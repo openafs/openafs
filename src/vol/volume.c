@@ -4726,15 +4726,17 @@ VCloseVolumeHandles_r(Volume * vp)
     VolState state_save;
 
     state_save = VChangeState_r(vp, VOL_STATE_OFFLINING);
+
+    VOL_UNLOCK;
 #endif
 
-    /* demand attach fs
-     *
-     * XXX need to investigate whether we can perform
-     * DFlushVolume outside of vol_glock_mutex...
-     *
-     * VCloseVnodeFiles_r drops the glock internally */
     DFlushVolume(vp->hashid);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+#endif
+
+    /* DAFS: VCloseVnodeFiles_r drops the glock internally */
     VCloseVnodeFiles_r(vp);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -4778,13 +4780,17 @@ VReleaseVolumeHandles_r(Volume * vp)
     VolState state_save;
 
     state_save = VChangeState_r(vp, VOL_STATE_DETACHING);
+
+    VOL_UNLOCK;
 #endif
 
-    /* XXX need to investigate whether we can perform
-     * DFlushVolume outside of vol_glock_mutex... */
     DFlushVolume(vp->hashid);
 
-    VReleaseVnodeFiles_r(vp); /* releases the glock internally */
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+#endif
+
+    VReleaseVnodeFiles_r(vp); /* DAFS: releases the glock internally */
 
 #ifdef AFS_DEMAND_ATTACH_FS
     VOL_UNLOCK;
