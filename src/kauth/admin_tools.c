@@ -582,6 +582,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
     int code;
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];
+    char *end;
     afs_int32 flags = 0;
     Date expiration = 0;
     afs_int32 lifetime = 0;
@@ -638,9 +639,8 @@ SetFields(struct cmd_syndesc *as, void *arock)
     for (i = 0; i < 4; misc_auth_bytes[i++] = 0);
 
     if (as->parms[4].items) {
-	if (util_isint(as->parms[4].items->data))
-	    pwexpiry = atoi(as->parms[4].items->data);
-	else {
+	pwexpiry = strtol(as->parms[4].items->data, &end, 10);
+	if (*end != '\0') {
 	    fprintf(stderr,
 		    "Password lifetime specified must be a non-negative decimal integer.\n");
 	    pwexpiry = -1;
@@ -650,9 +650,9 @@ SetFields(struct cmd_syndesc *as, void *arock)
 		    "Password lifetime range must be [0..254] days.\n");
 	    fprintf(stderr, "Zero represents an unlimited lifetime.\n");
 	    return KABADCMD;
-	} else {
-	    misc_auth_bytes[0] = pwexpiry + 1;
 	}
+
+	misc_auth_bytes[0] = pwexpiry + 1;
     }
 
     if (as->parms[5].items) {
@@ -673,15 +673,14 @@ SetFields(struct cmd_syndesc *as, void *arock)
     if (as->parms[6].items) {
 	int nfailures;
 
+        nfailures = strtol(as->parms[6].items->data, &end, 10);
 
-	if (util_isint(as->parms[6].items->data)
-	    && ((nfailures = atoi(as->parms[6].items->data)) < 255)) {
-	    misc_auth_bytes[2] = nfailures + 1;
-	} else {
+	if (*end != '\0' || nfailures < 0 || nfailures > 254) {
 	    fprintf(stderr, "Failure limit must be in [0..254].\n");
 	    fprintf(stderr, "Zero represents unlimited login attempts.\n");
 	    return KABADCMD;
 	}
+	misc_auth_bytes[2] = nfailures + 1;
     }
 
     if (as->parms[7].items) {
