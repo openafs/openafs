@@ -62,10 +62,12 @@ typedef struct cm_req {
 } cm_req_t;
 
 /* flags in cm_req structure */
-#define	CM_REQ_NORETRY		0x1
-#define CM_REQ_NEW_CONN_FORCED  0x2
-#define CM_REQ_SOURCE_SMB       0x4
-#define CM_REQ_VOLUME_UPDATED   0x8
+#define	CM_REQ_NORETRY		0x01
+#define CM_REQ_NEW_CONN_FORCED  0x02
+#define CM_REQ_SOURCE_SMB       0x04
+#define CM_REQ_VOLUME_UPDATED   0x08
+/* 0x10 and 0x20 are reserved for the afs redirector */
+#define CM_REQ_OFFLINE_VOL_CHK  0x40
 
 /*
  * Vice2 error codes

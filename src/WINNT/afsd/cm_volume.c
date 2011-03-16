@@ -1249,17 +1249,18 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
             if (statep->state == vl_busy || statep->state == vl_offline || statep->state == vl_unknown ||
                 (!alldown && statep->state == vl_alldown)) {
                 cm_InitReq(&req);
+                req.flags |= CM_REQ_OFFLINE_VOL_CHK;
 
                 lock_ReleaseWrite(&volp->rw);
                 do {
                     code = cm_ConnFromVolume(volp, statep->ID, cm_rootUserp, &req, &connp);
-                    if (code) 
+                    if (code)
                         continue;
 
                     rxconnp = cm_GetRxConn(connp);
                     code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
                                                  &volStat, &Name, &OfflineMsg, &MOTD);
-                    rx_PutConnection(rxconnp);            
+                    rx_PutConnection(rxconnp);
                 } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, NULL, NULL, NULL, code));
                 code = cm_MapRPCError(code, &req);
 

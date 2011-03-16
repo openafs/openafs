@@ -351,7 +351,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE, 
                                       &volp);
             if (code == 0) {
-                if (timeLeft > 7) {
+                /*
+                 * Do not perform a cm_CheckOfflineVolume() if cm_Analyze()
+                 * was called by cm_CheckOfflineVolumeState().
+                 */
+                if (!(reqp->flags & CM_REQ_OFFLINE_VOL_CHK) && timeLeft > 7) {
                     thrd_Sleep(5000);
 
                     /* cm_CheckOfflineVolume() resets the serverRef state */
