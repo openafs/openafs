@@ -1521,7 +1521,6 @@
                                 <File Id="filefs_utils_H" Name="fs_utils.h" LongName="fs_utils.h" DiskId="1" src="$(var.IncDir)afs\fs_utils.h" /> 
                                 <File Id="fileicl_H" Name="icl.h" LongName="icl.h" DiskId="1" src="$(var.IncDir)afs\icl.h" /> 
                                 <File Id="fileihandle_H" Name="ihandle.h" LongName="ihandle.h" DiskId="1" src="$(var.IncDir)afs\ihandle.h" /> 
-                                <File Id="fileitc_H" Name="itc.h" LongName="itc.h" DiskId="1" src="$(var.IncDir)afs\itc.h" /> 
                                 <File Id="filekaport_H" Name="kaport.h" LongName="kaport.h" DiskId="1" src="$(var.IncDir)afs\kaport.h" /> 
                                 <File Id="filekauth_H" Name="kauth.h" LongName="kauth.h" DiskId="1" src="$(var.IncDir)afs\kauth.h" /> 
                                 <File Id="filekautils_H" Name="kautils.h" LongName="kautils.h" DiskId="1" src="$(var.IncDir)afs\kautils.h" /> 

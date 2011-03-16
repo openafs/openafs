@@ -19,7 +19,6 @@ INCFILES =\
 	$(INCFILEDIR)\afsutil.h \
 	$(INCFILEDIR)\afs_assert.h \
 	$(INCFILEDIR)\errors.h \
-	$(INCFILEDIR)\itc.h \
 	$(INCFILEDIR)\vice.h \
         $(INCFILEDIR)\netutils.h \
 	$(INCFILEDIR)\pthread_glock.h \
