@@ -149,6 +149,7 @@ UAFSOBJ = \
 	$(UOBJ)/osi_vcache.o \
 	$(UOBJ)/afsaux.o \
 	$(UOBJ)/Kvice.xdr.o \
+	$(UOBJ)/xdr_array.o \
 	$(UOBJ)/xdr_arrayn.o \
 	$(UOBJ)/Kvice.cs.o \
 	$(UOBJ)/fcrypt.o \
@@ -285,6 +286,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/osi_vcache.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
+	$(WEBOBJ)/xdr_array.o \
 	$(WEBOBJ)/xdr_arrayn.o \
 	$(WEBOBJ)/Kvice.cs.o \
 	$(WEBOBJ)/fcrypt.o \
@@ -417,6 +419,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/osi_vcache.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
+	$(WEBOBJ)/xdr_array.o \
 	$(WEBOBJ)/xdr_arrayn.o \
 	$(WEBOBJ)/Kvice.cs.o \
 	$(WEBOBJ)/fcrypt.o \
@@ -552,6 +555,7 @@ JUAFSOBJ = \
 	$(JUAFS)/osi_vcache.o \
 	$(JUAFS)/afsaux.o \
 	$(JUAFS)/Kvice.xdr.o \
+	$(JUAFS)/xdr_array.o \
 	$(JUAFS)/xdr_arrayn.o \
 	$(JUAFS)/Kvice.cs.o \
 	$(JUAFS)/fcrypt.o \
@@ -799,6 +803,8 @@ $(UOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 $(UOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
 	$(CRULE1)
 $(UOBJ)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
+	$(CRULE1)
+$(UOBJ)/xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
 	$(CRULE1)
 $(UOBJ)/Kvldbint.cs.o: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
 	$(CRULE1)
@@ -1072,6 +1078,8 @@ $(WEBOBJ)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
 $(WEBOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(CRULE2)
 $(WEBOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
+	$(CRULE2)
+$(WEBOBJ)/xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
 	$(CRULE2)
 $(WEBOBJ)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
 	$(CRULE2)
@@ -1357,6 +1365,8 @@ $(JUAFS)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
 $(JUAFS)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(CRULE1)
 $(JUAFS)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
+	$(CRULE1)
+$(JUAFS)/xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
 	$(CRULE1)
 $(JUAFS)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
 	$(CRULE1)
