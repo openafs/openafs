@@ -180,13 +180,20 @@ handleit(struct cmd_syndesc *as, void *arock)
 	strncpy(pname, ti->data, 100);
     }
     if ((ti = as->parms[1].items)) {	/* -volumeid */
+	char *end;
+	unsigned long vid_l;
 	if (!seenpart) {
 	    printf
 		("You must also specify '-partition' option with the '-volumeid' option\n");
 	    exit(-1);
 	}
 	seenvol = 1;
-	vid = atoi(ti->data);
+	vid_l = strtoul(ti->data, &end, 10);
+	if (vid_l >= MAX_AFS_UINT32 || vid_l == ULONG_MAX || *end != '\0') {
+	    Log("salvage: invalid volume id specified; salvage aborted\n");
+	    Exit(1);
+	}
+	vid = (VolumeId)vid_l;
     }
     if (as->parms[2].items)	/* -debug */
 	debug = 1;
