@@ -59,7 +59,6 @@ includes = \
 	${TOP_INCDIR}/afs/ktime.h \
 	${TOP_INCDIR}/afs/fileutil.h \
 	${TOP_INCDIR}/afs/netutils.h \
-	${TOP_INCDIR}/afs/packages.h \
 	${TOP_INCDIR}/afs/afsutil.h \
 	${TOP_INCDIR}/afs/afsutil_prototypes.h \
 	${TOP_INCDIR}/afs/pthread_glock.h \
@@ -109,9 +108,6 @@ ${TOP_INCDIR}/afs/fileutil.h: ${srcdir}/fileutil.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/netutils.h: ${srcdir}/netutils.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/afsutil.h: ${srcdir}/afsutil.h
@@ -300,7 +296,6 @@ install: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DESTDIR}${includedir}/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DESTDIR}${includedir}/afs/fileutil.h
 	${INSTALL_DATA} ${srcdir}/netutils.h ${DESTDIR}${includedir}/afs/netutils.h
-	${INSTALL_DATA} ${srcdir}/packages.h ${DESTDIR}${includedir}/afs/packages.h
 	${INSTALL_DATA} ${srcdir}/afsutil.h ${DESTDIR}${includedir}/afs/afsutil.h
 	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DESTDIR}${includedir}/afs/afsutil_prototypes.h
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DESTDIR}${includedir}/afs/pthread_glock.h
@@ -330,7 +325,6 @@ dest: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DEST}/include/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DEST}/include/afs/fileutil.h
 	${INSTALL_DATA} ${srcdir}/netutils.h ${DEST}/include/afs/netutils.h
-	${INSTALL_DATA} ${srcdir}/packages.h ${DEST}/include/afs/packages.h
 	${INSTALL_DATA} ${srcdir}/afsutil.h ${DEST}/include/afs/afsutil.h
 	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DEST}/include/afs/afsutil_prototypes.h
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DEST}/include/afs/pthread_glock.h
