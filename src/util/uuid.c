@@ -54,8 +54,6 @@
 #ifdef KERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#define uuid_memcmp(A,B,C)	memcmp(A, B, C)
-#define uuid_memcpy(A,B,C)	memcpy(A, B, C)
 #else /* KERNEL */
 #include <stdio.h>
 #include <errno.h>
@@ -85,9 +83,6 @@
 #include <netinet/if_ether.h>
 #endif
 #include "afsutil.h"
-
-#define uuid_memcmp(A,B,C)	memcmp(A,B,C)
-#define uuid_memcpy(A,B,C)	memcpy(A,B,C)
 #endif /* KERNEL */
 
 
@@ -132,7 +127,7 @@ static afs_uint32 rand_m, rand_ia, rand_ib, rand_irand, uuid_init_done = 0;
 afs_int32
 afs_uuid_equal(afsUUID * u1, afsUUID * u2)
 {
-    return (uuid_memcmp((void *)u1, (void *)u2, sizeof(afsUUID)) == 0);
+    return (memcmp(u1, u2, sizeof(afsUUID)) == 0);
 }
 
 afs_int32
@@ -140,8 +135,7 @@ afs_uuid_is_nil(afsUUID * u1)
 {
     if (!u1)
 	return 1;
-    return (uuid_memcmp
-	    ((void *)u1, (void *)&afs_uuid_g_nil_uuid, sizeof(afsUUID)) == 0);
+    return afs_uuid_equal(u1, &afs_uuid_g_nil_uuid);
 }
 
 void
@@ -337,7 +331,7 @@ afs_uuid_create(afsUUID * uuid)
     uuid->clock_seq_low = clock_seq & 0xff;
     uuid->clock_seq_hi_and_reserved = (clock_seq & 0x3f00) >> 8;
     uuid->clock_seq_hi_and_reserved |= 0x80;
-    uuid_memcpy((void *)uuid->node, (void *)&eaddr, sizeof(uuid_address_t));
+    memcpy(uuid->node, &eaddr, sizeof(uuid_address_t));
 #endif /* AFS_NT40_ENV */
     return 0;
 }
@@ -409,7 +403,7 @@ extern struct interfaceAddr afs_cb_interface;
 static int
 uuid_get_address(uuid_address_p_t addr)
 {
-    uuid_memcpy((void *)addr->eaddr, (void *)&afs_cb_interface.addr_in[0], 4);
+    memcpy(addr->eaddr, &afs_cb_interface.addr_in[0], 4);
     addr->eaddr[4] = 0xaa;
     addr->eaddr[5] = 0x77;
     return 0;
@@ -453,9 +447,9 @@ uuid_get_address(uuid_address_p_t addr)
 	return errno;
 #endif
     } else {
-	uuid_memcpy(&addr1, he->h_addr_list[0], 4);
+	memcpy(&addr1, he->h_addr_list[0], 4);
 	addr1 = ntohl(addr1);
-	uuid_memcpy(addr->eaddr, &addr1, 4);
+	memcpy(addr->eaddr, &addr1, 4);
 	addr->eaddr[4] = 0xaa;
 	addr->eaddr[5] = 0x77;
 #ifdef  UUID_DEBUG
