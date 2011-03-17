@@ -305,8 +305,9 @@
 		[self clearConfiguration];
 		
 		//chech the afs version for chioce wich afsd conf file usage
-		useAfsdConfVersion = mjVersion >= 1 && miVersion>=4 && paVersion>=7;
-		useAfsdConfVersion = useAfsdConfVersion || (mjVersion >= 1 && miVersion>=6 && paVersion>=31);
+		useAfsdConfVersion = mjVersion >= 1 && miVersion==4 && paVersion>=7;
+		useAfsdConfVersion = useAfsdConfVersion || (mjVersion >= 1 && miVersion==5 && paVersion>=31);
+		useAfsdConfVersion = useAfsdConfVersion || (mjVersion >= 1 && miVersion>=6);
 		
 		// read thiscell config file
 		[filePath setString:installationPath];
