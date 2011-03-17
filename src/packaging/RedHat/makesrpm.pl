@@ -71,6 +71,13 @@ if (not defined($afsversion)) {
   $afsversion = `"$srcdir/build-tools/git-version" "$srcdir"`;
 }
 
+# Figure out a major, minor and release so that we know which version we're
+# building, and therefore what the srpm is going to be called
+$afsversion=~/([0-9]+)\.([0-9]+)\.([0-9]+)/;
+my $major = $1;
+my $minor = $2;
+my $patchlevel = $3;
+
 # Build the RPM root
 
 print "Building version $afsversion\n";
@@ -148,9 +155,18 @@ system("rpmbuild -bs --define \"_topdir $tmpdir/rpmdir\" ".
   or die "rpmbuild failed : $!\n";
 
 # Copy it out to somewhere useful
-File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$linuxver-1.$linuxrel.src.rpm",
-	         "openafs-$linuxver-1.$linuxrel.src.rpm")
-  or die "Unable to copy output RPM : $!\n";
+if ($major > 1 || ($major == 1 && $minor >= 6)) {
+  File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$linuxver-$linuxrel.src.rpm",
+	           "openafs-$linuxver-$linuxrel.src.rpm")
+    or die "Unable to copy output RPM : $!\n";
 
-print "SRPM is openafs-$linuxver-1.$linuxrel.src.rpm\n";
+  print "SRPM is openafs-$linuxver-$linuxrel.src.rpm\n";
+} else {
+  File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$linuxver-1.$linuxrel.src.rpm",
+	           "openafs-$linuxver-1.$linuxrel.src.rpm")
+    or die "Unable to copy output RPM : $!\n";
+
+  print "SRPM is openafs-$linuxver-1.$linuxrel.src.rpm\n";
+}
+
 
