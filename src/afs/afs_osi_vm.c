@@ -58,6 +58,11 @@ osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
      * citi-tr-01-3.
      */
 #endif
+    if (vType(avc) == VDIR) {
+	/* not applicable to directories; they're never mapped or stored in
+	 * pages */
+	return;
+    }
     ObtainReadLock(&avc->lock);
     /* If we've already purged this version, or if we're the ones
      * writing this version, don't flush it (could lose the
