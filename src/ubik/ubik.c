@@ -1265,7 +1265,9 @@ int
 ubik_GetVersion(struct ubik_trans *atrans,
 		struct ubik_version *avers)
 {
+    DBHOLD(atrans->dbase);
     *avers = atrans->dbase->version;
+    DBRELE(atrans->dbase);
     return 0;
 }
 
