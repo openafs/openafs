@@ -16,10 +16,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-# Override the global COMMON_CFLAGS, as we want to be able to override
-# debug and optimization settings for this module
-
-COMMON_CFLAGS = ${CFLAGS} ${LWP_DBG} ${LWP_OPTMZ} ${COMMON_INCL}
+DBG=${LWP_DBG}
+OPTMZ=${LWP_OPTMZ}
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
