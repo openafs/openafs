@@ -1,3 +1,21 @@
+openafs (1.6.0~pre3-1) UNRELEASED; urgency=low
+
+  * New upstream prerelease.
+    - Revert UUID support in vos.
+    - pt_util fixed to properly create new database.
+    - MTU discovery now properly shut down on call reset.
+    - FUSE client support fixed for non-/afs mounts.
+    - A deleted volume can now be recreated properly.
+    - Callbacks are again not broken during whole partition salvages.
+    - Positional vectored IO fixed.
+    - Fileserver per-client thread usage again properly enforced.
+    - Anonymous dropbox support improved and drawbacks documented.
+    - Ensure vnodes are not reallocated while in use for demand-attach.
+    - Perform vcache eviction via a fast path before visiting vcaches
+      where sleep is needed.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 22 Mar 2011 03:17:52 -0700
+
 openafs (1.6.0~pre2-1) experimental; urgency=low
 
   * New upstream prerelease.
