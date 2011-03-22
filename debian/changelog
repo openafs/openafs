@@ -1,4 +1,4 @@
-openafs (1.6.0~pre3-1) UNRELEASED; urgency=low
+openafs (1.6.0~pre3-1) experimental; urgency=low
 
   * New upstream prerelease.
     - Revert UUID support in vos.
@@ -17,7 +17,7 @@ openafs (1.6.0~pre3-1) UNRELEASED; urgency=low
     - [17b48f99] Add missing semicolon (Closes: #618496)
     - [ee2811b0] viced: Allow checkout of VOL_STATE_DELETED volumes
 
- -- Russ Allbery <rra@debian.org>  Tue, 22 Mar 2011 03:17:52 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 22 Mar 2011 05:07:22 -0700
 
 openafs (1.6.0~pre2-1) experimental; urgency=low
 
