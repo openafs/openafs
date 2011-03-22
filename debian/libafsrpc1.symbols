@@ -126,3 +126,4 @@ libafsrpc.so.1 libafsrpc1 #MINVER#
  rx_InterruptCall@Base 1.5.78
  rx_SetConnHardDeadTime@Base 1.5.78
  rx_SetConnIdleDeadTime@Base 1.5.78
+ rx_SetBusyChannelError@Base 1.6.0~pre3
