@@ -13,6 +13,9 @@ openafs (1.6.0~pre3-1) UNRELEASED; urgency=low
     - Ensure vnodes are not reallocated while in use for demand-attach.
     - Perform vcache eviction via a fast path before visiting vcaches
       where sleep is needed.
+  * Apply upstream deltas:
+    - [17b48f99] Add missing semicolon (Closes: #618496)
+    - [ee2811b0] viced: Allow checkout of VOL_STATE_DELETED volumes
 
  -- Russ Allbery <rra@debian.org>  Tue, 22 Mar 2011 03:17:52 -0700
 
