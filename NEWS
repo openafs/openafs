@@ -10,13 +10,20 @@ OpenAFS 1.6.0 (in progress)
     * Don't stop Rx keepalives after an ackall is received, avoiding
       spurious connection timeouts. (128848)
 
-    * Don't retry Rx calls on channels returning busy errors. (128671)
+    * Don't retry Rx calls on channels returning busy errors and improve
+      Rx busy call channel error handling. (128671)
 
     * Properly enable Rx connection hard timeouts.
 
     * Initialize rx_multi lock before use.
 
     * Avoid spurious crashes when initializing in "backup" client.
+
+    * Revert UUID support in vos.
+
+    * pt_util fixed to properly create new databases.
+
+    * MTU discovery now properly shut down on call reset.
 
   All server platforms
 
@@ -48,6 +55,19 @@ OpenAFS 1.6.0 (in progress)
 
     * Avoid erroneous full dump by remembering which sites were out of
       date at the start of the release.
+
+    * A deleted volume can now be recreated properly.
+
+    * Callbacks are again not broken during whole partition salvages.
+
+    * Positional vectored IO fixed for largefile (>2GB) capable systems.
+
+    * Fileserver per-client thread usage again properly enforced.
+
+    * Anonymous dropbox support improved and drawbacks documented.
+
+    * Demand attach: ensure vnodes are not reallocated while in use due to
+      volume bitmap errors.
 
   Microsoft Windows:
 
@@ -97,6 +117,8 @@ OpenAFS 1.6.0 (in progress)
 
     * Fix creation of mount points and symlinks as \\AFS\xxxx
 
+    * Icon tray state now conditionally set. (128591)
+
   All UNIX client platforms
 
     * Servers now marked down when GetCapabilities returns error.
@@ -109,6 +131,8 @@ OpenAFS 1.6.0 (in progress)
     * Avoid a potential panic when using /afs/.:mount syntax.
 
     * Avoid a panic in memcache mode due to missing CellItems file.
+
+    * FUSE client support fixed for non-/afs mounts.
 
   FreeBSD
 
@@ -146,6 +170,9 @@ OpenAFS 1.6.0 (in progress)
 
     * Avoid extra runs of vcache freeing routine. (128756)
 
+    * Perform vcache eviction via a fast path before visiting vcaches
+      where sleep is needed.
+
   MacOS
 
     * Properly handle setpag errors.  PAGs are not supported.
@@ -154,6 +181,8 @@ OpenAFS 1.6.0 (in progress)
 
     * Disable "get tokens at login" in prefs pane if AD authentication
       plugin is configured.
+
+    * aklog AuthorizationPlugin now provided.
 
   OpenBSD
 
@@ -167,6 +196,10 @@ OpenAFS 1.6.0 (in progress)
       65 is not safe.
 
     * Fix support for Solaris pre-10.
+
+    * Corrected Solaris 11 startup script.
+
+    * vcache mappings freed on shutdown to avoid panic.
 
 
 OpenAFS 1.5.78 (2010-11-04)
