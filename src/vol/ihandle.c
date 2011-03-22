@@ -73,6 +73,7 @@ int fdInUseCount = 0;
 /* Hash table for inode handles */
 IHashBucket_t ihashTable[I_HANDLE_HASH_SIZE];
 
+static int _ih_release_r(IHandle_t * ihP);
 void *ih_sync_thread(void *);
 
 /* start-time configurable I/O limits */
@@ -450,13 +451,12 @@ fd_close(FdHandle_t * fdP)
     /* If this is not the only reference to the Inode then we can decrement
      * the reference count, otherwise we need to call ih_release.
      */
-    if (ihP->ih_refcnt > 1) {
+    if (ihP->ih_refcnt > 1)
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
-    } else {
-	IH_UNLOCK;
-	ih_release(ihP);
-    }
+    else
+	_ih_release_r(ihP);
+
+    IH_UNLOCK;
 
     return 0;
 }
@@ -510,13 +510,12 @@ fd_reallyclose(FdHandle_t * fdP)
 
     /* If this is not the only reference to the Inode then we can decrement
      * the reference count, otherwise we need to call ih_release. */
-    if (ihP->ih_refcnt > 1) {
+    if (ihP->ih_refcnt > 1)
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
-    } else {
-	IH_UNLOCK;
-	ih_release(ihP);
-    }
+    else
+	_ih_release_r(ihP);
+
+    IH_UNLOCK;
 
     return 0;
 }
@@ -867,33 +866,30 @@ ih_reallyclose(IHandle_t * ihP)
 
     ih_fdclose(ihP);
 
-    if (ihP->ih_refcnt > 1) {
+    if (ihP->ih_refcnt > 1)
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
-    } else {
-	IH_UNLOCK;
-	ih_release(ihP);
-    }
+    else
+	_ih_release_r(ihP);
+
+    IH_UNLOCK;
     return 0;
 }
 
 /* Release an Inode handle. All cached file descriptors for this
  * inode are closed when the last reference to this handle is released
  */
-int
-ih_release(IHandle_t * ihP)
+static int
+_ih_release_r(IHandle_t * ihP)
 {
     int ihash;
 
     if (!ihP)
 	return 0;
 
-    IH_LOCK;
     osi_Assert(ihP->ih_refcnt > 0);
 
     if (ihP->ih_refcnt > 1) {
 	ihP->ih_refcnt--;
-	IH_UNLOCK;
 	return 0;
     }
 
@@ -907,8 +903,24 @@ ih_release(IHandle_t * ihP)
 
     DLL_INSERT_TAIL(ihP, ihAvailHead, ihAvailTail, ih_next, ih_prev);
 
-    IH_UNLOCK;
     return 0;
+}
+
+/* Release an Inode handle. All cached file descriptors for this
+ * inode are closed when the last reference to this handle is released
+ */
+int
+ih_release(IHandle_t * ihP)
+{
+    int ret;
+
+    if (!ihP)
+	return 0;
+
+    IH_LOCK;
+    ret = _ih_release_r(ihP);
+    IH_UNLOCK;
+    return ret;
 }
 
 /* Sync an inode to disk if its handle isn't NULL */
@@ -966,14 +978,10 @@ ih_sync_all(void) {
 	    ihPnext = ihP->ih_next;
 	    if (ihPnext) ihPnext->ih_refcnt++;
 
-	    if (ihP->ih_refcnt > 1) {
+	    if (ihP->ih_refcnt > 1)
 		ihP->ih_refcnt--;
-	    } else {
-		IH_UNLOCK;
-		ih_release(ihP);
-		IH_LOCK;
-	    }
-
+	    else
+		_ih_release_r(ihP);
 	}
     }
     IH_UNLOCK;
