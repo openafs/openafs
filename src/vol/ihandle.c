@@ -468,9 +468,9 @@ fd_close(FdHandle_t * fdP)
 
     fdP->fd_refcnt--;
     if (fdP->fd_refcnt == 0) {
-    /* Put this descriptor back into the cache */
-    fdP->fd_status = FD_HANDLE_OPEN;
-    DLL_INSERT_TAIL(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
+	/* Put this descriptor back into the cache */
+	fdP->fd_status = FD_HANDLE_OPEN;
+	DLL_INSERT_TAIL(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
     }
 
     /* If this is not the only reference to the Inode then we can decrement
@@ -511,13 +511,13 @@ fd_reallyclose(FdHandle_t * fdP)
     fdP->fd_refcnt--;
 
     if (fdP->fd_refcnt == 0) {
-    DLL_DELETE(fdP, ihP->ih_fdhead, ihP->ih_fdtail, fd_ihnext, fd_ihprev);
-    DLL_INSERT_TAIL(fdP, fdAvailHead, fdAvailTail, fd_next, fd_prev);
+	DLL_DELETE(fdP, ihP->ih_fdhead, ihP->ih_fdtail, fd_ihnext, fd_ihprev);
+	DLL_INSERT_TAIL(fdP, fdAvailHead, fdAvailTail, fd_next, fd_prev);
 
-    fdP->fd_status = FD_HANDLE_AVAIL;
-    fdP->fd_refcnt = 0;
-    fdP->fd_ih = NULL;
-    fdP->fd_fd = INVALID_FD;
+	fdP->fd_status = FD_HANDLE_AVAIL;
+	fdP->fd_refcnt = 0;
+	fdP->fd_ih = NULL;
+	fdP->fd_fd = INVALID_FD;
     }
 
     /* All the file descriptor handles have been closed; reset
@@ -529,10 +529,10 @@ fd_reallyclose(FdHandle_t * fdP)
     }
 
     if (fdP->fd_refcnt == 0) {
-    IH_UNLOCK;
-    OS_CLOSE(closeFd);
-    IH_LOCK;
-    fdInUseCount -= 1;
+	IH_UNLOCK;
+	OS_CLOSE(closeFd);
+	IH_LOCK;
+	fdInUseCount -= 1;
     }
 
     /* If this is not the only reference to the Inode then we can decrement
