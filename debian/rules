@@ -55,7 +55,7 @@ IGNORE += -Xafsd.fuse.8 -Xpam_afs
 DEBIAN  := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2)
 DEBVERS := $(shell echo '$(DEBIAN)' | cut -d- -f1)
 VERSION := $(shell echo '$(DEBVERS)' | sed -e 's/[+-].*//' -e 's/~//g')
-TAG     := $(shell echo 'openafs-devel-$(VERSION)' | sed 's/\./_/g')
+TAG     := $(shell echo 'openafs-stable-$(VERSION)' | sed 's/\./_/g')
 REPO    := git://git.openafs.org/openafs.git
 
 # Upstream does tarball releases for major releases, but not for point
