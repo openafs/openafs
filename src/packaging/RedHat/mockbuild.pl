@@ -213,10 +213,22 @@ if (!$ok || $help || !$srpm || $#platforms==-1) {
 
 my $oafsversion = `rpm -q --queryformat=%{VERSION} -p $srpm` or die $!;
 chomp $oafsversion;
+$oafsversion=~/([0-9]+)\.([0-9]+)\.([0-9]+)/;
+my $major = $1;
+my $minor = $2;
+my $pathlevel = $3;
+
+# OpenAFS SRPMs newer than 1.6.0 use the dist, rather than osvers variable
+
+my $usedist = ($minor >= 6);
+
 my $oafsrelease = `rpm -q --queryformat=%{RELEASE} -p $srpm` or die $!;
 chomp $oafsrelease;
-$oafsrelease=~s/^[^\.]*\.(.*)$/$1/;
 
+# Before we used the dist tag, the release variable of the srpm was 1.<release>
+if (!$usedist) {
+	$oafsrelease=~s/^[^\.]*\.(.*)$/$1/;
+}
 print "Release is $oafsrelease\n";
 
 if ($platforms[0] eq "all" and $#platforms == 0) {
@@ -301,12 +313,18 @@ foreach my $platform (@platforms) {
 
   my $missing = 0;
   foreach my $rpm (@rpms) {
-    if (! -f $resultdir."/".$rpm."-".$oafsversion."-".$osver.".".
-	     $oafsrelease.".".$basearch.".rpm") {
+    my $rpmname;
+    if ($usedist) {
+	$rpmname = $rpm."-".$oafsversion."-".$oafsrelease.".".$osver.".".
+		   $basearch.".rpm";
+    } else {
+	$rpmname = $rpm."-".$oafsversion."-".$osver.".".$oafsrelease.".".
+		   $basearch.".rpm";
+    }
+    if (! -f $resultdir."/".$rpmname) {
       $missing++;
-      print $resultdir."/".$rpm."-".$oafsversion."-".$osver.".".
-	    $oafsrelease.".".$basearch.".rpm is missing!\n";
-      push @missingrpms, $rpm;
+      print "$resultdir/$rpmname is missing!\n";
+      push @missingrpms, $rpmname;
     }
   }
   if ($missing) {
@@ -314,27 +332,25 @@ foreach my $platform (@platforms) {
 		        ' --define "fedorakmod 1" '.
 		        ' --define "kernvers '.$arbitraryversion.'" '.
 		        ' --define "osvers '.$osver.'" '.
+			' --define "dist .'.$osver.'" '.
 		        ' --define "build_modules 0" '.
 		        ' --define "build_userspace 1" '.
 		        ' --define "build_authlibs 1" '.
 		        $srpm) == 0
       or die "build failed with : $!\n";
-    foreach my $rpm (@missingrpms) {
-      system("cp ".$mockresults."/".$rpm."-".$oafsversion."-".
-		   $osver.".".$oafsrelease.".".$basearch.".rpm ".
-		   $resultdir) == 0
+    foreach my $rpmname (@missingrpms) {
+      system("cp ".$mockresults."/".$rpmname." ".$resultdir) == 0
           or die "Copy failed with : $!\n";
-      push @newrpms, $resultdir."/".$rpm."-".$oafsversion."-".
-		     $osver.".".$oafsrelease.".".$basearch.".rpm";
+      push @newrpms, $resultdir."/".$rpmname;
     }
   } else {
     print "All userland RPMs present for $platform. Skipping build\n";
   }
 
-   print "-------------------------------------------------------------------\n";
+  print "-------------------------------------------------------------------\n";
   print "Building kernel modules\n";
 
- foreach my $arch (keys(%modulelist)) {
+  foreach my $arch (keys(%modulelist)) {
     foreach my $version (keys(%{$modulelist{$arch}})) {
       my $kversion = $version;
       $kversion=~s/-/_/g;
@@ -372,6 +388,7 @@ foreach my $platform (@platforms) {
 			     " --arch ".$arch.
 			     ' --define "fedorakmod 1" '.
 			     ' --define "osvers '.$osver.'" '.
+			     ' --define "dist .'.$osver.'" '.
 			     ' --define "kernvers '.$version.'" '.
 			     ' --define "kvariants '.$variants.'" '.
 			     ' --define "build_modules 1" '.

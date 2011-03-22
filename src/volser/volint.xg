@@ -212,7 +212,7 @@ struct pIDs {
 struct diskPartition {
 	 char	name[32];	/* Mounted partition name */
    	 char	devName[32];
-	 int	lock_fd;        /* assigned from DiskPartition FD_t (64-bit on Windows) */
+	 int	lock_fd;
 	int	totalUsable;
 	int 	free;
 	int 	minFree;
@@ -222,7 +222,7 @@ struct diskPartition {
 struct diskPartition64 {
     char	name[256];	/* Mounted partition name */
     char	devName[256];
-    int	        lock_fd;        /* assigned from DiskPartition64 FD_t (64-bit on Windows) */
+    int	        lock_fd;
     afs_int64	totalUsable;
     afs_int64 	free;
     afs_int64 	minFree;

@@ -27,6 +27,7 @@ typedef void* (*afsd_callback_func) (void *rock);
 
 /* afsd.c expects these to be implemented; it does not implement them itself! */
 void afsd_mount_afs(const char *rn, const char *mountdir);
+int afsd_check_mount(const char *rn, const char *mountdir);
 void afsd_set_rx_rtpri(void);
 void afsd_set_afsd_rtpri(void);
 int afsd_call_syscall();

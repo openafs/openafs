@@ -891,7 +891,8 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 	    } else {		/* file */
 		/* must have read access, or be owner and have insert access */
 		if (!(rights & PRSFS_READ)
-		    && !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)))
+		    && !((OWNSp(client, targetptr) && (rights & PRSFS_INSERT)
+			  && (client->ViceId != AnonymousID))))
 		    return (EACCES);
 	    }
 	    if (CallingRoutine == CHK_FETCHDATA

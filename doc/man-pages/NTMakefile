@@ -367,6 +367,9 @@ clean::
         $(DEL) pod1\pts_setmax.pod
         $(DEL) pod1\pts_sleep.pod
         $(DEL) pod1\pts_source.pod
+        $(DEL) pod1\vos_addsite.pod
+        $(DEL) pod1\vos_copy.pod
+        $(DEL) pod1\vos_zap.pod
         $(DEL) pod8\dafileserver.pod
         $(DEL) pod8\dasalvager.pod
         $(DEL) pod8\davolserver.pod

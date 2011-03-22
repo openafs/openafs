@@ -83,6 +83,12 @@ struct state {
     struct volop_state * vop;
 };
 
+#ifndef AFS_DEMAND_ATTACH_FS
+/* remember argv/argc for later, if we need to re-exec */
+static char **fssd_argv;
+static int fssd_argc;
+#endif
+
 static int common_prolog(struct cmd_syndesc *, struct state *);
 static int common_volop_prolog(struct cmd_syndesc *, struct state *);
 
@@ -159,6 +165,10 @@ main(int argc, char **argv)
 	exit(2);
     }
 
+#ifndef AFS_DEMAND_ATTACH_FS
+    fssd_argv = argv;
+    fssd_argc = argc;
+#endif
 
     ts = cmd_CreateSyntax("online", VolOnline, NULL, "bring a volume online (FSYNC_VOL_ON opcode)");
     VOLOP_PARMS_DECL(ts);
@@ -256,6 +266,47 @@ main(int argc, char **argv)
     err = cmd_Dispatch(argc, argv);
     exit(err);
 }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+# define dafs_prolog()
+#else
+/* Try to detect if the fileserver is DAFS, and if so, re-exec as the
+ * DAFS-enabled fssync-debug (dafssync_debug). If we fail to detect or
+ * exec, just try to proceed anyway as if the server is not DAFS */
+static void
+dafs_prolog(void)
+{
+    SYNC_response res;
+    SYNC_PROTO_BUF_DECL(res_buf);
+    afs_int32 code;
+    char *dfssd;
+
+    res.payload.len = SYNC_PROTO_MAX_LEN;
+    res.payload.buf = res_buf;
+
+    /* LISTVOLUMES is a no-op; we just want to get the response header flags
+     * to see if the server reports itself as DAFS or not */
+    code = FSYNC_VolOp(0, NULL, FSYNC_VOL_LISTVOLUMES, FSYNC_WHATEVER, &res);
+    if (code) {
+	/* probably failed to contact the fileserver; later code will provide
+	 * some warning/error indication */
+	return;
+    }
+
+    if (!(res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS)) {
+	/* fileserver is not DAFS, so we don't need to do anything */
+	return;
+    }
+
+    dfssd = afs_exec_alt(fssd_argc, fssd_argv, "da", NULL);
+
+    fprintf(stderr, "\n*** server asserted demand attach extensions, but we failed\n"
+                    "*** to exec a DAFS-enabled fssync-debug '%s' (errno=%d);\n"
+                    "*** attempting to proceed without it.\n\n", dfssd, errno);
+
+    free(dfssd);
+}
+#endif /* !AFS_DEMAND_ATTACH_FS */
 
 static int
 common_prolog(struct cmd_syndesc * as, struct state * state)
@@ -641,6 +692,8 @@ VolQuery(struct cmd_syndesc * as, void * rock)
     int hi, lo;
 #endif
 
+    dafs_prolog();
+
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
     res.payload.len = SYNC_PROTO_MAX_LEN;
@@ -751,9 +804,10 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	}
 #else /* !AFS_DEMAND_ATTACH_FS */
 	if (res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS) {
-	    printf("*** server asserted demand attach extensions. fssync-debug not built to\n");
-	    printf("*** recognize those extensions. please recompile fssync-debug if you need\n");
-	    printf("*** to dump dafs extended state\n");
+	    printf("*** server asserted demand attach extensions. this fssync-debug\n"
+	           "*** is not built to recognize those extensions. please use an\n"
+	           "*** fssync-debug with demand attach if you need to dump dafs\n"
+	           "*** extended state.\n");
 	}
 #endif /* !AFS_DEMAND_ATTACH_FS */
 	printf("}\n");
@@ -964,6 +1018,8 @@ VnQuery(struct cmd_syndesc * as, void * rock)
     SYNC_response res;
     Vnode v;
 
+    dafs_prolog();
+
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
     res.payload.len = SYNC_PROTO_MAX_LEN;
@@ -997,9 +1053,10 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 
 #ifdef AFS_DEMAND_ATTACH_FS
 	if (!(res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS)) {
-	    printf("*** fssync-debug built to expect demand attach extensions.  server asserted\n");
-	    printf("*** that it was not compiled with demand attach turned on.  please recompile\n");
-	    printf("*** fssync-debug to match your server\n");
+	    printf("*** this fssync-debug is built to expect demand attach extensions.\n"
+	           "*** server asserted that is was not compiled with demand attach.\n"
+	           "*** please use an fssync-debug without demand attach to match your\n"
+	           "*** server.\n");
 	    goto done;
 	}
 
@@ -1008,9 +1065,9 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tvn_state        = %s\n", vn_state_to_string(v.vn_state));
 #else
 	if (res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS) {
-	    printf("*** server asserted demand attach extensions. fssync-debug not built to\n");
-	    printf("*** recognize those extensions. please recompile fssync-debug if you need\n");
-	    printf("*** to dump dafs extended state\n");
+	    printf("*** server asserted demand attach extensions. this fssync-debug is not\n"
+	           "*** built to recognize those extensions. please use an fssync-debug\n"
+	           "*** with demand attach to match your server.\n");
 	    goto done;
 	}
 #endif /* !AFS_DEMAND_ATTACH_FS */

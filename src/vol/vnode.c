@@ -666,9 +666,6 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    /* This won't block */
 	    VnLock(vnp, WRITE_LOCK, VOL_LOCK_HELD, WILL_NOT_DEADLOCK);
 	} else {
-	    /* other users present; follow locking hierarchy */
-	    VnLock(vnp, WRITE_LOCK, VOL_LOCK_HELD, MIGHT_DEADLOCK);
-
 #ifdef AFS_DEMAND_ATTACH_FS
 	    /*
 	     * DAFS:
@@ -686,6 +683,9 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    }
 #endif
 
+	    /* other users present; follow locking hierarchy */
+	    VnLock(vnp, WRITE_LOCK, VOL_LOCK_HELD, MIGHT_DEADLOCK);
+
 	    /*
 	     * verify state of the world hasn't changed
 	     *
@@ -698,6 +698,28 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 		VnCancelReservation_r(vnp);
 		goto vnrehash;
 	    }
+	}
+
+	/* sanity check: vnode should be blank if it was deleted. If it's
+	 * not blank, it is still in use somewhere; but the bitmap told us
+	 * this vnode number was free, so something is wrong. */
+	if (vnp->disk.type != vNull) {
+	    Error tmp;
+	    Log("VAllocVnode:  addled bitmap or vnode object! (vol %ld, "
+		"vnode %p, number %ld, type %ld)\n", (long)vp->hashid, vnp,
+		(long)Vn_id(vnp), (long)vnp->disk.type);
+	    *ec = EIO;
+	    VFreeBitMapEntry_r(&tmp, vp, &vp->vnodeIndex[class], bitNumber,
+		               VOL_FREE_BITMAP_WAIT);
+	    VInvalidateVnode_r(vnp);
+	    VnUnlock(vnp, WRITE_LOCK);
+	    VnCancelReservation_r(vnp);
+#ifdef AFS_DEMAND_ATTACH_FS
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
+#else
+	    VForceOffline_r(vp, 0);
+#endif
+	    return NULL;
 	}
 
     } else {
@@ -810,7 +832,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    if (fdP)
 		FDH_CLOSE(fdP);
 	    VOL_LOCK;
-	    VFreeBitMapEntry_r(&tmp, &vp->vnodeIndex[class], bitNumber);
+	    VFreeBitMapEntry_r(&tmp, vp, &vp->vnodeIndex[class], bitNumber, 0 /*flags*/);
 	    VInvalidateVnode_r(vnp);
 	    VnUnlock(vnp, WRITE_LOCK);
 	    VnCancelReservation_r(vnp);
@@ -927,6 +949,12 @@ VnLoad(Error * ec, Volume * vp, Vnode * vnp,
 	    struct vnodeIndex *index = &vp->vnodeIndex[class];
 	    unsigned int bitNumber = vnodeIdToBitNumber(Vn_id(vnp));
 	    unsigned int offset = bitNumber >> 3;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+	    /* Make sure the volume bitmap isn't getting updated while we are
+	     * checking it */
+	    VWaitExclusiveState_r(vp);
+#endif
 
 	    /* Test to see if vnode number is valid. */
 	    if ((offset >= index->bitmapSize)
@@ -1377,8 +1405,9 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 		if (vnp->delete && !*ec) {
 		    if (Vn_volume(vnp)->header->diskstuff.filecount-- < 1)
 			Vn_volume(vnp)->header->diskstuff.filecount = 0;
-		    VFreeBitMapEntry_r(ec, &vp->vnodeIndex[class],
-				       vnodeIdToBitNumber(Vn_id(vnp)));
+		    VFreeBitMapEntry_r(ec, vp, &vp->vnodeIndex[class],
+				       vnodeIdToBitNumber(Vn_id(vnp)),
+				       VOL_FREE_BITMAP_WAIT);
 		}
 	    }
 	    vcp->writes++;

@@ -1,6 +1,6 @@
 =head1 NAME
 
-uss_help - Displays help for uss commands
+uss_help - Displays help for uss commands (deprecated)
 
 =head1 SYNOPSIS
 
@@ -13,6 +13,15 @@ B<uss h> S<<< [B<-t> <I<help string>>+] >>> [B<-h>]
 
 =for html
 </div>
+
+=head1 CAUTIONS
+
+The B<uss> command suite is currently designed for cells using the
+obsolete Authentication Server, and therefore is primarily useful for
+sites that have not yet migrated to a Kerberos version 5 KDC. The
+Authentication Server and supporting commands will be removed in a future
+version of OpenAFS, which may include B<uss> unless someone who finds it
+useful converts it to work with a Kerberos version 5 KDC.
 
 =head1 DESCRIPTION
 

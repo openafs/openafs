@@ -376,7 +376,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	Initialize_PCB(temp, priority, stackmemory, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
-#ifndef AFS_ARM_LINUX20_ENV
+#if !defined(AFS_ARM_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
@@ -471,7 +471,7 @@ LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm
 	Initialize_PCB(temp, priority, stackptr, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
-#ifndef AFS_ARM_LINUX20_ENV
+#if !defined(AFS_ARM_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
@@ -970,7 +970,7 @@ Dispatcher(void)
 	printf("Dispatch %d [PCB at 0x%x] \"%s\"\n", ++dispatch_count,
 	       runnable[i].head, runnable[i].head->name);
 #endif
-#ifndef AFS_ARM_LINUX20_ENV
+#if !defined(AFS_ARM_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
     if (PRE_Block != 1)
 	Abort_LWP("PRE_Block not 1");
 #endif

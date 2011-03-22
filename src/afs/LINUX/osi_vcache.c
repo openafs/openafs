@@ -14,7 +14,7 @@
 #include "afsincludes.h"        /*AFS-based standard headers */
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     int code;
 
     struct dentry *dentry;
@@ -22,7 +22,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept) {
     struct list_head *cur, *head;
 
     /* First, see if we can evict the inode from the dcache */
-    if (avc != afs_globalVp && VREFCOUNT(avc) > 1 && avc->opens == 0) {
+    if (defersleep && avc != afs_globalVp && VREFCOUNT(avc) > 1 && avc->opens == 0) {
 	*slept = 1;
 	ReleaseWriteLock(&afs_xvcache);
         AFS_GUNLOCK();

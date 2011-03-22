@@ -11,13 +11,15 @@
 #include <afs/param.h>
 
 #if defined(__arm32__) || defined(__arm__)
-       /* register definitions */
+#ifndef AFS_ARM_DARWIN_ENV
+	/* register definitions */
        fp      .req    r11
        ip      .req    r12
        sp      .req    r13
        lp      .req    r14
        pc      .req    r15
-       
+#endif
+
        /*
           savecontext(f, area1, newsp)
                int (*f)()#if defined(RIOS);
@@ -29,24 +31,30 @@
 
        .text
        .align  0
+#ifndef AFS_ARM_DARWIN_ENV
        .globl  savecontext
        .type   savecontext, #function
 savecontext:
-       @ build the frame
-       mov     ip, sp
-       stmfd   sp!, {fp, ip, lr, pc}
-       sub     fp, ip, #4
-       @ stack r0 - r10, current fp
-       stmfd   sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, fp}
-       str     sp, [r1, #0]
-       @ check if newsp is zero
-       movs    r2, r2
-       movne   sp, r2
-       @ call function ...
-       mov     pc, r0
-
-       /*      should never get here ... */
-       /*      bl      EXT(abort) */
+#else
+       .globl  _savecontext
+_savecontext:
+#endif
+	@ build the frame
+	mov     ip, sp
+	stmfd   sp!, {fp, ip, lr, pc}
+	sub     fp, ip, #4
+	@ stack r0 - r10, current fp
+	stmfd   sp!, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, fp}
+	str     sp, [r1, #0]
+	@ check if newsp is zero
+	movs    r2, r2
+	movne   sp, r2
+	@ call function ...
+#ifdef AFS_ARM_DARWIN_ENV
+	bx      r0
+#else
+	mov     pc, r0
+#endif
 
        /*
          returnto(area2)
@@ -55,9 +63,14 @@ savecontext:
 
        /* area2 is in r0. */
 
+#ifndef AFS_ARM_DARWIN_ENV
        .globl returnto
        .type  returnto, #function
 returnto:
+#else
+       .globl _returnto
+_returnto:
+#endif
        @ restore r0-r10, fp
        ldr     r0, [r0, #0]
        ldmfd   r0, {r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, fp}

@@ -87,7 +87,7 @@ process.o	: process.s process.i386.s process.c lwp.o
 			fi ; \
 		fi ; \
 		if [ -n "$${arm}" ] ; then \
-			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch armv6 -I${TOP_INCDIR} ${srcdir}/process.c -o "$${arm}" ; \
+			$(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.s -o "$${arm}" ; \
 			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" ] ; then \
 				${MV} "$${arm}" process.o ; \
 			fi ; \

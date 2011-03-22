@@ -163,7 +163,7 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
 	    krb5_svc_get_msg(status,&str);
 	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
                     str);
-	    krb5_free_string(str);
+	    krb5_free_string(context, str);
 	} else
 #endif
 	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",

@@ -135,16 +135,6 @@
 #   include <linux/security.h>
 #  endif
 #  include <linux/suspend.h>
-#  if defined(LINUX_KEYRING_SUPPORT)
-#   include <linux/rwsem.h>
-#   include <linux/key.h>
-#   if defined(HAVE_LINUX_KEY_TYPE_H)
-#    include <linux/key-type.h>
-#   endif
-#   ifndef KEY_ALLOC_IN_QUOTA
-#    define KEY_ALLOC_IN_QUOTA 1
-#   endif
-#  endif
 # endif
 /* Avoid conflicts with coda overloading AFS type namespace. Must precede
  * inclusion of uaccess.h.

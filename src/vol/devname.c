@@ -33,7 +33,7 @@
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_XBSD_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */

@@ -22,13 +22,15 @@
 #endif
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     int code;
     struct dentry *dentry;
     struct list_head *cur, *head;
 
     /* First, see if we can evict the inode from the dcache */
-    if (avc != afs_globalVp && VREFCOUNT(avc) > 1 && avc->opens == 0) {
+    if (defersleep && avc != afs_globalVp && VREFCOUNT(avc) > 1 && avc->opens == 0) {
+	*slept = 1;
+	ReleaseWriteLock(&afs_xvcache);
         AFS_GUNLOCK();
 	afs_linux_lock_dcache();
 	head = &(AFSTOV(avc))->i_dentry;
@@ -57,13 +59,19 @@ restart:
 	afs_linux_unlock_dcache();
 inuse:
 	AFS_GLOCK();
+        ObtainWriteLock(&afs_xvcache, 733);
     }
 
     /* See if we can evict it from the VLRUQ */
     if (VREFCOUNT_GT(avc,0) && !VREFCOUNT_GT(avc,1) && avc->opens == 0
 	&& (avc->f.states & CUnlinkedDel) == 0) {
+	int didsleep = *slept;
 
 	code = afs_FlushVCache(avc, slept);
+        /* flushvcache wipes slept; restore slept if we did before */
+        if (didsleep)
+            *slept = didsleep;
+
 	if (code == 0)
 	   return 1;
     }

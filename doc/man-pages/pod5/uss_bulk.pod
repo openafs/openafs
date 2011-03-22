@@ -1,6 +1,15 @@
 =head1 NAME
 
-uss_bulk - Provides instructions for the uss bulk command
+uss_bulk - Provides instructions for the uss bulk command (deprecated)
+
+=head1 CAUTIONS
+
+The B<uss> command suite is currently designed for cells using the
+obsolete Authentication Server, and therefore is primarily useful for
+sites that have not yet migrated to a Kerberos version 5 KDC. The
+Authentication Server and supporting commands will be removed in a future
+version of OpenAFS, which may include B<uss> unless someone who finds it
+useful converts it to work with a Kerberos version 5 KDC.
 
 =head1 DESCRIPTION
 

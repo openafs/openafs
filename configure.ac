@@ -5,9 +5,9 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.0fc2
+MACOS_VERSION=1.6.0fc3
 LINUX_PKGVER=1.6.0
-LINUX_PKGREL=0.pre2
+LINUX_PKGREL=0.pre3
 #LINUX_PKGREL=1.1
 
 dnl Debian wants the release candidate version in the main upstream version,
@@ -22,8 +22,13 @@ AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 AC_SUBST(DEB_PKGVER)
 
+dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
+AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
+
 AC_USE_SYSTEM_EXTENSIONS
+
 AC_PROG_CC
+
 AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
 OPENAFS_CONFIGURE_COMMON
@@ -235,3 +240,6 @@ tests/util/Makefile,
 
 [chmod a+x src/config/shlib-build
  chmod a+x src/config/shlib-install])
+
+# print a final summary
+SUMMARY

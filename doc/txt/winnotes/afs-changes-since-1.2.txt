@@ -1,3 +1,23 @@
+Since 1.5.9902 (1.6pre2)
+ * rx calls issued on a busy call channel are now specially
+   handled and logged.  All calls are automatically retried.
+
+ * The vos support for multi-homed servers was incorrectly
+   implemented.  The changes have been reverted.
+
+ * Avoid wasting cm_buf_t objects and associated data buffers
+   for obtaining mountpoint and symlink target strings.  Instead
+   read them directly into the cm_scache_t mountPointTarget
+   buffer.
+
+ * Optimize the evaluation of mountpoint and symlink targets
+   by skipping the FetchStatus and a full round-trip if
+   the cache manager does not have valid status information
+   for the object.
+
+ * Fix the abstraction of cm_FreelanceAddMount() by passing
+   in volume names that do not include the trailing dot.
+
 Since 1.5.78
  [there was no 1.6pre1 for Windows]
 
