@@ -1,0 +1,74 @@
+Setup:
+
+http://support.apple.com/kb/TA20987 explains how to configure loginwindow
+to do Kerberos. After you have done so and it works, you can add this as
+aklog:CELLNAME,privileged
+
+after loginwindow:success and before HomeDirMechanism:login,privileged
+
+e.g.
+change
+<string>loginwindow:success</string>
+<string>HomeDirMechanism:login,privileged</string>
+
+to
+
+<string>loginwindow:success</string>
+<string>aklog:andrew.cmu.edu,privileged</string>
+<string>HomeDirMechanism:login,privileged</string>
+
+in the system.login.console section of /etc/authorization.
+
+The following is from Apple's ROT13 plugin:
+
+Note: The preferred way to modify the /etc/authorization file is to use
+the Authorization APIs in <Security/AuthorizationDB.h>. This is always
+how it should be done in shipping products, as there may have been other
+modifications to the /etc/authorization file. A code snippet to do this
+is:
+
+#include <CoreFoundation/CoreFoundation.h>
+#include <Security/AuthorizationDB.h>
+
+#define LOGIN_RIGHT "system.login.console"
+
+int main(int argc, char *argv[])
+{
+    CFDictionaryRef login_dict;
+    OSStatus status;
+    AuthorizationRef authRef;
+
+    status = AuthorizationCreate(NULL, NULL, 0, &authRef);
+    if (status) exit(1);
+
+    status = AuthorizationRightGet(LOGIN_RIGHT, &login_dict);
+    if (status) exit(1);
+
+    CFArrayRef arrayRef;
+    if (!CFDictionaryGetValueIfPresent(login_dict, CFSTR("mechanisms"),
+    	&arrayRef))
+        exit(1);
+
+    CFMutableArrayRef newMechanisms = CFArrayCreateMutableCopy(NULL, 0,
+    	arrayRef);
+    if (!newMechanisms)
+        exit(1);
+
+    CFIndex index = CFArrayGetFirstIndexOfValue(newMechanisms,
+    	CFRangeMake(0, CFArrayGetCount(newMechanisms)), CFSTR("authinternal"));
+
+    if (index == -1)
+        exit(1);
+
+    CFArraySetValueAtIndex(newMechanisms, index, CFSTR("newmech"));
+
+    CFMutableDictionaryRef new_login_dict 
+    	= CFDictionaryCreateMutableCopy(NULL, 0, login_dict);
+
+    CFDictionarySetValue(new_login_dict, CFSTR("mechanisms"), newMechanisms);
+
+    status = AuthorizationRightSet(authRef, LOGIN_RIGHT, new_login_dict,
+    	NULL, NULL, NULL);
+
+    if (status) exit(1);
+}

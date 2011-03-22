@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use File::Basename;
+use Test::More tests=>2;
+
+my $builddir = $ENV{BUILD};
+if (!$builddir) {
+  $builddir = dirname($0)."/..";
+}
+
+$builddir.="/..";
+
+my $prdbfile = "/tmp/prdbtest.$$";
+
+my $instructions = <<EOF;
+admin 128/20 1 -204 -204
+system:administrators 130/20 -204 -204 -204
+ admin 1
+EOF
+
+my $expected = <<EOF;
+admin      128/20 1 -204 -204
+anonymous  128/20 32766 -204 -204
+system:backup 2/0 -205 -204 -204
+system:administrators 130/20 -204 -204 -204
+   admin    1
+system:ptsviewers 2/0 -203 -204 -204
+system:authuser 2/0 -102 -204 -204
+system:anyuser 2/0 -101 -204 -204
+EOF
+
+my $fh;
+
+open $fh, '|-', "$builddir/src/ptserver/pt_util", '-w', '-p', $prdbfile
+   or die "Failed to start pt_util for DB creation\n";
+print $fh $instructions;
+close($fh)
+   or die "pt util failed while creating DB\n";
+
+open $fh, '-|', "$builddir/src/ptserver/pt_util", '-p', $prdbfile,
+				     '-user', '-group', '-members'
+    or die "Failed to start pt_util for DB reading\n";
+
+my $output = join('', readline($fh));
+close($fh)
+    or die "pt_util failed while reading from DB\n";
+is($output, $expected, "pt_util produced expected output");
+ok(1, "Completed sucessfully");
+
+unlink($prdbfile);

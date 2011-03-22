@@ -31,7 +31,6 @@
 #include <afs/vlserver.h>
 #include <afs/nfs.h>
 #include <afs/afsint.h>
-#include <ubik.h>
 #include "volint.h"
 #include "volser.h"
 #include "lockdata.h"
@@ -39,46 +38,23 @@
 #include "vsutils_prototypes.h"
 #include "lockprocs_prototypes.h"
 
-struct ubik_client *cstruct;
-
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.
  * If type is zero, will match first index of ANY type (RW, BK, or RO).
  * If server is zero, will match first index of ANY server and partition
  * Zero is a valid partition field.
  */
-static int
-FindIndex(struct uvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32 type)
+int
+FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32 type)
 {
     int e;
     afs_int32 error = 0;
-    afsUUID m_uuid;
-    int uuid_valid = 0;
-
-    if (server && !afs_uuid_is_nil(&entry->serverNumber[0])) {
-        afs_int32 vcode, m_uniq=0;
-        bulkaddrs m_addrs;
-        ListAddrByAttributes m_attrs;
-        afs_int32 m_nentries;
-
-        m_attrs.Mask = VLADDR_IPADDR;
-        m_attrs.ipaddr = htonl(server);
-        m_nentries = 0;
-        m_addrs.bulkaddrs_val = 0;
-        m_addrs.bulkaddrs_len = 0;
-        vcode =
-            ubik_VL_GetAddrsU( cstruct, 0, &m_attrs,
-                               &m_uuid,
-                               &m_uniq, &m_nentries,
-                               &m_addrs);
-        uuid_valid = (vcode == 0);
-    }
 
     for (e = 0; (e < entry->nServers) && !error; e++) {
 	if (!type || (entry->serverFlags[e] & type)) {
 	    if ((!server || (entry->serverPartition[e] == part))
 		&& (!server
-                    || (uuid_valid && afs_uuid_equal(&m_uuid, &entry->serverNumber[e]))
-		    || VLDB_IsSameAddrs(entry->serverUnique[e], server,	&error)))
+		    || VLDB_IsSameAddrs(entry->serverNumber[e], server,
+					&error)))
 		break;
 	    if (type == ITSRWVOL)
 		return -1;	/* quit when we are looking for RW entry (there's only 1) */
@@ -88,7 +64,7 @@ FindIndex(struct uvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32
     if (error) {
 	fprintf(STDERR,
 		"Failed to get info about server's %d address(es) from vlserver (err=%d)\n",
-		entry->serverUnique[e], error);
+		entry->serverNumber[e], error);
 	return -1;
     }
 
@@ -99,8 +75,8 @@ FindIndex(struct uvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32
 }
 
 /* Changes the rw site only */
-static void
-SetAValue(struct uvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
+void
+SetAValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
           afs_uint32 nserver, afs_int32 npart, afs_int32 type)
 {
     int e;
@@ -109,13 +85,13 @@ SetAValue(struct uvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
     if (e == -1)
 	return;			/* If didn't find it, just return */
 
-    entry->serverUnique[e] = nserver;
+    entry->serverNumber[e] = nserver;
     entry->serverPartition[e] = npart;
 
     /* Now move rest of entries up */
     if ((nserver == 0L) && (npart == 0L)) {
 	for (e++; e < entry->nServers; e++) {
-	    entry->serverUnique[e - 1] = entry->serverUnique[e];
+	    entry->serverNumber[e - 1] = entry->serverNumber[e];
 	    entry->serverPartition[e - 1] = entry->serverPartition[e];
 	    entry->serverFlags[e - 1] = entry->serverFlags[e];
 	}
@@ -124,18 +100,7 @@ SetAValue(struct uvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
 
 /* Changes the RW site only */
 void
-Lp_SetRWValue(struct nvldbentry *entryp, afs_uint32 oserver, afs_int32 opart,
-              afs_uint32 nserver, afs_int32 npart)
-{
-    struct uvldbentry uentry;
-
-    nvlentry_to_uvlentry(entryp, &uentry);
-    SetAValue(&uentry, oserver, opart, nserver, npart, ITSRWVOL);
-    uvlentry_to_nvlentry(&uentry, entryp);
-}
-
-void
-Lp_SetRWValueU(struct uvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
+Lp_SetRWValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
               afs_uint32 nserver, afs_int32 npart)
 {
     SetAValue(entry, oserver, opart, nserver, npart, ITSRWVOL);
@@ -143,18 +108,7 @@ Lp_SetRWValueU(struct uvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
 
 /* Changes the RO site only */
 void
-Lp_SetROValue(struct nvldbentry *entryp, afs_uint32 oserver,
-              afs_int32 opart, afs_uint32 nserver, afs_int32 npart)
-{
-    struct uvldbentry uentry;
-
-    nvlentry_to_uvlentry(entryp, &uentry);
-    SetAValue(&uentry, oserver, opart, nserver, npart, ITSROVOL);
-    uvlentry_to_nvlentry(&uentry, entryp);
-}
-
-void
-Lp_SetROValueU(struct uvldbentry *entry, afs_uint32 oserver,
+Lp_SetROValue(struct nvldbentry *entry, afs_uint32 oserver,
               afs_int32 opart, afs_uint32 nserver, afs_int32 npart)
 {
     SetAValue(entry, oserver, opart, nserver, npart, ITSROVOL);
@@ -163,20 +117,7 @@ Lp_SetROValueU(struct uvldbentry *entry, afs_uint32 oserver,
 /* Returns success if this server and partition matches the RW entry */
 int
 Lp_Match(afs_uint32 server, afs_int32 part,
-         struct nvldbentry *entryp)
-{
-    struct uvldbentry uentry;
-
-    nvlentry_to_uvlentry(entryp, &uentry);
-    if (FindIndex(&uentry, server, part, ITSRWVOL) == -1)
-	return 0;
-    uvlentry_to_nvlentry(&uentry, entryp);
-    return 1;
-}
-
-int
-Lp_MatchU(afs_uint32 server, afs_int32 part,
-         struct uvldbentry *entry)
+         struct nvldbentry *entry)
 {
     if (FindIndex(entry, server, part, ITSRWVOL) == -1)
 	return 0;
@@ -185,40 +126,14 @@ Lp_MatchU(afs_uint32 server, afs_int32 part,
 
 /* Return the index of the RO entry (plus 1) if it exists, else return 0 */
 int
-Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entryp)
-{
-    struct uvldbentry uentry;
-    int idx;
-
-    nvlentry_to_uvlentry(entryp, &uentry);
-    idx = (FindIndex(&uentry, server, part, ITSROVOL) + 1);
-    if (idx)
-        uvlentry_to_nvlentry(&uentry, entryp);
-    return idx;
-}
-
-int
-Lp_ROMatchU(afs_uint32 server, afs_int32 part, struct uvldbentry *entry)
+Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry)
 {
     return (FindIndex(entry, server, part, ITSROVOL) + 1);
 }
 
 /* Return the index of the RW entry if it exists, else return -1 */
 int
-Lp_GetRwIndex(struct nvldbentry *entryp)
-{
-    struct uvldbentry uentry;
-    int idx;
-
-    nvlentry_to_uvlentry(entryp, &uentry);
-    idx = (FindIndex(&uentry, 0, 0, ITSRWVOL));
-    if (idx > -1)
-        uvlentry_to_nvlentry(&uentry, entryp);
-    return idx;
-}
-
-int
-Lp_GetRwIndexU(struct uvldbentry *entry)
+Lp_GetRwIndex(struct nvldbentry *entry)
 {
     return (FindIndex(entry, 0, 0, ITSRWVOL));
 }

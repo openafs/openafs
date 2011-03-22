@@ -258,6 +258,10 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 		    cellHandle->vos_new = 0;
 		}
 	    } else {
+		if (*entriesp < 0)
+		    *entriesp = 0;
+		if (*entriesp > blkentriesp->nbulkentries_len)
+		    *entriesp = blkentriesp->nbulkentries_len;
 		rc = 1;
 	    }
 	} else {
@@ -266,6 +270,12 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 		ubik_VL_ListAttributes(cellHandle->vos, 0, attrp,
 			  entriesp, &arrayEntries);
 	    if (tst == 0) {
+
+		if (*entriesp < 0)
+		    *entriesp = 0;
+		if (*entriesp > arrayEntries.bulkentries_len)
+		    *entriesp = arrayEntries.bulkentries_len;
+
 		blkentriesp->nbulkentries_val =
 		    (nvldbentry *) malloc(*entriesp * sizeof(*blkentriesp));
 		if (blkentriesp->nbulkentries_val != NULL) {
@@ -281,6 +291,7 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 		if (arrayEntries.bulkentries_val) {
 		    free(arrayEntries.bulkentries_val);
 		}
+
 		rc = 1;
 	    }
 	}

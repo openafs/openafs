@@ -491,6 +491,8 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 #define OS_OPEN(F, M, P) open(F, M, P)
 #define OS_CLOSE(FD) close(FD)
 
+#define OS_READ(FD, B, S) read(FD, B, S)
+#define OS_WRITE(FD, B, S) write(FD, B, S)
 #ifdef O_LARGEFILE
 #define OS_SEEK(FD, O, F) lseek64(FD, (off64_t) (O), F)
 #define OS_TRUNC(FD, L) ftruncate64(FD, (off64_t) (L))
@@ -526,8 +528,13 @@ extern afs_sfsize_t ih_size(FD_t);
 #endif
 
 #ifdef HAVE_PIOV
+#ifdef O_LARGEFILE
+#define FDH_PREADV(H, I, N, O) preadv64((H)->fd_fd, I, N, O)
+#define FDH_PWRITEV(H, I, N, O) pwritev64((H)->fd_fd, I, N, O)
+#else /* !O_LARGEFILE */
 #define FDH_PREADV(H, I, N, O) preadv((H)->fd_fd, I, N, O)
 #define FDH_PWRITEV(H, I, N, O) pwritev((H)->fd_fd, I, N, O)
+#endif /* !O_LARGEFILE */
 #endif
 
 #define FDH_PREAD(H, B, S, O) OS_PREAD((H)->fd_fd, B, S, O)

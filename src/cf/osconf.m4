@@ -45,7 +45,6 @@ case $AFS_SYSNAME in
 		DBG="-g3"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
-		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
 		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
 		;;
@@ -59,7 +58,6 @@ case $AFS_SYSNAME in
 		CSTATIC="-non_shared"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
-		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
 		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
 		;;
@@ -73,7 +71,6 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
-		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
 		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
 		;;
@@ -86,7 +83,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -100,7 +96,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -114,7 +109,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -128,7 +122,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -142,7 +135,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -166,7 +158,6 @@ case $AFS_SYSNAME in
 		RM="/bin/rm"
 		SHLIB_LDFLAGS="-b -Bsymbolic"
 		SHLIB_SUFFIX="sl"
-		TXLIBS="/usr/lib/libHcurses.a"
 		VFSCK_CFLAGS="-D_FILE64"
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
 		XCFLAGS64="${XCFLAGS0} +DA2.0W"
@@ -195,7 +186,6 @@ case $AFS_SYSNAME in
 		RM="/bin/rm"
 		SHLIB_LDFLAGS="-b -Bsymbolic"
 		SHLIB_SUFFIX="sl"
-		TXLIBS="/usr/lib/libHcurses.a"
 		VFSCK_CFLAGS="-I/usr/old/usr/include -D_FILE64"
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
 		XCFLAGS64="${XCFLAGS0} +DA2.0W"
@@ -226,7 +216,6 @@ case $AFS_SYSNAME in
 		RM="/bin/rm"
 		SHLIB_LDFLAGS="-b -Bsymbolic"
 		SHLIB_SUFFIX="sl"
-		TXLIBS="/usr/lib/hpux32/libcurses.so"
 		VFSCK_CFLAGS="-I/usr/old/usr/include -D_FILE64"
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive_shared -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
 		XCFLAGS64="${XCFLAGS0} +DD64"
@@ -244,7 +233,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
-		TXLIBS="-lncurses"
 		XCFLAGS="-pipe"
 		;;
 
@@ -255,7 +243,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
-		TXLIBS="-lncurses"
 		XCFLAGS="-pipe"
 		;;
 
@@ -265,7 +252,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
-		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -pipe -fPIC"
 		;;
 
@@ -277,7 +263,6 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
-		TXLIBS="-lcurses"
 		XCFLAGS="-pipe"
 		;;
 
@@ -288,7 +273,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
-		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-pipe"
 		;;
 
@@ -300,7 +284,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE -G0"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -314,7 +297,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -327,7 +309,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_CFLAGS="-fPIC"
-		TXLIBS="/usr/lib64/libncurses.so"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -340,7 +321,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_CFLAGS="-fPIC"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE -fPIC"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -353,7 +333,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -370,7 +349,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -388,7 +366,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -406,7 +383,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -422,7 +398,6 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-fpic"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${MT_CC} -shared"
-		TXLIBS="/usr/lib/libcurses.a"
 		XCFLAGS=
 		;;
 
@@ -434,7 +409,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -450,7 +424,6 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-no-cpp-precomp"
-		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
@@ -469,7 +442,6 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-Os"
 		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
-		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
@@ -487,7 +459,6 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-Os"
 		OPTMZ="-Os"
 		REGEX_OBJ="regex.o"
-		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
@@ -495,8 +466,8 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
-	*_darwin_100)
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
+	arm_darwin_100)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
 		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
 		KROOT=
@@ -515,6 +486,25 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
+	*_darwin_100)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
+		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
+		KROOT=
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LD="cc"
+		KERN_OPTMZ="-Os"
+		LWP_OPTMZ="-Os"
+		OPTMZ="-Os"
+		PAM_LIBS="-lpam"
+		REGEX_OBJ="regex.o"
+		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
+		RANLIB="ranlib"
+		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
+		;;
+
 	ppc_linux*)
 		KERN_OPTMZ=-O2
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -523,7 +513,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -537,7 +526,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
-		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
@@ -555,7 +543,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
-		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
@@ -572,7 +559,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
-		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
@@ -589,7 +575,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
-		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
@@ -606,7 +591,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthreads"
 		SHLIB_SUFFIX="o"
-		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
@@ -624,7 +608,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		OPTMZ=-O
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
@@ -640,7 +623,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
@@ -656,7 +638,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
-		TXLIBS="-lncurses"
 		OPTMZ=-O
 		XCFLAGS="-D_LARGEFILE64_SOURCE -D__s390x__"
 		SHLIB_LINKER="${MT_CC} -shared"
@@ -670,7 +651,6 @@ case $AFS_SYSNAME in
 		FSINCLUDES="-I/usr/include/sys/fs"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		TXLIBS="-lcurses"
 		XCFLAGS64="-64 -mips3"
 		XCFLAGS="-o32"
 		XLDFLAGS64="-64"
@@ -686,7 +666,6 @@ case $AFS_SYSNAME in
 		FSINCLUDES="-I/usr/include/sys/fs"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		TXLIBS="-lcurses"
 		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
 		XCFLAGS="-D_OLD_TERMIOS -D_BSD_COMPAT -o32"
 		XLDFLAGS64="-64"
@@ -702,9 +681,8 @@ case $AFS_SYSNAME in
 		FSINCLUDES="-I/usr/include/sys/fs"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		TXLIBS="-lcurses"
 		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
-		XCFLAGS="-D_OLD_TERMIOS -D_BSD_COMPAT -n32 -woff 1009,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552"
+		XCFLAGS="-D_OLD_TERMIOS -D_BSD_COMPAT -n32 -woff 1009,1014,1110,1116,1164,1169,1171,1174,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552,3201 -Wl,-woff,84,-woff,15"
 		XLDFLAGS64="-64"
 		XLDFLAGS="-n32"
 		SHLIB_LINKER="${CC} -shared"
@@ -719,9 +697,8 @@ case $AFS_SYSNAME in
 		MT_CC="/usr/bin/cc"
 		MT_CFLAGS='-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		TXLIBS="-lcurses"
 		XCFLAGS64="-64 -mips3"
-		XCFLAGS="-n32 -mips3 -woff 1009,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552"
+		XCFLAGS="-n32 -mips3 -woff 1009,1014,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552,3201 -Wl,-woff,84,-woff,15"
 		XLDFLAGS64="-64 -mips3"
 		XLDFLAGS="-n32 -mips3"
 		SHLIB_LINKER="${CC} -shared"
@@ -735,7 +712,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		XCFLAGS64="-D_LARGEFILE64_SOURCE -m64"
 		XLDFLAGS64="-m64"
@@ -747,7 +723,6 @@ case $AFS_SYSNAME in
 		CC="gcc"
 		CCOBJ="gcc"
 		SHLIB_CFLAGS="-PIC"
-		TXLIBS="-lcurses -ltermcap"
 		XCFLAGS=""
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -762,7 +737,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		SHLIB_CFLAGS="-KPIC"
-		TXLIBS="-lcurses"
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -782,7 +756,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-L/usr/ccs/lib -lcurses"
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		LD="/usr/ccs/bin/ld"
@@ -803,7 +776,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=v9'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -824,7 +796,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=v9'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -845,7 +816,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=v9'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -866,7 +836,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -887,7 +856,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=v9'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -908,7 +876,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -928,7 +895,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -948,7 +914,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -968,7 +933,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -988,7 +952,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		TXLIBS="-lcurses"
 		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
@@ -1117,7 +1080,6 @@ AC_SUBST(SHLIB_CFLAGS)
 AC_SUBST(SHLIB_LDFLAGS)
 AC_SUBST(SHLIB_LINKER)
 AC_SUBST(SHLIB_SUFFIX)
-AC_SUBST(TXLIBS)
 AC_SUBST(VFSCK_CFLAGS)
 AC_SUBST(XCFLAGS)
 AC_SUBST(CFLAGS_NOERROR)

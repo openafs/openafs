@@ -429,11 +429,9 @@ afsd_event_cleanup(int signo) {
 
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
     CFRelease (source);
-#ifndef AFS_ARM_DARWIN_ENV
     IODeregisterForSystemPower(&iterator);
     IOServiceClose(root_port);
     IONotificationPortDestroy(notify);
-#endif
     exit(0);
 }
 
@@ -444,7 +442,6 @@ afsd_install_events(void)
     SCDynamicStoreContext ctx = {0};
     SCDynamicStoreRef store;
 
-#ifndef AFS_ARM_DARWIN_ENV
     root_port = IORegisterForSystemPower(0,&notify,afsd_sleep_callback,&iterator);
 
     if (root_port) {
@@ -491,7 +488,6 @@ afsd_install_events(void)
 
 	CFRelease (store);
     }
-#endif
 
     if (source != NULL) {
 	CFRunLoopAddSource (CFRunLoopGetCurrent(),
@@ -1462,7 +1458,7 @@ AfsdbLookupHandler(void)
     kernelMsg[1] = 0;
     acellName[0] = '\0';
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
     /* Fork the event handler also. */
     code = fork();
     if (code == 0) {
@@ -1923,7 +1919,6 @@ afsd_run(void)
 {
     static char rn[] = "afsd";	/*Name of this routine */
     struct afsconf_dir *cdir;	/* config dir */
-    struct stat statbuf;
     int lookupResult;		/*Result of GetLocalCellName() */
     int i;
     afs_int32 code;		/*Result of fork() */
@@ -1958,14 +1953,8 @@ afsd_run(void)
     }
 
     if (!enable_nomount) {
-	if (stat(afsd_cacheMountDir, &statbuf)) {
-	    printf("afsd: Mountpoint %s missing.\n", afsd_cacheMountDir);
-	    exit(1);
-	} else {
-	    if (!S_ISDIR(statbuf.st_mode)) {
-		printf("afsd: Mountpoint %s is not a directory.\n", afsd_cacheMountDir);
-		exit(1);
-	    }
+	if (afsd_check_mount(rn, afsd_cacheMountDir)) {
+	    return -1;
 	}
     }
 

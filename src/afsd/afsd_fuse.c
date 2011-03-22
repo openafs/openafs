@@ -91,6 +91,9 @@ static void *
 fuafsd_init(struct fuse_conn_info *conn)
 {
     uafs_Run();
+
+    uafs_setMountDir("/afs");
+
     return NULL;
 }
 

@@ -335,8 +335,10 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
 #ifdef HAVE_KRB5_SVC_GET_MSG
 	    krb5_svc_get_msg(code,&str);
-#else
+#elif defined(HAVE_ERROR_MESSAGE)
 	    str = error_message(code);
+#else
+	    ; /* IRIX apparently has neither: use the string we have */
 #endif
 	}
 	fputs(str, stderr);
@@ -617,6 +619,11 @@ rxkad_get_ticket(krb5_context context, char *realm,
 	fprintf(stderr, "%s: Couldn't get %s AFS tickets:\n",
 		progname, cell->name);
 	afs_com_err(progname, status, "while getting AFS tickets");
+#ifdef KRB5_CC_NOT_KTYPE
+	if (status == KRB5_CC_NOT_KTYPE) {
+	    fprintf(stderr, "allow_weak_enctypes may be required in the Kerberos configuration\n");
+	}
+#endif
 	status = AKLOG_KERBEROS;
 	goto out;
     }
@@ -1518,12 +1525,12 @@ main(int argc, char *argv[])
      * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
      * Heimdal.
      */
-#if defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
-    krb5_allow_weak_crypto(context, 1);
-#elif defined(HAVE_KRB5_ENCTYPE_ENABLE)
+#if defined(HAVE_KRB5_ENCTYPE_ENABLE)
     i = krb5_enctype_valid(context, ETYPE_DES_CBC_CRC);
     if (i)
         krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
+#elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+    krb5_allow_weak_crypto(context, 1);
 #endif
 
     /* Initialize list of cells to which we have authenticated */
@@ -1980,8 +1987,8 @@ get_credv5_akimpersonate(krb5_context context,
 
         if(buf_len != buf_size) {
             afs_com_err(progname, code,
-		    "%d != %d while encoding ticket (internal ASN.1 encoder error",
-		    buf_len, buf_size);
+		    "%u != %u while encoding ticket (internal ASN.1 encoder error",
+		    (unsigned int)buf_len, (unsigned int)buf_size);
             goto cleanup;
         }
         what = "krb5_crypto_init";

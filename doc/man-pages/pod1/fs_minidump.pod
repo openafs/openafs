@@ -29,6 +29,8 @@ Service process.
 The "MiniDumpType" registry value can be used to adjust the scope of the
 process information included within the dump file.
 
+In a standard install the default location for the dump file is %windir%\temp.
+
 =head1 CAUTIONS
 
 This command is only available in OpenAFS for Windows version 1.4 and later.

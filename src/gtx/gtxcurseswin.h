@@ -11,13 +11,15 @@
 #define	__gator_curseswindows_h  1
 
 #include "gtxwindows.h"		/*Base gator window dfns */
+
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
-#define __HP_CURSES
+# define __HP_CURSES
 #endif
-#ifdef AFS_LINUX20_ENV
-#include <ncurses.h>		/*Curses library */
-#else
-#include <curses.h>		/*Curses library */
+
+#if defined(HAVE_NCURSES_H)
+# include <ncurses.h>
+#elif defined(HAVE_CURSES_H)
+# include <curses.h>
 #endif
 
 /*Value for gwin w_type field*/

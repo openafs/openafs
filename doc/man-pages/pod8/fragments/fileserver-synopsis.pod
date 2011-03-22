@@ -1,3 +1,4 @@
+B<fileserver>
     S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-d> <I<debug level>>] >>>

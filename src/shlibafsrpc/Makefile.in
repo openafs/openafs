@@ -1,7 +1,7 @@
 # API version. When something changes, increment as appropriate. 
 # Ignore at your own risk.
 LIBAFSRPCMAJOR=1
-LIBAFSRPCMINOR=2
+LIBAFSRPCMINOR=5
 
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
@@ -390,6 +390,9 @@ syscall.o: ${SYS}/syscall.s
 		$(PATH_CPP)  ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
+	 arm_darwin_* ) \
+		touch syscall.c ; \
+	        ${CC} ${AFS_CFLAGS} -c syscall.c;; \
 	 sgi_* | *_darwin_* ) \
                 ${CC} ${CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \

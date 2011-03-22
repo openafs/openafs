@@ -5,16 +5,19 @@ AC_CONFIG_SRCDIR(src/libafs/Makefile.common.in)
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.0fc2
+MACOS_VERSION=1.6.0fc3
 LINUX_PKGVER=1.6.0
-LINUX_PKGREL=0.pre2
+LINUX_PKGREL=0.pre3
 #LINUX_PKGREL=1.1
 
 AC_SUBST(MACOS_VERSION)
 AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
+dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
+AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
 AC_PROG_CC
+
 OPENAFS_CONFIGURE_COMMON
 
 AC_OUTPUT(             \

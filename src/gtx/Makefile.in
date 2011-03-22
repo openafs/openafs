@@ -42,7 +42,7 @@ LIBS=\
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a
 
-EXTRA_LIBS=${TXLIBS} ${XLIBS}
+EXTRA_LIBS=${LIB_curses} ${XLIBS}
 
 KEYMAP_SRCS=keymap.c input.c frame.c
 

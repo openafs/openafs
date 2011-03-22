@@ -813,7 +813,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 			             [struct timespec s;
 				      s = current_kernel_time();])
 		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
-				     [#include <linux/dcache.h>],
+				     [#include <linux/fs.h>],
 				     [d_alloc_anon(NULL);])
 		 AC_CHECK_LINUX_FUNC([do_sync_read],
 				     [#include <linux/fs.h>],
@@ -1212,6 +1212,7 @@ AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h sys/resource.h)
 AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 AC_CHECK_HEADERS(et/com_err.h)
+AC_CHECK_HEADERS(ncurses.h curses.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
@@ -1225,6 +1226,17 @@ AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/statvfs.h>
 #endif
 ])
+
+dnl check for curses-lib
+save_LIBS=$LIBS
+AC_CHECK_LIB( [ncurses], [setupterm],
+[LIB_curses=-lncurses],
+    [AC_CHECK_LIB([Hcurses], [setupterm], [LIB_curses=-lHcurses],
+        [AC_CHECK_LIB([curses], [setupterm], [LIB_curses=-lcurses])
+    ])
+])
+LIBS=$save_LIBS
+AC_SUBST(LIB_curses)
 
 OPENAFS_TEST_PACKAGE(libintl,[#include <libintl.h>],[-lintl],,,INTL)
 
@@ -1254,24 +1266,31 @@ AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
-AC_CHECK_FUNCS(fseeko64 ftello64 pread preadv pwrite pwritev)
+AC_CHECK_FUNCS(fseeko64 ftello64 pread preadv pwrite pwritev preadv64 pwritev64)
 
-AC_MSG_CHECKING([for positional I/O])
-if test "$ac_cv_func_pread" = "yes" && \
-        test "$ac_cv_func_pwrite" = "yes"; then
-   AC_DEFINE(HAVE_PIO, 1, [define if you have pread() and pwrite()])
-   AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING([for vectored positional I/O])
-if test "$ac_cv_func_preadv" = "yes" && \
-        test "$ac_cv_func_pwritev" = "yes"; then
-   AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
-   AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
+case $AFS_SYSNAME in
+*hp_ux* | *hpux*)
+   AC_MSG_WARN([Some versions of HP-UX have a buggy positional I/O implementation. Forcing no positional I/O.])
+   ;;
+*)
+   AC_MSG_CHECKING([for positional I/O])
+   if test "$ac_cv_func_pread" = "yes" && \
+           test "$ac_cv_func_pwrite" = "yes"; then
+      AC_DEFINE(HAVE_PIO, 1, [define if you have pread() and pwrite()])
+      AC_MSG_RESULT(yes)
+   else
+     AC_MSG_RESULT(no)
+   fi
+   AC_MSG_CHECKING([for vectored positional I/O])
+   AS_IF([test "$ac_cv_func_preadv" = "yes" -a \
+               "$ac_cv_func_pwritev" = "yes" -a \
+	       "$ac_cv_func_preadv64" = "yes" -a \
+	       "$ac_cv_func_pwritev64" = "yes"],
+	 [AC_DEFINE(HAVE_PIOV, 1, [define if you have preadv() and pwritev()])
+  	  AC_MSG_RESULT(yes)],
+	 [AC_MSG_RESULT(no)])
+   ;;
+esac
 
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \
@@ -1433,4 +1452,18 @@ struct labeltest struct_labeltest = {
 [AC_MSG_RESULT(no)
 ])
 
+])
+
+AC_DEFUN([SUMMARY], [
+    # Print a configuration summary
+echo 
+echo "**************************************"
+echo configure summary
+echo
+AS_IF([test $LIB_curses],[
+echo "LIB_curses :                $LIB_curses" ],[
+echo "XXX LIB_curses  not found! not building scout and afsmonitor!"
+])
+echo 
+echo "**************************************"
 ])

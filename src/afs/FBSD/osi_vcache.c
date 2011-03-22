@@ -24,7 +24,7 @@
 #endif
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 
     /*
      * essentially all we want to do here is check that the
