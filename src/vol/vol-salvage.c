@@ -318,6 +318,7 @@ char *tmpdir = NULL;
 static int IsVnodeOrphaned(struct SalvInfo *salvinfo, VnodeId vnode);
 static int AskVolumeSummary(struct SalvInfo *salvinfo,
                             VolumeId singleVolumeNumber);
+static void MaybeAskOnline(struct SalvInfo *salvinfo, VolumeId volumeId);
 
 #if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 static int LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId);
@@ -869,6 +870,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
     if (GetInodeSummary(salvinfo, inodeFile, singleVolumeNumber) < 0) {
 	fclose(inodeFile);
+	if (singleVolumeNumber) {
+	    /* the volume group -- let alone the volume -- does not exist,
+	     * but we checked it out, so give it back to the fileserver */
+	    AskDelete(salvinfo, singleVolumeNumber);
+	}
 	return;
     }
     salvinfo->inodeFd = fileno(inodeFile);
@@ -877,6 +883,14 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     afs_lseek(salvinfo->inodeFd, 0L, SEEK_SET);
     if (ListInodeOption) {
 	PrintInodeList(salvinfo);
+	if (singleVolumeNumber) {
+	    /* We've checked out the volume from the fileserver, and we need
+	     * to give it back. We don't know if the volume exists or not,
+	     * so we don't know whether to AskOnline or not. Try to determine
+	     * if the volume exists by trying to read the volume header, and
+	     * AskOnline if it is readable. */
+	    MaybeAskOnline(salvinfo, singleVolumeNumber);
+	}
 	return;
     }
     /* enumerate volumes in the partition.
@@ -4459,6 +4473,19 @@ AskDAFS(void)
 
     isDAFS = ret;
     return ret;
+}
+
+static void
+MaybeAskOnline(struct SalvInfo *salvinfo, VolumeId volumeId)
+{
+    struct VolumeDiskHeader diskHdr;
+    int code;
+    code = VReadVolumeDiskHeader(volumeId, salvinfo->fileSysPartition, &diskHdr);
+    if (code) {
+	/* volume probably does not exist; no need to bring back online */
+	return;
+    }
+    AskOnline(salvinfo, volumeId);
 }
 
 void
