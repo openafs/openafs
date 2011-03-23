@@ -931,6 +931,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	 */
 	switch (type) {
 	case salvageServer:
+	case volumeSalvager:
 	    /* it is possible for the salvageserver to checkout a
 	     * volume for salvage before its scheduling request
 	     * has been sent to the salvageserver */
