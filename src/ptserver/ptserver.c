@@ -206,6 +206,8 @@ main(int argc, char **argv)
     afs_uint32 host = htonl(INADDR_ANY);
 
     const char *pr_dbaseName;
+    const char *configDir;
+    const char *logFile;
     char *whoami = "ptserver";
 
     int a;
@@ -242,6 +244,8 @@ main(int argc, char **argv)
     }
 
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
+    configDir = AFSDIR_SERVER_ETC_DIRPATH;
+    logFile = AFSDIR_SERVER_PTLOG_FILEPATH;
 
 #if defined(SUPERGROUPS)
     /* make sure the structures for database records are the same size */
@@ -337,12 +341,26 @@ main(int argc, char **argv)
 			RX_MAX_PACKET_DATA_SIZE);
 		PT_EXIT(1);
 	    }
+	} else if (!strncmp(arg, "-config", alen)) {
+	    if ((a + 1) > argc) {
+		fprintf(stderr, "missing argument for -config\n");
+		PT_EXIT(1);
+	    }
+	    configDir = argv[++a];
+	} else if (!strncmp(arg, "-logfile", alen)) {
+	    if ((a + 1) > argc) {
+		fprintf(stderr, "missing argument for -logfile\n");
+		PT_EXIT(1);
+	    }
+	    logFile = argv[++a];
 	}
 	else if (*arg == '-') {
 	    /* hack in help flag support */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] ");
+		   "[-audit-interface <file|sysvmq> (default is file)] "
+		   "[-config <config directory path>] "
+		   "[-logfile <log file path>] ");
 #ifndef AFS_NT40_ENV
 	    printf("[-syslog[=FACILITY]] ");
 #endif
@@ -376,10 +394,10 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
     serverLogSyslogTag = "ptserver";
 #endif
-    OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);	/* set up logging */
+    OpenLog(logFile);	/* set up logging */
     SetupLogSignals();
 
-    prdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    prdir = afsconf_Open(configDir);
     if (!prdir) {
 	fprintf(stderr, "ptserver: can't open configuration directory.\n");
 	PT_EXIT(1);

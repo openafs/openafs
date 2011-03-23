@@ -7,15 +7,19 @@ ptserver - Initializes the Protection Server
 =for html
 <div class="synopsis">
 
-B<ptserver> S<<< [B<-database> | B<-db> <I<db path>>] >>> S<<< [B<-p> <I<number of threads>>] >>> S<<< [B<-d> <I<debug level>>] >>>
-    S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
-    S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
-    [B<-restricted>] [B<-enable_peer_stats>]
-    [B<-enable_process_stats>] [B<-allow-dotted-principals>]
-    [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
-    S<<< [B<-audit-interface> (file | sysvmq)] >>>
-    S<<< [B<-syslog>[=<I<FACILITY>>]] >>> S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
-    [B<-help>]
+ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
+S<<< [B<-p> <I<number of threads>>] >>> S<<< [B<-d> <I<debug level>>] >>>
+S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
+S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
+[B<-restricted>] [B<-enable_peer_stats>]
+[B<-enable_process_stats>] [B<-allow-dotted-principals>]
+[B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
+S<<< [B<-audit-interface> (file | sysvmq)] >>>
+S<<< [B<-syslog>[=<I<FACILITY>>]] >>>
+S<<< [B<-logfile <I<log file>>] >>>
+S<<< [B<-config <I<configuration path>>] >>>
+S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+[B<-help>]
 
 =for html
 </div>
@@ -144,6 +148,21 @@ Specifies that logging output should go to syslog instead of the normal
 log file.  B<-syslog>=I<FACILITY> can be used to specify to which facility
 the log message should be sent.  Logging message sent to syslog are tagged
 with the string "ptserver".
+
+=item B<-logfile> <I<log file>>
+
+Sets the file to use for server logging. If logfile is not specified, and
+no other logging options are supplied, this will be F</usr/afs/logs/PTLog>.
+Note that this option is intended for debugging and testing purposes.
+Changing the location of the log file from the command line may result
+in undesirable interactions with tools such as B<bos>.
+
+=item B<-config> <I<configuration directory>>
+
+Set the location of the configuration directory used to configure this
+service. In a typical configuration this will be F</usr/afs/etc> - this
+option allows the use of alternative configuration locations for testing
+purposes.
 
 =item B<-auditlog> <I<log path>>
 
