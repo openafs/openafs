@@ -1264,6 +1264,10 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		 * possibly by putting the vp back on the VLRU. */
 
 		code = SYNC_OK;
+	    } else if (V_attachState(vp) == VOL_STATE_DELETED) {
+		VDeregisterVolOp_r(vp);
+		res->hdr.reason = FSYNC_UNKNOWN_VOLID;
+
 	    } else {
 		code = SYNC_DENIED;
 		res->hdr.reason = FSYNC_BAD_STATE;
