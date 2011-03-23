@@ -1870,9 +1870,12 @@ _namei_examine_special(char * path1,
 
     if (!judgeFun ||
 	(*judgeFun) (&info, singleVolumeNumber, rock)) {
-	ret = 1;
-        if ((*writeFun) (fp, &info, path1, dname) < 0) {
+	ret = (*writeFun) (fp, &info, path1, dname);
+	if (ret < 0) {
+	    Log("_namei_examine_special: writeFun returned %d\n", ret);
 	    ret = -1;
+	} else {
+	    ret = 1;
 	}
     }
 
@@ -1952,9 +1955,12 @@ _namei_examine_reg(char * path3,
 
     if (!judgeFun ||
 	(*judgeFun) (&info, singleVolumeNumber, rock)) {
-	ret = 1;
-        if ((*writeFun) (fp, &info, path3, dname) < 0) {
+	ret = (*writeFun) (fp, &info, path3, dname);
+	if (ret < 0) {
+	    Log("_namei_examine_reg: writeFun returned %d\n", ret);
 	    ret = -1;
+	} else {
+	    ret = 1;
 	}
     }
 
