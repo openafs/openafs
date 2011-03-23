@@ -298,7 +298,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	    continue;
 
 	if (inodeFile != INVALID_FD) {
-	    if (OS_WRITE(inodeFile, &info, sizeof(info) * 1) != 1) {
+	    if (OS_WRITE(inodeFile, &info, sizeof(info)) != sizeof(info)) {
 		Log("Error writing inode file for partition %s\n", partition);
 		goto out;
 	    }
@@ -745,7 +745,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	    if (inodeFile != INVALID_FD) {
 		if (OS_WRITE
 		    (inodeFile, &info.ili_info, sizeof(vice_inode_info_t))
-		    != 1) {
+		    != sizeof(vice_inode_info_t)) {
 		    Log("Error writing inode file for partition %s\n", mountedOn);
 		    goto err1_exit;
 		}
@@ -964,7 +964,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 	if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 	    continue;
 	if (inodeFile != INVALID_FD) {
-	    if (OS_WRITE(inodeFile, &info, sizeof(info)) != 1) {
+	    if (OS_WRITE(inodeFile, &info, sizeof(info)) != sizeof(info)) {
 		Log("Error writing inode file for partition %s\n", partition);
 		goto out;
 	    }
@@ -1175,7 +1175,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 		    if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
 			continue;
 		    if (inodeFile != INVALID_FD) {
-			if (OS_WRITE(inodeFile, &info, sizeof(info)) != 1) {
+			if (OS_WRITE(inodeFile, &info, sizeof(info)) != sizeof(info)) {
 			    Log("Error writing inode file for partition %s\n",
 				partition);
 			    goto out;

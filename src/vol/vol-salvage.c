@@ -823,7 +823,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	     getpid());
 #endif
 
-    inodeFile = OS_OPEN(inodeListPath, O_RDWR|O_TRUNC, 0666);
+    inodeFile = OS_OPEN(inodeListPath, O_RDWR|O_TRUNC|O_CREAT, 0666);
     if (inodeFile == INVALID_FD) {
 	Abort("Error %d when creating inode description file %s; not salvaged\n", errno, inodeListPath);
     }
@@ -1179,7 +1179,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FD_t inodeFile, VolumeId singleVolume
     (void)afs_snprintf(summaryFileName, sizeof summaryFileName,
 		       "%s" OS_DIRSEP "salvage.temp.%d", tdir, getpid());
 #endif
-    summaryFile = OS_OPEN(summaryFileName, O_RDWR|O_APPEND, 0666);
+    summaryFile = OS_OPEN(summaryFileName, O_RDWR|O_APPEND|O_CREAT, 0666);
     if (summaryFile == INVALID_FD) {
 	Abort("Unable to create inode summary file\n");
     }

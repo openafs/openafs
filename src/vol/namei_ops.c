@@ -1596,7 +1596,7 @@ WriteInodeInfo(FD_t fp, struct ViceInodeInfo *info, char *dir, char *name)
 {
     size_t n;
     n = OS_WRITE(fp, info, sizeof(*info));
-    return (n == 1) ? 0 : -2;
+    return (n == sizeof(*info)) ? 0 : -2;
 }
 
 
@@ -1674,7 +1674,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
     /*
      * Paranoia:  check that the file is really the right size
      */
-    if (OS_SIZE(inodeFile) * sizeof(struct ViceInodeInfo)) {
+    if (OS_SIZE(inodeFile) != ninodes * sizeof(struct ViceInodeInfo)) {
 	Log("Wrong size (%d instead of %lu) in inode file for %s\n",
 	    (int) OS_SIZE(inodeFile),
 	    (long unsigned int) ninodes * sizeof(struct ViceInodeInfo),
