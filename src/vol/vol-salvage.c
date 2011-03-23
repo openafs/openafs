@@ -936,9 +936,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	}
 
 	if (!foundSVN) {
-	    /* singleVolumeNumber generally should always be in the constructed
-	     * volumeSummary, but just in case it's not... */
-	    AskOnline(salvinfo, singleVolumeNumber);
+	    /* If singleVolumeNumber is not in our volumeSummary, it means that
+	     * at least one other volume in the VG is on the partition, but the
+	     * RW volume is not. We've already AskOffline'd it by now, though,
+	     * so make sure we don't still have the volume checked out. */
+	    AskDelete(salvinfo, singleVolumeNumber);
 	}
 
 	for (j = 0; j < salvinfo->nVolumes; j++) {
@@ -4432,10 +4434,12 @@ void
 AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId)
 {
     afs_int32 code, i;
+    SYNC_response res;
 
     for (i = 0; i < 3; i++) {
+	memset(&res, 0, sizeof(res));
 	code = FSYNC_VolOp(volumeId, salvinfo->fileSysPartition->name,
-	                   FSYNC_VOL_DONE, FSYNC_SALVAGE, NULL);
+	                   FSYNC_VOL_DONE, FSYNC_SALVAGE, &res);
 
 	if (code == SYNC_OK) {
 	    break;
@@ -4457,6 +4461,11 @@ AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId)
 		Log("AskOnline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
 #endif
 	    }
+	    break;
+	} else if (code == SYNC_FAILED &&
+	             (res.hdr.reason == FSYNC_UNKNOWN_VOLID ||
+	              res.hdr.reason == FSYNC_WRONG_PART)) {
+	    /* volume is already effectively 'deleted' */
 	    break;
 	} else if (i < 2) {
 	    /* try it again */
