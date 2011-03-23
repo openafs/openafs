@@ -150,7 +150,8 @@ if ($changelog) {
 }
 
 # Build an RPM
-system("rpmbuild -bs --define \"_topdir $tmpdir/rpmdir\" ".
+system("rpmbuild -bs --eval \"%undefine dist\" ".
+       "--define \"_topdir $tmpdir/rpmdir\" ".
        "$tmpdir/rpmdir/SPECS/openafs.spec > /dev/null") == 0
   or die "rpmbuild failed : $!\n";
 
