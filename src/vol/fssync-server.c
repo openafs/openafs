@@ -728,6 +728,10 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vcom->hdr->command == FSYNC_VOL_LEAVE_OFF) {
 	/* nothing much to do if we're leaving the volume offline */
 #ifdef AFS_DEMAND_ATTACH_FS
+	if (vp) {
+	    VCreateReservation_r(vp);
+	    VWaitExclusiveState_r(vp);
+	}
 	if (vp && V_attachState(vp) != VOL_STATE_DELETED) {
 	    if (FSYNC_partMatch(vcom, vp, 1)) {
 		if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
@@ -746,6 +750,11 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    code = SYNC_FAILED;
 	    res->hdr.reason = FSYNC_UNKNOWN_VOLID;
 	}
+
+	if (vp) {
+	    VCancelReservation_r(vp);
+	    vp = NULL;
+	}
 #endif
 	goto done;
     }
@@ -756,7 +765,11 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 				vcom->vop->partName,
 				vcom->vop->volume);
     if (vp) {
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
 	VDeregisterVolOp_r(vp);
+	VCancelReservation_r(vp);
+	vp = NULL;
     }
 #else /* !AFS_DEMAND_ATTACH_FS */
     tvolName[0] = OS_DIRSEPC;
@@ -1060,15 +1073,18 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    }
 
 #ifdef AFS_DEMAND_ATTACH_FS
+	    VCreateReservation_r(vp);
             VOfflineForVolOp_r(&error, vp, "A volume utility is running.");
             if (error==0) {
                 osi_Assert(vp->nUsers==0);
                 vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
             }
             else {
+		VWaitExclusiveState_r(vp);
 		VDeregisterVolOp_r(vp);
                 code = SYNC_DENIED;
             }
+	    VCancelReservation_r(vp);
 #else
 	    VOffline_r(vp, "A volume utility is running.");
 #endif
@@ -1219,6 +1235,9 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     if (vp) {
 	if (FSYNC_partMatch(vcom, vp, 1)) {
 #ifdef AFS_DEMAND_ATTACH_FS
+	    VCreateReservation_r(vp);
+	    VWaitExclusiveState_r(vp);
+
 	    if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 		(V_attachState(vp) == VOL_STATE_PREATTACHED) ||
 		VIsErrorState(V_attachState(vp))) {
@@ -1240,6 +1259,9 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		code = SYNC_DENIED;
 		res->hdr.reason = FSYNC_BAD_STATE;
 	    }
+
+	    VCancelReservation_r(vp);
+	    vp = NULL;
 #else /* AFS_DEMAND_ATTACH_FS */
 	    if (!vp->specialStatus) {
 		vp->specialStatus = VNOVOL;
@@ -1318,6 +1340,9 @@ FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	if (FSYNC_partMatch(vcom, vp, 0)) {
 	    /* null out salvsync control state, as it's no longer relevant */
 	    memset(&vp->salvage, 0, sizeof(vp->salvage));
+
+	    VCreateReservation_r(vp);
+	    VWaitExclusiveState_r(vp);
             VDeregisterVolOp_r(vp);
 
             if (vcom->hdr->reason == FSYNC_SALVAGE) {
@@ -1325,6 +1350,9 @@ FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
             } else {
 	        VChangeState_r(vp, VOL_STATE_ERROR);
             }
+
+	    VCancelReservation_r(vp);
+	    vp = NULL;
 
 	    code = SYNC_OK;
 	} else {
