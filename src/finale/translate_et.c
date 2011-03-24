@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/com_err.h>
 #include <rx/rxkad.h>
@@ -21,10 +22,6 @@
 #include <afs/bnode.h>
 #include <afs/volser.h>
 #include <ubik.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
 
 #define ERRCODE_RANGE 8		/* from error_table.h */
 
