@@ -222,20 +222,14 @@ main(int argc, char **argv)
 #endif
 	} else {
 	    /* support help flag */
+	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
+		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] ");
 #ifndef AFS_NT40_ENV
-	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
-		   "[-syslog[=FACILITY]] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-help]\n");
-#else
-	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-help]\n");
+	    printf("[-syslog[=FACILITY]] ");
 #endif
+	    printf("[-enable_peer_stats] [-enable_process_stats] "
+		   "[-help]\n");
 	    fflush(stdout);
 	    exit(0);
 	}
