@@ -10,44 +10,43 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #ifdef KERNEL
-#if !defined(UKERNEL)
-#include "h/types.h"
-#include "h/param.h"
-#ifdef	AFS_AUX_ENV
-#include "h/mmu.h"
-#include "h/seg.h"
-#include "h/sysmacros.h"
-#include "h/signal.h"
-#include "h/errno.h"
-#endif
-#include "h/time.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV)
-#include "h/errno.h"
-#else
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
-#include "h/kernel.h"
-#endif
-#endif
-#if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DARWIN80_ENV)
-#include "afs/sysincludes.h"
-#endif
-#if !defined(AFS_SGI64_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD48_ENV)
-#include "h/user.h"
-#endif /* AFS_SGI64_ENV */
-#include "h/uio.h"
-#ifdef	AFS_OSF_ENV
-#include <sys/mount.h>
-#include <sys/vnode.h>
-#include <ufs/inode.h>
-#endif
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
-#include "h/mbuf.h"
-#endif
-#ifndef AFS_LINUX20_ENV
-#include "netinet/in.h"
-#endif
+# if !defined(UKERNEL)
+#  include "h/types.h"
+#  include "h/param.h"
+#  ifdef	AFS_AUX_ENV
+#   include "h/mmu.h"
+#   include "h/seg.h"
+#   include "h/sysmacros.h"
+#   include "h/signal.h"
+#   include "h/errno.h"
+#  endif
+#  include "h/time.h"
+#  if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV)
+#   include "h/errno.h"
+#  else
+#   if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
+#    include "h/kernel.h"
+#   endif
+#  endif
+#  if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DARWIN80_ENV)
+#   include "afs/sysincludes.h"
+#  endif
+#  if !defined(AFS_SGI64_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD48_ENV)
+#   include "h/user.h"
+#  endif /* AFS_SGI64_ENV */
+#  include "h/uio.h"
+#  ifdef	AFS_OSF_ENV
+#   include <sys/mount.h>
+#   include <sys/vnode.h>
+#   include <ufs/inode.h>
+#  endif
+#  if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
+#   include "h/mbuf.h"
+#  endif
+#  ifndef AFS_LINUX20_ENV
+#   include "netinet/in.h"
+#  endif
 
 /* afs_buffer.c */
 /* These are needed because afs_prototypes.h is not included here */
@@ -55,53 +54,42 @@ struct dcache;
 extern void *DRead(struct dcache *adc, int page);
 extern void *DNew(struct dcache *adc, int page);
 
-#else /* !defined(UKERNEL) */
-#include "afs/stds.h"
-#include "afs/sysincludes.h"
+# else /* !defined(UKERNEL) */
+#  include "afs/stds.h"
+#  include "afs/sysincludes.h"
 
 /* afs_buffer.c */
 /* These are needed because afs_prototypes.h is not included here */
 extern void *DRead(afs_int32 *fid, int page);
 extern void *DNew(afs_int32 *fid, int page);
 
-#endif /* !defined(UKERNEL) */
-#include "afs/afs_osi.h"
+# endif /* !defined(UKERNEL) */
+# include "afs/afs_osi.h"
 
-#include "afs/dir.h"
+# include "afs/dir.h"
 
-#ifdef AFS_LINUX20_ENV
-#include "h/string.h"
-#endif
+# ifdef AFS_LINUX20_ENV
+#  include "h/string.h"
+# endif
 
 /* generic renaming */
-#define	NameBlobs	afs_dir_NameBlobs
-#define	GetBlob		afs_dir_GetBlob
-#define	Create		afs_dir_Create
-#define	Length		afs_dir_Length
-#define	Delete		afs_dir_Delete
-#define	MakeDir		afs_dir_MakeDir
-#define	Lookup		afs_dir_Lookup
-#define	LookupOffset	afs_dir_LookupOffset
-#define	EnumerateDir	afs_dir_EnumerateDir
-#define	IsEmpty		afs_dir_IsEmpty
-#define InverseLookup   afs_dir_InverseLookup
-#define ChangeFid	afs_dir_ChangeFid
+# define	NameBlobs	afs_dir_NameBlobs
+# define	GetBlob		afs_dir_GetBlob
+# define	Create		afs_dir_Create
+# define	Length		afs_dir_Length
+# define	Delete		afs_dir_Delete
+# define	MakeDir		afs_dir_MakeDir
+# define	Lookup		afs_dir_Lookup
+# define	LookupOffset	afs_dir_LookupOffset
+# define	EnumerateDir	afs_dir_EnumerateDir
+# define	IsEmpty		afs_dir_IsEmpty
+# define InverseLookup   afs_dir_InverseLookup
+# define ChangeFid	afs_dir_ChangeFid
 
 #else /* KERNEL */
 
-# ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-# endif
-# include <sys/types.h>
-# include <errno.h>
+# include <roken.h>
 # include "dir.h"
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-
-#include <string.h>
 #endif /* KERNEL */
 
 afs_int32 DErrno;

@@ -12,7 +12,6 @@
 
 #include <roken.h>
 
-#include <stdlib.h>
 #include <lock.h>
 
 #ifdef AFS_64BIT_IOPS_ENV

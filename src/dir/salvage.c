@@ -16,20 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-
-#include <string.h>
-
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+#include <roken.h>
 
 #include "dir.h"
 /* Defined in vol/vol-salvage.c */
