@@ -15,20 +15,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <ptclient.h>
+
 #include "acl.h"
 #include "prs_fs.h"
-
 
 struct acl_accessList *aclstore[20];
 char *externalstore[20];

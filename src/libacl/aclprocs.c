@@ -18,17 +18,11 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/ptclient.h>
 #include <afs/ptuser.h>
+
 #include "acl.h"
 
 #ifdef AFS_PTHREAD_ENV
