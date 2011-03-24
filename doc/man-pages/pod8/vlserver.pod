@@ -7,10 +7,13 @@ vlserver - Initializes the Volume Location Server
 =for html
 <div class="synopsis">
 
-B<vlserver> S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>] [B<-jumbo>] [B<-rxbind>] S<<< [B<-d> <I<debug level>>] >>>
-    [B<-allow-dotted-principals>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
-	 S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
-    [B<-help>]
+vlserver S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>]
+[B<-jumbo>] [B<-rxbind>] S<<< [B<-d> <I<debug level>>] >>>
+[B<-allow-dotted-principals>] S<<< [B<-database <I<database path>>] >>>
+S<<< [B<-logfile <I<log file>>] >>> S<<< [B<-config <I<configuration path>>] >>>
+[B<-enable_peer_stats>] [B<-enable_process_stats>]
+S<<< [B<-auditlog> <I<log path>>] >>> S<<< [B<-audit-interface> (file | sysvmq)] >>>
+[B<-help>]
 
 =for html
 </div>
@@ -122,6 +125,26 @@ L<fileserver(8)> for an explanation of each interface.
 
 Bind the Rx socket to the primary interface only.  (If not specified, the
 Rx socket will listen on all interfaces.)
+
+=item B<-logfile <I<log file>>
+
+Sets the file to use for server logging. If logfile is not specified, and
+no other logging options are supplied, this will be F</usr/afs/logs/VLLog>.
+Note that this option is intended for debugging and testing purposes.
+Changing the location of the log file from the command line may result
+in undesirable interactions with tools such as B<bos>.
+
+=item B<-database <I<databse path>>
+
+Set the location of the database used by this program. This option is
+intended primarily for testing purposes.
+
+=item B<-config <I<configuration directory>>
+
+Set the location of the configuration directory used to configure this
+service. In a typical configuration this will be F</usr/afs/etc> - this
+option allows the use of alternative configuration locations for testing
+purposes.
 
 =item B<-help>
 

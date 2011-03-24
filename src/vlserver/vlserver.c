@@ -38,7 +38,6 @@
 #include "vlserver_internal.h"
 
 #define MAXLWP 16
-const char *vl_dbaseName;
 struct afsconf_dir *vldb_confdir = 0;	/* vldb configuration dir */
 int lwps = 9;
 
@@ -132,6 +131,10 @@ main(int argc, char **argv)
     char *auditFileName = NULL;
     afs_uint32 host = ntohl(INADDR_ANY);
 
+    const char *vl_dbaseName;
+    const char *configDir;
+    const char *logFile;
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a
@@ -149,6 +152,20 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     osi_audit_init();
+
+    /* Initialize dirpaths */
+    if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
+#ifdef AFS_NT40_ENV
+	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0], 0);
+#endif
+	fprintf(stderr, "%s: Unable to obtain AFS server directory.\n",
+		argv[0]);
+	exit(2);
+    }
+
+    vl_dbaseName = AFSDIR_SERVER_VLDB_FILEPATH;
+    configDir = AFSDIR_SERVER_ETC_DIRPATH;
+    logFile = AFSDIR_SERVER_PTLOG_FILEPATH;
 
     /* Parse command line */
     for (index = 1; index < argc; index++) {
@@ -220,11 +237,29 @@ main(int argc, char **argv)
 	    serverLogSyslog = 1;
 	    serverLogSyslogFacility = atoi(argv[index] + 8);
 #endif
+	} else if ((strcmp(argv[index], "-database") == 0)
+		|| (strcmp(argv[index], "-db") == 0)) {
+	    vl_dbaseName = argv[++index];
+	} else if (strcmp(argv[index], "-config") == 0) {
+	    if ((index + 1) > argc) {
+		fprintf(stderr, "missing argument for -config\n");
+		return -1;
+	    }
+	    configDir = argv[++index];
+	} else if (strcmp(argv[index], "-logfile") == 0) {
+	    if ((index + 1) > argc) {
+		fprintf(stderr, "missing argument for -logfile\n");
+		return -1;
+	    }
+	    logFile = argv[++index];
 	} else {
 	    /* support help flag */
-	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+	    printf("Usage: vlserver [-database <db path] "
+		   "[-p <number of processes>] [-nojumbo] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] ");
+		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
+		   "[-config <config directory path>] "
+		   "[-logfile <log file path>] ");
 #ifndef AFS_NT40_ENV
 	    printf("[-syslog[=FACILITY]] ");
 #endif
@@ -239,28 +274,17 @@ main(int argc, char **argv)
 	osi_audit_file(auditFileName);
     }
 
-    /* Initialize dirpaths */
-    if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
-#ifdef AFS_NT40_ENV
-	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0], 0);
-#endif
-	fprintf(stderr, "%s: Unable to obtain AFS server directory.\n",
-		argv[0]);
-	exit(2);
-    }
-    vl_dbaseName = AFSDIR_SERVER_VLDB_FILEPATH;
-
 #ifndef AFS_NT40_ENV
     serverLogSyslogTag = "vlserver";
 #endif
-    OpenLog(AFSDIR_SERVER_VLOG_FILEPATH);	/* set up logging */
+    OpenLog(logFile);	/* set up logging */
     SetupLogSignals();
 
-    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    tdir = afsconf_Open(configDir);
     if (!tdir) {
 	printf
 	    ("vlserver: can't open configuration files in dir %s, giving up.\n",
-	     AFSDIR_SERVER_ETC_DIRPATH);
+	     configDir);
 	exit(1);
     }
 #ifdef AFS_NT40_ENV
