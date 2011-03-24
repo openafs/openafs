@@ -6,17 +6,16 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
+#include <afsconfig.h>
+#include <afs/param.h>
 
-#include <sys/types.h>
-#include <sys/file.h>
-#include <sys/stat.h>
+#include <roken.h>
+
 #ifdef AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
-#include <netdb.h>
-#include <sys/errno.h>
+
 #include <lock.h>
-#include <netinet/in.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
@@ -29,9 +28,6 @@
 #include <afs/cmd.h>
 #include <rx/rxkad.h>
 #include <afs/tcdata.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 
 #define SERVERNAME "server1"
 

@@ -17,29 +17,11 @@
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#include <sys/types.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <errno.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <string.h>
-#include <afs/procmgmt.h>
 #include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
-#include <fcntl.h>
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
@@ -57,6 +39,7 @@
 #include <afs/butm_prototypes.h>
 #include <afs/budb_prototypes.h>
 #include <afs/afsutil.h>
+
 #include "butc_internal.h"
 #include "error_macros.h"
 

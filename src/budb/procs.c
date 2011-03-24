@@ -18,21 +18,8 @@
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <sys/file.h>
-#include <sys/param.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#endif
-
-#include <string.h>
-#include <sys/types.h>
 #include <afs/stds.h>
 #include <afs/bubasics.h>
-#include <stdio.h>
 #include <lock.h>
 #include <ubik.h>
 #include <lwp.h>
@@ -41,15 +28,15 @@
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
-#include <errno.h>
+#include <afs/audit.h>
+#include <afs/afsutil.h>
+
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
 #include "budb_internal.h"
 #include "error_macros.h"
 #include "globals.h"
-#include "afs/audit.h"
-#include <afs/afsutil.h>
 
 #undef min
 #undef max

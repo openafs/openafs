@@ -12,21 +12,6 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <strings.h>
-#endif
-#include <sys/types.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -38,6 +23,7 @@
 #include <afs/budb_prototypes.h>
 #include <afs/butm_prototypes.h>
 #include <afs/bucoord_prototypes.h>
+
 #include "error_macros.h"
 #include "butc_internal.h"
 

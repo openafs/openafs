@@ -9,23 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#if defined(AFS_LINUX24_ENV)
-#define _REGEX_RE_COMP
+#ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
+#include <regex.h>
 #endif
-#include <sys/types.h>
+
 #include <afs/cmd.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <errno.h>
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
 #include <afs/budb.h>
@@ -37,15 +29,11 @@
 #include <afs/vldbint.h>	/* PA */
 #include <afs/ktime.h>		/* PA */
 #include <ubik.h>
-#include <time.h>
 #include <lock.h>
-#include <afs/butc.h>
 #include <afs/tcdata.h>
 #include <afs/butx.h>
 #include <afs/vsutils_prototypes.h>
-#ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
-#include <regex.h>
-#endif
+
 #include "bc.h"
 #include "error_macros.h"
 #include "bucoord_internal.h"

@@ -12,18 +12,6 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netdb.h>
-#endif
-#include <stdlib.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -32,7 +20,6 @@
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>
 #include <afs/vldbint.h>
-
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
@@ -40,7 +27,6 @@
 #include <afs/bucoord_prototypes.h>
 
 #include "butc_internal.h"
-
 #include "error_macros.h"
 
 dlqlinkT savedEntries;

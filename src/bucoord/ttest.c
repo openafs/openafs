@@ -7,13 +7,13 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include <afsconfig.h>
+#include <afs/param.h>
+
+#include <roken.h>
+
 #include <lwp.h>
 #include <rx/rx.h>
-#include <rpc/types.h>
 #include <afs/bubasics.h>
 #include <afs/butc.h>
 #include <afs/budb.h>

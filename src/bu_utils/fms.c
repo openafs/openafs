@@ -10,15 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#undef	IN
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>		/* for mtio.h */
-#include <afs/cmd.h>
 #include <afs/procmgmt.h>
+#include <roken.h>
+
+#include <afs/cmd.h>
 #include <afs/usd.h>
 
 /* structure for writing data to tape */

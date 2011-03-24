@@ -13,20 +13,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
 #include <afs/cmd.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#endif
 #include <lwp.h>
 #include <afs/bubasics.h>
 #include "bc.h"
@@ -34,6 +25,7 @@
 #include <afs/butc.h>
 #include <afs/budb.h>
 #include <afs/vlserver.h>
+
 #include "error_macros.h"
 #include "bucoord_internal.h"
 #include "bucoord_prototypes.h"

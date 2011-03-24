@@ -9,25 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
 #include <fcntl.h>
-#include <sys/stat.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
-#include <netinet/in.h>
-#include <sys/file.h>
-#include <sys/time.h>
-#include <netdb.h>
 #endif
-#include <string.h>
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <time.h>
-#include <stdio.h>
 #include <afs/cmd.h>
 #include <lwp.h>
 #include <ubik.h>
@@ -39,16 +29,13 @@
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
-#include <errno.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+#include <afs/audit.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
 #include "budb_internal.h"
 #include "globals.h"
-#include "afs/audit.h"
 
 struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */

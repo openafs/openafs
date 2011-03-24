@@ -12,16 +12,6 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <errno.h>
-
 #include "bc.h"
 
 struct bc_config *bc_globalConfig;

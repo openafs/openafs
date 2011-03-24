@@ -12,27 +12,18 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
-#include <fcntl.h>
-#include <errno.h>
+
 #include <limits.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+
 #include <lwp.h>
 #include <afs/com_err.h>
 #include <afs/butm.h>
 #include <afs/usd.h>
+
 #include "error_macros.h"
 #include "butm_prototypes.h"
 

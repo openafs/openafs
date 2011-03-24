@@ -18,15 +18,6 @@
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
 #endif
 
-#include <sys/types.h>
-#include <fcntl.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#elif defined(AFS_SUN5_ENV)
-#include <netdb.h>
-#else
-#include <sys/param.h>		/* for hostnames etc */
-#endif
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
@@ -37,7 +28,6 @@
 #include <afs/budb_client.h>
 #include <afs/budb.h>
 #include <afs/com_err.h>
-#include <errno.h>
 
 #include "bc.h"
 #include "error_macros.h"

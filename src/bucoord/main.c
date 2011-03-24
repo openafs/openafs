@@ -9,31 +9,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-
-#include <errno.h>
 #include <afs/cmd.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <lwp.h>
 #include <afs/bubasics.h>
-#include <fcntl.h>
 #include <afs/afsutil.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>

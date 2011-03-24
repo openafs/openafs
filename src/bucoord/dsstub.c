@@ -16,22 +16,12 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
 #include <afs/cmd.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
 #include <afs/afsutil.h>
 #include <afs/budb.h>
 #include <afs/bubasics.h>
 #include <afs/volser.h>
+
 #include "bc.h"
 
 /* protos */

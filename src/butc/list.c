@@ -12,14 +12,10 @@
 
 #include <roken.h>
 
-#ifndef AFS_NT40_ENV
-#include <sys/time.h>
-#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lock.h>
 #include <lwp.h>
-#include <errno.h>
 #include <afs/tcdata.h>
 
 #include "error_macros.h"

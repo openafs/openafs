@@ -12,26 +12,10 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#endif
-#include <stdlib.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
 #include <lock.h>
-#include <errno.h>
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>

@@ -9,17 +9,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <afs/ktime.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <afs/cmd.h>
-#include <ctype.h>
-#include "bc.h"
 
+#include <roken.h>
+
+#include <ctype.h>
+
+#include <afs/ktime.h>
+#include <afs/cmd.h>
+
+#include "bc.h"
 
 #define	MAX_YEAR_VALUE	0
 #define	MAX_MONTH_VALUE 11

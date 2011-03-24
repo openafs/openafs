@@ -10,7 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <afs/procmgmt.h>
 #include <roken.h>
 
@@ -18,50 +17,44 @@
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
-#include <netinet/in.h>
-#include <sys/time.h>
 #endif
-#include <afs/procmgmt.h>
+
+#include <ctype.h>
+
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
+#include <rx/rxkad.h>
 #include <rx/xdr.h>
+
 #include <afs/afsint.h>
-#include <stdio.h>
 #include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
-#include <string.h>
 #include <afs/vlserver.h>
 #include <lwp.h>
 #include <lock.h>
 #include <afs/afsutil.h>
-#include <rx/rx.h>
-#include <rx/rx_globals.h>
-#include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/volser.h>
 #include <ubik.h>
 #include <afs/com_err.h>
-#include <errno.h>
 #include <afs/cmd.h>
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
-#include <ctype.h>
-#include "error_macros.h"
 #include <afs/budb_errs.h>
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
-#include "afs/butx.h"
+#include <afs/butx.h>
+#include <afs/kautils.h>
+#include <afs/bc.h>
+
+#include "error_macros.h"
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
-#include <afs/kautils.h>
-#include <afs/bc.h>
 
 #define N_SECURITY_OBJECTS 3
 #define ERRCODE_RANGE 8		/* from error_table.h */

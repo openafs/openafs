@@ -13,24 +13,12 @@
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <sys/types.h>
-#include <string.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <conio.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
 #endif
 
-#include <afs/procmgmt.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <time.h>
 #include <lwp.h>
 #include <lock.h>
 #include <afs/tcdata.h>
@@ -41,9 +29,9 @@
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/com_err.h>
-#include "error_macros.h"
 #include <afs/afsutil.h>
-#include <errno.h>
+
+#include "error_macros.h"
 #include "butc_xbsa.h"
 #include "butc_internal.h"
 

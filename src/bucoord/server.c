@@ -7,17 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/types.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#endif
 #include <rx/rx.h>
 
 /* services available on incoming message port */

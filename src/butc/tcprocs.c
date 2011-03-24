@@ -15,26 +15,11 @@
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <sys/types.h>
-#include <errno.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <string.h>
-#include <afs/procmgmt.h>
 #include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
-#include <sys/stat.h>
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
@@ -44,6 +29,7 @@
 #include <afs/tcdata.h>
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
+
 #include "error_macros.h"
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"

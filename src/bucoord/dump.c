@@ -16,20 +16,7 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
 #include <afs/cmd.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#endif
 #include <lwp.h>
 #include <rx/rx.h>
 #include <afs/bubasics.h>

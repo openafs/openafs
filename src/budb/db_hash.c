@@ -9,19 +9,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <sys/types.h>
-#include <afs/stds.h>
 #include <ubik.h>
 #include <afs/bubasics.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "budb_internal.h"

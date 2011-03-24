@@ -11,17 +11,14 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <sys/types.h>
 #include <afs/stds.h>
-#include <stdio.h>
 
+#include <roken.h>
 
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
 #include <dlfcn.h>
 #endif
 
-#include <errno.h>
 #include "butc_xbsa.h"
 #include <afs/butx.h>
 

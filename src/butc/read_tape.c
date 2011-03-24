@@ -10,18 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/cmd.h>
 #include <lock.h>
 #include <afs/tcdata.h>
-
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-
 #include <afs/usd.h>
 
 usd_handle_t fd;

@@ -12,10 +12,6 @@
 
 #include <roken.h>
 
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
 #include "bc.h"
 #include <afs/bubasics.h>
 #include "bucoord_prototypes.h"

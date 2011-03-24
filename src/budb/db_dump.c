@@ -14,20 +14,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <sys/param.h>
-#endif
-#include <afs/stds.h>
-#include <sys/types.h>
 #include <ubik.h>
 #include <lock.h>
-#include <string.h>
+#include <afs/audit.h>
 
 #include "database.h"
 #include "budb.h"
@@ -35,7 +28,6 @@
 #include "error_macros.h"
 #include "budb_errs.h"
 #include "budb_internal.h"
-#include "afs/audit.h"
 
 
 /* dump ubik database - routines to scan the database and dump all

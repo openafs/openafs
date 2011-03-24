@@ -20,19 +20,10 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
 #include <afs/cmd.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/param.h>
-#endif
 #include <afs/com_err.h>
-
 #include <afs/bubasics.h>
+
 #include "bc.h"
 #include "bucoord_internal.h"
 

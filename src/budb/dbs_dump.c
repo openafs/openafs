@@ -9,42 +9,25 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#include <fcntl.h>
-#else
-#include <netinet/in.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/file.h>
-#endif
-#include <time.h>
-#include <sys/types.h>
-#include <afs/stds.h>
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #include <lock.h>
 #include <ubik.h>
 #include <lwp.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#include <string.h>
 #include <afs/cellconfig.h>
-#include <errno.h>
+#include <afs/audit.h>
+
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
 #include "budb_internal.h"
 #include "error_macros.h"
 #include "globals.h"
-#include "afs/audit.h"
 
 afs_int32 DumpDB(struct rx_call *, int, afs_int32, charListT *, afs_int32 *);
 afs_int32 RestoreDbHeader(struct rx_call *, struct DbHeader *);

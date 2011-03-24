@@ -12,24 +12,14 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <time.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/time.h>
-#include <netinet/in.h>
-#endif
-#include <afs/afsutil.h>
 #include <limits.h>
-#include <sys/stat.h>
-#include <stdio.h>
 #include <ctype.h>
+
+#include <afs/afsutil.h>
 #include <lwp.h>
 #include <afs/com_err.h>
 #include <afs/butm.h>
+
 #include "error_macros.h"
 
 int isafile = 0, debugLevel = 1;

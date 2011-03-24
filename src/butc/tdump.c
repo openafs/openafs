@@ -7,11 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/types.h
-#include <sys/file.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+#include <afsconfig.h>
+#include <afs/param.h>
+
+#include <roken.h>
 
 #define BLKSIZE (4096+24)	/* actual block size on our backup tapes */
 

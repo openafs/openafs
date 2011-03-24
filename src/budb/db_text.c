@@ -12,25 +12,15 @@
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <netinet/in.h>
-#include <sys/file.h>
-#include <sys/param.h>
-#endif
-#include <string.h>
-#include <sys/types.h>
 #include <ubik.h>
 #include <afs/bubasics.h>
+#include <afs/audit.h>
+#include <afs/afsutil.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
 #include "budb_internal.h"
-#include "afs/audit.h"
-#include <afs/afsutil.h>
 
 /* --------------------------------
  * interface & support code to manage text blocks within the
