@@ -12,19 +12,19 @@
 
 #include <roken.h>
 
-#include "internal.h"
-#include <stdio.h>
-#include "error_table.h"
-#include "mit-sipb-cr.h"
 #ifdef HAVE_LIBINTL
 #include <libintl.h>
 #endif
 #ifdef AFS_DARWIN_ENV
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+
 #include <afs/errors.h>
 #include <afs/afsutil.h>
-#include <string.h>
+
+#include "internal.h"
+#include "error_table.h"
+#include "mit-sipb-cr.h"
 #include "com_err.h"
 
 static const char copyright[] =

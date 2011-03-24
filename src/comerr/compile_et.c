@@ -10,22 +10,10 @@
 #undef MEMORYLEAK
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <afs/afsutil.h>
-
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#ifndef AFS_NT40_ENV
-#include <sys/file.h>
-#include <sys/param.h>
-#endif
-
-#include <errno.h>
-#include <string.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 #include "mit-sipb-cr.h"
 #include "internal.h"
 #include "compiler.h"
