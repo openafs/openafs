@@ -13,6 +13,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
@@ -20,26 +21,15 @@
 # include "afsincludes.h"
 #endif
 
-#include <afs/stds.h>
-#include <sys/types.h>
 #include <rx/xdr.h>
 #include <afs/pthread_glock.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#endif
-#include <string.h>
-/* netinet/in.h and cellconfig.h  are needed together */
 #include <afs/cellconfig.h>
-    /* these are needed together */
+#include <afs/auth.h>
 #include <lock.h>
 #include <ubik.h>
 
 #include "kauth.h"
 #include "kautils.h"
-#include <afs/auth.h>
 
 
 afs_int32

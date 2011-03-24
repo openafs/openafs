@@ -9,26 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/afsutil.h>
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/file.h>
-#endif
-#include <string.h>
-#include <time.h>
-#include <stdio.h>
 #include <ctype.h>
+
+#include <hcrypto/des.h>
+
+#include <afs/afsutil.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <hcrypto/des.h>
+
 #include "kauth.h"
 #include "kautils.h"
 

@@ -13,19 +13,12 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <stdio.h>
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
 #include <ctype.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <time.h>
-#include <netdb.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <string.h>
+
 #include <afs/vice.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>

@@ -9,28 +9,17 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
+
 #include <afs/pthread_glock.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <crypt.h>
-#endif
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#if !defined(__USE_XOPEN)
-#define __USE_XOPEN
-#endif
-#include <unistd.h>
-#endif
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
-#include <hcrypto/des.h>
-#include <hcrypto/ui.h>
 
 #include "kauth.h"
 #include "kautils.h"

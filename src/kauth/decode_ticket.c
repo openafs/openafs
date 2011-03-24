@@ -10,11 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <hcrypto/des.h>
+
 #include <afs/com_err.h>
 #include <afs/auth.h>
 #include <rx/rxkad.h>
+
 #include "kautils.h"
 
 static char *whoami;

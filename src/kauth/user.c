@@ -12,19 +12,14 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <signal.h>
+
+#include <roken.h>
+
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
+
 #include <afs/com_err.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <string.h>
-#include <stdio.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/ptint.h>
@@ -40,8 +35,7 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */
-#include <hcrypto/des.h>
-#include <hcrypto/ui.h>
+
 
 #include "kauth.h"
 #include "kautils.h"

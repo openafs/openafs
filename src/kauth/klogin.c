@@ -21,28 +21,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #if !defined(AFS_SUN_ENV) && !defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-#include <sys/param.h>
 
 #define quota(a,b,c,d) 0
 
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/file.h>
 #include <afs/afsutil.h>
 #include <sgtty.h>
 #include <utmp.h>
-#include <signal.h>
-#include <pwd.h>
-#include <stdio.h>
 #include <lastlog.h>
-#include <errno.h>
 #include <ttyent.h>
-
-
-#include <syslog.h>
 
 #include <grp.h>
 

@@ -10,25 +10,17 @@
 /* These two needed for rxgen output to work */
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
-#include <sys/types.h>
-#include <rx/xdr.h>
-
-#include <lock.h>
-#include <ubik.h>
-#ifndef AFS_NT40_ENV
-#include <pwd.h>
-#else
+#ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif
-#include <string.h>
+
+#include <rx/xdr.h>
+#include <lock.h>
+#include <ubik.h>
 #include <afs/cellconfig.h>
 #include <afs/com_err.h>
 #include <afs/cmd.h>
@@ -36,7 +28,6 @@
 #include "kauth.h"
 #include "kauth_internal.h"
 #include "kautils.h"
-
 
 int
 main(int argc, char *argv[])

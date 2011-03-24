@@ -14,6 +14,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
@@ -21,21 +22,9 @@
 # pragma GCC diagnostic warning "-Wdeprecated-declarations"
 #endif
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <errno.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <afs/errmap_nt.h>
-#define snprintf _snprintf
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #endif
-#include <string.h>
-#include <afs/afsutil.h>
-#include <time.h>
 
 #define HC_DEPRECATED
 #include <hcrypto/des.h>
@@ -47,7 +36,6 @@
 #include <rx/rxkad.h>
 #include <afs/auth.h>
 #include <ubik.h>
-
 
 #include "kauth.h"
 #include "kautils.h"

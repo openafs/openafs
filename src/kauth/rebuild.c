@@ -12,25 +12,11 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
-#include <time.h>
+#include <hcrypto/des.h>
+
 #include <ubik.h>
 #include <afs/cmd.h>
-#include <hcrypto/des.h>
 #include <rx/rxkad.h>
-
 #include <afs/com_err.h>
 
 #include "kauth.h"

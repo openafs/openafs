@@ -10,18 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <fcntl.h>
-#include <sys/types.h>
-#include <time.h>
-#include <stdio.h>
-#ifndef AFS_NT40_ENV
-#include <strings.h>
-#endif
 #include <afs/cmd.h>
+#include <afs/afsutil.h>
+
 #include "kauth.h"
 #include "kalog.h"
-#include <afs/afsutil.h>
 
 #ifdef AUTH_DBM_LOG
 

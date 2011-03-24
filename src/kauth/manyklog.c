@@ -9,23 +9,17 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <rx/xdr.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 
+#include <roken.h>
+
+#include <rx/xdr.h>
 #include <lock.h>
 #include <ubik.h>
-
-#include <stdio.h>
-#include <pwd.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include "assert.h"

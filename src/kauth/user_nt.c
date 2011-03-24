@@ -16,10 +16,6 @@
 
 #include <windows.h>
 #include <rpc.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>		/* sprintf */
-#include <malloc.h>
 #include <afs/kautils.h>
 #include <afs/cm.h>
 #include <afs/cm_config.h>

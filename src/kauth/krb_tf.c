@@ -49,19 +49,9 @@
 
 #include <roken.h>
 
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#endif
-#include <string.h>
-#include <sys/types.h>
 #include <rx/xdr.h>
-#include <errno.h>
 #include <afs/auth.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include "kauth_internal.h"

@@ -10,9 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif

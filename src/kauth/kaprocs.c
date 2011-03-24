@@ -9,25 +9,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
+
+#ifdef HAVE_SYS_RESOURCE_H
+# include <sys/resource.h>
+#endif
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wdeprecated-declarations"
 #endif
 
-#include <afs/stds.h>
-#include <errno.h>
 #include "kauth.h"
-#include <sys/types.h>
-#include <time.h>
-#ifdef AFS_NT40_ENV
-#include <afs/afsutil.h>
-#else
-#include <sys/resource.h>
-#include <sys/file.h>
-#endif
-#include <stdio.h>
 
 #define HC_DEPRECATED
 #include <hcrypto/des.h>
@@ -38,22 +32,17 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/com_err.h>
+#include <afs/afsutil.h>
+#include <afs/audit.h>
 
 #include "kautils.h"
 #include "kaserver.h"
 #include "kalog.h"
 #include "kaport.h"
 #include "kauth_internal.h"
-#include "afs/audit.h"
 
 #include "kadatabase.h"
 #include "kaprocs.h"

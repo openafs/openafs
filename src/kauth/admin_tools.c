@@ -14,33 +14,27 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
 #include <ctype.h>
-#include <string.h>
 
-    /* These two needed for rxgen output to work */
-#include <sys/types.h>
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
+
 #include <rx/xdr.h>
-
-#include <stdio.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <lock.h>
 #define UBIK_LEGACY_CALLITER 1
 #include <ubik.h>
-#ifndef AFS_NT40_ENV
-#include <pwd.h>
-#endif
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
-#include <hcrypto/des.h>
-#include <hcrypto/ui.h>
+
 #include "kauth.h"
 #include "kauth_internal.h"
 #include "kautils.h"

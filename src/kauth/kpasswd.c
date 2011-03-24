@@ -10,40 +10,27 @@
 /* These two needed for rxgen output to work */
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+#include <limits.h>
+
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
 
 #include <rx/xdr.h>
-
 #include <lock.h>
 #include <ubik.h>
-
-#include <stdio.h>
-#ifndef AFS_NT40_ENV
-#include <pwd.h>
-#endif
-#include <string.h>
-#include <signal.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
-#include <hcrypto/des.h>
-#include <hcrypto/ui.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include "kkids.h"
 
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
-#include <limits.h>
 
 
 /* This code borrowed heavily from the log program.  Here is the intro comment

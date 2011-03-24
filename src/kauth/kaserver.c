@@ -9,29 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
-#include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #endif
-#include "kalog.h"		/* for OpenLog() */
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+
+
 #include <lwp.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -44,7 +30,8 @@
 #include <afs/com_err.h>
 #include <afs/audit.h>
 #include <ubik.h>
-#include <sys/stat.h>
+
+#include "kalog.h"		/* for OpenLog() */
 #include "kauth.h"
 #include "kauth_internal.h"
 #include "kautils.h"

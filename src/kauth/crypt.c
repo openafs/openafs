@@ -34,14 +34,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 /* This crypt() implementation is only used by the Andrew string_to_key
  * function on Windows. All Unix platforms use their own crypt() 
  * implementation
  */
 
 #include <windows.h>
-#include <stdlib.h>
-#include <string.h>
 
 /*
  * UNIX password, and DES, encryption.

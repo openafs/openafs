@@ -16,15 +16,6 @@
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#endif
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#include <string.h>
 #include <rx/rxkad.h>
 #define UBIK_INTERNALS
 #include <ubik.h>

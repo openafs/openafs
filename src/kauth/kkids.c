@@ -14,26 +14,18 @@
 /* These two needed for rxgen output to work */
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <afs/fs_utils.h>
 #else
-#include <unistd.h>
-#include <netinet/in.h>
 #include <afs/venus.h>
 #endif
-#include <signal.h>
-#include <afs/stds.h>
+
 #include <rx/xdr.h>
 #include <afs/prs_fs.h>
-#include <stdlib.h>
-#include <string.h>
 #include <afs/sys_prototypes.h>
 #include <afs/afs_consts.h>
 

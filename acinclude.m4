@@ -1216,6 +1216,7 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
 AC_CHECK_HEADERS([ \
+		   arpa/inet.h \
 		   arpa/nameser.h \
 		   curses.h\
 		   direct.h \

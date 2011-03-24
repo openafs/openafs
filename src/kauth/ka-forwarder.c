@@ -32,21 +32,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
 #include <afs/stds.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <netdb.h>
+#include <roken.h>
+
 #include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <syslog.h>
-#include <unistd.h>
 
 #if	HAVE_GETOPT_H
 #include <getopt.h>

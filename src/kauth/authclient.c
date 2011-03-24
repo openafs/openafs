@@ -11,6 +11,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
@@ -19,28 +20,16 @@
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
+#include <hcrypto/des.h>
+
 #define UBIK_LEGACY_CALLITER 1
 
-#include <afs/stds.h>
 #include <afs/pthread_glock.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#endif
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#include <string.h>
-#include <stdio.h>
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
-#include <hcrypto/des.h>
 
 #include "kauth.h"
 #include "kautils.h"
