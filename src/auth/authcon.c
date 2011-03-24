@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
@@ -16,25 +17,13 @@
 # pragma GCC diagnostic warning "-Wdeprecated-declarations"
 #endif
 
-#include <afs/stds.h>
-#include <afs/pthread_glock.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <string.h>
-#include <stdio.h>
-
 #define HC_DEPRECATED
 #include <hcrypto/des.h>
 
 #include <rx/rxkad.h>
 #include <rx/rx.h>
+
+#include <afs/pthread_glock.h>
 
 #include "cellconfig.h"
 #include "keys.h"

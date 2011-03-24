@@ -12,26 +12,20 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/stds.h>
+#include <afs/pthread_glock.h>
+#include <ctype.h>
+
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #if defined(UKERNEL)
 #include "afsincludes.h"
 #endif
 
-#ifdef	AFS_SUN5_ENV
-#include <unistd.h>
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <afs/stds.h>
-#include <afs/pthread_glock.h>
-#include <sys/types.h>
-#include <ctype.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <afs/vice.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
 #ifdef AFS_AIX51_ENV
@@ -41,12 +35,12 @@
 #endif
 #endif
 #endif
+
 #ifdef HAVE_CRT_EXTERNS_H
 #include <crt_externs.h>
 #endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+
+#include <afs/vice.h>
 #include <afs/auth.h>
 #include <afs/venus.h>
 #include <afs/afsutil.h>
@@ -54,8 +48,6 @@
 #if !defined(UKERNEL)
 #include <afs/sys_prototypes.h>
 #endif
-
-#include "token.h"
 
 #if defined(AFS_LINUX26_ENV)
 #include <sys/syscall.h>
@@ -65,18 +57,10 @@
 #endif
 #endif
 
-/* For malloc() */
-#include <stdlib.h>
+#include "token.h"
 #include "ktc.h"
 
-#ifdef	notdef
-/* AFS_KERBEROS_ENV is now conditionally defined in the Makefile */
-#define AFS_KERBEROS_ENV
-#endif
-
 #ifdef AFS_KERBEROS_ENV
-#include <fcntl.h>
-#include <sys/file.h>
 #include <afs/cellconfig.h>
 static char lcell[MAXCELLCHARS];
 

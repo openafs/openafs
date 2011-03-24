@@ -10,17 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <string.h>
-#include <sys/types.h>
-#include "auth.h"
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include "cellconfig.h"
 #include <afs/afsutil.h>
+
+#include "auth.h"
+#include "cellconfig.h"
 
 #include "AFS_component_version_number.c"
 

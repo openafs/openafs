@@ -9,29 +9,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
-#include "base64.h"
 
-#include <afs/stds.h>
-#include <afs/pthread_glock.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#endif
-#include <sys/stat.h>
-#include <stdlib.h>		/* for realpath() */
-#include <errno.h>
-#include <string.h>
 #include <ctype.h>
 
+#include <afs/pthread_glock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_identity.h>
@@ -43,6 +27,7 @@
 #include <krb.h>
 #endif
 
+#include "base64.h"
 #include "auth.h"
 #include "cellconfig.h"
 #include "keys.h"

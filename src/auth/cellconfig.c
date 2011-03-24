@@ -9,42 +9,23 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <afs/pthread_glock.h>
-#include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <sys/utime.h>
-#include <io.h>
 #include <WINNT/afssw.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/file.h>
-#include <sys/time.h>
+#endif
+
 #include <ctype.h>
-#include <arpa/nameser.h>
+
 #ifdef HAVE_ARPA_NAMESER_COMPAT_H
 #include <arpa/nameser_compat.h>
 #endif
-#include <resolv.h>
-#endif /* AFS_NT40_ENV */
+
+#include <afs/pthread_glock.h>
 #include <afs/afsint.h>
-#include <errno.h>
-#include <ctype.h>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include <rx/rxkad.h>
 #include <rx/rx.h>
 

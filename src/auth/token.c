@@ -29,7 +29,6 @@
 
 #include <afs/auth.h>
 #include <rx/rxkad.h>
-#include <errno.h>
 
 #include "ktc.h"
 #include "token.h"

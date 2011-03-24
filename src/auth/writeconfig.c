@@ -14,27 +14,8 @@
 
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include <rx/rxkad.h>
+
 #include "cellconfig.h"
 #include "keys.h"
 

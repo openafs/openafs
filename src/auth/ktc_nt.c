@@ -11,17 +11,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <stdio.h>
-#include <afs/pthread_glock.h>
-#include <sys/types.h>
 #include <ctype.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <errno.h>
+
+#include <afs/pthread_glock.h>
 #include <rpc.h>
 #include <afs/smb_iocons.h>
 #include <afs/pioctl_nt.h>
