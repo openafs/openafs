@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <afs/procmgmt.h>
 #include <roken.h>
@@ -17,50 +18,34 @@
 # pragma GCC diagnostic warning "-Wdeprecated-declarations"
 #endif
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <direct.h>
-#include <io.h>
 #include <WINNT/afsevent.h>
-#else
-#include <unistd.h>
-#include <netinet/in.h>
-#include <syslog.h>
 #endif /* AFS_NT40_ENV */
-#include <afs/cellconfig.h>
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_globals.h>
-#include "bosint.h"
-#include "bnode.h"
-#include "bosprototypes.h"
 #include <rx/rxkad.h>
 #include <rx/rxstat.h>
 #include <afs/keys.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <afs/audit.h>
 #include <afs/cellconfig.h>
+
 #if defined(AFS_SGI_ENV)
 #include <afs/afs_args.h>
 #endif
+
+#include "bosint.h"
+#include "bnode.h"
+#include "bosprototypes.h"
 
 #define BOZO_LWP_STACKSIZE	16000
 extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;

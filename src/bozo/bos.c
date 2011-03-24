@@ -9,30 +9,14 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <strings.h>
-#endif /* AFS_NT40_ENV */
-#include <string.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
-#include <time.h>
+#include <hcrypto/ui.h>
+
 #include "bnode.h"
-#include <errno.h>
 #include <afs/afsutil.h>
 #include <afs/cellconfig.h>
 #include <rx/rx.h>
@@ -40,12 +24,10 @@
 #include <rx/xdr.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
-#include <stdio.h>
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <ubik.h>
 #include <afs/ktime.h>
-#include <hcrypto/ui.h>
 #include <afs/kautils.h>
 #include <afs/volser.h>
 

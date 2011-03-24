@@ -14,32 +14,13 @@
 #include <roken.h>
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <dirent.h>
-#include <errno.h>
-#include <sys/types.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <sys/time.h>
-#endif
-#ifdef BOZO_SAVE_CORES
-#include <time.h>
-#endif
-#include <sys/stat.h>
-#include <string.h>
 
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <lwp.h>
 #include <rx/rx.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+
 #include "bnode.h"
 #include "bosprototypes.h"
 

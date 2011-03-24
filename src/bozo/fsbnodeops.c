@@ -13,27 +13,10 @@
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <sys/types.h>
 #include <lwp.h>
 #include <rx/rx.h>
-#include <errno.h>
-#include <stdio.h>
-#ifdef	AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-
-#include <string.h>
-#include <stdlib.h>
-
-#endif /* AFS_NT40_ENV */
-#include <sys/stat.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <afs/afsutil.h>
+
 #include "bnode.h"
 #include "bosprototypes.h"
 

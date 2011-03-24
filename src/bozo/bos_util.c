@@ -22,20 +22,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <string.h>
-#include <stdio.h>
+#include <hcrypto/ui.h>
+#include <hcrypto/des.h>
 
 #include <afs/stds.h>
 #include <afs/afsutil.h>
 #include <afs/keys.h>
 #include <afs/cellconfig.h>
 #include <afs/kautils.h>
-#include <hcrypto/ui.h>
-#include <hcrypto/des.h>
 
 int
 main(int argc, char **argv)

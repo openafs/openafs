@@ -13,20 +13,13 @@
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <sys/types.h>
-#include <errno.h>
-#include <sys/stat.h>
 #include <lwp.h>
 #include <rx/rx.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #endif
 
-#include <string.h>
-#include <stdlib.h>
-
 #include <afs/afsutil.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include "bnode.h"
 #include "bosprototypes.h"
 

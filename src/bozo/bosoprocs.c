@@ -9,37 +9,24 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <io.h>
-#include <fcntl.h>
 #include <sys/utime.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
 #endif /* AFS_NT40_ENV */
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#include <errno.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/ktime.h>
 #include <afs/audit.h>
 #include <afs/kautils.h>
-#include <string.h>
 
 #include "bnode.h"
 #include "bosint.h"
