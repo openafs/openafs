@@ -8,15 +8,11 @@
  */
 
 #include <afsconfig.h>
+#include <afs/param.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <roken.h>
+
 #include "linked_list.h"
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 #ifndef TRUE
 #define TRUE 1

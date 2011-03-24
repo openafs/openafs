@@ -7,20 +7,11 @@
  */
 
 #include <afsconfig.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <stdio.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-#ifdef HAVE_MEMORY_H
-#include <memory.h>
-#endif /* HAVE_MEMORY_H */
-#include <string.h>
-
+#include <afs/param.h>
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <krb5.h>
 
 #ifndef HAVE_KERBEROSV_HEIM_ERR_H

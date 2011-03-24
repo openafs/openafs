@@ -1224,6 +1224,7 @@ AC_CHECK_HEADERS([ \
 		   ncurses.h \
 		   netdb.h \
 		   netinet/in.h \
+		   pwd.h \
 		   regex.h \
 		   security/pam_modules.h \
 		   signal.h \

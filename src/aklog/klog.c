@@ -9,30 +9,20 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <rx/xdr.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <string.h>
-#include <errno.h>
 
+#include <roken.h>
+
+#include <rx/xdr.h>
 #include <lock.h>
 #include <ubik.h>
-
-#include <stdio.h>
-#include <pwd.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
 #include <afs/cellconfig.h>
-#ifdef AFS_RXK5
-#include "rxk5_utilafs.h"
-#endif
 #include <afs/ptclient.h>
 #include <afs/cmd.h>
+
 #include <krb5.h>
 
 #ifdef HAVE_KRB5_CREDS_KEYBLOCK

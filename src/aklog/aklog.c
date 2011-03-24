@@ -35,32 +35,12 @@
  */
 
 #include <afsconfig.h>
+#include <afs/param.h>
+#include <afs/stds.h>
 
-#include <stdio.h>
-#include <string.h>
+#include <roken.h>
+
 #include <ctype.h>
-#include <sys/types.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_MEMORY_H
-#include <memory.h>
-#endif
-#include <errno.h>
-
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#include <sys/param.h>
-#include <sys/errno.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <pwd.h>
 
 #include <afs/stds.h>
 #include <afs/ktc.h>
@@ -77,7 +57,6 @@
 #include <afs/com_err.h>
 #endif
 
-#include <afs/param.h>
 #ifdef AFS_SUN5_ENV
 #include <sys/ioccom.h>
 #endif
@@ -118,10 +97,6 @@
 #define AKLOG_TOKEN 5
 #define AKLOG_BADPATH 6
 #define AKLOG_MISC 7
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 #ifndef TRUE
 #define TRUE 1
