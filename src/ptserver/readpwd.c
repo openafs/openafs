@@ -12,16 +12,16 @@
 
 #include <roken.h>
 
-#include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif
-#include <string.h>
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "ptprototypes.h"

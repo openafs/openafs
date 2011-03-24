@@ -13,39 +13,25 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
 #include <roken.h>
 
-#include <sys/types.h>
 #ifndef _WIN32
-#include <sys/time.h>
 #include <sys/file.h>
 #else
-#include <fcntl.h>
-#include <io.h>
 #define L_SET SEEK_SET
 #endif
-#include <stdio.h>
 #include <ctype.h>
-#include <string.h>
-#include <errno.h>
 
-#include <afsconfig.h>
-#include <afs/param.h>
 #include <afs/com_err.h>
-
-
 #include <afs/cmd.h>		/*Command line parsing */
 #include <afs/afsutil.h>
-#include <errno.h>
 #include <lock.h>
-#ifndef _WIN32
-#include <netinet/in.h>
-#endif
 #define UBIK_INTERNALS
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <afs/com_err.h>
+
 #include "ptint.h"
 #include "ptserver.h"
 #include "pterror.h"

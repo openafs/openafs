@@ -2,24 +2,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <stdarg.h>
-
 #include <lock.h>
-#define UBIK_INTERNALS
-#include <afs/stds.h>
 #include <afs/cellconfig.h>
+#define UBIK_INTERNALS
 #include <ubik.h>
 #include <rx/xdr.h>
+
 #include "ptint.h"
 #include "ptserver.h"
 

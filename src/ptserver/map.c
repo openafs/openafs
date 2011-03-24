@@ -31,14 +31,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef SUPERGROUPS
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #include "map.h"
 
 #undef PRINT_MAP_ERROR

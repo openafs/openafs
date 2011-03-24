@@ -12,17 +12,9 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
 #include <lock.h>
 #include <ubik.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <string.h>
+
 #include "ptserver.h"
 #include "pterror.h"
 

@@ -13,39 +13,25 @@
 #include <roken.h>
 
 #include <ctype.h>
-#include <errno.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <WINNT/afsevent.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <math.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
 #endif
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/rxgen_consts.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
+#include <afs/com_err.h>
+
 #include "ptclient.h"
 #include "pterror.h"
 #include "ptuser.h"
 #include "ptprototypes.h"
-#include <afs/afsutil.h>
-#include <afs/com_err.h>
 
 static char *whoami = "testpr";
 static struct afsconf_dir *conf;	/* cell info, set by MyBeforeProc */

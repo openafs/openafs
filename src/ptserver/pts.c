@@ -12,31 +12,24 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 #include <ctype.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <afs/cmd.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
 #include <WINNT/afsreg.h>
-#else
-#include <netinet/in.h>
 #endif
+
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
+#include <afs/com_err.h>
+#include <afs/cmd.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
 #include "ptprototypes.h"
-#include <afs/afsutil.h>
-#include <afs/com_err.h>
 
 #undef FOREIGN
 

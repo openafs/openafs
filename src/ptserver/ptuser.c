@@ -9,26 +9,17 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <ctype.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
-#include <string.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
-#include <errno.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"

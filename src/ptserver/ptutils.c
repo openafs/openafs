@@ -22,27 +22,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <lock.h>
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
+
 #include "ptserver.h"
 #include "pterror.h"
 #include "ptprototypes.h"
-#include <stdlib.h>
 
 /* Foreign cells are represented by the group system:authuser@cell*/
 #define AUTHUSER_GROUP "system:authuser"

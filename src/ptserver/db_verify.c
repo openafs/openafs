@@ -7,9 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
@@ -31,21 +31,13 @@
  *                          conditions.
  */
 
-#include <afs/stds.h>
-#include <sys/types.h>
+
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#include <io.h>
 #else
-#include <netdb.h>
-#include <netinet/in.h>
 #include <sys/file.h>
 #endif
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
+
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
