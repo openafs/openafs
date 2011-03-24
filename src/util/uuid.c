@@ -43,48 +43,27 @@
  */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#include <roken.h>
-#endif
 
+#ifndef KERNEL
+# include <roken.h>
 
-#ifdef KERNEL
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#else /* KERNEL */
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <rpc.h>
-#include <winsock2.h>
-#include <process.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
-#include <net/if.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
-#endif
-#include <sys/stat.h>
-#include <fcntl.h>
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
-#include <netinet/if_ether.h>
-#endif
+# ifdef AFS_NT40_ENV
+#  include <rpc.h>
+#  include <process.h>
+# else
+#  include <net/if.h>
+#  if !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#   include <netinet/if_ether.h>
+#  endif
+# endif
+
 #include "afsutil.h"
-#endif /* KERNEL */
 
+#else
+# include "afs/sysincludes.h"
+# include "afsincludes.h"
+#endif
 
 typedef struct {
     char eaddr[6];		/* 6 bytes of ethernet hardware address */

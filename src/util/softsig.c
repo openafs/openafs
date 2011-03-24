@@ -11,17 +11,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/procmgmt.h> /* Must be before roken.h */
 
-#include <afs/param.h>
+#include <roken.h>
+
 #include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#ifndef  AFS_NT40_ENV
-#include <signal.h>
-#include <unistd.h>
-#else
-#include <afs/procmgmt.h>
-#endif
 #include <pthread.h>
 
 #include "pthread_nosigs.h"

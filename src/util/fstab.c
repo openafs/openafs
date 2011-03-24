@@ -30,19 +30,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #if defined(AFS_DARWIN_ENV)
 /*
  * Reworked from FreeBSD umount
  */
 
-#include <sys/param.h>
 #include <sys/mount.h>
-
-#include <err.h>
-#include <errno.h>
 #include <fstab.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 size_t
 mntinfo(struct statfs **mntbuffer)

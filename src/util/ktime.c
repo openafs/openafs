@@ -10,18 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <time.h>
 #include <ctype.h>
-#ifdef AFS_NT40_ENV
-#include <malloc.h>
-#endif
-#include <string.h>
-#include <stdlib.h>
-#include "afsutil.h"
 
+#include "afsutil.h"
 #include "ktime.h"
 
 /* some date parsing routines */

@@ -10,11 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_HPUX_ENV
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/time.h>
 #include <utime.h>
 
 /* insque/remque moved to timer.c where they are used. */

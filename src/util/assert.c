@@ -10,14 +10,9 @@
 /* ReallyAbort:  called from assert. May/85 */
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <stdlib.h>
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#include <string.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #include "afsutil.h"
 
 #ifdef AFS_NT40_ENV

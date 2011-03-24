@@ -12,10 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <stdlib.h>
+#include <roken.h>
 
 /* helper for afs_exec_alt; just constructs the string for the 'alternate'
  * program */

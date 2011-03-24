@@ -10,11 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <string.h>
 #include <ctype.h>
-#include <stddef.h>
-#include <stdarg.h>
 
 /* Just like strncpy but shift-case in transit and forces null termination */
 char *

@@ -19,14 +19,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <errno.h>
 #include <afs/errmap_nt.h>
 #include <windows.h>
 #include <winbase.h>
 #include <dirent.h>
-#include <stdlib.h>
-#include <sys/stat.h>
 
 /* opendir() - The case insensitive version of opendir */
 DIR *

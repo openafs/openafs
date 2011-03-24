@@ -14,24 +14,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdlib.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <direct.h>
 #else
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <ctype.h>
 #endif
-#include <string.h>
-#include <errno.h>
-#include "afsutil.h"
 
+#include "afsutil.h"
 
 /* also parse a.b.c.d addresses */
 struct hostent *

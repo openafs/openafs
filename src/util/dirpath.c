@@ -10,27 +10,23 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <limits.h>
-#include <errno.h>
-#include <stdio.h>
+
 #include "afs_assert.h"
 #include "afsutil.h"
 #include "fileutil.h"
+
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 static pthread_once_t dirInit_once = PTHREAD_ONCE_INIT;
 #endif
+
 #ifdef AFS_NT40_ENV
-#include <windows.h>
 #include <WINNT\afssw.h>
-#endif
-#ifdef AFS_DARWIN_ENV
-#include <unistd.h>
 #endif
 
 /* local vars */

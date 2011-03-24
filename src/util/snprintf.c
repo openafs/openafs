@@ -36,28 +36,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <roken.h>
 #include <ctype.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#ifndef AFS_NT40_ENV
-#include <netinet/in.h>
-#include <netdb.h>
-#ifndef HAVE_VSYSLOG
-#include <syslog.h>
-#endif
-#else
-#include <winsock2.h>
-#endif
-#if defined(AFS_AIX32_ENV) || defined(AFS_SUN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI65_ENV)
-#include <sys/socket.h>
-#endif
 
 /* This is an enhanced version of the *printf functionality shipped
  * with Heimdal.  In addition to the standard Unix formatting types

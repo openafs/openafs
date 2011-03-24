@@ -14,28 +14,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <roken.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <roken.h>
 #include <ctype.h>
-#if defined(AFS_NT40_ENV)
-# include <winsock2.h>
-#else
-# if defined(__FreeBSD__)
-#  include <sys/types.h>
-# endif
-# include <netinet/in.h>
-# include <sys/errno.h>
-#endif
-#include <errno.h>
 
 #include <rx/rx.h>
+#include <afs/dirpath.h>
 
 #include "afs_assert.h"
 #include "afsutil.h"
-#include <afs/dirpath.h>
 
 #define AFS_IPINVALID        0xffffffff	/* invalid IP address */
 #define AFS_IPINVALIDIGNORE  0xfffffffe	/* no input given to extractAddr */

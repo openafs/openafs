@@ -11,8 +11,6 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
-
-
 #include <afs/stds.h>
 
 #include <stddef.h>

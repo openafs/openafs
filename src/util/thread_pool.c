@@ -10,21 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <dirent.h>
 #include <afs/afs_assert.h>
-#include <string.h>
-#include <sys/file.h>
-#include <sys/param.h>
 #include <lock.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-#include <unistd.h>
-#endif
 #include <afs/afsutil.h>
 #include <lwp.h>
 #include <afs/afsint.h>

@@ -18,35 +18,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
-
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <time.h>
-#else
-#ifdef AFS_AIX_ENV
-#include <time.h>
-#endif
-#include <sys/param.h>
-#include <sys/time.h>
-#include <syslog.h>
-#endif
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 
 #include <roken.h>		/* Must come after procmgmt.h */
 
-#include <fcntl.h>
-#include <afs/stds.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
 #include "afsutil.h"
 #include "fileutil.h"
 #include <lwp.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+
 #if defined(AFS_PTHREAD_ENV)
 #include <afs/afs_assert.h>
 /* can't include rx when we are libutil; it's too early */

@@ -10,17 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <afs/afs_assert.h>
-#include <string.h>
+#include <roken.h>
 #include <sys/file.h>
-#include <sys/param.h>
+
+#include <afs/afs_assert.h>
 #include <lock.h>
 
 #define __AFS_WORK_QUEUE_IMPL 1

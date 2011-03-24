@@ -27,14 +27,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <time.h>
+
+#include <roken.h>
+
 #include <afs/afsutil.h>
 #include <afs/tabular_output.h>
-#include <errno.h>
 
 /* private structures */
 

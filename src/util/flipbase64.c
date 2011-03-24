@@ -12,10 +12,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
+#include <roken.h>
 
 #if defined(AFS_NAMEI_ENV)
-#include <sys/types.h>
 #include "afsutil.h"
 
 /* This version of base64 gets it right and starts converting from the low
