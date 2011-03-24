@@ -10,14 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
 #include <ctype.h>
-#include "cmd.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <assert.h>
+
+#include "cmd.h"
 
 /* declaration of private token type */
 struct cmd_token {
