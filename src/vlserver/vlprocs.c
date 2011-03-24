@@ -12,28 +12,19 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
 #include <afs/keys.h>
 #include <afs/cellconfig.h>
+
 #include "vlserver.h"
 #include "vlserver_internal.h"
 #include "afs/audit.h"
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
+
 #ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
 #include <regex.h>
 #endif

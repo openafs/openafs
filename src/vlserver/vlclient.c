@@ -9,35 +9,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#endif
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
 #endif
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
 
 #include <afs/afsutil.h>
@@ -50,6 +31,7 @@
 #include <afs/cmd.h>
 #include <lock.h>
 #include <ubik.h>
+
 #include "vlserver.h"
 
 void fill_listattributes_entry(struct VldbListByAttributes *, char **, int);

@@ -9,16 +9,12 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <stdio.h>
-#include <sys/file.h>
-#include <string.h>
 
-#include <netinet/in.h>
+#include <roken.h>
+
+#include <sys/file.h>
+
 #include <afs/venus.h>
 #include <afs/cmd.h>
 #include <afs/afsutil.h>

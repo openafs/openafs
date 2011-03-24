@@ -9,34 +9,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <sys/stat.h>
-#include <string.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
 #endif
+
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#endif
-#include <time.h>
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
 #endif
 
 #include <rx/xdr.h>
@@ -51,6 +33,7 @@
 #include <lock.h>
 #include <ubik.h>
 #include <afs/afsutil.h>
+
 #include "vlserver.h"
 #include "vlserver_internal.h"
 

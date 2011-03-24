@@ -7,6 +7,22 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
+#include <roken.h>
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
+#endif
+
+#include <ubik.h>
+#include <afs/afsutil.h>
+#include <afs/cmd.h>
+
+#include "vlserver.h"
+#include "vldbint.h"
+
 /* Read a VLDB file and verify it for correctness */
 
 #define VL  0x001		/* good volume entry */
@@ -42,33 +58,6 @@
 #define VLDB_CHECK_FATAL    4
 #define vldbread(x,y,z) vldbio(x,y,z,0)
 #define vldbwrite(x,y,z) vldbio(x,y,z,1)
-
-#include <afsconfig.h>
-#include <afs/param.h>
-
-#include <roken.h>
-
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <WINNT/afsevent.h>
-#include <io.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
-
-#include "vlserver.h"
-#include "vldbint.h"
-#include <ubik.h>
-#include <afs/afsutil.h>
-#include <afs/cmd.h>
 
 #define ADDR(x) (x/sizeof(struct nvlentry))
 

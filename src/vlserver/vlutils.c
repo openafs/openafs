@@ -12,17 +12,10 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-
 #include <lock.h>
 #include <rx/xdr.h>
 #include <ubik.h>
+
 #include "vlserver.h"
 #include "vlserver_internal.h"
 
