@@ -9,20 +9,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <afs/afsutil.h>
 
-#include <string.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifndef AFS_NT40_ENV
-#include <sys/param.h>
-#include <unistd.h>
-#else
-#include <io.h>
-#endif
 #include "audit-api.h"
 
 static FILE *auditout;

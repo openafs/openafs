@@ -12,14 +12,6 @@
 
 #include <roken.h>
 
-#include <fcntl.h>
-#include <stdarg.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
 #ifdef AFS_AIX32_ENV
 #include <sys/audit.h>
 #else
@@ -29,7 +21,6 @@
 #define AUDIT_FAIL_ACCESS 3
 #define AUDIT_FAIL_PRIV 4
 #endif /* AFS_AIX32_ENV */
-#include <errno.h>
 
 #include "afs/afsint.h"
 #include <rx/rx.h>
@@ -37,9 +28,7 @@
 #include "audit.h"
 #include "audit-api.h"
 #include "lock.h"
-#ifdef AFS_AIX32_ENV
-#include <sys/audit.h>
-#endif
+
 #include <afs/afsutil.h>
 
 /* C99 requires va_copy.  Older versions of GCC provide __va_copy.  Per t
