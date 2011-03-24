@@ -1561,10 +1561,20 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
 
+    if (vp) {
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
+    }
+
     if (vp && vp->pending_vol_op) {
-	osi_Assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
-	memcpy(res->payload.buf, vp->pending_vol_op, sizeof(FSSYNC_VolOp_info));
-	res->hdr.response_len += sizeof(FSSYNC_VolOp_info);
+	if (!FSYNC_partMatch(vcom, vp, 1)) {
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	    code = SYNC_FAILED;
+	} else {
+	    osi_Assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
+	    memcpy(res->payload.buf, vp->pending_vol_op, sizeof(FSSYNC_VolOp_info));
+	    res->hdr.response_len += sizeof(FSSYNC_VolOp_info);
+	}
     } else {
 	if (!vp || V_attachState(vp) == VOL_STATE_DELETED) {
 	    res->hdr.reason = FSYNC_UNKNOWN_VOLID;
@@ -1574,6 +1584,10 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    res->hdr.reason = FSYNC_NO_PENDING_VOL_OP;
 	}
 	code = SYNC_FAILED;
+    }
+
+    if (vp) {
+	VCancelReservation_r(vp);
     }
     return code;
 }
