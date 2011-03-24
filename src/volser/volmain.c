@@ -12,26 +12,13 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #ifdef AFS_NT40_ENV
-#include <time.h>
-#include <fcntl.h>
 #include <windows.h>
 #include <WINNT/afsevent.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <unistd.h>
 #endif
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <signal.h>
 #include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
@@ -53,13 +40,10 @@
 #include <afs/keys.h>
 #include <afs/dir.h>
 #include <ubik.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-
-#include <errno.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
+
 #include "volser.h"
 #include "volint.h"
 #include "volser_internal.h"

@@ -50,21 +50,10 @@
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#include "volint.h"
-#include "dump.h"
 #include <afs/cmd.h>
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <stdio.h>
-#include <errno.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <string.h>
-
+#include "volint.h"
+#include "dump.h"
 
 char rootdir[MAXPATHLEN];
 char mntroot[MAXPATHLEN];

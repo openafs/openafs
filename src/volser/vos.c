@@ -16,28 +16,13 @@
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#include <sys/types.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <io.h>
-#include <winsock2.h>
 #include <WINNT/afsreg.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #endif
-#include <sys/stat.h>
+
 #ifdef AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
-#include <errno.h>
 
 #include <lock.h>
 #include <afs/stds.h>
@@ -62,9 +47,6 @@
 #include "dump.h"
 #include "lockdata.h"
 
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 #include "volser_internal.h"
 #include "volser_prototypes.h"
 #include "vsutils_prototypes.h"

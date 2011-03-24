@@ -12,21 +12,8 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/uio.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <sys/stat.h>
+
 #include <afs/afs_assert.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -39,12 +26,13 @@
 #include <afs/vnode.h>
 #include <afs/volume.h>
 #include <afs/partition.h>
-#include "dump.h"
 #include <afs/daemon_com.h>
 #include <afs/fssync.h>
 #include <afs/acl.h>
 #include <afs/com_err.h>
 #include <afs/vol_prototypes.h>
+
+#include "dump.h"
 #include "volser.h"
 #include "volint.h"
 #include "dumpstuff.h"

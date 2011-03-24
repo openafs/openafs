@@ -21,26 +21,9 @@
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
-#else
-#include <sys/time.h>
 #endif
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <dirent.h>
-#include <sys/stat.h>
 #include <afs/afsint.h>
-#include <signal.h>
 #include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>

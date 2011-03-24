@@ -19,23 +19,16 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <afs/voldefs.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/vlserver.h>
 #include <afs/nfs.h>
 #include <afs/afsint.h>
+
 #include "volint.h"
 #include "volser.h"
 #include "lockdata.h"
-
 #include "vsutils_prototypes.h"
 #include "lockprocs_prototypes.h"
 

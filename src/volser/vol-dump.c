@@ -24,21 +24,8 @@
 #include <roken.h>
 
 #include <ctype.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <time.h>
-#include <io.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/time.h>
-#endif
-#include <afs/cmd.h>
 
+#include <afs/cmd.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
@@ -55,24 +42,6 @@
 #include <afs/acl.h>
 #include <afs/dir.h>
 #include <afs/com_err.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-
-#ifdef _AIX
-#include <time.h>
-#endif
-
-#include <dirent.h>
 
 #include "volser.h"
 #include "volint.h"

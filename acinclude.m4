@@ -1253,6 +1253,7 @@ AC_CHECK_HEADERS([ \
 		   sys/sysctl.h \
 		   sys/time.h \
 		   sys/types.h \
+		   sys/uio.h \
 		   sys/un.h \
 		   sys/vfs.h \
 		   syslog.h \

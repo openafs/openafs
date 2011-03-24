@@ -14,27 +14,10 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <string.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <stdlib.h>
-#include <fcntl.h>
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-
-#include <dirent.h>
-#include <sys/stat.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/afsint.h>
-#include <signal.h>
 #include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>

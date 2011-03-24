@@ -13,19 +13,8 @@
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
 #endif
 
 #include <lock.h>
@@ -51,7 +40,6 @@
 #endif
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#include <errno.h>
 #define ERRCODE_RANGE 8		/* from error_table.h */
 #define	CLOCKSKEW   2		/* not really skew, but resolution */
 #define CLOCKADJ(x) (((x) < CLOCKSKEW) ? 0 : (x) - CLOCKSKEW)

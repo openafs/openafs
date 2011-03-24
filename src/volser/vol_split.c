@@ -8,31 +8,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
-#include <sys/types.h>
-#include <stdio.h>
-#include <afs/afs_assert.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <windows.h>
-#include <winbase.h>
-#include <io.h>
-#include <time.h>
-#else
-#include <sys/file.h>
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-#include <errno.h>
-#include <sys/stat.h>
+#include <roken.h>
 
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
+#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
+#include <afs/afs_assert.h>
 #include <afs/dir.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -45,6 +28,7 @@
 #include <afs/volume.h>
 #include <afs/partition.h>
 #include <afs/viceinode.h>
+
 #include "vol.h"
 #include "volint.h"
 #include "volser.h"

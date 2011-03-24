@@ -12,27 +12,14 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <string.h>
-#ifdef	AFS_SUN5_ENV
-#include <sys/fcntl.h>
-#endif
-#include <errno.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <stdio.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/afs_assert.h>
 #include <afs/dir.h>
 #include <afs/ihandle.h>
+
 #include "vol.h"
 #include "physio.h"
 
