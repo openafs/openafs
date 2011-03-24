@@ -11,24 +11,19 @@
  * Glue code for the kopenafs API.  Mostly just wrappers around the functions
  * included in the libsys code.
  */
+#include <afsconfig.h>
+#include <afs/param.h>
 
-#include <errno.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <signal.h>
-#include <stdlib.h>
+#include <roken.h>
+
 #ifdef AFS_AIX51_ENV
 # include <sys/cred.h>
 # ifdef HAVE_SYS_PAG_H
 #  include <sys/pag.h>
 # endif
 #endif
-#include <sys/param.h>
-#include <unistd.h>
 
-#include <afsconfig.h>
 #include <afs/afssyscalls.h>
-#include <afs/param.h>
 #include <kopenafs.h>
 
 static volatile sig_atomic_t syscall_okay = 1;
