@@ -4413,6 +4413,7 @@ AskDAFS(void)
 		ret = 1;
 	    else
 		ret = 0;
+	    break;
 	} else if (i < 2) {
 	    /* try it again */
 	    Log("AskDAFS:  request to query fileserver failed; trying again...\n");
