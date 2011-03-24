@@ -300,9 +300,9 @@ static int AskVolumeSummary(struct SalvInfo *salvinfo,
                             VolumeId singleVolumeNumber);
 static void MaybeAskOnline(struct SalvInfo *salvinfo, VolumeId volumeId);
 
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 static int LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId);
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 
 /* Uniquifier stored in the Inode */
 static Unique
@@ -731,13 +731,13 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	Abort("Raced too many times with fileserver restarts while trying to "
 	      "checkout/lock volumes; Aborted\n");
     }
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
     if (tries > 1) {
 	/* unlock all previous volume locks, since we're about to lock them
 	 * again */
 	VLockFileReinit(&partP->volLockFile);
     }
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 
     salvinfo->fileSysPartition = partP;
     salvinfo->fileSysDevice = salvinfo->fileSysPartition->device;
@@ -756,11 +756,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 #endif
 
     if (singleVolumeNumber) {
-#ifndef AFS_DEMAND_ATTACH_FS
+#if !(defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL))
 	/* only non-DAFS locks the partition when salvaging a single volume;
 	 * DAFS will lock the individual volumes in the VG */
 	VLockPartition(partP->name);
-#endif /* !AFS_DEMAND_ATTACH_FS */
+#endif /* !(AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL) */
 
 	ForceSalvage = 1;
 
@@ -771,11 +771,11 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
 	salvinfo->useFSYNC = 1;
 	AskOffline(salvinfo, singleVolumeNumber);
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 	if (LockVolume(salvinfo, singleVolumeNumber)) {
 	    goto retry;
 	}
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 
     } else {
 	salvinfo->useFSYNC = 0;
@@ -927,10 +927,10 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
     if (!Testing && singleVolumeNumber) {
 	int foundSVN = 0;
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 	/* unlock vol headers so the fs can attach them when we AskOnline */
 	VLockFileReinit(&salvinfo->fileSysPartition->volLockFile);
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 
 	/* Step through the volumeSummary list and set all volumes on-line.
 	 * Most volumes were taken off-line in GetVolumeSummary.
@@ -1599,7 +1599,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 
 	        AskOffline(salvinfo, summary.header.id);
 
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 		if (!badname) {
 		    /* don't lock the volume if the header is bad, since we're
 		     * about to delete it anyway. */
@@ -1608,7 +1608,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 			return -1;
 		    }
 		}
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 	    }
 	}
 	if (badname) {
@@ -4235,7 +4235,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
     }
 }
 
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 /**
  * Locks a volume on disk for salvaging.
  *
@@ -4321,7 +4321,7 @@ LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId)
 
     return 0;
 }
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 
 void
 AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId)
@@ -4347,13 +4347,13 @@ AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId)
 	    Log("AskOffline:  fssync protocol mismatch (bad command word '%d'); salvage aborting.\n",
 		FSYNC_VOL_OFF);
 	    if (AskDAFS()) {
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 		Log("AskOffline:  please make sure dafileserver, davolserver, salvageserver and dasalvager binaries are same version.\n");
 #else
 		Log("AskOffline:  fileserver is DAFS but we are not.\n");
 #endif
 	    } else {
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 		Log("AskOffline:  fileserver is not DAFS but we are.\n");
 #else
 		Log("AskOffline:  please make sure fileserver, volserver and salvager binaries are same version.\n");
@@ -4476,13 +4476,13 @@ AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId)
 	    Log("AskOnline:  fssync protocol mismatch (bad command word '%d')\n",
 		FSYNC_VOL_DONE);
 	    if (AskDAFS()) {
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 		Log("AskOnline:  please make sure dafileserver, davolserver, salvageserver and dasalvager binaries are same version.\n");
 #else
 		Log("AskOnline:  fileserver is DAFS but we are not.\n");
 #endif
 	    } else {
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 		Log("AskOnline:  fileserver is not DAFS but we are.\n");
 #else
 		Log("AskOnline:  please make sure fileserver, volserver and salvager binaries are same version.\n");

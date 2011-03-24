@@ -13,7 +13,7 @@
 #include "volume.h"
 #include "partition.h"
 
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 # include "lock.h"
 #endif
 
@@ -85,7 +85,7 @@ VIsSalvager(ProgramType type)
 static_inline int
 VRequiresPartLock(void)
 {
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
     return 0;
 #else
     switch (programType) {
@@ -95,7 +95,7 @@ VRequiresPartLock(void)
     default:
         return 0;
     }
-#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 }
 
 /**
@@ -151,7 +151,7 @@ VShouldCheckInUse(int mode)
     return 0;
 }
 
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 /**
  * acquire a non-blocking disk lock for a particular volume id.
  *
@@ -270,6 +270,9 @@ VVolLockType(int mode, int writeable)
 	}
     }
 }
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+
+#ifdef AFS_DEMAND_ATTACH_FS
 
 /**
  * tells caller whether or not the volume is effectively salvaging.

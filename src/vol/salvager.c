@@ -335,7 +335,7 @@ handleit(struct cmd_syndesc *as, void *arock)
      */
     if (seenvol) {
 	char *msg = NULL;
-#ifdef AFS_DEMAND_ATTACH_FS
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 	if (!AskDAFS()) {
 	    msg =
 		"The DAFS dasalvager cannot be run with a non-DAFS fileserver.  Please use 'salvager'.";
@@ -525,7 +525,7 @@ main(int argc, char **argv)
 #ifdef FAST_RESTART
     cmd_AddParm(ts, "-DontSalvage", CMD_FLAG, CMD_OPTIONAL,
 		"Don't salvage. This my be set in BosConfig to let the fileserver restart immediately after a crash. Bad volumes will be taken offline");
-#elif defined(AFS_DEMAND_ATTACH_FS)
+#elif defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
     cmd_Seek(ts, 20); /* skip DontSalvage */
     cmd_AddParm(ts, "-forceDAFS", CMD_FLAG, CMD_OPTIONAL,
 		"For Demand Attach Fileserver, permit a manual volume salvage outside of the salvageserver");
