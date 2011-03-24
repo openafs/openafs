@@ -349,9 +349,8 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 	    afs_uint64 size;
 	    offset = (e->vN + 1 - class) << (vcp->logSize -1);
 	    if (FDH_PREAD(fdP, vnode, vcp->diskSize, offset) != vcp->diskSize) {
-		Log("Couldn't read in %s Index of volume %u at offset %"
-		    AFS_UINT64_FMT "\n", class ? "small":"large",
-		    V_id(vol), offset);
+		Log("Couldn't read in %s Index of volume %u at offset %llu\n",
+		    class ? "small":"large", V_id(vol), offset);
 		code = EIO;
 		goto Bad_Copy;
 	    }
@@ -381,9 +380,8 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 		VNDISK_SET_INO(vnode, newino);
 		vnode->cloned = 0;
 	        if (FDH_PWRITE(fdP, vnode, vcp->diskSize, offset) != vcp->diskSize) {
-		    Log("Couldn't write in %s Index of volume %u at offset %"
-			AFS_UINT64_FMT "\n", class ? "small":"large",
-			V_id(vol), offset);
+		    Log("Couldn't write in %s Index of volume %u at offset %llu\n",
+			class ? "small":"large", V_id(vol), offset);
 		    code = EIO;
 		    goto Bad_Copy;
 	        }
@@ -428,9 +426,8 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 		    vnode->parent = 1; /* in new root-directory */
 		vnode->cloned = 0;
 	        if (FDH_PWRITE(newfdP, vnode, vcp->diskSize, offset) != vcp->diskSize) {
-		    Log("Couldn't write in %s Index of volume %u to offset %"
-			AFS_UINT64_FMT "\n", class ? "small":"large",
-			V_id(newvol), offset);
+		    Log("Couldn't write in %s Index of volume %u to offset %llu\n",
+			class ? "small":"large", V_id(newvol), offset);
 		    code = EIO;
 		    goto Bad_Copy;
 	        }
@@ -455,8 +452,8 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
   	}
 	offset = (where + 1 - class) << (vcp->logSize -1);
 	if (FDH_PREAD(fdP, vnode, vcp->diskSize, offset) != vcp->diskSize) {
-	    Log("Couldn't read in large Index of old volume %u at offset %"
-		AFS_UINT64_FMT "\n", V_id(vol), offset);
+	    Log("Couldn't read in large Index of old volume %u at offset %llu\n",
+		V_id(vol), offset);
 	    code = EIO;
 	    goto Bad_Copy;
 	}
@@ -667,9 +664,8 @@ deleteVnodes(Volume *vol, afs_int32 class,
 	if (e->flag & NEEDED) {
 	    offset = (e->vN + 1 - class) << (vcp->logSize -1);
 	    if (FDH_PREAD(fdP, vnode, vcp->diskSize, offset) != vcp->diskSize) {
-		Log("Couldn't read in %s Index of volume %u at offset %"
-		    AFS_UINT64_FMT "\n", class ? "small":"large", V_id(vol),
-		    offset);
+		Log("Couldn't read in %s Index of volume %u at offset %llu\n",
+		    class ? "small":"large", V_id(vol), offset);
 		code = EIO;
 		goto Bad_Delete;
 	    }
@@ -688,9 +684,8 @@ deleteVnodes(Volume *vol, afs_int32 class,
 	    memset(vnode, 0, vcp->diskSize);
 	    vnode->type = vNull;
 	    if (FDH_PWRITE(fdP, vnode, vcp->diskSize, offset) != vcp->diskSize) {
-	           Log("Couldn't write in %s Index of volume %u to offset %"
-		       AFS_UINT64_FMT "\n", class ? "small":"large",
-		       V_id(vol), offset);
+	           Log("Couldn't write in %s Index of volume %u to offset %llu\n",
+		       class ? "small":"large", V_id(vol), offset);
 	    }
         }
     }

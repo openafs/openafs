@@ -9,9 +9,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <roken.h>
-
 #include <afs/stds.h>
+
+#include <roken.h>
 
 #include <windows.h>
 #include <winsock2.h>

@@ -114,14 +114,13 @@ vFSLog(const char *format, va_list args)
     if (mrafsStyleLogs || threadIdLogs) {
 	num = (*threadNumProgram) ();
         if (num > -1) {
-	(void)afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%d] ",
-			   num);
-	info += strlen(info);
-    }
+	    snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%d] ",
+		     num);
+	    info += strlen(info);
+	}
     }
 
-    (void)afs_vsnprintf(info, (sizeof tbuffer) - strlen(tbuffer), format,
-			args);
+    vsnprintf(info, (sizeof tbuffer) - strlen(tbuffer), format, args);
 
     len = strlen(tbuffer);
     LOCK_SERVERLOG();
@@ -302,11 +301,11 @@ OpenLog(const char *fileName)
 		strcpy((char *)&ourName, (char *)fileName);
 	}
     makefilename:
-	afs_snprintf(FileName, MAXPATHLEN, "%s.%d%02d%02d%02d%02d%02d",
-		     ourName, TimeFields->tm_year + 1900,
-		     TimeFields->tm_mon + 1, TimeFields->tm_mday,
-		     TimeFields->tm_hour, TimeFields->tm_min,
-		     TimeFields->tm_sec);
+	snprintf(FileName, MAXPATHLEN, "%s.%d%02d%02d%02d%02d%02d",
+		 ourName, TimeFields->tm_year + 1900,
+		 TimeFields->tm_mon + 1, TimeFields->tm_mday,
+		 TimeFields->tm_hour, TimeFields->tm_min,
+		 TimeFields->tm_sec);
 	if(lstat(FileName, &buf) == 0) {
 	    /* avoid clobbering a log */
 	    TimeFields->tm_sec++;

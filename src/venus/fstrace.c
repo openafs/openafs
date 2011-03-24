@@ -13,6 +13,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -622,8 +623,8 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
      * install this special message catalog in with internationalization
      * catalogs.
      */
-    afs_snprintf(nls_filename, sizeof(nls_filename), "%s/C/%s.cat",
-		 AFSDIR_CLIENT_DATA_DIRPATH, filename_prefix);
+    snprintf(nls_filename, sizeof(nls_filename), "%s/C/%s.cat",
+	     AFSDIR_CLIENT_DATA_DIRPATH, filename_prefix);
 
     catd = catopen(nls_filename, 0);
     if (catd == (nl_catd) -1) {

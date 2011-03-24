@@ -174,7 +174,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
     }
 
     if (pfile == NULL) {
-        afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0", pbase);
+        snprintf(pbuffer, sizeof(pbuffer), "%s.DB0", pbase);
         pfile = pbuffer;
     }
     if ((dbase_fd = open(pfile, (wflag ? O_RDWR : O_RDONLY) | O_CREAT, 0600))

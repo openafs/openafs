@@ -30,8 +30,7 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 RXOBJS = rx_pthread.o
 
 UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-       volparse.o flipbase64.o softsig.o hostparse.o snprintf.o \
-       pthread_glock.o
+       volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o
 
 LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
      ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libcmd.a \
@@ -87,9 +86,6 @@ softsig.o: ${UTIL}/softsig.c
 
 hostparse.o: ${UTIL}/hostparse.c
 	$(AFS_CCRULE) $(UTIL)/hostparse.c
-
-snprintf.o: ${UTIL}/snprintf.c
-	$(AFS_CCRULE) $(UTIL)/snprintf.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
 	$(AFS_CCRULE) $(UTIL)/pthread_glock.c

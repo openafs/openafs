@@ -501,7 +501,9 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     offset = 0;
     epoch = tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
     (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP",
+	     ubik_dbase->pathName, (file<0)?"SYS":"",
+	     (file<0)?-file:file);
     fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (fd < 0) {
 	code = errno;
@@ -544,13 +546,16 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 
     /* sync data first, then write label and resync (resync done by setlabel call).
      * This way, good label is only on good database. */
-    afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+    snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d",
+	     ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #ifdef AFS_NT40_ENV
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD",
+	     ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     code = unlink(pbuffer);
     if (!code)
 	code = rename(tbuffer, pbuffer);
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP",
+	     ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #endif
     if (!code)
 	code = rename(pbuffer, tbuffer);
@@ -559,7 +564,8 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	code = (*ubik_dbase->setlabel) (dbase, file, avers);
     }
 #ifdef AFS_NT40_ENV
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD",
+	     ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     unlink(pbuffer);
 #endif
     memcpy(&ubik_dbase->version, avers, sizeof(struct ubik_version));

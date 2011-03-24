@@ -55,7 +55,6 @@ LIBOBJS = \
 	$(OUT)\regex.obj \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog.obj \
-    	$(OUT)\snprintf.obj \
 	$(OUT)\uuid.obj \
 	$(OUT)\volparse.obj \
 	$(OUT)\winsock_nt.obj \
@@ -77,7 +76,6 @@ MT_LIBOBJS = \
 	$(OUT)\regex.obj \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog_mt.obj \
-    	$(OUT)\snprintf.obj \
 	$(OUT)\uuid.obj \
 	$(OUT)\volparse.obj \
 	$(OUT)\winsock_nt.obj \

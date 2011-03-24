@@ -353,12 +353,13 @@ namei_ViceREADME(char *partition)
     int fd;
 
     /* Create the inode directory if we're starting for the first time */
-    (void)afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s", partition,
-		       INODEDIR);
+    snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s", partition,
+	     INODEDIR);
     mkdir(filename, 0700);
 
-    (void)afs_snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s" OS_DIRSEP "README",
-                       partition, INODEDIR);
+    snprintf(filename, sizeof filename,
+	     "%s" OS_DIRSEP "%s" OS_DIRSEP "README",
+             partition, INODEDIR);
     fd = OS_OPEN(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
     if (fd != INVALID_FD) {
 	(void)OS_WRITE(fd, VICE_README, strlen(VICE_README));
@@ -382,7 +383,7 @@ namei_CreateDataDirectories(namei_t * name, int *created)
     int i;
 
     *created = 0;
-    afs_snprintf(tmp, 256, "%s" OS_DIRSEP "%s", name->n_drive, name->n_voldir);
+    snprintf(tmp, 256, "%s" OS_DIRSEP "%s", name->n_drive, name->n_voldir);
 
     if (mkdir(tmp) < 0) {
         if (errno != EEXIST)
@@ -540,7 +541,7 @@ namei_RemoveDataDirectories(namei_t * name)
     char tmp[256];
     int i;
 
-    afs_snprintf(tmp, 256, "%s" OS_DIRSEP "%s", name->n_drive, name->n_voldir);
+    snprintf(tmp, 256, "%s" OS_DIRSEP "%s", name->n_drive, name->n_voldir);
 
     path = tmp;
     path += strlen(path);
@@ -1067,7 +1068,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	} else {
 	    IHandle_t *th;
 	    IH_INIT(th, ih->ih_dev, ih->ih_vid, ino);
-	    Log("Warning: Lost ref on ihandle dev %d vid %d ino %" AFS_INT64_FMT "\n",
+	    Log("Warning: Lost ref on ihandle dev %d vid %d ino %lld\n",
 		th->ih_dev, th->ih_vid, (afs_int64)th->ih_ino);
 	    IH_RELEASE(th);
 
@@ -1171,7 +1172,7 @@ namei_copy_on_write(IHandle_t *h)
 	fdP = IH_OPEN(h);
 	if (!fdP)
 	    return EIO;
-	afs_snprintf(path, sizeof(path), "%s-tmp", name.n_path);
+	snprintf(path, sizeof(path), "%s-tmp", name.n_path);
 	fd = OS_OPEN(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
 	if (fd == INVALID_FD) {
 	    FDH_CLOSE(fdP);
@@ -1760,8 +1761,8 @@ namei_ListAFSFiles(char *dev,
 #else
 	    if (*dp1->d_name == '.')
 		continue;
-	    afs_snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s", name.n_path,
-			 dp1->d_name);
+	    snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s", name.n_path,
+		     dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
 		while ((dp2 = readdir(dirp2))) {
@@ -1861,8 +1862,8 @@ _namei_examine_special(char * path1,
     } else {
 	char path2[512];
 	/* Open this handle */
-	(void)afs_snprintf(path2, sizeof(path2),
-			   "%s" OS_DIRSEP "%s", path1, dname);
+	snprintf(path2, sizeof(path2),
+		 "%s" OS_DIRSEP "%s", path1, dname);
 	linkHandle->fd_fd = OS_OPEN(path2, Testing ? O_RDONLY : O_RDWR, 0666);
 	info.linkCount =
 	    namei_GetLinkCount(linkHandle, (Inode) 0, 1, 1, Testing);
@@ -2444,7 +2445,8 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 
 #ifndef AFS_NT40_ENV /* This level missing on Windows */
 	    /* Now we've got a next level subdir. */
-	    afs_snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s", path1, dp1->d_name);
+	    snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s",
+		     path1, dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
 		while ((dp2 = readdir(dirp2))) {
@@ -2452,12 +2454,12 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 			continue;
 
 		    /* Now we've got to the actual data */
-		    afs_snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s", path2,
-				 dp2->d_name);
+		    snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s",
+			     path2, dp2->d_name);
 #else
 		    /* Now we've got to the actual data */
-		    afs_snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s", path1,
-				 dp1->d_name);
+		    snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s",
+			     path1, dp1->d_name);
 #endif
 		    dirp3 = opendir(path3);
 		    if (dirp3) {
@@ -2598,7 +2600,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     FdHandle_t linkHandle;
     char dirl;
 
-    afs_snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
+    snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
 
     dirH = FindFirstFileEx(fpath, FindExInfoStandard, &data,
 			   FindExSearchNameMatch, NULL,
@@ -2670,7 +2672,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     int parm, tag;
     lb64_string_t check;
 
-    afs_snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
+    snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
 
     if (afs_stat(fpath, &status) < 0) {
 	return -1;
@@ -2913,8 +2915,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     t_ih.ih_dev = ih->ih_dev;
     t_ih.ih_vid = ih->ih_vid;
 
-    (void)afs_snprintf(oldpath, sizeof oldpath, "%s" OS_DIRSEP "%s", dir_name,
-		       infoName);
+    snprintf(oldpath, sizeof oldpath, "%s" OS_DIRSEP "%s", dir_name,
+	     infoName);
     fd = OS_OPEN(oldpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
@@ -2944,8 +2946,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_SMALLINDEX);
     namei_HandleToName(&n, &t_ih);
-    (void)afs_snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
-		       smallName);
+    snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
+	     smallName);
     fd = OS_OPEN(newpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n", newpath);
@@ -2963,8 +2965,8 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_LARGEINDEX);
     namei_HandleToName(&n, &t_ih);
-    (void)afs_snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
-		       largeName);
+    snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
+	     largeName);
     fd = OS_OPEN(newpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n", newpath);
@@ -3025,7 +3027,7 @@ PrintInode(char *s, Inode ino)
     if (!s)
 	s = result;
 
-    (void)afs_snprintf(s, sizeof(afs_ino_str_t), "%" AFS_UINT64_FMT, (afs_uintmax_t) ino);
+    snprintf(s, sizeof(afs_ino_str_t), "%llu", (afs_uintmax_t) ino);
 
     return s;
 }

@@ -326,8 +326,7 @@ CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
     if (alen != vlen) {
 	afs_int64 alen64 = alen, vlen64 = vlen;
 	ViceLog(0, ("Fid %lu.%lu.%lu has inconsistent length (index "
-	            "%" AFS_INT64_FMT ", inode %" AFS_INT64_FMT "); volume "
-	            "must be salvaged\n",
+	            "%lld inode %lld ); volume must be salvaged\n",
 	            afs_printable_uint32_lu(vp->hashid),
 	            afs_printable_uint32_lu(Vn_id(vnp)),
 	            afs_printable_uint32_lu(vnp->disk.uniquifier),
@@ -1821,7 +1820,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	 AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
 			 BlocksPreallocatedForVnode))) {
 	ViceLog(25,
-		("Insufficient space to allocate %" AFS_INT64_FMT " blocks\n",
+		("Insufficient space to allocate %lld blocks\n",
 		 (afs_intmax_t) BlocksPreallocatedForVnode));
 	return (errorCode);
     }

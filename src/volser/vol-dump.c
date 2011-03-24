@@ -21,6 +21,8 @@
 # pragma GCC diagnostic warning "-Wformat"
 #endif
 
+#include <roken.h>
+
 #include <ctype.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -233,7 +235,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
-    (void)afs_snprintf(name1, sizeof name1, VFORMAT, (unsigned long)volumeId);
+    snprintf(name1, sizeof name1, VFORMAT, (unsigned long)volumeId);
     HandleVolume(partP, name1, fileName, fromtime);
     return 0;
 }
@@ -250,8 +252,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
 
     afs_int32 n;
 
-    (void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
-		       VPartitionPath(dp), name);
+    snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
+	     VPartitionPath(dp), name);
     if ((fd = afs_open(headerName, O_RDONLY)) == -1
 	|| afs_fstat(fd, &status) == -1) {
 	fprintf(stderr, "Cannot read volume header %s\n", name);

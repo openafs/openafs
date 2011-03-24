@@ -101,8 +101,8 @@ date(time_t date)
     char buf[32];
 
     (void)strftime(buf, 32, "%Y/%m/%d.%H:%M:%S", tm);	/* NT does not have %T */
-    (void)afs_snprintf(results[next = (next + 1) & 7], MAX_DATE_RESULT,
-		       "%lu (%s)", (unsigned long)date, buf);
+    snprintf(results[next = (next + 1) & 7], MAX_DATE_RESULT,
+	     "%lu (%s)", (unsigned long)date, buf);
     return results[next];
 }
 
@@ -311,8 +311,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	}
-	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
-			   afs_printable_uint32_lu(volumeId));
+	snprintf(name1, sizeof name1, VFORMAT,
+		 afs_printable_uint32_lu(volumeId));
 	if (dsizeOnly && !saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
@@ -446,8 +446,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     } else {
 	afs_sfsize_t n;
 
-	(void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
-			   VPartitionPath(dp), name);
+	snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
+		 VPartitionPath(dp), name);
 	if ((fd = OS_OPEN(headerName, O_RDONLY, 0666)) == INVALID_FD
 	    || OS_SIZE(fd) < 0) {
 	    printf("Volinfo: Cannot read volume header %s\n", name);
@@ -786,8 +786,8 @@ PrintVnodes(Volume * vp, VnodeClass class)
 			   PrintInode(NULL, ino), errno);
 		    continue;
 		}
-		(void)afs_snprintf(nfile, sizeof nfile, "TmpInode.%s",
-				   PrintInode(NULL, ino));
+		snprintf(nfile, sizeof nfile, "TmpInode.%s",
+		         PrintInode(NULL, ino));
 		ofd = afs_open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
 		if (ofd < 0) {
 		    printf("Can't create file %s; error %d (ignored)\n",

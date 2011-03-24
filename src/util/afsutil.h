@@ -55,35 +55,6 @@ extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);
 extern void SetupLogSignals(void);
 
-extern int
-afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
-	      va_list ap)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 0)
-    /*@requires maxSet(p) >= (avail-1)@ */
-    /*@modifies p@ */ ;
-
-extern /*@printflike@ */ int
-afs_snprintf( /*@out@ */ char *p, size_t avail, const char *fmt, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4)
-    /*@requires maxSet(p) >= (avail-1)@ */
-    /*@modifies p@ */ ;
-
-extern int
-afs_vasnprintf (char **ret, size_t max_sz, const char *format, va_list args)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 0);
-
-extern int
-afs_vasprintf (char **ret, const char *format, va_list args)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 2, 0);
-
-extern int
-afs_asprintf (char **ret, const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 2, 3);
-
-extern int
-afs_asnprintf (char **ret, size_t max_sz, const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4);
-
 /* special version of ctime that clobbers a *different static variable, so
  * that ViceLog can call ctime and not cause buffer confusion.
  */

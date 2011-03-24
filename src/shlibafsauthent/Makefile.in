@@ -70,7 +70,6 @@ UTILOBJS = \
 	get_krbrlm.o \
 	dirpath.o \
 	serverLog.o \
-	snprintf.o \
 	fileutil.o
 
 RXKADOBJS = \
@@ -238,9 +237,6 @@ dirpath.o: ${UTIL}/dirpath.c
 
 serverLog.o: ${UTIL}/serverLog.c
 	${AFS_CCRULE} ${UTIL}/serverLog.c
-
-snprintf.o: ${UTIL}/snprintf.c
-	${AFS_CCRULE} ${UTIL}/snprintf.c
 
 fileutil.o: ${UTIL}/fileutil.c
 	${AFS_CCRULE} ${UTIL}/fileutil.c

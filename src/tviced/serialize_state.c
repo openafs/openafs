@@ -329,7 +329,7 @@ fs_stateCreateDump(struct fs_dump_state * state)
     char savedump[MAXPATHLEN];
     struct afs_stat status;
 
-    afs_snprintf(savedump, sizeof(savedump), "%s.old", state->fn);
+    snprintf(savedump, sizeof(savedump), "%s.old", state->fn);
 
     if (afs_stat(state->fn, &status) == 0) {
 	renamefile(state->fn, savedump);

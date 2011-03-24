@@ -250,11 +250,11 @@ VInitPartition_r(char *path, char *devname, Device dev)
     dp->vol_list.busy = 0;
     {
 	char lockpath[MAXPATHLEN+1];
-	afs_snprintf(lockpath, MAXPATHLEN, "%s/" AFS_PARTLOCK_FILE, dp->name);
+	snprintf(lockpath, MAXPATHLEN, "%s/" AFS_PARTLOCK_FILE, dp->name);
 	lockpath[MAXPATHLEN] = '\0';
 	VLockFileInit(&dp->headerLockFile, lockpath);
 
-	afs_snprintf(lockpath, MAXPATHLEN, "%s/" AFS_VOLUMELOCK_FILE, dp->name);
+	snprintf(lockpath, MAXPATHLEN, "%s/" AFS_VOLUMELOCK_FILE, dp->name);
 	lockpath[MAXPATHLEN] = '\0';
 	VLockFileInit(&dp->volLockFile, lockpath);
     }
@@ -1093,14 +1093,14 @@ VPrintDiskStats_r(void)
     struct DiskPartition64 *dp;
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	if (dp->free < 0) {
-	    Log("Partition %s: %"AFS_INT64_FMT
-		" available 1K blocks (minfree=%"AFS_INT64_FMT"), "
-	        "overallocated by %"AFS_INT64_FMT" blocks\n", dp->name,
+	    Log("Partition %s: %lld "
+		" available 1K blocks (minfree=%lld), "
+	        "overallocated by %lld blocks\n", dp->name,
 	        dp->totalUsable, dp->minFree, -dp->free);
 	} else {
-	    Log("Partition %s: %"AFS_INT64_FMT
-		" available 1K blocks (minfree=%"AFS_INT64_FMT"), "
-	        "%"AFS_INT64_FMT" free blocks\n", dp->name,
+	    Log("Partition %s: %lld"
+		" available 1K blocks (minfree=%lld), "
+	        "%lld free blocks\n", dp->name,
 	        dp->totalUsable, dp->minFree, dp->free);
 	}
     }

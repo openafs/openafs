@@ -2749,34 +2749,30 @@ h_PrintClient(struct host *host, int flags, void *rock)
 	H_UNLOCK;
 	return flags;
     }
-    (void)afs_snprintf(tmpStr, sizeof tmpStr,
-		       "Host %s:%d down = %d, LastCall %s",
-		       afs_inet_ntoa_r(host->host, hoststr),
-		       ntohs(host->port), (host->hostFlags & VENUSDOWN),
-		       afs_ctime(&LastCall, tbuffer,
-				 sizeof(tbuffer)));
+    snprintf(tmpStr, sizeof tmpStr, "Host %s:%d down = %d, LastCall %s",
+	     afs_inet_ntoa_r(host->host, hoststr),
+	     ntohs(host->port), (host->hostFlags & VENUSDOWN),
+	     afs_ctime(&LastCall, tbuffer, sizeof(tbuffer)));
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     for (client = host->FirstClient; client; client = client->next) {
 	if (!client->deleted) {
-		expTime = client->expTime;
-		(void)afs_snprintf(tmpStr, sizeof tmpStr,
-				   "    user id=%d,  name=%s, sl=%s till %s",
-				   client->ViceId, h_UserName(client),
-				   client->
-				   authClass ? "Authenticated" :
-				   "Not authenticated",
-				   client->
-				   authClass ? afs_ctime(&expTime, tbuffer,
-							 sizeof(tbuffer))
-				   : "No Limit\n");
-		(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
-	    (void)afs_snprintf(tmpStr, sizeof tmpStr, "      CPS-%d is [",
-			       client->CPS.prlist_len);
+	    expTime = client->expTime;
+	    snprintf(tmpStr, sizeof tmpStr,
+		     "    user id=%d,  name=%s, sl=%s till %s",
+		     client->ViceId, h_UserName(client),
+		     client->authClass ? "Authenticated"
+				       : "Not authenticated",
+		     client->authClass ? afs_ctime(&expTime, tbuffer,
+						   sizeof(tbuffer))
+				       : "No Limit\n");
+	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+	    snprintf(tmpStr, sizeof tmpStr, "      CPS-%d is [",
+			 client->CPS.prlist_len);
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    if (client->CPS.prlist_val) {
 		for (i = 0; i < client->CPS.prlist_len; i++) {
-		    (void)afs_snprintf(tmpStr, sizeof tmpStr, " %d",
-				       client->CPS.prlist_val[i]);
+		    snprintf(tmpStr, sizeof tmpStr, " %d",
+			     client->CPS.prlist_val[i]);
 		    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 		}
 	    }
@@ -2811,8 +2807,8 @@ h_PrintClients(void)
 	return;
     }
     now = FT_ApproxTime();
-    (void)afs_snprintf(tmpStr, sizeof tmpStr, "List of active users at %s\n",
-		       afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+    snprintf(tmpStr, sizeof tmpStr, "List of active users at %s\n",
+	     afs_ctime(&now, tbuffer, sizeof(tbuffer)));
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_PrintClient, (char *)file);
     STREAM_REALLYCLOSE(file);
@@ -2832,19 +2828,20 @@ h_DumpHost(struct host *host, int flags, void *rock)
     char hoststr[16];
 
     H_LOCK;
-    (void)afs_snprintf(tmpStr, sizeof tmpStr,
-		       "ip:%s port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
-		       afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), host->index,
-		       host->cblist, CheckLock(&host->lock), host->LastCall,
-		       host->ActiveCall, (host->hostFlags & VENUSDOWN),
-		       host->hostFlags & HOSTDELETED, host->Console,
-		       host->hostFlags & CLIENTDELETED, host->hcpsfailed,
-		       host->cpsCall);
+    snprintf(tmpStr, sizeof tmpStr,
+	     "ip:%s port:%d hidx:%d cbid:%d lock:%x last:%u active:%u "
+	     "down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u "
+	     "hcps [",
+	     afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+	     host->index, host->cblist, CheckLock(&host->lock),
+	     host->LastCall, host->ActiveCall, (host->hostFlags & VENUSDOWN),
+	     host->hostFlags & HOSTDELETED, host->Console,
+	     host->hostFlags & CLIENTDELETED, host->hcpsfailed,
+	     host->cpsCall);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     if (host->hcps.prlist_val)
 	for (i = 0; i < host->hcps.prlist_len; i++) {
-	    (void)afs_snprintf(tmpStr, sizeof tmpStr, " %d",
-			       host->hcps.prlist_val[i]);
+	    snprintf(tmpStr, sizeof tmpStr, " %d", host->hcps.prlist_val[i]);
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
     sprintf(tmpStr, "] [");
@@ -2881,8 +2878,8 @@ h_DumpHosts(void)
 	return;
     }
     now = FT_ApproxTime();
-    (void)afs_snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n",
-		       afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+    snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n",
+	     afs_ctime(&now, tbuffer, sizeof(tbuffer)));
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_DumpHost, (char *)file);
     STREAM_REALLYCLOSE(file);

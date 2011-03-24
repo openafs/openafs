@@ -634,10 +634,9 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 		} else
 #endif
 		{
-		    (void)afs_snprintf(logFileName, sizeof logFileName,
-				       "%s.%d",
-				       AFSDIR_SERVER_SLVGLOG_FILEPATH,
-				       jobs[startjob]->jobnumb);
+		    snprintf(logFileName, sizeof logFileName, "%s.%d",
+			     AFSDIR_SERVER_SLVGLOG_FILEPATH,
+			     jobs[startjob]->jobnumb);
 		    logFile = afs_fopen(logFileName, "w");
 		}
 		if (!logFile)
@@ -656,8 +655,8 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 #endif
 	if (!partP) {
 	    for (i = 0; i < jobcount; i++) {
-		(void)afs_snprintf(logFileName, sizeof logFileName, "%s.%d",
-				   AFSDIR_SERVER_SLVGLOG_FILEPATH, i);
+		snprintf(logFileName, sizeof logFileName, "%s.%d",
+		         AFSDIR_SERVER_SLVGLOG_FILEPATH, i);
 		if ((passLog = afs_fopen(logFileName, "r"))) {
 		    while (fgets(buf, sizeof(buf), passLog)) {
 			fputs(buf, logFile);
@@ -1192,8 +1191,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FD_t inodeFile, VolumeId singleVolume
     (void)_putenv("TMP=");	/* If "TMP" is set, then that overrides tdir. */
     (void)strcpy(summaryFileName, _tempnam(tdir, "salvage.temp."));
 #else
-    (void)afs_snprintf(summaryFileName, sizeof summaryFileName,
-		       "%s" OS_DIRSEP "salvage.temp.%d", tdir, getpid());
+    snprintf(summaryFileName, sizeof summaryFileName,
+	     "%s" OS_DIRSEP "salvage.temp.%d", tdir, getpid());
 #endif
     summaryFile = OS_OPEN(summaryFileName, O_RDWR|O_APPEND|O_CREAT, 0666);
     if (summaryFile == INVALID_FD) {
@@ -1578,8 +1577,8 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 	    base = name;
 	}
 
-	(void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
-	                   VFORMAT, afs_printable_uint32_lu(summary.header.id));
+	snprintf(nameShouldBe, sizeof nameShouldBe,
+	         VFORMAT, afs_printable_uint32_lu(summary.header.id));
 
 
 	if (strcmp(nameShouldBe, base)) {
@@ -2300,8 +2299,10 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
     if (isp->volSummary == NULL) {
 	char path[64];
 	char headerName[64];
-	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
-	(void)afs_snprintf(path, sizeof path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, headerName);
+	snprintf(headerName, sizeof headerName, VFORMAT,
+		 afs_printable_uint32_lu(isp->volumeId));
+	snprintf(path, sizeof path, "%s" OS_DIRSEP "%s",
+	         salvinfo->fileSysPath, headerName);
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
 	    return -1;
@@ -2328,10 +2329,12 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    if (isp->volSummary->fileName) {
 		strcpy(headerName, isp->volSummary->fileName);
 	    } else {
-		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
+		snprintf(headerName, sizeof headerName, VFORMAT,
+		         afs_printable_uint32_lu(isp->volumeId));
 		isp->volSummary->fileName = ToString(headerName);
 	    }
-	    (void)afs_snprintf(path, sizeof path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, headerName);
+	    snprintf(path, sizeof path, "%s" OS_DIRSEP "%s",
+		     salvinfo->fileSysPath, headerName);
 
 	    Log("Header file %s is damaged or no longer valid%s\n", path,
 		(check ? "" : "; repairing"));
@@ -3973,11 +3976,10 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 		    pa.Vnode = ThisVnode;
 		    pa.Unique = ThisUnique;
 
-		    (void)afs_snprintf(npath, sizeof npath, "%s.%u.%u",
-				       ((class ==
-					 vLarge) ? "__ORPHANDIR__" :
-					"__ORPHANFILE__"), ThisVnode,
-				       ThisUnique);
+		    snprintf(npath, sizeof npath, "%s.%u.%u",
+			     ((class == vLarge) ? "__ORPHANDIR__"
+					        : "__ORPHANFILE__"),
+			     ThisVnode, ThisUnique);
 
 		    CopyOnWrite(salvinfo, &rootdir);
 		    code = Create(&rootdir.dirHandle, npath, &pa);
@@ -4697,11 +4699,10 @@ TimeStampLogFile(char * log_path)
 
     now = time(0);
     lt = localtime(&now);
-    (void)afs_snprintf(stampSlvgLog, sizeof stampSlvgLog,
-		       "%s.%04d-%02d-%02d.%02d:%02d:%02d",
-		       log_path, lt->tm_year + 1900,
-		       lt->tm_mon + 1, lt->tm_mday, lt->tm_hour, lt->tm_min,
-		       lt->tm_sec);
+    snprintf(stampSlvgLog, sizeof stampSlvgLog,
+	     "%s.%04d-%02d-%02d.%02d:%02d:%02d", log_path,
+	     lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday, lt->tm_hour,
+	     lt->tm_min, lt->tm_sec);
 
     /* try to link the logfile to a timestamped filename */
     /* if it fails, oh well, nothing we can do */
@@ -4747,7 +4748,7 @@ Log(const char *format, ...)
     va_list args;
 
     va_start(args, format);
-    (void)afs_vsnprintf(tmp, sizeof tmp, format, args);
+    vsnprintf(tmp, sizeof tmp, format, args);
     va_end(args);
 #ifndef AFS_NT40_ENV
     if (useSyslog) {
@@ -4768,7 +4769,7 @@ Abort(const char *format, ...)
     char tmp[1024];
 
     va_start(args, format);
-    (void)afs_vsnprintf(tmp, sizeof tmp, format, args);
+    vsnprintf(tmp, sizeof tmp, format, args);
     va_end(args);
 #ifndef AFS_NT40_ENV
     if (useSyslog) {

@@ -20,8 +20,8 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 	 hostparse.o exec.o \
 	 hputil.o kreltime.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
-	 afs_atomlist.o afs_lhash.o snprintf.o pthread_glock.o \
-	 tabular_output.o ${REGEX_OBJ}
+	 afs_atomlist.o afs_lhash.o pthread_glock.o tabular_output.o \
+	 ${REGEX_OBJ}
 
 objects_pic = \
 	assert_pic.o \
@@ -44,7 +44,6 @@ objects_pic = \
 	fstab_pic.o \
 	afs_atomlist_pic.o \
 	afs_lhash_pic.o \
-	snprintf_pic.o \
 	pthread_glock_pic.o \
 	tabular_output_pic.o \
 	${REGEX_OBJ_PIC}
@@ -261,9 +260,6 @@ afs_atomlist_pic.o: ${srcdir}/afs_atomlist.c ${includes}
 afs_lhash_pic.o: ${srcdir}/afs_lhash.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/afs_lhash.c
 
-snprintf_pic.o: ${srcdir}/snprintf.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/snprintf.c
-
 pthread_glock_pic.o: ${srcdir}/pthread_glock.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/pthread_glock.c
 
@@ -353,4 +349,4 @@ check-splint:
 	    assert.c base64.c casestrcpy.c ktime.c volparse.c hostparse.c \
 	    hputil.c kreltime.c get_krbrlm.c uuid.c serverLog.c \
 	    dirpath.c fileutil.c netutils.c flipbase64.c \
-	    afs_atomlist.c afs_lhash.c snprintf.c fstab.c
+	    afs_atomlist.c afs_lhash.c fstab.c

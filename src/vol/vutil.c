@@ -194,9 +194,10 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     vol.stamp.magic = VOLUMEINFOMAGIC;
     vol.stamp.version = VOLUMEINFOVERSION;
     vol.destroyMe = DESTROY_ME;
-    (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(vol.id));
-    (void)afs_snprintf(volumePath, sizeof volumePath, "%s" OS_DIRSEP "%s",
-		       VPartitionPath(partition), headerName);
+    snprintf(headerName, sizeof headerName, VFORMAT,
+	     afs_printable_uint32_lu(vol.id));
+    snprintf(volumePath, sizeof volumePath, "%s" OS_DIRSEP "%s",
+	     VPartitionPath(partition), headerName);
     rc = stat(volumePath, &st);
     if (rc == 0 || errno != ENOENT) {
 	if (rc == 0) {
@@ -422,9 +423,8 @@ VReadVolumeDiskHeader(VolumeId volid,
     int fd;
     char path[MAXPATHLEN];
 
-    (void)afs_snprintf(path, sizeof(path),
-		       "%s" OS_DIRSEP VFORMAT,
-		       VPartitionPath(dp), afs_printable_uint32_lu(volid));
+    snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
+	     VPartitionPath(dp), afs_printable_uint32_lu(volid));
     fd = open(path, O_RDONLY);
     if (fd < 0) {
 	Log("VReadVolumeDiskHeader: Couldn't open header for volume %lu (errno %d).\n",
@@ -478,9 +478,8 @@ _VWriteVolumeDiskHeader(VolumeDiskHeader_t * hdr,
 
     flags |= O_RDWR;
 
-    (void)afs_snprintf(path, sizeof(path),
-		       "%s" OS_DIRSEP VFORMAT,
-		       VPartitionPath(dp), afs_printable_uint32_lu(hdr->id));
+    snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
+	     VPartitionPath(dp), afs_printable_uint32_lu(hdr->id));
     fd = open(path, flags, 0644);
     if (fd < 0) {
 	code = errno;
@@ -658,9 +657,8 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
     SYNC_response res;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-    (void)afs_snprintf(path, sizeof(path),
-                       "%s" OS_DIRSEP VFORMAT,
-                       VPartitionPath(dp), afs_printable_uint32_lu(volid));
+    snprintf(path, sizeof(path), "%s" OS_DIRSEP VFORMAT,
+             VPartitionPath(dp), afs_printable_uint32_lu(volid));
     code = unlink(path);
     if (code) {
 	Log("VDestroyVolumeDiskHeader: Couldn't unlink disk header, error = %d\n", errno);

@@ -603,7 +603,9 @@ urecovery_Interact(void *dummy)
 		ubik_dprint("setlabel io error=%d\n", code);
 		goto FetchEndCall;
 	    }
-	    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+	    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP",
+		     ubik_dbase->pathName, (file<0)?"SYS":"",
+		     (file<0)?-file:file);
 	    fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	    if (fd < 0) {
 		code = errno;
@@ -652,13 +654,19 @@ urecovery_Interact(void *dummy)
 		urecovery_state |= UBIK_RECHAVEDB;
 		memcpy(&ubik_dbase->version, &tversion,
 		       sizeof(struct ubik_version));
-		afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+		snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d",
+			 ubik_dbase->pathName, (file<0)?"SYS":"",
+			 (file<0)?-file:file);
 #ifdef AFS_NT40_ENV
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+		snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD",
+			 ubik_dbase->pathName, (file<0)?"SYS":"",
+			 (file<0)?-file:file);
 		code = unlink(pbuffer);
 		if (!code)
 		    code = rename(tbuffer, pbuffer);
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+		snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP",
+			 ubik_dbase->pathName, (file<0)?"SYS":"",
+			 (file<0)?-file:file);
 #endif
 		if (!code)
 		    code = rename(pbuffer, tbuffer);
@@ -670,7 +678,9 @@ urecovery_Interact(void *dummy)
 						 &ubik_dbase->version);
 		}
 #ifdef AFS_NT40_ENV
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
+		snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD",
+			 ubik_dbase->pathName, (file<0)?"SYS":"",
+			 (file<0)?-file:file);
 		unlink(pbuffer);
 #endif
 	    }

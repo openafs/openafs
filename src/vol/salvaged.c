@@ -611,8 +611,8 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
      * another thread may have held the lock on the FILE
      * structure when fork was called! */
 
-    afs_snprintf(childLog, sizeof(childLog), "%s.%d",
-		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid());
+    snprintf(childLog, sizeof(childLog), "%s.%d",
+	     AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid());
 
     logFile = afs_fopen(childLog, "a");
     if (!logFile) {		/* still nothing, use stdout */
@@ -755,8 +755,8 @@ SalvageLogCleanup(int pid)
     char fn[AFSDIR_PATH_MAX];
     static char buf[LOG_XFER_BUF_SIZE];
 
-    afs_snprintf(fn, sizeof(fn), "%s.%d",
-		 AFSDIR_SERVER_SLVGLOG_FILEPATH, pid);
+    snprintf(fn, sizeof(fn), "%s.%d",
+	     AFSDIR_SERVER_SLVGLOG_FILEPATH, pid);
 
 
     pidlog = open(fn, O_RDONLY);
@@ -801,7 +801,7 @@ SalvageLogScanningThread(void * arg)
 	char prefix[AFSDIR_PATH_MAX];
 	size_t prefix_len;
 
-	afs_snprintf(prefix, sizeof(prefix), "%s.", AFSDIR_SLVGLOG_FILE);
+	snprintf(prefix, sizeof(prefix), "%s.", AFSDIR_SLVGLOG_FILE);
 	prefix_len = strlen(prefix);
 
 	dp = opendir(AFSDIR_LOGS_DIR);

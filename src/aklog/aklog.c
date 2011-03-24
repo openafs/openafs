@@ -42,7 +42,6 @@
 
 #include <ctype.h>
 
-#include <afs/stds.h>
 #include <afs/ktc.h>
 #include <afs/token.h>
 
@@ -885,7 +884,7 @@ rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
     } else {
 	len = strlen(username)+strlen(realmUsed)+2;
 	*authuser = malloc(len);
-	afs_snprintf(*authuser, len, "%s@%s", username, realmUsed);
+	snprintf(*authuser, len, "%s@%s", username, realmUsed);
 	*foreign = 1;
     }
 

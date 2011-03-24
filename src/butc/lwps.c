@@ -10,7 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <afs/procmgmt.h>
 #include <roken.h>
 
@@ -239,7 +238,7 @@ TapeLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     TapeLogStr(debug, task, error1, error2, tmp);
@@ -252,7 +251,7 @@ TLog(afs_int32 task, char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     /* Sends message to TapeLog and stdout */
@@ -287,7 +286,7 @@ ErrorLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     ErrorLogStr(debug, task, error1, error2, tmp);
@@ -301,7 +300,7 @@ ELog(afs_int32 task, char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     /* Sends message to ErrorLog, TapeLog and stdout */

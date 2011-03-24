@@ -6495,7 +6495,8 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
 
     *ec = 0;
     name[0] = OS_DIRSEPC;
-    (void)afs_snprintf(&name[1], (sizeof name) - 1, VFORMAT, afs_printable_uint32_lu(volumeId));
+    snprintf(&name[1], (sizeof name) - 1, VFORMAT,
+	     afs_printable_uint32_lu(volumeId));
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	struct afs_stat_st status;
 	strcpy(path, VPartitionPath(dp));
@@ -6558,7 +6559,7 @@ char *
 VolumeExternalName(VolumeId volumeId)
 {
     static char name[VMAXPATHLEN];
-    (void)afs_snprintf(name, sizeof name, VFORMAT, afs_printable_uint32_lu(volumeId));
+    snprintf(name, sizeof name, VFORMAT, afs_printable_uint32_lu(volumeId));
     return name;
 }
 
@@ -6579,7 +6580,7 @@ VolumeExternalName(VolumeId volumeId)
 int
 VolumeExternalName_r(VolumeId volumeId, char * name, size_t len)
 {
-    return afs_snprintf(name, len, VFORMAT, afs_printable_uint32_lu(volumeId));
+    return snprintf(name, len, VFORMAT, afs_printable_uint32_lu(volumeId));
 }
 
 

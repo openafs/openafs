@@ -89,8 +89,8 @@ uphys_open(struct ubik_dbase *adbase, afs_int32 afid)
     }
 
     /* not found, open it and try to enter in cache */
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName,
-		 (afid<0)?"SYS":"", (afid<0)?-afid:afid);
+    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName,
+	     (afid<0)?"SYS":"", (afid<0)?-afid:afid);
     fd = open(pbuffer, O_CREAT | O_RDWR, 0600);
     if (fd < 0) {
 	/* try opening read-only */

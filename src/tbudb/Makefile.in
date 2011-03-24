@@ -23,7 +23,7 @@ BUDB=$(srcdir)/../budb
 RXOBJS= rx_pthread.o rxkad_errs.o
 
 UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-     volparse.o flipbase64.o softsig.o hostparse.o snprintf.o pthread_glock.o
+     volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o
 
 
 INCLS=\
@@ -107,9 +107,6 @@ softsig.o: ${UTIL}/softsig.c
 
 hostparse.o: ${UTIL}/hostparse.c
 	$(AFS_CCRULE) $(UTIL)/hostparse.c
-
-snprintf.o: ${UTIL}/snprintf.c
-	$(AFS_CCRULE) $(UTIL)/snprintf.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
 	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
