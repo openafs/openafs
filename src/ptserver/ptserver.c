@@ -340,62 +340,32 @@ main(int argc, char **argv)
 	}
 	else if (*arg == '-') {
 	    /* hack in help flag support */
-
+	    printf("Usage: ptserver [-database <db path>] "
+		   "[-auditlog <log path>] "
+		   "[-audit-interface <file|sysvmq> (default is file)] ");
+#ifndef AFS_NT40_ENV
+	    printf("[-syslog[=FACILITY]] ");
+#endif
+	    printf("[-d <debug level>] "
+		   "[-p <number of processes>] [-rebuild] [-rxbind] ");
 #if defined(SUPERGROUPS)
+	    printf("[-groupdepth <depth>] ");
+#endif
+	    printf("[-restricted] [-rxmaxmtu <bytes>] "
+		   "[-allow-dotted-principals] ");
 #ifndef AFS_NT40_ENV
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] "
-		   "[-syslog[=FACILITY]] [-d <debug level>] "
-		   "[-p <number of processes>] [-rebuild] "
-		   "[-groupdepth <depth>] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-default_access default_user_access default_group_access] "
+	    printf("[-enable_peer_stats] [-enable_process_stats] ");
+#endif
+	    printf("[-default_access default_user_access default_group_access] "
 		   "[-help]\n");
-#else /* AFS_NT40_ENV */
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] "
-		   "[-d <debug level>] "
-		   "[-p <number of processes>] [-rebuild] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-groupdepth <depth>] " "[-help]\n");
-#endif
-#else
-#ifndef AFS_NT40_ENV
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] "
-		   "[-d <debug level>] "
-		   "[-syslog[=FACILITY]] "
-		   "[-p <number of processes>] [-rebuild] "
-		   "[-enable_peer_stats] [-enable_process_stats] "
-		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-help]\n");
-#else /* AFS_NT40_ENV */
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
-		   "[-default_access default_user_access default_group_access] "
-		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
-		   "[-allow-dotted-principals] "
-		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
-#endif
-#endif
+
 	    fflush(stdout);
 
 	    PT_EXIT(1);
 	}
-#if defined(SUPERGROUPS)
 	else {
 	    fprintf(stderr, "Unrecognized arg: '%s' ignored!\n", arg);
 	}
-#endif
     }
 
     if (auditFileName) {
