@@ -16,31 +16,21 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include <limits.h>
+
 #if defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
 #include <sys/fcntl.h>
 #include <sys/resource.h>
 #endif
-#endif
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <errno.h>
 #include <afs/afssyscalls.h>
+
 #include "nfs.h"
 #include "ihandle.h"
 #include "viceinode.h"
 #include "afs/afs_assert.h"
-#include <limits.h>
 
 #ifdef AFS_PTHREAD_ENV
 pthread_once_t ih_glock_once = PTHREAD_ONCE_INIT;

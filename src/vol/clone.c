@@ -20,30 +20,19 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <afs/afs_assert.h>
 #ifdef AFS_NT40_ENV
-#include <fcntl.h>
 #include <windows.h>
 #include <winbase.h>
-#include <io.h>
-#include <time.h>
-#else
-#include <sys/file.h>
-#include <sys/time.h>
-#include <unistd.h>
 #endif
-#include <string.h>
-#include <errno.h>
-#include <sys/stat.h>
 
+#include <afs/afs_assert.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
+#include <afs/afssyscalls.h>
+
 #include "nfs.h"
 #include "lwp.h"
 #include "lock.h"
-#include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"

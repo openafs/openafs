@@ -45,27 +45,6 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <time.h>
-#else
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-#include <errno.h>
-#include <afs/afs_assert.h>
-#include <signal.h>
-#include <string.h>
-
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"

@@ -7,15 +7,15 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/param.h>
 #include <afsconfig.h>
-
-
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <string.h>
 #include <ctype.h>
+
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
 #include <ufs/fs.h>
@@ -39,17 +39,11 @@
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 #endif /* AFS_SGI_ENV */
-#include <sys/errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdio.h>
 #include <sys/file.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/vfs.h>
-#include <fcntl.h>
 #else
 #ifdef	AFS_HPUX_ENV
-#include <fcntl.h>
 #include <mntent.h>
 #else
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
@@ -61,7 +55,6 @@
 #endif
 #else
 #if defined(AFS_SGI_ENV)
-#include <fcntl.h>
 #include <mntent.h>
 #else
 #ifdef AFS_LINUX22_ENV
@@ -73,13 +66,9 @@
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_HPUX_ENV */
 #endif
-#include <netdb.h>
-#include <netinet/in.h>
 #include <sys/wait.h>
 #include <setjmp.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
+
 #include "ihandle.h"
 #include "partition.h"
 

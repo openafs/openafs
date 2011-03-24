@@ -20,8 +20,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <string.h>
-
+#include <roken.h>
 
 #ifndef AFS_NAMEI_ENV
 #if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)
@@ -42,7 +41,6 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 }
 #else
 #include <ctype.h>
-#include <sys/param.h>
 #if defined(AFS_SGI_ENV)
 #else
 #ifdef	AFS_OSF_ENV
@@ -69,7 +67,6 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 #endif
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
-#include <sys/time.h>
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
@@ -89,20 +86,16 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 #endif /* AFS_SGI_ENV */
 #include <afs/osi_inode.h>
 #include <sys/file.h>
-#include <stdio.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
 #include <afs/afssyscalls.h>
 #include "viceinode.h"
-#include <sys/stat.h>
 #if defined (AFS_AIX_ENV) || defined (AFS_HPUX_ENV)
 #include <sys/ino.h>
 #endif
 #include <afs/afs_assert.h>
-#if defined(AFS_HPUX101_ENV)
-#include <unistd.h>
-#endif
+
 #include "lock.h"
 #include "ihandle.h"
 #include "vnode.h"
