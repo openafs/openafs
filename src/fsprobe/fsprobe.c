@@ -16,20 +16,18 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-
-#include <string.h>
-
-#include "fsprobe.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
 #include <afs/afsutil.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
-
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>
+
+#include "fsprobe.h"		/*Interface for this module */
 
 #define LWP_STACK_SIZE	(16 * 1024)
 

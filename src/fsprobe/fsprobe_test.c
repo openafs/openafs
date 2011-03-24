@@ -16,8 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <string.h>
 #include "fsprobe.h"		/*Interface for fsprobe module */
 #include <afs/afsutil.h>
 

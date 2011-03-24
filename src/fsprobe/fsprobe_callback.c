@@ -24,9 +24,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <errno.h>
-#include <stdio.h>		/*Standard I/O stuff */
 #include <afs/afscbint.h>	/*Callback interface defs */
 #include <afs/afsutil.h>
 
