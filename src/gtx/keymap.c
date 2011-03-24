@@ -10,9 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <string.h>
-#include <stdlib.h>
+#include <roken.h>
 
 #include "gtxkeymap.h"
 

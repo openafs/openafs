@@ -18,13 +18,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxX11win.h"		/*Interface definition */
-#include <stdio.h>		/*Standard I/O package */
 
-#if	!defined(NeXT)
-extern int errno;		/*System error number */
-#endif /* NeXT */
 int X11_debug;			/*Is debugging turned on? */
 static char mn[] = "gator_X11windows";	/*Module name */
 

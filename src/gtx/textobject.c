@@ -14,16 +14,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxtextobj.h"		/*Interface for this module */
 #include "gtxwindows.h"		/*Gator window interface */
 #include "gtxcurseswin.h"	/*Gator curses window interface */
 #include "gtxdumbwin.h"		/*Gator dumb terminal window interface */
 #include "gtxX11win.h"		/*Gator X11 window interface */
-#include <stdio.h>		/*Standard I/O stuff */
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 
 /*Externally-advertised array of text onode operations*/
 struct onodeops gator_text_ops = {

@@ -16,12 +16,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxlightobj.h"	/*Interface for this module */
-#include <stdio.h>		/*Standard I/O stuff */
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 
 /*Externally-advertised array of light onode operations*/
 struct onodeops gator_light_ops = {

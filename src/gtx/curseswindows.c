@@ -18,26 +18,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-
-#include <sys/types.h>
-#include <sys/file.h>
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD80_ENV)
 #include <sgtty.h>
 #endif
-#include <stdio.h>
-#include <sys/time.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 
 #include <lwp.h>
 
 #include "gtxcurseswin.h"	/*Interface definition */
 #include "gtxobjects.h"
 #include "gtxframe.h"
-
-
 
 int curses_debug;		/*Is debugging turned on? */
 static char mn[] = "gator_curseswindows";	/*Module name */

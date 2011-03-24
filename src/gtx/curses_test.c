@@ -14,6 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
 # define __HP_CURSES
 #endif

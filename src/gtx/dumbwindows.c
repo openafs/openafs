@@ -16,10 +16,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxdumbwin.h"		/*Interface definition */
-#include <stdio.h>		/*Standard I/O package */
-#include <errno.h>
 
 int dumb_debug;			/*Is debugging turned on? */
 static char mn[] = "gator_dumbwindows";	/*Module name */

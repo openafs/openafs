@@ -10,11 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <string.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
 #include "gtxwindows.h"
 #include "gtxobjects.h"
 #include "gtxtextobj.h"

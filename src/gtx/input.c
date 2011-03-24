@@ -10,12 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <stdlib.h>
+#include <roken.h>
 
-#ifdef AFS_HPUX_ENV
-#include <sys/types.h>
-#endif
 #include <lwp.h>
+
 #include "gtxobjects.h"
 #include "gtxwindows.h"
 #include "gtxcurseswin.h"

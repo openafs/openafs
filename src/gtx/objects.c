@@ -16,16 +16,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxobjects.h"		/*Interface for this module */
 #include "gtxtextobj.h"		/*Text object interface */
 #include "gtxlightobj.h"	/*Light object interface */
 #include "gtxobjdict.h"		/*Object dictionary module */
-#include <stdio.h>		/*Standard I/O stuff */
-#include <errno.h>
-
-#include <string.h>
-#include <stdlib.h>
 
 /*
  * Number of known gator object types.

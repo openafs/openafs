@@ -16,12 +16,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxtextcb.h"		/*Module interface */
-#include <stdio.h>		/*Standard I/O stuff */
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 
 static int gator_textcb_debug;	/*Is debugging output turned on? */
 

@@ -14,13 +14,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/cmd.h>		/*Command interpretation library */
 
 #include "gtxwindows.h"		/*Generalized window interface */
 #include "gtxcurseswin.h"	/*Curses window interface */
 #include "gtxdumbwin.h"		/*Dumb terminal window interface */
 #include "gtxX11win.h"		/*X11 window interface */
-#include <cmd.h>		/*Command interpretation library */
-#include <errno.h>
 
 
 /*
