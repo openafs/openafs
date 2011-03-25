@@ -295,7 +295,6 @@ fdHandleAllocateChunk(void)
 	fdP[i].fd_fd = INVALID_FD;
         fdP[i].fd_ihnext = NULL;
         fdP[i].fd_ihprev = NULL;
-        fdP[i].fd_needs_rclose = 0;
 	DLL_INSERT_TAIL(&fdP[i], fdAvailHead, fdAvailTail, fd_next, fd_prev);
     }
 }
@@ -387,7 +386,6 @@ ih_open_retry:
 	    fdP->fd_status = FD_HANDLE_AVAIL;
 	    fdP->fd_ih = NULL;
 	    fdP->fd_fd = INVALID_FD;
-	    fdP->fd_needs_rclose = 0;
 	    IH_UNLOCK;
 	    OS_CLOSE(closeFd);
 	    goto ih_open_retry;
@@ -405,7 +403,6 @@ ih_open_retry:
     fdP->fd_status = FD_HANDLE_INUSE;
     fdP->fd_fd = fd;
     fdP->fd_ih = ihP;
-    fdP->fd_needs_rclose = 0;
     fdP->fd_refcnt++;
 
     ihP->ih_refcnt++;
@@ -448,9 +445,7 @@ fd_close(FdHandle_t * fdP)
      * failed (this is determined by checking the ihandle for the flag
      * IH_REALLY_CLOSED) or we have too many open files.
      */
-    if (ihP->ih_flags & IH_REALLY_CLOSED || fdInUseCount > fdCacheSize ||
-        fdP->fd_needs_rclose) {
-
+    if (ihP->ih_flags & IH_REALLY_CLOSED || fdInUseCount > fdCacheSize) {
 	IH_UNLOCK;
 	return fd_reallyclose(fdP);
     }
@@ -506,9 +501,6 @@ fd_reallyclose(FdHandle_t * fdP)
 	fdP->fd_refcnt = 0;
 	fdP->fd_ih = NULL;
 	fdP->fd_fd = INVALID_FD;
-	fdP->fd_needs_rclose = 0;
-    } else {
-	fdP->fd_needs_rclose = 1;
     }
 
     /* All the file descriptor handles have been closed; reset
@@ -836,7 +828,6 @@ ih_fdclose(IHandle_t * ihP)
 	fdP->fd_refcnt = 0;
 	fdP->fd_fd = INVALID_FD;
 	fdP->fd_ih = NULL;
-	fdP->fd_needs_rclose = 0;
 	closeCount++;
     }
 

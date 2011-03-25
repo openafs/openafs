@@ -159,7 +159,6 @@ typedef int FD_t;
 typedef struct FdHandle_s {
     int fd_status;		/* status flags */
     int fd_refcnt;		/* refcnt */
-    int fd_needs_rclose;	/* do we need to fd_reallyclose? */
     FD_t fd_fd;			/* file descriptor */
     struct IHandle_s *fd_ih;	/* Pointer to Inode handle */
     struct FdHandle_s *fd_next;	/* LRU/Avail list pointers */
