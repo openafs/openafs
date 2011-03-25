@@ -347,8 +347,8 @@ ih_open(IHandle_t * ihP)
 #endif /* HAVE_PIO */
 	    fdP->fd_refcnt++;
 	    if (fdP->fd_status == FD_HANDLE_OPEN) {
-	    fdP->fd_status = FD_HANDLE_INUSE;
-	    DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
+		fdP->fd_status = FD_HANDLE_INUSE;
+		DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
 	    }
 	    ihP->ih_refcnt++;
 	    IH_UNLOCK;
