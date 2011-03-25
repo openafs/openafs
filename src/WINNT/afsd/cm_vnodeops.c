@@ -1176,7 +1176,7 @@ notfound:
             if (cnamep[0] == '.') {
                 if (cm_GetCell_Gen(&fnamep[1], &fullname[1], CM_FLAG_CREATE)) {
                     found = 1;
-                    code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell.", 1, &rock.fid);
+                    code = cm_FreelanceAddMount(fullname, &fullname[1], "root.cell", 1, &rock.fid);
                     if ( cm_FsStrCmpI(&fnamep[1], &fullname[1])) {
                         /*
                          * Do not permit symlinks that are one of:
@@ -1201,7 +1201,7 @@ notfound:
             } else {
                 if (cm_GetCell_Gen(fnamep, fullname, CM_FLAG_CREATE)) {
                     found = 1;
-                    code = cm_FreelanceAddMount(fullname, fullname, "root.cell.", 0, &rock.fid);
+                    code = cm_FreelanceAddMount(fullname, fullname, "root.cell", 0, &rock.fid);
                     if ( cm_FsStrCmpI(fnamep, fullname)) {
                         /*
                          * Do not permit symlinks that are one of:
