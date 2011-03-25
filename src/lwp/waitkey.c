@@ -22,21 +22,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #ifdef HAVE_STDIO_EXT_H
 #include <stdio_ext.h>
 #endif
-#include <sys/types.h>
+
 #ifdef AFS_NT40_ENV
-#include <time.h>
 #include <conio.h>
-#include <assert.h>
-#else
-#include <sys/time.h>
-#include <unistd.h>
 #endif
-#include <string.h>
+
 #include "lwp.h"
 
 #define LWP_KEYSTROKE_DELAY   250	/* 250ms. Must be < 1000 */

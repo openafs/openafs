@@ -12,12 +12,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <stdio.h>
-#include <assert.h>
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
+#include <roken.h>
 
+#include <assert.h>
 
 #include "lwp.h"
 

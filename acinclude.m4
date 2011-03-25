@@ -1254,6 +1254,7 @@ AC_CHECK_HEADERS([ \
 		   sys/pag.h \
 		   sys/param.h \
 		   sys/resource.h \
+		   sys/select.h \
 		   sys/statfs.h \
 		   sys/statvfs.h \
 		   sys/socket.h \

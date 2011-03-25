@@ -17,15 +17,7 @@ Created: 11/1/83, J. Rosenberg
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#ifdef AFS_NT40_ENV
-#include <malloc.h>
-#include <stdlib.h>
-#else
-#include <sys/time.h>
-#endif
-#include <stdio.h>
-#include <stdlib.h>
+#include <roken.h>
 
 #include "lwp.h"
 #include "lock.h"

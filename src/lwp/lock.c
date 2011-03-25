@@ -25,11 +25,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #ifdef AFS_PTHREAD_ENV
 #include <afs/afs_assert.h>
 /* can't include this in lwp, rx hasn't built yet */
 
-#include <roken.h>
 #include <rx/rx.h>
 #else
 #include <assert.h>
@@ -37,7 +38,6 @@
 
 #include "lwp.h"
 #include "lock.h"
-#include <stdio.h>
 
 #define FALSE	0
 #define TRUE	1

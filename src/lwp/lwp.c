@@ -17,17 +17,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdlib.h>
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#include <time.h>
+#include <roken.h>
 
 /* allocate externs here */
 #define  LWP_KERNEL
 #include "lwp.h"
+
 #ifdef	AFS_AIX32_ENV
 #include <ulimit.h>
 #include <sys/errno.h>
@@ -37,11 +32,6 @@
 #pragma alloca
 int setlim(int limcon, uchar_t hard, int limit);
 #endif
-#ifdef AFS_SGI64_ENV
-extern char *getenv();
-#include <time.h>
-#endif
-#include <string.h>
 
 #ifndef AFS_ARM_LINUX20_ENV
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)

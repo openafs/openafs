@@ -16,6 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 
 #include "lwp.h"
@@ -38,8 +39,6 @@ PRE_EndPreempt(void)
 }
 
 #else
-#include <sys/time.h>
-#include <signal.h>
 #ifdef HAVE_UCONTEXT_H
 #include <ucontext.h>
 #endif

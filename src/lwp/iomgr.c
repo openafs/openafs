@@ -36,30 +36,18 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <malloc.h>
 extern void lwp_abort(void);
-#else
-#include <unistd.h>		/* select() prototype */
-#include <sys/types.h>		/* fd_set on older platforms */
-#include <sys/time.h>		/* struct timeval, select() prototype */
-#ifndef FD_SET
-# include <sys/select.h>	/* fd_set on newer platforms */
-#endif
-#include <sys/file.h>
 #endif /* AFS_NT40_ENV */
+
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+
 #include "lwp.h"
 #include "timer.h"
-#include <signal.h>
-#include <errno.h>
-#ifdef AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
 
 typedef unsigned char bool;
 #define FALSE	0

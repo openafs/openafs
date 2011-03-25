@@ -26,16 +26,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <sys/timeb.h>
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#endif
 #include <afs/afsutil.h>
 
 int ft_debug;

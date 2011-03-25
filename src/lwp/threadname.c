@@ -22,8 +22,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <string.h>
+#include <roken.h>
 
 #if defined(AFS_PTHREAD_ENV)
 #include <pthread.h>

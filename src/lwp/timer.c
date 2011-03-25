@@ -21,13 +21,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#endif
-#include <stdlib.h>
+#include <roken.h>
 
 #define _TIMER_IMPL_
 #include "timer.h"
