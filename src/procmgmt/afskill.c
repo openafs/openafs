@@ -14,18 +14,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
 
 #include "procmgmt.h"
 
+#include <roken.h>
 
 /* Define NULL-terminated array of signal name/number pairs */
 typedef struct {

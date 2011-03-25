@@ -9,24 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
+#include "procmgmt.h" /* Must be before roken */
+
+#include <roken.h>
+
 #include <windows.h>
 #include <pthread.h>
 #include <afs/errmap_nt.h>
 #include <afs/secutil_nt.h>
 
-#include "procmgmt.h"
 #include "pmgtprivate.h"
-
-
 
 /* Signal disposition table and associated definitions and locks */
 
