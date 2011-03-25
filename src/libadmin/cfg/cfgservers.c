@@ -17,16 +17,10 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
 #include <ctype.h>
 
 #ifdef AFS_NT40_ENV

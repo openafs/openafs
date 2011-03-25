@@ -16,16 +16,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <pthread.h>
 #endif
-#include <string.h>
 
 #include <rx/rx.h>
 #include <rx/rxstat.h>
-
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_clientAdmin.h>

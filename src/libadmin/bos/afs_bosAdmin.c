@@ -9,31 +9,21 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <afs/stds.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
-#include "afs_bosAdmin.h"
-#include "../adminutil/afs_AdminInternal.h"
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_utilAdmin.h>
 #include <afs/bosint.h>
 #include <afs/bnode.h>
 #include <afs/ktime.h>
 #include <afs/dirpath.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-#include <string.h>
+
+#include "afs_bosAdmin.h"
+#include "../adminutil/afs_AdminInternal.h"
 
 typedef struct bos_server {
     int begin_magic;

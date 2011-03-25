@@ -9,37 +9,23 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include "afs_clientAdmin.h"
-#include "../adminutil/afs_AdminInternal.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <afs/cellconfig.h>
 #ifdef AFS_NT40_ENV
 #include <afs/afssyscalls.h>
-#include <winsock2.h>
 #include <afs/fs_utils.h>
 #define close(x) closesocket(x)
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <afs/venus.h>
-#include <errno.h>
-#include <strings.h>
-#include <unistd.h>
 #endif
-#include <string.h>
-#include <afs/kautils.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #include <rx/rx_null.h>
 #include <rx/rxkad.h>
+
+#include <afs/kautils.h>
 #include <afs/dirpath.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_vosAdmin.h>
@@ -48,6 +34,9 @@
 #include <afs/vlserver.h>
 #include <afs/pthread_glock.h>
 #include <afs/sys_prototypes.h>
+
+#include "afs_clientAdmin.h"
+#include "../adminutil/afs_AdminInternal.h"
 
 /*
  * AFS client administration functions.

@@ -23,19 +23,13 @@
 
 #include <roken.h>
 
+#include <afs/afs_AdminErrors.h>
+
 #include "vsprocs.h"
 #include "vosutils.h"
 #include "lockprocs.h"
 #include "../adminutil/afs_AdminInternal.h"
-#include <afs/afs_AdminErrors.h>
 #include "afs_vosAdmin.h"
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#endif
 
 static afs_int32 GroupEntries(struct rx_connection *server, volintInfo * pntr, afs_int32 count,
              struct qHead *myQueue, afs_int32 apart);

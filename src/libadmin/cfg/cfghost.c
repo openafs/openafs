@@ -13,29 +13,16 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <roken.h>
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <roken.h>
 
 #include <pthread.h>
 
 #ifdef AFS_NT40_ENV
 #include <WINNT/vptab.h>
 #include <WINNT/afsreg.h>
-#include <io.h>
 #include <direct.h>
-#else
-#include <unistd.h>
 #endif /* AFS_NT40_ENV */
 
 #include <rx/rx.h>
@@ -48,7 +35,6 @@
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_kasAdmin.h>
 #include <afs/afs_ptsAdmin.h>
-
 
 #include <afs/kautils.h>
 #include <afs/bnode.h>

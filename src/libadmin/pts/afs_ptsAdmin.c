@@ -9,20 +9,22 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <stdio.h>
 #include <ctype.h>
-#include <afs/stds.h>
+
 #include <rx/rx.h>
 #include <rx/rxstat.h>
-#include "afs_ptsAdmin.h"
-#include "../adminutil/afs_AdminInternal.h"
+
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_utilAdmin.h>
 #include <afs/ptint.h>
 #include <afs/ptserver.h>
+
+#include "afs_ptsAdmin.h"
+#include "../adminutil/afs_AdminInternal.h"
 
 /*
  * IsValidCellHandle - validate the cell handle for making pts

@@ -12,11 +12,11 @@
 
 #include <roken.h>
 
+#include <afs/afs_AdminErrors.h>
+
 #include "vosutils.h"
 #include "vsprocs.h"
 #include "lockprocs.h"
-#include <afs/afs_AdminErrors.h>
-#include <string.h>
 
 /*
  * VLDB entry conversion routines.

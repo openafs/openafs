@@ -9,32 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
-
 #ifdef AFS_NT40_ENV
 #include <windows.h>
-#include <winsock2.h>
-#include <io.h>
 #include <WINNT/afsreg.h>
-#else
-#include <unistd.h>
-#include <math.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <sys/param.h>
 #endif /* AFS_NT40_ENV */
-#include <dirent.h>
+
+#ifdef HAVE_MATH_H
+# include <math.h>
+#endif
 
 #include <pthread.h>
 

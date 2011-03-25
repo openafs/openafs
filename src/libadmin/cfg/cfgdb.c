@@ -13,16 +13,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <roken.h>
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
+#include <roken.h>
 
 #include <pthread.h>
 

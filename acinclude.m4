@@ -1224,6 +1224,7 @@ AC_CHECK_HEADERS([ \
 		   errno.h \
 		   fcntl.h \
 		   grp.h \
+		   math.h \
 		   mntent.h \
 		   ncurses.h \
 		   netdb.h \

@@ -17,7 +17,6 @@
 #include <roken.h>
 
 #include "kas.h"
-#include <time.h>
 
 /*
  * Utility functions

@@ -13,16 +13,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <roken.h>
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
+#include <roken.h>
 
 #include <pthread.h>
 
@@ -35,6 +28,7 @@
 
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+
 #include "common.h"
 #include "bos.h"
 #include "client.h"

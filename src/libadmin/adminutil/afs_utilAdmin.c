@@ -9,15 +9,14 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
-#include <stdio.h>
-#include <string.h>
-#include <afs/afs_Admin.h>
-#include "afs_AdminInternal.h"
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>
 #include <afs/dirpath.h>
@@ -29,18 +28,12 @@
 #include <afs/bnode.h>
 #include <afs/volser.h>
 #include <afs/afscbint.h>
-#include <rx/rx.h>
-#include <rx/rxstat.h>
+
 #ifdef AFS_NT40_ENV
-# include <winsock2.h>
 # include <afs/krb5_nt.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #endif
+
+#include "afs_AdminInternal.h"
 #include "afs_utilAdmin.h"
 
 /*

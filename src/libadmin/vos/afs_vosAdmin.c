@@ -9,29 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
-#include "afs_vosAdmin.h"
-#include "../adminutil/afs_AdminInternal.h"
+
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
+
+#include "afs_vosAdmin.h"
+#include "../adminutil/afs_AdminInternal.h"
 
 /* File descriptors are HANDLE's on NT. The following typedef helps catch
  * type errors. Duplicated from vol/ihandle.h

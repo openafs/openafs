@@ -13,24 +13,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <roken.h>
-
 #include <afs/stds.h>
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <pthread.h>
+#include <roken.h>
 
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_utilAdmin.h>
-
 #include <afs/dirpath.h>
 #include <afs/cellconfig.h>
 #include <afs/kautils.h>

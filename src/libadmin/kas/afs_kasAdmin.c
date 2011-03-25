@@ -9,13 +9,10 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
-
-#include <afs/stds.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #include "afs_kasAdmin.h"

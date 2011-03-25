@@ -33,7 +33,6 @@
 #include <ubik.h>
 #include <ubik_int.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <pthread.h>
 #endif
 
