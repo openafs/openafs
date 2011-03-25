@@ -164,20 +164,22 @@ int ct_memcmp(const void *p1, const void *p2, size_t len);
 
 #include "crypto.h"
 
-struct checksum_type * _krb5_find_checksum (krb5_cksumtype);
-struct encryption_type * _krb5_find_enctype (krb5_enctype);
-void _krb5_free_key_data (krb5_context, struct key_data *,
-			  struct encryption_type *);
-void _krb5_evp_cleanup (krb5_context, struct key_data *);
-krb5_error_code _krb5_evp_encrypt (krb5_context, struct key_data *, void *,
-				   size_t, krb5_boolean, int, void *);
-krb5_error_code _krb5_evp_encrypt_cts (krb5_context, struct key_data *,
+struct _krb5_checksum_type * _krb5_find_checksum (krb5_cksumtype);
+struct _krb5_encryption_type * _krb5_find_enctype (krb5_enctype);
+void _krb5_free_key_data (krb5_context, struct _krb5_key_data *,
+			  struct _krb5_encryption_type *);
+void _krb5_evp_cleanup (krb5_context, struct _krb5_key_data *);
+
+krb5_error_code _krb5_evp_encrypt (krb5_context, struct _krb5_key_data *,
+				   void *, size_t, krb5_boolean, int,
+				   void *);
+krb5_error_code _krb5_evp_encrypt_cts (krb5_context, struct _krb5_key_data *,
 				       void *,size_t, krb5_boolean,
 				       int, void *);
-void _krb5_evp_schedule (krb5_context, struct key_type *,struct key_data *);
-
+void _krb5_evp_schedule (krb5_context, struct _krb5_key_type *,
+			 struct _krb5_key_data *);
 krb5_error_code _krb5_SP_HMAC_SHA1_checksum (krb5_context,
-					     struct key_data *,
+					     struct _krb5_key_data *,
 					     const void *,
 					     size_t, unsigned, Checksum *);
 

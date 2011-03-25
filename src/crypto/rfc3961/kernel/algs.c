@@ -28,7 +28,7 @@
 
 #include "krb5_locl.h"
 
-struct checksum_type *_krb5_checksum_types[] = {
+struct _krb5_checksum_type *_krb5_checksum_types[] = {
     &_krb5_checksum_sha1,
     &_krb5_checksum_hmac_sha1_aes128,
     &_krb5_checksum_hmac_sha1_aes256,
@@ -37,7 +37,7 @@ struct checksum_type *_krb5_checksum_types[] = {
 int _krb5_num_checksums
         = sizeof(_krb5_checksum_types) / sizeof(_krb5_checksum_types[0]);
 
-struct encryption_type *_krb5_etypes[] = {
+struct _krb5_encryption_type *_krb5_etypes[] = {
     &_krb5_enctype_aes256_cts_hmac_sha1,
     &_krb5_enctype_aes128_cts_hmac_sha1,
 };
