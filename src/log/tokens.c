@@ -10,21 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/file.h>
 #include <rx/xdr.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <afs/auth.h>
-#include <time.h>		/*time(), ctime() */
-#include <pwd.h>
 #include <afs/ktc.h>
-
-#include <string.h>
 
 #define VIRTUE
 #define VICE

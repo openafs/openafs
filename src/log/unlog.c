@@ -29,19 +29,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <sys/ioctl.h>
 #include <afs/vice.h>
-#include <sys/file.h>
 
 #include <afs/auth.h>
 #include <afs/cellconfig.h>

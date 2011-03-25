@@ -10,21 +10,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <netinet/in.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
-#include <string.h>
+#include <roken.h>
 
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/auth.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
+
 #include <des.h>
+
 #include <rx/rxkad.h>
 
 #include "AFS_component_version_number.c"
