@@ -78,8 +78,8 @@
 #include "volint.h"
 #include "dump.h"
 
-#define putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
-#define putshort(p, v) *p++ = v>>8, *p++ = v
+#define afs_putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
+#define afs_putshort(p, v) *p++ = v>>8, *p++ = v
 
 int VolumeChanged;		/* needed by physio - leave alone */
 int verbose = 0;
@@ -322,8 +322,8 @@ DumpDouble(int dumpfd, char tag, afs_uint32 value1,
     char tbuffer[9];
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putint32(p, value1);
-    putint32(p, value2);
+    afs_putint32(p, value1);
+    afs_putint32(p, value2);
 
     res = write(dumpfd, tbuffer, 9);
     return ((res == 9) ? 0 : VOLSERDUMPERROR);
@@ -335,7 +335,7 @@ DumpInt32(int dumpfd, char tag, afs_uint32 value)
     char tbuffer[5];
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putint32(p, value);
+    afs_putint32(p, value);
     return ((write(dumpfd, tbuffer, 5) == 5) ? 0 : VOLSERDUMPERROR);
 }
 
@@ -364,7 +364,7 @@ DumpArrayInt32(int dumpfd, char tag, afs_uint32 * array,
     int code = 0;
     byte *p = (unsigned char *)tbuffer;
     *p++ = tag;
-    putshort(p, nelem);
+    afs_putshort(p, nelem);
     code = write(dumpfd, tbuffer, 3);
     if (code != 3)
 	return VOLSERDUMPERROR;
@@ -372,7 +372,7 @@ DumpArrayInt32(int dumpfd, char tag, afs_uint32 * array,
 	p = (unsigned char *)tbuffer;
 	v = *array++;		/*this was register */
 
-	putint32(p, v);
+	afs_putint32(p, v);
 	code = write(dumpfd, tbuffer, 4);
 	if (code != 4)
 	    return VOLSERDUMPERROR;
