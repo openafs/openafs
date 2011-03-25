@@ -1250,6 +1250,7 @@ AC_CHECK_HEADERS([ \
 		   sys/statfs.h \
 		   sys/statvfs.h \
 		   sys/socket.h \
+		   sys/sysctl.h \
 		   sys/time.h \
 		   sys/types.h \
 		   sys/un.h \
@@ -1341,6 +1342,8 @@ AC_CHECK_FUNCS([ \
 	sigaction \
 	strcasestr \
 	strerror \
+	sysconf \
+	sysctl \
 	timegm \
 ])
 
@@ -1352,7 +1355,6 @@ dnl haven't found a need for yet, and so haven't imported
 AC_CHECK_FUNCS([ \
 	chown \
 	fchown \
-	getdtablesize \
 	gethostname \
 	gettimeofday \
 	localtime_r \
@@ -1385,6 +1387,7 @@ AC_REPLACE_FUNCS([ \
 	erealloc \
 	err \
 	errx \
+	getdtablesize \
 	getopt \
 	getprogname \
 	mkstemp \

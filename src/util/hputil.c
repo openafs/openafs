@@ -29,24 +29,6 @@ utimes(char *file, struct timeval tvp[2])
 }
 #endif
 
-int
-random(void)
-{
-    return rand();
-}
-
-void
-srandom(int seed)
-{
-    srand(seed);
-}
-
-int
-getdtablesize(void)
-{
-    return (20);
-}
-
 void
 setlinebuf(FILE * file)
 {
