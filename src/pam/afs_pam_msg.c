@@ -10,14 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <security/pam_appl.h>
+
 #include "afs_pam_msg.h"
 #include "afs_message.h"
-#include <stdarg.h>
 
 
 int

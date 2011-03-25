@@ -10,12 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <syslog.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
+#include <roken.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>

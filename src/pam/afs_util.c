@@ -7,18 +7,18 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <stdio.h>
-#include <assert.h>
-#include <unistd.h>
-#include <errno.h>
-#include <syslog.h>
-#include <security/pam_appl.h>
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+
+#include <assert.h>
 #include <limits.h>
-#include <string.h>
-#include <stdlib.h>
+
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
 #ifdef HAVE_SYS_PAG_H
@@ -26,6 +26,7 @@
 #endif
 #endif
 
+#include <security/pam_appl.h>
 
 #include "afs_util.h"
 
@@ -49,29 +50,6 @@ nil_cleanup(pam_handle_t * pamh, void *data, int pam_end_status)
 {
     return;
 }
-
-/* The PAM module needs to be free from libucb dependency. Otherwise,
-dynamic linking is a problem, the AFS PAM library refuses to coexist
-with the DCE library. The sigvec() and sigsetmask() are the only two
-calls that neccesiate the inclusion of libucb.a.  There are used by
-the lwp library to support premeptive threads and signalling between
-threads. Since the lwp support used by the PAM module uses none of
-these facilities, we can safely define these to be null functions */
-
-#if !defined(AFS_HPUX110_ENV)
-/* For HP 11.0, this function is in util/hputil.c */
-int
-sigvec(int sig, const struct sigvec *vec, struct sigvec *ovec)
-{
-    assert(0);
-}
-
-int
-sigsetmask(int mask)
-{
-    assert(0);
-}
-#endif /* AFS_HPUX110_ENV */
 
 /* converts string to integer */
 

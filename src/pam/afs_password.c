@@ -7,26 +7,22 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <syslog.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pwd.h>
-#include <unistd.h>
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-
-#include <sys/param.h>
 #include <afs/kautils.h>
 #include "afs_message.h"
 #include "afs_util.h"
 #include "afs_pam_msg.h"
-#include <signal.h>
-#include <sys/wait.h>
-#include <errno.h>
 
 #define RET(x) { retcode = (x); goto out; }
 

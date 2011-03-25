@@ -10,17 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <syslog.h>
-#include <stdlib.h>
-#include <string.h>
-#include <pwd.h>
-#include <unistd.h>
-#include <sys/param.h>
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+
 #include <afs/kautils.h>
-#include <signal.h>
-#include <errno.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>

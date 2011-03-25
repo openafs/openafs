@@ -10,13 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #include <security/pam_appl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 
 static int my_conv(int num_msg, PAM_CONST struct pam_message **msg,
 		   struct pam_response **response, void *appdata_ptr);
