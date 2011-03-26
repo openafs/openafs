@@ -1,3 +1,10 @@
+Since 1.5.9903 (1.6pre3)
+ * Fix automatic addition of Freelance cell mount points
+   broken in 1.5.9902.
+
+ * Avoid recursive offline volume checks which could cause
+   a crash due to stack exhaustion.
+
 Since 1.5.9902 (1.6pre2)
  * rx calls issued on a busy call channel are now specially
    handled and logged.  All calls are automatically retried.
