@@ -33,4 +33,5 @@ EXPORTS
 	rk_mkstemp		@37
 	rk_asnprintf		@38
 	rk_asprintf		@39
-
+        rk_vsnprintf            @40
+        rk_vasnprintf           @41
