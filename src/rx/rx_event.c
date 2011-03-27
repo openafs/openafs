@@ -8,7 +8,7 @@
  */
 
 #include <afsconfig.h>
-#include "afs/param.h"
+#include <afs/param.h>
 
 #ifdef AFS_SUN59_ENV
 # include <sys/time_impl.h>
@@ -41,15 +41,11 @@ extern void *osi_Alloc();
 # endif
 #else /* KERNEL */
 # include <roken.h>
-# include <stdio.h>
 # include "rx_user.h"
 # ifdef AFS_PTHREAD_ENV
 #  include "rx_pthread.h"
 # else
 #  include "rx_lwp.h"
-# endif
-# ifdef AFS_NT40_ENV
-#  include <malloc.h>
 # endif
 #endif /* KERNEL */
 

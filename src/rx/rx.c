@@ -10,7 +10,7 @@
 /* RX:  Extended Remote Procedure Call */
 
 #include <afsconfig.h>
-#include "afs/param.h"
+#include <afs/param.h>
 
 #ifdef KERNEL
 # include "afs/sysincludes.h"
@@ -63,26 +63,12 @@ extern afs_int32 afs_termState;
 # include "afs/rxgen_consts.h"
 #else /* KERNEL */
 # include <roken.h>
-# include <sys/types.h>
-# include <string.h>
-# include <stdarg.h>
-# include <errno.h>
-# ifdef HAVE_STDINT_H
-#  include <stdint.h>
-# endif
+
 # ifdef AFS_NT40_ENV
-#  include <stdlib.h>
-#  include <fcntl.h>
 #  include <afs/afsutil.h>
 #  include <WINNT\afsreg.h>
-# else
-#  include <sys/socket.h>
-#  include <sys/file.h>
-#  include <netdb.h>
-#  include <sys/stat.h>
-#  include <netinet/in.h>
-#  include <sys/time.h>
 # endif
+
 # include "rx_user.h"
 #endif /* KERNEL */
 

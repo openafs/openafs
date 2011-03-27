@@ -14,28 +14,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifndef KERNEL
-# include <roken.h>
-#endif /* KERNEL */
+#include <roken.h>
 
-#include <sys/types.h>
-#include <errno.h>
-#include <signal.h>
-#include <string.h>
 #ifdef AFS_NT40_ENV
 # include <WINNT/syscfg.h>
 #else
-# include <sys/socket.h>
-# include <sys/file.h>
-# include <netdb.h>
-# include <sys/stat.h>
-# include <netinet/in.h>
-# include <sys/time.h>
 # include <net/if.h>
-# include <sys/ioctl.h>
-# include <unistd.h>
 #endif
-#include <fcntl.h>
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
 # include <sys/syscall.h>
 #endif
@@ -55,10 +40,6 @@
 #ifndef IP_MTU
 #define IP_MTU 14
 #endif
-#endif
-
-#ifndef AFS_NT40_ENV
-# include <sys/time.h>
 #endif
 
 #include "rx.h"

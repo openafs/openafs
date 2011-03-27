@@ -10,9 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifndef KERNEL
-# include <roken.h>
-#endif /* KERNEL */
+#include <roken.h>
 
 #ifndef RXDEBUG
 char rxi_tracename[80] = "\0Tracing not compiled in";
@@ -24,14 +22,6 @@ main(int argc, char **argv)
 }
 #endif
 #else
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <unistd.h>
-#endif
 
 #include "rx.h"
 #include "rx_atomic.h"

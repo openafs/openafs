@@ -28,7 +28,7 @@
 #ifdef KERNEL
 # include "afs/sysincludes.h"
 #else
-# include <stdlib.h>
+# include <roken.h>
 #endif
 
 #include "xdr.h"

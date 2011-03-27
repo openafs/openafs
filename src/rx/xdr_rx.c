@@ -34,11 +34,6 @@
 # endif /* !UKERNEL */
 #else /* KERNEL */
 # include <roken.h>
-# include <sys/types.h>
-# include <stdio.h>
-# ifndef AFS_NT40_ENV
-#  include <netinet/in.h>
-# endif
 #endif /* KERNEL */
 
 #include "rx.h"

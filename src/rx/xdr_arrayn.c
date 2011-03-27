@@ -51,15 +51,11 @@
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
-#if 0
-#define bzero(A,C) memset((A), 0, (C))
-#endif
 #else
 #include <sys/systm.h>
 #endif
 #else
-#include <stdio.h>
-#include <string.h>
+#include <roken.h>
 #endif
 #include "xdr.h"
 

@@ -53,19 +53,6 @@
 # include "afs/lock.h"
 #else /* KERNEL */
 # include <roken.h>
-# include <sys/types.h>
-# include <string.h>
-# ifdef AFS_NT40_ENV
-#  include <winsock2.h>
-# else /* !AFS_NT40_ENV */
-#  include <sys/socket.h>
-#  include <sys/file.h>
-#  include <netdb.h>
-#  include <netinet/in.h>
-#  include <sys/stat.h>
-#  include <sys/time.h>
-#  include <unistd.h>
-# endif /* !AFS_NT40_ENV */
 #endif /* KERNEL */
 
 #include "rx.h"

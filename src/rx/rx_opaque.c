@@ -27,9 +27,6 @@
 
 #ifndef KERNEL
 # include <roken.h>
-# include <sys/types.h>
-# include <string.h>
-# include <errno.h>
 #else
 # include "afs/sysincludes.h"
 # include "afsincludes.h"

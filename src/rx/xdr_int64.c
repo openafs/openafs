@@ -15,7 +15,7 @@
 #include <sys/systm.h>
 #endif
 #else
-#include <stdio.h>
+#include <roken.h>
 #endif
 #include "xdr.h"
 

@@ -12,7 +12,7 @@
  */
 
 #include <afsconfig.h>
-#include "afs/param.h"
+#include <afs/param.h>
 
 
 #include "rx/rx_kcommon.h"

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 #ifdef	KERNEL
-#include "afs/sysincludes.h"
+# include "afs/sysincludes.h"
 #else /* KERNEL */
 # include <roken.h>
 #endif /* KERNEL */

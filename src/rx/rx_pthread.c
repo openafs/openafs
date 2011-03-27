@@ -18,29 +18,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifndef KERNEL
-# include <roken.h>
-#endif /* KERNEL */
+#include <roken.h>
 
-#include <sys/types.h>
-#include <errno.h>
-#include <signal.h>
-#include <string.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifndef AFS_NT40_ENV
-# include <sys/socket.h>
-# include <sys/file.h>
-# include <netdb.h>
-# include <netinet/in.h>
-# include <net/if.h>
-# include <sys/ioctl.h>
-# include <sys/time.h>
-# include <unistd.h>
-# include <assert.h>
-#endif
-#include <sys/stat.h>
+#include <assert.h>
 
 #include "rx.h"
 #include "rx_globals.h"

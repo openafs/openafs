@@ -43,11 +43,8 @@
 #ifdef KERNEL
 # include "afs/sysincludes.h"
 #else
-# include <string.h>
+# include <roken.h>
 # include <limits.h>
-# ifndef AFS_NT40_ENV
-#  include <netinet/in.h>
-# endif
 #endif
 
 #include "xdr.h"

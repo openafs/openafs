@@ -11,7 +11,7 @@
 /* See rx_clock.h for calling conventions */
 
 #include <afsconfig.h>
-#include "afs/param.h"
+#include <afs/param.h>
 
 #ifdef AFS_SUN59_ENV
 #include <sys/time_impl.h>
@@ -26,13 +26,7 @@
 #  include "afsincludes.h"
 # endif /* !UKERNEL */
 #else /* KERNEL */
-# include <sys/time.h>
-# ifdef HAVE_SIGNAL_H
-#  include <signal.h>
-# endif
-# include <stdio.h>
-# include <errno.h>
-# include <stdlib.h>
+# include <roken.h>
 #endif
 
 #include "rx.h"

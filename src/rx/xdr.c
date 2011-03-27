@@ -32,7 +32,6 @@
 
 #ifndef KERNEL
 # include <roken.h>
-# include <string.h>
 #endif
 
 
@@ -53,8 +52,6 @@
 #ifndef AFS_LINUX20_ENV
 #include <sys/systm.h>
 #endif
-#else
-#include <stdio.h>
 #endif
 #include "xdr.h"
 #include "rx.h"

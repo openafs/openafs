@@ -14,12 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifndef KERNEL
-# include <roken.h>
-#endif /* KERNEL */
+#include <roken.h>
 
-#include <sys/types.h>
-#include <errno.h>
 #include "rx.h"
 
 /*

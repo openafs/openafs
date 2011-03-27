@@ -28,11 +28,7 @@
  */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
 
 
 #ifndef	NeXT
@@ -40,7 +36,7 @@
 #if defined(KERNEL) && !defined(UKERNEL)
 #include <sys/param.h>
 #else
-#include <stdio.h>
+#include <roken.h>
 #endif
 #include "xdr.h"
 

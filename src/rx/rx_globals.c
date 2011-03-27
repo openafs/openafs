@@ -19,7 +19,7 @@
 #endif
 
 #include <afsconfig.h>
-#include "afs/param.h"
+#include <afs/param.h>
 
 /* Enable data initialization when the header file is included */
 #define GLOBALSINIT(stuff) = stuff

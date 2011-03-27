@@ -21,36 +21,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifndef KERNEL
-# include <roken.h>
-#endif /* KERNEL */
+#include <roken.h>
 
-#include <sys/types.h>		/* fd_set on older platforms */
-#include <errno.h>
-#include <signal.h>
-#ifdef AFS_NT40_ENV
-# include <winsock2.h>
-#else
-# include <unistd.h>		/* select() prototype */
-# include <sys/time.h>		/* struct timeval, select() prototype */
-# ifndef FD_SET
-#  include <sys/select.h>	/* fd_set on newer platforms */
-# endif
-# include <sys/socket.h>
-# include <sys/file.h>
-# include <netdb.h>
-# include <sys/stat.h>
-# include <netinet/in.h>
-# include <net/if.h>
-# include <sys/ioctl.h>
-# include <sys/time.h>
-#endif
+#include <lwp.h>
 
 #include "rx.h"
 #include "rx_atomic.h"
 #include "rx_globals.h"
 #include "rx_stats.h"
-#include <lwp.h>
 
 #define MAXTHREADNAMELENGTH 64
 

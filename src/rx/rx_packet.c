@@ -42,25 +42,13 @@
 # endif /* defined(UKERNEL) */
 #else /* KERNEL */
 # include <roken.h>
-# include <sys/types.h>
-# include <sys/stat.h>
-# include <errno.h>
-# include <stdlib.h>
 # include <assert.h>
-# include <string.h>
-# ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-# endif
 # if defined(AFS_NT40_ENV)
-#  include <winsock2.h>
 #  ifndef EWOULDBLOCK
 #   define EWOULDBLOCK WSAEWOULDBLOCK
 #  endif
 #  include "rx_user.h"
 #  include "rx_xmit_nt.h"
-# else
-#  include <sys/socket.h>
-#  include <netinet/in.h>
 # endif
 # include <lwp.h>
 #endif /* KERNEL */

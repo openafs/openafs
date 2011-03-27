@@ -46,19 +46,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdio.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+#include <roken.h>
 #include "xdr.h"
-#ifndef AFS_NT40_ENV
-#include <sys/time.h>
-#include <netinet/in.h>
-#endif
-
-#include <string.h>
-
 
 /*  * A record is composed of one or more record fragments.
  * A record fragment is a two-byte header followed by zero to

@@ -8,7 +8,7 @@
  */
 
 #include <afsconfig.h>
-#include "afs/param.h"
+#include <afs/param.h>
 
 #ifdef KERNEL
 # ifndef UKERNEL

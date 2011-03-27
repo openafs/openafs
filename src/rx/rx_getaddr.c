@@ -10,16 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #ifndef KERNEL
+
+# include <roken.h>
 # ifndef AFS_NT40_ENV
-#  include <sys/types.h>
-#  include <sys/socket.h>
-#  include <sys/time.h>
-#  include <net/if.h>
-#  include <netinet/in.h>
-#  include <sys/ioctl.h>
-#  include <string.h>
+# include <net/if.h>
 #  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #   include <sys/sysctl.h>
 #   ifndef AFS_ARM_DARWIN_ENV
