@@ -10,24 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <signal.h>
-#include <sys/errno.h>
 #include <afs/afs_args.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
-#include <unistd.h>
-#else
-#include <stdio.h>
-#endif
-#ifdef AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
+
 #ifdef AFS_SGI_XFS_IOPS_ENV
-#include "xfsattrs.h"
+# include "xfsattrs.h"
 #endif
-#include <errno.h>
 #include "afssyscalls.h"
 
 #ifdef AFS_DEBUG_IOPS
@@ -49,9 +38,6 @@ static void check_iops(int index, char *fun, char *file, int line);
 
 #else
 #if defined(AFS_SGI_ENV)
-#ifdef AFS_SGI61_ENV
-#include <sys/types.h>
-#endif /* AFS_SGI61_ENV */
 
 #pragma weak xicreate = icreate
 #pragma weak xiinc = iinc

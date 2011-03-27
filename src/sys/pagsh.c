@@ -10,32 +10,22 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#ifdef AFS_AIX51_ENV
-#include <sys/cred.h>
-#ifdef HAVE_SYS_PAG_H
-#include <sys/pag.h>
+# ifdef AFS_AIX51_ENV
+#  include <sys/cred.h>
+#  ifdef HAVE_SYS_PAG_H
+#   include <sys/pag.h>
+#  endif
+# endif
 #endif
-#include <errno.h>
-#endif
-#endif
-#include <stdio.h>
-#include <stdlib.h>
+
 #include <limits.h>
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
-#include <string.h>
-#include <pwd.h>
-#ifdef AFS_KERBEROS_ENV
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-#include "rx/rx.h"
-#include "sys_prototypes.h"
+#include <rx/rx.h>
 #include <afs/auth.h>
+
+#include "sys_prototypes.h"
 
 #include "AFS_component_version_number.c"
 

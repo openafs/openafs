@@ -9,16 +9,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
 #include <windows.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <malloc.h>
-#include <string.h>
 #include <winioctl.h>
 #include <winsock2.h>
 #define SECURITY_WIN32

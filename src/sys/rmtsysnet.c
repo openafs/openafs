@@ -9,25 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <afs/afs_consts.h>
 
-#include <errno.h>
-#include <sys/param.h>
-#include <sys/types.h>
+#include <roken.h>
+
+#include <afs/afs_consts.h>
 #include <afs/vice.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/file.h>
-#endif
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
 #include <afs/afsint.h>
 #include <afs/venus.h>
 #include <rx/xdr.h>
+
 #include "rmtsys.h"
 
 

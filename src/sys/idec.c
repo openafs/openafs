@@ -10,15 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <stdio.h>
-#include <afs/afssyscalls.h>
 #ifdef AFS_HPUX_ENV
 #include <sys/mknod.h>
 #endif
+
+#include <afs/afssyscalls.h>
 
 main(argc, argv)
      char **argv;

@@ -16,20 +16,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/types.h>
-#include <sys/ioctl.h>
 #include <afs/vice.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <errno.h>
-#include <stdio.h>
 #include <rx/xdr.h>
+
 #include "rmtsys.h"
 #include "sys_prototypes.h"
 

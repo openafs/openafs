@@ -15,29 +15,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <errno.h>
 #include <limits.h>
-#include <sys/types.h>
+
 #include <afs/vice.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/file.h>
-#endif
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_GRP_H
-#include <grp.h>
-#endif
 #include <rx/xdr.h>
+
 #include "rmtsys.h"
 #include "sys_prototypes.h"
 

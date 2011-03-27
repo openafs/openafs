@@ -16,17 +16,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <signal.h>
+
+#include <roken.h>
 
 #include <afs/afs_args.h>
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
-#include <unistd.h>
-#else
-#include <stdio.h>
-#endif
-#if defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
+
 #include "afssyscalls.h"
 #include "sys_prototypes.h"
 

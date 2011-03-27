@@ -10,11 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/file.h>
-#include <stdio.h>
+#include <roken.h>
 
 #include "AFS_component_version_number.c"
 
