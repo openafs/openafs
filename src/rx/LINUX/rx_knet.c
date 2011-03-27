@@ -18,7 +18,6 @@
 
 #include <linux/version.h>
 #include "rx/rx_kcommon.h"
-#include "h/smp_lock.h"
 #include <asm/uaccess.h>
 #ifdef ADAPT_PMTU
 #include <linux/errqueue.h>

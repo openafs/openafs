@@ -30,7 +30,6 @@
 #include <linux/mm_inline.h>
 #endif
 #include <linux/pagemap.h>
-#include <linux/smp_lock.h>
 #include <linux/writeback.h>
 #include <linux/pagevec.h>
 #include "afs/lock.h"

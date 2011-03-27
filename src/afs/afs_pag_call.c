@@ -25,9 +25,6 @@
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
-#ifdef AFS_LINUX22_ENV
-#include "h/smp_lock.h"
-#endif
 #include "rmtsys.h"
 #include "pagcb.h"
 

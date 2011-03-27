@@ -21,7 +21,6 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include <linux/smp_lock.h>
 
 #include "osi_compat.h"
 
