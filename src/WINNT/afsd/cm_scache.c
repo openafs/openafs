@@ -2009,7 +2009,9 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
         if (scp->cbServerp) {
             if (!((scp->cbServerp->flags & CM_SERVERFLAG_UUID) &&
                 UuidToString((UUID *)&scp->cbServerp->uuid, &srvStr) == RPC_S_OK)) {
-                afs_asprintf(&srvStr, "%.0I", scp->cbServerp->addr.sin_addr.s_addr);
+                srvStr = malloc(16); /* enough for 255.255.255.255 */
+                if (srvStr != NULL)
+                    afs_inet_ntoa_r(scp->cbServerp->addr.sin_addr.s_addr, srvStr);
                 srvStrRpc = FALSE;
             }
         }

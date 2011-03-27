@@ -1508,7 +1508,9 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
         if (volp->cbServerpRO) {
             if (!((volp->cbServerpRO->flags & CM_SERVERFLAG_UUID) &&
                 UuidToString((UUID *)&volp->cbServerpRO->uuid, &srvStr) == RPC_S_OK)) {
-                afs_asprintf(&srvStr, "%.0I", volp->cbServerpRO->addr.sin_addr.s_addr);
+                srvStr = malloc(16);
+                if (srvStr != NULL)
+                    afs_inet_ntoa_r(volp->cbServerpRO->addr.sin_addr.s_addr, srvStr);
                 srvStrRpc = FALSE;
             }
         }
