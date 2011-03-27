@@ -10,11 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include <roken.h>
+
 #if defined(AFS_AIX_ENV)
 #include <sys/tape.h>
 #include <sys/statfs.h>
@@ -30,12 +27,6 @@
 #endif
 #endif /* AFS_AIX_ENV */
 
-#include <string.h>
-#include <stdlib.h>
-
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #include <afs/afs_assert.h>
 
 #include "usd.h"

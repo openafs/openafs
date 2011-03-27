@@ -10,10 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <windows.h>
-#include <stdio.h>
-#include <io.h>
 #include <winioctl.h>
 #include <sys/stat.h>
 #include <crtdbg.h>
