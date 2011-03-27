@@ -9,23 +9,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <rx/rxkad.h>
-#include "global.h"
 #ifdef AFS_NT40_ENV
 #include <afs/errmap_nt.h>
 #include <afs/afsutil.h>
 #include <WINNT/afssw.h>
 #endif
-#include <stdio.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <stdlib.h>
+
+#include <rx/rxkad.h>
+#include "global.h"
+
 
 int
 AddToList(struct filestr **ah, char *aname)

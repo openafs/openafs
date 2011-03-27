@@ -9,34 +9,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <afs/stds.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#include <fcntl.h>
-#include <io.h>
-#include <afs/procmgmt.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/file.h>
 #endif
-#include <dirent.h>
-#include <string.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
+
+#ifdef	AFS_AIX_ENV
+#include <sys/statfs.h>
 #endif
-#include <sys/stat.h>
-#include <errno.h>
-#include <stdio.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
@@ -44,9 +29,7 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/com_err.h>
-#ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
-#endif
+
 #include "update.h"
 #include "global.h"
 
