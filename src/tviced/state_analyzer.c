@@ -16,18 +16,12 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-#include <stdio.h>
-#include <errno.h>
-#include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <time.h>
-#include <string.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
+#include <sys/mman.h>
+
 #include <rx/xdr.h>
 #include <afs/afs_assert.h>
 #include <lwp.h>
@@ -48,18 +42,11 @@
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
-#include <stdlib.h>
 #include "../util/afsutil_prototypes.h"
 #include "../viced/viced.h"
 #include "../viced/host.h"
 #include "../viced/callback.h"
 #include "serialize_state.h"
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <unistd.h>
-
 
 #ifndef AFS_DEMAND_ATTACH_FS
 int

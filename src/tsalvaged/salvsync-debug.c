@@ -18,32 +18,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <WINNT/afsevent.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
-#endif
-
 #include <roken.h>
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
+#endif
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/afs_assert.h>
 #include <afs/dir.h>
-
-#include <fcntl.h>
 
 #ifndef AFS_NT40_ENV
 #include <afs/osi_inode.h>

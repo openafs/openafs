@@ -17,19 +17,6 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>		/* for malloc() */
-#include <time.h>		/* ANSI standard location for time stuff */
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/time.h>
-#include <sys/file.h>
-#endif
-#include <sys/stat.h>
-
 #include <afs/stds.h>
 #include <afs/afs_assert.h>
 
@@ -49,7 +36,6 @@
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
-#include <stdlib.h>
 
 #include "../viced/viced_prototypes.h"
 #include "../viced/viced.h"
