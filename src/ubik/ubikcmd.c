@@ -12,19 +12,6 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <string.h>
-#include <stdarg.h>
-#include <time.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <sys/param.h>
-#include <netdb.h>
-#endif
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>

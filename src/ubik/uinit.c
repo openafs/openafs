@@ -9,28 +9,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <winsock2.h>
-#else
-#include <sys/types.h>
-#include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif /* AFS_NT40_ENV */
-#include <sys/stat.h>
 #ifdef AFS_AIX_ENV
-#include <sys/statfs.h>
+# include <sys/statfs.h>
 #endif
 
-#include <string.h>
-
 #include <afs/dirpath.h>
-#include <errno.h>
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>

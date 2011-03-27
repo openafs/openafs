@@ -12,21 +12,6 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <time.h>
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <sys/time.h>
-#endif
-
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>

@@ -12,14 +12,6 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <stdarg.h>
-#include <errno.h>
-
-#ifndef AFS_NT40_ENV
-#include <sys/file.h>
-#endif
-
 #include <lock.h>
 #include <rx/xdr.h>
 

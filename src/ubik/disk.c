@@ -12,22 +12,8 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#endif
-
 #include <lock.h>
 #include <rx/xdr.h>
-
-
 
 #define UBIK_INTERNALS
 #include "ubik.h"

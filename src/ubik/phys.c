@@ -12,27 +12,7 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <io.h>
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#endif
-#include <sys/stat.h>
-
-/* #ifdef AFS_PTHREAD_ENV */
-#if 0   /* temporary hack - klm */
-/* nothing */
-#else
 #include <lwp.h>
-#endif
 
 #include <lock.h>
 #include <afs/afsutil.h>

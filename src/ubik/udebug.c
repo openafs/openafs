@@ -12,26 +12,6 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <signal.h>
-#include <time.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/file.h>
-#include <sys/param.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
