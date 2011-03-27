@@ -10,12 +10,8 @@
 /* The rxkad security object.  Routines used by both client and servers. */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#include <roken.h>
-#endif
+#include <afs/stds.h>
 
 #ifdef AFS_SUN59_ENV
 #include <sys/time_impl.h>
@@ -23,10 +19,8 @@
 
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
-
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "afs/stds.h"
 #include "afs/afs_osi.h"
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
@@ -36,33 +30,20 @@
 #endif
 #include "h/types.h"
 #include "h/time.h"
-#ifndef AFS_LINUX22_ENV
-#include "rpc/types.h"
-#include "rx/xdr.h"
-#endif /* AFS_LINUX22_ENV */
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #endif /* !UKERNEL */
-#include "rx/rx.h"
-
 #else /* KERNEL */
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <string.h>
-#include <time.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#ifdef AFS_PTHREAD_ENV
+#include <roken.h>
+#if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define RXKAD_STATS_DECLSPEC __declspec(dllexport)
 #endif
-#else
-#include <netinet/in.h>
-#endif
-#include <rx/rx.h>
-#include <rx/xdr.h>
 #include <afs/afsutil.h>
 #endif /* KERNEL */
+
+#include <rx/rx.h>
+#include <rx/xdr.h>
 
 #include "stats.h"
 #include "private_data.h"

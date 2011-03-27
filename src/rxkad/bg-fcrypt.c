@@ -31,39 +31,25 @@
  * SUCH DAMAGE.
  */
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#include <roken.h>
-#endif
-
+#include <afs/stds.h>
 
 #define DEBUG 0
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "afs/stds.h"
 #include "h/types.h"
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_OBSD_ENV)
 #include "netinet/in.h"
 #endif
 #else /* UKERNEL */
 #include "afs/sysincludes.h"
-#include "afs/stds.h"
 #endif /* UKERNEL */
 #ifdef AFS_LINUX22_ENV
 #include <asm/byteorder.h>
 #endif
 
 #else /* KERNEL */
-
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
+#include <roken.h>
 #include <rx/rx.h>
 #endif /* KERNEL */
 

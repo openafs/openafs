@@ -13,27 +13,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
 #if (defined(AFS_AIX_ENV) && defined(KERNEL) && !defined(UKERNEL)) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include <sys/systm.h>
 #endif
-#include <time.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/afsutil.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+
 #include "stats.h"
 #include "private_data.h"
 #define XPRT_RXKAD_SERVER

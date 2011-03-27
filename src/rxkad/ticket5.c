@@ -56,6 +56,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
@@ -63,18 +64,12 @@
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+
 #include <hcrypto/md4.h>
 #include <hcrypto/md5.h>
+
 #include "lifetimes.h"
 #include "rxkad.h"
 

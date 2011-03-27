@@ -9,11 +9,10 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <netinet/in.h>
+
+#include <roken.h>
+
 #include "fcrypt.h"
 
 

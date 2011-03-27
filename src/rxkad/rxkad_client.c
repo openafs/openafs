@@ -12,16 +12,10 @@
  * make any use of DES. */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#include <roken.h>
-#endif
-
+#include <afs/stds.h>
 
 #ifdef KERNEL
-#include "afs/stds.h"
 #ifndef UKERNEL
 #include "h/types.h"
 #include "h/time.h"
@@ -37,28 +31,15 @@
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */
-#ifndef AFS_LINUX22_ENV
-#include "rpc/types.h"
-#include "rx/xdr.h"
-#endif
-#include "rx/rx.h"
 #else /* ! KERNEL */
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <time.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-#include <rx/rx.h>
-#include <rx/xdr.h>
+#include <roken.h>
 #ifdef AFS_PTHREAD_ENV
 #include "rx/rxkad.h"
 #endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
+
+#include <rx/rx.h>
+#include <rx/xdr.h>
 
 #include "stats.h"
 #include "private_data.h"

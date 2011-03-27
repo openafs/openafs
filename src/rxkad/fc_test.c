@@ -33,6 +33,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include "rxkad.h"
 #include <rx/rx.h>
 #include "private_data.h"
@@ -43,11 +46,6 @@
 
 typedef afs_int32 int32;
 typedef afs_uint32 u_int32;
-
-#include <stdio.h>
-#include <string.h>
-
-#include <time.h>
 
 const char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
 
