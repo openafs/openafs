@@ -18,18 +18,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include "uss_kauth.h"		/*Module interface */
-#include "uss_common.h"		/*Common defs & operations */
-#include <errno.h>
-#include <pwd.h>
-
-#include <string.h>
+#include <roken.h>
 
 #include <afs/com_err.h>
 #include <afs/kautils.h> /*MAXKTCREALMLEN*/
 #include <afs/kaport.h>		/* pack_long */
 #include <afs/kauth.h>
+
+#include "uss_kauth.h"		/*Module interface */
+#include "uss_common.h"		/*Common defs & operations */
+
 #define uss_kauth_MAX_SIZE	2048
 #undef USS_KAUTH_DB
 /*

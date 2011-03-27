@@ -18,18 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include "uss_vol.h"		/*Interface to this module */
-#include "uss_common.h"		/*Common definitions */
-#include "uss_procs.h"		/*Defs from procs module */
-#include "uss_fs.h"		/*CacheManager ops */
-#include "uss_acl.h"
-#include <sys/stat.h>
-#include <pwd.h>
-#include <netdb.h>
-#include <errno.h>
-
-#include <string.h>
+#include <roken.h>
 
 #include <afs/com_err.h>
 #include <afs/vlserver.h>
@@ -43,6 +32,12 @@
 #include <afs/keys.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
+
+#include "uss_vol.h"		/*Interface to this module */
+#include "uss_common.h"		/*Common definitions */
+#include "uss_procs.h"		/*Defs from procs module */
+#include "uss_fs.h"		/*CacheManager ops */
+#include "uss_acl.h"
 
 extern int line;
 

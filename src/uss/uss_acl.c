@@ -18,17 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include "uss_acl.h"
-#include "uss_common.h"
-#include "uss_fs.h"
-#include <rx/xdr.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netdb.h>
-#include <errno.h>
-
-#include <string.h>
+#include <roken.h>
 
 #undef VIRTUE
 #undef VICE
@@ -36,6 +26,11 @@
 #include <afs/prs_fs.h>
 #include <afs/com_err.h>
 #include <afs/afs_consts.h>
+#include <rx/xdr.h>
+
+#include "uss_acl.h"
+#include "uss_common.h"
+#include "uss_fs.h"
 
 #define MAXNAME 100
 

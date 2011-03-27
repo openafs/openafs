@@ -18,13 +18,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "uss_ptserver.h"	/*Module interface */
 #include <afs/ptclient.h>	/*Protection Server client interface */
 #include <afs/pterror.h>	/*Protection Server error codes */
 #include <afs/ptuser.h>
 #include <afs/com_err.h>	/*Error code xlation */
 
+#include "uss_ptserver.h"	/*Module interface */
 
 #undef USS_PTSERVER_DB
 

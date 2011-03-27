@@ -18,23 +18,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/kautils.h> /*MAXKTCREALMLEN*/
 
 #include "uss_procs.h"		/*Module interface */
 #include "uss_common.h"		/*Common defs & operations */
 #include "uss_acl.h"		/*ACL-related operations */
-#include <errno.h>		/*Unix error codes */
-#include <pwd.h>		/*Password info */
-#include <sys/stat.h>		/*Stat defs */
-#include <dirent.h>		/*Directory package */
-#include <sys/file.h>		/*O_EXCL, O_CREAT, etc */
-#ifdef	AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
 
-#include <string.h>
-#include <stdarg.h>
-
-#include <afs/kautils.h> /*MAXKTCREALMLEN*/
 #undef USS_PROCS_DB
 #undef USS_PROCS_DB_INSTANCE
 #undef USS_PROCS_DB_BUILDDIR

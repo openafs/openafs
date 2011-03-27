@@ -18,12 +18,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "uss_common.h"		/*Interface definitions */
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */
 
-#include <string.h>
-
+#include "uss_common.h"		/*Interface definitions */
 
 /*
  * ---------------------- Exported variables ----------------------

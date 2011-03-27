@@ -18,24 +18,18 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "uss_fs.h"		/*Interface to this module */
-#include <sys/types.h>
-#include <errno.h>
-#include <sys/socket.h>
 #ifdef	AFS_SUN5_ENV
 #include <sys/ioccom.h>
 #endif
-#include <netinet/in.h>
-
-#include <string.h>
-#include <unistd.h>
 
 #include <afs/venus.h>
 #include <rx/rx.h>
 #include <afs/sys_prototypes.h>
-#include "uss_common.h"
 
+#include "uss_common.h"
+#include "uss_fs.h"		/*Interface to this module */
 
 /*
  * ---------------------- Private definitions ---------------------

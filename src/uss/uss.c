@@ -14,16 +14,17 @@
 /*
  * --------------------- Required definitions ---------------------
  */
-#include <stdlib.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
-#include <string.h>
+#include <afs/cmd.h>		/*Command line parsing */
+#include <afs/cellconfig.h>	/*Cell config defs */
+#include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */
+#include <afs/pterror.h>
+#include <afs/vlserver.h>
+#include <ubik.h>
 
 #include "uss_common.h"		/*Common uss definitions, globals */
 #include "uss_procs.h"		/*Main uss operations */
@@ -32,12 +33,6 @@
 #include "uss_ptserver.h"
 #include "uss_vol.h"
 #include "uss_acl.h"
-#include <afs/cmd.h>		/*Command line parsing */
-#include <afs/cellconfig.h>	/*Cell config defs */
-#include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */
-#include <afs/pterror.h>
-#include <afs/vlserver.h>
-#include <ubik.h>
 
 extern int yylex(void);
 extern int yyparse (void);
