@@ -21,7 +21,6 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "nfsclient.h"
-#include <linux/smp_lock.h>
 #include <linux/sunrpc/svc.h>
 #include <linux/sunrpc/svcauth.h>
 

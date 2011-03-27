@@ -28,9 +28,6 @@
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
-#ifdef AFS_LINUX22_ENV
-#include "h/smp_lock.h"
-#endif
 
 #if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || defined(NEED_IOCTL32)
 static void

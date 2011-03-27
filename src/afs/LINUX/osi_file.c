@@ -15,7 +15,6 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
-#include <linux/smp_lock.h>
 #include <linux/namei.h>
 
 #if defined(HAVE_LINUX_EXPORTFS_H)

@@ -22,7 +22,6 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include <linux/smp_lock.h>
 
 int afs_osicred_initialized = 0;
 afs_ucred_t afs_osi_cred;

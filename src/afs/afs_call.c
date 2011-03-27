@@ -24,9 +24,6 @@
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
-#ifdef AFS_LINUX22_ENV
-#include "h/smp_lock.h"
-#endif
 #ifdef AFS_SUN510_ENV
 #include "h/ksynch.h"
 #include "h/sunddi.h"
