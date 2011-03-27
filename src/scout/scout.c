@@ -14,13 +14,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #undef	IN
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-#include <string.h>
-#undef IN
 #include <afs/gtxwindows.h>		/*Generic window package */
 #include <afs/gtxobjects.h>		/*Object definitions */
 #include <afs/gtxtextobj.h>		/*Text object interface */
@@ -30,15 +26,9 @@
 #include <afs/gtxX11win.h>		/*X11 window package */
 #include <afs/gtxframe.h>		/*Frame package */
 #include <afs/gtxinput.h>
-#include <stdio.h>		/*Standard I/O stuff */
 #include <afs/cmd.h>		/*Command interpretation library */
 #include <afs/fsprobe.h>		/*Interface for fsprobe module */
-#include <errno.h>
 #include <afs/afsutil.h>
-#include <netdb.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 
 /*
  * Command line parameter indicies.
