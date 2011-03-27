@@ -26,8 +26,6 @@
 #include "afs/nfsclient.h"
 #include "osi_compat.h"
 
-#include <linux/smp_lock.h>
-
 #ifdef AFS_LINUX26_ONEGROUP_ENV
 # define NUMPAGGROUPS 1
 
