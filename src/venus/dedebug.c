@@ -10,16 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <stdio.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 #include <afs/afscbint.h>
 #include <afs/cmd.h>
 #include <afs/com_err.h>

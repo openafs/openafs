@@ -27,49 +27,26 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <afs/stds.h>
-
-#include <stdio.h>
 #include <setjmp.h>
-#include <sys/types.h>
-#include <string.h>
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
 #include <windows.h>
-#include <winsock2.h>
 #define _CRT_RAND_S
-#include <stdlib.h>
 #include <process.h>
-#include <fcntl.h>
-#include <io.h>
 #include <afs/smb_iocons.h>
 #include <afs/afsd.h>
 #include <afs/cm_ioctl.h>
 #include <afs/pioctl_nt.h>
 #include <WINNT/syscfg.h>
 #else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string.h>
-#include <fcntl.h>
-#include <pwd.h>
 #include <afs/venus.h>
-#include <sys/time.h>
-#include <netdb.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG 1
 #endif
-#include <sys/stat.h>
-#include <errno.h>
-#include <signal.h>
 #include <afs/vice.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
@@ -88,21 +65,15 @@
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/com_err.h>
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-#endif
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
 #endif
-#ifdef AFS_DARWIN_ENV
-#include <sys/malloc.h>
-#else
-#include <malloc.h>
-#endif
+
+#include <hcrypto/md5.h>
+
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
 #include <rx/rx_prototypes.h>
-#include <hcrypto/md5.h>
 
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>

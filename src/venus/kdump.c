@@ -10,10 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>		/* for malloc() */
+#include <roken.h>
 
 #include <afs/cmd.h>
 

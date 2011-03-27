@@ -12,37 +12,12 @@
 
 #include <roken.h>
 
-#include <errno.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#undef	_NONSTD_TYPES
-#endif
-#include <stdio.h>
-#include <unistd.h>
 #include <afs/afs_args.h>
-#include <sys/param.h>
-#ifdef	AFS_SUN5_ENV
-#include <fcntl.h>
-#endif
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <sys/time.h>
 #define VIRTUE
 #define VICE
-#include <sys/ioctl.h>
 #include <afs/vice.h>
 #undef VIRTUE
 #undef VICE
-#include <sys/ioctl.h>
-#include <netdb.h>
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
-#include <string.h>
-#include <stdlib.h>
-
 #include <afs/venus.h>
 #include <afs/sys_prototypes.h>
 #include <afs/afsutil.h>

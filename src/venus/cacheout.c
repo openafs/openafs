@@ -7,35 +7,24 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/vldbint.h>
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdio.h>
-#include <string.h>
-
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+#include <roken.h>
 
 #include <ctype.h>
-#include <sys/types.h>
+
 #include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
 #include <afs/vlserver.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-
 #include <ubik.h>
 #include <afs/kauth.h>
 #include <afs/afsutil.h>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <afs/vldbint.h>
 
 /*
 File servers in NW byte order.

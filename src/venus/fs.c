@@ -9,30 +9,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
+
+#include <ctype.h>
 
 #include <afs/afs_consts.h>
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <errno.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <netinet/in.h>
-#include <sys/stat.h>
-#include <afs/stds.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/com_err.h>
 #include <afs/afs_consts.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
-
-#include <string.h>
 
 #undef VIRTUE
 #undef VICE
@@ -46,10 +35,7 @@
 #include <afs/volser.h>
 #include <afs/vlserver.h>
 #include <afs/cmd.h>
-#include <afs/afsutil.h>
 #include <afs/com_err.h>
-#include <stdlib.h>
-#include <assert.h>
 #include <afs/ptclient.h>
 #include <afs/ptuser.h>
 #include <afs/afsutil.h>

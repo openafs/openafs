@@ -12,24 +12,10 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43)
-#include <time.h>
-/*#ifdef	AFS_AIX_ENV*/
-#include <sys/time.h>
-/*#endif*/
-#include <errno.h>
-#undef abs
-#include <stdlib.h>
-
-#include <string.h>
-
-#include <afs/stds.h>
 #include <afs/cmd.h>
 #include <afs/afs_args.h>
 #include <afs/icl.h>
@@ -49,7 +35,6 @@ int afs_icl_sizeofLong = 1;
 int afs_64bit_kernel = 1;	/* Default for 6.2+, and always for 6.1 */
 extern int afs_icl_sizeofLong;	/* Used in ICL_SIZEHACK() */
 #ifdef AFS_SGI62_ENV
-#include <unistd.h>
 
 /* If _SC_KERN_POINTERS not in sysconf, then we can assume a 32 bit abi. */
 void
@@ -2124,12 +2109,3 @@ main(int argc, char *argv[])
 
     return (cmd_Dispatch(argc, argv));
 }
-#else
-#include "AFS_component_version_number.c"
-
-int
-main(int argc, char *argv[])
-{
-    printf("fstrace is NOT supported for this OS\n");
-}
-#endif

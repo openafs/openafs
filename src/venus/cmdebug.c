@@ -12,22 +12,10 @@
 
 #include <roken.h>
 
-#include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <rpc.h>
-#else
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
 #endif
-#include <sys/socket.h>
-#include <netdb.h>
-#endif
-#include <stdio.h>
-#include <string.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+
 #include <afs/afscbint.h>
 #include <afs/cmd.h>
 #include <rx/rx.h>
