@@ -403,4 +403,35 @@ afs_inode_setattr(struct osi_file *afile, struct iattr *newattrs) {
     return code;
 }
 
+static inline int
+afs_kern_path(char *aname, int flags, struct nameidata *nd, struct path *path) {
+#if defined(HAVE_LINUX_PATH_LOOKUP)
+    return path_lookup(aname, flags, nd);
+#else
+    return kern_path(aname, flags, path);
+#endif
+}
+
+static inline void
+afs_get_dentry_ref(struct nameidata *nd, struct path *path, struct vfsmount **mnt, struct dentry **dpp) {
+#if defined(STRUCT_NAMEIDATA_HAS_PATH)
+# if defined(HAVE_LINUX_PATH_LOOKUP)
+    *dpp = dget(nd->path.dentry);
+    if (mnt)
+	*mnt = mntget(nd->path.mnt);
+    path_put(&nd->path);
+# else
+    *dpp = dget(path->dentry);
+    if (mnt)
+	*mnt = mntget(path->mnt);
+    path_put(path);
+# endif
+#else
+    *dpp = dget(nd->dentry);
+    if (mnt)
+	*mnt = mntget(nd->mnt);
+    path_release(nd);
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */
