@@ -23,6 +23,8 @@
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
 
+#include "osi_compat.h"
+
 int afs_osicred_initialized = 0;
 afs_ucred_t afs_osi_cred;
 
@@ -58,26 +60,17 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 {
     int code;
     struct nameidata nd;
+    struct path path;
     int flags = LOOKUP_POSITIVE;
     code = ENOENT;
 
     if (followlink)
        flags |= LOOKUP_FOLLOW;
-    code = path_lookup(aname, flags, &nd);
+    code = afs_kern_path(aname, flags, &nd, &path);
 
-    if (!code) {
-#if defined(STRUCT_NAMEIDATA_HAS_PATH)
-	*dpp = dget(nd.path.dentry);
-        if (mnt)
-	    *mnt = mntget(nd.path.mnt);
-	path_put(&nd.path);
-#else
-	*dpp = dget(nd.dentry);
-        if (mnt)
-           *mnt = mntget(nd.mnt);
-	path_release(&nd);
-#endif
-    }
+    if (!code)
+	afs_get_dentry_ref(&nd, &path, mnt, dpp);
+
     return code;
 }
 
