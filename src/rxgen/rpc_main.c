@@ -36,21 +36,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
-#include <string.h>
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_FILE_H
-#include <sys/file.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"

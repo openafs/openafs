@@ -35,11 +35,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
-#include <string.h>
+
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"

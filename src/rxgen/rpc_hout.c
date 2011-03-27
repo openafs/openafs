@@ -35,17 +35,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #include "rpc_scan.h"
 #include "rpc_parse.h"
