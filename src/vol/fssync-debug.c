@@ -64,7 +64,7 @@ struct volop_state {
     char partName[16];
 };
 
-struct state {
+struct fssync_state {
     afs_int32 reason;
     struct volop_state * vop;
 };
@@ -75,10 +75,11 @@ static char **fssd_argv;
 static int fssd_argc;
 #endif
 
-static int common_prolog(struct cmd_syndesc *, struct state *);
-static int common_volop_prolog(struct cmd_syndesc *, struct state *);
+static int common_prolog(struct cmd_syndesc *, struct fssync_state *);
+static int common_volop_prolog(struct cmd_syndesc *, struct fssync_state *);
 
-static int do_volop(struct state *, afs_int32 command, SYNC_response * res);
+static int do_volop(struct fssync_state *, afs_int32 command,
+		    SYNC_response * res);
 
 static int VolOnline(struct cmd_syndesc * as, void * rock);
 static int VolOffline(struct cmd_syndesc * as, void * rock);
@@ -295,7 +296,7 @@ dafs_prolog(void)
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
 static int
-common_prolog(struct cmd_syndesc * as, struct state * state)
+common_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
     VolumePackageOptions opts;
@@ -346,7 +347,7 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 }
 
 static int
-common_volop_prolog(struct cmd_syndesc * as, struct state * state)
+common_volop_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
 
@@ -392,7 +393,7 @@ debug_response(afs_int32 code, SYNC_response * res)
 }
 
 static int
-do_volop(struct state * state, afs_int32 command, SYNC_response * res)
+do_volop(struct fssync_state * state, afs_int32 command, SYNC_response * res)
 {
     afs_int32 code;
     SYNC_PROTO_BUF_DECL(res_buf);
@@ -440,7 +441,7 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
 static int
 VolOnline(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -453,7 +454,7 @@ VolOnline(struct cmd_syndesc * as, void * rock)
 static int
 VolOffline(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -466,7 +467,7 @@ VolOffline(struct cmd_syndesc * as, void * rock)
 static int
 VolMode(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -479,7 +480,7 @@ VolMode(struct cmd_syndesc * as, void * rock)
 static int
 VolDetach(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -492,7 +493,7 @@ VolDetach(struct cmd_syndesc * as, void * rock)
 static int
 VolBreakCBKs(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -505,7 +506,7 @@ VolBreakCBKs(struct cmd_syndesc * as, void * rock)
 static int
 VolMove(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -518,7 +519,7 @@ VolMove(struct cmd_syndesc * as, void * rock)
 static int
 VolList(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -531,7 +532,7 @@ VolList(struct cmd_syndesc * as, void * rock)
 static int
 VolLeaveOff(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -544,7 +545,7 @@ VolLeaveOff(struct cmd_syndesc * as, void * rock)
 static int
 VolForceAttach(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -557,7 +558,7 @@ VolForceAttach(struct cmd_syndesc * as, void * rock)
 static int
 VolForceError(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
@@ -673,7 +674,7 @@ vn_flags_to_string(afs_uint32 flags)
 static int
 VolQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Volume v;
@@ -808,7 +809,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 static int
 VolHdrQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     VolumeDiskData v;
@@ -883,7 +884,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 static int
 VolOpQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     FSSYNC_VolOp_info vop;
@@ -940,7 +941,7 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 }
 
 static int
-vn_prolog(struct cmd_syndesc * as, struct state * state)
+vn_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
 
@@ -975,7 +976,7 @@ vn_prolog(struct cmd_syndesc * as, struct state * state)
 }
 
 static int
-do_vnqry(struct state * state, SYNC_response * res)
+do_vnqry(struct fssync_state * state, SYNC_response * res)
 {
     afs_int32 code;
     int command = FSYNC_VOL_QUERY_VNODE;
@@ -1002,7 +1003,7 @@ do_vnqry(struct state * state, SYNC_response * res)
 static int
 VnQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Vnode v;
@@ -1104,7 +1105,7 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
     afs_int32 code;
     int command;
     struct cmd_item *ti;
-    struct state state;
+    struct fssync_state state;
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     FSSYNC_StatsOp_hdr scom;
@@ -1378,7 +1379,7 @@ static int
 VGCQuery(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     VolumeId volid;
     FSSYNC_VGQry_response_t q_res;
@@ -1425,7 +1426,7 @@ static int
 VGCAdd(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     VolumeId parent, child;
     struct cmd_item *ti;
@@ -1460,7 +1461,7 @@ static int
 VGCDel(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     VolumeId parent, child;
     struct cmd_item *ti;
@@ -1495,7 +1496,7 @@ static int
 VGCScan(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
     char * partName;
     struct cmd_item *ti;
 
@@ -1518,7 +1519,7 @@ static int
 VGCScanAll(struct cmd_syndesc * as, void * rock)
 {
     afs_int32 code;
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     fprintf(stderr, "calling FSYNC_VCGScanAll\n");

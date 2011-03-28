@@ -84,15 +84,15 @@ struct salv_state {
     char partName[16];
 };
 
-struct state {
+struct fssync_state {
     afs_int32 reason;
     struct salv_state * sop;
 };
 
-static int common_prolog(struct cmd_syndesc *, struct state *);
-static int common_salv_prolog(struct cmd_syndesc *, struct state *);
+static int common_prolog(struct cmd_syndesc *, struct fssync_state *);
+static int common_salv_prolog(struct cmd_syndesc *, struct fssync_state *);
 
-static int do_salvop(struct state *, afs_int32 command, SYNC_response * res);
+static int do_salvop(struct fssync_state *, afs_int32 command, SYNC_response * res);
 
 static char * response_code_to_string(afs_int32);
 static char * command_code_to_string(afs_int32);
@@ -176,7 +176,7 @@ main(int argc, char **argv)
 }
 
 static int
-common_prolog(struct cmd_syndesc * as, struct state * state)
+common_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
     VolumePackageOptions opts;
@@ -227,7 +227,7 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 }
 
 static int
-common_salv_prolog(struct cmd_syndesc * as, struct state * state)
+common_salv_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
 
@@ -256,7 +256,7 @@ common_salv_prolog(struct cmd_syndesc * as, struct state * state)
 }
 
 static int
-do_salvop(struct state * state, afs_int32 command, SYNC_response * res)
+do_salvop(struct fssync_state * state, afs_int32 command, SYNC_response * res)
 {
     afs_int32 code;
     SALVSYNC_response_hdr hdr_l, *hdr;
@@ -411,7 +411,7 @@ state_code_to_string(afs_int32 state)
 static int
 OpStats(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_salv_prolog(as, &state);
@@ -424,7 +424,7 @@ OpStats(struct cmd_syndesc * as, void * rock)
 static int
 OpSalvage(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_salv_prolog(as, &state);
@@ -437,7 +437,7 @@ OpSalvage(struct cmd_syndesc * as, void * rock)
 static int
 OpCancel(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_salv_prolog(as, &state);
@@ -450,7 +450,7 @@ OpCancel(struct cmd_syndesc * as, void * rock)
 static int
 OpCancelAll(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_salv_prolog(as, &state);
@@ -463,7 +463,7 @@ OpCancelAll(struct cmd_syndesc * as, void * rock)
 static int
 OpRaisePrio(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_salv_prolog(as, &state);
@@ -476,7 +476,7 @@ OpRaisePrio(struct cmd_syndesc * as, void * rock)
 static int
 OpQuery(struct cmd_syndesc * as, void * rock)
 {
-    struct state state;
+    struct fssync_state state;
 
     common_prolog(as, &state);
     common_salv_prolog(as, &state);
