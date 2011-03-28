@@ -74,31 +74,6 @@
 #include <vol/vol-salvage.h>
 #endif
 
-#if !defined(HAVE_FLOCK) && !defined(AFS_NT40_ENV)
-#include <fcntl.h>
-
-/*
- * This function emulates a subset of flock()
- */
-int
-emul_flock(int fd, int cmd)
-{    struct flock f;
-
-    memset(&f, 0, sizeof (f));
-
-    if (cmd & LOCK_UN)
-        f.l_type = F_UNLCK;
-    if (cmd & LOCK_SH)
-        f.l_type = F_RDLCK;
-    if (cmd & LOCK_EX)
-        f.l_type = F_WRLCK;
-
-    return fcntl(fd, (cmd & LOCK_NB) ? F_SETLK : F_SETLKW, &f);
-}
-
-#define flock(f,c)      emul_flock(f,c)
-#endif
-
 int Testing=0;
 
 
