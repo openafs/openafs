@@ -32,6 +32,7 @@ ROKEN_OBJS = \
 	$(OUT)\erealloc.obj \
         $(OUT)\err.obj \
         $(OUT)\errx.obj \
+	$(OUT)\flock.obj \
 	$(OUT)\getopt.obj \
         $(OUT)\getprogname.obj \
 	$(OUT)\hex.obj \

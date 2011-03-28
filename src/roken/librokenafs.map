@@ -18,6 +18,7 @@
 		rk_ecalloc;
 		rk_emalloc;
 		rk_erealloc;
+		rk_flock;
 		rk_hex_encode;
 		rk_mkstemp;
 		rk_print_version;

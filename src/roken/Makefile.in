@@ -100,6 +100,9 @@ err.o: ${UPSTREAM}/err.c err.h
 errx.o: ${UPSTREAM}/errx.c err.h
 	$(AFS_CCRULE) $(UPSTREAM)/errx.c
 
+flock.o: ${UPSTREAM}/flock.c
+	$(AFS_CCRULE) $(UPSTREAM)/flock.c
+
 getopt.o: ${UPSTREAM}/getopt.c
 	$(AFS_CCRULE) $(UPSTREAM)/getopt.c
 

@@ -35,3 +35,4 @@ EXPORTS
 	rk_asprintf		@39
         rk_vsnprintf            @40
         rk_vasnprintf           @41
+	rk_flock		@42

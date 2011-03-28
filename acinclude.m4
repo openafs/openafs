@@ -1320,7 +1320,7 @@ AC_SUBST(BUILD_LOGIN)
 
 AC_CHECK_FUNCS([ \
 	arc4random \
-	flock \
+	fcntl \
 	fseeko64 \
 	ftello64 \
 	getcwd \
@@ -1392,6 +1392,7 @@ AC_REPLACE_FUNCS([ \
 	erealloc \
 	err \
 	errx \
+	flock \
 	getdtablesize \
 	getopt \
 	getprogname \
