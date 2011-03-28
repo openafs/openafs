@@ -25,7 +25,13 @@ OpenAFS 1.6.0 (in progress)
 
     * MTU discovery now properly shut down on call reset.
 
+    * Documentation updates.
+
   All server platforms
+
+    * A file descriptor leak which could result in corrupted files in the
+      fileserver was fixed. An IMMEDIATE upgrade from previous 1.6 release
+      candidates as well as 1.5 release fileserver is recommended.
 
     * Fix ptserver supergroups support on 64 bit platforms.
 
@@ -68,6 +74,11 @@ OpenAFS 1.6.0 (in progress)
 
     * Demand attach: ensure vnodes are not reallocated while in use due to
       volume bitmap errors.
+
+    * Properly support large volume numbers (larger than 2147483647).
+
+    * Allow salvager to be run manually again when DAFS is being
+      used. (129458)
 
   Microsoft Windows:
 
@@ -119,6 +130,10 @@ OpenAFS 1.6.0 (in progress)
 
     * Icon tray state now conditionally set. (128591)
 
+    * Properly create new cell mount points in freelance mode.
+
+    * Avoid recursive offline volume checks.
+
   All UNIX client platforms
 
     * Servers now marked down when GetCapabilities returns error.
@@ -152,6 +167,8 @@ OpenAFS 1.6.0 (in progress)
 
     * Fix locking issues at shutdown.
 
+    * New RC script, updated packaging.
+
   Linux
 
     * Support through kernel 2.6.38.
@@ -173,6 +190,10 @@ OpenAFS 1.6.0 (in progress)
     * Perform vcache eviction via a fast path before visiting vcaches
       where sleep is needed.
 
+    * Improve RPM building tools.
+
+    * setpag() errors are now properly reported.
+
   MacOS
 
     * Properly handle setpag errors.  PAGs are not supported.
@@ -183,6 +204,14 @@ OpenAFS 1.6.0 (in progress)
       plugin is configured.
 
     * aklog AuthorizationPlugin now provided.
+
+    * Preferences Pane behavior fixed for 1.6 series (version detection is
+      used to select default behavior).
+
+    * A potential kernel panic during bulkstat operations is
+      fixed. (128511)
+
+    * 64-bit MacOS kernel performance is greatly improved. (128934)
 
   OpenBSD
 
@@ -200,6 +229,8 @@ OpenAFS 1.6.0 (in progress)
     * Corrected Solaris 11 startup script.
 
     * vcache mappings freed on shutdown to avoid panic.
+
+    * Properly report errors for AFS system call callers.
 
 
 OpenAFS 1.5.78 (2010-11-04)
