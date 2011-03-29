@@ -37,8 +37,8 @@ AC_DEFUN([_OPENAFS_ROKEN_CHECK], [
   AS_IF([test x"$roken_foundlib" = xtrue && test x"$roken_foundheader" = xtrue],
 	 [AS_IF([test x"$roken_path" != x],
 	       [CPPFLAGS_roken="-I$roken_path/include"
-		LDFLAGS_roken="-L$roken_path/lib"
-		LIB_roken="-lroken"])
+		LDFLAGS_roken="-L$roken_path/lib"])
+	 LIB_roken="-lroken"
 	 $2],
 	[$3])
 ])
