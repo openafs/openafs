@@ -158,6 +158,8 @@ UAFSOBJ = \
 	$(UOBJ)/afsd_uafs.o \
 	$(UOBJ)/xdr.o \
 	$(UOBJ)/xdr_afsuuid.o \
+	$(UOBJ)/xdr_update.o \
+	$(UOBJ)/xdr_refernce.o \
 	$(UOBJ)/afs_uuid.o \
 	$(UOBJ)/assert.o \
 	$(UOBJ)/osi_vnodeops.o \
@@ -301,6 +303,8 @@ PICUAFSOBJ = \
 	$(PICOBJ)/afsd_uafs.o \
 	$(PICOBJ)/xdr.o \
 	$(PICOBJ)/xdr_afsuuid.o \
+	$(PICOBJ)/xdr_update.o \
+	$(PICOBJ)/xdr_refernce.o \
 	$(PICOBJ)/afs_uuid.o \
 	$(PICOBJ)/assert.o \
 	$(PICOBJ)/osi_vnodeops.o \
@@ -444,6 +448,8 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afsd_uafs.o \
 	$(WEBOBJ)/xdr.o \
 	$(WEBOBJ)/xdr_afsuuid.o \
+	$(WEBOBJ)/xdr_update.o \
+	$(WEBOBJ)/xdr_refernce.o \
 	$(WEBOBJ)/afs_uuid.o \
 	$(WEBOBJ)/assert.o \
 	$(WEBOBJ)/osi_vnodeops.o \
@@ -725,6 +731,8 @@ JUAFSOBJ = \
 	$(JUAFS)/afsd_uafs.o \
 	$(JUAFS)/xdr.o \
 	$(JUAFS)/xdr_afsuuid.o \
+	$(JUAFS)/xdr_update.o \
+	$(JUAFS)/xdr_refernce.o \
 	$(JUAFS)/afs_uuid.o \
 	$(JUAFS)/assert.o \
 	$(JUAFS)/osi_vnodeops.o \
@@ -972,6 +980,10 @@ $(UOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 $(UOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULE1)
 $(UOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE1)
+$(UOBJ)/xdr_update.o: $(TOP_SRCDIR)/rx/xdr_update.c
+	$(CRULE1)
+$(UOBJ)/xdr_refernce.o: $(TOP_SRCDIR)/rx/xdr_refernce.c
 	$(CRULE1)
 $(UOBJ)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
 	$(CRULE1)
@@ -1266,6 +1278,10 @@ $(PICOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULEPIC)
 $(PICOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULEPIC)
+$(PICOBJ)/xdr_update.o: $(TOP_SRCDIR)/rx/xdr_update.c
+	$(CRULEPIC)
+$(PICOBJ)/xdr_refernce.o: $(TOP_SRCDIR)/rx/xdr_refernce.c
+	$(CRULEPIC)
 $(PICOBJ)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
 	$(CRULEPIC)
 $(PICOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
@@ -1556,6 +1572,10 @@ $(WEBOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 $(WEBOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULE1)
 $(WEBOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE2)
+$(WEBOBJ)/xdr_update.o: $(TOP_SRCDIR)/rx/xdr_update.c
+	$(CRULE2)
+$(WEBOBJ)/xdr_refernce.o: $(TOP_SRCDIR)/rx/xdr_refernce.c
 	$(CRULE2)
 $(WEBOBJ)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
 	$(CRULE2)
@@ -1857,6 +1877,10 @@ $(JUAFS)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 $(JUAFS)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULE1)
 $(JUAFS)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE1)
+$(JUAFS)/xdr_update.o: $(TOP_SRCDIR)/rx/xdr_update.c
+	$(CRULE1)
+$(JUAFS)/xdr_refernce.o: $(TOP_SRCDIR)/rx/xdr_refernce.c
 	$(CRULE1)
 $(JUAFS)/xdr.o: $(TOP_SRCDIR)/rx/xdr.c
 	$(CRULE1)
