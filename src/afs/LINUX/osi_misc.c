@@ -59,17 +59,20 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 			struct dentry **dpp)
 {
     int code;
-    struct nameidata nd;
-    struct path path;
+#if defined(HAVE_LINUX_PATH_LOOKUP)
+    struct nameidata path_data;
+#else
+    struct path path_data;
+#endif
     int flags = LOOKUP_POSITIVE;
     code = ENOENT;
 
     if (followlink)
        flags |= LOOKUP_FOLLOW;
-    code = afs_kern_path(aname, flags, &nd, &path);
+    code = afs_kern_path(aname, flags, &path_data);
 
     if (!code)
-	afs_get_dentry_ref(&nd, &path, mnt, dpp);
+	afs_get_dentry_ref(&path_data, mnt, dpp);
 
     return code;
 }

@@ -849,7 +849,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				     [#include <linux/pagevec.h>],
 				     [__pagevec_lru_add_file(NULL);])
 		 AC_CHECK_LINUX_FUNC([path_lookup],
-				     [#include <linux/namei.h>],
+				     [#include <linux/fs.h>
+				      #include <linux/namei.h>],
 				     [path_lookup(NULL, 0, NULL);])
 		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
 				     [#include <linux/rcupdate.h>],
