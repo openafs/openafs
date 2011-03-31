@@ -15,7 +15,7 @@
 #define osi_Alloc afs_osi_Alloc
 #define osi_Free  afs_osi_Free
 
-#ifndef AFS_DARWIN80_ENV
+#ifndef RXK_TIMEDSLEEP_ENV
 #define rxi_ReScheduleEvents    0	/* Not needed by kernel */
 #endif
 

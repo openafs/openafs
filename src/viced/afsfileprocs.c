@@ -7360,7 +7360,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    if (fdP == NULL) {
 		ViceLog(25,
 			("StoreData : Reopen after CopyOnWrite failed\n"));
-		FDH_CLOSE(origfdP);
+		FDH_REALLYCLOSE(origfdP);
 		return ENOENT;
 	    }
 	}
@@ -7392,7 +7392,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	 AdjustDiskUsage(volptr, adjustSize,
 			 adjustSize - SpareComp(volptr)))) {
 	FDH_CLOSE(fdP);
-	if (origfdP) FDH_CLOSE(origfdP);
+	if (origfdP) FDH_REALLYCLOSE(origfdP);
 	return (errorCode);
     }
 
@@ -7492,7 +7492,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	targetptr->changed_newTime = 1;
 	if (origfdP && (bytesTransfered < Length))	/* Need to "finish" CopyOnWrite still */
 	    CopyOnWrite2(origfdP, fdP, Pos + bytesTransfered, NewLength - Pos - bytesTransfered);
-	if (origfdP) FDH_CLOSE(origfdP);
+	if (origfdP) FDH_REALLYCLOSE(origfdP);
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
 	VAdjustDiskUsage(&errorCode, volptr,
@@ -7509,7 +7509,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 			afs_printable_VnodeId_u(targetptr->vnodeNumber),
 			V_name(volptr), CoW_off, CoW_len, errorCode));
 	}
-	FDH_CLOSE(origfdP);
+	FDH_REALLYCLOSE(origfdP);
     }
     FDH_CLOSE(fdP);
 

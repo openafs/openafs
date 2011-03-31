@@ -2775,7 +2775,7 @@ h_PrintClient(struct host *host, int flags, void *rock)
 			       client->CPS.prlist_len);
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    if (client->CPS.prlist_val) {
-		for (i = 0; i > client->CPS.prlist_len; i++) {
+		for (i = 0; i < client->CPS.prlist_len; i++) {
 		    (void)afs_snprintf(tmpStr, sizeof tmpStr, " %d",
 				       client->CPS.prlist_val[i]);
 		    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);

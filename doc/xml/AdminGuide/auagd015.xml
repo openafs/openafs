@@ -2199,44 +2199,65 @@
       <primary>setuid programs</primary>
     </indexterm>
 
-    <para>A <emphasis>setuid program</emphasis> is one whose binary file has the UNIX setuid mode bit turned on. While a setuid
-    program runs, the user who initialized it assumes the local identity (UNIX UID) of the binary file's owner, and so is granted
-    the permissions in the local file system that pertain to the owner. Most commonly, the issuer's assumed identity (often referred
-    to as <emphasis>effective UID</emphasis>) is the local superuser <emphasis role="bold">root</emphasis>.</para>
+    <para>A <emphasis>setuid program</emphasis> is one whose binary file
+    has the UNIX setuid mode bit turned on. While a setuid program runs,
+    the user who initialized it assumes the local identity (UNIX UID) of
+    the binary file's owner, and so is granted the permissions in the
+    local file system that pertain to the owner. Most commonly, the
+    issuer's assumed identity (often referred to as <emphasis>effective
+    UID</emphasis>) is the local superuser <emphasis
+    role="bold">root</emphasis>.</para>
 
-    <para>AFS does not recognize effective UID: if a setuid program accesses AFS files and directories, it uses the current AFS
-    identity of the user who initialized the program, not of the program's owner. Nevertheless, it can be useful to store setuid
-    programs in AFS for use on more than one client machine. AFS enables a client machine's administrator to determine whether the
-    local Cache Manager allows setuid programs to run or not.</para>
+    <para>AFS does not recognize effective UID: if a setuid program
+    accesses AFS files and directories, it uses the current AFS identity
+    of the user who initialized the program, not of the program's
+    owner. Nevertheless, it can be useful to store setuid programs in AFS
+    for use on more than one client machine. AFS enables a client
+    machine's administrator to determine and change whether the local
+    Cache Manager allows setuid programs to run or not.</para>
 
-    <para>By default, the Cache Manager allows programs from its home cell to run with setuid permission, but denies setuid
-    permission to programs from foreign cells. A program belongs to the same cell as the file server machine that houses the volume
-    in which the file resides, as specified in the file server machine's <emphasis role="bold">/usr/afs/etc/ThisCell</emphasis>
-    file. The Cache Manager determines its own home cell by reading the <emphasis role="bold">/usr/vice/etc/ThisCell</emphasis> file
-    at initialization.</para>
+    <para>By default, the Cache Manager ignores all setuid permissions in
+    AFS, but this can be changed by a client machine's administrator. Each
+    cell's setuid status is set independently of other cells. To change a
+    cell's setuid status with respect to the local machine, become the
+    local superuser <emphasis role="bold">root</emphasis> and issue the
+    <emphasis role="bold">fs setcell</emphasis> command. To determine a
+    cell's current setuid status, use the <emphasis role="bold">fs
+    getcellstatus</emphasis> command.</para>
 
-    <para>To change a cell's setuid status with respect to the local machine, become the local superuser <emphasis
-    role="bold">root</emphasis> and issue the <emphasis role="bold">fs setcell</emphasis> command. To determine a cell's current
-    setuid status, use the <emphasis role="bold">fs getcellstatus</emphasis> command.</para>
+    <warning>
+      <para>Enabling support for the UNIX setuid bit for AFS programs is
+      not secure with the current AFS protocol. Enabling this capability
+      is not recommended except in very restricted environments on trusted
+      networks.</para>
+    </warning>
 
-    <para>When you issue the <emphasis role="bold">fs setcell</emphasis> command, you directly alter a cell's setuid status as
-    recorded in kernel memory, so rebooting the machine is not necessary. However, nondefault settings do not persist across reboots
-    of the machine unless you add the appropriate <emphasis role="bold">fs setcell</emphasis> command to the machine's AFS
-    initialization file.</para>
+    <para>When you issue the <emphasis role="bold">fs setcell</emphasis>
+    command, you directly alter a cell's setuid status as recorded in
+    kernel memory, so rebooting the machine is not necessary. However,
+    nondefault settings do not persist across reboots of the machine
+    unless you add the appropriate <emphasis role="bold">fs
+    setcell</emphasis> command to the machine's AFS initialization
+    file.</para>
 
-    <para>Only members of the <emphasis role="bold">system:administrators</emphasis> group can turn on the setuid mode bit on an AFS
-    file or directory. When the setuid mode bit is turned on, the UNIX <emphasis role="bold">ls -l</emphasis> command displays the
-    third user mode bit as an <emphasis role="bold">s</emphasis> instead of an <emphasis role="bold">x</emphasis>, but for an AFS
-    file or directory, the <emphasis role="bold">s</emphasis> appears only if setuid permission is enabled for the cell in which the
-    file resides. <indexterm>
-        <primary>fs commands</primary>
-
-        <secondary>getcellstatus</secondary>
-      </indexterm> <indexterm>
-        <primary>commands</primary>
-
-        <secondary>fs getcellstatus</secondary>
-      </indexterm></para>
+    <para>Only members of the <emphasis
+    role="bold">system:administrators</emphasis> group can turn on the
+    setuid mode bit on an AFS file or directory. When the setuid mode bit
+    is turned on, the UNIX <emphasis role="bold">ls -l</emphasis> command
+    displays the third user mode bit as an <emphasis
+    role="bold">s</emphasis> instead of an <emphasis
+    role="bold">x</emphasis>, but for an AFS file or directory, the
+    <emphasis role="bold">s</emphasis> appears only if setuid permission
+    is enabled for the cell in which the file resides.
+    <indexterm>
+      <primary>fs commands</primary>
+      <secondary>getcellstatus</secondary>
+    </indexterm>
+    <indexterm>
+      <primary>commands</primary>
+      <secondary>fs getcellstatus</secondary>
+    </indexterm>
+    </para>
 
     <sect2 id="Header_458">
       <title>To determine a cell's setuid status</title>

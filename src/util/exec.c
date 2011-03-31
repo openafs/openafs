@@ -45,7 +45,7 @@ construct_alt(const char *argv0, const char *prefix, const char *suffix)
     memmove(replace + prefix_len, replace, replace_len);
     memcpy(replace, prefix, prefix_len);
     /* basically strcat(replace, suffix), but a touch faster */
-    memcpy(replace + prefix_len + replace_len, suffix, suffix_len);
+    memcpy(replace + prefix_len + replace_len, suffix, suffix_len + 1);
 
     return alt;
 }

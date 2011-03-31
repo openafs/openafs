@@ -349,8 +349,8 @@ MyArrivalProc(struct rx_packet *ahandle,
 void
 rxi_StartListener(void)
 {
+#if !defined(RXK_LISTENER_ENV) && !defined(RXK_UPCALL_ENV)
     /* if kernel, give name of appropriate procedures */
-#ifndef RXK_LISTENER_ENV
     rxk_GetPacketProc = MyPacketProc;
     rxk_PacketArrivalProc = MyArrivalProc;
     rxk_init();
@@ -863,7 +863,13 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP,
 		    afs_osi_credp, curthread);
 #elif defined(AFS_DARWIN80_ENV)
+#ifdef RXK_LISTENER_ENV
     code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, NULL, NULL, &newSocket);
+#else
+    code = sock_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP, rx_upcall, NULL, &newSocket);
+#endif
+#elif defined(AFS_NBSD50_ENV)
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, osi_curproc(), NULL);
 #elif defined(AFS_NBSD40_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, osi_curproc());
 #else
@@ -1021,8 +1027,8 @@ rxk_FreeSocket(struct socket *asocket)
 }
 #endif /* !SUN5 && !LINUX20 */
 
-#if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV)
-#ifdef AFS_DARWIN80_ENV
+#if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV) || defined(RXK_UPCALL_ENV)
+#ifdef RXK_TIMEDSLEEP_ENV
 /* Shutting down should wake us up, as should an earlier event. */
 void
 rxi_ReScheduleEvents(void)
@@ -1059,7 +1065,7 @@ afs_rxevent_daemon(void)
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "before afs_osi_Wait()");
 #endif
-#ifdef AFS_DARWIN80_ENV
+#ifdef RXK_TIMEDSLEEP_ENV
 	afs_osi_TimedSleep(&afs_termState, MAX(500, ((temp.sec * 1000) +
 						     (temp.usec / 1000))), 0);
 #else
@@ -1072,12 +1078,10 @@ afs_rxevent_daemon(void)
 	if (afs_termState == AFSOP_STOP_RXEVENT) {
 #ifdef RXK_LISTENER_ENV
 	    afs_termState = AFSOP_STOP_RXK_LISTENER;
-#else
-#ifdef AFS_SUN510_ENV
+#elif defined(AFS_SUN510_ENV) || defined(RXK_UPCALL_ENV)
 	    afs_termState = AFSOP_STOP_NETIF;
 #else
 	    afs_termState = AFSOP_STOP_COMPLETE;
-#endif
 #endif
 	    osi_rxWakeup(&afs_termState);
 	    return;
