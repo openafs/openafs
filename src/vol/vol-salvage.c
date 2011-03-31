@@ -831,11 +831,6 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
     if (GetInodeSummary(salvinfo, inodeFile, singleVolumeNumber) < 0) {
 	OS_CLOSE(inodeFile);
-	if (singleVolumeNumber) {
-	    /* the volume group -- let alone the volume -- does not exist,
-	     * but we checked it out, so give it back to the fileserver */
-	    AskDelete(salvinfo, singleVolumeNumber);
-	}
 	return;
     }
     salvinfo->inodeFd = inodeFile;
