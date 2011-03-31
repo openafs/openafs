@@ -2600,6 +2600,7 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     struct vcache *tvc;
     afs_int32 i;
 #ifdef AFS_DARWIN80_ENV
+    struct vcache *deadvc = NULL, *livevc = NULL;
     vnode_t tvp;
 #endif
 
@@ -2609,47 +2610,78 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	if (FidMatches(afid, tvc)) {
+#ifdef  AFS_DARWIN80_ENV
+	    if (flag & FIND_CDEAD) {
+		if (tvc->f.states & (CDeadVnode|CBulkFetching)) {
+		    deadvc = tvc;
+		    continue;
+		}
+	    } else {
+		if (tvc->f.states & CDeadVnode)
+		    if ((tvc->f.states & CBulkFetching) &&
+			!(flag & FIND_BULKDEAD))
+			continue;
+	    }
+#endif
             if (tvc->f.states & CVInit) {
 		findvc_sleep(tvc, flag);
 		goto findloop;
-            }
+	    }
 #ifdef  AFS_DARWIN80_ENV
-	    if (tvc->f.states & CDeadVnode) {
-		if (!(flag & FIND_CDEAD)) {
-		    findvc_sleep(tvc, flag);
-		    goto findloop;
-		}
-	    }
-	    tvp = AFSTOV(tvc);
-	    if (vnode_get(tvp))
+            if (tvc->f.states & CDeadVnode) {
+		findvc_sleep(tvc, flag);
+		goto findloop;
+            }
+	    if (flag & FIND_CDEAD) {
+		livevc = tvc;
 		continue;
-	    if (vnode_ref(tvp)) {
-		AFS_GUNLOCK();
-		/* AFSTOV(tvc) may be NULL */
-		vnode_put(tvp);
-		AFS_GLOCK();
-		continue;
-	    }
-	    if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
-		AFS_GUNLOCK();
-		vnode_recycle(AFSTOV(tvc));
-		AFS_GLOCK();
 	    }
 #endif
 	    break;
 	}
     }
+#ifdef  AFS_DARWIN80_ENV
+	if (flag & FIND_CDEAD) {
+	    if (livevc && deadvc) {
+		/* discard deadvc */
+		AFS_GUNLOCK();
+		vnode_recycle(AFSTOV(deadvc));
+		vnode_put(AFSTOV(deadvc));
+		vnode_rele(AFSTOV(deadvc));
+		AFS_GLOCK();
+		deadvc = NULL;
+	    }
+
+	    /* return what's left */
+	    tvc = livevc ? livevc : deadvc;
+	}
+#endif
 
     /* should I have a read lock on the vnode here? */
     if (tvc) {
 	if (retry)
 	    *retry = 0;
-#if !defined(AFS_DARWIN80_ENV)
-	osi_vnhold(tvc, retry);	/* already held, above */
-	if (retry && *retry)
-	    return 0;
-#endif
-#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
+#if defined(AFS_DARWIN80_ENV)
+	tvp = AFSTOV(tvc);
+	if (vnode_get(tvp))
+	    tvp = NULL;
+	if (tvp && vnode_ref(tvp)) {
+	    AFS_GUNLOCK();
+	    /* AFSTOV(tvc) may be NULL */
+	    vnode_put(tvp);
+	    AFS_GLOCK();
+	    tvp = NULL;
+	}
+	if (tvp && (tvc->f.states & (CBulkFetching|CDeadVnode))) {
+	    AFS_GUNLOCK();
+	    vnode_recycle(AFSTOV(tvc));
+	    AFS_GLOCK();
+	}
+	if (!tvp) {
+	    tvc = NULL;
+	    return tvc;
+	}
+#elif defined(AFS_DARWIN_ENV)
 	tvc->f.states |= CUBCinit;
 	AFS_GUNLOCK();
 	if (UBCINFOMISSING(AFSTOV(tvc)) ||
@@ -2658,6 +2690,10 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 	}
 	AFS_GLOCK();
 	tvc->f.states &= ~CUBCinit;
+#else
+	osi_vnhold(tvc, retry);	/* already held, above */
+	if (retry && *retry)
+	    return 0;
 #endif
 	/*
 	 * only move to front of vlru if we have proper vcache locking)

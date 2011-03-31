@@ -193,6 +193,7 @@ extern void Exit(int code) AFS_NORETURN;
 extern int Fork(void);
 extern int Wait(char *prog);
 extern char *ToString(const char *s);
+extern int AskDAFS(void);
 extern void AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId);
 extern void AskOnline(struct SalvInfo *salvinfo, VolumeId volumeId);
 extern void AskDelete(struct SalvInfo *salvinfo, VolumeId volumeId);

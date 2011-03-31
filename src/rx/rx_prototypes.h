@@ -441,8 +441,12 @@ extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 		       struct iovec *dvec, int nvecs, afs_int32 asize,
 		       int istack);
 # endif
+# ifdef RXK_UPCALL_ENV
+extern void rx_upcall(socket_t so, void *arg, __unused int waitflag);
+# else
 extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
 			  struct iovec *dvec, int nvecs, int *lengthp);
+# endif
 # if defined(AFS_SUN510_ENV)
 extern void osi_StartNetIfPoller(void);
 extern void osi_NetIfPoller(void);
@@ -456,8 +460,8 @@ extern void rxi_ListenerProc(osi_socket usockp, int *tnop,
 			     struct rx_call **newcallp);
 # endif
 
-# ifndef RXK_LISTENER_ENV
-extern void rxk_init();
+# if !defined(RXK_LISTENER_ENV) && !defined(RXK_UPCALL_ENV)
+extern void rxk_init(void);
 # endif
 
 /* UKERNEL/rx_knet.c */

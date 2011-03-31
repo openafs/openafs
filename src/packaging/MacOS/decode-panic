@@ -31,7 +31,7 @@ my $temp_dir   = tempdir( "afsdebugXXXXXX", DIR => File::Spec->tmpdir,
 			  TMPDIR => 1, CLEANUP => 1 );
 my $dump_file  = "/var/db/openafs/logs/crash.dump";
 my $kernel = "/mach_kernel";
-my $kextpath = "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/";
+my $kextpath = "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext";
 
 my $option_quiet;
 my $option_verbose;
@@ -120,8 +120,20 @@ generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir, $kextarch ,
 
 write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" } );
 
+# needed so we can put the sym file where the kext is. ick.
+if ($kextprog eq $kextutil) {
+    `cp -R $kextpath $temp_dir`;
+}
+
 if ($option_verbose) {
     print "$gdb $gdbarch $kernel -batch -x $temp_dir/$gdb_file\n";
+    my $gdbi_fh = IO::File->new( $temp_dir . "/" . $gdb_file, '<' )
+        or croak "Can't open backtrace file $gdb_file: $OS_ERROR\n";
+    while (my $line = <$gdbi_fh> ) {
+	print $line;
+    }
+    $gdbi_fh->close()
+        or croak "Can't close file $gdb_file: $OS_ERROR\n";
 }
 my $gdb_output = `$gdb $gdbarch $kernel -batch -x $temp_dir/$gdb_file`;
 croak "gdb failed!\n" if $CHILD_ERROR;
@@ -394,8 +406,12 @@ sub write_gdb_input_file {
     my $fh = IO::File->new( $write_dir . "/" . $filename, '>' )
         or croak "Can't open gdb file $filename for writing: $OS_ERROR\n";
 
-    for my $symbol ( @symbol_files ) {
-        print $fh "add-symbol-file $symbol\n";
+    if ($kextprog eq $kextutil) {
+	    print $fh "add-kext " . $write_dir . "/afs.kext\n";
+    } else {
+	for my $symbol ( @symbol_files ) {
+	    print $fh "add-symbol-file $symbol\n";
+	}
     }
     
     print $fh "set print asm-demangle on\n";

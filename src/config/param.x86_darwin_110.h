@@ -10,19 +10,24 @@
 #define AFS_64BIT_IOPS_ENV	1
 #if defined(__ppc__)
 #define AFS_PPC_ENV		1
-#elif defined(__i386__) || defined(__x86_64__)
+#elif defined(__i386__) || defined(__amd64__)
 #define AFS_X86_ENV		1
 #else
 #error Unsupported architecture
 #endif
 #define AFS_VFSINCL_ENV		1
-
+#ifdef __amd64__
+#define AFS_64BITUSERPOINTER_ENV 1
+#endif
+#define AFS_64BIT_SIZEOF 1 /* seriously? */
 #include <afs/afs_sysnames.h>
 
 #define AFS_DARWIN_ENV
 #define AFS_DARWIN70_ENV
 #define AFS_DARWIN80_ENV
 #define AFS_DARWIN90_ENV
+#define AFS_DARWIN100_ENV
+#define AFS_DARWIN110_ENV
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
@@ -30,6 +35,7 @@
 #define DARWIN_REFBASE 3
 #define AFS_WARNUSER_MARINER_ENV 1
 #define AFS_CACHE_VNODE_PATH
+#define NEED_IOCTL32
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
@@ -43,10 +49,24 @@
 #define sys_ppc_darwin_70	1
 #define sys_ppc_darwin_80	1
 #define sys_ppc_darwin_90	1
-#define SYS_NAME		"ppc_darwin_90"
-#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_90
+#define sys_ppc_darwin_100	1
+#define SYS_NAME		"ppc_darwin_100"
+#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_100
 #define AFSBIG_ENDIAN		1
-#elif defined(__i386__) || defined(__x86_64__)
+#elif defined(__ppc64__)
+#define sys_ppc_darwin_12	1
+#define sys_ppc_darwin_13	1
+#define sys_ppc_darwin_14	1
+#define sys_ppc_darwin_60	1
+#define sys_ppc_darwin_70	1
+#define sys_ppc_darwin_80	1
+#define sys_ppc_darwin_90	1
+#define sys_ppc_darwin_100	1
+#define sys_ppc64_darwin_100	1
+#define SYS_NAME		"ppc64_darwin_100"
+#define SYS_NAME_ID		SYS_NAME_ID_ppc64_darwin_100
+#define AFSBIG_ENDIAN		1
+#elif defined(__i386__)
 #define sys_x86_darwin_12	1
 #define sys_x86_darwin_13	1
 #define sys_x86_darwin_14	1
@@ -54,8 +74,24 @@
 #define sys_x86_darwin_70	1
 #define sys_x86_darwin_80	1
 #define sys_x86_darwin_90	1
-#define SYS_NAME		"x86_darwin_90"
-#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_90
+#define sys_x86_darwin_100	1
+#define sys_x86_darwin_110      1
+#define SYS_NAME		"x86_darwin_110"
+#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_110
+#define AFSLITTLE_ENDIAN	1
+#elif defined(__amd64__)
+#define sys_x86_darwin_12	1
+#define sys_x86_darwin_13	1
+#define sys_x86_darwin_14	1
+#define sys_x86_darwin_60	1
+#define sys_x86_darwin_70	1
+#define sys_x86_darwin_80	1
+#define sys_x86_darwin_90	1
+#define sys_x86_darwin_100	1
+#define sys_amd64_darwin_100	1
+#define sys_amd64_darwin_110      1
+#define SYS_NAME		"amd64_darwin_110"
+#define SYS_NAME_ID		SYS_NAME_ID_amd64_darwin_110
 #define AFSLITTLE_ENDIAN	1
 #else
 #error Unsupported architecture
@@ -63,7 +99,7 @@
 #define AFS_HAVE_FFS    1	/* Use system's ffs. */
 
 #define AFS_GCPAGS               0
-#define RXK_LISTENER_ENV         1
+#define RXK_UPCALL_ENV         1
 #define RXK_TIMEDSLEEP_ENV       1
 
 #ifdef KERNEL
@@ -91,6 +127,7 @@
 #define vfs_vnodecovered mnt_vnodecovered
 #define direct          dirent
 
+#define BIND_8_COMPAT
 
 #endif
 #endif /* AFS_PARAM_H */
@@ -107,10 +144,13 @@
 #define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #if defined(__ppc__)
 #define AFS_PPC_ENV		1
-#elif defined(__i386__) || defined(__x86_64__)
+#elif defined(__i386__) || defined(__amd64__)
 #define AFS_X86_ENV		1
 #else
 #error Unsupported architecture
+#endif
+#ifdef __amd64__
+#define AFS_64BITUSERPOINTER_ENV 1
 #endif
 
 #include <afs/afs_sysnames.h>
@@ -119,6 +159,8 @@
 #define AFS_USR_DARWIN70_ENV
 #define AFS_USR_DARWIN80_ENV
 #define AFS_USR_DARWIN90_ENV
+#define AFS_USR_DARWIN100_ENV
+#define AFS_USR_DARWIN110_ENV
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
@@ -137,19 +179,34 @@
 #define sys_ppc_darwin_70	1
 #define sys_ppc_darwin_80	1
 #define sys_ppc_darwin_90	1
-#define SYS_NAME		"ppc_darwin_90"
-#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_90
+#define sys_ppc_darwin_100	1
+#define SYS_NAME		"ppc_darwin_100"
+#define SYS_NAME_ID		SYS_NAME_ID_ppc_darwin_100
 #define AFSBIG_ENDIAN		1
-#elif defined(__i386__) || defined(__x86_64__)
+#elif defined(__i386__)
 #define sys_x86_darwin_12	1
 #define sys_x86_darwin_13	1
 #define sys_x86_darwin_14	1
 #define sys_x86_darwin_60	1
 #define sys_x86_darwin_70	1
 #define sys_x86_darwin_80	1
-#define sys_x86_darwin_90	1
-#define SYS_NAME		"x86_darwin_90"
-#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_90
+#define sys_x86_darwin_100	1
+#define sys_x86_darwin_110	1
+#define SYS_NAME		"x86_darwin_110"
+#define SYS_NAME_ID		SYS_NAME_ID_x86_darwin_110
+#define AFSLITTLE_ENDIAN	1
+#elif defined(__amd64__)
+#define sys_x86_darwin_12	1
+#define sys_x86_darwin_13	1
+#define sys_x86_darwin_14	1
+#define sys_x86_darwin_60	1
+#define sys_x86_darwin_70	1
+#define sys_x86_darwin_80	1
+#define sys_x86_darwin_100	1
+#define sys_amd64_darwin_100	1
+#define sys_amd64_darwin_110	1
+#define SYS_NAME		"amd64_darwin_110"
+#define SYS_NAME_ID		SYS_NAME_ID_amd64_darwin_110
 #define AFSLITTLE_ENDIAN	1
 #else
 #error Unsupported architecture
@@ -177,6 +234,7 @@
 #define CMSERVERPREF
 #endif
 
+#define BIND_8_COMPAT
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */

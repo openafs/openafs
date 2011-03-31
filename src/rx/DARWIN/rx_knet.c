@@ -16,7 +16,140 @@
 #ifdef AFS_DARWIN80_ENV
 #define soclose sock_close
 #endif
- 
+
+#ifdef RXK_UPCALL_ENV
+void
+rx_upcall(socket_t so, void *arg, __unused int waitflag)
+{
+    mbuf_t m;
+    int error = 0;
+    int i, flags = 0;
+    struct msghdr msg;
+    struct sockaddr_storage ss;
+    struct sockaddr *sa = NULL;
+    struct sockaddr_in from;
+    struct rx_packet *p;
+    afs_int32 rlen;
+    afs_int32 tlen;
+    afs_int32 savelen;          /* was using rlen but had aliasing problems */
+    size_t nbytes, resid, noffset;
+
+    p = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE);
+    rx_computelen(p, tlen);
+    rx_SetDataSize(p, tlen);    /* this is the size of the user data area */
+    tlen += RX_HEADER_SIZE;     /* now this is the size of the entire packet */
+    rlen = rx_maxJumboRecvSize; /* this is what I am advertising.  Only check
+				 * it once in order to avoid races.  */
+    tlen = rlen - tlen;
+    if (tlen > 0) {
+	tlen = rxi_AllocDataBuf(p, tlen, RX_PACKET_CLASS_RECV_CBUF);
+	if (tlen > 0) {
+	    tlen = rlen - tlen;
+	} else
+	    tlen = rlen;
+    } else
+	tlen = rlen;
+    /* add some padding to the last iovec, it's just to make sure that the
+     * read doesn't return more data than we expect, and is done to get around
+     * our problems caused by the lack of a length field in the rx header. */
+    savelen = p->wirevec[p->niovecs - 1].iov_len;
+    p->wirevec[p->niovecs - 1].iov_len = savelen + RX_EXTRABUFFERSIZE;
+
+    resid = nbytes = tlen + sizeof(afs_int32);
+
+    memset(&msg, 0, sizeof(struct msghdr));
+    msg.msg_name = &ss;
+    msg.msg_namelen = sizeof(struct sockaddr_storage);
+    sa =(struct sockaddr *) &ss;
+
+    do {
+	m = NULL;
+	error = sock_receivembuf(so, &msg, &m, MSG_DONTWAIT, &nbytes);
+	if (!error) {
+	    size_t sz, offset = 0;
+	    noffset = 0;
+	    resid = nbytes;
+	    for (i=0;i<p->niovecs && resid;i++) {
+		sz=MIN(resid, p->wirevec[i].iov_len);
+		error = mbuf_copydata(m, offset, sz, p->wirevec[i].iov_base);
+		if (error)
+		    break;
+		resid-=sz;
+		offset+=sz;
+		noffset += sz;
+	    }
+	}
+    } while (0);
+
+    mbuf_freem(m);
+
+    /* restore the vec to its correct state */
+    p->wirevec[p->niovecs - 1].iov_len = savelen;
+
+    if (error == EWOULDBLOCK && noffset > 0)
+	error = 0;
+
+    if (!error) {
+	int host, port;
+
+	nbytes -= resid;
+
+	if (sa->sa_family == AF_INET)
+	    from = *(struct sockaddr_in *)sa;
+
+	p->length = nbytes - RX_HEADER_SIZE;;
+	if ((nbytes > tlen) || (p->length & 0x8000)) {  /* Bogus packet */
+	    if (nbytes <= 0) {
+		if (rx_stats_active) {
+		    MUTEX_ENTER(&rx_stats_mutex);
+		    rx_stats.bogusPacketOnRead++;
+		    rx_stats.bogusHost = from.sin_addr.s_addr;
+		    MUTEX_EXIT(&rx_stats_mutex);
+		}
+		dpf(("B: bogus packet from [%x,%d] nb=%d",
+		     from.sin_addr.s_addr, from.sin_port, nbytes));
+	    }
+	    return;
+	} else {
+	    /* Extract packet header. */
+	    rxi_DecodePacketHeader(p);
+
+	    host = from.sin_addr.s_addr;
+	    port = from.sin_port;
+	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
+		if (rx_stats_active) {
+		    MUTEX_ENTER(&rx_stats_mutex);
+		    rx_stats.packetsRead[p->header.type - 1]++;
+		    MUTEX_EXIT(&rx_stats_mutex);
+		}
+	    }
+
+#ifdef RX_TRIMDATABUFS
+	    /* Free any empty packet buffers at the end of this packet */
+	    rxi_TrimDataBufs(p, 1);
+#endif
+	    /* receive pcket */
+	    p = rxi_ReceivePacket(p, so, host, port, 0, 0);
+	}
+    }
+    /* free packet? */
+    if (p)
+	rxi_FreePacket(p);
+
+    return;
+}
+
+/* in listener env, the listener shutdown does this. we have no listener */
+void
+osi_StopNetIfPoller(void)
+{
+    soclose(rx_socket);
+    if (afs_termState == AFSOP_STOP_NETIF) {
+	afs_termState = AFSOP_STOP_COMPLETE;
+	osi_rxWakeup(&afs_termState);
+    }
+}
+#elif defined(RXK_LISTENER_ENV)
 int
 osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	       int nvecs, int *alength)
@@ -129,6 +262,9 @@ osi_StopListener(void)
 	psignal(p, SIGUSR1);
 #endif
 }
+#else
+#error need upcall or listener
+#endif
 
 int
 osi_NetSend(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
