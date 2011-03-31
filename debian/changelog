@@ -1,5 +1,6 @@
-openafs (1.6.0~pre4-1) UNRELEASED; urgency=low
+openafs (1.6.0~pre4-1) unstable; urgency=low
 
+  * Upload to unstable.
   * New upstream prerelease.
     - Fix file descriptor leak in the file server that could result in
       corrupted files.
@@ -15,7 +16,7 @@ openafs (1.6.0~pre4-1) UNRELEASED; urgency=low
     fileserver and a client, the fileserver starts before and stops after
     the client.
 
- -- Russ Allbery <rra@debian.org>  Thu, 31 Mar 2011 14:04:35 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 31 Mar 2011 15:00:04 -0700
 
 openafs (1.6.0~pre3-1) experimental; urgency=low
 
