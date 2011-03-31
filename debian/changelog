@@ -7,6 +7,9 @@ openafs (1.6.0~pre4-1) UNRELEASED; urgency=low
     - Document current client setuid behavior.  (Closes: #612608)
     - Allow salvager to be run manually with demand-attach servers.
     - Properly report setpag() errors.
+  * Apply upstream deltas:
+    - [1e322b88] Linux: 2.6.39: deal with BKL removal
+    - [a8aa6f42] Linux: 2.6.39: replace path_lookup with kern_path
   * Declare optional dependencies in the openafs-client init script on
     openafs-fileserver so that, if the same host is running both a
     fileserver and a client, the fileserver starts before and stops after
