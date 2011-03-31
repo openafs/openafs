@@ -3,7 +3,8 @@
 # Provides:             openafs-client
 # Required-Start:       $remote_fs $network $time
 # Required-Stop:        $remote_fs $network
-# Should-Start:         $syslog $named
+# Should-Start:         $syslog $named openafs-fileserver
+# Should-Stop:          openafs-fileserver
 # X-Stop-After:         autofs
 # Default-Start:        2 3 4 5
 # Default-Stop:         0 1 6
