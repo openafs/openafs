@@ -182,6 +182,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "volume.h"
 #include "partition.h"
 #include "daemon_com.h"
+#include "daemon_com_inline.h"
 #include "fssync.h"
 #include "fssync_inline.h"
 #include "volume_inline.h"
@@ -320,6 +321,7 @@ static int IsVnodeOrphaned(struct SalvInfo *salvinfo, VnodeId vnode);
 static int AskVolumeSummary(struct SalvInfo *salvinfo,
                             VolumeId singleVolumeNumber);
 static void MaybeAskOnline(struct SalvInfo *salvinfo, VolumeId volumeId);
+static void AskError(struct SalvInfo *salvinfo, VolumeId volumeId);
 
 #if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
 static int LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId);
@@ -1186,6 +1188,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     char *part = salvinfo->fileSysPath;
     char *tdir;
     int i;
+    int retcode = 0;
+    int deleted = 0;
 
     /* This file used to come from vfsck; cobble it up ourselves now... */
     if ((err =
@@ -1194,7 +1198,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 			singleVolumeNumber, &forceSal, forceR, wpath, NULL)) < 0) {
 	if (err == -2) {
 	    Log("*** I/O error %d when writing a tmp inode file; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n", errno, dev);
-	    return -1;
+	    retcode = -1;
+	    goto error;
 	}
 	Abort("Unable to get inodes for \"%s\"; not salvaged\n", dev);
     }
@@ -1248,17 +1253,38 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	    else {
 		struct VolumeSummary *vsp;
 		int i;
+		int foundSVN = 0;
 
 		GetVolumeSummary(salvinfo, singleVolumeNumber);
 
 		for (i = 0, vsp = salvinfo->volumeSummaryp; i < salvinfo->nVolumes; i++) {
-		    if (vsp->fileName)
+		    if (vsp->fileName) {
+			if (vsp->header.id == singleVolumeNumber) {
+			    foundSVN = 1;
+			}
 			DeleteExtraVolumeHeaderFile(salvinfo, vsp);
+		    }
+		}
+
+		if (!foundSVN) {
+		    if (Testing) {
+			MaybeAskOnline(salvinfo, singleVolumeNumber);
+		    } else {
+			/* make sure we get rid of stray .vol headers, even if
+			 * they're not in our volume summary (might happen if
+			 * e.g. something else created them and they're not in the
+			 * fileserver VGC) */
+			VDestroyVolumeDiskHeader(salvinfo->fileSysPartition,
+			                         singleVolumeNumber, 0 /*parent*/);
+			AskDelete(salvinfo, singleVolumeNumber);
+		    }
 		}
 	    }
 	    Log("%s vice inodes on %s; not salvaged\n",
 		singleVolumeNumber ? "No applicable" : "No", dev);
-	    return -1;
+	    retcode = -1;
+	    deleted = 1;
+	    goto error;
 	}
 	ip = (struct ViceInodeInfo *)malloc(nInodes*sizeof(struct ViceInodeInfo));
 	if (ip == NULL) {
@@ -1284,7 +1310,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	    if (fwrite(&summary, sizeof(summary), 1, summaryFile) != 1) {
 		Log("Difficulty writing summary file (errno = %d); %s not salvaged\n", errno, dev);
 		fclose(summaryFile);
-		return -1;
+		retcode = -1;
+		goto error;
 	    }
 	    summary.index += (summary.nInodes);
 	    nInodes -= summary.nInodes;
@@ -1296,7 +1323,8 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 	if (fflush(summaryFile) == EOF || fsync(fileno(summaryFile)) == -1) {
 	    Log("Unable to write summary file (errno = %d); %s not salvaged\n", errno, dev);
 	    fclose(summaryFile);
-	    return -1;
+	    retcode = -1;
+	    goto error;
 	}
 	if (canfork && !debug) {
 	    ShowLog = 0;
@@ -1325,7 +1353,13 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
     }
     Log("%d nVolumesInInodeFile %lu \n",salvinfo->nVolumesInInodeFile,(unsigned long)(status.st_size));
     fclose(summaryFile);
-    return 0;
+
+ error:
+    if (retcode && singleVolumeNumber && !deleted) {
+	AskError(salvinfo, singleVolumeNumber);
+    }
+
+    return retcode;
 }
 
 /* Comparison routine for volume sort.
@@ -4379,6 +4413,21 @@ LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId)
     return 0;
 }
 #endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+
+static void
+AskError(struct SalvInfo *salvinfo, VolumeId volumeId)
+{
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+    afs_int32 code;
+    code = FSYNC_VolOp(volumeId, salvinfo->fileSysPartition->name,
+                       FSYNC_VOL_FORCE_ERROR, FSYNC_WHATEVER, NULL);
+    if (code != SYNC_OK) {
+	Log("AskError: failed to force volume %lu into error state; "
+	    "SYNC error code %ld (%s)\n", (long unsigned)volumeId,
+	    (long)code, SYNC_res2string(code));
+    }
+#endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
+}
 
 void
 AskOffline(struct SalvInfo *salvinfo, VolumeId volumeId)
