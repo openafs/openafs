@@ -1,5 +1,6 @@
-openafs (1.6.0~pre3-2) UNRELEASED; urgency=low
+openafs (1.6.0~pre4-1) UNRELEASED; urgency=low
 
+  * New upstream prerelease.
   * Declare optional dependencies in the openafs-client init script on
     openafs-fileserver so that, if the same host is running both a
     fileserver and a client, the fileserver starts before and stops after
