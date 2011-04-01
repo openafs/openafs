@@ -406,8 +406,14 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 	    } else if (avc->flockCount == -1 && (acom & LOCK_EX)) {
 		if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 		    code = EWOULDBLOCK;
-		} else
+		} else {
 		    code = 0;
+		    /* We've just re-grabbed an exclusive lock, so we don't
+		     * need to contact the fileserver, and we don't need to
+		     * add the lock to avc->slocks (since we already have a
+		     * lock there). So, we are done. */
+		    break;
+		}
 	    }
 	    if (code == 0) {
 		/* compatible here, decide if needs to go to file server.  If
