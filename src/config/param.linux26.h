@@ -96,13 +96,16 @@
 
 #endif /* !defined(UKERNEL) */
 
-/* needed so glibc version will be defined */
-#include <afs/afs_sysnames.h>
+#if defined(UKERNEL) || !defined(KERNEL)
+#include <features.h>
+#endif
 
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
 #define USE_UCONTEXT
 #endif
 #endif
+
+#include <afs/afs_sysnames.h>
 
 #endif /* AFS_PARAM_COMMON_H */
