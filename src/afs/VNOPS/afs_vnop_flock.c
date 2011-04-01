@@ -271,6 +271,8 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 #endif
     ObtainWriteLock(&avc->lock, 118);
     if (acom & LOCK_UN) {
+	int stored_segments = 0;
+     retry_unlock:
 
 /* defect 3083 */
 
@@ -317,7 +319,14 @@ HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 		}
 	    }
 	} else if (avc->flockCount == -1) {
-	    afs_StoreAllSegments(avc, areq, AFS_SYNC | AFS_VMSYNC);	/* fsync file early */
+	    if (!stored_segments) {
+		afs_StoreAllSegments(avc, areq, AFS_SYNC | AFS_VMSYNC);	/* fsync file early */
+		/* afs_StoreAllSegments can drop and reacquire the write lock
+		 * on avc and GLOCK, so the flocks may be completely different
+		 * now. Go back and perform all checks again. */
+		 stored_segments = 1;
+		 goto retry_unlock;
+	    }
 	    avc->flockCount = 0;
 	    /* And remove the (only) exclusive lock entry from the list... */
 	    osi_FreeSmallSpace(avc->slocks);
