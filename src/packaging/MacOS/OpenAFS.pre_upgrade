@@ -29,6 +29,7 @@ fi
 
 if [ -f /Library/StartupItems/OpenAFS/OpenAFS ]; then
   /Library/StartupItems/OpenAFS/OpenAFS stop
+  rm /Library/StartupItems/OpenAFS/OpenAFS
 else
   if [ -f /Library/LaunchDaemons/org.openafs.filesystems.afs.plist ]; then
 	if ps ax | grep -v grep | grep $DAEMON > /dev/null
