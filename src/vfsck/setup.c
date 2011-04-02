@@ -18,9 +18,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <string.h>
+#include <ctype.h>
+
 #define VICE
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV)
@@ -35,8 +36,6 @@ extern vfscklogprintf();
 #endif
 
 #define DKTYPENAMES
-#include <sys/param.h>
-#include <sys/time.h>
 
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
@@ -48,13 +47,10 @@ extern vfscklogprintf();
 #include <ufs/dir.h>
 #undef	_KERNEL
 #undef	_BSD
-#include <stdio.h>
 #else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <stdio.h>
-#include <unistd.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -68,7 +64,6 @@ extern vfscklogprintf();
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
 #ifdef	AFS_HPUX_ENV
-#include <ctype.h>
 #define	LONGFILENAMES	1
 #include <sys/sysmacros.h>
 #include <sys/ino.h>
@@ -77,10 +72,7 @@ extern vfscklogprintf();
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 
-#include <sys/stat.h>
-#include <sys/ioctl.h>
 #include <sys/file.h>
-#include <ctype.h>
 #ifdef	AFS_SUN5_ENV
 #include <sys/mntent.h>
 #include <sys/vfstab.h>

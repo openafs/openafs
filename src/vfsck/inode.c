@@ -18,12 +18,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <ctype.h>
 
 #define VICE			/* control whether AFS changes are present */
-#include <stdio.h>
-
-#include <sys/time.h>
-#include <sys/param.h>
 
 #ifdef	AFS_OSF_ENV
 #include <sys/mount.h>
@@ -55,7 +54,6 @@
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
 #ifdef	AFS_HPUX_ENV
-#include <ctype.h>
 #define	LONGFILENAMES	1
 #include <sys/sysmacros.h>
 #include <sys/ino.h>

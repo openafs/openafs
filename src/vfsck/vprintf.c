@@ -13,12 +13,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <ctype.h>
 
 #define VICE			/* allow us to put our changes in at will */
-#include <stdio.h>
-
-#include <sys/param.h>
-#include <sys/time.h>
 
 #ifdef AFS_SUN_ENV
 #define KERNEL
@@ -45,8 +44,6 @@
 #define VFS
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <stdio.h>
-#include <unistd.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -64,7 +61,6 @@
 
 #include <sys/inode.h>
 #ifdef	AFS_HPUX_ENV
-#include <ctype.h>
 #define	LONGFILENAMES	1
 #include <sys/sysmacros.h>
 #include <sys/ino.h>
@@ -83,16 +79,8 @@
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 
-#include <sys/stat.h>
 #include <sys/wait.h>
-#ifdef AFS_SUN5_ENV
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include <ctype.h>
 #include "fsck.h"
-#include <errno.h>
 
 /* Vice printf:  lob the message into /vice/file/vfsck.log if it isn't the root */
 /* If we're salvaging the root, it wouldn't be such a good idea to lob stuff there */

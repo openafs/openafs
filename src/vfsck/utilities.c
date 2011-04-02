@@ -18,10 +18,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/param.h>
+#include <ctype.h>
+
 #define VICE			/* allow us to put our changes in at will */
-#include <sys/time.h>
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
 #include <sys/mount.h>
@@ -37,9 +38,6 @@
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <stdio.h>
-#include <unistd.h>
-#include <signal.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -54,7 +52,6 @@
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
 #ifdef	AFS_HPUX_ENV
-#include <ctype.h>
 #define	LONGFILENAMES	1
 #include <sys/sysmacros.h>
 #include <sys/ino.h>
@@ -72,14 +69,7 @@
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
 #include "fsck.h"
-
-#if	defined(AFS_HPUX101_ENV)
-#include <unistd.h>
-#endif
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV)
 #define AFS_NEWCG_ENV

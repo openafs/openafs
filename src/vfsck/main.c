@@ -18,12 +18,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <ctype.h>
+
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
 
 #define VICE			/* allow us to put our changes in at will */
-#include <stdio.h>
-
-#include <sys/param.h>
-#include <sys/time.h>
 
 #ifdef AFS_SUN_ENV
 #define KERNEL
@@ -32,8 +35,6 @@
 #ifdef AFS_SUN_ENV
 #undef KERNEL
 #endif
-
-#include <sys/file.h>
 
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
@@ -45,7 +46,6 @@
 #define VFS
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <unistd.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -63,7 +63,6 @@
 
 #include <sys/inode.h>
 #ifdef	AFS_HPUX_ENV
-#include <ctype.h>
 #define	LONGFILENAMES	1
 #include <sys/sysmacros.h>
 #include <sys/ino.h>
@@ -82,14 +81,7 @@
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 
-#include <sys/stat.h>
 #include <sys/wait.h>
-#ifdef	AFS_SUN5_ENV
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#include <ctype.h>
 #ifdef	XAFS_SUN_ENV
 #include <mntent.h>
 #else
@@ -103,7 +95,6 @@
 #endif
 #endif
 #include "fsck.h"
-#include <errno.h>
 #include <sys/signal.h>
 
 char *rawname(), *unrawname(), *blockcheck(), *malloc();

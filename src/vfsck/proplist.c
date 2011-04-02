@@ -10,14 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #define VICE			/* control whether AFS changes are present */
 
 #ifdef   AFS_OSF_ENV
 
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/param.h>
 #include <sys/mount.h>
 #include <sys/vnode.h>
 #include <ufs/inode.h>
