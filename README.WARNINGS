@@ -51,7 +51,7 @@ bucoord/ubik_db_if.c : strict-proto  : Ubik_Call
 bucoord/commands.c   : all	     : Ubik_Call
 				     : signed vs unsigned for dates
 butc/tcudbprocs.c    : all	     : ubik_Call
-kauth/admin_tools.c  : all           : ubik_Call nonsense
+kauth/admin_tools.c  : all           : signed vs unsigned for dates
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
 libadmin/kas/afs_kasAdmin.c: all     : Ubik_Call nonsense
 libadmin/samples/rxstat_query_peer.c : all : util_RPCStatsStateGet types
@@ -59,7 +59,5 @@ libadmin/samples/rxstat_query_process.c : all : util_RPCStatsStateGet types
 libadmin/test/client.c : all         : util_RPCStatsStateGet types
 rx/rx.c		     : all (pthread) : rxkad_global_stats_init not proto'd
 ubik/ubikclient.c    : strict-protos : ubik_Call
-uss/uss_kauth.c      : all	     : ubik_Call
-viced/fsprobe.c      : all	     : ubik_Call
 volser/vol-dump.c    : format        : afs_sfsize_t
 

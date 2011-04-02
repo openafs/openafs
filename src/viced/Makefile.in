@@ -83,7 +83,6 @@ fileserver: ${objects} ${headers} ${LIBS}
 		${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	esac
 
-CFLAGS_fsprobe.o = @CFLAGS_NOERROR@ -DINTERPRET_DUMP
 fsprobe.o: fsprobe.c AFS_component_version_number.c
 
 fsprobe: fsprobe.o

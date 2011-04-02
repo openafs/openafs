@@ -50,7 +50,6 @@ uss: uss.o ${OBJS} $(LIBS)
 
 uss.o:  uss.c AFS_component_version_number.c
 
-CFLAGS_uss_kauth.o = @CFLAGS_NOERROR@
 CFLAGS_lex.yy.o = @CFLAGS_NOUNUSED@
 lex.yy.o : lex.yy.c y.tab.c
 
