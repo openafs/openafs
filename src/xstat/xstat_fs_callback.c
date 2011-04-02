@@ -24,17 +24,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
 #include <roken.h>
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #include <rpc.h>
 #endif
-
-
-#include <errno.h>
-#include <stdio.h>		/*Standard I/O stuff */
-#include <string.h>
 
 #include <afs/afscbint.h>	/*Callback interface defs */
 #include <afs/afsutil.h>

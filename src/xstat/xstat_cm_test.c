@@ -20,8 +20,6 @@
 
 #include "xstat_cm.h"		/*Interface for xstat_cm module */
 #include <afs/cmd.h>		/*Command line interpreter */
-#include <time.h>
-#include <string.h>
 #include <afs/afsutil.h>
 
 /*

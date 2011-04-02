@@ -16,6 +16,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
 #include <roken.h>
 
 #include "xstat_fs.h"		/*Interface for this module */
@@ -23,7 +24,6 @@
 
 #include <afs/afsutil.h>
 #include <afs/afscbint.h>
-#include <string.h>
 
 #define LWP_STACK_SIZE	(16 * 1024)
 

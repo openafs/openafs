@@ -15,13 +15,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <roken.h>
 
+#include <roken.h>
 
 #include "xstat_fs.h"		/*Interface for xstat_fs module */
 #include <afs/cmd.h>		/*Command line interpreter */
-#include <time.h>
-#include <string.h>
 #include <afs/afsutil.h>
 
 /*
