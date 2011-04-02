@@ -20,9 +20,7 @@
 
 #include <roken.h>
 
-#ifndef MAXINT
-#define MAXINT     (~(1<<((sizeof(int)*8)-1)))
-#endif
+#include <limits.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -1386,7 +1384,7 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 	    if (vnp->changed_newTime)
 	    {
 		V_updateDate(vp) = vp->updateTime = now;
-		if(V_volUpCounter(vp)<MAXINT)
+		if(V_volUpCounter(vp)< UINT_MAX)
 			V_volUpCounter(vp)++;
 	    }
 
