@@ -15,9 +15,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <fcntl.h>
-#include <errno.h>
 #include <afs/vldbint.h>
 
 #define SYSIDMAGIC      0x88aabbcc

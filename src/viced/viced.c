@@ -20,38 +20,26 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
-#include <sys/stat.h>
-#include <fcntl.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #ifdef AFS_NT40_ENV
-#include <io.h>
 #include <windows.h>
 #include <WINNT/afsevent.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>		/* sysconf() */
+#endif
 
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
-#endif /* AFS_NT40_ENV */
-#include <afs/stds.h>
+#endif
+
 #undef SHARED
+
 #include <rx/xdr.h>
 #include <afs/nfs.h>
 #include <afs/afs_assert.h>

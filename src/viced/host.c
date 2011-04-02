@@ -11,22 +11,14 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <winsock2.h>
-#else
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #endif
 
-#include <afs/stds.h>
 #include <rx/xdr.h>
 #include <afs/afs_assert.h>
 #include <lwp.h>
@@ -52,7 +44,6 @@
 #include <afs/com_err.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
-#include <stdlib.h>
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"

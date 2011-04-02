@@ -1228,7 +1228,9 @@ AC_CHECK_HEADERS([ \
 		   math.h \
 		   mntent.h \
 		   ncurses.h \
+		   net/if.h \
 		   netdb.h \
+		   netinet/if_ether.h \
 		   netinet/in.h \
 		   pwd.h \
 		   regex.h \
@@ -1242,12 +1244,15 @@ AC_CHECK_HEADERS([ \
 		   strings.h \
 		   sys/bitypes.h \
 		   sys/bswap.h \
+		   sys/dk.h \
 		   sys/fcntl.h \
 		   sys/file.h \
 		   sys/fs_types.h \
 		   sys/fstyp.h \
 		   sys/ioctl.h \
 		   sys/ipc.h \
+		   sys/lockf.h \
+		   sys/map.h \
 		   sys/mount.h \
 		   sys/mntent.h \
 		   sys/mnttab.h \

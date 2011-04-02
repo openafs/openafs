@@ -83,24 +83,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>		/* for malloc() */
-#include <time.h>		/* ANSI standard location for time stuff */
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/time.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <unistd.h>
 #endif
-#include <afs/afs_assert.h>
 
-#include <afs/stds.h>
+#include <afs/afs_assert.h>
 
 #include <afs/nfs.h>		/* yuck.  This is an abomination. */
 #include <lwp.h>

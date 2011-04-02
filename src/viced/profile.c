@@ -12,10 +12,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <signal.h>
+#endif
 
 #if defined(sun) || defined(mac2)
 #define PROFSTART	0x8000
@@ -34,11 +35,6 @@
 #endif
 #define		SCALE_1_TO_1	0x10000L
 
-#ifdef	AFS_OSF_ENV
-extern void *malloc();
-#else
-extern char *malloc();
-#endif
 extern int etext;
 void AllocProfBuf();
 

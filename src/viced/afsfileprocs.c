@@ -27,34 +27,38 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
 #ifdef	AFS_SGI_ENV
 #undef SHARED			/* XXX */
 #endif
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string.h>
 
-#ifndef AFS_LINUX20_ENV
+#ifdef HAVE_NET_IF_H
 #include <net/if.h>
-#ifndef AFS_ARM_DARWIN_ENV
+#endif
+
+#ifdef HAVE_NETINET_IF_ETHER_H
 #include <netinet/if_ether.h>
 #endif
+
+#if !defined(AFS_SGI_ENV) && defined(HAVE_SYS_MAP_H)
+#include <sys/map.h>
 #endif
+
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
 #endif
+
+#ifdef HAVE_SYS_LOCKF_H
+#include <sys/lockf.h>
+#endif
+
+#ifdef HAVE_SYS_DK_H
+#include <sys/dk.h>
+#endif
+
 #ifdef AFS_HPUX_ENV
 /* included early because of name conflict on IOPEN */
 #include <sys/inode.h>
@@ -62,7 +66,7 @@
 #undef IOPEN
 #endif
 #endif /* AFS_HPUX_ENV */
-#include <afs/stds.h>
+
 #include <rx/xdr.h>
 #include <afs/nfs.h>
 #include <afs/afs_assert.h>
@@ -80,27 +84,10 @@
 #include <afs/acl.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
-#include <sys/stat.h>
-#if ! defined(AFS_SGI_ENV) && ! defined(AFS_AIX32_ENV) && ! defined(AFS_NT40_ENV) && ! defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-#include <sys/map.h>
-#endif
-#if !defined(AFS_NT40_ENV)
-#include <unistd.h>
-#endif
-#if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
-#ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
-#include <sys/lockf.h>
-#else
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-#include <sys/dk.h>
-#endif
-#endif
-#endif
+
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 
-#include <signal.h>
 #include <afs/partition.h>
 #include "viced_prototypes.h"
 #include "viced.h"
