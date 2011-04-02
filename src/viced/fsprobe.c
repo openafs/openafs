@@ -69,7 +69,7 @@ main(int argc, char **argv)
 
     argc--, av++;
     if (argc < 1) {
-	printf("usage: pxclient <serverHost>\n");
+	printf("usage: fsprobe <serverHost>\n");
 	exit(1);
     }
     memset(&host, 0, sizeof(struct sockaddr_in));
