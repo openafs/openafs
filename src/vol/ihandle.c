@@ -18,8 +18,7 @@
 
 #include <limits.h>
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
-#include <sys/fcntl.h>
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #endif
 

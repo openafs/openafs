@@ -15,14 +15,7 @@
 #include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <direct.h>
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <windows.h>
 #include <winnt.h>
 #include <winbase.h>

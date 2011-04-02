@@ -9,18 +9,15 @@
 
 /* Verify that the size of the XFS inode is large enough to hold the XFS
  * attribute for AFS inode parameters. Check all the mounted /vicep partitions.
-#include <afsconfig.h>
-
-
  */
+#include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #ifdef AFS_SGI_XFS_IOPS_ENV
-#include <errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <dirent.h>
-#include <fcntl.h>
 #include <mntent.h>
+#include <afs/afsint.h>
 #include "ihandle.h"
 #include "partition.h"
 #include <afs/xfsattrs.h>

@@ -23,26 +23,18 @@
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <WINNT/afsevent.h>
-#else
-#include <sys/param.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
 #endif
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
+#endif
+
 #ifndef WCOREDUMP
 #define WCOREDUMP(x)	((x) & 0200)
 #endif
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/afs_assert.h>
@@ -74,17 +66,13 @@
 #include <sys/lockf.h>
 #else
 #ifdef	AFS_HPUX_ENV
-#include <unistd.h>
 #include <checklist.h>
 #else
 #if defined(AFS_SGI_ENV)
-#include <unistd.h>
-#include <fcntl.h>
 #include <mntent.h>
 #else
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 #ifdef	  AFS_SUN5_ENV
-#include <unistd.h>
 #include <sys/mnttab.h>
 #include <sys/mntent.h>
 #else
@@ -95,7 +83,6 @@
 #endif /* AFS_HPUX_ENV */
 #endif
 #endif
-#include <fcntl.h>
 #ifndef AFS_NT40_ENV
 #include <afs/osi_inode.h>
 #endif
@@ -103,9 +90,6 @@
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
-#ifndef AFS_NT40_ENV
-#include <syslog.h>
-#endif
 
 #include "nfs.h"
 #include "lwp.h"

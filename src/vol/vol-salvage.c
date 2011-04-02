@@ -89,22 +89,11 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#ifndef AFS_NT40_ENV
-#include <sys/param.h>
-#include <sys/file.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
+#ifdef HAVE_SYS_FILE_H
+# include <sys/file.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <errno.h>
+
 #ifdef AFS_NT40_ENV
-#include <io.h>
 #include <WINNT/afsevent.h>
 #endif
 #ifndef WCOREDUMP
@@ -141,17 +130,13 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <sys/lockf.h>
 #else
 #ifdef	AFS_HPUX_ENV
-#include <unistd.h>
 #include <checklist.h>
 #else
 #if defined(AFS_SGI_ENV)
-#include <unistd.h>
-#include <fcntl.h>
 #include <mntent.h>
 #else
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 #ifdef	  AFS_SUN5_ENV
-#include <unistd.h>
 #include <sys/mnttab.h>
 #include <sys/mntent.h>
 #else
@@ -162,7 +147,6 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #endif /* AFS_HPUX_ENV */
 #endif
 #endif
-#include <fcntl.h>
 #ifndef AFS_NT40_ENV
 #include <afs/osi_inode.h>
 #endif
@@ -170,10 +154,6 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
-#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
-#ifndef AFS_NT40_ENV
-#include <syslog.h>
-#endif
 
 #include "nfs.h"
 #include "lwp.h"

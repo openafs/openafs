@@ -19,19 +19,14 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <time.h>
-#include <fcntl.h>
-#else
-#include <sys/time.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <unistd.h>
 #endif
-#include <dirent.h>
-#include <sys/stat.h>
+
+#ifdef HAVE_SYS_LOCKF_H
+#include <sys/lockf.h>
+#endif
+
 #include <afs/afs_assert.h>
 
 #include <rx/xdr.h>
@@ -45,7 +40,6 @@
 #include <afs/afsutil.h>
 #ifdef AFS_NT40_ENV
 #include "ntops.h"
-#include <io.h>
 #endif
 #include "vnode.h"
 #include "volume.h"
@@ -56,15 +50,6 @@
 #include "volinodes.h"
 #include "vol_prototypes.h"
 #include "common.h"
-
-#ifdef	AFS_AIX_ENV
-#include <sys/lockf.h>
-#endif
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_LINUX20_ENV)
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #ifndef AFS_NT40_ENV
 # ifdef O_LARGEFILE

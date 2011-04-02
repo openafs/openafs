@@ -22,6 +22,8 @@
 
 #include <roken.h>
 
+#include <ctype.h>
+
 #ifndef AFS_NAMEI_ENV
 #if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)
 /* ListViceInodes
@@ -40,9 +42,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
     return -1;
 }
 #else
-#include <ctype.h>
-#if defined(AFS_SGI_ENV)
-#else
+#if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
 #include <ufs/fs.h>
 #else /* AFS_OSF_ENV */

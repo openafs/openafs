@@ -22,10 +22,10 @@
 
 #include <limits.h>
 
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #include <afs/afs_assert.h>
 
 #include <rx/xdr.h>
@@ -44,27 +44,8 @@
 #include "partition.h"
 #include "salvsync.h"
 #include "common.h"
-#if defined(AFS_SGI_ENV)
-#include "sys/types.h"
-#include "fcntl.h"
-#undef min
-#undef max
-#include "stdlib.h"
-#endif
 #ifdef AFS_NT40_ENV
-#include <fcntl.h>
 #include "ntops.h"
-#else
-#include <sys/file.h>
-#ifdef	AFS_SUN5_ENV
-#include <sys/fcntl.h>
-#endif
-#include <unistd.h>
-#endif /* AFS_NT40_ENV */
-#include <sys/stat.h>
-
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
 #endif
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];

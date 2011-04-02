@@ -20,19 +20,11 @@
 #include <roken.h>
 
 #include <ctype.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <time.h>
-#include <io.h>
-#else
-#include <sys/param.h>
+
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <sys/time.h>
 #endif
+
 #include <afs/cmd.h>
 #include <afs/dir.h>
 
@@ -50,12 +42,6 @@
 #include "viceinode.h"
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
-
-#ifdef _AIX
-#include <time.h>
-#endif
-
-#include <dirent.h>
 
 int DumpVnodes = 0;		/* Dump everything, i.e. summary of all vnodes */
 int DumpInodeNumber = 0;	/* Dump inode numbers with vnodes */

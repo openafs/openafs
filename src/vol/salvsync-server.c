@@ -26,25 +26,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+#include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
+#include <stddef.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
-#include <time.h>
-#else
-#include <sys/param.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/time.h>
 #endif
-#include <errno.h>
+
 #include <afs/afs_assert.h>
-#include <signal.h>
-#include <string.h>
-
-
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
@@ -59,11 +50,6 @@
 #include "partition.h"
 #include "common.h"
 #include <rx/rx_queue.h>
-#include <afs/procmgmt.h>
-
-#if !defined(offsetof)
-#include <stddef.h>
-#endif
 
 #ifdef USE_UNIX_SOCKETS
 #include <afs/afsutil.h>

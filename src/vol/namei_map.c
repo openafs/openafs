@@ -1,10 +1,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <roken.h>
+
 #include <afs/afsutil.h>
 
 int main(int argc, char **argv) {

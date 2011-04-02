@@ -23,12 +23,17 @@
 
 #include <roken.h>
 
+#include <ctype.h>
+#include <stddef.h>
+
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <ctype.h>
-#include <signal.h>
+
 #ifndef AFS_NT40_ENV
-#include <sys/param.h>
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
 #include <ufs/fs.h>
@@ -52,22 +57,12 @@
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 #endif /* AFS_SGI_ENV */
-#endif /* AFS_NT40_ENV */
-#include <errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
-#include <sys/file.h>
-#endif
-#include <dirent.h>
+#endif /* !AFS_NT40_ENV */
+
 #ifdef	AFS_AIX_ENV
 #include <sys/vfs.h>
-#include <fcntl.h>
 #else
 #ifdef	AFS_HPUX_ENV
-#include <fcntl.h>
 #include <mntent.h>
 #else
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
@@ -80,9 +75,7 @@
 #else
 #ifndef AFS_NT40_ENV
 #if defined(AFS_SGI_ENV)
-#include <fcntl.h>
 #include <mntent.h>
-
 #else
 #ifndef AFS_LINUX20_ENV
 #include <fstab.h>		/* Need to find in libc 5, present in libc 6 */
@@ -92,20 +85,6 @@
 #endif
 #endif /* AFS_HPUX_ENV */
 #endif
-#ifndef AFS_NT40_ENV
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/wait.h>
-#include <setjmp.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
-#endif /* AFS_NT40_ENV */
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_LINUX20_ENV)
-#include <string.h>
-#else
-#include <strings.h>
-#endif
 
 #include "nfs.h"
 #include <afs/errors.h>
@@ -114,9 +93,6 @@
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include <afs/afsutil.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#endif
 #include "daemon_com.h"
 #include "fssync.h"
 #include "salvsync.h"
@@ -128,13 +104,6 @@
 #include "afs/afs_assert.h"
 #include "vutils.h"
 #include <afs/dir.h>
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
-
-#if !defined(offsetof)
-#include <stddef.h>
-#endif
 
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t vol_glock_mutex;

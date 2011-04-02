@@ -19,19 +19,12 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#else
+#include <assert.h>
+
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <unistd.h>
-#include <string.h>
-#ifdef	AFS_SUN5_ENV
-#include <sys/fcntl.h>
 #endif
-#endif
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <errno.h>
@@ -40,7 +33,6 @@
 #include "ihandle.h"
 #include "salvage.h"
 #include <afs/dir.h>
-#include <assert.h>
 #include "vol_internal.h"
 
 /* returns 0 on success, errno on failure */

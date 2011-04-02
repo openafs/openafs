@@ -18,18 +18,10 @@
 
 #include <roken.h>
 
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/param.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <sys/time.h>
-#include <unistd.h>
 #endif
-#include <string.h>
-#include <sys/stat.h>
+
 #include <afs/afs_assert.h>
 #include <afs/afsutil.h>
 

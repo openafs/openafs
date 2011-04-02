@@ -14,33 +14,22 @@
 
 #include <roken.h>
 
+
 #ifdef AFS_NAMEI_ENV
-#include <stdio.h>
-#include <stdlib.h>
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#else
+
+#ifdef HAVE_SYS_FILE_H
+# include <sys/file.h>
+#endif
+
+#ifdef AFS_NT40_ENV
 #define DELETE_ZLC
-#include <io.h>
 #include <windows.h>
 #include <winnt.h>
 #include <winbase.h>
-#include <winsock2.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#ifdef AFS_NT40_ENV
 #include <direct.h>
-#else
-#include <sys/file.h>
-#include <sys/param.h>
 #endif
-#include <dirent.h>
+
 #include <afs/afs_assert.h>
-#include <string.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
@@ -56,6 +45,7 @@
 #include "volume_inline.h"
 #include "common.h"
 #include <afs/errors.h>
+
 #ifdef AFS_NT40_ENV
 #include <afs/errmap_nt.h>
 #endif

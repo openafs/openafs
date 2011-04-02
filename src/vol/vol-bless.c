@@ -10,8 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdio.h>
+#include <roken.h>
 
 #include <afs/cmd.h>
 

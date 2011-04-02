@@ -18,25 +18,13 @@
 
 #include <roken.h>
 
+#ifdef HAVE_SYS_FILE_H
+#include <sys/file.h>
+#endif
+
 #ifdef AFS_DEMAND_ATTACH_FS
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <dirent.h>
 #include <afs/afs_assert.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <sys/param.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV)
-#include <unistd.h>
-#endif
-#endif /* AFS_NT40_ENV */
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>

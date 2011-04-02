@@ -14,19 +14,7 @@
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <stdio.h>
 #include <afs/afs_assert.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
 
 #include <afs/afsutil.h>
 

@@ -24,15 +24,12 @@
 #include <roken.h>
 
 #include <ctype.h>
-#include <string.h>
+
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #include <winbase.h>
 #include <winioctl.h>
 #else
-#include <sys/param.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
 #include <sys/statvfs.h>
@@ -64,9 +61,6 @@
 #endif
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
-#include <errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
 #include <sys/file.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/vfs.h>
@@ -74,8 +68,6 @@
 #else
 #ifdef	AFS_HPUX_ENV
 #include <sys/vfs.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <checklist.h>
 #else
 #if	defined(AFS_SUN_ENV)
@@ -101,9 +93,6 @@
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_NT40_ENV */
 #if defined(AFS_SGI_ENV)
-#include <sys/errno.h>
-#include <sys/stat.h>
-#include <stdio.h>
 #include <sys/file.h>
 #include <mntent.h>
 #endif

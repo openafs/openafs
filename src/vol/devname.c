@@ -12,9 +12,10 @@
 
 #include <roken.h>
 
+#include <ctype.h>
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <ctype.h>
 
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
