@@ -232,7 +232,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 	    bulkentries.nbulkentries_val = 0;
 	    nsi = -1;
 	    tcode =
-		ubik_Call(VL_ListAttributesN2, uclient, 0, &attributes,
+		ubik_VL_ListAttributesN2(uclient, 0, &attributes,
 			  tve->name, si, &nentries, &bulkentries, &nsi);
 	    if (tcode)
 		ERROR(tcode);
@@ -449,8 +449,7 @@ EvalVolumeSet1(struct bc_config *aconfig,
      */
     for (index = 0; 1; index = next_index) {	/*w */
 	memset(&entry, 0, sizeof(entry));
-	code = ubik_Call(VL_ListEntry,	/*Routine to invoke */
-			 uclient,	/*Ubik client structure */
+	code = ubik_VL_ListEntry(uclient,	/*Ubik client structure */
 			 0,	/*Ubik flags */
 			 index,	/*Current index */
 			 &count,	/*Ptr to working variable */
@@ -2271,7 +2270,7 @@ bc_dbVerifyCmd(struct cmd_syndesc *as, void *arock)
     detail = (as->parms[0].items ? 1 : 0);	/* print more details */
 
     code =
-	ubik_Call(BUDB_DbVerify, udbHandle.uh_client, 0, &status, &orphans,
+	ubik_BUDB_DbVerify(udbHandle.uh_client, 0, &status, &orphans,
 		  &host);
 
     if (code) {
@@ -3086,7 +3085,7 @@ printRecentDumps(int ndumps)
 	dl.budb_dumpList_val = 0;
 
 	/* outline algorithm */
-	code = ubik_Call(BUDB_GetDumps, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_NPREVIOUS, "",	/* no name */
+	code = ubik_BUDB_GetDumps(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_NPREVIOUS, "",	/* no name */
 			 0,	/* start */
 			 ndumps,	/* end */
 			 index,	/* index */

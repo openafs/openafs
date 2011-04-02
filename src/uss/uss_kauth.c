@@ -698,7 +698,7 @@ uss_kauth_SetFields(char *username, char *expirestring, char *reuse,
 	    if (!expiration)
 		expiration = uss_Expires;
 	    code =
-		ubik_Call(KAM_SetFields, uconn_kauthP, 0, username, &instance,
+		ubik_KAM_SetFields(uconn_kauthP, 0, username, &instance,
 			  flags, expiration, lifetime, maxAssociates,
 			  was_spare, /* spare */ 0);
 	} else
