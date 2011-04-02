@@ -24,17 +24,17 @@ afs_NTAbort(void)
 #endif
 
 #define TIMESTAMP_BUFFER_SIZE 26  /* including the null */
-#define TIMESTAMP_NEWLINE_POS 24  /* offset to the newline placed by ctime */
 
 void
 AssertionFailed(char *file, int line)
 {
     char tdate[TIMESTAMP_BUFFER_SIZE];
     time_t when;
+    struct tm tm;
 
-    time(&when);
-    (void)afs_ctime(&when, tdate, sizeof(tdate));
-    tdate[TIMESTAMP_NEWLINE_POS] = ' ';
+    when = time(NULL);
+    strftime(tdate, sizeof(tdate), "%a %b %d %T %Y",
+	     localtime_r(&when, &tm));
     fprintf(stderr, "%sAssertion failed! file %s, line %d.\n", tdate, file,
 	    line);
     fflush(stderr);

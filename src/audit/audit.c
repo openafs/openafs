@@ -170,16 +170,15 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     int num = LogThreadNum();
     struct in_addr hostAddr;
     time_t currenttime;
-    char *timeStamp;
     char tbuffer[26];
+    struct tm tm;
 
     /* Don't print the timestamp or thread id if we recursed */
     if (rec == 0) {
 	currenttime = time(0);
-	timeStamp = afs_ctime(&currenttime, tbuffer,
-			      sizeof(tbuffer));
-	timeStamp[24] = ' ';   /* ts[24] is the newline, 25 is the null */
-	audit_ops->append_msg(timeStamp);
+	if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y ",
+		     localtime_r(&currenttime, &tm)) !=0)
+	    audit_ops->append_msg(tbuffer);
 
 	if (num > -1)
 	    audit_ops->append_msg("[%d] ", num);

@@ -1274,9 +1274,10 @@ dump_stats(vldstats *stats, vital_vlheader *vital_header)
     int i;
     char strg[30];
     time_t start_time = stats->start_time;
+    struct tm tm;
 
-    afs_ctime(&start_time, strg, sizeof(strg));
-    strg[strlen(strg) - 1] = 0;
+    strftime(strg, sizeof(strg), "%a %b %d %T %Y",
+	     localtime_r(&start_time, &tm));
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");
     for (i = 0; i < VL_NUMBER_OPCODESX; i++)

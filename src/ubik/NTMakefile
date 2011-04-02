@@ -135,7 +135,8 @@ UDBG_EXELIBS =\
 	$(DESTDIR)\lib\afslwp.lib \
      	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-     	$(DESTDIR)\lib\afs\afsutil.lib
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 
 $(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)  

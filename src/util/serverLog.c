@@ -100,16 +100,16 @@ void
 vFSLog(const char *format, va_list args)
 {
     time_t currenttime;
-    char *timeStamp;
     char tbuffer[1024];
     char *info;
     size_t len;
+    struct tm tm;
     int num;
 
-    currenttime = time(0);
-    timeStamp = afs_ctime(&currenttime, tbuffer, sizeof(tbuffer));
-    timeStamp[24] = ' ';	/* ts[24] is the newline, 25 is the null */
-    info = &timeStamp[25];
+    currenttime = time(NULL);
+    len = strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y ",
+		   localtime_r(&currenttime, &tm));
+    info = &tbuffer[len+1];
 
     if (mrafsStyleLogs || threadIdLogs) {
 	num = (*threadNumProgram) ();

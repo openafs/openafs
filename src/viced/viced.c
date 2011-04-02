@@ -474,9 +474,11 @@ FiveMinuteCheckLWP(void *unused)
 #endif
 	if (printBanner && (++msg & 1)) {	/* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
+	    struct tm tm;
+	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+		     localtime_r(&now, &tm));
 	    ViceLog(2,
-		    ("File server is running at %s\n",
-		     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+		    ("File server is running at %s\n", tbuffer));
 	}
 #ifdef AFS_DEMAND_ATTACH_FS
 	FS_STATE_WRLOCK;
@@ -689,15 +691,16 @@ PrintCounters(void)
     int workstations, activeworkstations, delworkstations;
     int processSize = 0;
     char tbuffer[32];
+    struct tm tm;
 #ifdef AFS_DEMAND_ATTACH_FS
     int stats_flags = 0;
 #endif
 
     FT_GetTimeOfDay(&tpl, 0);
     Statistics = 1;
-    ViceLog(0,
-	    ("Vice was last started at %s\n",
-	     afs_ctime(&StartTime, tbuffer, sizeof(tbuffer))));
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	     localtime_r(&StartTime, &tm));
+    ViceLog(0, ("Vice was last started at %s\n", tbuffer));
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (LogLevel >= 125) {
@@ -771,7 +774,8 @@ ShutdownWatchdogLWP(void *unused)
 void
 ShutDownAndCore(int dopanic)
 {
-    time_t now = time(0);
+    time_t now = time(NULL);
+    struct tm tm;
     char tbuffer[32];
 
     if (dopanic) {
@@ -809,9 +813,9 @@ ShutDownAndCore(int dopanic)
     FS_STATE_UNLOCK;
 #endif
 
-    ViceLog(0,
-	    ("Shutting down file server at %s",
-	     afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	     localtime_r(&now, &tm));
+    ViceLog(0, ("Shutting down file server at %s", tbuffer));
     if (dopanic)
 	ViceLog(0, ("ABNORMAL SHUTDOWN, see core file.\n"));
     DFlush();
@@ -859,14 +863,12 @@ ShutDownAndCore(int dopanic)
 	fflush(debugFile);
     }
     now = time(0);
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	     localtime_r(&now, &tm));
     if (dopanic) {
-      ViceLog(0,
-	      ("File server has terminated abnormally at %s\n",
-	       afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+      ViceLog(0, ("File server has terminated abnormally at %s\n", tbuffer));
     } else {
-      ViceLog(0,
-	      ("File server has terminated normally at %s\n",
-	       afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+      ViceLog(0, ("File server has terminated normally at %s\n", tbuffer));
     }
 
     if (dopanic) /* XXX pass in file and line? */
@@ -1972,6 +1974,7 @@ main(int argc, char *argv[])
 #endif
     int curLimit;
     time_t t;
+    struct tm tm;
     afs_uint32 rx_bindhost;
     VolumePackageOptions opts;
 
@@ -2380,9 +2383,9 @@ main(int argc, char *argv[])
     }
 
     t = tp.tv_sec;
-    ViceLog(0,
-	    ("File Server started %s",
-	     afs_ctime(&t, tbuffer, sizeof(tbuffer))));
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	     localtime_r(&t, &tm));
+    ViceLog(0, ("File Server started %s", tbuffer));
 #if FS_STATS_DETAILED
     afs_FullPerfStats.det.epoch.tv_sec = StartTime = tp.tv_sec;
 #endif

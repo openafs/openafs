@@ -55,33 +55,6 @@ extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);
 extern void SetupLogSignals(void);
 
-/* special version of ctime that clobbers a *different static variable, so
- * that ViceLog can call ctime and not cause buffer confusion.
- */
-extern char *vctime(const time_t * atime);
-
-/* Need a thead safe ctime for pthread builds. Use std ctime for LWP */
-#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-#if defined(AFS_SUN5_ENV) && !defined(_POSIX_PTHREAD_SEMANTICS) && (_POSIX_C_SOURCE - 0 < 199506L)
-#define afs_ctime(C, B, L) ctime_r(C, B, L)
-#else
-/* Cast is for platforms which do not prototype ctime_r */
-#define afs_ctime(C, B, L) (char*)ctime_r(C, B)
-#endif /* AFS_SUN5_ENV */
-#else /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
-static_inline char *
-afs_ctime(const time_t *C, char *B, size_t S) {
-#if !defined(AFS_NT40_ENV) || (_MSC_VER < 1400)
-    strncpy(B, ctime(C), (S-1));
-    B[S-1] = '\0';
-#else
-    ctime_s(B, S, C);
-#endif
-    return B;
-}
-#endif /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
-
-
 /* abort the current process. */
 #ifdef AFS_NT40_ENV
 #define afs_abort() afs_NTAbort()

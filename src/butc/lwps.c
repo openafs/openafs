@@ -195,19 +195,20 @@ TapeLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
 	   char *str)
 {
     time_t now;
-    char tbuffer[32], *timestr;
+    char tbuffer[32];
+    struct tm tm;
 
     now = time(0);
-    timestr = afs_ctime(&now, tbuffer, sizeof(tbuffer));
-    timestr[24] = '\0';
+    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+		 localtime_r(&now, &tm)) != 0)
+	fprintf(logIO, "%s: ", tbuffer);
 
-    fprintf(logIO, "%s: ", timestr);
     if (task)
 	fprintf(logIO, "Task %u: ", task);
     PrintLogStr(logIO, error1, error2, str);
 
     if (lastPass && lastLogIO) {
-	fprintf(lastLogIO, "%s: ", timestr);
+	fprintf(lastLogIO, "%s: ", tbuffer);
 	if (task)
 	    fprintf(lastLogIO, "Task %u: ", task);
 	PrintLogStr(lastLogIO, error1, error2, str);
@@ -251,12 +252,13 @@ ErrorLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
 	    char *errStr)
 {
     time_t now;
-    char tbuffer[32], *timestr;
+    char tbuffer[32];
+    struct tm tm;
 
     now = time(0);
-    timestr = afs_ctime(&now, tbuffer, sizeof(tbuffer));
-    timestr[24] = '\0';
-    fprintf(ErrorlogIO, "%s: ", timestr);
+    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+		 localtime_r(&now, &tm)) != 0)
+	fprintf(ErrorlogIO, "%s: ", tbuffer);
 
     /* Print the time and task number */
     if (task)

@@ -2733,6 +2733,7 @@ h_PrintClient(struct host *host, int flags, void *rock)
     char tbuffer[32];
     char hoststr[16];
     time_t LastCall, expTime;
+    struct tm tm;
 
     H_LOCK;
     LastCall = host->LastCall;
@@ -2740,22 +2741,24 @@ h_PrintClient(struct host *host, int flags, void *rock)
 	H_UNLOCK;
 	return flags;
     }
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	     localtime_r(&LastCall, &tm));
     snprintf(tmpStr, sizeof tmpStr, "Host %s:%d down = %d, LastCall %s",
 	     afs_inet_ntoa_r(host->host, hoststr),
 	     ntohs(host->port), (host->hostFlags & VENUSDOWN),
-	     afs_ctime(&LastCall, tbuffer, sizeof(tbuffer)));
+	     tbuffer);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     for (client = host->FirstClient; client; client = client->next) {
 	if (!client->deleted) {
 	    expTime = client->expTime;
+	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+		     localtime_r(&expTime, &tm));
 	    snprintf(tmpStr, sizeof tmpStr,
 		     "    user id=%d,  name=%s, sl=%s till %s",
 		     client->ViceId, h_UserName(client),
 		     client->authClass ? "Authenticated"
 				       : "Not authenticated",
-		     client->authClass ? afs_ctime(&expTime, tbuffer,
-						   sizeof(tbuffer))
-				       : "No Limit\n");
+		     client->authClass ? tbuffer : "No Limit\n");
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    snprintf(tmpStr, sizeof tmpStr, "      CPS-%d is [",
 			 client->CPS.prlist_len);
@@ -2788,6 +2791,7 @@ h_PrintClients(void)
     time_t now;
     char tmpStr[256];
     char tbuffer[32];
+    struct tm tm;
 
     StreamHandle_t *file = STREAM_OPEN(AFSDIR_SERVER_CLNTDUMP_FILEPATH, "w");
 
@@ -2798,8 +2802,10 @@ h_PrintClients(void)
 	return;
     }
     now = FT_ApproxTime();
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	     localtime_r(&now, &tm));
     snprintf(tmpStr, sizeof tmpStr, "List of active users at %s\n",
-	     afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+	     tbuffer);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_PrintClient, (char *)file);
     STREAM_REALLYCLOSE(file);
@@ -2861,6 +2867,7 @@ h_DumpHosts(void)
     StreamHandle_t *file = STREAM_OPEN(AFSDIR_SERVER_HOSTDUMP_FILEPATH, "w");
     char tmpStr[256];
     char tbuffer[32];
+    struct tm tm;
 
     if (file == NULL) {
 	ViceLog(0,
@@ -2869,8 +2876,9 @@ h_DumpHosts(void)
 	return;
     }
     now = FT_ApproxTime();
-    snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n",
-	     afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	     localtime_r(&now, &tm));
+    snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n", tbuffer);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_DumpHost, (char *)file);
     STREAM_REALLYCLOSE(file);

@@ -167,14 +167,18 @@ ka_timestr(afs_int32 time, char *tstr, afs_int32 tlen)
 {
     char tbuffer[32];		/* need at least 26 bytes */
     time_t passtime;		/* modern systems have 64 bit time */
+    struct tm tm;
 
-    if (!time)
-	strcpy(tstr, "no date");	/* special case this */
-    else if (time == NEVERDATE)
+    passtime = time;
+
+    if (time == NEVERDATE)
 	strcpy(tstr, "never");
     else {
-	passtime = time;
-	strncpy(tstr, afs_ctime(&passtime, tbuffer, sizeof(tbuffer)), tlen);
-	tstr[strlen(tstr) - 1] = '\0';	/* punt the newline character */
+	if (!time || strftime(tbuffer, sizeof(tbuffer), "%c",
+			      localtime_r(&passtime, &tm)) == 0)
+	    strcpy(tstr, "no date");
+	else {
+	    strncpy(tstr, tbuffer, tlen);
+	}
     }
 }
