@@ -20,6 +20,7 @@
 		rk_erealloc;
 		rk_flock;
 		rk_hex_encode;
+		rk_localtime_r;
 		rk_mkstemp;
 		rk_print_version;
 		rk_snprintf;

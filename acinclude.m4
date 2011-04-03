@@ -1371,7 +1371,6 @@ AC_CHECK_FUNCS([ \
 	fchown \
 	gethostname \
 	gettimeofday \
-	localtime_r \
 	lstat \
 	inet_aton \
 	inet_ntop \
@@ -1408,6 +1407,7 @@ AC_REPLACE_FUNCS([ \
 	getdtablesize \
 	getopt \
 	getprogname \
+	localtime_r \
 	mkstemp \
 	strcasecmp \
 	strlcat \
