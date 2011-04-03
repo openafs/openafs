@@ -1371,11 +1371,14 @@ AC_CHECK_FUNCS([ \
 	inet_aton \
 	inet_ntop \
 	inet_pton \
+	putenv \
 	readv \
+	setenv \
 	strdup \
 	strftime \
 	strndup \
 	strsep \
+	unsetenv \
 ])
 
 dnl Functions that are in objects that we always build from libroken
