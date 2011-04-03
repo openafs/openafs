@@ -70,6 +70,7 @@ lib/roken/flock.c		roken/flock.c
 lib/roken/getdtablesize.c	roken/getdtablesize.c
 lib/roken/getopt.c		roken/getopt.c
 lib/roken/getprogname.c		roken/getprogname.c
+lib/roken/gettimeofday.c	roken/gettimeofday.c
 lib/roken/hex.c			roken/hex.c
 lib/roken/hex.h			roken/hex.h
 lib/roken/issuid.c		roken/issuid.c
