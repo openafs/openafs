@@ -70,8 +70,6 @@ AFSDEV_BUILDTYPE = NONE
 !ENDIF
 INCLUDE = $(AFSDEV_INCLUDE)
 
-PATH = $(AFSDEV_BIN);$(PATH)
-
 !IFNDEF AFSDEV_LIB
 !ERROR Must define AFSDEV_LIB to be the default library directories.
 !ENDIF
@@ -191,6 +189,8 @@ OUT=$(OJT)\$(RELDIR)
 !IF ("$(APPVER)" == "")
 APPVER=5.02
 !ENDIF
+
+PATH = $(AFSDEV_BIN);$(DESTDIR)\lib;$(PATH)
 
 !INCLUDE <WIN32.MAK>
 

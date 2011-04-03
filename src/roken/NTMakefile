@@ -35,6 +35,7 @@ ROKEN_OBJS = \
 	$(OUT)\flock.obj \
 	$(OUT)\getopt.obj \
         $(OUT)\getprogname.obj \
+	$(OUT)\gettimeofday.obj \
 	$(OUT)\hex.obj \
         $(OUT)\issuid.obj \
 	$(OUT)\localtime_r.obj \

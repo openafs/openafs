@@ -72,13 +72,6 @@ extern void SetupLogSignals(void);
      extern int afs_winsockInit(void);
      extern void afs_winsockCleanup(void);
 
-     struct timezone {
-	 int tz_minuteswest;	/* of Greenwich */
-	 int tz_dsttime;	/* type of dst correction to apply */
-     };
-#define gettimeofday afs_gettimeofday
-     int afs_gettimeofday(struct timeval *tv, struct timezone *tz);
-
 /* Unbuffer output when Un*x would do line buffering. */
 #define setlinebuf(S) setvbuf(S, NULL, _IONBF, 0)
 

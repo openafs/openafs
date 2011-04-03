@@ -12,6 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -46,19 +47,10 @@ afs_winsockCleanup(void)
     WSACleanup();
 }
 
-/* This function will begin to fail in the year 2038 */
+/* exported from libafsauthent.dll */
 int
 afs_gettimeofday(struct timeval *tv, struct timezone *tz)
 {
-    struct _timeb myTime;
-
-    _ftime(&myTime);
-    tv->tv_sec = myTime.time;
-    tv->tv_usec = myTime.millitm * 1000;
-    if (tz) {
-	tz->tz_minuteswest = myTime.timezone;
-	tz->tz_dsttime = myTime.dstflag;
-    }
-    return 0;
+    return rk_gettimeofday(tv, tz);
 }
 #endif

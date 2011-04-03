@@ -36,3 +36,4 @@ EXPORTS
         rk_vsnprintf            @40
         rk_vasnprintf           @41
 	rk_flock		@42
+	rk_gettimeofday		@43

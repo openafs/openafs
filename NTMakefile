@@ -110,7 +110,7 @@ pthread: hcrypto_headers
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-util: procmgmt_headers afsreg_headers lwp_headers rx_headers pthread
+util: procmgmt_headers afsreg_headers lwp_headers rx_headers hcrypto
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -173,14 +173,14 @@ hcrypto: roken
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-roken: rxgen
+roken: pthread
      @echo ***** $@
         $(DOCD) $(SRC)\roken
 	$(CD) $(SRC)\roken
 	$(NTMAKE)
 	$(CD) ..\..
 
-rx: hcrypto
+rx: rxgen
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
