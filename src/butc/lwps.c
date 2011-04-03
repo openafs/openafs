@@ -116,7 +116,6 @@ extern struct tapeConfig globalTapeConfig;
 extern struct deviceSyncNode *deviceLatch;
 extern char globalCellName[];
 struct timeval tp;
-struct timezone tzp;
 
 /* forward declaration */
 afs_int32 readVolumeHeader(char *, afs_int32, struct volumeHeader *);
@@ -1811,7 +1810,6 @@ GetNewLabel(struct butm_tapeInfo *tapeInfoPtr, char *pName, char *AFSName,
 	    struct butm_tapeLabel *tapeLabel)
 {
     struct timeval tp;
-    struct timezone tzp;
     afs_uint32 size;
 
     memset(tapeLabel, 0, sizeof(struct butm_tapeLabel));
@@ -1823,7 +1821,7 @@ GetNewLabel(struct butm_tapeInfo *tapeInfoPtr, char *pName, char *AFSName,
     } else {
 	size = 0;		/* no tape size */
     }
-    gettimeofday(&tp, &tzp);
+    gettimeofday(&tp, NULL);
 
     tapeLabel->structVersion = CUR_TAPE_VERSION;
     tapeLabel->creationTime = tp.tv_sec;
@@ -1971,13 +1969,12 @@ tapeExpired(struct butm_tapeLabel *tapeLabelPtr)
 {
     Date expiration;
     struct timeval tp;
-    struct timezone tzp;
 
     expiration = ExpirationDate(tapeLabelPtr->dumpid);
     if (!expiration)
 	expiration = tapeLabelPtr->expirationDate;
 
-    gettimeofday(&tp, &tzp);
+    gettimeofday(&tp, NULL);
     return ((expiration < tp.tv_sec) ? 1 : 0);
 }
 

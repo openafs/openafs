@@ -132,7 +132,6 @@ JNIEXPORT jboolean JNICALL Java_org_openafs_jafs_File_setAttributes
     jboolean islink = JNI_FALSE;
     int i;
     struct timeval tv0, tv1;
-    struct timezone tz;
 
     /*memset(target, 0, FILENAME_MAX);*/
 
@@ -152,12 +151,12 @@ JNIEXPORT jboolean JNICALL Java_org_openafs_jafs_File_setAttributes
       return JNI_FALSE;
     }
 
-    gettimeofday(&tv0, &tz);
+    gettimeofday(&tv0, NULL);
     if ((strcmp(dirName, "/afs") == 0) || (strcmp(dirName, "/afs/") == 0)) {
       rc = 1;   /* special case for /afs since statmountpoint fails on it */
     } else {
       rc = uafs_statmountpoint(dirName);
-      gettimeofday(&tv1, &tz);
+      gettimeofday(&tv1, NULL);
       sub_time(&tv1, &tv0);
       /*printf("%s: statmountpoint %d.%06d\n", dirName, tv1.tv_sec, tv1.tv_usec);*/
     }

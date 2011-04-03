@@ -7419,14 +7419,14 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 		   (struct sockaddr *)&taddr, sizeof(struct sockaddr_in));
 
 	/* see if there's a packet available */
-	gettimeofday(&tv_wake,0);
+	gettimeofday(&tv_wake, NULL);
 	tv_wake.tv_sec += waitTime;
 	for (;;) {
 	    FD_ZERO(&imask);
 	    FD_SET(socket, &imask);
 	    tv_delta.tv_sec = tv_wake.tv_sec;
 	    tv_delta.tv_usec = tv_wake.tv_usec;
-	    gettimeofday(&tv_now, 0);
+	    gettimeofday(&tv_now, NULL);
 
 	    if (tv_delta.tv_usec < tv_now.tv_usec) {
 		/* borrow */

@@ -210,7 +210,6 @@ main(int argc, char **argv)
     int filesz = 0;
     int ch, blksize, bytesremaining, bytes;
     struct timeval start, finish;
-    struct timezone tz;
     struct rx_securityClass *ssc = 0, *dsc = 0;
     int sscindex, dscindex;
     struct rx_connection *sconn = NULL, *dconn = NULL;
@@ -433,7 +432,7 @@ main(int argc, char **argv)
 	scall = rx_NewCall(sconn);
     if (!dlcl && !unlock)
 	dcall = rx_NewCall(dconn);
-    gettimeofday(&start, &tz);
+    gettimeofday(&start, NULL);
     if (unlock) {
 	if (fst.lockCount) {
 	    printf("Sending 1 unlock for %s (%d locks)\n", srcf, fst.lockCount);
@@ -553,7 +552,7 @@ main(int argc, char **argv)
     if (storecode)
 	printf("Error returned from store: %s\n", afs_error_message(storecode));
 Finish:
-    gettimeofday(&finish, &tz);
+    gettimeofday(&finish, NULL);
 
     if (!slcl) {
 	theFids.AFSCBFids_len = 1;

@@ -979,7 +979,7 @@ gensym(const char *x)
     char *symbol;
     if (!gensym_n) {
 	struct timeval tv;
-	gettimeofday(&tv, (void *)0);
+	gettimeofday(&tv, NULL);
 	gensym_n = (tv.tv_sec % 10000) * 100 + tv.tv_usec / 10000;
     }
     symbol = (char *)malloc(32 * sizeof(char));

@@ -769,16 +769,16 @@ main()
 	int i;
 
 	fc_keysched(key1, sched);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
 	    fc_keysched(key1, sched);
-	gettimeofday(&stop, 0);
+	gettimeofday(&stop, NULL);
 	printf("fc_keysched    = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
 	fc_ecb_encrypt(data, data, sched, ENCRYPT);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
 	    fc_ecb_encrypt(data, data, sched, ENCRYPT);
 	gettimeofday(&stop, 0);
@@ -788,11 +788,11 @@ main()
 
 	fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 		       ENCRYPT);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 100000; i++)
 	    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 			   ENCRYPT);
-	gettimeofday(&stop, 0);
+	gettimeofday(&stop, NULL);
 	printf("fc_cbc_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 10);

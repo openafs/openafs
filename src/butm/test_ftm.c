@@ -222,7 +222,7 @@ PerformDumpTest(TestInfo * tip)
     }
 
     memset(&label, 0, sizeof(label));
-    gettimeofday(&tp, 0);
+    gettimeofday(&tp, NULL);
     label.structVersion = CUR_TAPE_VERSION;
     label.creationTime = tp.tv_sec;
     label.size = info.tapeSize;

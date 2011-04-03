@@ -125,7 +125,6 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
     char tapeName[BU_MAXTAPELEN];
     char strlevel[5];
     struct timeval tp;
-    struct timezone tzp;
     afs_int32 curTime;
     int tapecount = 1;
 
@@ -239,7 +238,7 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
 	     */
 	    else {
 		/* Check the tape's expiration date. Use the expiration on the label */
-		gettimeofday(&tp, &tzp);
+		gettimeofday(&tp, NULL);
 		curTime = tp.tv_sec;
 		if (curTime < oldTapeLabel.expirationDate) {
 		    TLog(taskId, "This tape has not expired\n");

@@ -92,7 +92,6 @@ static int CBServiceNeeded = 0;
 static struct timeval starttime, opentime, readtime, writetime;
 afs_uint64 xfered=0, oldxfered=0;
 static struct timeval now;
-struct timezone Timezone;
 static float seconds, datarate, oldseconds;
 extern int rxInitDone;
 #ifdef AFS_NT40_ENV
@@ -944,7 +943,7 @@ readFile(struct cmd_syndesc *as, void *unused)
     CBServiceNeeded = 1;
     InitializeCBService();
 
-    gettimeofday (&starttime, &Timezone);
+    gettimeofday (&starttime, NULL);
     fname = as->parms[0].items->data;
     cell = 0;
     if (as->parms[1].items)
@@ -991,7 +990,7 @@ readFile(struct cmd_syndesc *as, void *unused)
 		   useHost, fname, code);
 	   continue;
 	}
-        gettimeofday(&opentime, &Timezone);
+        gettimeofday(&opentime, NULL);
 	if (verbose) {
             seconds = (float)(opentime.tv_sec + opentime.tv_usec *.000001
 		-starttime.tv_sec - starttime.tv_usec *.000001);
@@ -1057,7 +1056,7 @@ readFile(struct cmd_syndesc *as, void *unused)
 		    write(1, buf, len);
 	        length -= len;
 		xfered += len;
-		gettimeofday(&now, &Timezone);
+		gettimeofday(&now, NULL);
 	        if (verbose)
 		    printDatarate();
 	    }
@@ -1069,7 +1068,7 @@ readFile(struct cmd_syndesc *as, void *unused)
 	}
         break;
     }
-    gettimeofday(&readtime, &Timezone);
+    gettimeofday(&readtime, NULL);
     if (worstCode) {
 	fprintf(stderr,"%s failed with code %d\n",
 		(char *) &as->name, worstCode);
@@ -1186,7 +1185,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	return ENOENT;
     }
     cl = FindCell(cell);
-    gettimeofday (&starttime, &Timezone);
+    gettimeofday (&starttime, NULL);
     useHost = hosts[0];
     RXConn = FindRXConnection(useHost, htons(AFSCONF_FILEPORT), 1,
 			      cl->sc, cl->scIndex);
@@ -1253,7 +1252,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	previous = tbuf;
 	Len += tbuf->used;
     }
-    gettimeofday(&opentime, &Timezone);
+    gettimeofday(&opentime, NULL);
     if (verbose) {
         seconds = (float) (opentime.tv_sec + opentime.tv_usec *.000001
 	    -starttime.tv_sec - starttime.tv_usec *.000001);
@@ -1296,7 +1295,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
 		    break;
 	        }
 		xfered += tbuf->used;
-		gettimeofday(&now, &Timezone);
+		gettimeofday(&now, NULL);
 	        if (verbose)
 		    printDatarate();
 	        length -= tbuf->used;
@@ -1352,7 +1351,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
             }
         }
     }
-    gettimeofday(&writetime, &Timezone);
+    gettimeofday(&writetime, NULL);
     if (worstCode) {
 	fprintf(stderr,"%s failed with code %d\n", as->name, worstCode);
     } else if(verbose) {

@@ -378,7 +378,7 @@ static double
 ftime(void)
 {
     struct timeval tv;
-    gettimeofday(&tv, 0);
+    gettimeofday(&tv, NULL);
     return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
 }
 

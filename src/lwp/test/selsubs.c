@@ -146,14 +146,13 @@ Log(char *fmt, ...)
 {
     va_list args;
     struct timeval now;
-    struct timezone tz;
     struct tm *ltime;
     time_t tt;
     int code;
     PROCESS pid;
     extern char *program;
 
-    code = gettimeofday(&now, &tz);
+    code = gettimeofday(&now, NULL);
     assert(code == 0);
 
     tt = now.tv_sec;

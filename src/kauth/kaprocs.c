@@ -110,7 +110,7 @@ get_time(Date *timeP,
     int i;
     afs_int32 to;
 
-    gettimeofday(&time, 0);
+    gettimeofday(&time, NULL);
     bit = (random_value[3] >> 31) & 1;	/* get high bit of high word */
     for (i = 0; i < 4; i++) {
 	nbit = random_value[i] >> 31;
@@ -216,7 +216,7 @@ initialize_database(struct ubik_trans *tt)
     struct ktc_encryptionKey key;
     int code;
 
-    gettimeofday((struct timeval *)&key, 0);	/* this is just a cheap seed key */
+    gettimeofday((struct timeval *)&key, NULL);	/* this is just a cheap seed key */
     DES_set_odd_parity(ktc_to_cblock(&key));
     DES_init_random_number_generator(ktc_to_cblock(&key));
     if ((code = DES_new_random_key(ktc_to_cblock(&key)))

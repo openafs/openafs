@@ -2452,7 +2452,7 @@ SalvageHeader(struct SalvInfo *salvinfo, struct afs_inode_info *sp,
 	    header.volumeInfo.uniquifier = (isp->maxUniquifier + 1) + 1000;
 	    header.volumeInfo.type = (isp->volumeId == isp->RWvolumeId ? readwriteVolume : readonlyVolume);	/* XXXX */
 	    header.volumeInfo.needsCallback = 0;
-	    gettimeofday(&tp, 0);
+	    gettimeofday(&tp, NULL);
 	    header.volumeInfo.creationDate = tp.tv_sec;
 	    nBytes =
 		FDH_PWRITE(fdP, (char *)&header.volumeInfo,
@@ -4736,7 +4736,7 @@ Log(const char *format, ...)
     } else
 #endif
 	if (logFile) {
-	    gettimeofday(&now, 0);
+	    gettimeofday(&now, NULL);
 	    fprintf(logFile, "%s %s", TimeStamp(now.tv_sec, 1), tmp);
 	    fflush(logFile);
 	}

@@ -54,7 +54,6 @@ NewTrans(afs_uint32 avol, afs_int32 apart)
     /* set volid, next, partition */
     struct volser_trans *tt, *newtt;
     struct timeval tp;
-    struct timezone tzp;
 
     newtt = (struct volser_trans *)malloc(sizeof(struct volser_trans));
     VTRANS_LOCK;
@@ -73,7 +72,7 @@ NewTrans(afs_uint32 avol, afs_int32 apart)
     tt->refCount = 1;
     tt->rxCallPtr = (struct rx_call *)0;
     strcpy(tt->lastProcName, "");
-    gettimeofday(&tp, &tzp);
+    gettimeofday(&tp, NULL);
     tt->creationTime = tp.tv_sec;
     tt->time = FT_ApproxTime();
     tt->tid = transCounter++;
