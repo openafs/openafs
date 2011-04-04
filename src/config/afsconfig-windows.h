@@ -263,5 +263,7 @@ typedef int errno_t;
 #define HAVE_GETCWD 1
 #define HAVE_STRUPR 1
 
+#define HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE 1
+
 /* Build afsroken.dll as a dynamic library */
 #define ROKEN_LIB_DYNAMIC 1
