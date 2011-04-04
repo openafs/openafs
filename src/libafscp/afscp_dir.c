@@ -32,6 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
 #include <afs/dir.h>
+#ifdef AFS_NT40_ENV
+#include <afs/errmap_nt.h>
+#endif
 #include "afscp.h"
 #include "afscp_internal.h"
 

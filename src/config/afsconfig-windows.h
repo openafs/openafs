@@ -245,3 +245,4 @@ typedef int errno_t;
 #endif
 
 #define HAVE_CONIO_H 1
+#define HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE 1

@@ -648,6 +648,13 @@ rpctestlib: fsint libafsrpc
 	$(NTMAKE)
 	$(CD) ..\..
 
+libafscp: util afs volser vlserver rx auth fsint afsdobjs
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
 extra: netidmgr_plugin rpctestlib
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      @echo ***** $@

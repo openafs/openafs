@@ -28,10 +28,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afs/param.h>
 
 #include <afs/afsutil.h>
+
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #include <rpc.h>
+#include <afs/cm_server.h>
+#include <WINNT/syscfg.h>
 #endif
+
+#include <afs/afsutil.h>
 #include "afscp.h"
 #include "afscp_internal.h"
 
@@ -53,6 +58,7 @@ init_afs_cb(void)
      * untested here and may be unnecessary if rx_getAllAddr() can be used on that
      * platform.  However, there was already an ifdef here surrounding UuidCreate().
      */
+    long rx_mtu = -1;
     int code;
     int cm_IPAddr[CM_MAXINTERFACE_ADDR];	/* client's IP address in host order */
     int cm_SubnetMask[CM_MAXINTERFACE_ADDR];	/* client's subnet mask in host order */
@@ -305,7 +311,8 @@ SRXAFSCB_CallBack(struct rx_call * rxcall, AFSCBFids * Fids_Array,
     struct afscp_callback *cb;
     struct afscp_venusfid f;
     struct AFSFid *fid;
-    int i, j;
+    int i;
+    unsigned int j;
 
     if (server == NULL) {
 	return 0;
@@ -527,10 +534,7 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * a_call,
 	for (i = 0; i < cm_noIPAddr; i++) {
 	    addr->addr_in[i] = cm_IPAddr[i];
 	    addr->subnetmask[i] = cm_SubnetMask[i];
-	    addr->mtu[i] = (rx_mtu == -1
-			    || (rx_mtu != -1
-				&& cm_NetMtu[i] <
-				rx_mtu)) ? cm_NetMtu[i] : rx_mtu;
+	    addr->mtu[i] = cm_NetMtu[i];
 	}
     } else {
 	addr->numberOfInterfaces = 0;

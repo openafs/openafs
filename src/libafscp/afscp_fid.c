@@ -178,8 +178,11 @@ afscp_Stat(const struct afscp_venusfid *fid, struct stat *s)
 	s->st_mode = S_IFREG;
     else if (status.FileType == Directory)
 	s->st_mode = S_IFDIR;
+#ifndef AFS_NT40_ENV
     else if (status.FileType == SymbolicLink)
 	s->st_mode = S_IFLNK;
+    /* a behavior needs to be defined on Windows */
+#endif
     else {
 	afscp_errno = EINVAL;
 	return -1;
