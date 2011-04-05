@@ -109,7 +109,7 @@ vFSLog(const char *format, va_list args)
     currenttime = time(NULL);
     len = strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y ",
 		   localtime_r(&currenttime, &tm));
-    info = &tbuffer[len+1];
+    info = &tbuffer[len];
 
     if (mrafsStyleLogs || threadIdLogs) {
 	num = (*threadNumProgram) ();

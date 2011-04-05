@@ -815,7 +815,7 @@ ShutDownAndCore(int dopanic)
 
     strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
 	     localtime_r(&now, &tm));
-    ViceLog(0, ("Shutting down file server at %s", tbuffer));
+    ViceLog(0, ("Shutting down file server at %s\n", tbuffer));
     if (dopanic)
 	ViceLog(0, ("ABNORMAL SHUTDOWN, see core file.\n"));
     DFlush();
@@ -2385,7 +2385,7 @@ main(int argc, char *argv[])
     t = tp.tv_sec;
     strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
 	     localtime_r(&t, &tm));
-    ViceLog(0, ("File Server started %s", tbuffer));
+    ViceLog(0, ("File Server started %s\n", tbuffer));
 #if FS_STATS_DETAILED
     afs_FullPerfStats.det.epoch.tv_sec = StartTime = tp.tv_sec;
 #endif

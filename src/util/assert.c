@@ -35,7 +35,7 @@ AssertionFailed(char *file, int line)
     when = time(NULL);
     strftime(tdate, sizeof(tdate), "%a %b %d %T %Y",
 	     localtime_r(&when, &tm));
-    fprintf(stderr, "%sAssertion failed! file %s, line %d.\n", tdate, file,
+    fprintf(stderr, "%s Assertion failed! file %s, line %d.\n", tdate, file,
 	    line);
     fflush(stderr);
     afs_abort();
