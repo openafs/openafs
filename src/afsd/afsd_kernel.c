@@ -407,16 +407,31 @@ HandleMTab(char *cacheMountDir)
 #else
 #if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
     struct mntent tmntent;
+    char *dir = strdup(cacheMountDir);
+    int i;
+
+    /* trim trailing slashes; don't look at dir[0] in case we are somehow
+     * just "/" */
+    for (i = strlen(dir)-1; i > 0; i--) {
+	if (dir[i] == '/') {
+	    dir[i] = '\0';
+	} else {
+	    break;
+	}
+    }
 
     tfilep = setmntent("/etc/mtab", "a+");
     tmntent.mnt_fsname = "AFS";
-    tmntent.mnt_dir = cacheMountDir;
+    tmntent.mnt_dir = dir;
     tmntent.mnt_type = "afs";
     tmntent.mnt_opts = "rw";
     tmntent.mnt_freq = 1;
     tmntent.mnt_passno = 3;
     addmntent(tfilep, &tmntent);
     endmntent(tfilep);
+
+    free(dir);
+    dir = NULL;
 #else
     struct mntent tmntent;
 
