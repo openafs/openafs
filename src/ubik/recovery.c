@@ -759,17 +759,18 @@ urecovery_Interact(void *dummy)
 	    if (ubik_dbase->flags & DBWRITING) {
 		struct timeval tv;
 		int safety = 0;
-		tv.tv_sec = 0;
-		tv.tv_usec = 50000;
+		long cur_usec = 50000;
 		while ((ubik_dbase->flags & DBWRITING) && (safety < 500)) {
 		    DBRELE(ubik_dbase);
 		    /* sleep for a little while */
+		    tv.tv_sec = 0;
+		    tv.tv_usec = cur_usec;
 #ifdef AFS_PTHREAD_ENV
 		    select(0, 0, 0, 0, &tv);
 #else
 		    IOMGR_Select(0, 0, 0, 0, &tv);
 #endif
-		    tv.tv_usec += 10000;
+		    cur_usec += 10000;
 		    safety++;
 		    DBHOLD(ubik_dbase);
 		}
