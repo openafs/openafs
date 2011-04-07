@@ -57,6 +57,7 @@
 #include "afs/audit.h"
 #include <afs/dir.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include <afs/vol_prototypes.h>
 #include <afs/errors.h>
 
@@ -320,7 +321,7 @@ XAttachVolume(afs_int32 *error, afs_uint32 avolid, afs_int32 apartid, int amode)
 }
 
 /* Adapted from the file server; create a root directory for this volume */
-static int
+static Error
 ViceCreateRoot(Volume *vp)
 {
     DirHandle dir;
@@ -344,7 +345,11 @@ ViceCreateRoot(Volume *vp)
 	IH_CREATE(V_linkHandle(vp), V_device(vp),
 		  VPartitionPath(V_partition(vp)), nearInode, V_parentId(vp),
 		  1, 1, 0);
-    osi_Assert(VALID_INO(inodeNumber));
+    if (!VALID_INO(inodeNumber)) {
+	Log("ViceCreateRoot: IH_CREATE: %s\n", afs_error_message(errno));
+	free(vnode);
+	return EIO;
+    }
 
     SetSalvageDirHandle(&dir, V_parentId(vp), vp->device, inodeNumber);
     did.Volume = V_id(vp);
@@ -400,7 +405,7 @@ ViceCreateRoot(Volume *vp)
     V_diskused(vp) = nBlocks(length);
 
     free(vnode);
-    return 1;
+    return 0;
 }
 
 afs_int32
@@ -576,8 +581,16 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
     V_inService(vp) = V_blessed(vp) = 1;
     V_type(vp) = atype;
     AssignVolumeName(&V_disk(vp), aname, 0);
-    if (doCreateRoot)
-	ViceCreateRoot(vp);
+    if (doCreateRoot) {
+	error = ViceCreateRoot(vp);
+	if (error) {
+	    Log("1 Volser: CreateVolume: Unable to create volume root dir; "
+	        "error code %u\n", (unsigned)error);
+	    DeleteTrans(tt, 1);
+	    VDetachVolume(&junk, vp);
+	    return EIO;
+	}
+    }
     V_destroyMe(vp) = DESTROY_ME;
     V_inService(vp) = 0;
     V_maxquota(vp) = 5000;	/* set a quota of 5000 at init time */
