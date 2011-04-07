@@ -5322,6 +5322,10 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 		    VOfflineForSalvage_r(vp);
 		}
 	    }
+	    /* If we are non-fileserver, we're telling the fileserver to
+	     * salvage the vol, so we don't need to give it back separately. */
+	    vp->needsPutBack = 0;
+
 	    *ec = VSALVAGING;
 	} else {
 	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
