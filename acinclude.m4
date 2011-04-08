@@ -1414,6 +1414,10 @@ AC_REPLACE_FUNCS([ \
 	strnlen \
 	strlcpy \
 	strsep \
+	tdelete \
+	tfind \
+	tsearch \
+	twalk \
 	verr \
 	verrx \
 	vsyslog \
@@ -1426,6 +1430,7 @@ AC_REPLACE_FUNCS([ \
 dnl Headers that we're going to try and get from libroken
 AC_CHECK_HEADERS([ \
 	err.h \
+	search.h \
 ])
 
 AC_CHECK_DECLS([h_errno], [], [], [

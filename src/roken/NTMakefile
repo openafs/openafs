@@ -15,7 +15,8 @@ INCFILEDIR = $(DESTDIR)\include
 
 INCFILES = \
 	$(INCFILEDIR)\err.h \
-	$(INCFILEDIR)\roken.h
+	$(INCFILEDIR)\roken.h \
+	$(INCFILEDIR)\search.h
 
 ROKEN_INCFILES = \
 	$(INCFILEDIR)\roken-common.h \
@@ -49,6 +50,7 @@ ROKEN_OBJS = \
 	$(OUT)\strlcpy.obj \
 	$(OUT)\strnlen.obj \
 	$(OUT)\strsep.obj \
+	$(OUT)\tsearch.obj \
         $(OUT)\verr.obj \
         $(OUT)\verrx.obj \
         $(OUT)\vwarn.obj \
@@ -70,6 +72,9 @@ roken.h: $(ROKEN)\roken.h.in
 	$(COPY) $** $@
 
 err.h: $(ROKEN)\err.hin
+	$(COPY) $** $@
+
+search.h: $(ROKEN)\search.hin
 	$(COPY) $** $@
 
 !if !defined(NMAKE)
