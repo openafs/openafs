@@ -587,6 +587,7 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
 	    Log("1 Volser: CreateVolume: Unable to create volume root dir; "
 	        "error code %u\n", (unsigned)error);
 	    DeleteTrans(tt, 1);
+	    V_needsSalvaged(vp) = 1;
 	    VDetachVolume(&junk, vp);
 	    return EIO;
 	}
@@ -855,8 +856,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	DeleteTrans(ttc, 1);
 #ifdef AFS_DEMAND_ATTACH_FS
     if (salv_vp && error != VVOLEXISTS && error != EXDEV) {
-	Error salv_error;
-	VRequestSalvage_r(&salv_error, salv_vp, FSYNC_SALVAGE, 0);
+	V_needsSalvaged(salv_vp) = 1;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
     return error;

@@ -1406,6 +1406,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		    if (!VALID_INO(ino)) {
 			Log("1 Volser: ReadVnodes: IH_CREATE: %s - restore aborted\n",
                             afs_error_message(errno));
+			V_needsSalvaged(vp) = 1;
 			return VOLSERREAD_DUMPERROR;
 		    }
 		    nearInode = ino;
@@ -1416,6 +1417,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 			Log("1 Volser: ReadVnodes: IH_OPEN: %s - restore aborted\n",
                             afs_error_message(errno));
 			IH_RELEASE(tmpH);
+			V_needsSalvaged(vp) = 1;
 			return VOLSERREAD_DUMPERROR;
 		    }
 		    vnodeLength =
@@ -1427,6 +1429,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 			Log("1 Volser: ReadVnodes: IDEC inode %llu\n",
 			    (afs_uintmax_t) ino);
 			IH_DEC(V_linkHandle(vp), ino, V_parentId(vp));
+			V_needsSalvaged(vp) = 1;
 			return VOLSERREAD_DUMPERROR;
 		    }
 		    break;
@@ -1460,6 +1463,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 	    if (fdP == NULL) {
 		Log("1 Volser: ReadVnodes: Error opening vnode index: %s; restore aborted\n",
 		    afs_error_message(errno));
+		V_needsSalvaged(vp) = 1;
 		return VOLSERREAD_DUMPERROR;
 	    }
 	    if (FDH_PREAD(fdP, &oldvnode, sizeof(oldvnode), vnodeIndexOffset(vcp, vnodeNumber)) ==
@@ -1474,6 +1478,7 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 		Log("1 Volser: ReadVnodes: Error writing vnode index: %s; restore aborted\n",
 		    afs_error_message(errno));
 		FDH_REALLYCLOSE(fdP);
+		V_needsSalvaged(vp) = 1;
 		return VOLSERREAD_DUMPERROR;
 	    }
 	    FDH_CLOSE(fdP);
