@@ -2028,30 +2028,26 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     temp = strlen(V_name(volptr)) + 1;
     *name = malloc(temp);
     if (!*name) {
-	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
     strcpy(*name, V_name(volptr));
     temp = strlen(V_offlineMessage(volptr)) + 1;
     *offMsg = malloc(temp);
     if (!*offMsg) {
-	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
     strcpy(*offMsg, V_offlineMessage(volptr));
 #if OPENAFS_VOL_STATS
     *motd = malloc(1);
     if (!*motd) {
-	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
     strcpy(*motd, nullString);
 #else
     temp = strlen(V_motd(volptr)) + 1;
     *motd = malloc(temp);
     if (!*motd) {
-	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
-	osi_Panic("Failed malloc in RXGetVolumeStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
     strcpy(*motd, V_motd(volptr));
 #endif /* FS_STATS_DETAILED */
@@ -2140,8 +2136,7 @@ AllocSendBuffer(void)
 	FS_UNLOCK;
 	tmp = malloc(sendBufSize);
 	if (!tmp) {
-	    ViceLog(0, ("Failed malloc in AllocSendBuffer\n"));
-	    osi_Panic("Failed malloc in AllocSendBuffer\n");
+	    ViceLogThenPanic(0, ("Failed malloc in AllocSendBuffer\n"));
 	}
 	return tmp;
     }
@@ -2517,8 +2512,7 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
     AccessList->AFSOpaque_len = 0;
     AccessList->AFSOpaque_val = malloc(AFSOPAQUEMAX);
     if (!AccessList->AFSOpaque_val) {
-	ViceLog(0, ("Failed malloc in SRXAFS_FetchACL\n"));
-	osi_Panic("Failed malloc in SRXAFS_FetchACL\n");
+	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_FetchACL\n"));
     }
 
     /*
@@ -2707,15 +2701,13 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     OutStats->AFSBulkStats_val = (struct AFSFetchStatus *)
 	malloc(nfiles * sizeof(struct AFSFetchStatus));
     if (!OutStats->AFSBulkStats_val) {
-	ViceLog(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
-	osi_Panic("Failed malloc in SRXAFS_BulkStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
     }
     OutStats->AFSBulkStats_len = nfiles;
     CallBacks->AFSCBs_val = (struct AFSCallBack *)
 	malloc(nfiles * sizeof(struct AFSCallBack));
     if (!CallBacks->AFSCBs_val) {
-	ViceLog(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
-	osi_Panic("Failed malloc in SRXAFS_BulkStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
     }
     CallBacks->AFSCBs_len = nfiles;
 
@@ -2858,15 +2850,13 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     OutStats->AFSBulkStats_val = (struct AFSFetchStatus *)
 	malloc(nfiles * sizeof(struct AFSFetchStatus));
     if (!OutStats->AFSBulkStats_val) {
-	ViceLog(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
-	osi_Panic("Failed malloc in SRXAFS_FetchStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
     }
     OutStats->AFSBulkStats_len = nfiles;
     CallBacks->AFSCBs_val = (struct AFSCallBack *)
 	malloc(nfiles * sizeof(struct AFSCallBack));
     if (!CallBacks->AFSCBs_val) {
-	ViceLog(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
-	osi_Panic("Failed malloc in SRXAFS_FetchStatus\n");
+	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
     }
     CallBacks->AFSCBs_len = nfiles;
 

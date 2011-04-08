@@ -346,11 +346,9 @@ CDel(struct CallBack *cb, int deletefe)
     for (safety = 0, cbp = &fe->firstcb; *cbp && *cbp != cbi;
 	 cbp = &itocb(*cbp)->cnext, safety++) {
 	if (safety > cbstuff.nblks + 10) {
-	    osi_Panic("CDel: Internal Error -- shutting down: wanted %d from %d, now at %d\n",
-		      cbi, fe->firstcb, *cbp);
-	    ViceLog(0,
-		    ("CDel: Internal Error -- shutting down: wanted %d from %d, now at %d\n",
-		     cbi, fe->firstcb, *cbp));
+	    ViceLogThenPanic(0, ("CDel: Internal Error -- shutting down: "
+			         "wanted %d from %d, now at %d\n",
+			         cbi, fe->firstcb, *cbp));
 	    DumpCallBackState_r();
 	    ShutDownAndCore(PANIC);
 	}
@@ -431,8 +429,7 @@ InitCallBack(int nblks)
      * FE[0] and CB[0] are not used--and not allocated */
     FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry))));
     if (!FE) {
-	ViceLog(0, ("Failed malloc in InitCallBack\n"));
-	osi_Panic("Failed malloc in InitCallBack\n");
+	ViceLogThenPanic(0, ("Failed malloc in InitCallBack\n"));
     }
     FE--;  /* FE[0] is supposed to point to junk */
     cbstuff.nFEs = nblks;
@@ -440,8 +437,7 @@ InitCallBack(int nblks)
 	FreeFE(&FE[cbstuff.nFEs]);	/* This is correct */
     CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack))));
     if (!CB) {
-	ViceLog(0, ("Failed malloc in InitCallBack\n"));
-	osi_Panic("Failed malloc in InitCallBack\n");
+	ViceLogThenPanic(0, ("Failed malloc in InitCallBack\n"));
     }
     CB--;  /* CB[0] is supposed to point to junk */
     cbstuff.nCBs = nblks;
@@ -2961,9 +2957,8 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     interfaces = calloc(i, sizeof(struct AddrPort));
     conns = calloc(i, sizeof(struct rx_connection *));
     if (!interfaces || !conns) {
-	ViceLog(0,
-		("Failed malloc in MultiBreakCallBackAlternateAddress_r\n"));
-	osi_Panic("Failed malloc in MultiBreakCallBackAlternateAddress_r\n");
+	ViceLogThenPanic(0, ("Failed malloc in "
+			     "MultiBreakCallBackAlternateAddress_r\n"));
     }
 
     /* initialize alternate rx connections */
@@ -3057,8 +3052,8 @@ MultiProbeAlternateAddress_r(struct host *host)
     interfaces = calloc(i, sizeof(struct AddrPort));
     conns = calloc(i, sizeof(struct rx_connection *));
     if (!interfaces || !conns) {
-	ViceLog(0, ("Failed malloc in MultiProbeAlternateAddress_r\n"));
-	osi_Panic("Failed malloc in MultiProbeAlternateAddress_r\n");
+	ViceLogThenPanic(0, ("Failed malloc in "
+			     "MultiProbeAlternateAddress_r\n"));
     }
 
     /* initialize alternate rx connections */

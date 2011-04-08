@@ -979,13 +979,11 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     }
     list = (struct host **)malloc(hostCount * sizeof(struct host *));
     if (!list) {
-	ViceLog(0, ("Failed malloc in h_Enumerate (list)\n"));
-	osi_Panic("Failed malloc in h_Enumerate (list)\n");
+	ViceLogThenPanic(0, ("Failed malloc in h_Enumerate (list)\n"));
     }
     flags = (int *)malloc(hostCount * sizeof(int));
     if (!flags) {
-	ViceLog(0, ("Failed malloc in h_Enumerate (flags)\n"));
-	osi_Panic("Failed malloc in h_Enumerate (flags)\n");
+	ViceLogThenPanic(0, ("Failed malloc in h_Enumerate (flags)\n"));
     }
     for (totalCount = count = 0, host = hostList;
          host && totalCount < hostCount;
@@ -1146,8 +1144,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
     /* insert into beginning of list for this bucket */
     chain = (struct h_UuidHashChain *)malloc(sizeof(struct h_UuidHashChain));
     if (!chain) {
-	ViceLog(0, ("Failed malloc in h_AddHostToUuidHashTable_r\n"));
-	osi_Panic("Failed malloc in h_AddHostToUuidHashTable_r\n");
+	ViceLogThenPanic(0, ("Failed malloc in h_AddHostToUuidHashTable_r\n"));
     }
     chain->hostPtr = host;
     chain->next = hostUuidHashTable[index];
@@ -1333,8 +1330,7 @@ createHostAddrHashChain_r(int index, afs_uint32 addr, afs_uint16 port, struct ho
     /* insert into beginning of list for this bucket */
     chain = (struct h_AddrHashChain *)malloc(sizeof(struct h_AddrHashChain));
     if (!chain) {
-	ViceLog(0, ("Failed malloc in h_AddHostToAddrHashTable_r\n"));
-	osi_Panic("Failed malloc in h_AddHostToAddrHashTable_r\n");
+	ViceLogThenPanic(0, ("Failed malloc in h_AddHostToAddrHashTable_r\n"));
     }
     chain->hostPtr = host;
     chain->next = hostAddrHashTable[index];
@@ -1554,8 +1550,7 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     interface = (struct Interface *)
 	malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * number));
     if (!interface) {
-	ViceLog(0, ("Failed malloc in addInterfaceAddr_r\n"));
-	osi_Panic("Failed malloc in addInterfaceAddr_r\n");
+	ViceLogThenPanic(0, ("Failed malloc in addInterfaceAddr_r\n"));
     }
     interface->numberOfInterfaces = number + 1;
     interface->uuid = host->interface->uuid;
@@ -1747,8 +1742,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    ((code == 0) && (afs_uuid_equal(&interf.uuid, &nulluuid)))) {
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
 	    if (!identP) {
-		ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		osi_Panic("Failed malloc in h_GetHost_r\n");
+		ViceLogThenPanic(0, ("Failed malloc in h_GetHost_r\n"));
 	    }
 	    identP->valid = 0;
 	    rx_SetSpecific(tcon, rxcon_ident_key, identP);
@@ -1789,8 +1783,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    interfValid = 1;
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
 	    if (!identP) {
-		ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		osi_Panic("Failed malloc in h_GetHost_r\n");
+		ViceLogThenPanic(0, ("Failed malloc in h_GetHost_r\n"));
 	    }
 	    identP->valid = 1;
 	    identP->uuid = interf.uuid;
@@ -1978,8 +1971,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    pident = 1;
 
 		if (!identP) {
-		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		    osi_Panic("Failed malloc in h_GetHost_r\n");
+		    ViceLogThenPanic(0, ("Failed malloc in h_GetHost_r\n"));
 		}
 		identP->valid = 0;
 		if (!pident)
@@ -1997,8 +1989,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    pident = 1;
 
 		if (!identP) {
-		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-		    osi_Panic("Failed malloc in h_GetHost_r\n");
+		    ViceLogThenPanic(0, ("Failed malloc in h_GetHost_r\n"));
 		}
 		identP->valid = 1;
 		interfValid = 1;
@@ -2262,8 +2253,7 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 	    foreign = 1;	/* attempt cross-cell authentication */
 	    tname = (char *)malloc(PR_MAXNAMELEN);
 	    if (!tname) {
-		ViceLog(0, ("Failed malloc in MapName_r\n"));
-		osi_Panic("Failed malloc in MapName_r\n");
+		ViceLogThenPanic(0, ("Failed malloc in MapName_r\n"));
 	    }
 	    strcpy(tname, aname);
 	    tname[anamelen] = '@';
@@ -2695,8 +2685,7 @@ h_UserName(struct client *client)
     lids.idlist_len = 1;
     lids.idlist_val = (afs_int32 *) malloc(1 * sizeof(afs_int32));
     if (!lids.idlist_val) {
-	ViceLog(0, ("Failed malloc in h_UserName\n"));
-	osi_Panic("Failed malloc in h_UserName\n");
+	ViceLogThenPanic(0, ("Failed malloc in h_UserName\n"));
     }
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *) 0;
@@ -4033,16 +4022,14 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	    malloc(sizeof(struct Interface) +
 		   (sizeof(struct AddrPort) * (count - 1)));
 	if (!interface) {
-	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r 1\n"));
-	    osi_Panic("Failed malloc in initInterfaceAddr_r 1\n");
+	    ViceLogThenPanic(0, ("Failed malloc in initInterfaceAddr_r 1\n"));
 	}
 	interface->numberOfInterfaces = count;
     } else {
 	interface = (struct Interface *)
 	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * count));
 	if (!interface) {
-	    ViceLog(0, ("Failed malloc in initInterfaceAddr_r 2\n"));
-	    osi_Panic("Failed malloc in initInterfaceAddr_r 2\n");
+	    ViceLogThenPanic(0, ("Failed malloc in initInterfaceAddr_r 2\n"));
 	}
 	interface->numberOfInterfaces = count + 1;
 	interface->interface[count].addr = myAddr;

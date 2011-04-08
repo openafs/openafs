@@ -50,6 +50,8 @@ extern void FSLog(const char *format, ...)
 
 #define ViceLog(level, str)  do { if ((level) <= LogLevel) (FSLog str); } while (0)
 #define vViceLog(level, str) do { if ((level) <= LogLevel) (vFSLog str); } while (0)
+#define ViceLogThenPanic(level, str) \
+    do { ViceLog(level, str); osi_Panic str; } while(0);
 
 extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);

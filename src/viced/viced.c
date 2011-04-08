@@ -764,10 +764,9 @@ static void *
 ShutdownWatchdogLWP(void *unused)
 {
     sleep(panic_timeout);
-    ViceLog(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
-                "within %d seconds; forcing panic\n", panic_timeout));
-    osi_Panic("ShutdownWatchdogLWP: Failed to shutdown and panic "
-	      "within %d seconds; forcing panic\n", panic_timeout);
+    ViceLogThenPanic(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
+                         "within %d seconds; forcing panic\n",
+			 panic_timeout));
     return NULL;
 }
 
@@ -1590,9 +1589,8 @@ NewParms(int initializing)
 void
 Die(char *msg)
 {
-    ViceLog(0, ("%s\n", msg));
-    osi_Panic("%s\n", msg);
 
+    ViceLogThenPanic(0, ("%s\n", msg));
 }				/*Die */
 
 
