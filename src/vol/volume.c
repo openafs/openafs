@@ -4613,11 +4613,17 @@ VDetachVolume_r(Error * ec, Volume * vp)
 	notifyServer = vp->needsPutBack;
 	if (V_destroyMe(vp) == DESTROY_ME)
 	    useDone = FSYNC_VOL_LEAVE_OFF;
-#ifdef AFS_DEMAND_ATTACH_FS
+# ifdef AFS_DEMAND_ATTACH_FS
 	else if (!V_blessed(vp) || !V_inService(vp))
 	    useDone = FSYNC_VOL_LEAVE_OFF;
-#endif
+# endif
     }
+# ifdef AFS_DEMAND_ATTACH_FS
+    if (V_needsSalvaged(vp)) {
+	notifyServer = 0;
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, 0);
+    }
+# endif
     tpartp = vp->partition;
     volume = V_id(vp);
 #endif /* FSSYNC_BUILD_CLIENT */
