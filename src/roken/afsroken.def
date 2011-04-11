@@ -37,3 +37,7 @@ EXPORTS
         rk_vasnprintf           @41
 	rk_flock		@42
 	rk_gettimeofday		@43
+        rk_tsearch              @44
+        rk_tdelete              @45
+        rk_tfind                @46
+
