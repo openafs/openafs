@@ -7,7 +7,7 @@ udebug - Reports Ubik process status for a database server process
 =for html
 <div class="synopsis">
 
-B<udebug> S<<< B<-servers> <I<server machine>> >>> S<<< [B<-port> <I<IP port>>] >>>
+B<udebug> S<<< B<-server> <I<server machine>> >>> S<<< [B<-port> <I<IP port>>] >>>
     [B<-long>] [B<-help>]
 
 B<udebug> S<<< B<-s> <I<server machine>> >>> S<<< [B<-p> <I<IP port>>] >>> [B<-l>] [B<-h>]
@@ -19,7 +19,7 @@ B<udebug> S<<< B<-s> <I<server machine>> >>> S<<< [B<-p> <I<IP port>>] >>> [B<-l
 
 The B<udebug> command displays the status of the lightweight Ubik process
 for the database server process identified by the B<-port> argument that
-is running on the database server machine named by the B<-servers>
+is running on the database server machine named by the B<-server>
 argument. The output identifies the machines where peer database server
 processes are running, which of them is the synchronization site (Ubik
 coordinator), and the status of the connections between them.
@@ -28,7 +28,7 @@ coordinator), and the status of the connections between them.
 
 =over 4
 
-=item B<-servers> <I<server machine>>
+=item B<-server> <I<server machine>>
 
 Names the database server machine that is running the process for which to
 display status information. Provide the machine's IP address in dotted
@@ -60,7 +60,7 @@ following values.
 =item B<-long>
 
 Reports additional information about each peer of the machine named by the
-B<-servers> argument. The information appears by default if that machine
+B<-server> argument. The information appears by default if that machine
 is the synchronization site.
 
 =item B<-help>
@@ -73,7 +73,7 @@ ignored.
 =head1 OUTPUT
 
 Several of the messages in the output provide basic status information
-about the Ubik process on the machine specified by the B<-servers>
+about the Ubik process on the machine specified by the B<-server>
 argument, and the remaining messages are useful mostly for debugging
 purposes.
 
@@ -113,7 +113,7 @@ Ubik's implementation.
 
 The output begins with the following messages. The first message reports
 the IP addresses that are configured with the operating system on the
-machine specified by the B<-servers> argument. As previously noted, the
+machine specified by the B<-server> argument. As previously noted, the
 second and third messages report the current date and time according to
 the clocks on the database server machine and the machine where the
 B<udebug> command is issued, respectively. All subsequent timestamps in
@@ -169,7 +169,7 @@ If there is only one database server machine, it is always the coordinator
 
 =item *
 
-If there are multiple database sites, and the B<-servers> argument names
+If there are multiple database sites, and the B<-server> argument names
 the coordinator (synchronization site), the output continues with the
 following two messages.
 
@@ -221,7 +221,7 @@ into the database, the following additional message appears.
 
 =item *
 
-If the B<-servers> argument names a secondary site, the output continues
+If the B<-server> argument names a secondary site, the output continues
 with the following messages.
 
    I am not sync site
@@ -265,14 +265,14 @@ is issued:
    There is at least one active read transaction
    Transaction tid is <tid>
 
-If the machine named by the B<-servers> argument is the coordinator, the
+If the machine named by the B<-server> argument is the coordinator, the
 next message reports when the current coordinator last updated the
 database.
 
     Last time a new db version was labelled was:
             <last_restart> secs ago (at <date/time>)
 
-If the machine named by the B<-servers> argument is the coordinator, the
+If the machine named by the B<-server> argument is the coordinator, the
 output concludes with an entry for each secondary site that is
 participating in the quorum, in the following format.
 
@@ -315,7 +315,7 @@ request for votes, C<0> if it has not.
 =back
 
 Including the B<-long> flag produces peer entries even when the
-B<-servers> argument names a secondary site, but in that case only the
+B<-server> argument names a secondary site, but in that case only the
 I<IP_address> field is guaranteed to be accurate. For example, the value
 in the <db_version> field is usually C<0.0>, because secondary sites do
 not poll their peers for this information.  The values in the I<last_vote>
