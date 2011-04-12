@@ -1674,102 +1674,123 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
+GetLastComponent(const char *data, char **outdir, char **outbase,
+		 int *thru_symlink)
+{
+    char orig_name[1024];	/*Original name, may be modified */
+    char true_name[1024];	/*``True'' dirname (e.g., symlink target) */
+    char *lastSlash;
+    struct stat statbuff;	/*Buffer for status info */
+    int link_chars_read;	/*Num chars read in readlink() */
+    char *dirname = NULL;
+    char *basename = NULL;
+
+    if (thru_symlink)
+	*thru_symlink = 0;
+
+    snprintf(orig_name, sizeof(orig_name), "%s%s",
+	     (data[0] == '/') ? "" : "./", data);
+
+    if (lstat(orig_name, &statbuff) < 0) {
+	/* if lstat fails, we should still try the pioctl, since it
+	 * may work (for example, lstat will fail, but pioctl will
+	 * work if the volume of offline (returning ENODEV). */
+	statbuff.st_mode = S_IFDIR;	/* lie like pros */
+    }
+
+    /*
+     * The lstat succeeded.  If the given file is a symlink, substitute
+     * the file name with the link name.
+     */
+    if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
+	if (thru_symlink)
+	     *thru_symlink = 1;
+
+	/* Read name of resolved file */
+	link_chars_read = readlink(orig_name, true_name, 1024);
+	if (link_chars_read <= 0) {
+	    fprintf(stderr,
+		    "%s: Can't read target name for '%s' symbolic link!\n",
+		    pn, orig_name);
+	    goto out;
+	}
+
+	/* Add a trailing null to what was read, bump the length. */
+	true_name[link_chars_read++] = 0;
+
+	/*
+	 * If the symlink is an absolute pathname, we're fine.  Otherwise, we
+	 * have to create a full pathname using the original name and the
+	 * relative symlink name.  Find the rightmost slash in the original
+	 * name (we know there is one) and splice in the symlink value.
+	 */
+	if (true_name[0] != '/') {
+	    lastSlash = strrchr(orig_name, '/');
+	    strcpy(++lastSlash, true_name);
+	    strcpy(true_name, orig_name);
+	}
+     } else {
+	strcpy(true_name, orig_name);
+     }
+
+    /* Find rightmost slash, if any. */
+    lastSlash = strrchr(true_name, '/');
+    if (lastSlash == true_name) {
+	dirname = strdup("/");
+	basename = strdup(lastSlash+1);
+    } else if (lastSlash != NULL) {
+	/*
+	 * Found it.  Designate everything before it as the parent directory,
+	 * everything after it as the final component.
+	 */
+	*lastSlash = '\0';
+	dirname = strdup(true_name);
+	basename = strdup(lastSlash+1);
+    } else {
+	/*
+	 * No slash appears in the given file name.  Set parent_dir to the current
+	 * directory, and the last component as the given name.
+	 */
+	dirname = strdup(".");
+	basename = strdup(true_name);
+    }
+
+    if (strcmp(basename, ".") == 0
+	|| strcmp(basename, "..") == 0) {
+	fprintf(stderr,
+		"%s: you may not use '.' or '..' as the last component\n", pn);
+	fprintf(stderr, "%s: of a name in this fs command.\n", pn);
+	goto out;
+    }
+
+    *outdir = dirname;
+    *outbase = basename;
+
+    return 0;
+
+out:
+    if (outdir)
+	free(outdir);
+    if (outbase)
+	free(outbase);
+    return -1;
+}
+
+
+static int
 ListMountCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-    char orig_name[1024];	/*Original name, may be modified */
-    char true_name[1024];	/*``True'' dirname (e.g., symlink target) */
-    char parent_dir[1024];	/*Parent directory of true name */
-    char *last_component;	/*Last component of true name */
-    struct stat statbuff;	/*Buffer for status info */
-    int link_chars_read;	/*Num chars read in readlink() */
-    int thru_symlink;		/*Did we get to a mount point via a symlink? */
+    char *last_component;
+    char *parent_dir;
+    int thru_symlink = 0;
     int error = 0;
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-	/* once per file */
-	thru_symlink = 0;
-	sprintf(orig_name, "%s%s", (ti->data[0] == '/') ? "" : "./",
-		ti->data);
-
-	if (lstat(orig_name, &statbuff) < 0) {
-	    /* if lstat fails, we should still try the pioctl, since it
-	     * may work (for example, lstat will fail, but pioctl will
-	     * work if the volume of offline (returning ENODEV). */
-	    statbuff.st_mode = S_IFDIR;	/* lie like pros */
-	}
-
-	/*
-	 * The lstat succeeded.  If the given file is a symlink, substitute
-	 * the file name with the link name.
-	 */
-	if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
-	    thru_symlink = 1;
-	    /*
-	     * Read name of resolved file.
-	     */
-	    link_chars_read = readlink(orig_name, true_name, 1024);
-	    if (link_chars_read <= 0) {
-		fprintf(stderr,
-			"%s: Can't read target name for '%s' symbolic link!\n",
-			pn, orig_name);
-		error = 1;
-		continue;
-	    }
-
-	    /*
-	     * Add a trailing null to what was read, bump the length.
-	     */
-	    true_name[link_chars_read++] = 0;
-
-	    /*
-	     * If the symlink is an absolute pathname, we're fine.  Otherwise, we
-	     * have to create a full pathname using the original name and the
-	     * relative symlink name.  Find the rightmost slash in the original
-	     * name (we know there is one) and splice in the symlink value.
-	     */
-	    if (true_name[0] != '/') {
-		last_component = (char *)strrchr(orig_name, '/');
-		strcpy(++last_component, true_name);
-		strcpy(true_name, orig_name);
-	    }
-	} else
-	    strcpy(true_name, orig_name);
-
-	/*
-	 * Find rightmost slash, if any.
-	 */
-	last_component = (char *)strrchr(true_name, '/');
-	if (last_component == (char *)true_name) {
-	    strcpy(parent_dir, "/");
-	    last_component++;
-	}
-	else if (last_component != (char *)NULL) {
-	    /*
-	     * Found it.  Designate everything before it as the parent directory,
-	     * everything after it as the final component.
-	     */
-	    strncpy(parent_dir, true_name, last_component - true_name);
-	    parent_dir[last_component - true_name] = 0;
-	    last_component++;	/*Skip the slash */
-	} else {
-	    /*
-	     * No slash appears in the given file name.  Set parent_dir to the current
-	     * directory, and the last component as the given name.
-	     */
-	    strcpy(parent_dir, ".");
-	    last_component = true_name;
-	}
-
-	if (strcmp(last_component, ".") == 0
-	    || strcmp(last_component, "..") == 0) {
-	    fprintf(stderr,
-		    "%s: you may not use '.' or '..' as the last component\n",
-		    pn);
-	    fprintf(stderr, "%s: of a name in the 'fs lsmount' command.\n",
-		    pn);
+	if (GetLastComponent(ti->data, &parent_dir,
+			     &last_component, &thru_symlink) != 0) {
 	    error = 1;
 	    continue;
 	}
@@ -1781,6 +1802,8 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+	free(last_component);
+	free(parent_dir);
 
 	if (code == 0) {
 	    printf("'%s' is a %smount point for volume '%s'\n", ti->data,
@@ -4056,97 +4079,13 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-    char orig_name[1024];	/*Original name, may be modified */
-    char true_name[1024];	/*``True'' dirname (e.g., symlink target) */
-    char parent_dir[1024];	/*Parent directory of true name */
-    char *last_component;	/*Last component of true name */
-    struct stat statbuff;	/*Buffer for status info */
-    int link_chars_read;	/*Num chars read in readlink() */
-    int thru_symlink;		/*Did we get to a mount point via a symlink? */
+    char *last_component;
+    char *parent_dir;
     int error = 0;
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-	/* once per file */
-	thru_symlink = 0;
-	sprintf(orig_name, "%s%s", (ti->data[0] == '/') ? "" : "./",
-		ti->data);
-
-	if (lstat(orig_name, &statbuff) < 0) {
-	    /* if lstat fails, we should still try the pioctl, since it
-	     * may work (for example, lstat will fail, but pioctl will
-	     * work if the volume of offline (returning ENODEV). */
-	    statbuff.st_mode = S_IFDIR;	/* lie like pros */
-	}
-
-	/*
-	 * The lstat succeeded.  If the given file is a symlink, substitute
-	 * the file name with the link name.
-	 */
-	if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
-	    thru_symlink = 1;
-	    /*
-	     * Read name of resolved file.
-	     */
-	    link_chars_read = readlink(orig_name, true_name, 1024);
-	    if (link_chars_read <= 0) {
-		fprintf(stderr,
-			"%s: Can't read target name for '%s' symbolic link!\n",
-			pn, orig_name);
-		error = 1;
-		continue;
-	    }
-
-	    /*
-	     * Add a trailing null to what was read, bump the length.
-	     */
-	    true_name[link_chars_read++] = 0;
-
-	    /*
-	     * If the symlink is an absolute pathname, we're fine.  Otherwise, we
-	     * have to create a full pathname using the original name and the
-	     * relative symlink name.  Find the rightmost slash in the original
-	     * name (we know there is one) and splice in the symlink value.
-	     */
-	    if (true_name[0] != '/') {
-		last_component = (char *)strrchr(orig_name, '/');
-		strcpy(++last_component, true_name);
-		strcpy(true_name, orig_name);
-	    }
-	} else
-	    strcpy(true_name, orig_name);
-
-	/*
-	 * Find rightmost slash, if any.
-	 */
-	last_component = (char *)strrchr(true_name, '/');
-	if (last_component == (char *)true_name) {
-	    strcpy(parent_dir, "/");
-	    last_component++;
-	}
-	else if (last_component != (char *)NULL) {
-	    /*
-	     * Found it.  Designate everything before it as the parent directory,
-	     * everything after it as the final component.
-	     */
-	    strncpy(parent_dir, true_name, last_component - true_name);
-	    parent_dir[last_component - true_name] = 0;
-	    last_component++;	/*Skip the slash */
-	} else {
-	    /*
-	     * No slash appears in the given file name.  Set parent_dir to the current
-	     * directory, and the last component as the given name.
-	     */
-	    strcpy(parent_dir, ".");
-	    last_component = true_name;
-	}
-
-	if (strcmp(last_component, ".") == 0
-	    || strcmp(last_component, "..") == 0) {
-	    fprintf(stderr,
-		    "%s: you may not use '.' or '..' as the last component\n",
-		    pn);
-	    fprintf(stderr, "%s: of a name in the 'fs flushmount' command.\n",
-		    pn);
+	if (GetLastComponent(ti->data, &parent_dir,
+			     &last_component, NULL) != 0) {
 	    error = 1;
 	    continue;
 	}
@@ -4154,9 +4093,11 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = last_component;
 	blob.in_size = strlen(last_component) + 1;
 	blob.out_size = 0;
-	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_FLUSHMOUNT, &blob, 1);
+
+	free(last_component);
+	free(parent_dir);
 
 	if (code != 0) {
 	    if (errno == EINVAL) {
