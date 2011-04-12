@@ -2008,7 +2008,7 @@ $(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULE1)
 
 clean:
-	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi afs afsint config rx
+	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi afsd afs afsint config rx
 	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys linktest $(AFS_OS_CLEAN)
 
 
