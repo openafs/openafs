@@ -40,6 +40,8 @@
 #include <afs/ptserver.h>
 #include "aix_auth_prototypes.h"
 
+static int uidpag = 0;
+static int localuid = 0;
 struct afsconf_cell ak_cellconfig; /* General information about the cell */
 static char linkedcell[MAXCELLCHARS+1];
 static krb5_ccache  _krb425_ccache = NULL;
@@ -151,6 +153,10 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
     int code, unixauthneeded, password_expires = -1;
     int status;
     krb5_context context;
+
+    syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: uidpag %s localuid %s",
+                               uidpag ? "yes" : "no",
+                               localuid ? "yes" : "no");
 
     krb5_init_context(&context);
     *reenter = 0;
@@ -294,6 +300,25 @@ aklog_getpasswd(char * userName)
     return NULL;
 }
 
+static void *
+aklog_open(char *name, char *domain, int mode, char *options)
+{
+    char *opt;
+
+    /* I can't find this documented anywhere, but it looks like the "options"
+     * string is NUL-delimited (so NULs replace commas in the configuration
+     * file), and the end of the list is marked by an extra NUL. */
+
+    for (opt = options; opt && *opt; opt += strlen(opt) + 1) {
+	if (strcasecmp(opt, "uidpag") == 0) {
+	    uidpag = 1;
+	}
+	if (strcasecmp(opt, "localuid") == 0) {
+	    localuid = 1;
+	}
+    }
+    return NULL;
+}
 
 static int
 get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
@@ -351,7 +376,7 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
     krb5_creds *v5cred = NULL;
     struct ktc_principal aserver;
     int afssetpag = 0, uid = -1;
-    struct passwd *pwd;
+    struct passwd *pwd = NULL;
     struct ktc_setTokenData *token = NULL;
     struct ktc_tokenUnion *rxkadToken = NULL;
 
@@ -548,28 +573,35 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 	strcat(username, realm_of_user);
     }
 
-    viceId = ANONYMOUSID;
-#if 0
-    /* This actually crashes long-running daemons */
-    if (!pr_Initialize (0, confname, aserver.cell))
-	status = pr_SNameToId (username, &viceId);
-    if ((status == 0) && (viceId != ANONYMOUSID))
-	sprintf (username, "AFS ID %d", (int) viceId);
-#else
-    /*
-     * This actually only works assuming that your uid and pts space match
-     * and probably this works only for the local cell anyway.
-     */
-
-    if ((uid = getuid()) == 0) {
-	if ((pwd = getpwnam(user)) == NULL) {
+    uid = getuid();
+    if (uid == 0) {
+	pwd = getpwnam(user);
+	if (!pwd) {
 	    syslog(LOG_AUTH|LOG_ERR, "LAM aklog: getpwnam %s failed", user);
 	    status = AUTH_FAILURE;
 	    goto done;
 	}
-	viceId = pwd->pw_uid;
+    }
+
+    viceId = ANONYMOUSID;
+
+    if (!localuid) {
+	/* This actually crashes long-running daemons */
+	if (!pr_Initialize (0, confname, aserver.cell))
+	    status = pr_SNameToId (username, &viceId);
+	if (status)
+	    viceId = ANONYMOUSID;
     } else {
-	viceId = uid;
+	/*
+	 * This actually only works assuming that your uid and pts space match
+	 * and probably this works only for the local cell anyway.
+	 */
+
+	if (uid == 0) {
+	    viceId = pwd->pw_uid;
+	} else {
+	    viceId = uid;
+	}
     }
 
     /* Don't do first-time registration. Handle only the simple case */
@@ -580,9 +612,10 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 	    status = 0;
 	} else {
 	    token_replaceToken(token, &rxkadToken);
+	    syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: setting tokens for ViceId %d\n",
+	           (int)viceId);
 	}
     }
-#endif
 
 #ifndef AFS_AIX51_ENV
     /* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
@@ -593,10 +626,27 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
     write(2,"",0); /* dummy write */
 #endif
 
-    afssetpag = (getpagvalue("afs") > 0) ? 1 : 0;
+    /* If uidpag is set, we want to use UID-based PAGs, and not real PAGs, so
+     * don't create a new PAG if we're not in a PAG. But if uidpag is _not_
+     * set, just always create a new PAG. */
+    if (uidpag) {
+	afssetpag = (getpagvalue("afs") > 0) ? 1 : 0;
+	if (afssetpag) {
+	    /* we can't set a UID PAG if we're already in a real PAG. Whine */
+	    syslog(LOG_AUTH|LOG_ERR, "LAM aklog: uidpag is set, but we are "
+	                             "already in a PAG; this cannot work! "
+	                             "Attempting to continue by creating a "
+	                             "a new PAG");
+	}
+    } else {
+	afssetpag = 1;
+    }
     token_setPag(token, afssetpag);
 
-    if (uid == 0) {
+    if (uid == 0 && uidpag) {
+	/* We are root, and we want to use UID-based PAGs. So, fork a child
+	 * and setuid before setting tokens, so we set the tokens for the
+	 * target user. */
 	struct sigaction newAction, origAction;
 	pid_t cid, pcid;
 	int wstatus;
@@ -653,13 +703,14 @@ aklog_initialize(struct secmethod_table *meths)
     syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog loaded: uid %d pag %d", getuid(), getpagvalue("afs"));
     /*
      * Initialize the exported interface routines.
-     * Aside from method_authenticate, these are just no-ops.
+     * Aside from method_authenticate and method_open, these are just no-ops.
      */
     meths->method_chpass = aklog_chpass;
     meths->method_authenticate = aklog_authenticate;
     meths->method_passwdexpired = aklog_passwdexpired;
     meths->method_passwdrestrictions = aklog_passwdrestrictions;
     meths->method_getpasswd = aklog_getpasswd;
+    meths->method_open = aklog_open;
 
     return (0);
 }
