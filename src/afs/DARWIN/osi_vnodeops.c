@@ -812,7 +812,7 @@ afs_vop_read(ap)
 #endif
     AFS_GLOCK();
     osi_FlushPages(avc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
-    code = afs_read(avc, ap->a_uio, vop_cred, 0, 0, 0);
+    code = afs_read(avc, ap->a_uio, vop_cred, 0);
     AFS_GUNLOCK();
     return code;
 }
@@ -898,7 +898,7 @@ afs_vop_pagein(ap)
 #endif
     AFS_GLOCK();
     osi_FlushPages(tvc, vop_cred);	/* hold bozon lock, but not basic vnode lock */
-    code = afs_read(tvc, uio, cred, 0, 0, 0);
+    code = afs_read(tvc, uio, cred, 0);
     if (code == 0) {
 	ObtainWriteLock(&tvc->lock, 2);
 	tvc->f.states |= CMAPPED;

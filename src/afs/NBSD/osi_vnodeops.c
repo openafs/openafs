@@ -602,9 +602,7 @@ afs_nbsd_read(void *v)
         printf("nbsd_read enter %p", ap);
 
     AFS_GLOCK();
-    code =
-        afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, (daddr_t) 0, NULL,
-		 0);
+    code = afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, 0);
     AFS_GUNLOCK();
 
     if (afs_debug & AFSDEB_VNLAYER)

@@ -1243,8 +1243,7 @@ extern int afs_open(struct vcache **avcp, afs_int32 aflags,
 
 /* VNOPS/afs_vnop_read.c */
 extern int afs_read(struct vcache *avc, struct uio *auio,
-		    afs_ucred_t *acred, daddr_t albn,
-		    struct buf **abpp, int noLock);
+		    afs_ucred_t *acred, int noLock);
 
 extern int afs_UFSReadUIO(afs_dcache_id_t *cacheId, struct uio *tuiop);
 

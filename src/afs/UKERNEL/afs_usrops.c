@@ -2391,7 +2391,6 @@ uafs_pread_r(int fd, char *buf, int len, off_t offset)
     struct usr_uio uio;
     struct iovec iov[1];
     struct usr_vnode *fileP;
-    struct usr_buf *bufP;
 
     /*
      * Make sure this is an open file
@@ -2417,7 +2416,7 @@ uafs_pread_r(int fd, char *buf, int len, off_t offset)
     /*
      * do the read
      */
-    code = afs_read(VTOAFS(fileP), &uio, get_user_struct()->u_cred, 0, &bufP, 0);
+    code = afs_read(VTOAFS(fileP), &uio, get_user_struct()->u_cred, 0);
     if (code) {
 	errno = code;
 	return -1;

@@ -1352,9 +1352,9 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
         (*(afs_cacheType->vwrite))(avc, uio, aio, acred, nolock)
 
 #define	afs_rdwr(avc, uio, rw, io, cred) \
-    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 0) : afs_read(avc, uio, cred, 0, 0, 0))
+    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 0) : afs_read(avc, uio, cred, 0))
 #define	afs_nlrdwr(avc, uio, rw, io, cred) \
-    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 1) : afs_read(avc, uio, cred, 0, 0, 1))
+    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 1) : afs_read(avc, uio, cred, 1))
 
 /* Cache size truncation uses the following low and high water marks:
  * If the cache is more than 95% full (CM_DCACHECOUNTFREEPCT), the cache

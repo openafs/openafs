@@ -846,7 +846,7 @@ OSI_VC_DECL(avc);
 
     if (bp->b_flags & B_READ) {
 	uio->uio_fmode = FREAD;
-	error = afs_read(vp, uio, cr, 0, 0, 0);
+	error = afs_read(vp, uio, cr, 0);
     } else {
 	uio->uio_fmode = FWRITE;
 	error = afs_write(vp, uio, 0, cr, 0);

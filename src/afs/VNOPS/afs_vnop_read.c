@@ -43,7 +43,7 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 
 int
 afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
-	 daddr_t albn, struct buf **abpp, int noLock)
+	 int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;

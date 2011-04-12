@@ -462,9 +462,7 @@ afs_obsd_read(void *v)
     int code;
 
     AFS_GLOCK();
-    code =
-	afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, (daddr_t) 0, NULL,
-		 0);
+    code = afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, 0);
     AFS_GUNLOCK();
     return code;
 }
