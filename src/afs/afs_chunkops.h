@@ -58,9 +58,7 @@ struct afs_cacheOps {
     int (*fwrite) (struct osi_file * fp, afs_int32 offset, void *buf,
 		   afs_int32 len);
     int (*close) (struct osi_file * fp);
-    int (*vread) (struct vcache * avc, struct uio * auio,
-		  afs_ucred_t * acred, daddr_t albn, struct buf ** abpp,
-		  int noLock);
+    int (*vreadUIO) (afs_dcache_id_t *, struct uio *);
     int (*vwrite) (struct vcache * avc, struct uio * auio, int aio,
 		   afs_ucred_t * acred, int noLock);
     struct dcache *(*GetDSlot) (afs_int32 aslot,

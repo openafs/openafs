@@ -1348,8 +1348,6 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define	AFS_VLPORT	    ((unsigned short) htons(7003))
 #define AFS_RXOSDPORT	    ((unsigned short) htons(7011))
 
-#define	afs_read(avc, uio, acred, albn, abpp, nolock) \
-        (*(afs_cacheType->vread))(avc, uio, acred, albn, abpp, nolock)
 #define	afs_write(avc, uio, aio, acred, nolock) \
         (*(afs_cacheType->vwrite))(avc, uio, aio, acred, nolock)
 

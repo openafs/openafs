@@ -1242,12 +1242,12 @@ extern int afs_open(struct vcache **avcp, afs_int32 aflags,
 
 
 /* VNOPS/afs_vnop_read.c */
-extern int afs_MemRead(struct vcache *avc, struct uio *auio,
-		       afs_ucred_t *acred, daddr_t albn,
-		       struct buf **abpp, int noLock);
-extern int afs_UFSRead(struct vcache *avc, struct uio *auio,
-		       afs_ucred_t *acred, daddr_t albn,
-		       struct buf **abpp, int noLock);
+extern int afs_read(struct vcache *avc, struct uio *auio,
+		    afs_ucred_t *acred, daddr_t albn,
+		    struct buf **abpp, int noLock);
+
+extern int afs_UFSReadUIO(afs_dcache_id_t *cacheId, struct uio *tuiop);
+
 extern void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 			      afs_ucred_t *acred, struct vrequest *areq);
 
