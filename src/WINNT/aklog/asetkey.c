@@ -114,8 +114,24 @@ main(int argc, char **argv)
 	}
 	retval = krb5_kt_read_service_key(context, argv[3], principal, kvno,
 					  ENCTYPE_DES_CBC_CRC, &key);
-	if (retval != 0) {
-		afs_com_err(argv[0], retval, "while extracting AFS service key");
+        if (retval == KRB5_KT_NOTFOUND)
+            retval = krb5_kt_read_service_key(context, argv[3], principal, kvno,
+                                               ENCTYPE_DES_CBC_MD5, &key);
+        if (retval == KRB5_KT_NOTFOUND)
+            retval = krb5_kt_read_service_key(context, argv[3], principal, kvno,
+                                               ENCTYPE_DES_CBC_MD4, &key);
+        if (retval == KRB5_KT_NOTFOUND) {
+            char * princname = NULL;
+
+            krb5_unparse_name(context, principal, &princname);
+
+            afs_com_err(argv[0], retval,
+                        "for keytab entry with Principal %s, kvno %u, DES-CBC-CRC/MD5/MD4",
+                        princname ? princname : argv[4],
+                        kvno);
+            exit(1);
+        } else if (retval != 0) {
+            afs_com_err(argv[0], retval, "while extracting AFS service key");
 		exit(1);
 	}
 
