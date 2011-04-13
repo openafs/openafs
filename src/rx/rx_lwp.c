@@ -23,6 +23,10 @@
 
 #include <roken.h>
 
+#ifdef HAVE_SYS_FILE_H
+# include <sys/file.h>
+#endif
+
 #include <lwp.h>
 
 #include "rx.h"
