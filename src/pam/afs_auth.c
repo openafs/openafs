@@ -179,7 +179,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     if (i == 0)			/* getpwnam_r success */
 	upwd = &unix_pwd;
 #endif /* else AFS_HPUX110_ENV */
-    if (ignore_uid && i == 0 && upwd->pw_uid <= ignore_uid_id) {
+    if (ignore_uid && i == 0 && upwd && upwd->pw_uid <= ignore_uid_id) {
 	pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
 	RET(PAM_AUTH_ERR);
     }
