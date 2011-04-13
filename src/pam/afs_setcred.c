@@ -51,7 +51,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int set_expires = 0;	/* the default is to not to set the env variable */
     int use_klog = 0;
     int i;
-    struct pam_conv *pam_convp = NULL;
+    PAM_CONST struct pam_conv *pam_convp = NULL;
     char my_password_buf[256];
     char *cell_ptr = NULL;
     char sbuffer[100];
@@ -59,7 +59,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int torch_password = 1;
     int auth_ok = 0;
     char *lh;
-    char *user = NULL;
+    PAM_CONST char *user = NULL;
     int password_expires = -1;
     char *reason = NULL;
     struct passwd unix_pwd, *upwd = NULL;
@@ -133,7 +133,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass,
 		       try_first_pass, ignore_uid, ignore_uid_id, 8, 8, 8, 8);
     /* Try to get the user-interaction info, if available. */
-    errcode = pam_get_item(pamh, PAM_CONV, (const void **)&pam_convp);
+    errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NO_USER_INT);
@@ -142,7 +142,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
     /* Who are we trying to authenticate here? */
     if ((errcode =
-	 pam_get_user(pamh, (const char **)&user,
+	 pam_get_user(pamh, (PAM_CONST char **)&user,
 		      "AFS username:")) != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_NOUSER, errcode);
 	RET(PAM_USER_UNKNOWN);

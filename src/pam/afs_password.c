@@ -50,14 +50,14 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     char realm[256];
     char cell[256];
     char *localcell;
-    char *user = NULL, *password = NULL;
+    PAM_CONST char *user = NULL, *password = NULL;
     char *new_password = NULL, *verify_password = NULL;
     char upwd_buf[2048];	/* size is a guess. */
     char *reason = NULL;
     struct ktc_encryptionKey oldkey, newkey;
     struct ktc_token token;
     struct ubik_client *conn = 0;
-    struct pam_conv *pam_convp = NULL;
+    PAM_CONST struct pam_conv *pam_convp = NULL;
     struct passwd unix_pwd, *upwd = NULL;
 
 #ifndef AFS_SUN56_ENV
@@ -97,7 +97,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     }
 
     /* Try to get the user-interaction info, if available. */
-    errcode = pam_get_item(pamh, PAM_CONV, (const void **)&pam_convp);
+    errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_WARNING, PAMAFS_NO_USER_INT);
 	pam_convp = NULL;
@@ -105,7 +105,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
     /* Who are we trying to authenticate here? */
     if ((errcode =
-	 pam_get_user(pamh, (const char **)&user,
+	 pam_get_user(pamh, &user,
 		      "AFS username: ")) != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_NOUSER, errcode);
 	RET(PAM_USER_UNKNOWN);
@@ -143,7 +143,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     }
 #endif
 
-    errcode = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+    errcode = pam_get_item(pamh, PAM_AUTHTOK, (PAM_CONST void **)&password);
     if (errcode != PAM_SUCCESS || password == NULL) {
 	if (use_first_pass) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_PASSWD_REQ, user);
