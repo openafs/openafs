@@ -514,7 +514,7 @@ extern int afs_MemWriteBlk(struct osi_file *fP, int offset,
 			   void *src, int size);
 extern int afs_MemWritevBlk(struct memCacheEntry *mceP, int offset,
 			    struct iovec *iov, int nio, int size);
-extern int afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP);
+extern int afs_MemWriteUIO(struct vcache *, afs_dcache_id_t *, struct uio *);
 extern int afs_MemCacheTruncate(struct osi_file *fP,
 				int size);
 extern void shutdown_memcache(void);
@@ -1304,12 +1304,13 @@ extern int afs_readlink(OSI_VC_DECL(avc), struct uio *auio,
 			afs_ucred_t *acred);
 
 /* VNOPS/afs_vnop_write.c */
-extern int afs_MemWrite(struct vcache *avc, struct uio *auio,
-			int aio, afs_ucred_t *acred, int noLock);
+extern int afs_write(struct vcache *avc, struct uio *auio, int aio,
+		     afs_ucred_t *acred, int noLock);
+
+extern int afs_UFSWriteUIO(struct vcache *, afs_dcache_id_t *, struct uio *);
+
 extern int afs_StoreOnLastReference(struct vcache *avc,
 				    struct vrequest *treq);
-extern int afs_UFSWrite(struct vcache *avc, struct uio *auio,
-			int aio, afs_ucred_t *acred, int noLock);
 extern int afs_DoPartialWrite(struct vcache *avc,
 			      struct vrequest *areq);
 extern int afs_closex(struct file *afd);

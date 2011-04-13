@@ -229,7 +229,7 @@ afs_MemWritevBlk(struct memCacheEntry *mceP, int offset,
 }
 
 int
-afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
+afs_MemWriteUIO(struct vcache *avc, afs_dcache_id_t *ainode, struct uio *uioP)
 {
     struct memCacheEntry *mceP =
 	(struct memCacheEntry *)afs_MemCacheOpen(ainode);

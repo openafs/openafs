@@ -9,8 +9,8 @@
 
 /*
  * Implements:
- * afs_UFSWrite
- * afs_MemWrite
+ * afs_write
+ * afs_UFSWriteUIO
  * afs_StoreOnLastReference
  * afs_close
  * afs_fsync
@@ -95,223 +95,107 @@ afs_StoreOnLastReference(struct vcache *avc,
 }
 
 int
-afs_MemWrite(struct vcache *avc, struct uio *auio, int aio,
-	     afs_ucred_t *acred, int noLock)
+afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
 {
-    afs_size_t totalLength;
-    afs_size_t transferLength;
-    afs_size_t filePos;
-    afs_size_t offset, len;
-    afs_int32 tlen, trimlen;
-    afs_int32 startDate;
-    afs_int32 max;
-    struct dcache *tdc;
-#ifdef _HIGHC_
-    volatile
-#endif
-    afs_int32 error;
-#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
-    struct vnode *vp = AFSTOV(avc);
-#endif
-#ifdef AFS_DARWIN80_ENV
-    uio_t tuiop = NULL;
-#else
-    struct uio tuio;
-    struct uio *tuiop = &tuio;
-    struct iovec *tvec;		/* again, should have define */
-#endif
-    afs_int32 code;
-    struct vrequest treq;
+    struct osi_file *tfile;
+    int code;
 
-    AFS_STATCNT(afs_MemWrite);
-    if (avc->vc_error)
-	return avc->vc_error;
-
-    startDate = osi_Time();
-    if ((code = afs_InitReq(&treq, acred)))
-	return code;
-    /* otherwise we read */
-    totalLength = AFS_UIO_RESID(auio);
-    filePos = AFS_UIO_OFFSET(auio);
-    error = 0;
-    transferLength = 0;
-    afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(totalLength), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->f.m.Length));
-    if (!noLock) {
-	afs_MaybeWakeupTruncateDaemon();
-	ObtainWriteLock(&avc->lock, 126);
-    }
-#if defined(AFS_SGI_ENV)
+    tfile = (struct osi_file *)osi_UFSOpen(inode);
+#if defined(AFS_AIX41_ENV)
+    AFS_GUNLOCK();
+    code = VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, tuiop, NULL, NULL,
+		     NULL, afs_osi_credp);
+    AFS_GLOCK();
+#elif defined(AFS_AIX32_ENV)
+    code = VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, tuiop, NULL, NULL);
+#elif defined(AFS_AIX_ENV)
+    code = VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, (off_t) &offset,
+		     tuiop, NULL, NULL, -1);
+#elif defined(AFS_SUN5_ENV)
+    AFS_GUNLOCK();
+# ifdef AFS_SUN510_ENV
     {
-	off_t diff;
-	/*
-	 * afs_xwrite handles setting m.Length
-	 * and handles APPEND mode.
-	 * Since we are called via strategy, we need to trim the write to
-	 * the actual size of the file
-	 */
-	osi_Assert(filePos <= avc->f.m.Length);
-	diff = avc->f.m.Length - filePos;
-	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
-	totalLength = AFS_UIO_RESID(auio);
-    }
-#else
-    if (aio & IO_APPEND) {
-	/* append mode, start it at the right spot */
-#if	defined(AFS_SUN56_ENV)
-	auio->uio_loffset = 0;
-#endif
-	filePos = avc->f.m.Length;
-	AFS_UIO_SETOFFSET(auio, filePos);
-    }
-#endif
-    /*
-     * Note that we use startDate rather than calling osi_Time() here.
-     * This is to avoid counting lock-waiting time in file date (for ranlib).
-     */
-    avc->f.m.Date = startDate;
+	caller_context_t ct;
 
-#if	defined(AFS_HPUX_ENV)
-#if	defined(AFS_HPUX101_ENV)
-    if ((totalLength + filePos) >> 9 >
-	(p_rlimit(u.u_procp))[RLIMIT_FSIZE].rlim_cur) {
-#else
-    if ((totalLength + filePos) >> 9 > u.u_rlimit[RLIMIT_FSIZE].rlim_cur) {
-#endif
-	if (!noLock)
-	    ReleaseWriteLock(&avc->lock);
-	return (EFBIG);
+	VOP_RWLOCK(tfile->vnode, 1, &ct);
+	code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp, &ct);
+	VOP_RWUNLOCK(tfile->vnode, 1, &ct);
     }
-#endif
-#if defined(AFS_VM_RDWR_ENV) && !defined(AFS_FAKEOPEN_ENV)
-    /*
-     * If write is implemented via VM, afs_FakeOpen() is called from the
-     * high-level write op.
-     */
-    if (avc->execsOrWriters <= 0) {
-	afs_warn("WARNING: afs_ufswr vp=%lx, exOrW=%d\n", (unsigned long)avc,
-	       avc->execsOrWriters);
+# else
+    VOP_RWLOCK(tfile->vnode, 1);
+    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
+    VOP_RWUNLOCK(tfile->vnode, 1);
+# endif
+    AFS_GLOCK();
+    if (code == ENOSPC)
+	afs_warnuser
+	    ("\n\n\n*** Cache partition is full - decrease cachesize!!! ***\n\n\n");
+#elif defined(AFS_SGI_ENV)
+    AFS_GUNLOCK();
+    avc->f.states |= CWritingUFS;
+    AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_WRITE);
+    AFS_VOP_WRITE(tfile->vnode, tuiop, IO_ISLOCKED, afs_osi_credp, code);
+    AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_WRITE);
+    avc->f.states &= ~CWritingUFS;
+    AFS_GLOCK();
+#elif defined(AFS_HPUX100_ENV)
+    {
+	AFS_GUNLOCK();
+	code = VOP_RDWR(tfile->vnode, tuiop, UIO_WRITE, 0, afs_osi_credp);
+	AFS_GLOCK();
     }
+#elif defined(AFS_LINUX20_ENV)
+    AFS_GUNLOCK();
+    code = osi_rdwr(tfile, tuiop, UIO_WRITE);
+    AFS_GLOCK();
+#elif defined(AFS_DARWIN80_ENV)
+    AFS_GUNLOCK();
+    code = VNOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_ctxtp);
+    AFS_GLOCK();
+#elif defined(AFS_DARWIN_ENV)
+    AFS_GUNLOCK();
+    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
+    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
+    VOP_UNLOCK(tfile->vnode, 0, current_proc());
+    AFS_GLOCK();
+#elif defined(AFS_FBSD80_ENV)
+    AFS_GUNLOCK();
+    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
+    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
+    VOP_UNLOCK(tfile->vnode, 0);
+    AFS_GLOCK();
+#elif defined(AFS_FBSD_ENV)
+    AFS_GUNLOCK();
+    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
+    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
+    VOP_UNLOCK(tfile->vnode, 0, curthread);
+    AFS_GLOCK();
+#elif defined(AFS_NBSD_ENV)
+    AFS_GUNLOCK();
+    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
+    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
+    VOP_UNLOCK(tfile->vnode, 0);
+    AFS_GLOCK();
+#elif defined(AFS_XBSD_ENV)
+    AFS_GUNLOCK();
+    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
+    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
+    VOP_UNLOCK(tfile->vnode, 0, curproc);
+    AFS_GLOCK();
 #else
-    afs_FakeOpen(avc);
+# ifdef	AFS_HPUX_ENV
+    tuio.uio_fpflags &= ~FSYNCIO;	/* don't do sync io */
+# endif
+    code = VOP_RDWR(tfile->vnode, tuiop, UIO_WRITE, 0, afs_osi_credp);
 #endif
-    avc->f.states |= CDirty;
-#ifndef AFS_DARWIN80_ENV
-    tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
-#endif
-    while (totalLength > 0) {
-	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
-					 noLock);
-	if (!tdc) {
-	    error = EIO;
-	    break;
-	}
+    osi_UFSClose(tfile);
 
-	len = totalLength;	/* write this amount by default */
-	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */
-	if (max <= len + offset) {	/*if we'd go past the end of this chunk */
-	    /* it won't all fit in this chunk, so write as much
-	     * as will fit */
-	    len = max - offset;
-	}
-
-#ifdef  AFS_DARWIN80_ENV
-        if (tuiop)
-	    uio_free(tuiop);
-	trimlen = len;
-	tuiop = afsio_darwin_partialcopy(auio, trimlen);
-#else
-	/* mung uio structure to be right for this transfer */
-	afsio_copy(auio, &tuio, tvec);
-	trimlen = len;
-	afsio_trim(&tuio, trimlen);
-#endif
-	AFS_UIO_SETOFFSET(tuiop, offset);
-
-	code = afs_MemWriteUIO(&tdc->f.inode, tuiop);
-	if (code) {
-	    void *mep;		/* XXX in prototype world is struct memCacheEntry * */
-	    error = code;
-	    ZapDCE(tdc);	/* bad data */
-	    mep = afs_MemCacheOpen(&tdc->f.inode);
-	    afs_MemCacheTruncate(mep, 0);
-	    afs_MemCacheClose(mep);
-	    afs_stats_cmperf.cacheCurrDirtyChunks--;
-	    afs_indexFlags[tdc->index] &= ~IFDataMod;	/* so it does disappear */
-	    ReleaseWriteLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	    break;
-	}
-	/* otherwise we've written some, fixup length, etc and continue with next seg */
-	len = len - AFS_UIO_RESID(tuiop);	/* compute amount really transferred */
-	tlen = len;
-	afsio_skip(auio, tlen);	/* advance auio over data written */
-	/* compute new file size */
-	if (offset + len > tdc->f.chunkBytes) {
-	    afs_int32 tlength = offset + len;
-	    afs_AdjustSize(tdc, tlength);
-	    if (tdc->validPos < filePos + len)
-		tdc->validPos = filePos + len;
-	}
-	totalLength -= len;
-	transferLength += len;
-	filePos += len;
-#if defined(AFS_SGI_ENV)
-	/* afs_xwrite handles setting m.Length */
-	osi_Assert(filePos <= avc->f.m.Length);
-#else
-	if (filePos > avc->f.m.Length) {
-	    if (AFS_IS_DISCON_RW)
-   		afs_PopulateDCache(avc, filePos, &treq);
-	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
-		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(filePos));
-	    avc->f.m.Length = filePos;
-#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
-            vnode_pager_setsize(vp, filePos);
-#endif
-	}
-#endif
-	ReleaseWriteLock(&tdc->lock);
-	afs_PutDCache(tdc);
-#if !defined(AFS_VM_RDWR_ENV)
-	/*
-	 * If write is implemented via VM, afs_DoPartialWrite() is called from
-	 * the high-level write op.
-	 */
-	if (!noLock) {
-	    code = afs_DoPartialWrite(avc, &treq);
-	    if (code) {
-		error = code;
-		break;
-	    }
-	}
-#endif
-    }
-#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_FAKEOPEN_ENV)
-    afs_FakeClose(avc, acred);
-#endif
-    if (error && !avc->vc_error)
-	avc->vc_error = error;
-    if (!noLock)
-	ReleaseWriteLock(&avc->lock);
-#ifdef AFS_DARWIN80_ENV
-    uio_free(tuiop);
-#else
-    osi_FreeSmallSpace(tvec);
-#endif
-    error = afs_CheckCode(error, &treq, 6);
-    return error;
+    return code;
 }
-
 
 /* called on writes */
 int
-afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
+afs_write(struct vcache *avc, struct uio *auio, int aio,
 	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
@@ -337,11 +221,11 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
     struct uio *tuiop = &tuio;
     struct iovec *tvec;		/* again, should have define */
 #endif
-    struct osi_file *tfile;
     afs_int32 code;
     struct vrequest treq;
 
-    AFS_STATCNT(afs_UFSWrite);
+    AFS_STATCNT(afs_write);
+
     if (avc->vc_error)
 	return avc->vc_error;
 
@@ -420,7 +304,7 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #endif
     avc->f.states |= CDirty;
 #ifndef AFS_DARWIN80_ENV
-    tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
+    tvec = osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
 	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
@@ -429,7 +313,6 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 	    error = EIO;
 	    break;
 	}
-	tfile = (struct osi_file *)osi_UFSOpen(&tdc->f.inode);
 	len = totalLength;	/* write this amount by default */
 	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */
@@ -452,103 +335,20 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #endif
 	AFS_UIO_SETOFFSET(tuiop, offset);
 
-#if defined(AFS_AIX41_ENV)
-	AFS_GUNLOCK();
-	code =
-	    VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, &tuio, NULL, NULL,
-		      NULL, afs_osi_credp);
-	AFS_GLOCK();
-#elif defined(AFS_AIX32_ENV)
-	code = VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, &tuio, NULL, NULL);
-#elif defined(AFS_AIX_ENV)
-	code =
-	    VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, (off_t) & offset,
-		      &tuio, NULL, NULL, -1);
-#elif defined(AFS_SUN5_ENV)
-	AFS_GUNLOCK();
-#ifdef AFS_SUN510_ENV
-	{
-	    caller_context_t ct;
+        code = (*(afs_cacheType->vwriteUIO))(avc, &tdc->f.inode, tuiop);
 
-	    VOP_RWLOCK(tfile->vnode, 1, &ct);
-	    code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp, &ct);
-	    VOP_RWUNLOCK(tfile->vnode, 1, &ct);
-	}
-#else
-	VOP_RWLOCK(tfile->vnode, 1);
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
-	VOP_RWUNLOCK(tfile->vnode, 1);
-#endif
-	AFS_GLOCK();
-	if (code == ENOSPC)
-	    afs_warnuser
-		("\n\n\n*** Cache partition is full - decrease cachesize!!! ***\n\n\n");
-#elif defined(AFS_SGI_ENV)
-	AFS_GUNLOCK();
-	avc->f.states |= CWritingUFS;
-	AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_WRITE);
-	AFS_VOP_WRITE(tfile->vnode, &tuio, IO_ISLOCKED, afs_osi_credp, code);
-	AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_WRITE);
-	avc->f.states &= ~CWritingUFS;
-	AFS_GLOCK();
-#elif defined(AFS_HPUX100_ENV)
-	{
-	    AFS_GUNLOCK();
-	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, afs_osi_credp);
-	    AFS_GLOCK();
-	}
-#elif defined(AFS_LINUX20_ENV)
-	AFS_GUNLOCK();
-	code = osi_rdwr(tfile, &tuio, UIO_WRITE);
-	AFS_GLOCK();
-#elif defined(AFS_DARWIN80_ENV)
-	AFS_GUNLOCK();
-	code = VNOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_ctxtp);
-	AFS_GLOCK();
-#elif defined(AFS_DARWIN_ENV)
-	AFS_GUNLOCK();
-	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
-	VOP_UNLOCK(tfile->vnode, 0, current_proc());
-	AFS_GLOCK();
-#elif defined(AFS_FBSD80_ENV)
-	AFS_GUNLOCK();
-	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
-	VOP_UNLOCK(tfile->vnode, 0);
-	AFS_GLOCK();
-#elif defined(AFS_FBSD_ENV)
-	AFS_GUNLOCK();
-	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
-	VOP_UNLOCK(tfile->vnode, 0, curthread);
-	AFS_GLOCK();
-#elif defined(AFS_NBSD_ENV)
-	AFS_GUNLOCK();
-	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
-	VOP_UNLOCK(tfile->vnode, 0);
-	AFS_GLOCK();
-#elif defined(AFS_XBSD_ENV)
-	AFS_GUNLOCK();
-	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
-	VOP_UNLOCK(tfile->vnode, 0, curproc);
-	AFS_GLOCK();
-#else
-#ifdef	AFS_HPUX_ENV
-	tuio.uio_fpflags &= ~FSYNCIO;	/* don't do sync io */
-#endif
-	code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, afs_osi_credp);
-#endif
 	if (code) {
+	    void *cfile;
+
 	    error = code;
 	    ZapDCE(tdc);	/* bad data */
-	    osi_UFSTruncate(tfile, 0);	/* fake truncate the segment */
+	    cfile = afs_CFileOpen(&tdc->f.inode);
+	    afs_CFileTruncate(cfile, 0);
+	    afs_CFileClose(cfile);
 	    afs_AdjustSize(tdc, 0);	/* sets f.chunkSize to 0 */
+
 	    afs_stats_cmperf.cacheCurrDirtyChunks--;
 	    afs_indexFlags[tdc->index] &= ~IFDataMod;	/* so it does disappear */
-	    afs_CFileClose(tfile);
 	    ReleaseWriteLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	    break;
@@ -584,7 +384,6 @@ afs_UFSWrite(struct vcache *avc, struct uio *auio, int aio,
 #endif
 	}
 #endif
-	osi_UFSClose(tfile);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
 #if !defined(AFS_VM_RDWR_ENV)
