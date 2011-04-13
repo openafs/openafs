@@ -70,13 +70,13 @@ check_sysid: check_sysid.c
 		${srcdir}/check_sysid.c
 
 fileserver: ${objects} ${headers} ${LIBS}
-	set -x; \
+	$(Q)set -x; \
 	case ${SYS_NAME} in \
 	rs_aix*) \
 	    ${CC} -K ${AFS_LDFLAGS} -o fileserver ${objects} \
 		${TOP_LIBDIR}/libaudit.a ${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	*) \
-	    $(AFS_LDRULE) ${objects} ${TOP_LIBDIR}/libaudit.a \
+	    $(AFS_LDRULE_NOQ) ${objects} ${TOP_LIBDIR}/libaudit.a \
 		${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	esac
 

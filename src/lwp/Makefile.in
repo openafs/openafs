@@ -148,12 +148,12 @@ process.o	: process.s process.i386.s process.amd64.s process.c lwp.o
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
-		$(AFS_CCRULE) -c ${srcdir}/process.c;; \
+		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
 		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.s; \
 		${AS} -v process.i -o process.o;; \
 	ia64_hpux11* | hp_ux11* ) \
-		$(AFS_CCRULE) -c ${srcdir}/process.c;; \
+		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
 	i386_*) \
 		$(PATH_CPP) -P -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s > process.ss; \
 		${AS} process.ss -o process.o; \
@@ -171,7 +171,7 @@ lwp.o		: lwp.c lwp.h
 		rs_aix*) \
 			$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -I${srcdir} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -c ${srcdir}/lwp.c;; \
 		*)  \
-			$(AFS_CCRULE) ${srcdir}/lwp.c;; \
+			$(AFS_CCRULE_NOQ) ${srcdir}/lwp.c;; \
 		esac
 lock.o		: lock.c lock.h lwp.h
 timer.o		: timer.c

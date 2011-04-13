@@ -63,9 +63,9 @@ tdump: tdump.c AFS_component_version_number.c
 
 butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	@case ${SYS_NAME} in \
-	  rs_aix*) $(AFS_LDRULE) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} \
+	  rs_aix*) $(AFS_LDRULE_NOQ) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} \
 	  	/usr/lib/libc_r.a ;; \
-	  *)       $(AFS_LDRULE) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} ;; \
+	  *)       $(AFS_LDRULE_NOQ) ${SOBJS} ${LIBS} $(LIB_roken) ${XLIBS} ;; \
 	esac
 
 tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c

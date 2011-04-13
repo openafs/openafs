@@ -69,16 +69,16 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
 		$(LIB_hcrypto) $(LIB_roken)
 
 test_pam: test_pam.o
-	set -x; \
+	$(Q)set -x; \
 	case "$(SYS_NAME)" in \
 	hp_ux* | ia64_hpux*) \
-		$(AFS_LDRULE) test_pam.o ${PAM_LIBS};; \
+		$(AFS_LDRULE_NOQ) test_pam.o ${PAM_LIBS};; \
 	sun*_5*) \
-		$(AFS_LDRULE) test_pam.o ${PAM_LIBS};; \
+		$(AFS_LDRULE_NOQ) test_pam.o ${PAM_LIBS};; \
 	*linux*) \
-		$(AFS_LDRULE) -rdynamic test_pam.o -lpam -ldl;; \
+		$(AFS_LDRULE_NOQ) -rdynamic test_pam.o -lpam -ldl;; \
 	*fbsd*| *nbsd*) \
-		$(AFS_LDRULE) -rdynamic test_pam.o -lpam ;; \
+		$(AFS_LDRULE_NOQ) -rdynamic test_pam.o -lpam ;; \
 	*) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
