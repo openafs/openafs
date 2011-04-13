@@ -164,8 +164,8 @@ cfgafs64: cfgafs64.o
 
 CFLAGS_cfgexport64.o = -g -q64 -D__XCOFF64__ 
 cfgexport64.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
-	if [ "x$(AIX64)" = "xyes" ]; then  \
-	  $(AFS_CCRULE) $(srcdir)/cfgexport.c ; \
+	$(Q)if [ "x$(AIX64)" = "xyes" ]; then  \
+	  $(AFS_CCRULE_NOQ) $(srcdir)/cfgexport.c ; \
 	fi
 
 cfgexport.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
@@ -173,8 +173,8 @@ cfgafs.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
 
 CFLAGS_cfgafs64.o = -q64
 cfgafs64.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
-	if [ "x$(AIX64)" = "xyes" ]; then  \
-	  $(AFS_CCRULE) $(srcdir)/cfgafs.c ; \
+	$(Q)if [ "x$(AIX64)" = "xyes" ]; then  \
+	  $(AFS_CCRULE_NOQ) $(srcdir)/cfgafs.c ; \
 	fi
 
 clean:

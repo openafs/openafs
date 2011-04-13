@@ -184,10 +184,10 @@ readpwd.o: readpwd.c ${LINCLS} AFS_component_version_number.c
 testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 	case "$(SYS_NAME)" in \
 	*_darwin_12 ) \
-		$(AFS_LDRULE) testpt.o ${TOP_LIBDIR}/libcmd.a \
+		$(AFS_LDRULE_NOQ) testpt.o ${TOP_LIBDIR}/libcmd.a \
 			libprot.a $(LIBS) $(LIB_roken) ;; \
 	* ) \
-		$(AFS_LDRULE) testpt.o -lm ${TOP_LIBDIR}/libcmd.a \
+		$(AFS_LDRULE_NOQ) testpt.o -lm ${TOP_LIBDIR}/libcmd.a \
 			libprot.a $(LIBS) $(LIB_roken) ${XLIBS} ;; \
 	esac
 

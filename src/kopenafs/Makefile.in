@@ -54,7 +54,7 @@ setpag.o: ${SYS}/setpag.c ${SYS}/afssyscalls.h
 syscall.o: ${SYS}/syscall.s
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	sgi_*) \
-	        $(AFS_CCRULE) ${SYS}/syscall.s; \
+	        $(AFS_CCRULE_NOQ) ${SYS}/syscall.s; \
 		;; \
 	rs_aix* | hp_ux10*) \
 		$(PATH_CPP) -P ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \

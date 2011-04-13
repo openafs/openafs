@@ -115,23 +115,23 @@ whatfid: whatfid.o ${LIBS}
 	$(AFS_LDRULE) whatfid.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 fstrace.o: fstrace.c AFS_component_version_number.c
-	case ${SYS_NAME} in \
+	$(Q)case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
 			${CCXPG2} ${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
 		sun*_4* ) \
 			${CC} ${DBG} ${OPTMZ} -I/usr/xpg2include -I/usr/5include -g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c fstrace.c ;; \
 		* ) \
-			$(AFS_CCRULE) $(srcdir)/fstrace.c ;; \
+			$(AFS_CCRULE_NOQ) $(srcdir)/fstrace.c ;; \
 	esac
 
 fstrace: fstrace.o
-	case ${SYS_NAME} in \
+	$(Q)case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
 			${CCXPG2} ${AFS_CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a $(TOP_LIBDIR)/libopr.a;; \
 		sun*_4* ) \
 			${CC} -L/usr/xpg2lib -L/usr/5lib ${AFS_CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a $(TOP_LIBDIR)/libopr.a -lxpg ;; \
 		* ) \
-			$(AFS_LDRULE) fstrace.o ${TOP_LIBDIR}/libsys.a \
+			$(AFS_LDRULE_NOQ) fstrace.o ${TOP_LIBDIR}/libsys.a \
 				${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
 				$(TOP_LIBDIR)/libopr.a ${XLIBS} \
 				$(LIB_roken);; \

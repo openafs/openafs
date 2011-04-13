@@ -144,6 +144,51 @@ RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
 SHELL = /bin/sh
 
 #
+# "Pretty" build line stuff
+#
+
+# Default to disabling the "pretty" build lines
+# If the user specifies 'V=0', the variables below expand to their _V0
+# variants, which enable the "pretty" build lines
+V=1
+
+RUNCMD=RUNCMD () { \
+	echo "  $$1  $$2"; \
+	shift; shift; \
+	"$$@" || failcode=$$?; \
+	if [ x"$$failcode" != x ] ; then \
+		echo >&2; \
+		echo "FAILED COMMAND: $$@" >&2; \
+		echo >&2; \
+		echo "In dir:" >&2; \
+		pwd >&2; \
+		echo >&2; \
+		exit $$failcode; \
+	fi; \
+	exit 0; \
+} ; RUNCMD
+
+RUN_CC_NOQ_V0=${RUNCMD} CC "`pwd`/$@"
+RUN_LD_NOQ_V0=${RUNCMD} LD "`pwd`/$@"
+
+# Prefixing a command with $(Q) will suppress that line from being printed
+# during a "pretty" make, so the RUNCMD function above can decide itself how
+# much to print. The Q is just for "quiet", and Q kinda looks like @.
+#
+# The _NOQ variants of the RUN_ commands are for when a compiler invocation is
+# in the middle of e.g. a switch/case or an if/else, etc. In those cases, we
+# want to prefix the _entire_ command with $(Q), not just the compiler, linker,
+# etc.
+Q_V0=@
+Q=$(Q_V$(V))
+
+RUN_CC=$(Q)$(RUN_CC_NOQ_V$(V))
+RUN_LD=$(Q)$(RUN_LD_NOQ_V$(V))
+
+RUN_CC_NOQ=$(RUN_CC_NOQ_V$(V))
+RUN_LD_NOQ=$(RUN_LD_NOQ_V$(V))
+
+#
 # Common/standard cflags/paths/etc
 # Cflags defaults, will be overridden later if necessary
 #
@@ -162,20 +207,24 @@ COMMON_LDFLAGS=$(LDFLAGS) $(LDFLAGS_hcrypto) $(LDFLAGS_roken) $(DBG) $(OPTMZ)
 # LWP Flags
 LWP_CFLAGS=$(COMMON_CFLAGS) $(MODULE_CFLAGS)
 LWP_LDFLAGS=$(COMMON_LDFLAGS) $(MODULE_LDFLAGS) $(XLDFLAGS) $(ARCHFLAGS)
-LWP_CCRULE=$(CCOBJ) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+LWP_CCRULE        =$(RUN_CC) $(CCOBJ) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+LWP_CCRULE_NOQ=$(RUN_CC_NOQ) $(CCOBJ) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 # Pthreaded
 PTH_CFLAGS=$(COMMON_CFLAGS) $(MODULE_CFLAGS) $(MT_CFLAGS)
 PTH_LDFLAGS=$(COMMON_LDFLAGS) $(MODULE_LDFLAGS) $(MT_LDFLAGS)
-PTH_CCRULE=$(MT_CC) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+PTH_CCRULE        =$(RUN_CC) $(MT_CC) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+PTH_CCRULE_NOQ=$(RUN_CC_NOQ) $(MT_CC) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 # Shared
 SHD_CFLAGS=$(COMMON_CFLAGS) $(MODULE_CFLAGS) $(MT_CFLAGS) $(SHLIB_CFLAGS)
 SHD_LDFLAGS=$(COMMON_LDFLAGS) $(MODULE_LDFLAGS) $(SHLIB_LDFLAGS)
-SHD_CCRULE=$(MT_CC) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+SHD_CCRULE        =$(RUN_CC) $(MT_CC) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+SHD_CCRULE_NOQ=$(RUN_CC_NOQ) $(MT_CC) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 # Default rules. These will be overriden if the module Makefile specifically
 # includes a particular type (lwp, pthread, or shared)
 
-AFS_LDRULE =$(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
+AFS_LDRULE         =$(RUN_LD) $(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
+AFS_LDRULE_NOQ =$(RUN_LD_NOQ) $(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
 

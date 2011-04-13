@@ -201,13 +201,13 @@ listinodes.o: listinodes.c AFS_component_version_number.c
 	esac
 
 gi: ${TOP_LIBDIR}/libsys.a 
-	case ${SYS_NAME} in \
+	$(Q)case ${SYS_NAME} in \
 	        *linux* | sgi_* | *fbsd* ) \
 			echo "Don't build gi on ${SYS_NAME}";; \
 	        *) \
 			${CC} $(AFS_CPPFLAGS) $(AFS_CFLAGS) \
 				-c ${srcdir}/gi.c ; \
-			$(AFS_LDRULE) gi.o ${TOP_LIBDIR}/libsys.a;; \
+			$(AFS_LDRULE_NOQ) gi.o ${TOP_LIBDIR}/libsys.a;; \
 	esac
 
 namei_map: ${TOP_LIBDIR}/libsys.a namei_map.o
