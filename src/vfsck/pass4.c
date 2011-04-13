@@ -141,11 +141,7 @@ pass4()
 		    pwarn("I=%u (%ld should be %ld)", inumber, dp->di_nlink,
 			  1);
 		    if (preen)
-#ifdef VICE
-			vprintf(" (CORRECTED)\n");
-#else
 			printf(" (CORRECTED)\n");
-#endif /* VICE */
 		    else {
 			if (reply("CORRECT") == 0)
 			    continue;

@@ -88,11 +88,7 @@ pass3()
 		|| ((statemap[dp->di_contin] & STATE) != CSTATE)) {
 		/*  this is an error which must be cleared by hand. */
 		pfatal("BAD CONTINUATION INODE NUMBER ");
-#ifdef VICE
-		vprintf(" I=%u ", inumber);
-#else
 		printf(" I=%u ", inumber);
-#endif /* VICE */
 		if (reply("CLEAR") == 1) {
 		    dp->di_contin = 0;
 		    inodirty();

@@ -100,7 +100,6 @@ struct bufarea *pbp;
     /* inode map */	howmany((fs)->fs_ipg, NBBY) + \
     /* block map */	howmany((fs)->fs_cpg * (fs)->fs_spc / NSPF(fs), NBBY))
 
-char *malloc(), *calloc();
 struct disklabel *getdisklabel();
 
 setup(dev)
