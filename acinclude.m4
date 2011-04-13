@@ -1230,12 +1230,11 @@ AC_CHECK_HEADERS([ \
 		   ncurses.h \
 		   net/if.h \
 		   netdb.h \
-		   netinet/if_ether.h \
 		   netinet/in.h \
 		   pwd.h \
 		   regex.h \
 		   resolv.h \
-		   security/pam_modules.h \
+		   security/pam_appl.h \
 		   signal.h \
 		   stdint.h \
 		   stdio_ext.h \
@@ -1276,6 +1275,14 @@ AC_CHECK_HEADERS([ \
 		   unistd.h \
 		   windows.h \
 		])
+AC_CHECK_HEADERS([netinet/if_ether.h],[],[],[AC_INCLUDES_DEFAULT
+#ifdef HAVE_NET_IF_H
+# include <net/if.h>
+#endif])
+AC_CHECK_HEADERS([security/pam_modules.h],[],[],[AC_INCLUDES_DEFAULT
+#ifdef HAVE_SECURITY_PAM_APPL_H
+# include <security/pam_appl.h>
+#endif])
 
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 
