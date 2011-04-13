@@ -55,11 +55,11 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     int use_klog = 0;
     int set_expires = 0;	/* This option is only used in pam_set_cred() */
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
-    char *user = NULL, *password = NULL;
+    PAM_CONST char *user = NULL, *password = NULL;
     afs_int32 password_expires = -1;
     int torch_password = 1;
     int i;
-    struct pam_conv *pam_convp = NULL;
+    PAM_CONST struct pam_conv *pam_convp = NULL;
     int auth_ok;
     struct passwd unix_pwd, *upwd = NULL;
     char upwd_buf[2048];	/* size is a guess. */
@@ -146,7 +146,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 		       refresh_token, set_token, dont_fork, use_klog);
 
     /* Try to get the user-interaction info, if available. */
-    errcode = pam_get_item(pamh, PAM_CONV, (const void **)&pam_convp);
+    errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_WARNING, PAMAFS_NO_USER_INT);
 	pam_convp = NULL;
@@ -154,7 +154,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 
     /* Who are we trying to authenticate here? */
     if ((errcode =
-	 pam_get_user(pamh, (const char **)&user,
+	 pam_get_user(pamh, &user,
 		      "login: ")) != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_NOUSER, errcode);
 	RET(PAM_USER_UNKNOWN);
@@ -194,7 +194,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	RET(PAM_AUTH_ERR);
     }
 #endif
-    errcode = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+    errcode = pam_get_item(pamh, PAM_AUTHTOK, (PAM_CONST void **)&password);
     if (errcode != PAM_SUCCESS || password == NULL) {
 	if (use_first_pass) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_PASSWD_REQ, user);
