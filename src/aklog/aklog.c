@@ -657,13 +657,12 @@ static int
 rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
 			 struct ktc_tokenUnion **tokenPtr, char **userPtr) {
     char username[BUFSIZ];
-    struct ktc_tokenUnion *token;
-    struct token_rxkad *rxkadToken;
+    struct ktc_token token;
+    int status;
 #ifdef HAVE_NO_KRB5_524
     char *p;
     int len;
 #else
-    int status;
     char k4name[ANAME_SZ];
     char k4inst[INST_SZ];
     char k4realm[REALM_SZ];
@@ -706,30 +705,21 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
     }
 #endif
 
-    token = malloc(sizeof(struct ktc_tokenUnion));
-    if (token == NULL)
-	return ENOMEM;
+    memset(&token, 0, sizeof(struct ktc_token));
 
-    memset(token, 0, sizeof(struct ktc_tokenUnion));
-
-    token->at_type = AFSTOKEN_UNION_KAD;
-    rxkadToken = &token->ktc_tokenUnion_u.at_kad;
-
-    rxkadToken->rk_kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
-    rxkadToken->rk_begintime = v5cred->times.starttime;;
-    rxkadToken->rk_endtime = v5cred->times.endtime;
-    memcpy(&rxkadToken->rk_key, get_cred_keydata(v5cred),
+    token.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+    token.startTime = v5cred->times.starttime;;
+    token.endTime = v5cred->times.endtime;
+    memcpy(&token.sessionKey, get_cred_keydata(v5cred),
 	   get_cred_keylen(v5cred));
-    rxkadToken->rk_ticket.rk_ticket_len = v5cred->ticket.length;
-    rxkadToken->rk_ticket.rk_ticket_val = malloc(v5cred->ticket.length);
-    if (rxkadToken->rk_ticket.rk_ticket_val == NULL) {
-	free(token);
-	return ENOMEM;
-    }
-    memcpy(rxkadToken->rk_ticket.rk_ticket_val, v5cred->ticket.data,
-	   rxkadToken->rk_ticket.rk_ticket_len);
+    token.ticketLen = v5cred->ticket.length;
+    memcpy(token.ticket, v5cred->ticket.data, token.ticketLen);
 
-    *tokenPtr = token;
+    status = token_importRxkadViceId(tokenPtr, &token, 0);
+    if (status) {
+	return status;
+    }
+
     *userPtr = strdup(username);
 
     return 0;
@@ -771,8 +761,7 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
 			  struct ktc_tokenUnion **tokenPtr, char **userPtr) {
     CREDENTIALS cred;
     char username[BUFSIZ];
-    struct ktc_tokenUnion *token;
-    struct token_rxkad *rxkadToken;
+    struct ktc_token token;
     int status;
 
     *tokenPtr = NULL;
@@ -794,16 +783,10 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
 	strcat (username, cred.pinst);
     }
 
-    token = malloc(sizeof(struct ktc_tokenUnion));
-    if (token == NULL)
-	return ENOMEM;
-    memset(token, 0, sizeof(struct ktc_tokenUnion));
+    memset(&token, 0, sizeof(struct ktc_token));
 
-    token->at_type = AFSTOKEN_UNION_KAD;
-
-    rxkadToken = &token->ktc_tokenUnion_u.at_kad;
-    rxkadToken->rk_kvno = cred.kvno;
-    rxkadToken->rk_begintime = cred.issue_date;
+    token.kvno = cred.kvno;
+    token.startTime = cred.issue_date;
     /*
      * It seems silly to go through a bunch of contortions to
      * extract the expiration time, when the v5 credentials already
@@ -812,18 +795,16 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
      * Note that this isn't a security hole, as the expiration time
      * is also contained in the encrypted token
      */
-    rxkadToken->rk_endtime = v5cred->times.endtime;
-    memcpy(&rxkadToken->rk_key, cred.session, 8);
-    rxkadToken->rk_ticket.rk_ticket_len = cred.ticket_st.length;
-    rxkadToken->rk_ticket.rk_ticket_val = malloc(cred.ticket_st.length);
-    if (rxkadToken->rk_ticket.rk_ticket_val == NULL) {
-	free(token);
-	return ENOMEM;
-    }
-    memcpy(rxkadToken->rk_ticket.rk_ticket_val, cred.ticket_st.dat,
-	   rxkadToken->rk_ticket.rk_ticket_len);
+    token.endTime = v5cred->times.endtime;
+    memcpy(&token.sessionKey, cred.session, 8);
+    token.ticketLen = cred.ticket_st.length;
+    memcpy(token.ticket, cred.ticket_st.dat, token.ticketLen);
 
-    *tokenPtr = token;
+    status = token_importRxkadViceId(tokenPtr, &token, 0);
+    if (status) {
+	return status;
+    }
+
     *userPtr = strdup(username);
 
     return 0;
@@ -1070,8 +1051,13 @@ auth_to_cell(krb5_context context, const char *config,
 #endif /* ALLOW_REGISTER */
 
 	    if ((status == 0) && (viceId != ANONYMOUSID)) {
-		rxkadToken->ktc_tokenUnion_u.at_kad.rk_viceid = viceId;
-		token_replaceToken(token, rxkadToken);
+		status = token_setRxkadViceId(rxkadToken, viceId);
+		if (status) {
+		    fprintf(stderr, "Error %d setting rxkad ViceId\n", status);
+		    status = AKLOG_SUCCESS;
+		} else {
+		    token_replaceToken(token, rxkadToken);
+		}
 	    }
 	}
 
@@ -1098,8 +1084,7 @@ auth_to_cell(krb5_context context, const char *config,
 
 out:
     if (rxkadToken) {
-	free(rxkadToken->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val);
-	free(rxkadToken);
+	token_freeToken(&rxkadToken);
     }
 
     if (local_cell)
