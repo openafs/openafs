@@ -166,7 +166,6 @@ extern afs_kmutex_t des_random_mutex;
 extern afs_kmutex_t rx_clock_mutex;
 extern afs_kmutex_t rxi_connCacheMutex;
 extern afs_kmutex_t rx_event_mutex;
-extern afs_kmutex_t osi_malloc_mutex;
 extern afs_kmutex_t event_handler_mutex;
 extern afs_kmutex_t listener_mutex;
 extern afs_kmutex_t rx_if_init_mutex;
@@ -195,7 +194,6 @@ rxi_InitPthread(void)
     MUTEX_INIT(&epoch_mutex, "epoch", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_event_mutex, "event", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&osi_malloc_mutex, "malloc", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&event_handler_mutex, "event handler", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxi_connCacheMutex, "conn cache", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&listener_mutex, "listener", MUTEX_DEFAULT, 0);

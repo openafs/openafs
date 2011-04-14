@@ -84,21 +84,6 @@ ntoh_syserr_conv(int code)
  */
 
 #ifndef osi_alloc
-#ifdef AFS_PTHREAD_ENV
-/*
- * This mutex protects the following global variables:
- * osi_alloccnt
- * osi_allocsize
- */
-
-afs_kmutex_t osi_malloc_mutex;
-#define LOCK_MALLOC_STATS MUTEX_ENTER(&osi_malloc_mutex);
-#define UNLOCK_MALLOC_STATS MUTEX_EXIT(&osi_malloc_mutex);
-#else
-#define LOCK_MALLOC_STATS
-#define UNLOCK_MALLOC_STATS
-#endif /* AFS_PTHREAD_ENV */
-long osi_alloccnt = 0, osi_allocsize = 0;
 static const char memZero;
 char *
 osi_alloc(afs_int32 x)
@@ -109,10 +94,6 @@ osi_alloc(afs_int32 x)
      */
     if (x == 0)
 	return (char *)&memZero;
-    LOCK_MALLOC_STATS;
-    osi_alloccnt++;
-    osi_allocsize += x;
-    UNLOCK_MALLOC_STATS;
     return (char *)(mem_alloc(x));
 }
 
@@ -121,10 +102,6 @@ osi_free(char *x, afs_int32 size)
 {
     if ((x == &memZero) || !x)
 	return 0;
-    LOCK_MALLOC_STATS;
-    osi_alloccnt--;
-    osi_allocsize -= size;
-    UNLOCK_MALLOC_STATS;
     mem_free(x, size);
     return 0;
 }
