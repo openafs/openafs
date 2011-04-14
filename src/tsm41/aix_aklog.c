@@ -35,6 +35,8 @@
 #include <afs/dirpath.h>
 #include <rx/rxkad.h>
 #include <afs/auth.h>
+#include <afs/ktc.h>
+#include <afs/token.h>
 #include <afs/ptserver.h>
 #include "aix_auth_prototypes.h"
 
@@ -345,14 +347,13 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
     char realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
     char local_cell[MAXCELLCHARS+1];
     char cell_to_use[MAXCELLCHARS+1]; /* Cell to authenticate to */
-    static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
     krb5_creds *v5cred = NULL;
     struct ktc_principal aserver;
-    struct ktc_principal aclient;
-    struct ktc_token atoken, btoken;
     int afssetpag = 0, uid = -1;
     struct passwd *pwd;
+    struct ktc_setTokenData *token = NULL;
+    struct ktc_tokenUnion *rxkadToken = NULL;
 
     memset(name, 0, sizeof(name));
     memset(primary_instance, 0, sizeof(primary_instance));
@@ -431,6 +432,12 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 	secondary_instance[sizeof(secondary_instance)-1] = '\0';
     }
 
+    token = token_buildTokenJar(ak_cellconfig.name);
+    if (!token) {
+	syslog(LOG_AUTH|LOG_ERR, "LAM aklog: token_buildTokenJar returns NULL");
+	return ENOMEM;
+    }
+
     /*
      * Extract the session key from the ticket file and hand-frob an
      * afs style authenticator.
@@ -453,7 +460,8 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 
 	if (!afs_realm) {
             syslog(LOG_AUTH|LOG_ERR, "LAM aklog: afs_realm_of_cell returns %d", status);
-	    return AFSCONF_FAILURE;
+	    status = AFSCONF_FAILURE;
+	    goto done;
 	}
 
 	strcpy(realm_of_cell, afs_realm);
@@ -475,7 +483,7 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 
     if (status) {
         syslog(LOG_AUTH|LOG_ERR, "LAM aklog: get_credv5 returns %d", status);
-	return status;
+	goto done;
     }
 
     strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
@@ -491,6 +499,7 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
     {
 	char *p;
 	int len;
+	struct ktc_token atoken;
 
 	len = min(get_princ_len(context, v5cred->client, 0),
 		  second_comp(context, v5cred->client) ?
@@ -515,29 +524,31 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 	       get_cred_keylen(v5cred));
 	atoken.ticketLen = v5cred->ticket.length;
 	memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
+
+	status = token_importRxkadViceId(&rxkadToken, &atoken, 0);
+	if (status) {
+	    syslog(LOG_AUTH|LOG_ERR, "LAM aklog: importRxkad failed with %d", status);
+	    goto done;
+	}
+    }
+
+    status = token_addToken(token, rxkadToken);
+    if (status) {
+	syslog(LOG_AUTH|LOG_ERR, "LAM aklog: addToken failed with %d", status);
+	goto done;
     }
 
     if ((status = get_user_realm(context, realm_of_user))) {
         syslog(LOG_AUTH|LOG_ERR, "LAM aklog: get_user_realm returns %d", status);
-	return KRB5_REALM_UNKNOWN;
+	status = KRB5_REALM_UNKNOWN;
+	goto done;
     }
     if (strcmp(realm_of_user, realm_of_cell)) {
 	strcat(username, "@");
 	strcat(username, realm_of_user);
     }
 
-    strcpy(lastcell, aserver.cell);
-
-    /*
-     * This is a crock, but it is Transarc's crock, so
-     * we have to play along in order to get the
-     * functionality.  The way the afs id is stored is
-     * as a string in the username field of the token.
-     * Contrary to what you may think by looking at
-     * the code for tokens, this hack (AFS ID %d) will
-     * not work if you change %d to something else.
-     */
-
+    viceId = ANONYMOUSID;
 #if 0
     /* This actually crashes long-running daemons */
     if (!pr_Initialize (0, confname, aserver.cell))
@@ -553,22 +564,25 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
     if ((uid = getuid()) == 0) {
 	if ((pwd = getpwnam(user)) == NULL) {
 	    syslog(LOG_AUTH|LOG_ERR, "LAM aklog: getpwnam %s failed", user);
-	    return AUTH_FAILURE;
+	    status = AUTH_FAILURE;
+	    goto done;
 	}
+	viceId = pwd->pw_uid;
+    } else {
+	viceId = uid;
     }
 
     /* Don't do first-time registration. Handle only the simple case */
-    if ((status == 0) && (viceId != ANONYMOUSID))
- 	sprintf (username, "AFS ID %d", ((uid==0)?(int)pwd->pw_uid:(int)uid));
+    if ((status == 0) && (viceId != ANONYMOUSID)) {
+	status = token_setRxkadViceId(rxkadToken, viceId);
+	if (status) {
+	    syslog(LOG_AUTH|LOG_ERR, "LAM aklog: Error %d setting rxkad ViceId", status);
+	    status = 0;
+	} else {
+	    token_replaceToken(token, &rxkadToken);
+	}
+    }
 #endif
-
-    /* Reset the "aclient" structure before we call ktc_SetToken.
-     * This structure was first set by the ktc_GetToken call when
-     * we were comparing whether identical tokens already existed.
-     */
-    strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
-    strcpy(aclient.instance, "");
-    strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
 
 #ifndef AFS_AIX51_ENV
     /* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
@@ -578,7 +592,10 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
      */
     write(2,"",0); /* dummy write */
 #endif
+
     afssetpag = (getpagvalue("afs") > 0) ? 1 : 0;
+    token_setPag(token, afssetpag);
+
     if (uid == 0) {
 	struct sigaction newAction, origAction;
 	pid_t cid, pcid;
@@ -590,14 +607,15 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 	status = sigaction(SIGCHLD, &newAction, &origAction);
 	if (status) {
 	    syslog(LOG_AUTH|LOG_ERR, "LAM aklog: sigaction returned %d", status);
-	    return AUTH_FAILURE;
+	    status = AUTH_FAILURE;
+	    goto done;
 	}
 	syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: in daemon? forking to set tokens");
 	cid = fork();
 	if (cid <= 0) {
 	    syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog child: setting tokens");
 	    setuid(pwd->pw_uid);
-	    status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag);
+	    status = ktc_SetTokenEx(token);
 	    if (status != 0)
 		syslog(LOG_AUTH|LOG_ERR, "LAM aklog child: set tokens, returning %d", status);
 	    exit((status == 0)?0:255);
@@ -613,12 +631,18 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 	syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: collected child status %d", status);
 	sigaction(SIGCHLD, &origAction, NULL);
     } else {
-	status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag);
+	status = ktc_SetTokenEx(token);
     }
     if (status != 0)
 	syslog(LOG_AUTH|LOG_ERR, "LAM aklog: set tokens returned %d", status);
     else
 	syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: set tokens, pag %d", getpagvalue("afs"));
+
+ done:
+    if (rxkadToken) {
+	token_freeImportedToken(&rxkadToken);
+    }
+    token_FreeSet(&token);
     return(status);
 }
 
