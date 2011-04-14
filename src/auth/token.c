@@ -276,8 +276,12 @@ token_extractRxkad(struct ktc_setTokenData *token,
 	   uToken.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val,
 	   rxkadToken->ticketLen);
 
-    if (flags)
-	*flags = uToken.ktc_tokenUnion_u.at_kad.rk_primary_flag & ~0x8000;
+    if (flags) {
+	*flags = 0;
+	if ((token->flags & AFSTOKEN_EX_SETPAG)) {
+	    *flags |= AFS_SETTOK_SETPAG;
+	}
+    }
 
     if (aclient) {
 	strncpy(aclient->cell, token->cell, MAXKTCREALMLEN-1);
