@@ -640,7 +640,7 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 
  done:
     if (rxkadToken) {
-	token_freeImportedToken(&rxkadToken);
+	token_freeToken(&rxkadToken);
     }
     token_FreeSet(&token);
     return(status);

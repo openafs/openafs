@@ -75,11 +75,6 @@ decodeToken(struct token_opaque *opaque, struct ktc_tokenUnion *token) {
     return code;
 }
 
-static void
-freeToken(struct ktc_tokenUnion *token) {
-    xdr_free((xdrproc_t)xdr_ktc_tokenUnion, token);
-}
-
 static int
 rxkadTokenEqual(struct ktc_tokenUnion *tokenA, struct ktc_tokenUnion *tokenB) {
     return (tokenA->ktc_tokenUnion_u.at_kad.rk_kvno ==
@@ -220,6 +215,99 @@ token_findByType(struct ktc_setTokenData *token,
 	xdr_free((xdrproc_t)xdr_ktc_tokenUnion, output);
 	return EINVAL;
     }
+
+    return 0;
+}
+
+static void
+SetRxkadViceId(struct token_rxkad *rxkadToken, afs_int32 viceId)
+{
+    rxkadToken->rk_viceid = viceId;
+    if (viceId) {
+	if (((rxkadToken->rk_endtime - rxkadToken->rk_begintime) & 1) == 0) {
+	    rxkadToken->rk_begintime++; /* force lifetime to be odd */
+	}
+    } else {
+	if (((rxkadToken->rk_endtime - rxkadToken->rk_begintime) & 1) == 1) {
+	    rxkadToken->rk_begintime++; /* force lifetime to be even */
+	}
+    }
+}
+
+/**
+ * Import an rxkad token with a ViceId into a unified token.
+ *
+ * @param[out] atoken
+ *           The resultant unified token. Free with token_freeToken.
+ * @param[in] oldToken
+ *          The rxkad token to import.
+ * @param[in] viceId
+ *          The optional rxkad ViceId to use. Specify 0 to explicitly not
+ *          specify a ViceId.
+ *
+ * @return operation status
+ *  @retval 0 success
+ */
+int
+token_importRxkadViceId(struct ktc_tokenUnion **atoken,
+			struct ktc_token *oldToken,
+			afs_int32 viceId)
+{
+    struct ktc_tokenUnion *token;
+    struct token_rxkad *rxkadToken;
+
+    token = malloc(sizeof(struct ktc_tokenUnion));
+    if (!token)
+	return ENOMEM;
+
+    token->at_type = AFSTOKEN_UNION_KAD;
+    rxkadToken = &token->ktc_tokenUnion_u.at_kad;
+
+    rxkadToken->rk_kvno = oldToken->kvno;
+    rxkadToken->rk_begintime = oldToken->startTime;
+    rxkadToken->rk_endtime = oldToken->endTime;
+    memcpy(&rxkadToken->rk_key, &oldToken->sessionKey,
+           sizeof(oldToken->sessionKey));
+    rxkadToken->rk_ticket.rk_ticket_len = oldToken->ticketLen;
+
+    rxkadToken->rk_ticket.rk_ticket_val = xdr_alloc(oldToken->ticketLen);
+    if (!rxkadToken->rk_ticket.rk_ticket_val) {
+	free(token);
+	return ENOMEM;
+    }
+    memcpy(rxkadToken->rk_ticket.rk_ticket_val, oldToken->ticket, oldToken->ticketLen);
+
+    SetRxkadViceId(rxkadToken, viceId);
+
+    *atoken = token;
+
+    return 0;
+}
+
+/**
+ * Set the optional ViceId for an rxkad token.
+ *
+ * @param[in] token
+ *          The token union to change.
+ * @param[in] viceId
+ *          The ViceId to set. Specify 0 to explicitly set no ViceId.
+ *
+ * @return operation status
+ *  @retval EINVAL  The given token union is not an rxkad token
+ *  @retval 0  success
+ */
+int
+token_setRxkadViceId(struct ktc_tokenUnion *token,
+                     afs_int32 viceId)
+{
+    struct token_rxkad *rxkadToken;
+
+    if (token->at_type != AFSTOKEN_UNION_KAD) {
+	return EINVAL;
+    }
+
+    rxkadToken = &token->ktc_tokenUnion_u.at_kad;
+    SetRxkadViceId(rxkadToken, viceId);
 
     return 0;
 }
@@ -411,11 +499,11 @@ token_SetsEquivalent(struct ktc_setTokenData *tokenSetA,
 		    found = 1;
 		    break;
 		}
-		freeToken(&tokenB);
+		token_freeTokenContents(&tokenB);
 	    }
 	}
 	if (decodedOK)
-	    freeToken(&tokenA);
+	    token_freeTokenContents(&tokenA);
 
 	if (!found)
 	    return 0;
@@ -431,6 +519,22 @@ token_setPag(struct ktc_setTokenData *jar, int setpag) {
 	jar->flags |= AFSTOKEN_EX_SETPAG;
     else
 	jar->flags &= ~AFSTOKEN_EX_SETPAG;
+}
+
+void
+token_freeTokenContents(struct ktc_tokenUnion *atoken)
+{
+    xdr_free((xdrproc_t)xdr_ktc_tokenUnion, atoken);
+}
+    
+void
+token_freeToken(struct ktc_tokenUnion **atoken)
+{
+    if (*atoken) {
+	token_freeTokenContents(*atoken);
+	free(*atoken);
+        *atoken = NULL;
+    }
 }
 
 void
