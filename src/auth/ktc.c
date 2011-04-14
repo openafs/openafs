@@ -154,6 +154,10 @@ static struct {
 0}, {
 0}};
 
+static int
+GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
+          int atokenLen, struct ktc_principal *alicnet, afs_int32 *aviceid);
+
 
 #define MAXPIOCTLTOKENLEN \
 (3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
@@ -475,9 +479,9 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
      */
     if (code == -1 && errno == EINVAL) {
 	struct ktc_principal server;
-	struct ktc_principal client;
 	struct ktc_tokenUnion token;
 	struct ktc_token *ktcToken; /* too huge for the stack */
+	afs_int32 viceid;
 
 	memset(&server, 0, sizeof(server));
 	ktcToken = malloc(sizeof(struct ktc_token));
@@ -487,8 +491,8 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
 
 	strcpy(server.name, "afs");
 	strcpy(server.cell, cellName);
-	code = ktc_GetToken(&server, ktcToken, sizeof(struct ktc_token),
-			    &client);
+	code = GetToken(&server, ktcToken, sizeof(struct ktc_token),
+			 NULL /*client*/, &viceid);
 	if (code == 0) {
 	    *tokenSet = token_buildTokenJar(cellName);
 	    token.at_type = AFSTOKEN_UNION_KAD;
@@ -502,6 +506,7 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
 		= ktcToken->ticketLen;
 	    token.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val
 		= ktcToken->ticket;
+	    token.ktc_tokenUnion_u.at_kad.rk_viceid = viceid;
 
 	    token_addToken(*tokenSet, &token);
 
@@ -536,6 +541,13 @@ int
 ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 	     int atokenLen, struct ktc_principal *aclient)
 {
+    return GetToken(aserver, atoken, atokenLen, aclient, NULL);
+}
+
+static int
+GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
+          int atokenLen, struct ktc_principal *aclient, afs_int32 *aviceid)
+{
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
     afs_int32 code = 0;
@@ -549,6 +561,9 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 #ifdef AFS_KERBEROS_ENV
     char found = 0;
 #endif
+    if (aviceid) {
+	*aviceid = 0;
+    }
 
     LOCK_GLOBAL_MUTEX;
 
@@ -684,15 +699,22 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		       sizeof(struct ktc_encryptionKey));
 		atoken->ticketLen = tktLen;
 
-		if (aclient) {
-		    strcpy(aclient->cell, cellp);
-		    aclient->instance[0] = 0;
+		if (aclient || aviceid) {
+		    if (aclient) {
+			strcpy(aclient->cell, cellp);
+			aclient->instance[0] = 0;
+		    }
 
 		    if ((atoken->kvno == 999) ||	/* old style bcrypt ticket */
 			(ct.BeginTimestamp &&	/* new w/ prserver lookup */
 			 (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 1))) {
-			sprintf(aclient->name, "AFS ID %d", ct.ViceId);
-		    } else {
+			if (aclient) {
+			    sprintf(aclient->name, "AFS ID %d", ct.ViceId);
+			}
+			if (aviceid) {
+			    *aviceid = ct.ViceId;
+			}
+		    } else if (aclient) {
 			sprintf(aclient->name, "Unix UID %d", ct.ViceId);
 		    }
 		}
