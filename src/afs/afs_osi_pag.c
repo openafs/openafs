@@ -629,6 +629,9 @@ PagInCred(afs_ucred_t *cred)
 # endif
     if (pag == NOPAG)
 	pag = osi_get_keyring_pag(cred);
+#elif defined(AFS_AIX51_ENV)
+    if (kcred_getpag(cred, PAG_AFS, &pag) < 0 || pag == 0)
+	pag = NOPAG;
 #else
     pag = osi_get_group_pag(cred);
 #endif
