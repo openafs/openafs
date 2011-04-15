@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
 #include <afs/dir.h>
+#include <afs/unified_afs.h>
 #include "afscp.h"
 #include "afscp_internal.h"
 
@@ -184,6 +185,51 @@ afscp_Symlink(const struct afscp_venusfid *dir, char *name,
 	return -1;
     }
     _StatStuff(dir, &dfst);
+    return 0;
+}
+
+
+int
+afscp_Lock(const struct afscp_venusfid *fid, int locktype)
+{
+    int code, i, j;
+    struct AFSFid ff = fid->fid;
+    struct afscp_volume *vol;
+    struct AFSVolSync vs;
+    struct afscp_server *server;
+    struct rx_connection *c;
+
+    vol = afscp_VolumeById(fid->cell, fid->fid.Volume);
+    if (vol == NULL) {
+	afscp_errno = ENOENT;
+	return -1;
+    }
+    code = ENOENT;
+    for (i = 0; i < vol->nservers; i++) {
+	server = afscp_ServerByIndex(vol->servers[i]);
+	if (server && server->naddrs > 0) {
+	    for (j = 0; j < server->naddrs; j++) {
+		c = afscp_ServerConnection(server, j);
+		if (c == NULL)
+		    break;
+		if (locktype == LockRelease)
+		    code = RXAFS_ReleaseLock(c, &ff, &vs);
+		/* read, write, extend */
+		else if (locktype < LockRelease)
+		    code = RXAFS_SetLock(c, &ff, locktype, &vs);
+		if (code >= 0)
+		    break;
+	    }
+	}
+	if (code >= 0)
+	    break;
+    }
+    if (code != 0) {
+	if ((code == EAGAIN) || (code == UAEWOULDBLOCK) || (code == UAEAGAIN))
+	    code = EWOULDBLOCK;
+	afscp_errno = code;
+	return -1;
+    }
     return 0;
 }
 

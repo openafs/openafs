@@ -104,7 +104,16 @@ _DirUpdate(struct afscp_dirstream *d)
 	    d->dv = stored->dv;
 	    return 0;
 	}
+	pthread_mutex_lock(&(stored->mtx));
 	tdelete(&key, &v->dircache, dircompare);
+	stored->nwaiters++;
+	while (stored->nwaiters > 1) {
+	    pthread_cond_wait(&(stored->cv), &(stored->mtx));
+	}
+	stored->nwaiters--;
+	pthread_cond_destroy(&(stored->cv));
+	pthread_mutex_unlock(&(stored->mtx));
+	pthread_mutex_destroy(&(stored->mtx));
 	if (d->dirbuffer != stored->dirbuffer)
 	    free(stored->dirbuffer);
 	free(stored);
@@ -142,6 +151,9 @@ _DirUpdate(struct afscp_dirstream *d)
 	    stored->buflen = d->buflen;
 	    stored->dirbuffer = d->dirbuffer;
 	    stored->dv = d->dv;
+	    stored->nwaiters = 0;
+	    pthread_mutex_init(&(stored->mtx), NULL);
+	    pthread_cond_init(&(stored->cv), NULL);
 	    *(struct afscp_dircache **)cached = stored;
 	} else {
 	    tdelete(&key, &v->dircache, dircompare);

@@ -9,6 +9,11 @@
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 
+#ifdef AFS_NT40_ENV
+/* not included elsewhere for Windows */
+#include <pthread.h>
+#endif
+
 struct afscp_server {
     afsUUID id;
     int index;
@@ -69,11 +74,18 @@ struct afscp_dircache {
     int buflen;
     char *dirbuffer;
     int dv;
+    int nwaiters;
+    pthread_mutex_t mtx;
+    pthread_cond_t cv;
 };
 
 struct afscp_statent {
     struct afscp_venusfid me;
     struct AFSFetchStatus status;
+    int nwaiters;
+    int cleanup;
+    pthread_mutex_t mtx;
+    pthread_cond_t cv;
 };
 
 struct afscp_openfile {
@@ -112,6 +124,12 @@ struct afscp_server *afscp_ServerByIndex(int);
 struct rx_connection *afscp_ServerConnection(const struct afscp_server *,
 					     int);
 
+int afscp_CheckCallBack(const struct afscp_venusfid *fid,
+			const struct afscp_server *server,
+			afs_uint32 *expiretime);
+int afscp_FindCallBack(const struct afscp_venusfid *f,
+		       const struct afscp_server *server,
+		       struct afscp_callback *ret);
 int afscp_AddCallBack(const struct afscp_server *,
 		      const struct AFSFid *,
 		      const struct AFSFetchStatus *,
@@ -120,6 +138,7 @@ int afscp_RemoveCallBack(const struct afscp_server *,
 			 const struct afscp_venusfid *);
 int afscp_ReturnCallBacks(const struct afscp_server *);
 int afscp_ReturnAllCallBacks(void);
+int afscp_WaitForCallback(const struct afscp_venusfid *fid, int seconds);
 
 /* file metastuff */
 /* frees with free() */
@@ -146,6 +165,7 @@ int afscp_GetStatus(const struct afscp_venusfid *, struct AFSFetchStatus *);
 int afscp_StoreStatus(const struct afscp_venusfid *, struct AFSStoreStatus *);
 int afscp_CreateFile(const struct afscp_venusfid *, char *,
 		     struct AFSStoreStatus *, struct afscp_venusfid **);
+int afscp_Lock(const struct afscp_venusfid *, int locktype);
 int afscp_MakeDir(const struct afscp_venusfid *, char *,
 		  struct AFSStoreStatus *, struct afscp_venusfid **);
 int afscp_Symlink(const struct afscp_venusfid *, char *,

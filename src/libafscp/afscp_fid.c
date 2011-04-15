@@ -102,6 +102,61 @@ statcompare(const void *a, const void *b)
     return 0;
 }
 
+static void
+_StatCleanup(struct afscp_statent *stored)
+{
+    pthread_cond_destroy(&(stored->cv));
+    pthread_mutex_unlock(&(stored->mtx));
+    pthread_mutex_destroy(&(stored->mtx));
+    free(stored);
+}
+
+int
+afscp_WaitForCallback(const struct afscp_venusfid *fid, int seconds)
+{
+    void **cached;
+    struct afscp_volume *v;
+    struct afscp_statent *stored, key;
+    int code = 0;
+
+    v = afscp_VolumeById(fid->cell, fid->fid.Volume);
+    if (v == NULL) {
+        return -1;
+    }
+    memmove(&key.me, fid, sizeof(*fid));
+
+    cached = tfind(&key, &v->statcache, statcompare);
+    if (cached != NULL) {
+        struct timeval tv;
+        struct timespec ts;
+
+        stored = *(struct afscp_statent **)cached;
+
+        if (seconds) {
+	    gettimeofday(&tv, NULL);
+	    ts.tv_sec = tv.tv_sec + seconds;
+	    ts.tv_nsec = 0;
+	}
+
+        pthread_mutex_lock(&(stored->mtx));
+	stored->nwaiters++;
+	if (seconds)
+	    code = pthread_cond_timedwait(&(stored->cv), &(stored->mtx), &ts);
+	else
+	    pthread_cond_wait(&(stored->cv), &(stored->mtx));
+	if ((stored->nwaiters == 1) && stored->cleanup)
+	    _StatCleanup(stored);
+	else
+	    stored->nwaiters--;
+        pthread_mutex_unlock(&(stored->mtx));
+    }
+    if ((code == EINTR) || (code == ETIMEDOUT)) {
+	afscp_errno = code;
+	code = -1;
+    }      
+    return code;
+}
+
 int
 afscp_GetStatus(const struct afscp_venusfid *fid, struct AFSFetchStatus *s)
 {
@@ -125,10 +180,14 @@ afscp_GetStatus(const struct afscp_venusfid *fid, struct AFSFetchStatus *s)
     cached = tfind(&key, &v->statcache, statcompare);
     if (cached != NULL) {
 	stored = *(struct afscp_statent **)cached;
+	pthread_mutex_lock(&(stored->mtx));
 	memmove(s, &stored->status, sizeof(*s));
 	afs_dprintf(("Stat %u.%lu.%lu.%lu returning cached result\n",
 		     fid->cell->id, fid->fid.Volume, fid->fid.Vnode,
 		     fid->fid.Unique));
+	if (stored->nwaiters)
+	    pthread_cond_broadcast(&(stored->cv));
+	pthread_mutex_unlock(&(stored->mtx));
 	return 0;
     }
 
@@ -201,10 +260,41 @@ afscp_Stat(const struct afscp_venusfid *fid, struct stat *s)
 }
 
 int
+afscp_CheckCallBack(const struct afscp_venusfid *fid, const struct afscp_server *server, afs_uint32 *expiretime)
+{
+    struct AFSFetchStatus status;
+    struct afscp_callback *cb = NULL;
+    int code;
+    time_t now;
+
+    if (expiretime == NULL || fid == NULL) {
+	fprintf(stderr, "NULL args given to afscp_CheckCallback, cannot continue\n");
+	return -1;
+    }
+
+    *expiretime = 0;
+
+    code = afscp_GetStatus(fid, &status);
+    if (code != 0)
+	return code;
+
+    code = afscp_FindCallBack(fid, server, cb);
+    if (code != 0)
+	return code;
+
+    if (cb) {
+	time(&now);
+	*expiretime = cb->cb.ExpirationTime + cb->as_of - now;
+    }
+
+    return 0;
+}
+
+int
 _StatInvalidate(const struct afscp_venusfid *fid)
 {
     struct afscp_volume *v;
-    struct afscp_statent key;
+    struct afscp_statent *stored, key;
     void **cached;
 
     v = afscp_VolumeById(fid->cell, fid->fid.Volume);
@@ -215,8 +305,16 @@ _StatInvalidate(const struct afscp_venusfid *fid)
 
     cached = tfind(&key, &v->statcache, statcompare);
     if (cached != NULL) {
-	free(*cached);
+        stored = *(struct afscp_statent **)cached;
+	pthread_mutex_lock(&(stored->mtx));
 	tdelete(&key, &v->statcache, statcompare);
+	if (stored->nwaiters) {
+	    /* avoid blocking callback thread */
+	    pthread_cond_broadcast(&(stored->cv));
+	    stored->cleanup = 1;
+	} else
+	    _StatCleanup(stored);
+	pthread_mutex_unlock(&(stored->mtx));
     }
     return 0;
 }
@@ -238,6 +336,10 @@ _StatStuff(const struct afscp_venusfid *fid, const struct AFSFetchStatus *s)
     if (cached != NULL) {
 	stored = malloc(sizeof(struct afscp_statent));
 	if (stored != NULL) {
+	    pthread_mutex_init(&(stored->mtx), NULL);
+	    pthread_cond_init(&(stored->cv), NULL);
+	    stored->nwaiters = 0;
+	    stored->cleanup = 0;
 	    memmove(&stored->me, fid, sizeof(*fid));
 	    memmove(&stored->status, s, sizeof(*s));
 	    *(struct afscp_statent **)cached = stored;
