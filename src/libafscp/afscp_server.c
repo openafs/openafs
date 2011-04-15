@@ -334,6 +334,7 @@ afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
     return ret;
 }
 
+/* takes server in host byte order */
 struct afscp_server *
 afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 {
@@ -435,6 +436,7 @@ afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
     return ret;
 }
 
+/* takes server in host byte order */
 struct afscp_server *
 afscp_AnyServerByAddr(afs_uint32 addr)
 {
