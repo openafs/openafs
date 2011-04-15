@@ -108,7 +108,8 @@ static int get_user_realm(krb5_context, char *);
 #error "Must have either keyblock or session member of krb5_creds"
 #endif
 
-char *afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, int fallback)
+char *
+afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, int fallback)
 {
     static char krbrlm[REALM_SZ+1];
     char **hrealms = 0;
@@ -206,9 +207,10 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
     return AUTH_SUCCESS;
 }
 
-static krb5_error_code get_credv5(krb5_context context, char *user,
-				  char *name, char *inst, char *realm,
-				  krb5_creds **creds)
+static krb5_error_code
+get_credv5(krb5_context context, char *user,
+	   char *name, char *inst, char *realm,
+	   krb5_creds **creds)
 {
     krb5_creds increds;
     krb5_error_code r;
@@ -245,7 +247,8 @@ static krb5_error_code get_credv5(krb5_context context, char *user,
 }
 
 
-static int get_user_realm(krb5_context context, char *realm)
+static int
+get_user_realm(krb5_context context, char *realm)
 {
     static krb5_principal client_principal = 0;
     int i;
@@ -290,7 +293,8 @@ aklog_getpasswd(char * userName)
 }
 
 
-static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
+static int
+get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
 {
     int status = 0;
     struct afsconf_dir *configdir;
@@ -326,7 +330,8 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
  * doing anything.  Otherwise, log to it and mark that it has been logged
  * to.
  */
-static int auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
+static int
+auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
 {
     int status = 0;
     char username[BUFSIZ];	/* To hold client username structure */
