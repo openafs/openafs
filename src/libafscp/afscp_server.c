@@ -250,6 +250,7 @@ _xdr_bulkaddrs(XDR * xdrs, void *objp)
     return xdr_bulkaddrs(xdrs, objp);
 }
 
+/* takes server in host byte order */
 struct afscp_server *
 afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
 {
@@ -460,6 +461,7 @@ afscp_AnyServerByAddr(afs_uint32 addr)
     return NULL;
 }
 
+/* takes server in host byte order */
 struct afscp_server *
 afscp_ServerByIndex(int i)
 {

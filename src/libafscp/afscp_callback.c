@@ -103,6 +103,48 @@ init_afs_cb(void)
 }				/* init_afs_cb */
 
 int
+afscp_FindCallBack(const struct afscp_venusfid *f, const struct afscp_server *server, struct afscp_callback *ret)
+{
+    int i;
+    struct afscp_callback *use = NULL, *cb;
+    time_t now;
+    struct afscp_venusfid fid;
+
+    ret = NULL;
+
+    time(&now);
+    for (i = 0; i < afscp_maxcallbacks; i++) {
+	cb = &allcallbacks[i];
+	if ((f->fid.Volume == cb->fid.Volume) &&
+	    (f->fid.Vnode == cb->fid.Vnode) &&
+	    (f->fid.Unique == cb->fid.Unique)) {
+	    if (server && (cb->server != server))
+		continue;
+	    use = cb;
+	    break;
+	}
+    }
+    if (!use)
+	return -1;
+
+    if (use->cb.ExpirationTime + use->as_of < now) {
+	if (use->valid) {
+	    fid.cell = afscp_CellById(use->server->cell);
+	    memcpy(&fid.fid, &use->fid, sizeof(struct AFSFid));
+	    _StatInvalidate(&fid);
+	}
+	use->valid = 0;
+    }
+
+    if (use->valid)
+	ret = use;
+    else
+	return -1;
+
+    return 0;
+}
+
+int
 afscp_AddCallBack(const struct afscp_server *server,
 		  const struct AFSFid *fid,
 		  const struct AFSFetchStatus *fst,
@@ -112,37 +154,36 @@ afscp_AddCallBack(const struct afscp_server *server,
     struct afscp_callback *use = NULL, *newlist;
     struct afscp_venusfid f;
     time_t now;
-
+    
     time(&now);
-
+    
     for (i = 0; i < afscp_maxcallbacks; i++) {
 	if (allcallbacks[i].cb.ExpirationTime + allcallbacks[i].as_of < now) {
-	    if (allcallbacks[i].valid) {
-		f.cell = afscp_CellById(allcallbacks[i].server->cell);
-		memcpy(&f.fid, &allcallbacks[i].fid, sizeof(struct AFSFid));
-		_StatInvalidate(&f);
-	    }
-	    allcallbacks[i].valid = 0;
-
-	}
-
-	if (allcallbacks[i].valid == 0)
-	    use = &allcallbacks[i];
-	if ((allcallbacks[i].server == server) &&
-	    (fid->Volume == allcallbacks[i].fid.Volume) &&
-	    (fid->Vnode == allcallbacks[i].fid.Vnode) &&
-	    (fid->Unique == allcallbacks[i].fid.Unique)) {
-	    use = &allcallbacks[i];
-	    break;
-	}
+            if (allcallbacks[i].valid) {
+                f.cell = afscp_CellById(allcallbacks[i].server->cell);
+                memcpy(&f.fid, &allcallbacks[i].fid, sizeof(struct AFSFid));
+                _StatInvalidate(&f);
+            }
+            allcallbacks[i].valid = 0;
+        }
+	
+        if (allcallbacks[i].valid == 0)
+            use = &allcallbacks[i];
+        if ((allcallbacks[i].server == server) &&
+            (fid->Volume == allcallbacks[i].fid.Volume) &&
+            (fid->Vnode == allcallbacks[i].fid.Vnode) &&
+            (fid->Unique == allcallbacks[i].fid.Unique)) {
+            use = &allcallbacks[i];
+            break;
+        }
     }
     if (use == NULL) {
-	if (afscp_maxcallbacks >= afscp_cballoced) {
-	    if (afscp_cballoced != 0)
-		afscp_cballoced = afscp_cballoced * 2;
-	    else
-		afscp_cballoced = 4;
-	    newlist = realloc(allcallbacks, afscp_cballoced *
+        if (afscp_maxcallbacks >= afscp_cballoced) {
+            if (afscp_cballoced != 0)
+                afscp_cballoced = afscp_cballoced * 2;
+            else
+                afscp_cballoced = 4;
+            newlist = realloc(allcallbacks, afscp_cballoced *
 			      sizeof(struct afscp_callback));
 	    if (newlist == NULL) {
 		return -1;
