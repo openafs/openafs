@@ -814,7 +814,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	exit(CLD_EXITED, 0);
 # endif /* AFS_SGI_ENV */
     }
-# if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+# if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
     else if (parm == AFSOP_RXEVENT_DAEMON) {
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
@@ -826,7 +826,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	exit(CLD_EXITED, 0);
 #  endif /* AFS_SGI_ENV */
     }
-# endif /* AFS_SUN5_ENV || RXK_LISTENER_ENV */
+# endif /* AFS_SUN5_ENV || RXK_LISTENER_ENV || RXK_UPCALL_ENV */
 #endif /* AFS_DAEMONOP_ENV */
     else if (parm == AFSOP_BASIC_INIT) {
 	afs_int32 temp;
