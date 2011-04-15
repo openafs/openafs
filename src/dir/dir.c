@@ -393,6 +393,8 @@ EnumerateDir(void *dir, int (*hookproc) (), void *hook)
     int num;
     register struct DirHeader *dhp;
     struct DirEntry *ep;
+    int code = 0;
+    int elements;
 
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
@@ -400,7 +402,10 @@ EnumerateDir(void *dir, int (*hookproc) (), void *hook)
     for (i = 0; i < NHASHENT; i++) {
 	/* For each hash chain, enumerate everyone on the list. */
 	num = ntohs(dhp->hashTable[i]);
-	while (num != 0) {
+	elements = 0;
+	while (num != 0 && elements < BIGMAXPAGES * EPP) {
+	    elements++;
+
 	    /* Walk down the hash table list. */
 	    code = GetVerifiedBlob(dir, num, &ep);
 	    if (code)
@@ -430,6 +435,7 @@ IsEmpty(void *dir)
     register struct DirHeader *dhp;
     struct DirEntry *ep;
     int code;
+    int elements;
 
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
@@ -437,7 +443,9 @@ IsEmpty(void *dir)
     for (i = 0; i < NHASHENT; i++) {
 	/* For each hash chain, enumerate everyone on the list. */
 	num = ntohs(dhp->hashTable[i]);
-	while (num != 0) {
+	elements = 0;
+	while (num != 0 && elements < BIGMAXPAGES * EPP) {
+	    elements++;
 	    /* Walk down the hash table list. */
 	    code = GetVerifiedBlob(dir, num, &ep);
 	    if (code)
@@ -572,24 +580,27 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
     }
 
     lp = &(dhp->hashTable[i]);
-    while (1) {
+    elements = 0;
+    /* Detect circular hash chains. Absolute max size of a directory */
+    while (elements < BIGMAXPAGES * EPP) {
+	elements++;
+
 	/* Look at each hash conflict entry. */
 	if (!strcmp(ename, tp->name)) {
 	    /* Found our entry. */
 	    *previtem = lp;
 	    return tp;
 	}
+
 	DRelease(lp, 0);
 	lp = &(tp->next);
-	if (tp->next == 0) {
-	    /* The end of the line */
-	    DRelease(lp, 0);	/* Release all locks. */
-	    return 0;
-	}
+	if (tp->next == 0)
+	    break;
+
 	GetVerifiedBlob(dir, (u_short) ntohs(tp->next), &tp);
-	if (tp == NULL) {
-	    DRelease(lp, 0);
-	    return NULL;
-	}
+	if (tp == NULL)
+	    break;
     }
+    DRelease(lp, 0);
+    return NULL;
 }
