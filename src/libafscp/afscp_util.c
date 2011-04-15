@@ -100,8 +100,7 @@ _GetSecurityObject(struct afscp_cell *cell)
     krb5_creds match;
     krb5_creds *cred;
     krb5_ccache cc;
-    char **realms, *realm, *inst;
-    char name[1024];
+    char **realms, *realm;
     struct afsconf_cell celldata;
     char localcell[MAXCELLCHARS + 1];
     struct rx_securityClass *sc;
@@ -168,10 +167,8 @@ _GetSecurityObject(struct afscp_cell *cell)
 	krb5_free_principal(context, match.server);
 	match.server = NULL;
 
-	inst = cell->name;
-	snprintf(name, sizeof(name), "afs/%s", inst);
 	code = krb5_build_principal(context, &match.server,
-				    strlen(realm), realm, name, (void *)NULL);
+				    strlen(realm), realm, "afs", (void *)NULL);
 	if (code == 0)
 	    code = krb5_get_credentials(context, 0, cc, &match, &cred);
 	if (code != 0) {
