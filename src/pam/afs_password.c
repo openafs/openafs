@@ -168,6 +168,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     }
 
     if (password == NULL) {
+	char *prompt_password;
 	torch_password = 1;
 	if (use_first_pass)
 	    RET(PAM_AUTH_ERR);	/* shouldn't happen */
@@ -178,12 +179,12 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    RET(PAM_AUTH_ERR);
 	}
 
-	errcode = pam_afs_prompt(pam_convp, &password, 0, PAMAFS_PWD_PROMPT);
-	if (errcode != PAM_SUCCESS || password == NULL) {
+	errcode = pam_afs_prompt(pam_convp, &prompt_password, 0, PAMAFS_PWD_PROMPT);
+	if (errcode != PAM_SUCCESS || prompt_password == NULL) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_GETPASS_FAILED);
 	    RET(PAM_AUTH_ERR);
 	}
-	if (password[0] == '\0') {
+	if (prompt_password[0] == '\0') {
 	    pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	    RET(PAM_NEW_AUTHTOK_REQD);
 	}
@@ -195,17 +196,17 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	 * this storage, copy it to a buffer that won't need to be freed
 	 * later, and free this storage now.
 	 */
-	strncpy(my_password_buf, password, sizeof(my_password_buf));
+	strncpy(my_password_buf, prompt_password, sizeof(my_password_buf));
 	my_password_buf[sizeof(my_password_buf) - 1] = '\0';
-	memset(password, 0, strlen(password));
-	free(password);
+	memset(prompt_password, 0, strlen(password));
+	free(prompt_password);
 	password = my_password_buf;
     }
 
-    if ((code = ka_VerifyUserPassword(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, user,	/* kerberos name */
+    if ((code = ka_VerifyUserPassword(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, (char *)user,	/* kerberos name */
 				      NULL,	/* instance */
 				      NULL,	/* realm */
-				      password,	/* password */
+				      (char *)password,	/* password */
 				      0,	/* spare 2 */
 				      &reason /* error string */ )) != 0) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_LOGIN_FAILED, user, reason);
@@ -275,10 +276,10 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     strcpy(realm, localcell);
     strcpy(cell, realm);
     /* oldkey is not used in ka_ChangePassword (only for ka_auth) */
-    ka_StringToKey(password, realm, &oldkey);
+    ka_StringToKey((char *)password, realm, &oldkey);
     ka_StringToKey(new_password, realm, &newkey);
     if ((code =
-	 ka_GetAdminToken(user, instance, realm, &oldkey, 20, &token,
+	 ka_GetAdminToken((char *)user, instance, realm, &oldkey, 20, &token,
 			  0)) != 0) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
 	RET(PAM_AUTH_ERR);
@@ -289,7 +290,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
 	RET(PAM_AUTH_ERR);
     }
-    if ((code = ka_ChangePassword(user,	/* kerberos name */
+    if ((code = ka_ChangePassword((char *)user,	/* kerberos name */
 				  instance,	/* instance */
 				  conn,	/* conn */
 				  0,	/* old password unused */
@@ -304,7 +305,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
   out:
     if (password && torch_password) {
-	memset(password, 0, strlen(password));
+	memset((char *)password, 0, strlen(password));
     }
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV

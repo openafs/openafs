@@ -285,7 +285,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		auth_ok = !do_klog(user, password, "00:00:01", cell_ptr);
 		ktc_ForgetAllTokens();
 	    } else {
-		if (ka_VerifyUserPassword(KA_USERAUTH_VERSION, user,	/* kerberos name */
+		if (ka_VerifyUserPassword(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					  NULL,	/* instance */
 					  cell_ptr,	/* realm */
 					  (char*)password,	/* password */
@@ -304,7 +304,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    if (use_klog)
 		auth_ok = !do_klog(user, password, NULL, cell_ptr);
 	    else {
-		if (ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, user,	/* kerberos name */
+		if (ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					       NULL,	/* instance */
 					       cell_ptr,	/* realm */
 					       (char*)password,	/* password */
