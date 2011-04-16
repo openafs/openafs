@@ -97,6 +97,34 @@ ubeacon_Debug(struct ubik_debug *aparm)
     aparm->nServers = nServers;
 }
 
+static int
+amSyncSite(void) {
+    afs_int32 now;
+    afs_int32 rcode;
+
+    /* special case for fast startup */
+    if (nServers == 1 && !amIClone)
+	return 1;		/* one guy is always the sync site */
+
+    UBIK_BEACON_LOCK;
+    if (beacon_globals.ubik_amSyncSite == 0 || amIClone)
+	rcode = 0;		/* if I don't think I'm the sync site, say so */
+    else {
+	now = FT_ApproxTime();
+	if (beacon_globals.syncSiteUntil <= now) {	/* if my votes have expired, say so */
+	    if (beacon_globals.ubik_amSyncSite)
+		ubik_dprint("Ubik: I am no longer the sync site\n");
+	    beacon_globals.ubik_amSyncSite = 0;
+	    rcode = 0;
+	} else {
+	    rcode = 1;		/* otherwise still have the required votes */
+	}
+    }
+    UBIK_BEACON_UNLOCK;
+    ubik_dprint("beacon: amSyncSite is %d\n", rcode);
+    return rcode;
+}
+
 /*!
  * \brief Procedure that determines whether this site has enough current votes to remain sync site.
  *
@@ -116,32 +144,13 @@ ubeacon_Debug(struct ubik_debug *aparm)
 int
 ubeacon_AmSyncSite(void)
 {
-    afs_int32 now;
     afs_int32 rcode;
 
-    /* special case for fast startup */
-    if (nServers == 1 && !amIClone) {
-	return 1;		/* one guy is always the sync site */
-    }
+    rcode = amSyncSite();
 
-    UBIK_BEACON_LOCK;
-    if (beacon_globals.ubik_amSyncSite == 0 || amIClone)
-	rcode = 0;		/* if I don't think I'm the sync site, say so */
-    else {
-	now = FT_ApproxTime();
-	if (beacon_globals.syncSiteUntil <= now) {	/* if my votes have expired, say so */
-	    if (beacon_globals.ubik_amSyncSite)
-		ubik_dprint("Ubik: I am no longer the sync site\n");
-	    beacon_globals.ubik_amSyncSite = 0;
-	    rcode = 0;
-	} else {
-	    rcode = 1;		/* otherwise still have the required votes */
-	}
-    }
-    if (rcode == 0)
-	urecovery_ResetState();	/* force recovery to re-execute */
-    UBIK_BEACON_UNLOCK;
-    ubik_dprint("beacon: amSyncSite is %d\n", rcode);
+    if (!rcode)
+	urecovery_ResetState();
+
     return rcode;
 }
 
@@ -463,16 +472,22 @@ ubeacon_Interact(void *dummy)
 	    ttid.counter = ubik_dbase->tidCounter + 1;
 	tversion.epoch = ubik_dbase->version.epoch;
 	tversion.counter = ubik_dbase->version.counter;
+	UBIK_VERSION_UNLOCK;
 
 	/* now analyze return codes, counting up our votes */
 	yesVotes = 0;		/* count how many to ensure we have quorum */
 	oldestYesVote = 0x7fffffff;	/* time quorum expires */
-	syncsite = ubeacon_AmSyncSite();
+	syncsite = amSyncSite();
+	if (!syncsite) {
+	    /* Ok to use the DB lock here since we aren't sync site */
+	    DBHOLD(ubik_dbase);
+	    urecovery_ResetState();
+	    DBRELE(ubik_dbase);
+	}
 	startTime = FT_ApproxTime();
 	/*
 	 * Don't waste time using mult Rx calls if there are no connections out there
 	 */
-	UBIK_VERSION_UNLOCK;
 	if (i > 0) {
 	    char hoststr[16];
 	    multi_Rx(connections, i) {
@@ -557,7 +572,9 @@ ubeacon_Interact(void *dummy)
 		ubik_dprint("Ubik: I am no longer the sync site\n");
 	    beacon_globals.ubik_amSyncSite = 0;
 	    UBIK_BEACON_UNLOCK;
+	    DBHOLD(ubik_dbase);
 	    urecovery_ResetState();	/* tell recovery we're no longer the sync site */
+	    DBRELE(ubik_dbase);
 	}
 
     }				/* while loop */
