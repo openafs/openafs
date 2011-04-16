@@ -146,7 +146,7 @@ tests: all
 config: prelude
 	+${COMPILE_PART1} config ${COMPILE_PART2}
 
-procmgmt: config
+procmgmt: $(DIR_roken) config
 	+${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
 util: $(DIR_roken) procmgmt hcrypto lwp_depinstall rx_depinstall
@@ -185,7 +185,7 @@ lwp: util lwp_depinstall
 roken: config
 	+${COMPILE_PART1} roken ${COMPILE_PART2}
 
-rxgen: config
+rxgen: $(DIR_roken) config
 	+${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
 rx: config lwp rxgen rx_depinstall
