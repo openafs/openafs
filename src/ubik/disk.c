@@ -886,13 +886,14 @@ udisk_commit(struct ubik_trans *atrans)
 	    dbase->version = newversion;
 	    UBIK_VERSION_UNLOCK;
 
+	    urecovery_state |= UBIK_RECLABELDB;
+
 	    /* Ignore the error here. If the call fails, the site is
 	     * marked down and when we detect it is up again, we will
 	     * send the entire database to it.
 	     */
 	    ContactQuorum_DISK_SetVersion( atrans, 1 /*CStampVersion */ ,
 					   &oldversion, &newversion);
-	    urecovery_state |= UBIK_RECLABELDB;
 	}
 
 	UBIK_VERSION_LOCK;
