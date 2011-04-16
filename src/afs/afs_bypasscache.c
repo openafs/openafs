@@ -518,7 +518,6 @@ afs_PrefetchNoCache(struct vcache *avc,
 #endif
 
     struct afs_conn *tc;
-    afs_int32 i;
     struct rx_call *tcall;
     struct tlocal1 {
 	struct AFSVolSync tsync;
@@ -536,7 +535,6 @@ afs_PrefetchNoCache(struct vcache *avc,
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */);
 	if (tc) {
 	    avc->callback = tc->parent->srvr->server;
-	    i = osi_Time();
 	    tcall = rx_NewCall(tc->id);
 #ifdef AFS_64BIT_CLIENT
 	    if (!afs_serverHasNo64Bit(tc)) {

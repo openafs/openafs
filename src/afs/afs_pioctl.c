@@ -730,7 +730,7 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 {
     struct afs_ioctl_sys ua, *uap = &ua;
     struct vcache *tvc;
-    int ioctlDone = 0, code = 0;
+    int code = 0;
 
     AFS_STATCNT(afs_xioctl);
     ua.com = com;
@@ -752,7 +752,6 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	    code = HandleIoctl(tvc, uap->com, datap);
 	    osi_FreeSmallSpace(datap);
 	    AFS_GUNLOCK();
-	    ioctlDone = 1;
 	}
 	else
 	    code = EINVAL;

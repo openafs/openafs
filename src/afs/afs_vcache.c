@@ -1519,7 +1519,6 @@ afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
 		 struct AFSVolSync *tsyncp)
 {
     afs_int32 code;
-    afs_uint32 start;
     struct afs_conn *tc;
     struct AFSFetchStatus OutDirStatus;
     XSTATS_DECLS;
@@ -1530,7 +1529,6 @@ afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
 	if (tc) {
 	    if (serverp)
 		*serverp = tc->parent->srvr->server;
-	    start = osi_Time();
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_XLOOKUP);
 	    RX_AFS_GUNLOCK();
 	    code =
