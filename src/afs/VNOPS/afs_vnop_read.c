@@ -52,13 +52,7 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
     afs_int32 trimlen;
     struct dcache *tdc = 0;
     afs_int32 error, trybusy = 1;
-#ifdef AFS_DARWIN80_ENV
-    uio_t tuiop = NULL;
-#else
-    struct uio tuio;
-    struct uio *tuiop = &tuio;
-    struct iovec *tvec = NULL;
-#endif
+    struct uio *tuiop = NULL;
     afs_int32 code;
     struct vrequest treq;
 
@@ -94,9 +88,6 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
     }
 #endif
 
-#ifndef AFS_DARWIN80_ENV
-    tvec = osi_AllocSmallSpace(sizeof(struct iovec));
-#endif
     totalLength = AFS_UIO_RESID(auio);
     filePos = AFS_UIO_OFFSET(auio);
     afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc,
@@ -121,14 +112,8 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	if (len > AFS_ZEROS)
 	    len = sizeof(afs_zeros);	/* and in 0 buffer */
 	len = 0;
-#ifdef AFS_DARWIN80_ENV
 	trimlen = len;
-	tuiop = afsio_darwin_partialcopy(auio, trimlen);
-#else
-	afsio_copy(auio, &tuio, tvec);
-	trimlen = len;
-	afsio_trim(&tuio, trimlen);
-#endif
+	tuiop = afsio_partialcopy(auio, trimlen);
 	AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, tuiop, code);
     }
 
@@ -329,14 +314,8 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 		len = tlen;
 	    if (len > AFS_ZEROS)
 		len = sizeof(afs_zeros);	/* and in 0 buffer */
-#ifdef AFS_DARWIN80_ENV
 	    trimlen = len;
-            tuiop = afsio_darwin_partialcopy(auio, trimlen);
-#else
-	    afsio_copy(auio, &tuio, tvec);
-	    trimlen = len;
-	    afsio_trim(&tuio, trimlen);
-#endif
+            tuiop = afsio_partialcopy(auio, trimlen);
 	    AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, tuiop, code);
 	    if (code) {
 		error = code;
@@ -346,16 +325,9 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	    /* get the data from the cache */
 
 	    /* mung uio structure to be right for this transfer */
-#ifdef AFS_DARWIN80_ENV
 	    trimlen = len;
-            tuiop = afsio_darwin_partialcopy(auio, trimlen);
-	    uio_setoffset(tuiop, offset);
-#else
-	    afsio_copy(auio, &tuio, tvec);
-	    trimlen = len;
-	    afsio_trim(&tuio, trimlen);
-	    tuio.afsio_offset = offset;
-#endif
+            tuiop = afsio_partialcopy(auio, trimlen);
+	    AFS_UIO_SETOFFSET(tuiop, offset);
 
 	    code = (*(afs_cacheType->vreadUIO))(&tdc->f.inode, tuiop);
 
@@ -374,12 +346,10 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 
 	if (len <= 0)
 	    break;		/* surprise eof */
-#ifdef AFS_DARWIN80_ENV
 	if (tuiop) {
-	    uio_free(tuiop);
-	    tuiop = 0;
+	    afsio_free(tuiop);
+	    tuiop = NULL;
 	}
-#endif
     }				/* the whole while loop */
 
     /*
@@ -408,12 +378,8 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 
     code = afs_CheckCode(error, &treq, 10);
 
-#ifdef AFS_DARWIN80_ENV
     if (tuiop)
-       uio_free(tuiop);
-#else
-    osi_FreeSmallSpace(tvec);
-#endif
+       afsio_free(tuiop);
 
 out:
     AFS_DISCON_UNLOCK();

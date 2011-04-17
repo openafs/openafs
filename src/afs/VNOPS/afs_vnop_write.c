@@ -218,13 +218,7 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
     struct vnode *vp = AFSTOV(avc);
 #endif
-#ifdef AFS_DARWIN80_ENV
-    uio_t tuiop = NULL;
-#else
-    struct uio tuio;
-    struct uio *tuiop = &tuio;
-    struct iovec *tvec;		/* again, should have define */
-#endif
+    struct uio *tuiop = NULL;
     afs_int32 code;
     struct vrequest treq;
 
@@ -307,9 +301,7 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
     afs_FakeOpen(avc);
 #endif
     avc->f.states |= CDirty;
-#ifndef AFS_DARWIN80_ENV
-    tvec = osi_AllocSmallSpace(sizeof(struct iovec));
-#endif
+
     while (totalLength > 0) {
 	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
 					 noLock);
@@ -326,17 +318,10 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 	    len = max - offset;
 	}
 
-#ifdef  AFS_DARWIN80_ENV
 	if (tuiop)
-	    uio_free(tuiop);
+	    afsio_free(tuiop);
 	trimlen = len;
-	tuiop = afsio_darwin_partialcopy(auio, trimlen);
-#else
-	/* mung uio structure to be right for this transfer */
-	afsio_copy(auio, &tuio, tvec);
-	trimlen = len;
-	afsio_trim(&tuio, trimlen);
-#endif
+	tuiop = afsio_partialcopy(auio, trimlen);
 	AFS_UIO_SETOFFSET(tuiop, offset);
 
         code = (*(afs_cacheType->vwriteUIO))(avc, &tdc->f.inode, tuiop);
@@ -413,11 +398,8 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 	avc->vc_error = error;
     if (!noLock)
 	ReleaseWriteLock(&avc->lock);
-#ifdef AFS_DARWIN80_ENV
-    uio_free(tuiop);
-#else
-    osi_FreeSmallSpace(tvec);
-#endif
+    afsio_free(tuiop);
+
 #ifndef	AFS_VM_RDWR_ENV
     /*
      * If write is implemented via VM, afs_fsync() is called from the high-level

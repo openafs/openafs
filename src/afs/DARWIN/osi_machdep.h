@@ -225,9 +225,9 @@ extern int igetinode(mount_t vfsp, dev_t dev , ino_t inode, vnode_t *vpp,
 #define osi_curcred() &afs_osi_cred
 
 #ifdef AFS_DARWIN80_ENV
-uio_t afsio_darwin_partialcopy(uio_t auio, int size);
-
-#define uprintf printf
+# define afsio_free(X) uio_free(X)
+# define afsio_setoffset(X, Y) uio_setoffset(X, Y)
+# define uprintf printf
 #endif
 
 /* Vnode related macros */

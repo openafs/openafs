@@ -603,9 +603,14 @@ extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
 extern afs_int32 PagInCred(afs_ucred_t *cred);
 
 /* afs_osi_uio.c */
+#if !defined(AFS_DARWIN80_ENV)
 extern int afsio_copy(struct uio *ainuio, struct uio *aoutuio,
 		      struct iovec *aoutvec);
 extern int afsio_trim(struct uio *auio, afs_int32 asize);
+extern void afsio_free(struct uio *auio);
+#endif
+
+extern struct uio* afsio_partialcopy(struct uio *auio, size_t size);
 extern int afsio_skip(struct uio *auio, afs_int32 asize);
 
 /* afs_osi_vm.c */

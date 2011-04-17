@@ -184,10 +184,10 @@ afs_suser(void *credp)
 }
 
 #ifdef AFS_DARWIN80_ENV
-uio_t
-afsio_darwin_partialcopy(uio_t auio, int size)
+struct uio *
+afsio_partialcopy(struct uio *auio, size_t size)
 {
-    uio_t res;
+    struct uio *res;
     int i;
     user_addr_t iovaddr;
     user_size_t iovsize;
