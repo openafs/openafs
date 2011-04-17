@@ -184,25 +184,19 @@ extern int CEs, CEBlocks;
 
 extern int HTs, HTBlocks;
 
-afs_int32 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
-			    struct rx_call *Call, afs_sfsize_t Pos,
-			    afs_sfsize_t Len, afs_int32 Int64Mode,
-#if FS_STATS_DETAILED
-			    afs_sfsize_t * a_bytesToFetchP,
-			    afs_sfsize_t * a_bytesFetchedP
-#endif				/* FS_STATS_DETAILED */
-    );
+static afs_int32 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
+				   struct rx_call *Call, afs_sfsize_t Pos,
+				   afs_sfsize_t Len, afs_int32 Int64Mode,
+				   afs_sfsize_t * a_bytesToFetchP,
+				   afs_sfsize_t * a_bytesFetchedP);
 
-afs_int32 StoreData_RXStyle(Volume * volptr, Vnode * targetptr,
-			    struct AFSFid *Fid, struct client *client,
-			    struct rx_call *Call, afs_fsize_t Pos,
-			    afs_fsize_t Length, afs_fsize_t FileLength,
-			    int sync,
-#if FS_STATS_DETAILED
-			    afs_sfsize_t * a_bytesToStoreP,
-			    afs_sfsize_t * a_bytesStoredP
-#endif				/* FS_STATS_DETAILED */
-    );
+static afs_int32 StoreData_RXStyle(Volume * volptr, Vnode * targetptr,
+				   struct AFSFid *Fid, struct client *client,
+				   struct rx_call *Call, afs_fsize_t Pos,
+				   afs_fsize_t Length, afs_fsize_t FileLength,
+				   int sync,
+				   afs_sfsize_t * a_bytesToStoreP,
+				   afs_sfsize_t * a_bytesStoredP);
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 #include <afs/xfsattrs.h>
@@ -2050,7 +2044,7 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
 	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
     strcpy(*motd, V_motd(volptr));
-#endif /* FS_STATS_DETAILED */
+#endif /* OPENAFS_VOL_STATS */
     return 0;
 }				/*RXGetVolumeStatus */
 
@@ -2218,28 +2212,16 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct VCallByVol tcbv, *cbv = NULL;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct fs_stats_xferData *xferP;	/* Ptr to this op's byte size struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval xferStartTime, xferStopTime;	/* Start/stop times for xfer portion */
-    struct timeval elapsedTime;	/* Transfer time */
-    afs_sfsize_t bytesToXfer;	/* # bytes to xfer */
-    afs_sfsize_t bytesXferred;	/* # bytes actually xferred */
-    int readIdx;		/* Index of read stats array to bump */
-    static afs_int32 tot_bytesXferred;	/* shared access protected by FS_LOCK */
+    static int remainder = 0;	/* shared access protected by FS_LOCK */
+    struct fsstats fsstats;
+    afs_sfsize_t bytesToXfer;  /* # bytes to xfer */
+    afs_sfsize_t bytesXferred; /* # bytes actually xferred */
 
-    /*
-     * Set our stats pointers, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_FETCHDATA]);
-    xferP = &(afs_FullPerfStats.det.xferOpTimes[FS_STATS_XFERIDX_FETCHDATA]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
+#if FS_STATS_DETAILED
+    int readIdx;		/* Index of read stats array to bump */
 #endif /* FS_STATS_DETAILED */
+
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_FETCHDATA);
 
     ViceLog(1,
 	    ("SRXAFS_FetchData, Fid = %u.%u.%u\n", Fid->Volume, Fid->Vnode,
@@ -2304,90 +2286,19 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
 	osi_Assert(!fileCode || (fileCode == VSALVAGE));
 	parentwhentargetnotdir = NULL;
     }
-#if FS_STATS_DETAILED
-    /*
-     * Remember when the data transfer started.
-     */
-    FT_GetTimeOfDay(&xferStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+
+    fsstats_StartXfer(&fsstats);
 
     /* actually do the data transfer */
-#if FS_STATS_DETAILED
     errorCode =
 	FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type,
 			  &bytesToXfer, &bytesXferred);
-#else
-    if ((errorCode =
-	 FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type)))
-	goto Bad_FetchData;
-#endif /* FS_STATS_DETAILED */
 
-#if FS_STATS_DETAILED
-    /*
-     * At this point, the data transfer is done, for good or ill.  Remember
-     * when the transfer ended, bump the number of successes/failures, and
-     * integrate the transfer size and elapsed time into the stats.  If the
-     * operation failed, we jump to the appropriate point.
-     */
-    FT_GetTimeOfDay(&xferStopTime, 0);
-    FS_LOCK;
-    (xferP->numXfers)++;
-    if (!errorCode) {
-	(xferP->numSuccesses)++;
+    fsstats_FinishXfer(&fsstats, errorCode, bytesToXfer, bytesXferred,
+		       &remainder);
 
-	/*
-	 * Bump the xfer sum by the number of bytes actually sent, NOT the
-	 * target number.
-	 */
-	tot_bytesXferred += bytesXferred;
-	(xferP->sumBytes) += (tot_bytesXferred >> 10);
-	tot_bytesXferred &= 0x3FF;
-	if (bytesXferred < xferP->minBytes)
-	    xferP->minBytes = bytesXferred;
-	if (bytesXferred > xferP->maxBytes)
-	    xferP->maxBytes = bytesXferred;
-
-	/*
-	 * Tally the size of the object.  Note: we tally the actual size,
-	 * NOT the number of bytes that made it out over the wire.
-	 */
-	if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET0)
-	    (xferP->count[0])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET1)
-	    (xferP->count[1])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET2)
-	    (xferP->count[2])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET3)
-	    (xferP->count[3])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET4)
-	    (xferP->count[4])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET5)
-	    (xferP->count[5])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET6)
-	    (xferP->count[6])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET7)
-	    (xferP->count[7])++;
-	else
-	    (xferP->count[8])++;
-
-	fs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
-	fs_stats_AddTo((xferP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
-	    fs_stats_TimeAssign((xferP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
-	    fs_stats_TimeAssign((xferP->maxTime), elapsedTime);
-	}
-    }
-    FS_UNLOCK;
-    /*
-     * Finally, go off to tell our caller the bad news in case the
-     * fetch failed.
-     */
     if (errorCode)
 	goto Bad_FetchData;
-#endif /* FS_STATS_DETAILED */
 
     /* write back  the OutStatus from the target vnode  */
     GetStatus(targetptr, OutStatus, rights, anyrights,
@@ -2410,23 +2321,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     ViceLog(2, ("SRXAFS_FetchData returns %d\n", errorCode));
     errorCode = CallPostamble(tcon, errorCode, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
     osi_auditU(acall, FetchDataEvent, errorCode,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -2476,21 +2371,9 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_FETCHACL]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_FETCHACL);
 
     ViceLog(1,
 	    ("SAFS_FetchACL, Fid = %u.%u.%u\n", Fid->Volume, Fid->Vnode,
@@ -2550,23 +2433,7 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
 	     AccessList->AFSOpaque_val));
     errorCode = CallPostamble(tcon, errorCode, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
     osi_auditU(acall, FetchACLEvent, errorCode,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -2671,21 +2538,9 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     struct rx_connection *tcon = rx_ConnectionOf(acall);
     struct host *thost;
     struct client *t_client = NULL;     /* tmp pointer to the client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_BULKSTATUS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_BULKSTATUS);
 
     ViceLog(1, ("SAFS_BulkStatus\n"));
     FS_LOCK;
@@ -2773,23 +2628,7 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
   Audit_and_Return:
     ViceLog(2, ("SAFS_BulkStatus	returns	%d\n", errorCode));
@@ -2820,21 +2659,9 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     struct client *t_client = NULL;	/* tmp ptr to client data */
     AFSFetchStatus *tstatus;
     int VolSync_set = 0;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_BULKSTATUS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_BULKSTATUS);
 
     ViceLog(1, ("SAFS_InlineBulkStatus\n"));
     FS_LOCK;
@@ -2947,23 +2774,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
   Audit_and_Return:
     ViceLog(2, ("SAFS_InlineBulkStatus	returns	%d\n", errorCode));
@@ -2984,21 +2795,9 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_FETCHSTATUS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_FETCHSTATUS);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_FetchStatus;
@@ -3010,23 +2809,7 @@ SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, FetchStatusEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -3054,30 +2837,16 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon;
     struct host *thost;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct fs_stats_xferData *xferP;	/* Ptr to this op's byte size struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval xferStartTime, xferStopTime;	/* Start/stop times for xfer portion */
-    struct timeval elapsedTime;	/* Transfer time */
-    afs_sfsize_t bytesToXfer;	/* # bytes to xfer */
-    afs_sfsize_t bytesXferred;	/* # bytes actually xfer */
-    static afs_int32 tot_bytesXferred;	/* shared access protected by FS_LOCK */
+    struct fsstats fsstats;
+    afs_sfsize_t bytesToXfer;
+    afs_sfsize_t bytesXferred;
+    static int remainder = 0;
 
-    /*
-     * Set our stats pointers, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_STOREDATA]);
-    xferP = &(afs_FullPerfStats.det.xferOpTimes[FS_STATS_XFERIDX_STOREDATA]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
     ViceLog(1,
 	    ("StoreData: Fid = %u.%u.%u\n", Fid->Volume, Fid->Vnode,
 	     Fid->Unique));
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_STOREDATA);
 
     FS_LOCK;
     AFSCallStats.StoreData++, AFSCallStats.TotalCalls++;
@@ -3130,92 +2899,19 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
 	osi_Assert(!fileCode || (fileCode == VSALVAGE));
 	parentwhentargetnotdir = NULL;
     }
-#if FS_STATS_DETAILED
-    /*
-     * Remember when the data transfer started.
-     */
-    FT_GetTimeOfDay(&xferStartTime, 0);
-#endif /* FS_STATS_DETAILED */
 
-    /* Do the actual storing of the data */
-#if FS_STATS_DETAILED
+    fsstats_StartXfer(&fsstats);
+
     errorCode =
 	StoreData_RXStyle(volptr, targetptr, Fid, client, acall, Pos, Length,
 			  FileLength, (InStatus->Mask & AFS_FSYNC),
 			  &bytesToXfer, &bytesXferred);
-#else
-    errorCode =
-	StoreData_RXStyle(volptr, targetptr, Fid, client, acall, Pos, Length,
-			  FileLength, (InStatus->Mask & AFS_FSYNC));
+
+    fsstats_FinishXfer(&fsstats, errorCode, bytesToXfer, bytesXferred,
+		       &remainder);
+
     if (errorCode && (!targetptr->changed_newTime))
 	goto Bad_StoreData;
-#endif /* FS_STATS_DETAILED */
-#if FS_STATS_DETAILED
-    /*
-     * At this point, the data transfer is done, for good or ill.  Remember
-     * when the transfer ended, bump the number of successes/failures, and
-     * integrate the transfer size and elapsed time into the stats.  If the
-     * operation failed, we jump to the appropriate point.
-     */
-    FT_GetTimeOfDay(&xferStopTime, 0);
-    FS_LOCK;
-    (xferP->numXfers)++;
-    if (!errorCode) {
-	(xferP->numSuccesses)++;
-
-	/*
-	 * Bump the xfer sum by the number of bytes actually sent, NOT the
-	 * target number.
-	 */
-	tot_bytesXferred += bytesXferred;
-	(xferP->sumBytes) += (tot_bytesXferred >> 10);
-	tot_bytesXferred &= 0x3FF;
-	if (bytesXferred < xferP->minBytes)
-	    xferP->minBytes = bytesXferred;
-	if (bytesXferred > xferP->maxBytes)
-	    xferP->maxBytes = bytesXferred;
-
-	/*
-	 * Tally the size of the object.  Note: we tally the actual size,
-	 * NOT the number of bytes that made it out over the wire.
-	 */
-	if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET0)
-	    (xferP->count[0])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET1)
-	    (xferP->count[1])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET2)
-	    (xferP->count[2])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET3)
-	    (xferP->count[3])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET4)
-	    (xferP->count[4])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET5)
-	    (xferP->count[5])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET6)
-	    (xferP->count[6])++;
-	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET7)
-	    (xferP->count[7])++;
-	else
-	    (xferP->count[8])++;
-
-	fs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
-	fs_stats_AddTo((xferP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
-	    fs_stats_TimeAssign((xferP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
-	    fs_stats_TimeAssign((xferP->maxTime), elapsedTime);
-	}
-    }
-    FS_UNLOCK;
-    /*
-     * Finally, go off to tell our caller the bad news in case the
-     * store failed.
-     */
-    if (errorCode && (!targetptr->changed_newTime))
-	goto Bad_StoreData;
-#endif /* FS_STATS_DETAILED */
 
     /* Update the status of the target's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_SDATA, client, InStatus,
@@ -3233,23 +2929,8 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
 
     errorCode = CallPostamble(tcon, errorCode, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
+
     osi_auditU(acall, StoreDataEvent, errorCode,
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FID, Fid, AUD_END);
@@ -3308,21 +2989,10 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_STOREACL]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_STOREACL);
+
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_StoreACL;
 
@@ -3383,23 +3053,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     ViceLog(2, ("SAFS_StoreACL returns %d\n", errorCode));
     errorCode = CallPostamble(tcon, errorCode, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
     osi_auditU(acall, StoreACLEvent, errorCode,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -3503,21 +3157,9 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_STORESTATUS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_STORESTATUS);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_StoreStatus;
@@ -3529,23 +3171,7 @@ SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, StoreStatusEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -3666,21 +3292,9 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_REMOVEFILE]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_REMOVEFILE);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_RemoveFile;
@@ -3692,23 +3306,7 @@ SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, RemoveFileEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -3833,21 +3431,9 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_CREATEFILE]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_CREATEFILE);
 
     memset(OutFid, 0, sizeof(struct AFSFid));
 
@@ -3863,23 +3449,7 @@ SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, CreateFileEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -4368,21 +3938,9 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_RENAME]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_RENAME);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_Rename;
@@ -4396,23 +3954,7 @@ SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, RenameFileEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -4581,21 +4123,9 @@ SRXAFS_Symlink(struct rx_call *acall,	/* Rx call */
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_SYMLINK]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_SYMLINK);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_Symlink;
@@ -4609,23 +4139,7 @@ SRXAFS_Symlink(struct rx_call *acall,	/* Rx call */
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, SymlinkEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -4788,21 +4302,9 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_LINK]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_LINK);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_Link;
@@ -4816,23 +4318,7 @@ SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, LinkEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -4989,21 +4475,10 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_MAKEDIR]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_MAKEDIR);
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_MakeDir;
 
@@ -5016,23 +4491,7 @@ SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, MakeDirEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -5149,21 +4608,9 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_REMOVEDIR]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_REMOVEDIR);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_RemoveDir;
@@ -5175,23 +4622,7 @@ SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, RemoveDirEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -5281,21 +4712,9 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_SETLOCK]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_SETLOCK);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_SetLock;
@@ -5307,23 +4726,7 @@ SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, SetLockEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -5407,21 +4810,9 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_EXTENDLOCK]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_EXTENDLOCK);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_ExtendLock;
@@ -5433,23 +4824,7 @@ SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, ExtendLockEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -5543,21 +4918,9 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_RELEASELOCK]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_RELEASELOCK);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_ReleaseLock;
@@ -5569,23 +4932,7 @@ SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, ReleaseLockEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -5678,21 +5025,9 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
     struct rx_connection *tcon = rx_ConnectionOf(acall);
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETSTATISTICS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETSTATISTICS);
 
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
 	goto Bad_GetStatistics;
@@ -5711,23 +5046,7 @@ SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, GetStatisticsEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
@@ -5745,21 +5064,9 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct timeval time;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETSTATISTICS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETSTATISTICS);
 
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
 	goto Bad_GetStatistics64;
@@ -5822,23 +5129,7 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     osi_auditU(acall, GetStatisticsEvent, code,
                AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
@@ -5872,41 +5163,15 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct rx_connection *tcon = rx_ConnectionOf(a_call);
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_XSTATSVERSION]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_XSTATSVERSION);
 
     *a_versionP = AFS_XSTAT_VERSION;
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-    fs_stats_AddTo((opP->sumTime), elapsedTime);
-    fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-    if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-    }
-    if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-    }
-    FS_LOCK;
-    (opP->numSuccesses)++;
-    FS_UNLOCK;
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, 0);
 
     osi_auditU(a_call, XStatsVersionEvent, 0,
                AUD_ID, t_client ? t_client->ViceId : 0, AUD_END);
@@ -6080,21 +5345,9 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
     int code;		/*Return value */
     afs_int32 *dataBuffP;	/*Ptr to data to be returned */
     afs_int32 dataBytes;	/*Bytes in data buffer */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETXSTATS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETXSTATS);
 
     /*
      * Record the time of day and the server version number.
@@ -6235,23 +5488,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	code = 1;
     }				/*Switch on collection number */
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     return (code);
 
@@ -6267,22 +5504,9 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
     struct client *client = 0;
     struct rx_connection *tcon;
     struct host *thost;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP =
-	&(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GIVEUPCALLBACKS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GIVEUPCALLBACKS);
 
     if (FidArray)
 	ViceLog(1,
@@ -6329,23 +5553,8 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
   Bad_GiveUpCallBacks:
     errorCode = CallPostamble(tcon, errorCode, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
+
     return errorCode;
 
 }				/*common_GiveUpCallBacks */
@@ -6612,21 +5821,10 @@ SRXAFS_GetVolumeInfo(struct rx_call * acall, char *avolid,
     afs_int32 code;
     struct rx_connection *tcon;
     struct host *thost;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETVOLUMEINFO]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETVOLUMEINFO);
+
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_GetVolumeInfo;
 
@@ -6643,23 +5841,7 @@ SRXAFS_GetVolumeInfo(struct rx_call * acall, char *avolid,
   Bad_GetVolumeInfo:
     code = CallPostamble(tcon, code, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     return code;
 
@@ -6681,22 +5863,9 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     struct rx_connection *tcon;
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP =
-	&(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETVOLUMESTATUS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETVOLUMESTATUS);
 
     ViceLog(1, ("SAFS_GetVolumeStatus for volume %u\n", avolid));
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
@@ -6745,23 +5914,7 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
     osi_auditU(acall, GetVolumeStatusEvent, errorCode,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -6786,22 +5939,9 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     struct rx_connection *tcon = rx_ConnectionOf(acall);
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP =
-	&(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_SETVOLUMESTATUS]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_SETVOLUMESTATUS);
 
     ViceLog(1, ("SAFS_SetVolumeStatus for volume %u\n", avolid));
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
@@ -6843,23 +5983,7 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
     osi_auditU(acall, SetVolumeStatusEvent, errorCode,
                AUD_ID, t_client ? t_client->ViceId : 0,
@@ -6880,24 +6004,9 @@ SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
     struct host *thost;
     Error errorCode = 0;
 #endif
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime;	/* Start time for RPC op */
-#ifdef notdef
-    struct timeval opStopTime;
-    struct timeval elapsedTime;	/* Transfer time */
-#endif
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETROOTVOLUME]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETROOTVOLUME);
 
     return FSERR_EOPNOTSUPP;
 
@@ -6933,23 +6042,7 @@ SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
   Bad_GetRootVolume:
     errorCode = CallPostamble(tcon, errorCode, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (errorCode == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, errorCode);
 
     return (errorCode);
 #endif /* notdef */
@@ -6965,21 +6058,9 @@ SRXAFS_CheckToken(struct rx_call * acall, afs_int32 AfsId,
     afs_int32 code;
     struct rx_connection *tcon;
     struct host *thost;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_CHECKTOKEN]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_CHECKTOKEN);
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon, &thost)))
 	goto Bad_CheckToken;
@@ -6989,23 +6070,7 @@ SRXAFS_CheckToken(struct rx_call * acall, afs_int32 AfsId,
   Bad_CheckToken:
     code = CallPostamble(tcon, code, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     return code;
 
@@ -7019,21 +6084,9 @@ SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
     struct rx_connection *tcon;
     struct host *thost;
     struct timeval tpl;
-#if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
-    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
-    struct timeval elapsedTime;	/* Transfer time */
+    struct fsstats fsstats;
 
-    /*
-     * Set our stats pointer, remember when the RPC operation started, and
-     * tally the operation.
-     */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETTIME]);
-    FS_LOCK;
-    (opP->numOps)++;
-    FS_UNLOCK;
-    FT_GetTimeOfDay(&opStartTime, 0);
-#endif /* FS_STATS_DETAILED */
+    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETTIME);
 
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon, &thost)))
 	goto Bad_GetTime;
@@ -7050,23 +6103,7 @@ SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
   Bad_GetTime:
     code = CallPostamble(tcon, code, thost);
 
-#if FS_STATS_DETAILED
-    FT_GetTimeOfDay(&opStopTime, 0);
-    fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-    if (code == 0) {
-	FS_LOCK;
-	(opP->numSuccesses)++;
-	fs_stats_AddTo((opP->sumTime), elapsedTime);
-	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-	}
-	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-	}
-	FS_UNLOCK;
-    }
-#endif /* FS_STATS_DETAILED */
+    fsstats_FinishOp(&fsstats, code);
 
     return code;
 
@@ -7085,23 +6122,18 @@ SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
  *	Call		: Ptr to the Rx call involved.
  *	Pos		: Offset within the file.
  *	Len		: Length in bytes to read; this value is bogus!
- * if FS_STATS_DETAILED
  *	a_bytesToFetchP	: Set to the number of bytes to be fetched from
  *			  the File Server.
  *	a_bytesFetchedP	: Set to the actual number of bytes fetched from
  *			  the File Server.
- * endif
  */
 
-afs_int32
+static afs_int32
 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 		  struct rx_call * Call, afs_sfsize_t Pos,
 		  afs_sfsize_t Len, afs_int32 Int64Mode,
-#if FS_STATS_DETAILED
 		  afs_sfsize_t * a_bytesToFetchP,
-		  afs_sfsize_t * a_bytesFetchedP
-#endif				/* FS_STATS_DETAILED */
-    )
+		  afs_sfsize_t * a_bytesFetchedP)
 {
     struct timeval StartTime, StopTime;	/* used to calculate file  transfer rates */
     IHandle_t *ihP;
@@ -7115,14 +6147,11 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     afs_sfsize_t tlen;
     afs_int32 optSize;
 
-#if FS_STATS_DETAILED
     /*
      * Initialize the byte count arguments.
      */
     (*a_bytesToFetchP) = 0;
     (*a_bytesFetchedP) = 0;
-#endif /* FS_STATS_DETAILED */
-
 
     ViceLog(25,
 	    ("FetchData_RXStyle: Pos %llu, Len %llu\n", (afs_uintmax_t) Pos,
@@ -7182,9 +6211,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	low = htonl(low);
 	rx_Write(Call, (char *)&low, sizeof(afs_int32));	/* send length on fetch */
     }
-#if FS_STATS_DETAILED
     (*a_bytesToFetchP) = Len;
-#endif /* FS_STATS_DETAILED */
 #ifndef HAVE_PIOV
     tbuffer = AllocSendBuffer();
 #endif /* HAVE_PIOV */
@@ -7224,13 +6251,11 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	nBytes = rx_Writev(Call, tiov, tnio, wlen);
 #endif /* HAVE_PIOV */
 	Pos += wlen;
-#if FS_STATS_DETAILED
 	/*
 	 * Bump the number of bytes actually sent by the number from this
 	 * latest iteration
 	 */
 	(*a_bytesFetchedP) += nBytes;
-#endif /* FS_STATS_DETAILED */
 	if (nBytes != wlen) {
 	    afs_int32 err;
 	    FDH_CLOSE(fdP);
@@ -7317,23 +6342,18 @@ GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc,
  *	Call		: Ptr to the Rx call involved.
  *	Pos		: Offset within the file.
  *	Len		: Length in bytes to store; this value is bogus!
- * if FS_STATS_DETAILED
  *	a_bytesToStoreP	: Set to the number of bytes to be stored to
  *			  the File Server.
  *	a_bytesStoredP	: Set to the actual number of bytes stored to
  *			  the File Server.
- * endif
  */
 afs_int32
 StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		  struct client * client, struct rx_call * Call,
 		  afs_fsize_t Pos, afs_fsize_t Length, afs_fsize_t FileLength,
 		  int sync,
-#if FS_STATS_DETAILED
 		  afs_sfsize_t * a_bytesToStoreP,
-		  afs_sfsize_t * a_bytesStoredP
-#endif				/* FS_STATS_DETAILED */
-    )
+		  afs_sfsize_t * a_bytesStoredP)
 {
     afs_sfsize_t bytesTransfered;	/* number of bytes actually transfered */
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
@@ -7358,13 +6378,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     afs_ino_str_t stmp;
 
-#if FS_STATS_DETAILED
     /*
      * Initialize the byte count arguments.
      */
     (*a_bytesToStoreP) = 0;
     (*a_bytesStoredP) = 0;
-#endif /* FS_STATS_DETAILED */
 
     /*
      * We break the callbacks here so that the following signal will not
@@ -7527,9 +6545,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	errorCode = FDH_TRUNC(fdP, Pos);
     } else {
 	/* have some data to copy */
-#if FS_STATS_DETAILED
 	(*a_bytesToStoreP) = Length;
-#endif /* FS_STATS_DETAILED */
 	while (1) {
 	    int rlen;
 	    if (bytesTransfered >= Length) {
@@ -7550,9 +6566,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		errorCode = -32;
 		break;
 	    }
-#if FS_STATS_DETAILED
 	    (*a_bytesStoredP) += errorCode;
-#endif /* FS_STATS_DETAILED */
 	    rlen = errorCode;
 #ifndef HAVE_PIOV
 	    nBytes = FDH_PWRITE(fdP, tbuffer, rlen, Pos);

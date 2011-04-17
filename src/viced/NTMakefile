@@ -32,6 +32,7 @@ EXERES = $(OUT)\fileserver.res
 EXEOBJS =\
 	$(OUT)\afsfileprocs.obj \
 	$(OUT)\callback.obj \
+	$(OUT)\fsstats.obj \
 	$(OUT)\host.obj \
 	$(OUT)\physio.obj \
 	$(OUT)\viced.obj \

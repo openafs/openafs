@@ -51,7 +51,8 @@ objects=viced.o		\
 	afsfileprocs.o	\
 	host.o		\
 	physio.o	\
-	callback.o	
+	callback.o	\
+	fsstats.o
 
 all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
 

@@ -24,7 +24,8 @@ DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 FSINT=$(srcdir)/../fsint
 
-VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o	
+VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
+	  fsstats.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
 
@@ -72,6 +73,8 @@ physio.o: ${VICED}/physio.c
 callback.o: ${VICED}/callback.c
 	$(AFS_CCRULE) $(VICED)/callback.c
 
+fsstats.o: ${VICED}/fsstats.c
+	$(AFS_CCRULE) $(VICED)/fsstats.c
 
 assert.o: ${UTIL}/assert.c
 	$(AFS_CCRULE) $(UTIL)/assert.c

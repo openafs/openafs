@@ -28,7 +28,7 @@ RX = ..\rx
 RXOBJS = $(OUT)\xdr_int64.obj \
          $(OUT)\xdr_int32.obj
 
-VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj 
+VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\fsstats.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj 
 
 TVICEDRES =  $(OUT)\fileserver.res
 
