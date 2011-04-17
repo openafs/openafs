@@ -103,6 +103,7 @@ afs_cleanup(void)
 #if !defined(AFS_NONFSTRANS)
     osi_linux_nfssrv_shutdown();
 #endif
+    osi_event_shutdown();
     osi_linux_free_afs_memory();
 
     osi_ioctl_clean();

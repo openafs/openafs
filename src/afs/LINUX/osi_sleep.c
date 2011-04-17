@@ -85,6 +85,20 @@ afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
 #define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
 int afs_evhashcnt = 0;
 
+void
+osi_event_shutdown(void)
+{
+   int i;
+
+   for (i=0;i<HASHSIZE;i++) {
+	while (afs_evhasht[i] != NULL) {
+	    afs_event_t *tmp = afs_evhasht[i];
+	    afs_evhasht[i] = tmp->next;
+	    kfree(tmp);
+	}
+   }
+}
+
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
  * */
 static afs_event_t *
@@ -119,10 +133,7 @@ afs_getevent(char *event)
  *     address.
  *
  * Locks:
- *     Called with GLOCK held. However the function might drop
- *     GLOCK when it calls osi_AllocSmallSpace for allocating
- *     a new event (In Linux, the allocator drops GLOCK to avoid
- *     a deadlock).
+ *     Called with GLOCK held.
  */
 
 static void
@@ -133,14 +144,12 @@ afs_addevent(char *event)
 
     AFS_ASSERT_GLOCK();
     hashcode = afs_evhash(event);
-    newp = osi_linux_alloc(sizeof(afs_event_t), 0);
+    newp = kzalloc(sizeof(afs_event_t), GFP_NOFS);
     afs_evhashcnt++;
     newp->next = afs_evhasht[hashcode];
     afs_evhasht[hashcode] = newp;
     init_waitqueue_head(&newp->cond);
-    newp->seq = 0;
     newp->event = &dummyV;	/* Dummy address for new events */
-    newp->refcount = 0;
 }
 
 #ifndef set_current_state

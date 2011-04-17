@@ -61,6 +61,9 @@ extern void *osi_find_syscall_table(int which);
 extern void osi_proc_init(void);
 extern void osi_proc_clean(void);
 
+/* osi_sleep.c */
+extern void osi_event_shutdown(void);
+
 /* osi_syscall.c */
 extern int osi_syscall_init(void);
 extern void osi_syscall_clean(void);
