@@ -354,7 +354,7 @@ typedef struct page * bypass_page_t;
 static afs_int32
 afs_NoCacheFetchProc(struct rx_call *acall,
                      struct vcache *avc,
-					 uio_t *auio,
+		     struct uio *auio,
                      afs_int32 release_pages,
 		     afs_int32 size)
 {
@@ -544,7 +544,7 @@ cleanup:
     osi_Free(areq, sizeof(struct vrequest));
     osi_Free(bparms->auio->uio_iov,
 	     bparms->auio->uio_iovcnt * sizeof(struct iovec));
-    osi_Free(bparms->auio, sizeof(uio_t));
+    osi_Free(bparms->auio, sizeof(struct uio));
     osi_Free(bparms, sizeof(struct nocache_read_request));
     return code;
 }
@@ -556,7 +556,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 		    afs_ucred_t *acred,
 		    struct nocache_read_request *bparms)
 {
-    uio_t *auio;
+    struct uio *auio;
     struct iovec *iovecp;
     struct vrequest *areq;
     afs_int32 code = 0;
@@ -669,7 +669,7 @@ done:
 #ifndef UKERNEL
     /* in UKERNEL, the "pages" are passed in */
     osi_Free(iovecp, auio->uio_iovcnt * sizeof(struct iovec));
-    osi_Free(auio, sizeof(uio_t));
+    osi_Free(auio, sizeof(struct uio));
 #endif
     return code;
 }

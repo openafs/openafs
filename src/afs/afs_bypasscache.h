@@ -70,9 +70,6 @@
 #define AFS_CACHE_BYPASS_DISABLED -1
 
 #ifdef UKERNEL
-#ifdef AFS_USR_LINUX24_ENV
-typedef struct uio uio_t;
-#endif
 #ifndef PAGE_CACHE_SIZE
 #define PAGE_CACHE_SIZE 4096
 #endif
@@ -89,7 +86,7 @@ struct nocache_read_request {
     caddr_t address;
 #elif defined(AFS_LINUX24_ENV) || defined(UKERNEL)
     /* The tested platform, as CITI impl. just packs ab->parms */
-    uio_t * auio;
+    struct uio *auio;
     struct vrequest *areq;
     afs_size_t offset;
     afs_size_t length;

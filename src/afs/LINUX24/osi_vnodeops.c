@@ -1408,7 +1408,7 @@ afs_linux_ireadlink(struct inode *ip, char *target, int maxlen, uio_seg_t seg)
 {
     int code;
     cred_t *credp = crref();
-    uio_t tuio;
+    struct uio tuio;
     struct iovec iov;
 
     setup_uio(&tuio, &iov, target, (afs_offs_t) 0, maxlen, UIO_READ, seg);
@@ -1544,7 +1544,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     afs_int32 isize;
 #endif
-    uio_t *auio;
+    struct uio *auio;
     struct iovec *iovecp;
     struct inode *ip = FILE_INODE(fp);
     afs_int32 cnt = page_count(pp);
@@ -1561,7 +1561,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     clear_bit(PG_error, &pp->flags);
 #endif
     /* if bypasscache, receiver frees, else we do */
-    auio = osi_Alloc(sizeof(uio_t));
+    auio = osi_Alloc(sizeof(struct uio));
     iovecp = osi_Alloc(sizeof(struct iovec));
 
     setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
@@ -1639,7 +1639,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	goto done;
 
     /* free if not bypassing cache */
-    osi_Free(auio, sizeof(uio_t));
+    osi_Free(auio, sizeof(struct uio));
     osi_Free(iovecp, sizeof(struct iovec));
 
     if (!code && AFS_CHUNKOFFSET(offset) == 0) {
@@ -1675,7 +1675,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     afs_offs_t base;
     int code = 0;
     cred_t *credp;
-    uio_t tuio;
+    struct uio tuio;
     struct iovec iovec;
     int f_flags = 0;
 
@@ -1785,7 +1785,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
     u8 *page_addr = (u8 *) afs_linux_page_address(pp);
     int code = 0;
     cred_t *credp;
-    uio_t tuio;
+    struct uio tuio;
     struct iovec iovec;
 
     set_bit(PG_locked, &pp->flags);
