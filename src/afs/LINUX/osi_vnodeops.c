@@ -1471,7 +1471,7 @@ static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
     int code;
     char *name;
 
-    name = osi_Alloc(PATH_MAX);
+    name = kmalloc(PATH_MAX, GFP_NOFS);
     if (!name) {
 	return -EIO;
     }
@@ -1493,9 +1493,9 @@ static void
 afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
 {
     char *name = nd_get_link(nd);
-    if (name && !IS_ERR(name)) {
-	osi_Free(name, PATH_MAX);
-    }
+
+    if (name && !IS_ERR(name))
+	kfree(name);
 }
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
@@ -1741,8 +1741,8 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
     address = kmap(pp);
     ClearPageError(pp);
 
-    auio = osi_Alloc(sizeof(struct uio));
-    iovecp = osi_Alloc(sizeof(struct iovec));
+    auio = kmalloc(sizeof(struct uio), GFP_NOFS);
+    iovecp = kmalloc(sizeof(struct iovec), GFP_NOFS);
 
     setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
               AFS_UIOSYS);
@@ -1773,8 +1773,8 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
 
     kunmap(pp);
 
-    osi_Free(auio, sizeof(struct uio));
-    osi_Free(iovecp, sizeof(struct iovec));
+    kfree(auio);
+    kfree(iovecp);
 
     crfree(credp);
     return afs_convert_code(code);
