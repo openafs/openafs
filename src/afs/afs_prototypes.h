@@ -637,11 +637,11 @@ extern void afs_osi_SetTime(osi_timeval_t * atv);
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
-extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
-extern void setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf,
+extern int osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw);
+extern void setup_uio(struct uio *uiop, struct iovec *iovecp, const char *buf,
 		      afs_offs_t pos, int count, uio_flag_t flag,
 		      uio_seg_t seg);
-extern int uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop);
+extern int uiomove(char *dp, int length, uio_flag_t rw, struct uio *uiop);
 extern void osi_linux_free_inode_pages(void);
 #endif
 extern void osi_linux_mask(void);

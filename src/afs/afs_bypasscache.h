@@ -71,7 +71,6 @@
 #define AFS_CACHE_BYPASS_DISABLED -1
 
 #ifdef UKERNEL
-typedef struct uio uio_t;
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 1024 * sizeof(long) / 8
 #endif
@@ -94,7 +93,7 @@ struct nocache_read_request {
     int32 length;
 #elif defined(AFS_LINUX24_ENV) || defined(AFS_USR_LINUX24_ENV)
     /* The tested platform, as CITI impl. just packs ab->parms */
-    uio_t * auio;
+    struct uio *auio;
     struct vrequest *areq;
     afs_size_t offset;
     afs_size_t length;
