@@ -407,17 +407,17 @@ parse_acl(XFILE * X, unsigned char *tag, tagged_field * field,
 	acl = (struct acl_accessList *)(v->acl);
 	n = ntohl(acl->positive);
 	if (n) {
-	    printf("Positive ACL: %d entries\n", n);
+	    printf(" Positive ACL: %d entries\n", n);
 	    for (i = 0; i < n; i++)
 		printf("              %9d  %s\n", ntohl(acl->entries[i].id),
-		       rights2str(acl->entries[i].rights));
+		       rights2str(ntohl(acl->entries[i].rights)));
 	}
 	n = ntohl(acl->negative);
 	if (n) {
-	    printf("Positive ACL: %d entries\n", n);
+	    printf(" Negative ACL: %d entries\n", n);
 	    for (i = ntohl(acl->positive); i < ntohl(acl->total); i++)
 		printf("              %9d  %s\n", ntohl(acl->entries[i].id),
-		       rights2str(acl->entries[i].rights));
+		       rights2str(ntohl(acl->entries[i].rights)));
 	}
     }
     return ReadByte(X, tag);
@@ -463,7 +463,7 @@ parse_vdata(XFILE * X, unsigned char *tag, tagged_field * field,
 		    return r;
 		symlink_buf[v->size] = 0;
 		if (p->print_flags & DSPRINT_VNODE)
-		    printf("Target:       %s\n", symlink_buf);
+		    printf(" Target:       %s\n", symlink_buf);
 	    } else {
 		/* Call the callback here, because it's non-fatal */
 		if (p->cb_error)
