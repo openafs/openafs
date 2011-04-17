@@ -83,8 +83,8 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }
-    afile = (struct osi_file *)osi_AllocLargeSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
+    afile = kmalloc(sizeof(struct osi_file), GFP_NOFS);
     if (!afile) {
 	osi_Panic("osi_UFSOpen: Failed to allocate %d bytes for osi_file.\n",
 		  (int)sizeof(struct osi_file));
@@ -149,8 +149,7 @@ osi_UFSClose(struct osi_file *afile)
 	    filp_close(afile->filp, NULL);
 	}
     }
-
-    osi_FreeLargeSpace(afile);
+    kfree(afile);
     return 0;
 }
 
