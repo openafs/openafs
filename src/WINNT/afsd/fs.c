@@ -326,15 +326,32 @@ Parent(char *apath)
     return tspace;
 }
 
-enum rtype {add, destroy, deny};
+                                /* added relative add resp. delete    */
+                                /* (so old add really means to set)   */
+enum rtype { add, destroy, deny, reladd, reldel };
 
 static afs_int32
 Convert(char *arights, int dfs, enum rtype *rtypep)
 {
     afs_int32 mode;
     char tc;
+    char *tcp;
 
     *rtypep = add;	/* add rights, by default */
+
+                                /* analyze last character of string   */
+    tcp = arights + strlen(arights);
+    if ( tcp-- > arights ) {    /* assure non-empty string            */
+        if ( *tcp == '+' )
+            *rtypep = reladd;   /* '+' indicates more rights          */
+        else if ( *tcp == '-' )
+            *rtypep = reldel;   /* '-' indicates less rights          */
+        else if ( *tcp == '=' )
+            *rtypep = add;      /* '=' also allows old behaviour      */
+        else
+            tcp++;              /* back to original null byte         */
+        *tcp = '\0';            /* do not disturb old strcmp-s        */
+    }
 
     if (dfs) {
 	if (!strcmp(arights, "null")) {
@@ -366,7 +383,8 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
 	return 0;
     }
     mode = 0;
-    for(; (tc = *arights) != '\0'; arights++) {
+    tcp = arights;
+    while ((tc = *tcp++)) {
 	if (dfs) {
 	    if (tc == '-')
                 continue;
@@ -478,20 +496,36 @@ SetDotDefault(struct cmd_item **aitemp)
 }
 
 static void
-ChangeList (struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights)
+ChangeList (struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
+	    enum rtpe *artypep)
 {
     struct AclEntry *tlist;
     tlist = (plus ? al->pluslist : al->minuslist);
     tlist = FindList (tlist, aname);
     if (tlist) {
         /* Found the item already in the list. */
-        tlist->rights = arights;
+                                /* modify rights in case of reladd    */
+                                /* and reladd only, use standard -    */
+                                /* add, ie. set - otherwise           */
+        if ( artypep == NULL )
+            tlist->rights = arights;
+        else if ( *artypep == reladd )
+            tlist->rights |= arights;
+        else if ( *artypep == reldel )
+            tlist->rights &= ~arights;
+        else
+            tlist->rights = arights;
+
         if (plus)
             al->nplus -= PruneList(&al->pluslist, al->dfs);
         else
             al->nminus -= PruneList(&al->minuslist, al->dfs);
         return;
     }
+    if ( artypep != NULL && *artypep == reldel )
+                                /* can't reduce non-existing rights   */
+        return;
+
     /* Otherwise we make a new item and plug in the new data. */
     tlist = (struct AclEntry *) malloc(sizeof (struct AclEntry));
     assert(tlist);
@@ -1094,7 +1128,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
                 plusp = 0;
 	    if (rtype == destroy && ta->dfs)
                 rights = -1;
-	    ChangeList(ta, plusp, ui->data, rights);
+	    ChangeList(ta, plusp, ui->data, rights, &rtype);
 	}
 	blob.in = AclToString(ta);
 	blob.out_size=0;
@@ -1239,9 +1273,9 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	    }
 	}
 	for (tp = fa->pluslist;tp;tp=tp->next)
-	    ChangeList(ta, 1, tp->name, tp->rights);
+	    ChangeList(ta, 1, tp->name, tp->rights, NULL);
 	for (tp = fa->minuslist;tp;tp=tp->next)
-	    ChangeList(ta, 0, tp->name, tp->rights);
+	    ChangeList(ta, 0, tp->name, tp->rights, NULL);
 	blob.in = AclToString(ta);
 	blob.out_size=0;
 	if( FAILED(StringCbLength(blob.in, sizeof(space), &len))) {
