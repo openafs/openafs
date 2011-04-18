@@ -56,7 +56,7 @@ main(int argc, char **argv)
     int code;
     int tc;
 
-    plan(25);
+    plan(27);
 
     initialize_CMD_error_table();
 
@@ -99,9 +99,6 @@ main(int argc, char **argv)
     is_int(CMD_NOTLIST, code, "too many parameters fails as expected");
     cmd_FreeArgv(tv);
 
-
-
-
     /* Positional parameters */
     code = cmd_ParseLine("foo bar -flag", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
@@ -123,5 +120,14 @@ main(int argc, char **argv)
     is_int(CMD_UNKNOWNSWITCH, code, "ambiguous abbreviations correctly fail");
     cmd_FreeArgv(tv);
 
+    /* Disable positional commands */
+    cmd_DisablePositionalCommands();
+    code = cmd_ParseLine("foo bar -flag", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Dispatch(tc, tv);
+    is_int(3359746, code, "positional parameters can be disabled");
+    cmd_FreeArgv(tv);
+
     return 0;
 }
+

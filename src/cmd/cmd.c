@@ -28,6 +28,7 @@ static struct cmd_syndesc *allSyntax = 0;
 static int noOpcodes = 0;
 static int (*beforeProc) (struct cmd_syndesc * ts, void *beforeRock) = NULL;
 static int (*afterProc) (struct cmd_syndesc * ts, void *afterRock) = NULL;
+static int enablePositional = 1;
 static void *beforeRock, *afterRock;
 static char initcmd_opcode[] = "initcmd";	/*Name of initcmd opcode */
 
@@ -452,6 +453,12 @@ cmd_CreateAlias(struct cmd_syndesc *as, char *aname)
     return 0;			/* all done */
 }
 
+void
+cmd_DisablePositionalCommands(void)
+{
+    enablePositional = 0;
+}
+
 int
 cmd_IsAdministratorCommand(struct cmd_syndesc *as)
 {
@@ -779,7 +786,7 @@ cmd_Dispatch(int argc, char **argv)
      * out of positional mode, and from that point on, expect a switch
      * before any particular token. */
 
-    positional = 1;		/* Are we still in the positional region of the cmd line? */
+    positional = enablePositional;	/* Accepting positional cmds ? */
     i = noOpcodes ? 1 : 2;
     SetupExpandsFlag(ts);
     for (; i < argc; i++) {
