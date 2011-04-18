@@ -78,6 +78,7 @@ extern int cmd_ParseLine(char *aline, char **argv, afs_int32 * an,
 			 afs_int32 amaxn);
 extern int cmd_IsAdministratorCommand(struct cmd_syndesc *as);
 extern void cmd_DisablePositionalCommands(void);
+extern void cmd_DisableAbbreviations(void);
 extern void PrintSyntax(struct cmd_syndesc *as);
 extern void PrintFlagHelp(struct cmd_syndesc *as);
 

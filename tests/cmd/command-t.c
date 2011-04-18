@@ -56,7 +56,7 @@ main(int argc, char **argv)
     int code;
     int tc;
 
-    plan(27);
+    plan(29);
 
     initialize_CMD_error_table();
 
@@ -126,6 +126,14 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(3359746, code, "positional parameters can be disabled");
+    cmd_FreeArgv(tv);
+
+    /* Disable abbreviations */
+    cmd_DisableAbbreviations();
+    code = cmd_ParseLine("-fi foo -s bar -flag", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Dispatch(tc, tv);
+    is_int(CMD_UNKNOWNSWITCH, code, "dispatching abbreviations succeeds");
     cmd_FreeArgv(tv);
 
     return 0;

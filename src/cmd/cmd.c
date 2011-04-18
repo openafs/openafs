@@ -29,6 +29,7 @@ static int noOpcodes = 0;
 static int (*beforeProc) (struct cmd_syndesc * ts, void *beforeRock) = NULL;
 static int (*afterProc) (struct cmd_syndesc * ts, void *afterRock) = NULL;
 static int enablePositional = 1;
+static int enableAbbreviation = 1;
 static void *beforeRock, *afterRock;
 static char initcmd_opcode[] = "initcmd";	/*Name of initcmd opcode */
 
@@ -91,7 +92,7 @@ FindType(struct cmd_syndesc *as, char *aname)
 	if (strlen(as->parms[i].name) < cmdlen)
 	    continue;
 	/* A hidden option must be a full match (no best matches) */
-	if (as->parms[i].flags & CMD_HIDE)
+	if (as->parms[i].flags & CMD_HIDE || !enableAbbreviation)
 	    continue;
 
 	if (strncmp(as->parms[i].name, aname, cmdlen) == 0) {
@@ -457,6 +458,12 @@ void
 cmd_DisablePositionalCommands(void)
 {
     enablePositional = 0;
+}
+
+void
+cmd_DisableAbbreviations(void)
+{
+    enableAbbreviation = 0;
 }
 
 int
