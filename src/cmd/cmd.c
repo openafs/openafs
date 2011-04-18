@@ -389,15 +389,15 @@ cmd_CreateSyntax(char *aname,
 
     /* can't have two cmds in no opcode mode */
     if (noOpcodes)
-	return (struct cmd_syndesc *)0;
+	return NULL;
 
-    td = (struct cmd_syndesc *)calloc(1, sizeof(struct cmd_syndesc));
+    td = calloc(1, sizeof(struct cmd_syndesc));
     assert(td);
     td->aliasOf = td;		/* treat aliasOf as pointer to real command, no matter what */
 
     /* copy in name, etc */
     if (aname) {
-	td->name = (char *)malloc(strlen(aname) + 1);
+	td->name = malloc(strlen(aname) + 1);
 	assert(td->name);
 	strcpy(td->name, aname);
     } else {
@@ -409,7 +409,7 @@ cmd_CreateSyntax(char *aname,
 	if (ahelp == (char *)CMD_HIDDEN) {
 	    td->flags |= CMD_HIDDEN;
 	} else {
-	    td->help = (char *)malloc(strlen(ahelp) + 1);
+	    td->help = malloc(strlen(ahelp) + 1);
 	    assert(td->help);
 	    strcpy(td->help, ahelp);
 	}
@@ -432,10 +432,10 @@ cmd_CreateAlias(struct cmd_syndesc *as, char *aname)
 {
     struct cmd_syndesc *td;
 
-    td = (struct cmd_syndesc *)malloc(sizeof(struct cmd_syndesc));
+    td = malloc(sizeof(struct cmd_syndesc));
     assert(td);
     memcpy(td, as, sizeof(struct cmd_syndesc));
-    td->name = (char *)malloc(strlen(aname) + 1);
+    td->name = malloc(strlen(aname) + 1);
     assert(td->name);
     strcpy(td->name, aname);
     td->flags |= CMD_ALIAS;
@@ -478,14 +478,14 @@ cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
 	return CMD_EXCESSPARMS;
     tp = &as->parms[as->nParms++];
 
-    tp->name = (char *)malloc(strlen(aname) + 1);
+    tp->name = malloc(strlen(aname) + 1);
     assert(tp->name);
     strcpy(tp->name, aname);
     tp->type = atype;
     tp->flags = aflags;
     tp->items = NULL;
     if (ahelp) {
-	tp->help = (char *)malloc(strlen(ahelp) + 1);
+	tp->help = malloc(strlen(ahelp) + 1);
 	assert(tp->help);
 	strcpy(tp->help, ahelp);
     } else
@@ -498,9 +498,9 @@ static int
 AddItem(struct cmd_parmdesc *aparm, char *aval)
 {
     struct cmd_item *ti, *ni;
-    ti = (struct cmd_item *)calloc(1, sizeof(struct cmd_item));
+    ti = calloc(1, sizeof(struct cmd_item));
     assert(ti);
-    ti->data = (char *)malloc(strlen(aval) + 1);
+    ti->data = malloc(strlen(aval) + 1);
     assert(ti->data);
     strcpy(ti->data, aval);
     /* now put ti at the *end* of the list */
@@ -585,7 +585,9 @@ SetupExpandsFlag(struct cmd_syndesc *as)
     return 0;
 }
 
-/*Take the current argv & argc and alter them so that the initialization opcode is made to appear.  This is used in cases where the initialization opcode is implicitly invoked.*/
+/* Take the current argv & argc and alter them so that the initialization
+ * opcode is made to appear.  This is used in cases where the initialization
+ * opcode is implicitly invoked.*/
 static char **
 InsertInitOpcode(int *aargc, char **aargv)
 {
@@ -593,16 +595,17 @@ InsertInitOpcode(int *aargc, char **aargv)
     char *pinitopcode;		/*Ptr to space for name of init opcode */
     int i;			/*Loop counter */
 
-    /*Allocate the new argv array, plus one for the new opcode, plus one more for the trailing null pointer */
-    newargv = (char **)malloc(((*aargc) + 2) * sizeof(char *));
+    /* Allocate the new argv array, plus one for the new opcode, plus one
+     * more for the trailing null pointer */
+    newargv = malloc(((*aargc) + 2) * sizeof(char *));
     if (!newargv) {
 	fprintf(stderr, "%s: Can't create new argv array with %d+2 slots\n",
 		aargv[0], *aargc);
 	return (NULL);
     }
 
-    /*Create space for the initial opcode & fill it in */
-    pinitopcode = (char *)malloc(sizeof(initcmd_opcode));
+    /* Create space for the initial opcode & fill it in */
+    pinitopcode = malloc(sizeof(initcmd_opcode));
     if (!pinitopcode) {
 	fprintf(stderr, "%s: Can't malloc initial opcode space\n", aargv[0]);
 	free(newargv);
@@ -610,17 +613,19 @@ InsertInitOpcode(int *aargc, char **aargv)
     }
     strcpy(pinitopcode, initcmd_opcode);
 
-    /*Move all the items in the old argv into the new argv, in their proper places */
+    /* Move all the items in the old argv into the new argv, in their
+     * proper places */
     for (i = *aargc; i > 1; i--)
 	newargv[i] = aargv[i - 1];
 
-    /*Slip in the opcode and the trailing null pointer, and bump the argument count up by one for the new opcode */
+    /* Slip in the opcode and the trailing null pointer, and bump the
+     * argument count up by one for the new opcode */
     newargv[0] = aargv[0];
     newargv[1] = pinitopcode;
     (*aargc)++;
     newargv[*aargc] = NULL;
 
-    /*Return the happy news */
+    /* Return the happy news */
     return (newargv);
 
 }				/*InsertInitOpcode */
@@ -642,7 +647,10 @@ NoParmsOK(struct cmd_syndesc *as)
     return 1;
 }
 
-/* Call the appropriate function, or return syntax error code.  Note: if no opcode is specified, an initialization routine exists, and it has NOT been called before, we invoke the special initialization opcode*/
+/* Call the appropriate function, or return syntax error code.  Note: if
+ * no opcode is specified, an initialization routine exists, and it has
+ * NOT been called before, we invoke the special initialization opcode
+ */
 int
 cmd_Dispatch(int argc, char **argv)
 {
@@ -660,24 +668,24 @@ cmd_Dispatch(int argc, char **argv)
 	initd = 1;
 	/* Add help, apropos commands once */
 	if (!noOpcodes) {
-	    ts = cmd_CreateSyntax("help", HelpProc, (char *)0,
+	    ts = cmd_CreateSyntax("help", HelpProc, NULL,
 				  "get help on commands");
 	    cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
 	    cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, NULL);
 
-	    ts = cmd_CreateSyntax("apropos", AproposProc, (char *)0,
+	    ts = cmd_CreateSyntax("apropos", AproposProc, NULL,
 				  "search by help text");
 	    cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED,
 			"help string");
-	    ts = cmd_CreateSyntax("version", VersionProc, (char *)0,
+	    ts = cmd_CreateSyntax("version", VersionProc, NULL,
 				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("-version", VersionProc, (char *)0,
+	    ts = cmd_CreateSyntax("-version", VersionProc, NULL,
 				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("-help", HelpProc, (char *)0,
+	    ts = cmd_CreateSyntax("-help", HelpProc, NULL,
 				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("--version", VersionProc, (char *)0,
+	    ts = cmd_CreateSyntax("--version", VersionProc, NULL,
 				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("--help", HelpProc, (char *)0,
+	    ts = cmd_CreateSyntax("--help", HelpProc, NULL,
 				  (char *)CMD_HIDDEN);
 	}
     }
@@ -762,13 +770,15 @@ cmd_Dispatch(int argc, char **argv)
 	}			/*Argv[1] is not a valid opcode */
     }				/*Opcodes are defined */
 
-    /* Found the descriptor; start parsing.  curType is the type we're trying to parse */
+    /* Found the descriptor; start parsing.  curType is the type we're
+     * trying to parse */
     curType = 0;
 
     /* We start off parsing in "positional" mode, where tokens are put in
      * slots positionally.  If we find a name that takes args, we go
      * out of positional mode, and from that point on, expect a switch
      * before any particular token. */
+
     positional = 1;		/* Are we still in the positional region of the cmd line? */
     i = noOpcodes ? 1 : 2;
     SetupExpandsFlag(ts);
@@ -847,9 +857,9 @@ cmd_Dispatch(int argc, char **argv)
     /* keep track of this for messages */
     ts->a0name = argv[0];
 
-    /* If we make it here, all the parameters are filled in.  Check to see if this
-     * is a -help version.  Must do this before checking for all required parms,
-     * otherwise it is a real nuisance */
+    /* If we make it here, all the parameters are filled in.  Check to see if
+     * this is a -help version.  Must do this before checking for all
+     * required parms, otherwise it is a real nuisance */
     if (ts->parms[CMD_HELPPARM].items) {
 	PrintSyntax(ts);
 	/* Display full help syntax if we don't have subcommands */
@@ -883,7 +893,8 @@ cmd_Dispatch(int argc, char **argv)
 
     /*
      * Before calling the beforeProc and afterProc and all the implications
-     * from those calls, check if the help procedure was called and call it now.
+     * from those calls, check if the help procedure was called and call it
+     * now.
      */
     if ((ts->proc == HelpProc) || (ts->proc == AproposProc)) {
 	i = (*ts->proc) (ts, ts->rock);
@@ -930,9 +941,10 @@ cmd_FreeArgv(char **argv)
     return 0;
 }
 
-/* copy back the arg list to the argv array, freeing the cmd_tokens as you go; the actual
-    data is still malloc'd, and will be freed when the caller calls cmd_FreeArgv
-    later on */
+/* copy back the arg list to the argv array, freeing the cmd_tokens as you go;
+ * the actual data is still malloc'd, and will be freed when the caller calls
+ * cmd_FreeArgv later on
+ */
 #define INITSTR ""
 static int
 CopyBackArgs(struct cmd_token *alist, char **argv,
@@ -996,8 +1008,8 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
     int tc;
 
     inToken = 0;		/* not copying token chars at start */
-    first = (struct cmd_token *)0;
-    last = (struct cmd_token *)0;
+    first = NULL;
+    last = NULL;
     inQuote = 0;		/* not in a quoted string */
     while (1) {
 	tc = *aline++;
@@ -1008,10 +1020,10 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
 		    return -1;	/* should never get here */
 		else
 		    *tptr++ = 0;
-		ttok = (struct cmd_token *)malloc(sizeof(struct cmd_token));
+		ttok = malloc(sizeof(struct cmd_token));
 		assert(ttok);
-		ttok->next = (struct cmd_token *)0;
-		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
+		ttok->next = NULL;
+		ttok->key = malloc(strlen(tbuffer) + 1);
 		assert(ttok->key);
 		strcpy(ttok->key, tbuffer);
 		if (last) {
@@ -1043,7 +1055,7 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
 	if (tc == 0) {
 	    /* last token flushed 'cause space(0) --> true */
 	    if (last)
-		last->next = (struct cmd_token *)0;
+		last->next = NULL;
 	    return CopyBackArgs(first, argv, an, amaxn);
 	}
     }
