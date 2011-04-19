@@ -846,11 +846,11 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 #endif /* AFS_FREELANCE_CLIENT */        
     {
         char temp[MOUNTPOINTLEN];
-        osi_hyper_t thyper;
+        osi_hyper_t offset;
 
         /* otherwise, we have to read it in */
-        thyper.LowPart = thyper.HighPart = 0;
-        code = cm_GetData(scp, &thyper, temp, MOUNTPOINTLEN, userp, reqp);
+        offset.LowPart = offset.HighPart = 0;
+        code = cm_GetData(scp, &offset, temp, MOUNTPOINTLEN, userp, reqp);
         if (code)
             return code;
 
@@ -865,8 +865,8 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             return CM_ERROR_INVAL;
 
         /* convert the terminating dot to a NUL */
-        temp[thyper.LowPart - 1] = 0;
-        memcpy(scp->mountPointStringp, temp, thyper.LowPart);
+        temp[scp->length.LowPart - 1] = 0;
+        memcpy(scp->mountPointStringp, temp, scp->length.LowPart);
     }
 
     return code;
@@ -1723,11 +1723,11 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
 #endif /* AFS_FREELANCE_CLIENT */        
         {
             char temp[MOUNTPOINTLEN];
-            osi_hyper_t thyper;
+            osi_hyper_t offset;
 
             /* read the link data from the file server */
-            thyper.LowPart = thyper.HighPart = 0;
-            code = cm_GetData(linkScp, &thyper, temp, MOUNTPOINTLEN, userp, reqp);
+            offset.LowPart = offset.HighPart = 0;
+            code = cm_GetData(linkScp, &offset, temp, MOUNTPOINTLEN, userp, reqp);
             if (code)
                 return code;
 
@@ -1741,9 +1741,9 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
             if (linkScp->length.LowPart == 0)
                 return CM_ERROR_INVAL;
 
-            /* convert the terminating dot to a NUL */
-            temp[thyper.LowPart - 1] = 0;
-            memcpy(linkScp->mountPointStringp, temp, thyper.LowPart);
+            /* make sure we are NUL terminated */
+            temp[linkScp->length.LowPart] = 0;
+            memcpy(linkScp->mountPointStringp, temp, linkScp->length.LowPart + 1);
         }
         
         if ( !strnicmp(linkScp->mountPointStringp, "msdfs:", strlen("msdfs:")) )
