@@ -57,7 +57,7 @@ main(int argc, char **argv)
     int code;
     int tc;
 
-    plan(47);
+    plan(51);
 
     initialize_CMD_error_table();
 
@@ -174,6 +174,19 @@ main(int argc, char **argv)
     is_string("two", retopts->parms[1].items->data, " ... 2nd option matches");
     ok(retopts->parms[2].items != NULL, " ... 3rd option matches");
 
+    cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
+    /* Try adding a couple of parameters at specific positions */
+    cmd_AddParmAtOffset(opts, "-fifth", CMD_SINGLE, CMD_OPTIONAL,
+		       "fifth option", 5);
+    cmd_AddParmAtOffset(opts, "-fourth", CMD_SINGLE, CMD_OPTIONAL,
+		       "fourth option", 4);
+    code = cmd_ParseLine("-first a -fourth b -fifth c", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "parsing our new options succeeds");
+    is_string("b", retopts->parms[4].items->data, " Fourth option in right place");
+    is_string("c", retopts->parms[5].items->data, " Fifth option in right place");
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 

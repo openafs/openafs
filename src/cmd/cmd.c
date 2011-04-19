@@ -483,14 +483,14 @@ cmd_Seek(struct cmd_syndesc *as, int apos)
 }
 
 int
-cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
-	    afs_int32 aflags, char *ahelp)
+cmd_AddParmAtOffset(struct cmd_syndesc *as, char *aname, int atype,
+		    afs_int32 aflags, char *ahelp, int ref)
 {
     struct cmd_parmdesc *tp;
 
-    if (as->nParms >= CMD_MAXPARMS)
+    if (ref >= CMD_MAXPARMS)
 	return CMD_EXCESSPARMS;
-    tp = &as->parms[as->nParms++];
+    tp = &as->parms[ref];
 
     tp->name = malloc(strlen(aname) + 1);
     assert(tp->name);
@@ -504,7 +504,21 @@ cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
 	strcpy(tp->help, ahelp);
     } else
 	tp->help = NULL;
+
+    if (as->nParms <= ref)
+	as->nParms = ref+1;
+
     return 0;
+}
+
+int
+cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
+	    afs_int32 aflags, char *ahelp)
+{
+    if (as->nParms >= CMD_MAXPARMS)
+	return CMD_EXCESSPARMS;
+
+    return cmd_AddParmAtOffset(as, aname, atype, aflags, ahelp, as->nParms++);
 }
 
 /* add a text item to the end of the parameter list */
