@@ -67,9 +67,6 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     return code;
 }
 
-
-
-
 typedef struct afs_event {
     struct afs_event *next;	/* next in hash chain */
     char *event;		/* lwp event: an address */
@@ -169,11 +166,7 @@ afs_osi_SleepSig(void *event)
 {
     struct afs_event *evp;
     int seq, retval;
-#ifdef DECLARE_WAITQUEUE
-    DECLARE_WAITQUEUE(wait, current);
-#else
-    struct wait_queue wait = { current, NULL };
-#endif
+    int code;
 
     evp = afs_getevent(event);
     if (!evp) {
@@ -184,25 +177,17 @@ afs_osi_SleepSig(void *event)
     seq = evp->seq;
     retval = 0;
 
-    add_wait_queue(&evp->cond, &wait);
-    while (seq == evp->seq) {
-	set_current_state(TASK_INTERRUPTIBLE);
-	AFS_ASSERT_GLOCK();
-	AFS_GUNLOCK();
-	schedule();
-	afs_try_to_freeze();
+    AFS_GUNLOCK();
+    code = wait_event_freezable(evp->cond, seq != evp->seq);
+    AFS_GLOCK();
 
-	AFS_GLOCK();
-	if (signal_pending(current)) {
-	    retval = EINTR;
-	    break;
-	}
-    }
-    remove_wait_queue(&evp->cond, &wait);
-    set_current_state(TASK_RUNNING);
+    if (code == -ERESTARTSYS)
+	code = EINTR;
+    else
+	code = -code;
 
     relevent(evp);
-    return retval;
+    return code;
 }
 
 /* afs_osi_Sleep -- waits for an event to be notified, ignoring signals.
@@ -247,11 +232,7 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
     int code = 0;
     long ticks = (ams * HZ / 1000) + 1;
     struct afs_event *evp;
-#ifdef DECLARE_WAITQUEUE
-    DECLARE_WAITQUEUE(wait, current);
-#else
-    struct wait_queue wait = { current, NULL };
-#endif
+    int seq;
 
     evp = afs_getevent(event);
     if (!evp) {
@@ -259,22 +240,15 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 	evp = afs_getevent(event);
     }
 
-    add_wait_queue(&evp->cond, &wait);
-    set_current_state(TASK_INTERRUPTIBLE);
-    /* always sleep TASK_INTERRUPTIBLE to keep load average
-     * from artifically increasing. */
+    seq = evp->seq;
+
     AFS_GUNLOCK();
-
-    if (schedule_timeout(ticks)) {
-	if (aintok)
-	    code = EINTR;
-    }
-
-    afs_try_to_freeze();
-
+    code = wait_event_freezable_timeout(evp->cond, evp->seq != seq, ticks);
     AFS_GLOCK();
-    remove_wait_queue(&evp->cond, &wait);
-    set_current_state(TASK_RUNNING);
+    if (code == -ERESTARTSYS)
+	code = EINTR;
+    else
+	code = -code;
 
     relevent(evp);
 
