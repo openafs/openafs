@@ -86,5 +86,10 @@ extern void PrintFlagHelp(struct cmd_syndesc *as);
 
 extern int cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax);
 extern void cmd_FreeOptions(struct cmd_syndesc **ts);
+extern int cmd_OptionAsInt(struct cmd_syndesc *syn, int pos, int *value);
+extern int cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value);
+extern int cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **);
+extern int cmd_OptionAsFlag(struct cmd_syndesc *syn, int pos, int *value);
+extern int cmd_OptionPresent(struct cmd_syndesc *syn, int pos);
 
 #endif /* __CMD_INCL__ */

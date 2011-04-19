@@ -1127,3 +1127,64 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
 	}
     }
 }
+
+int
+cmd_OptionAsInt(struct cmd_syndesc *syn, int pos, int *value)
+{
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+    if (syn->parms[pos].items == NULL ||
+	syn->parms[pos].items->data == NULL)
+	return CMD_MISSING;
+    *value = strtol(syn->parms[pos].items->data, NULL, 10);
+
+    return 0;
+}
+
+int
+cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
+{
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+    if (syn->parms[pos].items == NULL || syn->parms[pos].items->data == NULL)
+	return CMD_MISSING;
+
+    if (*value)
+	free(*value);
+    *value = strdup(syn->parms[pos].items->data);
+
+    return 0;
+}
+
+int
+cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **value)
+{
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+    if (syn->parms[pos].items == NULL)
+	return CMD_MISSING;
+
+    *value = syn->parms[pos].items;
+    return 0;
+}
+
+int
+cmd_OptionAsFlag(struct cmd_syndesc *syn, int pos, int *value)
+{
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+    if (syn->parms[pos].items == NULL)
+	return CMD_MISSING;
+
+    *value = 1;
+    return 0;
+}
+
+int
+cmd_OptionPresent(struct cmd_syndesc *syn, int pos)
+{
+    if (pos > syn->nParms || syn->parms[pos].items == NULL)
+	return 0;
+
+    return 1;
+}

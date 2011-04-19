@@ -56,8 +56,10 @@ main(int argc, char **argv)
     struct cmd_syndesc *retopts;
     int code;
     int tc;
+    int retval;
+    char *retstring;
 
-    plan(51);
+    plan(58);
 
     initialize_CMD_error_table();
 
@@ -189,6 +191,29 @@ main(int argc, char **argv)
     is_string("c", retopts->parms[5].items->data, " Fifth option in right place");
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
+
+    /* Check Accessors */
+    code = cmd_ParseLine("-first 1 -second second -flag", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+
+    code = cmd_OptionAsInt(retopts, 0, &retval);
+    is_int(0, code, "cmd_OptionsAsInt succeeds");
+    is_int(1, retval, " ... and returns correct value");
+
+    code = cmd_OptionAsString(retopts, 1, &retstring);
+    is_int(0, code, "cmd_OptionsAsString succeeds");
+    is_string("second", retstring, " ... and returns correct value");
+    free(retstring);
+    retstring = NULL;
+
+    code = cmd_OptionAsFlag(retopts, 2, &retval);
+    is_int(0, code, "cmd_OptionsAsFlag succeeds");
+    ok(retval, " ... and flag is correct");
+
+    cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
+
 
     return 0;
 }
