@@ -59,7 +59,7 @@ main(int argc, char **argv)
     int retval;
     char *retstring;
 
-    plan(62);
+    plan(70);
 
     initialize_CMD_error_table();
 
@@ -227,6 +227,37 @@ main(int argc, char **argv)
     free(retstring);
     retstring = NULL;
 
+    cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
+
+    /* Add something that can be a flag or a value, and put something after
+     * it so we can check for parse problems*/
+    cmd_AddParm(opts, "-perhaps", CMD_SINGLE_OR_FLAG, CMD_OPTIONAL,
+	        "what am I");
+    cmd_AddParm(opts, "-sanity", CMD_SINGLE, CMD_OPTIONAL, "sanity check");
+
+    /* Try using as an option */
+
+    code = cmd_ParseLine("-first 1 -perhaps 2 -sanity 3", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "cmd_Parse succeeds for option-as-flag as opt");
+    code = cmd_OptionAsInt(retopts, 6, &retval);
+    is_int(0, code, "cmd_OptionAsInt succeeds");
+    is_int(2, retval, " ... and we have the correct value");
+    cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
+
+    /* And now, as a flag */
+
+    code = cmd_ParseLine("-first 1 -perhaps -sanity 3", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "cmd_Parse succeeds for option-as-flag as flag");
+    code = cmd_OptionAsInt(retopts, 6, &retval);
+    is_int(CMD_MISSING, code, " ... pulling out a value fails as expected");
+    cmd_OptionAsFlag(retopts, 6, &retval);
+    ok(retval, " ... but parsing as a flag works");
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 

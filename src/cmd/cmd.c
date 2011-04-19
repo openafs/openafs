@@ -601,6 +601,10 @@ ResetSyntax(struct cmd_syndesc *as)
     tp = as->parms;
     for (i = 0; i < CMD_MAXPARMS; i++, tp++) {
 	switch (tp->type) {
+	case CMD_SINGLE_OR_FLAG:
+	    if (tp->items == &dummy)
+		break;
+	    /* Deliberately fall through here */
 	case CMD_SINGLE:
 	case CMD_LIST:
 	    /* free whole list in both cases, just for fun */
@@ -908,7 +912,8 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 		continue;
 	    }
 
-	    if (tparm->type == CMD_SINGLE) {
+	    if (tparm->type == CMD_SINGLE ||
+		tparm->type == CMD_SINGLE_OR_FLAG) {
 		if (tparm->items) {
 		    fprintf(stderr, "%sToo many values after switch %s\n",
 			    NName(pname, ": "), tparm->name);
@@ -946,10 +951,14 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 	if (tparm->type == 0)
 	    continue;		/* Skipped parm slot */
 	if ((tparm->flags & CMD_PROCESSED) && tparm->items == 0) {
-	    fprintf(stderr, "%s The field '%s' isn't completed properly\n",
+	    if (tparm->type == CMD_SINGLE_OR_FLAG) {
+		tparm->items = &dummy;
+	    } else {
+	        fprintf(stderr, "%s The field '%s' isn't completed properly\n",
 		    NName(pname, ": "), tparm->name);
-	    code = CMD_TOOFEW;
-	    goto out;
+	        code = CMD_TOOFEW;
+	        goto out;
+	    }
 	}
 	if (!(tparm->flags & CMD_OPTIONAL) && tparm->items == 0) {
 	    fprintf(stderr, "%sMissing required parameter '%s'\n",
@@ -1164,6 +1173,9 @@ cmd_OptionAsInt(struct cmd_syndesc *syn, int pos, int *value)
     if (syn->parms[pos].items == NULL ||
 	syn->parms[pos].items->data == NULL)
 	return CMD_MISSING;
+    if (syn->parms[pos].items == &dummy)
+	return 0;
+
     *value = strtol(syn->parms[pos].items->data, NULL, 10);
 
     return 0;
@@ -1176,9 +1188,12 @@ cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
 	return CMD_EXCESSPARMS;
     if (syn->parms[pos].items == NULL || syn->parms[pos].items->data == NULL)
 	return CMD_MISSING;
+    if (syn->parms[pos].items == &dummy)
+	return 0;
 
     if (*value)
 	free(*value);
+
     *value = strdup(syn->parms[pos].items->data);
 
     return 0;

@@ -14,6 +14,7 @@
 #define	CMD_FLAG	1	/* no parms */
 #define	CMD_SINGLE	2	/* one parm */
 #define	CMD_LIST	3	/* two parms */
+#define CMD_SINGLE_OR_FLAG 4	/* one parm or flag */
 
 /* syndesc flags */
 #define	CMD_ALIAS	1	/* this is an alias */
