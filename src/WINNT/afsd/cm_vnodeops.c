@@ -834,7 +834,6 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
-    osi_hyper_t thyper;
 
     if (scp->mountPointStringp[0]) 
         return 0;
@@ -849,21 +848,28 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     } else 
 #endif /* AFS_FREELANCE_CLIENT */        
     {
+        char temp[MOUNTPOINTLEN];
+        osi_hyper_t thyper;
+
         /* otherwise, we have to read it in */
         thyper.LowPart = thyper.HighPart = 0;
-        code = cm_GetData(scp, &thyper, scp->mountPointStringp, MOUNTPOINTLEN, userp, reqp);
+        code = cm_GetData(scp, &thyper, temp, MOUNTPOINTLEN, userp, reqp);
         if (code)
             return code;
 
-        scp->mountPointStringp[MOUNTPOINTLEN-1] = 0;	/* nul terminate */
-
+        /*
+         * scp->length is the actual length of the mount point string.
+         * It is current because cm_GetData merged the most up to date
+         * status info into scp and has not dropped the rwlock since.
+         */
         if (scp->length.LowPart > MOUNTPOINTLEN - 1)
             return CM_ERROR_TOOBIG;
         if (scp->length.LowPart == 0)
             return CM_ERROR_INVAL;
 
         /* convert the terminating dot to a NUL */
-        scp->mountPointStringp[scp->length.LowPart - 1] = 0;
+        temp[thyper.LowPart - 1] = 0;
+        memcpy(scp->mountPointStringp, temp, thyper.LowPart);
     }
 
     return code;
@@ -1705,7 +1711,6 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
 long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code = 0;
-    osi_hyper_t thyper;
 
     lock_AssertWrite(&linkScp->rw);
     if (!linkScp->mountPointStringp[0]) {
@@ -1720,18 +1725,28 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
         } else 
 #endif /* AFS_FREELANCE_CLIENT */        
         {
+            char temp[MOUNTPOINTLEN];
+            osi_hyper_t thyper;
+
             /* read the link data from the file server */
             thyper.LowPart = thyper.HighPart = 0;
-            code = cm_GetData(linkScp, &thyper, linkScp->mountPointStringp, MOUNTPOINTLEN, userp, reqp);
+            code = cm_GetData(linkScp, &thyper, temp, MOUNTPOINTLEN, userp, reqp);
             if (code)
                 return code;
 
-            linkScp->mountPointStringp[MOUNTPOINTLEN-1] = 0;	/* null terminate */
-
+            /*
+             * linkScp->length is the actual length of the symlink target string.
+             * It is current because cm_GetData merged the most up to date
+             * status info into scp and has not dropped the rwlock since.
+             */
             if (linkScp->length.LowPart > MOUNTPOINTLEN - 1)
                 return CM_ERROR_TOOBIG;
             if (linkScp->length.LowPart == 0)
                 return CM_ERROR_INVAL;
+
+            /* convert the terminating dot to a NUL */
+            temp[thyper.LowPart - 1] = 0;
+            memcpy(linkScp->mountPointStringp, temp, thyper.LowPart);
         }
         
         if ( !strnicmp(linkScp->mountPointStringp, "msdfs:", strlen("msdfs:")) )
