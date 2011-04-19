@@ -140,7 +140,8 @@ VLDB_CHECK_LIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib 	\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afs\afscmd.lib
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 	$(EXECONLINK)
@@ -152,7 +153,8 @@ $(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 # build local vlclient
 VLCLIENT_LIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-	$(DESTDIR)\lib\afs\afspioctl.lib
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib

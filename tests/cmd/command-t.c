@@ -59,7 +59,7 @@ main(int argc, char **argv)
     int retval;
     char *retstring;
 
-    plan(70);
+    plan(73);
 
     initialize_CMD_error_table();
 
@@ -259,6 +259,14 @@ main(int argc, char **argv)
     cmd_OptionAsFlag(retopts, 6, &retval);
     ok(retval, " ... but parsing as a flag works");
     cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
+
+    /* Check that we can produce help output */
+    code = cmd_ParseLine("-help", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_USAGE, code, "cmd_Parse returns usage error with help output");
+    ok(retopts == NULL, " ... and options is empty");
     cmd_FreeArgv(tv);
 
     return 0;

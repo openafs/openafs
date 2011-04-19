@@ -160,23 +160,20 @@ FindSyntax(char *aname, int *aambig)
 }
 
 /* print the help for a single parameter */
-static void
-PrintParmHelp(struct cmd_parmdesc *aparm)
+static char *
+ParmHelpString(struct cmd_parmdesc *aparm)
 {
+    char *str;
     if (aparm->type == CMD_FLAG) {
-#ifdef notdef
-	/* doc people don't like seeing this information */
-	if (aparm->help)
-	    printf(" (%s)", aparm->help);
-#endif
-    } else if (aparm->help) {
-	printf(" <%s>", aparm->help);
-	if (aparm->type == CMD_LIST)
-	    printf("+");
-    } else if (aparm->type == CMD_SINGLE)
-	printf(" <arg>");
-    else if (aparm->type == CMD_LIST)
-	printf(" <arg>+");
+	return strdup("");
+    } else {
+	asprintf(&str, " %s<%s>%s%s",
+	         aparm->type == CMD_SINGLE_OR_FLAG?"[":"",
+		 aparm->help?aparm->help:"arg",
+		 aparm->type == CMD_LIST?"+":"",
+		 aparm->type == CMD_SINGLE_OR_FLAG?"]":"");
+	return str;
+    }
 }
 
 extern char *AFSVersion;
@@ -193,16 +190,23 @@ PrintSyntax(struct cmd_syndesc *as)
 {
     int i;
     struct cmd_parmdesc *tp;
+    char *str;
+    size_t len;
+    size_t xtralen;
 
     /* now print usage, from syntax table */
     if (noOpcodes)
-	printf("Usage: %s", as->a0name);
+	asprintf(&str, "Usage: %s", as->a0name);
     else {
 	if (!strcmp(as->name, initcmd_opcode))
-	    printf("Usage: %s[%s]", NName(as->a0name, " "), as->name);
+	    asprintf(&str, "Usage: %s[%s]", NName(as->a0name, " "), as->name);
 	else
-	    printf("Usage: %s%s", NName(as->a0name, " "), as->name);
+	    asprintf(&str, "Usage: %s%s", NName(as->a0name, " "), as->name);
     }
+
+    len = strlen(str);
+    printf("%s", str);
+    free(str);
 
     for (i = 0; i < CMD_MAXPARMS; i++) {
 	tp = &as->parms[i];
@@ -210,13 +214,24 @@ PrintSyntax(struct cmd_syndesc *as)
 	    continue;		/* seeked over slot */
 	if (tp->flags & CMD_HIDE)
 	    continue;		/* skip hidden options */
-	printf(" ");
-	if (tp->flags & CMD_OPTIONAL)
-	    printf("[");
-	printf("%s", tp->name);
-	PrintParmHelp(tp);
-	if (tp->flags & CMD_OPTIONAL)
-	    printf("]");
+	/* Work out if we can fit what we want to on this line, or if we need to
+	 * start a new one */
+	str = ParmHelpString(tp);
+	xtralen = 1 + strlen(tp->name) + strlen(str) +
+		  ((tp->flags & CMD_OPTIONAL)? 2: 0);
+
+	if (len + xtralen > 78) {
+	    printf("\n        ");
+	    len = 8;
+	}
+
+	printf(" %s%s%s%s",
+	       tp->flags & CMD_OPTIONAL?"[":"",
+	       tp->name,
+	       str,
+	       tp->flags & CMD_OPTIONAL?"]":"");
+	free(str);
+	len+=xtralen;
     }
     printf("\n");
 }

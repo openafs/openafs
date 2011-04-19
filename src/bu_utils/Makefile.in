@@ -22,7 +22,7 @@ FMSLIBS=${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/util.a
 
 fms: fms.o
-	$(AFS_LDRULE) fms.o ${FMSLIBS}
+	$(AFS_LDRULE) fms.o ${FMSLIBS} $(LIB_roken)
 
 fms.o:  fms.c AFS_component_version_number.o
 
