@@ -53,10 +53,11 @@ main(int argc, char **argv)
 {
     char *tv[100];
     struct cmd_syndesc *opts;
+    struct cmd_syndesc *retopts;
     int code;
     int tc;
 
-    plan(29);
+    plan(47);
 
     initialize_CMD_error_table();
 
@@ -70,6 +71,12 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(0, code, "dispatching simple comamnd line succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "parsing simple command line succeeds");
+    is_string("foo", retopts->parms[0].items->data, " ... 1st option matches");
+    is_string("bar", retopts->parms[1].items->data, " ... 2nd option matches");
+    ok(retopts->parms[2].items != NULL, " ... 3rd option matches");
+    cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
     /* unknown switch */
@@ -77,6 +84,8 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(CMD_UNKNOWNSWITCH, code, "invalid options fail as expected");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_UNKNOWNSWITCH, code, "and still fail with cmd_Parse");
     cmd_FreeArgv(tv);
 
     /* missing parameter */
@@ -84,6 +93,8 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(CMD_TOOFEW, code, "missing parameters fail as expected");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_TOOFEW, code, "and still fail with cmd_Parse");
     cmd_FreeArgv(tv);
 
     /* missing option */
@@ -91,12 +102,16 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(CMD_UNKNOWNSWITCH, code, "missing options fail as expected");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_UNKNOWNSWITCH, code, "and still fail with cmd_Parse");
     cmd_FreeArgv(tv);
 
     code = cmd_ParseLine("-first foo baz -second bar -third -flag", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(CMD_NOTLIST, code, "too many parameters fails as expected");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_NOTLIST, code, "and still fail with cmd_Parse");
     cmd_FreeArgv(tv);
 
     /* Positional parameters */
@@ -104,6 +119,9 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(0, code, "dispatching positional parameters succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "and works with cmd_Parse");
+    cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
     /* Abbreviations */
@@ -111,6 +129,10 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(0, code, "dispatching abbreviations succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "and works with cmd_Parse");
+    cmd_FreeOptions(&retopts);
+
     cmd_FreeArgv(tv);
 
     /* Ambiguous */
@@ -118,6 +140,8 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(CMD_UNKNOWNSWITCH, code, "ambiguous abbreviations correctly fail");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_UNKNOWNSWITCH, code, "and fail with cmd_Parse too");
     cmd_FreeArgv(tv);
 
     /* Disable positional commands */
@@ -125,7 +149,9 @@ main(int argc, char **argv)
     code = cmd_ParseLine("foo bar -flag", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
-    is_int(3359746, code, "positional parameters can be disabled");
+    is_int(CMD_NOTLIST, code, "positional parameters can be disabled");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_NOTLIST, code, "and fail with cmd_Parse too");
     cmd_FreeArgv(tv);
 
     /* Disable abbreviations */
@@ -134,6 +160,21 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
     is_int(CMD_UNKNOWNSWITCH, code, "dispatching abbreviations succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(CMD_UNKNOWNSWITCH, code, "and fail with cmd_Parse too");
+
+    cmd_FreeArgv(tv);
+
+    /* Try the new cmd_Parse function with something different*/
+    code = cmd_ParseLine("-first one -second two -flag", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "Parsing with cmd_Parse works");
+    is_string("one", retopts->parms[0].items->data, " ... 1st option matches");
+    is_string("two", retopts->parms[1].items->data, " ... 2nd option matches");
+    ok(retopts->parms[2].items != NULL, " ... 3rd option matches");
+
+    cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
     return 0;

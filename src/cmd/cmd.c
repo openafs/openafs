@@ -661,47 +661,57 @@ NoParmsOK(struct cmd_syndesc *as)
     return 1;
 }
 
+/* Add help, apropos commands once */
+static void
+initSyntax(void)
+{
+    struct cmd_syndesc *ts;
+
+    if (!noOpcodes) {
+	ts = cmd_CreateSyntax("help", HelpProc, NULL,
+			      "get help on commands");
+	cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
+	cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, NULL);
+
+	ts = cmd_CreateSyntax("apropos", AproposProc, NULL,
+			      "search by help text");
+	cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED, "help string");
+	ts = cmd_CreateSyntax("version", VersionProc, NULL,
+			      (char *)CMD_HIDDEN);
+	ts = cmd_CreateSyntax("-version", VersionProc, NULL,
+			      (char *)CMD_HIDDEN);
+	ts = cmd_CreateSyntax("-help", HelpProc, NULL,
+			      (char *)CMD_HIDDEN);
+	ts = cmd_CreateSyntax("--version", VersionProc, NULL,
+		              (char *)CMD_HIDDEN);
+	ts = cmd_CreateSyntax("--help", HelpProc, NULL,
+			      (char *)CMD_HIDDEN);
+    }
+}
+
 /* Call the appropriate function, or return syntax error code.  Note: if
  * no opcode is specified, an initialization routine exists, and it has
  * NOT been called before, we invoke the special initialization opcode
  */
 int
-cmd_Dispatch(int argc, char **argv)
+cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 {
     char *pname;
-    struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts = NULL;
     struct cmd_parmdesc *tparm;
     afs_int32 i, j;
     int curType;
     int positional;
     int ambig;
+    int code = 0;
     static int initd = 0;	/*Is this the first time this routine has been called? */
     static int initcmdpossible = 1;	/*Should be consider parsing the initial command? */
 
+    *outsyntax = NULL;
+
     if (!initd) {
 	initd = 1;
-	/* Add help, apropos commands once */
-	if (!noOpcodes) {
-	    ts = cmd_CreateSyntax("help", HelpProc, NULL,
-				  "get help on commands");
-	    cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
-	    cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, NULL);
-
-	    ts = cmd_CreateSyntax("apropos", AproposProc, NULL,
-				  "search by help text");
-	    cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED,
-			"help string");
-	    ts = cmd_CreateSyntax("version", VersionProc, NULL,
-				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("-version", VersionProc, NULL,
-				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("-help", HelpProc, NULL,
-				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("--version", VersionProc, NULL,
-				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("--help", HelpProc, NULL,
-				  (char *)CMD_HIDDEN);
-	}
+	initSyntax();
     }
 
     /*Remember the program name */
@@ -711,17 +721,19 @@ cmd_Dispatch(int argc, char **argv)
 	if (argc == 1) {
 	    if (!NoParmsOK(allSyntax)) {
 		printf("%s: Type '%s -help' for help\n", pname, pname);
-		return (CMD_USAGE);
+		code = CMD_USAGE;
+		goto out;
 	    }
 	}
     } else {
 	if (argc < 2) {
 	    /* if there is an initcmd, don't print an error message, just
 	     * setup to use the initcmd below. */
-	    if (!(initcmdpossible && FindSyntax(initcmd_opcode, (int *)0))) {
+	    if (!(initcmdpossible && FindSyntax(initcmd_opcode, NULL))) {
 		printf("%s: Type '%s help' or '%s help <topic>' for help\n",
 		       pname, pname, pname);
-		return (CMD_USAGE);
+		code = CMD_USAGE;
+		goto out;
 	    }
 	}
     }
@@ -738,7 +750,7 @@ cmd_Dispatch(int argc, char **argv)
 		 * see if there is a descriptor for the initialization opcode.
 		 * Only try this once. */
 		initcmdpossible = 0;
-		ts = FindSyntax(initcmd_opcode, (int *)0);
+		ts = FindSyntax(initcmd_opcode, NULL);
 		if (!ts) {
 		    /*There is no initialization opcode available, so we declare
 		     * an error */
@@ -753,7 +765,8 @@ cmd_Dispatch(int argc, char **argv)
 				"Unrecognized operation '%s'; type '%shelp' for list\n",
 				argv[1], NName(pname, " "));
 		    }
-		    return (CMD_UNKNOWNCMD);
+		    code = CMD_UNKNOWNCMD;
+		    goto out;
 		} else {
 		    /*Found syntax structure for an initialization opcode.  Fix
 		     * up argv and argc to relect what the user
@@ -762,7 +775,8 @@ cmd_Dispatch(int argc, char **argv)
 			fprintf(stderr,
 				"%sCan't insert implicit init opcode into command line\n",
 				NName(pname, ": "));
-			return (CMD_INTERNALERROR);
+			code = CMD_INTERNALERROR;
+			goto out;
 		    }
 		}
 	    } /*Initial opcode not yet attempted */
@@ -779,7 +793,8 @@ cmd_Dispatch(int argc, char **argv)
 			    "Unrecognized operation '%s'; type '%shelp' for list\n",
 			    argv[1], NName(pname, " "));
 		}
-		return CMD_UNKNOWNCMD;
+		code = CMD_UNKNOWNCMD;
+		goto out;
 	    }
 	}			/*Argv[1] is not a valid opcode */
     }				/*Opcodes are defined */
@@ -812,14 +827,14 @@ cmd_Dispatch(int argc, char **argv)
 		else
 		    fprintf(stderr, "'%shelp %s' for detailed help\n",
 			    NName(argv[0], " "), ts->name);
-		ResetSyntax(ts);
-		return (CMD_UNKNOWNSWITCH);
+		code = CMD_UNKNOWNSWITCH;
+		goto out;
 	    }
 	    if (j >= CMD_MAXPARMS) {
 		fprintf(stderr, "%sInternal parsing error\n",
 			NName(pname, ": "));
-		ResetSyntax(ts);
-		return (CMD_INTERNALERROR);
+		code = CMD_INTERNALERROR;
+		goto out;
 	    }
 	    if (ts->parms[j].type == CMD_FLAG) {
 		ts->parms[j].items = &dummy;
@@ -832,8 +847,8 @@ cmd_Dispatch(int argc, char **argv)
 	    /* Try to fit in this descr */
 	    if (curType >= CMD_MAXPARMS) {
 		fprintf(stderr, "%sToo many arguments\n", NName(pname, ": "));
-		ResetSyntax(ts);
-		return (CMD_TOOMANY);
+		code = CMD_TOOMANY;
+		goto out;
 	    }
 	    tparm = &ts->parms[curType];
 
@@ -855,8 +870,8 @@ cmd_Dispatch(int argc, char **argv)
 		if (tparm->items) {
 		    fprintf(stderr, "%sToo many values after switch %s\n",
 			    NName(pname, ": "), tparm->name);
-		    ResetSyntax(ts);
-		    return (CMD_NOTLIST);
+		    code = CMD_NOTLIST;
+		    goto out;
 		}
 		AddItem(tparm, argv[i]);	/* Add to end of list */
 	    } else if (tparm->type == CMD_LIST) {
@@ -879,8 +894,8 @@ cmd_Dispatch(int argc, char **argv)
 	/* Display full help syntax if we don't have subcommands */
 	if (noOpcodes)
 	    PrintFlagHelp(ts);
-	ResetSyntax(ts);
-	return 0;
+	code = CMD_USAGE;
+	goto out;
     }
 
     /* Parsing done, see if we have all of our required parameters */
@@ -891,19 +906,35 @@ cmd_Dispatch(int argc, char **argv)
 	if ((tparm->flags & CMD_PROCESSED) && tparm->items == 0) {
 	    fprintf(stderr, "%s The field '%s' isn't completed properly\n",
 		    NName(pname, ": "), tparm->name);
-	    ResetSyntax(ts);
-	    tparm->flags &= ~CMD_PROCESSED;
-	    return (CMD_TOOFEW);
+	    code = CMD_TOOFEW;
+	    goto out;
 	}
 	if (!(tparm->flags & CMD_OPTIONAL) && tparm->items == 0) {
 	    fprintf(stderr, "%sMissing required parameter '%s'\n",
 		    NName(pname, ": "), tparm->name);
-	    ResetSyntax(ts);
-	    tparm->flags &= ~CMD_PROCESSED;
-	    return (CMD_TOOFEW);
+	    code = CMD_TOOFEW;
+	    goto out;
 	}
 	tparm->flags &= ~CMD_PROCESSED;
     }
+    *outsyntax = ts;
+
+out:
+    if (code && ts != NULL)
+	ResetSyntax(ts);
+
+    return code;
+}
+
+int
+cmd_Dispatch(int argc, char **argv)
+{
+    struct cmd_syndesc *ts = NULL;
+    int code;
+
+    code = cmd_Parse(argc, argv, &ts);
+    if (code)
+	return code;
 
     /*
      * Before calling the beforeProc and afterProc and all the implications
@@ -911,25 +942,33 @@ cmd_Dispatch(int argc, char **argv)
      * now.
      */
     if ((ts->proc == HelpProc) || (ts->proc == AproposProc)) {
-	i = (*ts->proc) (ts, ts->rock);
-	ResetSyntax(ts);
-	return (i);
+	code = (*ts->proc) (ts, ts->rock);
+	goto out;
     }
 
     /* Now, we just call the procedure and return */
     if (beforeProc)
-	i = (*beforeProc) (ts, beforeRock);
-    else
-	i = 0;
-    if (i) {
-	ResetSyntax(ts);
-	return (i);
-    }
-    i = (*ts->proc) (ts, ts->rock);
+	code = (*beforeProc) (ts, beforeRock);
+
+    if (code)
+	goto out;
+
+    code = (*ts->proc) (ts, ts->rock);
+
     if (afterProc)
 	(*afterProc) (ts, afterRock);
-    ResetSyntax(ts);		/* Reset and free things */
-    return (i);
+out:
+    cmd_FreeOptions(&ts);
+    return code;
+}
+
+void
+cmd_FreeOptions(struct cmd_syndesc **ts)
+{
+    if (*ts != NULL) {
+	ResetSyntax(*ts);
+        *ts = NULL;
+    }
 }
 
 /* free token list returned by parseLine */

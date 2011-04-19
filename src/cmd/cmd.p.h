@@ -82,4 +82,7 @@ extern void cmd_DisableAbbreviations(void);
 extern void PrintSyntax(struct cmd_syndesc *as);
 extern void PrintFlagHelp(struct cmd_syndesc *as);
 
+extern int cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax);
+extern void cmd_FreeOptions(struct cmd_syndesc **ts);
+
 #endif /* __CMD_INCL__ */
