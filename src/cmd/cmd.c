@@ -75,6 +75,7 @@ FindType(struct cmd_syndesc *as, char *aname)
     size_t cmdlen;
     int ambig;
     int best;
+    struct cmd_item *alias;
 
     /* Allow --long-style options. */
     if (aname[0] == '-' && aname[1] == '-' && aname[2] && aname[3]) {
@@ -91,6 +92,15 @@ FindType(struct cmd_syndesc *as, char *aname)
 	    return i;
 	if (strlen(as->parms[i].name) < cmdlen)
 	    continue;
+
+	/* Check for aliases, which must be full matches */
+	alias = as->parms[i].aliases;
+	while (alias != NULL) {
+	    if (strcmp(alias->data, aname) == 0)
+		return i;
+	    alias = alias->next;
+	}
+
 	/* A hidden option must be a full match (no best matches) */
 	if (as->parms[i].flags & CMD_HIDE || !enableAbbreviation)
 	    continue;
@@ -505,6 +515,8 @@ cmd_AddParmAtOffset(struct cmd_syndesc *as, char *aname, int atype,
     } else
 	tp->help = NULL;
 
+    tp->aliases = NULL;
+
     if (as->nParms <= ref)
 	as->nParms = ref+1;
 
@@ -519,6 +531,22 @@ cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
 	return CMD_EXCESSPARMS;
 
     return cmd_AddParmAtOffset(as, aname, atype, aflags, ahelp, as->nParms++);
+}
+
+int
+cmd_AddParmAlias(struct cmd_syndesc *as, int pos, char *alias)
+{
+    struct cmd_item *item;
+
+    if (pos > as->nParms)
+	return CMD_EXCESSPARMS;
+
+    item = calloc(1, sizeof(struct cmd_item));
+    item->data = strdup(alias);
+    item->next = as->parms[pos].aliases;
+    as->parms[pos].aliases = item;
+
+    return 0;
 }
 
 /* add a text item to the end of the parameter list */

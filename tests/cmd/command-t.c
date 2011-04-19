@@ -59,7 +59,7 @@ main(int argc, char **argv)
     int retval;
     char *retstring;
 
-    plan(58);
+    plan(62);
 
     initialize_CMD_error_table();
 
@@ -214,6 +214,21 @@ main(int argc, char **argv)
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
+    /* Add an alias */
+    code = cmd_AddParmAlias(opts, 1, "-twa");
+    is_int(0, code, "cmd_AddParmAlias succeeds");
+
+    code = cmd_ParseLine("-first 1 -twa tup", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "cmd_Parse succeeds for alias");
+    cmd_OptionAsString(retopts, 1, &retstring);
+    is_string("tup", retstring, " ... and we have the correct value");
+    free(retstring);
+    retstring = NULL;
+
+    cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
 
     return 0;
 }

@@ -35,6 +35,7 @@ struct cmd_parmdesc {
     struct cmd_item *items;	/* list of cmd items */
     afs_int32 flags;		/* flags */
     char *help;			/* optional help descr */
+    struct cmd_item *aliases;   /* optional aliases */
 };
 
 /* cmd_parmdesc flags */
@@ -74,6 +75,7 @@ extern int cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
 		       afs_int32 aflags, char *ahelp);
 extern int cmd_AddParmAtOffset(struct cmd_syndesc *as, char *name, int atype,
 		              afs_int32 aflags, char *ahelp, int ref);
+extern int cmd_AddParmAlias(struct cmd_syndesc *as, int pos, char *alias);
 extern int cmd_Dispatch(int argc, char **argv);
 extern int cmd_FreeArgv(char **argv);
 extern int cmd_ParseLine(char *aline, char **argv, afs_int32 * an,
