@@ -59,7 +59,7 @@ main(int argc, char **argv)
     int retval;
     char *retstring;
 
-    plan(73);
+    plan(79);
 
     initialize_CMD_error_table();
 
@@ -267,6 +267,20 @@ main(int argc, char **argv)
     code = cmd_Parse(tc, tv, &retopts);
     is_int(CMD_USAGE, code, "cmd_Parse returns usage error with help output");
     ok(retopts == NULL, " ... and options is empty");
+
+    /* Check splitting with '=' */
+
+    code = cmd_ParseLine("-first 1 -perhaps=6 -sanity=3", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "cmd_Parse succeeds for items split with '='");
+    code = cmd_OptionAsInt(retopts, 6, &retval);
+    is_int(0, code, "cmd_OptionAsInt succeeds");
+    is_int(6, retval, " ... and we have the correct value once");
+    code = cmd_OptionAsInt(retopts, 7, &retval);
+    is_int(0, code, "cmd_OptionAsInt succeeds");
+    is_int(3, retval, " ... and we have the correct value twice");
+    cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
     return 0;

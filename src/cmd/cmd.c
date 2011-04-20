@@ -566,9 +566,19 @@ cmd_AddParmAlias(struct cmd_syndesc *as, int pos, char *alias)
 
 /* add a text item to the end of the parameter list */
 static int
-AddItem(struct cmd_parmdesc *aparm, char *aval)
+AddItem(struct cmd_parmdesc *aparm, char *aval, char *pname)
 {
     struct cmd_item *ti, *ni;
+
+    if (aparm->type == CMD_SINGLE ||
+	aparm->type == CMD_SINGLE_OR_FLAG) {
+	if (aparm->items) {
+	    fprintf(stderr, "%sToo many values after switch %s\n",
+		    NName(pname, ": "), aparm->name);
+	    return CMD_NOTLIST;
+	}
+    }
+
     ti = calloc(1, sizeof(struct cmd_item));
     assert(ti);
     ti->data = malloc(strlen(aval) + 1);
@@ -760,11 +770,14 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
     char *pname;
     struct cmd_syndesc *ts = NULL;
     struct cmd_parmdesc *tparm;
-    afs_int32 i, j;
+    int i;
+    int j = 0;
     int curType;
     int positional;
     int ambig;
     int code = 0;
+    char *param = NULL;
+    char *embeddedvalue = NULL;
     static int initd = 0;	/*Is this the first time this routine has been called? */
     static int initcmdpossible = 1;	/*Should be consider parsing the initial command? */
 
@@ -873,11 +886,28 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
     i = noOpcodes ? 1 : 2;
     SetupExpandsFlag(ts);
     for (; i < argc; i++) {
+	if (param) {
+	    free(param);
+	    param = NULL;
+	    embeddedvalue = NULL;
+	}
+
 	/* Only tokens that start with a hyphen and are not followed by a digit
 	 * are considered switches.  This allow negative numbers. */
+
 	if ((argv[i][0] == '-') && !isdigit(argv[i][1])) {
+
 	    /* Find switch */
-	    j = FindType(ts, argv[i]);
+	    if (strrchr(argv[i], '=') != NULL) {
+		param = strdup(argv[i]);
+		embeddedvalue = strrchr(param, '=');
+		*embeddedvalue = '\0';
+		embeddedvalue ++;
+	        j = FindType(ts, param);
+	    } else {
+	        j = FindType(ts, argv[i]);
+	    }
+
 	    if (j < 0) {
 		fprintf(stderr,
 			"%sUnrecognized or ambiguous switch '%s'; type ",
@@ -899,10 +929,21 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 	    }
 	    if (ts->parms[j].type == CMD_FLAG) {
 		ts->parms[j].items = &dummy;
+
+		if (embeddedvalue) {
+		    fprintf(stderr, "%sSwitch '%s' doesn't take an argument\n",
+			    NName(pname, ": "), ts->parms[j].name);
+		    code = CMD_TOOMANY;
+		    goto out;
+		}
 	    } else {
 		positional = 0;
 		curType = j;
 		ts->parms[j].flags |= CMD_PROCESSED;
+
+		if (embeddedvalue) {
+		    AddItem(&ts->parms[curType], embeddedvalue, pname);
+		}
 	    }
 	} else {
 	    /* Try to fit in this descr */
@@ -927,18 +968,12 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 		continue;
 	    }
 
-	    if (tparm->type == CMD_SINGLE ||
-		tparm->type == CMD_SINGLE_OR_FLAG) {
-		if (tparm->items) {
-		    fprintf(stderr, "%sToo many values after switch %s\n",
-			    NName(pname, ": "), tparm->name);
-		    code = CMD_NOTLIST;
+	    if (ts->parms[j].type != CMD_FLAG) {
+		code = AddItem(tparm, argv[i], pname);
+		if (code)
 		    goto out;
-		}
-		AddItem(tparm, argv[i]);	/* Add to end of list */
-	    } else if (tparm->type == CMD_LIST) {
-		AddItem(tparm, argv[i]);	/* Add to end of list */
 	    }
+
 	    /* Now, if we're in positional mode, advance to the next item */
 	    if (positional)
 		curType = AdvanceType(ts, curType);
