@@ -469,7 +469,7 @@ compareBodyRow(struct util_Table *Table, int RowIndx, struct util_TableRow *aRow
 /* find correct index for new row by bi-secting the table */
 int
 findRowIndex(struct util_Table* Table, struct util_TableRow *aRow){
-    int cmp,best,lower,middle,upper;
+    int cmp,lower,middle,upper;
 
     /* empty Table */
     if (Table->numRows == 0)  {
@@ -486,17 +486,14 @@ findRowIndex(struct util_Table* Table, struct util_TableRow *aRow){
 
     lower =  0;
     upper= Table->numRows-1;
-    best=0;
     do {
         middle=(upper-lower)/2+lower;
         cmp=compareBodyRow(Table,middle,aRow);
 	if (cmp > 0)  {
             upper=middle;
-            best = lower;
         }
         if (cmp < 0)  {
             lower=middle;
-            best = upper;
         }
         if (cmp == 0) {
             return middle;

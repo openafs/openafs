@@ -393,7 +393,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     struct destServer destination;
 
     struct nvldbentry entry;
-    int islocked, pntg;
+    int islocked;
     afs_int32 error;
     int same;
     afs_int32 store_flags;
@@ -411,7 +411,6 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     clonetid = 0;
     error = 0;
     volid = 0;
-    pntg = 0;
     backupId = 0;
     newVol = 0;
 
@@ -459,7 +458,6 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 	 */
 	fromconn = UV_Bind(cellHandle, afromserver, AFSCONF_VOLUMEPORT);
 	fromtid = 0;
-	pntg = 1;
 
 	tst =
 	    AFSVolTransCreate(fromconn, afromvol, afrompart, ITOffline,
@@ -533,7 +531,6 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 	}
     }
 
-    pntg = 1;
     toconn = UV_Bind(cellHandle, atoserver, AFSCONF_VOLUMEPORT);	/* get connections to the servers */
     fromconn = UV_Bind(cellHandle, afromserver, AFSCONF_VOLUMEPORT);
     fromtid = totid = 0;	/* initialize to uncreated */
@@ -3514,7 +3511,6 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     int islocked = 0;
     int pass = 0;
     afs_int32 modentry = 0;
-    afs_int32 delentry = 0;
 
     if (modified) {
 	*modified = 0;
@@ -3578,7 +3574,6 @@ CheckVldb(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
 	    if (tst) {
 		goto fail_CheckVldb;
 	    }
-	    delentry = 1;
 	} else {
 	    /* Replace old entry with our new one */
 	    if (!VLDB_ReplaceEntry
