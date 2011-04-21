@@ -1785,6 +1785,10 @@ _settok_tokenCell(char *cellName, int *cellNum, int *primary) {
     int t1;
     struct cell *cell;
 
+    if (primary) {
+	*primary = 0;
+    }
+
     if (cellName && strlen(cellName) > 0) {
 	cell = afs_GetCellByName(cellName, READ_LOCK);
     } else {
