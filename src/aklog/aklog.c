@@ -823,6 +823,9 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
     *tokenPtr = token;
     *userPtr = strdup(username);
 
+    *tokenPtr = token;
+    *userPtr = strdup(username);
+
     return 0;
 }
 #endif
