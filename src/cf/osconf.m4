@@ -204,7 +204,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-O2 -pipe -fPIC"
 		;;
 
-	*nbsd2*|*nbsd3*|*nbsd4*|*nbsd5*)
+	*nbsd2*|*nbsd3*|*nbsd4*|*nbsd5*|*nbsd6*)
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
 		PAM_OPTMZ=-O2
