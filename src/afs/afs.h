@@ -85,7 +85,9 @@ extern int afs_shuttingdown;
 #define MAXNUMSYSNAMES	32	/* max that current constants allow */
 #define	NOTOKTIMEOUT	(2*3600)	/* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
-#define AFS_NCBRS	1024	/* max # of call back return entries */
+
+
+
 #define AFS_MAXCBRSCALL	32	/* max to return in a given call (must be <= AFSCBMAX) */
 #define	AFS_SALLOC_LOW_WATER	250	/* Min free blocks before allocating more */
 #define	AFS_LRALLOCSIZ 	4096	/* "Large" allocated size */
@@ -260,6 +262,16 @@ struct afs_cbr {
     struct AFSFid fid;
     unsigned int dynalloc:1;
 };
+
+#ifdef AFS_LINUX22_ENV
+/* On Linux, we have to be able to allocate the storage for this using
+ * kmalloc, as otherwise we may deadlock. So, it needs to be able to fit
+ * in a single page
+ */
+# define AFS_NCBRS	PAGE_SIZE/sizeof(struct afs_cbr)
+#else
+# define AFS_NCBRS	300	/* max # of call back return entries */
+#endif
 
 /* cellinfo file magic number */
 #define AFS_CELLINFO_MAGIC	0xf32817cd
