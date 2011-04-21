@@ -824,6 +824,9 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
     token->ticketLen = cred.ticket_st.length;
     memcpy(token->ticket, cred.ticket_st.dat, token->ticketLen);
 
+    *tokenPtr = token;
+    *userPtr = strdup(username);
+
     return 0;
 }
 #endif
