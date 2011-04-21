@@ -64,7 +64,7 @@ loop:
 	    if (!(vp = AFSTOV(tvc)) || !vnode_isdir(AFSTOV(tvc)))
 		continue;
 	    /* dynroot object. no callbacks. anonymous ACL. just no. */
-	    if (afs_IsDynrootFid(tvc))
+	    if (afs_IsDynrootFid(&tvc->f.fid))
 		continue;
 	    /* no fake fsevents on mount point sources. leaks refs */
 	    if (tvc->mvstat == 1)
