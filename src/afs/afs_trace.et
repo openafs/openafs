@@ -173,5 +173,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_WRITEFAILED, "osi_Write failed len %ld resid %ld err %ld"
 	ec	CM_TRACE_ADJUSTSIZE2, "AdjustSize dc = 0x%lx, chunkBytes = 0x%x used = %ld, diff = %ld"
 	ec 	CM_TRACE_AFSDB, "AFSDB lookup %s returned %d"
+	ec	CM_TRACE_AIOREADOP, "Iaioread ip x%lx pos (0x%x, 0x%x) segs 0x%x code %x"
+	ec	CM_TRACE_AIOWRITEOP, "Iaiowrite ip x%lx pos (0x%x, 0x%x) segs 0x%x code %x"
 end
 
