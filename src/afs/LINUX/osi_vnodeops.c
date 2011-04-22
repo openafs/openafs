@@ -96,6 +96,36 @@ afs_linux_VerifyVCache(struct vcache *avc, cred_t **retcred) {
     return afs_convert_code(code);
 }
 
+#ifdef HAVE_LINUX_GENERIC_FILE_AIO_READ
+static ssize_t
+afs_linux_aio_read(struct kiocb *iocb, const struct iovec *iov, unsigned long segs, loff_t pos)
+{
+    struct file *fp = iocb->ki_filp;
+    ssize_t code = 0;
+    struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
+
+    AFS_GLOCK();
+    afs_Trace4(afs_iclSetp, CM_TRACE_AIOREADOP, ICL_TYPE_POINTER, vcp,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(pos), ICL_TYPE_INT32, segs, ICL_TYPE_INT32,
+	       99999);
+    code = afs_linux_VerifyVCache(vcp, NULL);
+
+    if (code == 0) {
+	/* Linux's FlushPages implementation doesn't ever use credp,
+	 * so we optimise by not using it */
+	osi_FlushPages(vcp, NULL);	/* ensure stale pages are gone */
+	AFS_GUNLOCK();
+	code = generic_file_aio_read(iocb, iov, segs, pos);
+	AFS_GLOCK();
+    }
+
+    afs_Trace4(afs_iclSetp, CM_TRACE_AIOREADOP, ICL_TYPE_POINTER, vcp,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(pos), ICL_TYPE_INT32, segs, ICL_TYPE_INT32,
+	       code);
+    AFS_GUNLOCK();
+    return code;
+}
+#else
 static ssize_t
 afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 {
@@ -123,12 +153,56 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     AFS_GUNLOCK();
     return code;
 }
+#endif
 
 
-/* Now we have integrated VM for writes as well as reads. generic_file_write
- * also takes care of re-positioning the pointer if file is open in append
+/* Now we have integrated VM for writes as well as reads. the generic write operations
+ * also take care of re-positioning the pointer if file is open in append
  * mode. Call fake open/close to ensure we do writes of core dumps.
  */
+#ifdef HAVE_LINUX_GENERIC_FILE_AIO_READ
+static ssize_t
+afs_linux_aio_write(struct kiocb *iocb, const struct iovec *iov, unsigned long segs, loff_t pos)
+{
+    ssize_t code = 0;
+    struct vcache *vcp = VTOAFS(iocb->ki_filp->f_dentry->d_inode);
+    cred_t *credp;
+
+    AFS_GLOCK();
+
+    afs_Trace4(afs_iclSetp, CM_TRACE_AIOWRITEOP, ICL_TYPE_POINTER, vcp,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(pos), ICL_TYPE_INT32, segs, ICL_TYPE_INT32,
+	       (iocb->ki_filp->f_flags & O_APPEND) ? 99998 : 99999);
+
+    code = afs_linux_VerifyVCache(vcp, &credp);
+
+    ObtainWriteLock(&vcp->lock, 529);
+    afs_FakeOpen(vcp);
+    ReleaseWriteLock(&vcp->lock);
+    if (code == 0) {
+	    AFS_GUNLOCK();
+	    code = generic_file_aio_write(iocb, iov, segs, pos);
+	    AFS_GLOCK();
+    }
+
+    ObtainWriteLock(&vcp->lock, 530);
+
+    if (vcp->execsOrWriters == 1 && !credp)
+      credp = crref();
+
+    afs_FakeClose(vcp, credp);
+    ReleaseWriteLock(&vcp->lock);
+
+    afs_Trace4(afs_iclSetp, CM_TRACE_AIOWRITEOP, ICL_TYPE_POINTER, vcp,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(pos), ICL_TYPE_INT32, segs, ICL_TYPE_INT32,
+	       code);
+
+    if (credp)
+      crfree(credp);
+    AFS_GUNLOCK();
+    return code;
+}
+#else
 static ssize_t
 afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 {
@@ -170,6 +244,7 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     AFS_GUNLOCK();
     return code;
 }
+#endif
 
 extern int BlobScan(struct dcache * afile, afs_int32 ablob);
 
@@ -663,11 +738,12 @@ struct file_operations afs_dir_fops = {
 };
 
 struct file_operations afs_file_fops = {
+#ifdef HAVE_LINUX_GENERIC_FILE_AIO_READ
+  .aio_read =	afs_linux_aio_read,
+  .aio_write =	afs_linux_aio_write,
+#else
   .read =	afs_linux_read,
   .write =	afs_linux_write,
-#ifdef HAVE_LINUX_GENERIC_FILE_AIO_READ
-  .aio_read =	generic_file_aio_read,
-  .aio_write =	generic_file_aio_write,
 #endif
 #ifdef HAVE_UNLOCKED_IOCTL
   .unlocked_ioctl = afs_unlocked_xioctl,
