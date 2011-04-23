@@ -9,24 +9,20 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 MODULE_CFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 
+SUBDIRS = tap auth util cmd
+
 all: runtests
-	cd tap && $(MAKE) $@
-	cd auth && $(MAKE) $@
-	cd util && $(MAKE) $@
+	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
 
 runtests: runtests.o
 	$(AFS_LDRULE) runtests.o
 
 check test tests: runtests
-	cd tap && $(MAKE) $@
-	cd auth && $(MAKE) $@
-	cd util && $(MAKE) $@
+	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
 	./runtests $(abs_top_srcdir)/tests/TESTS
 
 install:
 
 clean distclean:
-	cd tap && $(MAKE) $@
-	cd auth && $(MAKE) $@
-	cd util && $(MAKE) $@
+	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
 	$(RM) -f *.o core runtests

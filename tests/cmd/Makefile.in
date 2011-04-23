@@ -1,0 +1,25 @@
+# Build rules for the OpenAFS cmd test suite.
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+MODULE_CFLAGS = -I$(srcdir)/..
+
+LIBS = ../tap/libtap.a \
+       $(abs_top_builddir)/lib/libcmd.a \
+       $(abs_top_builddir)/lib/libcom_err.a \
+       $(abs_top_builddir)/lib/util.a
+
+tests = command-t
+
+all check test tests: $(tests)
+
+command-t: command-t.o $(LIBS)
+	$(AFS_LDRULE) command-t.o $(LIBS) $(XLIBS)
+
+install:
+
+clean distclean:
+	$(RM) -f $(tests) *.o core

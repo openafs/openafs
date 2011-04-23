@@ -953,6 +953,9 @@ distclean: clean
 	tests/Makefile \
 	tests/rpctestlib/Makefile \
 	tests/tap/Makefile \
+	tests/auth/Makefile \
+	tests/cmd/Makefile \
+	tests/util/Makefile \
 	src/helper-splint.sh
 	if test -d doc/man-pages ; then \
 	    rm -f doc/man-pages/Makefile doc/man-pages/install-man ; \
