@@ -1229,7 +1229,6 @@ AC_CHECK_HEADERS([ \
 		   math.h \
 		   mntent.h \
 		   ncurses.h \
-		   net/if.h \
 		   netdb.h \
 		   netinet/in.h \
 		   pwd.h \
@@ -1276,10 +1275,16 @@ AC_CHECK_HEADERS([ \
 		   unistd.h \
 		   windows.h \
 		])
+AC_CHECK_HEADERS([net/if.h],[],[],[AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif])
+
 AC_CHECK_HEADERS([netinet/if_ether.h],[],[],[AC_INCLUDES_DEFAULT
 #ifdef HAVE_NET_IF_H
 # include <net/if.h>
 #endif])
+
 AC_CHECK_HEADERS([security/pam_modules.h],[],[],[AC_INCLUDES_DEFAULT
 #ifdef HAVE_SECURITY_PAM_APPL_H
 # include <security/pam_appl.h>
