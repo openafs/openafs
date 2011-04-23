@@ -2665,6 +2665,14 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 	H_UNLOCK;
 	return VICETOKENDEAD;
     }
+    if (client->deleted) {
+	ViceLog(0, ("GetClient: got deleted client, this should not happen! "
+	            "Connection will appear to have no rights; "
+	            "tcon %p sid %d epoch %d client %p host %s:%d viceid %d\n",
+	            tcon, (int)rxr_CidOf(tcon), (int)rxr_GetEpoch(tcon), client,
+	            afs_inet_ntoa_r(client->host->host, hoststr),
+	            (int)ntohs(client->host->port), (int)client->ViceId));
+    }
 
     client->refCount++;
     *cp = client;
