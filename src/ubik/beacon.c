@@ -62,8 +62,6 @@ static int ubeacon_InitServerListCommon(afs_uint32 ame,
 					afs_uint32 aservers[]);
 static int verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 				  afs_uint32 aservers[]);
-static int updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR]);
-
 
 /*! \file
  * Module responsible for both deciding if we're currently the sync site,
@@ -358,10 +356,6 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	nServers = i + 1;	/* count this server as well as the remotes */
 
     ubik_quorum = (nServers >> 1) + 1;	/* compute the majority figure */
-    /* send addrs to all other servers */
-    code = updateUbikNetworkAddress(ubik_host);
-    if (code)
-	return code;
 
 /* Shoud we set some defaults for RX??
     r_retryInterval = 2;
@@ -737,14 +731,14 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
  *
  * \param ubik_host an array containing all my IP addresses.
  *
- * Algorithm     : Do an RPC to all remote ubik servers infroming them
+ * Algorithm     : Do an RPC to all remote ubik servers informing them
  *                 about my IP addresses. Get their IP addresses and
  *                 update my linked list of ubik servers \p ubik_servers
  *
  * \return 0 on success, non-zero on failure
  */
-static int
-updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
+int
+ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 {
     int j, count, code = 0;
     UbikInterfaceAddr inAddr, outAddr;

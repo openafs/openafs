@@ -513,6 +513,11 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
               NULL, "rx_ServerProc", &junk);
 #endif
 
+    /* send addrs to all other servers */
+    code = ubeacon_updateUbikNetworkAddress(ubik_host);
+    if (code)
+	return code;
+
     /* now start up async processes */
 #ifdef AFS_PTHREAD_ENV
     ubik_thread_create(&ubeacon_Interact_tattr, &ubeacon_InteractThread,
