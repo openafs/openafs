@@ -220,8 +220,8 @@ extern struct host *h_Alloc_r(struct rx_connection *r_con);
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 		      struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
-extern void h_Enumerate(int (*proc) (struct host *, int, void *), void *param);
-extern void h_Enumerate_r(int (*proc) (struct host *, int, void *), struct host *enumstart, void *param);
+extern void h_Enumerate(int (*proc) (struct host *, void *), void *param);
+extern void h_Enumerate_r(int (*proc) (struct host *, void *), struct host *enumstart, void *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
@@ -265,7 +265,6 @@ extern int h_RestoreState(void);
 
 #define H_ENUMERATE_BAIL(flags)        ((flags)|0x80000000)
 #define H_ENUMERATE_ISSET_BAIL(flags)  ((flags)&0x80000000)
-#define H_ENUMERATE_ISSET_HELD(flags)  ((flags)&0x7FFFFFFF)
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);	/* Used by h_itoh */
 #define h_htoi(host) ((host)->index)	/* index isn't zeroed, no need to lock */
