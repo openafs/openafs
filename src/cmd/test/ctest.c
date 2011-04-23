@@ -10,9 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "cmd.h"
-#include <stdio.h>
+#include <afs/cmd.h>
 
 static int
 cproc1(struct cmd_syndesc *as, void *arock)

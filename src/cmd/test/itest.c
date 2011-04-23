@@ -10,10 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include "cmd.h"
-#include <stdio.h>
-#include <com_err.h>
+#include <afs/com_err.h>
+#include <afs/cmd.h>
 
 static int
 cproc1(struct cmd_syndesc *as, void *arock)
@@ -49,7 +49,7 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     char tline[1000];
-    long tc;
+    afs_int32 tc;
     char *tp;
     long code;
     char *tv[100];

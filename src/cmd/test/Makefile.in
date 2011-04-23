@@ -14,8 +14,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
-LIBS=-lcmd -lcom_err -lafsutil
+LIBS=-lcmd $(TOP_LIBDIR)/libcom_err.a -lafsutil $(LIB_roken) $(XLIBS)
 
 all: test
 test tests: ctest dtest itest
