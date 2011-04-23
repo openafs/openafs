@@ -566,6 +566,7 @@ extern void ubik_dprint_25(const char *format, ...)
 extern struct vote_data vote_globals;
 extern void uvote_set_dbVersion(struct ubik_version);
 extern int uvote_eq_dbVersion(struct ubik_version);
+extern int uvote_HaveSyncAndVersion(struct ubik_version);
 /*\}*/
 
 #endif /* UBIK_INTERNALS */

@@ -622,3 +622,27 @@ uvote_eq_dbVersion(struct ubik_version version) {
     UBIK_VOTE_UNLOCK;
     return ret;
 }
+
+/*!
+ * \brief Check if there is a sync site and whether we have a given db version
+ *
+ * \return 1 if there is a valid sync site, and the given db version matches the sync site's
+ */
+
+int
+uvote_HaveSyncAndVersion(struct ubik_version version)
+{
+    afs_int32 now;
+    int code;
+
+    UBIK_VOTE_LOCK;
+    now = FT_ApproxTime();
+    if (!vote_globals.lastYesState || (SMALLTIME + vote_globals.lastYesClaim < now) ||
+			vote_globals.ubik_dbVersion.epoch != version.epoch ||
+			vote_globals.ubik_dbVersion.counter != version.counter)
+	code = 0;
+    else
+	code = 1;
+    UBIK_VOTE_UNLOCK;
+    return code;
+}
