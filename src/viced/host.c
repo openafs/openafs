@@ -1007,6 +1007,16 @@ h_Enumerate(int (*proc) (struct host*, void *), void *param)
 	    ShutDownAndCore(PANIC);
 	}
     }
+    if (i < count-1) {
+	/* we bailed out of enumerating hosts early; we still have holds on
+	 * some of the hosts in 'list', so release them */
+	i++;
+	H_LOCK;
+	for ( ; i < count; i++) {
+	    h_Release_r(list[i]);
+	}
+	H_UNLOCK;
+    }
     free((void *)list);
 }	/* h_Enumerate */
 
@@ -1087,6 +1097,9 @@ h_Enumerate_r(int (*proc) (struct host *, void *),
 	    flags = (*proc) (host, param);
 	    if (H_ENUMERATE_ISSET_BAIL(flags)) {
 		h_Release_r(host); /* this might free up the host */
+		if (next) {
+		    h_Release_r(next);
+		}
 		break;
 	    } else if (flags) {
 		ViceLog(0, ("h_Enumerate_r got back invalid return value %d\n", flags));
