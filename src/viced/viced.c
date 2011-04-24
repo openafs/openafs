@@ -86,7 +86,6 @@ extern int etext;
 
 void *ShutDown(void *);
 static void ClearXStatValues(void);
-static void NewParms(int);
 static void PrintCounters(void);
 static void ResetCheckDescriptors(void);
 static void ResetCheckSignal(void);
@@ -1515,75 +1514,21 @@ ParseArgs(int argc, char *argv[])
 
 }				/*ParseArgs */
 
-
-#define MAXPARMS 15
-
+/* Once upon a time, in a galaxy far far away, IBM AFS supported the use of
+ * a file /vice/file/parms, the contents of which would override any command
+ * line parameters. We no longer support the use of such a file, but we warn
+ * if we encounter its presence from an older release
+ */
 static void
-NewParms(int initializing)
+CheckParms(void)
 {
-    static struct afs_stat sbuf;
-    int i, fd;
-    char *parms;
-    char *argv[MAXPARMS];
-    int argc;
+    struct afs_stat sbuf;
 
-    if (!(afs_stat("/vice/file/parms", &sbuf))) {
-	parms = (char *)malloc(sbuf.st_size);
-	if (!parms)
-	    return;
-	fd = afs_open("parms", O_RDONLY, 0666);
-	if (fd <= 0) {
-	    ViceLog(0, ("Open for parms failed with errno = %d\n", errno));
-	    return;
-	}
-
-	i = read(fd, parms, sbuf.st_size);
-	close(fd);
-	if (i != sbuf.st_size) {
-	    if (i < 0) {
-		ViceLog(0, ("Read on parms failed with errno = %d\n", errno));
-	    } else {
-		ViceLog(0,
-			("Read on parms failed; expected %ld bytes but read %d\n",
-			 (long) sbuf.st_size, i));
-	    }
-	    free(parms);
-	    return;
-	}
-
-	for (i = 0; i < MAXPARMS; argv[i++] = 0);
-
-	for (argc = i = 0; i < sbuf.st_size; i++) {
-	    if ((*(parms + i) != ' ') && (*(parms + i) != '\n')) {
-		if (argv[argc] == 0)
-		    argv[argc] = (parms + i);
-	    } else {
-		*(parms + i) = '\0';
-		if (argv[argc] != 0) {
-		    if (++argc == MAXPARMS)
-			break;
-		}
-		while ((*(parms + i + 1) == ' ')
-		       || (*(parms + i + 1) == '\n'))
-		    i++;
-	    }
-	}
-	if (ParseArgs(argc, argv) == 0) {
-	    ViceLog(0, ("Change parameters to:"));
-	} else {
-	    ViceLog(0, ("Invalid parameter in:"));
-	}
-	for (i = 0; i < argc; i++) {
-	    ViceLog(0, (" %s", argv[i]));
-	}
-	ViceLog(0, ("\n"));
-	free(parms);
-    } else if (!initializing)
-	ViceLog(0,
-		("Received request to change parms but no parms file exists\n"));
-
-}				/*NewParms */
-
+    if (afs_stat("/vice/file/parms", &sbuf) == 0) {
+	ViceLog(0, ("Using /vice/file/parms to override command line "
+		    "options is no longer supported"));
+    }
+}
 
 /* Miscellaneous routines */
 void
@@ -1999,6 +1944,9 @@ main(int argc, char *argv[])
     /* set ihandle package defaults prior to parsing args */
     ih_PkgDefaults();
 
+    /* check for the parameter file */
+    CheckParms();
+
     if (ParseArgs(argc, argv)) {
 	FlagMsg();
 	exit(-1);
@@ -2020,8 +1968,6 @@ main(int argc, char *argv[])
 		AFSDIR_SERVER_ETC_DIRPATH);
 	exit(-1);
     }
-
-    NewParms(1);
 
     /* Open FileLog on stdout, stderr, fd 1 and fd2 (for perror), sigh. */
 #ifndef AFS_NT40_ENV
