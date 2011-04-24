@@ -57,7 +57,7 @@ main(int argc, char **argv)
     int code;
     int tc;
     int retval;
-    char *retstring;
+    char *retstring = NULL;
 
     plan(79);
 
