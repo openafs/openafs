@@ -191,6 +191,7 @@ PrintSyntax(struct cmd_syndesc *as)
     int i;
     struct cmd_parmdesc *tp;
     char *str;
+    char *name;
     size_t len;
     size_t xtralen;
 
@@ -214,10 +215,30 @@ PrintSyntax(struct cmd_syndesc *as)
 	    continue;		/* seeked over slot */
 	if (tp->flags & CMD_HIDE)
 	    continue;		/* skip hidden options */
+
+	/* The parameter name is the real name, plus any aliases */
+	if (!tp->aliases) {
+	    name = strdup(tp->name);
+	} else {
+	    size_t namelen;
+	    struct cmd_item *alias;
+	    namelen = strlen(tp->name) + 1;
+	    for (alias = tp->aliases; alias != NULL; alias = alias->next)
+		namelen+=strlen(alias->data) + 3;
+
+	    name = malloc(namelen);
+	    strlcpy(name, tp->name, namelen);
+
+	    for (alias = tp->aliases; alias != NULL; alias = alias->next) {
+		strlcat(name, " | ", namelen);
+		strlcat(name, alias->data, namelen);
+	    }
+	}
+
 	/* Work out if we can fit what we want to on this line, or if we need to
 	 * start a new one */
 	str = ParmHelpString(tp);
-	xtralen = 1 + strlen(tp->name) + strlen(str) +
+	xtralen = 1 + strlen(name) + strlen(str) +
 		  ((tp->flags & CMD_OPTIONAL)? 2: 0);
 
 	if (len + xtralen > 78) {
@@ -227,7 +248,7 @@ PrintSyntax(struct cmd_syndesc *as)
 
 	printf(" %s%s%s%s",
 	       tp->flags & CMD_OPTIONAL?"[":"",
-	       tp->name,
+	       name,
 	       str,
 	       tp->flags & CMD_OPTIONAL?"]":"");
 	free(str);
