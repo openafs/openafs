@@ -43,7 +43,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int try_first_pass = 0;
     int ignore_root = 0;
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
-    int torch_password = 1;
+    char *torch_password = NULL;
     int i;
     char my_password_buf[256];
     char instance[256];
@@ -154,13 +154,11 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
-	torch_password = 0;
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	torch_password = 0;
 	got_authtok = 1;
     }
     if (!(use_first_pass || try_first_pass)) {
@@ -169,7 +167,6 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
     if (password == NULL) {
 	char *prompt_password;
-	torch_password = 1;
 	if (use_first_pass)
 	    RET(PAM_AUTH_ERR);	/* shouldn't happen */
 	if (try_first_pass)
@@ -200,7 +197,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	my_password_buf[sizeof(my_password_buf) - 1] = '\0';
 	memset(prompt_password, 0, strlen(password));
 	free(prompt_password);
-	password = my_password_buf;
+	password = torch_password = my_password_buf;
     }
 
     if ((code = ka_VerifyUserPassword(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, (char *)user,	/* kerberos name */
@@ -212,7 +209,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	pam_afs_syslog(LOG_ERR, PAMAFS_LOGIN_FAILED, user, reason);
 	RET(PAM_AUTH_ERR);
     }
-    torch_password = 0;
+    torch_password = NULL;
     pam_set_item(pamh, PAM_AUTHTOK, password);
     pam_set_item(pamh, PAM_OLDAUTHTOK, password);
     if (flags & PAM_PRELIM_CHECK) {
@@ -305,7 +302,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
   out:
     if (password && torch_password) {
-	memset((char *)password, 0, strlen(password));
+	memset(torch_password, 0, strlen(torch_password));
     }
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV
