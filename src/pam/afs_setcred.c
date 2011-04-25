@@ -50,11 +50,11 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     char my_password_buf[256];
     char *cell_ptr = NULL;
     char sbuffer[100];
-    char *password = NULL;
     int torch_password = 1;
     int auth_ok = 0;
     char *lh;
     PAM_CONST char *user = NULL;
+    const char *password = NULL;
     int password_expires = -1;
     char *reason = NULL;
     struct passwd unix_pwd, *upwd = NULL;
@@ -223,6 +223,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
       try_auth:
 	if (password == NULL) {
+	    char *prompt_password;
 
 	    torch_password = 1;
 
@@ -237,12 +238,12 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    }
 
 	    errcode =
-		pam_afs_prompt(pam_convp, &password, 0, PAMAFS_PWD_PROMPT);
-	    if (errcode != PAM_SUCCESS || password == NULL) {
+		pam_afs_prompt(pam_convp, &prompt_password, 0, PAMAFS_PWD_PROMPT);
+	    if (errcode != PAM_SUCCESS || prompt_password == NULL) {
 		pam_afs_syslog(LOG_ERR, PAMAFS_GETPASS_FAILED);
 		RET(PAM_AUTH_ERR);
 	    }
-	    if (password[0] == '\0') {
+	    if (prompt_password[0] == '\0') {
 		if (logmask && LOG_MASK(LOG_DEBUG))
 		    pam_afs_syslog(LOG_DEBUG, PAMAFS_NILPASSWORD);
 		RET(PAM_NEW_AUTHTOK_REQD);
@@ -255,10 +256,10 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	     * later, and free this storage now.
 	     */
 
-	    strncpy(my_password_buf, password, sizeof(my_password_buf));
+	    strncpy(my_password_buf, prompt_password, sizeof(my_password_buf));
 	    my_password_buf[sizeof(my_password_buf) - 1] = '\0';
-	    memset(password, 0, strlen(password));
-	    free(password);
+	    memset(prompt_password, 0, strlen(prompt_password));
+	    free(prompt_password);
 	    password = my_password_buf;
 	}
 	/*
@@ -282,7 +283,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		if (ka_VerifyUserPassword(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					  NULL,	/* instance */
 					  cell_ptr,	/* realm */
-					  password,	/* password */
+					  (char*)password,	/* password */
 					  0,	/* spare 2 */
 					  &reason	/* error string */
 		    )) {
@@ -301,7 +302,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		if (ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					       NULL,	/* instance */
 					       cell_ptr,	/* realm */
-					       password,	/* password */
+					       (char*)password,	/* password */
 					       0,	/* default lifetime */
 					       &password_expires, 0,	/* spare 2 */
 					       &reason	/* error string */
@@ -353,7 +354,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
   out:
     if (password && torch_password)
-	memset(password, 0, strlen(password));
+	memset((char*)password, 0, strlen(password));
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV
     closelog();
