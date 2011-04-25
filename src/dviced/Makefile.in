@@ -53,8 +53,11 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a \
 	   ${TOP_LIBDIR}/libopr.a
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a \
-     ${TOP_LIBDIR}/libopr.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a \
+     ${TOP_LIBDIR}/libafsrpc.a \
+     $(TOP_LIBDIR)/libcmd.a \
+     ${TOP_LIBDIR}/libopr.a \
+     ${TOP_LIBDIR}/util.a
 
 all: dafileserver state_analyzer
 

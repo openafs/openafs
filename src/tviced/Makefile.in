@@ -50,6 +50,7 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
+     $(TOP_LIBDIR)/libcmd.a \
      ${TOP_LIBDIR}/util.a
 
 all: fileserver
