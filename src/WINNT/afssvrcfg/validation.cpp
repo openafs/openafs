@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -57,11 +57,11 @@ BOOL Validation_IsValid(TCHAR *pszInput, VALIDATION_TYPE type, BOOL bShowError)
 	bValid = CheckAfsPartitionName(pszInput, nErrorMsgResID);
 	break;
 
-    case VALID_AFS_CELL_NAME: 
+    case VALID_AFS_CELL_NAME:
 	bValid = CheckAfsCellName(pszInput, nErrorMsgResID);
 	break;
 
-    case VALID_AFS_PASSWORD:	 
+    case VALID_AFS_PASSWORD:
 	bValid = CheckAfsPassword(pszInput, nErrorMsgResID);
 	break;
 
@@ -83,7 +83,7 @@ BOOL Validation_IsValid(TCHAR *pszInput, VALIDATION_TYPE type, BOOL bShowError)
         ShowError(nErrorMsgResID);
 
     return bValid;
-}	
+}
 
 
 
@@ -122,7 +122,7 @@ static BOOL CheckAfsPartitionName(TCHAR *pszPartitionName, int &nErrorMsgResID)
 }
 
 static BOOL CheckAfsCellName(TCHAR *pszInput, int &nErrorMsgResID)
-{	
+{
     nErrorMsgResID = 0;
 
     return TRUE;
@@ -133,7 +133,7 @@ static BOOL CheckAfsPassword(TCHAR *pszInput, int &nErrorMsgResID)
     nErrorMsgResID = 0;
 
     return TRUE;
-}	
+}
 
 static BOOL CheckAfsUid(TCHAR *pszInput, int &nErrorMsgResID)
 {

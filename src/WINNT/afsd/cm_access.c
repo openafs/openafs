@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -49,7 +49,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     } else {
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         aclScp = cm_FindSCache(&tfid);
-        if (!aclScp) 
+        if (!aclScp)
             return 0;
         if (aclScp != scp) {
             if (aclScp->fid.vnode < scp->fid.vnode)
@@ -71,7 +71,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     }
 
     lock_AssertAny(&aclScp->rw);
-        
+
     /* now if rights is a subset of the public rights, we're done.
      * Otherwise, if we an explicit acl entry, we're also in good shape,
      * and can definitively answer.
@@ -102,12 +102,12 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
 	    *outRightsp &= ~PRSFS_READ;
 	}
 	if ((scp->unixModeBits & 0200) == 0 && (rights != (PRSFS_WRITE | PRSFS_LOCK))) {
-	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing WRITE scp 0x%p unix 0%o", 
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing WRITE scp 0x%p unix 0%o",
 		      scp, scp->unixModeBits);
 	    *outRightsp &= ~PRSFS_WRITE;
 	}
 	if ((scp->unixModeBits & 0200) == 0 && !cm_deleteReadOnly) {
-	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing DELETE scp 0x%p unix 0%o", 
+	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing DELETE scp 0x%p unix 0%o",
 		      scp, scp->unixModeBits);
 	    *outRightsp &= ~PRSFS_DELETE;
 	}
@@ -130,7 +130,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     /* fall through */
 
   done:
-    if (didLock) 
+    if (didLock)
         lock_ReleaseRead(&aclScp->rw);
     if (release)
         cm_ReleaseSCache(aclScp);
@@ -153,7 +153,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     int got_cb = 0;
 
     /* pretty easy: just force a pass through the fetch status code */
-        
+
     osi_Log2(afsd_logp, "GetAccessRights scp 0x%p user 0x%p", scp, userp);
 
     /* first, start by finding out whether we have a directory or something
@@ -162,7 +162,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY || cm_accessPerFileCheck) {
 	code = cm_SyncOp(scp, NULL, userp, reqp, 0,
 			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
-	if (!code) 
+	if (!code)
 	    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     else
         osi_Log3(afsd_logp, "GetAccessRights syncop failure scp %x user %x code %x", scp, userp, code);
@@ -174,16 +174,16 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
         if (code) {
             lock_ObtainWrite(&scp->rw);
 	    goto _done;
-        }       
-                
+        }
+
         osi_Log2(afsd_logp, "GetAccessRights parent scp %x user %x", aclScp, userp);
 	lock_ObtainWrite(&aclScp->rw);
 	code = cm_SyncOp(aclScp, NULL, userp, reqp, 0,
 			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
 	if (!code)
-	    cm_SyncOpDone(aclScp, NULL, 
+	    cm_SyncOpDone(aclScp, NULL,
 			  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        else 
+        else
             osi_Log3(afsd_logp, "GetAccessRights parent syncop failure scp %x user %x code %x", aclScp, userp, code);
 	lock_ReleaseWrite(&aclScp->rw);
         cm_ReleaseSCache(aclScp);

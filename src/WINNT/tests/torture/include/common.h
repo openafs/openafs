@@ -40,8 +40,8 @@ enum states {BM_SETUP, BM_WARMUP, BM_MEASURE};
 #define CMD_RMDIR           9
 #define CMD_UNLINK          10
 #define CMD_WRITEX          11
-#define CMD_XCOPY           12 
-#define CMD_DELETEFILES     13 
+#define CMD_XCOPY           12
+#define CMD_DELETEFILES     13
 #define CMD_COPYFILES       14
 #define CMD_ATTACH          15
 #define CMD_DETACH          16
@@ -79,7 +79,7 @@ struct cmd_struct {
   DWORD total_sum_of_squares;
 };
 
-static struct 
+static struct
 {
 	char *name; /* name used in results */
 	char *disable_name; /* name used in disable (-d) option */
@@ -142,7 +142,7 @@ typedef struct {
 typedef struct {
         HANDLE fd;
         int handle;
-        char *name; 
+        char *name;
 	int reads, writes;
 } FTABLE;
 

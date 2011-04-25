@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -47,8 +47,8 @@ LOGFILE::~LOGFILE()
 	Close();
 }
 
-BOOL LOGFILE::Open(const char *pszLogFilePath, 
-		   LOGFILE_OPEN_MODE eOpenMode,	
+BOOL LOGFILE::Open(const char *pszLogFilePath,
+		   LOGFILE_OPEN_MODE eOpenMode,
 		   LOGFILE_TIMESTAMP_MODE eTimeStampMode)
 {
     char *pszOpenMode;
@@ -72,12 +72,12 @@ BOOL LOGFILE::Open(const char *pszLogFilePath,
     }
 
     return FALSE;
-}	
+}
 
 BOOL LOGFILE::Close()
 {
     int nResult = 0;
-	
+
     if (m_fp) {
 	if (m_eTimeStampMode != TSM_NEVER)
 	    WriteTimeStamp();
@@ -114,7 +114,7 @@ BOOL LOGFILE::Write(const char *pszEntry, ...)
     bTimestampNextLine = (pszEntry[strlen(pszEntry) - 1] == '\n');
 
     return (nWritten > 0);
-}	
+}
 
 BOOL LOGFILE::WriteError(const char *pszMsg, DWORD nErrorCode, ...)
 {
@@ -146,7 +146,7 @@ BOOL LOGFILE::WriteError(const char *pszMsg, DWORD nErrorCode, ...)
     fflush(m_fp);
 
     return (nWritten > 0);
-}	
+}
 
 BOOL LOGFILE::WriteTimeStamp()
 {
@@ -184,5 +184,5 @@ BOOL LOGFILE::WriteMultistring(const char *pszMultiStr)
 	Write("%s\r\n", p);
 
     return TRUE;
-}	
+}
 

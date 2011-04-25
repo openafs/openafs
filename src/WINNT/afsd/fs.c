@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -105,7 +105,7 @@ struct AclEntry {
     afs_int32 rights;
 };
 
-static void 
+static void
 ZapAcl (struct Acl *acl)
 {
     if (!acl)
@@ -119,7 +119,7 @@ ZapAcl (struct Acl *acl)
 /*
  * Mods for the AFS/DFS protocol translator.
  *
- * DFS rights. It's ugly to put these definitions here, but they 
+ * DFS rights. It's ugly to put these definitions here, but they
  * *cannot* change, because they're part of the wire protocol.
  * In any event, the protocol translator will guarantee these
  * assignments for AFS cache managers.
@@ -154,7 +154,7 @@ static int parm_setacl_id, parm_copyacl_id, parm_listacl_id;
  * return 0, 1 or 2, as appropriate. Abort if both switches are present.
  */
 /* int id; Offset of -id switch; -if is next switch */
-static int 
+static int
 getidf(struct cmd_syndesc *as, int id)
 {
     int idf = 0;
@@ -178,85 +178,85 @@ static int
 PRights(afs_int32 arights, int dfs)
 {
     if (!dfs) {
-	if (arights & PRSFS_READ) 
+	if (arights & PRSFS_READ)
             printf("r");
-	if (arights & PRSFS_LOOKUP) 
+	if (arights & PRSFS_LOOKUP)
             printf("l");
-	if (arights & PRSFS_INSERT) 
+	if (arights & PRSFS_INSERT)
             printf("i");
-	if (arights & PRSFS_DELETE) 
+	if (arights & PRSFS_DELETE)
             printf("d");
-	if (arights & PRSFS_WRITE) 
+	if (arights & PRSFS_WRITE)
             printf("w");
-	if (arights & PRSFS_LOCK) 
+	if (arights & PRSFS_LOCK)
             printf("k");
-	if (arights & PRSFS_ADMINISTER) 
+	if (arights & PRSFS_ADMINISTER)
             printf("a");
-	if (arights & PRSFS_USR0) 
+	if (arights & PRSFS_USR0)
             printf("A");
-	if (arights & PRSFS_USR1) 
+	if (arights & PRSFS_USR1)
             printf("B");
-	if (arights & PRSFS_USR2) 
+	if (arights & PRSFS_USR2)
             printf("C");
-	if (arights & PRSFS_USR3) 
+	if (arights & PRSFS_USR3)
             printf("D");
-	if (arights & PRSFS_USR4) 
+	if (arights & PRSFS_USR4)
             printf("E");
-	if (arights & PRSFS_USR5) 
+	if (arights & PRSFS_USR5)
             printf("F");
-	if (arights & PRSFS_USR6) 
+	if (arights & PRSFS_USR6)
             printf("G");
-	if (arights & PRSFS_USR7) 
+	if (arights & PRSFS_USR7)
             printf("H");
     } else {
-	if (arights & DFS_READ) 
+	if (arights & DFS_READ)
             printf("r");
-        else 
+        else
             printf("-");
-	if (arights & DFS_WRITE) 
-            printf("w"); 
-        else 
+	if (arights & DFS_WRITE)
+            printf("w");
+        else
             printf("-");
-	if (arights & DFS_EXECUTE) 
-            printf("x"); 
-        else 
+	if (arights & DFS_EXECUTE)
+            printf("x");
+        else
             printf("-");
-	if (arights & DFS_CONTROL) 
-            printf("c"); 
-        else 
+	if (arights & DFS_CONTROL)
+            printf("c");
+        else
             printf("-");
-	if (arights & DFS_INSERT) 
-            printf("i"); 
-        else 
+	if (arights & DFS_INSERT)
+            printf("i");
+        else
             printf("-");
-	if (arights & DFS_DELETE) 
-            printf("d"); 
-        else 
+	if (arights & DFS_DELETE)
+            printf("d");
+        else
             printf("-");
-	if (arights & (DFS_USRALL)) 
+	if (arights & (DFS_USRALL))
             printf("+");
-	if (arights & DFS_USR0) 
+	if (arights & DFS_USR0)
             printf("A");
-	if (arights & DFS_USR1) 
+	if (arights & DFS_USR1)
             printf("B");
-	if (arights & DFS_USR2) 
+	if (arights & DFS_USR2)
             printf("C");
-	if (arights & DFS_USR3) 
+	if (arights & DFS_USR3)
             printf("D");
-	if (arights & DFS_USR4) 
+	if (arights & DFS_USR4)
             printf("E");
-	if (arights & DFS_USR5) 
+	if (arights & DFS_USR5)
             printf("F");
-	if (arights & DFS_USR6) 
+	if (arights & DFS_USR6)
             printf("G");
-	if (arights & DFS_USR7) 
+	if (arights & DFS_USR7)
             printf("H");
-    }	
+    }
     return 0;
 }
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
-static int 
+static int
 InAFS(char *apath)
 {
     struct ViceIoctl blob;
@@ -275,13 +275,13 @@ InAFS(char *apath)
 
     code = pioctl_utf8(apath, VIOCGETFID, &blob, 1);
     if (code) {
-	if ((errno == EINVAL) || (errno == ENOENT)) 
+	if ((errno == EINVAL) || (errno == ENOENT))
             return 0;
     }
     return 1;
 }
 
-static int 
+static int
 IsFreelanceRoot(char *apath)
 {
     struct ViceIoctl blob;
@@ -328,7 +328,7 @@ Parent(char *apath)
 
 enum rtype {add, destroy, deny};
 
-static afs_int32 
+static afs_int32
 Convert(char *arights, int dfs, enum rtype *rtypep)
 {
     afs_int32 mode;
@@ -341,24 +341,24 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
 	    *rtypep = deny;
 	    return 0;
 	}
-	if (!strcmp(arights,"read")) 
+	if (!strcmp(arights,"read"))
             return DFS_READ | DFS_EXECUTE;
-	if (!strcmp(arights, "write")) 
-            return DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE | 
+	if (!strcmp(arights, "write"))
+            return DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE |
                 DFS_WRITE;
-	if (!strcmp(arights, "all")) 
-            return DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE | 
+	if (!strcmp(arights, "all"))
+            return DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE |
                 DFS_WRITE | DFS_CONTROL;
     } else {
-	if (!strcmp(arights,"read")) 
+	if (!strcmp(arights,"read"))
             return PRSFS_READ | PRSFS_LOOKUP;
-	if (!strcmp(arights, "write")) 
-            return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE | 
+	if (!strcmp(arights, "write"))
+            return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
                 PRSFS_WRITE | PRSFS_LOCK;
-	if (!strcmp(arights, "mail")) 
+	if (!strcmp(arights, "mail"))
             return PRSFS_INSERT | PRSFS_LOCK | PRSFS_LOOKUP;
-	if (!strcmp(arights, "all")) 
-            return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE | 
+	if (!strcmp(arights, "all"))
+            return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
                 PRSFS_WRITE | PRSFS_LOCK | PRSFS_ADMINISTER;
     }
     if (!strcmp(arights, "none")) {
@@ -368,74 +368,74 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
     mode = 0;
     for(; (tc = *arights) != '\0'; arights++) {
 	if (dfs) {
-	    if (tc == '-') 
+	    if (tc == '-')
                 continue;
-	    else if (tc == 'r') 
+	    else if (tc == 'r')
                 mode |= DFS_READ;
-	    else if (tc == 'w') 
+	    else if (tc == 'w')
                 mode |= DFS_WRITE;
-	    else if (tc == 'x') 
+	    else if (tc == 'x')
                 mode |= DFS_EXECUTE;
-	    else if (tc == 'c') 
+	    else if (tc == 'c')
                 mode |= DFS_CONTROL;
-	    else if (tc == 'i') 
+	    else if (tc == 'i')
                 mode |= DFS_INSERT;
-	    else if (tc == 'd') 
+	    else if (tc == 'd')
                 mode |= DFS_DELETE;
-	    else if (tc == 'A') 
+	    else if (tc == 'A')
                 mode |= DFS_USR0;
-	    else if (tc == 'B') 
+	    else if (tc == 'B')
                 mode |= DFS_USR1;
-	    else if (tc == 'C') 
+	    else if (tc == 'C')
                 mode |= DFS_USR2;
-	    else if (tc == 'D') 
+	    else if (tc == 'D')
                 mode |= DFS_USR3;
-	    else if (tc == 'E') 
+	    else if (tc == 'E')
                 mode |= DFS_USR4;
-	    else if (tc == 'F') 
+	    else if (tc == 'F')
                 mode |= DFS_USR5;
-	    else if (tc == 'G') 
+	    else if (tc == 'G')
                 mode |= DFS_USR6;
-	    else if (tc == 'H') 
+	    else if (tc == 'H')
                 mode |= DFS_USR7;
 	    else {
-		fprintf(stderr, "%s: illegal DFS rights character '%c'.\n", 
+		fprintf(stderr, "%s: illegal DFS rights character '%c'.\n",
                          pn, tc);
 		exit(1);
 	    }
 	} else {
-	    if (tc == 'r') 
+	    if (tc == 'r')
                 mode |= PRSFS_READ;
-	    else if (tc == 'l') 
+	    else if (tc == 'l')
                 mode |= PRSFS_LOOKUP;
-	    else if (tc == 'i') 
+	    else if (tc == 'i')
                 mode |= PRSFS_INSERT;
-	    else if (tc == 'd') 
+	    else if (tc == 'd')
                 mode |= PRSFS_DELETE;
-	    else if (tc == 'w') 
+	    else if (tc == 'w')
                 mode |= PRSFS_WRITE;
-	    else if (tc == 'k') 
+	    else if (tc == 'k')
                 mode |= PRSFS_LOCK;
-	    else if (tc == 'a') 
+	    else if (tc == 'a')
                 mode |= PRSFS_ADMINISTER;
-	    else if (tc == 'A') 
+	    else if (tc == 'A')
                 mode |= PRSFS_USR0;
-	    else if (tc == 'B') 
+	    else if (tc == 'B')
                 mode |= PRSFS_USR1;
-	    else if (tc == 'C') 
+	    else if (tc == 'C')
                 mode |= PRSFS_USR2;
-	    else if (tc == 'D') 
+	    else if (tc == 'D')
                 mode |= PRSFS_USR3;
-	    else if (tc == 'E') 
+	    else if (tc == 'E')
                 mode |= PRSFS_USR4;
-	    else if (tc == 'F') 
+	    else if (tc == 'F')
                 mode |= PRSFS_USR5;
-	    else if (tc == 'G') 
+	    else if (tc == 'G')
                 mode |= PRSFS_USR6;
-	    else if (tc == 'H') 
+	    else if (tc == 'H')
                 mode |= PRSFS_USR7;
 	    else {
-		fprintf(stderr, "%s: illegal rights character '%c'.\n", pn, 
+		fprintf(stderr, "%s: illegal rights character '%c'.\n", pn,
                          tc);
 		exit(1);
 	    }
@@ -448,7 +448,7 @@ static struct AclEntry *
 FindList (struct AclEntry *alist, char *aname)
 {
     while (alist) {
-        if (!strcasecmp(alist->name, aname)) 
+        if (!strcasecmp(alist->name, aname))
             return alist;
         alist = alist->next;
     }
@@ -456,13 +456,13 @@ FindList (struct AclEntry *alist, char *aname)
 }
 
 /* if no parm specified in a particular slot, set parm to be "." instead */
-static void 
+static void
 SetDotDefault(struct cmd_item **aitemp)
 {
     struct cmd_item *ti;
     int len_data = 2;
 
-    if (*aitemp) 
+    if (*aitemp)
         return;	                /* already has value */
     /* otherwise, allocate an item representing "." */
     ti = (struct cmd_item *) malloc(sizeof(struct cmd_item));
@@ -477,7 +477,7 @@ SetDotDefault(struct cmd_item **aitemp)
     *aitemp = ti;
 }
 
-static void 
+static void
 ChangeList (struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights)
 {
     struct AclEntry *tlist;
@@ -510,12 +510,12 @@ ChangeList (struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights)
         tlist->next = al->minuslist;
         al->minuslist = tlist;
         al->nminus++;
-        if (arights == 0) 
+        if (arights == 0)
             al->nminus -= PruneList(&al->minuslist, al->dfs);
     }
 }
 
-static void 
+static void
 ZapList (struct AclEntry *alist)
 {
     struct AclEntry *tp, *np;
@@ -525,7 +525,7 @@ ZapList (struct AclEntry *alist)
     }
 }
 
-static int 
+static int
 PruneList (struct AclEntry **ae, int dfs)
 {
     struct AclEntry **lp;
@@ -550,7 +550,7 @@ PruneList (struct AclEntry **ae, int dfs)
 static char *
 SkipLine (char *astr)
 {
-    while (*astr !='\n') 
+    while (*astr !='\n')
         astr++;
     astr++;
     return astr;
@@ -633,7 +633,7 @@ ParseAcl (char *astr, int astr_size)
     first = 0;
     for(i=0;i<nplus;i++) {
 #if _MSC_VER < 1400
-        ret = sscanf(astr, "%100s %d", tname, &trights); 
+        ret = sscanf(astr, "%100s %d", tname, &trights);
 #else
         ret = sscanf_s(astr, "%100s %d", tname, sizeof(tname), &trights);
 #endif
@@ -643,7 +643,7 @@ ParseAcl (char *astr, int astr_size)
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
         if (tl == NULL)
             goto nplus_err;
-        if (!first) 
+        if (!first)
             first = tl;
         if( FAILED(StringCbCopy(tl->name, sizeof(tl->name), tname))) {
             fprintf (stderr, "name - not enough space");
@@ -651,7 +651,7 @@ ParseAcl (char *astr, int astr_size)
         }
         tl->rights = trights;
         tl->next = 0;
-        if (last) 
+        if (last)
             last->next = tl;
         last = tl;
     }
@@ -671,7 +671,7 @@ ParseAcl (char *astr, int astr_size)
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
         if (tl == NULL)
             goto nminus_err;
-        if (!first) 
+        if (!first)
             first = tl;
         if( FAILED(StringCbCopy(tl->name, sizeof(tl->name), tname))) {
             fprintf (stderr, "name - not enough space");
@@ -679,7 +679,7 @@ ParseAcl (char *astr, int astr_size)
         }
         tl->rights = trights;
         tl->next = 0;
-        if (last) 
+        if (last)
             last->next = tl;
         last = tl;
     }
@@ -691,14 +691,14 @@ ParseAcl (char *astr, int astr_size)
     for (;first; first = next) {
         next = first->next;
         free(first);
-    }   
+    }
     first = ta->pluslist;
 
   nplus_err:
     for (;first; first = next) {
         next = first->next;
         free(first);
-    }   
+    }
     free(ta);
     return NULL;
 }
@@ -712,9 +712,9 @@ PrintStatus(VolumeStatus *status, char *name, char *motd, char *offmsg)
     if (*motd != 0)
 	printf("Current message of the day is %s\n",motd);
     printf("Current disk quota is ");
-    if (status->MaxQuota != 0) 
+    if (status->MaxQuota != 0)
         printf("%d\n", status->MaxQuota);
-    else 
+    else
         printf("unlimited\n");
     printf("Current blocks used are %d\n",status->BlocksInUse);
     printf("The partition has %d blocks available out of %d\n",
@@ -739,17 +739,17 @@ QuickPrintStatus(VolumeStatus *status, char *name)
     if (QuotaUsed > 90.0){
 	printf(" %5.0f%%<<", QuotaUsed);
 	WARN = 1;
-    } else 
+    } else
         printf(" %5.0f%%  ", QuotaUsed);
     PartUsed = (100.0 - ((((double)status->PartBlocksAvail)/status->PartMaxBlocks) * 100.0));
     if (PartUsed > 97.0){
 	printf(" %9.0f%%<<", PartUsed);
 	WARN = 1;
-    } else 
+    } else
         printf(" %9.0f%%  ", PartUsed);
     if (WARN){
 	printf("  <<WARNING\n");
-    } else 
+    } else
         printf("\n");
     return 0;
 }
@@ -762,16 +762,16 @@ QuickPrintSpace(VolumeStatus *status, char *name)
     printf("%-25.25s",name);
 
     printf("%10d%10d%10d", status->PartMaxBlocks, status->PartMaxBlocks - status->PartBlocksAvail, status->PartBlocksAvail);
-	
+
     PartUsed = (100.0 - ((((double)status->PartBlocksAvail)/status->PartMaxBlocks) * 100.0));
     if (PartUsed > 90.0){
 	printf(" %4.0f%%<<", PartUsed);
 	WARN = 1;
-    } else 
+    } else
         printf(" %4.0f%%  ", PartUsed);
     if (WARN){
 	printf("  <<WARNING\n");
-    } else 
+    } else
         printf("\n");
     return 0;
 }
@@ -922,7 +922,7 @@ static BOOL IsAdmin (void)
         assert(pszRefDomain);
 
         if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
-            /* We can't lookup the group now even though we looked it up earlier.  
+            /* We can't lookup the group now even though we looked it up earlier.
                Could this happen? */
             fAdmin = TRUE;
         } else {
@@ -1062,9 +1062,9 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	}
         if (ta)
             ZapAcl(ta);
-	if (clear) 
+	if (clear)
             ta = EmptyAcl(space);
-	else 
+	else
             ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
@@ -1090,9 +1090,9 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 		if (!FindList(tlist, ui->data))
                     continue;
 	    }
-	    if (rtype == deny && !ta->dfs) 
+	    if (rtype == deny && !ta->dfs)
                 plusp = 0;
-	    if (rtype == destroy && ta->dfs) 
+	    if (rtype == destroy && ta->dfs)
                 rights = -1;
 	    ChangeList(ta, plusp, ui->data, rights);
 	}
@@ -1115,7 +1115,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 		    if (!fsenv) {
 			fprintf(stderr,
     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
-    "\nPossible reasons for this include:\n\n",			    
+    "\nPossible reasons for this include:\n\n",
     " -You may have specified an inappropriate combination of rights.\n",
     "  For example, some DFS-supported filesystems may not allow you to\n",
     "  drop the \"c\" right from \"user_obj\".\n\n",
@@ -1132,7 +1132,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
     " -If you add a user or group to a DFS ACL, remember that it must be\n",
     "  fully specified as \"user:username\" or \"group:groupname\". In addition, there\n",
     "  may be local requirements on the format of the user or group name.\n",
-    "  Check with your cell administrator.\n\n",			    
+    "  Check with your cell administrator.\n\n",
     " -Or numerous other possibilities. It would be great if we could be more\n",
     "  precise about the actual problem, but for various reasons, this is\n",
     "  impractical via this interface.  If you can't figure it out, you\n",
@@ -1142,7 +1142,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 		    }
 		} else {
 		    fprintf(stderr,
-                            "%s: Invalid argument, possible reasons include:\n", 
+                            "%s: Invalid argument, possible reasons include:\n",
                              pn);
 		    fprintf(stderr,"\t-File not in AFS\n");
 		    fprintf(stderr,
@@ -1161,7 +1161,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-static int 
+static int
 CopyACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -1174,9 +1174,9 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     int error = 0;
     size_t len;
 
-    if (as->parms[2].items) 
+    if (as->parms[2].items)
         clear=1;
-    else 
+    else
         clear=0;
     blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = idf;
@@ -1206,9 +1206,9 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	}
         if (ta)
             ZapAcl(ta);
-	if (clear) 
+	if (clear)
             ta = EmptyAcl(space);
-	else 
+	else
             ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
@@ -1219,16 +1219,16 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
         }
 	CleanAcl(ta, ti->data);
 	if (ta->dfs != fa->dfs) {
-	    fprintf(stderr, 
-                    "%s: incompatible file system types: acl not copied to %s; aborted\n", 
+	    fprintf(stderr,
+                    "%s: incompatible file system types: acl not copied to %s; aborted\n",
                     pn, ti->data);
 	    error = 1;
             continue;
 	}
 	if (ta->dfs) {
 	    if (! clear && strcmp(ta->cell, fa->cell) != 0) {
-		fprintf(stderr, 
-                        "%s: default DCE cell differs for file %s: use \"-clear\" switch; acl not merged\n", 
+		fprintf(stderr,
+                        "%s: default DCE cell differs for file %s: use \"-clear\" switch; acl not merged\n",
                         pn, ti->data);
                 error = 1;
 		continue;
@@ -1238,9 +1238,9 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
                 exit(1);
 	    }
 	}
-	for (tp = fa->pluslist;tp;tp=tp->next) 
+	for (tp = fa->pluslist;tp;tp=tp->next)
 	    ChangeList(ta, 1, tp->name, tp->rights);
-	for (tp = fa->minuslist;tp;tp=tp->next) 
+	for (tp = fa->minuslist;tp;tp=tp->next)
 	    ChangeList(ta, 0, tp->name, tp->rights);
 	blob.in = AclToString(ta);
 	blob.out_size=0;
@@ -1260,7 +1260,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	    }
             error = 1;
 	}
-    } 
+    }
     if (ta)
 	ZapAcl(ta);
     ZapAcl(fa);
@@ -1320,7 +1320,7 @@ BadName(char *aname, char *fname)
 
 /* clean up an access control list of its bad entries; return 1 if we made
    any changes to the list, and 0 otherwise */
-static int 
+static int
 CleanAcl(struct Acl *aa, char *fname)
 {
     struct AclEntry *te, **le, *ne;
@@ -1363,7 +1363,7 @@ CleanAcl(struct Acl *aa, char *fname)
 
 
 /* clean up an acl to not have bogus entries */
-static int 
+static int
 CleanACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -1419,11 +1419,11 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 	    if (code) {
 		if (errno == EINVAL) {
 		    fprintf(stderr,
-                            "%s: Invalid argument, possible reasons include\n", 
+                            "%s: Invalid argument, possible reasons include\n",
                              pn);
 		    fprintf(stderr,"%s: File not in vice or\n", pn);
 		    fprintf(stderr,
-                            "%s: Too many users on access control list or\n", 
+                            "%s: Too many users on access control list or\n",
                             pn);
 		} else {
 		    Die(errno, ti->data);
@@ -1435,7 +1435,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 	    /* now list the updated acl */
 	    printf("Access list for %s is now\n", ti->data);
 	    if (ta->nplus > 0) {
-		if (!ta->dfs) 
+		if (!ta->dfs)
                     printf("Normal rights:\n");
 		for(te = ta->pluslist;te;te=te->next) {
 		    printf("  %s ", te->name);
@@ -1451,7 +1451,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 		    printf("\n");
 		}
 	    }
-	    if (ti->next) 
+	    if (ti->next)
                 printf("\n");
 	} else
 	    printf("Access list for %s is fine.\n", ti->data);
@@ -1461,8 +1461,8 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-static int 
-ListACLCmd(struct cmd_syndesc *as, void *arock) 
+static int
+ListACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct Acl *ta = 0;
@@ -1597,8 +1597,8 @@ FlushVolumeCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-static int 
-FlushCmd(struct cmd_syndesc *as, void *arock) 
+static int
+FlushCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1609,7 +1609,7 @@ FlushCmd(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items)
         literal = 1;
-    
+
     for(ti=as->parms[0].items; ti; ti=ti->next) {
         /* once per file */
         memset(&options, 0, sizeof(options));
@@ -1623,7 +1623,7 @@ FlushCmd(struct cmd_syndesc *as, void *arock)
 	code = pioctl_utf8(ti->data, VIOCFLUSH, &blob, 0);
 	if (code) {
 	    if (errno == EMFILE) {
-		fprintf(stderr, "%s: Can't flush active file %s\n", pn, 
+		fprintf(stderr, "%s: Can't flush active file %s\n", pn,
                         ti->data);
 	    } else {
 		fprintf(stderr, "%s: Error flushing file ", pn);
@@ -1684,9 +1684,9 @@ SetVolCmd(struct cmd_syndesc *as, void *arock) {
                 continue;
 	    }
 	}
-	if (as->parms[2].items) 
+	if (as->parms[2].items)
             motd = as->parms[2].items->data;
-	if (as->parms[3].items) 
+	if (as->parms[3].items)
             offmsg = as->parms[3].items->data;
 	input = (char *)status + sizeof(*status);
 	*(input++) = '\0';	/* never set name: this call doesn't change vldb */
@@ -1761,7 +1761,7 @@ filetypestr(afs_uint32 type)
     return s;
 }
 
-static int 
+static int
 ExamineCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -1899,7 +1899,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
-ListQuotaCmd(struct cmd_syndesc *as, void *arock) 
+ListQuotaCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1908,7 +1908,7 @@ ListQuotaCmd(struct cmd_syndesc *as, void *arock)
     char *name;
 
     int error = 0;
-    
+
     printf("%-25s%-11s%-11s%-7s%-13s\n", "Volume Name", "      Quota",
 	   "       Used", "  %Used", "    Partition");
     SetDotDefault(&as->parms[0].items);
@@ -1946,7 +1946,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items)
         literal = 1;
-    
+
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
         cm_fid_t fid;
@@ -1961,7 +1961,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
         options.literal = literal;
 	blob.in_size = options.size;    /* no variable length data */
         blob.in = &options;
-        
+
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
         if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
@@ -1993,12 +1993,12 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
 	    continue;
 	}
         hosts = (afs_int32 *) space;
-	printf("%s %s is on host%s ", 
+	printf("%s %s is on host%s ",
                 filetypestr(filetype),
                 ti->data,
                 (hosts[0] && !hosts[1]) ? "": "s");
 	for(j=0; j<AFS_MAXHOSTS; j++) {
-	    if (hosts[j] == 0) 
+	    if (hosts[j] == 0)
                 break;
 	    tp = hostutil_GetNameByINet(hosts[j]);
 	    printf("%s ", tp);
@@ -2018,7 +2018,7 @@ DiskFreeCmd(struct cmd_syndesc *as, void *arock)
     char *name;
     struct VolumeStatus *status;
     int error = 0;
-    
+
     printf("%-25s%-10s%-10s%-10s%-6s\n", "Volume Name", "    kbytes",
 	   "      used", "     avail", " %used");
     SetDotDefault(&as->parms[0].items);
@@ -2050,7 +2050,7 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
     double quotaPct;
     struct VolumeStatus *status;
     int error = 0;
-    
+
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
@@ -2068,9 +2068,9 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
 	}
 
         status = (VolumeStatus *)space;
-	if (status->MaxQuota) 
+	if (status->MaxQuota)
             quotaPct = ((((double)status->BlocksInUse)/status->MaxQuota) * 100.0);
-	else 
+	else
             quotaPct = 0.0;
 	printf("%2.0f%% of quota used.\n", quotaPct);
     }
@@ -2096,7 +2096,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
     int link_chars_read;		/*Num chars read in readlink()*/
 #endif /* not WIN32 */
     int	thru_symlink;			/*Did we get to a mount point via a symlink?*/
-    
+
     int error = 0;
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
@@ -2331,7 +2331,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 		fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
 		return 1;
 	    }
-	} else 
+	} else
 #endif
 	{
 	    fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
@@ -2576,11 +2576,11 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 
     /* prepare flags for checkservers command */
     temp = 2;	/* default to checking local cell only */
-    if (as->parms[2].items) 
+    if (as->parms[2].items)
         temp |= 1;	/* set fast flag */
-    if (as->parms[1].items) 
+    if (as->parms[1].items)
         temp &= ~2;	/* turn off local cell check */
-    
+
     checkserv.magic = 0x12345678;	/* XXX */
     checkserv.tflags=temp;
 
@@ -2619,7 +2619,7 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
         } else if(checkserv.tinterval> 600) {
             printf("Warning: The maximum -interval value is 10 mins (600 secs)\n");
             checkserv.tinterval=600;	/* 10 min max interval */
-        }       
+        }
     } else {
         checkserv.tinterval = -1;	/* don't change current interval */
     }
@@ -2658,10 +2658,10 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 #endif
 
     if (checkserv.tinterval >= 0) {
-	if (checkserv.tinterval > 0) 
-	    printf("The new down server probe interval (%d secs) is now in effect (old interval was %d secs)\n", 
+	if (checkserv.tinterval > 0)
+	    printf("The new down server probe interval (%d secs) is now in effect (old interval was %d secs)\n",
 		   checkserv.tinterval, temp);
-	else 
+	else
 	    printf("The current down server probe interval is %d secs\n", temp);
 	return 0;
     }
@@ -2680,7 +2680,7 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
             }
 #endif
 
-	    if (temp == 0) 
+	    if (temp == 0)
                 break;
 	    tp = hostutil_GetNameByINet(temp);
 	    printf(" %s", tp);
@@ -2698,7 +2698,7 @@ MessagesCmd(struct cmd_syndesc *as, void *arock)
     struct ViceIoctl blob;
     struct gaginfo gagflags;
     struct cmd_item *show;
-    
+
     memset(&gagflags, 0, sizeof(struct gaginfo));
     blob.in_size = sizeof(struct gaginfo);
     blob.in = (caddr_t ) &gagflags;
@@ -2716,13 +2716,13 @@ MessagesCmd(struct cmd_syndesc *as, void *arock)
         else if (!strcasecmp (show->data, "none"))
             /* do nothing */ ;
         else {
-            fprintf(stderr, 
-                     "unrecognized flag %s: must be in {user,console,all,none}\n", 
+            fprintf(stderr,
+                     "unrecognized flag %s: must be in {user,console,all,none}\n",
                      show->data);
             code = EINVAL;
         }
     }
- 
+
     if (code)
         return 1;
 
@@ -2739,7 +2739,7 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    
+
     blob.in_size = 0;
     blob.out_size = 0;
     code = pioctl_utf8(0, VIOCCKBACK, &blob, 1);
@@ -2748,7 +2748,7 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
     printf("All volumeID/name mappings checked.\n");
-    
+
     return 0;
 }
 
@@ -2758,7 +2758,7 @@ SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ViceIoctl blob;
     afs_int32 temp;
-    
+
 #ifdef WIN32
     if ( !IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
@@ -2790,8 +2790,8 @@ SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
     if (code) {
 	Die(errno, (char *) 0);
         return 1;
-    } 
-      
+    }
+
     printf("New cache size set.\n");
     return 0;
 }
@@ -2813,7 +2813,7 @@ GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
 	Die(errno, NULL);
         return 1;
     }
-     
+
     printf("AFS using %I64u of the cache's available %I64u 1K byte blocks.\n",
            parms.parms[1], parms.parms[0]);
     if (parms.parms[1] > parms.parms[0])
@@ -2833,7 +2833,7 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
     errno_t err;
 
     resolve = !(as->parms[0].items);    /* -numeric */
-    
+
     for(i=0;i<1000;i++) {
 	tp = space;
 #if _MSC_VER < 1400
@@ -2855,11 +2855,11 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
 	blob.out = space;
 	code = pioctl_utf8(0, VIOCGETCELL, &blob, 1);
 	if (code < 0) {
-	    if (errno == EDOM) 
+	    if (errno == EDOM)
                 break;	/* done with the list */
             Die(errno, 0);
             return 1;
-	}       
+	}
 	tp = space;
 #if _MSC_VER < 1400
         memcpy(&magic, tp, sizeof(afs_int32));
@@ -2886,7 +2886,7 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
                 exit(1);
            }
 #endif
-	    if (addr == 0) 
+	    if (addr == 0)
                 break;
 
             if (resolve) {
@@ -2963,7 +2963,7 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
     struct hostent *thp;
     char *tp;
     int setp;
-    
+
     ti = as->parms[0].items;
     setp = 1;
     if (ti) {
@@ -2985,13 +2985,13 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
         hostAddr = 0;   /* means don't set host */
 	setp = 0;       /* aren't setting host */
     }
-    
+
     /* now do operation */
     blob.in_size = sizeof(afs_int32);
     blob.out_size = sizeof(afs_int32);
     blob.in = (char *) &hostAddr;
     blob.out = (char *) &hostAddr;
-    
+
     code = pioctl_utf8(0, VIOC_CBADDR, &blob, 1);
     if (code < 0) {
 	Die(errno, 0);
@@ -3176,7 +3176,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
         Die(errno, as->parms[0].items->data);
         return 1;
     }
-    
+
     printf("Cell servers information for %s added or updated.\n",
            as->parms[0].items->data);
     return 0;
@@ -3240,7 +3240,7 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items)
         literal = 1;
-    
+
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
         cm_fid_t fid;
@@ -3303,7 +3303,7 @@ WSCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    
+
     blob.in_size = 0;
     blob.in = NULL;
     blob.out_size = AFS_PIOCTL_MAXSIZE;
@@ -3341,7 +3341,7 @@ MonitorCmd(struct cmd_syndesc *as, void *arock)
     char *tp;
     int setp;
     errno_t err;
-    
+
     ti = as->parms[0].items;
     setp = 1;
     if (ti) {
@@ -3411,7 +3411,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     errno_t err;
     size_t destRemaining = sizeof(space);
     size_t len;
-    
+
     ti = as->parms[0].items;
     if (ti) {
 #ifdef WIN32
@@ -3467,7 +3467,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     if (code) {
         Die(errno, 0);
         return 1;
-    }    
+    }
     if (setp) {
         printf("%s: new sysname%s set.\n", pn, setp > 1 ? " list" : "");
         return 0;
@@ -3487,7 +3487,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     if (!setp) {
         fprintf(stderr,"No sysname name value was found\n");
         return 1;
-    } 
+    }
     space[blob.out_size - 1] = '\0';
     printf("Current sysname%s is", setp > 1 ? " list" : "");
     for (; setp > 0; --setp ) {
@@ -3511,7 +3511,7 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     int export = 0, type = 0, mode = 0, exp = 0, gstat = 0;
     int exportcall, pwsync = 0, smounts = 0;
-    
+
 #ifdef WIN32
     if ( !IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
@@ -3525,7 +3525,7 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 #endif /* WIN32 */
 
     ti = as->parms[0].items;
-    if (strcmp(ti->data, "nfs")	== 0) 
+    if (strcmp(ti->data, "nfs")	== 0)
         type = 0x71; /* NFS */
     else {
 	fprintf(stderr,
@@ -3534,9 +3534,9 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     }
     ti = as->parms[1].items;
     if (ti) {
-	if (strcmp(ti->data, "on") == 0) 
+	if (strcmp(ti->data, "on") == 0)
             export = 3;
-	else if (strcmp(ti->data, "off") == 0) 
+	else if (strcmp(ti->data, "off") == 0)
             export = 2;
 	else {
 	    fprintf(stderr, "Illegal argument %s\n", ti->data);
@@ -3545,9 +3545,9 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	exp = 1;
     }
     if (ti = as->parms[2].items) {	/* -noconvert */
-	if (strcmp(ti->data, "on") == 0) 
+	if (strcmp(ti->data, "on") == 0)
             mode = 2;
-	else if (strcmp(ti->data, "off") == 0) 
+	else if (strcmp(ti->data, "off") == 0)
             mode = 3;
 	else {
 	    fprintf(stderr, "Illegal argument %s\n", ti->data);
@@ -3555,9 +3555,9 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
     if (ti = as->parms[3].items) {	/* -uidcheck */
-	if (strcmp(ti->data, "on") == 0) 
+	if (strcmp(ti->data, "on") == 0)
             pwsync = 3;
-	else if (strcmp(ti->data, "off") == 0) 
+	else if (strcmp(ti->data, "off") == 0)
             pwsync = 2;
 	else {
 	    fprintf(stderr, "Illegal argument %s\n", ti->data);
@@ -3565,9 +3565,9 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
     if (ti = as->parms[4].items) {	/* -submounts */
-	if (strcmp(ti->data, "on") == 0) 
+	if (strcmp(ti->data, "on") == 0)
             smounts = 3;
-	else if (strcmp(ti->data, "off") == 0) 
+	else if (strcmp(ti->data, "off") == 0)
             smounts = 2;
 	else {
 	    fprintf(stderr, "Illegal argument %s\n", ti->data);
@@ -3593,7 +3593,7 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     } else {
 	if (!gstat) {
 	    if (exportcall & 1) {
-		printf("'%s' translator is enabled with the following options:\n\tRunning in %s mode\n\tRunning in %s mode\n\t%s\n", 
+		printf("'%s' translator is enabled with the following options:\n\tRunning in %s mode\n\tRunning in %s mode\n\t%s\n",
 		       exported_types[type], (exportcall & 2 ? "strict unix" : "convert owner mode bits to world/other"),
 		       (exportcall & 4 ? "strict 'passwd sync'" : "no 'passwd sync'"),
 		       (exportcall & 8 ? "Allow mounts of /afs/.. subdirs" : "Only mounts to /afs allowed"));
@@ -3650,14 +3650,14 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
 	}
 	printf("Cell %s status: ", info.name);
 #ifdef notdef
-	if (args.stat & 1) 
+	if (args.stat & 1)
             printf("primary ");
 #endif
-	if (args.stat & 2) 
+	if (args.stat & 2)
             printf("no setuid allowed");
-	else 
+	else
             printf("setuid allowed");
-	if (args.stat & 4) 
+	if (args.stat & 4)
             printf(", using old VLDB");
 	printf("\n");
     }
@@ -3701,7 +3701,7 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
     }
 #endif /* WIN32 */
 
-    if (! as->parms[1].items) 
+    if (! as->parms[1].items)
         args.stat |= CM_SETCELLFLAG_SUID; /* default to -nosuid */
 
     /* set stat for all listed cells */
@@ -3749,8 +3749,8 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 
     cm_GetConfigDir(confDir, sizeof(confDir));
 
-    code = ugen_ClientInit(noAuthFlag, confDir, 
-			   info->name, 0, &uclient, 
+    code = ugen_ClientInit(noAuthFlag, confDir,
+			   info->name, 0, &uclient,
                            NULL, pn, rxkad_clear,
                            VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
                            0, 0, USER_SERVICE_ID);
@@ -3760,7 +3760,7 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 
 static struct ViceIoctl gblob;
 static int debug = 0;
-/* 
+/*
  * here follow some routines in suport of the setserverprefs and
  * getserverprefs commands.  They are:
  * SetPrefCmd  "top-level" routine
@@ -3772,7 +3772,7 @@ static int debug = 0;
  */
 
 #ifdef WIN32
-static int 
+static int
 pokeServers(void)
 {
     int code;
@@ -3817,7 +3817,7 @@ pokeServers(void)
 #ifdef WIN32
 static int
 addServer(char *name, unsigned short rank)
-{  
+{
     int code;
     cm_SSetPref_t *ssp;
     cm_SPref_t *sp;
@@ -3967,7 +3967,7 @@ SetPrefCmd(struct cmd_syndesc *as, void * arock)
     char name[80];
     afs_int32 rank;
     cm_SSetPref_t *ssp;
-    
+
     ssp = (cm_SSetPref_t *)space;
     ssp->flags = 0;
     ssp->num_servers = 0;
@@ -4028,7 +4028,7 @@ SetPrefCmd(struct cmd_syndesc *as, void * arock)
         }
     }
     code = pokeServers();
-    if (debug) 
+    if (debug)
         printf("now working on vlservers, code=%d, errno=%d\n",code,errno);
 
     ssp = (cm_SSetPref_t *)space;
@@ -4043,19 +4043,19 @@ SetPrefCmd(struct cmd_syndesc *as, void * arock)
                 break;
             }
             code = addServer (ti->data, (unsigned short) atol(ti->next->data));
-            if (debug) 
+            if (debug)
                 printf("set vl prefs %s %s\n", ti->data, ti->next->data);
             ti=ti->next;
         }
     }
 
     if (as->parms[1].items) {
-        if (debug) 
+        if (debug)
             printf("now poking vlservers\n");
         code = pokeServers();
     }
 
-    if (code) 
+    if (code)
         Die(errno,0);
 
     return code;
@@ -4184,7 +4184,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
 #endif /* WIN32 */
 
 #ifdef WIN32
-static int 
+static int
 GetPrefCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -4198,7 +4198,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
     struct cm_SPrefRequest *in;
     struct cm_SPrefInfo *out;
     int i;
-    
+
     code = 0;
     ti = as->parms[0].items;  /* -file */
     if (ti) {
@@ -4225,7 +4225,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
         blob.out_size = AFS_PIOCTL_MAXSIZE;
 
         in->num_servers = (AFS_PIOCTL_MAXSIZE - 2*sizeof(short))/sizeof(struct cm_SPref);
-        in->flags = vlservers; 
+        in->flags = vlservers;
 
         code = pioctl_utf8(0, VIOC_GETSPREFS, &blob, 1);
         if (code){
@@ -4248,7 +4248,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 		    }
                     name=tbuffer;
                 }
-                printf ("%-50s %5u\n",name,out->servers[i].rank);      
+                printf ("%-50s %5u\n",name,out->servers[i].rank);
             }
 
             in->offset = out->next_offset;
@@ -4498,7 +4498,7 @@ TraceCmd(struct cmd_syndesc *asp, void *arock)
     struct ViceIoctl blob;
     long inValue;
     long outValue;
-    
+
 #ifdef WIN32
     if ( !IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
@@ -4515,32 +4515,32 @@ TraceCmd(struct cmd_syndesc *asp, void *arock)
         fprintf(stderr, "fs trace: must use at most one of '-off' or '-on'\n");
         return EINVAL;
     }
-        
+
     /* determine if we're turning this tracing on or off */
     inValue = 0;
     if (asp->parms[0].items)
         inValue = 3;		/* enable */
-    else if (asp->parms[1].items) 
+    else if (asp->parms[1].items)
         inValue = 2;	/* disable */
-    if (asp->parms[2].items) 
+    if (asp->parms[2].items)
         inValue |= 4;		/* do reset */
-    if (asp->parms[3].items) 
+    if (asp->parms[3].items)
         inValue |= 8;		/* dump */
-        
+
     blob.in_size = sizeof(long);
     blob.in = (char *) &inValue;
     blob.out_size = sizeof(long);
     blob.out = (char *) &outValue;
-        
+
     code = pioctl_utf8(NULL, VIOC_TRACECTL, &blob, 1);
     if (code || blob.out_size != sizeof(long)) {
         Die(errno, NULL);
         return code;
     }
 
-    if (outValue) 
+    if (outValue)
         printf("AFS tracing enabled.\n");
-    else 
+    else
         printf("AFS tracing disabled.\n");
 
     return 0;
@@ -4550,7 +4550,7 @@ static void sbusage(void)
 {
     fprintf(stderr, "example usage: %s storebehind -files *.o -kb 99999 -default 0\n", pn);
     fprintf(stderr, "               %s sb 50000 *.[ao] -default 10\n", pn);
-}       
+}
 
 /* fs sb -kbytes 9999 -files *.o -default 64 */
 static int
@@ -4567,7 +4567,7 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");  
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #endif /* WIN32 */
@@ -4668,13 +4668,13 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-static afs_int32 
+static afs_int32
 SetCryptCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
     char *tp;
- 
+
 #ifdef WIN32
     if ( !IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
@@ -4703,14 +4703,14 @@ SetCryptCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-static afs_int32 
+static afs_int32
 GetCryptCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
     char *tp;
     errno_t err;
- 
+
     blob.in = NULL;
     blob.in_size = 0;
     blob.out_size = sizeof(flag);
@@ -4779,7 +4779,7 @@ MemDumpCmd(struct cmd_syndesc *asp, void *arock)
         return code;
     }
 
-    if (!outValue) { 
+    if (!outValue) {
         printf("AFS memdump created.\n");
         return 0;
     } else {
@@ -4819,7 +4819,7 @@ MiniDumpCmd(struct cmd_syndesc *asp, void *arock)
         return 0;
     }
 
-  failure: 
+  failure:
     if (hService)
         CloseServiceHandle(hService);
     if (hManager)
@@ -4854,13 +4854,13 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
     {
         char *policy;
 
-        RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+        RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                          AFSREG_CLT_OPENAFS_SUBKEY "\\CSCPolicy",
-                        0, 
-                        "AFS", 
+                        0,
+                        "AFS",
                         REG_OPTION_NON_VOLATILE,
                         (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
-                        NULL, 
+                        NULL,
                         &hkCSCPolicy,
                         NULL );
 
@@ -4877,7 +4877,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
 
         policy = "manual";
         len = 6;
-		
+
         if (asp->parms[1].items) {
             policy = "manual";
             len = 6;
@@ -4895,9 +4895,9 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
             len = 7;
         }
         RegSetValueEx( hkCSCPolicy, share, 0, REG_SZ, policy, (DWORD)len+1);
-		
+
         printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
-        printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
+        printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n");
     }
     else
     {
@@ -4910,13 +4910,13 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
 
         /* list current csc policies */
 
-        RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+        RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                         AFSREG_CLT_OPENAFS_SUBKEY "\\CSCPolicy",
-                        0, 
-                        "AFS", 
+                        0,
+                        "AFS",
                         REG_OPTION_NON_VOLATILE,
                         (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ|KEY_QUERY_VALUE,
-                        NULL, 
+                        NULL,
                         &hkCSCPolicy,
                         NULL );
 
@@ -4933,7 +4933,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
                          NULL,  /* lpcbSecurityDescriptor */
                          NULL   /* lpftLastWriteTime */
                          );
-		
+
         printf("Current CSC policies:\n");
         for ( dwIndex = 0; dwIndex < dwPolicies; dwIndex ++ ) {
 
@@ -5369,7 +5369,7 @@ TestVolStatCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-static int 
+static int
 ChOwnCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -5377,7 +5377,7 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     int error = 0;
     int literal = 0;
-    struct { 
+    struct {
         cm_ioctlQueryOptions_t options;
         afs_uint32 owner;
     } inData;
@@ -5421,9 +5421,9 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
 	    continue;
         }
 
-        /* 
+        /*
          * if the owner was specified as a numeric value,
-         * then we can just use it.  Otherwise, we need 
+         * then we can just use it.  Otherwise, we need
          * to know the cell of the path to determine which
          * ptserver to contact in order to convert the name
          * to a numeric value.
@@ -5439,9 +5439,9 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
                 continue;
             }
             cell[CELL_MAXNAMELEN - 1] = '\0';
-            /* 
+            /*
              * We now know the cell for the target and we need to
-             * convert the ownerStr to the Id for this user 
+             * convert the ownerStr to the Id for this user
              */
             pr_Initialize(1, confDir, cell);
             code = pr_SNameToId(ownerStr, &inData.owner);
@@ -5467,7 +5467,7 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-static int 
+static int
 ChGrpCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -5475,7 +5475,7 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     int error = 0;
     int literal = 0;
-    struct { 
+    struct {
         cm_ioctlQueryOptions_t options;
         afs_uint32 group;
     } inData;
@@ -5519,9 +5519,9 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
 	    continue;
         }
 
-        /* 
+        /*
          * if the group was specified as a numeric value,
-         * then we can just use it.  Otherwise, we need 
+         * then we can just use it.  Otherwise, we need
          * to know the cell of the path to determine which
          * ptserver to contact in order to convert the name
          * to a numeric value.
@@ -5537,9 +5537,9 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
                 continue;
             }
             cell[CELL_MAXNAMELEN - 1] = '\0';
-            /* 
+            /*
              * We now know the cell for the target and we need to
-             * convert the groupStr to the Id for this user 
+             * convert the groupStr to the Id for this user
              */
             pr_Initialize(1, confDir, cell);
             code = pr_SNameToId(groupStr, &inData.group);
@@ -5719,13 +5719,13 @@ int wmain(int argc, wchar_t **wargv)
 
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -5777,7 +5777,7 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-id", CMD_FLAG, CMD_OPTIONAL, "initial directory acl (DFS only)");
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl (DFS only)");
     cmd_CreateAlias(ts, "sa");
-    
+
     ts = cmd_CreateSyntax("listacl", ListACLCmd, NULL, "list access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     parm_listacl_id = ts->nParms;
@@ -5785,10 +5785,10 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl");
     cmd_AddParm(ts, "-cmd", CMD_FLAG, CMD_OPTIONAL, "output as 'fs setacl' command");
     cmd_CreateAlias(ts, "la");
-    
+
     ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL, "clean up access control list");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
-    
+
     ts = cmd_CreateSyntax("copyacl", CopyACLCmd, NULL, "copy access control list");
     cmd_AddParm(ts, "-fromdir", CMD_SINGLE, 0, "source directory (or DFS file)");
     cmd_AddParm(ts, "-todir", CMD_LIST, 0, "destination directory (or DFS file)");
@@ -5796,13 +5796,13 @@ int wmain(int argc, wchar_t **wargv)
     parm_copyacl_id = ts->nParms;
     cmd_AddParm(ts, "-id", CMD_FLAG, CMD_OPTIONAL, "initial directory acl");
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl");
-    
+
     cmd_CreateAlias(ts, "ca");
 
     ts = cmd_CreateSyntax("flush", FlushCmd, NULL, "flush file from cache");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
-    
+
 #ifndef WIN32
     ts = cmd_CreateSyntax("flushmount", FlushMountCmd, NULL,
                            "flush mount symlink from cache");
@@ -5818,7 +5818,7 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-motd", CMD_SINGLE, CMD_OPTIONAL, "message of the day");
     cmd_AddParm(ts, "-offlinemsg", CMD_SINGLE, CMD_OPTIONAL, "offline message");
     cmd_CreateAlias(ts, "sv");
-    
+
     ts = cmd_CreateSyntax("messages", MessagesCmd, NULL, "control Cache Manager messages");
     cmd_AddParm(ts, "-show", CMD_SINGLE, CMD_OPTIONAL, "[user|console|all|none]");
 
@@ -5827,21 +5827,21 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
     cmd_CreateAlias(ts, "lv");
     cmd_CreateAlias(ts, "listvol");
-    
+
     ts = cmd_CreateSyntax("listquota", ListQuotaCmd, NULL, "list volume quota");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "lq");
-    
+
     ts = cmd_CreateSyntax("diskfree", DiskFreeCmd, NULL, "show server disk space usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "df");
-    
+
     ts = cmd_CreateSyntax("quota", QuotaCmd, NULL, "show volume quota usage");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
-    
-    ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, "list mount point");    
+
+    ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, "list mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
-    
+
     ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, "make mount point");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, 0, "directory");
     cmd_AddParm(ts, "-vol", CMD_SINGLE, 0, "volume name");
@@ -5852,35 +5852,35 @@ int wmain(int argc, wchar_t **wargv)
     /*
      *
      * defect 3069
-     * 
+     *
     cmd_AddParm(ts, "-root", CMD_FLAG, CMD_OPTIONAL, "create cellular mount point");
     */
 
-    
+
     ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, NULL, "remove mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
-    
+
     ts = cmd_CreateSyntax("checkservers", CheckServersCmd, NULL, "check local cell's servers");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell to check");
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "check all cells");
     cmd_AddParm(ts, "-fast", CMD_FLAG, CMD_OPTIONAL, "just list, don't check");
     cmd_AddParm(ts,"-interval",CMD_SINGLE,CMD_OPTIONAL,"seconds between probes");
-    
+
     ts = cmd_CreateSyntax("checkvolumes", CheckVolumesCmd, NULL, "check volumeID/name mappings");
     cmd_CreateAlias(ts, "checkbackups");
 
-    
+
     ts = cmd_CreateSyntax("setcachesize", SetCacheSizeCmd, NULL, "set cache size");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL, "size in 1K byte blocks (0 => reset)");
     cmd_CreateAlias(ts, "cachesize");
 
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "reset size back to boot value");
-    
+
     ts = cmd_CreateSyntax("getcacheparms", GetCacheParmsCmd, NULL, "get cache usage info");
 
     ts = cmd_CreateSyntax("listcells", ListCellsCmd, NULL, "list configured cells");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
-    
+
     ts = cmd_CreateSyntax("setquota", SetQuotaCmd, NULL, "set volume quota");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, 0, "max quota in kbytes");
@@ -5921,11 +5921,11 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
     ts = cmd_CreateSyntax("wscell", WSCellCmd, NULL, "list workstation's cell");
-    
+
     /*
      ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
      */
-    
+
 #ifndef AFS_NT40_ENV
     ts = cmd_CreateSyntax("monitor", MonitorCmd, NULL, "set cache monitor host address");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "host name or 'off'");
@@ -5934,7 +5934,7 @@ int wmain(int argc, wchar_t **wargv)
 
     ts = cmd_CreateSyntax("getcellstatus", GetCellCmd, NULL, "get cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
-    
+
     ts = cmd_CreateSyntax("setcell", SetCellCmd, NULL, "set cell status");
     cmd_AddParm(ts, "-cell", CMD_LIST, 0, "cell name");
     cmd_AddParm(ts, "-suid", CMD_FLAG, CMD_OPTIONAL, "allow setuid programs");
@@ -5957,7 +5957,7 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-submounts", CMD_SINGLE, CMD_OPTIONAL, "allow nfs mounts to subdirs of /afs/.. ('on' or 'off')");
 #endif
 
-    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL, 
+    ts = cmd_CreateSyntax("storebehind", StoreBehindCmd, NULL,
 			  "store to server after file close");
     cmd_AddParm(ts, "-kbytes", CMD_SINGLE, CMD_OPTIONAL, "asynchrony for specified names");
     cmd_AddParm(ts, "-files", CMD_LIST, CMD_OPTIONAL, "specific pathnames");
@@ -5999,7 +5999,7 @@ int wmain(int argc, wchar_t **wargv)
     ts = cmd_CreateSyntax("memdump", MemDumpCmd, NULL, "dump memory allocs in debug builds");
     cmd_AddParm(ts, "-begin", CMD_FLAG, CMD_OPTIONAL, "set a memory checkpoint");
     cmd_AddParm(ts, "-end", CMD_FLAG, CMD_OPTIONAL, "dump memory allocs");
-    
+
     ts = cmd_CreateSyntax("cscpolicy", CSCPolicyCmd, NULL, "change client side caching policy for AFS shares");
     cmd_AddParm(ts, "-share", CMD_SINGLE, CMD_OPTIONAL, "AFS share");
     cmd_AddParm(ts, "-manual", CMD_FLAG, CMD_OPTIONAL, "manual caching of documents");
@@ -6041,11 +6041,11 @@ int wmain(int argc, wchar_t **wargv)
 
     code = cmd_Dispatch(argc, argv);
 
-    if (rxInitDone) 
+    if (rxInitDone)
         rx_Finalize();
-    
+
     FreeUtf8CmdLine(argc, argv);
-    
+
     return code;
 }
 
@@ -6056,21 +6056,21 @@ Die(int code, char *filename)
     if (code == EINVAL) {
 	if (filename)
 	    fprintf(stderr,"%s: Invalid argument; it is possible that %s is not in AFS.\n", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s: Invalid argument.\n", pn);
     }
     else if (code == ENOENT) {
-	if (filename) 
+	if (filename)
             fprintf(stderr,"%s: File '%s' doesn't exist\n", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s: no such file returned\n", pn);
     }
-    else if (code == EROFS)  
+    else if (code == EROFS)
         fprintf(stderr,"%s: You can not change a backup or readonly volume\n", pn);
     else if (code == EACCES || code == EPERM) {
-	if (filename) 
+	if (filename)
             fprintf(stderr,"%s: You don't have the required access rights on '%s'\n", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s: You do not have the required rights to do this operation\n", pn);
     }
     else if (code == ENODEV) {
@@ -6092,33 +6092,33 @@ Die(int code, char *filename)
 	    fprintf(stderr,"%s: Connection timed out", pn);
     }
     else if (code == EBUSY) {
-	if (filename) 
+	if (filename)
             fprintf(stderr,"%s: All servers are busy on which '%s' resides\n", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s: All servers are busy\n", pn);
-    } 
+    }
     else if (code == ENXIO) {
-	if (filename) 
+	if (filename)
             fprintf(stderr,"%s: All volume instances are offline on which '%s' resides\n", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s: All volume instances are offline\n", pn);
-    } 
+    }
     else if (code == ENOSYS) {
-	if (filename) 
+	if (filename)
             fprintf(stderr,"%s: All servers are down on which '%s' resides\n", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s: All servers are down\n", pn);
-    } 
+    }
     else if (code == ECHILD) {  /* hack */
-	if (filename) 
+	if (filename)
             fprintf(stderr,"%s: Invalid owner specified for '%s'\n", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s: Invalid owner specified\n", pn);
-    } 
+    }
     else {
-	if (filename) 
+	if (filename)
             fprintf(stderr,"%s:'%s'", pn, filename);
-	else 
+	else
             fprintf(stderr,"%s", pn);
 #ifdef WIN32
 	fprintf(stderr, ": code 0x%x\n", code);

@@ -48,7 +48,7 @@ int parse_cmd_line(int argc, _TCHAR * argv[])
                 return show_usage(argv[0]);
             }
         } else if (!_tcscmp(argv[i], _T("-nr"))) {
-            tst_read_write = FALSE;        
+            tst_read_write = FALSE;
         } else if(!_tcscmp(argv[i], _T("-child"))) {
             isChild = TRUE;
         } else if(!_tcscmp(argv[i], _T("-p"))) {
@@ -97,7 +97,7 @@ int spawn_kids(int argc, _TCHAR *argv[])
     startinfo.lpTitle = NULL;
     startinfo.dwFlags = 0;
     startinfo.cbReserved2 = 0;
-    
+
     cerr << "PARENT: Process ID:" << GetCurrentProcessId() << "\n";
     cerr << "PARENT: Spawning child process: " << cmd_line << "\n";
 
@@ -155,11 +155,11 @@ int run_tests(void)
 #define PCINT_CALL(f)   \
     rvt = f;            \
     rv = (rv | rvt)
-    
+
     PC_CALL(begin_tests());
 
     PC_CALL(test_create());
-    
+
     if(tst_read_write)
         PC_CALL(test_lock_prep());
 

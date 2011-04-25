@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -355,7 +355,7 @@ void Subsets_GetSubsetFromDialog (HWND hDlg, LPSUBSET sub)
    if (cChecked == 1)  // Only one is checked--use pszMonitored.
       {
       TCHAR szServer[ cchNAME ];
-      SendMessage (hList, LB_GETTEXT, iiChecked, (LPARAM)szServer); 
+      SendMessage (hList, LB_GETTEXT, iiChecked, (LPARAM)szServer);
       FormatMultiString (&sub->pszMonitored, TRUE, TEXT("%1"), TEXT("%s"), szServer);
       }
    else // Use pszUnmonitored.
@@ -365,7 +365,7 @@ void Subsets_GetSubsetFromDialog (HWND hDlg, LPSUBSET sub)
          if (!LB_GetCheck (hList, ii))
             {
             TCHAR szServer[ cchNAME ];
-            SendMessage (hList, LB_GETTEXT, ii, (LPARAM)szServer); 
+            SendMessage (hList, LB_GETTEXT, ii, (LPARAM)szServer);
             FormatMultiString (&sub->pszUnmonitored, TRUE, TEXT("%1"), TEXT("%s"), szServer);
             }
          }

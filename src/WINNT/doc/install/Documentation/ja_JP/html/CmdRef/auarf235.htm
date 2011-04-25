@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -26,7 +26,7 @@
 <P>発行側のトークンを表示します。
 <P><STRONG>構文</STRONG>
 <PRE><B>tokens</B> [<B>-help</B>]
-   
+
 <B>tokens</B> [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -54,37 +54,37 @@ AFS サーバー・プロセスでは、サーバーのローカル・セルで認証されていることを確認す
 <P>以下の例は、発行側が任意のセルで認証されていない場合の例です。
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
-   
+
       --End of list--
-   
+
 </PRE>
 <P>次の例は、発行側が ABC Corporation のセルで認証されて、AFS UID
 1000 を持っているときの出力例です。
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
-   
+
    User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 2 10:00]
       --End of list--
-   
+
 </PRE>
 <P>以下の例は、発行側が ABC Corporation セル、State University セル、および XYZ Company セルで認証されている場合の出力例です。このユーザーは、3 つのセルで異なる AFS UID を持っています。最後のセルのトークンは、有効期限が切れています。
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
-      
+
    User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 3 10:00]
    User's (AFS ID 4286) tokens for afs@stateu.edu [Expires Jan 3 1:34]
    User's (AFS ID 22) tokens for afs@xyz.com [>>Expired&lt;]
       --End of list--
-   
+
 </PRE>
 <P>発行側が <B>klog.krb</B> コマンドを使用して ABC Corporation セルで認証後に、コマンドの <B>tokens.krb</B> バージョンを使用した出力例を以下に示します。
 <PRE>   % <B>tokens.krb</B>
    Tokens held by the Cache Manager:
-      
+
    User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 31 00:09]
    User smiths tokens for krbtgt.ABC.COM@abc.com [Expires Jan 31 00:09]
       --End of list--
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>なし。
@@ -92,11 +92,11 @@ AFS サーバー・プロセスでは、サーバーのローカル・セルで認証されていることを確認す
 <P><A HREF="auarf200.htm#HDRKLOG">klog</A>
 <P><A HREF="auarf238.htm#HDRUNLOG">unlog</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf234.htm">前ページ</A> &#124; <A HREF="auarf236.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf234.htm">前ページ</A> &#124; <A HREF="auarf236.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

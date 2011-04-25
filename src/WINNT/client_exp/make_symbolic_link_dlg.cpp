@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -66,7 +66,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMakeSymbolicLinkDlg message handlers
 
-void CMakeSymbolicLinkDlg::OnOK() 
+void CMakeSymbolicLinkDlg::OnOK()
 {
     UINT code;
     UpdateData(TRUE);
@@ -79,7 +79,7 @@ void CMakeSymbolicLinkDlg::OnOK()
         strTarget+=" - Path is not in AFS directory";
         AfxMessageBox(strTarget,MB_ICONERROR);
         return;
-    } 
+    }
     if (m_sBase.GetLength()>MAX_PATH-2)
     {
         MessageBeep((UINT)-1);
@@ -99,7 +99,7 @@ void CMakeSymbolicLinkDlg::OnOK()
     CDialog::OnOK();
 }
 /*
-void CMakeSymbolicLinkDlg::OnChangeName() 
+void CMakeSymbolicLinkDlg::OnChangeName()
 {
 	CString strName;
 	m_Name.GetWindowText(strName);
@@ -111,7 +111,7 @@ void CMakeSymbolicLinkDlg::OnChangeName()
 	CheckEnableOk();
 }
 
-void CMakeSymbolicLinkDlg::OnChangeDir() 
+void CMakeSymbolicLinkDlg::OnChangeDir()
 {
 	m_Dir.GetWindowText(m_strDir);
     if (!IsPathInAfs(m_strDir)) {
@@ -124,17 +124,17 @@ void CMakeSymbolicLinkDlg::OnChangeDir()
 void CMakeSymbolicLinkDlg::CheckEnableOk()
 {
 	BOOL bEnable = FALSE;
-	
+
 	if ((m_strName.GetLength() > 0) && (m_strDir.GetLength() > 0))
 		bEnable = TRUE;
 
 	m_OK.EnableWindow(bEnable);
 }
 
-BOOL CMakeSymbolicLinkDlg::OnInitDialog() 
+BOOL CMakeSymbolicLinkDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 //	m_Dir.SetWindowText(m_strDir);
 //	m_Name.SetWindowText(m_strName);
 	UpdateData(FALSE);

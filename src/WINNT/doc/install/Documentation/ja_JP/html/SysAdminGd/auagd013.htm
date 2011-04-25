@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理の手引き</H1>
@@ -222,7 +222,7 @@ AFS サーバー (<B>/vicep</B>) パーティションで使用可能なブロックの K バイト数を表
 <P>表示サイズを効率よく変更する場合は、<B>scout</B> プログラムを停止させてからウィンドウのサイズを変更し、それからプログラムを再始動します。この場合でも、表示環境から受け取る情報の正確さに応じて、サイズ変更に対する <B>scout</B> プログラムの反応は異なります。開発段階でのテストでは、表示環境がウィンドウのサイズ変更についての信頼できる情報を提供しないことが判明しています。
 X ウィンドウ・システムを使用する場合は、以下のコマンドのシーケンスを <B>scout</B> プログラムを開始 (またはコマンドをシェル初期化ファイルに配置) する前に実行すると、サイズ変更を適切に調整することができます。
 <PRE>   %<B> set noglob</B>
-   % <B>eval '/usr/bin/X11/resize'</B> 
+   % <B>eval '/usr/bin/X11/resize'</B>
    % <B>unset noglob</B>
 </PRE>
 <A NAME="IDX7138"></A>
@@ -323,7 +323,7 @@ ABC Corporation セルでは、正しい値は <B>abc.com</B> であり、<B>.abc.com</B> では
 <P>最初の例では、ABC Corporation 社の管理者がオプションの引き数またはフラグを何も指定せずに <B> scout</B> コマンドを発行します。複数のマシン名を指定するため、
 <B>-server</B> 引き数を指定します。<B>-basename</B> 引き数は使用していませんが、それぞれのマシン名の開始部分について指定します。この際、セルのネーム・サービスにより、
 <B>scout</B> プログラムが接続の確立に必要とする完全修飾名を取得します。
-<PRE>   % <B>scout -server fs1 fs2</B> 
+<PRE>   % <B>scout -server fs1 fs2</B>
 </PRE>
 <P><A HREF="#FIGWQ460">図 2</A> は、結果として示される表示を表しています。最初に気付くのは、5 番目 (ラベルなし) の列に表示されるマシン名は、管理者がコマンド行に入力したとおりに表示されるということです。表示領域の 2 行目 (マシン名
 <TT>fs2</TT> が 5 番目の列に表示されている) を参照してください。<TT>Conn</TT> および <TT> Ws</TT> 列は共に、<B>fs2</B> がクライアント・マシンとの間で 144 の RPC 接続をオープンしていることを示しており、各クライアントごとに複数の接続が可能であることを示します。<TT>Fetch</TT> 列は、ファイル・サーバー・プロセスが最後に起動されてから、クライアント・マシンが 2,734,278 のフェッチ RPC を <B>fs2</B> に対して実行したことを示し、<TT>Store</TT> 列はクライアント・マシンが 34,066 の保管 RPC を実行したことを示します。
@@ -341,7 +341,7 @@ ABC Corporation セルでは、正しい値は <B>abc.com</B> であり、<B>.abc.com</B> では
 </LI><LI><B>-frequency</B> 引き数を使用して、プローブ頻度をデフォルトの 1 分間に 1 回から 5 秒ごとに 1 回に変更します。
 </LI><LI><B>-attention</B> 引き数を使用して、パーティション強調表示のしきい値をデフォルトの 95% 占有から最低限度 5000 KB に変更します。
 </LI></UL>
-<PRE>   % <B>scout -server fs1 fs2 -basename abc.com -host -frequency 5 -attention disk 5000</B> 
+<PRE>   % <B>scout -server fs1 fs2 -basename abc.com -host -frequency 5 -attention disk 5000</B>
 </PRE>
 <P>オプションの引き数を使用すると、<A HREF="#FIGWQ461">図 3</A> と <A HREF="#FIGWQ460">図 2</A> にはいくつかの違いが発生します。最初の違いは、<B> -host</B> フラグが取り入れられているため、バナー行には、<B> -basename</B> 引き数で指定されたベース名 <TT>abc.com</TT> とともに、<TT>[client52]</TT> として <B>scout</B> プロセスを実行しているマシンの名前が表示されます。
 <P>もう 1 つの違いは、その値は <A HREF="#FIGWQ460">図 2</A> の場合と同じですが、マシン <B>fs2</B> のパーティションのうち 4 つではなく 2 つが反転表示されます。これは、管理者が強調表示のしきい値を最低 5000 ブロックに変更したためで、<TT>Disk attn</TT> 列のヘッダーにも表示されます。マシン <B>fs2</B> のパーティション <B>/vicepa</B> および <B>/vicepd</B> はまだ 95% 占有ですが、5000 以上の空きブロックを持っています。パーティション <B> /vicepc</B> および <B>/vicepe</B> は空きブロックが 5000 より少ないため強調表示されています。
@@ -352,7 +352,7 @@ ABC Corporation セルでは、正しい値は <B>abc.com</B> であり、<B>.abc.com</B> では
 <B><BR><IMG SRC="scout2.gif" ALT="2 回目の例 scout 表示"><BR></B><BR>
 </TD></TR></TABLE>
 <P><A HREF="#FIGWQ462">図 4</A> では、State University セルの管理者はそのセルのファイル・サーバー・マシンの 3 つをモニターします。管理者は <B>-basename</B> 引き数を使用して <B>stateu.edu</B> ドメイン名を指定します。
-<PRE>   % <B>scout -server server2 server3 server4 -basename stateu.edu</B> 
+<PRE>   % <B>scout -server server2 server3 server4 -basename stateu.edu</B>
 </PRE>
 <P><B><A NAME="FIGWQ462" HREF="auagd003.htm#FT_FIGWQ462">図 4. 3 番目の scout 表示</A></B><BR>
 <TABLE BORDER ><TR><TD><BR>
@@ -483,7 +483,7 @@ setset</B> コマンドを使用します。
 </LI></OL>
 <P>次の例は、<B>cmfx</B> トレース・ログのサイズを
 80 KB に設定します。
-<PRE>   # <B>fstrace setlog cmfx 80</B> 
+<PRE>   # <B>fstrace setlog cmfx 80</B>
 </PRE>
 <A NAME="IDX7165"></A>
 <A NAME="IDX7166"></A>
@@ -499,7 +499,7 @@ setset</B> コマンドを使用します。
 </LI><LI><B>fstrace setset</B> コマンドを発行して、イベント・セットの状態を設定します。
 <P>
 <PRE>   % <B>fstrace setset</B> [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>] [<B>-active</B>] [<B>-inactive</B>]  \
-                    [<B>-dormant</B>] 
+                    [<B>-dormant</B>]
 </PRE>
 </LI></OL>
 <P>以下の例では、<B>cm</B> イベント・セットをアクティブにします。
@@ -552,7 +552,7 @@ setset</B> コマンドを使用します。
 </PRE>
 </LI><LI><B>fstrace lslog</B> コマンドを発行して、カーネルのトレース・ログに関する情報を表示します。
 <P>
-<PRE>   # <B>fstrace lslog</B>  [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-log</B> &lt;<VAR>log_name</VAR>>]  [<B>-long</B>] 
+<PRE>   # <B>fstrace lslog</B>  [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]  [<B>-log</B> &lt;<VAR>log_name</VAR>>]  [<B>-long</B>]
 </PRE>
 </LI></OL>
 <P>次の例は、<B>-long</B> フラグを使用して、
@@ -715,9 +715,9 @@ AFS 製品サポートで問題の診断を行う際に、キャッシュ・マネージャーの活動の詳細なト
       Date: Fri Apr 16 10:54:57 1999
    Found 1 logs.
    time 32.965783, pid 0: Fri Apr 16 10:45:52 1999
-   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20 
+   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20
    time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns
-   0x0) 
+   0x0)
    time 35.159854, pid 10891: Breaking callback for 5bd95e4 states 1024
    (volume 0)
    time 35.407081, pid 10891: Breaking callback for 5c0fadc states 1024
@@ -726,12 +726,12 @@ AFS 製品サポートで問題の診断を行う際に、キャッシュ・マネージャーの活動の詳細なト
        .                         .
        .                         .
    time 71.440456, pid 33658: Lookup adp 0x5bbdcf0 name g3oCKs fid (756
-   4fb7e:588d240.2ff978a8.6) 
-   time 71.440569, pid 33658: Returning code 2 from 19 
+   4fb7e:588d240.2ff978a8.6)
+   time 71.440569, pid 33658: Returning code 2 from 19
    time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns
-   0x2) 
+   0x2)
    time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x
-   0) 
+   0)
    AFS Trace Dump - Completed
 </PRE>
 <HR><H2><A NAME="HDRWQ472" HREF="auagd002.htm#ToC_390">afsmonitor プログラムの使用</A></H2>
@@ -1090,7 +1090,7 @@ AFS 製品サポートに連絡してください。
                    <B>-fsname</B> &lt;<VAR>File Server name(s) to monitor</VAR>><SUP>+</SUP>  \
                    <B>-collID</B> &lt;<VAR>Collection(s) to fetch</VAR>><SUP>+</SUP>  [<B>-onceonly</B>]  \
                    [<B>-frequency</B> &lt;<VAR>poll frequency, in seconds</VAR>>]  \
-                   [<B>-period</B> &lt;<VAR>data collection time, in minutes</VAR>>] [<B>-debug</B>] 
+                   [<B>-period</B> &lt;<VAR>data collection time, in minutes</VAR>>] [<B>-debug</B>]
 </PRE>
 <P>
 <P>ここで、
@@ -1134,7 +1134,7 @@ AFS 製品サポートに連絡してください。
                    <B>-cmname</B> &lt;<VAR>Cache Manager name(s) to monitor</VAR>><SUP>+</SUP>  \
                    <B>-collID</B> &lt;<VAR>Collection(s) to fetch</VAR>><SUP>+</SUP> \
                    [<B>-onceonly</B>] [<B>-frequency</B> &lt;<VAR>poll frequency, in seconds</VAR>>]  \
-                   [<B>-period</B> &lt;<VAR>data collection time, in minutes</VAR>>] [<B>-debug</B>] 
+                   [<B>-period</B> &lt;<VAR>data collection time, in minutes</VAR>>] [<B>-debug</B>]
 </PRE>
 <P>
 <P>ここで、
@@ -1208,11 +1208,11 @@ AIX 検査システムを使用して監査を開始し終了します。
 <LI>もはや AFS イベントの監査をする必要がない、各ファイル・サーバー上のファイル <B>/usr/afs/local/Audit</B> の内容を削除します。
 </LI><LI><B>bos restart</B> コマンド (<B>-all</B> フラグを指定する) を発行して、各ファイル・サーバー上のすべてのサーバー・プロセスを停止して、再始動します。このコマンドの使用に関する説明については、<A HREF="auagd009.htm#HDRWQ225">プロセスの停止および即時の再始動</A> を参照してください。
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd012.htm">前ページ</A> &#124; <A HREF="auagd014.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd012.htm">前ページ</A> &#124; <A HREF="auagd014.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 -->
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

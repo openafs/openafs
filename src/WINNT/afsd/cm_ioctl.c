@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -68,9 +68,9 @@ void cm_InitIoctl(void)
                           LOCK_HIERARCHY_AFSDBSBMT_GLOBAL);
 }
 
-/* 
+/*
  * Utility function.  (Not currently in use.)
- * This function forces all dirty buffers to the file server and 
+ * This function forces all dirty buffers to the file server and
  * then discards the status info.
  */
 afs_int32
@@ -88,7 +88,7 @@ cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }
 
-/* 
+/*
  * Utility function.  Used within this file.
  * scp must be held but not locked.
  */
@@ -105,7 +105,7 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 #endif
 
     code = buf_FlushCleanPages(scp, userp, reqp);
-        
+
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
         lock_ObtainWrite(&scp->dirlock);
     lock_ObtainWrite(&scp->rw);
@@ -120,7 +120,7 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }
 
-/* 
+/*
  * Utility function.  (Not currently in use)
  * IoctlPath must be parsed or skipped prior to calling.
  * scp must be held but not locked.
@@ -130,9 +130,9 @@ cm_FlushParent(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     afs_int32 code = 0;
     cm_scache_t * pscp;
-  
+
     pscp = cm_FindSCacheParent(scp);
-  
+
     /* now flush the file */
     code = cm_FlushFile(pscp, userp, reqp);
     cm_ReleaseSCache(pscp);
@@ -140,7 +140,7 @@ cm_FlushParent(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     return code;
 }
 
-/* 
+/*
  * Utility function.  Used within this function.
  */
 afs_int32
@@ -185,14 +185,14 @@ cm_FlushVolume(cm_user_t *userp, cm_req_t *reqp, afs_uint32 cell, afs_uint32 vol
  *  The pioctl functions must match
  *  this translation for paths given via our own commands (like
  *  fs).  If we do not do this, then we will try to perform an
- *  operation on a non-translated path, which we will fail to 
+ *  operation on a non-translated path, which we will fail to
  *  find, since the path was created with the translated chars.
  *  This function performs the required translation.
  *
  *  OEM character code pages are used by the non-Unicode SMB
  *  mode.  Do not use if the CM_IOCTLFLAG_USEUTF8 is set.
  */
-void 
+void
 TranslateExtendedChars(char *str)
 {
     if (!str || !*str)
@@ -279,10 +279,10 @@ int cm_UnparseIoctlString(cm_ioctl_t *ioctlp,
     return cchout;
 }
 
-/* 
- * Must be called before XXX_ParseIoctlPath or cm_SkipIoctlPath 
+/*
+ * Must be called before XXX_ParseIoctlPath or cm_SkipIoctlPath
  */
-cm_ioctlQueryOptions_t * 
+cm_ioctlQueryOptions_t *
 cm_IoctlGetQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_uint32 pathlen = (afs_uint32) strlen(ioctlp->inDatap) + 1;
@@ -298,9 +298,9 @@ cm_IoctlGetQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return optionsp;
 }
 
-/* 
+/*
  * Must be called after smb_ParseIoctlPath or cm_SkipIoctlPath
- * or any other time that ioctlp->inDatap points at the 
+ * or any other time that ioctlp->inDatap points at the
  * cm_ioctlQueryOptions_t object.
  */
 void
@@ -318,12 +318,12 @@ cm_IoctlSkipQueryOptions(struct cm_ioctl *ioctlp, struct cm_user *userp)
  * easier (because we can always jump past the initial "/afs" to find
  * the AFS path that should be written into afsdsbmt.ini).
  */
-void 
+void
 cm_NormalizeAfsPath(clientchar_t *outpathp, long cchlen, clientchar_t *inpathp)
 {
     clientchar_t *cp;
     clientchar_t bslash_mountRoot[256];
-       
+
     cm_ClientStrCpy(bslash_mountRoot, lengthof(bslash_mountRoot), cm_mountRootC);
     bslash_mountRoot[0] = '\\';
 
@@ -355,10 +355,10 @@ void cm_NormalizeAfsPathAscii(char *outpathp, long outlen, char *inpathp)
 {
     char *cp;
     char bslash_mountRoot[256];
-       
+
     strncpy(bslash_mountRoot, cm_mountRoot, sizeof(bslash_mountRoot) - 1);
     bslash_mountRoot[0] = '\\';
-       
+
     if (!strnicmp (inpathp, cm_mountRoot, strlen(cm_mountRoot)))
         StringCbCopy(outpathp, outlen, inpathp);
     else if (!strnicmp (inpathp, bslash_mountRoot, strlen(bslash_mountRoot)))
@@ -371,7 +371,7 @@ void cm_NormalizeAfsPathAscii(char *outpathp, long outlen, char *inpathp)
     for (cp = outpathp; *cp != 0; ++cp) {
         if (*cp == '\\')
             *cp = '/';
-    }       
+    }
 
     if (strlen(outpathp) && (outpathp[strlen(outpathp)-1] == '/')) {
         outpathp[strlen(outpathp)-1] = 0;
@@ -383,13 +383,13 @@ void cm_NormalizeAfsPathAscii(char *outpathp, long outlen, char *inpathp)
 }
 
 
-/* 
+/*
  * VIOCGETAL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -418,7 +418,7 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
             acl.AFSOpaque_val = ioctlp->outDatap;
             acl.AFSOpaque_len = 0;
             code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
-            if (code) 
+            if (code)
                 continue;
 
             rxconnp = cm_GetRxConn(connp);
@@ -428,7 +428,7 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
         } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
-        if (code) 
+        if (code)
             return code;
     }
     /* skip over return data */
@@ -440,34 +440,34 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
 }
 
 
-/* 
+/*
  * VIOC_FILE_CELL_NAME internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetFileCellName(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code;
     cm_cell_t *cellp;
 
 #ifdef AFS_FREELANCE_CLIENT
-    if ( cm_freelanceEnabled && 
+    if ( cm_freelanceEnabled &&
          scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
          scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
          scp->fid.vnode==0x1 && scp->fid.unique==0x1 ) {
         StringCbCopyA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), "Freelance.Local.Root");
         ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
         code = 0;
-    } else 
+    } else
 #endif /* AFS_FREELANCE_CLIENT */
     {
         cellp = cm_FindCellByID(scp->fid.cell, CM_FLAG_NOPROBE);
         if (cellp) {
             clientchar_t * cellname;
 
-            cellname = cm_FsStringToClientStringAlloc(cellp->name, -1, NULL); 
+            cellname = cm_FsStringToClientStringAlloc(cellp->name, -1, NULL);
             if (cellname == NULL) {
                 code = CM_ERROR_NOSUCHCELL;
             } else {
@@ -482,14 +482,14 @@ cm_IoctlGetFileCellName(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     return code;
 }
 
-	
-/* 
+
+/*
  * VIOCSETAL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -516,7 +516,7 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
             acl.AFSOpaque_val = ioctlp->inDatap;
             acl.AFSOpaque_len = (u_int)strlen(ioctlp->inDatap)+1;
             code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
-            if (code) 
+            if (code)
                 continue;
 
             rxconnp = cm_GetRxConn(connp);
@@ -535,12 +535,12 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
     return code;
 }
 
-/* 
+/*
  * VIOC_FLUSHALL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -564,13 +564,13 @@ cm_IoctlFlushAllVolumes(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t
     return code;
 }
 
-/* 
+/*
  * VIOC_FLUSHVOLUME internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlFlushVolume(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -590,13 +590,13 @@ cm_IoctlFlushVolume(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t 
     return code;
 }
 
-/* 
+/*
  * VIOCFLUSH internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlFlushFile(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -613,13 +613,13 @@ cm_IoctlFlushFile(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *s
 }
 
 
-/* 
+/*
  * VIOCSETVOLSTAT internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -647,9 +647,9 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
         if (scp->flags & CM_SCACHEFLAG_RO)
             return CM_ERROR_READONLY;
 
-        code = cm_FindVolumeByID(cellp, scp->fid.volume, userp, reqp, 
+        code = cm_FindVolumeByID(cellp, scp->fid.volume, userp, reqp,
                                  CM_GETVOL_FLAG_CREATE, &tvp);
-        if (code) 
+        if (code)
             return code;
 
         cm_PutVolume(tvp);
@@ -695,7 +695,7 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
         } while (cm_Analyze(tcp, userp, reqp, &scp->fid, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
     }
-    
+
     /* return on failure */
     if (code)
         return code;
@@ -718,16 +718,16 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     ioctlp->outDatap = cp;
 
     return 0;
-}       
+}
 
 
-/* 
+/*
  * VIOCGETVOLSTAT internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -772,7 +772,7 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
 	code = cm_MapRPCError(code, reqp);
     }
 
-    if (code) 
+    if (code)
         return code;
 
     /* Copy all this junk into msg->im_data, keeping track of the lengths. */
@@ -792,13 +792,13 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     return 0;
 }
 
-/* 
+/*
  * VIOCGETFID internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetFid(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     char *cp;
@@ -821,13 +821,13 @@ cm_IoctlGetFid(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
     return 0;
 }
 
-/* 
+/*
  * VIOC_GETFILETYPE internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetFileType(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code = 0;
@@ -857,13 +857,13 @@ cm_IoctlGetFileType(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t 
     return code;
 }
 
-/* 
+/*
  * VIOCGETOWNER internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetOwner(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code = 0;
@@ -891,16 +891,16 @@ cm_IoctlGetOwner(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *sc
 }
 
 
-/* 
+/*
  * VIOC_SETOWNER internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped
  * and that cm_ioctlQueryOptions_t have been parsed and skipped.
- * 
+ *
  * scp is held but not locked.
  *
  */
-afs_int32 
+afs_int32
 cm_IoctlSetOwner(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code = 0;
@@ -931,14 +931,14 @@ cm_IoctlSetOwner(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *sc
 }
 
 
-/* 
+/*
  * VIOC_SETGROUP internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped
  * and that cm_ioctlQueryOptions_t have been parsed and skipped.
- * 
+ *
  */
-afs_int32 
+afs_int32
 cm_IoctlSetGroup(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code = 0;
@@ -969,13 +969,13 @@ cm_IoctlSetGroup(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *sc
 }
 
 
-/* 
+/*
  * VIOCWHEREIS internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
 {
     afs_int32 code = 0;
@@ -1003,7 +1003,7 @@ cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp
         addr.s_impno = 1;
 
         cp = ioctlp->outDatap;
-        
+
         memcpy(cp, (char *)&addr, sizeof(addr));
         cp += sizeof(addr);
 
@@ -1013,15 +1013,15 @@ cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp
         cp += sizeof(addr);
 
         ioctlp->outDatap = cp;
-    } else 
+    } else
 #endif
     {
         code = cm_FindVolumeByID(cellp, volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &tvp);
-        if (code) 
+        if (code)
             return code;
-	
+
         cp = ioctlp->outDatap;
-        
+
         tsrpp = cm_GetVolServers(tvp, volume, userp, reqp);
         if (tsrpp == NULL) {
             code = CM_ERROR_NOSUCHVOLUME;
@@ -1044,15 +1044,15 @@ cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp
         cm_PutVolume(tvp);
     }
     return code;
-}       
+}
 
-/* 
+/*
  * VIOC_AFS_STAT_MT_PT internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlStatMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -1062,7 +1062,7 @@ cm_IoctlStatMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache
     cp = cm_ParseIoctlStringAlloc(ioctlp, NULL);
 
     code = cm_Lookup(dscp, cp[0] ? cp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
-    if (code) 
+    if (code)
         goto done_2;
 
     lock_ObtainWrite(&scp->rw);
@@ -1097,15 +1097,15 @@ cm_IoctlStatMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache
         free(cp);
 
     return code;
-}       
+}
 
-/* 
+/*
  * VIOC_AFS_DELETE_MT_PT internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -1117,15 +1117,15 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     cp = cm_ParseIoctlStringAlloc(ioctlp, NULL);
 
     code = cm_Lookup(dscp, cp[0] ? cp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
-        
+
     /* if something went wrong, bail out now */
     if (code)
         goto done3;
-        
+
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, reqp, 0,
                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code)  
+    if (code)
         goto done2;
 
     /* now check that this is a real mount point */
@@ -1165,7 +1165,7 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
          * the freelance code to do the deletion. */
         osi_Log0(afsd_logp,"IoctlDeleteMountPoint from Freelance root dir");
         code = cm_FreelanceRemoveMount(originalName);
-    } else 
+    } else
 #endif
     {
         /* easier to do it this way */
@@ -1195,12 +1195,12 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     return code;
 }
 
-/* 
+/*
  * VIOCCKSERV internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     cm_cell_t *cellp;
@@ -1210,7 +1210,7 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
     long temp;
     cm_server_t *tsp, *csp;
     int haveCell;
-        
+
     tp = ioctlp->inDatap;
     haveCell = 0;
 
@@ -1239,17 +1239,17 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
             haveCell = 1;
     }
 
-    /* 
+    /*
      * 1: fast check, don't contact servers.
      * 2: local cell only.
      */
     if (haveCell) {
         /* have cell name, too */
         cellp = cm_GetCell(cp, (temp & 1) ? CM_FLAG_NOPROBE : 0);
-        if (!cellp) 
+        if (!cellp)
             return CM_ERROR_NOSUCHCELL;
     }
-    else 
+    else
         cellp = (cm_cell_t *) 0;
     if (!cellp && (temp & 2)) {
         /* use local cell */
@@ -1266,7 +1266,7 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->outDatap;
     lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
-        if (cellp && tsp->cellp != cellp) 
+        if (cellp && tsp->cellp != cellp)
             continue;	/* cell spec'd and wrong */
         if (tsp->flags & CM_SERVERFLAG_DOWN) {
             /*
@@ -1306,40 +1306,40 @@ cm_IoctlCheckServers(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOCCKBACK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlCheckVolumes(cm_ioctl_t *ioctlp, cm_user_t *userp)
 {
     cm_RefreshVolumes(0);
     return 0;
-}       
+}
 
-/* 
+/*
  * VIOCSETCACHESIZE internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  *
  * This function is no longer meaningful in the current day world
  * of persistent caches.  The buf_SetNBuffers() function will
  * inevitably fail.
  */
-afs_int32 
+afs_int32
 cm_IoctlSetCacheSize(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_int32 code;
     afs_uint64 temp;
 
     memcpy(&temp, ioctlp->inDatap, sizeof(temp));
-    if (temp == 0) 
+    if (temp == 0)
         temp = cm_data.buf_nOrigBuffers;
     else {
         /* temp is in 1K units, convert to # of buffers */
         temp = temp / (cm_data.buf_blockSize / 1024);
-    }       
+    }
 
     /* now adjust the cache size */
     code = buf_SetNBuffers(temp);
@@ -1347,12 +1347,12 @@ cm_IoctlSetCacheSize(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return code;
 }
 
-/* 
+/*
  * VIOC_TRACECTL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlTraceControl(cm_ioctl_t *ioctlp, cm_user_t *userp)
 {
     afs_uint32 inValue;
@@ -1364,7 +1364,7 @@ cm_IoctlTraceControl(cm_ioctl_t *ioctlp, cm_user_t *userp)
         afsd_ForceTrace(FALSE);
         buf_ForceTrace(FALSE);
     }
-        
+
     if (inValue & 2) {
         /* set tracing value to low order bit */
         if ((inValue & 1) == 0) {
@@ -1389,14 +1389,14 @@ cm_IoctlTraceControl(cm_ioctl_t *ioctlp, cm_user_t *userp)
     memcpy(ioctlp->outDatap, &inValue, sizeof(afs_uint32));
     ioctlp->outDatap += sizeof(afs_uint32);
     return 0;
-}       
+}
 
-/* 
+/*
  * VIOCGETCACHEPARMS internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetCacheParms(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     cm_cacheParms_t parms;
@@ -1417,12 +1417,12 @@ cm_IoctlGetCacheParms(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOCGETCELL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     long whichCell;
@@ -1465,8 +1465,8 @@ cm_IoctlGetCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
         memset(cp, 0, max * sizeof(long));
         basep = cp;
         lock_ObtainRead(&cm_serverLock);	/* for going down server list */
-        for (i=0, serverRefp = tcellp->vlServersp; 
-             serverRefp && i<max; 
+        for (i=0, serverRefp = tcellp->vlServersp;
+             serverRefp && i<max;
              i++, serverRefp = serverRefp->next) {
             serverp = serverRefp->server;
             memcpy(cp, &serverp->addr.sin_addr.s_addr, sizeof(long));
@@ -1484,34 +1484,34 @@ cm_IoctlGetCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
         }
     }
 
-    if (tcellp) 
+    if (tcellp)
         return 0;
-    else 
+    else
         return CM_ERROR_NOMORETOKENS;	/* mapped to EDOM */
 }
 
 
-/* 
+/*
  * VIOCNEWCELL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
-    /* 
-     * All that needs to be done is to refresh server information for all cells that 
+    /*
+     * All that needs to be done is to refresh server information for all cells that
      * are already loaded.
-  
+
      * cell list will be cm_CellLock and cm_ServerLock will be held for write.
-     */  
-  
+     */
+
     cm_cell_t *cp;
     cm_cell_rock_t rock;
 
     lock_ObtainWrite(&cm_cellLock);
-  
-    for (cp = cm_data.allCellsp; cp; cp=cp->allNextp) 
+
+    for (cp = cm_data.allCellsp; cp; cp=cp->allNextp)
     {
         afs_int32 code;
 
@@ -1536,7 +1536,7 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
                     lock_ReleaseMutex(&cp->mx);
                 }
             }
-        } 
+        }
         else {
             lock_ObtainMutex(&cp->mx);
             cp->flags &= ~CM_CELLFLAG_DNS;
@@ -1557,10 +1557,10 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
         }
     }
     lock_ReleaseWrite(&cm_cellLock);
-    return 0;       
+    return 0;
 }
 
-/* 
+/*
  * VIOCNEWCELL2 internals.
  *
  * Assumes that pioctl path has been parsed or skipped.
@@ -1646,10 +1646,10 @@ cm_IoctlNewCell2(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
 /*
  * VIOC_GET_WS_CELL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp)
 {
     afs_int32 code = 0;
@@ -1670,17 +1670,17 @@ cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp)
     } else {
         /* if we don't know our default cell, return failure */
         code = CM_ERROR_NOSUCHCELL;
-    }   
+    }
 
     return code;
 }
 
-/* 
+/*
  * VIOC_AFS_SYSNAME internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_uint32 setSysName;
@@ -1753,7 +1753,7 @@ cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
         if (cm_sysNameCount) {
             for ( count=0; count < cm_sysNameCount ; ++count) {   /* ... or list */
                 if ( !cm_sysNameList[count] || *cm_sysNameList[count] == _C('\0'))
-                    osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n", 
+                    osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n",
                               __FILE__, __LINE__);
                 cm_UnparseIoctlString(ioctlp, NULL, cm_sysNameList[count], -1);
             }
@@ -1769,12 +1769,12 @@ cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_GETCELLSTATUS internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlGetCellStatus(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_uint32 temp;
@@ -1788,7 +1788,7 @@ cm_IoctlGetCellStatus(struct cm_ioctl *ioctlp, struct cm_user *userp)
     free(fscellnamep);
     free(cellnamep);
 
-    if (!cellp) 
+    if (!cellp)
         return CM_ERROR_NOSUCHCELL;
 
     temp = 0;
@@ -1804,12 +1804,12 @@ cm_IoctlGetCellStatus(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_SETCELLSTATUS internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlSetCellStatus(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     afs_uint32 flags;
@@ -1823,7 +1823,7 @@ cm_IoctlSetCellStatus(struct cm_ioctl *ioctlp, struct cm_user *userp)
     free(temp);
     free(cellnamep);
 
-    if (!cellp) 
+    if (!cellp)
         return CM_ERROR_NOSUCHCELL;
 
     memcpy((char *)&flags, ioctlp->inDatap, sizeof(afs_uint32));
@@ -1838,12 +1838,12 @@ cm_IoctlSetCellStatus(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_SETSPREFS internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
-afs_int32 
+afs_int32
 cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
 {
     cm_SSetPref_t     *spin;    /* input */
@@ -1858,10 +1858,10 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
     vlonly     = spin->flags;
     if ( vlonly )
         type = CM_SERVER_VLDB;
-    else    
+    else
         type = CM_SERVER_FILE;
 
-    for ( i=0; i < noServers; i++) 
+    for ( i=0; i < noServers; i++)
     {
         srvin          = &(spin->servers[i]);
         rank           = srvin->rank + (rand() & 0x000f);
@@ -1889,8 +1889,8 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
             case CM_SERVER_FILE:
                 /*
                  * find volumes which might have RO copy
-                 * on server and change the ordering of 
-                 * their RO list 
+                 * on server and change the ordering of
+                 * their RO list
                  */
                 cm_ChangeRankVolume(tsp);
                 break;
@@ -1915,9 +1915,9 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_GETSPREFS internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -1932,7 +1932,7 @@ cm_IoctlGetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
     spin      = (cm_SPrefRequest_t *)ioctlp->inDatap;
     spout     = (cm_SPrefInfo_t *) ioctlp->outDatap;
     srvout    = spout->servers;
-    noServers = spin->num_servers; 
+    noServers = spin->num_servers;
     vlonly    = spin->flags & CM_SPREF_VLONLY;
     spout->num_servers = 0;
 
@@ -1950,7 +1950,7 @@ cm_IoctlGetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
         srvout->host = tsp->addr.sin_addr;
         srvout->rank = tsp->ipRank;
-        srvout++;	
+        srvout++;
         spout->num_servers++;
         noServers--;
     }
@@ -1958,17 +1958,17 @@ cm_IoctlGetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     if ( tsp ) 	/* we ran out of space in the output buffer */
         spout->next_offset = i;
-    else    
-        spout->next_offset = 0; 
-    ioctlp->outDatap += sizeof(cm_SPrefInfo_t) + 
+    else
+        spout->next_offset = 0;
+    ioctlp->outDatap += sizeof(cm_SPrefInfo_t) +
         (spout->num_servers -1 ) * sizeof(cm_SPref_t) ;
     return 0;
 }
 
 
-/* 
+/*
  * VIOC_AFS_CREATE_MT_PT internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * dscp is held but not locked.
  */
@@ -1989,7 +1989,7 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     cm_cell_t *cellp = NULL;
     size_t len;
 
-   /* 
+   /*
      * The fs command allows the user to specify partial cell names on NT.  These must
      * be expanded to the full cell name for mount points so that the mount points will
      * work on UNIX clients.
@@ -2031,10 +2031,10 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
 
     /* validate the target info */
     if (cm_VolNameIsID(fsvolume)) {
-        code = cm_FindVolumeByID(cellp, atoi(fsvolume), userp, reqp, 
+        code = cm_FindVolumeByID(cellp, atoi(fsvolume), userp, reqp,
                                 CM_GETVOL_FLAG_CREATE, &volp);
     } else {
-        code = cm_FindVolumeByName(cellp, fsvolume, userp, reqp, 
+        code = cm_FindVolumeByName(cellp, fsvolume, userp, reqp,
                                   CM_GETVOL_FLAG_CREATE, &volp);
     }
     if (code)
@@ -2060,7 +2060,7 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
 
         code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, reqp);
     }
-    
+
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
         smb_NotifyChange(FILE_ACTION_ADDED,
                          FILE_NOTIFY_CHANGE_DIR_NAME,
@@ -2079,13 +2079,13 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     return code;
 }
 
-/* 
+/*
  * VIOC_SYMLINK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * dscp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlSymlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp, cm_req_t *reqp, clientchar_t *leaf)
 {
     afs_int32 code;
@@ -2107,8 +2107,8 @@ cm_IoctlSymlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dsc
          * the freelance code to do the add. */
         fschar_t *fsleaf;
 
-        if (cp[0] == cp[1] && cp[1] == '\\' && 
-            !_strnicmp(cm_NetbiosName,cp+2,strlen(cm_NetbiosName))) 
+        if (cp[0] == cp[1] && cp[1] == '\\' &&
+            !_strnicmp(cm_NetbiosName,cp+2,strlen(cm_NetbiosName)))
         {
             /* skip \\AFS\ or \\AFS\all\ */
             char * p;
@@ -2141,13 +2141,13 @@ cm_IoctlSymlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dsc
 }
 
 
-/* 
+/*
  * VIOC_LISTSYMLINK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * dscp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlListlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp, cm_req_t *reqp)
 {
     afs_int32 code;
@@ -2166,7 +2166,7 @@ cm_IoctlListlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *ds
     clientp = cm_Utf8ToClientStringAlloc(cp, -1, NULL);
     code = cm_Lookup(dscp, clientp[0] ? clientp : L".", CM_FLAG_NOMOUNTCHASE, userp, reqp, &scp);
     free(clientp);
-    if (code) 
+    if (code)
         return code;
 
     /* Check that it's a real symlink */
@@ -2197,7 +2197,7 @@ cm_IoctlListlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *ds
         if (newRootScp != NULL)
             cm_ReleaseSCache(newRootScp);
         code = 0;
-    } else if (code == CM_ERROR_PATH_NOT_COVERED && 
+    } else if (code == CM_ERROR_PATH_NOT_COVERED &&
                 scp->fileType == CM_SCACHETYPE_DFSLINK ||
                code == CM_ERROR_NOSUCHPATH &&
                 scp->fileType == CM_SCACHETYPE_INVALID) {
@@ -2212,13 +2212,13 @@ cm_IoctlListlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *ds
     return code;
 }
 
-/* 
+/*
  * VIOC_ISSYMLINK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * dscp is held but not locked.
  */
-afs_int32 
+afs_int32
 cm_IoctlIslink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp, cm_req_t *reqp)
 {/*CHECK FOR VALID SYMLINK*/
     afs_int32 code;
@@ -2248,9 +2248,9 @@ cm_IoctlIslink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dscp
     return code;
 }
 
-/* 
+/*
  * VIOC_DELSYMLINK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * dscp is held but not locked.
  */
@@ -2276,13 +2276,13 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     /* if something went wrong, bail out now */
     if (code)
         goto done3;
-        
+
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, reqp, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code)
         goto done2;
-	
+
     /* now check that this is a real symlink */
     if (scp->fileType != CM_SCACHETYPE_SYMLINK &&
         scp->fileType != CM_SCACHETYPE_DFSLINK &&
@@ -2290,10 +2290,10 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
         code = CM_ERROR_INVAL;
         goto done1;
     }
-	
+
     /* time to make the RPC, so drop the lock */
     lock_ReleaseWrite(&scp->rw);
-        
+
 #ifdef USE_BPLUS
     code = cm_BeginDirOp(dscp, userp, reqp, CM_DIRLOCK_READ,
                          CM_DIROP_FLAG_NONE, &dirop);
@@ -2323,7 +2323,7 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
          * the freelance code to do the add. */
         osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
         code = cm_FreelanceRemoveSymlink(originalName);
-    } else 
+    } else
 #endif
     {
         /* easier to do it this way */
@@ -2356,11 +2356,11 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
 }
 
 #ifdef QUERY_AFSID
-/* Utility function.  Not currently used.  
+/* Utility function.  Not currently used.
  * This function performs a PTS lookup which has traditionally
  * not been performed by the cache manager.
  */
-afs_int32 
+afs_int32
 cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
 {
     afs_int32 code;
@@ -2384,8 +2384,8 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
     sc[1] = 0;
     sc[2] = 0;
 
-    /* we have the token that was given to us in the settoken 
-     * call.   we just have to use it. 
+    /* we have the token that was given to us in the settoken
+     * call.   we just have to use it.
      */
     scIndex = 2;	/* kerberos ticket */
     sc[2] = rxkad_NewClientSecurityObject(rxkad_clear, &ucellp->sessionKey,
@@ -2444,7 +2444,7 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
 
 #if 0
 /* This has been copied to smb_IoctlSetToken in its entirety.
- * An equivalent version will need to be produced for the 
+ * An equivalent version will need to be produced for the
  * redirector and some extensive refactoring might be required.
  */
 afs_int32
@@ -2502,7 +2502,7 @@ cm_IoctlSetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
         /* cell name */
         cellp = cm_GetCell(tp, CM_FLAG_CREATE | CM_FLAG_NOPROBE);
-        if (!cellp) 
+        if (!cellp)
             return CM_ERROR_NOSUCHCELL;
         tp += strlen(tp) + 1;
 
@@ -2581,9 +2581,9 @@ cm_IoctlSetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 }
 #endif
 
-/* 
+/*
  * VIOC_GETTOK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -2613,7 +2613,7 @@ cm_IoctlGetTokenIter(struct cm_ioctl *ioctlp, struct cm_user *userp)
         }
         if (ucellp->flags & CM_UCELLFLAG_RXKAD)
             break;
-    }       
+    }
 
     /* new iterator */
     temp = ucellp->iterator + 1;
@@ -2638,7 +2638,7 @@ cm_IoctlGetTokenIter(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     /*
      * This field is supposed to hold the session key
-     * but we don't want to make it easier for someone 
+     * but we don't want to make it easier for someone
      * to attack the cache.  The user gave us the session
      * key in the first place.
      */
@@ -2669,9 +2669,9 @@ cm_IoctlGetTokenIter(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_NEWGETTOK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -2691,7 +2691,7 @@ cm_IoctlGetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     /* cell name is right here */
     cellp = cm_GetCell(tp, 0);
-    if (!cellp) 
+    if (!cellp)
         return CM_ERROR_NOSUCHCELL;
     tp += strlen(tp) + 1;
 
@@ -2752,9 +2752,9 @@ cm_IoctlGetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOCDELTOK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -2768,7 +2768,7 @@ cm_IoctlDelToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     /* cell name is right here */
     cellp = cm_GetCell(ioctlp->inDatap, 0);
-    if (!cellp) 
+    if (!cellp)
         return CM_ERROR_NOSUCHCELL;
 
     lock_ObtainMutex(&userp->mx);
@@ -2800,9 +2800,9 @@ cm_IoctlDelToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOCDELALLTOK internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -2835,9 +2835,9 @@ cm_IoctlDelAllToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_MAKESUBMOUNT internals.  (This function should be deprecated)
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -2868,13 +2868,13 @@ cm_IoctlMakeSubmount(cm_ioctl_t *ioctlp, cm_user_t *userp)
      * has to match our path.
      */
 
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                     AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
-                    0, 
-                    "AFS", 
+                    0,
+                    "AFS",
                     REG_OPTION_NON_VOLATILE,
                     KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
-                    NULL, 
+                    NULL,
                     &hkSubmounts,
                     NULL );
 
@@ -2893,7 +2893,7 @@ cm_IoctlMakeSubmount(cm_ioctl_t *ioctlp, cm_user_t *userp)
              * leading "/afs" when writing out the submount.
              */
             RegSetValueEx( hkSubmounts, submountreqp, 0,
-                           REG_EXPAND_SZ, 
+                           REG_EXPAND_SZ,
                            (strlen(&afspath[strlen(cm_mountRoot)])) ?
                            &afspath[strlen(cm_mountRoot)]:"/",
                            (strlen(&afspath[strlen(cm_mountRoot)])) ?
@@ -2966,7 +2966,7 @@ cm_IoctlMakeSubmount(cm_ioctl_t *ioctlp, cm_user_t *userp)
             thisAutoSubmount = atoi (&submountName[strlen("auto")]);
             nextAutoSubmount = max (nextAutoSubmount,
                                      thisAutoSubmount+1);
-        }       
+        }
 
         if ((submountPathLen == 0) ||
              (submountPathLen == sizeof(submountPath) - 1)) {
@@ -2995,10 +2995,10 @@ cm_IoctlMakeSubmount(cm_ioctl_t *ioctlp, cm_user_t *userp)
 
     StringCbPrintfA(ioctlp->outDatap, SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp), "auto%ld", nextAutoSubmount);
 
-    RegSetValueEx( hkSubmounts, 
+    RegSetValueEx( hkSubmounts,
                    ioctlp->outDatap,
                    0,
-                   REG_EXPAND_SZ, 
+                   REG_EXPAND_SZ,
                    (strlen(&afspath[strlen(cm_mountRoot)])) ?
                    &afspath[strlen(cm_mountRoot)]:"/",
                    (strlen(&afspath[strlen(cm_mountRoot)])) ?
@@ -3010,9 +3010,9 @@ cm_IoctlMakeSubmount(cm_ioctl_t *ioctlp, cm_user_t *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_GETRXKCRYPT internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -3024,9 +3024,9 @@ cm_IoctlGetRxkcrypt(cm_ioctl_t *ioctlp, cm_user_t *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_SETRXKCRYPT internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -3047,9 +3047,9 @@ cm_IoctlSetRxkcrypt(cm_ioctl_t *ioctlp, cm_user_t *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_RXSTAT_PROC internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -3074,9 +3074,9 @@ cm_IoctlRxStatProcess(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_RXSTAT_PEER internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -3101,9 +3101,9 @@ cm_IoctlRxStatPeer(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_UNICODECTL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -3135,9 +3135,9 @@ cm_IoctlUnicodeControl(struct cm_ioctl *ioctlp, struct cm_user * userp)
     return 0;
 }
 
-/* 
+/*
  * VIOC_UUIDCTL internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -3162,16 +3162,16 @@ cm_IoctlUUIDControl(struct cm_ioctl * ioctlp, struct cm_user *userp)
 
 
 
-/* 
- * functions to dump contents of various structures. 
+/*
+ * functions to dump contents of various structures.
  * In debug build (linked with crt debug library) will dump allocated but not freed memory
  */
 extern int cm_DumpSCache(FILE *outputFile, char *cookie, int lock);
 extern int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock);
 
-/* 
+/*
  * VIOC_TRACEMEMDUMP internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * dscp is held but not locked.
  */
@@ -3183,13 +3183,13 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     char logfileName[MAX_PATH+1];
     char *cookie;
     DWORD dwSize;
-  
-#ifdef _DEBUG  
+
+#ifdef _DEBUG
     static _CrtMemState memstate;
 #endif
-  
+
     memcpy(&inValue, ioctlp->inDatap, sizeof(afs_int32));
-  
+
     dwSize = GetEnvironmentVariable("TEMP", logfileName, sizeof(logfileName));
     if ( dwSize == 0 || dwSize > sizeof(logfileName) )
     {
@@ -3198,26 +3198,26 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     strncat(logfileName, "\\afsd_alloc.log", sizeof(logfileName));
 
     hLogFile = CreateFile(logfileName, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  
+
     if (!hLogFile)
     {
       /* error */
       inValue = -1;
       memcpy(ioctlp->outDatap, &inValue, sizeof(afs_int32));
       ioctlp->outDatap += sizeof(afs_int32);
-      
-      return 0;               
+
+      return 0;
     }
-  
+
     SetFilePointer(hLogFile, 0, NULL, FILE_END);
-  
+
     cookie = inValue ? "b" : "e";
-  
-#ifdef _DEBUG  
-  
+
+#ifdef _DEBUG
+
     if (inValue)
     {
-      _CrtMemCheckpoint(&memstate);           
+      _CrtMemCheckpoint(&memstate);
     }
     else
     {
@@ -3226,7 +3226,7 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
         _CrtMemDumpAllObjectsSince(&memstate);
     }
 #endif
-  
+
     /* dump all interesting data */
     cm_MemDumpDirStats(hLogFile, cookie, 1);
     cm_MemDumpBPlusStats(hLogFile, cookie, 1);
@@ -3239,12 +3239,12 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     rx_DumpCalls(hLogFile, cookie);
     rx_DumpPackets(hLogFile, cookie);
 
-    CloseHandle(hLogFile);                          
-  
+    CloseHandle(hLogFile);
+
     inValue = 0;	/* success */
     memcpy(ioctlp->outDatap, &inValue, sizeof(long));
     ioctlp->outDatap += sizeof(long);
-  
+
     return 0;
 }
 
@@ -3287,12 +3287,12 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
             lock_ObtainRead(&cm_serverLock);
             cm_PutServerNoLock(tsp);
         }
-    }   
+    }
     lock_ReleaseRead(&cm_serverLock);
 
-    if (allDown) 
+    if (allDown)
         code = CM_ERROR_ALLDOWN;
-    else if (allBusy) 
+    else if (allBusy)
         code = CM_ERROR_ALLBUSY;
     else if (allOffline || (someBusy && someOffline))
         code = CM_ERROR_ALLOFFLINE;
@@ -3302,9 +3302,9 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
     return code;
 }
 
-/* 
+/*
  * VIOC_PATH_AVAILABILITY internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  * scp is held but not locked.
  */
@@ -3316,7 +3316,7 @@ cm_IoctlPathAvailability(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     cm_volume_t *tvp;
     cm_vol_state_t *statep;
     afs_uint32 volume;
-        
+
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
 	code = 0;
@@ -3331,9 +3331,9 @@ cm_IoctlPathAvailability(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
             return CM_ERROR_NOSUCHCELL;
 
         code = cm_FindVolumeByID(cellp, volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &tvp);
-        if (code) 
+        if (code)
             return code;
-	
+
         statep = cm_VolumeStateByID(tvp, volume);
         switch (statep->state) {
         case vl_online:
@@ -3353,11 +3353,11 @@ cm_IoctlPathAvailability(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
         cm_PutVolume(tvp);
     }
     return code;
-}       
+}
 
-/* 
+/*
  * VIOC_VOLSTAT_TEST internals.
- * 
+ *
  * Assumes that pioctl path has been parsed or skipped.
  */
 afs_int32
@@ -3373,7 +3373,7 @@ cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *re
     testp = (struct VolStatTest *)ioctlp->inDatap;
 
 #ifdef AFS_FREELANCE_CLIENT
-    if (testp->fid.cell == -1) 
+    if (testp->fid.cell == -1)
         return CM_ERROR_NOACCESS;
 #endif
 
@@ -3428,7 +3428,7 @@ cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *re
 
     if (code)
         return code;
-	
+
     if (testp->fid.volume)
         statep = cm_VolumeStateByID(volp, testp->fid.volume);
     else
@@ -3442,7 +3442,7 @@ cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *re
     cm_PutVolume(volp);
 
     return code;
-}       
+}
 
 /*
  * VIOC_GETUNIXMODE internals.

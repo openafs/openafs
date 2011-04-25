@@ -1,8 +1,8 @@
 /*
  * Copyright 2005,2006 Secure Endpoints Inc.
  * All Rights Reserved.
- * 
- * This software has been released under the terms of the MIT License.  
+ *
+ * This software has been released under the terms of the MIT License.
  */
 
 #include <afsconfig.h>

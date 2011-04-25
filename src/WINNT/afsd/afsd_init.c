@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -139,7 +139,7 @@ afsi_log(char *pattern, ...)
             WriteFile(afsi_file, u, (DWORD)strlen(u), &zilch, NULL);
 #ifdef NOTSERVICE
         printf("%s", u);
-#endif 
+#endif
     } else {
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, s, (DWORD)strlen(s), &zilch, NULL);
@@ -206,10 +206,10 @@ afsi_start()
     afsi_log("OEM Code Page = %d", GetOEMCP());
     afsi_log("locale =  %s", setlocale(LC_ALL,NULL));
 #ifdef COMMENT
-    /* Two things to look into.  First, should mbstowcs() be performing 
-     * character set translations from OEM to Unicode in smb3.c; 
-     * Second, do we need to set this translation in each function 
-     * due to multi-threading. 
+    /* Two things to look into.  First, should mbstowcs() be performing
+     * character set translations from OEM to Unicode in smb3.c;
+     * Second, do we need to set this translation in each function
+     * due to multi-threading.
      */
     afsi_log("locale -> %s", setlocale(LC_ALL, ".OCP"));
     afsi_log("_setmbcp = %d -> %d", _setmbcp(_MB_CP_OEM), _getmbcp());
@@ -226,7 +226,7 @@ void afsd_ForceTrace(BOOL flush)
     int len;
     char buf[256];
 
-    if (!logReady) 
+    if (!logReady)
         return;
 
     len = GetTempPath(sizeof(buf)-10, buf);
@@ -255,7 +255,7 @@ static void afsd_InitServerPreferences(void)
     struct sockaddr_in	saddr;
     cm_server_t       *tsp;
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Server Preferences\\VLDB",
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
@@ -331,7 +331,7 @@ static void afsd_InitServerPreferences(void)
         RegCloseKey(hkPrefs);
     }
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Server Preferences\\File",
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
@@ -389,9 +389,9 @@ static void afsd_InitServerPreferences(void)
 		tsp->adminRank = tsp->ipRank;
                 lock_ReleaseMutex(&tsp->mx);
 
-                /* find volumes which might have RO copy 
-                /* on server and change the ordering of 
-                 * their RO list 
+                /* find volumes which might have RO copy
+                /* on server and change the ordering of
+                 * their RO list
                  */
                 cm_ChangeRankVolume(tsp);
                 cm_PutServer(tsp);  /* decrease refcount */
@@ -704,13 +704,13 @@ afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "blockSize", NULL, NULL,
                             (BYTE *) &blockSize, &dummyLen);
     if (code == ERROR_SUCCESS) {
-        if (blockSize < 1 || 
-            (blockSize > 1024 && (blockSize % CM_CONFIGDEFAULT_BLOCKSIZE != 0))) 
+        if (blockSize < 1 ||
+            (blockSize > 1024 && (blockSize % CM_CONFIGDEFAULT_BLOCKSIZE != 0)))
         {
             afsi_log("Invalid block size %u specified, using default", blockSize);
             blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
         } else {
-            /* 
+            /*
              * if the blockSize is less than 1024 we permit the blockSize to be
              * specified in multiples of the default blocksize
              */
@@ -721,7 +721,7 @@ afsd_InitCM(char **reasonP)
         blockSize = CM_CONFIGDEFAULT_BLOCKSIZE;
     }
     if (blockSize > cm_chunkSize) {
-        afsi_log("Block size (%d) cannot be larger than Chunk size (%d).", 
+        afsi_log("Block size (%d) cannot be larger than Chunk size (%d).",
                   blockSize, cm_chunkSize);
         blockSize = cm_chunkSize;
     }
@@ -800,7 +800,7 @@ afsd_InitCM(char **reasonP)
             ltto = 120;
     } else {
         ltto = 0;
-    }   
+    }
     smb_LogoffTransferTimeout = ltto;
     afsi_log("Logoff token transfer timeout %d seconds", ltto);
 
@@ -846,7 +846,7 @@ afsd_InitCM(char **reasonP)
     } else {
         dummyLen = ExpandEnvironmentStrings("%TEMP%\\AFSCache", cm_CachePath, sizeof(cm_CachePath));
         if (dummyLen > sizeof(cm_CachePath)) {
-            afsi_log("Cache path [%%TEMP%%\\AFSCache] longer than %d after expanding env strings", 
+            afsi_log("Cache path [%%TEMP%%\\AFSCache] longer than %d after expanding env strings",
                      sizeof(cm_CachePath));
             osi_panic("CachePath too long", __FILE__, __LINE__);
         }
@@ -915,7 +915,7 @@ afsd_InitCM(char **reasonP)
             cm_ClientStrCpy(cbuf, lengthof(buf), _C("x86_win32 i386_w2k i386_nt40"));
 #endif
         }
-        afsi_log("Sys name %S", cbuf); 
+        afsi_log("Sys name %S", cbuf);
 
         /* breakup buf into individual search string entries */
         for (p = q = cbuf; p < cbuf + dummyLen; p++) {
@@ -964,7 +964,7 @@ afsd_InitCM(char **reasonP)
     if (code == ERROR_SUCCESS) {
         afsi_log("DNS %s be used to find AFS cell servers",
                   cm_dnsEnabled ? "will" : "will not");
-    }       
+    }
     else {
         cm_dnsEnabled = 1;   /* default on */
         afsi_log("Default to use DNS to find AFS cell servers");
@@ -1038,7 +1038,7 @@ afsd_InitCM(char **reasonP)
     code = RegQueryValueEx(parmKey, "SMBAuthType", NULL, NULL,
                             (BYTE *) &smb_authType, &dummyLen);
 
-    if (code != ERROR_SUCCESS || 
+    if (code != ERROR_SUCCESS ||
          (smb_authType != SMB_AUTH_EXTENDED && smb_authType != SMB_AUTH_NTLM && smb_authType != SMB_AUTH_NONE)) {
         smb_authType = SMB_AUTH_EXTENDED; /* default is to use extended authentication */
     }
@@ -1162,7 +1162,7 @@ afsd_InitCM(char **reasonP)
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_enableServerLocks = (unsigned short) dwValue;
-    } 
+    }
     switch (cm_enableServerLocks) {
     case 0:
 	afsi_log("EnableServerLocks: never");
@@ -1181,16 +1181,16 @@ afsd_InitCM(char **reasonP)
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_deleteReadOnly = (unsigned short) dwValue;
-    } 
+    }
     afsi_log("CM DeleteReadOnly is %u", cm_deleteReadOnly);
-    
+
 #ifdef USE_BPLUS
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "BPlusTrees", NULL, NULL,
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_BPlusTrees = (unsigned short) dwValue;
-    } 
+    }
     afsi_log("CM BPlusTrees is %u", cm_BPlusTrees);
 
     if (cm_BPlusTrees && !cm_InitBPlusDir()) {
@@ -1201,14 +1201,14 @@ afsd_InitCM(char **reasonP)
     afsi_log("CM BPlusTrees is not supported");
 #endif
 
-    if ((RegQueryValueExW( parmKey, L"PrefetchExecutableExtensions", 0, 
+    if ((RegQueryValueExW( parmKey, L"PrefetchExecutableExtensions", 0,
                            &regType, NULL, &dummyLen) == ERROR_SUCCESS) &&
-         (regType == REG_MULTI_SZ)) 
+         (regType == REG_MULTI_SZ))
     {
         clientchar_t * pSz;
         dummyLen += 3; /* in case the source string is not nul terminated */
         pSz = malloc(dummyLen);
-        if ((RegQueryValueExW( parmKey, L"PrefetchExecutableExtensions", 0, &regType, 
+        if ((RegQueryValueExW( parmKey, L"PrefetchExecutableExtensions", 0, &regType,
                                (LPBYTE) pSz, &dummyLen) == ERROR_SUCCESS) &&
              (regType == REG_MULTI_SZ))
         {
@@ -1225,7 +1225,7 @@ afsd_InitCM(char **reasonP)
             }
             smb_ExecutableExtensions[cnt] = NULL;
         }
-        
+
         if (!smb_ExecutableExtensions)
             free(pSz);
     }
@@ -1237,15 +1237,15 @@ afsd_InitCM(char **reasonP)
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_OfflineROIsValid = (unsigned short) dwValue;
-    } 
+    }
     afsi_log("CM OfflineReadOnlyIsValid is %u", cm_OfflineROIsValid);
-    
+
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "GiveUpAllCallBacks", NULL, NULL,
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_giveUpAllCBs = (unsigned short) dwValue;
-    } 
+    }
     afsi_log("CM GiveUpAllCallBacks is %u", cm_giveUpAllCBs);
 
     dummyLen = sizeof(DWORD);
@@ -1253,7 +1253,7 @@ afsd_InitCM(char **reasonP)
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_followBackupPath = (unsigned short) dwValue;
-    } 
+    }
     afsi_log("CM FollowBackupPath is %u", cm_followBackupPath);
 
     dummyLen = sizeof(DWORD);
@@ -1261,7 +1261,7 @@ afsd_InitCM(char **reasonP)
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_accessPerFileCheck = (int) dwValue;
-    } 
+    }
     afsi_log("CM PerFileAccessCheck is %d", cm_accessPerFileCheck);
 
     dummyLen = sizeof(DWORD);
@@ -1275,7 +1275,7 @@ afsd_InitCM(char **reasonP)
     RegCloseKey (parmKey);
 
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;
-        
+
     /* get network related info */
     cm_noIPAddr = CM_MAXINTERFACE_ADDR;
     code = syscfg_GetIFInfo(&cm_noIPAddr,
@@ -1307,11 +1307,11 @@ afsd_InitCM(char **reasonP)
     cm_InitConn();
 
     cm_InitServer();
-        
+
     cm_InitIoctl();
-        
+
     smb_InitIoctl();
-        
+
     cm_InitCallback();
 
     cm_InitNormalization();
@@ -1349,7 +1349,7 @@ afsd_InitCM(char **reasonP)
 
     rx_SetBusyChannelError(CM_RX_RETRY_BUSY_CALL);
 
-    /* initialize RX, and tell it to listen to the callbackport, 
+    /* initialize RX, and tell it to listen to the callbackport,
      * which is used for callback RPC messages.
      */
     code = rx_Init(htons(cm_callbackport));
@@ -1386,7 +1386,7 @@ afsd_InitCM(char **reasonP)
     }
     rx_SetMinProcs(serverp, 2);
     rx_SetMaxProcs(serverp, 4);
-        
+
     /* start server threads, *not* donating this one to the pool */
     rx_StartServer(0);
     afsi_log("rx_StartServer");
@@ -1398,21 +1398,21 @@ afsd_InitCM(char **reasonP)
 	rx_enableProcessRPCStats();
 
     code = cm_GetRootCellName(rootCellName);
-    afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 
+    afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s",
              code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
-    if (code != 0 && !cm_freelanceEnabled) 
+    if (code != 0 && !cm_freelanceEnabled)
     {
         *reasonP = "can't find root cell name in " AFS_CELLSERVDB;
         return -1;
-    }   
+    }
     else if (cm_freelanceEnabled)
         cm_data.rootCellp = NULL;
 
-    if (code == 0 && !cm_freelanceEnabled) 
+    if (code == 0 && !cm_freelanceEnabled)
     {
         cm_data.rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
         afsi_log("cm_GetCell addr %x", PtrToUlong(cm_data.rootCellp));
-        if (cm_data.rootCellp == NULL) 
+        if (cm_data.rootCellp == NULL)
         {
             *reasonP = "can't find root cell in " AFS_CELLSERVDB;
             return -1;
@@ -1493,10 +1493,10 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
                 smb_AsyncStoreSize = cm_data.buf_blockSize;
             else
                 smb_AsyncStoreSize = (dwValue & ~(cm_data.buf_blockSize-1));
-        } else 
+        } else
             smb_AsyncStoreSize = CM_CONFIGDEFAULT_ASYNCSTORESIZE;
         afsi_log("SMBAsyncStoreSize = %d", smb_AsyncStoreSize);
-        
+
         RegCloseKey (parmKey);
     }
 
@@ -1534,33 +1534,33 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
 #endif
     DWORD symOptions;
     char functionName[MAXNAMELEN];
-  
+
     IMAGEHLP_MODULE Module;
     IMAGEHLP_LINE Line;
-  
+
     STACKFRAME s;
     IMAGEHLP_SYMBOL *pSym;
-  
+
     afsi_log_useTimestamp = 0;
-  
+
     pSym = (IMAGEHLP_SYMBOL *) GlobalAlloc(0, sizeof (IMAGEHLP_SYMBOL) + MAXNAMELEN);
-  
+
     memset( &s, '\0', sizeof s );
     if (!SymInitialize(hProcess, NULL, 1) )
     {
         afsi_log("SymInitialize(): GetLastError() = %lu\n", GetLastError() );
-      
+
         SymCleanup( hProcess );
         GlobalFree(pSym);
-      
+
         return;
     }
-  
+
     symOptions = SymGetOptions();
     symOptions |= SYMOPT_LOAD_LINES;
     symOptions &= ~SYMOPT_UNDNAME;
     SymSetOptions( symOptions );
-  
+
     /*
      * init STACKFRAME for first call
      * Notes: AddrModeFlat is just an assumption. I hate VDM debugging.
@@ -1585,55 +1585,55 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
     memset( pSym, '\0', sizeof (IMAGEHLP_SYMBOL) + MAXNAMELEN );
     pSym->SizeOfStruct = sizeof (IMAGEHLP_SYMBOL);
     pSym->MaxNameLength = MAXNAMELEN;
-  
+
     memset( &Line, '\0', sizeof Line );
     Line.SizeOfStruct = sizeof Line;
-  
+
     memset( &Module, '\0', sizeof Module );
     Module.SizeOfStruct = sizeof Module;
-  
+
     offset = 0;
-  
+
     afsi_log("\n--# FV EIP----- RetAddr- FramePtr StackPtr Symbol" );
-  
+
     for ( frameNum = 0; ; ++ frameNum )
     {
         /*
-         * get next stack frame (StackWalk(), SymFunctionTableAccess(), 
+         * get next stack frame (StackWalk(), SymFunctionTableAccess(),
          * SymGetModuleBase()). if this returns ERROR_INVALID_ADDRESS (487) or
          * ERROR_NOACCESS (998), you can assume that either you are done, or
          * that the stack is so hosed that the next deeper frame could not be
          * found.
          */
-        if ( ! StackWalk( IMAGE_FILE_MACHINE_I386, hProcess, hThread, &s, c, 
-                          NULL, SymFunctionTableAccess, SymGetModuleBase, 
+        if ( ! StackWalk( IMAGE_FILE_MACHINE_I386, hProcess, hThread, &s, c,
+                          NULL, SymFunctionTableAccess, SymGetModuleBase,
                           NULL ) )
             break;
-      
+
         /* display its contents */
         afsi_log("\n%3d %c%c %08lx %08lx %08lx %08lx ",
                  frameNum, s.Far? 'F': '.', s.Virtual? 'V': '.',
                  s.AddrPC.Offset, s.AddrReturn.Offset,
                  s.AddrFrame.Offset, s.AddrStack.Offset );
-      
+
         if ( s.AddrPC.Offset == 0 )
         {
             afsi_log("(-nosymbols- PC == 0)" );
         }
         else
-        { 
+        {
             /* show procedure info from a valid PC */
             if (!SymGetSymFromAddr(hProcess, s.AddrPC.Offset, &offset, pSym))
             {
                 if ( GetLastError() != ERROR_INVALID_ADDRESS )
                 {
-                    afsi_log("SymGetSymFromAddr(): errno = %lu", 
+                    afsi_log("SymGetSymFromAddr(): errno = %lu",
                              GetLastError());
                 }
             }
             else
             {
-                UnDecorateSymbolName(pSym->Name, functionName, MAXNAMELEN, 
+                UnDecorateSymbolName(pSym->Name, functionName, MAXNAMELEN,
                                      UNDNAME_NAME_ONLY);
                 afsi_log("%s", functionName );
 
@@ -1647,17 +1647,17 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
             {
                 if (GetLastError() != ERROR_INVALID_ADDRESS)
                 {
-                    afsi_log("Error: SymGetLineFromAddr(): errno = %lu", 
+                    afsi_log("Error: SymGetLineFromAddr(): errno = %lu",
                              GetLastError());
                 }
             }
             else
             {
-                afsi_log("    Line: %s(%lu) %+ld bytes", Line.FileName, 
+                afsi_log("    Line: %s(%lu) %+ld bytes", Line.FileName,
                          Line.LineNumber, offset);
             }
         }
-      
+
         /* no return address means no deeper stackframe */
         if (s.AddrReturn.Offset == 0)
         {
@@ -1665,12 +1665,12 @@ void afsd_printStack(HANDLE hThread, CONTEXT *c)
             break;
         }
     }
-  
+
     if (GetLastError() != 0)
     {
         afsi_log("\nStackWalk(): errno = %lu\n", GetLastError());
     }
-  
+
     SymCleanup(hProcess);
     GlobalFree(pSym);
 }
@@ -1710,23 +1710,23 @@ OpenDumpFile(void)
                             CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
 }
 
-void 
+void
 GenerateMiniDump(PEXCEPTION_POINTERS ep)
 {
     if (IsDebuggerPresent())
         return;
 
-    if (ep == NULL) 
+    if (ep == NULL)
     {
         // Generate exception to get proper context in dump
-        __try 
+        __try
         {
             RaiseException(DBG_CONTINUE, 0, 0, NULL);
-        } 
-        __except(GenerateMiniDump(GetExceptionInformation()), EXCEPTION_CONTINUE_EXECUTION) 
+        }
+        __except(GenerateMiniDump(GetExceptionInformation()), EXCEPTION_CONTINUE_EXECUTION)
         {
         }
-    } 
+    }
     else
     {
         MINIDUMP_EXCEPTION_INFORMATION eInfo;
@@ -1780,27 +1780,27 @@ GenerateMiniDump(PEXCEPTION_POINTERS ep)
 LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
 {
     CONTEXT context;
-#ifdef _DEBUG  
-    BOOL allocRequestBrk = FALSE;
-#endif 
-    HMODULE hLib = NULL;
-  
-    afsi_log("UnhandledException : code : 0x%x, address: 0x%x\n", 
-             ep->ExceptionRecord->ExceptionCode, 
-             ep->ExceptionRecord->ExceptionAddress);
-	   
 #ifdef _DEBUG
-    if (afsd_crtDbgBreakCurrent && 
+    BOOL allocRequestBrk = FALSE;
+#endif
+    HMODULE hLib = NULL;
+
+    afsi_log("UnhandledException : code : 0x%x, address: 0x%x\n",
+             ep->ExceptionRecord->ExceptionCode,
+             ep->ExceptionRecord->ExceptionAddress);
+
+#ifdef _DEBUG
+    if (afsd_crtDbgBreakCurrent &&
         *afsd_crtDbgBreakCurrent == _CrtSetBreakAlloc(*afsd_crtDbgBreakCurrent))
-    { 
+    {
         allocRequestBrk = TRUE;
         afsi_log("Breaking on alloc request # %d\n", *afsd_crtDbgBreakCurrent);
     }
 #endif
-	   
+
     /* save context if we want to print the stack information */
     context = *ep->ContextRecord;
-	   
+
     afsd_printStack(GetCurrentThread(), &context);
 
     GenerateMiniDump(ep);
@@ -1816,15 +1816,15 @@ LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
     if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT)
     {
         afsi_log("\nEXCEPTION_BREAKPOINT - continue execution ...\n");
-    
+
 #ifdef _DEBUG
         if (allocRequestBrk)
         {
             afsd_crtDbgBreakCurrent++;
             _CrtSetBreakAlloc(*afsd_crtDbgBreakCurrent);
         }
-#endif         
-#if defined(_X86)    
+#endif
+#if defined(_X86)
         ep->ContextRecord->Eip++;
 #endif
 #if defined(_AMD64_)
@@ -1837,7 +1837,7 @@ LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
         return EXCEPTION_CONTINUE_SEARCH;
     }
 }
-  
+
 void afsd_SetUnhandledExceptionFilter()
 {
 #ifndef NOTRACE
@@ -1851,7 +1851,7 @@ void afsd_DbgBreakAllocInit()
     memset(afsd_crtDbgBreaks, -1, sizeof(afsd_crtDbgBreaks));
     afsd_crtDbgBreakCurrent = afsd_crtDbgBreaks;
 }
-  
+
 void afsd_DbgBreakAdd(DWORD requestNumber)
 {
     int i;

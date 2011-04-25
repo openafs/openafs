@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -26,14 +26,14 @@
 <P><STRONG>目的</STRONG>
 <P>複数の読み取り / 書き込みボリュームにバックアップ・ボリュームを作成します。
 <P><STRONG>構文</STRONG>
-<PRE><B>vos backupsys</B> [<B>-prefix</B> &lt;<VAR>common prefix on volume(s)</VAR>><SUP>+</SUP>]  
+<PRE><B>vos backupsys</B> [<B>-prefix</B> &lt;<VAR>common prefix on volume(s)</VAR>><SUP>+</SUP>]
               [<B>-server</B> &lt;<VAR>machine name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition name</VAR>>]
-              [<B>-exclude</B>]  [<B>-xprefix</B> &lt;<VAR>negative prefix on volume(s)</VAR>><SUP>+</SUP>] 
+              [<B>-exclude</B>]  [<B>-xprefix</B> &lt;<VAR>negative prefix on volume(s)</VAR>><SUP>+</SUP>]
               [<B>-dryrun</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]
               [<B>-verbose</B>]  [<B>-help</B>]
-    
-<B>vos backups</B> [<B>-pr</B> &lt;<VAR>common prefix on volume(s)</VAR>><SUP>+</SUP>]  [<B>-s</B> &lt;<VAR>machine name</VAR>>] 
-            [<B>-pa</B> &lt;<VAR>partition name</VAR>>]  [<B>-e</B>]  [<B>-x</B> &lt;<VAR>negative prefix on volume(s)</VAR>><SUP>+</SUP>]  
+
+<B>vos backups</B> [<B>-pr</B> &lt;<VAR>common prefix on volume(s)</VAR>><SUP>+</SUP>]  [<B>-s</B> &lt;<VAR>machine name</VAR>>]
+            [<B>-pa</B> &lt;<VAR>partition name</VAR>>]  [<B>-e</B>]  [<B>-x</B> &lt;<VAR>negative prefix on volume(s)</VAR>><SUP>+</SUP>]
             [<B>-d</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -147,19 +147,19 @@
 <P><STRONG>例</STRONG>
 <P>次の例では、文字列 <B>user</B> で始まる名前をもつ、セルの VLDB にリストされている、読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
 <PRE>   % <B>vos backupsys -prefix user</B>
-   
+
 </PRE>
 <P>次の例は、ABC Corporation セルに適合したもので、ファイル・サーバー・マシン <B>fs3.abc.com</B> のすべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
 <PRE>   % <B>vos backupsys -server fs3.abc.com</B>
-   
+
 </PRE>
 <P>次の例では、State University セルのファイル・サーバー・マシン <B>db1.stateu.edu</B> に、名前に文字列 <B>temp</B> を含むボリュームを除く、すべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
 <PRE>   % <B>vos backupsys  -server db1.stateu.edu -prefix '^.*temp'</B>
-   
+
 </PRE>
 <P>次の例では、名前に文字列 <B>source</B> を含むボリュームを除き、名前に文字列 <B>source.current</B> を含むボリュームを含む、セルの VLDB にリストされている、すべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
 <PRE>   % <B>vos backupsys  -prefix '^.*source' -exclude -xprefix '^.*source\.current'</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
@@ -169,11 +169,11 @@
 <P><A HREF="auarf255.htm#HDRVOS_BACKUP">vos backup</A>
 <P><B>regexp(5)</B> については、UNIX 解説書ページ
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf255.htm">前ページ</A> &#124; <A HREF="auarf257.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf255.htm">前ページ</A> &#124; <A HREF="auarf257.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

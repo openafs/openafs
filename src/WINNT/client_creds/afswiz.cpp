@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -226,13 +226,13 @@ void WizStarting_OnInitDialog (HWND hDlg)
    ShowWindow (GetDlgItem (hDlg, IDC_START_TRY), SW_SHOW);
 
    SC_HANDLE hManager;
-    if ((hManager = OpenSCManager (NULL, NULL, 
+    if ((hManager = OpenSCManager (NULL, NULL,
                                    SC_MANAGER_CONNECT |
                                    SC_MANAGER_ENUMERATE_SERVICE |
                                    SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
       {
       SC_HANDLE hService;
-          if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+          if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"),
                                        SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
          {
          if (StartService (hService, 0, 0))

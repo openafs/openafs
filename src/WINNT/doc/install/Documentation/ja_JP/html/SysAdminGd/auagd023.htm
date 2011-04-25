@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理の手引き</H1>
@@ -25,7 +25,7 @@
 <HR><H2><A NAME="HDRWQ839" HREF="auagd002.htm#ToC_690">AFS コマンドの構文</A></H2>
 <P>組に属している AFS コマンドの構造は、以下のとおりです。
 <PRE>   <B>command_suite operation_code</B> <B>-switch</B> &lt;<VAR>value</VAR>><SUP>[+]</SUP>  [<B>-flag</B>]
-   
+
 </PRE>
 <P><H3><A NAME="Header_691" HREF="auagd002.htm#ToC_691">コマンド名</A></H3>
 <P>全体として、<B>command_suite</B> と
@@ -54,7 +54,7 @@
 <P><H3><A NAME="HDRCOMMAND-EX" HREF="auagd002.htm#ToC_695">コマンドの例</A></H3>
 <P>次の例は、AFS コマンド組に属するコマンドのさまざまな部分を示しています。
 <PRE>   % <B> bos getdate -server fs1.abc.com -file ptserver kaserver</B>
-   
+
 </PRE>
 <P>ここで、
 <UL>
@@ -92,17 +92,17 @@ BOS サーバーに指示します。
 <P><H4><A NAME="Header_698">スイッチ省略の例</A></H4>
 <P><A HREF="#HDRCOMMAND-EX">コマンドの例</A> にある例のコマンドについて、もう一度考えてみます。
 <PRE>   % <B> bos getdate -server fs1.abc.com -file ptserver kaserver</B>
-   
+
 </PRE>
 <P>このコマンドは、サーバー・マシンの名前 (<B>-server</B> スイッチで識別される) とバイナリー・ファイルの名前 (<B>-file</B> スイッチで識別される) という 2 つの必須の引き数を持ちます。2 番目の引き数は、複数の値を受け入れます。
 3 つの条件すべてに適合していることにより、発行者は次のようにスイッチを省略することができます。
 <PRE>   % <B>bos getdate fs1.abc.com ptserver kaserver</B>
-   
+
 </PRE>
 <P>スイッチがないので、<B>bos</B> コマンド・インタープリターは、引き数の順序をあてにします。このコマンド・インタープリターは、演算子に続く最初の要素 <B>fs1.abc.com</B> がサーバー・マシンの名前で、次の引き数 <B>ptserver</B> はバイナリー・ファイルの名前であると想定します。次に、このコマンドの 2 番目の (かつ最後の) 引き数は、複数の値を受け入れるので、このコマンド・インタープリターは、<B>kaserver</B> はその引き数の追加の値である、と正しく解釈します。
 <P>一方、次の例は受け入れられません。それは、<A HREF="#HDRNOSWITCH">スイッチを省略するための条件</A> の最初の 2 つの条件に違反しているからです。1 つの引き数に値が 1 つしか指定されていませんが、引き数が規定の順序で出現していません。さらに、1 つの引き数にスイッチが提供されていますがもう 1 つの引き数には提供されていません。
 <PRE>   % <B>bos getdate ptserver -server fs1.abc.com</B>
-   
+
 </PRE>
 <P><H3><A NAME="HDRWQ841" HREF="auagd002.htm#ToC_699">省略形と別名を使用するための規則</A></H3>
 <P>このセクションでは、演算子、オプション名、サーバー・マシン名、区画名、およびセル名の省略方法について説明します。これら以外の値を省略することはできません。
@@ -145,16 +145,16 @@ AFS コマンドは、明白に短縮した形式を受け入れますが、コマンドが発行されたとき、短
 <P>AFS コマンドを発行するときには、以下の形式のいずれかを使用して、区分名を省略することができます。
 <PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
    <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
-   
+
 </PRE>
 <P><B>/vicepz</B> (インデックスは 25) の後に
 <PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
    <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
-   
+
 </PRE>
 <P>同様に
 <PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
-    
+
 </PRE>
 <P><H4><A NAME="HDRCELLABBREV">セル名の省略</A></H4>
 <P>セルのフルネームは通常そのインターネット・ドメイン名 (たとえば、State University の場合は <B>stateu.edu</B>、あるいは ABC Corporation の場合であれば <B>abc.com</B>) に一致します。一部の AFS コマンドは、通常ローカルの <B>/usr/vice/etc/CellServDB ファイル</B>を基準としたあいまいでない短縮形式を受け入れますが、対応するドメイン名をどのように解決するかは、ローカル・ネーム・サービスの性能によって異なる場合があります。
@@ -168,58 +168,58 @@ AFS コマンドは、明白に短縮した形式を受け入れますが、コマンドが発行されたとき、短
 </LI><LI>最終行は文字列 <TT>Usage:</TT> で始まり、コマンドのオプションを規定の順序でリストしています。オンライン・ヘルプの項目は、このドキュメンテーションと同じ活字記号 (大括弧など) を使用しています。
 </LI></UL>
 <P>演算子が指定されていない場合は、<B>help</B> 演算子は、その組の演算子ごとに最初の行 (簡単な説明) を表示します。
-<PRE>   
+<PRE>
    % <VAR>command_suite</VAR>  <B>help</B>
-   
+
 </PRE>
 <P>発行者が 1 つ以上の演算子を指定している場合は、<B>help</B> 演算子は、各コマンドの完全なオンライン項目 (簡単な説明、あるいは別名がある場合にはその別名、および構文) を表示します。
-<PRE>   
+<PRE>
    % <VAR>command_suite</VAR> <B>help</B> <VAR>operation_code</VAR><SUP>+</SUP>
-   
+
 </PRE>
 <P><B>-help</B> フラグは、コマンドの構文を表示しますが、簡単な説明あるいは別名は表示しません。
-<PRE>   % <VAR>command_name</VAR> <B>-help</B>  
-   
+<PRE>   % <VAR>command_name</VAR> <B>-help</B>
+
 </PRE>
 <P><B>apropos</B> 演算子は、指定されたキーワードを含む演算子または簡単な説明を持つ、ある組に属する任意のコマンドに関する簡単な説明を表示します。
 <PRE>   % <VAR>command_suite</VAR> <B>apropos</B> <VAR>"&lt;help
 string>"</VAR>
-   
+
 </PRE>
 <P>以下の例で示したコマンドは、<B>fs setacl</B> コマンドの完全なオンライン・ヘルプ項目を表示します。
-<PRE>   
-   % <B>fs help setacl </B>  
+<PRE>
+   % <B>fs help setacl </B>
    fs setacl: set access control list
    aliases: sa
-   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
-   
+
 </PRE>
 <P>構文ステートメントだけを表示するには、<B>-help</B> フラグを使用します。
 <PRE>   % <B>fs setacl -help</B>
-   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
-   
+
 </PRE>
 <P>以下の例では、あるユーザーが自分のホーム・ボリュームの割り当て量を表示したいと思っています。ユーザーは、関係のあるコマンドが <B>fs</B> 組に属することは知っていますが、その演算子を思い出すことができません。そこでこのユーザーはキーワードとして <B>quota</B> を使用します。
-<PRE>   
+<PRE>
    % <B>fs apropos quota</B>
    listquota: list volume quota
    quota: show volume quota usage
    setquota: set volume quota
-   
+
 </PRE>
 <P>以下の例は、コマンド名または簡潔な説明の中にキーワードが組み込まれていない場合に表示されるエラー・メッセージを示しています。
-<PRE>   
+<PRE>
    % <B>fs apropos "list quota"</B>
    Sorry, no commands found
-   
+
 </PRE>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd022.htm">前ページ</A> &#124; <A HREF="auagd024.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd022.htm">前ページ</A> &#124; <A HREF="auagd024.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 -->
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

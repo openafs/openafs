@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     HANDLE  ShutDownEventHandle;
     HANDLE  PauseEventHandle;
     HANDLE  ContinueEventHandle;
-    HANDLE  hStdin; 
+    HANDLE  hStdin;
 
     hStdin = GetStdHandle(STD_INPUT_HANDLE);
 
@@ -74,10 +74,10 @@ int GetConsoleInput(HANDLE hStdin)
                 break;
         }
     }
-    for (i = 0; i < (int)InputRecordCount; i++) 
+    for (i = 0; i < (int)InputRecordCount; i++)
     {
-        switch(InputRecord[i].EventType) 
-        { 
+        switch(InputRecord[i].EventType)
+        {
             case KEY_EVENT:
                 if (InputRecord[i].Event.KeyEvent.bKeyDown)
                 {
@@ -103,9 +103,9 @@ int GetConsoleInput(HANDLE hStdin)
                         printf("\nEnd stress test request received\n");
                     }
                 }
-                break; 
-            default: 
-                break; 
+                break;
+            default:
+                break;
         }
     }
     return(RetCode);

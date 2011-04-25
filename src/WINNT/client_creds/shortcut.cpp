@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -55,7 +55,7 @@ BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc, LPTST
       IPersistFile *ppf;
       rc = psl->QueryInterface (IID_IPersistFile, (void **)&ppf);
       if (SUCCEEDED (rc))
-         { 
+         {
          rc = psl->SetPath (pszSource);
          if (SUCCEEDED (rc))
             {
@@ -81,7 +81,7 @@ BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc, LPTST
       psl->Release ();
       }
    return SUCCEEDED(rc) ? TRUE : FALSE;
-} 
+}
 
 
 BOOL Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
@@ -116,7 +116,7 @@ BOOL Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
 
    if (fAutoStart)
    {
-       DWORD code, len, type; 
+       DWORD code, len, type;
        TCHAR szParams[ 64 ] = TEXT(AFSCREDS_SHORTCUT_OPTIONS);
 
        code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,

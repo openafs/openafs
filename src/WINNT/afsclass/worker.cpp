@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -732,7 +732,7 @@ DWORD Worker_PerformTask (WORKERTASK wtask, LPWORKERPACKET lpwp)
 
       case wtaskVosVolumeOnline:
          {
-         if ((*lpVosVolumeOnline)(lpwp->wpVosVolumeOnline.hServer, NULL, lpwp->wpVosVolumeOnline.idPartition, lpwp->wpVosVolumeOnline.idVolume, lpwp->wpVosVolumeOnline.csecSleep, lpwp->wpVosVolumeOnline.Status, &status)) 
+         if ((*lpVosVolumeOnline)(lpwp->wpVosVolumeOnline.hServer, NULL, lpwp->wpVosVolumeOnline.idPartition, lpwp->wpVosVolumeOnline.idVolume, lpwp->wpVosVolumeOnline.csecSleep, lpwp->wpVosVolumeOnline.Status, &status))
             status = 0;
          break;
          }

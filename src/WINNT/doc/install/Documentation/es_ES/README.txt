@@ -21,7 +21,7 @@ AFS Partitions No Longer Need to Reside On Empty NTFS Volumes
 
 On Windows NT machines, any NTFS volume can be designated as an AFS
 partition.  Previously, an NTFS volume containing any data other than
-the Windows Recycler could not be designated as an AFS partition. 
+the Windows Recycler could not be designated as an AFS partition.
 
 
 
@@ -53,7 +53,7 @@ AFS for Windows Supplemental Documentation
 
 The Supplemental Documentation component of AFS for Windows is only available
 online if the AFS Supplemental Documentation option was chosen when AFS for Windows
-was installed on your system.  (AFS Supplemental Documentation is not an option when 
+was installed on your system.  (AFS Supplemental Documentation is not an option when
 installing AFS Light.) Note that documentation is also available directly
 from the AFS for Windows CD-ROM, in the CD:\Documentation directory, where CD
 is the letter of your CD-ROM drive.

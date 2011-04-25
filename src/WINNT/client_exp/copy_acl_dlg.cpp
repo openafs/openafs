@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -68,11 +68,11 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CCopyAclDlg message handlers
 
-void CCopyAclDlg::OnOK() 
+void CCopyAclDlg::OnOK()
 {
 	m_bClear = m_Clear.GetCheck() == 1;
 	m_ToDir.GetWindowText(m_strToDir);
-	
+
 	if (PathIsDirectory(m_strToDir) == -1) {
 		ShowMessageBox(IDS_DIR_DOES_NOT_EXIST_ERROR, MB_ICONEXCLAMATION, IDS_DIR_DOES_NOT_EXIST_ERROR, m_strToDir);
 		return;
@@ -81,25 +81,25 @@ void CCopyAclDlg::OnOK()
 	CDialog::OnOK();
 }
 
-BOOL CCopyAclDlg::OnInitDialog() 
+BOOL CCopyAclDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
 	m_FromDir.SetWindowText(m_strFromDir);
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CCopyAclDlg::OnChangeToDir() 
+void CCopyAclDlg::OnChangeToDir()
 {
 	m_ToDir.GetWindowText(m_strToDir);
-	
+
 	BOOL bEnable = m_strToDir.GetLength() > 0;
 	m_Ok.EnableWindow(bEnable);
 }
 
-void CCopyAclDlg::OnBrowse() 
+void CCopyAclDlg::OnBrowse()
 {
     CFileDialog dlg(TRUE, 0, TEXT("*.*"), OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR | OFN_HIDEREADONLY, 0, 0);
 
@@ -107,7 +107,7 @@ void CCopyAclDlg::OnBrowse()
 		return;
 
 	CString strPath = dlg.GetPathName();
-	
+
 	// Remove file name (last component of path)
 	int nFirstSlash = strPath.Find('\\');
 	int nLastSlash = strPath.ReverseFind('\\');
@@ -119,7 +119,7 @@ void CCopyAclDlg::OnBrowse()
 	m_ToDir.SetWindowText(strPath);
 }
 
-void CCopyAclDlg::OnHelp() 
+void CCopyAclDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, COPY_ACL_HELP_ID);
 }

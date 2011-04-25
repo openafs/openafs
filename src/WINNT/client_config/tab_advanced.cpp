@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,16 +50,16 @@ void AdvancedTab_OnRefresh (HWND hDlg);
 extern BOOL CALLBACK AutoMap_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 // From dlg_misc.cpp
-extern BOOL Misc_OnApply();    
+extern BOOL Misc_OnApply();
 extern BOOL CALLBACK Misc_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 
 // From dlg_logon.cpp
 extern BOOL CALLBACK Logon_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
-extern BOOL Logon_OnApply();   
+extern BOOL Logon_OnApply();
 
 // From dlg_diag.cpp
 extern BOOL CALLBACK Diag_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
-extern BOOL Diag_OnApply();    
+extern BOOL Diag_OnApply();
 
 // From binding_misc.cpp
 extern BOOL Binding_OnApply();
@@ -115,7 +115,7 @@ BOOL CALLBACK AdvancedTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             case IDC_MISC_PARMS:
          	    ModalDialog(IDD_MISC_CONFIG_PARMS, hDlg, (DLGPROC)Misc_DlgProc);
                 break;
-                
+
             case IDC_BINDING_PARMS:
                 ModalDialog(IDD_BINDING_CONFIG_PARAMS, hDlg, (DLGPROC)Binding_DlgProc);
                 break;
@@ -124,7 +124,7 @@ BOOL CALLBACK AdvancedTab_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                 ModalDialog(IDD_LOGIN_CONFIG_PARMS, hDlg, (DLGPROC)Logon_DlgProc);
                 break;
 
-            case IDC_AUTOMAP_PARMS: 
+            case IDC_AUTOMAP_PARMS:
                 ModalDialog(IDD_GLOBAL_DRIVES, hDlg, (DLGPROC)AutoMap_DlgProc);
                 break;
 
@@ -239,13 +239,13 @@ BOOL AdvancedTab_OnApply (HWND hDlg)
    // Save the data from the advanced tab dialogs
    if (!Misc_OnApply())
       return FALSE;
-      
+
    if (!Binding_OnApply())
         return FALSE;
-      
+
    if (!Logon_OnApply())
       return FALSE;
-      
+
    if (!Diag_OnApply())
       return FALSE;
 

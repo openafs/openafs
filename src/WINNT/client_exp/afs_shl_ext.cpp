@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -102,17 +102,17 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
     return AfxDllGetClassObject(rclsid, riid, ppv);
-}	
+}
 
 STDAPI DllCanUnloadNow(void)
 {
     AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 #ifdef COMMENT
-    // This test is correct and we really do want to allow the extension to be loaded and 
+    // This test is correct and we really do want to allow the extension to be loaded and
     // unloaded as needed.   Unfortunately, the extension is being unloaded and never loaded
-    // again which is disconcerting for many folks.  For now we will prevent the unloading 
-    // until someone has time to figure out how to debug this.   
+    // again which is disconcerting for many folks.  For now we will prevent the unloading
+    // until someone has time to figure out how to debug this.
     // Jeffrey Altman - 2 Oct 2005
 
     if (!nCMRefCount && !nSERefCount && !nICRefCount && !nTPRefCount && !nXPRefCount)
@@ -143,7 +143,7 @@ LRESULT DoRegCLSID(HKEY hKey,PTCHAR szSubKey,PTCHAR szData,PTCHAR szValue=NULL)
     if(NOERROR == lResult)
     {
 	lResult = RegSetValueEx(thKey, szValue, 0, REG_SZ,
-				 (LPBYTE)szData, (lstrlen(szData) + 1) 
+				 (LPBYTE)szData, (lstrlen(szData) + 1)
 				 * sizeof(TCHAR));
 	RegCloseKey(thKey);
     }
@@ -176,7 +176,7 @@ STDAPI DllRegisterServer(void)
     } else {
 	return E_FAIL;
     }
-    
+
     /*
     [HKEY_CLASSES_ROOT\CLSID\{$CLSID}\InprocServer32]
     @="Y:\\DEST\\root.client\\usr\\vice\\etc\\afs_shl_ext.dll"
@@ -201,7 +201,7 @@ STDAPI DllRegisterServer(void)
     wsprintf(szSubKey, TEXT("%s\\%s"), STR_REG_PATH, STR_EXT_TITLE);
     if ((lResult=DoRegCLSID(HKEY_LOCAL_MACHINE,szSubKey,szCLSID))!=NOERROR)
 	return lResult;
-	
+
     //If running on NT, register the extension as approved.
     /*
     [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
@@ -244,7 +244,7 @@ STDAPI DllRegisterServer(void)
     if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szCLSID))!=NOERROR)
 	return lResult;
 
-	
+
     /* Below needs to be merged with above */
     wsprintf(szSubKey, TEXT("%s\\%s"), STR_REG_PATH, STR_EXT_TITLE);
     lResult = RegCreateKeyEx(  HKEY_LOCAL_MACHINE,
@@ -436,6 +436,6 @@ STDAPI DllUnregisterServer(void)
     DoValueDelete(HKEY_LOCAL_MACHINE,szSubKey,szCLSID);
 
     return S_OK;
-}	
+}
 
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -154,12 +154,12 @@ static void OnInitDialog(HWND hwndDlg)
 
 	// Move remaining controls to fill the holes left from
 	// hiding the SCC controls
-        
+
         // Get position of the "Do not configure" option button; we will position
         // the other controls relative to this one
         RECT rectDNC;
         GetWindowRect(GetDlgItem(hDlg, IDC_DONT_CONFIGURE), &rectDNC);
-   
+
         // Get position of the SCS option button
         RECT rectSCS;
         GetWindowRect(GetDlgItem(hDlg, IDC_SYS_CONTROL_SERVER), &rectSCS);
@@ -186,7 +186,7 @@ static void OnInitDialog(HWND hwndDlg)
 	EnableSysControlMachine(TRUE);
     } else
 	SetCheck(hDlg, IDC_DONT_CONFIGURE);
-}	
+}
 
 /*
  * Utility Functions _________________________________________________________________
@@ -236,7 +236,7 @@ static void CheckEnableNextButton()
 
 	if (lstrlen(g_CfgData.szSysControlMachine) == 0)
 	    bEnable = FALSE;
-    }	
+    }
 
     if (bEnable)
 	g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON);

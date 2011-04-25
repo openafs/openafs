@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -100,7 +100,7 @@ BOOL PropSheet_HandleNotify (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                FORWARD_WM_COMMAND (hDlg, IDOK, 0, 0, SendMessage);
                return TRUE;
             case PSN_APPLY:
-               FORWARD_WM_COMMAND (hDlg, IDAPPLY, 0, 0, SendMessage);    
+               FORWARD_WM_COMMAND (hDlg, IDAPPLY, 0, 0, SendMessage);
                return TRUE;
             case PSN_HELP:
                FORWARD_WM_COMMAND (hDlg, IDHELP, 0, 0, SendMessage);

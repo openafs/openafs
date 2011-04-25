@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -667,7 +667,7 @@ BOOL Config_SetSysName (LPCTSTR pszName, ULONG *pStatus)
         } InData;
         memset (&InData, 0x00, sizeof(InData));
         USHORT i=0, j=0, len=lstrlen(pszName);
-        
+
         if ( len == 0 ) {
             Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_SYSNAME, TEXT("A sysname must be specified"));
             return(-1);
@@ -792,7 +792,7 @@ void Config_GetCachePath (LPTSTR pszCachePath)
         if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Control\\Session Manager\\Environment"), 0, KEY_QUERY_VALUE, &hk) == ERROR_SUCCESS)
         {
             DWORD dwSize = sizeof(szPath);
-            DWORD dwType = 0; 
+            DWORD dwType = 0;
 
             if (RegQueryValueEx (hk, TEXT("TEMP"), NULL, &dwType, (PBYTE)szPath, &dwSize) == ERROR_SUCCESS)
             {
@@ -812,7 +812,7 @@ void Config_GetCachePath (LPTSTR pszCachePath)
         }
         lstrcpy (pszCachePath, szPath);
     }
-}        
+}
 
 BOOL Config_SetCachePath(LPCTSTR pszPath, ULONG *pStatus)
 {

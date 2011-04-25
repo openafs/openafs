@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理の手引き</H1>
@@ -221,7 +221,7 @@ AFS 認証プロトコルはマサチューセッツ工科大学のプロジェクト Athena によって開発さ
 <P><B>BosConfig</B> のプロセス項目には、次の情報が含まれています。
 <UL>
 <LI>プロセスの名前。推奨される一般的な名前は <I>AFS インストールの手引き</I> および <A HREF="#HDRWQ216">プロセスの作成および除去</A>で定義されています。単純なプロセスの名前は、通常、そのバイナリー・ファイルの名前に一致します (たとえば、保護サーバーの場合は、<B>ptserver</B>)。
-</LI><LI>以下の 1 つであるそのタイプ: 
+</LI><LI>以下の 1 つであるそのタイプ:
 <DL>
 <A NAME="IDX6292"></A>
 <A NAME="IDX6293"></A>
@@ -519,15 +519,15 @@ BOS サーバーは、毎週、指定された曜日の指定された時刻に、そのファイルまたはコマン
 </DL>
 </LI></OL>
 <P>次の例は、マシン <B>db2.abc.com</B> の保護サーバーを定義および開始します。
-<PRE>   
-   % <B>bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</B> 
-   
+<PRE>
+   % <B>bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</B>
+
 </PRE>
 <P>次の例は、マシン <B>fs6.abc.com</B> の <B>fs</B> プロセスを定義および開始します。
-<PRE>   
+<PRE>
    % <B>bos create fs6.abc.com fs fs /usr/afs/bin/fileserver </B>  \
         <B>/usr/afs/bin/volserver /usr/afs/bin/salvager</B>
-    
+
 </PRE>
 <P>次の例は、マシン <B>fs3.abc.com</B> の <B>backupuser</B> プロセスという cron プロセスを定義および開始して、毎日 3:00 a.m に稼動するようにスケジュールします。
 <PRE>   % <B>bos create fs3.abc.com backupuser cron
@@ -547,9 +547,9 @@ BOS サーバーは、毎週、指定された曜日の指定された時刻に、そのファイルまたはコマン
 <PRE>   % <B>bos listusers</B> &lt;<VAR>machine name</VAR>>
 </PRE>
 </LI><LI><A NAME="LIPROC-STOP"></A><B>bos stop</B> コマンドを発行して <B>BosConfig</B> ファイルにある各プロセスの状況フラグを、<TT> NotRun</TT> に変更して、停止します。継続的に稼動しない場合でも、<B>BosConfig</B> ファイルから削除したい cron プロセスにもこのコマンドを発行する必要があります。このコマンドについての詳細は、<A HREF="#HDRWQ220">状況を NotRun に変更してプロセスを停止する方法</A> を参照してください。
-<PRE>   
+<PRE>
    % <B>bos stop</B> &lt;<VAR>machine name</VAR>> &lt;<VAR>server process name</VAR>><SUP>+</SUP> [<B>-wait</B>]
-   
+
 </PRE>
 </LI><LI><A NAME="LIPROC-DEL"></A><B>bos delete</B> コマンドを発行して、各プロセスを <B>BosConfig</B> ファイルから削除します。
 <P>
@@ -936,11 +936,11 @@ BOS サーバーは再始動しません。
 <B>/usr/afs/logs</B> ディレクトリーの相対パスと解釈されます。
 </DL>
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd008.htm">前ページ</A> &#124; <A HREF="auagd010.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd008.htm">前ページ</A> &#124; <A HREF="auagd010.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 -->
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

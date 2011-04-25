@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -28,7 +28,7 @@ extern "C" {
 #include "get_cur_config.h"
 
 
-/*					 
+/*
  * DEFINITIONS _________________________________________________________________
  *
  */
@@ -98,10 +98,10 @@ BOOL CALLBACK ServicesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
     case WM_INITDIALOG:
 	OnInitDialog(hwndDlg);
 	break;
- 
+
     case WM_COMMAND:
 	switch (LOWORD(wParam)) {
-	case IDC_DB_SERVICE: 
+	case IDC_DB_SERVICE:
 	    OnDbService();
 	    break;
 
@@ -117,7 +117,7 @@ BOOL CALLBACK ServicesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	    OnScClient();
 	    break;
 
-	case IDC_SCS:  
+	case IDC_SCS:
 	    OnScServer();
 	    break;
 
@@ -127,7 +127,7 @@ BOOL CALLBACK ServicesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 	    }
 	    break;
 
-	case IDAPPLY: 
+	case IDAPPLY:
 	    PrepareToConfig();
 	    break;
 	}
@@ -137,7 +137,7 @@ BOOL CALLBACK ServicesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
     CheckEnableApply();
 
     return FALSE;
-}		
+}
 
 
 /*
@@ -160,14 +160,14 @@ static void OnInitDialog(HWND hwndDlg)
 }
 
 static void EnableScMachine(BOOL bEnable)
-{	
+{
     SetEnable(hDlg, IDC_SC_MACHINE_LABEL, (ENABLE_STATE)bEnable);
     SetEnable(hDlg, IDC_SC_MACHINE, (ENABLE_STATE)bEnable);
 
     bSettingScMachine = TRUE;
     SetWndText(hDlg, IDC_SC_MACHINE, bEnable ? szScMachine : TEXT(""));
     bSettingScMachine = FALSE;
-}		
+}
 
 static void ShowInitialConfig()
 {
@@ -252,7 +252,7 @@ static void ShowInitialConfig()
     }
 
     bSccOn = bSccRunning;
-}	
+}
 
 static void ShowServiceStates()
 {
@@ -265,9 +265,9 @@ static void ShowServiceStates()
     } else {
 	if (bFsRunning)
 	    SetWndText(hDlg, IDC_FS_ACTION_MSG, IDS_FS_WILL_STOP);
-	else	
+	else
 	    SetWndText(hDlg, IDC_FS_ACTION_MSG, IDS_FS_HOW_TO_RUN);
-    }	
+    }
 
     // DB
     switch (GetButtonState(hDlg, IDC_DB_SERVICE)) {
@@ -372,14 +372,14 @@ static void OnDbService()
     CheckEnableSc();
 
     ShowServiceStates();
-}	
+}
 
 static void OnBakService()
 {
     bBakOn = !bBakOn;
 
     ShowServiceStates();
-}	
+}
 
 static void OnFsService()
 {
@@ -388,7 +388,7 @@ static void OnFsService()
     CheckEnableSc();
 
     ShowServiceStates();
-}	
+}
 
 static void CheckEnableBak()
 {
@@ -432,7 +432,7 @@ static void CheckEnableSc()
 	bSccEnable = FALSE;
 	uiSccStatusMsg = IDS_SC_DISABLED;
 	uiSccActionMsg = IDS_SCC_ENABLE;
-    }		
+    }
 
     // Enable the sc server GUI
     if (bScsEnable) {
@@ -457,7 +457,7 @@ static void CheckEnableSc()
 	SetWndText(hDlg, IDC_SCC_ACTION_MSG, uiSccActionMsg);
 	EnableScMachine(FALSE);
     }
-}	
+}
 
 static void OnScServer()
 {
@@ -467,14 +467,14 @@ static void OnScServer()
 }
 
 static void OnScClient()
-{	
+{
     bSccOn = !bSccOn;
 
     ShowServiceStates();
 }
 
 static void OnScMachineChange()
-{	
+{
     if (!bSettingScMachine && IsButtonChecked(hDlg, IDC_SCC))
 	GetWndText(hDlg, IDC_SC_MACHINE, szScMachine, sizeof(szScMachine) / sizeof(szScMachine[0]));
 }
@@ -555,9 +555,9 @@ static BOOL PrepareToConfig()
         // We need to know the name of the SCM machine.  Are we the SCM machine?
         if (bScsRunning)
             lstrcpy(g_CfgData.szSysControlMachine, g_CfgData.szHostname);
-        else	
+        else
 	    eOptions = GAIO_GET_SCS;
-    }	
+    }
 
     // If doing a login only and the admin info is reusable
     if ((eOptions != GAIO_LOGIN_ONLY) || !g_CfgData.bReuseAdminInfo) {
@@ -567,7 +567,7 @@ static BOOL PrepareToConfig()
         // Use the admin info to get new handles
         if (!GetHandles(hDlg))
             return FALSE;
-    }	
+    }
 
     // Now that we are ready to configure, copy our local config info
     // into the structure that the config engine uses.
@@ -594,7 +594,7 @@ static BOOL PrepareToConfig()
     if (dwStatus || bCanceled) {
 	if (!bCanceled)
 	    ErrorDialog(dwStatus, IDS_CONFIG_CHECK_FAILED);
-    }	
+    }
 
     // Show the initial services config
     ShowInitialConfig();
@@ -606,7 +606,7 @@ static BOOL PrepareToConfig()
 static void CheckEnableApply()
 {
     BOOL bEnable = FALSE;
-	
+
     bEnable = (bFsRunning != bFsOn) || (bDbRunning != bDbOn) || (bBakRunning != bBakOn) ||
 	(bScsRunning != bScsOn) || (bSccRunning != bSccOn);
 
@@ -614,6 +614,6 @@ static void CheckEnableApply()
 	PropSheet_Changed(GetParent(hDlg), hDlg);
     else
 	PropSheet_UnChanged(GetParent(hDlg), hDlg);
-}	
+}
 
 

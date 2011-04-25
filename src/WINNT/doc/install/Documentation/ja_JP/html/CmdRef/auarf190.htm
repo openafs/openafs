@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -24,7 +24,7 @@
 <P>すべての発行者のチケット (トークン) を表示します。
 <P><STRONG>構文</STRONG>
 <PRE><B>kas listtickets</B> [<B>-name</B> &lt;<VAR>name of server</VAR>>]  [<B>-long</B>]  [<B>-help</B>]
-   
+
 <B>kas listt</B> [<B>-n</B> &lt;<VAR>name of server</VAR>>]  [<B>-l</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -47,7 +47,7 @@
 <P><STRONG>出力</STRONG>
 <P>この出力には、トークンを所有するユーザーの AFS UID、サービス (通常は <TT>afs</TT>)、それに有効なセル、および有効期限が、次の形式で示されます。メッセージにセルが表示されない場合、チケットはローカル・セル用のチケットになります。
 <PRE>   User's (AFS ID <VAR>AFS UID</VAR>) tokens for <VAR>service</VAR>[@<VAR>cellname</VAR>] [Expires <VAR>date</VAR>]
-   
+
 </PRE>
 <P><B>-long</B> フラグを指定すると、セッション・キーおよびトークンを構成する 8 進数が、トークンのキー・バージョン番号およびバイト数と一緒に出力されます。(バイト数が 56 でない場合には、エラーが発生しています。)
 <P>有効期限の代わりにマーカー <TT>[>> POSTDATED &lt;]</TT> が表示された場合、チケットは表示された時間まで有効になりません。(内部呼び出しによって日付の古いチケットを作成することができますが、そのための標準インターフェースは用意されていません。)
@@ -58,12 +58,12 @@
    User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
    User's (AFS ID 35@test.abc.com) tokens for afs@test.abc.com  \
              [Expires Wed Mar 31 13:54:26 1999]
-   
+
    % <B>kas listtickets -name afs -long</B>
    User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
    SessionKey: \375\205\351\227\032\310\263\013
    Ticket: (kvno = 0, len = 56): \033\005\221\156\203\278\312\058\016\133 <VAR>(etc.)</VAR>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>なし。パスワードは不要です。
@@ -71,11 +71,11 @@
 <P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
 <P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf189.htm">前ページ</A> &#124; <A HREF="auarf191.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf189.htm">前ページ</A> &#124; <A HREF="auarf191.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

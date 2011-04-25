@@ -12,9 +12,9 @@
 <p>
 The OpenAFS Provider maintains a list of AFS cells for each network identity.
 A list is created the first time AFS tokens are obtained for an
-identity or when the list of cells is 
+identity or when the list of cells is
 specified in the identity configuration panels.  Each AFS cell that
-is listed has associated with it a token acquisition method and the name of the Kerberos realm 
+is listed has associated with it a token acquisition method and the name of the Kerberos realm
 from which the AFS service ticket can be obtained.&nbsp; More details are provided in the <a
 href="token_methods.htm">Token Aquisition Methods</a> topic.</p>
 
@@ -26,7 +26,7 @@ specified when obtaining new credentials or configuring identities.
 <h3>Specifying AFS cells when obtaining new credentials</h3>
 
 <p>
-When the OpenAFS Provider is installed, it enhances the Network Identity Manager 
+When the OpenAFS Provider is installed, it enhances the Network Identity Manager
 &quot;New Credentials&quot;
 dialog with an AFS tokens options panel.  A typical new
 credentials dialog is shown below demonstrating AFS cells listed in the
@@ -90,11 +90,11 @@ cell.</li>
 
 <p>Note that only one token can exist per cell per login session.
 If a token exists for cell <em>X</em> while
-logged in as user <em>A</em>, then any attempt to obtain credentials for cell X 
-as user B will result in the loss of the previous token.&nbsp; Only one identity can 
+logged in as user <em>A</em>, then any attempt to obtain credentials for cell X
+as user B will result in the loss of the previous token.&nbsp; Only one identity can
 posses a token for a given cell at a time.</p>
 
-<p>Therefore, if you try to add a cell to an identity which is already listed in 
+<p>Therefore, if you try to add a cell to an identity which is already listed in
 the persistent cell list for another identity or
 which currently exists under a different identity, you will receive a
 warning such as the following:
@@ -104,8 +104,8 @@ warning such as the following:
 <img src="images/window_nc_prob.bmp" alt="Message displaying warning about a duplicate cell" />
 </p>
 
-<p>From here, you can decide to keep the cell listed for both identity (although 
-only one of them can be active at any given time), or remove the cell from all 
+<p>From here, you can decide to keep the cell listed for both identity (although
+only one of them can be active at any given time), or remove the cell from all
 the other identity and add it to
 the current one.  Also, you can cancel the add cell request.
 </p>
@@ -178,7 +178,7 @@ are done.
 <p><img src="images/window_cfg_afs_0.bmp" /></p>
 
 <p>You can reach this configuration panel by opening the configuration
-dialog (<span class="pre">Options</span> menu), and then clicking the persistent 
+dialog (<span class="pre">Options</span> menu), and then clicking the persistent
 identity you wish to modify options for.</p>
 
 </body>

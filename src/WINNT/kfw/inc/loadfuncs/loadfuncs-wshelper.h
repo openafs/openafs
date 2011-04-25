@@ -120,9 +120,9 @@ TYPEDEF_FUNC(
     int,
     WINAPI,
     res_mkquery,
-    (int op, const char FAR *dname, 
-     int qclass, int type, 
-     const char FAR *data, int datalen, 
+    (int op, const char FAR *dname,
+     int qclass, int type,
+     const char FAR *data, int datalen,
      const struct rrec FAR *newrr,
      char FAR *buf, int buflen)
     );
@@ -131,7 +131,7 @@ TYPEDEF_FUNC(
     int,
     WINAPI,
     res_send,
-    (const char FAR *msg, int msglen, 
+    (const char FAR *msg, int msglen,
      char FAR *answer, int anslen)
     );
 
@@ -139,9 +139,9 @@ TYPEDEF_FUNC(
     int,
     WINAPI,
     res_querydomain,
-    (const char FAR *name, 
-     const char FAR *domain, 
-     int qclass, int type, 
+    (const char FAR *name,
+     const char FAR *domain,
+     int qclass, int type,
      u_char FAR *answer, int anslen)
     );
 
@@ -149,8 +149,8 @@ TYPEDEF_FUNC(
     int,
     WINAPI,
     res_search,
-    (const char FAR *name, 
-     int qclass, int type, 
+    (const char FAR *name,
+     int qclass, int type,
      u_char FAR *answer, int anslen)
     );
 
@@ -158,9 +158,9 @@ TYPEDEF_FUNC(
     int,
     WINAPI,
     dn_comp,
-    (const u_char FAR *exp_dn, 
-     u_char FAR *comp_dn, 
-     int length, u_char FAR * FAR *dnptrs, 
+    (const u_char FAR *exp_dn,
+     u_char FAR *comp_dn,
+     int length, u_char FAR * FAR *dnptrs,
      u_char FAR * FAR *lastdnptr)
     );
 
@@ -168,10 +168,10 @@ TYPEDEF_FUNC(
     int,
     WINAPI,
     rdn_expand,
-    (const u_char FAR *msg, 
-     const u_char FAR *eomorig, 
-     const u_char FAR *comp_dn, 
-     u_char FAR *exp_dn, 
+    (const u_char FAR *msg,
+     const u_char FAR *eomorig,
+     const u_char FAR *comp_dn,
+     u_char FAR *exp_dn,
      int length)
     );
 
@@ -180,7 +180,7 @@ TYPEDEF_FUNC(
     WINAPI,
     hes_to_bind,
     (
-        LPSTR HesiodName, 
+        LPSTR HesiodName,
         LPSTR HesiodNameType
         )
     );
@@ -215,7 +215,7 @@ TYPEDEF_FUNC(
     struct servent *,
     WINAPI,
     hes_getservbyname,
-    (LPSTR name, 
+    (LPSTR name,
      LPSTR proto)
     );
 

@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -23,10 +23,10 @@
 <P><STRONG>目的</STRONG>
 <P>サイトからボリュームを削除します。ただし、VLDB の変更はしません。
 <P><STRONG>構文</STRONG>
-<PRE><B>vos zap -server</B> &lt;<VAR>machine name</VAR>>  <B>-partition</B> &lt;<VAR>partition name</VAR>> 
+<PRE><B>vos zap -server</B> &lt;<VAR>machine name</VAR>>  <B>-partition</B> &lt;<VAR>partition name</VAR>>
         <B>-id</B> &lt;<VAR>volume ID</VAR>>  [<B>-force</B>]  [<B>-backup</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
         [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
-    
+
 <B>vos z -s</B> &lt;<VAR>machine name</VAR>>  <B>-p</B> &lt;<VAR>partition name</VAR>>  <B>-i</B> &lt;<VAR>volume ID</VAR>>
       [<B>-f</B>]  [<B>-b</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
 </PRE>
@@ -72,7 +72,7 @@ VLDB にアクセスできない状況で有効です。コマンドの発行側は、後で <B>vos remove</B
 <P><STRONG>例</STRONG>
 <P>次の例は、ボリューム ID が 536870988 のボリュームをファイル・サーバー・マシン <B>fs6.abc.com</B>の区画 <B>/vicepf</B> から削除し、VLDB には変更を加えません。
 <PRE>   % <B>vos zap -server fs6.abc.com -partition f -id 536870988</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
@@ -82,11 +82,11 @@ VLDB にアクセスできない状況で有効です。コマンドの発行側は、後で <B>vos remove</B
 <P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
 <P><A HREF="auarf272.htm#HDRVOS_REMSITE">vos remsite</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf279.htm">前ページ</A> &#124; <A HREF="auarf281.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf279.htm">前ページ</A> &#124; <A HREF="auarf281.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

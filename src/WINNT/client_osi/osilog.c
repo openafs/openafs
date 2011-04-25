@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -57,7 +57,7 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
         LARGE_INTEGER bigFreq;
         LARGE_INTEGER bigTemp;
         LARGE_INTEGER bigJunk;
-	
+
 	if (osi_Once(&osi_logOnce)) {
 		QueryPerformanceFrequency(&bigFreq);
                 if (bigFreq.LowPart == 0 && bigFreq.HighPart == 0)
@@ -101,10 +101,10 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
 	logp->maxstringindex = size/3;
 	logp->stringindex = 0;
 	logp->stringsp = malloc(logp->maxstringindex * OSI_LOG_STRINGSIZE);
- 
+
         /* and sync */
         thrd_InitCrit(&logp->cs);
-        
+
 	StringCbCopyA(tbuffer, sizeof(tbuffer), "log:");
         StringCbCatA(tbuffer, sizeof(tbuffer), namep);
 	typep = osi_RegisterFDType(tbuffer, &osi_logFDOps, logp);
@@ -115,7 +115,7 @@ osi_log_t *osi_LogCreate(char *namep, size_t size)
 		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONSTRING, 1,
 			"Time (mics)", 0);
 	}
-	
+
         return logp;
 }
 
@@ -134,7 +134,7 @@ void osi_LogPanic(char *msgp, char *filep, size_t lineNumber)
 	                osi_LogAdd(tlp, "**PANIC** \"%s\" (file %s:%d)", (size_t)msgp, (size_t) filep, lineNumber, 0, 0);
 		else
 			osi_LogAdd(tlp, "**PANIC** \"%s\"", (size_t)msgp, 0, 0, 0, 0);
-		
+
                 /* should grab lock for this, but we're in panic, and better safe than
                  * sorry.
                  */
@@ -179,7 +179,7 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2,
          * by a bit.
          */
 	if (!logp->enabled) return;
-        
+
 	thrd_EnterCrit(&logp->cs);
 	if (logp->nused < logp->alloc) logp->nused++;
 	else {
@@ -216,7 +216,7 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, size_t p0, size_t p1, size_t p2,
 
 	    StringCbPrintfA(msg, sizeof(msg), formatp,
                             p0, p1, p2, p3, p4);
-	    StringCbPrintfA(wholemsg, sizeof(wholemsg), 
+	    StringCbPrintfA(wholemsg, sizeof(wholemsg),
                             "tid[%d] %s\n",
                             lep->tid, msg);
             OutputDebugStringA(wholemsg);
@@ -321,7 +321,7 @@ long osi_LogFDCreate(osi_fdType_t *typep, osi_fd_t **outpp)
 {
 	osi_logFD_t *lfdp;
 	osi_log_t *logp;
-        
+
         lfdp = malloc(sizeof(*lfdp));
         logp = lfdp->logp = typep->rockp;	/* the log we were created for */
         thrd_EnterCrit(&logp->cs);
@@ -341,13 +341,13 @@ long osi_LogFDGetInfo(osi_fd_t *ifd, osi_remGetInfoParms_t *outp)
     osi_logEntry_t *lep;
     char tbuffer[256];
     long ix;
-        
+
     lfdp = (osi_logFD_t *) ifd;
     logp = lfdp->logp;
-        
+
     /* see if we're done */
     if (lfdp->current >= lfdp->nused) return OSI_DBRPC_EOF;
-        
+
     /* grab lock */
     thrd_EnterCrit(&logp->cs);
 
@@ -403,9 +403,9 @@ void osi_InitTraceOption()
 
 
 #define MAXBUF_ 131
-void osi_LogEvent0(char *a,char *b) 
+void osi_LogEvent0(char *a,char *b)
 {
-	HANDLE h; 
+	HANDLE h;
     char *ptbuf[1];
 	if (!ISCLIENTTRACE(osi_TraceOption))
 		return;
@@ -416,7 +416,7 @@ void osi_LogEvent0(char *a,char *b)
 }
 
 
-void osi_LogEvent(char *a,char *b,char *c,...) 
+void osi_LogEvent(char *a,char *b,char *c,...)
 {
 	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
 	va_list marker;
@@ -437,7 +437,7 @@ char *osi_HexifyString(char *s) {
 	char *buf, *counter, *bufp;
 
 	len = strlen(s);
-	
+
 	bufp = buf = malloc( len * 3 ); /* [xx.xx.xx.xx\0] */
 
 	if(!buf) return NULL;

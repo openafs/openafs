@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -24,7 +24,7 @@
 
 osi_rwlock_t cm_volumeLock;
 
-long 
+long
 cm_ValidateVolume(void)
 {
     cm_volume_t * volp;
@@ -46,7 +46,7 @@ cm_ValidateVolume(void)
             fprintf(stderr, "cm_ValidateVolume failure: volp->allNextp->magic != CM_VOLUME_MAGIC\n");
             return -3;
         }
-        if ( count != 0 && volp == cm_data.allVolumesp || 
+        if ( count != 0 && volp == cm_data.allVolumesp ||
              count > cm_data.maxVolumes ) {
             afsi_log("cm_ValidateVolume failure: cm_data.allVolumep loop detected");
             fprintf(stderr, "cm_ValidateVolume failure: cm_data.allVolumep loop detected\n");
@@ -59,7 +59,7 @@ cm_ValidateVolume(void)
         fprintf(stderr, "cm_ValidateVolume failure: count != cm_data.currentVolumes\n");
         return -5;
     }
-    
+
     return 0;
 }
 
@@ -123,7 +123,7 @@ void cm_InitVolume(int newFile, long maxVols)
 
 
 /* returns true if the id is a decimal integer, in which case we interpret it
- * as an id.  make the cache manager much simpler.  
+ * as an id.  make the cache manager much simpler.
  * Stolen from src/volser/vlprocs.c */
 int
 cm_VolNameIsID(char *aname)
@@ -205,7 +205,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     }
 
 #ifdef AFS_FREELANCE_CLIENT
-    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->vol[RWVOL].ID == AFS_FAKE_ROOT_VOL_ID ) 
+    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && volp->vol[RWVOL].ID == AFS_FAKE_ROOT_VOL_ID )
     {
 	freelance = 1;
         memset(&vldbEntry, 0, sizeof(vldbEntry));
@@ -217,14 +217,14 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 #endif
     {
         while (volp->flags & CM_VOLUMEFLAG_UPDATING_VL) {
-            osi_Log3(afsd_logp, "cm_UpdateVolumeLocation sleeping name %s:%s flags 0x%x", 
+            osi_Log3(afsd_logp, "cm_UpdateVolumeLocation sleeping name %s:%s flags 0x%x",
                      volp->cellp->name, volp->namep, volp->flags);
             osi_SleepW((LONG_PTR) &volp->flags, &volp->rw);
             lock_ObtainWrite(&volp->rw);
-            osi_Log3(afsd_logp, "cm_UpdateVolumeLocation awake name %s:%s flags 0x%x", 
+            osi_Log3(afsd_logp, "cm_UpdateVolumeLocation awake name %s:%s flags 0x%x",
                      volp->cellp->name, volp->namep, volp->flags);
             if (!(volp->flags & CM_VOLUMEFLAG_RESET)) {
-                osi_Log3(afsd_logp, "cm_UpdateVolumeLocation nothing to do, waking others name %s:%s flags 0x%x", 
+                osi_Log3(afsd_logp, "cm_UpdateVolumeLocation nothing to do, waking others name %s:%s flags 0x%x",
                          volp->cellp->name, volp->namep, volp->flags);
                 osi_Wakeup((LONG_PTR) &volp->flags);
                 return 0;
@@ -238,21 +238,21 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             cm_UpdateCell(cellp, 0);
 
         /* now we have volume structure locked and held; make RPC to fill it */
-	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", 
-                  osi_LogSaveString(afsd_logp,volp->cellp->name), 
+	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s",
+                  osi_LogSaveString(afsd_logp,volp->cellp->name),
                   osi_LogSaveString(afsd_logp,volp->namep));
         do {
             struct rx_connection * rxconnp;
 
             code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
-            if (code) 
+            if (code)
                 continue;
 
             rxconnp = cm_GetRxConn(connp);
 #ifdef MULTIHOMED
             code = VL_GetEntryByNameU(rxconnp, volp->namep, &uvldbEntry);
             method = 2;
-            if ( code == RXGEN_OPCODE ) 
+            if ( code == RXGEN_OPCODE )
 #endif
             {
                 code = VL_GetEntryByNameN(rxconnp, volp->namep, &nvldbEntry);
@@ -266,12 +266,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
         code = cm_MapVLRPCError(code, reqp);
 	if ( code )
-	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x", 
-		      osi_LogSaveString(afsd_logp,volp->cellp->name), 
+	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x",
+		      osi_LogSaveString(afsd_logp,volp->cellp->name),
                       osi_LogSaveString(afsd_logp,volp->namep), code);
 	else
-	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS", 
-		      osi_LogSaveString(afsd_logp,volp->cellp->name), 
+	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS",
+		      osi_LogSaveString(afsd_logp,volp->cellp->name),
                       osi_LogSaveString(afsd_logp,volp->namep));
     }
 
@@ -287,23 +287,23 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         char name[VL_MAXNAMELEN];
 
         snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
-                
+
         /* now we have volume structure locked and held; make RPC to fill it */
-	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s", 
+	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s",
                  osi_LogSaveString(afsd_logp,volp->cellp->name),
                  osi_LogSaveString(afsd_logp,name));
         do {
             struct rx_connection * rxconnp;
 
             code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
-            if (code) 
+            if (code)
                 continue;
 
             rxconnp = cm_GetRxConn(connp);
 #ifdef MULTIHOMED
             code = VL_GetEntryByNameU(connp->rxconnp, name, &uvldbEntry);
             method = 2;
-            if ( code == RXGEN_OPCODE ) 
+            if ( code == RXGEN_OPCODE )
 #endif
             {
                 code = VL_GetEntryByNameN(connp->rxconnp, name, &nvldbEntry);
@@ -317,15 +317,15 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
         code = cm_MapVLRPCError(code, reqp);
 	if ( code )
-	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x", 
-		     osi_LogSaveString(afsd_logp,volp->cellp->name), 
+	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x",
+		     osi_LogSaveString(afsd_logp,volp->cellp->name),
                      osi_LogSaveString(afsd_logp,name), code);
 	else
-	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS", 
-		     osi_LogSaveString(afsd_logp,volp->cellp->name), 
+	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS",
+		     osi_LogSaveString(afsd_logp,volp->cellp->name),
                      osi_LogSaveString(afsd_logp,name));
     }
-    
+
     lock_ObtainWrite(&volp->rw);
     if (code == 0) {
         afs_int32 flags;
@@ -409,9 +409,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                         struct rx_connection *rxconnp;
 
                         code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
-                        if (code) 
+                        if (code)
                             continue;
-                   
+
                         rxconnp = cm_GetRxConn(connp);
                         code = VL_GetAddrsU(rxconnp, &attrs, &uuid, &unique, &nentries, &addrs);
                         rx_PutConnection(rxconnp);
@@ -419,10 +419,10 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 
                     if ( code ) {
                         code = cm_MapVLRPCError(code, reqp);
-                        osi_Log2(afsd_logp, "CALL VL_GetAddrsU serverNumber %u FAILURE, code 0x%x", 
+                        osi_Log2(afsd_logp, "CALL VL_GetAddrsU serverNumber %u FAILURE, code 0x%x",
                                  i, code);
                         continue;
-                    } 
+                    }
                     osi_Log1(afsd_logp, "CALL VL_GetAddrsU serverNumber %u SUCCESS", i);
 
                     addrp = addrs.bulkaddrs_val;
@@ -457,8 +457,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             } else if (len >= 10 && strcmp(name + len - 9, ".readonly") == 0) {
                 name[len - 9] = '\0';
             }
-            
-            osi_Log2(afsd_logp, "cm_UpdateVolume name %s -> %s", 
+
+            osi_Log2(afsd_logp, "cm_UpdateVolume name %s -> %s",
                      osi_LogSaveString(afsd_logp,volp->namep), osi_LogSaveString(afsd_logp,name));
 
             if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH)
@@ -515,7 +515,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         for (i=0; i<nServers; i++) {
             /* create a server entry */
             tflags = serverFlags[i];
-            if (tflags & VLSF_DONTUSE) 
+            if (tflags & VLSF_DONTUSE)
                 continue;
             tsockAddr.sin_port = htons(7000);
             tsockAddr.sin_family = AF_INET;
@@ -523,7 +523,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tsockAddr.sin_addr.s_addr = tempAddr;
             tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
             if (tsp && (method == 2) && (tsp->flags & CM_SERVERFLAG_UUID)) {
-                /* 
+                /*
                  * Check to see if the uuid of the server we know at this address
                  * matches the uuid of the server we are being told about by the
                  * vlserver.  If not, ...?
@@ -552,15 +552,15 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 lock_ObtainWrite(&volp->rw);
             }
             osi_assertx(tsp != NULL, "null cm_server_t");
-                        
+
             /*
              * if this server was created by fs setserverprefs
-             * then it won't have either a cell assignment or 
+             * then it won't have either a cell assignment or
              * a server uuid.
              */
-            if ( !tsp->cellp ) 
+            if ( !tsp->cellp )
                 tsp->cellp = cellp;
-            if ( (method == 2) && !(tsp->flags & CM_SERVERFLAG_UUID) && 
+            if ( (method == 2) && !(tsp->flags & CM_SERVERFLAG_UUID) &&
                  !afs_uuid_is_nil(&serverUUID[i])) {
                 tsp->uuid = serverUUID[i];
                 tsp->flags |= CM_SERVERFLAG_UUID;
@@ -596,7 +596,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     roServers_alldown = 0;
             }
             /* We don't use VLSF_BACKVOL !?! */
-            /* Because only the backup on the server holding the RW 
+            /* Because only the backup on the server holding the RW
              * volume can be valid.  This check prevents errors if a
              * RW is moved but the old backup is not removed.
              */
@@ -612,12 +612,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             }
             /* Drop the reference obtained by cm_FindServer() */
             cm_PutServer(tsp);
-        }       
+        }
 
         /*
          * Randomize RO list
          *
-         * If the first n servers have the same ipRank, then we 
+         * If the first n servers have the same ipRank, then we
          * randomly pick one among them and move it to the beginning.
          * We don't bother to re-order the whole list because
          * the rest of the list is used only if the first server is
@@ -661,8 +661,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         volp->flags &= ~CM_VOLUMEFLAG_RESET;
 
     volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
-    osi_Log4(afsd_logp, "cm_UpdateVolumeLocation done, waking others name %s:%s flags 0x%x code 0x%x", 
-             osi_LogSaveString(afsd_logp,volp->cellp->name), 
+    osi_Log4(afsd_logp, "cm_UpdateVolumeLocation done, waking others name %s:%s flags 0x%x code 0x%x",
+             osi_LogSaveString(afsd_logp,volp->cellp->name),
              osi_LogSaveString(afsd_logp,volp->namep), volp->flags, code);
     osi_Wakeup((LONG_PTR) &volp->flags);
 
@@ -706,9 +706,9 @@ cm_volume_t *cm_GetVolumeByFID(cm_fid_t *fidp)
     }
 
     /* hold the volume if we found it */
-    if (volp) 
+    if (volp)
         cm_GetVolume(volp);
-        
+
     lock_ReleaseRead(&cm_volumeLock);
     return volp;
 }
@@ -732,7 +732,7 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
 	       (unsigned) volumeID == volp->vol[ROVOL].ID ||
 	       (unsigned) volumeID == volp->vol[BACKVOL].ID))
 	    break;
-    }	
+    }
 
     volp2 = volp;
 #endif /* SEARCH_ALL_VOLUMES */
@@ -766,15 +766,15 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
 #endif
 
     /* hold the volume if we found it */
-    if (volp) 
+    if (volp)
         cm_GetVolume(volp);
-        
+
     lock_ReleaseRead(&cm_volumeLock);
 
     /* return it held */
     if (volp) {
         lock_ObtainWrite(&volp->rw);
-        
+
         code = 0;
         if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
             code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
@@ -795,19 +795,19 @@ long cm_FindVolumeByID(cm_cell_t *cellp, afs_uint32 volumeID, cm_user_t *userp,
         }
         return code;
     }
-        
+
     /* otherwise, we didn't find it so consult the VLDB */
     sprintf(volNameString, "%u", volumeID);
     code = cm_FindVolumeByName(cellp, volNameString, userp, reqp,
 			      flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL, outVolpp);
 
-    if (code == CM_ERROR_NOSUCHVOLUME && cellp->linkedName[0] && 
+    if (code == CM_ERROR_NOSUCHVOLUME && cellp->linkedName[0] &&
         !(flags & CM_GETVOL_FLAG_IGNORE_LINKED_CELL)) {
         cm_cell_t *linkedCellp = cm_GetCell(cellp->linkedName, flags);
 
         if (linkedCellp)
-            code = cm_FindVolumeByID(linkedCellp, volumeID, userp, reqp, 
-                                     flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL, 
+            code = cm_FindVolumeByID(linkedCellp, volumeID, userp, reqp,
+                                     flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL,
                                      outVolpp);
     }
     return code;
@@ -848,7 +848,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	if (cellp == volp->cellp && strcmp(name, volp->namep) == 0) {
 	    break;
 	}
-    }	
+    }
     volp2 = volp;
 #endif /* SEARCH_ALL_VOLUMES */
 
@@ -866,9 +866,9 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         afs_uint32 volType;
         /* otherwise, get from VLDB */
 
-        /* 
+        /*
          * Change to a write lock so that we have exclusive use of
-         * the first cm_volume_t with a refCount of 0 so that we 
+         * the first cm_volume_t with a refCount of 0 so that we
          * have time to increment it.
          */
         lock_ConvertRToW(&cm_volumeLock);
@@ -884,7 +884,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 #else
             for ( volp = cm_data.volumeLRULastp;
                   volp;
-                  volp = (cm_volume_t *) osi_QPrev(&volp->q)) 
+                  volp = (cm_volume_t *) osi_QPrev(&volp->q))
             {
 		if ( volp->refCount == 0 ) {
 		    /* There is one we can re-use */
@@ -940,7 +940,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	strncpy(volp->namep, name, VL_MAXNAMELEN);
 	volp->namep[VL_MAXNAMELEN-1] = '\0';
 	volp->flags = CM_VOLUMEFLAG_RESET;
-    
+
         for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
             volp->vol[volType].state = vl_unknown;
             volp->vol[volType].nextp = NULL;
@@ -956,7 +956,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         if (volp)
             cm_GetVolume(volp);
         lock_ReleaseRead(&cm_volumeLock);
-        
+
         if (!volp)
             return CM_ERROR_NOSUCHVOLUME;
 
@@ -966,7 +966,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
     /* if we get here we are holding the mutex */
     if ((volp->flags & CM_VOLUMEFLAG_RESET) && !(flags & CM_GETVOL_FLAG_NO_RESET)) {
         code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
-    }	
+    }
     lock_ReleaseWrite(&volp->rw);
 
     if (code == 0 && (type == BACKVOL && volp->vol[BACKVOL].ID == 0 ||
@@ -975,7 +975,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 
     if (code == 0) {
         *outVolpp = volp;
-		
+
         lock_ObtainWrite(&cm_volumeLock);
         if (!(volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE) ||
              (flags & CM_GETVOL_FLAG_NO_LRU_UPDATE))
@@ -994,19 +994,19 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         lock_ReleaseWrite(&cm_volumeLock);
     }
 
-    if (code == CM_ERROR_NOSUCHVOLUME && cellp->linkedName[0] && 
+    if (code == CM_ERROR_NOSUCHVOLUME && cellp->linkedName[0] &&
         !(flags & CM_GETVOL_FLAG_IGNORE_LINKED_CELL)) {
         cm_cell_t *linkedCellp = cm_GetCell(cellp->linkedName, flags);
 
         if (linkedCellp)
-            code = cm_FindVolumeByName(linkedCellp, volumeNamep, userp, reqp, 
-                                       flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL, 
+            code = cm_FindVolumeByName(linkedCellp, volumeNamep, userp, reqp,
+                                       flags | CM_GETVOL_FLAG_IGNORE_LINKED_CELL,
                                        outVolpp);
     }
     return code;
-}	
+}
 
-/* 
+/*
  * Only call this function in response to a VNOVOL or VMOVED error
  * from a file server.  Do not call it in response to CM_ERROR_NOSUCHVOLUME
  * as that can lead to recursive calls.
@@ -1021,11 +1021,11 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     afs_uint32  hash;
     long code;
 
-    if (!fidp) 
+    if (!fidp)
         return CM_ERROR_INVAL;
 
     cellp = cm_FindCellByID(fidp->cell, 0);
-    if (!cellp) 
+    if (!cellp)
         return CM_ERROR_NOSUCHCELL;
 
     /* search for the volume */
@@ -1037,7 +1037,7 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 	       fidp->volume == volp->vol[ROVOL].ID ||
 	       fidp->volume == volp->vol[BACKVOL].ID))
 	    break;
-    }	
+    }
 #endif /* SEARCH_ALL_VOLUMES */
 
     hash = CM_VOLUME_ID_HASH(fidp->volume);
@@ -1068,7 +1068,7 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     osi_assertx(volp == volp2, "unexpected cm_vol_t");
 #endif
     /* hold the volume if we found it */
-    if (volp) 
+    if (volp)
 	cm_GetVolume(volp);
 
     lock_ReleaseRead(&cm_volumeLock);
@@ -1122,11 +1122,11 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume, cm_user_
         return NULL;
     }
 
-    /* 
+    /*
      * Increment the refCount on deleted items as well.
-     * They will be freed by cm_FreeServerList when they get to zero 
+     * They will be freed by cm_FreeServerList when they get to zero
      */
-    for (current = *serverspp; current; current = current->next) 
+    for (current = *serverspp; current; current = current->next)
         current->refCount++;
 
     lock_ReleaseWrite(&cm_serverLock);
@@ -1235,7 +1235,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                 alldeleted = 0;
                 *onlinep = 1;
                 alldown = 0;
-                
+
                 if (serversp->status == srv_busy || serversp->status == srv_offline)
                     serversp->status = srv_not_busy;
             }
@@ -1285,7 +1285,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
     }
 }
 
-/* The return code is 0 if the volume is not online and 
+/* The return code is 0 if the volume is not online and
  * 1 if the volume is online
  */
 long
@@ -1313,7 +1313,7 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
 }
 
 
-/* 
+/*
  * called from the Daemon thread.
  * when checking the offline status, check those of the most recently used volumes first.
  */
@@ -1325,8 +1325,8 @@ void cm_CheckOfflineVolumes(void)
     extern int powerStateSuspended;
 
     lock_ObtainRead(&cm_volumeLock);
-    for (volp = cm_data.volumeLRULastp; 
-         volp && !daemon_ShutdownFlag && !powerStateSuspended; 
+    for (volp = cm_data.volumeLRULastp;
+         volp && !daemon_ShutdownFlag && !powerStateSuspended;
          volp=(cm_volume_t *) osi_QPrev(&volp->q)) {
         if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH) {
             InterlockedIncrement(&volp->refCount);
@@ -1360,14 +1360,14 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
     lock_ObtainWrite(&cm_serverLock);
     for (tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
-        sprintf(addr, "%d.%d.%d.%d", 
+        sprintf(addr, "%d.%d.%d.%d",
                  ((tsp->addr.sin_addr.s_addr & 0xff)),
                  ((tsp->addr.sin_addr.s_addr & 0xff00)>> 8),
                  ((tsp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                 ((tsp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+                 ((tsp->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
         if (tsrp->status == srv_deleted) {
-            osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s deleted", 
+            osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s deleted",
                      statep->ID, osi_LogSaveString(afsd_logp,addr));
             continue;
         }
@@ -1376,36 +1376,36 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
                 if (tsrp->status == srv_busy) {
-                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s busy", 
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s busy",
                               statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allOffline = 0;
                     someBusy = 1;
                 } else if (tsrp->status == srv_offline) {
-                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s offline", 
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s offline",
                               statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allBusy = 0;
                     someOffline = 1;
                 } else {
-                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s online", 
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s online",
                               statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allOffline = 0;
                     allBusy = 0;
                 }
             } else {
-                osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s down", 
+                osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s down",
                           statep->ID, osi_LogSaveString(afsd_logp,addr));
             }
             cm_PutServerNoLock(tsp);
         }
-    }   
+    }
     lock_ReleaseWrite(&cm_serverLock);
 
-    osi_Log5(afsd_logp, "cm_UpdateVolumeStatusInt allDown %d allBusy %d someBusy %d someOffline %d allOffline %d", 
+    osi_Log5(afsd_logp, "cm_UpdateVolumeStatusInt allDown %d allBusy %d someBusy %d someOffline %d allOffline %d",
              allDown, allBusy, someBusy, someOffline, allOffline);
 
     if (allDown)
 	newStatus = vl_alldown;
-    else if (allBusy || (someBusy && someOffline)) 
+    else if (allBusy || (someBusy && someOffline))
 	newStatus = vl_busy;
     else if (allOffline)
 	newStatus = vl_offline;
@@ -1432,8 +1432,8 @@ cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
         /*
          * If we are called with volID == 0 then something has gone wrong.
          * Most likely a race occurred in the server volume list maintenance.
-         * Since we don't know which volume's status should be updated, 
-         * just update all of them that are known to exist.  Better to be 
+         * Since we don't know which volume's status should be updated,
+         * just update all of them that are known to exist.  Better to be
          * correct than fast.
          */
         afs_uint32 volType;
@@ -1449,7 +1449,7 @@ cm_UpdateVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
 ** RO list according to the changed rank of server.
 */
 void cm_ChangeRankVolume(cm_server_t *tsp)
-{	
+{
     int 		code;
     cm_volume_t*	volp;
     afs_int32 refCount;
@@ -1476,27 +1476,27 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
 	osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
     }
     lock_ReleaseRead(&cm_volumeLock);
-}	
+}
 
-/* dump all volumes that have reference count > 0 to a file. 
- * cookie is used to identify this batch for easy parsing, 
- * and it a string provided by a caller 
+/* dump all volumes that have reference count > 0 to a file.
+ * cookie is used to identify this batch for easy parsing,
+ * and it a string provided by a caller
  */
 int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
 {
     int zilch;
     cm_volume_t *volp;
     char output[1024];
-  
+
     if (lock) {
 	lock_ObtainRead(&cm_scacheLock);
         lock_ObtainRead(&cm_volumeLock);
     }
-  
+
     sprintf(output, "%s - dumping volumes - cm_data.currentVolumes=%d, cm_data.maxVolumes=%d\r\n",
             cookie, cm_data.currentVolumes, cm_data.maxVolumes);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-  
+
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
         time_t t;
@@ -1553,16 +1553,16 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
     }
     sprintf(output, "%s - Done dumping volumes.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-  
+
     if (lock) {
         lock_ReleaseRead(&cm_volumeLock);
 	lock_ReleaseRead(&cm_scacheLock);
     }
-    return (0);     
+    return (0);
 }
 
 
-/* 
+/*
  * String hash function used by SDBM project.
  * It was chosen because it is fast and provides
  * decent coverage.
@@ -1587,7 +1587,7 @@ afs_uint32 SDBMHash(const char * str)
 void cm_AddVolumeToNameHashTable(cm_volume_t *volp)
 {
     int i;
-    
+
     if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH)
         return;
 
@@ -1604,7 +1604,7 @@ void cm_RemoveVolumeFromNameHashTable(cm_volume_t *volp)
     cm_volume_t **lvolpp;
     cm_volume_t *tvolp;
     int i;
-	
+
     if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH) {
 	/* hash it out first */
 	i = CM_VOLUME_NAME_HASH(volp->namep);
@@ -1639,7 +1639,7 @@ void cm_AddVolumeToIDHashTable(cm_volume_t *volp, afs_uint32 volType)
         statep->nextp = cm_data.volumeRWIDHashTablep[i];
         cm_data.volumeRWIDHashTablep[i] = volp;
         break;
-    case ROVOL:                                
+    case ROVOL:
         statep->nextp = cm_data.volumeROIDHashTablep[i];
         cm_data.volumeROIDHashTablep[i] = volp;
         break;
@@ -1659,7 +1659,7 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
     cm_volume_t *tvolp;
     struct cm_vol_state * statep;
     int i;
-	
+
     statep = cm_VolumeStateByType(volp, volType);
 
     if (statep->qflags & CM_VOLUME_QFLAG_IN_HASH) {
@@ -1776,7 +1776,7 @@ void cm_VolumeStatusNotification(cm_volume_t * volp, afs_uint32 volID, enum vols
              osi_LogSaveString(afsd_logp, volstr), volID, volstatus_str(old), volstatus_str(new));
 
     cm_VolStatus_Change_Notification(volp->cellp->cellID, volID, new);
-}       
+}
 
 enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
 {
@@ -1790,7 +1790,7 @@ enum volstatus cm_GetVolumeStatus(cm_volume_t *volp, afs_uint32 volID)
 /* Renew .readonly volume callbacks that are more than
  * 30 minutes old.  (A volume callback is issued for 2 hours.)
  */
-void 
+void
 cm_VolumeRenewROCallbacks(void)
 {
     cm_volume_t * volp;
@@ -1824,13 +1824,13 @@ cm_VolumeRenewROCallbacks(void)
     lock_ReleaseRead(&cm_volumeLock);
 }
 
-cm_vol_state_t * 
+cm_vol_state_t *
 cm_VolumeStateByType(cm_volume_t *volp, afs_uint32 volType)
 {
     return &volp->vol[volType];
 }
 
-cm_vol_state_t * 
+cm_vol_state_t *
 cm_VolumeStateByID(cm_volume_t *volp, afs_uint32 id)
 {
     cm_vol_state_t * statep = NULL;
@@ -1845,7 +1845,7 @@ cm_VolumeStateByID(cm_volume_t *volp, afs_uint32 id)
     return(statep);
 }
 
-cm_vol_state_t * 
+cm_vol_state_t *
 cm_VolumeStateByName(cm_volume_t *volp, char *volname)
 {
     size_t len = strlen(volname);
@@ -1855,13 +1855,13 @@ cm_VolumeStateByName(cm_volume_t *volp, char *volname)
         statep = &volp->vol[ROVOL];
     else if (cm_stricmp_utf8N(".backup", &volname[len-7]) == 0)
         statep = &volp->vol[BACKVOL];
-    else 
+    else
         statep = &volp->vol[RWVOL];
 
     return statep;
 }
 
-afs_int32 
+afs_int32
 cm_VolumeType(cm_volume_t *volp, afs_uint32 id)
 {
     if (id == volp->vol[RWVOL].ID)

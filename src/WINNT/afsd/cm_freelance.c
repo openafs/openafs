@@ -43,7 +43,7 @@ void cm_InitFakeRootDir();
 void cm_FreelanceChangeNotifier(void * parmp) {
     HKEY   hkFreelance = 0;
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_NOTIFY,
@@ -57,7 +57,7 @@ void cm_FreelanceChangeNotifier(void * parmp) {
     }
 
     while ( TRUE ) {
-    /* check hFreelanceChangeEvent to see if it is set. 
+    /* check hFreelanceChangeEvent to see if it is set.
      * if so, call cm_noteLocalMountPointChange()
      */
         if (RegNotifyChangeKeyValue( hkFreelance,   /* hKey */
@@ -74,12 +74,12 @@ void cm_FreelanceChangeNotifier(void * parmp) {
 
         if (WaitForSingleObject(hFreelanceChangeEvent, INFINITE) == WAIT_OBJECT_0)
         {
-            if (freelance_ShutdownFlag == 1) {     
-                RegCloseKey(hkFreelance);          
+            if (freelance_ShutdownFlag == 1) {
+                RegCloseKey(hkFreelance);
                 CloseHandle(hFreelanceChangeEvent);
-                hFreelanceChangeEvent = 0;         
-                return;                            
-            }                                      
+                hFreelanceChangeEvent = 0;
+                return;
+            }
             cm_noteLocalMountPointChange(FALSE);
         }
     }
@@ -88,7 +88,7 @@ void cm_FreelanceChangeNotifier(void * parmp) {
 void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
     HKEY   hkFreelance = 0;
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                       0,
                       KEY_NOTIFY,
@@ -102,7 +102,7 @@ void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
     }
 
     while ( TRUE ) {
-    /* check hFreelanceSymlinkChangeEvent to see if it is set. 
+    /* check hFreelanceSymlinkChangeEvent to see if it is set.
      * if so, call cm_noteLocalMountPointSymlinkChange()
      */
         if (RegNotifyChangeKeyValue( hkFreelance,   /* hKey */
@@ -119,25 +119,25 @@ void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
 
         if (WaitForSingleObject(hFreelanceSymlinkChangeEvent, INFINITE) == WAIT_OBJECT_0)
         {
-            if (freelance_ShutdownFlag == 1) {     
-                RegCloseKey(hkFreelance);          
+            if (freelance_ShutdownFlag == 1) {
+                RegCloseKey(hkFreelance);
                 CloseHandle(hFreelanceSymlinkChangeEvent);
-                hFreelanceSymlinkChangeEvent = 0;         
-                return;                            
-            }                                      
+                hFreelanceSymlinkChangeEvent = 0;
+                return;
+            }
             cm_noteLocalMountPointChange(FALSE);
         }
     }
 }
 
-void                                          
-cm_FreelanceShutdown(void)                    
-{                                             
-    freelance_ShutdownFlag = 1;               
-    if (hFreelanceChangeEvent != 0)           
-        thrd_SetEvent(hFreelanceChangeEvent); 
-    if (hFreelanceSymlinkChangeEvent != 0)           
-        thrd_SetEvent(hFreelanceSymlinkChangeEvent); 
+void
+cm_FreelanceShutdown(void)
+{
+    freelance_ShutdownFlag = 1;
+    if (hFreelanceChangeEvent != 0)
+        thrd_SetEvent(hFreelanceChangeEvent);
+    if (hFreelanceSymlinkChangeEvent != 0)
+        thrd_SetEvent(hFreelanceSymlinkChangeEvent);
 }
 
 static long
@@ -217,7 +217,7 @@ void cm_InitFakeRootDir() {
     // 4. the first chunk of all subsequent pages are used
     //    for page header stuff
     // 5. a max of CM_DIR_EPP entries are allowed per page
-    // 6. each entry takes 1 or more chunks, depending on 
+    // 6. each entry takes 1 or more chunks, depending on
     //    the size of the mount point string, as determined
     //    by cm_NameEntries
     // 7. each chunk is CM_DIR_CHUNKSIZE bytes
@@ -255,7 +255,7 @@ void cm_InitFakeRootDir() {
         cm_fakeDirSize = dirSize;
     }
 
-    // yj: when we get here, we've figured out how much memory we need and 
+    // yj: when we get here, we've figured out how much memory we need and
     // allocated the appropriate space for it. we now prceed to fill
     // it up with entries.
     curPage = 0;
@@ -272,11 +272,11 @@ void cm_InitFakeRootDir() {
     // the first page is special, it uses fakeDirHeader instead of fakePageHeader
     // we fill up the page with dirEntries that belong there and we make changes
     // to the fakeDirHeader.header.freeBitmap along the way. Then when we're done
-    // filling up the dirEntries in this page, we copy the fakeDirHeader into 
+    // filling up the dirEntries in this page, we copy the fakeDirHeader into
     // the top of the page.
 
     // init the freeBitmap array
-    for (i=0; i<8; i++) 
+    for (i=0; i<8; i++)
         fakeDirHeader.header.freeBitmap[i]=0;
 
     fakeDirHeader.header.freeBitmap[0] = 0xff;
@@ -302,10 +302,10 @@ void cm_InitFakeRootDir() {
     // 2. we have less than CM_DIR_EPP entries in page 0
     // 3. we're not out of chunks in page 0
 
-    while( (curDirEntry<cm_noLocalMountPoints) && 
+    while( (curDirEntry<cm_noLocalMountPoints) &&
            (curDirEntryInPage < CM_DIR_EPP) &&
-           (curChunk + cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0) <= CPP)) 
-    {       
+           (curChunk + cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0) <= CPP))
+    {
 
         noChunks = cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0);
         /* enforce the rule that only directories have odd vnode values */
@@ -336,7 +336,7 @@ void cm_InitFakeRootDir() {
     while (curDirEntry<cm_noLocalMountPoints) {
         // setup a new page
         curChunk = 1;			// the zeroth chunk is reserved for page header
-        curDirEntryInPage = 0; 
+        curDirEntryInPage = 0;
         for (i=0; i<8; i++) {
             fakePageHeader.freeBitmap[i]=0;
         }
@@ -380,13 +380,13 @@ void cm_InitFakeRootDir() {
 
 int cm_FakeRootFid(cm_fid_t *fidp)
 {
-    cm_SetFid(fidp, 
+    cm_SetFid(fidp,
               AFS_FAKE_ROOT_CELL_ID,            /* root cell */
               AFS_FAKE_ROOT_VOL_ID,            /* root.afs ? */
               1, 1);
     return 0;
 }
-  
+
 /* called directly from ioctl */
 /* called while not holding freelance lock */
 int cm_noteLocalMountPointChange(afs_int32 locked) {
@@ -415,7 +415,7 @@ int cm_reInitLocalMountPoints() {
     cm_req_t req;
 
     cm_InitReq(&req);
-	
+
     osi_Log0(afsd_logp,"----- freelance reinitialization starts ----- ");
 
     // first we invalidate all the SCPs that were created
@@ -442,8 +442,8 @@ int cm_reInitLocalMountPoints() {
 
                 // take the scp out of the hash
                 lock_ObtainWrite(&cm_scacheLock);
-                for (lscpp = &cm_data.scacheHashTablep[hash], tscp = cm_data.scacheHashTablep[hash]; 
-                     tscp; 
+                for (lscpp = &cm_data.scacheHashTablep[hash], tscp = cm_data.scacheHashTablep[hash];
+                     tscp;
                      lscpp = &tscp->nextp, tscp = tscp->nextp) {
                     if (tscp == scp) {
                         *lscpp = scp->nextp;
@@ -543,7 +543,7 @@ cm_enforceTrailingDot(char * line, size_t cchLine, DWORD *pdwSize)
 }
 
 
-// yj: open up the registry and read all the local mount 
+// yj: open up the registry and read all the local mount
 // points that are stored there. Part of the initialization
 // process for the freelance client.
 /* to be called while holding freelance lock. */
@@ -563,7 +563,7 @@ long cm_InitLocalMountPoints() {
     DWORD dwSymlinks = 0;
     FILETIME ftLastWriteTime;
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
@@ -598,7 +598,7 @@ long cm_InitLocalMountPoints() {
             }
         }
 
-        if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+        if (RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                           AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                           0,
                           NULL,
@@ -634,7 +634,7 @@ long cm_InitLocalMountPoints() {
         // now we read n lines and parse them into local mount points
         // where n is the number of local mount points there are, as
         // determined above.
-        // Each line in the ini file represents 1 local mount point and 
+        // Each line in the ini file represents 1 local mount point and
         // is in the format xxx#yyy:zzz, where xxx is the directory
         // entry name, yyy is the cell name and zzz is the volume name.
         // #yyy:zzz together make up the mount point.
@@ -683,12 +683,12 @@ long cm_InitLocalMountPoints() {
             aLocalMountPoint->namep=malloc(t-line+1);
             strncpy(aLocalMountPoint->namep, line, t-line);
             aLocalMountPoint->namep[t-line] = '\0';
-		
+
             /* copy the mount point string */
             aLocalMountPoint->mountPointStringp=malloc(strlen(t));
             strncpy(aLocalMountPoint->mountPointStringp, t, strlen(t)-1);
             aLocalMountPoint->mountPointStringp[strlen(t)-1] = '\0';
-    
+
             osi_Log2(afsd_logp,"found mount point: name %s, string %s",
                       osi_LogSaveString(afsd_logp,aLocalMountPoint->namep),
                       osi_LogSaveString(afsd_logp,aLocalMountPoint->mountPointStringp));
@@ -740,12 +740,12 @@ long cm_InitLocalMountPoints() {
             aLocalMountPoint->namep=malloc(t-line+1);
             strncpy(aLocalMountPoint->namep, line, t-line);
             aLocalMountPoint->namep[t-line] = '\0';
-		
+
             /* copy the symlink string */
             aLocalMountPoint->mountPointStringp=malloc(strlen(t)-1);
             strncpy(aLocalMountPoint->mountPointStringp, t+1, strlen(t)-2);
             aLocalMountPoint->mountPointStringp[strlen(t)-2] = '\0';
-    
+
             osi_Log2(afsd_logp,"found symlink: name %s, string %s",
                       osi_LogSaveString(afsd_logp,aLocalMountPoint->namep),
                       osi_LogSaveString(afsd_logp,aLocalMountPoint->mountPointStringp));
@@ -759,7 +759,7 @@ long cm_InitLocalMountPoints() {
         return 0;
     }
 
-    /* What follows is the old code to read freelance mount points 
+    /* What follows is the old code to read freelance mount points
      * out of a text file modified to copy the data into the registry
      */
     cm_GetConfigDir(hdir, sizeof(hdir));
@@ -774,7 +774,7 @@ long cm_InitLocalMountPoints() {
         fp = fopen(hdir, "r");
     }
 
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                     AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                     0,
                     NULL,
@@ -801,7 +801,7 @@ long cm_InitLocalMountPoints() {
 
     // we successfully opened the file
     osi_Log0(afsd_logp,"opened afs_freelance.ini");
-	
+
     // now we read the first line to see how many entries
     // there are
     fgets(line, sizeof(line), fp);
@@ -827,7 +827,7 @@ long cm_InitLocalMountPoints() {
     // now we read n lines and parse them into local mount points
     // where n is the number of local mount points there are, as
     // determined above.
-    // Each line in the ini file represents 1 local mount point and 
+    // Each line in the ini file represents 1 local mount point and
     // is in the format xxx#yyy:zzz, where xxx is the directory
     // entry name, yyy is the cell name and zzz is the volume name.
     // #yyy:zzz together make up the mount point.
@@ -900,14 +900,14 @@ long cm_FreelanceMountPointExists(char * filename, int prefix_ok)
     DWORD dwType, dwSize;
     DWORD dwMountPoints;
     DWORD dwIndex;
-        
+
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
-                      &hkFreelance) == ERROR_SUCCESS) 
+                      &hkFreelance) == ERROR_SUCCESS)
     {
         RegQueryInfoKey( hkFreelance,
                          NULL,  /* lpClass */
@@ -982,14 +982,14 @@ long cm_FreelanceSymlinkExists(char * filename, int prefix_ok)
     DWORD dwType, dwSize;
     DWORD dwSymlinks;
     DWORD dwIndex;
-        
+
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
-                      &hkFreelance) == ERROR_SUCCESS) 
+                      &hkFreelance) == ERROR_SUCCESS)
     {
         RegQueryInfoKey( hkFreelance,
                          NULL,  /* lpClass */
@@ -1069,9 +1069,9 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
        allow partial matches as a means of poor man's alias. */
     /* major performance issue? */
     osi_Log4(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s %s",
-              osi_LogSaveString(afsd_logp,filename), 
-              osi_LogSaveString(afsd_logp,cellname), 
-              osi_LogSaveString(afsd_logp,volume), 
+              osi_LogSaveString(afsd_logp,filename),
+              osi_LogSaveString(afsd_logp,cellname),
+              osi_LogSaveString(afsd_logp,volume),
               rw ? "rw" : "ro");
 
     if ( filename[0] == '\0' || cellname[0] == '\0' || volume[0] == '\0' )
@@ -1091,12 +1091,12 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             return CM_ERROR_INVAL;
     }
 
-    osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", 
+    osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s",
               osi_LogSaveString(afsd_logp,cellname));
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
@@ -1122,7 +1122,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             sprintf(line, "%s#%s:%s.", filename, fullname, volume);
 
         /* If we are adding a new value, there must be an unused name
-         * within the range 0 to dwMountPoints 
+         * within the range 0 to dwMountPoints
          */
         for ( dwIndex = 0; dwIndex <= dwMountPoints; dwIndex++ ) {
             char szIndex[16];
@@ -1138,7 +1138,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
                 break;
             } else {
                 int len = (int)strlen(filename);
-                if ( dwType == REG_SZ && !strncmp(filename, szMount, len) && 
+                if ( dwType == REG_SZ && !strncmp(filename, szMount, len) &&
                      (szMount[len] == '%' || szMount[len] == '#')) {
                     /* Replace the existing value */
                     dwType = REG_SZ;
@@ -1149,7 +1149,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             }
         }
         RegCloseKey(hkFreelance);
-    } else 
+    } else
     {
         cm_GetConfigDir(hfile, sizeof(hfile));
         strcat(hfile, AFS_FREELANCE_INI);
@@ -1181,7 +1181,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
 
         cm_InitReq(&req);
 
-        cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);        
+        cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);
         if (!cpath)
             return CM_ERROR_NOSUCHPATH;
 
@@ -1199,7 +1199,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
         *fidp = scp->fid;
         cm_ReleaseSCache(scp);
     }
-    
+
     return code;
 }
 
@@ -1219,7 +1219,7 @@ long cm_FreelanceRemoveMount(char *toremove)
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
@@ -1259,7 +1259,7 @@ long cm_FreelanceRemoveMount(char *toremove)
             }
         }
         RegCloseKey(hkFreelance);
-    } else 
+    } else
     {
         cm_GetConfigDir(hfile, sizeof(hfile));
         strcat(hfile, AFS_FREELANCE_INI);
@@ -1326,9 +1326,9 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
      * as mount point or a cellname, do not permit the creation of the symlink.
      */
     osi_Log2(afsd_logp,"Freelance Add Symlink request: filename=%s destination=%s",
-              osi_LogSaveString(afsd_logp,filename), 
+              osi_LogSaveString(afsd_logp,filename),
               osi_LogSaveString(afsd_logp,destination));
-    
+
     if ( filename[0] == '\0' || destination[0] == '\0' )
         return CM_ERROR_INVAL;
 
@@ -1358,7 +1358,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                         AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                         0,
                         NULL,
@@ -1385,7 +1385,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
         sprintf(line, "%s:%s.", filename, destination);
 
         /* If we are adding a new value, there must be an unused name
-         * within the range 0 to dwSymlinks 
+         * within the range 0 to dwSymlinks
          */
         for ( dwIndex = 0; dwIndex <= dwSymlinks; dwIndex++ ) {
             char szIndex[16];
@@ -1411,7 +1411,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
             }
         }
         RegCloseKey(hkFreelanceSymlinks);
-    } 
+    }
 
     /* Do this while we are holding the lock */
     cm_noteLocalMountPointChange(TRUE);
@@ -1425,7 +1425,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 
         cm_InitReq(&req);
 
-        cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);        
+        cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);
         if (!cpath) {
             code = CM_ERROR_NOSUCHPATH;
         } else {
@@ -1461,7 +1461,7 @@ long cm_FreelanceRemoveSymlink(char *toremove)
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
@@ -1500,7 +1500,7 @@ long cm_FreelanceRemoveSymlink(char *toremove)
         }
         RegCloseKey(hkFreelanceSymlinks);
     }
-    
+
     if (found) {
         /* Do this while we are holding the lock */
         cm_noteLocalMountPointChange(TRUE);
@@ -1513,9 +1513,9 @@ long
 cm_FreelanceFetchMountPointString(cm_scache_t *scp)
 {
     lock_ObtainMutex(&cm_Freelance_Lock);
-    if (!scp->mountPointStringp[0] && 
+    if (!scp->mountPointStringp[0] &&
         scp->fid.cell == AFS_FAKE_ROOT_CELL_ID &&
-        scp->fid.volume == AFS_FAKE_ROOT_VOL_ID && 
+        scp->fid.volume == AFS_FAKE_ROOT_VOL_ID &&
         scp->fid.unique <= cm_noLocalMountPoints) {
         strncpy(scp->mountPointStringp, cm_localMountPoints[scp->fid.unique-1].mountPointStringp, MOUNTPOINTLEN);
         scp->mountPointStringp[MOUNTPOINTLEN-1] = 0;	/* null terminate */
@@ -1525,21 +1525,21 @@ cm_FreelanceFetchMountPointString(cm_scache_t *scp)
     return 0;
 }
 
-long 
+long
 cm_FreelanceFetchFileType(cm_scache_t *scp)
 {
     lock_ObtainMutex(&cm_Freelance_Lock);
     if (scp->fid.cell == AFS_FAKE_ROOT_CELL_ID &&
-        scp->fid.volume == AFS_FAKE_ROOT_VOL_ID && 
-        scp->fid.unique <= cm_noLocalMountPoints) 
+        scp->fid.volume == AFS_FAKE_ROOT_VOL_ID &&
+        scp->fid.unique <= cm_noLocalMountPoints)
     {
         scp->fileType = cm_localMountPoints[scp->fid.unique-1].fileType;
-    
+
         if ( scp->fileType == CM_SCACHETYPE_SYMLINK &&
              !strnicmp(cm_localMountPoints[scp->fid.unique-1].mountPointStringp, "msdfs:", strlen("msdfs:")) )
         {
             scp->fileType = CM_SCACHETYPE_DFSLINK;
-        } 
+        }
     } else {
         scp->fileType = CM_SCACHETYPE_INVALID;
     }

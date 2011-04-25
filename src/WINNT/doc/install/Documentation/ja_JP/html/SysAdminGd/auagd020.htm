@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理の手引き</H1>
@@ -399,7 +399,7 @@ ACL の <B>a</B> アクセス権を持つディレクトリー上では、ユーザーは独自のグループを
 <B>r</B> (<B>読み取り</B>) および <B>l</B> (<B>ルックアップ</B>) アクセス権を許可します。この例は、
 1 つのディレクトリーだけを指定した場合に、<B>-dir</B> および <B>-acl</B>スイッチを省略する方法を示しています。
 <PRE>   % <B>fs sa ~/notes pat rl</B>
-   
+
    % <B>fs sa ~/notes pat read</B>
 </PRE>
 <P>以下の例では、現行作業ディレクトリーに対する ACL を編集しています。この例では、<B>system:anyuser</B> グループの項目を削除し、2 つの項目を追加しています。すべてのアクセス権を新規ユーザーに許可し、1 つの項目は、<B>a</B> (<B>管理</B>) 以外のすべてのアクセス権を <B>terry:colleagues</B> グループのメンバーに付与し、もう 1 つの項目では、<B>r</B> (<B>読み取り</B>) および <B>l</B> (<B>ルックアップ</B>) アクセス権を <B>system:authuser</B> グループに付与します。コマンドがここで 2 行に表示されているのは、ただ見やすくするためです。
@@ -420,7 +420,7 @@ ACL の <B>a</B> アクセス権を持つディレクトリー上では、ユーザーは独自のグループを
 </LI><LI><B>-negative</B> フラグを組み込んで <B>fs setacl</B> コマンドを発行して、ACL の禁止アクセス権機能グループの項目を編集します。項目を削除するには、アクセス権として、
 <B>none</B> 省略表記を指定します。ACL 項目がユーザーまたはグループに既にある場合は、アクション権を指定すると、既存の項目と完全に置換されます。
 <P>
-<PRE>   % <B>fs setacl -dir</B> &lt;<VAR>directory</VAR>><SUP>+</SUP> <B>-acl</B> &lt;<VAR>access list entries</VAR>><SUP>+</SUP>  <B>-negative</B> 
+<PRE>   % <B>fs setacl -dir</B> &lt;<VAR>directory</VAR>><SUP>+</SUP> <B>-acl</B> &lt;<VAR>access list entries</VAR>><SUP>+</SUP>  <B>-negative</B>
 </PRE>
 <P>
 <P>ここで、
@@ -465,7 +465,7 @@ ACL の <B>a</B> アクセス権を持つディレクトリー上では、ユーザーは独自のグループを
 </LI><LI><B>fs setacl</B> コマンドに <B> -clear</B> フラグを組み込んで発行し、通常アクセス権または禁止アクセス権を設定する前に、ACL を完全に消去します。ディレクトリーの所有者にはすべての権限を付与することが必要なので、この時点では normal permissions を設定することが多くの場合最適です。
 <P>
 <PRE>   % <B>fs setacl -dir</B> &lt;<VAR>directory</VAR>><SUP>+</SUP> <B>-acl</B> &lt;<VAR>access list entries</VAR>><SUP>+</SUP> <B>-clear</B>  \
-               [<B>-negative</B>] 
+               [<B>-negative</B>]
 </PRE>
 <P>
 <P>ここで、
@@ -649,11 +649,11 @@ AFS に保管されているファイルを実行するために、ユーザーは、ファイルのディレクトリ
 <B>l</B> アクセス権も必要です。
 </LI></UL>
 </LI></UL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd019.htm">前ページ</A> &#124; <A HREF="auagd021.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd019.htm">前ページ</A> &#124; <A HREF="auagd021.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 -->
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

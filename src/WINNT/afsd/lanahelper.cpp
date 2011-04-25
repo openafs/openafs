@@ -96,7 +96,7 @@ static HRESULT lana_ShellGetNameFromGuidW(WCHAR *wGuid, WCHAR *wName, int NameSi
 			      CLSCTX_INPROC_SERVER, IID_IShellFolder,
 			      reinterpret_cast<LPVOID *>(&pShellFolder));
     }
-    if (SUCCEEDED(hr)) 
+    if (SUCCEEDED(hr))
     {
         hr = pShellFolder->ParseDisplayName(NULL, NULL, szAdapterGuid, NULL,
 					    &pidl, NULL);
@@ -126,7 +126,7 @@ extern "C" int lana_GetNameFromGuid(char *Guid, char **Name)
     DWORD NameSize = MAX_PATH;
     char *name = NULL;
     HRESULT status;
-        
+
     // Convert the Guid string to Unicode.  First we ask only for the size
     // of the converted string.  Then we allocate a buffer of sufficient
     // size to hold the result of the conversion.
@@ -146,7 +146,7 @@ extern "C" int lana_GetNameFromGuid(char *Guid, char **Name)
     //status = getname_shellfolder(wGuid, wName, NameSize);
     status = E_NOTIMPL;
 
-    /* XXX end of pbh 9/11/03 temporary hack*/	
+    /* XXX end of pbh 9/11/03 temporary hack*/
 
     if (status == E_NOTIMPL) {
         // The IShellFolder interface is not implemented on this platform.
@@ -224,9 +224,9 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
     LANAINFO * lanainfo;
 
     // Open the NetBios Linkage key.
-    status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, RegNetBiosLinkageKeyName, 0, 
+    status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, RegNetBiosLinkageKeyName, 0,
                           KEY_QUERY_VALUE, &hkey);
-        
+
     if (status != ERROR_SUCCESS) {
 #ifndef NOLOGGING
         afsi_log("Failed to open NetBios Linkage key (status %ld)", status);
@@ -265,7 +265,7 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
             RegCloseKey(hkey);
             return NULL;
         }
-        status = RegQueryValueEx(hkey, "Bind", 0, &type, 
+        status = RegQueryValueEx(hkey, "Bind", 0, &type,
                                  (BYTE *) bindpaths, &bindpathsize);
     }
     RegCloseKey(hkey);
@@ -305,7 +305,7 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
         }
         memset(lanainfo, 0, sizeof(LANAINFO) * (nlana+1));
     }
-    
+
     int index = 0;
 
     // Iterate over the lana map entries and bind paths.
@@ -488,13 +488,13 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana, BOOL reset)
     if (status == 0)
         status = ncb.ncb_retcode;
     if (ncb.ncb_retcode != 0) {
-#ifndef NOLOGGING   
+#ifndef NOLOGGING
         afsi_log("NCBASTAT failed: lana %u, status %ld", lana, status);
 #endif
         return FALSE;
     }
     return (memcmp(astat.status.adapter_address, kWLA_MAC, 6) == 0 ||
-	    memcmp(astat.status.adapter_address, kVista_WLA_MAC, 6) == 0 
+	    memcmp(astat.status.adapter_address, kVista_WLA_MAC, 6) == 0
 #ifdef USE_VMWARE
              || memcmp(astat.status.adapter_address, kVMWare_MAC, 5) == 0
 #endif
@@ -547,7 +547,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	if(!(flags & LANA_NETBIOS_NAME_IN) || !pLana) {
 	    dummyLen = sizeof(regLana);
 	    rv = RegQueryValueEx(hkConfig, szLanAdapterValue, NULL, NULL, (LPBYTE) &regLana, &dummyLen);
-	    if(rv != ERROR_SUCCESS) 
+	    if(rv != ERROR_SUCCESS)
 		regLana = -1;
 	} else
 	    regLana = *pLana;
@@ -555,7 +555,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	if(!(flags & LANA_NETBIOS_NAME_IN) || !pIsGateway) {
 	    dummyLen = sizeof(regGateway);
 	    rv = RegQueryValueEx(hkConfig, szIsGatewayValue, NULL, NULL, (LPBYTE) &regGateway, &dummyLen);
-	    if(rv != ERROR_SUCCESS) 
+	    if(rv != ERROR_SUCCESS)
 		regGateway = 0;
 	} else
 	    regGateway = *pIsGateway;
@@ -563,7 +563,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 #ifdef USE_FINDLANABYNAME
 	dummyLen = sizeof(regNoFindLanaByName);
 	rv = RegQueryValueEx(hkConfig, szNoFindLanaByName, NULL, NULL, (LPBYTE) &regNoFindLanaByName, &dummyLen);
-	if(rv != ERROR_SUCCESS) 
+	if(rv != ERROR_SUCCESS)
 	    regNoFindLanaByName = 0;
 #endif
 
@@ -571,7 +571,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	// in netbios names over 15 chars.
 	dummyLen = sizeof(regNbName);
 	rv = RegQueryValueEx(hkConfig, szNetbiosNameValue, NULL, NULL, (LPBYTE) &regNbName, &dummyLen);
-	if(rv != ERROR_SUCCESS) 
+	if(rv != ERROR_SUCCESS)
 	    strcpy(regNbName, "AFS");
 	else {
             /* Max Suffix Length is 6 */
@@ -587,13 +587,13 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	    regLana = -1;
 	    regGateway = 0;
 	}
-#ifdef USE_FINDLANABYNAME 
+#ifdef USE_FINDLANABYNAME
         regNoFindLanaByName = 0;
 #endif
 	strcpy(regNbName, "AFS");
     }
 
-    if(regLana < 0 || regLana > MAX_LANA) 
+    if(regLana < 0 || regLana > MAX_LANA)
         regLana = -1;
 
     if(regLana == -1) {
@@ -613,7 +613,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	if(nLana == LANA_INVALID && !regGateway) {
 	    nLana = lana_FindLoopback(!(flags & LANA_NETBIOS_NO_RESET));
 	}
-	if(nLana != LANA_INVALID) 
+	if(nLana != LANA_INVALID)
             regLana = nLana;
     }
 
@@ -647,9 +647,9 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	}
     }
 
-    if(pLana) 
+    if(pLana)
 	*pLana = regLana;
-    if(pIsGateway) 
+    if(pIsGateway)
 	*pIsGateway = regGateway;
 
     strcpy(buffer, nbName);
@@ -678,7 +678,7 @@ extern "C" void lana_GetUncServerName(TCHAR *name, int type) {
     if(SUCCEEDED(lana_GetUncServerNameEx(szName,NULL,NULL,type))) {
 #ifdef _UNICODE
 	mbswcs(name,szName,MAX_NB_NAME_LENGTH);
-#else	
+#else
 	strncpy(name,szName,MAX_NB_NAME_LENGTH);
 #endif
     } else {

@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -118,9 +118,9 @@ unsigned long main_Scan1(unsigned long parm)
 		lock_ObtainRead(&main_bRWLock);
 		Sleep(0);
 		lock_ReleaseRead(&main_bRWLock);
-		
+
 		s1Loops++;
-                
+
                 osi_Log2(main_logp, "scan1 done %d %d", s1Loops, 2);
 	}
 	lock_ReleaseRead(&main_doneRWLock);
@@ -172,13 +172,13 @@ main_BasicTest(HANDLE hWnd)
 	long localDone;
 
 	osi_Init();
-        
+
         if (main_logp == NULL) {
         	main_logp = osi_LogCreate("basic", 0);
                 osi_LogEnable(main_logp);
                 osi_SetStatLog(main_logp);
         }
-	
+
 	/* create three processes, two modifiers and one scanner.  The scanner
 	 * checks that the basic invariants are being maintained, while the
 	 * modifiers modify the global variables, maintaining certain invariants
@@ -189,7 +189,7 @@ main_BasicTest(HANDLE hWnd)
 	a = 100;
 	b = 0;
 	done = 0;
-	
+
 	lock_InitializeRWLock(&main_doneRWLock, "done lock");
 	lock_InitializeRWLock(&main_bRWLock, "b lock");
 	lock_InitializeMutex(&main_aMutex, "a mutex");
@@ -228,7 +228,7 @@ main_BasicTest(HANDLE hWnd)
 		/* right now, we're waiting for 4 threads */
 		if (localDone == 4) break;
 	}
-	
+
 	wsprintf(main_screenText[0], "Test done.");
 	main_ForceDisplay(hWnd);
 

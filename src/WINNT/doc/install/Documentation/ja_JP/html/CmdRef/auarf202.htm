@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -29,10 +29,10 @@
 <PRE><B>kpasswd</B> [<B>-x</B>]  [<B>-principal</B> &lt;<VAR>user name</VAR>>]  [<B>-password</B> &lt;<VAR>user's password</VAR>>]
         [<B>-newpassword</B> &lt;<VAR>user's new password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
         [<B>-servers</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  [<B>-pipe</B>]  [<B>-help</B>]
-   
-<B>kpasswd</B> [<B>-x</B>]  [<B>-pr</B> &lt;<VAR>user name</VAR>>]  [<B>-pa</B> &lt;<VAR>user's password</VAR>>]  
-        [<B>-n</B> &lt;<VAR>user's new password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
-        [<B>-s</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  [<B>-pi</B>]  [<B>-h</B>] 
+
+<B>kpasswd</B> [<B>-x</B>]  [<B>-pr</B> &lt;<VAR>user name</VAR>>]  [<B>-pa</B> &lt;<VAR>user's password</VAR>>]
+        [<B>-n</B> &lt;<VAR>user's new password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+        [<B>-s</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  [<B>-pi</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
 <P><B>kpasswd</B> コマンドは、認証データベース項目に記録されているパスワードを変更します。デフォルトでは、コマンド・インタープリターは、発行者のローカル ID (UNIX UID) と一致する AFS ユーザー名のパスワードを変更します。代替ユーザーを指定する場合は、
@@ -52,7 +52,7 @@
 <B>-reuse</B> 引き数を使用して、旧パスワードの再利用を禁止する場合、コマンド・インタープリターは、そのパスワードが、ユーザーが最近使用した 20 個のパスワードのいずれにも類似していないことを確認します。この結果、シェルでは、次のようなエラー・メッセージが生成されます。
 <P>
 <PRE>   パスワードは再利用パスワードに類似しているため、変更されませんでした。
-   
+
 </PRE>
 <P>
 <P>ユーザーが、(手動またはスクリプトの実行で) 短時間で連続して、パスワードを 20 回変更することによって、この制限を無効にすることを防ぐためには、
@@ -73,7 +73,7 @@
 </B><DD>現在のパスワードを指定します。コマンド・インタープリターにパスワードのプロンプトを出させるには、この引き数を省略してください。この場合、入力されたパスワードは、外観では判別されないように表示されます。
 <P>
 <PRE>   旧パスワード : <VAR>current_password</VAR>
-   
+
 </PRE>
 <P><DT><B>-newpassword
 </B><DD>新規パスワードを指定します。新規パスワードは、
@@ -83,7 +83,7 @@
 <P>
 <PRE>   新規パスワード (中止の場合は &lt;RETURN&gt; を押す): <VAR>new_password</VAR>
    新規パスワードの再入力 : <VAR>new_password</VAR>
-   
+
 </PRE>
 <P><DT><B>-cell
 </B><DD>セルの認証サーバーにコマンドを送信して、パスワードを変更するセルを指定します。発行者は、セル名を、ローカルな <B>/usr/vice/etc/CellServDB</B> ファイルにリストされている、他のセルと区別できる最短形式に、省略することができます。
@@ -110,7 +110,7 @@ ABC Corporation セルでパスワードを変更しているところを示したものです。
    旧パスワード :
    新規パスワード (中止の場合は &lt;RETURN&gt; を押す) :
    確認のため、新規パスワードを再入力してください :
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>なし。
@@ -120,11 +120,11 @@ ABC Corporation セルでパスワードを変更しているところを示したものです。
 <P><A HREF="auarf200.htm#HDRKLOG">klog</A>
 <P><A HREF="auarf203.htm#HDRKPWVALID">kpwvalid</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf201.htm">前ページ</A> &#124; <A HREF="auarf203.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf201.htm">前ページ</A> &#124; <A HREF="auarf203.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

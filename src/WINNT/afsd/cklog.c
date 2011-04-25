@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -337,13 +337,13 @@ bad_lifetime:
     if (writeTicketFile) {
        code = krb_write_ticket_file (realm);
        if (!Silent) {
-          if (code) 
+          if (code)
               afs_com_err (rn, code, "writing Kerberos ticket file");
           else fprintf (stderr, "Wrote ticket file to /tmp\n");
       }
    }
 #endif
- 
+
 #ifdef DEBUGEXPIRES
        if (password_expires >= 0) {
 	 printf ("password expires at %ld\n", password_expires);

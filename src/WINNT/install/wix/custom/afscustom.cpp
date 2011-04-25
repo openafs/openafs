@@ -56,7 +56,7 @@ void ShowMsiError( MSIHANDLE hInstall, DWORD errcode, DWORD param ){
 	MsiRecordSetInteger(hRecord, 2, param);
 
 	MsiProcessMessage( hInstall, INSTALLMESSAGE_ERROR, hRecord );
-	
+
 	MsiCloseHandle( hRecord );
 }
 
@@ -185,34 +185,34 @@ DWORD InstNetProvider(MSIHANDLE hInstall, int bInst) {
     LONG rv;
     DWORD dwSize;
     HANDLE hProcHeap;
-    
+
     strOrder = (LPTSTR) 0;
-    
+
     CHECK(rv = RegOpenKeyEx( HKEY_LOCAL_MACHINE, STR_KEY_ORDER, 0, KEY_READ | KEY_WRITE, &hkOrder ));
-    
+
     dwSize = 0;
     CHECK(rv = RegQueryValueEx( hkOrder, STR_VAL_ORDER, NULL, NULL, NULL, &dwSize ) );
-    
+
     strOrder = new TCHAR[ (dwSize + STR_SERVICE_LEN) * sizeof(TCHAR) ];
-    
+
     CHECK(rv = RegQueryValueEx( hkOrder, STR_VAL_ORDER, NULL, NULL, (LPBYTE) strOrder, &dwSize));
-    
+
     npi_CheckAndAddRemove( strOrder, STR_SERVICE , bInst);
-    
+
     dwSize = (lstrlen( strOrder ) + 1) * sizeof(TCHAR);
-    
+
     CHECK(rv = RegSetValueEx( hkOrder, STR_VAL_ORDER, NULL, REG_SZ, (LPBYTE) strOrder, dwSize ));
-    
+
     /* everything else should be set by the MSI tables */
     rv = ERROR_SUCCESS;
 _cleanup:
-	
+
     if( rv != ERROR_SUCCESS ) {
         ShowMsiError( hInstall, ERR_NPI_FAILED, rv );
     }
-    
+
     if(strOrder) delete[] strOrder;
-    
+
     return rv;
 }
 
@@ -236,12 +236,12 @@ int npi_CheckAndAddRemove( LPTSTR str, LPTSTR str2, int bInst ) {
     lstrcat(charset,_T(","));
 
     match = _tcsstr(target, charset);
-    
+
     if ((match) && (bInst)) {
         ret = INP_ERR_PRESENT;
         goto cleanup;
     }
-    
+
     if ((!match) && (!bInst)) {
         ret = INP_ERR_ABSENT;
         goto cleanup;
@@ -257,7 +257,7 @@ int npi_CheckAndAddRemove( LPTSTR str, LPTSTR str2, int bInst ) {
 
     // if (!bInst) && (match)
     {
-       lstrcpy(str+(match-target),match+lstrlen(str2)+2);  
+       lstrcpy(str+(match-target),match+lstrlen(str2)+2);
        str[lstrlen(str)-1]=_T('\0');
        ret = INP_ERR_REMOVED;
        goto cleanup;
@@ -314,7 +314,7 @@ MSIDLLEXPORT UninstallNsisInstallation( MSIHANDLE hInstall )
 	sInfo.hStdOutput = 0;
 	sInfo.hStdError = 0;
 
-	if(!CreateProcess( 
+	if(!CreateProcess(
 		strPathUninst,
 		_T("Uninstall /S"),
 		NULL,
@@ -369,7 +369,7 @@ MSIDLLEXPORT UninstallNsisInstallation( MSIHANDLE hInstall )
 	}
 
 	rv = ERROR_SUCCESS;
-    
+
 _cleanup:
 	if(hIo) CloseHandle(hIo);
 	if(pInfo.hProcess)	CloseHandle( pInfo.hProcess );
@@ -426,8 +426,8 @@ UINT createAfsAdminGroup(void) {
     return status;
 }
 
-/* LookupAliasFromRid is from Microsoft KB 157234 
- * 
+/* LookupAliasFromRid is from Microsoft KB 157234
+ *
  * Author: Scott Field (sfield)    02-Oct-96
  */
 
@@ -466,7 +466,7 @@ UINT initializeAfsAdminGroup(void) {
     WCHAR AdminGroupName[UNLEN+1];
     DWORD cchName = UNLEN;
 
-    if (!LookupAliasFromRid( NULL, DOMAIN_ALIAS_RID_ADMINS, AdminGroupName, &cchName )) 
+    if (!LookupAliasFromRid( NULL, DOMAIN_ALIAS_RID_ADMINS, AdminGroupName, &cchName ))
     {
         /* if we fail, we will try the English string "Administrators" */
         wcsncpy(AdminGroupName, L"Administrators", UNLEN+1);

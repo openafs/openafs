@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -26,7 +26,7 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>fs mkmount -dir</B> &lt;<VAR>directory</VAR>>  <B>-vol</B> &lt;<VAR>volume name</VAR>>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
            [<B>-rw</B>]  [<B>-fast</B>]  [<B>-help</B>]
-   
+
 <B>fs mk -d</B> &lt;<VAR>directory</VAR>>  <B>-v</B> &lt;<VAR>volume name</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-r</B>]  [<B>-f</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -125,22 +125,22 @@ AFS ファイル・スペース・ルート
 <P><STRONG>例</STRONG>
 <P>次のコマンドは標準のマウント・ポイントを作成し、<B>/afs/abc.com/usr/smith</B> にボリューム <B>user.smith</B> をマウントします。
 <PRE>   % <B>cd /afs/abc.com/usr</B>
-      
+
    %<B> fs mkmount -dir smith -vol user.smith</B>
-   
+
 </PRE>
 <P>以下のコマンドは、
 ABC Corporation セルの <TT>root.cell</TT> ボリューム用の読み取り / 書き込みマウント・ポイントと正規のマウント・ポイントをそのセルのファイル・ツリーで作成します。
 2 番目のコマンドは、読み取り / 書き込みマウント・ポイントの名前の始まりにピリオドを入れるという規則に従っています。
 <PRE>   % <B>fs mkmount -dir /afs/abc.com -vol root.cell</B>
-   
+
    %<B> fs mkmount -dir /afs/.abc.com -vol root.cell -rw</B>
-   
+
 </PRE>
 <P>次のコマンドは、State University セルの <TT>root.cell</TT> ボリュームを、ABC Corporation セルのファイル・ツリーにマウントし、<B>/afs/stateu.edu</B> という標準セルラー・マウント・ポイントを作成します。
 ABC Corporation のキャッシュ・マネージャーがこのマウント・ポイントに出会うと、読み取り専用パスで State University セルに入り込みます。
 <PRE>   % <B>fs mkmount -dir /afs/stateu.edu -vol root.cell -c stateu.edu</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>発行者は、マウント・ポイントを格納するディレクトリーの ACL で
@@ -151,11 +151,11 @@ ABC Corporation のキャッシュ・マネージャーがこのマウント・ポイントに出会うと、読
 <P><A HREF="auarf151.htm#HDRFS_LSMOUNT">fs lsmount</A>
 <P><A HREF="auarf156.htm#HDRFS_RMMOUNT">fs rmmount</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf152.htm">前ページ</A> &#124; <A HREF="auarf154.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf152.htm">前ページ</A> &#124; <A HREF="auarf154.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

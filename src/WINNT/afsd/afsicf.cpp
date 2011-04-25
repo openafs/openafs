@@ -262,7 +262,7 @@ HRESULT icf_CheckAndAddPorts(INetFwProfile * fwProfile, global_afs_port_t * port
 		} else
 		    DEBUGOUT(("Added port\n"));
 
-	      abandon_port:	 	
+	      abandon_port:
 		fwPort->Release();
 	    }
 	}
@@ -276,7 +276,7 @@ HRESULT icf_CheckAndAddPorts(INetFwProfile * fwProfile, global_afs_port_t * port
 	fwPorts->Release();
 
     return rhr;
-}	
+}
 
 long icf_CheckAndAddAFSPorts(int portset) {
     HRESULT hr;
@@ -341,5 +341,5 @@ int main(int argc, char **argv) {
 	printf("Succeeded\n");
     printf("Done\n");
     return 0;
-}	
+}
 #endif

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -109,7 +109,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
     DWORD dummyLen;
 
     /* why does this have to query the registry each time? */
-	if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+	if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                       AFSREG_CLT_OPENAFS_SUBKEY,
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
@@ -122,7 +122,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
     }
 
     if (dwDelay > 5000)    /* do not allow a delay of more then 5 seconds */
-        dwDelay = 5000;   
+        dwDelay = 5000;
 
     osi_Log3(afsd_logp, "CallbackNotifyChange FileType %d Flags %lX Delay %dms",
               scp->fileType, scp->flags, dwDelay);
@@ -148,7 +148,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
             smb_NotifyChange( 0,
                               FILE_NOTIFY_GENERIC_FILE_FILTER,
                               dscp, NULL, NULL, TRUE);
-        if (dscp) 
+        if (dscp)
             cm_ReleaseSCache(dscp);
     }
 }
@@ -164,7 +164,7 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
     cm_fid_t tfid;
     cm_scache_t *scp;
     long hash;
-        
+
     tfid.cell = cellp ? cellp->cellID : 0;
     tfid.volume = fidp->Volume;
     tfid.vnode = fidp->Vnode;
@@ -173,7 +173,7 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
 
     osi_Log3(afsd_logp, "RevokeCallback vol %u vn %u uniq %u",
              fidp->Volume, fidp->Vnode, fidp->Unique);
-        
+
     /* do this first, so that if we're executing a callback granting call
      * at this moment, we kill it before it can be merged in.  Otherwise,
      * it could complete while we're doing the scan below, and get missed
@@ -194,7 +194,7 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
         {
             cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
-            osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
+            osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
             lock_ObtainWrite(&scp->rw);
@@ -202,7 +202,7 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
             lock_ReleaseWrite(&scp->rw);
 
             cm_CallbackNotifyChange(scp);
-            
+
             lock_ObtainWrite(&cm_scacheLock);
             cm_ReleaseSCacheNoLock(scp);
         }
@@ -265,7 +265,7 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                 lock_ReleaseWrite(&cm_scacheLock);
 
                 lock_ObtainWrite(&scp->rw);
-                osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
+                osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                 cm_DiscardSCache(scp);
                 lock_ReleaseWrite(&scp->rw);
@@ -379,7 +379,7 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
             osi_Log2(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d",
                      ntohl(host),
                      ntohs(port));
-        else 
+        else
             osi_Log3(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d for cell %s",
                      ntohl(host),
                      ntohs(port),
@@ -391,7 +391,7 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
 
     for (i=0; i < (long) fidsArrayp->AFSCBFids_len; i++) {
         tfidp = &fidsArrayp->AFSCBFids_val[i];
-                
+
         if (tfidp->Volume == 0)
             continue;   /* means don't do anything */
         else if (tfidp->Vnode == 0)
@@ -577,7 +577,7 @@ SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
         port = rx_PortOf(peerp);
     }
 
-    osi_Log3(afsd_logp, "SRXAFSCB_GetLock(%d) from host 0x%x port %d", 
+    osi_Log3(afsd_logp, "SRXAFSCB_GetLock(%d) from host 0x%x port %d",
              index, ntohl(host), ntohs(port));
 
     nentries = sizeof(ltable) / sizeof(struct _ltable);
@@ -949,7 +949,7 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
     for ( i=0; i < cm_noIPAddr; i++ ) {
         addr->addr_in[i] = cm_IPAddr[i];
         addr->subnetmask[i] = cm_SubnetMask[i];
-        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
+        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ?
             cm_NetMtu[i] : rx_mtu;
     }
 
@@ -985,7 +985,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
             if (UuidToString((UUID *)serverUuid, &p) == RPC_S_OK) {
                 osi_Log1(afsd_logp, "SRXAFSCB_InitCallBackState3 Uuid%s ->",osi_LogSaveString(afsd_logp,p));
                 RpcStringFree(&p);
-            } 
+            }
 
             tsp = cm_FindServerByUuid(serverUuid, CM_SERVER_FILE);
         }
@@ -1000,7 +1000,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
             osi_Log2(afsd_logp, "SRXAFSCB_InitCallBackState3 from host 0x%x port %d",
                      ntohl(host),
                      ntohs(port));
-        else 
+        else
             osi_Log3(afsd_logp, "SRXAFSCB_InitCallBackState3 from host 0x%x port %d for cell %s",
                      ntohl(host),
                      ntohs(port),
@@ -1017,7 +1017,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
 	tsp = cm_FindServer(&taddr, CM_SERVER_FILE);
 
 	osi_Log1(afsd_logp, "InitCallbackState3 server %x", tsp);
-	
+
 	/* record the callback in the racing revokes structure.  This
 	 * shouldn't be necessary, since we shouldn't be making callback
 	 * granting calls while we're going to get an initstate call,
@@ -1061,7 +1061,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
                 if (scp->cbExpires > 0 && scp->cbServerp != NULL) {
                     /* we have a callback, now decide if we should clear it */
                     if (cm_ServerEqual(scp->cbServerp, tsp)) {
-                        osi_Log4(afsd_logp, "InitCallbackState3 Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
+                        osi_Log4(afsd_logp, "InitCallbackState3 Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                                   scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                         cm_DiscardSCache(scp);
                         discarded = 1;
@@ -1078,9 +1078,9 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
 
             }	/* search one hash bucket */
 	}      	/* search all hash buckets */
-	
+
 	lock_ReleaseWrite(&cm_scacheLock);
-	
+
 	if (tsp) {
 	    /* reset the No flags on the server */
 	    cm_SetServerNo64Bit(tsp, 0);
@@ -1088,7 +1088,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
 
 	    /* we're done with the server structure */
             cm_PutServer(tsp);
-	} 
+	}
     }
     return 0;
 }
@@ -1115,8 +1115,8 @@ SRXAFSCB_ProbeUuid(struct rx_call *callp, afsUUID* clientUuid)
     if ( !afs_uuid_equal(&cm_data.Uuid, clientUuid) ) {
         UuidToString((UUID *)&cm_data.Uuid, &p);
         UuidToString((UUID *)clientUuid, &q);
-        osi_Log4(afsd_logp, "SRXAFSCB_ProbeUuid %s != %s from host 0x%x port %d", 
-                  osi_LogSaveString(afsd_logp,p), 
+        osi_Log4(afsd_logp, "SRXAFSCB_ProbeUuid %s != %s from host 0x%x port %d",
+                  osi_LogSaveString(afsd_logp,p),
                   osi_LogSaveString(afsd_logp,q),
                   ntohl(host),
                   ntohs(port));
@@ -1133,12 +1133,12 @@ SRXAFSCB_ProbeUuid(struct rx_call *callp, afsUUID* clientUuid)
 }
 
 /* debug interface */
-static int 
+static int
 GetCellCommon(afs_int32 a_cellnum, char **a_name, serverList *a_hosts)
 {
     afs_int32 sn;
     cm_cell_t * cellp;
-    cm_serverRef_t * serverRefp; 
+    cm_serverRef_t * serverRefp;
 
     cellp = cm_FindCellByID(a_cellnum, CM_FLAG_NOPROBE);
     if (!cellp) {
@@ -1149,14 +1149,14 @@ GetCellCommon(afs_int32 a_cellnum, char **a_name, serverList *a_hosts)
     lock_ObtainRead(&cm_serverLock);
     *a_name = strdup(cellp->name);
 
-    for ( sn = 0, serverRefp = cellp->vlServersp; 
+    for ( sn = 0, serverRefp = cellp->vlServersp;
           sn < AFSMAXCELLHOSTS && serverRefp;
           sn++, serverRefp = serverRefp->next);
 
     a_hosts->serverList_len = sn;
     a_hosts->serverList_val = (afs_int32 *)xdr_alloc(sn * sizeof(afs_int32));
 
-    for ( sn = 0, serverRefp = cellp->vlServersp; 
+    for ( sn = 0, serverRefp = cellp->vlServersp;
           sn < AFSMAXCELLHOSTS && serverRefp;
           sn++, serverRefp = serverRefp->next)
     {
@@ -1168,7 +1168,7 @@ GetCellCommon(afs_int32 a_cellnum, char **a_name, serverList *a_hosts)
 }
 
 /* debug interface */
-int 
+int
 SRXAFSCB_GetCellByNum(struct rx_call *callp, afs_int32 a_cellnum,
                       char **a_name, serverList *a_hosts)
 {
@@ -1199,8 +1199,8 @@ SRXAFSCB_GetCellByNum(struct rx_call *callp, afs_int32 a_cellnum,
 }
 
 /* debug interface */
-int 
-SRXAFSCB_TellMeAboutYourself( struct rx_call *callp, 
+int
+SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
                               struct interfaceAddr *addr,
                               Capabilities * capabilities)
 {
@@ -1245,7 +1245,7 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     for ( i=0; i < cm_noIPAddr; i++ ) {
         addr->addr_in[i] = cm_IPAddr[i];
         addr->subnetmask[i] = cm_SubnetMask[i];
-        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
+        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ?
             cm_NetMtu[i] : rx_mtu;
     }
     lock_ReleaseRead(&cm_syscfgLock);
@@ -1332,7 +1332,7 @@ int SRXAFSCB_GetServerPrefs(
  *      As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetCellServDB(struct rx_call *callp, afs_int32 index, char **a_name, 
+int SRXAFSCB_GetCellServDB(struct rx_call *callp, afs_int32 index, char **a_name,
                            serverList *a_hosts)
 {
     struct rx_connection *connp;
@@ -1448,7 +1448,7 @@ static void afs_MarshallCacheConfig(
     *(ptr++) = config->memCache;
 
 }
- 
+
 
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_GetCacheConfig
@@ -1536,7 +1536,7 @@ void cm_InitCallback(void)
 int cm_HaveCallback(cm_scache_t *scp)
 {
 #ifdef AFS_FREELANCE_CLIENT
-    if (cm_freelanceEnabled && 
+    if (cm_freelanceEnabled &&
         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
         if (cm_getLocalMountPointChange()) {
@@ -1589,7 +1589,7 @@ int cm_HaveCallback(cm_scache_t *scp)
  * When we're back from the call, we look at all of the callback revokes with
  * counter numbers greater than the one we recorded in our caller's structure,
  * and replay those that are higher than when we started the call.
- * 
+ *
  * We free all the structures in the queue when the count of the # of outstanding
  * callback-granting calls drops to zero.
  *
@@ -1623,16 +1623,16 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 
     lock_ObtainWrite(&cm_callbackLock);
     if (flags & CM_CALLBACK_MAINTAINCOUNT) {
-        osi_assertx(cm_activeCallbackGrantingCalls > 0, 
+        osi_assertx(cm_activeCallbackGrantingCalls > 0,
                     "CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
     }
     else {
         osi_assertx(cm_activeCallbackGrantingCalls-- > 0,
                     "!CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
     }
-    if (cm_activeCallbackGrantingCalls == 0) 
+    if (cm_activeCallbackGrantingCalls == 0)
         freeFlag = 1;
-    else 
+    else
         freeFlag = 0;
 
     /* record the callback; we'll clear it below if we really lose it */
@@ -1677,7 +1677,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                   ((revp->flags & CM_RACINGFLAG_CANCELVOL) &&
                     scp->fid.volume == revp->fid.volume)
                   ||
-                  ((revp->flags & CM_RACINGFLAG_CANCELALL) && 
+                  ((revp->flags & CM_RACINGFLAG_CANCELALL) &&
                    (revp->fid.cell == 0 || scp->fid.cell == revp->fid.cell)))) {
             /* this one matches */
             osi_Log4(afsd_logp,
@@ -1690,12 +1690,12 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                  (revp->flags & CM_RACINGFLAG_ALL))
                 cm_callbackDiscardROVolumeByFID(&scp->fid);
         }
-        if (freeFlag) 
+        if (freeFlag)
             free(revp);
     }
 
     /* if we freed the list, zap the pointer to it */
-    if (freeFlag) 
+    if (freeFlag)
         cm_racingRevokesp = NULL;
 
     lock_ReleaseWrite(&cm_callbackLock);
@@ -1753,7 +1753,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
     memset(&volSync, 0, sizeof(volSync));
 
-    osi_Log4(afsd_logp, "GetCallback scp 0x%p cell %d vol %d flags %lX", 
+    osi_Log4(afsd_logp, "GetCallback scp 0x%p cell %d vol %d flags %lX",
              scp, scp->fid.cell, scp->fid.volume, flags);
 
 #ifdef AFS_FREELANCE_CLIENT
@@ -1774,13 +1774,13 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             memset(&afsStatus, 0, sizeof(afsStatus));
             memset(&volSync, 0, sizeof(volSync));
 
-            // Fetch the status info 
+            // Fetch the status info
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
         }
         goto done;
     }
 #endif /* AFS_FREELANCE_CLIENT */
-	
+
     mustCall = (flags & 1);
     cm_AFSFidFromFid(&tfid, &scp->fid);
     while (1) {
@@ -1792,7 +1792,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
         /* otherwise, we have to make an RPC to get the status */
 	if (!syncop_done) {
-	    code = cm_SyncOp(scp, NULL, userp, reqp, 0, 
+	    code = cm_SyncOp(scp, NULL, userp, reqp, 0,
 			     CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
 	    if (code)
 		break;
@@ -1801,13 +1801,13 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         cm_StartCallbackGrantingCall(scp, &cbr);
         sfid = scp->fid;
         lock_ReleaseWrite(&scp->rw);
-		
+
         /* now make the RPC */
-        osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p vol %u vn %u uniq %u", 
+        osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p vol %u vn %u uniq %u",
                  scp, sfid.volume, sfid.vnode, sfid.unique);
         do {
             code = cm_ConnFromFID(&sfid, userp, reqp, &connp);
-            if (code) 
+            if (code)
                 continue;
 
             rxconnp = cm_GetRxConn(connp);
@@ -1819,10 +1819,10 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);
         if (code)
-            osi_Log4(afsd_logp, "CALL FetchStatus FAILURE code 0x%x scp 0x%p vol %u vn %u", 
+            osi_Log4(afsd_logp, "CALL FetchStatus FAILURE code 0x%x scp 0x%p vol %u vn %u",
                      code, scp, scp->fid.volume, scp->fid.vnode);
         else
-            osi_Log4(afsd_logp, "CALL FetchStatus SUCCESS scp 0x%p vol %u vn %u uniq %u", 
+            osi_Log4(afsd_logp, "CALL FetchStatus SUCCESS scp 0x%p vol %u vn %u uniq %u",
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
         lock_ObtainWrite(&scp->rw);
@@ -1841,13 +1841,13 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
   done:
     if (syncop_done)
 	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
-    
+
     if (code) {
 	osi_Log2(afsd_logp, "GetCallback Failed code 0x%x scp 0x%p -->",code, scp);
 	osi_Log4(afsd_logp, "            cell %u vol %u vn %u uniq %u",
 		 scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
     } else {
-	osi_Log3(afsd_logp, "GetCallback Complete scp 0x%p cell %d vol %d", 
+	osi_Log3(afsd_logp, "GetCallback Complete scp 0x%p cell %d vol %d",
 		  scp, scp->fid.cell, scp->fid.volume);
     }
 
@@ -1909,7 +1909,7 @@ cm_CBServersDownTime(cm_scache_t *scp, cm_volume_t *volp, time_t * pdownTime)
     }
 
     /* if the cbServerp does not match the current volume server list
-     * we report the callback server as up so the callback can be 
+     * we report the callback server as up so the callback can be
      * expired.
      */
 
@@ -1933,7 +1933,7 @@ void cm_CheckCBExpiration(void)
     cm_volume_t *volp;
     enum volstatus volstate;
     time_t now, downTime;
-        
+
     osi_Log0(afsd_logp, "CheckCBExpiration");
 
     now = time(NULL);
@@ -2014,14 +2014,14 @@ void cm_CheckCBExpiration(void)
 }
 
 
-void 
+void
 cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
 {
     long code;
     cm_conn_t *connp;
     struct rx_connection * rxconnp;
 
-    if ((tsp->type == CM_SERVER_FILE) && !(tsp->flags & CM_SERVERFLAG_DOWN)) 
+    if ((tsp->type == CM_SERVER_FILE) && !(tsp->flags & CM_SERVERFLAG_DOWN))
     {
         code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
         if (code == 0) {
@@ -2055,10 +2055,10 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
                         code = cm_FindVolumeByID(tsp->cellp, tsrvp->ids[i], cm_rootUserp,
                                                  &req, CM_GETVOL_FLAG_NO_LRU_UPDATE | CM_GETVOL_FLAG_NO_RESET, &volp);
                         lock_ObtainMutex(&tsp->mx);
-                        if (code == 0) {    
+                        if (code == 0) {
                             cm_UpdateVolumeStatus(volp, tsrvp->ids[i]);
                             cm_PutVolume(volp);
-                        }       
+                        }
                     }
                 }
             }

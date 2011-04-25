@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -54,7 +54,7 @@ static void EraseRect(HDC hdc, RECT rect)
 
     DeleteObject(hPen);
     DeleteObject(hbr);
-}	
+}
 
 static void DrawCircle(HDC hdc, RECT rect, COLORREF crCircleColor)
 {
@@ -68,7 +68,7 @@ static void DrawCircle(HDC hdc, RECT rect, COLORREF crCircleColor)
 
     int midX = rect.left + ((rect.right - rect.left) / 2);
     int midY = rect.top + ((rect.bottom - rect.top) / 2);
-	
+
     MoveToEx(hdc, midX - 1, midY - 2, 0);
     LineTo(hdc, midX + 2, midY - 2);
 
@@ -89,13 +89,13 @@ static void DrawCircle(HDC hdc, RECT rect, COLORREF crCircleColor)
 
     DeleteObject(hPen);
     DeleteObject(hBrush);
-}	
+}
 
 static void DrawCheckmark(HDC hdc, RECT rect)
 {
 #define cxCHECKBOX        (2+9+2)
 #define cyCHECKBOX        (2+9+2)
-	
+
     // Checkmark
     HPEN hpNew = CreatePen(PS_SOLID, 1, RGB(0,0,0));
     HGDIOBJ hpOld = (HPEN)SelectObject(hdc, hpNew);
@@ -103,7 +103,7 @@ static void DrawCheckmark(HDC hdc, RECT rect)
     POINT ptCheckbox;
     ptCheckbox.x = rect.left;
     ptCheckbox.y = rect.top + ((rect.bottom - rect.top) - cyCHECKBOX) / 2;
-	
+
     MoveToEx(hdc, ptCheckbox.x +3, ptCheckbox.y+5, NULL);
     LineTo(hdc, ptCheckbox.x +5, ptCheckbox.y+7);
     LineTo(hdc, ptCheckbox.x+10, ptCheckbox.y+2);
@@ -185,24 +185,24 @@ void PaintStepGraphic(HWND hwnd, STEP_STATE state)
 
     // Draw an image that corresponds to the state
     switch (state) {
-    case SS_STEP_IN_PROGRESS:	
+    case SS_STEP_IN_PROGRESS:
 	DrawCircle(hdc, rect, STEP_IN_PROGRESS_COLOR);
 	break;
 
-    case SS_STEP_TO_BE_DONE:	
+    case SS_STEP_TO_BE_DONE:
 	DrawCircle(hdc, rect, STEP_TO_BE_DONE_COLOR);
 	break;
 
-    case SS_STEP_FINISHED:		
+    case SS_STEP_FINISHED:
 	DrawCheckmark(hdc, rect);
 	break;
 
-	
-    case SS_STEP_FAILED: 
+
+    case SS_STEP_FAILED:
 	DrawX(hdc, rect);
 	break;
     }
-	
+
     EndPaint(hwnd, &ps);
 }
 
@@ -387,5 +387,5 @@ void CALLBACK PaintPageGraphic(LPWIZARD pWiz, HDC hdc, LPRECT prTarget, HPALETTE
 
     SetTextColor (hdc, clrTextOld);
     SelectObject (hdc, hFontOld);
-}	
+}
 

@@ -19,14 +19,14 @@ typedef struct _FUNC_INFO {
 
 void
 UnloadFuncs(
-    FUNC_INFO fi[], 
+    FUNC_INFO fi[],
     HINSTANCE h
     );
 
 int
 LoadFuncs(
-    const char* dll_name, 
-    FUNC_INFO fi[], 
+    const char* dll_name,
+    FUNC_INFO fi[],
     HINSTANCE* ph,  // [out, optional] - DLL handle
     int* pindex,    // [out, optional] - index of last func loaded (-1 if none)
     int cleanup,    // cleanup function pointers and unload on error

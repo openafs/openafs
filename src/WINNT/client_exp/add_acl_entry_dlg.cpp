@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -73,17 +73,17 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CAddAclEntryDlg message handlers
 
-void CAddAclEntryDlg::OnAddNegativeEntry() 
+void CAddAclEntryDlg::OnAddNegativeEntry()
 {
 	m_bNormal = FALSE;
 }
 
-void CAddAclEntryDlg::OnAddNormalEntry() 
+void CAddAclEntryDlg::OnAddNormalEntry()
 {
 	m_bNormal = TRUE;
 }
 
-BOOL CAddAclEntryDlg::OnInitDialog() 
+BOOL CAddAclEntryDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -95,7 +95,7 @@ BOOL CAddAclEntryDlg::OnInitDialog()
 	m_Name.SetFocus();
 
 	m_bNormal = TRUE;
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -122,7 +122,7 @@ CString CAddAclEntryDlg::MakePermString()
 	return str;
 }
 
-void CAddAclEntryDlg::OnOK() 
+void CAddAclEntryDlg::OnOK()
 {
 	m_Rights = MakePermString();
 	m_Name.GetWindowText(m_strName);
@@ -135,7 +135,7 @@ void CAddAclEntryDlg::OnOK()
 	CDialog::OnOK();
 }
 
-void CAddAclEntryDlg::OnChangeName() 
+void CAddAclEntryDlg::OnChangeName()
 {
 	m_Name.GetWindowText(m_strName);
 
@@ -143,7 +143,7 @@ void CAddAclEntryDlg::OnChangeName()
 		m_Ok.EnableWindow(TRUE);
 }
 
-void CAddAclEntryDlg::OnHelp() 
+void CAddAclEntryDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, ADD_ACL_ENTRY_HELP_ID);
 }

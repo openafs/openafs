@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -21,7 +21,7 @@ LIBINCLUDES = \
 PTHR_DLLFILE = $(DESTDIR)\lib\afspthread.dll
 
 $(OUT)\pthread.res: pthread.rc AFS_component_version_number.h
-	$(RC) /fo$*.res $(*F).rc 
+	$(RC) /fo$*.res $(*F).rc
 
 PTHR_DLLOBJS = \
 	$(OUT)\pthread.obj \
@@ -42,4 +42,4 @@ install9x: install
 clean::
 
 mkdir:
-	
+

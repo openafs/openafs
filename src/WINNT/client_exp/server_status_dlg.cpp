@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -74,7 +74,7 @@ BOOL CServerStatusDlg::Save()
 	return FALSE;
 }
 
-BOOL CServerStatusDlg::OnInitDialog() 
+BOOL CServerStatusDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -87,28 +87,28 @@ BOOL CServerStatusDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CServerStatusDlg::OnShowStatus() 
+void CServerStatusDlg::OnShowStatus()
 {
 	UpdateData(TRUE);
 
 	CheckServers(GetCellNameText(), (WHICH_CELLS)m_nCell, m_bFast);
 }
 
-void CServerStatusDlg::OnSpecifiedCell() 
+void CServerStatusDlg::OnSpecifiedCell()
 {
         m_nCell = SPECIFIC_CELL;
-        m_CellName.EnableWindow(TRUE);	
+        m_CellName.EnableWindow(TRUE);
 	CheckEnableShowStatus();
 }
 
-void CServerStatusDlg::OnLocalCell() 
+void CServerStatusDlg::OnLocalCell()
 {
         m_nCell = LOCAL_CELL;
 	m_CellName.EnableWindow(FALSE);
 	m_ShowStatus.EnableWindow(TRUE);
 }
 
-void CServerStatusDlg::OnAllCells() 
+void CServerStatusDlg::OnAllCells()
 {
         m_nCell = ALL_CELLS;
 	m_CellName.EnableWindow(FALSE);
@@ -120,7 +120,7 @@ void CServerStatusDlg::CheckEnableShowStatus()
 	m_ShowStatus.EnableWindow(GetCellNameText().GetLength() > 0);
 }
 
-void CServerStatusDlg::OnChangeCellName() 
+void CServerStatusDlg::OnChangeCellName()
 {
 	CheckEnableShowStatus();
 }
@@ -134,7 +134,7 @@ CString CServerStatusDlg::GetCellNameText()
 	return strCellName;
 }
 
-void CServerStatusDlg::OnHelp() 
+void CServerStatusDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, SERVER_STATUS_HELP_ID);
 }

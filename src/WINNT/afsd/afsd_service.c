@@ -70,7 +70,7 @@ static void afsd_notifier(char *msgp, char *filep, long line)
         msgp = "unspecified assert";
 
     if (filep)
-    	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP_WITH_MSG_AND_LOCATION, 
+    	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP_WITH_MSG_AND_LOCATION,
                  filep, line, msgp);
     else
 	LogEvent(EVENTLOG_ERROR_TYPE, MSG_SERVICE_ERROR_STOP_WITH_MSG, msgp);
@@ -100,11 +100,11 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     cm_DumpSCache(afsi_file, "a", 0);
     cm_DumpBufHashTable(afsi_file, "a", 0);
     cm_DumpServers(afsi_file, "a", 0);
-    smb_DumpVCP(afsi_file, "a", 0);			
+    smb_DumpVCP(afsi_file, "a", 0);
     rx_DumpPackets(afsi_file, "a");
     rx_DumpCalls(afsi_file, "a");
     afsi_log("--- end   dump ---");
-    
+
     GenerateMiniDump(NULL);
 
     SetEvent(WaitToTerminate);
@@ -168,7 +168,7 @@ afsd_ServiceFlushVolume(DWORD dwlpEventData)
 
 
 /* service control handler used in nt4 only for backward compat. */
-VOID WINAPI 
+VOID WINAPI
 afsd_ServiceControlHandler(DWORD ctrlCode)
 {
     HKEY parmKey;
@@ -228,7 +228,7 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
         /* XXX handle system shutdown */
         /* XXX handle pause & continue */
     }
-}       
+}
 
 
 /*
@@ -254,7 +254,7 @@ afsd_ServiceControlHandlerEx(
     osVersion.dwOSVersionInfoSize = sizeof(osVersion);
     GetVersionEx(&osVersion);
 
-    switch (ctrlCode) 
+    switch (ctrlCode)
     {
     case SERVICE_CONTROL_SHUTDOWN:
     case SERVICE_CONTROL_STOP:
@@ -311,121 +311,121 @@ afsd_ServiceControlHandlerEx(
 
         /* XXX handle system shutdown */
         /* XXX handle pause & continue */
-    case SERVICE_CONTROL_POWEREVENT:                                              
-        { 
+    case SERVICE_CONTROL_POWEREVENT:
+        {
 #ifdef DEBUG
 	    afsi_log("SERVICE_CONTROL_POWEREVENT");
 #endif
-            /*                                                                                
-            **	dwEventType of this notification == WPARAM of WM_POWERBROADCAST               
-            **	Return NO_ERROR == return TRUE for that message, i.e. accept request          
-            **	Return any error code to deny request,                                        
-            **	i.e. as if returning BROADCAST_QUERY_DENY                                     
-            */                                                                                
+            /*
+            **	dwEventType of this notification == WPARAM of WM_POWERBROADCAST
+            **	Return NO_ERROR == return TRUE for that message, i.e. accept request
+            **	Return any error code to deny request,
+            **	i.e. as if returning BROADCAST_QUERY_DENY
+            */
             if (powerEventsRegistered) {
-                switch((int) dwEventType)                                                         
-                {                                                                               
-                case PBT_APMQUERYSUSPEND:       
-                    afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND"); 
+                switch((int) dwEventType)
+                {
+                case PBT_APMQUERYSUSPEND:
+                    afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND");
                     /* Write all dirty buffers back to server */
 		    if ( !lana_OnlyLoopback() ) {
 			buf_CleanAndReset();
                         cm_SuspendSCache();
                     }
-                    afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND buf_CleanAndReset complete"); 
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMQUERYSTANDBY:                                                         
-                    afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY"); 
+                    afsi_log("SERVICE_CONTROL_APMQUERYSUSPEND buf_CleanAndReset complete");
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMQUERYSTANDBY:
+                    afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY");
                     /* Write all dirty buffers back to server */
 		    if ( !lana_OnlyLoopback() ) {
 			buf_CleanAndReset();
                         cm_SuspendSCache();
                     }
-                    afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY buf_CleanAndReset complete"); 
-                    dwRet = NO_ERROR;                                                             
-                    break;                                                                        
-							                                                                  
-                    /* allow remaining case PBT_WhatEver */                                           
-                case PBT_APMSUSPEND:                         
+                    afsi_log("SERVICE_CONTROL_APMQUERYSTANDBY buf_CleanAndReset complete");
+                    dwRet = NO_ERROR;
+                    break;
+
+                    /* allow remaining case PBT_WhatEver */
+                case PBT_APMSUSPEND:
                     afsi_log("SERVICE_CONTROL_APMSUSPEND");
 		    powerStateSuspended = 1;
 		    if (osVersion.dwMajorVersion >= 6) {
                         cm_SuspendSCache();
 			smb_StopListeners(0);
                     }
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMSTANDBY:                  
-                    afsi_log("SERVICE_CONTROL_APMSTANDBY"); 
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMSTANDBY:
+                    afsi_log("SERVICE_CONTROL_APMSTANDBY");
 		    powerStateSuspended = 1;
 		    if (osVersion.dwMajorVersion >= 6) {
                         cm_SuspendSCache();
 			smb_StopListeners(0);
                     }
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMRESUMECRITICAL:             
-                    afsi_log("SERVICE_CONTROL_APMRESUMECRITICAL"); 
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMRESUMECRITICAL:
+                    afsi_log("SERVICE_CONTROL_APMRESUMECRITICAL");
 		    if (osVersion.dwMajorVersion >= 6)
 			smb_RestartListeners(0);
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMRESUMESUSPEND:                                                        
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMRESUMESUSPEND:
 		    /* User logged in after suspend */
-                    afsi_log("SERVICE_CONTROL_APMRESUMESUSPEND"); 
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMRESUMESTANDBY:            
+                    afsi_log("SERVICE_CONTROL_APMRESUMESUSPEND");
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMRESUMESTANDBY:
 		    /* User logged in after standby */
-                    afsi_log("SERVICE_CONTROL_APMRESUMESTANDBY"); 
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMBATTERYLOW:                                                           
-                    afsi_log("SERVICE_CONTROL_APMBATTERYLOW"); 
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMPOWERSTATUSCHANGE:                                                    
+                    afsi_log("SERVICE_CONTROL_APMRESUMESTANDBY");
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMBATTERYLOW:
+                    afsi_log("SERVICE_CONTROL_APMBATTERYLOW");
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMPOWERSTATUSCHANGE:
 #ifdef DEBUG
 		    afsi_log("SERVICE_CONTROL_APMPOWERSTATUSCHANGE");
 #endif
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMOEMEVENT:                                                             
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMOEMEVENT:
 #ifdef DEBUG
-                    afsi_log("SERVICE_CONTROL_APMOEMEVENT"); 
+                    afsi_log("SERVICE_CONTROL_APMOEMEVENT");
 #endif
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                case PBT_APMRESUMEAUTOMATIC:          
+                    dwRet = NO_ERROR;
+                    break;
+                case PBT_APMRESUMEAUTOMATIC:
 		    /* This is the message delivered once all devices are up */
-                    afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC"); 
+                    afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC");
 		    powerStateSuspended = 0;
 		    if (osVersion.dwMajorVersion >= 6) {
 			smb_SetLanAdapterChangeDetected();
                     }
-                    dwRet = NO_ERROR;                       
-                    break;                                  
-                default:                                                                          
-                    afsi_log("SERVICE_CONTROL_unknown"); 
-                    dwRet = NO_ERROR;                       
-                }   
+                    dwRet = NO_ERROR;
+                    break;
+                default:
+                    afsi_log("SERVICE_CONTROL_unknown");
+                    dwRet = NO_ERROR;
+                }
             }
         }
         break;
-    case SERVICE_CONTROL_CUSTOM_DUMP: 
+    case SERVICE_CONTROL_CUSTOM_DUMP:
         {
-            afsi_log("SERVICE_CONTROL_CUSTOM_DUMP"); 
+            afsi_log("SERVICE_CONTROL_CUSTOM_DUMP");
             GenerateMiniDump(NULL);
 	    dwRet = NO_ERROR;
         }
         break;
-    }		/* end switch(ctrlCode) */                                                        
-    return dwRet;   
+    }		/* end switch(ctrlCode) */
+    return dwRet;
 }
 
 /* There is similar code in client_config\drivemap.cpp GlobalMountDrive()
- * 
+ *
  * Mount a drive into AFS if there global mapping
  */
 /* DEE Could check first if we are run as SYSTEM */
@@ -477,18 +477,18 @@ static DWORD __stdcall MountGlobalDrivesThread(void * notUsed)
             nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;       /* ignored parameter */
 
             dwResult = WNetAddConnection2(&nr,NULL,NULL,0);
-            afsi_log("GlobalAutoMap of %s to %s %s (%d)", szDriveToMapTo, szSubMount, 
+            afsi_log("GlobalAutoMap of %s to %s %s (%d)", szDriveToMapTo, szSubMount,
                      (dwResult == NO_ERROR) ? "succeeded" : "failed", dwResult);
             if (dwResult == NO_ERROR) {
                 break;
             }
             /* wait for smb server to come up */
-            Sleep((DWORD)1000 /* miliseconds */);		
+            Sleep((DWORD)1000 /* miliseconds */);
 
             /* Disconnect any previous mappings */
             dwResult = WNetCancelConnection2(szDriveToMapTo, 0, TRUE);
         }
-    }        
+    }
 
     RegCloseKey(hKey);
     return 0;
@@ -559,12 +559,12 @@ static void DismountGlobalDrives()
         }
 
         sprintf(szAfsPath,"\\\\%s\\%s",cm_NetbiosName,szSubMount);
-		    
+
         dwResult = WNetCancelConnection2(szDriveToMapTo, 0, TRUE);
         dwResult = WNetCancelConnection(szAfsPath, TRUE);
-        
+
         afsi_log("Disconnect from GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
-    }        
+    }
 
     RegCloseKey(hKey);
 }
@@ -669,7 +669,7 @@ void LoadCrypt32(void)
     (FARPROC) pCryptMsgClose = GetProcAddress( hCrypt32, "CryptMsgClose" );
     (FARPROC) pCertCompareCertificate = GetProcAddress( hCrypt32, "CertCompareCertificate" );
     (FARPROC) pCertFreeCertificateContext = GetProcAddress( hCrypt32, "CertFreeCertificateContext" );
-    
+
     if ( !pCertGetNameString ||
          !pCryptQueryObject ||
          !pCryptMsgGetParam ||
@@ -750,7 +750,7 @@ PCCERT_CONTEXT GetCertCtx(CHAR * filename)
 			        0,
 			        (PVOID)pSignerInfo,
 			        &dwSignerInfo);
-    
+
     if (!fResult) {
         afsi_log("CryptMsgGetParam failed for [%s] with error 0x%x",
 		 filename,
@@ -804,7 +804,7 @@ BOOL VerifyTrust(CHAR * filename)
     LONG (WINAPI *pWinVerifyTrust)(HWND hWnd, GUID* pgActionID, WINTRUST_DATA* pWinTrustData) = NULL;
     HINSTANCE hWinTrust;
 
-    if (filename == NULL ) 
+    if (filename == NULL )
         return FALSE;
 
     hWinTrust = LoadLibrary("wintrust");
@@ -842,7 +842,7 @@ BOOL VerifyTrust(CHAR * filename)
         switch (gle) {
         case TRUST_E_PROVIDER_UNKNOWN:
             afsi_log("VerifyTrust failed: \"Generic Verify V2\" Provider Unknown");
-            break;  
+            break;
         case TRUST_E_NOSIGNATURE:
             afsi_log("VerifyTrust failed: Unsigned executable");
             break;
@@ -982,7 +982,7 @@ BOOL AFSModulesVerify(void)
     }
 
 
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                         AFSREG_CLT_SVC_PARAM_SUBKEY,
                         0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
@@ -1001,7 +1001,7 @@ BOOL AFSModulesVerify(void)
         RegCloseKey (parmKey);
     }
 
-    if (verifyServiceSig 
+    if (verifyServiceSig
 #ifndef _WIN64
          && cacheSize < 716800
 #endif
@@ -1058,7 +1058,7 @@ BOOL AFSModulesVerify(void)
                         if ( !VerifyTrust(szModName) ) {
                             afsi_log("Signature Verification failed: %s", szModName);
                             success = FALSE;
-                        } 
+                        }
                         else if (pCtxService) {
                             PCCERT_CONTEXT pCtx = GetCertCtx(szModName);
 
@@ -1068,10 +1068,10 @@ BOOL AFSModulesVerify(void)
                                 afsi_log("Certificate mismatch: %s", szModName);
                                 if (pCtx)
                                     LogCertCtx(pCtx);
-                                
+
                                 success = FALSE;
                             }
-                            
+
                             if (pCtx)
                                 pCertFreeCertificateContext(pCtx);
                         }
@@ -1100,7 +1100,7 @@ typedef SERVICE_STATUS_HANDLE ( * RegisterServiceCtrlHandlerExFunc )(  LPCTSTR ,
 typedef SERVICE_STATUS_HANDLE ( * RegisterServiceCtrlHandlerFunc   )(  LPCTSTR ,  LPHANDLER_FUNCTION );
 
 RegisterServiceCtrlHandlerExFunc pRegisterServiceCtrlHandlerEx = NULL;
-RegisterServiceCtrlHandlerFunc   pRegisterServiceCtrlHandler   = NULL; 
+RegisterServiceCtrlHandlerFunc   pRegisterServiceCtrlHandler   = NULL;
 
 VOID WINAPI
 afsd_Main(DWORD argc, LPTSTR *argv)
@@ -1118,12 +1118,12 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     void afsd_DbgBreakAllocInit();
 
     afsd_DbgBreakAllocInit();
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ |
                    _CRTDBG_CHECK_CRT_DF /* | _CRTDBG_DELAY_FREE_MEM_DF */ );
-#endif 
+#endif
 
     afsd_SetUnhandledExceptionFilter();
-       
+
     osi_InitPanic(afsd_notifier);
     osi_InitTraceOption();
 
@@ -1185,12 +1185,12 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         int bpower = TRUE;
 
         /* see if we should handle power notifications */
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                             0, KEY_QUERY_VALUE, &hkParm);
         if (code == ERROR_SUCCESS) {
             dummyLen = sizeof(bpower);
             code = RegQueryValueEx(hkParm, "FlushOnHibernate", NULL, NULL,
-                (BYTE *) &bpower, &dummyLen);      
+                (BYTE *) &bpower, &dummyLen);
 
             if(code != ERROR_SUCCESS)
                 bpower = TRUE;
@@ -1243,7 +1243,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
                 ServiceStatus.dwWaitHint = 0;
                 ServiceStatus.dwControlsAccepted = 0;
                 SetServiceStatus(StatusHandle, &ServiceStatus);
-            }       
+            }
             /* exit if initialization failed */
             return;
         }
@@ -1271,7 +1271,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     MainThreadId = GetCurrentThreadId();
     jmpret = setjmp(notifier_jmp);
 
-    if (jmpret == 0) 
+    if (jmpret == 0)
 #endif /* JUMP */
     {
         code = afsd_InitCM(&reason);
@@ -1309,7 +1309,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
                     ServiceStatus.dwWaitHint = 0;
                     ServiceStatus.dwControlsAccepted = 0;
                     SetServiceStatus(StatusHandle, &ServiceStatus);
-                }   
+                }
                 /* exit if initialization failed */
                 return;
             }
@@ -1354,7 +1354,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
                     ServiceStatus.dwWaitHint = 0;
                     ServiceStatus.dwControlsAccepted = 0;
                     SetServiceStatus(StatusHandle, &ServiceStatus);
-                }   
+                }
                 /* exit if initialization failed */
                 return;
             }
@@ -1379,7 +1379,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
             ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT | SERVICE_ACCEPT_PARAMCHANGE;
             SetServiceStatus(StatusHandle, &ServiceStatus);
         }
-#endif  
+#endif
 
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_RUNNING);
     }
@@ -1406,7 +1406,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
                 ServiceStatus.dwWaitHint = 0;
                 ServiceStatus.dwControlsAccepted = 0;
                 SetServiceStatus(StatusHandle, &ServiceStatus);
-            }                       
+            }
             /* exit if initialization failed */
             return;
         }
@@ -1451,23 +1451,23 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     DismountGlobalDrives();
     afsi_log("Global Drives dismounted");
-                                         
-    smb_Shutdown();                      
-    afsi_log("smb shutdown complete");   
-                                         
-    RpcShutdown();                       
+
+    smb_Shutdown();
+    afsi_log("smb shutdown complete");
+
+    RpcShutdown();
 
     cm_ReleaseAllLocks();
 
-    cm_DaemonShutdown();                 
+    cm_DaemonShutdown();
     afsi_log("Daemon shutdown complete");
-    
-    buf_Shutdown();                      
+
+    buf_Shutdown();
     afsi_log("Buffer shutdown complete");
-                                         
+
     afsd_ShutdownCM();
 
-    cm_ShutdownMappedMemory();           
+    cm_ShutdownMappedMemory();
 
     rx_Finalize();
     afsi_log("rx finalization complete");
@@ -1514,7 +1514,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwControlsAccepted = 0;
         SetServiceStatus(StatusHandle, &ServiceStatus);
     }
-}       
+}
 
 DWORD __stdcall afsdMain_thread(void* notUsed)
 {
@@ -1561,9 +1561,9 @@ main(int argc, char * argv[])
             bRunningAsService = FALSE;
 
             hAFSDMainThread = CreateThread(NULL, 0, afsdMain_thread, 0, 0, &tid);
-		
+
             printf("Hit <Enter> to terminate OpenAFS Client Service\n");
-            getchar();  
+            getchar();
             SetEvent(WaitToTerminate);
         }
     }

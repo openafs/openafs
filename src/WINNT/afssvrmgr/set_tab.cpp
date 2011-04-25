@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -107,7 +107,7 @@ BOOL CALLBACK Filesets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          {
          RECT rTab;
          GetClientRect (GetParent(hDlg), &rTab);
-         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab); 
+         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab);
          ResizeWindow (hDlg, awdFilesets, rwaMoveToHere, &rTab);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_SET_LIST), &gr.viewSet);
@@ -149,7 +149,7 @@ BOOL CALLBACK Filesets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          if ((HWND)wp == GetDlgItem (hDlg, IDC_SET_LIST))
             Filesets_ShowPopupMenu ((HWND)wp, ptClient, ptScreen);
          }
-         break; 
+         break;
 
       case WM_SERVER_CHANGED:
          {
@@ -259,7 +259,7 @@ BOOL CALLBACK Filesets_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
       case WM_NOTIFY:
          switch (((LPNMHDR)lp)->code)
-            { 
+            {
             case FLN_ITEMSELECT:
                if (((LPNMHDR)lp)->hwndFrom == GetDlgItem (hDlg, IDC_SET_LIST))
                   {
@@ -402,9 +402,9 @@ LRESULT CALLBACK Filesets_SubclassListProc (HWND hList, UINT msg, WPARAM wp, LPA
             SetWindowLongPtr (hList, GWLP_WNDPROC, procFilesetsList);
          break;
 
-      case WM_COMMAND: 
+      case WM_COMMAND:
          Filesets_Subclass_OnCommand (hList, msg, wp, lp);
-         break; 
+         break;
       }
 
    return rc;

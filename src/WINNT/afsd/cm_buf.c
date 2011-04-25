@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -44,9 +44,9 @@ extern void afsi_log(char *pattern, ...);
  *
  * The mutexes in the buffer structures protect the remaining fields in the
  * buffers, as well the data itself.
- * 
+ *
  * The locking hierarchy here is this:
- * 
+ *
  * - resv multiple simul. buffers reservation
  * - lock buffer I/O flags
  * - lock buffer's mutex
@@ -153,7 +153,7 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
     osi_assertx(refCount >= 0, "cm_buf_t refCount == 0");
 #endif
     if (refCount == 0) {
-        /* 
+        /*
          * If we are read locked there could be a race condition
          * with buf_Find() so we must obtain a write lock and
          * double check that the refCount is actually zero
@@ -175,7 +175,7 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
         if (!writeLocked)
             lock_ConvertWToR(&buf_globalLock);
     }
-}       
+}
 
 /* release a buffer.  Buffer must be referenced, but unlocked. */
 #ifdef DEBUG_REFCOUNT
@@ -202,7 +202,7 @@ void buf_Release(cm_buf_t *bp)
 #endif
     if (refCount == 0) {
         lock_ObtainWrite(&buf_globalLock);
-        if (bp->refCount == 0 && 
+        if (bp->refCount == 0 &&
             !(bp->qFlags & CM_BUF_QINLRU)) {
             osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
 
@@ -215,8 +215,8 @@ void buf_Release(cm_buf_t *bp)
     }
 }
 
-long 
-buf_Sync(int quitOnShutdown) 
+long
+buf_Sync(int quitOnShutdown)
 {
     cm_buf_t **bpp, *bp, *prevbp;
     afs_uint32 wasDirty = 0;
@@ -259,7 +259,7 @@ buf_Sync(int quitOnShutdown)
 
         /* the buffer may or may not have been dirty
         * and if dirty may or may not have been cleaned
-        * successfully.  check the dirty flag again.  
+        * successfully.  check the dirty flag again.
         */
         if (!(bp->flags & CM_BUF_DIRTY)) {
             /* remove the buffer from the dirty list */
@@ -303,8 +303,8 @@ buf_Sync(int quitOnShutdown)
                     snprintf(volstr, sizeof(volstr), "%u", bp->fid.volume);
                 }
 
-                LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_DIRTY_BUFFER_AT_SHUTDOWN, 
-                         cellp->name, volstr, bp->fid.vnode, bp->fid.unique, 
+                LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_DIRTY_BUFFER_AT_SHUTDOWN,
+                         cellp->name, volstr, bp->fid.vnode, bp->fid.unique,
                          bp->offset.QuadPart+bp->dirty_offset, bp->dirty_length);
             }
 
@@ -330,7 +330,7 @@ void buf_IncrSyncer(long parm)
 
         if (!wasDirty) {
 	    i = SleepEx(5000, 1);
-	    if (i != 0) 
+	    if (i != 0)
                 continue;
 	} else {
             Sleep(50);
@@ -350,80 +350,80 @@ buf_ValidateBuffers(void)
          cm_data.buf_freeListp != NULL && cm_data.buf_freeListEndp == NULL) {
         afsi_log("cm_ValidateBuffers failure: inconsistent free list pointers");
         fprintf(stderr, "cm_ValidateBuffers failure: inconsistent free list pointers\n");
-        return -9;                  
+        return -9;
     }
 
-    for (bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) { 
+    for (bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
         if (bp->magic != CM_BUF_MAGIC) {
             afsi_log("cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC");
             fprintf(stderr, "cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC\n");
-            return -1;                  
+            return -1;
         }
-        countb++;                                                                
-        bpb = bp;     
+        countb++;
+        bpb = bp;
 
         if (countb > cm_data.buf_nbuffers) {
             afsi_log("cm_ValidateBuffers failure: countb > cm_data.buf_nbuffers");
             fprintf(stderr, "cm_ValidateBuffers failure: countb > cm_data.buf_nbuffers\n");
-            return -6;	                 
+            return -6;
         }
     }
 
-    for (bp = cm_data.buf_freeListp; bp; bp=(cm_buf_t *) osi_QNext(&bp->q)) { 
+    for (bp = cm_data.buf_freeListp; bp; bp=(cm_buf_t *) osi_QNext(&bp->q)) {
         if (bp->magic != CM_BUF_MAGIC) {
             afsi_log("cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC");
             fprintf(stderr, "cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC\n");
-            return -2;                  
+            return -2;
         }
-        countf++;                                                             
-        bpf = bp;    
+        countf++;
+        bpf = bp;
 
         if (countf > cm_data.buf_nbuffers) {
             afsi_log("cm_ValidateBuffers failure: countf > cm_data.buf_nbuffers");
             fprintf(stderr, "cm_ValidateBuffers failure: countf > cm_data.buf_nbuffers\n");
             return -7;
         }
-    }                                                                         
-                                                                              
-    for (bp = cm_data.buf_allp; bp; bp=bp->allp) {                            
+    }
+
+    for (bp = cm_data.buf_allp; bp; bp=bp->allp) {
         if (bp->magic != CM_BUF_MAGIC) {
             afsi_log("cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC");
             fprintf(stderr, "cm_ValidateBuffers failure: bp->magic != CM_BUF_MAGIC\n");
-            return -3;                  
+            return -3;
         }
-        counta++;                                                             
-        bpa = bp;                                                             
+        counta++;
+        bpa = bp;
 
         if (counta > cm_data.buf_nbuffers) {
             afsi_log("cm_ValidateBuffers failure: counta > cm_data.buf_nbuffers");
             fprintf(stderr, "cm_ValidateBuffers failure: counta > cm_data.buf_nbuffers\n");
-            return -8;	                 
+            return -8;
         }
-    }                                                                         
-                                                                              
+    }
+
     if (countb != countf) {
         afsi_log("cm_ValidateBuffers failure: countb != countf");
         fprintf(stderr, "cm_ValidateBuffers failure: countb != countf\n");
-        return -4;         
+        return -4;
     }
-                                                                              
+
     if (counta != cm_data.buf_nbuffers) {
         afsi_log("cm_ValidateBuffers failure: counta != cm_data.buf_nbuffers");
         fprintf(stderr, "cm_ValidateBuffers failure: counta != cm_data.buf_nbuffers\n");
-        return -5;	                 
+        return -5;
     }
-                                                                              
-    return 0;                                                                 
+
+    return 0;
 }
 
-void buf_Shutdown(void)  
-{  
+void buf_Shutdown(void)
+{
     /* disable the buf_IncrSyncer() threads */
     buf_ShutdownFlag = 1;
 
     /* then force all dirty buffers to the file servers */
     buf_Sync(0);
-}                        
+}
 
 /* initialize the buffer package; called with no locks
  * held during the initialization phase.
@@ -438,7 +438,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
     char *data;
 
     if ( newFile ) {
-        if (nbuffers) 
+        if (nbuffers)
             cm_data.buf_nbuffers = nbuffers;
 
         /* Have to be able to reserve a whole chunk */
@@ -456,13 +456,13 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
         if ( newFile ) {
             /* remember this for those who want to reset it */
             cm_data.buf_nOrigBuffers = cm_data.buf_nbuffers;
- 
+
             /* lower hash size to a prime number */
 	    cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cm_data.buf_nbuffers/7 + 1));
- 
+
             /* create hash table */
             memset((void *)cm_data.buf_scacheHashTablepp, 0, cm_data.buf_hashSize * sizeof(cm_buf_t *));
-            
+
             /* another hash table */
             memset((void *)cm_data.buf_fileHashTablepp, 0, cm_data.buf_hashSize * sizeof(cm_buf_t *));
 
@@ -470,45 +470,45 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
             bp = cm_data.bufHeaderBaseAddress;
             data = cm_data.bufDataBaseAddress;
             cm_data.buf_allp = NULL;
-            
+
             for (i=0; i<cm_data.buf_nbuffers; i++) {
-                osi_assertx(bp >= cm_data.bufHeaderBaseAddress && bp < (cm_buf_t *)cm_data.bufDataBaseAddress, 
+                osi_assertx(bp >= cm_data.bufHeaderBaseAddress && bp < (cm_buf_t *)cm_data.bufDataBaseAddress,
                             "invalid cm_buf_t address");
                 osi_assertx(data >= cm_data.bufDataBaseAddress && data < cm_data.bufEndOfData,
                             "invalid cm_buf_t data address");
-                
+
                 /* allocate and zero some storage */
                 memset(bp, 0, sizeof(cm_buf_t));
                 bp->magic = CM_BUF_MAGIC;
                 /* thread on list of all buffers */
                 bp->allp = cm_data.buf_allp;
                 cm_data.buf_allp = bp;
-                
+
                 osi_QAdd((osi_queue_t **)&cm_data.buf_freeListp, &bp->q);
                 bp->qFlags |= CM_BUF_QINLRU;
                 lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
-                
+
                 /* grab appropriate number of bytes from aligned zone */
                 bp->datap = data;
-                
+
                 /* setup last buffer pointer */
                 if (i == 0)
                     cm_data.buf_freeListEndp = bp;
-                    
+
                 /* next */
                 bp++;
                 data += cm_data.buf_blockSize;
-            }       
- 
+            }
+
             /* none reserved at first */
             cm_data.buf_reservedBufs = 0;
- 
+
             /* just for safety's sake */
             cm_data.buf_maxReservedBufs = cm_data.buf_nbuffers - 3;
         } else {
             bp = cm_data.bufHeaderBaseAddress;
             data = cm_data.bufDataBaseAddress;
-            
+
             for (i=0; i<cm_data.buf_nbuffers; i++) {
                 lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
                 bp->userp = NULL;
@@ -516,9 +516,9 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 bp->waitRequests = 0;
                 bp->flags &= ~CM_BUF_WAITING;
                 bp++;
-            }       
+            }
         }
- 
+
 #ifdef TESTING
         buf_ValidateBufQueues();
 #endif /* TESTING */
@@ -553,7 +553,7 @@ long buf_AddBuffers(afs_uint64 nbuffers)
 {
     /* The size of a virtual cache cannot be changed after it has
      * been created.  Subsequent calls to MapViewofFile() with
-     * an existing mapping object name would not allow the 
+     * an existing mapping object name would not allow the
      * object to be resized.  Return failure immediately.
      *
      * A similar problem now occurs with the persistent cache
@@ -564,20 +564,20 @@ long buf_AddBuffers(afs_uint64 nbuffers)
               nbuffers, cm_data.buf_nbuffers);
 
     return CM_ERROR_INVAL;
-}       
+}
 
 /* interface to set the number of buffers to an exact figure.
  * Called with no locks held.
  */
 long buf_SetNBuffers(afs_uint64 nbuffers)
 {
-    if (nbuffers < 10) 
+    if (nbuffers < 10)
         return CM_ERROR_INVAL;
-    if (nbuffers == cm_data.buf_nbuffers) 
+    if (nbuffers == cm_data.buf_nbuffers)
         return 0;
     else if (nbuffers > cm_data.buf_nbuffers)
         return buf_AddBuffers(nbuffers - cm_data.buf_nbuffers);
-    else 
+    else
         return CM_ERROR_INVAL;
 }
 
@@ -596,7 +596,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         /* if no IO is happening, we're done */
         if (!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)))
             break;
-		
+
         /* otherwise I/O is happening, but some other thread is waiting for
          * the I/O already.  Wait for that guy to figure out what happened,
          * and then check again.
@@ -636,7 +636,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
 	    lock_ReleaseRead(&scp->rw);
         }
     }
-        
+
     /* if we get here, the IO is done, but we may have to wakeup people waiting for
      * the I/O to complete.  Do so.
      */
@@ -667,7 +667,7 @@ cm_buf_t *buf_FindLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
             break;
         }
     }
-        
+
     /* return whatever we found, if anything */
     return bp;
 }
@@ -684,7 +684,7 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
     lock_ReleaseRead(&buf_globalLock);
 
     return bp;
-}       
+}
 
 /* find a buffer, if any, for a particular file ID and offset.  Assumes
  * that buf_globalLock is write locked when called.  Uses the all buffer
@@ -707,7 +707,7 @@ cm_buf_t *buf_FindAllLocked(struct cm_scache *scp, osi_hyper_t *offsetp, afs_uin
         for(bp = cm_data.buf_allp; bp; bp=bp->allp) {
             if (cm_FidCmp(&scp->fid, &bp->fid) == 0) {
                 char * fileOffset;
-                
+
                 fileOffset = offsetp->QuadPart + cm_data.baseAddress;
                 if (fileOffset == bp->datap) {
                     buf_HoldLocked(bp);
@@ -732,7 +732,7 @@ cm_buf_t *buf_FindAll(struct cm_scache *scp, osi_hyper_t *offsetp, afs_uint32 fl
     lock_ReleaseRead(&buf_globalLock);
 
     return bp;
-}       
+}
 
 /* start cleaning I/O on this buffer.  Buffer must be write locked, and is returned
  * write-locked.
@@ -808,8 +808,8 @@ afs_uint32 buf_CleanAsyncLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 	 * because we aren't going to be able to write this data to the file
 	 * server.
 	 */
-	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD || code == CM_ERROR_NOACCESS || 
-            code == CM_ERROR_QUOTA || code == CM_ERROR_SPACE || code == CM_ERROR_TOOBIG || 
+	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD || code == CM_ERROR_NOACCESS ||
+            code == CM_ERROR_QUOTA || code == CM_ERROR_SPACE || code == CM_ERROR_TOOBIG ||
             code == CM_ERROR_READONLY || code == CM_ERROR_NOSUCHPATH){
 	    bp->flags &= ~CM_BUF_DIRTY;
 	    bp->flags |= CM_BUF_ERROR;
@@ -827,8 +827,8 @@ afs_uint32 buf_CleanAsyncLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
         diskcache_Update(bp->dcp, bp->datap, cm_data.buf_blockSize, bp->dataVersion);
 #endif /* DISKCACHE95 */
 
-	/* if we get here and retries are not permitted 
-	 * then we need to exit this loop regardless of 
+	/* if we get here and retries are not permitted
+	 * then we need to exit this loop regardless of
 	 * whether or not we were able to clear the dirty bit
 	 */
 	if (reqp->flags & CM_REQ_NORETRY)
@@ -894,7 +894,7 @@ void buf_Recycle(cm_buf_t *bp)
         i = BUF_HASH(&bp->fid, &bp->offset);
         lbpp = &(cm_data.buf_scacheHashTablepp[i]);
         for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
-            if (tbp == bp) 
+            if (tbp == bp)
                 break;
         }
 
@@ -927,11 +927,11 @@ void buf_Recycle(cm_buf_t *bp)
     /* clean up junk flags */
     bp->flags &= ~(CM_BUF_EOF | CM_BUF_ERROR);
     bp->dataVersion = CM_BUF_VERSION_BAD;	/* unknown so far */
-}       
+}
 
 /* recycle a buffer, removing it from the free list, hashing in its new identity
  * and returning it write-locked so that no one can use it.  Called without
- * any locks held, and can return an error if it loses the race condition and 
+ * any locks held, and can return an error if it loses the race condition and
  * finds that someone else created the desired buffer.
  *
  * If success is returned, the buffer is returned write-locked.
@@ -957,7 +957,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
         /* check to see if we lost the race */
         if (scp) {
             if (bp = buf_FindLocked(scp, offsetp)) {
-		/* Do not call buf_ReleaseLocked() because we 
+		/* Do not call buf_ReleaseLocked() because we
 		 * do not want to allow the buffer to be added
 		 * to the free list.
 		 */
@@ -999,9 +999,9 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
              * code can bump refcounts, at least, so it may not be
              * zero.
              */
-            if (bp->refCount > 0) 
+            if (bp->refCount > 0)
                 continue;
-                        
+
             /* we don't have to lock buffer itself, since the ref
              * count is 0 and we know it will stay zero as long as
              * we hold the global lock.
@@ -1028,7 +1028,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                  */
                 continue;
             }
-                        
+
             if (bp->flags & CM_BUF_DIRTY) {
                 /* if the buffer is dirty, start cleaning it and
                  * move on to the next buffer.  We do this with
@@ -1106,7 +1106,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
             afsi_log("%s:%d buf_GetNewLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, 1);
 #endif
             /* grab the mutex so that people don't use it
-             * before the caller fills it with data.  Again, no one	
+             * before the caller fills it with data.  Again, no one
              * should have been able to get to this dude to lock it.
              */
 	    if (!lock_TryMutex(&bp->mx)) {
@@ -1304,7 +1304,7 @@ long buf_CountFreeList(void)
          */
         if (!(bufp->qFlags & CM_BUF_QINHASH) || bufp->dataVersion == CM_BUF_VERSION_BAD)
             count++;
-    }       
+    }
     lock_ReleaseRead(&buf_globalLock);
     return count;
 }
@@ -1321,7 +1321,7 @@ afs_uint32 buf_CleanAsync(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp, afs_ui
     lock_ReleaseMutex(&bp->mx);
 
     return code;
-}       
+}
 
 /* wait for a buffer's cleaning to finish */
 void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp, afs_uint32 locked)
@@ -1335,7 +1335,7 @@ void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp, afs_uint32 locked)
     }
     if (!locked)
         lock_ReleaseMutex(&bp->mx);
-}       
+}
 
 /* set the dirty flag on a buffer, and set associated write-ahead log,
  * if there is one.  Allow one to be added to a buffer, but not changed.
@@ -1377,14 +1377,14 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t 
         bp->dirty_offset = offset;
         bp->dirty_length = length;
 
-        /* and add to the dirty list.  
-         * we obtain a hold on the buffer for as long as it remains 
-         * in the list.  buffers are only removed from the list by 
+        /* and add to the dirty list.
+         * we obtain a hold on the buffer for as long as it remains
+         * in the list.  buffers are only removed from the list by
          * the buf_IncrSyncer function regardless of when else the
          * dirty flag might be cleared.
          *
          * This should never happen but just in case there is a bug
-         * elsewhere, never add to the dirty list if the buffer is 
+         * elsewhere, never add to the dirty list if the buffer is
          * already there.
          */
         lock_ObtainWrite(&buf_globalLock);
@@ -1405,7 +1405,7 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t 
     /* and record the last writer */
     if (bp->userp != userp) {
         cm_HoldUser(userp);
-        if (bp->userp) 
+        if (bp->userp)
             cm_ReleaseUser(bp->userp);
         bp->userp = userp;
     }
@@ -1464,10 +1464,10 @@ long buf_CleanAndReset(void)
 #ifdef TESTING
     buf_ValidateBufQueues();
 #endif /* TESTING */
-    
+
     /* and we're done */
     return 0;
-}       
+}
 
 /* called without global lock being held, reserves buffers for callers
  * that need more than one held (not locked) at once.
@@ -1504,7 +1504,7 @@ int buf_TryReserveBuffers(afs_uint64 nbuffers)
     }
     lock_ReleaseWrite(&buf_globalLock);
     return code;
-}       
+}
 
 /* called without global lock held, releases reservation held by
  * buf_ReserveBuffers.
@@ -1518,7 +1518,7 @@ void buf_UnreserveBuffers(afs_uint64 nbuffers)
         osi_Wakeup((LONG_PTR) &cm_data.buf_reservedBufs);
     }
     lock_ReleaseWrite(&buf_globalLock);
-}       
+}
 
 /* truncate the buffers past sizep, zeroing out the page, if we don't
  * end on a page boundary.
@@ -1561,7 +1561,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
             buf_WaitIO(scp, bufp);
         }
         lock_ObtainWrite(&scp->rw);
-	
+
         /* make sure we have a callback (so we have the right value for
          * the length), and wait for it to be safe to do a truncate.
          */
@@ -1571,7 +1571,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                           | CM_SCACHESYNC_SETSIZE
                           | CM_SCACHESYNC_BUFLOCKED);
 
-	
+
 	/* if we succeeded in our locking, and this applies to the right
          * file, and the truncate request overlaps the buffer either
          * totally or partially, then do something.
@@ -1608,17 +1608,17 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                         cm_data.buf_blockSize - bufferPos);
             }
         }
-		
-	cm_SyncOpDone( scp, bufp, 
+
+	cm_SyncOpDone( scp, bufp,
 		       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
 		       | CM_SCACHESYNC_SETSIZE | CM_SCACHESYNC_BUFLOCKED);
 
         lock_ReleaseWrite(&scp->rw);
         lock_ReleaseMutex(&bufp->mx);
-    
+
 	if (!code) {
 	    nbufp = bufp->fileHashp;
-	    if (nbufp) 
+	    if (nbufp)
 		buf_Hold(nbufp);
 	} else {
 	    /* This forces the loop to end and the error code
@@ -1651,7 +1651,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     code = 0;
     lock_ObtainRead(&buf_globalLock);
     bp = cm_data.buf_fileHashTablepp[i];
-    if (bp) 
+    if (bp)
         buf_HoldLocked(bp);
     lock_ReleaseRead(&buf_globalLock);
 
@@ -1673,7 +1673,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             }
 
             if (code == CM_ERROR_BADFD) {
-                /* if the scp's FID is bad its because we received VNOVNODE 
+                /* if the scp's FID is bad its because we received VNOVNODE
                  * when attempting to FetchStatus before the write.  This
                  * page therefore contains data that can no longer be stored.
                  */
@@ -1707,7 +1707,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                 lock_ObtainWrite(&buf_globalLock);
                 if (bp->refCount == 1) {	/* bp is held above */
                     nbp = bp->fileHashp;
-                    if (nbp) 
+                    if (nbp)
                         buf_HoldLocked(nbp);
                     buf_ReleaseLocked(bp, TRUE);
                     didRelease = 1;
@@ -1737,7 +1737,7 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     /* done */
     return code;
-}       
+}
 
 /* Must be called with scp->rw held */
 long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion)
@@ -1780,7 +1780,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
 
     lock_ObtainRead(&buf_globalLock);
     bp = cm_data.buf_fileHashTablepp[i];
-    if (bp) 
+    if (bp)
         buf_HoldLocked(bp);
     lock_ReleaseRead(&buf_globalLock);
     for (; bp; bp = nbp) {
@@ -1790,10 +1790,10 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
             if (bp->flags & CM_BUF_DIRTY) {
                 if (userp && userp != bp->userp) {
                     cm_HoldUser(userp);
-                    if (bp->userp) 
+                    if (bp->userp)
                         cm_ReleaseUser(bp->userp);
                     bp->userp = userp;
-                }   
+                }
 
                 switch (code) {
                 case CM_ERROR_NOSUCHFILE:
@@ -1804,7 +1804,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                 case CM_ERROR_TOOBIG:
                 case CM_ERROR_READONLY:
                 case CM_ERROR_NOSUCHPATH:
-                    /* 
+                    /*
                      * Apply the previous fatal error to this buffer.
                      * Do not waste the time attempting to store to
                      * the file server when we know it will fail.
@@ -1841,7 +1841,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
 
         lock_ObtainRead(&buf_globalLock);
         nbp = bp->fileHashp;
-        if (nbp) 
+        if (nbp)
             buf_HoldLocked(nbp);
         buf_ReleaseLocked(bp, FALSE);
         lock_ReleaseRead(&buf_globalLock);
@@ -1900,45 +1900,45 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     cm_buf_t *bp;
     char output[1024];
     afs_uint32 i;
-  
+
     if (cm_data.buf_scacheHashTablepp == NULL)
         return -1;
 
     if (lock)
         lock_ObtainRead(&buf_globalLock);
-  
-    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_HashTable - buf_hashSize=%d\r\n", 
+
+    StringCbPrintfA(output, sizeof(output), "%s - dumping buf_HashTable - buf_hashSize=%d\r\n",
                     cookie, cm_data.buf_hashSize);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-  
+
     for (i = 0; i < cm_data.buf_hashSize; i++)
     {
-        for (bp = cm_data.buf_scacheHashTablepp[i]; bp; bp=bp->hashp) 
+        for (bp = cm_data.buf_scacheHashTablepp[i]; bp; bp=bp->hashp)
         {
-	    StringCbPrintfA(output, sizeof(output), 
+	    StringCbPrintfA(output, sizeof(output),
 			    "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d, "
 			    "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
 			    "flags=0x%x, qFlags=0x%x cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
-			     cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
-			     bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
+			     cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume,
+			     bp->fid.vnode, bp->fid.unique, bp->offset.HighPart,
 			     bp->offset.LowPart, bp->dataVersion, bp->flags, bp->qFlags,
 			     bp->cmFlags, bp->error, bp->refCount);
 	    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
     }
-  
+
     StringCbPrintfA(output, sizeof(output), "%s - Done dumping buf_HashTable.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
     StringCbPrintfA(output, sizeof(output), "%s - dumping buf_freeListEndp\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     for(bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
-	StringCbPrintfA(output, sizeof(output), 
+	StringCbPrintfA(output, sizeof(output),
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
 			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
 			 "flags=0x%x, qFlags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
-			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
-			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
+			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume,
+			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart,
 			 bp->offset.LowPart, bp->dataVersion, bp->flags, bp->qFlags,
 			 bp->cmFlags, bp->error, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
@@ -1949,12 +1949,12 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock)
     StringCbPrintfA(output, sizeof(output), "%s - dumping buf_dirtyListp\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     for(bp = cm_data.buf_dirtyListp; bp; bp=bp->dirtyp) {
-	StringCbPrintfA(output, sizeof(output), 
+	StringCbPrintfA(output, sizeof(output),
 			 "%s bp=0x%08X, fid (cell=%d, volume=%d, "
 			 "vnode=%d, unique=%d), offset=%x:%08x, dv=%I64d, "
 			 "flags=0x%x, qFlags=0x%x, cmFlags=0x%x, error=0x%x, refCount=%d\r\n",
-			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume, 
-			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart, 
+			 cookie, (void *)bp, bp->fid.cell, bp->fid.volume,
+			 bp->fid.vnode, bp->fid.unique, bp->offset.HighPart,
 			 bp->offset.LowPart, bp->dataVersion, bp->flags, bp->qFlags,
 			 bp->cmFlags, bp->error, bp->refCount);
 	WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
@@ -1973,7 +1973,7 @@ void buf_ForceTrace(BOOL flush)
     int len;
     char buf[256];
 
-    if (!buf_logp) 
+    if (!buf_logp)
         return;
 
     len = GetTempPath(sizeof(buf)-10, buf);

@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -23,13 +23,13 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>dlog</B> [<B>-principal</B> &lt;<VAR>user name</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
      [<B>-password</B> &lt;<VAR>user's password</VAR>>]  [<B>-servers</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]
-     [<B>-lifetime</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]  
+     [<B>-lifetime</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]
      [<B>-setpag</B>]  [<B>-pipe</B>]  [<B>-help</B>]
-    
-<B>dlog</B> [<B>-pr</B> &lt;<VAR>user name</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-pw</B> &lt;<VAR>user's password</VAR>>] 
-     [<B>-ser</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  
+
+<B>dlog</B> [<B>-pr</B> &lt;<VAR>user name</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-pw</B> &lt;<VAR>user's password</VAR>>]
+     [<B>-ser</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]
      [<B>-l</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]  [<B>-set</B>]  [<B>-pi</B>]  [<B>-h</B>]
-  
+
 </PRE>
 <P><STRONG>構文</STRONG>
 <P><B>dlog</B> コマンドは、発行者用の DCE 信用証明書を <B>-cell</B> 引き数によって指定されたセル内の DCE セキュリティー・サービスから取得し、ユーザーがこのコマンドを発行する AFS クライアント・マシンでそれらを保管します。DCE セルのマシンで実行している AFS/DFS Migration Toolkit Protocol Translator 処理で信用証明書を受け取ります。この証明書で、ユーザーは DCE セルのファイル・スペースに AFS クライアントからアクセスすることができます。ローカル・ファイル・システムでのユーザーの ID は未変更です。
@@ -81,13 +81,13 @@
 <P><B>dlog</B> コマンド・インタープリターが、変換プログラム・サーバーに接続できない場合、以下のようなメッセージを生成します。
 <PRE>   dlog: server or network not responding -- failed to contact
    authentication service
-   
+
 </PRE>
 <P><STRONG>例</STRONG>
 <P>以下のコマンドは、発行者を <B>dce.abc.com</B> セルの <B>cell_admin</B> として認証します。
 <PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com</B>
    Password: <VAR>cell_admin's password</VAR>
-    
+
 </PRE>
 <P>以下の例では、発行者は <B>cell_admin</B> として <B>dce.abc.com</B> セルを認証して、100 時間のチケット存続時間を要求しています。
 <B>tokens</B> コマンドは、ユーザーがユーザー <B>cell_admin</B> として DCE 証明書を獲得したことを確認します。
@@ -95,14 +95,14 @@ AFS ID は、<B>dce.abc.com</B> セルの DCE レジストリーで
 <B>cell_admin</B> に割り当てられた UNIX ID <B>1</B> と同じです。
 <PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com -lifetime 100</B>
    Password: <VAR>cell_admin's password</VAR>
-   
+
    % <B>tokens</B>
    Tokens held by the Cache Manager:
-   
+
    User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12]
    User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14]
       --End of list--
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>なし。
@@ -112,11 +112,11 @@ AFS ID は、<B>dce.abc.com</B> セルの DCE レジストリーで
 <P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
 <P><A HREF="auarf238.htm#HDRUNLOG">unlog</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf126.htm">前ページ</A> &#124; <A HREF="auarf128.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf126.htm">前ページ</A> &#124; <A HREF="auarf128.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

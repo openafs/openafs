@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2005,2006 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person

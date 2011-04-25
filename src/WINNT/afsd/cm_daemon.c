@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -57,7 +57,7 @@ static time_t lastIPAddrChange = 0;
 
 static EVENT_HANDLE cm_Daemon_ShutdownEvent = NULL;
 static EVENT_HANDLE cm_IPAddrDaemon_ShutdownEvent = NULL;
-static EVENT_HANDLE cm_BkgDaemon_ShutdownEvent[CM_MAX_DAEMONS] = 
+static EVENT_HANDLE cm_BkgDaemon_ShutdownEvent[CM_MAX_DAEMONS] =
        {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 void cm_IpAddrDaemon(long parm)
@@ -73,7 +73,7 @@ void cm_IpAddrDaemon(long parm)
 
     while (daemon_ShutdownFlag == 0) {
 	DWORD Result;
-        
+
         thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
         Result = NotifyAddrChange(NULL,NULL);
         if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
@@ -81,7 +81,7 @@ void cm_IpAddrDaemon(long parm)
             smb_SetLanAdapterChangeDetected();
             cm_SetLanAdapterChangeDetected();
             thrd_ResetEvent(cm_IPAddrDaemon_ShutdownEvent);
-	}	
+	}
     }
 
     thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
@@ -113,7 +113,7 @@ void cm_BkgDaemon(void * parm)
             lock_ObtainWrite(&cm_daemonLock);
             continue;
         }
-                
+
         /* we found a request */
         for (rp = cm_bkgListEndp; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
 	{
@@ -139,13 +139,13 @@ void cm_BkgDaemon(void * parm)
 	osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
         code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
-#ifdef DEBUG_REFCOUNT                
+#ifdef DEBUG_REFCOUNT
 	osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
 
         /*
          * Keep the following list synchronized with the
-         * error code list in cm_BkgStore.  
+         * error code list in cm_BkgStore.
          * cm_SyncOpDone(CM_SCACHESYNC_ASYNCSTORE) will be called there unless
          * one of these errors has occurred.
          */
@@ -187,10 +187,10 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
 	cm_user_t *userp)
 {
     cm_bkgRequest_t *rp;
-        
+
     rp = malloc(sizeof(*rp));
     memset(rp, 0, sizeof(*rp));
-        
+
     cm_HoldSCache(scp);
     rp->scp = scp;
     cm_HoldUser(userp);
@@ -204,7 +204,7 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
     lock_ObtainWrite(&cm_daemonLock);
     cm_bkgQueueCount++;
     osi_QAdd((osi_queue_t **) &cm_bkgListp, &rp->q);
-    if (!cm_bkgListEndp) 
+    if (!cm_bkgListEndp)
         cm_bkgListEndp = rp;
     lock_ReleaseWrite(&cm_daemonLock);
 
@@ -339,7 +339,7 @@ cm_DaemonCheckInit(void)
     if (code == ERROR_SUCCESS && dummy)
 	cm_daemonCheckOfflineVolInterval = dummy;
     afsi_log("daemonCheckOfflineVolInterval is %d", cm_daemonCheckOfflineVolInterval);
-    
+
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonPerformanceTuningInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
@@ -410,7 +410,7 @@ void cm_Daemon(long parm)
         code = 0;
     else
         memcpy(&code, thp->h_addr_list[0], 4);
-    
+
     srand(ntohl(code));
 
     cm_DaemonCheckInit();
@@ -434,7 +434,7 @@ void cm_Daemon(long parm)
             Sleep(1000);
             continue;
         }
-	/* check to see if the listener threads halted due to network 
+	/* check to see if the listener threads halted due to network
 	 * disconnect or other issues.  If so, attempt to restart them.
 	 */
 	smb_RestartListeners(0);
@@ -537,7 +537,7 @@ void cm_Daemon(long parm)
 	    now = osi_Time();
 	}
 
-        if (cm_daemonCheckVolCBInterval && 
+        if (cm_daemonCheckVolCBInterval &&
             now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval &&
             daemon_ShutdownFlag == 0 &&
             powerStateSuspended == 0) {
@@ -622,11 +622,11 @@ void cm_Daemon(long parm)
                 break;
 	    now = osi_Time();
         }
-        
+
         thrd_Sleep(10000);		/* sleep 10 seconds */
     }
     thrd_SetEvent(cm_Daemon_ShutdownEvent);
-}       
+}
 
 void cm_DaemonShutdown(void)
 {
@@ -638,7 +638,7 @@ void cm_DaemonShutdown(void)
 
     /* wait for shutdown */
     if (cm_Daemon_ShutdownEvent)
-        code = thrd_WaitForSingleObject_Event(cm_Daemon_ShutdownEvent, INFINITE); 
+        code = thrd_WaitForSingleObject_Event(cm_Daemon_ShutdownEvent, INFINITE);
 
     for ( i=0; i<cm_nDaemons; i++) {
         if (cm_BkgDaemon_ShutdownEvent[i])
@@ -657,9 +657,9 @@ void cm_InitDaemon(int nDaemons)
     int i;
 
     cm_nDaemons = (nDaemons > CM_MAX_DAEMONS) ? CM_MAX_DAEMONS : nDaemons;
-    
+
     if (osi_Once(&once)) {
-        lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock", 
+        lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock",
                                LOCK_HIERARCHY_DAEMON_GLOBAL);
         osi_EndOnce(&once);
 

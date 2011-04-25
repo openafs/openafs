@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -93,38 +93,38 @@ BOOL CALLBACK PartitionsPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 	return TRUE;
 
     switch (uMsg) {
-    case WM_INITDIALOG:	
+    case WM_INITDIALOG:
 	OnInitDialog(hwndDlg);
 	break;
-	
-    case WM_COMMAND:  
+
+    case WM_COMMAND:
 	switch (LOWORD(wParam)) {
 	case IDINIT:
 	    CheckShowPartitions();
 	    break;
 
-	case IDC_CREATE_PARTITIONS:	
+	case IDC_CREATE_PARTITIONS:
 	    OnCreatePartitions();
 	    break;
 
-	case IDC_REMOVE:  
+	case IDC_REMOVE:
 	    OnRemove();
 	    break;
 
-	case IDC_SALVAGE: 
+	case IDC_SALVAGE:
 	    OnSalvage();
 	    break;
 	}
 	break;
 
-    case WM_NOTIFY:    
+    case WM_NOTIFY:
 	if ((((LPNMHDR)lParam)->code) == FLN_ITEMSELECT)
 	    OnListSelection((LPFLN_ITEMSELECT_PARAMS)lParam);
 	break;
     }
 
     return FALSE;
-}	
+}
 
 void UpdatePartitionList()
 {
@@ -165,7 +165,7 @@ static void OnInitDialog(HWND hwndDlg)
     ShowPartitions();
 
     CheckEnableSalvage();
-}	
+}
 
 static void OnCreatePartitions()
 {
@@ -189,7 +189,7 @@ static void OnRemove()
 {
     ASSERT(hSelectedItem);
     ASSERT(g_hServer);
-	
+
     afs_status_t nStatus;
 
     BOOL bExported = (BOOL)FastList_GetItemParam(hPartitionList, hSelectedItem);
@@ -215,7 +215,7 @@ static void OnRemove()
     FastList_RemoveItem(hPartitionList, hSelectedItem);
 
     CheckEnableSalvage();
-}	
+}
 
 static void OnSalvage()
 {
@@ -230,7 +230,7 @@ static void OnSalvage()
     if (hSelectedItem) {
 	pszPartitionName = FastList_GetItemText(hPartitionList, hSelectedItem, 0);
 	ASSERT(pszPartitionName);
-    }	
+    }
 
     if (!ShowSalvageDlg(hDlg, pszPartitionName))
         return;
@@ -268,13 +268,13 @@ static void SetupImageLists()
     AfsAppLib_AddToImageList(hiList, IDI_DISABLED_DISK_DRIVE, FALSE);
 
     FastList_SetImageLists(hPartitionList, hiList, 0);
-}	
+}
 
 static void AddColumn(int nWidth, LPCTSTR pszTitle, DWORD dwFlags)
 {
     static int nCol = 1;
     FASTLISTCOLUMN col;
-	
+
     col.dwFlags = dwFlags;
     col.cxWidth = nWidth;
     lstrcpy(col.szText, pszTitle);
@@ -296,7 +296,7 @@ static void SetupListCols()
 cfg_partitionEntry_t *GetPartitionTableFromRegistry(int& cEntries)
 {
     afs_status_t nStatus;
- 
+
     // Read the parition table out of the registry
     int nResult = ReadPartitionTable(&nStatus);
     if (!nResult) {
@@ -371,7 +371,7 @@ static LPTSTR DiskSpaceToString(int nSpace)
     double space;
     LPTSTR pszUnits;
 
-    space = nSpace;	
+    space = nSpace;
 
     if (space >= oneTB) {
 	space /= oneTB;
@@ -392,7 +392,7 @@ static LPTSTR DiskSpaceToString(int nSpace)
     _stprintf(szSpace, TEXT("%3.*f%s"), nNumDecimals, space, pszUnits);
 
     return szSpace;
-}	
+}
 
 static void ShowPartitions()
 {

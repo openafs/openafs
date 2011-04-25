@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -125,11 +125,11 @@ cm_DirPrefetchBuffers(cm_dirOp_t * op);
 /* compute how many 32 byte entries an AFS 3 dir requires for storing
  * the specified name.
  */
-long 
+long
 cm_NameEntries(char *namep, size_t *lenp)
 {
     long i;
-        
+
     i = (long)strlen(namep);
     if (lenp) *lenp = i;
     return 1 + ((i+16) >> 5);
@@ -448,7 +448,7 @@ cm_DirFindBlobs(cm_dirOp_t * op, int nblobs)
     return -1;
 }
 
-/* Add a page to a directory. 
+/* Add a page to a directory.
 
    Called with op->scp->rw
 */
@@ -851,7 +851,7 @@ cm_DirGetBlob(cm_dirOp_t * op,
     *blobpp = (cm_dirEntry_t *) (ep + 32 * (blobno & (CM_DIR_EPP - 1)));
 
     return code;
-}	
+}
 
 int
 cm_DirHash(char *string)
@@ -975,7 +975,7 @@ cm_DirFindItem(cm_dirOp_t * op,
     }
 }
 
-/* Begin a sequence of directory operations.  
+/* Begin a sequence of directory operations.
  * Called with scp->rw unlocked.
  */
 long
@@ -1006,7 +1006,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
     if (lockType == CM_DIRLOCK_WRITE) {
         lock_ObtainWrite(&scp->dirlock);
         haveWrite = 1;
-    } else { 
+    } else {
         lock_ObtainRead(&scp->dirlock);
         haveWrite = 0;
     }
@@ -1022,7 +1022,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
 #ifdef USE_BPLUS
         if (!cm_BPlusTrees ||
             (scp->dirBplus &&
-             scp->dirDataVersion == scp->dataVersion)) 
+             scp->dirDataVersion == scp->dataVersion))
         {
             /* we know that haveWrite matches lockType at this point */
             switch (lockType) {
@@ -1041,8 +1041,8 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
             }
             op->lockType = lockType;
         } else {
-            if (!(scp->dirBplus && 
-                  scp->dirDataVersion == scp->dataVersion)) 
+            if (!(scp->dirBplus &&
+                  scp->dirDataVersion == scp->dataVersion))
             {
               repeat:
                 if (!haveWrite) {
@@ -1057,7 +1057,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                     lock_ObtainWrite(&scp->rw);
                     mxheld = 1;
                 }
-                if (scp->dirBplus && 
+                if (scp->dirBplus &&
                      scp->dirDataVersion != scp->dataVersion)
                 {
                     bplus_dv_error++;
@@ -1177,8 +1177,8 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
 
         rc = 1;
     }
-    lock_ReleaseWrite(&op->scp->rw); 
-    
+    lock_ReleaseWrite(&op->scp->rw);
+
     if (rc)
         osi_Log0(afsd_logp, "cm_CheckDirOpForSingleChange succeeded");
     else
@@ -1188,7 +1188,7 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
     return rc;
 }
 
-/* End a sequence of directory operations.  
+/* End a sequence of directory operations.
  * Called with op->scp->rw unlocked.*/
 long
 cm_EndDirOp(cm_dirOp_t * op)
@@ -1204,7 +1204,7 @@ cm_EndDirOp(cm_dirOp_t * op)
     if (op->dirtyBufCount > 0) {
 #ifdef USE_BPLUS
         /* update the data version on the B+ tree */
-        if (op->scp->dirBplus && 
+        if (op->scp->dirBplus &&
              op->scp->dirDataVersion == op->dataVersion) {
 
             switch (op->lockType) {
@@ -1309,7 +1309,7 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
 
         if (code == 0 && bufferp->dataVersion != op->dataVersion) {
                 osi_Log2(afsd_logp,
-                         "cm_DirOpAddBuffer: buffer data version mismatch. buf dv = %d. needs %d", 
+                         "cm_DirOpAddBuffer: buffer data version mismatch. buf dv = %d. needs %d",
                          bufferp->dataVersion, op->dataVersion);
 
                 cm_SyncOpDone(op->scp, bufferp,

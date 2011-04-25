@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -29,7 +29,7 @@
 
 /*
  * vpt_PartitionNameValid() -- Check partition name syntax.
- * 
+ *
  * RETURN CODES: 1 valid, 0 not valid
  */
 int
@@ -69,7 +69,7 @@ vpt_PartitionNameValid(const char *vpname)
 
 /*
  * vpt_DeviceNameValid() -- Check device name syntax.
- * 
+ *
  * RETURN CODES: 1 valid, 0 not valid
  */
 int
@@ -86,7 +86,7 @@ vpt_DeviceNameValid(const char *devname)
 
 /*
  * vpt_Start() -- Initialize iteration for reading vice partition table.
- * 
+ *
  * RETURN CODES: 0 success, -1 failed (errno set)
  */
 
@@ -118,7 +118,7 @@ vpt_Start(struct vpt_iter *iterp)  /* [out] iteration handle to initialize */
 
 /*
  * vpt_NextEntry() -- Return next vice partition table entry.
- * 
+ *
  * RETURN CODES: 0 success, -1 no more entries (ENOENT) or failed (errno set).
  */
 
@@ -199,7 +199,7 @@ vpt_NextEntry(struct vpt_iter *iterp,   /* [in] valid iteration handle */
 
 /*
  * vpt_Finish() -- Terminate iteration for vice partition table.
- * 
+ *
  * RETURN CODES: 0 success, -1 failed (errno set)
  */
 int

@@ -1,4 +1,4 @@
-#                                                                                                                                
+#
 # Copyright (c) 2009 Secure Endpoints Inc.
 #
 
@@ -23,7 +23,7 @@ OBJS =  $(OUT)\main.obj \
 LIBS =  $(DESTDIR)\lib\afs\afsutil.lib
 
 $(EXEDIR)\winflock.exe: $(OBJS) $(LIBS)
-        $(EXECONLINK) 
+        $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(EXEPREP)
         $(CODESIGN_USERLAND)
@@ -32,5 +32,5 @@ $(EXEDIR)\winflock.exe: $(OBJS) $(LIBS)
 install: idirs $(EXEDIR)\winflock.exe
 
 clean::
-        
+
 

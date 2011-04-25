@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -158,7 +158,7 @@ void DrivesTab_OnCheck (HWND hDlg)
             Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), dwStatus);
          DrivesTab_FillList (hDlg);
          }
-      WriteActiveMap(g.Configuration.NetDrives.aDriveMap[ iDriveSel ].chDrive, fChecked && 
+      WriteActiveMap(g.Configuration.NetDrives.aDriveMap[ iDriveSel ].chDrive, fChecked &&
                      g.Configuration.NetDrives.aDriveMap[ iDriveSel ].fPersistent );
 
       }
@@ -448,7 +448,7 @@ void DriveEdit_OnInitDialog (HWND hDlg)
 
    TCHAR szMapping[ MAX_PATH ];
    AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
-   
+
    CHAR msg[256], msgf[256];
    if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
    {
@@ -831,7 +831,7 @@ void SubEdit_OnInitDialog (HWND hDlg)
    }
 
    SetDlgItemText (hDlg, IDC_SUBMOUNT, pSubmount->szSubmount);
-   
+
    SetDlgItemText (hDlg, IDC_MAPPING, pSubmount->szMapping);
 }
 

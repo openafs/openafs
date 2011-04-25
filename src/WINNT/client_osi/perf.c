@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -38,7 +38,7 @@ long main_Perf1(long parm)
 			osi_SleepM((long) &flags, &main_perfMutex);
 			continue;
 		}
-		
+
 		/* hand off to the other guy */
 		flags &= ~STARTA;
 		flags |= STARTB;
@@ -51,7 +51,7 @@ long main_Perf1(long parm)
 		if (count > main_NITERS) {
 			break;
 		}
-		
+
 		osi_SleepM((long) &flags, &main_perfMutex);
 	}
 	done++;
@@ -69,7 +69,7 @@ long main_Perf2(long parm)
 			osi_SleepM((long) &flags, &main_perfMutex);
 			continue;
 		}
-		
+
 		/* hand off to the other guy */
 		flags &= ~STARTB;
 		flags |= STARTA;
@@ -82,7 +82,7 @@ long main_Perf2(long parm)
 		if (count > main_NITERS) {
 			break;
 		}
-		
+
 		osi_SleepM((long)&flags, &main_perfMutex);
 	}
 	done++;
@@ -99,7 +99,7 @@ main_PerfTest(HANDLE hWnd)
 	HANDLE mod2Handle;
 
 	osi_Init();
-	
+
 	main_ForceDisplay(hWnd);
 
 	/* create three processes, two modifiers and one scanner.  The scanner
@@ -112,7 +112,7 @@ main_PerfTest(HANDLE hWnd)
 	done = 0;
 	count = 0;
 	flags = STARTA;
-	
+
 	lock_InitializeMutex(&main_perfMutex, "perf test mutex");
 
 	mod1Handle = CreateThread((SECURITY_ATTRIBUTES *) 0, 0,
@@ -133,7 +133,7 @@ main_PerfTest(HANDLE hWnd)
 		}
 		osi_SleepM((long) &done, &main_perfMutex);
 	}
-	
+
 	/* done, release and finalize all locks */
 	lock_FinalizeMutex(&main_perfMutex);
 

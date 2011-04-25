@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -97,12 +97,12 @@ void osi_QRemove(osi_queue_t **headpp, osi_queue_t *eltp)
     if (eltp == *headpp) {
 	/* we're the first element in the list */
 	*headpp = np;
-	if (np) 
+	if (np)
 	    np->prevp = NULL;
     }
     else {
 	pp->nextp = np;
-	if (np) 
+	if (np)
 	    np->prevp = pp;
     }
     eltp->prevp = NULL;
@@ -114,29 +114,29 @@ void osi_QRemoveHT(osi_queue_t **headpp, osi_queue_t **tailpp, osi_queue_t *eltp
     osi_queue_t *np = eltp->nextp;	/* next dude */
     osi_queue_t *pp = eltp->prevp;	/* prev dude */
 
-    if (eltp == *headpp && eltp == *tailpp) 
+    if (eltp == *headpp && eltp == *tailpp)
     {
     	*headpp = *tailpp = NULL;
     }
     else if (eltp == *headpp) {
 	/* we're the first element in the list */
 	*headpp = np;
-	if (np) 
+	if (np)
 	    np->prevp = NULL;
-    }	
+    }
     else if (eltp == *tailpp) {
 	/* we're the last element in the list */
 	*tailpp = pp;
-	if (pp) 
+	if (pp)
 	    pp->nextp = NULL;
-    }	
+    }
     else {
 	if (pp)
 		pp->nextp = np;
 	if (np)
 		np->prevp = pp;
     }
-    eltp->prevp = NULL; 
+    eltp->prevp = NULL;
     eltp->nextp = NULL;
 }
 
@@ -171,7 +171,7 @@ osi_queueData_t *osi_QDAlloc(void)
                         tp->datap = NULL;
 			osi_QDFreeListp = tp;
 		}
-		
+
 		/* when we get here, tp is pointing to the last dude allocated.
 		 * This guy wasn't put on the free list, so we can return him now.
 		 */

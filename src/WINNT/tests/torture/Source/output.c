@@ -8,7 +8,7 @@ extern HANDLE ChronMutexHandle;
 extern HANDLE MutexHandle;
 extern HANDLE FileMutexHandle;
 
-void LogStats(char *FileName, int ToLog, int Iteration, int NumberOfProcesses, int NumberOfThreads, 
+void LogStats(char *FileName, int ToLog, int Iteration, int NumberOfProcesses, int NumberOfThreads,
               char *HostName, int ProcessNumber, struct cmd_struct CommandInfo[],
               char *CommandLine, char *TargetDirectory)
 {
@@ -48,9 +48,9 @@ void LogStats(char *FileName, int ToLog, int Iteration, int NumberOfProcesses, i
     for (i = 0; i <= CMD_MAX_CMD; i++)
     {
         TotalCommandInfo[i].count += CommandInfo[i].count;
-        TotalCommandInfo[i].total_sec += CommandInfo[i].total_sec; 
-        TotalCommandInfo[i].ErrorCount += CommandInfo[i].ErrorCount; 
-        TotalCommandInfo[i].ErrorTime += CommandInfo[i].ErrorTime; 
+        TotalCommandInfo[i].total_sec += CommandInfo[i].total_sec;
+        TotalCommandInfo[i].ErrorCount += CommandInfo[i].ErrorCount;
+        TotalCommandInfo[i].ErrorTime += CommandInfo[i].ErrorTime;
         grand_total += CommandInfo[i].total_sec;
         if (!TotalCommandInfo[i].min_sec || (TotalCommandInfo[i].min_sec > CommandInfo[i].min_sec))
             TotalCommandInfo[i].min_sec = CommandInfo[i].min_sec;
@@ -107,8 +107,8 @@ void LogStats(char *FileName, int ToLog, int Iteration, int NumberOfProcesses, i
     for (i = 0; i <= CMD_MAX_CMD; i++)
     {
         fprintf(fp, "%-30s   %8d    %8d  %10d  %10.2f   %5.1f%%   %10d  %8d  %8d  %s\n",
-                cmd_names[i].name, 
-                TotalCommandInfo[i].count, 
+                cmd_names[i].name,
+                TotalCommandInfo[i].count,
                 TotalCommandInfo[i].min_sec,
                 TotalCommandInfo[i].max_sec,
                 (TotalCommandInfo[i].count ? (float)TotalCommandInfo[i].total_sec/(float)TotalCommandInfo[i].count : 0),
@@ -183,7 +183,7 @@ void DumpAFSLog(char *HostName, int LogID)
     strcat(EnvVariable, "\\TEMP\\afsd.log");
     sprintf(command, "move %s %s\\log%05d\\%s > .\\test\\%s", EnvVariable, WorkingDirectory, LogID, HostName, HostName);
     rc = system(command);
-    sprintf(command, "rename %s\\log%05d\\%s\\afsd.log afsd_%s_iteration%d.log", 
+    sprintf(command, "rename %s\\log%05d\\%s\\afsd.log afsd_%s_iteration%d.log",
             WorkingDirectory, LogID, HostName, HostName, CurrentLoop);
     rc = system(command);
     ReleaseMutex(FileMutexHandle);
@@ -263,8 +263,8 @@ int UpdateMasterLog(char *FileName, struct cmd_struct CommandInfo[])
     return(0);
 }
 
-int BuildMasterStatLog(char *FileName, char*MoveFileName, int NumberOfProcesses, 
-                       int NumberOfThreads, char *CommandLine, int Iterations, 
+int BuildMasterStatLog(char *FileName, char*MoveFileName, int NumberOfProcesses,
+                       int NumberOfThreads, char *CommandLine, int Iterations,
                        char *TargetDirectory, int ProcessNumber)
 {
     FILE    *fp;
@@ -307,10 +307,10 @@ int BuildMasterStatLog(char *FileName, char*MoveFileName, int NumberOfProcesses,
         fclose(fp);
         MoveFile(FileName, MoveFileName);
     }
-    
+
     fp = fopen(FileName, "w");
     fclose(fp);
-    LogStats(FileName, 1, Iterations, NumberOfProcesses, NumberOfThreads, "", ProcessNumber, TotalCommandInfo, 
+    LogStats(FileName, 1, Iterations, NumberOfProcesses, NumberOfThreads, "", ProcessNumber, TotalCommandInfo,
              CommandLine, TargetDirectory);
     return(0);
 }

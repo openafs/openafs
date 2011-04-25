@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -75,7 +75,7 @@ BOOL CUnlogDlg::OnInitDialog()
 		else
 			m_strCellName = defaultCell;
 	}
-	
+
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -96,7 +96,7 @@ int kl_Unlog(const CString& strCellName)
 		strcpy(server.name, "afs");
 		code = ktc_ForgetToken(&server);
 	}
-	
+
 	if (code == KTC_NOCM)
             AfxMessageBox(_T("AFS service may not have started"));
 	else if (code) {
@@ -105,26 +105,26 @@ int kl_Unlog(const CString& strCellName)
             xreason.Format(_T("Unexpected error, code %d"), code);
 		AfxMessageBox(xreason);
 	}
-	
+
 	return code;
 }
 
-void CUnlogDlg::OnChangeCellName() 
+void CUnlogDlg::OnChangeCellName()
 {
 	UpdateData();
-	
+
 	m_OK.EnableWindow(!m_strCellName.IsEmpty());
 }
 
-void CUnlogDlg::OnOK() 
+void CUnlogDlg::OnOK()
 {
 	if (kl_Unlog(m_strCellName))
 		return;
-	
+
 	CDialog::OnOK();
 }
 
-void CUnlogDlg::OnHelp() 
+void CUnlogDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, DISCARD_TOKENS_HELP_ID);
 }

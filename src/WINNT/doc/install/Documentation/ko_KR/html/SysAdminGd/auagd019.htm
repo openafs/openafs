@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -256,7 +256,7 @@ ACL(기계는 ACL에 직접 표시될 수 없음)에 배치합니다. 기계
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts examine</B> 명령을 실행하여
 보호 데이터베이스 항목을 두 개 이상 표시합니다.
@@ -380,7 +380,7 @@ ID를 지정할 수 있습니다. 더 자세한 내용은 <A HREF="#HDRWQ542">사용자와 기계 항목
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><A NAME="LIWQ539"></A><B>pts membership</B> 명령을 실행하여 사용자나
 기계가 속하는 그룹의 목록이나 그룹에 속하는 사용자와 기계의 목록을 표시합니다.
@@ -439,7 +439,7 @@ ID를 지정할 수 있습니다. 더 자세한 내용은 <A HREF="#HDRWQ542">사용자와 기계 항목
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts listowned</B> 명령을 실행하여 각 사용자나 그룹에서 소유한 그룹을
 표시하십시오.
@@ -462,9 +462,9 @@ AFS UID를 지정합니다.
 </PRE>
 <P>다음 예는 <B>terry</B>라고 하는 사용자와 <B>terry:friends</B>라고
 하는 그룹의 출력을 보여줍니다.
-<PRE>   % <B>pts listo terry</B> 
-   Groups owned by terry (id: 5347) are:  
-     terry:friends   
+<PRE>   % <B>pts listo terry</B>
+   Groups owned by terry (id: 5347) are:
+     terry:friends
      terry:co-workers
    % <B>pts listo terry:friends</B>
    Groups owned by terry:friends (id: -567) are:
@@ -496,7 +496,7 @@ AFS UID를 지정합니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts listentries</B> 명령을 실행하여 모든 보호 데이터베이스 항목을 표시하십시오.
 <P>
@@ -533,14 +533,14 @@ ID(AFS UID)는 양수입니다. 그룹에 대해 AFS 그룹 ID(AFS GID)는 음수입니다.
 <PRE>   %
 <B>pts listentries</B>
    Name                          ID  Owner Creator
-   anonymous                  32766   -204    -204 
-   admin                          1   -204   32766 
-   pat                         1000   -204       1 
-   terry                       1001   -204       1 
-   smith                       1003   -204       1 
-   jones                       1004   -204       1 
-   192.12.105.33               2000   -204       1 
-   192.12.105.46               2001   -204       1 
+   anonymous                  32766   -204    -204
+   admin                          1   -204   32766
+   pat                         1000   -204       1
+   terry                       1001   -204       1
+   smith                       1003   -204       1
+   jones                       1004   -204       1
+   192.12.105.33               2000   -204       1
+   192.12.105.46               2001   -204       1
 </PRE>
 <A NAME="IDX7913"></A>
 <A NAME="IDX7914"></A>
@@ -628,11 +628,11 @@ AFS UID를 제거하려면 <A HREF="auagd020.htm#HDRWQ579">ACL에서 쓸모없는 AFS ID 제�
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts createuser</B> 명령을 실행하여 기계 항목을 두 개 이상 작성합니다.
 <P>
-<PRE>   % <B>pts createuser -name</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP> 
+<PRE>   % <B>pts createuser -name</B> &lt;<VAR>user&nbsp;name</VAR>><SUP>+</SUP>
 </PRE>
 <P>
 <P>여기서,
@@ -790,7 +790,7 @@ ACL에 이를 배치하기 위해서입니다. 그룹을 사용하는 데 있어서
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts creategroup</B> 명령을 실행하여 각 그룹을 작성하십시오. 모든
 그룹은 같은 소유자를 가지고 있습니다.
@@ -916,7 +916,7 @@ ACL에 이를 배치하기 위해서입니다. 그룹을 사용하는 데 있어서
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts adduser</B> 명령을 실행하여 두 개 이상의 그룹에 구성원을
 두 개 이상 추가하십시오.
@@ -952,7 +952,7 @@ ACL에 이를 배치하기 위해서입니다. 그룹을 사용하는 데 있어서
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts removeuser</B> 명령을 실행하여 두 개 이상의 그룹에서 구성원을
 두 개 이상 제거하십시오.
@@ -1002,7 +1002,7 @@ ACL에 이를 배치하기 위해서입니다. 그룹을 사용하는 데 있어서
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts delete</B> 명령을 실행하여
 보호 데이터베이스에서 항목을 두 개 이상 삭제하십시오.
@@ -1059,7 +1059,7 @@ ACL에 이를 배치하기 위해서입니다. 그룹을 사용하는 데 있어서
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>(선택적)</B> 그룹 소유자를 다른
 그룹(또는 그 자체)으로 변경하고 소유한 그룹에 대해 관리
@@ -1166,7 +1166,7 @@ IP 주소가 변경된 경우에만 적합합니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts rename</B> 명령을 실행하여 항목의 이름을 변경하십시오.
 <P>
@@ -1211,7 +1211,7 @@ IP 주소가 변경된 경우에만 적합합니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts setfields</B> 명령을 실행하여 두 명 이상의 사용자가 각각
 추가로 작성할 수 있는 그룹의 수를 지정하십시오.
@@ -1305,7 +1305,7 @@ IP 주소가 변경된 경우에만 적합합니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts setfields</B> 명령을 실행하여 개인 플래그를 설정하십시오.
 <P>
@@ -1425,7 +1425,7 @@ AFS GID는 -469입니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>pts setmax</B> 명령을 실행하여 <TT>max user id</TT> 카운터,
 <TT>max group id</TT> 카운터 또는 둘다 설정하십시오.
@@ -1446,11 +1446,11 @@ AFS GID는 -469입니다.
 지정합니다.
 </DL>
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd018.htm">이전 페이지</A> &#124; <A HREF="auagd020.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd018.htm">이전 페이지</A> &#124; <A HREF="auagd020.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

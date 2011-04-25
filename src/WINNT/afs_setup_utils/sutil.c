@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -106,7 +106,7 @@ BOOL AddToProviderOrder(char *pszWhatToAdd)
 		strcpy(pszNewValue, pszValue);
 		strcat(pszNewValue, ",");
 	    }
-	    strcat(pszNewValue, pszWhatToAdd);		
+	    strcat(pszNewValue, pszWhatToAdd);
 	}
 
     } else if (result == ERROR_FILE_NOT_FOUND)
@@ -220,7 +220,7 @@ BOOL AddToSystemPath(char *pszPath)
 
     /* Do we need to add it? */
     if (!pszCurPath || !FindSubString(pszCurPath, pszPath)) {
-		
+
 	/* Old path + a semicolon + the new path entry + a null */
 	pszNewPath = malloc((pszCurPath ? strlen(pszCurPath) + 1 : 0) +
 			    strlen(pszPath) + 1);

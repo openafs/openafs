@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -45,13 +45,13 @@ HANDLE hDLL;
 
 #define AFS_LOGON_EVENT_NAME TEXT("AFS Logon")
 
-void DebugEvent0(char *a) 
+void DebugEvent0(char *a)
 {
     HANDLE h; char *ptbuf[1];
-    
+
     if (!ISLOGONTRACE(TraceOption))
         return;
-    
+
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
     if (h != INVALID_HANDLE_VALUE) {
         ptbuf[0] = a;
@@ -61,7 +61,7 @@ void DebugEvent0(char *a)
 }
 
 #define MAXBUF_ 512
-void DebugEvent(char *b,...) 
+void DebugEvent(char *b,...)
 {
     HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
     va_list marker;
@@ -119,21 +119,21 @@ void AfsLogonInit(void)
 {
     if ( bInit == FALSE ) {
         if ( WaitForSingleObject( hInitMutex, INFINITE ) == WAIT_OBJECT_0 ) {
-	    /* initAFSDirPath() initializes an array and sets a 
+	    /* initAFSDirPath() initializes an array and sets a
 	     * flag so that the initialization can only occur
-	     * once.  No cleanup will be done when the DLL is 
-	     * unloaded so the initialization will not be 
+	     * once.  No cleanup will be done when the DLL is
+	     * unloaded so the initialization will not be
 	     * performed again on a subsequent reload
 	     */
 	    initAFSDirPath();
 
 	    /* ka_Init initializes a number of error tables.
-	     * and then calls ka_CellConfig() which grabs 
+	     * and then calls ka_CellConfig() which grabs
 	     * an afsconf_dir structure via afsconf_Open().
 	     * Upon a second attempt to call ka_CellConfig()
 	     * the structure will be released with afsconf_Close()
 	     * and then re-opened.  Could this corrupt memory?
-	     * 
+	     *
 	     * We only need this if we are not using KFW.
 	     */
 	    if (!KFW_is_available())
@@ -234,10 +234,10 @@ DWORD APIENTRY NPGetCaps(DWORD index)
     default:
         return 0;
     }
-}       
+}
 
-NET_API_STATUS 
-NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath, 
+NET_API_STATUS
+NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath,
                        DWORD profilePathLen )
 {
     NET_API_STATUS code;
@@ -246,7 +246,7 @@ NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath,
 
     NetGetAnyDCName(NULL, Domain, (LPBYTE *)&ServerName);
     /* if NetGetAnyDCName fails, ServerName == NULL
-     * NetUserGetInfo will obtain local user information 
+     * NetUserGetInfo will obtain local user information
      */
     code = NetUserGetInfo(ServerName, UserName, 3, (LPBYTE *)&p3);
     if (code == NERR_Success)
@@ -266,7 +266,7 @@ NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath,
             NetApiBufferFree(p3);
         }
     }
-    if (ServerName) 
+    if (ServerName)
         NetApiBufferFree(ServerName);
     return code;
 }
@@ -291,7 +291,7 @@ BOOL IsServiceRunning (void)
     }
     DebugEvent("AFS AfsLogon - Test Service Running Return Code[%x] ?Running[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_RUNNING));
     return (Status.dwCurrentState == SERVICE_RUNNING);
-}   
+}
 
 BOOL IsServiceStartPending (void)
 {
@@ -313,7 +313,7 @@ BOOL IsServiceStartPending (void)
     }
     DebugEvent("AFS AfsLogon - Test Service Start Pending Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
     return (Status.dwCurrentState == SERVICE_START_PENDING);
-}   
+}
 
 /* LOOKUPKEYCHAIN: macro to look up the value in the list of keys in order until it's found
    v:variable to receive value (reference type)
@@ -351,7 +351,7 @@ BOOL IsServiceStartPending (void)
 /* Get domain specific configuration info.  We are returning void because if anything goes wrong
    we just return defaults.
  */
-void 
+void
 GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOptions_t *opt ) {
     HKEY hkParm = NULL; /* Service parameter */
     HKEY hkNp = NULL;   /* network provider key */
@@ -415,7 +415,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         DebugEvent0("Not opening domain key");
 
     /* Each individual can either be specified on the domain key, the domains key or in the
-       net provider key.  They fail over in that order.  If none is found, we just use the 
+       net provider key.  They fail over in that order.  If none is found, we just use the
        defaults. */
 
     /* LogonOption */
@@ -460,7 +460,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
             DebugEvent("LsaGetLogonSessionData failed [0x%x]", Status);
             goto bad_strings;
         }
-        
+
         if (!UnicodeStringToANSI(plsd->UserName, lsaUsername, MAX_USERNAME_LENGTH))
             goto bad_strings;
 
@@ -500,7 +500,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
 
         DebugEvent("Constructing username using [%s] and [%s]",
                    username, domain);
- 
+
         len = strlen(username) + strlen(domain) + 2;
 
         opt->smbName = malloc(len);
@@ -719,7 +719,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     if(hkDom) RegCloseKey(hkDom);
     if(hkDoms) RegCloseKey(hkDoms);
     if(hkParm) RegCloseKey(hkParm);
-}       
+}
 
 #undef LOOKUPKEYCHAIN
 
@@ -742,7 +742,7 @@ DWORD GetFileCellName(char * path, char * cell, size_t cellLen) {
         cell[cellLen - 1] = '\0';
     }
     return code;
-}       
+}
 
 
 static BOOL
@@ -756,7 +756,7 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
     if (CodePageInfo.MaxCharSize > 1)
         // Only supporting non-Unicode strings
         return FALSE;
-    
+
     if (uInputString.Buffer && ((LPBYTE) uInputString.Buffer)[1] == '\0')
     {
         // Looks like unicode, better translate it
@@ -766,7 +766,7 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
         lpszOutputString[min(uInputString.Length/2,nOutStringLen-1)] = '\0';
         return TRUE;
     }
-      
+
     lpszOutputString[0] = '\0';
     return FALSE;
 }  // UnicodeStringToANSI
@@ -835,11 +835,11 @@ DWORD APIENTRY NPLogonNotify(
 
     /* Initialize Logon Script to none */
     *lpLogonScript=NULL;
-    
+
     /* MSV1_0_INTERACTIVE_LOGON and KERB_INTERACTIVE_LOGON are equivalent for
      * our purposes */
 
-    if ( wcsicmp(lpAuthentInfoType,L"MSV1_0:Interactive") && 
+    if ( wcsicmp(lpAuthentInfoType,L"MSV1_0:Interactive") &&
          wcsicmp(lpAuthentInfoType,L"Kerberos:Interactive") )
     {
         DebugEvent("Unsupported Authentication Info Type: %S",
@@ -892,7 +892,7 @@ DWORD APIENTRY NPLogonNotify(
 
     DebugEvent("LogonOption[%x], Service AutoStart[%d]",
                 opt.LogonOption,afsWillAutoStart);
-    
+
     /* Check for zero length password if integrated logon*/
     if ( ISLOGONINTEGRATED(opt.LogonOption) )  {
         if ( password[0] == 0 ) {
@@ -902,19 +902,19 @@ DWORD APIENTRY NPLogonNotify(
             code=0;
         }
 
-        /* Get cell name if doing integrated logon.  
+        /* Get cell name if doing integrated logon.
            We might overwrite this if we are logging into an AD realm and we find out that
            the user's home dir is in some other cell. */
         DebugEvent("About to call cm_GetRootCellName(%s)",cell);
         code = cm_GetRootCellName(cell);
-        if (code < 0) { 
+        if (code < 0) {
             DebugEvent0("Unable to obtain Root Cell");
             code = KTC_NOCELL;
             reason = "unknown cell";
             code=0;
         } else {
             DebugEvent("Cell is %s",cell);
-        }       
+        }
 
         /* We get the user's home directory path, if applicable, though we can't lookup the
            cell right away because the client service may not have started yet. This call
@@ -937,14 +937,14 @@ DWORD APIENTRY NPLogonNotify(
 		    DebugEvent("profile path [%s] is in cell [%s]",homePath,cell);
 		}
 		/* Don't bail out if GetFileCellName failed.
-		 * The home dir may not be in AFS after all. 
+		 * The home dir may not be in AFS after all.
 		 */
 	    } else
 		code=0;
-		
+
 	    /* if Integrated Logon  */
 	    if (ISLOGONINTEGRATED(opt.LogonOption))
-	    {			
+	    {
 		if ( KFW_is_available() ) {
 		    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
                     if (opt.realm) {
@@ -974,7 +974,7 @@ DWORD APIENTRY NPLogonNotify(
                                     uname,opt.smbName,cell,code);
                     }
 		    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
-		    if (code == 0 && opt.theseCells) { 
+		    if (code == 0 && opt.theseCells) {
 			char * principal, *p;
 			size_t len, tlen;
 
@@ -1017,7 +1017,7 @@ DWORD APIENTRY NPLogonNotify(
 							&reason);
 		    DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
 				code,uname,opt.smbName,cell,pw_exp,reason?reason:"");
-		}       
+		}
 		if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
 		    for ( ctemp = uname; *ctemp ; ctemp++) {
 			*ctemp = tolower(*ctemp);
@@ -1030,12 +1030,12 @@ DWORD APIENTRY NPLogonNotify(
 
 		/* If we've failed because the client isn't running yet and the
 		 * client is set to autostart (and therefore it makes sense for
-		 * us to wait for it to start) then sleep a while and try again. 
+		 * us to wait for it to start) then sleep a while and try again.
 		 * If the error was something else, then give up. */
 		if (code != KTC_NOCM && code != KTC_NOCMRPC)
 		    break;
 	    }
-	    else {  
+	    else {
 		/*JUST check to see if its running*/
 		if (IsServiceRunning())
 		    break;
@@ -1073,7 +1073,7 @@ DWORD APIENTRY NPLogonNotify(
     DebugEvent0("while loop exited");
 
     /* remove any kerberos 5 tickets currently held by the SYSTEM account
-     * for this user 
+     * for this user
      */
 
     if (ISLOGONINTEGRATED(opt.LogonOption) && KFW_is_available()) {
@@ -1099,7 +1099,7 @@ DWORD APIENTRY NPLogonNotify(
 	ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1008, NULL,
 		     1, 0, ptbuf, NULL);
 	DeregisterEventSource(h);
-	    
+
         code = MapAuthError(code);
         SetLastError(code);
 
@@ -1119,7 +1119,7 @@ DWORD APIENTRY NPLogonNotify(
 
     DebugEvent("AFS AfsLogon - Exit","Return Code[%x]",code);
     return code;
-}       
+}
 
 DWORD APIENTRY NPPasswordChangeNotify(
 	LPCWSTR lpAuthentInfoType,
@@ -1168,14 +1168,14 @@ BOOL IsPathInAfs(const CHAR *strPath)
 }
 
 #ifdef COMMENT
-typedef struct _WLX_NOTIFICATION_INFO {  
-    ULONG Size;  
-    ULONG Flags;  
-    PWSTR UserName;  
-    PWSTR Domain;  
-    PWSTR WindowStation;  
-    HANDLE hToken;  
-    HDESK hDesktop;  
+typedef struct _WLX_NOTIFICATION_INFO {
+    ULONG Size;
+    ULONG Flags;
+    PWSTR UserName;
+    PWSTR Domain;
+    PWSTR WindowStation;
+    HANDLE hToken;
+    HDESK hDesktop;
     PFNMSGECALLBACK pStatusCallback;
 } WLX_NOTIFICATION_INFO, *PWLX_NOTIFICATION_INFO;
 #endif
@@ -1254,7 +1254,7 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
 		}
 	    }
 
-	    /* We can't use pInfo->Domain for the domain since in the cross realm case 
+	    /* We can't use pInfo->Domain for the domain since in the cross realm case
 	     * this is source domain and not the destination domain.
 	     */
 	    if (tokenUser && QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
@@ -1294,7 +1294,7 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
     }
 
     DebugEvent0("AFS_Logoff_Event - End");
-}   
+}
 
 VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
@@ -1330,7 +1330,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
         StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
         WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
                             username, sizeof(username), NULL, NULL);
-        
+
         StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
         WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
                             domain, sizeof(domain), NULL, NULL);
@@ -1344,7 +1344,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 	    DebugEvent0("AFS_Logon_Event - No pInfo->Domain");
     }
 
-    DebugEvent("AFS_Logon_Event - opt.LogonOption = %lX opt.flags = %lX", 
+    DebugEvent("AFS_Logon_Event - opt.LogonOption = %lX opt.flags = %lX",
 		opt.LogonOption, opt.flags);
 
     if (!ISLOGONINTEGRATED(opt.LogonOption) || !ISREMOTE(opt.flags)) {
@@ -1366,7 +1366,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
         }
     }
 
-    /* We can't use pInfo->Domain for the domain since in the cross realm case 
+    /* We can't use pInfo->Domain for the domain since in the cross realm case
      * this is source domain and not the destination domain.
      */
     if (tokenUser && QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
@@ -1377,7 +1377,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
                 GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
         }
     }
-    
+
     if (strlen(profileDir)) {
         DebugEvent("AFS_Logon_Event - Profile Directory: %s", profileDir);
     } else {
@@ -1408,7 +1408,7 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
                         szPath, szUserA,res);
         else
             DebugEvent0("AFS_Logon_Event - WNetAddConnection2() succeeded");
-    } else 
+    } else
         DebugEvent("AFS_Logon_Event - User name conversion failed: GLE = 0x%X",GetLastError());
 
     if ( tokenUser )
@@ -1494,22 +1494,22 @@ VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     }
 
     strcat(filename, "\\");
-    strcat(filename, szLogonId);    
+    strcat(filename, szLogonId);
 
-    hf = CreateFile(filename, FILE_ALL_ACCESS, 0, NULL, OPEN_EXISTING, 
+    hf = CreateFile(filename, FILE_ALL_ACCESS, 0, NULL, OPEN_EXISTING,
 		     FILE_ATTRIBUTE_NORMAL, NULL);
     if (hf == INVALID_HANDLE_VALUE) {
 	DebugEvent0("KFW_Logon_Event - file cannot be opened");
  	return;
     }
     CloseHandle(hf);
- 
+
     if (KFW_AFS_set_file_cache_dacl(filename, pInfo->hToken)) {
 	DebugEvent0("KFW_Logon_Event - unable to set dacl");
  	DeleteFile(filename);
  	return;
     }
- 
+
     if (KFW_AFS_obtain_user_temp_directory(pInfo->hToken, newfilename, sizeof(newfilename))) {
 	DebugEvent0("KFW_Logon_Event - unable to obtain temp directory");
  	return;
@@ -1521,9 +1521,9 @@ VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
     }
 
     strcat(newfilename, "\\");
-    strcat(newfilename, szLogonId);    
+    strcat(newfilename, szLogonId);
 
-    if (!MoveFileEx(filename, newfilename, 
+    if (!MoveFileEx(filename, newfilename,
 		     MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
         DebugEvent("KFW_Logon_Event - MoveFileEx failed GLE = 0x%x", GetLastError());
 	return;
@@ -1542,7 +1542,7 @@ VOID KFW_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
                              NULL,
                              NULL,
                              &startupinfo,
-                             &procinfo)) 
+                             &procinfo))
     {
 	DebugEvent("KFW_Logon_Event - CommandLine %s", commandline);
 

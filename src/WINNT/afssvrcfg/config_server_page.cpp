@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -179,7 +179,7 @@ struct CONFIG_STEP {
 
 /*
  *	Structure that holds info about the static controls that show the step description
- *	and the graphic that corresponds to the step state.  There are 8 of these; they 
+ *	and the graphic that corresponds to the step state.  There are 8 of these; they
  *	are configured at runtime depending on what configuration steps are to be performed.
  *	These are assigned into the appropriate step structure above.  I could have just
  *	stuck an index from the array of these structures into the struct above, but decided
@@ -267,7 +267,7 @@ static CONFIG_STEP STEPS[MAX_STEPS] = {
     { SS_STEP_TO_BE_DONE, CreatePrincipalAndKey,0, 0, IDS_CREATE_PRINCIPAL_AND_KEY_STEP,0 },
     { SS_STEP_TO_BE_DONE, StartDbServers,	0, 0, IDS_START_DB_STEP,		IDS_DB_STEP_DESC },
     { SS_STEP_TO_BE_DONE, StartDbServers,	0, 0, IDS_START_DB_AND_BK_STEP,		IDS_DB_AND_BK_STEP_DESC },
-    { SS_STEP_TO_BE_DONE, StartDbServers,	0, 0, IDS_START_BK_STEP,		IDS_BK_STEP_DESC },	
+    { SS_STEP_TO_BE_DONE, StartDbServers,	0, 0, IDS_START_BK_STEP,		IDS_BK_STEP_DESC },
     { SS_STEP_TO_BE_DONE, CreateAdminPrincipal, 0, 0, IDS_CREATE_ADMIN_PRINCIPAL_STEP,	0 },
     { SS_STEP_TO_BE_DONE, StartFsVlAndSalvager, 0, 0, IDS_START_FS_STEP,		IDS_FS_STEP_DESC },
     { SS_STEP_TO_BE_DONE, ConfigSCC,	    	0, 0, IDS_START_SCC_STEP,		IDS_SCC_STEP_DESC },
@@ -286,7 +286,7 @@ static CONFIG_STEP STEPS[MAX_STEPS] = {
     { SS_STEP_TO_BE_DONE, RestartAllDbServers,  0, 0, IDS_RESTART_ALL_DB_SERVERS_STEP,	0 },
     { SS_STEP_TO_BE_DONE, VosOpenServer,	0, 0, IDS_NO_MSG_STEP,			0 },
     { SS_STEP_TO_BE_DONE, UnconfigDB,	    	0, 0, IDS_UNCONFIG_DB_STEP,		IDS_UNCONFIG_DB_STEP_DESC },
-    { SS_STEP_TO_BE_DONE, UnconfigBak,	    	0, 0, IDS_UNCONFIG_BK_STEP,		IDS_UNCONFIG_BK_STEP_DESC },	
+    { SS_STEP_TO_BE_DONE, UnconfigBak,	    	0, 0, IDS_UNCONFIG_BK_STEP,		IDS_UNCONFIG_BK_STEP_DESC },
     { SS_STEP_TO_BE_DONE, UnconfigFS,	    	0, 0, IDS_UNCONFIG_FS_STEP,		IDS_UNCONFIG_FS_STEP_DESC },
     { SS_STEP_TO_BE_DONE, UnconfigSCS,	    	0, 0, IDS_UNCONFIG_SCS_STEP,		IDS_UNCONFIG_SCS_STEP_DESC },
     { SS_STEP_TO_BE_DONE, UnconfigSCC,	    	0, 0, IDS_UNCONFIG_SCC_STEP,		IDS_UNCONFIG_SCC_STEP_DESC },
@@ -320,7 +320,7 @@ static STEP_ID FirstServerSteps[] = {
     SID_MOUNT_ROOT_CELL_RW,
     SID_REPLICATE,
     SID_ENABLE_AUTH_CHECKING
-};	
+};
 
 static STEP_ID InvalidServerInfoSteps[] = {
     SID_DEFINE_CELL_FOR_SERVER,
@@ -337,7 +337,7 @@ static STEP_ID InvalidClientInfoSteps[] = {
 
 static STEP_ID PreconfigSteps[] = {
     SID_GET_CREDENTIALS,    // Always do this so we will always have credentials - need this for the config manager.
-    SID_VOS_OPEN_SERVER	    // We'll always do this step so we know we can make vos calls 
+    SID_VOS_OPEN_SERVER	    // We'll always do this step so we know we can make vos calls
 };
 
 static STEP_ID UnconfigDbSteps[] = {
@@ -348,7 +348,7 @@ static STEP_ID UnconfigDbSteps[] = {
 static STEP_ID UnconfigBakSteps[] = {
     SID_UNCONFIG_BAK,
     SID_GET_CREDENTIALS
-};	
+};
 
 static STEP_ID UnconfigFsSteps[] = {
     SID_UNCONFIG_FS
@@ -370,7 +370,7 @@ static STEP_ID DbSteps[] = {
     SID_ADD_TO_CELLSERVDB,
     SID_START_DB,
     SID_RESTART_ALL_DB_SERVERS
-};	
+};
 
 static STEP_ID DbAndBakSteps[] = {
     SID_ADD_TO_CELLSERVDB,
@@ -423,7 +423,7 @@ static STEP_ID PostConfigSteps[] = {
  *
  */
 BOOL Configure(HWND hParent, BOOL& bMustExit)
-{	
+{
     int nResult = ModalDialog(IDD_CONFIG_SERVER, hParent, (DLGPROC)ConfigServerPageDlgProc);
 
     bMustExit = m_bMustExit;
@@ -470,7 +470,7 @@ BOOL CALLBACK ConfigServerPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM 
     if (g_pWiz) {
 	if (WizStep_Common_DlgProc (hwndDlg, msg, wp, lp))
 	    return FALSE;
-    }	
+    }
 
     return FALSE;
 }
@@ -499,7 +499,7 @@ static BOOL CALLBACK StepGrahpicDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 		return 0;
 	    }
 	}
-    }		
+    }
 
     return CallWindowProc((WNDPROC)Subclass_FindNextHook(hwnd, StepGrahpicDlgProc), hwnd, uMsg, wParam, lParam);
 }
@@ -563,7 +563,7 @@ static void OnInitDialog(HWND hwndDlg)
 	       (g_CfgData.configSCC == CS_ALREADY_CONFIGURED)))
 	{
 	    GetString(szMsg, IDS_ALREADY_CONFIGURED);
-	}	
+	}
 	// Is there nothing to configure?
 	else if ((g_CfgData.configFS != CS_CONFIGURE) &&
 		  (g_CfgData.configDB != CS_CONFIGURE) &&
@@ -573,7 +573,7 @@ static void OnInitDialog(HWND hwndDlg)
 		  (g_CfgData.configRep != CS_CONFIGURE) &&
 		  (g_CfgData.configSCS != CS_CONFIGURE) &&
 		  (g_CfgData.configSCC != CS_CONFIGURE))
-	{	
+	{
 	    GetString(szMsg, IDS_NOTHING_TO_CONFIGURE);
 	}
 
@@ -616,10 +616,10 @@ static void OnInitDialog(HWND hwndDlg)
     for (UINT ii = 0; ii < MAX_STEPS; ii++) {
 	if (m_ConfigSteps[ii].nGraphicCtrlID)
 	    Subclass_AddHook(GetDlgItem(m_hDlg, m_ConfigSteps[ii].nGraphicCtrlID), StepGrahpicDlgProc);
-    }	
+    }
 
     IF_WIZ(g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON));
-}	
+}
 
 // User has pressed the Config (or Exit) button.
 static void OnConfig()
@@ -666,7 +666,7 @@ static void ShowExitButton()
     else {
         if (m_bMustExit)
             SetWndText(m_hDlg, IDCANCEL, IDS_EXIT);
-        else	
+        else
 	    SetWndText(m_hDlg, IDCANCEL, IDS_CLOSE);
     }
 }
@@ -674,7 +674,7 @@ static void ShowExitButton()
 static void ShowTitle()
 {
     ASSERT(g_CfgData.szCellName[0]);
-	
+
     TCHAR szMsg[cchRESOURCE];
 
     GetString(szMsg, IDS_CONFIG_INTO_CELL_MSG);
@@ -686,13 +686,13 @@ static void ShowTitle()
 }
 
 static BOOL Unconfiguring()
-{	
+{
     return ShouldUnconfig(g_CfgData.configFS)  ||
 	   ShouldUnconfig(g_CfgData.configDB)  ||
 	   ShouldUnconfig(g_CfgData.configBak) ||
 	   ShouldUnconfig(g_CfgData.configSCS) ||
 	   ShouldUnconfig(g_CfgData.configSCC);
-}	
+}
 
 static void AddSteps(STEP_ID *pSteps, int nNumNewSteps)
 {
@@ -711,7 +711,7 @@ static void AddSteps(STEP_ID *pSteps, int nNumNewSteps)
 	// Add the new step
 	m_ConfigSteps[m_nNumSteps++] = STEPS[nStepID];
     }
-}	
+}
 
 static void GetStepsToPerform()
 {
@@ -745,7 +745,7 @@ static void GetStepsToPerform()
     if (!g_CfgData.bValidClientInfo || (lstrcmp(g_CfgData.szClientCellName, g_CfgData.szCellName) != 0)) {
         m_bMustChangeClientCell = TRUE;
 	AddSteps(InvalidClientInfoSteps, NUM_STEPS(InvalidClientInfoSteps));
-    }	
+    }
 
     // Make sure server info is valid
     if (!g_CfgData.bValidServerInfo)
@@ -842,10 +842,10 @@ static void SetupStepGUI(CONFIG_STEP& step, UINT& nDispPos)
 
 	// Show the static control
 	ShowWnd(m_hDlg, step.nDescCtrlID);
-	
+
 	// Show the graphic control
 	ShowWnd(m_hDlg, step.nGraphicCtrlID);
-	
+
 	nDispPos++;
     }
 }
@@ -899,17 +899,17 @@ static BOOL CheckCancel()
 
     // Ask user if they really want to cancel
     int nChoice = MessageBox(m_hDlg, szMsg, szTitle, MB_YESNO | MB_ICONQUESTION);
-	
+
     m_bCancel = (nChoice == IDYES);
 
     m_bCheckCancel = FALSE;
 
     return m_bCancel;
-}	
+}
 
 /*
  *	Show the current config step, UNLESS the user has pressed the Cancel
- *	button, in which case a "cancel pending" message is already being 
+ *	button, in which case a "cancel pending" message is already being
  *	displayed and we don't want it replace with this new message.
  */
 static void ShowCurrentStep(UINT uiMsgID)
@@ -940,7 +940,7 @@ static char *GetVicepName()
     ASSERT((lstrlen(g_CfgData.szPartitionName) == 1) || (lstrlen(g_CfgData.szPartitionName) == 2));
 
     // Construct the partition name
-    if (!m_szVicepName[0]) 
+    if (!m_szVicepName[0])
 	sprintf(m_szVicepName, "/vicep%s", GetPartitionNameA());
 
     return m_szVicepName;
@@ -1046,14 +1046,14 @@ static BOOL DefineCellForServer()
     g_LogFile.Write("Putting this host in cell '%s'.\r\n", GetCellNameA());
 
     ASSERT(g_CfgData.szCellName[0]);
-		
+
     m_nResult = cfg_HostSetCell(g_hServer, GetCellNameA(), pszEntries, &m_nStatus);
     CHECK_RESULT;
 
     g_CfgData.bValidServerInfo = TRUE;
 
     return TRUE;
-}	
+}
 
 static BOOL StopClient()
 {
@@ -1103,10 +1103,10 @@ static BOOL DefineCellForClient()
     if (!g_CfgData.bFirstServer) {
 	if (!UpgradeLibHandles())
 	    return FALSE;
-    }	
+    }
 
     return TRUE;
-}	
+}
 
 static BOOL StartBosServer()
 {
@@ -1204,7 +1204,7 @@ static BOOL CreateAdminPrincipal()
 {
     ASSERT(g_hServer);
     ASSERT(g_CfgData.szAdminName[0]);
-	
+
     // Create generic admin principal and put in local Userlist
     char *pszAdminPW = 0;
     int nUID = 0;
@@ -1226,10 +1226,10 @@ static BOOL CreateAdminPrincipal()
     if (g_CfgData.bFirstServer) {
 	if (!UpgradeLibHandles())
 	    return FALSE;
-    }	
+    }
 
     return TRUE;
-}	
+}
 
 static BOOL StartFsVlAndSalvager()
 {
@@ -1239,7 +1239,7 @@ static BOOL StartFsVlAndSalvager()
 
     m_nResult = cfg_FileServerStart(g_hServer, &m_nStatus);
     CHECK_RESULT;
-                
+
     return TRUE;
 }
 
@@ -1259,14 +1259,14 @@ static BOOL ConfigSCC()
 {
     ASSERT(g_hServer);
     ASSERT(g_CfgData.szSysControlMachine[0]);
-	
+
     g_LogFile.Write("Configuring the System Control Client.\r\n");
 
     m_nResult = cfg_SysControlClientStart(g_hServer, GetSysControlMachineA(), &m_nStatus);
     CHECK_RESULT;
 
     return TRUE;
-}	
+}
 
 static BOOL GetPartitionID()
 {
@@ -1293,7 +1293,7 @@ static BOOL GetRootVolumeInfo()
         m_nStatus = DoRootVolumesExist(bResult);
         m_nResult = !m_nStatus;
         CHECK_RESULT;
-    
+
         g_CfgData.bRootVolumesExistanceKnown = TRUE;
     }
 
@@ -1301,7 +1301,7 @@ static BOOL GetRootVolumeInfo()
         m_nStatus = AreRootVolumesReplicated(bResult);
         m_nResult = !m_nStatus;
         CHECK_RESULT;
-    
+
         g_CfgData.bRootVolumesReplicationKnown = TRUE;
     }
 
@@ -1316,7 +1316,7 @@ static BOOL CreateRootAfs()
     // If the root.afs volume already exists, then just return.  We can get to this step
     // and root.afs already exist if:
     //
-    //    1)  We could not determine the status of the root volumes when the app was started 
+    //    1)  We could not determine the status of the root volumes when the app was started
     //        and the user asked us to create the root volumes if they don't exist.
     //
     //    2)  Since there is only one page from which the user decides if they want to create
@@ -1330,7 +1330,7 @@ static BOOL CreateRootAfs()
 
     if (!GetPartitionID())
 	return FALSE;
-    
+
     // If the client is running then stop it - creating root.afs will confuse it.
     // It will be started again after root.afs is created.
     if (!StopClient())
@@ -1349,17 +1349,17 @@ static BOOL CreateRootAfs()
     m_bWeCreatedRootAfs = TRUE;
 
     return TRUE;
-}	
+}
 
 static BOOL StartClient()
 {
     ASSERT(g_hClient);
-    
+
     g_LogFile.Write("Starting the AFS Client.\r\n");
 
     m_nResult = cfg_ClientStart(g_hClient, CLIENT_START_TIMEOUT, &m_nStatus);
     CHECK_RESULT;
-	
+
     return TRUE;
 }
 
@@ -1393,7 +1393,7 @@ static BOOL IsClientFreelance(void)
                             (BYTE *) &enabled, &dummyLen);
         RegCloseKey (parmKey);
     }
-    return (enabled?TRUE:FALSE);	
+    return (enabled?TRUE:FALSE);
 }
 
 static char space[2048];
@@ -1416,7 +1416,7 @@ static BOOL CreateFreelanceRootAfsMountPoint(char * path)
 {
     struct ViceIoctl blob;
     afs_int32 code;
-    
+
 	if (IsRootAfsMountPoint())
 		return TRUE;
 
@@ -1468,14 +1468,14 @@ try_again:
         m_bRootAfsDriveMappingCreated = (res == NO_ERROR);
         // m_bRootAfsDriveMappingCreated = (WNetAddConnection(A2S(szAfsRootDir), TEXT(""), A2S(m_szDriveToMapTo)) == NO_ERROR);
         g_LogFile.Write(m_bRootAfsDriveMappingCreated ? "succeeded.\r\n" : "failed.\r\n");
-    }        
+    }
 
     // If we couldn't map a drive, then ask the user to unmap something.
     if (!m_bRootAfsDriveMappingCreated) {
     	int nChoice = MsgBox(m_hDlg, IDS_CANT_MAP_ROOT_AFS, GetAppTitleID(), MB_ICONEXCLAMATION | MB_OKCANCEL);
         if (nChoice == IDOK)
             goto try_again;
-    }            
+    }
 
     return m_bRootAfsDriveMappingCreated;
 }
@@ -1511,7 +1511,7 @@ static BOOL CreateRootCell()
     // If the root.cell volume already exists, then just return.  We can get to this step
     // and root.cell already exist if:
     //
-    //    1)  We could not determine the status of the root volumes when the app was started 
+    //    1)  We could not determine the status of the root volumes when the app was started
     //        and the user asked us to create the root volumes if they don't exist.
     //
     //    2)  Since there is only one page from which the user decides if they want to create
@@ -1529,7 +1529,7 @@ static BOOL CreateRootCell()
     // error messages.
     if (g_CfgData.bRootAfsExists && !m_bWeCreatedRootAfs)
         return TRUE;
-	
+
     if (!GetPartitionID())
 	return FALSE;
 
@@ -1545,7 +1545,7 @@ static BOOL CreateRootCell()
     m_bWeCreatedRootCell = TRUE;
 
     return TRUE;
-}	
+}
 
 static char *GetRootCellDir()
 {
@@ -1569,7 +1569,7 @@ static char *GetRootCellReadWriteDir()
     }
 
     return szDir;
-}	
+}
 
 static BOOL MountRootCellStandard()
 {
@@ -1586,7 +1586,7 @@ static BOOL MountRootCellStandard()
         return FALSE;
 
     g_LogFile.Write("Mouting root.cell with a Standard mount point at path %s.\r\n", GetRootCellDir());
-	
+
     m_nResult = afsclient_MountPointCreate(g_hCell, GetRootCellDir(), "root.cell", READ_ONLY, CHECK_VOLUME, &m_nStatus);
     CHECK_RESULT;
 
@@ -1632,7 +1632,7 @@ static BOOL MountRootCellRW()
     CHECK_RESULT;
 
     return TRUE;
-}	
+}
 
 static BOOL Replicate()
 {
@@ -1648,12 +1648,12 @@ static BOOL Replicate()
 
     if (g_CfgData.bRootAfsExists && !g_CfgData.bRootAfsReplicated) {
 	g_LogFile.Write("Creating a read only site for volume root.afs using partition ID %d and volume ID %d.\r\n", m_nPartitionID, g_CfgData.nRootAfsID);
-	
+
 	m_nResult = vos_VLDBReadOnlySiteCreate(g_hCell, m_hvosServer, 0, m_nPartitionID, g_CfgData.nRootAfsID, &m_nStatus);
 	CHECK_RESULT;
-	
+
 	g_LogFile.Write("Releasing the root.afs volume using volume ID %d.\r\n", g_CfgData.nRootAfsID);
-	
+
 	m_nResult = vos_VolumeRelease(g_hCell, 0, g_CfgData.nRootAfsID, VOS_NORMAL, &m_nStatus);
 	CHECK_RESULT;
 
@@ -1662,12 +1662,12 @@ static BOOL Replicate()
 
     if (g_CfgData.bRootCellExists && !g_CfgData.bRootCellReplicated) {
 	g_LogFile.Write("Creating a read only site for volume root.cell using partition ID %d and volume ID %d.\r\n", m_nPartitionID, g_CfgData.nRootCellID);
-	
+
 	m_nResult = vos_VLDBReadOnlySiteCreate(g_hCell, m_hvosServer, 0, m_nPartitionID, g_CfgData.nRootCellID, &m_nStatus);
 	CHECK_RESULT;
-	
+
 	g_LogFile.Write("Releasing the root.cell volume using volume ID %d.\r\n", g_CfgData.nRootCellID);
-	
+
 	m_nResult = vos_VolumeRelease(g_hCell, 0, g_CfgData.nRootCellID, VOS_NORMAL, &m_nStatus);
 	CHECK_RESULT;
 
@@ -1675,7 +1675,7 @@ static BOOL Replicate()
     }
 
     return TRUE;
-}	
+}
 
 static BOOL EnableAuthChecking()
 {
@@ -1718,7 +1718,7 @@ static BOOL UpgradeLibHandles()
 static BOOL RestartServers()
 {
     ASSERT(g_hCell);
-	
+
     void *hbosServer;
 
     g_LogFile.Write("Bos open of server '%s'.\r\n", GetHostnameA());
@@ -1736,7 +1736,7 @@ static BOOL RestartServers()
     CHECK_RESULT;
 
     return TRUE;
-}	
+}
 
 void DbAddHostCallback(void *callBackId, cfg_cellServDbStatus_t *statusItemP, int status)
 {
@@ -1777,14 +1777,14 @@ void DbAddHostCallback(void *callBackId, cfg_cellServDbStatus_t *statusItemP, in
 
     cfg_CellServDbStatusDeallocate(statusItemP, &m_nStatus);
     // We don't care if this fails
-}	
+}
 
 static BOOL UpdateCellServDB(BOOL bAdding)
 {
     ASSERT(g_hServer);
     ASSERT(g_CfgData.szCellName[0]);
 
-    int nMaxUpdates;				 
+    int nMaxUpdates;
 
     cfg_cellServDbUpdateCallBack_t callBack = (cfg_cellServDbUpdateCallBack_t)DbAddHostCallback;
 
@@ -1810,7 +1810,7 @@ static BOOL UpdateCellServDB(BOOL bAdding)
 
     // Update CellServDB on all servers
     g_LogFile.Write("Updating CellServDB on all servers in the cell.\r\n");
-    if (bAdding)	
+    if (bAdding)
 	m_nResult = cfg_CellServDbAddHost(g_hServer, pszSCM, callBack, (void *)&m_CallBackID, &nMaxUpdates, &m_nStatus);
     else
 	m_nResult = cfg_CellServDbRemoveHost(g_hServer, pszSCM, callBack, (void *)&m_CallBackID, &nMaxUpdates, &m_nStatus);
@@ -1829,10 +1829,10 @@ static BOOL UpdateCellServDB(BOOL bAdding)
     while (!bDone) {
 	switch (WaitForSingleObject(m_hCellServDBUpdateEvent, CELLSERVDB_UPDATE_TIMEOUT))
 	{
-	case WAIT_OBJECT_0:	bDone = TRUE;	// The callback function signalled us that it is done.	
+	case WAIT_OBJECT_0:	bDone = TRUE;	// The callback function signalled us that it is done.
 	    break;
 
-	case WAIT_TIMEOUT: 
+	case WAIT_TIMEOUT:
 	    // We timed out so see if a server was updated.  If it was then all is cool
 	    // and we can keep going (after clearing the server update count flag).
 	    EnterCriticalSection(&m_CritSec);
@@ -1865,7 +1865,7 @@ static BOOL UpdateCellServDB(BOOL bAdding)
     CHECK_RESULT;
 
     return TRUE;
-}	
+}
 
 static BOOL AddToCellServDB()
 {
@@ -1873,12 +1873,12 @@ static BOOL AddToCellServDB()
 }
 
 static BOOL RemoveFromCellServDB()
-{	
+{
     return UpdateCellServDB(FALSE);
 }
 
 static BOOL RestartAllDbServers()
-{	
+{
     ASSERT(g_hServer);
 
     if (m_bUnconfiguringLastDBServer)
@@ -1895,7 +1895,7 @@ static BOOL RestartAllDbServers()
     m_bDbServersRestarted = TRUE;
 
     return TRUE;
-}	
+}
 
 static BOOL UnconfigDB()
 {
@@ -1913,7 +1913,7 @@ static BOOL UnconfigDB()
 static BOOL UnconfigBak()
 {
     ASSERT(g_hServer);
-	
+
     int nResult = cfg_DbServersStopAllBackup(g_hServer, &m_nStatus);
     CHECK_RESULT;
 
@@ -1928,10 +1928,10 @@ static BOOL UnconfigFS()
     CHECK_RESULT;
 
     return TRUE;
-}	
+}
 
 static BOOL UnconfigSCS()
-{	
+{
     ASSERT(g_hServer);
 
     m_nResult = cfg_UpdateServerStop(g_hServer, &m_nStatus);
@@ -1989,7 +1989,7 @@ static BOOL PostConfig()
     }
 
     ShowCurrentStep(IDS_INVALIDATE_CONFIG_INFO_STEP);
-	
+
     g_LogFile.Write("User has chosen to invalidate the server config info.\r\n");
 
     g_LogFile.Write("Stopping the bos server.\r\n");
@@ -2005,7 +2005,7 @@ static BOOL PostConfig()
     m_bMustExit = TRUE;
 
     return TRUE;
-}	
+}
 
 static void VosCloseServer()
 {
@@ -2014,7 +2014,7 @@ static void VosCloseServer()
 	vos_ServerClose(m_hvosServer, &m_nStatus);
 	m_hvosServer = 0;
     }
-}	
+}
 
 static void ShowConfigControls(BOOL bShow)
 {
@@ -2030,7 +2030,7 @@ static void UpdateConfigProgress(int nStepNum)
 {
     // Update the progress bar
     SendDlgItemMessage(m_hDlg, IDC_CONFIG_PROGRESS, PBM_STEPIT, 0, 0);
-			
+
     // Update the percent complete
     TCHAR buf[16];
     _stprintf(buf, TEXT("%2d%%"), nStepNum * 100 / m_nNumSteps);
@@ -2082,19 +2082,19 @@ static void AssignFailure(int nCurStep, int nLastMainStep)
     // use the last one that is there.
     m_ConfigSteps[nLastMainStep].eState = SS_STEP_FAILED;
     IF_WIZ(ForceUpdateWindow(m_hDlg, m_ConfigSteps[nLastMainStep].nGraphicCtrlID));
-}	
+}
 
 static int GetLastMainStep()
 {
     for (int ii = m_nNumSteps - 1; ii >= 0; ii--) {
 	if (m_ConfigSteps[ii].nDescID != 0)
 	    return ii;
-    }	
+    }
 
     ASSERT(FALSE);	// This should never happen!
 
     return 0;
-}	
+}
 
 static void ShowConfigFailedMsg()
 {
@@ -2123,11 +2123,11 @@ static void ShowViewLogButton()
 static DWORD WINAPI ConfigServer(LPVOID param)
 {
     HWND hLogo;
-	
+
     if (!g_pWiz) {
 	hLogo = GetDlgItem(m_hDlg, IDC_LOGO);
 	AfsAppLib_StartAnimation(hLogo);
-    }	
+    }
 
     // Disable all buttons (doesn't affect the Cancel button)
     IF_WIZ(g_pWiz->EnableButtons(0));
@@ -2148,7 +2148,7 @@ static DWORD WINAPI ConfigServer(LPVOID param)
 
     int nLastMainStep;
     IF_WIZ(nLastMainStep = GetLastMainStep());
-	
+
     // Loop over each config step performing the ones that are enabled.
     for (int nCurStep = 0; (nCurStep < m_nNumSteps) && bResult; nCurStep++) {
 	CONFIG_STEP& step = m_ConfigSteps[nCurStep];
@@ -2191,7 +2191,7 @@ static DWORD WINAPI ConfigServer(LPVOID param)
 		    // correct control
 		    step = m_ConfigSteps[nLastMainStep];
 		}
-            }	
+            }
 
 	    UpdateConfigProgress(nStepNum);
         } else {
@@ -2203,7 +2203,7 @@ static DWORD WINAPI ConfigServer(LPVOID param)
 
 	if (step.nGraphicCtrlID)
 	    IF_WIZ(ForceUpdateWindow(m_hDlg, step.nGraphicCtrlID));
-    }		
+    }
 
     // Close m_hvosServer if it is open
     VosCloseServer();
@@ -2262,11 +2262,11 @@ static DWORD WINAPI ConfigServer(LPVOID param)
 
     // Warn the user if we are going to force the config manager to exit
     if (m_bMustExit) {
-        if (m_bUnconfiguringLastDBServer)    
+        if (m_bUnconfiguringLastDBServer)
 	    MsgBox(m_hDlg, IDS_CELL_IS_GONE_MUST_EXIT, GetAppTitleID(), MB_OK | MB_ICONSTOP);
-        else	
+        else
 	    MsgBox(m_hDlg, IDS_CONFIG_INFO_INVALIDATED, GetAppTitleID(), MB_OK);
-    }	
+    }
 
     // Unmap the root afs drive if we had one
     if (m_bRootAfsDriveMappingCreated) {
@@ -2275,7 +2275,7 @@ static DWORD WINAPI ConfigServer(LPVOID param)
         BOOL bCanceled = WNetCancelConnection(A2S(m_szDriveToMapTo), TRUE) == NO_ERROR;
         g_LogFile.Write(bCanceled ? "succeeded.\r\n" : "failed.\r\n");
         m_bRootAfsDriveMappingCreated = !bCanceled;
-    }	
+    }
 
     return 0;
 }

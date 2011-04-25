@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -26,7 +26,7 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>backup deletedump</B> [<B>-dumpid</B> &lt;<VAR>dump id</VAR>><SUP>+</SUP>]  [<B>-from</B> &lt;<VAR>date time</VAR>><SUP>+</SUP>]  [<B>-to</B> &lt;<VAR>date time</VAR>><SUP>+</SUP>]
                   [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
-  
+
 <B>backup dele</B> [<B>-d</B> &lt;<VAR>dump id</VAR>><SUP>+</SUP>]  [<B>-f</B> &lt;<VAR>date time</VAR>><SUP>+</SUP>]  [<B>-t</B> &lt;<VAR>date time</VAR>><SUP>+</SUP>]
             [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
 </PRE>
@@ -96,14 +96,14 @@
         <VAR>dump ID 1</VAR>
         <VAR>dump ID 2</VAR>
         <VAR>etc.</VAR>
-   
+
 </PRE>
 <P><STRONG>例</STRONG>
 <P>次のコマンドは、ダンプ ID が 653777462 のダンプ・レコードと、それに関連する付加ダンプのレコードを削除しています。
 <PRE>   % <B>backup deletedump -dumpid 653777462</B>
    The following dumps were deleted:
         653777462
-   
+
 </PRE>
 <P>次のコマンドは、1997 年 1 月 1 日の 00:00:00 から 1997 年 12 月 31日の 23:59:59 までに作成されたすべてのダンプのレコードをバックアップ・データベースから削除しています。
 <PRE>   % <B>backup deletedump -from 01/01/1997 -to 12/31/1997</B>
@@ -114,7 +114,7 @@
            ...
         653777523
         653779648
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
@@ -123,11 +123,11 @@
 <P><A HREF="auarf074.htm#HDRBK_DUMPINFO">backup dumpinfo</A>
 <P><A HREF="auarf087.htm#HDRBK_SCANTAPE">backup scantape</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf067.htm">前ページ</A> &#124; <A HREF="auarf069.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf067.htm">前ページ</A> &#124; <A HREF="auarf069.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

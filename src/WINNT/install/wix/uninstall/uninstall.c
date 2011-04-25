@@ -10,7 +10,7 @@ int main(void)
     CHAR  szProductCode[39];
 
     MsiSetInternalUI(INSTALLUILEVEL_PROGRESSONLY, NULL);
-    
+
     do {
         rc = MsiEnumRelatedProducts(OAFW_UPGRADE_CODE, 0, iProduct, szProductCode);
         if ( rc == ERROR_SUCCESS ) {

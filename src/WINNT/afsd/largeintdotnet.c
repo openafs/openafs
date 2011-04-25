@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
  *
  * (C) COPYRIGHT IBM CORPORATION 1987, 1988
@@ -19,7 +19,7 @@
 
 #if (_MSC_VER >= 1300)
 LARGE_INTEGER LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b)
-{ 
+{
     LARGE_INTEGER result;
     int carry;
     result.LowPart=a.LowPart+b.LowPart;
@@ -28,7 +28,7 @@ LARGE_INTEGER LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b)
     return result;
 }
 LARGE_INTEGER LargeIntegerSubtract(LARGE_INTEGER a, LARGE_INTEGER b)
-{ 
+{
     LARGE_INTEGER result;
     int borrow;
     result.LowPart=a.LowPart-b.LowPart;
@@ -65,10 +65,10 @@ LARGE_INTEGER LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER
     result.HighPart=0;
     result.LowPart=0;
     if (b.HighPart == 0 && b.LowPart == 0) { return result; }
-    if (b.HighPart == 0 && b.LowPart == 1) { 
-	remainder->HighPart = 0; 
+    if (b.HighPart == 0 && b.LowPart == 1) {
+	remainder->HighPart = 0;
 	remainder->LowPart = 0;
-	return a; 
+	return a;
     }
 
     a1=a.HighPart;
@@ -84,13 +84,13 @@ LARGE_INTEGER LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER
     remainder->HighPart=(LONG)(r1 >> 32);
     remainder->LowPart=(DWORD)(r1 & 0xffffffff);
     return result;
-}	
+}
 
-LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a) 
+LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a)
 {
     LARGE_INTEGER result;
     result.HighPart=0;
     result.LowPart=a;
     return result;
-}	
-#endif	
+}
+#endif

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -209,10 +209,10 @@ BOOL CALLBACK WizStep_Common_DlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp)
 {
     // Get the dialog's resource ID
     int nIDD = GetWindowLong(hRHS, GWL_ID);
-	
+
     if (AfsAppLib_HandleHelp(nIDD, hRHS, msg, wp, lp))
 	return TRUE;
-	
+
     switch (msg) {
     case WM_INITDIALOG:	MakeBold(hRHS, IDC_TITLE);
 	RedrawGraphic();
@@ -387,7 +387,7 @@ char *GetClientCellNameA()
 char *GetClientNetbiosNameA()
 {
     static char szValueA[MAX_MACHINE_NAME_LEN + 1]="";
-	
+
     if ( szValueA[0] == 0 )
         lana_GetNetbiosName(szValueA, LANA_NETBIOS_NAME_FULL);
 
@@ -409,7 +409,7 @@ BOOL GetLibHandles(afs_status_t *pStatus)
     ASSERT(g_CfgData.szHostname[0]);
 
     int nResult;
-	
+
     // ************************* NOTE ********************************
     // * You MUST have already determined whether or not the host
     // * and client config info is valid before calling this function.
@@ -420,13 +420,13 @@ BOOL GetLibHandles(afs_status_t *pStatus)
     // cell that it can, and then use that to open the config library.  If the
     // libraries are already open, it will close them first.  Two handles to
     // the config library will be opened, one to the server to be configured,
-    // and one to the client machine we are configuring from.  
+    // and one to the client machine we are configuring from.
 
     // There are two types of cell handles, NULL and Standard.  A null handle
     // can make calls to any server except DB servers.  We need this primarily
     // to talk to the bos server to determine the machine's current configuration,
-    // and to configure the client information if it is not already.  A standard 
-    // handle can talk to any server.  Standard handles can be either authenticated 
+    // and to configure the client information if it is not already.  A standard
+    // handle can talk to any server.  Standard handles can be either authenticated
     // or unauthenticated.
 
     // Close all current handles
@@ -443,7 +443,7 @@ BOOL GetLibHandles(afs_status_t *pStatus)
             g_LogFile.Write("Failed to open a NULL cell handle: %lx.\r\n", (unsigned long)*pStatus);
     		return FALSE;
     	}
-    
+
     	// Get the client handle.  We never need a better handle than this
         // for the client, and so this handle will never be upgraded.
     	g_LogFile.Write("Getting config handle for the client.\r\n");
@@ -458,7 +458,7 @@ BOOL GetLibHandles(afs_status_t *pStatus)
 
     // If the client info is valid and we know what cell the server should be in,
     // and the client has that cell in its CellServDB, then we can get a Standard cell
-    // handle.  However there is an exception: if this is the first server in the 
+    // handle.  However there is an exception: if this is the first server in the
     // cell then there may not yet be an authentication server to talk to.  In that
     // case we use a null cell handle.
     if (g_CfgData.bValidClientInfo &&   // Client config is valid
@@ -499,8 +499,8 @@ BOOL GetLibHandles(afs_status_t *pStatus)
     	if (!nResult) {
             g_LogFile.Write("Failed to open a NULL cell handle:  %lx.\r\n", (unsigned long)*pStatus);
 	    return FALSE;
-    	}	
-    }	
+    	}
+    }
 
     // Get the server handle
     g_LogFile.Write("Getting config library handle for the server.\r\n");
@@ -555,7 +555,7 @@ static void CloseLibHandles(BOOL bExiting)
         if (g_hClient) {
 	    cfg_HostClose(g_hClient, &nStatus);
 	    g_hClient = 0;
-        }	
+        }
 
     	if (hClientCell) {
 	    afsclient_CellClose(hClientCell, &nStatus);
@@ -590,15 +590,15 @@ static void SetConfigDefaults()
 
 	if (g_CfgData.configSCC == CS_NULL)
 	    g_CfgData.configSCC = CS_DONT_CONFIGURE;
-    }	
+    }
 
     lstrcpy(g_CfgData.szAdminName, TEXT("admin"));
     lstrcpy(g_CfgData.szAdminUID, TEXT("0"));
 
     g_CfgData.bUseNextUid = TRUE;
-}	
+}
 
-	
+
 // Prototypes for each property page's dialog proc
 BOOL CALLBACK PartitionsPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK ServicesPageDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -612,7 +612,7 @@ static void RunCfgTool()
 	if (nChoice == IDYES)
 	    RunWizard();
 	return;
-    }	
+    }
 
     // If the server info is invalid, then the config tool cannot run.  The Wizard must be run
     // to initially configure the server.  Inform the user and ask if they want to run the wizard instead.
@@ -638,7 +638,7 @@ static void RunCfgTool()
 
     // Let the user see it
     PropSheet_ShowModal(g_pSheet);
-}	
+}
 
 static void RunWizard()
 {
@@ -660,5 +660,5 @@ static void RunWizard()
     delete g_pWiz;
 
     g_pWiz = 0;
-}	
+}
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2009 - Secure Endpoints Inc.
  *
  * Author: Asanka Herath <asanka@secure-endpoints.com>
@@ -244,7 +244,7 @@ BOOL write_bitmap(HANDLE h, bitmap * b)
 
  done:
 
-    return success;    
+    return success;
 }
 
 bitmap* read_bitmap(HANDLE h)

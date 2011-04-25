@@ -40,7 +40,7 @@ ShowUsage(void)
     printf("instloop [-i [name [ip mask]] | -u]\n\n");
     printf("    -i  install the %s\n", DRIVER_DESC);
     _tprintf(_T("        (if unspecified, uses name %s,\n"), DEFAULT_NAME);
-    _tprintf(_T("         ip %s, and mask %s)\n"), DEFAULT_IP, DEFAULT_MASK);    
+    _tprintf(_T("         ip %s, and mask %s)\n"), DEFAULT_IP, DEFAULT_MASK);
     printf("    -u  uninstall the %s\n", DRIVER_DESC);
 }
 
@@ -51,7 +51,7 @@ DisplayStartup(BOOL bInstall)
            " (Note: This may take up to a minute or two...)\n",
            bInstall ? "I" : "Un",
            DRIVER_DESC);
-    
+
 }
 
 static void

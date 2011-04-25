@@ -18,19 +18,19 @@ int optopt;
 int optreset;
 char *optarg;
 
-extern void LogStats(char *FileName, int ToLog, int Iteration,  int NumberOfProcesses, int NumberOfThreads, 
+extern void LogStats(char *FileName, int ToLog, int Iteration,  int NumberOfProcesses, int NumberOfThreads,
                      char *HostName, int ProcessNumber, struct cmd_struct CommandInfo[],
                      char *CommandLine, char *TargetDirectory);
 extern int UpdateMasterLog(char *FileName, struct cmd_struct CommandInfo[]);
-extern int BuildMasterStatLog(char *FileName, char *MoveFileName, int NumberOfProcesses, 
-                              int NumberOfThreads, char *CommandLine, int LoopCount, 
+extern int BuildMasterStatLog(char *FileName, char *MoveFileName, int NumberOfProcesses,
+                              int NumberOfThreads, char *CommandLine, int LoopCount,
                               char *TargetDirectory, int ProcessNumber);
 extern void LogMessage(int ProcessNumber, char *HostName, char *FileName, char *message, int LogID);
 
 DWORD WINAPI StressTestThread(LPVOID lpThreadParameter);
 int   getopt(int, char**, char*);
 DWORD FindProcessCount(char *ProcessName, HANDLE JobHandle);
-void  show_results(char *CommandLine, char *TargetDirectory, struct cmd_struct CommandInfo[], 
+void  show_results(char *CommandLine, char *TargetDirectory, struct cmd_struct CommandInfo[],
                    char *HostName, int NumberOfThreads, int CurrentLoop, int LogID);
 
 char    *ClientText = "streamfiles.txt";
@@ -52,8 +52,8 @@ HANDLE  PauseEventHandle;
 HANDLE  ContinueEventHandle;
 EXIT_STATUS ExitStatus[MAX_HANDLES];
 
-double create_procs(char *Hostname, char *CommandLine, char *TargetDirectory, 
-                    char *AfsLocker, char *Locker, char *HostName, 
+double create_procs(char *Hostname, char *CommandLine, char *TargetDirectory,
+                    char *AfsLocker, char *Locker, char *HostName,
                     int NumberOfThreads, int CurrentLoop, int LogID)
 {
     int     i;
@@ -71,7 +71,7 @@ double create_procs(char *Hostname, char *CommandLine, char *TargetDirectory,
     USER_OPTIONS     attachOption;
 #endif
 
-    InitializeCriticalSection(&CriticalSection); 
+    InitializeCriticalSection(&CriticalSection);
     for (i = 0; i < MAX_HANDLES; i++)
     {
         hEventHandle[i] = NULL;
@@ -84,7 +84,7 @@ double create_procs(char *Hostname, char *CommandLine, char *TargetDirectory,
     CommandInfo = calloc(1, sizeof(struct cmd_struct) * (CMD_MAX_CMD + 1) * NumberOfThreads);
     ProcessID = getpid();
 
-    for (i = 0; i < NumberOfThreads; i++) 
+    for (i = 0; i < NumberOfThreads; i++)
     {
         if (EndOnError)
         {
@@ -96,7 +96,7 @@ double create_procs(char *Hostname, char *CommandLine, char *TargetDirectory,
         if (hEventHandle[count] == NULL)
             continue;
         ResetEvent(hEventHandle[count]);
-        
+
         pParameterList[count] = calloc(1, sizeof(PARAMETERLIST));
         pParameterList[count]->ProcessNumber = count;
         pParameterList[count]->CommandInfo = (struct cmd_struct *)(CommandInfo + (i * (CMD_MAX_CMD + 1)));
@@ -233,7 +233,7 @@ static void usage(void)
     fprintf(stderr, "\n      may use either upper or lower case letters.\n\n");
 }
 
-void show_results(char *CommandLine, char *TargetDirectory, struct cmd_struct *CommandInfo, 
+void show_results(char *CommandLine, char *TargetDirectory, struct cmd_struct *CommandInfo,
                   char *HostName, int NumberOfThreads, int CurrentLoop, int LogID)
 {
 	struct cmd_struct TotalCommandInfo[CMD_MAX_CMD + 1];
@@ -257,17 +257,17 @@ void show_results(char *CommandLine, char *TargetDirectory, struct cmd_struct *C
 
     memset(ExitStatus, '\0', sizeof(ExitStatus[0]) * MAX_HANDLES);
 
-	for (j = 0; j < NumberOfThreads; j++) 
-    { 
+	for (j = 0; j < NumberOfThreads; j++)
+    {
 	    FinalCmdInfo = CommandInfo + (j * (CMD_MAX_CMD + 1));
 
 		for (i = 0; i <= CMD_MAX_CMD; i++)
         {
 		    TotalCommandInfo[i].count += FinalCmdInfo[i].count;
-            TotalCommandInfo[i].total_sec += FinalCmdInfo[i].total_sec; 
-            TotalCommandInfo[i].total_sum_of_squares += FinalCmdInfo[i].total_sum_of_squares; 
-            TotalCommandInfo[i].ErrorCount += FinalCmdInfo[i].ErrorCount; 
-            TotalCommandInfo[i].ErrorTime += FinalCmdInfo[i].ErrorTime; 
+            TotalCommandInfo[i].total_sec += FinalCmdInfo[i].total_sec;
+            TotalCommandInfo[i].total_sum_of_squares += FinalCmdInfo[i].total_sum_of_squares;
+            TotalCommandInfo[i].ErrorCount += FinalCmdInfo[i].ErrorCount;
+            TotalCommandInfo[i].ErrorTime += FinalCmdInfo[i].ErrorTime;
             grand_total += FinalCmdInfo[j].total_sec;
             if (!TotalCommandInfo[i].min_sec || (TotalCommandInfo[i].min_sec > FinalCmdInfo[i].min_sec))
                 TotalCommandInfo[i].min_sec = FinalCmdInfo[i].min_sec;
@@ -282,9 +282,9 @@ void show_results(char *CommandLine, char *TargetDirectory, struct cmd_struct *C
     sprintf(FileName, "%s\\log%05d\\%s\\ProcessStats.log", WorkingDirectory, LogID, HostName);
 
     if (PrintStats)
-        LogStats(FileName, 0, CurrentLoop, 1, NumberOfThreads, HostName, -1, TotalCommandInfo, 
+        LogStats(FileName, 0, CurrentLoop, 1, NumberOfThreads, HostName, -1, TotalCommandInfo,
                  CommandLine, TargetDirectory);
-    LogStats(FileName, 1, CurrentLoop, 1, NumberOfThreads, HostName, -1, TotalCommandInfo, 
+    LogStats(FileName, 1, CurrentLoop, 1, NumberOfThreads, HostName, -1, TotalCommandInfo,
              CommandLine, TargetDirectory);
 
     sprintf(FileName, "%s\\log%05d\\%s", WorkingDirectory, LogID, "MasterStatLog.log");
@@ -505,7 +505,7 @@ int main(int argc, char *argv[])
         if(*p == '/')
             *p = '\\';
     }
- 
+
 #ifdef HAVE_HESOID
     if (UseLocker)
     {
@@ -621,7 +621,7 @@ int main(int argc, char *argv[])
 
         _strtime(tbuffer);
         printf("\nIteration %d started at: %s\n", LoopCount, tbuffer);
-        create_procs(HostName, CommandLine, TargetDirectory, AfsLocker, Locker, 
+        create_procs(HostName, CommandLine, TargetDirectory, AfsLocker, Locker,
                      HostName, NumberOfThreads, CurrentLoop, LogID);
         _strtime(tbuffer);
         printf("Iteration %d ended at: %s\n", LoopCount, tbuffer);
@@ -696,12 +696,12 @@ int main(int argc, char *argv[])
 
     sprintf(FileName, "%s\\log%05d\\%s\\%s", WorkingDirectory, LogID, HostName, "MasterProcessStatLog.log");
     sprintf(MoveFileName, "%s\\log%05d\\%s\\%s", WorkingDirectory, LogID, HostName, "MasterProcessStatLogRaw.log");
-    BuildMasterStatLog(FileName, MoveFileName, NumberOfProcesses, NumberOfThreads, CommandLine, LoopCount, 
+    BuildMasterStatLog(FileName, MoveFileName, NumberOfProcesses, NumberOfThreads, CommandLine, LoopCount,
                        TargetDirectory, -1);
 
 //    sprintf(DateTime, "%s-%04d%02d%02d-%02d%02d%02d", HostName,
-//                                                      LocalTime.wYear, 
-//                                                      LocalTime.wMonth, 
+//                                                      LocalTime.wYear,
+//                                                      LocalTime.wMonth,
 //                                                      LocalTime.wDay,
 //                                                      LocalTime.wHour,
 //                                                      LocalTime.wMinute,
@@ -755,12 +755,12 @@ int main(int argc, char *argv[])
 
         sprintf(FileName, "%s\\log%05d\\%s", WorkingDirectory, LogID, "MasterStatLog.log");
         sprintf(MoveFileName, "%s\\log%05d\\%s", WorkingDirectory, LogID, "MasterStatLogRaw.log");
-        BuildMasterStatLog(FileName, MoveFileName, NumberOfProcesses, NumberOfThreads, 
+        BuildMasterStatLog(FileName, MoveFileName, NumberOfProcesses, NumberOfThreads,
                            CommandLine, IterationCount, TargetDirectory, -2);
         sprintf(DateTime, "%s%05d-%04d%02d%02d-%02d%02d%02d", "log",
                                                           LogID,
-                                                          LocalTime.wYear, 
-                                                          LocalTime.wMonth, 
+                                                          LocalTime.wYear,
+                                                          LocalTime.wMonth,
                                                           LocalTime.wDay,
                                                           LocalTime.wHour,
                                                           LocalTime.wMinute,
@@ -887,7 +887,7 @@ int getopt(int nargc, char *nargv[], char *ostr)
             return (-1);
         }
     }
-    if ((optopt = (int)*place++) == (int)':' || !(oli = strchr(ostr, optopt))) 
+    if ((optopt = (int)*place++) == (int)':' || !(oli = strchr(ostr, optopt)))
     {
         if (optopt == (int)'-')
             return (-1);
@@ -897,7 +897,7 @@ int getopt(int nargc, char *nargv[], char *ostr)
             (void)fprintf(stderr, "%s: illegal option -- %c\n", __progname, optopt);
         return (BADCH);
     }
-    if (*++oli != ':') 
+    if (*++oli != ':')
     {
         optarg = NULL;
         if (!*place)
@@ -907,7 +907,7 @@ int getopt(int nargc, char *nargv[], char *ostr)
     {
         if (*place)
             optarg = place;
-        else if (nargc <= ++optind) 
+        else if (nargc <= ++optind)
         {
             place = EMSG;
             if (*ostr == ':')

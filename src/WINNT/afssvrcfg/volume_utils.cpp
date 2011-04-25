@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -89,17 +89,17 @@ static void AddColumn(int nWidth, LPCTSTR pszTitle)
 {
     static int nCol = 1;
     FASTLISTCOLUMN col;
-	
+
     col.dwFlags = FLCF_JUSTIFY_LEFT;
     col.cxWidth = nWidth;
     lstrcpy(col.szText, pszTitle);
-	
+
     FastList_SetColumn(m_hDriveList, nCol++, &col);
 }
 
 static void SetupDriveListCols()
 {
-    // Set width of cols based on width of the list		
+    // Set width of cols based on width of the list
     RECT rect;
     GetClientRect(m_hDriveList, &rect);
 
@@ -115,7 +115,7 @@ static void SetupDriveListCols()
     AddColumn(50, GetString(IDS_DRIVE));
     AddColumn(nWidth - 100, GetString(IDS_NAME_OR_ERROR));
     AddColumn(50, GetString(IDS_SIZE));
-}	
+}
 
 static LPCTSTR GetDriveSizeAsString(LPCTSTR pszRootDir)
 {
@@ -127,7 +127,7 @@ static LPCTSTR GetDriveSizeAsString(LPCTSTR pszRootDir)
 
     *szSize = 0;
 
-    // Get partition size in bytes	
+    // Get partition size in bytes
     if (GetDiskFreeSpaceEx(pszRootDir, &liDummy, &liSize, &liDummy)) {
 	// Covert to megabytes
 	ULONG nSize = (ULONG)(liSize.QuadPart / (1024 * 1024));
@@ -137,7 +137,7 @@ static LPCTSTR GetDriveSizeAsString(LPCTSTR pszRootDir)
     }
 
     return szSize;
-}	
+}
 
 static BOOL DoesDriveContainData(LPCTSTR pszDriveRootDir)
 {
@@ -153,7 +153,7 @@ static BOOL DoesDriveContainData(LPCTSTR pszDriveRootDir)
     FindClose(hFind);
 
     return TRUE;
-}	
+}
 
 static BOOL OnlyHasFolder(LPCTSTR pszRootDir, LPCTSTR pszFolder)
 {
@@ -174,18 +174,18 @@ static BOOL OnlyHasFolder(LPCTSTR pszRootDir, LPCTSTR pszFolder)
 	// Is anything else on the disk?
 	if (!FindNextFile(hFind, &findData))
 	    bFound = TRUE;
-    }	
+    }
 
     FindClose(hFind);
 
     return bFound;
-}	
+}
 
 static BOOL DriveHasRecycleBin(LPCTSTR pszDriveRootDir)
 {
     if (OnlyHasFolder(pszDriveRootDir, TEXT("Recycled")))
 	return TRUE;
-	
+
     if (OnlyHasFolder(pszDriveRootDir, TEXT("Recycle Bin")))
 	return TRUE;
 
@@ -238,7 +238,7 @@ static BOOL GetDriveInfo(TCHAR chDrive, DRIVE_INFO& di)
     DWORD dwDriveFlags;
 
     _stprintf(di.szRootDir, TEXT("%c:\\"), chDrive);
-	
+
     if (GetDriveType(di.szRootDir) != DRIVE_FIXED)
 	return FALSE;
 
@@ -253,7 +253,7 @@ static BOOL GetDriveInfo(TCHAR chDrive, DRIVE_INFO& di)
 	bInvalid |= ValidateDrive(dwDriveFlags & FS_VOL_IS_COMPRESSED, IDS_ERROR_DRIVE_COMPRESSED, szError);
 	bInvalid |= ValidateDrive(lstrcmp(szFileSys, TEXT("NTFS")) != 0, IDS_ERROR_FS_IS_NOT_NTFS, szError);
 
-	/* 
+	/*
 	 *  We are no longer going to require that afs drives be empty; we will give a warning instead.
 	 *
 	 *	bInvalid |= ValidateDrive(DoesDriveContainNT(di.szRootDir), IDS_ERROR_DRIVE_CONTAINS_NT, szError);
@@ -261,7 +261,7 @@ static BOOL GetDriveInfo(TCHAR chDrive, DRIVE_INFO& di)
 	 */
 	if (!bInvalid)
 	    bHasData = ValidateDrive(DoesDriveContainData(di.szRootDir), IDS_ERROR_DRIVE_HAS_DATA, szError);
-    }	
+    }
 
     if (*szError) {
 	lstrcpy(di.szVolName, szError);
@@ -282,7 +282,7 @@ static BOOL GetDriveInfo(TCHAR chDrive, DRIVE_INFO& di)
 
 	if (lstrlen(di.szVolName) == 0)
 	    GetString(di.szVolName, IDS_VOLUME_HAS_NO_NAME);
-    }	
+    }
 
     lstrncpy(di.szSize, GetDriveSizeAsString(di.szRootDir), sizeof(di.szSize));
 
@@ -361,5 +361,5 @@ BOOL UpdateDriveList()
     FastList_RemoveAll(m_hDriveList);
 
     return FillDriveList();
-}	
+}
 

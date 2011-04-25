@@ -10,8 +10,8 @@
 #define AFSCLIENT_ADMIN_COMMENTW   L"AFS Client Administrators"
 #define LOCAL_ADMIN_GROUP_SID      L"S-1-5-32-544"
 
-/* LookupAliasFromRid is from Microsoft KB 157234 
- * 
+/* LookupAliasFromRid is from Microsoft KB 157234
+ *
  * Author: Scott Field (sfield)    02-Oct-96
  */
 

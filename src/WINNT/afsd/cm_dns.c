@@ -49,11 +49,11 @@ int cm_InitDNS(int enabled)
     int len;
     int code;
     char *addr;
-  
-    if (!enabled) { 
-        fprintf(stderr, "DNS support disabled\n"); 
-        cm_dnsEnabled = 0; 
-        return 0; 
+
+    if (!enabled) {
+        fprintf(stderr, "DNS support disabled\n");
+        cm_dnsEnabled = 0;
+        return 0;
     }
 
     /* First try AFS_NS environment var. */
@@ -71,14 +71,14 @@ int cm_InitDNS(int enabled)
         len = GetPrivateProfileString("AFS Domain Name Servers", "ns1", NULL,
                                        dns_addr, sizeof(dns_addr),
                                        configpath);
-  
+
         if (len == 0 || inet_addr(dns_addr) == -1) {
             fprintf(stderr, "No valid name server addresses found, DNS lookup is "
                      "disabled\n");
             cm_dnsEnabled = 0;  /* failed */
             return -1;     /* No name servers defined */
         }
-        else 
+        else
             fprintf(stderr, "Found DNS server %s\n", dns_addr);
     }
 #endif /* DNSAPI_ENV */
@@ -89,7 +89,7 @@ int cm_InitDNS(int enabled)
 #ifndef DNSAPI_ENV
 SOCKADDR_IN setSockAddr(char *server, int port)
 {
-  SOCKADDR_IN sockAddr;                     
+  SOCKADDR_IN sockAddr;
   int         addrLen = sizeof(SOCKADDR_IN);
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -109,7 +109,7 @@ int getRRCount(PDNS_HDR ptr)
 }
 
 
-int send_DNS_Addr_Query(char* query, 
+int send_DNS_Addr_Query(char* query,
 			 SOCKET commSock, SOCKADDR_IN sockAddr, char *buffer)
 {
   PDNS_HDR    pDNShdr;
@@ -127,7 +127,7 @@ int send_DNS_Addr_Query(char* query,
    *                               *
    * hard-coded Adrress (A) query  *
    *********************************/
-  
+
   pDNShdr = (PDNS_HDR)&( buffer[ 0 ] );
   pDNShdr->id         = htons( 0xDADE );
   pDNShdr->flags      = htons( DNS_FLAG_RD ); /* do recurse */
@@ -135,23 +135,23 @@ int send_DNS_Addr_Query(char* query,
   pDNShdr->rr_count   = 0;                    /* none in query */
   pDNShdr->auth_count = 0;                    /* none in query */
   pDNShdr->add_count  = 0;                    /* none in query */
-  
+
   queryLen = putQName( query, &(buffer[ DNS_HDR_LEN ] ) );
   queryLen += DNS_HDR_LEN; /* query Length is just after the query name and header */
 #ifdef DEBUG
   fprintf(stderr, "send_DNS_Addr: query=%s, queryLen=%d\n", query, queryLen);
 #endif
-  
-  
+
+
   pDNS_qtail = (PDNS_QTAIL) &(buffer[ queryLen ]);
   pDNS_qtail->qtype = htons(255);/*htons(DNS_RRTYPE_A); */
-  pDNS_qtail->qclass = htons(DNS_RRCLASS_IN); 
+  pDNS_qtail->qclass = htons(DNS_RRCLASS_IN);
   queryLen +=  DNS_QTAIL_LEN;
-  
+
   /**************************
    * Send DNS Query Message *
    **************************/
-  
+
 
   res = sendto( commSock,
 		buffer,
@@ -159,7 +159,7 @@ int send_DNS_Addr_Query(char* query,
 		0,
 		(struct sockaddr *) &sockAddr,
 		sizeof( SOCKADDR_IN ) );
-  
+
   /*dumpSbuffer(buffer,queryLen);*/
 
   if ( res < 0 )
@@ -175,12 +175,12 @@ int send_DNS_Addr_Query(char* query,
     /*printf( "sendto() succeeded\n");*/
     ;
     } /* end if */
-  
+
   return(0);
 }
 
 
-int send_DNS_AFSDB_Query(char* query, 
+int send_DNS_AFSDB_Query(char* query,
 			 SOCKET commSock, SOCKADDR_IN sockAddr, char *buffer)
 {
   /*static char buffer[BUFSIZE];*/
@@ -200,7 +200,7 @@ int send_DNS_AFSDB_Query(char* query,
    *                         *
    * hard-coded AFSDB query  *
    ***************************/
-  
+
   pDNShdr = (PDNS_HDR)&( buffer[ 0 ] );
   pDNShdr->id         = htons( 0xDEAD );
   pDNShdr->flags      = htons( DNS_FLAG_RD ); /* do recurse */
@@ -208,27 +208,27 @@ int send_DNS_AFSDB_Query(char* query,
   pDNShdr->rr_count   = 0;                    /* none in query */
   pDNShdr->auth_count = 0;                    /* none in query */
   pDNShdr->add_count  = 0;                    /* none in query */
-  
+
   queryLen = putQName( query, &(buffer[ DNS_HDR_LEN ] ) );
   queryLen += DNS_HDR_LEN; /* query Length is just after the query name and header */
-  
-  
+
+
   pDNS_qtail = (PDNS_QTAIL) &(buffer[ queryLen ]);
-  pDNS_qtail->qtype = htons(DNS_RRTYPE_AFSDB); 
-  pDNS_qtail->qclass = htons(DNS_RRCLASS_IN); 
+  pDNS_qtail->qtype = htons(DNS_RRTYPE_AFSDB);
+  pDNS_qtail->qclass = htons(DNS_RRCLASS_IN);
   queryLen +=  DNS_QTAIL_LEN;
-  
+
   /**************************
    * Send DNS Query Message *
    **************************/
-  
+
   res = sendto( commSock,
 		buffer,
 		queryLen,
 		0,
 		(struct sockaddr *) &sockAddr,
 		sizeof( SOCKADDR_IN ) );
-  
+
   /*dumpSbuffer(buffer,queryLen);*/
 
   if ( res < 0 )
@@ -244,7 +244,7 @@ int send_DNS_AFSDB_Query(char* query,
     /*printf( "sendto() succeeded\n");*/
     ;
     } /* end if */
-  
+
   return(0);
 }
 
@@ -263,9 +263,9 @@ PDNS_HDR get_DNS_Response(SOCKET commSock, SOCKADDR_IN sockAddr, char *buffer)
   /*****************************
    * Receive DNS Reply Message *
    *****************************/
-  
+
   /*printf( "calling recvfrom() on connected UDP socket\n" );*/
-  
+
   size = recvfrom( commSock,
 		  buffer,
 		  BUFSIZE,
@@ -277,10 +277,10 @@ PDNS_HDR get_DNS_Response(SOCKET commSock, SOCKADDR_IN sockAddr, char *buffer)
   /*dumpRbuffer(buffer,res);*/
 
 #ifdef DEBUG
-  fprintf(stderr, "recvfrom returned %d bytes from %s: \n", 
+  fprintf(stderr, "recvfrom returned %d bytes from %s: \n",
 	  size, inet_ntoa( sockAddr.sin_addr ) );
 #endif /* DEBUG */
-  
+
   return((PDNS_HDR)&( buffer[ 0 ] ));
 
 }
@@ -292,15 +292,15 @@ int putQName( char *pHostName, char *pQName )
   char    c;
   int     j = 0;
   int     k = 0;
-  
+
   DNSlowerCase(pHostName);
   /*printf( "Hostname: [%s]\n", pHostName );*/
-  
+
   for ( i = 0; *( pHostName + i ); i++ )
     {
       c = *( pHostName + i );   /* get next character */
-      
-      
+
+
       if ( c == '.' )
 	{
 	  /* dot encountered, fill in previous length */
@@ -318,13 +318,13 @@ int putQName( char *pHostName, char *pQName )
 	  k++;                /* inc count of seg chars */
 	} /* end if */
     } /* end for loop */
-  
+
   *(pQName + j )                  = k;   /* count for final segment */
 
   *(pQName + j + k + 1 )      = 0;   /* count for trailing NULL segment is 0 */
-  
+
   /*printf( "\n" ); */
-  
+
   if (c == '.')
     return ( j + k + 1 );        /* return total length of QName */
   else
@@ -353,7 +353,7 @@ u_char * skipRRQName(u_char *pQName)
   };
 
   /* ptr now pointing at terminating zero of query QName,
-     or the pointer for the previous occurrence 
+     or the pointer for the previous occurrence
      (compression)
    */
   ptr++;
@@ -381,11 +381,11 @@ u_char * printRRQName( u_char *pQName, PDNS_HDR buffer )
       if ( c >= 0xC0 ) {
 	c = *(namePtr + 1);
 	retPtr = namePtr+2;
-	namePtr = buffPtr+c; 
+	namePtr = buffPtr+c;
       } else {
 	if ( c == 0 )
 	  break;
-	
+
 	for ( k = 1; k <= c; k++ )
 	  {
 	    fprintf(stderr, "%c", *( namePtr + k ) );
@@ -425,11 +425,11 @@ u_char * sPrintRRQName( u_char *pQName, PDNS_HDR buffer, char *str )
       if ( c >= 0xC0 ) {
 	c = *(namePtr + 1);
 	retPtr = namePtr+2;
-	namePtr = buffPtr+c; 
+	namePtr = buffPtr+c;
       } else {
 	if ( c == 0 )
 	  break;
-	
+
 	for ( k = 1; k <= c; k++ )
 	  {
 	    sprintf(section,"%c", *( namePtr + k ) );
@@ -454,7 +454,7 @@ void printReplyBuffer_AFSDB(PDNS_HDR replyBuff)
   u_char *ptr = (u_char *) replyBuff;
   int    answerCount = ntohs((replyBuff)->rr_count);
   u_char i;
-  PDNS_AFSDB_RR_HDR 
+  PDNS_AFSDB_RR_HDR
          rrPtr;
 
   ptr += DNS_HDR_LEN;
@@ -474,7 +474,7 @@ void printReplyBuffer_AFSDB(PDNS_HDR replyBuff)
     rrPtr = (PDNS_AFSDB_RR_HDR) ptr;
     ptr+= DNS_AFSDB_RR_HDR_LEN;
     if ( ntohs(rrPtr->rr_afsdb_class) == 1) {
-      fprintf(stderr,"AFDB class %d ->  ",ntohs(rrPtr->rr_afsdb_class)); 
+      fprintf(stderr,"AFDB class %d ->  ",ntohs(rrPtr->rr_afsdb_class));
       ptr = printRRQName(ptr,replyBuff); }
     else
       ptr = skipRRQName(ptr);
@@ -484,14 +484,14 @@ void printReplyBuffer_AFSDB(PDNS_HDR replyBuff)
 
 };
 
-void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS], 
+void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
                               unsigned short ports[], unsigned short ipRanks[], int *numServers, int *ttl)
   /*PAFS_SRV_LIST (srvList)*/
 {
   u_char *ptr = (u_char *) replyBuff;
   int    answerCount = ntohs((replyBuff)->rr_count);
   u_char i;
-  PDNS_AFSDB_RR_HDR 
+  PDNS_AFSDB_RR_HDR
          rrPtr;
   int srvCount = 0;
   char hostName[256];
@@ -518,7 +518,7 @@ void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHost
     ptr = skipRRQName(ptr);
     rrPtr = (PDNS_AFSDB_RR_HDR) ptr;
     ptr+= DNS_AFSDB_RR_HDR_LEN;
-    if ((ntohs(rrPtr->rr_afsdb_class) == 1) && 
+    if ((ntohs(rrPtr->rr_afsdb_class) == 1) &&
 	(srvCount < MAX_AFS_SRVS)) {
       /*ptr = sPrintRRQName(ptr,replyBuff,srvList->host[srvList->count]);*/
       ptr = sPrintRRQName(ptr,replyBuff,hostName);
@@ -556,14 +556,14 @@ u_char * processReplyBuffer_Addr(PDNS_HDR replyBuff)
 {
   u_char *ptr = (u_char *) replyBuff;
   int    answerCount = ntohs((replyBuff)->rr_count);
-  PDNS_A_RR_HDR 
+  PDNS_A_RR_HDR
          rrPtr;
 
 #ifdef DEBUG
   fprintf(stderr, "processReplyBuffer_Addr: answerCount=%d\n", answerCount);
 #endif /* DEBUG */
   if (answerCount == 0) return 0;
-  
+
   ptr += DNS_HDR_LEN;
 
   /* ptr now pointing at start of QName in query field */
@@ -604,15 +604,15 @@ int DNSgetAddr(SOCKET commSock, char *hostName, struct in_addr *iNet)
   /**********************
    * Get a DGRAM socket *
    **********************/
-  
+
   sockAddr = setSockAddr(dns_addr, DNS_PORT);
-  
+
   rc = send_DNS_Addr_Query(hostName,commSock,sockAddr, buffer);
   if (rc < 0) return rc;
   pDNShdr = get_DNS_Response(commSock,sockAddr, buffer);
   if (pDNShdr == NULL)
     return -1;
-  
+
   addr = processReplyBuffer_Addr(pDNShdr);
   if (addr == 0)
     return -1;
@@ -656,21 +656,21 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
         fprintf(stderr, "DNS initialization failed, disabled\n");
         return -1;
     }
-  
+
     if (service == NULL || protocol == NULL || cellName == NULL) {
         fprintf(stderr, "invalid input\n");
         return -1;
     }
 
     sockAddr = setSockAddr(dns_addr, DNS_PORT);
-  
+
     commSock = socket( AF_INET, SOCK_DGRAM, 0 );
     if ( commSock < 0 )
     {
         /*afsi_log("socket() failed\n");*/
         fprintf(stderr, "getAFSServer: socket() failed, errno=%d\n", errno);
         return (-1);
-    } 
+    }
 
     StringCbCopyA(query, sizeof(query), cellName);
     if (query[strlen(query)-1] != '.') {
@@ -683,9 +683,9 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
         fprintf(stderr,"getAFSServer: send_DNS_AFSDB_Query failed\n");
         return -1;
     }
-    
+
     pDNShdr = get_DNS_Response(commSock,sockAddr, buffer);
-  
+
     /*printReplyBuffer_AFSDB(pDNShdr);*/
     if (pDNShdr)
         processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, ports, ipRanks, numServers, ttl);
@@ -728,14 +728,14 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                 ports[*numServers] = htons(pDnsIter->Data.SRV.wPort);
                 (*numServers)++;
 
-                if (!*ttl) 
+                if (!*ttl)
                     *ttl = pDnsIter->dwTtl;
-                if (*numServers == AFSMAXCELLHOSTS) 
+                if (*numServers == AFSMAXCELLHOSTS)
                     break;
             }
         }
 
-        for (i=0;i<*numServers;i++) 
+        for (i=0;i<*numServers;i++)
             cellHostAddrs[i] = 0;
 
         /* now check if there are any A records in the results */
@@ -766,7 +766,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                                     break;
                                 }
                             }
-                            if (cellHostAddrs[i]) 
+                            if (cellHostAddrs[i])
                                 break;
                             /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                         }
@@ -796,14 +796,14 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                     ports[*numServers] = afsdbPort;
                     (*numServers)++;
 
-                    if (!*ttl) 
+                    if (!*ttl)
                         *ttl = pDnsIter->dwTtl;
-                    if (*numServers == AFSMAXCELLHOSTS) 
+                    if (*numServers == AFSMAXCELLHOSTS)
                         break;
                 }
             }
 
-            for (i=0;i<*numServers;i++) 
+            for (i=0;i<*numServers;i++)
                 cellHostAddrs[i] = 0;
 
             /* now check if there are any A records in the results */
@@ -834,7 +834,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                                         break;
                                     }
                                 }
-                                if (cellHostAddrs[i]) 
+                                if (cellHostAddrs[i])
                                     break;
                                 /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                             }
@@ -850,7 +850,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
 
     if ( *numServers > 0 )
         return 0;
-    else        
+    else
         return -1;
 #endif /* DNSAPI_ENV */
 }
@@ -858,7 +858,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
 int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, const cm_unichar_t *cellName,
                   unsigned short afsdbPort, /* network byte order */
                   int *cellHostAddrs,
-                  cm_unichar_t cellHostNames[][MAXHOSTCHARS], 
+                  cm_unichar_t cellHostNames[][MAXHOSTCHARS],
                   unsigned short ports[],   /* network byte order */
                   unsigned short ipRanks[],
                   int *numServers, int *ttl)
@@ -896,15 +896,15 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                 ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
                 ports[*numServers] = htons(pDnsIter->Data.SRV.wPort);
                 (*numServers)++;
-                
-                if (!*ttl) 
+
+                if (!*ttl)
                     *ttl = pDnsIter->dwTtl;
-                if (*numServers == AFSMAXCELLHOSTS) 
+                if (*numServers == AFSMAXCELLHOSTS)
                     break;
             }
         }
 
-        for (i=0;i<*numServers;i++) 
+        for (i=0;i<*numServers;i++)
             cellHostAddrs[i] = 0;
 
         /* now check if there are any A records in the results */
@@ -936,7 +936,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                                     break;
                                 }
                             }
-                            if (cellHostAddrs[i]) 
+                            if (cellHostAddrs[i])
                                 break;
                             /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                         }
@@ -966,15 +966,15 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                     ipRanks[*numServers] = 0;
                     ports[*numServers] = afsdbPort;
                     (*numServers)++;
-                
-                    if (!*ttl) 
+
+                    if (!*ttl)
                         *ttl = pDnsIter->dwTtl;
-                    if (*numServers == AFSMAXCELLHOSTS) 
+                    if (*numServers == AFSMAXCELLHOSTS)
                         break;
                 }
             }
 
-            for (i=0;i<*numServers;i++) 
+            for (i=0;i<*numServers;i++)
                 cellHostAddrs[i] = 0;
 
             /* now check if there are any A records in the results */
@@ -1006,7 +1006,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                                         break;
                                     }
                                 }
-                                if (cellHostAddrs[i]) 
+                                if (cellHostAddrs[i])
                                     break;
                                 /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                             }
@@ -1022,7 +1022,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
 
     if ( *numServers > 0 )
         return 0;
-    else        
+    else
 #endif  /* DNSAPI_ENV */
         return -1;
 }

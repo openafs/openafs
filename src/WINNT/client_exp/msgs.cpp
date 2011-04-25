@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -24,22 +24,22 @@ extern "C" {
 
 
 
-/* 
+/*
   ShowMessageBox:
 
   This function takes three main arguements, the stringtable ID, the button types
-  to be displayed (default = MB_OK) and the help table reference (default = 0, no 
-  help) and then a variable amount of arguements. The variable list does not need 
-  a special ending flag/character/number. The list is read only as needed, which 
-  is defined by the string table and the presence of any "%X" characters, where X 
-  is one of the printf format types. The order of the variable list MUST 
-  correspond to the order of types in the string table entry. If the string table 
-  calls for INT INT UINT CHAR* DOUBLE, then the arguement list had better be INT 
-  INT UINT CHAR* DOUBLE or else there will be serious problems (stack will be 
+  to be displayed (default = MB_OK) and the help table reference (default = 0, no
+  help) and then a variable amount of arguements. The variable list does not need
+  a special ending flag/character/number. The list is read only as needed, which
+  is defined by the string table and the presence of any "%X" characters, where X
+  is one of the printf format types. The order of the variable list MUST
+  correspond to the order of types in the string table entry. If the string table
+  calls for INT INT UINT CHAR* DOUBLE, then the arguement list had better be INT
+  INT UINT CHAR* DOUBLE or else there will be serious problems (stack will be
   misread, general protection faults, garbage output, and other errors).
 
-  This function takes the arguements passed in the list and inserts them by 
-  parsing and pszcut/pszpaste the string table entry to add all the arguements passed 
+  This function takes the arguements passed in the list and inserts them by
+  parsing and pszcut/pszpaste the string table entry to add all the arguements passed
   in. This allows for any generic	message to be created.
 
   %i,d 	  = Integer
@@ -56,22 +56,22 @@ extern "C" {
   default = prints out string so far, with error message attached at place of error.
 
   Return type is the button pressed in the message box.
- 
+
 */
 
 UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 
     CString temp;
-    TCHAR *pszstring, 
-    *pszpaste, 
-    *pszcut, 
+    TCHAR *pszstring,
+    *pszpaste,
+    *pszcut,
     *pszdone,
     *pszconvert;
     TCHAR chread;
     va_list params;
     int x;
 
-    pszconvert = new TCHAR[255];    	
+    pszconvert = new TCHAR[255];
     va_start(params, Help);
     LoadString (temp, Id);
     pszstring = temp.GetBuffer(512);
@@ -81,7 +81,7 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
     if (!_tcsstr(pszstring, _T("%"))) {
 	delete pszconvert;
 	return AfxMessageBox(pszstring, Button, Help);
-    }   
+    }
 
     x = _tcscspn(pszstring, _T("%"));
     pszdone = new TCHAR[512];
@@ -94,23 +94,23 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 
     for ( ; ; ) {
 
-	switch (chread) { 
+	switch (chread) {
 	case	_T('i') :
 	case	_T('d') :
-	{ 	    
+	{
 	    int anint = va_arg(params, int);
 	    _itot( anint, pszconvert, 10);
 	    break;
 	}
 	case	_T('u') :
-	{	
+	{
 	    UINT anuint = va_arg(params, UINT);
 	    _itot( anuint, pszconvert, 10);
 	    break;
 	}
 
 	case	_T('x') :
-	case	_T('X') :   
+	case	_T('X') :
 	{
 	    int ahex = va_arg(params, int);
 	    _itot( ahex, pszconvert, 16);
@@ -118,20 +118,20 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 	}
 	case	_T('g') :
 	case	_T('f') :
-	case	_T('e') :   
+	case	_T('e') :
 	{
 	    double adbl = va_arg(params, double);
             _stprintf(pszconvert, _T("%g"), adbl);
 	    break;
 	}
-	case	_T('s') :	
+	case	_T('s') :
 	{
 	    TCHAR *pStr = va_arg(params, TCHAR*);
 	    ASSERT(_tcslen(pStr) <= 255);
 	    _tcscpy(pszconvert, pStr);
 	    break;
 	}
-	case	_T('l') :	
+	case	_T('l') :
 	{
 	    chread = pszdone[x+2];
 	    switch(chread) {
@@ -156,11 +156,11 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 	    break;
 	}
 
-	case	_T('c') :	
+	case	_T('c') :
 	{
 	    int letter = va_arg(params, int);
 	    pszconvert[0] = (TCHAR)letter;
-	    pszconvert[1] = '\0'; 
+	    pszconvert[1] = '\0';
 	    break;
 	}
 	case 	_T('a')	:
@@ -183,7 +183,7 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 	    break;
 	}
 	    default 	:
-	    {	
+	    {
 		_tcscpy(pszconvert, _T(" Could not load message. Invalid %type in string table entry. "));
 		delete pszdone;
 		pszdone = new TCHAR[_tcslen(pszpaste)+_tcslen(pszcut)+_tcslen(pszconvert)+5];
@@ -197,7 +197,7 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 		delete pszdone;
 		ASSERT(FALSE);
 		return 0;
-	    }		
+	    }
 	} // case
 
 	delete pszdone;
@@ -207,7 +207,7 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 	_tcscat(pszdone, pszcut);
 	// Now pszdone holds the entire message.
 	// Check to see if there are more insertions to be made or not
-	
+
 	if (!_tcsstr(pszdone, _T("%")))	{
 	    UINT rt_type = AfxMessageBox(pszdone, Button, Help);
 	    delete pszcut;
@@ -220,12 +220,12 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 	// there are more insertions to make, prepare the strings to use.
 	x = _tcscspn(pszdone, _T("%"));
 	_tcscpy(pszcut, &pszdone[x+2]);
-	_tcsncpy(pszpaste, pszdone, x); 
+	_tcsncpy(pszpaste, pszdone, x);
 	pszpaste[x] = _T('\0');
 	chread = pszdone[x+1];
-	
+
     } // for
-    ASSERT(FALSE);		
+    ASSERT(FALSE);
     return 0;
 
 } // ShowMessageBox
@@ -233,9 +233,9 @@ UINT ShowMessageBox (UINT Id, UINT Button, UINT Help, ...) {
 CString GetMessageString(UINT Id, ...)
 {
     CString temp;
-    TCHAR *pszstring, 
-    *pszpaste, 
-    *pszcut, 
+    TCHAR *pszstring,
+    *pszpaste,
+    *pszcut,
     *pszdone,
     *pszconvert;
     TCHAR chread;
@@ -243,7 +243,7 @@ CString GetMessageString(UINT Id, ...)
     int x;
     CString strMsg;
 
-    pszconvert = new TCHAR[255];    	
+    pszconvert = new TCHAR[255];
     va_start(params, Id);
     LoadString (temp, Id);
     pszstring = temp.GetBuffer(512);
@@ -255,7 +255,7 @@ CString GetMessageString(UINT Id, ...)
 	strMsg = pszconvert;
 	delete pszconvert;
 	return strMsg;
-    }   
+    }
 
     x = _tcscspn(pszstring, _T("%"));
     pszdone = new TCHAR[512];
@@ -268,23 +268,23 @@ CString GetMessageString(UINT Id, ...)
 
     for ( ; ; ) {
 
-	switch (chread) { 
+	switch (chread) {
 	case	_T('i') :
 	case	_T('d') :
-	{ 	    
+	{
 	    int anint = va_arg(params, int);
 	    _itot( anint, pszconvert, 10);
 	    break;
 	}
 	case	_T('u') :
-	{	
+	{
 	    UINT anuint = va_arg(params, UINT);
 	    _itot( anuint, pszconvert, 10);
 	    break;
 	}
 
 	case	_T('x') :
-	case	_T('X') :   
+	case	_T('X') :
 	{
 	    int ahex = va_arg(params, int);
 	    _itot( ahex, pszconvert, 16);
@@ -292,20 +292,20 @@ CString GetMessageString(UINT Id, ...)
 	}
 	case	_T('g') :
 	case	_T('f') :
-	case	_T('e') :   
+	case	_T('e') :
 	{
 	    double adbl = va_arg(params, double);
             _stprintf(pszconvert, _T("%g"), adbl);
 	    break;
 	}
-	case	_T('s') :	
+	case	_T('s') :
 	{
 	    TCHAR *pStr = va_arg(params, TCHAR*);
 	    ASSERT(_tcslen(pStr) <= 255);
 	    _tcscpy(pszconvert, pStr);
 	    break;
 	}
-	case	_T('l') :	
+	case	_T('l') :
 	{
 	    chread = pszdone[x+2];
 	    switch(chread) {
@@ -328,13 +328,13 @@ CString GetMessageString(UINT Id, ...)
 		}
 	    }
 	    break;
-	}	
+	}
 
-	case	_T('c') :	
+	case	_T('c') :
 	{
 	    int letter = va_arg(params, int);
 	    pszconvert[0] = (TCHAR)letter;
-	    pszconvert[1] = _T('\0'); 
+	    pszconvert[1] = _T('\0');
 	    break;
 	}
 	case 	_T('a')	:
@@ -357,7 +357,7 @@ CString GetMessageString(UINT Id, ...)
 	    break;
 	}
 	default:
-	    {	
+	    {
 		_tcscpy(pszconvert, _T(" Could not load message. Invalid %type in string table entry. "));
 		delete pszdone;
 		pszdone = new TCHAR[_tcslen(pszpaste)+_tcslen(pszcut)+_tcslen(pszconvert)+5];
@@ -371,7 +371,7 @@ CString GetMessageString(UINT Id, ...)
 		delete pszdone;
 		ASSERT(FALSE);
 		return strMsg;
-	    }		
+	    }
 	} // case
 
 	delete pszdone;
@@ -381,7 +381,7 @@ CString GetMessageString(UINT Id, ...)
 	_tcscat(pszdone, pszcut);
 	// Now pszdone holds the entire message.
 	// Check to see if there are more insertions to be made or not
-	
+
 	if (!_tcsstr(pszdone, _T("%")))	{
 	    strMsg = pszdone;
 	    delete pszcut;
@@ -394,12 +394,12 @@ CString GetMessageString(UINT Id, ...)
 	// there are more insertions to make, prepare the strings to use.
 	x = _tcscspn(pszdone, _T("%"));
 	_tcscpy(pszcut, &pszdone[x+2]);
-	_tcsncpy(pszpaste, pszdone, x); 
+	_tcsncpy(pszpaste, pszdone, x);
 	pszpaste[x] = _T('\0');
 	chread = pszdone[x+1];
-	
+
     } // for
-    ASSERT(FALSE);		
+    ASSERT(FALSE);
     return strMsg;
 }
 

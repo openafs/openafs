@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -46,7 +46,7 @@ EXEOBJSc = \
 	$(OUT)\cellservdb.obj
 
 EXERES = \
-	$(OUT)\afs_config_stub.res 
+	$(OUT)\afs_config_stub.res
 
 AFSDOBJS = \
 	$(OUT)\fs_utils.obj
@@ -115,7 +115,7 @@ $(EXEFILE) : $(EXEOBJS) $(EXEOBJSc) $(EXERES) $(AFSDOBJS) $(EXELIBS)
         $(COPY) afs_config.exe.manifest $(MANIFEST)
 !ENDIF
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 

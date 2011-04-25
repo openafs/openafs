@@ -8,7 +8,7 @@
  *   require a specific license from the United States Government.
  *   It is the responsibility of any person or organization contemplating
  *   export to obtain such a license before exporting.
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright
@@ -22,21 +22,21 @@
  * M.I.T. makes no representations about the suitability of
  * this software for any purpose.  It is provided "as is" without express
  * or implied warranty.
- * 
+ *
  *
  * General definitions for Kerberos version 5.
  */
 
 /*
  * Copyright (C) 1998 by the FundsXpress, INC.
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Export of this software from the United States of America may require
  * a specific license from the United States Government.  It is the
  * responsibility of any person or organization contemplating export to
  * obtain such a license before exporting.
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright
@@ -47,7 +47,7 @@
  * permission.  FundsXpress makes no representations about the suitability of
  * this software for any purpose.  It is provided "as is" without express
  * or implied warranty.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -157,7 +157,7 @@ typedef	unsigned short	krb5_ui_4;
    indicator */
 #define KRB5_INT32_MIN	(-KRB5_INT32_MAX-1)
 
-#define KRB5_INT16_MAX 65535	
+#define KRB5_INT16_MAX 65535
 /* this strange form is necessary since - is a unary operator, not a sign
    indicator */
 #define KRB5_INT16_MIN	(-KRB5_INT16_MAX-1)
@@ -182,8 +182,8 @@ typedef	unsigned short	krb5_ui_4;
 #endif
 
 typedef	unsigned int krb5_boolean;
-typedef	unsigned int krb5_msgtype;	
-typedef	unsigned int krb5_kvno;	
+typedef	unsigned int krb5_msgtype;
+typedef	unsigned int krb5_kvno;
 
 typedef	krb5_int32 krb5_addrtype;
 typedef krb5_int32 krb5_enctype;
@@ -205,9 +205,9 @@ typedef struct _krb5_data {
 	char *data;
 } krb5_data;
 
-/* 
+/*
  * Hack length for crypto library to use the afs_string_to_key It is
- * equivalent to -1 without possible sign extension 
+ * equivalent to -1 without possible sign extension
  * We also overload for an unset salt type length - which is also -1, but
  * hey, why not....
 */
@@ -462,9 +462,9 @@ krb5_error_code KRB5_CALLCONV
     (krb5_context context, krb5_data *data);
 
 /*
-* Collect entropy from the OS if possible. strong requests that as strong 
-* of a source of entropy  as available be used.  Setting strong may 
-* increase the probability of blocking and should not  be used for normal 
+* Collect entropy from the OS if possible. strong requests that as strong
+* of a source of entropy  as available be used.  Setting strong may
+* increase the probability of blocking and should not  be used for normal
 * applications.  Good uses include seeding the PRNG for kadmind
 * and realm setup.
 * If successful is non-null, then successful is set to 1 if the OS provided
@@ -501,15 +501,15 @@ krb5_error_code KRB5_CALLCONV
     (krb5_context context, krb5_cksumtype cksumtype,
 		    const krb5_keyblock *key, krb5_keyusage usage,
 		    const krb5_data *input, krb5_checksum *cksum);
-    
+
 krb5_error_code KRB5_CALLCONV
     krb5_c_verify_checksum
-    (krb5_context context, 
+    (krb5_context context,
 		    const krb5_keyblock *key, krb5_keyusage usage,
 		    const krb5_data *data,
 		    const krb5_checksum *cksum,
 		    krb5_boolean *valid);
-    
+
 krb5_error_code KRB5_CALLCONV
     krb5_c_checksum_length
     (krb5_context context, krb5_cksumtype cksumtype,
@@ -517,7 +517,7 @@ krb5_error_code KRB5_CALLCONV
 
 krb5_error_code KRB5_CALLCONV
     krb5_c_keyed_checksum_types
-    (krb5_context context, krb5_enctype enctype, 
+    (krb5_context context, krb5_enctype enctype,
 		    unsigned int *count, krb5_cksumtype **cksumtypes);
 
 #define KRB5_KEYUSAGE_AS_REQ_PA_ENC_TS		1
@@ -652,13 +652,13 @@ krb5_error_code KRB5_CALLCONV krb5_random_confounder
 	(size_t, krb5_pointer);
 
 krb5_error_code krb5_encrypt_data
-	(krb5_context context, krb5_keyblock *key, 
-		krb5_pointer ivec, krb5_data *data, 
+	(krb5_context context, krb5_keyblock *key,
+		krb5_pointer ivec, krb5_data *data,
 		krb5_enc_data *enc_data);
 
 krb5_error_code krb5_decrypt_data
-	(krb5_context context, krb5_keyblock *key, 
-		krb5_pointer ivec, krb5_enc_data *data, 
+	(krb5_context context, krb5_keyblock *key,
+		krb5_pointer ivec, krb5_enc_data *data,
 		krb5_data *enc_data);
 #endif
 
@@ -711,7 +711,7 @@ krb5_error_code krb5_decrypt_data
 /*
  * Mask of ticket flags in the TGT which should be converted into KDC
  * options when using the TGT to get derivitive tickets.
- * 
+ *
  *  New mask = KDC_OPT_FORWARDABLE | KDC_OPT_PROXIABLE |
  *	       KDC_OPT_ALLOW_POSTDATE | KDC_OPT_RENEWABLE
  */
@@ -876,7 +876,7 @@ krb5_error_code krb5_decrypt_data
 #define KRB5_PADATA_ETYPE_INFO2 19
 #define KRB5_PADATA_SAM_CHALLENGE_2	30 /* draft challenge system, updated */
 #define KRB5_PADATA_SAM_RESPONSE_2	31 /* draft challenge system, updated */
-    
+
 #define	KRB5_SAM_USE_SAD_AS_KEY		0x80000000
 #define	KRB5_SAM_SEND_ENCRYPTED_SAD	0x40000000
 #define	KRB5_SAM_MUST_PK_ENCRYPT_SAD	0x20000000 /* currently must be zero */
@@ -914,7 +914,7 @@ krb5_error_code krb5_decrypt_data
 /* Time set */
 typedef struct _krb5_ticket_times {
     krb5_timestamp authtime; /* XXX ? should ktime in KDC_REP == authtime
-				in ticket? otherwise client can't get this */ 
+				in ticket? otherwise client can't get this */
     krb5_timestamp starttime;		/* optional in ticket, if not present,
 					   use authtime */
     krb5_timestamp endtime;
@@ -1123,7 +1123,7 @@ typedef struct _krb5_cred_enc_part {
     krb5_address *s_address;	/* sender address, optional */
     krb5_address *r_address;	/* recipient address, optional */
     krb5_cred_info **ticket_info;
-} krb5_cred_enc_part;	 
+} krb5_cred_enc_part;
 
 typedef struct _krb5_cred {
     krb5_magic magic;
@@ -1157,11 +1157,11 @@ typedef struct _krb5_pwd_data {
 #define KRB5_AUTH_CONTEXT_RET_SEQUENCE	0x00000008
 #define KRB5_AUTH_CONTEXT_PERMIT_ALL	0x00000010
 #define KRB5_AUTH_CONTEXT_USE_SUBKEY	0x00000020
- 
-typedef struct krb5_replay_data { 
-    krb5_timestamp	timestamp; 
+
+typedef struct krb5_replay_data {
+    krb5_timestamp	timestamp;
     krb5_int32		usec;
-    krb5_ui_4		seq; 
+    krb5_ui_4		seq;
 } krb5_replay_data;
 
 /* flags for krb5_auth_con_genaddrs() */
@@ -1173,7 +1173,7 @@ typedef struct krb5_replay_data {
 /* type of function used as a callback to generate checksum data for
  * mk_req */
 
-typedef krb5_error_code 
+typedef krb5_error_code
 (KRB5_CALLCONV * krb5_mk_req_checksum_func) (krb5_context, krb5_auth_context , void *,
 			       krb5_data **);
 
@@ -1359,7 +1359,7 @@ krb5_error_code krb5_set_default_tgs_ktypes
 		const krb5_enctype *);
 #endif
 
-krb5_error_code KRB5_CALLCONV 
+krb5_error_code KRB5_CALLCONV
 krb5_set_default_tgs_enctypes
 	(krb5_context,
 		const krb5_enctype *);
@@ -1535,7 +1535,7 @@ krb5_boolean KRB5_CALLCONV krb5_principal_compare
 		krb5_const_principal);
 krb5_error_code KRB5_CALLCONV  krb5_init_keyblock
 		(krb5_context, krb5_enctype enctype,
-		size_t length, krb5_keyblock **out); 
+		size_t length, krb5_keyblock **out);
   		/* Initialize a new keyblock and allocate storage
 		 * for the contents of the key, which will be freed along
 		 * with the keyblock when krb5_free_keyblock is called.
@@ -1621,7 +1621,7 @@ krb5_error_code KRB5_CALLCONV krb5_425_conv_principal
 		krb5_principal *princ);
 
 krb5_error_code KRB5_CALLCONV krb5_524_conv_principal
-	(krb5_context context, krb5_const_principal princ, 
+	(krb5_context context, krb5_const_principal princ,
 		char *name, char *inst, char *realm);
 
 struct credentials;
@@ -1991,7 +1991,7 @@ krb5_error_code KRB5_CALLCONV krb5_cc_register
 		krb5_boolean );
 #endif
 
-krb5_error_code KRB5_CALLCONV krb5_sendauth 
+krb5_error_code KRB5_CALLCONV krb5_sendauth
 	(krb5_context,
 		krb5_auth_context *,
 		krb5_pointer,
@@ -2005,14 +2005,14 @@ krb5_error_code KRB5_CALLCONV krb5_sendauth
 		krb5_error **,
 		krb5_ap_rep_enc_part **,
 		krb5_creds **);
-	
+
 krb5_error_code KRB5_CALLCONV krb5_recvauth
 	(krb5_context,
 		krb5_auth_context *,
 		krb5_pointer,
 		char *,
 		krb5_principal,
-		krb5_int32, 
+		krb5_int32,
 		krb5_keytab,
 		krb5_ticket **);
 krb5_error_code KRB5_CALLCONV krb5_recvauth_version
@@ -2020,7 +2020,7 @@ krb5_error_code KRB5_CALLCONV krb5_recvauth_version
 		krb5_auth_context *,
 		krb5_pointer,
 		krb5_principal,
-		krb5_int32, 
+		krb5_int32,
 		krb5_keytab,
 		krb5_ticket **,
 		krb5_data *);
@@ -2056,14 +2056,14 @@ krb5_error_code KRB5_CALLCONV krb5_rd_cred
 		krb5_replay_data *);
 
 krb5_error_code KRB5_CALLCONV krb5_fwd_tgt_creds
-	(krb5_context, 
+	(krb5_context,
 		krb5_auth_context,
 		char *,
-		krb5_principal, 
-		krb5_principal, 
+		krb5_principal,
+		krb5_principal,
 		krb5_ccache,
 		int forwardable,
-		krb5_data *);	
+		krb5_data *);
 
 krb5_error_code KRB5_CALLCONV krb5_auth_con_init
 	(krb5_context,
@@ -2485,13 +2485,13 @@ krb5_get_renewed_creds
 
 krb5_error_code KRB5_CALLCONV
 krb5_decode_ticket
-(const krb5_data *code, 
+(const krb5_data *code,
 		krb5_ticket **rep);
 
 void KRB5_CALLCONV
 krb5_appdefault_string
 (krb5_context context,
-		const char *appname,  
+		const char *appname,
 	        const krb5_data *realm,
  		const char *option,
 		const char *default_value,
@@ -2500,7 +2500,7 @@ krb5_appdefault_string
 void KRB5_CALLCONV
 krb5_appdefault_boolean
 (krb5_context context,
-		const char *appname,  
+		const char *appname,
 	        const krb5_data *realm,
  		const char *option,
 		int default_value,

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -49,7 +49,7 @@ BOOL CALLBACK Creds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       case WM_INITDIALOG:
          RECT rTab;
          GetClientRect (GetParent(hDlg), &rTab);
-         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab); 
+         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab);
          SetWindowPos (hDlg, NULL, rTab.left, rTab.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
 
          SetWindowLongPtr (hDlg, DWLP_USER, lp);

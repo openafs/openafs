@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -10,7 +10,7 @@ RELDIR=WINNT\afsreg\test
 
 test tests: $(OUT)\getifinfo.exe $(OUT)\regman.exe $(OUT)\dupkey.exe
 
-$(OUT)\getifinfo.exe: $(OUT)\getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib 
+$(OUT)\getifinfo.exe: $(OUT)\getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
@@ -35,4 +35,4 @@ $(OUT)\regman.exe: $(OUT)\regman.obj $(REGMAN_EXELIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

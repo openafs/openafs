@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -158,8 +158,8 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
 
-    code = ugen_ClientInit(noAuthFlag, (char *)AFSDIR_CLIENT_ETC_DIRPATH, 
-			   info->name, 0, &uclient, 
+    code = ugen_ClientInit(noAuthFlag, (char *)AFSDIR_CLIENT_ETC_DIRPATH,
+			   info->name, 0, &uclient,
                            NULL, pn, rxkad_clear,
                            VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
                            0, 0, USER_SERVICE_ID);
@@ -176,7 +176,7 @@ OpenFile(char *file, char *rwp)
     FILE *fp;
 
     code = GetWindowsDirectoryA(wdir, sizeof(wdir));
-    if (code == 0 || code > sizeof(wdir)) 
+    if (code == 0 || code > sizeof(wdir))
         return FALSE;
 
     /* add trailing backslash, if required */
@@ -189,7 +189,7 @@ OpenFile(char *file, char *rwp)
     fp = fopen(wdir, rwp);
 
     return fp;
-}       
+}
 
 CString StripPath(CString& strPath)
 {
@@ -226,14 +226,14 @@ void Flush(const CStringArray& files)
             error = 1;
             if (errno == EMFILE)
                 ShowMessageBox(IDS_FLUSH_FAILED, MB_ICONERROR, IDS_FLUSH_FAILED, files[i]);
-            else 
+            else
                 ShowMessageBox(IDS_FLUSH_ERROR, MB_ICONERROR, IDS_FLUSH_ERROR, files[i], strerror(errno));
         }
-    }   
+    }
 
     if (!error)
         ShowMessageBox(IDS_FLUSH_OK, MB_ICONINFORMATION, IDS_FLUSH_OK);
-}       
+}
 
 void FlushVolume(const CStringArray& files)
 {
@@ -251,11 +251,11 @@ void FlushVolume(const CStringArray& files)
             error = 1;
             ShowMessageBox(IDS_FLUSH_VOLUME_ERROR, MB_ICONERROR, IDS_FLUSH_VOLUME_ERROR, files[i], strerror(errno));
         }
-    }   
+    }
 
     if (!code)
         ShowMessageBox(IDS_FLUSH_VOLUME_OK, MB_ICONINFORMATION, IDS_FLUSH_VOLUME_OK);
-}       
+}
 
 void WhichCell(CStringArray& files)
 {
@@ -287,7 +287,7 @@ void WhichCell(CStringArray& files)
             space[AFS_PIOCTL_MAXSIZE - 1] = '\0';
             results.Add(Utf8ToCString(space));
         }
-    }       
+    }
 
     LoadString (str, IDS_SHOW_CELL);
     LoadString (str2, IDS_SHOW_CELL_COLUMN);
@@ -300,7 +300,7 @@ void WSCellCmd()
 {
     LONG code;
     struct ViceIoctl blob;
-    
+
     HOURGLASS hourglass;
 
     blob.in_size = 0;
@@ -321,7 +321,7 @@ BOOL CheckVolumes()
 {
     LONG code;
     struct ViceIoctl blob;
-    
+
     blob.in_size = 0;
     blob.out_size = 0;
     code = pioctl(0, VIOCCKBACK, &blob, 1);
@@ -339,7 +339,7 @@ void SetCacheSizeCmd(LONG nNewCacheSize)
 {
     LONG code;
     struct ViceIoctl blob;
-    
+
     HOURGLASS hourglass;
 
     blob.in = (char *) &nNewCacheSize;
@@ -399,7 +399,7 @@ void WhereIs(CStringArray& files)
     CResultsDlg dlg(SHOW_FILE_SERVERS_HELP_ID);
     dlg.SetContents(str, str2, resultFiles, servers);
     dlg.DoModal();
-}       
+}
 
 static int
 CMtoUNIXerror(int cm_code)
@@ -452,12 +452,12 @@ CString GetAfsError(int code, const TCHAR *filename)
     if (code == EINVAL) {
         if (filename)
             strMsg.Format(_T("Invalid argument; it is possible that the file is not in AFS"));
-        else 
+        else
             strMsg.Format(_T("Invalid argument"));
     } else if (code == ENOENT) {
-        if (filename) 
+        if (filename)
             strMsg.Format(_T("The file does not exist"));
-        else 
+        else
             strMsg.Format(_T("No such file returned"));
     } else if (code == EROFS)  {
         strMsg.Format(_T("You can not change a backup or readonly volume"));
@@ -537,7 +537,7 @@ extern "C" int PruneList (struct AclEntry **ae, int dfs)
     struct AclEntry **lp = ae;
     struct AclEntry *te, *ne;
     LONG ctr = 0;
-    
+
     for (te = *ae; te; te = ne) {
         if ((!dfs && te->rights == 0) || te->rights == -1) {
             *lp = te->next;
@@ -550,17 +550,17 @@ extern "C" int PruneList (struct AclEntry **ae, int dfs)
             lp = &te->next;
         }
     }
-    
+
     return ctr;
 }
 
 char *SkipLine (char *astr)
 {
-    while (*astr != '\n') 
+    while (*astr != '\n')
         astr++;
-    
+
     astr++;
-    
+
     return astr;
 }
 
@@ -571,7 +571,7 @@ static int BadName(char *aname)
 
     /* all must be '-' or digit to be bad */
     while (tc = *aname++) {
-        if ((tc != '-') && (tc < '0' || tc > '9')) 
+        if ((tc != '-') && (tc < '0' || tc > '9'))
             return 0;
     }
 
@@ -601,7 +601,7 @@ CString GetRightsString(LONG arights, int dfs)
 		if (arights & DFS_DELETE) str += _T("d"); else printf(_T("-"));
 		if (arights & (DFS_USRALL)) str += _T("+");
 */
-    }	
+    }
 
     return str;
 }
@@ -612,23 +612,23 @@ char *AclToString(struct Acl *acl)
     char tstring[AFS_PIOCTL_MAXSIZE];
     char dfsstring[30];
     struct AclEntry *tp;
-    
+
     if (acl->dfs)
         sprintf(dfsstring, " dfs:%d %s", acl->dfs, acl->cell);
     else
         dfsstring[0] = '\0';
     sprintf(mydata, "%d%s\n%d\n", acl->nplus, dfsstring, acl->nminus);
-    
+
     for(tp = acl->pluslist; tp; tp = tp->next) {
         sprintf(tstring, "%s %d\n", tp->name, tp->rights);
         strcat(mydata, tstring);
     }
-    
+
     for(tp = acl->minuslist; tp; tp = tp->next) {
         sprintf(tstring, "%s %d\n", tp->name, tp->rights);
         strcat(mydata, tstring);
     }
-    
+
     return mydata;
 }
 
@@ -636,7 +636,7 @@ struct Acl *EmptyAcl(const CString& strCellName)
 {
     struct Acl *tp;
     CStringUtf8 ustrCell(strCellName);
-    
+
     tp = (struct Acl *)malloc(sizeof (struct Acl));
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
@@ -693,19 +693,19 @@ ParseAcl (char *astr)
     last = 0;
     first = 0;
     for(i=0;i<nplus;i++) {
-        ret = sscanf(astr, "%100s %d", tname, &trights); 
+        ret = sscanf(astr, "%100s %d", tname, &trights);
         if (ret <= 0)
             goto nplus_err;
         astr = SkipLine(astr);
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
         if (tl == NULL)
             goto nplus_err;
-        if (!first) 
+        if (!first)
             first = tl;
         strcpy(tl->name, tname);
         tl->rights = trights;
         tl->next = 0;
-        if (last) 
+        if (last)
             last->next = tl;
         last = tl;
     }
@@ -721,12 +721,12 @@ ParseAcl (char *astr)
         tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
         if (tl == NULL)
             goto nminus_err;
-        if (!first) 
+        if (!first)
             first = tl;
         strcpy(tl->name, tname);
         tl->rights = trights;
         tl->next = 0;
-        if (last) 
+        if (last)
             last->next = tl;
         last = tl;
     }
@@ -738,14 +738,14 @@ ParseAcl (char *astr)
     for (;first; first = next) {
         next = first->next;
         free(first);
-    }   
+    }
     first = ta->pluslist;
 
   nplus_err:
     for (;first; first = next) {
         next = first->next;
         free(first);
-    }   
+    }
     free(ta);
     return NULL;
 }
@@ -780,7 +780,7 @@ extern "C" int CleanAcl(struct Acl *aa)
     }
 
     le = &aa->minuslist;
-    
+
     for(te = aa->minuslist; te; te = ne) {
         ne = te->next;
         if (BadName(te->name)) {
@@ -792,7 +792,7 @@ extern "C" int CleanAcl(struct Acl *aa)
         }
         else
             le = &te->next;
-    }   
+    }
 
     return changes;
 }
@@ -837,7 +837,7 @@ void CleanACL(CStringArray& names)
         blob.in = AclToString(ta);
         blob.in_size = strlen((char *)blob.in) + 1;
         blob.out_size = 0;
-		
+
         code = pioctl_T(names[i], VIOCSETAL, &blob, 1);
         if (code) {
             if (errno == EINVAL) {
@@ -850,7 +850,7 @@ void CleanACL(CStringArray& names)
             }
         }
     }
-}       
+}
 
 // Derived from fs.c's ListAclCmd
 BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& strNegative)
@@ -866,7 +866,7 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
     blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = idf;
     blob.in = blob.out = space;
-	
+
     code = pioctl_T(strDir, VIOCGETAL, &blob, 1);
     if (code) {
         ShowMessageBox(IDS_GETRIGHTS_ERROR, MB_ICONERROR, IDS_GETRIGHTS_ERROR, strDir, GetAfsError(errno));
@@ -912,7 +912,7 @@ struct AclEntry *FindList(struct AclEntry *pCurEntry, const char *entryName)
             return pCurEntry;
         pCurEntry = pCurEntry->next;
     }
-    
+
     return 0;
 }
 
@@ -920,7 +920,7 @@ void ChangeList(struct Acl *pAcl, BYTE bNormalRights, const CString & entryName,
 {
     ASSERT(pAcl);
     ASSERT(entryName);
-    
+
     struct AclEntry *pEntry;
     CStringUtf8 uEntryName(entryName);
 
@@ -942,10 +942,10 @@ void ChangeList(struct Acl *pAcl, BYTE bNormalRights, const CString & entryName,
     /* Otherwise we make a new item and plug in the new data. */
     pEntry = (struct AclEntry *) malloc(sizeof (struct AclEntry));
     ASSERT(pEntry);
-	
+
     strcpy(pEntry->name, uEntryName);
     pEntry->rights = nEntryRights;
-    
+
     if (bNormalRights) {
         pEntry->next = pAcl->pluslist;
         pAcl->pluslist = pEntry;
@@ -971,15 +971,15 @@ static LONG Convert(const CString& strRights, int dfs, enum rtype *rtypep)
 
     *rtypep = add;	/* add rights, by default */
 
-    if (strRights == _T("read")) 
+    if (strRights == _T("read"))
         return PRSFS_READ | PRSFS_LOOKUP;
-    if (strRights == _T("write")) 
+    if (strRights == _T("write"))
         return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK;
-    if (strRights == _T("mail")) 
+    if (strRights == _T("mail"))
         return PRSFS_INSERT | PRSFS_LOCK | PRSFS_LOOKUP;
-    if (strRights == _T("all")) 
+    if (strRights == _T("all"))
         return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK | PRSFS_ADMINISTER;
-    
+
     if (strRights == _T("none")) {
         *rtypep = destroy; /* Remove entire entry */
         return 0;
@@ -1001,7 +1001,7 @@ static LONG Convert(const CString& strRights, int dfs, enum rtype *rtypep)
             fprintf(stderr, "illegal rights character '%c'.\n", c);
             exit(1);
         }
-    }   
+    }
     return mode;
 }
 
@@ -1042,7 +1042,7 @@ BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArr
             ShowMessageBox(IDS_SAVE_ACL_EINVAL_ERROR, MB_ICONERROR, IDS_SAVE_ACL_EINVAL_ERROR, strDir);
         else
             ShowMessageBox(IDS_SAVE_ACL_ERROR, MB_ICONERROR, IDS_SAVE_ACL_ERROR, strDir, GetAfsError(errno, strDir));
-    }       
+    }
 
     ZapAcl(pAcl);
 
@@ -1062,16 +1062,16 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = idf;
     blob.in = blob.out = space;
-	
+
     code = pioctl_T(strToDir, VIOCGETAL, &blob, 1);
     if (code) {
         ShowMessageBox(IDS_ACL_READ_ERROR, MB_ICONERROR, IDS_ACL_READ_ERROR, strToDir, GetAfsError(errno, strToDir));
         return FALSE;
     }
-	
-    if (bClear) 
+
+    if (bClear)
         pToAcl = EmptyAcl(space);
-    else 
+    else
         pToAcl = ParseAcl(space);
 
     if (pToAcl == NULL) {
@@ -1112,7 +1112,7 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
         ZapAcl(pToAcl);
         if (errno == EINVAL)
             ShowMessageBox(IDS_COPY_ACL_EINVAL_ERROR, MB_ICONERROR, IDS_COPY_ACL_EINVAL_ERROR, strToDir);
-        else 
+        else
             ShowMessageBox(IDS_COPY_ACL_ERROR, MB_ICONERROR, IDS_COPY_ACL_ERROR, strToDir, GetAfsError(errno, strToDir));
         return FALSE;
     }
@@ -1146,7 +1146,7 @@ CString ParseMountPoint(const CString strFile, CString strMountPoint)
     strMountPointInfo = strFile + _T("\t") + strVolume + _T("\t") + strCell + _T("\t") + strType;
 
     return strMountPointInfo;
-}       
+}
 
 CString ParseSymlink(const CString strFile, CString strSymlink)
 {
@@ -1155,7 +1155,7 @@ CString ParseSymlink(const CString strFile, CString strSymlink)
     strSymlinkInfo = strFile + _T("\t") + strSymlink;
 
     return strSymlinkInfo;
-}       
+}
 
 BOOL IsPathInAfs(const CString & strPath)
 {
@@ -1183,7 +1183,7 @@ BOOL IsPathInAfs(const CString & strPath)
     return TRUE;
 }
 
-static int 
+static int
 IsFreelanceRoot(const CString& apath)
 {
     struct ViceIoctl blob;
@@ -1289,7 +1289,7 @@ static BOOL IsAdmin (void)
         pszRefDomain = (TCHAR *)malloc(dwSize2);
 
         if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
-            /* We can't lookup the group now even though we looked it up earlier.  
+            /* We can't lookup the group now even though we looked it up earlier.
                Could this happen? */
             fAdmin = TRUE;
         } else {
@@ -1391,7 +1391,7 @@ CString Parent(const CString& path)
         }
     }
     }
-    
+
 CString LastComponent(const CString& path)
 {
     int last_slash = path.ReverseFind(_T('\\'));
@@ -1443,7 +1443,7 @@ BOOL ListMount(CStringArray& files)
     CStringUtf8 last_component;	        /* Last component of true name */
 
     CStringArray mountPoints;
-    
+
     HOURGLASS hourglass;
 
     error = 0;
@@ -1553,7 +1553,7 @@ MakeMount(const CString& strDir,
         ShowMessageBox(IDS_MOUNT_POINT_ERROR, MB_ICONERROR, IDS_MOUNT_POINT_ERROR, GetAfsError(errno, strDir));
         return FALSE;
     }
-    
+
     return TRUE;
 }
 
@@ -1570,7 +1570,7 @@ long fs_ExtractDriveLetter(const char *inPathp, char *outPathp)
     else *outPathp = 0;
 
     return 0;
-}       
+}
 
 /* strip the drive letter from a component */
 long fs_StripDriveLetter(const char *inPathp, char *outPathp, long outSize)
@@ -1586,7 +1586,7 @@ long fs_StripDriveLetter(const char *inPathp, char *outPathp, long outSize)
         strcpy(outPathp, tempBuffer);
     }
     return 0;
-}       
+}
 
 
 BOOL RemoveSymlink(const CString& strName)
@@ -1595,7 +1595,7 @@ BOOL RemoveSymlink(const CString& strName)
     INT code=0;
     struct ViceIoctl blob;
     char lsbuffer[1024];
-    
+
     HOURGLASS hourglass;
 
     CString strParent = Parent(strName);
@@ -1624,7 +1624,7 @@ BOOL RemoveSymlink(const CString& strName)
     ustrLast.ReleaseBuffer();
 
     return (code == 0);
-}       
+}
 
 BOOL IsSymlink(const CString& strName)
 {
@@ -1649,7 +1649,7 @@ BOOL IsSymlink(const CString& strName)
     ustrLast.ReleaseBuffer();
 
     return (code==0);
-}       
+}
 
 
 BOOL IsMountPoint(const CString& path)
@@ -1675,7 +1675,7 @@ BOOL IsMountPoint(const CString& path)
     mountpoint.ReleaseBuffer();
 
     return (code==0);
-}       
+}
 
 
 /*
@@ -1728,7 +1728,7 @@ BOOL RemoveMount(CStringArray& files)
             results.Add(GetMessageString(IDS_ERROR, GetAfsError(errno, StripPath(files[i]))));
         } else
             results.Add(GetMessageString(IDS_DELETED));
-    }   
+    }
 
     LoadString (str, IDS_REMOVE_MP);
     LoadString (str2, IDS_REMOVE_MP_COLUMN);
@@ -1787,7 +1787,7 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
 
     return TRUE;
 }
-	
+
 BOOL SetVolInfo(CVolInfo& volInfo)
 {
     LONG code;
@@ -1805,7 +1805,7 @@ BOOL SetVolInfo(CVolInfo& volInfo)
     status = (VolumeStatus *)space;
     status->MinQuota = -1;
     status->MaxQuota = volInfo.m_nNewQuota;
-	
+
     input = (char *)status + sizeof(*status);
     *(input++) = '\0';	/* never set name: this call doesn't change vldb */
     *(input++) = '\0';	// No offmsg
@@ -1822,7 +1822,7 @@ BOOL SetVolInfo(CVolInfo& volInfo)
         fprintf(fp, "\t\t\tOther status fields aren't set\n");
         fprintf(fp, "\t\t\t3 nulls follow the VolumeStatus structure.\n");
         fprintf(fp, "\tfollow = 1\n");
-        fclose(fp);		
+        fclose(fp);
     }
 #endif
 
@@ -1874,7 +1874,7 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
     }
     if (bFast)
         temp |= 1;	/* set fast flag */
-    
+
     checkserv.magic = 0x12345678;	/* XXX */
     checkserv.tflags = temp;
     checkserv.tinterval = -1;	/* don't change current interval */
@@ -1907,7 +1907,7 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
     dlg.DoModal();
 
     return TRUE;
-}       
+}
 
 BOOL GetTokenInfo(CStringArray& tokenInfo)
 {
@@ -1957,7 +1957,7 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
         else {
             rc = ktc_GetToken(&serviceName, &token, sizeof(token), &clientName);
             if (rc) {
-                ShowMessageBox(IDS_GET_TOKENS_UNEXPECTED_ERROR2, MB_ICONERROR, IDS_GET_TOKENS_UNEXPECTED_ERROR2, 
+                ShowMessageBox(IDS_GET_TOKENS_UNEXPECTED_ERROR2, MB_ICONERROR, IDS_GET_TOKENS_UNEXPECTED_ERROR2,
                                 serviceName.name, serviceName.instance,	serviceName.cell, rc);
                 continue;
             }
@@ -1983,10 +1983,10 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
             else
                 strUserName = userName;
 //		printf("User %s's tokens", userName);
-			
+
 //		printf(" for %s%s%s@%s ", serviceName.name, serviceName.instance[0] ? "." : "",	serviceName.instance, serviceName.cell);
             strCellName = serviceName.cell;
-			
+
             if (tokenExpireTime <= current_time)
                 strExpir = "[>> Expired <<]";
 //		printf("[>> Expired <<]\n");
@@ -2050,7 +2050,7 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
     char true_name[MAX_PATH+1];		/*``True'' dirname (e.g., symlink target)*/
     char parent_dir[MAX_PATH+1];		/*Parent directory of true name*/
     char *last_component;	/*Last component of true name*/
-    UINT code;    
+    UINT code;
 
     HOURGLASS hourglass;
 
@@ -2103,7 +2103,7 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
         strcpy(space,"???");
     ASSERT(strlen(space)<MAX_PATH);
     strncpy(strPath,space,nlenPath);
-}       
+}
 
 BOOL ListSymlink(CStringArray& files)
 {
@@ -2111,7 +2111,7 @@ BOOL ListSymlink(CStringArray& files)
     struct ViceIoctl blob;
     int error;
     CStringArray symlinks;
-    
+
     HOURGLASS hourglass;
 
     error = 0;

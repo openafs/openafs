@@ -51,8 +51,8 @@ LANGUAGES=en_US de_DE es_ES ja_JP ko_KR pt_BR zh_CN zh_TW
 
 languages:
 # Don't bother with non en_US for now.  The other builds comprise of either
-# verbatim copies of en_US files, partial translations or doesn't build 
-# (no languages resources). Someday when OpenAFS 8.1029828419 comes out we'll 
+# verbatim copies of en_US files, partial translations or doesn't build
+# (no languages resources). Someday when OpenAFS 8.1029828419 comes out we'll
 # get someone to translate.
 #	for %l in ( $(LANGUAGES ) do (
 #	$(MAKE) /f NTMakefile /nologo LANG=%l lang
@@ -69,7 +69,7 @@ lang_clean:
 	-$(DEL) $(BINMSIFILE)
 !ENDIF
 
-uninst: 
+uninst:
         $(CD) uninstall
         $(MAKE) /f NTMakefile /nologo install
         $(CD) ..

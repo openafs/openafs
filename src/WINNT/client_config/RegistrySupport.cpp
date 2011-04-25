@@ -57,21 +57,21 @@ void Config_GetGlobalDriveList (DRIVEMAPLIST *pDriveList)
    while (1) {
       dwDriveSize = sizeof(szDriveToMapTo);
       dwSubMountSize = sizeof(szSubMount);
-      
+
       dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, (BYTE*)szSubMount, &dwSubMountSize);
       if (dwResult != ERROR_SUCCESS)
          break;
-      
+
       szDriveToMapTo[0] = _totupper(szDriveToMapTo[0]);
-        
+
       int nCurDrive = szDriveToMapTo[0] - TEXT('A');
-   	
+
       pDriveList->aDriveMap[nCurDrive].chDrive = szDriveToMapTo[0];
       lstrcpy(pDriveList->aDriveMap[nCurDrive].szSubmount, szSubMount);
 
       // Find the path that goes with this submount
       SubmountToPath (&DriveMapList, pDriveList->aDriveMap[nCurDrive].szMapping, szSubMount, FALSE);
-   }        
+   }
 
    FreeDriveMapList(&DriveMapList);
 

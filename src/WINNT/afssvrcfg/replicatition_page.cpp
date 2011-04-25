@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -138,7 +138,7 @@ static void OnInitDialog(HWND hwndDlg)
 	SetCheck(hDlg, IDC_DONT_REPLICATE);
     else if (g_CfgData.configRep == CS_CONFIGURE)
 	SetCheck(hDlg, IDC_REPLICATE);
-}	
+}
 
 
 /*

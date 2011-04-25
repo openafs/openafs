@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -786,7 +786,7 @@ DWORD WINAPI SERVER::CanTalkToServer_ThreadProc (PVOID lp)
    // has canceled the operation--and if no one has, there is a thread
    // hanging around which holds the library's critsec, which ensures
    // the lpServer pointer won't have been freed.)
-   // 
+   //
    PVOID hCell;
    PVOID hBOS = NULL;
    PVOID hVOS = NULL;
@@ -1088,7 +1088,7 @@ BOOL SERVER::RefreshAll (ULONG *pStatus, double dInit, double dFactor)
                ++nAggregates;
                lpAggregate->Close();
                }
-               
+
             if (nAggregates)
                {
                for (lpAggregate = AggregateFindFirst (&hEnum); lpAggregate; lpAggregate = AggregateFindNext (&hEnum))

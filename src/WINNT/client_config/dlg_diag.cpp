@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -80,7 +80,7 @@ BOOL CALLBACK Diag_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             case IDOK:
                 Diag_OnOK(hDlg);
                 break;
-                
+
             case IDCANCEL:
                 Diag_OnCancel(hDlg);
                 break;
@@ -120,11 +120,11 @@ void Diag_OnInitDialog (HWND hDlg)
       Config_GetTraceBufferSize(&g.Configuration.nTraceBufSize);
       Config_GetTrapOnPanic(&g.Configuration.fTrapOnPanic);
       Config_GetReportSessionStartups(&g.Configuration.fReportSessionStartups);
-      
+
       nTraceBufSize = g.Configuration.nTraceBufSize;
       fTrapOnPanic = g.Configuration.fTrapOnPanic;
       fReportSessionStartups = g.Configuration.fReportSessionStartups;
-      
+
       fFirstTime = FALSE;
    }
 
@@ -155,13 +155,13 @@ BOOL Diag_OnApply()
          return FALSE;
       g.Configuration.nTraceBufSize = nTraceBufSize;
    }
-   
+
    if (fTrapOnPanic != g.Configuration.fTrapOnPanic) {
       if (!Config_SetTrapOnPanic (fTrapOnPanic))
          return FALSE;
       g.Configuration.fTrapOnPanic = fTrapOnPanic;
    }
-   
+
    if (fReportSessionStartups != g.Configuration.fReportSessionStartups) {
       if (!Config_SetReportSessionStartups (fReportSessionStartups))
          return FALSE;

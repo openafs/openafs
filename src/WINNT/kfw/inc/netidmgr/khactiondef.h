@@ -67,7 +67,7 @@
 #define KHUI_ACTION_LAYOUT_RELOAD (KHUI_ACTION_BASE + 32)
 /*@}*/
 
-/*! \name Pseudo actions 
+/*! \name Pseudo actions
 
 Pseudo actions do not trigger any specific function, but acts as a
 signal of some generic event which will be interpreted based on

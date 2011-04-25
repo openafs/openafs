@@ -1,6 +1,6 @@
-/* 
+/*
  *  Copyright (C) 1989,2004 by the Massachusetts Institute of Technology
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright
@@ -95,7 +95,7 @@
 #define DRIVECOLON ':'		/* Drive letter separator */
 #define BDIR '\\'		/* Other character that divides directories */
 
-static int 
+static int
 readlink(char *path, char *buf, int buffers)
 {
 	return -1;
@@ -103,7 +103,7 @@ readlink(char *path, char *buf, int buffers)
 
 char * getcwd(char*, size_t);
 
-static long 
+static long
 get_cellconfig_callback(void *cellconfig, struct sockaddr_in *addrp, char *namep)
 {
 	struct afsconf_cell *cc = (struct afsconf_cell *) cellconfig;
@@ -254,21 +254,21 @@ long GetLocalCell(struct afsconf_dir **pconfigdir, char *local_cell)
     return afsconf_GetLocalCell(*pconfigdir, local_cell, MAXCELLCHARS);
 }
 
-long GetCellInfo(struct afsconf_dir **pconfigdir, char* cell, 
+long GetCellInfo(struct afsconf_dir **pconfigdir, char* cell,
 struct afsconf_cell **pcellconfig)
 {
     return afsconf_GetCellInfo(*pconfigdir, cell, NULL, *pcellconfig);
 }
 
 void CloseConf(struct afsconf_dir **pconfigdir)
-{       
+{
     (void) afsconf_Close(*pconfigdir);
 }
 
 #define ALLOW_REGISTER 1
 void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                       char * cell_to_use, CREDENTIALS *c,
-                      int *status, 
+                      int *status,
                       struct ktc_principal *aclient, struct ktc_principal *aserver, struct ktc_token *atoken)
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
@@ -304,7 +304,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             printf("pr_SNameToId Error %s\n",  afs_error_message(*status));
         else
             printf("Id %d\n", viceId);
-    }       
+    }
 
     /*
      * This code is taken from cklog -- it lets people
@@ -458,13 +458,13 @@ static int get_cred(char *name, char *inst, char *realm, CREDENTIALS *c)
 #endif
         if (status == KSUCCESS)
             status = krb_get_cred(name, inst, realm, c);
-    }       
+    }
 
     return (status);
 }
 #endif
 
-static int get_v5cred(krb5_context context, 
+static int get_v5cred(krb5_context context,
                       char *name, char *inst, char *realm, CREDENTIALS *c,
                       krb5_creds **creds)
 {
@@ -546,8 +546,8 @@ static char *afs_realm_of_cell(struct afsconf_cell *cellconfig)
 }
 #endif
 
-/* As of MIT Kerberos 1.6, krb5_get_host_realm() will return the NUL-string 
- * if there is no domain_realm mapping for the hostname's domain.  This is 
+/* As of MIT Kerberos 1.6, krb5_get_host_realm() will return the NUL-string
+ * if there is no domain_realm mapping for the hostname's domain.  This is
  * used as a trigger indicating that referrals should be used within the
  * krb5_get_credentials() call.  However, if the KDC does not support referrals
  * that will result in a KRB5_ERR_HOST_REALM_UNKNOWN error and we will have
@@ -584,7 +584,7 @@ static char *afs_realm_of_cell5(krb5_context context, struct afsconf_cell *cellc
 	    krb5_free_host_realm( context, krbrlms );
     }
     return krbrlm;
-}	
+}
 
 static char *copy_cellinfo(cellinfo_t *cellinfo)
 {
@@ -752,14 +752,14 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
      * afs style authenticator.
      */
 
-    if (usev5) 
+    if (usev5)
     { /* using krb5 */
         int retry = 1;
 	int realm_fallback = 0;
 
         if ((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
             char * msg;
-            
+
             if (pkrb5_get_error_message)
                 msg = pkrb5_get_error_message(context, status);
             else
@@ -783,9 +783,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	if (realm && realm[0]) {
             if (dflag)
                 printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm);
-            status = get_v5cred(context, name, instance, realm, 
+            status = get_v5cred(context, name, instance, realm,
 #ifdef HAVE_KRB4
-                            use524 ? &c : NULL, 
+                            use524 ? &c : NULL,
 #else
                             NULL,
 #endif
@@ -800,15 +800,15 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
                 status = -1;
                 if (dflag)
                     printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_user);
-                status = get_v5cred(context, name, instance, realm_of_user, 
+                status = get_v5cred(context, name, instance, realm_of_user,
 #ifdef HAVE_KRB4
-                                     use524 ? &c : NULL, 
+                                     use524 ? &c : NULL,
 #else
                                      NULL,
 #endif
                                      &v5cred);
                 if (status == 0) {
-                    /* we have determined that the client realm 
+                    /* we have determined that the client realm
                      * is a valid cell realm
                      */
                     strcpy(realm_of_cell, realm_of_user);
@@ -818,14 +818,14 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             if (status != 0 && (!retry || retry && strcmp(realm_of_user,realm_of_cell))) {
                 if (dflag)
                     printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
-                status = get_v5cred(context, name, instance, realm_of_cell, 
+                status = get_v5cred(context, name, instance, realm_of_cell,
 #ifdef HAVE_KRB4
-                                     use524 ? &c : NULL, 
+                                     use524 ? &c : NULL,
 #else
                                      NULL,
 #endif
                                      &v5cred);
-                if (!status && !strlen(realm_of_cell)) 
+                if (!status && !strlen(realm_of_cell))
                     copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), v5cred);
             }
         }
@@ -840,24 +840,24 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    }
             if (dflag)
                 printf("Getting v5 tickets: %s@%s\n", name, realm_of_cell);
-            status = get_v5cred(context, name, "", realm_of_cell, 
+            status = get_v5cred(context, name, "", realm_of_cell,
 #ifdef HAVE_KRB4
-                                use524 ? &c : NULL, 
+                                use524 ? &c : NULL,
 #else
                                 NULL,
 #endif
                                 &v5cred);
-            if (!status && !strlen(realm_of_cell)) 
+            if (!status && !strlen(realm_of_cell))
                 copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), v5cred);
 	}
-     
+
         if ( status == KRB5KRB_AP_ERR_MSG_TYPE && retry ) {
             retry = 0;
 	    realm_fallback = 0;
             goto try_v5;
-        }       
-    }       
-    else 
+        }
+    }
+    else
     {
 #ifdef HAVE_KRB4
 	if (realm && realm[0])
@@ -885,7 +885,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         status = AKLOG_MISC;
         goto done;
 #endif
-    } 
+    }
 
     if (status != KSUCCESS)
     {
@@ -922,7 +922,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
          */
         char * p;
         int len;
-        
+
         len = min(v5cred->client->data[0].length,MAXKTCNAMELEN - 1);
         strncpy(username, v5cred->client->data[0].data, len);
         username[len] = '\0';
@@ -971,7 +971,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
          atoken.ticketLen == btoken.ticketLen &&
          !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
          !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
-    {       
+    {
         if (dflag)
             printf("Identical tokens already exist; skipping.\n");
         status = AKLOG_SUCCESS;
@@ -982,8 +982,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     {
         if (dflag)
             printf("Not resolving name %s to id (-noprdb set)\n", username);
-    }       
-    else    
+    }
+    else
     {
         if (!usev5) {
 #ifdef HAVE_KRB4
@@ -1004,9 +1004,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         strcat(username, "@");
         strcat(username, realm_of_user);
 
-        ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use, 
+        ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use,
 #ifdef HAVE_KRB4
-                          &c, 
+                          &c,
 #else
                           NULL,
 #endif
@@ -1022,12 +1022,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
      */
     strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
     strcpy(aclient.instance, "");
-    
+
     if (usev5 && !use524) {
         int len = min(v5cred->client->realm.length,MAXKTCNAMELEN - 1);
         strncpy(aclient.cell, v5cred->client->realm.data, len);
         aclient.cell[len] = '\0';
-    } 
+    }
 #ifdef HAVE_KRB4
     else
 	strncpy(aclient.cell, c.realm, MAXKTCREALMLEN - 1);
@@ -1056,7 +1056,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 
   done:
 #if 0
-    /* 
+    /*
      * intentionally leak the linkedCell field because it was allocated
      * using a different C RTL version.
      */
@@ -1117,7 +1117,7 @@ static int get_afs_mountpoint(char *file, char *mountpoint, int size)
     else {
         return(FALSE);
     }
-}       
+}
 
 /*
 * This routine each time it is called returns the next directory
@@ -1210,7 +1210,7 @@ static char *next_path(char *origpath)
         }
         else
             last_comp = elast_comp;
-    }       
+    }
     while(link);
 
     return(pathtocheck);
@@ -1249,9 +1249,9 @@ static int auth_to_path(krb5_context context, char *path)
             /* in WIN32, if getcwd returns a root dir (eg: c:\), the returned string
             * will already have a trailing slash ('\'). Otherwise, the string will
             * end in the last directory name */
-#ifdef WIN32    
+#ifdef WIN32
             if(pathtocheck[strlen(pathtocheck) - 1] != BDIR)
-#endif  
+#endif
                 strcat(pathtocheck, DIRSTRING);
             strcat(pathtocheck, path);
         }
@@ -1365,7 +1365,7 @@ void
 validate_krb5_availability(void)
 {
     HINSTANCE h = LoadLibrary(KRB5LIB);
-    if (h) 
+    if (h)
         FreeLibrary(h);
     else {
         fprintf(stderr, "Kerberos for Windows library %s is not available.\n", KRB5LIB);
@@ -1378,7 +1378,7 @@ validate_krb4_availability(void)
 {
 #ifdef HAVE_KRB4
     HINSTANCE h = LoadLibrary("krbv4w32.dll");
-    if (h) 
+    if (h)
         FreeLibrary(h);
     else {
         fprintf(stderr, "Kerberos for Windows library krbv4w32.dll is not available.\n");
@@ -1450,7 +1450,7 @@ int main(int argc, char *argv[])
             force++;
         else if (((strcmp(argv[i], "-cell") == 0) ||
                    (strcmp(argv[i], "-c") == 0)) && !pmode)
-        {       
+        {
             if (++i < argc)
             {
                 cmode++;
@@ -1461,7 +1461,7 @@ int main(int argc, char *argv[])
         }
         else if (((strcmp(argv[i], "-path") == 0) ||
                    (strcmp(argv[i], "-p") == 0)) && !cmode)
-        {       
+        {
             if (++i < argc)
             {
                 pmode++;
@@ -1558,7 +1558,7 @@ int main(int argc, char *argv[])
         if (krb5_init_context(&context))
             return(AKLOG_KERBEROS);
         load_krb5_error_message_funcs();
-    } else 
+    } else
         validate_krb4_availability();
     afs_set_com_err_hook(redirect_errors);
 
@@ -1571,15 +1571,15 @@ int main(int argc, char *argv[])
         for (cur_node = cells.first; cur_node; cur_node = cur_node->next)
         {
             memcpy(&cellinfo, cur_node->data, sizeof(cellinfo));
-            if (status = auth_to_cell(context, 
+            if (status = auth_to_cell(context,
                                        cellinfo.cell, cellinfo.realm))
                 somethingswrong++;
-        }       
+        }
 
         /* Then, log to all paths in the paths list */
         for (cur_node = paths.first; cur_node; cur_node = cur_node->next)
         {
-            if (status = auth_to_path(context, 
+            if (status = auth_to_path(context,
                                        cur_node->data))
                 somethingswrong++;
         }
@@ -1591,7 +1591,7 @@ int main(int argc, char *argv[])
         */
         if (somethingswrong && ((cells.nelements + paths.nelements) > 1))
             status = AKLOG_SOMETHINGSWRONG;
-    }       
+    }
 
     akexit(status);
-}       
+}

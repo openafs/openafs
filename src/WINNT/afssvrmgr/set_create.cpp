@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -115,7 +115,7 @@ BOOL CALLBACK Filesets_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
                }
             break;
 
-         case WM_ENDTASK: 
+         case WM_ENDTASK:
             LPTASKPACKET ptp;
             if ((ptp = (LPTASKPACKET)lp) != NULL)
                {
@@ -189,9 +189,9 @@ BOOL CALLBACK Filesets_Create_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
             pscp = NULL;
             break;
 
-         case WM_NOTIFY: 
+         case WM_NOTIFY:
             switch (((LPNMHDR)lp)->code)
-               { 
+               {
                case FLN_ITEMSELECT:
                   LPIDENT lpi;
                   if ((lpi = (LPIDENT)FL_GetSelectedData (GetDlgItem (hDlg, IDC_AGG_LIST))) != NULL)
@@ -229,14 +229,14 @@ LRESULT CALLBACK Filesets_Create_SubclassListProc (HWND hList, UINT msg, WPARAM 
             SetWindowLongPtr (hList, GWLP_WNDPROC, procFilesetsCreateList);
          break;
 
-      case WM_COMMAND: 
+      case WM_COMMAND:
          switch (LOWORD(wp))
             {
             case M_COLUMNS:
                ShowColumnsDialog (GetParent (hList), &gr.viewAggCreate);
                break;
             }
-         break; 
+         break;
       }
 
    return rc;

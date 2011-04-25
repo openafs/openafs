@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -53,11 +53,11 @@ long osi_UnregisterFDType(char *namep)
 	thrd_EnterCrit(&osi_fdCS);
 	ftp = osi_FindFDType(namep);
         if (!ftp) return -1;
-        
+
 	/* free subsidiary storage, and remove from list */
         free(ftp->namep);
 	osi_QRemove((osi_queue_t **) &osi_allFDTypes, &ftp->q);
-        
+
 	/* free format structs */
         for(ffp = ftp->formatListp; ffp; ffp=nffp) {
 		nffp = ffp->nextp;
@@ -82,7 +82,7 @@ osi_fdType_t *osi_RegisterFDType(char *namep, osi_fdOps_t *opsp, void *datap)
 	osi_assertx(osi_FindFDType(namep) == NULL, "registering duplicate iteration type");
 
 	ftp = (osi_fdType_t *) malloc(sizeof(*ftp));
-	
+
 	ftp->namep = (char *) malloc(strlen(namep)+1);
 	strcpy(ftp->namep, namep);
 
@@ -151,7 +151,7 @@ osi_fd_t *osi_AllocFD(char *namep)
 
 	/* initialize for failure */
 	fdp = NULL;
-	
+
 	thrd_EnterCrit(&osi_fdCS);
 	fdTypep = osi_FindFDType(namep);
 	if (fdTypep) {

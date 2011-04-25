@@ -63,7 +63,7 @@ TYPEDEF_FUNC(
     long,
     KRB5_CALLCONV,
     profile_get_string,
-    (profile_t profile, const char *name, const char *subname, 
+    (profile_t profile, const char *name, const char *subname,
 			const char *subsubname, const char *def_val,
 			char **ret_string)
     );
@@ -104,7 +104,7 @@ TYPEDEF_FUNC(
     profile_iterator_free,
     (void **iter_p)
     );
-	
+
 TYPEDEF_FUNC(
     long,
     KRB5_CALLCONV,

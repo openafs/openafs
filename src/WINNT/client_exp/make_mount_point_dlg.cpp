@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -69,18 +69,18 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMakeMountPointDlg message handlers
 
-void CMakeMountPointDlg::OnOK() 
+void CMakeMountPointDlg::OnOK()
 {
 	UpdateData(TRUE);
-	
+
 	BOOL bRW = m_nType == 1;
-	
+
 	m_bMade = MakeMount(m_strDir, m_strVol, m_strCell, bRW);
-		
+
 	CDialog::OnOK();
 }
 
-void CMakeMountPointDlg::OnChangeVolume() 
+void CMakeMountPointDlg::OnChangeVolume()
 {
 	CString strVol;
 	m_Vol.GetWindowText(strVol);
@@ -93,34 +93,34 @@ void CMakeMountPointDlg::OnChangeVolume()
 	CheckEnableOk();
 }
 
-void CMakeMountPointDlg::OnChangeDir() 
+void CMakeMountPointDlg::OnChangeDir()
 {
 	m_Dir.GetWindowText(m_strDir);
 
 	CheckEnableOk();
 }
 
-void CMakeMountPointDlg::OnChangeCell() 
+void CMakeMountPointDlg::OnChangeCell()
 {
 	m_Cell.GetWindowText(m_strCell);
-	
+
 	CheckEnableOk();
 }
 
 void CMakeMountPointDlg::CheckEnableOk()
 {
 	BOOL bEnable = FALSE;
-	
+
 	if ((m_strVol.GetLength() > 0) && (m_strDir.GetLength() > 0))
 		bEnable = TRUE;
 
 	m_Ok.EnableWindow(bEnable);
 }
 
-BOOL CMakeMountPointDlg::OnInitDialog() 
+BOOL CMakeMountPointDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	m_Dir.SetWindowText(m_strDir);
 
 	m_nType = 0;
@@ -131,7 +131,7 @@ BOOL CMakeMountPointDlg::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CMakeMountPointDlg::OnHelp() 
+void CMakeMountPointDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, MAKE_MOUNT_POINT_HELP_ID);
 }

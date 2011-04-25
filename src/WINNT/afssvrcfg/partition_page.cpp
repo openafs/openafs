@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -37,8 +37,8 @@ static BOOL bCantCreate = FALSE;
 static HLISTITEM hSelectedItem = 0;
 
 //	The idea for this var is that if the user clicks on a drive and the vice name
-//	hasn't been set by the user, then we will set the vice name to the drive letter 
-//	selected.  However, if the user sets the vice name, then clicking on a drive 
+//	hasn't been set by the user, then we will set the vice name to the drive letter
+//	selected.  However, if the user sets the vice name, then clicking on a drive
 //	letter doesn't change the vice name.  This var tells us whether it is ok to set
 //	the vice name or not.
 static BOOL bAutoSetPartitionName = TRUE;
@@ -78,7 +78,7 @@ static BOOL CALLBACK WizardDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARA
     if ((g_pWiz->GetState() == sidSTEP_EIGHT) && (uMsg == WM_ACTIVATEAPP) && wParam) {
 	UpdateDriveList();
 	ShowPartitionInfo();
-    }		
+    }
 
     return CallWindowProc((WNDPROC)Subclass_FindNextHook(hwndDlg, WizardDlgProc), hwndDlg, uMsg, wParam, lParam);
 }
@@ -94,7 +94,7 @@ BOOL CALLBACK PartitionPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 	CheckEnableButtons();
 	break;
 
-    case WM_DESTROY_SHEET:	
+    case WM_DESTROY_SHEET:
 	Subclass_RemoveHook(g_pWiz->GetWindow(), WizardDlgProc);
 	break;
 
@@ -131,7 +131,7 @@ BOOL CALLBACK PartitionPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	break;
 
-    case WM_NOTIFY:	
+    case WM_NOTIFY:
 	switch (((LPNMHDR)lp)->code) {
 	case FLN_ITEMSELECT:	OnListSelection((LPFLN_ITEMSELECT_PARAMS)lp);
 	}
@@ -140,7 +140,7 @@ BOOL CALLBACK PartitionPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     return FALSE;
-}	
+}
 
 
 
@@ -201,7 +201,7 @@ static void OnInitDialog(HWND hwndDlg)
 
     if (g_CfgData.bFirstServer)
 	MustMakePartition();
-}	
+}
 
 static void OnPartitionName()
 {
@@ -211,7 +211,7 @@ static void OnPartitionName()
     bAutoSetPartitionName = szBuf[0] == 0;
 
     CheckEnableButtons();
-}	
+}
 
 static void OnListSelection(LPFLN_ITEMSELECT_PARAMS pItemParms)
 {
@@ -267,7 +267,7 @@ static void CantMakePartition(UINT nMsgID)
     SetWindowText(hMsg, szMsg);
 
     bCantCreate = TRUE;
-}	
+}
 
 static void MustMakePartition()
 {
@@ -301,7 +301,7 @@ static BOOL SavePartitionInfo(BOOL bValidate)
 	GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), g_CfgData.szPartitionName, MAX_PARTITION_NAME_LEN);
         if (bValidate && !Validation_IsValid(g_CfgData.szPartitionName, VALID_AFS_PARTITION_NAME))
             return FALSE;
-    }	
+    }
 
     if (hSelectedItem == 0)
 	g_CfgData.chDeviceName = 0;
@@ -316,11 +316,11 @@ static BOOL SavePartitionInfo(BOOL bValidate)
 static void ShowPartitionInfo()
 {
     // The SetWndText call below will mess up our bAutoSetPartitionName variable.
-    // It will trigger the change event on the partition name field causing our 
-    // OnPartitionName function to get called, and making it look to us like the 
+    // It will trigger the change event on the partition name field causing our
+    // OnPartitionName function to get called, and making it look to us like the
     // user set the partition name.  Therefore, we will save the current value,
     // make the call, then restore the value.
-    BOOL bAutoSet = bAutoSetPartitionName;	
+    BOOL bAutoSet = bAutoSetPartitionName;
     SetWndText(hDlg, IDC_PARTITION_NAME, g_CfgData.szPartitionName);
     bAutoSetPartitionName = bAutoSet;
 

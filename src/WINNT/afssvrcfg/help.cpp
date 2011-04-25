@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -151,7 +151,7 @@ static DWORD IDH_FIRST_SERVER_CTX_HELP[] = {
     IDC_AFS_UID,			IDH_AFS_UID,
     IDC_AFS_UID_SPINNER,	IDH_AFS_UID_SPINNER,
     0,                      0
-};	
+};
 
 static DWORD IDH_EXISTING_CELL_CTX_HELP[] = {
     IDC_ADMIN_NAME,		IDH_ADMIN_NAME2,
@@ -356,7 +356,7 @@ void RegisterConfigToolHelp()
 
 void RegisterWizardHelp()
 {
-    AfsAppLib_RegisterHelp(IDD_INTRO_PAGE, IDH_INTRO_CTX_HELP, IDH_INTRO_PAGE);	
+    AfsAppLib_RegisterHelp(IDD_INTRO_PAGE, IDH_INTRO_CTX_HELP, IDH_INTRO_PAGE);
     AfsAppLib_RegisterHelp(IDD_INFO_PAGE, IDH_CELL_AND_SERVER_INFO_CTX_HELP, IDH_INFO_PAGE);
     AfsAppLib_RegisterHelp(IDD_INFO_PAGE2_FIRST_SERVER, IDH_FIRST_SERVER_CTX_HELP, IDH_FIRST_SERVER_PAGE);
     AfsAppLib_RegisterHelp(IDD_INFO_PAGE2_NOT_FIRST_SERVER, IDH_EXISTING_CELL_CTX_HELP, IDH_EXISTING_CELL_PAGE);
@@ -368,6 +368,6 @@ void RegisterWizardHelp()
     AfsAppLib_RegisterHelp(IDD_REPLICATION_PAGE, IDH_REPLICATION_CTX_HELP, IDH_REPLICATION_PAGE);
     AfsAppLib_RegisterHelp(IDD_SYS_CONTROL_PAGE, IDH_SYS_CONTROL_CTX_HELP, IDH_SYS_CONTROL_PAGE);
     AfsAppLib_RegisterHelp(IDD_GET_PW, IDH_GET_PW_CTX_HELP, IDH_GET_PW_DLG);
-    AfsAppLib_RegisterHelp(IDD_CONFIG_SERVER_PAGE, IDH_CONFIG_SERVER_CTX_HELP, IDH_CONFIG_SERVER_PAGE);	
+    AfsAppLib_RegisterHelp(IDD_CONFIG_SERVER_PAGE, IDH_CONFIG_SERVER_CTX_HELP, IDH_CONFIG_SERVER_PAGE);
 }
 

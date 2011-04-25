@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -147,7 +147,7 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
     DWORD i;
 
     HMODULE hIpHlp;
-    DWORD (WINAPI *pGetAdaptersAddresses)(ULONG, DWORD, PVOID, 
+    DWORD (WINAPI *pGetAdaptersAddresses)(ULONG, DWORD, PVOID,
                                           PIP_ADAPTER_ADDRESSES, PULONG) = 0;
 
     hIpHlp = LoadLibrary("iphlpapi");
@@ -163,7 +163,7 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
     /* first pass to get the required size of the IP table */
     pIpTbl = (PMIB_IPADDRTABLE) malloc(sizeof(MIB_IPADDRTABLE));
     outBufLen = sizeof(MIB_IPADDRTABLE);
-    
+
     dwRetVal = GetIpAddrTable(pIpTbl, &outBufLen, FALSE);
     if (dwRetVal != ERROR_INSUFFICIENT_BUFFER) {
         /* this should have failed with an insufficient buffer because we
@@ -189,11 +189,11 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
     pAddresses = (IP_ADAPTER_ADDRESSES*) malloc(sizeof(IP_ADAPTER_ADDRESSES));
 
     /* first call gets required buffer size */
-    if (pGetAdaptersAddresses(AF_INET, 
-                              0, 
-                              NULL, 
-                              pAddresses, 
-                              &outBufLen) == ERROR_BUFFER_OVERFLOW) 
+    if (pGetAdaptersAddresses(AF_INET,
+                              0,
+                              NULL,
+                              pAddresses,
+                              &outBufLen) == ERROR_BUFFER_OVERFLOW)
     {
         free(pAddresses);
         pAddresses = (IP_ADAPTER_ADDRESSES*) malloc(outBufLen);
@@ -203,26 +203,26 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
         nConfig = -1;
         goto done;
     }
-    
+
     /* second call to get the actual data */
-    if ((dwRetVal = pGetAdaptersAddresses(AF_INET, 
-                                          0, 
-                                          NULL, 
-                                          pAddresses, 
-                                          &outBufLen)) == NO_ERROR) 
+    if ((dwRetVal = pGetAdaptersAddresses(AF_INET,
+                                          0,
+                                          NULL,
+                                          pAddresses,
+                                          &outBufLen)) == NO_ERROR)
     {
         /* we have a list of addresses.  go through them and figure out
            the IP addresses */
         for (cAddress = pAddresses; cAddress; cAddress = cAddress->Next) {
-            
+
             /* skip software loopback adapters */
             if (cAddress->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
                 continue;
-            
+
             /* also skip interfaces that are not up */
             if (cAddress->OperStatus != 1)
                 continue;
-            
+
             /* starting with the AdapterName, which is actually the adapter
                instance GUID, check if this is a MS loopback device */
             if (IsLoopback(cAddress->AdapterName))
@@ -256,12 +256,12 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
                 }
             }
         }
-        
+
         free(pAddresses);
         free(pIpTbl);
-        
+
         *count = n;
-    } else { 
+    } else {
         /* again. this is bad */
         free(pAddresses);
         free(pIpTbl);
@@ -277,57 +277,57 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
 static int IsLoopback(char * guid)
 {
     int isloopback = FALSE;
- 
+
     HKEY hkNet = NULL;
     HKEY hkDev = NULL;
     HKEY hkDevConn = NULL;
     HKEY hkEnum = NULL;
     HKEY hkAdapter = NULL;
-    
+
     char pnpIns[MAX_PATH];
     char hwId[MAX_PATH];
     char service[MAX_PATH];
-    
+
     DWORD size;
-    
+
     /* Open the network adapters key */
     if (FAILED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, KEY_READ, &hkNet)))
         goto _exit;
-    
+
     /* open the guid key */
     if (FAILED(RegOpenKeyEx(hkNet, guid, 0, KEY_READ, &hkDev)))
         goto _exit;
-    
+
     /* then the connection */
     if (FAILED(RegOpenKeyEx(hkDev, "Connection", 0, KEY_READ, &hkDevConn)))
         goto _exit;
-    
+
     /* and find out the plug-n-play instance ID */
     size = MAX_PATH;
     if (FAILED(RegQueryValueEx(hkDevConn, "PnpInstanceID", NULL, NULL, pnpIns, &size)))
         goto _exit;
-    
+
     /* now look in the device ENUM */
     if (FAILED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Enum", 0, KEY_READ, &hkEnum)))
         goto _exit;
-    
+
     /* for the instance that we found above */
     if (FAILED(RegOpenKeyEx(hkEnum, pnpIns, 0, KEY_READ, &hkAdapter)))
         goto _exit;
-    
+
     /* and fetch the harware ID */
     size = MAX_PATH;
     if (FAILED(RegQueryValueEx(hkAdapter, "HardwareID", NULL, NULL, hwId, &size)))
         goto _exit;
-    
+
     size = MAX_PATH;
     if (FAILED(RegQueryValueEx(hkAdapter, "Service", NULL, NULL, service, &size)))
         goto _exit;
-    
+
     /* and see if it is the loopback adapter */
     if (!stricmp(hwId, "*msloop") || !stricmp(service, "msloop"))
         isloopback = TRUE;
-    
+
   _exit:
     if (hkAdapter)
         RegCloseKey(hkAdapter);
@@ -339,7 +339,7 @@ static int IsLoopback(char * guid)
         RegCloseKey(hkDev);
     if (hkNet)
         RegCloseKey(hkNet);
- 
+
     return isloopback;
 }
 
@@ -449,7 +449,7 @@ static char *GetNextInterface(char *iflist)
 {
     char *ifname;
 
-    /* interface substrings are assumed to be of form \Device\<adapter name> 
+    /* interface substrings are assumed to be of form \Device\<adapter name>
      * \Tcpip\Parameters\Interfaces\<adapter name>
      */
     ifname = strrchr(iflist, '\\');

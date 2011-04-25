@@ -226,7 +226,7 @@ int simple_test(void)
                 rc = CM_ERROR_INEXACT_MATCH;
             } else {
                 rc = CM_ERROR_AMBIGUOUS_FILENAME;
-            } 
+            }
         } else {
             rc = ENOENT;
         }

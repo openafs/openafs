@@ -19,8 +19,8 @@
 #define MS_NT_16 2
 #define MS_95_32 3
 #define MS_95_16 4
-#define NOVELL_LWP_16 5       
-	
+#define NOVELL_LWP_16 5
+
 #define MS_OS_WIN 1
 #define MS_OS_95 2
 #define MS_OS_NT 4
@@ -29,7 +29,7 @@
 #define MS_OS_2003 60
 #define MS_OS_NT_UNKNOWN 124
 #define MS_OS_UNKNOWN 0
-	
+
 #define STACK_UNKNOWN 0
 #define UNKNOWN_16_UNDER_32 -2
 #define UNKNOWN_16_UNDER_16 -3
@@ -80,5 +80,5 @@
 #define W95_DOMAIN_KEY "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP\\Domain"
 #define W95_NS_KEY     "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP\\NameServer"
 
-	   
+
 #endif // __MIT_WHICH_H

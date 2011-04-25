@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -169,7 +169,7 @@ BOOL InitApplication(HANDLE hInstance)
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = GetStockObject(WHITE_BRUSH); 
+    wc.hbrBackground = GetStockObject(WHITE_BRUSH);
     wc.lpszMenuName =  "InputMenu";
     wc.lpszClassName = "InputWClass";
 
@@ -332,7 +332,7 @@ main_GetBinding(char *name, RPC_BINDING_HANDLE *handlep)
 	long code;
 	int count=0;
 	int valid;
-	
+
 	code = RpcNsBindingImportBegin(RPC_C_NS_SYNTAX_DCE, name, *dbrpc_v1_0_c_ifspecp,
 		(UUID *) 0, &tempContext);
 	if (code != RPC_S_OK) return code;
@@ -383,26 +383,26 @@ main_GetBinding(char *hostNamep, UUID *exportIDp, RPC_BINDING_HANDLE *handlep)
 	char *stringBindingp;
         unsigned long code;
         RPC_BINDING_HANDLE handle;
-        
+
         code = RpcStringBindingCompose(NULL, "ncacn_ip_tcp", hostNamep, NULL, NULL,
         	&stringBindingp);
 	if (code) return code;
-        
+
 	code = RpcBindingFromStringBinding(stringBindingp, &handle);
         if (code) goto done;
-        
+
 	code = RpcMgmtSetComTimeout(handle, /* short, but not too short, timeout */ 3);
 	if (code) {
 		RpcBindingFree(&handle);
         	goto done;
 	}
-        
+
         code = RpcBindingSetObject(handle, exportIDp);
         if (code) {
 		RpcBindingFree(&handle);
         	goto done;
 	}
-        
+
         *handlep = handle;
         code = 0;
 
@@ -564,7 +564,7 @@ LONG APIENTRY MainWndProc(
 			RpcBindingFree(&main_remoteHandle);
 			main_remoteHandle = NULL;
 		}
-                
+
                 /* parse milkyway:3 into host milkyway, UUID 3 */
                 strcpy(hostName, tbuffer);
 		tp = strrchr(hostName, ':');
@@ -649,7 +649,7 @@ LONG APIENTRY MainWndProc(
         case WM_PAINT:
 	    /* make kids draw, too */
 	    InvalidateRect(hWnd, &screenRect, TRUE);
-	    
+
             hDC = BeginPaint (hWnd, &ps);
 	    /* nothing to draw, right? */
             EndPaint(hWnd, &ps);

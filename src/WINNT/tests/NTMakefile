@@ -1,4 +1,4 @@
-#                                                                                                                                
+#
 # Copyright (c) 2009 Secure Endpoints Inc.
 #
 
@@ -27,5 +27,5 @@ clean::
         cd ..\winflock
         $(MAKECMD) /nologo /f NTMakefile clean
         cd ..
-        
+
 

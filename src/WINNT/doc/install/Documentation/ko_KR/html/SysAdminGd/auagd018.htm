@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -353,7 +353,7 @@ AFS UID를 스스로 지정해야 합니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> 파일에 포함.
 필요하면 <A HREF="auagd021.htm#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
@@ -427,7 +427,7 @@ UID가 이미 있는 경우에만 적합합니다. 이 인수를 제공하지
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>kas create</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>> \
-                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
+                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
    initial_password: <VAR>initial_password</VAR>
    Verifying, please re-enter initial_password: <VAR>initial_password</VAR>
@@ -612,9 +612,9 @@ UID가 이미 있는 경우에만 적합합니다. 이 인수를 제공하지
 <B>vos release</B> 명령을 사용하여 <A HREF="auagd010.htm#HDRWQ194">읽기/쓰기 볼륨을 복제하려면 (읽기 전용 볼륨 작성)</A>의
 설명 대로 볼륨을 해제하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 단계는 홈 디렉토리의 상위 디렉토리 그 자체가 복제된 볼륨의 마운트 포인트가 아니어도
@@ -752,7 +752,7 @@ UID가 이미 있는 경우에만 적합합니다. 이 인수를 제공하지
 <I>AFS Administration Reference</I>의 명령 참조 페이지 참조). 사용자가 암호를 너무 자주 변경하려고 하면 다음 메시지가
 나타납니다.
 <P>
-<PRE>   Password was not changed because you changed it too recently; see 
+<PRE>   Password was not changed because you changed it too recently; see
    your systems administrator
 </PRE>
 </LI><LI>새 암호의 품질을 확인하십시오.
@@ -843,7 +843,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 항목에 플래그가 있는 지 확인하려면, <A HREF="auagd021.htm#HDRWQ590">ADMIN 플래그가 설정되어 있는지 확인하려면</A>에서
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   % <B>kas -admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
+<PRE>   % <B>kas -admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
    ka>
 </PRE>
@@ -861,7 +861,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 <A NAME="IDX7769"></A>
 </LI><LI><B>(kas) unlock</B> 명령을 실행하여 계정을 잠금 해제하십시오.
 <P>
-<PRE>   ka> <B>unlock</B> &lt;<VAR>authentication&nbsp;ID</VAR>> 
+<PRE>   ka> <B>unlock</B> &lt;<VAR>authentication&nbsp;ID</VAR>>
 </PRE>
 <P>
 <P>여기서,
@@ -891,7 +891,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 <P>
 <PRE>   % <B>kas setfields</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>> \
                    <B>-pwexpires</B> &lt;<VAR>number&nbsp;days&nbsp;password&nbsp;is&nbsp;valid &nbsp;[0..254])</VAR>>  \
-                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>> 
+                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
@@ -931,7 +931,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>kas setfields</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>> <B>-reuse</B> &lt;<VAR> permit&nbsp;password&nbsp;reuse&nbsp;(yes/no)</VAR>>  \
-                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>> 
+                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
@@ -985,7 +985,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>kas setpassword</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>> \
-                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>> 
+                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
    new_password: <VAR>new_password</VAR>
    Verifying, please re-enter new_password: <VAR>new_password</VAR>
@@ -1062,7 +1062,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> 파일에 포함.
 필요하면 <A HREF="auagd021.htm#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
@@ -1123,7 +1123,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 항목에 플래그가 있는 지 확인하려면, <A HREF="auagd021.htm#HDRWQ590">ADMIN 플래그가 설정되어 있는지 확인하려면</A>에서
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   % <B>kas -admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
+<PRE>   % <B>kas -admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
    ka>
 </PRE>
@@ -1223,9 +1223,9 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 <B>vos release</B> 명령을 사용하여 볼륨을
 해제하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 단계는 홈 디렉토리의 상위 디렉토리 그 자체가 복제된 볼륨의 마운트 포인트가 아니어도
@@ -1268,7 +1268,7 @@ ACL은 <B>w</B>(<B>쓰기</B>) 권한을 <B>system:administrators</B>
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> 파일에 포함.
 필요하면 <A HREF="auagd021.htm#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
@@ -1344,7 +1344,7 @@ AFS UID를 기록해 두십시오. 나중에 원래의 AFS UID를 가진
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>kas delete</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>> \
-                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
+                   <B>-admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
@@ -1448,9 +1448,9 @@ AFS UID를 기록해 두십시오. 나중에 원래의 AFS UID를 가진
 <A HREF="auagd010.htm#HDRWQ194">읽기/쓰기 볼륨을 복제하려면 (읽기 전용 볼륨 작성)</A>의 설명대로
 <B>vos release</B> 명령을 사용하여 볼륨을 해제하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 단계는 홈 디렉토리의 상위 디렉토리 그 자체가 복제된 볼륨의 마운트 포인트가 아니어도
@@ -1463,11 +1463,11 @@ AFS UID를 기록해 두십시오. 나중에 원래의 AFS UID를 가진
 실행해야 합니다.
 </TD></TR></TABLE>
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd017.htm">이전 페이지</A> &#124; <A HREF="auagd019.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd017.htm">이전 페이지</A> &#124; <A HREF="auagd019.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

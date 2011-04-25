@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -70,7 +70,7 @@ BOOL CALLBACK Services_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          {
          RECT rTab;
          GetClientRect (GetParent(hDlg), &rTab);
-         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab); 
+         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab);
          ResizeWindow (hDlg, awdServices, rwaMoveToHere, &rTab);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_SVC_LIST), &gr.viewSvc);
@@ -169,9 +169,9 @@ BOOL CALLBACK Services_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             }
          break;
 
-      case WM_NOTIFY: 
+      case WM_NOTIFY:
          switch (((LPNMHDR)lp)->code)
-            { 
+            {
             case FLN_ITEMSELECT:
                Services_OnSelect (hDlg);
                break;
@@ -183,10 +183,10 @@ BOOL CALLBACK Services_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                      PostMessage (GetDlgItem (hDlg, IDC_SVC_LIST), WM_COMMAND, M_PROPERTIES, 0);
                   }
                break;
-            } 
-         break; 
+            }
+         break;
 
-      case WM_CONTEXTMENU: 
+      case WM_CONTEXTMENU:
          {
          POINT ptScreen;
          POINT ptClient;
@@ -199,7 +199,7 @@ BOOL CALLBACK Services_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          if ((HWND)wp == GetDlgItem (hDlg, IDC_SVC_LIST))
             Services_ShowPopupMenu ((HWND)wp, ptClient, ptScreen);
          }
-         break; 
+         break;
       }
 
    return FALSE;

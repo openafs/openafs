@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -120,14 +120,14 @@ main_TryLockTest(HANDLE hWnd)
 	salmonCount = 0;
 	neonCount = 0;
 	interestingEvents = 0;
-	
+
 	/* create three processes, two modifiers and one scanner.  The scanner
 	 * checks that the basic invariants are being maintained, while the
 	 * modifiers modify the global variables, maintaining certain invariants
 	 * by using locks.
 	 */
 	done = 0;
-	
+
 	main_ForceDisplay(hWnd);
 
 	lock_InitializeRWLock(&trylock_first, "first lock");
@@ -158,7 +158,7 @@ main_TryLockTest(HANDLE hWnd)
 		/* right now, we're waiting for 2 threads */
 		if (localDone == 2) break;
 	}
-	
+
 	/* done, release and finalize all locks */
 	lock_FinalizeRWLock(&trylock_first);
 	lock_FinalizeRWLock(&trylock_third);

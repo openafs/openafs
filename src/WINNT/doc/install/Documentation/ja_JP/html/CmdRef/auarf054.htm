@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -53,7 +53,7 @@
 <PRE>   add <VAR>username</VAR>[:<VAR>full_name</VAR>][:<VAR>initial_password</VAR>][:<VAR>password_expires</VAR>]
        [:<VAR>file_server</VAR>][:<VAR>partition</VAR>][:<VAR>mount_point</VAR>][:<VAR>uid</VAR>][:<VAR>var1</VAR>][:<VAR>var2</VAR>]
        [:<VAR>var3</VAR>][:<VAR>var4</VAR>][:<VAR>var5</VAR>][:<VAR>var6</VAR>][:<VAR>var7</VAR>][:<VAR>var8</VAR>][:<VAR>var9</VAR>][:]
-   
+
 </PRE>
 <P>フィールドの値を省略する場合には (フィールドがオプションか、あるいはテンプレートに定数が指定されているため)、コロンの間には何も入力しないでください。最後の引き数を指定したら、コロンと改行を入力するか、あるいは改行のみを入力して、行を終了してください。
 <P>各フィールドの意味と許容値は、次のとおりです。
@@ -87,7 +87,7 @@
 <P>
 <PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
    <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
-   
+
 </PRE>
 <P>
 <P>
@@ -95,14 +95,14 @@
 <P>
 <PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
    <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
-   
+
 </PRE>
 <P>
 <P>
 <P>次の値まで、以下同様となります。
 <P>
 <PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
-    
+
 </PRE>
 <P>
 <P>
@@ -131,7 +131,7 @@
 <P><B>delete</B> 命令は、システムからユーザー・アカウントを削除します。バルク入力ファイルの各インスタンスは、コマンド行で発行された
 <B>uss delete</B> コマンドと同じ結果になります。命令のフィールドの順序は、<B>uss delete</B> コマンドの引き数の順序と同じです。
 <PRE>   delete <VAR>username</VAR>:<VAR>mount_point_path</VAR>[:{ savevolume | delvolume }][:]
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -159,7 +159,7 @@
 ID が必要になります。
 <P>命令の構文は次のとおりです。
 <PRE>   exec <VAR>command</VAR>
-   
+
 </PRE>
 <P><B>デフォルトのボリューム処理を設定する delvolume および savevolume 命令</B>
 <A NAME="IDX4106"></A>
@@ -170,7 +170,7 @@ ID が必要になります。
 <B>delvolume</B> 命令は、バルク入力ファイルでこれらの後にある <B>delete</B> 命令で参照されたボリュームのデフォルト処理を設定します。これらの構文は次のとおりです。
 <PRE>   savevolume
    delvolume
-   
+
 </PRE>
 <P><B>savevolume</B> 命令を使用すると、バルク入力ファイルでこれ以降に <B>delete</B> 命令があっても、ボリュームおよび VLDB 項目が削除されません。<B>delvolume</B> 命令を使用すると、後続の <B>delete</B> 命令でボリュームおよび VLDB 項目が削除されます。この設定を無効にする命令があるまで、この設定は有効になります。このような命令がなければ、バルク・ファイルの最後まで有効になります。
 <P>いずれの行もバルク入力ファイルにない場合、デフォルトでは、ボリュームおよび VLDB 項目は削除されます。最初の
@@ -182,15 +182,15 @@ ID が必要になります。
 <P><STRONG>例</STRONG>
 <P>次の例は、<B>add</B> 命令で認証のみのアカウントを作成しています。ユーザーの初期パスワードは、<B>changeme</B> (デフォルト)です。
 <PRE>   add anderson
-   
+
 </PRE>
 <P>次の例は、<B>add</B> 命令で、テンプレート・ファイルの
 <B>V</B> 命令を参照しています (これは、テンプレート・ファイルでは単一行でなければなりません)。
-<PRE>   add smith:John Smith:::fs1:a:::::marketing 
+<PRE>   add smith:John Smith:::fs1:a:::::marketing
    add jones:Pat Jones:::fs3:c:::::finance
    V user.$USER $SERVER.abc.com /vicep$PART 2000 \
        /afs/abc.com/usr/$3/$USER $UID $USER all
-   
+
 </PRE>
 <P>最初の <B>add</B> 命令により、初期パスワード <B>changeme</B> と保護サーバーによって提供された $UID に値を持つ <B>smith</B> というアカウントを、保護データベースおよび認証データベースに作成しています。ボリューム <B>user.smith</B> は、ファイル・サーバー・マシン <B>fs1.abc.com</B> の区画 <B>/vicepa</B> にあり、
 <B>/afs/abc.com/usr/marketing/smith</B> にマウントされます。このアカウントには自分のホーム・ディレクトリーがあり、そのルート・ディレクトリーのアクセス制御リスト (ACL) ですべてのアクセス権が許可されています。
@@ -199,7 +199,7 @@ ID が必要になります。
 <P>次の <B>add</B> 命令は前の例と同じ結果になりますが、値のない番号変数に空のフィールドを明示的に指定しています。
 <PRE>   add smith:John Smith:::fs1:a:::::marketing::::::
    add jones:Pat Jones:::fs3:c:::::finance::::::
-   
+
 </PRE>
 <P>次の例は、<B>delete</B> 命令と
 <B>savevolume</B> 命令のセットがある完全なバルク入力ファイルの例です。ユーザー <B>smith</B>、<B>pat</B>、および <B>rogers</B> に対する <B>delete</B> 命令が <B>savevolume</B> 命令の前にあり、3 番目のフィールドがすべて空になっているので、該当するホーム・ボリュームは削除されます。
@@ -211,11 +211,11 @@ ID が必要になります。
    savevolume
    delete terry:/afs/abc.com/usr/terry
    delete johnson:/afs/abc.com/usr/johnson:delvolume
-   
+
 </PRE>
 <P>次の例は、<B>add</B> 命令と <B>delete</B> 命令の間に <B>exec</B> 命令があるバルク入力ファイルの例です。追加操作が完了し、削除操作が開始すると、<B>uss bulk</B> コマンドが発行された コマンド・シェルに次のメッセージが表示されます。
 <PRE>   exec echo "Additions completed; beginning deletions..."
-   
+
 </PRE>
 <P><STRONG>関連情報 </STRONG>
 <P><A HREF="auarf055.htm#HDRUSSFILE">uss テンプレート・ファイル</A>
@@ -223,11 +223,11 @@ ID が必要になります。
 <P><A HREF="auarf245.htm#HDRUSS_BULK">uss bulk</A>
 <P><A HREF="auarf246.htm#HDRUSS_DELETE">uss delete</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf053.htm">前ページ</A> &#124; <A HREF="auarf055.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf053.htm">前ページ</A> &#124; <A HREF="auarf055.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

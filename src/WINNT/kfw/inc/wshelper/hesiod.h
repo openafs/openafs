@@ -29,37 +29,37 @@
 /*! \def DEF_RHS
  *	default RHS value is the hesiod configuration file is not present
  */
-#define DEF_RHS         ".Athena.MIT.EDU"      
+#define DEF_RHS         ".Athena.MIT.EDU"
 
 /*! \def DEF_LHS
  *	default LHS value is the hesiod configuration file is not present
  */
-#define DEF_LHS         ".ns"                   
+#define DEF_LHS         ".ns"
 
 /*! \def HES_ER_UNINIT
- *	HES error code: uninitialized 
+ *	HES error code: uninitialized
  */
-#define HES_ER_UNINIT   -1  
+#define HES_ER_UNINIT   -1
 
-/*! \def HES_ER_OK 
- *	HES error code: no error 
+/*! \def HES_ER_OK
+ *	HES error code: no error
  */
-#define HES_ER_OK       0  
+#define HES_ER_OK       0
 
-/*! \def HES_ER_NOTFOUND 
+/*! \def HES_ER_NOTFOUND
  *	HES error code: Hesiod name not found by server
  */
-#define HES_ER_NOTFOUND 1      
+#define HES_ER_NOTFOUND 1
 
-/*! \def HES_ER_CONFIG  
+/*! \def HES_ER_CONFIG
  *	HES error code: local problem (no config file?)
  */
-#define HES_ER_CONFIG   2       
+#define HES_ER_CONFIG   2
 
 /*! \def HES_ER_NET
  *	HES error code: network problem
  */
-#define HES_ER_NET      3      
+#define HES_ER_NET      3
 
 
 #ifdef __cplusplus
@@ -67,7 +67,7 @@ extern "C" {
 #endif
 
 /*!	\fn LPSTR WINAPI hes_to_bind(LPSTR HesiodName, LPSTR HesiodNameType)
- *	hes_to_bind function use the LHS and RHS values and 
+ *	hes_to_bind function use the LHS and RHS values and
  *	binds them with the parameters so that a well formed DNS query may
  *	be performed.
  *
@@ -80,7 +80,7 @@ extern "C" {
  */
 LPSTR WINAPI
 hes_to_bind(
-    LPSTR HesiodName, 
+    LPSTR HesiodName,
     LPSTR HesiodNameType
     );
 
@@ -106,7 +106,7 @@ hes_resolve(
     );
 
 /*! \fn  int WINAPI hes_error(void)
- *	The  function  hes_error may be called to determine the 
+ *	The  function  hes_error may be called to determine the
  *	source of the error.  It does not take an argument.
  *
  *	defined in hesiod.c
@@ -133,7 +133,7 @@ hes_free(
     );
 
 
-/*! \struct hes_postoffice 
+/*! \struct hes_postoffice
  * For use in getting post-office information.
  */
 struct hes_postoffice {
@@ -146,7 +146,7 @@ struct hes_postoffice {
 };
 
 /*! \fn struct hes_postoffice  * WINAPI hes_getmailhost(LPSTR user)
- * This call is used to obtain a user's type of mail account and the location of that 
+ * This call is used to obtain a user's type of mail account and the location of that
  *	account. E.g. POP PO10.MIT.EDU or IMAP IMAP-TEST.MIT.EDU
  *
  *	defined in hesmailh.c
@@ -154,8 +154,8 @@ struct hes_postoffice {
  *	\param[in]	user	The username to be used when querying for the Hesiod Name Type POBOX.
  *	\retval				NULL if there was an error or if there was no entry for the
  *						username. Otherwise a pointer to a hes_postoffice structure is
- *						returned. The caller must never attempt to modify this structure or to free 
- *						any of its components. Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before 
+ *						returned. The caller must never attempt to modify this structure or to free
+ *						any of its components. Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before
  *						issuing another getmailhost call
  */
 struct hes_postoffice  * WINAPI hes_getmailhost(LPSTR user);
@@ -166,18 +166,18 @@ struct hes_postoffice  * WINAPI hes_getmailhost(LPSTR user);
  *	getservbyname function which normally just uses a local services
  *	file. This allows a site to use a centralized database for adding new
  *	services.
- *	
+ *
  *	defined in hesservb.c
- *	
+ *
  *	\param[in]	name	pointer to the official name of the service, eg "POP3".
  *	\param[in]	proto	pointer to the protocol to use when contacting the service, e.g. "TCP"
- *	\retval				NULL if there was an error or a pointer to a servent structure. The caller must 
- *						never attempt to modify this structure or to free any of its components. 
- *						Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before 
+ *	\retval				NULL if there was an error or a pointer to a servent structure. The caller must
+ *						never attempt to modify this structure or to free any of its components.
+ *						Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before
  *						issuing another hes_getservbyname call
  *
  */
-struct servent  * WINAPI hes_getservbyname(LPSTR name, 
+struct servent  * WINAPI hes_getservbyname(LPSTR name,
                                               LPSTR proto);
 
 /*! \fn struct passwd  * WINAPI hes_getpwnam(LPSTR nam)
@@ -188,9 +188,9 @@ struct servent  * WINAPI hes_getservbyname(LPSTR name,
  *	defined in hespwnam.c
  *
  *	\param	nam			a pointer to the username
- *	\retval				NULL if there was an error or a pointer to the passwd structure. The caller must 
- *						never attempt to modify this structure or to free any of its components. 
- *						Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before 
+ *	\retval				NULL if there was an error or a pointer to the passwd structure. The caller must
+ *						never attempt to modify this structure or to free any of its components.
+ *						Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before
  *						issuing another hes_getpwnam call
  *
  */
@@ -199,13 +199,13 @@ struct passwd  * WINAPI hes_getpwnam(LPSTR nam);
 /*!  struct passwd  * WINAPI hes_getpwuid(int uid)
  * 	Given a UID this function will return the pwd information, eg username, uid,
  *	gid, fullname, office location, phone number, home directory, and default shell
- *	
+ *
  *	defined in hespwnam.c
  *
  *	\param	uid			The user ID
- *	\retval				NULL if there was an error or a pointer to the passwd structure. The caller must 
- *						never attempt to modify this structure or to free any of its components. 
- *						Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before 
+ *	\retval				NULL if there was an error or a pointer to the passwd structure. The caller must
+ *						never attempt to modify this structure or to free any of its components.
+ *						Furthermore, only one copy of this structure is allocated per call per thread, so the application should copy any information it needs before
  *						issuing another hes_getpwuid call
  */
 struct passwd  * WINAPI hes_getpwuid(int uid);

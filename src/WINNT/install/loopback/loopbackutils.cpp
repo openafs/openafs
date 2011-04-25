@@ -1,24 +1,24 @@
 /*
-   Copyright 2004 by the Massachusetts Institute of Technology              
-                                                                            
-   All rights reserved.                                                     
-                                                                            
-   Permission to use, copy, modify, and distribute this software and its    
-   documentation for any purpose and without fee is hereby granted,         
-   provided that the above copyright notice appear in all copies and that   
-   both that copyright notice and this permission notice appear in          
-   supporting documentation, and that the name of the Massachusetts         
-   Institute of Technology (M.I.T.) not be used in advertising or publicity 
-   pertaining to distribution of the software without specific, written     
-   prior permission.                                                        
-                                                                            
-   M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING  
-   ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL 
-   M.I.T. BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR   
-   ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,      
-   WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,   
-   ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS      
-   SOFTWARE.                                                                
+   Copyright 2004 by the Massachusetts Institute of Technology
+
+   All rights reserved.
+
+   Permission to use, copy, modify, and distribute this software and its
+   documentation for any purpose and without fee is hereby granted,
+   provided that the above copyright notice appear in all copies and that
+   both that copyright notice and this permission notice appear in
+   supporting documentation, and that the name of the Massachusetts
+   Institute of Technology (M.I.T.) not be used in advertising or publicity
+   pertaining to distribution of the software without specific, written
+   prior permission.
+
+   M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+   ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+   M.I.T. BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+   ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+   WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+   ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+   SOFTWARE.
 */
 
 #define _WIN32_DCOM
@@ -80,11 +80,11 @@ extern "C" DWORD UnInstallLoopBack(void)
 
         ok = SetupDiEnumDeviceInfo(hDeviceInfo, index, &DeviceInfoData);
 
-	if(!ok) 
+	if(!ok)
 	{
 	  if(GetLastError() == ERROR_NO_MORE_ITEMS)
 	      break;
-	  else 
+	  else
 	  {
    	      index++;
 	      continue;
@@ -92,12 +92,12 @@ extern "C" DWORD UnInstallLoopBack(void)
 	}
 
         // try to get the DeviceDesc registry property
-        ok = SetupDiGetDeviceRegistryProperty(hDeviceInfo, 
+        ok = SetupDiGetDeviceRegistryProperty(hDeviceInfo,
 					      &DeviceInfoData,
                                               SPDRP_HARDWAREID,
                                               NULL,
 					      NULL,
-                                              0, 
+                                              0,
 					      &size);
         if (!ok)
         {
@@ -111,9 +111,9 @@ extern "C" DWORD UnInstallLoopBack(void)
             ok = SetupDiGetDeviceRegistryProperty(hDeviceInfo,
                                                   &DeviceInfoData,
                                                   SPDRP_HARDWAREID,
-                                                  NULL, 
+                                                  NULL,
 						  (PBYTE)deviceHwid,
-                                                  size, 
+                                                  size,
 						  NULL);
             if (!ok) {
 	        free(deviceHwid);
@@ -143,7 +143,7 @@ extern "C" DWORD UnInstallLoopBack(void)
 
 	if (found)
             break;
-	
+
         index++;
     }
 
@@ -184,7 +184,7 @@ BOOL IsLoopbackInstalled(void)
     SP_DEVINFO_DATA DeviceInfoData;
     DWORD i,err;
     BOOL found;
-    
+
     //
     // Create a Device Information Set with all present devices.
     //
@@ -193,7 +193,7 @@ BOOL IsLoopbackInstalled(void)
     {
         return FALSE; // nothing installed?
     }
-    
+
     //
     //  Enumerate through all Devices.
     //
@@ -214,10 +214,10 @@ BOOL IsLoopbackInstalled(void)
 	  else
 	    continue;
 	}
-        
+
         //
         // We won't know the size of the HardwareID buffer until we call
-        // this function. So call it with a null to begin with, and then 
+        // this function. So call it with a null to begin with, and then
         // use the required buffer size to Alloc the nessicary space.
         // Keep calling we have success or an unknown failure.
         //
@@ -237,7 +237,7 @@ BOOL IsLoopbackInstalled(void)
             else if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
             {
                 // We need to change the buffer size.
-                if (buffer) 
+                if (buffer)
                     LocalFree(buffer);
                 buffer = (TCHAR *)LocalAlloc(LPTR,buffersize);
             }
@@ -248,13 +248,13 @@ BOOL IsLoopbackInstalled(void)
                 goto cleanup_DeviceInfo;
             }
         }
-        
+
         if (GetLastError() == ERROR_INVALID_DATA) {
 	    if (buffer)
                 LocalFree(buffer);
             continue;
 	}
-        
+
         // Compare each entry in the buffer multi-sz list with our hwid.
         for (p=buffer; *p && (p < &buffer[buffersize]); p += _tcslen(p)+1)
         {
@@ -264,19 +264,19 @@ BOOL IsLoopbackInstalled(void)
                 break;
             }
         }
-        
+
         if (buffer)
 	    LocalFree(buffer);
-        if (found) 
+        if (found)
 	    break;
     }
-    
+
     //  Cleanup.
 cleanup_DeviceInfo:
     err = GetLastError();
     SetupDiDestroyDeviceInfoList(DeviceInfoSet);
     SetLastError(err);
-    
+
     return found;
 }
 
@@ -585,7 +585,7 @@ cleanup:
     return ret;
 };
 
-/* The following functions provide the RunDll32 interface 
+/* The following functions provide the RunDll32 interface
  *    RunDll32 loopback_install.dll doLoopBackEntry [Interface Name] [IP address] [Subnet Mask]
  */
 
@@ -596,7 +596,7 @@ static void wcsMallocAndCpy (LPWSTR * dst, const LPWSTR src) {
 
 static void display_usage()
 {
-    MessageBoxW( NULL, 
+    MessageBoxW( NULL,
                  L"Installation utility for the MS Loopback Adapter\r\n\r\n"
                  L"Usage:\r\n"
                  L"RunDll32 loopback_install.dll doLoopBackEntry [q|quiet] [Connection Name] [IP address] [Submask]\r\n",
@@ -661,7 +661,7 @@ void CALLBACK doLoopBackEntryW (HWND hwnd, HINSTANCE hinst, LPWSTR lpCmdLine, in
 {
 	Args args;
 
-	if (!process_args(lpCmdLine, 0, args)) 
+	if (!process_args(lpCmdLine, 0, args))
         return;
 
 	InstallLoopBack(args.lpConnectionName, args.lpIPAddr, args.lpSubnetMask);
@@ -701,7 +701,7 @@ UINT __stdcall installLoopbackMSI (MSIHANDLE hInstall)
 
 	SetMsiReporter("InstallLoopback", "Installing loopback adapter", hInstall);
 
-    /* check if there is already one installed.  If there is, we shouldn't try to 
+    /* check if there is already one installed.  If there is, we shouldn't try to
      * install another.
      */
 	if(IsLoopbackInstalled())
@@ -713,17 +713,17 @@ UINT __stdcall installLoopbackMSI (MSIHANDLE hInstall)
 		if (rc == ERROR_MORE_DATA) {
 			cbValueBuf++;
 			szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
-		} 
-        else 
+		}
+        else
             return ERROR_INSTALL_FAILURE;
 	}
 
-	if (!process_args(szValueBuf, 1, args)) 
+	if (!process_args(szValueBuf, 1, args))
         return ERROR_INSTALL_FAILURE;
-		
+
 	rc = InstallLoopBack (args.lpConnectionName, args.lpIPAddr, args.lpSubnetMask);
 
-	if (rc != 2 && rc != 0) 
+	if (rc != 2 && rc != 0)
         return ERROR_INSTALL_FAILURE;
 
 	if (rc == 2) {
@@ -748,17 +748,17 @@ UINT __stdcall uninstallLoopbackMSI (MSIHANDLE hInstall)
 		if (rc == ERROR_MORE_DATA) {
 			cbValueBuf++;
 			szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
-		} 
-        else 
+		}
+        else
             return ERROR_INSTALL_FAILURE;
 	}
 
-	if (!process_args(szValueBuf, 1, args)) 
+	if (!process_args(szValueBuf, 1, args))
         return ERROR_INSTALL_FAILURE;
-		
+
 	rc = UnInstallLoopBack ();
 
-	if (rc == 1) 
+	if (rc == 1)
         return ERROR_INSTALL_FAILURE;
 
 	if (rc == 2) {
@@ -776,7 +776,7 @@ extern "C" void ReportMessage(int level, LPCSTR msg, LPCSTR str, LPCWSTR wstr, D
 		printf("%s:[%s][%S][%d]\n", (msg?msg:""), (str?str:""), (wstr?wstr:L""), dw);
 	else if(dwReporterType == REPORT_MSI && hMsiHandle && level == 0) {
 		MSIHANDLE hRec = MsiCreateRecord(5);
-        
+
 		MsiRecordClearData(hRec);
 		MsiRecordSetStringA(hRec,1,(msg)?msg:"");
 		MsiRecordSetStringA(hRec,2,(str)?str:"");
@@ -796,14 +796,14 @@ extern "C" void SetMsiReporter(LPCSTR strAction, LPCSTR strDesc,DWORD h) {
 #ifdef DONT_NEED
     /* this is performed in the Wix installer */
 	MSIHANDLE hRec = MsiCreateRecord(4);
-  
+
     MsiRecordClearData(hRec);
 	MsiRecordSetStringA(hRec,1,strAction);
 	MsiRecordSetStringA(hRec,2,strDesc);
 	MsiRecordSetStringA(hRec,3,"[1]:([2])([3])([4])");
 
 	MsiProcessMessage(h,INSTALLMESSAGE_ACTIONSTART, hRec);
-	
+
     MsiCloseHandle(hRec);
 #endif
 }

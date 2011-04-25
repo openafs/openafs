@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -81,16 +81,16 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     } else {
         firstp = pathp;
 		pathHasDrive = 0;
-	}   
-        
+	}
+
     if (*firstp == '\\' || *firstp == '/') {
 		/* already an absolute pathname, just copy it back */
         strcpy(outPathp, firstp);
         return 0;
     }
-        
+
     GetCurrentDirectoryA(sizeof(origPath), origPath);
-        
+
 	doSwitch = 0;
     if (pathHasDrive && (*pathp & ~0x20) != (origPath[0] & ~0x20)) {
 		/* a drive has been specified and it isn't our current drive.
@@ -106,7 +106,7 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
             return code;
         }
     }
-        
+
     /* now get the absolute path to the current wdir in this drive */
     GetCurrentDirectoryA(sizeof(tpath), tpath);
     strcpy(outPathp, tpath+2);	/* skip drive letter */
@@ -120,7 +120,7 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     if (doSwitch) {
         SetCurrentDirectoryA(origPath);
     }
-        
+
     return 0;
 }
 
@@ -144,7 +144,7 @@ static int getmeta(int ac) {
     return 0;
 }
 
-char *cm_mount_root="afs"; 
+char *cm_mount_root="afs";
 char *cm_slash_mount_root="/afs";
 char *cm_back_slash_mount_root="\\afs";
 
@@ -155,12 +155,12 @@ void fs_utils_InitMountRoot()
     char *pmount=mountRoot;
     DWORD len=sizeof(mountRoot)-1;
     printf("int mountroot \n");
-    if ((RegOpenKeyExA(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, 
+    if ((RegOpenKeyExA(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
                       (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS)
         || (RegQueryValueExA(parmKey, "Mountroot", NULL, NULL,(LPBYTE)(mountRoot), &len)!= ERROR_SUCCESS)
          || (len==sizeof(mountRoot)-1)
-         ) 
-        strcpy(mountRoot, "\\afs"); 
+         )
+        strcpy(mountRoot, "\\afs");
     RegCloseKey(parmKey);
     mountRoot[len]=0;       /*safety see ms-help://MS.MSDNQTR.2002OCT.1033/sysinfo/base/regqueryvalueex.htm*/
     cm_mount_root=malloc(len+1);

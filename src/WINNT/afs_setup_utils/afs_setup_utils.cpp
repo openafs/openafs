@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -72,7 +72,7 @@ BOOL ClientSpecificUninstall();
 
 #define WIN9X_START_MENU_REG_KEY    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
 #define WIN9X_START_MENU_REG_VALUE  "Programs"
-    
+
 #define WINNT_START_MENU_REG_KEY    "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
 #define WINNT_START_MENU_REG_VALUE  "Common Programs"
 
@@ -142,7 +142,7 @@ struct APPINFO {
  */
 struct APPINFO appServer = {
     "AFS Server",
-    
+
     AFSREG_SVR_SVC_NAME,
     AFSREG_SVR_SVC_KEY,
     0,  // No depend on
@@ -154,7 +154,7 @@ struct APPINFO appServer = {
     IDS_WAITING_FOR_SERVER_TO_STOP,
 
     AFSREG_SVR_SW_VERSION_KEY,
-    
+
     { AFSREG_SVR_SW_VERSION_KEY, AFSREG_SVR_SW_VERSION_DIR_VALUE },
 
     "\\Server",
@@ -169,7 +169,7 @@ struct APPINFO appServer = {
     TARGETDIR"\\Server\\usr\\afs\\local\0"
     TARGETDIR"\\Server\\usr\\afs\0"
     TARGETDIR"\\Server\\usr\0",
-    
+
     // Files to delete
     TARGETDIR"\\Common\\*.gid\0"
     TARGETDIR"\\Common\\*.fts\0",
@@ -181,7 +181,7 @@ struct APPINFO appServer = {
     "Server\0",
 
     // Config info to preserve
-    AFSREG_SVR_SVC_KEY"\0", 
+    AFSREG_SVR_SVC_KEY"\0",
     IDS_PRESERVE_SERVER_CONFIG_INFO,
 
     0   // No special uninstall function
@@ -209,7 +209,7 @@ struct REGVALUE clientWin9XRegValues[] = {
  */
 struct APPINFO appClient = {
     "AFS Client",
-    
+
     AFSREG_CLT_SVC_NAME,
     AFSREG_CLT_SVC_KEY,
     "5250435353004E657462696F730000",
@@ -229,7 +229,7 @@ struct APPINFO appClient = {
 
     // No dirs to delete
     0,
-    
+
     // Files to delete
     TARGETDIR"\\Common\\*.gid\0"
     TARGETDIR"\\Common\\*.fts\0"
@@ -239,7 +239,7 @@ struct APPINFO appClient = {
     TARGETDIR"\\Client\\afsdsbmt.ini\0"
     TARGETDIR"\\Client\\afsdcell.ini\0"
     WINDIR"\\TEMP\\afsd_init.log\0",
-    
+
     clientRegValues,
     clientWinNTRegValues,
     clientWin9XRegValues,
@@ -260,8 +260,8 @@ struct APPINFO appClient = {
  */
 struct APPINFO appLightClient = {
     "AFS Light",
-    
-    // No service info 
+
+    // No service info
     0,
     0,
     0,
@@ -282,7 +282,7 @@ struct APPINFO appLightClient = {
 
     // No dirs to delete
     0,
-    
+
     // Files to delete
     TARGETDIR"\\Common\\*.gid\0"
     TARGETDIR"\\Common\\*.fts\0",
@@ -307,7 +307,7 @@ struct APPINFO appLightClient = {
  */
 struct APPINFO appControlCenter = {
     "AFS Control Center",
-    
+
     // No service info
     0,
     0,
@@ -317,12 +317,12 @@ struct APPINFO appControlCenter = {
     // No network provider order
     0,
 
-    // No service shutdown messages    
+    // No service shutdown messages
     0,
     0,
 
     "HKEY_LOCAL_MACHINE\\SOFTWARE\\TransarcCorporation\\AFS Control Center",
-    
+
     { "HKEY_LOCAL_MACHINE\\SOFTWARE\\TransarcCorporation\\AFS Control Center\\CurrentVersion", "PathName" },
 
     "\\Control Center",
@@ -330,11 +330,11 @@ struct APPINFO appControlCenter = {
 
     // No dirs to delete
     0,
-    
+
     // Files to delete
     TARGETDIR"\\Common\\*.gid\0"
     TARGETDIR"\\Common\\*.fts\0",
-    
+
     0,  // No reg values
     0,  // No NT only reg values
     0,  // No 9x only reg values
@@ -365,12 +365,12 @@ struct APPINFO appDocs = {
     // No network provider order
     0,
 
-    // No service shutdown messages    
+    // No service shutdown messages
     0,
     0,
 
     "HKEY_LOCAL_MACHINE\\SOFTWARE\\TransarcCorporation\\AFS Supplemental Documentation",
-    
+
     { "HKEY_LOCAL_MACHINE\\SOFTWARE\\TransarcCorporation\\AFS Supplemental Documentation\\CurrentVersion", "PathName" },
 
     "\\Documentation",
@@ -378,7 +378,7 @@ struct APPINFO appDocs = {
 
     // No dirs to delete
     0,
-    
+
     // Files to delete
     TARGETDIR"\\Common\\*.gid\0"
     TARGETDIR"\\Common\\*.fts\0",
@@ -517,7 +517,7 @@ int SUCALLCONV Upgrade34ClientConfigInfo()
     HKEY hKey;
     LONG result;
     int nData;
-    
+
     result = RegOpenKeyAlt(AFSREG_NULL_KEY, AFSREG_CLT_SVC_PARAM_KEY, KEY_WRITE, TRUE, &hKey, 0);
     if (result != ERROR_SUCCESS)
         return -1;
@@ -530,7 +530,7 @@ int SUCALLCONV Upgrade34ClientConfigInfo()
     UpgradeClientIntParm(hKey, "TraceBufferSize", "TraceBufferSize");
     UpgradeClientIntParm(hKey, "TraceOnShutdown", "TraceOnShutdown");
     UpgradeClientIntParm(hKey, "ReportSessionStartups", "ReportSessionStartups");
-    
+
     UpgradeClientStringParm(hKey, "MountRoot", "MountRoot");
     UpgradeClientStringParm(hKey, "Cell", "Cell");
 
@@ -555,7 +555,7 @@ int SUCALLCONV Eradicate34Client()
     return 0;
 }
 
-// This function was written a long time ago by Mike Comer for use by the 
+// This function was written a long time ago by Mike Comer for use by the
 // original DFS Client for NT install program.
 int SUCALLCONV CheckIfAdmin(void)
 {
@@ -664,16 +664,16 @@ static void SetSharedFileRefCount(char *pszFile, int nRefCount)
 {
     LONG result;
     HKEY hKey;
-    
+
     result = RegOpenKeyAlt(AFSREG_NULL_KEY, MS_SHARED_FILES_KEY, KEY_WRITE, FALSE, &hKey, 0);
     if (result != ERROR_SUCCESS)
         return;
-    
+
     if (nRefCount <= 0)
         RegDeleteValue(hKey, pszFile);
     else
-        RegSetValueEx(hKey, pszFile, 0, REG_DWORD, (BYTE *)&nRefCount, sizeof(int));    
-    
+        RegSetValueEx(hKey, pszFile, 0, REG_DWORD, (BYTE *)&nRefCount, sizeof(int));
+
     RegCloseKey(hKey);
 }
 
@@ -686,7 +686,7 @@ static char *GetTimeStamp()
     _strdate(szDate);
 
     sprintf(szTimeDate, "[%s %s] ", szTime, szDate);
-    
+
     return szTimeDate;
 }
 
@@ -695,17 +695,17 @@ int SUCALLCONV WriteToInstallErrorLog(char *pszMsg)
     static BOOL bWritten = FALSE;
     FILE *fp;
 
-    // On the first write, recreate the file    
+    // On the first write, recreate the file
     fp = fopen(INSTALL_ERROR_LOG_NAME, bWritten ? "a" : "w");
     if (!fp)
         return -1;
-        
+
     fprintf(fp, "%s%s\r\n", GetTimeStamp(), pszMsg);
-    
+
     fclose(fp);
-    
+
     bWritten = TRUE;
-    
+
     return 0;
 }
 
@@ -714,15 +714,15 @@ static void WriteToUninstallErrorLog(char *pszMsg)
     static BOOL bWritten = FALSE;
     FILE *fp;
 
-    // On the first write, recreate the file    
+    // On the first write, recreate the file
     fp = fopen(UNINSTALL_ERROR_LOG_NAME, bWritten ? "a" : "w");
     if (!fp)
         return;
-        
+
     fprintf(fp, "%s%s\r\n", GetTimeStamp(), pszMsg);
-    
+
     fclose(fp);
-    
+
     bWritten = TRUE;
 }
 
@@ -746,7 +746,7 @@ static void ShowError(UINT nResID, LONG nError)
         strcpy(szErr, psz);
     else
         sprintf(szErr, "unknown error msg (Msg ID = %d)", nResID);
-    
+
     psz = LoadResString(IDS_INSTALLATION_FAILURE);
     strcpy(szPrompt, psz ? psz : "An error has occurred:  %s (Last Error = %ld).");
 
@@ -826,7 +826,7 @@ static void BuildShortPath(char *pszShortPath, UINT nShortPathLen, char *pszInst
 {
     strncpy(pszShortPath, pszInstallDir, nShortPathLen);
     strncat(pszShortPath, pszPath, nShortPathLen);
-    
+
     GetShortPathName(pszShortPath, pszShortPath, nShortPathLen);
 }
 
@@ -835,13 +835,13 @@ static BOOL IsWin95()
     OSVERSIONINFO versionInformation;
 
     versionInformation.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    
+
     GetVersionEx(&versionInformation);
-    
+
     if ((versionInformation.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) &&
         (versionInformation.dwMinorVersion == 0))
         return TRUE;
-        
+
     return FALSE;
 }
 
@@ -850,13 +850,13 @@ int IsWin98()
     OSVERSIONINFO versionInformation;
 
     versionInformation.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    
+
     GetVersionEx(&versionInformation);
-    
+
     if ((versionInformation.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) &&
         (versionInformation.dwMinorVersion == 10))
         return 0;
-        
+
     return -1;
 }
 
@@ -891,7 +891,7 @@ static void MakeSureServiceDoesNotExist(char *pszName)
                     }
                 }
             }
-            
+
             // Try to delete even if status query fails
             DeleteService(hServer);
         }
@@ -930,9 +930,9 @@ static int InstallService(char *pszName, char *pszDependOn, char *pszDisplayName
             bRestoreOldConfig = FALSE;
             // Fall through to service creation below
         }
-    } 
+    }
 */
-    
+
     if (!bRestoreOldConfig) {
         DWORD dwServiceType;
 
@@ -945,11 +945,11 @@ static int InstallService(char *pszName, char *pszDependOn, char *pszDisplayName
         dwServiceType = SERVICE_WIN32_OWN_PROCESS;
         if (bInteractive)
             dwServiceType |= SERVICE_INTERACTIVE_PROCESS;
-    
+
         hServer = CreateService(hSCM, pszName, pszDisplayName,
-            SERVICE_ALL_ACCESS, dwServiceType, SERVICE_AUTO_START, 
+            SERVICE_ALL_ACCESS, dwServiceType, SERVICE_AUTO_START,
             SERVICE_ERROR_NORMAL, pszServicePath, 0, 0, "RPCSS\0Netbios\0\0", 0, 0);
-    
+
         if (!hServer)
             ShowError(IDS_SERVICE_CREATE_FAILED, GetLastError());
     }
@@ -989,7 +989,7 @@ static int UninstallService(struct APPINFO *pAppInfo)
         ShowError(IDS_SCM_OPEN_FAILED, GetLastError());
         return -1;
     }
-    
+
     hServer = OpenService(hSCM, pAppInfo->pszSvcName, SERVICE_ALL_ACCESS | DELETE);
     if (!hServer) {
         ShowError(IDS_SERVICE_OPEN_FAILED, GetLastError());
@@ -1047,7 +1047,7 @@ static int UninstallService(struct APPINFO *pAppInfo)
         HideProgressDialog();
 
     // This code to disable the service may be of use some day so I am keeping it here.
-    // bOk = ChangeServiceConfig(hServer, SERVICE_NO_CHANGE, SERVICE_DISABLED, SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0); 
+    // bOk = ChangeServiceConfig(hServer, SERVICE_NO_CHANGE, SERVICE_DISABLED, SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0);
 
     bOk = DeleteService(hServer);
 
@@ -1092,7 +1092,7 @@ static void RemoveFiles(char *pszFileSpec)
     p = strrchr(szDir, '\\');
     if (p)
         *p = 0;
-    
+
     hSearch = _findfirst(pszFileSpec, &fileinfo);
     if (hSearch == -1)
         return;
@@ -1165,7 +1165,7 @@ static char *GetTempDir()
     result = GetTempPath(sizeof(szTempDir) - 1, szTempDir);
     if (result == 0)
         return "\\";
-        
+
     return szTempDir;
 }
 
@@ -1176,7 +1176,7 @@ static char *GetRootInstallDir()
 
     if (szRootInstallDir[0] == 0) {
         strcpy(szRootInstallDir, pszInstallDir);
-    
+
         // Strip off the app specific part of the install dir
         psz = strrchr(szRootInstallDir, '\\');
         if (psz)
@@ -1202,7 +1202,7 @@ static BOOL ClientSpecificUninstall()
                 return FALSE;       // Cancel the uninstall
         }
     }
-    
+
     UninstallCredsTool();
 
     return TRUE;
@@ -1233,15 +1233,15 @@ static void RememberInstallDir(char *pszInstallDir)
     // by the InstallShield uninstaller, we can find out where we were installed to.  We
     // have to do this because by the time that function is called, the registry values
     // created at install time are already gone.  We need to be able to find out where we
-    // were installed so we can clean up anything IS couldn't uninstall.  If this fails in 
+    // were installed so we can clean up anything IS couldn't uninstall.  If this fails in
     // any way then we don't care.  The only consequence is that some junk might be left on
     // the users' system after an uninstall.
-    
+
     LONG result = RegOpenKeyAlt(AFSREG_NULL_KEY, UNINSTALL_TEMP_INFO_KEY, KEY_WRITE, TRUE, &hKey, 0);
     if (result != ERROR_SUCCESS)
         return;
 
-    RegSetValueEx(hKey, INSTALL_DIR_VALUE_NAME, 0, REG_SZ, (PBYTE)pszInstallDir, strlen(pszInstallDir) + 1);    
+    RegSetValueEx(hKey, INSTALL_DIR_VALUE_NAME, 0, REG_SZ, (PBYTE)pszInstallDir, strlen(pszInstallDir) + 1);
 
     RegCloseKey(hKey);
 }
@@ -1257,9 +1257,9 @@ static char *GetWinDir()
 {
     static char szWinDir[MAX_PATH] = "";
 
-    if (!szWinDir[0]) 
+    if (!szWinDir[0])
         GetWindowsDirectory(szWinDir, sizeof(szWinDir));
-    
+
     return szWinDir;
 }
 
@@ -1269,9 +1269,9 @@ static char *GetWinSysDir()
 
     if (!szWinSysDir[0])
         GetSystemDirectory(szWinSysDir, sizeof(szWinSysDir));
-    
+
     return szWinSysDir;
-} 
+}
 
 static char *GetLocaleID()
 {
@@ -1279,10 +1279,10 @@ static char *GetLocaleID()
 
     if (szID[0] == 0) {
         LCID dwID = GetSystemDefaultLCID();
-        
+
          // Nuke the high word.  It contains a sort ID.
         dwID &= 0x0000FFFF;
-        
+
         // Convert locale ID to a string
         itoa(dwID, szID, 10);
 
@@ -1300,7 +1300,7 @@ static char *ExpandPath(char *pszFile)
 
     szPath[0] = 0;
 
-    // Convert a path containing TARGETDIR, WINDIR, or WINSYSDIR to a 
+    // Convert a path containing TARGETDIR, WINDIR, or WINSYSDIR to a
     // real path in the file system.  One of these MUST be the start of
     // the file path passed in.  Also convert the string ???? to an
     // actual locale number.
@@ -1310,8 +1310,8 @@ static char *ExpandPath(char *pszFile)
         strcpy(szPath, GetWinDir());
     else if (strncmp(pszFile, WINSYSDIR, strlen(WINSYSDIR)) == 0)
         strcpy(szPath, GetWinSysDir());
-    
-    if (szPath[0]) {    
+
+    if (szPath[0]) {
         psz = strchr(pszFile, '\\');
         if (psz)
             strcat(szPath, psz);
@@ -1320,7 +1320,7 @@ static char *ExpandPath(char *pszFile)
 
     // Is this a language dll?
     psz = strstr(szPath, "????.");
-    
+
     // If it is, replace ???? with the locale number
     if (psz)
         strncpy(psz, GetLocaleID(), LOCALE_ID_LEN);
@@ -1346,7 +1346,7 @@ static BOOL FileNeededByOtherApp(struct APPINFO *pApp, struct FILEINFO *pFileInf
 
     if ((pFileInfo->nUsedBy & CC) && (pApp != &appControlCenter) && IsAppInstalled(&appControlCenter))
         return TRUE;
-    
+
     return FALSE;
 }
 
@@ -1367,7 +1367,7 @@ static void DeleteInUseFiles(struct APPINFO *pAppInfo, struct FILEINFO *pFileInf
     // when IS fails to remove these in use files, it marks them for deletion after the
     // next reboot, which is fine.  Unfortunately, it leaves them in the dirs they were
     // installed to.  So if we don't immediately reboot and perform an install to the
-    // same dirs, once a reboot is performed, those files get deleted and we have a 
+    // same dirs, once a reboot is performed, those files get deleted and we have a
     // broken installation.
 
     // What we will do to fix all of this, is when the client is uninstalled, but
@@ -1388,7 +1388,7 @@ static void DeleteInUseFiles(struct APPINFO *pAppInfo, struct FILEINFO *pFileInf
         // If the file doesn't exist then go on to the next file.
         if (_access(szSrcPath, 0) != 0)
             continue;
-            
+
         // See if we can do a regular delete of the file
         if (DeleteFile(szSrcPath)) {
             SetSharedFileRefCount(szSrcPath, 0);
@@ -1403,13 +1403,13 @@ static void DeleteInUseFiles(struct APPINFO *pAppInfo, struct FILEINFO *pFileInf
             strncpy(szTempDir, szSrcPath, 3);
             szTempDir[3] = 0;
         }
-        
+
         // Get the dest path - we will rename the file during the move
         GetTempFileName(szTempDir, "AFS", 0, szDestPath);
 
         // Move from source to dest, marking the file for deletion after a reboot
         if (IsWin95()) {
-            if (MoveFile(szSrcPath, szDestPath)) {            
+            if (MoveFile(szSrcPath, szDestPath)) {
                 WritePrivateProfileString("rename", szSrcPath, szDestPath, "wininit.ini");
                 SetSharedFileRefCount(szSrcPath, 0);
             }
@@ -1433,15 +1433,15 @@ static void RemoveDirectoryTree(char *pszDir)
     BOOL bContinue;
 
     sprintf(szSpec, "%s\\*.*", pszDir);
-    
+
     // First delete the contents of the dir
     hFind = FindFirstFile(szSpec, &findFileData);
     bContinue = (hFind != INVALID_HANDLE_VALUE);
-    
+
     while (bContinue) {
         if ((strcmp(findFileData.cFileName, ".") != 0) && (strcmp(findFileData.cFileName, "..") != 0)) {
             sprintf(szSubFileOrDir, "%s\\%s", pszDir, findFileData.cFileName);
-            
+
             if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 RemoveDirectoryTree(szSubFileOrDir);
             else
@@ -1452,10 +1452,10 @@ static void RemoveDirectoryTree(char *pszDir)
     }
 
     FindClose(hFind);
-        
+
     // Now remove the dir
     RemoveDirectory(pszDir);
-} 
+}
 
 static char *GetStartMenuRoot()
 {
@@ -1470,7 +1470,7 @@ static char *GetStartMenuRoot()
 
     if (szStartMenuRoot[0] == 0) {
         dwSize = sizeof(szStartMenuRoot);
-    
+
         if (IsWinNT()) {
             pszKey = WINNT_START_MENU_REG_KEY;
             pszValue = WINNT_START_MENU_REG_VALUE;
@@ -1478,7 +1478,7 @@ static char *GetStartMenuRoot()
             pszKey = WIN9X_START_MENU_REG_KEY;
             pszValue = WIN9X_START_MENU_REG_VALUE;
         }
-        
+
         nResult = RegOpenKeyAlt(AFSREG_NULL_KEY, pszKey, KEY_READ, FALSE, &hKey, 0);
         if (nResult == ERROR_SUCCESS) {
             nResult = RegQueryValueEx(hKey, pszValue, 0, &dwType, (PBYTE)szStartMenuRoot, &dwSize);
@@ -1498,8 +1498,8 @@ static char *GetAfsStartMenuRoot()
 {
     static char szAfsStartMenuRoot[MAX_PATH] = "";
     char *pszStartMenuRoot;
-    
-    if (szAfsStartMenuRoot[0] == 0) {    
+
+    if (szAfsStartMenuRoot[0] == 0) {
         pszStartMenuRoot = GetStartMenuRoot();
         if (!pszStartMenuRoot)
             return 0;
@@ -1533,7 +1533,7 @@ static void DeleteStartMenuEntries(char *pszEntries)
 
     if (!pszAfsStartMenuRoot)
         return;
-        
+
     for (pszCurEntry = pszEntries; *pszCurEntry; pszCurEntry += strlen(pszCurEntry) + 1) {
         sprintf(szStartMenuPath, "%s\\%s", pszAfsStartMenuRoot, pszCurEntry);
         if (IsADir(szStartMenuPath))
@@ -1547,16 +1547,16 @@ static void RefreshStartMenu()
 {
     char *pszAfsStartMenuRoot;
     char szTemp[MAX_PATH];
-    
+
     pszAfsStartMenuRoot = GetAfsStartMenuRoot();
     if (!pszAfsStartMenuRoot)
         return;
 
     sprintf(szTemp, "%s - Refresh Attempt", pszAfsStartMenuRoot);
-        
-    // Deleting items from below the root level of the start menu does not 
+
+    // Deleting items from below the root level of the start menu does not
     // cause it to refresh.  In order that users can see changes without
-    // rebooting we will temporarily rename our root most entry, which 
+    // rebooting we will temporarily rename our root most entry, which
     // does cause a refresh of the start menu.
     MoveFileEx(pszAfsStartMenuRoot, szTemp, MOVEFILE_REPLACE_EXISTING);
     MoveFileEx(szTemp, pszAfsStartMenuRoot, MOVEFILE_REPLACE_EXISTING);
@@ -1575,7 +1575,7 @@ static BOOL PreserveConfigInfo(struct APPINFO *pApp)
         int nChoice = ShowMsg(pApp->nPreserveConfigInfoMsgID, MB_ICONQUESTION | MB_YESNOCANCEL);
         if (nChoice == IDCANCEL)
             return FALSE;                   // Cancel the uninstall
-        else if (nChoice == IDNO) {     
+        else if (nChoice == IDNO) {
             bPreserveConfigInfo = FALSE;    // User doesn't want to preserve the config info
             return TRUE;
         }
@@ -1613,13 +1613,13 @@ static BOOL PreserveConfigInfo(struct APPINFO *pApp)
 			RegCloseKey(hKey);
 		}
 	}
-	
+
 done:
 	if ((result == ERROR_SUCCESS) || bSilentMode)
 	    return TRUE;    // Continue with uninstall
 
     // Report the error and ask the user if they want to continue the uninstall
-    return (ShowMsg(IDS_SAVE_OF_CONFIG_INFO_FAILED, MB_ICONEXCLAMATION | MB_YESNO) == IDYES);			
+    return (ShowMsg(IDS_SAVE_OF_CONFIG_INFO_FAILED, MB_ICONEXCLAMATION | MB_YESNO) == IDYES);
 }
 
 int SUCALLCONV RestoreConfigInfo(int nApp)
@@ -1636,10 +1636,10 @@ int SUCALLCONV RestoreConfigInfo(int nApp)
         case LCLIENT:   pApp = &appLightClient;     break;
         case CC:        pApp = &appControlCenter;   break;
     }
-    
+
     if (!pApp)
         return -1;
-        
+
     // Copy each reg key (and all of its subkeys and values) back to its original place in the registry.
     for (pszRegKey = pApp->pszRegKeysToPreserve; *pszRegKey; pszRegKey += strlen(pszRegKey) + 1) {
         // Create the source path for the copy
@@ -1671,7 +1671,7 @@ int SUCALLCONV RestoreConfigInfo(int nApp)
     // Remove our saved copies of the config info
     sprintf(szSrcKey, "%s\\%s", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName);
     RegDeleteEntryAlt(szSrcKey, REGENTRY_KEY);
-            
+
     if (bError)
         ShowError(IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED, 0);
 
@@ -1684,22 +1684,22 @@ static BOOL DoSubKeysExist(char *pszKey)
     HKEY hKey;
     char *pszSubKeys = 0;
     BOOL bExist;
-    
+
     result = RegOpenKeyAlt(AFSREG_NULL_KEY, pszKey, KEY_READ, FALSE, &hKey, 0);
     if (result != ERROR_SUCCESS)
         return FALSE;
-        
+
     result = RegEnumKeyAlt(hKey,  &pszSubKeys);
     RegCloseKey(hKey);
-    
+
     if (result != ERROR_SUCCESS)
         return FALSE;
-   
+
     if (pszSubKeys) {
         bExist = TRUE;
         free(pszSubKeys);
     } else
-        bExist = FALSE;    
+        bExist = FALSE;
 
     return bExist;
 }
@@ -1967,7 +1967,7 @@ int SUCALLCONV UninstInitialize(HWND hIS, HINSTANCE hIS5, long Reserved)
     RemoveRegValues(pAppInfo->pRegValues);
     if (IsWinNT())
         RemoveRegValues(pAppInfo->pWinNTRegValues);
-    else    
+    else
         RemoveRegValues(pAppInfo->pWin9XRegValues);
 
     // Remove the start menu entries for this app
@@ -1998,7 +1998,7 @@ void SUCALLCONV UninstUnInitialize(HWND hIS, HINSTANCE hIS5, long Reserved)
     }
 
     bSilentMode = !IsWindowVisible(hIS);
-    
+
     // Which app did we just uninstall?
     pAppInfo = GetApp();
     if (!pAppInfo) {
@@ -2022,7 +2022,7 @@ void SUCALLCONV UninstUnInitialize(HWND hIS, HINSTANCE hIS5, long Reserved)
     // Remove the install dir
     RemoveDirectory(pszInstallDir);
 
-    // Attempt to remove the install root and common directories.  The are 
+    // Attempt to remove the install root and common directories.  The are
     // shared and so no single app knows to delete them.
 
     // Strip off the app specific part of the install dir
@@ -2045,9 +2045,9 @@ void SUCALLCONV UninstUnInitialize(HWND hIS, HINSTANCE hIS5, long Reserved)
     // that the user chose for our install root.  The default for
     // this is IBM/Afs, but they could have chosen anything,
     // including a dir or dirs that have other products in them.
-    // We will check to see if it is IBM\AFS and if it is then we 
+    // We will check to see if it is IBM\AFS and if it is then we
     // will attempt to remove them.
-    
+
     // Back up a level and look for AFS
     psz = strrchr(pszInstallDir, '\\');
     if (psz) {
@@ -2073,7 +2073,7 @@ void SUCALLCONV UninstUnInitialize(HWND hIS, HINSTANCE hIS5, long Reserved)
             // Remove everything under our branch
             sprintf(szDirPath, "%s\\IBM WebSphere\\Performance Pack\\AFS", psz);
             RemoveDirectoryTree(szDirPath);
-            
+
             // Remove the IBM stuff only if the dirs are empty
             sprintf(szDirPath, "%s\\IBM WebSphere\\Performance Pack", psz);
             if (RemoveDirectory(szDirPath)) {

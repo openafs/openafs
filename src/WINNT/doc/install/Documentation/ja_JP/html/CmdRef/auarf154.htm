@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -29,7 +29,7 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>fs newcell -name</B> &lt;<VAR>cell name</VAR>> <B>-servers</B> &lt;<VAR>primary servers</VAR>><SUP>+</SUP>
            [<B>-linkedcell</B> &lt;<VAR>linked cell name</VAR>>]  [<B>-help</B>]
-   
+
 <B>fs n -n</B> &lt;<VAR>cell name</VAR>>  <B>-s</B> &lt;<VAR>primary servers</VAR>><SUP>+</SUP>  [<B>-l</B> &lt;<VAR>linked cell name</VAR>>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -63,13 +63,13 @@ FL サーバー・マシンが指定される場合には、ローカル・マシンは AFS/DFS 移行ツールキ
 <P>以下の例は、ABC Corporation セルがマシン
 <B>db1.abc.com</B> と <B>db2.abc.com</B>を組み込むために、データベース・サーバー・マシンのカーネル常駐リストを変更します。
 <PRE>   % <B>fs newcell -name abc.com -servers db1.abc.com db2.abc.com</B>
-   
+
 </PRE>
 <P>次の例では、DCE セル <B>dce.abc.com</B> を AFS セル <B>abc.com</B> にリンクします。
 AFS クライアントは、DFS パス名の解釈に必要なファイル・セットの位置情報のために、ファイル・ロケーション (FL) サーバー<B>db1.dce.abc.com</B> および <B>db2.dce.abc.com</B> に接続します。
 <PRE>   % <B>fs newcell -name dce.abc.com -servers db1.dce.abc.com db2.dce.abc.com</B>   \
                 <B>-linkedcell abc.com</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
@@ -79,11 +79,11 @@ AFS クライアントは、DFS パス名の解釈に必要なファイル・セットの位置情報のために、
 <P><I>AFS/DFS Migration Toolkit Administration Guide and Reference</I>
 <P><I>AFS/DFS 移行 Toolkit 管理インストールおよび構成ガイド</I>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf153.htm">前ページ</A> &#124; <A HREF="auarf155.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf153.htm">前ページ</A> &#124; <A HREF="auarf155.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

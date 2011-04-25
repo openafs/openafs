@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -76,13 +76,13 @@ BOOL CALLBACK RootAfsPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 	case IDC_CREATE_ROOT_VOLUMES:
 	    g_CfgData.configRootVolumes = CS_CONFIGURE;
 	    break;
-	}	
+	}
 	break;
 
     }
 
     return FALSE;
-}	
+}
 
 
 
@@ -131,9 +131,9 @@ static void OnInitDialog(HWND hwndDlg)
 	return;
     }
 
-    // If root.afs exists already but root.cell does not exist, then 
-    // the wizard cannot make root.cell and must disable this option.  
-    // However, since the root volumes don't both exist, we will leave 
+    // If root.afs exists already but root.cell does not exist, then
+    // the wizard cannot make root.cell and must disable this option.
+    // However, since the root volumes don't both exist, we will leave
     // this option enabled, and only disable the yes check box.
     // TODO:  We should handle this better in a future version where we can
     // add new messages.  The message catalog is frozen for this version
@@ -152,7 +152,7 @@ static void OnInitDialog(HWND hwndDlg)
 	SetCheck(hDlg, IDC_DONT_CREATE_ROOT_VOLUMES);
     else
 	SetCheck(hDlg, IDC_CREATE_ROOT_VOLUMES);
-}	
+}
 
 
 /*
@@ -169,7 +169,7 @@ static void ShowStatusMsg(UINT nMsgID)
     ShowWnd(hDlg, IDC_ROOT_AFS_QUESTION, FALSE);
     ShowWnd(hDlg, IDC_CREATE_ROOT_VOLUMES, FALSE);
     ShowWnd(hDlg, IDC_DONT_CREATE_ROOT_VOLUMES, FALSE);
-	
+
     SetWndText(hDlg, IDC_ROOT_AFS_MSG, szMsg);
     ShowWnd(hDlg, IDC_ROOT_AFS_MSG);
 }

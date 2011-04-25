@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -78,7 +78,7 @@ BOOL DisplayQueueFilter (size_t idqVictim, size_t idqKiller);
  */
 
 BOOL CALLBACK GetItemText (HWND hList, LPFLN_GETITEMTEXT_PARAMS pfln, UINT_PTR dwCookie)
-{ 
+{
    LPVIEWINFO lpvi = (LPVIEWINFO)dwCookie;
    LPIDENT lpi = (LPIDENT)(pfln->item.lParam);
    LPTSTR psz = NULL;
@@ -704,7 +704,7 @@ BOOL HandleColumnNotify (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp, LPVIEWINFO p
       if (fIsFastList (hList))
          {
          switch (((LPNMHDR)lp)->code)
-            { 
+            {
             case FLN_COLUMNRESIZE:
                FL_StoreView (hList, pvi);
                return TRUE;

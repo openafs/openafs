@@ -5,7 +5,7 @@ SetLocker
 Xrmdir \\afs\locker\clients\client1 all
 Xrmdir c:\clients\client1 all
 Mkdir c:\clients\client1\mixfile
-Mkdir c:\clients\client1\~dmtmp 
+Mkdir c:\clients\client1\~dmtmp
 CreateFile c:\clients\client1\filler.000 256891
 CreateFile c:\clients\client1\filler.001 99243
 CreateFile c:\clients\client1\filler.002 9000
@@ -24,7 +24,7 @@ CreateFile c:\clients\client1\~dmtmp\PWRPNT\ZD16.BMP 174533
 CreateFile c:\clients\client1\~dmtmp\PWRPNT\PPTOOLS1.PPA 273561
 CreateFile c:\clients\client1\~dmtmp\PWRPNT\TIPS.PPT 43596
 CreateFile c:\clients\client1\~dmtmp\PWRPNT\TRIDOTS.POT 33811
-Mkdir c:\clients\client1\~dmtmp\COREL 
+Mkdir c:\clients\client1\~dmtmp\COREL
 CreateFile c:\clients\client1\~dmtmp\COREL\CDRROLS.CFG 213857
 CreateFile c:\clients\client1\~dmtmp\COREL\CDRBARS.CFG 172699
 CreateFile c:\clients\client1\~dmtmp\COREL\ARTISTIC.ACL 23982

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -42,7 +42,7 @@ int IsWow64(void)
         hModule = GetModuleHandle(TEXT("kernel32"));
         if (hModule) {
             fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hModule, "IsWow64Process");
-  
+
             if (NULL != fnIsWow64Process)
             {
                 if (!fnIsWow64Process(GetCurrentProcess(),&bIsWow64))
@@ -50,7 +50,7 @@ int IsWow64(void)
                     // on error, assume FALSE.
                     // in other words, do nothing.
                 }
-            }       
+            }
             FreeLibrary(hModule);
         }
         init = FALSE;

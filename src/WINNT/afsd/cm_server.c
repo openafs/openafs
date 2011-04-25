@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -113,7 +113,7 @@ cm_RankServer(cm_server_t * tsp)
     return code;
 }
 
-void 
+void
 cm_PingServer(cm_server_t *tsp)
 {
     long code;
@@ -132,7 +132,7 @@ cm_PingServer(cm_server_t *tsp)
 	tsp->waitCount--;
 	if (tsp->waitCount == 0)
 	    tsp->flags &= ~CM_SERVERFLAG_PINGING;
-	else 
+	else
 	    osi_Wakeup((LONG_PTR)tsp);
 	lock_ReleaseMutex(&tsp->mx);
 	return;
@@ -150,7 +150,7 @@ cm_PingServer(cm_server_t *tsp)
 	*/
 
 	osi_Log4(afsd_logp, "cm_PingServer server %s (%s) was %s with caps 0x%x",
-		  osi_LogSaveString(afsd_logp, hoststr), 
+		  osi_LogSaveString(afsd_logp, hoststr),
 		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
 		  wasDown ? "down" : "up",
 		  tsp->capabilities);
@@ -188,7 +188,7 @@ cm_PingServer(cm_server_t *tsp)
 	}
 
 	osi_Log3(afsd_logp, "cm_PingServer server %s (%s) is up with caps 0x%x",
-		  osi_LogSaveString(afsd_logp, hoststr), 
+		  osi_LogSaveString(afsd_logp, hoststr),
 		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
 		  tsp->capabilities);
 
@@ -227,7 +227,7 @@ cm_PingServer(cm_server_t *tsp)
             lock_ObtainMutex(&tsp->mx);
         }
 	osi_Log3(afsd_logp, "cm_PingServer server %s (%s) is down with caps 0x%x",
-		  osi_LogSaveString(afsd_logp, hoststr), 
+		  osi_LogSaveString(afsd_logp, hoststr),
 		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
 		  tsp->capabilities);
 
@@ -258,7 +258,7 @@ cm_PingServer(cm_server_t *tsp)
 
     if (tsp->waitCount == 0)
 	tsp->flags &= ~CM_SERVERFLAG_PINGING;
-    else 
+    else
 	osi_Wakeup((LONG_PTR)tsp);
     lock_ReleaseMutex(&tsp->mx);
 }
@@ -319,9 +319,9 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
         if ((cellp == NULL || cellp == tsp->cellp) &&
              ((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
                (!isDown && (flags & CM_FLAG_CHECKUPSERVERS))) &&
-             ((!(flags & CM_FLAG_CHECKVLDBSERVERS) || 
+             ((!(flags & CM_FLAG_CHECKVLDBSERVERS) ||
                isVLDB && (flags & CM_FLAG_CHECKVLDBSERVERS)) &&
-              (!(flags & CM_FLAG_CHECKFILESERVERS) || 
+              (!(flags & CM_FLAG_CHECKFILESERVERS) ||
                  isFS && (flags & CM_FLAG_CHECKFILESERVERS)))) {
             doPing = 1;
         }	/* we're supposed to check this up/down server */
@@ -330,7 +330,7 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
         /* at this point, we've adjusted the server state, so do the ping and
          * adjust things.
          */
-        if (doPing) 
+        if (doPing)
 	    cm_PingServer(tsp);
 
         /* also, run the GC function for connections on all of the
@@ -342,16 +342,16 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
         cm_PutServerNoLock(tsp);
     }
     lock_ReleaseRead(&cm_serverLock);
-}       
+}
 
 static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 {
-    /* 
-     * The goal of this function is to probe simultaneously 
-     * probe all of the up/down servers (vldb/file) as 
+    /*
+     * The goal of this function is to probe simultaneously
+     * probe all of the up/down servers (vldb/file) as
      * specified by flags in the minimum number of RPCs.
      * Effectively that means use one multi_RXAFS_GetCapabilities()
-     * followed by possibly one multi_RXAFS_GetTime() and 
+     * followed by possibly one multi_RXAFS_GetTime() and
      * one multi_VL_ProbeServer().
      *
      * To make this work we must construct the list of vldb
@@ -388,12 +388,12 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 
     memset(caps, 0, maxconns * sizeof(Capabilities));
 
-    if ((flags & CM_FLAG_CHECKFILESERVERS) || 
+    if ((flags & CM_FLAG_CHECKFILESERVERS) ||
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
         lock_ObtainRead(&cm_serverLock);
         for (nconns=0, tsp = cm_allServersp; tsp && nconns < maxconns; tsp = tsp->allNextp) {
-            if (tsp->type != CM_SERVER_FILE || 
+            if (tsp->type != CM_SERVER_FILE ||
                 tsp->cellp == NULL ||           /* SetPref only */
                 cellp && cellp != tsp->cellp)
                 continue;
@@ -472,7 +472,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 
                 afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is up with caps 0x%x",
-                          osi_LogSaveString(afsd_logp, hoststr), 
+                          osi_LogSaveString(afsd_logp, hoststr),
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
 
@@ -512,7 +512,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                 }
                 afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
-                          osi_LogSaveString(afsd_logp, hoststr), 
+                          osi_LogSaveString(afsd_logp, hoststr),
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
 
@@ -543,16 +543,16 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 
             if (tsp->waitCount == 0)
                 tsp->flags &= ~CM_SERVERFLAG_PINGING;
-            else 
+            else
                 osi_Wakeup((LONG_PTR)tsp);
-            
+
             lock_ReleaseMutex(&tsp->mx);
 
             cm_PutServer(tsp);
         }
     }
 
-    if ((flags & CM_FLAG_CHECKVLDBSERVERS) || 
+    if ((flags & CM_FLAG_CHECKVLDBSERVERS) ||
         !(flags & (CM_FLAG_CHECKFILESERVERS|CM_FLAG_CHECKVLDBSERVERS)))
     {
         lock_ObtainRead(&cm_serverLock);
@@ -628,7 +628,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
 
                 afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is up with caps 0x%x",
-                          osi_LogSaveString(afsd_logp, hoststr), 
+                          osi_LogSaveString(afsd_logp, hoststr),
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
             } else {
@@ -644,16 +644,16 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                 }
                 afs_inet_ntoa_r(tsp->addr.sin_addr.S_un.S_addr, hoststr);
                 osi_Log3(afsd_logp, "cm_MultiPingServer server %s (%s) is down with caps 0x%x",
-                          osi_LogSaveString(afsd_logp, hoststr), 
+                          osi_LogSaveString(afsd_logp, hoststr),
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
             }
 
             if (tsp->waitCount == 0)
                 tsp->flags &= ~CM_SERVERFLAG_PINGING;
-            else 
+            else
                 osi_Wakeup((LONG_PTR)tsp);
-            
+
             lock_ReleaseMutex(&tsp->mx);
 
             cm_PutServer(tsp);
@@ -694,7 +694,7 @@ void cm_CheckServers(afs_uint32 flags, cm_cell_t *cellp)
 void cm_InitServer(void)
 {
     static osi_once_t once;
-        
+
     if (osi_Once(&once)) {
         lock_InitializeRWLock(&cm_serverLock, "cm_serverLock", LOCK_HIERARCHY_SERVER_GLOBAL);
         lock_InitializeRWLock(&cm_syscfgLock, "cm_syscfgLock", LOCK_HIERARCHY_SYSCFG_GLOBAL);
@@ -809,11 +809,11 @@ void cm_SetServerPrefs(cm_server_t * serverp)
 	myNet    =  myAddr & netMask;
 	mySubnet =  myAddr & cm_SubnetMask[i];
 
-	if ( (serverAddr & netMask) == myNet ) 
+	if ( (serverAddr & netMask) == myNet )
 	{
 	    if ( (serverAddr & cm_SubnetMask[i]) == mySubnet)
 	    {
-		if ( serverAddr == myAddr ) 
+		if ( serverAddr == myAddr )
 		    serverp->ipRank = min(serverp->ipRank,
 					   CM_IPRANK_TOP);/* same machine */
 		else serverp->ipRank = min(serverp->ipRank,
@@ -821,7 +821,7 @@ void cm_SetServerPrefs(cm_server_t * serverp)
 	    }
 	    else serverp->ipRank = min(serverp->ipRank,CM_IPRANK_MED);
 	    /* same net */
-	}	
+	}
     } /* and of for loop */
 
     /* random between 0..15*/
@@ -847,7 +847,7 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         lock_InitializeMutex(&tsp->mx, "cm_server_t mutex", LOCK_HIERARCHY_SERVER);
         tsp->addr = *socketp;
 
-        cm_SetServerPrefs(tsp); 
+        cm_SetServerPrefs(tsp);
 
         lock_ObtainWrite(&cm_serverLock); 	/* get server lock */
         tsp->allNextp = cm_allServersp;
@@ -856,7 +856,7 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         switch (type) {
         case CM_SERVER_VLDB:
             cm_numVldbServers++;
-            break;      
+            break;
         case CM_SERVER_FILE:
             cm_numFileServers++;
             break;
@@ -886,7 +886,7 @@ cm_FindServerByIP(afs_uint32 ipaddr, unsigned short port, int type)
     }
 
     /* bump ref count if we found the server */
-    if (tsp) 
+    if (tsp)
         cm_GetServerNoLock(tsp);
 
     lock_ReleaseRead(&cm_serverLock);
@@ -906,7 +906,7 @@ cm_FindServerByUuid(afsUUID *serverUuid, int type)
     }
 
     /* bump ref count if we found the server */
-    if (tsp) 
+    if (tsp)
         cm_GetServerNoLock(tsp);
 
     lock_ReleaseRead(&cm_serverLock);
@@ -920,25 +920,25 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
     cm_server_t *tsp;
 
     osi_assertx(addrp->sin_family == AF_INET, "unexpected socket value");
-        
+
     lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
         if (tsp->type == type &&
             tsp->addr.sin_addr.s_addr == addrp->sin_addr.s_addr &&
             (tsp->addr.sin_port == addrp->sin_port || tsp->addr.sin_port == 0))
             break;
-    }       
+    }
 
     /* bump ref count if we found the server */
-    if (tsp) 
+    if (tsp)
         cm_GetServerNoLock(tsp);
 
     /* drop big table lock */
     lock_ReleaseRead(&cm_serverLock);
-	
+
     /* return what we found */
     return tsp;
-}       
+}
 
 cm_server_vols_t *cm_NewServerVols(void) {
     cm_server_vols_t *tsvp;
@@ -1032,9 +1032,9 @@ LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 }
 
 /*
-** Insert a server into the server list keeping the list sorted in 
-** ascending order of ipRank. 
-** 
+** Insert a server into the server list keeping the list sorted in
+** ascending order of ipRank.
+**
 ** The refCount of the cm_serverRef_t is increased
 */
 void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
@@ -1051,9 +1051,9 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
         element->next = *list;
         *list = element;
         lock_ReleaseWrite(&cm_serverLock);
-        return ;	
+        return ;
     }
-	
+
     while ( current->next ) /* find appropriate place to insert */
     {
         if ( current->next->server->ipRank > ipRank )
@@ -1063,10 +1063,10 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
     element->next = current->next;
     current->next = element;
     lock_ReleaseWrite(&cm_serverLock);
-}       
+}
 /*
 ** Re-sort the server list with the modified rank
-** returns 0 if element was changed successfully. 
+** returns 0 if element was changed successfully.
 ** returns 1 if  list remained unchanged.
 */
 long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
@@ -1088,7 +1088,7 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
             *current = (*current)->next; /* delete it */
             break;
         }
-        current = & ( (*current)->next);	
+        current = & ( (*current)->next);
     }
     lock_ReleaseWrite(&cm_serverLock);
 
@@ -1106,7 +1106,7 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
     return 0;
 }
 /*
-** If there are more than one server on the list and the first n servers on 
+** If there are more than one server on the list and the first n servers on
 ** the list have the same rank( n>1), then randomise among the first n servers.
 */
 void cm_RandomizeServer(cm_serverRef_t** list)
@@ -1117,7 +1117,7 @@ void cm_RandomizeServer(cm_serverRef_t** list)
 
     /* an empty list or a list with only one element */
     if ( !tsrp || ! tsrp->next )
-        return ; 
+        return ;
 
     lock_ObtainWrite(&cm_serverLock);
 
@@ -1129,19 +1129,19 @@ void cm_RandomizeServer(cm_serverRef_t** list)
             break;
         else
             count++;
-    }       	
+    }
 
     /* if there is only one server with the lowest rank, we are done */
     if ( count <= 1 ) {
         lock_ReleaseWrite(&cm_serverLock);
         return ;
-    }   
+    }
 
     picked = rand() % count;
     if ( !picked ) {
         lock_ReleaseWrite(&cm_serverLock);
         return ;
-    }   
+    }
 
     tsrp = *list;
     while (--picked >= 0)
@@ -1153,7 +1153,7 @@ void cm_RandomizeServer(cm_serverRef_t** list)
     tsrp->next     = *list; /* insert element at the beginning of list */
     *list          = tsrp;
     lock_ReleaseWrite(&cm_serverLock);
-}       
+}
 
 /* call cm_FreeServer while holding a write lock on cm_serverLock */
 void cm_FreeServer(cm_server_t* serverp)
@@ -1164,14 +1164,14 @@ void cm_FreeServer(cm_server_t* serverp)
     cm_PutServerNoLock(serverp);
     if (serverp->refCount == 0)
     {
-        /* 
+        /*
          * we need to check to ensure that all of the connections
          * for this server have a 0 refCount; otherwise, they will
-         * not be garbage collected 
+         * not be garbage collected
          *
          * must drop the cm_serverLock because cm_GCConnections
-         * obtains the cm_connLock and that comes first in the 
-         * lock hierarchy.  
+         * obtains the cm_connLock and that comes first in the
+         * lock hierarchy.
          */
         lock_ReleaseWrite(&cm_serverLock);
         cm_GCConnections(serverp);  /* connsp */
@@ -1179,9 +1179,9 @@ void cm_FreeServer(cm_server_t* serverp)
     }
 
 
-    /* 
+    /*
      * Once we have the cm_serverLock locked check to make
-     * sure the refCount is still zero before removing the 
+     * sure the refCount is still zero before removing the
      * server entirely.
      */
     if (serverp->refCount == 0) {
@@ -1189,7 +1189,7 @@ void cm_FreeServer(cm_server_t* serverp)
             switch (serverp->type) {
             case CM_SERVER_VLDB:
                 cm_numVldbServers--;
-                break;      
+                break;
             case CM_SERVER_FILE:
                 cm_numFileServers--;
                 break;
@@ -1270,15 +1270,15 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
             current = nextp;
         }
     }
-  
+
   done:
 
     lock_ReleaseWrite(&cm_serverLock);
 }
 
-/* dump all servers to a file. 
- * cookie is used to identify this batch for easy parsing, 
- * and it a string provided by a caller 
+/* dump all servers to a file.
+ * cookie is used to identify this batch for easy parsing,
+ * and it a string provided by a caller
  */
 int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
 {
@@ -1290,12 +1290,12 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
 
     if (lock)
         lock_ObtainRead(&cm_serverLock);
-  
+
     sprintf(output,
             "%s - dumping servers - cm_numFileServers=%d, cm_numVldbServers=%d\r\n",
             cookie, cm_numFileServers, cm_numVldbServers);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-  
+
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp)
     {
         char * type;
@@ -1329,17 +1329,17 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
     }
     sprintf(output, "%s - Done dumping servers.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-  
+
     if (lock)
 	lock_ReleaseRead(&cm_serverLock);
 
-    return (0);     
+    return (0);
 }
 
-/* 
+/*
  * Determine if two servers are in fact the same.
  *
- * Returns 1 if they match, 0 if they do not 
+ * Returns 1 if they match, 0 if they do not
  */
 int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2)
 {
@@ -1368,7 +1368,7 @@ int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2)
              srv1->addr.sin_port == srv2->addr.sin_port )
             return 1;
     }
-    
+
     return 0;
 }
 

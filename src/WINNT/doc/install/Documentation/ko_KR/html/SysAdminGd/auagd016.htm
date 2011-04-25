@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -200,7 +200,7 @@
 고유한 프로토타입 파일을 작성하는 것이 바람직합니다.
 <P><B>package</B> 프로그램을 더 효과적으로 만들고 유지하기 쉽게 하려면
 라이브러리 파일과 변수를 사용하여 고유한 것 대신 모듈러 방식의 일반적인 프로토타입 파일을
-작성하십시오. 
+작성하십시오.
 <A NAME="IDX7533"></A>
 <A NAME="IDX7534"></A>
 <UL>
@@ -298,7 +298,7 @@
    %ifdef	rs_aix42
    %	define 	AIX
    %	define	rootlinks
-   %ifndef	noafsd 
+   %ifndef	noafsd
    %	define	afsd
    %endif	noafsd
    %endif	rs_aix42
@@ -492,10 +492,10 @@ AFS나 로컬 디스크에 상주할 수 있습니다.
 작성합니다. <I>owner</I>, <I>group</I> 그리고
 <I>mode_bits</I> 필드는 비어 있으므로 심볼릭 링크는 실제 파일에서
 이런 필드의 값을 가져옵니다.
-<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110 
+<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110
 </PRE>
 <P>이 예는 <B>A</B> 갱신 코드를 사용합니다.
-<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote 
+<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote
                root wheel 644
 </PRE>
 <A NAME="IDX7554"></A>
@@ -712,13 +712,13 @@ AFS에 대해 현재 지원되는 시스템 유형이 들어 있습니다. 사용되지
 <B>Makefile</B> 개념에 익숙해 있다는
 가정하에서 시작합니다.
 <PRE>   #The following appear on a single line each in the actual file
-   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42  
+   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42
                            -Dname=$* $*.proto > $@
-   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40 
+   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40
                            -Dname=$* $*.proto > $@
-   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56 
+   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56
                            -Dname=$* $*.proto > $@
-   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110  
+   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110
                            -Dname=$* $*.proto > $@
    all: ${CONFIG}
    ${CONFIG}: ${LIBS}
@@ -839,7 +839,7 @@ MACHINE_LIBS 섹션에 추가하십시오.
 </LI><LI>AFS를 분배할 때 포함되는 <B>Makefile</B> 파일의 백업 복사본을
 작성합니다.
 <P>
-<PRE>   % <B>cp  Makefile Makefile.example</B> 
+<PRE>   % <B>cp  Makefile Makefile.example</B>
 </PRE>
 </LI><LI><A HREF="#HDRWQ439">CONFIG 섹션</A>, <A HREF="#HDRWQ440">BASE_LIBS 섹션</A> 그리고
 <A HREF="#HDRWQ441">MACHINE_LIBS 섹션</A>의 설명 대로 <B>Makefile</B> 파일의
@@ -1069,8 +1069,8 @@ MACHINE_LIBS 섹션에 추가하십시오.
 <P>
 <PRE>   # <B>package</B>  [<B>initcmd</B>]  [<B>-config</B> &lt;<VAR>base&nbsp;name&nbsp;of&nbsp;configuration&nbsp;file</VAR>>]  \
     [<B>-fullconfig</B> &lt;<VAR>full&nbsp;name&nbsp;of&nbsp;configuration&nbsp;file,&nbsp;or&nbsp;stdin&nbsp;for&nbsp;standard&nbsp;input</VAR>>]  \
-    [<B>-overwrite</B>]  [<B>-noaction</B>] 
-[<B>-verbose</B>]  [<B>-silent</B>] [<B>-rebootfiles</B>] 
+    [<B>-overwrite</B>]  [<B>-noaction</B>]
+[<B>-verbose</B>]  [<B>-silent</B>] [<B>-rebootfiles</B>]
 </PRE>
 <P>
 <P>여기서,
@@ -1122,11 +1122,11 @@ MACHINE_LIBS 섹션에 추가하십시오.
 </LI><LI><B>Q</B> 갱신 코드로 표시된 파일이 갱신되었다고 생각하면 시스템을
 재부트합니다. 이 때 재부트 작업은 자동으로 일어나지 않습니다.
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd015.htm">이전 페이지</A> &#124; <A HREF="auagd017.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd015.htm">이전 페이지</A> &#124; <A HREF="auagd017.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

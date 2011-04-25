@@ -5,9 +5,9 @@ RELDIR=WINNT\afs_setup_utils\GetWebDll
 
 !IF "$(OS)" == "Windows_NT"
 NULL=
-!ELSE 
+!ELSE
 NULL=nul
-!ENDIF 
+!ENDIF
 
 OUTDIR=$(OUT)
 INTDIR=$(OUT)
@@ -31,44 +31,44 @@ CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDL
 
 .c{$(INTDIR)}.obj::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.obj::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.obj::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .c{$(INTDIR)}.sbr::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cpp{$(INTDIR)}.sbr::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 .cxx{$(INTDIR)}.sbr::
    $(CPP) @<<
-   $(CPP_PROJ) $< 
+   $(CPP_PROJ) $<
 <<
 
 MTL=midl.exe
-MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
+MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32
 RSC=rc.exe
-RSC_PROJ=/l 0x409 /fo"$(INTDIR)\GetWebDll.res" /d "NDEBUG" 
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)\GetWebDll.res" /d "NDEBUG"
 BSC32=bscmake.exe
-BSC32_FLAGS=/nologo /o"$(OUTDIR)\GetWebDll.bsc" 
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\GetWebDll.bsc"
 BSC32_SBRS= \
 
 LINK32=link.exe
-LINK32_FLAGS=/nologo /subsystem:windows /dll /incremental:no /pdb:"$(OUTDIR)\GetWebDll.pdb" /machine:I386 /def:".\GetWebDll.def" /out:"$(DESTDIR)\WinInstall\Config\GetWebDll.dll" /implib:"$(DESTDIR)\WinInstall\Config\GetWebDll.lib" 
+LINK32_FLAGS=/nologo /subsystem:windows /dll /incremental:no /pdb:"$(OUTDIR)\GetWebDll.pdb" /machine:I386 /def:".\GetWebDll.def" /out:"$(DESTDIR)\WinInstall\Config\GetWebDll.dll" /implib:"$(DESTDIR)\WinInstall\Config\GetWebDll.lib"
 DEF_FILE= \
 	".\GetWebDll.def"
 LINK32_OBJS= \
@@ -84,10 +84,10 @@ LINK32_OBJS= \
 !IF "$(NO_EXTERNAL_DEPS)" != "1"
 !IF EXISTS("GetWebDll.dep")
 !INCLUDE "GetWebDll.dep"
-!ELSE 
+!ELSE
 !MESSAGE Warning: cannot find "GetWebDll.dep"
-!ENDIF 
-!ENDIF 
+!ENDIF
+!ENDIF
 
 
 SOURCE=.\GetWebDll.cpp

@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -23,12 +23,12 @@
 <P><STRONG>目的</STRONG>
 <P>1 つのディレクトリーから、別の 1 つ以上のディレクトリーに ACL をコピーします。
 <P><STRONG>構文</STRONG>
-<PRE><B>fs copyacl -fromdir</B> &lt;<VAR>source directory (or DFS file)</VAR>>  
-           <B>-todir</B> &lt;<VAR>destination directory (or DFS file)</VAR>><SUP>+</SUP>  
+<PRE><B>fs copyacl -fromdir</B> &lt;<VAR>source directory (or DFS file)</VAR>>
+           <B>-todir</B> &lt;<VAR>destination directory (or DFS file)</VAR>><SUP>+</SUP>
            [<B>-clear</B>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-help</B>]
-   
-<B>fs co -f</B> &lt;<VAR>source directory (or DFS file)</VAR>>  
-      <B>-t</B> &lt;<VAR>destination directory (or DFS file)</VAR>><SUP>+</SUP>  
+
+<B>fs co -f</B> &lt;<VAR>source directory (or DFS file)</VAR>>
+      <B>-t</B> &lt;<VAR>destination directory (or DFS file)</VAR>><SUP>+</SUP>
       [<B>-c</B>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -78,9 +78,9 @@ DFS ファイルを指定するとそのファイルの ACL が変更されます)。部分的なパス名を指定
       pat:friends rl
    Negative rights
       jones rlidwka
-   
+
    % <B>fs copyacl -fromdir . -todir reports</B>
-   
+
    % <B>fs listacl . reports</B>
    Access list for . is
    Normal rights:
@@ -93,7 +93,7 @@ DFS ファイルを指定するとそのファイルの ACL が変更されます)。部分的なパス名を指定
       smith rlidwk
    Negative rights
       jones rlidwka
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>AFS オブジェクト間で ACL をコピーするには、発行者は、ソース・ディレクトリーの ACL で <B>l</B> (<B>検索</B>) アクセス権を、各宛先ディレクトリーの ACL で <B>a</B> (<B>管理</B>) アクセス権が必要です。
@@ -106,11 +106,11 @@ DFS ファイルを指定するとそのファイルの ACL が変更されます)。部分的なパス名を指定
 <P><A HREF="auarf157.htm#HDRFS_SETACL">fs setacl</A>
 <P><I>AFS/DFS Migration Toolkit Administration Guide and Reference</I>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf135.htm">前ページ</A> &#124; <A HREF="auarf137.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf135.htm">前ページ</A> &#124; <A HREF="auarf137.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

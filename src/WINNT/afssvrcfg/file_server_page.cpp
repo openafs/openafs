@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -139,7 +139,7 @@ static void ConfigMsg(UINT nMsgID)
     ShowWnd(hDlg, IDC_CREATE_FS_QUESTION, FALSE);
     ShowWnd(hDlg, IDC_SHOULD_CONFIG_FILE_SERVER, FALSE);
     ShowWnd(hDlg, IDC_DONT_CONFIG_FILE_SERVER, FALSE);
-	
+
     SetWndText(hDlg, IDC_MSG, szMsg);
     ShowWnd(hDlg, IDC_MSG);
 }

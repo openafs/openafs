@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -151,7 +151,7 @@ int osi_Once(osi_once_t *argp)
 	while ((i=InterlockedExchange(&argp->atomic, 1)) != 0) {
 		Sleep(0);
 	}
-	
+
 	if (argp->done == 0) {
 		argp->done = 1;
 		return 1;
@@ -175,7 +175,7 @@ int osi_TestOnce(osi_once_t *argp)
 	while ((i=InterlockedExchange(&argp->atomic, 1)) != 0) {
 		Sleep(0);
 	}
-	
+
 	localDone = argp->done;
 
 	/* drop interlock */
@@ -247,11 +247,11 @@ void osi_Init(void)
 		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 2,
 			"States", OSI_DBRPC_HEX);
 	}
-	
+
 	osi_BaseInit();
 
 	osi_StatInit();
-        
+
         osi_InitQueue();
 
 	osi_EndOnce(&once);
@@ -274,7 +274,7 @@ void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, CRITICAL_SECTI
     sp->waitFor = waitFor;
     sp->value = (LONG_PTR) patchp;
     osi_QAddT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
-    if (!turnp->lastp) 
+    if (!turnp->lastp)
 	turnp->lastp = sp;
     LeaveCriticalSection(releasep);
 
@@ -290,16 +290,16 @@ void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, CRITICAL_SECTI
 		 */
 		if (code == WAIT_OBJECT_0) break;
 	}	/* while we're waiting */
-        
+
 	/* we're the only one who should be looking at or changing this
 	 * structure after it gets signalled.  Sema sp->sema isn't signalled
 	 * any longer after we're back from WaitForSingleObject, so we can
 	 * free this element directly.
          */
         osi_assert(sp->states & OSI_SLEEPINFO_SIGNALLED);
-        
+
         osi_FreeSleepInfo(sp);
-        
+
 	/* reobtain, since caller commonly needs it */
         EnterCriticalSection(releasep);
 }
@@ -312,10 +312,10 @@ void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, CRITICAL_SECTI
 void osi_TSignal(osi_turnstile_t *turnp)
 {
 	osi_sleepInfo_t *sp;
-        
-	if (!turnp->lastp) 
+
+	if (!turnp->lastp)
 	    return;
-        
+
         sp = turnp->lastp;
 	turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
         osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
@@ -327,7 +327,7 @@ void osi_TSignal(osi_turnstile_t *turnp)
 void osi_TBroadcast(osi_turnstile_t *turnp)
 {
 	osi_sleepInfo_t *sp;
-        
+
         while(sp = turnp->lastp) {
 		turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
 	        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
@@ -358,7 +358,7 @@ void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SE
         int wokeReader;
         unsigned short *sp;
         unsigned char *cp;
-        
+
 	wokeReader = stillHaveReaders;
 	wakeupListp = NULL;
         while(tsp = turnp->lastp) {
@@ -369,14 +369,14 @@ void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SE
 			if (wokeReader) break;
                 }
                 else wokeReader = 1;
-                
+
                 /* otherwise, we will wake this guy.  For now, remove from this list
                  * and move to private one, so we can do the wakeup after releasing
                  * the crit sec.
                  */
 		turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&tsp->q);
 	        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &tsp->q);
-                
+
 		/* do the patching required for lock obtaining */
                 if (tsp->waitFor & OSI_SLEEPINFO_W4WRITE) {
 			cp = (void *) tsp->value;
@@ -390,16 +390,16 @@ void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SE
                 /* and add to our own list */
                 tsp->q.nextp = wakeupListp;
                 wakeupListp = &tsp->q;
-                
+
                 /* now if we woke a writer, we're done, since it is pointless
                  * to wake more than one writer.
                  */
                 if (!wokeReader) break;
         }
-        
+
         /* hit end, or found someone we're not supposed to wakeup */
 	if (csp) LeaveCriticalSection(csp);
-        
+
         /* finally, wakeup everyone we found.  Don't free things since the sleeper
          * will free the sleepInfo structure.
          */
@@ -486,14 +486,14 @@ void osi_WakeupSpin(LONG_PTR sleepValue)
 		ReleaseSemaphore(tsp->sema, 1, (long *) 0);
 		tsp->states |= OSI_SLEEPINFO_SIGNALLED;
 	    }
-	}	
+	}
     LeaveCriticalSection(csp);
-}	
+}
 
 void osi_Sleep(LONG_PTR sleepVal)
 {
 	CRITICAL_SECTION *csp;
-        
+
 	/* may as well save some code by using SleepSched again */
         csp = &osi_baseAtomicCS[0];
         EnterCriticalSection(csp);
@@ -565,7 +565,7 @@ void osi_AdvanceSleepFD(osi_sleepFD_t *cp)
 			nsip = (osi_sleepInfo_t *) sip->q.nextp;
 			osi_ReleaseSleepInfo(sip);
 			sip = nsip;
-			
+
 			if (sip) sip->refCount++;
 			else idx++;
 		}
@@ -629,14 +629,14 @@ BOOL APIENTRY DLLMain(HANDLE inst, DWORD why, char *reserved)
 int osi_IsPrime(unsigned long x)
 {
 	unsigned long c;
-        
+
 	/* even numbers aren't prime */
 	if ((x & 1) == 0 && x != 2) return 0;
 
         for(c = 3; c<x; c += 2) {
 		/* see if x is divisible by c */
 		if ((x % c) == 0) return 0;	/* yup, it ain't prime */
-                
+
                 /* see if we've gone far enough; only have to compute until
                  * square root of x.
                  */
@@ -650,7 +650,7 @@ int osi_IsPrime(unsigned long x)
 /* return first prime number less than or equal to x */
 unsigned long osi_PrimeLessThan(unsigned long x) {
 	unsigned long c;
-        
+
         for(c = x; c > 1; c--) {
 		if (osi_IsPrime(c)) return c;
         }

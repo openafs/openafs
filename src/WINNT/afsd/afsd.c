@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -80,9 +80,9 @@ int WINAPI WinMain(
 {
 	MSG msg;
 	int i;
-	
+
     afsd_SetUnhandledExceptionFilter();
-       
+
 #ifdef _DEBUG
     afsd_DbgBreakAllocInit();
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /* | _CRTDBG_CHECK_ALWAYS_DF */ | _CRTDBG_CHECK_CRT_DF | _CRTDBG_DELAY_FREE_MEM_DF );
@@ -95,7 +95,7 @@ int WINAPI WinMain(
             allocRequest = strtok(NULL, " \t");
         }
     }
-#endif 
+#endif
 
     if (!InitClass(hInstance))
         return (FALSE);
@@ -124,7 +124,7 @@ BOOL InitClass(HANDLE hInstance)
 	wc.hInstance = hInstance;
 	wc.hIcon = LoadIcon(hInstance, "AFSDIcon");
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = GetStockObject(WHITE_BRUSH); 
+	wc.hbrBackground = GetStockObject(WHITE_BRUSH);
 	wc.lpszMenuName =  "AFSDMenu";
 	wc.lpszClassName = "AFSDWinClass";
 
@@ -143,7 +143,7 @@ BOOL InitInstance(
 	INT nLineHeight;
     long code, cnt;
 	char *reason;
- 
+
 	/* remember this, since it is a useful thing for some of the Windows
 	 * calls */
 	main_inst = hInstance;
@@ -170,7 +170,7 @@ BOOL InitInstance(
 	hDC = GetDC(hWnd);
 	GetTextMetrics(hDC, &textmetric);
 	nLineHeight = textmetric.tmExternalLeading + textmetric.tmHeight;
-	
+
 	main_rect.left   = GetDeviceCaps(hDC, LOGPIXELSX) / 4;   /* 1/4 inch */
 	main_rect.right  = GetDeviceCaps(hDC, HORZRES);
 	main_rect.top    = GetDeviceCaps(hDC, LOGPIXELSY) / 4;   /* 1/4 inch */

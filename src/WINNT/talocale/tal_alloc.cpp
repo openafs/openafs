@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -248,14 +248,14 @@ typedef struct
 #define cyLABELS    15
 
 
-HWND MakeWindow (LPCTSTR pszClass, LPCTSTR pszTitle, DWORD dwStyle, RECT *prSource, 
+HWND MakeWindow (LPCTSTR pszClass, LPCTSTR pszTitle, DWORD dwStyle, RECT *prSource,
                  HWND hParent, UINT idc, DWORD dwStyleEx = 0)
 {
    RECT rr = { 0, 0, 16, 16 };
    if (prSource)
       rr = *prSource;
-   HWND hWnd = CreateWindowEx (dwStyleEx, pszClass, pszTitle, dwStyle, 
-                               rr.left, rr.top, rr.right - rr.left, rr.bottom - rr.top, 
+   HWND hWnd = CreateWindowEx (dwStyleEx, pszClass, pszTitle, dwStyle,
+                               rr.left, rr.top, rr.right - rr.left, rr.bottom - rr.top,
                                hParent, (HMENU)UIntToPtr(idc), GetModuleHandle(0), 0);
    if (IsWindow (hWnd))
       SendMessage (hWnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 1);
@@ -264,7 +264,7 @@ HWND MakeWindow (LPCTSTR pszClass, LPCTSTR pszTitle, DWORD dwStyle, RECT *prSour
 
 void SetWindowRect (HWND hWnd, RECT *pr)
 {
-   SetWindowPos (hWnd, 0, pr->left, pr->top, pr->right - pr->left, 
+   SetWindowPos (hWnd, 0, pr->left, pr->top, pr->right - pr->left,
                  pr->bottom - pr->top, SWP_NOZORDER | SWP_NOACTIVATE);
 }
 

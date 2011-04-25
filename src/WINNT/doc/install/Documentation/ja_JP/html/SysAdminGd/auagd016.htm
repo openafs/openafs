@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>ŠÇ—‚Ìèˆø‚«</H1>
@@ -205,7 +205,7 @@ AIX 4.2 ‚ ‚é‚¢‚Í Solaris 2.6 ‚ğÀs‚µ‚Ä‚¢‚éƒ}ƒVƒ“‚ğ“¯‚¶ƒvƒ‚Æƒ^ƒCƒvEƒtƒ@ƒCƒ‹‚ğ
    %ifdef	rs_aix42
    %	define 	AIX
    %	define	rootlinks
-   %ifndef	noafsd 
+   %ifndef	noafsd
    %	define	afsd
    %endif	noafsd
    %endif	rs_aix42
@@ -354,10 +354,10 @@ AFS ‚Ö‚ÌƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN) ‚É•ÛŠÇ‚µ‚Ü‚·B‚»‚Ìã‚ÅAPATH ŠÂ‹«•Ï”‚ğİ’è‚µA
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>’:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">–¼‘O‚ª”Ô†‹L† (<B>#</B>) ‚Ü‚½‚Íƒp[ƒZƒ“ƒg‹L† (<B>%</B>) ‚Ån‚Ü‚éƒtƒ@ƒCƒ‹‚É‘Î‚µ‚ÄA‹L†ƒŠƒ“ƒN‚ğì¬‚µ‚Ä‚Í‚¢‚¯‚Ü‚¹‚ñBƒLƒƒƒbƒVƒ…Eƒ}ƒl[ƒWƒƒ[‚Í‚±‚Ì‚æ‚¤‚ÈƒŠƒ“ƒN‚ğ‚»‚ê‚¼‚ê•W€‚ÌA‚Ü‚½‚Í“Ç‚İæ‚è / ‘‚«‚İƒ{ƒŠƒ…[ƒ€‚É‘Î‚·‚éƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Æ‰ğß‚µ‚Ü‚·B
 </TD></TR></TABLE>
 <P>ˆÈ‰º‚Ì—á‚ÍAƒ[ƒJƒ‹EƒfƒBƒXƒNã‚Ì <B>/etc/ftpd</B> ‚©‚ç AFS “à‚Ì <B>/afs/abc.com/hp_ux110/etc/ftpd</B> ‚Ö‚ÌƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN‚ğì¬‚µ‚Ü‚·B<I>owner</I>A<I>group</I> ‚¨‚æ‚Ñ <I>mode_bits</I> ‚ÌŠeƒtƒB[ƒ‹ƒh‚ª‹ó‚Ì‚½‚ßAƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN‚Í‚±‚ê‚ç‚ÌƒtƒB[ƒ‹ƒh‚ÉÀÛ‚Ìƒtƒ@ƒCƒ‹‚©‚ç’l‚ğÌ—p‚µ‚Ü‚·B
-<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110 
+<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110
 </PRE>
 <P>‚±‚Ì—á‚ÍA<B>A</B> XVƒR[ƒh‚ğg—p‚µ‚Ä‚¢‚Ü‚·B
-<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote 
+<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote
                root wheel 644
 </PRE>
 <A NAME="IDX7549"></A>
@@ -531,13 +531,13 @@ AFS ‚É’ñ‹Ÿ‚³‚ê‚Ä‚¢‚éƒTƒ“ƒvƒ‹‚ğ•ÏX‚·‚é‚±‚Æ‚É‚æ‚Á‚Äƒ†[ƒU[‚Ì
 <B>package</B> ƒvƒƒOƒ‰ƒ€‚É‚æ‚é\¬ƒtƒ@ƒCƒ‹‚Ìì¬‚ğ§Œä‚µ‚Ü‚·B
 <P>‰º‚Ì—á‚ğ‚æ‚­‚¨“Ç‚İ‚­‚¾‚³‚¢Bƒ†[ƒU[‚ªAƒvƒƒOƒ‰ƒ~ƒ“ƒO‚¨‚æ‚Ñ <B>Makefile</B> ‚ÌŠT”O‚É’Ê‚¶‚Ä‚¢‚é‚±‚Æ‚ğ‘O’ñ‚Æ‚µ‚Ä‚¢‚Ü‚·B
 <PRE>   #The following appear on a single line each in the actual file
-   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42  
+   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42
                            -Dname=$* $*.proto > $@
-   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40 
+   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40
                            -Dname=$* $*.proto > $@
-   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56 
+   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56
                            -Dname=$* $*.proto > $@
-   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110  
+   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110
                            -Dname=$* $*.proto > $@
    all: ${CONFIG}
    ${CONFIG}: ${LIBS}
@@ -638,7 +638,7 @@ AFS ‚É’ñ‹Ÿ‚³‚ê‚Ä‚¢‚éƒTƒ“ƒvƒ‹‚ğ•ÏX‚·‚é‚±‚Æ‚É‚æ‚Á‚Äƒ†[ƒU[‚Ì
 </PRE>
 </LI><LI>AFS ‚ÉŠÜ‚Ü‚ê‚é <B>Makefile</B> ƒtƒ@ƒCƒ‹‚ÌƒoƒbƒNƒAƒbƒvEƒRƒs[‚ğì¬‚µ‚Ü‚·B
 <P>
-<PRE>   % <B>cp  Makefile Makefile.example</B> 
+<PRE>   % <B>cp  Makefile Makefile.example</B>
 </PRE>
 </LI><LI><B>Makefile</B> ƒtƒ@ƒCƒ‹‚Ì <TT>CONFIG</TT>A
 <TT>BASE_LIBS</TT> ‚¨‚æ‚Ñ <TT>MACHINE_LIBS</TT> ‹@”\ƒOƒ‹[ƒv‚ğ•ÏX‚µ‚Ü‚·
@@ -803,7 +803,7 @@ AFS ‚É’ñ‹Ÿ‚³‚ê‚Ä‚¢‚éƒTƒ“ƒvƒ‹‚ğ•ÏX‚·‚é‚±‚Æ‚É‚æ‚Á‚Äƒ†[ƒU[‚Ì
 <P>
 <PRE>   # <B>package</B>  [<B>initcmd</B>]  [<B>-config</B> &lt;<VAR>base name of configuration file</VAR>>]  \
     [<B>-fullconfig</B> &lt;<VAR>full name of configuration file, or stdin for standard input</VAR>>]  \
-    [<B>-overwrite</B>]  [<B>-noaction</B>]  [<B>-verbose</B>]  [<B>-silent</B>] [<B>-rebootfiles</B>] 
+    [<B>-overwrite</B>]  [<B>-noaction</B>]  [<B>-verbose</B>]  [<B>-silent</B>] [<B>-rebootfiles</B>]
 </PRE>
 <P>
 <P>‚±‚±‚ÅA
@@ -844,11 +844,11 @@ AFS ‚É’ñ‹Ÿ‚³‚ê‚Ä‚¢‚éƒTƒ“ƒvƒ‹‚ğ•ÏX‚·‚é‚±‚Æ‚É‚æ‚Á‚Äƒ†[ƒU[‚Ì
 </DL>
 </LI><LI><B>Q</B> ƒR[ƒh‚Åƒ}[ƒN‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ªXV‚³‚ê‚½‚Æv‚í‚ê‚éê‡‚ÍAƒ}ƒVƒ“‚ğƒŠƒu[ƒg‚µ‚Ü‚·B‚±‚ÌƒŠƒu[ƒg‚ÍA©“®“I‚É‚Í‹N‚±‚è‚Ü‚¹‚ñB
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ƒy[ƒW‚Ìƒgƒbƒv</A> &#124; <A HREF="auagd015.htm">‘Oƒy[ƒW</A> &#124; <A HREF="auagd017.htm">Ÿƒy[ƒW</A> &#124; <A HREF="auagd002.htm#ToC">–ÚŸ</A> &#124; <A HREF="auagd026.htm#HDRINDEX">õˆø</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ƒy[ƒW‚Ìƒgƒbƒv</A> &#124; <A HREF="auagd015.htm">‘Oƒy[ƒW</A> &#124; <A HREF="auagd017.htm">Ÿƒy[ƒW</A> &#124; <A HREF="auagd002.htm#ToC">–ÚŸ</A> &#124; <A HREF="auagd026.htm#HDRINDEX">õˆø</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 -->
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

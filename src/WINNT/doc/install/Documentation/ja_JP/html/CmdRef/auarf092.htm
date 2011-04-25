@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -27,10 +27,10 @@
 <P>ボリューム・セット内のすべてのボリュームを復元します。
 <P><STRONG>構文</STRONG>
 <PRE><B>backup volsetrestore</B> [<B>-name</B> &lt;<VAR>volume set name</VAR>>]  [<B>-file</B> &lt;<VAR>file name</VAR>>]
-                     [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]  
+                     [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]
                      [<B>-extension</B> &lt;<VAR>new volume name extension</VAR>>]
                      [<B>-n</B>]  [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
-   
+
 <B>backup vols</B> [<B>-na</B> &lt;<VAR>volume set name</VAR>>]  [<B>-f</B> &lt;<VAR>file name</VAR>>]
             [<B>-p</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]  [<B>-e</B> &lt;<VAR>new volume name extension</VAR>>]
             [<B>-n</B>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
@@ -76,7 +76,7 @@ VLDB のボリューム・ロケーション情報を更新します。
 <P>
 <PRE>    <VAR>machine  partition
  volume</VAR> [<VAR>comments...</VAR>]
-   
+
 </PRE>
 <P>
 <P>
@@ -127,7 +127,7 @@ VLDB のボリューム・ロケーション情報を更新します。
 <P>各行の形式は、以下のとおりです (ここで示した出力は、読みやすくするために 2 行で表示されています。)
 <PRE>   <VAR>machine partition volume_dumped</VAR>  # as <VAR>volume_restored</VAR>; <VAR>tape_name</VAR> (<VAR>tape_ID</VAR>);  \
            pos <VAR>position_number</VAR>; <VAR>date</VAR>
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -164,14 +164,14 @@ One way to<B>-name</B> と <B>-n</B> オプションを組み合わせてファイルに出力するこ
    Starting restore
    backup: task ID of restore operation: 112
    backup: Finished doing restore
-   
+
 </PRE>
 <P>次のコマンドは、<B>/tmp/restore</B> というファイルに項目があるボリュームをすべて復元しています。
 <PRE>   % <B>backup volsetrestore -file /tmp/restore</B>
    Starting restore
    backup: task ID of restore operation: 113
    backup: Finished doing restore
-   
+
 </PRE>
 <P><B>/tmp/restore</B> ファイルの内容は、次のとおりです。
 <PRE>   fs1.abc.com b user.pat
@@ -180,7 +180,7 @@ One way to<B>-name</B> と <B>-n</B> オプションを組み合わせてファイルに出力するこ
    fs2.abc.com c user.jones
           .         .     .
           .         .     .
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、バックアップ・サーバーまたはボリューム・ロケーション (VL) サーバーが実行されている各マシン上、および関連するボリュームのあるすべてのファイル・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。
@@ -194,11 +194,11 @@ One way to<B>-name</B> と <B>-n</B> オプションを組み合わせてファイルに出力するこ
 <P><A HREF="auarf091.htm#HDRBK_VOLRESTORE">backup volrestore</A>
 <P><A HREF="auarf126.htm#HDRBUTC">butc</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf091.htm">前ページ</A> &#124; <A HREF="auarf093.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf091.htm">前ページ</A> &#124; <A HREF="auarf093.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

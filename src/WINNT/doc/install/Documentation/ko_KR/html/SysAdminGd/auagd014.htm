@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -155,7 +155,7 @@
 시스템에서는 <B>upclientetc</B> 프로세스를 실행해야
 합니다. <I>AFS 빠른 시작</I>에서는 이 두 프로세스를 설치하는 방법에 대해
 설명합니다. 갱신 서버 프로세스가 실행되는 지 확인하는 명령은
-<A HREF="auagd009.htm#HDRWQ158">프로세스 상태와 BosConfig 파일의 정보 표시하기</A>의 내용을 참조하십시오. 
+<A HREF="auagd009.htm#HDRWQ158">프로세스 상태와 BosConfig 파일의 정보 표시하기</A>의 내용을 참조하십시오.
 <A NAME="IDX7264"></A>
 </LI><LI>시스템 제어 시스템에서만 <B>KeyFile</B> 파일을
 변경하십시오(<A HREF="#HDRWQ370">서버 암호화 키 비상사태 처리</A>에서 설명한 비상 유형시는
@@ -185,7 +185,7 @@
 <P>기본적으로 명령에서는 키를 구성하는 실제 8진 문자열을 표시하지
 않지만, 키로 상수를 암호화하여 얻은 십진수인 <I>체크섬</I>을 표시합니다. 이렇게 하면 허가없는 사용자가 실제 키에
 쉽게 액세스할 수 없게 되며, 이 실제 키는 보호 통신에서 거짓을
-말하거나 도청할 때 사용할 수 있습니다. 
+말하거나 도청할 때 사용할 수 있습니다.
 <A NAME="IDX7266"></A>
 <A NAME="IDX7267"></A>
 <B>bos listkeys</B> 및
@@ -244,7 +244,7 @@
 <PRE>   % <B>bos listkeys fs1.abc.com</B>
    key 0 has cksum 972037177
    key 1 has cksum 2825165022
-   Keys last changed on Wed Jan 13 11:20:29 1999. 
+   Keys last changed on Wed Jan 13 11:20:29 1999.
    All done.
 </PRE>
 <A NAME="IDX7274"></A>
@@ -268,8 +268,8 @@
 <P>
 <PRE>   % <B>kas examine afs</B>
 [<B>-showkey</B>]  \
-                 <B>-admin</B>  &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
-   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR> 
+                 <B>-admin</B>  &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
+   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
 <P>여기서
@@ -298,7 +298,7 @@
 <B>kas examine</B>명령 출력에 있는 다른 행에 대한
 설명은 <I>AFS Administration Reference</I>에 있는 참조 페이지를 참조하십시오.
 <PRE>   % <B>kas examine afs  -admin admin</B>
-   Administrator's (admin) password: <VAR>admin_password</VAR> 
+   Administrator's (admin) password: <VAR>admin_password</VAR>
    User data for afs
     key (1) cksum is 2825165022, last cpw: no date
     password will never expire.
@@ -466,8 +466,8 @@
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>kas setpassword -name afs -kvno</B> &lt;<VAR>kvno</VAR>>  \
-                     <B>-admin</B>  &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
-   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR> 
+                     <B>-admin</B>  &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
+   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
    new_password: <VAR>afs_password</VAR>
    Verifying, please re-enter new_password: <VAR>afs_password</VAR>
 </PRE>
@@ -561,8 +561,8 @@ AFS 서버 프로세스는 클라이언트가 제공하는 티켓을 해독할 수 없게 됩니다.
 버전 번호를 갖지 않도록 하십시오. <B>kas examine</B>
 명령에 대한 자세한 설명은 <A HREF="#HDRWQ361">인증 데이터베이스에서 afs 키 표시하기</A>의 내용을 참조하십시오.
 <P>
-<PRE>   % <B>kas examine afs  -admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>  
-   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR> 
+<PRE>   % <B>kas examine afs  -admin</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>
+   Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <A NAME="IDX7296"></A>
 <A NAME="IDX7297"></A>
@@ -908,11 +908,11 @@ listhosts</B> 명령을 사용하십시오).
 <A HREF="#HDRWQ375">비상사태시 권한부여 체크 사용가능으로 재설정</A>에서 설명한 바와 같이 권한 부여 체크를
 사용 가능으로 다시 설정하십시오.
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd013.htm">이전 페이지</A> &#124; <A HREF="auagd015.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd013.htm">이전 페이지</A> &#124; <A HREF="auagd015.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

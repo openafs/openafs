@@ -320,7 +320,7 @@ TYPEDEF_FUNC(
     krb5_error_code,
     KRB5_CALLCONV,
     krb5_c_verify_checksum,
-    (krb5_context context, 
+    (krb5_context context,
      const krb5_keyblock *key, krb5_keyusage usage,
      const krb5_data *data,
      const krb5_checksum *cksum,
@@ -339,7 +339,7 @@ TYPEDEF_FUNC(
     krb5_error_code,
     KRB5_CALLCONV,
     krb5_c_keyed_checksum_types,
-    (krb5_context context, krb5_enctype enctype, 
+    (krb5_context context, krb5_enctype enctype,
      unsigned int *count, krb5_cksumtype **cksumtypes)
     );
 
@@ -703,7 +703,7 @@ TYPEDEF_FUNC(
     krb5_error_code,
     KRB5_CALLCONV,
     krb5_524_conv_principal,
-    (krb5_context context, const krb5_principal princ, 
+    (krb5_context context, const krb5_principal princ,
      char *name, char *inst, char *realm)
     );
 
@@ -1077,7 +1077,7 @@ TYPEDEF_FUNC(
      krb5_pointer,
      char *,
      krb5_principal,
-     krb5_int32, 
+     krb5_int32,
      krb5_keytab,
      krb5_ticket * *)
     );
@@ -1119,16 +1119,16 @@ TYPEDEF_FUNC(
     krb5_error_code,
     KRB5_CALLCONV,
     krb5_fwd_tgt_creds,
-    (krb5_context, 
+    (krb5_context,
      krb5_auth_context,
      char *,
-     krb5_principal, 
-     krb5_principal, 
+     krb5_principal,
+     krb5_principal,
      krb5_ccache,
      int forwardable,
      krb5_data *)
     );
-	
+
 TYPEDEF_FUNC(
     krb5_error_code,
     KRB5_CALLCONV,
