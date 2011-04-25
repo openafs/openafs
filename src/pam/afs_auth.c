@@ -57,7 +57,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
     PAM_CONST char *user = NULL, *password = NULL;
     afs_int32 password_expires = -1;
-    int torch_password = 1;
+    char *torch_password = NULL;
     int i;
     PAM_CONST struct pam_conv *pam_convp = NULL;
     int auth_ok;
@@ -205,13 +205,11 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
-	torch_password = 0;
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	torch_password = 0;
 	got_authtok = 1;
     }
     if (!(use_first_pass || try_first_pass)) {
@@ -221,8 +219,6 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
   try_auth:
     if (password == NULL) {
 	char *prompt_password;
-
-	torch_password = 1;
 
 	if (use_first_pass)
 	    RET(PAM_AUTH_ERR);	/* shouldn't happen */
@@ -256,7 +252,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	my_password_buf[sizeof(my_password_buf) - 1] = '\0';
 	memset(prompt_password, 0, strlen(prompt_password));
 	free(prompt_password);
-	password = my_password_buf;
+	password = torch_password = my_password_buf;
 
     }
 
@@ -398,7 +394,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
      * after pam_afs
      */
     if (!got_authtok) {
-	torch_password = 0;
+	torch_password = NULL;
 	(void)pam_set_item(pamh, PAM_AUTHTOK, password);
     }
 
@@ -414,7 +410,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	char *tmp = strdup(password);
 	(void)pam_set_data(pamh, pam_afs_lh, tmp, lc_cleanup);
 	if (torch_password)
-	    memset((char *)password, 0, strlen(password));
+	    memset(torch_password, 0, strlen(torch_password));
     }
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV

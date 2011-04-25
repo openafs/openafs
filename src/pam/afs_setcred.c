@@ -50,7 +50,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     char my_password_buf[256];
     char *cell_ptr = NULL;
     char sbuffer[100];
-    int torch_password = 1;
+    char *torch_password = NULL;
     int auth_ok = 0;
     char *lh;
     PAM_CONST char *user = NULL;
@@ -202,7 +202,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	} else if (password[0] == '\0') {
 	    /* Actually we *did* get one but it was empty. */
 	    got_authtok = 1;
-	    torch_password = 0;
 	    /* So don't use it. */
 	    password = NULL;
 	    if (use_first_pass) {
@@ -214,7 +213,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	} else {
 	    if (logmask && LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	    torch_password = 0;
 	    got_authtok = 1;
 	}
 	if (!(use_first_pass || try_first_pass)) {
@@ -224,8 +222,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
       try_auth:
 	if (password == NULL) {
 	    char *prompt_password;
-
-	    torch_password = 1;
 
 	    if (use_first_pass)
 		RET(PAM_AUTH_ERR);	/* shouldn't happen */
@@ -260,7 +256,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    my_password_buf[sizeof(my_password_buf) - 1] = '\0';
 	    memset(prompt_password, 0, strlen(prompt_password));
 	    free(prompt_password);
-	    password = my_password_buf;
+	    password = torch_password = my_password_buf;
 	}
 	/*
 	 * We only set a PAG here, if we haven't got one before in
@@ -322,7 +318,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
 	/* pam_sm_authenticate should have set this
 	 * if (auth_ok && !got_authtok) {
-	 *     torch_password = 0;
+	 *     torch_password = NULL;
 	 *     (void) pam_set_item(pamh, PAM_AUTHTOK, password);
 	 * }
 	 */
@@ -354,7 +350,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
   out:
     if (password && torch_password)
-	memset((char*)password, 0, strlen(password));
+	memset(torch_password, 0, strlen(torch_password));
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV
     closelog();
