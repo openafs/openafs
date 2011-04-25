@@ -1,4 +1,4 @@
-/* 
+/*
   Copyright (C) 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997 by the Massachusetts Institute of Technology
 
    Export of this software from the United States of America is assumed

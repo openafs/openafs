@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -28,9 +28,9 @@
 <P><STRONG>目的</STRONG>
 <P>保護データベース・グループにユーザーまたはマシンを追加します。
 <P><STRONG>構文</STRONG>
-<PRE><B>pts adduser -user</B> &lt;<VAR>user name</VAR>><SUP>+</SUP>  <B>-group</B> &lt;<VAR>group name</VAR>><SUP>+</SUP> 
+<PRE><B>pts adduser -user</B> &lt;<VAR>user name</VAR>><SUP>+</SUP>  <B>-group</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>
             [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
-   
+
 <B>pts ad -u</B> &lt;<VAR>user name</VAR>><SUP>+</SUP>  <B>-g</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-f</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -63,17 +63,17 @@
 <P><STRONG>例</STRONG>
 <P>次の例では、グループ <B>system:administrators</B> に、ユーザー <B>smith</B> を追加しています。
 <PRE>   % <B>pts adduser -user smith -group system:administrators</B>
-   
+
 </PRE>
 <P>次の例は、<B>smith:colleagues</B> グループに、ユーザー <B>jones</B>、<B>terry</B>、および <B>pat</B> を追加しています。
 <PRE>   % <B>pts adduser -user jones terry pat -group smith:colleagues</B>
-   
+
 </PRE>
 <P>次の例は、ABC Corporation サブネット内のマシン項目を、グループ <B>bin-prot</B> に追加しています。
 ABC Corporation のサブネットの IP アドレスの範囲によって、システム管理者は、<B>pts createuser</B> の解説ページにある、ワイルドカードの表記法に従って、
 3 つのマシン項目にマシンをグループ化することができます。
 <PRE>   % <B>pts adduser -user 138.255.0.0 192.12.105.0 192.12.106.0 -group bin-prot</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>次のように、<B>-group</B> 引き数に指定された各グループの、保護データベース項目の 4 番目の privacy フラグの設定によって、必要な特権が異なります (フラグを表示するには、
@@ -92,11 +92,11 @@ ABC Corporation のサブネットの IP アドレスの範囲によって、システム管理者は、<B>p
 <P><A HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
 <P><A HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf210.htm">前ページ</A> &#124; <A HREF="auarf212.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf210.htm">前ページ</A> &#124; <A HREF="auarf212.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

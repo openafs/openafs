@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -25,8 +25,8 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>knfs -host</B> &lt;<VAR>host name</VAR>>  [<B>-id</B> &lt;<VAR>user ID (decimal)</VAR>>]
      [<B>-sysname</B> &lt;<VAR>host's '@sys' value</VAR>>]  [<B>-unlog</B>]  [<B>-tokens</B>]  [<B>-help</B>]
-    
-<B>knfs -ho</B> &lt;<VAR>host name</VAR>>  [<B>-i</B> &lt;<VAR>user ID (decimal)</VAR>>]  
+
+<B>knfs -ho</B> &lt;<VAR>host name</VAR>>  [<B>-i</B> &lt;<VAR>user ID (decimal)</VAR>>]
      [<B>-s</B> &lt;<VAR>host's '@sys' value</VAR>>]  [<B>-u</B>]  [<B>-t</B>]  [<B>-he</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -86,7 +86,7 @@ NFS ユーザーが、AFS コマンドを発行することができるようになります。
 <P><STRONG>出力</STRONG>
 <P>次のエラー・メッセージは、変換プログラム・マシン上で UID 検査が使用可能であること、および、
 <B>-id</B> 引き数に提供される値が、発行者のローカル UID と異なっていることを示しています。
-<PRE>   
+<PRE>
 knfs: 'passwd sync' モードの変換プログラム。
 リモート uid はローカル uid と同じでなければなりません。
 </PRE>
@@ -103,14 +103,14 @@ ABC Corporation のテスト・セル <B> test.abc.com</B> で、
    login: <B>smith</B>
    Password:
    AFS(R) login
-   
+
    % <B>klog admin -cell test.abc.com</B>
    Password:
-   
+
    % <B>knfs nfscli1.abc.com 1020</B>
-   
+
    % <B>exit</B>
-   
+
 </PRE>
 <P>次の例は、ユーザー <B>smith</B> が、
 <B>telnet</B> プログラム経由で、再びマシン <B>tx4</B> に接続し、トークンを破棄したことを示しています。
@@ -119,9 +119,9 @@ ABC Corporation のテスト・セル <B> test.abc.com</B> で、
    login: <B>smith</B>
    Password:
    AFS(R) login
-   
+
    % <B>knfs nfscli1.abc.com 1020 -unlog</B>
- 
+
    % <B>exit</B>
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
@@ -130,11 +130,11 @@ ABC Corporation のテスト・セル <B> test.abc.com</B> で、
 <P><A HREF="auarf200.htm#HDRKLOG">klog</A>
 <P><A HREF="auarf208.htm#HDRPAGSH">pagsh</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf200.htm">前ページ</A> &#124; <A HREF="auarf202.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf200.htm">前ページ</A> &#124; <A HREF="auarf202.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -66,7 +66,7 @@ BOOL CALLBACK SalvageDlgProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
  *
  */
 BOOL ShowSalvageDlg(HWND hParent, LPCTSTR pszPartitionName)
-{	
+{
     ASSERT(pszPartitionName);
 
     lstrcpy(szPartitionName, pszPartitionName);
@@ -129,7 +129,7 @@ BOOL CALLBACK SalvageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 	    break;
 	}
 	break;
-    }		
+    }
 
     return FALSE;
 }
@@ -164,7 +164,7 @@ static void OnInitDialog(HWND hwndDlg)
 	SetCheck(hDlg, IDC_SERVER);
     } else
 	SetCheck(hDlg, IDC_PARTITION);
-	
+
     // Close the Advanced portion of the dialog
     OnAdvanced();
 }
@@ -175,7 +175,7 @@ static void OnAdvanced()
 
     bAdvanced = !bAdvanced;
 
-    ShowAndEnable(hDlg, IDC_ADVANCED_FRAME, bAdvanced);	
+    ShowAndEnable(hDlg, IDC_ADVANCED_FRAME, bAdvanced);
     ShowAndEnable(hDlg, IDC_LOG_FILE, bAdvanced);
     ShowAndEnable(hDlg, IDC_LOG_FILE_LABEL, bAdvanced);
     ShowAndEnable(hDlg, IDC_NUM_PROCESSES, bAdvanced);
@@ -199,12 +199,12 @@ static void OnAdvanced()
     if (nOffset == 0) {
         // Find the frame containing the things we will hide or show
         HWND hFrame = GetDlgItem(hDlg, IDC_ADVANCED_FRAME);
-    
+
         // Get its dimensions
         RECT rectFrame;
         GetWindowRect(hFrame, &rectFrame);
 
-        // Find the distance between the bottom of the dialog and the top of the frame    
+        // Find the distance between the bottom of the dialog and the top of the frame
         nOffset = rectDlg.bottom - rectFrame.top - 3;
     }
 
@@ -212,7 +212,7 @@ static void OnAdvanced()
 
     if (!bAdvanced)
 	nCurOffset *= -1;
-	
+
     // Adjust dialog position
     MoveWindow(hDlg, rectDlg.left, rectDlg.top, rectDlg.right - rectDlg.left, rectDlg.bottom - rectDlg.top + nCurOffset, TRUE);
 
@@ -246,7 +246,7 @@ static void UpdateControls()
 	bEnable = !!lstrlen(szNumProcesses);
 
     SetEnable(hDlg, IDOK, (ENABLE_STATE)bEnable);
-}	
+}
 
 /*
  * Utility Functions _________________________________________________________________
@@ -280,7 +280,7 @@ static BOOL OnSalvage()
 
         if (!GetHandles(hDlg))
             return FALSE;
-    }	
+    }
 
     return TRUE;
 }
@@ -289,7 +289,7 @@ static DWORD WINAPI Salvage(LPVOID param)
 {
     afs_status_t nStatus;
     void *hServer;
-    int nResult; 
+    int nResult;
 
     nResult = bos_ServerOpen(g_hCell, GetHostnameA(), &hServer, &nStatus);
     if (!nResult) {
@@ -304,7 +304,7 @@ static DWORD WINAPI Salvage(LPVOID param)
     	ShowError(hDlg, nStatus, IDS_SALVAGE_ERROR);
 
     bos_ServerClose(hServer, &nStatus);
-    
+
     g_CfgData.bReuseAdminInfo = nResult;
 
     return nResult;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,15 +50,15 @@ void cm_InitConn(void)
     DWORD dwValue;
     DWORD dummyLen;
     HKEY parmKey;
-        
+
     if (osi_Once(&once)) {
 	lock_InitializeRWLock(&cm_connLock, "connection global lock",
                                LOCK_HIERARCHY_CONN_GLOBAL);
 
         /* keisa - read timeout value for lanmanworkstation  service.
-         * jaltman - as per 
+         * jaltman - as per
          *   http://support.microsoft.com:80/support/kb/articles/Q102/0/67.asp&NoWebContent=1
-         * the SessTimeout is a minimum timeout not a maximum timeout.  Therefore, 
+         * the SessTimeout is a minimum timeout not a maximum timeout.  Therefore,
          * I believe that the default should not be short.  Instead, we should wait until
          * RX times out before reporting a timeout to the SMB client.
          */
@@ -69,14 +69,14 @@ void cm_InitConn(void)
             BOOL extTimeouts = msftSMBRedirectorSupportsExtendedTimeouts();
 
             if (extTimeouts) {
-                /* 
+                /*
                  * The default value is 1000 seconds.  However, this default
-                 * will not apply to "\\AFS" unless "AFS" is listed in 
+                 * will not apply to "\\AFS" unless "AFS" is listed in
                  * ServersWithExtendedSessTimeout which we will add when we
                  * create the ExtendedSessTimeout value in smb_Init()
                  */
                 dummyLen = sizeof(DWORD);
-                code = RegQueryValueEx(parmKey, 
+                code = RegQueryValueEx(parmKey,
                                        LANMAN_WKS_EXT_SESSION_TIMEOUT,
                                         NULL, NULL,
                                         (BYTE *) &dwValue, &dummyLen);
@@ -84,10 +84,10 @@ void cm_InitConn(void)
                     RDRtimeout = dwValue;
                     afsi_log("lanmanworkstation : ExtSessTimeout %u", RDRtimeout);
                 }
-            } 
+            }
             if (!extTimeouts || code != ERROR_SUCCESS) {
                 dummyLen = sizeof(DWORD);
-                code = RegQueryValueEx(parmKey, 
+                code = RegQueryValueEx(parmKey,
                                        LANMAN_WKS_SESSION_TIMEOUT,
                                        NULL, NULL,
                                        (BYTE *) &dwValue, &dummyLen);
@@ -133,16 +133,16 @@ void cm_InitConn(void)
             RegCloseKey(parmKey);
 	}
 
-        /* 
-         * If these values were not set via cpp macro or obtained 
+        /*
+         * If these values were not set via cpp macro or obtained
          * from the registry, we use a value that is derived from
          * the smb redirector session timeout (RDRtimeout).
          *
          * The UNIX cache manager uses 120 seconds for the hard dead
          * timeout and 50 seconds for the connection and idle timeouts.
          *
-         * We base our values on those while making sure we leave 
-         * enough time for overhead.  
+         * We base our values on those while making sure we leave
+         * enough time for overhead.
          */
 	if (ConnDeadtimeout == 0) {
 	    ConnDeadtimeout = (unsigned short) ((RDRtimeout / 2) < 50 ? (RDRtimeout / 2) : 50);
@@ -179,13 +179,13 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     }
 
     cellp = cm_FindCellByID(fidp->cell, 0);
-    if (!cellp) 
+    if (!cellp)
         return CM_ERROR_NOSUCHCELL;
 
     code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, CM_GETVOL_FLAG_CREATE, &volp);
-    if (code) 
+    if (code)
         return code;
-    
+
     *serversppp = cm_GetVolServers(volp, fidp->volume, userp, reqp);
 
     lock_ObtainRead(&cm_volumeLock);
@@ -212,8 +212,8 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
  */
 int
 cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
-           struct cm_fid *fidp, 
-           AFSVolSync *volSyncp, 
+           struct cm_fid *fidp,
+           AFSVolSync *volSyncp,
            cm_serverRef_t * serversp,
            cm_callbackRequest_t *cbrp, long errorCode)
 {
@@ -263,7 +263,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     /* if timeout - check that it did not exceed the HardDead timeout
      * and retry */
-    
+
     /* timeleft - get it from reqp the same way as cm_ConnByMServers does */
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
     timeLeft = HardDeadtimeout - timeUsed;
@@ -280,7 +280,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 if ( refp->server )
                     cellp = refp->server->cellp;
             }
-        } 
+        }
         if (cellp == NULL && fidp) {
             cellp = cm_FindCellByID(fidp->cell, 0);
         }
@@ -303,15 +303,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }
     }
 
-    /* if there is nosuchvolume, then we have a situation in which a 
-     * previously known volume no longer has a set of servers 
+    /* if there is nosuchvolume, then we have a situation in which a
+     * previously known volume no longer has a set of servers
      * associated with it.  Either the volume has moved or
      * the volume has been deleted.  Try to find a new server list
      * until the timeout period expires.
      */
     else if (errorCode == CM_ERROR_NOSUCHVOLUME) {
 	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_NOSUCHVOLUME.");
-        /* 
+        /*
          * The VNOVOL or VL_NOENT error has already been translated
          * to CM_ERROR_NOSUCHVOLUME.  There is nothing for us to do.
          */
@@ -319,7 +319,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     else if (errorCode == CM_ERROR_ALLDOWN) {
 	/* Servers marked DOWN will be restored by the background daemon
-	 * thread as they become available.  The volume status is 
+	 * thread as they become available.  The volume status is
          * updated as the server state changes.
 	 */
         if (fidp) {
@@ -334,8 +334,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     else if (errorCode == CM_ERROR_ALLOFFLINE) {
-        /* Volume instances marked offline will be restored by the 
-         * background daemon thread as they become available 
+        /* Volume instances marked offline will be restored by the
+         * background daemon thread as they become available
          */
         if (fidp) {
             osi_Log2(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE (FS cell %s vol 0x%x)",
@@ -344,8 +344,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             format = "All servers are offline when accessing cell %s volume %d.";
 	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, cellp->name, fidp->volume);
 
-            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
-                                      CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
+                                      CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                       &volp);
             if (code == 0) {
                 /*
@@ -371,7 +371,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }
     }
     else if (errorCode == CM_ERROR_ALLBUSY) {
-        /* Volumes that are busy cannot be determined to be non-busy 
+        /* Volumes that are busy cannot be determined to be non-busy
          * without actually attempting to access them.
          */
         if (fidp) { /* File Server query */
@@ -381,15 +381,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             format = "All servers are busy when accessing cell %s volume %d.";
 	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, cellp->name, fidp->volume);
 
-            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
-                                     CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
+                                     CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                      &volp);
             if (code == 0) {
                 if (timeLeft > 7) {
                     thrd_Sleep(5000);
-                    
+
                     statep = cm_VolumeStateByID(volp, fidp->volume);
-                    if (statep->state != vl_offline && 
+                    if (statep->state != vl_offline &&
                          statep->state != vl_busy &&
                          statep->state != vl_unknown) {
                         retry = 1;
@@ -407,7 +407,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                                 continue;
                             if (tsrp->status == srv_busy) {
                                 tsrp->status = srv_not_busy;
-                            }       
+                            }
                         }
                         lock_ReleaseWrite(&cm_serverLock);
                         if (free_svr_list) {
@@ -491,8 +491,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 tsrp->status = srv_busy;
                 if (fidp) { /* File Server query */
                     lock_ReleaseWrite(&cm_serverLock);
-                    code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp, 
-                                             CM_GETVOL_FLAG_NO_LRU_UPDATE, 
+                    code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
+                                             CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                              &volp);
                     if (code == 0)
                         statep = cm_VolumeStateByID(volp, fidp->volume);
@@ -502,7 +502,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             }
         }
         lock_ReleaseWrite(&cm_serverLock);
-        
+
         if (statep) {
             cm_UpdateVolumeStatus(volp, statep->ID);
             lock_ObtainRead(&cm_volumeLock);
@@ -521,8 +521,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     /* special codes:  missing volumes */
     else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE ||
-             errorCode == VSALVAGE || errorCode == VNOSERVICE || errorCode == VIO) 
-    {       
+             errorCode == VSALVAGE || errorCode == VNOSERVICE || errorCode == VIO)
+    {
         /* In case of timeout */
         reqp->volumeError = errorCode;
 
@@ -695,15 +695,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
          * reported idle for longer than idleDeadTime
          * don't mark server as down but don't retry
          * this is to prevent the SMB session from timing out
-         * In addition, we log an event to the event log 
+         * In addition, we log an event to the event log
          */
 
         if (serverp) {
-            sprintf(addr, "%d.%d.%d.%d", 
+            sprintf(addr, "%d.%d.%d.%d",
                     ((serverp->addr.sin_addr.s_addr & 0xff)),
                     ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
                     ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
             LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
             osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime or idleDeadtime exceeded addr[%s]",
@@ -775,12 +775,12 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         if (errorCode == RX_CALL_DEAD)
             osi_Log2(afsd_logp, "cm_Analyze: Rx Call Dead addr[%s] forcedNew[%s]",
-                     osi_LogSaveString(afsd_logp,addr), 
+                     osi_LogSaveString(afsd_logp,addr),
                      (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
         else
             osi_Log3(afsd_logp, "cm_Analyze: Rx Misc Error[%d] addr[%s] forcedNew[%s]",
                      errorCode,
-                     osi_LogSaveString(afsd_logp,addr), 
+                     osi_LogSaveString(afsd_logp,addr),
                      (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
 
         if (serverp) {
@@ -929,59 +929,59 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             case VL_INDEXERANGE    : s = "VL_INDEXERANGE";     break;
             case VL_MULTIPADDR     : s = "VL_MULTIPADDR";      break;
             case VL_BADMASK        : s = "VL_BADMASK";         break;
-	    case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break; 			
-	    case CM_ERROR_NOSUCHVOLUME	    : s = "CM_ERROR_NOSUCHVOLUME";       break; 			
-	    case CM_ERROR_TIMEDOUT	    : s = "CM_ERROR_TIMEDOUT";           break; 		
-	    case CM_ERROR_RETRY		    : s = "CM_ERROR_RETRY";              break; 
-	    case CM_ERROR_NOACCESS	    : s = "CM_ERROR_NOACCESS";           break; 
-	    case CM_ERROR_NOSUCHFILE	    : s = "CM_ERROR_NOSUCHFILE";         break; 			
-	    case CM_ERROR_STOPNOW	    : s = "CM_ERROR_STOPNOW";            break; 			
-	    case CM_ERROR_TOOBIG	    : s = "CM_ERROR_TOOBIG";             break; 				
-	    case CM_ERROR_INVAL		    : s = "CM_ERROR_INVAL";              break; 				
-	    case CM_ERROR_BADFD		    : s = "CM_ERROR_BADFD";              break; 				
-	    case CM_ERROR_BADFDOP	    : s = "CM_ERROR_BADFDOP";            break; 			
-	    case CM_ERROR_EXISTS	    : s = "CM_ERROR_EXISTS";             break; 				
-	    case CM_ERROR_CROSSDEVLINK	    : s = "CM_ERROR_CROSSDEVLINK";       break; 			
-	    case CM_ERROR_BADOP		    : s = "CM_ERROR_BADOP";              break; 				
-	    case CM_ERROR_BADPASSWORD       : s = "CM_ERROR_BADPASSWORD";        break;         
-	    case CM_ERROR_NOTDIR	    : s = "CM_ERROR_NOTDIR";             break; 				
-	    case CM_ERROR_ISDIR		    : s = "CM_ERROR_ISDIR";              break; 				
-	    case CM_ERROR_READONLY	    : s = "CM_ERROR_READONLY";           break; 			
-	    case CM_ERROR_WOULDBLOCK	    : s = "CM_ERROR_WOULDBLOCK";         break; 			
-	    case CM_ERROR_QUOTA		    : s = "CM_ERROR_QUOTA";              break; 				
-	    case CM_ERROR_SPACE		    : s = "CM_ERROR_SPACE";              break; 				
-	    case CM_ERROR_BADSHARENAME	    : s = "CM_ERROR_BADSHARENAME";       break; 			
-	    case CM_ERROR_BADTID	    : s = "CM_ERROR_BADTID";             break; 				
-	    case CM_ERROR_UNKNOWN	    : s = "CM_ERROR_UNKNOWN";            break; 			
-	    case CM_ERROR_NOMORETOKENS	    : s = "CM_ERROR_NOMORETOKENS";       break; 			
-	    case CM_ERROR_NOTEMPTY	    : s = "CM_ERROR_NOTEMPTY";           break; 			
-	    case CM_ERROR_USESTD	    : s = "CM_ERROR_USESTD";             break; 				
-	    case CM_ERROR_REMOTECONN	    : s = "CM_ERROR_REMOTECONN";         break; 			
-	    case CM_ERROR_ATSYS		    : s = "CM_ERROR_ATSYS";              break; 				
-	    case CM_ERROR_NOSUCHPATH	    : s = "CM_ERROR_NOSUCHPATH";         break; 			
-	    case CM_ERROR_CLOCKSKEW	    : s = "CM_ERROR_CLOCKSKEW";          break; 			
-	    case CM_ERROR_BADSMB	    : s = "CM_ERROR_BADSMB";             break; 				
-	    case CM_ERROR_ALLBUSY	    : s = "CM_ERROR_ALLBUSY";            break; 			
-	    case CM_ERROR_NOFILES	    : s = "CM_ERROR_NOFILES";            break; 			
-	    case CM_ERROR_PARTIALWRITE	    : s = "CM_ERROR_PARTIALWRITE";       break; 			
-	    case CM_ERROR_NOIPC		    : s = "CM_ERROR_NOIPC";              break; 				
-	    case CM_ERROR_BADNTFILENAME	    : s = "CM_ERROR_BADNTFILENAME";      break; 			
-	    case CM_ERROR_BUFFERTOOSMALL    : s = "CM_ERROR_BUFFERTOOSMALL";     break; 			
-	    case CM_ERROR_RENAME_IDENTICAL  : s = "CM_ERROR_RENAME_IDENTICAL";   break; 		
-	    case CM_ERROR_ALLOFFLINE        : s = "CM_ERROR_ALLOFFLINE";         break;          
-	    case CM_ERROR_AMBIGUOUS_FILENAME: s = "CM_ERROR_AMBIGUOUS_FILENAME"; break;  
-	    case CM_ERROR_BADLOGONTYPE	    : s = "CM_ERROR_BADLOGONTYPE";       break; 	    
-	    case CM_ERROR_GSSCONTINUE       : s = "CM_ERROR_GSSCONTINUE";        break;         
-	    case CM_ERROR_TIDIPC            : s = "CM_ERROR_TIDIPC";             break;              
-	    case CM_ERROR_TOO_MANY_SYMLINKS : s = "CM_ERROR_TOO_MANY_SYMLINKS";  break;   
-	    case CM_ERROR_PATH_NOT_COVERED  : s = "CM_ERROR_PATH_NOT_COVERED";   break;    
-	    case CM_ERROR_LOCK_CONFLICT     : s = "CM_ERROR_LOCK_CONFLICT";      break;       
-	    case CM_ERROR_SHARING_VIOLATION : s = "CM_ERROR_SHARING_VIOLATION";  break;   
-	    case CM_ERROR_ALLDOWN           : s = "CM_ERROR_ALLDOWN";            break;             
-	    case CM_ERROR_TOOFEWBUFS	    : s = "CM_ERROR_TOOFEWBUFS";         break; 			
-	    case CM_ERROR_TOOMANYBUFS	    : s = "CM_ERROR_TOOMANYBUFS";        break; 			
+	    case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break;
+	    case CM_ERROR_NOSUCHVOLUME	    : s = "CM_ERROR_NOSUCHVOLUME";       break;
+	    case CM_ERROR_TIMEDOUT	    : s = "CM_ERROR_TIMEDOUT";           break;
+	    case CM_ERROR_RETRY		    : s = "CM_ERROR_RETRY";              break;
+	    case CM_ERROR_NOACCESS	    : s = "CM_ERROR_NOACCESS";           break;
+	    case CM_ERROR_NOSUCHFILE	    : s = "CM_ERROR_NOSUCHFILE";         break;
+	    case CM_ERROR_STOPNOW	    : s = "CM_ERROR_STOPNOW";            break;
+	    case CM_ERROR_TOOBIG	    : s = "CM_ERROR_TOOBIG";             break;
+	    case CM_ERROR_INVAL		    : s = "CM_ERROR_INVAL";              break;
+	    case CM_ERROR_BADFD		    : s = "CM_ERROR_BADFD";              break;
+	    case CM_ERROR_BADFDOP	    : s = "CM_ERROR_BADFDOP";            break;
+	    case CM_ERROR_EXISTS	    : s = "CM_ERROR_EXISTS";             break;
+	    case CM_ERROR_CROSSDEVLINK	    : s = "CM_ERROR_CROSSDEVLINK";       break;
+	    case CM_ERROR_BADOP		    : s = "CM_ERROR_BADOP";              break;
+	    case CM_ERROR_BADPASSWORD       : s = "CM_ERROR_BADPASSWORD";        break;
+	    case CM_ERROR_NOTDIR	    : s = "CM_ERROR_NOTDIR";             break;
+	    case CM_ERROR_ISDIR		    : s = "CM_ERROR_ISDIR";              break;
+	    case CM_ERROR_READONLY	    : s = "CM_ERROR_READONLY";           break;
+	    case CM_ERROR_WOULDBLOCK	    : s = "CM_ERROR_WOULDBLOCK";         break;
+	    case CM_ERROR_QUOTA		    : s = "CM_ERROR_QUOTA";              break;
+	    case CM_ERROR_SPACE		    : s = "CM_ERROR_SPACE";              break;
+	    case CM_ERROR_BADSHARENAME	    : s = "CM_ERROR_BADSHARENAME";       break;
+	    case CM_ERROR_BADTID	    : s = "CM_ERROR_BADTID";             break;
+	    case CM_ERROR_UNKNOWN	    : s = "CM_ERROR_UNKNOWN";            break;
+	    case CM_ERROR_NOMORETOKENS	    : s = "CM_ERROR_NOMORETOKENS";       break;
+	    case CM_ERROR_NOTEMPTY	    : s = "CM_ERROR_NOTEMPTY";           break;
+	    case CM_ERROR_USESTD	    : s = "CM_ERROR_USESTD";             break;
+	    case CM_ERROR_REMOTECONN	    : s = "CM_ERROR_REMOTECONN";         break;
+	    case CM_ERROR_ATSYS		    : s = "CM_ERROR_ATSYS";              break;
+	    case CM_ERROR_NOSUCHPATH	    : s = "CM_ERROR_NOSUCHPATH";         break;
+	    case CM_ERROR_CLOCKSKEW	    : s = "CM_ERROR_CLOCKSKEW";          break;
+	    case CM_ERROR_BADSMB	    : s = "CM_ERROR_BADSMB";             break;
+	    case CM_ERROR_ALLBUSY	    : s = "CM_ERROR_ALLBUSY";            break;
+	    case CM_ERROR_NOFILES	    : s = "CM_ERROR_NOFILES";            break;
+	    case CM_ERROR_PARTIALWRITE	    : s = "CM_ERROR_PARTIALWRITE";       break;
+	    case CM_ERROR_NOIPC		    : s = "CM_ERROR_NOIPC";              break;
+	    case CM_ERROR_BADNTFILENAME	    : s = "CM_ERROR_BADNTFILENAME";      break;
+	    case CM_ERROR_BUFFERTOOSMALL    : s = "CM_ERROR_BUFFERTOOSMALL";     break;
+	    case CM_ERROR_RENAME_IDENTICAL  : s = "CM_ERROR_RENAME_IDENTICAL";   break;
+	    case CM_ERROR_ALLOFFLINE        : s = "CM_ERROR_ALLOFFLINE";         break;
+	    case CM_ERROR_AMBIGUOUS_FILENAME: s = "CM_ERROR_AMBIGUOUS_FILENAME"; break;
+	    case CM_ERROR_BADLOGONTYPE	    : s = "CM_ERROR_BADLOGONTYPE";       break;
+	    case CM_ERROR_GSSCONTINUE       : s = "CM_ERROR_GSSCONTINUE";        break;
+	    case CM_ERROR_TIDIPC            : s = "CM_ERROR_TIDIPC";             break;
+	    case CM_ERROR_TOO_MANY_SYMLINKS : s = "CM_ERROR_TOO_MANY_SYMLINKS";  break;
+	    case CM_ERROR_PATH_NOT_COVERED  : s = "CM_ERROR_PATH_NOT_COVERED";   break;
+	    case CM_ERROR_LOCK_CONFLICT     : s = "CM_ERROR_LOCK_CONFLICT";      break;
+	    case CM_ERROR_SHARING_VIOLATION : s = "CM_ERROR_SHARING_VIOLATION";  break;
+	    case CM_ERROR_ALLDOWN           : s = "CM_ERROR_ALLDOWN";            break;
+	    case CM_ERROR_TOOFEWBUFS	    : s = "CM_ERROR_TOOFEWBUFS";         break;
+	    case CM_ERROR_TOOMANYBUFS	    : s = "CM_ERROR_TOOMANYBUFS";        break;
             }
-            osi_Log2(afsd_logp, "cm_Analyze: ignoring error code 0x%x (%s)", 
+            osi_Log2(afsd_logp, "cm_Analyze: ignoring error code 0x%x (%s)",
                      errorCode, s);
             retry = 0;
         }
@@ -998,9 +998,9 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     if (connp)
         cm_PutConn(connp);
 
-    /* 
+    /*
      * clear the volume updated flag if we succeed.
-     * this way the flag will not prevent a subsequent volume 
+     * this way the flag will not prevent a subsequent volume
      * from being updated if necessary.
      */
     if (errorCode == 0)
@@ -1032,7 +1032,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
 #ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
-        
+
     /* leave 5 seconds margin of safety */
     timeLeft =  ConnDeadtimeout - timeUsed - 5;
     hardTimeLeft = HardDeadtimeout - timeUsed - 5;
@@ -1045,7 +1045,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
         tsp = tsrp->server;
         if (reqp->tokenIdleErrorServp) {
-            /* 
+            /*
              * search the list until we find the server
              * that failed last time.  When we find it
              * clear the error, skip it and try the one
@@ -1077,7 +1077,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                         if (timeLeft > ConnDeadtimeout)
                             timeLeft = ConnDeadtimeout;
 
-                        if (hardTimeLeft > HardDeadtimeout) 
+                        if (hardTimeLeft > HardDeadtimeout)
                             hardTimeLeft = HardDeadtimeout;
 
                         lock_ObtainMutex(&(*connpp)->mx);
@@ -1096,12 +1096,12 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
             lock_ObtainRead(&cm_serverLock);
             cm_PutServerNoLock(tsp);
         }
-    }   
+    }
     lock_ReleaseRead(&cm_serverLock);
 
     if (firstError == 0) {
         if (allDown) {
-            firstError = (reqp->tokenError ? reqp->tokenError : 
+            firstError = (reqp->tokenError ? reqp->tokenError :
                           (reqp->idleError ? RX_CALL_TIMEOUT : CM_ERROR_ALLDOWN));
             /*
              * if we experienced either a token error or and idle dead time error
@@ -1191,7 +1191,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         }
         secObjp = rxkad_NewClientSecurityObject(tcp->cryptlevel,
                                                 &ucellp->sessionKey, ucellp->kvno,
-                                                ucellp->ticketLen, ucellp->ticketp);    
+                                                ucellp->ticketLen, ucellp->ticketp);
     } else {
         /* normal auth */
         secIndex = 0;
@@ -1246,16 +1246,16 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
     lock_ObtainMutex(&userp->mx);
     lock_ObtainRead(&cm_connLock);
     for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
-        if (tcp->userp == userp) 
+        if (tcp->userp == userp)
             break;
     }
-    
+
     /* find ucell structure */
     ucellp = cm_GetUCell(userp, serverp->cellp);
     if (!tcp) {
         lock_ConvertRToW(&cm_connLock);
         for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
-            if (tcp->userp == userp) 
+            if (tcp->userp == userp)
                 break;
         }
         if (tcp) {
@@ -1340,13 +1340,13 @@ long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
                 allBusy = 0;
             }
         }
-    }   
+    }
     lock_ReleaseRead(&cm_serverLock);
     cm_FreeServerList(serverspp, 0);
 
     if (allDown)
 	return 0;
-    else if (allBusy) 
+    else if (allBusy)
 	return 0;
     else if (allOffline || (someBusy && someOffline))
 	return 0;
@@ -1354,9 +1354,9 @@ long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
 	return 1;
 }
 
-/* 
+/*
  * The returned cm_conn_t ** object is released in the subsequent call
- * to cm_Analyze().  
+ * to cm_Analyze().
  */
 long cm_ConnFromFID(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
                     cm_conn_t **connpp)

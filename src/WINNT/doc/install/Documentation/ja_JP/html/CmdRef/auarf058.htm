@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -27,22 +27,22 @@
 <P><STRONG>目的</STRONG>
 <P>キャッシュ・マネージャーの初期化および関連デーモンを開始します。
 <P><STRONG>構文</STRONG>
-<PRE><B>afsd</B> [-<B>blocks</B> &lt;<VAR>1024 byte blocks in cache</VAR>>]  
+<PRE><B>afsd</B> [-<B>blocks</B> &lt;<VAR>1024 byte blocks in cache</VAR>>]
      [<B>-files</B> &lt;<VAR>files in cache</VAR>>]
      [<B>-rootvol</B> &lt;<VAR>name of AFS root volume</VAR>>]
      [<B>-stat</B> &lt;<VAR>number of stat entries</VAR>>]
-     [<B>-memcache</B>]  [<B>-cachedir</B> &lt;<VAR>cache directory</VAR>>]  
+     [<B>-memcache</B>]  [<B>-cachedir</B> &lt;<VAR>cache directory</VAR>>]
      [<B>-mountdir</B> &lt;<VAR>mount location</VAR>>]
-     [<B>-daemons</B> &lt;<VAR>number of daemons to use</VAR>>]  
-     [<B>-nosettime</B>]  [<B>-verbose</B>]  [<B>-rmtsys</B>]  [<B>-debug</B>]  
+     [<B>-daemons</B> &lt;<VAR>number of daemons to use</VAR>>]
+     [<B>-nosettime</B>]  [<B>-verbose</B>]  [<B>-rmtsys</B>]  [<B>-debug</B>]
      [<B>-chunksize</B> &lt;<VAR>log(2) of chunk size</VAR>>]
      [<B>-dcache</B> &lt;<VAR>number of dcache entries</VAR>>]
-     [<B>-volumes</B> &lt;<VAR>number of volume entries</VAR>>]  
+     [<B>-volumes</B> &lt;<VAR>number of volume entries</VAR>>]
      [<B>-biods</B> &lt;<VAR>number of bkg I/O daemons (aix vm)</VAR>>]
      [<B>-prealloc</B> &lt;<VAR>number of 'small' preallocated blocks</VAR>>]
      [<B>-confdir</B> &lt;<VAR>configuration directory</VAR>>]
-     [<B>-logfile</B> &lt;<VAR>Place to keep the CM log</VAR>>]  
-     [<B>-waitclose</B>]  [<B>-shutdown</B>]  [<B>-enable_peer_stats</B>]  
+     [<B>-logfile</B> &lt;<VAR>Place to keep the CM log</VAR>>]
+     [<B>-waitclose</B>]  [<B>-shutdown</B>]  [<B>-enable_peer_stats</B>]
      [<B>-enable_process_stats</B>]  [<B>-help</B>]
 </PRE>
 <P>このコマンドは、AFS コマンド・セットの構文規則に準拠していません。コマンド名およびすべてのオプション名は省略せずにすべて指定してください。
@@ -83,7 +83,7 @@
 <B>afsd</B> プログラムは、キャッシュ・マネージャーを初期化せずに終了し、標準出力ストリームに次のメッセージを出力します。
 <P>
 <PRE>   afsd: <VAR>number</VAR> KB での memCache の割り振りに失敗しました。
-   
+
 </PRE>
 <P>
 <P>ここで、<VAR>number</VAR> は、障害発生直前に割り振られていたバイト数を示します。
@@ -244,15 +244,15 @@ Rx Monitoring API を使用します。
 <P><STRONG>例</STRONG>
 <P><B>afsd</B> コマンドは通常、コマンド・シェル・プロンプトで入力されるのではなく、マシンの AFS 初期化ファイルに組み込まれます。最大ディスク・キャッシュのための適切な形式です。
 <PRE>   /usr/vice/etc/afsd
-   
+
 </PRE>
 <P>以下のコマンドは、5 ユーザー以上に応対する NFS/AFS 変換プログラム・マシンのように振る舞うマシンが使用可能な時に適切です。
 <PRE>   /usr/vice/etc/afsd -daemons 4 -rmtsys
-   
+
 </PRE>
 <P>以下のコマンドは、メモリー・キャッシュを初期化し、チャンクのサイズに 16 KB (2<SUP>14</SUP>) を設定します。
 <PRE>   /usr/vice/etc/afsd -memcache -chunksize 14
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
@@ -268,11 +268,11 @@ Rx Monitoring API を使用します。
 <A NAME="IDX4196"></A>
 <A NAME="IDX4197"></A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf057.htm">前ページ</A> &#124; <A HREF="auarf059.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf057.htm">前ページ</A> &#124; <A HREF="auarf059.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

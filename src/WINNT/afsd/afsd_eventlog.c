@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////
 //
 //
-//		E V E N T   L O G G I N G   F U N C T I O N S 
+//		E V E N T   L O G G I N G   F U N C T I O N S
 //
 //
 ////////////////////////////////////////////////////////////////////
@@ -21,14 +21,14 @@ static BOOL	AddEventSource(void);
 static BOOL
 GetServicePath(LPTSTR lpPathBuf, PDWORD pdwPathBufSize)
 {
-    HKEY	hKey = NULL; 
+    HKEY	hKey = NULL;
     DWORD	dwData = 0;
     BOOL	bRet = TRUE;
 
     do {
 	// Open key
 	if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_SUBKEY, 0, KEY_QUERY_VALUE, &hKey ) )
-	{		
+	{
 	    bRet = FALSE;
 	    break;
 	}
@@ -42,20 +42,20 @@ GetServicePath(LPTSTR lpPathBuf, PDWORD pdwPathBufSize)
 			      NULL,			// type buffer
 			      (LPBYTE) lpPathBuf,	// data buffer
 			      &dwData))		// size of data buffer
-	{	
+	{
 	    bRet = FALSE;
 	    break;
 	}
-		
+
 	*pdwPathBufSize = dwData;
 
     } while (0);
-				
+
     if (hKey != NULL)
-	RegCloseKey(hKey); 
+	RegCloseKey(hKey);
 
     return bRet;
-} 
+}
 
 //
 // Ensure name for message file is in proper location in Registry.
@@ -63,9 +63,9 @@ GetServicePath(LPTSTR lpPathBuf, PDWORD pdwPathBufSize)
 static BOOL
 AddEventSource()
 {
-    HKEY	hKey = NULL, hLogKey; 
-    UCHAR	szBuf[MAX_PATH] = "afsd_service.exe"; 
-    DWORD	dwData, dwDisposition; 
+    HKEY	hKey = NULL, hLogKey;
+    UCHAR	szBuf[MAX_PATH] = "afsd_service.exe";
+    DWORD	dwData, dwDisposition;
     static BOOL	bRet = TRUE;
     static BOOL bOnce = TRUE;
 
@@ -74,71 +74,71 @@ AddEventSource()
 
     if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_APPLOG_SUBKEY, 0,
                        KEY_SET_VALUE, &hLogKey ) )
-    {	        		
-        // nope - create it		
+    {
+        // nope - create it
         if ( RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_APPLOG_SUBKEY, 0,
                              NULL, REG_OPTION_NON_VOLATILE,
                              KEY_ALL_ACCESS, NULL, &hLogKey,
-                             &dwDisposition)) 
-        {	
+                             &dwDisposition))
+        {
             bRet = FALSE;
             goto done;
         }
     }
 
-    // Let's see if key already exists as a subkey under the 
+    // Let's see if key already exists as a subkey under the
     // Application key in the EventLog registry key.  If not,
     // create it.
     if ( RegOpenKeyEx( hLogKey, AFSREG_CLT_APPLOG_SUBKEY, 0,
                        KEY_SET_VALUE, &hKey ) )
-    {	        		
-        // nope - create it		
+    {
+        // nope - create it
         if ( RegCreateKeyEx(hLogKey, AFSREG_CLT_APPLOG_SUBKEY, 0,
                              NULL, REG_OPTION_NON_VOLATILE,
                              KEY_ALL_ACCESS, NULL, &hKey,
-                             &dwDisposition)) 
-        {	        
+                             &dwDisposition))
+        {
             bRet = FALSE;
             goto done;
         }
     }
 
-    // Add the name to the EventMessageFile subkey. 
-    if ( RegSetValueEx( hKey,			// subkey handle 
-                        AFSREG_APPLOG_MSGFILE_VALUE,	// value name 
-                        0,			// must be zero 
-                        REG_SZ,		        // value type 
-                        (LPBYTE) szBuf,		// pointer to value data 
+    // Add the name to the EventMessageFile subkey.
+    if ( RegSetValueEx( hKey,			// subkey handle
+                        AFSREG_APPLOG_MSGFILE_VALUE,	// value name
+                        0,			// must be zero
+                        REG_SZ,		        // value type
+                        (LPBYTE) szBuf,		// pointer to value data
                         (DWORD)strlen(szBuf) + 1))	// length of value data
-    {	        
+    {
         bRet = FALSE;
         goto done;
     }
 
-    // Set the supported event types in the TypesSupported subkey. 
-    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | 
-        EVENTLOG_INFORMATION_TYPE; 
+    // Set the supported event types in the TypesSupported subkey.
+    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
+        EVENTLOG_INFORMATION_TYPE;
 
-    if ( RegSetValueEx( hKey,			// subkey handle 
-                        AFSREG_APPLOG_MSGTYPE_VALUE,	// value name 
-                        0,			// must be zero 
-                        REG_DWORD,		// value type 
-                        (LPBYTE) &dwData,	// pointer to value data 
+    if ( RegSetValueEx( hKey,			// subkey handle
+                        AFSREG_APPLOG_MSGTYPE_VALUE,	// value name
+                        0,			// must be zero
+                        REG_DWORD,		// value type
+                        (LPBYTE) &dwData,	// pointer to value data
                         sizeof(DWORD)))		// length of value data
-    {	        
+    {
         bRet = FALSE;
 	goto done;
     }
-	    
+
   done:
     if (hKey != NULL)
-	RegCloseKey(hKey); 
+	RegCloseKey(hKey);
 
     if (hLogKey != NULL)
-	RegCloseKey(hLogKey); 
+	RegCloseKey(hLogKey);
 
     return bRet;
-} 	
+}
 
 // Log an event with a formatted system message as the (only) substitution
 // string, from the given message ID.
@@ -388,6 +388,6 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
         CloseHandle(hMutex);
 
     DeregisterEventSource(hEventSource);
-}	
+}
 
 

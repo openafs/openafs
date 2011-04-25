@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -32,7 +32,7 @@ static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
     char tc;
     int sawEquals;
     int sawBracket;
-        
+
     sawEquals = 0;
     sawBracket = 0;
     for(tp = lineBufferp; *tp; tp++) {
@@ -45,17 +45,17 @@ static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 	}
 
 	/* comment or line end */
-        if (tc == '#' || tc == '\r' || tc == '\n') 
+        if (tc == '#' || tc == '\r' || tc == '\n')
             break;
 
 	/* square bracket comment -- look for closing delim */
 	if (tc == '[') {
-            sawBracket = 1; 
+            sawBracket = 1;
             continue;
-        }	
+        }
 
 	/* space or tab */
-        if (tc == ' ' || tc == '\t') 
+        if (tc == ' ' || tc == '\t')
             continue;
 
         if (tc == '=') {
@@ -66,8 +66,8 @@ static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
         /* now we have a real character, put it in the appropriate bucket */
         if (sawEquals == 0) {
 	    *leftp++ = tc;
-        }	
-        else {	
+        }
+        else {
 	    *rightp++ = tc;
         }
     }
@@ -93,7 +93,7 @@ IsWindowsModule(const char * name)
     p = strrchr(name, '.');
     if (p) {
         /* as of 2009-09-04 these are not valid ICANN ccTLDs */
-	if (i == 1 && 
+	if (i == 1 &&
 	    (!cm_stricmp_utf8N(p,".dll") ||
 	     !cm_stricmp_utf8N(p,".exe") ||
 	     !cm_stricmp_utf8N(p,".ini") ||
@@ -148,13 +148,13 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
     if (*wdir)
         tfilep = fopen(wdir, "r");
 
-    if (!tfilep) 
+    if (!tfilep)
         return -2;
 
     bestp = fopen(wdir, "r");
-    
+
 #ifdef CELLSERV_DEBUG
-    osi_Log2(afsd_logp,"cm_searchfile fopen handle[%p], wdir[%s]", bestp, 
+    osi_Log2(afsd_logp,"cm_searchfile fopen handle[%p], wdir[%s]", bestp,
 	     osi_LogSaveString(afsd_logp,wdir));
 #endif
     /* have we seen the cell line for the guy we're looking for? */
@@ -184,7 +184,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
 		    return (foundCell? 0 : -3);
 		}
 	    }
-        }	
+        }
 
         /* turn trailing cr or lf into null */
         tp = strrchr(lineBuffer, '\r');
@@ -207,7 +207,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                 return(foundCell ? 0 : -6);
             }
 
-            /* 
+            /*
              * terminate the cellname at the first white space
              * leaving 'tp' pointing to the next string if any
              */
@@ -218,7 +218,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                 if (*tp != '#') {
                     linkp = tp;
                     for (; tp && !isspace(*tp); tp++);
-                    if (tp) 
+                    if (tp)
                         *tp = '\0';
                 }
             }
@@ -244,7 +244,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                 }
                 inRightCell = 1;
 		tracking = 0;
-#ifdef CELLSERV_DEBUG                
+#ifdef CELLSERV_DEBUG
 		osi_Log2(afsd_logp, "cm_searchfile is cell inRightCell[%p], linebuffer[%s]",
 			 inRightCell, osi_LogSaveString(afsd_logp,lineBuffer));
 #endif
@@ -343,8 +343,8 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                 if (!thp) {
                     afs_uint32 ip_addr;
 		    unsigned int c1, c2, c3, c4;
-                    
-                    /* Since there is no gethostbyname() data 
+
+                    /* Since there is no gethostbyname() data
 		     * available we will read the IP address
 		     * stored in the CellServDB file
                      */
@@ -445,13 +445,13 @@ cm_EnumerateCellFile(afs_uint32 client, cm_enumCellProc_t *procp, void *rockp)
  * The CellServDB registry schema is as follows:
  *
  * HKLM\SOFTWARE\OpenAFS\Client\CellServDB\[cellname]\
- *   "LinkedCell"    REG_SZ "[cellname]" 
+ *   "LinkedCell"    REG_SZ "[cellname]"
  *   "Description"   REG_SZ "[comment]"
  *   "ForceDNS"      DWORD  {0,1}
  *
  * HKLM\SOFTWARE\OpenAFS\Client\CellServDB\[cellname]\[servername]\
- *   "HostName"      REG_SZ "[hostname]" 
- *   "IPv4Address"   REG_SZ "[address]" 
+ *   "HostName"      REG_SZ "[hostname]"
+ *   "IPv4Address"   REG_SZ "[address]"
  *   "IPv6Address"   REG_SZ "[address]"   <future>
  *   "Comment"       REG_SZ "[comment]"
  *   "Rank"          DWORD  "0..65535"
@@ -465,7 +465,7 @@ cm_EnumerateCellFile(afs_uint32 client, cm_enumCellProc_t *procp, void *rockp)
  * to a valid server configuration, the return code is success.
  * This prevents failover to the CellServDB file or DNS.
  */
-long cm_SearchCellRegistry(afs_uint32 client, 
+long cm_SearchCellRegistry(afs_uint32 client,
                            char *cellNamep, char *newCellNamep,
                            char *linkedNamep,
                            cm_configProc_t *procp, void *rockp)
@@ -501,7 +501,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
                       &hkCellServDB) != ERROR_SUCCESS)
         return CM_ERROR_NOSUCHCELL;
 
-    if (RegOpenKeyEx( hkCellServDB, 
+    if (RegOpenKeyEx( hkCellServDB,
                       cellNamep,
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
@@ -526,13 +526,13 @@ long cm_SearchCellRegistry(afs_uint32 client,
         if (code != ERROR_SUCCESS)
             dwCells = 0;
 
-        /* 
+        /*
          * We search the entire list to ensure that there is only
          * one prefix match.  If there is more than one, we return none.
          */
         for ( dwIndex = 0; dwIndex < dwCells; dwIndex++ ) {
             dwSize = CELL_MAXNAMELEN;
-            code = RegEnumKeyEx( hkCellServDB, dwIndex, szCellName, &dwSize, NULL, 
+            code = RegEnumKeyEx( hkCellServDB, dwIndex, szCellName, &dwSize, NULL,
                                  NULL, NULL, &ftLastWriteTime);
             if (code != ERROR_SUCCESS)
                 continue;
@@ -554,7 +554,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
                 break;
             }
 
-            if (RegOpenKeyEx( hkCellServDB, 
+            if (RegOpenKeyEx( hkCellServDB,
                               szCellName,
                               0,
                               KEY_READ|KEY_QUERY_VALUE,
@@ -601,7 +601,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
         dwForceDNS = 0;
     }
 
-    /* 
+    /*
      * Using the defined server list.  Enumerate and populate
      * the server list for the cell.
      */
@@ -623,22 +623,22 @@ long cm_SearchCellRegistry(afs_uint32 client,
 
     for ( dwIndex = 0; dwIndex < dwServers; dwIndex++ ) {
         dwSize = MAXHOSTCHARS;
-        code = RegEnumKeyEx( hkCellName, dwIndex, szServerName, &dwSize, NULL, 
+        code = RegEnumKeyEx( hkCellName, dwIndex, szServerName, &dwSize, NULL,
                              NULL, NULL, &ftLastWriteTime);
         if (code != ERROR_SUCCESS)
             continue;
 
         szServerName[MAXHOSTCHARS-1] = '\0';
-        if (RegOpenKeyEx( hkCellName, 
+        if (RegOpenKeyEx( hkCellName,
                           szServerName,
                           0,
                           KEY_READ|KEY_QUERY_VALUE,
                           &hkServerName) != ERROR_SUCCESS)
             continue;
 
-        /* We have a handle to a valid server key.  Now we need 
+        /* We have a handle to a valid server key.  Now we need
          * to add the server to the cell */
-        
+
         /* First, see if there is an alternate hostname specified */
         dwSize = MAXHOSTCHARS;
         code = RegQueryValueEx(hkServerName, "HostName", NULL, &dwType,
@@ -691,7 +691,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
             afs_uint32 ip_addr;
             unsigned int c1, c2, c3, c4;
 
-            /* Since there is no gethostbyname() data 
+            /* Since there is no gethostbyname() data
              * available we will read the IP address
              * stored in the CellServDB file
              */
@@ -866,12 +866,12 @@ long cm_EnumerateCellRegistry(afs_uint32 client, cm_enumCellProc_t *procp, void 
     if (code != ERROR_SUCCESS)
         dwCells = 0;
 
-    /* 
-     * Enumerate each Cell and 
+    /*
+     * Enumerate each Cell and
      */
     for ( dwIndex = 0; dwIndex < dwCells; dwIndex++ ) {
         dwSize = CELL_MAXNAMELEN;
-        code = RegEnumKeyEx( hkCellServDB, dwIndex, szCellName, &dwSize, NULL, 
+        code = RegEnumKeyEx( hkCellServDB, dwIndex, szCellName, &dwSize, NULL,
                              NULL, NULL, &ftLastWriteTime);
         if (code != ERROR_SUCCESS)
             continue;
@@ -935,14 +935,14 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
        return -1;  /* not found */
 }
 
-/* use cm_GetConfigDir() plus AFS_CELLSERVDB to 
- * generate the fully qualified name of the CellServDB 
+/* use cm_GetConfigDir() plus AFS_CELLSERVDB to
+ * generate the fully qualified name of the CellServDB
  * file.
  */
 long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
 {
     size_t tlen;
-    
+
     cm_GetConfigDir(cellNamep, len);
 
     /* add trailing backslash, if required */
@@ -961,8 +961,8 @@ long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
     return 0;
 }
 
-/* look up the root cell's name in the Registry 
- * Input buffer must be at least CELL_MAXNAMELEN 
+/* look up the root cell's name in the Registry
+ * Input buffer must be at least CELL_MAXNAMELEN
  * in size.  (Defined in cm_cell.h)
  */
 long cm_GetRootCellName(char *cellNamep)
@@ -997,8 +997,8 @@ cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 
         tfilep = fopen(wdir, rwp);
     }
-    return ((cm_configFile_t *) tfilep);        
-}	
+    return ((cm_configFile_t *) tfilep);
+}
 
 long cm_WriteConfigString(char *labelp, char *valuep)
 {
@@ -1061,7 +1061,7 @@ long cm_AppendPrunedCellList(cm_configFile_t *ofp, char *cellNamep)
     int foundCell;
 
     tfilep = cm_CommonOpen(AFS_CELLSERVDB, "r");
-    if (!tfilep) 
+    if (!tfilep)
         return -1;
 
     foundCell = 0;
@@ -1083,7 +1083,7 @@ long cm_AppendPrunedCellList(cm_configFile_t *ofp, char *cellNamep)
         if (tp) *tp = 0;
         tp = strchr(lineBuffer, '\n');
         if (tp) *tp = 0;
-                
+
         /* skip blank lines */
         if (lineBuffer[0] == 0) {
             fprintf((FILE *)ofp, "%s\n", lineBuffer);
@@ -1118,7 +1118,7 @@ long cm_AppendPrunedCellList(cm_configFile_t *ofp, char *cellNamep)
             }
         }	/* a vldb line */
     }		/* while loop processing all lines */
-}       
+}
 
 long cm_AppendNewCell(cm_configFile_t *filep, char *cellNamep)
 {
@@ -1160,11 +1160,11 @@ long cm_CloseCellFile(cm_configFile_t *filep)
 
     code = rename(sdir, wdir);	/* do the rename */
 
-    if (code) 
+    if (code)
         code = errno;
 
     return code;
-}   
+}
 
 void cm_GetConfigDir(char *dir, afs_uint32 len)
 {

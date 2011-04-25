@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -41,16 +41,16 @@
 <P><STRONG>目的</STRONG>
 <P>(空の) 保護データベース・グループ項目を作成します。
 <P><STRONG>構文</STRONG>
-<PRE><B>pts creategroup -name</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-owner</B> &lt;<VAR>owner of the group</VAR>>] 
-                [<B>-id</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+<PRE><B>pts creategroup -name</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-owner</B> &lt;<VAR>owner of the group</VAR>>]
+                [<B>-id</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
                 [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
-   
-<B>pts createg -na</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner of the group</VAR>>] 
-            [<B>-i</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+
+<B>pts createg -na</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner of the group</VAR>>]
+            [<B>-i</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
             [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
-      
-<B>pts cg -na</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner of the group</VAR>>]  
-       [<B>-i</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  
+
+<B>pts cg -na</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner of the group</VAR>>]
+       [<B>-i</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]
        [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -75,7 +75,7 @@
 <P><STRONG>出力</STRONG>
 <P>このコマンドは、次のような文字列を生成して、各グループの作成を確認します。
 <PRE>   group <VAR>name</VAR> has id <VAR>AFS GID</VAR>
-   
+
 </PRE>
 <P><STRONG>注意</STRONG>
 <P>グループの所有者にマシン項目を指定するために、
@@ -88,7 +88,7 @@
 <P>通常グループの名前は、次の形式でなければなりません。
 <P>
 <PRE>   <VAR>owner_name</VAR><B>:</B><VAR>group_name</VAR>
-   
+
 </PRE>
 <P>
 <P>
@@ -127,16 +127,16 @@ AFS GID と同じ番号を指定してください。最初の GID が最初のグループに、
 <B>pat:friends</B> および、
 <B>pat:colleagues</B> という名前のグループを作成しています。
 <PRE>   % <B>pts creategroup -name pat:friends pat:colleagues</B>
-   
+
 </PRE>
 <P>次の例では、<B>system:administrators</B> グループのメンバーが、接頭部のないグループ <B>staff</B> を作成し、自分自身ではなく <B>system:administrators</B> グループに、その所有権を割り当てています。
 <PRE>   % <B>pts creategroup -name staff -owner system:administrators</B>
-   
+
 </PRE>
 <P>次の例では、ユーザー <B>pat</B> が、
 <B>smith:team-members</B> という名前のグループを作成しています。このグループが許可されるのは、<B>-owner</B> 引き数に、必須の値 (<B>smith</B>) が指定されているからです。
 <PRE>   % <B>pts creategroup -name smith:team-members -owner smith</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>接頭部のないグループを作成したり、
@@ -156,11 +156,11 @@ AFS GID と同じ番号を指定してください。最初の GID が最初のグループに、
 <P><A HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
 <P><A HREF="auarf226.htm#HDRPTS_SETMAX">pts setmax</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf213.htm">前ページ</A> &#124; <A HREF="auarf215.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf213.htm">前ページ</A> &#124; <A HREF="auarf215.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

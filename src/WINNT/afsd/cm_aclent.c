@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -17,7 +17,7 @@
 #include "afsd.h"
 #include <osisleep.h>
 
-/* 
+/*
  * This next lock controls access to all cm_aclent structures in the system,
  * in either the free list or in the LRU queue.  A read lock prevents someone
  * from modifying the list(s), and a write lock is required for modifying
@@ -32,19 +32,19 @@ static void CleanupACLEnt(cm_aclent_t * aclp)
 {
     cm_aclent_t *taclp;
     cm_aclent_t **laclpp;
-        
+
     if (aclp->backp) {
         if (aclp->backp->randomACLp) {
-            /* 
-             * Remove the entry from the vnode's list 
+            /*
+             * Remove the entry from the vnode's list
              */
             lock_AssertWrite(&aclp->backp->rw);
             laclpp = &aclp->backp->randomACLp;
             for (taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp) {
-                if (taclp == aclp) 
+                if (taclp == aclp)
                     break;
             }
-            if (!taclp) 
+            if (!taclp)
                 osi_panic("CleanupACLEnt race", __FILE__, __LINE__);
             *laclpp = aclp->nextp;			/* remove from vnode list */
         }
@@ -61,7 +61,7 @@ static void CleanupACLEnt(cm_aclent_t * aclp)
     aclp->tgtLifetime = 0;
 }
 
-/* 
+/*
  * Get an acl cache entry for a particular user and file, or return that it doesn't exist.
  * Called with the scp locked.
  */
@@ -72,7 +72,7 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
 
     lock_ObtainWrite(&cm_aclLock);
     *rightsp = 0;   /* get a new acl from server if we don't find a
-                     * current entry 
+                     * current entry
                      */
 
     for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
@@ -96,16 +96,16 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
 			       &aclp->q);
 		}
                 retval = 0;     /* success */
-            }               
+            }
             break;
         }
     }
 
     lock_ReleaseWrite(&cm_aclLock);
     return retval;
-}       
+}
 
-/* 
+/*
  * This function returns a free (not in the LRU queue) acl cache entry.
  * It must be called with the cm_aclLock lock held
  */
@@ -113,7 +113,7 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
 {
     cm_aclent_t *aclp;
     cm_scache_t *ascp = 0;
-	
+
     if (cm_data.aclLRUp == NULL)
         osi_panic("empty aclent LRU", __FILE__, __LINE__);
 
@@ -137,8 +137,8 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
 }
 
 
-/* 
- * Add rights to an acl cache entry.  Do the right thing if not present, 
+/*
+ * Add rights to an acl cache entry.  Do the right thing if not present,
  * including digging up an entry from the LRU queue.
  *
  * The scp must be locked when this function is called.
@@ -151,16 +151,16 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 rights)
     for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
         if (aclp->userp == userp) {
             aclp->randomAccess = rights;
-            if (aclp->tgtLifetime == 0) 
+            if (aclp->tgtLifetime == 0)
                 aclp->tgtLifetime = cm_TGTLifeTime(pag);
             lock_ReleaseWrite(&cm_aclLock);
             return 0;
         }
     }
 
-    /* 
-     * Didn't find the dude we're looking for, so take someone from the LRUQ 
-     * and  reuse. But first try the free list and see if there's already 
+    /*
+     * Didn't find the dude we're looking for, so take someone from the LRUQ
+     * and  reuse. But first try the free list and see if there's already
      * someone there.
      */
     aclp = GetFreeACLEnt(scp);		 /* can't fail, panics instead */
@@ -247,7 +247,7 @@ long cm_ValidateACLCache(void)
     return 0;
 }
 
-/* 
+/*
  * Initialize the cache to have an entries.  Called during system startup.
  */
 long cm_InitACLCache(int newFile, long size)
@@ -267,8 +267,8 @@ long cm_InitACLCache(int newFile, long size)
         aclp = (cm_aclent_t *) cm_data.aclBaseAddress;
         memset(aclp, 0, size * sizeof(cm_aclent_t));
 
-        /* 
-         * Put all of these guys on the LRU queue 
+        /*
+         * Put all of these guys on the LRU queue
          */
         for (i = 0; i < size; i++) {
             aclp->magic = CM_ACLENT_MAGIC;
@@ -288,7 +288,7 @@ long cm_InitACLCache(int newFile, long size)
 }
 
 
-/* 
+/*
  * Free all associated acl entries.  We actually just clear the back pointer
  * since the acl entries are already in the free list.  The scp must be locked
  * or completely unreferenced (such as when called while recycling the scp).
@@ -314,7 +314,7 @@ void cm_FreeAllACLEnts(cm_scache_t *scp)
 }
 
 
-/* 
+/*
  * Invalidate all ACL entries for particular user on this particular vnode.
  *
  * The scp must be locked.
@@ -341,7 +341,7 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
 /*
  * Invalidate ACL info for a user that has just	obtained or lost tokens.
  */
-void 
+void
 cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
 {
     cm_scache_t *scp;
@@ -350,7 +350,7 @@ cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
     lock_ObtainWrite(&cm_scacheLock);
     for (hash=0; hash < cm_data.scacheHashTableSize; hash++) {
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
-            if (cellp == NULL || 
+            if (cellp == NULL ||
                 scp->fid.cell == cellp->cellID) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
@@ -363,6 +363,6 @@ cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);
-}       
+}
 
 

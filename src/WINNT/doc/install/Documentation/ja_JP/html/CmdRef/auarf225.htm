@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -37,9 +37,9 @@ privacy フラグまたはグループ作成割り当て量を設定します。
               [<B>-access</B> &lt;<VAR>set privacy flags</VAR>>]
               [<B>-groupquota</B> &lt;<VAR>set limit on group creation</VAR>>]
               [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
-   
-<B>pts setf -na</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>  [<B>-a</B> &lt;<VAR>set privacy flags</VAR>>] 
-         [<B>-g</B> &lt;<VAR>set limit on group creation</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>] 
+
+<B>pts setf -na</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>  [<B>-a</B> &lt;<VAR>set privacy flags</VAR>>]
+         [<B>-g</B> &lt;<VAR>set limit on group creation</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
          [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -122,14 +122,14 @@ privacy フラグの詳細については、
 <P>次の例では、グループ <B>operators</B> で privacy フラグを変更して、最初、2 番目、および 3 番目のフラグのデフォルト値を保存し、
 4 番目、5 番目のフラグは、グループのメンバーが他のメンバーを追加および削除できるように設定しています。
 <PRE>   % <B>pts setfields -nameorid operators -access S-Mar</B>
-   
+
 </PRE>
 <P>次の例では、privacy フラグを変更して、ユーザー項目 <B>admin</B> に、グループ割り当て量を設定しています。ここでは、最初、4 番目、および 5 番目のフラグについては、デフォルト値を保存していますが、
 2 番目および 3 番目のフラグは、<B>admin</B> が所有し、所属するグループを、だれもがリスト表示できるように、変更しています。
 <B>admin</B> として認証されたユーザーは、
 50 のグループを追加することができます。
 <PRE>   % <B>pts setfields -nameorid admin -access SOM-- -groupquota 50</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>グループ項目を編集する場合、または、任意のタイプの項目に privacy フラグの設定を行う場合には、発行者はその項目を所有しているか、
@@ -143,11 +143,11 @@ privacy フラグの詳細については、
 <P><A HREF="auarf222.htm#HDRPTS_MEMBERSHIP">pts membership</A>
 <P><A HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf224.htm">前ページ</A> &#124; <A HREF="auarf226.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf224.htm">前ページ</A> &#124; <A HREF="auarf226.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

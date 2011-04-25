@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -89,7 +89,7 @@ BOOL CALLBACK InfoPageDlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp)
 
 	}
 	break;
-    }	
+    }
 
     return FALSE;
 }
@@ -142,12 +142,12 @@ static void CheckEnableButtons()
 	g_pWiz->EnableButtons(BACK_BUTTON);
     else
 	g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON);
-}	
+}
 
 static BOOL SavePageInfo()
 {
     TCHAR szText[cchRESOURCE];
-	
+
     GetWndText(hDlg, IDC_CELL_NAME, szText);
     if (lstrlen(szText) > MAX_CELL_NAME_LEN) {
 	MsgBox(hDlg, IDS_CELL_NAME_LEN_ERROR, GetAppTitleID(), MB_ICONSTOP | MB_OK);
@@ -162,7 +162,7 @@ static BOOL SavePageInfo()
 }
 
 static void ShowPageInfo()
-{	
+{
     SetWndText(hDlg, IDC_CELL_NAME, g_CfgData.szCellName);
     SetWndText(hDlg, IDC_SERVER_PW, g_CfgData.szServerPW);
     SetWndText(hDlg, IDC_VERIFY_PW, g_CfgData.szServerPW);
@@ -184,14 +184,14 @@ static void IsFirstServer(BOOL bIs)
 
     SetEnable(hDlg, IDC_PRINCIPAL_LABEL, es);
     SetEnable(hDlg, IDC_PRINCIPAL, es);
-	
+
     SetEnable(hDlg, IDC_SERVER_PW_FRAME, es);
     SetEnable(hDlg, IDC_SERVER_PW_LABEL, es);
     SetEnable(hDlg, IDC_SERVER_PW_PROMPT, es);
     SetEnable(hDlg, IDC_SERVER_PW, es);
     SetEnable(hDlg, IDC_VERIFY_PW_LABEL, es);
     SetEnable(hDlg, IDC_VERIFY_PW, es);
-	
+
     CheckEnableButtons();
 }
 

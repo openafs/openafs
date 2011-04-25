@@ -1,19 +1,19 @@
-/* 
+/*
    Unix SMB/CIFS implementation.
    SMB torture tester
    Copyright (C) Andrew Tridgell 1997-1998
    Copyright (C) Richard Sharpe  2002
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -53,9 +53,9 @@ void DumpAFSLog(char * HostName, int LogID);
 int  FindHandle(int handle);
 int  GetFileList(char *Mask, void (*fn)(file_info *, const char *, void *), void *state);
 BOOL GetFileInfo(char *FileName, HANDLE fd, uint16 *mode, size_t *size,
-		        time_t *c_time, time_t *a_time, time_t *m_time, 
+		        time_t *c_time, time_t *a_time, time_t *m_time,
 		        time_t *w_time);
-BOOL GetPathInfo(const char *fname, time_t *c_time, time_t *a_time, time_t *m_time, 
+BOOL GetPathInfo(const char *fname, time_t *c_time, time_t *a_time, time_t *m_time,
 		         size_t *size, uint16 *mode);
 int  LeaveThread(int status, char *Reason, int cmd);
 void StartFirstTimer();
@@ -303,7 +303,7 @@ int nb_CreateFile(char *path, DWORD size)
     strcpy(NewPath, path);
 
     StartFirstTimer();
-    fHandle = CreateFile(NewPath, 
+    fHandle = CreateFile(NewPath,
                          GENERIC_READ | GENERIC_WRITE | STANDARD_RIGHTS_ALL,
                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                          NULL,
@@ -507,11 +507,11 @@ int nb_createx(char *fname, unsigned create_options, unsigned create_disposition
     }
 
     StartFirstTimer();
-    fd = CreateObject(path, 
+    fd = CreateObject(path,
                        desired_access,
                        0x0,
-                       FILE_SHARE_READ|FILE_SHARE_WRITE, 
-                       create_disposition, 
+                       FILE_SHARE_READ|FILE_SHARE_WRITE,
+                       create_disposition,
                        create_options);
 
     if (fd == INVALID_HANDLE_VALUE && handle != -1)
@@ -550,19 +550,19 @@ int nb_createx(char *fname, unsigned create_options, unsigned create_disposition
     if (fd == INVALID_HANDLE_VALUE && handle == -1)
         return(0);
 
-    for (i = 0; i < MAX_FILES; i++) 
+    for (i = 0; i < MAX_FILES; i++)
     {
-        if (ftable[i].handle == 0) 
+        if (ftable[i].handle == 0)
             break;
     }
-    if (i == MAX_FILES) 
+    if (i == MAX_FILES)
     {
         printf("(%d) file table full for %s\n", LineCount, path);
         return(LeaveThread(1, "file table is full\n", CMD_NTCREATEX));
     }
     ftable[i].handle = handle;
     ftable[i].fd = fd;
-    if (ftable[i].name) 
+    if (ftable[i].name)
         free(ftable[i].name);
     ftable[i].name = strdup(path);
     ftable[i].reads = ftable[i].writes = 0;
@@ -589,7 +589,7 @@ int nb_writex(int handle, int offset, int size, int ret_size)
         return(-1);
     StartFirstTimer();
     status = nb_write(ftable[i].fd, IoBuffer, offset, size);
-    if (status != ret_size) 
+    if (status != ret_size)
     {
         EndFirstTimer(CMD_WRITEX, 0);
 		LeaveThread(0, "", CMD_WRITEX);
@@ -700,9 +700,9 @@ int nb_close(int handle)
         return(0);
 
     StartFirstTimer();
-    ret = nb_close1(ftable[i].fd); 
+    ret = nb_close1(ftable[i].fd);
     EndFirstTimer(CMD_CLOSE, ret);
-    if (!ret) 
+    if (!ret)
     {
         LeaveThread(0, "", CMD_CLOSE);
         sprintf(temp, "(%d) close failed on handle %d\n", LineCount, handle);
@@ -714,10 +714,10 @@ int nb_close(int handle)
 
     ftable[i].handle = 0;
     ftable[i].fd = 0;
-    if (ftable[i].name) 
+    if (ftable[i].name)
         free(ftable[i].name);
     ftable[i].name = NULL;
-    return(0);   
+    return(0);
 }
 
 int nb_rmdir(char *fname)
@@ -764,7 +764,7 @@ int nb_rename(char *old, char *New)
     strcpy(opath, AfsLocker);
     strcat(opath, old);
     strcpy(npath, AfsLocker);
-    strcat(npath, New); 
+    strcat(npath, New);
 
     StartFirstTimer();
     rc = MoveFileEx(opath, npath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
@@ -783,8 +783,8 @@ int nb_rename(char *old, char *New)
     return(0);
 }
 
-/* 
- * Type is used to determine whether the file is expected 
+/*
+ * Type is used to determine whether the file is expected
  * to exist or not.  It is overloaded (temporarily) to control
  * Flag which indicates whether an error is treated as an error
  * or not.  The StreamFiles.txt script does not have the Type
@@ -900,7 +900,7 @@ int nb_qfsinfo(int level)
     ULARGE_INTEGER TotalNumberOfBytes;
     ULARGE_INTEGER TotalNumberOfFreeBytes;
     DWORD   gle;
- 
+
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     sprintf(Path, "%s\\%s%05d", AfsLocker, HostName, LogID);
 
@@ -984,7 +984,7 @@ void delete_fn(file_info *finfo, const char *name, void *state)
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
-    if (finfo->mode & aDIR) 
+    if (finfo->mode & aDIR)
     {
         char s2[1024];
         sprintf(s2, "%s\\*", name);
@@ -1225,7 +1225,7 @@ HANDLE CreateObject(const char *fname, uint32 DesiredAccess,
     {
         DWORD rc;
 
-        if (!CreateDirectory(fname, NULL) && (rc = GetLastError()) != ERROR_ALREADY_EXISTS) 
+        if (!CreateDirectory(fname, NULL) && (rc = GetLastError()) != ERROR_ALREADY_EXISTS)
         {
             SetLastError(rc);
             fd = INVALID_HANDLE_VALUE;
@@ -1376,14 +1376,14 @@ void SubstituteString(char *s,const char *pattern,const char *insert, size_t len
     li = (ssize_t)strlen(insert);
 
     if (!*pattern) return;
-	
+
     while (lp <= ls && (p = strstr(s,pattern)))
     {
-        if (len && (ls + (li-lp) >= (int)len)) 
+        if (len && (ls + (li-lp) >= (int)len))
         {
             break;
         }
-        if (li != lp) 
+        if (li != lp)
         {
             memmove(p+li,p+lp,strlen(p+lp)+1);
         }
@@ -1405,8 +1405,8 @@ B.tm_isdst = -1; \
 B.tm_mday = A.wDay;
 
 
-BOOL GetPathInfo(const char *fname, 
-		   time_t *c_time, time_t *a_time, time_t *m_time, 
+BOOL GetPathInfo(const char *fname,
+		   time_t *c_time, time_t *a_time, time_t *m_time,
 		   size_t *size, uint16 *mode)
 {
     WIN32_FILE_ATTRIBUTE_DATA FileInfo;
@@ -1435,7 +1435,7 @@ BOOL GetPathInfo(const char *fname,
             CHANGE_TIME(SystemTime, tm_time)
             (*m_time) = mktime(&tm_time);
         }
-        if (size) 
+        if (size)
         {
             rc = 1;
             if (!(FileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -1453,9 +1453,9 @@ BOOL GetPathInfo(const char *fname,
 /****************************************************************************
 send a qfileinfo call
 ****************************************************************************/
-BOOL GetFileInfo(char *FileName, HANDLE fd, 
+BOOL GetFileInfo(char *FileName, HANDLE fd,
                    uint16 *mode, size_t *size,
-                   time_t *c_time, time_t *a_time, time_t *m_time, 
+                   time_t *c_time, time_t *a_time, time_t *m_time,
                    time_t *w_time)
 {
     WIN32_FILE_ATTRIBUTE_DATA FileInfo;
@@ -1484,7 +1484,7 @@ BOOL GetFileInfo(char *FileName, HANDLE fd,
             CHANGE_TIME(SystemTime, tm_time)
             (*m_time) = mktime(&tm_time);
         }
-        if (size) 
+        if (size)
         {
             rc = 0;
             if (!(FileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -1509,7 +1509,7 @@ ssize_t nb_read(HANDLE fd, char *IoBuffer, off_t offset, size_t size)
     int     rc;
     DWORD   LowDword;
 
-    if (size == 0) 
+    if (size == 0)
         return(0);
 
     LowDword = SetFilePointer(fd, offset, 0, FILE_BEGIN);

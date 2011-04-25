@@ -51,19 +51,19 @@ khm_handle afs_sub = NULL;      /* AFS message subscription */
 khm_int32 action_id_afs_help = 0;
 
 /* forward dcls */
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_msg_system(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_msg_kcdb(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_msg_cred(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 
 khm_int32 KHMAPI
 afs_msg_act(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_msg_ext(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 
 /* AFS help menu extensions */
@@ -98,7 +98,7 @@ khm_int32
 #endif
 
 /* AFS plugin callback */
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_plugin_cb(khm_int32 msg_type,
               khm_int32 msg_subtype,
               khm_ui_4 uparam,
@@ -121,11 +121,11 @@ afs_plugin_cb(khm_int32 msg_type,
 /* ktc_principal attribute type */
 /* String */
 
-khm_int32 KHMAPI 
-afs_type_principal_toString(const void * d, 
-                            khm_size cbd, 
-                            wchar_t * buffer, 
-                            khm_size * cb_buf, 
+khm_int32 KHMAPI
+afs_type_principal_toString(const void * d,
+                            khm_size cbd,
+                            wchar_t * buffer,
+                            khm_size * cb_buf,
                             khm_int32 flags)
 {
     size_t cbsize;
@@ -154,7 +154,7 @@ afs_type_principal_toString(const void * d,
     return KHM_ERROR_SUCCESS;
 }
 
-khm_boolean KHMAPI 
+khm_boolean KHMAPI
 afs_type_principal_isValid(const void * d,
                            khm_size cbd)
 {
@@ -164,7 +164,7 @@ afs_type_principal_isValid(const void * d,
     return TRUE;
 }
 
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_type_principal_comp(const void * d1,
                         khm_size cbd1,
                         const void * d2,
@@ -184,7 +184,7 @@ afs_type_principal_comp(const void * d1,
     return r;
 }
 
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_type_principal_dup(const void * d_src,
                        khm_size cbd_src,
                        void * d_dst,
@@ -236,9 +236,9 @@ afs_type_method_toString(const void * data,
 }
 
 /* process KMSG_SYSTEM messages */
-khm_int32 KHMAPI 
-afs_msg_system(khm_int32 msg_subtype, 
-               khm_ui_4 uparam, 
+khm_int32 KHMAPI
+afs_msg_system(khm_int32 msg_subtype,
+               khm_ui_4 uparam,
                void * vparam)
 {
     khm_int32 rv = KHM_ERROR_UNKNOWN;
@@ -296,9 +296,9 @@ afs_msg_system(khm_int32 msg_subtype,
             ct.id = KCDB_CREDTYPE_AUTO;
             ct.name = AFS_CREDTYPE_NAME;
 
-            if(LoadString(hResModule, 
-                          IDS_AFS_SHORT_DESC, 
-                          buf, 
+            if(LoadString(hResModule,
+                          IDS_AFS_SHORT_DESC,
+                          buf,
                           ARRAYLENGTH(buf)) != 0) {
                 StringCbLength(buf, sizeof(buf), &cbsize);
                 cbsize += sizeof(wchar_t);
@@ -307,9 +307,9 @@ afs_msg_system(khm_int32 msg_subtype,
             } else
                 ct.short_desc = NULL;
 
-            if(LoadString(hResModule, 
-                          IDS_AFS_LONG_DESC, 
-                          buf, 
+            if(LoadString(hResModule,
+                          IDS_AFS_LONG_DESC,
+                          buf,
                           ARRAYLENGTH(buf)) != 0) {
                 StringCbLength(buf, sizeof(buf), &cbsize);
                 cbsize += sizeof(wchar_t);
@@ -318,9 +318,9 @@ afs_msg_system(khm_int32 msg_subtype,
             } else
                 ct.long_desc = NULL;
 
-            ct.icon = LoadImage(hResModule, 
-                                MAKEINTRESOURCE(IDI_AFSTOKEN), 
-                                IMAGE_ICON, 
+            ct.icon = LoadImage(hResModule,
+                                MAKEINTRESOURCE(IDI_AFSTOKEN),
+                                IMAGE_ICON,
                                 0, 0, LR_DEFAULTSIZE);
 
             kmq_create_subscription(afs_plugin_cb, &afs_sub);
@@ -343,7 +343,7 @@ afs_msg_system(khm_int32 msg_subtype,
                 type.cb_min = sizeof(struct ktc_principal);
                 type.flags = KCDB_TYPE_FLAG_CB_FIXED;
 
-                if(KHM_FAILED(kcdb_type_register(&type, 
+                if(KHM_FAILED(kcdb_type_register(&type,
                                                  &afs_type_principal)))
                     goto _exit_init;
             }
@@ -365,7 +365,7 @@ afs_msg_system(khm_int32 msg_subtype,
                 type.cb_min = sizeof(khm_int32);
                 type.flags = KCDB_TYPE_FLAG_CB_FIXED;
 
-                if(KHM_FAILED(kcdb_type_register(&type, 
+                if(KHM_FAILED(kcdb_type_register(&type,
                                                  &afs_type_method))) {
                     kcdb_type_release_info(ti32);
                     goto _exit_init;
@@ -377,63 +377,63 @@ afs_msg_system(khm_int32 msg_subtype,
             /* now register the attributes */
             {
                 wchar_t short_desc[KCDB_MAXCCH_SHORT_DESC];
-                    
+
                 ZeroMemory(&att, sizeof(att));
 
                 att.type = KCDB_TYPE_STRING;
                 att.name = AFS_ATTRNAME_CELL;
-                LoadString(hResModule, 
-                           IDS_ATTR_CELL_SHORT_DESC, 
-                           short_desc, 
+                LoadString(hResModule,
+                           IDS_ATTR_CELL_SHORT_DESC,
+                           short_desc,
                            ARRAYLENGTH(short_desc));
                 att.short_desc = short_desc;
                 att.long_desc = NULL;
                 att.id = KCDB_ATTR_INVALID;
                 att.flags = KCDB_ATTR_FLAG_TRANSIENT;
-                    
-                if(KHM_FAILED(rv = kcdb_attrib_register(&att, 
+
+                if(KHM_FAILED(rv = kcdb_attrib_register(&att,
                                                         &afs_attr_cell)))
                     goto _exit_init;
             }
 
             {
                 wchar_t short_desc[KCDB_MAXCCH_SHORT_DESC];
-                    
+
                 ZeroMemory(&att, sizeof(att));
 
                 att.type = KCDB_TYPE_STRING;
                 att.name = AFS_ATTRNAME_REALM;
-                LoadString(hResModule, 
-                           IDS_ATTR_REALM_SHORT_DESC, 
-                           short_desc, 
+                LoadString(hResModule,
+                           IDS_ATTR_REALM_SHORT_DESC,
+                           short_desc,
                            ARRAYLENGTH(short_desc));
                 att.short_desc = short_desc;
                 att.long_desc = NULL;
                 att.id = KCDB_ATTR_INVALID;
                 att.flags = KCDB_ATTR_FLAG_TRANSIENT;
-                    
-                if(KHM_FAILED(rv = kcdb_attrib_register(&att, 
+
+                if(KHM_FAILED(rv = kcdb_attrib_register(&att,
                                                         &afs_attr_realm)))
                     goto _exit_init;
             }
 
             {
                 wchar_t short_desc[KCDB_MAXCCH_SHORT_DESC];
-                    
+
                 ZeroMemory(&att, sizeof(att));
 
                 att.type = afs_type_method;
                 att.name = AFS_ATTRNAME_METHOD;
-                LoadString(hResModule, 
-                           IDS_ATTR_METHOD_SHORT_DESC, 
-                           short_desc, 
+                LoadString(hResModule,
+                           IDS_ATTR_METHOD_SHORT_DESC,
+                           short_desc,
                            ARRAYLENGTH(short_desc));
                 att.short_desc = short_desc;
                 att.long_desc = NULL;
                 att.id = KCDB_ATTR_INVALID;
                 att.flags = KCDB_ATTR_FLAG_TRANSIENT;
-                    
-                if(KHM_FAILED(rv = kcdb_attrib_register(&att, 
+
+                if(KHM_FAILED(rv = kcdb_attrib_register(&att,
                                                         &afs_attr_method)))
                     goto _exit_init;
             }
@@ -445,15 +445,15 @@ afs_msg_system(khm_int32 msg_subtype,
 
                 att.type = afs_type_principal;
                 att.name = AFS_ATTRNAME_CLIENT_PRINC;
-                LoadString(hResModule, 
-                           IDS_ATTR_CLIENT_PRINC_SHORT_DESC, 
-                           short_desc, 
+                LoadString(hResModule,
+                           IDS_ATTR_CLIENT_PRINC_SHORT_DESC,
+                           short_desc,
                            ARRAYLENGTH(short_desc));
                 att.short_desc = short_desc;
                 att.long_desc = NULL;
                 att.id = KCDB_ATTR_INVALID;
                 att.flags = KCDB_ATTR_FLAG_TRANSIENT;
-                    
+
                 if(KHM_FAILED(rv = kcdb_attrib_register(&att, &afs_attr_client_princ)))
                     goto _exit_init;
             }
@@ -465,14 +465,14 @@ afs_msg_system(khm_int32 msg_subtype,
 
                 att.type = afs_type_principal;
                 att.name = AFS_ATTRNAME_SERVER_PRINC;
-                LoadString(hResModule, 
-                           IDS_ATTR_SERVER_PRINC_SHORT_DESC, 
+                LoadString(hResModule,
+                           IDS_ATTR_SERVER_PRINC_SHORT_DESC,
                            short_desc, ARRAYLENGTH(short_desc));
                 att.short_desc = short_desc;
                 att.long_desc = NULL;
                 att.id = KCDB_ATTR_INVALID;
                 att.flags = KCDB_ATTR_FLAG_TRANSIENT;
-                    
+
                 if(KHM_FAILED(rv = kcdb_attrib_register(&att, &afs_attr_server_princ)))
                     goto _exit_init;
             }
@@ -765,9 +765,9 @@ afs_msg_system(khm_int32 msg_subtype,
 }
 
 /* process KMSG_KCDB messages */
-khm_int32 KHMAPI 
-afs_msg_kcdb(khm_int32 msg_subtype, 
-             khm_ui_4 uparam, 
+khm_int32 KHMAPI
+afs_msg_kcdb(khm_int32 msg_subtype,
+             khm_ui_4 uparam,
              void * vparam)
 {
     khm_int32 rv = KHM_ERROR_SUCCESS;
@@ -797,9 +797,9 @@ afs_cred_destroy_proc(khm_handle cred, void * rock) {
 }
 
 /* process KMSG_CRED messages */
-khm_int32 KHMAPI 
-afs_msg_cred(khm_int32 msg_subtype, 
-             khm_ui_4 uparam, 
+khm_int32 KHMAPI
+afs_msg_cred(khm_int32 msg_subtype,
+             khm_ui_4 uparam,
              void * vparam)
 {
     khm_int32 rv = KHM_ERROR_SUCCESS;
@@ -846,9 +846,9 @@ help_launcher(HWND hwnd_main, void * rock) {
     return KHM_ERROR_SUCCESS;
 }
 
-khm_int32 KHMAPI 
-afs_msg_act(khm_int32 msg_subtype, 
-            khm_ui_4 uparam, 
+khm_int32 KHMAPI
+afs_msg_act(khm_int32 msg_subtype,
+            khm_ui_4 uparam,
             void * vparam)
 {
     khm_int32 rv = KHM_ERROR_SUCCESS;

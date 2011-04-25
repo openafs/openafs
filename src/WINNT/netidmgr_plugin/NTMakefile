@@ -184,7 +184,7 @@ $(LANGDLL): $(OUT)\langres_$(LANG).res $(OUT)\langres_ver_$(LANG).res
         $(CODESIGN_USERLAND)
 
 $(OUT)\langres_ver_$(LANG).res: version.rc
-	$(RC) /d LANGVER /d LANG_$(LANG) /fo $@ $** 
+	$(RC) /d LANGVER /d LANG_$(LANG) /fo $@ $**
 
 $(OUT)\langres_$(LANG).res: lang\$(LANG)\langres.rc
 	$(RC) /fo $@ $**

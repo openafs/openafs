@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -42,7 +42,7 @@
 <P><H5><A NAME="HDRWQ11">AFS コマンドの構文</A></H5>
 <P>コマンド・セットに属する AFS コマンドは、以下の構造をしています。
 <PRE>   <B>command_suite operation_code</B> <B>-switch</B> &lt;<VAR>value</VAR>><SUP>[+]</SUP>  [<B>-flag</B>]
-   
+
 </PRE>
 <P><H6><A NAME="Header_57">コマンド名</A></H6>
 <P>全体として、<B>command_suite</B> と <B>operation_code</B> で、
@@ -75,7 +75,7 @@ AFS には、<B>bos</B>、<B>fs</B>、
 <P>次のコマンドの例では、
 AFS コマンド・セットに属しているコマンドの各部分を示しています。
 <PRE>   % <B> bos getdate -server fs1.abc.com -file ptserver kaserver</B>
-   
+
 </PRE>
 <P>説明:
 <UL>
@@ -97,7 +97,7 @@ BOS サーバーがバイナリーの日付を収集して報告する予定のサーバー・マシンを指定しま
 </LI><LI>操作コード、スイッチ (組み込まれているなら)、およびいくつかのタイプの値の受け入れ済み省略形を使用する。
 </LI></UL>
 <P>以下のセクションでは、コマンド行の各部分の省略または短縮化のための条件を説明します。省略形を使用せず、スイッチをすべて入力した完全なコマンドは、いつでも使用することができます。
-<P><I><B><A NAME="HDRNOSWITCH">スイッチを省略するための条件</A>: </B></I> 
+<P><I><B><A NAME="HDRNOSWITCH">スイッチを省略するための条件</A>: </B></I>
 どのような場合でも、引き数のスイッチ部分は常に入力しても構いません。ただし、多くの場合その必要はありません。特に、以下の条件を満たす場合には、コマンドのスイッチを省略しても構いません。
 <UL>
 <LI>コマンドの必須引き数のすべてが、構文で規定される順序で表示されている
@@ -113,16 +113,16 @@ BOS サーバーがバイナリーの日付を収集して報告する予定のサーバー・マシンを指定しま
 </LI><LI>スイッチが、先にくる引き数に提供される
 </LI><LI>複数の値が、先にくる引き数 (もちろん、リストを取る引き数でなければならない) に提供される。現行の引き数にスイッチがないと、コマンド・インタープリターは、現行の引き数は、先にくる引き数の別の値に過ぎないとみなす
 </LI></UL>
-<P><I><B><A NAME="Header_64">スイッチの省略の例</A>: </B></I> 
+<P><I><B><A NAME="Header_64">スイッチの省略の例</A>: </B></I>
 <A HREF="#HDRCOMMAND-EX">コマンド例</A> のコマンドの例をもう一度考えます。
 <PRE>   % <B> bos getdate -server fs1.abc.com -file ptserver kaserver</B>
-   
+
 </PRE>
 <P>このコマンドには、2 つの必須引き数の、サーバー・マシン名 (<B>-server</B> で識別される) とバイナリー・ファイル名 (<B>-file</B> で識別される) があります。
 2 番目の引き数には、複数の値を設定できます。
 3 つの条件すべてを満たすことによって、発行者はスイッチを省略することができます。
 <PRE>   % <B>bos getdate fs1.abc.com ptserver kaserver</B>
-   
+
 </PRE>
 <P>スイッチがないため、
 <B>bos</B> コマンド・インタープリターは、引き数の順序を頼りにします。このコマンド・インタープリターは、操作コードに続く最初の要素、
@@ -130,11 +130,11 @@ BOS サーバーがバイナリーの日付を収集して報告する予定のサーバー・マシンを指定しま
 <P>これに反して、以下の引き数は、たとえ条件 3 を満たしていても、
 <A HREF="#HDRNOSWITCH">スイッチを省略するための条件</A> の最初の 2 つの条件に違反しているため、受け入れられません。たとえ、引き数当り 1 つの例しかなくても、引き数は規定の順序で表示されず、スイッチは 1 つの引き数には提供されますが、ほかの引き数には提供されません。
 <PRE>   % <B>bos getdate ptserver -server fs1.abc.com</B>
-   
+
 </PRE>
 <P><H6><A NAME="HDRWQ13">省略語と別名の使用規則</A></H6>
 <P>この節では、操作コードの名前、オプション名、サーバー・マシン名、区画名、およびセル名を省略する方法について説明します。それ以外のタイプの値は省略できません。
-<P><I><B><A NAME="Header_66">操作コードの省略</A>: </B></I> 
+<P><I><B><A NAME="Header_66">操作コードの省略</A>: </B></I>
 操作コードは、そのセットの他の操作コードと区別できる範囲で、最短形にまで操作コードを省略することができます。
 <P>たとえば、<B>bos install</B> を
 <B>bos i</B> に短縮することができます。それは、<B>bos</B> コマンド・セットの操作コードで、文字 <B>i</B> で始まるものがほかにないからです。これに対して、
@@ -163,15 +163,15 @@ AFS の前のバージョンのユーザーは、変更前の名前を知っています。たとえば、<B>bos l
 <P>操作コードが別名を持っている場合でも、最短省略形も使用できます。したがって、<B>fs setacl</B> コマンドには、次の 3 つの使用可能な形式があります。
 <B>fs setacl</B> (完全形)、
 <B>fs seta</B> (最短省略形)、そして <B>fs sa</B> (別名) です。
-<P><I><B><A NAME="Header_67">スイッチとフラグの短縮</A>: </B></I> 
+<P><I><B><A NAME="Header_67">スイッチとフラグの短縮</A>: </B></I>
 スイッチやフラグは、別のスイッチとフラグから区別できる最短の形式にまで短縮することができます。
 <A HREF="#HDRNOSWITCH">スイッチを省略するための条件</A> にリストされる条件に完全に従ってスイッチを省略することが頻繁にできます。
-<P><I><B><A NAME="HDRFMSABBREV">サーバー・マシン名の省略</A>: </B></I> 
+<P><I><B><A NAME="HDRFMSABBREV">サーバー・マシン名の省略</A>: </B></I>
 サーバー・マシンには、完全に修飾されたインターネット形式のホスト名がなければなりません (たとえば、
 <B>fs1.abc.com</B> など)。ただし、コマンド行に常にフルネームを入力する必要はありません。
 AFS コマンドには、明確な短縮形を使用できます。ただし、コマンドが発行されたときに短縮名を等価な完全修飾名に解決するのは、セルのネーム・サービス (たとえばドメイン・ネーム・サービス) あるいはローカル・ホスト・テーブルによって異なります。
 <P>ほとんどのコマンドには、マシンの IP アドレスをドット付きの 10 進数形式としたものを識別子として使用できます。
-<P><I><B><A NAME="HDRPARTABBREV">区画名の短縮</A>: </B></I> 
+<P><I><B><A NAME="HDRPARTABBREV">区画名の短縮</A>: </B></I>
 AFS ボリュームを格納している区画の名前は、
 <B>/vicep</B><VAR>x</VAR> または <B>/vicep</B><VAR>xx</VAR> という形式でなければなりません。ここで、最後の可変部分は、
 1 字または 2 字の小文字で表します。通常、サーバー・マシン上に作成された最初のサーバー区画は <B>/vicepa</B>、
@@ -180,18 +180,18 @@ AFS ボリュームを格納している区画の名前は、
 <P>AFS コマンドを発行する場合、以下の形を使って、区画名を省略します。
 <PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
    <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
-   
+
 </PRE>
 <P><B>/vicepz</B> (これのインデックスは 25 です) の後には、以下が続きます。
 <PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
    <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
-   
+
 </PRE>
 <P>次の値まで、以下同様となります。
 <PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
-    
+
 </PRE>
-<P><I><B><A NAME="HDRCELLABBREV">セル名の省略</A>: </B></I> 
+<P><I><B><A NAME="HDRCELLABBREV">セル名の省略</A>: </B></I>
 通常セルのフルネームは、インターネット・ドメイン名 (State University の <B>stateu.edu</B> または ABC Corporation の <B>abc.com</B> など) と一致します。一部の AFS コマンドは、明白な短縮形を、通常はローカルの <B>/usr/vice/etc/CellServDB ファイル</B>を参照して受け入れます。ただし、対応するドメイン名を解決するのは、ローカル・ネーム・サービスの性能によって異なります。
 <P><H6><A NAME="HDRWQ14">AFS コマンドのオンライン・ヘルプの表示</A></H6>
 <P>コマンド・セットの属している AFS コマンドのオンライン・ヘルプを表示するには、
@@ -204,52 +204,52 @@ AFS ボリュームを格納している区画の名前は、
 </LI><LI>文字列 <TT>Usage:</TT> で始まる最終行には、コマンドのオプションを規定の順序でリストする。オンライン・ヘルプ項目では、この資料と同じ記号 (大括弧など) が使用されています。
 </LI></UL>
 <P>操作コードが指定されない場合、<B>help</B> 操作コードは、そのコマンド・セットに含まれる各操作コードの最初の行 (簡単な説明) を表示します。
-<PRE>   
+<PRE>
    % <VAR>command_suite</VAR> <B>help</B>
-   
+
 </PRE>
 <P>操作コードを一つ以上指定した場合、<B>help</B> 操作コードは、各コマンドの完全なオンライン項目 (簡単な説明、ある場合には別名、および構文) を表示します。
-<PRE>   
+<PRE>
    % <VAR>command_suite</VAR> <B>help</B> <VAR>operation_code</VAR><SUP>+</SUP>
-   
+
 </PRE>
 <P><B>-help</B> フラグはコマンドの構文を表示します。ただし、簡単な説明や別名は表示されません。
-<PRE>   % <VAR>command_name</VAR> <B>-help</B>  
-   
+<PRE>   % <VAR>command_name</VAR> <B>-help</B>
+
 </PRE>
 <P><B>apropos</B> 操作コードは、操作コードまたは簡単な説明に指定されるキーワードが組み込まれるコマンド・セットの、任意のコマンドに関する簡単な説明を表示します。
 <PRE>   % <VAR>command_suite</VAR> <B>apropos</B> <VAR>"&lt;help string>"</VAR>
-   
+
 </PRE>
 <P>次のコマンドの例では、
 <B>fs setacl</B> コマンドの完全なオンライン・ヘルプ項目を表示します。
-<PRE>   
-   % <B>fs help setacl</B>  
+<PRE>
+   % <B>fs help setacl</B>
    fs setacl: set access control list
    aliases: sa
-   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
-   
+
 </PRE>
 <P>構文だけを参照する場合は、<B>-help</B> フラグを使用します。
 <PRE>   % <B>fs setacl -help</B>
-   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
-   
+
 </PRE>
 <P>次は、ホーム・ボリュームの割り当て量を表示させる場合の例です。関連コマンドが <B>fs</B> セットに属していることは分かっていても、操作コードを覚えていないとします。この場合、ユーザーはキーワードとして <B>quota</B> を使用します。
-<PRE>   
+<PRE>
    % <B>fs apropos quota</B>
    listquota: list volume quota
    quota: show volume quota usage
    setquota: set volume quota
-   
+
 </PRE>
 <P>次の例は、コマンド名または概説に、指定したキーワードが含まれていない場合に表示されるエラー・メッセージを示しています。
-<PRE>   
+<PRE>
    % <B>fs apropos "list quota"</B>
    コマンドが見つかりません。
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>多くの AFS コマンドには、1 つまたは複数のタイプの管理特権が必要です。各コマンドについては、解説ページを参照してください。
@@ -309,11 +309,11 @@ AFS ボリュームを格納している区画の名前は、
 <DD><P><A HREF="auarf283.htm#HDRXSTAT_FS_TEST">xstat_fs_test</A>
 </DL>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf056.htm">前ページ</A> &#124; <A HREF="auarf058.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf056.htm">前ページ</A> &#124; <A HREF="auarf058.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

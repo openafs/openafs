@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -169,7 +169,7 @@ BOOL CALLBACK Filesets_RepSites_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM 
                      DisplayContextMenu (hm, ptScreen, hList);
                      }
                   }
-               break; 
+               break;
 
             case WM_COLUMNS_CHANGED:
                HWND hList;
@@ -245,14 +245,14 @@ LRESULT CALLBACK Filesets_RepSites_SubclassListProc (HWND hList, UINT msg, WPARA
             SetWindowLongPtr (hList, GWLP_WNDPROC, procRepSitesList);
          break;
 
-      case WM_COMMAND: 
+      case WM_COMMAND:
          switch (LOWORD(wp))
             {
             case M_COLUMNS:
                ShowColumnsDialog (GetParent (hList), &gr.viewRep);
                break;
             }
-         break; 
+         break;
       }
 
    return rc;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -73,13 +73,13 @@ static int InAFS(char *apath)
 
     code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code) {
-	if ((errno == EINVAL) || (errno == ENOENT)) 
+	if ((errno == EINVAL) || (errno == ENOENT))
             return 0;
     }
     return 1;
 }
 
-static int 
+static int
 IsFreelanceRoot(char *apath)
 {
     struct ViceIoctl blob;
@@ -169,7 +169,7 @@ static BOOL IsAdmin (void)
         assert(pszRefDomain);
 
         if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
-            /* We can't lookup the group now even though we looked it up earlier.  
+            /* We can't lookup the group now even though we looked it up earlier.
                Could this happen? */
             fAdmin = TRUE;
         } else {
@@ -294,7 +294,7 @@ static ListLinkCmd(struct cmd_syndesc *as, void *arock)
     int link_chars_read;		/*Num chars read in readlink()*/
 #endif /* not WIN32 */
     int	thru_symlink;			/*Did we get to a mount point via a symlink?*/
-    
+
     error = 0;
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
@@ -455,7 +455,7 @@ static MakeLinkCmd(struct cmd_syndesc *as, void *arock)
 		fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
 		return 1;
 	    }
-	} else 
+	} else
 #endif
 	{
 	    fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
@@ -503,7 +503,7 @@ static RemoveLinkCmd(struct cmd_syndesc *as, void *arock)
     char tbuffer[1024];
     char lsbuffer[1024];
     char *tp;
-    
+
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
 	tp = (char *) strrchr(ti->data, '\\');
@@ -618,16 +618,16 @@ int wmain(int argc, wchar_t **wargv)
     afs_int32 code;
     struct cmd_syndesc *ts;
     char ** argv;
-    
+
 #ifdef	AFS_AIX32_ENV
     /*
-     * The following signal action for AIX is necessary so that in case of a 
-     * crash (i.e. core is generated) we can include the user's data section 
+     * The following signal action for AIX is necessary so that in case of a
+     * crash (i.e. core is generated) we can include the user's data section
      * in the core dump. Unfortunately, by default, only a partial core is
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -640,14 +640,14 @@ int wmain(int argc, wchar_t **wargv)
 #endif /* WIN32 */
 
     /* try to find volume location information */
-    
+
     argv = MakeUtf8Cmdline(argc, wargv);
 
     osi_Init();
 
-    ts = cmd_CreateSyntax("list", ListLinkCmd, NULL, "list symlink");    
+    ts = cmd_CreateSyntax("list", ListLinkCmd, NULL, "list symlink");
     cmd_AddParm(ts, "-name", CMD_LIST, 0, "name");
-    
+
     ts = cmd_CreateSyntax("make", MakeLinkCmd, NULL, "make symlink");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name");
     cmd_AddParm(ts, "-to", CMD_SINGLE, 0, "target");
@@ -661,9 +661,9 @@ int wmain(int argc, wchar_t **wargv)
 #ifndef WIN32
     if (rxInitDone) rx_Finalize();
 #endif /* not WIN32 */
-    
+
     FreeUtf8CmdLine(argc, argv);
-    
+
     return code;
 }
 

@@ -48,7 +48,7 @@ afs_is_running(void) {
     if (!AfsAvailable)
         return FALSE;
 
-    if (GetServiceStatus(NULL, TRANSARCAFSDAEMON, 
+    if (GetServiceStatus(NULL, TRANSARCAFSDAEMON,
                          &CurrentState, NULL) != NOERROR)
         return FALSE;
     if (CurrentState != SERVICE_RUNNING)
@@ -82,7 +82,7 @@ afs_unlog_cred(khm_handle cred)
         return 0;
 
     cbbuf = sizeof(princ);
-    if(KHM_FAILED(kcdb_cred_get_attr(cred, afs_attr_server_princ, 
+    if(KHM_FAILED(kcdb_cred_get_attr(cred, afs_attr_server_princ,
                                      NULL, &princ, &cbbuf)))
         return 1;
 
@@ -100,9 +100,9 @@ afs_unlog_cred(khm_handle cred)
 /* convert a ktc_principal to a wchar_t string form that looks like
     name.instance@cell return 0 if it worked. non-zero otherwise
 */
-int 
-afs_princ_to_string(struct ktc_principal * p, 
-                    wchar_t * buf, 
+int
+afs_princ_to_string(struct ktc_principal * p,
+                    wchar_t * buf,
                     size_t cbbuf)
 {
     wchar_t wbuf[256];
@@ -135,7 +135,7 @@ afs_princ_to_string(struct ktc_principal * p,
     return rv;
 }
 
-int 
+int
 afs_list_tokens(void)
 {
     int r;
@@ -157,7 +157,7 @@ afs_list_tokens(void)
 
 /* is the credential provided an AFS token and is it from the
    specified cell? */
-static khm_int32 KHMAPI 
+static khm_int32 KHMAPI
 afs_filter_by_cell(khm_handle cred, khm_int32 flags, void * rock)
 {
     wchar_t wcell[MAXCELLCHARS];
@@ -172,7 +172,7 @@ afs_filter_by_cell(khm_handle cred, khm_int32 flags, void * rock)
         return FALSE;
 
     cbsize = sizeof(wcell);
-    if(KHM_FAILED(kcdb_cred_get_attr(cred, afs_attr_cell, 
+    if(KHM_FAILED(kcdb_cred_get_attr(cred, afs_attr_cell,
                                      NULL, wcell, &cbsize)))
         return FALSE;
 
@@ -231,8 +231,8 @@ afs_find_token(khm_handle credset, wchar_t * cell) {
         return cred;
 }
 
-static khm_int32 KHMAPI 
-afs_filter_krb5_tkt(khm_handle cred, khm_int32 flags, void * rock) 
+static khm_int32 KHMAPI
+afs_filter_krb5_tkt(khm_handle cred, khm_int32 flags, void * rock)
 {
     wchar_t cname[KCDB_CRED_MAXCCH_NAME];
     khm_int32 type;
@@ -273,8 +273,8 @@ afs_filter_krb5_tkt(khm_handle cred, khm_int32 flags, void * rock)
     return TRUE;
 }
 
-static khm_int32 KHMAPI 
-afs_filter_krb4_tkt(khm_handle cred, khm_int32 flags, void * rock) 
+static khm_int32 KHMAPI
+afs_filter_krb4_tkt(khm_handle cred, khm_int32 flags, void * rock)
 {
     wchar_t cname[KCDB_CRED_MAXCCH_NAME];
     khm_int32 type;
@@ -348,7 +348,7 @@ afs_list_tokens_internal(void)
 
     BreakAtEnd = 0;
     cellNum = 0;
-    while (1) 
+    while (1)
     {
         memset(&aserver, 0, sizeof(aserver));
         if (rc = ktc_ListTokens(cellNum, &cellNum, &aserver))
@@ -409,17 +409,17 @@ _no_krb5:
 
            Note that, we use another heuristic to find out which
            identity to associate the token with.
-   
+
            ASSUMPTION:
 
            The assumption here is that the principal for the token is
            computed as follows:
-           
+
            if realm != cell : principal looks like user@realm@cell
            if realm == cell : principal looks like user@realm
-        
+
            HEURISTIC:
-        
+
            We strip the part of the string that follows the second '@'
            sign to obtain the 'user@realm' part, which we use as the
            credential name.  If there is no second '@', we use the
@@ -465,9 +465,9 @@ _no_krb5:
         if(cell) {
             khm_handle c;
 
-            if(KHM_SUCCEEDED(kcdb_credset_find_filtered(NULL, -1, 
-                                                        afs_filter_by_cell, 
-                                                        (void *) cell, 
+            if(KHM_SUCCEEDED(kcdb_credset_find_filtered(NULL, -1,
+                                                        afs_filter_by_cell,
+                                                        (void *) cell,
                                                         &c, NULL))) {
                 khm_size cb;
 
@@ -500,9 +500,9 @@ _no_krb5:
         if (ident == NULL && cell != NULL) {
             khm_handle c;
 
-            if(KHM_SUCCEEDED(kcdb_credset_find_filtered(NULL, -1, 
+            if(KHM_SUCCEEDED(kcdb_credset_find_filtered(NULL, -1,
                                                         afs_filter_krb5_tkt,
-                                                        (void *) cell, 
+                                                        (void *) cell,
                                                         &c, NULL))) {
                 kcdb_cred_get_identity(c, &ident);
                 /* this could be Krb5 or Krb524, so we leave method at
@@ -514,7 +514,7 @@ _no_krb5:
 
         /* If that didn't work either, we look for a Krb4 ticket of
            the form afs.<cell>@<REALM> or afs@<CELL> which matches the
-           cell. 
+           cell.
 
            ASSUMPTION:
 
@@ -568,7 +568,7 @@ _no_krb5:
             cb = sizeof(tidname);
 
             if (KHM_SUCCEEDED(khc_open_space(csp_afscred,
-                                             L"Cells", 0, 
+                                             L"Cells", 0,
                                              &h_cellmap))) {
                 if (KHM_SUCCEEDED(khc_read_string(h_cellmap,
                                                   cell,
@@ -584,8 +584,8 @@ _no_krb5:
 
         /* all else failed */
         if(ident == NULL) {
-            if(KHM_FAILED(kcdb_identity_create(idname, 
-                                               KCDB_IDENT_FLAG_CREATE, 
+            if(KHM_FAILED(kcdb_identity_create(idname,
+                                               KCDB_IDENT_FLAG_CREATE,
                                                &ident)))
                 goto _exit;
         }
@@ -601,16 +601,16 @@ _no_krb5:
             TimetToFileTime(atoken.startTime, &ft);
             kcdb_cred_set_attr(cred, KCDB_ATTR_ISSUE, &ft, sizeof(ft));
         }
-        kcdb_cred_set_attr(cred, afs_attr_client_princ, 
+        kcdb_cred_set_attr(cred, afs_attr_client_princ,
                            &aclient, sizeof(aclient));
-        kcdb_cred_set_attr(cred, afs_attr_server_princ, 
+        kcdb_cred_set_attr(cred, afs_attr_server_princ,
                            &aserver, sizeof(aserver));
 
         if(cell) {
             kcdb_cred_set_attr(cred, afs_attr_cell, cell, (khm_size)KCDB_CBSIZE_AUTO);
         }
 
-        kcdb_cred_set_attr(cred, KCDB_ATTR_LOCATION, 
+        kcdb_cred_set_attr(cred, KCDB_ATTR_LOCATION,
                            location, (khm_size)KCDB_CBSIZE_AUTO);
 
         kcdb_credset_add_cred(afs_credset, cred, -1);
@@ -634,12 +634,12 @@ _exit:
 
 #define ALLOW_REGISTER 1
 static int
-ViceIDToUsername(char *username, 
-                 char *realm_of_user, 
+ViceIDToUsername(char *username,
+                 char *realm_of_user,
                  char *realm_of_cell,
                  char * cell_to_use,
-                 struct ktc_principal *aclient, 
-                 struct ktc_principal *aserver, 
+                 struct ktc_principal *aclient,
+                 struct ktc_principal *aserver,
                  struct ktc_token *atoken)
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
@@ -801,10 +801,10 @@ afs_klog(khm_handle identity,
     }
 
     if (linkedCell && ak_cellconfig.linkedCell)
-        StringCbCopyA(linkedCell, MAXCELLCHARS, 
+        StringCbCopyA(linkedCell, MAXCELLCHARS,
                       ak_cellconfig.linkedCell);
 
-    StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), 
+    StringCbCopyA(realm_of_cell, sizeof(realm_of_cell),
                   afs_realm_of_cell(&ak_cellconfig, FALSE));
 
     if (strlen(service) == 0)
@@ -851,7 +851,7 @@ afs_klog(khm_handle identity,
 
             pkrb5_cc_get_principal(context, k5cc, &client_principal);
             i = krb5_princ_realm(context, client_principal)->length;
-            if (i > MAXKTCREALMLEN-1) 
+            if (i > MAXKTCREALMLEN-1)
                 i = MAXKTCREALMLEN-1;
             StringCchCopyNA(realm_of_user, ARRAYLENGTH(realm_of_user),
                             krb5_princ_realm(context, client_principal)->data,
@@ -895,7 +895,7 @@ afs_klog(khm_handle identity,
                                            ServiceName,
                                            0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc, 
+                    r = pkrb5_get_credentials(context, 0, k5cc,
                                                &increds, &k5creds);
             }
 
@@ -939,14 +939,14 @@ afs_klog(khm_handle identity,
                                            CellName,
                                            0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc, 
+                    r = pkrb5_get_credentials(context, 0, k5cc,
                                                &increds, &k5creds);
             }
             if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                  r == KRB5_ERR_HOST_REALM_UNKNOWN ||
                  r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
                  strlen(realm_of_cell) == 0) {
-                StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), 
+                StringCbCopyA(realm_of_cell, sizeof(realm_of_cell),
                                afs_realm_of_cell(&ak_cellconfig, TRUE));
 
                 pkrb5_free_principal(context, increds.server);
@@ -957,14 +957,14 @@ afs_klog(khm_handle identity,
                                            CellName,
                                            0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc, 
+                    r = pkrb5_get_credentials(context, 0, k5cc,
                                                &increds, &k5creds);
             }
             if (r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                 r == KRB5_ERR_HOST_REALM_UNKNOWN ||
                 r == KRB5KRB_ERR_GENERIC /* Heimdal */) {
                 /* Next try Service@REALM */
-                StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), 
+                StringCbCopyA(realm_of_cell, sizeof(realm_of_cell),
                                afs_realm_of_cell(&ak_cellconfig, FALSE));
 
                 pkrb5_free_principal(context, increds.server);
@@ -974,7 +974,7 @@ afs_klog(khm_handle identity,
                                            ServiceName,
                                            0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc, 
+                    r = pkrb5_get_credentials(context, 0, k5cc,
                                                &increds, &k5creds);
             }
             if ((r == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
@@ -982,7 +982,7 @@ afs_klog(khm_handle identity,
                  r == KRB5KRB_ERR_GENERIC /* Heimdal */) &&
                  strlen(realm_of_cell) == 0) {
                 /* Next try Service@REALM */
-                StringCbCopyA(realm_of_cell, sizeof(realm_of_cell), 
+                StringCbCopyA(realm_of_cell, sizeof(realm_of_cell),
                                afs_realm_of_cell(&ak_cellconfig, TRUE));
 
                 pkrb5_free_principal(context, increds.server);
@@ -992,11 +992,11 @@ afs_klog(khm_handle identity,
                                            ServiceName,
                                            0);
                 if (r == 0)
-                    r = pkrb5_get_credentials(context, 0, k5cc, 
+                    r = pkrb5_get_credentials(context, 0, k5cc,
                                                &increds, &k5creds);
             }
 
-            if (r == 0 && strlen(realm_of_cell) == 0) 
+            if (r == 0 && strlen(realm_of_cell) == 0)
                 copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
 
             /* Check to make sure we received a valid ticket; if not remove it
@@ -1046,8 +1046,8 @@ afs_klog(khm_handle identity,
         atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
         atoken.startTime = k5creds->times.starttime;
         atoken.endTime = k5creds->times.endtime;
-        memcpy(&atoken.sessionKey, 
-               k5creds->keyblock.contents, 
+        memcpy(&atoken.sessionKey,
+               k5creds->keyblock.contents,
                k5creds->keyblock.length);
         atoken.ticketLen = k5creds->ticket.length;
         memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
@@ -1068,7 +1068,7 @@ afs_klog(khm_handle identity,
 
         if (atoken.kvno == btoken.kvno &&
             atoken.ticketLen == btoken.ticketLen &&
-            !memcmp(&atoken.sessionKey, &btoken.sessionKey, 
+            !memcmp(&atoken.sessionKey, &btoken.sessionKey,
                     sizeof(atoken.sessionKey)) &&
             !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen)) {
 
@@ -1080,7 +1080,7 @@ afs_klog(khm_handle identity,
                 pkrb5_free_context(context);
 
             _reportf(L"Same token already exists");
-            
+
             rc = 0;
             goto cleanup;
         }
@@ -1113,7 +1113,7 @@ afs_klog(khm_handle identity,
         StringCchCopyNA(p, MAXKTCNAMELEN - strlen(aclient.name),
                         k5creds->client->realm.data, len);
 
-        ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName, 
+        ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName,
                          &aclient, &aserver, &atoken);
 
         rc = ktc_SetToken(&aserver, &atoken, &aclient, 0);
@@ -1125,7 +1125,7 @@ afs_klog(khm_handle identity,
 
             if (context)
                 pkrb5_free_context(context);
-            
+
             goto cleanup;
         }
 
@@ -1135,7 +1135,7 @@ afs_klog(khm_handle identity,
 
         _reportf(L"Trying Krb524");
 
-        if (pkrb524_convert_creds_kdc && 
+        if (pkrb524_convert_creds_kdc &&
             (method == AFS_TOKEN_AUTO || method == AFS_TOKEN_KRB524)) {
             /* This requires krb524d to be running with the KDC */
             r = pkrb524_convert_creds_kdc(context, k5creds, &creds);
@@ -1165,14 +1165,14 @@ afs_klog(khm_handle identity,
     if (supports_krb4) {
 	kcdb_identity_get_config(identity, 0, &confighandle);
 	khc_read_int32(confighandle, L"Krb4Cred\\Krb4NewCreds", &supports_krb4);
-	khc_close_space(confighandle); 
+	khc_close_space(confighandle);
     }
 
     if (!supports_krb4)
         _reportf(L"Kerberos 4 not configured");
 
-    if (!bGotCreds && supports_krb4 && 
-        strlen(RealmName) < REALM_SZ && 
+    if (!bGotCreds && supports_krb4 &&
+        strlen(RealmName) < REALM_SZ &&
         (method == AFS_TOKEN_AUTO ||
          method == AFS_TOKEN_KRB4)) {
 
@@ -1181,7 +1181,7 @@ afs_klog(khm_handle identity,
         _reportf(L"Trying Kerberos 4");
 
         if (!realm_of_user[0] ) {
-            if ((rc = (*pkrb_get_tf_realm)((*ptkt_string)(), realm_of_user)) 
+            if ((rc = (*pkrb_get_tf_realm)((*ptkt_string)(), realm_of_user))
                 != KSUCCESS) {
                 /* can't determine realm of user */
                 _reportf(L"krb_get_tf_realm returns %d", rc);
@@ -1205,19 +1205,19 @@ afs_klog(khm_handle identity,
 
         if (rc != KSUCCESS) {
             _reportf(L"Trying to obtain new ticket");
-            if ((rc = (*pkrb_mk_req)(&ticket, ServiceName, 
+            if ((rc = (*pkrb_mk_req)(&ticket, ServiceName,
                                      CellName, RealmName, 0))
                 == KSUCCESS) {
-                if ((rc = (*pkrb_get_cred)(ServiceName, CellName, 
+                if ((rc = (*pkrb_get_cred)(ServiceName, CellName,
                                            RealmName, &creds)) != KSUCCESS) {
                     goto end_krb4;
                 } else {
                     _reportf(L"Got %S.%S@%S", ServiceName, CellName, RealmName);
                 }
-            } else if ((rc = (*pkrb_mk_req)(&ticket, ServiceName, 
+            } else if ((rc = (*pkrb_mk_req)(&ticket, ServiceName,
                                             "", RealmName, 0))
                        == KSUCCESS) {
-                if ((rc = (*pkrb_get_cred)(ServiceName, "", 
+                if ((rc = (*pkrb_get_cred)(ServiceName, "",
                                            RealmName, &creds)) != KSUCCESS) {
                     goto end_krb4;
                 } else {
@@ -1251,11 +1251,11 @@ afs_klog(khm_handle identity,
         if (tok_expiration)
             *tok_expiration = atoken.endTime;
 
-        if (!(rc = ktc_GetToken(&aserver, &btoken, 
+        if (!(rc = ktc_GetToken(&aserver, &btoken,
                                 sizeof(btoken), &aclient)) &&
             atoken.kvno == btoken.kvno &&
             atoken.ticketLen == btoken.ticketLen &&
-            !memcmp(&atoken.sessionKey, &btoken.sessionKey, 
+            !memcmp(&atoken.sessionKey, &btoken.sessionKey,
                     sizeof(atoken.sessionKey)) &&
             !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen)) {
 
@@ -1281,7 +1281,7 @@ afs_klog(khm_handle identity,
 
         StringCbCopyA(aclient.cell, sizeof(aclient.cell), CellName);
 
-        ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName, 
+        ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName,
                          &aclient, &aserver, &atoken);
 
         if (rc = ktc_SetToken(&aserver, &atoken, &aclient, 0)) {
@@ -1352,7 +1352,7 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 #endif
     } else {
 	if ( pkrb5_init_context ) {
-	    r = pkrb5_init_context(&ctx); 
+	    r = pkrb5_init_context(&ctx);
 	    if ( !r )
 		r = pkrb5_get_host_realm(ctx, cellconfig->hostName[0], &realmlist);
 	    if ( !r && realmlist && realmlist[0] ) {
@@ -1365,7 +1365,7 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 
 	if (r) {
 	    if (pkrb_get_krbhst && pkrb_realmofhost) {
-		StringCbCopyA(krbrlm, sizeof(krbrlm), 
+		StringCbCopyA(krbrlm, sizeof(krbrlm),
 			       (char *)(*pkrb_realmofhost)(cellconfig->hostName[0]));
 		if ((*pkrb_get_krbhst)(krbhst, krbrlm, 1) != KSUCCESS)
 		    krbrlm[0] = '\0';
@@ -1392,7 +1392,7 @@ afs_realm_of_cell(afs_conf_cell *cellconfig, BOOL referral_fallback)
 /**************************************/
 /* afs_get_cellconfig():                  */
 /**************************************/
-static int 
+static int
 afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
 {
     int	rc;
@@ -1414,14 +1414,14 @@ afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
 
     StringCbCopyA(cellconfig->name, (MAXCELLCHARS+1) * sizeof(char), cell);
 
-    rc = cm_SearchCellRegistry(1, cell, NULL, linkedCell, 
+    rc = cm_SearchCellRegistry(1, cell, NULL, linkedCell,
                                afs_get_cellconfig_callback, (void*) cellconfig);
     if (rc && rc != CM_ERROR_FORCE_DNS_LOOKUP)
-        rc = cm_SearchCellFileEx(cell, NULL, linkedCell, afs_get_cellconfig_callback, 
+        rc = cm_SearchCellFileEx(cell, NULL, linkedCell, afs_get_cellconfig_callback,
                                  (void*)cellconfig);
     if(rc)
-        rc = cm_SearchCellByDNS(cell, NULL, &ttl, 
-                                afs_get_cellconfig_callback, 
+        rc = cm_SearchCellByDNS(cell, NULL, &ttl,
+                                afs_get_cellconfig_callback,
                                 (void*) cellconfig);
 
     if (linkedCell[0])
@@ -1433,16 +1433,16 @@ afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
 /**************************************/
 /* afs_get_cellconfig_callback():          */
 /**************************************/
-static long 
-afs_get_cellconfig_callback(void *cellconfig, 
-                            struct sockaddr_in *addrp, 
+static long
+afs_get_cellconfig_callback(void *cellconfig,
+                            struct sockaddr_in *addrp,
                             char *namep,
                             unsigned short ipRank)
 {
     afs_conf_cell *cc = (afs_conf_cell *)cellconfig;
 
     cc->hostAddr[cc->numServers] = *addrp;
-    StringCbCopyA(cc->hostName[cc->numServers], 
+    StringCbCopyA(cc->hostName[cc->numServers],
                   sizeof(cc->hostName[0]), namep);
     cc->numServers++;
     return(0);
@@ -1456,11 +1456,11 @@ void
 afs_report_error(LONG rc, LPCSTR FailedFunctionName)
 {
     char message[256];
-    const char *errText; 
+    const char *errText;
 
-    // Using AFS defines as error messages for now, until Transarc 
-    // gets back to me with "string" translations of each of these 
-    // const. defines. 
+    // Using AFS defines as error messages for now, until Transarc
+    // gets back to me with "string" translations of each of these
+    // const. defines.
     if (rc == KTC_ERROR)
         errText = "KTC_ERROR";
     else if (rc == KTC_TOOBIG)
@@ -1480,109 +1480,109 @@ afs_report_error(LONG rc, LPCSTR FailedFunctionName)
     else
         errText = "Unknown error!";
 
-    StringCbPrintfA(message, sizeof(message), 
+    StringCbPrintfA(message, sizeof(message),
                     "%s\n(%s failed)", errText, FailedFunctionName);
     _report_cs1(KHERR_ERROR, L"%1!S!", _cptr(message));
     _resolve();
     return;
 }
 
-DWORD 
-GetServiceStatus(LPSTR lpszMachineName, 
-                 LPSTR lpszServiceName, 
+DWORD
+GetServiceStatus(LPSTR lpszMachineName,
+                 LPSTR lpszServiceName,
                  DWORD *lpdwCurrentState,
-                 DWORD *lpdwWaitHint) 
-{ 
-    DWORD           hr               = NOERROR; 
-    SC_HANDLE       schSCManager     = NULL; 
-    SC_HANDLE       schService       = NULL; 
-    DWORD           fdwDesiredAccess = 0; 
-    SERVICE_STATUS  ssServiceStatus  = {0}; 
-    BOOL            fRet             = FALSE; 
+                 DWORD *lpdwWaitHint)
+{
+    DWORD           hr               = NOERROR;
+    SC_HANDLE       schSCManager     = NULL;
+    SC_HANDLE       schService       = NULL;
+    DWORD           fdwDesiredAccess = 0;
+    SERVICE_STATUS  ssServiceStatus  = {0};
+    BOOL            fRet             = FALSE;
 
-    *lpdwCurrentState = 0; 
- 
-    fdwDesiredAccess = GENERIC_READ; 
- 
-    schSCManager = OpenSCManagerA(lpszMachineName,  
+    *lpdwCurrentState = 0;
+
+    fdwDesiredAccess = GENERIC_READ;
+
+    schSCManager = OpenSCManagerA(lpszMachineName,
                                   NULL,
-                                  fdwDesiredAccess); 
- 
-    if(schSCManager == NULL) { 
+                                  fdwDesiredAccess);
+
+    if(schSCManager == NULL) {
         hr = GetLastError();
-        goto cleanup; 
-    } 
- 
+        goto cleanup;
+    }
+
     schService = OpenServiceA(schSCManager,
                               lpszServiceName,
                               fdwDesiredAccess);
- 
-    if(schService == NULL) { 
+
+    if(schService == NULL) {
         hr = GetLastError();
-        goto cleanup; 
-    } 
- 
+        goto cleanup;
+    }
+
     fRet = QueryServiceStatus(schService,
-                              &ssServiceStatus); 
- 
-    if(fRet == FALSE) { 
-        hr = GetLastError(); 
-        goto cleanup; 
-    } 
- 
-    *lpdwCurrentState = ssServiceStatus.dwCurrentState; 
+                              &ssServiceStatus);
+
+    if(fRet == FALSE) {
+        hr = GetLastError();
+        goto cleanup;
+    }
+
+    *lpdwCurrentState = ssServiceStatus.dwCurrentState;
     if (lpdwWaitHint)
         *lpdwWaitHint = ssServiceStatus.dwWaitHint;
-cleanup: 
- 
-    CloseServiceHandle(schService); 
-    CloseServiceHandle(schSCManager); 
- 
-    return(hr); 
-} 
+cleanup:
 
-DWORD ServiceControl(LPSTR lpszMachineName, 
+    CloseServiceHandle(schService);
+    CloseServiceHandle(schSCManager);
+
+    return(hr);
+}
+
+DWORD ServiceControl(LPSTR lpszMachineName,
                      LPSTR lpszServiceName,
                      DWORD dwNewState) {
 
-    DWORD           hr               = NOERROR; 
-    SC_HANDLE       schSCManager     = NULL; 
-    SC_HANDLE       schService       = NULL; 
-    DWORD           fdwDesiredAccess = 0; 
-    SERVICE_STATUS  ssServiceStatus  = {0}; 
-    BOOL            fRet             = FALSE; 
+    DWORD           hr               = NOERROR;
+    SC_HANDLE       schSCManager     = NULL;
+    SC_HANDLE       schService       = NULL;
+    DWORD           fdwDesiredAccess = 0;
+    SERVICE_STATUS  ssServiceStatus  = {0};
+    BOOL            fRet             = FALSE;
     DWORD           dwCurrentState   = 0;
 
-    dwCurrentState = 0; 
- 
+    dwCurrentState = 0;
+
     fdwDesiredAccess = GENERIC_READ;
- 
-    schSCManager = OpenSCManagerA(lpszMachineName, NULL, 
-                                  fdwDesiredAccess); 
- 
+
+    schSCManager = OpenSCManagerA(lpszMachineName, NULL,
+                                  fdwDesiredAccess);
+
     if(schSCManager == NULL) {
         hr = GetLastError();
-        goto cleanup; 
+        goto cleanup;
     }
 
     fdwDesiredAccess = GENERIC_READ | GENERIC_EXECUTE;
 
     schService = OpenServiceA(schSCManager, lpszServiceName,
                               fdwDesiredAccess);
- 
+
     if(schService == NULL) {
         hr = GetLastError();
-        goto cleanup; 
-    } 
- 
+        goto cleanup;
+    }
+
     fRet = QueryServiceStatus(schService, &ssServiceStatus);
- 
+
     if(fRet == FALSE) {
-        hr = GetLastError(); 
-        goto cleanup; 
-    } 
- 
-    dwCurrentState = ssServiceStatus.dwCurrentState; 
+        hr = GetLastError();
+        goto cleanup;
+    }
+
+    dwCurrentState = ssServiceStatus.dwCurrentState;
 
     if (dwCurrentState == SERVICE_STOPPED &&
         dwNewState == SERVICE_RUNNING) {
@@ -1597,7 +1597,7 @@ DWORD ServiceControl(LPSTR lpszMachineName,
 
     if (dwCurrentState == SERVICE_RUNNING &&
         dwNewState == SERVICE_STOPPED) {
-        fRet = ControlService(schService, SERVICE_CONTROL_STOP, 
+        fRet = ControlService(schService, SERVICE_CONTROL_STOP,
                               &ssServiceStatus);
 
         if (fRet == FALSE) {
@@ -1605,13 +1605,13 @@ DWORD ServiceControl(LPSTR lpszMachineName,
             goto cleanup;
         }
     }
- 
-cleanup: 
- 
-    CloseServiceHandle(schService); 
-    CloseServiceHandle(schSCManager); 
- 
-    return(hr); 
+
+cleanup:
+
+    CloseServiceHandle(schService);
+    CloseServiceHandle(schSCManager);
+
+    return(hr);
 }
 
 khm_boolean

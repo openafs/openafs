@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright (c) 2008 - Secure Endpoints Inc.
  */
 
@@ -19,7 +19,7 @@ static afs_uint32        fidStatsHashTableSize = 0;
 
 /*
  * algorithm and implementation adapted from code written by
- * Frank Pilhofer <fp@fpx.de> 
+ * Frank Pilhofer <fp@fpx.de>
  */
 afs_uint32 nearest_prime(afs_uint32 s)
 {
@@ -33,18 +33,18 @@ afs_uint32 nearest_prime(afs_uint32 s)
     while (feld==NULL)
         zzz = feld = malloc (alloc=((max>>4)+1L));
 
-    for (count=0; count<alloc; count++) 
+    for (count=0; count<alloc; count++)
         *zzz++ = 0x00;
 
     while ((teste+=2) < max) {
         if (!TEST(feld, teste)) {
-            for (mom=3L*teste; mom<max; mom+=teste<<1) 
+            for (mom=3L*teste; mom<max; mom+=teste<<1)
                 SET (feld, mom);
         }
     }
 
-    count=s-2; 
-    if (s%2==0) 
+    count=s-2;
+    if (s%2==0)
         count++;
     while ((count+=2)<max) {
         if (!TEST(feld,count)) {
@@ -56,9 +56,9 @@ afs_uint32 nearest_prime(afs_uint32 s)
     return largest_prime;
 }
 
-/* We never free these objects so we don't need to 
+/* We never free these objects so we don't need to
  * worry about reuse or tracking the allocations
- * 
+ *
  * The management of the free allocation is not
  * thread safe because we never expect this code
  * to be called from more than one thread.
@@ -85,7 +85,7 @@ cm_fid_stats_t * cm_PerformanceGetNew(void)
 void cm_PerformanceInsertToHashTable(cm_fid_stats_t *statp)
 {
     afs_uint32 hash = statp->fid.hash % fidStatsHashTableSize;
-    
+
     statp->nextp = fidStatsHashTablep[hash];
     fidStatsHashTablep[hash] = statp;
 }
@@ -121,7 +121,7 @@ void cm_PerformanceAddSCache(cm_scache_t *scp)
         cm_req_t req;
 
         cm_InitReq(&req);
-        
+
         cellp = cm_FindCellByID(statp->fid.cell, 0);
         if (cellp) {
             if (!cm_FindVolumeByID(cellp, statp->fid.volume, cm_rootUserp, &req, 0, &volp)) {
@@ -159,7 +159,7 @@ void cm_PerformanceTuningInit(void)
 
     lock_ObtainRead(&cm_scacheLock);
     for (i=0; i<cm_data.scacheHashTableSize; i++) {
-        for (scp=cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) { 
+        for (scp=cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) {
             if (scp->fid.cell == 0)
                 continue;
             lock_ReleaseRead(&cm_scacheLock);
@@ -225,13 +225,13 @@ void cm_PerformanceTuningInit(void)
                 cm_PerformanceInsertToHashTable(statp);
             }
         }
-    }	
+    }
     lock_ReleaseRead(&cm_volumeLock);
 
     lock_ObtainRead(&buf_globalLock);
     for (bp = cm_data.buf_allp; bp; bp=bp->allp) {
         int valid = 0;
-    
+
         if (bp->fid.cell == 0)
             continue;
 
@@ -244,7 +244,7 @@ void cm_PerformanceTuningInit(void)
             lock_ReleaseRead(&scp->rw);
             lock_ReleaseMutex(&bp->mx);
             cm_ReleaseSCache(scp);
-        
+
             if (valid) {
                 hash = bp->fid.hash % fidStatsHashTableSize;
                 for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {
@@ -262,7 +262,7 @@ void cm_PerformanceTuningInit(void)
     cm_PerformancePrintReport();
 }
 
-void cm_PerformanceTuningCheck(void) 
+void cm_PerformanceTuningCheck(void)
 {
     afs_uint32 i;
     cm_scache_t *scp;
@@ -365,13 +365,13 @@ void cm_PerformanceTuningCheck(void)
                 cm_PerformanceInsertToHashTable(statp);
             }
         }
-    }	
+    }
     lock_ReleaseRead(&cm_volumeLock);
 
     lock_ObtainRead(&buf_globalLock);
     for (bp = cm_data.buf_allp; bp; bp=bp->allp) {
         int valid = 0;
-    
+
         if (bp->fid.cell == 0)
             continue;
 
@@ -384,7 +384,7 @@ void cm_PerformanceTuningCheck(void)
             lock_ReleaseRead(&scp->rw);
             lock_ReleaseMutex(&bp->mx);
             cm_ReleaseSCache(scp);
-        
+
             if (valid) {
                 hash = bp->fid.hash % fidStatsHashTableSize;
                 for (statp = fidStatsHashTablep[hash]; statp; statp = statp->nextp) {
@@ -428,7 +428,7 @@ void cm_PerformancePrintReport(void)
 
             if ((statp->flags & (CM_FIDSTATS_FLAG_RO | CM_FIDSTATS_FLAG_PURERO)) == (CM_FIDSTATS_FLAG_RO | CM_FIDSTATS_FLAG_PURERO))
                 ro_vols++;
-            else if (statp->flags & CM_FIDSTATS_FLAG_RO) 
+            else if (statp->flags & CM_FIDSTATS_FLAG_RO)
                 bk_vols++;
             else
                 rw_vols++;
@@ -486,7 +486,7 @@ void cm_PerformancePrintReport(void)
                         fid_0k++;
                     else if (statp->fileLength.LowPart <= 1024)
                         fid_1k++;
-                    else if (statp->fileLength.LowPart <= 4096) 
+                    else if (statp->fileLength.LowPart <= 4096)
                         fid_4k++;
                     else if (statp->fileLength.LowPart <= 65536)
                         fid_64k++;
@@ -500,9 +500,9 @@ void cm_PerformancePrintReport(void)
                         fid_1g++;
                     else
                         fid_2g++;
-                } else {    
+                } else {
                     fid_large++;
-                }   
+                }
             }
         }
     }
@@ -514,7 +514,7 @@ void cm_PerformancePrintReport(void)
     }
     strncat(logfileName, "\\afsd_performance.log", sizeof(logfileName));
 
-    hLogFile = CreateFile(logfileName, FILE_APPEND_DATA, FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 
+    hLogFile = CreateFile(logfileName, FILE_APPEND_DATA, FILE_SHARE_WRITE, NULL, OPEN_ALWAYS,
                           FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hLogFile) {
@@ -531,7 +531,7 @@ void cm_PerformancePrintReport(void)
                         "VOLs - rw=%u ro=%u bk=%u\r\n"
                         "TYPEs- file=%u dir=%u mp=%u sym=%u unk=%u\r\n"
                         "SIZEs- 0kb=%u 1kb=%u 4kb=%u 64kb=%u 1mb=%u 20m=%u 100mb=%u 1gb=%u 2gb=%u larger=%u\r\n\r\n",
-                         t, 
+                         t,
                          cm_data.currentSCaches, cm_data.maxSCaches, cm_data.currentVolumes, cm_data.maxVolumes,
                          cm_data.buf_nbuffers - buf_CountFreeList(), cm_data.buf_nbuffers,
                          fid_cnt, fid_w_vol, fid_w_scache, fid_w_callbacks, fid_w_buffers,

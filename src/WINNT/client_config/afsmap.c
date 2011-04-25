@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2004.  Secure Endpoints Inc.
  *
  * This software has been released under the terms of the IBM Public
@@ -16,8 +16,8 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 
-/* 
- * 
+/*
+ *
  */
 
 void usage(char * program)
@@ -30,7 +30,7 @@ void usage(char * program)
     exit(1);
 }
 
-int main(int argc, char * argv) 
+int main(int argc, char * argv)
 {
     int retval = 0;
     char drive = 0;
@@ -57,7 +57,7 @@ int main(int argc, char * argv)
     if ( stricmp("/help", argv[1]) ) {
         usage(program);
     }
-    
+
     if ( strlen(argv[1]) == 2 && argv[1][1] == ':' ) {
         drive = toupper(argv[1][0]);
         if ( drive < 'A' || drive > 'Z' )
@@ -80,7 +80,7 @@ int main(int argc, char * argv)
         return 0;
     }
 
-    /* need to determine if argv[3] contains a /mountroot or \\netbiosname path.  
+    /* need to determine if argv[3] contains a /mountroot or \\netbiosname path.
      * do not use hard code constants; instead use the registry strings
      */
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
@@ -102,7 +102,7 @@ int main(int argc, char * argv)
     }
     netbiosNameLen = strlen(netbiosName);
 
-    if ( argv[3][0] == '\\' && argv[3][1] == '\\' && 
+    if ( argv[3][0] == '\\' && argv[3][1] == '\\' &&
          _strnicmp(netbiosName, &argv[3][2], netbiosNameLen) == 0 &&
          argv[3][netbiosNameLen+3] == '\\') {
         /* we have a UNC style path */
@@ -126,7 +126,7 @@ int main(int argc, char * argv)
         return 0;
     }
 
-    if ( argv[3][0] == '/' && 
+    if ( argv[3][0] == '/' &&
          _strnicmp(mountRoot, &argv[1], mountRootLen) &&
          argv[3][mountRootLen+2] == '/') {
         /* we have an afs path */

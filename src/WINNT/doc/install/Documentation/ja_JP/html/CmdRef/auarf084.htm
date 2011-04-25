@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -29,7 +29,7 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>backup readlabel</B>  [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>>]
                   [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
-   
+
 <B>backup rea</B> [<B>-p</B> &lt;<VAR>TC port offset</VAR>>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -54,19 +54,19 @@
 <P>このコマンドの出力は、コマンドが発行されたシェル・ウィンドウと [テープ・コーディネーター] ウィンドウに表示されます。
 <P>磁気テープにラベルが付いていないか、指定された磁気テープ装置が空の場合には、次のような出力が表示されます。
 <PRE>   Failed to read tape label.
-   
+
 </PRE>
 <P>そうでない場合には、シェル・ウィンドウに次の出力が表示されます。
 <PRE>   Tape read was labelled: <VAR>tape name</VAR> (<VAR>dump id</VAR>)
         size: <VAR>size</VAR> Kbytes
-    
+
 </PRE>
 <P>磁気テープに永続名がある場合には <VAR>tape name</VAR> に永続名が、そうでない場合には AFS 磁気テープ名が表示されます。
 <VAR>dump ID</VAR> には、磁気テープにある初期ダンプのダンプ ID が、
 <VAR>size</VAR> には記録されている磁気テープの容量が キロバイトで表示されます。
 <P>[テープ・コーディネーター] ウィンドウでは、下線で囲まれた <TT>Tape</TT> <TT>label</TT> という見出しが上部に表示され、下部には次の文字列が表示されます。
 <PRE>   -- End of tape label --
-   
+
 </PRE>
 <P>この間に、次の情報が表示されます。
 <DL>
@@ -108,7 +108,7 @@ KB 単位で表示されます。これは、磁気テープ上のデータ量ではありません。この値は、<
 <PRE>   % <B>backup readlabel -portoffset 6</B>
    Tape read was labelled: oct.guest.dump (907215000)
         size: 2097152 Kbytes
-   
+
 </PRE>
 <P>[テープ・コーディネーター] ウィンドウの出力は、次のようになります。
 <PRE>   Tape label
@@ -122,13 +122,13 @@ KB 単位で表示されます。これは、磁気テープ上のデータ量ではありません。この値は、<
    dump id = 907215000
    useCount = 5
    ---- End of tape label ----
-   
+
 </PRE>
 <P>永続名のない磁気テープの場合は、次のようになります。
 <PRE>   % backup readlabel -portoffset 6
    Tape read was labelled: guests.monthly.2 (909899900)
         size: 2097152 Kbytes
-   
+
 </PRE>
 <P>[テープ・コーディネーター] ウィンドウの出力は、次のようになります。
 <PRE>   Tape label
@@ -142,7 +142,7 @@ KB 単位で表示されます。これは、磁気テープ上のデータ量ではありません。この値は、<
    dump id = 909899900
    useCount = 1
    ---- End of tape label ----
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
@@ -151,11 +151,11 @@ KB 単位で表示されます。これは、磁気テープ上のデータ量ではありません。この値は、<
 <P><A HREF="auarf079.htm#HDRBK_LABELTAPE">backup labeltape</A>
 <P><A HREF="auarf126.htm#HDRBUTC">butc</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf083.htm">前ページ</A> &#124; <A HREF="auarf085.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf083.htm">前ページ</A> &#124; <A HREF="auarf085.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

@@ -34,37 +34,37 @@
 /*! \defgroup kcdb NetIDMgr Credentials Database */
 /*@{*/
 
-/*! \brief Maximum length in characters of short description 
+/*! \brief Maximum length in characters of short description
 
     The length includes the terminating \a NULL character.
     */
 #define KCDB_MAXCCH_SHORT_DESC  256
 
-/*! \brief Maximum length in bytes of short description 
+/*! \brief Maximum length in bytes of short description
 
     The length includes the terminating \a NULL character.
     */
 #define KCDB_MAXCB_SHORT_DESC   (sizeof(wchar_t) * KCDB_MAXCCH_SHORT_DESC)
 
-/*! \brief Maximum length in characters of long description 
+/*! \brief Maximum length in characters of long description
 
     The length includes the terminating \a NULL character.
     */
 #define KCDB_MAXCCH_LONG_DESC   8192
 
-/*! \brief Maximum length in characters of long description 
+/*! \brief Maximum length in characters of long description
 
     The length includes the terminating \a NULL character.
     */
 #define KCDB_MAXCB_LONG_DESC    (sizeof(wchar_t) * KCDB_MAXCCH_LONG_DESC)
 
-/*! \brief Maximum length in characters of name 
+/*! \brief Maximum length in characters of name
 
     The length includes the terminating \a NULL character.
     */
 #define KCDB_MAXCCH_NAME        256
 
-/*! \brief Maximum length in bytes of short description 
+/*! \brief Maximum length in bytes of short description
 
     The length includes the terminating \a NULL character.
     */
@@ -106,7 +106,7 @@ Functions, macros etc. for manipulating identities.
 \name Flags for identities */
 /*@{*/
 
-/*! \brief Create the identity if it doesn't already exist. 
+/*! \brief Create the identity if it doesn't already exist.
     \note  Only to be used with kcdb_identity_create() */
 #define KCDB_IDENT_FLAG_CREATE      0x10000000L
 
@@ -131,7 +131,7 @@ Functions, macros etc. for manipulating identities.
  */
 #define KCDB_IDENT_FLAG_ATTRIBS     0x08000000L
 
-/*! \brief This is the default identity. 
+/*! \brief This is the default identity.
 
     At most one identity will have this flag set at any given time.
     To set or reset the flag, use kcdb_identity_set_default() */
@@ -307,7 +307,7 @@ typedef struct tag_kcdb_ident_info {
 
     \see ::KMSG_IDENT_VALIDATE_NAME
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_validate_name(const wchar_t * name);
 
 /*! \brief Validate an identity
@@ -317,47 +317,47 @@ kcdb_identpro_validate_name(const wchar_t * name);
 
     \see ::KMSG_IDENT_VALIDATE_IDENTITY
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_validate_identity(khm_handle identity);
 
-/*! \brief Canonicalize the name 
+/*! \brief Canonicalize the name
 
 
     \see ::KMSG_IDENT_CANON_NAME
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_identpro_canon_name(const wchar_t * name_in, 
-                         wchar_t * name_out, 
+KHMEXP khm_int32 KHMAPI
+kcdb_identpro_canon_name(const wchar_t * name_in,
+                         wchar_t * name_out,
                          khm_size * cb_name_out);
 
-/*! \brief Compare two identity names 
+/*! \brief Compare two identity names
 
     \see ::KMSG_IDENT_COMPARE_NAME
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_compare_name(const wchar_t * name1,
                            const wchar_t * name2);
 
-/*! \brief Set the specified identity as the default 
+/*! \brief Set the specified identity as the default
 
     \see ::KMSG_IDENT_SET_DEFAULT
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_set_default(khm_handle identity);
 
-/*! \brief Set the specified identity as searchable 
+/*! \brief Set the specified identity as searchable
 
     \see ::KMSG_IDENT_SET_SEARCHABLE
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_set_searchable(khm_handle identity,
                              khm_boolean searchable);
 
-/*! \brief Update the specified identity 
+/*! \brief Update the specified identity
 
     \see ::KMSG_IDENT_UPDATE
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_update(khm_handle identity);
 
 /*! \brief Obtain the UI callback
@@ -367,14 +367,14 @@ kcdb_identpro_update(khm_handle identity);
 
     \see ::KMSG_IDENT_GET_UI_CALLBACK
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_get_ui_cb(void * rock);
 
-/*! \brief Notify an identity provider of the creation of a new identity 
+/*! \brief Notify an identity provider of the creation of a new identity
 
     \see ::KMSG_IDENT_NOTIFY_CREATE
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identpro_notify_create(khm_handle identity);
 
 /*@}*/
@@ -383,7 +383,7 @@ kcdb_identpro_notify_create(khm_handle identity);
 
     \return TRUE or FALSE to the question, is this valid?
 */
-KHMEXP khm_boolean KHMAPI 
+KHMEXP khm_boolean KHMAPI
 kcdb_identity_is_valid_name(const wchar_t * name);
 
 /*! \brief Create or open an identity.
@@ -406,9 +406,9 @@ kcdb_identity_is_valid_name(const wchar_t * name);
         kcdb_identity_release() to release the identity once it is no
         longer needed.
     */
-KHMEXP khm_int32 KHMAPI 
-kcdb_identity_create(const wchar_t *name, 
-                     khm_int32 flags, 
+KHMEXP khm_int32 KHMAPI
+kcdb_identity_create(const wchar_t *name,
+                     khm_int32 flags,
                      khm_handle * result);
 
 /*! \brief Mark an identity for deletion.
@@ -418,7 +418,7 @@ kcdb_identity_create(const wchar_t *name,
     identity.  Once all references to the identity are released, it
     will be removed from memory.  All associated credentials will also
     be removed. */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_delete(khm_handle id);
 
 /*! \brief Set or unset the specified flags in the specified identity.
@@ -452,8 +452,8 @@ kcdb_identity_delete(khm_handle id);
     check the flags in the identity using kcdb_identity_get_flags() to
     check which flags have been set and which have failed.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_identity_set_flags(khm_handle id, 
+KHMEXP khm_int32 KHMAPI
+kcdb_identity_set_flags(khm_handle id,
                         khm_int32 flags,
                         khm_int32 mask);
 
@@ -461,11 +461,11 @@ kcdb_identity_set_flags(khm_handle id,
 
     The returned flags may include internal flags.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_identity_get_flags(khm_handle id, 
+KHMEXP khm_int32 KHMAPI
+kcdb_identity_get_flags(khm_handle id,
                         khm_int32 * flags);
 
-/*! \brief Return the name of the identity 
+/*! \brief Return the name of the identity
 
     \param[out] buffer Buffer to copy the identity name into.  The
         maximum size of an identity name is \a KCDB_IDENT_MAXCB_NAME.
@@ -473,9 +473,9 @@ kcdb_identity_get_flags(khm_handle id,
         is returned in \a pcbsize.
 
     \param[in,out] pcbsize Size of buffer in bytes. */
-KHMEXP khm_int32 KHMAPI 
-kcdb_identity_get_name(khm_handle id, 
-                       wchar_t * buffer, 
+KHMEXP khm_int32 KHMAPI
+kcdb_identity_get_name(khm_handle id,
+                       wchar_t * buffer,
                        khm_size * pcbsize);
 
 /*! \brief Set the specified identity as the default.
@@ -485,7 +485,7 @@ kcdb_identity_get_name(khm_handle id,
 
     \see kcdb_identity_set_flags()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_set_default(khm_handle id);
 
 /*! \brief Mark the specified identity as the default.
@@ -493,7 +493,7 @@ kcdb_identity_set_default(khm_handle id);
     This API is reserved for use by identity providers as a means of
     specifying which identity is default.  The difference between
     kcdb_identity_set_default() and kcdb_identity_set_default_int() is
-    in semantics.  
+    in semantics.
 
     - kcdb_identity_set_default() is used to request the KCDB to
       designate the specified identity as the default.  When
@@ -519,10 +519,10 @@ kcdb_identity_set_default_int(khm_handle id);
     If there is no default identity, then the handle pointed to by \a
     pvid is set to \a NULL and the function returns
     KHM_ERROR_NOT_FOUND. */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_default(khm_handle * pvid);
 
-/*! \brief Get the configuration space for the identity. 
+/*! \brief Get the configuration space for the identity.
 
     If the configuration space for the identity does not exist and the
     flags parameter does not specify ::KHM_FLAG_CREATE, then the
@@ -541,7 +541,7 @@ kcdb_identity_get_default(khm_handle * pvid);
         successful, this receives a handle to the configuration space.
         Use khc_close_space() to close the handle.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_config(khm_handle id,
                          khm_int32 flags,
                          khm_handle * result);
@@ -552,12 +552,12 @@ kcdb_identity_get_config(khm_handle id,
     held.  \note Once the handle is released, it can not be
     revalidated by calling kcdb_identity_hold().  Doing so would lead
     to unpredictable consequences. */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_hold(khm_handle id);
 
 /*! \brief Release a reference to an identity.
     \see kcdb_identity_hold() */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_release(khm_handle id);
 
 /*! \brief Set the identity provider subscription
@@ -567,7 +567,7 @@ kcdb_identity_release(khm_handle id);
 
     \param[in] sub New identity provider subscription
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_set_provider(khm_handle sub);
 
 /*! \brief Set the primary credentials type
@@ -576,7 +576,7 @@ kcdb_identity_set_provider(khm_handle sub);
     provider.  As such, this function should only be called by an
     identity provider.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_set_type(khm_int32 cred_type);
 
 /*! \brief Retrieve the identity provider subscription
@@ -592,7 +592,7 @@ kcdb_identity_set_type(khm_int32 cred_type);
         identity provider.  If \a sub was not NULL, the handle it
         points to has been set to NULL.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_provider(khm_handle * sub);
 
 /*! \brief Retrieve the identity provider credentials type
@@ -600,7 +600,7 @@ kcdb_identity_get_provider(khm_handle * sub);
     This is the credentials type that the identity provider has
     designated as the primary credentials type.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_type(khm_int32 * ptype);
 
 /*! \brief Returns TRUE if the two identities are equal
@@ -623,7 +623,7 @@ kcdb_identity_is_equal(khm_handle identity1,
         individual data type handlers may copy in less than this many
         bytes in to the credential.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_set_attr(khm_handle identity,
                        khm_int32 attr_id,
                        void * buffer,
@@ -638,7 +638,7 @@ kcdb_identity_set_attr(khm_handle identity,
         individual data type handlers may copy in less than this many
         bytes in to the credential.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_set_attrib(khm_handle identity,
                          wchar_t * attr_name,
                          void * buffer,
@@ -662,7 +662,7 @@ kcdb_identity_set_attrib(khm_handle identity,
         exists in this identity then the function will return
         KHM_ERROR_SUCCESS, otherwise it returns KHM_ERROR_NOT_FOUND.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_attr(khm_handle identity,
                        khm_int32 attr_id,
                        khm_int32 * attr_type,
@@ -684,7 +684,7 @@ kcdb_identity_get_attr(khm_handle identity,
         exists in this identity then the function will return
         KHM_ERROR_SUCCESS, otherwise it returns KHM_ERROR_NOT_FOUND.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_attrib(khm_handle identity,
                          wchar_t * attr_name,
                          khm_int32 * attr_type,
@@ -719,7 +719,7 @@ kcdb_identity_get_attrib(khm_handle identity,
     \retval KHM_ERROR_TOO_LONG Either \a buffer was NULL or the
         supplied buffer was insufficient
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_attr_string(khm_handle identity,
                               khm_int32 attr_id,
                               wchar_t * buffer,
@@ -749,7 +749,7 @@ kcdb_identity_get_attr_string(khm_handle identity,
 
     \see kcdb_identity_get_attr_string()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_get_attrib_string(khm_handle identity,
                                 wchar_t * attr_name,
                                 wchar_t * buffer,
@@ -807,7 +807,7 @@ kcdb_identity_get_attrib_string(khm_handle identity,
         guaranteed to work since the list of identities may change
         between the two calls.
   */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_enum(khm_int32 and_flags,
                    khm_int32 eq_flags,
                    wchar_t * name_buf,
@@ -825,7 +825,7 @@ kcdb_identity_enum(khm_int32 and_flags,
 
     \see kcdb_identity_refresh()
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_refresh(khm_handle vid);
 
 /*! \brief Refresh all identities
@@ -835,7 +835,7 @@ kcdb_identity_refresh(khm_handle vid);
 
     \see kcdb_identityt_refresh()
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_identity_refresh_all(void);
 
 /* KSMG_KCDB_IDENT notifications are structured as follows:
@@ -866,8 +866,8 @@ kcdb_identity_refresh_all(void);
 
     \see kcdb_credset_apply()
 */
-typedef khm_int32 
-(KHMAPI *kcdb_cred_apply_func)(khm_handle cred, 
+typedef khm_int32
+(KHMAPI *kcdb_cred_apply_func)(khm_handle cred,
                                void * rock);
 
 /*! \brief Credentials filter function.
@@ -883,9 +883,9 @@ typedef khm_int32
     \see kcdb_credset_collect_filtered()
     \see kcdb_credset_extract_filtered()
 */
-typedef khm_int32 
-(KHMAPI *kcdb_cred_filter_func)(khm_handle cred, 
-                                khm_int32 flags, 
+typedef khm_int32
+(KHMAPI *kcdb_cred_filter_func)(khm_handle cred,
+                                khm_int32 flags,
                                 void * rock);
 
 /*! \brief Credentials compare function.
@@ -899,9 +899,9 @@ typedef khm_int32
     \see kcdb_credset_sort()
     \see ::kcdb_credtype
 */
-typedef khm_int32 
-(KHMAPI *kcdb_cred_comp_func)(khm_handle cred1, 
-                              khm_handle cred2, 
+typedef khm_int32
+(KHMAPI *kcdb_cred_comp_func)(khm_handle cred1,
+                              khm_handle cred2,
                               void * rock);
 
 /*! \defgroup kcdb_credset Credential sets */
@@ -926,14 +926,14 @@ typedef khm_int32
     \see kcdb_credset_delete()
     \see kcdb_credset_collect()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_create(khm_handle * result);
 
 /** \brief Delete a credential set
 
     \see kcdb_credset_create()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_delete(khm_handle credset);
 
 /** \brief Collect credentials from a credential set to another credential set.
@@ -1014,10 +1014,10 @@ kcdb_credset_delete(khm_handle credset);
 
     \note The destination credential set cannot be sealed.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_collect(khm_handle cs_dest,
                      khm_handle cs_src,
-                     khm_handle identity, 
+                     khm_handle identity,
                      khm_int32 type,
                      khm_int32 * delta);
 
@@ -1025,7 +1025,7 @@ kcdb_credset_collect(khm_handle cs_dest,
     \see kcdb_credset_collect() */
 #define KCDB_DELTA_ADD      1
 
-/*! \brief Credentials were deleted 
+/*! \brief Credentials were deleted
     \see kcdb_credset_collect() */
 #define KCDB_DELTA_DEL      2
 
@@ -1040,14 +1040,14 @@ kcdb_credset_collect(khm_handle cs_dest,
 #define KCDB_CREDCOLL_FILTER_ROOT   1
 
 /*! \brief Indicates that the credential to be filtered is from the source
-        credential set 
-        
+        credential set
+
     \see kcdb_credset_collect_filtered() */
 #define KCDB_CREDCOLL_FILTER_SRC    2
 
 /*! \brief Indicates that the credential to be filtered is from the destination
-        credential set 
-        
+        credential set
+
     \see kcdb_credset_collect_filtered() */
 #define KCDB_CREDCOLL_FILTER_DEST   4
 
@@ -1076,7 +1076,7 @@ kcdb_credset_collect(khm_handle cs_dest,
 
     \see kcdb_credset_collect()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_collect_filtered(khm_handle cs_dest,
                               khm_handle cs_src,
                               kcdb_cred_filter_func filter,
@@ -1091,7 +1091,7 @@ kcdb_credset_collect_filtered(khm_handle cs_dest,
 
     \note The credential set cannot be sealed
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_flush(khm_handle credset);
 
 /*! \brief Extract credentials from one credential set to another
@@ -1120,10 +1120,10 @@ kcdb_credset_flush(khm_handle credset);
 
     \note The destination credential set cannot be sealed.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_credset_extract(khm_handle destcredset, 
-                     khm_handle sourcecredset, 
-                     khm_handle identity, 
+KHMEXP khm_int32 KHMAPI
+kcdb_credset_extract(khm_handle destcredset,
+                     khm_handle sourcecredset,
+                     khm_handle identity,
                      khm_int32 type);
 
 /*! \brief Extract credentials from one credential set to another using a filter.
@@ -1135,7 +1135,7 @@ kcdb_credset_extract(khm_handle destcredset,
 
     \note The destination credential set cannot be sealed.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_extract_filtered(khm_handle destcredset,
                               khm_handle sourcecredset,
                               kcdb_cred_filter_func filter,
@@ -1146,7 +1146,7 @@ kcdb_credset_extract_filtered(khm_handle destcredset,
     \param[in] idx The index of the credential to retrieve.  This is a
         zero based index which goes from 0 ... (size of credset - 1).
 
-    \param[out] cred The held reference to a credential.  Call 
+    \param[out] cred The held reference to a credential.  Call
         kcdb_cred_release() to release the credential.
 
     \retval KHM_ERROR_SUCCESS Success. \a cred has a held reference to the credential.
@@ -1155,7 +1155,7 @@ kcdb_credset_extract_filtered(khm_handle destcredset,
 
     \see kcdb_cred_release()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_get_cred(khm_handle credset,
                       khm_int32 idx,
                       khm_handle * cred);
@@ -1207,7 +1207,7 @@ kcdb_credset_get_cred(khm_handle credset,
         matches are possible if the order of the credentials in the
         set was changed.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_find_filtered(khm_handle credset,
                            khm_int32 idx_start,
                            kcdb_cred_filter_func f,
@@ -1221,7 +1221,7 @@ kcdb_credset_find_filtered(khm_handle credset,
     specified credential.  For a credential to be a match, it must
     have the same identity, credential type and name.
 
-    \param[in] credset Credential set to search 
+    \param[in] credset Credential set to search
 
     \param[in] cred_src Credetial to search on
 
@@ -1235,11 +1235,11 @@ kcdb_credset_find_filtered(khm_handle credset,
 
     \retval KHM_ERROR_NOT_FOUND A matching credential was not found.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_find_cred(khm_handle credset,
                        khm_handle cred_src,
                        khm_handle *cred_dest);
-                                               
+
 
 /*! \brief Delete a credential from a credential set.
 
@@ -1263,7 +1263,7 @@ kcdb_credset_find_cred(khm_handle credset,
 
     \see kcdb_credset_del_cred_ref()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_del_cred(khm_handle credset,
                       khm_int32 idx);
 
@@ -1276,7 +1276,7 @@ kcdb_credset_del_cred(khm_handle credset,
 
     \see kcdb_credset_del_cred()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_del_cred_ref(khm_handle credset,
                           khm_handle cred);
 
@@ -1292,7 +1292,7 @@ kcdb_credset_del_cred_ref(khm_handle credset,
 
     \note The credential set cannot be sealed.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_add_cred(khm_handle credset,
                       khm_handle cred,
                       khm_int32 idx);
@@ -1314,7 +1314,7 @@ kcdb_credset_add_cred(khm_handle credset,
     \see kcdb_credset_purge()
     \see kcdb_credset_get_cred()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_get_size(khm_handle credset,
                       khm_size * size);
 
@@ -1329,7 +1329,7 @@ kcdb_credset_get_size(khm_handle credset,
     \see kcdb_credset_get_size()
     \see kcdb_credset_get_cred()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_purge(khm_handle credset);
 
 /*! \brief Applies a function to all the credentials in a credentials set
@@ -1355,9 +1355,9 @@ kcdb_credset_purge(khm_handle credset);
 
     \retval KHM_ERROR_INVALID_PARAM One or more parameters were invalid.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_credset_apply(khm_handle credset, 
-                   kcdb_cred_apply_func f, 
+KHMEXP khm_int32 KHMAPI
+kcdb_credset_apply(khm_handle credset,
+                   kcdb_cred_apply_func f,
                    void * rock);
 
 /*! \brief Sort the contents of a credential set.
@@ -1368,7 +1368,7 @@ kcdb_credset_apply(khm_handle credset,
 
     \see kcdb_cred_comp_generic()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_sort(khm_handle credset,
                   kcdb_cred_comp_func comp,
                   void * rock);
@@ -1390,7 +1390,7 @@ kcdb_credset_sort(khm_handle credset,
 
     \see kcdb_credset_unseal()
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credset_seal(khm_handle credset);
 
 /*! \brief Unseal a credential set
@@ -1415,7 +1415,7 @@ typedef struct tag_kcdb_cred_comp_field {
                        with either. */
 } kcdb_cred_comp_field;
 
-/*! \brief Defines the sort order for a field in ::kcdb_cred_comp_field 
+/*! \brief Defines the sort order for a field in ::kcdb_cred_comp_field
 
     Sorts lexicographically ascending by string representation of field.
 */
@@ -1428,7 +1428,7 @@ typedef struct tag_kcdb_cred_comp_field {
  */
 #define KCDB_CRED_COMP_DECREASING 1
 
-/*! \brief Defines the sort order for a field in ::kcdb_cred_comp_field 
+/*! \brief Defines the sort order for a field in ::kcdb_cred_comp_field
 
     Any credentials which have the ::KCDB_CRED_FLAG_INITIAL will be
     grouped above any that don't.
@@ -1468,9 +1468,9 @@ typedef struct tag_kcdb_cred_comp_order {
 
     \param[in] rock a pointer to a ::kcdb_cred_comp_order object
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_comp_generic(khm_handle cred1, 
-                       khm_handle cred2, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_comp_generic(khm_handle cred1,
+                       khm_handle cred2,
                        void * rock);
 
 /*@}*/
@@ -1532,7 +1532,7 @@ kcdb_cred_comp_generic(khm_handle cred1,
  */
 #define KCDB_CRED_FLAGMASK_EXT     (KCDB_CRED_FLAG_INITIAL | KCDB_CRED_FLAG_EXPIRED | KCDB_CRED_FLAG_INVALID | KCDB_CRED_FLAG_RENEWABLE)
 
-/*! \brief Bitmask indicating dditive flags 
+/*! \brief Bitmask indicating dditive flags
 
     Additive flags are special flags which are added to exiting
     credentials based on new credentials when doing a collect
@@ -1601,17 +1601,17 @@ typedef struct tag_kcdb_cred_request {
 /*! \brief Create a new credential
 
     \param[in] name Name of credential.  \a name cannot be NULL and cannot
-        exceed \a KCDB_CRED_MAXCCH_NAME unicode characters including the 
+        exceed \a KCDB_CRED_MAXCCH_NAME unicode characters including the
         \a NULL terminator.
     \param[in] identity A reference to an identity.
     \param[in] cred_type A credentials type identifier for the credential.
     \param[out] result Gets a held reference to the newly created credential.
-        Call kcdb_cred_release() or kcdb_cred_delete() to release the 
+        Call kcdb_cred_release() or kcdb_cred_delete() to release the
         reference.
     \see kcdb_cred_release()
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_create(wchar_t *   name, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_create(wchar_t *   name,
                  khm_handle  identity,
                  khm_int32   cred_type,
                  khm_handle * result);
@@ -1621,7 +1621,7 @@ kcdb_cred_create(wchar_t *   name,
     \param[out] newcred A held reference to the new credential if the call
         succeeds.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_dup(khm_handle cred,
               khm_handle * newcred);
 
@@ -1635,7 +1635,7 @@ kcdb_cred_dup(khm_handle cred,
     \retval KHM_ERROR_SUCCESS vdest was successfully updated
     \retval KHM_ERROR_EQUIVALENT all fields in vsrc were present and equivalent in vdest
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_update(khm_handle vdest,
                  khm_handle vsrc);
 
@@ -1645,10 +1645,10 @@ kcdb_cred_update(khm_handle vdest,
         individual data type handlers may copy in less than this many
         bytes in to the credential.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_set_attrib(khm_handle cred, 
-                     wchar_t * name, 
-                     void * buffer, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_set_attrib(khm_handle cred,
+                     wchar_t * name,
+                     void * buffer,
                      khm_size cbbuf);
 
 /*! \brief Set an attribute in a credential by attribute id
@@ -1663,10 +1663,10 @@ kcdb_cred_set_attrib(khm_handle cred,
         individual data type handlers may copy in less than this many
         bytes in to the credential.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_set_attr(khm_handle cred, 
-                   khm_int32 attr_id, 
-                   void * buffer, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_set_attr(khm_handle cred,
+                   khm_int32 attr_id,
+                   void * buffer,
                    khm_size cbbuf);
 
 /*! \brief Get an attribute from a credential by name.
@@ -1684,11 +1684,11 @@ kcdb_cred_set_attr(khm_handle cred,
         exists in this credential then the function will return
         KHM_ERROR_SUCCESS, otherwise it returns KHM_ERROR_NOT_FOUND.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_get_attrib(khm_handle cred, 
-                     wchar_t * name, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_get_attrib(khm_handle cred,
+                     wchar_t * name,
                      khm_int32 * attr_type,
-                     void * buffer, 
+                     void * buffer,
                      khm_size * cbbuf);
 
 /*! \brief Get an attribute from a credential by attribute id.
@@ -1709,11 +1709,11 @@ kcdb_cred_get_attrib(khm_handle cred,
         exists in this credential then the function will return
         KHM_ERROR_SUCCESS, otherwise it returns KHM_ERROR_NOT_FOUND.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_get_attr(khm_handle cred, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_get_attr(khm_handle cred,
                    khm_int32 attr_id,
                    khm_int32 * attr_type,
-                   void * buffer, 
+                   void * buffer,
                    khm_size * cbbuf);
 
 /*! \brief Get the name of a credential.
@@ -1726,9 +1726,9 @@ kcdb_cred_get_attr(khm_handle cred,
         If \a buffer is not sufficient, returns KHM_ERROR_TOO_LONG and
         sets this to the required buffer size.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_get_name(khm_handle cred, 
-                   wchar_t * buffer, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_get_name(khm_handle cred,
+                   wchar_t * buffer,
                    khm_size * cbbuf);
 
 /*! \brief Get the string representation of a credential attribute.
@@ -1759,10 +1759,10 @@ kcdb_cred_get_name(khm_handle cred,
     \retval KHM_ERROR_TOO_LONG Either \a buffer was NULL or the
         supplied buffer was insufficient
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_get_attr_string(khm_handle vcred, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_get_attr_string(khm_handle vcred,
                           khm_int32 attr_id,
-                          wchar_t * buffer, 
+                          wchar_t * buffer,
                           khm_size * pcbbuf,
                           khm_int32 flags);
 
@@ -1789,10 +1789,10 @@ kcdb_cred_get_attr_string(khm_handle vcred,
 
     \see kcdb_cred_get_attr_string()
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_get_attrib_string(khm_handle cred, 
-                            wchar_t * name, 
-                            wchar_t * buffer, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_get_attrib_string(khm_handle cred,
+                            wchar_t * name,
+                            wchar_t * buffer,
                             khm_size * cbbuf,
                             khm_int32 flags) ;
 
@@ -1804,8 +1804,8 @@ kcdb_cred_get_attrib_string(khm_handle cred,
 
     \see kcdb_identity_relase()
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_cred_get_identity(khm_handle cred, 
+KHMEXP khm_int32 KHMAPI
+kcdb_cred_get_identity(khm_handle cred,
                        khm_handle * identity);
 
 /*! \brief Set the identity of a credential
@@ -1816,7 +1816,7 @@ kcdb_cred_get_identity(khm_handle cred,
     credential that is not placed in a credential set or placed in a
     credential set that is only used by a single entity.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_set_identity(khm_handle vcred,
                        khm_handle id);
 
@@ -1827,7 +1827,7 @@ kcdb_cred_set_identity(khm_handle vcred,
 
     \param[out] pserial Receives the serial number. Cannot be NULL.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_get_serial(khm_handle cred,
                      khm_ui_8 * pserial);
 
@@ -1837,7 +1837,7 @@ kcdb_cred_get_serial(khm_handle cred,
 
     \param[out] type Receives the type.  Cannot be NULL.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_get_type(khm_handle cred,
                    khm_int32 * type);
 
@@ -1848,7 +1848,7 @@ kcdb_cred_get_type(khm_handle cred,
     credential for the operation to succeed.  This means the
     ::KCDB_CRED_FLAG_DELETED will never be retured by this function.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_get_flags(khm_handle cred,
                     khm_int32 * flags);
 
@@ -1864,7 +1864,7 @@ kcdb_cred_get_flags(khm_handle cred,
 
     \see ::KCDB_CRED_FLAGMASK_ALL
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_set_flags(khm_handle cred,
                     khm_int32 flags,
                     khm_int32 mask);
@@ -1875,12 +1875,12 @@ kcdb_cred_set_flags(khm_handle cred,
 
     \see kcdb_cred_release()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_hold(khm_handle cred);
 
 /*! \brief Release a held reference to a credential.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_release(khm_handle cred);
 
 /*! \brief Delete a credential.
@@ -1890,7 +1890,7 @@ kcdb_cred_release(khm_handle cred);
     is bound to a credential set or the root credential store, it will
     be removed from the respective container.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_cred_delete(khm_handle cred);
 
 /*! \brief Compare an attribute of two credentials by name.
@@ -1901,9 +1901,9 @@ kcdb_cred_delete(khm_handle cred);
     attribute, the return value is 0, which signifies that no ordering
     can be determined.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_creds_comp_attrib(khm_handle cred1, 
-                       khm_handle cred2, 
+KHMEXP khm_int32 KHMAPI
+kcdb_creds_comp_attrib(khm_handle cred1,
+                       khm_handle cred2,
                        wchar_t * name);
 
 /*! \brief Compare an attribute of two credentials by attribute id.
@@ -1914,9 +1914,9 @@ kcdb_creds_comp_attrib(khm_handle cred1,
     attribute, the return value is 0, which signifies that no ordering
     can be determined.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_creds_comp_attr(khm_handle cred1, 
-                     khm_handle cred2, 
+KHMEXP khm_int32 KHMAPI
+kcdb_creds_comp_attr(khm_handle cred1,
+                     khm_handle cred2,
                      khm_int32 attr_id);
 
 /*! \brief Compare two credentials for equivalence
@@ -1927,7 +1927,7 @@ kcdb_creds_comp_attr(khm_handle cred1,
         - Both have the same name.
         - Both have the same type.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_creds_is_equal(khm_handle cred1,
                     khm_handle cred2);
 
@@ -1991,7 +1991,7 @@ kcdb_creds_is_equal(khm_handle cred1,
 
     \see ::kcdb_type
  */
-typedef khm_int32 
+typedef khm_int32
 (KHMAPI *kcdb_dtf_toString)(const void *     data,
                             khm_size         cb_data,
                             wchar_t *        s_buf,
@@ -2021,7 +2021,7 @@ typedef khm_int32
 
     \see ::kcdb_type
 */
-typedef khm_boolean 
+typedef khm_boolean
 (KHMAPI *kcdb_dtf_isValid)(const void *     data,
                            khm_size         cb_data);
 
@@ -2060,7 +2060,7 @@ typedef khm_boolean
 
     \see ::kcdb_type
 */
-typedef khm_int32 
+typedef khm_int32
 (KHMAPI *kcdb_dtf_comp)(const void *     data_l,
                         khm_size         cb_data_l,
                         const void *     data_r,
@@ -2106,7 +2106,7 @@ typedef khm_int32
 
     \see ::kcdb_type
  */
-typedef khm_int32 
+typedef khm_int32
 (KHMAPI *kcdb_dtf_dup)(const void * data_src,
                        khm_size cb_data_src,
                        void * data_dst,
@@ -2141,7 +2141,7 @@ typedef struct tag_kcdb_type {
 
 /*! \name Flags for kcdb_type::toString
 @{*/
-/*! \brief Specify that the short form of the string representation should be returned. 
+/*! \brief Specify that the short form of the string representation should be returned.
 
     Flags for #kcdb_type::toString.  The flag specifies how long the
     string representation should be.  The specific length of a short
@@ -2151,11 +2151,11 @@ typedef struct tag_kcdb_type {
     Usually, KCDB_TS_SHORT is specified when the amount of space that
     is available to display the string is very restricted.  It may be
     the case that the string is truncated to facilitate displaying in
-    a constrainted space.  
+    a constrainted space.
 */
 #define KCDB_TS_SHORT   1
 
-/*! \brief Specify that the long form of the string representation should be returned 
+/*! \brief Specify that the long form of the string representation should be returned
 
     Flags for #kcdb_type::toString.  The flag specifies how long the
     string representation should be.  The specific length of a short
@@ -2191,7 +2191,7 @@ typedef struct tag_kcdb_type {
 
     \note If this flag is used in conjunction with \a
     KCDB_TYPE_FLAG_CB_MAX then, \a cb_min must be less than or equal
-    to \a cb_max. 
+    to \a cb_max.
 */
 #define KCDB_TYPE_FLAG_CB_MIN       128
 
@@ -2218,7 +2218,7 @@ typedef struct tag_kcdb_type {
 
 /*@}*/
 
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_type_get_id(wchar_t *name, khm_int32 * id);
 
 /*! \brief Return the type descriptor for a given type id
@@ -2231,7 +2231,7 @@ kcdb_type_get_id(wchar_t *name, khm_int32 * id);
 
     \see kcdb_type_release_info()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_type_get_info(khm_int32 id, kcdb_type ** info);
 
 /*! \brief Release a reference to a type info structure
@@ -2239,16 +2239,16 @@ kcdb_type_get_info(khm_int32 id, kcdb_type ** info);
     Releases the reference to the type information obtained with a
     prior call to kcdb_type_get_info().
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_type_release_info(kcdb_type * info);
 
 /*! \brief Get the name of a type
 
     Retrieves the non-localized name of the specified type.
  */
-KHMEXP khm_int32 KHMAPI 
-kcdb_type_get_name(khm_int32 id, 
-                   wchar_t * buffer, 
+KHMEXP khm_int32 KHMAPI
+kcdb_type_get_name(khm_int32 id,
+                   wchar_t * buffer,
                    khm_size * cbbuf);
 
 /*! \brief Register a credentials attribute type
@@ -2261,8 +2261,8 @@ kcdb_type_get_name(khm_int32 id,
     \param[in] type The type descriptor
     \param[out] new_id Receives the identifier for the credential attribute type.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_type_register(kcdb_type * type, 
+KHMEXP khm_int32 KHMAPI
+kcdb_type_register(kcdb_type * type,
                    khm_int32 * new_id);
 
 /*! \brief Unregister a credential attribute type
@@ -2270,32 +2270,32 @@ kcdb_type_register(kcdb_type * type,
     Removes the registration for the specified credentials attribute
     type.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_type_unregister(khm_int32 id);
 
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_type_get_next_free(khm_int32 * id);
 
 /*! \name Conversion functions
 @{*/
 /*! \brief Convert a time_t value to FILETIME
 */
-KHMEXP void KHMAPI 
+KHMEXP void KHMAPI
 TimetToFileTime( time_t t, LPFILETIME pft );
 
 /*! \brief Convert a time_t interval to a FILETIME interval
 */
-KHMEXP void KHMAPI 
+KHMEXP void KHMAPI
 TimetToFileTimeInterval(time_t t, LPFILETIME pft);
 
 /*! \brief Convert a FILETIME interval to seconds
 */
-KHMEXP long KHMAPI 
+KHMEXP long KHMAPI
 FtIntervalToSeconds(LPFILETIME pft);
 
 /*! \brief Convert a FILETIME interval to milliseconds
 */
-KHMEXP long KHMAPI 
+KHMEXP long KHMAPI
 FtIntervalToMilliseconds(LPFILETIME pft);
 
 /*! \brief Compare two FILETIME values
@@ -2303,7 +2303,7 @@ FtIntervalToMilliseconds(LPFILETIME pft);
     The return value is similar to the return value of strcmp(), based
     on the comparison of the two FILETIME values.
  */
-KHMEXP long KHMAPI 
+KHMEXP long KHMAPI
 FtCompare(LPFILETIME pft1, LPFILETIME pft2);
 
 /*! \brief Convert a FILETIME to a 64 bit int
@@ -2328,9 +2328,9 @@ KHMEXP FILETIME KHMAPI FtAdd(LPFILETIME ft1, LPFILETIME ft2);
 
 /*! \brief Convert a FILETIME inverval to a string
 */
-KHMEXP khm_int32 KHMAPI 
-FtIntervalToString(LPFILETIME data, 
-                   wchar_t * buffer, 
+KHMEXP khm_int32 KHMAPI
+FtIntervalToString(LPFILETIME data,
+                   wchar_t * buffer,
                    khm_size * cb_buf);
 
 /*! \brief Parse a string representing an interval into a FILETIME interval
@@ -2363,7 +2363,7 @@ FtIntervalToString(LPFILETIME data,
     \retval KHM_ERROR_SUCCESS The string was successfully parsed and
         the result was placed in \a pft.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 IntervalStringToFt(FILETIME * pft, wchar_t * str);
 
 /*! \brief Return number of milliseconds till next representation change
@@ -2374,7 +2374,7 @@ IntervalStringToFt(FILETIME * pft, wchar_t * str);
 
    Returns 0 if the representation is not expected to change.
 */
-KHMEXP long KHMAPI 
+KHMEXP long KHMAPI
 FtIntervalMsToRepChange(LPFILETIME pft);
 
 /*! \brief Convert a safe ANSI string to a Unicode string
@@ -2388,7 +2388,7 @@ FtIntervalMsToRepChange(LPFILETIME pft);
     \return the number of characters converted.  This is always either
         the length of the string \a astr or 0.
 */
-KHMEXP int KHMAPI 
+KHMEXP int KHMAPI
 AnsiStrToUnicode( wchar_t * wstr, size_t cbwstr, const char * astr);
 
 /*! \brief Convert a Unicode string to ANSI
@@ -2399,11 +2399,11 @@ AnsiStrToUnicode( wchar_t * wstr, size_t cbwstr, const char * astr);
     \return the number of characters converted.  This is always either
         the length of the string \a src or 0.
 */
-KHMEXP int KHMAPI 
+KHMEXP int KHMAPI
 UnicodeStrToAnsi( char * dest, size_t cbdest, const wchar_t * src);
 /*@}*/
 
-/*! \name Standard type identifiers and names 
+/*! \name Standard type identifiers and names
 @{*/
 
 /*! Maximum identifier number */
@@ -2456,8 +2456,8 @@ UnicodeStrToAnsi( char * dest, size_t cbdest, const wchar_t * src);
     buffer is \a NULL, then the required buffer size should be placed
     in \a cbsize.
  */
-typedef khm_int32 
-(KHMAPI *kcdb_attrib_compute_cb)(khm_handle cred, 
+typedef khm_int32
+(KHMAPI *kcdb_attrib_compute_cb)(khm_handle cred,
                                  khm_int32 id,
                                  void * buffer,
                                  khm_size * cbsize);
@@ -2508,8 +2508,8 @@ typedef struct tag_kcdb_attrib {
 } kcdb_attrib;
 
 /*! \brief Retrieve the ID of a named attribute */
-KHMEXP khm_int32 KHMAPI 
-kcdb_attrib_get_id(wchar_t *name, 
+KHMEXP khm_int32 KHMAPI
+kcdb_attrib_get_id(wchar_t *name,
                    khm_int32 * id);
 
 /*! \brief Register an attribute
@@ -2517,11 +2517,11 @@ kcdb_attrib_get_id(wchar_t *name,
     \param[out] new_id Receives the ID of the newly registered
         attribute.  If the \a id member of the ::kcdb_attrib object is
         set to KCDB_ATTR_INVALID, then a unique ID is generated. */
-KHMEXP khm_int32 KHMAPI 
-kcdb_attrib_register(kcdb_attrib * attrib, 
+KHMEXP khm_int32 KHMAPI
+kcdb_attrib_register(kcdb_attrib * attrib,
                      khm_int32 * new_id);
 
-/*! \brief Retrieve the attribute descriptor for an attribute 
+/*! \brief Retrieve the attribute descriptor for an attribute
 
     The descriptor that is returned must be released through a call to
     kcdb_attrib_release_info()
@@ -2530,35 +2530,35 @@ kcdb_attrib_register(kcdb_attrib * attrib,
     checked, you can pass in NULL for \a attrib.  In this case, if the
     identifier is valid, then the funciton will return
     KHM_ERROR_SUCCESS, otherwise it will return KHM_ERROR_NOT_FOUND.
-    
+
     \see kcdb_attrib_release_info()
     */
-KHMEXP khm_int32 KHMAPI 
-kcdb_attrib_get_info(khm_int32 id, 
+KHMEXP khm_int32 KHMAPI
+kcdb_attrib_get_info(khm_int32 id,
                      kcdb_attrib ** attrib);
 
 /*! \brief Release an attribute descriptor
 
     \see kcdb_attrib_get_info()
     */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_attrib_release_info(kcdb_attrib * attrib);
 
-/*! \brief Unregister an attribute 
+/*! \brief Unregister an attribute
 
     Once an attribute ID has been unregistered, it may be reclaimed by
     a subsequent call to kcdb_attrib_register().
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_attrib_unregister(khm_int32 id);
 
-/*! \brief Retrieve the description of an attribute 
+/*! \brief Retrieve the description of an attribute
 
     \param[in] flags Specify \a KCDB_TS_SHORT to retrieve the short description. */
-KHMEXP khm_int32 KHMAPI 
-kcdb_attrib_describe(khm_int32 id, 
-                     wchar_t * buffer, 
-                     khm_size * cbsize, 
+KHMEXP khm_int32 KHMAPI
+kcdb_attrib_describe(khm_int32 id,
+                     wchar_t * buffer,
+                     khm_size * cbsize,
                      khm_int32 flags);
 
 /*! \brief Count attributes
@@ -2573,7 +2573,7 @@ kcdb_attrib_describe(khm_int32 id,
 
     The number of attributes that match are returned in \a pcount.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_attrib_get_count(khm_int32 and_flags,
                       khm_int32 eq_flags,
                       khm_size * pcount);
@@ -2614,7 +2614,7 @@ kcdb_attrib_get_count(khm_int32 and_flags,
         array.  This is different from the usual size parameters used
         in the NetIDMgr API.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_attrib_get_ids(khm_int32 and_flags,
                     khm_int32 eq_flags,
                     khm_int32 * plist,
@@ -2741,7 +2741,7 @@ kcdb_attrib_get_ids(khm_int32 and_flags,
 */
 #define KCDB_ATTR_ID            1
 
-/*! \brief The name of the identity 
+/*! \brief The name of the identity
 
     - \b Type: STRING
     - \b Flags: REQUIRED, COMPUTED, SYSTEM
@@ -2755,42 +2755,42 @@ kcdb_attrib_get_ids(khm_int32 and_flags,
 */
 #define KCDB_ATTR_TYPE          3
 
-/*! \brief Type name for the credential 
+/*! \brief Type name for the credential
 
     - \b Type: STRING
     - \b Flags: REQUIRED, COMPUTED, SYSTEM
 */
 #define KCDB_ATTR_TYPE_NAME     4
 
-/*! \brief Name of the parent credential 
+/*! \brief Name of the parent credential
 
     - \b Type: STRING
     - \b Flags: SYSTEM
 */
 #define KCDB_ATTR_PARENT_NAME   5
 
-/*! \brief Issed on 
+/*! \brief Issed on
 
     - \b Type: DATE
     - \b Flags: SYSTEM
 */
 #define KCDB_ATTR_ISSUE         6
 
-/*! \brief Expires on 
+/*! \brief Expires on
 
     - \b Type: DATE
     - \b Flags: SYSTEM
 */
 #define KCDB_ATTR_EXPIRE        7
 
-/*! \brief Renewable period expires on 
+/*! \brief Renewable period expires on
 
     - \b Type: DATE
     - \b Flags: SYSTEM
 */
 #define KCDB_ATTR_RENEW_EXPIRE  8
 
-/*! \brief Time left till expiration 
+/*! \brief Time left till expiration
 
     - \b Type: INTERVAL
     - \b Flags: SYSTEM, COMPUTED, VOLATILE
@@ -2806,7 +2806,7 @@ kcdb_attrib_get_ids(khm_int32 and_flags,
 */
 #define KCDB_ATTR_LOCATION      11
 
-/*! \brief Lifetime of the credential 
+/*! \brief Lifetime of the credential
 
     - \b Type: INTERVAL
     - \b Flags: SYSTEM
@@ -2973,8 +2973,8 @@ typedef struct tag_kcdb_credtype {
     \retval KHM_ERROR_DUPLICATE The \a name or \a id that was
         specified is already in use.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_credtype_register(kcdb_credtype * type, 
+KHMEXP khm_int32 KHMAPI
+kcdb_credtype_register(kcdb_credtype * type,
                        khm_int32 * new_id);
 
 /*! \brief Return a held reference to a \a kcdb_credtype object describing the credential type.
@@ -2998,8 +2998,8 @@ kcdb_credtype_register(kcdb_credtype * type,
     \see kcdb_credtype_release_info()
     \see kcdb_credtype_register()
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_credtype_get_info(khm_int32 id, 
+KHMEXP khm_int32 KHMAPI
+kcdb_credtype_get_info(khm_int32 id,
                        kcdb_credtype ** type);
 
 /*! \brief Release a reference to a \a kcdb_credtype object
@@ -3009,7 +3009,7 @@ kcdb_credtype_get_info(khm_int32 id,
 
     \see kcdb_credtype_get_info()
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credtype_release_info(kcdb_credtype * type);
 
 /*! \brief Unregister a credentials type
@@ -3019,7 +3019,7 @@ kcdb_credtype_release_info(kcdb_credtype * type);
     This should only be done when the credentials provider is being
     unloaded.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credtype_unregister(khm_int32 id);
 
 /*! \brief Retrieve the name of a credentials type
@@ -3043,7 +3043,7 @@ kcdb_credtype_unregister(khm_int32 id);
 
     \retval KHM_ERROR_INVALID_PARAM Invalid parameter.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credtype_get_name(khm_int32 id,
                        wchar_t * buf,
                        khm_size * cbbuf);
@@ -3054,7 +3054,7 @@ kcdb_credtype_get_name(khm_int32 id,
     type specific subcription.  It may return NULL if the subscription
     is not available.
  */
-KHMEXP khm_handle KHMAPI 
+KHMEXP khm_handle KHMAPI
 kcdb_credtype_get_sub(khm_int32 id);
 
 /*! \brief Get the description of a credentials type
@@ -3078,7 +3078,7 @@ kcdb_credtype_get_sub(khm_int32 id);
    \retval KHM_ERROR_TOO_LONG Either \a buf was NULL or the supplied buffer was insufficient.  The required size is specified in \a cbbuf.
    \retval KHM_ERROR_INVALID_PARAM One or more parameters were invalid.
  */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_credtype_describe(khm_int32 id,
                        wchar_t * buf,
                        khm_size * cbbuf,
@@ -3092,15 +3092,15 @@ kcdb_credtype_describe(khm_int32 id,
     \param[out] id Receives the identifier if the call succeeds
 
  */
-KHMEXP khm_int32 KHMAPI 
-kcdb_credtype_get_id(wchar_t * name, 
+KHMEXP khm_int32 KHMAPI
+kcdb_credtype_get_id(wchar_t * name,
                      khm_int32 * id);
 
 /*@}*/
 
 /*********************************************************************/
 
-/*! \defgroup kcdb_buf Generic access to buffer 
+/*! \defgroup kcdb_buf Generic access to buffer
 
     Currently, credentials and identities both hold record data types.
     This set of API's allow an application to access fields in the
@@ -3131,11 +3131,11 @@ kcdb_credtype_get_id(wchar_t * name,
         exists in this record then the function will return
         KHM_ERROR_SUCCESS, otherwise it returns KHM_ERROR_NOT_FOUND.
 */
-KHMEXP khm_int32 KHMAPI 
-kcdb_buf_get_attr(khm_handle  record, 
-                  khm_int32   attr_id, 
-                  khm_int32 * attr_type, 
-                  void *      buffer, 
+KHMEXP khm_int32 KHMAPI
+kcdb_buf_get_attr(khm_handle  record,
+                  khm_int32   attr_id,
+                  khm_int32 * attr_type,
+                  void *      buffer,
                   khm_size *  pcb_buf);
 
 /*! \brief Get an attribute from a record by name.
@@ -3153,7 +3153,7 @@ kcdb_buf_get_attr(khm_handle  record,
         exists in this record then the function will return
         KHM_ERROR_SUCCESS, otherwise it returns KHM_ERROR_NOT_FOUND.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_buf_get_attrib(khm_handle  record,
                     wchar_t *   attr_name,
                     khm_int32 * attr_type,
@@ -3188,7 +3188,7 @@ kcdb_buf_get_attrib(khm_handle  record,
     \retval KHM_ERROR_TOO_LONG Either \a buffer was NULL or the
         supplied buffer was insufficient
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_buf_get_attr_string(khm_handle  record,
                          khm_int32   attr_id,
                          wchar_t *   buffer,
@@ -3218,7 +3218,7 @@ kcdb_buf_get_attr_string(khm_handle  record,
 
     \see kcdb_cred_get_attr_string()
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_buf_get_attrib_string(khm_handle  record,
                            wchar_t *   attr_name,
                            wchar_t *   buffer,
@@ -3231,7 +3231,7 @@ kcdb_buf_get_attrib_string(khm_handle  record,
         individual data type handlers may copy in less than this many
         bytes in to the record.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_buf_set_attr(khm_handle  record,
                   khm_int32   attr_id,
                   void *      buffer,
@@ -3243,16 +3243,16 @@ kcdb_buf_set_attr(khm_handle  record,
         individual data type handlers may copy in less than this many
         bytes in to the record.
 */
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_buf_set_attrib(khm_handle  record,
                     wchar_t *   attr_name,
                     void *      buffer,
                     khm_size    cbbuf);
 
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_buf_hold(khm_handle  record);
 
-KHMEXP khm_int32 KHMAPI 
+KHMEXP khm_int32 KHMAPI
 kcdb_buf_release(khm_handle record);
 
 /*@}*/

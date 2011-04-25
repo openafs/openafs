@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -949,7 +949,7 @@ VLDB에서 생성합니다. 볼륨이 하나 이상의 볼륨 항목에 대응되면, 백업
 완전히 생략합니다. 테이프 조정자와 로그 파일에서 다음 메시지를
 생성합니다.
 <P>
-<PRE>   Volume <VAR>volume_name</VAR> (<VAR>volume_ID</VAR>) not dumped - has not been modified 
+<PRE>   Volume <VAR>volume_name</VAR> (<VAR>volume_ID</VAR>) not dumped - has not been modified
       since last dump.
 </PRE>
 </LI><LI><A NAME="LIBKOV-READCFG"></A>테이프 조정자는 데이터 백업을 준비합니다.
@@ -1079,7 +1079,7 @@ VLDB에서 생성합니다. 볼륨이 하나 이상의 볼륨 항목에 대응되면, 백업
 발견하면(즉, 볼륨의 현재 클론 날짜가 상위 클론 날짜와 같음)
 이와 유사한 메시지를 생성합니다.
 <P>
-<PRE>   Volume <VAR>volume_name</VAR> (<VAR>volume_ID</VAR>) not dumped - has not been re-cloned 
+<PRE>   Volume <VAR>volume_name</VAR> (<VAR>volume_ID</VAR>) not dumped - has not been re-cloned
        since last dump.
 </PRE>
 <P>
@@ -1506,7 +1506,7 @@ name</VAR> 인수와 <VAR>TC port offset</VAR> 인수가 들어있어야 합니다.
 </B><DD>다음 양식으로 된 덤프 이름.
 <P>
 <PRE>   <VAR>volume_set_name</VAR>.<VAR>dump_level_name</VAR> (<VAR>initial_dump_ID</VAR>)
-   
+
 </PRE>
 <P>
 <P>
@@ -1694,8 +1694,8 @@ ID가 올 수 있습니다. 그런 경우, 이것은 이 추가 덤프가 속하는 덤프
 <PRE>   %<B> backup volinfo user.smith.backup</B>
    DumpID    lvl parentID  creation   date  clone date       tape name
    924600000 1   924427600 04/20/1999 05:20 04/20/1999 05:01 user_incr_2 (924514392)
-   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2 
-   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6 
+   924514392 1   924427600 04/19/1999 05:33 04/19/1999 05:08 user_incr_2
+   924427600 0           0 04/18/1999 05:26 04/18/1999 04:58 user_full_6
        .     .      .         .       .       .      .         .
        .     .      .         .       .       .      .         .
 </PRE>
@@ -2015,7 +2015,7 @@ backup</B> 명령을 사용하여 새로운 사이트에서 백업 버전을
 </LI><LI>원하는 인수와 함께 <B>backup volrestore</B>
 명령을 실행하십시오.
 <P>
-<PRE>   backup> <B>volrestore</B> &lt;<VAR>destination&nbsp;machine</VAR>> &lt;<VAR>destination&nbsp;partition</VAR>>  \ 
+<PRE>   backup> <B>volrestore</B> &lt;<VAR>destination&nbsp;machine</VAR>> &lt;<VAR>destination&nbsp;partition</VAR>>  \
                       <B>-volume</B> &lt;<VAR>volume(s)&nbsp;to&nbsp;restore</VAR>><SUP>+</SUP>  \
                       [<B>-extension</B> &lt;<VAR>new&nbsp;volume&nbsp;name&nbsp;extension</VAR>>]  \
                       [<B>-date</B> &lt;<VAR>date&nbsp;from&nbsp;which&nbsp;to&nbsp;restore</VAR>>]  \
@@ -2426,7 +2426,7 @@ VLDB에 있는 이름 대신 백업 데이터베이스 덤프 레코드에 사용된 이름과
 완전한 명령은 <A HREF="auagd011.htm#HDRWQ265">볼륨 세트와 볼륨 항목의 정의 및 표시</A>에 있습니다.
 <P>
 <PRE>   backup> <B>addvolset</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>  [<B>-temporary</B>]
-   
+
    backup> <B>addvolentry  -name</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>  \
                         <B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>  \
                         <B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>  \
@@ -2439,7 +2439,7 @@ VLDB에 있는 이름 대신 백업 데이터베이스 덤프 레코드에 사용된 이름과
 [<B>-name</B> &lt;<VAR>volume&nbsp;set&nbsp;name</VAR>>]  \
                  [<B>-file</B> &lt;<VAR>file&nbsp;name</VAR>>]  \
                  [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>><SUP>+</SUP>]  \
-                 [<B>-extension</B> &lt;<VAR>new&nbsp;volume&nbsp;name&nbsp;extension</VAR>>] [<B>-n</B>] 
+                 [<B>-extension</B> &lt;<VAR>new&nbsp;volume&nbsp;name&nbsp;extension</VAR>>] [<B>-n</B>]
 </PRE>
 <P>
 <P>여기서
@@ -2648,7 +2648,7 @@ status</B> 명령을 실행하십시오.
 </DL>
 </LI><LI>대화식 모드를 종료하십시오.
 <P>
-<PRE>   backup>  <B>quit</B>  
+<PRE>   backup>  <B>quit</B>
 </PRE>
 </LI><LI>각 시스템에서 교대로 <B>bos shutdown</B>
 명령을 실행하여 백업 서버 프로세스를 종료하십시오. 로컬 수퍼유저
@@ -2792,7 +2792,7 @@ labeltape</B> 명령을 사용하여 테이프를 다시 사용하거나 레이블을
 <PRE>   backup> <B>deletedump</B>
 [<B>-dumpid</B> &lt;<VAR>dumpid</VAR>><SUP>+</SUP>]
 [<B>-from</B> &lt;<VAR>date&nbsp;time</VAR>>]  \
-                      [<B>-to</B> &lt;<VAR>date&nbsp;time</VAR>>] 
+                      [<B>-to</B> &lt;<VAR>date&nbsp;time</VAR>>]
 </PRE>
 <P>
 <P>여기서
@@ -2862,11 +2862,11 @@ dumpinfo</B> 명령에서 덤프 작성시를 시와 분으로만 표현하는 것이
 </TD></TR></TABLE>
 </DL>
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd011.htm">이전 페이지</A> &#124; <A HREF="auagd013.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd011.htm">이전 페이지</A> &#124; <A HREF="auagd013.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

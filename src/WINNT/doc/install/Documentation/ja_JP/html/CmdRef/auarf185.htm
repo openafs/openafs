@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -38,16 +38,16 @@
 <P><STRONG>目的</STRONG>
 <P>認証データベース項目からの情報を表示します。
 <P><STRONG>構文</STRONG>
-<PRE><B>kas examine -name</B> &lt;<VAR>name of user</VAR>> [<B>-showkey</B>] 
-            [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
-            [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>] 
-            [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  
+<PRE><B>kas examine -name</B> &lt;<VAR>name of user</VAR>> [<B>-showkey</B>]
+            [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>]
+            [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+            [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]
             [<B>-noauth</B>]  [<B>-help</B>]
-    
-<B>kas e -na</B> &lt;<VAR>name of user</VAR>>  [<B>-sh</B>] 
-      [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
-      [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>] 
-      [<B>-se</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]  
+
+<B>kas e -na</B> &lt;<VAR>name of user</VAR>>  [<B>-sh</B>]
+      [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]
+      [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+      [<B>-se</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
 <P><B>kas examine</B> コマンドは、
@@ -151,7 +151,7 @@ setpassword</B>、または <B>kas setkey</B> コマンド発行時に、自分が最近使用した 2
     entry never expires. Max ticket lifetime 100.00 hours.
     last mod on Tue Jan 5 08:22:29 1999 by admin
     permit password reuse
-   
+
 </PRE>
 <P>以下の例では、ユーザー <B>pat</B> は、現在有効なアカウント・ロックがいつ解除されるかを判別するために、認証データベース項目を検査しています。
 <PRE>   % <B>kas examine pat</B>
@@ -165,7 +165,7 @@ setpassword</B>、または <B>kas setkey</B> コマンド発行時に、自分が最近使用した 2
     entry expires on never. Max ticket lifetime 100.00 hours.
     last mod on Thu Feb 4 08:22:29 1999 by admin
     permit password reuse
-   
+
 </PRE>
 <P>以下の例では、<B>admin</B> としてログインした管理者が、
 <B>-showkey</B> フラグを使用して、<B>afs</B> 項目のキーを構成する 8 進数を表示しています。
@@ -176,7 +176,7 @@ setpassword</B>、または <B>kas setkey</B> コマンド発行時に、自分が最近使用した 2
     entry never expires. Max ticket lifetime 100.00 hours.
     last mod on Thu Mar 25 14:53:29 1999 by admin
     permit password reuse
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>ユーザーは、自分の項目を検査することができます。他の項目を検査するには、あるいは、<B>-showkey</B> フラグを組み込むには、発行者は、認証データベース項目で <TT>ADMIN</TT> フラグを設定させる必要があります。
@@ -191,10 +191,10 @@ setpassword</B>、または <B>kas setkey</B> コマンド発行時に、自分が最近使用した 2
 <P><A HREF="auarf200.htm#HDRKLOG">klog</A>
 <P><A HREF="auarf202.htm#HDRKPASSWD">kpasswd</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf184.htm">前ページ</A> &#124; <A HREF="auarf186.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf184.htm">前ページ</A> &#124; <A HREF="auarf186.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C)2 <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+<P><HR><B>
+<br>(C)2 <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
 </B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>

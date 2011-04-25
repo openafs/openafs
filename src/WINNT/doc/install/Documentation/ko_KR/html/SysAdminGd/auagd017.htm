@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -378,7 +378,7 @@ AFS에 저장하는 것이 좋습니다. 다음 두 스크립트 예를 참조하여 이 단계를 자동하는
    echo "copied in passwd file."
    PASSWD=/afs/.abc.com/common/uss/newaccts/passwd
    ENTRIES=`ls passwd_*`
-   case $ENTRIES in 
+   case $ENTRIES in
    "")
         echo No new entry found to be added to passwd file
         ;;
@@ -388,7 +388,7 @@ AFS에 저장하는 것이 좋습니다. 다음 두 스크립트 예를 참조하여 이 단계를 자동하는
         do
            cat  $i  |  awk  -F:  '{print $1  >  "foo"}'
            USER=`cat foo`
-           case  `egrep  -e  \^$USER\: $PASSWD` in 
+           case  `egrep  -e  \^$USER\: $PASSWD` in
            "")
                    echo  adding  $USER
                    cat  $i  >>  $PASSWD
@@ -402,7 +402,7 @@ AFS에 저장하는 것이 좋습니다. 다음 두 스크립트 예를 참조하여 이 단계를 자동하는
         cd  /afs/.abc.com/common/uss/newaccts
         echo  "sorting password file"
         sort  ${PASSWD}  >  ${PASSWD}.sorted
-        echo  "installing files"     
+        echo  "installing files"
         install  ${PASSWD}.sorted ${DEST}/passwd
         echo  "Password file is built, sorted and installed."
         ;;
@@ -818,8 +818,8 @@ UNIX <B>chown</B> 명령을 실행할 수 있게 허용하며
    #
    # Create directories and files for mail
    #
-   D $MTPT/.MESSAGES 0700 $UID $USER all abc:staff none 
-   D $MTPT/.Outgoing 0700 $UID $USER rlidwk postman rlidwk 
+   D $MTPT/.MESSAGES 0700 $UID $USER all abc:staff none
+   D $MTPT/.Outgoing 0700 $UID $USER rlidwk postman rlidwk
    D $MTPT/Mailbox 0700 $UID $USER all abc:staff none system:anyuser lik
    #
    # Here are some useful scripts for login etc.
@@ -1740,7 +1740,7 @@ $1 변수에 대해서는 파일 서버 시스템 이름을 제공하고 $2 변수에 대해서는
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> 파일에
 포함.
@@ -1808,7 +1808,7 @@ $1 변수에 대해서는 파일 서버 시스템 이름을 제공하고 $2 변수에 대해서는
 항목에 플래그가 있는 지 확인하려면, <A HREF="auagd021.htm#HDRWQ590">ADMIN 플래그가 설정되어 있는지 확인하려면</A>에서
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   % <B>uss add</B> <B>-user</B> &lt;<VAR>login&nbsp;name</VAR>> 
+<PRE>   % <B>uss add</B> <B>-user</B> &lt;<VAR>login&nbsp;name</VAR>>
 <B>-admin</B> &lt;<VAR>administrator&nbsp;to&nbsp;authenticate</VAR>>   \
              [<B>-realname</B> &lt;<VAR>full&nbsp;name&nbsp;in&nbsp;quotes</VAR>>] [<B>-pass</B> &lt;<VAR>initial&nbsp;passwd</VAR>>]   \
              [<B>-pwexpires</B> &lt;<VAR>password&nbsp;expires&nbsp;in&nbsp;[0..254]&nbsp;days&nbsp;(0&nbsp;=>&nbsp;never)</VAR>>]  \
@@ -1818,7 +1818,7 @@ $1 변수에 대해서는 파일 서버 시스템 이름을 제공하고 $2 변수에 대해서는
              [<B>-uid</B> &lt;<VAR>uid&nbsp;to&nbsp;assign&nbsp;the&nbsp;user</VAR>>]  \
              [<B>-template</B> &lt;<VAR>pathname&nbsp;of&nbsp;template&nbsp;file</VAR>>]  \
              [<B>-var</B> &lt;<VAR>auxiliary&nbsp;argument&nbsp;pairs&nbsp;(Numval)</VAR>><SUP>+</SUP>] [<B>-dryrun</B>] \
-             [<B>-overwrite</B>] 
+             [<B>-overwrite</B>]
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
@@ -1984,9 +1984,9 @@ AFS 암호를 변경하는 방법을 설명합니다.
 <B>vos release</B> 명령을 사용하여 <A HREF="auagd010.htm#HDRWQ194">읽기/쓰기 볼륨을 복제하려면 (읽기 전용 볼륨 작성)</A>의
 설명 대로 볼륨을 해제하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 단계는 홈 디렉토리의 상위 디렉토리 그 자체가 복제된 볼륨의 마운트 포인트가 아니어도
@@ -2082,7 +2082,7 @@ AFS UID에 일치하도록 설정하십시오. 새로운 사용자의 AFS UID가
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> 파일에 포함.
 필요하면 <A HREF="auagd021.htm#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
@@ -2129,10 +2129,10 @@ AFS UID에 일치하도록 설정하십시오. 새로운 사용자의 AFS UID가
 항목에 플래그가 있는 지 확인하려면, <A HREF="auagd021.htm#HDRWQ590">ADMIN 플래그가 설정되어 있는지 확인하려면</A>에서
 설명한 것처럼 <B>kas examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   % <B>uss delete</B> <B>-user</B> &lt;<VAR>login&nbsp;name</VAR>>  \ 
+<PRE>   % <B>uss delete</B> <B>-user</B> &lt;<VAR>login&nbsp;name</VAR>>  \
                 <B>-mountpoint</B> &lt;<VAR>mountpoint&nbsp;for&nbsp;user's&nbsp;volume</VAR>>  \
                 [<B>-savevolume</B>]  <B>-admin </B> &lt;<VAR>administrator&nbsp;to&nbsp;authenticate</VAR>>  \
-                [<B>-dryrun</B>] 
+                [<B>-dryrun</B>]
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
@@ -2168,9 +2168,9 @@ AFS UID에 일치하도록 설정하십시오. 새로운 사용자의 AFS UID가
 <A HREF="auagd010.htm#HDRWQ194">읽기/쓰기 볼륨을 복제하려면 (읽기 전용 볼륨 작성)</A>의 설명대로
 <B>vos release</B> 명령을 사용하여 볼륨을 해제하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 단계는 홈 디렉토리의 상위 디렉토리 그 자체가 복제된 볼륨의 마운트 포인트가 아니어도
@@ -2323,7 +2323,7 @@ VLDB 항목을 처리합니다. 기본값이 설정되는 방식에 대해서는 해당 명령어에 대한
 포함하여 <B>add</B> 명령어를 사용하십시오. 사용자의 실제
 이름은 사용자 이름(<B>anderson</B>)과 일치하도록 설정되며
 초기 암호는 문자열 <B>changeme</B>으로 설정됩니다.
-<PRE>   add anderson 
+<PRE>   add anderson
 </PRE>
 <P>다음 예제에서도 인증 전용 계정을 작성하지만 실제 이름과 초기 암호에 대해
 비기본 값을 설정합니다.
@@ -2408,7 +2408,7 @@ VLDB 항목을 처리합니다. 기본값이 설정되는 방식에 대해서는 해당 명령어에 대한
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> 파일에 포함.
 필요하면 <A HREF="auagd021.htm#HDRWQ593">UserList 파일에서 사용자를 표시하려면</A>에서 자세히 설명되어 있는
@@ -2541,9 +2541,9 @@ VLDB 항목을 처리합니다. 기본값이 설정되는 방식에 대해서는 해당 명령어에 대한
 <B>vos release</B> 명령을 사용하여 볼륨을
 해제하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 단계는 홈 디렉토리의 상위 디렉토리 그 자체가
@@ -2577,11 +2577,11 @@ AFS UID에 일치하도록 설정하십시오. 새로운 사용자의 AFS UID가
 항목을 주석 처리하거나 암호 필드에 별표(*)를 입력하는 것이
 더 쉬운 방법입니다.
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd016.htm">이전 페이지</A> &#124; <A HREF="auagd018.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd016.htm">이전 페이지</A> &#124; <A HREF="auagd018.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

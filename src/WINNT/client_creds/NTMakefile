@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -42,10 +42,10 @@ EXERES = \
 
 AFSDOBJS = \
 	$(OUT)\fs_utils.obj
-	
+
 CLIENTOBJS = \
 	$(OUT)\drivemap.obj \
-    	$(OUT)\RegistrySupport.obj 
+    	$(OUT)\RegistrySupport.obj
 
 VCLIBS =\
     	iphlpapi.lib \
@@ -56,7 +56,7 @@ VCLIBS =\
 	mpr.lib \
 	userenv.lib \
     	netapi32.lib \
-        secur32.lib 
+        secur32.lib
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
@@ -104,10 +104,10 @@ $(EXECOBJS): $$(@B).c
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
+$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS)
 	$(EXEGUILINK) $(VCLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 

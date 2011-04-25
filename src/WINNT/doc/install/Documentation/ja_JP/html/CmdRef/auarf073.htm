@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -37,7 +37,7 @@
             [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>>]  [<B>-at</B> &lt;<VAR>Date/time to start dump</VAR>><SUP>+</SUP>]
             [<B>-append</B>]  [<B>-n</B>]  [<B>-file</B> &lt;<VAR>load file</VAR>>]
             [<B>-localauth</B>]  [-<B>cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
-  
+
 <B>backup dump</B> [<B>-v</B> &lt;<VAR>volume set name</VAR>>]  [<B>-d</B> &lt;<VAR>dump level name</VAR>>]
             [<B>-p</B> &lt;<VAR>TC port offset</VAR>>]  [<B>-at</B> &lt;<VAR>Date/time to start dump</VAR>><SUP>+</SUP>]
             [<B>-ap</B>]  [<B>-n</B>]  [<B>-f</B> &lt;<VAR>load file</VAR>>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
@@ -110,12 +110,12 @@ AFS 磁気テープ名が <TT>&lt;NULL></TT> の場合、バックアップ・システムは、適切な A
 </LI><LI>この磁気テープには、現在ダンプ中のデータは書き込めなくなっています。これは、操作員または自動磁気テープ装置がドライブから前の磁気テープを取り外していないか、間違ってドライブに再挿入されていることを想定しているためです。テープ・コーディネーターは、次のメッセージを生成して、別の磁気テープの挿入を要求します。
 <P>
 <PRE>   作成中のダンプを含む磁気テープを上書きすることはできません
-   
+
 </PRE>
 </LI><LI>この磁気テープには、現在のダンプ (インクリメンタル・ダンプ) の親ダンプのデータは書き込まれません。親ダンプを上書きすると、現在のダンプからデータが復元できなくなるためです。テープ・コーディネーターは、次のメッセージを生成して、別の磁気テープの挿入を要求します。
 <P>
 <PRE>   親ダンプを上書きすることはできません<VAR>parent_name</VAR> (<VAR>parent_dump_ID</VAR>)
-   
+
 </PRE>
 </LI></UL>
 <P>すべてのダンプが有効期限切れになる前か、あるいは AFS 磁気テープ名が間違っているときに磁気テープを再利用する場合には、
@@ -171,10 +171,10 @@ UNIX の標準表記では 2038 年 2 月までしか表現できないので、
 <P>各 <B>backup dump</B> コマンドは、指定したファイルの各行に、コマンド行の場合と同じ構文で記述してください。ただし、行の先頭に <B>backup</B> を付ける必要はありません。各コマンドには、<B>-volumeset</B> および <B> -dump</B> 引き数の値を指定してください。デフォルトの 0 を使用しない場合には、
 <B>-portoffset</B> 引き数にも値を指定してください。ファイルには、<B>backup dump</B> コマンドのオプションのオプションも指定することができます。次のファイルの例では、バックアップ・システムがファイルを読み込むとすぐに最初のコマンドが実行され、他のコマンドは、ファイルの読み込みが開始した後で実行されるようにスケジュールされています。
 <P>
-<PRE>   dump user /sunday1/wednesday -port 1 
+<PRE>   dump user /sunday1/wednesday -port 1
    dump sun4x_56 /sunday1/friday -port 2 -at 04/08/1999
    dump sun4x_55 /sunday1/friday -port 2 -at 04/08/1999 02:00 -append
-   
+
 </PRE>
 <P>
 <P>
@@ -193,18 +193,18 @@ UNIX の標準表記では 2038 年 2 月までしか表現できないので、
 <P><STRONG>出力</STRONG>
 <P>コマンド・インタープリターは、まず、ボリューム・セットの項目とボリューム・ロケーション・データベース (VLDB) にあるボリュームを突き合わせて、ダンプに含まれるボリュームのリストを生成します。次のヘッダーを出力します。
 <PRE>   Preparing to dump the following volumes:
-   
+
 </PRE>
 <P>次に、以下のメッセージを出力して、処理を行うテープ・コーディネーターにダンプ要求を送信したことを示します。
 <PRE>ダンプを開始しています。
-   
+
 </PRE>
 <P>発行者が <B>-n</B> フラグを使用している場合には、次のような形式の出力になります。
 <PRE>   Starting dump of volume set '<VAR>volume set</VAR>' (dump set '<VAR>dump level</VAR>')
    Total number of volumes : <VAR>number dumped</VAR>
    Would have dumped the following volumes:
    <VAR>list_of_volumes</VAR>
-   
+
 </PRE>
 <P><VAR>list_of_volumes</VAR> は、各ボリュームを名前とボリューム ID 番号で識別します。
 <P>テープ・コーディネーターがボリュームにアクセスできなくなると、テープ・コーディネーターはウィンドウにエラー・メッセージを表示し、ログとエラー・ファイルにエラーを記録します。
@@ -218,7 +218,7 @@ UNIX の標準表記では 2038 年 2 月までしか表現できないので、
            .                .
            .                .
    Starting dump.
-   
+
 </PRE>
 <P>次のコマンドは、ユーザーが <B>sys_sun</B> ボリューム・セットのダンプを <B>/full</B> ダンプ・レベルで作成するときに、ダンプに含まれるボリュームのリストを表示します。
 <PRE>   % <B>backup dump -volumeset sys_sun -dump /full -n</B>
@@ -232,11 +232,11 @@ UNIX の標準表記では 2038 年 2 月までしか表現できないので、
    sun4x_55      124857997
         .            .
         .            .
-   
+
 </PRE>
 <P>次のコマンドは、ボリューム・セット <B>user</B> のボリュームのダンプをダンプ・レベル <B>/sunday2/monday1</B> で 1999 年 6 月 14 日 午後 11 時 00 分に実行するようにスケジュールしています。該当するテープ・コーディネーターのポート・オフセットは 0 (ゼロ) なので、この引き数は省略されています。
 <PRE>   % <B>backup dump -volumeset user -dump /sunday2/monday1 -at 06/14/1999 23:00</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、バックアップ・サーバーまたはボリューム・ロケーション (VL) サーバーが実行されている各マシン上、および関連するボリュームのあるすべてのファイル・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。
@@ -251,11 +251,11 @@ UNIX の標準表記では 2038 年 2 月までしか表現できないので、
 <P><A HREF="auarf091.htm#HDRBK_VOLRESTORE">backup volrestore</A>
 <P><A HREF="auarf126.htm#HDRBUTC">butc</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf072.htm">前ページ</A> &#124; <A HREF="auarf074.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf072.htm">前ページ</A> &#124; <A HREF="auarf074.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -30,13 +30,13 @@
 <P>ファイル・サーバー・プロセスをモニターします。
 <P><STRONG>構文</STRONG>
 <PRE><B>scout</B> [<B>initcmd</B>]  <B>-server</B> &lt;<VAR>FileServer name(s) to monitor</VAR>><SUP>+</SUP>
-      [<B>-basename</B> &lt;<VAR>base server name</VAR>>]  
-      [<B>-frequency</B> &lt;<VAR>poll frequency, in seconds</VAR>>]  [<B>-host</B>]  
+      [<B>-basename</B> &lt;<VAR>base server name</VAR>>]
+      [<B>-frequency</B> &lt;<VAR>poll frequency, in seconds</VAR>>]  [<B>-host</B>]
       [<B>-attention</B> &lt;<VAR>specify attention (highlighting) level</VAR>><SUP>+</SUP>]
       [<B>-debug</B> &lt;<VAR>turn debugging output on to the named file</VAR>>]  [<B>-help</B>]
-    
-<B>scout</B> [<B>i</B>]  <B>-s</B> &lt;<VAR>FileServer name(s) to monitor</VAR>><SUP>+</SUP>  
-      [<B>-b</B> &lt;<VAR>base server name</VAR>>] [<B>-f</B> &lt;<VAR>poll frequency, in seconds</VAR>>] 
+
+<B>scout</B> [<B>i</B>]  <B>-s</B> &lt;<VAR>FileServer name(s) to monitor</VAR>><SUP>+</SUP>
+      [<B>-b</B> &lt;<VAR>base server name</VAR>>] [<B>-f</B> &lt;<VAR>poll frequency, in seconds</VAR>>]
       [<B>-ho</B>]  [<B>-a</B> &lt;<VAR>specify attention (highlighting) level</VAR>><SUP>+</SUP>]
       [<B>-d</B> &lt;<VAR>turn debugging output on to the named file</VAR>>]  [<B>-he</B>]
 </PRE>
@@ -108,12 +108,12 @@ ABC Corporation のセルの場合、正しい値は <B>.abc.com</B> でなく、<B>abc.com</B> 
 <B>scout</B> プログラムがマシン <B>client1.abc.com</B> で実行しているときは、バナー行には以下のように表示されます。
 <P>
 <PRE>   [client1.abc.com] Scout
-   
+
 </PRE>
 </LI><LI><B>-basename</B> 引き数は、バナー行に指示されたベース名を表示します。たとえば、<B>-basename abc.com</B> 引き数を組み込んだ結果が、バナー行に以下のように表示されます。
 <P>
 <PRE>   Scout for abc.com
-   
+
 </PRE>
 </LI></UL>
 <P><B><I>統計表示領域</I></B>
@@ -143,7 +143,7 @@ ABC Corporation のセルの場合、正しい値は <B>.abc.com</B> でなく、<B>abc.com</B> 
  各区画は以下のフォームで表示されます。
 <P>
 <PRE>   x:<VAR>free_blocks</VAR>
-   
+
 </PRE>
 <P>
 <P><TT>x</TT> は、区画名を示します。たとえば、<TT><B>a:8949</B></TT> は、<B>/vicepa</B> 区画に 8,949 個の 1 KB ブロックの空き領域があることを示します。使用可能なスペースは、最大 26 区画まで表示することができます。ウィンドウの幅が、1 行にすべての区画項目が表示できるほど広くない場合は、
@@ -153,7 +153,7 @@ ABC Corporation のセルの場合、正しい値は <B>.abc.com</B> でなく、<B>abc.com</B> 
 <P><TT>Disk</TT> <TT>attn</TT> 列のラベルは、強調表示される列項目のしきい値を示します。デフォルトのラベルは、次のとおりです。
 <P>
 <PRE>   Disk attn: > 95% used
-   
+
 </PRE>
 <P>
 <P>デフォルトで、<B>scout</B> プログラムは、
@@ -163,7 +163,7 @@ ABC Corporation のセルの場合、正しい値は <B>.abc.com</B> でなく、<B>abc.com</B> 
 5 列目および <TT>Disk attn</TT> 列の値だけは、デフォルトですでに強調表示されています。
 <P><B>scout</B> プログラムがアクセスできないか、区画に関する情報を取得している場合、以下の例のようなメッセージを生成します。
 <PRE>   サーバー fs1.abc.com の区画 /vicepa の情報が取得できませんでした
-   
+
 </PRE>
 <P><B><I>メッセージ / プローブ行</I></B>
 <P><B>scout</B> 画面の最終行に、
@@ -177,11 +177,11 @@ ABC Corporation のセルの場合、正しい値は <B>.abc.com</B> でなく、<B>abc.com</B> 
 <P><A HREF="auarf059.htm#HDRAFSMONITOR">afsmonitor</A>
 <P><A HREF="auarf169.htm#HDRFSTRACE_INTRO">fstrace</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf232.htm">前ページ</A> &#124; <A HREF="auarf234.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf232.htm">前ページ</A> &#124; <A HREF="auarf234.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

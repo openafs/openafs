@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -420,7 +420,7 @@ void Help_FindError_Shrink (HWND hDlg, BOOL fShrink)
       GetRectInParent (GetDlgItem (hDlg, IDCANCEL), &rClose);
 
       cyShrunk = rClose.top - rAdvanced.top - 9;
-      
+
       ShowWindow (GetDlgItem (hDlg, IDC_ERROR_DESC), SW_HIDE);
 
       SetWindowPos (GetDlgItem (hDlg, IDCANCEL), NULL,

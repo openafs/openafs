@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -86,7 +86,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CSetAfsAcl message handlers
 
-BOOL CSetAfsAcl::OnInitDialog() 
+BOOL CSetAfsAcl::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -115,7 +115,7 @@ BOOL CSetAfsAcl::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CSetAfsAcl::OnClear() 
+void CSetAfsAcl::OnClear()
 {
 	CClearAclDlg dlg;
 
@@ -139,12 +139,12 @@ void CSetAfsAcl::OnClear()
 		if (!m_bShowingNormal)
 			bClearRights = TRUE;
 	}
-	
+
 	if (bClearRights)
 		OnNothingSelected();
 }
 
-void CSetAfsAcl::OnAdd() 
+void CSetAfsAcl::OnAdd()
 {
 	CAddAclEntryDlg dlg;
 
@@ -179,7 +179,7 @@ void CSetAfsAcl::OnAdd()
 	m_bChanges = TRUE;
 }
 
-void CSetAfsAcl::OnCopy() 
+void CSetAfsAcl::OnCopy()
 {
 	CCopyAclDlg dlg;
 
@@ -205,7 +205,7 @@ void CSetAfsAcl::ShowRights(const CString& strRights)
 	m_AdminPerm.SetCheck((strRights.Find(_T("a")) == -1) ? UNCHECKED : CHECKED);
 }
 
-void CSetAfsAcl::OnSelChangeNormalRights() 
+void CSetAfsAcl::OnSelChangeNormalRights()
 {
 	m_NegativeRights.SetSel(-1, FALSE);
 
@@ -228,7 +228,7 @@ void CSetAfsAcl::OnSelChangeNormalRights()
 	OnSelection();
 }
 
-void CSetAfsAcl::OnSelChangeNegativeEntries() 
+void CSetAfsAcl::OnSelChangeNegativeEntries()
 {
 	m_NormalRights.SetSel(-1, FALSE);
 
@@ -273,7 +273,7 @@ CString CSetAfsAcl::MakeRightsString()
 	return str;
 }
 
-void CSetAfsAcl::OnPermChange() 
+void CSetAfsAcl::OnPermChange()
 {
 	CListBox *pRightsList;
 	CStringArray *pRights;
@@ -299,7 +299,7 @@ void CSetAfsAcl::OnPermChange()
 	m_bChanges = TRUE;
 }
 
-void CSetAfsAcl::OnRemove() 
+void CSetAfsAcl::OnRemove()
 {
 	CListBox *pRightsList;
 	CStringArray *pRights;
@@ -375,15 +375,15 @@ void CSetAfsAcl::OnSelection()
 	m_Remove.EnableWindow(TRUE);
 }
 
-void CSetAfsAcl::OnOK() 
+void CSetAfsAcl::OnOK()
 {
 	if (m_bChanges && !SaveACL(m_strCellName, m_strDir, m_Normal, m_Negative))
 		return;
-	
+
 	CDialog::OnOK();
 }
 
-void CSetAfsAcl::OnClean() 
+void CSetAfsAcl::OnClean()
 {
 	CStringArray dirs;
 
@@ -409,7 +409,7 @@ BOOL CSetAfsAcl::IsNameInUse(BOOL bNormal, const CString& strName)
 	return FALSE;
 }
 
-void CSetAfsAcl::OnHelp() 
+void CSetAfsAcl::OnHelp()
 {
 	ShowHelp(m_hWnd, SET_AFS_ACL_HELP_ID);
 }

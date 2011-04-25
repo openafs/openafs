@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,7 +36,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) 
+    if (code)
         goto done;
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -60,7 +60,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
             count = 0;
         else
             count = thyper.LowPart;
-    }       
+    }
 
     *readp = count;
 
@@ -93,7 +93,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                 code = cm_SyncOp(scp, bufferp, userp, &req, 0,
                                   CM_SCACHESYNC_NEEDCALLBACK
                                   | CM_SCACHESYNC_READ);
-                if (code) 
+                if (code)
                     goto done;
 
 		cm_SyncOpDone(scp, bufferp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
@@ -134,14 +134,14 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
   done:
     lock_ReleaseWrite(&scp->rw);
     //lock_ReleaseMutex(&fidp->mx);
-    if (bufferp) 
+    if (bufferp)
         buf_Release(bufferp);
 
     if (code == 0 && sequential)
         cm_ConsiderPrefetch(scp, &lastByte, *readp, userp, &req);
 
     return code;
-}       
+}
 
 
 long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
@@ -174,9 +174,9 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                      CM_SCACHESYNC_NEEDCALLBACK
                       | CM_SCACHESYNC_SETSTATUS
                       | CM_SCACHESYNC_GETSTATUS);
-    if (code) 
+    if (code)
         goto done;
-    
+
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_GETSTATUS);
 
 #if 0
@@ -186,7 +186,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
     goto done;
     }
 #endif
-	
+
     /* now we have the entry locked, look up the length */
     fileLength = scp->length;
     minLength = fileLength;
@@ -240,14 +240,14 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                 lock_ReleaseMutex(&bufferp->mx);
                 buf_Release(bufferp);
                 bufferp = NULL;
-            }	
+            }
             lock_ReleaseWrite(&scp->rw);
 
             code = buf_Get(scp, &thyper, &req, &bufferp);
 
             lock_ObtainMutex(&bufferp->mx);
             lock_ObtainWrite(&scp->rw);
-            if (code) 
+            if (code)
                 goto done;
 
             bufferOffset = thyper;
@@ -258,19 +258,19 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                                   CM_SCACHESYNC_NEEDCALLBACK
                                   | CM_SCACHESYNC_WRITE
                                   | CM_SCACHESYNC_BUFLOCKED);
-                if (code) 
+                if (code)
                     goto done;
-                       
-		cm_SyncOpDone(scp, bufferp, 
-			       CM_SCACHESYNC_NEEDCALLBACK 
-			       | CM_SCACHESYNC_WRITE 
+
+		cm_SyncOpDone(scp, bufferp,
+			       CM_SCACHESYNC_NEEDCALLBACK
+			       | CM_SCACHESYNC_WRITE
 			       | CM_SCACHESYNC_BUFLOCKED);
 
                 /* If we're overwriting the entire buffer, or
                  * if we're writing at or past EOF, mark the
                  * buffer as current so we don't call
                  * cm_GetBuffer.  This skips the fetch from the
-                 * server in those cases where we're going to 
+                 * server in those cases where we're going to
                  * obliterate all the data in the buffer anyway,
                  * or in those cases where there is no useful
                  * data at the server to start with.
@@ -299,7 +299,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                 lock_ReleaseWrite(&scp->rw);
                 lock_ObtainMutex(&bufferp->mx);
                 lock_ObtainWrite(&scp->rw);
-                if (code) 
+                if (code)
                     break;
             }
             if (code) {
@@ -317,7 +317,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
 
         /* and figure out how many bytes we want from this buffer */
         nbytes = buf_bufferSize - bufIndex;	/* what remains in buffer */
-        if (nbytes > count) 
+        if (nbytes > count)
             nbytes = count;	/* don't go past end of request */
 
         /* now copy the data */
@@ -347,7 +347,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
         if (code == 0)
             cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                                writeBackOffset.HighPart, cm_chunkSize, 0, userp);
-    }   
+    }
 
     /* cm_SyncOpDone is called when cm_BkgStore completes */
     return code;

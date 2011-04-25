@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -71,7 +71,7 @@
 命令は、ディスクなど、マルチバイト・コマンド・ブロック単位での入力を扱うブロック単位装置を定義します。
 <B>C</B> 命令は、端末または tty など 1 文字単位での入力を扱うキャラクター単位装置を定義します。これらの命令の構文は同じです。
 <PRE>   {<B>B </B>| <B>C</B>}   <VAR>device_name</VAR>  <VAR>major_device</VAR>  <VAR>minor_device</VAR>  <VAR>owner</VAR>  <VAR>group</VAR>  <VAR>mode_bits</VAR>
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -103,7 +103,7 @@
 <A NAME="IDX4062"></A>
 <P><B>package</B> 構成ファイルの <B>D</B> 命令は、ローカル・ディスク上にディレクトリーを作成します。ローカル・ディスク上に同じ名前のシンボリック・リンク、ファイル、またはその他の要素がある場合、それはディレクトリーで置き換えられます。そのディレクトリーがすでに存在する場合、その所有者、グループ、およびモード・ビットは、命令に適合するよう必要に応じて変更されます。この命令の構文は、次のとおりです。
 <PRE>   <B>D</B>[<VAR>update_code</VAR>]  <VAR>directory</VAR>  <VAR>owner</VAR>  <VAR>group</VAR>  <VAR>mode_bits</VAR>
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -145,7 +145,7 @@
 <P>ローカル・ディスク上に同じ名前のシンボリック・リンク、ディレクトリー、またはその他の要素がある場合、それはファイルで置き換えられます (必要に応じて、ディレクトリーの内容が最初に削除されます)。
 <P>この命令の構文は、次のとおりです。
 <PRE>      <B>F</B>[<VAR>update_code</VAR>]  <VAR>file</VAR>  <VAR>source_file</VAR>  [<VAR>owner  group  mode_bits</VAR>]
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -201,7 +201,7 @@ AFS) を指定します。
 <B>package</B> コマンドは、シンボリック・リンクで置換します。
 <P>この命令の構文は、次のとおりです。
 <PRE>      <B>L</B>[<VAR>update_code</VAR>]  <VAR>link</VAR>  <VAR>actual_path</VAR>  [<VAR>owner  group  mode_bits</VAR>]
-    
+
 </PRE>
 <P>ここで、
 <DL>
@@ -251,7 +251,7 @@ AFS) を指定します。
 <P><B>package</B> 構成ファイルの <B>S</B>
 命令は、ローカル・ディスク上に (UDP または TCP/IP 接続の通信装置となる) ソケットを作成します。この命令の構文は、次のとおりです。
 <PRE>   <B>S</B>  <VAR>socket</VAR> [<VAR>owner  group  mode_bits</VAR>]
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -299,7 +299,7 @@ umask で調整され、<B>777</B>
    %define  <VAR>variable</VAR>  <VAR>value</VAR>
    %undef  <VAR>declaration</VAR>
    %undef  <VAR>variable</VAR>
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -338,7 +338,7 @@ umask で調整され、<B>777</B>
    [%else [<VAR>declaration</VAR>]
                   <VAR>alternate_action</VAR><SUP>+</SUP>]
    %endif <VAR>declaration</VAR>
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -367,7 +367,7 @@ umask で調整され、<B>777</B>
 <B>%include</B> 命令は、
 <B>%include</B> 命令のあるプロトタイプ・ファイルのコンパイル後に、指定されたライブラリー・ファイルの内容を構成ファイルに組み込みます。この命令の構文は、次のとおりです。
 <PRE>   %include  <VAR>pathname</VAR>
-   
+
 </PRE>
 <P>ここで、
 <DL>
@@ -383,39 +383,39 @@ umask で調整され、<B>777</B>
 <P>次の例では、<B>B</B> および <B>C</B> 命令により、メジャーおよびマイナー装置番号がそれぞれ <B>1</B> および <B>0</B> で、モード・ビットが、<B>-rw-r--r--</B> のディスク <B>/dev/hd0a</B> と、メジャーおよびマイナー装置番号がそれぞれ <B>6</B> および <B>5</B> で、モード・ビットが <B>-rw-rw-rw</B>の tty <B>/dev/ttyp5</B> を定義しています。いずれの場合も、所有者は <B>root</B> で、所有グループは <B>wheel</B> です。
 <PRE>   B /dev/hd0a 1 0 root wheel 644
    C /dev/ttyp5 6 5 root wheel 666
-   
+
 </PRE>
 <P>次の例では、<B>D</B> 命令により、所有者 <B>root</B>、グループ <B>wheel</B>、モード・ビットが <B>drwxr-xr-x</B> のローカル <B>/usr</B> ディレクトリーを作成しています。
 <B>R</B> 更新コードにより、構成ファイルにはなく、<B>/usr</B> ディレクトリーに存在するファイルおよびサブディレクトリー (もしあれば) を削除しています。
 <PRE>   DR /usr root wheel 755
-   
+
 </PRE>
 <P>次の例は、ABC Corporation セルで AIX 4.2 を実行するマシンに適切な <B>F</B> 命令により、<B>/afs/abc.com/rs_aix42/bin/grep</B> をソースとして使用し、ローカル・ディスク・ファイル <B>/bin/grep</B> を作成または更新しています。
 <PRE>   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
-   
+
 </PRE>
 <P>次の例では、<B>F</B> 命令により、<B>/usr/vice/etc/ThisCell</B>ファイルを作成しています。ここでは、<B>A</B> 更新コードの指定に従って、ソース・ファイルに絶対パス名を指定しています。<B>Q</B> コードで、<B>package</B> コマンドが終了時に状況コード 4 を戻すように設定しています。これは、マシンの AFS 初期設定ファイルに、標準の <B>package</B> に関連した変更が行われると、マシンのリブートを要求します。所有者、グループおよびモード・ビットの値は指定していません。これらは、ソース・ファイルから継承されます。
 <PRE>   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
-   
+
 </PRE>
 <P>次の例では、ABC Corporation セルで AIX 4.2 を実行するマシンに適切な <B>L</B> 命令により、ローカル・ディスク上の <B>/etc/ftpd</B> からファイル <B>/afs/abc.com/rs_aix42/etc/ftpd</B> へのシンボリック・リンクを作成しています。
 <PRE>   L /etc/ftpd /afs/abc.com/rs_aix42 root wheel 644
-   
+
 </PRE>
 <P>次の例では、<B>S</B> 命令でソケット <B>/dev/printer</B> を定義しています。
-<PRE> 
+<PRE>
    S /dev/printer root wheel 777
-   
+
 </PRE>
 <P>次の例では、<B>%define</B> 命令で変数
 <TT>${diskmode}</TT> に値を定義しています。この変数は、<B>D</B>、<B>F</B>、または <B>L</B> 命令の <VAR>owner_name</VAR>、<VAR>group_name</VAR>、および <VAR>mode_bits</VAR> フィールドを埋めるために、テンプレートで使用されます。
 <PRE>   %define diskmode root wheel 644
-    
+
 </PRE>
 <P>次の例では、<B>%undef</B> 命令により、未定義の文字列
 <B>afsd</B> を宣言しています。
 <PRE>   %undef afsd
-   
+
 </PRE>
 <P>次の例では、<B>%ifdef</B> 命令により、文字列
 <TT>rs_aix42</TT> が宣言されたら、命令を含むプロトタイプ・ファイルのコンパイル時に指定された 3 つのライブラリー・ファイルを組み込むように指定しています。代替アクションは定義されていません。プロトタイプ・ファイルの先頭のほうに、<B>rs_aix42</B>
@@ -426,26 +426,26 @@ umask で調整され、<B>777</B>
    %include ${wsadmin}/lib/rs_aix42.generic
    %include ${wsadmin}/lib/rs_aix42.generic.dev
    %endif rs_aix42
-   
+
 </PRE>
 <P>次の例では、State University セルに適切な <B>%ifndef</B> 命令により、<TT>${cell}</TT> 変数の値として <TT>stateu.edu</TT> を定義しています。
 <PRE>   %ifndef cell
    %define cell stateu.edu
    %endif cell
-   
+
 </PRE>
 <P>次の例では、<B>%include</B> 命令で、<B>package</B> に関連したファイルが常駐するディレクトリーの <B>lib</B> サブディレクトリーからライブラリー・ファイル <B>base.generic</B> を組み込んでいます。コンパイル時に、<TT>${wsadmin}</TT> 変数は実際のパス名 (<B>/afs/abc.com/wsadmin</B> など)に解決されます。
 <PRE>   %include ${wsadmin}/lib/base.generic
-   
+
 </PRE>
 <P><STRONG>関連情報 </STRONG>
 <P><A HREF="auarf204.htm#HDRPACKAGE">package</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf052.htm">前ページ</A> &#124; <A HREF="auarf054.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf052.htm">前ページ</A> &#124; <A HREF="auarf054.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

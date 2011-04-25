@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -34,12 +34,12 @@ void osi_BaseInit(void)
     for(i=0; i<OSI_MUTEXHASHSIZE; i++)
         InitializeCriticalSection(&osi_baseAtomicCS[i]);
 
-    if ((tls_LockRefH = TlsAlloc()) == TLS_OUT_OF_INDEXES) 
-        osi_panic("TlsAlloc(tls_LockRefH) failure", __FILE__, __LINE__); 
+    if ((tls_LockRefH = TlsAlloc()) == TLS_OUT_OF_INDEXES)
+        osi_panic("TlsAlloc(tls_LockRefH) failure", __FILE__, __LINE__);
 
-    if ((tls_LockRefT = TlsAlloc()) == TLS_OUT_OF_INDEXES) 
-        osi_panic("TlsAlloc(tls_LockRefT) failure", __FILE__, __LINE__); 
-}       
+    if ((tls_LockRefT = TlsAlloc()) == TLS_OUT_OF_INDEXES)
+        osi_panic("TlsAlloc(tls_LockRefT) failure", __FILE__, __LINE__);
+}
 
 void osi_SetLockOrderValidation(int on)
 {
@@ -125,7 +125,7 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
     CRITICAL_SECTION *csp;
     osi_queue_t * lockRefH, *lockRefT;
     osi_lock_ref_t *lockRefp;
-        
+
     if ((i=lockp->type) != 0) {
         if (i >= 0 && i < OSI_NLOCKTYPES)
             (osi_lockOps[i]->ObtainWriteProc)(lockp);
@@ -136,7 +136,7 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-        if (lockp->level != 0) 
+        if (lockp->level != 0)
             lock_VerifyOrderRW(lockRefH, lockRefT, lockp);
     }
 
@@ -145,7 +145,7 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
     EnterCriticalSection(csp);
 
     /* here we have the fast lock, so see if we can obtain the real lock */
-    if (lockp->waiters > 0 || (lockp->flags & OSI_LOCKFLAG_EXCL) || 
+    if (lockp->waiters > 0 || (lockp->flags & OSI_LOCKFLAG_EXCL) ||
         (lockp->readers > 0)) {
         lockp->waiters++;
         osi_TWait(&lockp->d.turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, csp);
@@ -167,7 +167,7 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
         TlsSetValue(tls_LockRefH, lockRefH);
         TlsSetValue(tls_LockRefT, lockRefT);
     }
-}       
+}
 
 void lock_ObtainRead(osi_rwlock_t *lockp)
 {
@@ -175,7 +175,7 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
     CRITICAL_SECTION *csp;
     osi_queue_t * lockRefH, *lockRefT;
     osi_lock_ref_t *lockRefp;
-        
+
     if ((i=lockp->type) != 0) {
         if (i >= 0 && i < OSI_NLOCKTYPES)
             (osi_lockOps[i]->ObtainReadProc)(lockp);
@@ -186,7 +186,7 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-        if (lockp->level != 0) 
+        if (lockp->level != 0)
             lock_VerifyOrderRW(lockRefH, lockRefT, lockp);
     }
 
@@ -222,7 +222,7 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
     CRITICAL_SECTION *csp;
     osi_queue_t * lockRefH, *lockRefT;
     osi_lock_ref_t *lockRefp;
-        
+
     if ((i = lockp->type) != 0) {
         if (i >= 0 && i < OSI_NLOCKTYPES)
             (osi_lockOps[i]->ReleaseReadProc)(lockp);
@@ -313,7 +313,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
         /* and finally release the big lock */
         LeaveCriticalSection(csp);
     }
-}       
+}
 
 void lock_ConvertWToR(osi_rwlock_t *lockp)
 {
@@ -378,7 +378,7 @@ void lock_ConvertRToW(osi_rwlock_t *lockp)
 
     lockp->tid = thrd_Current();
     LeaveCriticalSection(csp);
-}       
+}
 
 void lock_ObtainMutex(struct osi_mutex *lockp)
 {
@@ -386,7 +386,7 @@ void lock_ObtainMutex(struct osi_mutex *lockp)
     CRITICAL_SECTION *csp;
     osi_queue_t * lockRefH, *lockRefT;
     osi_lock_ref_t *lockRefp;
-        
+
     if ((i=lockp->type) != 0) {
         if (i >= 0 && i < OSI_NLOCKTYPES)
             (osi_lockOps[i]->ObtainMutexProc)(lockp);
@@ -397,7 +397,7 @@ void lock_ObtainMutex(struct osi_mutex *lockp)
         lockRefH = (osi_queue_t *)TlsGetValue(tls_LockRefH);
         lockRefT = (osi_queue_t *)TlsGetValue(tls_LockRefT);
 
-        if (lockp->level != 0) 
+        if (lockp->level != 0)
             lock_VerifyOrderMX(lockRefH, lockRefT, lockp);
     }
 
@@ -453,7 +453,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
                 break;
             }
         }
-    
+
         osi_assertx(found, "mutex lock not found in TLS queue");
         TlsSetValue(tls_LockRefH, lockRefH);
         TlsSetValue(tls_LockRefT, lockRefT);
@@ -475,7 +475,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
         /* and finally release the big lock */
         LeaveCriticalSection(csp);
     }
-}       
+}
 
 int lock_TryRead(struct osi_rwlock *lockp)
 {
@@ -525,7 +525,7 @@ int lock_TryRead(struct osi_rwlock *lockp)
     }
 
     return i;
-}       
+}
 
 
 int lock_TryWrite(struct osi_rwlock *lockp)
@@ -678,7 +678,7 @@ void osi_SleepR(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 
     /* now call into scheduler to sleep atomically with releasing spin lock */
     osi_SleepSpin(sleepVal, csp);
-}       
+}
 
 void osi_SleepW(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 {
@@ -748,7 +748,7 @@ void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
                 break;
             }
         }
-    
+
         TlsSetValue(tls_LockRefH, lockRefH);
         TlsSetValue(tls_LockRefT, lockRefT);
     }
@@ -758,7 +758,7 @@ void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
     EnterCriticalSection(csp);
 
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "osi_SleepM not held");
-	
+
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
     if (!osi_TEmpty(&lockp->d.turn)) {
         osi_TSignalForMLs(&lockp->d.turn, 0, NULL);
@@ -775,16 +775,16 @@ void lock_FinalizeRWLock(osi_rwlock_t *lockp)
     if ((i=lockp->type) != 0)
         if (i >= 0 && i < OSI_NLOCKTYPES)
             (osi_lockOps[i]->FinalizeRWLockProc)(lockp);
-}       
+}
 
 void lock_FinalizeMutex(osi_mutex_t *lockp)
-{       
+{
     long i;
 
     if ((i=lockp->type) != 0)
         if (i >= 0 && i < OSI_NLOCKTYPES)
             (osi_lockOps[i]->FinalizeMutexProc)(lockp);
-}       
+}
 
 void lock_InitializeMutex(osi_mutex_t *mp, char *namep, unsigned short level)
 {
@@ -817,7 +817,7 @@ void lock_InitializeRWLock(osi_rwlock_t *mp, char *namep, unsigned short level)
             (osi_lockOps[i]->InitializeRWLockProc)(mp, namep, level);
         return;
     }
-	
+
     /* otherwise we have the base case, which requires no special
      * initialization.
      */
@@ -845,11 +845,11 @@ int lock_GetRWLockState(osi_rwlock_t *lp)
     EnterCriticalSection(csp);
 
     /* here we have the fast lock, so see if we can obtain the real lock */
-    if (lp->flags & OSI_LOCKFLAG_EXCL) 
+    if (lp->flags & OSI_LOCKFLAG_EXCL)
         i = OSI_RWLOCK_WRITEHELD;
-    else 
+    else
         i = 0;
-    if (lp->readers > 0) 
+    if (lp->readers > 0)
         i |= OSI_RWLOCK_READHELD;
 
     LeaveCriticalSection(csp);
@@ -857,7 +857,7 @@ int lock_GetRWLockState(osi_rwlock_t *lp)
     return i;
 }
 
-int lock_GetMutexState(struct osi_mutex *mp) 
+int lock_GetMutexState(struct osi_mutex *mp)
 {
     long i;
     CRITICAL_SECTION *csp;

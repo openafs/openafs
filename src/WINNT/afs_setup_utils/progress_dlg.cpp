@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -55,7 +55,7 @@ static void OnQuit();
 BOOL ShowProgressDialog(char *pszMsg)
 {
 	DWORD dwThreadID;
-	
+
     pszProgressMsg = pszMsg;
 
 	// Create a thread to show the dialog
@@ -84,9 +84,9 @@ static BOOL CALLBACK ProgressDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM l
 			hDlg = hwndDlg;
             SetWindowText(GetDlgItem(hDlg, IDC_MSG), pszProgressMsg);
 			break;
-    
+
         case WM_QUIT:
-            OnQuit();            
+            OnQuit();
             break;
     }
 

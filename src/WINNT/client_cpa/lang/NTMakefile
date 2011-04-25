@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -43,7 +43,7 @@ DLLOBJS = $(RESFILE)
 
 $(DLLFILE) : $(DLLOBJS)
 	$(DLLRESLINK)
-	$(DLLPREP) 
+	$(DLLPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -51,9 +51,9 @@ install : $(DLLFILE)
 
 clean ::
 	$(DEL) $(RESFILE)
-	$(DEL) RC* 
-	$(DEL) RD* 
-	$(DEL) $(DLLFILE) 
+	$(DEL) RC*
+	$(DEL) RD*
+	$(DEL) $(DLLFILE)
 	$(DEL) AFS_component_version_number.h
 
 ############################################################################
@@ -66,4 +66,4 @@ $(RESFILE) : $(RCFILE) AFS_component_version_number.h
 
 
 mkdir:
-	
+

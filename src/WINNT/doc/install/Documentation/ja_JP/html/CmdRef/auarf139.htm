@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -29,18 +29,18 @@
 <P><STRONG>目的</STRONG>
 <P>マシンが AFS を別のファイル・システムのクライアントにエクスポートできるかどうか報告または設定を行います。
 <P><STRONG>構文</STRONG>
-<PRE><B>fs exportafs -type</B> &lt;<VAR>exporter name</VAR>>  
-        [<B>-start</B> &lt;<VAR>start/stop translator (on | off)</VAR>>] 
-        [<B>-convert</B> &lt;<VAR>convert from afs to unix mode (on | off)</VAR>>] 
-        [<B>-uidcheck</B> &lt;<VAR>run on strict 'uid check' mode (on | off)</VAR>>] 
+<PRE><B>fs exportafs -type</B> &lt;<VAR>exporter name</VAR>>
+        [<B>-start</B> &lt;<VAR>start/stop translator (on | off)</VAR>>]
+        [<B>-convert</B> &lt;<VAR>convert from afs to unix mode (on | off)</VAR>>]
+        [<B>-uidcheck</B> &lt;<VAR>run on strict 'uid check' mode (on | off)</VAR>>]
         [<B>-submounts</B> &lt;<VAR>allow nfs mounts to subdirs of /afs/.. (on | off)</VAR>>]
         [<B>-help</B>]
-   
-<B>fs exp -t</B> &lt;<VAR>exporter name</VAR>>  
+
+<B>fs exp -t</B> &lt;<VAR>exporter name</VAR>>
        [<B>-st</B> &lt;<VAR>start/stop translator (on | off)</VAR>>]
        [<B>-c</B> &lt;<VAR>convert from afs to unix mode (on | off)</VAR>>]
        [<B>-u</B> &lt;<VAR>run on strict 'uid check' mode (on | off)</VAR>>]
-       [<B>-su</B> &lt;<VAR>allow nfs mounts to subdirs of /afs/.. (on | off)</VAR>>]  
+       [<B>-su</B> &lt;<VAR>allow nfs mounts to subdirs of /afs/.. (on | off)</VAR>>]
        [<B>-help</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -97,30 +97,30 @@ NFS クライアント・マシンの同じユーザーにトークンを使用できるようにすることが可能
 <P>マシンが非 AFS ファイル・システムのサーバーとしても構成されていない場合は、次のメッセージが表示されます。
 <PRE>   Sorry, the <VAR>file_system</VAR>-exporter type is currently not supported on
    this AFS client
-   
+
 </PRE>
 <P>マシンが非 AFS ファイル・システムのサーバーとして構成されてはいるけれども、現在そのマシンに AFS を再エクスポートできない場合 (このコマンドの <B>-start</B> 引き数が <B>on</B> に設定されていないため)、次のメッセージが表示されます。
 <PRE>   '<VAR>file_system</VAR>' translator is disabled
-   
+
 </PRE>
 <P>マシンが AFS を再エクスポートできる場合は、他のパラメーターの設定を報告するメッセージよりも前に、次のメッセージが表示されます。
 <PRE>   '<VAR>file_system</VAR>' translator is enabled with the following options:
-   
+
 </PRE>
 <P>次のメッセージは、<B>-convert</B> 引き数がそれぞれ、<B>on</B> または <B>off</B> に設定されていることを示しています。
 <PRE>   Running in convert owner mode bits to world/other mode
    Running in strict unix mode
-   
+
 </PRE>
 <P>次のメッセージは、<B>-uidcheck</B> 引き数がそれぞれ、<B>on</B> または <B>off</B> に設定されていることを示しています。
 <PRE>   Running in strict 'passwd sync' mode
    Running in no 'passwd sync' mode
-    
+
 </PRE>
 <P>次のメッセージは、<B>-submounts</B> 引き数がそれぞれ、<B>on</B> または <B>off</B> に設定されていることを示しています。
 <PRE>   Allow mounts of /afs/.. subdirs
    Only mounts to /afs allowed
-   
+
 </PRE>
 <P><STRONG>例</STRONG>
 <P>次の例は、ローカル・マシンが AFS を NFS クライアント・マシンにエクスポート可能であることを示しています。
@@ -129,16 +129,16 @@ NFS クライアント・マシンの同じユーザーにトークンを使用できるようにすることが可能
         Running in convert owner mode bits to world/other mode
         Running in no 'passwd sync' mode
         Only mounts to /afs allowed
-   
+
 </PRE>
 <P>次の例では、マシンを NFS サーバーとして使用可能にし、エクスポートされた AFS ディレクトリーおよびファイルの UNIX の <B>group</B> および <B>other</B> モード・ビットを変換して、
 <B>owner</B> モード・ビットと一致するようにします。
 <PRE>   % <B>fs exportafs -type nfs -start on -convert on</B>
-   
+
 </PRE>
 <P>次の例では、マシンが AFS を NFS クライアント・マシンに再エクスポートできないようにしています。
 <PRE>   %<B> fs exportafs -type nfs -start off</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
@@ -146,11 +146,11 @@ NFS クライアント・マシンの同じユーザーにトークンを使用できるようにすることが可能
 <P><A HREF="auarf200.htm#HDRKLOG">klog</A>
 <P><A HREF="auarf201.htm#HDRKNFS">knfs</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf138.htm">前ページ</A> &#124; <A HREF="auarf140.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf138.htm">前ページ</A> &#124; <A HREF="auarf140.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

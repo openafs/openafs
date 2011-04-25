@@ -146,7 +146,7 @@ long cm_InitNormalization(void)
    buffer is different from the supplied buffer and non-NULL, it
    should be freed using free().
 */
-static wchar_t * 
+static wchar_t *
 NormalizeUtf16String(const wchar_t * src, int cch_src, wchar_t * ext_dest, int *pcch_dest)
 {
     if (!nls_init)
@@ -520,7 +520,7 @@ static int sanitize_bytestring(const char * src, int cch_src,
 
         rc = sanitized_escapes_1252[*src];
         if (IS_ESCAPED(rc)) {
-            static const char hex[] = 
+            static const char hex[] =
                 {'0','1','2','3','4','5','6','7',
                  '8','9','a','b','c','d','e','f'};
 

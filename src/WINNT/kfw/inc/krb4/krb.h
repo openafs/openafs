@@ -11,7 +11,7 @@
 #ifndef KRB_DEFS
 #define KRB_DEFS
 
-#include <conf.h> 
+#include <conf.h>
 
 /* Need some defs from des.h     */
 #include <des.h>
@@ -57,7 +57,7 @@ typedef unsigned short gid_t;
 #define         KRB_RLM_TRANS   "krbrealm.con"
 
 #else
- 
+
 #define         KRB_CONF        "/etc/krb.conf"
 #define         KRB_RLM_TRANS   "/etc/krb.realms"
 
@@ -154,7 +154,7 @@ struct credentials {
     long    issue_date;         /* The issue time */
     char    pname[ANAME_SZ];    /* Principal's name */
     char    pinst[INST_SZ];     /* Principal's instance */
-    char    address[ADDR_SZ];      /* IP Address in ticket */ 
+    char    address[ADDR_SZ];      /* IP Address in ticket */
 };
 
 typedef struct credentials CREDENTIALS;
@@ -189,7 +189,7 @@ tkt_header far *tkt_ptr(void);
 #define KM_TKFILE 0
 #define KM_KRBMEM 1
 
-#define TKT_ROOT        "/tmp/tkt" 
+#define TKT_ROOT        "/tmp/tkt"
 
 /* Error codes returned from the KDC */
 #define         KDC_OK          0       /* Request OK */
@@ -390,8 +390,8 @@ char *tkt_string();
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 int PASCAL krb_sendauth(long, int, KTEXT, char *, char *, char *,
-                        unsigned long, MSG_DAT *, CREDENTIALS *, 
-                        Key_schedule *, struct sockaddr_in *, 
+                        unsigned long, MSG_DAT *, CREDENTIALS *,
+                        Key_schedule *, struct sockaddr_in *,
                         struct sockaddr_in FAR *, char *);
 int PASCAL krb_mk_req(KTEXT, char *, char *, char *, long);
 char * PASCAL krb_getrealm(char *host);
@@ -399,7 +399,7 @@ char * PASCAL krb_getrealm(char *host);
 void tkt_free(tkt_header FAR* hdr);
 int krb_get_tf_fullname(char FAR *, char FAR *, char FAR *, char FAR *);
 int krb_get_tf_realm(char FAR *,char FAR *);
-int tf_init(char FAR*,int); 
+int tf_init(char FAR*,int);
 
 long LocalHostAddr();
 int tf_get_pname(char FAR*);
@@ -418,8 +418,8 @@ int set_krb_debug(int);
 int set_krb_ap_req_debug(int);
 char * PASCAL get_krb_err_txt_entry(int i);
 char * krb_err_func(int offset, long code);
-int PASCAL k_decomp_ticket(KTEXT, unsigned char *, char *, char *, char *, 
-                           unsigned long *, C_Block, int *, unsigned long *, 
+int PASCAL k_decomp_ticket(KTEXT, unsigned char *, char *, char *, char *,
+                           unsigned long *, C_Block, int *, unsigned long *,
                            char *, char *, C_Block, Key_schedule);
 int PASCAL krb_mk_req(KTEXT,char *,char *,char *,long);
 char * PASCAL krb_getrealm(char *host);

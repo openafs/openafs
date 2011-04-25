@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -544,20 +544,20 @@ HRESULT CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             }
          break;
 
-      case WM_MEASUREITEM: 
+      case WM_MEASUREITEM:
          LPMEASUREITEMSTRUCT lpmis;
-         lpmis = (LPMEASUREITEMSTRUCT)lp; 
+         lpmis = (LPMEASUREITEMSTRUCT)lp;
          HDC hdc;
          hdc = GetDC (hDlg);
          SIZE sAMPM;
          Time_GetAMPMSize (hdc, &sAMPM, NULL, NULL);
          ReleaseDC (hDlg, hdc);
          lpmis->itemHeight = sAMPM.cy;
-         return TRUE; 
+         return TRUE;
 
-      case WM_DRAWITEM: 
+      case WM_DRAWITEM:
          LPDRAWITEMSTRUCT lpdis;
-         lpdis = (LPDRAWITEMSTRUCT)lp; 
+         lpdis = (LPDRAWITEMSTRUCT)lp;
 
          COLORREF clrBack;
          COLORREF clrFore;
@@ -578,7 +578,7 @@ HRESULT CALLBACK TimeDlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             }
 
          TCHAR szText[ cchRESOURCE ];
-         SendMessage (lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)szText); 
+         SendMessage (lpdis->hwndItem, LB_GETTEXT, lpdis->itemID, (LPARAM)szText);
 
          SetTextColor (lpdis->hDC, clrFore);
          SetBkColor (lpdis->hDC, clrBack);

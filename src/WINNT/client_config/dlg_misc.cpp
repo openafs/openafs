@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -96,7 +96,7 @@ BOOL CALLBACK Misc_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             case IDOK:
                 Misc_OnOK(hDlg);
                 break;
-                
+
             case IDCANCEL:
                 Misc_OnCancel(hDlg);
                 break;
@@ -153,7 +153,7 @@ void Misc_OnInitDialog (HWND hDlg)
    CreateSpinner (GetDlgItem (hDlg, IDC_PROBE), 10, FALSE, csecPROBE_MIN, csecProbe, csecPROBE_MAX);
    CreateSpinner (GetDlgItem (hDlg, IDC_THREADS), 10, FALSE, cTHREADS_MIN, nThreads, cTHREADS_MAX);
    CreateSpinner (GetDlgItem (hDlg, IDC_DAEMONS), 10, FALSE, cDAEMONS_MIN, nDaemons, cDAEMONS_MAX);
-   
+
    SetDlgItemText (hDlg, IDC_SYSNAME, szSysName);
    SetDlgItemText (hDlg, IDC_ROOTVOLUME, szRootVolume);
    SetDlgItemText (hDlg, IDC_MOUNTDIR, szMountDir);
@@ -170,15 +170,15 @@ void Misc_OnOK (HWND hDlg)
 		:SP_GetPos (GetDlgItem (hDlg, IDC_LAN_ADAPTER));
 #endif
    csecProbe = SP_GetPos (GetDlgItem (hDlg, IDC_PROBE));
-  
+
    nThreads = SP_GetPos (GetDlgItem (hDlg, IDC_THREADS));
-   
+
    nDaemons = SP_GetPos (GetDlgItem (hDlg, IDC_DAEMONS));
-   
+
    GetDlgItemText (hDlg, IDC_SYSNAME, szSysName, sizeof(szSysName));
    GetDlgItemText (hDlg, IDC_ROOTVOLUME, szRootVolume, sizeof(szRootVolume));
    GetDlgItemText (hDlg, IDC_MOUNTDIR, szMountDir, sizeof(szMountDir));
-   
+
    EndDialog(hDlg, IDOK);
 }
 
@@ -201,31 +201,31 @@ BOOL Misc_OnApply()
          return FALSE;
       g.Configuration.csecProbe = csecProbe;
    }
-   
+
    if (nThreads != g.Configuration.nThreads) {
       if (!Config_SetNumThreads (nThreads))
          return FALSE;
       g.Configuration.nThreads = nThreads;
    }
-   
+
    if (nDaemons != g.Configuration.nDaemons) {
       if (!Config_SetNumDaemons (nDaemons))
          return FALSE;
       g.Configuration.nDaemons = nDaemons;
    }
-   
+
    if (lstrcmp(szSysName, g.Configuration.szSysName) != 0) {
       if (!Config_SetSysName (szSysName))
          return FALSE;
       lstrcpy(g.Configuration.szSysName, szSysName);
    }
-   
+
    if (lstrcmp(szRootVolume, g.Configuration.szRootVolume) != 0) {
       if (!Config_SetRootVolume (szRootVolume))
          return FALSE;
       lstrcpy(g.Configuration.szRootVolume, szRootVolume);
    }
-   
+
    if (lstrcmp(szMountDir, g.Configuration.szMountDir) != 0) {
       if (!Config_SetMountRoot (szMountDir))
          return FALSE;

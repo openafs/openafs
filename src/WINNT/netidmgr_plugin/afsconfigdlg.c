@@ -480,7 +480,7 @@ afs_cfg_main_proc(HWND hwnd,
                 goto _free_buffer;
 
             cb = 0;
-            if (!VerQueryValue(ver_info, 
+            if (!VerQueryValue(ver_info,
                                L"\\VarFileInfo\\Translation",
                                (LPVOID*) &translations,
                                (PUINT)&cb) ||
@@ -556,11 +556,11 @@ afs_cfg_main_proc(HWND hwnd,
             break;
 
         case MAKEWPARAM(IDC_CFG_CPL, BN_CLICKED):
-            if (32 >= (LRESULT) ShellExecute (NULL, NULL, 
+            if (32 >= (LRESULT) ShellExecute (NULL, NULL,
                                               L"AFS_CONFIG.EXE", NULL,
                                               NULL, SW_SHOW)) {
-                MessageBox(NULL, 
-                           L"Can't find file AFS_CONFIG.EXE", 
+                MessageBox(NULL,
+                           L"Can't find file AFS_CONFIG.EXE",
                            L"Error", MB_OK);
             }
             break;

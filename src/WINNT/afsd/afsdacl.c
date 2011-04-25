@@ -99,7 +99,7 @@ int set_dacl(int action) {
         goto exit0;
     }
 
-    if (!QueryServiceObjectSecurity(s_afs, DACL_SECURITY_INFORMATION, 
+    if (!QueryServiceObjectSecurity(s_afs, DACL_SECURITY_INFORMATION,
         &sd, 0, &dwSize))
     {
         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
@@ -129,7 +129,7 @@ int set_dacl(int action) {
         show_last_error(0);
 
     BuildExplicitAccessWithName(&exa[0], AFSCLIENT_ADMIN_GROUPNAME,
-        SPECIFIC_RIGHTS_ALL | STANDARD_RIGHTS_ALL, 
+        SPECIFIC_RIGHTS_ALL | STANDARD_RIGHTS_ALL,
         SET_ACCESS,
         NO_INHERITANCE);
 
@@ -220,7 +220,7 @@ int show_dacl(void) {
         SDDL_REVISION_1,
         DACL_SECURITY_INFORMATION,
         &pstr,
-        NULL)) 
+        NULL))
     {
         show_last_error(0);
         goto exit0;
@@ -270,7 +270,7 @@ int main(int argc, char ** argv) {
     if(action) {
         rv = set_dacl(action);
     }
-    
+
     if(showdacl) {
         rv = show_dacl();
     }

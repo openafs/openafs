@@ -22,7 +22,7 @@ GranularityAdjustment(afs_uint64 size)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfConfigData(void)
 {
     afs_uint64 size;
@@ -62,7 +62,7 @@ ComputeSizeOfCells(DWORD maxcells)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfACLCache(DWORD stats)
 {
     afs_uint64 size;
@@ -70,7 +70,7 @@ ComputeSizeOfACLCache(DWORD stats)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfSCache(DWORD stats)
 {
     afs_uint64 size;
@@ -78,7 +78,7 @@ ComputeSizeOfSCache(DWORD stats)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfSCacheHT(DWORD stats)
 {
     afs_uint64 size;
@@ -86,7 +86,7 @@ ComputeSizeOfSCacheHT(DWORD stats)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfDNLCache(void)
 {
     afs_uint64 size;
@@ -94,7 +94,7 @@ ComputeSizeOfDNLCache(void)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfDataBuffers(afs_uint64 cacheBlocks, DWORD blockSize)
 {
     afs_uint64 size;
@@ -102,7 +102,7 @@ ComputeSizeOfDataBuffers(afs_uint64 cacheBlocks, DWORD blockSize)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfDataHT(afs_uint64 cacheBlocks)
 {
     afs_uint64 size;
@@ -110,7 +110,7 @@ ComputeSizeOfDataHT(afs_uint64 cacheBlocks)
     return size;
 }
 
-afs_uint64 
+afs_uint64
 ComputeSizeOfDataHeaders(afs_uint64 cacheBlocks)
 {
     afs_uint64 size;
@@ -122,20 +122,20 @@ afs_uint64
 ComputeSizeOfMappingFile(DWORD stats, DWORD maxVols, DWORD maxCells, DWORD chunkSize, afs_uint64 cacheBlocks, DWORD blockSize)
 {
     afs_uint64 size;
-    
+
     size       =  ComputeSizeOfConfigData()
-               +  ComputeSizeOfVolumes(maxVols) 
-               +  4 * ComputeSizeOfVolumeHT(maxVols) 
-               +  ComputeSizeOfCells(maxCells) 
+               +  ComputeSizeOfVolumes(maxVols)
+               +  4 * ComputeSizeOfVolumeHT(maxVols)
+               +  ComputeSizeOfCells(maxCells)
                +  2 * ComputeSizeOfCellHT(maxCells)
                +  ComputeSizeOfACLCache(stats)
                +  ComputeSizeOfSCache(stats)
                +  ComputeSizeOfSCacheHT(stats)
                +  ComputeSizeOfDNLCache()
-               +  ComputeSizeOfDataBuffers(cacheBlocks, blockSize) 
-               +  2 * ComputeSizeOfDataHT(cacheBlocks) 
+               +  ComputeSizeOfDataBuffers(cacheBlocks, blockSize)
+               +  2 * ComputeSizeOfDataHT(cacheBlocks)
                +  ComputeSizeOfDataHeaders(cacheBlocks);
-    return size;    
+    return size;
 }
 
 /* Create a security attribute structure suitable for use when the cache file
@@ -182,7 +182,7 @@ PSECURITY_ATTRIBUTES CreateCacheFileSA()
     psa->bInheritHandle = FALSE;
 
     return psa;
-}       
+}
 
 
 /* Free a security attribute structure created by CreateCacheFileSA() */
@@ -195,7 +195,7 @@ VOID FreeCacheFileSA(PSECURITY_ATTRIBUTES psa)
     GlobalFree(pAcl);
     GlobalFree(psa->lpSecurityDescriptor);
     GlobalFree(psa);
-}       
+}
 
 static HANDLE hMemoryMappedFile = NULL;
 
@@ -278,20 +278,20 @@ cm_ValidateMappedMemory(char * cachePath)
     afs_uint64 mappingSize;
     char * baseAddress = NULL;
     cm_config_data_t * config_data_p;
-        
+
     psa = CreateCacheFileSA();
     hf = CreateFile( cachePath,
                      GENERIC_READ | GENERIC_WRITE,
                      FILE_SHARE_READ | FILE_SHARE_WRITE,
                      psa,
                      OPEN_EXISTING,
-                     FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | 
+                     FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM |
                      FILE_ATTRIBUTE_NOT_CONTENT_INDEXED | FILE_FLAG_RANDOM_ACCESS,
                      NULL);
     FreeCacheFileSA(psa);
 
     if (hf == INVALID_HANDLE_VALUE) {
-        fprintf(stderr, "Error creating cache file \"%s\" error %d\n", 
+        fprintf(stderr, "Error creating cache file \"%s\" error %d\n",
                  cachePath, GetLastError());
         return CM_ERROR_INVAL;
     }
@@ -306,11 +306,11 @@ cm_ValidateMappedMemory(char * cachePath)
     afsi_log("Existing File Size: %08X:%08X",
               fileInfo.nFileSizeHigh,
               fileInfo.nFileSizeLow);
-            
+
     hm = CreateFileMapping( hf,
                             NULL,
                             PAGE_READWRITE,
-                            0, 
+                            0,
                             sizeof(cm_config_data_t),
                             NULL);
     if (hm == NULL) {
@@ -321,7 +321,7 @@ cm_ValidateMappedMemory(char * cachePath)
             hm = CreateFileMapping( hf,
                                     NULL,
                                     PAGE_READWRITE,
-                                    0, 
+                                    0,
                                     fileInfo.nFileSizeLow,
                                     NULL);
             if (hm == NULL) {
@@ -335,7 +335,7 @@ cm_ValidateMappedMemory(char * cachePath)
                     return CM_ERROR_INVAL;
                 }
             } else {
-                fprintf(stderr, "Retry with file size (%lX) succeeds", 
+                fprintf(stderr, "Retry with file size (%lX) succeeds",
                          fileInfo.nFileSizeLow);
             }
         } else {
@@ -348,7 +348,7 @@ cm_ValidateMappedMemory(char * cachePath)
 
     config_data_p = MapViewOfFile( hm,
                                    FILE_MAP_READ,
-                                   0, 0,   
+                                   0, 0,
                                    sizeof(cm_config_data_t));
     if ( config_data_p == NULL ) {
         fprintf(stderr, "Unable to MapViewOfFile\n");
@@ -361,7 +361,7 @@ cm_ValidateMappedMemory(char * cachePath)
     if ( config_data_p->dirty ) {
         fprintf(stderr, "Previous session terminated prematurely\n");
         UnmapViewOfFile(config_data_p);
-        CloseHandle(hm);               
+        CloseHandle(hm);
         CloseHandle(hf);
         return CM_ERROR_INVAL;
     }
@@ -374,7 +374,7 @@ cm_ValidateMappedMemory(char * cachePath)
     hm = CreateFileMapping( hf,
                             NULL,
                             PAGE_READWRITE,
-			    (DWORD)(mappingSize >> 32), 
+			    (DWORD)(mappingSize >> 32),
 			    (DWORD)(mappingSize & 0xFFFFFFFF),
                             NULL);
     if (hm == NULL) {
@@ -389,7 +389,7 @@ cm_ValidateMappedMemory(char * cachePath)
         CloseHandle(hf);
         return CM_ERROR_INVAL;
     }
-    
+
     baseAddress = MapViewOfFileEx( hm,
                                    FILE_MAP_ALL_ACCESS,
                                    0, 0,
@@ -433,7 +433,7 @@ cm_ValidateMappedMemory(char * cachePath)
     fprintf(stderr,"  scacheHashTableSize  = %u\n", config_data_p->scacheHashTableSize);
     fprintf(stderr,"  currentSCaches = %u\n", config_data_p->currentSCaches);
     fprintf(stderr,"  maxSCaches     = %u\n", config_data_p->maxSCaches);
-    cm_data = *config_data_p;      
+    cm_data = *config_data_p;
 
     // perform validation of persisted data structures
     // if there is a failure, start from scratch
@@ -448,7 +448,7 @@ cm_ValidateMappedMemory(char * cachePath)
     return 0;
 }
 
-DWORD 
+DWORD
 GetVolSerialNumber(char * cachePath)
 {
     char rootpath[128];
@@ -456,7 +456,7 @@ GetVolSerialNumber(char * cachePath)
     DWORD serial = 0;
 
     if ( cachePath[0] == '\\' && cachePath[1] == '\\' ||
-	 cachePath[0] == '/' && cachePath[1] == '/' ) 
+	 cachePath[0] == '/' && cachePath[1] == '/' )
     {
 	rootpath[0]=rootpath[1]='\\';
 	for ( i=2; cachePath[i]; i++ ) {
@@ -494,7 +494,7 @@ BOOL GetTextualSid( PSID pSid, PBYTE TextualSid, LPDWORD lpdwBufferLen )
     DWORD dwSidSize;
 
     // Validate the binary SID.
-    if(!IsValidSid(pSid)) 
+    if(!IsValidSid(pSid))
 	return FALSE;
 
     // Get the identifier authority value from the SID.
@@ -556,17 +556,17 @@ BOOL GetTextualSid( PSID pSid, PBYTE TextualSid, LPDWORD lpdwBufferLen )
     return TRUE;
 }
 
-PBYTE 
+PBYTE
 IsSubAuthValid( PBYTE SidData, DWORD SidLength )
 {
     PBYTE	sidPtr;
 
     sidPtr = NULL;
     if ( SidLength % sizeof(DWORD) == 0 )  {
-	for ( sidPtr = SidData + SidLength - 5*sizeof(DWORD); 
-	      sidPtr >= SidData; 
+	for ( sidPtr = SidData + SidLength - 5*sizeof(DWORD);
+	      sidPtr >= SidData;
 	      sidPtr -= sizeof(DWORD) )
-	    if ( ((PDWORD)sidPtr)[1] == 0x05000000 &&  
+	    if ( ((PDWORD)sidPtr)[1] == 0x05000000 &&
 		 ((PDWORD)sidPtr)[2] == 0x00000015 )
 		break;
 	if ( sidPtr < SidData )
@@ -591,7 +591,7 @@ GetMachineSid(PBYTE SidBuffer, DWORD SidSize)
     //
     // Read the last subauthority of the current computer SID
     //
-    if( RegOpenKey( HKEY_LOCAL_MACHINE, "SECURITY\\SAM\\Domains\\Account", 
+    if( RegOpenKey( HKEY_LOCAL_MACHINE, "SECURITY\\SAM\\Domains\\Account",
 		    &hKey) != ERROR_SUCCESS ) {
 	return FALSE;
     }
@@ -649,17 +649,17 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
                          FILE_SHARE_READ | FILE_SHARE_WRITE,
                          psa,
                          OPEN_ALWAYS,
-                         FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | 
+                         FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM |
                          FILE_ATTRIBUTE_NOT_CONTENT_INDEXED | FILE_FLAG_RANDOM_ACCESS,
                          NULL);
         FreeCacheFileSA(psa);
 
         if (hf == INVALID_HANDLE_VALUE) {
-            afsi_log("Error creating cache file \"%s\" error %d", 
+            afsi_log("Error creating cache file \"%s\" error %d",
                       cachePath, GetLastError());
             return CM_ERROR_INVAL;
         }
-        
+
         if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
             BY_HANDLE_FILE_INFORMATION fileInfo;
 
@@ -681,13 +681,13 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
                                      FILE_SHARE_READ | FILE_SHARE_WRITE,
                                      psa,
                                      TRUNCATE_EXISTING,
-                                     FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | 
+                                     FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM |
                                      FILE_ATTRIBUTE_NOT_CONTENT_INDEXED | FILE_FLAG_RANDOM_ACCESS,
                                      NULL);
                     FreeCacheFileSA(psa);
 
                     if (hf == INVALID_HANDLE_VALUE) {
-                        afsi_log("Error creating cache file \"%s\" error %d", 
+                        afsi_log("Error creating cache file \"%s\" error %d",
                                   cachePath, GetLastError());
                         return CM_ERROR_INVAL;
                     }
@@ -702,7 +702,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
             hm = CreateFileMapping( hf,
                                     NULL,
                                     PAGE_READWRITE,
-                                    0, 
+                                    0,
                                     sizeof(cm_config_data_t),
                                     NULL);
             if (hm == NULL) {
@@ -713,7 +713,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
                     hm = CreateFileMapping( hf,
                                             NULL,
                                             PAGE_READWRITE,
-                                            (DWORD)(mappingSize >> 32), 
+                                            (DWORD)(mappingSize >> 32),
                                             (DWORD)(mappingSize & 0xFFFFFFFF),
                                             NULL);
                     if (hm == NULL) {
@@ -739,7 +739,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
 
             config_data_p = MapViewOfFile( hm,
                                            FILE_MAP_READ,
-                                           0, 0,   
+                                           0, 0,
                                            sizeof(cm_config_data_t));
             if ( config_data_p == NULL ) {
                 if (hf != INVALID_HANDLE_VALUE)
@@ -775,7 +775,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
     hm = CreateFileMapping( hf,
                             NULL,
                             PAGE_READWRITE,
-			    (DWORD)(mappingSize >> 32), 
+			    (DWORD)(mappingSize >> 32),
 			    (DWORD)(mappingSize & 0xFFFFFFFF),
                             NULL);
     if (hm == NULL) {
@@ -790,16 +790,16 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
     }
     baseAddress = MapViewOfFileEx( hm,
                                    FILE_MAP_ALL_ACCESS,
-                                   0, 
-				   0, 
+                                   0,
+				   0,
 				   (SIZE_T)mappingSize,
                                    baseAddress );
     if (baseAddress == NULL) {
         afsi_log("Error mapping view of file: %d", GetLastError());
         baseAddress = MapViewOfFile( hm,
                                      FILE_MAP_ALL_ACCESS,
-                                     0, 
-				     0, 
+                                     0,
+				     0,
 				     (SIZE_T)mappingSize);
         if (baseAddress == NULL) {
             if (hf != INVALID_HANDLE_VALUE)
@@ -815,7 +815,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
 
     if (!newFile) {
         afsi_log("Reusing existing AFS Cache data:");
-        cm_data = *config_data_p;      
+        cm_data = *config_data_p;
 
 	afsi_log("  Map Address    = %p", baseAddress);
 	afsi_log("  baseAddress    = %p", config_data_p->baseAddress);
@@ -975,13 +975,13 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
 
     afsi_log("Initializing Stat Data");
     cm_InitSCache(newFile, stats);
-        
+
     afsi_log("Initializing Data Buffers");
     cm_InitDCache(newFile, 0, cacheBlocks);
 
     *config_data_p = cm_data;
     config_data_p->dirty = 1;
-    
+
     hMemoryMappedFile = hf;
     afsi_log("Cache Initialization Complete");
     return 0;

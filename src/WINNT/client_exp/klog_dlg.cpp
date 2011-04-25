@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -112,7 +112,7 @@ BOOL CKlogDlg::OnInitDialog()
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
-void CKlogDlg::OnOK() 
+void CKlogDlg::OnOK()
 {
 	char *reason;
 
@@ -129,12 +129,12 @@ void CKlogDlg::OnOK()
 	CDialog::OnOK();
 }
 
-void CKlogDlg::OnChangeName() 
+void CKlogDlg::OnChangeName()
 {
 	CheckEnableOk();
 }
 
-void CKlogDlg::OnChangeCellName() 
+void CKlogDlg::OnChangeCellName()
 {
 	CheckEnableOk();
 }
@@ -142,16 +142,16 @@ void CKlogDlg::OnChangeCellName()
 void CKlogDlg::	CheckEnableOk()
 {
 	UpdateData();
-	
+
 	m_OK.EnableWindow(!m_strCellName.IsEmpty() && !m_strName.IsEmpty() && !m_strPassword.IsEmpty());
 }
 
-void CKlogDlg::OnChangePassword() 
+void CKlogDlg::OnChangePassword()
 {
 	CheckEnableOk();
 }
 
-void CKlogDlg::OnHelp() 
+void CKlogDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, GET_TOKENS_HELP_ID);
 }

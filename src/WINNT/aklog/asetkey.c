@@ -56,7 +56,7 @@ validate_krb5_availability(void)
 #define KRB5LIB "krb5_64.dll"
 #endif
     HINSTANCE h = LoadLibrary(KRB5LIB);
-    if (h) 
+    if (h)
         FreeLibrary(h);
     else {
         fprintf(stderr, "Kerberos for Windows library %s is not available.\n", KRB5LIB);
@@ -165,7 +165,7 @@ main(int argc, char **argv)
     else if (strcmp(argv[1], "list") == 0) {
 	struct afsconf_keys tkeys;
 	register int i, j;
-	
+
 	code = afsconf_GetKeys(tdir, &tkeys);
 	if (code) {
 	    printf("asetkey: failed to get keys, code %d\n", code);

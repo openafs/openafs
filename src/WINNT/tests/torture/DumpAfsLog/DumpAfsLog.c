@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 //    char    *pPtr;
     time_t  StartTime;
 //    FILE    *fp;
-    HANDLE  hStdin; 
+    HANDLE  hStdin;
 
 
     Count = 0;
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
             if (NewSessionDeadlockCount == 0)
                 NewSessionDeadlockCount = 20;
         }
-        if (!stricmp(argv[i], "-?") || !stricmp(argv[i], "/?") || 
+        if (!stricmp(argv[i], "-?") || !stricmp(argv[i], "/?") ||
             !stricmp(argv[i], "?") || !stricmp(argv[i], "help"))
         {
              usage();
@@ -234,10 +234,10 @@ int GetConsoleInput(HANDLE hStdin)
     if (InputRecordCount == 0)
         return(0);
     rc = ReadConsoleInput(hStdin, InputRecord, 128, &InputRecordCount);
-    for (i = 0; i < (int)InputRecordCount; i++) 
+    for (i = 0; i < (int)InputRecordCount; i++)
     {
-        switch(InputRecord[i].EventType) 
-        { 
+        switch(InputRecord[i].EventType)
+        {
             case KEY_EVENT:
                 if (InputRecord[i].Event.KeyEvent.bKeyDown)
                 {
@@ -248,9 +248,9 @@ int GetConsoleInput(HANDLE hStdin)
                         exit(0);
                     }
                 }
-                break; 
-            default: 
-                break; 
+                break;
+            default:
+                break;
         }
     }
     return(RetCode);

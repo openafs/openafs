@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -31,7 +31,7 @@
 
 smb_ioctlProc_t *smb_ioctlProcsp[SMB_IOCTL_MAXPROCS];
 
-void 
+void
 smb_InitIoctl(void)
 {
     int i;
@@ -93,10 +93,10 @@ smb_InitIoctl(void)
     smb_ioctlProcsp[VIOCNEWCELL2] = smb_IoctlNewCell2;
     smb_ioctlProcsp[VIOC_SETUNIXMODE] = smb_IoctlSetUnixMode;
     smb_ioctlProcsp[VIOC_GETUNIXMODE] = smb_IoctlSetUnixMode;
-}       
+}
 
 /* called to make a fid structure into an IOCTL fid structure */
-void 
+void
 smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
 {
     smb_ioctl_t *iop;
@@ -138,7 +138,7 @@ smb_IoctlPrepareRead(struct smb_fid *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp
         /* do the call now, or fail if we didn't get an opcode, or
          * enough of an opcode.
          */
-        if (ioctlp->ioctl.inCopied < sizeof(afs_int32)) 
+        if (ioctlp->ioctl.inCopied < sizeof(afs_int32))
             return CM_ERROR_INVAL;
         memcpy(&opcode, ioctlp->ioctl.inDatap, sizeof(afs_int32));
         ioctlp->ioctl.inDatap += sizeof(afs_int32);
@@ -175,11 +175,11 @@ smb_IoctlPrepareRead(struct smb_fid *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp
  * a series of reads (or the very first call), then we start a new call.
  * We also ensure that things are properly initialized for the start of a call.
  */
-void 
+void
 smb_IoctlPrepareWrite(smb_fid_t *fidp, smb_ioctl_t *ioctlp)
 {
     /* make sure the buffer(s) are allocated */
-    if (!ioctlp->ioctl.inAllocp) 
+    if (!ioctlp->ioctl.inAllocp)
         ioctlp->ioctl.inAllocp = malloc(SMB_IOCTL_MAXDATA);
     if (!ioctlp->ioctl.outAllocp)
         ioctlp->ioctl.outAllocp = malloc(SMB_IOCTL_MAXDATA);
@@ -197,7 +197,7 @@ smb_IoctlPrepareWrite(smb_fid_t *fidp, smb_ioctl_t *ioctlp)
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_DATAIN;
         ioctlp->ioctl.flags &= ~CM_IOCTLFLAG_DATAOUT;
     }
-}       
+}
 
 /* called from smb_ReceiveCoreRead when we receive a read on the ioctl fid */
 afs_int32
@@ -305,20 +305,20 @@ smb_IoctlWrite(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     code = 0;
     count = smb_GetSMBParm(inp, 1);
     iop = fidp->ioctlp;
-        
+
     smb_IoctlPrepareWrite(fidp, iop);
 
     op = smb_GetSMBData(inp, NULL);
     op = smb_ParseDataBlock(op, NULL, &inDataBlockCount);
-	
+
     if (count + iop->ioctl.inCopied > SMB_IOCTL_MAXDATA) {
         code = CM_ERROR_TOOBIG;
         goto done;
     }
-        
+
     /* copy data */
     memcpy(iop->ioctl.inDatap + iop->ioctl.inCopied, op, count);
-        
+
     /* adjust counts */
     iop->ioctl.inCopied += count;
 
@@ -330,7 +330,7 @@ smb_IoctlWrite(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     }
 
     return code;
-}       
+}
 
 /* called from smb_ReceiveV3WriteX when we receive a write call on the IOCTL
  * file descriptor.
@@ -357,7 +357,7 @@ smb_IoctlV3Write(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t
         code = CM_ERROR_TOOBIG;
         goto done;
     }
-        
+
     /* copy data */
     memcpy(iop->ioctl.inDatap + iop->ioctl.inCopied, op, count);
 
@@ -375,7 +375,7 @@ smb_IoctlV3Write(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t
     }
 
     return code;
-}       
+}
 
 
 /* called from V3 read to handle IOCTL descriptor reads */
@@ -444,9 +444,9 @@ smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
         cm_ReleaseUser(userp);
         return CM_ERROR_INVAL;
     }
-    if (count > leftToCopy) 
+    if (count > leftToCopy)
         count = (unsigned short)leftToCopy;
-        
+
     /* 0 and 1 are reserved for request chaining, were setup by our caller,
      * and will be further filled in after we return.
      */
@@ -465,13 +465,13 @@ smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
      * know where the data really is.
      */
     op = smb_GetSMBData(outp, NULL);
-        
+
     /* now fill in offset from start of SMB header to first data byte (to op) */
     smb_SetSMBParm(outp, 6, ((int) (op - outp->data)));
 
     /* set the packet data length the count of the # of bytes */
     smb_SetSMBDataLength(outp, count);
-        
+
     /* now copy the data into the response packet */
     memcpy(op, iop->ioctl.outCopied + iop->ioctl.outAllocp, count);
 
@@ -482,7 +482,7 @@ smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     cm_ReleaseUser(userp);
 
     return 0;
-}	
+}
 
 /* called from Read Raw to handle IOCTL descriptor reads */
 afs_int32
@@ -641,15 +641,15 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     if (relativePath[0] == relativePath[1] &&
-        relativePath[1] == '\\' && 
+        relativePath[1] == '\\' &&
         !cm_ClientStrCmpNI(cm_NetbiosNameC, relativePath+2,
-                           cm_ClientStrLen(cm_NetbiosNameC))) 
+                           cm_ClientStrLen(cm_NetbiosNameC)))
     {
         clientchar_t shareName[256];
         clientchar_t *sharePath;
         int shareFound, i;
 
-        /* We may have found a UNC path. 
+        /* We may have found a UNC path.
          * If the first component is the NetbiosName,
          * then throw out the second component (the submount)
          * since it had better expand into the value of ioctl->tidPathp
@@ -705,7 +705,7 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
-             * This requires that we reconstruct the shareName string with 
+             * This requires that we reconstruct the shareName string with
              * leading and trailing slashes.
              */
             p = relativePath + 2 + cm_ClientStrLen(cm_NetbiosNameC) + 1;
@@ -767,7 +767,7 @@ smb_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 free(relativePath);
             return code;
 	}
-        
+
 	lastComponent = cm_ClientStrRChr(relativePath,  '\\');
 	if (lastComponent && (lastComponent - relativePath) > 1 &&
             cm_ClientStrLen(lastComponent) > 1) {
@@ -884,7 +884,7 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     }
     else {
         *tp = 0;
-        if (leafp) 
+        if (leafp)
             cm_ClientStrCpy(leafp, LEAF_SIZE, tp+1);
     }
 
@@ -892,15 +892,15 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     inpathp = NULL;             /* We don't need this from this point on */
 
     if (tbuffer[0] == tbuffer[1] &&
-        tbuffer[1] == '\\' && 
+        tbuffer[1] == '\\' &&
         !cm_ClientStrCmpNI(cm_NetbiosNameC, tbuffer+2,
-                           cm_ClientStrLen(cm_NetbiosNameC))) 
+                           cm_ClientStrLen(cm_NetbiosNameC)))
     {
         clientchar_t shareName[256];
         clientchar_t *sharePath;
         int shareFound, i;
 
-        /* We may have found a UNC path. 
+        /* We may have found a UNC path.
          * If the first component is the NetbiosName,
          * then throw out the second component (the submount)
          * since it had better expand into the value of ioctl->tidPathp
@@ -931,7 +931,7 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             if (code) return code;
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
-             * This requires that we reconstruct the shareName string with 
+             * This requires that we reconstruct the shareName string with
              * leading and trailing slashes.
              */
             p = tbuffer + 2 + cm_ClientStrLen(cm_NetbiosNameC) + 1;
@@ -984,7 +984,7 @@ smb_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     return 0;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     char *saveDataPtr;
@@ -1242,7 +1242,7 @@ smb_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
     return 0;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
 {
     cm_scache_t *scp;
@@ -1260,14 +1260,14 @@ smb_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
 
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlGetACL(&ioctlp->ioctl, userp, scp, &req);
@@ -1276,7 +1276,7 @@ smb_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlSetACL(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
 {
     cm_scache_t *scp;
@@ -1287,7 +1287,7 @@ smb_IoctlSetACL(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
     smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlSetACL(&ioctlp->ioctl, userp, scp, &req);
@@ -1314,13 +1314,13 @@ smb_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlGetFileCellName(&ioctlp->ioctl, userp, scp, &req);
@@ -1330,7 +1330,7 @@ smb_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_req_t req;
@@ -1342,7 +1342,7 @@ smb_IoctlFlushAllVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
     return cm_IoctlFlushAllVolumes(&ioctlp->ioctl, userp, &req);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1360,13 +1360,13 @@ smb_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlFlushVolume(&ioctlp->ioctl, userp, scp, &req);
@@ -1376,7 +1376,7 @@ smb_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1400,7 +1400,7 @@ smb_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 p
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlFlushFile(&ioctlp->ioctl, userp, scp, &req);
@@ -1409,7 +1409,7 @@ smb_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 p
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1427,7 +1427,7 @@ smb_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1445,13 +1445,13 @@ smb_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlGetVolumeStatus(&ioctlp->ioctl, userp, scp, &req);
@@ -1461,7 +1461,7 @@ smb_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetFid(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1477,7 +1477,7 @@ smb_IoctlGetFid(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfla
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlGetFid(&ioctlp->ioctl, userp, scp, &req);
@@ -1487,7 +1487,7 @@ smb_IoctlGetFid(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfla
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetFileType(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1505,13 +1505,13 @@ smb_IoctlGetFileType(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlGetFileType(&ioctlp->ioctl, userp, scp, &req);
@@ -1521,7 +1521,7 @@ smb_IoctlGetFileType(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1545,7 +1545,7 @@ smb_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlGetOwner(&ioctlp->ioctl, userp, scp, &req);
@@ -1555,7 +1555,7 @@ smb_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1579,7 +1579,7 @@ smb_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlWhereIs(&ioctlp->ioctl, userp, scp, &req);
@@ -1590,7 +1590,7 @@ smb_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
 }
 
 
-afs_int32 
+afs_int32
 smb_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1610,7 +1610,7 @@ smb_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uin
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1620,7 +1620,7 @@ smb_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_u
     smb_InitReq(&req);
 
     code = smb_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlDeleteMountPoint(&ioctlp->ioctl, userp, dscp, &req);
@@ -1630,7 +1630,7 @@ smb_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_u
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlCheckServers(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);	/* we don't care about the path */
@@ -1638,14 +1638,14 @@ smb_IoctlCheckServers(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint3
     return cm_IoctlCheckServers(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGag(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     /* we don't print anything superfluous, so we don't support the gag call */
     return CM_ERROR_INVAL;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlCheckVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1661,23 +1661,23 @@ afs_int32 smb_IoctlSetCacheSize(struct smb_ioctl *ioctlp, struct cm_user *userp,
 }
 
 
-afs_int32 
+afs_int32
 smb_IoctlTraceControl(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
-       
+
     return cm_IoctlTraceControl(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetCacheParms(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
-       
+
     return cm_IoctlGetCacheParms(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1685,7 +1685,7 @@ smb_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
     return cm_IoctlGetCell(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1693,7 +1693,7 @@ smb_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
     return cm_IoctlNewCell(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlNewCell2(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1709,7 +1709,7 @@ smb_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
     return cm_IoctlGetWsCell(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1717,7 +1717,7 @@ smb_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
     return cm_IoctlSysName(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetCellStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1725,7 +1725,7 @@ smb_IoctlGetCellStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint
     return cm_IoctlGetCellStatus(&ioctlp->ioctl, userp);
 }
 
-afs_int32 
+afs_int32
 smb_IoctlSetCellStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1756,7 +1756,7 @@ smb_IoctlStoreBehind(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
      * of doing this today.
      */
     return 0;
-}       
+}
 
 afs_int32
 smb_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
@@ -1767,7 +1767,7 @@ smb_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_u
     cm_req_t req;
 
     smb_InitReq(&req);
-        
+
     code = smb_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
     if (code)
         return code;
@@ -1798,7 +1798,7 @@ smb_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1816,7 +1816,7 @@ smb_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlIslink(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {/*CHECK FOR VALID SYMLINK*/
     afs_int32 code;
@@ -1835,7 +1835,7 @@ smb_IoctlIslink(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfla
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -1854,7 +1854,7 @@ smb_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 
     return code;
 }
 
-afs_int32 
+afs_int32
 smb_IoctlGetTokenIter(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     cm_SkipIoctlPath(&ioctlp->ioctl);
@@ -1973,13 +1973,13 @@ smb_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_u
     if (optionsp && CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
         cm_fid_t fid;
         cm_SkipIoctlPath(&ioctlp->ioctl);
-        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume, 
+        cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
         code = cm_GetSCache(&fid, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
-    if (code) 
+    if (code)
         return code;
 
     code = cm_IoctlPathAvailability(&ioctlp->ioctl, userp, scp, &req);
@@ -1999,13 +1999,13 @@ smb_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
     return cm_IoctlVolStatTest(&ioctlp->ioctl, userp, &req);
 }
 
-/* 
+/*
  * VIOC_SETOWNER
- * 
+ *
  * This pioctl requires the use of the cm_ioctlQueryOptions_t structure.
  *
  */
-afs_int32 
+afs_int32
 smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -2030,7 +2030,7 @@ smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         } else {
             code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
         }
-        if (code) 
+        if (code)
             return code;
 
         cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);
@@ -2043,13 +2043,13 @@ smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
     return code;
 }
 
-/* 
+/*
  * VIOC_SETGROUP
- * 
+ *
  * This pioctl requires the use of the cm_ioctlQueryOptions_t structure.
  *
  */
-afs_int32 
+afs_int32
 smb_IoctlSetGroup(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
     afs_int32 code;
@@ -2074,7 +2074,7 @@ smb_IoctlSetGroup(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         } else {
             code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
         }
-        if (code) 
+        if (code)
             return code;
 
         cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);

@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -34,10 +34,10 @@
 <P>ボリューム・セットにボリューム項目を定義します。
 <P><STRONG>構文</STRONG>
 <PRE><B>backup addvolentry -name</B> &lt;<VAR>volume set name</VAR>>  <B>-server</B> &lt;<VAR>machine name</VAR>>
-                   <B>-partition</B> &lt;<VAR>partition name</VAR>> 
-                   <B>-volumes</B> &lt;<VAR>volume name (regular expression)</VAR>>   
+                   <B>-partition</B> &lt;<VAR>partition name</VAR>>
+                   <B>-volumes</B> &lt;<VAR>volume name (regular expression)</VAR>>
                    [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
-   
+
 <B>backup addvole -n</B> &lt;<VAR>volume set name</VAR>>  <B>-s</B> &lt;<VAR>machine name</VAR>> <B>-p</B> &lt;<VAR>partition name</VAR>>
                <B>-v</B> &lt;<VAR>volume name (regular expression)</VAR>>
                [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
@@ -97,7 +97,7 @@ VLDB にリストされている任意のボリュームに一致します)、あるいは通常の文字と一緒に
 <B>backup</B> で終了する任意のボリューム名に一致します。
 <P>
 <PRE>   <B>user.*backup</B>
-   
+
 </PRE>
 <P><DT><B>-localauth
 </B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
@@ -111,14 +111,14 @@ VLDB にリストされている任意のボリュームに一致します)、あるいは通常の文字と一緒に
 <P><STRONG>例</STRONG>
 <P>次のコマンドは、<B>sys</B> という名前のボリューム・セットにボリューム項目を追加しています。この項目は、<B>sun4x_56</B> という文字列で始まり、ピリオドが続く名前を持っているマシンまたは区画上のすべてのボリュームに一致します。
 <PRE>   backup> <B>addvolentry sys .* .* sun4x_56\..*</B>
-   
+
 </PRE>
 <P>ファイル・サーバー・マシン <B>fs2.abc.com</B> の <B>/vicepb</B> 区画上のすべてのボリュームに一致するように、次のコマンドは、<B>fs2</B> という名前のボリューム・セットにボリューム項目を追加しています。これはシェル・プロンプトで発行されているので、
 <B>-volumes</B> 引き数のメタ文字が二重引用符で囲まれています。
 (ここで示したコマンドは、読みやすくするために 2 行で表示されています。)
 <PRE>   % <B>backup addvolentry -name fs2 -server fs2.abc.com \
                         -partition /vicepb -volumes ".*"</B>
-   
+
 </PRE>
 <P><I>AFS 管理の手引き</I> の AFS バックアップ・システムの構成に関する章にはこれに関する例と、ボリュームのグループ化に関するアドバイスが解説されています。
 <P><STRONG>必要となる特権</STRONG>
@@ -130,11 +130,11 @@ VLDB にリストされている任意のボリュームに一致します)、あるいは通常の文字と一緒に
 <P><A HREF="auarf071.htm#HDRBK_DELVOLSET">backup delvolset</A>
 <P><A HREF="auarf082.htm#HDRBK_LISTVOLSETS">backup listvolsets</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf062.htm">前ページ</A> &#124; <A HREF="auarf064.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf062.htm">前ページ</A> &#124; <A HREF="auarf064.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

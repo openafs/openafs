@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -25,14 +25,14 @@
 <P><STRONG>目的</STRONG>
 <P>区画のすべての内容を復元します。
 <P><STRONG>構文</STRONG>
-<PRE><B>backup diskrestore -server</B> &lt;<VAR>machine to restore</VAR>> 
+<PRE><B>backup diskrestore -server</B> &lt;<VAR>machine to restore</VAR>>
                    <B>-partition</B> &lt;<VAR>partition to restore</VAR>>
-                   [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]  
+                   [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]
                    [-<B>newserver</B> &lt;<VAR>destination machine</VAR>>]
                    [<B>-newpartition</B> &lt;<VAR>destination partition</VAR>>]
                    [<B>-extension</B> &lt;<VAR>new volume name extension</VAR>>]
                    [<B>-n</B>]  [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
-   
+
 <B>backup di -s</B> &lt;<VAR>machine to restore</VAR>> <B>-pa</B> &lt;<VAR>partition to restore</VAR>>
           [<B>-po</B> &lt;<VAR>TC port offset</VAR>><SUP>+</SUP>]  [<B>-news</B> &lt;<VAR>destination machine</VAR>>]
           [<B>-newp</B> &lt;<VAR>destination partition</VAR>>]  [<B>-e</B> &lt;<VAR>new volume name extension</VAR>>]
@@ -105,24 +105,24 @@
 <P>復元捜査中に磁気テープ・エラーが起きると、テープ・コーディネーターは次のメッセージを表示します。
 <PRE>   磁気テープ・エラーのため、ボリューム<VAR>名前</VAR>の復元操作が失敗しました。
    続けますか (y/n)?
-   
+
 </PRE>
 <P><VAR>名前</VAR> は、復元中に磁気テープ・エラーが発生したボリュームの名前です。指定されたボリュームを復元しないで操作を継続するには、値 <B>y</B> を入力します。操作を終了する場合は、値 <B>n</B> を入力します。後者の場合、操作員は磁気テープ・エラーの原因を判別することができます。
 <P>このコマンドが <B>-n</B> フラグ付きで発行されると、まず次の文字列が表示され、次に復元操作に必要な磁気テープのリストが表示されます。
 <PRE>   Tapes needed:
-   
+
 </PRE>
 <P><STRONG>例</STRONG>
 <P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームを復元します。このサイトは、マシン <B>fs5.abc.com</B> の <B>/vicepd</B> 区画上にあります。ポート・オフセット 3 のテープ・コーディネーターが復元操作を行います。
 <PRE>   % <B>backup diskrestore -server fs5.abc.com -partition /vicepd -portoffset 3</B>
-   
+
 </PRE>
 <P>次のコマンドは、
 VLDB が読み取り / 書き込みサイト (マシン <B>fs1.abc.com</B> の <B>/vicepb</B> 区画上) をリストするボリュームを、新規サイト (マシン <B>fs3.abc.com</B> の <B>/vicepa</B> 区画上) に復元します。ポート・オフセット 0 のテープ・コーディネーターが復元操作を行います。
 (印刷の都合上、ここではコマンドを 2 行で表示します。)
 <PRE>   % <B>backup diskrestore  -server fs1.abc.com -partition /vicepb </B>   \
                          <B>-newserver fs3.abc.com -newpartition /vicepa</B>
-   
+
 </PRE>
 <P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームの復元に必要な磁気テープをリストします。このサイトは、マシン <B>fs4.abc.com</B> の <B>/vicepm</B> 区画上にあります。
 <PRE>   % <B>backup diskrestore -server fs4.abc.com -partition /vicepm -n</B>
@@ -132,7 +132,7 @@ VLDB が読み取り / 書き込みサイト (マシン <B>fs1.abc.com</B> の <B>/vicepb</B> 区
    user.monday1.1
    user.tuesday1.1
    user.wednesday1.1
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、バックアップ・サーバーまたはボリューム・ロケーション (VL) サーバーが実行されている各マシン上、および関連するボリュームのあるすべてのファイル・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。
@@ -148,11 +148,11 @@ VLDB が読み取り / 書き込みサイト (マシン <B>fs1.abc.com</B> の <B>/vicepb</B> 区
 <P><A HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
 <P><A HREF="auarf270.htm#HDRVOS_RELEASE">vos release</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf071.htm">前ページ</A> &#124; <A HREF="auarf073.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf071.htm">前ページ</A> &#124; <A HREF="auarf073.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

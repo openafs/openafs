@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -35,7 +35,7 @@ main(int argc, char **argv) {
                         (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ|KEY_WRITE,
                         NULL,
                         &hkSubmounts,
-                        NULL) == ERROR_SUCCESS) 
+                        NULL) == ERROR_SUCCESS)
     {
         if ( argc == 2 ) {
             if (RegDeleteValue(hkSubmounts, argv[1])) {
@@ -53,7 +53,7 @@ main(int argc, char **argv) {
                                 (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ,
                                 NULL,
                                 &hkParameters,
-                                NULL) == ERROR_SUCCESS) 
+                                NULL) == ERROR_SUCCESS)
             {
                 DWORD dwSize = sizeof(mountRoot);
                 RegQueryValueEx (hkParameters, "MountRoot", NULL, NULL, (PBYTE)mountRoot, &dwSize);

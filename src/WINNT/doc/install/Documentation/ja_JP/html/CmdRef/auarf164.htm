@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -21,11 +21,11 @@
 <P><STRONG>目的</STRONG>
 <P>ファイル・サーバーに非同期で書き込むことを可能にします。
 <P><STRONG>構文</STRONG>
-<PRE><B>fs storebehind</B> [<B>-kbytes</B> &lt;<VAR>asynchrony for specified names</VAR>>]  
-               [<B>-files</B> &lt;<VAR>specific pathnames</VAR>><SUP>+</SUP>]  
+<PRE><B>fs storebehind</B> [<B>-kbytes</B> &lt;<VAR>asynchrony for specified names</VAR>>]
+               [<B>-files</B> &lt;<VAR>specific pathnames</VAR>><SUP>+</SUP>]
                [<B>-allfiles</B> &lt;<VAR>new default (KB)</VAR>>]  [<B>-verbose</B>]  [<B>-help</B>]
-    
-<B>fs st</B> [<B>-k</B> &lt;<VAR>asynchrony for specified names</VAR>>]  [<B>-f</B> &lt;<VAR>specific pathnames</VAR>><SUP>+</SUP>]  
+
+<B>fs st</B> [<B>-k</B> &lt;<VAR>asynchrony for specified names</VAR>>]  [<B>-f</B> &lt;<VAR>specific pathnames</VAR>><SUP>+</SUP>]
       [<B>-a</B> &lt;<VAR>new default (KB)</VAR>>]  [<B>-v</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -37,14 +37,14 @@
 <P>たとえば、以下の設定は、アプリケーションがファイルをクローズすると、キャッシュ・マネージャーは、ファイル・サーバーに書き込むファイルが残り 10 KB になるとすぐに制御をアプリケーションに戻すことができることを意味しています。
 <P>
 <PRE>   <B>-allfiles 10</B>
-   
+
 </PRE>
 </LI><LI>1 つ以上の個々のファイルに適用する値を 1 つ設定し、各ファイルに対する <B>-allfiles</B> 引き数の値を上書きするには、<B>-kbytes</B> および <B>-files</B> 引き数を組み合わせて使用します。この設定は、キャッシュ・マネージャーがファイルについての確実な情報を記録するために使用するカーネル・テーブルのファイルに入力があるまで残ります。一般に、そのような項目は少なくともアプリケーションがファイルをクローズするか終了するまで残っていますが、キャッシュ・マネージャーはファイルが活動停止中でテーブルのスロットを解放する必要がある場合には、項目の再生を自由に行えます。テーブルにファイルに対する項目があるという確信度を高めるには、ファイルをクローズする直前に <B>fs storebehind</B> コマンドを発行します。
 <P>
 <P>たとえば、以下の設定は、アプリケーションが <B>bigfile</B> および <B>biggerfile</B> ファイルのどちらかをクローズすると、キャッシュ・マネージャーは、ファイル・サーバーに書き込むファイルが残り 1 MB になるとすぐに制御をアプリケーションに戻すことができることを意味しています。
 <P>
 <PRE>   <B>-kbytes 1024 -files bigfile biggerfile</B>
-   
+
 </PRE>
 <P>
 <P>一度明示値がファイルに設定されると、それを再度デフォルトで非同期的に格納するには、その値に <B>-kbytes</B> を設定することに注意してください。言い替えると、一度別の値がファイルに設定されると、自動的にファイルをデフォルトで非同期的に格納する引き数の組み合わせはないということです。
@@ -56,7 +56,7 @@
 <P>遅延書き込みに失敗すると、アプリケーションに通知する方法はありません。それは、<B>close</B> システム・コールがすでに成功を示すコードを戻しているからです。
 <P>非同期的な書き込みは、書き込み操作によってファイルを格納するボリュームの割り当て量を超えた場合、ユーザーがそれに気付かない可能性が高くなります。常にそうであるように、ボリュームの割り当て量を超えたファイルの部分は失われ、以下のようなメッセージが表示されます。
 <PRE>   No space left on device
-   
+
 </PRE>
 <P>データの脱落を回避するには、ファイルを格納しているボリュームに、書き込みが予想されるデータ量に使用可能なスペースがあるかどうかを検査することをお勧めします。
 <P><STRONG>オプション </STRONG>
@@ -77,18 +77,18 @@
 <P><STRONG>出力</STRONG>
 <P>コマンドのオプションがなにも組み込まれていない場合、または <B>-verbose</B> フラグだけが指定されている場合には、次のメッセージがデフォルトの保存非同期性 (ローカル・マシンで実行中のアプリケーションによって操作されていて、特定の非同期式が設定されていないすべてのファイルに適用する設定) をレポートします。
 <PRE>   Default store asynchrony is <VAR>x</VAR> kbytes.
-   
+
 </PRE>
 <P>値 <TT>0</TT> (ゼロ) は、同期書き込みを示しています。マシンが最後にリブートされてから、このコマンドに <B>-allfiles</B> 引き数が誰からも指定されなかった場合には、この値がデフォルトになります。
 <P><B>-files</B> 引き数が、<B>-kbytes</B> 引き数なしに使用された場合には、出力は、デフォルトの保存非同期性とともに指定された各ファイルに適用される値を報告します。特定の値が以前からファイルに設定されていた場合には、次のメッセージがその値を報告します。
 <PRE>   Will store up to <VAR>y</VAR> kbytes of <VAR>file</VAR> asynchronously.
    Default store asynchrony is <VAR>x</VAR> kbytes.
-   
+
 </PRE>
 <P>明示的な <B>-kbytes</B> 値が設定されていないため、デフォルトの保存非同期性をファイルに適用している場合には、代わりにメッセージは次のようになります。
 <PRE>   Will store <VAR>file</VAR> according to default.
    Default store asynchrony is <VAR>x</VAR> kbytes.
-   
+
 </PRE>
 <P><B>-verbose</B> フラグが、値を設定する引き数 (<B>-files</B> および <B>-kbytes</B>、または <B>-allfiles</B>、または 3 つすべて) と組み合わされている場合には、設定が即時に有効になったことを確認するメッセージが表示されます。他の引き数またはフラグを使用しない場合は、<B>-verbose</B> フラグがデフォルトの保存非同期性のみ報告します。
 <P><STRONG>例</STRONG>
@@ -97,7 +97,7 @@
 <PRE>   % <B>fs storebehind -kbytes 100 -files test.data -verbose</B>
    Will store up to 100 kbytes of test.data asynchronously.
    Default store asynchrony is 0 kbytes.
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P><B>-allfiles</B> 引き数を使用するには、発行者がローカル・スーパーユーザー <B>root</B> としてログインしなくてはなりません。
@@ -106,11 +106,11 @@
 <P><STRONG>関連情報 </STRONG>
 <P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf163.htm">前ページ</A> &#124; <A HREF="auarf165.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf163.htm">前ページ</A> &#124; <A HREF="auarf165.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

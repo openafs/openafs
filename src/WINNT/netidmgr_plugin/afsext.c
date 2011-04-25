@@ -192,7 +192,7 @@ afs_method_describe(afs_tk_method method, khm_int32 flags,
     switch(method) {
     case AFS_TOKEN_AUTO:
         return LoadString(hResModule,
-                          ((flags & KCDB_TS_SHORT)? 
+                          ((flags & KCDB_TS_SHORT)?
                            IDS_NC_METHOD_AUTO:
                            IDS_NC_METHODL_AUTO),
                           wbuf, (int) cbbuf / sizeof(wchar_t));
@@ -443,7 +443,7 @@ afs_ext_klog(afs_tk_method method,
     return FALSE;
 }
 
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_msg_ext(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam) {
     switch(msg_subtype) {
     case AFS_MSG_ANNOUNCE:

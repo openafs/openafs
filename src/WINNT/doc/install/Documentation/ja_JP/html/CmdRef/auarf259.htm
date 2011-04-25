@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -24,13 +24,13 @@
 <P>VLDB からボリューム項目を削除します。
 <P><STRONG>構文</STRONG>
 <PRE><B>vos delentry</B> [<B>-id</B> &lt;<VAR>volume name or ID</VAR>><SUP>+</SUP>]
-             [<B>-prefix</B> &lt;<VAR>prefix of volume whose VLDB entry is to be deleted</VAR>>] 
-             [<B>-server</B> &lt;<VAR>machine name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition name</VAR>>]  
+             [<B>-prefix</B> &lt;<VAR>prefix of volume whose VLDB entry is to be deleted</VAR>>]
+             [<B>-server</B> &lt;<VAR>machine name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition name</VAR>>]
              [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
-     
+
 <B>vos de</B> [<B>-i</B> &lt;<VAR>volume name or ID</VAR>><SUP>+</SUP>]
-       [<B>-pr</B> &lt;<VAR>prefix of volume whose VLDB entry is to be deleted</VAR>>]  
-       [<B>-s</B> &lt;<VAR>machine name</VAR>>]  [<B>-pa</B> &lt;<VAR>partition name</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>] 
+       [<B>-pr</B> &lt;<VAR>prefix of volume whose VLDB entry is to be deleted</VAR>>]
+       [<B>-s</B> &lt;<VAR>machine name</VAR>>]  [<B>-pa</B> &lt;<VAR>partition name</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
        [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -82,16 +82,16 @@
 <P><STRONG>出力</STRONG>
 <P>次のメッセージにより、削除された VLDB 項目数が示され、コマンドが成功したことが確認できます。
 <PRE>   Deleted <VAR>number</VAR> VLDB entries
-   
+
 </PRE>
 <P><STRONG>例</STRONG>
 <P>次のコマンドは、ボリューム <B> user.temp</B> の項目を VLDB から削除しています。
 <PRE>   % <B>vos delentry user.temp</B>
-   
+
 </PRE>
 <P>次のコマンドは、VLDB でファイル・サーバー・マシン <B>fs3.abc.com</B> のサイトがリストされ、名前が <B>test</B> で始まるボリュームの項目を VLDB から削除しています。
 <PRE>   % <B>vos delentry -prefix test -server fs3.abc.com</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
@@ -102,11 +102,11 @@
 <P><A HREF="auarf277.htm#HDRVOS_SYNCVLDB">vos syncvldb</A>
 <P><A HREF="auarf280.htm#HDRVOS_ZAP">vos zap</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf258.htm">前ページ</A> &#124; <A HREF="auarf260.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf258.htm">前ページ</A> &#124; <A HREF="auarf260.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

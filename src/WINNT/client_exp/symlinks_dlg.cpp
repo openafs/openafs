@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -55,12 +55,12 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CSymlinksDlg message handlers
 
-BOOL CSymlinksDlg::OnInitDialog() 
+BOOL CSymlinksDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
 	int tabs[] = { 64 };
-	
+
 	m_List.SetTabStops(sizeof(tabs) / sizeof(int), tabs);
 
 	for (int i = 0; i < m_Symlinks.GetSize(); i++)
@@ -77,7 +77,7 @@ void CSymlinksDlg::SetSymlinks(const CStringArray& symlinks)
 	m_Symlinks.Copy(symlinks);
 }
 
-void CSymlinksDlg::OnHelp() 
+void CSymlinksDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, SYMLINK_HELP_ID);
 }

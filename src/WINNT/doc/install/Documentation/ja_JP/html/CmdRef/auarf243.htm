@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -39,24 +39,24 @@
 <P>ユーザー・アカウントを作成します。
 <P><STRONG>構文</STRONG>
 <PRE><B>uss add -user</B> &lt;<VAR>login name</VAR>>  [<B>-realname</B> &lt;<VAR>full name in quotes</VAR>>]
-        [<B>-pass</B> &lt;<VAR>initial password</VAR>>]  
+        [<B>-pass</B> &lt;<VAR>initial password</VAR>>]
         [<B>-pwexpires</B> &lt;<VAR>password expires in [0..254] days (0 => never)</VAR>>]
-        [<B>-server</B> &lt;<VAR>FileServer for home volume</VAR>>] 
-        [<B>-partition</B> &lt;<VAR>FileServer's disk partition for home volume</VAR>>] 
-        [<B>-mount</B> &lt;<VAR>home directory mount point</VAR>>]  
+        [<B>-server</B> &lt;<VAR>FileServer for home volume</VAR>>]
+        [<B>-partition</B> &lt;<VAR>FileServer's disk partition for home volume</VAR>>]
+        [<B>-mount</B> &lt;<VAR>home directory mount point</VAR>>]
         [<B>-uid</B> &lt;<VAR>uid to assign the user</VAR>>]
-        [<B>-template</B> &lt;<VAR>pathname of template file</VAR>>] 
-        [<B>-verbose</B>]  [<B>-var</B> &lt;<VAR>auxiliary argument pairs (Num val)</VAR>><SUP>+</SUP>] 
+        [<B>-template</B> &lt;<VAR>pathname of template file</VAR>>]
+        [<B>-verbose</B>]  [<B>-var</B> &lt;<VAR>auxiliary argument pairs (Num val)</VAR>><SUP>+</SUP>]
         [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-admin</B> &lt;<VAR>administrator to authenticate</VAR>>]
         [<B>-dryrun</B>]  [<B>-skipauth</B>]  [<B>-overwrite</B>]  [<B>-help</B>]
-   
-<B>uss ad -us</B> &lt;<VAR>login name</VAR>>  [<B>-r</B> &lt;<VAR>full name in quotes</VAR>>]   
-       [<B>-pas</B> &lt;<VAR>initial password</VAR>>] 
-       [<B>-pw</B> &lt;<VAR>password expires in [0..254] days (0 => never)</VAR>>]  
-       [<B>-se</B> &lt;<VAR>FileServer for home volume</VAR>>] 
-       [<B>-par</B> &lt;<VAR>FileServer's disk partition for home volume</VAR>>] 
+
+<B>uss ad -us</B> &lt;<VAR>login name</VAR>>  [<B>-r</B> &lt;<VAR>full name in quotes</VAR>>]
+       [<B>-pas</B> &lt;<VAR>initial password</VAR>>]
+       [<B>-pw</B> &lt;<VAR>password expires in [0..254] days (0 => never)</VAR>>]
+       [<B>-se</B> &lt;<VAR>FileServer for home volume</VAR>>]
+       [<B>-par</B> &lt;<VAR>FileServer's disk partition for home volume</VAR>>]
        [<B>-m</B> &lt;<VAR>home directory mount point</VAR>>]  [<B>-ui</B> &lt;<VAR>uid to assign the user</VAR>>]
-       [<B>-t</B> &lt;<VAR>pathname of template file</VAR>>]  [<B>-ve</B>]  
+       [<B>-t</B> &lt;<VAR>pathname of template file</VAR>>]  [<B>-ve</B>]
        [<B>-va</B> &lt;<VAR>auxiliary argument pairs (Num val)</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
        [<B>-a</B> &lt;<VAR>administrator to authenticate</VAR>>]  [<B>-d</B>]  [<B>-sk</B>]  [<B>-o</B>]  [<B>-h</B>]
 </PRE>
@@ -102,7 +102,7 @@
 <P>
 <PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
    <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
-   
+
 </PRE>
 <P>
 <P>
@@ -110,14 +110,14 @@
 <P>
 <PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
    <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
-   
+
 </PRE>
 <P>
 <P>
 <P>次の値まで、以下同様となります。
 <P>
 <PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
-    
+
 </PRE>
 <P>
 <P>
@@ -185,10 +185,10 @@
 <P><B>uss add</B> コマンドの発行側は、完全パス名ではなく、テンプレート・ファイル名のみを指定します。完全パス名が現在の作業ディレクトリーに存在しているためです。読みやすくするために、ここではコマンドおよび <B>V</B> 命令を 2 行に分けていますが、実際の命令およびコマンドは、1 行で入力してください。
 <PRE>   V user.$USER $SERVER.abc.com /vice$PART $1   \
         /afs/abc.com/usr/$USER $UID $USER all
-   
+
    % <B>uss add  -user smith -realname "John Smith" -pass js_pswd -server fs2</B>   \
               <B>-partition b -template uss.tpl -var 1 2500</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>発行側 (または <B>-admin</B> 引き数で指定されたユーザー) は、保護データベースの <B>system:administrators</B> グループに所属して、発行側の認証データベース項目で <TT>ADMIN</TT> フラグをオンにする必要があります。
@@ -201,11 +201,11 @@
 <P><A HREF="auarf245.htm#HDRUSS_BULK">uss bulk</A>
 <P><A HREF="auarf246.htm#HDRUSS_DELETE">uss delete</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf242.htm">前ページ</A> &#124; <A HREF="auarf244.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf242.htm">前ページ</A> &#124; <A HREF="auarf244.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

@@ -1,4 +1,4 @@
-/* 
+/*
  * MODULE: locker.c.
  *
  * Copyright (C) 1988-1998 by the Massachusetts Institute of Technology.

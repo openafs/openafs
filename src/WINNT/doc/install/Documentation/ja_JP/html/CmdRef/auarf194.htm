@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -27,26 +27,26 @@
 <P><STRONG>目的</STRONG>
 <P>認証データベース項目のキー・フィールドを変更します。
 <P><STRONG>構文</STRONG>
-<PRE><B>kas setpassword -name</B> &lt;<VAR>name of user</VAR>>  [<B>-new_password</B> &lt;<VAR>new password</VAR>>] 
-                [<B>-kvno</B> &lt;<VAR>key version number</VAR>>] 
-                [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
-                [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>] 
+<PRE><B>kas setpassword -name</B> &lt;<VAR>name of user</VAR>>  [<B>-new_password</B> &lt;<VAR>new password</VAR>>]
+                [<B>-kvno</B> &lt;<VAR>key version number</VAR>>]
+                [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>]
+                [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
                 [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]
                 [<B>-noauth</B>]  [<B>-help</B>]
-   
-<B>kas setpasswd -na</B> &lt;<VAR>name of user</VAR>>  [<B>-ne</B> &lt;<VAR>new password</VAR>>]  
+
+<B>kas setpasswd -na</B> &lt;<VAR>name of user</VAR>>  [<B>-ne</B> &lt;<VAR>new password</VAR>>]
               [<B>-k</B> &lt;<VAR>key version number</VAR>>]
-              [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
-              [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [-c &lt;<VAR>cell name</VAR>>]  
+              [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]
+              [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [-c &lt;<VAR>cell name</VAR>>]
               [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
-   
+
 <B>kas setp -na</B> &lt;<VAR>name of user</VAR>>  [<B>-ne</B> &lt;<VAR>new password</VAR>>]  [<B>-k</B> &lt;<VAR>key version number</VAR>>]
-         [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
-         [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [-c &lt;<VAR>cell name</VAR>>]  
+         [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]
+         [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [-c &lt;<VAR>cell name</VAR>>]
          [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
-   
+
 <B>kas sp -na</B> &lt;<VAR>name of user</VAR>>  [<B>-ne</B> &lt;<VAR>new password</VAR>>]  [<B>-k</B> &lt;<VAR>key version number</VAR>>]
-       [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+       [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]
        [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
        [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]
 </PRE>
@@ -65,14 +65,14 @@
 </LI><LI><B>-reuse</B> 引き数を <B>kas setfields</B> コマンドに指定した場合には、前のパスワードの再利用を禁止しているので、コマンド・インタープリターは、パスワードがユーザーの発行した最近の 20 個のパスワードを使用してください。これは、シェルに以下のようなエラー・メッセージを生成します。
 <P>
 <PRE>   Password was not changed because it seems like a reused password
-   
+
 </PRE>
 <P>
 <P>手操作またはスクリプトを使用して、ユーザーがパスワードを変更し、この制限に近づかないようにするには、<B>kaserver</B> 初期化コマンドの <B>-minhours</B> 引き数を指定してください。次のエラー・メッセージは、最短時間が経過する前にユーザーがパスワードを変更しようとすると表示されます。
 <P>
 <PRE>   Password was not changed because you changed it too
    recently; see your systems administrator
-   
+
 </PRE>
 </LI></UL>
 <P><STRONG>オプション </STRONG>
@@ -105,7 +105,7 @@
    Password for admin:
    new_password:
    Verifying, please re-enter new_password:
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>個々のユーザーは、自分のパスワードを変更することができます。他のユーザーのパスワードまたは <B>afs</B> などのサーバー項目のパスワード (サーバー暗号化キー) を変更するには、発行者は、自分の認証データベース項目で <TT>ADMIN</TT> フラグが設定されていなければなりません。
@@ -115,11 +115,11 @@
 <P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
 <P><A HREF="auarf203.htm#HDRKPWVALID">kpwvalid</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf193.htm">前ページ</A> &#124; <A HREF="auarf195.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf193.htm">前ページ</A> &#124; <A HREF="auarf195.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

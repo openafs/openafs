@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -96,7 +96,7 @@ BOOL InitApplication(HANDLE hInstance)
     wc.hInstance = hInstance;
     wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = GetStockObject(WHITE_BRUSH); 
+    wc.hbrBackground = GetStockObject(WHITE_BRUSH);
     wc.lpszMenuName =  "InputMenu";
     wc.lpszClassName = "InputWClass";
 
@@ -162,7 +162,7 @@ BOOL InitInstance(
 
     if (code == 0) wsprintf(main_screenText[0], "Initialized successfully.");
     else wsprintf(main_screenText[0], "Failed to init debug system, code %ld", code);
-    
+
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
     return (TRUE);

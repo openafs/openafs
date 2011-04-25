@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -49,7 +49,7 @@ extern "C" {
    typedef int (*ktc_ForgetToken_t)(struct ktc_principal *server);
    typedef int (*ka_UserAuthenticateGeneral_t)(int flags, char *name, char *instance, char *realm, char *password, int lifetime, int *password_expiresP, int spare, char **reasonP);
    typedef long (*cm_GetRootCellName_t)(char *namep);
-   typedef int (*ka_ParseLoginName_t)(char *login, char *name, char *inst, char *cell); 
+   typedef int (*ka_ParseLoginName_t)(char *login, char *name, char *inst, char *cell);
 }
 
 static struct l
@@ -64,7 +64,7 @@ static struct l
    ktc_ListTokens_t ktc_ListTokensP;
    ktc_ForgetToken_t ktc_ForgetTokenP;
    ka_UserAuthenticateGeneral_t ka_UserAuthenticateGeneralP;
-   ka_ParseLoginName_t ka_ParseLoginNameP; 
+   ka_ParseLoginName_t ka_ParseLoginNameP;
    cm_GetRootCellName_t cm_GetRootCellNameP;
    } l;
 
@@ -408,23 +408,23 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword,
       int Expiration = 0;
 
 	  if ( KFW_is_available() ) {
-		  // KFW_AFS_get_cred() parses the szNameA field as complete princial including potentially 
+		  // KFW_AFS_get_cred() parses the szNameA field as complete princial including potentially
 		  // a different realm then the specified cell name.
           rc = KFW_AFS_get_cred(szNameA, szCellA, szPasswordA, 0, szSmbNameA[0] ? szSmbNameA : NULL, &Result);
 	  } else {
 		char  name[sizeof(szNameA)];
 		char  instance[sizeof(szNameA)];
 		char  cell[sizeof(szNameA)];
-      
+
 		name[0] = '\0';
 		instance[0] = '\0';
 		cell[0] = '\0';
-		ka_ParseLoginName(szNameA, name, instance, cell); 
+		ka_ParseLoginName(szNameA, name, instance, cell);
 
 		if ( szSmbNameA[0] ) {
-			  rc = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON, 
+			  rc = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
 				                               name, instance, szCellA, szPasswordA, szSmbNameA, 0, &Expiration, 0, &Result);
-		} else { 
+		} else {
 			  rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, name, instance, szCellA, szPasswordA, 0, &Expiration, 0, &Result);
 		}
 	  }

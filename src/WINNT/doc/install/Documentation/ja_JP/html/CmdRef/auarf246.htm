@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -29,11 +29,11 @@
 <P><STRONG>目的</STRONG>
 <P>ユーザー・アカウントを削除します。
 <P><STRONG>構文</STRONG>
-<PRE><B>uss delete -user</B> &lt;<VAR>login name</VAR>>  [<B>-mountpoint</B> &lt;<VAR>mountpoint for user's volume</VAR>>] 
-           [<B>-savevolume</B>]  [<B>-verbose</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
-           [<B>-admin</B> &lt;<VAR>administrator to authenticate</VAR>>]  [<B>-dryrun</B>]  
+<PRE><B>uss delete -user</B> &lt;<VAR>login name</VAR>>  [<B>-mountpoint</B> &lt;<VAR>mountpoint for user's volume</VAR>>]
+           [<B>-savevolume</B>]  [<B>-verbose</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+           [<B>-admin</B> &lt;<VAR>administrator to authenticate</VAR>>]  [<B>-dryrun</B>]
            [<B>-skipauth</B>]  [<B>-help</B>]
-    
+
 <B>uss d -u</B> &lt;<VAR>login name</VAR>>  [<B>-m</B> &lt;<VAR>mountpoint for user's volume</VAR>>]  [<B>-sa</B>]  [<B>-v</B>]
       [<B>-c</B> &lt;<VAR>cell name</VAR>>]  <B>-a</B> &lt;<VAR>administrator to authenticate</VAR>>]
       [<B>-d</B>]  [<B>-sk</B>]  [<B>-h</B>]
@@ -77,7 +77,7 @@
 <P><STRONG>例</STRONG>
 <P>次のコマンドは、<B>smith</B> のユーザー・アカウントを <B>abc.com</B> セルから削除します。<B>-savevolume</B> 引き数を使用すると、ファイル・サーバー・マシン上の <TT>user.smith</TT> ボリュームが保持されます。
 <PRE>   % <B>uss delete smith -mountpoint /afs/abc.com/usr/smith -savevolume</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>発行者 (または <B>-admin</B> 引き数で指定されたユーザー) は、保護データベースの <B>system:administrators</B> グループに属し、その認証データベース項目の <TT>ADMIN</TT> フラグがオンにされ、マウント・ポイントの親ディレクトリーのアクセス制御リスト (ACL) に、少なくとも <B>a</B> (<B>administer</B>) および <B>d</B> (<B>delete</B>) 許可がなければなりません。
@@ -87,11 +87,11 @@
 <P><A HREF="auarf153.htm#HDRFS_MKMOUNT">fs mkmount</A>
 <P><A HREF="auarf242.htm#HDRUSS_INTRO">uss</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf245.htm">前ページ</A> &#124; <A HREF="auarf247.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf245.htm">前ページ</A> &#124; <A HREF="auarf247.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

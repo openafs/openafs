@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -338,7 +338,7 @@
 명령들을 실행하면(또는 이들을 쉘 초기설정 파일에 삽입하면) 크기를
 제대로 재조정할 수 있게 됩니다.
 <PRE>   %<B> set noglob</B>
-   % <B>eval '/usr/bin/X11/resize'</B> 
+   % <B>eval '/usr/bin/X11/resize'</B>
    % <B>unset noglob</B>
 </PRE>
 <A NAME="IDX7143"></A>
@@ -351,7 +351,7 @@
 <LI>전용 명령 쉘을 여십시오. 필요하면 이를 해당 크기로 조정하십시오.
 </LI><LI><B>scout</B> 명령을 실행하여 프로그램을 시작하십시오.
 <P>
-<PRE>   % <B>scout</B>  [<B>initcmd</B>] 
+<PRE>   % <B>scout</B>  [<B>initcmd</B>]
 <B>-server</B> &lt;<VAR>FileServer&nbsp;name(s)&nbsp;to&nbsp;monitor</VAR>><SUP>+</SUP>  \
             [<B>-basename</B> &lt;<VAR>base&nbsp;server&nbsp;name</VAR>>]  \
             [<B>-frequency</B> &lt;<VAR>poll&nbsp;frequency,&nbsp;in&nbsp;seconds</VAR>>] [<B>-host</B>]  \
@@ -392,7 +392,7 @@ ABC 회사 셀에서 적합한 값은 <B>.abc.com</B>이 아닌
 </B><DD>하나 이상의 통계를 강조표시할 임계치를 정의합니다. 순서에
 관계없이 통과와 임계치 쌍을 제공할 수 있으며, 각 쌍과 각 쌍의
 파트는 하나 이상의 공백으로 구분됩니다. 다음 목록에서는 각 통계의
-구문을 정의합니다. 
+구문을 정의합니다.
 <A NAME="IDX7148"></A>
 <A NAME="IDX7149"></A>
 <A NAME="IDX7150"></A>
@@ -473,7 +473,7 @@ ABC 회사 셀에서 적합한 값은 <B>.abc.com</B>이 아닌
 않는 경우라도 <B>scout</B> 프로그램이 연결을 설정하는
 데 필요한 완전한 이름을 확인하는 셀의 이름 서비스에 따라 각 시스템
 이름의 처음 파트를 지정하도록 선택합니다.
-<PRE>   % <B>scout -server fs1 fs2</B> 
+<PRE>   % <B>scout -server fs1 fs2</B>
 </PRE>
 <P><A HREF="#FIGWQ337">그림 2</A>에서는 결과 디스플레이에 대해 설명합니다.
 먼저 다섯 번째(unlabeled) 컬럼에 있는 시스템 이름이 명령행에서 관리자가
@@ -516,7 +516,7 @@ attn</TT> 헤더에 나타나는 파티션) 이상이 가득 찼음을 나타냅니다.
 </LI><LI><B>-attention</B> 인수를 사용하여 파티션에 대한
 강조표시 임계치를 기본값인 95%에서 최소 5,000 KB로 변경합니다.
 </LI></UL>
-<PRE>   % <B>scout -server fs1 fs2 -basename abc.com -host -frequency 5 -attention disk 5000</B> 
+<PRE>   % <B>scout -server fs1 fs2 -basename abc.com -host -frequency 5 -attention disk 5000</B>
 </PRE>
 <P>선택적인 인수를 사용하면 <A HREF="#FIGWQ338">그림 3</A> 및
 <A HREF="#FIGWQ337">그림 2</A>에서 여러가지가 달라질 수 있습니다. 먼저,
@@ -545,7 +545,7 @@ attn</TT> 헤더에 나타나는 파티션) 이상이 가득 찼음을 나타냅니다.
 <P><A HREF="#FIGWQ339">그림 4</A>에서, 주립 대학 셀에서 관리자는 셀의
 파일 서버 시스템 중 3개를 모니터합니다. 관리자는 <B>-basename</B> 인수를 사용하여 <B>stateu.edu</B>
 도메인 이름을 지정합니다.
-<PRE>   % <B>scout -server server2 server3 server4 -basename stateu.edu</B> 
+<PRE>   % <B>scout -server server2 server3 server4 -basename stateu.edu</B>
 </PRE>
 <P><B><A NAME="FIGWQ339" HREF="auagd003.htm#FT_FIGWQ339">그림 4. scout 디스플레이의 세 번째 예</A></B><BR>
 <TABLE BORDER ><TR><TD><BR>
@@ -766,7 +766,7 @@ PID와 연관된 메시지를 탐색할 수 있습니다.
 </LI></OL>
 <P>다음 예에서는 <B>cmfx</B> 추적 로그의 크기를 80KB로
 설정합니다.
-<PRE>   # <B>fstrace setlog cmfx 80</B> 
+<PRE>   # <B>fstrace setlog cmfx 80</B>
 </PRE>
 <A NAME="IDX7170"></A>
 <A NAME="IDX7171"></A>
@@ -784,7 +784,7 @@ PID와 연관된 메시지를 탐색할 수 있습니다.
 세트의 상태를 설정하십시오.
 <P>
 <PRE>   % <B>fstrace setset</B> [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>] [<B>-active</B>] [<B>-inactive</B>]  \
-                    [<B>-dormant</B>] 
+                    [<B>-dormant</B>]
 </PRE>
 </LI></OL>
 <P>다음 예에서는 <B>cm</B> 이벤트 세트를 활성화합니다.
@@ -813,7 +813,7 @@ PID와 연관된 메시지를 탐색할 수 있습니다.
 </LI><LI><B>fstrace lsset</B> 명령을 실행하여 사용가능한
 이벤트 세트 및 그 상태를 표시하십시오.
 <P>
-<PRE>   # <B>fstrace lsset</B> 
+<PRE>   # <B>fstrace lsset</B>
 [<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]
 </PRE>
 </LI></OL>
@@ -850,9 +850,9 @@ PID와 연관된 메시지를 탐색할 수 있습니다.
 </LI><LI><B>fstrace lslog</B> 명령을 실행하여 커널
 추적 로그에 대한 정보를 표시하십시오.
 <P>
-<PRE>   # <B>fstrace lslog</B> 
-[<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>] 
-[<B>-log</B> &lt;<VAR>log_name</VAR>>]  [<B>-long</B>] 
+<PRE>   # <B>fstrace lslog</B>
+[<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]
+[<B>-log</B> &lt;<VAR>log_name</VAR>>]  [<B>-long</B>]
 </PRE>
 </LI></OL>
 <P>다음 예에서는 <B>-long</B> 플래그를 사용하여
@@ -1001,8 +1001,8 @@ setlog</B> 명령으로 로그 크기를 증가시키면 이 문제가 완화될 수 있습니다.
 </LI><LI><B>fstrace clear</B> 명령을 실행하여 로그 이름으로
 또는 이벤트 세트별로 로그를 지우십시오.
 <P>
-<PRE>   # <B>fstrace clear</B> 
-[<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>] 
+<PRE>   # <B>fstrace clear</B>
+[<B>-set</B> &lt;<VAR>set_name</VAR>><SUP>+</SUP>]
 [<B>-log</B> &lt;<VAR>log_name</VAR>><SUP>+</SUP>]
 </PRE>
 </LI></OL>
@@ -1088,9 +1088,9 @@ setlog</B> 명령으로 로그 크기를 증가시키면 이 문제가 완화될 수 있습니다.
       Date: Fri Apr 16 10:54:57 1999
    Found 1 logs.
    time 32.965783, pid 0: Fri Apr 16 10:45:52 1999
-   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20 
+   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20
    time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns
-   0x0) 
+   0x0)
    time 35.159854, pid 10891: Breaking callback for 5bd95e4 states 1024
    (volume 0)
    time 35.407081, pid 10891: Breaking callback for 5c0fadc states 1024
@@ -1099,12 +1099,12 @@ setlog</B> 명령으로 로그 크기를 증가시키면 이 문제가 완화될 수 있습니다.
        .                         .
        .                         .
    time 71.440456, pid 33658: Lookup adp 0x5bbdcf0 name g3oCKs fid (756
-   4fb7e:588d240.2ff978a8.6) 
-   time 71.440569, pid 33658: Returning code 2 from 19 
+   4fb7e:588d240.2ff978a8.6)
+   time 71.440569, pid 33658: Returning code 2 from 19
    time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns
-   0x2) 
+   0x2)
    time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x
-   0) 
+   0)
    AFS Trace Dump - Completed
 </PRE>
 <HR><H2><A NAME="HDRWQ349" HREF="auagd002.htm#ToC_390">afsmonitor 프로그램 사용</A></H2>
@@ -1141,7 +1141,7 @@ setlog</B> 명령으로 로그 크기를 증가시키면 이 문제가 완화될 수 있습니다.
 출력을 얻으려면, 표시 환경에서 역상 비디오와 커서 주소지정을 지원해야
 합니다. TERM 환경 변수를 정확한 터미널 유형으로 설정하거나, 실제
 터미널 유형과 유사한 특성을 갖는 값으로 설정하십시오. 표시 창 또는
-터미널은 적어도 80 컬럼, 12행이어야 합니다. 
+터미널은 적어도 80 컬럼, 12행이어야 합니다.
 <A NAME="IDX7197"></A>
 <A NAME="IDX7198"></A>
 <A NAME="IDX7199"></A>
@@ -1700,7 +1700,7 @@ AFS 제품 지원 부서에 문의하십시오.
                    <B>-fsname</B> &lt;<VAR>File&nbsp;Server&nbsp;name(s)&nbsp;to&nbsp;monitor</VAR>><SUP>+</SUP>  \
                    <B>-collID</B> &lt;<VAR>Collection(s)&nbsp;to&nbsp;fetch</VAR>><SUP>+</SUP>  [<B>-onceonly</B>]  \
                    [<B>-frequency</B> &lt;<VAR>poll&nbsp;frequency,&nbsp;in&nbsp;seconds</VAR>>]  \
-                   [<B>-period</B> &lt;<VAR>data&nbsp;collection&nbsp;time,&nbsp;in&nbsp;minutes</VAR>>] [<B>-debug</B>] 
+                   [<B>-period</B> &lt;<VAR>data&nbsp;collection&nbsp;time,&nbsp;in&nbsp;minutes</VAR>>] [<B>-debug</B>]
 </PRE>
 <P>
 <P>여기서
@@ -1761,7 +1761,7 @@ AFS 제품 지원 부서에 문의하십시오.
                    <B>-cmname</B> &lt;<VAR>Cache&nbsp;Manager&nbsp;name(s)&nbsp;to&nbsp;monitor</VAR>><SUP>+</SUP>  \
                    <B>-collID</B> &lt;<VAR>Collection(s)&nbsp;to&nbsp;fetch</VAR>><SUP>+</SUP> \
                    [<B>-onceonly</B>] [<B>-frequency</B> &lt;<VAR>poll&nbsp;frequency,&nbsp;in&nbsp;seconds</VAR>>]  \
-                   [<B>-period</B> &lt;<VAR>data&nbsp;collection&nbsp;time,&nbsp;in&nbsp;minutes</VAR>>] [<B>-debug</B>] 
+                   [<B>-period</B> &lt;<VAR>data&nbsp;collection&nbsp;time,&nbsp;in&nbsp;minutes</VAR>>] [<B>-debug</B>]
 </PRE>
 <P>
 <P>여기서
@@ -1859,7 +1859,7 @@ AIX 이벤트 파일(<B>/etc/security/audit/events</B>)로
 <B>/usr/afs/local/Audit</B> 파일에 다음 문자열을
 작성하십시오.
 <P>
-<PRE>  
+<PRE>
 <B>AFS_AUDIT_AllEvents</B>
 </PRE>
 </LI><LI><B>bos restart</B> 명령(<B>-all</B>
@@ -1877,11 +1877,11 @@ AIX 이벤트 파일(<B>/etc/security/audit/events</B>)로
 이 명령 사용에 대해서는 <A HREF="auagd009.htm#HDRWQ170">프로세스를 정지한 후 즉시 재시작하기</A>의 내용을
 참조하십시오.
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd012.htm">이전 페이지</A> &#124; <A HREF="auagd014.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd012.htm">이전 페이지</A> &#124; <A HREF="auagd014.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

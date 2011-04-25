@@ -1,12 +1,12 @@
 #include "winflock.h"
 
-void _begin_log(void) 
+void _begin_log(void)
 {
     WaitForSingleObject(mutex_logfile, INFINITE);
     logfile << (isChild?"CHILD {\n":"PARENT {\n");
 }
 
-void _end_log(void) 
+void _end_log(void)
 {
     logfile << "}\n";
     logfile.flush();

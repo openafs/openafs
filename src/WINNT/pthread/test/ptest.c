@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 	    condWaitFunc, (void *) 0);
 	assert(i==0);
     }
-    assert(pthread_create(&tid[NTH-1], (const pthread_attr_t *) 0, 
+    assert(pthread_create(&tid[NTH-1], (const pthread_attr_t *) 0,
 	   condBroadcastFunc, (void *) 0)==0);
     for(j=0;j<NTH;j++) {
 	i = pthread_join(tid[j], (void **) 0);

@@ -17,22 +17,22 @@ int test_write(HANDLE hf, LARGE_INTEGER offset) {
     DWORD dwWritten;
     int ret = 0;
 
-    if (!LockFile(hf, offset.u.LowPart, offset.u.HighPart, 
+    if (!LockFile(hf, offset.u.LowPart, offset.u.HighPart,
 		   4096, 0)) {
-	fprintf(stderr, "Unable to lock offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to lock offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	return -1;
     }
 
     if (!SetFilePointerEx(hf, offset, NULL, FILE_BEGIN)) {
-	fprintf(stderr, "Unable to set file pointer to offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to set file pointer to offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	ret = -1;
 	goto unlock;
     }
 
     if (!WriteFile(hf, teststr, strlen(teststr)+1, &dwWritten, NULL)) {
-	fprintf(stderr, "Unable to write test string at offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to write test string at offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	ret = -1;
 	goto unlock;
@@ -41,16 +41,16 @@ int test_write(HANDLE hf, LARGE_INTEGER offset) {
     }
 
   unlock:
-    if (!UnlockFile(hf, offset.u.LowPart, offset.u.HighPart, 
+    if (!UnlockFile(hf, offset.u.LowPart, offset.u.HighPart,
 		   4096, 0)) {
-	fprintf(stderr, "Unable to unlock offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to unlock offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	ret = -1;
     }
 
 #if 0
     if (!FlushFileBuffers(hf)) {
-	fprintf(stderr, "Flush buffers fails at offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Flush buffers fails at offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
     }
 #endif
@@ -62,22 +62,22 @@ int test_read(HANDLE hf, LARGE_INTEGER offset) {
     DWORD dwRead;
     int ret = 0;
 
-    if (!LockFile(hf, offset.u.LowPart, offset.u.HighPart, 
+    if (!LockFile(hf, offset.u.LowPart, offset.u.HighPart,
 		   4096, 0)) {
-	fprintf(stderr, "Unable to lock offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to lock offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	return -1;
     }
 
     if (!SetFilePointerEx(hf, offset, NULL, FILE_BEGIN)) {
-	fprintf(stderr, "Unable to set file pointer to offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to set file pointer to offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	ret = -1;
 	goto unlock;
     }
 
     if (!ReadFile(hf, buffer, strlen(teststr)+1, &dwRead, NULL)) {
-	fprintf(stderr, "Unable to read test string at offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to read test string at offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	ret = -1;
 	goto unlock;
@@ -86,7 +86,7 @@ int test_read(HANDLE hf, LARGE_INTEGER offset) {
     }
 
     if (strcmp(buffer, teststr)) {
-	fprintf(stderr, "Test string comparison failure at offset 0x%08x:%08x\n", 
+	fprintf(stderr, "Test string comparison failure at offset 0x%08x:%08x\n",
 		 offset.u.HighPart, offset.u.LowPart);
 	ret = -1;
 	goto unlock;
@@ -95,7 +95,7 @@ int test_read(HANDLE hf, LARGE_INTEGER offset) {
   unlock:
     if (!UnlockFile(hf, offset.u.LowPart, offset.u.HighPart,
 		   4096, 0)) {
-	fprintf(stderr, "Unable to unlock offset 0x%08x:%08x gle = 0x%08x\n", 
+	fprintf(stderr, "Unable to unlock offset 0x%08x:%08x gle = 0x%08x\n",
 		 offset.u.HighPart, offset.u.LowPart, GetLastError());
 	ret = -1;
     }
@@ -103,14 +103,14 @@ int test_read(HANDLE hf, LARGE_INTEGER offset) {
     return ret;
 }
 
-int 
+int
 main(int argc, char *argv[]) {
     HANDLE fh;
     __int64 i;
     char cmdline[512];
     LARGE_INTEGER large;
 
-    if (argc == 1) 
+    if (argc == 1)
 	usage();
 
     if (!SetCurrentDirectory(argv[1])) {
@@ -118,14 +118,14 @@ main(int argc, char *argv[]) {
 	return 2;
     }
 
-    fh = CreateFile("largefile.test", 
+    fh = CreateFile("largefile.test",
 		     GENERIC_READ | GENERIC_WRITE | STANDARD_RIGHTS_READ | STANDARD_RIGHTS_WRITE,
 		     FILE_SHARE_READ | FILE_SHARE_WRITE,
 		     NULL /* default security */,
 		     OPEN_ALWAYS,
 		     FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS | FILE_FLAG_WRITE_THROUGH,
 		     NULL );
-    
+
     if (fh == INVALID_HANDLE_VALUE) {
 	fprintf(stderr, "unable to create/open the test file\n");
 	return 3;
@@ -143,14 +143,14 @@ main(int argc, char *argv[]) {
     sprintf(cmdline, "fs.exe flushvolume %s", argv[1]);
     system(cmdline);
 
-    fh = CreateFile("largefile.test", 
+    fh = CreateFile("largefile.test",
 		     GENERIC_READ | GENERIC_WRITE | STANDARD_RIGHTS_READ | STANDARD_RIGHTS_WRITE,
 		     FILE_SHARE_READ | FILE_SHARE_WRITE,
 		     NULL /* default security */,
 		     OPEN_ALWAYS,
 		     FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS | FILE_FLAG_WRITE_THROUGH,
 		     NULL );
-    
+
     if (fh == INVALID_HANDLE_VALUE) {
 	fprintf(stderr, "unable to create/open the test file\n");
 	return 3;

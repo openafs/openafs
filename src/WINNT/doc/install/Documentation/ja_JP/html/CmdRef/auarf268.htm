@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -28,15 +28,15 @@
 <P><STRONG>目的</STRONG>
 <P>読み取り / 書き込みボリュームを別のサイトに移動します。
 <P><STRONG>構文</STRONG>
-<PRE><B>vos move -id</B> &lt;<VAR>volume name or ID</VAR>>  <B>-fromserver</B> &lt;<VAR>machine name on source</VAR>> 
-         <B>-frompartition</B> &lt;<VAR>partition name on source</VAR>> 
-         <B>-toserver</B> &lt;<VAR>machine name on destination</VAR>>  
-         <B>-topartition</B> &lt;<VAR>partition name on destination</VAR>> 
-         [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>] 
-    
-<B>vos m -i</B> &lt;<VAR>volume name or ID</VAR>>  <B>-froms</B> &lt;<VAR>machine name on source</VAR>> 
-      <B>-fromp</B> &lt;<VAR>partition name on source</VAR>>  <B>-tos</B> &lt;<VAR>machine name on destination</VAR>> 
-      <B>-top</B> &lt;<VAR>partition name on destination</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+<PRE><B>vos move -id</B> &lt;<VAR>volume name or ID</VAR>>  <B>-fromserver</B> &lt;<VAR>machine name on source</VAR>>
+         <B>-frompartition</B> &lt;<VAR>partition name on source</VAR>>
+         <B>-toserver</B> &lt;<VAR>machine name on destination</VAR>>
+         <B>-topartition</B> &lt;<VAR>partition name on destination</VAR>>
+         [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+
+<B>vos m -i</B> &lt;<VAR>volume name or ID</VAR>>  <B>-froms</B> &lt;<VAR>machine name on source</VAR>>
+      <B>-fromp</B> &lt;<VAR>partition name on source</VAR>>  <B>-tos</B> &lt;<VAR>machine name on destination</VAR>>
+      <B>-top</B> &lt;<VAR>partition name on destination</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
       [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -47,7 +47,7 @@
 <B>vos backup</B> コマンドを発行します。
 <P>このコマンドを実行する前に、<B>vos</B> コマンド・インタープリターは、移動するボリュームが入る十分なスペースか宛先の区画にあるかどうかチェックします。十分なスペースがないと、移動操作は実行されず、次のメッセージが表示されます。
 <PRE>   vos: no space on target partition <VAR>dest_part</VAR> to move volume <VAR>volume</VAR>
-   
+
 </PRE>
 <P><STRONG>注意</STRONG>
 <P>特別な理由のない限り、<B>vos move</B> コマンドの実行中に操作を中断しないでください。移動操作を中断すると、次のような矛盾が生じる可能性があります。
@@ -62,7 +62,7 @@
 <PRE>SIGINT ハンドラー: vos move 操作が進行中です
 警告: AFS 記憶域およびメタデータが中間状態のままになる可能性があります
 もう一度 control-c を押して処理を終了してください
-   
+
 </PRE>
 <P>操作を終了する場合は、
 &lt;<B>Ctrl-c</B>&gt; を再度押してください。操作を継続する場合は、それ以外のキーを押してください。
@@ -98,7 +98,7 @@
 <P>次の例は、ボリューム <B>user.smith</B> をファイル・サーバー・マシン <B>fs3.abc.com</B> の区画 <B>/vicepb</B> からファイル・サーバー・マシン <B>fs7.abc.com</B>の区画 <B>/vicepg</B> に移動しています。
 <PRE>   % <B>vos move -id user.smith -fromserver fs3.abc.com -frompartition b</B>  \
               <B>-toserver fs7.abc.com -topartition g</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行側は、<B>-toserver</B> および
@@ -112,11 +112,11 @@
 <P><A HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
 <P><A HREF="auarf271.htm#HDRVOS_REMOVE">vos remove</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf267.htm">前ページ</A> &#124; <A HREF="auarf269.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf267.htm">前ページ</A> &#124; <A HREF="auarf269.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

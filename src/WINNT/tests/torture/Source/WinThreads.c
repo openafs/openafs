@@ -178,7 +178,7 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
 
         run_netbench(ProcessNumber, ClientText, PathToSecondDir);
         if (LastKnownError != ERROR_NETNAME_DELETED)
-            break; 
+            break;
         sprintf(temp, "entered error %d processing\n", LastKnownError);
         if (verbose)
             printf("%s", temp);
@@ -190,7 +190,7 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
         pExitStatus->ExitStatus = 0;
         (*pThreadStatus) = 1;
         count = 0;
-        
+
         while ((rc = IsOnline(OriginalAfsLocker)) != WINTORTURE_ASFDLL_ONLINE)
         {
             if ((count > 3) || (rc == WINTORTURE_ASFDLL_NOTFOUND) || (rc == WINTORTURE_ASFPIOCTL_NOTFOUND))
@@ -290,9 +290,9 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
         printf("%s", temp);
     LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
 
-    hFile = CreateFile(ClientText, GENERIC_READ | STANDARD_RIGHTS_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL); 
+    hFile = CreateFile(ClientText, GENERIC_READ | STANDARD_RIGHTS_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    if (hFile == INVALID_HANDLE_VALUE) 
+    if (hFile == INVALID_HANDLE_VALUE)
     {
         perror(ClientText);
         return(-1);
@@ -387,15 +387,15 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
                 (*pPtr) = '\0';
                 ++pPtr;
             }
-            
+
         }
 
         params[i] = "";
 
-        if (i < 1) 
+        if (i < 1)
             continue;
 
-        if (!strncmp(params[0],"SMB", 3)) 
+        if (!strncmp(params[0],"SMB", 3))
         {
             printf("ERROR: You are using a dbench 1 load file\n");
             if (GetHandleInformation((HANDLE)hWinEventHandle, &dwFlags))
@@ -404,150 +404,150 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
         if (!strcmp(params[0], "BM_SETUP"))
         {
             bm_state = BM_SETUP;
-        } 
+        }
         else if (!strcmp(params[0], "BM_WARMUP"))
         {
             bm_state = BM_WARMUP;
-        } 
+        }
         else if (!strcmp(params[0], "BM_MEASURE"))
         {
             bm_state = BM_MEASURE;
             if (verbose)
                 fprintf(stderr, "setting state to BM_MEASURE\n");
-        } 
-        else if (!strcmp(params[0],"RECONNECT")) 
+        }
+        else if (!strcmp(params[0],"RECONNECT"))
         {
             if (verbose)
                 fprintf(stderr, "Reconnecting ...\n");
-        } 
+        }
         else if (!strcmp(params[0], "SYNC"))
         {
             int length = atoi(params[1]), st = 0;
             if (verbose)
                 fprintf(stderr, "Syncing for %d seconds\n", length);
-        } 
-        else if (!strcmp(params[0],"NTCreateX")) 
+        }
+        else if (!strcmp(params[0],"NTCreateX"))
         {
             if (nb_createx(params[1], ival(params[2]), ival(params[3]), ival(params[4])) == -1)
                 break;
-        } 
+        }
         else if (!stricmp(params[0],"SetLocker"))
         {
             if (nb_SetLocker(params[1]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"Xrmdir")) 
+        }
+        else if (!stricmp(params[0],"Xrmdir"))
         {
             if (nb_Xrmdir(params[1], params[2]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"Mkdir")) 
+        }
+        else if (!stricmp(params[0],"Mkdir"))
         {
             if (nb_Mkdir(params[1]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"Attach")) 
+        }
+        else if (!stricmp(params[0],"Attach"))
         {
             if (nb_Attach(params[1], params[2]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"Detach")) 
+        }
+        else if (!stricmp(params[0],"Detach"))
         {
             if (nb_Detach(params[1], params[2]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"CreateFile")) 
+        }
+        else if (!stricmp(params[0],"CreateFile"))
         {
             if (nb_CreateFile(params[1], atol(params[2])) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"CopyFiles")) 
+        }
+        else if (!stricmp(params[0],"CopyFiles"))
         {
             if (nb_CopyFile(params[1], params[2]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"DeleteFiles")) 
+        }
+        else if (!stricmp(params[0],"DeleteFiles"))
         {
             if (nb_DeleteFile(params[1]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"Move")) 
+        }
+        else if (!stricmp(params[0],"Move"))
         {
             if (nb_Move(params[1], params[2]) == -1)
                 break;
-        } 
-        else if (!stricmp(params[0],"Xcopy")) 
+        }
+        else if (!stricmp(params[0],"Xcopy"))
         {
             if (nb_xcopy(params[1], params[2]) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"Close")) 
+        }
+        else if (!strcmp(params[0],"Close"))
         {
             if (nb_close(ival(params[1])) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"Rename")) 
+        }
+        else if (!strcmp(params[0],"Rename"))
         {
             if (nb_rename(params[1], params[2]) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"Unlink")) 
+        }
+        else if (!strcmp(params[0],"Unlink"))
         {
             if (nb_unlink(params[1]) == -1)
                 break;
-        } 
+        }
         else if (!strcmp(params[0],"Deltree"))
         {
             if (nb_deltree(params[1]) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"Rmdir")) 
+        }
+        else if (!strcmp(params[0],"Rmdir"))
         {
             if (nb_rmdir(params[1]) == -1)
                 break;
-        } 
+        }
         else if (!strcmp(params[0],"QUERY_PATH_INFORMATION"))
         {
             if (nb_qpathinfo(params[1], ival(params[2])) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"QUERY_FILE_INFORMATION")) 
+        }
+        else if (!strcmp(params[0],"QUERY_FILE_INFORMATION"))
         {
             if (nb_qfileinfo(ival(params[1])) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"QUERY_FS_INFORMATION")) 
+        }
+        else if (!strcmp(params[0],"QUERY_FS_INFORMATION"))
         {
             if (nb_qfsinfo(ival(params[1])) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"FIND_FIRST")) 
+        }
+        else if (!strcmp(params[0],"FIND_FIRST"))
         {
             if (nb_findfirst(params[1]) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"WriteX")) 
+        }
+        else if (!strcmp(params[0],"WriteX"))
         {
             if (nb_writex(ival(params[1]), ival(params[2]), ival(params[3]), ival(params[4])) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"ReadX")) 
+        }
+        else if (!strcmp(params[0],"ReadX"))
         {
             if (nb_readx(ival(params[1]), ival(params[2]), ival(params[3]), ival(params[4])) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"Flush")) 
+        }
+        else if (!strcmp(params[0],"Flush"))
         {
             if (nb_flush(ival(params[1])) == -1)
                 break;
-        } 
-        else if (!strcmp(params[0],"LockingX")) 
+        }
+        else if (!strcmp(params[0],"LockingX"))
         {
             if (nb_lock(ival(params[1]), ival(params[2]), ival(params[3]), ival(params[4]),
                         (unsigned char)ival(params[5]), ival(params[6])) == -1)
                 break;
-        } 
-        else 
+        }
+        else
         {
             printf("Unknown operation %s\n", params[0]);
             printf("Line read = %s\n", line1);
@@ -560,7 +560,7 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
 
     EndSecondTime(CMD_NONAFS);
 
-    for (i = 0; i < MAX_FILES; i++) 
+    for (i = 0; i < MAX_FILES; i++)
     {
         if (ftable[i].handle > 0)
             nb_close(ftable[i].handle);
@@ -620,7 +620,7 @@ int IsOnline(char *strPath)
                     break;
                 }
             }
-#endif 
+#endif
         }
         else
             bret = WINTORTURE_ASFPIOCTL_NOTFOUND;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -87,7 +87,7 @@ BOOL CALLBACK DBServerPageDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     return FALSE;
-}	
+}
 
 
 /*
@@ -131,7 +131,7 @@ static void OnInitDialog(HWND hwndDlg)
 	EnableSCM(ES_ENABLE);
 	break;
     }
-}	
+}
 
 
 /*
@@ -163,15 +163,15 @@ static void EnableSCM(ENABLE_STATE enable)
     SetEnable(hDlg, IDC_SCM_PROMPT, enable);
     SetEnable(hDlg, IDC_SYS_CONTROL_MACHINE_LABEL, enable);
     SetEnable(hDlg, IDC_SYS_CONTROL_MACHINE, enable);
-}	
+}
 
 static void ShowPageInfo()
 {
     SetWndText(hDlg, IDC_SYS_CONTROL_MACHINE, g_CfgData.szSysControlMachine);
-}	
+}
 
 static void SavePageInfo()
 {
     GetWndText(hDlg, IDC_SYS_CONTROL_MACHINE, g_CfgData.szSysControlMachine);
-}	
+}
 

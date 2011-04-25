@@ -1,7 +1,7 @@
 //
 //	AFSD_FLUSHVOL.C
-// 
-//	Routines to handle flushing AFS volumes in response to 
+//
+//	Routines to handle flushing AFS volumes in response to
 //	System Power event notification such as Hibernate request.
 //
 /////////////////////////////////////////////////////////////////////
@@ -54,13 +54,13 @@ afsd_ServicePerformFlushVolumeCmd(char *data)
     afsi_log("Flushing Volume \"%s\"",data);
     memset(&blob, '\0', sizeof(blob));
     code = pioctl(data, VIOC_FLUSHVOLUME, &blob, 0);
-    
+
     return code;
 }
 
 BOOL
 afsd_ServicePerformFlushVolumes()
-{       
+{
     CONST CHAR	COLON = ':';
     CONST CHAR	SLASH = '\\';
     CONST DWORD	NETRESBUFSIZE = 16384;
@@ -185,7 +185,7 @@ afsd_ServicePerformFlushVolumes()
     }
 
     dwFlushEnd = GetTickCount();
-	
+
     // display total volume count in Event Logger
     sprintf(bufMessage, "%d", dwTotalVols);
     LogTimingEvent(MSG_TIME_FLUSH_TOTAL, bufMessage,
@@ -202,7 +202,7 @@ static VOID
 LogTimingEvent(DWORD dwEventID, LPTSTR lpString1, DWORD dwTime)
 {
     CHAR	szTime[16];
-	
+
     sprintf(szTime, "%lu", dwTime);
     LogEvent(EVENTLOG_INFORMATION_TYPE, dwEventID, lpString1, szTime,
               NULL);
@@ -220,11 +220,11 @@ LogTimingEvent(DWORD dwEventID, LPTSTR lpString1, DWORD dwTime)
 // getting a handle on an access token owned by the shell.
 //
 // The return value is either a handle to a suitable token,
-// or else null. 
+// or else null.
 //
 // One of the times that this function might return null
 // is when there is no logged-in user. Other cases include
-// insufficient access to the desktop, etc. 
+// insufficient access to the desktop, etc.
 //
 // Disclaimer:
 // Portions of this routine found in various newsgroups
@@ -247,8 +247,8 @@ HANDLE GetUserToken(DWORD access)
     // running shell).
     else
     {
-        HWINSTA saveWinSta = GetProcessWindowStation(); 
-        HDESK saveDesk = GetThreadDesktop(GetCurrentThreadId()); 
+        HWINSTA saveWinSta = GetProcessWindowStation();
+        HDESK saveDesk = GetThreadDesktop(GetCurrentThreadId());
         HWINSTA winSta = NULL;
         HDESK desk = NULL;
         BOOL changeFlag = FALSE;
@@ -263,7 +263,7 @@ HANDLE GetUserToken(DWORD access)
 
         // Now find the window and process on this desktop
         shell = FindWindowEx(NULL, NULL, "Progman", NULL);
-        if (shell != NULL) 
+        if (shell != NULL)
         {
             tid = GetWindowThreadProcessId(shell, &pid);
         }
@@ -278,12 +278,12 @@ HANDLE GetUserToken(DWORD access)
         // Close temporary objects
         if (winSta != NULL)
             CloseWindowStation(winSta);
-        if (desk != NULL) 
+        if (desk != NULL)
             CloseDesktop(desk);
     }
 
     //
-    // If we have a process id, use that to get the process handle and 
+    // If we have a process id, use that to get the process handle and
     // from there the process' access token.
     //
     if (pid != 0)
@@ -298,7 +298,7 @@ HANDLE GetUserToken(DWORD access)
 
     // Return token if we got one
     return hTok;
-}       
+}
 
 // impersonate logged-on user as client
 BOOL
@@ -306,7 +306,7 @@ ImpersonateClient()
 {
     DWORD	dwDesiredAccess = TOKEN_ALL_ACCESS;
     HANDLE	hUserToken = GetUserToken(dwDesiredAccess);
-	
+
     if (hUserToken == NULL)
         return FALSE;
     if (ImpersonateLoggedOnUser(hUserToken) == 0)
@@ -317,16 +317,16 @@ ImpersonateClient()
     }
     return TRUE;
 }
-	
+
 /////////////////////////////////////////////////////////////////////
 //
 // Thread proc
 //
-DWORD WINAPI 
+DWORD WINAPI
 afsd_ServiceFlushVolumesThreadProc(LPVOID lpParam)
 {
     FLUSHVOLTHREADINFO ThreadInfo;
-    PFLUSHVOLTHREADINFO pThreadInfo = (PFLUSHVOLTHREADINFO) lpParam; 
+    PFLUSHVOLTHREADINFO pThreadInfo = (PFLUSHVOLTHREADINFO) lpParam;
     HANDLE	arHandles[2] = {0};
     DWORD	dwWaitState = 0;
 
@@ -357,7 +357,7 @@ afsd_ServiceFlushVolumesThreadProc(LPVOID lpParam)
             break;
 
         case WAIT_OBJECT_0+1:
-            // Power event 
+            // Power event
             // - flush 'em!
             if (ImpersonateClient())
             {
@@ -385,14 +385,14 @@ afsd_ServiceFlushVolumesThreadProc(LPVOID lpParam)
 
     // I suppose we never get here
     ExitThread(0);
-}       
+}
 
 /////////////////////////////////////////////////////////////////////
 //
 // Mainline thread routines
 //
 
-VOID	
+VOID
 CheckAndCloseHandle(HANDLE thisHandle)
 {
     if (thisHandle != NULL)
@@ -411,42 +411,42 @@ PowerNotificationThreadCreate()
     BOOL	bSuccess = FALSE;
     DWORD	dwThreadId = 0;
     char    eventName[MAX_PATH];
-	
-    do 
+
+    do
     {
         // create power event notification event
         // bManualReset=TRUE, bInitialState=FALSE
-        gThreadInfo.hEventPowerEvent = CreateEvent(NULL, TRUE, FALSE, 
+        gThreadInfo.hEventPowerEvent = CreateEvent(NULL, TRUE, FALSE,
                                                    TEXT("afsd_flushvol_EventPowerEvent"));
         if ( GetLastError() == ERROR_ALREADY_EXISTS )
             afsi_log("Event Object Already Exists: %s", eventName);
         if (gThreadInfo.hEventPowerEvent == NULL)
-            break;			
+            break;
 
         // create mainline resume event
         // bManualReset=FALSE, bInitialState=FALSE
-        gThreadInfo.hEventResumeMain = CreateEvent(NULL, FALSE, FALSE, 
+        gThreadInfo.hEventResumeMain = CreateEvent(NULL, FALSE, FALSE,
                                                    TEXT("afsd_flushvol_EventResumeMain"));
         if ( GetLastError() == ERROR_ALREADY_EXISTS )
             afsi_log("Event Object Already Exists: %s", eventName);
         if (gThreadInfo.hEventResumeMain == NULL)
-            break;			
+            break;
 
         // create thread terminate event
         // bManualReset=FALSE, bInitialState=FALSE
-        gThreadInfo.hEventTerminate = CreateEvent(NULL, FALSE, FALSE, 
+        gThreadInfo.hEventTerminate = CreateEvent(NULL, FALSE, FALSE,
                                                   TEXT("afsd_flushvol_EventTerminate"));
         if ( GetLastError() == ERROR_ALREADY_EXISTS )
             afsi_log("Event Object Already Exists: %s", eventName);
         if (gThreadInfo.hEventTerminate == NULL)
-            break;			
+            break;
 
         // good so far - create thread
         gThreadHandle = CreateThread(NULL, 0,
                                      afsd_ServiceFlushVolumesThreadProc,
                                      (LPVOID) &gThreadInfo,
                                      0, &dwThreadId);
-		
+
         if (!gThreadHandle)
             break;
 
@@ -462,7 +462,7 @@ PowerNotificationThreadCreate()
         CheckAndCloseHandle(gThreadInfo.hEventTerminate);
         CheckAndCloseHandle(gThreadHandle);
     }
-		
+
     return bSuccess;
 }
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -589,7 +589,7 @@ void WIZARD::GeneratePalette (LPRGBQUAD argb)
          }
 
       for (COLORREF clr = clrWASH_DARKEST; clr <= clrWASH_BRIGHTEST; clr += clrWASH_INCREMENT)
-         {            
+         {
          for (ii = 0; ii < 256; ++ii)
             {
             if ( (pPal->palPalEntry[ ii ].peRed   == GetRValue (clr)) &&
@@ -1123,7 +1123,7 @@ BOOL WIZARD::Background_OnPaint (void)
 {
    if (!m_bmpBackground)
       return FALSE;
-      
+
    PAINTSTRUCT ps;
    HDC hdcTarget;
    if ((hdcTarget = BeginPaint (m_hBkg, &ps)) != NULL)

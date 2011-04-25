@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -118,11 +118,11 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
 
     /*
      * Try to find the All Users\Application Data\OpenAFS\Client directory.
-     * If it exists and it contains a CellServDB file, return that. 
+     * If it exists and it contains a CellServDB file, return that.
      * Otherwise, return the Install Directory for backward compatibility.
      * SHGetFolderPath requires wdir to be of length MAX_PATH which is 260.
      */
-    if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 
+    if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL,
                                     SHGFP_TYPE_CURRENT, wdir)))
     {   HANDLE fh;
 
@@ -132,10 +132,10 @@ afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
             wdir[sizeof(wdir)-1] = '\0';
             tlen++;
         }
-        strncat(wdir, "OpenAFS\\Client\\CellServDB", sizeof(wdir)); 
+        strncat(wdir, "OpenAFS\\Client\\CellServDB", sizeof(wdir));
         wdir[sizeof(wdir)-1] = '\0';
 
-        fh = CreateFile(wdir, GENERIC_READ, FILE_SHARE_READ, NULL, 
+        fh = CreateFile(wdir, GENERIC_READ, FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (fh != INVALID_HANDLE_VALUE) {
             CloseHandle(fh);
@@ -301,7 +301,7 @@ StringDataRead(const char *keyName, const char *valueName, char **bufPP)
 
 /*
  * StringDataWrite() -- write registry data of type REG_SZ.
- * 
+ *
  * RETURN CODES: 0 success, -1 failed (errno set)
  */
 static int

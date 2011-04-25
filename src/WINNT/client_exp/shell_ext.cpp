@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -94,7 +94,7 @@ CShellExt::CShellExt()
 
 CShellExt::~CShellExt()
 {
-    if(m_pAlloc) 
+    if(m_pAlloc)
 	m_pAlloc->Release();
     nCMRefCount--;
     TRACE("Destroy CShellExt, Ref count %d/n",nCMRefCount);
@@ -109,7 +109,7 @@ void CShellExt::OnFinalRelease()
     // object before calling the base class.
 
     CCmdTarget::OnFinalRelease();
-}	
+}
 
 
 BEGIN_MESSAGE_MAP(CShellExt, CCmdTarget)
@@ -125,7 +125,7 @@ BEGIN_DISPATCH_MAP(CShellExt, CCmdTarget)
 END_DISPATCH_MAP()
 
 // Note: we add support for IID_IShellExt to support typesafe binding
-//  from VBA.  This IID must match the GUID that is attached to the 
+//  from VBA.  This IID must match the GUID that is attached to the
 //  dispinterface in the .ODL file.
 
 #ifndef _WIN64
@@ -259,7 +259,7 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
     ::InsertMenu(hMountPointMenu, indexMountPointMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_MOUNTPOINT_MAKE, GetMessageString(IDS_MP_MAKE_ITEM));
     ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT)hMountPointMenu, GetMessageString(IDS_MOUNT_POINT_ITEM));
 
-    ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_FLUSH, GetMessageString(IDS_FLUSH_FILE_DIR_ITEM));	
+    ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_FLUSH, GetMessageString(IDS_FLUSH_FILE_DIR_ITEM));
     ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_FLUSH_VOLUME, GetMessageString(IDS_FLUSH_VOLUME_ITEM));
     ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SHOW_SERVER, GetMessageString(IDS_SHOW_FILE_SERVERS_ITEM));
     ::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SHOWCELL, GetMessageString(IDS_SHOW_CELL_ITEM));
@@ -299,9 +299,9 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
     // Add a separator after us
     ::InsertMenu (hMenu, indexMenu + indexShellMenu++, MF_STRING | MF_BYPOSITION | MF_SEPARATOR, 0, TEXT(""));
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 
+    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL,
 			 (USHORT)indexAfsMenu + indexVolPartMenu + indexMountPointMenu + indexShellMenu + indexSymbolicMenu);
-}	
+}
 
 STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
@@ -322,7 +322,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 	break;
     }
 
-    case IDM_ACL_SET:			{ 
+    case IDM_ACL_SET:			{
 	CSetAfsAcl dlg;
 	ASSERT(files.GetSize() == 1);
 	dlg.SetDir(files[0]);
@@ -341,7 +341,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 	CheckVolumes();
 	break;
 
-    case IDM_MOUNTPOINT_SHOW:	
+    case IDM_MOUNTPOINT_SHOW:
 	ListMount(files);
 	break;
 
@@ -360,15 +360,15 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 	break;
     }
 
-    case IDM_FLUSH:				
+    case IDM_FLUSH:
 	Flush(files);
 	break;
 
-    case IDM_FLUSH_VOLUME:		
+    case IDM_FLUSH_VOLUME:
 	FlushVolume(files);
 	break;
 
-    case IDM_SHOW_SERVER:	       
+    case IDM_SHOW_SERVER:
 	WhereIs(files);
 	break;
 
@@ -433,7 +433,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 	break;
     }
 
-    case IDM_SYMBOLICLINK_SHOW:	
+    case IDM_SYMBOLICLINK_SHOW:
 	ListSymlink(files);
 	break;
 
@@ -443,7 +443,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 	int nChoice = ShowMessageBox(IDS_REALLY_REMOVE_SYMLINK, MB_ICONQUESTION | MB_YESNO, IDS_REALLY_REMOVE_SYMLINK);
 	if (nChoice == IDYES)
 	    RemoveSymlink(files.GetAt(0));
-	}	
+	}
 	break;
     default:
 	ASSERT(FALSE);
@@ -454,7 +454,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     Release();
 
     return NOERROR;
-}	
+}
 
 STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT_PTR idCmd, UINT uType,
     UINT* pwReserved, LPSTR pszName, UINT cchMax)
@@ -468,11 +468,11 @@ STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT_PTR idCmd, UINT uType,
 
     switch (idCmd)
     {
-    case IDM_AUTHENTICATION: 
+    case IDM_AUTHENTICATION:
 	nCmdStrID = ID_AUTHENTICATE;
 	break;
 
-    case IDM_ACL_SET: 
+    case IDM_ACL_SET:
 	nCmdStrID = ID_ACL_SET;
 	break;
 
@@ -480,58 +480,58 @@ STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT_PTR idCmd, UINT uType,
 	nCmdStrID = ID_VOLUME_PROPERTIES;
 	break;
 
-    case IDM_VOLUMEPARTITION_UPDATENAMEIDTABLE:	
+    case IDM_VOLUMEPARTITION_UPDATENAMEIDTABLE:
 	nCmdStrID = ID_VOLUMEPARTITION_UPDATENAMEIDTABLE;
 	break;
 
-    case IDM_MOUNTPOINT_SHOW:  
+    case IDM_MOUNTPOINT_SHOW:
 	nCmdStrID = ID_MOUNTPOINT_SHOW;
 	break;
 
-    case IDM_MOUNTPOINT_REMOVE:	
+    case IDM_MOUNTPOINT_REMOVE:
 	nCmdStrID = ID_MOUNTPOINT_REMOVE;
 	break;
-		
-    case IDM_MOUNTPOINT_MAKE: 
+
+    case IDM_MOUNTPOINT_MAKE:
 	nCmdStrID = ID_MOUNTPOINT_MAKE;
 	break;
 
-    case IDM_FLUSH:  
+    case IDM_FLUSH:
 	nCmdStrID = ID_FLUSH;
 	break;
 
-    case IDM_FLUSH_VOLUME:   
+    case IDM_FLUSH_VOLUME:
 	nCmdStrID = ID_VOLUME_FLUSH;
 	break;
 
-    case IDM_SHOW_SERVER: 
+    case IDM_SHOW_SERVER:
 	nCmdStrID = ID_WHEREIS;
 	break;
 
-    case IDM_SHOWCELL:	
+    case IDM_SHOWCELL:
 	nCmdStrID = ID_SHOWCELL;
 	break;
 
-    case IDM_SERVER_STATUS: 
+    case IDM_SERVER_STATUS:
 	nCmdStrID = ID_SERVER_STATUS;
 	break;
 
     case IDM_SYMBOLICLINK_ADD:
 	nCmdStrID = ID_SYMBOLICLINK_ADD;
 	break;
-		
+
     case IDM_SYMBOLICLINK_SHOW:
 	nCmdStrID = ID_SYMBOLICLINK_SHOW;
 	break;
 
-    case IDM_SYMBOLICLINK_REMOVE: 
+    case IDM_SYMBOLICLINK_REMOVE:
 	nCmdStrID = ID_SYMBOLICLINK_REMOVE;
 	break;
 
     case IDM_REMOVE_SYMLINK:
 	nCmdStrID= ID_REMOVE_SYMLINK;
 	break;
-		
+
     default:
 	ASSERT(FALSE);
 	Release();
@@ -565,7 +565,7 @@ STDMETHODIMP_(ULONG) CShellExt::XShellInit::Release(void)
 {
     if (nSERefCount > 0)
 	nSERefCount--;
-	
+
     return nSERefCount;
 }
 
@@ -661,7 +661,7 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
 	    hres = NOERROR;
 	else
 	    hres = E_FAIL;
- 
+
     return hres;
 }
 
@@ -682,7 +682,7 @@ STDMETHODIMP_(ULONG) CShellExt::XIconExt::Release(void)
 	nICRefCount--;
 
     return nICRefCount;
-}	
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -715,7 +715,7 @@ STDMETHODIMP CShellExt::XIconExt::GetOverlayInfo(LPWSTR pwszIconFile
         }
     }
 #ifndef UNICODE
-    MultiByteToWideChar( CP_ACP,0,szModule,-1,pwszIconFile,cchMax); 
+    MultiByteToWideChar( CP_ACP,0,szModule,-1,pwszIconFile,cchMax);
 #else
     _tcsncpy(pwszIconFile, szModule, cchMax);
 #endif
@@ -751,7 +751,7 @@ STDMETHODIMP CShellExt::XIconExt::IsMemberOf(LPCWSTR pwszPath,DWORD dwAttrib)
         return S_OK;
     }
     return S_FALSE;
-}	
+}
 
 /*  TOOL TIP INFO IMPLIMENTION   */
 
@@ -824,31 +824,31 @@ STDMETHODIMP	CShellExt::XPersistFileExt::Load(LPCOLESTR wszFile, DWORD dwMode)
 {
     METHOD_PROLOGUE(CShellExt, PersistFileExt);
     USES_CONVERSION;
-    _tcscpy(pThis->m_szFile, OLE2T((WCHAR*)wszFile)); 
-    return S_OK;	
+    _tcscpy(pThis->m_szFile, OLE2T((WCHAR*)wszFile));
+    return S_OK;
 }
 
 STDMETHODIMP CShellExt::XPersistFileExt::GetClassID(LPCLSID)
-{ 
-    return E_NOTIMPL;	
+{
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CShellExt::XPersistFileExt::IsDirty(VOID)
-{ 
-    return E_NOTIMPL; 
+{
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CShellExt::XPersistFileExt::Save(LPCOLESTR, BOOL)
-{ 
-    return E_NOTIMPL; 
+{
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CShellExt::XPersistFileExt::SaveCompleted(LPCOLESTR)
-{ 
-    return E_NOTIMPL; 
+{
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CShellExt::XPersistFileExt::GetCurFile(LPOLESTR FAR*)
-{ 
-    return E_NOTIMPL; 
+{
+    return E_NOTIMPL;
 }

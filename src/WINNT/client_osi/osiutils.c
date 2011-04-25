@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -43,7 +43,7 @@ int osi_UIDCmp(UUID *uid1p, UUID *uid2p)
         int v2;
         char *t1p;
         char *t2p;
-	
+
 	if (uid1p->Data1 < uid2p->Data1) return -1;
         else if (uid1p->Data1 > uid2p->Data1) return 1;
 
@@ -77,7 +77,7 @@ void __RPC_API MIDL_user_free(void *p)
 
 #if (_MSC_VER >= 1300)
 LARGE_INTEGER /* WINAPI */ LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b)
-{ 
+{
 	LARGE_INTEGER result;
 	int carry;
 	result.LowPart=a.LowPart+b.LowPart;
@@ -86,7 +86,7 @@ LARGE_INTEGER /* WINAPI */ LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b)
 	return result;
 }
 LARGE_INTEGER /* WINAPI */ LargeIntegerSubtract(LARGE_INTEGER a, LARGE_INTEGER b)
-{ 
+{
 	LARGE_INTEGER result;
 	int borrow;
 	result.LowPart=a.LowPart-b.LowPart;
@@ -123,10 +123,10 @@ LARGE_INTEGER /* WINAPI */ LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, 
     result.HighPart=0;
     result.LowPart=0;
     if (b.HighPart == 0 && b.LowPart == 0) { return result; }
-    if (b.HighPart == 0 && b.LowPart == 1) { 
-	remainder->HighPart = 0; 
+    if (b.HighPart == 0 && b.LowPart == 1) {
+	remainder->HighPart = 0;
 	remainder->LowPart = 0;
-	return a; 
+	return a;
     }
 
     a1 = a.HighPart;
@@ -144,7 +144,7 @@ LARGE_INTEGER /* WINAPI */ LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, 
     return result;
 }
 
-LARGE_INTEGER /* WINAPI */ ConvertLongToLargeInteger(unsigned long a) 
+LARGE_INTEGER /* WINAPI */ ConvertLongToLargeInteger(unsigned long a)
 {
     LARGE_INTEGER result;
     result.HighPart=0;

@@ -1,18 +1,18 @@
-/* 
+/*
  * Copyright (c) 2007-2010 Secure Endpoints Inc.
  *
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
- * 
- *     * Redistributions of source code must retain the above copyright 
+ *
+ *     * Redistributions of source code must retain the above copyright
  *       notice, this list of conditions and the following disclaimer.
- *     * Neither the name of the Secure Endpoints Inc. nor the names of its 
- *       contributors may be used to endorse or promote products derived 
+ *     * Neither the name of the Secure Endpoints Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -26,7 +26,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* This source file provides the declarations 
+/* This source file provides the declarations
  * which specify the AFS Cache Manager Volume Status Event
  * Notification API
  */
@@ -55,10 +55,10 @@ cm_VolStatus_Active(void)
     return (hVolStatus != NULL);
 }
 
-/* This function is used to load any Volume Status Handlers 
- * and their associated function pointers.  
+/* This function is used to load any Volume Status Handlers
+ * and their associated function pointers.
  */
-long 
+long
 cm_VolStatus_Initialization(void)
 {
     long (__fastcall * dll_VolStatus_Initialization)(dll_VolStatus_Funcs_t * dll_funcs, cm_VolStatus_Funcs_t *cm_funcs) = NULL;
@@ -76,7 +76,7 @@ cm_VolStatus_Initialization(void)
 
         if (code == 0) {
             dummyLen = sizeof(volstat_NetbiosName);
-            code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL, 
+            code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
                                    (BYTE *)volstat_NetbiosName, &dummyLen);
         }
         RegCloseKey (parmKey);
@@ -93,9 +93,9 @@ cm_VolStatus_Initialization(void)
 
             dll_funcs.version = DLL_VOLSTATUS_FUNCS_VERSION;
             code = dll_VolStatus_Initialization(&dll_funcs, &cm_funcs);
-        } 
+        }
 
-        if (dll_VolStatus_Initialization == NULL || code != 0 || 
+        if (dll_VolStatus_Initialization == NULL || code != 0 ||
             dll_funcs.version != DLL_VOLSTATUS_FUNCS_VERSION) {
             FreeLibrary(hVolStatus);
             hVolStatus = NULL;
@@ -111,7 +111,7 @@ cm_VolStatus_Initialization(void)
 /* This function is used to unload any Volume Status Handlers
  * that were loaded during initialization.
  */
-long 
+long
 cm_VolStatus_Finalize(void)
 {
     osi_Log1(afsd_logp,"cm_VolStatus_Finalize handle 0x%x", hVolStatus);
@@ -128,7 +128,7 @@ cm_VolStatus_Finalize(void)
  * AFS client service has started.  If the network is started
  * at this point we call cm_VolStatus_Network_Started().
  */
-long 
+long
 cm_VolStatus_Service_Started(void)
 {
     long code = 0;
@@ -137,7 +137,7 @@ cm_VolStatus_Service_Started(void)
 
     if (hVolStatus == NULL)
         return 0;
-   
+
     code = dll_funcs.dll_VolStatus_Service_Started();
     if (code == 0 && smb_IsNetworkStarted())
         code = dll_funcs.dll_VolStatus_Network_Started(cm_NetbiosName, cm_NetbiosName);
@@ -148,7 +148,7 @@ cm_VolStatus_Service_Started(void)
 /* This function notifies the Volume Status Handlers that the
  * AFS client service is stopping.
  */
-long 
+long
 cm_VolStatus_Service_Stopped(void)
 {
     long code = 0;
@@ -157,7 +157,7 @@ cm_VolStatus_Service_Stopped(void)
 
     if (hVolStatus == NULL)
         return 0;
-   
+
     code = dll_funcs.dll_VolStatus_Service_Stopped();
 
     return code;
@@ -165,7 +165,7 @@ cm_VolStatus_Service_Stopped(void)
 
 
 /* This function notifies the Volume Status Handlers that the
- * AFS client service is accepting network requests using the 
+ * AFS client service is accepting network requests using the
  * specified netbios names.
  */
 long
@@ -190,8 +190,8 @@ cm_VolStatus_Network_Started(const char * netbios32)
 }
 
 /* This function notifies the Volume Status Handlers that the
- * AFS client service is no longer accepting network requests 
- * using the specified netbios names 
+ * AFS client service is no longer accepting network requests
+ * using the specified netbios names
  */
 long
 #ifdef _WIN64
@@ -215,11 +215,11 @@ cm_VolStatus_Network_Stopped(const char * netbios32)
 }
 
 /* This function is called when the IP address list changes.
- * Volume Status Handlers can use this notification as a hint 
- * that it might be possible to determine volume IDs for paths 
- * that previously were not accessible.  
+ * Volume Status Handlers can use this notification as a hint
+ * that it might be possible to determine volume IDs for paths
+ * that previously were not accessible.
  */
-long 
+long
 cm_VolStatus_Network_Addr_Change(void)
 {
     long code = 0;
@@ -232,10 +232,10 @@ cm_VolStatus_Network_Addr_Change(void)
     return code;
 }
 
-/* This function notifies the Volume Status Handlers that the 
+/* This function notifies the Volume Status Handlers that the
  * state of the specified cell.volume has changed.
  */
-long 
+long
 cm_VolStatus_Change_Notification(afs_uint32 cellID, afs_uint32 volID, enum volstatus status)
 {
     long code = 0;
@@ -317,7 +317,7 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     if (cellID == NULL || volID == NULL)
         return CM_ERROR_INVAL;
 
-    osi_Log2(afsd_logp,"cm_VolStatus_Path_To_ID share %s path %s", 
+    osi_Log2(afsd_logp,"cm_VolStatus_Path_To_ID share %s path %s",
               osi_LogSaveString(afsd_logp, (char *)share), osi_LogSaveString(afsd_logp, (char *)path));
 
     cm_InitReq(&req);
@@ -346,7 +346,7 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
         cm_ReleaseSCache(scp);
         goto done;
     }
-        
+
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     *cellID = scp->fid.cell;
@@ -367,7 +367,7 @@ cm_VolStatus_Path_To_ID(const char * share, const char * path, afs_uint32 * cell
     if (cshare)
         free(cshare);
 
-    osi_Log1(afsd_logp,"cm_VolStatus_Path_To_ID code 0x%x",code); 
+    osi_Log1(afsd_logp,"cm_VolStatus_Path_To_ID code 0x%x",code);
     return code;
 }
 
@@ -384,7 +384,7 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     if (pBufSize == NULL || (pBuffer == NULL && *pBufSize != 0))
         return CM_ERROR_INVAL;
 
-    osi_Log2(afsd_logp,"cm_VolStatus_Path_To_DFSlink share %s path %s", 
+    osi_Log2(afsd_logp,"cm_VolStatus_Path_To_DFSlink share %s path %s",
               osi_LogSaveString(afsd_logp, (char *)share), osi_LogSaveString(afsd_logp, (char *)path));
 
     cm_InitReq(&req);
@@ -412,7 +412,7 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
         cm_ReleaseSCache(scp);
         goto done;
     }
-        
+
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
     if (scp->fileType != CM_SCACHETYPE_DFSLINK) {
@@ -440,6 +440,6 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
     if (cshare)
         free(cshare);
 
-    osi_Log1(afsd_logp,"cm_VolStatus_Path_To_DFSlink code 0x%x",code); 
+    osi_Log1(afsd_logp,"cm_VolStatus_Path_To_DFSlink code 0x%x",code);
     return code;
 }

@@ -1,4 +1,4 @@
-/* 
+/*
 
 Copyright © 1996 by Project Mandarin, Inc.
 
@@ -13,7 +13,7 @@ Error codes copyright 1996 by Massachusetts Institute of Technology
 /* to be declared as __stdcall AND __declspec(dllexport), so  */
 /* I have to use a .def file for the export part */
 #define KC_CALLTYPE __stdcall
-#define KC_EXPORT 
+#define KC_EXPORT
 #else
 #define KC_CALLTYPE WINAPI
 #define KC_EXPORT _export

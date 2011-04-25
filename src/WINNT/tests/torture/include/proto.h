@@ -5,7 +5,7 @@
 #include <includes.h>
 
 int nb_unlink(char *fname);
-int nb_createx(char *fname, 
+int nb_createx(char *fname,
 		unsigned create_options, unsigned create_disposition, int handle);
 int nb_SetLocker(char *Locker);
 int nb_Mkdir(char *Directory);

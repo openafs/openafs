@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -34,14 +34,14 @@ BOOL IsStepEnabled(const CONFIG_STATE& step)
 }
 
 void EnableStep(CONFIG_STATE& step, BOOL bEnable)
-{	
+{
     if (bEnable)
 	step &= ~CS_DISABLED;
     else
-	step |= CS_DISABLED;		
-}	
+	step |= CS_DISABLED;
+}
 
-BOOL ShouldConfig(const CONFIG_STATE& state)		
+BOOL ShouldConfig(const CONFIG_STATE& state)
 {
     return (state == CS_CONFIGURE);
 }
@@ -72,7 +72,7 @@ void ToggleConfig(CONFIG_STATE& state)
 	state = CS_DONT_CONFIGURE;
     else if (DontConfig(state))
 	state = CS_CONFIGURE;
-}	
+}
 
 void RedrawGraphic()
 {
@@ -85,7 +85,7 @@ void RedrawGraphic()
 
     InvalidateRect(hBg, &rect, FALSE);
     UpdateWindow(hBg);
-}	
+}
 
 UINT GetAppTitleID()
 {
@@ -110,7 +110,7 @@ const char *GetAdminLibErrorCodeMessage(afs_status_t nErrorCode)
 void LogError(afs_status_t nErrorCode)
 {
     const char *pszMsg = GetAdminLibErrorCodeMessage(nErrorCode);
-    
+
     if (pszMsg)
         g_LogFile.Write("Error 0x%0x has occurred: %s.\r\n", (UINT)nErrorCode, pszMsg);
     else

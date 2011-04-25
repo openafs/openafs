@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -60,10 +60,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CResultsDlg message handlers
 
-BOOL CResultsDlg::OnInitDialog() 
+BOOL CResultsDlg::OnInitDialog()
 {
     CDialog::OnInitDialog();
-	
+
     SetWindowText(m_strDlgTitle);
     m_ResultsLabel.SetWindowText(m_strResultsTitle);
 
@@ -92,7 +92,7 @@ void CResultsDlg::SetContents(const CString& strDlgTitle, const CString& strResu
     m_Results.Copy(results);
 }
 
-void CResultsDlg::OnHelp() 
+void CResultsDlg::OnHelp()
 {
     ShowHelp(m_hWnd, m_nHelpID);
 }

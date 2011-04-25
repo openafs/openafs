@@ -8,7 +8,7 @@
  *   require a specific license from the United States Government.
  *   It is the responsibility of any person or organization contemplating
  *   export to obtain such a license before exporting.
- * 
+ *
  * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
  * distribute this software and its documentation for any purpose and
  * without fee is hereby granted, provided that the above copyright
@@ -22,8 +22,8 @@
  * M.I.T. makes no representations about the suitability of
  * this software for any purpose.  It is provided "as is" without express
  * or implied warranty.
- * 
- * Include file for the Kerberos V4 library. 
+ *
+ * Include file for the Kerberos V4 library.
  */
 
 /* Only one time, please */
@@ -94,7 +94,7 @@ extern const char * const krb_err_txt[MAX_KRB_ERRORS];
 #define		KFAILURE	255
 
 /*
- * Kerberos specific definitions 
+ * Kerberos specific definitions
  *
  * KRBLOG is the log file for the kerberos master server. KRB_CONF is
  * the configuration file where different host machines running master
@@ -104,7 +104,7 @@ extern const char * const krb_err_txt[MAX_KRB_ERRORS];
  * requests, which can go to slaves) must go to it. KRB_HOST is the
  * default machine * when looking for a kerberos slave server.  Other
  * possibilities are * in the KRB_CONF file. KRB_REALM is the name of
- * the realm. 
+ * the realm.
  */
 
 #define		KRB_CONF	"/etc/krb.conf"
@@ -481,7 +481,7 @@ int KRB5_CALLCONV krb_get_lrealm
 char * KRB5_CALLCONV krb_get_phost
 	(char * alias);
 /* get_pw_tkt */
-int KRB5_CALLCONV get_pw_tkt 
+int KRB5_CALLCONV get_pw_tkt
         (char *, char *, char *, char *);
 /* g_pw_in_tkt.c */
 int KRB5_CALLCONV krb_get_pw_in_tkt
@@ -665,8 +665,8 @@ int KRB5_CALLCONV krb_sendauth
         (long k4_options, int fd, KTEXT ticket,
 	 char *service, char *inst, char *realm,
 	 unsigned KRB4_32 checksum, MSG_DAT *msg_data,
-	 CREDENTIALS *cred, Key_schedule schedule, 
-	 struct sockaddr_in *laddr, struct sockaddr_in *faddr, 
+	 CREDENTIALS *cred, Key_schedule schedule,
+	 struct sockaddr_in *laddr, struct sockaddr_in *faddr,
 	 char *version);
 
 #if KRB_PRIVATE
@@ -704,7 +704,7 @@ void KRB5_CALLCONV tf_close (void);
 
 #if KRB_PRIVATE
 /* unix_time.c */
-unsigned KRB4_32 KRB5_CALLCONV unix_time_gmt_unixsec 
+unsigned KRB4_32 KRB5_CALLCONV unix_time_gmt_unixsec
         (unsigned KRB4_32 *);
 
 /*
@@ -725,15 +725,15 @@ extern int KRB5_CALLCONV decomp_ticket
 extern void cr_err_reply(KTEXT pkt, char *pname, char *pinst, char *prealm,
 			 u_long time_ws, u_long e, char *e_string);
 
-extern int create_ciph(KTEXT c, C_Block session, char *service, 
+extern int create_ciph(KTEXT c, C_Block session, char *service,
 		       char *instance, char *realm, unsigned long life,
-		       int kvno, KTEXT tkt, unsigned long kdc_time, 
+		       int kvno, KTEXT tkt, unsigned long kdc_time,
 		       C_Block key);
 
 
 extern int krb_create_ticket(KTEXT tkt, unsigned int flags, char *pname,
 			     char *pinstance, char *prealm, long paddress,
-			     char *session, int life, long time_sec, 
+			     char *session, int life, long time_sec,
 			     char *sname, char *sinstance, C_Block key);
 
 #endif /* KRB_PRIVATE */
@@ -748,8 +748,8 @@ extern int krb_kntoln(AUTH_DAT *, char *);
 #ifdef KRB5_GENERAL__
 extern int krb_cr_tkt_krb5(KTEXT tkt, unsigned int flags, char *pname,
 			   char *pinstance, char *prealm, long paddress,
-			   char *session, int life, long time_sec, 
-			   char *sname, char *sinstance,  
+			   char *session, int life, long time_sec,
+			   char *sname, char *sinstance,
 			   krb5_keyblock *k5key);
 
 extern int krb_set_key_krb5(krb5_context ctx, krb5_keyblock *key);

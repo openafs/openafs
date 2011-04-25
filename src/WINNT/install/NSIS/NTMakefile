@@ -23,7 +23,7 @@ $(OUT)\Service.obj: Service.cpp
 $(OUT)\Service.res: Service.rc AFS_component_version_number.h
 
 $(EXEDIR)\Service.exe: $(OUT)\Service.obj $(OUT)\Service.res
-      $(EXECONLINK) 
+      $(EXECONLINK)
       $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
@@ -34,7 +34,7 @@ $(OUT)\Killer.obj: Killer.cpp
       $(C2OBJ) Killer.cpp
 
 $(EXEDIR)\Killer.exe: $(OUT)\Killer.obj $(OUT)\Killer.res
-      $(EXECONLINK) 
+      $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
@@ -45,7 +45,7 @@ $(OUT)\AdminGroup.obj: AdminGroup.cpp
       $(C2OBJ) AdminGroup.cpp
 
 $(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj $(OUT)\AdminGroup.res
-      $(EXECONLINK) 
+      $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
@@ -151,9 +151,9 @@ prebuild:
    echo !define AFS_MINORVERSION $(AFSPRODUCT_VER_MINOR) >>$(OUT)\nsi-includes.nsi
    echo !define AFS_PATCHLEVEL $(AFSPRODUCT_VER_PATCH) >>$(OUT)\nsi-includes.nsi
    echo !define IDNMREDIST "$(IDNMREDIST)" >>$(OUT)\nsi-includes.nsi
-   $(DESTDIR)\bin\util_cr.exe _echo "!define " >>$(OUT)\nsi-includes.nsi 
-   "$(NSISDIR)\makensis.exe" /VERSION >>$(OUT)\nsi-includes.nsi          
-   echo. >>$(OUT)\nsi-includes.nsi                                       
+   $(DESTDIR)\bin\util_cr.exe _echo "!define " >>$(OUT)\nsi-includes.nsi
+   "$(NSISDIR)\makensis.exe" /VERSION >>$(OUT)\nsi-includes.nsi
+   echo. >>$(OUT)\nsi-includes.nsi
 !if ("$(AFSVER_CL)" == "1500")
    echo !define CL_1500 1 >> $(OUT)\nsi-includes.nsi
    echo !define MSVCMSI "$(MSVCMSI)" >> $(OUT)\nsi-includes.nsi

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -62,25 +62,25 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CAuthDlg message handlers
 
-BOOL CAuthDlg::OnInitDialog() 
+BOOL CAuthDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// The final tab is for an extra CellName entry that is 
+	// The final tab is for an extra CellName entry that is
 	// there so we can easily parse it out when someone wants
 	// to get or discard tokens.  It is placed so the user can't
 	// see it.  It's kind of a hack, but not too bad.
 	int tabs[] = { 93, 211, 700 };
-	
+
 	m_TokenList.SetTabStops(sizeof(tabs) / sizeof(int), tabs);
 
 	FillTokenList();
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CAuthDlg::OnGetTokens() 
+void CAuthDlg::OnGetTokens()
 {
 	CKlogDlg dlg;
 
@@ -90,7 +90,7 @@ void CAuthDlg::OnGetTokens()
 		FillTokenList();
 }
 
-void CAuthDlg::OnDiscardTokens() 
+void CAuthDlg::OnDiscardTokens()
 {
 	CUnlogDlg dlg;
 
@@ -103,7 +103,7 @@ void CAuthDlg::OnDiscardTokens()
 void CAuthDlg::FillTokenList()
 {
 	m_TokenList.ResetContent();
-	
+
 	CStringArray tokenInfo;
 	if (!GetTokenInfo(tokenInfo))
 		return;
@@ -126,7 +126,7 @@ CString CAuthDlg::GetSelectedCellName()
 	return strTokenInfo.Mid(nPos + 1);
 }
 
-void CAuthDlg::OnHelp() 
+void CAuthDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, AUTHENTICATION_HELP_ID);
 }

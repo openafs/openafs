@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -28,7 +28,7 @@
 <P>バックアップ・データベースのダンプ階層を表示します。
 <P><STRONG>構文</STRONG>
 <PRE><B>backup listdumps</B>  [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
-  
+
 <B>backup listd</B>  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -48,12 +48,12 @@
 <P>この出力には、完全なダンプ階層と、フル・ダンプ・レベルとインクリメンタル・ダンプ・レベルの関係が表示されます。フル・ダンプ・レベルは、左端に表示されます。階層の中に複数のフル・ダンプ・レベルがある場合には、そのダンプ・レベルごとにダンプ・レベルのサブ階層が定義されます。このサブ階層は、異なるボリューム・セットにダンプを作成する場合に使用されます。
 <P>インクリメンタル・ダンプ・レベルは、その親ダンプ・レベルの下に、右側に字下げされて表示されます。これは、フル・ダンプでもインクリメンタル・ダンプでも同じです。同じ親から複数のインクリメンタル・ダンプ・レベルが派生する場合があるので、インクリメンタル・ダンプ・レベルが必ずしも親のすぐ下にあるとは限りません。親/子の関係は、インデントの数で判別できます。
 <P>ダンプ・レベルに有効期限が設定されている場合には、その期限がレベル名と一緒に表示されます。有効期限が絶対値で設定されている場合には、次の形式で表示されます。
-<PRE>   <VAR>dump_level</VAR> expires at <VAR>day month date time year</VAR>    
-   
+<PRE>   <VAR>dump_level</VAR> expires at <VAR>day month date time year</VAR>
+
 </PRE>
 <P>有効期限が相対値で設定されている場合には、次の形式で表示されます。
 <PRE>   <VAR>dump_level</VAR> expires in {<VAR>years</VAR>y | <VAR>months</VAR>m | <VAR>days</VAR>d}
-   
+
 </PRE>
 <P>これは、このレベルでダンプが作成されてからの期間を、年数、月数、日数で表しています。
 <P><STRONG>例</STRONG>
@@ -95,7 +95,7 @@
            /wednesday2  expires in  13d
            /thursday2  expires in  13d
            /friday2  expires in  13d
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
@@ -104,11 +104,11 @@
 <P><A HREF="auarf061.htm#HDRBK_ADDDUMP">backup adddump</A>
 <P><A HREF="auarf067.htm#HDRBK_DELDUMP">backup deldump</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf079.htm">前ページ</A> &#124; <A HREF="auarf081.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf079.htm">前ページ</A> &#124; <A HREF="auarf081.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

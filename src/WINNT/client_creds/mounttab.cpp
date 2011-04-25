@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -64,7 +64,7 @@ BOOL CALLBACK Mount_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       case WM_INITDIALOG:
          RECT rTab;
          GetClientRect (GetParent(hDlg), &rTab);
-         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab); 
+         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab);
          SetWindowPos (hDlg, NULL, rTab.left, rTab.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
 
          Mount_OnInitDialog (hDlg);
@@ -145,7 +145,7 @@ void Mount_OnUpdate (HWND hDlg, BOOL fOnInitDialog)
 
 	int iCount = SendMessage(hList, LB_GETCOUNT, 0, 0);
 
-	/* This really shouldn't work except that we are adding 
+	/* This really shouldn't work except that we are adding
 	 * the strings in alphabetical order.  Otherwise, we could
 	 * identify an index value for a string that could then change.
 	 */

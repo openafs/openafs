@@ -1,4 +1,4 @@
-#                                                                                                                                
+#
 # Copyright (c) 2009 Secure Endpoints Inc.
 #
 
@@ -23,7 +23,7 @@ EXEDIR = $(DESTDIR)\bin
 OBJS = 	$(OUT)\Stress.obj
 
 $(EXEDIR)\Stress.exe: $(OBJS)
-        $(EXECONLINK) 
+        $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(EXEPREP)
         $(CODESIGN_USERLAND)
@@ -32,5 +32,5 @@ $(EXEDIR)\Stress.exe: $(OBJS)
 install: idirs $(EXEDIR)\Stress.exe
 
 clean::
-        
+
 

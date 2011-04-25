@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -74,7 +74,7 @@ static void CheckEnableButtons();
  *
  */
 BOOL CreatePartition(HWND hParent)
-{	
+{
     ModalDialog(IDD, hParent, (DLGPROC)DlgProc);
 
     return bCreated;
@@ -99,13 +99,13 @@ static BOOL CALLBACK DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     case WM_INITDIALOG:	OnInitDialog(hwndDlg);
 	break;
 
-    case WM_COMMAND:	
+    case WM_COMMAND:
 	switch (LOWORD(wParam)) {
-	case IDC_CLOSE:		
+	case IDC_CLOSE:
 	    OnClose();
 	    break;
 
-	case IDC_CREATE:	
+	case IDC_CREATE:
 	    OnCreate();
 	    break;
 
@@ -117,17 +117,17 @@ static BOOL CALLBACK DlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	    break;
 	}
 	break;
-	
+
     case WM_NCACTIVATE:	if (wParam)
 	UpdateDriveList();
 	break;
 
-    case WM_NOTIFY:	
+    case WM_NOTIFY:
 	if ((((LPNMHDR)lParam)->code) == FLN_ITEMSELECT)
 	    OnListSelection((LPFLN_ITEMSELECT_PARAMS)lParam);
 	break;
 
-    case WM_SIZE:	
+    case WM_SIZE:
 	if (lParam != 0)
 	    ResizeWindow(hwndDlg, arwDialog, rwaFixupGuts);
 	break;
@@ -166,7 +166,7 @@ static void OnClose()
 static void OnCreate()
 {
     ASSERT(g_hServer);
-	
+
     HLISTITEM hItem = FastList_FindFirstSelected(hDriveList);
     _ASSERTE(hItem);
 
@@ -208,7 +208,7 @@ static void OnCreate()
 }
 
 static void OnPartitionName()
-{	
+{
     TCHAR szBuf[MAX_PARTITION_NAME_LEN];
     GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szBuf, MAX_PARTITION_NAME_LEN);
 
@@ -251,16 +251,16 @@ static void OnListSelection(LPFLN_ITEMSELECT_PARAMS pItemParms)
     }
 
     CheckEnableButtons();
-}	
+}
 
 static void CheckEnableButtons()
 {
     TCHAR szBuf[MAX_PARTITION_NAME_LEN];
 
     GetWindowText(GetDlgItem(hDlg, IDC_PARTITION_NAME), szBuf, MAX_PARTITION_NAME_LEN);
-	
+
     ENABLE_STATE es = ES_ENABLE;
-	
+
     if ((hSelectedItem == 0) || (szBuf[0] == 0))
 	es = ES_DISABLE;
 

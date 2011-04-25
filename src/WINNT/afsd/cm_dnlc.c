@@ -1,17 +1,17 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*
-**	This implements the directory to name cache lookup. 
+**	This implements the directory to name cache lookup.
 **	Given a directory scache and a name, the dnlc returns the
-**	vcache corresponding to the name. The vcache entries that 
-**	exist in the dnlc are not refcounted. 
+**	vcache corresponding to the name. The vcache entries that
+**	exist in the dnlc are not refcounted.
 **
 */
 
@@ -39,36 +39,36 @@ static int cm_debugDnlc = 0;	/* debug dnlc */
  */
 
 /* Must be called with cm_dnlcLock write locked */
-static cm_nc_t * 
-GetMeAnEntry() 
+static cm_nc_t *
+GetMeAnEntry()
 {
     static unsigned int nameptr = 0; /* next bucket to pull something from */
     cm_nc_t *tnc;
     int j;
-  
-    if (cm_data.ncfreelist) 
+
+    if (cm_data.ncfreelist)
     {
 	tnc = cm_data.ncfreelist;
 	cm_data.ncfreelist = tnc->next;
 	return tnc;
     }
 
-    for (j=0; j<NHSIZE+2; j++, nameptr++) 
+    for (j=0; j<NHSIZE+2; j++, nameptr++)
     {
-	if (nameptr >= NHSIZE) 
+	if (nameptr >= NHSIZE)
 	    nameptr =0;
 	if (cm_data.nameHash[nameptr])
 	    break;
     }
 
     tnc = cm_data.nameHash[nameptr];
-    if (!tnc)   
+    if (!tnc)
     {
 	osi_Log0(afsd_logp,"null tnc in GetMeAnEntry");
 	return 0;
     }
 
-    if (tnc->prev == tnc) 
+    if (tnc->prev == tnc)
     { 			/* only thing in list, don't screw around */
 	cm_data.nameHash[nameptr] = (cm_nc_t *) 0;
 	return (tnc);
@@ -81,18 +81,18 @@ GetMeAnEntry()
     return (tnc);
 }
 
-static void 
+static void
 InsertEntry(cm_nc_t *tnc)
 {
-    unsigned int key; 
+    unsigned int key;
     key = tnc->key & (NHSIZE -1);
 
-    if (!cm_data.nameHash[key]) 
+    if (!cm_data.nameHash[key])
     {
 	cm_data.nameHash[key] = tnc;
 	tnc->next = tnc->prev = tnc;
     }
-    else 
+    else
     {
 	tnc->next = cm_data.nameHash[key];
 	tnc->prev = tnc->next->prev;
@@ -103,7 +103,7 @@ InsertEntry(cm_nc_t *tnc)
 }
 
 
-void 
+void
 cm_dnlcEnter ( cm_scache_t *adp,
                normchar_t  *nname,
                cm_scache_t *avc )
@@ -120,12 +120,12 @@ cm_dnlcEnter ( cm_scache_t *adp,
     if (!cm_NormStrCmp(nname,_C(".")) || !cm_NormStrCmp(nname,_C("..")))
 	return ;
 
-    if ( cm_debugDnlc ) 
-	osi_Log3(afsd_logp,"cm_dnlcEnter dir %x name %S scache %x", 
+    if ( cm_debugDnlc )
+	osi_Log3(afsd_logp,"cm_dnlcEnter dir %x name %S scache %x",
 	    adp, osi_LogSaveStringW(afsd_logp,nname), avc);
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
-    if (ts - nname >= CM_AFSNCNAMESIZE) 
+    if (ts - nname >= CM_AFSNCNAMESIZE)
 	return ;
     skey = key & (NHSIZE -1);
 
@@ -140,7 +140,7 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	    tnc = NULL;
 	    break;
 	}
-	else if (safety > NCSIZE) 
+	else if (safety > NCSIZE)
 	{
 	    InterlockedIncrement(&dnlcstats.cycles);
             if (writeLocked)
@@ -153,7 +153,7 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	    cm_dnlcPurge();
 	    return;
 	}
-	
+
     if ( !tnc )
     {
         if ( !writeLocked ) {
@@ -165,13 +165,13 @@ cm_dnlcEnter ( cm_scache_t *adp,
 	tnc = GetMeAnEntry();
     }
     if ( tnc )
-    { 
+    {
 	tnc->dirp = adp;
 	tnc->vp = avc;
 	tnc->key = key;
 	memcpy (tnc->name, nname, (ts-nname+1)*sizeof(normchar_t)); /* include the NULL */
 
-    	if ( new )	/* insert entry only if it is newly created */ 
+    	if ( new )	/* insert entry only if it is newly created */
             InsertEntry(tnc);
 
     }
@@ -196,12 +196,12 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
     normchar_t *ts = nname;
     cm_nc_t * tnc, * tnc_begin;
     int safety, match;
-  
+
     if (!cm_useDnlc || nname == NULL)
 	return NULL;
 
-    if ( cm_debugDnlc ) 
-	osi_Log2(afsd_logp, "cm_dnlcLookup dir %x name %S", 
+    if ( cm_debugDnlc )
+	osi_Log2(afsd_logp, "cm_dnlcLookup dir %x name %S",
 		adp, osi_LogSaveStringW(afsd_logp,nname));
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
@@ -219,12 +219,12 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 
     ts = 0;
     tnc_begin = cm_data.nameHash[skey];
-    for ( tvc = (cm_scache_t *) NULL, tnc = tnc_begin, safety=0; 
-          tnc; tnc = tnc->next, safety++ ) 
+    for ( tvc = (cm_scache_t *) NULL, tnc = tnc_begin, safety=0;
+          tnc; tnc = tnc->next, safety++ )
     {
-	if (tnc->dirp == adp) 
+	if (tnc->dirp == adp)
 	{
-        if( cm_debugDnlc ) 
+        if( cm_debugDnlc )
             osi_Log1(afsd_logp,"Looking at [%S]",
                      osi_LogSaveStringW(afsd_logp,tnc->name));
 
@@ -238,7 +238,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 
                 /* determine what type of match it is */
                 if ( !cm_NormStrCmp(tnc->name, nname))
-                {	
+                {
                     /* exact match. */
                     sp->ExactFound = 1;
 
@@ -251,7 +251,7 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
                     sp->LCfound = 1;
                 else if ( cm_NoneLower(tnc->name))
                     sp->UCfound = 1;
-                else    
+                else
                     sp->NCfound = 1;
                 /* Don't break here. We might find an exact match yet */
             }
@@ -262,23 +262,23 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
             if ( !match ) /* found a match */
             {
                 sp->ExactFound = 1;
-                tvc = tnc->vp; 
+                tvc = tnc->vp;
                 ts = tnc->name;
                 break;
             }
 	    }
 	}
-	if (tnc->next == cm_data.nameHash[skey]) 
+	if (tnc->next == cm_data.nameHash[skey])
     { 			/* end of list */
 	    break;
 	}
-	else if (tnc->next == tnc_begin || safety > NCSIZE) 
+	else if (tnc->next == tnc_begin || safety > NCSIZE)
 	{
 	    InterlockedIncrement(&dnlcstats.cycles);
 	    lock_ReleaseRead(&cm_dnlcLock);
 
-	    if ( cm_debugDnlc ) 
-		osi_Log0(afsd_logp, "DNLC cycle"); 
+	    if ( cm_debugDnlc )
+		osi_Log0(afsd_logp, "DNLC cycle");
 	    cm_dnlcPurge();
 	    return(NULL);
 	}
@@ -291,22 +291,22 @@ cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
                  (long) tvc->fid.vnode);
     }
 
-    if (!tvc) 
+    if (!tvc)
         InterlockedIncrement(&dnlcstats.misses);
-    else 
+    else
     {
         sp->found = 1;
-        sp->fid.vnode  = tvc->fid.vnode; 
-        sp->fid.unique = tvc->fid.unique;	
+        sp->fid.vnode  = tvc->fid.vnode;
+        sp->fid.unique = tvc->fid.unique;
     }
     lock_ReleaseRead(&cm_dnlcLock);
 
     if (tvc)
         cm_HoldSCache(tvc);
 
-    if ( cm_debugDnlc && tvc ) 
+    if ( cm_debugDnlc && tvc )
         osi_Log1(afsd_logp, "cm_dnlcLookup found %x", tvc);
-    
+
     return tvc;
 }
 
@@ -322,7 +322,7 @@ RemoveEntry (cm_nc_t *tnc, unsigned int key)
 
     if (tnc == tnc->next)  /* only one in list */
 	cm_data.nameHash[key] = (cm_nc_t *) 0;
-    else 
+    else
     {
 	if (tnc == cm_data.nameHash[key])
 	    cm_data.nameHash[key]  = tnc->next;
@@ -336,32 +336,32 @@ RemoveEntry (cm_nc_t *tnc, unsigned int key)
 }
 
 
-void 
+void
 cm_dnlcRemove (cm_scache_t *adp, normchar_t *nname)
 {
     unsigned int key, skey, error=0;
     int found= 0, safety;
     normchar_t *ts = nname;
     cm_nc_t *tnc, *tmp;
-  
+
     if (!cm_useDnlc || nname == NULL)
 	return ;
 
     if ( cm_debugDnlc )
-	osi_Log2(afsd_logp, "cm_dnlcRemove dir %x name %S", 
+	osi_Log2(afsd_logp, "cm_dnlcRemove dir %x name %S",
 		adp, osi_LogSaveStringW(afsd_logp,nname));
 
     dnlcHash( ts, key );  /* leaves ts pointing at the NULL */
-    if (ts - nname >= CM_AFSNCNAMESIZE) 
+    if (ts - nname >= CM_AFSNCNAMESIZE)
 	return ;
 
     skey = key & (NHSIZE -1);
     lock_ObtainWrite(&cm_dnlcLock);
     InterlockedIncrement(&dnlcstats.removes);
 
-    for (tnc = cm_data.nameHash[skey], safety=0; tnc; safety++) 
+    for (tnc = cm_data.nameHash[skey], safety=0; tnc; safety++)
     {
-	if ( (tnc->dirp == adp) && (tnc->key == key) 
+	if ( (tnc->dirp == adp) && (tnc->key == key)
              && !cm_NormStrCmp(tnc->name,nname) )
 	{
 	    tmp = tnc->next;
@@ -384,8 +384,8 @@ cm_dnlcRemove (cm_scache_t *adp, normchar_t *nname)
 	    InterlockedIncrement(&dnlcstats.cycles);
 	    lock_ReleaseWrite(&cm_dnlcLock);
 
-	    if ( cm_debugDnlc ) 
-		osi_Log0(afsd_logp, "DNLC cycle"); 
+	    if ( cm_debugDnlc )
+		osi_Log0(afsd_logp, "DNLC cycle");
 	    cm_dnlcPurge();
 	    return;
 	}
@@ -400,7 +400,7 @@ cm_dnlcRemove (cm_scache_t *adp, normchar_t *nname)
 }
 
 /* remove anything pertaining to this directory */
-void 
+void
 cm_dnlcPurgedp (cm_scache_t *adp)
 {
     int i;
@@ -415,9 +415,9 @@ cm_dnlcPurgedp (cm_scache_t *adp)
     lock_ObtainWrite(&cm_dnlcLock);
     InterlockedIncrement(&dnlcstats.purgeds);
 
-    for (i=0; i<NCSIZE && !err; i++) 
+    for (i=0; i<NCSIZE && !err; i++)
     {
-	if (cm_data.nameCache[i].dirp == adp ) 
+	if (cm_data.nameCache[i].dirp == adp )
 	{
 	    if (cm_data.nameCache[i].prev) {
                 err = RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
@@ -437,7 +437,7 @@ cm_dnlcPurgedp (cm_scache_t *adp)
 }
 
 /* remove anything pertaining to this file */
-void 
+void
 cm_dnlcPurgevp (cm_scache_t *avc)
 {
     int i;
@@ -452,9 +452,9 @@ cm_dnlcPurgevp (cm_scache_t *avc)
     lock_ObtainWrite(&cm_dnlcLock);
     InterlockedIncrement(&dnlcstats.purgevs);
 
-    for (i=0; i<NCSIZE && !err ; i++) 
+    for (i=0; i<NCSIZE && !err ; i++)
     {
-   	if (cm_data.nameCache[i].vp == avc) 
+   	if (cm_data.nameCache[i].vp == avc)
 	{
 	    if (cm_data.nameCache[i].prev) {
                 err = RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
@@ -486,7 +486,7 @@ void cm_dnlcPurge(void)
 
     lock_ObtainWrite(&cm_dnlcLock);
     InterlockedIncrement(&dnlcstats.purges);
-    
+
     cm_data.ncfreelist = (cm_nc_t *) 0;
     memset (cm_data.nameCache, 0, sizeof(cm_nc_t) * NCSIZE);
     memset (cm_data.nameHash, 0, sizeof(cm_nc_t *) * NHSIZE);
@@ -497,7 +497,7 @@ void cm_dnlcPurge(void)
         cm_data.ncfreelist = &cm_data.nameCache[i];
     }
     lock_ReleaseWrite(&cm_dnlcLock);
-   
+
 }
 
 /* remove everything referencing a specific volume */
@@ -556,7 +556,7 @@ cm_dnlcValidate(void)
 
     // are the contents of the hash table intact?
     for (i=0; i<NHSIZE;i++) {
-        for (ncp = cm_data.nameHash[i]; ncp ; 
+        for (ncp = cm_data.nameHash[i]; ncp ;
              ncp = ncp->next != cm_data.nameHash[i] ? ncp->next : NULL) {
             if (ncp->magic != CM_DNLC_MAGIC) {
                 afsi_log("cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC");
@@ -583,7 +583,7 @@ cm_dnlcValidate(void)
 
     // is the freelist stable?
     if ( cm_data.ncfreelist ) {
-        for (ncp = cm_data.ncfreelist, i = 0; ncp && i < NCSIZE; 
+        for (ncp = cm_data.ncfreelist, i = 0; ncp && i < NCSIZE;
              ncp = ncp->next != cm_data.ncfreelist ? ncp->next : NULL, i++) {
             if (ncp->magic != CM_DNLC_MAGIC) {
                 afsi_log("cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC");
@@ -639,7 +639,7 @@ cm_dnlcValidate(void)
     goto retry;
 }
 
-void 
+void
 cm_dnlcInit(int newFile)
 {
     int i;
@@ -680,7 +680,7 @@ cm_dnlcInit(int newFile)
         memset (cm_data.nameCache, 0, sizeof(cm_nc_t) * NCSIZE);
         cm_data.nameHash = (cm_nc_t **) (cm_data.nameCache + NCSIZE);
         memset (cm_data.nameHash, 0, sizeof(cm_nc_t *) * NHSIZE);
-    
+
         for (i=0; i<NCSIZE; i++)
         {
             cm_data.nameCache[i].magic = CM_DNLC_MAGIC;
@@ -691,7 +691,7 @@ cm_dnlcInit(int newFile)
     }
 }
 
-long 
+long
 cm_dnlcShutdown(void)
 {
     if ( cm_debugDnlc )

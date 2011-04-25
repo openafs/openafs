@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -192,7 +192,7 @@ BOOL HostsTab_OnApply (HWND hDlg)
       cellname[i] = '\0';
 
       ULONG code = cm_SearchCellRegistry(1, cellname, NULL, NULL, NULL, NULL);
-      if (code && 
+      if (code &&
           code != CM_ERROR_FORCE_DNS_LOOKUP &&
           !CSDB_FindCell (&g.Configuration.CellServDB, szCell))
          {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -112,7 +112,7 @@ BOOL CALLBACK InfoPage2DlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp)
 
 	}
 	break;
-    }	
+    }
 
     return FALSE;
 }
@@ -145,7 +145,7 @@ static void OnInitDialog(HWND hwndDlg)
  *
  */
 static void CheckEnableButtons()
-{	
+{
     BOOL bDisable = FALSE;
 
     TCHAR szDummy[cchRESOURCE];
@@ -171,12 +171,12 @@ static void CheckEnableButtons()
 	g_pWiz->EnableButtons(BACK_BUTTON);
     else
 	g_pWiz->EnableButtons(BACK_BUTTON | NEXT_BUTTON);
-}	
+}
 
 static void SavePageInfo()
 {
     TCHAR szText[cchRESOURCE];
-	
+
     lstrncpy(g_CfgData.szAdminName, GetWndText(hDlg, IDC_ADMIN_NAME, szText), MAX_ADMIN_NAME_LEN);
     lstrncpy(g_CfgData.szAdminPW, GetWndText(hDlg, IDC_ADMIN_PW, szText), MAX_ADMIN_PW_LEN);
 
@@ -184,11 +184,11 @@ static void SavePageInfo()
 	g_CfgData.bUseNextUid = IsButtonChecked(hDlg, IDC_USE_NEXT_UID);
 	if (!g_CfgData.bUseNextUid)
 	    lstrncpy(g_CfgData.szAdminUID, GetWndText(hDlg, IDC_ADMIN_UID, szText), MAX_UID_LEN);
-    }	
+    }
 
     if (g_pWiz->GetState() == NOT_FIRST_SERVER_STEP)
 	lstrncpy(g_CfgData.szCellServDbHostname, GetWndText(hDlg, IDC_HOSTNAME, szText), MAX_MACHINE_NAME_LEN);
-}	
+}
 
 static void ShowPageInfo()
 {
@@ -210,7 +210,7 @@ static void ShowPageInfo()
 static void UseNextUid(BOOL bUseNext)
 {
     ENABLE_STATE es = bUseNext ? ES_DISABLE : ES_ENABLE;
-	
+
     SetEnable(hDlg, IDC_ADMIN_UID, es);
     SetEnable(hDlg, IDC_AFS_UID_SPINNER, es);
 }

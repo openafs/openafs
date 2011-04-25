@@ -1,6 +1,6 @@
 # Copyright 2004, OpenAFS.ORG and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -66,14 +66,14 @@ $(ASETKEYOBJS): $$(@B).c
 $(AKLOG) : $(AKLOGOBJS) $(PTERROBJS) $(EXELIBS) $(OUT)\aklog.res
 	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
 $(ASETKEY) : $(ASETKEYOBJS) $(EXELIBS) $(OUT)\asetkey.res
 	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS) $(LINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 

@@ -1,10 +1,10 @@
 /*
       Service Installer for NSIS script
-      
+
       Rob Murawski
-      
+
       Released under terms of IBM Open Source agreement for OpenAFS
-      
+
       */
 
 #include <stdio.h>
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
       printf("Insufficient arguments: Service ServiceName ServicePath DisplayName.\n");
       return 1;
    }
-   
+
 	SC_HANDLE hSCM = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
 	SC_HANDLE hService;
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 		argv[2],
 		NULL,NULL,NULL, NULL, NULL );
 
-		if (hService == NULL) 
+		if (hService == NULL)
 		{
 		    printf("Create Service failed (%d)\n", GetLastError() );
 		    CloseServiceHandle(hSCM);
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
        if(hService!=NULL)
 	   DeleteService( hService );
    }
-   
+
 	CloseServiceHandle(hService);
 
 

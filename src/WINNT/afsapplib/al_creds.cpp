@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -71,7 +71,7 @@ BOOL AfsAppLib_CrackCredentials (UINT_PTR hCreds, LPTSTR pszCell, LPTSTR pszUser
       {
       rc = asc_CredentialsCrack (idClient, (PVOID) hCreds, pszCell, pszUser, pst, &status);
       }
-   else 
+   else
        if (OpenClientLibrary())
       {
       char szUserA[ cchRESOURCE ], szUser2A[ cchRESOURCE ];
@@ -856,7 +856,7 @@ HRESULT CALLBACK BadCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    LPREALBADCREDSDLG_PARAMS lpp;
    if (msg == WM_INITDIALOG)
       SetWindowLongPtr (hDlg, DWLP_USER, lp);
-   if ((lpp = (LPREALBADCREDSDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL) 
+   if ((lpp = (LPREALBADCREDSDLG_PARAMS)GetWindowLongPtr (hDlg, DWLP_USER)) != NULL)
       {
       if (lpp->bcdp.hookproc)
          {

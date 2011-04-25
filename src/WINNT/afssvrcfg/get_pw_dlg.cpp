@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -48,7 +48,7 @@ BOOL CALLBACK GetPwDlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp);
  *
  */
 BOOL GetAfsPrincipalPassword(HWND hParent, TCHAR *&pszServerPW)
-{	
+{
     int nResult = ModalDialog(IDD_GET_PW, hParent, (DLGPROC)GetPwDlgProc);
     if (nResult == IDOK) {
     	pszServerPW = g_CfgData.szServerPW;
@@ -131,7 +131,7 @@ static void CheckEnableButtons()
 static void SaveDlgInfo()
 {
     TCHAR szText[cchRESOURCE];
-	
+
     lstrncpy(g_CfgData.szServerPW, GetWndText(hDlg, IDC_PW, szText), MAX_SERVER_PW_LEN);
 }
 

@@ -148,7 +148,7 @@ FindNetworkAdapterConfigurationInstanceByGUID(
         CLEANUP_ON_FAILURE(hr);
 
         bFound = !wcscmp(adapter_guid, V_BSTR(&Value));
-        
+
         if (bFound)
         {
             ReportMessage(1,"Found adapter", NULL,V_BSTR(&Value),0);
@@ -161,11 +161,11 @@ FindNetworkAdapterConfigurationInstanceByGUID(
             CLEANUP_ON_FAILURE(hr);
 
             *pPath = SysAllocString(V_BSTR(&Value));
-            
+
         }
-        
+
         VariantClear(&Value);
-        
+
         // Release it.
         // ===========
         pObj->Release();    // Release objects not owned.
@@ -367,7 +367,7 @@ WMIEnableStatic(
         DWORD dwIndex;
         if (swscanf(InstancePath, L"Win32_NetworkAdapterConfiguration.Index=%u", &dwIndex)==1)
         {
-            DWORD ret = 0; 
+            DWORD ret = 0;
             ReportMessage(1,"Setting MAXLANA",NULL,NULL,dwIndex+1);
             ret = AdjustMaxLana(dwIndex+1);
             if (ret) ReportMessage(0,"AdjustMaxLana returned the error code ",NULL,NULL,ret);
@@ -412,15 +412,15 @@ WMIEnableStatic(
 	    ReportMessage(0,"Trying again in 20 seconds...",NULL,NULL,0);
 	    Sleep(10000);
 	    ReportMessage(0,"Trying again in 10 seconds...",NULL,NULL,0);
-	    Sleep(5000);  
+	    Sleep(5000);
 	    ReportMessage(0,"Trying again in  5 seconds...",NULL,NULL,0);
 	    Sleep(2000);
 	}
-  
-        ReportMessage(0,"Calling ExecMethod EnableStatic NOW...          ",NULL,NULL,0);     
+
+        ReportMessage(0,"Calling ExecMethod EnableStatic NOW...          ",NULL,NULL,0);
 	// Call the method
         hr = pNamespace->ExecMethod(InstancePath, MethodName, 0, NULL, pInInst,
-                                  &pOutInst, NULL);   
+                                  &pOutInst, NULL);
         if (!SUCCEEDED(hr))
         {
            ReportMessage(0,"ExecMethod EnableStatic failed",NULL,NULL, hr);
@@ -435,7 +435,7 @@ WMIEnableStatic(
           continue;
         }
 
-        hr = V_I4(&v_ret_value);                
+        hr = V_I4(&v_ret_value);
         if(hr != 0)
             ReportMessage(0,"EnableStatic failed ", NULL,NULL,hr);
         else
@@ -483,7 +483,7 @@ WMIEnableStatic(
 
     // Call the method
     hr2 = pNamespace->ExecMethod(InstancePath, MethodName, 0, NULL, pInInst,
-				 &pOutInst, NULL);   
+				 &pOutInst, NULL);
     if (!SUCCEEDED(hr2))	{
 	ReportMessage(0,"ExecMethod SetDynamicDNSRegistration failed",NULL,NULL, hr2);
 	goto cleanup;
@@ -494,7 +494,7 @@ WMIEnableStatic(
     if (!SUCCEEDED(hr2)) {
 	ReportMessage(0,"WARNING: Could not determine return value for SetDynamicDNSRegistration ",NULL,NULL, hr2);
     } else {
-	hr2 = V_I4(&v_ret_value);                
+	hr2 = V_I4(&v_ret_value);
 	if(hr2 != 0)
 	    ReportMessage(0,"SetDynamicDNSRegistration failed ", NULL,NULL,hr2);
 	else
@@ -538,7 +538,7 @@ WMIEnableStatic(
 
     // Call the method
     hr2 = pNamespace->ExecMethod(InstancePath, MethodName, 0, NULL, pInInst,
-				 &pOutInst, NULL);   
+				 &pOutInst, NULL);
     if (!SUCCEEDED(hr2)) {
 	ReportMessage(0,"ExecMethod SetTcpipNetbios failed",NULL,NULL, hr2);
 	goto cleanup;
@@ -549,7 +549,7 @@ WMIEnableStatic(
     if (!SUCCEEDED(hr2)) {
 	ReportMessage(0,"WARNING: Could not determine return value for SetTcpipNetbios ",NULL,NULL, hr2);
     } else {
-	hr2 = V_I4(&v_ret_value);                
+	hr2 = V_I4(&v_ret_value);
 	if(hr2 != 0)
 	    ReportMessage(0,"SetTcpipNetbios failed ", NULL,NULL,hr2);
 	else
@@ -585,8 +585,8 @@ WMIEnableStatic(
 
 
 /**********************************************************
-* LoopbackBindings :  unbind all other 
-*       protocols except TCP/IP, netbios, netbt. 
+* LoopbackBindings :  unbind all other
+*       protocols except TCP/IP, netbios, netbt.
 */
 extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
 {
@@ -601,44 +601,44 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
     LPWSTR			swName = NULL;
     GUID            g;
     wchar_t         device_guid[100];
-    
+
     ReportMessage(0,"Running LoopbackBindings()...",NULL,NULL,0);
-    
-    hr = CoInitializeEx( NULL, COINIT_DISABLE_OLE1DDE | COINIT_APARTMENTTHREADED ); 
+
+    hr = CoInitializeEx( NULL, COINIT_DISABLE_OLE1DDE | COINIT_APARTMENTTHREADED );
     CLEANUP_ON_FAILURE(hr);
-    
+
     hr = CoCreateInstance( CLSID_CNetCfg, NULL, CLSCTX_INPROC_SERVER, IID_INetCfg, (void**)&pCfg );
     CLEANUP_ON_FAILURE(hr);
-    
+
     hr = pCfg->QueryInterface( IID_INetCfgLock, (void**)&pLock );
     CLEANUP_ON_FAILURE(hr);
-    
+
     hr = pLock->AcquireWriteLock( 1000, L"AFS Configuration", NULL );
     CLEANUP_ON_FAILURE(hr);
     bLockGranted = TRUE;
-    
+
     hr = pCfg->Initialize( NULL );
     CLEANUP_ON_FAILURE(hr);
     bInitialized = TRUE;
-    
+
     hr = pCfg->EnumComponents( &GUID_DEVCLASS_NET, &pEnumComponent );
     CLEANUP_ON_FAILURE(hr);
-    
+
     while( pEnumComponent->Next( 1, &pAdapter, NULL ) == S_OK )
     {
         pAdapter->GetDisplayName( &swName );
         pAdapter->GetInstanceGuid( &g );
         StringFromGUID2(g, device_guid, 99);
-        
+
         if(!wcscmp( device_guid, loopback_guid )) // found loopback adapter
         {
             INetCfgComponentBindings *pBindings;
             INetCfgBindingPath *pPath;
             IEnumNetCfgBindingPath *pEnumPaths;
             INetCfgComponent *upper;
-            
+
             ReportMessage(0,"LoopbackBindings found", NULL, device_guid,0 );
-            
+
             hr = pAdapter->QueryInterface( IID_INetCfgComponentBindings, (void**) &pBindings);
             if(hr==S_OK)
             {
@@ -648,14 +648,14 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                     while(pEnumPaths->Next( 1, &pPath, NULL ) == S_OK)
                     {
                         pPath->GetOwner( &upper );
-                        
+
                         LPWSTR swId = NULL, swName = NULL;
-                        
+
                         upper->GetDisplayName( &swName );
                         upper->GetId( &swId );
-                        
+
                         ReportMessage(1,"Looking at ",NULL, swName, 0);
-                                                                        
+
                         {
                             ReportMessage(1,"  Moving to the end of binding order...",NULL,NULL,0);
                             INetCfgComponentBindings *pBindings2;
@@ -663,15 +663,15 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                             if (hr==S_OK)
                             {
                                 ReportMessage(1,"...",0,0,0);
-                                hr = pBindings2->MoveAfter(pPath, NULL);                                
-                                pBindings2->Release();                               
+                                hr = pBindings2->MoveAfter(pPath, NULL);
+                                pBindings2->Release();
                                 bConfigChanged=TRUE;
                             }
-                            if (hr==S_OK) ReportMessage(1,"success",0,0,0); else ReportMessage(0,"Binding change failed",0,0,hr);                                                        
-                                                                                                            
-                        }                        
-                        
-                        if ( !_wcsicmp(swId, L"ms_netbios")  || 
+                            if (hr==S_OK) ReportMessage(1,"success",0,0,0); else ReportMessage(0,"Binding change failed",0,0,hr);
+
+                        }
+
+                        if ( !_wcsicmp(swId, L"ms_netbios")  ||
                              !_wcsicmp(swId, L"ms_tcpip")    ||
                              !_wcsicmp(swId, L"ms_netbt")    ||
                              !_wcsicmp(swId, L"ms_msclient"))
@@ -683,9 +683,9 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                                 if (hr==S_OK) ReportMessage(1,"success",0,0,0); else ReportMessage(0,"Proto failed",0,0,hr);
                                 bConfigChanged=TRUE;
                             }
-                            
+
                         }
-                        else //if (!_wcsicmp(swId, L"ms_server") || (!_wcsicmp(swId, L"ms_msclient")) 
+                        else //if (!_wcsicmp(swId, L"ms_server") || (!_wcsicmp(swId, L"ms_msclient"))
                         {
                             if (pPath->IsEnabled()==S_OK)
                             {
@@ -695,10 +695,10 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                                 bConfigChanged=TRUE;
                             }
                         }
-                        
+
                         CoTaskMemFree( swName );
                         CoTaskMemFree( swId );
-                        
+
                         pPath->Release();
                     }
                     pEnumPaths->Release();
@@ -706,33 +706,33 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                 pBindings->Release();
             } // hr==S_OK for QueryInterface IID_INetCfgComponentBindings
         }
-        
+
         CoTaskMemFree( swName );
-        
+
         pAdapter->Release();
     }
-    
-    pEnumComponent->Release();    
-    
+
+    pEnumComponent->Release();
+
     hr = 0;
-    
+
 cleanup:
-    
+
     if(bConfigChanged) pCfg->Apply();
-    
+
     if(pAdapter) pAdapter->Release();
-    
+
     if(bInitialized) pCfg->Uninitialize();
     if(bLockGranted) pLock->ReleaseWriteLock();
-    
+
     if(pLock) pLock->Release();
     if(pCfg) pCfg->Release();
-    
+
     if (hr) ReportMessage(0,"LoopbackBindings() is returning ",0,0,hr);
     return hr;
 }
 
-        
+
 extern "C" DWORD SetIpAddress(LPCWSTR guid, LPCWSTR ip, LPCWSTR mask)
 {
     ReportMessage(0,"Running SetIpAddress()...",0,0,0);
@@ -755,15 +755,15 @@ DWORD AdjustMaxLana(DWORD dwMaxLana)
 
     ReportMessage(0,"Making sure MaxLana is large enough",0,0, dwMaxLana);
 
-    ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Services\\NetBIOS\\Parameters"), 
+    ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Services\\NetBIOS\\Parameters"),
         0, KEY_ALL_ACCESS , &hNetBiosParamKey);
     if (ret) return ret;
 
 
-    
+
     dwSize = 4;
     ret = RegQueryValueEx(hNetBiosParamKey, _T("MaxLana"), 0, &dwType, (LPBYTE) &dwExistingMaxLana, &dwSize);
-    if ((ret) && (ret != ERROR_MORE_DATA) && (ret != ERROR_FILE_NOT_FOUND)) 
+    if ((ret) && (ret != ERROR_MORE_DATA) && (ret != ERROR_FILE_NOT_FOUND))
     {
         RegCloseKey(hNetBiosParamKey);
         return ret;
@@ -773,15 +773,15 @@ DWORD AdjustMaxLana(DWORD dwMaxLana)
 
     ReportMessage (1,"MaxLana is currently",0,0, dwExistingMaxLana);
 
-    if (dwExistingMaxLana < dwMaxLana) 
+    if (dwExistingMaxLana < dwMaxLana)
     {
         ReportMessage (1,"Changing MaxLana", 0,0,dwMaxLana);
         ret = RegSetValueEx(hNetBiosParamKey, _T("MaxLana"), 0, REG_DWORD, (const BYTE*)&dwMaxLana, 4);
-        if (ret) 
+        if (ret)
         {
             RegCloseKey(hNetBiosParamKey);
             return ret;
-        }       
+        }
 
     }
 
@@ -791,7 +791,7 @@ DWORD AdjustMaxLana(DWORD dwMaxLana)
 
 }
 
-extern "C" 
+extern "C"
 BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre )
 {
     char szIp[2048], szName[2048];
@@ -802,7 +802,7 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 	HRESULT rv;
 	DWORD fa,len;
 	FILE *hFile, *hTemp;
-	
+
     _snprintf(szIp, 2047, "%S", swIp);
     _snprintf(szName, 2047, "%S", swName);
     strupr(szName);
@@ -915,7 +915,7 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
                 }
             }
             if(status && status != ERROR_FILE_NOT_FOUND) {
-                /* we can't delete the file.  Try to come up with 
+                /* we can't delete the file.  Try to come up with
                    a different name that's not already taken. */
                 srand(GetTickCount());
                 eos = buffer + strlen(buffer);

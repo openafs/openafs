@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -58,12 +58,12 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CMountPointsDlg message handlers
 
-BOOL CMountPointsDlg::OnInitDialog() 
+BOOL CMountPointsDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
 	int tabs[] = { 64, 145, 220 };
-	
+
 	m_List.SetTabStops(sizeof(tabs) / sizeof(int), tabs);
 
 	for (int i = 0; i < m_MountPoints.GetSize(); i++)
@@ -80,7 +80,7 @@ void CMountPointsDlg::SetMountPoints(const CStringArray& mountPoints)
 	m_MountPoints.Copy(mountPoints);
 }
 
-void CMountPointsDlg::OnHelp() 
+void CMountPointsDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, MOUNT_POINTS_HELP_ID);
 }

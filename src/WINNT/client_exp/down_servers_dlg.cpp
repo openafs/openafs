@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -54,13 +54,13 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CDownServersDlg message handlers
 
-BOOL CDownServersDlg::OnInitDialog() 
+BOOL CDownServersDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	for (int i = 0; i < m_ServerNames.GetSize(); i++)
 		m_ServerList.AddString(m_ServerNames[i]);
-	
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }

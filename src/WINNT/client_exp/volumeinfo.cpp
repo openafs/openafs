@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -42,7 +42,7 @@ CVolumeInfo::CVolumeInfo(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CVolumeInfo)
 	m_nNewQuota = 0;
 	//}}AFX_DATA_INIT
-	
+
 	m_pVolInfo = 0;
 	m_nCurIndex = -1;
 }
@@ -78,14 +78,14 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CVolumeInfo message handlers
 
-BOOL CVolumeInfo::OnInitDialog() 
+BOOL CVolumeInfo::OnInitDialog()
 {
 	ASSERT(m_Files.GetSize() > 0);
 
 	CDialog::OnInitDialog();
 
 	int tabs[] = { 79, 164, 214, 260, 301 };
-	
+
 	m_List.SetTabStops(sizeof(tabs) / sizeof(int), tabs);
 
 	m_pVolInfo = new CVolInfo[m_Files.GetSize()];
@@ -123,7 +123,7 @@ int CVolumeInfo::GetCurVolInfoIndex()
 	return nIndex;
 }
 
-void CVolumeInfo::OnSelChangeList() 
+void CVolumeInfo::OnSelChangeList()
 {
 	m_nCurIndex = GetCurVolInfoIndex();
 	if (m_nCurIndex < 0)
@@ -141,7 +141,7 @@ void CVolumeInfo::OnSelChangeList()
 	UpdateData(FALSE);
 }
 
-void CVolumeInfo::OnPartitionInfo() 
+void CVolumeInfo::OnPartitionInfo()
 {
 	CPartitionInfoDlg dlg;
 
@@ -159,7 +159,7 @@ void CVolumeInfo::SetFiles(const CStringArray& files)
 	m_Files.Copy(files);
 }
 
-void CVolumeInfo::OnChangeNewQuota() 
+void CVolumeInfo::OnChangeNewQuota()
 {
 	if (m_List.m_hWnd == 0)
 		return;
@@ -183,7 +183,7 @@ void CVolumeInfo::OnChangeNewQuota()
 	ShowInfo();
 }
 
-void CVolumeInfo::OnOK() 
+void CVolumeInfo::OnOK()
 {
 	for (int i = 0; i < m_Files.GetSize(); i++) {
 		if ((m_pVolInfo[i].m_nDup == -1) && (m_pVolInfo[i].m_nQuota != m_pVolInfo[i].m_nNewQuota)) {
@@ -193,20 +193,20 @@ void CVolumeInfo::OnOK()
 			SetVolInfo(m_pVolInfo[i]);
 		}
 	}
-	
+
 	CDialog::OnOK();
 }
 
-void CVolumeInfo::OnDeltaPosQuotaSpin(NMHDR* pNMHDR, LRESULT* pResult) 
+void CVolumeInfo::OnDeltaPosQuotaSpin(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	NM_UPDOWN* pNMUpDown = (NM_UPDOWN*)pNMHDR;
-	
+
 	unsigned __int64 nNewQuota = m_nNewQuota + pNMUpDown->iDelta * 1024;
 	if (nNewQuota < 0)
 		return;
 
 	m_nNewQuota = nNewQuota;
-	
+
 	UpdateData(FALSE);
 
 	OnChangeNewQuota();
@@ -217,7 +217,7 @@ void CVolumeInfo::OnDeltaPosQuotaSpin(NMHDR* pNMHDR, LRESULT* pResult)
 void CVolumeInfo::ShowInfo()
 {
 	m_List.ResetContent();
-	
+
 	for (int i = 0; i < m_Files.GetSize(); i++) {
 
 		CString strEntry;
@@ -252,7 +252,7 @@ void CVolumeInfo::ShowInfo()
 	}
 }
 
-void CVolumeInfo::OnHelp() 
+void CVolumeInfo::OnHelp()
 {
 	ShowHelp(m_hWnd, VOLUME_INFO_HELP_ID);
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -192,7 +192,7 @@ et_to_sys_error(afs_int32 in)
 
 long cm_MapRPCError(long error, cm_req_t *reqp)
 {
-    if (error == 0) 
+    if (error == 0)
         return 0;
 
     /* If we had to stop retrying, report our saved error code. */
@@ -216,15 +216,15 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_UNKNOWN;
     else if (error == EINVAL)
         error = CM_ERROR_INVAL;
-    else if (error == EROFS) 
+    else if (error == EROFS)
         error = CM_ERROR_READONLY;
-    else if (error == EACCES) 
+    else if (error == EACCES)
         error = CM_ERROR_NOACCESS;
-    else if (error == EXDEV) 
+    else if (error == EXDEV)
         error = CM_ERROR_CROSSDEVLINK;
-    else if (error == EEXIST) 
+    else if (error == EEXIST)
         error = CM_ERROR_EXISTS;
-    else if (error == ENOTDIR) 
+    else if (error == ENOTDIR)
         error = CM_ERROR_NOTDIR;
     else if (error == ENOENT)
         error = CM_ERROR_NOSUCHFILE;
@@ -256,7 +256,7 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
 
 long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
 {
-    if (error == 0) 
+    if (error == 0)
         return 0;
 
     /* If we had to stop retrying, report our saved error code. */
@@ -284,24 +284,24 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
         error = CM_ERROR_ALLBUSY;
     else if (error < 0)
         error = CM_ERROR_UNKNOWN;
-    else if (error == EROFS) 
+    else if (error == EROFS)
         error = CM_ERROR_READONLY;
-    else if (error == ENOTDIR) 
+    else if (error == ENOTDIR)
         error = CM_ERROR_NOTDIR;
-    else if (error == EACCES) 
+    else if (error == EACCES)
         error = CM_ERROR_NOACCESS;
-    else if (error == ENOENT) 
+    else if (error == ENOENT)
         error = CM_ERROR_NOSUCHFILE;
     else if (error == EINVAL)
         error = CM_ERROR_INVAL;
-    else if (error == ENOTEMPTY 
+    else if (error == ENOTEMPTY
               || error == 17		/* AIX */
               || error == 66		/* SunOS 4, Digital UNIX */
               || error == 93		/* Solaris 2, IRIX */
               || error == 247)	/* HP/UX */
         error = CM_ERROR_NOTEMPTY;
     return error;
-}       
+}
 
 long cm_MapVLRPCError(long error, cm_req_t *reqp)
 {
@@ -330,7 +330,7 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_UNKNOWN;
     else if (error == EINVAL)
         error = CM_ERROR_INVAL;
-    else if (error == VL_NOENT || error == VL_BADNAME) 
+    else if (error == VL_NOENT || error == VL_BADNAME)
 	error = CM_ERROR_NOSUCHVOLUME;
     return error;
 }
@@ -348,7 +348,7 @@ cm_space_t *cm_GetSpace(void)
         else tsp = (cm_space_t *) malloc(sizeof(cm_space_t));
 	(void) memset(tsp, 0, sizeof(cm_space_t));
         lock_ReleaseWrite(&cm_utilsLock);
-        
+
         return tsp;
 }
 
@@ -395,7 +395,7 @@ int cm_Is8Dot3(clientchar_t *namep)
     int sawDot = 0;
     clientchar_t tc;
     int charCount = 0;
-    
+
     if (namep == NULL || !namep[0])
         return 0;
 
@@ -433,13 +433,13 @@ int cm_Is8Dot3(clientchar_t *namep)
 
 /*
  * Number unparsing map for generating 8.3 names;
- * The version taken from DFS was on drugs.  
+ * The version taken from DFS was on drugs.
  * You can't include '&' and '@' in a file name.
  */
 char cm_8Dot3Mapping[42] =
 {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
- 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 
- 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 
+ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K',
+ 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
  'V', 'W', 'X', 'Y', 'Z', '_', '-', '$', '#', '!', '{', '}'
 };
 int cm_8Dot3MapSize = sizeof(cm_8Dot3Mapping);
@@ -599,8 +599,8 @@ void cm_Gen8Dot3NameIntW(const clientchar_t * longname, cm_dirFid_t * pfid,
 
   \return BOOL : TRUE/FALSE (match/mistmatch)
 */
-static BOOL 
-szWildCardMatchFileName(clientchar_t * pattern, clientchar_t * name, int casefold) 
+static BOOL
+szWildCardMatchFileName(clientchar_t * pattern, clientchar_t * name, int casefold)
 {
     clientchar_t upattern[MAX_PATH];
     clientchar_t uname[MAX_PATH];
@@ -687,14 +687,14 @@ szWildCardMatchFileName(clientchar_t * pattern, clientchar_t * name, int casefol
 /* do a case-folding search of the star name mask with the name in namep.
  * Return 1 if we match, otherwise 0.
  */
-int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags) 
+int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags)
 {
     clientchar_t *newmask, lastchar = _C('\0');
     int    i, j, casefold, retval;
     int  star = 0, qmark = 0, dot = 0;
 
     /* make sure we only match 8.3 names, if requested */
-    if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
+    if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep))
         return 0;
 
     casefold = (flags & CM_FLAG_CASEFOLD) ? 1 : 0;
@@ -759,7 +759,7 @@ cm_TargetPerceivedAsDirectory(const fschar_t *target)
     return FALSE;
 }
 
-HANDLE 
+HANDLE
 cm_LoadAfsdHookLib(void)
 {
     char dllname[260];
@@ -829,7 +829,7 @@ typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 typedef BOOL (WINAPI *LPFN_DISABLEWOW64FSREDIRECTION) (PVOID *);
 typedef BOOL (WINAPI *LPFN_REVERTWOW64FSREDIRECTION) (PVOID);
 
-BOOL msftSMBRedirectorSupportsExtendedTimeouts(void) 
+BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
 {
     static BOOL fChecked = FALSE;
     static BOOL fSupportsExtendedTimeouts = FALSE;
@@ -846,7 +846,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
         LARGE_INTEGER fvFile, fvHotFixMin;
 
         h1 = GetModuleHandle("kernel32.dll"); /* no refcount increase */
-        /* 
+        /*
          * If we don't find the fnIsWow64Process function then we
          * are not running in a Wow64 environment
          */
@@ -857,7 +857,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
         Version.dwOSVersionInfoSize = sizeof(Version);
         GetVersionEx((OSVERSIONINFO *) &Version);
 
-        /* 
+        /*
          * Support is available as hot fixes / service packs on:
          *   XP SP2
          *   XP SP3
@@ -871,7 +871,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
             /* 32-bit XP */
             if (Version.dwMajorVersion == 5 &&
                 Version.dwMinorVersion == 1) {
-                
+
                 fvHotFixMin.HighPart = (5 << 16) | 1;
 
                 switch (Version.wServicePackMajor) {
@@ -890,7 +890,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
             /* 64-bit XP and Server 2003 */
             else if (Version.dwMajorVersion == 5 &&
                      Version.dwMinorVersion == 2) {
-                
+
                 fvHotFixMin.HighPart = (5 << 16) | 2;
 
                 switch (Version.wServicePackMajor) {
@@ -909,7 +909,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
             /* Vista and Server 2008 */
             else if (Version.dwMajorVersion == 6 &&
                      Version.dwMinorVersion == 0) {
-                
+
                 fvHotFixMin.HighPart = (6 << 16) | 0;
 
                 switch (Version.wServicePackMajor) {
@@ -931,7 +931,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
             }
 
             /* If wow64, disable wow64 redirection and preserve the existing state */
-            if (fnIsWow64Process && 
+            if (fnIsWow64Process &&
                  fnIsWow64Process(GetCurrentProcess(), &isWow64) &&
                  isWow64) {
                 fnDisableWow64FsRedirection =
@@ -940,7 +940,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
                     (LPFN_REVERTWOW64FSREDIRECTION)GetProcAddress(h1, "Wow64RevertWow64FsRedirection");
                 fnDisableWow64FsRedirection(&Wow64RedirectionState);
             }
-            
+
             if (cm_GetOSFileVersion("drivers\\mrxsmb.sys", &fvFile) ||
                 (fvFile.QuadPart >= fvHotFixMin.QuadPart))
                 fSupportsExtendedTimeouts = TRUE;
@@ -948,7 +948,7 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
             /* If wow64, restore the previous redirection state */
             if (fnIsWow64Process && isWow64) {
                 fnRevertWow64FsRedirection(Wow64RedirectionState);
-            }            
+            }
         }
       checked:
         fChecked = TRUE;
@@ -977,11 +977,11 @@ void cm_SetRequestStartTime()
 
 	if (!TlsSetValue(cm_TlsRequestSlot, tp))
 	    free(tp);
-    }	
+    }
 }
 
 void cm_UpdateServerPriority()
-{	
+{
     time_t *tp = TlsGetValue(cm_TlsRequestSlot);
 
     if (tp) {
@@ -1037,19 +1037,19 @@ void cm_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
         localJunk.tm_hour = 0;
         localJunk.tm_min = 0;
         localJunk.tm_sec = 0;
-    }	
+    }
 
     dosDate = ((ltp->tm_year-80)<<9) | ((ltp->tm_mon+1) << 5) | (ltp->tm_mday);
     dosTime = (ltp->tm_hour<<11) | (ltp->tm_min << 5) | (ltp->tm_sec / 2);
     *searchTimep = (dosDate<<16) | dosTime;
-}	
+}
 
 void cm_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime)
 {
     unsigned short dosDate;
     unsigned short dosTime;
     struct tm localTm;
-        
+
     dosDate = (unsigned short) (searchTime & 0xffff);
     dosTime = (unsigned short) ((searchTime >> 16) & 0xffff);
 

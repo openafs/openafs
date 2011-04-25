@@ -81,7 +81,7 @@ int test_create(void)
     if(isChild) {
         logfile << "----Begin CreateFile tests ----\n";
 
-        cerr << 
+        cerr <<
             "TEST:CREATE:001 Requesting a sharing mode that conflicts with the access mode "
             "specified in a previous open requestion whose handle is still open should be an error.\n";
 
@@ -422,7 +422,7 @@ int testint_lock_excl_rw_beof(void)
         } else {
             cerr << "TEST:LOCK:002:01 PASS\n";
         }
-        
+
         cerr << "TEST:LOCK:002:02 Read in partially locked area (A)\n";
 
         logfile << "SetFilePointer(h_file_base, PAGE_BEGIN(27), NULL, FILE_BEGIN)\n";
@@ -435,7 +435,7 @@ int testint_lock_excl_rw_beof(void)
         } else {
             cerr << "TEST:LOCK:002:02 PASS\n";
         }
-        
+
         cerr << "TEST:LOCK:002:03 Read in locked area\n";
 
         logfile << "SetFilePointer(h_file_base, PAGE_BEGIN(32), NULL, FILE_BEGIN)\n";
@@ -448,7 +448,7 @@ int testint_lock_excl_rw_beof(void)
         } else {
             cerr << "TEST:LOCK:002:03 PASS\n";
         }
-        
+
         cerr << "TEST:LOCK:002:04 Read in partially locked area (B)\n";
 
         logfile << "SetFilePointer(h_file_base, PAGE_BEGIN(37), NULL, FILE_BEGIN)\n";
@@ -461,7 +461,7 @@ int testint_lock_excl_rw_beof(void)
         } else {
             cerr << "TEST:LOCK:002:04 PASS\n";
         }
-         
+
         cerr << "TEST:LOCK:002:05 Read in partially unowned area (A)\n";
 
         logfile << "SetFilePointer(h_file_base, PAGE_BEGIN(47), NULL, FILE_BEGIN)\n";
@@ -474,7 +474,7 @@ int testint_lock_excl_rw_beof(void)
         } else {
             cerr << "TEST:LOCK:002:05 ***FAILED***\n";
         }
-        
+
         cerr << "TEST:LOCK:002:06 Read in fully unowned area\n";
 
         logfile << "SetFilePointer(h_file_base, PAGE_BEGIN(52), NULL, FILE_BEGIN)\n";
@@ -487,7 +487,7 @@ int testint_lock_excl_rw_beof(void)
         } else {
             cerr << "TEST:LOCK:002:06 ***FAILED***\n";
         }
-        
+
         cerr << "TEST:LOCK:002:07 Read in partially unowned area (B)\n";
 
         logfile << "SetFilePointer(h_file_base, PAGE_BEGIN(56), NULL, FILE_BEGIN)\n";
@@ -1031,7 +1031,7 @@ int testint_waitlock(void)
                 cerr << "done\n"
                     << "TEST:WLCS:002:06 PASS\n";
             } else {
-                logfile << "Unlock failed! last error = " 
+                logfile << "Unlock failed! last error = "
                         << e << "\n";
                 cerr << "TEST:WLCS:002:06 FAILED! Unlock failed! see log\n";
                 rv = 1;

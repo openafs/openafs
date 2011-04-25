@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -511,7 +511,7 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
             cch = cchMaxNUMBER;
             break;
 
-         case vtSTRINGA:   
+         case vtSTRINGA:
             {
             LPSTR arg_pszA = va_arg (arg, LPSTR);
 
@@ -524,7 +524,7 @@ LPTSTR cdecl vFormatString (LONG pszSource, LPCTSTR pszFmt, va_list arg)
             break;
             }
 
-         case vtSTRINGW:   
+         case vtSTRINGW:
             {
             LPWSTR arg_pszW = va_arg (arg, LPWSTR);
 
@@ -785,7 +785,7 @@ BOOL FormatElapsed (LPTSTR pszTarget, LPTSTR pszFormatUser, SYSTEMTIME *pst)
       lstrcpy (szTimeSep, TEXT(":"));
 
    TCHAR szElapsed[ cchRESOURCE ];
-   wsprintf (szElapsed, TEXT("%02lu%s%02lu%s%02lu"), 
+   wsprintf (szElapsed, TEXT("%02lu%s%02lu%s%02lu"),
              pst->wHour + (pst->wDay * 24),
              szTimeSep,
              pst->wMinute,

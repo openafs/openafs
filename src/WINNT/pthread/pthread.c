@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -13,7 +13,7 @@
  * The purpose of this file is to only implement those functions that
  * are truly needed to support the afs code base.
  *
- * A secondary goal is to allow a "real" pthread implementation to 
+ * A secondary goal is to allow a "real" pthread implementation to
  * replace this file without any modification to code that depends upon
  * this file
  *
@@ -21,7 +21,7 @@
  * as their UNIX prototypes.
  * Where possible, the POSIX specified return values are used.
  * For situations where an error can occur, but no corresponding
- * POSIX error value exists, unique (within a given function) negative 
+ * POSIX error value exists, unique (within a given function) negative
  * numbers are used for errors to avoid collsions with the errno
  * style values.
  */
@@ -155,9 +155,9 @@ int pthread_mutex_lock(pthread_mutex_t *mp) {
 	    mp->isLocked = 1;
 	    mp->tid = GetCurrentThreadId();
 	} else {
-	    /* 
+	    /*
 	     * same thread tried to recursively lock this mutex.
-	     * Under real POSIX, this would cause a deadlock, but NT only 
+	     * Under real POSIX, this would cause a deadlock, but NT only
 	     * supports recursive mutexes so we indicate the situation
 	     * by returning EDEADLK.
 	     */
@@ -173,7 +173,7 @@ int pthread_mutex_lock(pthread_mutex_t *mp) {
 #endif
 	rc = EINVAL;
     }
-	
+
     return rc;
 }
 
@@ -279,7 +279,7 @@ int pthread_rwlock_wrlock(pthread_rwlock_t *rwp)
     }
 
     while (rc == 0 && rwp->readers > 0) {
-        rc = pthread_cond_wait( &rwp->read_access_completion_wait, 
+        rc = pthread_cond_wait( &rwp->read_access_completion_wait,
                                 &rwp->read_access_completion_mutex);
     }
 
@@ -314,7 +314,7 @@ int pthread_rwlock_rdlock(pthread_rwlock_t *rwp)
     pthread_mutex_unlock(&rwp->write_access_mutex);
 
     return rc;
-        
+
 }
 
 int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwp)
@@ -381,7 +381,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwp)
         /* unlock a read lock */
         if (rc == 0)
             pthread_mutex_unlock(&rwp->write_access_mutex);
-        
+
         if ((rc = pthread_mutex_lock(&rwp->read_access_completion_mutex)) != 0)
         {
             pthread_mutex_unlock(&rwp->write_access_mutex);
@@ -392,14 +392,14 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwp)
         {
             rc = EINVAL;
         }
-        else 
+        else
         {
-            if (--rwp->readers == 0) 
+            if (--rwp->readers == 0)
                 pthread_cond_broadcast(&rwp->read_access_completion_wait);
         }
 
         pthread_mutex_unlock(&rwp->read_access_completion_mutex);
-    } 
+    }
     else
     {
         /* unlock a write lock */
@@ -488,10 +488,10 @@ static void cleanup_pthread_cache(void) {
 
 	pthread_cache_done = 0;
     }
-}	
+}
 
 static void put_thread(thread_p old) {
- 
+
     CloseHandle(old->t_handle);
     pthread_mutex_lock(&cache_Q_mutex);
     queue_Prepend(&cache_Q, old);
@@ -500,9 +500,9 @@ static void put_thread(thread_p old) {
 
 static thread_p get_thread() {
     thread_p new = NULL;
- 
+
     pthread_mutex_lock(&cache_Q_mutex);
- 
+
     if (queue_IsEmpty(&cache_Q)) {
         new = (thread_p) malloc(sizeof(thread_t));
 	if (new != NULL) {
@@ -518,10 +518,10 @@ static thread_p get_thread() {
         new = queue_First(&cache_Q, thread);
         queue_Remove(new);
     }
- 
+
     pthread_mutex_unlock(&cache_Q_mutex);
 
-    /* 
+    /*
      * Initialization done every time we hand out a thread_t
      */
 
@@ -532,9 +532,9 @@ static thread_p get_thread() {
 	new->has_been_joined = 0;
     }
     return new;
- 
+
 }
- 
+
 /*
  * The thread start function signature is different on NT than the pthread
  * spec so we create a tiny stub to map from one signature to the next.
@@ -611,7 +611,7 @@ static DWORD WINAPI afs_pthread_create_stub(LPVOID param) {
     pthread_create_t *t = (pthread_create_t *) param;
     void *rc;
 
-    /* 
+    /*
      * Initialize thread specific storage structures.
      */
 
@@ -759,7 +759,7 @@ static DWORD WINAPI terminate_thread_routine(LPVOID param) {
 	     * Here, we've decided to wait for native threads et al.
 	     * Fill out the wakeup_list.
 	     */
-	    memset(terminate_thread_wakeup_list, 0x00, (sizeof(HANDLE) * 
+	    memset(terminate_thread_wakeup_list, 0x00, (sizeof(HANDLE) *
 				(1+native_thread_count)));
 
 	    terminate_thread_wakeup_list[0] = terminate_thread_wakeup_event;
@@ -842,8 +842,8 @@ static void pthread_sync_terminate_thread(void) {
         sprintf(eventName, "terminate_thread_wakeup_event %d::%d", _getpid(), eventCount++);
         terminate_thread_wakeup_event = CreateEvent((LPSECURITY_ATTRIBUTES) 0,
                                                      TRUE, FALSE, (LPCTSTR) eventName);
-        terminate_thread_handle = CreateThread((LPSECURITY_ATTRIBUTES) 0, 0, 
-                                                terminate_thread_routine, (LPVOID) 0, 0, 
+        terminate_thread_handle = CreateThread((LPSECURITY_ATTRIBUTES) 0, 0,
+                                                terminate_thread_routine, (LPVOID) 0, 0,
                                                 &terminate_thread_id);
     } else {
     	SetEvent (terminate_thread_wakeup_event);
@@ -889,11 +889,11 @@ int pthread_create(pthread_t *tid, const pthread_attr_t *attr, void *(*func)(voi
 	     */
 	    pthread_mutex_lock(&active_Q_mutex);
 	    queue_Prepend(&active_Q, t->me);
-	    t->me->t_handle = CreateThread((LPSECURITY_ATTRIBUTES) 0, 0, 
-		                afs_pthread_create_stub, (LPVOID) t, 0, 
+	    t->me->t_handle = CreateThread((LPSECURITY_ATTRIBUTES) 0, 0,
+		                afs_pthread_create_stub, (LPVOID) t, 0,
 			        &t->me->NT_id);
 	    if (t->me->t_handle == 0) {
-		/* 
+		/*
 		 * we only free t if the thread wasn't created, otherwise
 		 * it's free'd by the new thread.
 		 */
@@ -940,12 +940,12 @@ int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr) {
  * once they have been created, they stay in the cache for the life
  * of the process.
  */
- 
+
 static struct rx_queue waiter_cache;
 static CRITICAL_SECTION waiter_cache_cs;
 static int waiter_cache_init;
 static pthread_once_t waiter_cache_once = PTHREAD_ONCE_INIT;
- 
+
 static void init_waiter_cache(void) {
     if (waiter_cache_init)
         return;
@@ -955,7 +955,7 @@ static void init_waiter_cache(void) {
     queue_Init(&waiter_cache);
     waiter_cache_init = 1;
 }
- 
+
 static void cleanup_waiter_cache(void)
 {
     cond_waiters_t * cur = NULL, * next = NULL;
@@ -975,11 +975,11 @@ static void cleanup_waiter_cache(void)
 
 static cond_waiters_t *get_waiter() {
     cond_waiters_t *new = NULL;
- 
+
     (waiter_cache_init || pthread_once(&waiter_cache_once, init_waiter_cache));
- 
+
     EnterCriticalSection(&waiter_cache_cs);
- 
+
     if (queue_IsEmpty(&waiter_cache)) {
         new = (cond_waiters_t *) malloc(sizeof(cond_waiters_t));
 	if (new != NULL) {
@@ -997,16 +997,16 @@ static cond_waiters_t *get_waiter() {
         new = queue_First(&waiter_cache, cond_waiter);
         queue_Remove(new);
     }
- 
+
     LeaveCriticalSection(&waiter_cache_cs);
     return new;
- 
+
 }
- 
+
 static void put_waiter(cond_waiters_t *old) {
- 
+
     (waiter_cache_init || pthread_once(&waiter_cache_once, init_waiter_cache));
- 
+
     EnterCriticalSection(&waiter_cache_cs);
     queue_Prepend(&waiter_cache, old);
     LeaveCriticalSection(&waiter_cache_cs);
@@ -1033,7 +1033,7 @@ static int cond_wait_internal(pthread_cond_t *cond, pthread_mutex_t *mutex, cons
                 /*
                  * This is a royal pain.  We've timed out waiting
                  * for the signal, but between the time out and here
-                 * it is possible that we were actually signalled by 
+                 * it is possible that we were actually signalled by
                  * another thread.  So we grab the condition lock
                  * and scan the waiting thread queue to see if we are
                  * still there.  If we are, we just remove ourselves.
@@ -1079,7 +1079,7 @@ static int cond_wait_internal(pthread_cond_t *cond, pthread_mutex_t *mutex, cons
             }
             if (pthread_mutex_lock(mutex) != 0) {
                 rc = -3;
-            }   
+            }
 	} else {
 	    rc = EINVAL;
 	}
@@ -1111,7 +1111,7 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const s
 	/*
 	 * pthread timedwait uses an absolute time, NT uses relative so
 	 * we convert here.  The millitm field in the timeb struct is
-	 * unsigned, but we need to do subtraction preserving the sign, 
+	 * unsigned, but we need to do subtraction preserving the sign,
 	 * so we copy the fields into temporary variables.
 	 *
 	 * WARNING:
@@ -1125,7 +1125,7 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const s
 	then.time = abstime->tv_sec;
 	t_milli = abstime->tv_nsec/1000000;
 
-	if((then.time > now.time || 
+	if((then.time > now.time ||
 	   (then.time == now.time && t_milli > n_milli))) {
 	    if((t_milli -= n_milli) < 0) {
 		t_milli += 1000;
@@ -1138,7 +1138,7 @@ int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const s
 		 * Under NT, we can only wait for milliseconds, so we
 		 * round up the wait time here.
 		 */
-		rc = cond_wait_internal(cond, mutex, 
+		rc = cond_wait_internal(cond, mutex,
 				 (DWORD)((then.time * 1000) + (t_milli)));
 	    } else {
 		rc = EINVAL;
@@ -1189,7 +1189,7 @@ int pthread_cond_broadcast(pthread_cond_t *cond) {
 	EnterCriticalSection(&cond->cs);
 
 	/*
-	 * Empty the waiting_threads queue. 
+	 * Empty the waiting_threads queue.
 	 */
 	if (queue_IsNotEmpty(&cond->waiting_threads)) {
 	    for(queue_Scan(&cond->waiting_threads, release_thread,
@@ -1217,7 +1217,7 @@ int pthread_cond_destroy(pthread_cond_t *cond) {
     } else {
 	rc = EINVAL;
     }
-	
+
     /*
      * A previous version of this file had code to check the waiter
      * queue and empty it here.  This has been removed in the hopes

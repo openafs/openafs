@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -34,10 +34,10 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>fs setacl -dir</B> &lt;<VAR>directory</VAR>><SUP>+</SUP>  <B>-acl</B> &lt;<VAR>access list entries</VAR>><SUP>+</SUP>
           [<B>-clear</B>]  [<B>-negative</B>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-help</B>]
-    
+
 <B>fs sa -d</B> &lt;<VAR>directory</VAR>><SUP>+</SUP>  <B>-a</B> &lt;<VAR>access list entries</VAR>><SUP>+</SUP>
       [<B>-c</B>]  [<B>-n</B>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-h</B>]
-      
+
 <B>fs seta -d</B> &lt;<VAR>directory</VAR>><SUP>+</SUP>  <B>-a</B> &lt;<VAR>access list entries</VAR>><SUP>+</SUP>
         [<B>-c</B>]  [<B>-n</B>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-h</B>]
 </PRE>
@@ -135,13 +135,13 @@ DFS は拒否の ACL アクセス権をインプリメントしていないからです。
 <B>a</B> (<B>管理</B>) を除くすべてのアクセス権をユーザー
 <B>smith</B> に与えます。
 <PRE>   % <B>fs setacl -dir . -acl pat:friends rl smith write</B>
-   
+
    % <B>fs listacl -path </B>.
    Access list for . is
    Normal rights:
       pat:friends rl
       smith rlidwk
-   
+
 </PRE>
 <P>次の例では、<B>-clear</B> フラグが指定されています。これは、既存のアクセス権 (<B>fs listacl</B> コマンドで表示されるように) を現行作業ディレクトリーの <B>reports</B> サブディレクトリーから削除し、新規セットに置き換えます。
 <PRE>   % <B>fs listacl -dir reports</B>
@@ -153,20 +153,20 @@ DFS は拒否の ACL アクセス権をインプリメントしていないからです。
       pat rlidwka
    Negative rights:
       terry rl
-   
+
    % <B>fs setacl -clear -dir reports -acl pat all smith write system:anyuser rl</B>
-   
+
    % <B>fs listacl -dir reports</B>
    Access list for reports is
    Normal rights:
       system:anyuser rl
       smith rlidwk
       pat rlidwka
-   
+
 </PRE>
 <P>次の例では、<B>-dir</B> および <B>-acl</B> スイッチを使用しています。これは ACL を複数のディレクトリー(両方とも現行作業ディレクトリーとその <B>public</B> サブディレクトリー) に設定するためです。
 <PRE>   % <B>fs setacl -dir . public -acl pat:friends rli</B>
-      
+
    % <B>fs listacl -path . public</B>
    Access list for . is
    Normal rights:
@@ -176,7 +176,7 @@ DFS は拒否の ACL アクセス権をインプリメントしていないからです。
    Normal rights:
       pat rlidwka
       pat:friends rli
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>発行者は、ディレクトリーの ACL の <B>a</B> (<B>管理</B>) アクセス権が必要です。ディレクトリーの所有者および <B>system:administrators</B> グループのメンバーは、
@@ -187,11 +187,11 @@ ACL に表示されていなくても、暗黙的に権限を持っています。
 <P><A HREF="auarf153.htm#HDRFS_MKMOUNT">fs mkmount</A>
 <P><I>AFS/DFS Migration Toolkit Administration Guide and Reference</I>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf156.htm">前ページ</A> &#124; <A HREF="auarf158.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf156.htm">前ページ</A> &#124; <A HREF="auarf158.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

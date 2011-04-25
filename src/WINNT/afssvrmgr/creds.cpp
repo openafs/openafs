@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -98,11 +98,11 @@ void OpenCellDlg_Hook_OnOK (HWND hDlg, LPOPENCELLDLG_PARAMS lpp)
     ULONG status;
 
     if ( KFW_is_available() ) {
-        // KFW_AFS_get_cred() parses the szNameA field as complete 
+        // KFW_AFS_get_cred() parses the szNameA field as complete
         // princial including potentially
         // a different realm then the specified cell name.
         char *Result = NULL;
-        
+
         char szCellA[ 256 ];
         CopyStringToAnsi (szCellA, lpp->szCell);
 

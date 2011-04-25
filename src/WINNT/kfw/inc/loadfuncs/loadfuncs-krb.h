@@ -26,8 +26,8 @@ TYPEDEF_FUNC(
     PASCAL,
     krb_sendauth,
     (long, int, KTEXT, char *, char *, char *,
-     unsigned long, MSG_DAT *, CREDENTIALS *, 
-     Key_schedule *, struct sockaddr_in *, 
+     unsigned long, MSG_DAT *, CREDENTIALS *,
+     Key_schedule *, struct sockaddr_in *,
      struct sockaddr_in FAR *, char *)
     );
 TYPEDEF_FUNC(
@@ -151,8 +151,8 @@ TYPEDEF_FUNC(
     int,
     PASCAL,
     k_decomp_ticket,
-    (KTEXT, unsigned char *, char *, char *, char *, 
-     unsigned long *, C_Block, int *, unsigned long *, 
+    (KTEXT, unsigned char *, char *, char *, char *,
+     unsigned long *, C_Block, int *, unsigned long *,
      char *, char *, C_Block, Key_schedule)
     );
 TYPEDEF_FUNC(

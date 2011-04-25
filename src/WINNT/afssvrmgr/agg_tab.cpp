@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -63,7 +63,7 @@ BOOL CALLBACK Aggregates_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          {
          RECT rTab;
          GetClientRect (GetParent(hDlg), &rTab);
-         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab); 
+         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab);
          ResizeWindow (hDlg, awdAggregates, rwaMoveToHere, &rTab);
 
          FL_RestoreView (GetDlgItem (hDlg, IDC_AGG_LIST), &gr.viewAgg);
@@ -134,9 +134,9 @@ BOOL CALLBACK Aggregates_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          Delete ((LPNOTIFYSTRUCT)lp);
          break;
 
-      case WM_NOTIFY: 
+      case WM_NOTIFY:
          switch (((LPNMHDR)lp)->code)
-            { 
+            {
             case FLN_LDBLCLICK:
                if (((LPNMHDR)lp)->hwndFrom == GetDlgItem (hDlg, IDC_AGG_LIST))
                   {
@@ -148,7 +148,7 @@ BOOL CALLBACK Aggregates_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             }
          break;
 
-      case WM_CONTEXTMENU: 
+      case WM_CONTEXTMENU:
          {
          POINT ptScreen;
          POINT ptClient;
@@ -161,7 +161,7 @@ BOOL CALLBACK Aggregates_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          if ((HWND)wp == GetDlgItem (hDlg, IDC_AGG_LIST))
             Aggregates_ShowPopupMenu ((HWND)wp, ptClient, ptScreen);
          }
-         break; 
+         break;
 
       case WM_COMMAND:
          switch (LOWORD(wp))

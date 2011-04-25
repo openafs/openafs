@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -29,11 +29,11 @@
 <PRE><B>fs setserverprefs</B> [<B>-servers</B> &lt;<VAR>fileserver names and ranks</VAR>><SUP>+</SUP>]
                   [<B>-vlservers</B> &lt;<VAR>VL server names and ranks</VAR>><SUP>+</SUP>]
                   [<B>-file</B> &lt;<VAR>input from named file</VAR>>]  [<B>-stdin</B>]  [<B>-help</B>]
-   
+
 <B>fs sets</B> [<B>-se</B> &lt;<VAR>fileserver names and ranks</VAR>><SUP>+</SUP>]  [<B>-vl</B> &lt;<VAR>VL server names and ranks</VAR>><SUP>+</SUP>]
         [<B>-f</B> &lt;<VAR>input from named file</VAR>>]  [<B>-st</B>]  [<B>-h</B>]
-   
-<B>fs sp</B> [<B>-se</B> &lt;<VAR>fileserver names and ranks</VAR>><SUP>+</SUP>]  [<B>-vl</B> &lt;<VAR>VL server names and ranks></VAR><SUP>+</SUP>]  
+
+<B>fs sp</B> [<B>-se</B> &lt;<VAR>fileserver names and ranks</VAR>><SUP>+</SUP>]  [<B>-vl</B> &lt;<VAR>VL server names and ranks></VAR><SUP>+</SUP>]
       [<B>-f</B> &lt;<VAR>input from named file</VAR>>]  [<B>-st</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -106,14 +106,14 @@ VLDB に同様の誤った情報がない限り、決して使用しません。
 <P><STRONG>例</STRONG>
 <P>次のコマンドは、ファイル・サーバー・マシン <B>fs3.abc.com</B> および <B>fs4.abc.com</B> に対するキャッシュ・マネージャーの優先順位を設定します。後者のマシンは、IP アドレス、192.12.105.100 で指定されています。これらのマシンは、ローカル・マシンのネットワークの別のサブネットワークに常駐するため、デフォルトの基本ランクは 3,000 になります。これらのマシンに対するキャッシュ・マネージャーの優先順位を上げるためには、発行者はランク <B>25000</B> を割り当て、キャッシュ・マネージャーはそれに 0 から 15 の範囲の整数を追加します。
 <PRE>   # <B>fs setserverprefs -servers fs3.abc.com 25000 192.12.105.100 25000</B>
-   
+
 </PRE>
 <P>次のコマンドは、同じ 2 つのファイル・サーバー・マシンに対するキャッシュ・マネージャーの優先順位を設定するために
 <B>-servers</B> 引き数を使用します。また、ローカル・ファイル <B>/etc/fs.prefs</B> に常駐するファイルにある優先順位のコレクションを読み取るために、
 <B>-file</B> 引き数も使用します。
 <PRE>   # <B>fs setserverprefs -servers fs3.abc.com 25000 192.12.105.100 25000</B>  \
                        <B>-file /etc/fs.prefs</B>
-   
+
 </PRE>
 <P><B>/etc/fs.prefs</B> ファイルは、次のような内容と形式を持っています。
 <PRE>   192.12.108.214        7500
@@ -122,28 +122,28 @@ VLDB に同様の誤った情報がない限り、決して使用しません。
    138.255.33.34         39000
    128.0.45.36           41000
    128.0.45.37           41000
-   
+
 </PRE>
 <P>以下のコマンドは、<B>-stdin</B> フラグを使用して、標準入力ストリームから優先順位を読み取ります。ランクは、プログラム <B>calc_prefs</B> からこのコマンドにパイプ接続されます。このプログラムは、発行者がローカル・セルにとって重要な値を基本にして計算するために作成されたものです。
 <PRE>   # <B>calc_prefs | fs setserverprefs -stdin</B>
-   
+
 </PRE>
 <P>以下のコマンドは、<B>-vlservers</B> 引き数を使用して、
 <B>fs1.abc.com</B>、<B>fs3.abc.com</B>、および <B>fs4.abc.com</B> という VL サーバー・マシンに対するキャッシュ・マネージャーの優先順位を設定します。基本ランクはそれぞれ、1,11000 および 65521 です。
 <PRE>   # <B>fs setserverprefs -vlservers fs1.abc.com 1 fs3.abc.com 11000</B>  \
                        <B>fs4.abc.com 65521</B>
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
 <P><STRONG>関連情報 </STRONG>
 <P><A HREF="auarf146.htm#HDRFS_GETSERVERPREFS">fs getserverprefs</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf161.htm">前ページ</A> &#124; <A HREF="auarf163.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf161.htm">前ページ</A> &#124; <A HREF="auarf163.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -26,13 +26,13 @@
 <P><STRONG>目的</STRONG>
 <P>認証サーバーを使用して認証を行います。
 <P><STRONG>構文</STRONG>
-<PRE><B>klog</B>  [<B>-x</B>]  [<B>-principal</B> &lt;<VAR>user name</VAR>>]  [<B>-password</B> &lt;<VAR>user's password</VAR>>]  
-      [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-servers</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  
-      [<B>-pipe</B>]  [<B>-silent</B>]  [<B>-lifetime</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]  
+<PRE><B>klog</B>  [<B>-x</B>]  [<B>-principal</B> &lt;<VAR>user name</VAR>>]  [<B>-password</B> &lt;<VAR>user's password</VAR>>]
+      [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-servers</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]
+      [<B>-pipe</B>]  [<B>-silent</B>]  [<B>-lifetime</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]
       [<B>-setpag</B>]  [<B>-tmp</B>]  [<B>-help</B>]
-    
-<B>klog</B>  [<B>-x</B>]  [<B>-pr</B> &lt;<VAR>user name</VAR>>]  [<B>-pa</B> &lt;<VAR>user's password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
-      [<B>-s</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  [<B>-pi</B>]  [<B>-si</B>]  
+
+<B>klog</B>  [<B>-x</B>]  [<B>-pr</B> &lt;<VAR>user name</VAR>>]  [<B>-pa</B> &lt;<VAR>user's password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+      [<B>-s</B> &lt;<VAR>explicit list of servers</VAR>><SUP>+</SUP>]  [<B>-pi</B>]  [<B>-si</B>]
       [<B>-l</B> &lt;<VAR>ticket lifetime in hh[:mm[:ss]]</VAR>>]  [<B>-se</B>]  [<B>-t</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -89,7 +89,7 @@ AFS 3.1 以降を実行する認証サーバーが作成するユーザー・アカウントの場合、
    37:59:41 (1d 13h)   154:42:01 (6d 10h)  629:52:56 (26d 05h)
    40:37:19 (1d 16h)   165:23:50 (6d 21h)  673:26:07 (28d 01h)
    43:25:50 (1d 19h)   176:50:01 (7d 08h)
-   
+
 </PRE>
 <P><STRONG>注意</STRONG>
 <P>デフォルトでは、このコマンドは新規のプロセス認証グループ (PAG) を作成しません。
@@ -106,7 +106,7 @@ NFS クライアント・マシンがサポートされるシステム・タイプであると想定することが可
 <B>-uidcheck on</B> 引き数を、
 <B>fs exportafs</B> コマンドに組み込んで、
 UID 検査を使用可能にした場合は、コマンドは失敗し、以下のようなエラー・メッセージが出ます。
-<PRE>   
+<PRE>
    警告 : <VAR>translator_machine</VAR> へのリモート pioctl は失敗しました (err=8). . .
    pioctl が失敗したため、AFS に対する認証は利用できません。
 </PRE>
@@ -163,35 +163,35 @@ NFS クライアント・マシン上で <B>klog</B> コマンドを発行したユーザーの、ローカル 
 (時間は、<B>kas setfields</B> コマンドの、
 <B>-locktime</B> 引き数を使用して設定され、
 <B>kas examine</B> コマンドの出力に表示されます)。
-<PRE>   
+<PRE>
    ID がロックされているため、AFS への認証が利用できません。
    システム管理者にご連絡ください。
-   
+
 </PRE>
 <P><B>-tmp</B> フラグが組み込まれている場合は、次のメッセージで、ケルベロス・スタイルのチケット・ファイルの作成が確認されます。
-<PRE>   
+<PRE>
    チケット・ファイルを /tmp に書き込みました。
-   
+
 </PRE>
 <P><STRONG>例</STRONG>
 <P>ほとんどの場合、このコマンドは引き数を伴わずに発行されます。該当するパスワードは、ローカル・ファイル・システムに現在ログインしている人のためのものです。チケットの存続時間は、<B>説明</B>セクションで述べた方法で、計算されます (デフォルトを変更していない場合、認証データベース項目を AFS 3.1 以降で作成したユーザーの場合は 25 時間です)。
-<PRE>   
+<PRE>
    % <B>klog</B>
    パスワード :
-   
+
 </PRE>
 <P>次の例では、ユーザーを、
 ABC Corporation のテスト・セルの<B>管理者</B>として、認証しています。
-<PRE>   
+<PRE>
    % <B>klog -principal admin -cell test.abc.com</B>
    パスワード :
-   
+
 </PRE>
 <P>次の例では、発行者は、
 104 時間 30 分 (4 日と 8 時間 30 分) のチケット存続時間を要求しています。この存続時間が、<B>説明</B>セクションで述べた、チケットの最大存続時間その他の要素によって許可されたとすると、トークンの存続時間は 110:44:28 です。これは、可能な値のうちでは 2 番目に大きなものです。
 <PRE>   % <B>klog -lifetime 104:30</B>
    パスワード :
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>なし。
@@ -204,11 +204,11 @@ ABC Corporation のテスト・セルの<B>管理者</B>として、認証しています。
 <P><A HREF="auarf208.htm#HDRPAGSH">pagsh</A>
 <P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf199.htm">前ページ</A> &#124; <A HREF="auarf201.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf199.htm">前ページ</A> &#124; <A HREF="auarf201.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

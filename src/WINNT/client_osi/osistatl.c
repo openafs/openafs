@@ -1,7 +1,7 @@
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -93,7 +93,7 @@ static void lock_ObtainWriteStat(osi_rwlock_t *lockp)
 	if (ap) {
 		/* remove from queue and turn time to incremental time */
 		osi_RemoveActiveInfo(&realp->qi, ap);
-		
+
 		/* add in increment to statistics */
 		realp->writeBlockedCount++;
 		realp->writeBlockedTime = LargeIntegerAdd(realp->writeBlockedTime,
@@ -162,7 +162,7 @@ static void lock_ReleaseReadStat(osi_rwlock_t *lockp)
 	realp->readLockedCount++;
 	realp->readLockedTime = LargeIntegerAdd(realp->readLockedTime, ap->startTime);
 	osi_FreeActiveInfo(ap);
-	
+
 	if (--lockp->readers == 0 && !osi_TEmpty(&realp->turn)) {
         	osi_TSignalForMLs(&realp->turn, 0, csp);
 	}
@@ -191,11 +191,11 @@ static void lock_ConvertWToRStat(osi_rwlock_t *lockp)
 	realp->writeLockedCount++;
 	realp->writeLockedTime = LargeIntegerAdd(realp->writeLockedTime, ap->startTime);
 	osi_FreeActiveInfo(ap);
-        
+
         /* and obtain the read lock */
 	lockp->readers++;
 	osi_QueueActiveInfo(&realp->qi, OSI_ACTIVEFLAGS_READER);
-	
+
 	lockp->flags &= ~OSI_LOCKFLAG_EXCL;
 	if (!osi_TEmpty(&realp->turn)) {
 		osi_TSignalForMLs(&realp->turn, 1, csp);
@@ -225,7 +225,7 @@ static void lock_ConvertRToWStat(osi_rwlock_t *lockp)
         realp->readLockedCount++;
         realp->readLockedTime = LargeIntegerAdd(realp->readLockedTime, ap->startTime);
         osi_FreeActiveInfo(ap);
-        
+
         if (--lockp->readers == 0) {
             /* and obtain the write lock */
             lockp->readers--;
@@ -244,7 +244,7 @@ static void lock_ConvertRToWStat(osi_rwlock_t *lockp)
 
             /* remove from queue and turn time to incremental time */
             osi_RemoveActiveInfo(&realp->qi, ap);
-		
+
             /* add in increment to statistics */
             realp->writeBlockedCount++;
             realp->writeBlockedTime = LargeIntegerAdd(realp->writeBlockedTime,
@@ -275,7 +275,7 @@ static void lock_ReleaseWriteStat(osi_rwlock_t *lockp)
 	realp->writeLockedCount++;
 	realp->writeLockedTime = LargeIntegerAdd(realp->writeLockedTime, ap->startTime);
 	osi_FreeActiveInfo(ap);
-	
+
 	lockp->flags &= ~OSI_LOCKFLAG_EXCL;
 	if (!osi_TEmpty(&realp->turn)) {
 		osi_TSignalForMLs(&realp->turn, 0, csp);
@@ -337,7 +337,7 @@ static void lock_ReleaseMutexStat(struct osi_mutex *lockp)
         EnterCriticalSection(csp);
 
 	osi_assert(lockp->flags & OSI_LOCKFLAG_EXCL);
-	
+
 	ap = osi_FindActiveInfo(&realp->qi);
 	osi_assert(ap != NULL);
 	osi_RemoveActiveInfo(&realp->qi, ap);
@@ -358,7 +358,7 @@ static void lock_ReleaseMutexStat(struct osi_mutex *lockp)
 static int lock_TryReadStat(struct osi_rwlock *lockp)
 {
 	long i;
-	osi_rwlockStat_t *realp; 
+	osi_rwlockStat_t *realp;
         CRITICAL_SECTION *csp;
 
 	realp = (osi_rwlockStat_t *) lockp->d.privateDatap;
@@ -507,7 +507,7 @@ static void osi_SleepRStat(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         EnterCriticalSection(csp);
 
 	osi_assert(lockp->readers > 0);
-	
+
 	if (--lockp->readers == 0 && !osi_TEmpty(&realp->turn)) {
         	osi_TSignalForMLs(&realp->turn, 0, NULL);
 	}
@@ -537,7 +537,7 @@ static void osi_SleepWStat(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         EnterCriticalSection(csp);
 
 	osi_assert(lockp->flags & OSI_LOCKFLAG_EXCL);
-	
+
 	lockp->flags &= ~OSI_LOCKFLAG_EXCL;
 	if (!osi_TEmpty(&realp->turn)) {
         	osi_TSignalForMLs(&realp->turn, 0, NULL);
@@ -568,7 +568,7 @@ static void osi_SleepMStat(LONG_PTR sleepVal, struct osi_mutex *lockp)
         EnterCriticalSection(csp);
 
 	osi_assert(lockp->flags & OSI_LOCKFLAG_EXCL);
-	
+
 	lockp->flags &= ~OSI_LOCKFLAG_EXCL;
 	if (!osi_TEmpty(&realp->turn)) {
 		osi_TSignalForMLs(&realp->turn, 0, NULL);
@@ -610,10 +610,10 @@ static void lock_DecrRWLockStat(osi_rwlockStat_t *rwp)
 static void lock_FinalizeMutexStat(osi_mutex_t *lockp)
 {
 	osi_mutexStat_t *realp;
-	
+
 	/* pull out the real pointer */
 	realp = (osi_mutexStat_t *) lockp->d.privateDatap;
-	
+
 	/* remove from the queues, and free */
 	EnterCriticalSection(&osi_statFDCS);
 	if (realp->refCount <= 0) {
@@ -627,10 +627,10 @@ static void lock_FinalizeMutexStat(osi_mutex_t *lockp)
 static void lock_FinalizeRWLockStat(osi_rwlock_t *lockp)
 {
 	osi_rwlockStat_t *realp;
-	
+
 	/* pull out the real pointer */
 	realp = (osi_rwlockStat_t *) lockp->d.privateDatap;
-	
+
 	/* remove from the queues, and free */
 	EnterCriticalSection(&osi_statFDCS);
 	if (realp->refCount <= 0) {
@@ -644,7 +644,7 @@ static void lock_FinalizeRWLockStat(osi_rwlock_t *lockp)
 void lock_InitializeRWLockStat(osi_rwlock_t *lockp, char *namep, unsigned short level)
 {
 	osi_rwlockStat_t *realp;
-	
+
 	realp = (osi_rwlockStat_t *) malloc(sizeof(*realp));
 	lockp->d.privateDatap = (void *) realp;
 	lockp->type = osi_statType;
@@ -663,7 +663,7 @@ void lock_InitializeRWLockStat(osi_rwlock_t *lockp, char *namep, unsigned short 
 void lock_InitializeMutexStat(osi_mutex_t *lockp, char *namep, unsigned short level)
 {
 	osi_mutexStat_t *realp;
-	
+
 	realp = (osi_mutexStat_t *) malloc(sizeof(*realp));
 	lockp->d.privateDatap = (void *) realp;
 	lockp->type = osi_statType;

@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -166,7 +166,7 @@ AFS 내부가 표준 디렉토리 요소와 같이 보이고 수행되기 때문입니다.
 <B>.readonly</B> 확장자를 추가하여 생성됩니다. 읽기
 전용 볼륨 작성에 대한 지침을 보려면 <A HREF="#HDRWQ192">볼륨 복제(읽기 전용 볼륨 작성)</A>를 참조하십시오.
 </LI><LI><I>백업</I> 볼륨은 읽기/쓰기 원본 볼륨의 클론이로
-원본과 동일한 사이트에 저장됩니다. 
+원본과 동일한 사이트에 저장됩니다.
 <A NAME="IDX6435"></A>
 백업 버전은 특정 시간에
 읽기/쓰기 원본의 상태를 기록하기 때문에 나중에 실수로 변경되었거나 삭제된
@@ -203,7 +203,7 @@ AFS 백업 시스템을 사용한 볼륨 백업에 대한 정보를 보려면
 이동할 수 있습니다. VLDB(Location Database)의 자동 볼륨 위치 추적
 기능은 액세스가 가시적으로 유지되게 합니다. 볼륨 이동에 대한 지침을 보려면
 <A HREF="#HDRWQ226">볼륨 이동</A>을 참조하십시오.
-</LI><LI>볼륨은 AFS에서 복제본 단위입니다. 
+</LI><LI>볼륨은 AFS에서 복제본 단위입니다.
 <A NAME="IDX6438"></A>
 <A NAME="IDX6439"></A>
 <I>복제</I>는
@@ -215,7 +215,7 @@ AFS 백업 시스템을 사용한 볼륨 백업에 대한 정보를 보려면
 일반적으로 자주 사용되는 응용 프로그램과 자주 변경되지 않는 파일을
 포함하는 볼륨은 복제될 가능성이 가장 높지만 어떠한 읽기/쓰기 볼륨도
 복제할 수 있습니다. <A HREF="#HDRWQ192">볼륨 복제(읽기 전용 볼륨 작성)</A>를 참조하십시오.
-</LI><LI>볼륨은 두 가지 측면에서 AFS의 백업 단위입니다. 
+</LI><LI>볼륨은 두 가지 측면에서 AFS의 백업 단위입니다.
 <A NAME="IDX6440"></A>
 백업 볼륨 버전을
 작성하여 지정된 시간에 읽기/쓰기 원본 볼륨의 상태를 보존할 수 있습니다.
@@ -321,7 +321,7 @@ AFS 파일 공간에 백업 버전을 마운트하여 사용자들이 실수로 변경했거나
 있습니다. 둘째, 캐쉬 관리 프로그램은 파일에 도달하기 위해 추적하는
 경로 이름에 혼동을 일으킬 수 있습니다 (예를 들어 <B>pwd</B>
 명령의 예측치 못한 출력 야기). 그러나 둘 이상의 디렉토리에 볼륨을 마운트하면
-해당 볼륨의 루트 디렉토리와 연관된 액세스 제어 목록(ACL)이 모든 마운트 포인트에 적용됩니다. 
+해당 볼륨의 루트 디렉토리와 연관된 액세스 제어 목록(ACL)이 모든 마운트 포인트에 적용됩니다.
 <A NAME="IDX6457"></A>
 <A NAME="IDX6458"></A>
 <P>여러 유형의 마운트 포인트가 있으며 캐쉬 관리 프로그램은 각 마운트 포인트를
@@ -360,7 +360,7 @@ ID 번호를 예약해 둡니다. 동시에 볼륨 서버는 사용자가 지정하는 사이트에
 액세스 권한을 <B>system:administrators</B> 그룹에
 부여합니다. 볼륨을 마운트한 후에 <B>fs setacl</B> 명령을
 사용하여 <B>system:administrators</B> 그룹에 대해 다른
-항목을 추가 및 제거하거나 항목을 변경할 수 있습니다. <A HREF="auagd020.htm#HDRWQ573">ACL 항목 설정</A>을 참조하십시오. 
+항목을 추가 및 제거하거나 항목을 변경할 수 있습니다. <A HREF="auagd020.htm#HDRWQ573">ACL 항목 설정</A>을 참조하십시오.
 <A NAME="IDX6466"></A>
 <A NAME="IDX6467"></A>
 </LI><LI>볼륨의 읽기/쓰기 버전이 파일 서버 파티션에서 사용할 수 있는 디스크
@@ -410,7 +410,7 @@ ID 번호를 예약해 둡니다. 동시에 볼륨 서버는 사용자가 지정하는 사이트에
 </TD></TR></TABLE>
 <P>
 <PRE>   % <B>vos partinfo</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -432,10 +432,10 @@ ID 번호를 예약해 둡니다. 동시에 볼륨 서버는 사용자가 지정하는 사이트에
 </LI><LI><A NAME="LIWQ188"></A><B>vos create</B> 명령을 실행하여
 볼륨을 작성하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos create</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>> &lt;<VAR>volume&nbsp;name</VAR>>  \
                 [<B>-maxquota</B> &lt;<VAR>initial&nbsp;quota&nbsp;(KB)</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -463,17 +463,17 @@ ID 번호를 예약해 둡니다. 동시에 볼륨 서버는 사용자가 지정하는 사이트에
 </LI><LI><A NAME="LIWQ189"></A><B>(선택적)</B> <B>fs mkmount</B> 명령을 실행하여 파일 공간에 볼륨을 마운트하십시오.
 자세한 구문을 보려면 <A HREF="#HDRWQ212">일반 또는 읽기/쓰기 마운트 포인트를 작성하려면</A>을 참조하십시오.
 <P>
-<PRE>   
-   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>> 
-   
+<PRE>
+   % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>>
+
 </PRE>
 </LI><LI><B>(선택적)</B> <B>fs lsmount</B> 명령을
 실행하여 마운트 포인트가 올바른 볼륨을 참조하는지 확인하십시오.
 <A HREF="#HDRWQ211">마운트 포인트를 표시하려면</A>에 나타난 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
-   
+
 </PRE>
 </LI><LI><B>(선택적)</B> 볼륨 헤더에 볼륨에 대한 보조
 정보를 기록하려면 <B>-offlinemsg</B> 인수와 함께
@@ -753,9 +753,9 @@ VLDB 항목에 있는 최대 사이트 수 정의에 의해 결정됩니다. 볼륨의 읽기/쓰기
 볼륨의 현재 사이트를 표시하려면 <A HREF="#HDRWQ221">볼륨의 VLDB 항목 및 볼륨 헤더 표시</A>에서
 설명하는 것처럼 <B>vos examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos examine</B> &lt;<VAR>volume&nbsp;name&nbsp;or &nbsp;ID</VAR>>
-    
+
 </PRE>
 <P>
 <P>출력의 마지막 행에는 VLDB로부터의 볼륨 사이트 정의가 표시됩니다.
@@ -771,9 +771,9 @@ VLDB 항목에 있는 최대 사이트 수 정의에 의해 결정됩니다. 볼륨의 읽기/쓰기
 <A HREF="#HDRWQ185">읽기/쓰기 볼륨 작성</A>에서 자세히 설명하는 것처럼
 <B>vos partinfo</B> 명령을 사용하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos partinfo</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>]
-   
+
 </PRE>
 </LI></UL>
 <A NAME="IDX6519"></A>
@@ -785,9 +785,9 @@ VLDB 항목에 있는 최대 사이트 수 정의에 의해 결정됩니다. 볼륨의 읽기/쓰기
 </LI><LI><A NAME="LIWQ197"></A><B>vos addsite</B> 명령을 실행하여
 VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos addsite</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -812,9 +812,9 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 실행하십시오.
 이 명령은 <A HREF="auagd009.htm#HDRWQ158">프로세스 상태와 BosConfig 파일의 정보 표시하기</A>에서 자세히 설명합니다.
 <P>
-<PRE>   
+<PRE>
    % <B>bos status</B> &lt;<VAR>machine&nbsp;name</VAR>> <B>fs vlserver</B>
-   
+
 </PRE>
 <A NAME="IDX6525"></A>
 <A NAME="IDX6526"></A>
@@ -823,9 +823,9 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 </LI><LI><A NAME="LIWQ199"></A><B>vos release</B> 명령을 실행하여 읽기/쓰기
 원본 볼륨을 클론하고 클론을 각 읽기 전용 사이트에 분배하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>> [<B>-f</B>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -844,9 +844,9 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 <TT>New release</TT> 플래그가 설정된 사이트 정의가 없는지 확인하십시오.
 이 명령은 <A HREF="#HDRWQ221">볼륨의 VLDB 항목 및 볼륨 헤더 표시</A>에서 자세히 설명합니다.
 <P>
-<PRE>   
+<PRE>
    % <B>vos examine</B> &lt;<VAR>volume&nbsp;name&nbsp;or &nbsp;ID</VAR>>
-   
+
 </PRE>
 </LI></OL>
 <P>단계 <A HREF="#LIWQ200">6</A>의 출력에 플래그가 나타나는 경우
@@ -978,10 +978,10 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 실행)에 대한 PATH 환경 변수에 보통 AFS 2진 파일로의 경로가 들어 있지
 않으므로 <B>vos</B> 2진 파일에 대한 완전한 경로 이름을
 지정한다는 점을 알아 두십시오.
-<PRE>   
+<PRE>
    % <B>bos create fs3.abc.com backupusers cron</B>  \
      <B>-cmd "/usr/afs/bin/vos backupsys  -prefix user -localauth" "1:00"</B>
-    
+
 </PRE>
 <A NAME="IDX6543"></A>
 <A NAME="IDX6544"></A>
@@ -1032,10 +1032,10 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 읽기/쓰기 원본 볼륨의 백업 버전을 작성하십시오. 표시되는 메시지는 백업
 조작의 성공을 확인해 줍니다.
 <P>
-<PRE>   
+<PRE>
    % <B>vos backup</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
    Created backup volume for <VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1054,9 +1054,9 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 선택적이지만 캐쉬 관리 프로그램은 볼륨이 마운트되지 않으면 볼륨의 내용을
 액세스할 수 없다는 점을 알아 두십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>><B>.backup</B>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1075,9 +1075,9 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 실행하여 마운트 포인트가 올바른 볼륨을 참조하는지 확인하십시오.
 <A HREF="#HDRWQ211">마운트 포인트를 표시하려면</A>에 나타난 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
-   
+
 </PRE>
 </LI></OL>
 <A NAME="IDX6550"></A>
@@ -1099,9 +1099,9 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 <PRE>   % <B>vos backupsys</B> [<B>-prefix</B> &lt;<VAR>common&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>]   \
         [<B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>]
 [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>]  \
-        [<B>-exclude</B>]   [<B>-xprefix</B> &lt;<VAR>negative&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>] 
+        [<B>-exclude</B>]   [<B>-xprefix</B> &lt;<VAR>negative&nbsp;prefix&nbsp;on&nbsp;volume(s)</VAR>><SUP>+</SUP>]
         [<B>-dryrun</B>]  [<B>-verbose</B>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1328,9 +1328,9 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 <OL TYPE=1>
 <LI><B>fs lsmount</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1344,45 +1344,45 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 </LI></OL>
 <P>지정된 디렉토리가 마운트 포인트이면 출력은 다음 양식을 가집니다.
 <PRE>   '<VAR>directory</VAR>' is a mount point for volume '<VAR>volume&nbsp;name</VAR>'
-   
+
 </PRE>
 <P>일반 마운트 포인트의 경우 <B>abc.com</B> 셀의 클라이언트
 시스템에 대해 실행된 다음 예제 명령에서처럼 숫자 기호(<TT>#</TT>)가
 <VAR>volume name</VAR> 문자열 앞에 사용됩니다.
-<PRE>   
+<PRE>
    % <B>fs lsmount /afs/abc.com/usr/terry</B>
    '/afs/abc.com/usr/terry' is a mount point for volume '#user.terry'
-      
+
 </PRE>
 <P>읽기/쓰기 마운트 포인트의 경우 <B>abc.com</B> 셀의 클라이언트
 시스템에 대해 실행된 다음 예제 명령에서처럼 퍼센트 기호(<TT>%</TT>)가
 <VAR>volume name</VAR> 문자열 앞에 사용됩니다. 셀의 관리자는 읽기/쓰기
 마운트 포인트의 이름 앞에 마침표를 사용하는 규칙을 따라 왔습니다.
-<PRE>   
+<PRE>
    % <B>fs lsmount /afs/.abc.com </B>
    '/afs/.abc.com' is a mount point for volume '%root.cell'
-   
+
 </PRE>
 <P>셀 방식의 마운트 포인트의 경우 <B>abc.com</B> 셀의 클라이언트
 시스템에 대해 실행된 다음 예제 명령에서처럼 셀 이름과 콜론(<TT>:</TT>)이
 숫자 다음에 나오고 <VAR>volume name</VAR> 문자열 앞에 사용됩니다.
-<PRE>   
+<PRE>
     % <B>fs lsmount /afs/ghi.gov </B>
    '/afs/ghi.gov' is a mount point for volume '#ghi.gov:root.cell'
-   
+
 </PRE>
 <P>마운트 포인트로의 기호 연결의 경우 출력은 <B>abc.com</B>
 셀의 클라이언트 시스템에 대해 실행된 다음 예제 명령에서 볼 수 있는 양식을
 가집니다.
-<PRE>   
+<PRE>
    % <B>fs lsmount /afs/abc</B>
    '/afs/abc' is a symbolic link, leading to a mount point for volume '#root.cell'
-   
+
 </PRE>
 <P>디렉토리가 마운트 포인트가 아니고 AFS에 있지 않으면 출력은 다음과 같이
 나타납니다.
 <PRE>   '<VAR>directory</VAR>' is not a mount point.
-   
+
 </PRE>
 <P>출력이 뒤죽박죽되는 경우 마운트 포인트가 로컬 캐쉬에서 손상된 것일 수
 있습니다. <A HREF="auagd015.htm#HDRWQ413">하나 이상의 마운트 포인트 플러쉬하기</A>에서 설명하는 것처럼
@@ -1409,9 +1409,9 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 작성하십시오. 읽기/쓰기 마운트 포인트를 작성하는 경우
 <B>-rw</B> 플래그를 포함시키십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>>  [<B>-rw</B>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1462,20 +1462,20 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 <P>
 <P><VAR>cellname</VAR>을 셀 이름으로 대체하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>cd /afs/.</B><VAR>cellname</VAR>
-   
+
    % <B>fs  mkmount  new_cells  root.afs</B>
- 
+
    % <B>cd  new_cells</B>
-   
+
 </PRE>
 </LI><LI><B>fs mkmount</B> 명령을 <B>-cell</B> 인수와 함께 실행하여 셀 방식의 마운트 포인트를 작성하십시오.
 필요한 만큼 각 셀 방식의 마운트 포인트에 대해 이 명령을 반복하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>> <B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1507,16 +1507,16 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 액세스하게 하십시오. 원하는 경우 또한 <B>/afs/.</B><VAR>cellname</VAR> 디렉토리로부터 <B>new_cells</B> 마운트 포인트를
 제거할 수도 있습니다.
 <P>
-<PRE>     
+<PRE>
    % <B>vos release root.afs</B>
-   
+
    %  <B>fs checkvolumes</B>
-   
+
    % <B>cd /afs/.</B><VAR>cellname</VAR>
-    
+
    % <B>fs rmmount new_cells</B>
-   
-   
+
+
 </PRE>
 <P>
 <P>사용자가 새로 마운트된 외부 셀을 액세스하게 하려면 각 클라이언트 시스템의
@@ -1550,9 +1550,9 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 제거하십시오. 해당 볼륨이 여전히 존재하면 이것이 유일한 마운트 포인트인
 경우 그 내용을 액세스할 수 없습니다.
 <P>
-<PRE>   
+<PRE>
    % <B>fs rmmount</B> &lt;<VAR>directory</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1613,10 +1613,10 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 <OL TYPE=1>
 <LI><B>vos listvldb</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos listvldb</B>  [<B>-name</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>] [<B>-server</B> &lt;<VAR>machine&nbsp;name</VAR>>] \
                   [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>] [<B>-locked</B>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1685,13 +1685,13 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
 <P><TT>New release</TT> 및 <TT>Old release</TT> 플래그에 대한 자세한
 설명을 보려면 <A HREF="#HDRWQ192">볼륨 복제(읽기 전용 볼륨 작성)</A>를 참조하십시오.
 <P>이 명령의 예와 단일 볼륨에 대한 출력 결과는 다음과 같습니다.
-<PRE>   
+<PRE>
    % <B>vos listvldb user.terry</B>
    user.terry
        RWrite: 50489902    Backup: 50489904
        number of sites -> 1
           server fs3.abc.com partition /vicepc RW Site
-  
+
 </PRE>
 <P><H3><A NAME="HDRWQ219" HREF="auagd002.htm#ToC_235">볼륨 헤더 표시</A></H3>
 <A NAME="IDX6598"></A>
@@ -1710,9 +1710,9 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
 <OL TYPE=1>
 <LI><B>vos listvol</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos listvol</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>] [<B>-fast</B>] [<B>-long</B>] [<B>-extended</B>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1787,7 +1787,7 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
 출력의 첫째 행은 목록의 볼륨 수를 지정합니다.
 출력의 마지막 행은 다음 예에서처럼 온라인, 오프라인 및 사용중 상태에
 있는 볼륨의 수를 요약합니다.
-<PRE>   
+<PRE>
    % <B>vos listvol  fs2.abc.com /vicepb</B>
    Total number of volumes on server fs2.abc.com \
                                        partition /vicepb : 66
@@ -1798,7 +1798,7 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
    user.pat             1969534536 RW      17518 K On-line
    user.pat.backup      1969534538 BK      17537 K On-line
    Total volumes onLine 66 ; Total volumes offLine 0 ;  Total busy 0
-   
+
 </PRE>
 <P><B>-fast 플래그를 사용한 출력</B>
 <P>
@@ -1806,7 +1806,7 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
 <B>-fast</B> 플래그를 포함시키면 다음 예에서처럼 숫자 순서 크기대로 정렬되는
 각 볼륨의 볼륨 ID 번호만 표시됩니다. 마지막 행(온라인, 오프라인 및 사용중
 볼륨의 수 요약)은 생략됩니다.
-<PRE>   
+<PRE>
    % <B>vos listvol fs3.abc.com /vicepa -f</B>
    Total number of volumes on server fs3.abc.com  \
                                        partition /vicepa: 37
@@ -1816,7 +1816,7 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
       .
    35970325
    49732810
-   
+
 </PRE>
 <P><B>-long 플래그를 사용한 출력</B>
 <A NAME="IDX6608"></A>
@@ -1867,22 +1867,22 @@ ReleaseClone이 없으면 <TT>RClone</TT> 필드는 나타나지 않습니다.
 </LI></UL>
 </LI></UL>
 <P><B>-long</B> 플래그가 포함될 때 출력의 예는 다음과 같습니다.
-<PRE>   
+<PRE>
    % <B>vos listvol fs2.abc.com b -long</B>
-   Total number of volumes on server fs2.abc.com 
+   Total number of volumes on server fs2.abc.com
                                        partition /vicepb: 66
          .                   .      .         .   .    .
          .                   .      .         .   .    .
    user.pat             1969534536 RW      17518 K On-line
         fs2.abc.com /vicepb
-        RWrite 1969534536 ROnly 0        Backup 1969534538 
+        RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Mon Jun 12 09:02:25 1989
         Last Update Thu Jan  4 17:39:34 1990
         1573 accesses in the past day (i.e., vnode references)
    user.pat.backup      1969534538 BK      17537 K On-line
         fs2.abc.com /vicepb
-        RWrite 1969534536 ROnly 0        Backup 1969534538 
+        RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Fri Jan  5 06:37:59 1990
         Last Update Fri Jan  5 06:37:59 1990
@@ -1890,7 +1890,7 @@ ReleaseClone이 없으면 <TT>RClone</TT> 필드는 나타나지 않습니다.
 	    .               .         .     .       .
 	    .               .         .     .       .
    Total volumes onLine 66 ; Total volumes offLine 0 ; Total busy 0
-   
+
 </PRE>
 <P><B>-extended 플래그를 사용한 출력</B>
 <A NAME="IDX6625"></A>
@@ -1912,7 +1912,7 @@ ReleaseClone이 없으면 <TT>RClone</TT> 필드는 나타나지 않습니다.
        Creation    Mon Mar  8 14:26:05 1999
        Last Update Mon Apr 26 09:20:43 1999
        11533 accesses in the past day (i.e., vnode references)
-   
+
                          Raw Read/Write Stats
              |-------------------------------------------|
              |    Same Network     |    Diff Network     |
@@ -1922,7 +1922,7 @@ ReleaseClone이 없으면 <TT>RClone</TT> 필드는 나타나지 않습니다.
    Reads     |      151 |      151 |     1092 |     1068 |
    Writes    |        3 |        3 |      324 |      324 |
              |-------------------------------------------|
-    
+
                       Writes Affecting Authorship
              |-------------------------------------------|
              |   File Authorship   | Directory Authorship|
@@ -1936,7 +1936,7 @@ ReleaseClone이 없으면 <TT>RClone</TT> 필드는 나타나지 않습니다.
    1day-1wk  |        1 |        0 |        1 |        0 |
    > 1wk     |        0 |        0 |        0 |        0 |
              |-------------------------------------------|
-   
+
 </PRE>
 <P><H3><A NAME="HDRWQ221" HREF="auagd002.htm#ToC_237">볼륨의 VLDB 항목 및 볼륨 헤더 표시</A></H3>
 <A NAME="IDX6626"></A>
@@ -1959,9 +1959,9 @@ VLDB와 볼륨 헤더를 비교할 수 있습니다.
 <OL TYPE=1>
 <LI><B>vos examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos examine</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -1982,7 +1982,7 @@ VLDB와 볼륨 헤더를 비교할 수 있습니다.
 설명하는 것처럼 <B>vos listvldb</B> 명령을 사용할 때와
 동일한 VLDB의 정보가 나열됩니다.
 <P>다음은 그 VLDB 항목이 현재 잠겨 있는 볼륨에 대한 예입니다.
-<PRE>   
+<PRE>
    % <B>vos examine user.terry</B>
    user.terry                    536870981 RW   3459 K On-line
        fs3.abc.com /vicepa
@@ -1993,9 +1993,9 @@ VLDB와 볼륨 헤더를 비교할 수 있습니다.
        5719 accesses in the past day (i.e., vnode references)
        RWrite: 5360870981   Backup: 536870983
        number of sites -> 1
-          server fs3.abc.com partition /vicepa RW Site 
+          server fs3.abc.com partition /vicepa RW Site
        Volume is currently LOCKED
-   
+
 </PRE>
 <P><H3><A NAME="HDRWQ223" HREF="auagd002.htm#ToC_239">파일이 들어 있는 볼륨의 이름 또는 위치 표시</A></H3>
 <P>이 절은 파일이나 디렉토리를 포함하는 볼륨의 이름, 볼륨 ID 번호 또는
@@ -2040,9 +2040,9 @@ listvldb</B> 명령을 사용하십시오.
 <OL TYPE=1>
 <LI><B>fs listquota</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs listquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2058,11 +2058,11 @@ listvldb</B> 명령을 사용하십시오.
 </DL>
 </LI></OL>
 <P>다음은 출력의 예입니다.
-<PRE>   
+<PRE>
    % <B>fs listquota /afs/abc.com/usr/terry</B>
-   Volume Name     Quota    Used    % Used   Partition 
-   user.terry      15000    5071       34%         86%   
-   
+   Volume Name     Quota    Used    % Used   Partition
+   user.terry      15000    5071       34%         86%
+
 </PRE>
 <A NAME="IDX6657"></A>
 <A NAME="IDX6658"></A>
@@ -2074,9 +2074,9 @@ listvldb</B> 명령을 사용하십시오.
 <OL TYPE=1>
 <LI><B>fs examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs examine</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2092,13 +2092,13 @@ listvldb</B> 명령을 사용하십시오.
 </LI></OL>
 <P>다음 예제는 출력이 <TT>vid</TT> 필드에 볼륨 ID 번호를 보고하는 방법을
 보여 줍니다.
-<PRE>   
+<PRE>
    % <B>fs examine /afs/abc.com/usr/terry</B>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073
-   The partition has 46383 blocks available out of 333305  
-   
+   The partition has 46383 blocks available out of 333305
+
 </PRE>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 명령의 출력에서 파티션 관련 통계가 항상 표준 UNIX <B>df</B>
 명령 출력의 해당 값과 일치하는 것은 아닙니다. 이 명령에서 보고한 통계는
@@ -2119,9 +2119,9 @@ listvldb</B> 명령을 사용하십시오.
 <LI><B>fs whereis</B> 명령을 실행하여 파일이나 디렉토리가
 들어 있는 볼륨을 저장하는 파일 서버 시스템의 이름을 표시하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs whereis</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2138,18 +2138,18 @@ listvldb</B> 명령을 사용하십시오.
 <P>출력은 다음 예에서처럼 해당 파일을 포함하는 볼륨이 있는 파일 서버 시스템을
 표시합니다.
 <P>
-<PRE>   
+<PRE>
    % <B>fs whereis /afs/abc.com/user/terry</B>
    File /afs/abc.com/usr/terry is on host fs2.abc.com
-   
+
 </PRE>
 </LI><LI>또한 해당 볼륨이 있는 파티션을 알기 원하는 경우 먼저 <B>fs
 listquota</B> 명령을 실행하여 볼륨의 이름을 표시하십시오.
 자세한 구문을 보려면 <A HREF="#HDRWQ224">파일이 들어 있는 볼륨의 이름을 표시하려면</A>을 참조하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs listquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
-   
+
 </PRE>
 <P>
 <P>그런 다음 <B>vos listvldb</B> 명령을 실행하십시오. 이 때
@@ -2157,9 +2157,9 @@ listquota</B> 명령을 실행하여 볼륨의 이름을 표시하십시오.
 자세한 구문이나 출력에 대한 설명을 보려면 <A HREF="#HDRWQ218">VLDB 항목을 표시하려면</A>을
 참조하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos listvldb</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 </LI></OL>
 <HR><H2><A NAME="HDRWQ226" HREF="auagd002.htm#ToC_243">볼륨 이동</A></H2>
@@ -2169,7 +2169,7 @@ listquota</B> 명령을 실행하여 볼륨의 이름을 표시하십시오.
 <UL>
 <LI>디스크 또는 파일 서버 시스템을 복구하거나 교체하는 동안 다른 파티션이나
 시스템에 볼륨을 일시적으로 배치하기 위해.
-</LI><LI>포화 상태의 파티션에 공간을 확보하기 위해. 
+</LI><LI>포화 상태의 파티션에 공간을 확보하기 위해.
 <A NAME="IDX6672"></A>
 <A NAME="IDX6673"></A>
 <A NAME="IDX6674"></A>
@@ -2180,9 +2180,9 @@ listquota</B> 명령을 실행하여 볼륨의 이름을 표시하십시오.
 저장할 수 없는 것입니다. 다음 오류 메시지가 나타나서 이러한 문제점이
 발생했음을 확인해 줍니다.
 <P>
-<PRE>   
+<PRE>
    afs: failed to store file (partition full)
-   
+
 </PRE>
 <P>
 <P><A HREF="auagd013.htm#HDRWQ323">AFS 성능 모니터 및 감사</A>에서 설명하는 것처럼 <B>scout</B>
@@ -2199,15 +2199,15 @@ listquota</B> 명령을 실행하여 볼륨의 이름을 표시하십시오.
 <B>vos</B> 명령 인터프리터는 목적지 파티션에 충분한
 여유 공간이 있는지 확인합니다. 공간이 충분하지 않으면 이동 조작을
 시도하지 않고 다음 메시지를 출력합니다.
-<PRE>   
+<PRE>
    vos: no space on target partition <VAR>destination_part</VAR> to move volume <VAR>volume</VAR>
-   
+
 </PRE>
 <P>읽기 전용 볼륨을 이동하려면 <A HREF="#HDRWQ236">볼륨을 제거하고 언마운트하려면</A>에서 설명하는
 것처럼 <B>vos remove</B> 명령을 실행하여 현재 사이트에서
 실제로 볼륨을 제거하십시오. 그런 다음 <A HREF="#HDRWQ194">읽기/쓰기 볼륨을 복제하려면 (읽기 전용 볼륨 작성)</A>에서
 설명하는 것처럼 <B>vos addsite</B> 및 <B>vos release</B> 명령을 실행하여 새 사이트를 정의하고 이 사이트에
-해당 볼륨을 릴리스하십시오. 
+해당 볼륨을 릴리스하십시오.
 <A NAME="IDX6679"></A>
 <A NAME="IDX6680"></A>
 <P>백업 볼륨은 읽기/쓰기 원본이 있는 동일한 사이트에 항상 위치하므로
@@ -2232,11 +2232,11 @@ listquota</B> 명령을 실행하여 볼륨의 이름을 표시하십시오.
 이 명령은 단일 행에 입력하십시오. 아래에서는 읽기 편리하도록 여러 행으로
 표현한 것에 불과합니다.
 <P>
-<PRE>   
+<PRE>
    % <B>vos move</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>  \
        &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;source</VAR>>  &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;source </VAR>>  \
        &lt;<VAR>machine&nbsp;name&nbsp;on&nbsp;destination</VAR>>  &lt;<VAR>partition&nbsp;name&nbsp;on&nbsp;destination</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2264,16 +2264,16 @@ listquota</B> 명령을 실행하여 볼륨의 이름을 표시하십시오.
 </LI><LI><B>(선택적)</B> <B>vos listvldb</B> 명령을 실행하여 이동이 성공적인지 확인하십시오. <A HREF="#HDRWQ218">VLDB 항목을 표시하려면</A>에
 나타난 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos listvldb</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 </LI><LI>읽기/쓰기 볼륨의 이전 사이트에 백업 버전이 존재한 경우
 <A HREF="#HDRWQ205">백업 볼륨을 작성 및 마운트하려면</A>에서 설명하는 것처럼 <B>vos backup</B> 명령을 실행하여 새 사이트에 새 백업을 작성하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos backup</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 </LI></OL>
 <HR><H2><A NAME="HDRWQ227" HREF="auagd002.htm#ToC_245">VLDB 및 볼륨 헤더 동기화</A></H2>
@@ -2409,7 +2409,7 @@ VLDB가 시스템이나 파티션에 있는 모든 볼륨의 실제 상태 또는 한 볼륨의
 <P>
 <PRE>   % <B>vos syncvldb -server</B> &lt;<VAR>machine&nbsp;name</VAR>>
 [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>]  [<B>-volume</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>]  [<B>-verbose >></B> <VAR>file</VAR>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2445,7 +2445,7 @@ VLDB가 시스템이나 파티션에 있는 모든 볼륨의 실제 상태 또는 한 볼륨의
 </TD></TR></TABLE>
 <P>
 <PRE>   % <B>vos syncserv</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>] [<B>-v >></B> <VAR>file</VAR>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2608,9 +2608,9 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 볼륨 할당량을 계산할 때 추가되지 않습니다.
 <P>구조 작업 중에 <B>bos status</B> 명령의 출력은
 <B>fs</B> 프로세스에 대해 다음의 보조 상태를 보고합니다.
-<PRE>   
+<PRE>
    Salvaging file system
-   
+
 </PRE>
 <A NAME="IDX6709"></A>
 <A NAME="IDX6710"></A>
@@ -2626,15 +2626,15 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 </LI><LI><B>bos salvage</B> 명령을 실행하여 하나 이상의 볼륨을
 구조하십시오.
 <P>
-<PRE>   
-   % <B>bos salvage  -server</B> &lt;<VAR>machine&nbsp;name</VAR>> 
+<PRE>
+   % <B>bos salvage  -server</B> &lt;<VAR>machine&nbsp;name</VAR>>
 [<B>-partition</B> &lt;<VAR>salvage&nbsp;partition</VAR>>]  \
                   [<B>-volume</B> &lt;<VAR>salvage&nbsp;volume&nbsp;number&nbsp;or&nbsp;volume&nbsp;name</VAR>>]  \
                   [<B>-file</B> <VAR>salvage&nbsp;log&nbsp;output&nbsp;file</VAR>]  [<B>-all</B>]  [<B>-showlog</B>]  \
-                  [<B>-parallel</B> &lt;<VAR>#&nbsp;of&nbsp;max&nbsp;parallel&nbsp;partition&nbsp;salvaging</VAR>>]  \ 
-                  [<B>-tmpdir</B> &lt;<VAR>directory&nbsp;to&nbsp;place&nbsp;tmp&nbsp;files</VAR>>]  \ 
-                  [<B>-orphans</B> &lt;<B>ignore</B> | <B>remove</B> | <B>attach</B>>] 
-   
+                  [<B>-parallel</B> &lt;<VAR>#&nbsp;of&nbsp;max&nbsp;parallel&nbsp;partition&nbsp;salvaging</VAR>>]  \
+                  [<B>-tmpdir</B> &lt;<VAR>directory&nbsp;to&nbsp;place&nbsp;tmp&nbsp;files</VAR>>]  \
+                  [<B>-orphans</B> &lt;<B>ignore</B> | <B>remove</B> | <B>attach</B>>]
+
 </PRE>
 <P>
 <P>여기서
@@ -2760,15 +2760,15 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>fs setquota</B> 명령을 실행하여 볼륨의 최대 할당량을
 설정하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs setquota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>>]
 <B>-max</B> &lt;<VAR>max&nbsp;quota&nbsp;in&nbsp;kbytes</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2808,14 +2808,14 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <B>pts membership</B> 명령을 실행하십시오.
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>fs setvol</B> 명령을 실행하여 하나 이상의 볼륨에
 대한 할당량을 설정하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs setvol</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>] <B>-max</B> &lt;<VAR>disk&nbsp;space&nbsp;quota&nbsp;in&nbsp;1K&nbsp;units</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2841,9 +2841,9 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <OL TYPE=1>
 <LI><B>fs quota</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs quota</B> [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2858,10 +2858,10 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 </DL>
 </LI></OL>
 <P>다음 예제는 이 명령이 생성한 출력을 보여 줍니다.
-<PRE>   
+<PRE>
    % <B>fs quota /afs/abc.com/usr/terry</B>
    34% of quota used.
-   
+
 </PRE>
 <A NAME="IDX6726"></A>
 <A NAME="IDX6727"></A>
@@ -2873,10 +2873,10 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <OL TYPE=1>
 <LI><B>fs listquota</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs listquota</B>
 [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2893,11 +2893,11 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <P>다음 예에서 보여주는 것처럼 출력은 볼륨의 이름, 그 할당량과 현재 크기(모두
 킬로바이트 블록 단위로), 사용된 퍼센트 할당량 및 사용된 볼륨의 호스트
 파티션에 있는 공간의 백분율을 보고합니다.
-<PRE>   
+<PRE>
    % <B>fs listquota /afs/abc.com/usr/terry</B>
-   Volume Name     Quota    Used    % Used   Partition 
-   user.terry      15000    5071       34%         86%   
-   
+   Volume Name     Quota    Used    % Used   Partition
+   user.terry      15000    5071       34%         86%
+
 </PRE>
 <A NAME="IDX6732"></A>
 <A NAME="IDX6733"></A>
@@ -2910,10 +2910,10 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <OL TYPE=1>
 <LI><B>fs examine</B> 명령을 실행하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs examine</B>
 [&lt;<VAR>dir/file&nbsp;path</VAR>><SUP>+</SUP>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -2930,13 +2930,13 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <P>다음 예에서 보여주는 것처럼 출력은 볼륨의 볼륨 ID 번호와 이름, 그 할당량과
 현재 크기(모두 킬로바이트 블록 단위로), 볼륨 호스트 파티션에서 킬로바이트
 블록의 총 수와 이중 사용 가능한 블록의 수를 보고합니다.
-<PRE>   
+<PRE>
    % <B>fs examine /afs/abc.com/usr/terry</B>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073
-   The partition has 46383 blocks available out of 333305   
-   
+   The partition has 46383 blocks available out of 333305
+
 </PRE>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>주:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">이 명령의 출력에서 파티션 관련 통계가 항상 표준 UNIX <B>df</B>
 명령 출력의 해당 값과 일치하는 것은 아닙니다. 이 명령에서 보고한 통계는
@@ -2959,7 +2959,7 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <LI><B>.readonly</B> 또는 <B>.backup</B>
 확장자 없이 볼륨의 기본 이름을 지정하여 읽기/쓰기 볼륨을 지정하는 경우
 이 명령은 볼륨이 있는 파티션에서 읽기/쓰기 볼륨과 연관된 백업 볼륨을 모두
-제거합니다. 
+제거합니다.
 <A NAME="IDX6744"></A>
 <A NAME="IDX6745"></A>
 하나의 읽기/쓰기 사이트만 있을 수 있으므로
@@ -3037,7 +3037,7 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 사이트로 볼륨을 릴리스하지 않았으면 이 명령을 사용하십시오. 실제로 사이트에
 볼륨을 릴리스했으면 <B>vos remove</B> 명령을 대신 사용하십시오.
 <P><B>vos delentry</B> 명령은 사용자가 지정하는 볼륨을
-언급하는 전체 VLDB 항목을 제거합니다. 
+언급하는 전체 VLDB 항목을 제거합니다.
 <A NAME="IDX6752"></A>
 <A NAME="IDX6753"></A>
 파일 서버 시스템에 볼륨의 버전이
@@ -3086,10 +3086,10 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 제거하십시오. 복수의 사이트에서 읽기 전용 볼륨을 제거하는 경우 각 볼륨에 대해
 이 명령을 반복하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos remove</B> [<B>-server</B> <VAR>machine&nbsp;name</VAR>>]  [<B>-partition</B> &lt;<VAR>partition&nbsp;name</VAR>>]  \
                 <B>-id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3124,9 +3124,9 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 완전히 구분된 디렉토리에 백업 볼륨을 마운트한 경우 백업 볼륨의 마운트 포인트에
 대해 이 단계를 반복해야 합니다.
 <P>
-<PRE>   
+<PRE>
    % <B>fs rmmount</B> &lt;<VAR>directory</VAR>>
-   
+
 </PRE>
 </LI><LI><B>(선택적)</B> 단계 <A HREF="#LIWQ237">3</A>에서
 덤프 파일을 작성한 경우 이를 테이프로 옮기십시오. 선호되는 방법은
@@ -3238,10 +3238,10 @@ AFS에 덤프 파일을 추가하는 경우 해당 파일 디렉토리의 ACL에 대해
 </LI><LI><A NAME="LIWQ241"></A><B>vos dump</B> 명령을 실행하여
 볼륨을 덤프하십시오.
 <P>
-<PRE>   
-   % <B>vos dump -id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>> [<B>-time</B> &lt;<VAR>dump&nbsp;from&nbsp;time</VAR>>] 
+<PRE>
+   % <B>vos dump -id</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>> [<B>-time</B> &lt;<VAR>dump&nbsp;from&nbsp;time</VAR>>]
 [<B>-file</B> &lt;<VAR>arg</VAR>>]  [<B>-server</B> &lt;<VAR>server</VAR>>]  [<B>-partition</B> &lt;<VAR>partition</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3322,9 +3322,9 @@ ASCII에서 복원된 버전을 저장하는 파일 서버 시스템에 적절한 볼륨 형식으로
 다음 프롬프트를 생성하여 기존의 볼륨을 전체(<B>f</B>)
 또는 점층적(<B>i</B>) 덤프로 덮어쓸지 확인합니다.
 <P>
-<PRE>   
+<PRE>
    Do you want to do a full/incremental restore or abort? [fia](a):
-   
+
 </PRE>
 <P>
 <P><B>-file</B> 인수를 사용하여 명명하는 대신 표준 출력
@@ -3376,21 +3376,21 @@ ASCII에서 복원된 버전을 저장하는 파일 서버 시스템에 적절한 볼륨 형식으로
 파티션에서 사용할 수 있는 공간의 양을 표시하려면 <A HREF="#HDRWQ185">읽기/쓰기 볼륨 작성</A>에서
 설명하는 것처럼 <B>vos partinfo</B> 명령을 사용하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos partinfo</B> &lt;<VAR>machine&nbsp;name</VAR>> [&lt;<VAR>partition&nbsp;name</VAR>>]
-   
+
 </PRE>
 </LI><LI><A NAME="LIWQ243"></A><B>vos restore</B> 명령을 실행하여
 새 볼륨을 작성하고 덤프 파일을 작성한 볼륨에 복원하십시오.
 이 명령은 단일 행에 입력하십시오. 아래에서는 읽기 편리하도록 여러 행으로
 표현한 것에 불과합니다.
 <P>
-<PRE>   
+<PRE>
    % <B>vos restore</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>>  \
                  &lt;<VAR>name&nbsp;of&nbsp;volume&nbsp;to&nbsp;be&nbsp;restored</VAR>>   \
                  [<B>-file</B> &lt;<VAR>dump&nbsp;file</VAR>>]
 [<B>-id</B> &lt;<VAR>volume&nbsp;ID</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3420,17 +3420,17 @@ ASCII에서 복원된 버전을 저장하는 파일 서버 시스템에 적절한 볼륨 형식으로
 그 내용을 액세스 가능하게 하십시오. <A HREF="#HDRWQ212">일반 또는 읽기/쓰기 마운트 포인트를 작성하려면</A>에 나타난
 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>>
-   
+
 </PRE>
 </LI><LI><B>(선택적)</B> <B>fs lsmount</B> 명령을
 실행하여 마운트 포인트가 올바른 볼륨을 참조하는지 확인하십시오.
 <A HREF="#HDRWQ211">마운트 포인트를 표시하려면</A>에 나타난 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs lsmount</B> &lt;<VAR>directory</VAR>>
-   
+
 </PRE>
 </LI></OL>
 <A NAME="IDX6778"></A>
@@ -3463,12 +3463,12 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 이 명령은 단일 행에 입력하십시오. 아래에서는 읽기 편리하도록 여러 행으로
 표현한 것에 불과합니다.
 <P>
-<PRE>   
+<PRE>
    % <B>vos restore</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>partition&nbsp;name</VAR>>  \
                  &lt;<VAR>name&nbsp;of&nbsp;volume&nbsp;to&nbsp;be&nbsp;restored</VAR>>   \
                  [<B>-file</B> &lt;<VAR>dump &nbsp;file</VAR>>]  \
                  <B>-overwrite</B> &lt;<B>full</B> | <B>incremental</B>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3507,16 +3507,16 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 새로 복원된 내용을 읽기 전용 사이트로 릴리스하십시오. <A HREF="#HDRWQ192">볼륨 복제(읽기 전용 볼륨 작성)</A>에
 나타난 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 </LI><LI><B>vos backup</B> 명령을 실행하여 볼륨의 새 백업
 버전을 작성하십시오. <A HREF="#HDRWQ201">백업 볼륨 작성</A>에 나타난 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos backup</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 </LI></OL>
 <HR><H2><A NAME="HDRWQ245" HREF="auagd002.htm#ToC_264">볼륨 이름 변경</A></H2>
@@ -3567,9 +3567,9 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 </LI><LI><A NAME="LIVOL-REN"></A><B>vos rename</B> 명령을 실행하여
 볼륨 이름을 변경하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos rename</B> &lt;<VAR>old&nbsp;volume&nbsp;name</VAR>> &lt;<VAR>new&nbsp;volume&nbsp;name</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3586,9 +3586,9 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 <P>지정된 현재 볼륨에 대해 VLDB(Location Database) 항목이 있으면
 명령은 다음의 오류 메시지를 나타내며 실패합니다.
 <P>
-<PRE>   
-   vos: Could not find entry for volume <VAR>old_volume_name</VAR>. 
-   
+<PRE>
+   vos: Could not find entry for volume <VAR>old_volume_name</VAR>.
+
 </PRE>
 <A NAME="IDX6789"></A>
 <A NAME="IDX6790"></A>
@@ -3596,9 +3596,9 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 참조하는 마운트 포인트를 제거하십시오. <A HREF="#HDRWQ215">마운트 포인트를 제거하려면</A>에 나타난
 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs rmmount</B> &lt;<VAR>directory</VAR>>
-   
+
 </PRE>
 <A NAME="IDX6791"></A>
 <A NAME="IDX6792"></A>
@@ -3606,9 +3606,9 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 나타내는 마운트 포인트를 작성하십시오. <A HREF="#HDRWQ212">일반 또는 읽기/쓰기 마운트 포인트를 작성하려면</A>에 나타난
 지시를 따르십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>fs mkmount</B> &lt;<VAR>directory</VAR>> &lt;<VAR>volume&nbsp;name</VAR>> [<B>-rw</B>]
-    
+
 </PRE>
 </LI></OL>
 <HR><H2><A NAME="HDRWQ247" HREF="auagd002.htm#ToC_266">VLDB 항목 잠금 해제 및 잠금</A></H2>
@@ -3649,9 +3649,9 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 </PRE>
 </LI><LI><B>vos lock</B> 명령을 실행하여 항목을 잠그십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos lock</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3679,7 +3679,7 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 해제하십시오.
 <P>
 <PRE>   % <B>vos unlock</B> &lt;<VAR>volume&nbsp;name&nbsp;or&nbsp;ID</VAR>>
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3706,9 +3706,9 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 </LI><LI><B>vos unlockvldb</B> 명령을 실행하여 원하는 항목의
 잠금을 해제하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>vos unlockvldb</B> [&lt;<VAR>machine&nbsp;name</VAR>>] [&lt;<VAR>partition&nbsp;name</VAR>>]
-   
+
 </PRE>
 <P>
 <P>여기서
@@ -3728,11 +3728,11 @@ AFS에 있는 경우 해당 디렉토리의 ACL에 대한 <B>r</B>(<B>read</B>)
 잠금이 해제됩니다.
 </DL>
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd009.htm">이전 페이지</A> &#124; <A HREF="auagd011.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd009.htm">이전 페이지</A> &#124; <A HREF="auagd011.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

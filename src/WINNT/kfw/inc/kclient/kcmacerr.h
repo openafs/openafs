@@ -24,7 +24,7 @@ enum {
 	cKrbDriverInUse,			/* driver is not reentrant */
 	cKrbAppInBkgnd,				/* driver won't put up password dialog when in background */
 	cKrbInvalidSession,			/* invalid structure passed to KClient/KServer routine */
-	
+
 	cKrbKerberosErrBlock = -20000	/* start of block of 256 kerberos error numbers */
 };
 
@@ -57,7 +57,7 @@ enum {
 #define ipNoFragMemErr			-23036			/* no memory to send fragmented pkt */
 #define ipRouteErr				-23037			/* can't route packet off-net */
 
-#define nameSyntaxErr 			-23041		
+#define nameSyntaxErr 			-23041
 #define cacheFault				-23042
 #define noResultProc			-23043
 #define noNameServer			-23044

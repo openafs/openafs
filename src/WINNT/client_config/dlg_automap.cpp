@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -92,7 +92,7 @@ BOOL CALLBACK AutoMap_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             case IDOK:
                EndDialog(hDlg, IDOK);
                break;
-                
+
             case IDCANCEL:
                EndDialog(hDlg, IDCANCEL);
                break;
@@ -137,7 +137,7 @@ BOOL CALLBACK AutoMap_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 void AddToDriveList(DRIVEMAPLIST& DriveMapList, DRIVEMAP& DriveMap)
 {
    int nCurDrive = DriveMap.chDrive - TEXT('A');
-   
+
    memcpy(&DriveMapList.aDriveMap[nCurDrive], &DriveMap, sizeof(DRIVEMAP));
 }
 
@@ -145,7 +145,7 @@ void AddToDriveList(DRIVEMAPLIST& DriveMapList, DRIVEMAP& DriveMap)
 void RemoveFromDriveList(DRIVEMAPLIST& DriveMapList, DRIVEMAP& DriveMap)
 {
    int nCurDrive = DriveMap.chDrive - TEXT('A');
-   
+
    memset(&DriveMapList.aDriveMap[nCurDrive], 0, sizeof(DRIVEMAP));
 }
 
@@ -189,7 +189,7 @@ void ShowDriveList(HWND hDlg, DRIVEMAPLIST& drives)
          continue;
 
       HWND hList = GetDlgItem (hDlg, IDC_GLOBAL_DRIVE_LIST);
-   
+
    	FASTLISTADDITEM ai;
    	memset (&ai, 0x00, sizeof(FASTLISTADDITEM));
    	ai.iFirstImage = IMAGE_NOIMAGE;
@@ -198,12 +198,12 @@ void ShowDriveList(HWND hDlg, DRIVEMAPLIST& drives)
    	ai.pszText = _tcsdup(TEXT("  ?:"));
    	ai.pszText[DRIVE_LETTER_INDEX] = GlobalDrives.aDriveMap[ ii ].chDrive;
    	ai.lParam = 0;
-   	
+
    	HLISTITEM hItem = FastList_AddItem (hList, &ai);
-   
+
       TCHAR szAfsPath[ MAX_PATH ];
       AdjustAfsPath (szAfsPath, GlobalDrives.aDriveMap[ ii ].szMapping, TRUE, FALSE);
-   
+
    	FastList_SetItemText (hList, hItem, 1, szAfsPath);
    }
 
@@ -228,14 +228,14 @@ BOOL UpdateRegistry(DRIVEMAP *pDrive, BOOL bRemove)
       return FALSE;
 
    _stprintf(szValueName, TEXT("%c:"), pDrive->chDrive);
- 
-   if (bRemove) 
+
+   if (bRemove)
       result = RegDeleteValue(hKey, szValueName);
    else
       result = RegSetValueEx(hKey, szValueName, 0, REG_SZ, (BYTE *)pDrive->szSubmount, lstrlen(pDrive->szSubmount) + 1);
 
    RegCloseKey(hKey);
-   
+
    return (result == ERROR_SUCCESS);
 }
 
@@ -274,9 +274,9 @@ BOOL DefineDosDrive(DRIVEMAP *pDrive, DDDACTION dddAction)
     */
    if (fResult)
        UpdateRegistry(pDrive, dddAction == DDD_REMOVE);
-   
+
    return fResult;
-}   
+}
 
 
 void AutoMap_OnAdd(HWND hDlg)
@@ -303,7 +303,7 @@ void AutoMap_OnSelect (HWND hDlg)
    HWND hList = GetDlgItem (hDlg, IDC_GLOBAL_DRIVE_LIST);
 
    BOOL bEnable = FastList_FindFirstSelected (hList) != NULL;
-	
+
 	EnableWindow (GetDlgItem (hDlg, IDC_REMOVE), bEnable);
    EnableWindow (GetDlgItem (hDlg, IDC_CHANGE), bEnable);
 }
@@ -313,7 +313,7 @@ DRIVEMAP *GetSelectedDrive(HWND hDlg, HLISTITEM  *pItem)
 {
 	static DRIVEMAP DriveMap;
    HLISTITEM hItem;
-   
+
    HWND hList = GetDlgItem (hDlg, IDC_GLOBAL_DRIVE_LIST);
 
    if (!pItem)
@@ -321,7 +321,7 @@ DRIVEMAP *GetSelectedDrive(HWND hDlg, HLISTITEM  *pItem)
 
    if ((*pItem = FastList_FindFirstSelected (hList)) == NULL)
    	return 0;
-   	
+
 	LPCTSTR pszDrive = FastList_GetItemText (hList, *pItem, 0);
    int nCurDrive = pszDrive[DRIVE_LETTER_INDEX] - TEXT('A');
 
@@ -330,7 +330,7 @@ DRIVEMAP *GetSelectedDrive(HWND hDlg, HLISTITEM  *pItem)
    return &DriveMap;
 }
 
-   
+
 void AutoMap_OnEdit (HWND hDlg)
 {
    DRIVEMAP *pOldDrive = GetSelectedDrive(hDlg);
@@ -339,7 +339,7 @@ void AutoMap_OnEdit (HWND hDlg)
 
    DRIVEMAP NewDrive;
    memcpy(&NewDrive, pOldDrive, sizeof(DRIVEMAP));
-	
+
 	if (ModalDialogParam (IDD_GLOBAL_DRIVES_ADDEDIT, hDlg, (DLGPROC)AutoMapEdit_DlgProc, (LPARAM)&NewDrive) != IDOK)
 		return;
 
@@ -365,7 +365,7 @@ void AutoMap_OnRemove (HWND hDlg)
    DRIVEMAP *pDrive = GetSelectedDrive(hDlg, &hItem);
    if (pDrive == 0)
       return;
-      
+
    if (DefineDosDrive(pDrive, DDD_REMOVE)) {
       RemoveFromDriveList(GlobalDrives, *pDrive);
    	FastList_RemoveItem (hList, hItem);

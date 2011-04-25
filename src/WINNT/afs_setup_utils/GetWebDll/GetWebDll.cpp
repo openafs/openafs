@@ -29,7 +29,7 @@ static char THIS_FILE[] = __FILE__;
 //
 //		It is very important that this macro appear in each
 //		function, prior to any calls into MFC.  This means that
-//		it must appear as the first statement within the 
+//		it must appear as the first statement within the
 //		function, even before any object variable declarations
 //		as their constructors may generate calls into the MFC
 //		DLL.
@@ -160,7 +160,7 @@ void StripTags(LPTSTR pszBuffer)
 }
 
 
-extern "C" 
+extern "C"
 __declspec(dllexport) INT GetWebPage(LPSTR lpErrMsg,LPSTR lpFile,LPSTR lpCmdLine)
 {
 	CString emsg;
@@ -353,7 +353,7 @@ __declspec(dllexport) INT GetWebPage(LPSTR lpErrMsg,LPSTR lpFile,LPSTR lpCmdLine
 	return nRetCode;
 }
 
-extern "C" 
+extern "C"
 __declspec(dllexport) INT GetUserLogon(LPSTR lpUserName)
 {
 	int nRetCode = 1;
@@ -362,7 +362,7 @@ __declspec(dllexport) INT GetUserLogon(LPSTR lpUserName)
 	return nRetCode;
 }
 
-extern "C" 
+extern "C"
 __declspec(dllexport) INT BrowseFile(HWND hwndOwner,LPSTR lpstrTitle,LPSTR lpFileName,INT size)
 {
 	char *xptr;

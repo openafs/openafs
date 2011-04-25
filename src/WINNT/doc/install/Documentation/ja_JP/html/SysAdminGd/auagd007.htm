@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理の手引き</H1>
@@ -304,7 +304,7 @@ ABC Corporation セルでは、
 <B>/afs/abc.com</B> はこのセル自体の <B>root.cell</B> ボリュームのマウント・ポイントであり、
 <B>stateu.edu</B> は、
 State University セルの <B>root.cell</B> ボリュームのマウント・ポイントです。<B>fs lsmount</B> コマンドはマウント・ポイントを表示します。
-<PRE>   % <B>fs lsmount /afs/abc.com </B> 
+<PRE>   % <B>fs lsmount /afs/abc.com </B>
    '/afs/abc.com' is a mount point for volume '#root.cell'
    % <B>fs lsmount /afs/stateu.edu</B>
    '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
@@ -848,7 +848,7 @@ PAG はそのまま保持され、後で獲得されるトークンにすぐに関連付けられる状態になって
 <A HREF="#LIWQ84">6</A> のステップに進みます。
 </LI><LI>認証サービスが、そのパスワードは正しいと判断した場合は、AFS 認証の証明として、ユーザーにトークンを発行する。ログイン・ユーティリティーは、ローカルの UNIX ファイル・システムにユーザーをログインさせます。ログイン・ユーティリティーによっては、以下のバナーを画面に表示し、ユーザーに AFS による認証の注意を促します。<A HREF="#LIWQ84">6</A> のステップはスキップされます。
 <P>
-<PRE>   AFS(R) <VAR>version</VAR> Login 
+<PRE>   AFS(R) <VAR>version</VAR> Login
 </PRE>
 </LI></UL>
 </LI><LI><A NAME="LIWQ84"></A>AFS トークンが <A HREF="#LIWQ83">4</A> のステップで許可された場合には、ログイン・ユーティリティーは、提供されたパスワードをローカル・パスワード・ファイルと比較して、ユーザーをローカル・ファイル・システムにログインさせようとします。
@@ -907,15 +907,15 @@ AFS パスワードと一致している方が簡単ですが、その必要はありません。
 </PRE>
 <P>以下に示すのは、ABC Corporation セルの AFS UID 1000 のユーザーの出力です。
 <PRE>   % <B>tokens</B>
-   Tokens held by the Cache Manager: 
-   
+   Tokens held by the Cache Manager:
+
    User's (AFS ID 1000) tokens for afs@abc.com [Expires Jun  2 10:00]
      --End of list--
 </PRE>
 <P>以下に示すのは、ABC Corporation セル、State University セルおよび DEF Company セルで認証されるユーザーの出力です。ユーザーは、3 つのセルで別々の AFS UID をもっています。最後のセルのトークンは有効期限が切れています。
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
-    
+
    User's (AFS ID 1000) tokens for afs@abc.com [Expires Jun  2 10:00]
    User's (AFS ID 4286) tokens for afs@stateu.edu  [Expires Jun  3 1:34]
    User's (AFS ID 22) tokens for afs@def.com  [>>Expired&lt;&lt;]
@@ -1158,11 +1158,11 @@ AFS 認証情報の受け渡しが <B>rcp</B> コマンドで正常に動作するのは、
 <P>変更済みのリモート・コマンドのインストール場所は、標準では <B>/usr/afsws/bin</B> および <B>/usr/afsws/etc</B> ディレクトリーです。コマンドの機能の詳細については、<I>AFS Administration Reference</I> の各コマンドの解説ページを参照してください。
 <HR><H2><A NAME="HDRWQ95" HREF="auagd002.htm#ToC_98">NFS を介した AFS へのアクセス</A></H2>
 <P>NFS クライアント・マシンのユーザーは、<I>NFS/AFS 変換プログラム</I> を実行している AFS クライアント・マシンの <B>/afs</B> ディレクトリーを取り付けることによって、AFS ファイル・スペースにアクセスすることができます。これは、AFS を使用できないクライアント・マシンを使用して AFS にアクセスしたい NFS をすでに実行しているセルでは、特に有利になります。<A HREF="auagd022.htm#HDRWQ818">付録 A,  NFS/AFS 変換プログラムの管理</A>を参照してください。
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd006.htm">前ページ</A> &#124; <A HREF="auagd008.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd006.htm">前ページ</A> &#124; <A HREF="auagd008.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 -->
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

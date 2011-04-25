@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>ŠÇ—‚Ìèˆø‚«</H1>
@@ -212,7 +212,7 @@ AFS d—l‚É•ÏX‚³‚ê‚½ƒƒOƒCƒ“Eƒ†[ƒeƒBƒŠƒeƒB[‚ÍAƒ†[ƒU[‚ª³‚µ‚¢ AFS ƒpƒXƒ[ƒ
    echo "copied in passwd file."
    PASSWD=/afs/.abc.com/common/uss/newaccts/passwd
    ENTRIES=`ls passwd_*`
-   case $ENTRIES in 
+   case $ENTRIES in
    "")
         echo No new entry found to be added to passwd file
         ;;
@@ -222,7 +222,7 @@ AFS d—l‚É•ÏX‚³‚ê‚½ƒƒOƒCƒ“Eƒ†[ƒeƒBƒŠƒeƒB[‚ÍAƒ†[ƒU[‚ª³‚µ‚¢ AFS ƒpƒXƒ[ƒ
         do
            cat  $i  |  awk  -F:  '{print $1  >  "foo"}'
            USER=`cat foo`
-           case  `egrep  -e  \^$USER\: $PASSWD` in 
+           case  `egrep  -e  \^$USER\: $PASSWD` in
            "")
                    echo  adding  $USER
                    cat  $i  >>  $PASSWD
@@ -236,7 +236,7 @@ AFS d—l‚É•ÏX‚³‚ê‚½ƒƒOƒCƒ“Eƒ†[ƒeƒBƒŠƒeƒB[‚ÍAƒ†[ƒU[‚ª³‚µ‚¢ AFS ƒpƒXƒ[ƒ
         cd  /afs/.abc.com/common/uss/newaccts
         echo  "sorting password file"
         sort  ${PASSWD}  >  ${PASSWD}.sorted
-        echo  "installing files"     
+        echo  "installing files"
         install  ${PASSWD}.sorted ${DEST}/passwd
         echo  "Password file is built, sorted and installed."
         ;;
@@ -474,8 +474,8 @@ K ƒoƒCƒg’PˆÊ‚ÌŠ„‚è“–‚Ä—ÊAƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒgAƒz[ƒ€EƒfƒBƒŒƒNƒgƒŠ[Š—LÒA‚¨‚æ
    #
    # Create directories and files for mail
    #
-   D $MTPT/.MESSAGES 0700 $UID $USER all abc:staff none 
-   D $MTPT/.Outgoing 0700 $UID $USER rlidwk postman rlidwk 
+   D $MTPT/.MESSAGES 0700 $UID $USER all abc:staff none
+   D $MTPT/.Outgoing 0700 $UID $USER rlidwk postman rlidwk
    D $MTPT/Mailbox 0700 $UID $USER all abc:staff none  system:anyuser lik
    #
    # Here are some useful scripts for login etc.
@@ -1022,7 +1022,7 @@ $1 •Ï”‚É‘Î‚µ‚ÄAƒtƒ@ƒCƒ‹EƒT[ƒo[Eƒ}ƒVƒ“–¼‚ğA$2 •Ï”‚É‘Î‚µ‚ÄAƒp[ƒeƒBƒVƒ‡ƒ“
 <LI><B>system:administrators</B> ƒOƒ‹[ƒv‚Ìƒƒ“ƒo[ƒVƒbƒvB•K—v‚Èê‡‚É‚ÍA<B>pts membership</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚Ä‚­‚¾‚³‚¢B‚±‚ÌƒRƒ}ƒ“ƒh‚ÌÚ×‚ÍA<A HREF="auagd021.htm#HDRWQ810">system:administrators ƒOƒ‹[ƒv‚Ìƒƒ“ƒo[‚Ì•\¦</A> ‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢B
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> ƒtƒ@ƒCƒ‹‚É‘g‚İ‚Ü‚ê‚Ä‚¢‚é‚±‚ÆB•K—v‚Èê‡‚É‚ÍA<B>bos listusers</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚Ü‚·B‚±‚ÌƒRƒ}ƒ“ƒh‚É‚Â‚¢‚Ä‚ÍA
 <A HREF="auagd021.htm#HDRWQ816">UserList ƒtƒ@ƒCƒ‹‚Ìƒ†[ƒU[‚Ì•\¦</A>‚ÅÚ‚µ‚­à–¾‚µ‚Ä‚¢‚Ü‚·B
@@ -1063,7 +1063,7 @@ $1 •Ï”‚É‘Î‚µ‚ÄAƒtƒ@ƒCƒ‹EƒT[ƒo[Eƒ}ƒVƒ“–¼‚ğA$2 •Ï”‚É‘Î‚µ‚ÄAƒp[ƒeƒBƒVƒ‡ƒ“
              [<B>-uid</B> &lt;<VAR>uid to assign the user</VAR>>]  \
              [<B>-template</B> &lt;<VAR>pathname of template file</VAR>>]  \
              [<B>-var</B> &lt;<VAR>auxiliary argument pairs (Numval)</VAR>><SUP>+</SUP>] [<B>-dryrun</B>] \
-             [<B>-overwrite</B>] 
+             [<B>-overwrite</B>]
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
@@ -1158,9 +1158,9 @@ $SERVER •Ï”‚Æ’è” (‚½‚Æ‚¦‚ÎAƒZƒ‹‚ÌƒhƒƒCƒ“–¼) ‚Æ‚ğAƒeƒ“ƒvƒŒ[ƒgEƒtƒ@ƒCƒ‹“à‚Ì
 </DL>
 </LI><LI>V‹Kƒ†[ƒU[‚Ìƒz[ƒ€EƒfƒBƒŒƒNƒgƒŠ[‚ª•¡Ê‚³‚ê‚½ƒ{ƒŠƒ…[ƒ€‚É‚ ‚éê‡A<A HREF="auagd010.htm#HDRWQ280">“Ç‚İæ‚è / ‘‚«‚İƒ{ƒŠƒ…[ƒ€‚Ì•¡Ê (“Ç‚İæ‚èê—pƒ{ƒŠƒ…[ƒ€‚Ìì¬)</A> ‚Åà–¾‚³‚ê‚Ä‚¢‚é‚æ‚¤‚É <B>vos release</B> ƒRƒ}ƒ“ƒh‚ğg—p‚µ‚Ä‚»‚Ìƒ{ƒŠƒ…[ƒ€‚ğƒŠƒŠ[ƒX‚µ‚Ä‚­‚¾‚³‚¢B
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume name or ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>’:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">‚±‚ÌƒXƒeƒbƒv‚ÍAƒz[ƒ€EƒfƒBƒŒƒNƒgƒŠ[‚ÌeƒfƒBƒŒƒNƒgƒŠ[©g‚ª•¡Ê‚³‚ê‚½ƒ{ƒŠƒ…[ƒ€‚Ìƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Å‚È‚¢ê‡ (‚»‚Ì•û‚ªŠÇ—‚µ‚â‚·‚¢) ‚É‚à•K—v‚Å‚·B‚½‚Æ‚¦‚ÎAABC Corporation ‚Ìƒeƒ“ƒvƒŒ[ƒg‚ªƒ†[ƒU[Eƒ{ƒŠƒ…[ƒ€‚Ìƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚ğ <B>/afs/abc.com/usr</B> ƒfƒBƒŒƒNƒgƒŠ[‚É‚·‚é‚Æ‚µ‚Ü‚·B‚±‚ÌƒfƒBƒŒƒNƒgƒŠ[‚Íƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Å‚Í‚È‚­A’Êí‚ÌƒfƒBƒŒƒNƒgƒŠ[‚Å‚ ‚é‚½‚ßA<B>/afs/abc.com</B> ƒfƒBƒŒƒNƒgƒŠ[‚Éƒ}ƒEƒ“ƒg‚³‚ê‚½ <B>root.cell</B> ƒ{ƒŠƒ…[ƒ€‚É‘¶İ‚µ‚Ü‚·B‚±‚Ìƒ{ƒŠƒ…[ƒ€‚Í•¡Ê‚³‚ê‚Ä‚¢‚é‚½‚ßAŠÇ—Ò‚ÍAV‹K‚Ìƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚ğì¬‚µ‚Ä•ÏX‚ğs‚Á‚½Œã‚Å <B>vos release</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB
@@ -1210,7 +1210,7 @@ $SERVER •Ï”‚Æ’è” (‚½‚Æ‚¦‚ÎAƒZƒ‹‚ÌƒhƒƒCƒ“–¼) ‚Æ‚ğAƒeƒ“ƒvƒŒ[ƒgEƒtƒ@ƒCƒ‹“à‚Ì
 <LI><B>system:administrators</B> ƒOƒ‹[ƒv‚Ìƒƒ“ƒo[ƒVƒbƒvB•K—v‚Èê‡‚É‚ÍA<B>pts membership</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚Ä‚­‚¾‚³‚¢B‚±‚ÌƒRƒ}ƒ“ƒh‚ÌÚ×‚ÍA<A HREF="auagd021.htm#HDRWQ810">system:administrators ƒOƒ‹[ƒv‚Ìƒƒ“ƒo[‚Ì•\¦</A> ‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢B
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> ƒtƒ@ƒCƒ‹‚É‘g‚İ‚Ü‚ê‚Ä‚¢‚é‚±‚ÆB•K—v‚Èê‡‚É‚ÍA<B>bos listusers</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚Ü‚·B‚±‚ÌƒRƒ}ƒ“ƒh‚É‚Â‚¢‚Ä‚ÍA
 <A HREF="auagd021.htm#HDRWQ816">UserList ƒtƒ@ƒCƒ‹‚Ìƒ†[ƒU[‚Ì•\¦</A>‚ÅÚ‚µ‚­à–¾‚µ‚Ä‚¢‚Ü‚·B
@@ -1240,7 +1240,7 @@ $SERVER •Ï”‚Æ’è” (‚½‚Æ‚¦‚ÎAƒZƒ‹‚ÌƒhƒƒCƒ“–¼) ‚Æ‚ğAƒeƒ“ƒvƒŒ[ƒgEƒtƒ@ƒCƒ‹“à‚Ì
 <PRE>   % <B>uss delete</B> <B>-user</B> &lt;<VAR>login name</VAR>>  \
                 <B>-mountpoint</B> &lt;<VAR>mountpoint for user's volume</VAR>>  \
                 [<B>-savevolume</B>]  <B>-admin </B> &lt;<VAR>administrator to authenticate</VAR>>  \
-                [<B>-dryrun</B>] 
+                [<B>-dryrun</B>]
     Administrator's (<VAR>admin_user</VAR>) password: <VAR>admin_password</VAR>
 </PRE>
 <P>
@@ -1267,9 +1267,9 @@ password ƒvƒƒ“ƒvƒg‚ÍƒAƒJƒEƒ“ƒg‚ğ <VAR>admin_user</VAR> ‚Æ‚µ‚Ä•\¦‚µ‚Ü‚·B“KØ‚È
 </DL>
 </LI><LI>íœ‚³‚ê‚½ƒ†[ƒU[‚Ìƒz[ƒ€EƒfƒBƒŒƒNƒgƒŠ[‚ª•¡Ê‚³‚ê‚½ƒ{ƒŠƒ…[ƒ€‚É‚ ‚Á‚½ê‡A<A HREF="auagd010.htm#HDRWQ280">“Ç‚İæ‚è / ‘‚«‚İƒ{ƒŠƒ…[ƒ€‚Ì•¡Ê (“Ç‚İæ‚èê—pƒ{ƒŠƒ…[ƒ€‚Ìì¬)</A> ‚Åà–¾‚³‚ê‚Ä‚¢‚é‚æ‚¤‚É <B>vos release</B> ƒRƒ}ƒ“ƒh‚ğg—p‚µ‚Ä‚»‚Ìƒ{ƒŠƒ…[ƒ€‚ğƒŠƒŠ[ƒX‚µ‚Ä‚­‚¾‚³‚¢B
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume name or ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>’:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">‚±‚ÌƒXƒeƒbƒv‚ÍAƒz[ƒ€EƒfƒBƒŒƒNƒgƒŠ[‚ÌeƒfƒBƒŒƒNƒgƒŠ[©g‚ª•¡Ê‚³‚ê‚½ƒ{ƒŠƒ…[ƒ€‚Ìƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Å‚È‚¢ê‡ (‚»‚Ì•û‚ªŠÇ—‚µ‚â‚·‚¢) ‚É‚à•K—v‚Å‚·B‚½‚Æ‚¦‚ÎAABC Corporation ‚Ìƒeƒ“ƒvƒŒ[ƒg‚ªƒ†[ƒU[Eƒ{ƒŠƒ…[ƒ€‚Ìƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚ğ <B>/afs/abc.com/usr</B> ƒfƒBƒŒƒNƒgƒŠ[‚É‚·‚é‚Æ‚µ‚Ü‚·B‚±‚ÌƒfƒBƒŒƒNƒgƒŠ[‚Íƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Å‚Í‚È‚­A’Êí‚ÌƒfƒBƒŒƒNƒgƒŠ[‚Å‚ ‚é‚½‚ßA<B>/afs/abc.com</B> ƒfƒBƒŒƒNƒgƒŠ[‚Éƒ}ƒEƒ“ƒg‚³‚ê‚½ <B>root.cell</B> ƒ{ƒŠƒ…[ƒ€‚É‘¶İ‚µ‚Ü‚·B‚±‚Ìƒ{ƒŠƒ…[ƒ€‚Í•¡Ê‚³‚ê‚Ä‚¢‚é‚½‚ßAŠÇ—Ò‚ÍAƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚ğíœ‚µ‚Ä•ÏX‚ğs‚Á‚½Œã‚Å <B>vos release</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB
@@ -1351,7 +1351,7 @@ AFS ‚¨‚æ‚Ñƒ[ƒJƒ‹‚Ì¯•Ê‚ğ‘z’è‚µ‚Ü‚·B‚±‚ÌƒRƒ}ƒ“ƒh‚Ì”­sÒ‚ÍA‚»‚ÌƒRƒ}ƒ“ƒh‚ğÀs
 (‚Ü‚½A<B>savevolume</B> ‚Æ <B>delvolume</B> –½—ß‚Ì•¡”‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğg—p‚µ‚ÄAƒfƒtƒHƒ‹ƒg‚Ìíœ‚Æƒ{ƒŠƒ…[ƒ€•Û‘¶‚ğŒğŒİ‚ÉØ‚è‘Ö‚¦‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B)
 <P><H3><A NAME="Header_570" HREF="auagd002.htm#ToC_570">ƒoƒ‹ƒN“ü—Íƒtƒ@ƒCƒ‹–½—ß‚Ì—á</A></H3>
 <P>”FØê—p‚ÌƒAƒJƒEƒ“ƒg‚ğì¬‚·‚é‚É‚ÍAŸ‚Ì—á‚Ì‚æ‚¤‚ÉÅ‰‚Ì (<VAR>username</VAR>) ˆø‚«”‚¾‚¯‚ğ‘g‚İ‚ñ‚Å <B>add</B> –½—ß‚ğg—p‚µ‚Ü‚·Bƒ†[ƒU[‚ÌÀ–¼‚ÍAƒ†[ƒU[–¼ (<B>anderson</B>) ‚Éˆê’v‚·‚é‚æ‚¤‚Éİ’è‚³‚êA‰ŠúƒpƒXƒ[ƒh‚ÍA•¶š—ñ <B>changeme</B> ‚Éİ’è‚³‚ê‚Ü‚·B
-<PRE>   add anderson 
+<PRE>   add anderson
 </PRE>
 <P>‚Ü‚½AˆÈ‰º‚Ì—á‚à”FØê—p‚ÌƒAƒJƒEƒ“ƒg‚ğì¬‚µ‚Ü‚·‚ªAÀ–¼‚¨‚æ‚Ñ‰ŠúƒpƒXƒ[ƒh‚É‘Î‚µ‚Ä”ñƒfƒtƒHƒ‹ƒg’l‚ğİ’è‚µ‚Ü‚·B
 <PRE>   add smith:John Smith:js_pswd
@@ -1398,7 +1398,7 @@ AFS ‚¨‚æ‚Ñƒ[ƒJƒ‹‚Ì¯•Ê‚ğ‘z’è‚µ‚Ü‚·B‚±‚ÌƒRƒ}ƒ“ƒh‚Ì”­sÒ‚ÍA‚»‚ÌƒRƒ}ƒ“ƒh‚ğÀs
 <LI><B>system:administrators</B> ƒOƒ‹[ƒv‚Ìƒƒ“ƒo[ƒVƒbƒvB•K—v‚Èê‡‚É‚ÍA<B>pts membership</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚Ä‚­‚¾‚³‚¢B‚±‚ÌƒRƒ}ƒ“ƒh‚ÌÚ×‚ÍA<A HREF="auagd021.htm#HDRWQ810">system:administrators ƒOƒ‹[ƒv‚Ìƒƒ“ƒo[‚Ì•\¦</A> ‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢B
 <P>
 <PRE>   % <B>pts membership system:administrators</B>
-   
+
 </PRE>
 </LI><LI><B>/usr/afs/etc/UserList</B> ƒtƒ@ƒCƒ‹‚É‘g‚İ‚Ü‚ê‚Ä‚¢‚é‚±‚ÆB•K—v‚Èê‡‚É‚ÍA<B>bos listusers</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚Ü‚·B‚±‚ÌƒRƒ}ƒ“ƒh‚É‚Â‚¢‚Ä‚ÍA
 <A HREF="auagd021.htm#HDRWQ816">UserList ƒtƒ@ƒCƒ‹‚Ìƒ†[ƒU[‚Ì•\¦</A>‚ÅÚ‚µ‚­à–¾‚µ‚Ä‚¢‚Ü‚·B
@@ -1467,9 +1467,9 @@ password ƒvƒƒ“ƒvƒg‚ÍƒAƒJƒEƒ“ƒg‚ğ <VAR>admin_user</VAR> ‚Æ‚µ‚Ä•\¦‚µ‚Ü‚·B“KØ‚È
 </LI><LI>V‹Kì¬‚Ü‚½‚Ííœ‚³‚ê‚½ƒ†[ƒU[‚Ìƒz[ƒ€EƒfƒBƒŒƒNƒgƒŠ[‚ª•¡Ê‚³‚ê‚½ƒ{ƒŠƒ…[ƒ€‚É‚ ‚éê‡A
 <A HREF="auagd010.htm#HDRWQ280">“Ç‚İæ‚è / ‘‚«‚İƒ{ƒŠƒ…[ƒ€‚Ì•¡Ê (“Ç‚İæ‚èê—pƒ{ƒŠƒ…[ƒ€‚Ìì¬)</A> ‚Åà–¾‚³‚ê‚Ä‚¢‚é‚æ‚¤‚É <B>vos release</B> ƒRƒ}ƒ“ƒh‚ğg—p‚µ‚Ä‚»‚Ìƒ{ƒŠƒ…[ƒ€‚ğƒŠƒŠ[ƒX‚µ‚Ä‚­‚¾‚³‚¢B
 <P>
-<PRE>   
+<PRE>
    % <B>vos release</B> &lt;<VAR>volume name or ID</VAR>>
-   
+
 </PRE>
 <P>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>’:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">‚±‚ÌƒXƒeƒbƒv‚ÍAƒz[ƒ€EƒfƒBƒŒƒNƒgƒŠ[‚ÌeƒfƒBƒŒƒNƒgƒŠ[©g‚ª•¡Ê‚³‚ê‚½ƒ{ƒŠƒ…[ƒ€‚Ìƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Å‚È‚¢ê‡ (‚»‚Ì•û‚ªŠÇ—‚µ‚â‚·‚¢) ‚É‚à•K—v‚Å‚·B‚½‚Æ‚¦‚ÎAABC Corporation ‚Ìƒeƒ“ƒvƒŒ[ƒg‚ªƒ†[ƒU[Eƒ{ƒŠƒ…[ƒ€‚Ìƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚ğ <B>/afs/abc.com/usr</B> ƒfƒBƒŒƒNƒgƒŠ[‚É‚·‚é‚Æ‚µ‚Ü‚·B‚±‚ÌƒfƒBƒŒƒNƒgƒŠ[‚Íƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Å‚Í‚È‚­A’Êí‚ÌƒfƒBƒŒƒNƒgƒŠ[‚Å‚ ‚é‚½‚ßA<B>/afs/abc.com</B> ƒfƒBƒŒƒNƒgƒŠ[‚Éƒ}ƒEƒ“ƒg‚³‚ê‚½ <B>root.cell</B> ƒ{ƒŠƒ…[ƒ€‚É‘¶İ‚µ‚Ü‚·B‚±‚Ìƒ{ƒŠƒ…[ƒ€‚Í•¡Ê‚³‚ê‚Ä‚¢‚é‚½‚ßAŠÇ—Ò‚ÍAƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚ğì¬‚Ü‚½‚Ííœ‚µ‚Ä•ÏX‚ğs‚Á‚½Œã‚Å <B>vos release</B> ƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB
@@ -1480,11 +1480,11 @@ password ƒvƒƒ“ƒvƒg‚ÍƒAƒJƒEƒ“ƒg‚ğ <VAR>admin_user</VAR> ‚Æ‚µ‚Ä•\¦‚µ‚Ü‚·B“KØ‚È
 </LI><LI>ƒAƒJƒEƒ“ƒg‚ğíœ‚·‚éê‡‚ÍAŠeƒNƒ‰ƒCƒAƒ“ƒgEƒ}ƒVƒ“‚Ìƒ[ƒJƒ‹EƒpƒXƒ[ƒhEƒtƒ@ƒCƒ‹ (<B>/etc/passwd</B> ‚Ü‚½‚Í“¯“™‚Ì) ‚©‚çƒ†[ƒU[‚Ì€–Ú‚ğíœ‚µ‚Ü‚·B
 AFS <B>package</B> ƒ†[ƒeƒBƒŠƒeƒB[‚ğg—p‚·‚éê‡‚ÍA€–Ú‚ğ‹¤’Ê‘—MŒ³ƒo[ƒWƒ‡ƒ“‚Ìƒtƒ@ƒCƒ‹‚©‚çœ‹‚·‚é‚¾‚¯‚Å\•ª‚Å‚·B«—ˆAƒ†[ƒU[‚ÌƒAƒJƒEƒ“ƒg‚ğÄŠˆ“®‰»‚·‚éˆÓ}‚ª‚ ‚éê‡‚ÍA€–Ú‚ğƒRƒƒ“ƒg‰»‚·‚é‚©A‚Ü‚½‚ÍAƒpƒXƒ[ƒhEƒtƒB[ƒ‹ƒh‚ÉƒAƒXƒ^ƒŠƒXƒN (*) ‚ğ“ü‚ê‚é‚Ù‚¤‚ªŠÈ’P‚Å‚·B
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ƒy[ƒW‚Ìƒgƒbƒv</A> &#124; <A HREF="auagd016.htm">‘Oƒy[ƒW</A> &#124; <A HREF="auagd018.htm">Ÿƒy[ƒW</A> &#124; <A HREF="auagd002.htm#ToC">–ÚŸ</A> &#124; <A HREF="auagd026.htm#HDRINDEX">õˆø</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ƒy[ƒW‚Ìƒgƒbƒv</A> &#124; <A HREF="auagd016.htm">‘Oƒy[ƒW</A> &#124; <A HREF="auagd018.htm">Ÿƒy[ƒW</A> &#124; <A HREF="auagd002.htm#ToC">–ÚŸ</A> &#124; <A HREF="auagd026.htm#HDRINDEX">õˆø</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 -->
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

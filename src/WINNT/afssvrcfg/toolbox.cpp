@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -71,10 +71,10 @@ void SetElapsedTime(HWND hwnd, DWORD nCtrlID, ULONG ulMin, ULONG ulMax, ULONG ul
 void GetElapsedTime(HWND hwnd, DWORD nCtrlID, DWORD& dwTime)
 {
     SYSTEMTIME stFinal;
-	
+
     HWND hElapsed = ::GetDlgItem(hwnd, nCtrlID);
     EL_GetTime (hElapsed, &stFinal);
-	
+
     dwTime = GET_SECONDS_FROM_ELAPSED_TIME(&stFinal);
 }
 
@@ -97,7 +97,7 @@ LPCTSTR SecondsToElapsedTime(UINT uiNumSeconds)
     if (nMinutes) {
 	if (nHours)
 	    lstrcat(szTime, TEXT(", "));
-	_stprintf(sz, TEXT("%d minutes"), nMinutes); 
+	_stprintf(sz, TEXT("%d minutes"), nMinutes);
 	lstrcat(szTime, sz);
     }
 
@@ -117,7 +117,7 @@ BOOL IsButtonChecked(HWND hDlg, UINT uiCtrlID)
 }
 
 int GetButtonState(HWND hDlg, UINT uiCtrlID)
-{	
+{
     return SendMessage(GetDlgItem(hDlg, uiCtrlID), BM_GETCHECK, 0, 0);
 }
 
@@ -153,7 +153,7 @@ void SetWndText(HWND hDlg, UINT uiCtrlID, UINT nMsgID)
     TCHAR szMsg[cchRESOURCE];
 
     GetString(szMsg, nMsgID);
-	
+
     SetWndText(hDlg, uiCtrlID, szMsg);
 }
 
@@ -240,10 +240,10 @@ void ShowAndEnable(HWND hDlg, UINT uiCtrlID, BOOL bShowAndEnable)
 void MoveWnd(HWND hDlg, UINT nCtrlID, int xOffset, int yOffset)
 {
     HWND hCtrl = GetDlgItem(hDlg, nCtrlID);
-	
+
     RECT rect;
     GetWindowRect(hCtrl, &rect);
-	
+
     POINT p1, p2;
     p1.x = rect.left;
     p1.y = rect.top;

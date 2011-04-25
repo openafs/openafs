@@ -71,7 +71,7 @@ typedef unsigned int WORD;
 #endif
 
 #ifdef WIN32
-#define _export 
+#define _export
 #endif
 
 #if defined(BITS32)

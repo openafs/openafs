@@ -43,7 +43,7 @@ typedef struct tag_afs_ident_token_set {
 } afs_ident_token_set;
 
 
-void 
+void
 afs_cred_flush_rows(afs_cred_list * l) {
     int i;
 
@@ -61,7 +61,7 @@ afs_cred_flush_rows(afs_cred_list * l) {
     l->n_rows = 0;
 }
 
-void 
+void
 afs_cred_free_rows(afs_cred_list * l) {
 
     afs_cred_flush_rows(l);
@@ -73,7 +73,7 @@ afs_cred_free_rows(afs_cred_list * l) {
     l->nc_rows = 0;
 }
 
-void 
+void
 afs_cred_assert_rows(afs_cred_list * l, int n) {
     afs_cred_row * rows;
 
@@ -91,7 +91,7 @@ afs_cred_assert_rows(afs_cred_list * l, int n) {
     }
 }
 
-void 
+void
 afs_cred_delete_row(afs_cred_list * l, int i) {
     if (i < 0 || i >= l->n_rows)
         return;
@@ -103,13 +103,13 @@ afs_cred_delete_row(afs_cred_list * l, int i) {
             PFREE(l->rows[i].realm);
         memmove(&(l->rows[i]),
                 &(l->rows[i+1]),
-                ((l->n_rows - (i+1)) * 
+                ((l->n_rows - (i+1)) *
                  sizeof(l->rows[0])));
     }
     l->n_rows--;
 }
 
-afs_cred_row * 
+afs_cred_row *
 afs_cred_get_new_row(afs_cred_list * l) {
     afs_cred_row * r;
 
@@ -589,7 +589,7 @@ add_token_to_list(afs_cred_list * l,
             /* remove the deprecated value if it is present. */
             khc_remove_value(h_cell, L"Method", 0);
 
-        } else if (KHM_SUCCEEDED(khc_read_int32(h_cell, 
+        } else if (KHM_SUCCEEDED(khc_read_int32(h_cell,
                                                 L"Method", &i))) {
             /* the Method property is deprecated.  We detect and
                correct this whenever possible. */
@@ -652,8 +652,8 @@ add_token_to_list(afs_cred_list * l,
 }
 
 
-void 
-afs_cred_get_identity_creds(afs_cred_list * l, 
+void
+afs_cred_get_identity_creds(afs_cred_list * l,
                             khm_handle ident,
                             khm_boolean * penabled) {
     khm_handle h_id = NULL;
@@ -673,10 +673,10 @@ afs_cred_get_identity_creds(afs_cred_list * l,
     afs_cred_flush_rows(l);
 
     kcdb_identity_get_config(ident, 0, &h_id);
-    if(!h_id) 
+    if(!h_id)
         goto _done_config;
 
-    if(KHM_FAILED(khc_open_space(h_id, CSNAME_AFSCRED, 
+    if(KHM_FAILED(khc_open_space(h_id, CSNAME_AFSCRED,
                                  0, &h_afs)))
         goto _done_config;
 
@@ -687,11 +687,11 @@ afs_cred_get_identity_creds(afs_cred_list * l,
         *penabled = !!t;
     }
 
-    if(KHM_FAILED(khc_open_space(h_afs, L"Cells", 
+    if(KHM_FAILED(khc_open_space(h_afs, L"Cells",
                                  0, &h_cells)))
         goto _done_config;
 
-    if(khc_read_multi_string(h_afs, L"Cells", NULL, &cbi) != 
+    if(khc_read_multi_string(h_afs, L"Cells", NULL, &cbi) !=
        KHM_ERROR_TOO_LONG)
         goto _done_config;
 
@@ -861,13 +861,13 @@ afs_cred_get_identity_creds(afs_cred_list * l,
         khc_close_space(h_gcells);
 }
 
-void 
+void
 nc_dlg_enable(HWND hwnd, BOOL enable) {
     if(enable) {
-        SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, BM_SETCHECK, 
+        SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, BM_SETCHECK,
                            BST_CHECKED, 0);
     } else {
-        SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, BM_SETCHECK, 
+        SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, BM_SETCHECK,
                            BST_UNCHECKED, 0);
     }
 
@@ -879,13 +879,13 @@ nc_dlg_enable(HWND hwnd, BOOL enable) {
     EnableWindow(GetDlgItem(hwnd,IDC_NCAFS_DELETE_TOKEN), enable);
 }
 
-void 
-nc_dlg_show_tooltip(HWND hwnd, 
-                    UINT_PTR id, 
-                    LPWSTR msg, 
-                    LPWSTR title, 
-                    int type, 
-                    int x, 
+void
+nc_dlg_show_tooltip(HWND hwnd,
+                    UINT_PTR id,
+                    LPWSTR msg,
+                    LPWSTR title,
+                    int type,
+                    int x,
                     int y)
 {
     afs_dlg_data * d;
@@ -926,7 +926,7 @@ nc_dlg_show_tooltip(HWND hwnd,
     SetTimer(hwnd, DLG_TOOLTIP_TIMER_ID, DLG_TOOLTIP_TIMEOUT, NULL);
 }
 
-void 
+void
 nc_dlg_hide_tooltip(HWND hwnd, UINT_PTR id)
 {
     TOOLINFO ti;
@@ -949,7 +949,7 @@ nc_dlg_hide_tooltip(HWND hwnd, UINT_PTR id)
     d->tooltip_visible = FALSE;
 }
 
-void 
+void
 afs_dlg_update_rows(HWND hwnd, afs_dlg_data * d) {
     HWND hwlist;
     LVITEM lvi;
@@ -1013,7 +1013,7 @@ afs_dlg_update_rows(HWND hwnd, afs_dlg_data * d) {
     }
 }
 
-void 
+void
 nc_dlg_del_token(HWND hwnd) {
     afs_dlg_data * d;
     khui_new_creds_by_type * nct;
@@ -1086,14 +1086,14 @@ nc_dlg_del_token(HWND hwnd) {
     }
 
     if (d->nc)
-        SendMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY, 
+        SendMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY,
                     MAKEWPARAM(0, WMNC_UPDATE_CREDTEXT), 0);
     else if (d->config_dlg && d->dirty)
         khui_cfg_set_flags_inst(&d->cfg, KHUI_CNFLAG_MODIFIED,
                                 KHUI_CNFLAG_MODIFIED);
 }
 
-void 
+void
 nc_dlg_add_token(HWND hwnd) {
     afs_dlg_data * d;
     afs_cred_row * prow;
@@ -1117,17 +1117,17 @@ nc_dlg_add_token(HWND hwnd) {
     else
         nct = NULL;
 
-    if((n = SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, WM_GETTEXT, 
-                               (WPARAM) ARRAYLENGTH(buf), (LPARAM) buf)) 
+    if((n = SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, WM_GETTEXT,
+                               (WPARAM) ARRAYLENGTH(buf), (LPARAM) buf))
        == 0)
     {
         /* probably should indicate that user should type something */
         RECT r;
         GetWindowRect(GetDlgItem(hwnd, IDC_NCAFS_CELL), &r);
-        nc_dlg_show_tooltip(hwnd, 
-                            0, 
-                            MAKEINTRESOURCE(IDS_NC_TT_NO_CELL), 
-                            MAKEINTRESOURCE(IDS_NC_TT_CANT_ADD), 
+        nc_dlg_show_tooltip(hwnd,
+                            0,
+                            MAKEINTRESOURCE(IDS_NC_TT_NO_CELL),
+                            MAKEINTRESOURCE(IDS_NC_TT_CANT_ADD),
                             2, (r.left + r.right)/ 2, r.bottom);
         return;
     }
@@ -1135,10 +1135,10 @@ nc_dlg_add_token(HWND hwnd) {
     if(n != wcsspn(buf, AFS_VALID_CELL_CHARS)) {
         RECT r;
         GetWindowRect(GetDlgItem(hwnd, IDC_NCAFS_CELL), &r);
-        nc_dlg_show_tooltip(hwnd, 
-                            0, 
-                            MAKEINTRESOURCE(IDS_NC_TT_MALFORMED_CELL), 
-                            MAKEINTRESOURCE(IDS_NC_TT_CANT_ADD), 
+        nc_dlg_show_tooltip(hwnd,
+                            0,
+                            MAKEINTRESOURCE(IDS_NC_TT_MALFORMED_CELL),
+                            MAKEINTRESOURCE(IDS_NC_TT_CANT_ADD),
                             2, (r.left + r.right)/2, r.bottom);
         return;
     }
@@ -1166,11 +1166,11 @@ nc_dlg_add_token(HWND hwnd) {
 
     /* now for the realm */
     do {
-        idx = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
+        idx = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
                                        CB_GETCURSEL, 0, 0);
         if(idx != CB_ERR) {
             int lp;
-            lp = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
+            lp = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
                                           CB_GETITEMDATA, idx, 0);
             if(lp != CB_ERR && lp) /* this is the 'determine realm
                                       automatically' item */
@@ -1180,13 +1180,13 @@ nc_dlg_add_token(HWND hwnd) {
             }
         }
 
-        if((n = SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, WM_GETTEXT, 
+        if((n = SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, WM_GETTEXT,
                                    ARRAYLENGTH(buf), (LPARAM) buf)) == 0) {
             RECT r;
             GetWindowRect(GetDlgItem(hwnd, IDC_NCAFS_REALM), &r);
-            nc_dlg_show_tooltip(hwnd, 
-                                0, 
-                                MAKEINTRESOURCE(IDS_NC_TT_NO_REALM), 
+            nc_dlg_show_tooltip(hwnd,
+                                0,
+                                MAKEINTRESOURCE(IDS_NC_TT_NO_REALM),
                                 MAKEINTRESOURCE((new_row)?
                                                 IDS_NC_TT_CANT_ADD:
                                                 IDS_NC_TT_CANT_UPDATE),
@@ -1198,11 +1198,11 @@ nc_dlg_add_token(HWND hwnd) {
             RECT r;
             GetWindowRect(GetDlgItem(hwnd, IDC_NCAFS_REALM), &r);
             nc_dlg_show_tooltip(hwnd,
-                                0, 
+                                0,
                                 MAKEINTRESOURCE(IDS_NC_TT_MALFORMED_REALM),
                                 MAKEINTRESOURCE((new_row)?
                                                 IDS_NC_TT_CANT_ADD:
-                                                IDS_NC_TT_CANT_UPDATE), 
+                                                IDS_NC_TT_CANT_UPDATE),
                                 2, (r.left + r.right)/2, r.bottom);
             goto _error_exit;
         }
@@ -1213,11 +1213,11 @@ nc_dlg_add_token(HWND hwnd) {
 
     } while(FALSE);
 
-    idx = (int)SendDlgItemMessage(hwnd, IDC_NCAFS_METHOD, 
+    idx = (int)SendDlgItemMessage(hwnd, IDC_NCAFS_METHOD,
                                   CB_GETCURSEL, 0, 0);
     if (idx != CB_ERR) {
         trow.method = (afs_tk_method)
-            SendDlgItemMessage(hwnd, IDC_NCAFS_METHOD, CB_GETITEMDATA, 
+            SendDlgItemMessage(hwnd, IDC_NCAFS_METHOD, CB_GETITEMDATA,
                                idx, 0);
     } else {
         trow.method = AFS_TOKEN_AUTO;
@@ -1226,13 +1226,13 @@ nc_dlg_add_token(HWND hwnd) {
     if (d->nc &&
         d->nc->n_identities > 0 &&
         d->nc->identities[0]) {
-        
+
         ident = d->nc->identities[0];
 
     } else if (d->ident) {
 
         ident = d->ident;
-        
+
     }
 
     if(new_row) {
@@ -1358,7 +1358,7 @@ nc_dlg_add_token(HWND hwnd) {
     d->dirty = TRUE;
 
     if (d->nc)
-        SendMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY, 
+        SendMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY,
                     MAKEWPARAM(0, WMNC_UPDATE_CREDTEXT), 0);
     else if (d->config_dlg) {
         khui_cfg_set_flags_inst(&d->cfg,
@@ -1377,7 +1377,7 @@ _error_exit:
 
 /* this is shared between the new credentials window and the AFS per
    identity configuration dialog. */
-INT_PTR CALLBACK 
+INT_PTR CALLBACK
 afs_dlg_proc(HWND hwnd,
              UINT uMsg,
              WPARAM wParam,
@@ -1414,7 +1414,7 @@ afs_dlg_proc(HWND hwnd,
                 nct->aux = (LPARAM) d;
 
             /* create the tooltip window */
-            d->tooltip = 
+            d->tooltip =
                 CreateWindowEx(WS_EX_TOPMOST,
                                TOOLTIPS_CLASS,
                                NULL,
@@ -1509,7 +1509,7 @@ afs_dlg_proc(HWND hwnd,
                 lc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
                 lc.fmt = LVCFMT_LEFT;
                 lc.cx = ((r.right - r.left) * 2) / 5;
-                LoadString(hResModule, IDS_NCAFS_COL_CELL, 
+                LoadString(hResModule, IDS_NCAFS_COL_CELL,
                            wbuf, ARRAYLENGTH(wbuf));
                 lc.pszText = wbuf;
 
@@ -1518,14 +1518,14 @@ afs_dlg_proc(HWND hwnd,
                 lc.mask |= LVCF_SUBITEM;
                 //lc.cx is the same as above
                 lc.iSubItem = NCAFS_IDX_REALM;
-                LoadString(hResModule, IDS_NCAFS_COL_REALM, 
+                LoadString(hResModule, IDS_NCAFS_COL_REALM,
                            wbuf, ARRAYLENGTH(wbuf));
 
                 ListView_InsertColumn(hw, 1, &lc);
 
                 lc.cx = ((r.right - r.left) * 1) / 5;
                 lc.iSubItem = NCAFS_IDX_METHOD;
-                LoadString(hResModule, IDS_NCAFS_COL_METHOD, 
+                LoadString(hResModule, IDS_NCAFS_COL_METHOD,
                            wbuf, ARRAYLENGTH(wbuf));
 
                 ListView_InsertColumn(hw, 2, &lc);
@@ -1560,7 +1560,7 @@ afs_dlg_proc(HWND hwnd,
             }
 
             d->afs_enabled = TRUE;
-            SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, 
+            SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN,
                                BM_SETCHECK, BST_CHECKED, 0);
 
             SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, CB_LIMITTEXT, MAXCELLCHARS-1, 0);
@@ -1580,7 +1580,7 @@ afs_dlg_proc(HWND hwnd,
             afs_dlg_data * d;
             khui_new_creds_by_type * nct;
 
-            d = (afs_dlg_data *)(LONG_PTR) 
+            d = (afs_dlg_data *)(LONG_PTR)
                 GetWindowLongPtr(hwnd, DWLP_USER);
 
             if (d == NULL)
@@ -1610,7 +1610,7 @@ afs_dlg_proc(HWND hwnd,
             afs_dlg_data * d;
             khui_new_creds_by_type * nct;
 
-            d = (afs_dlg_data *)(LONG_PTR) 
+            d = (afs_dlg_data *)(LONG_PTR)
                 GetWindowLongPtr(hwnd, DWLP_USER);
 
             if (d == NULL)
@@ -1630,8 +1630,8 @@ afs_dlg_proc(HWND hwnd,
             case MAKEWPARAM(IDC_NCAFS_OBTAIN, BN_CLICKED):
                 {
                     BOOL c;
-                    c = (SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, 
-                                            BM_GETCHECK, 0, 0) 
+                    c = (SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN,
+                                            BM_GETCHECK, 0, 0)
                          == BST_CHECKED);
                     d->afs_enabled = c;
                     d->dirty = TRUE;
@@ -1667,7 +1667,7 @@ afs_dlg_proc(HWND hwnd,
             afs_dlg_data * d;
             khui_new_creds_by_type * nct;
 
-            d = (afs_dlg_data *)(LONG_PTR) 
+            d = (afs_dlg_data *)(LONG_PTR)
                 GetWindowLongPtr(hwnd, DWLP_USER);
 
             if (d == NULL)
@@ -1683,24 +1683,24 @@ afs_dlg_proc(HWND hwnd,
             switch(HIWORD(wParam)) {
             case WMNC_DIALOG_SETUP:
                 {
-                    SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, 
+                    SendDlgItemMessage(hwnd, IDC_NCAFS_CELL,
                                        CB_RESETCONTENT, 0, 0);
-                    
+
                     /* load the LRU cells */
                     {
                         wchar_t * buf;
                         wchar_t *s;
                         khm_size cbbuf;
 
-                        if(khc_read_multi_string(csp_params, L"LRUCells", 
-                                                 NULL, &cbbuf) == 
+                        if(khc_read_multi_string(csp_params, L"LRUCells",
+                                                 NULL, &cbbuf) ==
                            KHM_ERROR_TOO_LONG) {
                             buf = PMALLOC(cbbuf);
-                            khc_read_multi_string(csp_params, L"LRUCells", 
+                            khc_read_multi_string(csp_params, L"LRUCells",
                                                   buf, &cbbuf);
                             s = buf;
                             while(*s) {
-                                SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, 
+                                SendDlgItemMessage(hwnd, IDC_NCAFS_CELL,
                                                    CB_ADDSTRING, 0, (LPARAM) s);
                                 s += wcslen(s) + 1;
                             }
@@ -1720,17 +1720,17 @@ afs_dlg_proc(HWND hwnd,
                                                   CB_FINDSTRINGEXACT,
                                                   (WPARAM) -1,
                                                   (LPARAM) wbuf) == CB_ERR) {
-                                SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, 
-                                                   CB_ADDSTRING, 
+                                SendDlgItemMessage(hwnd, IDC_NCAFS_CELL,
+                                                   CB_ADDSTRING,
                                                    0, (LPARAM) wbuf);
                             }
-                            SendDlgItemMessage(hwnd, IDC_NCAFS_CELL, 
-                                               CB_SELECTSTRING, 
+                            SendDlgItemMessage(hwnd, IDC_NCAFS_CELL,
+                                               CB_SELECTSTRING,
                                                (WPARAM)-1, (LPARAM) wbuf);
                         }
                     }
 
-                    SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
+                    SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
                                        CB_RESETCONTENT, 0, 0);
 
                     /* as for the realms, we have a special one here */
@@ -1738,18 +1738,18 @@ afs_dlg_proc(HWND hwnd,
                         wchar_t wbuf[256];
                         int idx;
 
-                        LoadString(hResModule, IDS_NC_REALM_AUTO, wbuf, 
+                        LoadString(hResModule, IDS_NC_REALM_AUTO, wbuf,
                                    (int) ARRAYLENGTH(wbuf));
-                        idx = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
-                                                       CB_ADDSTRING, 0, 
+                        idx = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
+                                                       CB_ADDSTRING, 0,
                                                        (LPARAM) wbuf);
                         /* item data for the realm strings is the
                            answer to the question, "is this the
                            'determine realm automatically' item?" */
-                        SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
+                        SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
                                            CB_SETITEMDATA, idx, TRUE);
-                        SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
-                                           CB_SELECTSTRING, 
+                        SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
+                                           CB_SELECTSTRING,
                                            (WPARAM)-1, (LPARAM) wbuf);
                     }
 
@@ -1760,26 +1760,26 @@ afs_dlg_proc(HWND hwnd,
                         int idx;
                         khm_size cbbuf;
 
-                        if(khc_read_multi_string(csp_params, L"LRURealms", 
-                                                 NULL, &cbbuf) == 
+                        if(khc_read_multi_string(csp_params, L"LRURealms",
+                                                 NULL, &cbbuf) ==
                            KHM_ERROR_TOO_LONG) {
                             buf = PMALLOC(cbbuf);
-                            khc_read_multi_string(csp_params, L"LRURealms", 
+                            khc_read_multi_string(csp_params, L"LRURealms",
                                                   buf, &cbbuf);
                             s = buf;
                             while(*s) {
-                                if(SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
-                                                      CB_FINDSTRINGEXACT, 
+                                if(SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
+                                                      CB_FINDSTRINGEXACT,
                                                       (WPARAM)-1,
                                                       (LPARAM) s) == CB_ERR) {
-                                    idx = 
+                                    idx =
                                         (int)
-                                        SendDlgItemMessage(hwnd, 
-                                                           IDC_NCAFS_REALM, 
-                                                           CB_ADDSTRING, 
+                                        SendDlgItemMessage(hwnd,
+                                                           IDC_NCAFS_REALM,
+                                                           CB_ADDSTRING,
                                                            0, (LPARAM) s);
-                                    SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
-                                                       CB_SETITEMDATA, 
+                                    SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
+                                                       CB_SETITEMDATA,
                                                        idx, FALSE);
                                 }
 
@@ -1790,7 +1790,7 @@ afs_dlg_proc(HWND hwnd,
                     }
 
                     if (d->nc)
-                        khui_cw_enable_type(d->nc, afs_credtype_id, 
+                        khui_cw_enable_type(d->nc, afs_credtype_id,
                                             d->afs_enabled);
 
                     nc_dlg_enable(hwnd, d->afs_enabled);
@@ -1824,30 +1824,30 @@ afs_dlg_proc(HWND hwnd,
                     wstr[0] = 0;
 
                     if(!d->afs_enabled) {
-                        LoadString(hResModule, IDS_AFS_CREDTEXT_DIS, 
+                        LoadString(hResModule, IDS_AFS_CREDTEXT_DIS,
                                    wstr, ARRAYLENGTH(wstr));
                     } else {
                         if(d->creds.n_rows == 0) {
-                            LoadString(hResModule, IDS_AFS_CREDTEXT_0, 
+                            LoadString(hResModule, IDS_AFS_CREDTEXT_0,
                                        wstr, ARRAYLENGTH(wstr));
                         } else if(d->creds.n_rows == 1) {
-                            LoadString(hResModule, IDS_AFS_CREDTEXT_1, 
+                            LoadString(hResModule, IDS_AFS_CREDTEXT_1,
                                        wformat, ARRAYLENGTH(wformat));
-                            StringCbPrintf(wstr, sizeof(wstr), wformat, 
+                            StringCbPrintf(wstr, sizeof(wstr), wformat,
                                            d->creds.rows[0].cell);
                         } else {
                             int i;
                             wchar_t wcells[1024];
 
-                            LoadString(hResModule, IDS_AFS_CREDTEXT_N, 
+                            LoadString(hResModule, IDS_AFS_CREDTEXT_N,
                                        wformat, ARRAYLENGTH(wformat));
                             wcells[0] = 0;
                             for(i=0; i<d->creds.n_rows; i++) {
                                 if(i > 0)
-                                    StringCbCat(wcells, sizeof(wcells), 
+                                    StringCbCat(wcells, sizeof(wcells),
                                                 L", ");
-                                if(FAILED(StringCbCat(wcells, 
-                                                      sizeof(wcells), 
+                                if(FAILED(StringCbCat(wcells,
+                                                      sizeof(wcells),
                                                       d->creds.rows[i].cell))) {
                                     size_t cch;
                                     /* looks like we overflowed */
@@ -1888,7 +1888,7 @@ afs_dlg_proc(HWND hwnd,
 
                     StringCchCopyN(wid, ARRAYLENGTH(wid), l->id, l->id_len);
                     wids = wcschr(wid, L':');
-                        
+
                     if(!wids)
                         break;
                     else
@@ -1899,7 +1899,7 @@ afs_dlg_proc(HWND hwnd,
 #endif
 
                     if(!wcscmp(wids, L"Enable")) {
-                        SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN, 
+                        SendDlgItemMessage(hwnd, IDC_NCAFS_OBTAIN,
                                            BM_SETCHECK, BST_CHECKED, 0);
                         d->afs_enabled = TRUE;
                         khui_cw_enable_type(d->nc, afs_credtype_id, TRUE);
@@ -1909,11 +1909,11 @@ afs_dlg_proc(HWND hwnd,
                 break;
 
             case WMNC_IDENTITY_CHANGE:
-                kmq_post_sub_msg(afs_sub, KMSG_CRED, 
-                                 KMSG_CRED_DIALOG_NEW_IDENTITY, 0, 
+                kmq_post_sub_msg(afs_sub, KMSG_CRED,
+                                 KMSG_CRED_DIALOG_NEW_IDENTITY, 0,
                                  (void *) d->nc);
                 break;
-                
+
             case WMNC_AFS_UPDATE_ROWS:
                 afs_dlg_update_rows(hwnd, d);
 
@@ -1921,7 +1921,7 @@ afs_dlg_proc(HWND hwnd,
                 assert(d->nc);
 #endif
 
-                PostMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY, 
+                PostMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY,
                             MAKEWPARAM(0, WMNC_UPDATE_CREDTEXT), 0);
                 break;
             }
@@ -1951,7 +1951,7 @@ afs_dlg_proc(HWND hwnd,
 
                     return TRUE;
 
-                d = (afs_dlg_data *)(LONG_PTR) 
+                d = (afs_dlg_data *)(LONG_PTR)
                     GetWindowLongPtr(hwnd, DWLP_USER);
 
                 if (d == NULL)
@@ -1976,25 +1976,25 @@ afs_dlg_proc(HWND hwnd,
                 if(row < 0 || row >= d->creds.n_rows)
                     goto _done_notify_select;
 
-                SetDlgItemText(hwnd, IDC_NCAFS_CELL, 
+                SetDlgItemText(hwnd, IDC_NCAFS_CELL,
                                d->creds.rows[row].cell);
                 if(d->creds.rows[row].realm != NULL) {
-                    SetDlgItemText(hwnd, IDC_NCAFS_REALM, 
+                    SetDlgItemText(hwnd, IDC_NCAFS_REALM,
                                    d->creds.rows[row].realm);
                 } else {
                     wchar_t wbuf[256];
                     int idx;
-                        
-                    LoadString(hResModule, IDS_NC_REALM_AUTO, wbuf, 
+
+                    LoadString(hResModule, IDS_NC_REALM_AUTO, wbuf,
                                ARRAYLENGTH(wbuf));
-                    idx = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, 
-                                                   CB_FINDSTRINGEXACT, 
+                    idx = (int) SendDlgItemMessage(hwnd, IDC_NCAFS_REALM,
+                                                   CB_FINDSTRINGEXACT,
                                                    (WPARAM) -1,
                                                    (LPARAM) wbuf);
                     SendDlgItemMessage(hwnd, IDC_NCAFS_REALM, CB_SETCURSEL,
                                        idx, 0);
                 }
-                SendDlgItemMessage(hwnd, IDC_NCAFS_METHOD, CB_SETCURSEL, 
+                SendDlgItemMessage(hwnd, IDC_NCAFS_METHOD, CB_SETCURSEL,
                                    d->creds.rows[row].method, 0);
             _done_notify_select:
                 LeaveCriticalSection(&d->cs);
@@ -2009,7 +2009,7 @@ afs_dlg_proc(HWND hwnd,
                 int x,y;
                 RECT r;
 
-                d = (afs_dlg_data *)(LONG_PTR) 
+                d = (afs_dlg_data *)(LONG_PTR)
                     GetWindowLongPtr(hwnd, DWLP_USER);
 
                 if (d == NULL)
@@ -2115,7 +2115,7 @@ afs_dlg_proc(HWND hwnd,
 /* passed in to kcdb_credset_apply along with the afs_credset to adjust
    newly acquired credentials to include informatino derived from the
    new creds operation */
-khm_int32 KHMAPI 
+khm_int32 KHMAPI
 afs_adjust_token_ident_proc(khm_handle cred, void * vd)
 {
     wchar_t cell[MAXCELLCHARS];
@@ -2137,21 +2137,21 @@ afs_adjust_token_ident_proc(khm_handle cred, void * vd)
                                      it wants to know if whether or
                                      not we want to continue the
                                      search */
-    
+
     for(i=0; i<l->n_rows; i++) {
-        if((l->rows[i].flags & DLGROW_FLAG_DONE) && 
+        if((l->rows[i].flags & DLGROW_FLAG_DONE) &&
            !_wcsicmp(cell, l->rows[i].cell)) {
             khm_int32 method;
 
             kcdb_cred_set_identity(cred, b->ident);
             if(l->rows[i].realm)
-                kcdb_cred_set_attr(cred, afs_attr_realm, l->rows[i].realm, 
+                kcdb_cred_set_attr(cred, afs_attr_realm, l->rows[i].realm,
                                    (khm_size)KCDB_CBSIZE_AUTO);
             else
                 kcdb_cred_set_attr(cred, afs_attr_realm, NULL, 0);
 
             method = l->rows[i].method;
-            kcdb_cred_set_attr(cred, afs_attr_method, &method, 
+            kcdb_cred_set_attr(cred, afs_attr_method, &method,
                                (khm_size)KCDB_CBSIZE_AUTO);
 
             break;
@@ -2204,12 +2204,12 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
         if(KHM_SUCCEEDED(kcdb_identity_get_config(ident,
                                                   KHM_FLAG_CREATE,
                                                   &h_idc))) {
-            khc_open_space(h_idc, CSNAME_AFSCRED, 
+            khc_open_space(h_idc, CSNAME_AFSCRED,
                            KHM_FLAG_CREATE, &h_afs);
         }
 
         if(h_afs) {
-            khc_open_space(h_afs, L"Cells", KHM_FLAG_CREATE, 
+            khc_open_space(h_afs, L"Cells", KHM_FLAG_CREATE,
                            &h_acells);
         }
     }
@@ -2219,16 +2219,16 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
                         !!d->afs_enabled);
     }
 
-    if(khc_read_multi_string(csp_params, 
-                             L"LRUCells", 
+    if(khc_read_multi_string(csp_params,
+                             L"LRUCells",
                              NULL,
                              &cbcell) == KHM_ERROR_TOO_LONG) {
-        cbcell += MAXCELLCHARS * sizeof(wchar_t) * 
+        cbcell += MAXCELLCHARS * sizeof(wchar_t) *
             l->n_rows;
         lru_cell = PMALLOC(cbcell);
         ZeroMemory(lru_cell, cbcell);
         cbt = cbcell;
-                    
+
         khc_read_multi_string(csp_params,
                               L"LRUCells",
                               lru_cell,
@@ -2280,30 +2280,30 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
     for(i=0; i < l->n_rows; i++)
         if(!(l->rows[i].flags & DLGROW_FLAG_DELETED)) {
             khm_handle h_acell = NULL;
-            
-            if(!multi_string_find(lru_cell, 
+
+            if(!multi_string_find(lru_cell,
                                   l->rows[i].cell, 0)) {
                 cbz = cbcell;
-                multi_string_append(lru_cell, &cbz, 
+                multi_string_append(lru_cell, &cbz,
                                     l->rows[i].cell);
             }
 
-            if(l->rows[i].realm && 
-               !multi_string_find(lru_realm, 
+            if(l->rows[i].realm &&
+               !multi_string_find(lru_realm,
                                   l->rows[i].realm, 0)) {
                 cbz = cbrealm;
-                multi_string_append(lru_realm, &cbz, 
+                multi_string_append(lru_realm, &cbz,
                                     l->rows[i].realm);
             }
 
             cbz = cbidcell;
-            multi_string_append(id_cell, &cbz, 
+            multi_string_append(id_cell, &cbz,
                                 l->rows[i].cell);
 
-            if(h_acells && 
-               KHM_SUCCEEDED(khc_open_space(h_acells, 
-                                            l->rows[i].cell, 
-                                            KHM_FLAG_CREATE, 
+            if(h_acells &&
+               KHM_SUCCEEDED(khc_open_space(h_acells,
+                                            l->rows[i].cell,
+                                            KHM_FLAG_CREATE,
                                             &h_acell))) {
                 wchar_t methodname[KHUI_MAXCCH_NAME];
 
@@ -2311,11 +2311,11 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
                                     methodname,
                                     sizeof(methodname));
 
-                khc_write_string(h_acell, L"MethodName", 
+                khc_write_string(h_acell, L"MethodName",
                                  methodname);
 
                 if(l->rows[i].realm)
-                    khc_write_string(h_acell, L"Realm", 
+                    khc_write_string(h_acell, L"Realm",
                                      l->rows[i].realm);
                 else
                     khc_write_string(h_acell, L"Realm", L"");
@@ -2331,7 +2331,7 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
             }
         }
 
-    if (lru_cell)                
+    if (lru_cell)
         khc_write_multi_string(csp_params,
                                L"LRUCells", lru_cell);
     if (lru_realm)
@@ -2372,8 +2372,8 @@ afs_cred_write_ident_data(afs_dlg_data * d) {
 }
 
 khm_int32
-afs_msg_newcred(khm_int32 msg_subtype, 
-                khm_ui_4 uparam, 
+afs_msg_newcred(khm_int32 msg_subtype,
+                khm_ui_4 uparam,
                 void * vparam) {
 
     switch(msg_subtype) {
@@ -2539,7 +2539,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 khui_cw_set_response(nc, afs_credtype_id,
                                      KHUI_NC_RESPONSE_SUCCESS);
 
-                _report_cs0(KHERR_INFO, 
+                _report_cs0(KHERR_INFO,
                             L"Cancelling");
                 _end_task();
                 break;
@@ -2567,7 +2567,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
                      nc->ctx.cred_type == afs_credtype_id)) {
 
                     _report_cs1(KHERR_INFO,
-                                L"AFS Renew Creds :: ident %1!p!", 
+                                L"AFS Renew Creds :: ident %1!p!",
                                 _cptr(nc->ctx.identity));
 
                 } else {
@@ -2681,7 +2681,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
 
                 UnicodeStrToAnsi(cell, sizeof(cell), l->rows[i].cell);
                 if (l->rows[i].realm != NULL)
-                    UnicodeStrToAnsi(realm, sizeof(realm), 
+                    UnicodeStrToAnsi(realm, sizeof(realm),
                                      l->rows[i].realm);
 
                 ZeroMemory(&ft_old, sizeof(ft_old));
@@ -2712,7 +2712,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
                         _resolve();
                     }
 
-                    khc_close_space(csp_cell);               
+                    khc_close_space(csp_cell);
                 } else {
                     method = l->rows[i].method;
                 }
@@ -2726,10 +2726,10 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 _resolve();
 
                 /* make the call */
-                code = afs_klog(ident, "", 
-                                bgetLinked ? linkedCell : cell, 
+                code = afs_klog(ident, "",
+                                bgetLinked ? linkedCell : cell,
                                 realm, 0,
-                                method, &new_exp, 
+                                method, &new_exp,
                                 bgetLinked ? NULL :linkedCell);
 
                 _report_cs1(KHERR_INFO,
@@ -2795,7 +2795,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
 
             if(failed) {
                 /* we should indicate errors if anything went wrong */
-                khui_cw_set_response(nc, afs_credtype_id, 
+                khui_cw_set_response(nc, afs_credtype_id,
                                      KHUI_NC_RESPONSE_FAILED);
             } else {
                 khui_cw_set_response(nc, afs_credtype_id,
@@ -2816,10 +2816,10 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 b.add_new = FALSE;
                 b.update_info = FALSE;
 
-                kcdb_credset_apply(afs_credset, afs_adjust_token_ident_proc, 
+                kcdb_credset_apply(afs_credset, afs_adjust_token_ident_proc,
                                    (void *) &b);
 
-                kcdb_credset_collect(NULL, afs_credset, NULL, 
+                kcdb_credset_collect(NULL, afs_credset, NULL,
                                      afs_credtype_id, NULL);
 
             } else if (nc->subtype == KMSG_CRED_NEW_CREDS) {
@@ -2836,10 +2836,10 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 b.add_new = FALSE;
                 b.update_info = FALSE;
 
-                kcdb_credset_apply(afs_credset, afs_adjust_token_ident_proc, 
+                kcdb_credset_apply(afs_credset, afs_adjust_token_ident_proc,
                                    (void *) &b);
 
-                kcdb_credset_collect(NULL, afs_credset, NULL, 
+                kcdb_credset_collect(NULL, afs_credset, NULL,
                                      afs_credtype_id, NULL);
 
                 afs_cred_write_ident_data(d);
@@ -2874,7 +2874,7 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 break;
 
             khui_cw_del_type(nc, afs_credtype_id);
-    
+
             if (nct->name)
                 PFREE(nct->name);
             if (nct->credtext)

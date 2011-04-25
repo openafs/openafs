@@ -136,7 +136,7 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 		DebugEvent("InitializeSecurityContext returns status[%lX](%s)",status,_get_sec_err_text(status));
 
 		if (!first) FreeContextBuffer(stoks.pvBuffer);
-        
+
 		if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
 			CompleteAuthToken(&ctxclient, &sdescc);
 		}
@@ -207,7 +207,7 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
     CHAR ansidomain[256], *a;
 
 	homePath[0] = '\0';
-    
+
     /* I trust this is an ASCII domain name */
     for ( p=domain, a=ansidomain; *a = (CHAR)*p; p++, a++);
     DebugEvent("Domain: %s", ansidomain);
@@ -230,11 +230,11 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
         if (FAILED(hr)) { DebugEvent("Can't create nametranslate object"); }
         else {
             hr = pNto->Init(ADS_NAME_INITTYPE_GC,L"");
-            if (FAILED(hr)) { 
+            if (FAILED(hr)) {
                 DebugEvent("NameTranslate Init GC failed [%ld]", hr);
                 if ( domain ) {
                     hr = pNto->Init(ADS_NAME_INITTYPE_DOMAIN,domain);
-                    if (FAILED(hr)) { 
+                    if (FAILED(hr)) {
                         DebugEvent("NameTranslate Init Domain failed [%ld]", hr);
                     }
                 }
@@ -308,10 +308,10 @@ cleanup:
 	if (coInitialized)
 		CoUninitialize();
 
-	return code;               
+	return code;
 }
 
-/* Try to determine the user's AD home path.  *homePath is assumed to be at least MAXPATH bytes. 
+/* Try to determine the user's AD home path.  *homePath is assumed to be at least MAXPATH bytes.
    If successful, opt.flags is updated with LOGON_FLAG_AD_REALM to indicate that we are dealing with
    an AD realm. */
 DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonOptions_t * opt) {

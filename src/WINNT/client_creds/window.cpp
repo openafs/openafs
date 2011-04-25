@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -205,13 +205,13 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       case WM_START_SERVICE:
           {
               SC_HANDLE hManager;
-              if ((hManager = OpenSCManager ( NULL, NULL, 
+              if ((hManager = OpenSCManager ( NULL, NULL,
                                               SC_MANAGER_CONNECT |
                                               SC_MANAGER_ENUMERATE_SERVICE |
                                               SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
               {
                   SC_HANDLE hService;
-                  if ((hService = OpenService ( hManager, TEXT("TransarcAFSDaemon"), 
+                  if ((hService = OpenService ( hManager, TEXT("TransarcAFSDaemon"),
                                                 SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
                   {
                       if (StartService (hService, 0, 0))
@@ -349,7 +349,7 @@ void Main_OnRemindTimer (void)
    if ((iExpired = Main_FindExpiredCreds()) != -1) {
        if (InterlockedIncrement (&g.fShowingMessage) != 1) {
            InterlockedDecrement (&g.fShowingMessage);
-       } else { 
+       } else {
            char * rootcell = NULL;
            char   password[PROBE_PASSWORD_LEN+1];
            struct afsconf_cell cellconfig;
@@ -357,12 +357,12 @@ void Main_OnRemindTimer (void)
            DWORD  code;
 
            rootcell = (char *)GlobalAlloc(GPTR,MAXCELLCHARS+1);
-           if (!rootcell) 
+           if (!rootcell)
                goto cleanup;
 
-           code = KFW_AFS_get_cellconfig(g.aCreds[ iExpired ].szCell, 
+           code = KFW_AFS_get_cellconfig(g.aCreds[ iExpired ].szCell,
                                          (afsconf_cell*)&cellconfig, rootcell);
-           if (code) 
+           if (code)
                goto cleanup;
 
            if (KFW_is_available()) {
@@ -696,7 +696,7 @@ size_t Main_FindExpiredCreds (void)
 
    if ( KFW_is_available() )
        KFW_AFS_renew_expiring_tokens();
-   
+
    lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
@@ -729,7 +729,7 @@ size_t Main_FindExpiredCreds (void)
          break;
          }
       }
-   
+
    lock_ReleaseMutex(&g.credsLock);
 
    lock_ObtainMutex(&g.expirationCheckLock);
@@ -783,13 +783,13 @@ void Terminate_OnOK (HWND hDlg)
       if (IsDlgButtonChecked (hDlg, IDC_STOP))
          {
          SC_HANDLE hManager;
-             if ((hManager = OpenSCManager (NULL, NULL, 
+             if ((hManager = OpenSCManager (NULL, NULL,
                                             SC_MANAGER_CONNECT |
                                             SC_MANAGER_ENUMERATE_SERVICE |
                                             SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
             {
             SC_HANDLE hService;
-            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"),
                                          SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
                {
                SERVICE_STATUS Status;

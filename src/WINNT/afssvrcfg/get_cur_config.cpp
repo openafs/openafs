@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -94,7 +94,7 @@ int GetCurrentConfig(HWND hParent, BOOL& bCanceled)
 static BOOL CALLBACK GetCurConfigDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 {
     BOOL bOn = FALSE;
-	
+
     switch (msg) {
     case WM_INITDIALOG:
 	bCancel = FALSE;
@@ -150,12 +150,12 @@ static BOOL IsClientConfigured(BOOL& bConfigured, afs_status_t& nStatus)
     }
 
     return TRUE;
-}	
+}
 
 /*
  *	NOTE:	This function has an important side effect.  If this machine
  *			is not the first in a new cell, then this function will get the
- *			cell name from the config info.  The cell name may be needed in 
+ *			cell name from the config info.  The cell name may be needed in
  *			config calls that come later, and so this function must be called
  *			before they are.
  */
@@ -163,7 +163,7 @@ static int IsConfigInfoValid(BOOL& bValid, afs_status_t& nStatus)
 {
     if (bCancel)
 	return FALSE;
-	
+
     afs_status_t configStatus;
     char *pszCellName = 0;
 
@@ -204,7 +204,7 @@ static int StartBosServer(afs_status_t& nStatus)
     }
 
     return nResult;
-}		
+}
 
 static BOOL AreWeLastDBServer(BOOL& bLast, afs_status_t& nStatus)
 {
@@ -220,7 +220,7 @@ static BOOL AreWeLastDBServer(BOOL& bLast, afs_status_t& nStatus)
     g_LogFile.Write("Getting CellServDB from host %s.\r\n", GetHostnameA());
     int nResult = cfg_CellServDbEnumerate(GetHostnameA(), &pszCellname, &pszCellServDB, &nStatus);
     if (!nResult)
-	return FALSE;	
+	return FALSE;
 
     if (!pszCellServDB) {
 	g_LogFile.Write("There are no DB servers in CellServDB!!!!!");
@@ -247,7 +247,7 @@ static BOOL AreWeLastDBServer(BOOL& bLast, afs_status_t& nStatus)
 static afs_status_t IsFSConfigured(BOOL& bConfigured)
 {
     g_LogFile.Write("Is this machine a file server: ");
-	
+
     bConfigured = FALSE;
 
     short isStarted;
@@ -257,12 +257,12 @@ static afs_status_t IsFSConfigured(BOOL& bConfigured)
     if (!nResult)
 	return nStatus;
 
-    bConfigured = isStarted;	
-	
+    bConfigured = isStarted;
+
     g_LogFile.WriteBoolResult(bConfigured);
 
     return 0;
-}	
+}
 
 static afs_status_t IsDBConfigured(BOOL& bConfigured)
 {
@@ -284,12 +284,12 @@ static afs_status_t IsDBConfigured(BOOL& bConfigured)
     g_LogFile.Write(", %s.\r\n", bBakConfigured ? "Yes Bak" : "No Bak");
 
     return 0;
-}	
+}
 
 static afs_status_t IsBakConfigured(BOOL& bConfigured)
 {
     bConfigured = bBakConfigured;
-	
+
     return 0;
 }
 
@@ -318,7 +318,7 @@ static afs_status_t DoesAPartitionExist(BOOL& bExists)
     g_LogFile.WriteBoolResult(bExists);
 
     return 0;
-}	
+}
 
 afs_status_t DoRootVolumesExist(BOOL& bExists)
 {
@@ -381,12 +381,12 @@ afs_status_t AreRootVolumesReplicated(BOOL& bReplicated)
     g_LogFile.WriteBoolResult(bReplicated);
 
     return 0;
-}	
+}
 
 static afs_status_t IsSCSConfigured(BOOL& bConfigured)
 {
     g_LogFile.Write("Is this machine a System Control Server: ");
-	
+
     bConfigured = FALSE;
 
     short isUpserver, isSC, isBin;
@@ -406,7 +406,7 @@ static afs_status_t IsSCSConfigured(BOOL& bConfigured)
 static afs_status_t IsSCCConfigured(BOOL& bConfigured)
 {
     g_LogFile.Write("Is this machine a System Control Client: ");
-	
+
     bConfigured = FALSE;
 
     short isUpclient, isSCC, isBin;
@@ -428,7 +428,7 @@ static void ShowMsg(UINT uiMsgID)
     TCHAR szMsg[cchRESOURCE];
 
     GetString(szMsg, uiMsgID);
-	
+
     pProg->SetOperation(szMsg);
 }
 
@@ -438,7 +438,7 @@ static void NextStep(UINT uiMsgID)
 
     if (bCancel)
 	return;
-	
+
     ShowMsg(uiMsgID);
 
     pProg->SetProgress(nCurStep++);
@@ -465,7 +465,7 @@ static BOOL CheckConfigState(afs_status_t (*ConfigCheckFunc)(BOOL&), CONFIG_STAT
 
     return TRUE;
 }
-		
+
 static DWORD CALLBACK GetCurrentConfigState(LPPROGRESSDISPLAY ppd, LPARAM lp)
 {
     afs_status_t nStatus = 0;
@@ -480,11 +480,11 @@ static DWORD CALLBACK GetCurrentConfigState(LPPROGRESSDISPLAY ppd, LPARAM lp)
     if (!IsConfigInfoValid(g_CfgData.bValidServerInfo, nStatus))
 	return nStatus;
 
-    // If the server and client have good config info, and the client is in a 
+    // If the server and client have good config info, and the client is in a
     // different cell than the server, then the config routines will want to
     // reconfigure the client.  To do so they need information that we already
     // know and don't have to ask the user for.  Prefill this information here.
-    if (g_CfgData.bValidClientInfo && g_CfgData.bValidServerInfo && 
+    if (g_CfgData.bValidClientInfo && g_CfgData.bValidServerInfo &&
         (lstrcmp(g_CfgData.szCellName, g_CfgData.szClientCellName) != 0))
     {
         lstrcpy(g_CfgData.szCellServDbHostname, g_CfgData.szHostname);
@@ -523,7 +523,7 @@ static DWORD CALLBACK GetCurrentConfigState(LPPROGRESSDISPLAY ppd, LPARAM lp)
 
 	if (!CheckConfigState(AreRootVolumesReplicated, g_CfgData.configRep, nStatus, IDS_CHECK_REP))
             return nStatus;
-        
+
         g_CfgData.bRootVolumesReplicationKnown = TRUE;
 
 	if (!CheckConfigState(IsSCSConfigured, g_CfgData.configSCS, nStatus, IDS_CHECK_SCS))
@@ -531,11 +531,11 @@ static DWORD CALLBACK GetCurrentConfigState(LPPROGRESSDISPLAY ppd, LPARAM lp)
 
 	if (!CheckConfigState(IsSCCConfigured, g_CfgData.configSCC, nStatus, IDS_CHECK_SCC))
 	    return nStatus;
-    }		
+    }
 
     if (!bCancel)
 	pProg->SetProgress(MAX_STEPS);
-	
+
     return 0;
 }
 

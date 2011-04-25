@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -47,7 +47,7 @@ static HWND hDlg = 0;						// HWND for this page's dialog
 static HWND hLogo;
 static afs_status_t nStatus;
 static void *hServer;
-static int nResult; 
+static int nResult;
 static BOOL bSalvageComplete;
 
 
@@ -72,7 +72,7 @@ BOOL CALLBACK SalvageResultsDlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp);
  *
  */
 BOOL ShowSalvageResults(HWND hParent)
-{	
+{
     int nResult = ModalDialog(IDD_SALVAGE_RESULTS, hParent, (DLGPROC)SalvageResultsDlgProc);
 
     return (nResult == IDOK);
@@ -105,14 +105,14 @@ BOOL CALLBACK SalvageResultsDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp
 	}
 	break;
 
-    case WM_SIZE:	
+    case WM_SIZE:
 	if (lp != 0)
 	    ResizeWindow(hwndDlg, arwDialog, rwaFixupGuts);
 	break;
     }
 
     return FALSE;
-}	
+}
 
 
 /*
@@ -207,7 +207,7 @@ static char *AddCarriageReturnsToLog(char *pszInBuf, char *& pszOutBuf)
             *pOutBuf++ = '\n';
         } else
             *pOutBuf++ = *pInBuf;
-		
+
 	pInBuf++;
     }
 
@@ -229,7 +229,7 @@ static char *GetMaxPartOfLogWeCanShow(char *pszLogBuf)
     // Buffer is bigger than maximum, so find the last full line
     // under the limit and return it.
     char *psz = pszLogBuf + nLen - EDIT_CONTROL_MAX_CHARS;
-    
+
     // Make sure we return the beginning of a line
     while (*psz && (*psz != '\n'))
         psz++;
@@ -238,7 +238,7 @@ static char *GetMaxPartOfLogWeCanShow(char *pszLogBuf)
 	psz++;
 
     return psz;
-}    
+}
 
 static BOOL AllocMemory(char *&pszLogBuf, int nBufSize)
 {
@@ -283,7 +283,7 @@ static DWORD WINAPI ShowResults(LPVOID param)
 
     if (!AllocMemory(pszLogBuf, nBufSize))
         return 0;
-    
+
     while (dwWait != WAIT_OBJECT_0) {
         // Wait for either the salvage thread to terminate or our update
         // interval to pass.
@@ -292,7 +292,7 @@ static DWORD WINAPI ShowResults(LPVOID param)
         // In either case, update the log display for the user
 
         // Get the salvage log as it currently exists
-      getlog: 
+      getlog:
 	nResult = bos_LogGet(hServer, "SalvageLog", &nLogSize, pszLogBuf, &nStatus);
         if (!nResult) {
             if (nStatus == ADMMOREDATA) {
@@ -308,7 +308,7 @@ static DWORD WINAPI ShowResults(LPVOID param)
             }
 
             rc = 0;
-            break;            
+            break;
         }
 
         // NULL-terminate the log
@@ -321,7 +321,7 @@ static DWORD WINAPI ShowResults(LPVOID param)
             rc = 0;
             break;
         }
-        
+
         // The edit control has a limit to the number of characters it can hold.  If the log
         // is bigger than that limit, then we will show the maximum portion of the end of the
         // log that we can fit in the edit control.

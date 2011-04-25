@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -430,7 +430,7 @@ BOS 서버 자체는 프로세스가 반복적으로 실패하는 경우에도 이 플래그의 상태를
 절대 변경하지 않습니다. 또한 이 플래그는 내부 사용만을 목적으로 합니다.
 따라서 <B>bos status</B> 명령의 출력에는 나타나지 않습니다.
 </LI><LI>그 명령 매개변수는 BOS 서버가 프로세스를 시작하기 위해 실행하는
-명령입니다. 
+명령입니다.
 <A NAME="IDX6310"></A>
 <P>
 <UL>
@@ -839,22 +839,22 @@ BOS 서버가 시작된 이후에 프로세스가 종료된 경우에는 나타나지 않습니다.
 </LI></OL>
 <P>다음 예제는 시스템 <B>db2.abc.com</B>의 보호 서버를 정의하고
 시작합니다.
-<PRE>   
-   % <B>bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</B> 
-   
+<PRE>
+   % <B>bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</B>
+
 </PRE>
 <P>다음 예제는 시스템 <B>fs6.abc.com</B>의
 <B>fs</B> 프로세스를 정의하고 시작합니다.
-<PRE>   
+<PRE>
    % <B>bos create fs6.abc.com fs fs /usr/afs/bin/fileserver </B>  \
         <B>/usr/afs/bin/volserver /usr/afs/bin/salvager</B>
-    
+
 </PRE>
 <P>다음 예제는 시스템 <B>fs3.abc.com</B>에서
 <B>backupuser</B> 프로세스라고 하는 cron 프로세스를
 정의하고 시작합니다. 이 프로세스는 매일 새벽 3시에 실행되도록 예정되어
 있습니다.
-<PRE>   % <B>bos create fs3.abc.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</B> 
+<PRE>   % <B>bos create fs3.abc.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</B>
 </PRE>
 <P><H3><A NAME="Header_184" HREF="auagd002.htm#ToC_184">프로세스를 정지하고 BosConfig 파일에서 제거하려면</A></H3>
 <A NAME="IDX6349"></A>
@@ -878,9 +878,9 @@ BOS 서버가 시작된 이후에 프로세스가 종료된 경우에는 나타나지 않습니다.
 이 프로세스에 대해 이 명령을 실행해야 합니다. 이 명령에 대한 자세한 설명을
 보려면 <A HREF="#HDRWQ165">상태를 NotRun으로 변경하여 프로세스를 정지하려면</A>을 참조하십시오.
 <P>
-<PRE>   
+<PRE>
    % <B>bos stop</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP> [<B>-wait</B>]
-   
+
 </PRE>
 </LI><LI><A NAME="LIPROC-DEL"></A><B>bos delete</B> 명령을 실행하여
 <B>BosConfig</B> 파일에서 각 프로세스를 제거하십시오.
@@ -989,7 +989,7 @@ BOS 서버를 제어하지 않습니다. 다른 모든 프로세스와 함께 BOS 서버를 정지한 후
 <B>BosConfig</B> 파일과 BOS 서버의 메모리에서 각 프로세스의
 상태 플래그를 <TT>Run</TT>으로 변경하고 시작하십시오.
 <P>
-<PRE>   % 
+<PRE>   %
 <B>bos start</B> &lt;<VAR>machine&nbsp;name</VAR>> &lt;<VAR>server&nbsp;process&nbsp;name</VAR>><SUP>+</SUP>
 </PRE>
 <P>
@@ -1447,11 +1447,11 @@ setrestart</B> 명령을 사용하십시오.
 상대적으로 해석됩니다.
 </DL>
 </LI></OL>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd008.htm">이전 페이지</A> &#124; <A HREF="auagd010.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd008.htm">이전 페이지</A> &#124; <A HREF="auagd010.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

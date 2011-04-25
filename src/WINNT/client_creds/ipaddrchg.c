@@ -1,20 +1,20 @@
 /*
  * Copyright (c) 2003 SkyRope, LLC
  * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- * - Redistributions of source code must retain the above copyright notice, 
+ *
+ * - Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
- * - Redistributions in binary form must reproduce the above copyright notice, 
- *   this list of conditions and the following disclaimer in the documentation 
+ * - Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * - Neither the name of Skyrope, LLC nor the names of its contributors may be 
- *   used to endorse or promote products derived from this software without 
+ * - Neither the name of Skyrope, LLC nor the names of its contributors may be
+ *   used to endorse or promote products derived from this software without
  *   specific prior written permission from Skyrope, LLC.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
  * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
@@ -80,10 +80,10 @@
 // based on work originally submitted to the CMU Computer Club
 // by Jeffrey Hutzelman
 //
-// These would work great if the fsProbe interface had been 
+// These would work great if the fsProbe interface had been
 // ported to Windows
 
-static 
+static
 void probeComplete()
 {
     fsprobe_Cleanup(1);
@@ -103,7 +103,7 @@ struct ping_params {
 }
 
 // the fsHandler is where we receive the answer to the probe
-static 
+static
 int fsHandler(void)
 {
     ping_count = fsprobe_Results.probeNum;
@@ -112,14 +112,14 @@ int fsHandler(void)
         ok_count++;
         if (waiting) complete();
     }
-    if (ping_count == retry) 
+    if (ping_count == retry)
         complete();
     return 0;
 }
 
 // ping_fs is a callback routine meant to be called from within
 // cm_SearchCellFile() or cm_SearchCellDNS()
-static long 
+static long
 pingFS(void *ping_params, struct sockaddr_in *addrp, char *namep)
 {
     int rc;
@@ -145,7 +145,7 @@ pingFS(void *ping_params, struct sockaddr_in *addrp, char *namep)
     {
         tv.tv_sec = pp->host.wait;
         tv.tv_usec = 0;
-        if (IOMGR_Select(0, 0, 0, 0, &tv)) 
+        if (IOMGR_Select(0, 0, 0, 0, &tv))
             break;
     }
     probeComplete();
@@ -181,11 +181,11 @@ pingCell(char *cell)
     rc = pcm_SearchCellFile(cell, newcell, pingFS, (void *)&pp);
 }
 #endif /* USE_FSPROBE */
- 
-// These two items are imported from afscreds.h 
+
+// These two items are imported from afscreds.h
 // but it cannot be included without causing conflicts
 #define c100ns1SECOND        (LONGLONG)10000000
-static void 
+static void
 TimeToSystemTime (SYSTEMTIME *pst, time_t TimeT)
 {
     struct tm *pTime;
@@ -204,61 +204,61 @@ TimeToSystemTime (SYSTEMTIME *pst, time_t TimeT)
     }
 }
 
-static DWORD 
+static DWORD
 GetServiceStatus(
-    LPSTR lpszMachineName, 
+    LPSTR lpszMachineName,
     LPSTR lpszServiceName,
-    DWORD *lpdwCurrentState) 
-{ 
-    DWORD           hr               = NOERROR; 
-    SC_HANDLE       schSCManager     = NULL; 
-    SC_HANDLE       schService       = NULL; 
-    DWORD           fdwDesiredAccess = 0; 
-    SERVICE_STATUS  ssServiceStatus  = {0}; 
-    BOOL            fRet             = FALSE; 
+    DWORD *lpdwCurrentState)
+{
+    DWORD           hr               = NOERROR;
+    SC_HANDLE       schSCManager     = NULL;
+    SC_HANDLE       schService       = NULL;
+    DWORD           fdwDesiredAccess = 0;
+    SERVICE_STATUS  ssServiceStatus  = {0};
+    BOOL            fRet             = FALSE;
 
-    *lpdwCurrentState = 0; 
- 
-    fdwDesiredAccess = GENERIC_READ; 
- 
-    schSCManager = OpenSCManager(lpszMachineName,  
+    *lpdwCurrentState = 0;
+
+    fdwDesiredAccess = GENERIC_READ;
+
+    schSCManager = OpenSCManager(lpszMachineName,
                                  NULL,
-                                 fdwDesiredAccess); 
- 
-    if(schSCManager == NULL) 
-    { 
+                                 fdwDesiredAccess);
+
+    if(schSCManager == NULL)
+    {
         hr = GetLastError();
-        goto cleanup; 
-    } 
- 
+        goto cleanup;
+    }
+
     schService = OpenService(schSCManager,
                              lpszServiceName,
-                             fdwDesiredAccess); 
- 
-    if(schService == NULL) 
-    { 
+                             fdwDesiredAccess);
+
+    if(schService == NULL)
+    {
         hr = GetLastError();
-        goto cleanup; 
-    } 
- 
+        goto cleanup;
+    }
+
     fRet = QueryServiceStatus(schService,
-                              &ssServiceStatus); 
- 
-    if(fRet == FALSE) 
-    { 
-        hr = GetLastError(); 
-        goto cleanup; 
-    } 
- 
-    *lpdwCurrentState = ssServiceStatus.dwCurrentState; 
- 
-cleanup: 
- 
-    CloseServiceHandle(schService); 
-    CloseServiceHandle(schSCManager); 
- 
-    return(hr); 
-} 
+                              &ssServiceStatus);
+
+    if(fRet == FALSE)
+    {
+        hr = GetLastError();
+        goto cleanup;
+    }
+
+    *lpdwCurrentState = ssServiceStatus.dwCurrentState;
+
+cleanup:
+
+    CloseServiceHandle(schService);
+    CloseServiceHandle(schSCManager);
+
+    return(hr);
+}
 
 void
 ObtainTokensFromUserIfNeeded(HWND hWnd)
@@ -295,11 +295,11 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
     }
 
     rootcell = (char *)GlobalAlloc(GPTR,MAXCELLCHARS+1);
-    if (!rootcell) 
+    if (!rootcell)
         goto cleanup;
 
     code = KFW_AFS_get_cellconfig(cell, (void*)&cellconfig, rootcell);
-    if (code) 
+    if (code)
         goto cleanup;
 
     memset(&aserver, '\0', sizeof(aserver));
@@ -378,7 +378,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
             SystemTimeToFileTime (&stExpires, &ftExpires);
             llExpires = (((LONGLONG)ftExpires.dwHighDateTime) << 32) + (LONGLONG)(ftExpires.dwLowDateTime);
             llExpires /= c100ns1SECOND;
-        
+
             if (llNow < llExpires)
                 goto cleanup;
         }
@@ -440,7 +440,7 @@ IpAddrChangeMonitor(void * hWnd)
 
         Result = NotifyAddrChange(&Handle,&Ovlap);
         if (Result != ERROR_IO_PENDING)
-        {        
+        {
             if ( IsDebuggerPresent() ) {
                 sprintf(message, "NotifyAddrChange() failed with error %d \n", Result);
                 OutputDebugString(message);
@@ -471,7 +471,7 @@ IpAddrChangeMonitor(void * hWnd)
 #else
         Result = NotifyAddrChange(NULL,NULL);
         if (Result != NO_ERROR)
-        {        
+        {
             if ( IsDebuggerPresent() ) {
                 sprintf(message, "NotifyAddrChange() failed with error %d \n", Result);
                 OutputDebugString(message);
@@ -479,7 +479,7 @@ IpAddrChangeMonitor(void * hWnd)
             break;
         }
 #endif
-        
+
         NumOfAddrs = GetNumOfIpAddrs();
 
         if ( IsDebuggerPresent() ) {
@@ -500,7 +500,7 @@ IpAddrChangeMonitor(void * hWnd)
 }
 
 
-DWORD 
+DWORD
 IpAddrChangeMonitorInit(HWND hWnd)
 {
     DWORD status = ERROR_SUCCESS;

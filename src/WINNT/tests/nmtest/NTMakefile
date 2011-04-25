@@ -1,4 +1,4 @@
-#                                                                                                                                
+#
 # Copyright (c) 2009 Secure Endpoints Inc.
 #
 
@@ -28,5 +28,5 @@ $(EXEDIR)\nmtest.exe: $(OBJS)
 install: idirs $(EXEDIR)\nmtest.exe
 
 clean::
-        
+
 

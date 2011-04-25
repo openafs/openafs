@@ -1,10 +1,10 @@
 /*
       Process Killer for NSIS script
-      
+
       Rob Murawski
-      
+
       Released under terms of IBM Open Source agreement for OpenAFS
-      
+
       */
 
 
@@ -29,19 +29,19 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam);
 BOOL WINAPI Enum16(DWORD dwThreadId, WORD hMod16, WORD hTask16,
       PSZ pszModName, PSZ pszFileName, LPARAM lpUserDefined);
 
-// 
+//
 // The EnumProcs function takes a pointer to a callback function
-// that will be called once per process with the process filename 
+// that will be called once per process with the process filename
 // and process ID.
-// 
+//
 // lpProc -- Address of callback routine.
-// 
+//
 // lParam -- A user-defined LPARAM value to be passed to
 //           the callback routine.
-// 
+//
 // Callback function definition:
 // BOOL CALLBACK Proc(DWORD dw, WORD w, LPCSTR lpstr, LPARAM lParam);
-// 
+//
 BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
 
    OSVERSIONINFO  osver;
@@ -66,7 +66,7 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
 
    // PSAPI Function Pointers.
    BOOL (WINAPI *lpfEnumProcesses)(DWORD *, DWORD, DWORD *);
-   BOOL (WINAPI *lpfEnumProcessModules)(HANDLE, HMODULE *, DWORD, 
+   BOOL (WINAPI *lpfEnumProcessModules)(HANDLE, HMODULE *, DWORD,
          LPDWORD);
    DWORD (WINAPI *lpfGetModuleBaseName)(HANDLE, HMODULE, LPTSTR, DWORD);
 
@@ -77,7 +77,7 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
    osver.dwOSVersionInfoSize = sizeof(osver);
    if (!GetVersionEx(&osver))
       return FALSE;
-   
+
    // If Windows NT 4.0
    if (osver.dwPlatformId == VER_PLATFORM_WIN32_NT
          && osver.dwMajorVersion == 4) {
@@ -86,7 +86,7 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
 
          // Get the procedure addresses explicitly. We do
          // this so we don't have to worry about modules
-         // failing to load under OSes other than Windows NT 4.0 
+         // failing to load under OSes other than Windows NT 4.0
          // because references to PSAPI.DLL can't be resolved.
          hInstLib = LoadLibraryA("PSAPI.DLL");
          if (hInstLib == NULL)
@@ -110,17 +110,17 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
 
          lpfVDMEnumTaskWOWEx = (INT (WINAPI *)(DWORD, TASKENUMPROCEX,
                LPARAM)) GetProcAddress(hInstLib2, "VDMEnumTaskWOWEx");
-         
-         if (lpfEnumProcesses == NULL 
-               || lpfEnumProcessModules == NULL 
-               || lpfGetModuleBaseName == NULL 
+
+         if (lpfEnumProcesses == NULL
+               || lpfEnumProcessModules == NULL
+               || lpfGetModuleBaseName == NULL
                || lpfVDMEnumTaskWOWEx == NULL)
             __leave;
 
-         // 
+         //
          // Call the PSAPI function EnumProcesses to get all of the
          // ProcID's currently in the system.
-         // 
+         //
          // NOTE: In the documentation, the third parameter of
          // EnumProcesses is named cbNeeded, which implies that you
          // can call the function once to find out how much space to
@@ -128,11 +128,11 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
          // This is not the case. The cbNeeded parameter returns
          // the number of PIDs returned, so if your buffer size is
          // zero cbNeeded returns zero.
-         // 
+         //
          // NOTE: The "HeapAlloc" loop here ensures that we
          // actually allocate a buffer large enough for all the
          // PIDs in the system.
-         // 
+         //
          dwSize2 = 256 * sizeof(DWORD);
          do {
 
@@ -141,11 +141,11 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
                dwSize2 *= 2;
             }
 
-            lpdwPIDs = (LPDWORD) HeapAlloc(GetProcessHeap(), 0, 
+            lpdwPIDs = (LPDWORD) HeapAlloc(GetProcessHeap(), 0,
                   dwSize2);
             if (lpdwPIDs == NULL)
                __leave;
-            
+
             if (!lpfEnumProcesses(lpdwPIDs, dwSize2, &dwSize))
                __leave;
 
@@ -158,7 +158,7 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
          for (dwIndex = 0; dwIndex < dwSize; dwIndex++) {
 
             szFileName[0] = 0;
-            
+
             // Open the process (if we can... security does not
             // permit every process in the system to be opened).
             hProcess = OpenProcess(
@@ -167,7 +167,7 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
             if (hProcess != NULL) {
 
                // Here we call EnumProcessModules to get only the
-               // first module in the process. This will be the 
+               // first module in the process. This will be the
                // EXE module for which we will retrieve the name.
                if (lpfEnumProcessModules(hProcess, &hMod,
                      sizeof(hMod), &dwSize2)) {
@@ -233,7 +233,7 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
                __leave;
          }
 
-         // Get procedure addresses. We are linking to 
+         // Get procedure addresses. We are linking to
          // these functions explicitly, because a module using
          // this code would fail to load under Windows NT,
          // which does not have the Toolhelp32
@@ -275,7 +275,7 @@ BOOL WINAPI EnumProcs(PROCENUMPROC lpProc, LPARAM lParam) {
 
          // While there are processes, keep looping.
          while (bFlag) {
-            
+
             // Call the enum func with the filename and ProcID.
             if (lpProc(procentry.th32ProcessID, 0,
                   procentry.szExeFile, lParam)) {
@@ -334,21 +334,21 @@ BOOL WINAPI Enum16(DWORD dwThreadId, WORD hMod16, WORD hTask16,
    bRet = psInfo->lpProc(psInfo->dwPID, hTask16, pszFileName,
       psInfo->lParam);
 
-   if (!bRet) 
+   if (!bRet)
       psInfo->bEnd = TRUE;
 
    return !bRet;
-} 
+}
 
 
-BOOL CALLBACK MyProcessEnumerator(DWORD dwPID, WORD wTask, 
+BOOL CALLBACK MyProcessEnumerator(DWORD dwPID, WORD wTask,
       LPCSTR szProcess, LPARAM lParam) {
 
    /*if (wTask == 0)
       printf("%5u   %s\n", dwPID, szProcess);
    else
       printf("  %5u %s\n", wTask, szProcess);*/
-   
+
    if(stricmp(szProcess,strProcessName)==0)
    {
       HANDLE hProcess=OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPID);
@@ -366,7 +366,7 @@ void main(int argc, char *argv[])
    if(argc<2)
    {
       printf("Please specify the process name to kill\n");
-      
+
       return;
    }
 
@@ -374,7 +374,7 @@ void main(int argc, char *argv[])
       strcpy(strProcessName,(argv[1]));
    else
       return;
-  
+
    EnumProcs((PROCENUMPROC) MyProcessEnumerator, 0);
-  
+
 }

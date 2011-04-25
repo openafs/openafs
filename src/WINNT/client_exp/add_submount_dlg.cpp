@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -68,10 +68,10 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CAddSubmtDlg message handlers
 
-BOOL CAddSubmtDlg::OnInitDialog() 
+BOOL CAddSubmtDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
-	
+
 	if (!m_bAdd) {
 		SetWindowText(GetMessageString(IDS_EDIT_PATH_NAME));
 		((CEdit *)GetDlgItem(IDC_SHARE_NAME))->EnableWindow(FALSE);
@@ -88,12 +88,12 @@ void CAddSubmtDlg::CheckEnableOk()
 	m_Ok.EnableWindow(!m_strShareName.IsEmpty() && !m_strPathName.IsEmpty());
 }
 
-void CAddSubmtDlg::OnChangeShareName() 
+void CAddSubmtDlg::OnChangeShareName()
 {
 	CheckEnableOk();
 }
 
-void CAddSubmtDlg::OnChangePathName() 
+void CAddSubmtDlg::OnChangePathName()
 {
 	CheckEnableOk();
 }
@@ -110,7 +110,7 @@ void CAddSubmtDlg::OnOK()
 void CAddSubmtDlg::SetSubmtInfo(CSubmountInfo *pInfo)
 {
 	ASSERT_VALID(pInfo);
-	
+
 	m_strShareName = pInfo->GetShareName();
 	m_strPathName = pInfo->GetPathName();
 }
@@ -119,18 +119,18 @@ CSubmountInfo *CAddSubmtDlg::GetSubmtInfo()
 {
 	if (!m_bSave)
 		return 0;
-	
+
 	SUBMT_INFO_STATUS status;
 
 	if (m_bAdd)
 		status = SIS_ADDED;
 	else
 		status = SIS_CHANGED;
-	
+
 	return new CSubmountInfo(m_strShareName, m_strPathName, status);
 }
 
-void CAddSubmtDlg::OnHelp() 
+void CAddSubmtDlg::OnHelp()
 {
 	ShowHelp(m_hWnd, (m_bAdd ? ADD_SUBMT_HELP_ID : EDIT_PATH_NAME_HELP_ID));
 }

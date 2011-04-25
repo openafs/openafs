@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -1338,7 +1338,7 @@ void UserProp_Member_PopulateList (HWND hDlg)
       {
       if (IsDlgButtonChecked (hDlg, IDC_USER_SHOW_MEMBER))
          {
-         if (!lpp->pUserList) 
+         if (!lpp->pUserList)
             GetString (szTitle, IDS_NEWMACHINE_SHOW_MEMBER_TITLE);
          else if (lpp->pUserList->cEntries == 1)
             GetString (szTitle, IDS_MACHINE_SHOW_MEMBER_TITLE);
@@ -1357,7 +1357,7 @@ void UserProp_Member_PopulateList (HWND hDlg)
       {
       if (IsDlgButtonChecked (hDlg, IDC_USER_SHOW_MEMBER))
          {
-         if (!lpp->pUserList) 
+         if (!lpp->pUserList)
             GetString (szTitle, IDS_NEWUSER_SHOW_MEMBER_TITLE);
          else if (lpp->pUserList->cEntries == 1)
             GetString (szTitle, IDS_USER_SHOW_MEMBER_TITLE);

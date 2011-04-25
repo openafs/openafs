@@ -1,4 +1,4 @@
-#                                                                                                                                
+#
 # Copyright (c) 2009 Secure Endpoints Inc.
 #
 
@@ -23,7 +23,7 @@ EXEDIR = $(DESTDIR)\bin
 OBJS = 	$(OUT)\StopStressTest.obj
 
 $(EXEDIR)\StopStressTest.exe: $(OBJS)
-        $(EXECONLINK) 
+        $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(EXEPREP)
         $(CODESIGN_USERLAND)
@@ -32,5 +32,5 @@ $(EXEDIR)\StopStressTest.exe: $(OBJS)
 install: idirs $(EXEDIR)\StopStressTest.exe
 
 clean::
-        
+
 

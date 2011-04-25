@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>ŠÇ—‰ğà‘</H1>
@@ -30,12 +30,12 @@
 <P><STRONG>–Ú“I</STRONG>
 <P>ƒ{ƒŠƒ…[ƒ€‚ğ ASCII Œ`®‚É•ÏŠ·‚µAƒtƒ@ƒCƒ‹‚É‘‚«‚İ‚Ü‚·B
 <P><STRONG>\•¶</STRONG>
-<PRE><B>vos dump -id</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-time</B> &lt;<VAR>dump from time</VAR>>]  [<B>-file</B> &lt;<VAR>dump file</VAR>>]  
-         [<B>-server</B> &lt;<VAR>server</VAR>>]  [<B>-partition</B> &lt;<VAR>partition</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+<PRE><B>vos dump -id</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-time</B> &lt;<VAR>dump from time</VAR>>]  [<B>-file</B> &lt;<VAR>dump file</VAR>>]
+         [<B>-server</B> &lt;<VAR>server</VAR>>]  [<B>-partition</B> &lt;<VAR>partition</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
          [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
-    
-<B>vos du -i</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-t</B> &lt;<VAR>dump from time</VAR>>]  [<B>-f</B> &lt;<VAR>dump file</VAR>>]  
-       [<B>-s</B> &lt;<VAR>server</VAR>>]  [<B>-p</B> &lt;<VAR>partition</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+
+<B>vos du -i</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-t</B> &lt;<VAR>dump from time</VAR>>]  [<B>-f</B> &lt;<VAR>dump file</VAR>>]
+       [<B>-s</B> &lt;<VAR>server</VAR>>]  [<B>-p</B> &lt;<VAR>partition</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
        [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>\•¶</STRONG>
@@ -90,11 +90,11 @@ UNIX ‚Ì•W€•\‹L‚Å‚Í 2038 ”N‚Ü‚Å‚µ‚©•\Œ»‚Å‚«‚È‚¢‚½‚ßA‚±‚ê‚æ‚è‚‚¢’l‚Í–³Œø‚É‚È‚è‚
 <P><STRONG>—á</STRONG>
 <P>Ÿ‚ÌƒRƒ}ƒ“ƒh‚ÍAƒ{ƒŠƒ…[ƒ€ <B>user.terry</B> ‚Ìƒtƒ‹Eƒ_ƒ“ƒv‚ğƒtƒ@ƒCƒ‹ <B>/afs/abc.com/common/dumps/terry.dump</B> ‚É‘‚«‚İ‚Ü‚·B
 <PRE>   % <B>vos dump -id user.terry -time 0 -file /afs/abc.com/common/dumps/terry.dump</B>
-   
+
 </PRE>
 <P>Ÿ‚ÌƒRƒ}ƒ“ƒh‚ÍAƒ{ƒŠƒ…[ƒ€ <B>user.smith</B> ‚Ì‘•ªƒ_ƒ“ƒv‚ğŒ»sì‹ÆƒfƒBƒŒƒNƒgƒŠ[‚Ìƒtƒ@ƒCƒ‹ <B>smith.990131.dump</B> ‚É‘‚«‚İ‚Ü‚·Bƒ{ƒŠƒ…[ƒ€‚Ì’†‚Åƒ_ƒ“ƒv‚³‚ê‚éƒtƒ@ƒCƒ‹‚ÍA1999 ”N 1 Œ 31 “úŒßŒã 6  00 •ªˆÈ~‚ÌC³ƒ^ƒCƒ€EƒXƒ^ƒ“ƒv‚ğ‚Âƒtƒ@ƒCƒ‹‚Å‚·B
 <PRE>   % <B>vos dump -id user.smith -time "01/31/1999 18:00" -file smith.990131.dump</B>
-   
+
 </PRE>
 <P><STRONG>•K—v‚Æ‚È‚é“ÁŒ </STRONG>
 <P>ƒRƒ}ƒ“ƒh‚Ì”­s‘¤‚ÍA<B>-server</B> ˆø‚«”‚Éw’è‚³‚ê‚½ƒ}ƒVƒ“A‚¨‚æ‚ÑŠeƒf[ƒ^ƒx[ƒXEƒT[ƒo[Eƒ}ƒVƒ“ã‚Ì <B>/usr/afs/etc/UserList</B> ƒtƒ@ƒCƒ‹‚ÉƒŠƒXƒg‚³‚ê‚Ä‚¢‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB<B>-localauth</B> ƒtƒ‰ƒO‚ğg—p‚·‚éê‡‚É‚ÍAƒRƒ}ƒ“ƒh‚Ì”­s‘¤‚ªAƒ[ƒJƒ‹EƒX[ƒp[ƒ†[ƒU[ <B>root</B> ‚Æ‚µ‚ÄAƒT[ƒo[Eƒ}ƒVƒ“‚ÉƒƒOƒIƒ“‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B
@@ -105,11 +105,11 @@ UNIX ‚Ì•W€•\‹L‚Å‚Í 2038 ”N‚Ü‚Å‚µ‚©•\Œ»‚Å‚«‚È‚¢‚½‚ßA‚±‚ê‚æ‚è‚‚¢’l‚Í–³Œø‚É‚È‚è‚
 <P><A HREF="auarf265.htm#HDRVOS_LISTVLDB">vos listvldb</A>
 <P><A HREF="auarf274.htm#HDRVOS_RESTORE">vos restore</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ƒy[ƒW‚Ìƒgƒbƒv</A> &#124; <A HREF="auarf259.htm">‘Oƒy[ƒW</A> &#124; <A HREF="auarf261.htm">Ÿƒy[ƒW</A> &#124; <A HREF="auarf002.htm#ToC">–ÚŸ</A> &#124; <A HREF="auarf284.htm#HDRINDEX">õˆø</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ƒy[ƒW‚Ìƒgƒbƒv</A> &#124; <A HREF="auarf259.htm">‘Oƒy[ƒW</A> &#124; <A HREF="auarf261.htm">Ÿƒy[ƒW</A> &#124; <A HREF="auarf002.htm#ToC">–ÚŸ</A> &#124; <A HREF="auarf284.htm#HDRINDEX">õˆø</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

@@ -1,6 +1,6 @@
 /*
  * @doc
- * @module nameser.h | 
+ * @module nameser.h |
  * Copyright (c) 1983, 1989 Regents of the University of California.
  * All rights reserved.
  *
@@ -160,8 +160,8 @@
 #endif
 /*
  * Structure for query header, the order of the fields is machine and
- * compiler dependent, in our case, the bits within a byte are assignd 
- * least significant first, while the order of transmition is most 
+ * compiler dependent, in our case, the bits within a byte are assignd
+ * least significant first, while the order of transmition is most
  * significant first.  This requires a somewhat confusing rearrangement.
  */
 

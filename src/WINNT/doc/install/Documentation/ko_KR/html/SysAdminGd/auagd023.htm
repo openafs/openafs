@@ -10,8 +10,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 31 Dec 2000 09:22:58">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 31 Dec 2001 09:22:58">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>관리 안내서</H1>
@@ -28,7 +28,7 @@
 <HR><H2><A NAME="HDRWQ613" HREF="auagd002.htm#ToC_690">AFS 명령 구문</A></H2>
 <P>집합에 속하는 AFS 명령은 다음과 같은 구조를 사용합니다.
 <PRE>   <B>command_suite operation_code</B> <B>-switch</B> &lt;<VAR>value</VAR>><SUP>[+]</SUP>  [<B>-flag</B>]
-   
+
 </PRE>
 <P><H3><A NAME="Header_691" HREF="auagd002.htm#ToC_691">명령 이름</A></H3>
 <P><B>command_suite</B>와 <B>operation_code</B>는 함께
@@ -88,7 +88,7 @@
 <P><H3><A NAME="HDRCOMMAND-EX" HREF="auagd002.htm#ToC_695">예제 명령</A></H3>
 <P>다음 예제는 AFS 명령 집합에 속하는 명령의 다른 부분을 설명합니다.
 <PRE>   % <B>bos getdate -server fs1.abc.com -file ptserver kaserver </B>
-   
+
 </PRE>
 <P>여기서,
 <UL>
@@ -161,7 +161,7 @@
 <P><H4><A NAME="Header_698">스위치 생략의 예</A></H4>
 <P><A HREF="#HDRCOMMAND-EX">예제 명령</A>에서 예제 명령을 다시 살펴 보십시오.
 <PRE>   % <B> bos getdate -server fs1.abc.com -file ptserver kaserver</B>
-   
+
 </PRE>
 <P>이 명령은 두 개의 필수 인수를 가집니다. 바로 서버 시스템
 이름(<B>-server</B> 스위치로 식별)과 2진 파일
@@ -169,7 +169,7 @@
 인수는 여러 값을 수용합니다. 세 가지 규칙을 모두 준수함으로써
 실행자는 다음과 같이 스위치를 생략할 수 있습니다.
 <PRE>   % <B>bos getdate fs1.abc.com ptserver kaserver</B>
-   
+
 </PRE>
 <P>스위치가 없으므로 <B>bos</B> 명령 인터프리터는
 인수의 순서에 의존합니다. 또한 연산 코드 다음에 나오는 첫째
@@ -183,7 +183,7 @@
 해도 인수가 미리 지정한 순서대로 나타나지 않고 하나의 인수에
 대해 스위치가 제공되지만 이것도 지정한 순서와 다릅니다.
 <PRE>   % <B>bos getdate ptserver -server fs1.abc.com</B>
-   
+
 </PRE>
 <P><H3><A NAME="HDRWQ615" HREF="auagd002.htm#ToC_699">약어 및 별명 사용 규칙</A></H3>
 <P>이 절에서는 연산 코드, 옵션 이름, 서버 시스템 이름, 파티션
@@ -252,16 +252,16 @@ seta</B>(가장 짧은 축약형) 및 <B>fs sa</B>(별명)의 세 가지
 <P>AFS 명령을 실행할 때 다음 양식을 사용하여 파티션 이름을 줄일 수 있습니다.
 <PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
    <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
-   
+
 </PRE>
 <P><B>/vicepz</B>(색인이 25인) 뒤에는 다음이 옵니다.
 <PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
    <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
-   
+
 </PRE>
 <P>그 이후에도 다음이 적용됩니다.
 <PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
-    
+
 </PRE>
 <P><H4><A NAME="HDRCELLABBREV">셀 이름 약어 사용</A></H4>
 <P>셀의 전체 이름은 보통 그 인터넷 도메인 이름(예: State University의 경우
@@ -284,65 +284,65 @@ seta</B>(가장 짧은 축약형) 및 <B>fs sa</B>(별명)의 세 가지
 </LI></UL>
 <P>연산 코드가 지정되지 않으면 <B>help</B> 연산 코드가 명령
 집합의 모든 연산 코드에 대한 첫째 행(짧은 설명)을 표시합니다.
-<PRE>   
+<PRE>
    % <VAR>command_suite</VAR>  <B>help</B>
-   
+
 </PRE>
 <P>실행자가 하나 이상의 연산 코드를 지정하면 <B>help</B> 연산 코드는 각 명령의 완전한 온라인 항목(설명, 있는 경우 별명 및
 구문)을 표시합니다.
-<PRE>   
+<PRE>
    % <VAR>command_suite</VAR> <B>help</B> <VAR>operation_code</VAR><SUP>+</SUP>
-   
+
 </PRE>
 <P><B>-help</B> 플래그는 명령의 구문을 표시하지만 짧은 설명이나
 별명은 표시하지 않습니다.
-<PRE>   % <VAR>command_name</VAR> <B>-help</B>  
-   
+<PRE>   % <VAR>command_name</VAR> <B>-help</B>
+
 </PRE>
 <P><B>apropos</B> 연산 코드는 그 연산 코드나 짧은 설명에
 지정된 키워드가 들어 있는 명령의 짧은 설명을 표시합니다.
 <PRE>   % <VAR>command_suite</VAR> <B>apropos</B> <VAR>"&lt;help
 string>"</VAR>
-   
+
 </PRE>
 <P>다음 예제 명령은 <B>fs setacl</B> 명령에 대한 완전한 온라인
 도움말 항목을 표시합니다.
-<PRE>   
-   % <B>fs help setacl </B>  
+<PRE>
+   % <B>fs help setacl </B>
    fs setacl: set access control list
    aliases: sa
-   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
-   
+
 </PRE>
 <P>명령 구문만 보려면 <B>-help</B> 플래그를 사용하십시오.
 <PRE>   % <B>fs setacl -help</B>
-   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+ 
+   Usage: fs setacl -dir &lt;directory>+ -acl &lt;access list entries>+
    [-clear] [-negative] [-id] [-if] [-help]
-   
+
 </PRE>
 <P>다음 예제에서 사용자는 홈 볼륨에 대한 할당량을 표시하려고 합니다.
 이 사람은 적절한 명령이 <B>fs</B> 명령 집합에 속해 있다는 것을
 알고 있으나 연산 코드를 기억할 수 없습니다. 따라서 키워드로 <B>quota</B>를 사용합니다.
-<PRE>   
+<PRE>
    % <B>fs apropos quota</B>
    listquota: list volume quota
    quota: show volume quota usage
    setquota: set volume quota
-   
+
 </PRE>
 <P>다음은 명령 이름이나 짧은 설명에 키워드가 들어 있지 않을 때
 나타나는 오류 메시지를 보여줍니다.
-<PRE>   
+<PRE>
    % <B>fs apropos "list quota"</B>
    Sorry, no commands found
-   
+
 </PRE>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd022.htm">이전 페이지</A> &#124; <A HREF="auagd024.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">페이지의 맨 위</A> &#124; <A HREF="auagd022.htm">이전 페이지</A> &#124; <A HREF="auagd024.htm">다음 페이지</A> &#124; <A HREF="auagd002.htm#ToC">목차</A> &#124; <A HREF="auagd026.htm#HDRINDEX">색인</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

@@ -9,8 +9,8 @@
 <META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
 <META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
 </HEAD><BODY>
-<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
-<BODY bgcolor="ffffff"> 
+<!-- (C) IBM Corporation 2000. All Rights Reserved    -->
+<BODY bgcolor="ffffff">
 <!-- End Header Records  ============================================ -->
 <A NAME="Top_Of_Page"></A>
 <H1>管理解説書</H1>
@@ -29,8 +29,8 @@
 <P><STRONG>構文</STRONG>
 <PRE><B>fs checkservers</B> [<B>-cell</B> &lt;<VAR>cell to check</VAR>>]  [<B>-all</B>]  [<B>-fast</B>]
                 [<B>-interval</B> &lt;<VAR>seconds between probes</VAR>>]  [<B>-help</B>]
-   
-<B>fs checks</B> [<B>-c</B> &lt;<VAR>cell to check</VAR>>]  [<B>-a</B>]  [<B>-f</B>]  
+
+<B>fs checks</B> [<B>-c</B> &lt;<VAR>cell to check</VAR>>]  [<B>-a</B>]  [<B>-f</B>]
           [<B>-i</B> &lt;<VAR>seconds between probes</VAR>>]  [<B>-h</B>]
 </PRE>
 <P><STRONG>構文</STRONG>
@@ -74,35 +74,35 @@
 <P><STRONG>出力</STRONG>
 <P>アクセス不能とマークされたマシンがない場合、またはそのすべてが現在キャッシュ・マネージャーのプローブに応答している場合の出力は次のとおりです。
 <PRE>   All servers are running.
-   
+
 </PRE>
 <P>このメッセージは、それぞれのセルに関係のあるすべてのサーバー・マシンが実行されていることを意味するものでないことに注意してください。出力は、キャッシュ・マネージャーがプローブを行うマシンの状況のみを示しています。
 <P>マシンがタイムアウト期間内にプローブに応答しなかった場合、出力は次の文字列で開始されます。
 <PRE>   These servers unavailable due to network or server problems:
-   
+
 </PRE>
 <P>その後、各マシンのホスト名をそれに対応する行にリストします。キャッシュ・マネージャーは、マシン・レコードを IP アドレスで格納しています。したがって、各ホスト名の書式 (英大文字か英小文字、または小数点付き 10 進数形式の IP アドレス) は、ローカル・セルのネーム・サービスが、コマンド発行時にそれをどのように変換するかによって違います。サーバー・マシンがマルチ・ホームである場合は、出力は、サーバー・マシンのインターフェースの 1 つだけをリストします
 (通常は、現在最も優先されるインターフェース)。
 <P><B>-interval</B> 引き数に <B>1</B> から <B>600</B> の間の値を与えると、出力されません。値 が <B>0</B> の場合、出力は次のようなプローブ間隔を報告します。
 <PRE>   The current down server probe interval is <VAR>interval</VAR> secs
-   
+
 </PRE>
 <P><STRONG>例</STRONG>
 <P>次のコマンドは、再度プローブを行う代わりに、キャッシュ・マネージャーにある応答不能マシンの現行リストを表示します。出力は、アクセス不能とマークされたマシンがあるかどうか、すべてのマシンが直前のプローブに応答しているかどうかを示します。
 <PRE>   % <B>fs checkservers -fast</B>
    All servers are running.
-   
+
 </PRE>
 <P>キャッシュ・マネージャーのメモリー・リストにある <B>stateu.edu</B> セルに属するマシンのプローブを行います。
 <PRE>   % <B>fs checkservers -cell stateu.edu</B>
    All servers are running.
-   
+
 </PRE>
 <P>次の例では、キャッシュ・マネージャーのメモリー・リストにあるすべてのサーバー・マシンのプローブを行います。このプローブに応答しなかったマシン 2 台が報告されます。
 <PRE>   % <B>fs checkservers -all</B>
    These servers unavailable due to network or server problems:
    fs1.abc.com SV3.STATE.EDU.
-   
+
 </PRE>
 <P><STRONG>必要となる特権</STRONG>
 <P>プローブ間隔を設定するには、発行者がローカル・スーパーユーザー <B>root</B> としてログインしなくてはなりません。そうでない場合、特権は必要ありません。
@@ -111,11 +111,11 @@
 <P><A HREF="auarf032.htm#HDRCLI_THISCELL">ThisCell (クライアント・バージョン)</A>
 <P><A HREF="auarf154.htm#HDRFS_NEWCELL">fs newcell</A>
 <P>
-<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf132.htm">前ページ</A> &#124; <A HREF="auarf134.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf132.htm">前ページ</A> &#124; <A HREF="auarf134.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B>
 <!-- Begin Footer Records  ========================================== -->
-<P><HR><B> 
-<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
-</B> 
+<P><HR><B>
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved
+</B>
 <!-- End Footer Records  ============================================ -->
 <A NAME="Bot_Of_Page"></A>
 </BODY></HTML>

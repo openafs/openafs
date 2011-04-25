@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -58,7 +58,7 @@ static BOOL IsClientInstalled (void)
          TCHAR szPath[ MAX_PATH ];
          DWORD dwSize = sizeof(szPath);
          DWORD dwType = REG_SZ;
-         if (RegQueryValueEx (hk, TEXT(AFSREG_CLT_SW_VERSION_DIR_VALUE), 
+         if (RegQueryValueEx (hk, TEXT(AFSREG_CLT_SW_VERSION_DIR_VALUE),
                               NULL, &dwType, (PBYTE)szPath, &dwSize) == 0)
             fIsInstalled = TRUE;
          RegCloseKey (hk);

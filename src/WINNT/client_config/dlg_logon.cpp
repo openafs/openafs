@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -82,7 +82,7 @@ BOOL CALLBACK Logon_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             case IDOK:
                 Logon_OnOK(hDlg);
                 break;
-                
+
             case IDCANCEL:
                 Logon_OnCancel(hDlg);
                 break;
@@ -120,7 +120,7 @@ void Logon_OnInitDialog (HWND hDlg)
    // Always add szNo first so it has index 0 and szYes has index 1
    CB_AddItem (hCombo, szNo, 0);
    CB_AddItem (hCombo, szYes, 0);
-  
+
    CB_SetSelected (hCombo, fFailLoginsSilently);
 }
 
@@ -138,13 +138,13 @@ BOOL Logon_OnApply()
 {
    if (fFirstTime)
       return TRUE;
-   
+
    if (nLoginRetryInterval != g.Configuration.nLoginRetryInterval) {
       if (!Config_SetLoginRetryInterval (nLoginRetryInterval))
          return FALSE;
       g.Configuration.nLoginRetryInterval = nLoginRetryInterval;
    }
-   
+
    if (fFailLoginsSilently != g.Configuration.fFailLoginsSilently) {
       if (!Config_SetFailLoginsSilently (fFailLoginsSilently))
          return FALSE;

@@ -230,7 +230,7 @@ int getopt(int nargc, char *nargv[], char *ostr)
             return (-1);
         }
     }
-    if ((optopt = (int)*place++) == (int)':' || !(oli = strchr(ostr, optopt))) 
+    if ((optopt = (int)*place++) == (int)':' || !(oli = strchr(ostr, optopt)))
     {
         if (optopt == (int)'-')
             return (-1);
@@ -240,7 +240,7 @@ int getopt(int nargc, char *nargv[], char *ostr)
             (void)fprintf(stderr, "%s: illegal option -- %c\n", __progname, optopt);
         return (BADCH);
     }
-    if (*++oli != ':') 
+    if (*++oli != ':')
     {
         optarg = NULL;
         if (!*place)
@@ -250,7 +250,7 @@ int getopt(int nargc, char *nargv[], char *ostr)
     {
         if (*place)
             optarg = place;
-        else if (nargc <= ++optind) 
+        else if (nargc <= ++optind)
         {
             place = EMSG;
             if (*ostr == ':')

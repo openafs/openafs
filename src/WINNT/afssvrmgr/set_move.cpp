@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -100,7 +100,7 @@ BOOL CALLBACK Filesets_MoveTo_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
                   }
                FreeTaskPacket (ptp);
                }
-            break; 
+            break;
 
          case WM_CONTEXTMENU:
             HWND hList;
@@ -152,9 +152,9 @@ BOOL CALLBACK Filesets_MoveTo_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp
             psmp = NULL;
             break;
 
-         case WM_NOTIFY: 
+         case WM_NOTIFY:
             switch (((LPNMHDR)lp)->code)
-               { 
+               {
                case FLN_ITEMSELECT:
                   LPIDENT lpi;
                   if ((lpi = (LPIDENT)FL_GetSelectedData (GetDlgItem (hDlg, IDC_AGG_LIST))) != NULL)
@@ -190,14 +190,14 @@ LRESULT CALLBACK Filesets_MoveTo_SubclassListProc (HWND hList, UINT msg, WPARAM 
             SetWindowLongPtr (hList, GWLP_WNDPROC, procFilesetsMoveToList);
          break;
 
-      case WM_COMMAND: 
+      case WM_COMMAND:
          switch (LOWORD(wp))
             {
             case M_COLUMNS:
                ShowColumnsDialog (GetParent (hList), &gr.viewAggMove);
                break;
             }
-         break; 
+         break;
       }
 
    return rc;

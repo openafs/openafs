@@ -91,9 +91,9 @@ des_fixup_key_parity PROTOTYPE ((des_cblock FAR));
 int DES_CALLCONV_C
 des_check_key_parity PROTOTYPE ((des_cblock FAR));
 
-/* 
-   These random_key routines are made external here 
-   for the Macintosh Driver which exports pointers to them 
+/*
+   These random_key routines are made external here
+   for the Macintosh Driver which exports pointers to them
    to applications via a driver level interface.
    Preserved for KClient compatability.
 */
@@ -103,13 +103,13 @@ des_new_random_key PROTOTYPE (( des_cblock ));
 
 void DES_CALLCONV_C
 des_init_random_number_generator PROTOTYPE (( des_cblock ));
-     
-void DES_CALLCONV_C 
+
+void DES_CALLCONV_C
 des_set_random_generator_seed PROTOTYPE (( des_cblock ));
 
 unsigned long DES_CALLCONV_C
 des_cbc_cksum PROTOTYPE ((des_cblock *,des_cblock *,long,des_key_schedule,des_cblock));
-	
+
 /* FIXME, put the rest of the function declarations here */
 
 #endif /* DES_DEFS */

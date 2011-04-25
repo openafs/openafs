@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -9,7 +9,7 @@
 /* AFSIFS portions copyright (c) 2005
  * the regents of the university of michigan
  * all rights reserved
- * 
+ *
  * permission is granted to use, copy, create derivative works and
  * redistribute this software and such derivative works for any purpose,
  * so long as no fee is charged, and so long as the copyright notice
@@ -18,7 +18,7 @@
  * michigan is not used in any advertising or publicity pertaining
  * to the use or distribution of this software without specific, written
  * prior authorization.
- * 
+ *
  * this software is provided as is, without representation from the
  * university of michigan as to its fitness for any purpose, and without
  * warranty by the university of michigan of any kind, either express
@@ -79,7 +79,7 @@ static TCHAR cszAUTOSUBMOUNT[] = TEXT("Auto");
 static TCHAR cszLANMANDEVICE[] = TEXT("\\Device\\LanmanRedirector\\");
 
 
-static BOOL 
+static BOOL
 WriteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs)
 {
     HKEY hkSub = NULL;
@@ -101,7 +101,7 @@ WriteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs)
     return (status == ERROR_SUCCESS);
 }
 
-static BOOL 
+static BOOL
 WriteExpandedRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs)
 {
     HKEY hkSub = NULL;
@@ -123,7 +123,7 @@ WriteExpandedRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs)
     return (status == ERROR_SUCCESS);
 }
 
-static BOOL 
+static BOOL
 ReadRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs, DWORD * size)
 {
     HKEY hkSub = NULL;
@@ -157,7 +157,7 @@ ReadRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs, DWORD * siz
     return (status == ERROR_SUCCESS);
 }
 
-static BOOL 
+static BOOL
 DeleteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs)
 {
     HKEY hkSub = NULL;
@@ -453,13 +453,13 @@ void QueryDriveMapList_ReadSubmounts (PDRIVEMAPLIST pList)
     {
         HKEY hkSubmounts;
 
-        RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+        RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                         cszSECTION_SUBMOUNTS,
-                        0, 
-                        "AFS", 
+                        0,
+                        "AFS",
                         REG_OPTION_NON_VOLATILE,
                         KEY_READ|KEY_QUERY_VALUE,
-                        NULL, 
+                        NULL,
                         &hkSubmounts,
                         NULL );
 
@@ -526,11 +526,11 @@ void QueryDriveMapList_ReadMappings (PDRIVEMAPLIST pList)
     HKEY hkMappings;
     RegCreateKeyEx( HKEY_CURRENT_USER,
                     cszSECTION_MAPPINGS,
-                    0, 
-                    "AFS", 
+                    0,
+                    "AFS",
                     REG_OPTION_NON_VOLATILE,
                     KEY_READ|KEY_QUERY_VALUE,
-                    NULL, 
+                    NULL,
                     &hkMappings,
                     NULL );
 
@@ -625,13 +625,13 @@ void QueryDriveMapList_WriteMappings (PDRIVEMAPLIST pList)
 void WriteDriveMappings (PDRIVEMAPLIST pList)
 {
     HKEY hkMappings;
-    RegCreateKeyEx( HKEY_CURRENT_USER, 
+    RegCreateKeyEx( HKEY_CURRENT_USER,
                     cszSECTION_MAPPINGS,
-                    0, 
-                    "AFS", 
+                    0,
+                    "AFS",
                     REG_OPTION_NON_VOLATILE,
                     KEY_READ|KEY_QUERY_VALUE|KEY_WRITE,
-                    NULL, 
+                    NULL,
                     &hkMappings,
                     NULL );
 
@@ -696,7 +696,7 @@ BOOL DriveIsGlobalAfsDrive(TCHAR chDrive)
    BOOL bIsGlobal = (RegQueryValueEx (hKey, szValueName, NULL, NULL, (PBYTE)szValue, &dwSize) == ERROR_SUCCESS);
 
    RegCloseKey (hKey);
-   
+
    return bIsGlobal;
 }
 
@@ -729,13 +729,13 @@ void QueryDriveMapList_FindNetworkDrives (PDRIVEMAPLIST pList, BOOL *pfFoundNew)
             continue;
 
          // Okay, we know that drive {chDrive} is mapped to afs path {szAfsPath}.
-         // If this drive is a global afs drive, then reject it.  Otherwise, look 
-         // at pList->aDriveMap, to see if this drive mapping is already in our 
+         // If this drive is a global afs drive, then reject it.  Otherwise, look
+         // at pList->aDriveMap, to see if this drive mapping is already in our
          // list. If not, add it and set pfFoundNew.
          //
          if (DriveIsGlobalAfsDrive(chDrive))
             continue;
-         
+
          size_t iDrive = chDrive - chDRIVE_A;
          if (lstrcmpi (pList->aDriveMap[ iDrive ].szMapping, szAfsPath))
             {
@@ -954,7 +954,7 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
            return FALSE;
 
     LPTSTR pszSubmount = szMapping;
-    
+
 	TCHAR szNetBiosName[32];
     memset(szNetBiosName, '\0', sizeof(szNetBiosName));
     GetClientNetbiosName(szNetBiosName);
@@ -1000,12 +1000,12 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
             *(pszSubmount) > '9')
            return FALSE;
        ++pszSubmount;
-#else   
+#else
       if (IsWindows2000())
       {
           if (*(pszSubmount) != TEXT(';'))
              return FALSE;
-      } else 
+      } else
           --pszSubmount;
 
       if (toupper(*(++pszSubmount)) != chDrive)
@@ -1076,7 +1076,7 @@ BOOL fUserName=FALSE;
 void SetBitLogonOption(BOOL set,DWORD value)
 {
 
-    RWLogonOption(FALSE,((set)?value | RWLogonOption(TRUE,0):RWLogonOption(TRUE,0) & ~value) );	
+    RWLogonOption(FALSE,((set)?value | RWLogonOption(TRUE,0):RWLogonOption(TRUE,0) & ~value) );
 }
 
 DWORD RWLogonOption(BOOL read,DWORD value)
@@ -1087,7 +1087,7 @@ DWORD RWLogonOption(BOOL read,DWORD value)
     DWORD dwDisp;
     DWORD LSPtype, LSPsize;
     DWORD rval;
-   
+
     if (read)
     {
         rval=0;
@@ -1106,7 +1106,7 @@ DWORD RWLogonOption(BOOL read,DWORD value)
             RegCloseKey (hk);
         }
         return TRUE;
-    }    
+    }
 }
 
 void MapShareName(char *pszCmdLineA)
@@ -1175,10 +1175,10 @@ void TestAndDoUnMapShare()
 {
     if (!RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
 	return;
-    DoUnMapShare(FALSE);	
+    DoUnMapShare(FALSE);
 }
 
-void DoUnMapShare(BOOL drivemap)	//disconnect drivemap 
+void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 {
     TCHAR szMachine[MAX_PATH],szPath[MAX_PATH];
     DWORD rc=28;
@@ -1211,7 +1211,7 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 			if (drivemap) {
 			    DisMountDOSDrive(*lpnrLocal[i].lpLocalName);
                             DEBUG_EVENT1("AFS DriveUnMap","UnMap-Local=%x",res);
-                        }		
+                        }
 		    } else {
 			DisMountDOSDriveFull(lpnrLocal[i].lpRemoteName);
                         DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
@@ -1259,15 +1259,15 @@ BOOL DoMapShareChange(BOOL removeUnknown)
 		if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath)==NULL)
 		    continue;	//only look at real afs mappings
 		CHAR * pSubmount=strrchr(lpnrLocal[i].lpRemoteName,'\\')+1;
-		if (lstrcmpi(pSubmount,"all")==0) 
+		if (lstrcmpi(pSubmount,"all")==0)
 		    continue;				// do not remove 'all'
 		for (DWORD j=0;j<List.cSubmounts;j++)
 		{
 		    if ((List.aSubmounts[j].szSubmount[0]) &&
 			 (lstrcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
-			 ) 
+			 )
 		    {
-			List.aSubmounts[j].fInUse=TRUE; 
+			List.aSubmounts[j].fInUse=TRUE;
 			goto nextname;
 		    }
 		}
@@ -1401,16 +1401,16 @@ BOOL GlobalMountDrive()
     if (!GetComputerName(cm_HostName, &dwType))
         return TRUE;
     sprintf(szKeyName, "%s\\GlobalAutoMapper", AFSREG_CLT_SVC_PARAM_SUBKEY);
-    
+
     dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE,
 			    &hKey);
     if (dwResult != ERROR_SUCCESS)
 	return TRUE;
-    
+
     while (1) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
-        dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 
+        dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize,
 				0, &dwType, szSubMount, &dwSubMountSize);
         if (dwResult != ERROR_MORE_DATA) {
 	    if (dwResult != ERROR_SUCCESS) {
@@ -1440,7 +1440,7 @@ DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPersistent,const c
 
 #ifdef AFSIFS
     int pathCount, currPos, lastPos, x;
-    
+
     pathCount = 0;
 
     pathCount = 0;

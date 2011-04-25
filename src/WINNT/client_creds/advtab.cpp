@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -49,7 +49,7 @@ BOOL CALLBACK Advanced_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
       case WM_INITDIALOG:
          RECT rTab;
          GetClientRect (GetParent(hDlg), &rTab);
-         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab); 
+         TabCtrl_AdjustRect (GetParent (hDlg), FALSE, &rTab);
          SetWindowPos (hDlg, NULL, rTab.left, rTab.top, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
 
          Advanced_OnInitDialog (hDlg);
@@ -187,7 +187,7 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
    BOOL fSuccess = FALSE;
    ULONG error = 0;
    SC_HANDLE hManager, hService;
-   
+
     switch (wCmd)
     {
     case IDC_SERVICE_AUTO:
@@ -196,12 +196,12 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
                                         SC_MANAGER_ENUMERATE_SERVICE |
                                         SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
         {
-            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
-                                         SERVICE_CHANGE_CONFIG | SERVICE_QUERY_CONFIG | 
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"),
+                                         SERVICE_CHANGE_CONFIG | SERVICE_QUERY_CONFIG |
                                          SERVICE_QUERY_STATUS)) != NULL)
             {
                 StartType = (IsDlgButtonChecked (hDlg, wCmd)) ? SERVICE_AUTO_START : SERVICE_DEMAND_START;
-                if (ChangeServiceConfig (hService, SERVICE_NO_CHANGE, StartType, 
+                if (ChangeServiceConfig (hService, SERVICE_NO_CHANGE, StartType,
                                          SERVICE_NO_CHANGE, 0, 0, 0, 0, 0, 0, 0))
                     fSuccess = TRUE;
                 CloseServiceHandle (hService);
@@ -215,7 +215,7 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
                                         SC_MANAGER_ENUMERATE_SERVICE |
                                         SC_MANAGER_QUERY_LOCK_STATUS )) != NULL)
         {
-            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"),
                                          SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
             {
                 if (StartService (hService, 0, 0))
@@ -239,8 +239,8 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
         if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_CONNECT |
                                         SC_MANAGER_ENUMERATE_SERVICE |
                                         SC_MANAGER_QUERY_LOCK_STATUS )) != NULL)
-        {            
-            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+        {
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"),
                                          SERVICE_QUERY_STATUS | SERVICE_STOP)) != NULL)
             {
                 SERVICE_STATUS Status;

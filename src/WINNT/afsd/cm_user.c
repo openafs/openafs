@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -27,19 +27,19 @@ cm_user_t *cm_rootUserp;
 void cm_InitUser(void)
 {
     static osi_once_t once;
-        
+
     if (osi_Once(&once)) {
         lock_InitializeRWLock(&cm_userLock, "cm_userLock", LOCK_HIERARCHY_USER_GLOBAL);
         osi_EndOnce(&once);
     }
-        
+
     cm_rootUserp = cm_NewUser();
 }
 
 cm_user_t *cm_NewUser(void)
 {
     cm_user_t *userp;
-        
+
     userp = malloc(sizeof(*userp));
     memset(userp, 0, sizeof(*userp));
     userp->refCount = 1;
@@ -51,13 +51,13 @@ cm_user_t *cm_NewUser(void)
 cm_ucell_t *cm_GetUCell(cm_user_t *userp, cm_cell_t *cellp)
 {
     cm_ucell_t *ucp;
-        
+
     lock_AssertMutex(&userp->mx);
     for (ucp = userp->cellInfop; ucp; ucp=ucp->nextp) {
-        if (ucp->cellp == cellp) 
+        if (ucp->cellp == cellp)
             break;
     }
-        
+
     if (!ucp) {
         ucp = malloc(sizeof(*ucp));
         memset(ucp, 0, sizeof(*ucp));
@@ -69,7 +69,7 @@ cm_ucell_t *cm_GetUCell(cm_user_t *userp, cm_cell_t *cellp)
         userp->cellInfop = ucp;
         ucp->cellp = cellp;
     }
-        
+
     return ucp;
 }
 
@@ -85,7 +85,7 @@ cm_ucell_t *cm_FindUCell(cm_user_t *userp, int iterator)
             best = ucp;
         else
             break;
-    }       
+    }
     return best;
 }
 
@@ -101,7 +101,7 @@ void cm_ReleaseUser(cm_user_t *userp)
     cm_ucell_t *ucp;
     cm_ucell_t *ncp;
 
-    if (userp == NULL) 
+    if (userp == NULL)
         return;
 
     lock_ObtainWrite(&cm_userLock);
@@ -110,7 +110,7 @@ void cm_ReleaseUser(cm_user_t *userp)
         lock_FinalizeMutex(&userp->mx);
         for (ucp = userp->cellInfop; ucp; ucp = ncp) {
             ncp = ucp->nextp;
-            if (ucp->ticketp) 
+            if (ucp->ticketp)
                 free(ucp->ticketp);
             free(ucp);
         }
@@ -125,7 +125,7 @@ void cm_HoldUserVCRef(cm_user_t *userp)
     lock_ObtainMutex(&userp->mx);
     userp->vcRefs++;
     lock_ReleaseMutex(&userp->mx);
-}       
+}
 
 /* release the count of the # of connections that use this user structure.
  * When this hits zero, we know we won't be getting any new requests from
@@ -138,16 +138,16 @@ void cm_ReleaseUserVCRef(cm_user_t *userp)
     lock_ObtainMutex(&userp->mx);
     osi_assertx(userp->vcRefs-- > 0, "cm_user_t refCount 0");
     lock_ReleaseMutex(&userp->mx);
-}       
+}
 
 
 /*
- * Check if any users' tokens have expired and if they have then do the 
- * equivalent of unlogging the user for that particular cell for which 
+ * Check if any users' tokens have expired and if they have then do the
+ * equivalent of unlogging the user for that particular cell for which
  * the tokens have expired.
- * ref. cm_IoctlDelToken() in cm_ioctl.c 
+ * ref. cm_IoctlDelToken() in cm_ioctl.c
  * This routine is called by the cm_Daemon() ie. the periodic daemon.
- * every cm_daemonTokenCheckInterval seconds 
+ * every cm_daemonTokenCheckInterval seconds
  */
 void cm_CheckTokenCache(time_t now)
 {
@@ -158,8 +158,8 @@ void cm_CheckTokenCache(time_t now)
     cm_ucell_t *ucellp;
     BOOL bExpired=FALSE;
 
-    /* 
-     * For every vcp, get the user and check his tokens 
+    /*
+     * For every vcp, get the user and check his tokens
      */
     lock_ObtainRead(&smb_rctLock);
     for (vcp=smb_allVCsp; vcp; vcp=vcp->nextp) {
@@ -174,7 +174,7 @@ void cm_CheckTokenCache(time_t now)
                 if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
                     if (ucellp->expirationTime < now) {
                         /* this guy's tokens have expired */
-                        osi_Log3(afsd_logp, "cm_CheckTokens: Tokens for user:%s have expired expiration time:0x%x ucellp:%x", 
+                        osi_Log3(afsd_logp, "cm_CheckTokens: Tokens for user:%s have expired expiration time:0x%x ucellp:%x",
                                  ucellp->userName, ucellp->expirationTime, ucellp);
                         if (ucellp->ticketp) {
                             free(ucellp->ticketp);
@@ -184,7 +184,7 @@ void cm_CheckTokenCache(time_t now)
                         ucellp->gen++;
                         bExpired=TRUE;
                     }
-                } 
+                }
             }
             lock_ReleaseMutex(&userp->mx);
             if (bExpired) {
@@ -203,7 +203,7 @@ void cm_CheckTokenCache(time_t now)
  * -> Keytab (required if UseLSA is 0)
  * -> Principal (required if there is more than one principal in the keytab)
  * -> Realm (required if realm is not upper-case of <cellname>
- * -> RequireEncryption 
+ * -> RequireEncryption
  */
 
 void
@@ -211,4 +211,4 @@ cm_RefreshRootTokens(void)
 {
 
 }
-#endif 
+#endif

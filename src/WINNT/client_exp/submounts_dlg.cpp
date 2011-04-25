@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -48,13 +48,13 @@ static CSubmountInfo *ReadSubmtInfo(const CString& strShareName)
 	TCHAR pathName[1024];
 
     HKEY hkSubmounts;
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                     AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
-                    0, 
-                    TEXT("AFS"), 
+                    0,
+                    TEXT("AFS"),
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ,
-                    NULL, 
+                    NULL,
                     &hkSubmounts,
                     NULL );
 
@@ -118,7 +118,7 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CSubmountsDlg message handlers
 
-BOOL CSubmountsDlg::OnInitDialog() 
+BOOL CSubmountsDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -169,13 +169,13 @@ BOOL CSubmountsDlg::FillSubmtList()
     DWORD dwIndex;
     DWORD dwSubmounts;
 
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                     AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
-                    0, 
-                    TEXT("AFS"), 
+                    0,
+                    TEXT("AFS"),
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
-                    NULL, 
+                    NULL,
                     &hkSubmounts,
                     NULL );
 
@@ -209,10 +209,10 @@ BOOL CSubmountsDlg::FillSubmtList()
 	return TRUE;
 }
 
-void CSubmountsDlg::OnDelete() 
+void CSubmountsDlg::OnDelete()
 {
 	HOURGLASS hourglass;
-	
+
 	int nIndex = m_SubmtList.GetCurSel();
 	ASSERT(nIndex >= 0);
 
@@ -240,7 +240,7 @@ void CSubmountsDlg::OnDelete()
 	AddWork(pInfo);
 }
 
-void CSubmountsDlg::OnSelChangeList() 
+void CSubmountsDlg::OnSelChangeList()
 {
 	m_Delete.EnableWindow(TRUE);
 	m_Change.EnableWindow(TRUE);
@@ -251,13 +251,13 @@ static BOOL AddSubmt(CSubmountInfo *pInfo)
 	HOURGLASS hourglass;
 
     HKEY hkSubmounts;
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                     AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
-                    0, 
-                    TEXT("AFS"), 
+                    0,
+                    TEXT("AFS"),
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
-                    NULL, 
+                    NULL,
                     &hkSubmounts,
                     NULL );
 
@@ -274,13 +274,13 @@ static BOOL DeleteSubmt(CSubmountInfo *pInfo)
 	HOURGLASS hourglass;
 
     HKEY hkSubmounts;
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                     AFSREG_CLT_OPENAFS_SUBKEY TEXT("\\Submounts"),
-                    0, 
-                    TEXT("AFS"), 
+                    0,
+                    TEXT("AFS"),
                     REG_OPTION_NON_VOLATILE,
                     (IsWow64()?KEY_WOW64_64KEY:0)|KEY_WRITE,
-                    NULL, 
+                    NULL,
                     &hkSubmounts,
                     NULL );
 
@@ -290,7 +290,7 @@ static BOOL DeleteSubmt(CSubmountInfo *pInfo)
 	return (status == ERROR_SUCCESS);
 }
 
-void CSubmountsDlg::OnAdd() 
+void CSubmountsDlg::OnAdd()
 {
 	CAddSubmtDlg dlg;
 
@@ -309,7 +309,7 @@ void CSubmountsDlg::OnAdd()
 	AddWork(pInfo);
 }
 
-void CSubmountsDlg::OnChange() 
+void CSubmountsDlg::OnChange()
 {
 	CAddSubmtDlg dlg;
 
@@ -341,12 +341,12 @@ void CSubmountsDlg::OnChange()
 	}
 
 	dlg.SetSubmtInfo(pInfo);
-	
+
 	delete pInfo;
 
 	if (dlg.DoModal() != IDOK)
 		return;
-		
+
 	pInfo = dlg.GetSubmtInfo();
 
 	m_SubmtList.DeleteString(nIndex);
@@ -370,7 +370,7 @@ void CSubmountsDlg::AddWork(CSubmountInfo *pInfo)
 				bAdd = FALSE;
 			delete m_ToDo[i];
 			m_ToDo.RemoveAt(i);
-			break;	
+			break;
 		}
 	}
 
@@ -402,12 +402,12 @@ CSubmountInfo *CSubmountsDlg::FindWork(const CString& strShareName)
 	return 0;
 }
 
-void CSubmountsDlg::WinHelp(DWORD dwData, UINT nCmd) 
+void CSubmountsDlg::WinHelp(DWORD dwData, UINT nCmd)
 {
 	CDialog::WinHelp(dwData, nCmd);
 }
 
-void CSubmountsDlg::OnOk() 
+void CSubmountsDlg::OnOk()
 {
 	if (!FixSubmts())
 		ShowMessageBox(IDS_SUBMT_SAVE_FAILED);

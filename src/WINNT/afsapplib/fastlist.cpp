@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -3231,7 +3231,7 @@ void FastList_SyncScroll (LPFASTLIST pfl)
          }
       else
          {
-         SetWindowPos (pfl->hScrollV, 0, 
+         SetWindowPos (pfl->hScrollV, 0,
                        rScroll.left, rScroll.top, cxRECT(rScroll), cyRECT(rScroll),
                        SWP_NOZORDER | SWP_NOACTIVATE);
          }
@@ -3267,7 +3267,7 @@ void FastList_SyncScroll (LPFASTLIST pfl)
          }
       else
          {
-         SetWindowPos (pfl->hScrollH, 0, 
+         SetWindowPos (pfl->hScrollH, 0,
                        rScroll.left, rScroll.top, cxRECT(rScroll), cyRECT(rScroll),
                        SWP_NOZORDER | SWP_NOACTIVATE);
          }

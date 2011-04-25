@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -50,7 +50,7 @@ BOOL CALLBACK AdminInfoDlgProc(HWND hRHS, UINT msg, WPARAM wp, LPARAM lp);
  *
  */
 BOOL GetAdminInfo(HWND hParent, GET_ADMIN_INFO_OPTIONS options)
-{	
+{
     eOptions = options;
 
     int nResult = ModalDialog(IDD_ADMIN_INFO, hParent, (DLGPROC)AdminInfoDlgProc);
@@ -64,7 +64,7 @@ BOOL GetAdminInfo(HWND hParent, GET_ADMIN_INFO_OPTIONS options)
  *
  */
 BOOL CALLBACK AdminInfoDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
-{	
+{
     if (AfsAppLib_HandleHelp(IDD_ADMIN_INFO, hwndDlg, msg, wp, lp))
 	return TRUE;
 
@@ -91,7 +91,7 @@ BOOL CALLBACK AdminInfoDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp)
 	    SaveDlgInfo();
 	    EndDialog(hDlg, IDOK);
 	    break;
-	}	
+	}
 	break;
     }
 
@@ -113,7 +113,7 @@ static void OnInitDialog(HWND hwndDlg)
     static int nOffset = 0;
 
     hDlg = hwndDlg;
-	
+
     // Hide the additional server stuff if we don't need it
     if (eOptions == GAIO_LOGIN_ONLY) {
 	HideAndDisable(hDlg, IDC_HOSTNAME_FRAME);
@@ -135,7 +135,7 @@ static void OnInitDialog(HWND hwndDlg)
             nOffset = rectButton.top - rectFrame.top;
         }
 
-        // Move the buttons		
+        // Move the buttons
 	MoveWnd(hDlg, IDOK, 0, -nOffset);
 	MoveWnd(hDlg, IDCANCEL, 0, -nOffset);
 	MoveWnd(hDlg, IDHELP, 0, -nOffset);
@@ -168,7 +168,7 @@ static void CheckEnableButtons()
 static void SaveDlgInfo()
 {
     TCHAR szText[cchRESOURCE];
-	
+
     lstrncpy(g_CfgData.szAdminName, GetWndText(hDlg, IDC_ADMIN_NAME, szText), MAX_ADMIN_NAME_LEN);
     lstrncpy(g_CfgData.szAdminPW, GetWndText(hDlg, IDC_ADMIN_PW, szText), MAX_ADMIN_PW_LEN);
 
