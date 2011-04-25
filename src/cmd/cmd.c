@@ -1260,6 +1260,23 @@ cmd_OptionAsInt(struct cmd_syndesc *syn, int pos, int *value)
 }
 
 int
+cmd_OptionAsUint(struct cmd_syndesc *syn, int pos,
+		 unsigned int *value)
+{
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+    if (syn->parms[pos].items == NULL ||
+	syn->parms[pos].items->data == NULL)
+	return CMD_MISSING;
+    if (syn->parms[pos].items == &dummy)
+	return 0;
+
+    *value = strtoul(syn->parms[pos].items->data, NULL, 10);
+
+    return 0;
+}
+
+int
 cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
 {
     if (pos > syn->nParms)
