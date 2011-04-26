@@ -150,7 +150,9 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	/* valid for alpha_osf, SunOS, Ultrix */
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 	afs_osi_cred.cr_ref++;
+#ifndef AFS_DARWIN110_ENV
 	afs_osi_cred.cr_ngroups = 1;
+#endif
 	afs_osicred_initialized = 1;
     }
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));

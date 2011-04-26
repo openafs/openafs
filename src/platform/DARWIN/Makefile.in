@@ -12,6 +12,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+OSXSDK = @OSXSDK@
+
 .PHONY: all afscell
 
 all: OpenAFS.prefPane afssettings afscell growlagent aklog.bundle
@@ -21,34 +23,31 @@ afscell/build/Release/afscell.bundle: afscell
 afscell/InstallerSections.plist: afscell 
 
 OpenAFS.prefPane:
-	@case ${SYS_NAME} in \
-	*_darwin_100 ) \
-		xcodebuild -sdk macosx10.6 -project ${srcdir}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
-	*_darwin_90 ) \
-		xcodebuild -sdk macosx10.5 -project ${srcdir}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
-	*_darwin_80 ) \
-		xcodebuild -sdk macosx10.4 -project ${srcdor}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
+	@case ${OSXSDK} in \
+	macosx* ) \
+		xcodebuild -sdk ${OSXSDK} -project ${srcdir}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
 	* ) \
-		echo Not building AFS prefPane for ${SYS_NAME} ;; \
+		echo Not building AFS prefPane for ${OSXSDK} ;; \
 	esac
 
 aklog.bundle:
-	@case ${SYS_NAME} in \
-	*_darwin_100 ) \
-		xcodebuild -sdk macosx10.6 -project ${srcdir}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
-	*_darwin_90 ) \
-		xcodebuild -sdk macosx10.5 -project ${srcdir}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
-	*_darwin_80 ) \
-		xcodebuild -sdk macosx10.4 -project ${srcdor}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
+	@case ${OSXSDK} in \
+	macosx* ) \
+		xcodebuild -sdk ${OSXSDK} -project ${srcdir}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
 	* ) \
-		echo Not building AklogAuthPlugin for ${SYS_NAME} ;; \
+		echo Not building AklogAuthPlugin for ${OSXSDK} ;; \
 	esac
 
 growlagent:
 	cd growlagent && $(MAKE) all
 
 afscell:
-	xcodebuild -project ${srcdir}/afscell/afscell.xcodeproj SYMROOT=`pwd`/afscell/build
+	@case ${OSXSDK} in \
+	macosx* ) \
+		xcodebuild -sdk ${OSXSDK} -project ${srcdir}/afscell/afscell.xcodeproj SYMROOT=`pwd`/afscell/build;; \
+	* ) \
+		echo Not building afscell.bundle for ${OSXSDK} ;; \
+	esac
 
 afssettings: afssettings.m 
 	${CC} ${CFLAGS} -o afssettings $? -framework Foundation
