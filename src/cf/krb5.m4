@@ -262,7 +262,8 @@ AC_DEFUN([RRA_LIB_KRB5_OPTIONAL],
  AS_IF([test x"$rra_use_kerberos" != xfalse],
      [AS_IF([test x"$rra_use_kerberos" = xtrue],
          [_RRA_LIB_KRB5_INTERNAL([true])],
-         [_RRA_LIB_KRB5_INTERNAL([false])])])
+         [_RRA_LIB_KRB5_INTERNAL([false])])],
+     [AM_CONDITIONAL([KRB5_USES_COM_ERR], [false])])
  AS_IF([test x"$KRB5_LIBS" != x],
     [AC_DEFINE([HAVE_KERBEROS], 1, [Define to enable Kerberos features.])])])
 
