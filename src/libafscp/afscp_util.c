@@ -36,7 +36,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ubik.h>
 #include <rx/rx_null.h>
 #include <rx/rxkad.h>
-#include <krb5.h>
+#ifdef HAVE_KERBEROS
+# include <krb5.h>
+#endif
 #include "afscp.h"
 #include "afscp_internal.h"
 
@@ -95,7 +97,8 @@ _GetNullSecurityObject(struct afscp_cell *cell)
 int
 _GetSecurityObject(struct afscp_cell *cell)
 {
-    int code;
+    int code = ENOENT;
+#ifdef HAVE_KERBEROS
     krb5_context context;
     krb5_creds match;
     krb5_creds *cred;
@@ -198,6 +201,7 @@ _GetSecurityObject(struct afscp_cell *cell)
     return 0;
 
     try_anon:
+#endif /* HAVE_KERBEROS */
     if (try_anonymous)
 	return _GetNullSecurityObject(cell);
     else
