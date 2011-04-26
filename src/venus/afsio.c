@@ -64,11 +64,6 @@
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
 #endif
-#ifdef AFS_DARWIN_ENV
-#include <sys/malloc.h>
-#else
-#include <malloc.h>
-#endif
 #include <hcrypto/md5.h>
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
