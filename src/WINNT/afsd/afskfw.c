@@ -1007,7 +1007,7 @@ KFW_get_ccache(krb5_context alt_ctx, krb5_principal principal, krb5_ccache * cc)
     krb5_error_code code;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     if ( alt_ctx ) {
         ctx = alt_ctx;
@@ -1360,7 +1360,7 @@ KFW_AFS_get_cred( char * username,
     char * dot;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_get_cred for token ");
@@ -1546,7 +1546,7 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
     char ** principals = NULL;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_destroy_tickets_for_cell: ");
@@ -1613,7 +1613,7 @@ KFW_AFS_destroy_tickets_for_principal(char * user)
     krb5_ccache		cc  = NULL;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_destroy_tickets_for_user: ");
@@ -1672,7 +1672,7 @@ KFW_AFS_renew_expiring_tokens(void)
     struct afsconf_cell cellconfig;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     if ( pcc_next == NULL ) // nothing to do
         return 0;
@@ -1776,7 +1776,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
     char ** principals = NULL;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_renew_token_for_cell:");
@@ -1931,7 +1931,7 @@ KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
     krb5_data           *realm = NULL;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
 	memset(&my_creds, 0, sizeof(krb5_creds));
 
@@ -2050,7 +2050,7 @@ KFW_kinit( krb5_context alt_ctx,
     int                         i = 0, addr_count = 0;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     pkrb5_get_init_creds_opt_init(&options);
     memset(&my_creds, 0, sizeof(my_creds));
@@ -2210,7 +2210,7 @@ KFW_kdestroy(krb5_context alt_ctx, krb5_ccache alt_cc)
     krb5_error_code		code;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     if (alt_ctx)
     {
@@ -2880,7 +2880,7 @@ KFW_AFS_klog(
     }
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     memset(&ak_cellconfig, 0, sizeof(ak_cellconfig));
     memset(RealmName, '\0', sizeof(RealmName));
@@ -3676,7 +3676,7 @@ BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
     BOOL serverReachable = 0;
 
     if (!pkrb5_init_context)
-        return 0;
+        return KRB5_CONFIG_CANTOPEN;
 
     code = pkrb5_init_context(&ctx);
     if (code) goto cleanup;
