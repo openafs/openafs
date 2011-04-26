@@ -88,8 +88,12 @@ int  KFW_AFS_copy_system_file_to_default_cache(char *);
 #define         KERB_ERR_NULL_KEY                       10
 
 /* From afs/krb.h */
+#ifndef RD_AP_TIME
 #define           RD_AP_TIME     37       /* delta_t too big */
+#endif
+#ifndef INTK_BADPW
 #define           INTK_BADPW     62       /* Incorrect password */
+#endif
 
 #define PROBE_USERNAME               "OPENAFS-KDC-PROBE"
 #define PROBE_PASSWORD_LEN           16
