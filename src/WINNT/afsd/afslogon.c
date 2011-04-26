@@ -1005,7 +1005,7 @@ DWORD APIENTRY NPLogonNotify(
 			    while ( *p ) {
                                 if ( cm_stricmp_utf8(p, cell) ) {
                                     SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
-                                    code2 = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
+                                    code2 = KFW_AFS_get_cred(principal, p, password, 0, opt.smbName, &reason);
                                     SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL);
                                     DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
                                                principal,opt.smbName,p,code2);
