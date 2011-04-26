@@ -86,11 +86,6 @@
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
 #endif
-#ifdef AFS_DARWIN_ENV
-#include <sys/malloc.h>
-#else
-#include <malloc.h>
-#endif
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
 #include <des_prototypes.h>
