@@ -641,7 +641,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     }
 
     if (hkTemp) {
-        CHAR * thesecells = NULL;
+        CHAR * thesecells = NULL, *p;
 
         /* dwSize still has the size of the required buffer in bytes. */
         thesecells = malloc(dwSize*2);
@@ -655,9 +655,16 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
             goto doneTheseCells;
         }
 
-        DebugEvent("Found TheseCells [%s]", thesecells);
-        opt->theseCells = thesecells;
-        thesecells = NULL;
+        /* TheseCells is a REG_MULTI_SZ */
+        if ( thesecells && thesecells[0]) {
+            for ( p=thesecells; *p; p += (strlen(p) + 1)) {
+                DebugEvent("Found TheseCells [%s]", p);
+            }
+            opt->theseCells = thesecells;
+            thesecells = NULL;
+        } else {
+            DebugEvent("TheseCells [REG_MULTI_SZ] not found");
+        }
 
       doneTheseCells:
         if (thesecells) free(thesecells);
@@ -854,7 +861,7 @@ DWORD APIENTRY NPLogonNotify(
 	 !UnicodeStringToANSI(IL->LogonDomainName, logonDomain, MAX_DOMAIN_LENGTH))
  	return 0;
 
-    /* Make sure AD-DOMAINS sent from login that is sent to us is striped */
+    /* Make sure AD-DOMAINS sent from login that is sent to us is stripped */
     ctemp = strchr(uname, '@');
     if (ctemp) {
         *ctemp = 0;
@@ -883,7 +890,7 @@ DWORD APIENTRY NPLogonNotify(
     if (retryInterval < sleepInterval)
         sleepInterval = retryInterval;
 
-    DebugEvent("Got logon script: %S",opt.logonScript);
+    DebugEvent("Got logon script: [%S]", opt.logonScript);
 
     afsWillAutoStart = AFSWillAutoStart();
 
@@ -902,7 +909,7 @@ DWORD APIENTRY NPLogonNotify(
         /* Get cell name if doing integrated logon.
            We might overwrite this if we are logging into an AD realm and we find out that
            the user's home dir is in some other cell. */
-        DebugEvent("About to call cm_GetRootCellName(%s)",cell);
+        DebugEvent("About to call cm_GetRootCellName()");
         code = cm_GetRootCellName(cell);
         if (code < 0) {
             DebugEvent0("Unable to obtain Root Cell");
@@ -910,7 +917,7 @@ DWORD APIENTRY NPLogonNotify(
             reason = "unknown cell";
             code=0;
         } else {
-            DebugEvent("Cell is %s",cell);
+            DebugEvent("Default cell is %s", cell);
         }
 
         /* We get the user's home directory path, if applicable, though we can't lookup the
