@@ -92,6 +92,7 @@ osi_PostPopulateVCache(struct vcache *avc) {
     AFS_VN_INIT_BUF_LOCK(&(avc->v));
 #endif
 
+    vSetVfsp(avc, afs_globalVFS);
     vSetType(avc, VREG);
 
     VN_SET_DPAGES(&(avc->v), (struct pfdat *)NULL);
