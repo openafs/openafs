@@ -55,13 +55,11 @@
  *
  */
 
-
 #undef  USE_KRB4
 #ifndef _WIN64
 #define USE_KRB524 1
 #endif
 #define USE_MS2MIT 1
-#define USE_LEASH 1
 
 #include <afsconfig.h>
 #include <afs/param.h>
@@ -423,6 +421,12 @@ static HINSTANCE hLeashOpt = 0;
 static HINSTANCE hCCAPI = 0;
 static struct principal_ccache_data * princ_cc_data = NULL;
 static struct cell_principal_map    * cell_princ_map = NULL;
+
+#ifdef USE_LEASH
+#define DEFAULT_LIFETIME pLeash_get_default_lifetime()
+#else
+#define DEFAULT_LIFETIME (24 * 60)
+#endif
 
 void
 KFW_initialize(void)
@@ -1068,7 +1072,11 @@ KFW_import_windows_lsa(void)
     code = pkrb5_cc_get_principal(ctx, cc, &princ);
     if ( code ) goto cleanup;
 
+#ifdef USE_LEASH
     dwMsLsaImport = pLeash_get_default_mslsa_import ? pLeash_get_default_mslsa_import() : 1;
+#else
+    dwMsLsaImport = 1;
+#endif
     switch ( dwMsLsaImport ) {
     case 0: /* do not import */
         goto cleanup;
@@ -1105,7 +1113,7 @@ KFW_import_windows_lsa(void)
     cell[i] = '\0';
     realm[i] = '\0';
 
-    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, pLeash_get_default_lifetime(),NULL);
+    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, DEFAULT_LIFETIME, NULL);
     if ( IsDebuggerPresent() ) {
         char message[256];
         StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
@@ -1282,13 +1290,7 @@ KFW_import_ccache_data(void)
                         OutputDebugString("Calling KFW_AFS_klog() to obtain token\n");
                     }
 
-                    code = KFW_AFS_klog(ctx, cc, "afs", cell->data, realm->data,
-#ifndef USE_LEASH
-                                        600,
-#else
-                                        pLeash_get_default_lifetime(),
-#endif /* USE_LEASH */
-                                        NULL);
+                    code = KFW_AFS_klog(ctx, cc, "afs", cell->data, realm->data, DEFAULT_LIFETIME, NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
                         StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
@@ -1423,19 +1425,22 @@ KFW_AFS_get_cred( char * username,
     if ( code ) goto cleanup;
 
     if ( lifetime == 0 )
-#ifndef USE_LEASH
-        lifetime = 600;
-#else
-        lifetime = pLeash_get_default_lifetime();
-#endif
+        lifetime = DEFAULT_LIFETIME;
 
-    if ( password && password[0] ) {
+    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime, smbname);
+    if ( IsDebuggerPresent() ) {
+        char message[256];
+        StringCbPrintf(message, sizeof(message), "KFW_AFS_klog() returns: %d\n", code);
+        OutputDebugString(message);
+    }
+
+    if (code && password && password[0] ) {
         code = KFW_kinit( ctx, cc, HWND_DESKTOP,
                           pname,
                           password,
                           lifetime,
 #ifndef USE_LEASH
-                          1, /* forwardable */
+                          0, /* forwardable */
                           0, /* not proxiable */
                           1, /* renewable */
                           1, /* noaddresses */
@@ -1649,7 +1654,7 @@ KFW_AFS_destroy_tickets_for_principal(char * user)
     }
 
     if (ctx)
-		pkrb5_free_context(ctx);
+        pkrb5_free_context(ctx);
     return 0;
 }
 
@@ -2077,11 +2082,7 @@ KFW_kinit( krb5_context alt_ctx,
 	goto cleanup;
 
     if (lifetime == 0)
-#ifndef USE_LEASH
-        lifetime = 600;
-#else
-        lifetime = pLeash_get_default_lifetime();
-#endif /* USE_LEASH */
+        lifetime = DEFAULT_LIFETIME;
     lifetime *= 60;
 
     if (renew_life > 0)
