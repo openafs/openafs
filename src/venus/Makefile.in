@@ -96,12 +96,8 @@ afscbint.ss.o: ../fsint/afscbint.ss.c
 	${PTH_CCRULE} ../fsint/afscbint.ss.c
 
 afsio: afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS}
-	+if test "@BUILD_KRB5@" = "yes"; then \
-		$(MT_CC) @KRB5_CPPFLAGS@ $(PTH_LDFLAGS) $(AFS_CFLAGS) -o afsio afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS} \
-		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} ${KRB5LIBS} ; \
-	else \
-		echo "Skipping afsio (KRB5 build disabled)" ; \
-	fi
+	$(MT_CC) $(PTH_LDFLAGS) $(AFS_CFLAGS) -o afsio afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS} \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} ${KRB5LIBS}
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
@@ -309,9 +305,7 @@ install: kdump-build fs livesys up fstrace cmdebug afsio
 	${INSTALL_PROGRAM} up ${DESTDIR}${bindir}/up
 	${INSTALL_PROGRAM} fstrace ${DESTDIR}${sbindir}/fstrace
 	${INSTALL_PROGRAM} cmdebug ${DESTDIR}${bindir}/cmdebug
-	if test "@BUILD_KRB5@" = "yes"; then \
-		${INSTALL_PROGRAM} afsio ${DESTDIR}${bindir}/afsio ; \
-	fi
+	${INSTALL_PROGRAM} afsio ${DESTDIR}${bindir}/afsio ;
 	-set -x; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
@@ -350,9 +344,7 @@ dest: kdump-build fs livesys up fstrace cmdebug afsio
 	${INSTALL_PROGRAM} up ${DEST}/bin/up
 	${INSTALL_PROGRAM} fstrace ${DEST}/etc/fstrace
 	${INSTALL_PROGRAM} cmdebug ${DEST}/bin/cmdebug
-	if test "@BUILD_KRB5@" = "yes"; then \
-		${INSTALL_PROGRAM} afsio ${DEST}/bin/afsio ; \
-	fi
+	${INSTALL_PROGRAM} afsio ${DEST}/bin/afsio
 	-set -x; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \

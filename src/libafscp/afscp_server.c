@@ -38,7 +38,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define AFSCONF_CLIENTNAME AFSDIR_CLIENT_ETC_DIRPATH
 #endif
 #include <rx/rx.h>
-#include <krb5.h>
+#ifdef HAVE_KERBEROS
+# include <krb5.h>
+#endif
 #include "afscp.h"
 #include "afscp_internal.h"
 
@@ -165,9 +167,11 @@ afscp_DefaultCell(void)
 int
 afscp_SetDefaultRealm(const char *realmname)
 {
+    char *newdefrealm;
+
+#ifdef HAVE_KERBEROS
     /* krb5_error_code k5ec; */
     krb5_context k5con;
-    char *newdefrealm;
     int code;
 
     if (realmname == NULL) {
@@ -188,6 +192,8 @@ afscp_SetDefaultRealm(const char *realmname)
      * return -1;
      * } */
     /* krb5_set_default_realm() is returning 0 on success, not KRB5KDC_ERR_NONE */
+#endif /* HAVE_KERBEROS */
+
     newdefrealm = strdup(realmname);
     if (newdefrealm == NULL) {
 	return -1;
