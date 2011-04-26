@@ -1491,6 +1491,9 @@ extern int afsd_dynamic_vcaches;
  */
 #if defined(AFS_NBSD40_ENV)
 /* in osi_machdep.h as expected */
+#elif defined (AFS_DARWIN110_ENV)
+#define afs_cr_uid(cred) kauth_cred_getuid((kauth_cred_t)(cred))
+#define afs_cr_gid(cred) kauth_cred_getgid((kauth_cred_t)(cred))
 #elif !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 #define afs_cr_uid(cred) ((cred)->cr_uid)
 #define afs_cr_gid(cred) ((cred)->cr_gid)
@@ -1499,6 +1502,7 @@ extern int afsd_dynamic_vcaches;
 #define afs_cr_rgid(cred) ((cred)->cr_rgid)
 #endif
 
+#if !defined(AFS_DARWIN110_ENV)
 static_inline void
 afs_set_cr_uid(afs_ucred_t *cred, uid_t uid) {
     cred->cr_uid = uid;
@@ -1516,7 +1520,8 @@ static_inline void
 afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
     cred->cr_rgid = gid;
 }
-#endif
+#endif /* ! AFS_OBSD_ENV */
+#endif /* ! AFS_DARWIN110_ENV */
 #endif
 
 #ifdef AFS_SUN5_ENV

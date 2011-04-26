@@ -15,7 +15,6 @@
 #else
 #error Unsupported architecture
 #endif
-#define AFS_VFSINCL_ENV		1
 #ifdef __amd64__
 #define AFS_64BITUSERPOINTER_ENV 1
 #endif
@@ -139,7 +138,6 @@
 #ifndef AFS_PARAM_H
 #define AFS_PARAM_H
 
-#define AFS_VFSINCL_ENV 1	/* NOBODY uses this.... */
 #define AFS_ENV                 1
 #define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #if defined(__ppc__)
