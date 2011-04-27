@@ -2574,12 +2574,15 @@ h_FindClient_r(struct rx_connection *tcon)
 	    client = oldClient;
 	    host = oldClient->host;
 	} else {
-	    ViceLog(0, ("FindClient: deleted client %p(%x) already had "
-			"conn %p (host %s:%d), stolen by client %p(%x)\n",
-			oldClient, oldClient->sid, tcon,
-			afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
-			ntohs(rxr_PortOf(tcon)),
-			client, client->sid));
+	    ViceLog(0, ("FindClient: deleted client %p(%x ref %d host %p href "
+	                "%d) already had conn %p (host %s:%d, cid %x), stolen "
+	                "by client %p(%x, ref %d host %p href %d)\n",
+	                oldClient, oldClient->sid, oldClient->refCount,
+	                oldClient->host, oldClient->host->refCount, tcon,
+	                afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
+	                ntohs(rxr_PortOf(tcon)), rxr_CidOf(tcon),
+	                client, client->sid, client->refCount,
+	                client->host, client->host->refCount));
 	    /* rx_SetSpecific will be done immediately below */
 	}
     }
@@ -2666,12 +2669,14 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 	return VICETOKENDEAD;
     }
     if (client->deleted) {
-	ViceLog(0, ("GetClient: got deleted client, this should not happen! "
-	            "Connection will appear to have no rights; "
-	            "tcon %p sid %d epoch %d client %p host %s:%d viceid %d\n",
-	            tcon, (int)rxr_CidOf(tcon), (int)rxr_GetEpoch(tcon), client,
+	ViceLog(0, ("GetClient: got deleted client, connection will appear "
+	            "anonymous; tcon %p cid %x client %p ref %d host %p "
+	            "(%s:%d) href %d ViceId %d\n",
+	            tcon, rxr_CidOf(tcon), client, client->refCount,
+	            client->host,
 	            afs_inet_ntoa_r(client->host->host, hoststr),
-	            (int)ntohs(client->host->port), (int)client->ViceId));
+	            (int)ntohs(client->host->port), client->host->refCount,
+	            (int)client->ViceId));
     }
 
     client->refCount++;
