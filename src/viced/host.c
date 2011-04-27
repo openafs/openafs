@@ -2563,10 +2563,15 @@ h_FindClient_r(struct rx_connection *tcon)
 		created = 0;
 	    }
 	    oldClient->refCount++;
+
+	    h_Hold_r(oldClient->host);
+	    h_Release_r(client->host);
+
 	    H_UNLOCK;
 	    ObtainWriteLock(&oldClient->lock);
 	    H_LOCK;
 	    client = oldClient;
+	    host = oldClient->host;
 	} else {
 	    ViceLog(0, ("FindClient: deleted client %p(%x) already had "
 			"conn %p (host %s:%d), stolen by client %p(%x)\n",
