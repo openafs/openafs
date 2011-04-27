@@ -2386,11 +2386,12 @@ h_FindClient_r(struct rx_connection *tcon)
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client && client->sid == rxr_CidOf(tcon)
 	&& client->VenusEpoch == rxr_GetEpoch(tcon)
-	&& !(client->host->hostFlags & HOSTDELETED)) {
+	&& !(client->host->hostFlags & HOSTDELETED)
+	&& !client->deleted) {
 
 	client->refCount++;
 	h_Hold_r(client->host);
-	if (!client->deleted && client->prfail != 2) {
+	if (client->prfail != 2) {
 	    /* Could add shared lock on client here */
 	    /* note that we don't have to lock entry in this path to
 	     * ensure CPS is initialized, since we don't call rx_SetSpecific
