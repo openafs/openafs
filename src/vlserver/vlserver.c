@@ -25,6 +25,7 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxstat.h>
+#include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/auth.h>
@@ -53,7 +54,6 @@ int rxJumbograms = 0;		/* default is to not send and receive jumbo grams */
 int rxMaxMTU = -1;
 afs_int32 rxBind = 0;
 int rxkadDisableDotCheck = 0;
-int debuglevel = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -113,6 +113,27 @@ vldb_rxstat_userok(struct rx_call *call)
 
 #include "AFS_component_version_number.c"
 
+enum optionsList {
+    OPT_noauth,
+    OPT_smallmem,
+    OPT_auditlog,
+    OPT_auditiface,
+    OPT_config,
+    OPT_debug,
+    OPT_database,
+    OPT_logfile,
+    OPT_threads,
+    OPT_syslog,
+    OPT_peer,
+    OPT_process,
+    OPT_nojumbo,
+    OPT_jumbo,
+    OPT_rxbind,
+    OPT_rxmaxmtu,
+    OPT_trace,
+    OPT_dotted
+};
+
 int
 main(int argc, char **argv)
 {
@@ -126,14 +147,18 @@ main(int argc, char **argv)
     struct afsconf_cell info;
     struct hostent *th;
     char hostname[VL_MAXNAMELEN];
-    int noAuth = 0, index;
+    int noAuth = 0;
     char clones[MAXHOSTSPERCELL];
-    char *auditFileName = NULL;
     afs_uint32 host = ntohl(INADDR_ANY);
+    struct cmd_syndesc *opts;
 
-    const char *vl_dbaseName;
-    const char *configDir;
-    const char *logFile;
+    char *vl_dbaseName;
+    char *configDir;
+    char *logFile;
+
+    char *auditFileName = NULL;
+    char *interface = NULL;
+    char *optstring = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -163,112 +188,131 @@ main(int argc, char **argv)
 	exit(2);
     }
 
-    vl_dbaseName = AFSDIR_SERVER_VLDB_FILEPATH;
-    configDir = AFSDIR_SERVER_ETC_DIRPATH;
-    logFile = AFSDIR_SERVER_PTLOG_FILEPATH;
+    vl_dbaseName = strdup(AFSDIR_SERVER_VLDB_FILEPATH);
+    configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
+    logFile = strdup(AFSDIR_SERVER_PTLOG_FILEPATH);
 
-    /* Parse command line */
-    for (index = 1; index < argc; index++) {
-	if (strcmp(argv[index], "-noauth") == 0) {
-	    noAuth = 1;
-	} else if (strcmp(argv[index], "-p") == 0) {
-	    lwps = atoi(argv[++index]);
-	    if (lwps > MAXLWP) {
-		printf("Warning: '-p %d' is too big; using %d instead\n",
-		       lwps, MAXLWP);
-		lwps = MAXLWP;
-	    }
-	} else if (strcmp(argv[index], "-d") == 0) {
-	    if ((index + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n");
-		return -1;
-	    }
-	    debuglevel = atoi(argv[++index]);
-	    LogLevel = debuglevel;
-	} else if (strcmp(argv[index], "-nojumbo") == 0) {
-	    rxJumbograms = 0;
-	} else if (strcmp(argv[index], "-jumbo") == 0) {
-	    rxJumbograms = 1;
-	} else if (strcmp(argv[index], "-rxbind") == 0) {
-	    rxBind = 1;
-	} else if (strcmp(argv[index], "-allow-dotted-principals") == 0) {
-	    rxkadDisableDotCheck = 1;
-	} else if (!strcmp(argv[index], "-rxmaxmtu")) {
-	    if ((index + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n");
-		return -1;
-	    }
-	    rxMaxMTU = atoi(argv[++index]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE,
-		       RX_MAX_PACKET_DATA_SIZE);
-		return -1;
-	    }
+    cmd_DisableAbbreviations();
+    cmd_DisablePositionalCommands();
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
 
-	} else if (strcmp(argv[index], "-smallmem") == 0) {
-	    smallMem = 1;
+    /* vlserver specific options */
+    cmd_AddParmAtOffset(opts, OPT_noauth, "-noauth", CMD_FLAG,
+		        CMD_OPTIONAL, "disable authentication");
+    cmd_AddParmAtOffset(opts, OPT_smallmem, "-smallmem", CMD_FLAG,
+		        CMD_OPTIONAL, "optimise for small memory systems");
 
-	} else if (strcmp(argv[index], "-trace") == 0) {
-	    extern char rxi_tracename[80];
-	    strcpy(rxi_tracename, argv[++index]);
-
-	} else if (strcmp(argv[index], "-auditlog") == 0) {
-	    auditFileName = argv[++index];
-
-	} else if (strcmp(argv[index], "-audit-interface") == 0) {
-	    char *interface = argv[++index];
-
-	    if (osi_audit_interface(interface)) {
-		printf("Invalid audit interface '%s'\n", interface);
-		return -1;
-	    }
-
-	} else if (strcmp(argv[index], "-enable_peer_stats") == 0) {
-	    rx_enablePeerRPCStats();
-	} else if (strcmp(argv[index], "-enable_process_stats") == 0) {
-	    rx_enableProcessRPCStats();
-#ifndef AFS_NT40_ENV
-	} else if (strcmp(argv[index], "-syslog") == 0) {
-	    /* set syslog logging flag */
-	    serverLogSyslog = 1;
-	} else if (strncmp(argv[index], "-syslog=", 8) == 0) {
-	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(argv[index] + 8);
+    /* general server options */
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
+		        CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditiface, "-audit-interface", CMD_SINGLE,
+		        CMD_OPTIONAL, "interface to use for audit logging");
+    cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
+		        CMD_OPTIONAL, "configuration location");
+    cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE,
+		        CMD_OPTIONAL, "debug level");
+    cmd_AddParmAtOffset(opts, OPT_database, "-database", CMD_SINGLE,
+		        CMD_OPTIONAL, "database file");
+    cmd_AddParmAlias(opts, OPT_database, "-db");
+    cmd_AddParmAtOffset(opts, OPT_logfile, "-logfile", CMD_SINGLE,
+		        CMD_OPTIONAL, "location of logfile");
+    cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
+		        "number of threads");
+#if !defined(AFS_NT40_ENV)
+    cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG,
+		        CMD_OPTIONAL, "log to syslog");
 #endif
-	} else if ((strcmp(argv[index], "-database") == 0)
-		|| (strcmp(argv[index], "-db") == 0)) {
-	    vl_dbaseName = argv[++index];
-	} else if (strcmp(argv[index], "-config") == 0) {
-	    if ((index + 1) > argc) {
-		fprintf(stderr, "missing argument for -config\n");
-		return -1;
-	    }
-	    configDir = argv[++index];
-	} else if (strcmp(argv[index], "-logfile") == 0) {
-	    if ((index + 1) > argc) {
-		fprintf(stderr, "missing argument for -logfile\n");
-		return -1;
-	    }
-	    logFile = argv[++index];
-	} else {
-	    /* support help flag */
-	    printf("Usage: vlserver [-database <db path] "
-		   "[-p <number of processes>] [-nojumbo] "
-		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
-		   "[-config <config directory path>] "
-		   "[-logfile <log file path>] ");
-#ifndef AFS_NT40_ENV
-	    printf("[-syslog[=FACILITY]] ");
-#endif
-	    printf("[-enable_peer_stats] [-enable_process_stats] "
-		   "[-help]\n");
-	    fflush(stdout);
-	    exit(0);
+
+    /* rx options */
+    cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX transport statistics");
+    cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX RPC statistics");
+    cmd_AddParmAtOffset(opts, OPT_nojumbo, "-nojumbo", CMD_FLAG,
+		        CMD_OPTIONAL, "disable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_jumbo, "-jumbo", CMD_FLAG,
+		        CMD_OPTIONAL, "enable jumbograms");
+    cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG,
+		        CMD_OPTIONAL, "bind only to the primary interface");
+    cmd_AddParmAtOffset(opts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+		        CMD_OPTIONAL, "maximum MTU for RX");
+    cmd_AddParmAtOffset(opts, OPT_trace, "-trace", CMD_SINGLE,
+		        CMD_OPTIONAL, "rx trace file");
+
+    /* rxkad options */
+    cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals",
+		        CMD_FLAG, CMD_OPTIONAL,
+		        "permit Kerberos 5 principals with dots");
+
+    code = cmd_Parse(argc, argv, &opts);
+    if (code)
+	return -1;
+
+    /* vlserver options */
+    cmd_OptionAsFlag(opts, OPT_noauth, &noAuth);
+    cmd_OptionAsFlag(opts, OPT_smallmem, &smallMem);
+    if (cmd_OptionAsString(opts, OPT_trace, &optstring) == 0) {
+	extern char rxi_tracename[80];
+	strcpy(rxi_tracename, optstring);
+	free(optstring);
+	optstring = NULL;
+    }
+
+    /* general server options */
+
+    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
+
+    if (cmd_OptionAsString(opts, OPT_auditiface, &interface) == 0) {
+	if (osi_audit_interface(interface)) {
+	    printf("Invalid audit interface '%s'\n", interface);
+	    return -1;
+	}
+	free(interface);
+    }
+
+    cmd_OptionAsString(opts, OPT_config, &configDir);
+    cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
+    cmd_OptionAsString(opts, OPT_database, &vl_dbaseName);
+    cmd_OptionAsString(opts, OPT_logfile, &logFile);
+
+    if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
+	if (lwps > MAXLWP) {
+	     printf("Warning: '-p %d' is too big; using %d instead\n",
+		    lwps, MAXLWP);
+	     lwps = MAXLWP;
 	}
     }
+#ifndef AFS_NT40_ENV
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
+        serverLogSyslog = 1;
+        cmd_OptionAsInt(opts, OPT_syslog, &serverLogSyslogFacility);
+    }
+#endif
+
+    /* rx options */
+    if (cmd_OptionPresent(opts, OPT_peer))
+	rx_enablePeerRPCStats();
+    if (cmd_OptionPresent(opts, OPT_process))
+	rx_enableProcessRPCStats();
+    if (cmd_OptionPresent(opts, OPT_nojumbo))
+	rxJumbograms = 0;
+    if (cmd_OptionPresent(opts, OPT_jumbo))
+	rxJumbograms = 1;
+
+    cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
+
+    if (cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU) == 0) {
+	if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
+	    (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+	    printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
+		   rxMaxMTU, RX_MIN_PACKET_SIZE,
+		   RX_MAX_PACKET_DATA_SIZE);
+	    return -1;
+	}
+    }
+
+    /* rxkad options */
+    cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
 
     if (auditFileName) {
 	osi_audit_file(auditFileName);

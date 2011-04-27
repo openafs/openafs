@@ -75,6 +75,7 @@ VLSERVER_EXEOBJS =\
 	$(OUT)\vlserver.res
 
 VLSERVER_EXECLIBS = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
