@@ -124,6 +124,7 @@
 #include <rx/rxstat.h>
 #include <lock.h>
 #include <ubik.h>
+#include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/keys.h>
@@ -146,7 +147,6 @@ extern afs_int32 depthsg;
 
 char *pr_realmName;
 
-int debuglevel = 0;
 int restricted = 0;
 int rxMaxMTU = -1;
 int rxBind = 0;
@@ -191,6 +191,25 @@ pr_rxstat_userok(struct rx_call *call)
     return afsconf_SuperUser(prdir, call, NULL);
 }
 
+enum optionsList {
+    OPT_database,
+    OPT_access,
+    OPT_groupdepth,
+    OPT_restricted,
+    OPT_auditlog,
+    OPT_auditiface,
+    OPT_config,
+    OPT_debug,
+    OPT_logfile,
+    OPT_threads,
+    OPT_syslog,
+    OPT_peer,
+    OPT_process,
+    OPT_rxbind,
+    OPT_rxmaxmtu,
+    OPT_dotted
+};
+
 int
 main(int argc, char **argv)
 {
@@ -204,16 +223,16 @@ main(int argc, char **argv)
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = htonl(INADDR_ANY);
+    struct cmd_syndesc *opts;
+    struct cmd_item *list;
 
-    const char *pr_dbaseName;
-    const char *configDir;
-    const char *logFile;
+    char *pr_dbaseName;
+    char *configDir;
+    char *logFile;
     char *whoami = "ptserver";
 
-    int a;
-    char arg[100];
-
     char *auditFileName = NULL;
+    char *interface = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -243,9 +262,9 @@ main(int argc, char **argv)
 	exit(2);
     }
 
-    pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
-    configDir = AFSDIR_SERVER_ETC_DIRPATH;
-    logFile = AFSDIR_SERVER_PTLOG_FILEPATH;
+    pr_dbaseName = strdup(AFSDIR_SERVER_PRDB_FILEPATH);
+    configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
+    logFile = strdup(AFSDIR_SERVER_PTLOG_FILEPATH);
 
 #if defined(SUPERGROUPS)
     /* make sure the structures for database records are the same size */
@@ -261,130 +280,135 @@ main(int argc, char **argv)
     }
 #endif
 
-    for (a = 1; a < argc; a++) {
-	int alen;
-	lcstring(arg, argv[a], sizeof(arg));
-	alen = strlen(arg);
-	if (strcmp(argv[a], "-d") == 0) {
-	    if ((a + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n");
-		return -1;
-	    }
-	    debuglevel = atoi(argv[++a]);
-	    LogLevel = debuglevel;
-	} else if ((strncmp(arg, "-database", alen) == 0)
-	    || (strncmp(arg, "-db", alen) == 0)) {
-	    pr_dbaseName = argv[++a];	/* specify a database */
-	} else if (strncmp(arg, "-p", alen) == 0) {
-	    lwps = atoi(argv[++a]);
-	    if (lwps > 16) {	/* maximum of 16 */
-		printf("Warning: '-p %d' is too big; using %d instead\n",
-		       lwps, 16);
-		lwps = 16;
-	    } else if (lwps < 3) {	/* minimum of 3 */
-		printf("Warning: '-p %d' is too small; using %d instead\n",
-		       lwps, 3);
-		lwps = 3;
-	    }
+    cmd_DisableAbbreviations();
+    cmd_DisablePositionalCommands();
+    opts = cmd_CreateSyntax(NULL, NULL, NULL, NULL);
+
+/* ptserver specific options */
+    cmd_AddParmAtOffset(opts, OPT_database, "-database", CMD_SINGLE,
+		        CMD_OPTIONAL, "database file");
+    cmd_AddParmAlias(opts, OPT_database, "db");
+
+    cmd_AddParmAtOffset(opts, OPT_access, "-default_access", CMD_SINGLE,
+		        CMD_OPTIONAL, "default access flags for new entries");
 #if defined(SUPERGROUPS)
-	} else if ((strncmp(arg, "-groupdepth", alen) == 0)
-		 || (strncmp(arg, "-depth", alen) == 0)) {
-	    depthsg = atoi(argv[++a]);	/* Max search depth for supergroups */
+    cmd_AddParmAtOffset(opts, OPT_groupdepth, "-groupdepth", CMD_SINGLE,
+		        CMD_OPTIONAL, "max search depth for supergroups");
+    cmd_AddParmAlias(opts, OPT_groupdepth, "depth");
 #endif
-	} else if (strncmp(arg, "-default_access", alen) == 0) {
-	    prp_user_default = prp_access_mask(argv[++a]);
-	    prp_group_default = prp_access_mask(argv[++a]);
-	}
-	else if (strncmp(arg, "-restricted", alen) == 0) {
-	    restricted = 1;
-	}
-	else if (strncmp(arg, "-rxbind", alen) == 0) {
-	    rxBind = 1;
-	}
-	else if (strncmp(arg, "-allow-dotted-principals", alen) == 0) {
-	    rxkadDisableDotCheck = 1;
-	}
-	else if (strncmp(arg, "-enable_peer_stats", alen) == 0) {
-	    rx_enablePeerRPCStats();
-	} else if (strncmp(arg, "-enable_process_stats", alen) == 0) {
-	    rx_enableProcessRPCStats();
-	}
-#ifndef AFS_NT40_ENV
-	else if (strncmp(arg, "-syslog", alen) == 0) {
-	    /* set syslog logging flag */
-	    serverLogSyslog = 1;
-	} else if (strncmp(arg, "-syslog=", MIN(8, alen)) == 0) {
-	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(arg + 8);
-	}
-#endif
-	else if (strncmp(arg, "-auditlog", alen) == 0) {
-	    auditFileName = argv[++a];
+    cmd_AddParmAtOffset(opts, OPT_restricted, "-restricted", CMD_FLAG,
+		        CMD_OPTIONAL, "enable restricted mode");
 
-	} else if (strncmp(arg, "-audit-interface", alen) == 0) {
-	    char *interface = argv[++a];
-	    if (osi_audit_interface(interface)) {
-		printf("Invalid audit interface '%s'\n", interface);
-		PT_EXIT(1);
-	    }
-	}
-	else if (!strncmp(arg, "-rxmaxmtu", alen)) {
-	    if ((a + 1) >= argc) {
-		fprintf(stderr, "missing argument for -rxmaxmtu\n");
-		PT_EXIT(1);
-	    }
-	    rxMaxMTU = atoi(argv[++a]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-		 (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-			rxMaxMTU, RX_MIN_PACKET_SIZE,
-			RX_MAX_PACKET_DATA_SIZE);
-		PT_EXIT(1);
-	    }
-	} else if (!strncmp(arg, "-config", alen)) {
-	    if ((a + 1) > argc) {
-		fprintf(stderr, "missing argument for -config\n");
-		PT_EXIT(1);
-	    }
-	    configDir = argv[++a];
-	} else if (!strncmp(arg, "-logfile", alen)) {
-	    if ((a + 1) > argc) {
-		fprintf(stderr, "missing argument for -logfile\n");
-		PT_EXIT(1);
-	    }
-	    logFile = argv[++a];
-	}
-	else if (*arg == '-') {
-	    /* hack in help flag support */
-	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
-		   "[-audit-interface <file|sysvmq> (default is file)] "
-		   "[-config <config directory path>] "
-		   "[-logfile <log file path>] ");
-#ifndef AFS_NT40_ENV
-	    printf("[-syslog[=FACILITY]] ");
+    /* general server options */
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
+		 	CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditiface, "-audit-interface", CMD_SINGLE,
+		        CMD_OPTIONAL, "interface to use for audit logging");
+    cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
+		        CMD_OPTIONAL, "configuration location");
+    cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE,
+		        CMD_OPTIONAL, "debug level");
+    cmd_AddParmAtOffset(opts, OPT_logfile, "-logfile", CMD_SINGLE,
+		        CMD_OPTIONAL, "location of logfile");
+    cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of threads");
+#if !defined(AFS_NT40_ENV)
+    cmd_AddParmAtOffset(opts, OPT_syslog, "-syslog", CMD_SINGLE_OR_FLAG, 
+		        CMD_OPTIONAL, "log to syslog");
 #endif
-	    printf("[-d <debug level>] "
-		   "[-p <number of processes>] [-rebuild] [-rxbind] ");
-#if defined(SUPERGROUPS)
-	    printf("[-groupdepth <depth>] ");
-#endif
-	    printf("[-restricted] [-rxmaxmtu <bytes>] "
-		   "[-allow-dotted-principals] ");
-#ifndef AFS_NT40_ENV
-	    printf("[-enable_peer_stats] [-enable_process_stats] ");
-#endif
-	    printf("[-default_access default_user_access default_group_access] "
-		   "[-help]\n");
 
-	    fflush(stdout);
+    /* rx options */
+    cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX transport statistics");
+    cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
+		        CMD_OPTIONAL, "enable RX RPC statistics");
+    cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG,
+		        CMD_OPTIONAL, "bind only to the primary interface");
+    cmd_AddParmAtOffset(opts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+		        CMD_OPTIONAL, "maximum MTU for RX");
 
+    /* rxkad options */
+    cmd_AddParmAtOffset(opts, OPT_dotted, "-allow-dotted-principals",
+		        CMD_FLAG, CMD_OPTIONAL,
+		        "permit Kerberos 5 principals with dots");
+
+    code = cmd_Parse(argc, argv, &opts);
+    if (code)
+	PT_EXIT(1);
+
+    if (cmd_OptionAsList(opts, OPT_access, &list) == 0) {
+	prp_user_default = prp_access_mask(list->data);
+	if (list->next == NULL || list->next->data == NULL) {
+	    fprintf(stderr, "Missing second argument for -default_access\n");
 	    PT_EXIT(1);
 	}
-	else {
-	    fprintf(stderr, "Unrecognized arg: '%s' ignored!\n", arg);
+	prp_group_default = prp_access_mask(list->next->data);
+    }
+
+#if defined(SUPERGROUPS)
+    cmd_OptionAsInt(opts, OPT_groupdepth, &depthsg);
+#endif
+
+    cmd_OptionAsFlag(opts, OPT_restricted, &restricted);
+
+    /* general server options */
+    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
+
+    if (cmd_OptionAsString(opts, OPT_auditiface, &interface) == 0) {
+	if (osi_audit_interface(interface)) {
+	    printf("Invalid audit interface '%s'\n", interface);
+	    PT_EXIT(1);
+	}
+	free(interface);
+    }
+
+    cmd_OptionAsString(opts, OPT_config, &configDir);
+    cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
+    cmd_OptionAsString(opts, OPT_database, &pr_dbaseName);
+    cmd_OptionAsString(opts, OPT_logfile, &logFile);
+
+    if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
+	if (lwps > 16) {	/* maximum of 16 */
+	    printf("Warning: '-p %d' is too big; using %d instead\n",
+		   lwps, 16);
+	    lwps = 16;
+	} else if (lwps < 3) {	/* minimum of 3 */
+	    printf("Warning: '-p %d' is too small; using %d instead\n",
+		   lwps, 3);
+	    lwps = 3;
 	}
     }
+
+#ifndef AFS_NT40_ENV
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
+	serverLogSyslog = 1;
+	cmd_OptionAsInt(opts, OPT_syslog, &serverLogSyslogFacility);
+    }
+#endif
+
+    /* rx options */
+    if (cmd_OptionPresent(opts, OPT_peer))
+	rx_enablePeerRPCStats();
+
+    if (cmd_OptionPresent(opts, OPT_process))
+	rx_enableProcessRPCStats();
+
+    cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
+
+    if (cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU) == 0) {
+	if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
+	    (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
+	    printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
+		   rxMaxMTU, RX_MIN_PACKET_SIZE,
+		   RX_MAX_PACKET_DATA_SIZE);
+	    PT_EXIT(1);
+	}
+    }
+
+    /* rxkad options */
+    cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
+
+    cmd_FreeOptions(&opts);
 
     if (auditFileName) {
 	osi_audit_file(auditFileName);

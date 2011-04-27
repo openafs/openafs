@@ -57,6 +57,7 @@ PTSERVER_EXEOBJS =\
 
 
 PTSERVER_EXELIBS =\
+	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
