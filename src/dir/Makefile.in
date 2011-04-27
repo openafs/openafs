@@ -35,7 +35,7 @@ libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 test: 
 	cd test; $(MAKE)
 
-buffer.o: buffer.c
+buffer.o: buffer.c dir.h
 
 dir.o: dir.c dir.h
 

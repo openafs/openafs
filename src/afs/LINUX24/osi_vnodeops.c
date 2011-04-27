@@ -300,9 +300,10 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (!dirpos)
 	    break;
 
-	de = afs_dir_GetBlob(tdc, dirpos);
-	if (!de)
+	code = afs_dir_GetBlob(tdc, dirpos, &entry);
+	if (code)
 	    break;
+	de = (struct DirEntry *)entry.data;
 
 	ino = afs_calc_inum (avc->f.fid.Fid.Volume, ntohl(de->fid.vnode));
 

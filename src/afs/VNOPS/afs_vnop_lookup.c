@@ -674,6 +674,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     afs_size_t statSeqNo = 0;	/* Valued of file size to detect races */
     int code;			/* error code */
     long newIndex;		/* new index in the dir */
+    struct DirBuffer entry;	/* Buffer for dir manipulation */
     struct DirEntry *dirEntryp;	/* dir entry we are examining */
     int i;
     struct VenusFid afid;	/* file ID we are using now */
@@ -792,14 +793,14 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	dirCookie = newIndex << 5;
 
 	/* get a ptr to the dir entry */
-	dirEntryp =
-	    (struct DirEntry *)afs_dir_GetBlob(dcp, newIndex);
-	if (!dirEntryp)
+	code = afs_dir_GetBlob(dcp, newIndex, &entry);
+	if (code)
 	    break;
+	dirEntryp = (struct DirEntry *)entry.data;
 
 	/* dont copy more than we have room for */
 	if (fidIndex >= nentries) {
-	    DRelease(dirEntryp, 0);
+	    DRelease(&entry, 0);
 	    break;
 	}
 
@@ -852,7 +853,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    }
 	    if (!tvcp)
 	    {
-		DRelease(dirEntryp, 0);
+		DRelease(&entry, 0);
 		ReleaseReadLock(&dcp->lock);
 		ReleaseReadLock(&adp->lock);
 		afs_PutDCache(dcp);
@@ -911,7 +912,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * used by this dir entry.
 	 */
 	temp = afs_dir_NameBlobs(dirEntryp->name) << 5;
-	DRelease(dirEntryp, 0);
+	DRelease(&entry, 0);
 	if (temp <= 0)
 	    break;
 	dirCookie += temp;

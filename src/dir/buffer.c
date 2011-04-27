@@ -148,11 +148,13 @@ DInit(int abuffers)
  * @return pointer to requested page in directory cache
  *    @retval NULL read failed
  */
-void *
-DRead(afs_int32 *fid, int page)
+int
+DRead(afs_int32 *fid, int page, struct DirBuffer *entry)
 {
     /* Read a page from the disk. */
     struct buffer *tb, *tb2, **bufhead;
+
+    memset(entry, 0, sizeof(struct DirBuffer));
 
     ObtainWriteLock(&afs_bufferLock);
     calls++;
@@ -174,7 +176,9 @@ DRead(afs_int32 *fid, int page)
 	    ReleaseWriteLock(&afs_bufferLock);
 	    tb->accesstime = ++timecounter;
 	    ReleaseWriteLock(&tb->lock);
-	    return tb->data;
+	    entry->buffer = tb;
+	    entry->data = tb->data;
+	    return 0;
 	} else {
 	    bufhead = &(phTable[pHash(fid)]);
 	    while ((tb2 = tb->hashNext)) {
@@ -185,7 +189,9 @@ DRead(afs_int32 *fid, int page)
 		    ReleaseWriteLock(&afs_bufferLock);
 		    tb2->accesstime = ++timecounter;
 		    ReleaseWriteLock(&tb2->lock);
-		    return tb2->data;
+		    entry->buffer = tb2;
+		    entry->data = tb2->data;
+		    return 0;
 		}
 		if ((tb = tb2->hashNext)) {	/* ASSIGNMENT HERE! */
 		    if (bufmatch(tb)) {
@@ -195,7 +201,8 @@ DRead(afs_int32 *fid, int page)
 			ReleaseWriteLock(&afs_bufferLock);
 			tb->accesstime = ++timecounter;
 			ReleaseWriteLock(&tb->lock);
-			return tb->data;
+			entry->buffer = tb;
+			entry->data = tb->data;
 		    }
 		} else
 		    break;
@@ -218,14 +225,17 @@ DRead(afs_int32 *fid, int page)
 	tb->lockers--;
 	FidZap(tb->fid);	/* disaster */
 	ReleaseWriteLock(&tb->lock);
-	return 0;
+	return EIO;
     }
     /* Note that findslot sets the page field in the buffer equal to
      * what it is searching for.
      */
     ReleaseWriteLock(&tb->lock);
-    return tb->data;
+    entry->buffer = tb;
+    entry->data = tb->data;
+    return 0;
 }
+
 
 static int
 FixupBucket(struct buffer *ap)
@@ -307,15 +317,13 @@ newslot(afs_int32 *afid, afs_int32 apage, struct buffer *lp)
 /* Release a buffer, specifying whether or not the buffer has been modified
  * by the locker. */
 void
-DRelease(void *loc, int flag)
+DRelease(struct DirBuffer *entry, int flag)
 {
-    struct buffer *bp = (struct buffer *)loc;
-    int index;
+    struct buffer *bp;
 
-    if (!bp)
+    bp = (struct buffer *) entry->buffer;
+    if (bp == NULL)
 	return;
-    index = ((char *)bp - BufferData) >> LOGPS;
-    bp = Buffers[index];
     ObtainWriteLock(&bp->lock);
     bp->lockers--;
     if (flag)
@@ -323,18 +331,14 @@ DRelease(void *loc, int flag)
     ReleaseWriteLock(&bp->lock);
 }
 
+/* Return the byte within a file represented by a buffer pointer. */
 int
-DVOffset(void *ap)
+DVOffset(struct DirBuffer *entry)
 {
-    /* Return the byte within a file represented by a buffer pointer. */
-    struct buffer *bp = ap;
-    int index;
+    struct buffer *bp;
 
-    index = ((char *)bp - BufferData) >> LOGPS;
-    if (index < 0 || index >= nbuffers)
-	return -1;
-    bp = Buffers[index];
-    return BUFFER_PAGE_SIZE * bp->page + (char *)ap - (char *)bp->data;
+    bp = entry->buffer;
+    return BUFFER_PAGE_SIZE * bp->page + (char *)entry->data - (char *)bp->data;
 }
 
 void
@@ -435,21 +439,28 @@ DFlush(void)
     return rcode;
 }
 
-void *
-DNew(afs_int32 *fid, int page)
+/* Same as read, only do *not* even try to read the page,
+ * since it probably doesn't exist.
+ */
+int
+DNew(afs_int32 *fid, int page, struct DirBuffer *entry)
 {
-    /* Same as read, only do *not* even try to read the page,
-     * since it probably doesn't exist.
-     */
     struct buffer *tb;
+
+    memset(entry,0, sizeof(struct DirBuffer));
+
     ObtainWriteLock(&afs_bufferLock);
     if ((tb = newslot(fid, page, 0)) == 0) {
 	ReleaseWriteLock(&afs_bufferLock);
-	return 0;
+	return EIO;
     }
     ObtainWriteLock(&tb->lock);
     tb->lockers++;
     ReleaseWriteLock(&afs_bufferLock);
     ReleaseWriteLock(&tb->lock);
-    return tb->data;
+
+    entry->buffer = tb;
+    entry->data = tb->data;
+
+    return 0;
 }

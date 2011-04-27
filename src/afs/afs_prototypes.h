@@ -26,13 +26,14 @@ extern void afs_FreeAllAxs(struct axscache **headp);
 extern void shutdown_xscache(void);
 
 /* afs_buffer.c */
+struct DirBuffer;
 extern void DInit(int abuffers);
-extern void *DRead(struct dcache * fid, int page);
-extern int DVOffset(void *ap);
+extern int DRead(struct dcache * fid, int page, struct DirBuffer *);
+extern int DVOffset(struct DirBuffer *);
 extern void DZap(struct dcache * fid);
 extern void DFlush(void);
 extern void DFlushDCache(struct dcache *);
-extern void *DNew(struct dcache * fid, int page);
+extern int DNew(struct dcache * fid, int page, struct DirBuffer *);
 extern void shutdown_bufferpackage(void);
 
 /* afs_call.c */

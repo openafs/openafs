@@ -39,6 +39,11 @@ struct PageHeader {
     char padding[32 - (5 + EPP / 8)];
 };
 
+struct DirBuffer {
+    void *buffer;
+    void *data;
+};
+
 struct DirHeader {
     /* A directory header object. */
     struct PageHeader header;
@@ -77,7 +82,7 @@ struct DirPage1 {
  * user space code.  One implementation is in afs/afs_buffer.c; the
  * other is in dir/buffer.c.
  */
-extern int DVOffset(void *ap);
+extern int DVOffset(struct DirBuffer *);
 
 
 /* This is private to buffer.c */
@@ -99,12 +104,11 @@ extern int EnumerateDir(void *dir,
 					 afs_int32 vnode, afs_int32 unique),
 			void *hook);
 extern int IsEmpty(void *dir);
-extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
+extern int GetBlob(void *dir, afs_int32 blobno, struct DirBuffer *);
 extern int DirHash(char *string);
 
 extern int DStat(int *abuffers, int *acalls, int *aios);
-extern void DRelease(void *loc, int flag);
-extern int DVOffset(void *ap);
+extern void DRelease(struct DirBuffer *loc, int flag);
 extern int DFlushVolume(afs_int32 vid);
 extern int DFlushEntry(afs_int32 *fid);
 extern int InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique,
@@ -114,9 +118,9 @@ extern int InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique,
    in afs_prototypes.h */
 #ifndef KERNEL
 extern int DInit(int abuffers);
-extern void *DRead(afs_int32 *fid, int page);
+extern int DRead(afs_int32 *fid, int page, struct DirBuffer *);
 extern int DFlush(void);
-extern void *DNew(afs_int32 *fid, int page);
+extern int DNew(afs_int32 *fid, int page, struct DirBuffer *);
 extern void DZap(afs_int32 *fid);
 
 /* salvage.c */
@@ -144,7 +148,7 @@ extern int afs_dir_EnumerateDir(void *dir,
 extern int afs_dir_IsEmpty(void *dir);
 extern int afs_dir_ChangeFid(void *dir, char *entry, afs_uint32 *old_fid,
                		     afs_uint32 *new_fid);
-extern struct DirEntry *afs_dir_GetBlob(void *dir, afs_int32 blobno);
+extern int afs_dir_GetBlob(void *dir, afs_int32 blobno, struct DirBuffer *);
 #endif
 
 #endif /*       !defined(__AFS_DIR_H) */

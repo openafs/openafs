@@ -75,6 +75,7 @@ DirOK(void *file)
     struct DirHeader *dhp;
     struct PageHeader *pp;
     struct DirEntry *ep;
+    struct DirBuffer headerbuf, pagebuf, entrybuf;
     int i, j, k, up;
     int havedot = 0, havedotdot = 0;
     int usedPages, count, entry;
@@ -82,12 +83,13 @@ DirOK(void *file)
     int eaSize;
     afs_int32 entcount, maxents;
     unsigned short ne;
+    int code;
 
     eaSize = BIGMAXPAGES * EPP / 8;
 
     /* Read the directory header */
-    dhp = (struct DirHeader *)DRead(file, 0);
-    if (!dhp) {
+    code = DRead(file,0, &headerbuf);
+    if (code) {
 	/* if DErrno is 0, then we know that the read worked, but was short,
 	 * and the damage is permanent.  Otherwise, we got an I/O or programming
 	 * error.  Claim the dir is OK, but log something.
@@ -100,11 +102,12 @@ DirOK(void *file)
 	printf("First page in directory does not exist.\n");
 	return 0;
     }
+    dhp = (struct DirHeader *)headerbuf.data;
 
     /* Check magic number for first page */
     if (dhp->header.tag != htons(1234)) {
 	printf("Bad first pageheader magic number.\n");
-	DRelease(dhp, 0);
+	DRelease(&headerbuf, 0);
 	return 0;
     }
 
@@ -125,13 +128,13 @@ DirOK(void *file)
 		 * two must exist for "." and ".."
 		 */
 		printf("The dir header alloc map for page %d is bad.\n", i);
-		DRelease(dhp, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 	} else {
 	    if ((j < 0) || (j > EPP)) {
 		printf("The dir header alloc map for page %d is bad.\n", i);
-		DRelease(dhp, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 	}
@@ -142,7 +145,7 @@ DirOK(void *file)
 		printf
 		    ("A partially-full page occurs in slot %d, after the dir end.\n",
 		     i);
-		DRelease(dhp, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 	} else if (j == EPP) {	/* is this the last page */
@@ -160,7 +163,7 @@ DirOK(void *file)
     if (usedPages < up) {
 	printf
 	    ("Count of used directory pages does not match count in directory header\n");
-	DRelease(dhp, 0);
+	DRelease(&headerbuf, 0);
 	return 0;
     }
 
@@ -170,9 +173,9 @@ DirOK(void *file)
      */
     for (i = 0; i < usedPages; i++) {
 	/* Read the page header */
-	pp = (struct PageHeader *)DRead(file, i);
-	if (!pp) {
-	    DRelease(dhp, 0);
+	code = DRead(file, i, &pagebuf);
+	if (code) {
+	    DRelease(&headerbuf, 0);
 	    if (DErrno != 0) {
 		/* couldn't read page, but not because it wasn't there permanently */
 		printf("Failed to read dir page %d (errno %d)\n", i, DErrno);
@@ -182,12 +185,13 @@ DirOK(void *file)
 	    printf("Directory shorter than alloMap indicates (page %d)\n", i);
 	    return 0;
 	}
+	pp = (struct PageHeader *)pagebuf.data;
 
 	/* check the tag field */
 	if (pp->tag != htons(1234)) {
 	    printf("Directory page %d has a bad magic number.\n", i);
-	    DRelease(pp, 0);
-	    DRelease(dhp, 0);
+	    DRelease(&pagebuf, 0);
+	    DRelease(&headerbuf, 0);
 	    return 0;
 	}
 
@@ -221,12 +225,12 @@ DirOK(void *file)
 	    printf
 		("Header alloMap count doesn't match count in freebitmap for page %d.\n",
 		 i);
-	    DRelease(pp, 0);
-	    DRelease(dhp, 0);
+	    DRelease(&pagebuf, 0);
+	    DRelease(&headerbuf, 0);
 	    return 0;
 	}
 
-	DRelease(pp, 0);
+	DRelease(&pagebuf, 0);
     }
 
     /* Initialize the in-memory freebit map for all pages. */
@@ -254,34 +258,36 @@ DirOK(void *file)
 	    /* Verify that the entry is within range */
 	    if (entry < 0 || entry >= maxents) {
 		printf("Out-of-range hash id %d in chain %d.\n", entry, i);
-		DRelease(dhp, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 
 	    /* Read the directory entry */
 	    DErrno = 0;
-	    ep = GetBlob(file, entry);
-	    if (!ep) {
+	    code = GetBlob(file, entry, &entrybuf);
+	    if (code) {
 		if (DErrno != 0) {
 		    /* something went wrong reading the page, but it wasn't
 		     * really something wrong with the dir that we can fix.
 		     */
 		    printf("Could not get dir blob %d (errno %d)\n", entry,
 			   DErrno);
-		    DRelease(dhp, 0);
+		    DRelease(&headerbuf, 0);
 		    Die("dirok3");
 		}
 		printf("Invalid hash id %d in chain %d.\n", entry, i);
-		DRelease(dhp, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
+	    ep = (struct DirEntry *)entrybuf.data;
+
 	    ne = ntohs(ep->next);
 
 	    /* There can't be more than maxents entries */
 	    if (++entcount >= maxents) {
 		printf("Directory's hash chain %d is circular.\n", i);
-		DRelease(ep, 0);
-		DRelease(dhp, 0);
+		DRelease(&entrybuf, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 
@@ -289,8 +295,8 @@ DirOK(void *file)
 	    if (ep->name[0] == '\000') {
 		printf("Dir entry %"AFS_PTR_FMT
 		       " in chain %d has bogus (null) name.\n", ep, i);
-		DRelease(ep, 0);
-		DRelease(dhp, 0);
+		DRelease(&entrybuf, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 
@@ -298,8 +304,8 @@ DirOK(void *file)
 	    if (ep->flag != FFIRST) {
 		printf("Dir entry %"AFS_PTR_FMT
 		       " in chain %d has bogus flag field.\n", ep, i);
-		DRelease(ep, 0);
-		DRelease(dhp, 0);
+		DRelease(&entrybuf, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 
@@ -308,8 +314,8 @@ DirOK(void *file)
 	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
 		printf("Dir entry %"AFS_PTR_FMT
 		       " in chain %d has too-long name.\n", ep, i);
-		DRelease(ep, 0);
-		DRelease(dhp, 0);
+		DRelease(&entrybuf, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 
@@ -326,8 +332,8 @@ DirOK(void *file)
 		printf("Dir entry %"AFS_PTR_FMT
 		       " should be in hash bucket %d but IS in %d.\n",
 		       ep, j, i);
-		DRelease(ep, 0);
-		DRelease(dhp, 0);
+		DRelease(&entrybuf, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 
@@ -340,8 +346,8 @@ DirOK(void *file)
 			("Dir entry %"AFS_PTR_FMT
 			 ", index 13 has name '%s' should be '.'\n",
 			 ep, ep->name);
-		    DRelease(ep, 0);
-		    DRelease(dhp, 0);
+		    DRelease(&entrybuf, 0);
+		    DRelease(&headerbuf, 0);
 		    return 0;
 		}
 	    }
@@ -355,15 +361,15 @@ DirOK(void *file)
 			("Dir entry %"AFS_PTR_FMT
 			 ", index 14 has name '%s' should be '..'\n",
 			 ep, ep->name);
-		    DRelease(ep, 0);
-		    DRelease(dhp, 0);
+		    DRelease(&entrybuf, 0);
+		    DRelease(&headerbuf, 0);
 		    return 0;
 		}
 	    }
 
 	    /* CHECK FOR DUPLICATE NAMES? */
 
-	    DRelease(ep, 0);
+	    DRelease(&entrybuf, 0);
 	}
     }
 
@@ -371,7 +377,7 @@ DirOK(void *file)
     if (!havedot || !havedotdot) {
 	printf
 	    ("Directory entry '.' or '..' does not exist or is in the wrong index.\n");
-	DRelease(dhp, 0);
+	DRelease(&headerbuf, 0);
 	return 0;
     }
 
@@ -380,12 +386,12 @@ DirOK(void *file)
      * Note that if this matches, alloMap has already been checked against it.
      */
     for (i = 0; i < usedPages; i++) {
-	pp = DRead(file, i);
-	if (!pp) {
+	code = DRead(file, i, &pagebuf);
+	if (code) {
 	    printf
 		("Failed on second attempt to read dir page %d (errno %d)\n",
 		 i, DErrno);
-	    DRelease(dhp, 0);
+	    DRelease(&headerbuf, 0);
 	    /* if DErrno is 0, then the dir is really bad, and we return dir *not* OK.
 	     * otherwise, we want to return true (1), meaning the dir isn't known
 	     * to be bad (we can't tell, since I/Os are failing.
@@ -395,6 +401,7 @@ DirOK(void *file)
 	    else
 		return 0;	/* dir is really shorter */
 	}
+	pp = (struct PageHeader *)pagebuf.data;
 
 	count = i * (EPP / 8);
 	for (j = 0; j < EPP / 8; j++) {
@@ -402,17 +409,17 @@ DirOK(void *file)
 		printf
 		    ("Entry freebitmap error, page %d, map offset %d, %x should be %x.\n",
 		     i, j, pp->freebitmap[j], eaMap[count + j]);
-		DRelease(pp, 0);
-		DRelease(dhp, 0);
+		DRelease(&pagebuf, 0);
+		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 	}
 
-	DRelease(pp, 0);
+	DRelease(&pagebuf, 0);
     }
 
     /* Finally cleanup and return. */
-    DRelease(dhp, 0);
+    DRelease(&headerbuf, 0);
     return 1;
 }
 
@@ -438,6 +445,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     char tname[256];
     int i;
     char *tp;
+    struct DirBuffer headerbuf, entrybuf;
     struct DirHeader *dhp;
     struct DirEntry *ep;
     int entry;
@@ -454,8 +462,8 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     /* Find out how many pages are valid, using stupid heuristic since DRead
      * never returns null.
      */
-    dhp = (struct DirHeader *)DRead(fromFile, 0);
-    if (!dhp) {
+    code = DRead(fromFile, 0, &headerbuf);
+    if (code) {
 	printf("Failed to read first page of fromDir!\n");
 	/* if DErrno != 0, then our call failed and we should let our
 	 * caller know that there's something wrong with the new dir.  If not,
@@ -463,6 +471,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	 */
 	return DErrno;
     }
+    dhp = (struct DirHeader *)headerbuf.data;
 
     usedPages = ComputeUsedPages(dhp);
 
@@ -477,20 +486,23 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 		    ("Warning: bogus hash table entry encountered, ignoring.\n");
 		break;
 	    }
+
 	    DErrno = 0;
-	    ep = GetBlob(fromFile, entry);
-	    if (!ep) {
+	    code = GetBlob(fromFile, entry, &entrybuf);
+	    if (code) {
 		if (DErrno) {
 		    printf
 			("can't continue down hash chain (entry %d, errno %d)\n",
 			 entry, DErrno);
-		    DRelease(dhp, 0);
+		    DRelease(&headerbuf, 0);
 		    return DErrno;
 		}
 		printf
 		    ("Warning: bogus hash chain encountered, switching to next.\n");
 		break;
 	    }
+	    ep = (struct DirEntry *)entrybuf.data;
+
 	    strncpy(tname, ep->name, MAXENAME);
 	    tname[MAXENAME - 1] = '\000';	/* just in case */
 	    tp = tname;
@@ -505,15 +517,15 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 		    printf
 			("Create of %s returned code %d, skipping to next hash chain.\n",
 			 tname, code);
-		    DRelease(ep, 0);
+		    DRelease(&entrybuf, 0);
 		    break;
 		}
 	    }
-	    DRelease(ep, 0);
+	    DRelease(&entrybuf, 0);
 	}
     }
 
     /* Clean up things. */
-    DRelease(dhp, 0);
+    DRelease(&headerbuf, 0);
     return 0;
 }

@@ -66,15 +66,19 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
     afs_int32 relativeBlob;
     afs_int32 pageBlob;
     struct PageHeader *tpe;
+    struct DirBuffer headerbuf;
     afs_int32 i;
+    int code;
 
     AFS_STATCNT(BlobScan);
     /* advance ablob over free and header blobs */
     while (1) {
 	pageBlob = ablob & ~(EPP - 1);	/* base blob in same page */
-	tpe = (struct PageHeader *)afs_dir_GetBlob(afile, pageBlob);
-	if (!tpe)
-	    return 0;		/* we've past the end */
+	code = afs_dir_GetBlob(afile, pageBlob, &headerbuf);
+	if (code)
+	    return 0;
+	tpe = (struct PageHeader *)headerbuf.data;
+
 	relativeBlob = ablob - pageBlob;	/* relative to page's first blob */
 	/* first watch for headers */
 	if (pageBlob == 0) {	/* first dir page has extra-big header */
@@ -92,7 +96,7 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
 	}
 	/* now relativeBlob is the page-relative first allocated blob,
 	 * or EPP (if there are none in this page). */
-	DRelease(tpe, 0);
+	DRelease(&headerbuf, 0);
 	if (i != EPP)
 	    return i + pageBlob;
 	ablob = pageBlob + EPP;	/* go around again */
@@ -597,6 +601,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     afs_size_t origOffset, tlen;
     afs_int32 len;
     int code = 0;
+    struct DirBuffer oldEntry, nextEntry;
     struct DirEntry *ode = 0, *nde = 0;
     int o_slen = 0, n_slen = 0;
     afs_uint32 us;
@@ -624,6 +629,9 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
      * the null byte.  Followed by null-terminated string.
      */
     AFS_STATCNT(afs_readdir);
+
+    memset(&oldEntry, 0, sizeof(struct DirBuffer));
+    memset(&nextEntry, 0, sizeof(struct DirBuffer));
 
 #if defined(AFS_SGI53_ENV)
 #ifdef AFS_SGI61_ENV
@@ -743,7 +751,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
 	if (!(us = BlobScan(tdc, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(tdc, us))) {
+	    || (afs_dir_GetBlob(tdc, us, &nextEntry) != 0)) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */
@@ -794,11 +802,11 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	    if (eofp)
 		*eofp = 1;	/* Set it properly */
 #endif
-	    if (ode)
-		DRelease(ode, 0);
+	    DRelease(&oldEntry, 0);
 	    goto dirend;
 	}
-	/* by here nde is set */
+	nde = (struct DirEntry *)nextEntry.data;
+	
 	/* Do we have enough user space to carry out our mission? */
 #if defined(AFS_SGI_ENV)
 	n_slen = strlen(nde->name) + 1;	/* NULL terminate */
@@ -813,7 +821,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	if (DIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
 #endif /* AFS_SGI53_ENV */
 	    /* No can do no more now; ya know... at this time */
-	    DRelease(nde, 0);	/* can't use this one. */
+	    DRelease(&nextEntry, 0);	/* can't use this one. */
 	    if (len) {
 #ifdef	AFS_HPUX_ENV
 		sdirEntry->d_fileno =
@@ -862,8 +870,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 		 */
 		code = EINVAL;
 	    }
-	    if (ode)
-		DRelease(ode, 0);
+	    DRelease(&oldEntry, 0);
 	    goto dirend;
 	}
 
@@ -912,13 +919,13 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 #else
 	len = DIRSIZ_LEN(o_slen = n_slen);
 #endif /* AFS_SGI53_ENV */
-	if (ode)
-	    DRelease(ode, 0);
+	
+	DRelease(&oldEntry, 0);
 	ode = nde;
 	AFS_UIO_SETOFFSET(auio, (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5));
     }
-    if (ode)
-	DRelease(ode, 0);
+    
+    DRelease(&oldEntry, 0);
 
   dirend:
     ReleaseReadLock(&tdc->lock);
@@ -935,233 +942,4 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     return code;
 }
 
-#if defined(AFS_HPUX_ENV)
-int
-afs1_readdir(struct vcache *avc, struct uio *auio, afs_ucred_t *acred)
-{
-    struct vrequest treq;
-    struct dcache *tdc;
-    afs_size_t origOffset, len;
-    int code = 0;
-    struct DirEntry *ode = 0, *nde = 0;
-    int o_slen = 0, n_slen = 0;
-    afs_uint32 us;
-    /*
-     * XXX All the hacks for alloced sdirEntry and inlining of
-     * afs_readdir_move instead of calling it is necessary for hpux due to
-     * stack problems that seem to occur when coming thru the nfs
-     * translator side XXX
-     */
-    struct minnfs_direct *sdirEntry = (struct minnfs_direct *)
-	osi_AllocSmallSpace(sizeof(struct min_direct));
-    afs_int32 rlen;
-
-    struct afs_fakestat_state fakestate;
-
-    AFS_STATCNT(afs_readdir);
-    if (code = afs_InitReq(&treq, acred)) {
-	osi_FreeSmallSpace((char *)sdirEntry);
-	return code;
-    }
-    afs_InitFakeStat(&fakestate);
-    AFS_DISCON_LOCK();
-    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
-    if (code) {
-	osi_FreeSmallSpace((char *)sdirEntry);
-	AFS_DISCON_UNLOCK();
-	afs_PutFakeStat(&fakestate);
-	return code;
-    }
-    /* update the cache entry */
-  tagain:
-    code = afs_VerifyVCache(avc, &treq);
-    if (code)
-	goto done;
-    /* get a reference to the entire directory */
-    tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &len, 1);
-    if (!tdc) {
-	code = ENOENT;
-	goto done;
-    }
-    ObtainReadLock(&avc->lock);
-    ObtainReadLock(&tdc->lock);
-
-    /*
-     * Make sure that the data in the cache is current. There are two
-     * cases we need to worry about:
-     * 1. The cache data is being fetched by another process.
-     * 2. The cache data is no longer valid
-     */
-    while ((avc->f.states & CStatd)
-	   && (tdc->dflags & DFFetching)
-	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
-	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
-		   __FILE__, ICL_TYPE_INT32, __LINE__, ICL_TYPE_POINTER, tdc,
-		   ICL_TYPE_INT32, tdc->dflags);
-	ReleaseReadLock(&tdc->lock);
-	ReleaseReadLock(&avc->lock);
-	afs_osi_Sleep(&tdc->validPos);
-	ObtainReadLock(&avc->lock);
-	ObtainReadLock(&tdc->lock);
-    }
-    if (!(avc->f.states & CStatd)
-	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
-	ReleaseReadLock(&tdc->lock);
-	ReleaseReadLock(&avc->lock);
-	afs_PutDCache(tdc);
-	goto tagain;
-    }
-
-    len = 0;
-    auio->uio_fpflags = 0;
-    while (code == 0) {
-	origOffset = AFS_UIO_OFFSET(auio);
-
-	/* scan for the next interesting entry scan for in-use blob
-	 * otherwise up point at this blob note that ode, if non-zero,
-	 * also represents a held dir page */
-	if (!(us = BlobScan(tdc, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(tdc, us))) {
-	    /* failed to setup nde, return what we've got, and release ode */
-	    if (len) {
-		/* something to hand over. */
-		sdirEntry->d_fileno =
-		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
-		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
-		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
-		sdirEntry->d_namlen = o_slen;
-		sdirEntry->d_off = origOffset;
-		AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ,
-			    auio, code);
-		if (code == 0) {
-		    AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
-		}
-		/* pad out the remaining characters with zeros */
-		if (code == 0) {
-		    AFS_UIOMOVE(bufofzeros,
-				((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen,
-				UIO_READ, auio, code);
-		}
-		/* pad out the difference between rlen and slen... */
-		if (NDIRSIZ_LEN(o_slen) < rlen) {
-		    while (NDIRSIZ_LEN(o_slen) < rlen) {
-			int minLen = rlen - NDIRSIZ_LEN(o_slen);
-			if (minLen > sizeof(bufofzeros))
-			    minLen = sizeof(bufofzeros);
-			AFS_UIOMOVE(bufofzeros, minLen, UIO_READ, auio, code);
-			rlen -= minLen;
-		    }
-		}
-		AFS_UIO_SETRESID(auio, 0);
-	    } else {
-		/* nothin to hand over */
-	    }
-	    if (ode)
-		DRelease(ode, 0);
-	    goto dirend;
-	}
-	/* by here nde is set */
-
-	/* Do we have enough user space to carry out our mission? */
-	n_slen = strlen(nde->name);
-	if (NDIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
-	    /* No can do no more now; ya know... at this time */
-	    DRelease(nde, 0);	/* can't use this one. */
-	    if (len) {
-		sdirEntry->d_fileno =
-		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
-		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
-		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
-		sdirEntry->d_namlen = o_slen;
-		sdirEntry->d_off = origOffset;
-		AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ,
-			    auio, code);
-		if (code == 0)
-		    AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
-		/* pad out the remaining characters with zeros */
-		if (code == 0) {
-		    AFS_UIOMOVE(bufofzeros,
-				((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen,
-				UIO_READ, auio, code);
-		}
-		/* pad out the difference between rlen and slen... */
-		if (NDIRSIZ_LEN(o_slen) < rlen) {
-		    while (NDIRSIZ_LEN(o_slen) < rlen) {
-			int minLen = rlen - NDIRSIZ_LEN(o_slen);
-			if (minLen > sizeof(bufofzeros))
-			    minLen = sizeof(bufofzeros);
-			AFS_UIOMOVE(bufofzeros, minLen, UIO_READ, auio, code);
-			rlen -= minLen;
-		    }
-		}
-		/* this next line used to be AFSVFS40 or AIX 3.1, but is really generic */
-		AFS_UIO_SETOFFSET(auio, origOffset);
-		AFS_UIO_SETRESID(auio, 0);
-	    } else {		/* trouble, can't give anything to the user! */
-		/* even though he has given us a buffer, 
-		 * even though we have something to give us,
-		 * Looks like we lost something somewhere.
-		 */
-		code = EINVAL;
-	    }
-	    if (ode)
-		DRelease(ode, 0);
-	    goto dirend;
-	}
-
-	/*
-	 * In any event, we move out the LAST de entry, getting ready
-	 * to set up for the next one.
-	 */
-	if (len) {
-	    sdirEntry->d_fileno =
-		(avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
-	    FIXUPSTUPIDINODE(sdirEntry->d_fileno);
-	    sdirEntry->d_reclen = rlen = len;
-	    sdirEntry->d_namlen = o_slen;
-	    sdirEntry->d_off = origOffset;
-	    AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ, auio,
-			code);
-	    if (code == 0)
-		AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
-	    /* pad out the remaining characters with zeros */
-	    if (code == 0) {
-		AFS_UIOMOVE(bufofzeros,
-			    ((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen,
-			    UIO_READ, auio, code);
-	    }
-	    /* pad out the difference between rlen and slen... */
-	    if (NDIRSIZ_LEN(o_slen) < rlen) {
-		while (NDIRSIZ_LEN(o_slen) < rlen) {
-		    int minLen = rlen - NDIRSIZ_LEN(o_slen);
-		    if (minLen > sizeof(bufofzeros))
-			minLen = sizeof(bufofzeros);
-		    AFS_UIOMOVE(bufofzeros, minLen, UIO_READ, auio, code);
-		    rlen -= minLen;
-		}
-	    }
-	}
-	len = NDIRSIZ_LEN(o_slen = n_slen);
-	if (ode)
-	    DRelease(ode, 0);
-	ode = nde;
-	AFS_UIO_OFFSET(auio) = ((us + afs_dir_NameBlobs(nde->name)) << 5);
-    }
-    if (ode)
-	DRelease(ode, 0);
-
-  dirend:
-    ReleaseReadLock(&tdc->lock);
-    afs_PutDCache(tdc);
-    ReleaseReadLock(&avc->lock);
-
-  done:
-    osi_FreeSmallSpace((char *)sdirEntry);
-    AFS_DISCON_UNLOCK();
-    afs_PutFakeStat(&fakestate);
-    code = afs_CheckCode(code, &treq, 29);
-    return code;
-}
-
-#endif
 #endif /* !AFS_LINUX20_ENV */
