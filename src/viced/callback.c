@@ -182,7 +182,7 @@ static int FDel(struct FileEntry *fe);
 static int AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead,
 			  int type, int locked);
 static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
-				 struct AFSCBFids *afidp, struct host *xhost);
+				 struct AFSCBFids *afidp);
 static int MultiBreakVolumeCallBack_r(struct host *host,
 				      struct VCBParams *parms, int deletefe);
 static int MultiBreakVolumeLaterCallBack(struct host *host, void *rock);
@@ -655,8 +655,8 @@ CompareCBA(const void *e1, const void *e2)
 }
 
 /* Take an array full of hosts, all held.  Break callbacks to them, and
- * release the holds once you're done, except don't release xhost.  xhost
- * may be NULL.  Currently only works for a single Fid in afidp array.
+ * release the holds once you're done.
+ * Currently only works for a single Fid in afidp array.
  * If you want to make this work with multiple fids, you need to fix
  * the error handling.  One approach would be to force a reset if a
  * multi-fid call fails, or you could add delayed callbacks for each
@@ -674,7 +674,7 @@ CompareCBA(const void *e1, const void *e2)
  * wherever that is done. */
 static void
 MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
-		     struct AFSCBFids *afidp, struct host *xhost)
+		     struct AFSCBFids *afidp)
 {
     int i, j;
     struct rx_connection *conns[MAX_CB_HOSTS];
@@ -761,7 +761,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
     for (i = 0; i < ncbas; i++) {
 	struct host *hp;
 	hp = cba[i].hp;
-	if (hp && xhost != hp) {
+	if (hp) {
 	    h_Release_r(hp);
 	}
     }
@@ -870,7 +870,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 
 	    for (cba2 = cba, num = ncbas; ncbas > 0; cba2 += num, ncbas -= num) {
 		num = (ncbas > MAX_CB_HOSTS) ? MAX_CB_HOSTS : ncbas;
-		MultiBreakCallBack_r(cba2, num, &tf, xhost);
+		MultiBreakCallBack_r(cba2, num, &tf);
 	    }
 	}
 
@@ -1152,7 +1152,7 @@ MultiBreakVolumeCallBack_r(struct host *host,
 	tf.AFSCBFids_val = parms->fid;
 
 	/* this releases all the hosts */
-	MultiBreakCallBack_r(parms->cba, parms->ncbas, &tf, 0 /* xhost */ );
+	MultiBreakCallBack_r(parms->cba, parms->ncbas, &tf);
 
 	parms->ncbas = 0;
     }
@@ -1334,7 +1334,7 @@ BreakLaterCallBacks(void)
 	    tf.AFSCBFids_len = 1;
 	    tf.AFSCBFids_val = &fid;
 
-	    MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf, 0);
+	    MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf);
 	    henumParms.ncbas = 0;
 	}
     }
