@@ -4,5 +4,5 @@ util/queues
 auth/keys
 auth/superuser
 auth/authcon
-cmd/commands
+cmd/command
 ptserver/pt_util
