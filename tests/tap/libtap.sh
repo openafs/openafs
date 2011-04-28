@@ -1,10 +1,31 @@
 # Shell function library for test cases.
 #
+# This file provides a TAP-compatible shell function library useful for
+# writing test cases.  It is part of C TAP Harness, which can be found at
+# <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
+#
 # Written by Russ Allbery <rra@stanford.edu>
 # Copyright 2009, 2010 Russ Allbery <rra@stanford.edu>
-# Copyright 2006, 2007, 2008 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2006, 2007, 2008
+#     The Board of Trustees of the Leland Stanford Junior University
 #
-# See LICENSE for licensing terms.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 
 # Print out the number of test cases we expect to run.
 plan () {
@@ -126,11 +147,23 @@ skip_block () {
     done
 }
 
+# Portable variant of printf '%s\n' "$*".  In the majority of cases, this
+# function is slower than printf, because the latter is often implemented
+# as a builtin command.  The value of the variable IFS is ignored.
+puts () {
+    cat << EOH
+$@
+EOH
+}
+
 # Run a program expected to succeed, and print ok if it does and produces the
 # correct output.  Takes the description, expected exit status, the expected
-# output, the command to run, and then any arguments for that command.  Strip
-# a colon and everything after it off the output if the expected status is
-# non-zero, since this is probably a system-specific error message.
+# output, the command to run, and then any arguments for that command.
+# Standard output and standard error are combined when analyzing the output of
+# the command.
+#
+# If the command may contain system-specific error messages in its output,
+# add strip_colon_error before the command to post-process its output.
 ok_program () {
     local desc w_status w_output output status
     desc="$1"
@@ -141,9 +174,6 @@ ok_program () {
     shift
     output=`"$@" 2>&1`
     status=$?
-    if [ "$w_status" -ne 0 ] ; then
-        output=`echo "$output" | sed 's/^\([^:]*\):.*/\1/'`
-    fi
     if [ $status = $w_status ] && [ x"$output" = x"$w_output" ] ; then
         ok "$desc" true
     else
@@ -151,6 +181,20 @@ ok_program () {
         echo "#  not: ($w_status) $w_output"
         ok "$desc" false
     fi
+}
+
+# Strip a colon and everything after it off the output of a command, as long
+# as that colon comes after at least one whitespace character.  (This is done
+# to avoid stripping the name of the program from the start of an error
+# message.)  This is used to remove system-specific error messages (coming
+# from strerror, for example).
+strip_colon_error() {
+    local output status
+    output=`"$@" 2>&1`
+    status=$?
+    output=`puts "$output" | sed 's/^\([^ ]* [^:]*\):.*/\1/'`
+    puts "$output"
+    return $status
 }
 
 # Bail out with an error message.
@@ -162,4 +206,17 @@ bail () {
 # Output a diagnostic on standard error, preceded by the required # mark.
 diag () {
     echo '#' "$@"
+}
+
+# Search for the given file first in $BUILD and then in $SOURCE and echo the
+# path where the file was found, or the empty string if the file wasn't
+# found.
+test_file_path () {
+    if [ -n "$BUILD" ] && [ -f "$BUILD/$1" ] ; then
+        puts "$BUILD/$1"
+    elif [ -n "$SOURCE" ] && [ -f "$SOURCE/$1" ] ; then
+        puts "$SOURCE/$1"
+    else
+        echo ''
+    fi
 }

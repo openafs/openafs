@@ -3,14 +3,15 @@
  *
  * Usage:
  *
- *      runtests <test-list>
+ *      runtests [-b <build-dir>] [-s <source-dir>] <test-list>
+ *      runtests -o [-b <build-dir>] [-s <source-dir>] <test>
  *
- * Expects a list of executables located in the given file, one line per
- * executable.  For each one, runs it as part of a test suite, reporting
- * results.  Test output should start with a line containing the number of
- * tests (numbered from 1 to this number), optionally preceded by "1..",
- * although that line may be given anywhere in the output.  Each additional
- * line should be in the following format:
+ * In the first case, expects a list of executables located in the given file,
+ * one line per executable.  For each one, runs it as part of a test suite,
+ * reporting results.  Test output should start with a line containing the
+ * number of tests (numbered from 1 to this number), optionally preceded by
+ * "1..", although that line may be given anywhere in the output.  Each
+ * additional line should be in the following format:
  *
  *      ok <number>
  *      not ok <number>
@@ -39,10 +40,21 @@
  * This is a subset of TAP as documented in Test::Harness::TAP or
  * TAP::Parser::Grammar, which comes with Perl.
  *
- * Any bug reports, bug fixes, and improvements are very much welcome and
- * should be sent to the e-mail address below.
+ * If the -o option is given, instead run a single test and display all of its
+ * output.  This is intended for use with failing tests so that the person
+ * running the test suite can get more details about what failed.
  *
- * Copyright 2000, 2001, 2004, 2006, 2007, 2008, 2009, 2010
+ * If built with the C preprocessor symbols SOURCE and BUILD defined, C TAP
+ * Harness will export those values in the environment so that tests can find
+ * the source and build directory and will look for tests under both
+ * directories.  These paths can also be set with the -b and -s command-line
+ * options, which will override anything set at build time.
+ *
+ * Any bug reports, bug fixes, and improvements are very much welcome and
+ * should be sent to the e-mail address below.  This program is part of C TAP
+ * Harness <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
+ *
+ * Copyright 2000, 2001, 2004, 2006, 2007, 2008, 2009, 2010, 2011
  *     Russ Allbery <rra@stanford.edu>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -64,6 +76,11 @@
  * DEALINGS IN THE SOFTWARE.
 */
 
+/* Required for fdopen(), getopt(), and putenv(). */
+#ifndef _XOPEN_SOURCE
+# define _XOPEN_SOURCE 500
+#endif
+
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -71,6 +88,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -133,10 +151,10 @@ struct testset {
     unsigned long skipped;      /* Count of skipped tests (passed). */
     unsigned long allocated;    /* The size of the results table. */
     enum test_status *results;  /* Table of results by test number. */
-    int aborted;                /* Whether the set as aborted. */
+    unsigned int aborted;       /* Whether the set as aborted. */
     int reported;               /* Whether the results were reported. */
     int status;                 /* The exit status of the test. */
-    int all_skipped;            /* Whether all tests were skipped. */
+    unsigned int all_skipped;   /* Whether all tests were skipped. */
     char *reason;               /* Why all tests were skipped. */
 };
 
@@ -145,6 +163,23 @@ struct testlist {
     struct testset *ts;
     struct testlist *next;
 };
+
+/*
+ * Usage message.  Should be used as a printf format with two arguments: the
+ * path to runtests, given twice.
+ */
+static const char usage_message[] = "\
+Usage: %s [-b <build-dir>] [-s <source-dir>] <test-list>\n\
+       %s -o [-b <build-dir>] [-s <source-dir>] <test>\n\
+\n\
+Options:\n\
+    -b <build-dir>      Set the build directory to <build-dir>\n\
+    -o                  Run a single test rather than a list of tests\n\
+    -s <source-dir>     Set the source directory to <source-dir>\n\
+\n\
+runtests normally runs each test listed in a file whose path is given as\n\
+its command-line argument.  With the -o option, it instead runs a single\n\
+test and shows its complete output.\n";
 
 /*
  * Header used for test output.  %s is replaced by the file name of the list
@@ -367,7 +402,9 @@ test_plan(const char *line, struct testset *ts)
      * Get the count, check it for validity, and initialize the struct.  If we
      * have something of the form "1..0 # skip foo", the whole file was
      * skipped; record that.  If we do skip the whole file, zero out all of
-     * our statistics, since they're no longer relevant.
+     * our statistics, since they're no longer relevant.  strtol is called
+     * with a second argument to advance the line pointer past the count to
+     * make it simpler to detect the # skip case.
      */
     n = strtol(line, (char **) &line, 10);
     if (n == 0) {
@@ -437,6 +474,7 @@ test_checkline(const char *line, struct testset *ts)
     char *end;
     long number;
     unsigned long i, current;
+    int outlen;
 
     /* Before anything, check for a test abort. */
     bail = strstr(line, "Bail out!");
@@ -449,7 +487,7 @@ test_checkline(const char *line, struct testset *ts)
             if (bail[length - 1] == '\n')
                 length--;
             test_backspace(ts);
-            printf("ABORTED (%.*s)\n", (int)length, bail);
+            printf("ABORTED (%.*s)\n", (int) length, bail);
             ts->reported = 1;
         }
         ts->aborted = 1;
@@ -551,13 +589,14 @@ test_checkline(const char *line, struct testset *ts)
         case TEST_PASS: ts->passed++;   break;
         case TEST_FAIL: ts->failed++;   break;
         case TEST_SKIP: ts->skipped++;  break;
-        default:                        break;
+        case TEST_INVALID:              break;
     }
     ts->current = current;
     ts->results[current - 1] = status;
     test_backspace(ts);
     if (isatty(STDOUT_FILENO)) {
-        ts->length = printf("%lu/%lu", current, ts->count);
+        outlen = printf("%lu/%lu", current, ts->count);
+        ts->length = (outlen >= 0) ? outlen : 0;
         fflush(stdout);
     }
 }
@@ -565,23 +604,20 @@ test_checkline(const char *line, struct testset *ts)
 
 /*
  * Print out a range of test numbers, returning the number of characters it
- * took up.  Add a comma and a space before the range if chars indicates that
+ * took up.  Takes the first number, the last number, the number of characters
+ * already printed on the line, and the limit of number of characters the line
+ * can hold.  Add a comma and a space before the range if chars indicates that
  * something has already been printed on the line, and print ... instead if
  * chars plus the space needed would go over the limit (use a limit of 0 to
- * disable this.
+ * disable this).
  */
 static unsigned int
 test_print_range(unsigned long first, unsigned long last, unsigned int chars,
                  unsigned int limit)
 {
     unsigned int needed = 0;
-    unsigned int out = 0;
     unsigned long n;
 
-    if (chars > 0) {
-        needed += 2;
-        if (!limit || chars <= limit) out += printf(", ");
-    }
     for (n = first; n > 0; n /= 10)
         needed++;
     if (last > first) {
@@ -589,15 +625,26 @@ test_print_range(unsigned long first, unsigned long last, unsigned int chars,
             needed++;
         needed++;
     }
-    if (limit && chars + needed > limit) {
-        if (chars <= limit)
-            out += printf("...");
+    if (chars > 0)
+        needed += 2;
+    if (limit > 0 && chars + needed > limit) {
+        needed = 0;
+        if (chars <= limit) {
+            if (chars > 0) {
+                printf(", ");
+                needed += 2;
+            }
+            printf("...");
+            needed += 3;
+        }
     } else {
+        if (chars > 0)
+            printf(", ");
         if (last > first)
-            out += printf("%lu-", first);
-        out += printf("%lu", last);
+            printf("%lu-", first);
+        printf("%lu", last);
     }
-    return out;
+    return needed;
 }
 
 
@@ -825,14 +872,14 @@ test_fail_summary(const struct testlist *fails)
                     last = i + 1;
                 else {
                     if (first != 0)
-                        chars += test_print_range(first, last, chars, 20);
+                        chars += test_print_range(first, last, chars, 19);
                     first = i + 1;
                     last = i + 1;
                 }
             }
         }
         if (first != 0)
-            test_print_range(first, last, chars, 20);
+            test_print_range(first, last, chars, 19);
         putchar('\n');
         free(ts->file);
         free(ts->path);
@@ -861,8 +908,13 @@ find_test(const char *name, struct testset *ts, const char *source,
           const char *build)
 {
     char *path;
-    const char *bases[] = { ".", build, source, NULL };
+    const char *bases[4];
     unsigned int i;
+
+    bases[0] = ".";
+    bases[1] = build;
+    bases[2] = source;
+    bases[3] = NULL;
 
     for (i = 0; bases[i] != NULL; i++) {
         path = xmalloc(strlen(bases[i]) + strlen(name) + 4);
@@ -1066,10 +1118,14 @@ main(int argc, char *argv[])
     const char *source = SOURCE;
     const char *build = BUILD;
 
-    while ((option = getopt(argc, argv, "b:os:")) != EOF) {
+    while ((option = getopt(argc, argv, "b:hos:")) != EOF) {
         switch (option) {
         case 'b':
             build = optarg;
+            break;
+        case 'h':
+            printf(usage_message, argv[0], argv[0]);
+            exit(0);
             break;
         case 'o':
             single = 1;
@@ -1081,12 +1137,12 @@ main(int argc, char *argv[])
             exit(1);
         }
     }
-    argc -= optind;
-    argv += optind;
-    if (argc != 1) {
-        fprintf(stderr, "Usage: runtests <test-list>\n");
+    if (argc - optind != 1) {
+        fprintf(stderr, usage_message, argv[0], argv[0]);
         exit(1);
     }
+    argc -= optind;
+    argv += optind;
 
     if (source != NULL) {
         setting = xmalloc(strlen("SOURCE=") + strlen(source) + 1);

@@ -71,10 +71,17 @@ Writing TAP Tests
     One of the special features of C TAP Harness is the environment that
     it sets up for your test cases.  If your test program is called under
     the runtests driver, the environment variables SOURCE and BUILD will
-    be set to the top of the source tree and the top of the build tree,
-    respectively.  You can use those environment variables to locate
-    additional test data, programs and libraries built as part of your
-    software build, and other supporting information needed by tests.
+    be set to the top of the test directory in the source tree and the top
+    of the build tree, respectively.  You can use those environment
+    variables to locate additional test data, programs and libraries built
+    as part of your software build, and other supporting information
+    needed by tests.
+
+    The C and shell TAP libraries support a test_file_path() function,
+    which looks for a file under the build tree and then under the source
+    tree, using the BUILD and SOURCE environment variables, and return the
+    full path to the file.  This can be used to locate supporting data
+    files.
 
   Perl
 
@@ -89,12 +96,11 @@ Writing TAP Tests
     of Test::More for all the details and lots of examples.
 
     C TAP Harness can run Perl test scripts directly and interpret the
-    results correctly, and similarly the Perl Test::Harness module can run
-    TAP tests written in other languages using, for example, the TAP
-    library that comes with C TAP Harness.  However, the "prove" tool that
-    comes with Perl and runs tests makes some Perl-specific assumptions
-    that aren't always appropriate for packages that aren't written in
-    Perl.
+    results correctly, and similarly the Perl Test::Harness module and
+    prove command can run TAP tests written in other languages using, for
+    example, the TAP library that comes with C TAP Harness.  You can, if
+    you wish, use the library that comes with C TAP Harness but use prove
+    instead of runtests for running the test suite.
 
   C
 
@@ -110,6 +116,7 @@ Writing TAP Tests
 
     Here's a complete example test program that uses the C TAP library:
 
+        #include <stddef.h>
         #include <tap/basic.h>
 
         int
@@ -219,3 +226,23 @@ Writing TAP Tests
     rest of its arguments as the program to run.  That program is run with
     standard error and standard output combined, and then its exit status
     and output are tested against the provided values.
+
+    A utility function, strip_colon_error, is provided that runs the
+    command given as its arguments and strips text following a colon and a
+    space from the output (unless there is no whitespace on the line
+    before the colon and the space, normally indicating a prefix of the
+    program name).  This function can be used to wrap commands that are
+    expected to fail with output that has a system- or locale-specific
+    error message appended, such as the output of strerror().
+
+License
+
+    This file is part of the documentation of C TAP Harness, which can be
+    found at <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
+
+    Copyright 2010 Russ Allbery <rra@stanford.edu>
+
+    Copying and distribution of this file, with or without modification,
+    are permitted in any medium without royalty provided the copyright
+    notice and this notice are preserved.  This file is offered as-is,
+    without any warranty.
