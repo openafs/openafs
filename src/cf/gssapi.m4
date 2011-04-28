@@ -14,10 +14,12 @@ dnl
 dnl Depends on RRA_ENABLE_REDUCED_DEPENDS and RRA_SET_LDFLAGS.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
-dnl Copyright 2005, 2006, 2007, 2008, 2009
-dnl     Board of Trustees, Leland Stanford Jr. University
+dnl Copyright 2005, 2006, 2007, 2008, 2009, 2011
+dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
-dnl See LICENSE for licensing terms.
+dnl This file is free software; the authors give unlimited permission to copy
+dnl and/or distribute it, with or without modifications, as long as this
+dnl notice is preserved.
 
 dnl Save the current CPPFLAGS, LDFLAGS, and LIBS settings and switch to
 dnl versions that include the GSS-API flags.  Used as a wrapper, with
@@ -68,18 +70,18 @@ AC_DEFUN([_RRA_LIB_GSSAPI_MANUAL],
 [RRA_LIB_GSSAPI_SWITCH
  rra_gssapi_extra=
  LIBS=
- AC_SEARCH_LIBS([res_search], [resolv], ,
+ AC_SEARCH_LIBS([res_search], [resolv], [],
     [AC_SEARCH_LIBS([__res_search], [resolv])])
  AC_SEARCH_LIBS([gethostbyname], [nsl])
- AC_SEARCH_LIBS([socket], [socket], ,
-    [AC_CHECK_LIB([nsl], [socket], [LIBS="-lnsl -lsocket $LIBS"], ,
+ AC_SEARCH_LIBS([socket], [socket], [],
+    [AC_CHECK_LIB([nsl], [socket], [LIBS="-lnsl -lsocket $LIBS"], [],
         [-lsocket])])
  AC_SEARCH_LIBS([crypt], [crypt])
+ AC_SEARCH_LIBS([rk_simple_execve], [roken])
  rra_gssapi_extra="$LIBS"
  LIBS="$rra_gssapi_save_LIBS"
  AC_CHECK_LIB([gssapi], [gss_import_name],
-    [GSSAPI_LIBS="-lgssapi -lkrb5 -lasn1 -lroken -lcrypto -lcom_err"
-     GSSAPI_LIBS="$GSSAPI_LIBS $rra_gssapi_extra"],
+    [GSSAPI_LIBS="-lgssapi -lkrb5 -lasn1 -lcrypto -lcom_err $rra_gssapi_extra"],
     [AC_CHECK_LIB([krb5support], [krb5int_getspecific],
         [rra_gssapi_extra="-lkrb5support $rra_gssapi_extra"],
         [AC_CHECK_LIB([pthreads], [pthread_setspecific],
@@ -88,7 +90,7 @@ AC_DEFUN([_RRA_LIB_GSSAPI_MANUAL],
                 [rra_gssapi_pthread="-lpthread"])])
          AC_CHECK_LIB([krb5support], [krb5int_setspecific],
             [rra_gssapi_extra="-lkrb5support $rra_gssapi_extra"
-             rra_gssapi_extra="$rra_gssapi_extra $rra_gssapi_pthread"], ,
+             rra_gssapi_extra="$rra_gssapi_extra $rra_gssapi_pthread"], [],
             [$rra_gssapi_pthread])])
      AC_CHECK_LIB([com_err], [error_message],
         [rra_gssapi_extra="-lcom_err $rra_gssapi_extra"])
@@ -152,7 +154,8 @@ AC_DEFUN([RRA_LIB_GSSAPI],
      AS_IF([test x"$rra_gssapi_root" != x && test -z "$KRB5_CONFIG"],
          [AS_IF([test -x "${rra_gssapi_root}/bin/krb5-config"],
              [KRB5_CONFIG="${rra_gssapi_root}/bin/krb5-config"])],
-         [AC_PATH_PROG([KRB5_CONFIG], [krb5-config])])
+         [AC_PATH_PROG([KRB5_CONFIG], [krb5-config], [],
+             [${PATH}:/usr/kerberos/bin])])
      AS_IF([test x"$KRB5_CONFIG" != x && test -x "$KRB5_CONFIG"],
          [AC_CACHE_CHECK([for gssapi support in krb5-config],
              [rra_cv_lib_gssapi_config],
