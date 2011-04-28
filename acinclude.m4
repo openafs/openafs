@@ -1594,7 +1594,7 @@ AC_CHECK_TYPES([long long], [], [], [])
 
 AC_SIZEOF_TYPE(long)
 
-AC_HEADER_PAM_CONST
+RRA_HEADER_PAM_CONST
 
 
 dnl Directory PATH handling

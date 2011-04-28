@@ -34,9 +34,11 @@ dnl HAVE_KRB5_GET_INIT_CREDS_OPT_FREE_2_ARGS if it takes two arguments.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Copyright 2005, 2006, 2007, 2008, 2009, 2010
-dnl     Board of Trustees, Leland Stanford Jr. University
+dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
-dnl See LICENSE for licensing terms.
+dnl This file is free software; the authors give unlimited permission to copy
+dnl and/or distribute it, with or without modifications, as long as this
+dnl notice is preserved.
 
 dnl Save the current CPPFLAGS, LDFLAGS, and LIBS settings and switch to
 dnl versions that include the Kerberos v5 flags.  Used as a wrapper, with
@@ -80,12 +82,13 @@ AC_DEFUN([_RRA_LIB_KRB5_REDUCED],
  LIBS="$KRB5_LIBS $LIBS"
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
-     [AC_CHECK_FUNCS([krb5_get_error_string], ,
-         [AC_CHECK_FUNCS([krb5_get_err_txt], ,
+     [AC_CHECK_FUNCS([krb5_get_error_string], [],
+         [AC_CHECK_FUNCS([krb5_get_err_txt], [],
              [AC_CHECK_LIB([ksvc], [krb5_svc_get_msg],
                  [KRB5_LIBS="$KRB5_LIBS -lksvc"
                   AC_DEFINE([HAVE_KRB5_SVC_GET_MSG], [1])
-                  AC_CHECK_HEADERS([ibm_svc/krb5_svc.h])],
+                  AC_CHECK_HEADERS([ibm_svc/krb5_svc.h], [], [],
+                     [#include <krb5.h>])],
                  [AC_CHECK_LIB([com_err], [com_err],
                      [KRB5_LIBS="$KRB5_LIBS -lcom_err"],
                      [AC_MSG_ERROR([cannot find usable com_err library])])
@@ -99,11 +102,11 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
 [RRA_LIB_KRB5_SWITCH
  rra_krb5_extra=
  LIBS=
- AC_SEARCH_LIBS([res_search], [resolv], ,
+ AC_SEARCH_LIBS([res_search], [resolv], [],
     [AC_SEARCH_LIBS([__res_search], [resolv])])
  AC_SEARCH_LIBS([gethostbyname], [nsl])
- AC_SEARCH_LIBS([socket], [socket], ,
-    [AC_CHECK_LIB([nsl], [socket], [LIBS="-lnsl -lsocket $LIBS"], ,
+ AC_SEARCH_LIBS([socket], [socket], [],
+    [AC_CHECK_LIB([nsl], [socket], [LIBS="-lnsl -lsocket $LIBS"], [],
         [-lsocket])])
  AC_SEARCH_LIBS([crypt], [crypt])
  AC_SEARCH_LIBS([rk_simple_execve], [roken])
@@ -119,15 +122,16 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
                 [rra_krb5_pthread="-lpthread"])])
          AC_CHECK_LIB([krb5support], [krb5int_setspecific],
             [rra_krb5_extra="-lkrb5support $rra_krb5_extra $rra_krb5_pthread"],
-            , [$rra_krb5_pthread])])
+            [], [$rra_krb5_pthread $rra_krb5_extra])],
+        [$rra_krb5_extra])
      AC_CHECK_LIB([com_err], [error_message],
-        [rra_krb5_extra="-lcom_err $rra_krb5_extra"])
+        [rra_krb5_extra="-lcom_err $rra_krb5_extra"], [], [$rra_krb5_extra])
      AC_CHECK_LIB([ksvc], [krb5_svc_get_msg],
-        [rra_krb5_extra="-lksvc $rra_krb5_extra"])
+        [rra_krb5_extra="-lksvc $rra_krb5_extra"], [], [$rra_krb5_extra])
      AC_CHECK_LIB([k5crypto], [krb5int_hash_md5],
-        [rra_krb5_extra="-lk5crypto $rra_krb5_extra"])
+        [rra_krb5_extra="-lk5crypto $rra_krb5_extra"], [], [$rra_krb5_extra])
      AC_CHECK_LIB([k5profile], [profile_get_values],
-        [rra_krb5_extra="-lk5profile $rra_krb5_extra"])
+        [rra_krb5_extra="-lk5profile $rra_krb5_extra"], [], [$rra_krb5_extra])
      AC_CHECK_LIB([krb5], [krb5_cc_default],
         [KRB5_LIBS="-lkrb5 $rra_krb5_extra"],
         [AS_IF([test x"$1" = xtrue],
@@ -137,12 +141,12 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
  LIBS="$KRB5_LIBS $LIBS"
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
-     [AC_CHECK_FUNCS([krb5_get_error_string], ,
-         [AC_CHECK_FUNCS([krb5_get_err_txt], ,
-	     [AC_CHECK_FUNCS([error_message], ,
+     [AC_CHECK_FUNCS([krb5_get_error_string], [],
+         [AC_CHECK_FUNCS([krb5_get_err_txt], [],
              [AC_CHECK_FUNCS([krb5_svc_get_msg],
-                 [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h])],
-                 [AC_CHECK_HEADERS([et/com_err.h])])])])])])
+                 [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h], [], [],
+                     [#include <krb5.h>])],
+                 [AC_CHECK_HEADERS([et/com_err.h])])])])])
  RRA_LIB_KRB5_RESTORE])
 
 dnl Sanity-check the results of krb5-config and be sure we can really link a
@@ -171,7 +175,7 @@ AC_DEFUN([_RRA_LIB_KRB5_INTERNAL],
      AS_IF([test x"$rra_krb5_root" != x && test -z "$KRB5_CONFIG"],
          [AS_IF([test -x "${rra_krb5_root}/bin/krb5-config"],
              [KRB5_CONFIG="${rra_krb5_root}/bin/krb5-config"])],
-         [AC_PATH_PROG([KRB5_CONFIG], [krb5-config], ,
+         [AC_PATH_PROG([KRB5_CONFIG], [krb5-config], [],
              [${PATH}:/usr/kerberos/bin])])
      AS_IF([test x"$KRB5_CONFIG" != x && test -x "$KRB5_CONFIG"],
          [AC_CACHE_CHECK([for krb5 support in krb5-config],
@@ -189,10 +193,11 @@ AC_DEFUN([_RRA_LIB_KRB5_INTERNAL],
           RRA_LIB_KRB5_SWITCH
           AC_CHECK_FUNCS([krb5_get_error_message],
               [AC_CHECK_FUNCS([krb5_free_error_message])],
-              [AC_CHECK_FUNCS([krb5_get_error_string], ,
-                  [AC_CHECK_FUNCS([krb5_get_err_txt], ,
+              [AC_CHECK_FUNCS([krb5_get_error_string], [],
+                  [AC_CHECK_FUNCS([krb5_get_err_txt], [],
                       [AC_CHECK_FUNCS([krb5_svc_get_msg],
-                          [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h])],
+                          [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h], [], [],
+                              [#include <krb5.h>])],
                           [AC_CHECK_HEADERS([et/com_err.h])])])])])
           RRA_LIB_KRB5_RESTORE],
          [_RRA_LIB_KRB5_PATHS
@@ -210,6 +215,7 @@ AC_DEFUN([RRA_LIB_KRB5],
 [rra_krb5_root=
  rra_krb5_libdir=
  rra_krb5_includedir=
+ rra_use_kerberos=true
  AC_SUBST([KRB5_CPPFLAGS])
  AC_SUBST([KRB5_LDFLAGS])
  AC_SUBST([KRB5_LIBS])
