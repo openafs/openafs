@@ -131,8 +131,6 @@ fstrace: fstrace.o
 			${CCXPG2} ${AFS_CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		sun*_4* ) \
 			${CC} -L/usr/xpg2lib -L/usr/5lib ${AFS_CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a -lxpg ;; \
-		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
-			${CC} -I${TOP_OBJDIR}/src/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		* ) \
 			$(AFS_LDRULE) fstrace.o ${TOP_LIBDIR}/libsys.a \
 				${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
