@@ -200,15 +200,13 @@ afs_Daemon(void)
 #ifdef AFS_MAXVCOUNT_ENV
     if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
         /* start with trying to drop us back to our base usage */
-        int anumber;
-        if (afs_vcount <= afs_cacheStats)
-	    anumber = VCACHE_FREE;
-        else
-	    anumber = VCACHE_FREE + (afs_vcount - afs_cacheStats);
+	int anumber = VCACHE_FREE + (afs_vcount - afs_cacheStats);
 
-	ObtainWriteLock(&afs_xvcache, 734);
-	afs_ShakeLooseVCaches(anumber);
-	ReleaseWriteLock(&afs_xvcache);
+	if (anumber > 0) {
+	    ObtainWriteLock(&afs_xvcache, 734);
+	    afs_ShakeLooseVCaches(anumber);
+	    ReleaseWriteLock(&afs_xvcache);
+	}
 	last5MinCheck = now;
     }
 #endif
