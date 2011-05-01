@@ -145,7 +145,6 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_d_op = &afs_dentry_operations;
 #endif
 
-#if defined(AFS_LINUX26_ENV)
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
 #if defined(HAVE_BDI_INIT)
