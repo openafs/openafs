@@ -187,6 +187,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     int freelance = 0;
 #endif
     afs_uint32 volType;
+    time_t now;
 
     lock_AssertWrite(&volp->rw);
 
@@ -195,8 +196,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
      * minutes and it did not exist, then avoid the RPC
      * and return No Such Volume immediately.
      */
+    now = time(NULL);
     if ((volp->flags & CM_VOLUMEFLAG_NOEXIST) &&
-        volp->lastUpdateTime + 600 < time(0))
+        (now < volp->lastUpdateTime + 600))
     {
         return CM_ERROR_NOSUCHVOLUME;
     }
@@ -652,7 +654,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         volp->vol[BACKVOL].state = bkNewstate;
     }
 
-    volp->lastUpdateTime = time(0);
+    volp->lastUpdateTime = time(NULL);
 
     if (code == 0)
         volp->flags &= ~CM_VOLUMEFLAG_RESET;
@@ -1325,7 +1327,14 @@ void cm_CheckOfflineVolumes(void)
     for (volp = cm_data.volumeLRULastp;
          volp && !daemon_ShutdownFlag && !powerStateSuspended;
          volp=(cm_volume_t *) osi_QPrev(&volp->q)) {
-        if (volp->qflags & CM_VOLUME_QFLAG_IN_HASH) {
+        /*
+         * Skip volume entries that did not exist last time
+         * the vldb was queried.  For those entries wait until
+         * the next actual request is received for the volume
+         * before checking its state.
+         */
+        if ((volp->qflags & CM_VOLUME_QFLAG_IN_HASH) &&
+            !(volp->flags & CM_VOLUMEFLAG_NOEXIST)) {
             InterlockedIncrement(&volp->refCount);
             lock_ReleaseRead(&cm_volumeLock);
             cm_CheckOfflineVolume(volp, 0);
