@@ -103,7 +103,7 @@ AC_DEFUN([_RRA_LIB_GSSAPI_MANUAL],
             [GSSAPI_LIBS="-lgss"],
             [AC_MSG_ERROR([cannot find usable GSS-API library])])],
         [$rra_gssapi_extra])],
-    [-lkrb5 -lasn1 -lroken -lcrypto -lcom_err $rra_gssapi_extra])
+    [-lkrb5 -lasn1 -lcrypto -lcom_err $rra_gssapi_extra])
  RRA_LIB_GSSAPI_RESTORE])
 
 dnl Sanity-check the results of krb5-config and be sure we can really link a
