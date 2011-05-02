@@ -147,7 +147,7 @@ extern void osi_PostPopulateVCache(struct vcache *);
 extern void osi_AttachVnode(struct vcache *, int seq);
 
 /*
- * In IRIX 6.5 we cannot have DEBUG turned on since certain
+ * In IRIX 6.5 and NetBSD we cannot have DEBUG turned on since certain
  * system-defined structures are a different size with DEBUG on, the
  * kernel is compiled without DEBUG on, and the resulting differences
  * would break our ability to interact with the rest of the kernel.
@@ -155,7 +155,7 @@ extern void osi_AttachVnode(struct vcache *, int seq);
  * Is DEBUG only for turning the ASSERT() macro?  If so, we should
  * be able to eliminate DEBUG entirely.
  */
-#if !defined(AFS_SGI65_ENV)
+#if !defined(AFS_SGI65_ENV) && !defined(AFS_NBSD_ENV)
 #ifndef	DEBUG
 #define	DEBUG	1		/* Default is to enable debugging/logging */
 #endif
