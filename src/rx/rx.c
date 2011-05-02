@@ -1784,7 +1784,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     struct rx_serverQueueEntry *sq;
     struct rx_call *call = (struct rx_call *)0;
     struct rx_service *service = NULL;
-    SPLVAR;
 
     MUTEX_ENTER(&freeSQEList_lock);
 
