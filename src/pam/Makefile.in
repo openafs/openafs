@@ -17,7 +17,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
 	  ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libaudit.a \
-          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a \
+          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafscom_err.a \
 	  ${TOP_LIBDIR}/util.a
 
 LDFLAGS = ${SHLIB_LDFLAGS}
