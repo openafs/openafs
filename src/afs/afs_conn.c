@@ -215,6 +215,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	isec = 0;
 	if (tu->vid != UNDEFVID) {
 	    int level;
+	    char *ticket;
+	    struct ClearToken ct;
 
 	    if (cryptall) {
 		level = rxkad_crypt;
@@ -222,12 +224,22 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 		level = rxkad_clear;
 	    }
 	    isec = 2;
+
+	    /* Make a copy of the ticket data to give to rxkad, because the
+	     * the ticket data could change while rxkad is sleeping for memory
+	     * allocation. We should implement locking on unixuser
+	     * structures to fix this properly, but for now, this is easier. */
+	    ticket = afs_osi_Alloc(MAXKTCTICKETLEN);
+	    memcpy(ticket, tu->stp, tu->stLen);
+	    memcpy(&ct, &tu->ct, sizeof(ct));
+
 	    /* kerberos tickets on channel 2 */
 	    csec = rxkad_NewClientSecurityObject(level,
-                                                 (struct ktc_encryptionKey *)tu->ct.HandShakeKey,
+                                                 (struct ktc_encryptionKey *)ct.HandShakeKey,
 						 /* kvno */
-						 tu->ct.AuthHandle, tu->stLen,
-						 tu->stp);
+						 ct.AuthHandle, tu->stLen,
+						 ticket);
+	    afs_osi_Free(ticket, MAXKTCTICKETLEN);
 	}
 	if (isec == 0)
 	    csec = rxnull_NewClientSecurityObject();
