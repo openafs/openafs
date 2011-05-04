@@ -72,13 +72,27 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
 
     /* Do we have tokens ? */
     if (conn->user->vid != UNDEFVID) {
+	char *ticket;
+	struct ClearToken ct;
+
 	*secLevel = 2;
+
+	/* Make a copy of the ticket data to give to rxkad, because the
+	 * the ticket data could change while rxkad is sleeping for memory
+	 * allocation. We should implement locking on unixuser
+	 * structures to fix this properly, but for now, this is easier. */
+	ticket = afs_osi_Alloc(MAXKTCTICKETLEN);
+	memcpy(ticket, conn->user->stp, conn->user->stLen);
+	memcpy(&ct, &conn->user->ct, sizeof(ct));
+
 	/* kerberos tickets on channel 2 */
 	secObj = rxkad_NewClientSecurityObject(
 		    cryptall ? rxkad_crypt : rxkad_clear,
-                    (struct ktc_encryptionKey *)conn->user->ct.HandShakeKey,
-		    conn->user->ct.AuthHandle,
-		    conn->user->stLen, conn->user->stp);
+                    (struct ktc_encryptionKey *)ct.HandShakeKey,
+		    ct.AuthHandle,
+		    conn->user->stLen, ticket);
+
+	afs_osi_Free(ticket, MAXKTCTICKETLEN);
      }
      if (secObj == NULL) {
 	*secLevel = 0;

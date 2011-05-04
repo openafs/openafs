@@ -1790,9 +1790,9 @@ DECL_PIOCTL(PSetTokens)
     struct unixuser *tu;
     struct ClearToken clear;
     struct cell *tcell;
-    char *stp;
+    char *stp, *stpNew;
     char *cellName;
-    int stLen;
+    int stLen, stLenOld;
     struct vrequest treq;
     afs_int32 flag, set_parent_pag = 0;
 
@@ -1866,18 +1866,21 @@ DECL_PIOCTL(PSetTokens)
 	    areq = &treq;
 	}
     }
-    /* now we just set the tokens */
-    tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* i has the cell # */
-    tu->vid = clear.ViceId;
-    if (tu->stp != NULL) {
-	afs_osi_Free(tu->stp, tu->stLen);
-    }
-    tu->stp = (char *)afs_osi_Alloc(stLen);
-    if (tu->stp == NULL) {
+
+    stpNew = (char *)afs_osi_Alloc(stLen);
+    if (stpNew == NULL) {
 	return ENOMEM;
     }
+    memcpy(stpNew, stp, stLen);
+
+    /* now we just set the tokens */
+    tu = afs_GetUser(areq->uid, i, WRITE_LOCK);	/* i has the cell # */
+    stp = tu->stp;
+    stLenOld = tu->stLen;
+
+    tu->vid = clear.ViceId;
+    tu->stp = stpNew;
     tu->stLen = stLen;
-    memcpy(tu->stp, stp, stLen);
     tu->ct = clear;
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.TicketUpdates++;
@@ -1890,6 +1893,10 @@ DECL_PIOCTL(PSetTokens)
     afs_ResetUserConns(tu);
     afs_NotifyUser(tu, UTokensObtained);
     afs_PutUser(tu, WRITE_LOCK);
+
+    if (stp) {
+	afs_osi_Free(stp, stLenOld);
+    }
 
     return 0;
 
