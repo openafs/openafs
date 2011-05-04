@@ -89,5 +89,9 @@ afscp_Finalize(void)
     afscp_FreeAllCells();
     afscp_FreeAllServers();
     rx_Finalize();
+#ifdef AFS_NT40_ENV
+    closesocket(serv->socket);
+#else
     close(serv->socket);
+#endif
 }
