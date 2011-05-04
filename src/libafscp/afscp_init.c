@@ -91,5 +91,5 @@ afscp_Finalize(void)
     afscp_FreeAllCells();
     afscp_FreeAllServers();
     rx_Finalize();
-    close(serv->socket);
+    rk_closesocket(serv->socket);
 }
