@@ -173,11 +173,7 @@ SYNC_connect(SYNC_client_state * state)
 int
 SYNC_disconnect(SYNC_client_state * state)
 {
-#ifdef AFS_NT40_ENV
-    closesocket(state->fd);
-#else
-    close(state->fd);
-#endif
+    rk_closesocket(state->fd);
     state->fd = OSI_NULLSOCKET;
     return 0;
 }

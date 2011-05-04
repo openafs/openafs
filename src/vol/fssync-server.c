@@ -1984,11 +1984,7 @@ FSYNC_Drop(osi_socket fd)
     }
     VOL_UNLOCK;
     RemoveHandler(fd);
-#ifdef AFS_NT40_ENV
-    closesocket(fd);
-#else
-    close(fd);
-#endif
+    rk_closesocket(fd);
     AcceptOn();
 }
 
