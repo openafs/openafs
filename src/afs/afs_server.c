@@ -1791,6 +1791,7 @@ afs_GetCapabilities(struct server *ts)
     tc = afs_ConnBySA(ts->addr, ts->cell->fsport, ts->cell->cellNum, tu, 0, 1,
 								SHARED_LOCK,
                                                                 &rxconn);
+    afs_PutUser(tu, SHARED_LOCK);
     if ( !tc )
 	return;
     /* InitCallBackStateN, triggered by our RPC, may need this */
