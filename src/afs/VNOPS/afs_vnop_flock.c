@@ -293,19 +293,20 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 	    avc->slocks = 0;
 	}
 	if (avc->flockCount == 0) {
+	    struct rx_connection *rxconn;
 	    do {
-		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 		if (tc) {
 		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
 		    RX_AFS_GUNLOCK();
-		    code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
+		    code = RXAFS_ReleaseLock(rxconn, (struct AFSFid *)
 					     &avc->fid.Fid, &tsync);
 		    RX_AFS_GLOCK();
 		    XSTATS_END_TIME;
 		} else
 		    code = -1;
 	    } while (afs_Analyze
-		     (tc, code, &avc->fid, areq,
+		     (tc, rxconn, code, &avc->fid, areq,
 		      AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK, NULL));
 	}
     } else {
@@ -346,14 +347,15 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		    }
 		}
 		if (!code && avc->flockCount == 0) {
+		    struct rx_connection *rxconn;
 		    do {
-			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 			if (tc) {
 			    XSTATS_START_TIME
 				(AFS_STATS_FS_RPCIDX_RELEASELOCK);
 			    RX_AFS_GUNLOCK();
 			    code =
-				RXAFS_ReleaseLock(tc->id,
+				RXAFS_ReleaseLock(rxconn,
 						  (struct AFSFid *)&avc->fid.
 						  Fid, &tsync);
 			    RX_AFS_GLOCK();
@@ -361,7 +363,7 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 			} else
 			    code = -1;
 		    } while (afs_Analyze
-			     (tc, code, &avc->fid, areq,
+			     (tc, rxconn, code, &avc->fid, areq,
 			      AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK,
 			      NULL));
 		}
@@ -377,14 +379,15 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		 * we've already checked for compatibility), we shouldn't send
 		 * the call through to the server again */
 		if (avc->flockCount == 0) {
+		    struct rx_connection *rxconn;
 		    /* we're the first on our block, send the call through */
 		    lockType = ((acom & LOCK_EX) ? LockWrite : LockRead);
 		    do {
-			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 			if (tc) {
 			    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
 			    RX_AFS_GUNLOCK();
-			    code = RXAFS_SetLock(tc->id, (struct AFSFid *)
+			    code = RXAFS_SetLock(rxconn, (struct AFSFid *)
 						 &avc->fid.Fid, lockType,
 						 &tsync);
 			    RX_AFS_GLOCK();
@@ -392,7 +395,7 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 			} else
 			    code = -1;
 		    } while (afs_Analyze
-			     (tc, code, &avc->fid, areq,
+			     (tc, rxconn, code, &avc->fid, areq,
 			      AFS_STATS_FS_RPCIDX_SETLOCK, SHARED_LOCK,
 			      NULL));
 		} else
@@ -801,25 +804,26 @@ GetFlockCount(struct vcache *avc, struct vrequest *areq)
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
+    struct rx_connection *rxconn;
     int temp;
     XSTATS_DECLS;
     temp = areq->flags & O_NONBLOCK;
     areq->flags |= O_NONBLOCK;
 
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_FetchStatus(tc->id, (struct AFSFid *)&avc->fid.Fid,
+		RXAFS_FetchStatus(rxconn, (struct AFSFid *)&avc->fid.Fid,
 				  &OutStatus, &CallBack, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_FETCHSTATUS,
+	     (tc, rxconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_FETCHSTATUS,
 	      SHARED_LOCK, NULL));
 
     if (temp)

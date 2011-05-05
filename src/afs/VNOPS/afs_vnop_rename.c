@@ -44,6 +44,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     struct dcache *tdc1, *tdc2;
     struct AFSFetchStatus OutOldDirStatus, OutNewDirStatus;
     struct AFSVolSync tsync;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     AFS_STATCNT(afs_rename);
     afs_Trace4(afs_iclSetp, CM_TRACE_RENAME, ICL_TYPE_POINTER, aodp,
@@ -161,12 +162,12 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 
     /* locks are now set, proceed to do the real work */
     do {
-	tc = afs_Conn(&aodp->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&aodp->fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RENAME);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_Rename(tc->id, (struct AFSFid *)&aodp->fid.Fid, aname1,
+		RXAFS_Rename(rxconn, (struct AFSFid *)&aodp->fid.Fid, aname1,
 			     (struct AFSFid *)&andp->fid.Fid, aname2,
 			     &OutOldDirStatus, &OutNewDirStatus, &tsync);
 	    RX_AFS_GLOCK();
@@ -175,7 +176,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    code = -1;
 
     } while (afs_Analyze
-	     (tc, code, &andp->fid, areq, AFS_STATS_FS_RPCIDX_RENAME,
+	     (tc, rxconn, code, &andp->fid, areq, AFS_STATS_FS_RPCIDX_RENAME,
 	      SHARED_LOCK, NULL));
 
     returnCode = code;		/* remember for later */

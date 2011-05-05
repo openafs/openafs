@@ -44,6 +44,7 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     struct AFSVolSync tsync;
     register afs_int32 code;
     register struct rx_call *tcall;
+    struct rx_connection *rxconn;
     afs_size_t tlen, xlen = 0;
     XSTATS_DECLS;
     AFS_STATCNT(afs_StoreMini);
@@ -56,11 +57,11 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     avc->states &= ~CExtendedFile;
 
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	  retry:
 	    RX_AFS_GUNLOCK();
-	    tcall = rx_NewCall(tc->id);
+	    tcall = rx_NewCall(rxconn);
 	    RX_AFS_GLOCK();
 	    /* Set the client mod time since we always want the file
 	     * to have the client's mod time and not the server's one
@@ -119,7 +120,7 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_STOREDATA,
+	     (tc, rxconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_STOREDATA,
 	      SHARED_LOCK, NULL));
 
     if (code == 0) {
@@ -321,6 +322,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 		    }
 		}
 		if (bytes && (j == high || !dcList[j + 1])) {
+		    struct rx_connection *rxconn;
 		    /* base = AFS_CHUNKTOBASE(dcList[first]->f.chunk); */
 		    base = AFS_CHUNKTOBASE(first + minj);
 		    /*
@@ -355,11 +357,11 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 		    do {
 			stored = 0;
-			tc = afs_Conn(&avc->fid, areq, 0);
+			tc = afs_Conn(&avc->fid, areq, 0, &rxconn);
 			if (tc) {
 			  restart:
 			    RX_AFS_GUNLOCK();
-			    tcall = rx_NewCall(tc->id);
+			    tcall = rx_NewCall(rxconn);
 #ifdef AFS_64BIT_CLIENT
 			    if (!afs_serverHasNo64Bit(tc)) {
 				code =
@@ -569,7 +571,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			}
 #endif /* AFS_64BIT_CLIENT */
 		    } while (afs_Analyze
-			     (tc, code, &avc->fid, areq,
+			     (tc, rxconn, code, &avc->fid, areq,
 			      AFS_STATS_FS_RPCIDX_STOREDATA, SHARED_LOCK,
 			      NULL));
 

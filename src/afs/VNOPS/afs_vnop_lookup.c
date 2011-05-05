@@ -566,6 +566,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct VenusFid dotdot;
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
 #ifdef AFS_DARWIN80_ENV
     panic("bulkstatus doesn't work on AFS_DARWIN80_ENV. don't call it");
@@ -807,7 +808,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* start the timer; callback expirations are relative to this */
 	startTime = osi_Time();
 
-	tcp = afs_Conn(&adp->fid, areqp, SHARED_LOCK);
+	tcp = afs_Conn(&adp->fid, areqp, SHARED_LOCK, &rxconn);
 	if (tcp) {
 	    hostp = tcp->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
@@ -815,20 +816,20 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
 		code =
-		    RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
+		    RXAFS_InlineBulkStatus(rxconn, &fidParm, &statParm,
 					   &cbParm, &volSync);
 		if (code == RXGEN_OPCODE) {
 		    tcp->srvr->server->flags |= SNO_INLINEBULK;
 		    inlinebulk = 0;
 		    code =
-			RXAFS_BulkStatus(tcp->id, &fidParm, &statParm,
+			RXAFS_BulkStatus(rxconn, &fidParm, &statParm,
 					 &cbParm, &volSync);
 		} else
 		    inlinebulk = 1;
 	    } else {
 		inlinebulk = 0;
 		code =
-		    RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
+		    RXAFS_BulkStatus(rxconn, &fidParm, &statParm, &cbParm,
 				     &volSync);
 	    }
 	    RX_AFS_GLOCK();
@@ -836,7 +837,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tcp, code, &adp->fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
+	     (tcp, rxconn, code, &adp->fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
 	      SHARED_LOCK, NULL));
 
     /* now, if we didnt get the info, bail out. */
@@ -1077,7 +1078,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     /* If we did the InlineBulk RPC pull out the return code */
     if (inlinebulk && code == 0) {
 	if ((&statsp[0])->errorCode) {
-	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp,
+	    afs_Analyze(tcp, rxconn, (&statsp[0])->errorCode, &adp->fid, areqp,
 			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL);
 	    code = (&statsp[0])->errorCode;
 	}

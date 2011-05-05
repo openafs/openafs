@@ -1243,6 +1243,7 @@ DECL_PIOCTL(PSetAcl)
     struct AFSOpaque acl;
     struct AFSVolSync tsync;
     struct AFSFetchStatus OutStatus;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
 
     AFS_STATCNT(PSetAcl);
@@ -1253,19 +1254,19 @@ DECL_PIOCTL(PSetAcl)
 
     acl.AFSOpaque_val = ain;
     do {
-	tconn = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tconn = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tconn) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREACL);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_StoreACL(tconn->id, (struct AFSFid *)&avc->fid.Fid,
+		RXAFS_StoreACL(rxconn, (struct AFSFid *)&avc->fid.Fid,
 			       &acl, &OutStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_STOREACL,
+	     (tconn, rxconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_STOREACL,
 	      SHARED_LOCK, NULL));
 
     /* now we've forgotten all of the access info */
@@ -1329,6 +1330,7 @@ DECL_PIOCTL(PGetAcl)
     afs_int32 code;
     struct afs_conn *tconn;
     struct AFSFid Fid;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
 
     AFS_STATCNT(PGetAcl);
@@ -1351,18 +1353,18 @@ DECL_PIOCTL(PGetAcl)
     }
     acl.AFSOpaque_val = aout;
     do {
-	tconn = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tconn = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tconn) {
 	    *aout = 0;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHACL);
 	    RX_AFS_GUNLOCK();
-	    code = RXAFS_FetchACL(tconn->id, &Fid, &acl, &OutStatus, &tsync);
+	    code = RXAFS_FetchACL(rxconn, &Fid, &acl, &OutStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_FETCHACL,
+	     (tconn, rxconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_FETCHACL,
 	      SHARED_LOCK, NULL));
 
     if (code == 0) {
@@ -1585,6 +1587,7 @@ DECL_PIOCTL(PGetVolumeStatus)
     struct AFSFetchVolumeStatus volstat;
     register char *cp;
     char *Name, *OfflineMsg, *MOTD;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
 
     AFS_STATCNT(PGetVolumeStatus);
@@ -1596,19 +1599,19 @@ DECL_PIOCTL(PGetVolumeStatus)
     OfflineMsg = offLineMsg;
     MOTD = motd;
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_GetVolumeStatus(tc->id, avc->fid.Fid.Volume, &volstat,
+		RXAFS_GetVolumeStatus(rxconn, avc->fid.Fid.Volume, &volstat,
 				      &Name, &OfflineMsg, &MOTD);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS,
+	     (tc, rxconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS,
 	      SHARED_LOCK, NULL));
 
     if (code)
@@ -1641,6 +1644,7 @@ DECL_PIOCTL(PSetVolumeStatus)
     struct AFSStoreVolumeStatus storeStat;
     register struct volume *tvp;
     register char *cp;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
 
     AFS_STATCNT(PSetVolumeStatus);
@@ -1692,19 +1696,19 @@ DECL_PIOCTL(PSetVolumeStatus)
 	storeStat.Mask |= AFS_SETMAXQUOTA;
     }
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_SetVolumeStatus(tc->id, avc->fid.Fid.Volume, &storeStat,
+		RXAFS_SetVolumeStatus(rxconn, avc->fid.Fid.Volume, &storeStat,
 				      volName, offLineMsg, motd);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS,
+	     (tc, rxconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS,
 	      SHARED_LOCK, NULL));
 
     if (code)
@@ -2245,6 +2249,7 @@ DECL_PIOCTL(PRemoveCallBack)
     struct AFSCallBack CallBacks_Array[1];
     struct AFSCBFids theFids;
     struct AFSCBs theCBs;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
 
     AFS_STATCNT(PRemoveCallBack);
@@ -2260,17 +2265,17 @@ DECL_PIOCTL(PRemoveCallBack)
     CallBacks_Array[0].CallBackType = CB_DROPPED;
     if (avc->callback) {
 	do {
-	    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);
 		RX_AFS_GUNLOCK();
-		code = RXAFS_GiveUpCallBacks(tc->id, &theFids, &theCBs);
+		code = RXAFS_GiveUpCallBacks(rxconn, &theFids, &theCBs);
 		RX_AFS_GLOCK();
 		XSTATS_END_TIME;
 	    }
 	    /* don't set code on failure since we wouldn't use it */
 	} while (afs_Analyze
-		 (tc, code, &avc->fid, areq,
+		 (tc, rxconn, code, &avc->fid, areq,
 		  AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS, SHARED_LOCK, NULL));
 
 	ObtainWriteLock(&afs_xcbhash, 457);
@@ -2439,6 +2444,7 @@ DECL_PIOCTL(PRemoveMount)
     struct AFSFetchStatus OutDirStatus;
     struct VenusFid tfid;
     struct AFSVolSync tsync;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
 
 
@@ -2504,19 +2510,19 @@ DECL_PIOCTL(PRemoveMount)
     ObtainWriteLock(&avc->lock, 231);
     osi_dnlc_remove(avc, bufp, tvc);
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_RemoveFile(tc->id, (struct AFSFid *)&avc->fid.Fid, bufp,
+		RXAFS_RemoveFile(rxconn, (struct AFSFid *)&avc->fid.Fid, bufp,
 				 &OutDirStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_REMOVEFILE,
+	     (tc, rxconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_REMOVEFILE,
 	      SHARED_LOCK, NULL));
 
     if (code) {
@@ -3765,6 +3771,7 @@ DECL_PIOCTL(PPrefetchFromTape)
     struct VenusFid tfid;
     struct AFSFid *Fid;
     struct vcache *tvc;
+    struct rx_connection *rxconn;
 
     AFS_STATCNT(PSetAcl);
     if (!avc)
@@ -3789,11 +3796,11 @@ DECL_PIOCTL(PPrefetchFromTape)
 	       ICL_TYPE_FID, &tfid, ICL_TYPE_FID, &tvc->fid);
 
     do {
-	tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 
 	    RX_AFS_GUNLOCK();
-	    tcall = rx_NewCall(tc->id);
+	    tcall = rx_NewCall(rxconn);
 	    code =
 		StartRXAFS_FetchData(tcall, (struct AFSFid *)&tvc->fid.Fid, 0,
 				     0);
@@ -3807,7 +3814,7 @@ DECL_PIOCTL(PPrefetchFromTape)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &tvc->fid, areq, AFS_STATS_FS_RPCIDX_RESIDENCYRPCS,
+	     (tc, rxconn, code, &tvc->fid, areq, AFS_STATS_FS_RPCIDX_RESIDENCYRPCS,
 	      SHARED_LOCK, NULL));
     /* This call is done only to have the callback things handled correctly */
     afs_FetchStatus(tvc, &tfid, areq, &OutStatus);
@@ -3828,6 +3835,7 @@ DECL_PIOCTL(PFsCmd)
     struct FsCmdOutputs *Outputs;
     struct VenusFid tfid;
     struct AFSFid *Fid;
+    struct rx_connection *rxconn;
 
     Inputs = (struct FsCmdInputs *)ain;
     Outputs = (struct FsCmdOutputs *)aout;
@@ -3853,17 +3861,17 @@ DECL_PIOCTL(PFsCmd)
 
     if (Inputs->command) {
 	do {
-	    tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_FsCmd(tc->id, Fid, Inputs, 
+		    RXAFS_FsCmd(rxconn, Fid, Inputs,
 					(struct FsCmdOutputs *)aout);
 		RX_AFS_GLOCK();
 	    } else
 		code = -1;
 	} while (afs_Analyze
-		 (tc, code, &tvc->fid, areq,
+		 (tc, rxconn, code, &tvc->fid, areq,
 		  AFS_STATS_FS_RPCIDX_RESIDENCYRPCS, SHARED_LOCK, NULL));
 	/* This call is done to have the callback things handled correctly */
 	afs_FetchStatus(tvc, &tfid, areq, &Outputs->status);
@@ -3935,6 +3943,7 @@ DECL_PIOCTL(PCallBackAddr)
     afs_int32 i, j;
     struct unixuser *tu;
     struct srvAddr **addrs;
+    struct rx_connection *rxconn;
 
     /*AFS_STATCNT(PCallBackAddr); */
     if (!afs_resourceinit_flag)	/* afs deamons havn't started yet */
@@ -3999,24 +4008,24 @@ DECL_PIOCTL(PCallBackAddr)
 	/* get a connection, even if host is down; bumps conn ref count */
 	tu = afs_GetUser(areq->uid, ts->cell->cellNum, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
-			  1 /*force */ , 1 /*create */ , SHARED_LOCK);
+			  1 /*force */ , 1 /*create */ , SHARED_LOCK, &rxconn);
 	afs_PutUser(tu, SHARED_LOCK);
 	if (!tc)
 	    continue;
 
 	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(ts)) {
 	    if (sa->sa_flags & SRVADDR_ISDOWN) {
-		rx_SetConnDeadTime(tc->id, 3);
+		rx_SetConnDeadTime(rxconn, 3);
 	    }
 #ifdef RX_ENABLE_LOCKS
 	    AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
-	    code = RXAFS_CallBackRxConnAddr(tc->id, &addr);
+	    code = RXAFS_CallBackRxConnAddr(rxconn, &addr);
 #ifdef RX_ENABLE_LOCKS
 	    AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
 	}
-	afs_PutConn(tc, SHARED_LOCK);	/* done with it now */
+	afs_PutConn(tc, rxconn, SHARED_LOCK);	/* done with it now */
     }				/* Outer loop over addrs */
 #endif /* UKERNEL */
     return 0;

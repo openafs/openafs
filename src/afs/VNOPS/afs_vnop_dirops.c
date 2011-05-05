@@ -40,6 +40,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct vrequest treq;
     register afs_int32 code;
     register struct afs_conn *tc;
+    struct rx_connection *rxconn;
     struct VenusFid newFid;
     register struct dcache *tdc;
     afs_size_t offset, len;
@@ -92,13 +93,13 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock, 153);
     do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_MAKEDIR);
 	    now = osi_Time();
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_MakeDir(tc->id, (struct AFSFid *)&adp->fid.Fid, aname,
+		RXAFS_MakeDir(rxconn, (struct AFSFid *)&adp->fid.Fid, aname,
 			      &InStatus, (struct AFSFid *)&newFid.Fid,
 			      &OutFidStatus, &OutDirStatus, &CallBack,
 			      &tsync);
@@ -109,7 +110,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
+	     (tc, rxconn, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
 	      SHARED_LOCK, NULL));
 
     if (code) {
@@ -179,6 +180,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     struct afs_fakestat_state fakestate;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
@@ -238,19 +240,19 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     }
 
     do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEDIR);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_RemoveDir(tc->id, (struct AFSFid *)&adp->fid.Fid, aname,
+		RXAFS_RemoveDir(rxconn, (struct AFSFid *)&adp->fid.Fid, aname,
 				&OutDirStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
+	     (tc, rxconn, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
 	      SHARED_LOCK, NULL));
 
     if (code) {

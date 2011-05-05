@@ -48,6 +48,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSVolSync tsync;
     struct afs_fakestat_state vfakestate, dfakestate;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
@@ -91,12 +92,12 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 145);
     do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_LINK);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_Link(tc->id, (struct AFSFid *)&adp->fid.Fid, aname,
+		RXAFS_Link(rxconn, (struct AFSFid *)&adp->fid.Fid, aname,
 			   (struct AFSFid *)&avc->fid.Fid, &OutFidStatus,
 			   &OutDirStatus, &tsync);
 	    RX_AFS_GLOCK();
@@ -105,7 +106,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_LINK,
+	     (tc, rxconn, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_LINK,
 	      SHARED_LOCK, NULL));
 
     if (code) {

@@ -63,6 +63,7 @@ int afs_symlink
     struct AFSVolSync tsync;
     struct volume *volp = 0;
     struct afs_fakestat_state fakestate;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
@@ -121,7 +122,7 @@ int afs_symlink
     ObtainSharedLock(&afs_xvcache, 17);	/* prevent others from creating this entry */
     /* XXX Pay attention to afs_xvcache around the whole thing!! XXX */
     do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    hostp = tc->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
@@ -129,7 +130,7 @@ int afs_symlink
 		now = osi_Time();
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_DFSSymlink(tc->id, (struct AFSFid *)&adp->fid.Fid,
+		    RXAFS_DFSSymlink(rxconn, (struct AFSFid *)&adp->fid.Fid,
 				     aname, atargetName, &InStatus,
 				     (struct AFSFid *)&newFid.Fid,
 				     &OutFidStatus, &OutDirStatus, &CallBack,
@@ -138,7 +139,7 @@ int afs_symlink
 	    } else {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_Symlink(tc->id, (struct AFSFid *)&adp->fid.Fid,
+		    RXAFS_Symlink(rxconn, (struct AFSFid *)&adp->fid.Fid,
 				  aname, atargetName, &InStatus,
 				  (struct AFSFid *)&newFid.Fid, &OutFidStatus,
 				  &OutDirStatus, &tsync);
@@ -148,7 +149,7 @@ int afs_symlink
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
+	     (tc, rxconn, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
 	      SHARED_LOCK, NULL));
 
     UpgradeSToWLock(&afs_xvcache, 40);

@@ -106,21 +106,22 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     register struct afs_conn *tc;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     do {
-	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
+	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_RemoveFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
+		RXAFS_RemoveFile(rxconn, (struct AFSFid *)&adp->fid.Fid,
 				 aname, &OutDirStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &adp->fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
+	     (tc, rxconn, code, &adp->fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
 	      SHARED_LOCK, NULL));
 
     osi_dnlc_remove(adp, aname, tvc);

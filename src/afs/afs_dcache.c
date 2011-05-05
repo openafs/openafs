@@ -1522,6 +1522,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     int doAdjustSize = 0;
     int doReallyAdjustSize = 0;
     int overWriteWholeChunk = 0;
+    struct rx_connection *rxconn;
 
     XSTATS_DECLS;
 #ifndef AFS_NOSTATS
@@ -2102,7 +2103,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 		 * tdc->lock(W)
 		 */
 
-		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK, &rxconn);
 		if (tc) {
 		    afs_int32 length_hi, length, bytes;
 #ifndef AFS_NOSTATS
@@ -2119,7 +2120,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 		    }
 		    i = osi_Time();
 		    RX_AFS_GUNLOCK();
-		    tcall = rx_NewCall(tc->id);
+		    tcall = rx_NewCall(rxconn);
 		    RX_AFS_GLOCK();
 
 		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHDATA);
@@ -2162,7 +2163,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			    pos = Position;
 			    RX_AFS_GUNLOCK();
 			    if (!tcall)
-				tcall = rx_NewCall(tc->id);
+				tcall = rx_NewCall(rxconn);
 			    code =
 				StartRXAFS_FetchData(tcall, (struct AFSFid *)
 						     &avc->fid.Fid, pos,
@@ -2364,7 +2365,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 		}
 
 	    } while (afs_Analyze
-		     (tc, code, &avc->fid, areq,
+		     (tc, rxconn, code, &avc->fid, areq,
 		      AFS_STATS_FS_RPCIDX_FETCHDATA, SHARED_LOCK, NULL));
 
 	/*
