@@ -247,7 +247,7 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
  */
 struct afs_conn *
 afs_Conn(struct VenusFid *afid, struct vrequest *areq,
-	 afs_int32 locktype)
+	 afs_int32 locktype, struct rx_connection **rxconn)
 {
     u_short fsport = AFS_FSPORT;
     struct volume *tv;
@@ -257,6 +257,8 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
     int notbusy;
     int i;
     struct srvAddr *sa1p;
+
+    *rxconn = NULL;
 
     AFS_STATCNT(afs_Conn);
     /* Get fid's volume. */
@@ -317,7 +319,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
     if (lowp) {
 	tu = afs_GetUser(areq->uid, afid->Cell, SHARED_LOCK);
 	tconn = afs_ConnBySA(lowp, fsport, afid->Cell, tu, 0 /*!force */ ,
-			     1 /*create */ , locktype);
+			     1 /*create */ , locktype, rxconn);
 
 	afs_PutUser(tu, SHARED_LOCK);
     }
@@ -342,7 +344,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
 struct afs_conn *
 afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	     struct unixuser *tu, int force_if_down, afs_int32 create,
-	     afs_int32 locktype)
+	     afs_int32 locktype, struct rx_connection **rxconn)
 {
     int glocked, foundvec;
     struct afs_conn *tc = NULL;
@@ -350,6 +352,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
     struct rx_securityClass *csec; /*Security class object */
     int isec; /*Security index */
     int service;
+
+    *rxconn = NULL;
 
     /* find cached connection */
     ObtainSharedLock(&afs_xconn, 15);
@@ -472,6 +476,9 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	ConvertWToSLock(&afs_xconn);
     } /* end of if (tc->forceConnectFS)*/
 
+    *rxconn = tc->id;
+    rx_GetConnection(*rxconn);
+
     ReleaseSharedLock(&afs_xconn);
     return tc;
 }
@@ -494,11 +501,14 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
  */
 struct afs_conn *
 afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
-	       struct vrequest *areq, int aforce, afs_int32 locktype)
+	       struct vrequest *areq, int aforce, afs_int32 locktype,
+	       struct rx_connection **rxconn)
 {
     struct unixuser *tu;
     struct afs_conn *tc = NULL;
     struct srvAddr *sa = NULL;
+
+    *rxconn = NULL;
 
     AFS_STATCNT(afs_ConnByHost);
 
@@ -518,7 +528,7 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
     for (sa = aserver->addr; sa; sa = sa->next_sa) {
 	tc = afs_ConnBySA(sa, aport, acell, tu, aforce,
 			  0 /*don't create one */ ,
-			  locktype);
+			  locktype, rxconn);
 	if (tc)
 	    break;
     }
@@ -527,7 +537,7 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 	for (sa = aserver->addr; sa; sa = sa->next_sa) {
 	    tc = afs_ConnBySA(sa, aport, acell, tu, aforce,
 			      1 /*create one */ ,
-			      locktype);
+			      locktype, rxconn);
 	    if (tc)
 		break;
 	}
@@ -554,18 +564,20 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 struct afs_conn *
 afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
 		 afs_int32 acell, struct vrequest *areq,
-		 afs_int32 locktype)
+		 afs_int32 locktype, struct rx_connection **rxconn)
 {
     afs_int32 i;
     struct afs_conn *tconn;
     struct server *ts;
+
+    *rxconn = NULL;
 
     /* try to find any connection from the set */
     AFS_STATCNT(afs_ConnByMHosts);
     for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	if ((ts = ahosts[i]) == NULL)
 	    break;
-	tconn = afs_ConnByHost(ts, aport, acell, areq, 0, locktype);
+	tconn = afs_ConnByHost(ts, aport, acell, areq, 0, locktype, rxconn);
 	if (tconn) {
 	    return tconn;
 	}
@@ -581,11 +593,13 @@ afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
  * @param locktype
  */
 void
-afs_PutConn(struct afs_conn *ac, afs_int32 locktype)
+afs_PutConn(struct afs_conn *ac, struct rx_connection *rxconn,
+            afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
     ac->parent->refCount--;
+    rx_PutConnection(rxconn);
 }				/*afs_PutConn */
 
 

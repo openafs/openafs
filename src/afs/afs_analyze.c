@@ -102,6 +102,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
     char *bp, tbuf[CVBS];	/* biggest volume id is 2^32, ~ 4*10^9 */
     unsigned int changed;
     struct server *(oldhosts[NMAXNSERVERS]);
+    struct rx_connection *rxconn;
 
     AFS_STATCNT(CheckVLDB);
     afs_FinalizeReq(areq);
@@ -116,34 +117,34 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	VSleep(2);		/* Better safe than sorry. */
 	tconn =
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
-			     &treq, SHARED_LOCK);
+			     &treq, SHARED_LOCK, &rxconn);
 	if (tconn) {
 	    if ( tconn->parent->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
 		RX_AFS_GUNLOCK();
-		i = VL_GetEntryByNameO(tconn->id, bp, &v->tve);
+		i = VL_GetEntryByNameO(rxconn, bp, &v->tve);
 		RX_AFS_GLOCK();
 	    } else if (tconn->parent->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
 		RX_AFS_GUNLOCK();
-		i = VL_GetEntryByNameN(tconn->id, bp, &v->ntve);
+		i = VL_GetEntryByNameN(rxconn, bp, &v->ntve);
 		RX_AFS_GLOCK();
 	    } else {
 		type = 2;
 		RX_AFS_GUNLOCK();
-		i = VL_GetEntryByNameU(tconn->id, bp, &v->utve);
+		i = VL_GetEntryByNameU(rxconn, bp, &v->utve);
 		RX_AFS_GLOCK();
 		if (!(tconn->parent->srvr->server->flags & SVLSRV_UUID)) {
 		    if (i == RXGEN_OPCODE) {
 			type = 1;
 			RX_AFS_GUNLOCK();
-			i = VL_GetEntryByNameN(tconn->id, bp, &v->ntve);
+			i = VL_GetEntryByNameN(rxconn, bp, &v->ntve);
 			RX_AFS_GLOCK();
 			if (i == RXGEN_OPCODE) {
 			    type = 0;
 			    tconn->parent->srvr->server->flags |= SNO_LHOSTS;
 			    RX_AFS_GUNLOCK();
-			    i = VL_GetEntryByNameO(tconn->id, bp, &v->tve);
+			    i = VL_GetEntryByNameO(rxconn, bp, &v->tve);
 			    RX_AFS_GLOCK();
 			} else if (!i)
 			    tconn->parent->srvr->server->flags |= SYES_LHOSTS;
@@ -154,7 +155,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	    }
 	} else
 	    i = -1;
-    } while (afs_Analyze(tconn, i, NULL, &treq, -1,	/* no op code for this */
+    } while (afs_Analyze(tconn, rxconn, i, NULL, &treq, -1,	/* no op code for this */
 			 SHARED_LOCK, tcell));
 
     afs_PutCell(tcell, READ_LOCK);
@@ -305,9 +306,9 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
  *	if this is a temporary or permanent error.
  *------------------------------------------------------------------------*/
 int
-afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
-	    struct VenusFid *afid, struct vrequest *areq, int op,
-	    afs_int32 locktype, struct cell *cellp)
+afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
+            afs_int32 acode, struct VenusFid *afid, struct vrequest *areq,
+            int op, afs_int32 locktype, struct cell *cellp)
 {
     afs_int32 i;
     struct srvAddr *sa;
@@ -328,7 +329,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 	if (aconn) {
 	    /* SXW - I suspect that this will _never_ happen - we shouldn't
 	     *       get a connection because we're disconnected !!!*/
-	    afs_PutConn(aconn, locktype);
+	    afs_PutConn(aconn, rxconn, locktype);
 	}
 	return 0;
     }
@@ -447,7 +448,7 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
 	    }
 	}
 
-	afs_PutConn(aconn, locktype);
+	afs_PutConn(aconn, rxconn, locktype);
 	return 0;
     }
 
@@ -680,6 +681,6 @@ afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
     }
 out:
     /* now unlock the connection and return */
-    afs_PutConn(aconn, locktype);
+    afs_PutConn(aconn, rxconn, locktype);
     return (shouldRetry);
 }				/*afs_Analyze */

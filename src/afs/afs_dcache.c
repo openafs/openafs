@@ -1632,6 +1632,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
     int doAdjustSize = 0;
     int doReallyAdjustSize = 0;
     int overWriteWholeChunk = 0;
+    struct rx_connection *rxconn;
 
 #ifndef AFS_NOSTATS
     struct afs_stats_AccessInfo *accP;	/*Ptr to access record in stats */
@@ -2193,7 +2194,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		 * tdc->lock(W)
 		 */
 
-		tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
+		tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 		if (tc) {
 #ifndef AFS_NOSTATS
 		    numFetchLoops++;
@@ -2208,7 +2209,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 			setNewCallback = 1;
 		    }
 		    i = osi_Time();
-		    code = afs_CacheFetchProc(tc, file, Position, tdc,
+		    code = afs_CacheFetchProc(tc, rxconn, file, Position, tdc,
 					       avc, size, tsmall);
 		} else
 		   code = -1;
@@ -2253,7 +2254,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		}
 
 	    } while (afs_Analyze
-		     (tc, code, &avc->f.fid, areq,
+		     (tc, rxconn, code, &avc->f.fid, areq,
 		      AFS_STATS_FS_RPCIDX_FETCHDATA, SHARED_LOCK, NULL));
 
 	/*

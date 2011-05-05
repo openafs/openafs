@@ -361,7 +361,8 @@ struct storeOps rxfs_storeMemOps = {
 };
 
 afs_int32
-rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t base,
+rxfs_storeInit(struct vcache *avc, struct afs_conn *tc,
+                struct rx_connection *rxconn, afs_size_t base,
 		afs_size_t bytes, afs_size_t length,
 		int sync, struct storeOps **ops, void **rock)
 {
@@ -382,7 +383,7 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t base,
     if (sync & AFS_SYNC)
         v->InStatus.Mask |= AFS_FSYNC;
     RX_AFS_GUNLOCK();
-    v->call = rx_NewCall(tc->id);
+    v->call = rx_NewCall(rxconn);
     if (v->call) {
 #ifdef AFS_64BIT_CLIENT
 	if (!afs_serverHasNo64Bit(tc))
@@ -582,6 +583,7 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
     int nomore;
     unsigned int first = 0;
     struct afs_conn *tc;
+    struct rx_connection *rxconn;
 
     for (bytes = 0, j = 0; !code && j <= high; j++) {
 	if (dcList[j]) {
@@ -626,12 +628,12 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 		       ICL_HANDLE_OFFSET(length));
 
 	    do {
-	        tc = afs_Conn(&avc->f.fid, areq, 0);
+	        tc = afs_Conn(&avc->f.fid, areq, 0, &rxconn);
 
 #ifdef AFS_64BIT_CLIENT
 	      restart:
 #endif
-		code = rxfs_storeInit(avc, tc, base, bytes, length,
+		code = rxfs_storeInit(avc, tc, rxconn, base, bytes, length,
 				      sync, &ops, &rock);
 		if ( !code ) {
 		    code = afs_CacheStoreDCaches(avc, dclist, bytes, anewDV,
@@ -646,7 +648,7 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 		}
 #endif /* AFS_64BIT_CLIENT */
 	    } while (afs_Analyze
-		     (tc, code, &avc->f.fid, areq,
+		     (tc, rxconn, code, &avc->f.fid, areq,
 		      AFS_STATS_FS_RPCIDX_STOREDATA, SHARED_LOCK,
 		      NULL));
 
@@ -895,7 +897,8 @@ struct fetchOps rxfs_fetchMemOps = {
 };
 
 afs_int32
-rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
+rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
+               struct vcache *avc, afs_offs_t base,
 	       afs_uint32 size, afs_int32 *alength, struct dcache *adc,
 	       struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
@@ -913,7 +916,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
     memset(v, 0, sizeof(struct rxfs_fetchVariables));
 
     RX_AFS_GUNLOCK();
-    v->call = rx_NewCall(tc->id);
+    v->call = rx_NewCall(rxconn);
     RX_AFS_GLOCK();
     if (v->call) {
 #ifdef AFS_64BIT_CLIENT
@@ -950,7 +953,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 		pos = base;
 		RX_AFS_GUNLOCK();
 		if (!v->call)
-		    v->call = rx_NewCall(tc->id);
+		    v->call = rx_NewCall(rxconn);
 		code =
 		    StartRXAFS_FetchData(
 		    		v->call, (struct AFSFid*)&avc->f.fid.Fid,
@@ -1054,7 +1057,8 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
  * Routine called on fetch; also tells people waiting for data
  *	that more has arrived.
  *
- * \param tc Ptr to the Rx connection structure.
+ * \param tc Ptr to the AFS connection structure.
+ * \param rxconn Ptr to the Rx connection structure.
  * \param fP File descriptor for the cache file.
  * \param base Base offset to fetch.
  * \param adc Ptr to the dcache entry for the file, write-locked.
@@ -1065,7 +1069,8 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
  * \note Environment: Nothing interesting.
  */
 int
-afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
+afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
+                   struct osi_file *fP, afs_size_t base,
 		   struct dcache *adc, struct vcache *avc, afs_int32 size,
 		   struct afs_FetchOutput *tsmall)
 {
@@ -1094,7 +1099,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
      * adc->lock(W)
      */
     code = rxfs_fetchInit(
-		tc, avc, base, size, &length, adc, fP, &ops, &rock);
+		tc, rxconn, avc, base, size, &length, adc, fP, &ops, &rock);
 
 #ifndef AFS_NOSTATS
     osi_GetuTime(&xferStartTime);

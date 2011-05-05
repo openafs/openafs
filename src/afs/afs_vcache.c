@@ -442,6 +442,7 @@ afs_FlushVCBs(afs_int32 lockit)
 	    tcount = 0;		/* number found so far */
 	    for (safety2 = 0; safety2 < afs_cacheStats; safety2++) {
 		if (tcount >= AFS_MAXCBRSCALL || !tsp->cbrs) {
+		    struct rx_connection *rxconn;
 		    /* if buffer is full, or we've queued all we're going
 		     * to from this server, we should flush out the
 		     * callbacks.
@@ -455,20 +456,20 @@ afs_FlushVCBs(afs_int32 lockit)
 		    for (safety3 = 0; safety3 < AFS_MAXHOSTS * 2; safety3++) {
 			tc = afs_ConnByHost(tsp, tsp->cell->fsport,
 					    tsp->cell->cellNum, &treq, 0,
-					    SHARED_LOCK);
+					    SHARED_LOCK, &rxconn);
 			if (tc) {
 			    XSTATS_START_TIME
 				(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);
 			    RX_AFS_GUNLOCK();
 			    code =
-				RXAFS_GiveUpCallBacks(tc->id, &fidArray,
+				RXAFS_GiveUpCallBacks(rxconn, &fidArray,
 						      &cbArray);
 			    RX_AFS_GLOCK();
 			    XSTATS_END_TIME;
 			} else
 			    code = -1;
 			if (!afs_Analyze
-			    (tc, code, 0, &treq,
+			    (tc, rxconn, code, 0, &treq,
 			     AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS, SHARED_LOCK,
 			     tsp->cell)) {
 			    break;
@@ -979,6 +980,7 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
                  tvc->flockCount)) panic("Dead vnode has core/unlinkedel/flock");
 #endif
 	    if (doflocks && tvc->flockCount != 0) {
+		struct rx_connection *rxconn;
 		/* if this entry has an flock, send a keep-alive call out */
 		osi_vnhold(tvc, 0);
 		ReleaseReadLock(&afs_xvcache);
@@ -987,12 +989,12 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		    afs_InitReq(&treq, afs_osi_credp);
 		    treq.flags |= O_NONBLOCK;
 
-		    tc = afs_Conn(&tvc->f.fid, &treq, SHARED_LOCK);
+		    tc = afs_Conn(&tvc->f.fid, &treq, SHARED_LOCK, &rxconn);
 		    if (tc) {
 			XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_EXTENDLOCK);
 			RX_AFS_GUNLOCK();
 			code =
-			    RXAFS_ExtendLock(tc->id,
+			    RXAFS_ExtendLock(rxconn,
 					     (struct AFSFid *)&tvc->f.fid.Fid,
 					     &tsync);
 			RX_AFS_GLOCK();
@@ -1000,7 +1002,7 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		    } else
 			code = -1;
 		} while (afs_Analyze
-			 (tc, code, &tvc->f.fid, &treq,
+			 (tc, rxconn, code, &tvc->f.fid, &treq,
 			  AFS_STATS_FS_RPCIDX_EXTENDLOCK, SHARED_LOCK, NULL));
 
 		ReleaseWriteLock(&tvc->lock);
@@ -1285,24 +1287,25 @@ afs_WriteVCache(struct vcache *avc,
     struct afs_conn *tc;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     AFS_STATCNT(afs_WriteVCache);
     afs_Trace2(afs_iclSetp, CM_TRACE_WVCACHE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
     do {
-	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STORESTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_StoreStatus(tc->id, (struct AFSFid *)&avc->f.fid.Fid,
+		RXAFS_StoreStatus(rxconn, (struct AFSFid *)&avc->f.fid.Fid,
 				  astatus, &OutStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STORESTATUS,
+	     (tc, rxconn, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STORESTATUS,
 	      SHARED_LOCK, NULL));
 
     UpgradeSToWLock(&avc->lock, 20);
@@ -1526,19 +1529,20 @@ afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
 {
     afs_int32 code;
     struct afs_conn *tc;
+    struct rx_connection *rxconn;
     struct AFSFetchStatus OutDirStatus;
     XSTATS_DECLS;
     if (!name)
 	name = "";		/* XXX */
     do {
-	tc = afs_Conn(afid, areq, SHARED_LOCK);
+	tc = afs_Conn(afid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    if (serverp)
 		*serverp = tc->parent->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_XLOOKUP);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_Lookup(tc->id, (struct AFSFid *)&afid->Fid, name,
+		RXAFS_Lookup(rxconn, (struct AFSFid *)&afid->Fid, name,
 			     (struct AFSFid *)&nfid->Fid, OutStatusp,
 			     &OutDirStatus, CallBackp, tsyncp);
 	    RX_AFS_GLOCK();
@@ -1546,7 +1550,7 @@ afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, afid, areq, AFS_STATS_FS_RPCIDX_XLOOKUP, SHARED_LOCK,
+	     (tc, rxconn, code, afid, areq, AFS_STATS_FS_RPCIDX_XLOOKUP, SHARED_LOCK,
 	      NULL));
 
     return code;
@@ -2313,9 +2317,10 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
     struct afs_conn *tc;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     do {
-	tc = afs_Conn(afid, areq, SHARED_LOCK);
+	tc = afs_Conn(afid, areq, SHARED_LOCK, &rxconn);
 	avc->dchint = NULL;	/* invalidate hints */
 	if (tc) {
 	    avc->callback = tc->parent->srvr->server;
@@ -2323,7 +2328,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_FetchStatus(tc->id, (struct AFSFid *)&afid->Fid, Outsp,
+		RXAFS_FetchStatus(rxconn, (struct AFSFid *)&afid->Fid, Outsp,
 				  &CallBack, &tsync);
 	    RX_AFS_GLOCK();
 
@@ -2332,7 +2337,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, afid, areq, AFS_STATS_FS_RPCIDX_FETCHSTATUS,
+	     (tc, rxconn, code, afid, areq, AFS_STATS_FS_RPCIDX_FETCHSTATUS,
 	      SHARED_LOCK, NULL));
 
     if (!code) {

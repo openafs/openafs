@@ -513,6 +513,7 @@ afs_PrefetchNoCache(struct vcache *avc,
     struct iovec *iovecp;
     struct vrequest *areq;
     afs_int32 code = 0;
+    struct rx_connection *rxconn;
 #ifdef AFS_64BIT_CLIENT
     afs_int32 length_hi, bytes, locked;
 #endif
@@ -532,10 +533,10 @@ afs_PrefetchNoCache(struct vcache *avc,
 
     tcallspec = (struct tlocal1 *) osi_Alloc(sizeof(struct tlocal1));
     do {
-	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */, &rxconn);
 	if (tc) {
 	    avc->callback = tc->parent->srvr->server;
-	    tcall = rx_NewCall(tc->id);
+	    tcall = rx_NewCall(rxconn);
 #ifdef AFS_64BIT_CLIENT
 	    if (!afs_serverHasNo64Bit(tc)) {
 		code = StartRXAFS_FetchData64(tcall,
@@ -566,7 +567,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 		    pos = auio->uio_offset;
 		    COND_GUNLOCK(locked);
 		    if (!tcall)
-			tcall = rx_NewCall(tc->id);
+			tcall = rx_NewCall(rxconn);
 		    code = StartRXAFS_FetchData(tcall,
 					(struct AFSFid *) &avc->f.fid.Fid,
 					pos, bparms->length);
@@ -602,7 +603,7 @@ afs_PrefetchNoCache(struct vcache *avc,
 	    unlock_and_release_pages(auio);
 	    goto done;
 	}
-    } while (afs_Analyze(tc, code, &avc->f.fid, areq,
+    } while (afs_Analyze(tc, rxconn, code, &avc->f.fid, areq,
 						 AFS_STATS_FS_RPCIDX_FETCHDATA,
 						 SHARED_LOCK,0));
 done:

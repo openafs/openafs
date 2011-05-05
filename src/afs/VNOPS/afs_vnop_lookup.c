@@ -683,6 +683,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct VenusFid dotdot = {0, {0, 0, 0}};
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     dotdot.Cell = 0;
     dotdot.Fid.Unique = 0;
@@ -926,7 +927,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* start the timer; callback expirations are relative to this */
 	startTime = osi_Time();
 
-	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK);
+	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK, &rxconn);
 	if (tcp) {
 	    hostp = tcp->parent->srvr->server;
 
@@ -965,7 +966,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    retryonce:
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
+		    RXAFS_InlineBulkStatus(rxconn, &fidParm, &statParm,
 					   &cbParm, &volSync);
 		RX_AFS_GLOCK();
 		if (code == RXGEN_OPCODE) {
@@ -973,7 +974,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		    inlinebulk = 0;
 		    RX_AFS_GUNLOCK();
 		    code =
-			RXAFS_BulkStatus(tcp->id, &fidParm, &statParm,
+			RXAFS_BulkStatus(rxconn, &fidParm, &statParm,
 					 &cbParm, &volSync);
 		    RX_AFS_GLOCK();
 		} else {
@@ -984,7 +985,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 			 * Retryable errors are all whole-volume or
 			 * whole-server.
 			 */
-			if (afs_Analyze(tcp, (&statsp[0])->errorCode,
+			if (afs_Analyze(tcp, rxconn, (&statsp[0])->errorCode,
 					&adp->f.fid, areqp,
 					AFS_STATS_FS_RPCIDX_BULKSTATUS,
 					SHARED_LOCK, NULL) != 0)
@@ -995,7 +996,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		inlinebulk = 0;
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
+		    RXAFS_BulkStatus(rxconn, &fidParm, &statParm, &cbParm,
 				     &volSync);
 		RX_AFS_GLOCK();
 	    }
@@ -1003,7 +1004,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tcp, code, &adp->f.fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
+	     (tcp, rxconn, code, &adp->f.fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
 	      SHARED_LOCK, NULL));
 
     /* now, if we didnt get the info, bail out. */
@@ -1305,7 +1306,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     /* If we did the InlineBulk RPC pull out the return code */
     if (inlinebulk && code == 0) {
 	if ((&statsp[0])->errorCode) {
-	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->f.fid, areqp,
+	    afs_Analyze(tcp, rxconn, (&statsp[0])->errorCode, &adp->f.fid, areqp,
 			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL);
 	    code = (&statsp[0])->errorCode;
 	}

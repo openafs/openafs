@@ -84,6 +84,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct AFSVolSync tsync;
     struct volume *volp = 0;
     struct afs_fakestat_state fakestate;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
@@ -156,7 +157,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
      * the copy will be invalidated */
     if (!AFS_IS_DISCON_RW) {
 	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
+	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 		hostp = tc->parent->srvr->server;
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
@@ -164,7 +165,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    now = osi_Time();
 		    RX_AFS_GUNLOCK();
 		    code = 
-			RXAFS_DFSSymlink(tc->id, 
+			RXAFS_DFSSymlink(rxconn,
 					 (struct AFSFid *)&adp->f.fid.Fid,
 					 aname, atargetName, &InStatus,
 					 (struct AFSFid *)&newFid.Fid,
@@ -174,7 +175,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		} else {
 		    RX_AFS_GUNLOCK();
 		    code =
-			RXAFS_Symlink(tc->id, (struct AFSFid *)&adp->f.fid.Fid,
+			RXAFS_Symlink(rxconn, (struct AFSFid *)&adp->f.fid.Fid,
 				      aname, atargetName, &InStatus,
 				      (struct AFSFid *)&newFid.Fid, 
 				      &OutFidStatus, &OutDirStatus, &tsync);
@@ -184,7 +185,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 		code = -1;
 	} while (afs_Analyze
-		    (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
+		    (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
 		     SHARED_LOCK, NULL));
     } else {
 	newFid.Cell = adp->f.fid.Cell;
