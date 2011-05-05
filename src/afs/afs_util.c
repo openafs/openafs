@@ -301,6 +301,8 @@ afs_CheckLocks(void)
 
 	for (i = 0; i < NUSERS; i++) {
 	    for (tu = afs_users[i]; tu; tu = tu->next) {
+		if (CheckLock(&tu->lock))
+		    afs_warn("user at %p is locked\n", tu);
 		if (tu->refCount)
 		    afs_warn("user at %lx is held\n", (unsigned long)tu);
 	    }

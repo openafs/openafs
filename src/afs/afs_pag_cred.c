@@ -108,6 +108,11 @@ afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     ObtainWriteLock(&afs_xuser, 823);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == uid) {
+	    tu->refCount++;
+	    ReleaseWriteLock(&afs_xuser);
+
+	    afs_LockUser(tu, WRITE_LOCK, 368);
+
 	    tu->states &= ~UHasTokens;
 	    tu->viceId = UNDEFVID;
 	    afs_FreeTokens(&tu->tokens);
@@ -117,6 +122,10 @@ afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 	     */
 	    tu->tokenTime = 0;
 #endif /* UKERNEL */
+
+	    afs_PutUser(tu, WRITE_LOCK);
+
+	    ObtainWriteLock(&afs_xuser, 369);
 	}
     }
     ReleaseWriteLock(&afs_xuser);
@@ -254,6 +263,11 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 	if (tu->uid == a_uid && tu->cellinfo &&
 	    (tu->states & UHasTokens) && !(tu->states & UTokensBad)) {
 
+	    tu->refCount++;
+	    ReleaseWriteLock(&afs_xuser);
+
+	    afs_LockUser(tu, READ_LOCK, 0);
+
 	    token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
 
 	    tci = &a_creds->CredInfos_val[i];
@@ -268,20 +282,28 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 	    cellname = ((struct afspag_cell *)(tu->cellinfo))->cellname;
 	    clen = strlen(cellname) + 1;
 	    tci->cellname = afs_osi_Alloc(clen);
-	    if (!tci->cellname)
+	    if (!tci->cellname) {
+		afs_PutUser(tu, READ_LOCK);
+		ObtainWriteLock(&afs_xuser, 370);
 		goto out;
+	    }
 	    memcpy(tci->cellname, cellname, clen);
 
 	    tci->st.st_len = token->rxkad.ticketLen;
 	    tci->st.st_val = afs_osi_Alloc(token->rxkad.ticketLen);
 	    if (!tci->st.st_val) {
+		afs_PutUser(tu, READ_LOCK);
 		afs_osi_Free(tci->cellname, clen);
+		ObtainWriteLock(&afs_xuser, 371);
 		goto out;
 	    }
 	    memcpy(tci->st.st_val,
 		   token->rxkad.ticket, token->rxkad.ticketLen);
 	    if (tu->states & UPrimary)
 		tci->states |= UPrimary;
+
+	    afs_PutUser(tu, READ_LOCK);
+	    ObtainWriteLock(&afs_xuser, 372);
 	}
     }
 

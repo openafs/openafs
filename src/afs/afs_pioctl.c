@@ -1761,12 +1761,13 @@ DECL_PIOCTL(PGetUserCell)
 	if (tu->uid == areq->uid && (tu->states & UPrimary)) {
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
+	    afs_LockUser(tu, READ_LOCK, 0);
 	    break;
 	}
     }
     if (tu) {
 	tcell = afs_GetCell(tu->cell, READ_LOCK);
-	afs_PutUser(tu, WRITE_LOCK);
+	afs_PutUser(tu, READ_LOCK);
 	if (!tcell)
 	    return ESRCH;
 	else {
@@ -2266,6 +2267,10 @@ getNthCell(afs_int32 uid, afs_int32 iterator) {
 	tu->refCount++;
     }
     ReleaseReadLock(&afs_xuser);
+    if (tu) {
+	afs_LockUser(tu, READ_LOCK, 0);
+    }
+
 
     return tu;
 }
@@ -2416,10 +2421,13 @@ DECL_PIOCTL(PUnlog)
     ObtainWriteLock(&afs_xuser, 227);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == areq->uid) {
-	    tu->states &= ~UHasTokens;
-	    afs_FreeTokens(&tu->tokens);
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
+
+	    afs_LockUser(tu, WRITE_LOCK, 366);
+
+	    tu->states &= ~UHasTokens;
+	    afs_FreeTokens(&tu->tokens);
 	    afs_NotifyUser(tu, UTokensDropped);
 	    /* We have to drop the lock over the call to afs_ResetUserConns,
 	     * since it obtains the afs_xvcache lock.  We could also keep
@@ -2430,7 +2438,7 @@ DECL_PIOCTL(PUnlog)
 	     * every user conn that existed when we began this call.
 	     */
 	    afs_ResetUserConns(tu);
-	    tu->refCount--;
+	    afs_PutUser(tu, WRITE_LOCK);
 	    ObtainWriteLock(&afs_xuser, 228);
 #ifdef UKERNEL
 	    /* set the expire times to 0, causes
@@ -5477,12 +5485,15 @@ DECL_PIOCTL(PNFSNukeCreds)
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
 	    if (tu->exporter && EXP_CHECKHOST(tu->exporter, addr)) {
-		tu->states &= ~UHasTokens;
-		afs_FreeTokens(&tu->tokens);
 		tu->refCount++;
 		ReleaseWriteLock(&afs_xuser);
+
+		afs_LockUser(tu, WRITE_LOCK, 367);
+
+		tu->states &= ~UHasTokens;
+		afs_FreeTokens(&tu->tokens);
 		afs_ResetUserConns(tu);
-		tu->refCount--;
+		afs_PutUser(tu, WRITE_LOCK);
 		ObtainWriteLock(&afs_xuser, 228);
 #ifdef UKERNEL
 		/* set the expire times to 0, causes

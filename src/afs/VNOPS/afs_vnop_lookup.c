@@ -528,19 +528,19 @@ afs_getsysname(struct vrequest *areq, struct vcache *adp,
     if (!afs_nfsexporter)
 	strcpy(bufp, (*sysnamelist)[0]);
     else {
-	au = afs_GetUser(areq->uid, adp->f.fid.Cell, 0);
+	au = afs_GetUser(areq->uid, adp->f.fid.Cell, READ_LOCK);
 	if (au->exporter) {
 	    error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num, 0);
 	    if (error) {
 		strcpy(bufp, "@sys");
-		afs_PutUser(au, 0);
+		afs_PutUser(au, READ_LOCK);
 		return -1;
 	    } else {
 		strcpy(bufp, (*sysnamelist)[0]);
 	    }
 	} else
 	    strcpy(bufp, afs_sysname);
-	afs_PutUser(au, 0);
+	afs_PutUser(au, READ_LOCK);
     }
     return 0;
 }
@@ -604,16 +604,16 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
 	*sysnamelist = afs_sysnamelist;
 
 	if (afs_nfsexporter) {
-	    au = afs_GetUser(areq->uid, avc->f.fid.Cell, 0);
+	    au = afs_GetUser(areq->uid, avc->f.fid.Cell, READ_LOCK);
 	    if (au->exporter) {
 		error =
 		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, &num, 0);
 		if (error) {
-		    afs_PutUser(au, 0);
+		    afs_PutUser(au, READ_LOCK);
 		    return 0;
 		}
 	    }
-	    afs_PutUser(au, 0);
+	    afs_PutUser(au, READ_LOCK);
 	}
 	if (++(state->index) >= num || !(*sysnamelist)[(unsigned int)state->index])
 	    return 0;		/* end of list */

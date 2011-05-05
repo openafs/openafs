@@ -187,6 +187,11 @@ static int uu_show(struct seq_file *m, void *p)
 	return 0;
     }
 
+    tu->refCount++;
+    ReleaseReadLock(&afs_xuser);
+
+    afs_LockUser(tu, READ_LOCK, 0);
+
     if (tu->cell == -1) {
 	cellname = "<default>";
     } else {
@@ -233,6 +238,9 @@ static int uu_show(struct seq_file *m, void *p)
 	seq_printf(m, "  Unknown exporter type %d", tu->exporter->exp_type);
     }
     seq_printf(m, "\n");
+
+    afs_PutUser(tu, READ_LOCK);
+    ObtainReadLock(&afs_xuser);
 
     return 0;
 }

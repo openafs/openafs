@@ -239,6 +239,7 @@ afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 	if (tu->uid == auid && ((tu->cell == acell) || (acell == -1))) {
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
+	    afs_LockUser(tu, locktype, 365);
 	    return tu;
 	}
     }
@@ -427,12 +428,10 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 		/* Here we setup the real cell for the client */
 		tu->cell = acell;
 		tu->refCount++;
-		ReleaseWriteLock(&afs_xuser);
-		return tu;
+		goto done;
 	    } else if (tu->cell == acell || acell == -1) {
 		tu->refCount++;
-		ReleaseWriteLock(&afs_xuser);
-		return tu;
+		goto done;
 	    }
 	}
     }
@@ -442,6 +441,7 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
     afs_stats_cmfullperf.authent.PAGCreations++;
 #endif /* AFS_NOSTATS */
     memset(tu, 0, sizeof(struct unixuser));
+    AFS_RWLOCK_INIT(&tu->lock, "unixuser lock");
     tu->next = afs_users[i];
     afs_users[i] = tu;
     if (RmtUser) {
@@ -461,16 +461,54 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
     tu->viceId = UNDEFVID;
     tu->refCount = 1;
     tu->tokenTime = osi_Time();
+
+ done:
     ReleaseWriteLock(&afs_xuser);
+    afs_LockUser(tu, locktype, 364);
     return tu;
 
 }				/*afs_GetUser */
 
+void
+afs_LockUser(struct unixuser *au, afs_int32 locktype,
+             unsigned int src_indicator)
+{
+    switch (locktype) {
+    case READ_LOCK:
+	ObtainReadLock(&au->lock);
+	break;
+    case WRITE_LOCK:
+	ObtainWriteLock(&au->lock, src_indicator);
+	break;
+    case SHARED_LOCK:
+	ObtainSharedLock(&au->lock, src_indicator);
+	break;
+    default:
+	/* noop */
+	break;
+    }
+}
 
 void
 afs_PutUser(struct unixuser *au, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutUser);
+
+    switch (locktype) {
+    case READ_LOCK:
+	ReleaseReadLock(&au->lock);
+	break;
+    case WRITE_LOCK:
+	ReleaseWriteLock(&au->lock);
+	break;
+    case SHARED_LOCK:
+	ReleaseSharedLock(&au->lock);
+	break;
+    default:
+	/* noop */
+	break;
+    }
+
     --au->refCount;
 }				/*afs_PutUser */
 

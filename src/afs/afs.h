@@ -375,6 +375,7 @@ struct unixuser {
     struct tokenJar *tokens;
     struct afs_exporter *exporter;	/* more info about the exporter for the remote user */
     void *cellinfo;             /* pointer to cell info (PAG manager only) */
+    afs_rwlock_t lock;
 };
 
 #define CVEC_LEN 3 /* per-user connection pool */

@@ -285,7 +285,9 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     }
     if (au)
 	afs_PutUser(au, READ_LOCK);
-    au = afs_GetUser(pag, -1, WRITE_LOCK);
+    /* do not get a lock on au; afs_nfsclient_getcreds may write-lock the
+     * same unixuser */
+    au = afs_GetUser(pag, -1, 0);
     if (!(au->exporter)) {	/* Created new unixuser struct */
 	np->refCount++;		/* so it won't disappear */
 	au->exporter = (struct afs_exporter *)np;
@@ -296,7 +298,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     }
     *pagparam = pag;
     *outexporter = (struct afs_exporter *)np;
-    afs_PutUser(au, WRITE_LOCK);
+    afs_PutUser(au, 0);
 /*    ReleaseWriteLock(&afs_xnfsreq);	*/
     return 0;
 }
