@@ -683,6 +683,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct volume *volp = 0;	/* volume ptr */
     struct VenusFid dotdot = {0, {0, 0, 0}};
     int flagIndex = 0;		/* First file with bulk fetch flag set */
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     dotdot.Cell = 0;
     dotdot.Fid.Unique = 0;
@@ -938,7 +939,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* start the timer; callback expirations are relative to this */
 	startTime = osi_Time();
 
-	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK);
+	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK, &rxconn);
 	if (tcp) {
 	    hostp = tcp->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
@@ -946,14 +947,14 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
+		    RXAFS_InlineBulkStatus(rxconn, &fidParm, &statParm,
 					   &cbParm, &volSync);
 		RX_AFS_GLOCK();
 		if (code == RXGEN_OPCODE) {
 		    tcp->srvr->server->flags |= SNO_INLINEBULK;
 		    RX_AFS_GUNLOCK();
 		    code =
-			RXAFS_BulkStatus(tcp->id, &fidParm, &statParm,
+			RXAFS_BulkStatus(rxconn, &fidParm, &statParm,
 					 &cbParm, &volSync);
 		    RX_AFS_GLOCK();
 		} else if (!code) {
@@ -965,7 +966,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    } else {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
+		    RXAFS_BulkStatus(rxconn, &fidParm, &statParm, &cbParm,
 				     &volSync);
 		RX_AFS_GLOCK();
 	    }
@@ -973,7 +974,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tcp, code, &adp->f.fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
+	     (tcp, rxconn, code, &adp->f.fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
 	      SHARED_LOCK, NULL));
 
     /* now, if we didnt get the info, bail out. */
