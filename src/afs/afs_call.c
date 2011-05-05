@@ -1169,7 +1169,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 
 	if (refresh) {
 	    afs_CheckServers(1, NULL);     /* check down servers */
-	    afs_CheckServers(0, NULL);     /* check down servers */
+	    afs_CheckServers(0, NULL);     /* check up servers */
 	}
     }
 #ifdef	AFS_SGI53_ENV

@@ -751,7 +751,9 @@ afs_CheckServers(int adown, struct cell *acellp)
 		    afs_setTime?CkSrv_SetTime:NULL);
 }
 
-/* adown: 0 - check only down. 1 - check only up. 2 - check all */
+/* adown: AFS_LS_UP   - check only up
+ *        AFS_LS_DOWN - check only down.
+ *        AFS_LS_ALL  - check all */
 void
 afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 		void (*func1) (struct rx_connection **rxconns, int nconns,
@@ -838,8 +840,8 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 	if (acellp && acellp != ts->cell)
 	    continue;
 
-	if (((adown==AFS_LS_DOWN) && (sa->sa_flags & SRVADDR_ISDOWN))
-	    || ((adown==AFS_LS_UP) && !(sa->sa_flags & SRVADDR_ISDOWN)))
+	if (((adown==AFS_LS_DOWN) && !(sa->sa_flags & SRVADDR_ISDOWN))
+	    || ((adown==AFS_LS_UP) && (sa->sa_flags & SRVADDR_ISDOWN)))
 	    continue;
 
 	/* check vlserver with special code */
