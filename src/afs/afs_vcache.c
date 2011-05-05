@@ -426,7 +426,7 @@ afs_FlushVCBs(afs_int32 lockit)
      */
 
     if (lockit == 2)
-	afs_LoopServers(2, NULL, 0, FlushAllVCBs, NULL);
+	afs_LoopServers(AFS_LS_ALL, NULL, 0, FlushAllVCBs, NULL);
 
     ObtainReadLock(&afs_xserver);
     for (i = 0; i < NSERVERS; i++) {
