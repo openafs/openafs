@@ -4133,21 +4133,40 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 	    afs_printable_uint32_lu(vid));
     }
 
+    if (!Testing && salvinfo->VolumeChanged) {
 #ifdef FSSYNC_BUILD_CLIENT
-    if (!Testing && salvinfo->VolumeChanged && salvinfo->useFSYNC) {
-	afs_int32 fsync_code;
+	if (salvinfo->useFSYNC) {
+	    afs_int32 fsync_code;
 
-	fsync_code = FSYNC_VolOp(vid, NULL, FSYNC_VOL_BREAKCBKS, FSYNC_SALVAGE, NULL);
-	if (fsync_code) {
-	    Log("Error trying to tell the fileserver to break callbacks for "
-	        "changed volume %lu; error code %ld\n",
-	        afs_printable_uint32_lu(vid),
-	        afs_printable_int32_ld(fsync_code));
-	} else {
-	    salvinfo->VolumeChanged = 0;
+	    fsync_code = FSYNC_VolOp(vid, NULL, FSYNC_VOL_BREAKCBKS, FSYNC_SALVAGE, NULL);
+	    if (fsync_code) {
+		Log("Error trying to tell the fileserver to break callbacks for "
+		    "changed volume %lu; error code %ld\n",
+		    afs_printable_uint32_lu(vid),
+		    afs_printable_int32_ld(fsync_code));
+	    } else {
+		salvinfo->VolumeChanged = 0;
+	    }
 	}
-    }
 #endif /* FSSYNC_BUILD_CLIENT */
+
+#if defined(AFS_DEMAND_ATTACH_FS) || defined(AFS_DEMAND_ATTACH_UTIL)
+	if (!salvinfo->useFSYNC) {
+	    /* A volume's contents have changed, but the fileserver will not
+	     * break callbacks on the volume until it tries to load the vol
+	     * header. So, to reduce the amount of time a client could have
+	     * stale data, remove fsstate.dat, so the fileserver will init
+	     * callback state with all clients. This is a very coarse hammer,
+	     * and in the future we should just record which volumes have
+	     * changed. */
+	    code = unlink(AFSDIR_SERVER_FSSTATE_FILEPATH);
+	    if (code && errno != ENOENT) {
+		Log("Error %d when trying to unlink FS state file %s\n", errno,
+		    AFSDIR_SERVER_FSSTATE_FILEPATH);
+	    }
+	}
+#endif
+    }
 
     /* Turn off the inUse bit; the volume's been salvaged! */
     volHeader.inUse = 0;	/* clear flag indicating inUse@last crash */
