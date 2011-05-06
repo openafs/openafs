@@ -29,14 +29,14 @@ VERSFILE = version
 !INCLUDE ..\..\..\src\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\src\config\NTMakefile.version
 
-!IFNDEF CYGWIN
-CYGWIN     = c:/cygwin
+!IFNDEF CYGWINDIR
+CYGWINDIR     = c:/cygwin
 !ENDIF
 !IFNDEF DOCBOOK_XSL
-!IF (EXIST($(CYGWIN)/usr/share/sgml/docbook/xsl-stylesheets))
-DOCBOOK_XSL = $(CYGWIN)/usr/share/sgml/docbook/xsl-stylesheets
-!ELSE IF (EXIST($(CYGWIN)/usr/share/docbook-xsl))
-DOCBOOK_XSL = $(CYGWIN)/usr/share/docbook-xsl
+!IF (EXIST($(CYGWINDIR)/usr/share/sgml/docbook/xsl-stylesheets))
+DOCBOOK_XSL = $(CYGWINDIR)/usr/share/sgml/docbook/xsl-stylesheets
+!ELSE IF (EXIST($(CYGWINDIR)/usr/share/docbook-xsl))
+DOCBOOK_XSL = $(CYGWINDIR)/usr/share/docbook-xsl
 !ELSE
 !ERROR DOCBOOK_XSL cannot be determined
 !ENDIF
