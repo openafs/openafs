@@ -2953,7 +2953,7 @@ CopyAndSalvage(struct SalvInfo *salvinfo, struct DirSummary *dir)
     }
     vnode.cloned = 0;
     VNDISK_SET_INO(&vnode, newinode);
-    length = Length(&newdir);
+    length = afs_dir_Length(&newdir);
     VNDISK_SET_LEN(&vnode, length);
     lcode =
 	IH_IWRITE(salvinfo->vnodeInfo[vLarge].handle,
@@ -3007,7 +3007,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	}
 	if (!Testing) {
 	    CopyOnWrite(salvinfo, dir);
-	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
+	    osi_Assert(afs_dir_Delete(&dir->dirHandle, name) == 0);
 	}
 	return 0;
     }
@@ -3039,7 +3039,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	if (!unique) {
 	    if (!Testing) {
 		CopyOnWrite(salvinfo, dir);
-		osi_Assert(Delete(&dir->dirHandle, name) == 0);
+		osi_Assert(afs_dir_Delete(&dir->dirHandle, name) == 0);
 	    }
 	    return 0;
 	}
@@ -3069,9 +3069,9 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	    fid.Vnode = vnodeNumber;
 	    fid.Unique = vnodeEssence->unique;
 	    CopyOnWrite(salvinfo, dir);
-	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
+	    osi_Assert(afs_dir_Delete(&dir->dirHandle, name) == 0);
 	    if (!todelete)
-		osi_Assert(Create(&dir->dirHandle, name, &fid) == 0);
+		osi_Assert(afs_dir_Create(&dir->dirHandle, name, &fid) == 0);
 	}
 	if (todelete)
 	    return 0;		/* no need to continue */
@@ -3084,10 +3084,10 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 		Log("directory vnode %u.%u: bad '.' entry (was %u.%u); fixed\n", dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(salvinfo, dir);
-		osi_Assert(Delete(&dir->dirHandle, ".") == 0);
+		osi_Assert(afs_dir_Delete(&dir->dirHandle, ".") == 0);
 		fid.Vnode = dir->vnodeNumber;
 		fid.Unique = dir->unique;
-		osi_Assert(Create(&dir->dirHandle, ".", &fid) == 0);
+		osi_Assert(afs_dir_Create(&dir->dirHandle, ".", &fid) == 0);
 	    }
 
 	    vnodeNumber = fid.Vnode;	/* Get the new Essence */
@@ -3112,8 +3112,8 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 		Log("directory vnode %u.%u: bad '..' entry (was %u.%u); fixed\n", dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(salvinfo, dir);
-		osi_Assert(Delete(&dir->dirHandle, "..") == 0);
-		osi_Assert(Create(&dir->dirHandle, "..", &pa) == 0);
+		osi_Assert(afs_dir_Delete(&dir->dirHandle, "..") == 0);
+		osi_Assert(afs_dir_Create(&dir->dirHandle, "..", &pa) == 0);
 	    }
 
 	    vnodeNumber = pa.Vnode;	/* Get the new Essence */
@@ -3127,7 +3127,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	}
 	if (!Testing) {
 	    CopyOnWrite(salvinfo, dir);
-	    osi_Assert(Delete(&dir->dirHandle, name) == 0);
+	    osi_Assert(afs_dir_Delete(&dir->dirHandle, name) == 0);
 	}
 	vnodeEssence->claimed = 0;	/* Not claimed: Orphaned */
 	vnodeEssence->todelete = 1;	/* Will later delete vnode and decr inode */
@@ -3221,7 +3221,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 		}
 		if (!Testing) {
 		    CopyOnWrite(salvinfo, dir);
-		    osi_Assert(Delete(&dir->dirHandle, name) == 0);
+		    osi_Assert(afs_dir_Delete(&dir->dirHandle, name) == 0);
 		}
 		return 0;
 	    }
@@ -3420,7 +3420,8 @@ SalvageDir(struct SalvInfo *salvinfo, char *name, VolumeId rwVid,
 	judge_params.salvinfo = salvinfo;
 	judge_params.dir = &dir;
 
-	osi_Assert(EnumerateDir(&dirHandle, JudgeEntry, &judge_params) == 0);
+	osi_Assert(afs_dir_EnumerateDir(&dirHandle, JudgeEntry,
+				        &judge_params) == 0);
     }
 
     /* Delete the old directory if it was copied in order to salvage.
@@ -3707,17 +3708,17 @@ CreateRootDir(struct SalvInfo *salvinfo, VolumeDiskData *volHeader,
     did.Volume = vid;
     did.Vnode = 1;
     did.Unique = 1;
-    if (MakeDir(&rootdir->dirHandle, (afs_int32*)&did, (afs_int32*)&did)) {
+    if (afs_dir_MakeDir(&rootdir->dirHandle, (afs_int32*)&did, (afs_int32*)&did)) {
 	Log("CreateRootDir: MakeDir failed\n");
 	goto error;
     }
-    if (Create(&rootdir->dirHandle, "README.ROOTDIR", &readmeid)) {
+    if (afs_dir_Create(&rootdir->dirHandle, "README.ROOTDIR", &readmeid)) {
 	Log("CreateRootDir: Create failed\n");
 	goto error;
     }
     DFlush();
-    length = Length(&rootdir->dirHandle);
-    DZap((void *)&rootdir->dirHandle);
+    length = afs_dir_Length(&rootdir->dirHandle);
+    DZap(&rootdir->dirHandle);
 
     /* create the new root dir vnode */
     rootvnode = calloc(1, SIZEOF_LARGEDISKVNODE);
@@ -3967,8 +3968,8 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 		                        &salvinfo->VolumeChanged);
 		    pa.Vnode = LFVnode;
 		    pa.Unique = LFUnique;
-		    osi_Assert(Delete(&dh, "..") == 0);
-		    osi_Assert(Create(&dh, "..", &pa) == 0);
+		    osi_Assert(afs_dir_Delete(&dh, "..") == 0);
+		    osi_Assert(afs_dir_Create(&dh, "..", &pa) == 0);
 
 		    /* The original parent's link count was decremented above.
 		     * Here we increment the new parent's link count.
@@ -3991,7 +3992,7 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 			     ThisVnode, ThisUnique);
 
 		    CopyOnWrite(salvinfo, &rootdir);
-		    code = Create(&rootdir.dirHandle, npath, &pa);
+		    code = afs_dir_Create(&rootdir.dirHandle, npath, &pa);
 		    if (!code)
 			break;
 

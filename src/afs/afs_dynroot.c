@@ -257,7 +257,7 @@ afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
     /*
      * Add the new entry to the correct hash chain.
      */
-    i = DirHash(name);
+    i = afs_dir_DirHash(name);
     dirEntry->next = dirHeader->hashTable[i];
     dirHeader->hashTable[i] = htons(curPage * EPP + curChunk);
 

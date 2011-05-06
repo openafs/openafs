@@ -487,7 +487,7 @@ DFlushDCache(struct dcache *adc)
     ReleaseReadLock(&afs_bufferLock);
 }
 
-void
+int
 DFlush(void)
 {
     /* Flush all the modified buffers. */
@@ -522,6 +522,8 @@ DFlush(void)
 	}
     }
     ReleaseReadLock(&afs_bufferLock);
+
+    return 0;
 }
 
 int

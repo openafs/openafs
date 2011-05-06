@@ -19,7 +19,7 @@
 
 long fidCounter = 0;
 
-typedef struct dirhandle {
+typedef struct DirHandle {
     int fd;
     int uniq;
 } dirhandle;
@@ -51,7 +51,7 @@ LookupDir(char *dname, char *ename)
     int code;
 
     OpenDir(dname, &dir);
-    code = Lookup(&dir, ename, fid);
+    code = afs_dir_Lookup(&dir, ename, fid);
     if (code)
 	printf("lookup code %d\n", code);
     else {
@@ -70,7 +70,7 @@ AddEntry(char *dname, char *ename)
     fid[1] = fidCounter++;
     fid[2] = 3;
     OpenDir(dname, &dir);
-    code = Create(&dir, ename, fid);
+    code = afs_dir_Create(&dir, ename, fid);
     if (code)
 	printf("create code %d\n", code);
     DFlush();
@@ -90,7 +90,7 @@ ListDir(char *name)
 {
     dirhandle dir;
     OpenDir(name, &dir);
-    EnumerateDir(&dir, ListEntry, 0);
+    afs_dir_EnumerateDir(&dir, ListEntry, 0);
 }
 
 static void
@@ -111,7 +111,8 @@ SalvageDir(char *iname, char *oname)
     afs_int32 myFid[3], parentFid[3];
 
     OpenDir(iname, &in);
-    if (Lookup(&in, ".", myFid) || Lookup(&in, "..", parentFid)) {
+    if (afs_dir_Lookup(&in, ".", myFid) || 
+	afs_dir_Lookup(&in, "..", parentFid)) {
 	printf("Lookup of \".\" and/or \"..\" failed: ");
 	printf("%d %d %d %d\n", myFid[1], myFid[2], parentFid[1],
 	       parentFid[2]);
@@ -129,7 +130,7 @@ DelTest(char *dname, char *ename)
     int code;
 
     OpenDir(dname, &dir);
-    code = Delete(&dir, ename);
+    code = afs_dir_Delete(&dir, ename);
     if (code)
 	printf("delete code is %d\n", code);
     DFlush();
@@ -146,12 +147,12 @@ CRTest(char *dname, char *ename, int count)
 
     CreateDir(dname, &dir);
     memset(fid, 0, sizeof(fid));
-    MakeDir(&dir, fid, fid);
+    afs_dir_MakeDir(&dir, fid, fid);
     for (i = 0; i < count; i++) {
 	sprintf(tbuffer, "%s%d", ename, i);
 	fid[1] = fidCounter++;
 	fid[2] = count;
-	code = Create(&dir, tbuffer, &fid);
+	code = afs_dir_Create(&dir, tbuffer, &fid);
 	if (i % 100 == 0) {
 	    printf("#");
 	    fflush(stdout);

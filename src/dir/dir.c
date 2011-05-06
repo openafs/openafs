@@ -67,20 +67,6 @@ extern int DNew(struct dcache *adc, int page, struct DirBuffer *);
 #  include "h/string.h"
 # endif
 
-/* generic renaming */
-# define	NameBlobs	afs_dir_NameBlobs
-# define	GetBlob		afs_dir_GetBlob
-# define	Create		afs_dir_Create
-# define	Length		afs_dir_Length
-# define	Delete		afs_dir_Delete
-# define	MakeDir		afs_dir_MakeDir
-# define	Lookup		afs_dir_Lookup
-# define	LookupOffset	afs_dir_LookupOffset
-# define	EnumerateDir	afs_dir_EnumerateDir
-# define	IsEmpty		afs_dir_IsEmpty
-# define InverseLookup   afs_dir_InverseLookup
-# define ChangeFid	afs_dir_ChangeFid
-
 #else /* KERNEL */
 
 # include <roken.h>
@@ -90,12 +76,15 @@ extern int DNew(struct dcache *adc, int page, struct DirBuffer *);
 afs_int32 DErrno;
 
 /* Local static prototypes */
-static int FindItem(void *dir, char *ename, struct DirBuffer *,
+static int FindBlobs(dir_file_t, int);
+static void AddPage(dir_file_t, int);
+static void FreeBlobs(dir_file_t, int, int);
+static int FindItem(dir_file_t, char *, struct DirBuffer *,
 		    struct DirBuffer *);
 
 /* Find out how many entries are required to store a name. */
 int
-NameBlobs(char *name)
+afs_dir_NameBlobs(char *name)
 {
     int i;
     i = strlen(name) + 1;
@@ -105,7 +94,7 @@ NameBlobs(char *name)
 /* Create an entry in a file.  Dir is a file representation, while entry is
  * a string name. */
 int
-Create(void *dir, char *entry, void *voidfid)
+afs_dir_Create(dir_file_t dir, char *entry, void *voidfid)
 {
     afs_int32 *vfid = (afs_int32 *) voidfid;
     int blobs, firstelt;
@@ -126,13 +115,13 @@ Create(void *dir, char *entry, void *voidfid)
 	return EEXIST;
     }
 
-    blobs = NameBlobs(entry);	/* number of entries required */
+    blobs = afs_dir_NameBlobs(entry);	/* number of entries required */
     firstelt = FindBlobs(dir, blobs);
     if (firstelt < 0)
 	return EFBIG;		/* directory is full */
 
     /* First, we fill in the directory entry. */
-    if (GetBlob(dir, firstelt, &entrybuf) != 0)
+    if (afs_dir_GetBlob(dir, firstelt, &entrybuf) != 0)
 	return EIO;
     ep = (struct DirEntry *)entrybuf.data;
 
@@ -148,7 +137,7 @@ Create(void *dir, char *entry, void *voidfid)
     }
     dhp = (struct DirHeader *)headerbuf.data;
 
-    i = DirHash(entry);
+    i = afs_dir_DirHash(entry);
     ep->next = dhp->hashTable[i];
     dhp->hashTable[i] = htons(firstelt);
     DRelease(&headerbuf, 1);
@@ -157,7 +146,7 @@ Create(void *dir, char *entry, void *voidfid)
 }
 
 int
-Length(void *dir)
+afs_dir_Length(dir_file_t dir)
 {
     int i, ctr;
     struct DirBuffer headerbuf;
@@ -180,11 +169,12 @@ Length(void *dir)
     return ctr * AFS_PAGESIZE;
 }
 
+/* Delete an entry from a directory, including update of all free entry
+ * descriptors. */
 int
-Delete(void *dir, char *entry)
+afs_dir_Delete(dir_file_t dir, char *entry)
 {
-    /* Delete an entry from a directory, including update of all free entry
-     * descriptors. */
+
     int nitems, index;
     struct DirBuffer entrybuf, prevbuf;
     struct DirEntry *firstitem;
@@ -199,16 +189,16 @@ Delete(void *dir, char *entry)
     *previtem = firstitem->next;
     DRelease(&prevbuf, 1);
     index = DVOffset(&entrybuf) / 32;
-    nitems = NameBlobs(firstitem->name);
+    nitems = afs_dir_NameBlobs(firstitem->name);
     DRelease(&entrybuf, 0);
     FreeBlobs(dir, index, nitems);
     return 0;
 }
 
-int
-FindBlobs(void *dir, int nblobs)
+/* Find a bunch of contiguous entries; at least nblobs in a row. */
+static int
+FindBlobs(dir_file_t dir, int nblobs)
 {
-    /* Find a bunch of contiguous entries; at least nblobs in a row. */
     int i, j, k;
     int failed = 0;
     struct DirBuffer headerbuf, pagebuf;
@@ -280,8 +270,8 @@ FindBlobs(void *dir, int nblobs)
     return -1;
 }
 
-void
-AddPage(void *dir, int pageno)
+static void
+AddPage(dir_file_t dir, int pageno)
 {				/* Add a page to a directory. */
     int i;
     struct PageHeader *pp;
@@ -303,8 +293,8 @@ AddPage(void *dir, int pageno)
 
 /* Free a whole bunch of directory entries. */
 
-void
-FreeBlobs(void *dir, int firstblob, int nblobs)
+static void
+FreeBlobs(dir_file_t dir, int firstblob, int nblobs)
 {
     int i;
     int page;
@@ -339,7 +329,7 @@ FreeBlobs(void *dir, int firstblob, int nblobs)
  * allocation map and 8 to the hash table.
  */
 int
-MakeDir(void *dir, afs_int32 * me, afs_int32 * parent)
+afs_dir_MakeDir(dir_file_t dir, afs_int32 * me, afs_int32 * parent)
 {
     int i;
     struct DirBuffer buffer;
@@ -361,15 +351,15 @@ MakeDir(void *dir, afs_int32 * me, afs_int32 * parent)
     for (i = 0; i < NHASHENT; i++)
 	dhp->hashTable[i] = 0;
     DRelease(&buffer, 1);
-    Create(dir, ".", me);
-    Create(dir, "..", parent);	/* Virtue is its own .. */
+    afs_dir_Create(dir, ".", me);
+    afs_dir_Create(dir, "..", parent);	/* Virtue is its own .. */
     return 0;
 }
 
 /* Look up a file name in directory. */
 
 int
-Lookup(void *dir, char *entry, void *voidfid)
+afs_dir_Lookup(dir_file_t dir, char *entry, void *voidfid)
 {
     afs_int32 *fid = (afs_int32 *) voidfid;
     struct DirBuffer firstbuf, prevbuf;
@@ -389,7 +379,8 @@ Lookup(void *dir, char *entry, void *voidfid)
 /* Look up a file name in directory. */
 
 int
-LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
+afs_dir_LookupOffset(dir_file_t dir, char *entry, void *voidfid,
+		     long *offsetp)
 {
     afs_int32 *fid = (afs_int32 *) voidfid;
     struct DirBuffer firstbuf, prevbuf;
@@ -414,9 +405,10 @@ LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
  */
 
 int
-EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
-				         afs_int32 vnode, afs_int32 unique),
-	     void *hook)
+afs_dir_EnumerateDir(dir_file_t dir, int (*proc) (void *, char *name,
+						  afs_int32 vnode,
+						  afs_int32 unique),
+		     void *hook)
 {
     int i;
     int num;
@@ -435,7 +427,7 @@ EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
 	while (num != 0) {
 	    /* Walk down the hash table list. */
 	    DErrno = 0;
-	    if (GetBlob(dir, num, &entrybuf) != 0) {
+	    if (afs_dir_GetBlob(dir, num, &entrybuf) != 0) {
 		if (DErrno) {
 		    /* we failed, return why */
 		    DRelease(&headerbuf, 0);
@@ -446,8 +438,8 @@ EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
 	    ep = (struct DirEntry *)entrybuf.data;
 
 	    num = ntohs(ep->next);
-	    code = (*hookproc) (hook, ep->name, ntohl(ep->fid.vnode),
-			 ntohl(ep->fid.vunique));
+	    code = (*proc) (hook, ep->name, ntohl(ep->fid.vnode),
+			    ntohl(ep->fid.vunique));
 	    DRelease(&entrybuf, 0);
 	    if (code)
 	    	break;
@@ -458,7 +450,7 @@ EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
 }
 
 int
-IsEmpty(void *dir)
+afs_dir_IsEmpty(dir_file_t dir)
 {
     /* Enumerate the contents of a directory. */
     int i;
@@ -476,7 +468,7 @@ IsEmpty(void *dir)
 	num = ntohs(dhp->hashTable[i]);
 	while (num != 0) {
 	    /* Walk down the hash table list. */
-	    if (GetBlob(dir, num, &entrybuf) != 0);
+	    if (afs_dir_GetBlob(dir, num, &entrybuf) != 0);
 	        break;
 	    ep = (struct DirEntry *)entrybuf.data;
 	    if (strcmp(ep->name, "..") && strcmp(ep->name, ".")) {
@@ -493,7 +485,7 @@ IsEmpty(void *dir)
 }
 
 int
-GetBlob(void *dir, afs_int32 blobno, struct DirBuffer *buffer)
+afs_dir_GetBlob(dir_file_t dir, afs_int32 blobno, struct DirBuffer *buffer)
 {
     int code;
 
@@ -509,7 +501,7 @@ GetBlob(void *dir, afs_int32 blobno, struct DirBuffer *buffer)
 }
 
 int
-DirHash(char *string)
+afs_dir_DirHash(char *string)
 {
     /* Hash a string to a number between 0 and NHASHENT. */
     unsigned char tc;
@@ -536,7 +528,7 @@ DirHash(char *string)
  * returned instead. */
 
 static int
-FindItem(void *dir, char *ename, struct DirBuffer *prevbuf,
+FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
          struct DirBuffer *itembuf )
 {
     int i, code;
@@ -552,14 +544,15 @@ FindItem(void *dir, char *ename, struct DirBuffer *prevbuf,
 	return code;
     dhp = (struct DirHeader *)prev.data;
 
-    i = DirHash(ename);
+    i = afs_dir_DirHash(ename);
     if (dhp->hashTable[i] == 0) {
 	/* no such entry */
 	DRelease(&prev, 0);
 	return ENOENT;
     }
 
-    code = GetBlob(dir, (u_short) ntohs(dhp->hashTable[i]), &curr);
+    code = afs_dir_GetBlob(dir, (u_short) ntohs(dhp->hashTable[i]),
+			   &curr);
     if (code) {
 	DRelease(&prev, 0);
 	return code;
@@ -586,7 +579,7 @@ FindItem(void *dir, char *ename, struct DirBuffer *prevbuf,
 	prev = curr;
 	prev.data = &(tp->next);
 
-	code = GetBlob(dir, (u_short) ntohs(tp->next), &curr);
+	code = afs_dir_GetBlob(dir, (u_short) ntohs(tp->next), &curr);
 	if (code) {
 	    DRelease(&prev, 0);
 	    return code;
@@ -619,8 +612,8 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique,
 
     for (i=0; i<NHASHENT; i++) {
 	if (dhp->hashTable[i] != 0) {
-	    code = GetBlob(dir, (u_short)ntohs(dhp->hashTable[i]),
-			   &curr);
+	    code = afs_dir_GetBlob(dir, (u_short)ntohs(dhp->hashTable[i]),
+				   &curr);
 	    if (code) {
 		DRelease(&header, 0);
 		return code;
@@ -642,7 +635,7 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique,
 		if (next == 0)
 		    break;
 
-		code = GetBlob(dir, (u_short)ntohs(next), &curr);
+		code = afs_dir_GetBlob(dir, (u_short)ntohs(next), &curr);
 		if (code) {
 		    DRelease(&header, 0);
 		    return code;
@@ -655,8 +648,8 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique,
 }
 
 int
-InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name,
-	       afs_uint32 length)
+afs_dir_InverseLookup(void *dir, afs_uint32 vnode, afs_uint32 unique,
+		      char *name, afs_uint32 length)
 {
     /* Look for the name pointing to given vnode and unique in a directory */
     struct DirBuffer entrybuf;
@@ -684,10 +677,9 @@ InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name,
  * It can be omitted if you don't need a safety check...
  * \param new_fid The new find in MKFid format (host order).
  */
-int ChangeFid(void *dir,
-		char *entry,
-		afs_uint32 *old_fid,
-		afs_uint32 *new_fid)
+int
+afs_dir_ChangeFid(dir_file_t dir, char *entry, afs_uint32 *old_fid,
+		  afs_uint32 *new_fid)
 {
     struct DirBuffer prevbuf, entrybuf;
     struct DirEntry *firstitem;

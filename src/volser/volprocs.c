@@ -340,10 +340,10 @@ ViceCreateRoot(Volume *vp)
     did.Vnode = (VnodeId) 1;
     did.Unique = 1;
 
-    osi_Assert(!(MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
+    osi_Assert(!(afs_dir_MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
     DFlush();			/* flush all modified dir buffers out */
-    DZap((afs_int32 *)&dir);			/* Remove all buffers for this dir */
-    length = Length(&dir);	/* Remember size of this directory */
+    DZap(&dir);			/* Remove all buffers for this dir */
+    length = afs_dir_Length(&dir);	/* Remember size of this directory */
 
     FidZap(&dir);		/* Done with the dir handle obtained via SetSalvageDirHandle() */
 

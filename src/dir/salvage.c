@@ -264,7 +264,7 @@ DirOK(void *file)
 
 	    /* Read the directory entry */
 	    DErrno = 0;
-	    code = GetBlob(file, entry, &entrybuf);
+	    code = afs_dir_GetBlob(file, entry, &entrybuf);
 	    if (code) {
 		if (DErrno != 0) {
 		    /* something went wrong reading the page, but it wasn't
@@ -322,13 +322,13 @@ DirOK(void *file)
 	    /* The name used up k directory entries, set the bit in our in-memory
 	     * freebitmap for each entry used by the name.
 	     */
-	    k = NameBlobs(ep->name);
+	    k = afs_dir_NameBlobs(ep->name);
 	    for (j = 0; j < k; j++) {
 		eaMap[(entry + j) >> 3] |= (1 << ((entry + j) & 7));
 	    }
 
 	    /* Hash the name and make sure it is in the correct name hash */
-	    if ((j = DirHash(ep->name)) != i) {
+	    if ((j = afs_dir_DirHash(ep->name)) != i) {
 		printf("Dir entry %"AFS_PTR_FMT
 		       " should be in hash bucket %d but IS in %d.\n",
 		       ep, j, i);
@@ -457,7 +457,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     dotdot[1] = pvn;
     dotdot[2] = pvu;
 
-    MakeDir(toFile, dot, dotdot);	/* Returns no error code. */
+    afs_dir_MakeDir(toFile, dot, dotdot);	/* Returns no error code. */
 
     /* Find out how many pages are valid, using stupid heuristic since DRead
      * never returns null.
@@ -488,7 +488,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	    }
 
 	    DErrno = 0;
-	    code = GetBlob(fromFile, entry, &entrybuf);
+	    code = afs_dir_GetBlob(fromFile, entry, &entrybuf);
 	    if (code) {
 		if (DErrno) {
 		    printf
@@ -512,7 +512,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	    if ((strcmp(tp, ".") != 0) && (strcmp(tp, "..") != 0)) {
 		lfid[1] = ntohl(ep->fid.vnode);
 		lfid[2] = ntohl(ep->fid.vunique);
-		code = Create(toFile, tname, lfid);
+		code = afs_dir_Create(toFile, tname, lfid);
 		if (code) {
 		    printf
 			("Create of %s returned code %d, skipping to next hash chain.\n",

@@ -14,17 +14,19 @@
 
 #include <lock.h>
 
+#include "dir.h"
+
 #ifdef AFS_64BIT_IOPS_ENV
-#define BUFFER_FID_SIZE (9 + 2*sizeof(char*)/sizeof(int))
+#define BUFFER_FID_SIZE (9*sizeof(int) + 2*sizeof(char*))
 #else
-#define BUFFER_FID_SIZE (6 + 2*sizeof(char*)/sizeof(int))
+#define BUFFER_FID_SIZE (6*sizeof(int) + 2*sizeof(char*))
 #endif
 
 struct buffer {
     /* fid is used for Unique cache key + i/o addressing.
      * fid size is based on 4 + size of inode and size of pointer
      */
-    afs_int32 fid[BUFFER_FID_SIZE];
+    char fid[BUFFER_FID_SIZE];
     afs_int32 page;
     afs_int32 accesstime;
     struct buffer *hashNext;
@@ -35,7 +37,11 @@ struct buffer {
     struct Lock lock;
 };
 
-#include "dir.h"
+static_inline dir_file_t
+bufferDir(struct buffer *b)
+{
+    return (dir_file_t) &b->fid;
+}
 
 struct Lock afs_bufferLock;
 
@@ -50,7 +56,7 @@ struct Lock afs_bufferLock;
  * based on the volume id. This means this macro is dependent upon the
  * layout of DirHandle in viced/viced.h, vol/salvage.h and volser/salvage.h.
  */
-#define pHash(fid) ((fid)[0] & (PHSIZE-1))
+#define pHash(fid) (((afs_int32 *)fid)[0] & (PHSIZE-1))
 #define vHash(vid) (vid & (PHSIZE-1))
 
 /* admittedly system dependent, this is the maximum signed 32-bit value */
@@ -69,7 +75,7 @@ int nbuffers;
 int timecounter;
 static int calls = 0, ios = 0;
 
-struct buffer *newslot(afs_int32 *afid, afs_int32 apage,
+struct buffer *newslot(dir_file_t dir, afs_int32 apage,
 		       struct buffer *lp);
 
 /* XXX - This sucks. The correct prototypes for these functions are ...
@@ -79,13 +85,14 @@ struct buffer *newslot(afs_int32 *afid, afs_int32 apage,
  * extern int  ReallyRead(DirHandle *a, int block, char *data);
  */
 
-extern void FidZero(afs_int32 *file);
-extern int FidEq(afs_int32 *a, afs_int32 *b);
-extern int ReallyRead(afs_int32 *file, int block, char *data);
-extern int ReallyWrite(afs_int32 *file, int block, char *data);
-extern void FidZap(afs_int32 *file);
-extern int  FidVolEq(afs_int32 *file, afs_int32 vid);
-extern void FidCpy(afs_int32 *tofile, afs_int32 *fromfile);
+extern void FidZero(dir_file_t);
+extern int FidEq(dir_file_t, dir_file_t);
+extern int ReallyRead(dir_file_t, int block, char *data);
+extern int ReallyWrite(dir_file_t, int block, char *data);
+extern void FidZap(dir_file_t);
+extern int  FidVolEq(dir_file_t, afs_int32 vid);
+extern void FidCpy(dir_file_t, dir_file_t fromfile);
+
 extern void Die(char *msg);
 
 int
@@ -105,7 +112,7 @@ DStat(int *abuffers, int *acalls, int *aios)
  * @return operation status
  *    @retval 0 success
  */
-int
+void
 DInit(int abuffers)
 {
     /* Initialize the venus buffer system. */
@@ -129,14 +136,14 @@ DInit(int abuffers)
 	tb = (struct buffer *)tp;
 	Buffers[i] = tb;
 	tp += tsize;
-	FidZero(tb->fid);
+	FidZero(bufferDir(tb));
 	tb->accesstime = tb->lockers = 0;
 	tb->data = &BufferData[BUFFER_PAGE_SIZE * i];
 	tb->hashIndex = 0;
 	tb->dirty = 0;
 	Lock_Init(&tb->lock);
     }
-    return 0;
+    return;
 }
 
 /**
@@ -149,7 +156,7 @@ DInit(int abuffers)
  *    @retval NULL read failed
  */
 int
-DRead(afs_int32 *fid, int page, struct DirBuffer *entry)
+DRead(dir_file_t fid, int page, struct DirBuffer *entry)
 {
     /* Read a page from the disk. */
     struct buffer *tb, *tb2, **bufhead;
@@ -159,7 +166,7 @@ DRead(afs_int32 *fid, int page, struct DirBuffer *entry)
     ObtainWriteLock(&afs_bufferLock);
     calls++;
 
-#define bufmatch(tb) (tb->page == page && FidEq(tb->fid, fid))
+#define bufmatch(tb,fid) (tb->page == page && FidEq(bufferDir(tb), fid))
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
 
     /* this apparently-complicated-looking code is simply an example of
@@ -170,7 +177,7 @@ DRead(afs_int32 *fid, int page, struct DirBuffer *entry)
      * probably obsolete.
      */
     if ((tb = phTable[pHash(fid)])) {	/* ASSMT HERE */
-	if (bufmatch(tb)) {
+	if (bufmatch(tb, fid)) {
 	    ObtainWriteLock(&tb->lock);
 	    tb->lockers++;
 	    ReleaseWriteLock(&afs_bufferLock);
@@ -182,7 +189,7 @@ DRead(afs_int32 *fid, int page, struct DirBuffer *entry)
 	} else {
 	    bufhead = &(phTable[pHash(fid)]);
 	    while ((tb2 = tb->hashNext)) {
-		if (bufmatch(tb2)) {
+		if (bufmatch(tb2, fid)) {
 		    buf_Front(bufhead, tb, tb2);
 		    ObtainWriteLock(&tb2->lock);
 		    tb2->lockers++;
@@ -194,7 +201,7 @@ DRead(afs_int32 *fid, int page, struct DirBuffer *entry)
 		    return 0;
 		}
 		if ((tb = tb2->hashNext)) {	/* ASSIGNMENT HERE! */
-		    if (bufmatch(tb)) {
+		    if (bufmatch(tb, fid)) {
 			buf_Front(bufhead, tb2, tb);
 			ObtainWriteLock(&tb->lock);
 			tb->lockers++;
@@ -221,9 +228,9 @@ DRead(afs_int32 *fid, int page, struct DirBuffer *entry)
     ObtainWriteLock(&tb->lock);
     tb->lockers++;
     ReleaseWriteLock(&afs_bufferLock);
-    if (ReallyRead(tb->fid, tb->page, tb->data)) {
+    if (ReallyRead(bufferDir(tb), tb->page, tb->data)) {
 	tb->lockers--;
-	FidZap(tb->fid);	/* disaster */
+	FidZap(bufferDir(tb));	/* disaster */
 	ReleaseWriteLock(&tb->lock);
 	return EIO;
     }
@@ -254,7 +261,7 @@ FixupBucket(struct buffer *ap)
 	lp = &tp->hashNext;
     }
     /* now figure the new hash bucket */
-    i = pHash(ap->fid);
+    i = pHash(ap);
     ap->hashIndex = i;		/* remember where we are for deletion */
     ap->hashNext = phTable[i];	/* add us to the list */
     phTable[i] = ap;		/* at the front, since it's LRU */
@@ -262,7 +269,7 @@ FixupBucket(struct buffer *ap)
 }
 
 struct buffer *
-newslot(afs_int32 *afid, afs_int32 apage, struct buffer *lp)
+newslot(dir_file_t dir, afs_int32 apage, struct buffer *lp)
 {
     /* Find a usable buffer slot */
     afs_int32 i;
@@ -298,14 +305,14 @@ newslot(afs_int32 *afid, afs_int32 apage, struct buffer *lp)
      * and the afs_bufferLock prevents other threads from zapping this
      * buffer while we are writing it out */
     if (lp->dirty) {
-	if (ReallyWrite(lp->fid, lp->page, lp->data))
+	if (ReallyWrite(bufferDir(lp), lp->page, lp->data))
 	    Die("writing bogus buffer");
 	lp->dirty = 0;
     }
 
     /* Now fill in the header. */
-    FidZap(lp->fid);
-    FidCpy(lp->fid, afid);	/* set this */
+    FidZap(bufferDir(lp));
+    FidCpy(bufferDir(lp), dir);	/* set this */
     lp->page = apage;
     lp->accesstime = ++timecounter;
 
@@ -342,15 +349,15 @@ DVOffset(struct DirBuffer *entry)
 }
 
 void
-DZap(afs_int32 *fid)
+DZap(dir_file_t dir)
 {
     /* Destroy all buffers pertaining to a particular fid. */
     struct buffer *tb;
     ObtainReadLock(&afs_bufferLock);
-    for (tb = phTable[pHash(fid)]; tb; tb = tb->hashNext)
-	if (FidEq(tb->fid, fid)) {
+    for (tb = phTable[pHash(dir)]; tb; tb = tb->hashNext)
+	if (FidEq(bufferDir(tb), dir)) {
 	    ObtainWriteLock(&tb->lock);
-	    FidZap(tb->fid);
+	    FidZap(bufferDir(tb));
 	    tb->dirty = 0;
 	    ReleaseWriteLock(&tb->lock);
 	}
@@ -365,15 +372,15 @@ DFlushVolume(afs_int32 vid)
     int code, rcode = 0;
     ObtainReadLock(&afs_bufferLock);
     for (tb = phTable[vHash(vid)]; tb; tb = tb->hashNext)
-	if (FidVolEq(tb->fid, vid)) {
+	if (FidVolEq(bufferDir(tb), vid)) {
 	    ObtainWriteLock(&tb->lock);
 	    if (tb->dirty) {
-		code = ReallyWrite(tb->fid, tb->page, tb->data);
+		code = ReallyWrite(bufferDir(tb), tb->page, tb->data);
 		if (code && !rcode)
 		    rcode = code;
 		tb->dirty = 0;
 	    }
-	    FidZap(tb->fid);
+	    FidZap(bufferDir(tb));
 	    ReleaseWriteLock(&tb->lock);
 	}
     ReleaseReadLock(&afs_bufferLock);
@@ -381,7 +388,7 @@ DFlushVolume(afs_int32 vid)
 }
 
 int
-DFlushEntry(afs_int32 *fid)
+DFlushEntry(dir_file_t fid)
 {
     /* Flush pages modified by one entry. */
     struct buffer *tb;
@@ -389,10 +396,10 @@ DFlushEntry(afs_int32 *fid)
 
     ObtainReadLock(&afs_bufferLock);
     for (tb = phTable[pHash(fid)]; tb; tb = tb->hashNext)
-	if (FidEq(tb->fid, fid) && tb->dirty) {
+	if (FidEq(bufferDir(tb), fid) && tb->dirty) {
 	    ObtainWriteLock(&tb->lock);
 	    if (tb->dirty) {
-		code = ReallyWrite(tb->fid, tb->page, tb->data);
+		code = ReallyWrite(bufferDir(tb), tb->page, tb->data);
 		if (code) {
 		    ReleaseWriteLock(&tb->lock);
 		    ReleaseReadLock(&afs_bufferLock);
@@ -423,7 +430,7 @@ DFlush(void)
 	    (*tbp)->lockers++;
 	    ReleaseReadLock(&afs_bufferLock);
 	    if ((*tbp)->dirty) {
-		code = ReallyWrite((*tbp)->fid, (*tbp)->page, (*tbp)->data);
+		code = ReallyWrite(bufferDir(*tbp), (*tbp)->page, (*tbp)->data);
 		if (!code)
 		    (*tbp)->dirty = 0;	/* Clear the dirty flag */
 		if (code && !rcode) {
@@ -443,14 +450,14 @@ DFlush(void)
  * since it probably doesn't exist.
  */
 int
-DNew(afs_int32 *fid, int page, struct DirBuffer *entry)
+DNew(dir_file_t dir, int page, struct DirBuffer *entry)
 {
     struct buffer *tb;
 
     memset(entry,0, sizeof(struct DirBuffer));
 
     ObtainWriteLock(&afs_bufferLock);
-    if ((tb = newslot(fid, page, 0)) == 0) {
+    if ((tb = newslot(dir, page, 0)) == 0) {
 	ReleaseWriteLock(&afs_bufferLock);
 	return EIO;
     }

@@ -485,7 +485,7 @@ findName(Volume *vol, struct VnodeDiskObject *vd, afs_uint32 vN,
     ino = VNDISK_GET_INO(vd);
     SetSalvageDirHandle(&dir, V_id(vol), V_device(vol), ino);
 
-    code = InverseLookup(&dir, vN, un, name, length);
+    code = afs_dir_InverseLookup(&dir, vN, un, name, length);
     FidZap(&dir);
     return code;
 }
@@ -597,13 +597,13 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     ino = VNDISK_GET_INO(parent);
     SetSalvageDirHandle(&dir, V_id(vol), V_device(vol), ino);
 
-    code = Delete(&dir, name);
+    code = afs_dir_Delete(&dir, name);
     if (code) {
 	Log("splitvolume: couldn't delete directory entry for %s in %u.%u.%u, code = %d\n",
 			name, V_id(vol), vN, parent->uniquifier, code);
 	return code;
     }
-    code = Create(&dir, name, &fid);
+    code = afs_dir_Create(&dir, name, &fid);
     FidZap(&dir);
 
     class = vLarge;

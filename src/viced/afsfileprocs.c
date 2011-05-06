@@ -1413,7 +1413,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 
     /* check that the file is in the directory */
     SetDirHandle(dir, parentptr);
-    if (Lookup(dir, Name, fileFid))
+    if (afs_dir_Lookup(dir, Name, fileFid))
 	return (ENOENT);
     fileFid->Volume = V_id(volptr);
 
@@ -1447,9 +1447,9 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 
     if (ChkForDir == MustBeDIR) {
 	SetDirHandle(&childdir, *targetptr);
-	if (IsEmpty(&childdir) != 0)
+	if (afs_dir_IsEmpty(&childdir) != 0)
 	    return (EEXIST);
-	DZap((afs_int32 *) &childdir);
+	DZap(&childdir);
 	FidZap(&childdir);
 	(*targetptr)->delete = 1;
     } else if ((--(*targetptr)->disk.linkCount) == 0)
@@ -1489,7 +1489,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 
     (*targetptr)->changed_newTime = 1;	/* Status change of deleted file/dir */
 
-    code = Delete(dir, (char *)Name);
+    code = afs_dir_Delete(dir, Name);
     if (code) {
 	ViceLog(0,
 		("Error %d deleting %s\n", code,
@@ -1533,7 +1533,7 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
 #endif /* FS_STATS_DETAILED */
 
     parentptr->disk.dataVersion++;
-    newlength = (afs_fsize_t) Length(dir);
+    newlength = (afs_fsize_t) afs_dir_Length(dir);
     /*
      * This is a called on both dir removals (i.e. remove, removedir, rename) but also in dir additions
      * (create, symlink, link, makedir) so we need to check if we have enough space
@@ -1872,7 +1872,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 
     /* add the name to the directory */
     SetDirHandle(dir, parentptr);
-    if ((errorCode = Create(dir, (char *)Name, OutFid))) {
+    if ((errorCode = afs_dir_Create(dir, Name, OutFid))) {
 	(*targetptr)->delete = 1;
 	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
 	IH_REALLYCLOSE((*targetptr)->handle);
@@ -4034,7 +4034,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     SetDirHandle(&newdir, newvptr);
 
     /* Lookup the file to delete its vnode */
-    if (Lookup(&olddir, OldName, &fileFid)) {
+    if (afs_dir_Lookup(&olddir, OldName, &fileFid)) {
 	errorCode = ENOENT;
 	goto Bad_Rename;
     }
@@ -4074,7 +4074,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     }
 
     /* Lookup the new file  */
-    if (!(Lookup(&newdir, NewName, &newFileFid))) {
+    if (!(afs_dir_Lookup(&newdir, NewName, &newFileFid))) {
 	if (readonlyServer) {
 	    errorCode = VREADONLY;
 	    goto Bad_Rename;
@@ -4119,7 +4119,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 		errorCode = EISDIR;
 		goto Bad_Rename;
 	    }
-	    if ((IsEmpty(&newfiledir))) {
+	    if ((afs_dir_IsEmpty(&newfiledir))) {
 		errorCode = EEXIST;
 		goto Bad_Rename;
 	    }
@@ -4182,7 +4182,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	} else {
 	    struct AFSFid unused;
 
-	    code = Lookup(&filedir, "..", &unused);
+	    code = afs_dir_Lookup(&filedir, "..", &unused);
 	    if (code == ENOENT) {
 		/* only update .. if it doesn't already exist */
 		updatefile = 1;
@@ -4203,7 +4203,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     doDelete = 0;
     if (newfileptr) {
 	/* Delete NewName from its directory */
-	code = Delete(&newdir, NewName);
+	code = afs_dir_Delete(&newdir, NewName);
 	osi_Assert(code == 0);
 
 	/* Drop the link count */
@@ -4247,11 +4247,11 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
      * highly unlikely that it would work since it would involve issuing
      * another create.
      */
-    if ((errorCode = Create(&newdir, (char *)NewName, &fileFid)))
+    if ((errorCode = afs_dir_Create(&newdir, NewName, &fileFid)))
 	goto Bad_Rename;
 
     /* Delete the old name */
-    osi_Assert(Delete(&olddir, (char *)OldName) == 0);
+    osi_Assert(afs_dir_Delete(&olddir, OldName) == 0);
 
     /* if the directory length changes, reflect it in the statistics */
 #if FS_STATS_DETAILED
@@ -4282,8 +4282,8 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	fileptr->changed_newTime = 1;	/* status change of moved file */
 
 	/* fix .. to point to the correct place */
-	Delete(&filedir, "..");	/* No assert--some directories may be bad */
-	osi_Assert(Create(&filedir, "..", NewDirFid) == 0);
+	afs_dir_Delete(&filedir, "..");	/* No assert--some directories may be bad */
+	osi_Assert(afs_dir_Create(&filedir, "..", NewDirFid) == 0);
 	fileptr->disk.dataVersion++;
 
 	/* if the parent directories are different the link counts have to be   */
@@ -4731,7 +4731,7 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* add the name to the directory */
     SetDirHandle(&dir, parentptr);
-    if ((errorCode = Create(&dir, (char *)Name, ExistingFid)))
+    if ((errorCode = afs_dir_Create(&dir, Name, ExistingFid)))
 	goto Bad_Link;
     DFlush();
 
@@ -4948,9 +4948,9 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* Actually create the New directory in the directory package */
     SetDirHandle(&dir, targetptr);
-    osi_Assert(!(MakeDir(&dir, (afs_int32 *)OutFid, (afs_int32 *)DirFid)));
+    osi_Assert(!(afs_dir_MakeDir(&dir, (afs_int32 *)OutFid, (afs_int32 *)DirFid)));
     DFlush();
-    VN_SET_LEN(targetptr, (afs_fsize_t) Length(&dir));
+    VN_SET_LEN(targetptr, (afs_fsize_t) afs_dir_Length(&dir));
 
     /* set up return status */
     GetStatus(targetptr, OutFidStatus, rights, anyrights, parentptr);

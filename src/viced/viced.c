@@ -2055,7 +2055,7 @@ main(int argc, char *argv[])
     nice(-5);			/* TODO: */
 #endif
 #endif
-    osi_Assert(DInit(buffs) == 0);
+    DInit(buffs);
 #ifdef AFS_DEMAND_ATTACH_FS
     FS_STATE_INIT;
 #endif
