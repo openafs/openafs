@@ -77,6 +77,7 @@
 #include <afs\cellconfig.h>
 #include <afs\pioctl_nt.h>
 #include <afs\smb_iocons.h>
+#include <WINNT\afsreg.h>
 
 #define stat _stat
 #define __S_ISTYPE(mode, mask) (((mode) & _S_IFMT) == (mask))
@@ -672,6 +673,65 @@ copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_cre
     }
 }
 
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+static
+int is_wow64()
+{
+    static int init = TRUE;
+    static int bIsWow64 = FALSE;
+
+    if (init) {
+        HMODULE hModule;
+        LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+
+        hModule = GetModuleHandle(TEXT("kernel32"));
+        if (hModule) {
+            fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hModule, "IsWow64Process");
+
+            if (NULL != fnIsWow64Process)
+            {
+                if (!fnIsWow64Process(GetCurrentProcess(),&bIsWow64))
+                {
+                    // on error, assume FALSE.
+                    // in other words, do nothing.
+                }
+            }
+            FreeLibrary(hModule);
+        }
+        init = FALSE;
+    }
+    return bIsWow64;
+}
+
+static int
+accept_dotted_usernames(void)
+{
+    HKEY parmKey;
+    DWORD code, len;
+    DWORD value = 1;
+
+    code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
+                         0, (is_wow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        len = sizeof(value);
+        code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
+                                (BYTE *) &value, &len);
+        RegCloseKey(parmKey);
+    }
+    if (code != ERROR_SUCCESS) {
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
+                             0, (is_wow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+        if (code == ERROR_SUCCESS) {
+            len = sizeof(value);
+            code = RegQueryValueEx(parmKey, "AcceptDottedPrincipalNames", NULL, NULL,
+                                    (BYTE *) &value, &len);
+            RegCloseKey (parmKey);
+        }
+    }
+    return value;
+}
+
+
 /*
 * Log to a cell.  If the cell has already been logged to, return without
 * doing anything.  Otherwise, log to it and mark that it has been logged
@@ -772,7 +832,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             goto done;
         }
 
-        if ( strchr(name,'.') != NULL ) {
+        if ( strchr(name,'.') != NULL && !accept_dotted_usernames()) {
             fprintf(stderr, "%s: Can't support principal names including a dot.\n",
                     progname);
             status = AKLOG_MISC;
