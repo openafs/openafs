@@ -80,18 +80,6 @@ afs_freevfs(void)
 
     afs_globalVFS = 0;
 
-    /* free mappings for all vcaches */
-    for (i = 0; i < VCSIZE; i++) {
-	for (vc = afs_vhashT[i]; vc; vc = nvc) {
-	    int fv_slept;
-	    nvc = vc->hnext;
-	    if (afs_FlushVCache(vc, &fv_slept)) {
-		afs_warn("afs_FlushVCache failed on 0x%llx\n",
-		         (unsigned long long)vc);
-	    }
-	}
-    }
-
     afs_shutdown();
 }
 
