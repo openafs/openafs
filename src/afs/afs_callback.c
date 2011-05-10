@@ -771,9 +771,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 		}
 
 	    /* capabilities need be requested again */
-	    ObtainWriteLock(&afs_xserver, 877);
 	    ts->flags &= ~SCAPS_KNOWN;
-	    ReleaseWriteLock(&afs_xserver);
 	}
 
 
