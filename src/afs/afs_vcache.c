@@ -784,6 +784,33 @@ afs_PrePopulateVCache(struct vcache *avc, struct VenusFid *afid,
 #endif
 }
 
+void
+afs_FlushAllVCaches(void)
+{
+    int i;
+    struct vcache *tvc, *nvc;
+
+    ObtainWriteLock(&afs_xvcache, 867);
+
+ retry:
+    for (i = 0; i < VCSIZE; i++) {
+	for (tvc = afs_vhashT[i]; tvc; tvc = nvc) {
+	    int slept;
+
+	    nvc = tvc->hnext;
+	    if (afs_FlushVCache(tvc, &slept)) {
+		afs_warn("Failed to flush vcache 0x%lx\n", (unsigned long)(uintptr_t)tvc);
+	    }
+	    if (slept) {
+		goto retry;
+	    }
+	    tvc = nvc;
+	}
+    }
+
+    ReleaseWriteLock(&afs_xvcache);
+}
+
 /*!
  *   This routine is responsible for allocating a new cache entry
  * from the free list.  It formats the cache entry and inserts it
