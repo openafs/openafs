@@ -52,6 +52,7 @@ static int
 init_afs_cb(void)
 {
     int cm_noIPAddr;		/* number of client network interfaces */
+    int i;
 #ifdef AFS_NT40_ENV
     /*
      * This Windows section was pulled in from changes to src/venus/afsio.c but is
@@ -64,7 +65,6 @@ init_afs_cb(void)
     int cm_SubnetMask[CM_MAXINTERFACE_ADDR];	/* client's subnet mask in host order */
     int cm_NetMtu[CM_MAXINTERFACE_ADDR];	/* client's MTU sizes */
     int cm_NetFlags[CM_MAXINTERFACE_ADDR];	/* network flags */
-    int i;
 
     UuidCreate((UUID *) & afs_cb_interface.uuid);
     cm_noIPAddr = CM_MAXINTERFACE_ADDR;
@@ -91,8 +91,12 @@ init_afs_cb(void)
 		      AFS_MAX_INTERFACE_ADDR);
     if (cm_noIPAddr < 0)
 	afs_cb_interface.numberOfInterfaces = 0;
-    else
+    else {
 	afs_cb_interface.numberOfInterfaces = cm_noIPAddr;
+	/* we expect these in host byte order */
+	for (i = 0; i < cm_noIPAddr; i++)
+	    afs_cb_interface.addr_in[i] = ntohl(afs_cb_interface.addr_in[i]);
+    }
 #endif
     afs_cb_inited = 1;
     return 0;
