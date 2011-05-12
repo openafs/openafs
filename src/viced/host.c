@@ -1340,12 +1340,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
                     rxconn = NULL;
                 }
 
-                if (!sc)
-                    sc = rxnull_NewClientSecurityObject();
-                host->callback_rxcon =
-                    rx_NewConnection(host->host, host->port, 1, sc, 0);
-                rx_SetConnDeadTime(host->callback_rxcon, 50);
-                rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
+		h_SetupCallbackConn_r(host);
             }
         } else {
             /* not the primary addr/port, just invalidate it */
