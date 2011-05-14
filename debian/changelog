@@ -10,6 +10,9 @@ openafs (1.6.0~pre5-1) UNRELEASED; urgency=low
     - Restrict the number of CBRs allocated at once.
     - Permit importing of -md5 and -md4 keys with asetkey.
     - Fix token return in aklog with 524 conversion.
+  * Apply upstream patch from http://gerrit.openafs.org/#change,4654 to
+    fix a configure problem detecting Linux kernel properties, leading to
+    a lockup on 2.6.38 kernels.
   * Update import-upstream and README.source for moving 1.6 from the
     experimental and upstream-1.5 branches to the master and upstream
     branches.
