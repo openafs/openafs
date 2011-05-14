@@ -950,7 +950,7 @@ rxperf_server(int argc, char **argv)
     char *ptr;
     int ch;
 
-    while ((ch = getopt(argc, argv, "r:d:p:P:w:W:HNjm:u:4:s:SV")) != -1) {
+    while ((ch = getopt(argc, argv, "r:d:p:P:w:W:HNjm:u:4:s:S:V")) != -1) {
 	switch (ch) {
 	case 'd':
 #ifdef RXDEBUG
