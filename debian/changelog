@@ -1,5 +1,6 @@
-openafs (1.6.0~pre4-2) UNRELEASED; urgency=low
+openafs (1.6.0~pre5-1) UNRELEASED; urgency=low
 
+  * New upstream prerelease.
   * Update import-upstream and README.source for moving 1.6 from the
     experimental and upstream-1.5 branches to the master and upstream
     branches.
