@@ -1,4 +1,4 @@
-openafs (1.6.0~pre5-1) UNRELEASED; urgency=low
+openafs (1.6.0~pre5-1) unstable; urgency=low
 
   * New upstream prerelease.
     - Avoid downward vcache pressure when entries are free.
@@ -20,7 +20,7 @@ openafs (1.6.0~pre5-1) UNRELEASED; urgency=low
     patch for simplicity since the packaging is maintained in Git using
     branches, and include a patch header explaining why.
   
- -- Russ Allbery <rra@debian.org>  Sat, 14 May 2011 10:13:39 -0700
+ -- Russ Allbery <rra@debian.org>  Sat, 14 May 2011 11:52:40 -0700
 
 openafs (1.6.0~pre4-1) unstable; urgency=low
 
