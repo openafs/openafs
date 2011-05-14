@@ -20,7 +20,7 @@ install:
 # Build targets
 #
 test:	test.o test1.o test2.o 
-	$(CC)  ${CFLAGS} -o test test.o test1.o test2.o 
+	$(CC)  ${CFLAGS} -o test -lafscom_err test.o test1.o test2.o 
 
 test.o:	test1.h test2.h
 test1.o : test1.c
@@ -35,7 +35,7 @@ clean:
 	$(RM) -f *~ \#* *.bak \
 		*.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
 		*.cp *.fn *.ky *.log *.pg *.tp *.vr \
-		*.o *.a libcom_err.a \
+		*.o *.a libafscom_err.a \
 		com_err.o compile_et \
 		et.ar TAGS y.tab.c lex.yy.c error_table.c \
 		et_lex.lex.c \

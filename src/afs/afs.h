@@ -85,7 +85,9 @@ extern int afs_shuttingdown;
 #define MAXNUMSYSNAMES	32	/* max that current constants allow */
 #define	NOTOKTIMEOUT	(2*3600)	/* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
-#define AFS_NCBRS	1024	/* max # of call back return entries */
+
+
+
 #define AFS_MAXCBRSCALL	32	/* max to return in a given call (must be <= AFSCBMAX) */
 #define	AFS_SALLOC_LOW_WATER	250	/* Min free blocks before allocating more */
 #define	AFS_LRALLOCSIZ 	4096	/* "Large" allocated size */
@@ -258,8 +260,17 @@ struct afs_cbr {
     struct afs_cbr *hash_next;
 
     struct AFSFid fid;
-    unsigned int dynalloc:1;
 };
+
+#ifdef AFS_LINUX22_ENV
+/* On Linux, we have to be able to allocate the storage for this using
+ * kmalloc, as otherwise we may deadlock. So, it needs to be able to fit
+ * in a single page
+ */
+# define AFS_NCBRS	PAGE_SIZE/sizeof(struct afs_cbr)
+#else
+# define AFS_NCBRS	300	/* max # of call back return entries */
+#endif
 
 /* cellinfo file magic number */
 #define AFS_CELLINFO_MAGIC	0xf32817cd
@@ -1431,6 +1442,9 @@ extern int afsd_dynamic_vcaches;
  */
 #if defined(AFS_NBSD40_ENV)
 /* in osi_machdep.h as expected */
+#elif defined (AFS_DARWIN110_ENV)
+#define afs_cr_uid(cred) kauth_cred_getuid((kauth_cred_t)(cred))
+#define afs_cr_gid(cred) kauth_cred_getgid((kauth_cred_t)(cred))
 #elif !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 #define afs_cr_uid(cred) ((cred)->cr_uid)
 #define afs_cr_gid(cred) ((cred)->cr_gid)
@@ -1439,6 +1453,7 @@ extern int afsd_dynamic_vcaches;
 #define afs_cr_rgid(cred) ((cred)->cr_rgid)
 #endif
 
+#if !defined(AFS_DARWIN110_ENV)
 static_inline void
 afs_set_cr_uid(afs_ucred_t *cred, uid_t uid) {
     cred->cr_uid = uid;
@@ -1456,7 +1471,8 @@ static_inline void
 afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
     cred->cr_rgid = gid;
 }
-#endif
+#endif /* ! AFS_OBSD_ENV */
+#endif /* ! AFS_DARWIN110_ENV */
 #endif
 
 #ifdef AFS_SUN5_ENV

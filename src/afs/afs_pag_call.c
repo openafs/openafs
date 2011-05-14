@@ -25,9 +25,6 @@
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
-#ifdef AFS_LINUX22_ENV
-#include "h/smp_lock.h"
-#endif
 #include "rmtsys.h"
 #include "pagcb.h"
 
@@ -101,7 +98,6 @@ afspag_Init(afs_int32 nfs_server_addr)
     AFS_GLOCK();
 
     afs_InitStats();
-    rx_SetBusyChannelError(RX_CALL_TIMEOUT);
     rx_Init(htons(7001));
 
     AFS_STATCNT(afs_ResourceInit);

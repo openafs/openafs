@@ -21,7 +21,6 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include <linux/smp_lock.h>
 
 #include "osi_compat.h"
 
@@ -478,13 +477,17 @@ osi_linux_free_inode_pages(void)
     struct vcache *tvc, *nvc;
     extern struct vcache *afs_vhashT[VCSIZE];
 
+ retry:
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; ) {
 	    int slept;
 	
 	    nvc = tvc->hnext;
-	    if (afs_FlushVCache(tvc, &slept))		/* slept always 0 for linux? */
+	    if (afs_FlushVCache(tvc, &slept))
 		printf("Failed to invalidate all pages on inode 0x%p\n", tvc);
+	    if (slept) {
+		goto retry;
+	    }
 	    tvc = nvc;
 	}
     }

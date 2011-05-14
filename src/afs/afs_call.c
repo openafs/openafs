@@ -24,9 +24,6 @@
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
-#ifdef AFS_LINUX22_ENV
-#include "h/smp_lock.h"
-#endif
 #ifdef AFS_SUN510_ENV
 #include "h/ksynch.h"
 #include "h/sunddi.h"
@@ -109,8 +106,6 @@ afs_InitSetup(int preallocs)
 #endif /* AFS_NOSTATS */
 
     memset(afs_zeros, 0, AFS_ZEROS);
-
-    rx_SetBusyChannelError(RX_CALL_TIMEOUT);
 
     /* start RX */
     if(!afscall_set_rxpck_received)
@@ -1250,7 +1245,6 @@ afs_shutdown(void)
 
     if (afs_shuttingdown)
 	return;
-    afs_FlushVCBs(2);       /* Reasonable effort to free dynamically allocated callback returns */
 
     afs_shuttingdown = 1;
     if (afs_cold_shutdown)

@@ -962,23 +962,18 @@ h_TossStuff_r(struct host *host)
 
 
 
-/* h_Enumerate: Calls (*proc)(host, held, param) for at least each host in the
+/* h_Enumerate: Calls (*proc)(host, param) for at least each host in the
  * system at the start of the enumeration (perhaps more).  Hosts may be deleted
  * (have delete flag set); ditto for clients.  refCount is always incremented
- * before (*proc) is called.  The param flags is passed to (*proc) as the
- * param flags, permitting (*proc) to stop the enumeration (BAIL).
+ * before (*proc) is called.
  *
- * Needed?  Why not always h_Hold_r and h_Release_r in (*proc), or even -never-
- * h_Hold_r or h_Release_r in (*proc)?
- *
- * **The proc should return 0 if the host should be released, 1 if it should
- * be held after enumeration.
+ * The return value of the proc is a set of flags. The proc should set
+ * H_ENUMERATE_BAIL(foo) if the enumeration of hosts should be stopped early.
  */
 void
-h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
+h_Enumerate(int (*proc) (struct host*, void *), void *param)
 {
     struct host *host, **list;
-    int *flags;
     int i, count;
     int totalCount;
 
@@ -991,11 +986,6 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     if (!list) {
 	ViceLog(0, ("Failed malloc in h_Enumerate (list)\n"));
 	osi_Panic("Failed malloc in h_Enumerate (list)\n");
-    }
-    flags = (int *)malloc(hostCount * sizeof(int));
-    if (!flags) {
-	ViceLog(0, ("Failed malloc in h_Enumerate (flags)\n"));
-	osi_Panic("Failed malloc in h_Enumerate (flags)\n");
     }
     for (totalCount = count = 0, host = hostList;
          host && totalCount < hostCount;
@@ -1015,43 +1005,51 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     }
     H_UNLOCK;
     for (i = 0; i < count; i++) {
-	flags[i] = (*proc) (list[i], flags[i], param);
+	int flags;
+	flags = (*proc) (list[i], param);
 	H_LOCK;
 	h_Release_r(list[i]);
 	H_UNLOCK;
 	/* bail out of the enumeration early */
-	if (H_ENUMERATE_ISSET_BAIL(flags[i]))
+	if (H_ENUMERATE_ISSET_BAIL(flags)) {
 	    break;
+	} else if (flags) {
+	    ViceLog(0, ("h_Enumerate got back invalid return value %d\n", flags));
+	    ShutDownAndCore(PANIC);
+	}
+    }
+    if (i < count-1) {
+	/* we bailed out of enumerating hosts early; we still have holds on
+	 * some of the hosts in 'list', so release them */
+	i++;
+	H_LOCK;
+	for ( ; i < count; i++) {
+	    h_Release_r(list[i]);
+	}
+	H_UNLOCK;
     }
     free((void *)list);
-    free((void *)flags);
 }	/* h_Enumerate */
 
 
 /* h_Enumerate_r (revised):
- * Calls (*proc)(host, flags, param) for each host in hostList, starting
+ * Calls (*proc)(host, param) for each host in hostList, starting
  * at enumstart. Called only under H_LOCK.  Hosts may be deleted (have
  * delete flag set); ditto for clients.  refCount is always incremented
- * before (*proc) is called.  The param flags is passed to (*proc) as the
- * param flags, permitting (*proc) to stop the enumeration (BAIL).
- *
- * Needed?  Why not always h_Hold_r and h_Release_r in (*proc), or even -never-
- * h_Hold_r or h_Release_r in (*proc)?
+ * before (*proc) is called.
  *
  * @note Assumes that hostList is only prepended to, that a host is never
  *       inserted into the middle. Otherwise this would not be guaranteed to
  *       terminate.
  *
- * **The proc should return 0 if the host should be released, 1 if it should
- * be held after enumeration.
+ * The return value of the proc is a set of flags. The proc should set
+ * H_ENUMERATE_BAIL(foo) if the enumeration of hosts should be stopped early.
  */
 void
-h_Enumerate_r(int (*proc) (struct host *, int, void *),
+h_Enumerate_r(int (*proc) (struct host *, void *),
 	      struct host *enumstart, void *param)
 {
     struct host *host, *next;
-    int flags = 0;
-    int nflags = 0;
     int count;
     int origHostCount;
 
@@ -1090,7 +1088,7 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
      * h_Release_r */
     origHostCount = hostCount;
 
-    for (count = 0, host = enumstart; host && count < origHostCount; host = next, flags = nflags, count++) {
+    for (count = 0, host = enumstart; host && count < origHostCount; host = next, count++) {
 	next = host->next;
 
 	/* find the next non-deleted host */
@@ -1102,14 +1100,21 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
 		ShutDownAndCore(PANIC);
 	    }
 	}
-	if (next && !H_ENUMERATE_ISSET_BAIL(flags))
+	if (next)
 	    h_Hold_r(next);
 
 	if (!(host->hostFlags & HOSTDELETED)) {
-	    flags = (*proc) (host, flags, param);
+	    int flags;
+	    flags = (*proc) (host, param);
 	    if (H_ENUMERATE_ISSET_BAIL(flags)) {
 		h_Release_r(host); /* this might free up the host */
+		if (next) {
+		    h_Release_r(next);
+		}
 		break;
+	    } else if (flags) {
+		ViceLog(0, ("h_Enumerate_r got back invalid return value %d\n", flags));
+		ShutDownAndCore(PANIC);
 	    }
 	}
 	h_Release_r(host); /* this might free up the host */
@@ -2577,17 +2582,25 @@ h_FindClient_r(struct rx_connection *tcon)
 		created = 0;
 	    }
 	    oldClient->refCount++;
+
+	    h_Hold_r(oldClient->host);
+	    h_Release_r(client->host);
+
 	    H_UNLOCK;
 	    ObtainWriteLock(&oldClient->lock);
 	    H_LOCK;
 	    client = oldClient;
+	    host = oldClient->host;
 	} else {
-	    ViceLog(0, ("FindClient: deleted client %p(%x) already had "
-			"conn %p (host %s:%d), stolen by client %p(%x)\n",
-			oldClient, oldClient->sid, tcon,
-			afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
-			ntohs(rxr_PortOf(tcon)),
-			client, client->sid));
+	    ViceLog(0, ("FindClient: deleted client %p(%x ref %d host %p href "
+	                "%d) already had conn %p (host %s:%d, cid %x), stolen "
+	                "by client %p(%x, ref %d host %p href %d)\n",
+	                oldClient, oldClient->sid, oldClient->refCount,
+	                oldClient->host, oldClient->host->refCount, tcon,
+	                afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
+	                ntohs(rxr_PortOf(tcon)), rxr_CidOf(tcon),
+	                client, client->sid, client->refCount,
+	                client->host, client->host->refCount));
 	    /* rx_SetSpecific will be done immediately below */
 	}
     }
@@ -2673,6 +2686,16 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 	H_UNLOCK;
 	return VICETOKENDEAD;
     }
+    if (client->deleted) {
+	ViceLog(0, ("GetClient: got deleted client, connection will appear "
+	            "anonymous; tcon %p cid %x client %p ref %d host %p "
+	            "(%s:%d) href %d ViceId %d\n",
+	            tcon, rxr_CidOf(tcon), client, client->refCount,
+	            client->host,
+	            afs_inet_ntoa_r(client->host->host, hoststr),
+	            (int)ntohs(client->host->port), client->host->refCount,
+	            (int)client->ViceId));
+    }
 
     client->refCount++;
     *cp = client;
@@ -2734,7 +2757,7 @@ h_PrintStats(void)
 
 
 static int
-h_PrintClient(struct host *host, int flags, void *rock)
+h_PrintClient(struct host *host, void *rock)
 {
     StreamHandle_t *file = (StreamHandle_t *)rock;
     struct client *client;
@@ -2748,7 +2771,7 @@ h_PrintClient(struct host *host, int flags, void *rock)
     LastCall = host->LastCall;
     if (host->hostFlags & HOSTDELETED) {
 	H_UNLOCK;
-	return flags;
+	return 0;
     }
     (void)afs_snprintf(tmpStr, sizeof tmpStr,
 		       "Host %s:%d down = %d, LastCall %s",
@@ -2786,7 +2809,7 @@ h_PrintClient(struct host *host, int flags, void *rock)
 	}
     }
     H_UNLOCK;
-    return flags;
+    return 0;
 
 }				/*h_PrintClient */
 
@@ -2824,7 +2847,7 @@ h_PrintClients(void)
 
 
 static int
-h_DumpHost(struct host *host, int flags, void *rock)
+h_DumpHost(struct host *host, void *rock)
 {
     StreamHandle_t *file = (StreamHandle_t *)rock;
 
@@ -2862,7 +2885,7 @@ h_DumpHost(struct host *host, int flags, void *rock)
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     H_UNLOCK;
-    return flags;
+    return 0;
 
 }				/*h_DumpHost */
 
@@ -2899,10 +2922,10 @@ h_DumpHosts(void)
 static int h_stateFillHeader(struct host_state_header * hdr);
 static int h_stateCheckHeader(struct host_state_header * hdr);
 static int h_stateAllocMap(struct fs_dump_state * state);
-static int h_stateSaveHost(struct host * host, int flags, void *rock);
+static int h_stateSaveHost(struct host * host, void *rock);
 static int h_stateRestoreHost(struct fs_dump_state * state);
-static int h_stateRestoreIndex(struct host * h, int flags, void *rock);
-static int h_stateVerifyHost(struct host * h, int flags, void *rock);
+static int h_stateRestoreIndex(struct host * h, void *rock);
+static int h_stateVerifyHost(struct host * h, void *rock);
 static int h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
                                  afs_uint32 addr, afs_uint16 port, int valid);
 static int h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h);
@@ -2995,13 +3018,13 @@ h_stateRestoreIndices(struct fs_dump_state * state)
 }
 
 static int
-h_stateRestoreIndex(struct host * h, int flags, void *rock)
+h_stateRestoreIndex(struct host * h, void *rock)
 {
     struct fs_dump_state *state = (struct fs_dump_state *)rock;
     if (cb_OldToNew(state, h->cblist, &h->cblist)) {
-	return H_ENUMERATE_BAIL(flags);
+	return H_ENUMERATE_BAIL(0);
     }
-    return flags;
+    return 0;
 }
 
 int
@@ -3012,14 +3035,14 @@ h_stateVerify(struct fs_dump_state * state)
 }
 
 static int
-h_stateVerifyHost(struct host * h, int flags, void* rock)
+h_stateVerifyHost(struct host * h, void* rock)
 {
     struct fs_dump_state *state = (struct fs_dump_state *)rock;
     int i;
 
     if (h == NULL) {
 	ViceLog(0, ("h_stateVerifyHost: error: NULL host pointer in linked list\n"));
-	return H_ENUMERATE_BAIL(flags);
+	return H_ENUMERATE_BAIL(0);
     }
 
     if (h->interface) {
@@ -3041,7 +3064,7 @@ h_stateVerifyHost(struct host * h, int flags, void* rock)
 	state->bail = 1;
     }
 
-    return flags;
+    return 0;
 }
 
 /**
@@ -3219,7 +3242,7 @@ h_stateAllocMap(struct fs_dump_state * state)
 
 /* function called by h_Enumerate to save a host to disk */
 static int
-h_stateSaveHost(struct host * host, int flags, void* rock)
+h_stateSaveHost(struct host * host, void* rock)
 {
     struct fs_dump_state *state = (struct fs_dump_state *) rock;
     int if_len=0, hcps_len=0;
@@ -3285,9 +3308,9 @@ h_stateSaveHost(struct host * host, int flags, void* rock)
     if (hcps)
 	free(hcps);
     if (state->bail) {
-	return H_ENUMERATE_BAIL(flags);
+	return H_ENUMERATE_BAIL(0);
     }
-    return flags;
+    return 0;
 }
 
 /* restores a host from disk */
@@ -3812,7 +3835,7 @@ CheckHost(struct host *host, int flags, void *rock)
 #endif
 
 int
-CheckHost_r(struct host *host, int flags, void *dummy)
+CheckHost_r(struct host *host, void *dummy)
 {
     struct client *client;
     struct rx_connection *cb_conn = NULL;
@@ -3823,7 +3846,7 @@ CheckHost_r(struct host *host, int flags, void *dummy)
     FS_STATE_RDLOCK;
     if (fs_state.mode == FS_MODE_SHUTDOWN) {
 	FS_STATE_UNLOCK;
-	return H_ENUMERATE_BAIL(flags);
+	return H_ENUMERATE_BAIL(0);
     }
     FS_STATE_UNLOCK;
 #endif
@@ -3910,7 +3933,7 @@ CheckHost_r(struct host *host, int flags, void *dummy)
 	}
 	h_Unlock_r(host);
     }
-    return flags;
+    return 0;
 
 }				/*CheckHost_r */
 

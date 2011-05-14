@@ -41,7 +41,7 @@ LIBS=${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libaudit.a \
-	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/util.a
 

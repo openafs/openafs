@@ -176,7 +176,7 @@ LIBS=${kauthlib} ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libprot.a \
        ${authlib} ${rxkadlib} ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
        ${TOP_LIBDIR}/libsys.a  \
        ${TOP_LIBDIR}/liblwp.a ${deslib} ${cmdlib} \
-       ${TOP_LIBDIR}/libcom_err.a ${utilib} \
+       ${TOP_LIBDIR}/libafscom_err.a ${utilib} \
        $(DBM) $(XLIBS)
 
 AR=ar

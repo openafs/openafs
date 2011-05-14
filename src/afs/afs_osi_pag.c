@@ -542,7 +542,7 @@ void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
 }
 #endif
 
-#ifndef AFS_LINUX26_ENV
+#if !defined(AFS_LINUX26_ENV) && !defined(AFS_DARWIN110_ENV)
 static afs_int32
 osi_get_group_pag(afs_ucred_t *cred)
 {
@@ -615,6 +615,7 @@ PagInCred(afs_ucred_t *cred)
     if (cred == NULL || cred == afs_osi_credp) {
 	return NOPAG;
     }
+#ifndef AFS_DARWIN110_ENV
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
     /*
      * If linux keyrings are in use and we carry the session keyring in our credentials
@@ -629,8 +630,12 @@ PagInCred(afs_ucred_t *cred)
 # endif
     if (pag == NOPAG)
 	pag = osi_get_keyring_pag(cred);
+#elif defined(AFS_AIX51_ENV)
+    if (kcred_getpag(cred, PAG_AFS, &pag) < 0 || pag == 0)
+	pag = NOPAG;
 #else
     pag = osi_get_group_pag(cred);
+#endif
 #endif
     return pag;
 }

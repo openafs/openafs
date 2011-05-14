@@ -113,6 +113,7 @@
 				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+                                "ARCHS[sdk=macosx10.7]" = "$(ARCHS_STANDARD_32_64_BIT)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -134,6 +135,7 @@
 				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+                                "ARCHS[sdk=macosx10.7]" = "$(ARCHS_STANDARD_32_64_BIT)";
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
@@ -152,6 +154,7 @@
 				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+                                "ARCHS[sdk=macosx10.7]" = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -168,6 +171,7 @@
 				"ARCHS[sdk=macosx10.4u]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.5]" = "$(ARCHS_STANDARD_32_BIT)";
                                 "ARCHS[sdk=macosx10.6]" = "$(ARCHS_STANDARD_32_64_BIT)";
+                                "ARCHS[sdk=macosx10.7]" = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;

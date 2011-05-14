@@ -169,6 +169,7 @@ include/openafs/timer.h
 include/openafs/ubik.h
 include/openafs/ubik_int.h
 lib/afs/libacl.a
+lib/afs/libafscom_err.a
 lib/afs/libafsint.a
 lib/afs/libafsutil.a
 lib/afs/libaudit.a
@@ -180,7 +181,6 @@ lib/afs/libbudb.a
 lib/afs/libbutm.a
 lib/afs/libbxdb.a
 lib/afs/libcmd.a
-lib/afs/libcom_err.a
 lib/afs/libdir.a
 lib/afs/libfsprobe.a
 lib/afs/libgtx.a

@@ -24,9 +24,6 @@
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
-#ifdef AFS_LINUX22_ENV
-#include "h/smp_lock.h"
-#endif
 
 
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;

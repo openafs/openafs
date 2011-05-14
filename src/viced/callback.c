@@ -190,11 +190,10 @@ static int FDel(struct FileEntry *fe);
 static int AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead,
 			  int type, int locked);
 static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
-				 struct AFSCBFids *afidp, struct host *xhost);
-static int MultiBreakVolumeCallBack_r(struct host *host, int isheld,
+				 struct AFSCBFids *afidp);
+static int MultiBreakVolumeCallBack_r(struct host *host,
 				      struct VCBParams *parms, int deletefe);
-static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
-					 void *rock);
+static int MultiBreakVolumeLaterCallBack(struct host *host, void *rock);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
 static int DumpCallBackState_r(void);
@@ -668,8 +667,8 @@ CompareCBA(const void *e1, const void *e2)
 }
 
 /* Take an array full of hosts, all held.  Break callbacks to them, and
- * release the holds once you're done, except don't release xhost.  xhost
- * may be NULL.  Currently only works for a single Fid in afidp array.
+ * release the holds once you're done.
+ * Currently only works for a single Fid in afidp array.
  * If you want to make this work with multiple fids, you need to fix
  * the error handling.  One approach would be to force a reset if a
  * multi-fid call fails, or you could add delayed callbacks for each
@@ -687,7 +686,7 @@ CompareCBA(const void *e1, const void *e2)
  * wherever that is done. */
 static void
 MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
-		     struct AFSCBFids *afidp, struct host *xhost)
+		     struct AFSCBFids *afidp)
 {
     int i, j;
     struct rx_connection *conns[MAX_CB_HOSTS];
@@ -774,7 +773,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
     for (i = 0; i < ncbas; i++) {
 	struct host *hp;
 	hp = cba[i].hp;
-	if (hp && xhost != hp) {
+	if (hp) {
 	    h_Release_r(hp);
 	}
     }
@@ -864,7 +863,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 	}
 
 	if (ncbas) {
-	    MultiBreakCallBack_r(cba, ncbas, &tf, xhost);
+	    MultiBreakCallBack_r(cba, ncbas, &tf);
 
 	    /* we need to to all these initializations again because MultiBreakCallBack may block */
 	    fe = FindFE(fid);
@@ -1113,18 +1112,14 @@ BreakDelayedCallBacks_r(struct host *host)
     return (host->hostFlags & VENUSDOWN);
 }
 
-/*
-** isheld is 0 if the host is held in h_Enumerate
-** isheld is 1 if the host is held in BreakVolumeCallBacks
-*/
 static int
-MultiBreakVolumeCallBack_r(struct host *host, int isheld,
+MultiBreakVolumeCallBack_r(struct host *host,
 			   struct VCBParams *parms, int deletefe)
 {
     char hoststr[16];
 
     if (host->hostFlags & HOSTDELETED)
-	return 0;		/* host is deleted, release hold */
+	return 0;
 
     if (!(host->hostFlags & HCBREAK))
 	return 0;		/* host is not flagged to notify */
@@ -1145,7 +1140,7 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 						 * later */
 	host->hostFlags &= ~(RESETDONE|HCBREAK);	/* Do InitCallBackState when host returns */
 	h_Unlock_r(host);
-	return 0;		/* parent will release hold */
+	return 0;
     }
     osi_Assert(parms->ncbas <= MAX_CB_HOSTS);
 
@@ -1159,27 +1154,28 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 	tf.AFSCBFids_val = parms->fid;
 
 	/* this releases all the hosts */
-	MultiBreakCallBack_r(parms->cba, parms->ncbas, &tf, 0 /* xhost */ );
+	MultiBreakCallBack_r(parms->cba, parms->ncbas, &tf);
 
 	parms->ncbas = 0;
     }
     parms->cba[parms->ncbas].hp = host;
     parms->cba[(parms->ncbas)++].thead = parms->thead;
     host->hostFlags &= ~HCBREAK;
-    return 1;		/* parent shouldn't release hold, more work to do */
+
+    /* we have more work to do on this host, so make sure we keep a reference
+     * to it */
+    h_Hold_r(host);
+
+    return 0;
 }
 
-/*
-** isheld is 0 if the host is held in h_Enumerate
-** isheld is 1 if the host is held in BreakVolumeCallBacks
-*/
 static int
-MultiBreakVolumeLaterCallBack(struct host *host, int isheld, void *rock)
+MultiBreakVolumeLaterCallBack(struct host *host, void *rock)
 {
     struct VCBParams *parms = (struct VCBParams *)rock;
     int retval;
     H_LOCK;
-    retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 0);
+    retval = MultiBreakVolumeCallBack_r(host, parms, 0);
     H_UNLOCK;
     return retval;
 }
@@ -1340,7 +1336,7 @@ BreakLaterCallBacks(void)
 	    tf.AFSCBFids_len = 1;
 	    tf.AFSCBFids_val = &fid;
 
-	    MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf, 0);
+	    MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf);
 	    henumParms.ncbas = 0;
 	}
     }
@@ -1446,7 +1442,7 @@ struct lih_params {
  * theory not give these to us anyway, but be paranoid.
  */
 static int
-lih0_r(struct host *host, int flags, void *rock)
+lih0_r(struct host *host, void *rock)
 {
     struct lih_params *params = (struct lih_params *)rock;
 
@@ -1464,12 +1460,12 @@ lih0_r(struct host *host, int flags, void *rock)
 	h_Hold_r(host);
 	params->lih = host;
     }
-    return flags;
+    return 0;
 }
 
 /* same as lih0_r, except we do not prevent held hosts from being selected. */
 static int
-lih1_r(struct host *host, int flags, void *rock)
+lih1_r(struct host *host, void *rock)
 {
     struct lih_params *params = (struct lih_params *)rock;
 
@@ -1485,7 +1481,7 @@ lih1_r(struct host *host, int flags, void *rock)
 	h_Hold_r(host);
 	params->lih = host;
     }
-    return flags;
+    return 0;
 }
 
 /* This could be upgraded to get more space each time */

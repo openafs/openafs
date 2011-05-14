@@ -39,7 +39,7 @@ LIBS=\
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libdes.a \
-	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/util.a
 
 EXTRA_LIBS=${LIB_curses} ${XLIBS}
