@@ -4741,7 +4741,7 @@ rxi_AttachServerProc(struct rx_call *call,
 	    queue_Append(&rx_incomingCallQueue, call);
 	}
     } else {
-	sq = queue_First(&rx_idleServerQueue, rx_serverQueueEntry);
+	sq = queue_Last(&rx_idleServerQueue, rx_serverQueueEntry);
 
 	/* If hot threads are enabled, and both newcallp and sq->socketp
 	 * are non-null, then this thread will process the call, and the
