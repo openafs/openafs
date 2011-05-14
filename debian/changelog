@@ -1,6 +1,15 @@
 openafs (1.6.0~pre5-1) UNRELEASED; urgency=low
 
   * New upstream prerelease.
+    - Avoid downward vcache pressure when entries are free.
+    - Avoid client to fileserver deadlock during callback giveup.
+    - Improve calculation of when to flush vcaches.
+    - Don't read pages beyond the cache EOF.
+    - Improve file server reference counting, locking, and logging.
+    - Rename the OpenAFS com_err library to avoid conflicts.
+    - Restrict the number of CBRs allocated at once.
+    - Permit importing of -md5 and -md4 keys with asetkey.
+    - Fix token return in aklog with 524 conversion.
   * Update import-upstream and README.source for moving 1.6 from the
     experimental and upstream-1.5 branches to the master and upstream
     branches.
