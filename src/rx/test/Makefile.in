@@ -22,7 +22,8 @@ BASICINCLS =  ../rx_clock.h ../rx_queue.h ../rx_event.h
 
 LINK = $(AFS_LDRULE) $@.o ${LIBS}
 MT_LINK = $(CC) $(MT_CFLAGS) $(COMMON_CFLAGS) $(AFS_LDFLAGS) -o $@ \
-	  $@.o $(TOP_LIBDIR)/libafsrpc.a $(MT_LIBS) $(XLIBS)
+	  $@.o $(TOP_LIBDIR)/libafsrpc.a $(LIB_hcrypto) $(LIB_roken) \
+	  $(MT_LIBS) $(XLIBS)
 
 TESTS = testclient testserver kstest kctest testqueue tableGen generator
 
