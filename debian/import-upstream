@@ -37,11 +37,11 @@ tar xzf "$tarball"
 git add -f "$dir"
 tree=$(git write-tree --prefix="$dir"/)
 commit=$(echo "Imported upstream tag $upstream via tarball" | \
-    git commit-tree "$tree" -p upstream-1.5 -p $(git rev-list -n1 "$upstream"))
+    git commit-tree "$tree" -p upstream -p $(git rev-list -n1 "$upstream"))
 
 # Now that we have a commit, repoint upstream at that commit, tag it, and then
 # remove the unpacked upstream tarball from our index.
-git branch -f upstream-1.5 "$commit"
+git branch -f upstream "$commit"
 git tag "$tag" "$commit"
 git rm -q -r -f "$dir"
 rm -rf "$dir"

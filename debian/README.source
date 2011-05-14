@@ -18,11 +18,9 @@ General Maintenance
 
         http://openafs-wiki.stanford.edu/AFSLore/GitDevelopers
 
-    for information on how to submit patches upstream.  There are some
-    Debian-specific patches to the upstream source in the 1.4 versions of
-    the Debian packages, but in the 1.5 experimental branch there are no
-    Debian changes outside of the debian/* directory.  We want to keep it
-    that way if at all possible.
+    for information on how to submit patches upstream.  Starting from
+    OpenAFS 1.5, we're no longer carrying any Debian-specific changes
+    outside of the debian/* directory, and we want to keep it that way.
 
 Importing a New Upstream Release
 
@@ -133,4 +131,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Tue, 13 Jul 2010 19:30:15 -0700
+ -- Russ Allbery <rra@debian.org>, Sat, 14 May 2011 10:13:03 -0700
