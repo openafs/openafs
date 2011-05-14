@@ -16,7 +16,10 @@ openafs (1.6.0~pre5-1) UNRELEASED; urgency=low
   * Update import-upstream and README.source for moving 1.6 from the
     experimental and upstream-1.5 branches to the master and upstream
     branches.
-
+  * Change to Debian source format 3.0 (quilt).  Force a single Debian
+    patch for simplicity since the packaging is maintained in Git using
+    branches, and include a patch header explaining why.
+  
  -- Russ Allbery <rra@debian.org>  Sat, 14 May 2011 10:13:39 -0700
 
 openafs (1.6.0~pre4-1) unstable; urgency=low
