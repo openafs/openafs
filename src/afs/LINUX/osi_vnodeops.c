@@ -1415,14 +1415,25 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 		     int chunk, struct pagevec *lrupv,
 		     struct afs_pagecopy_task *task) {
     loff_t offset = page_offset(page);
+    struct inode *cacheinode = cachefp->f_dentry->d_inode;
     struct page *newpage, *cachepage;
     struct address_space *cachemapping;
-    int pageindex;
+    int pageindex, endindex;
     int code = 0;
 
-    cachemapping = cachefp->f_dentry->d_inode->i_mapping;
+    cachemapping = cacheinode->i_mapping;
     newpage = NULL;
     cachepage = NULL;
+
+    /* If we're trying to read a page that's past the end of the disk
+     * cache file, then just return a zeroed page */
+    if (offset >= i_size_read(cacheinode)) {
+	zero_user_segment(page, 0, PAGE_CACHE_SIZE);
+	SetPageUptodate(page);
+	if (task)
+	    unlock_page(page);
+	return 0;
+    }
 
     /* From our offset, we now need to work out which page in the disk
      * file it corresponds to. This will be fun ... */

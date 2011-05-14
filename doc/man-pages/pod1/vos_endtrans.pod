@@ -141,7 +141,7 @@ L<vos_status(1)>
 
 =head1 COPYRIGHT
 
-Copyright 2009 Andrew Deason <adeason@sinenomine.net>
+Copyright 2009 Sine Nomine Associates
 
 This documentation is covered by the BSD License as written in the
 doc/LICENSE file. This man page was written by Andrew Deason for

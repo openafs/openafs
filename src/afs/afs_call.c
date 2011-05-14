@@ -107,8 +107,6 @@ afs_InitSetup(int preallocs)
 
     memset(afs_zeros, 0, AFS_ZEROS);
 
-    rx_SetBusyChannelError(RX_CALL_TIMEOUT);
-
     /* start RX */
     if(!afscall_set_rxpck_received)
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
@@ -1247,7 +1245,6 @@ afs_shutdown(void)
 
     if (afs_shuttingdown)
 	return;
-    afs_FlushVCBs(2);       /* Reasonable effort to free dynamically allocated callback returns */
 
     afs_shuttingdown = 1;
     if (afs_cold_shutdown)

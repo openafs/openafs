@@ -517,24 +517,43 @@ else
 			;;
 		powerpc-apple-darwin7*)
 			AFS_SYSNAME="ppc_darwin_70"
+			OSXSDK="macosx10.3"
 			;;
 		powerpc-apple-darwin8.*)
 			AFS_SYSNAME="ppc_darwin_80"
+			OSXSDK="macosx10.4"
 			;;
 		i386-apple-darwin8.*)
 			AFS_SYSNAME="x86_darwin_80"
+			OSXSDK="macosx10.4"
 			;;
 		powerpc-apple-darwin9.*)
 			AFS_SYSNAME="ppc_darwin_90"
+			OSXSDK="macosx10.5"
 			;;
 		i386-apple-darwin9.*)
 			AFS_SYSNAME="x86_darwin_90"
+			OSXSDK="macosx10.5"
 			;;
 		i?86-apple-darwin10.*)
 			AFS_SYSNAME="x86_darwin_100"
+			OSXSDK="macosx10.6"
 			;;
 		x86_64-apple-darwin10.*)
 			AFS_SYSNAME="x86_darwin_100"
+			OSXSDK="macosx10.6"
+			;;
+		arm-apple-darwin10.*)
+			AFS_SYSNAME="arm_darwin_100"
+			OSXSDK="iphoneos4.0"
+			;;
+		x86_64-apple-darwin11.*)
+			AFS_SYSNAME="x86_darwin_110"
+			OSXSDK="macosx10.7"
+			;;
+		i?86-apple-darwin11.*)
+			AFS_SYSNAME="x86_darwin_110"
+			OSXSDK="macosx10.7"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -683,6 +702,7 @@ case $AFS_SYSNAME in
 		AC_CHECK_HEADERS(crt_externs.h)
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+		AC_SUBST(OSXSDK)
 		;;
 esac
 
@@ -849,7 +869,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				     [#include <linux/pagevec.h>],
 				     [__pagevec_lru_add_file(NULL);])
 		 AC_CHECK_LINUX_FUNC([path_lookup],
-				     [#include <linux/namei.h>],
+				     [#include <linux/fs.h>
+				      #include <linux/namei.h>],
 				     [path_lookup(NULL, 0, NULL);])
 		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
 				     [#include <linux/rcupdate.h>],

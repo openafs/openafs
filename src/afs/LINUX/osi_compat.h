@@ -403,17 +403,24 @@ afs_inode_setattr(struct osi_file *afile, struct iattr *newattrs) {
     return code;
 }
 
-static inline int
-afs_kern_path(char *aname, int flags, struct nameidata *nd, struct path *path) {
 #if defined(HAVE_LINUX_PATH_LOOKUP)
+static inline int
+afs_kern_path(char *aname, int flags, struct nameidata *nd) {
     return path_lookup(aname, flags, nd);
-#else
-    return kern_path(aname, flags, path);
-#endif
 }
+#else
+static inline int
+afs_kern_path(char *aname, int flags, struct path *path) {
+    return kern_path(aname, flags, path);
+}
+#endif
 
 static inline void
-afs_get_dentry_ref(struct nameidata *nd, struct path *path, struct vfsmount **mnt, struct dentry **dpp) {
+#if defined(HAVE_LINUX_PATH_LOOKUP)
+afs_get_dentry_ref(struct nameidata *nd, struct vfsmount **mnt, struct dentry **dpp) {
+#else
+afs_get_dentry_ref(struct path *path, struct vfsmount **mnt, struct dentry **dpp) {
+#endif
 #if defined(STRUCT_NAMEIDATA_HAS_PATH)
 # if defined(HAVE_LINUX_PATH_LOOKUP)
     *dpp = dget(nd->path.dentry);
