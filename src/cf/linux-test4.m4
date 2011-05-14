@@ -248,7 +248,7 @@ AC_DEFUN([LINUX_IOP_I_PERMISSION_TAKES_FLAGS], [
   AC_CHECK_LINUX_BUILD([whether inode_operations.permission takes flags],
 			[ac_cv_linux_func_i_permission_takes_flags],
 			[#include <linux/fs.h>],
-			[struct inode _inode;
+			[struct inode _inode = {0};
 			unsigned int flags = 0;
 			(void)_inode.i_op->permission(&_inode, 0, flags);],
 		       [IOP_PERMISSION_TAKES_FLAGS],
