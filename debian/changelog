@@ -1,3 +1,10 @@
+openafs (1.6.0~pre5-2) UNRELEASED; urgency=low
+
+  * Apply upstream patch from http://gerrit.openafs.org/#change,4656 for
+    correct reading of files larger than the chunk size.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 14 May 2011 23:47:41 -0700
+
 openafs (1.6.0~pre5-1) unstable; urgency=low
 
   * New upstream prerelease.
