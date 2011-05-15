@@ -383,7 +383,7 @@ main(argc, argv)
 	    hotroot = 0;
 #ifdef	AFS_SUN5_ENV
 	    if (wflag && !writable(*argv)) {
-		(void)fprintf(stderr, "not writeable '%s'\n", *argv);
+		(void)fprintf(stderr, "not writable '%s'\n", *argv);
 		argv++;
 	    } else
 #endif

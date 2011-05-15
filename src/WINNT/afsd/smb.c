@@ -1931,7 +1931,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         p = pathName;
         cchlen = lengthof(pathName);
 
-        /* within this code block, we maintain, cchlen = writeable
+        /* within this code block, we maintain, cchlen = writable
            buffer length of p */
 
         if (cm_ClientStrCmpN(p, cm_mountRootC, cm_mountRootCLen) == 0) {

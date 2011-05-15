@@ -564,7 +564,7 @@ PrintPrompt(int flag, char *name, int dumpid)
 	break;
 
     case SAVEDBOPCODE:		/* Mount for savedb */
-	printf("Please insert a writeable tape %s for the database dump",
+	printf("Please insert a writable tape %s for the database dump",
 	       tapename);
 	break;
 

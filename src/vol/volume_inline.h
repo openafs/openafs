@@ -219,7 +219,7 @@ VCanUnlockAttached(void)
  * read lock, or if we do not need to lock it at all, when attaching.
  *
  * @param[in]  mode  volume attachment mode
- * @param[in]  writeable  1 if the volume is writable, 0 if not
+ * @param[in]  writable  1 if the volume is writable, 0 if not
  *
  * @return how we need to lock the vol header
  *  @retval 0 do not lock the vol header at all
@@ -229,11 +229,11 @@ VCanUnlockAttached(void)
  * @note DAFS only (non-DAFS uses partition locks)
  */
 static_inline int
-VVolLockType(int mode, int writeable)
+VVolLockType(int mode, int writable)
 {
     switch (programType) {
     case fileServer:
-	if (writeable) {
+	if (writable) {
 	    return WRITE_LOCK;
 	}
 	return READ_LOCK;
@@ -256,7 +256,7 @@ VVolLockType(int mode, int writeable)
 
 	case V_CLONE:
 	case V_DUMP:
-	    if (writeable) {
+	    if (writable) {
 		return WRITE_LOCK;
 	    }
 	    return READ_LOCK;

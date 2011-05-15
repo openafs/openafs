@@ -358,7 +358,7 @@ lock cannot cause any process to just hang, waiting for a lock.
 
  -- re-reading volume headers
 
-Since we cannot know whether a volume is writeable or not until the
+Since we cannot know whether a volume is writable or not until the
 volume header is read, and we cannot atomically upgrade file-level
 locks, part of attachment can now occur twice (see attach2 and
 attach_volume_header). What occurs is we read the vol header, assuming

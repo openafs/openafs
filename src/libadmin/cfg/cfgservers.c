@@ -2108,7 +2108,7 @@ UbikVoteStatusFetch(int serverAddr, unsigned short serverPort,
 	    *isWriteReady = 0;
 
 	    if (*isSyncSite) {
-		/* as of 3.5 the database is writeable if "labeled" or if all
+		/* as of 3.5 the database is writable if "labeled" or if all
 		 * prior recovery states have been achieved; see defect 9477.
 		 */
 		if (((udebugInfo.recoveryState & UBIK_RECLABELDB))
@@ -2128,7 +2128,7 @@ UbikVoteStatusFetch(int serverAddr, unsigned short serverPort,
 		*isWriteReady = 0;
 
 		if (*isSyncSite) {
-		    /* pre 3.5 the database is writeable only if "labeled" */
+		    /* pre 3.5 the database is writable only if "labeled" */
 		    if (udebugInfo.recoveryState & UBIK_RECLABELDB) {
 			*isWriteReady = 1;
 		    }
