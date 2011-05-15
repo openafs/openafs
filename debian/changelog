@@ -2,6 +2,9 @@ openafs (1.6.0~pre5-2) UNRELEASED; urgency=low
 
   * Apply upstream patch from http://gerrit.openafs.org/#change,4656 for
     correct reading of files larger than the chunk size.
+  * Use dpkg-buildflags to get the default values of CFLAGS, CPPFLAGS, and
+    LDFLAGS.  Upstream does not entirely honor these yet, but we're
+    getting closer.
 
  -- Russ Allbery <rra@debian.org>  Sat, 14 May 2011 23:47:41 -0700
 

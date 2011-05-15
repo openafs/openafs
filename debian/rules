@@ -9,6 +9,11 @@ else
     SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 endif
 
+# Set compiler flags.
+CFLAGS   := $(shell dpkg-buildflags --get CFLAGS)
+CPPFLAGS := $(shell dpkg-buildflags --get CPPFLAGS)
+LDFLAGS  := $(shell dpkg-buildflags --get LDFLAGS)
+
 # Determine whether we're building with optimization.  This doesn't really
 # work at the moment due to upstream problems.
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
@@ -91,6 +96,7 @@ override_dh_auto_configure:
 	sh regen.sh
 	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
 	    sh configure \
+	    CFLAGS=$(CFLAGS) CPPFLAGS=$(CPPFLAGS) LDFLAGS=$(LDFLAGS) \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	    --prefix=/usr --mandir=\$${prefix}/share/man \
 	    --sysconfdir=/etc --libexecdir=/usr/lib --with-krb5 \
