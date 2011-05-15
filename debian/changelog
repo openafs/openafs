@@ -5,8 +5,9 @@ openafs (1.6.0~pre5-2) unstable; urgency=low
   * Use dpkg-buildflags to get the default values of CFLAGS, CPPFLAGS, and
     LDFLAGS.  Upstream does not entirely honor these yet, but we're
     getting closer.
+  * Update to standards version 3.9.2 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Sun, 15 May 2011 00:13:02 -0700
+ -- Russ Allbery <rra@debian.org>  Sun, 15 May 2011 00:29:14 -0700
 
 openafs (1.6.0~pre5-1) unstable; urgency=low
 
