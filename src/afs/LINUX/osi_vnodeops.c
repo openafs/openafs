@@ -1427,7 +1427,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 
     /* If we're trying to read a page that's past the end of the disk
      * cache file, then just return a zeroed page */
-    if (offset >= i_size_read(cacheinode)) {
+    if (AFS_CHUNKOFFSET(offset) >= i_size_read(cacheinode)) {
 	zero_user_segment(page, 0, PAGE_CACHE_SIZE);
 	SetPageUptodate(page);
 	if (task)
