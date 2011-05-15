@@ -96,7 +96,7 @@ override_dh_auto_configure:
 	sh regen.sh
 	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
 	    sh configure \
-	    CFLAGS=$(CFLAGS) CPPFLAGS=$(CPPFLAGS) LDFLAGS=$(LDFLAGS) \
+	    CFLAGS='$(CFLAGS)' CPPFLAGS='$(CPPFLAGS)' LDFLAGS='$(LDFLAGS)' \
 	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	    --prefix=/usr --mandir=\$${prefix}/share/man \
 	    --sysconfdir=/etc --libexecdir=/usr/lib --with-krb5 \
