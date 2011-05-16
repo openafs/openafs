@@ -770,6 +770,7 @@ KFW_AFS_update_princ_ccache_data(krb5_context ctx, krb5_ccache cc, int lsa)
     code = pkrb5_timeofday(ctx, &now);
 
     cc_code = pkrb5_cc_start_seq_get(ctx, cc, &cur);
+    if (cc_code) goto cleanup;
 
     while (!(cc_code = pkrb5_cc_next_cred(ctx, cc, &cur, &creds))) {
         if ( creds.ticket_flags & TKT_FLG_INITIAL ) {
@@ -1233,6 +1234,7 @@ KFW_import_ccache_data(void)
         KFW_AFS_update_princ_ccache_data(ctx, cc, !strcmp(pNCi[i]->name,LSA_CCNAME));
 
         cc_code = pkrb5_cc_start_seq_get(ctx, cc, &cur);
+        if (cc_code) goto cleanup;
 
         while (!(cc_code = pkrb5_cc_next_cred(ctx, cc, &cur, &creds))) {
             krb5_data * sname = krb5_princ_name(ctx, creds.server);
