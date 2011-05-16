@@ -62,8 +62,8 @@ typedef struct cm_buf {
     afs_uint32 dirtyCounter;	/* bumped at each dirty->clean transition */
     osi_hyper_t offset;	        /* offset */
     cm_fid_t fid;		/* file ID */
-    afs_uint16 flags;		/* flags we're using - mx */
-    afs_uint16 qFlags;		/* queue/hash state flags - buf_globalLock */
+    afs_uint32 flags;		/* flags we're using - mx */
+    afs_uint32 qFlags;		/* queue/hash state flags - buf_globalLock */
     char *datap;		/* data in this buffer */
     afs_uint32 error;	        /* last error code, if CM_BUF_ERROR is set */
     cm_user_t *userp;	        /* user who wrote to the buffer last */
