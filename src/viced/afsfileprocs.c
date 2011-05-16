@@ -3980,6 +3980,13 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	goto Bad_Rename;
     }
 
+    if (CheckLength(volptr, oldvptr, -1) ||
+        CheckLength(volptr, newvptr, -1)) {
+	VTakeOffline(volptr);
+	errorCode = VSALVAGE;
+	goto Bad_Rename;
+    }
+
     /* The CopyOnWrite might return ENOSPC ( disk full). Even if the second
      *  call to CopyOnWrite returns error, it is not necessary to revert back
      *  the effects of the first call because the contents of the volume is
@@ -4670,6 +4677,12 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     if (((DirFid->Vnode & 1) && (ExistingFid->Vnode & 1)) || (DirFid->Vnode == ExistingFid->Vnode)) {	/* at present, */
 	/* AFS fileservers always have directory vnodes that are odd.   */
 	errorCode = EISDIR;
+	goto Bad_Link;
+    }
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VTakeOffline(volptr);
+	errorCode = VSALVAGE;
 	goto Bad_Link;
     }
 
