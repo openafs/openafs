@@ -16,7 +16,6 @@
 
 
 int afs_osicred_initialized;
-afs_ucred_t afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
@@ -42,7 +41,11 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
+#if defined(AFS_NBSD60_ENV)
+    VOP_UNLOCK(vp);
+#else
     VOP_UNLOCK(vp, 0);
+#endif
     afile->vnode = vp;
     afile->size = VTOI(vp)->i_ffs1_size;
     afile->offset = 0;
@@ -111,12 +114,16 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     AFS_GUNLOCK();
     VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
 #ifdef AFS_NBSD50_ENV
-	code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp);
+    code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp);
 #else
     code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp,
 		       osi_curproc());
 #endif
+#ifdef AFS_NBSD60_ENV
+    VOP_UNLOCK(afile->vnode);
+#else
     VOP_UNLOCK(afile->vnode, 0);
+#endif
     AFS_GLOCK();
     if (code == 0)
 	afile->size = asize;
@@ -137,7 +144,7 @@ osi_DisableAtimes(struct vnode *avp)
 int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Read);
@@ -178,7 +185,7 @@ int
 afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Write);
@@ -188,11 +195,9 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	afile->offset = offset;
 
     AFS_GUNLOCK();
-    VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
     code =
-	vn_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
+	vn_rdwr(UIO_WRITE, afile->vnode, aptr, asize, afile->offset,
 		AFS_UIOSYS, IO_UNIT, afs_osi_credp, &resid, osi_curproc());
-    VOP_UNLOCK(afile->vnode, 0);
     AFS_GLOCK();
 
     if (code == 0) {
@@ -215,7 +220,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
  * bit, but should still be pretty clear.
  */
 int
-afs_osi_MapStrategy(int (*aproc) (), struct buf *bp)
+afs_osi_MapStrategy(int (*aproc)(struct buf *), struct buf *bp)
 {
     afs_int32 returnCode;
 

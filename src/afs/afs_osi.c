@@ -55,7 +55,7 @@ struct lock__bsd__ afs_global_lock;
 
 #if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD_ENV)
 # if defined(AFS_NBSD50_ENV)
-struct kmutex afs_global_mtx;
+kmutex_t afs_global_mtx;
 # else
 struct lock afs_global_lock;
 afs_proc_t *afs_global_owner;

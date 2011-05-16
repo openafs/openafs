@@ -39,7 +39,6 @@ static struct osi_packet {
 
 static char memZero;		/* address of 0 bytes for kmem_alloc */
 
-#if !defined(AFS_NBSD_ENV) || defined(AFS_NBSD50_ENV)
 void *
 afs_osi_Alloc(size_t size)
 {
@@ -83,8 +82,6 @@ afs_osi_FreeStr(char *x)
 {
     afs_osi_Free(x, strlen(x) + 1);
 }
-
-#endif /* !AFS_NBSD_ENV && !defined(AFS_NBSD50_ENV) */
 
 #ifndef AFS_PRIVATE_OSI_ALLOCSPACES
 

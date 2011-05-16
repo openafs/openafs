@@ -929,12 +929,18 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
        }
     }
 #else
+#if defined(AFS_NBSD_ENV)
+    solock(newSocket);
+#endif
     code = soreserve(newSocket, 50000, 50000);
     if (code) {
 	code = soreserve(newSocket, 32766, 32766);
 	if (code)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
+#if defined(AFS_NBSD_ENV)
+    sounlock(newSocket);
+#endif
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #if defined(AFS_FBSD_ENV)

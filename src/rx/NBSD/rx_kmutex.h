@@ -27,6 +27,7 @@
 
 #ifdef AFS_NBSD50_ENV
 #include <sys/mutex.h>
+#include <sys/condvar.h>
 #else
 #include <sys/lock.h>
 #endif
@@ -34,6 +35,28 @@
 /* You can't have AFS_GLOBAL_SUNLOCK and not RX_ENABLE_LOCKS */
 #define RX_ENABLE_LOCKS 1
 #define AFS_GLOBAL_RXLOCK_KERNEL
+
+#if defined(AFS_NBSD50_ENV)
+typedef kmutex_t afs_kmutex_t;
+
+#define MUTEX_INIT(a,b,c,d) mutex_init((a), (c), IPL_NONE)
+#define MUTEX_DESTROY(a) mutex_destroy((a))
+#define MUTEX_ENTER(a) mutex_enter((a));
+#define MUTEX_TRYENTER(a) mutex_tryenter((a))
+#define MUTEX_EXIT(a) mutex_exit((a))
+#define MUTEX_ISMINE(a) mutex_owned((a))
+
+typedef kcondvar_t afs_kcondvar_t;
+int afs_cv_wait(afs_kcondvar_t *, afs_kmutex_t *, int);
+
+#define CV_INIT(a, b, c, d) cv_init(a, b)
+#define CV_DESTROY(a) cv_destroy(a)
+#define CV_SIGNAL(a) cv_signal(a)
+#define CV_BROADCAST(a) cv_broadcast(a)
+#define CV_WAIT(a, b) afs_cv_wait(a, b, 0)
+#define CV_WAIT_SIG  afs_cv_wait(a, b, 1)
+
+#else
 
 /*
  * Condition variables
@@ -76,46 +99,13 @@
 #define CV_SIGNAL(cv)           wakeup_one(cv)
 #define CV_BROADCAST(cv)        wakeup(cv)
 
-/* #define osi_rxWakeup(cv)        wakeup(cv) */
+#define osi_rxWakeup(cv)        wakeup(cv)
 typedef int afs_kcondvar_t;
 
 typedef struct {
-#ifdef AFS_NBSD50_ENV
-    struct kmutex mtx;
-#else
-	struct lock lock;
-#endif
+    struct lock lock;
     struct lwp *owner;
 } afs_kmutex_t;
-
-#ifdef AFS_NBSD50_ENV
-#define MUTEX_INIT(a,b,c,d) \
-	do { \
-		mutex_init(&(a)->mtx, (c), IPL_NONE); \
-	} while(0);
-
-#define MUTEX_DESTROY(a) \
-	do { \
-		mutex_destroy(&(a)->mtx); \
-	} while(0);
-
-#define MUTEX_ENTER(a) \
-	do { \
-		mutex_enter(&(a)->mtx); \
-	} while(0);
-
-#define MUTEX_TRYENTER(a) \
-	( mutex_tryenter(&(a)->mtx) )
-
-#define MUTEX_EXIT(a) \
-	do { \
-		mutex_exit(&(a)->mtx); \
-	} while(0);
-
-#define MUTEX_ISMINE(a) \
-	( mutex_owned(&(a)->mtx) )
-
-#else  /* AFS_NBSD50_ENV */
 
 #define MUTEX_INIT(a,b,c,d) \
     do { \

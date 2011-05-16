@@ -32,7 +32,7 @@
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */
 afs_int32 cacheInfoModTime;	/*Last time cache info modified */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
 struct mount *afs_cacheVfsp = 0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
@@ -420,6 +420,8 @@ afs_InitCacheInfo(char *afile)
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
 #elif defined(AFS_FBSD80_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st))
+#elif defined(AFS_NBSD50_ENV)
+	if (!VFS_STATVFS(filevp->v_vfsp, &st))
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, osi_curproc()))
 #else

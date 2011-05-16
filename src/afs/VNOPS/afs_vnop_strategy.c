@@ -95,7 +95,9 @@ int afs_ustrategy(struct buf *abp)
 	tuio.afsio_fmode = 0;
 #endif
 	tuio.afsio_resid = abp->b_bcount;
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_NBSD40_ENV)
+	tiovec[0].iov_base = abp->b_data;
+#elif defined(AFS_XBSD_ENV)
 	tiovec[0].iov_base = abp->b_saveaddr;
 #else
 	tiovec[0].iov_base = abp->b_un.b_addr;
@@ -110,7 +112,10 @@ int afs_ustrategy(struct buf *abp)
 #endif
 	if (code == 0) {
 	    if (tuio.afsio_resid > 0)
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_NBSD40_ENV)
+		memset((char *)abp->b_data + (uintptr_t)abp->b_bcount - tuio.afsio_resid, 0,
+		       tuio.afsio_resid);
+#elif defined(AFS_XBSD_ENV)
 		memset(abp->b_saveaddr + abp->b_bcount - tuio.afsio_resid, 0,
 		       tuio.afsio_resid);
 #else
@@ -172,7 +177,9 @@ int afs_ustrategy(struct buf *abp)
 	len = MIN(len, tvc->f.m.Length - dbtob(abp->b_blkno));
 #endif
 	tuio.afsio_resid = len;
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_NBSD40_ENV)
+	tiovec[0].iov_base = abp->b_data;
+#elif defined(AFS_XBSD_ENV)
 	tiovec[0].iov_base = abp->b_saveaddr;
 #else
 	tiovec[0].iov_base = abp->b_un.b_addr;
@@ -202,6 +209,9 @@ int afs_ustrategy(struct buf *abp)
     (*abp->b_iodone)(abp);
 #elif defined(AFS_FBSD_ENV)
     biodone(&abp->b_io);
+#elif defined(AFS_NBSD40_ENV)
+    abp->b_resid = tuio.uio_resid;
+    biodone(abp);
 #elif defined(AFS_XBSD_ENV)
     biodone(abp);
 #elif !defined(AFS_SUN5_ENV)

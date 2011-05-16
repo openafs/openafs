@@ -421,8 +421,13 @@ extern int afs_icl_Event0(struct afs_icl_set *setp,
 extern void afs_icl_AppendRecord(struct afs_icl_log *logp,
 				 afs_int32 op, afs_int32 types, long p1,
 				 long p2, long p3, long p4);
+#if defined(AFS_NBSD_ENV)
+extern int Afscall_icl(long opcode, long p1, long p2, long p3, long p4,
+		       register_t *retval);
+#else
 extern int Afscall_icl(long opcode, long p1, long p2, long p3, long p4,
 		       long *retval);
+#endif
 #ifdef AFS_DARWIN100_ENV
 extern int Afscall64_icl(int opcode, user_addr_t p1, user_addr_t p2,
 		       user_addr_t p3, user_addr_t p4, int *retval);
@@ -582,6 +587,8 @@ extern void shutdown_osinet(void);
 extern int afs_setpag(afs_ucred_t **credpp);
 #elif defined(AFS_FBSD_ENV)
 extern int afs_setpag(struct thread *td, void *args);
+#elif defined(AFS_NBSD_ENV)
+extern int afs_setpag(afs_proc_t *p, const void *args, register_t *retval);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_setpag(afs_proc_t *p, void *args, int *retval);
 #else
@@ -680,8 +687,13 @@ extern int afs_syscall_icreate(afs_uint32, afs_uint32, afs_uint32, afs_uint32, a
 extern int afs_syscall_iopen(int, ino_t, int, rval_t *);
 extern int afs_syscall_iincdec(int, int, int, int);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_NBSD_ENV)
+extern int afs_syscall_icreate(long, long, long, long, long, long, register_t *);
+extern int afs_syscall_iopen(int dev, int inode, int usrmod, register_t *);
+#else
 extern int afs_syscall_icreate(long, long, long, long, long, long, long*);
 extern int afs_syscall_iopen(int dev, int inode, int usrmod, long *retval);
+#endif
 extern int afs_syscall_iincdec(int dev, int inode, int inode_p1, int amount);
 #else
 extern int afs_syscall_icreate(long, long, long, long, long, long);
@@ -720,8 +732,8 @@ extern int usr_setpag(afs_ucred_t **cred, afs_uint32 pagvalue,
 extern int setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
 
-#   elif defined(AFS_NBSD40_ENV)
-extern int setpag(struct proc *proc, afs_ucred_t *cred, afs_uint32 pagvalue,
+#   elif defined(AFS_NBSD_ENV)
+extern int setpag(afs_proc_t *proc, afs_ucred_t **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
 #   else
 extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
@@ -743,8 +755,11 @@ extern void osi_VM_StoreAllSegments(struct vcache *avc);
 extern void osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred,
 			      int sync);
 extern void osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp);
-extern void osi_VM_Truncate(struct vcache *avc, int alen,
-			    afs_ucred_t *acred);
+#if !defined(AFS_NBSD_ENV)
+extern void osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred);
+#else
+extern void osi_VM_Truncate(struct vcache *avc, voff_t alen, afs_ucred_t *acred);
+#endif
 extern void osi_VM_TryReclaim(struct vcache *avc, int *slept);
 extern void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size);
 extern int osi_VM_Setup(struct vcache *avc, int force);
@@ -925,6 +940,8 @@ extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
 /* afs3_syscall prototype is in sys/sysproto.h */
 #elif defined(AFS_FBSD_ENV)
 extern int afs3_syscall(struct thread *p, void *args);
+#elif defined(AFS_NBSD50_ENV)
+extern int afs3_syscall(afs_proc_t *p, const void *args, register_t *retval);
 #elif defined(AFS_NBSD40_ENV)
 extern int afs3_syscall(struct lwp *p, void *args);
 #else

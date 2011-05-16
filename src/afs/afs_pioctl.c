@@ -810,6 +810,10 @@ afs_xioctl(struct thread *td, struct ioctl_args *uap,
 	   register_t *retval)
 {
     afs_proc_t *p = td->td_proc;
+# elif defined(AFS_NBSD_ENV)
+int
+afs_xioctl(afs_proc_t *p, const struct sys_ioctl_args *uap, register_t *retval)
+{
 # else
 struct ioctl_args {
     int fd;
@@ -818,7 +822,7 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
+afs_xioctl(afs_proc_t *p, const struct ioctl_args *uap, register_t *retval)
 {
 # endif
     struct filedesc *fdp;
@@ -827,14 +831,19 @@ afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
     struct file *fd;
 
     AFS_STATCNT(afs_xioctl);
-#   if defined(AFS_NBSD40_ENV)
-     fdp = p->l_proc->p_fd;
-#   else
+#if defined(AFS_NBSD40_ENV)
+    fdp = p->l_proc->p_fd;
+#else
     fdp = p->p_fd;
 #endif
-    if ((u_int) uap->fd >= fdp->fd_nfiles
-	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
+#if defined(AFS_NBSD50_ENV)
+    if ((fd = fd_getfile(SCARG(uap, fd))) == NULL)
+	return (EBADF);
+#else
+    if ((uap->fd >= fdp->fd_nfiles)
+	|| ((fd = fdp->fd_ofiles[uap->fd]) == NULL))
 	return EBADF;
+#endif
     if ((fd->f_flag & (FREAD | FWRITE)) == 0)
 	return EBADF;
     /* first determine whether this is any sort of vnode */
@@ -847,19 +856,32 @@ afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
 # else
 	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
 # endif
-	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
+	if (tvc && IsAfsVnode((struct vnode *)fd->f_data)) {
 	    /* This is an AFS vnode */
-	    if (((uap->com >> 8) & 0xff) == 'V') {
+#if defined(AFS_NBSD50_ENV)
+	    if (((SCARG(uap, com) >> 8) & 0xff) == 'V') {
+#else
+            if (((uap->com >> 8) & 0xff) == 'V') {
+#endif
 		struct afs_ioctl *datap;
+		printf("%s %lx\n", __func__, SCARG(uap, com));
 		AFS_GLOCK();
 		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+#if defined(AFS_NBSD50_ENV)
+		code = copyin_afs_ioctl(SCARG(uap, data), datap);
+#else
 		code = copyin_afs_ioctl((char *)uap->arg, datap);
+#endif
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
 		    return code;
 		}
+#if defined(AFS_NBSD50_ENV)
+		code = HandleIoctl(tvc, SCARG(uap, com), datap);
+#else
 		code = HandleIoctl(tvc, uap->com, datap);
+#endif
 		osi_FreeSmallSpace(datap);
 		AFS_GUNLOCK();
 		ioctlDone = 1;
@@ -867,14 +889,17 @@ afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval)
 	}
     }
 
+#if defined(AFS_NBSD50_ENV)
+    fd_putfile(SCARG(uap, fd));
+#endif
+
     if (!ioctlDone) {
 # if defined(AFS_FBSD_ENV)
 	return ioctl(td, uap);
 # elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
 # elif defined(AFS_NBSD_ENV)
-           struct lwp *l = osi_curproc();
-           code = sys_ioctl(l, uap, retval);
+        code = sys_ioctl(p, uap, retval);
 # endif
     }
 

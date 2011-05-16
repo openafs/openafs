@@ -10,16 +10,10 @@
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 210
 
-
-#ifdef AFS_KALLOC
-#undef AFS_KALLOC
-#endif
-#define AFS_KALLOC(s) (osi_nbsd_Alloc((s), 1 /* cansleep */))
-
-#ifdef AFS_KFREE
-#undef AFS_KFREE
-#endif
-#define AFS_KFREE(p, s) (osi_nbsd_Free((p), (s)))
+#define AFS_KALLOC(n)           kmem_alloc(n, KM_SLEEP)
+#define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)
+#define AFS_KFREE               kmem_free
+#define VATTR_NULL              vattr_null
 
 #if 0
 /* including this file before sysincludes.h is canonical, but

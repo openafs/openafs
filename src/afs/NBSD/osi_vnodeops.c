@@ -107,12 +107,9 @@ NONINFRINGEMENT.
 #include <sys/pool.h>
 #include <miscfs/genfs/genfs.h>
 
-
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
-
-#define M_AFSNODE (M_TEMP-1)	/* XXX */
 
 int afs_nbsd_lookup(void *);
 int afs_nbsd_create(void *);
@@ -125,7 +122,6 @@ int afs_nbsd_setattr(void *);
 int afs_nbsd_read(void *);
 int afs_nbsd_write(void *);
 int afs_nbsd_ioctl(void *);
-int afs_nbsd_select(void *);
 int afs_nbsd_fsync(void *);
 int afs_nbsd_remove(void *);
 int afs_nbsd_link(void *);
@@ -146,33 +142,17 @@ int afs_nbsd_islocked(void *);
 int afs_nbsd_pathconf(void *);
 int afs_nbsd_advlock(void *);
 
-#if LATER
-int afs_nbsd_getpages(void*);
-#endif
+int afs_debug;
 
 /*
- * Implement:
- *   vop_getpages (VM)
- *   vop_putpages (VM)
- *
- * Someday:
- *   vop_mmap_desc (mmap'd IO)
- *
  * Skip:
  *   vop_*xtattr
  *
- * Unknown:
- *   vop_fcntl
- *
  */
-
-#define afs_nbsd_opnotsupp \
-	((int (*) __P((void *)))eopnotsupp)
-#define afs_nbsd_reallocblks afs_nbsd_opnotsupp
 
 /* Global vfs data structures for AFS. */
 int (**afs_vnodeop_p) __P((void *));
-struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
+const struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_default_desc, vn_default_error},
     {&vop_lookup_desc, afs_nbsd_lookup},	/* lookup */
     {&vop_create_desc, afs_nbsd_create},	/* create */
@@ -184,10 +164,17 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_setattr_desc, afs_nbsd_setattr},	/* setattr */
     {&vop_read_desc, afs_nbsd_read},		/* read */
     {&vop_write_desc, afs_nbsd_write},		/* write */
+#if NOTYET
     {&vop_ioctl_desc, afs_nbsd_ioctl},		/* XXX ioctl */
-    {&vop_poll_desc, afs_nbsd_select},		/* select */
+#else
+    {&vop_ioctl_desc, genfs_enoioctl},		/* ioctl */
+#endif
+    {&vop_fcntl_desc, genfs_fcntl},		/* fcntl */
+    {&vop_poll_desc, genfs_poll},		/* poll */
     {&vop_kqfilter_desc, genfs_kqfilter },	/* kqfilter */
+    {&vop_mmap_desc, genfs_mmap},		/* mmap */
     {&vop_fsync_desc, afs_nbsd_fsync},		/* fsync */
+    {&vop_seek_desc, genfs_seek},		/* seek */
     {&vop_remove_desc, afs_nbsd_remove},	/* remove */
     {&vop_link_desc, afs_nbsd_link},		/* link */
     {&vop_rename_desc, afs_nbsd_rename},	/* rename */
@@ -210,25 +197,54 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 #if 0
     {&vop_reallocblks_desc, afs_nbsd_reallocblks},	/* reallocblks */
 #endif
-    {&vop_bwrite_desc, vn_bwrite},	/* bwrite */
-#if LATER
-    { &vop_getpages_desc, ffs_getpages },       /* getpages */
-    { &vop_putpages_desc, genfs_putpages },	/* putpages */
-#endif
-    {(struct vnodeop_desc *)NULL, (int (*)__P((void *)))NULL}
+    {&vop_bwrite_desc, vn_bwrite},		/* bwrite */
+    {&vop_getpages_desc, genfs_getpages},	/* getpages */
+    {&vop_putpages_desc, genfs_putpages},	/* putpages */
+    { NULL, NULL}
 };
-struct vnodeopv_desc afs_vnodeop_opv_desc =
+const struct vnodeopv_desc afs_vnodeop_opv_desc =
     { &afs_vnodeop_p, afs_vnodeop_entries };
 
-#define GETNAME() \
-    struct componentname *cnp = ap->a_cnp; \
-    char *name; \
-    name = PNBUF_GET();	\
-    bcopy(cnp->cn_nameptr, name, cnp->cn_namelen); \
-    name[cnp->cn_namelen] = '\0'
+static void
+afs_nbsd_gop_size(struct vnode *vp, off_t size, off_t *eobp, int flags)
+{
 
-#define DROPNAME() PNBUF_PUT(name)
-#define DROPCNP PNBUF_PUT
+	*eobp = MAX(size, vp->v_size);
+}
+
+static int
+afs_nbsd_gop_alloc(struct vnode *vp, off_t off, off_t len, int flags,
+    kauth_cred_t cred)
+{
+
+    return (0);
+}
+
+static const struct genfs_ops afs_genfsops = {
+	.gop_size  = afs_nbsd_gop_size,
+	.gop_alloc = afs_nbsd_gop_alloc,
+	.gop_write = genfs_gop_write,
+};
+
+extern void cpu_Debugger(void);
+
+static char *
+cnstrdup(const struct componentname *cnp)
+{
+	char *string;
+
+	string = PNBUF_GET();
+	memcpy(string, cnp->cn_nameptr, cnp->cn_namelen);
+	string[cnp->cn_namelen] = '\0';
+
+	return string;
+}
+
+static void
+cnstrfree(char *string)
+{
+	PNBUF_PUT(string);
+}
 
 /* toss "stale" pages by shrinking the vnode uobj to a 0-length
  * region (see uvm_vnp_setsize in uvm_vnode.c) */
@@ -255,29 +271,31 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 void
 afs_nbsd_getnewvnode(struct vcache *tvc)
 {
-    while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &tvc->v)) {
+    struct nbvdata *vd;
+
+    KASSERT(AFSTOV(tvc) == NULL);
+    while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &AFSTOV(tvc))) {
 	/* no vnodes available, force an alloc (limits be damned)! */
+	printf("afs: upping desiredvnodes\n");
 	desiredvnodes++;
     }
-    printf("afs_nbsd_getnewvnode: vp %p refs %d\n", tvc->v,
-          tvc->v->v_usecount);
-#ifdef AFS_NBSD50_ENV
-    mutex_enter(&tvc->v->v_interlock);
-#else
-    simple_lock(&tvc->v->v_interlock);
-#endif
-    tvc->v->v_data = (void *)tvc;
-#if 0
-    tvc->v->v_usecount = 1; /* !locked, and vref w/v_usecount < 1 panics */
-#endif
-#ifdef AFS_NBSD50_ENV
-    mutex_exit(&tvc->v->v_interlock);
-#else
-    simple_unlock(&tvc->v->v_interlock);
-#endif
-}
 
-unsigned long long afs_debug;
+    vd = kmem_zalloc(sizeof(*vd), KM_SLEEP);
+#ifdef AFS_NBSD50_ENV
+    mutex_enter(&AFSTOV(tvc)->v_interlock);
+#else
+    simple_lock(&AFSTOV(tvc)->v_interlock);
+#endif
+    vd->afsvc = tvc;
+    AFSTOV(tvc)->v_data = vd;
+    genfs_node_init(AFSTOV(tvc), &afs_genfsops);
+#ifdef AFS_NBSD50_ENV
+    mutex_exit(&AFSTOV(tvc)->v_interlock);
+#else
+    simple_unlock(&AFSTOV(tvc)->v_interlock);
+#endif
+    uvm_vnp_setsize(AFSTOV(tvc), 0);
+}
 
 int
 afs_nbsd_lookup(void *v)
@@ -288,101 +306,92 @@ afs_nbsd_lookup(void *v)
 				 * struct vnode **a_vpp;
 				 * struct componentname *a_cnp;
 				 * } */ *ap = v;
-    int code;
+    struct vnode *dvp, *vp;
     struct vcache *vcp;
-    struct vnode *vp, *dvp;
-    int flags = ap->a_cnp->cn_flags;
-    int lockparent;		/* 1 => lockparent flag is set */
+    struct componentname *cnp;
+    char *name;
+    int code;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_lookup enter ap %p\n", ap);
-
-    GETNAME();
-    lockparent = flags & LOCKPARENT;
-    if (ap->a_dvp->v_type != VDIR) {
-        *ap->a_vpp = NULL;
-        DROPNAME();
-        return ENOTDIR;
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_lookup a_cnp->cn_nameptr %s cred %p a_dvp %p\n",
+	    ap->a_cnp->cn_nameptr, ap->a_cnp->cn_cred, ap->a_dvp);
+    } else {
+        KASSERT(VOP_ISLOCKED(ap->a_dvp));
     }
+
     dvp = ap->a_dvp;
-/*
-*	v_flag was broke up into 3 separate flags. v_vflag is the
-*	substitute when referencing V_ROOT (which was also renamed)
-*
-*	mattjsm
-*/
-#ifdef AFS_NBSD50_ENV
-    if (afs_debug & AFSDEB_VNLAYER && !(dvp->v_vflag & VV_ROOT))
-#else
-    if (afs_debug & AFSDEB_VNLAYER && !(dvp->v_flag & VROOT))
+    vp = *ap->a_vpp = NULL;
+    cnp = ap->a_cnp;
+
+#if AFS_USE_NBSD_NAMECACHE
+    code = cache_lookup(dvp, ap->a_vpp, cnp);
+    if (code >= 0)
+	goto out;
 #endif
-        printf("nbsd_lookup dvp %p flags %x name %s v_usecnt %d\n", dvp, flags,
-               name, dvp->v_usecount);
+
+    code = 0;
+
+    if (dvp->v_type != VDIR) {
+	code = ENOTDIR;
+	goto out;
+    }
+
+    name = cnstrdup(cnp);
     AFS_GLOCK();
     code = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
     AFS_GUNLOCK();
-    if (code) {
-        if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME)
-            && (flags & ISLASTCN) && code == ENOENT)
-            code = EJUSTRETURN;
-        if (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))
+    cnstrfree(name); name = NULL;
+
+    if (code == ENOENT
+	&& (cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME)
+        && (cnp->cn_flags & ISLASTCN)) {
+	    *ap->a_vpp = NULL;
+	    code = EJUSTRETURN;
+#if !defined(AFS_NBSD60_ENV)
             cnp->cn_flags |= SAVENAME;
-        DROPNAME();
-        *ap->a_vpp = NULL;
-        return (code);
-    }
-    vp = AFSTOV(vcp); /* always get a node if no error */
-
-    /*
-     * The parent directory comes in locked.  We unlock it on return
-     * unless the caller wants it left locked.
-     * we also always return the vnode locked.
-     */
-
-    if (vp == dvp) {
-        /* they're the same; afs_lookup() already ref'ed the leaf.
-         * It came in locked, so we don't need to ref OR lock it */
-        if (afs_debug & AFSDEB_VNLAYER)
-            printf("nbsd_lookup: ref'ed %p as .\n", dvp);
-    } else {
-        if (!lockparent || !(flags & ISLASTCN)) {
-            VOP_UNLOCK(dvp, 0); /* done with parent. */
-        }
-
-        if (afs_debug & AFSDEB_VNLAYER)
-            printf("nbsd_lookup dvp %p flags %x name %s v_usecnt %d\n",
-                   dvp, flags, name, dvp->v_usecount);
-
-        /* XXXX hacked here, recheck OBSD and bundled--NBSD has
-         * removed PDIRUNLOCK, so we must at least accommodate that
-         * change. M.*/
-        if (!VOP_ISLOCKED(vp)) {
-            vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
-            if (afs_debug & AFSDEB_VNLAYER)
-                printf("nbsd_lookup: omitting to always return child locked\n");
-            /* vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); *//* always return the child locked */
-        } else {
-            if (afs_debug & AFSDEB_VNLAYER)
-                printf("lookup: vp %p is locked\n", vp);
-        }
-        if (afs_debug & AFSDEB_VNLAYER)
-            printf("locked ret %p from lookup\n", vp);
-    }
-    *ap->a_vpp = vp;
-
-    if (((cnp->cn_nameiop == RENAME && (flags & ISLASTCN))
-     || (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))))
-    cnp->cn_flags |= SAVENAME;
-
-    DROPNAME();
-#ifdef AFS_NBSD50_ENV
-    if (afs_debug & AFSDEB_VNLAYER && !(dvp->v_vflag & VV_ROOT))
-#else
-    if (afs_debug & AFSDEB_VNLAYER && !(dvp->v_flag & VROOT))
 #endif
-        if (afs_debug & AFSDEB_VNLAYER)
-            printf("nbsd_lookup done ap %p dvp %p cnt %d\n", ap, dvp,
-                   dvp->v_usecount);
+	    goto out;
+    }
+
+    if (code == 0) {
+        vp = *ap->a_vpp = AFSTOV(vcp);
+        if (cnp->cn_flags & ISDOTDOT) {
+#if defined(AFS_NBSD60_ENV)
+            VOP_UNLOCK(dvp);
+#else
+            VOP_UNLOCK(dvp, 0);
+#endif
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+	    vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY);
+        } else if (vp == dvp) {
+	    vref(dvp);
+	} else {
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+        }
+    }
+
+#if AFS_USE_NBSD_NAMECACHE
+    if ((cnp->cn_flags & MAKEENTRY) && cnp->cn_nameiop != CREATE) {
+	cache_enter(dvp, *ap->a_vpp, cnp);
+    }
+#endif
+
+ out:
+#if 0
+#ifdef AFS_NBSD50_ENV
+    if ((afs_debug & AFSDEB_VNLAYER) != 0 && (dvp->v_vflag & VV_ROOT) != 0)
+#else
+    if ((afs_debug & AFSDEB_VNLAYER) != 0 && (dvp->v_flag & VROOT) != 0)
+#endif
+#endif
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_lookup done dvp %p cnt %d\n", dvp, dvp->v_usecount);
+    }
+
+    if (code == 0 && afs_debug == 0) {
+        KASSERT(VOP_ISLOCKED(*ap->a_vpp));
+    }
+
     return (code);
 }
 
@@ -398,22 +407,28 @@ afs_nbsd_create(void *v)
     int code = 0;
     struct vcache *vcp;
     struct vnode *dvp = ap->a_dvp;
-    GETNAME();
+    struct componentname *cnp = ap->a_cnp;
+    char *name;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-	printf("nbsd_create dvp %p cnt %d\n", dvp, dvp->v_usecount);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	/* printf("nbsd_create dvp %p cnt %d\n", dvp, dvp->v_usecount); */
+	printf("nbsd_create a_cnp->cn_nameptr %s cred %p a_dvp %p\n",
+	    ap->a_cnp->cn_nameptr, ap->a_cnp->cn_cred, ap->a_dvp);
+	/* printf("name: %d %s\n", ap->a_cnp->cn_namelen, name); */
+    }
 
     /* vnode layer handles excl/nonexcl */
 
+    name = cnstrdup(cnp);
     AFS_GLOCK();
     code =
 	afs_create(VTOAFS(dvp), name, ap->a_vap, NONEXCL, ap->a_vap->va_mode,
 		   &vcp, cnp->cn_cred);
     AFS_GUNLOCK();
+    cnstrfree(name);
     if (code) {
 	VOP_ABORTOP(dvp, cnp);
 	vput(dvp);
-	DROPNAME();
 	return (code);
     }
 
@@ -421,14 +436,17 @@ afs_nbsd_create(void *v)
 	*ap->a_vpp = AFSTOV(vcp);
 	vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY);
     } else
-	*ap->a_vpp = 0;
+	*ap->a_vpp = NULL;
 
-    if ((cnp->cn_flags & SAVESTART) == 0)
-	DROPCNP(cnp);
+#if !defined(AFS_NBSD60_ENV)
+    if (code || (cnp->cn_flags & SAVESTART) == 0) {
+        PNBUF_PUT(cnp->cn_pnbuf);
+    }
+#endif
     vput(dvp);
-    DROPNAME();
-    if (afs_debug & AFSDEB_VNLAYER)
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
 	printf("nbsd_create done dvp %p cnt %d\n", dvp, dvp->v_usecount);
+    }
     return code;
 }
 
@@ -442,15 +460,21 @@ afs_nbsd_mknod(void *v)
 				 * struct vattr *a_vap;
 				 * } */ *ap = v;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_mknod: enter ap %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_mknod: enter %p dvp %p\n", ap, ap->a_dvp);
+    }
 
-    DROPCNP(ap->a_cnp);
+
+#if !defined(AFS_NBSD60_ENV)
+    PNBUF_PUT(ap->a_cnp->cn_pnbuf);
+#endif
     vput(ap->a_dvp);
-    return (ENODEV);
 
-    if (afs_debug & AFSDEB_VNLAYER)
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
         printf("nbsd_mknod: exit ap %p\n", ap);
+    }
+
+    return (ENODEV);
 }
 
 int
@@ -466,8 +490,9 @@ afs_nbsd_open(void *v)
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(vp);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_open: enter vp %p vc %p\n", vp, vc);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_open: enter %p vp %p vc %p\n", ap, ap->a_vp, vc);
+    }
 
     AFS_GLOCK();
     code = afs_open(&vc, ap->a_mode, ap->a_cred);
@@ -477,8 +502,11 @@ afs_nbsd_open(void *v)
 #endif
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
+    uvm_vnp_setsize(ap->a_vp, VTOAFS(ap->a_vp)->f.m.Length);
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
         printf("nbsd_open: exit vp %p vc %p\n", vp, vc);
+    }
 
     return (code);
 }
@@ -496,15 +524,17 @@ afs_nbsd_close(void *v)
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(vp);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_close: enter vp %p vc %p\n", vp, vc);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+        printf("nbsd_close: enter %p vp %p vc %p\n", ap, ap->a_vp, vc);
+    }
 
     AFS_GLOCK();
     code = afs_close(VTOAFS(ap->a_vp), ap->a_fflag, ap->a_cred);
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
         printf("nbsd_close: exit vp %p vc %p\n", vp, vc);
+    }
 
     return (code);
 }
@@ -522,15 +552,17 @@ afs_nbsd_access(void *v)
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(vp);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_access: enter vp %p vc %p mode %d\n", vp, vc, ap->a_mode);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+        printf("nbsd_access: enter %p vp %p vc %p mode %d\n", ap, ap->a_vp, vc, ap->a_mode);
+    }
 
     AFS_GLOCK();
     code = afs_access(VTOAFS(ap->a_vp), ap->a_mode, ap->a_cred);
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_access: exit vp %p vc %p mode %d\n", vp, vc, ap->a_mode);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_access: exit vp %p vc %p mode %d\n", vp, vc, ap->a_mode);
+    }
 
     return (code);
 }
@@ -548,17 +580,19 @@ afs_nbsd_getattr(void *v)
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(vp);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_getattr: enter vp %p vc %p acred %p\n", vp, vc,
-               ap->a_cred);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_getattr: enter %p vp %p vc %p acred %p\n",
+	    ap, ap->a_vp, vc, ap->a_cred);
+    }
 
     AFS_GLOCK();
     code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
         printf("nbsd_getattr: exit vp %p vc %p acred %p\n", vp, vc,
                ap->a_cred);
+    }
 
     return (code);
 }
@@ -574,15 +608,17 @@ afs_nbsd_setattr(void *v)
 				 * } */ *ap = v;
     int code;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_setattr: enter %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_setattr: enter %p vp %p\n", ap, ap->a_vp);
+    }
 
     AFS_GLOCK();
     code = afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_setattr: exit %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_setattr: exit %p\n", ap);
+    }
 
     return (code);
 }
@@ -598,15 +634,22 @@ afs_nbsd_read(void *v)
 				 * } */ *ap = v;
     int code;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_read enter %p", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_read enter %p vp %p\n", ap, ap->a_vp);
+    }
+
+#if 0
+    if (ap->a_uio->uio_offset > ap->a_vp->v_size) {
+	return 0; }
+#endif
 
     AFS_GLOCK();
     code = afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, 0);
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_read exit %p", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_read exit %p\n", ap);
+    }
 
     return (code);
 }
@@ -622,22 +665,23 @@ afs_nbsd_write(void *v)
 				 * } */ *ap = v;
     int code;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_write enter %p", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_write enter %p vp %p\n", ap, ap->a_vp);
+    }
 
-#if 1
-    /* all pages are really "stale?" */
-    VNP_UNCACHE(ap->a_vp);
-#else
-    (void)uvm_vnp_uncache(ap->a_vp);	/* toss stale pages */
-#endif
     AFS_GLOCK();
+    /* osi_FlushPages(VTOAFS(ap->a_vp), ap->a_cred); */
     code =
         afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_write exit %p", ap);
+    if (ap->a_vp->v_size < ap->a_uio->uio_offset) {
+	uvm_vnp_setsize(ap->a_vp, ap->a_uio->uio_offset);
+    }
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_write exit %p\n", ap);
+    }
 
     return (code);
 }
@@ -655,8 +699,9 @@ afs_nbsd_ioctl(void *v)
 				 * } */ *ap = v;
     int code;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_ioctl: enter %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_ioctl: enter %p vp %p\n", ap, ap->a_vp);
+    }
 
     /* in case we ever get in here... */
 
@@ -672,16 +717,11 @@ afs_nbsd_ioctl(void *v)
         code = ENOTTY;
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_ioctl: exit %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_ioctl: exit %p\n", ap);
+    }
 
     return (code);
-}
-
-int
-afs_nbsd_select(void *v)
-{
-    return 1;
 }
 
 int
@@ -697,7 +737,7 @@ afs_nbsd_fsync(void *v)
     int code, wait;
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_fsync: enter %p\n", ap);
+        printf("nbsd_fsync: enter %p vp %p\n", ap, ap->a_vp);
 
     wait = (ap->a_flags & FSYNC_WAIT) != 0;
 
@@ -723,21 +763,22 @@ afs_nbsd_remove(void *v)
     int code;
     struct vnode *vp = ap->a_vp;
     struct vnode *dvp = ap->a_dvp;
+    struct componentname *cnp = ap->a_cnp;
+    char *name;
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_remove: enter %p\n", ap);
+        printf("nbsd_remove: enter %p vp %p\n", ap, ap->a_vp);
 
-    GETNAME();
+    name = cnstrdup(cnp);
     AFS_GLOCK();
     code = afs_remove(VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
+    cnstrfree(name); name = NULL;
     if (dvp == vp)
 	vrele(vp);
     else
 	vput(vp);
     vput(dvp);
-    DROPCNP(cnp);
-    DROPNAME();
 
     if (afs_debug & AFSDEB_VNLAYER)
         printf("nbsd_remove: exit %p\n", ap);
@@ -756,11 +797,12 @@ afs_nbsd_link(void *v)
     int code;
     struct vnode *dvp = ap->a_dvp;
     struct vnode *vp = ap->a_vp;
+    struct componentname *cnp = ap->a_cnp;
+    char *name;
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_link: enter %p\n", ap);
+        printf("nbsd_link: enter %p vp %p\n", ap, ap->a_vp);
 
-    GETNAME();
     if (dvp->v_mount != vp->v_mount) {
         VOP_ABORTOP(vp, cnp);
         code = EXDEV;
@@ -771,21 +813,28 @@ afs_nbsd_link(void *v)
         code = EISDIR;
         goto out;
     }
-    if ((code = vn_lock(vp, LK_EXCLUSIVE | LK_RETRY))) {
+    if (dvp != vp) {
+      if ((code = vn_lock(vp, LK_EXCLUSIVE | LK_RETRY))) {
         VOP_ABORTOP(dvp, cnp);
         goto out;
+      }
     }
 
+    name = cnstrdup(cnp);
     AFS_GLOCK();
     code = afs_link(VTOAFS(vp), VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
-    DROPCNP(cnp);
-    if (dvp != vp)
+    cnstrfree(name); name = NULL;
+    if (dvp != vp) {
+#if defined(AFS_NBSD60_ENV)
+        VOP_UNLOCK(vp);
+#else
         VOP_UNLOCK(vp, 0);
+#endif
+    }
 
   out:
     vput(dvp);
-    DROPNAME();
 
     if (afs_debug & AFSDEB_VNLAYER)
         printf("nbsd_link: exit %p\n", ap);
@@ -857,10 +906,14 @@ afs_nbsd_rename(void *v)
         vrele(fvp);
         fcnp->cn_flags &= ~MODMASK;
         fcnp->cn_flags |= LOCKPARENT | LOCKLEAF;
+        fcnp->cn_nameiop = DELETE;
+#if !defined(AFS_NBSD60_ENV)
         if ((fcnp->cn_flags & SAVESTART) == 0)
             panic("afs_rename: lost from startdir");
-        fcnp->cn_nameiop = DELETE;
         (void)relookup(fdvp, &fvp, fcnp);
+#else
+        (void)relookup(fdvp, &fvp, fcnp, 0);
+#endif
         code = VOP_REMOVE(fdvp, fvp, fcnp);
 	goto out;
     }
@@ -868,24 +921,16 @@ afs_nbsd_rename(void *v)
     if ((code = vn_lock(fvp, LK_EXCLUSIVE | LK_RETRY)))
         goto abortit;
 
-    /* XXX GETNAME() ? */
-    MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
-    bcopy(fcnp->cn_nameptr, fname, fcnp->cn_namelen);
-    fname[fcnp->cn_namelen] = '\0';
-    MALLOC(tname, char *, tcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
-    bcopy(tcnp->cn_nameptr, tname, tcnp->cn_namelen);
-    tname[tcnp->cn_namelen] = '\0';
+    fname = cnstrdup(fcnp);
+    tname = cnstrdup(tcnp);
 
     AFS_GLOCK();
     /* XXX use "from" or "to" creds? NFS uses "to" creds */
-    code =
-        afs_rename(VTOAFS(fdvp), fname, VTOAFS(tdvp), tname,
-                   tcnp->cn_cred);
+    code = afs_rename(VTOAFS(fdvp), fname, VTOAFS(tdvp), tname, tcnp->cn_cred);
     AFS_GUNLOCK();
 
-    VOP_UNLOCK(fvp, 0);
-    FREE(fname, M_TEMP);
-    FREE(tname, M_TEMP);
+    cnstrfree(fname); fname = NULL;
+    cnstrfree(tname); tname = NULL;
     if (code)
         goto abortit;        /* XXX */
     if (tdvp == tvp)
@@ -895,7 +940,7 @@ afs_nbsd_rename(void *v)
     if (tvp)
         vput(tvp);
     vrele(fdvp);
-    vrele(fvp);
+    vput(fvp);
 
  out:
     if (afs_debug & AFSDEB_VNLAYER)
@@ -915,33 +960,42 @@ afs_nbsd_mkdir(void *v)
 				 * } */ *ap = v;
     struct vnode *dvp = ap->a_dvp;
     struct vattr *vap = ap->a_vap;
-    int code;
+    struct componentname *cnp = ap->a_cnp;
     struct vcache *vcp;
+    int code;
+    char *name;
+
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_mkdir: enter %p\n", ap);
+        printf("nbsd_mkdir: enter %p dvp %p\n", ap, ap->a_dvp);
 
-    GETNAME();
+#if !defined(AFS_NBSD60_ENV)
 #ifdef DIAGNOSTIC
     if ((cnp->cn_flags & HASBUF) == 0)
         panic("afs_nbsd_mkdir: no name");
 #endif
+#endif
+
+    name = cnstrdup(cnp);
     AFS_GLOCK();
     code = afs_mkdir(VTOAFS(dvp), name, vap, &vcp, cnp->cn_cred);
     AFS_GUNLOCK();
+    cnstrfree(name); name = NULL;
     if (code) {
         VOP_ABORTOP(dvp, cnp);
         vput(dvp);
-        DROPNAME();
         goto out;
     }
     if (vcp) {
         *ap->a_vpp = AFSTOV(vcp);
         vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY);
     } else
-        *ap->a_vpp = 0;
-    DROPCNP(cnp);
-    DROPNAME();
+        *ap->a_vpp = NULL;
+#if !defined(AFS_NBSD60_ENV)
+    if (code || (cnp->cn_flags & SAVESTART) == 0) {
+        PNBUF_PUT(cnp->cn_pnbuf);
+    }
+#endif
     vput(dvp);
 
  out:
@@ -962,24 +1016,32 @@ afs_nbsd_rmdir(void *v)
     int code;
     struct vnode *vp = ap->a_vp;
     struct vnode *dvp = ap->a_dvp;
+    struct componentname *cnp = ap->a_cnp;
+    char *name;
+
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_rmdir: enter %p", ap);
+        printf("nbsd_rmdir: enter %p vp %p\n", ap, ap->a_vp);
 
-    GETNAME();
     if (dvp == vp) {
         vrele(dvp);
         vput(vp);
-        DROPCNP(cnp);
-        DROPNAME();
         code = EINVAL;
 	goto out;
     }
 
+    name = cnstrdup(cnp);
     AFS_GLOCK();
     code = afs_rmdir(VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
-    DROPNAME();
+    cnstrfree(name); name = NULL;
+
+#if AFS_USE_NBSD_NAMECACHE
+    if (code == 0) {
+	cache_purge(vp);
+    }
+#endif
+
     vput(dvp);
     vput(vp);
 
@@ -1001,99 +1063,42 @@ afs_nbsd_symlink(void *v)
 				 * char *a_target;
 				 * } */ *ap = v;
     struct vnode *dvp = ap->a_dvp;
+    struct vnode *nvp = NULL;
+    struct vcache *vcp;
+    struct componentname *cnp = ap->a_cnp;
     int code;
+    char *name;
     /* NFS ignores a_vpp; so do we. */
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_symlink: enter %p\n", ap);
+        printf("nbsd_symlink: enter %p dvp %p\n", ap, ap->a_dvp);
 
-    GETNAME();
+    name = cnstrdup(cnp);
     AFS_GLOCK();
     code =
 	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target,
 		    cnp->cn_cred);
+    if (code == 0) {
+	code = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
+        if (code == 0) {
+	  nvp = AFSTOV(vcp);
+	  vn_lock(nvp, LK_EXCLUSIVE | LK_RETRY);
+	}
+    }
     AFS_GUNLOCK();
-    DROPCNP(cnp);
-    DROPNAME();
+    cnstrfree(name); name = NULL;
+#if !defined(AFS_NBSD60_ENV)
+    if (code || (cnp->cn_flags & SAVESTART) == 0) {
+        PNBUF_PUT(cnp->cn_pnbuf);
+    }
+#endif
+
+    *(ap->a_vpp) = nvp;
+
     vput(dvp);
 
     if (afs_debug & AFSDEB_VNLAYER)
         printf("nbsd_symlink: exit %p\n", ap);
-
-    return (code);
-}
-
-int
-nbsd_fake_readdir(struct vnode *vp, struct vcache *vc, struct uio *auio,
-                  kauth_cred_t acred, int *a_eofflag, int *a_ncookies,
-                  u_long **a_cookies)
-{
-    static int ino = 2;
-    afs_int32 code, maxb;
-    struct dirent *dp;
-    maxb = auio->uio_resid;
-
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_fake_readdir: enter vp %p vc %p acred %p auio %p "
-               "uio_offset %d uio_resid %d\n",
-               vp, vc, acred, auio, (int) auio->uio_offset,
-               (int) auio->uio_resid);
-
-    /* 1. simply returning 0 had good behavior (/afs is empty) */
-
-/*
-(gdb) p *auio
-$5 = {uio_iov = 0xcbd0ec90, uio_iovcnt = 1, uio_offset = 0, uio_resid = 4096,
-  uio_rw = UIO_READ, uio_vmspace = 0xcbe8beec}
-*/
-    /* ok.  we don't know about cookies, so since auio->uio_resid is 4096,
-     * what we can legitimately do is move as many appropriately aligned
-     * NetBSD dirent records into uio_iov[0] as will fit in the total size
-     * of 4KB.  We do not need to zero-fill anything.  This does not
-     * terminate the directly listing. If we return 0, VFS will re-enter
-     * nbsd_readdir to continue reading--to termiate the iteration, we must
-     * return a non-zero value from nbsd_readdir.  VOP_READDIR(9) appears to
-     * suggest that enumeration is terminated by setting a_eofflag = 1,
-     * but as noted there this -can- only be done if VFS passed a value for
-     * a_eofflag--apparently, this is to do with NFS.  Setting the eof is
-     * correct but insufficient. */
-
-    /* 2. next, let's move ONE entry in by hand--due to termination
-     * rules, this will actually create file_1 .. file_99 and many
-     * unecessary nbsd_readdir invocations.  The solution to this is to
-     * make proper use of auio->uio_offset and auio->uio_resid, together
-     * when accounting bytes moved each invocation, allowing VFS to
-     * invoke nbsd_readdir at successive offsets until we have consumed
-     * all entries in all chunks of the vnode being read--setting a_eofflag
-     * when this is done.
-     */
-
-    /* this isn't thread safe--we would in fact use incoming offset
-     * to select the offset of the next AFS dirent, read it, then take
-     * its values for (modulo volume) inode number and name */
-    if (auio->uio_offset == 0)
-        ino = 2;
-
-    dp = (struct dirent *) kmem_zalloc(sizeof(struct dirent), KM_SLEEP);
-    dp->d_ino =  ino;
-    dp->d_type = DT_REG;
-    sprintf(dp->d_name, "file_%d", ino);
-    dp->d_namlen = strlen(dp->d_name);
-    dp->d_reclen = _DIRENT_SIZE(dp); /* comp reclen from d_namlen and align */
-    printf("nbsd_fake_readdir: add dirent %s\n", dp->d_name);
-    code = uiomove(dp, dp->d_reclen, auio);
-    if (code)
-        printf("nbsd_fake_readdir: uiomove FAILED\n");
-    kmem_free(dp, sizeof(struct dirent));
-    ++ino;
-
-    /* terminate enumeration */
-    if (!code)
-        if (ino > 100) {
-            code = EINVAL;
-            if(a_eofflag)
-                *a_eofflag = 1;
-        }
 
     return (code);
 }
@@ -1114,8 +1119,8 @@ afs_nbsd_readdir(void *v)
     struct vcache *vc = VTOAFS(vp);
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_readdir: enter vp %p vc %p acred %p auio %p\n", vp, vc,
-               ap->a_cred, ap->a_uio);
+        printf("nbsd_readdir: enter %p vp %p vc %p acred %p auio %p\n", ap,
+	    vp, vc, ap->a_cred, ap->a_uio);
 
     AFS_GLOCK();
 #ifdef AFS_HAVE_COOKIES
@@ -1147,7 +1152,7 @@ afs_nbsd_readlink(void *v)
     int code;
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_readlink: enter %p\n", ap);
+        printf("nbsd_readlink: enter %p vp %p\n", ap, ap->a_vp);
 
     AFS_GLOCK();
     code = afs_readlink(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred);
@@ -1174,21 +1179,23 @@ afs_nbsd_inactive(void *v)
     AFS_STATCNT(afs_inactive);
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_inactive: enter %p\n", ap);
+        printf("nbsd_inactive: enter %p vp %p\n", ap, ap->a_vp);
 
     if (prtactive && vp->v_usecount != 0)
         vprint("afs_nbsd_inactive: pushing active", vp);
 
     if (!haveGlock)
         AFS_GLOCK();
-    afs_InactiveVCache(vc, 0);	/* decrs ref counts */
+    afs_InactiveVCache(vc, NULL);	/* decrs ref counts */
     if (!haveGlock)
         AFS_GUNLOCK();
 
-#ifdef AFS_NBSD50_ENV
-    mutex_init(&vc->rwlock, MUTEX_DEFAULT, IPL_NONE);
+    *ap->a_recycle = (vc->f.states & CUnlinked) != 0;
+
+#if defined(AFS_NBSD60_ENV)
+    VOP_UNLOCK(vp);
 #else
-    lockinit(&vc->rwlock, PINOD, "vcache", 0, 0);
+    VOP_UNLOCK(vp, 0);
 #endif
 
     if (afs_debug & AFSDEB_VNLAYER)
@@ -1209,41 +1216,53 @@ afs_nbsd_reclaim(void *v)
     int haveGlock = ISAFS_GLOCK();
     int haveVlock = CheckLock(&afs_xvcache);
 
-	if (afs_debug & AFSDEB_VNLAYER)
-		printf("nbsd_reclaim: enter %p\n", ap);
+    if (afs_debug & AFSDEB_VNLAYER)
+	printf("nbsd_reclaim: enter %p vp %p\n", ap, vp);
 
-#if 0
-    printf("reclaim usecount %d\n", vp->v_usecount);
-    /* OK, there are no internal vrefCounts, so there shouldn't
-     * be any more refs here. */
-    vp->v_data = NULL;		/* remove from vnode */
-    avc->v = NULL;		/* also drop the ptr to vnode */
-
-	if (afs_debug & AFSDEB_VNLAYER)
-		printf("nbsd_reclaim: exit %p\n", ap);
-
-    return (0);
-#else
     if (!haveGlock)
 		AFS_GLOCK();
     if (!haveVlock)
 		ObtainWriteLock(&afs_xvcache, 901);
-#ifndef AFS_DISCON_ENV
-	code = afs_FlushVCache(avc, &slept); /* tosses our stuff from vnode */
-#else
     /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
     code = afs_FlushVCache(avc, &slept);
-#endif
-    if (!haveVlock)
-		ReleaseWriteLock(&afs_xvcache);
-    if (!haveGlock)
-		AFS_GUNLOCK();
 
-	if (afs_debug & AFSDEB_VNLAYER)
-		printf("nbsd_reclaim: exit %p\n", ap);
+#if 1
+    if (avc->f.states & CVInit) {
+	avc->f.states &= ~CVInit;
+	afs_osi_Wakeup(&avc->f.states);
+    }
+#endif
+
+    if (!haveVlock)
+	ReleaseWriteLock(&afs_xvcache);
+    if (!haveGlock)
+	AFS_GUNLOCK();
+
+    if (vp->v_tag != VT_AFS) {
+        vprint("afs reclaim", vp);
+    }
+    KASSERT(vp->v_tag == VT_AFS);
+
+    if (vp->v_data != NULL) {
+        genfs_node_destroy(vp);
+        kmem_free(vp->v_data, sizeof(struct nbvdata));
+        vp->v_data = NULL;		/* remove from vnode */
+        avc->v = NULL;			/* also drop the ptr to vnode */
+    } else {
+	if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	    vprint("reclaim", vp);
+	}
+    }
+
+#if AFS_USE_NBSD_NAMECACHE
+    cache_purge(vp);
+#endif
+
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_reclaim: exit %p\n", ap);
+    }
 
     return code;
-#endif /* 0 */
 }
 
 int
@@ -1255,16 +1274,18 @@ afs_nbsd_lock(void *v)
 				 * struct lwp *a_l;
 				 * } */ *ap = v;
     int code;
-    struct vnode *vp = ap->a_vp;
-    int flags = ap->a_flags;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_lock: enter vp %p flags %d\n", vp, flags);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_lock: enter %p vp %p\n", ap, ap->a_vp);
+    }
+
+    KASSERT(VTOAFS(ap->a_vp) != NULL);
 
     code = genfs_lock(v);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_lock: exit vp %p flags %d\n\n", vp, flags);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_lock: exit %p\n", ap);
+    }
 
     return (code);
 }
@@ -1278,16 +1299,18 @@ afs_nbsd_unlock(void *v)
 				 * struct lwp *a_l;
 				 * } */ *ap = v;
     int code;
-    struct vnode *vp = ap->a_vp;
-    int flags = ap->a_flags;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_unlock: enter vp %p flags %d\n", vp, flags);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_unlock: enter %p vp %p\n", ap, ap->a_vp);
+    }
+
+    KASSERT(VTOAFS(ap->a_vp) != NULL);
 
     code = genfs_unlock(v);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_unlock: exit vp %p flags %d\n", vp, flags);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+        printf("nbsd_unlock: exit %p\n", ap);
+    }
 
     return (code);
 }
@@ -1300,15 +1323,16 @@ afs_nbsd_islocked(void *v)
 				 * } */ *ap = v;
 
     int code;
-    struct vnode *vp = ap->a_vp;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_islocked: enter vp %p flags %d\n", vp);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_islocked: enter %p vp %p\n", ap, ap->a_vp);
+    }
 
     code = genfs_islocked(v);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_islocked: exit vp %p flags %d\n", vp);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_islocked: exit %p\n", ap);
+    }
 
     return (code);
 }
@@ -1324,27 +1348,27 @@ afs_nbsd_bmap(void *v)
 				 * daddr_t *a_bnp;
 				 * int *a_runp;
 				 * } */ *ap = v;
-    struct vcache *vcp = VTOAFS(ap->a_vp);
 
     AFS_STATCNT(afs_bmap);
 
     if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_bmap: enter %p\n", ap);
+        printf("nbsd_bmap: enter %p vp %p\n", ap, ap->a_vp);
 
-    /* borrowed from DARWIN--why notyet? */
     if (ap->a_bnp)
-        *ap->a_bnp = ap->a_bn * (PAGE_SIZE / DEV_BSIZE);
+        *ap->a_bnp = ap->a_bn;
     if (ap->a_vpp)
         *ap->a_vpp = ap->a_vp;
     if (ap->a_runp != NULL)
-        *ap->a_runp = 0;
+        *ap->a_runp = 1024 * 1024; /* XXX */
 #ifdef notyet
     if (ap->a_runb != NULL)
         *ap->a_runb = 0;
 #endif
 
+#if 0
     if (afs_debug & AFSDEB_VNLAYER)
         printf("nbsd_bmap: exit %p\n", ap);
+#endif
 
     return (0);
 }
@@ -1355,54 +1379,21 @@ afs_nbsd_strategy(void *v)
     struct vop_strategy_args	/* {
 				 * struct buf *a_bp;
 				 * } */ *ap = v;
-    struct buf *abp = ap->a_bp;
-    struct uio tuio;
-    struct iovec tiovec[1];
-    struct vcache *tvc = VTOAFS(abp->b_vp);
-    afs_ucred_t credp = osi_curcred();
-    long len = abp->b_bcount;
     int code;
 
     AFS_STATCNT(afs_strategy);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_strategy: enter %p\n", ap);
-
-    tuio.afsio_iov = tiovec;
-    tuio.afsio_iovcnt = 1;
-    tuio.afsio_resid = len;
-/*
- * b_un was removed in NBSD50...there's no true substitute for the
- * b_addr that was in it, but b_blkno is the closest.
- *	mattjsm
- */
-#ifdef AFS_NBSD50_ENV
-    tiovec[0].iov_base = abp->b_blkno;
-#else
-    tiovec[0].iov_base = abp->b_un.b_addr;
-#endif
-    tiovec[0].iov_len = len;
-    UIO_SETUP_SYSSPACE(&tuio);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+        printf("nbsd_strategy: enter %p vp %p\n", ap, ap->a_vp);
+    }
 
     AFS_GLOCK();
-    if ((abp->b_flags & B_READ) == B_READ) {
-        code = afs_rdwr(tvc, &tuio, UIO_READ, 0, credp);
-        if (code == 0 && tuio.afsio_resid > 0)
-#ifdef AFS_NBSD50_ENV
-            bzero(abp->b_blkno + len - tuio.afsio_resid,
-#else
-            bzero(abp->b_un.b_addr + len - tuio.afsio_resid,
-#endif
-                  tuio.afsio_resid);
-        } else
-            code = afs_rdwr(tvc, &tuio, UIO_WRITE, 0, credp);
+    code = afs_ustrategy(ap->a_bp, osi_curcred());
     AFS_GUNLOCK();
 
-    ReleaseWriteLock(&tvc->lock);
-    AFS_RELE(AFSTOV(tvc));
-
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_strategy: exit %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+        printf("nbsd_strategy: exit %p vp %p\n", ap, ap->a_vp);
+    }
 
     return (code);
 }
@@ -1417,10 +1408,12 @@ afs_nbsd_print(void *v)
     struct vcache *vc = VTOAFS(ap->a_vp);
 
     printf("tag %d, fid: %d.%x.%x.%x, ", vp->v_tag, vc->f.fid.Cell,
-	   (int)vc->f.fid.Fid.Volume, (int)vc->f.fid.Fid.Vnode,
-	   (int)vc->f.fid.Fid.Unique);
+	   vc->f.fid.Fid.Volume, vc->f.fid.Fid.Vnode,
+	   vc->f.fid.Fid.Unique);
 #ifdef AFS_NBSD50_ENV
-	mutex_owned(&vc->rwlock);
+#if defined(DDB) && defined(LOCKDEBUG)
+    lockdebug_lock_print(&vc->rwlock, printf);
+#endif
 #else
     lockmgr_printinfo(&vc->rwlock);
 #endif
@@ -1443,8 +1436,9 @@ afs_nbsd_pathconf(void *v)
 
     AFS_STATCNT(afs_cntl);
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_pathconf: enter %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_pathconf: enter %p vp %p\n", ap, ap->a_vp);
+    }
 
     switch (ap->a_name) {
     case _PC_LINK_MAX:
@@ -1472,8 +1466,9 @@ afs_nbsd_pathconf(void *v)
     }
 
 out:
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_pathconf: exit %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_pathconf: exit %p\n", ap);
+    }
 
     return (0);
 }
@@ -1497,17 +1492,18 @@ afs_nbsd_advlock(void *v)
 				 * } */ *ap = v;
     int code;
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_pathconf: enter %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_pathconf: enter %p vp %p\n", ap, ap->a_vp);
+    }
 
     AFS_GLOCK();
-    code =
-        afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, osi_curcred(),
-                    (int)ap->a_id);
+    code = afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, osi_curcred(),
+	(uintptr_t)ap->a_id);
     AFS_GUNLOCK();
 
-    if (afs_debug & AFSDEB_VNLAYER)
-        printf("nbsd_pathconf: exit %p\n", ap);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	printf("nbsd_pathconf: exit %p\n", ap);
+    }
 
     return (code);
 }

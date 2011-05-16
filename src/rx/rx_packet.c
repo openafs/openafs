@@ -1735,6 +1735,10 @@ m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 #endif /* AFS_SUN5_ENV */
 
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
+#if defined(AFS_NBSD_ENV)
+int
+rx_mb_to_packet(struct mbuf *amb, void (*free) (struct mbuf *), int hdr_len, int data_len, struct rx_packet *phandle)
+#else
 int
 rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 #if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
@@ -1745,6 +1749,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
      void (*free) ();
      struct rx_packet *phandle;
      int hdr_len, data_len;
+#endif /* AFS_NBSD_ENV */
 {
     int code;
 

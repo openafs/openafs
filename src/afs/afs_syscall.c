@@ -479,11 +479,10 @@ afs3_syscall(struct thread *p, void *args)
     long *retval;
 #elif defined(AFS_NBSD40_ENV)
 int
-afs3_syscall(struct lwp *p, void *args)
+afs3_syscall(struct lwp *p, const void *args, register_t *retval)
 {
     /* see osi_machdep.h */
     struct afs_sysargs *uap = (struct afs_sysargs *) args;
-    long *retval;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 afs3_syscall(afs_proc_t *p, void *args, long *retval)
@@ -717,8 +716,8 @@ Afs_syscall()
 				   uap->parm4, kauth_cred_get());
 #elif defined(AFS_NBSD40_ENV)
 	    code =
-		afs_syscall_pioctl(SCARG(uap, parm1), SCARG(uap, parm2),
-				   SCARG(uap, parm3), SCARG(uap, parm4),
+		afs_syscall_pioctl((char *)SCARG(uap, parm1), SCARG(uap, parm2),
+				   (void *)SCARG(uap, parm3), SCARG(uap, parm4),
 				   kauth_cred_get());
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    code =

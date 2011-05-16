@@ -743,6 +743,13 @@ extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 #if defined(AFS_DARWIN80_ENV)
 #define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
 #define AFSTOV(vc) ((vc)->v)
+#elif defined(AFS_NBSD40_ENV)
+struct nbvdata {
+    struct genfs_node gfsn;
+    struct vcache *afsvc;
+};
+#define VTOAFS(v) ((((struct nbvdata *)((v)->v_data)))->afsvc)
+#define AFSTOV(vc) ((vc)->v)
 #elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
@@ -849,9 +856,7 @@ struct vcache {
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV
-# if defined(AFS_NBSD50_ENV)
-  struct krwlock rwlock;
-# elif !defined(AFS_DFBSD_ENV)
+#if !defined(AFS_DFBSD_ENV) && !defined(AFS_NBSD_ENV)
     struct lock rwlock;
 #endif
 #endif

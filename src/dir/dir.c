@@ -32,7 +32,7 @@
 #  if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DARWIN80_ENV)
 #   include "afs/sysincludes.h"
 #  endif
-#  if !defined(AFS_SGI64_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD48_ENV)
+#  if !defined(AFS_SGI64_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD48_ENV) && !defined(AFS_NBSD_ENV)
 #   include "h/user.h"
 #  endif /* AFS_SGI64_ENV */
 #  include "h/uio.h"

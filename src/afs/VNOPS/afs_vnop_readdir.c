@@ -29,14 +29,11 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
-#if defined(AFS_NBSD40_ENV)
-#include <ufs/ufs/ufs_extern.h> /* direct_pool */
-#endif
 
 #if defined(AFS_HPUX1122_ENV)
 #define DIRPAD 7
 #elif defined(AFS_NBSD40_ENV)
-#define DIRPAD 4
+#define DIRPAD 7
 #else
 #define DIRPAD 3
 #endif
@@ -217,6 +214,10 @@ int afs_rd_stash_i = 0;
 #ifdef	AFS_SUN5_ENV
 #define DIRSIZ_LEN(len)	((10 + (len) + 1 + (NBPW-1)) & ~(NBPW-1))
 #else
+#ifdef	AFS_NBSD40_ENV
+#define DIRSIZ_LEN(len) \
+    ((sizeof (struct dirent) - (MAXNAMLEN+1)) + (((len)+1 + 7) & ~7))
+#else
 #ifdef	AFS_DIRENT
 #define DIRSIZ_LEN(len) \
     ((sizeof (struct dirent) - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
@@ -231,6 +232,7 @@ int afs_rd_stash_i = 0;
     ((sizeof (struct direct) - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_DIRENT */
+#endif /* AFS_NBSD40_ENV */
 #endif /* AFS_SUN5_ENV */
 #endif /* AFS_SUN56_ENV */
 #endif /* AFS_HPUX100_ENV */
@@ -503,12 +505,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 #if defined(AFS_NBSD40_ENV)
     {
 	struct dirent *dp;
-	dp = (struct dirent *)
-#if defined(AFS_NBSD50_ENV)
-	  osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-#else
-	  pool_get(&ufs_direct_pool, PR_WAITOK);
-#endif
+	dp = osi_AllocLargeSpace(sizeof(struct dirent));
 	memset(dp, 0, sizeof(struct dirent));
         dp->d_ino =  (Volume << 16) + ntohl(Vnode);
         FIXUPSTUPIDINODE(dp->d_ino);
@@ -516,14 +513,12 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
         dp->d_type = afs_readdir_type(vc, de);
         strcpy(dp->d_name, de->name);
         dp->d_reclen = _DIRENT_SIZE(dp) /* rlen */;
-	afs_warn("afs_readdir_move %s type %d slen %d rlen %d act. rlen %d\n",
-		 dp->d_name, dp->d_type, slen, rlen, _DIRENT_SIZE(dp));
-        AFS_UIOMOVE((char*) dp, sizeof(struct dirent), UIO_READ, auio, code);
-#if defined(AFS_NBSD50_ENV)
+	if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	    afs_warn("%s: %s type %d slen %d rlen %d act. rlen %zu\n", __func__,
+		dp->d_name, dp->d_type, slen, rlen, _DIRENT_SIZE(dp));
+	}
+        AFS_UIOMOVE(dp, dp->d_reclen, UIO_READ, auio, code);
         osi_FreeLargeSpace((char *)dp);
-#else
-        pool_put(&ufs_direct_pool, dp);
-#endif
     }
 #else
     AFS_UIOMOVE((char *) &sdirEntry, sizeof(sdirEntry), UIO_READ, auio, code);
@@ -538,6 +533,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 #endif
     AFS_MOVE_LOCK();
 #endif /* AFS_SGI_ENV */
+#if !defined(AFS_NBSD_ENV)
     /* pad out the difference between rlen and slen... */
     if (DIRSIZ_LEN(slen) < rlen) {
 	AFS_MOVE_UNLOCK();
@@ -550,6 +546,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	}
 	AFS_MOVE_LOCK();
     }
+#endif
 #endif /* AFS_SUN5_ENV */
 #endif /* AFS_SGI53_ENV */
     return (code);
@@ -781,13 +778,13 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 		}
 #else
 		code = afs_readdir_move(ode, avc, auio, o_slen,
-#if defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
 					len, origOffset);
 #else
 					AFS_UIO_RESID(auio), origOffset);
 #endif
 #endif /* AFS_HPUX_ENV */
-#if !defined(AFS_SUN5_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_NBSD_ENV)
 		AFS_UIO_SETRESID(auio, 0);
 #endif
 	    } else {
@@ -855,7 +852,9 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 		/* this next line used to be AFSVFS40 or AIX 3.1, but is
 		 * really generic */
 		AFS_UIO_SETOFFSET(auio, origOffset);
+#if !defined(AFS_NBSD_ENV)
 		AFS_UIO_SETRESID(auio, 0);
+#endif
 	    } else {		/* trouble, can't give anything to the user! */
 		/* even though he has given us a buffer, 
 		 * even though we have something to give us,

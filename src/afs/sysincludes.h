@@ -85,21 +85,14 @@
 # include <sys/socket.h>
 # include <sys/socketvar.h>
 # include <sys/dirent.h>
-# include <sys/user.h>
 # include <sys/kauth.h>
 # include <sys/uio.h>
 # include <sys/buf.h>
 # include <sys/stat.h>
 # include <sys/file.h>
 # include <sys/namei.h>
-# include <sys/socket.h>
-# include <sys/socketvar.h>
-# include <sys/dirent.h>
-# include <sys/user.h>
-# include <sys/kauth.h>
 # include <sys/uio.h>
 # include <sys/buf.h>
-# include <sys/stat.h>
 # include <sys/file.h>
 # include <sys/namei.h>
 # include <sys/vnode.h>
@@ -109,9 +102,7 @@
 # include <ufs/ufs/extattr.h>
 # include <ufs/ufs/ufsmount.h>
 # ifndef MLEN
-#  if 0
-#   include <sys/mbuf.h>
-#  endif /* 0 */
+#  include <sys/mbuf.h>
 #  include <net/if.h>
 # endif /* !MLEN */
 # include <sys/protosw.h>
