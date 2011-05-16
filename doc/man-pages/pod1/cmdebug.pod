@@ -95,8 +95,8 @@ this option with B<-long>, B<-refcounts>, B<-callbacks>, or B<-addrs>.
 
 Lists all known volume location database records in a
 CellServDB-compatible format. This includes all records in memory,
-including those from the CellServDB file, AFSDB DNS records, and the
-B<fs newcell> command. This option could be used to see if a client
+including those from the CellServDB file, DNS SRV or AFSDB records, and
+the B<fs newcell> command. This option could be used to see if a client
 has the latest copy of the CellServDB file. Do not use this option
 with B<-long>, B<-refcounts>, B<-callbacks>, or B<-cache>.
 
