@@ -24,8 +24,8 @@ typedef struct cm_vol_state {
     struct cm_fid dotdotFid;	        /* parent of volume root */
     cm_serverRef_t *serversp;           /* by cm_serverLock */
     enum volstatus  state;              /* by rw */
-    afs_uint16      flags;              /* by rw */
-    afs_uint16      qflags;             /* by cm_volumeLock */
+    afs_uint32      flags;              /* by rw */
+    afs_uint32      qflags;             /* by cm_volumeLock */
 } cm_vol_state_t;
 
 /* RWVOL, ROVOL, BACKVOL are defined in cm.h */
