@@ -1397,7 +1397,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 	return (EINVAL);
 
     if (CheckLength(volptr, parentptr, -1)) {
-	VTakeOffline_r(volptr);
+	VTakeOffline(volptr);
 	return VSALVAGE;
     }
 
@@ -1814,7 +1814,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 
     if (CheckLength(volptr, parentptr, -1)) {
 	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
-	VTakeOffline_r(volptr);
+	VTakeOffline(volptr);
 	return VSALVAGE;
     }
 
