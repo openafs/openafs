@@ -27,7 +27,7 @@ memory:
 
 =item *
 
-The database server machines in every cell listed in the local
+The database server machines for every cell listed in the local
 F</usr/vice/etc/CellServDB file>, plus any machines added to the memory
 list by the B<fs newcell> command since the last reboot.
 

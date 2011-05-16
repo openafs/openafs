@@ -13,8 +13,8 @@ configurations it can be a link to the same file the client uses.
 
 =head2 Client CellServDB
 
-Along with AFSDB entries in DNS, the client version of the CellServDB file
-lists the database server machines in the local cell and any foreign cell
+Along with AFSDB and SRV entries in DNS, the client version of the CellServDB
+file lists the database server machines in the local cell and any foreign cell
 that is to be accessible from the local client machine. Database server
 machines run the Authentication Server (optional), Backup Server
 (optional), Protection Server, and Volume Location (VL) Server (the
@@ -66,8 +66,8 @@ command.
 
 If the client attempts to access an AFS cell not listed in F<CellServDB>
 and B<afsd> was started with the B<-afsdb> option, the Cache Manager will
-attempt an AFSDB DNS record lookup and dynamically add the database server
-locations for that cell based on the result of the DNS query.  If the
+attempt a DNS SRV or AFSDB record lookup and dynamically add the database
+server locations for that cell based on the result of the DNS query.  If the
 B<-afsdb> option was not used, all AFS cells that will be accessed by a
 client machine must either be listed in F<CellServDB> or added with the
 B<fs newcell> command.
@@ -189,8 +189,8 @@ of a cell (so that it's listed by default in F</afs> when the B<-dynroot>
 flag to B<afsd> is in use, for instance) without specifying the database
 server machines for that cell.  This can be done by including only the
 cell line (starting with C<< > >>) and omitting any following database
-server machine lines.  This only works if B<afsd> is configured, with the
-B<-afsdb> option, to use AFSDB record lookups to locate database server
+server machine lines. B<afsd> must be configured with the B<-afsdb> option
+to use DNS SRV or AFSDB record lookups to locate database server
 machines.  If the cell has such records and the client is configured to
 use them, this configuration won't require updates to the client
 F<CellServDB> file when the IP addresses of the database server machines
