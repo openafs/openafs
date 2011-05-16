@@ -658,6 +658,8 @@ cm_buf_t *buf_FindLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
     afs_uint32 i;
     cm_buf_t *bp;
 
+    lock_AssertAny(&buf_globalLock);
+
     i = BUF_HASH(&scp->fid, offsetp);
     for(bp = cm_data.buf_scacheHashTablepp[i]; bp; bp=bp->hashp) {
         if (cm_FidCmp(&scp->fid, &bp->fid) == 0
@@ -1068,6 +1070,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
              * appropriate label, if requested.
              */
             if (scp) {
+                lock_AssertWrite(&buf_globalLock);
+
                 bp->qFlags |= CM_BUF_QINHASH;
                 bp->fid = scp->fid;
 #ifdef DEBUG
