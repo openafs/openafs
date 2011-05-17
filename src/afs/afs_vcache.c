@@ -846,7 +846,7 @@ afs_FlushAllVCaches(void)
 
 	    nvc = tvc->hnext;
 	    if (afs_FlushVCache(tvc, &slept)) {
-		afs_warn("Failed to flush vcache 0x%lx\n", (unsigned long)(uintptr_t)tvc);
+		afs_warn("Failed to flush vcache 0x%lx\n", (unsigned long)(uintptrsz)tvc);
 	    }
 	    if (slept) {
 		goto retry;
