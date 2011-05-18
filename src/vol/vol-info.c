@@ -280,13 +280,14 @@ handleit(struct cmd_syndesc *as, void *arock)
 	orphaned = 1;
 	DumpVnodes = 1;
     } else
+	orphaned = 0;
 #if defined(AFS_NAMEI_ENV)
     if (as->parms[12].items) {
 	PrintFileNames = 1;
 	DumpVnodes = 1;
     } else
+	PrintFileNames = 0;
 #endif
-	orphaned = 0;
 
     DInit(10);
 
