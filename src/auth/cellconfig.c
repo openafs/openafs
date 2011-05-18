@@ -1193,6 +1193,21 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 				ports, ipRanks, &numServers, &ttl,
 				&realCellName);
 
+    /* If we couldn't find an entry for the requested service
+     * and that service happens to be the prservice or kaservice
+     * then fallback to searching for afs3-vlserver and assigning
+     * the port number here. */
+    if (code < 0 && (afsdbport == htons(7002) || afsdbport == htons(7004))) {
+        code = afsconf_LookupServer("afs3-vlserver", "udp",
+                                    (const char *)acellName, afsdbport,
+                                    cellHostAddrs, cellHostNames,
+                                    ports, ipRanks, &numServers, &ttl,
+                                    &realCellName);
+        if (code >= 0) {
+            for (i = 0; i < numServers; i++)
+                ports[i] = afsdbport;
+        }
+    }
     if (code == 0) {
 	acellInfo->timeout = ttl;
 	acellInfo->numServers = numServers;
@@ -1255,7 +1270,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
      * and that service happens to be the prservice or kaservice
      * then fallback to searching for afs3-vlserver and assigning
      * the port number here. */
-    if (rc < 0 && tservice == htons(7002) || tservice == htons(7004)) {
+    if (rc < 0 && (tservice == htons(7002) || tservice == htons(7004))) {
         rc = getAFSServer("afs3-vlserver", "udp", acellName, tservice,
                            cellHostAddrs, cellHostNames, ports, ipRanks, &numServers,
                            &ttl);
