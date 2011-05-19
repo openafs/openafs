@@ -2355,7 +2355,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 
 	base = (ctx.hostaddress[WillChange[i]] >> 16) & 0xff;
 	index = ctx.hostaddress[WillChange[i]] & 0x0000ffff;
-	tex = &ctx.ex_addr[fbase][index];
+	tex = &ctx.ex_addr[base][index];
 
 	if (++m == 1)
 	    VLog(0,
