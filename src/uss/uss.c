@@ -1841,7 +1841,7 @@ main(int argc, char *argv[])
     cmd_AddParm(cs, "-admin", CMD_SINGLE, CMD_OPTIONAL,
 		"administrator to authenticate");
     cmd_AddParm(cs, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
-		"only list what would be done, don't do it");
+		"list what would be done, don't do it");
     cmd_AddParm(cs, "-skipauth", CMD_FLAG, CMD_OPTIONAL,
 		"ignore all contact with the authentication server (kaserver)");
     cmd_AddParm(cs, "-overwrite", CMD_FLAG, CMD_OPTIONAL,
@@ -1861,7 +1861,7 @@ main(int argc, char *argv[])
     cmd_AddParm(cs, "-admin", CMD_SINGLE, CMD_OPTIONAL,
 		"administrator to authenticate");
     cmd_AddParm(cs, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
-		"only list what would be done, don't do it");
+		"list what would be done, don't do it");
     cmd_AddParm(cs, "-skipauth", CMD_FLAG, CMD_OPTIONAL,
 		"ignore all contact with the authentication server (kaserver)");
     cmd_AddParm(cs, "-overwrite", CMD_FLAG, CMD_OPTIONAL,
@@ -1902,7 +1902,7 @@ main(int argc, char *argv[])
     cmd_AddParm(cs, "-admin", CMD_SINGLE, CMD_OPTIONAL,
 		"administrator to authenticate");
     cmd_AddParm(cs, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
-		"only list what would be done, don't do it");
+		"list what would be done, don't do it");
     cmd_AddParm(cs, "-skipauth", CMD_FLAG, CMD_OPTIONAL,
 		"ignore all contact with the authentication server (kaserver)");
 #if USS_FUTURE_FEATURES
@@ -1922,7 +1922,7 @@ main(int argc, char *argv[])
     cmd_AddParm(cs, "-admin", CMD_SINGLE, CMD_OPTIONAL,
 		"administrator to authenticate");
     cmd_AddParm(cs, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
-		"only list what would be done, don't do it");
+		"list what would be done, don't do it");
     cmd_AddParm(cs, "-skipauth", CMD_FLAG, CMD_OPTIONAL,
 		"ignore all contact with the authentication server (kaserver)");
 #endif /* USS_DONT_HIDE_SOME_FEATURES */
@@ -1955,7 +1955,7 @@ main(int argc, char *argv[])
     cmd_AddParm(cs, "-admin", CMD_SINGLE, CMD_OPTIONAL,
 		"administrator to authenticate");
     cmd_AddParm(cs, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
-		"only list what would be done, don't do it");
+		"list what would be done, don't do it");
     cmd_AddParm(cs, "-skipauth", CMD_FLAG, CMD_OPTIONAL,
 		"ignore all contact with the authentication server (kaserver)");
 #endif /* USS_DONT_HIDE_SOME_FEATURES */
