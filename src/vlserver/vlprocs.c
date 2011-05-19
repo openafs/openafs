@@ -72,15 +72,15 @@ static int get_vldbupdateentry(struct vl_ctx *ctx, afs_int32 blockindex,
 			       struct nvlentry *VlEntry);
 static int repsite_exists(struct nvlentry *VlEntry, int server, int partition);
 static void repsite_compress(struct nvlentry *VlEntry, int offset);
-static void vlentry_to_vldbentry(struct vl_ctx *ctx,
+static int vlentry_to_vldbentry(struct vl_ctx *ctx,
+				struct nvlentry *VlEntry,
+				struct vldbentry *VldbEntry);
+static int vlentry_to_nvldbentry(struct vl_ctx *ctx,
 				 struct nvlentry *VlEntry,
-				 struct vldbentry *VldbEntry);
-static void vlentry_to_nvldbentry(struct vl_ctx *ctx,
-				  struct nvlentry *VlEntry,
-				  struct nvldbentry *VldbEntry);
-static void vlentry_to_uvldbentry(struct vl_ctx *ctx,
-				  struct nvlentry *VlEntry,
-				  struct uvldbentry *VldbEntry);
+				 struct nvldbentry *VldbEntry);
+static int vlentry_to_uvldbentry(struct vl_ctx *ctx,
+				 struct nvlentry *VlEntry,
+				 struct uvldbentry *VldbEntry);
 static int InvalidVolname(char *volname);
 static int InvalidVoltype(afs_int32 voltype);
 static int InvalidOperation(afs_int32 voloper);
@@ -104,6 +104,52 @@ countAbort(int opcode)
 	dynamic_statistics.aborts[opcode - VL_LOWEST_OPCODE]++;
     }
 }
+
+
+static_inline int
+multiHomedExtentBase(struct vl_ctx *ctx, int srvidx, struct extentaddr **exp,
+		     int *basePtr)
+{
+    int base;
+    int index;
+
+    *exp = NULL;
+    *basePtr = 0;
+
+    if ((ctx->hostaddress[srvidx] & 0xff000000) == 0xff000000) {
+	base = (ctx->hostaddress[srvidx] >> 16) & 0xff;
+	index = ctx->hostaddress[srvidx] & 0x0000ffff;
+	if (base >= VL_MAX_ADDREXTBLKS) {
+	    VLog(0, ("Internal error: Multihome extent base is too large. "
+		     "Base %d index %d\n", base, index));
+	    return VL_IO;
+	}
+	if (index >= VL_MHSRV_PERBLK) {
+	    VLog(0, ("Internal error: Multihome extent index is too large. "
+		     "Base %d index %d\n", base, index));
+	    return VL_IO;
+	}
+	if (!ctx->ex_addr[base]) {
+	    VLog(0, ("Internal error: Multihome extent does not exist. "
+		     "Base %d\n", base));
+	    return VL_IO;
+	}
+
+	*basePtr = base;
+	*exp = &ctx->ex_addr[base][index];
+    }
+
+    return 0;
+}
+
+static_inline int
+multiHomedExtent(struct vl_ctx *ctx, int srvidx, struct extentaddr **exp)
+{
+    int base;
+
+    return multiHomedExtentBase(ctx, srvidx, exp, &base);
+}
+
 
 #define AFS_RXINFO_LEN 128
 static char *
@@ -462,11 +508,15 @@ GetEntryByID(struct rx_call *rxcall,
     }
     /* Convert from the internal to external form */
     if (new == 1)
-	vlentry_to_nvldbentry(&ctx, &tentry, (struct nvldbentry *)aentry);
+	code = vlentry_to_nvldbentry(&ctx, &tentry, (struct nvldbentry *)aentry);
     else if (new == 2)
-	vlentry_to_uvldbentry(&ctx, &tentry, (struct uvldbentry *)aentry);
+	code = vlentry_to_uvldbentry(&ctx, &tentry, (struct uvldbentry *)aentry);
     else
-	vlentry_to_vldbentry(&ctx, &tentry, (struct vldbentry *)aentry);
+	code = vlentry_to_vldbentry(&ctx, &tentry, (struct vldbentry *)aentry);
+
+    if (code)
+	goto abort;
+
     return (ubik_EndTrans(ctx.trans));
 
 abort:
@@ -552,11 +602,15 @@ GetEntryByName(struct rx_call *rxcall,
     }
     /* Convert to external entry representation */
     if (new == 1)
-	vlentry_to_nvldbentry(&ctx, &tentry, (struct nvldbentry *)aentry);
+	code = vlentry_to_nvldbentry(&ctx, &tentry, (struct nvldbentry *)aentry);
     else if (new == 2)
-	vlentry_to_uvldbentry(&ctx, &tentry, (struct uvldbentry *)aentry);
+	code = vlentry_to_uvldbentry(&ctx, &tentry, (struct uvldbentry *)aentry);
     else
-	vlentry_to_vldbentry(&ctx, &tentry, (struct vldbentry *)aentry);
+	code = vlentry_to_vldbentry(&ctx, &tentry, (struct vldbentry *)aentry);
+
+    if (code)
+	goto abort;
+
     return (ubik_EndTrans(ctx.trans));
 
 abort:
@@ -1120,8 +1174,14 @@ SVL_ListEntry(struct rx_call *rxcall, afs_int32 previous_index,
     VLog(25, ("OListEntry index=%d %s\n", previous_index,
               rxinfo(rxstr, rxcall)));
     *next_index = NextEntry(&ctx, previous_index, &tentry, count);
-    if (*next_index)
-	vlentry_to_vldbentry(&ctx, &tentry, aentry);
+    if (*next_index) {
+	code = vlentry_to_vldbentry(&ctx, &tentry, aentry);
+	if (code) {
+	    countAbort(this_op);
+	    ubik_AbortTrans(ctx.trans);
+	    return code;
+	}
+    }
     return (ubik_EndTrans(ctx.trans));
 }
 
@@ -1145,8 +1205,15 @@ SVL_ListEntryN(struct rx_call *rxcall, afs_int32 previous_index,
 	return code;
     VLog(25, ("ListEntry index=%d %s\n", previous_index, rxinfo(rxstr, rxcall)));
     *next_index = NextEntry(&ctx, previous_index, &tentry, count);
-    if (*next_index)
-	vlentry_to_nvldbentry(&ctx, &tentry, aentry);
+    if (*next_index) {
+	code = vlentry_to_nvldbentry(&ctx, &tentry, aentry);
+	if (code) {
+	    countAbort(this_op);
+	    ubik_AbortTrans(ctx.trans);
+	    return code;
+	}
+    }
+
     return (ubik_EndTrans(ctx.trans));
 }
 
@@ -1734,7 +1801,10 @@ SVL_LinkedList(struct rx_call *rxcall,
 	    code = VL_NOMEM;
 	    goto abort;
 	}
-	vlentry_to_vldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	code = vlentry_to_vldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	if (code)
+	    goto abort;
+
 	vllist->next_vldb = NULL;
 
 	*vllistptr = vllist;	/* Thread onto list */
@@ -1804,7 +1874,10 @@ SVL_LinkedList(struct rx_call *rxcall,
 		code = VL_NOMEM;
 		goto abort;
 	    }
-	    vlentry_to_vldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	    code = vlentry_to_vldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	    if (code)
+		goto abort;
+
 	    vllist->next_vldb = NULL;
 
 	    *vllistptr = vllist;	/* Thread onto list */
@@ -1864,7 +1937,10 @@ SVL_LinkedListN(struct rx_call *rxcall,
 	    code = VL_NOMEM;
 	    goto abort;
 	}
-	vlentry_to_nvldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	code = vlentry_to_nvldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	if (code)
+	    goto abort;
+
 	vllist->next_vldb = NULL;
 
 	*vllistptr = vllist;	/* Thread onto list */
@@ -1934,7 +2010,10 @@ SVL_LinkedListN(struct rx_call *rxcall,
 		code = VL_NOMEM;
 		goto abort;
 	    }
-	    vlentry_to_nvldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	    code = vlentry_to_nvldbentry(&ctx, &tentry, &vllist->VldbEntry);
+	    if (code)
+		goto abort;
+
 	    vllist->next_vldb = NULL;
 
 	    *vllistptr = vllist;	/* Thread onto list */
@@ -2045,11 +2124,11 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
     int this_op = VLREGADDR;
     afs_int32 code;
     struct vl_ctx ctx;
-    int cnt, h, i, j, k, m, base, index;
+    int cnt, h, i, j, k, m;
     struct extentaddr *exp = 0, *tex;
     afsUUID tuuid;
     afs_uint32 addrs[VL_MAXIPADDRS_PERMH];
-    afs_int32 fbase;
+    int base;
     int count, willChangeEntry, foundUuidEntry, willReplaceCnt;
     int WillReplaceEntry, WillChange[MAXSERVERID + 1];
     int FoundUuid = 0;
@@ -2093,31 +2172,12 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
     for (srvidx = 0; srvidx <= MAXSERVERID; srvidx++) {
 	willChangeEntry = 0;
 	WillReplaceEntry = 1;
-	if ((ctx.hostaddress[srvidx] & 0xff000000) == 0xff000000) {
-	    /* The server is registered as a multihomed */
-	    base = (ctx.hostaddress[srvidx] >> 16) & 0xff;
-	    index = ctx.hostaddress[srvidx] & 0x0000ffff;
-	    if (base >= VL_MAX_ADDREXTBLKS) {
-		VLog(0,
-		     ("Internal error: Multihome extent base is too large. Base %d index %d\n",
-		      base, index));
-		continue;
-	    }
-	    if (index >= VL_MHSRV_PERBLK) {
-		VLog(0,
-		     ("Internal error: Multihome extent index is too large. Base %d index %d\n",
-		      base, index));
-		continue;
-	    }
-	    if (!ctx.ex_addr[base]) {
-		VLog(0,
-		     ("Internal error: Multihome extent does not exist. Base %d\n",
-		      base));
-		continue;
-	    }
+	code = multiHomedExtent(&ctx, srvidx, &exp);
+	if (code)
+	     continue;
 
+	if (exp) {
 	    /* See if the addresses to register will change this server entry */
-	    exp = &ctx.ex_addr[base][index];
 	    tuuid = exp->ex_hostuuid;
 	    afs_ntohuuid(&tuuid);
 	    if (afs_uuid_equal(uuidp, &tuuid)) {
@@ -2179,20 +2239,20 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	VLog(0,("]\n"));
 
 	if (foundUuidEntry) {
-	    VLog(0,
-		 ("   It would have replaced the existing VLDB server entry:\n"));
-	    VLog(0, ("      entry %d: [", FoundUuid));
-	    base = (ctx.hostaddress[FoundUuid] >> 16) & 0xff;
-	    index = ctx.hostaddress[FoundUuid] & 0x0000ffff;
-	    exp = &ctx.ex_addr[base][index];
-	    for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
-		if (!exp->ex_addrs[mhidx])
-		    continue;
-		if (mhidx > 0)
-		    VLog(0,(" "));
-		PADDR(ntohl(exp->ex_addrs[mhidx]));
+	    code = multiHomedExtent(&ctx, FoundUuid, &exp);
+	    if (code == 0) {
+	        VLog(0, ("   It would have replaced the existing VLDB server "
+			 "entry:\n"));
+		VLog(0, ("      entry %d: [", FoundUuid));
+	        for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
+		    if (!exp->ex_addrs[mhidx])
+			continue;
+		    if (mhidx > 0)
+			VLog(0,(" "));
+		    PADDR(ntohl(exp->ex_addrs[mhidx]));
+		}
+	        VLog(0, ("]\n"));
 	    }
-	    VLog(0, ("]\n"));
 	}
 
 	if (count == 1)
@@ -2202,11 +2262,13 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	for (j = 0; j < count; j++) {
 	    srvidx = WillChange[j];
 	    VLog(0, ("      entry %d: ", srvidx));
-	    if ((ctx.hostaddress[srvidx] & 0xff000000) == 0xff000000) {
+
+	    code = multiHomedExtent(&ctx, srvidx, &exp);
+	    if (code)
+		goto abort;
+
+	    if (exp) {
 		VLog(0, ("["));
-		base = (ctx.hostaddress[srvidx] >> 16) & 0xff;
-		index = ctx.hostaddress[srvidx] & 0x0000ffff;
-		exp = &ctx.ex_addr[base][index];
 		for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
 		    if (!exp->ex_addrs[mhidx])
 			continue;
@@ -2242,9 +2304,9 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	/* Found the entry with same uuid. See if we need to change it */
 	int change = 0;
 
-	fbase = (ctx.hostaddress[FoundUuid] >> 16) & 0xff;
-	index = ctx.hostaddress[FoundUuid] & 0x0000ffff;
-	exp = &ctx.ex_addr[fbase][index];
+	code = multiHomedExtentBase(&ctx, FoundUuid, &exp, &base);
+	if (code)
+	    goto abort;
 
 	/* Determine if the entry has changed */
 	for (k = 0; ((k < cnt) && !change); k++) {
@@ -2291,11 +2353,11 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	}
 
 	/* Have an entry that needs to be replaced */
-	if ((ctx.hostaddress[ReplaceEntry] & 0xff000000) == 0xff000000) {
-	    fbase = (ctx.hostaddress[ReplaceEntry] >> 16) & 0xff;
-	    index = ctx.hostaddress[ReplaceEntry] & 0x0000ffff;
-	    exp = &ctx.ex_addr[fbase][index];
+	code = multiHomedExtentBase(&ctx, ReplaceEntry, &exp, &base);
+	if (code)
+	    goto abort;
 
+	if (exp) {
 	    VLog(0,
 		("   It will replace the following existing entry in the VLDB (new uuid):\n"));
 	    VLog(0, ("      entry %d: [", ReplaceEntry));
@@ -2316,7 +2378,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	    VLog(0,(", in the VLDB (new uuid):\n"));
 
 	    code =
-		FindExtentBlock(&ctx, uuidp, 1, ReplaceEntry, &exp, &fbase);
+		FindExtentBlock(&ctx, uuidp, 1, ReplaceEntry, &exp, &base);
 	    if (code || !exp) {
 		if (!code)
 		    code = VL_IO;
@@ -2328,7 +2390,7 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	 * well as use a new slot of the ctx.hostaddress array.
 	 */
 	VLog(0, ("   It will create a new entry in the VLDB.\n"));
-	code = FindExtentBlock(&ctx, uuidp, 1, -1, &exp, &fbase);
+	code = FindExtentBlock(&ctx, uuidp, 1, -1, &exp, &base);
 	if (code || !exp) {
 	    if (!code)
 		code = VL_IO;
@@ -2353,8 +2415,8 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
     /* Write the new mh entry out */
     if (vlwrite
 	(ctx.trans,
-	 DOFFSET(ntohl(ctx.ex_addr[0]->ex_contaddrs[fbase]),
-		 (char *)ctx.ex_addr[fbase], (char *)exp), (char *)exp,
+	 DOFFSET(ntohl(ctx.ex_addr[0]->ex_contaddrs[base]),
+		 (char *)ctx.ex_addr[base], (char *)exp), (char *)exp,
 	 sizeof(*exp))) {
 	code = VL_IO;
 	goto abort;
@@ -2371,9 +2433,9 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	if (willReplaceCnt && (WillChange[i] == ReplaceEntry))
 	    continue;
 
-	base = (ctx.hostaddress[WillChange[i]] >> 16) & 0xff;
-	index = ctx.hostaddress[WillChange[i]] & 0x0000ffff;
-	tex = &ctx.ex_addr[base][index];
+	code = multiHomedExtentBase(&ctx, WillChange[i], &tex, &base);
+	if (code)
+	    goto abort;
 
 	if (++m == 1)
 	    VLog(0,
@@ -2408,8 +2470,8 @@ SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
 	    DOFFSET(ntohl(ctx.ex_addr[0]->ex_contaddrs[base]),
 		    (char *)ctx.ex_addr[base], (char *)tex);
 	if (vlwrite(ctx.trans, doff, (char *)tex, sizeof(*tex))) {
-	    ubik_AbortTrans(ctx.trans);
-	    return VL_IO;
+	    code = VL_IO;
+	    goto abort;
 	}
     }
 
@@ -2419,7 +2481,6 @@ abort:
     countAbort(this_op);
     ubik_AbortTrans(ctx.trans);
     return code;
-
 }
 
 afs_int32
@@ -2574,6 +2635,7 @@ put_attributeentry(struct vl_ctx *ctx,
 {
     vldbentry *reall;
     afs_int32 allo;
+    int code;
 
     if (*Vldbentry == *VldbentryLast) {
 	if (smallMem)
@@ -2595,7 +2657,11 @@ put_attributeentry(struct vl_ctx *ctx,
 	*VldbentryLast = *Vldbentry + allo;
 	*alloccnt += allo;
     }
-    vlentry_to_vldbentry(ctx, entry, *Vldbentry);
+
+    code = vlentry_to_vldbentry(ctx, entry, *Vldbentry);
+    if (code)
+	return code;
+
     (*Vldbentry)++;
     (*nentries)++;
     vldbentries->bulkentries_len++;
@@ -2616,6 +2682,7 @@ put_nattributeentry(struct vl_ctx *ctx,
 {
     nvldbentry *reall;
     afs_int32 allo;
+    int code;
 
     if (*Vldbentry == *VldbentryLast) {
 	if (smallMem)
@@ -2637,7 +2704,10 @@ put_nattributeentry(struct vl_ctx *ctx,
 	*VldbentryLast = *Vldbentry + allo;
 	*alloccnt += allo;
     }
-    vlentry_to_nvldbentry(ctx, entry, *Vldbentry);
+    code = vlentry_to_nvldbentry(ctx, entry, *Vldbentry);
+    if (code)
+	return code;
+
     (*Vldbentry)->matchindex = (matchtype << 16) + matchindex;
     (*Vldbentry)++;
     (*nentries)++;
@@ -3012,25 +3082,23 @@ repsite_compress(struct nvlentry *VlEntry, int offset)
 
 /* Convert from the internal (compacted) vldb entry to the external
  * representation used by the interface. */
-static void
+static int
 vlentry_to_vldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
                      struct vldbentry *VldbEntry)
 {
-    int i, j;
+    int i, j, code;
+    struct extentaddr *exp;
 
     memset(VldbEntry, 0, sizeof(struct vldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
     for (i = 0; i < OMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID)
 	    break;
-	if ((ctx->hostaddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
-	    0xff000000) {
-	    struct extentaddr *exp;
-	    int base, index;
-
-	    base = (ctx->hostaddress[j] >> 16) & 0xff;
-	    index = ctx->hostaddress[j] & 0x0000ffff;
-	    exp = &ctx->ex_addr[base][index];
+	j = VlEntry->serverNumber[i];
+	code = multiHomedExtent(ctx, VlEntry->serverNumber[i], &exp);
+	if (code)
+	    return code;
+	if (exp) {
 	    /* For now return the first ip address back */
 	    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
 		if (exp->ex_addrs[j]) {
@@ -3049,30 +3117,30 @@ vlentry_to_vldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
 	VldbEntry->volumeId[i] = VlEntry->volumeId[i];
     VldbEntry->cloneId = VlEntry->cloneId;
     VldbEntry->flags = VlEntry->flags;
+
+    return 0;
 }
 
 
 /* Convert from the internal (compacted) vldb entry to the external
  * representation used by the interface. */
-static void
+static int
 vlentry_to_nvldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
                       struct nvldbentry *VldbEntry)
 {
-    int i, j;
+    int i, j, code;
+    struct extentaddr *exp;
 
     memset(VldbEntry, 0, sizeof(struct nvldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
     for (i = 0; i < NMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID)
 	    break;
-	if ((ctx->hostaddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
-	    0xff000000) {
-	    struct extentaddr *exp;
-	    int base, index;
+	code = multiHomedExtent(ctx, VlEntry->serverNumber[i], &exp);
+	if (code)
+	    return code;
 
-	    base = (ctx->hostaddress[j] >> 16) & 0xff;
-	    index = ctx->hostaddress[j] & 0x0000ffff;
-	    exp = &ctx->ex_addr[base][index];
+	if (exp) {
 	    /* For now return the first ip address back */
 	    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
 		if (exp->ex_addrs[j]) {
@@ -3091,13 +3159,16 @@ vlentry_to_nvldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
 	VldbEntry->volumeId[i] = VlEntry->volumeId[i];
     VldbEntry->cloneId = VlEntry->cloneId;
     VldbEntry->flags = VlEntry->flags;
+
+    return 0;
 }
 
-static void
+static int
 vlentry_to_uvldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
                       struct uvldbentry *VldbEntry)
 {
-    int i, j;
+    int i, code;
+    struct extentaddr *exp;
 
     memset(VldbEntry, 0, sizeof(struct uvldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
@@ -3106,15 +3177,13 @@ vlentry_to_uvldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
 	    break;
 	VldbEntry->serverFlags[i] = VlEntry->serverFlags[i];
 	VldbEntry->serverUnique[i] = 0;
-	if ((ctx->hostaddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
-	    0xff000000) {
-	    struct extentaddr *exp;
-	    int base, index;
+	code = multiHomedExtent(ctx, VlEntry->serverNumber[i], &exp);
+	if (code)
+	    return code;
+
+	if (exp) {
 	    afsUUID tuuid;
 
-	    base = (ctx->hostaddress[j] >> 16) & 0xff;
-	    index = ctx->hostaddress[j] & 0x0000ffff;
-	    exp = &ctx->ex_addr[base][index];
 	    tuuid = exp->ex_hostuuid;
 	    afs_ntohuuid(&tuuid);
 	    VldbEntry->serverFlags[i] |= VLSERVER_FLAG_UUID;
@@ -3132,6 +3201,8 @@ vlentry_to_uvldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
 	VldbEntry->volumeId[i] = VlEntry->volumeId[i];
     VldbEntry->cloneId = VlEntry->cloneId;
     VldbEntry->flags = VlEntry->flags;
+
+    return 0;
 }
 
 #define LEGALCHARS ".ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
@@ -3185,34 +3256,16 @@ static int
 IpAddrToRelAddr(struct vl_ctx *ctx, afs_uint32 ipaddr, int create)
 {
     int i, j;
-    afs_int32 code, base, index;
+    afs_int32 code;
     struct extentaddr *exp;
 
     for (i = 0; i <= MAXSERVERID; i++) {
 	if (ctx->hostaddress[i] == ipaddr)
 	    return i;
-	if ((ctx->hostaddress[i] & 0xff000000) == 0xff000000) {
-	    base = (ctx->hostaddress[i] >> 16) & 0xff;
-	    index = ctx->hostaddress[i] & 0x0000ffff;
-	    if (base >= VL_MAX_ADDREXTBLKS) {
-		VLog(0,
-		     ("Internal error: Multihome extent base is too large. Base %d index %d\n",
-		      base, index));
-		return -1;	/* EINVAL */
-	    }
-	    if (index >= VL_MHSRV_PERBLK) {
-		VLog(0,
-		     ("Internal error: Multihome extent index is too large. Base %d index %d\n",
-		      base, index));
-		return -1;	/* EINVAL */
-	    }
-	    if (!ctx->ex_addr[base]) {
-		VLog(0,
-		     ("Internal error: Multihome extent does not exist. Base %d\n",
-		      base));
-		return -1;	/* EINVAL */
-	    }
-	    exp = &ctx->ex_addr[base][index];
+	code = multiHomedExtent(ctx, i, &exp);
+	if (code)
+	    return -1;
+	if (exp) {
 	    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
 		if (exp->ex_addrs[j] && (ntohl(exp->ex_addrs[j]) == ipaddr)) {
 		    return i;
@@ -3247,8 +3300,8 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
     int i, j;
     afs_int32 code;
     struct extentaddr *exp = NULL;
-    int base = 0;
-    int index, mhidx;
+    int base;
+    int mhidx;
     afsUUID tuuid;
     afs_int32 blockindex, count;
     int pollcount = 0;
@@ -3271,17 +3324,11 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
     }
 
     for (i = 0; i <= MAXSERVERID; i++) {
-	if ((ctx->hostaddress[i] & 0xff000000) == 0xff000000) {
-	    base = (ctx->hostaddress[i] >> 16) & 0xff;
-	    index = ctx->hostaddress[i] & 0x0000ffff;
-	    if ((base >= VL_MAX_ADDREXTBLKS) || (index >= VL_MHSRV_PERBLK)) {
-		VLog(0,
-		     ("Internal error: Multihome extent addr is too large. Base %d index %d\n",
-		      base, index));
-		return -1;	/* EINVAL */
-	    }
+	code = multiHomedExtentBase(ctx, i, &exp, &base);
+	if (code)
+	    return code;
 
-	    exp = &ctx->ex_addr[base][index];
+	if (exp) {
 	    for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
 		if (!exp->ex_addrs[mhidx])
 		    continue;
