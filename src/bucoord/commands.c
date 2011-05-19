@@ -2485,7 +2485,12 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
     if (havegroupid)
 	groupId = atoi(as->parms[4].items->data);
 
-    noexecute = (as->parms[7].items ? 1 : 0);
+    if (as->parms[7].items || as->parms[8].items) {
+        /* -noexecute (hidden) or -dryrun used */
+	noexecute = 1;
+    } else {
+	noexecute = 0;
+    }
 
     /* Get the time to delete to */
     if (as->parms[2].items) {	/* -to */
