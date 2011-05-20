@@ -10,7 +10,7 @@ volinfo - Produces detailed statistics about AFS volume headers
 B<volinfo> [B<-online>] [B<-vnode>] [B<-date>] [B<-inode>] [B<-itime>]
     S<<< [B<-part> <I<AFS partition name (default current partition)>>+] >>>
     S<<< [B<-volumeid> <I<volume id>>+] >>> [B<-header>] [B<-sizeOnly>]
-    [B<-fixheader>] [B<-saveinodes>] [B<-orphaned>] [B<-help>]
+    [B<-fixheader>] [B<-saveinodes>] [B<-orphaned>] [B<-filenames>] [B<-help>]
 
 =for html
 </div>
@@ -99,6 +99,13 @@ modify it (such as B<-vnode>) are ignored.
 Displays a large vnode and small vnode table for each volume, which lists
 only orphaned vnodes (vnodes that have no parent). If there are none, the
 tables are empty (only the headers appear).
+
+=item B<-filenames>
+
+When combined with the B<-vnode> flag, adds the full path and file name of the
+C<namei> file which stores the vnode data to each vnode entry in the large vnode
+and small vnode tables. This option is only available on fileservers which use
+the C<namei> storage format for storing data.
 
 =item B<-help>
 
