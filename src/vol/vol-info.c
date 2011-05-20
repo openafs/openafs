@@ -626,7 +626,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-date", CMD_FLAG, CMD_OPTIONAL,
 		"Also dump vnode's mod date");
     cmd_AddParm(ts, "-inode", CMD_FLAG, CMD_OPTIONAL,
-		"Dump vnode's inode number");
+		"Also dump vnode's inode number");
     cmd_AddParm(ts, "-itime", CMD_FLAG, CMD_OPTIONAL,
 		"Dump special inode's mod times");
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL,
@@ -643,7 +643,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-orphaned", CMD_FLAG, CMD_OPTIONAL,
 		"List all dir/files without a parent");
 #if defined(AFS_NAMEI_ENV)
-    cmd_AddParm(ts, "-filenames", CMD_FLAG, CMD_OPTIONAL, "Print filenames");
+    cmd_AddParm(ts, "-filenames", CMD_FLAG, CMD_OPTIONAL, "Also dump vnode's namei filename");
 #endif
     code = cmd_Dispatch(argc, argv);
     return code;
