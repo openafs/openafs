@@ -612,13 +612,13 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    return 0;
 	afs_GetDynroot(0, 0, status);
 	afs_PutDynroot();
-	return 1;
+	goto succeed;
     }
 
     if (afs_IsDynrootMount(avc)) {
 	afs_GetDynrootMount(0, 0, status);
 	afs_PutDynroot();
-	return 1;
+	goto succeed;
     }
 
     /*
@@ -664,7 +664,10 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    }
 	    ReleaseReadLock(&afs_dynSymlinkLock);
 
-	    return ts ? 1 : 0;
+	    if (ts)
+		goto succeed;
+
+	    return 0;
 	}
 
 	if (VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode) != VN_TYPE_CELL
@@ -759,10 +762,31 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	}
 
 	status->Length = linklen;
-	return 1;
+	goto succeed;
     }
 
     return 0;
+
+    /* make sure we set type correctly when we do this. used to stay VREG */
+ succeed:
+    switch (status->FileType) {
+    case File:
+	vSetType(avc, VREG);
+	break;
+    case Directory:
+	vSetType(avc, VDIR);
+	break;
+    case SymbolicLink:
+	if (afs_fakestat_enable && (avc->f.m.Mode & 0111) == 0)
+	    vSetType(avc, VDIR);
+	else
+	    vSetType(avc, VLNK);
+	break;
+    default:
+	/* shouldn't happen */
+      ;
+    }
+    return 1;
 }
 
 /*
