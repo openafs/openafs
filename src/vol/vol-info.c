@@ -763,7 +763,16 @@ PrintVnodes(Volume * vp, VnodeClass class)
 
 	ino = VNDISK_GET_INO(vnode);
 	if (saveinodes) {
-	    if (VALID_INO(ino) && (class == vSmall)) {
+	    if (!VALID_INO(ino)) {
+		continue;
+	    }
+	    if (dsizeOnly && (class == vLarge)) {
+		afs_fsize_t fileLength;
+
+		VNDISK_GET_LEN(fileLength, vnode);
+		Vvnodesize += fileLength;
+		Vvnodesize_k += fileLength / 1024;
+	    } else if (class == vSmall) {
 		IHandle_t *ih1;
 		FdHandle_t *fdP1;
 		IH_INIT(ih1, V_device(vp), V_parentId(vp), ino);
