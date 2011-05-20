@@ -100,7 +100,7 @@ void
 osi_AttachVnode(struct vcache *avc, int seq) {
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
-    afs_darwin_getnewvnode(avc, seq ? 0 : 1);  /* includes one refcount */
+    afs_darwin_getnewvnode(avc);  /* includes one refcount */
     AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache,338);
 #ifdef AFS_DARWIN80_ENV
@@ -114,6 +114,8 @@ void
 osi_PostPopulateVCache(struct vcache *avc) {
 #if !defined(AFS_DARWIN80_ENV)
    avc->v->v_mount = afs_globalVFS;
-#endif
    vSetType(avc, VREG);
+#else
+   vSetType(avc, VNON);
+#endif
 }

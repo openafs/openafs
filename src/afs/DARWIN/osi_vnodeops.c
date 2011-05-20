@@ -1210,6 +1210,10 @@ afs_vop_fsync(ap)
     struct vnode *vp = ap->a_vp;
     int haveGlock = ISAFS_GLOCK();
 
+    /* in order to recycle faked vnodes for bulkstat */
+    if (VTOAFS(vp) == NULL)
+	return ENOTSUP;
+
     /* afs_vop_lookup glocks, can call us through vinvalbuf from GetVCache */
     if (!haveGlock) AFS_GLOCK();
     if (vop_cred)
@@ -1994,7 +1998,7 @@ afs_vop_truncate(ap)
 				 * } */ *ap;
 {
     /* printf("stray afs_vop_truncate\n"); */
-    return EOPNOTSUPP;
+    return ENOTSUP;
 }
 
 int
@@ -2007,7 +2011,7 @@ afs_vop_update(ap)
 				 * } */ *ap;
 {
     /* printf("stray afs_vop_update\n"); */
-    return EOPNOTSUPP;
+    return ENOTSUP;
 }
 
 int
@@ -2109,7 +2113,7 @@ afs_vop_cmap(ap)
 #endif
 
 int
-afs_darwin_getnewvnode(struct vcache *avc, int recycle)
+afs_darwin_getnewvnode(struct vcache *avc)
 {
 #ifdef AFS_DARWIN80_ENV
     vnode_t vp;
@@ -2128,8 +2132,7 @@ afs_darwin_getnewvnode(struct vcache *avc, int recycle)
       vnode_addfsref(vp);
       vnode_ref(vp);
       avc->v = vp;
-      if (recycle)
-	  vnode_recycle(vp); /* terminate as soon as iocount drops */
+      vnode_recycle(vp); /* terminate as soon as iocount drops */
       avc->f.states |= CDeadVnode;
     }
     return error;
@@ -2145,20 +2148,26 @@ afs_darwin_getnewvnode(struct vcache *avc, int recycle)
 #ifdef AFS_DARWIN80_ENV
 /* if this fails, then tvc has been unrefed and may have been freed. 
    Don't touch! */
-int 
-afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct componentname *cnp, int isroot, int locked)
+int
+afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
+			 struct componentname *cnp, int isroot, int locked)
 {
     vnode_t ovp;
     vnode_t nvp;
     int error;
     struct vnode_fsparam par;
+
     if (!locked) {
 	AFS_GLOCK();
 	ObtainWriteLock(&avc->lock,325);
     }
     ovp = AFSTOV(avc);
-    if (!(avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
-        AFS_GUNLOCK();
+
+    /* if the type changed, we still need to do a fixup, for bulkstat */
+    if (vnode_vtype(ovp) == avc->f.m.Type && !(avc->f.states & CDeadVnode)
+	&& vnode_vtype(ovp) != VNON)
+    {
+	AFS_GUNLOCK();
 #if 0 /* unsupported */
         if (dvp && cnp)
 	    vnode_update_identity(ovp, dvp, cnp->cn_nameptr, cnp->cn_namelen,
@@ -2166,14 +2175,15 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
 				  VNODE_UPDATE_PARENT|VNODE_UPDATE_NAME);
 #endif
 	/* Can end up in reclaim... drop GLOCK */
-        vnode_rele(ovp);
+	vnode_rele(ovp);
 	AFS_GLOCK();
 	if (!locked) {
 	    ReleaseWriteLock(&avc->lock);
 	    AFS_GUNLOCK();
 	}
-        return 0;
+	return 0;
     }
+
     if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
 	panic("vcache %p should not be CDeadVnode", avc);
     AFS_GUNLOCK();
@@ -2196,13 +2206,13 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp, struct component
 	if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
 	    printf("vcache %p should not be CDeadVnode", avc);
 	if (avc->v == ovp) {
-	    if (avc->f.states & CBulkFetching) {
-		vnode_recycle(ovp);
-	    }
 	    if (!(avc->f.states & CVInit)) {
 		vnode_clearfsnode(ovp);
 		vnode_removefsref(ovp);
 	    }
+	    /* we're discarding on a fixup. mark for recycle */
+	    if (!(avc->f.states & CDeadVnode))
+		vnode_recycle(ovp);
 	}
 	avc->v = nvp;
 	avc->f.states &=~ CDeadVnode;

@@ -1455,6 +1455,9 @@ afs_ProcessFS(struct vcache *avc,
 	      struct AFSFetchStatus *astat, struct vrequest *areq)
 {
     afs_size_t length;
+#ifdef AFS_DARWIN80_ENV
+    int fixup = 0;
+#endif
     AFS_STATCNT(afs_ProcessFS);
 
 #ifdef AFS_64BIT_CLIENT
@@ -1489,16 +1492,32 @@ afs_ProcessFS(struct vcache *avc,
     avc->f.m.Group = astat->Group;
     avc->f.m.LinkCount = astat->LinkCount;
     if (astat->FileType == File) {
+#ifdef AFS_DARWIN80_ENV
+	if (avc->f.m.Type != VREG)
+	    fixup = 1;
+#endif
 	vSetType(avc, VREG);
 	avc->f.m.Mode |= S_IFREG;
     } else if (astat->FileType == Directory) {
+#ifdef AFS_DARWIN80_ENV
+	if (avc->f.m.Type != VDIR)
+	    fixup = 1;
+#endif
 	vSetType(avc, VDIR);
 	avc->f.m.Mode |= S_IFDIR;
     } else if (astat->FileType == SymbolicLink) {
 	if (afs_fakestat_enable && (avc->f.m.Mode & 0111) == 0) {
+#ifdef AFS_DARWIN80_ENV
+	    if (avc->f.m.Type != VDIR)
+		fixup = 1;
+#endif
 	    vSetType(avc, VDIR);
 	    avc->f.m.Mode |= S_IFDIR;
 	} else {
+#ifdef AFS_DARWIN80_ENV
+	    if (avc->f.m.Type != VLNK)
+		fixup = 1;
+#endif
 	    vSetType(avc, VLNK);
 	    avc->f.m.Mode |= S_IFLNK;
 	}
@@ -1506,6 +1525,14 @@ afs_ProcessFS(struct vcache *avc,
 	    avc->mvstat = 1;
 	}
     }
+#ifdef AFS_DARWIN80_ENV
+    if (fixup) {
+	/* perform type correction on underlying vnode */
+	afs_darwin_finalizevnode(avc, NULL, NULL, 0, 1);
+	/* re-acquire the usecount that finalizevnode disposed of */
+	vnode_ref(AFSTOV(avc));
+    }
+#endif
     avc->f.anyAccess = astat->AnonymousAccess;
 #ifdef badidea
     if ((astat->CallerAccess & ~astat->AnonymousAccess))
@@ -2093,11 +2120,9 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
             }
 #ifdef AFS_DARWIN80_ENV
 	    if (tvc->f.states & CDeadVnode) {
-		if (!(tvc->f.states & CBulkFetching)) {
-		    ReleaseSharedLock(&afs_xvcache);
-		    afs_osi_Sleep(&tvc->f.states);
-		    goto rootvc_loop;
-		}
+		ReleaseSharedLock(&afs_xvcache);
+		afs_osi_Sleep(&tvc->f.states);
+		goto rootvc_loop;
 	    }
 	    tvp = AFSTOV(tvc);
 	    if (vnode_get(tvp))       /* this bumps ref count */
@@ -2108,11 +2133,6 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 		vnode_put(tvp);
 		AFS_GLOCK();
 	        continue;
-	    }
-	    if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
-		AFS_GUNLOCK();
-		vnode_recycle(AFSTOV(tvc));
-		AFS_GLOCK();
 	    }
 #endif
 	    break;
@@ -2593,7 +2613,6 @@ afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred)
 static void
 findvc_sleep(struct vcache *avc, int flag)
 {
-    int fstates = avc->f.states;
     if (flag & IS_SLOCK) {
 	    ReleaseSharedLock(&afs_xvcache);
     } else {
@@ -2603,16 +2622,7 @@ findvc_sleep(struct vcache *avc, int flag)
 	    ReleaseReadLock(&afs_xvcache);
 	}
     }
-    if (flag & FIND_CDEAD) {
-	ObtainWriteLock(&afs_xvcache, 342);
-	afs_FlushReclaimedVcaches();
-	if (fstates == avc->f.states) {
-	    ReleaseWriteLock(&afs_xvcache);
-	    afs_osi_Sleep(&avc->f.states);
-	} else
-	    ReleaseWriteLock(&afs_xvcache);
-    } else
-	afs_osi_Sleep(&avc->f.states);
+    afs_osi_Sleep(&avc->f.states);
     if (flag & IS_SLOCK) {
 	    ObtainSharedLock(&afs_xvcache, 341);
     } else {
@@ -2693,19 +2703,6 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	if (FidMatches(afid, tvc)) {
-#ifdef  AFS_DARWIN80_ENV
-	    if (flag & FIND_CDEAD) {
-		if (tvc->f.states & (CDeadVnode|CBulkFetching)) {
-		    deadvc = tvc;
-		    continue;
-		}
-	    } else {
-		if (tvc->f.states & CDeadVnode)
-		    if ((tvc->f.states & CBulkFetching) &&
-			!(flag & FIND_BULKDEAD))
-			continue;
-	    }
-#endif
             if (tvc->f.states & CVInit) {
 		findvc_sleep(tvc, flag);
 		goto findloop;
@@ -2715,30 +2712,10 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 		findvc_sleep(tvc, flag);
 		goto findloop;
             }
-	    if (flag & FIND_CDEAD) {
-		livevc = tvc;
-		continue;
-	    }
 #endif
 	    break;
 	}
     }
-#ifdef  AFS_DARWIN80_ENV
-	if (flag & FIND_CDEAD) {
-	    if (livevc && deadvc) {
-		/* discard deadvc */
-		AFS_GUNLOCK();
-		vnode_recycle(AFSTOV(deadvc));
-		vnode_put(AFSTOV(deadvc));
-		vnode_rele(AFSTOV(deadvc));
-		AFS_GLOCK();
-		deadvc = NULL;
-	    }
-
-	    /* return what's left */
-	    tvc = livevc ? livevc : deadvc;
-	}
-#endif
 
     /* should I have a read lock on the vnode here? */
     if (tvc) {
@@ -2754,11 +2731,6 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 	    vnode_put(tvp);
 	    AFS_GLOCK();
 	    tvp = NULL;
-	}
-	if (tvp && (tvc->f.states & (CBulkFetching|CDeadVnode))) {
-	    AFS_GUNLOCK();
-	    vnode_recycle(AFSTOV(tvc));
-	    AFS_GLOCK();
 	}
 	if (!tvp) {
 	    tvc = NULL;
@@ -2872,11 +2844,9 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
             }
 #ifdef  AFS_DARWIN80_ENV
 	    if (tvc->f.states & CDeadVnode) {
-		if (!(tvc->f.states & CBulkFetching)) {
-		    ReleaseSharedLock(&afs_xvcache);
-		    afs_osi_Sleep(&tvc->f.states);
-		    goto loop;
-		}
+		ReleaseSharedLock(&afs_xvcache);
+		afs_osi_Sleep(&tvc->f.states);
+		goto loop;
 	    }
 	    tvp = AFSTOV(tvc);
 	    if (vnode_get(tvp)) {
@@ -2890,11 +2860,6 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 		vnode_put(tvp);
 		AFS_GLOCK();
 		continue;
-	    }
-	    if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
-		AFS_GUNLOCK();
-		vnode_recycle(AFSTOV(tvc));
-		AFS_GLOCK();
 	    }
 #endif /* AFS_DARWIN80_ENV */
 	    count++;
