@@ -458,11 +458,9 @@ loop1:
 #else
 #ifdef AFS_DARWIN80_ENV
 			if (tvc->f.states & CDeadVnode) {
-			    if (!(tvc->f.states & CBulkFetching)) {
-				ReleaseReadLock(&afs_xvcache);
-				afs_osi_Sleep(&tvc->f.states);
-				goto loop1;
-			    }
+			    ReleaseReadLock(&afs_xvcache);
+			    afs_osi_Sleep(&tvc->f.states);
+			    goto loop1;
 			}
 			vp = AFSTOV(tvc);
 			if (vnode_get(vp))
@@ -472,11 +470,6 @@ loop1:
 			    vnode_put(vp);
 			    AFS_GLOCK();
 			    continue;
-			}
-			if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
-			    AFS_GUNLOCK();
-			    vnode_recycle(AFSTOV(tvc));
-			    AFS_GLOCK();
 			}
 #else
 			AFS_FAST_HOLD(tvc);
@@ -553,11 +546,9 @@ loop2:
 #else
 #ifdef AFS_DARWIN80_ENV
 		    if (tvc->f.states & CDeadVnode) {
-			if (!(tvc->f.states & CBulkFetching)) {
-			    ReleaseReadLock(&afs_xvcache);
-			    afs_osi_Sleep(&tvc->f.states);
-			    goto loop2;
-			}
+			ReleaseReadLock(&afs_xvcache);
+			afs_osi_Sleep(&tvc->f.states);
+			goto loop2;
 		    }
 		    vp = AFSTOV(tvc);
 		    if (vnode_get(vp))
@@ -567,11 +558,6 @@ loop2:
 			vnode_put(vp);
 			AFS_GLOCK();
 			continue;
-		    }
-		    if (tvc->f.states & (CBulkFetching|CDeadVnode)) {
-			AFS_GUNLOCK();
-			vnode_recycle(AFSTOV(tvc));
-			AFS_GLOCK();
 		    }
 #else
 		    AFS_FAST_HOLD(tvc);
