@@ -66,6 +66,8 @@
 #define afs_open	open
 #endif /* !O_LARGEFILE */
 
+static const char *progname = "volinfo";
+
 int DumpVnodes = 0;		/* Dump everything, i.e. summary of all vnodes */
 int DumpInodeNumber = 0;	/* Dump inode numbers with vnodes */
 int DumpDate = 0;		/* Dump vnode date (server modify date) with vnode */
@@ -138,15 +140,16 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 
     if (vsn->magic != magic) {
 	bad++;
-	printf("Inode %s: Bad magic %x (%x): IGNORED\n",
-	       PrintInode(NULL, ih->ih_ino), vsn->magic, magic);
+	fprintf(stderr, "%s: Inode %s: Bad magic %x (%x): IGNORED\n",
+		progname, PrintInode(NULL, ih->ih_ino), vsn->magic, magic);
     }
 
     /* Check is conditional, in case caller wants to inspect version himself */
     if (version && vsn->version != version) {
 	bad++;
-	printf("Inode %s: Bad version %x (%x): IGNORED\n",
-	       PrintInode(NULL, ih->ih_ino), vsn->version, version);
+	fprintf(stderr, "%s: Inode %s: Bad version %x (%x): IGNORED\n",
+		progname,
+		PrintInode(NULL, ih->ih_ino), vsn->version, version);
     }
     if (bad && fixheader) {
 	vsn->magic = magic;
@@ -155,7 +158,9 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 	       PrintInode(NULL, ih->ih_ino));
 	code = IH_IWRITE(ih, 0, to, size);
 	if (code != size) {
-	    printf("Write failed; header left in damaged state\n");
+	    fprintf(stderr,
+		    "%s: Write failed for inode %s; header left in damaged state\n",
+		    progname, PrintInode(NULL, ih->ih_ino));
 	}
     } else {
 	if (!dsizeOnly && !saveinodes) {
@@ -227,7 +232,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 #ifndef AFS_NT40_ENV
     if (geteuid() != 0) {
-	printf("vol-info must be run as root; sorry\n");
+	fprintf(stderr, "%s: Must be run as root; sorry\n", progname);
 	exit(1);
     }
 #endif
@@ -293,14 +298,15 @@ handleit(struct cmd_syndesc *as, void *arock)
 
     err = VAttachPartitions();
     if (err) {
-	printf("%d partitions had errors during attach.\n", err);
+	fprintf(stderr, "%s: %d partitions had errors during attach.\n",
+		progname, err);
     }
 
     if (partName) {
 	partP = VGetPartition(partName, 0);
 	if (!partP) {
-	    printf("%s is not an AFS partition name on this server.\n",
-		   partName);
+	    fprintf(stderr, "%s: %s is not an AFS partition name on this server.\n",
+		   progname, partName);
 	    exit(1);
 	}
     }
@@ -317,7 +323,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 	if (!partP) {
 	    partP = FindCurrentPartition();
 	    if (!partP) {
-		printf("Current partition is not a vice partition.\n");
+		fprintf(stderr,
+			"%s: Current partition is not a vice partition.\n",
+			progname);
 		exit(1);
 	    }
 	}
@@ -345,7 +353,8 @@ FindCurrentPartition(void)
 	    break;
     }
     if (!dp) {
-	printf("Current drive is not a valid vice partition.\n");
+	fprintf(stderr, "%s: Current drive is not a valid vice partition.\n",
+		progname);
     }
     return dp;
 }
@@ -359,6 +368,8 @@ FindCurrentPartition(void)
     struct DiskPartition64 *dp;
 
     if (!getcwd(partName, 1023)) {
+	fprintf(stderr, "%s: Failed to get current working directory: ",
+		progname);
 	perror("pwd");
 	exit(1);
     }
@@ -370,7 +381,8 @@ FindCurrentPartition(void)
     if (!(dp = VGetPartition(partName, 0))) {
 	if (tmp)
 	    *p = tmp;
-	printf("%s is not a valid vice partition.\n", partName);
+	fprintf(stderr, "%s: %s is not a valid vice partition.\n", progname,
+		partName);
 	exit(1);
     }
     return dp;
@@ -414,7 +426,8 @@ HandlePart(struct DiskPartition64 *partP)
 #endif
 
     if ((dirp = opendir(p)) == NULL) {
-	printf("Can't read directory %s; giving up\n", p);
+	fprintf(stderr, "%s: Can't read directory %s; giving up\n", progname,
+		p);
 	exit(1);
     }
     if (dsizeOnly && !saveinodes)
@@ -452,7 +465,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     char headerName[1024];
 
     if (online) {
-	printf("volinfo: -online not supported\n");
+	fprintf(stderr, "%s: -online not supported\n", progname);
 	exit(1);
     } else {
 	afs_int32 n;
@@ -461,7 +474,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 			   VPartitionPath(dp), name);
 	if ((fd = afs_open(headerName, O_RDONLY)) == -1
 	    || afs_fstat(fd, &status) == -1) {
-	    printf("Volinfo: Cannot read volume header %s\n", name);
+	    fprintf(stderr, "%s: Cannot read volume header %s\n", progname,
+		    name);
 	    close(fd);
 	    exit(1);
 	}
@@ -469,13 +483,14 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 
 	if (n != sizeof(diskHeader)
 	    || diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-	    printf("Volinfo: Error reading volume header %s\n", name);
+	    fprintf(stderr, "%s: Error reading volume header %s\n", progname,
+		    name);
 	    exit(1);
 	}
 	if (diskHeader.stamp.version != VOLUMEHEADERVERSION) {
-	    printf
-		("Volinfo: Volume %s, version number is incorrect; volume needs salvage\n",
-		 name);
+	    fprintf(stderr,
+		    "%s: Volume %s, version number is incorrect; volume needs salvage\n",
+		    progname, name);
 	    exit(1);
 	}
 	DiskToVolumeHeader(&header, &diskHeader);
@@ -499,11 +514,14 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    IH_INIT(ih, dp->device, header.parent, header.volumeInfo);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
-		perror("opening volume info");
+		fprintf(stderr, "%s: Error opening volume info: ", progname);
+		perror("open");
 		exit(1);
 	    }
 	    code = FDH_SIZE(fdP);
 	    if (code == -1) {
+		fprintf(stderr, "%s: Error getting size of volume info: ",
+			progname);
 		perror("fstat");
 		exit(1);
 	    }
@@ -519,11 +537,16 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    IH_INIT(ih, dp->device, header.parent, header.smallVnodeIndex);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
-		perror("opening small vnode index");
+		fprintf(stderr, "%s: Error opening small vnode index: ",
+			progname);
+		perror("open");
 		exit(1);
 	    }
 	    code = FDH_SIZE(fdP);
 	    if (code == -1) {
+		fprintf(stderr,
+			"%s: Error getting size of small vnode index: ",
+			progname);
 		perror("fstat");
 		exit(1);
 	    }
@@ -538,11 +561,16 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    IH_INIT(ih, dp->device, header.parent, header.largeVnodeIndex);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
-		perror("opening large vnode index");
+		fprintf(stderr, "%s: Error opening large vnode index: ",
+			progname);
+		perror("open");
 		exit(1);
 	    }
 	    code = FDH_SIZE(fdP);
 	    if (code == -1) {
+		fprintf(stderr,
+			"%s: Error getting size of large vnode index: ",
+			progname);
 		perror("fstat");
 		exit(1);
 	    }
@@ -560,11 +588,16 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    IH_INIT(ih, dp->device, header.parent, header.linkTable);
 	    fdP = IH_OPEN(ih);
 	    if (fdP == NULL) {
-		perror("opening link table index");
+		fprintf(stderr, "%s: Error opening link table index: ",
+			progname);
+		perror("open");
 		exit(1);
 	    }
 	    code = FDH_SIZE(fdP);
 	    if (code == -1) {
+		fprintf(stderr,
+			"%s: Error getting size of link table index: ",
+			progname);
 		perror("fstat");
 		exit(1);
 	    }
@@ -583,7 +616,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	close(fd);
 	vp = AttachVolume(dp, name, &header);
 	if (!vp) {
-	    printf("Volinfo: Error attaching volume header %s\n", name);
+	    fprintf(stderr, "%s: Error attaching volume header %s\n",
+		    progname, name);
 	    return;
 	}
     }
@@ -706,7 +740,7 @@ NT_date(FILETIME * ft)
 
     if (!FileTimeToLocalFileTime(ft, &lft)
 	|| !FileTimeToSystemTime(&lft, &st)) {
-	printf("Time conversion failed.\n");
+	fprintf(stderr, "%s: Time conversion failed.\n", progname);
 	exit(1);
     }
     sprintf(result[next = ((next + 1) & 7)], "%4d/%02d/%02d.%2d:%2d:%2d",
@@ -721,7 +755,8 @@ GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
 #ifdef AFS_NT40_ENV
     BY_HANDLE_FILE_INFORMATION fi;
     if (!GetFileInformationByHandle(fd, &fi)) {
-	printf("GetFileInformationByHandle failed, exiting\n");
+	fprintf(stderr, "%s: GetFileInformationByHandle failed, exiting\n",
+		progname);
 	exit(1);
     }
     *size = (int)fi.nFileSizeLow;
@@ -731,7 +766,7 @@ GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
 #else
     struct afs_stat status;
     if (afs_fstat(fd, &status) == -1) {
-	printf("fstat failed %d\n", errno);
+	fprintf(stderr, "%s: fstat failed %d\n", progname, errno);
 	exit(1);
     }
     *size = (int)status.st_size;
@@ -763,13 +798,13 @@ PrintVnodes(Volume * vp, VnodeClass class)
 
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
-	printf("open failed\n");
+	fprintf(stderr, "%s: open failed: ", progname);
 	exit(1);
     }
 
     file = FDH_FDOPEN(fdP, "r");
     if (!file) {
-	printf("fdopen failed\n");
+	fprintf(stderr, "%s: fdopen failed\n", progname);
 	exit(1);
     }
 
@@ -806,16 +841,18 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		IH_INIT(ih1, V_device(vp), V_parentId(vp), ino);
 		fdP1 = IH_OPEN(ih1);
 		if (fdP1 == NULL) {
-		    printf("Can't open inode %s error %d (ignored)\n",
-			   PrintInode(NULL, ino), errno);
+		    fprintf(stderr,
+			    "%s: Can't open inode %s error %d (ignored)\n",
+			    progname, PrintInode(NULL, ino), errno);
 		    continue;
 		}
 		(void)afs_snprintf(nfile, sizeof nfile, "TmpInode.%s",
 				   PrintInode(NULL, ino));
 		ofd = afs_open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
 		if (ofd < 0) {
-		    printf("Can't create file %s; error %d (ignored)\n",
-			   nfile, errno);
+		    fprintf(stderr,
+			    "%s: Can't create file %s; error %d (ignored)\n",
+			    progname, nfile, errno);
 		    continue;
 		}
 		total = bad = 0;
@@ -827,9 +864,9 @@ PrintVnodes(Volume * vp, VnodeClass class)
 			IH_RELEASE(ih1);
 			close(ofd);
 			unlink(nfile);
-			printf
-			    ("Error while reading from inode %s (%d - ignored)\n",
-			     PrintInode(NULL, ino), errno);
+			fprintf(stderr,
+				"%s: Error while reading from inode %s (%d - ignored)\n",
+				progname, PrintInode(NULL, ino), errno);
 			bad = 1;
 			break;
 		    }
@@ -841,9 +878,9 @@ PrintVnodes(Volume * vp, VnodeClass class)
 			IH_RELEASE(ih1);
 			close(ofd);
 			unlink(nfile);
-			printf
-			    ("Error while writing to \"%s\" (%d - ignored)\n",
-			     nfile, errno);
+			fprintf(stderr,
+				"%s: Error while writing to \"%s\" (%d - ignored)\n",
+				progname, nfile, errno);
 			bad = 1;
 			break;
 		    }
