@@ -452,16 +452,106 @@ HandlePart(struct DiskPartition64 *partP)
     }
 }
 
+/**
+ * Inspect a volume header special file.
+ *
+ * @param[in]  name       descriptive name of the type of header special file
+ * @param[in]  dp         partition object for this volume
+ * @param[in]  header     header object for this volume
+ * @param[in]  inode      fileserver inode number for this header special file
+ * @param[out] psize      total of the header special file
+ *
+ * @return none
+ */
+void
+HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
+		  struct VolumeHeader *header, Inode inode,
+		  afs_sfsize_t * psize)
+{
+    afs_sfsize_t size = 0;
+    IHandle_t *ih = NULL;
+    FdHandle_t *fdP = NULL;
+
+    IH_INIT(ih, dp->device, header->parent, inode);
+    fdP = IH_OPEN(ih);
+    if (fdP == NULL) {
+	fprintf(stderr,
+		"%s: Error opening header file '%s' for volume %u", progname,
+		name, header->id);
+	perror("open");
+	goto error;
+    }
+    size = FDH_SIZE(fdP);
+    if (size == -1) {
+	fprintf(stderr,
+		"%s: Error getting size of header file '%s' for volume %u",
+		progname, name, header->id);
+	perror("fstat");
+	goto error;
+    }
+    if (!dsizeOnly && !saveinodes) {
+	printf("\t%s inode\t= %s (size = %lld)\n",
+	       name, PrintInode(NULL, inode), size);
+    }
+    *psize += size;
+
+  error:
+    if (fdP != NULL) {
+	FDH_REALLYCLOSE(fdP);
+    }
+    if (ih != NULL) {
+	IH_RELEASE(ih);
+    }
+}
+
+/**
+ * Inspect this volume header files.
+ *
+ * @param[in]  dp         partition object for this volume
+ * @param[in]  header_fd  volume header file descriptor
+ * @param[in]  header     volume header object
+ * @param[out] psize      total of the header special file
+ *
+ * @return none
+ */
+void
+HandleHeaderFiles(struct DiskPartition64 *dp, FD_t header_fd,
+		  struct VolumeHeader *header)
+{
+    afs_sfsize_t size = 0;
+
+    if (!dsizeOnly && !saveinodes) {
+	size = OS_SIZE(header_fd);
+	printf("Volume header (size = %lld):\n", size);
+	printf("\tstamp\t= 0x%x\n", header->stamp.version);
+	printf("\tVolId\t= %u\n", header->id);
+	printf("\tparent\t= %u\n", header->parent);
+    }
+
+    HandleSpecialFile("Info", dp, header, header->volumeInfo, &size);
+    HandleSpecialFile("Small", dp, header, header->smallVnodeIndex,
+		      &size);
+    HandleSpecialFile("Large", dp, header, header->largeVnodeIndex,
+		      &size);
+#ifdef AFS_NAMEI_ENV
+    HandleSpecialFile("Link", dp, header, header->linkTable, &size);
+#endif /* AFS_NAMEI_ENV */
+
+    if (!dsizeOnly && !saveinodes) {
+	printf("Total aux volume size = %lld\n\n", size);
+    }
+    Vauxsize = size;
+    Vauxsize_k = size / 1024;
+}
 
 void
 HandleVolume(struct DiskPartition64 *dp, char *name)
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
-    struct afs_stat status, stat;
+    struct afs_stat status;
     int fd;
     Volume *vp;
-    IHandle_t *ih;
     char headerName[1024];
 
     if (online) {
@@ -496,119 +586,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	DiskToVolumeHeader(&header, &diskHeader);
 
 	if (dheader) {
-	    FdHandle_t *fdP;
-	    afs_sfsize_t size = 0;
-	    afs_sfsize_t code;
-
-	    if (afs_fstat(fd, &stat) == -1) {
-		perror("stat");
-		exit(1);
-	    }
-	    if (!dsizeOnly && !saveinodes) {
-		size = stat.st_size;
-		printf("Volume header (size = %d):\n", (int)size);
-		printf("\tstamp\t= 0x%x\n", header.stamp.version);
-		printf("\tVolId\t= %u\n", header.id);
-	    }
-
-	    IH_INIT(ih, dp->device, header.parent, header.volumeInfo);
-	    fdP = IH_OPEN(ih);
-	    if (fdP == NULL) {
-		fprintf(stderr, "%s: Error opening volume info: ", progname);
-		perror("open");
-		exit(1);
-	    }
-	    code = FDH_SIZE(fdP);
-	    if (code == -1) {
-		fprintf(stderr, "%s: Error getting size of volume info: ",
-			progname);
-		perror("fstat");
-		exit(1);
-	    }
-	    FDH_REALLYCLOSE(fdP);
-	    IH_RELEASE(ih);
-	    size += code;
-	    if (!dsizeOnly && !saveinodes) {
-		printf("\tparent\t= %u\n", header.parent);
-		printf("\tInfo inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.volumeInfo), (int)code);
-	    }
-
-	    IH_INIT(ih, dp->device, header.parent, header.smallVnodeIndex);
-	    fdP = IH_OPEN(ih);
-	    if (fdP == NULL) {
-		fprintf(stderr, "%s: Error opening small vnode index: ",
-			progname);
-		perror("open");
-		exit(1);
-	    }
-	    code = FDH_SIZE(fdP);
-	    if (code == -1) {
-		fprintf(stderr,
-			"%s: Error getting size of small vnode index: ",
-			progname);
-		perror("fstat");
-		exit(1);
-	    }
-	    FDH_REALLYCLOSE(fdP);
-	    IH_RELEASE(ih);
-	    size += code;
-	    if (!dsizeOnly && !saveinodes) {
-		printf("\tSmall inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.smallVnodeIndex), (int)code);
-	    }
-
-	    IH_INIT(ih, dp->device, header.parent, header.largeVnodeIndex);
-	    fdP = IH_OPEN(ih);
-	    if (fdP == NULL) {
-		fprintf(stderr, "%s: Error opening large vnode index: ",
-			progname);
-		perror("open");
-		exit(1);
-	    }
-	    code = FDH_SIZE(fdP);
-	    if (code == -1) {
-		fprintf(stderr,
-			"%s: Error getting size of large vnode index: ",
-			progname);
-		perror("fstat");
-		exit(1);
-	    }
-	    FDH_REALLYCLOSE(fdP);
-	    IH_RELEASE(ih);
-	    size += code;
-	    if (!dsizeOnly && !saveinodes) {
-		printf("\tLarge inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.largeVnodeIndex), (int)code);
-	    }
-#ifdef AFS_NAMEI_ENV
-	    IH_INIT(ih, dp->device, header.parent, header.linkTable);
-	    fdP = IH_OPEN(ih);
-	    if (fdP == NULL) {
-		fprintf(stderr, "%s: Error opening link table index: ",
-			progname);
-		perror("open");
-		exit(1);
-	    }
-	    code = FDH_SIZE(fdP);
-	    if (code == -1) {
-		fprintf(stderr,
-			"%s: Error getting size of link table index: ",
-			progname);
-		perror("fstat");
-		exit(1);
-	    }
-	    FDH_REALLYCLOSE(fdP);
-	    IH_RELEASE(ih);
-	    size += code;
-	    if (!dsizeOnly && !saveinodes) {
-		printf("\tLink inode\t= %s (size = %d)\n",
-		       PrintInode(NULL, header.linkTable), (int)code);
-	    }
-#endif
-	    printf("Total aux volume size = %d\n\n", (int)size);
-	    Vauxsize = size;
-	    Vauxsize_k = size / 1024;
+	    HandleHeaderFiles(dp, fd, &header);
 	}
 	close(fd);
 	vp = AttachVolume(dp, name, &header);
