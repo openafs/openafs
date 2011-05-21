@@ -580,9 +580,6 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    if (!dsizeOnly && !saveinodes) {
 		printf("\tLarge inode\t= %s (size = %d)\n",
 		       PrintInode(NULL, header.largeVnodeIndex), (int)code);
-#ifndef AFS_NT40_ENV
-		printf("Total aux volume size = %d\n\n", (int)size);
-#endif
 	    }
 #ifdef AFS_NAMEI_ENV
 	    IH_INIT(ih, dp->device, header.parent, header.linkTable);
@@ -607,9 +604,9 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    if (!dsizeOnly && !saveinodes) {
 		printf("\tLink inode\t= %s (size = %d)\n",
 		       PrintInode(NULL, header.linkTable), (int)code);
-		printf("Total aux volume size = %d\n\n", (int)size);
 	    }
 #endif
+	    printf("Total aux volume size = %d\n\n", (int)size);
 	    Vauxsize = size;
 	    Vauxsize_k = size / 1024;
 	}
