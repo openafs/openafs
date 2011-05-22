@@ -471,6 +471,9 @@ HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
     afs_sfsize_t size = 0;
     IHandle_t *ih = NULL;
     FdHandle_t *fdP = NULL;
+#ifdef AFS_NAMEI_ENV
+    namei_t filename;
+#endif /* AFS_NAMEI_ENV */
 
     IH_INIT(ih, dp->device, header->parent, inode);
     fdP = IH_OPEN(ih);
@@ -492,6 +495,10 @@ HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
     if (!dsizeOnly && !saveinodes) {
 	printf("\t%s inode\t= %s (size = %lld)\n",
 	       name, PrintInode(NULL, inode), size);
+#ifdef AFS_NAMEI_ENV
+	namei_HandleToName(&filename, ih);
+	printf("\t%s namei\t= %s\n", name, filename.n_path);
+#endif /* AFS_NAMEI_ENV */
     }
     *psize += size;
 
