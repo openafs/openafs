@@ -150,34 +150,52 @@ multiHomedExtent(struct vl_ctx *ctx, int srvidx, struct extentaddr **exp)
     return multiHomedExtentBase(ctx, srvidx, exp, &base);
 }
 
-
 #define AFS_RXINFO_LEN 128
 static char *
-rxinfo(char * str, struct rx_call *rxcall)
+rxkadInfo(char *str, struct rx_connection *conn, struct in_addr hostAddr)
 {
     int code;
-    struct rx_connection *tconn;
     char tname[64] = "";
     char tinst[64] = "";
     char tcell[64] = "";
     afs_uint32 exp;
-    struct in_addr hostAddr;
 
-    tconn = rx_ConnectionOf(rxcall);
-    hostAddr.s_addr = rx_HostOf(rx_PeerOf(tconn));
-    code =
-	rxkad_GetServerInfo(rxcall->conn, NULL, &exp, tname, tinst, tcell,
-			    NULL);
+    code = rxkad_GetServerInfo(conn, NULL, &exp, tname, tinst, tcell,
+			       NULL);
     if (!code)
-	sprintf(str, "%s %s%s%s%s%s", inet_ntoa(hostAddr), tname,
+	snprintf(str, AFS_RXINFO_LEN,
+		 "%s rxkad:%s%s%s%s%s", inet_ntoa(hostAddr), tname,
 		(tinst[0] == '\0') ? "" : ".",
 		(tinst[0] == '\0') ? "" : tinst,
 		(tcell[0] == '\0') ? "" : "@",
 		(tcell[0] == '\0') ? "" : tcell);
     else
-	sprintf(str, "%s noauth", inet_ntoa(hostAddr));
+	snprintf(str, AFS_RXINFO_LEN, "%s noauth", inet_ntoa(hostAddr));
     return (str);
 }
+
+static char *
+rxinfo(char *str, struct rx_call *rxcall)
+{
+    struct rx_connection *conn;
+    struct in_addr hostAddr;
+    rx_securityIndex authClass;
+
+    conn = rx_ConnectionOf(rxcall);
+    authClass = rx_SecurityClassOf(conn);
+    hostAddr.s_addr = rx_HostOf(rx_PeerOf(conn));
+
+    switch(authClass) {
+    case RX_SECIDX_KAD:
+	return rxkadInfo(str, conn, hostAddr);
+    default:
+	;
+    }
+
+    snprintf(str, AFS_RXINFO_LEN, "%s noauth", inet_ntoa(hostAddr));
+    return str;
+}
+
 
 /* This is called to initialize the database, set the appropriate locks and make sure that the vldb header is valid */
 int
