@@ -114,6 +114,7 @@ struct extentaddr {
 	    afsUUID hostuuid;
 	    afs_int32 uniquifier;
 	    afs_uint32 addrs[VL_MAXIPADDRS_PERMH];
+	    afs_int32 spares[12];
 	} _ex_addrentry;
     } _ex_un;
 };
