@@ -351,7 +351,7 @@ readMH(afs_int32 addr, struct extentaddr *mhblockP)
     vldbread(addr, (char *)mhblockP, VL_ADDREXTBLK_SIZE);
 
     mhblockP->ex_count = ntohl(mhblockP->ex_count);
-    mhblockP->ex_flags = ntohl(mhblockP->ex_flags);
+    mhblockP->ex_hdrflags = ntohl(mhblockP->ex_hdrflags);
     for (i = 0; i < VL_MAX_ADDREXTBLKS; i++)
 	mhblockP->ex_contaddrs[i] = ntohl(mhblockP->ex_contaddrs[i]);
 
@@ -497,7 +497,7 @@ readSIT(int base, int addr)
     quiet_println("multihome info block: base %d\n", base);
     if (base == 0) {
 	quiet_println("   count = %u\n", ntohl(extent->ex_count));
-	quiet_println("   flags = %u\n", ntohl(extent->ex_flags));
+	quiet_println("   flags = %u\n", ntohl(extent->ex_hdrflags));
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
 	    quiet_println("   contaddrs[%d] = %u\n", i,
 		   ntohl(extent->ex_contaddrs[i]));
@@ -897,7 +897,7 @@ CheckIpAddrs(struct vlheader *header)
 	 * addresses of all the mh blocks.
 	 */
 	readMH(header->SIT, MHblock);
-	if (MHblock->ex_flags != VLCONTBLOCK) {
+	if (MHblock->ex_hdrflags != VLCONTBLOCK) {
 	   log_error
 		(VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		 header->SIT);
@@ -919,7 +919,7 @@ CheckIpAddrs(struct vlheader *header)
 		continue;
 
 	    readMH(caddrs[i], MHblock);
-	    if (MHblock->ex_flags != VLCONTBLOCK) {
+	    if (MHblock->ex_hdrflags != VLCONTBLOCK) {
 	        log_error
 		    (VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		     header->SIT);

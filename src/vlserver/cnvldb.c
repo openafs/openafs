@@ -399,7 +399,7 @@ read_mhentries(afs_uint32 mh_addr, int oldfd)
     }
 
     /* Verify that this block is the right one */
-    if (ntohl(base[0]->ex_flags) != VLCONTBLOCK) {	/* check if flag is correct */
+    if (ntohl(base[0]->ex_hdrflags) != VLCONTBLOCK) {	/* check if flag is correct */
 	free(base[0]);
 	base[0] = 0;
 	return;
@@ -442,7 +442,7 @@ read_mhentries(afs_uint32 mh_addr, int oldfd)
 	}
 
 	/* Verify that this block knows its an extent block */
-	if (ntohl(base[j]->ex_flags) != VLCONTBLOCK) {
+	if (ntohl(base[j]->ex_hdrflags) != VLCONTBLOCK) {
 	    free(base[j]);
 	    base[j] = 0;
 	    continue;

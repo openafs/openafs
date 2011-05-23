@@ -266,7 +266,7 @@ readExtents(struct ubik_trans *trans)
 	}
 
 	/* After reading it in, check to see if its a real continuation block */
-	if (ntohl(rd_ex_addr[i]->ex_flags) != VLCONTBLOCK) {
+	if (ntohl(rd_ex_addr[i]->ex_hdrflags) != VLCONTBLOCK) {
 	    extent_mod = 1;
 	    rd_ex_addr[0]->ex_contaddrs[i] = 0;
 	    free(rd_ex_addr[i]);	/* Not the place to create it */
@@ -409,7 +409,7 @@ GetExtentBlock(struct vl_ctx *ctx, register afs_int32 base)
 	memset(ctx->ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
 
 	/* Write the full extension block at end of vldb */
-	ctx->ex_addr[base]->ex_flags = htonl(VLCONTBLOCK);
+	ctx->ex_addr[base]->ex_hdrflags = htonl(VLCONTBLOCK);
 	blockindex = ntohl(ctx->cheader->vital_header.eofPtr);
 	code =
 	    vlwrite(ctx->trans, blockindex, (char *)ctx->ex_addr[base],
