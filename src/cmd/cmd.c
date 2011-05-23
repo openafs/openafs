@@ -792,7 +792,6 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
     struct cmd_syndesc *ts = NULL;
     struct cmd_parmdesc *tparm;
     int i;
-    int j = 0;
     int curType;
     int positional;
     int ambig;
@@ -917,6 +916,7 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 	 * are considered switches.  This allow negative numbers. */
 
 	if ((argv[i][0] == '-') && !isdigit(argv[i][1])) {
+	    int j;
 
 	    /* Find switch */
 	    if (strrchr(argv[i], '=') != NULL) {
@@ -989,10 +989,17 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 		continue;
 	    }
 
-	    if (ts->parms[j].type != CMD_FLAG) {
-		code = AddItem(tparm, argv[i], pname);
-		if (code)
+	    if (tparm->type == CMD_SINGLE ||
+	        tparm->type == CMD_SINGLE_OR_FLAG) {
+		if (tparm->items) {
+		    fprintf(stderr, "%sToo many values after switch %s\n",
+		            NName(pname, ": "), tparm->name);
+		    code = CMD_NOTLIST;
 		    goto out;
+		}
+		AddItem(tparm, argv[i], pname);        /* Add to end of list */
+	    } else if (tparm->type == CMD_LIST) {
+		AddItem(tparm, argv[i], pname);        /* Add to end of list */
 	    }
 
 	    /* Now, if we're in positional mode, advance to the next item */
