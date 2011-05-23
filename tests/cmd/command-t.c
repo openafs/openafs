@@ -35,14 +35,22 @@
 
 #include <tap/basic.h>
 
+#define FIRST_OFF   0
+#define SECOND_OFF  1
+#define FLAG_OFF    2
+#define FOURTH_OFF  4
+#define FIFTH_OFF   5
+#define PERHAPS_OFF 6
+#define SANITY_OFF  7
+
 static int
 testproc(struct cmd_syndesc *as, void *rock)
 {
-    is_string("foo", as->parms[0].items->data,
+    is_string("foo", as->parms[FIRST_OFF].items->data,
 	      "first option matches");
-    is_string("bar", as->parms[1].items->data,
+    is_string("bar", as->parms[SECOND_OFF].items->data,
 	      "second option matches");
-    ok(as->parms[2].items != NULL,
+    ok(as->parms[FLAG_OFF].items != NULL,
        "flag is set");
 
     return 0;
@@ -75,9 +83,9 @@ main(int argc, char **argv)
     is_int(0, code, "dispatching simple comamnd line succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "parsing simple command line succeeds");
-    is_string("foo", retopts->parms[0].items->data, " ... 1st option matches");
-    is_string("bar", retopts->parms[1].items->data, " ... 2nd option matches");
-    ok(retopts->parms[2].items != NULL, " ... 3rd option matches");
+    is_string("foo", retopts->parms[FIRST_OFF].items->data, " ... 1st option matches");
+    is_string("bar", retopts->parms[SECOND_OFF].items->data, " ... 2nd option matches");
+    ok(retopts->parms[FLAG_OFF].items != NULL, " ... 3rd option matches");
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
@@ -172,23 +180,23 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "Parsing with cmd_Parse works");
-    is_string("one", retopts->parms[0].items->data, " ... 1st option matches");
-    is_string("two", retopts->parms[1].items->data, " ... 2nd option matches");
-    ok(retopts->parms[2].items != NULL, " ... 3rd option matches");
+    is_string("one", retopts->parms[FIRST_OFF].items->data, " ... 1st option matches");
+    is_string("two", retopts->parms[SECOND_OFF].items->data, " ... 2nd option matches");
+    ok(retopts->parms[FLAG_OFF].items != NULL, " ... 3rd option matches");
 
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
     /* Try adding a couple of parameters at specific positions */
     cmd_AddParmAtOffset(opts, "-fifth", CMD_SINGLE, CMD_OPTIONAL,
-		       "fifth option", 5);
+		       "fifth option", FIFTH_OFF);
     cmd_AddParmAtOffset(opts, "-fourth", CMD_SINGLE, CMD_OPTIONAL,
-		       "fourth option", 4);
+		       "fourth option", FOURTH_OFF);
     code = cmd_ParseLine("-first a -fourth b -fifth c", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "parsing our new options succeeds");
-    is_string("b", retopts->parms[4].items->data, " Fourth option in right place");
-    is_string("c", retopts->parms[5].items->data, " Fifth option in right place");
+    is_string("b", retopts->parms[FOURTH_OFF].items->data, " Fourth option in right place");
+    is_string("c", retopts->parms[FIFTH_OFF].items->data, " Fifth option in right place");
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
@@ -197,17 +205,17 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
 
-    code = cmd_OptionAsInt(retopts, 0, &retval);
+    code = cmd_OptionAsInt(retopts, FIRST_OFF, &retval);
     is_int(0, code, "cmd_OptionsAsInt succeeds");
     is_int(1, retval, " ... and returns correct value");
 
-    code = cmd_OptionAsString(retopts, 1, &retstring);
+    code = cmd_OptionAsString(retopts, SECOND_OFF, &retstring);
     is_int(0, code, "cmd_OptionsAsString succeeds");
     is_string("second", retstring, " ... and returns correct value");
     free(retstring);
     retstring = NULL;
 
-    code = cmd_OptionAsFlag(retopts, 2, &retval);
+    code = cmd_OptionAsFlag(retopts, FLAG_OFF, &retval);
     is_int(0, code, "cmd_OptionsAsFlag succeeds");
     ok(retval, " ... and flag is correct");
 
@@ -215,14 +223,14 @@ main(int argc, char **argv)
     cmd_FreeArgv(tv);
 
     /* Add an alias */
-    code = cmd_AddParmAlias(opts, 1, "-twa");
+    code = cmd_AddParmAlias(opts, SECOND_OFF, "-twa");
     is_int(0, code, "cmd_AddParmAlias succeeds");
 
     code = cmd_ParseLine("-first 1 -twa tup", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "cmd_Parse succeeds for alias");
-    cmd_OptionAsString(retopts, 1, &retstring);
+    cmd_OptionAsString(retopts, SECOND_OFF, &retstring);
     is_string("tup", retstring, " ... and we have the correct value");
     free(retstring);
     retstring = NULL;
@@ -242,7 +250,7 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "cmd_Parse succeeds for option-as-flag as opt");
-    code = cmd_OptionAsInt(retopts, 6, &retval);
+    code = cmd_OptionAsInt(retopts, PERHAPS_OFF, &retval);
     is_int(0, code, "cmd_OptionAsInt succeeds");
     is_int(2, retval, " ... and we have the correct value");
     cmd_FreeOptions(&retopts);
@@ -254,9 +262,9 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "cmd_Parse succeeds for option-as-flag as flag");
-    code = cmd_OptionAsInt(retopts, 6, &retval);
+    code = cmd_OptionAsInt(retopts, PERHAPS_OFF, &retval);
     is_int(CMD_MISSING, code, " ... pulling out a value fails as expected");
-    cmd_OptionAsFlag(retopts, 6, &retval);
+    cmd_OptionAsFlag(retopts, PERHAPS_OFF, &retval);
     ok(retval, " ... but parsing as a flag works");
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
@@ -274,10 +282,10 @@ main(int argc, char **argv)
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "cmd_Parse succeeds for items split with '='");
-    code = cmd_OptionAsInt(retopts, 6, &retval);
+    code = cmd_OptionAsInt(retopts, PERHAPS_OFF, &retval);
     is_int(0, code, "cmd_OptionAsInt succeeds");
     is_int(6, retval, " ... and we have the correct value once");
-    code = cmd_OptionAsInt(retopts, 7, &retval);
+    code = cmd_OptionAsInt(retopts, SANITY_OFF, &retval);
     is_int(0, code, "cmd_OptionAsInt succeeds");
     is_int(3, retval, " ... and we have the correct value twice");
     cmd_FreeOptions(&retopts);
