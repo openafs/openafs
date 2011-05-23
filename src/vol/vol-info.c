@@ -75,7 +75,6 @@ int InodeTimes = 0;		/* Dump some of the dates associated with inodes */
 #if defined(AFS_NAMEI_ENV)
 int PrintFileNames = 0;
 #endif
-int online = 0;
 int dheader = 0;
 int dsizeOnly = 0;
 int fixheader = 0, saveinodes = 0, orphaned = 0;
@@ -105,13 +104,8 @@ void HandleVolume(struct DiskPartition64 *partP, char *name);
 struct DiskPartition64 *FindCurrentPartition(void);
 Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     struct VolumeHeader *header);
-#if defined(AFS_NAMEI_ENV)
 void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino, Volume * vp);
-#else
-void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
-		Inode ino);
-#endif
 void PrintVnodes(Volume * vp, VnodeClass class);
 
 char *
@@ -332,10 +326,10 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-    if (as->parms[0].items)
-	online = 1;
-    else
-	online = 0;
+    if (as->parms[0].items) {
+	fprintf(stderr, "%s: -online not supported\n", progname);
+	return 1;
+    }
     if (as->parms[1].items)
 	DumpVnodes = 1;
     else
@@ -647,50 +641,50 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     int fd;
     Volume *vp;
     char headerName[1024];
+    afs_sfsize_t n;
 
-    if (online) {
-	fprintf(stderr, "%s: -online not supported\n", progname);
-	exit(1);
-    } else {
-	afs_int32 n;
-
-	(void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
-			   VPartitionPath(dp), name);
-	if ((fd = afs_open(headerName, O_RDONLY)) == -1
-	    || afs_fstat(fd, &status) == -1) {
-	    fprintf(stderr, "%s: Cannot read volume header %s\n", progname,
-		    name);
-	    close(fd);
-	    exit(1);
-	}
-	n = read(fd, &diskHeader, sizeof(diskHeader));
-
-	if (n != sizeof(diskHeader)
-	    || diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
-	    fprintf(stderr, "%s: Error reading volume header %s\n", progname,
-		    name);
-	    exit(1);
-	}
-	if (diskHeader.stamp.version != VOLUMEHEADERVERSION) {
-	    fprintf(stderr,
-		    "%s: Volume %s, version number is incorrect; volume needs salvage\n",
-		    progname, name);
-	    exit(1);
-	}
-	DiskToVolumeHeader(&header, &diskHeader);
-
-	if (dheader) {
-	    HandleHeaderFiles(dp, fd, &header);
-	}
-	close(fd);
-	vp = AttachVolume(dp, name, &header);
-	if (!vp) {
-	    fprintf(stderr, "%s: Error attaching volume header %s\n",
-		    progname, name);
-	    return;
-	}
+    (void)afs_snprintf(headerName, sizeof headerName, "%s" OS_DIRSEP "%s",
+		       VPartitionPath(dp), name);
+    if ((fd = afs_open(headerName, O_RDONLY)) == -1) {
+	fprintf(stderr, "%s: Cannot open volume header %s\n", progname, name);
+	return;
     }
-    PrintHeader(vp);
+
+    if (afs_fstat(fd, &status) == -1) {
+	fprintf(stderr, "%s: Cannot read volume header %s\n", progname, name);
+	close(fd);
+	return;
+    }
+    n = read(fd, &diskHeader, sizeof(diskHeader));
+    if (n != sizeof(diskHeader)
+	|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
+	fprintf(stderr, "%s: Error reading volume header %s\n", progname,
+		name);
+	close(fd);
+	return;
+    }
+    if (diskHeader.stamp.version != VOLUMEHEADERVERSION) {
+	fprintf(stderr,
+		"%s: Volume %s, version number is incorrect; volume needs to be salvaged\n",
+		progname, name);
+	close(fd);
+	return;
+    }
+    DiskToVolumeHeader(&header, &diskHeader);
+    if (dheader) {
+	HandleHeaderFiles(dp, fd, &header);
+    }
+    close(fd);
+    vp = AttachVolume(dp, name, &header);
+    if (!vp) {
+	fprintf(stderr, "%s: Error attaching volume header %s\n",
+		progname, name);
+	return;
+    }
+
+    if (!dsizeOnly && !saveinodes) {
+	PrintHeader(vp);
+    }
     if (DumpVnodes) {
 	if (!dsizeOnly && !saveinodes)
 	    printf("\nLarge vnodes (directories)\n");
@@ -706,6 +700,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	PrintVnodes(vp, vSmall);
     }
     if (dsizeOnly) {
+	volumeTotals.diskused_k = V_diskused(vp);
 	volumeTotals.size_k =
 	    volumeTotals.auxsize_k + volumeTotals.vnodesize_k;
 	PrintVolumeSizes(vp);
@@ -755,9 +750,6 @@ main(int argc, char **argv)
 void
 PrintHeader(Volume * vp)
 {
-    volumeTotals.diskused_k = V_diskused(vp);
-    if (dsizeOnly || saveinodes)
-	return;
     printf("Volume header for volume %u (%s)\n", V_id(vp), V_name(vp));
     printf("stamp.magic = %x, stamp.version = %u\n", V_stamp(vp).magic,
 	   V_stamp(vp).version);
@@ -843,6 +835,81 @@ GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
 #endif
 }
 
+/**
+ * Copy the inode data to a file in the current directory.
+ *
+ * @param[in] vp     volume object
+ * @param[in] vnode  vnode object
+ * @param[in] inode  inode of the source file
+ *
+ * @returns none
+ */
+static void
+SaveInode(Volume * vp, struct VnodeDiskObject *vnode, Inode ino)
+{
+    IHandle_t *ih;
+    FdHandle_t *fdP;
+    char nfile[50], buffer[256];
+    int ofd = 0;
+    afs_foff_t total;
+    ssize_t len;
+
+    IH_INIT(ih, V_device(vp), V_parentId(vp), ino);
+    fdP = IH_OPEN(ih);
+    if (fdP == NULL) {
+	fprintf(stderr,
+		"%s: Can't open inode %s error %d (ignored)\n",
+		progname, PrintInode(NULL, ino), errno);
+	return;
+    }
+    (void)afs_snprintf(nfile, sizeof nfile, "TmpInode.%s", PrintInode(NULL, ino));
+    ofd = afs_open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
+    if (ofd < 0) {
+	fprintf(stderr,
+		"%s: Can't create file %s; error %d (ignored)\n",
+		progname, nfile, errno);
+
+	FDH_REALLYCLOSE(fdP);
+	IH_RELEASE(ih);
+	return;
+    }
+    total = 0;
+    while (1) {
+	ssize_t nBytes;
+	len = FDH_PREAD(fdP, buffer, sizeof(buffer), total);
+	if (len < 0) {
+	    FDH_REALLYCLOSE(fdP);
+	    IH_RELEASE(ih);
+	    close(ofd);
+	    unlink(nfile);
+	    fprintf(stderr,
+		    "%s: Error while reading from inode %s (%d)\n",
+		    progname, PrintInode(NULL, ino), errno);
+	    return;
+	}
+	if (len == 0)
+	    break;		/* No more input */
+	nBytes = write(ofd, buffer, len);
+	if (nBytes != len) {
+	    FDH_REALLYCLOSE(fdP);
+	    IH_RELEASE(ih);
+	    close(ofd);
+	    unlink(nfile);
+	    fprintf(stderr,
+		    "%s: Error while writing to \"%s\" (%d - ignored)\n",
+		    progname, nfile, errno);
+	    return;
+	}
+	total += len;
+    }
+
+    FDH_REALLYCLOSE(fdP);
+    IH_RELEASE(ih);
+    close(ofd);
+    printf("... Copied inode %s to file %s (%lu bytes)\n",
+	   PrintInode(NULL, ino), nfile, (unsigned long)total);
+}
+
 void
 PrintVnodes(Volume * vp, VnodeClass class)
 {
@@ -858,10 +925,6 @@ PrintVnodes(Volume * vp, VnodeClass class)
     FdHandle_t *fdP;
     int size;
     char *ctime, *atime, *mtime;
-    char nfile[50], buffer[256];
-    int ofd, bad = 0;
-    afs_foff_t total;
-    ssize_t len;
 
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
@@ -892,6 +955,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
 	 nVnodes--, vnodeIndex++, offset += diskSize) {
 
 	ino = VNDISK_GET_INO(vnode);
+
 	if (saveinodes) {
 	    if (!VALID_INO(ino)) {
 		continue;
@@ -905,87 +969,20 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		    volumeTotals.vnodesize_k += fileLength / 1024;
 		}
 	    } else if (class == vSmall) {
-		IHandle_t *ih1;
-		FdHandle_t *fdP1;
-		IH_INIT(ih1, V_device(vp), V_parentId(vp), ino);
-		fdP1 = IH_OPEN(ih1);
-		if (fdP1 == NULL) {
-		    fprintf(stderr,
-			    "%s: Can't open inode %s error %d (ignored)\n",
-			    progname, PrintInode(NULL, ino), errno);
-		    continue;
-		}
-		(void)afs_snprintf(nfile, sizeof nfile, "TmpInode.%s",
-				   PrintInode(NULL, ino));
-		ofd = afs_open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
-		if (ofd < 0) {
-		    fprintf(stderr,
-			    "%s: Can't create file %s; error %d (ignored)\n",
-			    progname, nfile, errno);
-		    continue;
-		}
-		total = bad = 0;
-		while (1) {
-		    ssize_t nBytes;
-		    len = FDH_PREAD(fdP1, buffer, sizeof(buffer), total);
-		    if (len < 0) {
-			FDH_REALLYCLOSE(fdP1);
-			IH_RELEASE(ih1);
-			close(ofd);
-			unlink(nfile);
-			fprintf(stderr,
-				"%s: Error while reading from inode %s (%d - ignored)\n",
-				progname, PrintInode(NULL, ino), errno);
-			bad = 1;
-			break;
-		    }
-		    if (len == 0)
-			break;	/* No more input */
-		    nBytes = write(ofd, buffer, len);
-		    if (nBytes != len) {
-			FDH_REALLYCLOSE(fdP1);
-			IH_RELEASE(ih1);
-			close(ofd);
-			unlink(nfile);
-			fprintf(stderr,
-				"%s: Error while writing to \"%s\" (%d - ignored)\n",
-				progname, nfile, errno);
-			bad = 1;
-			break;
-		    }
-		    total += len;
-		}
-		if (bad)
-		    continue;
-		FDH_REALLYCLOSE(fdP1);
-		IH_RELEASE(ih1);
-		close(ofd);
-		printf("... Copied inode %s to file %s (%lu bytes)\n",
-		       PrintInode(NULL, ino), nfile, (unsigned long)total);
+		SaveInode(vp, vnode, ino);
 	    }
 	} else {
-#if defined(AFS_NAMEI_ENV)
 	    PrintVnode(offset, vnode,
 		       bitNumberToVnodeNumber(vnodeIndex, class), ino, vp);
-#else
-	    PrintVnode(offset, vnode,
-		       bitNumberToVnodeNumber(vnodeIndex, class), ino);
-#endif
 	}
     }
     STREAM_CLOSE(file);
     FDH_CLOSE(fdP);
 }
 
-#if defined(AFS_NAMEI_ENV)
 void
 PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 	   Inode ino, Volume * vp)
-#else
-void
-PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
-	   Inode ino)
-#endif
 {
 #if defined(AFS_NAMEI_ENV)
     IHandle_t *ihtmpp;
