@@ -35,9 +35,9 @@
 
 #include <tap/basic.h>
 
-#define FIRST_OFF   0
-#define SECOND_OFF  1
-#define FLAG_OFF    2
+#define FLAG_OFF    0
+#define FIRST_OFF   1
+#define SECOND_OFF  2
 #define FOURTH_OFF  4
 #define FIFTH_OFF   5
 #define PERHAPS_OFF 6
@@ -72,9 +72,9 @@ main(int argc, char **argv)
     initialize_CMD_error_table();
 
     opts = cmd_CreateSyntax(NULL, testproc, NULL, NULL);
+    cmd_AddParm(opts, "-flag", CMD_FLAG, CMD_OPTIONAL, "a flag");
     cmd_AddParm(opts, "-first", CMD_SINGLE, CMD_REQUIRED, "first option");
     cmd_AddParm(opts, "-second", CMD_LIST, CMD_OPTIONAL, "second option");
-    cmd_AddParm(opts, "-flag", CMD_FLAG, CMD_OPTIONAL, "a flag");
 
     /* A simple command line */
     code = cmd_ParseLine("-first foo -second bar -flag", tv, &tc, 100);
