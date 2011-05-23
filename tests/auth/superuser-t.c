@@ -123,7 +123,7 @@ startClient(char *configPath)
     struct hostent *he;
     afs_uint32 addr;
     afs_int32 result;
-    char *string;
+    char *string = NULL;
 
     plan(63);
 
@@ -255,6 +255,8 @@ startClient(char *configPath)
     is_int(0, code, "Can get identity back");
     is_string("<LocalAuth>", string, "Forged token is super user");
 
+    xdr_free((xdrproc_t)xdr_string, &string);
+
     /* Throw away this connection and security class */
     rx_DestroyConnection(conn);
     rxs_Release(class);
@@ -275,9 +277,11 @@ startClient(char *configPath)
     is_int(EPERM, code,
 	   "Running new interface RPC as non-super user fails as expected");
     code = TEST_WhoAmI(conn, &string);
+    xdr_free((xdrproc_t)xdr_string, &string);
     is_int(EPERM, code,
 	   "Running RPC returning string fails as expected");
     code = TEST_NewWhoAmI(conn, &string);
+    xdr_free((xdrproc_t)xdr_string, &string);
     is_int(EPERM, code,
 	   "Running new interface RPC returning string fails as expected");
     ok(afsconf_AddUser(dir, "rpctest") == 0,
@@ -289,9 +293,11 @@ startClient(char *configPath)
     code = TEST_WhoAmI(conn, &string);
     is_int(0, code, "Running RPC returning string as %s works", "rpctest");
     is_string("rpctest", string, "Returned user string matches");
+    xdr_free((xdrproc_t)xdr_string, &string);
     code = TEST_NewWhoAmI(conn, &string);
     is_int(0, code, "Running new RPC returning string as %s works", "rpctest");
     is_string("rpctest", string, "Returned user string for new interface matches");
+    xdr_free((xdrproc_t)xdr_string, &string);
     rx_DestroyConnection(conn);
     rxs_Release(class);
 
@@ -310,9 +316,11 @@ startClient(char *configPath)
     is_int(EPERM, code,
 	   "Running new interface RPC as non-super user fails as expected");
     code = TEST_WhoAmI(conn, &string);
+    xdr_free((xdrproc_t)xdr_string, &string);
     is_int(EPERM, code,
 	   "Running RPC returning string fails as expected");
     code = TEST_NewWhoAmI(conn, &string);
+    xdr_free((xdrproc_t)xdr_string, &string);
     is_int(EPERM, code,
 	   "Running new interface RPC returning string fails as expected");
 
@@ -326,11 +334,13 @@ startClient(char *configPath)
     code = TEST_WhoAmI(conn, &string);
     is_int(0, code, "Running RPC returning string as %s works", "rpctest/admin");
     is_string("rpctest.admin", string, "Returned user string matches");
+    xdr_free((xdrproc_t)xdr_string, &string);
     code = TEST_NewWhoAmI(conn, &string);
     is_int(0, code, "Running new interface RPC returning string as %s works",
 	   "rpctest/admin");
     is_string("rpctest.admin", string,
 	      "Returned user string from new interface matches");
+    xdr_free((xdrproc_t)xdr_string, &string);
 
     rx_DestroyConnection(conn);
     rxs_Release(class);
