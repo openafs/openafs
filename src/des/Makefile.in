@@ -105,32 +105,32 @@ libdes.a: ${OBJS} AFS_component_version_number.o
 	$(AR) crv libdes.a ${OBJS} AFS_component_version_number.o
 	$(RANLIB) libdes.a
 
-make_ip: make_ip.o misc.o main.o
-	${CC} make_ip.o misc.o main.o ${LDFLAGS} -o make_ip
+make_ip: make_ip.o misc-i.o main.o
+	${CC} make_ip.o misc-i.o main.o ${LDFLAGS} -o make_ip
 
-make_fp: make_fp.o misc.o main.o
-	${CC} make_fp.o misc.o main.o ${LDFLAGS} -o make_fp
+make_fp: make_fp.o misc-i.o main.o
+	${CC} make_fp.o misc-i.o main.o ${LDFLAGS} -o make_fp
 
-make_odd: make_odd.o misc.o main.o
-	${CC} make_odd.o misc.o main.o ${LDFLAGS} -o make_odd
+make_odd: make_odd.o misc-i.o main.o
+	${CC} make_odd.o misc-i.o main.o ${LDFLAGS} -o make_odd
 
-make_s_table: make_s_table.o misc.o main.o 
-	${CC} make_s_table.o misc.o main.o ${LDFLAGS} -o make_s_table
+make_s_table: make_s_table.o misc-i.o main.o 
+	${CC} make_s_table.o misc-i.o main.o ${LDFLAGS} -o make_s_table
 
-make_p_table: make_p_table.o misc.o main.o 
-	${CC} make_p_table.o misc.o main.o ${LDFLAGS} -o make_p_table
+make_p_table: make_p_table.o misc-i.o main.o 
+	${CC} make_p_table.o misc-i.o main.o ${LDFLAGS} -o make_p_table
 
-make_keyperm: make_keyperm.o misc.o main.o 
-	${CC} make_keyperm.o misc.o main.o ${LDFLAGS} -o make_keyperm
+make_keyperm: make_keyperm.o misc-i.o main.o 
+	${CC} make_keyperm.o misc-i.o main.o ${LDFLAGS} -o make_keyperm
 
-make_e:	make_e.o misc.o main.o 
-	${CC} make_e.o misc.o main.o ${LDFLAGS} -o make_e
+make_e:	make_e.o misc-i.o main.o 
+	${CC} make_e.o misc-i.o main.o ${LDFLAGS} -o make_e
 
-make_p:	make_p.o misc.o main.o 
-	${CC} make_p.o misc.o main.o ${LDFLAGS} -o make_p
+make_p:	make_p.o misc-i.o main.o 
+	${CC} make_p.o misc-i.o main.o ${LDFLAGS} -o make_p
 
-make_s:	make_s.o misc.o main.o 
-	${CC} make_s.o misc.o main.o ${LDFLAGS} -o make_s
+make_s:	make_s.o misc-i.o main.o 
+	${CC} make_s.o misc-i.o main.o ${LDFLAGS} -o make_s
 
 crypt.o: ${srcdir}/crypt.c
 	case ${SYS_NAME} in \
@@ -180,7 +180,9 @@ make_s_table.o: make_s_table.c tables.h ${INCLS}
 make_p_table.o: make_p_table.c tables.h ${INCLS}
 make_odd.o: make_odd.c ${INCLS}
 misc.o: misc.c AFS_component_version_number.c ${INCLS}
-main.o: main.c AFS_component_version_number.c ${INCLS}
+misc-i.o: misc.c ${INCLS}
+		${CCOBJ} -c ${CFLAGS} -o misc-i.o ${srcdir}/misc.c
+main.o: main.c ${INCLS}
 key_sched.o: key_sched.c key_perm.h odd.h ${INCLS}
 key_test.o: key_test.c ${INCLS}
 testit.o: testit.c ${INCLS}
