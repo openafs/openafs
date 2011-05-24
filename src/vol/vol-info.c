@@ -43,19 +43,26 @@
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
 
+#ifndef AFS_NT40_ENV
+#include "AFS_component_version_number.c"
+#endif
+
 static const char *progname = "volinfo";
 
-int DumpVnodes = 0;		/* Dump everything, i.e. summary of all vnodes */
-int DumpInodeNumber = 0;	/* Dump inode numbers with vnodes */
-int DumpDate = 0;		/* Dump vnode date (server modify date) with vnode */
-int InodeTimes = 0;		/* Dump some of the dates associated with inodes */
+/* Modes */
+static int DumpInfo = 1;            /**< Dump volume information, defualt mode*/
+static int DumpHeader = 0;          /**< Dump volume header files info */
+static int DumpVnodes = 0;          /**< Dump vnode info */
+static int DumpInodeNumber = 0;     /**< Dump inode numbers with vnodes */
+static int DumpDate = 0;            /**< Dump vnode date (server modify date) with vnode */
+static int InodeTimes = 0;          /**< Dump some of the dates associated with inodes */
 #if defined(AFS_NAMEI_ENV)
-int PrintFileNames = 0;
+static int PrintFileNames = 0;      /**< Dump vnode and special file name filenames */
 #endif
-int dheader = 0;
-int dsizeOnly = 0;
-int fixheader = 0, saveinodes = 0, orphaned = 0;
-int VolumeChanged;
+static int ShowOrphaned = 0;        /**< Show "orphaned" vnodes (vnodes with parent of 0) */
+static int ShowSizes = 0;           /**< Show volume size summary */
+static int SaveInodes = 0;          /**< Save vnode data to files */
+static int FixHeader = 0;           /**< Repair header files magic and version fields. */
 
 /**
  * Volume size running totals
@@ -72,6 +79,7 @@ struct sizeTotals {
 static struct sizeTotals volumeTotals = { 0, 0, 0, 0, 0, 0 };
 static struct sizeTotals partitionTotals = { 0, 0, 0, 0, 0, 0 };
 static struct sizeTotals serverTotals = { 0, 0, 0, 0, 0, 0 };
+static int PrintingVolumeSizes = 0;	/*print volume size lines */
 
 /* Forward Declarations */
 void PrintHeader(Volume * vp);
@@ -83,7 +91,7 @@ Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     struct VolumeHeader *header);
 void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino, Volume * vp);
-void PrintVnodes(Volume * vp, VnodeClass class);
+void HandleVnodes(Volume * vp, VnodeClass class);
 
 char *
 date(time_t date)
@@ -99,16 +107,6 @@ date(time_t date)
 	     "%lu (%s)", (unsigned long)date, buf);
     return results[next];
 }
-
-#ifndef AFS_NT40_ENV
-#include "AFS_component_version_number.c"
-#endif
-
-char name[VMAXPATHLEN];
-
-char BU[1000];
-
-static int PrintingVolumeSizes = 0;	/* printing volume size lines */
 
 /**
  * Print the volume size table heading line, if needed.
@@ -217,7 +215,7 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 		progname,
 		PrintInode(NULL, ih->ih_ino), vsn->version, version);
     }
-    if (bad && fixheader) {
+    if (bad && FixHeader) {
 	vsn->magic = magic;
 	vsn->version = version;
 	printf("Special index inode %s has a bad header. Reconstructing...\n",
@@ -229,7 +227,7 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 		    progname, PrintInode(NULL, ih->ih_ino));
 	}
     } else {
-	if (!dsizeOnly && !saveinodes) {
+	if (DumpInfo) {
 	    printf("Inode %s: Good magic %x and version %x\n",
 		   PrintInode(NULL, ih->ih_ino), magic, version);
 	}
@@ -303,62 +301,61 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-    if (as->parms[0].items) {
+    if (as->parms[0].items) {	/* -online */
 	fprintf(stderr, "%s: -online not supported\n", progname);
 	return 1;
     }
-    if (as->parms[1].items)
+    if (as->parms[1].items) {	/* -vnode */
 	DumpVnodes = 1;
-    else
-	DumpVnodes = 0;
-    if (as->parms[2].items)
+    }
+    if (as->parms[2].items) {	/* -date */
 	DumpDate = 1;
-    else
-	DumpDate = 0;
-    if (as->parms[3].items)
+    }
+    if (as->parms[3].items) {	/* -inode */
 	DumpInodeNumber = 1;
-    else
-	DumpInodeNumber = 0;
-    if (as->parms[4].items)
+    }
+    if (as->parms[4].items) {	/* -itime */
 	InodeTimes = 1;
-    else
-	InodeTimes = 0;
-    if ((ti = as->parms[5].items))
+    }
+    if ((ti = as->parms[5].items)) {	/* -part */
 	partName = ti->data;
-    if ((ti = as->parms[6].items))
+    }
+    if ((ti = as->parms[6].items)) {	/* -volumeid */
 	volumeId = strtoul(ti->data, NULL, 10);
-    if (as->parms[7].items)
-	dheader = 1;
-    else
-	dheader = 0;
-    if (as->parms[8].items) {
-	dsizeOnly = 1;
-	dheader = 1;
-	DumpVnodes = 1;
-    } else
-	dsizeOnly = 0;
-    if (as->parms[9].items) {
-	fixheader = 1;
-    } else
-	fixheader = 0;
-    if (as->parms[10].items) {
-	saveinodes = 1;
-	dheader = 1;
-	DumpVnodes = 1;
-    } else
-	saveinodes = 0;
-    if (as->parms[11].items) {
-	orphaned = 1;
-	DumpVnodes = 1;
-    } else
-	orphaned = 0;
+    }
+    if (as->parms[7].items) {	/* -header */
+	DumpHeader = 1;
+    }
+    if (as->parms[8].items) {	/* -sizeOnly */
+	ShowSizes = 1;
+    }
+    if (as->parms[9].items) {	/* -FixHeader */
+	FixHeader = 1;
+    }
+    if (as->parms[10].items) {	/* -saveinodes */
+	SaveInodes = 1;
+    }
+    if (as->parms[11].items) {	/* -orphaned */
+	ShowOrphaned = 1;
+    }
 #if defined(AFS_NAMEI_ENV)
-    if (as->parms[12].items) {
+    if (as->parms[12].items) {	/* -filenames */
 	PrintFileNames = 1;
-	DumpVnodes = 1;
-    } else
-	PrintFileNames = 0;
+    }
 #endif
+
+    /* -saveinodes and -sizeOnly override the default mode.
+     * For compatibility with old versions of volinfo, -orphaned
+     * and -filename options imply -vnodes */
+    if (SaveInodes || ShowSizes) {
+	DumpInfo = 0;
+	DumpHeader = 0;
+	DumpVnodes = 0;
+	InodeTimes = 0;
+	ShowOrphaned = 0;
+    } else if (ShowOrphaned || PrintFileNames) {
+	DumpVnodes = 1;		/* implied */
+    }
 
     DInit(10);
 
@@ -371,8 +368,9 @@ handleit(struct cmd_syndesc *as, void *arock)
     if (partName) {
 	partP = VGetPartition(partName, 0);
 	if (!partP) {
-	    fprintf(stderr, "%s: %s is not an AFS partition name on this server.\n",
-		   progname, partName);
+	    fprintf(stderr,
+		    "%s: %s is not an AFS partition name on this server.\n",
+		    progname, partName);
 	    exit(1);
 	}
     }
@@ -461,12 +459,12 @@ HandleAllPart(void)
     for (partP = DiskPartitionList; partP; partP = partP->next) {
 	printf("Processing Partition %s:\n", partP->name);
 	HandlePart(partP);
-	if (dsizeOnly) {
+	if (ShowSizes) {
 	    AddSizeTotals(&serverTotals, &partitionTotals);
 	}
     }
 
-    if (dsizeOnly) {
+    if (ShowSizes) {
 	PrintServerTotals();
     }
 }
@@ -495,14 +493,14 @@ HandlePart(struct DiskPartition64 *partP)
 	p = (char *)strrchr(dp->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    HandleVolume(partP, dp->d_name);
-	    if (dsizeOnly) {
+	    if (ShowSizes) {
 		nvols++;
 		AddSizeTotals(&partitionTotals, &volumeTotals);
 	    }
 	}
     }
     closedir(dirp);
-    if (dsizeOnly) {
+    if (ShowSizes) {
 	PrintPartitionTotals(nvols);
     }
 }
@@ -547,7 +545,7 @@ HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
 	perror("fstat");
 	goto error;
     }
-    if (!dsizeOnly && !saveinodes) {
+    if (DumpInfo) {
 	printf("\t%s inode\t= %s (size = %lld)\n",
 	       name, PrintInode(NULL, inode), size);
 #ifdef AFS_NAMEI_ENV
@@ -582,7 +580,7 @@ HandleHeaderFiles(struct DiskPartition64 *dp, FD_t header_fd,
 {
     afs_sfsize_t size = 0;
 
-    if (!dsizeOnly && !saveinodes) {
+    if (DumpInfo) {
 	size = OS_SIZE(header_fd);
 	printf("Volume header (size = %lld):\n", size);
 	printf("\tstamp\t= 0x%x\n", header->stamp.version);
@@ -599,11 +597,11 @@ HandleHeaderFiles(struct DiskPartition64 *dp, FD_t header_fd,
     HandleSpecialFile("Link", dp, header, header->linkTable, &size);
 #endif /* AFS_NAMEI_ENV */
 
-    if (!dsizeOnly && !saveinodes) {
+    if (DumpInfo) {
 	printf("Total aux volume size = %lld\n\n", size);
     }
 
-    if (dsizeOnly) {
+    if (ShowSizes) {
         volumeTotals.auxsize = size;
         volumeTotals.auxsize_k = size / 1024;
     }
@@ -646,7 +644,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	return;
     }
     DiskToVolumeHeader(&header, &diskHeader);
-    if (dheader) {
+    if (DumpHeader || ShowSizes) {
 	HandleHeaderFiles(dp, fd, &header);
     }
     OS_CLOSE(fd);
@@ -656,25 +654,16 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 		progname, name);
 	return;
     }
-
-    if (!dsizeOnly && !saveinodes) {
+    if (DumpInfo) {
 	PrintHeader(vp);
     }
-    if (DumpVnodes) {
-	if (!dsizeOnly && !saveinodes)
-	    printf("\nLarge vnodes (directories)\n");
-	PrintVnodes(vp, vLarge);
-	if (!dsizeOnly && !saveinodes) {
-	    printf("\nSmall vnodes(files, symbolic links)\n");
-	    fflush(stdout);
-	}
-	if (saveinodes) {
-	    printf("Saving all volume files to current directory ...\n");
-	    PrintingVolumeSizes = 0;	/* -saveinodes interfers with -sizeOnly */
-	}
-	PrintVnodes(vp, vSmall);
+    if (DumpVnodes || ShowSizes || ShowOrphaned) {
+	HandleVnodes(vp, vLarge);
     }
-    if (dsizeOnly) {
+    if (DumpVnodes || ShowSizes || SaveInodes || ShowOrphaned) {
+	HandleVnodes(vp, vSmall);
+    }
+    if (ShowSizes) {
 	volumeTotals.diskused_k = V_diskused(vp);
 	volumeTotals.size_k =
 	    volumeTotals.auxsize_k + volumeTotals.vnodesize_k;
@@ -829,6 +818,10 @@ SaveInode(Volume * vp, struct VnodeDiskObject *vnode, Inode ino)
     afs_foff_t total;
     ssize_t len;
 
+    if (!VALID_INO(ino)) {
+        return;
+    }
+
     IH_INIT(ih, V_device(vp), V_parentId(vp), ino);
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
@@ -886,7 +879,7 @@ SaveInode(Volume * vp, struct VnodeDiskObject *vnode, Inode ino)
 }
 
 void
-PrintVnodes(Volume * vp, VnodeClass class)
+HandleVnodes(Volume * vp, VnodeClass class)
 {
     afs_int32 diskSize =
 	(class == vSmall ? SIZEOF_SMALLDISKVNODE : SIZEOF_LARGEDISKVNODE);
@@ -901,6 +894,24 @@ PrintVnodes(Volume * vp, VnodeClass class)
     int size;
     char *ctime, *atime, *mtime;
 
+    /* print vnode table heading */
+    if (class == vLarge) {
+	if (DumpInfo) {
+	    printf("\nLarge vnodes (directories)\n");
+	}
+    } else {
+	if (DumpInfo) {
+	    printf("\nSmall vnodes(files, symbolic links)\n");
+	    fflush(stdout);
+	}
+	if (SaveInodes) {
+	    printf("Saving all volume files to current directory ...\n");
+	    if (ShowSizes) {
+		PrintingVolumeSizes = 0; /* print heading again */
+	    }
+	}
+    }
+
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
 	fprintf(stderr, "%s: open failed: ", progname);
@@ -914,7 +925,7 @@ PrintVnodes(Volume * vp, VnodeClass class)
     }
 
     GetFileInfo(fdP->fd_fd, &size, &ctime, &atime, &mtime);
-    if (InodeTimes && !dsizeOnly) {
+    if (InodeTimes) {
 	printf("ichanged : %s\nimodified: %s\niaccessed: %s\n\n", ctime,
 	       mtime, atime);
     }
@@ -930,23 +941,19 @@ PrintVnodes(Volume * vp, VnodeClass class)
 	 nVnodes--, vnodeIndex++, offset += diskSize) {
 
 	ino = VNDISK_GET_INO(vnode);
+	if (ShowSizes) {
+	    afs_fsize_t fileLength;
 
-	if (saveinodes) {
-	    if (!VALID_INO(ino)) {
-		continue;
+	    VNDISK_GET_LEN(fileLength, vnode);
+	    if (fileLength > 0) {
+		volumeTotals.vnodesize += fileLength;
+		volumeTotals.vnodesize_k += fileLength / 1024;
 	    }
-	    if (dsizeOnly && (class == vLarge)) {
-		afs_fsize_t fileLength;
-
-		VNDISK_GET_LEN(fileLength, vnode);
-		if (fileLength > 0) {
-		    volumeTotals.vnodesize += fileLength;
-		    volumeTotals.vnodesize_k += fileLength / 1024;
-		}
-	    } else if (class == vSmall) {
-                SaveInode(vp, vnode, ino);
-            }
-	} else {
+	}
+	if (SaveInodes && (class == vSmall)) {
+	    SaveInode(vp, vnode, ino);
+	}
+	if (DumpVnodes || ShowOrphaned) {
 	    PrintVnode(offset, vnode,
 		       bitNumberToVnodeNumber(vnodeIndex, class), ino, vp);
 	}
@@ -966,14 +973,13 @@ PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
     afs_fsize_t fileLength;
 
     VNDISK_GET_LEN(fileLength, vnode);
-    if (fileLength > 0) {
-	volumeTotals.vnodesize += fileLength;
-	volumeTotals.vnodesize_k += fileLength / 1024;
-    }
-    if (dsizeOnly)
+
+    /* The check for orphaned vnodes is currently limited to non-empty
+     * vnodes with a parent of zero (and which are not the first entry
+     * in the index). */
+    if (ShowOrphaned && (fileLength == 0 || vnode->parent || !offset))
 	return;
-    if (orphaned && (fileLength == 0 || vnode->parent || !offset))
-	return;
+
     printf
 	("%10lld Vnode %u.%u.%u cloned: %u, length: %llu linkCount: %d parent: %u",
 	 (long long)offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion,
