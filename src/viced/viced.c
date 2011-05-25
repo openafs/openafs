@@ -1502,6 +1502,7 @@ NewParms(int initializing)
     int argc;
 
     if (!(afs_stat("/vice/file/parms", &sbuf))) {
+	ViceLog(0, ("/vice/file/parms is deprecated, and will be removed in a future release!"));
 	parms = (char *)malloc(sbuf.st_size);
 	if (!parms)
 	    return;
