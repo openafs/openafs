@@ -1305,7 +1305,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
+#ifdef AFS_DARWIN80_ENV
+static int AFSDOBULK = 0;
+#else
 static int AFSDOBULK = 1;
+#endif
 
 static_inline int
 osi_lookup_isdot(const char *aname)
