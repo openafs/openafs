@@ -127,11 +127,16 @@ AC_DEFUN([AC_CHECK_LINUX_FUNC],
 
 dnl AC_CHECK_LINUX_STRUCT([structure], [element], [includes])
 AC_DEFUN([AC_CHECK_LINUX_STRUCT],
- [AC_CHECK_LINUX_BUILD([for $2 in struct $1],
-		       [ac_cv_linux_struct_$1_has_$2],
+ [AC_CHECK_LINUX_TYPED_STRUCT([struct $1], [$2], [$3])
+ ])
+
+dnl AC_CHECK_LINUX_TYPED_STRUCT([structure], [element], [includes])
+AC_DEFUN([AC_CHECK_LINUX_TYPED_STRUCT],
+ [AC_CHECK_LINUX_BUILD([for $2 in $1],
+		       [ac_cv_linux_$1_has_$2],
 		       [#include <linux/$3>],
-		       [struct $1 _test; printk("%x\n", &_test.$2); ],
-		       AS_TR_CPP(STRUCT_$1_HAS_$2),
-		       [Define if kernel struct $1 has the $2 element])
+		       [$1 _test; printk("%x\n", &_test.$2); ],
+		       AS_TR_CPP($1_HAS_$2),
+		       [Define if kernel typedef'd $1 has the $2 element])
  ])
 
