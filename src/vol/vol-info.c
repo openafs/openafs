@@ -125,6 +125,64 @@ char name[VMAXPATHLEN];
 
 char BU[1000];
 
+static int PrintingVolumeSizes = 0;	/* printing volume size lines */
+
+/**
+ * Print the volume size table heading line, if needed.
+ *
+ * @return none
+ */
+static void
+PrintVolumeSizeHeading(void)
+{
+    if (!PrintingVolumeSizes) {
+	printf
+	    ("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
+	PrintingVolumeSizes = 1;
+    }
+}
+
+/**
+ * Print the sizes for a volume.
+ *
+ * @return none
+ */
+static void
+PrintVolumeSizes(Volume * vp)
+{
+    PrintVolumeSizeHeading();
+    printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused,
+	   Vauxsize_k, Vvnodesize_k, totvolsize, totvolsize - Vdiskused,
+	   V_name(vp));
+}
+
+/**
+ * Print the size totals for the partition.
+ *
+ * @return none
+ */
+static void
+PrintPartitionTotals(int nvols)
+{
+    PrintVolumeSizeHeading();
+    printf("\nPart Totals  %12d%9d%10d%10d%9d (%d volumes)\n\n",
+	   TVdiskused, TVauxsize, TVvnodesize, Totvolsize,
+	   Totvolsize - TVdiskused, nvols);
+    PrintingVolumeSizes = 0;
+}
+
+/**
+ * Print the size totals for all the partitions.
+ *
+ * @return none
+ */
+static void
+PrintServerTotals(void)
+{
+    printf("\nServer Totals%12d%9d%10d%10d%9d\n", SVdiskused, SVauxsize,
+	   SVvnodesize, Stotvolsize, Stotvolsize - SVdiskused);
+}
+
 int
 ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 {
@@ -331,9 +389,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 	}
 	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
 			   afs_printable_uint32_lu(volumeId));
-	if (dsizeOnly && !saveinodes)
-	    printf
-		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
 	HandleVolume(partP, name1);
     }
     return 0;
@@ -405,8 +460,7 @@ HandleAllPart(void)
     }
 
     if (dsizeOnly) {
-	printf("\nServer Totals%12d%9d%10d%10d%9d\n", SVdiskused, SVauxsize,
-	       SVvnodesize, Stotvolsize, Stotvolsize - SVdiskused);
+	PrintServerTotals();
     }
 }
 
@@ -430,9 +484,6 @@ HandlePart(struct DiskPartition64 *partP)
 		p);
 	exit(1);
     }
-    if (dsizeOnly && !saveinodes)
-	printf
-	    ("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
     while ((dp = readdir(dirp))) {
 	p = (char *)strrchr(dp->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
@@ -446,9 +497,7 @@ HandlePart(struct DiskPartition64 *partP)
     }
     closedir(dirp);
     if (dsizeOnly) {
-	printf("\nPart Totals  %12d%9d%10d%10d%9d (%d volumes)\n\n",
-	       TVdiskused, TVauxsize, TVvnodesize, Totvolsize,
-	       Totvolsize - TVdiskused, nvols);
+	PrintPartitionTotals(nvols);
     }
 }
 
@@ -612,18 +661,15 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    printf("\nSmall vnodes(files, symbolic links)\n");
 	    fflush(stdout);
 	}
-	if (saveinodes)
+	if (saveinodes) {
 	    printf("Saving all volume files to current directory ...\n");
+	    PrintingVolumeSizes = 0;	/* -saveinodes interfers with -sizeOnly */
+	}
 	PrintVnodes(vp, vSmall);
     }
     if (dsizeOnly) {
 	totvolsize = Vauxsize_k + Vvnodesize_k;
-	if (saveinodes)
-	    printf
-		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
-	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused,
-	       Vauxsize_k, Vvnodesize_k, totvolsize, totvolsize - Vdiskused,
-	       V_name(vp));
+	PrintVolumeSizes(vp);
     }
     free(vp->header);
     free(vp);
