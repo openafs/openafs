@@ -1751,14 +1751,16 @@ SetUpDump(void)
 
     dumpSyntax =
 	cmd_CreateSyntax("dump", DoDump, NULL, "dump AFS trace logs");
-    (void)cmd_AddParm(dumpSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
+    (void)cmd_AddParm(dumpSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
     (void)cmd_AddParm(dumpSyntax, "-follow", CMD_SINGLE, CMD_OPTIONAL,
-		      "log_name");
+		      "trace log name");
     (void)cmd_AddParm(dumpSyntax, "-file", CMD_SINGLE, CMD_OPTIONAL,
-		      "output_filename");
+		      "path to trace log file for writing");
     (void)cmd_AddParm(dumpSyntax, "-sleep", CMD_SINGLE, CMD_OPTIONAL,
-		      "seconds_between_reads");
+		      "interval (secs) for writes when using -follow");
 }
+
 
 static int
 DoShowLog(struct cmd_syndesc *as, void *arock)
@@ -1826,9 +1828,12 @@ SetUpShowLog(void)
     showSyntax =
 	cmd_CreateSyntax("lslog", DoShowLog, NULL,
 			 "list available logs");
-    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
-    (void)cmd_AddParm(showSyntax, "-log", CMD_LIST, CMD_OPTIONAL, "log_name");
-    (void)cmd_AddParm(showSyntax, "-long", CMD_FLAG, CMD_OPTIONAL, "");
+    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
+    (void)cmd_AddParm(showSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
+		      "trace log name");
+    (void)cmd_AddParm(showSyntax, "-long", CMD_FLAG, CMD_OPTIONAL,
+		      "show defined log size in kbytes & if it is allocated in kernel mem");
 }
 
 static int
@@ -1882,7 +1887,8 @@ SetUpShowSet(void)
     showSyntax =
 	cmd_CreateSyntax("lsset", DoShowSet, NULL,
 			 "list available event sets");
-    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
+    (void)cmd_AddParm(showSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
 }
 
 static int
@@ -1940,9 +1946,9 @@ SetUpClear(void)
 	cmd_CreateSyntax("clear", DoClear, NULL,
 			 "clear logs by logname or by event set");
     (void)cmd_AddParm(clearSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
-		      "set_name");
+		      "event set name");
     (void)cmd_AddParm(clearSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
-		      "log_name");
+		      "trace log name");
 }
 
 static int
@@ -2026,10 +2032,14 @@ SetUpSet(void)
     setSyntax =
 	cmd_CreateSyntax("setset", DoSet, NULL,
 			 "set state of event sets");
-    (void)cmd_AddParm(setSyntax, "-set", CMD_LIST, CMD_OPTIONAL, "set_name");
-    (void)cmd_AddParm(setSyntax, "-active", CMD_FLAG, CMD_OPTIONAL, "");
-    (void)cmd_AddParm(setSyntax, "-inactive", CMD_FLAG, CMD_OPTIONAL, "");
-    (void)cmd_AddParm(setSyntax, "-dormant", CMD_FLAG, CMD_OPTIONAL, "");
+    (void)cmd_AddParm(setSyntax, "-set", CMD_LIST, CMD_OPTIONAL,
+		      "event set name");
+    (void)cmd_AddParm(setSyntax, "-active", CMD_FLAG, CMD_OPTIONAL,
+		      "enable tracing for event set & allocate kernel memory");
+    (void)cmd_AddParm(setSyntax, "-inactive", CMD_FLAG, CMD_OPTIONAL,
+		      "disables tracing for event set, keep kernel memory");
+    (void)cmd_AddParm(setSyntax, "-dormant", CMD_FLAG, CMD_OPTIONAL,
+		      "disable tracing for event set & free kernel memory");
 }
 
 static int
@@ -2084,9 +2094,9 @@ SetUpResize(void)
 	cmd_CreateSyntax("setlog", DoResize, NULL,
 			 "set the size of a log");
     (void)cmd_AddParm(setsizeSyntax, "-log", CMD_LIST, CMD_OPTIONAL,
-		      "log_name");
+		      "trace log name");
     (void)cmd_AddParm(setsizeSyntax, "-buffersize", CMD_SINGLE, CMD_REQUIRED,
-		      "1-kilobyte_units");
+		      "# of 1-kbyte blocks to allocate for log");
 }
 
 #include "AFS_component_version_number.c"
