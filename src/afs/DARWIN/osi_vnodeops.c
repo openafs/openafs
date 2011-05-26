@@ -2237,6 +2237,10 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
 	vnode_put(ovp);
 	vnode_rele(ovp);
     }
+    /* If it's ref'd still, unmark stat'd to force new lookup */
+    if ((vnode_vtype(ovp) != avc->f.m.Type) && VREFCOUNT_GT(avc, 1))
+	avc->f.states &= ~CStatd;
+
     vnode_put(ovp);
     vnode_rele(ovp);
     AFS_GLOCK();
