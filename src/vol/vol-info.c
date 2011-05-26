@@ -77,13 +77,25 @@ int PrintFileNames = 0;
 #endif
 int online = 0;
 int dheader = 0;
-int dsizeOnly = 0, totvolsize = 0, Vauxsize = 0, Vdiskused = 0, Vvnodesize =
-    0;
-int Vvnodesize_k = 0, Vauxsize_k = 0;
-int Totvolsize = 0, TVauxsize = 0, TVdiskused = 0, TVvnodesize = 0;
-int Stotvolsize = 0, SVauxsize = 0, SVdiskused = 0, SVvnodesize = 0;
+int dsizeOnly = 0;
 int fixheader = 0, saveinodes = 0, orphaned = 0;
 int VolumeChanged;
+
+/**
+ * Volume size running totals
+ */
+struct sizeTotals {
+    afs_uint64 diskused_k;	/**< volume size from disk data file, in kilobytes */
+    afs_uint64 auxsize;		/**< size of header files, in bytes  */
+    afs_uint64 auxsize_k;	/**< size of header files, in kilobytes */
+    afs_uint64 vnodesize;	/**< size of the large and small vnodes, in bytes */
+    afs_uint64 vnodesize_k;	/**< size of the large and small vnodes, in kilobytes */
+    afs_uint64 size_k;		/**< size of headers and vnodes, in kilobytes */
+};
+
+static struct sizeTotals volumeTotals = { 0, 0, 0, 0, 0, 0 };
+static struct sizeTotals partitionTotals = { 0, 0, 0, 0, 0, 0 };
+static struct sizeTotals serverTotals = { 0, 0, 0, 0, 0, 0 };
 
 /* Forward Declarations */
 void PrintHeader(Volume * vp);
@@ -143,6 +155,22 @@ PrintVolumeSizeHeading(void)
 }
 
 /**
+ * Accumulate totals.
+ *
+ * @return 0
+ */
+static void
+AddSizeTotals(struct sizeTotals *a, struct sizeTotals *b)
+{
+    a->diskused_k += b->diskused_k;
+    a->auxsize += b->auxsize;
+    a->auxsize_k += b->auxsize_k;
+    a->vnodesize += b->vnodesize;
+    a->vnodesize_k += b->vnodesize_k;
+    a->size_k += b->size_k;
+}
+
+/**
  * Print the sizes for a volume.
  *
  * @return none
@@ -150,10 +178,14 @@ PrintVolumeSizeHeading(void)
 static void
 PrintVolumeSizes(Volume * vp)
 {
+    afs_int64 diff_k = volumeTotals.size_k - volumeTotals.diskused_k;
+
     PrintVolumeSizeHeading();
-    printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused,
-	   Vauxsize_k, Vvnodesize_k, totvolsize, totvolsize - Vdiskused,
-	   V_name(vp));
+    printf("%u\t%9llu%9llu%10llu%10llu%9lld\t%24s\n",
+	   V_id(vp),
+	   volumeTotals.diskused_k,
+	   volumeTotals.auxsize_k, volumeTotals.vnodesize_k,
+	   volumeTotals.size_k, diff_k, V_name(vp));
 }
 
 /**
@@ -162,12 +194,14 @@ PrintVolumeSizes(Volume * vp)
  * @return none
  */
 static void
-PrintPartitionTotals(int nvols)
+PrintPartitionTotals(afs_uint64 nvols)
 {
+    afs_int64 diff_k = partitionTotals.size_k - partitionTotals.diskused_k;
+
     PrintVolumeSizeHeading();
-    printf("\nPart Totals  %12d%9d%10d%10d%9d (%d volumes)\n\n",
-	   TVdiskused, TVauxsize, TVvnodesize, Totvolsize,
-	   Totvolsize - TVdiskused, nvols);
+    printf("\nPart Totals  %12llu%9llu%10llu%10llu%9lld (%llu volumes)\n\n",
+	   partitionTotals.diskused_k, partitionTotals.auxsize,
+	   partitionTotals.vnodesize, partitionTotals.size_k, diff_k, nvols);
     PrintingVolumeSizes = 0;
 }
 
@@ -179,8 +213,11 @@ PrintPartitionTotals(int nvols)
 static void
 PrintServerTotals(void)
 {
-    printf("\nServer Totals%12d%9d%10d%10d%9d\n", SVdiskused, SVauxsize,
-	   SVvnodesize, Stotvolsize, Stotvolsize - SVdiskused);
+    afs_int64 diff_k = serverTotals.size_k - serverTotals.diskused_k;
+
+    printf("\nServer Totals%12lld%9lld%10lld%10lld%9lld\n",
+	   serverTotals.diskused_k, serverTotals.auxsize,
+	   serverTotals.vnodesize, serverTotals.size_k, diff_k);
 }
 
 int
@@ -453,10 +490,9 @@ HandleAllPart(void)
     for (partP = DiskPartitionList; partP; partP = partP->next) {
 	printf("Processing Partition %s:\n", partP->name);
 	HandlePart(partP);
-	Stotvolsize += Totvolsize;
-	SVauxsize += TVauxsize;
-	SVvnodesize += TVvnodesize;
-	SVdiskused += TVdiskused;
+	if (dsizeOnly) {
+	    AddSizeTotals(&serverTotals, &partitionTotals);
+	}
     }
 
     if (dsizeOnly) {
@@ -468,7 +504,7 @@ HandleAllPart(void)
 void
 HandlePart(struct DiskPartition64 *partP)
 {
-    int nvols = 0;
+    afs_int64 nvols = 0;
     DIR *dirp;
     struct dirent *dp;
 #ifdef AFS_NT40_ENV
@@ -488,11 +524,10 @@ HandlePart(struct DiskPartition64 *partP)
 	p = (char *)strrchr(dp->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    HandleVolume(partP, dp->d_name);
-	    Totvolsize += totvolsize;
-	    TVauxsize += Vauxsize;
-	    TVvnodesize += Vvnodesize;
-	    TVdiskused += Vdiskused;
-	    nvols++;
+	    if (dsizeOnly) {
+		nvols++;
+		AddSizeTotals(&partitionTotals, &volumeTotals);
+	    }
 	}
     }
     closedir(dirp);
@@ -596,8 +631,11 @@ HandleHeaderFiles(struct DiskPartition64 *dp, FD_t header_fd,
     if (!dsizeOnly && !saveinodes) {
 	printf("Total aux volume size = %lld\n\n", size);
     }
-    Vauxsize = size;
-    Vauxsize_k = size / 1024;
+
+    if (dsizeOnly) {
+        volumeTotals.auxsize = size;
+        volumeTotals.auxsize_k = size / 1024;
+    }
 }
 
 void
@@ -668,7 +706,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	PrintVnodes(vp, vSmall);
     }
     if (dsizeOnly) {
-	totvolsize = Vauxsize_k + Vvnodesize_k;
+	volumeTotals.size_k =
+	    volumeTotals.auxsize_k + volumeTotals.vnodesize_k;
 	PrintVolumeSizes(vp);
     }
     free(vp->header);
@@ -716,7 +755,7 @@ main(int argc, char **argv)
 void
 PrintHeader(Volume * vp)
 {
-    Vdiskused = V_diskused(vp);
+    volumeTotals.diskused_k = V_diskused(vp);
     if (dsizeOnly || saveinodes)
 	return;
     printf("Volume header for volume %u (%s)\n", V_id(vp), V_name(vp));
@@ -861,8 +900,10 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		afs_fsize_t fileLength;
 
 		VNDISK_GET_LEN(fileLength, vnode);
-		Vvnodesize += fileLength;
-		Vvnodesize_k += fileLength / 1024;
+		if (fileLength > 0) {
+		    volumeTotals.vnodesize += fileLength;
+		    volumeTotals.vnodesize_k += fileLength / 1024;
+		}
 	    } else if (class == vSmall) {
 		IHandle_t *ih1;
 		FdHandle_t *fdP1;
@@ -953,8 +994,10 @@ PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
     afs_fsize_t fileLength;
 
     VNDISK_GET_LEN(fileLength, vnode);
-    Vvnodesize += fileLength;
-    Vvnodesize_k += fileLength / 1024;
+    if (fileLength > 0) {
+	volumeTotals.vnodesize += fileLength;
+	volumeTotals.vnodesize_k += fileLength / 1024;
+    }
     if (dsizeOnly)
 	return;
     if (orphaned && (fileLength == 0 || vnode->parent || !offset))
