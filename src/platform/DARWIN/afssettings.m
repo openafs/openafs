@@ -149,6 +149,7 @@ recurse(id obj, Setting *s, int level, int myoid[])
 Setting sysctl_darwin_all[] = {
     {@"RealModes", AFS_SC_DARWIN_ALL_REALMODES, LeafNum, NULL},
     {@"FSEvents", AFS_SC_DARWIN_ALL_FSEVENTS, LeafNum, NULL},
+    {@"Bulkstat", AFS_SC_DARWIN_ALL_BULKSTAT, LeafNum, NULL},
     {NULL, 0, 0, NULL}
 };
 Setting sysctl_darwin[] = {
