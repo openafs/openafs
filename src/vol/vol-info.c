@@ -116,6 +116,18 @@ void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 		Inode ino, Volume * vp);
 void HandleVnodes(Volume * vp, VnodeClass class);
 
+/**
+ * Format time as a timestamp string
+ *
+ * @param[in] date  time value to format
+ *
+ * @return timestamp string in the form YYYY/MM/DD.hh:mm:ss
+ *
+ * @note A static array of 8 strings are stored by this
+ *       function. The array slots are overwritten, so the
+ *       caller must not reference the returned string after
+ *       seven additional calls to this function.
+ */
 char *
 date(time_t date)
 {
@@ -130,6 +142,38 @@ date(time_t date)
 		       "%lu (%s)", (unsigned long)date, buf);
     return results[next];
 }
+
+#ifdef AFS_NT40_ENV
+/**
+ * Format file time as a timestamp string
+ *
+ * @param[in] ft  file time
+ *
+ * @return timestamp string in the form YYYY/MM/DD.hh:mm:ss
+ *
+ * @note A static array of 8 strings are stored by this
+ *       function. The array slots are overwritten, so the
+ *       caller must not reference the returned string after
+ *       seven additional calls to this function.
+ */
+char *
+NT_date(FILETIME * ft)
+{
+    static char result[8][64];
+    static int next = 0;
+    SYSTEMTIME st;
+    FILETIME lft;
+
+    if (!FileTimeToLocalFileTime(ft, &lft)
+	|| !FileTimeToSystemTime(&lft, &st)) {
+	fprintf(stderr, "%s: Time conversion failed.\n", progname);
+	exit(1);
+    }
+    sprintf(result[next = ((next + 1) & 7)], "%4d/%02d/%02d.%2d:%2d:%2d",
+	    st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+    return result[next];
+}
+#endif
 
 /**
  * Print the volume size table heading line, if needed.
@@ -212,6 +256,19 @@ PrintServerTotals(void)
 	   serverTotals.vnodesize, serverTotals.size_k, diff_k);
 }
 
+/**
+ * Read a volume header file
+ *
+ * @param[in] ih        ihandle of the header file
+ * @param[in] to        destination
+ * @param[in] size      expected header size
+ * @param[in] magic     expected header magic number
+ * @param[in] version   expected header version number
+ *
+ * @return error code
+ *   @retval 0 success
+ *   @retval -1 failed to read file
+ */
 int
 ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 {
@@ -258,7 +315,15 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
     return 0;
 }
 
-
+/**
+ * Simplified attach volume
+ *
+ * param[in] dp       vice disk partition object
+ * param[in] volname  volume header file name
+ * param[in] header   volume header object
+ *
+ * @return volume object or null on error
+ */
 Volume *
 AttachVolume(struct DiskPartition64 * dp, char *volname,
 	     struct VolumeHeader * header)
@@ -306,7 +371,14 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
     return vp;
 }
 
-
+/**
+ * Process command line options and start scanning
+ *
+ * @param[in] as     command syntax object
+ * @param[in] arock  opaque object; not used
+ *
+ * @return error code
+ */
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
@@ -423,6 +495,11 @@ handleit(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+/**
+ * Determine if the current directory is a vice partition
+ *
+ * @return disk partition object
+ */
 #ifdef AFS_NT40_ENV
 #include <direct.h>
 struct DiskPartition64 *
@@ -473,6 +550,11 @@ FindCurrentPartition(void)
 }
 #endif
 
+/**
+ * Scan and handle all the partitions detected on this server
+ *
+ * @return none
+ */
 void
 HandleAllPart(void)
 {
@@ -492,7 +574,13 @@ HandleAllPart(void)
     }
 }
 
-
+/**
+ * Scan the partition and handle volumes
+ *
+ * @param[in] partP  disk partition to scan
+ *
+ * @return none
+ */
 void
 HandlePart(struct DiskPartition64 *partP)
 {
@@ -630,6 +718,17 @@ HandleHeaderFiles(struct DiskPartition64 *dp, FD_t header_fd,
     }
 }
 
+/**
+ * Attach and scan the volume and handle the header and vnodes
+ *
+ * Print the volume header and vnode information, depending on the
+ * current modes.
+ *
+ * @param[in] dp    vice partition object for this volume
+ * @param[in] name  volume header file name
+ *
+ * @return none
+ */
 void
 HandleVolume(struct DiskPartition64 *dp, char *name)
 {
@@ -698,6 +797,9 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     free(vp);
 }
 
+/**
+ * volinfo program entry
+ */
 int
 main(int argc, char **argv)
 {
@@ -736,6 +838,13 @@ main(int argc, char **argv)
 
 #define typestring(type) (type == RWVOL? "read/write": type == ROVOL? "readonly": type == BACKVOL? "backup": "unknown")
 
+/**
+ * Print the volume header information
+ *
+ * @param[in]  volume object
+ *
+ * @return none
+ */
 void
 PrintHeader(Volume * vp)
 {
@@ -774,29 +883,19 @@ PrintHeader(Volume * vp)
     printf("volUpdateCounter = %u\n", V_volUpCounter(vp));
 }
 
-/* GetFileInfo
- * OS independent file info. Die on failure.
+/**
+ * Get the size and times of a file
+ *
+ * @param[in]  fd     file descriptor of file to stat
+ * @param[out] size   size of the file
+ * @param[out] ctime  ctime of file as a formatted string
+ * @param[out] mtime  mtime of file as a formatted string
+ * @param[out] atime  atime of file as a formatted string
+ *
+ * @return error code
+ *   @retval 0 success
+ *   @retval -1 failed to retrieve file information
  */
-#ifdef AFS_NT40_ENV
-char *
-NT_date(FILETIME * ft)
-{
-    static char result[8][64];
-    static int next = 0;
-    SYSTEMTIME st;
-    FILETIME lft;
-
-    if (!FileTimeToLocalFileTime(ft, &lft)
-	|| !FileTimeToSystemTime(&lft, &st)) {
-	fprintf(stderr, "%s: Time conversion failed.\n", progname);
-	exit(1);
-    }
-    sprintf(result[next = ((next + 1) & 7)], "%4d/%02d/%02d.%2d:%2d:%2d",
-	    st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-    return result[next];
-}
-#endif
-
 static int
 GetFileInfo(FD_t fd, afs_sfsize_t * size, char **ctime, char **mtime,
 	    char **atime)
@@ -837,7 +936,7 @@ GetFileInfo(FD_t fd, afs_sfsize_t * size, char **ctime, char **mtime,
  * @param[in] vnode  vnode object
  * @param[in] inode  inode of the source file
  *
- * @returns none
+ * @return none
  */
 static void
 SaveInode(Volume * vp, struct VnodeDiskObject *vnode, Inode ino)
@@ -909,6 +1008,14 @@ SaveInode(Volume * vp, struct VnodeDiskObject *vnode, Inode ino)
 	   PrintInode(NULL, ino), nfile, (unsigned long)total);
 }
 
+/**
+ * Scan a volume index and handle each vnode
+ *
+ * @param[in] vp      volume object
+ * @param[in] class   which index to scan
+ *
+ * @return none
+ */
 void
 HandleVnodes(Volume * vp, VnodeClass class)
 {
@@ -1002,6 +1109,17 @@ HandleVnodes(Volume * vp, VnodeClass class)
     }
 }
 
+/**
+ * Print vnode information
+ *
+ * @param[in] offset       index offset of this vnode
+ * @param[in] vnode        vnode object to be printed
+ * @param[in] vnodeNumber  vnode number
+ * @param[in] ino          fileserver inode number
+ * @param[in] vp           parent volume of the vnode
+ *
+ * @return none
+ */
 void
 PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 	   Inode ino, Volume * vp)
