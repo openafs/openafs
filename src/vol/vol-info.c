@@ -372,6 +372,46 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
 }
 
 /**
+ * Convert the partition device number into a partition name.
+ *
+ * @param[in]   partId      partition number, 0 to 254
+ * @param[out]  partName    buffer to hold partition name (e.g. /vicepa)
+ * @param[in]   partNameSize    size of partName buffer
+ *
+ * @return status
+ *   @retval 0 success
+ *   @retval -1 error, partId is out of range
+ *   @retval -2 error, partition name exceeds partNameSize
+ */
+static int
+GetPartitionName(afs_uint32 partId, char *partName, afs_size_t partNameSize)
+{
+    const int OLD_NUM_DEVICES = 26;	/* a..z */
+
+    if (partId < OLD_NUM_DEVICES) {
+	if (partNameSize < 8) {
+	    return -2;
+	}
+	strlcpy(partName, "/vicep", partNameSize);
+	partName[6] = partId + 'a';
+	partName[7] = '\0';
+	return 0;
+    }
+    if (partId < VOLMAXPARTS) {
+	if (partNameSize < 9) {
+	    return -2;
+	}
+	strlcpy(partName, "/vicep", partNameSize);
+	partId -= OLD_NUM_DEVICES;
+	partName[6] = 'a' + (partId / OLD_NUM_DEVICES);
+	partName[7] = 'a' + (partId % OLD_NUM_DEVICES);
+	partName[8] = '\0';
+	return 0;
+    }
+    return -1;
+}
+
+/**
  * Process command line options and start scanning
  *
  * @param[in] as     command syntax object
@@ -385,7 +425,8 @@ handleit(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     int err = 0;
     afs_uint32 volumeId = 0;
-    char *partName = 0;
+    char *partNameOrId = 0;
+    char partName[64] = "";
     struct DiskPartition64 *partP = NULL;
 
 
@@ -413,7 +454,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	InodeTimes = 1;
     }
     if ((ti = as->parms[5].items)) {	/* -part */
-	partName = ti->data;
+	partNameOrId = ti->data;
     }
     if ((ti = as->parms[6].items)) {	/* -volumeid */
 	volumeId = strtoul(ti->data, NULL, 10);
@@ -452,6 +493,22 @@ handleit(struct cmd_syndesc *as, void *arock)
 	DumpVnodes = 1;		/* implied */
     }
 
+    /* Allow user to specify partition by name or id. */
+    if (partNameOrId) {
+	afs_uint32 partId = volutil_GetPartitionID(partNameOrId);
+	if (partId == -1) {
+	    fprintf(stderr, "%s: Could not parse '%s' as a partition name.\n",
+		    progname, partNameOrId);
+	    return 1;
+	}
+	if (GetPartitionName(partId, partName, sizeof(partName))) {
+	    fprintf(stderr,
+		    "%s: Could not format '%s' as a partition name.\n",
+		    progname, partNameOrId);
+	    return 1;
+	}
+    }
+
     DInit(10);
 
     err = VAttachPartitions();
@@ -460,7 +517,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		progname, err);
     }
 
-    if (partName) {
+    if (partName[0]) {
 	partP = VGetPartition(partName, 0);
 	if (!partP) {
 	    fprintf(stderr,
@@ -817,7 +874,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-itime", CMD_FLAG, CMD_OPTIONAL,
 		"Dump special inode's mod times");
     cmd_AddParm(ts, "-part", CMD_LIST, CMD_OPTIONAL,
-		"AFS partition name (default current partition)");
+		"AFS partition name or id (default current partition)");
     cmd_AddParm(ts, "-volumeid", CMD_LIST, CMD_OPTIONAL, "Volume id");
     cmd_AddParm(ts, "-header", CMD_FLAG, CMD_OPTIONAL,
 		"Dump volume's header info");

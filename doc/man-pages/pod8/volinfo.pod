@@ -54,10 +54,10 @@ associated inode number.
 When combined with the B<-vnode> flag, displays a change, modification,
 and access timestamp for each of the large vnode and small vnode tables.
 
-=item B<-part> <I<partition name>>+
+=item B<-part> <I<partition name or id>>+
 
 Specifies the partition that houses each volume for which to produce
-output. Use the format F</vicepI<xx>>, where I<xx> is one or two lowercase
+output. Use the format F</vicepI<xx>> or I<xx>, where I<xx> is one or two lowercase
 letters. This argument can be omitted if the current working directory is
 the mount location for an AFS server partition. If it is not the mount
 location for an AFS server partition, the command produces output for
