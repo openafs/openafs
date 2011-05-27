@@ -9,7 +9,7 @@ volinfo - Produces detailed statistics about AFS volume headers
 
 B<volinfo> [B<-online>] [B<-vnode>] [B<-date>] [B<-inode>] [B<-itime>]
     S<<< [B<-part> <I<AFS partition name (default current partition)>>+] >>>
-    S<<< [B<-volumeid> <I<volume id>>+] >>> [B<-header>] [B<-sizeOnly>]
+    S<<< [B<-volumeid> <I<volume id>>+] >>> [B<-header>] [B<-sizeonly>]
     [B<-fixheader>] [B<-saveinodes>] [B<-orphaned>] [B<-filenames>] [B<-help>]
 
 =for html
@@ -75,7 +75,7 @@ houses the volume.
 Displays statistics about the volume header of each volume, in addition to
 the default output.
 
-=item B<-sizeOnly>
+=item B<-sizeonly>
 
 Displays a single line of output for each volume, reporting the size of
 various structures associated with it. The default output is suppressed

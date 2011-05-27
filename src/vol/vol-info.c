@@ -72,6 +72,24 @@
 
 static const char *progname = "volinfo";
 
+/* Command line options */
+typedef enum {
+    P_ONLINE,
+    P_VNODE,
+    P_DATE,
+    P_INODE,
+    P_ITIME,
+    P_PART,
+    P_VOLUMEID,
+    P_HEADER,
+    P_SIZEONLY,
+    P_SIZEONLY_COMPAT,
+    P_FIXHEADER,
+    P_SAVEINODES,
+    P_ORPHANED,
+    P_FILENAMES
+} volinfo_parm_t;
+
 /* Modes */
 static int DumpInfo = 1;            /**< Dump volume information, defualt mode*/
 static int DumpHeader = 0;          /**< Dump volume header files info */
@@ -437,45 +455,45 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-    if (as->parms[0].items) {	/* -online */
+    if (as->parms[P_ONLINE].items) {
 	fprintf(stderr, "%s: -online not supported\n", progname);
 	return 1;
     }
-    if (as->parms[1].items) {	/* -vnode */
+    if (as->parms[P_VNODE].items) {
 	DumpVnodes = 1;
     }
-    if (as->parms[2].items) {	/* -date */
+    if (as->parms[P_DATE].items) {
 	DumpDate = 1;
     }
-    if (as->parms[3].items) {	/* -inode */
+    if (as->parms[P_INODE].items) {
 	DumpInodeNumber = 1;
     }
-    if (as->parms[4].items) {	/* -itime */
+    if (as->parms[P_ITIME].items) {
 	InodeTimes = 1;
     }
-    if ((ti = as->parms[5].items)) {	/* -part */
+    if ((ti = as->parms[P_PART].items)) {
 	partNameOrId = ti->data;
     }
-    if ((ti = as->parms[6].items)) {	/* -volumeid */
+    if ((ti = as->parms[P_VOLUMEID].items)) {
 	volumeId = strtoul(ti->data, NULL, 10);
     }
-    if (as->parms[7].items) {	/* -header */
+    if (as->parms[P_HEADER].items) {
 	DumpHeader = 1;
     }
-    if (as->parms[8].items) {	/* -sizeOnly */
+    if (as->parms[P_SIZEONLY].items || as->parms[P_SIZEONLY_COMPAT].items) {
 	ShowSizes = 1;
     }
-    if (as->parms[9].items) {	/* -FixHeader */
+    if (as->parms[P_FIXHEADER].items) {
 	FixHeader = 1;
     }
-    if (as->parms[10].items) {	/* -saveinodes */
+    if (as->parms[P_SAVEINODES].items) {
 	SaveInodes = 1;
     }
-    if (as->parms[11].items) {	/* -orphaned */
+    if (as->parms[P_ORPHANED].items) {
 	ShowOrphaned = 1;
     }
 #if defined(AFS_NAMEI_ENV)
-    if (as->parms[12].items) {	/* -filenames */
+    if (as->parms[P_FILENAMES].items) {
 	PrintFileNames = 1;
     }
 #endif
@@ -854,6 +872,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     free(vp);
 }
 
+
 /**
  * volinfo program entry
  */
@@ -878,8 +897,11 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-volumeid", CMD_LIST, CMD_OPTIONAL, "Volume id");
     cmd_AddParm(ts, "-header", CMD_FLAG, CMD_OPTIONAL,
 		"Dump volume's header info");
-    cmd_AddParm(ts, "-sizeOnly", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParm(ts, "-sizeonly", CMD_FLAG, CMD_OPTIONAL,
 		"Dump volume's size");
+    /* For compatibility with older versions. */
+    cmd_AddParm(ts, "-sizeOnly", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
+		"Alias for -sizeonly");
     cmd_AddParm(ts, "-fixheader", CMD_FLAG, CMD_OPTIONAL,
 		"Try to fix header");
     cmd_AddParm(ts, "-saveinodes", CMD_FLAG, CMD_OPTIONAL,
