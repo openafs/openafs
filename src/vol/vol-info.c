@@ -798,16 +798,21 @@ NT_date(FILETIME * ft)
 #endif
 
 static int
-GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
+GetFileInfo(FD_t fd, afs_sfsize_t * size, char **ctime, char **mtime,
+	    char **atime)
 {
 #ifdef AFS_NT40_ENV
     BY_HANDLE_FILE_INFORMATION fi;
+    LARGE_INTEGER fsize;
     if (!GetFileInformationByHandle(fd, &fi)) {
-	fprintf(stderr, "%s: GetFileInformationByHandle failed\n",
-		progname);
+	fprintf(stderr, "%s: GetFileInformationByHandle failed\n", progname);
 	return -1;
     }
-    *size = (int)fi.nFileSizeLow;
+    if (!GetFileSizeEx(fd, &fsize)) {
+	fprintf(stderr, "%s: GetFileSizeEx failed\n", progname);
+	return -1;
+    }
+    *size = fsize.QuadPart;
     *ctime = "N/A";
     *mtime = NT_date(&fi.ftLastWriteTime);
     *atime = NT_date(&fi.ftLastAccessTime);
@@ -817,7 +822,7 @@ GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
 	fprintf(stderr, "%s: fstat failed %d\n", progname, errno);
 	return -1;
     }
-    *size = (int)status.st_size;
+    *size = status.st_size;
     *ctime = date(status.st_ctime);
     *mtime = date(status.st_mtime);
     *atime = date(status.st_atime);
@@ -912,12 +917,13 @@ HandleVnodes(Volume * vp, VnodeClass class)
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     StreamHandle_t *file = NULL;
-    int vnodeIndex, nVnodes;
+    int vnodeIndex;
+    afs_sfsize_t nVnodes;
     afs_foff_t offset = 0;
     Inode ino;
     IHandle_t *ih = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP = NULL;
-    int size;
+    afs_sfsize_t size;
     char *ctime, *atime, *mtime;
 
     /* print vnode table heading */
