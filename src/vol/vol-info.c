@@ -320,7 +320,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 #ifndef AFS_NT40_ENV
     if (geteuid() != 0) {
 	fprintf(stderr, "%s: Must be run as root; sorry\n", progname);
-	exit(1);
+	return 1;
     }
 #endif
 
@@ -394,7 +394,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    fprintf(stderr,
 		    "%s: %s is not an AFS partition name on this server.\n",
 		    progname, partName);
-	    exit(1);
+	    return 1;
 	}
     }
 
@@ -413,7 +413,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		fprintf(stderr,
 			"%s: Current partition is not a vice partition.\n",
 			progname);
-		exit(1);
+		return 1;
 	    }
 	}
 	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
@@ -455,7 +455,7 @@ FindCurrentPartition(void)
 	fprintf(stderr, "%s: Failed to get current working directory: ",
 		progname);
 	perror("pwd");
-	exit(1);
+	return NULL;
     }
     p = strchr(&partName[1], OS_DIRSEPC);
     if (p) {
@@ -467,7 +467,7 @@ FindCurrentPartition(void)
 	    *p = tmp;
 	fprintf(stderr, "%s: %s is not a valid vice partition.\n", progname,
 		partName);
-	exit(1);
+	return NULL;
     }
     return dp;
 }
@@ -510,7 +510,7 @@ HandlePart(struct DiskPartition64 *partP)
     if ((dirp = opendir(p)) == NULL) {
 	fprintf(stderr, "%s: Can't read directory %s; giving up\n", progname,
 		p);
-	exit(1);
+	return;
     }
     while ((dp = readdir(dirp))) {
 	p = (char *)strrchr(dp->d_name, '.');
@@ -797,15 +797,15 @@ NT_date(FILETIME * ft)
 }
 #endif
 
-static void
+static int
 GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
 {
 #ifdef AFS_NT40_ENV
     BY_HANDLE_FILE_INFORMATION fi;
     if (!GetFileInformationByHandle(fd, &fi)) {
-	fprintf(stderr, "%s: GetFileInformationByHandle failed, exiting\n",
+	fprintf(stderr, "%s: GetFileInformationByHandle failed\n",
 		progname);
-	exit(1);
+	return -1;
     }
     *size = (int)fi.nFileSizeLow;
     *ctime = "N/A";
@@ -815,13 +815,14 @@ GetFileInfo(FD_t fd, int *size, char **ctime, char **mtime, char **atime)
     struct afs_stat status;
     if (afs_fstat(fd, &status) == -1) {
 	fprintf(stderr, "%s: fstat failed %d\n", progname, errno);
-	exit(1);
+	return -1;
     }
     *size = (int)status.st_size;
     *ctime = date(status.st_ctime);
     *mtime = date(status.st_mtime);
     *atime = date(status.st_atime);
 #endif
+    return 0;
 }
 
 /**
@@ -910,12 +911,12 @@ HandleVnodes(Volume * vp, VnodeClass class)
 	(class == vSmall ? SIZEOF_SMALLDISKVNODE : SIZEOF_LARGEDISKVNODE);
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
-    StreamHandle_t *file;
+    StreamHandle_t *file = NULL;
     int vnodeIndex, nVnodes;
     afs_foff_t offset = 0;
     Inode ino;
     IHandle_t *ih = vp->vnodeIndex[class].handle;
-    FdHandle_t *fdP;
+    FdHandle_t *fdP = NULL;
     int size;
     char *ctime, *atime, *mtime;
 
@@ -932,7 +933,7 @@ HandleVnodes(Volume * vp, VnodeClass class)
 	if (SaveInodes) {
 	    printf("Saving all volume files to current directory ...\n");
 	    if (ShowSizes) {
-		PrintingVolumeSizes = 0; /* print heading again */
+		PrintingVolumeSizes = 0;	/* print heading again */
 	    }
 	}
     }
@@ -940,16 +941,18 @@ HandleVnodes(Volume * vp, VnodeClass class)
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
 	fprintf(stderr, "%s: open failed: ", progname);
-	exit(1);
+	goto error;
     }
 
     file = FDH_FDOPEN(fdP, "r");
     if (!file) {
 	fprintf(stderr, "%s: fdopen failed\n", progname);
-	exit(1);
+	goto error;
     }
 
-    GetFileInfo(fdP->fd_fd, &size, &ctime, &atime, &mtime);
+    if (GetFileInfo(fdP->fd_fd, &size, &ctime, &atime, &mtime) != 0) {
+	goto error;
+    }
     if (InodeTimes) {
 	printf("ichanged : %s\nimodified: %s\niaccessed: %s\n\n", ctime,
 	       mtime, atime);
@@ -983,8 +986,14 @@ HandleVnodes(Volume * vp, VnodeClass class)
 		       bitNumberToVnodeNumber(vnodeIndex, class), ino, vp);
 	}
     }
-    STREAM_CLOSE(file);
-    FDH_CLOSE(fdP);
+
+  error:
+    if (file) {
+	STREAM_CLOSE(file);
+    }
+    if (fdP) {
+	FDH_CLOSE(fdP);
+    }
 }
 
 void
