@@ -38,6 +38,7 @@
 #define FLAG_OFF    0
 #define FIRST_OFF   1
 #define SECOND_OFF  2
+#define SUGAR_OFF   3
 #define FOURTH_OFF  4
 #define FIFTH_OFF   5
 #define PERHAPS_OFF 6
@@ -67,7 +68,7 @@ main(int argc, char **argv)
     int retval;
     char *retstring = NULL;
 
-    plan(79);
+    plan(85);
 
     initialize_CMD_error_table();
 
@@ -152,6 +153,19 @@ main(int argc, char **argv)
     is_int(CMD_UNKNOWNSWITCH, code, "ambiguous abbreviations correctly fail");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(CMD_UNKNOWNSWITCH, code, "and fail with cmd_Parse too");
+    cmd_FreeArgv(tv);
+
+    /* Check that paramaters with abbreviation disabled don't make things
+     * ambiguous */
+    cmd_AddParmAtOffset(opts, "-sugar", CMD_SINGLE, CMD_OPTIONAL | CMD_NOABBRV,
+			"sugar with that", SUGAR_OFF);
+    code = cmd_ParseLine("-fi foo -s bar -flag", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Dispatch(tc, tv);
+    is_int(0, code, "disabling specific abbreviations succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "and works with cmd_Parse into the bargain");
+    cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
     /* Disable positional commands */

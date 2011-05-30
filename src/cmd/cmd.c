@@ -101,8 +101,11 @@ FindType(struct cmd_syndesc *as, char *aname)
 	    alias = alias->next;
 	}
 
-	/* A hidden option must be a full match (no best matches) */
-	if (as->parms[i].flags & CMD_HIDE || !enableAbbreviation)
+	/* A hidden option, or one which cannot be abbreviated,
+	 * must be a full match (no best matches) */
+	if (as->parms[i].flags & CMD_HIDE ||
+	    as->parms[i].flags & CMD_NOABBRV ||
+	    !enableAbbreviation)
 	    continue;
 
 	if (strncmp(as->parms[i].name, aname, cmdlen) == 0) {

@@ -45,6 +45,7 @@ struct cmd_parmdesc {
 #define	CMD_EXPANDS	    2	/* if list, try to eat tokens through eoline, instead of just 1 */
 #define CMD_HIDE            4	/* A hidden option */
 #define	CMD_PROCESSED	    8
+#define CMD_NOABBRV	   16   /* Abbreviation not supported */
 
 struct cmd_syndesc {
     struct cmd_syndesc *next;	/* next one in system list */
