@@ -22,6 +22,7 @@ LIBS=\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libafscom_err.a \
+	$(LIB_roken) \
 	${XLIBS}
 
 OBJS_afsdump_scan    = afsdump_scan.o repair.o
@@ -58,7 +59,7 @@ null-search: libxfiles.a libdumpscan.a null-search.c
 	$(AFS_LDRULE) null-search.c $(LIBS)
 
 dumptool: dumptool.c
-	$(AFS_LDRULE) dumptool dumptool.c
+	$(AFS_LDRULE) dumptool.c
 
 libxfiles.a: $(OBJS_libxfiles.a)
 	-rm -f libxfiles.a
