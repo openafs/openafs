@@ -74,8 +74,8 @@ extern int cmd_CreateAlias(struct cmd_syndesc *as, char *aname);
 extern int cmd_Seek(struct cmd_syndesc *as, int apos);
 extern int cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
 		       afs_int32 aflags, char *ahelp);
-extern int cmd_AddParmAtOffset(struct cmd_syndesc *as, char *name, int atype,
-		              afs_int32 aflags, char *ahelp, int ref);
+extern int cmd_AddParmAtOffset(struct cmd_syndesc *as, int ref, char *name,
+			       int atype, afs_int32 aflags, char *ahelp);
 extern int cmd_AddParmAlias(struct cmd_syndesc *as, int pos, char *alias);
 extern int cmd_Dispatch(int argc, char **argv);
 extern int cmd_FreeArgv(char **argv);

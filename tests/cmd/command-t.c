@@ -187,10 +187,10 @@ main(int argc, char **argv)
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
     /* Try adding a couple of parameters at specific positions */
-    cmd_AddParmAtOffset(opts, "-fifth", CMD_SINGLE, CMD_OPTIONAL,
-		       "fifth option", FIFTH_OFF);
-    cmd_AddParmAtOffset(opts, "-fourth", CMD_SINGLE, CMD_OPTIONAL,
-		       "fourth option", FOURTH_OFF);
+    cmd_AddParmAtOffset(opts, FIFTH_OFF, "-fifth", CMD_SINGLE, CMD_OPTIONAL,
+		       "fifth option");
+    cmd_AddParmAtOffset(opts, FOURTH_OFF, "-fourth", CMD_SINGLE, CMD_OPTIONAL,
+		       "fourth option" );
     code = cmd_ParseLine("-first a -fourth b -fifth c", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);

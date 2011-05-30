@@ -529,8 +529,8 @@ cmd_Seek(struct cmd_syndesc *as, int apos)
 }
 
 int
-cmd_AddParmAtOffset(struct cmd_syndesc *as, char *aname, int atype,
-		    afs_int32 aflags, char *ahelp, int ref)
+cmd_AddParmAtOffset(struct cmd_syndesc *as, int ref, char *aname, int atype,
+		    afs_int32 aflags, char *ahelp)
 {
     struct cmd_parmdesc *tp;
 
@@ -566,7 +566,7 @@ cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
     if (as->nParms >= CMD_MAXPARMS)
 	return CMD_EXCESSPARMS;
 
-    return cmd_AddParmAtOffset(as, aname, atype, aflags, ahelp, as->nParms++);
+    return cmd_AddParmAtOffset(as, as->nParms++, aname, atype, aflags, ahelp);
 }
 
 int
