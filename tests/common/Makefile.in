@@ -1,0 +1,12 @@
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+MODULE_CFLAGS=-I$(srcdir)/..
+
+all check test tests:	config.o
+
+clean:
+	rm -f *.o

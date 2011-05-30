@@ -68,7 +68,7 @@ unlinkConfigFile(char *dirname, char *filename) {
  */
 
 char *
-buildTestConfig(void) {
+afstest_BuildTestConfig(void) {
     char *dir = NULL;
     FILE *file;
 
@@ -102,7 +102,7 @@ fail:
  */
 
 void
-unlinkTestConfig(char *dir)
+afstest_UnlinkTestConfig(char *dir)
 {
     unlinkConfigFile(dir, "KeyFile");
     unlinkConfigFile(dir, "CellServDB");

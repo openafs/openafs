@@ -6,7 +6,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 TESTS = authcon-t superuser-t keys-t
 
-MODULE_CFLAGS=-I$(srcdir)/..
+MODULE_CFLAGS=-I$(srcdir)/.. -I$(srcdir)/../common/
 
 all check test tests: $(TESTS)
 
@@ -17,17 +17,17 @@ MODULE_LIBS = 	../tap/libtap.a \
 		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
 		$(XLIBS)
 
-authcon-t: authcon-t.o common.o
-	$(AFS_LDRULE) authcon-t.o common.o \
+authcon-t: authcon-t.o ../common/config.o
+	$(AFS_LDRULE) authcon-t.o ../common/config.o \
 		$(MODULE_LIBS)
 
-superuser-t: superuser-t.o common.o test.cs.o test.ss.o test.xdr.o
-	$(AFS_LDRULE) superuser-t.o common.o \
+superuser-t: superuser-t.o ../common/config.o test.cs.o test.ss.o test.xdr.o
+	$(AFS_LDRULE) superuser-t.o ../common/config.o \
 		test.cs.o test.ss.o test.xdr.o \
 		$(MODULE_LIBS)
 
-keys-t: keys-t.o common.o
-	$(AFS_LDRULE) keys-t.o common.o $(MODULE_LIBS)
+keys-t: keys-t.o ../common/config.o
+	$(AFS_LDRULE) keys-t.o ../common/config.o $(MODULE_LIBS)
 
 writekeyfile: writekeyfile.o
 	$(AFS_LDRULE) writekeyfile.o $(MODULE_LIBS)
@@ -44,7 +44,7 @@ test.xdr.c: test.xg
 test.h: test.xg
 	$(RXGEN) -A -x -h -o $@ $(srcdir)/test.xg
 
-superuser-t.o: test.h common.h
+superuser-t.o: test.h
 
 clean:
 	rm -f *.o *.cs.c *.ss.c *.xdr.c test.h \

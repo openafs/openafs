@@ -22,5 +22,5 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern char *buildTestConfig(void);
-extern void unlinkTestConfig(char *);
+extern char *afstest_BuildTestConfig(void);
+extern void afstest_UnlinkTestConfig(char *);

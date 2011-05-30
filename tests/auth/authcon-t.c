@@ -51,7 +51,7 @@ main(int argc, char **argv)
     struct afsconf_typedKey *key;
 
     plan(9);
-    dirname = buildTestConfig();
+    dirname = afstest_BuildTestConfig();
 
     dir = afsconf_Open(dirname);
     if (dir == NULL) {

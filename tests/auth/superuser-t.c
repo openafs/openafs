@@ -457,7 +457,7 @@ int main(int argc, char **argv)
     /* Otherwise, do the basic configuration, then start the client and
      * server */
 
-    dirname = buildTestConfig();
+    dirname = afstest_BuildTestConfig();
 
     dir = afsconf_Open(dirname);
     if (dir == NULL) {

@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 
     /* Create a temporary afs configuration directory */
 
-    dirname = buildTestConfig();
+    dirname = afstest_BuildTestConfig();
 
     if (asprintf(&keyfile, "%s/KeyFile", dirname) == -1)
 	goto out;
@@ -557,12 +557,12 @@ int main(int argc, char **argv)
 
     afsconf_Close(dir);
 
-    unlinkTestConfig(dirname);
+    afstest_UnlinkTestConfig(dirname);
     free(dirname);
     free(keyfile);
 
     /* Start a new test configuration */
-    dirname = buildTestConfig();
+    dirname = afstest_BuildTestConfig();
     dir = afsconf_Open(dirname);
     ok(dir != NULL, "Sucessfully opened brand new config directory");
     if (dir == NULL)
@@ -583,7 +583,7 @@ int main(int argc, char **argv)
        " ... with the right key");
 
 out:
-    unlinkTestConfig(dirname);
+    afstest_UnlinkTestConfig(dirname);
 
     return 0;
 }
