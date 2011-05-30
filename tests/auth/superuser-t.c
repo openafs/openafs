@@ -38,6 +38,7 @@
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 
+#define HC_DEPRECATED
 #include <rx/rxkad.h>
 #include <rx/rx_identity.h>
 
@@ -436,7 +437,6 @@ int main(int argc, char **argv)
     struct afsconf_dir *dir;
     char *dirname;
     int serverPid, clientPid, waited, stat;
-    char keymaterial[]="\x19\x17\xff\xe6\xbb\x77\x2e\xfc";
     int code;
 
     /* Start the client and the server if requested */
@@ -465,10 +465,7 @@ int main(int argc, char **argv)
 	exit(1);
     }
 
-    DES_set_odd_parity((DES_cblock *)keymaterial);
-
-    /* Add a key to it so we can use it for connection tests */
-    code = afsconf_AddKey(dir, 1, keymaterial, 1);
+    code = afstest_AddDESKeyFile(dir);
     if (code) {
 	afs_com_err("superuser-t", code, "while adding new key\n");
 	exit(1);

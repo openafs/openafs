@@ -24,3 +24,6 @@
 
 extern char *afstest_BuildTestConfig(void);
 extern void afstest_UnlinkTestConfig(char *);
+
+struct afsconf_dir;
+extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);

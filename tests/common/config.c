@@ -30,7 +30,10 @@
 #include <afs/param.h>
 #include <roken.h>
 
+#include <afs/cellconfig.h>
 #include <afs/afsutil.h>
+
+#include <hcrypto/des.h>
 
 #include "common.h"
 
@@ -109,4 +112,15 @@ afstest_UnlinkTestConfig(char *dir)
     unlinkConfigFile(dir, "ThisCell");
     unlinkConfigFile(dir, "UserList");
     rmdir(dir);
+}
+
+int
+afstest_AddDESKeyFile(struct afsconf_dir *dir)
+{
+    char keymaterial[]="\x19\x17\xff\xe6\xbb\x77\x2e\xfc";
+
+    /* Make sure that it is actually a valid key */
+    DES_set_odd_parity((DES_cblock *)keymaterial);
+
+    return afsconf_AddKey(dir, 1, keymaterial, 1);
 }
