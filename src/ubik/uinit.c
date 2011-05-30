@@ -47,7 +47,6 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
     struct rx_securityClass *sc;
     /* This must change if VLDB_MAXSERVERS becomes larger than MAXSERVERS */
     static struct rx_connection *serverconns[MAXSERVERS];
-    const char *confdir;
 
     code = rx_Init(0);
     if (code) {
@@ -59,20 +58,21 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
     secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
     if (sauth) {
 	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
-	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+	confDir = AFSDIR_SERVER_ETC_DIRPATH;
     } else {
-	confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+	if (confDir == NULL)
+	    confDir = AFSDIR_CLIENT_ETC_DIRPATH;
     }
 
     if (noAuthFlag) {
 	secFlags |= AFSCONF_SECOPTS_NOAUTH;
     }
 
-    tdir = afsconf_Open(confdir);
+    tdir = afsconf_Open(confDir);
     if (!tdir) {
 	fprintf(stderr,
 		"%s: Could not process files in configuration directory (%s).\n",
-		funcName, confdir);
+		funcName, confDir);
 	return -1;
     }
 
@@ -83,7 +83,7 @@ ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 s
     if (code) {
 	afsconf_Close(tdir);
 	fprintf(stderr, "%s: can't find cell %s's hosts in %s/%s\n",
-		funcName, cellName, confdir, AFSDIR_CELLSERVDB_FILE);
+		funcName, cellName, confDir, AFSDIR_CELLSERVDB_FILE);
 	return -1;
     }
     code = afsconf_PickClientSecObj(tdir, secFlags, &info, cellName, &sc,
