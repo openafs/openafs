@@ -78,6 +78,7 @@ cmd_AddParm(ts, "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
 cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
 cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
 cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
+cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location"); \
 
 #define ERROR_EXIT(code) do { \
     error = (code); \
@@ -5822,6 +5823,10 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 #endif /* AFS_NT40_ENV */
          )
 	vsu_SetCrypt(1);
+
+    if (as->parms[18].items)   /* -config flag set */
+	confdir = as->parms[18].items->data;
+
     if ((code =
 	 vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
 			&cstruct, UV_SetSecurity))) {
@@ -5838,6 +5843,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	noresolve = 1;
     else
 	noresolve = 0;
+
     return 0;
 }
 

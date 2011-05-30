@@ -164,6 +164,11 @@ defined in the server machine's local F</usr/afs/etc/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell.
 
+=item B<-config> <I<config directory>>
+
+The location of the directory to use to obtain configuration information,
+including the CellServDB. This is primarily provided for testing purposes.
+
 =item B<-help>
 
 Prints a command's online help message on the standard output stream. Do
