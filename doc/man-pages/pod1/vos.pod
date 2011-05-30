@@ -133,7 +133,7 @@ Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
 =head1 OPTIONS
 
 The following arguments and flags are available on many commands in the
-B<bos> suite. The reference page for each command also lists them, but
+B<vos> suite. The reference page for each command also lists them, but
 they are described here in greater detail.
 
 =over 4
