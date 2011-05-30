@@ -5295,9 +5295,12 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
     afsUUID m_uuid, askuuid;
     afs_int32 m_nentries;
 
-    memset(&m_attrs, 0, sizeof(struct ListAddrByAttributes));
-    m_attrs.Mask = VLADDR_INDEX;
+    if (as->parms[0].items && as->parms[1].items) {
+        fprintf(STDERR, "vos: Can't use the -uuid and -host flags together\n");
+        exit(-1);
+    }
 
+    memset(&m_attrs, 0, sizeof(struct ListAddrByAttributes));
     memset(&askuuid, 0, sizeof(afsUUID));
     if (as->parms[0].items) {
 	/* -uuid */
@@ -5308,8 +5311,7 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
 	}
 	m_attrs.Mask = VLADDR_UUID;
 	m_attrs.uuid = askuuid;
-    }
-    if (as->parms[1].items) {
+    } else if (as->parms[1].items) {
 	/* -host */
 	struct hostent *he;
 	afs_uint32 saddr;
@@ -5322,7 +5324,11 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
 	memcpy(&saddr, he->h_addr, 4);
 	m_attrs.Mask = VLADDR_IPADDR;
 	m_attrs.ipaddr = ntohl(saddr);
+    } else {
+        /* by index */
+        m_attrs.Mask = VLADDR_INDEX;
     }
+
     if (as->parms[2].items) {
 	printuuid = 1;
     }
@@ -5339,48 +5345,44 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
 	goto out;
     }
 
-    m_nentries = 0;
-    i = 1;
-    while (1) {
-	m_attrs.index = i;
+    for (i = 1, m_nentries = 0; nentries; i++) {
+        m_attrs.index = i;
 
-	xdr_free((xdrproc_t)xdr_bulkaddrs, &m_addrs); /* reset addr list */
-	vcode =
-	    ubik_VL_GetAddrsU(cstruct, UBIK_CALL_NEW, &m_attrs, &m_uuid,
-			      &m_uniq, &m_nentries, &m_addrs);
+        xdr_free((xdrproc_t)xdr_bulkaddrs, &m_addrs); /* reset addr list */
+        vcode =
+            ubik_VL_GetAddrsU(cstruct, UBIK_CALL_NEW, &m_attrs, &m_uuid,
+                              &m_uniq, &m_nentries, &m_addrs);
+        switch (vcode) {
+        case 0: /* success */
+            print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid);
+            nentries--;
+            break;
 
-	if (vcode == VL_NOENT) {
-  	    if (m_attrs.Mask == VLADDR_UUID) {
-	        fprintf(STDERR, "vos: no entry for UUID '%s' found in VLDB\n",
-			as->parms[0].items->data);
-		exit(-1);
-	    } else if (m_attrs.Mask == VLADDR_IPADDR) {
-	        fprintf(STDERR, "vos: no entry for host '%s' [0x%08x] found in VLDB\n",
-			as->parms[1].items->data, m_attrs.ipaddr);
-		exit(-1);
-	    } else {
-	        i++;
-		nentries++;
-		continue;
-	    }
-	}
+        case VL_NOENT:
+            if (m_attrs.Mask == VLADDR_UUID) {
+                fprintf(STDERR, "vos: no entry for UUID '%s' found in VLDB\n",
+                        as->parms[0].items->data);
+                exit(-1);
+            } else if (m_attrs.Mask == VLADDR_IPADDR) {
+                fprintf(STDERR, "vos: no entry for host '%s' [0x%08x] found in VLDB\n",
+                        as->parms[1].items->data, m_attrs.ipaddr);
+                exit(-1);
+            }
+            continue;
 
-	if (vcode == VL_INDEXERANGE) {
-	    vcode = 0; /* not an error, just means we're done */
-	    goto out;
-	}
+        case VL_INDEXERANGE:
+            vcode = 0; /* not an error, just means we're done */
+            goto out;
 
-	if (vcode) {
-	    fprintf(STDERR, "vos: could not list the server addresses\n");
-	    PrintError("", vcode);
-	    goto out;
-	}
+        default: /* any other error */
+            fprintf(STDERR, "vos: could not list the server addresses\n");
+            PrintError("", vcode);
+            goto out;
+        }
 
-	print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid);
-	i++;
-
-	if ((as->parms[1].items) || (as->parms[0].items) || (i > nentries))
-	    goto out;
+        /* if -uuid or -host, only list one response */
+        if (as->parms[1].items || as->parms[0].items)
+            break;
     }
 
 out:
