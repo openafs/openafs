@@ -74,6 +74,9 @@ char *
 afstest_BuildTestConfig(void) {
     char *dir = NULL;
     FILE *file;
+    struct hostent *host;
+    char hostname[255];
+    struct in_addr iaddr;
 
     if (asprintf(&dir, "%s/afs_XXXXXX", gettmpdir()) == -1)
 	goto fail;
@@ -81,10 +84,20 @@ afstest_BuildTestConfig(void) {
     if (mkdtemp(dir) == NULL)
 	goto fail;
 
-    /* Create a CellServDB */
+    /* Work out which IP address to use in our CellServDB. We figure this out
+     * according to the IP address which ubik is most likely to pick for one of
+     * our db servers */
+
+    gethostname(hostname, sizeof(hostname));
+    host = gethostbyname(hostname);
+    if (!host)
+	return NULL;
+
+    memcpy(&iaddr, host->h_addr, 4);
+
     file = openConfigFile(dir, "CellServDB");
     fprintf(file, ">example.org # An example cell\n");
-    fprintf(file, "127.0.0.1 #test.example.org\n");
+    fprintf(file, "%s #test.example.org\n", inet_ntoa(iaddr));
     fclose(file);
 
     /* Create a ThisCell file */
