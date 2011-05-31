@@ -5259,14 +5259,8 @@ static void
 print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 	    int print)
 {
-    afs_int32 vcode, m_uniq=0;
-    afs_int32 i, j;
+    int i;
     afs_uint32 *addrp;
-    bulkaddrs m_addrs;
-    ListAddrByAttributes m_attrs;
-    afs_int32 m_nentries;
-    afs_uint32 *m_addrp;
-    afs_int32 base, index;
     char buf[1024];
 
     if (print) {
@@ -5277,56 +5271,6 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
     /* print out the list of all the server */
     addrp = (afs_uint32 *) addrs->bulkaddrs_val;
     for (i = 0; i < nentries; i++, addrp++) {
-	/* If it is a multihomed address, then we will need to
-	 * get the addresses for this multihomed server from
-	 * the vlserver and print them.
-	 */
-	if (((*addrp & 0xff000000) == 0xff000000) && ((*addrp) & 0xffff)) {
-	    /* Get the list of multihomed fileservers */
-	    base = (*addrp >> 16) & 0xff;
-	    index = (*addrp) & 0xffff;
-
-	    if ((base >= 0) && (base <= VL_MAX_ADDREXTBLKS) && (index >= 1)
-		&& (index <= VL_MHSRV_PERBLK)) {
-		m_attrs.Mask = VLADDR_INDEX;
-		m_attrs.index = (base * VL_MHSRV_PERBLK) + index;
-		m_nentries = 0;
-		m_addrs.bulkaddrs_val = 0;
-		m_addrs.bulkaddrs_len = 0;
-		vcode =
-		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, m_uuid,
-				      &m_uniq, &m_nentries,
-				      &m_addrs);
-		if (vcode) {
-		    fprintf(STDERR,
-			    "vos: could not list the multi-homed server addresses\n");
-		    PrintError("", vcode);
-		}
-
-		/* Print the list */
-		m_addrp = (afs_uint32 *) m_addrs.bulkaddrs_val;
-		for (j = 0; j < m_nentries; j++, m_addrp++) {
-		    *m_addrp = htonl(*m_addrp);
-		    if (noresolve) {
-			char hoststr[16];
-			printf("%s ", afs_inet_ntoa_r(*m_addrp, hoststr));
-		    } else {
-			printf("%s ", hostutil_GetNameByINet(*m_addrp));
-		    }
-		}
-		if (j == 0) {
-		    printf("<unknown>\n");
-		} else {
-		    printf("\n");
-		}
-
-		continue;
-	    }
-	}
-
-	/* Otherwise, it is a non-multihomed entry and contains
-	 * the IP address of the server - print it.
-	 */
 	*addrp = htonl(*addrp);
 	if (noresolve) {
 	    char hoststr[16];
