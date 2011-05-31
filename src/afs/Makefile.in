@@ -36,8 +36,6 @@ afszcm.cat: afs_trace.msf
 			gencat --new afszcm.cat afs_trace.msf ;; \
 		*_darwin_* ) \
 			gencat -new afszcm.cat afs_trace.msf ;; \
-		i386_fbsd*) \
-			echo No gencat for ${SYS_NAME} ;; \
 		* ) \
 			gencat afszcm.cat afs_trace.msf ;; \
 	esac
