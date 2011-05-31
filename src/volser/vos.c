@@ -5357,7 +5357,6 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
     memset(&m_attrs, 0, sizeof(struct ListAddrByAttributes));
     m_attrs.Mask = VLADDR_INDEX;
 
-    memset(&m_addrs, 0, sizeof(bulkaddrs));
     memset(&askuuid, 0, sizeof(afsUUID));
     if (as->parms[0].items) {
 	/* -uuid */
@@ -5387,8 +5386,8 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
 	printuuid = 1;
     }
 
-    m_addrs.bulkaddrs_val = 0;
-    m_addrs.bulkaddrs_len = 0;
+    memset(&m_addrs, 0, sizeof(bulkaddrs));
+    memset(&vlcb, 0, sizeof(struct VLCallBack));
 
     vcode =
 	ubik_VL_GetAddrs(cstruct, UBIK_CALL_NEW, 0, 0, &vlcb, &nentries,
@@ -5396,16 +5395,15 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
     if (vcode) {
 	fprintf(STDERR, "vos: could not list the server addresses\n");
 	PrintError("", vcode);
-	return (vcode);
+	goto out;
     }
 
     m_nentries = 0;
-    m_addrs.bulkaddrs_val = 0;
-    m_addrs.bulkaddrs_len = 0;
     i = 1;
     while (1) {
 	m_attrs.index = i;
 
+	xdr_free((xdrproc_t)xdr_bulkaddrs, &m_addrs); /* reset addr list */
 	vcode =
 	    ubik_VL_GetAddrsU(cstruct, UBIK_CALL_NEW, &m_attrs, &m_uuid,
 			      &m_uniq, &m_nentries, &m_addrs);
@@ -5427,23 +5425,26 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
 	}
 
 	if (vcode == VL_INDEXERANGE) {
-	    break;
+	    vcode = 0; /* not an error, just means we're done */
+	    goto out;
 	}
 
 	if (vcode) {
 	    fprintf(STDERR, "vos: could not list the server addresses\n");
 	    PrintError("", vcode);
-	    return (vcode);
+	    goto out;
 	}
 
 	print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid);
 	i++;
 
 	if ((as->parms[1].items) || (as->parms[0].items) || (i > nentries))
-	    break;
+	    goto out;
     }
 
-    return 0;
+out:
+    xdr_free((xdrproc_t)xdr_bulkaddrs, &m_addrs);
+    return vcode;
 }
 
 
