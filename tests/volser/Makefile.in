@@ -1,0 +1,32 @@
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+TESTS = vos-t
+
+MODULE_CFLAGS=-I$(srcdir)/.. -I$(srcdir)/../common/
+
+all check test tests: $(TESTS)
+
+# The direct reference of tviced libraries here is a colossal hack, but
+# we're just not building pthreaded versions of the vldb interface at the moment.
+# Soon, I hope ...
+
+MODULE_LIBS = 	../tap/libtap.a \
+		$(abs_top_builddir)/src/tviced/vldbint.cs.o \
+		$(abs_top_builddir)/src/tviced/vldbint.xdr.o \
+		$(abs_top_builddir)/lib/libafsauthent.a \
+		$(abs_top_builddir)/lib/libafsrpc.a \
+		$(abs_top_builddir)/lib/librxgk.a \
+		$(abs_top_builddir)/lib/libafshcrypto.a \
+		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
+		$(XLIBS)
+
+vos-t: vos-t.o ../common/config.o ../common/servers.o
+	$(AFS_LDRULE) vos-t.o ../common/config.o ../common/servers.o \
+		$(MODULE_LIBS)
+
+clean:
+	rm -f *.o $(TESTS)

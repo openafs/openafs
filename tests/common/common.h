@@ -22,8 +22,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* config.c */
 extern char *afstest_BuildTestConfig(void);
 extern void afstest_UnlinkTestConfig(char *);
 
 struct afsconf_dir;
 extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
+
+/* servers.c */
+
+extern int afstest_StartVLServer(char *dirname, pid_t *serverPid);
+extern int afstest_StopVLServer(pid_t serverPid);

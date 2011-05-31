@@ -250,7 +250,8 @@ tests/cmd/Makefile \
 tests/common/Makefile \
 tests/rpctestlib/Makefile \
 tests/tap/Makefile \
-tests/util/Makefile,
+tests/util/Makefile \
+tests/volser/Makefile,
 
 [chmod a+x src/config/shlib-build
  chmod a+x src/config/shlib-install])

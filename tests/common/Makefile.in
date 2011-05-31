@@ -6,7 +6,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS=-I$(srcdir)/..
 
-all check test tests:	config.o
+all check test tests:	config.o servers.o
 
 clean:
 	rm -f *.o
