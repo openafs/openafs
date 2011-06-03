@@ -173,7 +173,9 @@ AFSIOOBJS=$(OUT)\afsio.obj
 $(AFSIOOBJS): $(AFSROOT)\src\venus\afsio.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
-SLOBJS=$(OUT)\symlink.obj $(OUT)\fs_utils.obj
+SLOBJS= $(OUT)\symlink.obj \
+        $(OUT)\fs_utils.obj \
+        $(OUT)\cm_nls.obj
 
 ILIBDIR = $(DESTDIR)\lib
 

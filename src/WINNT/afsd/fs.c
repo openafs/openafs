@@ -50,8 +50,9 @@
 #define CELL_MAXNAMELEN		256
 #define MAXHOSTCHARS		64
 
+static char pn[] = "fs";
+
 static char space[AFS_PIOCTL_MAXSIZE];
-static char tspace[1024];
 
 static struct ubik_client *uclient;
 
@@ -77,7 +78,6 @@ static int MemDumpCmd(struct cmd_syndesc *asp, void *arock);
 static int CSCPolicyCmd(struct cmd_syndesc *asp, void *arock);
 static int MiniDumpCmd(struct cmd_syndesc *asp, void *arock);
 
-static char pn[] = "fs";
 static int rxInitDone = 0;
 
 /*
@@ -253,77 +253,6 @@ PRights(afs_int32 arights, int dfs)
             printf("H");
     }
     return 0;
-}
-
-/* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
-static int
-InAFS(char *apath)
-{
-    struct ViceIoctl blob;
-    cm_ioctlQueryOptions_t options;
-    cm_fid_t fid;
-    afs_int32 code;
-
-    memset(&options, 0, sizeof(options));
-    options.size = sizeof(options);
-    options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
-    options.literal = 1;
-    blob.in_size = options.size;    /* no variable length data */
-    blob.in = &options;
-    blob.out_size = sizeof(cm_fid_t);
-    blob.out = (char *) &fid;
-
-    code = pioctl_utf8(apath, VIOCGETFID, &blob, 1);
-    if (code) {
-	if ((errno == EINVAL) || (errno == ENOENT))
-            return 0;
-    }
-    return 1;
-}
-
-static int
-IsFreelanceRoot(char *apath)
-{
-    struct ViceIoctl blob;
-    afs_int32 code;
-
-    blob.in_size = 0;
-    blob.out_size = AFS_PIOCTL_MAXSIZE;
-    blob.out = space;
-
-    code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code == 0) {
-        return !cm_strnicmp_utf8N("Freelance.Local.Root",space, blob.out_size);
-    }
-    return 1;   /* assume it is because it is more restrictive that way */
-}
-
-/* return a static pointer to a buffer */
-static char *
-Parent(char *apath)
-{
-    char *tp;
-    if( FAILED(StringCbCopy(tspace, sizeof(tspace), apath))) {
-        fprintf (stderr, "tspace - not enough space");
-        exit(1);
-    }
-    tp = strrchr(tspace, '\\');
-    if (tp) {
-        if (tp - tspace > 2 &&
-            tspace[1] == ':' &&
-            &tspace[2] == tp)
-	    *(tp+1) = 0;	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k:" */
-        else
-            *tp = 0;
-    }
-    else {
-	fs_ExtractDriveLetter(apath, tspace);
-	if( FAILED(StringCbCat(tspace, sizeof(tspace), "."))) {
-	    fprintf (stderr, "tspace - not enough space");
-	    exit(1);
-	}
-    }
-    return tspace;
 }
 
                                 /* added relative add resp. delete    */
@@ -871,177 +800,6 @@ static DWORD IsFreelance(void)
     return enabled;
 }
 
-#define NETBIOSNAMESZ 1024
-static const char * NetbiosName(void)
-{
-    static char buffer[NETBIOSNAMESZ] = "AFS";
-    HKEY  parmKey;
-    DWORD code;
-    DWORD dummyLen;
-    DWORD enabled = 0;
-
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
-                         0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
-    if (code == ERROR_SUCCESS) {
-        dummyLen = sizeof(buffer);
-        code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
-			       buffer, &dummyLen);
-        RegCloseKey (parmKey);
-    } else {
-	if( FAILED(StringCbCopy(buffer, sizeof(buffer), "AFS"))) {
-	    fprintf (stderr, "buffer - not enough space");
-            exit(1);
-	}
-    }
-    return buffer;
-}
-
-#define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
-
-static BOOL IsAdmin (void)
-{
-    static BOOL fAdmin = FALSE;
-    static BOOL fTested = FALSE;
-
-    if (!fTested)
-    {
-        /* Obtain the SID for the AFS client admin group.  If the group does
-         * not exist, then assume we have AFS client admin privileges.
-         */
-        PSID psidAdmin = NULL;
-        DWORD dwSize, dwSize2;
-        char pszAdminGroup[ MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2 ];
-        char *pszRefDomain = NULL;
-        SID_NAME_USE snu = SidTypeGroup;
-
-        dwSize = sizeof(pszAdminGroup);
-
-        if (!GetComputerName(pszAdminGroup, &dwSize)) {
-            /* Can't get computer name.  We return false in this case.
-               Retain fAdmin and fTested. This shouldn't happen.*/
-            return FALSE;
-        }
-
-        dwSize = 0;
-        dwSize2 = 0;
-
-	if( FAILED(StringCbCat(pszAdminGroup, MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2,"\\"))) {
-	    fprintf (stderr, "pszAdminGroup - not enough space");
-            exit(1);
-	}
-	if( FAILED(StringCbCat(pszAdminGroup, MAX_COMPUTERNAME_LENGTH +
-	    sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2, AFSCLIENT_ADMIN_GROUPNAME))) {
-	    fprintf (stderr, "pszAdminGroup - not enough space");
-            exit(1);
-	}
-
-        LookupAccountName(NULL, pszAdminGroup, NULL, &dwSize, NULL, &dwSize2, &snu);
-        /* that should always fail. */
-
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-            /* if we can't find the group, then we allow the operation */
-            fAdmin = TRUE;
-            return TRUE;
-        }
-
-        if (dwSize == 0 || dwSize2 == 0) {
-            /* Paranoia */
-            fAdmin = TRUE;
-            return TRUE;
-        }
-
-        psidAdmin = (PSID)malloc(dwSize); memset(psidAdmin,0,dwSize);
-        assert(psidAdmin);
-        pszRefDomain = (char *)malloc(dwSize2);
-        assert(pszRefDomain);
-
-        if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
-            /* We can't lookup the group now even though we looked it up earlier.
-               Could this happen? */
-            fAdmin = TRUE;
-        } else {
-            /* Then open our current ProcessToken */
-            HANDLE hToken;
-
-            if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
-            {
-
-                if (!CheckTokenMembership(hToken, psidAdmin, &fAdmin)) {
-                    /* We'll have to allocate a chunk of memory to store the list of
-                     * groups to which this user belongs; find out how much memory
-                     * we'll need.
-                     */
-                    DWORD dwSize = 0;
-                    PTOKEN_GROUPS pGroups;
-
-                    GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
-
-                    pGroups = (PTOKEN_GROUPS)malloc(dwSize);
-                    assert(pGroups);
-
-                    /* Allocate that buffer, and read in the list of groups. */
-                    if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
-                    {
-                        /* Look through the list of group SIDs and see if any of them
-                         * matches the AFS Client Admin group SID.
-                         */
-                        size_t iGroup = 0;
-                        for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
-                        {
-                            if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
-                                fAdmin = TRUE;
-                            }
-                        }
-                    }
-
-                    if (pGroups)
-                        free(pGroups);
-                }
-
-                /* if do not have permission because we were not explicitly listed
-                 * in the Admin Client Group let's see if we are the SYSTEM account
-                 */
-                if (!fAdmin) {
-                    PTOKEN_USER pTokenUser;
-                    SID_IDENTIFIER_AUTHORITY SIDAuth = SECURITY_NT_AUTHORITY;
-                    PSID pSidLocalSystem = 0;
-                    DWORD gle;
-
-                    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
-
-                    pTokenUser = (PTOKEN_USER)malloc(dwSize);
-                    assert(pTokenUser);
-
-                    if (!GetTokenInformation(hToken, TokenUser, pTokenUser, dwSize, &dwSize))
-                        gle = GetLastError();
-
-                    if (AllocateAndInitializeSid( &SIDAuth, 1,
-                                                  SECURITY_LOCAL_SYSTEM_RID,
-                                                  0, 0, 0, 0, 0, 0, 0,
-                                                  &pSidLocalSystem))
-                    {
-                        if (EqualSid(pTokenUser->User.Sid, pSidLocalSystem)) {
-                            fAdmin = TRUE;
-                        }
-
-                        FreeSid(pSidLocalSystem);
-                    }
-
-                    if ( pTokenUser )
-                        free(pTokenUser);
-                }
-            }
-        }
-
-        free(psidAdmin);
-        free(pszRefDomain);
-
-        fTested = TRUE;
-    }
-
-    return fAdmin;
-}
-
 static int
 SetACLCmd(struct cmd_syndesc *as, void *arock)
 {
@@ -1062,7 +820,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
         clear = 0;
     plusp = !(as->parms[3].items);
     for(ti=as->parms[0].items; ti;ti=ti->next) {
-        if ( IsFreelanceRoot(ti->data) ) {
+        if ( fs_IsFreelanceRoot(ti->data) ) {
             fprintf(stderr,"%s: ACLs cannot be set on the Freelance root.afs volume.\n", pn);
             error = 1;
             continue;
@@ -1072,7 +830,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
             continue;
 	}
@@ -1185,7 +943,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
                             "\t-Tried to add non-existent user to access control list\n");
 		}
             } else {
-		Die(errno, ti->data);
+		fs_Die(errno, ti->data);
             }
             error = 1;
         }
@@ -1217,7 +975,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     blob.in = blob.out = space;
     code = pioctl_utf8(as->parms[0].items->data, VIOCGETAL, &blob, 1);
     if (code) {
-	Die(errno, as->parms[0].items->data);
+	fs_Die(errno, as->parms[0].items->data);
 	return 1;
     }
     fa = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
@@ -1234,7 +992,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
             continue;
 	}
@@ -1290,7 +1048,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
                         "%s: Invalid argument, possible reasons include:\n", pn);
 		fprintf(stderr,"\t-File not in AFS\n");
 	    } else {
-		Die(errno, ti->data);
+		fs_Die(errno, ti->data);
 	    }
             error = 1;
 	}
@@ -1416,7 +1174,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	    continue;
 	}
@@ -1460,7 +1218,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
                             "%s: Too many users on access control list or\n",
                             pn);
 		} else {
-		    Die(errno, ti->data);
+		    fs_Die(errno, ti->data);
 		}
                 error = 1;
                 continue;
@@ -1510,7 +1268,7 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	char separator;
 
-        if ( IsFreelanceRoot(ti->data) ) {
+        if ( fs_IsFreelanceRoot(ti->data) ) {
             fprintf(stderr,"%s: ACLs are not set on the Freelance root.afs volume.\n", pn);
             error = 1;
             continue;
@@ -1521,7 +1279,7 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETAL, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	    continue;
 	}
@@ -1762,37 +1520,11 @@ SetVolCmd(struct cmd_syndesc *as, void *arock) {
         }
 	code = pioctl_utf8(ti->data,VIOCSETVOLSTAT, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	}
     }
     return error;
-}
-
-/* values match cache manager File Types */
-static char *
-filetypestr(afs_uint32 type)
-{
-    char * s = "Object";
-
-    switch (type) {
-    case 1:     /* file */
-        s = "File";
-        break;
-    case 2:
-        s = "Directory";
-        break;
-    case 3:
-        s = "Symlink";
-        break;
-    case 4:
-        s = "Mountpoint";
-        break;
-    case 5:
-        s = "DfsLink";
-        break;
-    }
-    return s;
 }
 
 static int
@@ -1836,7 +1568,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -1846,7 +1578,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
         if (code || blob.out_size != sizeof(filetype)) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -1858,7 +1590,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         if (code == 0)
             cell[blob.out_size-1] = '\0';
         printf("%s %s (%u.%u.%u) contained in cell %s\n",
-                filetypestr(filetype),
+                fs_filetypestr(filetype),
                 ti->data, fid.volume, fid.vnode, fid.unique,
                 code ? "unknown-cell" : cell);
 
@@ -1905,7 +1637,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
             motd = offmsg + len + 1;
             PrintStatus(status, name, motd, offmsg);
         } else {
-            Die(errno, ti->data);
+            fs_Die(errno, ti->data);
         }
 
         errno = 0;
@@ -1925,7 +1657,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
             break;
         default:
             printf("Unknown volume state\n");
-            Die(errno, ti->data);
+            fs_Die(errno, ti->data);
         }
         printf("\n");
     }
@@ -1953,7 +1685,7 @@ ListQuotaCmd(struct cmd_syndesc *as, void *arock)
 	blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	    continue;
 	}
@@ -2003,7 +1735,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -2013,7 +1745,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
         if (code || blob.out_size != sizeof(filetype)) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	    continue;
         }
@@ -2022,13 +1754,13 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
 	memset(space, 0, sizeof(space));
 	code = pioctl_utf8(ti->data, VIOCWHEREIS, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	    continue;
 	}
         hosts = (afs_int32 *) space;
 	printf("%s %s is on host%s ",
-                filetypestr(filetype),
+                fs_filetypestr(filetype),
                 ti->data,
                 (hosts[0] && !hosts[1]) ? "": "s");
 	for(j=0; j<AFS_MAXHOSTS; j++) {
@@ -2063,7 +1795,7 @@ DiskFreeCmd(struct cmd_syndesc *as, void *arock)
 	blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	    continue;
 	}
@@ -2096,7 +1828,7 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
          * The response is VolumeStatus, volume name, offline message, and motd
          */
 	if (code || blob.out_size < sizeof(*status)) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	    continue;
 	}
@@ -2231,8 +1963,8 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	    parent_dir[last_component - true_name + 1] = 0;
 	    last_component++;   /*Skip the slash*/
 #ifdef WIN32
-	    if (!InAFS(parent_dir)) {
-		const char * nbname = NetbiosName();
+	    if (!fs_InAFS(parent_dir)) {
+		const char * nbname = fs_NetbiosName();
 		if( FAILED(StringCbLength(nbname, NETBIOSNAMESZ, &len))) {
 		    fprintf (stderr, "StringCbLength failure on nbname");
 		    exit(1);
@@ -2293,7 +2025,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	    if (errno == EINVAL) {
 		fprintf(stderr,"'%s' is not a mount point.\n", ti->data);
 	    } else {
-		Die(errno, (ti->data ? ti->data : parent_dir));
+		fs_Die(errno, (ti->data ? ti->data : parent_dir));
 	    }
 	    error = 1;
 	}
@@ -2342,10 +2074,10 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
         volName = ++tmpName;
     }
 
-    parent = Parent(as->parms[0].items->data);
-    if (!InAFS(parent)) {
+    parent = fs_GetParent(as->parms[0].items->data);
+    if (!fs_InAFS(parent)) {
 #ifdef WIN32
-	const char * nbname = NetbiosName();
+	const char * nbname = fs_NetbiosName();
 	if ( FAILED(StringCbLength(nbname, NETBIOSNAMESZ, &len))) {
 	    fprintf (stderr, "StringCbLength failure on nbname");
 	    exit(1);
@@ -2360,8 +2092,8 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 	        fprintf (stderr, "path - cannot be populated");
                 exit(1);
             }
-	    parent = Parent(path);
-	    if (!InAFS(parent)) {
+	    parent = fs_GetParent(path);
+	    if (!fs_InAFS(parent)) {
 		fprintf(stderr,"%s: mount points must be created within the AFS file system\n", pn);
 		return 1;
 	    }
@@ -2383,8 +2115,8 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
             exit(1);
 	}
     }
-    if ( IsFreelanceRoot(parent) ) {
-	if ( !IsAdmin() ) {
+    if ( fs_IsFreelanceRoot(parent) ) {
+	if ( !fs_IsAdmin() ) {
 	    fprintf(stderr,"%s: Only AFS Client Administrators may alter the Freelance root.afs volume\n", pn);
 	    return 1;
 	}
@@ -2478,7 +2210,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
         free(info.linkedCell);
 
     if (code) {
-	Die(errno, path);
+	fs_Die(errno, path);
 	return 1;
     }
     return 0;
@@ -2514,8 +2246,8 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
 	    tp++;   /* skip the slash */
 
 #ifdef WIN32
-	    if (!InAFS(tbuffer)) {
-		const char * nbname = NetbiosName();
+	    if (!fs_InAFS(tbuffer)) {
+		const char * nbname = fs_NetbiosName();
 		if( FAILED(StringCbLength(nbname, NETBIOSNAMESZ, &len))) {
 		    fprintf (stderr, "StringCbLength failure on nbname");
 		    exit(1);
@@ -2540,7 +2272,7 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
                 exit(1);
 	    }
 	    tp = ti->data;
-            fs_StripDriveLetter(tp, tp, 0);
+            fs_StripDriveLetter(tp, tp, strlen(tp) + 1);
 	}
 	blob.in = tp;
 	if( FAILED(StringCbLength(tp, AFS_PIOCTL_MAXSIZE, &len))) {
@@ -2555,13 +2287,13 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
 	    if (errno == EINVAL) {
 		fprintf(stderr,"%s: '%s' is not a mount point.\n", pn, ti->data);
             } else {
-		Die(errno, ti->data);
+		fs_Die(errno, ti->data);
 	    }
             error = 1;
 	    continue;	/* don't bother trying */
 	}
 
-        if ( IsFreelanceRoot(tbuffer) && !IsAdmin() ) {
+        if ( fs_IsFreelanceRoot(tbuffer) && !fs_IsAdmin() ) {
             fprintf(stderr,"%s: Only AFS Client Administrators may alter the Freelance root.afs volume\n", pn);
             error = 1;
             continue;   /* skip */
@@ -2576,7 +2308,7 @@ RemoveMountCmd(struct cmd_syndesc *as, void *arock) {
 	blob.in_size = (long)len+1;
 	code = pioctl_utf8(tbuffer, VIOC_AFS_DELETE_MT_PT, &blob, 0);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
             error = 1;
 	}
     }
@@ -2660,7 +2392,7 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 
     if ( checkserv.tinterval >= 0 ) {
 #ifdef WIN32
-        if ( !IsAdmin() ) {
+        if ( !fs_IsAdmin() ) {
             fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
             return EACCES;
         }
@@ -2678,7 +2410,7 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 	    printf("Must be root to change -interval\n");
 	    return code;
 	}
-	Die(errno, 0);
+	fs_Die(errno, 0);
         return 1;
     }
 #if _MSC_VER < 1400
@@ -2762,7 +2494,7 @@ MessagesCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(0, VIOC_GAG, &blob, 1);
     if (code) {
-	Die(errno, 0);
+	fs_Die(errno, 0);
         return 1;
     }
     return 0;
@@ -2778,7 +2510,7 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = 0;
     code = pioctl_utf8(0, VIOCCKBACK, &blob, 1);
     if (code) {
-	Die(errno, 0);
+	fs_Die(errno, 0);
 	return 1;
     }
     printf("All volumeID/name mappings checked.\n");
@@ -2794,7 +2526,7 @@ SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 temp;
 
 #ifdef WIN32
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -2822,7 +2554,7 @@ SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = 0;
     code = pioctl_utf8(0, VIOCSETCACHESIZE, &blob, 1);
     if (code) {
-	Die(errno, (char *) 0);
+	fs_Die(errno, (char *) 0);
         return 1;
     }
 
@@ -2844,7 +2576,7 @@ GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
     blob.out = (char *) &parms;
     code = pioctl_utf8(0, VIOCGETCACHEPARMS, &blob, 1);
     if (code || blob.out_size != sizeof(parms)) {
-	Die(errno, NULL);
+	fs_Die(errno, NULL);
         return 1;
     }
 
@@ -2891,7 +2623,7 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
 	if (code < 0) {
 	    if (errno == EDOM)
                 break;	/* done with the list */
-            Die(errno, 0);
+            fs_Die(errno, 0);
             return 1;
 	}
 	tp = space;
@@ -2970,7 +2702,7 @@ ListAliasesCmd(struct cmd_syndesc *as, void *arock)
 	if (code < 0) {
 	    if (errno == EDOM)
 		break;		/* done with the list */
-	    Die(errno, 0);
+	    fs_Die(errno, 0);
 	    return 1;
 	}
         space[blob.out_size - 1] = '\0';
@@ -3028,7 +2760,7 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(0, VIOC_CBADDR, &blob, 1);
     if (code < 0) {
-	Die(errno, 0);
+	fs_Die(errno, 0);
 	return 1;
     }
     return 0;
@@ -3046,7 +2778,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     afs_uint32 fsport = 0, vlport = 0;
     size_t destRemaining;
 
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -3061,7 +2793,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
         code = pioctl_utf8((char *) 0, VIOCNEWCELL, &blob, 1);
 
         if (code) {
-            Die(errno, (char *) 0);
+            fs_Die(errno, (char *) 0);
             return 1;
         }
 
@@ -3207,7 +2939,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     code = pioctl_utf8(NULL, VIOCNEWCELL2, &blob, 1);
 
     if (code) {
-        Die(errno, as->parms[0].items->data);
+        fs_Die(errno, as->parms[0].items->data);
         return 1;
     }
 
@@ -3254,7 +2986,7 @@ NewAliasCmd(struct cmd_syndesc *as, void *arock)
 		    "%s: cell name `%s' in use by an existing cell.\n", pn,
 		    aliasName);
 	} else {
-	    Die(errno, 0);
+	    fs_Die(errno, 0);
 	}
 	return 1;
     }
@@ -3298,7 +3030,7 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -3308,7 +3040,7 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
         if (code || blob.out_size != sizeof(filetype)) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -3320,13 +3052,13 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 	    if (errno == ENOENT)
 		fprintf(stderr,"%s: no such cell as '%s'\n", pn, ti->data);
 	    else
-		Die(errno, ti->data);
+		fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
 	}
         cell[CELL_MAXNAMELEN - 1] = '\0';
         printf("%s %s lives in cell '%s'\n",
-                filetypestr(filetype),
+                fs_filetypestr(filetype),
                 ti->data, cell);
     }
     return error;
@@ -3346,7 +3078,7 @@ WSCellCmd(struct cmd_syndesc *as, void *arock)
     code = pioctl_utf8(NULL, VIOC_GET_WS_CELL, &blob, 1);
 
     if (code) {
-	Die(errno, NULL);
+	fs_Die(errno, NULL);
         return 1;
     }
     space[AFS_PIOCTL_MAXSIZE - 1] = '\0';
@@ -3416,7 +3148,7 @@ MonitorCmd(struct cmd_syndesc *as, void *arock)
     blob.out = (char *) &hostAddr;
     code = pioctl_utf8(0, VIOC_AFS_MARINER_HOST, &blob, 1);
     if (code || blob.out_size != sizeof(afs_int32)) {
-	Die(errno, 0);
+	fs_Die(errno, 0);
 	return 1;
     }
     if (setp) {
@@ -3449,7 +3181,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     ti = as->parms[0].items;
     if (ti) {
 #ifdef WIN32
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -3499,7 +3231,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
-        Die(errno, 0);
+        fs_Die(errno, 0);
         return 1;
     }
     if (setp) {
@@ -3547,7 +3279,7 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     int exportcall, pwsync = 0, smounts = 0;
 
 #ifdef WIN32
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -3621,7 +3353,7 @@ static int ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	    fprintf(stderr,
                     "Sorry, the %s-exporter type is currently not supported on this AFS client\n", exported_types[type]);
 	} else {
-	    Die(errno, 0);
+	    fs_Die(errno, 0);
 	}
         return 1;
     } else {
@@ -3678,7 +3410,7 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
 	    if (errno == ENOENT)
 		fprintf(stderr,"%s: the cell named '%s' does not exist\n", pn, info.name);
 	    else
-		Die(errno, info.name);
+		fs_Die(errno, info.name);
 	    error = 1;
             continue;
 	}
@@ -3724,7 +3456,7 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
     args.junk = 0;
 
 #ifdef WIN32
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -3758,7 +3490,7 @@ static int SetCellCmd(struct cmd_syndesc *as, void *arock)
 	blob.out = (caddr_t) 0;
 	code = pioctl_utf8(0, VIOC_SETCELLSTATUS, &blob, 1);
 	if (code) {
-	    Die(errno, info.name);      /* XXX added cell name to Die() call */
+	    fs_Die(errno, info.name);      /* XXX added cell name to fs_Die() call */
             error = 1;
 	}
     }
@@ -4010,7 +3742,7 @@ SetPrefCmd(struct cmd_syndesc *as, void * arock)
     gblob.out = space;
     gblob.out_size = AFS_PIOCTL_MAXSIZE;
 
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4022,7 +3754,7 @@ SetPrefCmd(struct cmd_syndesc *as, void * arock)
         if (debug) fprintf(stderr,"opening file %s\n",ti->data);
         if (!(infd = fopen(ti->data,"r" ))) {
             code = errno;
-            Die(errno,ti->data);
+            fs_Die(errno,ti->data);
         } else {
 #if _MSC_VER < 1400
             while ( fscanf(infd, "%79s%ld", name, &rank) != EOF) {
@@ -4090,7 +3822,7 @@ SetPrefCmd(struct cmd_syndesc *as, void * arock)
     }
 
     if (code)
-        Die(errno,0);
+        fs_Die(errno,0);
 
     return code;
 }
@@ -4211,7 +3943,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
     }
 
     if (error > 0)
-	Die(error, 0);
+	fs_Die(error, 0);
 
     return error ? 1 : 0;
 }
@@ -4238,7 +3970,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
     if (ti) {
         if (debug) fprintf(stderr,"opening file %s\n",ti->data);
         if (!(outfd = freopen(ti->data,"w",stdout))) {
-            Die(errno,ti->data);
+            fs_Die(errno,ti->data);
             return errno;
         }
     }
@@ -4264,7 +3996,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
         code = pioctl_utf8(0, VIOC_GETSPREFS, &blob, 1);
         if (code){
             perror("getserverprefs pioctl");
-            Die (errno,0);
+            fs_Die (errno,0);
         }
         else {
             out = (struct cm_SPrefInfo *) blob.out;
@@ -4385,7 +4117,7 @@ SmbUnicodeCmd(struct cmd_syndesc * asp, void * arock)
         inValue = 2;
     }
 
-    if (inValue != 0 && !IsAdmin()) {
+    if (inValue != 0 && !fs_IsAdmin()) {
         fprintf (stderr, "Permission denied: Requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4397,7 +4129,7 @@ SmbUnicodeCmd(struct cmd_syndesc * asp, void * arock)
 
     code = pioctl_utf8(NULL, VIOC_UNICODECTL, &blob, 1);
     if (code) {
-        Die(errno, NULL);
+        fs_Die(errno, NULL);
         return code;
     }
 
@@ -4448,7 +4180,7 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -4458,7 +4190,7 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
         if (code || blob.out_size != sizeof(filetype)) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -4469,7 +4201,7 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
         if (code == 0)
             cell[CELL_MAXNAMELEN - 1] = '\0';
         printf("%s %s (%u.%u.%u) contained in cell %s\n",
-                filetypestr(filetype),
+                fs_filetypestr(filetype),
                 ti->data, fid.volume, fid.vnode, fid.unique,
                 code ? "unknown-cell" : cell);
     }
@@ -4487,7 +4219,7 @@ UuidCmd(struct cmd_syndesc *asp, void *arock)
 
     if (asp->parms[0].items) {
 #ifdef WIN32
-        if ( !IsAdmin() ) {
+        if ( !fs_IsAdmin() ) {
             fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
             return EACCES;
         }
@@ -4509,7 +4241,7 @@ UuidCmd(struct cmd_syndesc *asp, void *arock)
 
     code = pioctl_utf8(NULL, VIOC_UUIDCTL, &blob, 1);
     if (code || blob.out_size != sizeof(outValue)) {
-        Die(errno, NULL);
+        fs_Die(errno, NULL);
         return code;
     }
 
@@ -4534,7 +4266,7 @@ TraceCmd(struct cmd_syndesc *asp, void *arock)
     long outValue;
 
 #ifdef WIN32
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4568,7 +4300,7 @@ TraceCmd(struct cmd_syndesc *asp, void *arock)
 
     code = pioctl_utf8(NULL, VIOC_TRACECTL, &blob, 1);
     if (code || blob.out_size != sizeof(long)) {
-        Die(errno, NULL);
+        fs_Die(errno, NULL);
         return code;
     }
 
@@ -4600,7 +4332,7 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
     int error = 0;
 
 #ifdef WIN32
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4657,14 +4389,14 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 	/* Do this solely to see if the file is there */
 	code = pioctl_utf8(ti->data, VIOCWHEREIS, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
 	}
 
 	code = pioctl_utf8(ti->data, VIOC_STOREBEHIND, &blob, 1);
 	if (code) {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
 	}
@@ -4688,7 +4420,7 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 	tsb.sb_default = allfiles;
 	code = pioctl_utf8(0, VIOC_STOREBEHIND, &blob, 1);
 	if (code) {
-	    Die(errno, ((allfiles == -1) ? 0 : "-allfiles"));
+	    fs_Die(errno, ((allfiles == -1) ? 0 : "-allfiles"));
 	    error = 1;
 	}
     }
@@ -4710,7 +4442,7 @@ SetCryptCmd(struct cmd_syndesc *as, void *arock)
     char *tp;
 
 #ifdef WIN32
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4733,7 +4465,7 @@ SetCryptCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = 0;
     code = pioctl_utf8(0, VIOC_SETRXKCRYPT, &blob, 1);
     if (code)
-        Die(code, NULL);
+        fs_Die(code, NULL);
     return 0;
 }
 
@@ -4753,7 +4485,7 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
     code = pioctl_utf8(0, VIOC_GETRXKCRYPT, &blob, 1);
 
     if (code || blob.out_size != sizeof(flag))
-        Die(code, NULL);
+        fs_Die(code, NULL);
     else {
         tp = space;
 #if _MSC_VER < 1400
@@ -4785,7 +4517,7 @@ MemDumpCmd(struct cmd_syndesc *asp, void *arock)
     long inValue = 0;
     long outValue;
 
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4809,7 +4541,7 @@ MemDumpCmd(struct cmd_syndesc *asp, void *arock)
 
     code = pioctl_utf8(NULL, VIOC_TRACEMEMDUMP, &blob, 1);
     if (code || blob.out_size != sizeof(long)) {
-        Die(errno, NULL);
+        fs_Die(errno, NULL);
         return code;
     }
 
@@ -4830,7 +4562,7 @@ MiniDumpCmd(struct cmd_syndesc *asp, void *arock)
     SC_HANDLE hManager = NULL;
     SC_HANDLE hService = NULL;
 
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4871,7 +4603,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
     HKEY hkCSCPolicy;
     size_t len;
 
-    if ( !IsAdmin() ) {
+    if ( !fs_IsAdmin() ) {
         fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
@@ -4903,7 +4635,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, void *arock)
             return EACCES;
         }
 
-        if ( !IsAdmin() ) {
+        if ( !fs_IsAdmin() ) {
             fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
             RegCloseKey(hkCSCPolicy);
             return EACCES;
@@ -5102,7 +4834,7 @@ SetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(0, VIOC_SETCPREFS, &blob, 1);	/* network order */
     if (code) {
-	Die(errno, 0);
+	fs_Die(errno, 0);
 	error = 1;
     }
 
@@ -5240,7 +4972,7 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	    if (errno == EINVAL) {
 		fprintf(stderr, "'%s' is not a mount point.\n", ti->data);
 	    } else {
-		Die(errno, (ti->data ? ti->data : parent_dir));
+		fs_Die(errno, (ti->data ? ti->data : parent_dir));
 	    }
 	    error = 1;
 	}
@@ -5276,7 +5008,7 @@ RxStatProcCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(NULL, VIOC_RXSTAT_PROC, &blob, 1);
     if (code != 0) {
-	Die(errno, NULL);
+	fs_Die(errno, NULL);
 	return 1;
     }
 
@@ -5310,7 +5042,7 @@ RxStatPeerCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(NULL, VIOC_RXSTAT_PEER, &blob, 1);
     if (code != 0) {
-	Die(errno, NULL);
+	fs_Die(errno, NULL);
 	return 1;
     }
 
@@ -5396,7 +5128,7 @@ TestVolStatCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(NULL, VIOC_VOLSTAT_TEST, &blob, 1);
     if (code != 0) {
-	Die(errno, NULL);
+	fs_Die(errno, NULL);
 	return 1;
     }
 
@@ -5450,7 +5182,7 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
             inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             inData.options.fid = fid;
         } else {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -5468,7 +5200,7 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
 
             code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
             if (code) {
-                Die(errno, ti->data);
+                fs_Die(errno, ti->data);
                 error = 1;
                 continue;
             }
@@ -5482,7 +5214,7 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
             pr_End();
 
             if (code || inData.owner == ANONYMOUSID ) {
-                Die(ECHILD, ti->data);
+                fs_Die(ECHILD, ti->data);
                 error = 1;
                 continue;
             }
@@ -5495,7 +5227,7 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = 0;
 	code = pioctl_utf8(ti->data, VIOC_SETOWNER, &blob, 1);
 	if (code) {
-            Die(errno, ti->data);
+            fs_Die(errno, ti->data);
         }
     }
     return error;
@@ -5548,7 +5280,7 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
             inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             inData.options.fid = fid;
         } else {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -5566,7 +5298,7 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
 
             code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
             if (code) {
-                Die(errno, ti->data);
+                fs_Die(errno, ti->data);
                 error = 1;
                 continue;
             }
@@ -5580,7 +5312,7 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
             pr_End();
 
             if (code || inData.group == ANONYMOUSID ) {
-                Die(ECHILD, ti->data);
+                fs_Die(ECHILD, ti->data);
                 error = 1;
                 continue;
             }
@@ -5593,7 +5325,7 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = 0;
 	code = pioctl_utf8(ti->data, VIOC_SETGROUP, &blob, 1);
 	if (code) {
-            Die(errno, ti->data);
+            fs_Die(errno, ti->data);
         }
     }
     return error;
@@ -5630,7 +5362,7 @@ ChModCmd(struct cmd_syndesc *as, void *arock)
         while (*unixModeStr >= '0' && *unixModeStr <= '7')
             unixModeBits = (unixModeBits << 3) | (*unixModeStr++ & 07);
         if (*unixModeStr) {
-            Die(EINVAL, "invalid mode");
+            fs_Die(EINVAL, "invalid mode");
             return(1);
         }
         unixModeBits &= ALL_MODES;
@@ -5659,7 +5391,7 @@ ChModCmd(struct cmd_syndesc *as, void *arock)
             inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             inData.options.fid = fid;
         } else {
-	    Die(errno, ti->data);
+	    fs_Die(errno, ti->data);
 	    error = 1;
 	    continue;
         }
@@ -5677,7 +5409,7 @@ ChModCmd(struct cmd_syndesc *as, void *arock)
             blob.out = (char *)&unixModeBits;
             if (pioctl_utf8(ti->data, VIOC_GETUNIXMODE, &blob, 1) != 0)
             {
-                Die(errno, ti->data);
+                fs_Die(errno, ti->data);
                 error = 1;
                 continue;
             }
@@ -5691,7 +5423,7 @@ ChModCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = 0;
 	code = pioctl_utf8(ti->data, VIOC_SETUNIXMODE, &blob, 1);
 	if (code) {
-            Die(errno, ti->data);
+            fs_Die(errno, ti->data);
         }
     }
     return error;
@@ -5700,50 +5432,6 @@ ChModCmd(struct cmd_syndesc *as, void *arock)
 #ifndef WIN32
 #include "AFS_component_version_number.c"
 #endif
-
-static void
-FreeUtf8CmdLine(int argc, char ** argv)
-{
-    int i;
-    for (i=0; i < argc; i++) {
-        if (argv[i])
-            free(argv[i]);
-    }
-    free(argv);
-}
-
-static char **
-MakeUtf8Cmdline(int argc, const wchar_t **wargv)
-{
-    char ** argv;
-    int i;
-
-    argv = calloc(argc, sizeof(argv[0]));
-    if (argv == NULL)
-        return NULL;
-
-    for (i=0; i < argc; i++) {
-        int s;
-
-        s = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, NULL, 0, NULL, FALSE);
-        if (s == 0 ||
-            (argv[i] = calloc(s+1, sizeof(char))) == NULL) {
-            break;
-        }
-
-        s = WideCharToMultiByte(CP_UTF8, 0, wargv[i], -1, argv[i], s+1, NULL, FALSE);
-        if (s == 0) {
-            break;
-        }
-    }
-
-    if (i < argc) {
-        FreeUtf8CmdLine(argc, argv);
-        return NULL;
-    }
-
-    return argv;
-}
 
 int wmain(int argc, wchar_t **wargv)
 {
@@ -5771,7 +5459,9 @@ int wmain(int argc, wchar_t **wargv)
     WSAStartup(0x0101, &WSAjunk);
 #endif /* WIN32 */
 
-    argv = MakeUtf8Cmdline(argc, wargv);
+    fs_SetProcessName(pn);
+
+    argv = fs_MakeUtf8Cmdline(argc, wargv);
 
     /* try to find volume location information */
     osi_Init();
@@ -6078,87 +5768,8 @@ int wmain(int argc, wchar_t **wargv)
     if (rxInitDone)
         rx_Finalize();
 
-    FreeUtf8CmdLine(argc, argv);
+    fs_FreeUtf8CmdLine(argc, argv);
 
     return code;
 }
-
-void
-Die(int code, char *filename)
-{ /*Die*/
-
-    if (code == EINVAL) {
-	if (filename)
-	    fprintf(stderr,"%s: Invalid argument; it is possible that %s is not in AFS.\n", pn, filename);
-	else
-            fprintf(stderr,"%s: Invalid argument.\n", pn);
-    }
-    else if (code == ENOENT) {
-	if (filename)
-            fprintf(stderr,"%s: File '%s' doesn't exist\n", pn, filename);
-	else
-            fprintf(stderr,"%s: no such file returned\n", pn);
-    }
-    else if (code == EROFS)
-        fprintf(stderr,"%s: You can not change a backup or readonly volume\n", pn);
-    else if (code == EACCES || code == EPERM) {
-	if (filename)
-            fprintf(stderr,"%s: You don't have the required access rights on '%s'\n", pn, filename);
-	else
-            fprintf(stderr,"%s: You do not have the required rights to do this operation\n", pn);
-    }
-    else if (code == ENODEV) {
-	fprintf(stderr,"%s: AFS service may not have started.\n", pn);
-    }
-    else if (code == ESRCH) {   /* hack */
-	fprintf(stderr,"%s: Cell name not recognized.\n", pn);
-    }
-    else if (code == EPIPE) {   /* hack */
-	fprintf(stderr,"%s: Volume name or ID not recognized.\n", pn);
-    }
-    else if (code == EFBIG) {
-	fprintf(stderr,"%s: Cache size too large.\n", pn);
-    }
-    else if (code == ETIMEDOUT) {
-	if (filename)
-	    fprintf(stderr,"%s:'%s': Connection timed out", pn, filename);
-	else
-	    fprintf(stderr,"%s: Connection timed out", pn);
-    }
-    else if (code == EBUSY) {
-	if (filename)
-            fprintf(stderr,"%s: All servers are busy on which '%s' resides\n", pn, filename);
-	else
-            fprintf(stderr,"%s: All servers are busy\n", pn);
-    }
-    else if (code == ENXIO) {
-	if (filename)
-            fprintf(stderr,"%s: All volume instances are offline on which '%s' resides\n", pn, filename);
-	else
-            fprintf(stderr,"%s: All volume instances are offline\n", pn);
-    }
-    else if (code == ENOSYS) {
-	if (filename)
-            fprintf(stderr,"%s: All servers are down on which '%s' resides\n", pn, filename);
-	else
-            fprintf(stderr,"%s: All servers are down\n", pn);
-    }
-    else if (code == ECHILD) {  /* hack */
-	if (filename)
-            fprintf(stderr,"%s: Invalid owner specified for '%s'\n", pn, filename);
-	else
-            fprintf(stderr,"%s: Invalid owner specified\n", pn);
-    }
-    else {
-	if (filename)
-            fprintf(stderr,"%s:'%s'", pn, filename);
-	else
-            fprintf(stderr,"%s", pn);
-#ifdef WIN32
-	fprintf(stderr, ": code 0x%x\n", code);
-#else /* not WIN32 */
-	fprintf(stderr,": %s\n", afs_error_message(code));
-#endif /* not WIN32 */
-    }
-} /*Die*/
 

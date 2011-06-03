@@ -58,7 +58,7 @@ parsemode(char *symbolic, afs_uint32 oldmode)
                 break;
         }
         if (!*symbolic || *symbolic == ',') {
-            Die(EINVAL, "invalid mode");
+            fs_Die(EINVAL, "invalid mode");
             exit(1);
         }
         while (*symbolic) {
@@ -66,7 +66,7 @@ parsemode(char *symbolic, afs_uint32 oldmode)
                 break;
             switch (*symbolic) {
             default:
-                Die(EINVAL, "invalid mode");
+                fs_Die(EINVAL, "invalid mode");
                 exit(1);
             case '+':
             case '-':

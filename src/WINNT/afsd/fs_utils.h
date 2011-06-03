@@ -35,9 +35,34 @@ extern struct hostent *hostutil_GetHostByName(char *namep);
 
 extern afs_int32 util_GetInt32(char *stringp, afs_int32 *valuep);
 
-extern long fs_StripDriveLetter(char *inPathp, char *outPathp, long outSize);
+extern void fs_utils_InitMountRoot();
+
+extern long fs_StripDriveLetter(char *inPathp, char *outPathp, size_t outSize);
 
 extern long fs_ExtractDriveLetter(char *inPathp, char *outPathp);
+
+extern long fs_GetFullPath(char *pathp, char *outPathp, size_t outSize);
+
+extern char *fs_GetParent(char *apath);
+
+extern int fs_InAFS(char *apath);
+
+extern int fs_IsFreelanceRoot(char *apath);
+
+#define NETBIOSNAMESZ 1024
+extern const char * fs_NetbiosName(void);
+
+extern BOOL fs_IsAdmin (void);
+
+extern char **fs_MakeUtf8Cmdline(int argc, const wchar_t **wargv);
+
+extern void fs_FreeUtf8CmdLine(int argc, char ** argv);
+
+extern void fs_Die(int code, char *filename);
+
+extern const char * fs_filetypestr(afs_uint32 type);
+
+extern void fs_SetProcessName(const char *name);
 
 extern char *cm_mount_root;             /*"afs"*/
 extern char *cm_slash_mount_root;       /*"/afs"*/

@@ -41,7 +41,8 @@ EXERES = \
 	$(OUT)\afscreds_stub.res
 
 AFSDOBJS = \
-	$(OUT)\fs_utils.obj
+	$(OUT)\fs_utils.obj \
+        $(OUT)\cm_nls.obj
 
 CLIENTOBJS = \
 	$(OUT)\drivemap.obj \
@@ -67,7 +68,10 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-    	$(DESTDIR)\lib\afskfw.lib
+        $(DESTDIR)\lib\afskfw.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afsroken.lib
+
 
 ############################################################################
 #

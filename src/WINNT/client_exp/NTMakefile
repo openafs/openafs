@@ -32,6 +32,7 @@ DLLOBJS =\
 	$(OUT)\afs_shl_ext_stub.res \
 	$(OUT)\auth_dlg.obj \
 	$(OUT)\clear_acl_dlg.obj \
+        $(OUT)\cm_nls.obj \
 	$(OUT)\copy_acl_dlg.obj \
 	$(OUT)\down_servers_dlg.obj \
 	$(OUT)\fs_utils.obj \
@@ -58,7 +59,10 @@ DLLOBJS =\
 AFSD = ..\afsd
 
 $(OUT)\fs_utils.obj: $(AFSD)\fs_utils.c
-	$(C2OBJ) -I$(DESTDIR)\include\rx $**
+	$(C2OBJ) -UUNICODE -U_UNICODE -I$(DESTDIR)\include\rx $**
+
+$(OUT)\cm_nls.obj: $(AFSD)\cm_nls.c
+	$(C2OBJ)  -UUNICODE -U_UNICODE $**
 
 DLLSDKLIBS =\
     mpr.lib

@@ -49,7 +49,8 @@ EXERES = \
 	$(OUT)\afs_config_stub.res
 
 AFSDOBJS = \
-	$(OUT)\fs_utils.obj
+	$(OUT)\fs_utils.obj \
+        $(OUT)\cm_nls.obj
 
 AFSD= ..\afsd
 
@@ -66,7 +67,9 @@ EXELIBS = \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\lanahelper.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afs\afsreg.lib \
+        $(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 ############################################################################
 #
