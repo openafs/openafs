@@ -250,14 +250,97 @@ fs_GetParent(char *apath)
     return tspace;
 }
 
+#if (_WINNT_WIN32 < 0x0600)
+typedef struct FILE_NAME_INFO {
+    DWORD FileNameLength;
+    WCHAR FileName[1];
+} FILE_NAME_INFO, *PFILE_NAME_INFO;
+
+typedef enum _FILE_INFO_BY_HANDLE_CLASS {
+    FileNameInfo = 2
+} FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
+
+typedef BOOL
+(WINAPI *
+LPFN_GetFileInformationByHandleEx)(
+    __in  HANDLE hFile,
+    __in  FILE_INFO_BY_HANDLE_CLASS FileInformationClass,
+    __out LPVOID lpFileInformation,
+    __in  DWORD dwBufferSize
+);
+#endif
+
+static long
+GetFileSystemNameInfo(const char *fileNamep, char *outNamep, size_t outSize)
+{
+    HANDLE hf;
+    union {
+        FILE_NAME_INFO	nameInfo;
+        CHAR		    buffer[2048];
+    } u;
+    DWORD rc;
+#if (_WIN32_WINNT < 0x0600)
+    HANDLE hKernel32;
+    static LPFN_GetFileInformationByHandleEx GetFileInformationByHandleEx = NULL;
+
+    if (!GetFileInformationByHandleEx) {
+        hKernel32 = GetModuleHandle("kernel32.dll");	/* no refcount increase */
+        GetFileInformationByHandleEx = (LPFN_GetFileInformationByHandleEx)GetProcAddress(hKernel32, "GetFileInformationByHandleEx");
+    }
+#endif
+
+    if (!GetFileInformationByHandleEx)
+        return -1;
+
+    hf = CreateFile( fileNamep,
+                     GENERIC_READ,
+                     FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+                     NULL,
+                     OPEN_EXISTING,
+                     FILE_FLAG_BACKUP_SEMANTICS,
+                     NULL
+                     );
+    if (hf == INVALID_HANDLE_VALUE)
+        return -1;
+
+    rc = GetFileInformationByHandleEx( hf, FileNameInfo, &u, sizeof(u));
+    CloseHandle(hf);
+    if (rc == FALSE)
+        return -1;
+
+    rc = WideCharToMultiByte(CP_UTF8, 0,
+                              u.nameInfo.FileName, u.nameInfo.FileNameLength,
+                              outNamep, outSize,
+                              NULL, FALSE);
+    if (rc == 0) /* failure */
+        return -1;
+
+    if (outNamep[0] == '\\' &&
+         outNamep[u.nameInfo.FileNameLength/2 - 1] == '\\')
+		outNamep[u.nameInfo.FileNameLength/2 - 1] = 0;
+    else
+        outNamep[min(u.nameInfo.FileNameLength/2, outSize)] = 0;	/* make sure we are nul terminated */
+
+    return 0;
+}
+
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
 int
 fs_InAFS(char *apath)
 {
+    char fsname[MAX_PATH+2]="\\";
     struct ViceIoctl blob;
     cm_ioctlQueryOptions_t options;
     cm_fid_t fid;
     afs_int32 code;
+
+    /*
+     * If the operating system supports the name information query
+     * use it to resolve the full file path.  This will take care
+     * of any mappings, ntfs junctions, etc.
+     */
+    if (GetFileSystemNameInfo(apath, &fsname[1], sizeof(fsname)-1) == 0)
+        apath = fsname;
 
     memset(&options, 0, sizeof(options));
     options.size = sizeof(options);
