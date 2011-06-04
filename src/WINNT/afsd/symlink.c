@@ -74,7 +74,6 @@ ListLinkCmd(struct cmd_syndesc *as, void *arock)
             continue;
         }
 
-
 	/*
 	 * Find rightmost slash, if any.
 	 */

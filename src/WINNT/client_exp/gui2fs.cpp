@@ -32,8 +32,8 @@ extern "C" {
 
 extern "C" {
 #include <rx/rx_globals.h>
-#include "fs.h"
 #include "fs_utils.h"
+#include "fs_acl.h"
 #include <afs/afsint.h>
 #include <afs/afs_consts.h>
 #include <afs/cellconfig.h>
@@ -51,6 +51,13 @@ extern "C" {
 
 #define STRSAFE_NO_DEPRECATE
 #include <strsafe.h>
+
+/*
+ * the NO_CALLER symbol is used to document functions
+ * that are present in this file but have no caller
+ */
+#define NO_CALLER
+
 
 #define PCCHAR(str)		((char *)(const char *)(str))
 #define VL_NOENT                (363524L)
@@ -138,7 +145,8 @@ public:
     }
 };
 
-long pioctl_T(const CString& path, long opcode, struct ViceIoctl * blob, int follow)
+long
+pioctl_T(const CString& path, long opcode, struct ViceIoctl * blob, int follow)
 {
     CStringUtf8 upath(path);
 
@@ -151,9 +159,7 @@ long pioctl_T(const CString& path, long opcode, struct ViceIoctl * blob, int fol
 #define Utf8ToCString(cs) (cs)
 #endif
 
-
-
-static int
+static int NO_CALLER
 VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
@@ -202,7 +208,8 @@ CString StripPath(CString& strPath)
     return strFile;
 }
 
-CStringArray& StripPath(CStringArray& files)
+CStringArray&
+StripPath(CStringArray& files)
 {
     for (int i = 0; i < files.GetSize(); i++)
         files[i] = StripPath(files[i]);
@@ -210,7 +217,8 @@ CStringArray& StripPath(CStringArray& files)
     return files;
 }
 
-void Flush(const CStringArray& files)
+void
+Flush(const CStringArray& files)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -235,7 +243,8 @@ void Flush(const CStringArray& files)
         ShowMessageBox(IDS_FLUSH_OK, MB_ICONINFORMATION, IDS_FLUSH_OK);
 }
 
-void FlushVolume(const CStringArray& files)
+void
+FlushVolume(const CStringArray& files)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -257,7 +266,8 @@ void FlushVolume(const CStringArray& files)
         ShowMessageBox(IDS_FLUSH_VOLUME_OK, MB_ICONINFORMATION, IDS_FLUSH_VOLUME_OK);
 }
 
-void WhichCell(CStringArray& files)
+void NO_CALLER
+WhichCell(CStringArray& files)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -296,7 +306,8 @@ void WhichCell(CStringArray& files)
     dlg.DoModal();
 }
 
-void WSCellCmd()
+void NO_CALLER
+WSCellCmd(void)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -310,14 +321,14 @@ void WSCellCmd()
 
     code = pioctl((char *) 0, VIOC_GET_WS_CELL, &blob, 1);
 
-    if (code) {
-        //Die(errno, (char *) 0);
-    }
-    //else
-    //printf("This workstation belongs to cell '%s'\n", space);
+    /*
+     * Cell name is left in 'space' as side effect.
+     * At present no callers of this function.
+     */
 }
 
-BOOL CheckVolumes()
+BOOL NO_CALLER
+CheckVolumes(void)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -335,7 +346,8 @@ BOOL CheckVolumes()
     return TRUE;
 }
 
-void SetCacheSizeCmd(LONG nNewCacheSize)
+void NO_CALLER
+SetCacheSizeCmd(LONG nNewCacheSize)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -347,13 +359,12 @@ void SetCacheSizeCmd(LONG nNewCacheSize)
     blob.out_size = 0;
 
     code = pioctl(0, VIOCSETCACHESIZE, &blob, 1);
-    //if (code)
-    //	Die(errno, (char *) 0);
-    //else
-    //	printf("New cache size set.\n");
+
+    /* error handling? */
 }
 
-void WhereIs(CStringArray& files)
+void NO_CALLER
+WhereIs(CStringArray& files)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -443,7 +454,8 @@ CMtoUNIXerror(int cm_code)
     }
 }
 
-CString GetAfsError(int code, const TCHAR *filename)
+CString
+GetAfsError(int code, const TCHAR *filename)
 {
     CString strMsg;
 
@@ -479,30 +491,8 @@ CString GetAfsError(int code, const TCHAR *filename)
 }
 
 
-/************************************************************************
-************************** ACL Code *************************************
-************************************************************************/
-
-typedef char sec_rgy_name_t[1025];	/* A DCE definition */
-
-struct AclEntry {
-    struct AclEntry *next;
-    char name[MAXNAME];
-    LONG rights;
-};
-
-struct Acl {
-    int dfs;			//	Originally true if a dfs acl; now also the type
-                                //	of the acl (1, 2, or 3, corresponding to object,
-				//	initial dir, or initial object).
-    sec_rgy_name_t cell;	//	DFS cell name
-    int nplus;
-    int nminus;
-    struct AclEntry *pluslist;
-    struct AclEntry *minuslist;
-};
-
-int foldcmp (char *a, char *b)
+static int
+foldcmp (char *a, char *b)
 {
     char t, u;
     while (1) {
@@ -515,70 +505,8 @@ int foldcmp (char *a, char *b)
     }
 }
 
-extern "C" void ZapList(struct AclEntry *alist)
-{
-    struct AclEntry *tp, *np;
-
-    for (tp = alist; tp; tp = np) {
-        np = tp->next;
-        free(tp);
-    }
-}
-
-extern "C" void ZapAcl (struct Acl *acl)
-{
-    ZapList(acl->pluslist);
-    ZapList(acl->minuslist);
-    free(acl);
-}
-
-extern "C" int PruneList (struct AclEntry **ae, int dfs)
-{
-    struct AclEntry **lp = ae;
-    struct AclEntry *te, *ne;
-    LONG ctr = 0;
-
-    for (te = *ae; te; te = ne) {
-        if ((!dfs && te->rights == 0) || te->rights == -1) {
-            *lp = te->next;
-            ne = te->next;
-            free(te);
-            ctr++;
-        }
-        else {
-            ne = te->next;
-            lp = &te->next;
-        }
-    }
-
-    return ctr;
-}
-
-char *SkipLine (char *astr)
-{
-    while (*astr != '\n')
-        astr++;
-
-    astr++;
-
-    return astr;
-}
-
-/* tell if a name is 23 or -45 (digits or minus digits), which are bad names we must prune */
-static int BadName(char *aname)
-{
-    int tc;
-
-    /* all must be '-' or digit to be bad */
-    while (tc = *aname++) {
-        if ((tc != '-') && (tc < '0' || tc > '9'))
-            return 0;
-    }
-
-    return 1;
-}
-
-CString GetRightsString(LONG arights, int dfs)
+CString
+GetRightsString(LONG arights, int dfs)
 {
     CString str;
 
@@ -606,33 +534,8 @@ CString GetRightsString(LONG arights, int dfs)
     return str;
 }
 
-char *AclToString(struct Acl *acl)
-{
-    static char mydata[AFS_PIOCTL_MAXSIZE];
-    char tstring[AFS_PIOCTL_MAXSIZE];
-    char dfsstring[30];
-    struct AclEntry *tp;
-
-    if (acl->dfs)
-        sprintf(dfsstring, " dfs:%d %s", acl->dfs, acl->cell);
-    else
-        dfsstring[0] = '\0';
-    sprintf(mydata, "%d%s\n%d\n", acl->nplus, dfsstring, acl->nminus);
-
-    for(tp = acl->pluslist; tp; tp = tp->next) {
-        sprintf(tstring, "%s %d\n", tp->name, tp->rights);
-        strcat(mydata, tstring);
-    }
-
-    for(tp = acl->minuslist; tp; tp = tp->next) {
-        sprintf(tstring, "%s %d\n", tp->name, tp->rights);
-        strcat(mydata, tstring);
-    }
-
-    return mydata;
-}
-
-struct Acl *EmptyAcl(const CString& strCellName)
+struct Acl *
+EmptyAcl(const CString& strCellName)
 {
     struct Acl *tp;
     CStringUtf8 ustrCell(strCellName);
@@ -646,158 +549,8 @@ struct Acl *EmptyAcl(const CString& strCellName)
     return tp;
 }
 
-struct Acl *EmptyAcl(char *astr)
-{
-    struct Acl *tp;
-    int junk;
-
-    tp = (struct Acl *)malloc(sizeof (struct Acl));
-    tp->nplus = tp->nminus = 0;
-    tp->pluslist = tp->minuslist = 0;
-    tp->dfs = 0;
-    if (astr == NULL || sscanf(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell) <= 0) {
-        tp->dfs = 0;
-        tp->cell[0] = '\0';
-    }
-    return tp;
-}
-
-struct Acl *
-ParseAcl (char *astr)
-{
-    int nplus, nminus, i, trights, ret;
-    char tname[MAXNAME];
-    struct AclEntry *first, *next, *last, *tl;
-    struct Acl *ta;
-
-    ta = EmptyAcl(NULL);
-    if (astr == NULL || strlen(astr) == 0)
-        return ta;
-
-    ret = sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
-    if (ret <= 0) {
-        free(ta);
-        return NULL;
-    }
-    astr = SkipLine(astr);
-    ret = sscanf(astr, "%d", &ta->nminus);
-    if (ret <= 0) {
-        free(ta);
-        return NULL;
-    }
-    astr = SkipLine(astr);
-
-    nplus = ta->nplus;
-    nminus = ta->nminus;
-
-    last = 0;
-    first = 0;
-    for(i=0;i<nplus;i++) {
-        ret = sscanf(astr, "%100s %d", tname, &trights);
-        if (ret <= 0)
-            goto nplus_err;
-        astr = SkipLine(astr);
-        tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        if (tl == NULL)
-            goto nplus_err;
-        if (!first)
-            first = tl;
-        strcpy(tl->name, tname);
-        tl->rights = trights;
-        tl->next = 0;
-        if (last)
-            last->next = tl;
-        last = tl;
-    }
-    ta->pluslist = first;
-
-    last = 0;
-    first = 0;
-    for(i=0;i<nminus;i++) {
-        ret = sscanf(astr, "%100s %d", tname, &trights);
-        if (ret <= 0)
-            goto nminus_err;
-        astr = SkipLine(astr);
-        tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        if (tl == NULL)
-            goto nminus_err;
-        if (!first)
-            first = tl;
-        strcpy(tl->name, tname);
-        tl->rights = trights;
-        tl->next = 0;
-        if (last)
-            last->next = tl;
-        last = tl;
-    }
-    ta->minuslist = first;
-
-    return ta;
-
-  nminus_err:
-    for (;first; first = next) {
-        next = first->next;
-        free(first);
-    }
-    first = ta->pluslist;
-
-  nplus_err:
-    for (;first; first = next) {
-        next = first->next;
-        free(first);
-    }
-    free(ta);
-    return NULL;
-}
-
-/* clean up an access control list of its bad entries; return 1 if we made
-   any changes to the list, and 0 otherwise */
-extern "C" int CleanAcl(struct Acl *aa)
-{
-    struct AclEntry *te, **le, *ne;
-    int changes;
-
-    HOURGLASS hourglass;
-
-    /* Don't correct DFS ACL's for now */
-    if (aa->dfs)
-        return 0;
-
-    /* prune out bad entries */
-    changes = 0;	    /* count deleted entries */
-    le = &aa->pluslist;
-    for(te = aa->pluslist; te; te = ne) {
-        ne = te->next;
-        if (BadName(te->name)) {
-            /* zap this dude */
-            *le = te->next;
-            aa->nplus--;
-            free(te);
-            changes++;
-        }
-        else
-            le = &te->next;
-    }
-
-    le = &aa->minuslist;
-
-    for(te = aa->minuslist; te; te = ne) {
-        ne = te->next;
-        if (BadName(te->name)) {
-            /* zap this dude */
-            *le = te->next;
-            aa->nminus--;
-            free(te);
-            changes++;
-        }
-        else
-            le = &te->next;
-    }
-
-    return changes;
-}
-
-void CleanACL(CStringArray& names)
+void
+CleanACL(CStringArray& names)
 {
     LONG code;
     struct Acl *ta;
@@ -819,7 +572,7 @@ void CleanACL(CStringArray& names)
             continue;
         }
 
-        ta = ParseAcl(space);
+        ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (ta == NULL) {
             ShowMessageBox(IDS_INVALID_ACL_DATA, MB_ICONERROR, IDS_INVALID_ACL_DATA);
             continue;
@@ -829,7 +582,7 @@ void CleanACL(CStringArray& names)
             continue;
         }
 
-        changes = CleanAcl(ta);
+        changes = CleanAcl(ta, NULL);
         if (!changes)
             continue;
 
@@ -853,7 +606,8 @@ void CleanACL(CStringArray& names)
 }
 
 // Derived from fs.c's ListAclCmd
-BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& strNegative)
+BOOL
+GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& strNegative)
 {
     LONG code;
     struct Acl *ta;
@@ -873,7 +627,7 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
         return FALSE;
     }
 
-    ta = ParseAcl(space);
+    ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
     if (ta == NULL) {
         ShowMessageBox(IDS_INVALID_ACL_DATA, MB_ICONERROR, IDS_INVALID_ACL_DATA);
         return FALSE;
@@ -905,7 +659,8 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
     return TRUE;
 }
 
-struct AclEntry *FindList(struct AclEntry *pCurEntry, const char *entryName)
+struct AclEntry *
+FindList(struct AclEntry *pCurEntry, const char *entryName)
 {
     while (pCurEntry) {
         if (!foldcmp(pCurEntry->name, PCCHAR(entryName)))
@@ -916,7 +671,8 @@ struct AclEntry *FindList(struct AclEntry *pCurEntry, const char *entryName)
     return 0;
 }
 
-void ChangeList(struct Acl *pAcl, BYTE bNormalRights, const CString & entryName, LONG nEntryRights)
+void
+ChangeList(struct Acl *pAcl, BYTE bNormalRights, const CString & entryName, LONG nEntryRights)
 {
     ASSERT(pAcl);
     ASSERT(entryName);
@@ -962,9 +718,8 @@ void ChangeList(struct Acl *pAcl, BYTE bNormalRights, const CString & entryName,
     }
 }
 
-enum rtype {add, destroy, deny};
-
-static LONG Convert(const CString& strRights, int dfs, enum rtype *rtypep)
+static LONG
+Convert(const CString& strRights, int dfs, enum rtype *rtypep)
 {
     int i, len;
     LONG mode;
@@ -1005,7 +760,8 @@ static LONG Convert(const CString& strRights, int dfs, enum rtype *rtypep)
     return mode;
 }
 
-BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArray& normal, const CStringArray& negative)
+BOOL
+SaveACL(const CString& strCellName, const CString& strDir, const CStringArray& normal, const CStringArray& negative)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1049,7 +805,8 @@ BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArr
     return (code == 0);
 }
 
-BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringArray& negative, BOOL bClear)
+BOOL
+CopyACL(const CString& strToDir, const CStringArray& normal, const CStringArray& negative, BOOL bClear)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1072,14 +829,14 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     if (bClear)
         pToAcl = EmptyAcl(space);
     else
-        pToAcl = ParseAcl(space);
+        pToAcl = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
 
     if (pToAcl == NULL) {
         ShowMessageBox(IDS_INVALID_ACL_DATA, MB_ICONERROR, IDS_INVALID_ACL_DATA);
         return FALSE;
     }
 
-    CleanAcl(pToAcl);
+    CleanAcl(pToAcl, NULL);
 
     if (pToAcl->dfs) {
         ShowMessageBox(IDS_NO_DFS_COPY_ACL, MB_ICONERROR, IDS_NO_DFS_COPY_ACL, strToDir);
@@ -1124,7 +881,8 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     return TRUE;
 }
 
-CString ParseMountPoint(const CString strFile, CString strMountPoint)
+CString
+ParseMountPoint(const CString strFile, CString strMountPoint)
 {
     CString strType;
     CString strVolume;
@@ -1148,7 +906,8 @@ CString ParseMountPoint(const CString strFile, CString strMountPoint)
     return strMountPointInfo;
 }
 
-CString ParseSymlink(const CString strFile, CString strSymlink)
+CString
+ParseSymlink(const CString strFile, CString strSymlink)
 {
     CString strSymlinkInfo;
 
@@ -1157,7 +916,8 @@ CString ParseSymlink(const CString strFile, CString strSymlink)
     return strSymlinkInfo;
 }
 
-BOOL IsPathInAfs(const CString & strPath)
+BOOL
+IsPathInAfs(const CString & strPath)
 {
     struct ViceIoctl blob;
     cm_ioctlQueryOptions_t options;
@@ -1199,7 +959,8 @@ IsFreelanceRoot(const CString& apath)
     return 1;   /* assume it is because it is more restrictive that way */
 }
 
-static const char * NetbiosName(void)
+static const char *
+NetbiosName(void)
 {
     static char buffer[1024] = "AFS";
     HKEY  parmKey;
@@ -1220,7 +981,8 @@ static const char * NetbiosName(void)
     return buffer;
 }
 
-static void FixNetbiosPath(CString& path)
+static void
+FixNetbiosPath(CString& path)
 {
     if (!IsPathInAfs(path)) {
         CString nbroot;
@@ -1240,7 +1002,8 @@ static void FixNetbiosPath(CString& path)
 
 #define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
 
-static BOOL IsAdmin (void)
+static BOOL
+IsAdmin (void)
 {
     static BOOL fAdmin = FALSE;
     static BOOL fTested = FALSE;
@@ -1373,7 +1136,8 @@ static BOOL IsAdmin (void)
     return fAdmin;
 }
 
-CString Parent(const CString& path)
+CString
+Parent(const CString& path)
 {
     int last_slash = path.ReverseFind(_T('\\'));
 
@@ -1392,7 +1156,8 @@ CString Parent(const CString& path)
     }
     }
 
-CString LastComponent(const CString& path)
+CString
+LastComponent(const CString& path)
 {
     int last_slash = path.ReverseFind(_T('\\'));
 
@@ -1433,7 +1198,8 @@ GetCell(const CString & path)
 }
 
 
-BOOL ListMount(CStringArray& files)
+BOOL
+ListMount(CStringArray& files)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1557,39 +1323,8 @@ MakeMount(const CString& strDir,
     return TRUE;
 }
 
-/*
-*/
-long fs_ExtractDriveLetter(const char *inPathp, char *outPathp)
-{
-    if (inPathp[0] != 0 && inPathp[1] == ':') {
-        /* there is a drive letter */
-        *outPathp++ = *inPathp++;
-        *outPathp++ = *inPathp++;
-        *outPathp++ = 0;
-    }
-    else *outPathp = 0;
-
-    return 0;
-}
-
-/* strip the drive letter from a component */
-long fs_StripDriveLetter(const char *inPathp, char *outPathp, long outSize)
-{
-    char tempBuffer[1000];
-    strcpy(tempBuffer, inPathp);
-    if (tempBuffer[0] != 0 && tempBuffer[1] == ':') {
-        /* drive letter present */
-        strcpy(outPathp, tempBuffer+2);
-    }
-    else {
-        /* no drive letter present */
-        strcpy(outPathp, tempBuffer);
-    }
-    return 0;
-}
-
-
-BOOL RemoveSymlink(const CString& strName)
+BOOL
+RemoveSymlink(const CString& strName)
 {
     BOOL error = FALSE;
     INT code=0;
@@ -1626,7 +1361,8 @@ BOOL RemoveSymlink(const CString& strName)
     return (code == 0);
 }
 
-BOOL IsSymlink(const CString& strName)
+BOOL
+IsSymlink(const CString& strName)
 {
     struct ViceIoctl blob;
     int code;
@@ -1652,7 +1388,8 @@ BOOL IsSymlink(const CString& strName)
 }
 
 
-BOOL IsMountPoint(const CString& path)
+BOOL
+IsMountPoint(const CString& path)
 {
     LONG code = 0;
     struct ViceIoctl blob;
@@ -1684,7 +1421,8 @@ BOOL IsMountPoint(const CString& path)
  *	    (or ``.'' if none is provided)
  *      tp: Set to point to the actual name of the mount point to nuke.
  */
-BOOL RemoveMount(CStringArray& files)
+BOOL
+RemoveMount(CStringArray& files)
 {
     LONG code = 0;
     struct ViceIoctl blob;
@@ -1739,7 +1477,8 @@ BOOL RemoveMount(CStringArray& files)
     return !error;
 }
 
-BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
+BOOL
+GetVolumeInfo(CString strFile, CVolInfo& volInfo)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1788,7 +1527,8 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     return TRUE;
 }
 
-BOOL SetVolInfo(CVolInfo& volInfo)
+BOOL
+SetVolInfo(CVolInfo& volInfo)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1835,14 +1575,16 @@ BOOL SetVolInfo(CVolInfo& volInfo)
     return TRUE;
 }
 
-void GetCellName(const CString& cellNamep, struct afsconf_cell *infop)
+void
+GetCellName(const CString& cellNamep, struct afsconf_cell *infop)
 {
     CStringUtf8 uCellName(cellNamep);
 
     StringCbCopyA(infop->name, sizeof(infop->name), uCellName);
 }
 
-BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bFast)
+BOOL NO_CALLER
+CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bFast)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1909,7 +1651,8 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
     return TRUE;
 }
 
-BOOL GetTokenInfo(CStringArray& tokenInfo)
+BOOL
+GetTokenInfo(CStringArray& tokenInfo)
 {
     int cellNum;
     int rc;
@@ -2012,7 +1755,8 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
     return TRUE;
 }
 
-UINT MakeSymbolicLink(const CString& strName, const CString& strTarget)
+UINT
+MakeSymbolicLink(const CString& strName, const CString& strTarget)
 {
     struct ViceIoctl blob;
     UINT code;
@@ -2042,7 +1786,8 @@ UINT MakeSymbolicLink(const CString& strName, const CString& strTarget)
     return 0;
 }
 
-void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
+void NO_CALLER
+ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
 {
     ASSERT(nlenPath<MAX_PATH);
     struct ViceIoctl blob;
@@ -2105,7 +1850,8 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
     strncpy(strPath,space,nlenPath);
 }
 
-BOOL ListSymlink(CStringArray& files)
+BOOL NO_CALLER
+ListSymlink(CStringArray& files)
 {
     LONG code;
     struct ViceIoctl blob;

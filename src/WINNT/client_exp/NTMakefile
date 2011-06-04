@@ -35,6 +35,7 @@ DLLOBJS =\
         $(OUT)\cm_nls.obj \
 	$(OUT)\copy_acl_dlg.obj \
 	$(OUT)\down_servers_dlg.obj \
+        $(OUT)\fs_acl.obj \
 	$(OUT)\fs_utils.obj \
 	$(OUT)\gui2fs.obj \
 	$(OUT)\help.obj \
@@ -58,8 +59,11 @@ DLLOBJS =\
 
 AFSD = ..\afsd
 
+$(OUT)\fs_acl.obj: $(AFSD)\fs_acl.c
+	$(C2OBJ) -UUNICODE -U_UNICODE $**
+
 $(OUT)\fs_utils.obj: $(AFSD)\fs_utils.c
-	$(C2OBJ) -UUNICODE -U_UNICODE -I$(DESTDIR)\include\rx $**
+	$(C2OBJ) -UUNICODE -U_UNICODE $**
 
 $(OUT)\cm_nls.obj: $(AFSD)\cm_nls.c
 	$(C2OBJ)  -UUNICODE -U_UNICODE $**

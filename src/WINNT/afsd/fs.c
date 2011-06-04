@@ -39,12 +39,12 @@
 
 #include "fs.h"
 #include "fs_utils.h"
+#include "fs_acl.h"
 #include "cmd.h"
 #include "afsd.h"
 #include "cm_ioctl.h"
 #include "parsemode.h"
 
-#define MAXNAME 100
 #define MAXINSIZE 1300    /* pioctl complains if data is larger than this */
 #define VMSGSIZE 128      /* size of msg buf in volume hdr */
 #define CELL_MAXNAMELEN		256
@@ -57,15 +57,10 @@ static char space[AFS_PIOCTL_MAXSIZE];
 static struct ubik_client *uclient;
 
 /* some forward references */
-static void ZapList (struct AclEntry *alist);
-
-static int PruneList (struct AclEntry **ae, int dfs);
-
-static int CleanAcl(struct Acl *aa, char *fname);
-
 static int SetVolCmd(struct cmd_syndesc *as, void *arock);
 
 static int GetCellName(char *cellNamep, struct afsconf_cell *infop);
+static afs_int32 GetCell(char *fname, char *cellname, size_t cell_len);
 
 static int VLDBInit(int noAuthFlag, struct afsconf_cell *infop);
 static int GetClientAddrsCmd(struct cmd_syndesc *asp, void *arock);
@@ -79,69 +74,6 @@ static int CSCPolicyCmd(struct cmd_syndesc *asp, void *arock);
 static int MiniDumpCmd(struct cmd_syndesc *asp, void *arock);
 
 static int rxInitDone = 0;
-
-/*
- * Character to use between name and rights in printed representation for
- * DFS ACL's.
- */
-#define DFS_SEPARATOR	' '
-
-typedef char sec_rgy_name_t[1025];	/* A DCE definition */
-
-struct Acl {
-    int dfs;	        /* Originally true if a dfs acl; now also the type
-                         * of the acl (1, 2, or 3, corresponding to object,
-                         * initial dir, or initial object). */
-    sec_rgy_name_t cell; /* DFS cell name */
-    int nplus;
-    int nminus;
-    struct AclEntry *pluslist;
-    struct AclEntry *minuslist;
-};
-
-struct AclEntry {
-    struct AclEntry *next;
-    char name[MAXNAME];
-    afs_int32 rights;
-};
-
-static void
-ZapAcl (struct Acl *acl)
-{
-    if (!acl)
-        return;
-
-    ZapList(acl->pluslist);
-    ZapList(acl->minuslist);
-    free(acl);
-}
-
-/*
- * Mods for the AFS/DFS protocol translator.
- *
- * DFS rights. It's ugly to put these definitions here, but they
- * *cannot* change, because they're part of the wire protocol.
- * In any event, the protocol translator will guarantee these
- * assignments for AFS cache managers.
- */
-#define DFS_READ          0x01
-#define DFS_WRITE         0x02
-#define DFS_EXECUTE       0x04
-#define DFS_CONTROL       0x08
-#define DFS_INSERT        0x10
-#define DFS_DELETE        0x20
-
-/* the application definable ones (backwards from AFS) */
-#define DFS_USR0 0x80000000      /* "A" bit */
-#define DFS_USR1 0x40000000      /* "B" bit */
-#define DFS_USR2 0x20000000      /* "C" bit */
-#define DFS_USR3 0x10000000      /* "D" bit */
-#define DFS_USR4 0x08000000      /* "E" bit */
-#define DFS_USR5 0x04000000      /* "F" bit */
-#define DFS_USR6 0x02000000      /* "G" bit */
-#define DFS_USR7 0x01000000      /* "H" bit */
-#define DFS_USRALL	(DFS_USR0 | DFS_USR1 | DFS_USR2 | DFS_USR3 |\
-			 DFS_USR4 | DFS_USR5 | DFS_USR6 | DFS_USR7)
 
 /*
  * Offset of -id switch in command structure for various commands.
@@ -254,10 +186,6 @@ PRights(afs_int32 arights, int dfs)
     }
     return 0;
 }
-
-                                /* added relative add resp. delete    */
-                                /* (so old add really means to set)   */
-enum rtype { add, destroy, deny, reladd, reldel };
 
 static afs_int32
 Convert(char *arights, int dfs, enum rtype *rtypep)
@@ -391,17 +319,6 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
     return mode;
 }
 
-static struct AclEntry *
-FindList (struct AclEntry *alist, char *aname)
-{
-    while (alist) {
-        if (!strcasecmp(alist->name, aname))
-            return alist;
-        alist = alist->next;
-    }
-    return 0;
-}
-
 /* if no parm specified in a particular slot, set parm to be "." instead */
 static void
 SetDotDefault(struct cmd_item **aitemp)
@@ -422,248 +339,6 @@ SetDotDefault(struct cmd_item **aitemp)
         exit(1);
     }
     *aitemp = ti;
-}
-
-static void
-ChangeList (struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
-	    enum rtpe *artypep)
-{
-    struct AclEntry *tlist;
-    tlist = (plus ? al->pluslist : al->minuslist);
-    tlist = FindList (tlist, aname);
-    if (tlist) {
-        /* Found the item already in the list. */
-                                /* modify rights in case of reladd    */
-                                /* and reladd only, use standard -    */
-                                /* add, ie. set - otherwise           */
-        if ( artypep == NULL )
-            tlist->rights = arights;
-        else if ( *artypep == reladd )
-            tlist->rights |= arights;
-        else if ( *artypep == reldel )
-            tlist->rights &= ~arights;
-        else
-            tlist->rights = arights;
-
-        if (plus)
-            al->nplus -= PruneList(&al->pluslist, al->dfs);
-        else
-            al->nminus -= PruneList(&al->minuslist, al->dfs);
-        return;
-    }
-    if ( artypep != NULL && *artypep == reldel )
-                                /* can't reduce non-existing rights   */
-        return;
-
-    /* Otherwise we make a new item and plug in the new data. */
-    tlist = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-    assert(tlist);
-    if( FAILED(StringCbCopy(tlist->name, sizeof(tlist->name), aname))) {
-	fprintf (stderr, "name - not enough space");
-        exit(1);
-    }
-    tlist->rights = arights;
-    if (plus) {
-        tlist->next = al->pluslist;
-        al->pluslist = tlist;
-        al->nplus++;
-        if (arights == 0 || arights == -1)
-	    al->nplus -= PruneList(&al->pluslist, al->dfs);
-    } else {
-        tlist->next = al->minuslist;
-        al->minuslist = tlist;
-        al->nminus++;
-        if (arights == 0)
-            al->nminus -= PruneList(&al->minuslist, al->dfs);
-    }
-}
-
-static void
-ZapList (struct AclEntry *alist)
-{
-    struct AclEntry *tp, *np;
-    for (tp = alist; tp; tp = np) {
-        np = tp->next;
-        free(tp);
-    }
-}
-
-static int
-PruneList (struct AclEntry **ae, int dfs)
-{
-    struct AclEntry **lp;
-    struct AclEntry *te, *ne;
-    afs_int32 ctr;
-    ctr = 0;
-    lp = ae;
-    for(te = *ae;te;te=ne) {
-        if ((!dfs && te->rights == 0) || te->rights == -1) {
-            *lp = te->next;
-            ne = te->next;
-            free(te);
-            ctr++;
-	} else {
-            ne = te->next;
-            lp = &te->next;
-	}
-    }
-    return ctr;
-}
-
-static char *
-SkipLine (char *astr)
-{
-    while (*astr !='\n')
-        astr++;
-    astr++;
-    return astr;
-}
-
-/*
- * Create an empty acl, taking into account whether the acl pointed
- * to by astr is an AFS or DFS acl. Only parse this minimally, so we
- * can recover from problems caused by bogus ACL's (in that case, always
- * assume that the acl is AFS: for DFS, the user can always resort to
- * acl_edit, but for AFS there may be no other way out).
- */
-static struct Acl *
-EmptyAcl(char *astr)
-{
-    struct Acl *tp;
-    int junk;
-
-    tp = (struct Acl *)malloc(sizeof (struct Acl));
-    assert(tp);
-    tp->nplus = tp->nminus = 0;
-    tp->pluslist = tp->minuslist = 0;
-    tp->dfs = 0;
-#if _MSC_VER < 1400
-    if (astr == NULL || sscanf(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell) <= 0) {
-        tp->dfs = 0;
-        tp->cell[0] = '\0';
-    }
-#else
-    if (astr == NULL || sscanf_s(astr, "%d dfs:%d %s", &junk, &tp->dfs, tp->cell, sizeof(tp->cell)) <= 0) {
-        tp->dfs = 0;
-        tp->cell[0] = '\0';
-    }
-#endif
-    return tp;
-}
-
-static struct Acl *
-ParseAcl (char *astr, int astr_size)
-{
-    int nplus, nminus, i, trights, ret;
-    size_t len;
-    char tname[MAXNAME];
-    struct AclEntry *first, *next, *last, *tl;
-    struct Acl *ta;
-
-    ta = EmptyAcl(NULL);
-    if( FAILED(StringCbLength(astr, astr_size, &len))) {
-        fprintf (stderr, "StringCbLength failure on astr");
-        exit(1);
-    }
-    if (astr == NULL || len == 0)
-        return ta;
-
-#if _MSC_VER < 1400
-    ret = sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
-#else
-    ret = sscanf_s(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell, sizeof(ta->cell));
-#endif
-    if (ret <= 0) {
-        free(ta);
-        return NULL;
-    }
-    astr = SkipLine(astr);
-#if _MSC_VER < 1400
-    ret = sscanf(astr, "%d", &ta->nminus);
-#else
-    ret = sscanf_s(astr, "%d", &ta->nminus);
-#endif
-    if (ret <= 0) {
-        free(ta);
-        return NULL;
-    }
-    astr = SkipLine(astr);
-
-    nplus = ta->nplus;
-    nminus = ta->nminus;
-
-    last = 0;
-    first = 0;
-    for(i=0;i<nplus;i++) {
-#if _MSC_VER < 1400
-        ret = sscanf(astr, "%100s %d", tname, &trights);
-#else
-        ret = sscanf_s(astr, "%100s %d", tname, sizeof(tname), &trights);
-#endif
-        if (ret <= 0)
-            goto nplus_err;
-        astr = SkipLine(astr);
-        tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        if (tl == NULL)
-            goto nplus_err;
-        if (!first)
-            first = tl;
-        if( FAILED(StringCbCopy(tl->name, sizeof(tl->name), tname))) {
-            fprintf (stderr, "name - not enough space");
-            exit(1);
-        }
-        tl->rights = trights;
-        tl->next = 0;
-        if (last)
-            last->next = tl;
-        last = tl;
-    }
-    ta->pluslist = first;
-
-    last = 0;
-    first = 0;
-    for(i=0;i<nminus;i++) {
-#if _MSC_VER < 1400
-        ret = sscanf(astr, "%100s %d", tname, &trights);
-#else
-        ret = sscanf_s(astr, "%100s %d", tname, sizeof(tname), &trights);
-#endif
-        if (ret <= 0)
-            goto nminus_err;
-        astr = SkipLine(astr);
-        tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        if (tl == NULL)
-            goto nminus_err;
-        if (!first)
-            first = tl;
-        if( FAILED(StringCbCopy(tl->name, sizeof(tl->name), tname))) {
-            fprintf (stderr, "name - not enough space");
-            exit(1);
-        }
-        tl->rights = trights;
-        tl->next = 0;
-        if (last)
-            last->next = tl;
-        last = tl;
-    }
-    ta->minuslist = first;
-
-    return ta;
-
-  nminus_err:
-    for (;first; first = next) {
-        next = first->next;
-        free(first);
-    }
-    first = ta->pluslist;
-
-  nplus_err:
-    for (;first; first = next) {
-        next = first->next;
-        free(first);
-    }
-    free(ta);
-    return NULL;
 }
 
 static int
@@ -739,49 +414,6 @@ QuickPrintSpace(VolumeStatus *status, char *name)
     return 0;
 }
 
-static char *
-AclToString(struct Acl *acl)
-{
-    static char mydata[AFS_PIOCTL_MAXSIZE];
-    char tstring[AFS_PIOCTL_MAXSIZE];
-    char dfsstring[30];
-    struct AclEntry *tp;
-
-    if (acl->dfs) {
-        if( FAILED(StringCbPrintf(dfsstring, sizeof(dfsstring), " dfs:%d %s", acl->dfs, acl->cell))) {
-            fprintf (stderr, "dfsstring - cannot be populated");
-            exit(1);
-        }
-    } else {
-        dfsstring[0] = '\0';
-    }
-    if( FAILED(StringCbPrintf(mydata, sizeof(mydata), "%d%s\n%d\n", acl->nplus, dfsstring, acl->nminus))) {
-        fprintf (stderr, "mydata - cannot be populated");
-        exit(1);
-    }
-    for (tp = acl->pluslist;tp;tp=tp->next) {
-        if( FAILED(StringCbPrintf(tstring, sizeof(tstring), "%s %d\n", tp->name, tp->rights))) {
-            fprintf (stderr, "tstring - cannot be populated");
-            exit(1);
-        }
-        if( FAILED(StringCbCat(mydata, sizeof(mydata), tstring))) {
-            fprintf (stderr, "mydata - not enough space");
-            exit(1);
-        }
-    }
-    for (tp = acl->minuslist;tp;tp=tp->next) {
-        if( FAILED(StringCbPrintf(tstring, sizeof(tstring), "%s %d\n", tp->name, tp->rights))) {
-            fprintf (stderr, "tstring - cannot be populated");
-            exit(1);
-        }
-        if( FAILED(StringCbCat(mydata, sizeof(mydata), tstring))) {
-            fprintf (stderr, "mydata - not enough space");
-            exit(1);
-        }
-    }
-    return mydata;
-}
-
 static DWORD IsFreelance(void)
 {
     HKEY  parmKey;
@@ -813,6 +445,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
     int idf = getidf(as, parm_setacl_id);
     size_t len;
     int error = 0;
+    char cell[CELL_MAXNAMELEN];
 
     if (as->parms[2].items)
         clear = 1;
@@ -820,6 +453,13 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
         clear = 0;
     plusp = !(as->parms[3].items);
     for(ti=as->parms[0].items; ti;ti=ti->next) {
+        code = GetCell(ti->data, cell, sizeof(cell));
+	if (code) {
+	    fs_Die(errno, ti->data);
+	    error = 1;
+            continue;
+	}
+
         if ( fs_IsFreelanceRoot(ti->data) ) {
             fprintf(stderr,"%s: ACLs cannot be set on the Freelance root.afs volume.\n", pn);
             error = 1;
@@ -865,7 +505,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
             continue;
         }
-	CleanAcl(ta, ti->data);
+	CleanAcl(ta, cell);
 	for(ui=as->parms[1].items; ui; ui=ui->next->next) {
 	    enum rtype rtype;
 	    if (!ui->next) {
@@ -965,6 +605,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     int idf = getidf(as, parm_copyacl_id);
     int error = 0;
     size_t len;
+    char cell[CELL_MAXNAMELEN];
 
     if (as->parms[2].items)
         clear=1;
@@ -981,11 +622,18 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     fa = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
     if (!fa) {
         fprintf(stderr,
-                 "fs: %s: invalid acl data returned from VIOCGETAL\n",
-                 as->parms[0].items->data);
+                 "%s: %s: invalid acl data returned from VIOCGETAL\n",
+                 pn, as->parms[0].items->data);
         return 1;
     }
-    CleanAcl(fa, as->parms[0].items->data);
+    code = GetCell(as->parms[0].items->data, cell, sizeof(cell));
+    if (code) {
+        fprintf(stderr,
+                "%s: %s: unable to obtain cell name\n",
+                pn, as->parms[0].items->data);
+        return 1;
+    }
+    CleanAcl(fa, cell);
     for (ti=as->parms[1].items; ti;ti=ti->next) {
 	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = idf;
@@ -1004,12 +652,20 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
             ta = ParseAcl(space, AFS_PIOCTL_MAXSIZE);
         if (!ta) {
             fprintf(stderr,
-                    "fs: %s: invalid acl data returned from VIOCGETAL\n",
-                     ti->data);
+                    "%s: %s: invalid acl data returned from VIOCGETAL\n",
+                     pn, ti->data);
             error = 1;
             continue;
         }
-	CleanAcl(ta, ti->data);
+        code = GetCell(ti->data, cell, sizeof(cell));
+        if (code) {
+            fprintf(stderr,
+                    "%s: %s: unable to obtain cell name\n",
+                     pn, ti->data);
+            error = 1;
+            continue;
+        }
+	CleanAcl(ta, cell);
 	if (ta->dfs != fa->dfs) {
 	    fprintf(stderr,
                     "%s: incompatible file system types: acl not copied to %s; aborted\n",
@@ -1061,13 +717,13 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 
 /* pioctl_utf8() call to get the cellname of a pathname */
 static afs_int32
-GetCell(char *fname, char *cellname)
+GetCell(char *fname, char *cellname, size_t cell_len)
 {
     afs_int32 code;
     struct ViceIoctl blob;
 
     blob.in_size = 0;
-    blob.out_size = CELL_MAXNAMELEN;
+    blob.out_size = cell_len;
     blob.out = cellname;
 
     code = pioctl_utf8(fname, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -1075,84 +731,6 @@ GetCell(char *fname, char *cellname)
         cellname[blob.out_size - 1] = '\0';
     return code;
 }
-
-/* Check if a username is valid: If it contains only digits (or a
- * negative sign), then it might be bad.  We then query the ptserver
- * to see.
- */
-static int
-BadName(char *aname, char *fname)
-{
-    afs_int32 tc, code, id;
-    char *nm;
-    char cell[CELL_MAXNAMELEN];
-    char confDir[257];
-
-    for ( nm = aname; tc = *nm; nm++) {
-	/* all must be '-' or digit to be bad */
-	if (tc != '-' && (tc < '0' || tc > '9'))
-            return 0;
-    }
-
-    /* Go to the PRDB and see if this all number username is valid */
-    code = GetCell(fname, cell);
-    if (code)
-        return 0;
-
-    cm_GetConfigDir(confDir, sizeof(confDir));
-
-    pr_Initialize(1, confDir, cell);
-    code = pr_SNameToId(aname, &id);
-    pr_End();
-
-    /* 1=>Not-valid; 0=>Valid */
-    return ((!code && (id == ANONYMOUSID)) ? 1 : 0);
-}
-
-
-/* clean up an access control list of its bad entries; return 1 if we made
-   any changes to the list, and 0 otherwise */
-static int
-CleanAcl(struct Acl *aa, char *fname)
-{
-    struct AclEntry *te, **le, *ne;
-    int changes;
-
-    /* Don't correct DFS ACL's for now */
-    if (aa->dfs)
-	return 0;
-
-    /* prune out bad entries */
-    changes = 0;	    /* count deleted entries */
-    le = &aa->pluslist;
-    for(te = aa->pluslist; te; te=ne) {
-	ne = te->next;
-	if (BadName(te->name, fname)) {
-	    /* zap this dude */
-	    *le = te->next;
-	    aa->nplus--;
-	    free(te);
-	    changes++;
-	} else {
-	    le = &te->next;
-	}
-    }
-    le = &aa->minuslist;
-    for(te = aa->minuslist; te; te=ne) {
-	ne = te->next;
-	if (BadName(te->name, fname)) {
-	    /* zap this dude */
-	    *le = te->next;
-	    aa->nminus--;
-	    free(te);
-	    changes++;
-	} else {
-	    le = &te->next;
-	}
-    }
-    return changes;
-}
-
 
 /* clean up an acl to not have bogus entries */
 static int
@@ -1166,6 +744,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
     struct AclEntry *te;
     int error = 0;
     size_t len;
+    char cell[CELL_MAXNAMELEN];
 
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
@@ -2133,7 +1712,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 	}
     } else {
 	if (!cellName) {
-	    code = GetCell(parent,space);
+	    code = GetCell(parent, space, sizeof(space));
             if (code)
                 return 1;
         }

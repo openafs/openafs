@@ -35,6 +35,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_user.h \
 	$(INCFILEDIR)\cm_dns.h \
 	$(INCFILEDIR)\cm_utils.h \
+        $(INCFILEDIR)\fs_acl.h \
 	$(INCFILEDIR)\fs_utils.h \
 	$(INCFILEDIR)\krb.h \
 	$(INCFILEDIR)\krb_prot.h \
@@ -159,6 +160,7 @@ $(OUT)\cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
 FSOBJS=$(OUT)\fs.obj \
+       $(OUT)\fs_acl.obj \
        $(OUT)\fs_utils.obj \
        $(OUT)\cm_nls.obj \
        $(OUT)\parsemode.obj
