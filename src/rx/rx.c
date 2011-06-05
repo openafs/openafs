@@ -4803,6 +4803,7 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
     }
     rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
 		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
+    call->flags |= RX_CALL_ACKALL_SENT;
     if (event)
 	MUTEX_EXIT(&call->lock);
 #else /* RX_ENABLE_LOCKS */
@@ -4810,6 +4811,7 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
 	call->delayedAckEvent = NULL;
     rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
 		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
+    call->flags |= RX_CALL_ACKALL_SENT;
 #endif /* RX_ENABLE_LOCKS */
 }
 
@@ -5392,7 +5394,21 @@ rxi_SendAck(struct rx_call *call,
     ap->serial = htonl(serial);
     ap->maxSkew = 0;		/* used to be peer->inPacketSkew */
 
-    ap->firstPacket = htonl(call->rnext);	/* First packet not yet forwarded to reader */
+    /*
+     * First packet not yet forwarded to reader. When ACKALL has been
+     * sent the peer has been told that all received packets will be
+     * delivered to the reader.  The value 'rnext' is used internally
+     * to refer to the next packet in the receive queue that must be
+     * delivered to the reader.  From the perspective of the peer it
+     * already has so report the last sequence number plus one if there
+     * are packets in the receive queue awaiting processing.
+     */
+    if ((call->flags & RX_CALL_ACKALL_SENT) &&
+        !queue_IsEmpty(&call->rq)) {
+        ap->firstPacket = htonl(queue_Last(&call->rq, rx_packet)->header.seq + 1);
+    } else
+        ap->firstPacket = htonl(call->rnext);
+
     ap->previousPacket = htonl(call->rprev);	/* Previous packet received */
 
     /* No fear of running out of ack packet here because there can only be at most

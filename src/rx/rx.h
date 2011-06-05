@@ -638,6 +638,7 @@ struct rx_call {
 #define RX_CALL_NEED_START	0x10000	/* tells rxi_Start to start again */
 #define RX_CALL_PEER_BUSY	0x20000 /* the last packet we received on this call was a
                                          * BUSY packet; i.e. the channel for this call is busy */
+#define RX_CALL_ACKALL_SENT     0x40000 /* ACKALL has been sent on the call */
 
 
 /* The structure of the data portion of an acknowledge packet: An acknowledge
