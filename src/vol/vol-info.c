@@ -858,34 +858,33 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL,
 			  "Dump volume's internal state");
-    cmd_AddParmAtOffset(ts, "-online", CMD_FLAG, CMD_OPTIONAL,
-			"Get info from running fileserver", P_ONLINE);
-    cmd_AddParmAtOffset(ts, "-vnode", CMD_FLAG, CMD_OPTIONAL,
-			"Dump vnode info", P_VNODE);
-    cmd_AddParmAtOffset(ts, "-date", CMD_FLAG, CMD_OPTIONAL,
-			"Also dump vnode's mod date", P_DATE);
-    cmd_AddParmAtOffset(ts, "-inode", CMD_FLAG, CMD_OPTIONAL,
-			"Also dump vnode's inode number", P_INODE);
-    cmd_AddParmAtOffset(ts, "-itime", CMD_FLAG, CMD_OPTIONAL,
-			"Dump special inode's mod times", P_ITIME);
-    cmd_AddParmAtOffset(ts, "-part", CMD_LIST, CMD_OPTIONAL,
-			"AFS partition name or id (default current partition)",
-			P_PART);
-    cmd_AddParmAtOffset(ts, "-volumeid", CMD_LIST, CMD_OPTIONAL, "Volume id",
-			P_VOLUMEID);
-    cmd_AddParmAtOffset(ts, "-header", CMD_FLAG, CMD_OPTIONAL,
-			"Dump volume's header info", P_HEADER);
-    cmd_AddParmAtOffset(ts, "-sizeonly", CMD_FLAG, CMD_OPTIONAL,
-			"Dump volume's size", P_SIZEONLY);
-    cmd_AddParmAtOffset(ts, "-fixheader", CMD_FLAG, CMD_OPTIONAL,
-			"Try to fix header", P_FIXHEADER);
-    cmd_AddParmAtOffset(ts, "-saveinodes", CMD_FLAG, CMD_OPTIONAL,
-			"Try to save all inodes", P_SAVEINODES);
-    cmd_AddParmAtOffset(ts, "-orphaned", CMD_FLAG, CMD_OPTIONAL,
-			"List all dir/files without a parent", P_ORPHANED);
+    cmd_AddParmAtOffset(ts, P_ONLINE, "-online", CMD_FLAG, CMD_OPTIONAL,
+			"Get info from running fileserver");
+    cmd_AddParmAtOffset(ts, P_VNODE, "-vnode", CMD_FLAG, CMD_OPTIONAL,
+			"Dump vnode info");
+    cmd_AddParmAtOffset(ts, P_DATE, "-date", CMD_FLAG, CMD_OPTIONAL,
+			"Also dump vnode's mod date");
+    cmd_AddParmAtOffset(ts, P_INODE, "-inode", CMD_FLAG, CMD_OPTIONAL,
+			"Also dump vnode's inode number");
+    cmd_AddParmAtOffset(ts, P_ITIME, "-itime", CMD_FLAG, CMD_OPTIONAL,
+			"Dump special inode's mod times");
+    cmd_AddParmAtOffset(ts, P_PART, "-part", CMD_LIST, CMD_OPTIONAL,
+			"AFS partition name or id (default current partition)");
+    cmd_AddParmAtOffset(ts, P_VOLUMEID, "-volumeid", CMD_LIST, CMD_OPTIONAL,
+			"Volume id");
+    cmd_AddParmAtOffset(ts, P_HEADER, "-header", CMD_FLAG, CMD_OPTIONAL,
+			"Dump volume's header info");
+    cmd_AddParmAtOffset(ts, P_SIZEONLY, "-sizeonly", CMD_FLAG, CMD_OPTIONAL,
+			"Dump volume's size");
+    cmd_AddParmAtOffset(ts, P_FIXHEADER, "-fixheader", CMD_FLAG,
+			CMD_OPTIONAL, "Try to fix header");
+    cmd_AddParmAtOffset(ts, P_SAVEINODES, "-saveinodes", CMD_FLAG,
+			CMD_OPTIONAL, "Try to save all inodes");
+    cmd_AddParmAtOffset(ts, P_ORPHANED, "-orphaned", CMD_FLAG, CMD_OPTIONAL,
+			"List all dir/files without a parent");
 #if defined(AFS_NAMEI_ENV)
-    cmd_AddParmAtOffset(ts, "-filenames", CMD_FLAG, CMD_OPTIONAL,
-			"Also dump vnode's namei filename", P_FILENAMES);
+    cmd_AddParmAtOffset(ts, P_FILENAMES, "-filenames", CMD_FLAG,
+			CMD_OPTIONAL, "Also dump vnode's namei filename");
 #endif
 
     /* For compatibility with older versions. */
