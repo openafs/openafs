@@ -3953,12 +3953,18 @@ rxi_ReceiveDataPacket(struct rx_call *call,
      * received. Always send a soft ack for the last packet in
      * the server's reply.
      *
-     * If we have received all of the packets for the call
-     * immediately send an RX_PACKET_TYPE_ACKALL packet so that
-     * the peer can empty its packet queue and cancel all resend
-     * events.
+     * If there was more than one packet received for the call
+     * and we have received all of them, immediately send an
+     * RX_PACKET_TYPE_ACKALL packet so that the peer can empty
+     * its packet transmit queue and cancel all resend events.
+     *
+     * When there is only one packet in the call there is a
+     * chance that we can race with Ping ACKs sent as part of
+     * connection establishment if the udp packets are delivered
+     * out of order.  When the race occurs, a two second delay
+     * will occur while waiting for a new Ping ACK to be sent.
      */
-    if (call->flags & RX_CALL_RECEIVE_DONE) {
+    if (!isFirst && (call->flags & RX_CALL_RECEIVE_DONE)) {
         rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
         rxi_AckAll(NULL, call, 0);
     } else if (ackNeeded) {
