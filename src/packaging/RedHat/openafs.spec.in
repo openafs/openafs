@@ -1008,6 +1008,10 @@ tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
 tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
+# Set the executable bit on libraries in libdir, so rpmbuild knows to 
+# create "Provides" entries in the package metadata for the libraries
+chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
+
 # Fix the location of restorevol, since it should be available for
 # any user in /usr/bin
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
@@ -1117,7 +1121,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 	>openafs-man5files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man8 \
-	|egrep '^backup|^bos|^butc|^fms|^fssync-debug|^fstrace|^kas|^read_tape|^uss' \
+	|egrep '^aklog_dynamic_auth|^backup|^bos|^butc|^fms|^fssync-debug|^fstrace|^kas|^read_tape|^uss' \
 	>openafs-man8files
 
 #
@@ -1420,6 +1424,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %config /etc/sysconfig/openafs
 %doc %{_docdir}/openafs-%{afsvers}/LICENSE
+%{_libdir}/libafshcrypto.so.*
+%{_libdir}/librokenafs.so.*
 
 %files docs
 %defattr(-,root,root)
@@ -1438,6 +1444,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/vice/etc/CellServDB.dist
 %config %{_prefix}/vice/etc/ThisCell
 %config %{_prefix}/vice/etc/cacheinfo
+%{_bindir}/afsio
 %{_bindir}/cmdebug
 %{_bindir}/up
 %{_prefix}/vice/etc/afsd
@@ -1549,23 +1556,21 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/libafsauthent.so.*
 %{_libdir}/libafsrpc.so.*
 %{_libdir}/libkopenafs.so.*
-%{_libdir}/libafshcrypto.so.*
 %endif
 
 %files authlibs-devel
 %defattr(-,root,root)
 %{_includedir}/kopenafs.h
 %{_libdir}/libafsauthent.a
+%{_libdir}/libafscp.a
 %{_libdir}/libafsrpc.a
 %{_libdir}/libafsauthent_pic.a
 %{_libdir}/libafsrpc_pic.a
 %{_libdir}/libkopenafs.a
-%{_libdir}/libafshcrypto.a
 %if %{build_authlibs}
 %{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
 %{_libdir}/libkopenafs.so
-%{_libdir}/libafshcrypto.so
 %endif
 
 %files devel
@@ -1573,20 +1578,19 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/afs_compile_et
 %{_bindir}/rxgen
 %{_includedir}/afs
-%{_includedir}/des.h
-%{_includedir}/des_conf.h
-%{_includedir}/des_odd.h
-%{_includedir}/des_prototypes.h
 %{_includedir}/lock.h
 %{_includedir}/lwp.h
-%{_includedir}/mit-cpyright.h
 %{_includedir}/preempt.h
 %{_includedir}/rx
 %{_includedir}/timer.h
 %{_includedir}/ubik.h
 %{_includedir}/ubik_int.h
 %{_libdir}/afs
+%{_libdir}/libafshcrypto.a
+%{_libdir}/libafshcrypto.so
 %{_libdir}/liblwp.a
+%{_libdir}/librokenafs.a
+%{_libdir}/librokenafs.so
 %{_libdir}/librx.a
 %{_libdir}/librxkad.a
 %{_libdir}/librxstat.a
