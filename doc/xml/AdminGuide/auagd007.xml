@@ -11,7 +11,7 @@
 
   <para>It is best to read this chapter before installing your cell's
   first file server machine or performing any other administrative
-  task.</para>
+  task.
 
   <indexterm>
     <primary>AFS</primary>
@@ -30,6 +30,7 @@
 
     <secondary>between AFS and UNIX, summarized</secondary>
   </indexterm>
+  </para>
 
   <sect1 id="HDRWQ30">
     <title>Differences between AFS and UNIX: A Summary</title>
@@ -3691,12 +3692,12 @@
             the attempt proceeds to the next step.</para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ66" />The utility obtains a PAG.</para>
+          <listitem id="LIWQ66">
+            <para>The utility obtains a PAG.</para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ67" />The utility converts the password
+          <listitem id="LIWQ67">
+            <para>The utility converts the password
             provided by the user into an encryption key and encrypts a
             packet of data with the key. It sends the packet to the AFS
             authentication service (the AFS Authentication Server in the
@@ -3735,8 +3736,8 @@
             </para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ68" />If no AFS token was granted in
+          <listitem id="LIWQ68">
+            <para>If no AFS token was granted in
             Step <link linkend="LIWQ67">4</link>, the login utility
             attempts to log the user into the local file system, by
             comparing the password provided to the local password file.

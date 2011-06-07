@@ -2,6 +2,7 @@
 <chapter id="HDRWQ323">
   <title>Monitoring and Auditing AFS Performance</title>
 
+  <para>
   <indexterm>
     <primary>scout program</primary>
   </indexterm>
@@ -48,7 +49,7 @@
     <secondary>monitoring activity</secondary>
   </indexterm>
 
-  <para>AFS comes with three main monitoring tools: <itemizedlist>
+  AFS comes with three main monitoring tools: <itemizedlist>
       <listitem>
         <para>The <emphasis role="bold">scout</emphasis> program, which monitors and gathers statistics on File Server
         performance.</para>

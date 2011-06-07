@@ -2,6 +2,7 @@
 <chapter id="HDRWQ99">
   <title>Installing Additional Server Machines</title>
 
+  <para>
   <indexterm>
     <primary>instructions</primary>
 
@@ -20,7 +21,7 @@
     <see>file server machine, additional</see>
   </indexterm>
 
-  <para>Instructions for the following procedures appear in the indicated section of this chapter. <itemizedlist>
+  Instructions for the following procedures appear in the indicated section of this chapter. <itemizedlist>
       <listitem>
         <para><link linkend="HDRWQ100">Installing an Additional File Server Machine</link></para>
       </listitem>
@@ -58,13 +59,14 @@
         your operating system, either on the local filesystem or via an NFS
         mount of the distribution's contents.</para>
       </listitem>
-    </itemizedlist></para>
+    </itemizedlist>
 
   <indexterm>
     <primary>requirements</primary>
 
     <secondary>file server machine (additional)</secondary>
   </indexterm>
+  </para>
 
   <sect1 id="HDRWQ100">
     <title>Installing an Additional File Server Machine</title>
@@ -1063,8 +1065,8 @@
               </indexterm>
             </listitem>
 
-            <listitem>
-              <para><anchor id="LIWQ105" />Create a directory called <emphasis
+            <listitem id="LIWQ105">
+              <para>Create a directory called <emphasis
               role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS server partition you are configuring (there
               must be at least one). Repeat the command for each partition. <programlisting>
    # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
@@ -1883,8 +1885,8 @@
               </indexterm></para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ109" />If you run a system control machine, create the <emphasis
+          <listitem id="LIWQ109">
+            <para>If you run a system control machine, create the <emphasis
             role="bold">upclientetc</emphasis> process as an instance of the client portion of the Update Server. It accepts updates
             of the common configuration files stored in the system control machine's <emphasis role="bold">/usr/afs/etc</emphasis>
             directory from the <emphasis role="bold">upserver</emphasis> process (server portion of the Update Server) running on
@@ -1928,8 +1930,8 @@
             </indexterm>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ110" />Create an instance of the Update 
+          <listitem id="LIWQ110">
+            <para>Create an instance of the Update 
             Server to handle distribution of the file server binaries
             stored in the <emphasis role="bold">/usr/afs/bin</emphasis> 
             directory. If your architecture using a package management system
@@ -2945,8 +2947,8 @@
               </orderedlist></para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ113" />Verify that <emphasis role="bold">/usr/afs</emphasis> and its subdirectories on the new
+          <listitem id="LIWQ113">
+            <para>Verify that <emphasis role="bold">/usr/afs</emphasis> and its subdirectories on the new
             file server machine meet the ownership and mode bit requirements outlined in <link linkend="HDRWQ96">Protecting
             Sensitive AFS Directories</link>. If necessary, use the <emphasis role="bold">chmod</emphasis> command to correct the
             mode bits.</para>
@@ -3164,8 +3166,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ115" />Issue the <emphasis role="bold">bos addhost</emphasis> command to add the new database server
+        <listitem id="LIWQ115">
+          <para>Issue the <emphasis role="bold">bos addhost</emphasis> command to add the new database server
           machine to the <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis> file on existing server machines (as well as the
           new database server machine itself).</para>
 
@@ -3202,8 +3204,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ116" />Add the new database server machine to your cell's central <emphasis
+        <listitem id="LIWQ116">
+          <para>Add the new database server machine to your cell's central <emphasis
           role="bold">CellServDB</emphasis> source file, if you use one. The standard location is <emphasis
           role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/common/etc/CellServDB</emphasis>.</para>
@@ -3232,8 +3234,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ117" />If this machine's IP address is lower than any existing database server machine's, update
+        <listitem id="LIWQ117">
+          <para>If this machine's IP address is lower than any existing database server machine's, update
           every client machine's <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file and kernel memory list to include
           this machine. (If this machine's IP address is not the lowest, it is acceptable to wait until Step <link
           linkend="LIWQ123">12</link>.)</para>
@@ -3270,7 +3272,7 @@
           for an additional installation step.</para>
         </listitem>
 
-        <listitem>
+        <listitem id="LIWQ119">
           <indexterm>
             <primary>Backup Server</primary>
             <secondary>starting</secondary>
@@ -3281,7 +3283,7 @@
             <tertiary>new db-server machine</tertiary>
           </indexterm>
 
-          <para><anchor id="LIWQ119" />Start the Backup Server (the <emphasis role="bold">buserver</emphasis> process). You must
+          <para>Start the Backup Server (the <emphasis role="bold">buserver</emphasis> process). You must
           perform other configuration procedures before actually using the AFS Backup System, as detailed in the <emphasis>OpenAFS
           Administration Guide</emphasis>. <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>
@@ -3300,8 +3302,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ120" />Start the Protection Server (the <emphasis role="bold">ptserver</emphasis> process).
+        <listitem id="LIWQ120">
+          <para>Start the Protection Server (the <emphasis role="bold">ptserver</emphasis> process).
           <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis>
 </programlisting> <indexterm>
@@ -3319,8 +3321,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ121" />Start the Volume Location (VL) Server (the <emphasis role="bold">vlserver</emphasis>
+        <listitem id="LIWQ121">
+          <para>Start the Volume Location (VL) Server (the <emphasis role="bold">vlserver</emphasis>
           process). <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis>
 </programlisting> <indexterm>
@@ -3348,8 +3350,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ122" />Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
+        <listitem id="LIWQ122">
+          <para>Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
           machine in the cell, including the new machine. The command restarts the Authentication, Backup, Protection, and VL
           Servers, which forces an election of a new Ubik coordinator for each process. The new machine votes in the election and is
           considered as a potential new coordinator.</para>
@@ -3379,13 +3381,13 @@
             </itemizedlist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ123" />If you did not update the <emphasis role="bold">CellServDB</emphasis> file on client machines
+        <listitem id="LIWQ123">
+          <para>If you did not update the <emphasis role="bold">CellServDB</emphasis> file on client machines
           in Step <link linkend="LIWQ117">6</link>, do so now.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ124" />If you wish to participate in the AFS
+        <listitem id="LIWQ124">
+          <para>If you wish to participate in the AFS
           global name space, send the new database server machine's name and 
           IP address to grand.central.org. Do so, by emailing an updated
           <emphasis role="bold">CellServDB</emphasis> fragment for your cell
@@ -3498,8 +3500,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ126" />If your cell is included in the global
+        <listitem id="LIWQ126">
+          <para>If your cell is included in the global
           <emphasis role="bold">CellServDB</emphasis>, send the revised list of 
           your cell's database server machines to grand.central.org</para>
 
@@ -3510,8 +3512,8 @@
           machine.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ127" />Remove the decommissioned machine from your cell's central <emphasis
+        <listitem id="LIWQ127">
+          <para>Remove the decommissioned machine from your cell's central <emphasis
           role="bold">CellServDB</emphasis> source file, if you use one. The conventional location is <emphasis
           role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/common/etc/CellServDB</emphasis>.</para>
@@ -3542,8 +3544,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ128" />Update every client machine's <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file
+        <listitem id="LIWQ128">
+          <para>Update every client machine's <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file
           and kernel memory list to exclude this machine. Altering the <emphasis role="bold">CellServDB</emphasis> file and kernel
           memory list before stopping the actual database server processes avoids possible time-out delays that result when users
           send requests to a decommissioned database server machine that is still listed in the file.</para>
@@ -3574,8 +3576,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ129" />Issue the <emphasis role="bold">bos removehost</emphasis> command to remove the
+        <listitem id="LIWQ129">
+          <para>Issue the <emphasis role="bold">bos removehost</emphasis> command to remove the
           decommissioned database server machine from the <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis> file on server
           machines.</para>
 
@@ -3631,8 +3633,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ130" />Issue the <emphasis role="bold">bos stop</emphasis> command to stop the database server
+        <listitem id="LIWQ130">
+          <para>Issue the <emphasis role="bold">bos stop</emphasis> command to stop the database server
           processes on the machine, by substituting its fully-qualified hostname for the
           <replaceable>machine&nbsp;name</replaceable> argument. The command changes each process's status in the <emphasis
           role="bold">/usr/afs/local/BosConfig</emphasis> file to <computeroutput>NotRun</computeroutput>, but does not remove its
@@ -3661,8 +3663,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ131" /><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">bos
+        <listitem id="LIWQ131">
+          <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">bos
           delete</emphasis> command to remove the entries for database server processes from the <emphasis
           role="bold">BosConfig</emphasis> file. This step is unnecessary if you plan to restart the database server functionality
           on this machine in future. <programlisting>
@@ -3692,8 +3694,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ132" />Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
+        <listitem id="LIWQ132">
+          <para>Issue the <emphasis role="bold">bos restart</emphasis> command on every database server
           machine in the cell, to restart the Backup, Protection, and VL Servers. This forces the election of a Ubik
           coordinator for each process, ensuring that the remaining database server processes recognize that the machine is no
           longer a database server.</para>

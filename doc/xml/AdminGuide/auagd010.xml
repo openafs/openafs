@@ -730,8 +730,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ186" />Select a site (disk partition on a file server machine) for the new volume. To verify that
+        <listitem id="LIWQ186">
+          <para>Select a site (disk partition on a file server machine) for the new volume. To verify that
           the site has enough free space to house the volume (now, or if it grows to use its entire quota), issue the <emphasis
           role="bold">vos partinfo</emphasis> command.</para>
 
@@ -774,8 +774,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ187" />Select a volume name, taking note of the information in <link linkend="HDRWQ184">About Volume
+        <listitem id="LIWQ187">
+          <para>Select a volume name, taking note of the information in <link linkend="HDRWQ184">About Volume
           Names</link>.</para>
 
           <indexterm>
@@ -795,8 +795,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ188" />Issue the <emphasis role="bold">vos create</emphasis> command to create the volume.
+        <listitem id="LIWQ188">
+          <para>Issue the <emphasis role="bold">vos create</emphasis> command to create the volume.
           <programlisting>
    % <emphasis role="bold">vos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; &lt;<replaceable>volume name</replaceable>&gt; \
         [<emphasis role="bold">-maxquota</emphasis> &lt;<replaceable>initial quota (KB)</replaceable>&gt;]
@@ -874,9 +874,7 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <anchor id="LIWQ189" />
-
+        <listitem id="LIWQ189">
           <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">fs mkmount</emphasis> command to mount
           the volume in the filespace. For complete syntax, see <link linkend="HDRWQ212">To create a regular or read/write mount
           point</link>. <programlisting>
@@ -1386,16 +1384,16 @@
       </indexterm>
 
       <orderedlist>
-        <listitem>
-          <para><anchor id="LIWQ195" />Verify that you are listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis>
+        <listitem id="LIWQ195">
+          <para>Verify that you are listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis>
           file. If necessary, issue the <emphasis role="bold">bos listusers</emphasis> command, which is fully described in <link
           linkend="HDRWQ593">To display the users in the UserList file</link>. <programlisting>
    % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ196" />Select one or more sites at which to replicate the volume. There are several factors to
+        <listitem id="LIWQ196">
+          <para>Select one or more sites at which to replicate the volume. There are several factors to
           consider: <itemizedlist>
               <listitem>
                 <para>How many sites are already defined. As previously noted, it is usually appropriate to define a read-only site
@@ -1467,8 +1465,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ197" />Issue the <emphasis role="bold">vos addsite</emphasis> command to define each new read-only
+        <listitem id="LIWQ197">
+          <para>Issue the <emphasis role="bold">vos addsite</emphasis> command to define each new read-only
           site in the VLDB. <programlisting>
    % <emphasis role="bold">vos addsite</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; &lt;<replaceable>volume name or ID</replaceable>&gt;
 </programlisting></para>
@@ -1509,8 +1507,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ198" /><emphasis role="bold">(Optional)</emphasis> Verify that the <emphasis
+        <listitem id="LIWQ198">
+          <para><emphasis role="bold">(Optional)</emphasis> Verify that the <emphasis
           role="bold">fs</emphasis> process (which incorporates the Volume Server) is functioning normally on each file server
           machine where you have defined a read-only site, and that the <emphasis role="bold">vlserver</emphasis> process (the
           Volume Location Server) is functioning correctly on each database server machine. Knowing that they are functioning
@@ -1550,8 +1548,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ199" />Issue the <emphasis role="bold">vos release</emphasis> command to clone the read/write source
+        <listitem id="LIWQ199">
+          <para>Issue the <emphasis role="bold">vos release</emphasis> command to clone the read/write source
           volume and distribute the clone to each read-only site. <programlisting>
    % <emphasis role="bold">vos release</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt; [<emphasis role="bold">-f</emphasis>]
 </programlisting></para>
@@ -1585,9 +1583,7 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <anchor id="LIWQ200" />
-
+        <listitem id="LIWQ200">
           <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">vos examine</emphasis> command to verify
           that no site definition in the VLDB entry is marked with an <computeroutput>Old release</computeroutput> or
           <computeroutput>New release</computeroutput> flag. The command is described fully in <link linkend="HDRWQ221">Displaying
@@ -1898,8 +1894,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ206" />Issue the <emphasis role="bold">vos backup</emphasis> command to create a backup version of a
+        <listitem id="LIWQ206">
+          <para>Issue the <emphasis role="bold">vos backup</emphasis> command to create a backup version of a
           read/write source volume. The message shown confirms the success of the backup operation. <programlisting>
    % <emphasis role="bold">vos backup</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt; Created backup volume for volume name or ID
 </programlisting></para>
@@ -1941,8 +1937,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ207" /><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">fs
+        <listitem id="LIWQ207">
+          <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">fs
           mkmount</emphasis> to mount the backup volume. While this step is optional, Cache Managers cannot access the volume's
           contents if it is not mounted. <programlisting>
    % <emphasis role="bold">fs mkmount</emphasis> &lt;<replaceable>directory</replaceable>&gt; &lt;<replaceable>volume name</replaceable>&gt; <emphasis
@@ -2591,8 +2587,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ214" />If you are mounting one or more foreign cells' <emphasis role="bold">root.cell</emphasis>
+        <listitem id="LIWQ214">
+          <para>If you are mounting one or more foreign cells' <emphasis role="bold">root.cell</emphasis>
           volume at the second level in your filespace and your cell's <emphasis role="bold">root.afs</emphasis> volume is
           replicated, you must create a temporary mount point for the <emphasis role="bold">root.afs</emphasis> volume's read/write
           version in a directory on which the ACL grants you the <emphasis role="bold">i</emphasis> and <emphasis
@@ -4333,35 +4329,36 @@
     of the volume containing the file. Therefore, the VLDB must accurately reflect the state of volumes on the file server machines
     at all times. The Volume Server and VL Server automatically update a volume's VLDB entry when its status changes during a
     <emphasis role="bold">vos</emphasis> operation, by performing the following series of steps. <orderedlist>
-        <listitem>
-          <para><anchor id="LIWQ228" />The VL Server locks the VLDB entry. The lock advises other operations not to manipulate any
+        <listitem id="LIWQ228">
+          <para>The VL Server locks the VLDB entry. The lock advises other operations not to manipulate any
           of the volume versions (read/write, read-only, or backup), which prevents the inconsistency that can result from multiple
           simultaneous operations.</para>
         </listitem>
 
-        <listitem>
+        <listitem id="LIWQ229">
           <para><indexterm>
               <primary>intention flag in VLDB entry</primary>
             </indexterm> <indexterm>
               <primary>VLDB</primary>
 
               <secondary>intention flag set by VL Server</secondary>
-            </indexterm> <anchor id="LIWQ229" />The VL Server sets an <emphasis>intention flag</emphasis> in the VLDB entry that
+            </indexterm>
+          The VL Server sets an <emphasis>intention flag</emphasis> in the VLDB entry that
           indicates the kind of operation to be performed. This flag never appears in VLDB listings because it is for internal use
           only. In case the operation terminates prematurely, this flag tells the Salvager which operation was interrupted. (The
           Salvager then determines the steps necessary either to complete the operation or return the volume to a previous
           consistent state. For more information on salvaging, see <link linkend="HDRWQ232">Salvaging Volumes</link>.)</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ230" />The Volume Server manipulates the volume. It usually sets the
+        <listitem id="LIWQ230">
+          <para>The Volume Server manipulates the volume. It usually sets the
           <computeroutput>Off-line</computeroutput> flag in the volume header, which makes the volume inaccessible to the File
           Server and other Volume Server operations during the manipulation. When the operation completes, the volume is again
           marked <computeroutput>On-line</computeroutput>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ231" />The VL Server records any changes resulting from the operation in the VLDB entry. Once the
+        <listitem id="LIWQ231">
+          <para>The VL Server records any changes resulting from the operation in the VLDB entry. Once the
           operation is complete, it removes the intention flag set in Step <link linkend="LIWQ229">2</link>and releases the lock set
           in Step <link linkend="LIWQ228">1</link>.</para>
         </listitem>
@@ -4532,8 +4529,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIVOL-SYNCVL" />Issue the <emphasis role="bold">vos syncvldb</emphasis> command to make the VLDB reflect
+        <listitem id="LIVOL-SYNCVL">
+          <para>Issue the <emphasis role="bold">vos syncvldb</emphasis> command to make the VLDB reflect
           the true state of all volumes on a machine or partition, or the state of one volume.</para>
 
           <note>
@@ -4600,8 +4597,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIVOL-SYNCSR" />Issue the <emphasis role="bold">vos syncserv</emphasis> command to inspect each volume
+        <listitem id="LIVOL-SYNCSR">
+          <para>Issue the <emphasis role="bold">vos syncserv</emphasis> command to inspect each volume
           for which the VLDB lists a version at the specified site.</para>
 
           <note>
@@ -5701,8 +5698,7 @@
           role="bold">fs setacl</emphasis> command to grant other rights as necessary.</para>
         </listitem>
 
-        <listitem>
-          <anchor id="LIWQ237" />
+        <listitem id="LIWQ237">
 
           <para><emphasis role="bold">(Optional)</emphasis> Dump the volume to a file or to tape, in case you want to restore it
           later. To copy the volume's contents to a file, use the <emphasis role="bold">vos dump</emphasis> command as instructed in
@@ -5731,8 +5727,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ238" />Issue the <emphasis role="bold">vos remove</emphasis> command to remove the volume. If
+        <listitem id="LIWQ238">
+          <para>Issue the <emphasis role="bold">vos remove</emphasis> command to remove the volume. If
           removing a read-only volume from multiple sites, repeat the command for each one. <programlisting>
    % <emphasis role="bold">vos remove</emphasis> [<emphasis role="bold">-server</emphasis> machine name&gt;] [<emphasis role="bold">-partition</emphasis> &lt;<replaceable>partition name</replaceable>&gt;] \
                <emphasis role="bold">-id</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt;
@@ -5792,8 +5788,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ239" />If you are removing the last existing version of the volume, issue the <emphasis
+        <listitem id="LIWQ239">
+          <para>If you are removing the last existing version of the volume, issue the <emphasis
           role="bold">fs rmmount</emphasis> command remove the corresponding mount point. Complete instructions appear in <link
           linkend="HDRWQ236">To remove a volume and unmount it</link>.</para>
 
@@ -6013,8 +6009,8 @@
           role="bold">fs setacl</emphasis> command to grant other rights as necessary.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ241" />Issue the <emphasis role="bold">vos dump</emphasis> command to dump the volume.
+        <listitem id="LIWQ241">
+          <para>Issue the <emphasis role="bold">vos dump</emphasis> command to dump the volume.
           <programlisting>
    % <emphasis role="bold">vos dump -id</emphasis> &lt;<replaceable>volume name or ID</replaceable>&gt; [<emphasis role="bold">-time</emphasis> &lt;<replaceable>dump from time</replaceable>&gt;] [<emphasis
                 role="bold">-file</emphasis> &lt;<replaceable>arg</replaceable>&gt;] [<emphasis role="bold">-server</emphasis> &lt;<replaceable>server</replaceable>&gt;] [<emphasis
@@ -6219,8 +6215,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ243" />Issue the <emphasis role="bold">vos restore</emphasis> command to create a new volume and
+        <listitem id="LIWQ243">
+          <para>Issue the <emphasis role="bold">vos restore</emphasis> command to create a new volume and
           restore the dump file into it. Type it on a single line; it appears on multiple lines here only for legibility.
           <programlisting>
    % <emphasis role="bold">vos restore</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; \
@@ -6554,8 +6550,8 @@
           role="bold">fs setacl</emphasis> command to grant other rights as necessary.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIVOL-REN" />Issue the <emphasis role="bold">vos rename</emphasis> command to rename the volume.
+        <listitem id="LIVOL-REN">
+          <para>Issue the <emphasis role="bold">vos rename</emphasis> command to rename the volume.
           <programlisting>
    % <emphasis role="bold">vos rename</emphasis> &lt;<replaceable>old volume name</replaceable>&gt; &lt;<replaceable>new volume name</replaceable>&gt;
 </programlisting></para>

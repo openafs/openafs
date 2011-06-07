@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
     <appendix id="HDRWQ86"><title>OpenAFS Command Syntax and Online Help</title>
 
+<para>
 <indexterm><primary>syntax of AFS commands described</primary></indexterm>
 
-    <para>The AFS commands available to you are used to authenticate, list AFS information, protect directories, create
+    The AFS commands available to you are used to authenticate, list AFS information, protect directories, create
     and manage groups, and create and manage ACLs. There are three general types of commands available to all AFS
     users: file server commands, protection server commands, and miscellaneous commands. This chapter discusses the
     syntax of these AFS commands, the rules that must be followed when issuing them, and ways of accessing help

@@ -2,6 +2,7 @@
 <chapter id="HDRWQ142">
   <title>Monitoring and Controlling Server Processes</title>
 
+  <para>
   <indexterm>
     <primary>monitoring</primary>
 
@@ -14,7 +15,7 @@
     <secondary>monitoring server processes</secondary>
   </indexterm>
 
-  <para>One of your most important responsibilities as a system administrator is ensuring that the processes on file server machines
+  One of your most important responsibilities as a system administrator is ensuring that the processes on file server machines
   are running correctly. The BOS Server, which runs on every file server machine, relieves you of much of the responsibility by
   constantly monitoring the other AFS server processes on its machine. It can automatically restart processes that have failed,
   ordering the restarts to take interdependencies into account.</para>
@@ -1527,7 +1528,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ163" />Issue the <emphasis role="bold">bos create</emphasis> command to create an entry in the
+          <para>Issue the <emphasis role="bold">bos create</emphasis> command to create an entry in the
           <emphasis role="bold">BosConfig</emphasis> file and start the process. <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>server process name</replaceable>&gt;   \
              &lt;<replaceable>server type</replaceable>&gt; &lt;<replaceable>command lines</replaceable>&gt;+ [ <emphasis
@@ -1789,8 +1790,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIPROC-STOP" />Issue the <emphasis role="bold">bos stop</emphasis> command to change each process's
+        <listitem id="LIPROC-STOP">
+          <para>Issue the <emphasis role="bold">bos stop</emphasis> command to change each process's
           status flag in the <emphasis role="bold">BosConfig</emphasis> file to <computeroutput>NotRun</computeroutput> and to stop
           it. You must issue this command even for cron processes that you wish to remove from the <emphasis
           role="bold">BosConfig</emphasis> file, even though they do not run continuously. For a detailed description of this
@@ -1802,7 +1803,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIPROC-DEL" />Issue the <emphasis role="bold">bos delete</emphasis> command to remove each process from
+          <para>Issue the <emphasis role="bold">bos delete</emphasis> command to remove each process from
           the <emphasis role="bold">BosConfig</emphasis> file. <programlisting>
    % <emphasis role="bold">bos delete</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>server process name</replaceable>&gt;+
 </programlisting></para>
@@ -2030,7 +2031,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIPROC-START" />Issue the <emphasis role="bold">bos start</emphasis> command to change each process's
+          <para>Issue the <emphasis role="bold">bos start</emphasis> command to change each process's
           status flag to <computeroutput>Run</computeroutput> in both the <emphasis role="bold">BosConfig</emphasis> file and the
           BOS Server's memory and to start it. <programlisting>
    %  <emphasis role="bold">bos start</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>server process name</replaceable>&gt;+
@@ -2118,7 +2119,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ169" />Issue the <emphasis role="bold">bos shutdown</emphasis> command to stop each process by
+          <para>Issue the <emphasis role="bold">bos shutdown</emphasis> command to stop each process by
           changing its status flag in the BOS Server's memory to <computeroutput>NotRun</computeroutput>. <programlisting>
    % <emphasis role="bold">bos shutdown</emphasis> &lt;<replaceable>machine name</replaceable>&gt; [&lt;<replaceable>instances</replaceable>&gt;+] [<emphasis
                 role="bold">-wait</emphasis>]

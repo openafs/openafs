@@ -2912,7 +2912,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ484" /><emphasis role="bold">(Optional)</emphasis> Change to the directory where the template
+          <para><emphasis role="bold">(Optional)</emphasis> Change to the directory where the template
           resides. This affects the type of pathname you must type in Step <link linkend="LIWQ485">6</link>. <programlisting>
    % <emphasis role="bold">cd</emphasis> template_directory
 </programlisting></para>
@@ -2935,8 +2935,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ485" />Issue the <emphasis role="bold">uss add</emphasis> command to create the account. Enter the
+        <listitem id="LIWQ485">
+          <para>Issue the <emphasis role="bold">uss add</emphasis> command to create the account. Enter the
           command on a single line; it appears here on multiple lines only for legibility.</para>
 
           <para>The <emphasis role="bold">uss add</emphasis> operation creates an Authentication Database entry. The Authentication
@@ -3912,7 +3912,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ490" />Issue the <emphasis role="bold">uss bulk</emphasis> command to create or delete accounts, or
+          <para>Issue the <emphasis role="bold">uss bulk</emphasis> command to create or delete accounts, or
           both. Enter the command on a single line; it appears here on multiple lines only for legibility.</para>
 
           <para>The bulk operation always manipulates user entries in the Authentication Database. The Authentication Server

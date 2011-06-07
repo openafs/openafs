@@ -455,7 +455,7 @@
 
       <orderedlist>
         <listitem>
-          <para><anchor id="LIWQ591" />Issue the <emphasis role="bold">kas examine</emphasis> command to display an entry from the
+          <para>Issue the <emphasis role="bold">kas examine</emphasis> command to display an entry from the
           Authentication Database.</para>
 
           <para>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,

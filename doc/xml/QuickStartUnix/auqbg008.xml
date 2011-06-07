@@ -259,8 +259,8 @@
 
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ166" />Working in the <emphasis
+        <listitem id="LIWQ166">
+          <para>Working in the <emphasis
           role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis> directory on a
           machine of the system type for which you are building AFS, issue the <emphasis role="bold">make install</emphasis>
           command.</para>

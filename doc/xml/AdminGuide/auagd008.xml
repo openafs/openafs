@@ -2,6 +2,7 @@
 <chapter id="HDRWQ80">
   <title>Administering Server Machines</title>
 
+  <para>
   <indexterm>
     <primary>server machine</primary>
 
@@ -14,7 +15,7 @@
     <secondary>server machine</secondary>
   </indexterm>
 
-  <para>This chapter describes how to administer an AFS server machine. It describes the following configuration information and
+  This chapter describes how to administer an AFS server machine. It describes the following configuration information and
   administrative tasks: <itemizedlist>
       <listitem>
         <para>The binary and configuration files that must reside in the subdirectories of the <emphasis
@@ -2890,8 +2891,8 @@
           become the synchronization site in an election.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIDBBK_SHUTDOWN" />Issue the <emphasis role="bold">bos shutdown</emphasis> command to shut down the
+        <listitem id="LIDBBK_SHUTDOWN">
+          <para>Issue the <emphasis role="bold">bos shutdown</emphasis> command to shut down the
           relevant server process on the local machine. For a complete description of the command, see <link linkend="HDRWQ168">To
           stop processes temporarily</link>.</para>
 
@@ -2976,8 +2977,8 @@
           cell.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIDBREST_SHUTDOWN" />Working on one of the machines, issue the <emphasis role="bold">bos
+        <listitem id="LIDBREST_SHUTDOWN">
+          <para>Working on one of the machines, issue the <emphasis role="bold">bos
           shutdown</emphasis> command once for each database server machine, to shut down the relevant server process on all of
           them. For a complete description of the command, see <link linkend="HDRWQ168">To stop processes temporarily</link>.</para>
 
@@ -3308,8 +3309,8 @@
           using a transfer utility such as the <emphasis role="bold">ftp</emphasis> command.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ112" />Issue the <emphasis role="bold">bos install</emphasis> command for the binary distribution
+        <listitem id="LIWQ112">
+          <para>Issue the <emphasis role="bold">bos install</emphasis> command for the binary distribution
           machine. (If you have forgotten which machine is performing that role, see <link linkend="HDRWQ97">To locate the binary
           distribution machine for a system type</link>.) <programlisting>
    % <emphasis role="bold">bos install</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>files to install</replaceable>&gt;+
@@ -3489,8 +3490,8 @@
           role="bold">.BAK</emphasis></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ114" />Issue the <emphasis role="bold">bos uninstall</emphasis> command for a binary distribution
+        <listitem id="LIWQ114">
+          <para>Issue the <emphasis role="bold">bos uninstall</emphasis> command for a binary distribution
           machine. (If you have forgotten which machine is performing that role, see <link linkend="HDRWQ97">To locate the binary
           distribution machine for a system type</link>.) <programlisting>
    % <emphasis role="bold">bos uninstall</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>files to uninstall</replaceable>&gt;+
@@ -4966,15 +4967,15 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ132" />Using a text editor, create an entry in the machine's file systems registry file (<emphasis
+        <listitem id="LIWQ132">
+          <para>Using a text editor, create an entry in the machine's file systems registry file (<emphasis
           role="bold">/etc/fstab</emphasis> or equivalent) for each new disk partition, mapping its device name to the directory you
           created in the previous step. Refer to existing entries in the file to learn the proper format, which varies for different
           operating systems.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ133" />If the operating system requires that you shut off the machine to install a new disk, issue
+        <listitem id="LIWQ133">
+          <para>If the operating system requires that you shut off the machine to install a new disk, issue
           the <emphasis role="bold">bos shutdown</emphasis> command to shut down all AFS server processes other than the BOS Server
           (it terminates safely when you shut off the machine). Include the <emphasis role="bold">-localauth</emphasis> flag because
           you are logged in as the local superuser <emphasis role="bold">root</emphasis> but do not necessarily have administrative
@@ -4985,8 +4986,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ134" />If necessary, shut off the machine. Install and format the new disk according to the
+        <listitem id="LIWQ134">
+          <para>If necessary, shut off the machine. Install and format the new disk according to the
           instructions provided by the disk and operating system vendors. If necessary, edit the disk's partition table to reflect
           the changes you made to the files system registry file in step <link linkend="LIWQ132">4</link>; consult the operating
           system documentation for instructions.</para>
@@ -5117,8 +5118,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ136" />Using a text editor, remove or comment out each partition's entry from the machine's file
+        <listitem id="LIWQ136">
+          <para>Using a text editor, remove or comment out each partition's entry from the machine's file
           systems registry file (<emphasis role="bold">/etc/fstab</emphasis> or equivalent).</para>
         </listitem>
 
@@ -5139,8 +5140,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ137" />If necessary, shut off the machine. Remove the disk according to the instructions provided by
+        <listitem id="LIWQ137">
+          <para>If necessary, shut off the machine. Remove the disk according to the instructions provided by
           the disk and operating system vendors. If necessary, edit the disk's partition table to reflect the changes you made to
           the files system registry file in step <link linkend="LIWQ136">7</link>; consult the operating system documentation for
           instructions.</para>

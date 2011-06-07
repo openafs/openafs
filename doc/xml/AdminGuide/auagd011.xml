@@ -1141,8 +1141,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ263" />Install one or more tape devices on the Tape Coordinator machine according to the
+        <listitem id="LIWQ263">
+          <para>Install one or more tape devices on the Tape Coordinator machine according to the
           manufacturer's instructions. The Backup System can track a maximum of 58,511 tape devices or backup data files per
           cell.</para>
 
@@ -1262,8 +1262,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LICONFTC-ADDHOST" />Issue the <emphasis role="bold">backup addhost</emphasis> command to create a Tape
+        <listitem id="LICONFTC-ADDHOST">
+          <para>Issue the <emphasis role="bold">backup addhost</emphasis> command to create a Tape
           Coordinator entry in the Backup Database. Repeat the command for each Tape Coordinator. <programlisting>
    # <emphasis role="bold">backup addhost</emphasis> &lt;<replaceable>tape machine name</replaceable>&gt; [&lt;<replaceable>TC port offset</replaceable>&gt;]
 </programlisting></para>
@@ -4124,8 +4124,8 @@ volume_set_name<emphasis role="bold">.</emphasis>dump_level_name<emphasis role="
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LITAPECONFIG-FILE" />Using a text editor, create an entry for the backup data file in the local
+        <listitem id="LITAPECONFIG-FILE">
+          <para>Using a text editor, create an entry for the backup data file in the local
           <emphasis role="bold">/usr/afs/backup/tapeconfig</emphasis> file, using the standard syntax: <programlisting>
    [capacity  filemark_size]  device_name   port_offset
 </programlisting></para>

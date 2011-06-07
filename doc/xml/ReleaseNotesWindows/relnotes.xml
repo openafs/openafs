@@ -47,7 +47,7 @@
         <listitem>
           <para>
   a Windows Installer package (.msi) that is built using the open source WiX Toolkit.  The MSI can be customized for organizations via the use of MSI Transforms (see
-          <link linkend="MSI_Deployment_Guide">MSI Deployment Guide</link>)
+          <link linkend="Introduction_to_MSI_Deployment">MSI Deployment Guide</link>)
         </para>
         </listitem>
       </orderedlist>
@@ -173,8 +173,8 @@
       <para>It is important to note that AFS file servers are character-set agnostic.  All file system object names are stored as octet strings without any character set tagging.  If a file system object is created using OEM Code Page 858 and then interpreted as UTF-8 it is likely that the object name will appear to be gibberish.  OpenAFS for Windows goes to great lengths to ensure that the object name is converted to a form that will permit the user to rename the object using Unicode.  Accessing UTF-8 names on UNIX systems that have the locale set to one of the ISO Latin character sets will result in the UTF-8 strings appearing to be gibberish.  </para>
       <para>Neither UNIX AFS nor Microsoft Windows 2000 systems can perform Unicode Normalization for string comparisons.  Although it is possible to store and read Unicode object names, it is possible that a user may not be able to open an object by typing the name of the object at the keyboard.  GUI point and click operations should permit any object to be accessed.</para>
     </section>
-    <section>
-      <title id="Kerberos_v5_Requirements">3.2. Requirements for Kerberos v5 Authentication</title>
+    <section id="Kerberos_v5_Requirements">
+      <title>3.2. Requirements for Kerberos v5 Authentication</title>
       <indexterm significance="normal">
         <primary>kerberos for windows</primary>
       </indexterm>
@@ -229,8 +229,8 @@
         <para>Note that the OpenAFS 1.4.x servers permit the use of a secondary realm name that can be treated as equivalent to the cell name for authentication.  This functionality can be used to avoid the need for the krb524 service if and only if both realms are managed by the same administrative entity.
         </para>
       </section>
-      <section>
-        <title id="Network_Identity_Manager_Provider">3.2.3. Network Identity Manager Provider</title>
+      <section id="Network_Identity_Manager_Provider">
+        <title>3.2.3. Network Identity Manager Provider</title>
         <indexterm significance="normal">
           <primary>network identity manager</primary>
         </indexterm>
@@ -1304,8 +1304,8 @@
       </indexterm>
       <para>Prior to the 1.5.31 release, out of quota errors were reported to the calling application as an out of space error.  As of 1.5.31, an out of space error will indicate that the partition on which the volume is located is in fact out of space.  Whereas an out of quota error indicates that the user does not have permission to allocate additional space.</para>
     </section>
-    <section>
-      <title id="Linked_Cells">3.48. Linked Cells</title>
+    <section id="Linked_Cells">
+      <title>3.48. Linked Cells</title>
       <indexterm significance="normal">
         <primary>linked cells</primary>
       </indexterm>
@@ -1348,8 +1348,8 @@
       <para>aklog and Network Identity Manager will automatically obtain tokens for the linked cell when tokens for the other cell is specified.
       </para>
     </section>
-    <section>
-      <title id="Registry_VLDB_Configuration">3.49 Registry Configuration for AFS Volume Database Servers</title>
+    <section id="Registry_VLDB_Configuration">
+      <title>3.49 Registry Configuration for AFS Volume Database Servers</title>
       <indexterm significance="normal">
         <primary>vldb server locations</primary>
       </indexterm>
@@ -1420,13 +1420,14 @@
   </chapter>
   <chapter id="chap_4">
     <title id="How_to_Debug_Problems">How to Troubleshoot Problems with OpenAFS for Windows</title>
+    <para>
     <indexterm significance="normal">
       <primary>debugging</primary>
     </indexterm>
     <indexterm significance="normal">
       <primary>troubleshooting</primary>
     </indexterm>
-    <para>OpenAFS for Windows provides a wide range of tools to assist you in debugging problems. The techniques available to you are varied because of the wide range of issues that have been discovered over the years.</para>
+    OpenAFS for Windows provides a wide range of tools to assist you in debugging problems. The techniques available to you are varied because of the wide range of issues that have been discovered over the years.</para>
     <section>
       <title id="pioctl_debugging">4.1. pioctl debugging (
         <link linkend="Value_IoctlDebug">IoctlDebug</link> registry key)
@@ -1657,12 +1658,13 @@
       </para>
     </section>
   </chapter>
-  <chapter id="chap_5">
-    <title id="Reporting_Bugs">Reporting Bugs</title>
+  <chapter id="Reporting_Bugs">
+    <title>Reporting Bugs</title>
+    <para>
     <indexterm significance="normal">
       <primary>bug reports</primary>
     </indexterm>
-    <para>Bug reports should be sent to
+    Bug reports should be sent to
       <ulink url="mailto:openafs-bugs@openafs.org?subject=Bug%20Report">openafs-bugs@openafs.org</ulink>. Please include as much information as possible about the issue. If you are reporting a crash, please install the debugging symbols by re-running the installer. If a dump file is available for the problem, %WINDIR%\TEMP\afsd.dmp, include it along with the AFS Client Trace file %WINDIR%\TEMP\afsd.log. The AFS Client startup log is %WINDIR%\TEMP\afsd_init.log. Send the last continuous block of log information from this file.
     </para>
     <para>Configuring DrWatson to generate dump files for crashes:</para>
@@ -1710,16 +1712,17 @@
   </chapter>
   <chapter id="chap_6">
     <title id="Contributing_to_OpenAFS">How to Contribute to the Development of OpenAFS for Windows</title>
+    <para>
     <indexterm significance="normal">
       <primary>contributing to OpenAFS</primary>
     </indexterm>
-    <para>Contributions to the development of OpenAFS for Windows are continuously needed. Contributions may take many forms including cash donations, support contracts, donated developer time, and even donated tech writer time.</para>
+    Contributions to the development of OpenAFS for Windows are continuously needed. Contributions may take many forms including cash donations, support contracts, donated developer time, and even donated tech writer time.</para>
     <section>
       <title id="USENIX_OpenAFS_Fund">6.1. The USENIX OpenAFS Fund </title>
+      <para>
       <indexterm significance="normal">
         <primary>USENIX OpenAFS Fund</primary>
       </indexterm>
-      <para>
         <ulink url="http://www.usenix.org/">USENIX</ulink>, a 501c3 non-profit corporation, has formed the USENIX OpenAFS Fund in order to accept tax deductible donations on behalf of the OpenAFS Elders. The donated funds will be allocated by the OpenAFS Elders to fund OpenAFS development, documentation, project management, and maintaining openafs.org.
       </para>
       <informaltable frame="none">
@@ -1747,10 +1750,10 @@
     </section>
     <section>
       <title id="Secure_Endpoints_Inc">6.2. Secure Endpoints Inc. </title>
+      <para>
       <indexterm significance="normal">
         <primary>Secure Endpoints Inc.</primary>
       </indexterm>
-      <para>
         <ulink url="http://www.secure-endpoints.com/">Secure Endpoints Inc.</ulink> provides development and support services for OpenAFS for Windows and
         <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink>. Donations provided to Secure Endpoints Inc. for the development of OpenAFS are used to cover the OpenAFS gatekeeper responsibilities; providing support to the OpenAFS community via the OpenAFS mailing lists; and furthering development of desired features that are either too small to be financed by development contracts.
       </para>
@@ -1791,15 +1794,15 @@
   </chapter>
   <chapter id="chap_7">
     <title id="MSI_Deployment_Guide">MSI Deployment Guide</title>
-    <indexterm significance="normal">
-      <primary>msi deployment</primary>
-    </indexterm>
-    <indexterm significance="normal">
-      <primary>msi transforms</primary>
-    </indexterm>
     <section>
-      <title id="Introduction_to_MSI_Deployment">7.1. Introduction</title>
-      <para>A MSI installer option is available for those who wish to use Windows Installer for installing OpenAFS and for organizations that wish to deploy OpenAFS through Group Policy. The first version of OpenAFS for Windows available as an MSI was 1.3.65.</para>
+      <title>7.1. Introduction</title>
+      <indexterm significance="normal">
+        <primary>msi deployment</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>msi transforms</primary>
+      </indexterm>
+      <para id="Introduction_to_MSI_Deployment">A MSI installer option is available for those who wish to use Windows Installer for installing OpenAFS and for organizations that wish to deploy OpenAFS through Group Policy. The first version of OpenAFS for Windows available as an MSI was 1.3.65.</para>
       <para>This document provides a guide for authoring transforms used to customize the MSI package for a particular organization. Although many settings can be deployed via transforms, in an Active Directory environment it is advisable to deploy registry settings and configuration files through group policy and/or startup scripts so that machines where OpenAFS for Windows is already installed will pick up these customizations.</para>
       <section>
         <title id="MSI_Deployment_Requirements">7.1.1 Requirements</title>
@@ -2501,8 +2504,8 @@
             </orderedlist>
           </listitem>
         </orderedlist>
-        <section>
-          <title id="MSI_Configuration_File_Components">7.2.3.1 Components for Configuration Files</title>
+        <section id="MSI_Configuration_File_Components">
+          <title>7.2.3.1 Components for Configuration Files</title>
           <para>CellServDB: 'cpf_CellServDB' (ID {D5BA4C15-DBEC-4292-91FC-B54C30F24F2A})</para>
         </section>
       </section>
@@ -2811,8 +2814,8 @@
   </chapter>
   <chapter id="appendix_a" label="Appendix A">
     <title id="Registry_Values">Registry Values</title>
-    <section>
-      <title id="Service_Parameters">A.1. Service parameters</title>
+    <section id="Service_Parameters">
+      <title>A.1. Service parameters</title>
       <para>The service parameters primarily affect the behavior of the AFS client service (afsd_service.exe).</para>
       <section>
         <title id="Regkey_TransarcAFSDaemon_Parameters">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</title>
@@ -2828,12 +2831,11 @@
           <para>LAN adapter number to use. This is the lana number of the LAN adapter that the SMB server should bind to. If unspecified or set to -1, a LAN adapter with named 'AFS' or a loopback adapter will be selected. If neither are present, then all available adapters will be bound to. When binding to a non-loopback adapter, the NetBIOS name hostname%-AFS' will be used (where %hostname% is the NetBIOS name of the host truncated to 11 characters). Otherwise, the NetBIOS name will be 'AFS'.</para>
         </section>
         <section>
-          <title id="Regkey_TransarcAFSDaemon_Parameters_CacheSize">
-            <anchor id="Value_CacheSize" />Value: CacheSize</title>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_CacheSize">Value: CacheSize</title>
           <indexterm significance="normal">
             <primary>CacheSize</primary>
           </indexterm>
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_CacheSize">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD</para>
           <para>Default: 98304 (CM_CONFIGDEFAULT_CACHESIZE)</para>
           <para>Variable: cm_initParams.cacheSize</para>
@@ -2876,8 +2878,7 @@
           <indexterm significance="normal">
             <primary>Stats</primary>
           </indexterm>
-          <anchor id="Value_Stats" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_Stats">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD</para>
           <para>Default: 10000 (CM_CONFIGDEFAULT_STATS)</para>
           <para>Variable: cm_initParams.nStatCaches</para>
@@ -2920,8 +2921,7 @@ Variable: cm_initParams.nCells</para>
           <indexterm significance="normal">
             <primary>LogoffPreserveTokens</primary>
           </indexterm>
-          <anchor id="Value_LogoffPreserveTokens" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_LogoffPreserveTokens">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -2954,8 +2954,7 @@ Variable: cm_rootVolumeName</para>
           <indexterm significance="normal">
             <primary>/afs</primary>
           </indexterm>
-          <anchor id="Value_Mountroot" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_Mountroot">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -2973,8 +2972,7 @@ Variable: cm_mountRoot</para>
           <indexterm significance="normal">
             <primary>AFSCache</primary>
           </indexterm>
-          <anchor id="Value_CachePath" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_CachePath">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_SZ or REG_EXPAND_SZ
                   </para>
           <para>
@@ -2989,8 +2987,7 @@ Variable: cm_CachePath</para>
           <indexterm significance="normal">
             <primary>NonPersistentCaching</primary>
           </indexterm>
-          <anchor id="Value_NonPersistentCaching" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_NonPersistentCaching">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD [0..1]
                   </para>
           <para>
@@ -3048,8 +3045,7 @@ Variable: traceOnPanic</para>
           <indexterm significance="normal">
             <primary>\\AFS</primary>
           </indexterm>
-          <anchor id="Value_NetbiosName" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_NetbiosName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_EXPAND_SZ
                   </para>
           <para>
@@ -3095,8 +3091,7 @@ Variable: reportSessionStartups</para>
           <indexterm significance="normal">
             <primary>TraceBufferSize</primary>
           </indexterm>
-          <anchor id="Value_TraceBufferSize" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_TraceBufferSize">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD
                   </para>
           <para>
@@ -3111,8 +3106,7 @@ Variable: traceBufSize</para>
           <indexterm significance="normal">
             <primary>SysName</primary>
           </indexterm>
-          <anchor id="Value_SysName" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_SysName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -3133,8 +3127,7 @@ Variable: cm_sysName</para>
           <indexterm significance="normal">
             <primary>fs setcrypt</primary>
           </indexterm>
-          <anchor id="Value_SecurityLevel" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_SecurityLevel">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3155,8 +3148,7 @@ Variable: cryptall</para>
           <indexterm significance="normal">
             <primary>SRV DNS records</primary>
           </indexterm>
-          <anchor id="Value_UseDNS" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_UseDNS">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3174,8 +3166,7 @@ Variable: cm_dnsEnabled</para>
           <indexterm significance="normal">
             <primary>dynroot</primary>
           </indexterm>
-          <anchor id="Value_FreelanceClient" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_FreelanceClient">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3190,8 +3181,7 @@ Variable: cm_freelanceEnabled</para>
           <indexterm significance="normal">
             <primary>HideDotFiles</primary>
           </indexterm>
-          <anchor id="Value_HideDotFiles" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_HideDotFiles">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3239,8 +3229,7 @@ Variable: smb_maxVCPerServer</para>
           <indexterm significance="normal">
             <primary>workstation cell name</primary>
           </indexterm>
-          <anchor id="Value_Cell" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_Cell">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -3302,8 +3291,7 @@ Variable: rx_extraPackets</para>
           <indexterm significance="normal">
             <primary>RxMaxMTU</primary>
           </indexterm>
-          <anchor id="Value_RxMaxMTU" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_RxMaxMTU">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD
                   </para>
           <para>
@@ -3334,8 +3322,7 @@ Variable: rx_nojumbo</para>
           <indexterm significance="normal">
             <primary>ConnDeadTimeout</primary>
           </indexterm>
-          <anchor id="Value_ConnDeadTimeout" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_ConnDeadTimeout">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>
                      Type: DWORD
                   </para>
@@ -3421,8 +3408,7 @@ Variable: rx_nojumbo</para>
           <indexterm significance="normal">
             <primary>TraceOption</primary>
           </indexterm>
-          <anchor id="Value_TraceOption" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_TraceOption">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0-15}
                   </para>
           <para>
@@ -3451,8 +3437,7 @@ Default: 1</para>
           <indexterm significance="normal">
             <primary>NoFindLanaByName</primary>
           </indexterm>
-          <anchor id="Value_NoFindLanaByName" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_NoFindLanaByName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
           <para>
@@ -3476,8 +3461,7 @@ Default: &lt;no default&gt;</para>
           <indexterm significance="normal">
             <primary>SMBAuthType</primary>
           </indexterm>
-          <anchor id="Value_smbAuthType" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_smbAuthType">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0..2}
                   </para>
           <para>
@@ -3503,8 +3487,7 @@ The default is Extended authentication</para>
           <indexterm significance="normal">
             <primary>MaxLogSize</primary>
           </indexterm>
-          <anchor id="Value_MaxLogSize" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_MaxLogSize">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0 .. MAXDWORD}
                   </para>
           <para>
@@ -3627,8 +3610,7 @@ Default: 7001</para>
           <indexterm significance="normal">
             <primary>EnableServerLocks</primary>
           </indexterm>
-          <anchor id="Value_EnableServerLocks" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_EnableServerLocks">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1, 2}
                   </para>
           <para>
@@ -3769,8 +3751,8 @@ Default: 262144</para>
           </para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</title>
         <section>
           <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDBDir">Value: CellServDBDir</title>
           <indexterm significance="normal">
@@ -3779,8 +3761,7 @@ Default: 262144</para>
           <indexterm significance="normal">
             <primary>CellServDBDir</primary>
           </indexterm>
-          <anchor id="Value_CellServDBDir" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_CellServDBDir">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -3792,8 +3773,7 @@ Default: &lt;not defined&gt;</para>
           <indexterm significance="normal">
             <primary>VerifyServiceSignature</primary>
           </indexterm>
-          <anchor id="Value_VerifyServiceSignature" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_VerifyServiceSignature">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3808,8 +3788,7 @@ Default: 0x1</para>
           <indexterm significance="normal">
             <primary>path ioctl debugging</primary>
           </indexterm>
-          <anchor id="Value_IoctlDebug" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_IoctlDebug">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3824,8 +3803,7 @@ Default: 0x0</para>
           <indexterm significance="normal">
             <primary>MiniDumpType</primary>
           </indexterm>
-          <anchor id="Value_MiniDumpType" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_MiniDumpType">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3887,8 +3865,7 @@ MiniDumpWithCodeSegs = 0x00002000
           <indexterm significance="normal">
             <primary>EnableSMBAsyncStore</primary>
           </indexterm>
-          <anchor id="Value_EnableSMBAsyncStore" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_EnableSMBAsyncStore">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3900,8 +3877,7 @@ Default: 0x1</para>
           <indexterm significance="normal">
             <primary>SMBAsyncStoreSize</primary>
           </indexterm>
-          <anchor id="Value_SMBAsyncStoreSize" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_SMBAsyncStoreSize">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3919,8 +3895,7 @@ Default: 32</para>
           <indexterm significance="normal">
             <primary>character sets</primary>
           </indexterm>
-          <anchor id="Value_StoreAnsiFilenames" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_StoreAnsiFilenames">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3946,8 +3921,8 @@ Default: &lt;none&gt;</para>
           <para>These values used to be stored in afsdsbmt.ini</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB]</title>
         <indexterm significance="normal">
           <primary>CellServDB</primary>
         </indexterm>
@@ -4032,8 +4007,8 @@ Default: &lt;none&gt;</para>
           <para>A text string that can be displayed to end users to describe the server.</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance]</title>
         <indexterm significance="normal">
           <primary>Freelance</primary>
         </indexterm>
@@ -4053,8 +4028,8 @@ Default: &lt;none&gt;</para>
           <para>These values used to be stored in afs_freelance.ini</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]</title>
         <indexterm significance="normal">
           <primary>Freelance Symlinks</primary>
         </indexterm>
@@ -4136,9 +4111,8 @@ Default: &lt;none&gt;</para>
           <para>NOTE: Submounts should no longer be used with OpenAFS. Use the Windows Explorer to create drive mappings to AFS UNC paths instead of using the AFS Submount mechanism.</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB">Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</title>
         <indexterm significance="normal">
           <primary>Server Preferences</primary>
         </indexterm>
@@ -4282,8 +4256,8 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
         </section>
       </section>
     </section>
-    <section>
-      <title id="Domain_Specific_Configuration">A.2.1 Domain specific configuration keys for the Network Provider</title>
+    <section id="Domain_Specific_Configuration">
+      <title>A.2.1 Domain specific configuration keys for the Network Provider</title>
       <indexterm significance="normal">
         <primary>domain logon configuration</primary>
       </indexterm>
@@ -4317,8 +4291,8 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
       </section>
       <section>
         <title id="Domain_Specific_Configuration_Values">A.2.1.1 Domain Specific Configuration Values</title>
-        <section>
-          <title id="Domain_Specific_Regkeys">Regkeys: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+        <section id="Domain_Specific_Regkeys">
+          <title>Regkeys: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain name"]
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
@@ -4327,8 +4301,7 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
             <indexterm significance="normal">
               <primary>LogonOptions</primary>
             </indexterm>
-            <anchor id="Value_LogonOptions" />
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+            <para id="Value_LogonOptions">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
             <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
             <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
             <para>Type: DWORD
@@ -4427,8 +4400,7 @@ NSIS/WiX: (not set)</para>
             <indexterm significance="normal">
               <primary>Realm</primary>
             </indexterm>
-            <anchor id="Value_Realm" />
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+            <para id="Value_Realm">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
             <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
             <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
             <para>Type: REG_SZ
@@ -4442,8 +4414,7 @@ NSIS: &lt;not set&gt;</para>
             <indexterm significance="normal">
               <primary>TheseCells</primary>
             </indexterm>
-            <anchor id="Value_TheseCells" />
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+            <para id="Value_TheseCells">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
             <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
             <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
             <para>Type: REG_MULTI_SZ
@@ -4552,8 +4523,7 @@ Function: InitApp(), Main_OnCheckTerminate()</para>
           <indexterm significance="normal">
             <primary>EnableKFW</primary>
           </indexterm>
-          <anchor id="Value_EnableKFW" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_EnableKFW">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: DWORD {0, 1}
                   </para>
@@ -4585,8 +4555,7 @@ Function: KFW_accept_dotted_usernames()</para>
           <indexterm significance="normal">
             <primary>Use524</primary>
           </indexterm>
-          <anchor id="Value_Use524" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_Use524">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: DWORD {0, 1}
                   </para>
@@ -4602,8 +4571,7 @@ Function: KFW_use_krb524()</para>
           <indexterm significance="normal">
             <primary>AfscredsShortcutParams</primary>
           </indexterm>
-          <anchor id="Value_AfscredsShortcutParams" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_AfscredsShortcutParams">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_SZ
                   </para>

@@ -1133,7 +1133,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ400" />Issue the <emphasis role="bold">fs setcachesize</emphasis> command to set a new disk cache
+          <para>Issue the <emphasis role="bold">fs setcachesize</emphasis> command to set a new disk cache
           size.</para>
 
           <note>
@@ -2095,7 +2095,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LINEWCELL" />Issue the <emphasis role="bold">fs newcell</emphasis> command to add or change a cell's
+          <para>Issue the <emphasis role="bold">fs newcell</emphasis> command to add or change a cell's
           entry in kernel memory. Repeat the command for each cell.</para>
 
           <note>

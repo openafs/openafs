@@ -896,7 +896,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ539" />Issue the <emphasis role="bold">pts membership</emphasis> command to display the list of
+          <para>Issue the <emphasis role="bold">pts membership</emphasis> command to display the list of
           groups to which a user or machine belongs, or the list of users and machines that belong to a group. <programlisting>
    % <emphasis role="bold">pts membership</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+
 </programlisting></para>

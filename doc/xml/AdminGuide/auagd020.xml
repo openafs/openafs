@@ -1385,7 +1385,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ578" />Issue the <emphasis role="bold">fs copyacl</emphasis> command to copy a source ACL to the ACL
+          <para>Issue the <emphasis role="bold">fs copyacl</emphasis> command to copy a source ACL to the ACL
           on one or more destination directories. (The command appears here on two lines only for legibility.) <programlisting>
    % <emphasis role="bold">fs copyacl -fromdir</emphasis> &lt;<replaceable>source directory</replaceable>&gt; <emphasis role="bold">-todir</emphasis> &lt;<replaceable>destination directory</replaceable>&gt;+  \
                 [<emphasis role="bold">-clear</emphasis>]

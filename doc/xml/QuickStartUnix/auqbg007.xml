@@ -2,6 +2,7 @@
 <chapter id="HDRWQ133">
   <title>Installing Additional Client Machines</title>
 
+  <para>
   <indexterm>
     <primary>instructions</primary>
 
@@ -16,7 +17,7 @@
     <tertiary>client machine</tertiary>
   </indexterm>
 
-  <para>This chapter describes how to install AFS client machines after you have installed the first AFS machine. Some parts of the
+  This chapter describes how to install AFS client machines after you have installed the first AFS machine. Some parts of the
   installation differ depending on whether or not the new client is of the same AFS system type (uses the same AFS binaries) as a
   previously installed client machine. <indexterm>
       <primary>overview</primary>
@@ -2763,8 +2764,8 @@
 </programlisting></para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ160" />Issue the <emphasis role="bold">vos create</emphasis> command to create volumes for storing
+          <listitem id="LIWQ160">
+            <para>Issue the <emphasis role="bold">vos create</emphasis> command to create volumes for storing
             the AFS client binaries for this system type. The following example instruction creates volumes called
             <replaceable>sysname</replaceable>, <replaceable>sysname</replaceable>.<emphasis role="bold">usr</emphasis>, and
             <replaceable>sysname</replaceable>.<emphasis role="bold">usr.afsws</emphasis>. Refer to the <emphasis>OpenAFS Release
@@ -2823,8 +2824,8 @@
 </programlisting>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ161" />Copy the contents of the indicated 
+          <listitem id="LIWQ161">
+            <para>Copy the contents of the indicated 
             directories from the OpenAFS binary distribution into the 
             <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
             role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws</emphasis> directory.
@@ -2863,8 +2864,8 @@
 </programlisting></para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ162" />Perform this step on the new client machine even if you have performed the previous steps
+          <listitem id="LIWQ162">
+            <para>Perform this step on the new client machine even if you have performed the previous steps
             on another machine. Create <emphasis role="bold">/usr/afsws</emphasis> on the local disk as a symbolic link to the
             directory <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
             role="bold">/@sys/usr/afsws</emphasis>. You can specify the actual system name instead of <emphasis

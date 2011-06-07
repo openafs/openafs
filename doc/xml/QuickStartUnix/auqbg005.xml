@@ -2,6 +2,7 @@
 <chapter id="HDRWQ17">
   <title>Installing the First AFS Machine</title>
 
+  <para>
   <indexterm>
     <primary>file server machine</primary>
 
@@ -22,7 +23,7 @@
     <secondary>first AFS machine</secondary>
   </indexterm>
 
-  <para>This chapter describes how to install the first AFS machine in your cell, configuring it as both a file server machine and a
+  This chapter describes how to install the first AFS machine in your cell, configuring it as both a file server machine and a
   client machine. After completing all procedures in this chapter, you can remove the client functionality if you wish, as described
   in <link linkend="HDRWQ98">Removing Client Functionality</link>.</para>
 
@@ -3340,8 +3341,8 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ54" />Issue the 
+        <listitem id="LIWQ54">
+          <para>Issue the 
           <emphasis role="bold">add_principal</emphasis> command to create 
           Kerberos Database entries called 
           <emphasis role="bold">admin</emphasis> and 
@@ -3386,8 +3387,8 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ55" />Issue the <emphasis role="bold">kadmin 
+        <listitem id="LIWQ55">
+          <para>Issue the <emphasis role="bold">kadmin 
 	  get_principal</emphasis> command to display the <emphasis
           role="bold">afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt; entry. 
 <programlisting>
@@ -3456,8 +3457,8 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ57" />Issue the <emphasis role="bold">bos adduser</emphasis> command to add the <emphasis
+        <listitem id="LIWQ57">
+          <para>Issue the <emphasis role="bold">bos adduser</emphasis> command to add the <emphasis
           role="bold">admin</emphasis> user to the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. This enables the
           <emphasis role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">bos</emphasis> and <emphasis
           role="bold">vos</emphasis> commands. <programlisting>
@@ -3478,8 +3479,8 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ58" />Issue the 
+        <listitem id="LIWQ58">
+          <para>Issue the 
           <emphasis role="bold">asetkey</emphasis> command to set the AFS 
           server encryption key in the 
           <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file. This key 
@@ -3518,8 +3519,8 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ59" />Issue the 
+        <listitem id="LIWQ59">
+          <para>Issue the 
           <emphasis role="bold">bos listkeys</emphasis> command to verify that 
           the key version number for the new key in the 
           <emphasis role="bold">KeyFile</emphasis> file is the same as the key 
@@ -5530,8 +5531,8 @@ and so may already be available at your site.</para>
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ81" />Issue the <emphasis role="bold">vos create</emphasis> command to create the <emphasis
+        <listitem id="LIWQ81">
+          <para>Issue the <emphasis role="bold">vos create</emphasis> command to create the <emphasis
           role="bold">root.cell</emphasis> volume. Then issue the <emphasis role="bold">fs mkmount</emphasis> command to mount it as
           a subdirectory of the <emphasis role="bold">/afs</emphasis> directory, where it serves as the root of your cell's local
           AFS filespace. Finally, issue the <emphasis role="bold">fs setacl</emphasis> command to create an ACL entry for the
@@ -5630,8 +5631,8 @@ and so may already be available at your site.</para>
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ82" />Issue the <emphasis role="bold">vos addsite</emphasis> command to define a replication site
+        <listitem id="LIWQ82">
+          <para>Issue the <emphasis role="bold">vos addsite</emphasis> command to define a replication site
           for both the <emphasis role="bold">root.afs</emphasis> and <emphasis role="bold">root.cell</emphasis> volumes. In each
           case, substitute for the <replaceable>partition name</replaceable> argument the partition where the volume's read/write
           version resides. When you install additional file server machines, it is a good idea to create replication sites on them
@@ -5788,8 +5789,8 @@ and so may already be available at your site.</para>
           <tertiary>volume for AFS binaries</tertiary>
         </indexterm>
 
-        <listitem>
-          <para><anchor id="LIWQ84" />Issue the <emphasis role="bold">vos create</emphasis> command to create volumes for storing
+        <listitem id="LIWQ84">
+          <para>Issue the <emphasis role="bold">vos create</emphasis> command to create volumes for storing
           the AFS client binaries for this system type. The following example instruction creates volumes called
           <replaceable>sysname</replaceable>, <replaceable>sysname</replaceable>.<emphasis role="bold">usr</emphasis>, and
           <replaceable>sysname</replaceable>.<emphasis role="bold">usr.afsws</emphasis>. Refer to the <emphasis>OpenAFS Release
@@ -5848,8 +5849,8 @@ and so may already be available at your site.</para>
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ85" />Issue the <emphasis role="bold">fs setquota</emphasis> command to set an unlimited quota on
+        <listitem id="LIWQ85">
+          <para>Issue the <emphasis role="bold">fs setquota</emphasis> command to set an unlimited quota on
           the volume mounted at the <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws</emphasis> directory. This
           enables you to copy all of the appropriate files from the CD-ROM into the volume without exceeding the volume's
@@ -5910,8 +5911,8 @@ and so may already be available at your site.</para>
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ86" />Create <emphasis role="bold">/usr/afsws</emphasis> on the local disk as a symbolic link to the
+        <listitem id="LIWQ86">
+          <para>Create <emphasis role="bold">/usr/afsws</emphasis> on the local disk as a symbolic link to the
           directory <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/@sys/usr/afsws</emphasis>. You can specify the actual system name instead of <emphasis
           role="bold">@sys</emphasis> if you wish, but the advantage of using <emphasis role="bold">@sys</emphasis> is that it
@@ -6474,8 +6475,8 @@ and so may already be available at your site.</para>
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ92" />If this machine is going to remain an AFS client after you complete the installation, verify
+        <listitem id="LIWQ92">
+          <para>If this machine is going to remain an AFS client after you complete the installation, verify
           that the local <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file includes an entry for each foreign
           cell.</para>
 
