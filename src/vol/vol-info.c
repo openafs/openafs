@@ -324,11 +324,10 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 		    "%s: Write failed for inode %s; header left in damaged state\n",
 		    progname, PrintInode(NULL, ih->ih_ino));
 	}
-    } else {
-	if (DumpInfo) {
-	    printf("Inode %s: Good magic %x and version %x\n",
-		   PrintInode(NULL, ih->ih_ino), magic, version);
-	}
+    }
+    if (!bad && DumpInfo) {
+	printf("Inode %s: Good magic %x and version %x\n",
+	       PrintInode(NULL, ih->ih_ino), magic, version);
     }
     return 0;
 }
