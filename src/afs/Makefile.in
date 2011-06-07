@@ -85,13 +85,7 @@ install: unified_afs.h
 	    ${DESTDIR}${includedir}/afs/osi_inode.h
 	${INSTALL_DATA} ${srcdir}/sysctl.h ${DESTDIR}${includedir}/afs/sysctl.h
 	${INSTALL_DATA} unified_afs.h ${DESTDIR}${includedir}/afs/unified_afs.h
-	case ${SYS_NAME} in \
-	    i386_fbsd*) \
-		echo skipping afszcm.cat install for ${SYS_NAME} ;; \
-	    *) \
-		${INSTALL_DATA} afszcm.cat \
-		    ${DESTDIR}${afsdatadir}/C/afszcm.cat ;; \
-	esac
+	${INSTALL_DATA} afszcm.cat ${DESTDIR}${afsdatadir}/C/afszcm.cat
 	case ${SYS_NAME} in \
 	    *linux*) \
 		${INSTALL_DATA} ${srcdir}/${MKAFS_OSTYPE}/osi_vfs.h \
