@@ -235,11 +235,6 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * There's no mention of the Kerberos v5 support.  At least, we need
-     some disclaimers under klog and friends talking about sites without
-     kaserver (and possibly without fakeka), and deprecation warnings
-     on the .krb varient commands.
-
    * Linked cells are currently documented in fs newcell as being only
      for DCE, which is not correct.  That documentation, aklog, and the
      CellServDB documentation needs to be updated.
