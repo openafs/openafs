@@ -19,22 +19,28 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 VERSFILE=version
 include @TOP_OBJDIR@/src/config/Makefile.version
 
-BOOK     = auqbg000.xml
-SRCS     = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
+BOOK     = auqbg000
+SRCS     = $(BOOK).xml auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
 	   auqbg007.xml auqbg008.xml appendix.xml appendix_dafs.xml
 HTML_XSL = @HTML_XSL@
+DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
 XSLTPROC = @XSLTPROC@
 DOCBOOK2PDF = @DOCBOOK2PDF@
 
 html: $(SRCS) $(VERSFILE).xml
 	$(XSLTPROC) --param navig.graphics 1 \
-	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
+	    --stringparam navig.graphics.path ../ $(DOCBOOK_STYLESHEETS)/$(HTML_XSL) $(BOOK).xml
 
 pdf: $(SRCS) $(VERSFILE).xml
-	$(DOCBOOK2PDF) $(BOOK)
+	if test "x$(DOCBOOK2PDF)" = "xfop"; then \
+		$(XSLTPROC) $(DOCBOOK_STYLESHEETS)/fo/docbook.xsl $(BOOK).xml > $(BOOK).fo; \
+		$(DOCBOOK2PDF) $(BOOK).fo $(BOOK).pdf; \
+	else \
+		$(DOCBOOK2PDF) $(BOOK).xml; \
+	fi
 
 check:
-	xmllint --noout --valid $(BOOK)
+	xmllint --noout --valid $(BOOK).xml
 
 clean:
 	rm -f *.html *.pdf

@@ -233,20 +233,29 @@ AC_ARG_ENABLE([linux-syscall-probing],
 AC_ARG_WITH([xslt-processor],
 	AS_HELP_STRING([--with-xslt-processor=ARG],
 	[which XSLT processor to use (possible choices are: libxslt, saxon, xalan-j, xsltproc)]),
-       	XSLTPROC="$withval",
+       	[XSLTPROC="$withval"],
 	AC_CHECK_PROGS([XSLTPROC], [libxslt saxon xalan-j xsltproc], [echo]))
 
 AC_ARG_WITH([html-xsl], 
         AS_HELP_STRING([--with-html-xsl],
-	[build HTML documentation using Norman Walsh's DocBook XSL stylesheets (default is no; specify a path to chunk.xsl or docbook.xsl)]),
-	HTML_XSL="$withval",
-	HTML_XSL=no)
+	[build HTML documentation using this stylesheet (default is html/chunk.dsl; specify either html/chunk.xsl or html/docbook.xsl)]),
+	[HTML_XSL="$withval"],
+	[HTML_XSL="html/chunk.xsl"])
 
 AC_ARG_WITH([docbook2pdf],
 	AS_HELP_STRING([--with-docbook2pdf=ARG],
-	[which Docbook to PDF utility to use (possible choices are: docbook2pdf, dblatex)]),
-       	DOCBOOK2PDF="$withval",
-	AC_CHECK_PROGS([DOCBOOK2PDF], [docbook2pdf dblatex], [echo]))
+	[which Docbook to PDF utility to use (possible choices are: fop, docbook2pdf, dblatex)]),
+       	[DOCBOOK2PDF="$withval"],
+	AC_CHECK_PROGS([DOCBOOK2PDF], [fop docbook2pdf dblatex], [echo]))
+
+AC_ARG_WITH([docbook-stylesheets],
+	AS_HELP_STRING([--with-docbook-stylesheets=ARG],
+	[location of DocBook stylesheets (default is to search a set of likely paths)]),
+       	[DOCBOOK_STYLESHEETS="$withval"],
+	OPENAFS_SEARCH_DIRLIST([DOCBOOK_STYLESHEETS], [/usr/share/xml/docbook/stylesheet/nwalsh/current /usr/share/xml/docbook/stylesheet/nwalsh /usr/share/xml/docbook/xsl-stylesheets /usr/share/sgml/docbook/docbook-xsl-stylesheets /usr/share/sgml/docbook/xsl-stylesheets /usr/share/docbook-xsl /usr/share/sgml/docbkxsl /usr/local/share/xsl/docbook /sw/share/xml/xsl/docbook-xsl /opt/local/share/xsl/docbook-xsl], [$HTML_XSL])
+	if test "x$DOCBOOK_STYLESHEETS" == "x"; then
+		AC_WARN([Docbook stylesheets not found; some documentation can't be built])
+	fi)
 
 enable_login="no"
 
@@ -1678,6 +1687,7 @@ AC_SUBST(IRIX_BUILD_IP35)
 AC_SUBST(HTML_XSL)
 AC_SUBST(XSLTPROC)
 AC_SUBST(DOCBOOK2PDF)
+AC_SUBST(DOCBOOK_STYLESHEETS)
 
 OPENAFS_OSCONF
 OPENAFS_FUSE
