@@ -407,8 +407,17 @@ HandleMTab(char *cacheMountDir)
 #else
 #if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
     struct mntent tmntent;
-    char *dir = strdup(cacheMountDir);
+    char *dir;
     int i;
+
+    tfilep = setmntent("/etc/mtab", "a+");
+    if (!tfilep) {
+	printf("Can't open /etc/mtab for writing (errno %d); not adding "
+	       "an entry for AFS\n", errno);
+	return 1;
+    }
+
+    dir = strdup(cacheMountDir);
 
     /* trim trailing slashes; don't look at dir[0] in case we are somehow
      * just "/" */
@@ -420,7 +429,6 @@ HandleMTab(char *cacheMountDir)
 	}
     }
 
-    tfilep = setmntent("/etc/mtab", "a+");
     tmntent.mnt_fsname = "AFS";
     tmntent.mnt_dir = dir;
     tmntent.mnt_type = "afs";
