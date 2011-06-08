@@ -28,6 +28,12 @@
   <bookinfo>
     <title>OpenAFS Administration Guide</title>
 
+    <mediaobject role="cover">
+      <imageobject>
+        <imagedata fileref="auagd000.png" />
+      </imageobject>
+    </mediaobject>
+
     <copyright>
       <year>2000</year>
 

@@ -105,6 +105,11 @@ if test -f 'doc/xml/UserGuide/Makefile.in' ; then
 else
    USERGUIDE_MAKEFILE=
 fi
+if test -f 'doc/xml/mobi-fixup.xsl.in' ; then
+   MOBI_FIXUP_XSL="doc/xml/mobi-fixup.xsl"
+else
+   MOBI_FIXUP_XSL=
+fi
 
 AC_OUTPUT(             \
 Makefile               \
@@ -112,6 +117,7 @@ ${MAN_MAKEFILE} \
 ${ADMINGUIDE_MAKEFILE} \
 ${QSUNIX_MAKEFILE} \
 ${USERGUIDE_MAKEFILE} \
+${MOBI_FIXUP_XSL} \
 src/afs/Makefile \
 src/afsd/Makefile \
 src/afsmonitor/Makefile \

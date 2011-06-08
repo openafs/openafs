@@ -16,6 +16,12 @@
   <bookinfo>
     <title>OpenAFS Quick Start Guide for UNIX</title>
 
+    <mediaobject role="cover">
+      <imageobject>
+        <imagedata fileref="auqbg000.png" />
+      </imageobject>
+    </mediaobject>
+
     <copyright>
       <year>2000-2009</year>
       <holder>IBM Corporation and other contributors. All Rights Reserved</holder>
