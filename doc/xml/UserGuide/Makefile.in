@@ -13,26 +13,27 @@
 # HTML_XSL is possibly specific to Debian and may need to be modified on other
 # systems.
 
-all: pdf html
+BOOK = auusg000
+
+all: $(BOOK).pdf index.html
 
 include @TOP_OBJDIR@/src/config/Makefile.config
-VERSFILE=version
+VERSION=version
 include @TOP_OBJDIR@/src/config/Makefile.version
 
-BOOK     = auusg000
 SRCS     = $(BOOK).xml auusg003.xml auusg004.xml auusg005.xml auusg006.xml \
 	   auusg007.xml auusg008.xml auusg009.xml auusg010.xml auusg011.xml \
-	   auusg012.xml
+	   auusg012.xml $(VERSION).xml
 HTML_XSL = @HTML_XSL@
 DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
 XSLTPROC = @XSLTPROC@
 DOCBOOK2PDF = @DOCBOOK2PDF@
 
-html: $(SRCS) $(VERSFILE).xml
+index.html: $(SRCS)
 	$(XSLTPROC) --param navig.graphics 1 \
 	    --stringparam navig.graphics.path ../ $(DOCBOOK_STYLESHEETS)/$(HTML_XSL) $(BOOK).xml
 
-pdf: $(SRCS) $(VERSFILE).xml
+$(BOOK).pdf: $(SRCS)
 	if test "x$(DOCBOOK2PDF)" = "xfop"; then \
 		$(XSLTPROC) $(DOCBOOK_STYLESHEETS)/fo/docbook.xsl $(BOOK).xml > $(BOOK).fo; \
 		$(DOCBOOK2PDF) $(BOOK).fo $(BOOK).pdf; \
