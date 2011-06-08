@@ -61,9 +61,6 @@ extern "C" {
 #define MAXHOSTCHARS		64
 #define MAXHOSTSPERCELL		8
 
-static char space[AFS_PIOCTL_MAXSIZE];
-static char tspace[1024];
-
 static struct ubik_client *uclient;
 static int rxInitDone = 0;
 static char pn[] = "fs";
@@ -270,6 +267,8 @@ void WhichCell(CStringArray& files)
     HOURGLASS hourglass;
 
     for (int i = 0; i < files.GetSize(); i++) {
+        char space[AFS_PIOCTL_MAXSIZE];
+
         blob.in_size = 0;
         blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.out = space;
@@ -296,6 +295,7 @@ void WhichCell(CStringArray& files)
 
 void WSCellCmd()
 {
+    char space[AFS_PIOCTL_MAXSIZE];
     LONG code;
     struct ViceIoctl blob;
 
@@ -363,6 +363,8 @@ void WhereIs(CStringArray& files)
     HOURGLASS hourglass;
 
     for (int i = 0; i < files.GetSize(); i++) {
+        char space[AFS_PIOCTL_MAXSIZE];
+
         blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.in_size = 0;
         blob.out = space;
@@ -807,6 +809,8 @@ void CleanACL(CStringArray& names)
     HOURGLASS hourglass;
 
     for (int i = 0; i < names.GetSize(); i++) {
+        char space[AFS_PIOCTL_MAXSIZE];
+
         blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.in_size = 0;
         blob.out = space;
@@ -858,7 +862,7 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
     struct ViceIoctl blob;
     struct AclEntry *te;
     int idf = 0; //getidf(as, parm_listacl_id);
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     blob.out_size = AFS_PIOCTL_MAXSIZE;
@@ -1053,7 +1057,7 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     struct ViceIoctl blob;
     struct Acl *pToAcl;
     int idf = 0; // getidf(as, parm_copyacl_id);
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     // Get ACL to copy to
@@ -1186,6 +1190,7 @@ IsFreelanceRoot(const CString& apath)
 {
     struct ViceIoctl blob;
     afs_int32 code;
+    char space[AFS_PIOCTL_MAXSIZE];
 
     blob.in_size = 0;
     blob.out_size = AFS_PIOCTL_MAXSIZE;
@@ -1448,6 +1453,7 @@ BOOL ListMount(CStringArray& files)
 
     for (int i = 0; i < files.GetSize(); i++) {
         int last_slash = files[i].ReverseFind(_T('\\'));
+        char space[AFS_PIOCTL_MAXSIZE];
 
         if (last_slash != -1) {
             last_component.SetString( files[i].Mid(last_slash + 1) );
@@ -1628,7 +1634,7 @@ BOOL IsSymlink(const CString& strName)
 {
     struct ViceIoctl blob;
     int code;
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     CStringUtf8 ustrLast(LastComponent(strName));
@@ -1743,7 +1749,7 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     struct ViceIoctl blob;
     struct VolumeStatus *status;
     char *name;
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     volInfo.m_strFilePath = strFile;
@@ -1792,7 +1798,7 @@ BOOL SetVolInfo(CVolInfo& volInfo)
     struct ViceIoctl blob;
     struct VolumeStatus *status;
     char *input;
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     blob.out_size = AFS_PIOCTL_MAXSIZE;
@@ -1848,7 +1854,7 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
     LONG temp = 0;
     struct afsconf_cell info;
     struct chservinfo checkserv;
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     memset(&checkserv, 0, sizeof(struct chservinfo));
@@ -2049,7 +2055,7 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
     char parent_dir[MAX_PATH+1];		/*Parent directory of true name*/
     char *last_component;	/*Last component of true name*/
     UINT code;
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     strcpy(orig_name, strName);
@@ -2109,7 +2115,7 @@ BOOL ListSymlink(CStringArray& files)
     struct ViceIoctl blob;
     int error;
     CStringArray symlinks;
-
+    char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
 
     error = 0;
