@@ -476,7 +476,9 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-at", CMD_LIST, CMD_OPTIONAL, "Date/time to start dump");
     cmd_AddParm(ts, "-append", CMD_FLAG, CMD_OPTIONAL,
 		"append to existing dump set");
-    cmd_AddParm(ts, "-n", CMD_FLAG, CMD_OPTIONAL, "don't really execute it");
+    cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
+                "list what would be done, don't do it");
+    cmd_AddParmAlias(ts, 5, "-n");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "load file");
     if (!interact)
 	add_std_args(ts);
@@ -494,7 +496,9 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-date", CMD_LIST, CMD_OPTIONAL,
 		"date from which to restore");
     cmd_AddParm(ts, "-portoffset", CMD_LIST, CMD_OPTIONAL, "TC port offsets");
-    cmd_AddParm(ts, "-n", CMD_FLAG, CMD_OPTIONAL, "don't really execute it");
+    cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
+                "list what would be done, don't do it");
+    cmd_AddParmAlias(ts, 6, "-n");
     cmd_AddParm(ts, "-usedump", CMD_SINGLE, CMD_OPTIONAL,
 		"specify the dumpID to restore from");
     if (!interact)
@@ -514,7 +518,9 @@ main(int argc, char **argv)
 		"destination partition");
     cmd_AddParm(ts, "-extension", CMD_SINGLE, CMD_OPTIONAL,
 		"new volume name extension");
-    cmd_AddParm(ts, "-n", CMD_FLAG, CMD_OPTIONAL, "don't really execute it");
+    cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
+                "list what would be done, don't do it");
+    cmd_AddParmAlias(ts, 11, "-n");
     if (!interact)
 	add_std_args(ts);
 
@@ -527,7 +533,9 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-portoffset", CMD_LIST, CMD_OPTIONAL, "TC port offset");
     cmd_AddParm(ts, "-extension", CMD_SINGLE, CMD_OPTIONAL,
 		"new volume name extension");
-    cmd_AddParm(ts, "-n", CMD_FLAG, CMD_OPTIONAL, "don't really execute it");
+    cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
+                "list what would be done, don't do it");
+    cmd_AddParmAlias(ts, 4, "-n");
     if (!interact)
 	add_std_args(ts);
 
@@ -704,6 +712,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-noexecute", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN, "");
     cmd_AddParm(ts, "-dryrun", CMD_FLAG, CMD_OPTIONAL,
 		"list the dumps, don't delete anything");
+    cmd_AddParmAlias(ts, 8, "-n");
 
     if (!interact)
 	add_std_args(ts);

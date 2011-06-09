@@ -277,13 +277,9 @@ Known Problems
 
    * Document backup deletedump -port/-groupid/-dbonly/-force/-noexecute
 
-   * Replace backup diskrestore/dump -n option with -noexecute or -dryrun?
-
    * Document backup help -admin
 
-   * Document backup volrestore -usedump. Also, s/-n/.../ as above?
-
-   * Replace backup volsetrestore -n option with -noexecute or -dryrun?
+   * Document backup volrestore -usedump.
 
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we
