@@ -407,8 +407,7 @@ afs_RebuildDynroot(void)
     dirHeader->alloMap[0] = EPP - DHE - 1;
     for (i = 1; i < MAXPAGES; i++)
 	dirHeader->alloMap[i] = EPP;
-    for (i = 0; i < NHASHENT; i++)
-	dirHeader->hashTable[i] = 0;
+    memset(dirHeader->hashTable, 0, NHASHENT * sizeof(dirHeader->hashTable[0]));
 
     /* Install ".", "..", and the dynamic mount directory */
     afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1);
@@ -507,8 +506,7 @@ afs_RebuildDynrootMount(void)
     dirHeader->alloMap[0] = EPP - DHE - 1;
     for (i = 1; i < MAXPAGES; i++)
 	dirHeader->alloMap[i] = EPP;
-    for (i = 0; i < NHASHENT; i++)
-	dirHeader->hashTable[i] = 0;
+    memset(dirHeader->hashTable, 0, NHASHENT * sizeof(dirHeader->hashTable[0]));
 
     /* Install "." and ".." */
     afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1);
