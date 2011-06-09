@@ -507,8 +507,12 @@ handleit(struct cmd_syndesc *as, void *arock)
 	DumpVnodes = 0;
 	InodeTimes = 0;
 	ShowOrphaned = 0;
-    } else if (ShowOrphaned || PrintFileNames) {
+    } else if (ShowOrphaned) {
 	DumpVnodes = 1;		/* implied */
+#ifdef AFS_NAMEI_ENV
+    } else if (PrintFileNames) {
+	DumpVnodes = 1;		/* implied */
+#endif
     }
 
     /* Allow user to specify partition by name or id. */
