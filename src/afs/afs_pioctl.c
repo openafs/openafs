@@ -864,7 +864,6 @@ afs_xioctl(afs_proc_t *p, const struct ioctl_args *uap, register_t *retval)
             if (((uap->com >> 8) & 0xff) == 'V') {
 #endif
 		struct afs_ioctl *datap;
-		printf("%s %lx\n", __func__, SCARG(uap, com));
 		AFS_GLOCK();
 		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 #if defined(AFS_NBSD50_ENV)
