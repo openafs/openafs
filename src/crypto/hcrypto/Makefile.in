@@ -35,6 +35,8 @@ MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto
 
 SHLIBOBJ= libafshcrypto.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
 
+buildtools: ${HEADERS} ${TOP_LIBDIR}/libafshcrypto.a
+
 all: ${HEADERS} ${TOP_LIBDIR}/${SHLIBOBJ} \
 	${TOP_LIBDIR}/libafshcrypto.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
