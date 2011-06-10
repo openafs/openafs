@@ -247,7 +247,7 @@ The path to the cache will vary, of course.
 
 Most often, this command is issued without arguments. The appropriate
 password is for the person currently logged into the local system.  The
-ticket's lifetime is calculated as described in L<DESCRIPTION>.
+ticket's lifetime is calculated as described in L</DESCRIPTION>.
 
    % klog.krb5
    Password for user@EXAMPLE.ORG:

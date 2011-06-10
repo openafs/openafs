@@ -179,7 +179,7 @@ written to the standard output stream begins with basic statistics about
 packet usage and availability, how many calls are waiting for a thread,
 how many threads are free, and so on (this is the only information
 provided by the B<-noconns> flag). Adding other options produces
-additional information as described in L<OPTIONS>. The output is intended
+additional information as described in L</OPTIONS>. The output is intended
 for debugging purposes and is meaningful to someone familiar with the
 implementation of Rx.
 

@@ -70,7 +70,7 @@ to obtain a PAG before issuing the B<klog> command (or include the
 B<-setpag> argument to the B<klog> command). If a PAG is not acquired, the
 Cache Manager stores the token in a credential structure identified by
 local UID rather than PAG. This creates the potential security exposure
-described in L<DESCRIPTION>.
+described in L</DESCRIPTION>.
 
 If users of NFS client machines for which AFS is supported are to issue
 this command as part of authenticating with AFS, do not use the B<fs

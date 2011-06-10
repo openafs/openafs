@@ -36,7 +36,7 @@ The B<-force> flag removes a volume even if it cannot be "attached"
 (brought online), which can happen either because the volume is extremely
 damaged or because the Salvager functioned abnormally. Without this flag,
 this command cannot remove volumes that are not attachable. See also
-L<CAUTIONS>.
+L</CAUTIONS>.
 
 To remove the specified read/write volume's backup version at the same
 time, include the B<-backup> flag.

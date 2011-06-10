@@ -26,7 +26,7 @@ B<kpwvalid> binary.
 
 The AFS distribution includes an example B<kpwvalid> program that checks
 that the password is at least eight characters long; the code for it
-appears in L<EXAMPLES> below.
+appears in L</EXAMPLES> below.
 
 The script or program must accept a sequence of password strings, one per
 line, on the standard input stream. The first is the current password and

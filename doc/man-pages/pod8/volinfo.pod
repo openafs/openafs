@@ -118,7 +118,7 @@ ignored.
 
 By default, the command produces several line of statistics for each
 volume. Adding other options produces or substitutes additional
-information as described in L<OPTIONS>.  The output is intended for
+information as described in L</OPTIONS>.  The output is intended for
 debugging purposes and is meaningful to someone familiar with the internal
 structure of volume headers.
 

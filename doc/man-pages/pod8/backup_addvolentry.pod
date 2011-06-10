@@ -46,7 +46,7 @@ machine name or partition name in the Volume Location Database (VLDB).
 
 For the B<-volumes> argument, specify a combination of alphanumeric
 characters and one or more metacharacters to wildcard part or all of the
-volume name. L<OPTIONS> lists the acceptable metacharacters.
+volume name. L</OPTIONS> lists the acceptable metacharacters.
 
 =head1 CAUTIONS
 
