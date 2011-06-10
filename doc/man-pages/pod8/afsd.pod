@@ -184,7 +184,7 @@ for a memory cache is 8 KB.
 
 To override the default chunk size for either type of cache, use the
 B<-chunksize> argument to provide an integer to be used as an exponent of
-two; see L<OPTIONS> for details. For a memory cache, if total cache size
+two; see L</OPTIONS> for details. For a memory cache, if total cache size
 divided by chunk size leaves a remainder, the B<afsd> program rounds down
 the number of dcache entries, resulting in a slightly smaller cache.
 
@@ -585,7 +585,7 @@ the Finder program doesn't hang when browsing AFS directories.
 
 Specifies the number of F<VI<n>> files to create in the cache directory
 for a disk cache, overriding the default that is calculated as described
-in L<DESCRIPTION>. Each F<VI<n>> file accommodates a chunk of data, and
+in L</DESCRIPTION>. Each F<VI<n>> file accommodates a chunk of data, and
 can grow to a maximum size of 64 KB by default. Do not combine this
 argument with the B<-memcache> argument.
 

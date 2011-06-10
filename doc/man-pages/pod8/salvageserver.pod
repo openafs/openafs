@@ -310,7 +310,7 @@ the local superuser C<root>.
 
 L<BosConfig(5)>,
 L<SalvageLog(5)>,
-L<Salvager(8)>,
+L<salvager(8)>,
 L<bos_create(8)>,
 L<bos_getlog(8)>,
 L<bos_salvage(8)>,
