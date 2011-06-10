@@ -51,7 +51,6 @@ generated: force buildtools
 	+${COMPILE_PART1} bucoord ${COMPILE_GENERATED}
 	+${COMPILE_PART1} budb ${COMPILE_GENERATED}
 	+${COMPILE_PART1} cmd ${COMPILE_GENERATED}
-	+${COMPILE_PART1} des ${COMPILE_GENERATED}
 	+${COMPILE_PART1} fsint ${COMPILE_GENERATED}
 	+${COMPILE_PART1} kauth ${COMPILE_GENERATED}
 	+${COMPILE_PART1} ptserver ${COMPILE_GENERATED}
@@ -665,7 +664,7 @@ jafs: libjafs
 
 jafsadm: libjafsadm
 
-build_tools: config des comerr rxgen
+build_tools: config comerr rxgen
 	+${COMPILE_PART1} util ${COMPILE_PART2A} buildtools_clean
 
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log \
