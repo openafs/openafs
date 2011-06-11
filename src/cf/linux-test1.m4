@@ -137,6 +137,6 @@ AC_DEFUN([AC_CHECK_LINUX_TYPED_STRUCT],
 		       [#include <linux/$3>],
 		       [$1 _test; printk("%x\n", &_test.$2); ],
 		       AS_TR_CPP($1_HAS_$2),
-		       [Define if kernel typedef'd $1 has the $2 element])
+		       [Define if kernel $1 has the $2 element])
  ])
 
