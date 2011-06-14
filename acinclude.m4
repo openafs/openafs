@@ -358,10 +358,12 @@ case $system in
 		fi
 		AC_MSG_RESULT(linux)
                 if test "x$enable_kernel_module" = "xyes"; then
-                 AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $[]1 $[]2}'`
-                 if test "x${AFS_SYSKVERS}" = "x"; then
-                  AC_MSG_ERROR(Couldn't guess your Linux version [2])
-                 fi
+                 case "$LINUX_VERSION" in
+                  2.2.*) AFS_SYSKVERS=22 ;;
+                  2.4.*) AFS_SYSKVERS=24 ;;
+                  2.6.* | 3.*) AFS_SYSKVERS=26 ;;
+                  *) AC_MSG_ERROR(Couldn't guess your Linux version [2]) ;;
+                 esac
                 fi
                 ;;
         *-solaris*)
