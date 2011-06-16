@@ -127,3 +127,12 @@ libafsrpc.so.1 libafsrpc1 #MINVER#
  rx_SetConnHardDeadTime@Base 1.5.78
  rx_SetConnIdleDeadTime@Base 1.5.78
  rx_SetBusyChannelError@Base 1.6.0~pre3
+ afs_xdr_array@Base 1.6.0~pre6
+ afs_xdr_bytes@Base 1.6.0~pre6
+ afs_xdr_char@Base 1.6.0~pre6
+ afs_xdr_free@Base 1.6.0~pre6
+ afs_xdr_int@Base 1.6.0~pre6
+ afs_xdr_opaque@Base 1.6.0~pre6
+ afs_xdr_short@Base 1.6.0~pre6
+ afs_xdr_string@Base 1.6.0~pre6
+ afs_xdr_vector@Base 1.6.0~pre6
