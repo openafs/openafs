@@ -226,6 +226,14 @@ override_dh_installinit:
 override_dh_installdocs:
 	dh_installdocs $(DOC_PACKAGES) --link-doc=openafs-client
 	dh_installdocs --remaining-packages
+	set -e; if [ -d "$(DOCS)" ] ; then \
+	    for d in arch-overview bos-spec fs-cm-spec rx-spec \
+		     vldb-vol-spec ; do \
+		rm $(DOCS)/html/$$d/jquery.js ; \
+		ln -s /usr/share/javascript/jquery/jquery.min.js \
+		    $(DOCS)/html/$$d/jquery.js ; \
+	    done ; \
+	fi
 
 # Install the upstream NEWS file as the upstream changelog.
 override_dh_installchangelogs:
