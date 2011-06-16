@@ -1,4 +1,4 @@
-openafs (1.6.0~pre6-1) UNRELEASED; urgency=low
+openafs (1.6.0~pre6-1) unstable; urgency=low
 
   * New upstream prerelease.
     - Don't do unnecessary page invalidation with directories.
@@ -11,7 +11,7 @@ openafs (1.6.0~pre6-1) UNRELEASED; urgency=low
     - Fix reference leak in GetCapabilities.
     - Document DNS SRV record usage in afsd man page.
 
- -- Russ Allbery <rra@debian.org>  Thu, 16 Jun 2011 08:21:44 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 16 Jun 2011 08:38:10 -0700
 
 openafs (1.6.0~pre5-2) unstable; urgency=low
 
