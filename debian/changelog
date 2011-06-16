@@ -1,3 +1,9 @@
+openafs (1.6.0~pre6-1) UNRELEASED; urgency=low
+
+  * New upstream prerelease.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 16 Jun 2011 08:21:44 -0700
+
 openafs (1.6.0~pre5-2) unstable; urgency=low
 
   * Apply upstream patch from http://gerrit.openafs.org/#change,4656 for
