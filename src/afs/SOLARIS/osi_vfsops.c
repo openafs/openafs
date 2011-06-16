@@ -80,18 +80,6 @@ afs_freevfs(void)
 
     afs_globalVFS = 0;
 
-    /* free mappings for all vcaches */
-    for (i = 0; i < VCSIZE; i++) {
-	for (vc = afs_vhashT[i]; vc; vc = nvc) {
-	    int fv_slept;
-	    nvc = vc->hnext;
-	    if (afs_FlushVCache(vc, &fv_slept)) {
-		afs_warn("afs_FlushVCache failed on 0x%llx\n",
-		         (unsigned long long)vc);
-	    }
-	}
-    }
-
     afs_shutdown();
 }
 
@@ -586,6 +574,19 @@ static struct modlinkage afs_modlinkage = {
     NULL
 };
 
+static void
+reset_sysent(void)
+{
+    if (afs_sinited) {
+	sysent[SYS_setgroups].sy_callc = afs_orig_setgroups;
+	sysent[SYS_ioctl].sy_call = afs_orig_ioctl;
+#if defined(AFS_SUN57_64BIT_ENV)
+	sysent32[SYS_setgroups].sy_callc = afs_orig_setgroups32;
+	sysent32[SYS_ioctl].sy_call = afs_orig_ioctl32;
+#endif
+    }
+}
+
 /** This is the function that modload calls when loading the afs kernel
   * extensions. The solaris modload program searches for the _init
   * function in a module and calls it when modloading
@@ -682,6 +683,11 @@ _init()
     osi_Init();			/* initialize global lock, etc */
 
     code = mod_install(&afs_modlinkage);
+    if (code) {
+	/* we failed to load, so make sure we don't leave behind any
+	 * references to our syscall handlers */
+	reset_sysent();
+    }
     return code;
 }
 
@@ -701,14 +707,7 @@ _fini()
     if (afs_globalVFS)
 	return EBUSY;
 
-    if (afs_sinited) {
-	sysent[SYS_setgroups].sy_callc = afs_orig_setgroups;
-	sysent[SYS_ioctl].sy_call = afs_orig_ioctl;
-#if defined(AFS_SUN57_64BIT_ENV)
-	sysent32[SYS_setgroups].sy_callc = afs_orig_setgroups32;
-	sysent32[SYS_ioctl].sy_call = afs_orig_ioctl32;
-#endif
-    }
+    reset_sysent();
     code = mod_remove(&afs_modlinkage);
     return code;
 }

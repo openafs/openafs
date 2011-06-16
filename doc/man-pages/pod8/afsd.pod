@@ -71,7 +71,7 @@ machines, prevents the Cache Manager from accessing files in it.
 By default, the list of database server machines is transferred into the
 kernel from the F</usr/vice/etc/CellServDB> file. Alternatively, when the
 B<-afsdb> option is used, the list of database server machines is taken
-from the AFSDB DNS records for each cell. After initialization, use the
+from the DNS SRV or AFSDB records for each cell. After initialization, use the
 B<fs newcell> command to change the kernel-resident list without having to
 reboot.
 
@@ -411,14 +411,14 @@ It should be considered experimental.
 
 =item B<-afsdb>
 
-Enable afsdb support. This will use DNS to lookup the AFSDB record and
+Enable afsdb support. This will use DNS to lookup the SRV or AFSDB records and
 use that for the database servers for each cell instead of the values
 in the F<CellServDB> file. This has the advantage of only needing to
-update one DNS record to reconfigure the AFS clients for a new
+update one set of DNS records to reconfigure the AFS clients for a new
 database server as opposed to touching all of the clients, and also
 allows one to access a cell without preconfiguring its database
-servers in F<CellServDB>. The format of AFSDB records is defined in
-RFC 1183.
+servers in F<CellServDB>. The format of SRV records is defined in
+RFC 5864, and the AFSDB record format is in RFC 1183.
 
 =item B<-backuptree>
 
@@ -755,7 +755,8 @@ L<afs_cache(5)>,
 L<CellServDB(5)>,
 L<cacheinfo(5)>
 
-RFC 1183 L<http://www.faqs.org/rfcs/rfc1183.html>
+RFC 5864 L<http://www.ietf.org/rfc/rfc5864.txt>
+RFC 1183 L<http://www.ietf.org/rfc/rfc1183.txt>
 
 =head1 COPYRIGHT
 

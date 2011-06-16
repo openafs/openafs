@@ -325,7 +325,6 @@ afs_put_super(struct super_block *sbp)
     afs_globalVFS = 0;
     afs_globalVp = 0;
 
-    osi_linux_free_inode_pages();	/* invalidate and release remaining AFS inodes. */
     afs_shutdown();
 #if defined(AFS_LINUX24_ENV)
     mntput(afs_cacheMnt);
@@ -451,32 +450,4 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_atime = vp->va_atime.tv_sec;
     ip->i_mtime = vp->va_mtime.tv_sec;
     ip->i_ctime = vp->va_ctime.tv_sec;
-}
-
-/* osi_linux_free_inode_pages
- *
- * Free all vnodes remaining in the afs hash.  Must be done before
- * shutting down afs and freeing all memory.
- */
-void
-osi_linux_free_inode_pages(void)
-{
-    int i;
-    struct vcache *tvc, *nvc;
-    extern struct vcache *afs_vhashT[VCSIZE];
-
- retry:
-    for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; ) {
-	    int slept;
-	
-	    nvc = tvc->hnext;
-	    if (afs_FlushVCache(tvc, &slept))
-		printf("Failed to invalidate all pages on inode 0x%p\n", tvc);
-	    if (slept) {
-		goto retry;
-	    }
-	    tvc = nvc;
-	}
-    }
 }

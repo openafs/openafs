@@ -1251,7 +1251,11 @@ afs_shutdown(void)
 	afs_warn("afs: COLD ");
     else
 	afs_warn("afs: WARM ");
-    afs_warn("shutting down of: CB... ");
+    afs_warn("shutting down of: vcaches... ");
+
+    afs_FlushAllVCaches();
+
+    afs_warn("CB... ");
 
     afs_termState = AFSOP_STOP_RXCALLBACK;
     rx_WakeupServerProcs();

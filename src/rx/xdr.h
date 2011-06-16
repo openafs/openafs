@@ -63,7 +63,7 @@
 #define mem_free(ptr, bsize)	free(ptr)
 #endif
 
-#if defined(AFS_AMD64_LINUX24_ENV) || defined(AFS_DARWIN_ENV)
+#if !defined(AFS_NT40_ENV)
 #define xdr_alloc afs_xdr_alloc
 #define xdr_free afs_xdr_free
 #define xdr_void afs_xdr_void

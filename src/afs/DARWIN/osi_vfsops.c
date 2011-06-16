@@ -28,7 +28,7 @@ int afs_vfs_typenum;
 int
 afs_quotactl()
 {
-    return EOPNOTSUPP;
+    return ENOTSUP;
 }
 
 int
@@ -258,7 +258,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	        AFS_GLOCK();
                 if (error)
                    tvp = NULL;
-                else 
+                else
                    /* re-acquire the usecount that finalizevnode disposed of */
                    vnode_ref(AFSTOV(tvp));
             }
@@ -510,7 +510,7 @@ afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	}
 	break;
     }
-    return EOPNOTSUPP;
+    return ENOTSUP;
 }
 
 typedef (*PFI) ();
