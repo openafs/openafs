@@ -669,7 +669,11 @@ rxi_GetIFInfo(void)
     }
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_FBSD80_ENV)
+    TAILQ_FOREACH(ifn, &V_ifnet, if_link) {
+#else
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
+#endif
 	if (i >= ADDRSPERSITE)
 	    break;
 #elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)

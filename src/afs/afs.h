@@ -1292,8 +1292,6 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define DO_VLRU 2
 #define IS_SLOCK 4
 #define IS_WLOCK 8
-#define FIND_CDEAD 16
-#define FIND_BULKDEAD 32
 
 /* values for flag param of afs_CheckVolumeNames */
 #define AFS_VOLCHECK_EXPIRED	0x1	/* volumes whose callbacks have expired */

@@ -670,6 +670,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     long startTime;		/* time we started the call,
 				 * for callback expiration base
 				 */
+    int ftype[4] = {VNON, VREG, VDIR, VLNK}; /* verify type is as expected */
     afs_size_t statSeqNo = 0;	/* Valued of file size to detect races */
     int code;			/* error code */
     long newIndex;		/* new index in the dir */
@@ -816,7 +817,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 130);
-		tvcp = afs_FindVCache(&tfid, &retry, IS_WLOCK|FIND_BULKDEAD /* no stats | LRU */ );
+		tvcp = afs_FindVCache(&tfid, &retry, IS_WLOCK /* no stats | LRU */ );
 		if (tvcp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
 		    afs_PutVCache(tvcp);
@@ -826,12 +827,24 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		tvcp = afs_NewBulkVCache(&tfid, hostp, statSeqNo);
 		if (tvcp)
 		{
-			ObtainWriteLock(&tvcp->lock, 505);
-			ReleaseWriteLock(&afs_xvcache);
-			afs_RemoveVCB(&tfid);
-			ReleaseWriteLock(&tvcp->lock);
+		    ObtainWriteLock(&tvcp->lock, 505);
+#ifdef AFS_DARWIN80_ENV
+		    /* use even/odd hack to guess file versus dir.
+		       let links be reaped. oh well. */
+		    if (dirEntryp->fid.vnode & 1)
+			tvcp->f.m.Type = VDIR;
+		    else
+			tvcp->f.m.Type = VREG;
+		    /* finalize to a best guess */
+		    afs_darwin_finalizevnode(tvcp, VTOAFS(adp), NULL, 0, 1);
+		    /* re-acquire usecount that finalizevnode disposed of */
+		    vnode_ref(AFSTOV(tvcp));
+#endif
+		    ReleaseWriteLock(&afs_xvcache);
+		    afs_RemoveVCB(&tfid);
+		    ReleaseWriteLock(&tvcp->lock);
 		} else {
-			ReleaseWriteLock(&afs_xvcache);
+		    ReleaseWriteLock(&afs_xvcache);
 		}
 	    } else {
 		ReleaseWriteLock(&afs_xvcache);
@@ -1079,7 +1092,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	do {
 	    retry = 0;
 	    ObtainReadLock(&afs_xvcache);
-	    tvcp = afs_FindVCache(&afid, &retry, FIND_CDEAD /* !stats&!lru */);
+	    tvcp = afs_FindVCache(&afid, &retry, 0/* !stats&!lru */);
 	    ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 
@@ -1095,9 +1108,12 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * matches the value we placed there when we set the CBulkFetching
 	 * flag, then someone else has done something with this node,
 	 * and we may not have the latest status information for this
-	 * file.  Leave the entry alone.
+	 * file.  Leave the entry alone. There's also a file type
+	 * change here, for OSX bulkstat support.
 	 */
-	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
+	if (!(tvcp->f.states & CBulkFetching)
+	    || (tvcp->f.m.Length != statSeqNo)
+	    || (ftype[(&statsp[i])->FileType] != vType(tvcp))) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 	    afs_PutVCache(tvcp);
@@ -1223,10 +1239,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		afs_DequeueCallback(tvcp);
 		if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
 		    osi_dnlc_purgedp(tvcp); /* if it (could be) a directory */
-	    } else {
+	    } else
 		/* re-acquire the usecount that finalizevnode disposed of */
 		vnode_ref(AFSTOV(tvcp));
-	    }
 	} else
 #endif
 	ReleaseWriteLock(&afs_xcbhash);
@@ -1258,7 +1273,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	do {
 	    retry = 0;
 	    ObtainReadLock(&afs_xvcache);
-	    tvcp = afs_FindVCache(&afid, &retry, FIND_CDEAD /* !stats&!lru */);
+	    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */);
 	    ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 	if (tvcp != NULL) {
@@ -1290,7 +1305,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
+#ifdef AFS_DARWIN80_ENV
+static int AFSDOBULK = 0;
+#else
 static int AFSDOBULK = 1;
+#endif
 
 static_inline int
 osi_lookup_isdot(const char *aname)

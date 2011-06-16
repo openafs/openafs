@@ -146,7 +146,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     code = afs_root(sb);
     if (code) {
 	afs_globalVFS = NULL;
-	osi_linux_free_inode_pages();
+	afs_FlushAllVCaches();
         module_put(THIS_MODULE);
     }
 
@@ -341,7 +341,6 @@ afs_put_super(struct super_block *sbp)
     afs_globalVFS = 0;
     afs_globalVp = 0;
 
-    osi_linux_free_inode_pages();	/* invalidate and release remaining AFS inodes. */
     afs_shutdown();
     mntput(afs_cacheMnt);
 
@@ -463,32 +462,4 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_mtime.tv_nsec = afs_sysnamegen;
     ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
     ip->i_ctime.tv_nsec = 0;
-}
-
-/* osi_linux_free_inode_pages
- *
- * Free all vnodes remaining in the afs hash.  Must be done before
- * shutting down afs and freeing all memory.
- */
-void
-osi_linux_free_inode_pages(void)
-{
-    int i;
-    struct vcache *tvc, *nvc;
-    extern struct vcache *afs_vhashT[VCSIZE];
-
- retry:
-    for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; ) {
-	    int slept;
-	
-	    nvc = tvc->hnext;
-	    if (afs_FlushVCache(tvc, &slept))
-		printf("Failed to invalidate all pages on inode 0x%p\n", tvc);
-	    if (slept) {
-		goto retry;
-	    }
-	    tvc = nvc;
-	}
-    }
 }

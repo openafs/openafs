@@ -813,6 +813,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([task_struct], [thread_info], [sched.h])
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 
+		 dnl Check for typed structure elements
+		 AC_CHECK_LINUX_TYPED_STRUCT([read_descriptor_t],
+				     	     [buf], [fs.h])
+
 		 dnl Function existence checks
 
                  AC_CHECK_LINUX_FUNC([bdi_init],
