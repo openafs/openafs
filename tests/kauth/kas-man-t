@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use File::Basename;
+use lib "./tests-lib/perl5";
+use mancheck_utils;
+
+# Set this to the bare command to test
+my $command = 'kas';
+my $builddir = $ENV{BUILD};
+if (!$builddir) {
+    $builddir = dirname($0) . "/..";
+}
+$builddir .= "/..";
+# Set this to the directory holding $command
+my $srcdir = "$builddir/src/kauth";
+
+#---------------------------------------------------------------------
+
+# Keep track of number of tests we ran. We don't know up front.
+my $testcount = 0;
+
+check_command_binary("$srcdir/$command");
+my $count = test_command_man_pages($builddir, "$srcdir/$command");
+done_testing($count);
