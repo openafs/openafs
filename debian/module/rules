@@ -29,6 +29,10 @@ package    = openafs
 modulepkg := openafs-modules-$(KVERS)${INT_SUBARCH}
 moduledir := debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 
+# make-kpkg tries to rebuild debian/rules first, so add a dummy target to
+# avoid our dh wildcard rule and a fatal error.
+debian/rules:
+
 # This setup must be done before running any other target if it hasn't
 # already been done.
 setup:

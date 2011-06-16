@@ -10,6 +10,8 @@ openafs (1.6.0~pre6-1) unstable; urgency=low
     - Fix callback state handling with demand-attach when salvaged.
     - Fix reference leak in GetCapabilities.
     - Document DNS SRV record usage in afsd man page.
+  * Add a dummy debian/rules rule in the kernel module rules file to fix
+    builds with make-kpkg.  (Closes: #622260)
 
  -- Russ Allbery <rra@debian.org>  Thu, 16 Jun 2011 08:38:10 -0700
 
