@@ -1,6 +1,15 @@
 openafs (1.6.0~pre6-1) UNRELEASED; urgency=low
 
   * New upstream prerelease.
+    - Don't do unnecessary page invalidation with directories.
+    - Flush vcaches in afs_shutdown for better callback givebacks.
+    - Fix the vnode type for dynroot FIDs.
+    - Fix volinfo -filenames.
+    - Fall back to afs3-vlserver for SRV records for afs3-prserver.
+    - Fix a client locking issue on ICBS that could deadlock.
+    - Fix callback state handling with demand-attach when salvaged.
+    - Fix reference leak in GetCapabilities.
+    - Document DNS SRV record usage in afsd man page.
 
  -- Russ Allbery <rra@debian.org>  Thu, 16 Jun 2011 08:21:44 -0700
 
