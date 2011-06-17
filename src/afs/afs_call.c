@@ -1253,7 +1253,12 @@ afs_shutdown(void)
 	afs_warn("afs: WARM ");
     afs_warn("shutting down of: vcaches... ");
 
+#if !defined(AFS_FBSD_ENV)
+    /* The FBSD afs_unmount() calls vflush(), which reclaims all vnodes
+     * on the mountpoint, flushing them in the process.  In the presence
+     * of bugs, flushing again here can cause panics. */
     afs_FlushAllVCaches();
+#endif
 
     afs_warn("CB... ");
 
