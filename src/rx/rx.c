@@ -6818,11 +6818,16 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	peer->rtt = _8THMSEC(&thisRtt) + 8;
 	peer->rtt_dev = peer->rtt >> 2;	/* rtt/2: they're scaled differently */
     }
-    /* the timeout is RTT + 4*MDEV + rx_minPeerTimeout msec.
-     * This is because one end or the other of these connections is usually
-     * in a user process, and can be switched and/or swapped out.  So on fast,
-     * reliable networks, the timeout would otherwise be too short. */
-    rtt_timeout = ((peer->rtt >> 3) + peer->rtt_dev) + rx_minPeerTimeout;
+    /* the smoothed RTT time is RTT + 4*MDEV
+     *
+     * We allow a user specified minimum to be set for this, to allow clamping
+     * at a minimum value in the same way as TCP. In addition, we have to allow
+     * for the possibility that this packet is answered by a delayed ACK, so we
+     * add on a fixed 200ms to account for that timer expiring.
+     */
+
+    rtt_timeout = MAX(((peer->rtt >> 3) + peer->rtt_dev),
+		      rx_minPeerTimeout) + 200;
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
 
