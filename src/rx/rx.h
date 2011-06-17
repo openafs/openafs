@@ -401,7 +401,6 @@ struct rx_peer {
     int rtt;			/* Smoothed round trip time, measured in milliseconds/8 */
     int rtt_dev;		/* Smoothed rtt mean difference, in milliseconds/4 */
     struct clock timeout;	/* Current retransmission delay */
-    int backedOff;              /* Has the timeout been backed off due to a missing packet? */
     int nSent;			/* Total number of distinct data packets sent, not including retransmissions */
     int reSends;		/* Total number of retransmissions for this peer, since this structure was created */
 
