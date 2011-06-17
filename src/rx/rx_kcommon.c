@@ -370,12 +370,10 @@ rxi_InitPeerParams(struct rx_peer *pp)
 
     i = rxi_Findcbi(pp->host);
     if (i == -1) {
-	pp->timeout.sec = 3;
-	/* pp->timeout.usec = 0; */
+	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
-	pp->timeout.sec = 2;
-	/* pp->timeout.usec = 0; */
+	rx_rto_setPeerTimeoutSecs(pp, 2);
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 	mtu = ntohl(afs_cb_interface.mtu[i]);
 	/* Diminish the packet size to one based on the MTU given by
@@ -396,13 +394,12 @@ rxi_InitPeerParams(struct rx_peer *pp)
 
     ifn = rxi_FindIfnet(pp->host, NULL);
     if (ifn) {
-	pp->timeout.sec = 2;
-	/* pp->timeout.usec = 0; */
+	rx_rto_setPeerTimeoutSecs(pp, 2);
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 #   ifdef IFF_POINTOPOINT
 	if (rx_ifnet_flags(ifn) & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
-	    pp->timeout.sec = 4;
+	    rx_rto_setPeerTimeoutSecs(pp, 4);
 	    pp->ifMTU = RX_PP_PACKET_SIZE;
 	}
 #   endif /* IFF_POINTOPOINT */
@@ -414,8 +411,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     } else {			/* couldn't find the interface, so assume the worst */
-	pp->timeout.sec = 3;
-	/* pp->timeout.usec = 0; */
+	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 #  endif /* else AFS_USERSPACE_IP_ADDR */
@@ -425,12 +421,10 @@ rxi_InitPeerParams(struct rx_peer *pp)
     mtu = rxi_FindIfMTU(pp->host);
 
     if (mtu <= 0) {
-	pp->timeout.sec = 3;
-	/* pp->timeout.usec = 0; */
+	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
-	pp->timeout.sec = 2;
-	/* pp->timeout.usec = 0; */
+	rx_rto_setPeerTimeoutSecs(pp, 2);
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 
 	/* Diminish the packet size to one based on the MTU given by
@@ -444,7 +438,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 # endif /* AFS_SUN5_ENV */
 #else /* ADAPT_MTU */
     pp->rateFlag = 2;		/* start timing after two full packets */
-    pp->timeout.sec = 2;
+    rx_rto_setPeerTimeoutSecs(pp, 2);
     pp->ifMTU = OLD_MAX_PACKET_SIZE;
 #endif /* else ADAPT_MTU */
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);

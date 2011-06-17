@@ -98,7 +98,8 @@ int (*swapNameProgram) (PROCESS, const char *, char *) = 0;
 /* Local static routines */
 static void rxi_DestroyConnectionNoLock(struct rx_connection *conn);
 static void rxi_ComputeRoundTripTime(struct rx_packet *, struct rx_ackPacket *,
-				     struct rx_peer *, struct clock *);
+				     struct rx_call *, struct rx_peer *,
+				     struct clock *);
 
 #ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
@@ -612,6 +613,17 @@ int
 rx_Init(u_int port)
 {
     return rx_InitHost(htonl(INADDR_ANY), port);
+}
+
+/**
+ * Set an initial round trip timeout for a peer connection
+ *
+ * @param[in] secs The timeout to set in seconds
+ */
+
+void
+rx_rto_setPeerTimeoutSecs(struct rx_peer *peer, int secs) {
+    peer->rtt = secs * 8000;
 }
 
 /**
@@ -4252,7 +4264,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
 	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
-	    rxi_ComputeRoundTripTime(tp, ap, call->conn->peer, &now);
+	    rxi_ComputeRoundTripTime(tp, ap, call, peer, &now);
 	}
 
 #ifdef ADAPT_WINDOW
@@ -4324,8 +4336,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 		newAckCount++;
 		tp->flags |= RX_PKTFLAG_ACKED;
-
-		rxi_ComputeRoundTripTime(tp, ap, call->conn->peer, &now);
+		rxi_ComputeRoundTripTime(tp, ap, call, peer, &now);
 #ifdef ADAPT_WINDOW
 		rxi_ComputeRate(call->conn->peer, call, tp, np, ap->reason);
 #endif
@@ -4347,7 +4358,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
 	if (!(tp->flags & RX_PKTFLAG_ACKED) && !clock_IsZero(&tp->retryTime)) {
             tp->retryTime = tp->timeSent;
-	    clock_Add(&tp->retryTime, &peer->timeout);
+	    clock_Add(&tp->retryTime, &call->rto);
 	    /* shift by eight because one quarter-sec ~ 256 milliseconds */
 	    clock_Addmsec(&(tp->retryTime), ((afs_uint32) tp->backoff) << 8);
 	}
@@ -4364,7 +4375,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     while (!queue_IsEnd(&call->tq, tp) && !clock_IsZero(&tp->retryTime)) {
 	tp->retryTime = tp->timeSent;
-	clock_Add(&tp->retryTime, &peer->timeout);
+	clock_Add(&tp->retryTime, &call->rto);
 	clock_Addmsec(&tp->retryTime, ((afs_uint32) tp->backoff) << 8);
 	tp = queue_Next(tp, rx_packet);
     }
@@ -5196,6 +5207,11 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     call->ssthresh = rx_maxSendWindow;
     call->nDgramPackets = peer->nDgramPackets;
     call->congestSeq = peer->congestSeq;
+    call->rtt = peer->rtt;
+    call->rtt_dev = peer->rtt_dev;
+    clock_Zero(&call->rto);
+    clock_Addmsec(&call->rto,
+		  MAX(((call->rtt >> 3) + call->rtt_dev), rx_minPeerTimeout) + 200);
     MUTEX_EXIT(&peer->peer_lock);
 
     flags = call->flags;
@@ -5599,7 +5615,7 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
     peer->nSent += xmit->len;
     if (xmit->resending)
 	peer->reSends += xmit->len;
-    retryTime = peer->timeout;
+    retryTime = call->rto;
     MUTEX_EXIT(&peer->peer_lock);
 
     if (rx_stats_active) {
@@ -6166,8 +6182,8 @@ rxi_CheckCall(struct rx_call *call)
     }
 #endif
     /* RTT + 8*MDEV, rounded up to the next second. */
-    fudgeFactor = (((afs_uint32) conn->peer->rtt >> 3) +
-                   ((afs_uint32) conn->peer->rtt_dev << 1) + 1023) >> 10;
+    fudgeFactor = (((afs_uint32) call->rtt >> 3) +
+                   ((afs_uint32) call->rtt_dev << 1) + 1023) >> 10;
 
     deadTime = conn->secondsUntilDead + fudgeFactor;
     now = clock_Sec();
@@ -6675,6 +6691,7 @@ rxi_ChallengeOn(struct rx_connection *conn)
 static void
 rxi_ComputeRoundTripTime(struct rx_packet *p,
 			 struct rx_ackPacket *ack,
+			 struct rx_call *call,
 			 struct rx_peer *peer,
 			 struct clock *now)
 {
@@ -6752,11 +6769,11 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
     /* better rtt calculation courtesy of UMich crew (dave,larry,peter,?) */
 
     /* Apply VanJacobson round-trip estimations */
-    if (peer->rtt) {
+    if (call->rtt) {
 	int delta;
 
 	/*
-	 * srtt (peer->rtt) is in units of one-eighth-milliseconds.
+	 * srtt (call->rtt) is in units of one-eighth-milliseconds.
 	 * srtt is stored as fixed point with 3 bits after the binary
 	 * point (i.e., scaled by 8). The following magic is
 	 * equivalent to the smoothing algorithm in rfc793 with an
@@ -6767,8 +6784,8 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
          * srtt' = srtt + (rtt - srtt)/8
 	 */
 
-	delta = _8THMSEC(&thisRtt) - peer->rtt;
-	peer->rtt += (delta >> 3);
+	delta = _8THMSEC(&thisRtt) - call->rtt;
+	call->rtt += (delta >> 3);
 
 	/*
 	 * We accumulate a smoothed rtt variance (actually, a smoothed
@@ -6791,8 +6808,8 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	if (delta < 0)
 	    delta = -delta;
 
-	delta -= (peer->rtt_dev << 1);
-	peer->rtt_dev += (delta >> 3);
+	delta -= (call->rtt_dev << 1);
+	call->rtt_dev += (delta >> 3);
     } else {
 	/* I don't have a stored RTT so I start with this value.  Since I'm
 	 * probably just starting a call, and will be pushing more data down
@@ -6800,8 +6817,8 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	 * little, and I set deviance to half the rtt.  In practice,
 	 * deviance tends to approach something a little less than
 	 * half the smoothed rtt. */
-	peer->rtt = _8THMSEC(&thisRtt) + 8;
-	peer->rtt_dev = peer->rtt >> 2;	/* rtt/2: they're scaled differently */
+	call->rtt = _8THMSEC(&thisRtt) + 8;
+	call->rtt_dev = call->rtt >> 2;	/* rtt/2: they're scaled differently */
     }
     /* the smoothed RTT time is RTT + 4*MDEV
      *
@@ -6811,13 +6828,17 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
      * add on a fixed 200ms to account for that timer expiring.
      */
 
-    rtt_timeout = MAX(((peer->rtt >> 3) + peer->rtt_dev),
+    rtt_timeout = MAX(((call->rtt >> 3) + call->rtt_dev),
 		      rx_minPeerTimeout) + 200;
-    clock_Zero(&(peer->timeout));
-    clock_Addmsec(&(peer->timeout), rtt_timeout);
+    clock_Zero(&call->rto);
+    clock_Addmsec(&call->rto, rtt_timeout);
+
+    /* Update the peer, so any new calls start with our values */
+    peer->rtt_dev = call->rtt_dev;
+    peer->rtt = call->rtt;
 
     dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n",
-          p->header.callNumber, p, MSEC(&thisRtt), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
+          p->header.callNumber, p, MSEC(&thisRtt), call->rtt >> 3, call->rtt_dev >> 2, (call->rto.sec), (call->rto.usec)));
 }
 
 
@@ -7085,7 +7106,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
     case RX_ACK_REQUESTED:
 	xferSize =
 	    p->length + RX_HEADER_SIZE + call->conn->securityMaxTrailerSize;
-	xferMs = peer->rtt;
+	xferMs = call->rtt;
 	break;
 
     case RX_ACK_PING_RESPONSE:
@@ -7391,9 +7412,8 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 	    (int)peer->burstWait.sec, (int)peer->burstWait.usec);
 
     fprintf(file,
-	    "   Rtt %d, " "retry time %u.%06d, " "total sent %d, "
-	    "resent %d\n", peer->rtt, (int)peer->timeout.sec,
-	    (int)peer->timeout.usec, peer->nSent, peer->reSends);
+	    "   Rtt %d, " "total sent %d, " "resent %d\n",
+	    peer->rtt, peer->nSent, peer->reSends);
 
     fprintf(file,
 	    "   Packet size %d, " "max in packet skew %d, "
@@ -7771,8 +7791,8 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	peer->burstWait.usec = ntohl(peer->burstWait.usec);
 	peer->rtt = ntohl(peer->rtt);
 	peer->rtt_dev = ntohl(peer->rtt_dev);
-	peer->timeout.sec = ntohl(peer->timeout.sec);
-	peer->timeout.usec = ntohl(peer->timeout.usec);
+	peer->timeout.sec = 0;
+	peer->timeout.usec = 0;
 	peer->nSent = ntohl(peer->nSent);
 	peer->reSends = ntohl(peer->reSends);
 	peer->inPacketSkew = ntohl(peer->inPacketSkew);
@@ -7830,8 +7850,8 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->burstWait.usec = tp->burstWait.usec;
 		peerStats->rtt = tp->rtt;
 		peerStats->rtt_dev = tp->rtt_dev;
-		peerStats->timeout.sec = tp->timeout.sec;
-		peerStats->timeout.usec = tp->timeout.usec;
+		peerStats->timeout.sec = 0;
+		peerStats->timeout.usec = 0;
 		peerStats->nSent = tp->nSent;
 		peerStats->reSends = tp->reSends;
 		peerStats->inPacketSkew = tp->inPacketSkew;

@@ -1986,8 +1986,6 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tpeer.burstWait.usec = htonl(tp->burstWait.usec);
 			tpeer.rtt = htonl(tp->rtt);
 			tpeer.rtt_dev = htonl(tp->rtt_dev);
-			tpeer.timeout.sec = htonl(tp->timeout.sec);
-			tpeer.timeout.usec = htonl(tp->timeout.usec);
 			tpeer.nSent = htonl(tp->nSent);
 			tpeer.reSends = htonl(tp->reSends);
 			tpeer.inPacketSkew = htonl(tp->inPacketSkew);

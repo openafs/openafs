@@ -241,8 +241,7 @@ main(int argc, char **argv)
     if (!clock_IsZero(&burstTime))
 	conn->peer->burstWait = burstTime;
     if (!clock_IsZero(&retryTime))
-	conn->peer->timeout = retryTime;
-
+	conn->peer->rtt = _8THMSEC(&retryTime);
     if (sendFile)
 	SendFile(sendFile, conn);
     else {
