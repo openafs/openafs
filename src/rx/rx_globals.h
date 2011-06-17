@@ -49,20 +49,12 @@ EXT struct rx_queue rx_incomingCallQueue;
 /* Server processes wait on this queue when there are no appropriate calls to process */
 EXT struct rx_queue rx_idleServerQueue;
 
-/* Constant delay time before sending an acknowledge of the last packet received.  This is to avoid sending an extra acknowledge when the client is about to make another call, anyway, or the server is about to respond. */
-EXT struct clock rx_lastAckDelay;
-
 /* Constant delay time before sending a hard ack if the receiver consumes
  * a packet while no delayed ack event is scheduled. Ensures that the
  * sender is able to advance its window when the receiver consumes a packet
  * after the sender has exhausted its transmit window.
  */
 EXT struct clock rx_hardAckDelay;
-
-/* Constant delay time before sending a soft ack when none was requested.
- * This is to make sure we send soft acks before the sender times out,
- * Normally we wait and send a hard ack when the receiver consumes the packet */
-EXT struct clock rx_softAckDelay;
 
 #if defined(RXDEBUG) || defined(AFS_NT40_ENV)
 /* Variable to allow introduction of network unreliability; exported from libafsrpc */

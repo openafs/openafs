@@ -140,6 +140,25 @@ struct rx_tq_debug {
 } rx_tq_debug;
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
+/* Constant delay time before sending an acknowledge of the last packet
+ * received.  This is to avoid sending an extra acknowledge when the
+ * client is about to make another call, anyway, or the server is
+ * about to respond.
+ *
+ * The lastAckDelay may not exceeed 400ms without causing peers to
+ * unecessarily timeout.
+ */
+struct clock rx_lastAckDelay = {0, 400000};
+
+/* Constant delay time before sending a soft ack when none was requested.
+ * This is to make sure we send soft acks before the sender times out,
+ * Normally we wait and send a hard ack when the receiver consumes the packet
+ *
+ * This value has been 100ms in all shipping versions of OpenAFS. Changing it
+ * will require changes to the peer's RTT calculations.
+ */
+struct clock rx_softAckDelay = {0, 100000};
+
 /*
  * rxi_rpc_peer_stat_cnt counts the total number of peer stat structures
  * currently allocated within rx.  This number is used to allocate the
@@ -587,12 +606,8 @@ rx_InitHost(u_int host, u_int port)
     rx_connHashTable = (struct rx_connection **)htable;
     rx_peerHashTable = (struct rx_peer **)ptable;
 
-    rx_lastAckDelay.sec = 0;
-    rx_lastAckDelay.usec = 400000;	/* 400 milliseconds */
     rx_hardAckDelay.sec = 0;
     rx_hardAckDelay.usec = 100000;	/* 100 milliseconds */
-    rx_softAckDelay.sec = 0;
-    rx_softAckDelay.usec = 100000;	/* 100 milliseconds */
 
     rxevent_Init(20, rxi_ReScheduleEvents);
 
