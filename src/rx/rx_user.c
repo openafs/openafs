@@ -685,8 +685,6 @@ rxi_InitPeerParams(struct rx_peer *pp)
     struct sockaddr_in addr;
 #endif
 
-
-
     LOCK_IF_INIT;
     if (!Inited) {
 	UNLOCK_IF_INIT;
@@ -705,19 +703,20 @@ rxi_InitPeerParams(struct rx_peer *pp)
     ppaddr = ntohl(pp->host);
 
     pp->ifMTU = 0;
-    pp->timeout.sec = 2;
+    rx_rto_setPeerTimeoutSecs(pp, 2);
     pp->rateFlag = 2;		/* start timing after two full packets */
     /* I don't initialize these, because I presume they are bzero'd...
      * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
-     * pp->timeout.usec */
+     */
 
     LOCK_IF;
     for (ix = 0; ix < rxi_numNetAddrs; ++ix) {
 	if ((rxi_NetAddrs[ix] & myNetMasks[ix]) == (ppaddr & myNetMasks[ix])) {
 #ifdef IFF_POINTOPOINT
 	    if (myNetFlags[ix] & IFF_POINTOPOINT)
-		pp->timeout.sec = 4;
+		rx_rto_setPeerTimeoutSecs(pp, 4);
 #endif /* IFF_POINTOPOINT */
+
 	    rxmtu = myNetMTUs[ix] - RX_IPUDP_SIZE;
 	    if (rxmtu < RX_MIN_PACKET_SIZE)
 		rxmtu = RX_MIN_PACKET_SIZE;
@@ -727,12 +726,12 @@ rxi_InitPeerParams(struct rx_peer *pp)
     }
     UNLOCK_IF;
     if (!pp->ifMTU) {		/* not local */
-	pp->timeout.sec = 3;
+	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
 #else /* ADAPT_MTU */
     pp->rateFlag = 2;		/* start timing after two full packets */
-    pp->timeout.sec = 2;
+    rx_rto_setPeerTimeoutSecs(pp, 2);
     pp->ifMTU = MIN(rx_MyMaxSendSize, OLD_MAX_PACKET_SIZE);
 #endif /* ADAPT_MTU */
 #if defined(ADAPT_PMTU) && defined(IP_MTU)

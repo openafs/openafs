@@ -20,6 +20,7 @@ extern int (*swapNameProgram) (PROCESS, const char *, char *);
 extern int (*rx_justReceived) (struct rx_packet *, struct sockaddr_in *);
 extern int (*rx_almostSent) (struct rx_packet *, struct sockaddr_in *);
 
+extern void rx_rto_setPeerTimeoutSecs(struct rx_peer *, int secs);
 
 extern void rx_SetEpoch(afs_uint32 epoch);
 extern int rx_Init(u_int port);
