@@ -2295,9 +2295,8 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
                 rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
-	    p->retryTime = p->timeSent;	/* resend it very soon */
-	    clock_Addmsec(&(p->retryTime),
-			  10 + (((afs_uint32) p->backoff) << 8));
+	    p->flags &= ~RX_PKTFLAG_SENT; /* resend it very soon */
+
 	    /* Some systems are nice and tell us right away that we cannot
 	     * reach this recipient by returning an error code.
 	     * So, when this happens let's "down" the host NOW so
@@ -2332,10 +2331,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
-          p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+          p->header.seq, p->header.flags, p, p->length));
 #endif
     if (rx_stats_active) {
         rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
@@ -2506,9 +2505,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
                 rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
 	    for (i = 0; i < len; i++) {
 		p = list[i];
-		p->retryTime = p->timeSent;	/* resend it very soon */
-		clock_Addmsec(&(p->retryTime),
-			      10 + (((afs_uint32) p->backoff) << 8));
+		p->flags &= ~RX_PKTFLAG_SENT;  /* resend it very soon */
 	    }
 	    /* Some systems are nice and tell us right away that we cannot
 	     * reach this recipient by returning an error code.
@@ -2537,10 +2534,10 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     osi_Assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.3d len %d",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
-          p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+          p->header.seq, p->header.flags, p, p->length));
 
 #endif
     if (rx_stats_active) {
@@ -2713,7 +2710,8 @@ rxi_PrepareSendPacket(struct rx_call *call,
 	*call->callNumber = 1;
 
     MUTEX_EXIT(&call->lock);
-    p->flags &= ~RX_PKTFLAG_ACKED;
+    p->flags &= ~(RX_PKTFLAG_ACKED | RX_PKTFLAG_SENT);
+
     p->header.cid = (conn->cid | call->channel);
     p->header.serviceId = conn->serviceId;
     p->header.securityIndex = conn->securityIndex;
@@ -2730,10 +2728,8 @@ rxi_PrepareSendPacket(struct rx_call *call,
     if (last)
 	p->header.flags |= RX_LAST_PACKET;
 
-    clock_Zero(&p->retryTime);	/* Never yet transmitted */
     clock_Zero(&p->firstSent);	/* Never yet transmitted */
     p->header.serial = 0;	/* Another way of saying never transmitted... */
-    p->backoff = 0;
 
     /* Now that we're sure this is the last data on the call, make sure
      * that the "length" and the sum of the iov_lens matches. */
@@ -2845,9 +2841,9 @@ int rx_DumpPackets(FILE *outputFile, char *cookie)
 #endif
 
     for (p = rx_mallocedP; p; p = p->allNextp) {
-        RXDPRINTF(RXDPRINTOUT, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
-                cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec, p->retryTime.sec, p->retryTime.usec,
-                p->firstSerial, p->niovecs, (afs_uint32)p->flags, (afs_uint32)p->backoff, (afs_uint32)p->length,
+        RXDPRINTF(RXDPRINTOUT, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
+                cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec,
+                p->firstSerial, p->niovecs, (afs_uint32)p->flags, (afs_uint32)p->length,
                 p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.serial,
                 (afs_uint32)p->header.type, (afs_uint32)p->header.flags, (afs_uint32)p->header.userStatus,
                 (afs_uint32)p->header.securityIndex, (afs_uint32)p->header.serviceId);
