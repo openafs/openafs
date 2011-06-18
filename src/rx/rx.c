@@ -5918,10 +5918,14 @@ static void
 rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 {
     struct rx_call *call = arg0;
+    struct rx_peer *peer;
     struct rx_packet *p, *nxp;
     struct clock maxTimeout = { 60, 0 };
 
     MUTEX_ENTER(&call->lock);
+
+    peer = call->conn->peer;
+
     /* Make sure that the event pointer is removed from the call
      * structure, since there is no longer a per-call retransmission
      * event pending. */
@@ -5943,6 +5947,21 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 	goto out;
     }
 
+#ifdef AFS_GLOBAL_RXLOCK_KERNEL
+    if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
+	/* Someone else is waiting to start recovery */
+	goto out;
+    }
+    call->flags |= RX_CALL_FAST_RECOVER_WAIT;
+    rxi_WaitforTQBusy(call);
+    call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
+    if (call->error)
+	goto out;
+#endif
+
+    /* We're in loss recovery */
+    call->flags |= RX_CALL_FAST_RECOVER;
+
     /* Mark all of the pending packets in the queue as being lost */
     for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
 	if (!(p->flags & RX_PKTFLAG_ACKED))
@@ -5952,11 +5971,31 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
     /* We're resending, so we double the timeout of the call. This will be
      * dropped back down by the first successful ACK that we receive.
      *
-     * We apply a maximum value here of 60 second
+     * We apply a maximum value here of 60 seconds
      */
     clock_Add(&call->rto, &call->rto);
     if (clock_Gt(&call->rto, &maxTimeout))
 	call->rto = maxTimeout;
+
+    /* Packet loss is most likely due to congestion, so drop our window size
+     * and start again from the beginning */
+    if (peer->maxDgramPackets >1) {
+	call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
+        call->MTU = MIN(peer->natMTU, peer->maxMTU);
+    }
+    call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
+    call->nDgramPackets = 1;
+    call->cwind = 1;
+    call->nextCwind = 1;
+    call->nAcks = 0;
+    call->nNacks = 0;
+    MUTEX_ENTER(&peer->peer_lock);
+    peer->MTU = call->MTU;
+    peer->cwind = call->cwind;
+    peer->nDgramPackets = 1;
+    peer->congestSeq++;
+    call->congestSeq = peer->congestSeq;
+    MUTEX_EXIT(&peer->peer_lock);
 
     rxi_Start(call, istack);
 
