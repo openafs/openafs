@@ -4630,7 +4630,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	rxi_rto_packet_acked(call, istack);
 
     if (call->flags & RX_CALL_FAST_RECOVER) {
-	if (nNacked) {
+	if (newAckCount == 0) {
 	    call->cwind = MIN((int)(call->cwind + 1), rx_maxSendWindow);
 	} else {
 	    call->flags &= ~RX_CALL_FAST_RECOVER;
