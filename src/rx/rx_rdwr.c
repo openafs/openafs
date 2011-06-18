@@ -762,10 +762,10 @@ rxi_WriteProc(struct rx_call *call, char *buf,
                 call->tqc++;
 #endif /* RXDEBUG_PACKET */
                 cp = (struct rx_packet *)0;
-		if (!
-		    (call->
-		     flags & (RX_CALL_FAST_RECOVER |
-			      RX_CALL_FAST_RECOVER_WAIT))) {
+		/* If the call is in recovery, let it exhaust its current
+		 * retransmit queue before forcing it to send new packets
+		 */
+		if (!(call->flags & (RX_CALL_FAST_RECOVER))) {
 		    rxi_Start(call, 0);
 		}
 	    } else if (cp) {
@@ -1276,7 +1276,10 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 
     queue_SpliceAppend(&call->tq, &tmpq);
 
-    if (!(call->flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
+    /* If the call is in recovery, let it exhaust its current retransmit
+     * queue before forcing it to send new packets
+     */
+    if (!(call->flags & RX_CALL_FAST_RECOVER)) {
 	rxi_Start(call, 0);
     }
 
@@ -1403,9 +1406,11 @@ rxi_FlushWrite(struct rx_call *call)
 #ifdef RXDEBUG_PACKET
         call->tqc++;
 #endif /* RXDEBUG_PACKET */
-	if (!
-	    (call->
-	     flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
+
+	/* If the call is in recovery, let it exhaust its current retransmit
+	 * queue before forcing it to send new packets
+	 */
+	if (!(call->flags & RX_CALL_FAST_RECOVER)) {
 	    rxi_Start(call, 0);
 	}
         MUTEX_EXIT(&call->lock);

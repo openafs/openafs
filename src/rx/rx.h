@@ -634,7 +634,7 @@ struct rx_call {
 #define RX_CALL_TQ_SOME_ACKED    512	/* rxi_Start needs to discard ack'd packets. */
 #define RX_CALL_TQ_WAIT		1024	/* Reader is waiting for TQ_BUSY to be reset */
 #define RX_CALL_FAST_RECOVER    2048	/* call is doing congestion recovery */
-#define RX_CALL_FAST_RECOVER_WAIT 4096	/* thread is waiting to start recovery */
+/* 4096 was RX_CALL_FAST_RECOVER_WAIT */
 #define RX_CALL_SLOW_START_OK   8192	/* receiver acks every other packet */
 #define RX_CALL_IOVEC_WAIT	16384	/* waiting thread is using an iovec */
 #define RX_CALL_HAVE_LAST	32768	/* Last packet has been received */
