@@ -6071,13 +6071,6 @@ rxi_Start(struct rx_call *call, int istack)
 		nXmitPackets = 0;
 		maxXmitPackets = MIN(call->twind, call->cwind);
 		for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
-		    if ((nXmitPackets)
-			&& (call->flags & RX_CALL_FAST_RECOVER)) {
-			/* Only send one packet during fast recovery */
-			dpf(("call %d restricted to one packet per send during fast recovery\n",
-			     *(call->callNumber)));
-			break;
-		    }
 #ifdef RX_TRACK_PACKETS
 		    if ((p->flags & RX_PKTFLAG_FREE)
 			|| (!queue_IsEnd(&call->tq, nxp)
