@@ -141,9 +141,7 @@ extern void rxi_ResetCall(struct rx_call *call,
 extern struct rx_packet *rxi_SendAck(struct rx_call *call, struct rx_packet
 				     *optionalPacket, int serial, int reason,
 				     int istack);
-extern void rxi_Start(struct rxevent *event,
-		      void *call, /* struct rx_call */
-		      void *arg1, int istack);
+extern void rxi_Start(struct rx_call *call, int istack);
 extern void rxi_Send(struct rx_call *call,
 		     struct rx_packet *p, int istack);
 #ifdef RX_ENABLE_LOCKS
