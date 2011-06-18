@@ -71,9 +71,6 @@
 /* This parameter should not normally be changed */
 #define	RX_PROCESS_PRIORITY	LWP_NORMAL_PRIORITY
 
-/* backoff is fixed point binary.  Ie, units of 1/4 seconds */
-#define MAXBACKOFF 0x1F
-
 #define ADDRSPERSITE 16
 
 #ifndef KDUMP_RX_LOCK
