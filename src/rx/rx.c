@@ -129,6 +129,8 @@ static void rxi_DestroyConnectionNoLock(struct rx_connection *conn);
 static void rxi_ComputeRoundTripTime(struct rx_packet *, struct rx_ackPacket *,
 				     struct rx_call *, struct rx_peer *,
 				     struct clock *);
+static void rxi_Resend(struct rxevent *event, void *arg0, void *arg1,
+		       int istack);
 
 #ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
@@ -346,8 +348,6 @@ pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
 
 #if defined(RX_ENABLE_LOCKS)
 static afs_kmutex_t rx_rpc_stats;
-void rxi_StartUnlocked(struct rxevent *event, void *call,
-                       void *arg1, int istack);
 #endif
 
 /* We keep a "last conn pointer" in rxi_FindConnection. The odds are
@@ -678,16 +678,11 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
     if (lastPacket && call->conn->type == RX_CLIENT_CONNECTION)
 	clock_Addmsec(&retryTime, 400);
 
-#ifdef RX_ENABLE_LOCKS
     MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
     MUTEX_EXIT(&rx_refcnt_mutex);
-    call->resendEvent = rxevent_PostNow2(&retryTime, &now, rxi_StartUnlocked,
+    call->resendEvent = rxevent_PostNow2(&retryTime, &now, rxi_Resend,
 					 call, 0, istack);
-#else /* RX_ENABLE_LOCKS */
-    call->resendEvent = rxevent_PostNow2(&retryTime, &now, rxi_Start,
-					 call, 0, istack);
-#endif /* RX_ENABLE_LOCKS */
 }
 
 /*!
@@ -4760,7 +4755,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	rxi_ClearTransmitQueue(call, 0);
         rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     } else if (!queue_IsEmpty(&call->tq)) {
-	rxi_Start(0, call, 0, istack);
+	rxi_Start(call, istack);
     }
     return np;
 }
@@ -5950,19 +5945,44 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
     }
 }
 
-#ifdef	RX_ENABLE_LOCKS
-/* Call rxi_Start, below, but with the call lock held. */
-void
-rxi_StartUnlocked(struct rxevent *event,
-		  void *arg0, void *arg1, int istack)
+static void
+rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 {
     struct rx_call *call = arg0;
+    struct rx_packet *p, *nxp;
 
     MUTEX_ENTER(&call->lock);
-    rxi_Start(event, call, arg1, istack);
+    /* Make sure that the event pointer is removed from the call
+     * structure, since there is no longer a per-call retransmission
+     * event pending. */
+    if (event == call->resendEvent) {
+        MUTEX_ENTER(&rx_refcnt_mutex);
+	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
+        MUTEX_EXIT(&rx_refcnt_mutex);
+	call->resendEvent = NULL;
+    }
+
+    if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
+	rxi_CheckBusy(call);
+    }
+
+    if (queue_IsEmpty(&call->tq)) {
+	/* Nothing to do. This means that we've been raced, and that an
+	 * ACK has come in between when we were triggered, and when we
+	 * actually got to run. */
+	goto out;
+    }
+
+    /* Mark all of the pending packets in the queue as being lost */
+    for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
+	if (!(p->flags & RX_PKTFLAG_ACKED))
+	    p->flags &= ~RX_PKTFLAG_SENT;
+    }
+    rxi_Start(call, istack);
+
+out:
     MUTEX_EXIT(&call->lock);
 }
-#endif /* RX_ENABLE_LOCKS */
 
 /* This routine is called when new packets are readied for
  * transmission and when retransmission may be necessary, or when the
@@ -5970,36 +5990,16 @@ rxi_StartUnlocked(struct rxevent *event,
  * better optimized for new packets, the usual case, now that we've
  * got rid of queues of send packets. XXXXXXXXXXX */
 void
-rxi_Start(struct rxevent *event,
-          void *arg0, void *arg1, int istack)
+rxi_Start(struct rx_call *call, int istack)
 {
-    struct rx_call *call = arg0;
-    struct rx_peer *peer = call->conn->peer;
+
     struct rx_packet *p;
     struct rx_packet *nxp;	/* Next pointer for queue_Scan */
     int nXmitPackets;
     int maxXmitPackets;
 
-    /* If rxi_Start is being called as a result of a resend event,
-     * then make sure that the event pointer is removed from the call
-     * structure, since there is no longer a per-call retransmission
-     * event pending. */
-    if (event && event == call->resendEvent) {
-        MUTEX_ENTER(&rx_refcnt_mutex);
-	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
-        MUTEX_EXIT(&rx_refcnt_mutex);
-	call->resendEvent = NULL;
-
-	if (queue_IsEmpty(&call->tq)) {
-	    /* Nothing to do. This means that we've been raced, and that an
-	     * ACK has come in between when we were triggered, and when we
-	     * actually got to run. */
-	    return;
-	}
-
-	if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
-	    rxi_CheckBusy(call);
-	}
+    if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
+      rxi_CheckBusy(call);
     }
 
     if (call->error) {

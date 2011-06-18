@@ -766,7 +766,7 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		    (call->
 		     flags & (RX_CALL_FAST_RECOVER |
 			      RX_CALL_FAST_RECOVER_WAIT))) {
-		    rxi_Start(0, call, 0, 0);
+		    rxi_Start(call, 0);
 		}
 	    } else if (cp) {
 #ifdef RX_TRACK_PACKETS
@@ -1277,7 +1277,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     queue_SpliceAppend(&call->tq, &tmpq);
 
     if (!(call->flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
-	rxi_Start(0, call, 0, 0);
+	rxi_Start(call, 0);
     }
 
     /* Wait for the length of the transmit queue to fall below call->twind */
@@ -1406,7 +1406,7 @@ rxi_FlushWrite(struct rx_call *call)
 	if (!
 	    (call->
 	     flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
-	    rxi_Start(0, call, 0, 0);
+	    rxi_Start(call, 0);
 	}
         MUTEX_EXIT(&call->lock);
     }
