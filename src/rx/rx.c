@@ -4641,17 +4641,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	call->nCwindAcks = 0;
     } else if (nNacked && call->nNacks >= (u_short) rx_nackThreshold) {
 	/* Three negative acks in a row trigger congestion recovery */
-#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
-	MUTEX_EXIT(&peer->peer_lock);
-	if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-	    /* someone else is waiting to start recovery */
-	    return np;
-	}
-	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	rxi_WaitforTQBusy(call);
-	MUTEX_ENTER(&peer->peer_lock);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
 	call->flags |= RX_CALL_FAST_RECOVER;
 	call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
 	call->cwind =
@@ -5818,6 +5807,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 		 int istack)
 {
     int i;
+    int recovery;
     struct xmitlist working;
     struct xmitlist last;
 
@@ -5828,6 +5818,8 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
     working.list = &list[0];
     working.len = 0;
     working.resending = 0;
+
+    recovery = call->flags & RX_CALL_FAST_RECOVER;
 
     for (i = 0; i < len; i++) {
 	/* Does the current packet force us to flush the current list? */
@@ -5842,7 +5834,8 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 		rxi_SendList(call, &last, istack, 1);
 		/* If the call enters an error state stop sending, or if
 		 * we entered congestion recovery mode, stop sending */
-		if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
+		if (call->error
+		    || (!recovery && (call->flags & RX_CALL_FAST_RECOVER)))
 		    return;
 	    }
 	    last = working;
@@ -5869,7 +5862,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 		    /* If the call enters an error state stop sending, or if
 		     * we entered congestion recovery mode, stop sending */
 		    if (call->error
-			|| (call->flags & RX_CALL_FAST_RECOVER_WAIT))
+			|| (!recovery && (call->flags & RX_CALL_FAST_RECOVER)))
 			return;
 		}
 		last = working;
@@ -5902,7 +5895,8 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 	    rxi_SendList(call, &last, istack, morePackets);
 	    /* If the call enters an error state stop sending, or if
 	     * we entered congestion recovery mode, stop sending */
-	    if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
+	    if (call->error
+		|| (!recovery && (call->flags & RX_CALL_FAST_RECOVER)))
 		return;
 	}
 	if (morePackets) {
@@ -5946,18 +5940,6 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 	 * actually got to run. */
 	goto out;
     }
-
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-    if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-	/* Someone else is waiting to start recovery */
-	goto out;
-    }
-    call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-    rxi_WaitforTQBusy(call);
-    call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
-    if (call->error)
-	goto out;
-#endif
 
     /* We're in loss recovery */
     call->flags |= RX_CALL_FAST_RECOVER;
@@ -6054,13 +6036,6 @@ rxi_Start(struct rx_call *call, int istack)
 		nXmitPackets = 0;
 		maxXmitPackets = MIN(call->twind, call->cwind);
 		for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
-		    if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-			/* We shouldn't be sending packets if a thread is waiting
-			 * to initiate congestion recovery */
-			dpf(("call %d waiting to initiate fast recovery\n",
-			     *(call->callNumber)));
-			break;
-		    }
 		    if ((nXmitPackets)
 			&& (call->flags & RX_CALL_FAST_RECOVER)) {
 			/* Only send one packet during fast recovery */
@@ -6123,15 +6098,6 @@ rxi_Start(struct rx_call *call, int istack)
 		}
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-		/*
-		 * TQ references no longer protected by this flag; they must remain
-		 * protected by the global lock.
-		 */
-		if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-		    call->flags &= ~RX_CALL_TQ_BUSY;
-		    rxi_WakeUpTransmitQueue(call);
-		    return;
-		}
 		if (call->error) {
 		    /* We went into the error state while sending packets. Now is
 		     * the time to reset the call. This will also inform the using
