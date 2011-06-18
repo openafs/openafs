@@ -5950,6 +5950,7 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 {
     struct rx_call *call = arg0;
     struct rx_packet *p, *nxp;
+    struct clock maxTimeout = { 60, 0 };
 
     MUTEX_ENTER(&call->lock);
     /* Make sure that the event pointer is removed from the call
@@ -5978,6 +5979,16 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 	if (!(p->flags & RX_PKTFLAG_ACKED))
 	    p->flags &= ~RX_PKTFLAG_SENT;
     }
+
+    /* We're resending, so we double the timeout of the call. This will be
+     * dropped back down by the first successful ACK that we receive.
+     *
+     * We apply a maximum value here of 60 second
+     */
+    clock_Add(&call->rto, &call->rto);
+    if (clock_Gt(&call->rto, &maxTimeout))
+	call->rto = maxTimeout;
+
     rxi_Start(call, istack);
 
 out:
