@@ -30,7 +30,6 @@
 #include <vm/vm_object.h>
 #include <vm/vm_map.h>
 #include <limits.h>
-#include <float.h>
 
 /*
  * FreeBSD implementation notes:
