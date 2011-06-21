@@ -72,9 +72,7 @@ quitSignal(int ignore)
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
 int
-test_syscall(a3, a4, a5)
-     afs_uint32 a3, a4;
-     void *a5;
+test_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
     void (*old) (int);
@@ -88,8 +86,8 @@ test_syscall(a3, a4, a5)
 }
 #endif
 
-main(argc, argv)
-     char **argv;
+int
+main(int argc, char **argv)
 {
     char *hostname;
     struct hostent *hostent;
@@ -271,7 +269,7 @@ main(argc, argv)
 		    break;
 
 	    }
-	    for (bytesRead = 0; nbytes = rx_Read(call, buffer, bufferSize);
+	    for (bytesRead = 0; (nbytes = rx_Read(call, buffer, bufferSize));
 		 bytesRead += nbytes) {
 	    };
 	    if (print)
@@ -311,6 +309,7 @@ main(argc, argv)
 	}
     }
     Quit("testclient: done!\n");
+    return 0;
 }
 
 int
@@ -379,7 +378,7 @@ SendFile(char *file, struct rx_connection *conn)
 	char *p = buf;
 	while (nbytes--) {
 	    putchar(*p);
-	    *p++;
+	    p++;
 	}
     }
     if ((err = rx_EndCall(call, 0)) != 0) {
@@ -392,7 +391,7 @@ SendFile(char *file, struct rx_connection *conn)
 	elapsedTime = totalTime.sec + totalTime.usec / 1e6;
 	fprintf(stderr,
 		"Sent %d bytes in %0.3f seconds:  %0.0f bytes per second\n",
-		status.st_size, elapsedTime, status.st_size / elapsedTime);
+		(int) status.st_size, elapsedTime, status.st_size / elapsedTime);
 	if (timeReadvs) {
 	    float delay = clock_Float(&totalReadvDelay) / nReadvs;
 	    fprintf(stderr, "%d readvs, average delay of %0.4f seconds\n",
@@ -405,12 +404,12 @@ SendFile(char *file, struct rx_connection *conn)
 }
 
 void
-Abort(char *msg, ...)
+Abort(const char *msg, ...)
 {
     va_list args;
 
     va_start(args, msg);
-    printf((char *)msg, args);
+    printf(msg, args);
     va_end(args);
 
     printf("\n");
