@@ -3750,6 +3750,11 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	}
 
 	if (V_attachState(vp) == VOL_STATE_PREATTACHED) {
+	    if (vp->specialStatus) {
+		*ec = vp->specialStatus;
+		vp = NULL;
+		break;
+	    }
 	    avp = VAttachVolumeByVp_r(ec, vp, 0);
 	    if (avp) {
 		if (vp != avp) {
