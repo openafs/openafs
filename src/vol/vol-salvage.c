@@ -1542,6 +1542,8 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 
     params = (struct SalvageScanParams *)rock;
 
+    memset(&summary, 0, sizeof(summary));
+
     singleVolumeNumber = params->singleVolumeNumber;
     salvinfo = params->salvinfo;
 
