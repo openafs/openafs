@@ -437,7 +437,6 @@ rxi_InitPeerParams(struct rx_peer *pp)
     }
 # endif /* AFS_SUN5_ENV */
 #else /* ADAPT_MTU */
-    pp->rateFlag = 2;		/* start timing after two full packets */
     rx_rto_setPeerTimeoutSecs(pp, 2);
     pp->ifMTU = OLD_MAX_PACKET_SIZE;
 #endif /* else ADAPT_MTU */
