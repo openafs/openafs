@@ -3027,7 +3027,11 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
 
 	    /* check to see if we should set the specialStatus flag */
 	    if (VVolOpSetVBusy_r(vp, vp->pending_vol_op)) {
-	        vp->specialStatus = VBUSY;
+		/* don't overwrite specialStatus if it was already set to
+		 * something else (e.g. VMOVED) */
+		if (!vp->specialStatus) {
+		    vp->specialStatus = VBUSY;
+		}
 	    }
 	    break;
 
@@ -3112,7 +3116,11 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     if (!*ec) {
 	read_header = 1;
 
-	vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
+	/* ensure that we don't override specialStatus if it was set to
+	 * something else (e.g. VMOVED) */
+	if (isbusy && !vp->specialStatus) {
+	    vp->specialStatus = VBUSY;
+	}
 	vp->shuttingDown = 0;
 	vp->goingOffline = 0;
 	vp->nUsers = 1;
