@@ -111,7 +111,6 @@ afs_dir_Create(dir_file_t dir, char *entry, void *voidfid)
     if (FindItem(dir, entry, &prevbuf, &entrybuf) == 0) {
 	DRelease(&entrybuf, 0);
 	DRelease(&prevbuf, 0);
-	printf("Exists ...\n");
 	return EEXIST;
     }
 
