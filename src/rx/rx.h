@@ -403,7 +403,6 @@ struct rx_peer {
  * is likely to have been dropped. */
     afs_uint32 inPacketSkew;	/* Maximum skew on incoming packets */
     afs_uint32 outPacketSkew;	/* Peer-reported max skew on our sent packets */
-    int rateFlag;		/* Flag for rate testing (-no 0yes +decrement) */
 
     /* the "natural" MTU, excluding IP,UDP headers, is negotiated by the endpoints */
     u_short natMTU;
@@ -430,11 +429,6 @@ struct rx_peer {
     struct rx_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
     afs_int32 maxPacketSize;    /* peer packetsize hint */
-
-#ifdef ADAPT_WINDOW
-    afs_int32 smRtt;
-    afs_int32 countDown;
-#endif
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -587,9 +581,6 @@ struct rx_call {
 
     struct rx_packet *xmitList[RX_MAXACKS]; /* Can't xmit more than we ack */
                                 /* Protected by setting RX_CALL_TQ_BUSY */
-#ifdef ADAPT_WINDOW
-    struct clock pingRequestTime;
-#endif
 #ifdef RXDEBUG_PACKET
     u_short tqc;                /* packet count in tq */
     u_short rqc;                /* packet count in rq */

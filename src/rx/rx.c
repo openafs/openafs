@@ -4129,10 +4129,6 @@ rxi_ReceiveDataPacket(struct rx_call *call,
     return np;
 }
 
-#ifdef	ADAPT_WINDOW
-static void rxi_ComputeRate();
-#endif
-
 static void
 rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acall)
 {
@@ -4378,10 +4374,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    rxi_ComputeRoundTripTime(tp, ap, call, peer, &now);
 	}
 
-#ifdef ADAPT_WINDOW
-	rxi_ComputeRate(call->conn->peer, call, p, np, ap->reason);
-#endif
-
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* XXX Hack. Because we have to release the global rx lock when sending
 	 * packets (osi_NetSend) we drop all acks while we're traversing the tq
@@ -4414,13 +4406,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	tp = next;
     }
 
-#ifdef ADAPT_WINDOW
-    /* Give rate detector a chance to respond to ping requests */
-    if (ap->reason == RX_ACK_PING_RESPONSE) {
-	rxi_ComputeRate(peer, call, 0, np, ap->reason);
-    }
-#endif
-
     /* N.B. we don't turn off any timers here.  They'll go away by themselves, anyway */
 
     /* Second section of the queue - packets for which we are receiving
@@ -4448,9 +4433,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		newAckCount++;
 		tp->flags |= RX_PKTFLAG_ACKED;
 		rxi_ComputeRoundTripTime(tp, ap, call, peer, &now);
-#ifdef ADAPT_WINDOW
-		rxi_ComputeRate(call->conn->peer, call, tp, np, ap->reason);
-#endif
 	    }
 	    if (missing) {
 		nNacked++;
@@ -5230,9 +5212,6 @@ rxi_CallError(struct rx_call *call, afs_int32 error)
  * nFree are not reset, since these fields are manipulated by
  * unprotected macros, and may only be reset by non-interrupting code.
  */
-#ifdef ADAPT_WINDOW
-/* this code requires that call->conn be set properly as a pre-condition. */
-#endif /* ADAPT_WINDOW */
 
 void
 rxi_ResetCall(struct rx_call *call, int newcall)
@@ -5597,9 +5576,6 @@ rxi_SendAck(struct rx_call *call,
     p->header.flags = RX_SLOW_START_OK;
     if (reason == RX_ACK_PING) {
 	p->header.flags |= RX_REQUEST_ACK;
-#ifdef ADAPT_WINDOW
-	clock_GetTime(&call->pingRequestTime);
-#endif
 	if (padbytes) {
 	    p->length = padbytes +
 		rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32);
@@ -7112,160 +7088,6 @@ rxs_Release(struct rx_securityClass *aobj)
     return RXS_Close(aobj);
 }
 
-#ifdef ADAPT_WINDOW
-#define	RXRATE_PKT_OH	(RX_HEADER_SIZE + RX_IPUDP_SIZE)
-#define	RXRATE_SMALL_PKT    (RXRATE_PKT_OH + sizeof(struct rx_ackPacket))
-#define	RXRATE_AVG_SMALL_PKT	(RXRATE_PKT_OH + (sizeof(struct rx_ackPacket)/2))
-#define	RXRATE_LARGE_PKT    (RXRATE_SMALL_PKT + 256)
-
-/* Adjust our estimate of the transmission rate to this peer, given
- * that the packet p was just acked. We can adjust peer->timeout and
- * call->twind. Pragmatically, this is called
- * only with packets of maximal length.
- * Called with peer and call locked.
- */
-
-static void
-rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
-		struct rx_packet *p, struct rx_packet *ackp, u_char ackReason)
-{
-    afs_int32 xferSize, xferMs;
-    afs_int32 minTime;
-    struct clock newTO;
-
-    /* Count down packets */
-    if (peer->rateFlag > 0)
-	peer->rateFlag--;
-    /* Do nothing until we're enabled */
-    if (peer->rateFlag != 0)
-	return;
-    if (!call->conn)
-	return;
-
-    /* Count only when the ack seems legitimate */
-    switch (ackReason) {
-    case RX_ACK_REQUESTED:
-	xferSize =
-	    p->length + RX_HEADER_SIZE + call->conn->securityMaxTrailerSize;
-	xferMs = call->rtt;
-	break;
-
-    case RX_ACK_PING_RESPONSE:
-	if (p)			/* want the response to ping-request, not data send */
-	    return;
-	clock_GetTime(&newTO);
-	if (clock_Gt(&newTO, &call->pingRequestTime)) {
-	    clock_Sub(&newTO, &call->pingRequestTime);
-	    xferMs = (newTO.sec * 1000) + (newTO.usec / 1000);
-	} else {
-	    return;
-	}
-	xferSize = rx_AckDataSize(rx_maxSendWindow) + RX_HEADER_SIZE;
-	break;
-
-    default:
-	return;
-    }
-
-    dpf(("CONG peer %lx/%u: sample (%s) size %ld, %ld ms (to %d.%06d, rtt %u, ps %u)\n",
-          ntohl(peer->host), ntohs(peer->port), (ackReason == RX_ACK_REQUESTED ? "dataack" : "pingack"),
-          xferSize, xferMs, peer->timeout.sec, peer->timeout.usec, peer->smRtt, peer->ifMTU));
-
-    /* Track only packets that are big enough. */
-    if ((p->length + RX_HEADER_SIZE + call->conn->securityMaxTrailerSize) <
-	peer->ifMTU)
-	return;
-
-    /* absorb RTT data (in milliseconds) for these big packets */
-    if (peer->smRtt == 0) {
-	peer->smRtt = xferMs;
-    } else {
-	peer->smRtt = ((peer->smRtt * 15) + xferMs + 4) >> 4;
-	if (!peer->smRtt)
-	    peer->smRtt = 1;
-    }
-
-    if (peer->countDown) {
-	peer->countDown--;
-	return;
-    }
-    peer->countDown = 10;	/* recalculate only every so often */
-
-    /* In practice, we can measure only the RTT for full packets,
-     * because of the way Rx acks the data that it receives.  (If it's
-     * smaller than a full packet, it often gets implicitly acked
-     * either by the call response (from a server) or by the next call
-     * (from a client), and either case confuses transmission times
-     * with processing times.)  Therefore, replace the above
-     * more-sophisticated processing with a simpler version, where the
-     * smoothed RTT is kept for full-size packets, and the time to
-     * transmit a windowful of full-size packets is simply RTT *
-     * windowSize. Again, we take two steps:
-     - ensure the timeout is large enough for a single packet's RTT;
-     - ensure that the window is small enough to fit in the desired timeout.*/
-
-    /* First, the timeout check. */
-    minTime = peer->smRtt;
-    /* Get a reasonable estimate for a timeout period */
-    minTime += minTime;
-    newTO.sec = minTime / 1000;
-    newTO.usec = (minTime - (newTO.sec * 1000)) * 1000;
-
-    /* Increase the timeout period so that we can always do at least
-     * one packet exchange */
-    if (clock_Gt(&newTO, &peer->timeout)) {
-
-	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u)\n",
-              ntohl(peer->host), ntohs(peer->port), peer->timeout.sec, peer->timeout.usec,
-              newTO.sec, newTO.usec, peer->smRtt));
-
-	peer->timeout = newTO;
-    }
-
-    /* Now, get an estimate for the transmit window size. */
-    minTime = peer->timeout.sec * 1000 + (peer->timeout.usec / 1000);
-    /* Now, convert to the number of full packets that could fit in a
-     * reasonable fraction of that interval */
-    minTime /= (peer->smRtt << 1);
-    minTime = MAX(minTime, rx_minPeerTimeout);
-    xferSize = minTime;		/* (make a copy) */
-
-    /* Now clamp the size to reasonable bounds. */
-    if (minTime <= 1)
-	minTime = 1;
-    else if (minTime > rx_maxSendWindow)
-	minTime = rx_maxSendWindow;
-/*    if (minTime != peer->maxWindow) {
-      dpf(("CONG peer %lx/%u: windowsize %lu ==> %lu (to %lu.%06lu, rtt %u)\n",
-	     ntohl(peer->host), ntohs(peer->port), peer->maxWindow, minTime,
-	     peer->timeout.sec, peer->timeout.usec, peer->smRtt));
-      peer->maxWindow = minTime;
-	elide... call->twind = minTime;
-    }
-*/
-
-    /* Cut back on the peer timeout if it had earlier grown unreasonably.
-     * Discern this by calculating the timeout necessary for rx_Window
-     * packets. */
-    if ((xferSize > rx_maxSendWindow) && (peer->timeout.sec >= 3)) {
-	/* calculate estimate for transmission interval in milliseconds */
-	minTime = rx_maxSendWindow * peer->smRtt;
-	if (minTime < 1000) {
-	    dpf(("CONG peer %lx/%u: cut TO %d.%06d by 0.5 (rtt %u)\n",
-		 ntohl(peer->host), ntohs(peer->port), peer->timeout.sec,
-		 peer->timeout.usec, peer->smRtt));
-
-	    newTO.sec = 0;	/* cut back on timeout by half a second */
-	    newTO.usec = 500000;
-	    clock_Sub(&peer->timeout, &newTO);
-	}
-    }
-
-    return;
-}				/* end of rxi_ComputeRate */
-#endif /* ADAPT_WINDOW */
-
-
 void
 rxi_DebugInit(void)
 {
@@ -7838,7 +7660,6 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	peer->reSends = ntohl(peer->reSends);
 	peer->inPacketSkew = ntohl(peer->inPacketSkew);
 	peer->outPacketSkew = ntohl(peer->outPacketSkew);
-	peer->rateFlag = ntohl(peer->rateFlag);
 	peer->natMTU = ntohs(peer->natMTU);
 	peer->maxMTU = ntohs(peer->maxMTU);
 	peer->maxDgramPackets = ntohs(peer->maxDgramPackets);
@@ -7897,7 +7718,6 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->reSends = tp->reSends;
 		peerStats->inPacketSkew = tp->inPacketSkew;
 		peerStats->outPacketSkew = tp->outPacketSkew;
-		peerStats->rateFlag = tp->rateFlag;
 		peerStats->natMTU = tp->natMTU;
 		peerStats->maxMTU = tp->maxMTU;
 		peerStats->maxDgramPackets = tp->maxDgramPackets;
