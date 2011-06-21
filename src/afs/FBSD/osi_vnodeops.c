@@ -1590,7 +1590,10 @@ afs_vop_advlock(ap)
 
     AFS_GLOCK();
     error =
-	afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, &cr, (int)ap->a_id);
+	afs_lockctl(VTOAFS(ap->a_vp),
+		ap->a_fl,
+		ap->a_op, &cr,
+		(int)(intptr_t)ap->a_id);	/* XXX: no longer unique! */
     AFS_GUNLOCK();
     return error;
 }
