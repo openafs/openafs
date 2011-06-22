@@ -372,18 +372,32 @@ afs_data_pointer_to_int32(const void *p)
 afs_int32
 afs_calc_inum(afs_int32 volume, afs_int32 vnode)
 {
-    afs_int32 ino, vno = vnode;
+    afs_int32 ino = 0, vno = vnode;
     char digest[16];
     struct afs_md5 ct;
 
     if (afs_new_inum) {
+	int offset;
 	AFS_MD5_Init(&ct);
 	AFS_MD5_Update(&ct, &volume, 4);
 	AFS_MD5_Update(&ct, &vnode, 4);
 	AFS_MD5_Final(digest, &ct);
-	memcpy(&ino, digest, sizeof(afs_int32));
-	ino ^= (ino ^ vno) & 1;
-    } else {
+
+	/* Userspace may react oddly to an inode number of 0 or 1, so keep
+	 * reading more of the md5 digest if we get back one of those.
+	 * Make sure not to read beyond the end of the digest; if we somehow
+	 * still have a 0, we will fall through to the non-md5 calculation. */
+	for (offset = 0;
+	     (ino == 0 || ino == 1) &&
+	      offset + sizeof(ino) <= sizeof(digest);
+	     offset++) {
+
+	    memcpy(&ino, &digest[offset], sizeof(ino));
+	    ino ^= (ino ^ vno) & 1;
+	    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
+	}
+    }
+    if (ino == 0 || ino == 1) {
 	ino = (volume << 16) + vnode;
     }
     ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
