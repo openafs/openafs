@@ -305,7 +305,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	    break;
 	de = (struct DirEntry *)entry.data;
 
-	ino = afs_calc_inum (avc->f.fid.Fid.Volume, ntohl(de->fid.vnode));
+	ino = afs_calc_inum(avc->f.fid.Cell, avc->f.fid.Fid.Volume,
+	                    ntohl(de->fid.vnode));
 
 	if (de->name)
 	    len = strlen(de->name);
