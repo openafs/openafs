@@ -968,7 +968,8 @@ extern void afs_MarkUserExpired(afs_int32 pag);
 
 /* afs_util.c */
 extern afs_int32 afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret);
-extern afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode);
+extern afs_int32 afs_calc_inum(afs_int32 cell, afs_int32 volume,
+                               afs_int32 vnode);
 #ifndef afs_cv2string
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
 #endif

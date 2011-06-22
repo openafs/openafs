@@ -272,7 +272,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	    goto out;
         }
 
-	ino = afs_calc_inum (avc->f.fid.Fid.Volume, ntohl(de->fid.vnode));
+	ino = afs_calc_inum(avc->f.fid.Cell, avc->f.fid.Fid.Volume,
+	                    ntohl(de->fid.vnode));
 	len = strlen(de->name);
 
 	/* filldir returns -EINVAL when the buffer is full. */
