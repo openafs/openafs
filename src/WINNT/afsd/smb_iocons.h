@@ -110,7 +110,9 @@ struct sbstruct {
 
 /* magic file name for ioctl opens */
 #define CM_IOCTL_FILENAME	"\\_._AFS_IOCTL_._"	/* double backslashes for C compiler */
+#define CM_IOCTL_FILENAME_W	L"\\_._AFS_IOCTL_._"	/* double backslashes for C compiler */
 #define CM_IOCTL_FILENAME_NOSLASH "_._AFS_IOCTL_._"
+#define CM_IOCTL_FILENAME_NOSLASH_W L"_._AFS_IOCTL_._"
 
 /* max parms for ioctl, in either direction */
 #define CM_IOCTL_MAXDATA	        8192*2

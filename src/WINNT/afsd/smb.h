@@ -488,17 +488,18 @@ typedef struct smb_dirSearch {
 /* type for patching directory listings */
 typedef struct smb_dirListPatch {
     osi_queue_t q;
-    char *dptr;                      /* ptr to attr, time, data, sizel, sizeh */
+    char *dptr;                         /* ptr to attr, time, data, sizel, sizeh */
     long flags;                         /* flags.  See below */
     cm_fid_t fid;
     cm_dirEntry_t *dep;                 /* temp */
 } smb_dirListPatch_t;
 
 /* dirListPatch Flags */
-#define SMB_DIRLISTPATCH_DOTFILE 1
+#define SMB_DIRLISTPATCH_DOTFILE        1
 /* the file referenced is a dot file
  * Note: will not be set if smb_hideDotFiles is false
  */
+#define SMB_DIRLISTPATCH_IOCTL          2
 
 /* individual lock on a waiting lock request */
 typedef struct smb_waitingLock {
