@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -4578,6 +4579,10 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
             cm_scache_t *tscp = NULL;
             int i;
 
+            /* Do not look for a cm_scache_t or bulkstat an ioctl entry */
+            if (patchp->flags & SMB_DIRLISTPATCH_IOCTL)
+                continue;
+
             code = cm_GetSCache(&patchp->fid, &tscp, userp, reqp);
             if (code == 0) {
                 if (lock_TryWrite(&tscp->rw)) {
@@ -4632,6 +4637,36 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
                             relPathp ? relPathp : _C(""), patchp->dep->name);
         reqp->relPathp = path;
         reqp->tidPathp = tidPathp;
+
+        if (patchp->flags & SMB_DIRLISTPATCH_IOCTL) {
+            /* Plug in fake timestamps. A time stamp of 0 causes 'invalid parameter'
+               errors in the client. */
+            if (infoLevel >= SMB_FIND_FILE_DIRECTORY_INFO) {
+                smb_V3FileAttrsLong * fa = (smb_V3FileAttrsLong *) patchp->dptr;
+
+                /* 1969-12-31 23:59:59 +00 */
+                ft.dwHighDateTime = 0x19DB200;
+                ft.dwLowDateTime = 0x5BB78980;
+
+                /* copy to Creation Time */
+                fa->creationTime = ft;
+                fa->lastAccessTime = ft;
+                fa->lastWriteTime = ft;
+                fa->lastChangeTime = ft;
+                fa->extFileAttributes = SMB_ATTR_SYSTEM | SMB_ATTR_HIDDEN;
+            } else {
+                smb_V3FileAttrsShort * fa = (smb_V3FileAttrsShort *) patchp->dptr;
+
+                /* 1969-12-31 23:59:58 +00*/
+                dosTime = 0xEBBFBF7D;
+
+                fa->creationDateTime = MAKELONG(HIWORD(dosTime),LOWORD(dosTime));
+                fa->lastAccessDateTime = fa->creationDateTime;
+                fa->lastWriteDateTime = fa->creationDateTime;
+                fa->attributes = SMB_ATTR_SYSTEM|SMB_ATTR_HIDDEN;
+            }
+            continue;
+        }
 
         code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
         reqp->relPathp = reqp->tidPathp = NULL;
@@ -4871,7 +4906,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     size_t ohbytes;			/* # of bytes, except file name */
     size_t onbytes;			/* # of bytes in name, incl. term. null */
     cm_scache_t *scp = NULL;
-    cm_scache_t *targetscp = NULL;
+    cm_scache_t *targetScp = NULL;
     cm_user_t *userp = NULL;
     char *op;				/* output data ptr */
     char *origOp;			/* original value of op */
@@ -4886,7 +4921,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     smb_tran2Packet_t *outp;		/* response packet */
     clientchar_t *tidPathp = 0;
     int align;
-    clientchar_t shortName[13];			/* 8.3 name if needed */
+    clientchar_t shortName[13];		/* 8.3 name if needed */
     int NeedShortName;
     clientchar_t *shortNameEnd;
     cm_dirEntry_t * dep = NULL;
@@ -4894,6 +4929,8 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     char * s;
     void * attrp = NULL;
     smb_tran2Find_t * fp;
+    int afs_ioctl = 0;                  /* is this query for _._AFS_IOCTL_._? */
+    cm_dirFid_t dfid;
 
     smb_InitReq(&req);
 
@@ -5045,32 +5082,43 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 #endif /* DFS_SUPPORT */
     osi_Log1(smb_logp,"T2SDSingle scp 0x%p", scp);
 
-    /* now do a single case sensitive lookup for the file in question */
-    code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE, userp, &req, &targetscp);
+    afs_ioctl = (cm_ClientStrCmpI(maskp, CM_IOCTL_FILENAME_NOSLASH_W) == 0);
 
-    /* if a case sensitive match failed, we try a case insensitive one
-       next. */
-    if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) {
-        code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE | CM_FLAG_CASEFOLD, userp, &req, &targetscp);
-    }
+    /*
+     * If we are not searching for _._AFS_IOCTL_._, then we need to obtain
+     * the target scp.
+     */
+    if (!afs_ioctl) {
+        /* now do a single case sensitive lookup for the file in question */
+        code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE, userp, &req, &targetScp);
 
-    if (code == 0 && targetscp->fid.vnode == 0) {
-        cm_ReleaseSCache(targetscp);
-        code = CM_ERROR_NOSUCHFILE;
-    }
+        /*
+         * if a case sensitive match failed, we try a case insensitive
+         * one next.
+         */
+        if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH)
+            code = cm_Lookup(scp, maskp, CM_FLAG_NOMOUNTCHASE | CM_FLAG_CASEFOLD, userp, &req, &targetScp);
 
-    if (code) {
-        /* if we can't find the directory entry, this block will
-           return CM_ERROR_NOSUCHFILE, which we will pass on to
-           smb_ReceiveTran2SearchDir(). */
-        cm_ReleaseSCache(scp);
-        cm_ReleaseUser(userp);
-	if (code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
-	    smb_SendTran2Error(vcp, p, opx, code);
-	    code = 0;
-	}
-	smb_FreeTran2Packet(outp);
-        return code;
+        if (code == 0 && targetScp->fid.vnode == 0) {
+            cm_ReleaseSCache(targetScp);
+            code = CM_ERROR_NOSUCHFILE;
+        }
+
+        if (code) {
+            /*
+             * if we can't find the directory entry, this block will
+             * return CM_ERROR_NOSUCHFILE, which we will pass on to
+             * smb_ReceiveTran2SearchDir().
+             */
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            if (code != CM_ERROR_NOSUCHFILE && code != CM_ERROR_BPLUS_NOMATCH) {
+                smb_SendTran2Error(vcp, p, opx, code);
+                code = 0;
+            }
+            smb_FreeTran2Packet(outp);
+            return code;
+        }
     }
 
     /* now that we have the target in sight, we proceed with filling
@@ -5087,12 +5135,20 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     fp = (smb_tran2Find_t *) op;
 
     if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO
-        && targetscp->fid.vnode != 0
         && !cm_Is8Dot3(maskp)) {
 
-        cm_dirFid_t dfid;
-        dfid.vnode = htonl(targetscp->fid.vnode);
-        dfid.unique = htonl(targetscp->fid.unique);
+        /*
+         * Since the _._AFS_IOCTL_._ file does not actually exist
+         * we will make up a per directory FID equivalent to the
+         * directory vnode and the uniqifier 0.
+         */
+        if (afs_ioctl) {
+            dfid.vnode = htonl(scp->fid.vnode);
+            dfid.unique = htonl(0);
+        } else {
+            dfid.vnode = htonl(targetScp->fid.vnode);
+            dfid.unique = htonl(targetScp->fid.unique);
+        }
 
         cm_Gen8Dot3NameIntW(maskp, &dfid, shortName, &shortNameEnd);
         NeedShortName = 1;
@@ -5101,8 +5157,8 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     }
 
     osi_Log4(smb_logp, "T2SDSingle dir vn %u uniq %u name %S (%S)",
-             htonl(targetscp->fid.vnode),
-             htonl(targetscp->fid.unique),
+             ntohl(dfid.vnode),
+             ntohl(dfid.unique),
              osi_LogSaveClientString(smb_logp, pathp),
              (NeedShortName)? osi_LogSaveClientString(smb_logp, shortName) : _C(""));
 
@@ -5117,10 +5173,11 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     }
 
     if (!(attribute & SMB_ATTR_DIRECTORY) &&
-        (targetscp->fileType == CM_SCACHETYPE_DIRECTORY ||
-         targetscp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
-         targetscp->fileType == CM_SCACHETYPE_DFSLINK ||
-         targetscp->fileType == CM_SCACHETYPE_INVALID)) {
+        !afs_ioctl &&
+        (targetScp->fileType == CM_SCACHETYPE_DIRECTORY ||
+         targetScp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+         targetScp->fileType == CM_SCACHETYPE_DFSLINK ||
+         targetScp->fileType == CM_SCACHETYPE_INVALID)) {
 
         code = CM_ERROR_NOSUCHFILE;
         osi_Log0(smb_logp, "T2SDSingle skipping directory or bad link");
@@ -5239,16 +5296,24 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
             curPatchp->flags = 0;
         }
 
-        cm_SetFid(&curPatchp->fid, targetscp->fid.cell, targetscp->fid.volume, targetscp->fid.vnode, targetscp->fid.unique);
-
         /* temp */
         {
             int namelen = cm_ClientStringToFsString(maskp, -1, NULL, 0);
             dep = (cm_dirEntry_t *)malloc(sizeof(cm_dirEntry_t)+namelen);
             cm_ClientStringToFsString(maskp, -1, dep->name, namelen);
         }
-        dep->fid.vnode = targetscp->fid.vnode;
-        dep->fid.unique = targetscp->fid.unique;
+
+        if (afs_ioctl) {
+            cm_SetFid(&curPatchp->fid, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 0);
+            dep->fid.vnode = scp->fid.vnode;
+            dep->fid.unique = 0;
+            curPatchp->flags |= SMB_DIRLISTPATCH_IOCTL;
+        } else {
+            cm_SetFid(&curPatchp->fid, targetScp->fid.cell, targetScp->fid.volume, targetScp->fid.vnode, targetScp->fid.unique);
+            dep->fid.vnode = targetScp->fid.vnode;
+            dep->fid.unique = targetScp->fid.unique;
+        }
+
         curPatchp->dep = dep;
     }
 
@@ -5295,8 +5360,9 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
     if (dep)
         free(dep);
     if (scp)
-    cm_ReleaseSCache(scp);
-    cm_ReleaseSCache(targetscp);
+        cm_ReleaseSCache(scp);
+    if (targetScp)
+        cm_ReleaseSCache(targetScp);
     cm_ReleaseUser(userp);
 
     return code;
