@@ -162,10 +162,8 @@ afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
 	ObtainWriteLock(&vcp->vlock, 548);
 	vcp->multiPage++;
 	ReleaseWriteLock(&vcp->vlock);
-	afs_BozonLock(&vcp->pvnLock, vcp);
 	code =
 	    pvn_getpages(afs_GetOnePage, vp, off, len, protp, pl, plsz, seg, addr, rw, acred);
-	afs_BozonUnlock(&vcp->pvnLock, vcp);
 	ObtainWriteLock(&vcp->vlock, 549);
 	vcp->multiPage--;
 	ReleaseWriteLock(&vcp->vlock);
@@ -291,7 +289,6 @@ afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp,
 	return afs_CheckCode(code, &treq, 44);	/* failed to get it */
     }
 
-    afs_BozonLock(&avc->pvnLock, avc);
     ObtainReadLock(&avc->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_PAGEIN, ICL_TYPE_POINTER, (afs_int32) vp,
@@ -307,7 +304,6 @@ afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp,
     if (avc->activeV) {
 	ReleaseReadLock(&avc->lock);
 	ReleaseWriteLock(&avc->vlock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	afs_PutDCache(tdc);
 	/* Check activeV again, it may have been turned off
 	 * while we were waiting for a lock in afs_PutDCache */
@@ -331,7 +327,6 @@ afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp,
 	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	afs_PutDCache(tdc);
 	goto retry;
     }
@@ -425,7 +420,6 @@ afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp,
     }
     afs_indexFlags[tdc->index] |= IFAnyPages;
     ReleaseWriteLock(&afs_xdcache);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     afs_PutDCache(tdc);
     afs_Trace3(afs_iclSetp, CM_TRACE_PAGEINDONE, ICL_TYPE_LONG, code,
 	       ICL_TYPE_LONG, (int)page, ICL_TYPE_LONG, Code);
@@ -439,7 +433,6 @@ afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp,
     if (page)
 	pvn_read_done(page, B_ERROR);
     ReleaseReadLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     return code;
@@ -470,7 +463,6 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	       (afs_int32) vp, ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(off),
 	       ICL_TYPE_INT32, (afs_int32) len, ICL_TYPE_LONG, (int)flags);
     avc = VTOAFS(vp);
-    afs_BozonLock(&avc->pvnLock, avc);
     ObtainSharedLock(&avc->lock, 247);
     didWriteLock = 0;
 
@@ -529,7 +521,6 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	ReleaseWriteLock(&avc->lock);
     else
 	ReleaseSharedLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     afs_Trace2(afs_iclSetp, CM_TRACE_PAGEOUTDONE, ICL_TYPE_LONG, code,
 	       ICL_TYPE_LONG, NPages);
     AFS_GUNLOCK();
@@ -654,8 +645,7 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
     if (code)
 	return afs_CheckCode(code, &treq, 45);
 
-    afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc, acred);	/* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, acred);
 
     ObtainWriteLock(&avc->lock, 250);
 
@@ -665,14 +655,12 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
     }
     if (auio->afsio_offset < 0 || (auio->afsio_offset + auio->uio_resid) < 0) {
 	ReleaseWriteLock(&avc->lock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	return EINVAL;
     }
 #ifndef AFS_64BIT_CLIENT
     /* file is larger than 2GB */
     if (AfsLargeFileSize(auio->uio_offset, auio->uio_resid)) {
 	ReleaseWriteLock(&avc->lock);
-	afs_BozonUnlock(&avc->pvnLock, avc);
 	return EFBIG;
     }
 #endif
@@ -683,7 +671,6 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	if (auio->uio_loffset + auio->afsio_resid > auio->uio_llimit) {
 	    if (auio->uio_loffset >= auio->uio_llimit) {
 		ReleaseWriteLock(&avc->lock);
-		afs_BozonUnlock(&avc->pvnLock, avc);
 		return EFBIG;
 	    } else {
 		/* track # of bytes we should write, but won't because of
@@ -724,7 +711,6 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 		(avc, PRSFS_READ, &treq,
 		 CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
 		ReleaseWriteLock(&avc->lock);
-		afs_BozonUnlock(&avc->pvnLock, avc);
 		return EACCES;
 	    }
 	}
@@ -900,7 +886,6 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	code = avc->vc_error;
     }
     ReleaseWriteLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     if (!code) {
 	if ((ioflag & FSYNC) && (arw == UIO_WRITE)
 	    && !AFS_NFSXLATORREQ(acred))
@@ -956,10 +941,8 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, u_int len,
     if (code) {
 	goto out;
     }
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, cred);	/* ensure old pages are gone */
     avc->f.states |= CMAPPED;	/* flag cleared at afs_inactive */
-    afs_BozonUnlock(&avc->pvnLock, avc);
 
     AFS_GUNLOCK();
     as_rangelock(as);

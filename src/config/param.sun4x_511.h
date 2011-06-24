@@ -15,7 +15,6 @@
 #define AFS_SUN59_ENV		1
 #define AFS_SUN510_ENV		1
 #define AFS_SUN511_ENV		1
-#define AFS_BOZONLOCK_ENV       1
 
 #define AFS_64BIT_CLIENT	1
 

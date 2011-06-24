@@ -248,9 +248,11 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
     } else
 	code = 0;
 
-#ifdef AFS_BOZONLOCK_ENV
+#if defined(AFS_SUN5_ENV) || defined(AFS_BOZONLOCK_ENV)
     if (code == 0)
 	osi_FlushPages(avc, acred);
+#endif
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonUnlock(&avc->pvnLock, avc);
 #endif
 

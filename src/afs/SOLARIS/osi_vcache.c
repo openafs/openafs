@@ -55,10 +55,6 @@ osi_PrePopulateVCache(struct vcache *avc) {
      ** for the time being, we fill up the v_data field with the
      ** vnode pointer itself. */
     avc->v.v_data = (char *)avc;
-
-#if defined(AFS_BOZONLOCK_ENV)
-    afs_BozonInit(&avc->pvnLock, avc);
-#endif
 }
 
 void

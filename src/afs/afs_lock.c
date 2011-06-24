@@ -261,7 +261,7 @@ afs_osi_SleepS(char *addr, struct afs_lock *alock)
 }
 
 
-#ifndef	AFS_NOBOZO_LOCK
+#ifdef AFS_BOZONLOCK_ENV
 /* operations on locks that don't mind if we lock the same thing twice.  I'd like to dedicate
     this function to Sun Microsystems' Version 4.0 virtual memory system, without
     which this wouldn't have been necessary */
@@ -329,7 +329,7 @@ afs_CheckBozonLockBlocking(struct afs_bozoLock *alock)
 	    return 1;
     return 0;
 }
-#endif
+#endif /* AFS_BOZONLOCK_ENV */
 
 /* Not static - used conditionally if lock tracing is enabled */
 int

@@ -19,38 +19,23 @@
  * LICENSED MATERIALS - PROPERTY OF IBM
  */
 
-#if	(defined(AFS_SUN5_ENV))
-#define	AFS_NOBOZO_LOCK
-#endif
-
 #define INSTRUMENT_LOCKS
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
 #define MAX_LOCK_NUMBER 780
 
+#ifdef AFS_BOZONLOCK_ENV
 struct afs_bozoLock {
     short count;		/* count of excl locks */
     char flags;			/* bit 1: is anyone waiting? */
     char spare;			/* for later */
     char *proc;			/* process holding the lock, really an afs_proc_t * */
 };
-#ifndef	AFS_NOBOZO_LOCK
 typedef struct afs_bozoLock afs_bozoLock_t;
-#else
-#ifdef	AFS_SUN5_ENV
-typedef kmutex_t afs_bozoLock_t;
-#else
-typedef struct afs_bozoLock afs_bozoLock_t;
-#endif
-#define afs_BozonLock(lock, avc)
-#define afs_BozonUnlock(lock, avc)
-#define afs_BozonInit(lock, nm)
-#define	afs_CheckBozonLock(lock)		0
-#define afs_CheckBozonLockBlocking(lock)	0
-#endif
 
 #define	AFS_BOZONWAITING    1	/* someone is waiting for this lock */
+#endif
 
 #define	AFS_RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
