@@ -3920,8 +3920,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          * the same value for all sessions.  We should generate a random value
          * and store it into the vcp
          */
-        smb_SetSMBParm(outp, 7, 1);	/* next 2: session key */
-        smb_SetSMBParm(outp, 8, 1);
+        smb_SetSMBParmLong(outp, 7, 0x1a2b3c4d);	/* session key */
         /*
          * Tried changing the capabilities to support for W2K - defect 117695
          * Maybe something else needs to be changed here?
@@ -3995,8 +3994,13 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 free(secBlob);
             }
         } else {
-            smb_SetSMBParmByte(outp, 16, 0); /* Encryption key length */
-            smb_SetSMBDataLength(outp, 0);   /* Perhaps we should specify 8 bytes anyway */
+            smb_SetSMBParmByte(outp, 16, 0);/* Challenge length */
+            smb_SetSMBDataLength(outp, smb_ServerDomainNameLength);
+            datap = smb_GetSMBData(outp, NULL);
+            /* the faux domain name */
+            cm_ClientStringToUtf8(smb_ServerDomainName, -1,
+                                  datap,
+                                  (int)(sizeof(outp->data)/sizeof(char) - (datap - outp->data)));
         }
     }
     else if (v3ProtoIndex != -1) {
