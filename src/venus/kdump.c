@@ -164,16 +164,6 @@ struct ncp_sb_info {
 #ifdef	AFS_SUN5_ENV /*XXXXX*/
 #include <sys/t_lock.h>
 struct vnode foo;
-#ifdef	AFS_SUN54_ENV
-#else
-#ifdef	AFS_SUN52_ENV
-typedef struct stat_mutex stat_mutex_t;
-#define	kmutex_t		stat_mutex_t
-#else
-typedef struct adaptive_mutex2 adaptive_mutex2_t;
-#define	kmutex_t	adaptive_mutex2_t
-#endif
-#endif
 #endif
 
 #ifdef AFS_SGI53_ENV
@@ -603,9 +593,6 @@ int Dgcpags = 0;
 #include <sys/elf.h>
 #include <libelf.h>
 #include <sys/elf_M32.h>
-#ifndef	AFS_SUN54_ENV
-typedef ulong_t k_fltset_t;	/* XXXXXXXXXXX */
-#endif /* !AFS_SUN54_ENV */
 #include <sys/proc.h>
 #include <sys/file.h>
 #define	_NLIST_H		/* XXXXXXXXXXXXX */
@@ -2214,11 +2201,11 @@ print_allocs(int pnt)
 int
 readmem(kmem, buf, vad, len)
      int kmem, len;
-#ifdef AFS_SUN57_ENV
+#ifdef AFS_SUN5_ENV
      uintptr_t vad;
 #else
      int vad;
-#endif		/** AFS_SUN57_ENV **/
+#endif		/** AFS_SUN5_ENV **/
      char *buf;
 {
     int newlen;
@@ -2509,13 +2496,6 @@ print_nfsclient(int kmem, struct nfsclientpag *ep,
 void
 pmutex(char *sp, kmutex_t *mp)
 {
-#ifdef	AFS_SUN54_ENV
-
-#else
-    struct stat_mutex *smp = (struct stat_mutex *)mp;
-
-    printf("%s mutex: %x %x\n", sp, smp->m_stats_lock, smp->m_type);
-#endif
 }
 
 #endif

@@ -374,37 +374,14 @@ vmountdata(struct vmount * vmtp, char *obj, char *stub, char *host,
 #ifdef	AFS_HPUX_ENV
 #define	MOUNTED_TABLE	MNT_MNTTAB
 #else
-#ifdef	AFS_SUN5_ENV
-#define	MOUNTED_TABLE	MNTTAB
-#else
 #define	MOUNTED_TABLE	MOUNTED
-#endif
 #endif
 
 static int
 HandleMTab(char *cacheMountDir)
 {
-#if (defined (AFS_SUN_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)) && !defined(AFS_SUN58_ENV)
+#if (defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV))
     FILE *tfilep;
-#ifdef	AFS_SUN5_ENV
-    char tbuf[16];
-    struct mnttab tmntent;
-
-    memset(&tmntent, '\0', sizeof(struct mnttab));
-    if (!(tfilep = fopen(MOUNTED_TABLE, "a+"))) {
-	printf("Can't open %s\n", MOUNTED_TABLE);
-	perror(MNTTAB);
-	exit(-1);
-    }
-    tmntent.mnt_special = "AFS";
-    tmntent.mnt_mountp = cacheMountDir;
-    tmntent.mnt_fstype = "xx";
-    tmntent.mnt_mntopts = "rw";
-    sprintf(tbuf, "%ld", (long)time((time_t *) 0));
-    tmntent.mnt_time = tbuf;
-    putmntent(tfilep, &tmntent);
-    fclose(tfilep);
-#else
 #if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
     struct mntent tmntent;
     char *dir;
@@ -464,7 +441,6 @@ HandleMTab(char *cacheMountDir)
     addmntent(tfilep, &tmntent);
     endmntent(tfilep);
 #endif /* AFS_SGI_ENV */
-#endif /* AFS_SUN5_ENV */
 #endif /* unreasonable systems */
 #ifdef AFS_DARWIN_ENV
 #ifndef AFS_DARWIN100_ENV

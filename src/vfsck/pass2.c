@@ -375,11 +375,7 @@ pass2check(idesc)
 		break;
 	    if ((dp = ginode(dirp->d_ino)) == NULL)
 		break;
-#if	defined(AFS_SUN_ENV) && !defined(AFS_SUN56_ENV)
-	    dp->di_gen = dp->di_ic.ic_flags = dp->di_ic.ic_size.val[0] = 0;
-#else
 	    CLEAR_DVICEMAGIC(dp);
-#endif
 	    inodirty();
 	    statemap[dirp->d_ino] = FSTATE;
 	    ret |= ALTERED;

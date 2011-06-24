@@ -108,7 +108,7 @@ static u_int fix_buf_size(u_int s);
 static struct xdr_ops xdrrec_ops = {
 #ifdef AFS_NT40_ENV
     /* Windows does not support labeled assignments */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
+#if !(defined(KERNEL) && defined(AFS_SUN5_ENV))
     xdrrec_getint32,    /* deserialize an afs_int32 */
     xdrrec_putint32,    /* serialize an afs_int32 */
 #endif
@@ -118,7 +118,7 @@ static struct xdr_ops xdrrec_ops = {
     xdrrec_setpos,      /* set offset in the stream: not supported. */
     xdrrec_inline,      /* prime stream for inline macros */
     xdrrec_destroy,     /* destroy stream */
-#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+#if (defined(KERNEL) && defined(AFS_SUN5_ENV))
     NULL,
     xdrrec_getint32,    /* deserialize an afs_int32 */
     xdrrec_putint32,    /* serialize an afs_int32 */

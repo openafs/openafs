@@ -149,7 +149,7 @@ pass1()
 		continue;
 	    }
 #endif /* ACLS */
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 	    if (dp->di_size < 0 || dp->di_size > (UOFF_T) UFS_MAXOFFSET_T) {
 		if (debug)
 		    printf("bad size %llu:", dp->di_size);
@@ -237,7 +237,7 @@ pass1()
 
 	    if (ndb < 0) {
 		if (debug)
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 		    printf("bad size %" AFS_INT64_FMT " ndb %d:",
 #else
 		    printf("bad size %d ndb %d:",
@@ -304,7 +304,7 @@ pass1()
 		    zlnhead = zlnp;
 		}
 	    }
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 	    if (OLDVICEINODE) {
 		if (yflag) {
 		    if (!oldreported) {

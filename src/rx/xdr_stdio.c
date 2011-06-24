@@ -60,7 +60,7 @@ static void xdrstdio_destroy();
 static struct xdr_ops xdrstdio_ops = {
 #ifdef AFS_NT40_ENV
     /* Windows does not support labeled assignments */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
+#if !(defined(KERNEL) && defined(AFS_SUN5_ENV))
     xdrstdio_getint32,	        /* deserialize an afs_int32 */
     xdrstdio_putint32,	        /* serialize an afs_int32 */
 #endif
@@ -70,7 +70,7 @@ static struct xdr_ops xdrstdio_ops = {
     xdrstdio_setpos,	        /* set offset in the stream */
     xdrstdio_inline,	        /* prime stream for inline macros */
     xdrstdio_destroy,	        /* destroy stream */
-#if (defined(KERNEL) && defined(AFS_SUN57_ENV))
+#if (defined(KERNEL) && defined(AFS_SUN5_ENV))
     NULL,
     xdrstdio_getint32,    /* deserialize an afs_int32 */
     xdrstdio_putint32,    /* serialize an afs_int32 */

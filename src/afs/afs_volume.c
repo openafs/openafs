@@ -40,12 +40,10 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/afs_dynroot.h"
 
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
-#if     defined(AFS_SUN58_ENV)
 #include <netinet/ip6.h>
-#endif
 #include <inet/ip.h>
 #endif
 

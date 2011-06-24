@@ -473,7 +473,7 @@ setup(dev)
      * read in the summary info.
      */
     asked = 0;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     {
 	caddr_t sip;
 	sip = calloc(1, sblock.fs_cssize);
@@ -494,7 +494,7 @@ setup(dev)
 	    sip += size;
 	}
     }
-#else /* AFS_SUN56_ENV */
+#else /* AFS_SUN5_ENV */
 #if     defined(AFS_HPUX110_ENV)
     size = fragroundup(&sblock, sblock.fs_cssize);
     sblock.fs_csp = (struct csum *)calloc(1, (unsigned)size);
@@ -533,7 +533,7 @@ setup(dev)
 	}
     }
 #endif /* else AFS_HPUX110_ENV */
-#endif /* else AFS_SUN56_ENV */
+#endif /* else AFS_SUN5_ENV */
 
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN3_ENV)
     /*
@@ -690,14 +690,14 @@ readsb(listerr)
     altsblock.fs_optim = sblock.fs_optim;
     altsblock.fs_rotdelay = sblock.fs_rotdelay;
     altsblock.fs_maxbpg = sblock.fs_maxbpg;
-#if	!defined(__alpha) && !defined(AFS_SUN56_ENV)
+#if	!defined(__alpha) && !defined(AFS_SUN5_ENV)
 #if !defined(AFS_HPUX110_ENV)
     /* HPUX110 will use UpdateAlternateSuper() below */
     memcpy((char *)altsblock.fs_csp, (char *)sblock.fs_csp,
 	   sizeof sblock.fs_csp);
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* ! __alpha */
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     memcpy((char *)altsblock.fs_u.fs_csp_pad, (char *)sblock.fs_u.fs_csp_pad,
 	   sizeof(sblock.fs_u.fs_csp_pad));
 #endif

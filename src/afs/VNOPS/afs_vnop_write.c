@@ -263,7 +263,7 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 #else
     if (aio & IO_APPEND) {
 	/* append mode, start it at the right spot */
-#if     defined(AFS_SUN56_ENV)
+#if     defined(AFS_SUN5_ENV)
 	auio->uio_loffset = 0;
 #endif
 	filePos = avc->f.m.Length;
@@ -639,13 +639,13 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 
 
 int
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN53_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
 afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred
 # ifdef AFS_SGI65_ENV
 	  , off_t start, off_t stop
 # endif /* AFS_SGI65_ENV */
     )
-#else /* !SUN53 && !SGI */
+#else /* !SUN5 && !SGI */
 afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)
 #endif 
 {

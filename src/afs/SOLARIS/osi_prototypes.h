@@ -14,19 +14,7 @@
 extern afs_rwlock_t afs_xosi;
 
 /* osi_vnodeops.c */
-int afs_putapage(struct vnode *vp, struct page *pages,
-#if	defined(AFS_SUN56_ENV)
-		 u_offset_t * offp,
-#else
-		 u_int * offp,
-#endif
-#if     defined(AFS_SUN58_ENV)
-		 size_t * lenp,
-#else
-		 u_int * lenp,
-#endif
-		 int flags, afs_ucred_t *credp);
-
-
+int afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
+		 size_t * lenp, int flags, afs_ucred_t *credp);
 
 #endif /* _OSI_PROTOTYPES_H_ */

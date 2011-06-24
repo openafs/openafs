@@ -97,12 +97,6 @@ dest: afsd vsys @ENABLE_FUSE_CLIENT@
 				sgi_53 | sgi_61 ) \
 				${INSTALL_SCRIPT} ${srcdir}/afs_rtsymtab.pl.${SYS_NAME} ${DEST}/root.client/usr/vice/etc/sgiload/afs_rtsymtab.pl ;;\
 			esac;; \
-		sun4_52 | sun4_53 | sun4c_52 | sun4c_53 | sun4m_52 | sun4m_53 | sun4m_54 | sun4_54 | sun4c_54 | sunx86_54) \
-			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
-		sun*_57 ) \
-			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2.7 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		sun*_58 ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2.8 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
@@ -112,9 +106,6 @@ dest: afsd vsys @ENABLE_FUSE_CLIENT@
 		sun*_511 ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2.11 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
-	        sun4x_5? ) \
-			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		alpha_osf* ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.alpha ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\

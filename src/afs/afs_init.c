@@ -384,17 +384,17 @@ afs_InitCacheInfo(char *afile)
     if (code || !filevp)
 	return ENOENT;
     {
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 	struct statvfs64 st;
 #elif	defined(AFS_HPUX102_ENV)
 	struct k_statvfs st;
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
+#elif	defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
 	struct statvfs st;
 #elif defined(AFS_DARWIN80_ENV)
 	struct vfsstatfs st;
 #else
 	struct statfs st;
-#endif /* SUN56 */
+#endif /* SUN5 */
 
 #if	defined(AFS_SGI_ENV)
 #ifdef AFS_SGI65_ENV

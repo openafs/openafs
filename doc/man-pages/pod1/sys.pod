@@ -45,11 +45,11 @@ The machine's system type appears as a text string:
 
 =head1 EXAMPLES
 
-The following example shows the output produced on a Sun SPARCStation
-running Solaris 5.7:
+The following example shows the output produced on a Sun Netra T1
+running Solaris 10:
 
    % sys
-   sun4x_57
+   sun4x_510
 
 =head1 PRIVILEGE REQUIRED
 

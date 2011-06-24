@@ -53,7 +53,7 @@ extern int afs_shuttingdown;
 #if     defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK       k_flock
 #else
-#if     defined(AFS_SUN56_ENV) || (defined(AFS_LINUX24_ENV) && !(defined(AFS_LINUX26_ENV) && defined(AFS_LINUX_64BIT_KERNEL)))
+#if     defined(AFS_SUN5_ENV) || (defined(AFS_LINUX24_ENV) && !(defined(AFS_LINUX26_ENV) && defined(AFS_LINUX_64BIT_KERNEL)))
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK       flock
@@ -1120,7 +1120,7 @@ struct afs_fheader {
 
 #if defined(AFS_CACHE_VNODE_PATH)
 typedef char *afs_ufs_dcache_id_t;
-#elif defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
+#elif defined(AFS_SGI61_ENV) || defined(AFS_SUN5_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile
  * the size correctly.
  */
@@ -1534,7 +1534,6 @@ afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
  * to accomodate both, *long* is used instead of afs_int32
  */
 
-# ifdef AFS_SUN57_ENV
 struct afssysa {
     long syscall;
     long parm1;
@@ -1544,17 +1543,6 @@ struct afssysa {
     long parm5;
     long parm6;
 };
-# else
-struct afssysa {
-    afs_int32 syscall;
-    afs_int32 parm1;
-    afs_int32 parm2;
-    afs_int32 parm3;
-    afs_int32 parm4;
-    afs_int32 parm5;
-    afs_int32 parm6;
-};
-# endif
 extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 #endif /* AFS_SUN5_ENV */
 

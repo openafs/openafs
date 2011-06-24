@@ -138,7 +138,7 @@ typedef atomic_t rx_atomic_t;
 #define rx_atomic_dec_and_read(X) atomic_dec_return(X)
 #define rx_atomic_sub(X, V)	  atomic_sub(V, X)
 
-#elif defined(AFS_SUN510_ENV) || (defined(AFS_SUN58_ENV) && defined(KERNEL) && !defined(UKERNEL))
+#elif defined(AFS_SUN510_ENV) || (defined(AFS_SUN5_ENV) && defined(KERNEL) && !defined(UKERNEL))
 
 # if defined(KERNEL) && !defined(UKERNEL)
 #  include <sys/atomic.h>

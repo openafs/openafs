@@ -606,7 +606,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #endif
 {
     afs_int32 code = 0;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;
 #else /* AFS_SGI61_ENV */
     u_int bufferSize;

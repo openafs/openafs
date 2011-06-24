@@ -534,34 +534,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	sun4_413)
-		CCXPG2="/usr/xpg2bin/cc"
-		CC="gcc"
-		CCOBJ="gcc"
-		SHLIB_CFLAGS="-PIC"
-		XCFLAGS=""
-		XLIBELFA="-lelf"
-		XLIBKVM="-lkvm"
-		XLIBS="${LIB_AFSDB}"
-		LD="ld"
-		;;
-
-	sun4x_55)
-		CC=$SOLARISCC
-		CCOBJ=$SOLARISCC
-		MT_CC=$SOLARISCC
-		MT_CFLAGS='-mt'
-		SHLIB_CFLAGS="-KPIC"
-		XCFLAGS="-dy -Bdynamic"
-		XLIBELFA="-lelf"
-		XLIBKVM="-lkvm"
-		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		LD="/usr/ccs/bin/ld"
-		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
-		LWP_OPTMZ="-g"
-		;;
-
-	sun4x_56|sun4x_57|sun4x_58|sun4x_59)
+	sun4x_58|sun4x_59)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
 		LD="/usr/ccs/bin/ld"
@@ -618,7 +591,7 @@ case $AFS_SYSNAME in
 		LWP_OPTMZ="-g"
 		;;
 
-	sunx86_57|sunx86_58|sunx86_59)
+	sunx86_58|sunx86_59)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
 		LD="/usr/ccs/bin/ld"

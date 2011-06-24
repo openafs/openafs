@@ -60,26 +60,20 @@
 /* The following define is in order to utilize one vfsck for SunOS 4.1 & 4.1.1; note
  * that the ic_flags and size.val[0] will be zero except for AFS inodes in 4.1.1...
  */
-#if	defined(AFS_SUN56_ENV)
 #define	VICEINODE	((dp->di_vicemagic == VICEMAGIC)   \
 			 && (dp->di_mode & IFMT) == IFREG)
 #define OLDVICEINODE    (!dp->di_ic.ic_uid && (dp->di_ic.ic_gid== 0xfffffffe))
 #else
-#define	VICEINODE	(((dp->di_ic.ic_gen == VICEMAGIC) || \
-			 (dp->di_ic.ic_flags || dp->di_ic.ic_size.val[0])) \
-			 && (dp->di_mode & IFMT) == IFREG)
-#endif /* AFS_SUN56_ENV */
-#else
 #define	VICEINODE	(IS_DVICEMAGIC(dp) && (dp->di_mode & IFMT) == IFREG)
 #endif
 #endif
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #define		OFF_T		offset_t
 #define		UOFF_T		u_offset_t
 #else
 #define		OFF_T		long
 #define		UOFF_T		long
-#endif /* AFS_SUN56_ENV */
+#endif /* AFS_SUN5_ENV */
 
 /*
  * buffer cache structure.

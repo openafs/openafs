@@ -568,16 +568,6 @@ else
 			AFS_SYSNAME="x86_darwin_110"
 			OSXSDK="macosx10.7"
 			;;
-		sparc-sun-solaris2.5*)
-			AFS_SYSNAME="sun4x_55"
-			enable_login="yes"
-			;;
-		sparc-sun-solaris2.6)
-			AFS_SYSNAME="sun4x_56"
-			;;
-		sparc-sun-solaris2.7)
-			AFS_SYSNAME="sun4x_57"
-			;;
 		sparc-sun-solaris2.8)
 			AFS_SYSNAME="sun4x_58"
 			;;
@@ -593,9 +583,6 @@ else
 		sparc-sun-sunos4*)
 			AFS_SYSNAME="sun4_413"
 			enable_login="yes"
-			;;
-		i386-pc-solaris2.7)
-			AFS_SYSNAME="sunx86_57"
 			;;
 		i386-pc-solaris2.8)
 			AFS_SYSNAME="sunx86_58"

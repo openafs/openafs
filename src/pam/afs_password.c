@@ -56,7 +56,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     PAM_CONST struct pam_conv *pam_convp = NULL;
     struct passwd unix_pwd, *upwd = NULL;
 
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     openlog(pam_afs_ident, LOG_CONS, LOG_AUTH);
 #endif
     origmask = setlogmask(logmask);
@@ -115,8 +115,8 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
      * and its uid==0, and "ignore_root" was given in pam.conf,
      * ignore the user.
      */
-#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
-#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
@@ -301,7 +301,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	memset(torch_password, 0, strlen(torch_password));
     }
     (void)setlogmask(origmask);
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     closelog();
 #endif
     return retcode;

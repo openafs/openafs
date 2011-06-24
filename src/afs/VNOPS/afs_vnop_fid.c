@@ -68,7 +68,7 @@ extern int afs_NFSRootOnly;	/* 1 => only allow NFS mounts of /afs. */
 int
 #ifdef AFS_AIX41_ENV
 afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp)
-#elif defined(AFS_SUN54_ENV)
+#elif defined(AFS_SUN5_ENV)
 afs_fid(OSI_VC_DECL(avc), struct fid *fidpp)
 #else
 afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
@@ -105,7 +105,7 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 	if (avc->f.fid.Fid.Unique > 0xffffff)
 	    afs_fid_uniqueoverflow++;
     } else {
-#if defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64))
+#if defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64))
 	addr[1] = (long)AFS_XLATOR_MAGIC << 48;
 #else /* defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64) */
 	addr[1] = AFS_XLATOR_MAGIC;
@@ -117,7 +117,7 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 	AFS_FAST_HOLD(avc);
 #endif
     }
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN54_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
     /* Use the fid pointer passed to us. */
     fidpp->fid_len = SizeOfSmallFid;
 

@@ -304,7 +304,7 @@ flush(fd, bp)
 	       fsbtodb(&sblock, sblock.fs_csaddr));
     }
 #else
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     sip = (caddr_t) sblock.fs_u.fs_csp;
     for (i = 0, j = 0; i < sblock.fs_cssize; i += sblock.fs_bsize, j++) {
 	size =
@@ -321,7 +321,7 @@ flush(fd, bp)
 	       sblock.fs_cssize - i <
 	       sblock.fs_bsize ? sblock.fs_cssize - i : sblock.fs_bsize);
     }
-#endif /* AFS_SUN56_ENV */
+#endif /* AFS_SUN5_ENV */
 #endif /* AFS_HPUX101_ENV */
 }
 
@@ -812,7 +812,7 @@ updateclean()
     unsigned int size;
     unsigned int bno;
     unsigned int fsclean;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     offset_t sblkoff;
 #endif
 
@@ -863,7 +863,7 @@ updateclean()
     /* read private copy of superblock, update clean flag, and write it */
     bno = sblk.b_bno;
     size = sblk.b_size;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     sblkoff = (OFF_T) (bno) << DEV_BSHIFT;
     if (llseek(fsreadfd, sblkoff, 0) == -1)
 	return;
@@ -882,7 +882,7 @@ updateclean()
     fs_set_state(cleanbuf.b_un.b_fs, fs_get_state(&sblock));
 #endif
     cleanbuf.b_un.b_fs->fs_time = sblock.fs_time;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     if (llseek(fswritefd, sblkoff, 0) == -1)
 	return;
 #else
@@ -925,7 +925,7 @@ printclean()
 }
 #endif
 
-#ifdef	AFS_SUN52_ENV
+#ifdef	AFS_SUN5_ENV
 char *
 hasvfsopt(vfs, opt)
      struct vfstab *vfs;

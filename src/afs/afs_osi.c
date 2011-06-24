@@ -205,21 +205,8 @@ afs_osi_SetTime(osi_timeval_t * atv)
     t.tv_sec = atv->tv_sec;
     t.tv_nsec = atv->tv_usec * 1000;
     ksettimer(&t);		/*  Was -> settimer(TIMEOFDAY, &t); */
-#elif defined(AFS_SUN55_ENV)
-    stime(atv->tv_sec);
 #elif defined(AFS_SUN5_ENV)
-    /*
-     * To get more than second resolution we can use adjtime. The problem
-     * is that the usecs from the server are wrong (by now) so it isn't
-     * worth complicating the following code.
-     */
-    struct stimea {
-	time_t time;
-    } sta;
-
-    sta.time = atv->tv_sec;
-
-    stime(&sta, NULL);
+    stime(atv->tv_sec);
 #elif defined(AFS_SGI_ENV)
     struct stimea {
 	sysarg_t time;

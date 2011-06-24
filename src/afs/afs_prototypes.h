@@ -1192,7 +1192,7 @@ struct fid;
 #if !defined(AFS_ATHENA_ENV)
 #ifdef AFS_AIX41_ENV
 int afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp);
-#elif defined(AFS_SUN54_ENV)
+#elif defined(AFS_SUN5_ENV)
 int afs_fid(OSI_VC_DECL(avc), struct fid *fidpp);
 #else
 int afs_fid(OSI_VC_DECL(avc), struct fid **fidpp);
@@ -1362,7 +1362,7 @@ extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,
 #if defined(AFS_SGI65_ENV)
 extern int afs_fsync(OSI_VC_DECL(avc), int flags, afs_ucred_t *acred,
 		     off_t start, off_t stop);
-#elif defined(AFS_SGI_ENV) || defined(AFS_SUN53_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
 extern int afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred);
 #else
 extern int afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred);

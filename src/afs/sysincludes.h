@@ -263,12 +263,9 @@ typedef unsigned short etap_event_t;
 
 # ifdef	AFS_SUN5_ENV
 #  include <sys/cmn_err.h>	/* for kernel printf() prototype */
-# endif
-
-# if	defined(AFS_SUN56_ENV)
-#  include "h/vfs.h"		/* stops SUN56 socketvar.h warnings */
-#  include "h/stropts.h"		/* stops SUN56 socketvar.h warnings */
-#  include "h/stream.h"		/* stops SUN56 socketvar.h errors */
+#  include "h/vfs.h"		/* stops SUN5 socketvar.h warnings */
+#  include "h/stropts.h"		/* stops SUN5 socketvar.h warnings */
+#  include "h/stream.h"		/* stops SUN5 socketvar.h errors */
 # endif
 
 # ifdef AFS_SUN510_ENV

@@ -1121,7 +1121,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 		osi_Panic("Tru64 needs AFS_3DISPARES\n");
 #endif
 #endif
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 		/* if this is a pre-sol2.6 unconverted inode, bail out */
 		{
 		    afs_uint32 p1, p2, p3, p4;

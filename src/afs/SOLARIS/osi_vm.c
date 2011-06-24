@@ -110,12 +110,8 @@ void
 osi_VM_StoreAllSegments(struct vcache *avc)
 {
     AFS_GUNLOCK();
-#if	defined(AFS_SUN56_ENV)
     (void)pvn_vplist_dirty(AFSTOV(avc), (u_offset_t) 0, afs_putapage, 0,
 			   CRED());
-#else
-    (void)pvn_vplist_dirty(AFSTOV(avc), 0, afs_putapage, 0, CRED());
-#endif
     AFS_GLOCK();
 }
 
@@ -129,13 +125,8 @@ void
 osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     AFS_GUNLOCK();
-#if	defined(AFS_SUN56_ENV)
     (void)pvn_vplist_dirty(AFSTOV(avc), (u_offset_t) 0, afs_putapage,
 			   (sync ? B_INVAL : B_FREE), acred);
-#else
-    (void)pvn_vplist_dirty(AFSTOV(avc), 0, afs_putapage,
-			   (sync ? B_INVAL : B_FREE), acred);
-#endif
     AFS_GLOCK();
 }
 

@@ -69,10 +69,10 @@ A  Configuring
       sparc64_linux22, sparc64_linux24, sparc64_linux26
       sparc_linux22, sparc_linux24
       sun4_413 (No client support, no fileserver support, db servers only)
-      sun4x_56, sun4x_57, sun4x_58, sun4x_59, sun4x_510, sun4x_511
+      sun4x_58, sun4x_59, sun4x_510, sun4x_511
          (logging UFS not supported for mixed-use partitions containing
          client cache)
-      sunx86_57, sunx86_58, sunx86_59, sunx86_510, sunx86_511
+      sunx86_58, sunx86_59, sunx86_510, sunx86_511
          (logging UFS not supported for mixed-use partitions containing
          client cache)
       x86_darwin_80, x86_darwin90

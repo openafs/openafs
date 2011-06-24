@@ -57,16 +57,14 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "rx/rx_multi.h"
 
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #include <inet/led.h>
 #include <inet/common.h>
-#if     defined(AFS_SUN58_ENV)
-# include <netinet/ip6.h>
-# define ipif_local_addr ipif_lcl_addr
-#  ifndef V4_PART_OF_V6
-#  define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
-#  endif
-# endif
+#include <netinet/ip6.h>
+#define ipif_local_addr ipif_lcl_addr
+#ifndef V4_PART_OF_V6
+# define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
+#endif
 #include <inet/ip.h>
 #endif
 
@@ -1118,108 +1116,6 @@ afs_SortServers(struct server *aservers[], int count)
 
 #define	USEIFADDR
 
-
-#if	defined(AFS_SUN5_ENV) && ! defined(AFS_SUN56_ENV)
-#include <inet/common.h>
-/* IP interface structure, one per local address */
-typedef struct ipif_s {
-     /**/ struct ipif_s *ipif_next;
-    struct ill_s *ipif_ill;	/* Back pointer to our ill */
-    long ipif_id;		/* Logical unit number */
-    u_int ipif_mtu;		/* Starts at ipif_ill->ill_max_frag */
-    afs_int32 ipif_local_addr;	/* Local IP address for this if. */
-    afs_int32 ipif_net_mask;	/* Net mask for this interface. */
-    afs_int32 ipif_broadcast_addr;	/* Broadcast addr for this interface. */
-    afs_int32 ipif_pp_dst_addr;	/* Point-to-point dest address. */
-    u_int ipif_flags;		/* Interface flags. */
-    u_int ipif_metric;		/* BSD if metric, for compatibility. */
-    u_int ipif_ire_type;	/* LOCAL or LOOPBACK */
-    mblk_t *ipif_arp_down_mp;	/* Allocated at time arp comes up to
-				 * prevent awkward out of mem condition
-				 * later
-				 */
-    mblk_t *ipif_saved_ire_mp;	/* Allocated for each extra IRE_SUBNET/
-				 * RESOLVER on this interface so that
-				 * they can survive ifconfig down.
-				 */
-    /*
-     * The packet counts in the ipif contain the sum of the
-     * packet counts in dead IREs that were affiliated with
-     * this ipif.
-     */
-    u_long ipif_fo_pkt_count;	/* Forwarded thru our dead IREs */
-    u_long ipif_ib_pkt_count;	/* Inbound packets for our dead IREs */
-    u_long ipif_ob_pkt_count;	/* Outbound packets to our dead IREs */
-    unsigned int
-      ipif_multicast_up:1,	/* We have joined the allhosts group */
-    : 0;
-} ipif_t;
-
-typedef struct ipfb_s {
-     /**/ struct ipf_s *ipfb_ipf;	/* List of ... */
-    kmutex_t ipfb_lock;		/* Protect all ipf in list */
-} ipfb_t;
-
-typedef struct ilm_s {
-     /**/ afs_int32 ilm_addr;
-    int ilm_refcnt;
-    u_int ilm_timer;		/* IGMP */
-    struct ipif_s *ilm_ipif;	/* Back pointer to ipif */
-    struct ilm_s *ilm_next;	/* Linked list for each ill */
-} ilm_t;
-
-typedef struct ill_s {
-     /**/ struct ill_s *ill_next;	/* Chained in at ill_g_head. */
-    struct ill_s **ill_ptpn;	/* Pointer to previous next. */
-    queue_t *ill_rq;		/* Read queue. */
-    queue_t *ill_wq;		/* Write queue. */
-
-    int ill_error;		/* Error value sent up by device. */
-
-    ipif_t *ill_ipif;		/* Interface chain for this ILL. */
-    u_int ill_ipif_up_count;	/* Number of IPIFs currently up. */
-    u_int ill_max_frag;		/* Max IDU. */
-    char *ill_name;		/* Our name. */
-    u_int ill_name_length;	/* Name length, incl. terminator. */
-    u_int ill_subnet_type;	/* IRE_RESOLVER or IRE_SUBNET. */
-    u_int ill_ppa;		/* Physical Point of Attachment num. */
-    u_long ill_sap;
-    int ill_sap_length;		/* Including sign (for position) */
-    u_int ill_phys_addr_length;	/* Excluding the sap. */
-    mblk_t *ill_frag_timer_mp;	/* Reassembly timer state. */
-    ipfb_t *ill_frag_hash_tbl;	/* Fragment hash list head. */
-
-    queue_t *ill_bind_pending_q;	/* Queue waiting for DL_BIND_ACK. */
-    ipif_t *ill_ipif_pending;	/* IPIF waiting for DL_BIND_ACK. */
-
-    /* ill_hdr_length and ill_hdr_mp will be non zero if
-     * the underlying device supports the M_DATA fastpath
-     */
-    int ill_hdr_length;
-
-    ilm_t *ill_ilm;		/* Multicast mebership for lower ill */
-
-    /* All non-nil cells between 'ill_first_mp_to_free' and
-     * 'ill_last_mp_to_free' are freed in ill_delete.
-     */
-#define	ill_first_mp_to_free	ill_hdr_mp
-    mblk_t *ill_hdr_mp;		/* Contains fastpath template */
-    mblk_t *ill_bcast_mp;	/* DLPI header for broadcasts. */
-    mblk_t *ill_bind_pending;	/* T_BIND_REQ awaiting completion. */
-    mblk_t *ill_resolver_mp;	/* Resolver template. */
-    mblk_t *ill_attach_mp;
-    mblk_t *ill_bind_mp;
-    mblk_t *ill_unbind_mp;
-    mblk_t *ill_detach_mp;
-#define	ill_last_mp_to_free	ill_detach_mp
-
-    u_int ill_frag_timer_running:1, ill_needs_attach:1, ill_is_ptp:1,
-	ill_priv_stream:1, ill_unbind_pending:1, ill_pad_to_bit_31:27;
-      MI_HRT_DCL(ill_rtime)
-      MI_HRT_DCL(ill_rtmp)
-} ill_t;
-#endif
-
 #ifdef AFS_USERSPACE_IP_ADDR
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
@@ -1478,11 +1374,9 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #else
     for (ill = (struct ill_s *)*addr /*ill_g_headp */ ; ill;
 	 ill = ill->ill_next) {
-#ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
 	    continue;
-#endif
 	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next) {
 	    subnet = ipif->ipif_local_addr & ipif->ipif_net_mask;
 	    subnetmask = ipif->ipif_net_mask;

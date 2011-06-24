@@ -126,7 +126,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     afs_int32 code;
     struct afs_icl_log *logp;
     struct afs_icl_set *setp;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t temp;
 #else /* AFS_SGI61_ENV */
 #if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)

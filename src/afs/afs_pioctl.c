@@ -667,19 +667,9 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
     int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
-# if defined(AFS_SUN57_ENV)
     fd = getf(uap->fd);
     if (!fd)
 	return (EBADF);
-# elif defined(AFS_SUN54_ENV)
-    fd = GETF(uap->fd);
-    if (!fd)
-	return (EBADF);
-# else
-    if (code = getf(uap->fd, &fd)) {
-	return (code);
-    }
-# endif
     if (fd->f_vnode->v_type == VREG || fd->f_vnode->v_type == VDIR) {
 	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
@@ -693,11 +683,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
-# if defined(AFS_SUN54_ENV)
 		    releasef(uap->fd);
-# else
-		    releasef(fd);
-# endif
 		    return (EFAULT);
 		}
 		code = HandleIoctl(tvc, uap->com, datap);
@@ -707,13 +693,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 	    }
 	}
     }
-# if defined(AFS_SUN57_ENV)
     releasef(uap->fd);
-# elif defined(AFS_SUN54_ENV)
-    RELEASEF(uap->fd);
-# else
-    releasef(fd);
-# endif
     if (!ioctlDone)
 	code = ioctl(uap, rvp);
 
@@ -2714,7 +2694,7 @@ Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 {
     char *tp;
     afs_int32 code;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;
 #else
     u_int bufferSize;

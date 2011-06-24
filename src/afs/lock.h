@@ -74,7 +74,7 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 typedef unsigned int afs_lock_tracker_t;
 # define MyPidxx (get_user_struct()->u_procp->p_pid )
 # define MyPidxx2Pid(x) (x)
-#elif defined(AFS_SUN57_ENV)
+#elif defined(AFS_SUN5_ENV)
 typedef kthread_t * afs_lock_tracker_t;
 # define MyPidxx (curthread)
 # define MyPidxx2Pid(x) (x ? ttoproc(x)->p_pid : 0)

@@ -47,21 +47,11 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
     proc_t *procp = ttoproc(curthread);
 
     if (slp) {
-# ifdef AFS_SUN53_ENV
 	slp->sysid = 0;
 	slp->pid = procp->p_pid;
-# else
-	slp->sysid = procp->p_sysid;
-	slp->pid = procp->p_epid;
-# endif
     } else {
-# ifdef AFS_SUN53_ENV
 	flock->l_sysid = 0;
 	flock->l_pid = procp->p_pid;
-# else
-	flock->l_sysid = procp->p_sysid;
-	flock->l_pid = procp->p_epid;
-# endif
     }
 }
 #elif defined(AFS_SGI_ENV)
@@ -580,7 +570,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     if (code) {
 	goto done;
     }
-#if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if defined(AFS_SGI_ENV)
     if ((acmd == F_GETLK) || (acmd == F_RGETLK)) {
 #else
     if (acmd == F_GETLK) {
@@ -593,7 +583,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	code = afs_CheckCode(code, &treq, 2);	/* defeat buggy AIX optimz */
 	goto done;
     } else if ((acmd == F_SETLK) || (acmd == F_SETLKW)
-#if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if defined(AFS_SGI_ENV)
 	       || (acmd == F_RSETLK) || (acmd == F_RSETLKW)) {
 #else
 	) {
@@ -620,7 +610,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	return EINVAL;		/* unknown lock type */
     }
     if (((acmd == F_SETLK)
-#if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if 	defined(AFS_SGI_ENV)
 	 || (acmd == F_RSETLK)
 #endif
 	) && code != LOCK_UN)

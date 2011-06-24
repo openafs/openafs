@@ -69,7 +69,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     struct sigaction newAction, origAction;
 
 
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     openlog(pam_afs_ident, LOG_CONS | LOG_PID, LOG_AUTH);
 #endif
     origmask = setlogmask(logmask);
@@ -171,8 +171,8 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     /* enhanced: use "ignore_uid <number>" to specify the largest uid
      * which should be ignored by this module
      */
-#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
-#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN5_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
@@ -413,7 +413,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    memset(torch_password, 0, strlen(torch_password));
     }
     (void)setlogmask(origmask);
-#ifndef AFS_SUN56_ENV
+#ifndef AFS_SUN5_ENV
     closelog();
 #endif
     return retcode;

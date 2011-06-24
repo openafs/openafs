@@ -212,11 +212,8 @@ int afs_rd_stash_i = 0;
 #define DIRSIZ_LEN(len) \
     ((sizeof (struct __dirent) - (_MAXNAMLEN+1)) + (((len)+1 + DIRPAD) &~ DIRPAD))
 #else
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 #define DIRSIZ_LEN(len) ((18 + (len) + 1 + 7) & ~7 )
-#else
-#ifdef	AFS_SUN5_ENV
-#define DIRSIZ_LEN(len)	((10 + (len) + 1 + (NBPW-1)) & ~(NBPW-1))
 #else
 #ifdef	AFS_NBSD40_ENV
 #define DIRSIZ_LEN(len) \
@@ -238,7 +235,6 @@ int afs_rd_stash_i = 0;
 #endif /* AFS_DIRENT */
 #endif /* AFS_NBSD40_ENV */
 #endif /* AFS_SUN5_ENV */
-#endif /* AFS_SUN56_ENV */
 #endif /* AFS_HPUX100_ENV */
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -306,13 +302,13 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     struct volume *tvp;
     afs_uint32 Volume = vc->f.fid.Fid.Volume;
     afs_uint32 Vnode  = de->fid.vnode;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     struct dirent64 *direntp;
 #else
-#if  defined(AFS_SUN5_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if  (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
     struct dirent *direntp;
 #endif
-#endif /* AFS_SUN56_ENV */
+#endif /* AFS_SUN5_ENV */
 #ifndef	AFS_SGI53_ENV
     struct min_direct sdirEntry;
 #endif /* AFS_SGI53_ENV */
@@ -464,7 +460,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     }
 #else /* AFS_SGI53_ENV */
 #if  defined(AFS_SUN5_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     direntp = (struct dirent64 *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 #else
     direntp = (struct dirent *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);

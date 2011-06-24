@@ -23,10 +23,8 @@
 #   include "h/socket.h"
 #  endif
 #  include "netinet/in.h"
-#  ifdef AFS_SUN58_ENV
+#  ifdef AFS_SUN5_ENV
 #   include "netinet/ip6.h"
-#  endif
-#  ifdef AFS_SUN57_ENV
 #   include "inet/common.h"
 #   include "inet/ip.h"
 #   include "inet/ip_ire.h"
@@ -6224,7 +6222,7 @@ rxi_CheckCall(struct rx_call *call)
     if (now > (call->lastReceiveTime + deadTime)) {
 	if (call->state == RX_STATE_ACTIVE) {
 #ifdef ADAPT_PMTU
-#if defined(KERNEL) && defined(AFS_SUN57_ENV)
+#if defined(KERNEL) && defined(AFS_SUN5_ENV)
 	    ire_t *ire;
 #if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
 	    netstack_t *ns =  netstack_find_by_stackid(GLOBAL_NETSTACKID);

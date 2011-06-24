@@ -43,11 +43,7 @@ afs_InitDualFSCacheOps(struct vnode *vp)
     int code;
     static int inited = 0;
     struct vfs *vfsp;
-#ifdef AFS_SUN56_ENV
     struct statvfs64 vfst;
-#else /* AFS_SUN56_ENV */
-    struct statvfs vfst;
-#endif /* AFS_SUN56_ENV */
 
     if (inited)
 	return;
@@ -355,11 +351,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
     afs_ucred_t *oldCred;
-#if defined(AFS_SUN57_ENV)
     ssize_t resid;
-#else
-    int resid;
-#endif
     afs_int32 code;
     afs_int32 cnt1 = 0;
     AFS_STATCNT(osi_Read);
@@ -400,11 +392,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
     afs_ucred_t *oldCred;
-#if defined(AFS_SUN57_ENV)
     ssize_t resid;
-#else
-    int resid;
-#endif
     afs_int32 code;
     AFS_STATCNT(osi_Write);
     if (!afile)

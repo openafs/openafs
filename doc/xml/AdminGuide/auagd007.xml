@@ -2662,8 +2662,8 @@
       example, the Cache Manager on a machine running AIX 4.2 converts
       <emphasis role="bold">/afs/abc.com/@sys</emphasis> to <emphasis
       role="bold">/afs/abc.com/rs_aix42</emphasis>, whereas a machine
-      running Solaris 7 converts it to <emphasis
-      role="bold">/afs/abc.com/sun4x_57</emphasis>.</para>
+      running Solaris 10 converts it to <emphasis
+      role="bold">/afs/abc.com/sun4x_510</emphasis>.</para>
 
       <para>If you want to use the @sys variable, it is simplest to use
       the conventional AFS system type names as specified in the OpenAFS

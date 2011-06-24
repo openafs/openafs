@@ -145,7 +145,7 @@ ckinode(dp, idesc)
 	    return (ret);
     }
     idesc->id_numfrags = sblock.fs_frag;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     /*
      * indir_data_blks determine the no. of data blocks
      * in the previous levels. ie., at level 3 it
@@ -212,7 +212,7 @@ iblock(idesc, ilevel, isize)
 	return (SKIP);
     bp = getdatablk(idesc->id_blkno, sblock.fs_bsize);
     ilevel--;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     for (sizepb = 1, i = 0; i < ilevel; i++) {
 	sizepb *= (u_offset_t) NINDIR(&sblock);
     }
@@ -270,7 +270,7 @@ iblock(idesc, ilevel, isize)
 	if (*ap) {
 	    idesc->id_blkno = *ap;
 	    if (ilevel > 0) {
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
 		n = iblock(idesc, ilevel, isize);
 		/*
 		 * each iteration decrease "remaining block
@@ -494,7 +494,7 @@ pinode(ino)
     printf("MODE=%o\n", dp->di_mode);
     if (preen)
 	printf("%s: ", devname);
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     printf("SIZE=%" AFS_INT64_FMT " ", dp->di_size);
 #else
     printf("SIZE=%ld ", dp->di_size);

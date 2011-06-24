@@ -29,7 +29,7 @@
 #endif
 #endif /* !defined(UKERNEL) */
 
-#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || defined(NEED_IOCTL32)
+#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || defined(NEED_IOCTL32)
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
@@ -91,7 +91,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     }
 #endif /* defined(AFS_HPUX_64BIT_ENV) */
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
     struct afs_ioctl32 dst32;
 
     if (get_udatamodel() == DATAMODEL_ILP32) {
@@ -100,7 +100,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
 	return code;
     }
-#endif /* defined(AFS_SUN57_64BIT_ENV) */
+#endif /* defined(AFS_SUN5_64BIT_ENV) */
 
 #if defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)
     struct afs_ioctl32 dst32;
@@ -342,7 +342,7 @@ struct iparam32 {
 };
 
 
-#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
+#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
@@ -377,7 +377,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     }
 #endif /* AFS_HPUX_64BIT_ENV */
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
     struct iparam32 dst32;
 
     if (get_udatamodel() == DATAMODEL_ILP32) {
@@ -386,7 +386,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	    iparam32_to_iparam(&dst32, dst);
 	return code;
     }
-#endif /* AFS_SUN57_64BIT_ENV */
+#endif /* AFS_SUN5_64BIT_ENV */
 
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
     struct iparam32 dst32;

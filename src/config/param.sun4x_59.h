@@ -12,13 +12,6 @@
 #define AFS_ENV			1
 #define AFS_SUN_ENV		1
 #define AFS_SUN5_ENV		1
-#define	AFS_SUN52_ENV		1
-#define	AFS_SUN53_ENV		1
-#define	AFS_SUN54_ENV		1
-#define	AFS_SUN55_ENV		1
-#define	AFS_SUN56_ENV		1
-#define AFS_SUN57_ENV		1
-#define AFS_SUN58_ENV		1
 #define AFS_SUN59_ENV		1
 #define AFS_BOZONLOCK_ENV       1
 
@@ -86,7 +79,7 @@
   * AFS_SYSCALL32 is used to protect the ILP32 syscall interface
   */
 #if defined(__sparcv9)
-#define	AFS_SUN57_64BIT_ENV	1
+#define	AFS_SUN5_64BIT_ENV	1
 #define AFS_64BIT_INO   	1
 #endif
 
