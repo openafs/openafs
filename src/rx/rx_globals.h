@@ -134,21 +134,12 @@ EXT int rxi_OrphanFragSize GLOBALSINIT(512);
 #define RX_MAX_DGRAM_PACKETS 6	/* max packets per jumbogram */
 
 EXT int rxi_nDgramPackets GLOBALSINIT(RX_MAX_DGRAM_PACKETS);
-/* allow n packets between soft acks - must be power of 2 -1, else change
- * macro below */
+/* allow n packets between soft acks */
 EXT int rxi_SoftAckRate GLOBALSINIT(RX_FAST_ACK_RATE);
 /* consume n packets before sending hard ack, should be larger than above,
    but not absolutely necessary.  If it's smaller, than fast receivers will
    send a soft ack, immediately followed by a hard ack. */
 EXT int rxi_HardAckRate GLOBALSINIT(RX_FAST_ACK_RATE + 1);
-
-/* If window sizes become very variable (in terms of #packets), be
- * sure that the sender can get back a hard acks without having to wait for
- * some kind of timer event first (like a keep-alive, for instance).
- * It might be kind of tricky, so it might be better to shrink the
- * window size by reducing the packet size below the "natural" MTU. */
-
-#define	ACKHACK(p,r) { if (((p)->header.seq & (rxi_SoftAckRate))==0) (p)->header.flags |= RX_REQUEST_ACK; }
 
 EXT int rx_nPackets GLOBALSINIT(0);	/* preallocate packets with rx_extraPackets */
 
