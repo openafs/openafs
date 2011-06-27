@@ -1667,7 +1667,6 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     }
     lock_ObtainWrite(&dscp->rw);
     cm_dnlcRemove(dscp, cnamep);
-    cm_SyncOpDone(dscp, NULL, sflags);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     } else if (code == CM_ERROR_NOSUCHFILE) {
@@ -1677,6 +1676,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
 	 */
 	dscp->cbServerp = NULL;
     }
+    cm_SyncOpDone(dscp, NULL, sflags);
     lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0 && cm_CheckDirOpForSingleChange(&dirop) && cnamep) {
@@ -2760,10 +2760,10 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
         osi_Log0(afsd_logp, "CALL StoreStatus SUCCESS");
 
     lock_ObtainWrite(&scp->rw);
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
     if (code == 0)
         cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp, reqp,
                         CM_MERGEFLAG_FORCE|CM_MERGEFLAG_STOREDATA);
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
 
     /* if we're changing the mode bits, discard the ACL cache,
      * since we changed the mode bits.
@@ -2872,10 +2872,9 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
-    if (code == 0) {
+    if (code == 0)
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-    }
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
     /* now try to create the file's entry, too, but be careful to
@@ -3053,10 +3052,9 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
-    if (code == 0) {
+    if (code == 0)
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-    }
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
     /* now try to create the new dir's entry, too, but be careful to
@@ -3178,10 +3176,10 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     }
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0) {
@@ -3279,10 +3277,9 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
-    if (code == 0) {
+    if (code == 0)
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-    }
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0) {
@@ -3427,11 +3424,11 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
         cm_dnlcRemove(dscp, cnamep);
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
     }
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
     if (code == 0) {
@@ -3746,11 +3743,11 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         oldDirOp.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&oldDscp->rw);
-    cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
 
     if (code == 0)
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
                        userp, reqp, CM_MERGEFLAG_DIROP);
+    cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&oldDscp->rw);
 
     if (code == 0 && cm_CheckDirOpForSingleChange(&oldDirOp)) {
@@ -3787,10 +3784,10 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
             newDirOp.lockType = CM_DIRLOCK_WRITE;
         }
         lock_ObtainWrite(&newDscp->rw);
-        cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         if (code == 0)
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, reqp, CM_MERGEFLAG_DIROP);
+        cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         lock_ReleaseWrite(&newDscp->rw);
 
 #if 0

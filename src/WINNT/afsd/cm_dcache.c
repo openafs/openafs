@@ -349,7 +349,6 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     lock_ObtainWrite(&scp->rw);
 
     cm_ReleaseBIOD(&biod, 1, code, 1);
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
 
     if (code == 0) {
         osi_hyper_t t;
@@ -389,6 +388,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         else if (code == CM_ERROR_QUOTA)
             scp->flags |= CM_SCACHEFLAG_OVERQUOTA;
     }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
+
     if (!scp_locked)
         lock_ReleaseWrite(&scp->rw);
 
@@ -491,8 +492,6 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     /* now, clean up our state */
     lock_ObtainWrite(&scp->rw);
 
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
-
     if (code == 0) {
         osi_hyper_t t;
         /*
@@ -510,6 +509,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             scp->mask &= ~CM_SCACHEMASK_LENGTH;
         cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     }
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
 
     return code;
 }
