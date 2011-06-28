@@ -36,8 +36,10 @@ struct multi_handle {
 #define multi_Body(startProc, endProc)\
 	if (multi_h->nextReady == multi_h->firstNotReady && multi_i < multi_h->nConns) {\
 	    multi_call = multi_h->calls[multi_i];\
-	    startProc;\
-	    rx_FlushWrite(multi_call);\
+            if (multi_call) {\
+                startProc;\
+	        rx_FlushWrite(multi_call);\
+            }\
 	    multi_i0++;  /* THIS is the loop variable!! */\
 	    continue;\
 	}\
