@@ -158,14 +158,39 @@ afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp,
 	code =
 	    afs_GetOnePage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred);
     else {
+	struct multiPage_range range;
 	struct vcache *vcp = VTOAFS(vp);
+
+	/* We've been asked to get more than one page. We must return all
+	 * requested pages at once, all of them locked, which means all of
+	 * these dcache entries cannot be kicked out of the cache before we
+	 * return (since their pages cannot be invalidated).
+	 *
+	 * afs_GetOnePage will be called multiple times by pvn_getpages in
+	 * order to get all of the requested pages. One of the later
+	 * afs_GetOnePage calls may need to evict some cache entries in order
+	 * to perform its read. If we try to kick out one of the entries an
+	 * earlier afs_GetOnePage call used, we will deadlock since we have
+	 * the page locked. So, to tell afs_GetDownD that it should skip over
+	 * any entries we've read in due to this afs_getpage call, record the
+	 * offset and length in avc->multiPage.
+	 *
+	 * Ideally we would just set something in each dcache as we get it,
+	 * but that is rather difficult, since pvn_getpages doesn't let us
+	 * retain any information between calls to afs_GetOnePage. So instead
+	 * just record the offset and length, and let afs_GetDownD calculate
+	 * which dcache entries should be skipped. */
+
+	range.off = off;
+	range.len = len;
+
 	ObtainWriteLock(&vcp->vlock, 548);
-	vcp->multiPage++;
+	QAdd(&vcp->multiPage, &range.q);
 	ReleaseWriteLock(&vcp->vlock);
 	code =
 	    pvn_getpages(afs_GetOnePage, vp, off, len, protp, pl, plsz, seg, addr, rw, acred);
 	ObtainWriteLock(&vcp->vlock, 549);
-	vcp->multiPage--;
+	QRemove(&range.q);
 	ReleaseWriteLock(&vcp->vlock);
     }
     AFS_GUNLOCK();

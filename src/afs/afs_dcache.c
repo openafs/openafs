@@ -589,7 +589,9 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
      * we don't reclaim active entries, or other than target bucket.
      * Set to 1, we reclaim even active ones in target bucket.
      * Set to 2, we reclaim any inactive one.
-     * Set to 3, we reclaim even active ones.
+     * Set to 3, we reclaim even active ones. On Solaris, we also reclaim
+     * entries whose corresponding vcache has a nonempty multiPage list, when
+     * possible.
      */
     if (splitdcache) {
 	phase = 0;
@@ -724,9 +726,11 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 
 			ReleaseWriteLock(&afs_xdcache);
 			ObtainWriteLock(&tvc->vlock, 543);
-			if (tvc->multiPage) {
-			    skip = 1;
-			    goto endmultipage;
+			if (!QEmpty(&tvc->multiPage)) {
+			    if (phase < 3 || osi_VM_MultiPageConflict(tvc, tdc)) {
+				skip = 1;
+				goto endmultipage;
+			    }
 			}
 			/* block locking pages */
 			tvc->vstates |= VPageCleaning;

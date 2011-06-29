@@ -39,6 +39,8 @@ void
 osi_PrePopulateVCache(struct vcache *avc) {
     memset(avc, 0, sizeof(struct vcache));
 
+    QInit(&avc->multiPage);
+
     AFS_RWLOCK_INIT(&avc->vlock, "vcache vlock");
 
     rw_init(&avc->rwlock, "vcache rwlock", RW_DEFAULT, NULL);

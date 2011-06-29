@@ -54,6 +54,34 @@ osi_VM_GetDownD(struct vcache *avc, struct dcache *adc)
     return code;
 }
 
+/* Does this dcache conflict with a multiPage request for this vcache?
+ *
+ * This function only exists for Solaris. This is used by afs_GetDownD to
+ * calculate if trying to evict the given dcache may deadlock with an
+ * in-progress afs_getpage call that is trying to get more than one page at
+ * once. See afs_getpage for details. We return 0 if we do NOT conflict,
+ * nonzero otherwise. If we return nonzero, we should NOT try to evict the
+ * given dcache entry from the cache.
+ *
+ * Locking: tvc->vlock is write-locked on entry (and GLOCK is held)
+ */
+int
+osi_VM_MultiPageConflict(struct vcache *avc, struct dcache *adc)
+{
+    struct multiPage_range *range;
+    for (range = (struct multiPage_range *)avc->multiPage.next;
+         range != &avc->multiPage;
+         range = (struct multiPage_range *)QNext(&range->q)) {
+
+	if (adc->f.chunk >= AFS_CHUNK(range->off) &&
+	    adc->f.chunk <= AFS_CHUNK(range->off + range->len - 1)) {
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
 /* Try to discard pages, in order to recycle a vcache entry.
  *
  * We also make some sanity checks:  ref count, open count, held locks.

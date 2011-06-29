@@ -764,6 +764,7 @@ extern int osi_VM_Setup(struct vcache *avc, int force);
 
 #ifdef AFS_SUN5_ENV
 extern int osi_VM_GetDownD(struct vcache *avc, struct dcache *adc);
+extern int osi_VM_MultiPageConflict(struct vcache *avc, struct dcache *adc);
 extern void osi_VM_PreTruncate(struct vcache *avc, int alen,
 			       afs_ucred_t *acred);
 #endif
