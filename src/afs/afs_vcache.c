@@ -1016,6 +1016,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     RWLOCK_INIT(&tvc->lock, "vcache lock");
 #if	defined(AFS_SUN5_ENV)
     RWLOCK_INIT(&tvc->vlock, "vcache vlock");
+    QInit(&tvc->multiPage);
 #endif /* defined(AFS_SUN5_ENV) */
 
     tvc->parentVnode = 0;

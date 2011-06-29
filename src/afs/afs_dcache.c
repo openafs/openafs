@@ -414,7 +414,8 @@ afs_GetDownD(int anumber, int *aneedSpace)
     /*
      * The phase variable manages reclaims.  Set to 0, the first pass,
      * we don't reclaim active entries.  Set to 1, we reclaim even active
-     * ones.
+     * ones, and on Solaris, we also reclaim entries whose corresponding vcache
+     * has a nonempty muiltiPage list, when possible.
      */
     phase = 0;
     for (i = 0; i < afs_cacheFiles; i++)
@@ -538,9 +539,11 @@ afs_GetDownD(int anumber, int *aneedSpace)
 
 			MReleaseWriteLock(&afs_xdcache);
 			MObtainWriteLock(&tvc->vlock, 543);
-			if (tvc->multiPage) {
-			    skip = 1;
-			    goto endmultipage;
+			if (!QEmpty(&tvc->multiPage)) {
+			    if (phase == 0 || osi_VM_MultiPageConflict(tvc, tdc)) {
+				skip = 1;
+				goto endmultipage;
+			    }
 			}
 			/* block locking pages */
 			tvc->vstates |= VPageCleaning;
