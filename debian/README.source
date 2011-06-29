@@ -16,7 +16,7 @@ General Maintenance
     review, which makes it very easy for anyone who wishes to submit
     patches for review using Git.  See:
 
-        http://openafs-wiki.stanford.edu/AFSLore/GitDevelopers
+        http://wiki.openafs.org/AFSLore/GitDevelopers
 
     for information on how to submit patches upstream.  Starting from
     OpenAFS 1.5, we're no longer carrying any Debian-specific changes
@@ -131,4 +131,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Sat, 14 May 2011 10:13:03 -0700
+ -- Russ Allbery <rra@debian.org>, Tue, 28 Jun 2011 20:14:11 -0700
