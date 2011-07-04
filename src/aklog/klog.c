@@ -22,6 +22,7 @@
 #include <afs/cellconfig.h>
 #include <afs/ptclient.h>
 #include <afs/cmd.h>
+#include <afs/ptuser.h>
 
 #include <krb5.h>
 
@@ -212,43 +213,20 @@ whoami(struct ktc_token *atoken,
     struct ktc_principal *aclient,
     int *vicep)
 {
-    rx_securityIndex scIndex;
     int code;
-    int i;
-    struct ubik_client *ptconn = 0;
-    struct rx_securityClass *sc;
-    struct rx_connection *conns[MAXSERVERS+1];
-    idlist lids[1];
-    namelist lnames[1];
     char tempname[PR_MAXNAMELEN + 1];
 
-    memset(lnames, 0, sizeof *lnames);
-    memset(lids, 0, sizeof *lids);
-    scIndex = RX_SECIDX_KAD;
-    sc = rxkad_NewClientSecurityObject(rxkad_auth,
-	&atoken->sessionKey, atoken->kvno,
-	atoken->ticketLen, atoken->ticket);
-    for (i = 0; i < cellconfig->numServers; ++i)
-	conns[i] = rx_NewConnection(cellconfig->hostAddr[i].sin_addr.s_addr,
-		cellconfig->hostAddr[i].sin_port, PRSRV, sc, scIndex);
-    conns[i] = 0;
-    ptconn = 0;
-    if ((code = ubik_ClientInit(conns, &ptconn)))
+    code = pr_Initialize(0, AFSDIR_CLIENT_ETC_DIRPATH, cellconfig->name);
+    if (code)
 	goto Failed;
+
     if (*aclient->instance)
 	snprintf (tempname, sizeof tempname, "%s.%s",
 	    aclient->name, aclient->instance);
     else
 	snprintf (tempname, sizeof tempname, "%s", aclient->name);
-    lnames->namelist_len = 1;
-    lnames->namelist_val = (prname *) tempname;
-    code = ubik_PR_NameToID(ptconn, 0, lnames, lids);
-    if (lids->idlist_val) {
-	*vicep = *lids->idlist_val;
-    }
+    code = pr_SNameToId(tempname, vicep);
 Failed:
-    if (lids->idlist_val) free(lids->idlist_val);
-    if (ptconn) ubik_ClientDestroy(ptconn);
     return code;
 }
 
