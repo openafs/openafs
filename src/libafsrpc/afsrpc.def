@@ -294,6 +294,8 @@ EXPORTS
 	rx_identity_free                        @303
 
 	rx_SetBusyChannelError                  @304
+	rx_GetThreadNum				@305
+	rx_SetThreadNum				@306
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

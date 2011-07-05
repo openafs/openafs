@@ -28,6 +28,8 @@
 #include "rx_clock.h"
 #include "rx_atomic.h"
 
+static void rxi_SetThreadNum(int threadID);
+
 /* Set rx_pthread_event_rescheduled if event_handler should just try
  * again instead of sleeping.
  *
@@ -250,7 +252,7 @@ rx_ListenerProc(void *argp)
 	/* osi_Assert(threadID != -1); */
 	/* osi_Assert(newcall != NULL); */
 	sock = OSI_NULLSOCKET;
-	osi_Assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
+	rxi_SetThreadNum(threadID);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* osi_Assert(sock != OSI_NULLSOCKET); */
     }
@@ -294,7 +296,7 @@ rx_ServerProc(void * dummy)
 
     while (1) {
 	sock = OSI_NULLSOCKET;
-	osi_Assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
+	rxi_SetThreadNum(threadID);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* osi_Assert(sock != OSI_NULLSOCKET); */
 	newcall = NULL;
@@ -436,3 +438,24 @@ struct rx_ts_info_t * rx_ts_info_init(void) {
 #endif /* RX_ENABLE_TSFPQ */
     return rx_ts_info;
 }
+
+int
+rx_GetThreadNum(void) {
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
+}
+
+static void
+rxi_SetThreadNum(int threadID) {
+    osi_Assert(pthread_setspecific(rx_thread_id_key,
+			           (void *)(intptr_t)threadID) == 0);
+}
+
+int
+rx_SetThreadNum(void) {
+    int threadId;
+
+    threadId = rx_NewThreadId();
+    rxi_SetThreadNum(threadId);
+    return threadId;
+}
+

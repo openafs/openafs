@@ -81,14 +81,6 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 			  exit(code);                             \
 		       }
 
-#if defined(AFS_PTHREAD_ENV)
-int
-threadNum(void)
-{
-    return (intptr_t)pthread_getspecific(rx_thread_id_key);
-}
-#endif
-
 static void
 MyBeforeProc(struct rx_call *acall)
 {
@@ -406,7 +398,7 @@ main(int argc, char **argv)
     InitErrTabs();
 
 #ifdef AFS_PTHREAD_ENV
-    SetLogThreadNumProgram( threadNum );
+    SetLogThreadNumProgram( rx_GetThreadNum );
 #endif
 
 #ifdef AFS_NT40_ENV

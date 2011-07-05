@@ -67,14 +67,6 @@ int lwps   = 3;
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
-#if defined(AFS_PTHREAD_ENV)
-static int
-threadNum(void)
-{
-    return (intptr_t)pthread_getspecific(rx_thread_id_key);
-}
-#endif
-
 /* check whether caller is authorized to manage RX statistics */
 int
 BU_rxstat_userok(struct rx_call *call)
@@ -432,7 +424,7 @@ main(int argc, char **argv)
     srandom(1);
 
 #ifdef AFS_PTHREAD_ENV
-    SetLogThreadNumProgram( threadNum );
+    SetLogThreadNumProgram( rx_GetThreadNum );
 #endif
 
     /* process the user supplied args */

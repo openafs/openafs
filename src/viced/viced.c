@@ -355,14 +355,6 @@ ResetCheckDescriptors(void)
 #endif
 }
 
-#if defined(AFS_PTHREAD_ENV)
-int
-threadNum(void)
-{
-    return (intptr_t)pthread_getspecific(rx_thread_id_key);
-}
-#endif
-
 #ifndef AFS_NT40_ENV
 int
 viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
@@ -413,13 +405,12 @@ static void
 setThreadId(char *s)
 {
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    int threadId;
+
     /* set our 'thread-id' so that the host hold table works */
-    pthread_setspecific(rx_thread_id_key,
-			(void *)(intptr_t)rx_NewThreadId());
+    threadId = rx_SetThreadNum();
     afs_pthread_setname_self(s);
-    ViceLog(0,
-	    ("Set thread id %p for '%s'\n",
-	     pthread_getspecific(rx_thread_id_key), s));
+    ViceLog(0, ("Set thread id 0x%x for '%s'\n", threadId, s));
 #endif
 }
 
@@ -2056,7 +2047,7 @@ main(int argc, char *argv[])
     }
 
 #ifdef AFS_PTHREAD_ENV
-    SetLogThreadNumProgram( threadNum );
+    SetLogThreadNumProgram( rx_GetThreadNum );
 #endif
 
     /* initialize libacl routines */

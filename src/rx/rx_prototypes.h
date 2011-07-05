@@ -257,6 +257,8 @@ extern int rx_RxStatUserOk(struct rx_call *call);
 extern afs_int32 rx_SetSecurityConfiguration(struct rx_service *service,
 					     rx_securityConfigVariables type,
 					     void *value);
+extern int rx_GetThreadNum(void);
+extern int rx_SetThreadNum(void);
 
 void rxi_DebugInit(void);
 void rxi_DebugPrint(char *format, ...)

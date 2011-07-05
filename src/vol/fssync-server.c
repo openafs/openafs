@@ -255,8 +255,7 @@ FSYNC_sync(void * args)
 
 #ifdef AFS_PTHREAD_ENV
     /* set our 'thread-id' so that the host hold table works */
-    tid = rx_NewThreadId();
-    pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)tid);
+    tid = rx_SetThreadNum();
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */
 
