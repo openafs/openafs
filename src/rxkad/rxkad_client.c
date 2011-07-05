@@ -33,14 +33,13 @@
 #endif /* !UKERNEL */
 #else /* ! KERNEL */
 #include <roken.h>
-#ifdef AFS_PTHREAD_ENV
-#include "rx/rxkad.h"
-#endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
+
 
 #include <rx/rx.h>
 #include <rx/xdr.h>
 
+#include "rxkad.h"
 #include "stats.h"
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
@@ -156,6 +155,8 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     struct rxkad_cprivate *tcp;
     int code;
     int size, psize;
+
+    rxkad_Init();
 
     size = sizeof(struct rx_securityClass);
     tsc = rxi_Alloc(size);

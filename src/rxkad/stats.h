@@ -69,7 +69,6 @@ struct rxkad_global_stats {
 extern pthread_mutex_t rxkad_global_stats_lock;
 extern pthread_key_t rxkad_stats_key;
 
-extern void rxkad_global_stats_init(void);
 extern rxkad_stats_t * rxkad_thr_stats_init(void);
 extern int rxkad_stats_agg(rxkad_stats_t *);
 

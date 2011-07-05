@@ -193,8 +193,6 @@ extern afs_kmutex_t event_handler_mutex;
 extern afs_kmutex_t listener_mutex;
 extern afs_kmutex_t rx_if_init_mutex;
 extern afs_kmutex_t rx_if_mutex;
-extern afs_kmutex_t rxkad_client_uid_mutex;
-extern afs_kmutex_t rxkad_random_mutex;
 
 extern afs_kcondvar_t rx_event_handler_cond;
 extern afs_kcondvar_t rx_listener_cond;
@@ -222,8 +220,6 @@ rxi_InitPthread(void)
     MUTEX_INIT(&listener_mutex, "listener", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_if_init_mutex, "if init", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_if_mutex, "if", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rxkad_client_uid_mutex, "uid", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
 
     CV_INIT(&rx_event_handler_cond, "evhand", CV_DEFAULT, 0);
@@ -231,8 +227,6 @@ rxi_InitPthread(void)
 
     osi_Assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
     osi_Assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
-
-    rxkad_global_stats_init();
 
     MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock", MUTEX_DEFAULT, 0);

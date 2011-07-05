@@ -67,6 +67,32 @@ struct rxkad_stats rxkad_stats = { { 0 } };
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_PTHREAD_ENV
+/* Pthread initialisation */
+static pthread_once_t rxkad_once_init = PTHREAD_ONCE_INIT;
+extern pthread_mutex_t rxkad_client_uid_mutex;
+extern pthread_mutex_t rxkad_random_mutex;
+
+static void
+rxkad_global_stats_init(void)
+{
+    osi_Assert(pthread_mutex_init(&rxkad_global_stats_lock, (const pthread_mutexattr_t *)0) == 0);
+    osi_Assert(pthread_key_create(&rxkad_stats_key, NULL) == 0);
+    memset(&rxkad_global_stats, 0, sizeof(rxkad_global_stats));
+}
+
+static void
+rxkad_InitPthread(void) {
+    MUTEX_INIT(&rxkad_client_uid_mutex, "uid", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
+
+    rxkad_global_stats_init();
+}
+
+void
+rxkad_Init(void) {
+    osi_Assert(pthread_once(&rxkad_once_init, rxkad_InitPthread) == 0);
+}
+
 /* rxkad_stats related stuff */
 
 /*
@@ -83,12 +109,6 @@ struct rxkad_stats rxkad_stats = { { 0 } };
 	    (head) = (ptr);			 \
 	osi_Assert((head) && ((head)->prev == NULL)); \
     } while(0)
-
-void rxkad_global_stats_init(void) {
-    osi_Assert(pthread_mutex_init(&rxkad_global_stats_lock, (const pthread_mutexattr_t *)0) == 0);
-    osi_Assert(pthread_key_create(&rxkad_stats_key, NULL) == 0);
-    memset(&rxkad_global_stats, 0, sizeof(rxkad_global_stats));
-}
 
 rxkad_stats_t *
 rxkad_thr_stats_init(void) {
@@ -162,6 +182,12 @@ int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
     }
     RXKAD_GLOBAL_STATS_UNLOCK;
     return 0;
+}
+#else
+void
+rxkad_Init(void)
+{
+    return;
 }
 #endif /* AFS_PTHREAD_ENV */
 

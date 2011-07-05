@@ -52,6 +52,8 @@ extern int rxkad_GetResponse(struct rx_securityClass *aobj,
 extern void rxkad_ResetState(void);
 
 /* rxkad_common.c */
+extern void rxkad_Init(void);
+
 struct rxkad_endpoint;
 extern int rxkad_SetupEndpoint(struct rx_connection *aconnp,
 			       struct rxkad_endpoint *aendpointp);
@@ -79,8 +81,6 @@ extern int rxkad_GetStats(struct rx_securityClass *aobj,
 			  struct rx_securityObjectStats *astats);
 extern rxkad_level rxkad_StringToLevel(char *string);
 extern char *rxkad_LevelToString(rxkad_level level);
-
-extern void rxkad_global_stats_init(void);
 
 /* rxkad_errs.c */
 

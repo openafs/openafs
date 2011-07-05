@@ -155,7 +155,6 @@ rx_user.o: ${RX}/rx_user.c
 rx_pthread.o: ${RX}/rx_pthread.c
 	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
-CFLAGS_rx.o = @CFLAGS_NOERROR@
 rx.o: ${RX}/rx.c
 	$(AFS_CCRULE) $(RX)/rx.c
 

@@ -137,6 +137,8 @@ rxkad_NewServerSecurityObject(rxkad_level level, void *get_key_rock,
     struct rxkad_sprivate *tsp;
     int size;
 
+    rxkad_Init();
+
     if (!get_key)
 	return 0;
 
