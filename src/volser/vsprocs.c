@@ -53,7 +53,7 @@
 #include "vsutils_prototypes.h"
 #include "lockprocs_prototypes.h"
 
-struct ubik_client *cstruct;
+extern struct ubik_client *cstruct;
 int verbose = 0, noresolve = 0;
 
 struct release {
