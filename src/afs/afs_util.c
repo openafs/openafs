@@ -368,9 +368,8 @@ afs_data_pointer_to_int32(const void *p)
 }
 
 #ifdef AFS_LINUX20_ENV
-
-afs_int32
-afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
+static_inline afs_int32
+afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
     afs_int32 ino = 0, vno = vnode;
     char digest[16];
@@ -398,19 +397,22 @@ afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 	    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
 	}
     }
+    return ino;
+}
+#else
+# define afs_calc_inum_md5(cell, volume, vnode) 0
+#endif
+
+afs_int32
+afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
+{
+    afs_int32 ino;
+
+    ino = afs_calc_inum_md5(cell, volume, vnode);
+
     if (ino == 0 || ino == 1) {
 	ino = (volume << 16) + vnode;
     }
     ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     return ino;
 }
-
-#else
-
-afs_int32
-afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
-{
-    return (volume << 16) + vnode;
-}
-
-#endif
