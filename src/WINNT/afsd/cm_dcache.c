@@ -165,6 +165,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
             osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData64 scp 0x%p, offset 0x%x:%08x, length 0x%x",
                      scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
+            osi_Log2(afsd_logp, "... truncPos 0x%x:%08x",  truncPos.HighPart, truncPos.LowPart);
 
             code = StartRXAFS_StoreData64(rxcallp, &tfid, &inStatus,
                                           biod.offset.QuadPart,
@@ -271,8 +272,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                     break;
                 }
 
-                osi_Log3(afsd_logp, "rx_Writev succeeded bp 0x%p offset 0x%x, wrote %u",
-                         bufp, buf_offset, vbytes);
+                osi_Log2(afsd_logp, "rx_Writev succeeded iov offset 0x%x, wrote 0x%x",
+                         (unsigned long)(bufp->offset.QuadPart + buf_offset - vbytes), vbytes);
                 nbytes -= vbytes;
 #else /* USE_RX_IOVEC */
                 if (qdp == NULL) {
@@ -293,11 +294,11 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                 /* write out wbytes of data from bufferp */
                 temp = rx_Write(rxcallp, bufferp, wbytes);
                 if (temp != wbytes) {
-                    osi_Log3(afsd_logp, "rx_Write failed bp 0x%p, %d != %d",bufp,temp,wbytes);
+                    osi_Log3(afsd_logp, "rx_Write failed bp 0x%p, %d != %d", bufp, temp, wbytes);
                     code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
                     break;
                 } else {
-                    osi_Log2(afsd_logp, "rx_Write succeeded bp 0x%p, %d",bufp,temp);
+                    osi_Log2(afsd_logp, "rx_Write succeeded bp 0x%p written %d", bufp, temp);
                 }
                 nbytes -= wbytes;
 #endif /* USE_RX_IOVEC */
@@ -413,6 +414,8 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     memset(&volSync, 0, sizeof(volSync));
 
+    osi_Log2(afsd_logp, "cm_StoreMini scp 0x%p userp 0x%p", scp, userp);
+
     /* Serialize StoreData RPC's; for rationale see cm_scache.c */
     (void) cm_SyncOp(scp, NULL, userp, reqp, 0,
                      CM_SCACHESYNC_STOREDATA_EXCL);
@@ -453,24 +456,47 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         if (SERVERHAS64BIT(connp)) {
             call_was_64bit = 1;
 
+            osi_Log3(afsd_logp, "CALL StartRXAFS_StoreData64 scp 0x%p, truncPos 0x%x:%08x",
+                      scp, truncPos.HighPart, truncPos.LowPart);
+
             code = StartRXAFS_StoreData64(rxcallp, &tfid, &inStatus,
                                           0, 0, truncPos.QuadPart);
+	    if (code)
+		osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData64 FAILURE, code 0x%x", code);
+	    else
+		osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData64 SUCCESS");
         } else {
             call_was_64bit = 0;
 
             if (require_64bit_ops) {
                 code = CM_ERROR_TOOBIG;
             } else {
+                osi_Log3(afsd_logp, "CALL StartRXAFS_StoreData scp 0x%p, truncPos 0x%x:%08x",
+                          scp, truncPos.HighPart, truncPos.LowPart);
+
                 code = StartRXAFS_StoreData(rxcallp, &tfid, &inStatus,
                                             0, 0, truncPos.LowPart);
+                if (code)
+                    osi_Log1(afsd_logp, "CALL StartRXAFS_StoreData FAILURE, code 0x%x", code);
+                else
+                    osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData SUCCESS");
             }
         }
 
         if (code == 0) {
-            if (call_was_64bit)
+            if (call_was_64bit) {
                 code = EndRXAFS_StoreData64(rxcallp, &outStatus, &volSync);
-            else
+                if (code)
+                    osi_Log2(afsd_logp, "EndRXAFS_StoreData64 FAILURE scp 0x%p code %lX", scp, code);
+		else
+		    osi_Log0(afsd_logp, "EndRXAFS_StoreData64 SUCCESS");
+            } else {
                 code = EndRXAFS_StoreData(rxcallp, &outStatus, &volSync);
+                if (code)
+                    osi_Log2(afsd_logp, "EndRXAFS_StoreData FAILURE scp 0x%p code %lX", scp, code);
+		else
+		    osi_Log0(afsd_logp, "EndRXAFS_StoreData SUCCESS");
+            }
         }
         code1 = rx_EndCall(rxcallp, code);
 
