@@ -2933,6 +2933,9 @@ long cm_FSync(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, afs_uint32 loc
 
     if (locked)
         lock_ReleaseWrite(&scp->rw);
+
+    osi_Log2(afsd_logp, "cm_FSync scp 0x%p userp 0x%p", scp, userp);
+
     code = buf_CleanVnode(scp, userp, reqp);
     if (code == 0) {
         lock_ObtainWrite(&scp->rw);
@@ -4896,12 +4899,123 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
     return code;
 }
 
+static long
+cm_IntUnlock(cm_scache_t * scp,
+             cm_user_t * userp,
+             cm_req_t *  reqp)
+{
+    long code = 0;
+
+    osi_assertx(scp->sharedLocks >= 0, "scp->sharedLocks < 0");
+    osi_assertx(scp->exclusiveLocks >= 0, "scp->exclusiveLocks < 0");
+    osi_assertx(scp->clientLocks >= 0, "scp->clientLocks < 0");
+
+    if (!SERVERLOCKS_ENABLED(scp)) {
+        osi_Log0(afsd_logp, "  Skipping server lock for scp");
+        goto done;
+    }
+
+    /* Ideally we would go through the rest of the locks to determine
+     * if one or more locks that were formerly in WAITUNLOCK can now
+     * be put to ACTIVE or WAITLOCK and update scp->exclusiveLocks and
+     * scp->sharedLocks accordingly.  However, the retrying of locks
+     * in that manner is done cm_RetryLock() manually.
+     */
+
+    if (scp->serverLock == LockWrite &&
+        scp->exclusiveLocks == 0 &&
+        scp->sharedLocks > 0) {
+        /* The serverLock should be downgraded to LockRead */
+        osi_Log0(afsd_logp, "  DOWNGRADE lock from LockWrite to LockRead");
+
+        /* Make sure there are no dirty buffers left. */
+        code = cm_FSync(scp, userp, reqp, TRUE);
+
+        /* since scp->serverLock looked sane, we are going to assume
+           that we have a valid server lock. */
+        scp->lockDataVersion = scp->dataVersion;
+        osi_Log1(afsd_logp, "  dataVersion on scp = %I64d", scp->dataVersion);
+
+        /* before we downgrade, make sure that we have enough
+           permissions to get the read lock. */
+        code = cm_LockCheckPerms(scp, LockRead, userp, reqp, NULL);
+        if (code != 0) {
+
+            osi_Log0(afsd_logp, "  SKIPPING downgrade because user doesn't have perms to get downgraded lock");
+
+            code = 0;
+            goto done;
+        }
+
+        code = cm_IntReleaseLock(scp, userp, reqp);
+
+        if (code) {
+            /* so we couldn't release it.  Just let the lock be for now */
+            code = 0;
+            goto done;
+        } else {
+            scp->serverLock = -1;
+        }
+
+        code = cm_IntSetLock(scp, userp, LockRead, reqp);
+
+        if (code == 0 && scp->lockDataVersion == scp->dataVersion) {
+            scp->serverLock = LockRead;
+        } else if (code == 0 && scp->lockDataVersion != scp->dataVersion) {
+            /* We lost a race condition.  Although we have a valid
+               lock on the file, the data has changed and essentially
+               we have lost the lock we had during the transition. */
+
+            osi_Log0(afsd_logp, "Data version mismatch during lock downgrade");
+            osi_Log2(afsd_logp, "  Data versions before=%I64d, after=%I64d",
+                     scp->lockDataVersion,
+                     scp->dataVersion);
+
+            code = cm_IntReleaseLock(scp, userp, reqp);
+
+            code = CM_ERROR_INVAL;
+            scp->serverLock = -1;
+        }
+
+        if (code != 0 &&
+            (scp->sharedLocks > 0 || scp->exclusiveLocks > 0) &&
+                (scp->serverLock == -1)) {
+                /* Oopsie */
+                cm_LockMarkSCacheLost(scp);
+            }
+
+        /* failure here has no bearing on the return value of cm_Unlock() */
+        code = 0;
+
+    } else if (scp->serverLock != (-1) &&
+              scp->exclusiveLocks == 0 &&
+              scp->sharedLocks == 0) {
+        /* The serverLock should be released entirely */
+
+        if (scp->serverLock == LockWrite) {
+            osi_Log0(afsd_logp, "  RELEASE LockWrite -> LockNone");
+
+            /* Make sure there are no dirty buffers left. */
+            code = cm_FSync(scp, userp, reqp, TRUE);
+        } else {
+            osi_Log0(afsd_logp, "  RELEASE LockRead -> LockNone");
+        }
+
+        code = cm_IntReleaseLock(scp, userp, reqp);
+
+        if (code == 0)
+            scp->serverLock = (-1);
+    }
+
+  done:
+    return code;
+}
 /* Called with scp->rw held */
 long cm_UnlockByKey(cm_scache_t * scp,
 		    cm_key_t key,
-		    int flags,
+		    afs_uint32 flags,
 		    cm_user_t * userp,
-		     cm_req_t * reqp)
+		    cm_req_t * reqp)
 {
     long code = 0;
     cm_file_lock_t *fileLock;
@@ -4990,94 +5104,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
     osi_Log1(afsd_logp, "cm_UnlockByKey done with %d locks", n_unlocks);
 
-    osi_assertx(scp->sharedLocks >= 0, "scp->sharedLocks < 0");
-    osi_assertx(scp->exclusiveLocks >= 0, "scp->exclusiveLocks < 0");
-    osi_assertx(scp->clientLocks >= 0, "scp->clientLocks < 0");
-
-    if (!SERVERLOCKS_ENABLED(scp)) {
-        osi_Log0(afsd_logp, "  Skipping server lock for scp");
-        goto done;
-    }
-
-    /* Ideally we would go through the rest of the locks to determine
-     * if one or more locks that were formerly in WAITUNLOCK can now
-     * be put to ACTIVE or WAITLOCK and update scp->exclusiveLocks and
-     * scp->sharedLocks accordingly.  However, the retrying of locks
-     * in that manner is done cm_RetryLock() manually.
-     */
-
-    if (scp->serverLock == LockWrite &&
-        scp->exclusiveLocks == 0 &&
-        scp->sharedLocks > 0) {
-        /* The serverLock should be downgraded to LockRead */
-        osi_Log0(afsd_logp, "  DOWNGRADE lock from LockWrite to LockRead");
-
-        /* Make sure there are no dirty buffers left. */
-        code = cm_FSync(scp, userp, reqp, TRUE);
-
-        /* since scp->serverLock looked sane, we are going to assume
-           that we have a valid server lock. */
-        scp->lockDataVersion = scp->dataVersion;
-        osi_Log1(afsd_logp, "  dataVersion on scp = %I64d", scp->dataVersion);
-
-        code = cm_IntReleaseLock(scp, userp, reqp);
-
-        if (code) {
-            /* so we couldn't release it.  Just let the lock be for now */
-            code = 0;
-            goto done;
-        } else {
-            scp->serverLock = -1;
-        }
-
-        code = cm_IntSetLock(scp, userp, LockRead, reqp);
-
-        if (code == 0 && scp->lockDataVersion == scp->dataVersion) {
-            scp->serverLock = LockRead;
-        } else if (code == 0 && scp->lockDataVersion != scp->dataVersion) {
-            /* We lost a race condition.  Although we have a valid
-               lock on the file, the data has changed and essentially
-               we have lost the lock we had during the transition. */
-
-            osi_Log0(afsd_logp, "Data version mismatch during lock downgrade");
-            osi_Log2(afsd_logp, "  Data versions before=%I64d, after=%I64d",
-                     scp->lockDataVersion,
-                     scp->dataVersion);
-
-            code = cm_IntReleaseLock(scp, userp, reqp);
-
-            code = CM_ERROR_INVAL;
-            scp->serverLock = -1;
-        }
-
-        if (code != 0 &&
-            (scp->sharedLocks > 0 || scp->exclusiveLocks > 0) &&
-                (scp->serverLock == -1)) {
-                /* Oopsie */
-                cm_LockMarkSCacheLost(scp);
-            }
-
-        /* failure here has no bearing on the return value of
-           cm_Unlock() */
-        code = 0;
-
-    } else if (scp->serverLock != (-1) &&
-              scp->exclusiveLocks == 0 &&
-              scp->sharedLocks == 0) {
-        /* The serverLock should be released entirely */
-
-        if (scp->serverLock == LockWrite) {
-            /* Make sure there are no dirty buffers left. */
-            code = cm_FSync(scp, userp, reqp, TRUE);
-        }
-
-        code = cm_IntReleaseLock(scp, userp, reqp);
-
-        if (code == 0)
-            scp->serverLock = (-1);
-    }
-
- done:
+    code = cm_IntUnlock(scp, userp, reqp);
 
     osi_Log1(afsd_logp, "cm_UnlockByKey code 0x%x", code);
     osi_Log4(afsd_logp, "   Leaving scp with excl[%d], shared[%d], client[%d], serverLock[%d]",
@@ -5104,7 +5131,7 @@ long cm_Unlock(cm_scache_t *scp,
     int lock_found  = 0;
     LARGE_INTEGER RangeEnd;
 
-    osi_Log4(afsd_logp, "cm_Unlock scp 0x%p type 0x%x offset %d length %d",
+    osi_Log4(afsd_logp, "cm_Unlock scp 0x%p type 0x%x offset 0x%x length 0x%x",
              scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
     osi_Log4(afsd_logp, "... key <0x%x,0x%x,0x%x> flags 0x%x",
              key.process_id, key.session_id, key.file_id, flags);
@@ -5202,111 +5229,17 @@ long cm_Unlock(cm_scache_t *scp,
     fileLock->scp = NULL;
     lock_ReleaseWrite(&cm_scacheLock);
 
-    if (!SERVERLOCKS_ENABLED(scp)) {
-        osi_Log0(afsd_logp, "   Skipping server locks for scp");
-        goto done;
-    }
-
-    /* Ideally we would go through the rest of the locks to determine
-     * if one or more locks that were formerly in WAITUNLOCK can now
-     * be put to ACTIVE or WAITLOCK and update scp->exclusiveLocks and
-     * scp->sharedLocks accordingly.  However, the retrying of locks
-     * in that manner is done cm_RetryLock() manually.
-     */
-
-    if (scp->serverLock == LockWrite &&
-        scp->exclusiveLocks == 0 &&
-        scp->sharedLocks > 0) {
-
-        /* The serverLock should be downgraded to LockRead */
-        osi_Log0(afsd_logp, "  DOWNGRADE lock from LockWrite to LockRead");
-
-        /* Make sure there are no dirty buffers left. */
-        code = cm_FSync(scp, userp, reqp, TRUE);
-
-        /* Since we already had a lock, we assume that there is a
-           valid server lock. */
-        scp->lockDataVersion = scp->dataVersion;
-        osi_Log1(afsd_logp, "   dataVersion on scp is %I64d", scp->dataVersion);
-
-        /* before we downgrade, make sure that we have enough
-           permissions to get the read lock. */
-        code = cm_LockCheckPerms(scp, LockRead, userp, reqp, NULL);
-        if (code != 0) {
-
-            osi_Log0(afsd_logp, "  SKIPPING downgrade because user doesn't have perms to get downgraded lock");
-
-            code = 0;
-            goto done;
-        }
-
-        code = cm_IntReleaseLock(scp, userp, reqp);
-
-        if (code) {
-            /* so we couldn't release it.  Just let the lock be for now */
-            code = 0;
-            goto done;
-        } else {
-            scp->serverLock = -1;
-        }
-
-        code = cm_IntSetLock(scp, userp, LockRead, reqp);
-
-        if (code == 0 && scp->lockDataVersion == scp->dataVersion) {
-            scp->serverLock = LockRead;
-        } else if (code == 0 && scp->lockDataVersion != scp->dataVersion) {
-            /* Lost a race.  We obtained a new lock, but that is
-               meaningless since someone modified the file
-               inbetween. */
-
-            osi_Log0(afsd_logp,
-                     "Data version mismatch while downgrading lock");
-            osi_Log2(afsd_logp,
-                     "  Data versions before=%I64d, after=%I64d",
-                     scp->lockDataVersion,
-                     scp->dataVersion);
-
-            code = cm_IntReleaseLock(scp, userp, reqp);
-
-            scp->serverLock = -1;
-            code = CM_ERROR_INVAL;
-        }
-
-        if (code != 0 &&
-            (scp->sharedLocks > 0 || scp->exclusiveLocks > 0) &&
-                (scp->serverLock == -1)) {
-                /* Oopsie */
-                cm_LockMarkSCacheLost(scp);
-            }
-
-        /* failure here has no bearing on the return value of
-           cm_Unlock() */
-        code = 0;
-
-    } else if (scp->serverLock != (-1) &&
-              scp->exclusiveLocks == 0 &&
-              scp->sharedLocks == 0) {
-        /* The serverLock should be released entirely */
-
-        if (scp->serverLock == LockWrite) {
-            /* Make sure there are no dirty buffers left. */
-            code = cm_FSync(scp, userp, reqp, TRUE);
-        }
-
-        code = cm_IntReleaseLock(scp, userp, reqp);
-
-        if (code == 0) {
-            scp->serverLock = (-1);
-        }
-    }
+    code = cm_IntUnlock(scp, userp, reqp);
 
     if (release_userp) {
         cm_ReleaseUser(userp);
         release_userp = FALSE;
     }
 
-    if (!exact_match)
+    if (!exact_match) {
+        osi_Log1(afsd_logp, "cm_Unlock not exact match, searching for next lock, code 0x%x", code);
         goto try_again;         /* might be more than one lock in the range */
+    }
 
  done:
 
