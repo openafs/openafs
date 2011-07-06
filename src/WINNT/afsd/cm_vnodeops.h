@@ -200,7 +200,7 @@ extern long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
 extern long cm_UnlockByKey(cm_scache_t * scp,
                            cm_key_t key,
-                           int flags,
+                           afs_uint32 flags,
                            cm_user_t * userp,
                            cm_req_t * reqp);
 
