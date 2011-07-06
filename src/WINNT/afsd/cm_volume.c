@@ -544,10 +544,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             if (!tsp) {
                 /*
                  * cm_NewServer will probe the file server which in turn will
-                 * update the state on the volume group object
+                 * update the state on the volume group object.  Do not probe
+                 * in this thread.  It will block the thread and can result in
+                 * a recursive call to cm_UpdateVolumeLocation().
                  */
                 lock_ReleaseWrite(&volp->rw);
-                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, &serverUUID[i], 0);
+                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, &serverUUID[i], CM_FLAG_NOPROBE);
                 lock_ObtainWrite(&volp->rw);
             }
             osi_assertx(tsp != NULL, "null cm_server_t");
