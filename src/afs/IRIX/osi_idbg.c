@@ -112,13 +112,13 @@ idbg_afsvfslist()
     for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	tvc = QTOV(tq);
 	uq = QPrev(tq);
-	nodeid = tvc->f.fid.Fid.Vnode + (tvc->f.fid.Fid.Volume << 16);
-	nodeid &= 0x7fffffff;
-	qprintf("avp 0x%x type %s cnt %d pg %d map %d nodeid %d(0x%x)\n", tvc,
+	nodeid = afs_calc_inum(tvc->f.fid.Cell, tvc->f.fid.Fid.Volume,
+	                       tvc->f.fid.Fid.Vnode);
+	qprintf("avp 0x%x type %s cnt %d pg %d map %d nodeid %lu(0x%lx)\n", tvc,
 		tab_vtypes[((vnode_t *) tvc)->v_type],
 		((vnode_t *) tvc)->v_count,
-		(int)VN_GET_PGCNT((vnode_t *) tvc), (int)tvc->mapcnt, nodeid,
-		nodeid);
+		(int)VN_GET_PGCNT((vnode_t *) tvc), (int)tvc->mapcnt,
+		(long unsigned)nodeid, (long unsigned)nodeid);
     }
     AFS_GUNLOCK();
     return 0;
