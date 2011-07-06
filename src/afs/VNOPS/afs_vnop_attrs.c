@@ -117,7 +117,6 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 	      afs_calc_inum(avc->f.fid.Cell,
 			    avc->f.fid.Fid.Volume,
 			    avc->f.fid.Fid.Vnode);
-    attrs->va_nodeid &= 0x7fffffff;	/* Saber C hates negative inode #s! */
     attrs->va_nlink = fakedir ? 100 : avc->f.m.LinkCount;
     attrs->va_size = fakedir ? 4096 : avc->f.m.Length;
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
