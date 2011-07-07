@@ -114,8 +114,7 @@ void cm_BkgDaemon(void * parm)
         /* we found a request */
         for (rp = cm_bkgListEndp; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
 	{
-	    if (!(rp->scp->flags & CM_SCACHEFLAG_DATASTORING) &&
-                cm_ServerAvailable(&rp->scp->fid, rp->userp))
+	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp))
 		break;
 	}
 	if (rp == NULL) {
