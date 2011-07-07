@@ -5803,10 +5803,6 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
 	if (i < xmit->len - 1 || moreFlag) {
 	    packet->header.flags |= RX_MORE_PACKETS;
 	}
-
-	/* Install the new retransmit time for the packet, and
-	 * record the time sent */
-	packet->timeSent = now;
     }
 
     if (requestAck) {
