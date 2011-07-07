@@ -21,47 +21,19 @@ my $buildall = 0;
 my $ignorerelease = 1;
 my @newrpms;
 
-# Words cannot describe how gross this is. Yum no longer provides usable
-# output, so we need to call the python interface. At some point this
-# probably means this script should be entirely rewritten in python,
-# but this is not that point.
-
-sub findKernelModules {
+sub findKernels {
   my ($root, $uname, @modules) = @_;
 
-  my $modlist = join(",",map { "'".$_."'" } @modules);
-  my $python = <<EOS;
-import yum;
-import sys;
-base = yum.YumBase();
-base.doConfigSetup('$root/etc/yum.conf', '$root');
-base.doRepoSetup();
-base.doSackSetup();
-EOS
+  my $modlist = join(" ", @modules);
 
+  my @kernels;
   if ($uname) {
-    $python.= <<EOS;
-
-for pkg, values in base.searchPackageProvides(['kernel-devel-uname-r']).items():
-  if values[0].find('kernel-devel-uname-r = ') != -1:
-    print '%s.%s %s' % (pkg.name, pkg.arch, values[0].replace('kernel-devel-uname-r = ',''));
-
-EOS
+    @kernels = `repoquery --whatprovides kernel-devel-uname-r --qf "%{name}.%{arch} %{version}-%{release}" -c $root/etc/yum.conf`;
   } else {
-    $python.= <<EOS;
-
-print '\\n'.join(['%s.%s %s' % (x.name, x.arch, x.printVer()) for x in base.searchPackageProvides([$modlist]).keys()]);
-
-EOS
+    @kernels = `repoquery --whatprovides $modlist --qf "%{name}.%{arch} %{version}-%{release}" -c $root/etc/yum.conf`;
   }
 
-#  my $output = `$suser -c "python -c \\\"$python\\\"" `;
-  my $output = `python -c "$python"`;
-
-  die "Python script to figure out available kernels failed : $output" 
-    if $?;
-
-  return $output;
+  return @kernels;
 }
 
 
@@ -265,19 +237,19 @@ foreach my $platform (@platforms) {
 
   my $arbitraryversion = "";
 
-  my $modules;
+  my @kernels;
   if ($platform=~/fedora-development/) {
-    $modules = findKernelModules($root, 0, "kernel-devel");
+    @kernels = findKernels($root, 0, "kernel-devel");
   } elsif ($platform=~/centos-4/) {
-    $modules = findKernelModules($root, 0, "kernel-devel", "kernel-smp-devel", 
+    @kernels = findKernels($root, 0, "kernel-devel", "kernel-smp-devel", 
 				 "kernel-hugemem-devel", "kernel-xenU-devel");
   } else {
-    $modules = findKernelModules($root, 0, 'kernel-devel');
+    @kernels = findKernels($root, 0, 'kernel-devel');
   }
 
-  foreach my $module (split(/\n/, $modules)) {
-      chomp $module;
-      my ($package, $version, $repo)=split(/\s+/, $module);
+  foreach my $kernel (@kernels) {
+      chomp $kernel;
+      my ($package, $version)=split(/\s+/, $kernel);
       my ($arch) = ($package=~/\.(.*)$/);
       my ($variant) = ($package=~/kernel-(.*)-devel/);
       $variant = "" if !defined($variant);
