@@ -75,6 +75,9 @@
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
 # include <afs/softsig.h>
+# ifdef HAVE_PTHREAD_NP_H
+#  include <pthread_np.h>
+# endif /* HAVE_PTHREAD_NP_H */
 #endif
 #if defined(AFS_SGI_ENV)
 # include "sys/schedctl.h"
@@ -416,6 +419,14 @@ setThreadId(char *s)
     /* set our 'thread-id' so that the host hold table works */
     pthread_setspecific(rx_thread_id_key,
 			(void *)(intptr_t)rx_NewThreadId());
+# if defined(HAVE_PTHREAD_SET_NAME_NP)
+    /* The "NP" stands for "non-portable" so it's only just that
+     * implementations disagree about the name of the function.
+     */
+    pthread_set_name_np(pthread_self(), s);
+# elif defined(HAVE_PTHREAD_SETNAME_NP)
+    pthread_setname_np(pthread_self(), s);
+# endif
     ViceLog(0,
 	    ("Set thread id %p for '%s'\n",
 	     pthread_getspecific(rx_thread_id_key), s));

@@ -1258,6 +1258,7 @@ AC_CHECK_HEADERS([ \
 		   ncurses.h \
 		   netdb.h \
 		   netinet/in.h \
+		   pthread_np.h \
 		   pwd.h \
 		   regex.h \
 		   resolv.h \
@@ -1552,6 +1553,15 @@ if test "$ac_cv_header_regex_h" = "yes" && \
 else
     AC_MSG_RESULT(no)
 fi
+
+dnl Look for "non-portable" pthreads functions.
+save_LIBS="$LIBS"
+LIBS="$LIBS $PTHREAD_LIBS"
+AC_CHECK_FUNCS([ \
+	pthread_set_name_np \
+	pthread_setname_np \
+])
+LIBS="$save_LIBS"
 
 AC_TYPE_SIGNAL
 OPENAFS_RETSIGTYPE
