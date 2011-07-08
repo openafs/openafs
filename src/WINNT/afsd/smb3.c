@@ -6587,6 +6587,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int i;
     cm_key_t key;
     unsigned int pid;
+    afs_uint32 smb_vc_hold_required = 0;
 
     smb_InitReq(&req);
 
@@ -6622,6 +6623,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     inp->fid = fid;
 
     userp = smb_GetUserFromVCP(vcp, inp);
+    smb_HoldVC(vcp);
 
     lock_ObtainWrite(&scp->rw);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -6728,7 +6730,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 osi_assertx(wlRequest != NULL, "null wlRequest");
 
                 wlRequest->vcp = vcp;
-                smb_HoldVC(vcp);
+                smb_vc_hold_required = 1;
                 wlRequest->scp = scp;
 		osi_Log2(smb_logp,"smb_ReceiveV3LockingX wlRequest 0x%p scp 0x%p", wlRequest, scp);
                 cm_HoldSCache(scp);
@@ -6860,6 +6862,8 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
     smb_ReleaseFID(fidp);
+    if (!smb_vc_hold_required)
+        smb_HoldVC(vcp);
 
     return code;
 }
