@@ -30,6 +30,9 @@
 
 /* Asserting is a mess - we need the RX headers in order to get a definition
  * for osi_Assert */
+#if defined(assert)
+#undef assert
+#endif
 #define assert osi_Assert
 #include <rx/rx.h>
 
