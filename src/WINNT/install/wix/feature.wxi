@@ -265,6 +265,7 @@
         	<ComponentRef Id="rcm_Documentation" />
                 <ComponentRef Id="cmp_Cmd_Ref_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_1_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_3_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_5_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_8_en_US" />
                 <ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
