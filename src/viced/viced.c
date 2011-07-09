@@ -26,16 +26,16 @@
 #include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <windows.h>
-#include <WINNT/afsevent.h>
+# include <windows.h>
+# include <WINNT/afsevent.h>
 #endif
 
 #ifdef HAVE_SYS_FILE_H
-#include <sys/file.h>
+# include <sys/file.h>
 #endif
 
 #ifdef HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>
+# include <sys/resource.h>
 #endif
 
 #undef SHARED
@@ -68,17 +68,17 @@
 #include <afs/partition.h>
 #include <afs/dir.h>
 #ifndef AFS_NT40_ENV
-#include <afs/netutils.h>
+# include <afs/netutils.h>
 #endif
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
-#include <afs/softsig.h>
+# include <afs/softsig.h>
 #endif
 #if defined(AFS_SGI_ENV)
-#include "sys/schedctl.h"
-#include "sys/lock.h"
+# include "sys/schedctl.h"
+# include "sys/lock.h"
 #endif
 #include <rx/rx_globals.h>
 
@@ -104,7 +104,7 @@ char fsync_wait[1];
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_NT40_ENV
-#define NT_OPEN_MAX    1024	/* This is an arbitrary no. we came up with for
+# define NT_OPEN_MAX    1024	/* This is an arbitrary no. we came up with for
 				 * now. We hope this will be replaced by a more
 				 * intelligent estimate later. */
 #endif
@@ -213,11 +213,11 @@ static void FlagMsg(void);
  * disk
  */
 
-#if !defined(PTHREAD_RWLOCK_INITIALIZER) && defined(AFS_DARWIN80_ENV)
-#define PTHREAD_RWLOCK_INITIALIZER {0x2DA8B3B4, {0}}
-#endif
+# if !defined(PTHREAD_RWLOCK_INITIALIZER) && defined(AFS_DARWIN80_ENV)
+#  define PTHREAD_RWLOCK_INITIALIZER {0x2DA8B3B4, {0}}
+# endif
 
-#ifndef AFS_NT40_ENV
+# ifndef AFS_NT40_ENV
 struct fs_state fs_state =
     { FS_MODE_NORMAL,
       0,
@@ -228,7 +228,7 @@ struct fs_state fs_state =
       PTHREAD_COND_INITIALIZER,
       PTHREAD_RWLOCK_INITIALIZER
     };
-#else /* AFS_NT40_ENV */
+# else /* AFS_NT40_ENV */
 struct fs_state fs_state;
 
 static int fs_stateInit(void)
@@ -247,7 +247,7 @@ static int fs_stateInit(void)
     CV_INIT(&fs_state.worker_done_cv, "worker done", CV_DEFAULT, 0);
     osi_Assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0);
 }
-#endif /* AFS_NT40_ENV */
+# endif /* AFS_NT40_ENV */
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 /*
@@ -330,12 +330,10 @@ ResetCheckSignal(void)
 
 #if defined(AFS_HPUX_ENV)
     signo = SIGPOLL;
-#else
-#if defined(AFS_NT40_ENV)
+#elif defined(AFS_NT40_ENV)
     signo = SIGUSR2;
 #else
     signo = SIGXCPU;
-#endif
 #endif
 
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
@@ -349,11 +347,11 @@ static void
 ResetCheckDescriptors(void)
 {
 #ifndef AFS_NT40_ENV
-#if defined(AFS_PTHREAD_ENV)
+# if defined(AFS_PTHREAD_ENV)
     softsig_signal(SIGTERM, CheckDescriptors_Signal);
-#else
+# else
     (void)signal(SIGTERM, CheckDescriptors_Signal);
-#endif
+# endif
 #endif
 }
 
@@ -370,22 +368,22 @@ int
 viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
-#ifndef AFS_LINUX20_ENV
+# ifndef AFS_LINUX20_ENV
     void (*old) (int);
 
     old = (void (*)(int))signal(SIGSYS, SIG_IGN);
-#endif
+# endif
     rcode = syscall(AFS_SYSCALL, 28 /* AFSCALL_CALL */ , a3, a4, a5);
-#ifndef AFS_LINUX20_ENV
+# ifndef AFS_LINUX20_ENV
     signal(SIGSYS, old);
-#endif
+# endif
 
     return rcode;
 }
 #endif
 
 #if !defined(AFS_NT40_ENV)
-#include "AFS_component_version_number.c"
+# include "AFS_component_version_number.c"
 #endif /* !AFS_NT40_ENV */
 
 #define MAXADMINNAME 64
@@ -666,15 +664,15 @@ ClearXStatValues(void)
      * declared in param.h.  If such a thing is not defined, we bitch
      * and declare ourselves to be an unknown system type.
      */
-#ifdef SYS_NAME_ID
+# ifdef SYS_NAME_ID
     afs_perfstats.sysname_ID = SYS_NAME_ID;
-#else
-#ifndef AFS_NT40_ENV
+# else
+#  ifndef AFS_NT40_ENV
     ViceLog(0, ("Sys name ID constant not defined in param.h!!\n"));
     ViceLog(0, ("[Choosing ``undefined'' sys name ID.\n"));
-#endif
+#  endif
     afs_perfstats.sysname_ID = SYS_NAME_ID_UNDEFINED;
-#endif /* SYS_NAME_ID */
+# endif /* SYS_NAME_ID */
 #endif
 
 }				/*ClearXStatValues */
@@ -1041,14 +1039,12 @@ ParseRights(char *arights)
 static int
 max_fileserver_thread(void)
 {
-#if defined(AFS_PTHREAD_ENV)
-#if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV)
+#if defined(AFS_PTHREAD_ENV) && (defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV))
     long ans;
 
     ans = sysconf(_SC_THREAD_THREADS_MAX);
     if (0 < ans && ans < MAX_FILESERVER_THREAD)
 	return (int)ans;
-#endif
 #endif /* defined(AFS_PTHREAD_ENV) */
     return MAX_FILESERVER_THREAD;
 }
@@ -1996,10 +1992,8 @@ main(int argc, char *argv[])
     schedctl(NDPRI, 0, NDPNORMMAX);
     if (SawLock)
 	plock(PROCLOCK);
-#else
-#ifndef AFS_NT40_ENV
+#elif !defined(AFS_NT40_ENV)
     nice(-5);			/* TODO: */
-#endif
 #endif
     DInit(buffs);
 #ifdef AFS_DEMAND_ATTACH_FS
