@@ -5082,12 +5082,6 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
             fileLock->flags |= CM_FILELOCK_FLAG_DELETED;
 
-            cm_ReleaseUser(fileLock->userp);
-            cm_ReleaseSCacheNoLock(scp);
-
-            fileLock->userp = NULL;
-            fileLock->scp = NULL;
-
             n_unlocks++;
         }
     }
@@ -5103,8 +5097,6 @@ long cm_UnlockByKey(cm_scache_t * scp,
     }
 
     osi_Log1(afsd_logp, "cm_UnlockByKey done with %d locks", n_unlocks);
-
-    code = cm_IntUnlock(scp, userp, reqp);
 
     osi_Log1(afsd_logp, "cm_UnlockByKey code 0x%x", code);
     osi_Log4(afsd_logp, "   Leaving scp with excl[%d], shared[%d], client[%d], serverLock[%d]",
@@ -5218,18 +5210,7 @@ long cm_Unlock(cm_scache_t *scp,
     }
 
     fileLock->flags |= CM_FILELOCK_FLAG_DELETED;
-    if (userp != NULL) {
-        cm_ReleaseUser(fileLock->userp);
-    } else {
-        userp = fileLock->userp;
-        release_userp = TRUE;
-    }
-    fileLock->userp = NULL;
-    cm_ReleaseSCacheNoLock(scp);
-    fileLock->scp = NULL;
     lock_ReleaseWrite(&cm_scacheLock);
-
-    code = cm_IntUnlock(scp, userp, reqp);
 
     if (release_userp) {
         cm_ReleaseUser(userp);
@@ -5311,6 +5292,19 @@ void cm_CheckLocks()
 	code = -1;
 
         if (IS_LOCK_DELETED(fileLock)) {
+            cm_user_t *userp = fileLock->userp;
+            cm_scache_t *scp = fileLock->scp;
+            fileLock->userp = NULL;
+            fileLock->scp = NULL;
+
+            lock_ReleaseWrite(&cm_scacheLock);
+            lock_ObtainWrite(&scp->rw);
+            code = cm_IntUnlock(scp, userp, &req);
+            lock_ReleaseWrite(&scp->rw);
+
+            cm_ReleaseUser(fileLock->userp);
+            lock_ObtainWrite(&cm_scacheLock);
+            cm_ReleaseSCacheNoLock(scp);
 
             osi_QRemove(&cm_allFileLocks, q);
             cm_PutFileLock(fileLock);

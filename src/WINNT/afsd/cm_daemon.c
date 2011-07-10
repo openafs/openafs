@@ -35,7 +35,7 @@ long cm_daemonCheckUpInterval    = 240;
 long cm_daemonCheckVolInterval   = 3600;
 long cm_daemonCheckCBInterval    = 60;
 long cm_daemonCheckVolCBInterval = 0;
-long cm_daemonCheckLockInterval  = 60;
+long cm_daemonCheckLockInterval  = 2;
 long cm_daemonTokenCheckInterval = 180;
 long cm_daemonCheckOfflineVolInterval = 600;
 long cm_daemonPerformanceTuningInterval = 0;
@@ -56,6 +56,7 @@ static int cm_nDaemons = 0;
 static time_t lastIPAddrChange = 0;
 
 static EVENT_HANDLE cm_Daemon_ShutdownEvent = NULL;
+static EVENT_HANDLE cm_LockDaemon_ShutdownEvent = NULL;
 static EVENT_HANDLE cm_IPAddrDaemon_ShutdownEvent = NULL;
 static EVENT_HANDLE cm_BkgDaemon_ShutdownEvent[CM_MAX_DAEMONS] =
        {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -360,11 +361,46 @@ cm_DaemonCheckInit(void)
         cm_PerformanceTuningInit();
 }
 
+/* periodic lock check daemon */
+void cm_LockDaemon(long parm)
+{
+    time_t now;
+    time_t lastLockCheck;
+    char * name = "cm_LockDaemon_ShutdownEvent";
+
+    cm_LockDaemon_ShutdownEvent = thrd_CreateEvent(NULL, FALSE, FALSE, name);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", name);
+
+    now = osi_Time();
+    lastLockCheck = now - cm_daemonCheckLockInterval/2 + (rand() % cm_daemonCheckLockInterval);
+
+    while (daemon_ShutdownFlag == 0) {
+        if (powerStateSuspended) {
+            Sleep(1000);
+            continue;
+        }
+
+        now = osi_Time();
+
+        if (now > lastLockCheck + cm_daemonCheckLockInterval &&
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
+            lastLockCheck = now;
+            cm_CheckLocks();
+            if (daemon_ShutdownFlag == 1)
+                break;
+        }
+
+        thrd_Sleep(1000);		/* sleep 1 second */
+    }
+    thrd_SetEvent(cm_LockDaemon_ShutdownEvent);
+}
+
 /* periodic check daemon */
 void cm_Daemon(long parm)
 {
     time_t now;
-    time_t lastLockCheck;
     time_t lastVolCheck;
     time_t lastCBExpirationCheck;
     time_t lastVolCBRenewalCheck;
@@ -420,7 +456,6 @@ void cm_Daemon(long parm)
     lastCBExpirationCheck = now - cm_daemonCheckCBInterval/2 + (rand() % cm_daemonCheckCBInterval);
     if (cm_daemonCheckVolCBInterval)
         lastVolCBRenewalCheck = now - cm_daemonCheckVolCBInterval/2 + (rand() % cm_daemonCheckVolCBInterval);
-    lastLockCheck = now - cm_daemonCheckLockInterval/2 + (rand() % cm_daemonCheckLockInterval);
     lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
@@ -568,16 +603,6 @@ void cm_Daemon(long parm)
 	    now = osi_Time();
         }
 
-        if (now > lastLockCheck + cm_daemonCheckLockInterval &&
-            daemon_ShutdownFlag == 0 &&
-            powerStateSuspended == 0) {
-            lastLockCheck = now;
-            cm_CheckLocks();
-            if (daemon_ShutdownFlag == 1)
-                break;
-	    now = osi_Time();
-        }
-
         if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval &&
             daemon_ShutdownFlag == 0 &&
             powerStateSuspended == 0) {
@@ -640,6 +665,9 @@ void cm_DaemonShutdown(void)
     if (cm_Daemon_ShutdownEvent)
         code = thrd_WaitForSingleObject_Event(cm_Daemon_ShutdownEvent, INFINITE);
 
+    if (cm_LockDaemon_ShutdownEvent)
+        code = thrd_WaitForSingleObject_Event(cm_LockDaemon_ShutdownEvent, INFINITE);
+
     for ( i=0; i<cm_nDaemons; i++) {
         if (cm_BkgDaemon_ShutdownEvent[i])
             code = thrd_WaitForSingleObject_Event(cm_BkgDaemon_ShutdownEvent[i], INFINITE);
@@ -673,6 +701,11 @@ void cm_InitDaemon(int nDaemons)
         phandle = thrd_Create((SecurityAttrib) 0, 0,
                                (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
         osi_assertx(phandle != NULL, "cm_Daemon thread creation failure");
+        thrd_CloseHandle(phandle);
+
+        phandle = thrd_Create((SecurityAttrib) 0, 0,
+                               (ThreadFunc) cm_LockDaemon, 0, 0, &pid, "cm_LockDaemon");
+        osi_assertx(phandle != NULL, "cm_LockDaemon thread creation failure");
         thrd_CloseHandle(phandle);
 
 	for(i=0; i < cm_nDaemons; i++) {
