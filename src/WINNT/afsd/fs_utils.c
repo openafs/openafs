@@ -11,6 +11,7 @@
 #include <afs/param.h>
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <afs/stds.h>
 #include <afs/afs_consts.h>
 
@@ -30,6 +31,7 @@
 #include <afsd.h>
 #include <smb.h>
 #include <afs/cmd.h>
+#include <afs/opr_assert.h>
 #include <fs_utils.h>
 #include <WINNT\afsreg.h>
 

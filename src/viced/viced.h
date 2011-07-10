@@ -195,7 +195,6 @@ extern int saneacls;
 					 * HostCheck, Signal, min 2 for RXSTATS */
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
-#include <afs/afs_assert.h>
 extern pthread_mutex_t fileproc_glock_mutex;
 #define FS_LOCK MUTEX_ENTER(&fileproc_glock_mutex);
 #define FS_UNLOCK MUTEX_EXIT(&fileproc_glock_mutex);

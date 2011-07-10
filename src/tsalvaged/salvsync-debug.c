@@ -26,7 +26,7 @@
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <afs/afs_assert.h>
+#include <afs/opr_assert.h>
 #include <afs/dir.h>
 
 #ifndef AFS_NT40_ENV

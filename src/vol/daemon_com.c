@@ -24,7 +24,6 @@
 #include <roken.h>
 #include <afs/opr.h>
 
-#include <afs/afs_assert.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/errors.h>

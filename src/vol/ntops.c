@@ -28,7 +28,6 @@
 #include "volume.h"
 #include "viceinode.h"
 #include <dirent.h>
-#include <afs/afs_assert.h>
 #include <afs/errmap_nt.h>
 
 #define BASEFILEATTRIBUTE FILE_ATTRIBUTE_NORMAL

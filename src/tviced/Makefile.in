@@ -33,7 +33,7 @@ LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o pthread_threadname.o
+UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o pthread_threadname.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -51,6 +51,7 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
      $(TOP_LIBDIR)/libcmd.a \
+     $(TOP_LIBDIR)/libopr.a \
      ${TOP_LIBDIR}/util.a
 
 all: fileserver

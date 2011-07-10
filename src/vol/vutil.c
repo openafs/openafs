@@ -27,8 +27,6 @@
 #include <sys/lockf.h>
 #endif
 
-#include <afs/afs_assert.h>
-
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"

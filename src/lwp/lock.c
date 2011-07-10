@@ -28,13 +28,10 @@
 #include <roken.h>
 
 #ifdef AFS_PTHREAD_ENV
-#include <afs/afs_assert.h>
-/* can't include this in lwp, rx hasn't built yet */
-
 #include <rx/rx.h>
-#else
-#include <assert.h>
 #endif
+
+#include <assert.h>
 
 #include "lwp.h"
 #include "lock.h"

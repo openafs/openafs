@@ -14,7 +14,6 @@
 
 #include <ctype.h>
 
-#include <afs/afs_assert.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>

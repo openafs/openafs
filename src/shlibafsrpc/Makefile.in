@@ -274,8 +274,8 @@ com_err.o: ${COMERR}/com_err.c
 casestrcpy.o: ${OPR}/casestrcpy.c
 	$(AFS_CCRULE) $(OPR)/casestrcpy.c
 
-assert.o: ${UTIL}/assert.c
-	$(AFS_CCRULE) $(UTIL)/assert.c
+assert.o: ${OPR}/assert.c
+	$(AFS_CCRULE) $(OPR)/assert.c
 
 base64.o: ${UTIL}/base64.c
 	$(AFS_CCRULE) $(UTIL)/base64.c

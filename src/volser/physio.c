@@ -16,7 +16,6 @@
 #include <rx/rx.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
-#include <afs/afs_assert.h>
 #include <afs/dir.h>
 #include <afs/ihandle.h>
 

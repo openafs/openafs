@@ -31,7 +31,6 @@
 #include <rx/xdr.h>
 
 #include <afs/afsint.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <afs/vlserver.h>

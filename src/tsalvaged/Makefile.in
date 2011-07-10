@@ -34,7 +34,7 @@ DIROBJS=buffer.o dir.o salvage.o
 
 LWPOBJS=lock.o threadname.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o fstab.o
+UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o fstab.o
 
 VLIBOBJS=volume.o vnode.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \
@@ -113,9 +113,6 @@ physio.o: ${VOL}/physio.c
 
 fssync-debug.o: ${VOL}/fssync-debug.c
 	$(AFS_CCRULE) $(VOL)/fssync-debug.c
-
-assert.o: ${UTIL}/assert.c
-	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
 	$(AFS_CCRULE) $(UTIL)/uuid.c

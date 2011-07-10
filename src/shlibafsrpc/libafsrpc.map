@@ -113,7 +113,7 @@
 	opr_stolower;
 	opr_ucstring;
 	opr_lcstring;
-	AssertionFailed;
+	opr_AssertionFailed;
 	rx_GetLocalPeers;
 	rx_GetMaxReceiveWindow;
 	rx_GetMaxSendWindow;

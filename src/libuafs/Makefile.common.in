@@ -988,7 +988,7 @@ $(UOBJ)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
 	$(CRULE1)
 $(UOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE1) -o afs_uuid.o
-$(UOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
+$(UOBJ)/assert.o: $(TOP_SRCDIR)/opr/assert.c
 	$(CRULE1)
 $(UOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULE1)
@@ -1285,7 +1285,7 @@ $(PICOBJ)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
 	$(CRULEPIC)
 $(PICOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULEPIC) -o afs_uuid.o
-$(PICOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
+$(PICOBJ)/assert.o: $(TOP_SRCDIR)/opr/assert.c
 	$(CRULEPIC)
 $(PICOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULEPIC)
@@ -1580,7 +1580,7 @@ $(WEBOBJ)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
 	$(CRULE2)
 $(WEBOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE2) -o afs_uuid.o
-$(WEBOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
+$(WEBOBJ)/assert.o: $(TOP_SRCDIR)/opr/assert.c
 	$(CRULE1)
 $(WEBOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULE2)
@@ -1885,7 +1885,7 @@ $(JUAFS)/afsd_uafs.o: $(TOP_SRC_AFS)/UKERNEL/afsd_uafs.c
 	$(CRULE1)
 $(JUAFS)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
 	$(CRULE1) -o afs_uuid.o
-$(JUAFS)/assert.o: $(TOP_SRCDIR)/util/assert.c
+$(JUAFS)/assert.o: $(TOP_SRCDIR)/opr/assert.c
 	$(CRULE1)
 $(JUAFS)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULE1)

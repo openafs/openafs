@@ -18,7 +18,7 @@ VLSERVER=$(srcdir)/../vlserver
 
 RXOBJS= rx_pthread.o rxkad_errs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
+UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
      volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
      pthread_threadname.o get_krbrlm.o
 
@@ -35,7 +35,8 @@ LIBS=	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libafsutil.a 
+	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libopr.a
 
 OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS} ${UTILOBJS} 
 
@@ -57,9 +58,6 @@ rxkad_errs.o: ../rxkad/rxkad_errs.c
 # using the non-pthreaded libutil.a.  There probably should be a
 # pthreaded version of this library, as we are doing with ubik itself, but...
 #
-
-assert.o: ${UTIL}/assert.c
-	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
 	$(AFS_CCRULE) $(UTIL)/uuid.c

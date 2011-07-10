@@ -29,7 +29,6 @@
 #include <lwp.h>
 
 #if defined(AFS_PTHREAD_ENV)
-#include <afs/afs_assert.h>
 /* can't include rx when we are libutil; it's too early */
 #include <rx/rx.h>
 #include <pthread.h>

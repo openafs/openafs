@@ -11,7 +11,8 @@ RELDIR=opr
 INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES = \
-	$(INCFILEDIR)\opr.h
+	$(INCFILEDIR)\opr.h \
+	$(INCFILEDIR)\opr_assert.h
 
 LIBFILE = $(DESTDIR)\lib\opr.lib
 

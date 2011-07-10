@@ -12,8 +12,8 @@
 #include <afs/stds.h>
 
 #include <roken.h>
-
 #include <ctype.h>
+#include <assert.h>
 
 #include <afs/afs_consts.h>
 #include <afs/afs_args.h>

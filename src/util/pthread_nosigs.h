@@ -68,13 +68,13 @@ do { \
          _SETABRT \
          _SETFPE \
 	 b = (AFS_SET_SIGMASK(SIG_BLOCK, &i_tset, &i_oset) == 0); \
-         assert(b); \
+         opr_Assert(b); \
 } while (0)
 
 #define AFS_SIGSET_RESTORE() \
 do { \
 	 int b = (AFS_SET_SIGMASK(SIG_SETMASK, &i_oset, NULL) == 0); \
-         assert(b); \
+         opr_Assert(b); \
 } while (0)
 #endif /* AFS_NT40_ENV */
 

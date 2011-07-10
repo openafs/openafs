@@ -44,7 +44,6 @@
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
-#include <afs/afs_assert.h>
 /* can't include in non-lwp case; rx builds later */
 #include <rx/rx.h>
 #define LOCK_LOCK(A) MUTEX_ENTER(&(A)->mutex);

@@ -23,7 +23,6 @@
  * precedence is host_listlock_mutex, host->mutex, host_glock_mutex.
  */
 #include <rx/rx_globals.h>
-#include <afs/afs_assert.h>
 #include <pthread.h>
 extern pthread_mutex_t host_glock_mutex;
 #define H_LOCK MUTEX_ENTER(&host_glock_mutex);

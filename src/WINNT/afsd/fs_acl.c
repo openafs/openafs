@@ -11,6 +11,7 @@
 #include <afs/param.h>
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <afs/stds.h>
 #include <afs/afs_consts.h>
 
@@ -25,7 +26,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <strsafe.h>
-#include <afs/afs_assert.h>
+#include <afs/opr_assert.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
 

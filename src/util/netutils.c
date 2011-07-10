@@ -21,7 +21,6 @@
 #include <rx/rx.h>
 #include <afs/dirpath.h>
 
-#include "afs_assert.h"
 #include "afsutil.h"
 
 #define AFS_IPINVALID        0xffffffff	/* invalid IP address */

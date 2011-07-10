@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #if defined(AFS_AIX_ENV)
 #include <sys/tape.h>
@@ -26,8 +27,6 @@
 #include <sys/mtio.h>
 #endif
 #endif /* AFS_AIX_ENV */
-
-#include <afs/afs_assert.h>
 
 #include "usd.h"
 
@@ -350,7 +349,7 @@ usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
 #endif /* O_LARGEFILE */
 
 	/* make sure both lock bits aren't set */
-	assert(~flags & (USD_OPEN_RLOCK | USD_OPEN_WLOCK));
+	opr_Assert(~flags & (USD_OPEN_RLOCK | USD_OPEN_WLOCK));
 
 	fl.l_type = ((flags & USD_OPEN_RLOCK) ? F_RDLCK : F_WRLCK);
 	fl.l_whence = SEEK_SET;

@@ -24,7 +24,6 @@
 #endif
 
 #include <afs/afsint.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>

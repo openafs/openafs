@@ -11,6 +11,7 @@
 #include <afs/param.h>
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <afs/stds.h>
 #include <afs/com_err.h>
 #include <afs/cmd.h>
@@ -25,7 +26,7 @@
 #include <time.h>
 #include <winsock2.h>
 #include <errno.h>
-#include <afs/afs_assert.h>
+#include <afs/opr_assert.h>
 #include <rx/rx_globals.h>
 
 #include <osi.h>

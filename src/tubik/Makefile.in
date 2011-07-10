@@ -26,13 +26,15 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 
 RXOBJS = rx_pthread.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
+UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
        volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
        pthread_threadname.o
 
 LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
      ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/libcmd.a \
-     ${TOP_LIBDIR}/libsys.a ${XLIBS} ${MT_LIBS}
+     ${TOP_LIBDIR}/libsys.a \
+     $(TOP_LIBDIR)/libopr.a \
+     ${XLIBS} ${MT_LIBS}
 
 all: depinstall ${TOP_LIBDIR}/libubik_pthread.a udebug utst_server utst_client
 
@@ -54,9 +56,6 @@ rx_pthread.o: ${RX}/rx_pthread.c
 # using the non-pthreaded libutil.a.  There probably should be a
 # pthreaded version of this library, as we are doing with ubik itself, but...
 #
-
-assert.o: ${UTIL}/assert.c
-	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
 	$(AFS_CCRULE) $(UTIL)/uuid.c

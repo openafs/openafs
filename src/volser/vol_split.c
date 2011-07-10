@@ -15,7 +15,6 @@
 #endif
 
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
-#include <afs/afs_assert.h>
 #include <afs/dir.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>

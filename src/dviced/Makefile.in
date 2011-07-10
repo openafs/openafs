@@ -35,7 +35,7 @@ LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
+UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -85,9 +85,6 @@ fsstats.o: ${VICED}/fsstats.c
 
 serialize_state.o: ${TVICED}/serialize_state.c
 	$(AFS_CCRULE) $(TVICED)/serialize_state.c
-
-assert.o: ${UTIL}/assert.c
-	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
 	$(AFS_CCRULE) $(UTIL)/uuid.c

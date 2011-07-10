@@ -101,7 +101,6 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <afs/afs_assert.h>
 #if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
 #if defined(AFS_VFSINCL_ENV)
 #include <sys/vnode.h>

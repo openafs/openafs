@@ -17,7 +17,6 @@ INCFILES =\
 	$(DESTDIR)\include\dirent.h \
 	$(DESTDIR)\include\opr\queue.h \
 	$(INCFILEDIR)\afsutil.h \
-	$(INCFILEDIR)\afs_assert.h \
 	$(INCFILEDIR)\errors.h \
 	$(INCFILEDIR)\vice.h \
         $(INCFILEDIR)\netutils.h \
@@ -43,7 +42,6 @@ LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsutil.lib
 
 LIBOBJS = \
-	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
@@ -63,7 +61,6 @@ LIBOBJS = \
 	$(OUT)\secutil_nt.obj
 
 MT_LIBOBJS = \
-	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
