@@ -117,7 +117,6 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
-#include <afs/afs_assert.h>
 
 #if defined(AFS_HPUX_ENV)
 #include <sys/types.h>

@@ -83,7 +83,8 @@ read_tape: read_tape.c
 	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
 		-o read_tape ${srcdir}/read_tape.c \
 		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libusd.a \
-		${TOP_LIBDIR}/util.a $(LIB_roken)
+		${TOP_LIBDIR}/util.a $(TOP_LIBDIR)/libopr.a \
+		$(LIB_roken)
 
 # Errors
 CFLAGS_tcudbprocs.o=@CFLAGS_NOERROR@

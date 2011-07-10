@@ -17,9 +17,10 @@
 #include <ctype.h>
 #include <limits.h>
 
-#include "afs_assert.h"
 #include "afsutil.h"
 #include "fileutil.h"
+
+#include <afs/opr.h>
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>

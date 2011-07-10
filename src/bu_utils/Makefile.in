@@ -15,7 +15,8 @@ all: fms
 FMSLIBS=${TOP_LIBDIR}/libcmd.a \
         ${TOP_LIBDIR}/libusd.a \
 	${XLIBS} \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/util.a \
+	$(TOP_LIBDIR)/libopr.a
 
 fms: fms.o
 	$(AFS_LDRULE) fms.o ${FMSLIBS} $(LIB_roken)

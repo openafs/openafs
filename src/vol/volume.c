@@ -22,6 +22,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <ctype.h>
 #include <stddef.h>
@@ -101,7 +102,6 @@
 #include "partition.h"
 #include "volume_inline.h"
 #include "common.h"
-#include "afs/afs_assert.h"
 #include "vutils.h"
 #include <afs/dir.h>
 

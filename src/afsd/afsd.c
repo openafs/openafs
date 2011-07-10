@@ -64,12 +64,13 @@
 #define VFS 1
 
 #include <afs/stds.h>
+#include <afs/opr.h>
+#include <afs/opr_assert.h>
 
 #include <afs/cmd.h>
 
 #include "afsd.h"
 
-#include <afs/afs_assert.h>
 #include <afs/afsutil.h>
 #include <stdlib.h>
 #include <stdio.h>

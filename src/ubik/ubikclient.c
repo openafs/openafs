@@ -83,7 +83,6 @@ ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers)
     return 0;
 }
 
-#include <afs/afs_assert.h>
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 

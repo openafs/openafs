@@ -15,10 +15,9 @@
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>

@@ -18,6 +18,7 @@
 
 #include <roken.h>
 #include <afs/opr.h>
+#include <afs/opr_assert.h>
 
 #include <ctype.h>
 

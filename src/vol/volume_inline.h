@@ -18,6 +18,9 @@
 #endif
 
 #ifdef AFS_PTHREAD_ENV
+
+#include <afs/opr_assert.h>
+
 /**
  * @param[in] cv cond var
  * @param[in] ts deadline, or NULL to wait forever

@@ -18,7 +18,6 @@
 #include <roken.h>
 
 #include <afs/stds.h>
-#include <afs/afs_assert.h>
 
 #include <rx/xdr.h>
 #include <lwp.h>

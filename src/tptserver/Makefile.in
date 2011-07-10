@@ -18,7 +18,7 @@ PTSERVER=$(srcdir)/../ptserver
 
 RXOBJS= rx_pthread.o rxkad_errs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
+UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
      volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
      pthread_threadname.o
 
@@ -37,6 +37,7 @@ LIBS=${RXOBJS} ${UTILOBJS}\
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libafsutil.a 
 
 PTOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o

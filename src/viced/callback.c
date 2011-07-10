@@ -91,8 +91,6 @@
 #include <sys/file.h>
 #endif
 
-#include <afs/afs_assert.h>
-
 #include <afs/nfs.h>		/* yuck.  This is an abomination. */
 #include <lwp.h>
 #include <rx/rx.h>

@@ -17,11 +17,7 @@
 #include  <stdlib.h>
 #include  <string.h>
 #include  <limits.h>
-#ifdef AFS_PTHREAD_ENV
 #include  <assert.h>
-#else
-#include <afs/afs_assert.h>
-#endif
 #include  <stdarg.h>
 
 #if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */

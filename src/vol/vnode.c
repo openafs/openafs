@@ -26,8 +26,6 @@
 #include <sys/file.h>
 #endif
 
-#include <afs/afs_assert.h>
-
 #include <rx/xdr.h>
 #include "rx/rx_queue.h"
 #include <afs/afsint.h>

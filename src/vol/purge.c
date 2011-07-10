@@ -22,7 +22,6 @@
 #include <sys/file.h>
 #endif
 
-#include <afs/afs_assert.h>
 #include <afs/afsutil.h>
 
 #include <rx/xdr.h>

@@ -19,11 +19,6 @@
 
 /* afs_lhash.c */
 
-
-/* assert.c */
-extern void AssertionFailed(char *file, int line);
-
-
 /* base32.c */
 extern char *int_to_base32(b32_string_t s, int a);
 extern int base32_to_int(char *s);

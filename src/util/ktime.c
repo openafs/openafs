@@ -15,6 +15,7 @@
 
 #include <ctype.h>
 
+#include <afs/opr.h>
 #include "afsutil.h"
 #include "ktime.h"
 

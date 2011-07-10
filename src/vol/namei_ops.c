@@ -29,7 +29,6 @@
 #include <direct.h>
 #endif
 
-#include <afs/afs_assert.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>

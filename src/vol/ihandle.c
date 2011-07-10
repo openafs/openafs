@@ -30,7 +30,6 @@
 #include "nfs.h"
 #include "ihandle.h"
 #include "viceinode.h"
-#include "afs/afs_assert.h"
 
 #ifdef AFS_PTHREAD_ENV
 pthread_once_t ih_glock_once = PTHREAD_ONCE_INIT;

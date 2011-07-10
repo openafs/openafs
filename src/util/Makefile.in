@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 HELPER_SPLINT=@HELPER_SPLINT@
 
 
-objects =assert.o base64.o config_file.o ktime.o volparse.o \
+objects =base64.o config_file.o ktime.o volparse.o \
 	 hostparse.o exec.o \
 	 hputil.o kreltime.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
@@ -20,7 +20,6 @@ objects =assert.o base64.o config_file.o ktime.o volparse.o \
 	 pthread_threadname.o ${REGEX_OBJ}
 
 objects_pic = \
-	assert_pic.o \
 	base64_pic.o \
 	config_file_pic.o \
 	ktime_pic.o \
@@ -47,7 +46,6 @@ objects_pic = \
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
-	${TOP_INCDIR}/afs/afs_assert.h \
 	${TOP_INCDIR}/afs/errors.h \
 	${TOP_INCDIR}/afs/vice.h \
 	${TOP_INCDIR}/afs/ktime.h \
@@ -81,9 +79,6 @@ ${TOP_INCDIR}/afs/dirpath.h: dirpath.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/afs_assert.h: ${srcdir}/afs_assert.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/errors.h: ${srcdir}/errors.h
@@ -196,9 +191,6 @@ sys: sys.o
 	$(AFS_LDRULE) sys.o
 
 # PIC objects build rules
-assert_pic.o: ${srcdir}/assert.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/assert.c
-
 base64_pic.o: ${srcdir}/base64.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/base64.c
 
@@ -277,7 +269,6 @@ install: dirpath.h util.a util_pic.a sys
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL_DATA} dirpath.h ${DESTDIR}${includedir}/afs/dirpath.h
 	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DESTDIR}${includedir}/afs/pthread_nosigs.h
-	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DESTDIR}${includedir}/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DESTDIR}${includedir}/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DESTDIR}${includedir}/afs/vice.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DESTDIR}${includedir}/afs/ktime.h
@@ -305,7 +296,6 @@ dest: dirpath.h util.a util_pic.a sys
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL_DATA} dirpath.h ${DEST}/include/afs/dirpath.h
 	${INSTALL_DATA} ${srcdir}/pthread_nosigs.h ${DEST}/include/afs/pthread_nosigs.h
-	${INSTALL_DATA} ${srcdir}/afs_assert.h ${DEST}/include/afs/afs_assert.h
 	${INSTALL_DATA} ${srcdir}/errors.h ${DEST}/include/afs/errors.h
 	${INSTALL_DATA} ${srcdir}/vice.h ${DEST}/include/afs/vice.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DEST}/include/afs/ktime.h

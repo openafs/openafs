@@ -33,7 +33,7 @@ LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o pthread_threadname.o
+UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o pthread_threadname.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -53,7 +53,8 @@ LIBS=	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsutil.a      \
 	${TOP_LIBDIR}/libusd.a          \
-	${TOP_LIBDIR}/libafsrpc.a
+	${TOP_LIBDIR}/libafsrpc.a	\
+	$(TOP_LIBDIR)/libopr.a
 
 all: volserver vos
 
@@ -99,9 +100,6 @@ vsutils.o: ${VOLSER}/vsutils.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) $(VOLSER)/lockprocs.c
-
-assert.o: ${UTIL}/assert.c
-	$(AFS_CCRULE) $(UTIL)/assert.c
 
 uuid.o: ${UTIL}/uuid.c
 	$(AFS_CCRULE) $(UTIL)/uuid.c
