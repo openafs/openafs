@@ -22,6 +22,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <afs/afs_assert.h>
 #include <rx/xdr.h>

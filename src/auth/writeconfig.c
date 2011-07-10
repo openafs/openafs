@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>

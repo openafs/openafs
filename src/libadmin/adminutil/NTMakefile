@@ -141,6 +141,7 @@ DLLLIBS =\
         $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
         $(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\opr.lib \
         $(DESTDIR)\lib\afsroken.lib
 
 !IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"

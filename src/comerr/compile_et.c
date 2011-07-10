@@ -12,8 +12,8 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
-#include <afs/afsutil.h>
 #include "mit-sipb-cr.h"
 #include "internal.h"
 #include "compiler.h"

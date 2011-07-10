@@ -1082,7 +1082,7 @@ $(UOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE1)
 $(UOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULE1)
-$(UOBJ)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
+$(UOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
 	$(CRULE1)
 $(UOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
@@ -1379,7 +1379,7 @@ $(PICOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULEPIC)
 $(PICOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULEPIC)
-$(PICOBJ)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
+$(PICOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
 	$(CRULEPIC)
 $(PICOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULEPIC)
@@ -1685,7 +1685,7 @@ $(WEBOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE2)
 $(WEBOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULE2)
-$(WEBOBJ)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
+$(WEBOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
 	$(CRULE1)
 $(WEBOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
@@ -1977,7 +1977,7 @@ $(JUAFS)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE1)
 $(JUAFS)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULE1)
-$(JUAFS)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
+$(JUAFS)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
 	$(CRULE1)
 $(JUAFS)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)

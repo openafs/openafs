@@ -109,6 +109,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\libacl))
 		$(MKDIR) $(OJT)\libacl
 !	ENDIF
+!	IF (!EXIST($(OJT)\opr))
+		$(MKDIR) $(OJT)\opr
+!	ENDIF
 !	IF (!EXIST($(OJT)\roken))
 		$(MKDIR) $(OJT)\roken
 !	ENDIF

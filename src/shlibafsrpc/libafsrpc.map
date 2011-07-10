@@ -109,10 +109,10 @@
 	RXSTATS_ClearPeerRPCStats;
 	TM_GetTimeOfDay;
 	FT_GetTimeOfDay;
-	strcompose;
-	stolower;
-	ucstring;
-	lcstring;
+	opr_strcompose;
+	opr_stolower;
+	opr_ucstring;
+	opr_lcstring;
 	AssertionFailed;
 	rx_GetLocalPeers;
 	rx_GetMaxReceiveWindow;

@@ -45,7 +45,6 @@ MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsutil.lib
 LIBOBJS = \
 	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
-	$(OUT)\casestrcpy.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
         $(OUT)\krb5_nt.obj \
@@ -66,7 +65,6 @@ LIBOBJS = \
 MT_LIBOBJS = \
 	$(OUT)\assert.obj \
 	$(OUT)\base32.obj \
-	$(OUT)\casestrcpy.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
         $(OUT)\krb5_nt.obj \

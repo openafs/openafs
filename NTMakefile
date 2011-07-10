@@ -89,10 +89,17 @@ rx_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-util_headers: roken_headers
+util_headers: opr_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\util
 	$(CD) $(SRC)\util
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+opr_headers: roken_headers
+     @echo ***** $@
+	$(DOCD) $(SRC)\opr
+	$(CD) $(SRC)\opr
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
@@ -117,7 +124,7 @@ pthread: hcrypto_headers
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-util: procmgmt_headers afsreg_headers lwp_headers rx_headers hcrypto
+util: procmgmt_headers afsreg_headers lwp_headers rx_headers opr
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -172,6 +179,13 @@ rxgen: lwp
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
+
+opr: hcrypto
+     @echo ***** $@
+	$(DOCD) $(SRC)\opr
+	$(CD) $(SRC)\opr
+	$(NTMAKE)
+	$(CD) ..\..\..
 
 hcrypto: roken
      @echo ***** $@

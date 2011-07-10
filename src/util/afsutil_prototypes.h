@@ -32,13 +32,6 @@ extern int base32_to_int(char *s);
 extern char *int_to_base64(b64_string_t s, int a);
 extern int base64_to_int(char *s);
 
-/* casestrcpy.c */
-extern char *lcstring(char *d, char *s, int n);
-extern char *ucstring(char *d, char *s, int n);
-extern char *strcompose(char *buf, size_t len, ...);
-extern void stolower(char *s);
-extern void stoupper(char *s);
-
 /* config_file.c && krb5_locl.h */
 typedef struct afs_config_section_struct afs_config_section;
 extern int afs_config_parse_file_multi(const char *, afs_config_section **);

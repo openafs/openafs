@@ -52,6 +52,7 @@
 #include <afs/stds.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <ctype.h>
 

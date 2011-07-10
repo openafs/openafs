@@ -29,7 +29,8 @@ AFSIO_LIBS=${TOP_LIBDIR}/libafscp.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
-	$(TOP_LIBDIR)/libafsutil.a
+	$(TOP_LIBDIR)/libafsutil.a \
+	$(TOP_LIBDIR)/libopr.a
 
 FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libvldb.a \
@@ -44,8 +45,9 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/libaudit.a \
+	 $(TOP_LIBDIR)/libafsutil.a \
+	 $(TOP_LIBDIR)/libopr.a \
 	 ${TOP_LIBDIR}/libafshcrypto_lwp.a \
-	 $(TOP_LIBDIR)/libafsutil.a
 
 CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafsint.a \
@@ -56,6 +58,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
+	 $(TOP_LIBDIR)/libopr.a \
 	 $(TOP_LIBDIR)/libafsutil.a
 
 LIBS = ${FSLIBS} 
@@ -124,13 +127,14 @@ fstrace.o: fstrace.c AFS_component_version_number.c
 fstrace: fstrace.o
 	case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} ${AFS_CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
+			${CCXPG2} ${AFS_CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a $(TOP_LIBDIR)/libopr.a;; \
 		sun*_4* ) \
-			${CC} -L/usr/xpg2lib -L/usr/5lib ${AFS_CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a -lxpg ;; \
+			${CC} -L/usr/xpg2lib -L/usr/5lib ${AFS_CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a $(TOP_LIBDIR)/libopr.a -lxpg ;; \
 		* ) \
 			$(AFS_LDRULE) fstrace.o ${TOP_LIBDIR}/libsys.a \
 				${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
-				${XLIBS} $(LIB_roken);; \
+				$(TOP_LIBDIR)/libopr.a ${XLIBS} \
+				$(LIB_roken);; \
 	esac
 
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c

@@ -1,0 +1,37 @@
+# Copyright 2011, Your File System Inc
+# All rights reserved
+#
+# This software has been released under the terms of the BSD License
+# For details, see the LICENSE file in the top level source directory
+
+RELDIR=opr
+!include ..\config\NTMakefile.$(SYS_NAME)
+!include ..\config\NTMakefile.version
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES = \
+	$(INCFILEDIR)\opr.h
+
+LIBFILE = $(DESTDIR)\lib\opr.lib
+
+LIBOBJS = \
+	$(OUT)\casestrcpy.obj \
+	$(OUT)\AFS_component_version_number.obj
+
+$(LIBOBJS): $(INCFILES)
+
+!if !defined(NMAKE)
+NTMAKE = nmake /nologo /f ntmakefile
+!endif
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+install_headers: $(INCFILES)
+
+install: install_headers $(LIBFILE)
+
+clean::
+	$(DEL) $(INCFILES)
+	$(DEL) $(LIBFILE)

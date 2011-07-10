@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 HELPER_SPLINT=@HELPER_SPLINT@
 
 
-objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
+objects =assert.o base64.o config_file.o ktime.o volparse.o \
 	 hostparse.o exec.o \
 	 hputil.o kreltime.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
@@ -22,7 +22,6 @@ objects = assert.o base64.o casestrcpy.o config_file.o ktime.o volparse.o \
 objects_pic = \
 	assert_pic.o \
 	base64_pic.o \
-	casestrcpy_pic.o \
 	config_file_pic.o \
 	ktime_pic.o \
 	volparse_pic.o \
@@ -203,9 +202,6 @@ assert_pic.o: ${srcdir}/assert.c ${includes}
 base64_pic.o: ${srcdir}/base64.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/base64.c
 
-casestrcpy_pic.o: ${srcdir}/casestrcpy.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/casestrcpy.c
-
 config_file_pic.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
 	$(SHD_CCRULE) ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
 
@@ -346,7 +342,7 @@ include ../config/Makefile.version
 
 check-splint:
 	sh $(HELPER_SPLINT) $(CFLAGS) \
-	    assert.c base64.c casestrcpy.c ktime.c volparse.c hostparse.c \
+	    base64.c ktime.c volparse.c hostparse.c \
 	    hputil.c kreltime.c get_krbrlm.c uuid.c serverLog.c \
 	    dirpath.c fileutil.c netutils.c flipbase64.c \
 	    afs_atomlist.c afs_lhash.c fstab.c

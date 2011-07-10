@@ -12,6 +12,7 @@
 #include <afs/stds.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <rx/rx.h>
 #include <rx/xdr.h>

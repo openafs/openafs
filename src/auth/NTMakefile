@@ -94,6 +94,7 @@ EXELIBS =\
 	$(EXELIBDIR)\afs\afseventlog.lib \
 	$(EXELIBDIR)\afs\afsreg.lib \
 	$(EXELIBDIR)\libafsconf.lib \
+	$(EXELIBDIR)\opr.lib \
 	$(EXELIBDIR)\afshcrypto.lib \
 	$(EXELIBDIR)\afsroken.lib
 

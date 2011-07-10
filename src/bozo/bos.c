@@ -13,6 +13,7 @@
 
 #include <afs/procmgmt.h>
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <hcrypto/ui.h>
 

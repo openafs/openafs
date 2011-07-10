@@ -12,6 +12,7 @@
 #include <afs/stds.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef HAVE_SYS_RESOURCE_H
 # include <sys/resource.h>

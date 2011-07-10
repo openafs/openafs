@@ -14,6 +14,8 @@
 
 #include <ctype.h>
 
+#include <afs/opr.h>
+
 /* Just like strncpy but shift-case in transit and forces null termination */
 char *
 lcstring(char *d, char *s, int n)

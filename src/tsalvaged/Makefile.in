@@ -53,7 +53,8 @@ SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIR
 LIBS=   ${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libcmd.a
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libopr.a
 
 SLIBS=	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libdir.a \
@@ -61,7 +62,8 @@ SLIBS=	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libacl.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libopr.a 
 
 all: salvageserver dafssync-debug salvsync-debug dasalvager
 

@@ -20,7 +20,15 @@ all: afsd vsys @ENABLE_FUSE_CLIENT@
 # Programs
 #
 
-AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
+AFSLIBS=${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a \
+	$(TOP_LIBDIR)/libopr.a
+
 UAFSLIBS=${TOP_LIBDIR}/libuafs.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a
 
 FUSE_LIBS=@FUSE_LIBS@

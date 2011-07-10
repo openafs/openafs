@@ -46,6 +46,7 @@ TESTLIBS = $(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afsusd.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsbubasics.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(OUT)\test_ftm.exe: $(OUT)\test_ftm.obj $(LIBFILE) $(TESTLIBS)

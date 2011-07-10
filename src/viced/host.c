@@ -14,6 +14,7 @@
 #include <afs/stds.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>

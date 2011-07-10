@@ -44,6 +44,7 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/util.a \
+	$(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libprocmgmt.a
 
 TESTOBJS=test.o

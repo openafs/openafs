@@ -299,6 +299,7 @@ LOGON_DLLLIBS =\
     $(DESTDIR)\lib\libafsconf.lib \
     $(DESTDIR)\lib\afs\afscom_err.lib \
     $(DESTDIR)\lib\afs\afsutil.lib \
+    $(DESTDIR)\lib\opr.lib \
     $(DESTDIR)\lib\afsroken.lib \
     $(LANAHELPERLIB) \
     $(AFSKFWLIB)
@@ -381,6 +382,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
@@ -396,12 +398,14 @@ EXELIBS2 = \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 EXELIBS3 = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
@@ -554,6 +558,7 @@ KPASSWD_LIBS =\
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 

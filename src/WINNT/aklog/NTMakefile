@@ -38,6 +38,7 @@ EXELIBS = \
         $(DESTDIR)\lib\afs\afskauth.lib \
         $(DESTDIR)\lib\afs\afscom_err.lib \
         $(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 !IF "$(CPU)" == "IA64" || "$(CPU)" == "AMD64" || "$(CPU)" == "ALPHA64"

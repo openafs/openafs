@@ -29,6 +29,7 @@ RXSTAT = $(srcdir)/../rxstat
 FSINT = $(srcdir)/../fsint
 COMERR = $(srcdir)/../comerr
 UTIL = $(srcdir)/../util
+OPR = $(srcdir)/../opr
 SYS = ${srcdir}/../sys
 LWP = ${srcdir}/../lwp
 
@@ -270,8 +271,8 @@ et_name.o: ${COMERR}/et_name.c
 com_err.o: ${COMERR}/com_err.c
 	$(AFS_CCRULE) $(COMERR)/com_err.c
 
-casestrcpy.o: ${UTIL}/casestrcpy.c
-	$(AFS_CCRULE) $(UTIL)/casestrcpy.c
+casestrcpy.o: ${OPR}/casestrcpy.c
+	$(AFS_CCRULE) $(OPR)/casestrcpy.c
 
 assert.o: ${UTIL}/assert.c
 	$(AFS_CCRULE) $(UTIL)/assert.c

@@ -12,6 +12,7 @@
 #include <afs/stds.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef AFS_NT40_ENV
 #include <sys/utime.h>

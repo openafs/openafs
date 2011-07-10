@@ -69,7 +69,6 @@ UBIKOBJS = \
 UTILOBJS = \
 	$(OUT)\pthread_glock.obj \
 	$(OUT)\get_krbrlm.obj \
-	$(OUT)\casestrcpy.obj \
 	$(OUT)\fileutil.obj \
 	$(OUT)\dirpath.obj \
 	$(OUT)\readdir_nt.obj
@@ -147,6 +146,7 @@ DLLLIBS =\
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\lanahelper.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 

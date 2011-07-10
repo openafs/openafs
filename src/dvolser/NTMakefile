@@ -91,6 +91,7 @@ VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsroken.lib
 

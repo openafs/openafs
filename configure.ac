@@ -190,6 +190,7 @@ src/log/Makefile \
 src/log/test/Makefile \
 src/lwp/Makefile \
 src/lwp/test/Makefile \
+src/opr/Makefile \
 src/packaging/Debian/changelog \
 src/packaging/MacOS/OpenAFS-debug.Description.plist \
 src/packaging/MacOS/OpenAFS-debug.Info.plist \

@@ -81,6 +81,7 @@ EXELIBS = \
         $(DESTDIR)\lib\afs\mtafsvol.lib \
         $(DESTDIR)\lib\afs\mtafsvldb.lib \
         $(DESTDIR)\lib\afs\mtafsdir.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsroken.lib
 

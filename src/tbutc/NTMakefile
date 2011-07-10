@@ -81,6 +81,7 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afspthread.lib \
              $(DESTDIR)\lib\afsauthent.lib \
 	     $(DESTDIR)\lib\libafsconf.lib \
+	     $(DESTDIR)\lib\opr.lib \
 	     $(DESTDIR)\lib\afshcrypto.lib \
 	     $(DESTDIR)\lib\afsroken.lib
 

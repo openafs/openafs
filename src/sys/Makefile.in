@@ -17,7 +17,8 @@ LIBS=libsys.a \
      ${TOP_LIBDIR}/librx.a \
      libsys.a \
      ${TOP_LIBDIR}/liblwp.a \
-     ${TOP_LIBDIR}/util.a \
+     $(TOP_LIBDIR)/libafsutil.a \
+     ${TOP_LIBDIR}/libopr.a \
      ${TOP_LIBDIR}/libafshcrypto_lwp.a \
      ${XLIBS}
 

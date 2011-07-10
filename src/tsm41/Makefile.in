@@ -24,6 +24,7 @@ AFSLIBS = \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafscom_err.a \
 		${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libopr.a \
 		${TOP_LIBDIR}/libaudit.a
 
 KAFSLIBS = \
@@ -39,6 +40,7 @@ KAFSLIBS = \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafscom_err.a \
 		${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libopr.a \
 		${TOP_LIBDIR}/libaudit.a
 
 AUTH_OBJS = \

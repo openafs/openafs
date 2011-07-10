@@ -46,7 +46,7 @@ LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_com
 
 LIBRXKAD_REGOBJS = $(OUT)\bg-fcrypt.obj
 
-UTILOBJS = $(OUT)\casestrcpy.obj $(OUT)\winsock_nt.obj
+UTILOBJS = $(OUT)\winsock_nt.obj
 
 COMERRBJS = $(OUT)\error_msg.obj $(OUT)\et_name.obj $(OUT)\com_err.obj
 
@@ -91,6 +91,7 @@ DLLLIBS =\
 !ENDIF
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsroken.lib
 

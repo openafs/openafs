@@ -145,7 +145,10 @@ config: prelude
 procmgmt: $(DIR_roken) config
 	+${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: $(DIR_roken) procmgmt hcrypto lwp_depinstall rx_depinstall
+opr: config $(DIR_roken)
+	+${COMPILE_PART1} opr ${COMPILE_PART2}
+
+util: opr $(DIR_roken) procmgmt hcrypto lwp_depinstall rx_depinstall
 	+${COMPILE_PART1} util ${COMPILE_PART2}
 
 libafscp: util afs volser vlserver rx auth fsint
@@ -694,6 +697,7 @@ clean2:
 	-${COMPILE_PART1} config ${COMPILE_CLEAN}
 	-${COMPILE_PART1} procmgmt ${COMPILE_CLEAN}
 	-${COMPILE_PART1} util ${COMPILE_CLEAN}
+	-${COMPILE_PART1} opr ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafscp ${COMPILE_CLEAN}
 	-${COMPILE_PART1} audit ${COMPILE_CLEAN}
 	-${COMPILE_PART1} comerr ${COMPILE_CLEAN}
@@ -869,6 +873,7 @@ distclean: clean
 	src/log/test/Makefile \
 	src/lwp/Makefile \
 	src/lwp/test/Makefile \
+	src/opr/Makefile \
 	src/packaging/Debian/changelog \
 	src/packaging/MacOS/OpenAFS-debug.Description.plist \
 	src/packaging/MacOS/OpenAFS-debug.Info.plist \

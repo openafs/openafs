@@ -57,7 +57,6 @@ UBIKOBJS = \
 UTILOBJS = \
 	$(OUT)\pthread_glock.obj \
 	$(OUT)\get_krbrlm.obj \
-	$(OUT)\casestrcpy.obj \
 	$(OUT)\fileutil.obj \
 	$(OUT)\dirpath.obj \
 	$(OUT)\readdir_nt.obj
@@ -170,9 +169,6 @@ fileutil.obj: $(UTIL)\fileutil.c
 
 readdir_nt.obj: $(UTIL)\readdir_nt.c
 	$(C2OBJ) $(UTIL)\readdir_nt.c
-
-casestrcpy.obj: $(UTIL)\casestrcpy.c
-	$(C2OBJ) $(UTIL)\casestrcpy.c
 
 pthread_glock.obj: $(UTIL)\pthread_glock.c
 	$(C2OBJ) $(UTIL)\pthread_glock.c

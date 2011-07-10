@@ -23,6 +23,7 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\opr.lib \
         $(DESTDIR)\lib\afsroken.lib \
         $(DESTDIR)\lib\afsicf.obj
 

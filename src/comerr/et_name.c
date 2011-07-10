@@ -9,7 +9,7 @@
 
 #include <roken.h>
 
-#include <afs/afsutil.h>
+#include <afs/opr.h>
 
 #include "error_table.h"
 #include "mit-sipb-cr.h"

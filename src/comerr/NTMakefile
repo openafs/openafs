@@ -61,6 +61,7 @@ $(COMPILE_ET_EXEOBJS): $$(@B).c
 
 COMPILE_ET_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 $(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXERES) $(COMPILE_ET_EXELIBS)  

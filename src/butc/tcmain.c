@@ -11,7 +11,9 @@
 #include <afs/param.h>
 
 #include <afs/procmgmt.h>
+
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"

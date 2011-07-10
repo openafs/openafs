@@ -69,6 +69,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\lanahelper.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
         $(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 ############################################################################

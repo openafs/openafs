@@ -16,6 +16,7 @@
 #include <afs/stds.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef UKERNEL
 # include "afsincludes.h"
