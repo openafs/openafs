@@ -375,7 +375,7 @@ ubik_thread_create(pthread_attr_t *tattr, pthread_t *thread, void *proc) {
  *
  * \see ubik_ServerInit(), ubik_ServerInitByInfo()
  */
-int
+static int
 ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 		      struct afsconf_cell *info, char clones[],
 		      afs_uint32 serverList[], const char *pathName,
