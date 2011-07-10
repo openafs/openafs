@@ -293,7 +293,7 @@ OpenLog(const char *fileName)
     if (mrafsStyleLogs) {
         time_t t;
 	struct stat buf;
-	FT_GetTimeOfDay(&Start, 0);
+	gettimeofday(&Start, NULL);
         t = Start.tv_sec;
 	TimeFields = localtime(&t);
 	if (fileName) {
