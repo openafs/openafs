@@ -153,7 +153,7 @@ ${TOP_LIBDIR}/libafsutil_pic.a: util_pic.a
 # Use " as the sed boundary character because we lose anyway if that occurs
 # in path names.
 dirpath.h: ${srcdir}/dirpath.hin Makefile
-	( sed \
+	sed \
 		-e 's"@afsconfdir"${afsconfdir}"' \
 		-e 's"@viceetcdir"${viceetcdir}"' \
 		-e 's"@afssrvbindir"${afssrvbindir}"' \
@@ -165,10 +165,7 @@ dirpath.h: ${srcdir}/dirpath.hin Makefile
 		-e 's"@afsbackupdir"${afsbackupdir}"' \
 		-e 's"@afsbosconfigdir"${afsbosconfigdir}"' \
 		-e 's"@afsdatadir"${afsdatadir}"' \
-		${srcdir}/dirpath.hin >dirpath.h.tmp && \
-		if cmp dirpath.h.tmp dirpath.h >/dev/null ; then : ; else \
-		mv dirpath.h.tmp dirpath.h ; fi)
-	rm -f dirpath.h.tmp
+		${srcdir}/dirpath.hin >dirpath.h
 
 util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
