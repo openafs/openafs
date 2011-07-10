@@ -44,11 +44,9 @@
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
-/* can't include in non-lwp case; rx builds later */
 #include <afs/opr.h>
-#include <rx/rx.h>
-#define LOCK_LOCK(A) MUTEX_ENTER(&(A)->mutex);
-#define LOCK_UNLOCK(A) MUTEX_EXIT(&(A)->mutex);
+#define LOCK_LOCK(A) opr_Verify(pthread_mutex_lock(&(A)->mutex));
+#define LOCK_UNLOCK(A) opr_Verify(pthread_mutex_unlock(&(A)->mutex));
 #else /* AFS_PTHREAD_ENV */
 #define LOCK_LOCK(A)
 #define LOCK_UNLOCK(A)
