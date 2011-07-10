@@ -386,11 +386,9 @@ PrintError(char *msg, afs_int32 errcode)
 	break;
     default:
 	{
-	    initialize_KA_error_table();
 	    initialize_RXK_error_table();
 	    initialize_KTC_error_table();
 	    initialize_ACFG_error_table();
-	    initialize_CMD_error_table();
 	    initialize_VL_error_table();
 
 	    fprintf(STDERR, "%s: %s\n", afs_error_table_name(errcode),
