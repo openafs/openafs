@@ -1561,6 +1561,39 @@ AC_CHECK_FUNCS([ \
 	pthread_set_name_np \
 	pthread_setname_np \
 ])
+
+dnl Sadly, there are three different versions of pthread_setname_np.
+dnl Try to cater for all of them.
+if test "$ac_cv_func_pthread_setname_np" = "yes" ; then
+    AC_MSG_CHECKING([for signature of pthread_setname_np])
+    AC_TRY_COMPILE([
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+], [pthread_setname_np(pthread_self(), "test", (void *)0)], [
+	AC_MSG_RESULT([three arguments])
+	pthread_setname_np_args=3], [
+	AC_TRY_COMPILE([
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+], [pthread_setname_np(pthread_self(), "test")], [
+	    AC_MSG_RESULT([two arguments])
+	    pthread_setname_np_args=2], [
+	    AC_TRY_COMPILE([
+#include <pthread.h>
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+], [pthread_setname_np("test")], [
+		AC_MSG_RESULT([one argument])
+		pthread_setname_np_args=1], [pthread_setname_np_args=0])
+])
+])
+AC_DEFINE_UNQUOTED([PTHREAD_SETNAME_NP_ARGS], $pthread_setname_np_args, [Number of arguments required by pthread_setname_np() function])
+fi
 LIBS="$save_LIBS"
 
 AC_TYPE_SIGNAL
