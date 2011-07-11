@@ -8400,6 +8400,16 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     osi_Log4(smb_logp,"... co[%x],sdl[%x],eal[%x],as[%x],flags[%x]",createOptions,sdLen,eaLen,allocSize);
     osi_Log3(smb_logp,"... imp[%x],sec[%x],flags[%x]", impLevel, secFlags, flags);
 
+    if ( realDirFlag == 1 &&
+         ( createDisp == FILE_SUPERSEDE ||
+           createDisp == FILE_OVERWRITE ||
+           createDisp == FILE_OVERWRITE_IF))
+    {
+        osi_Log0(smb_logp, "NTTranCreate rejecting invalid readDirFlag and createDisp combination");
+        free(realPathp);
+        return CM_ERROR_INVAL;
+    }
+
     /*
      * Nothing here to handle SMB_IOCTL_FILENAME.
      * Will add it if necessary.
@@ -8494,59 +8504,43 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     dscp = NULL;
     code = 0;
-    if ( createDisp == FILE_OPEN ||
-         createDisp == FILE_OVERWRITE ||
-         createDisp == FILE_OVERWRITE_IF) {
-        code = cm_NameI(baseDirp, spacep->wdata, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                        userp, tidPathp, &req, &dscp);
-        if (code == 0) {
+
+    code = cm_NameI(baseDirp, spacep->wdata, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                    userp, tidPathp, &req, &dscp);
+    if (code == 0) {
 #ifdef DFS_SUPPORT
-            if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
-                cm_ReleaseSCache(dscp);
-                cm_ReleaseUser(userp);
-                free(realPathp);
-		if (baseFidp)
-		    smb_ReleaseFID(baseFidp);
-                if ( WANTS_DFS_PATHNAMES(inp) || pnc )
-                    return CM_ERROR_PATH_NOT_COVERED;
-                else
-                    return CM_ERROR_NOSUCHPATH;
-            }
-#endif /* DFS_SUPPORT */
-            code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
-                             userp, &req, &scp);
-            if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) {
-                code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp,
-                                 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
-                if (code == 0 && realDirFlag == 1) {
-                    cm_ReleaseSCache(scp);
-                    cm_ReleaseSCache(dscp);
-                    cm_ReleaseUser(userp);
-                    free(realPathp);
-		    if (baseFidp)
-			smb_ReleaseFID(baseFidp);
-                    return CM_ERROR_EXISTS;
-                }
-            }
-        }
-    } else {
-        code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                        userp, tidPathp, &req, &scp);
-#ifdef DFS_SUPPORT
-        if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK) {
-            int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, realPathp);
-            cm_ReleaseSCache(scp);
+        if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+            int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
+            cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             free(realPathp);
-	    if (baseFidp)
-		smb_ReleaseFID(baseFidp);
+            if (baseFidp)
+                smb_ReleaseFID(baseFidp);
             if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
                 return CM_ERROR_NOSUCHPATH;
         }
 #endif /* DFS_SUPPORT */
+        code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
+                         userp, &req, &scp);
+        if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) {
+
+            code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp,
+                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
+            if (code == 0 && realDirFlag == 1 &&
+                (createDisp == FILE_OPEN ||
+                 createDisp == FILE_OVERWRITE ||
+                 createDisp == FILE_OVERWRITE_IF)) {
+                cm_ReleaseSCache(scp);
+                cm_ReleaseSCache(dscp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                if (baseFidp)
+                    smb_ReleaseFID(baseFidp);
+                return CM_ERROR_EXISTS;
+            }
+        }
     }
 
     if (code == 0)
@@ -8556,27 +8550,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         code == CM_ERROR_NOSUCHPATH ||
         code == CM_ERROR_BPLUS_NOMATCH ||
         (code == 0 && (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)))) {
-        /* look up parent directory */
-        if ( !dscp ) {
-            code = cm_NameI(baseDirp, spacep->wdata,
-                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                             userp, tidPathp, &req, &dscp);
-#ifdef DFS_SUPPORT
-            if (code == 0 && dscp->fileType == CM_SCACHETYPE_DFSLINK) {
-                int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
-                cm_ReleaseSCache(dscp);
-                cm_ReleaseUser(userp);
-                free(realPathp);
-		if (baseFidp)
-		    smb_ReleaseFID(baseFidp);
-                if ( WANTS_DFS_PATHNAMES(inp) || pnc )
-                    return CM_ERROR_PATH_NOT_COVERED;
-                else
-                    return CM_ERROR_NOSUCHPATH;
-            }
-#endif /* DFS_SUPPORT */
-        } else
-            code = 0;
+        code = 0;
 
         cm_FreeSpace(spacep);
 
@@ -8584,6 +8558,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             smb_ReleaseFID(baseFidp);
 
         if (code) {
+            cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             free(realPathp);
             return code;
@@ -8594,11 +8569,15 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         else
 	    lastNamep++;
 
-        if (!smb_IsLegalFilename(lastNamep))
+        if (!smb_IsLegalFilename(lastNamep)) {
+            cm_ReleaseSCache(dscp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
             return CM_ERROR_BADNTFILENAME;
+        }
 
         if (!foundscp) {
-            if (createDisp == FILE_CREATE || createDisp == FILE_OVERWRITE_IF) {
+            if (createDisp == FILE_CREATE || createDisp == FILE_OVERWRITE_IF || createDisp == FILE_OPEN_IF) {
                 code = cm_Lookup(dscp, lastNamep,
                                   CM_FLAG_FOLLOW, userp, &req, &scp);
             } else {
@@ -8628,8 +8607,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
         if (code) {
             cm_CheckNTOpenDone(scp, userp, &req, &ldp);
-            if (dscp)
-                cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
@@ -8640,8 +8618,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         if (createDisp == FILE_CREATE) {
             /* oops, file shouldn't be there */
 	    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
-            if (dscp)
-                cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
@@ -8672,8 +8649,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 		    code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
 		    if (code) {
                         cm_CheckNTOpenDone(scp, userp, &req, &ldp);
-			if (dscp)
-			    cm_ReleaseSCache(dscp);
+                        cm_ReleaseSCache(dscp);
 			if (scp)
 			    cm_ReleaseSCache(scp);
 			cm_ReleaseUser(userp);
@@ -8689,14 +8665,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
     else if (createDisp == FILE_OPEN || createDisp == FILE_OVERWRITE) {
         /* don't create if not found */
-        if (dscp)
-            cm_ReleaseSCache(dscp);
+        cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         free(realPathp);
         return CM_ERROR_NOSUCHFILE;
     }
     else if (realDirFlag == 0 || realDirFlag == -1) {
-        osi_assertx(dscp != NULL, "null cm_scache_t");
+        /* createDisp: FILE_SUPERSEDE, FILE_CREATE, FILE_OPEN_IF, FILE_OVERWRITE_IF */
         osi_Log1(smb_logp, "smb_ReceiveNTTranCreate creating file %S",
                   osi_LogSaveClientString(smb_logp, lastNamep));
         openAction = 2;		/* created file */
@@ -8748,8 +8723,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             }	/* lookup succeeded */
         }
     } else {
-        /* create directory */
-        osi_assertx(dscp != NULL, "null cm_scache_t");
+        /* create directory; createDisp: FILE_CREATE, FILE_OPEN_IF */
         osi_Log1(smb_logp,
                   "smb_ReceiveNTTranCreate creating directory %S",
                   osi_LogSaveClientString(smb_logp, lastNamep));
