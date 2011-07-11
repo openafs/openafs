@@ -403,9 +403,9 @@ authentication may link against them.
 
 %package authlibs-devel
 %if %{build_authlibs}
-Requires: openafs-authlibs = %{version}
+Requires: openafs-authlibs = %{version}-%{release}
 %endif
-Requires: openafs-devel = %{version}
+Requires: openafs-devel = %{version}-%{release}
 Summary: OpenAFS shared library development
 Group: Development/Filesystems
 
@@ -422,6 +422,7 @@ libraries.
 %package devel
 Summary: OpenAFS Development Libraries and Headers
 Group: Development/Filesystems
+Requires: openafs = %{version}-%{release}
 
 %description devel
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -435,7 +436,7 @@ shared libraries.
 
 %package docs
 Summary: OpenAFS user and administrator documentation
-Requires: openafs = %{version}
+Requires: openafs = %{version}-%{release}
 Group: Networking/Filesystems
 
 %description docs
