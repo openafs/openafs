@@ -247,9 +247,7 @@ extern int SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp,
 extern void DoSalvageVolumeGroup(struct SalvInfo *salvinfo,
                                  struct InodeSummary *isp, int nVols);
 #ifdef AFS_NT40_ENV
-extern void SalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nVols);
-#else
-#define SalvageVolumeGroup DoSalvageVolumeGroup
+extern void nt_SalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nVols);
 #endif
 extern int SalvageVolumeHeaderFile(struct SalvInfo *salvinfo,
                                    struct InodeSummary *isp,

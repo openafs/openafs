@@ -889,7 +889,12 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	/* Salvage the group of volumes (several read-only + 1 read/write)
 	 * starting with the current read-only volume we're looking at.
 	 */
-	SalvageVolumeGroup(salvinfo, &salvinfo->inodeSummary[i], j - i);
+#ifdef AFS_NT40_ENV
+	nt_SalvageVolumeGroup(salvinfo, &salvinfo->inodeSummary[i], j - i);
+#else
+	DoSalvageVolumeGroup(salvinfo, &salvinfo->inodeSummary[i], j - i);
+#endif /* AFS_NT40_ENV */
+
     }
 
     /* Delete any additional volumes that were listed in the partition but which didn't have any corresponding inodes */
@@ -1848,7 +1853,7 @@ nt_SVG(void *arg)
 }
 
 void
-SalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nVols)
+nt_SalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nVols)
 {
     pthread_t tid;
     pthread_attr_t tattr;
