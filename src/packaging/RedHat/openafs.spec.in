@@ -187,32 +187,15 @@
 # you'll need to tweak that last bit.
 %if !%{build_userspace_on_cmdline} && !%{build_modules_on_cmdline}
 
-%ifarch x86_64 ia64 s390 s390x
 %define build_userspace 1
 %define build_modules 1
-%ifarch x86_64 ia64
+%ifarch %{ix86} x86_64 ia64
 %define build_authlibs 1
 %else
 %define build_authlibs 0
 %endif
-%endif
 
-%ifarch %{ix86}
-%define build_userspace 0
-%define build_modules 1
-%define build_authlibs 1
-%endif
-
-%ifarch i386
-%define build_userspace 1
-%define build_modules 0
-%define build_authlibs 1
-%endif
-
-%endif
-
-# deal with cmdline specification
-%if %{build_userspace_on_cmdline} || %{build_modules_on_cmdline}
+%else
 %if !%{build_userspace_on_cmdline}
 %define build_userspace 0
 %endif
@@ -242,6 +225,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: OpenAFS Gatekeepers <openafs-gatekeepers@openafs.org>
 Group: Networking/Filesystems
 BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
+BuildRequires: perl-devel perl-ExtUtils-Embed
 %if %{krb5support}
 BuildRequires: krb5-devel
 %endif
