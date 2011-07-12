@@ -395,6 +395,8 @@ afs_vfs_getattr(struct mount *mp, struct vfs_attr *outattrs,
                    VOL_CAP_FMT_ZERO_RUNS |
                    VOL_CAP_FMT_CASE_SENSITIVE |
                    VOL_CAP_FMT_CASE_PRESERVING |
+		   VOL_CAP_FMT_PERSISTENTOBJECTIDS |
+		   VOL_CAP_FMT_2TB_FILESIZE |
                    VOL_CAP_FMT_FAST_STATFS;
          vcapattrptr->capabilities[VOL_CAPABILITIES_INTERFACES] = 
                    VOL_CAP_INT_ADVLOCK | 
@@ -414,6 +416,8 @@ afs_vfs_getattr(struct mount *mp, struct vfs_attr *outattrs,
                  VOL_CAP_FMT_ZERO_RUNS |
                  VOL_CAP_FMT_CASE_SENSITIVE |
                  VOL_CAP_FMT_CASE_PRESERVING |
+		 VOL_CAP_FMT_PERSISTENTOBJECTIDS |
+		 VOL_CAP_FMT_2TB_FILESIZE |
                  VOL_CAP_FMT_FAST_STATFS;
          vcapattrptr->valid[VOL_CAPABILITIES_INTERFACES] =
                  VOL_CAP_INT_SEARCHFS |
