@@ -184,7 +184,7 @@ if [ $firstpass = yes ]; then
        ln -s ../../Library/OpenAFS/Tools/etc/$f $PKGROOT/usr/sbin/$f
     done
     for f in $SHLIBLIST; do
-       ln -s ../../Library/OpenAFS/Tools/etc/$f $PKGROOT/usr/lib/$f
+       ln -s ../../Library/OpenAFS/Tools/lib/$f $PKGROOT/usr/lib/$f
     done
     for f in `ls $PKGROOT/Library/OpenAFS/Tools/man/man1`; do
 	gzip -9 $PKGROOT/Library/OpenAFS/Tools/man/man1/$f
