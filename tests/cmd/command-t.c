@@ -157,8 +157,8 @@ main(int argc, char **argv)
 
     /* Check that paramaters with abbreviation disabled don't make things
      * ambiguous */
-    cmd_AddParmAtOffset(opts, "-sugar", CMD_SINGLE, CMD_OPTIONAL | CMD_NOABBRV,
-			"sugar with that", SUGAR_OFF);
+    cmd_AddParmAtOffset(opts, SUGAR_OFF, "-sugar", CMD_SINGLE, CMD_OPTIONAL | CMD_NOABBRV,
+			"sugar with that");
     code = cmd_ParseLine("-fi foo -s bar -flag", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
