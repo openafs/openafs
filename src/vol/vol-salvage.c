@@ -1928,6 +1928,18 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	IH_INIT(salvinfo->VGLinkH, salvinfo->fileSysDevice, isp->RWvolumeId, ino);
 	fdP = IH_OPEN(salvinfo->VGLinkH);
     }
+    if (VALID_INO(ino) && fdP != NULL) {
+	struct versionStamp header;
+	afs_sfsize_t nBytes;
+
+	nBytes = FDH_PREAD(fdP, (char *)&header, sizeof(struct versionStamp), 0);
+	if (nBytes != sizeof(struct versionStamp)
+	    || header.magic != LINKTABLEMAGIC) {
+            Log("Bad linktable header for volume %u.\n", isp->RWvolumeId);
+	    FDH_REALLYCLOSE(fdP);
+	    fdP = NULL;
+	}
+    }
     if (!VALID_INO(ino) || fdP == NULL) {
 	Log("%s link table for volume %u.\n",
 	    Testing ? "Would have recreated" : "Recreating", isp->RWvolumeId);
@@ -2288,7 +2300,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	if (stuff[i].inodeType == VI_LINKTABLE) {
 	    /* Gross hack: SalvageHeader does a bcmp on the volume header.
 	     * And we may have recreated the link table earlier, so set the
-	     * RW header as well.
+	     * RW header as well. The header magic was already checked.
 	     */
 	    if (VALID_INO(salvinfo->VGLinkH->ih_ino)) {
 		*stuff[i].inode = salvinfo->VGLinkH->ih_ino;
@@ -2384,7 +2396,7 @@ SalvageHeader(struct SalvInfo *salvinfo, struct stuff *sp,
 	return 0;
 #ifndef AFS_NAMEI_ENV
     if (sp->inodeType == VI_LINKTABLE)
-	return 0;
+	return 0; /* header magic was already checked */
 #endif
     if (*(sp->inode) == 0) {
 	if (check) {
