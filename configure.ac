@@ -6,7 +6,6 @@ AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 MACOS_VERSION=1.5.76
-LINUX_PKGVER=1.5.76
 #LINUX_PKGREL=0.pre3
 LINUX_PKGREL=1.1
 
@@ -18,8 +17,6 @@ if echo "$LINUX_PKGREL" | grep pre >/dev/null 2>/dev/null ; then
 fi
 
 AC_SUBST(MACOS_VERSION)
-AC_SUBST(LINUX_PKGVER)
-AC_SUBST(LINUX_PKGREL)
 AC_SUBST(DEB_PKGVER)
 
 dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
@@ -194,7 +191,6 @@ src/packaging/MacOS/OpenAFS.Description.plist \
 src/packaging/MacOS/OpenAFS.Info.plist \
 src/packaging/MacOS/OpenAFS.info \
 src/packaging/MacOS/buildpkg.sh \
-src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/platform/Makefile \
 src/platform/${MKAFS_OSTYPE}/Makefile \
