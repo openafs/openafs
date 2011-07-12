@@ -6,13 +6,8 @@ AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 MACOS_VERSION=1.6.0fc6
-LINUX_PKGVER=1.6.0
-LINUX_PKGREL=0.pre6
-#LINUX_PKGREL=1.1
 
 AC_SUBST(MACOS_VERSION)
-AC_SUBST(LINUX_PKGVER)
-AC_SUBST(LINUX_PKGREL)
 
 dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
 AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
