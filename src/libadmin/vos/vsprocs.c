@@ -394,7 +394,6 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 
     struct nvldbentry entry;
     int islocked;
-    afs_int32 error;
     int same;
     afs_int32 store_flags;
 
@@ -409,7 +408,6 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     fromtid = 0;
     totid = 0;
     clonetid = 0;
-    error = 0;
     volid = 0;
     backupId = 0;
     newVol = 0;
@@ -512,7 +510,6 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 	}
 
 	fromtid = 0;
-	error = 0;
 	goto fail_UV_MoveVolume;
     }
 
@@ -2091,11 +2088,9 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     afs_int32 rcode;
 
     struct nvldbentry entry;
-    afs_int32 error;
     int islocked;
 
     islocked = 0;
-    error = 0;
     rxError = 0;
     fromcall = (struct rx_call *)0;
     fromconn = (struct rx_connection *)0;
@@ -2292,7 +2287,6 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
     afs_int32 temptid;
     int success;
     struct nvldbentry entry;
-    afs_int32 error;
     int islocked;
     struct restoreCookie cookie;
     int reuseID;
@@ -2303,7 +2297,6 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
     memset(&cookie, 0, sizeof(cookie));
     islocked = 0;
     success = 0;
-    error = 0;
     reuseID = 1;
     tocall = (struct rx_call *)0;
     toconn = (struct rx_connection *)0;
@@ -3616,7 +3609,6 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_int32 code, vcode;
     int noError;
     afs_int32 nentries, tentries = 0;
     struct VldbListByAttributes attributes;
@@ -3627,8 +3619,6 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
     afs_int32 si, nsi;
     afs_int32 modified = 0;
 
-    code = 0;
-    vcode = 0;
     noError = 1;
     arrayEntries.nbulkentries_val = 0;
 
@@ -3691,14 +3681,13 @@ UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
     int rc = 0;
     afs_status_t tst = 0;
     afs_status_t etst = 0;
-    afs_int32 rcode, error;
+    afs_int32 rcode;
     int i, index;
     char nameBuffer[256];
     afs_int32 tid;
     struct rx_connection *aconn;
     int islocked;
 
-    error = 0;
     aconn = (struct rx_connection *)0;
     tid = 0;
     islocked = 0;
@@ -4055,12 +4044,10 @@ int
 UV_VolumeZap(afs_cell_handle_p cellHandle, struct rx_connection *server,
 	     unsigned int partition, afs_uint32 volumeId, afs_status_p st)
 {
-    afs_int32 rcode, ttid, error, code;
+    afs_int32 rcode, ttid;
     int rc = 0;
     afs_status_t tst = 0;
 
-    code = 0;
-    error = 0;
     ttid = 0;
 
     tst = AFSVolTransCreate(server, volumeId, partition, ITOffline, &ttid);
