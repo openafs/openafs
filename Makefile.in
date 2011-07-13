@@ -792,8 +792,15 @@ clean2:
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
 	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
+dist:
+	mkdir -p packages
+	./build-tools/make-release --dir=packages HEAD
+
+srpm:
+	(cd packages && ../src/packaging/RedHat/makesrpm.pl *-src.tar.bz2 *-doc.tar.bz2)
+
 distclean: clean
-	/bin/rm -rf lib include
+	/bin/rm -rf lib include packages
 	/bin/rm -f config.log config.cache config.status \
 	src/config/afsconfig.h src/config/stamp-h1 \
 	src/libafs/Makefile \
