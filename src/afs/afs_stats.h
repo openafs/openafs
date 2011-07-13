@@ -655,6 +655,7 @@ struct afs_CMCallStats {
     afs_int32 C_BPrefetchNoCache;	/* afs_daemons.c */
     afs_int32 C_afs_ReadNoCache;	/* osi_vnodeops.c */
     afs_int32 C_PSetTokens2;		/* afs_pioctl.c */
+    afs_int32 C_PPrefetchFromTape;	/* afs_pioctl.c */
 };
 
 struct afs_CMMeanStats {
