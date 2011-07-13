@@ -1786,7 +1786,6 @@ main(int argc, char *argv[])
 {				/*Main routine */
 
     struct cmd_syndesc *cs;	/*Command line syntax descriptor */
-    afs_int32 code;	/*Return code */
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -1973,16 +1972,9 @@ main(int argc, char *argv[])
     /*
      * Execute the parsed command.
      */
-    code = cmd_Dispatch(argc, argv);
-#if 0
-    if (code) {
-	fprintf(stderr, "%s: Call to cmd_Dispatch() failed; code is %d\n",
-		uss_whoami, code);
-	exit(-1);
-    }
-#endif /* 0 */
+    cmd_Dispatch(argc, argv);
     if (doUnlog) {
-	code = uss_fs_UnlogToken(uss_Cell);
+	uss_fs_UnlogToken(uss_Cell);
     }
     return 0;
 }				/*Main routine */
