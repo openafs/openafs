@@ -1175,7 +1175,8 @@ RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 static int
 CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 {
-    Inode ino, nearInode;
+    Inode ino;
+    Inode nearInode AFS_UNUSED;
     ssize_t rdlen;
     ssize_t wrlen;
     afs_fsize_t size;
@@ -1794,7 +1795,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
     Error errorCode = 0;		/* Error code returned back */
     Error temp;
     Inode inode = 0;
-    Inode nearInode;		/* hint for inode allocation in solaris */
+    Inode nearInode AFS_UNUSED;	 /* hint for inode allocation in solaris */
     afs_ino_str_t stmp;
 
     if ((errorCode =

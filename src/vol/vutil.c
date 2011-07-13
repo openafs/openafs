@@ -109,7 +109,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     struct VolumeDiskHeader diskHeader;
     IHandle_t *handle;
     FdHandle_t *fdP;
-    Inode nearInode = 0;
+    Inode nearInode AFS_UNUSED = 0;
     char *part, *name;
     struct stat st;
     struct VolumeHeader tempHeader;
