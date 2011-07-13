@@ -315,7 +315,6 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     afs_int32 shouldRetry = 0;
     afs_int32 serversleft = 1;
     struct afs_stats_RPCErrors *aerrP;
-    afs_int32 markeddown;
     afs_uint32 address;
 
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
@@ -484,17 +483,10 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	     */
 	    goto out;
 	}
-	markeddown = afs_ServerDown(sa);
+	afs_ServerDown(sa);
 	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;
-#if 0
-	/* retry *once* when the server is timed out in case of NAT */
-	if (markeddown && acode == RX_CALL_DEAD) {
-	    aconn->forceConnectFS = 1;
-	    shouldRetry = 1;
-	}
-#endif
     }
 
     if (acode == VBUSY || acode == VRESTARTING) {
