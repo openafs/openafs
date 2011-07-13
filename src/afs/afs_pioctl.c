@@ -4880,7 +4880,7 @@ DECL_PIOCTL(PPrefetchFromTape)
     struct vcache *tvc;
     struct rx_connection *rxconn;
 
-    AFS_STATCNT(PSetAcl);
+    AFS_STATCNT(PPrefetchFromTape);
     if (!avc)
 	return EINVAL;
 
