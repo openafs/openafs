@@ -190,10 +190,9 @@ struct vcache *
 osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 {
     struct vcache *tvc;
-    int LRUme;
     unsigned int key, skey;
     char *ts = aname;
-    struct nc *tnc, *tnc1 = 0;
+    struct nc *tnc;
     int safety;
 #ifdef AFS_DARWIN80_ENV
     vnode_t tvp;
@@ -218,7 +217,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	if ( /* (tnc->key == key)  && */ (tnc->dirp == adp)
 	    && (!strcmp((char *)tnc->name, aname))) {
 	    tvc = tnc->vp;
-	    tnc1 = tnc;
 	    break;
 	} else if (tnc->next == nameHash[skey]) {	/* end of list */
 	    break;
@@ -232,7 +230,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	}
     }
 
-    LRUme = 0;			/* (tnc != nameHash[skey]); */
     ReleaseReadLock(&afs_xdnlc);
 
     if (!tvc) {
@@ -272,38 +269,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 #endif
 	ReleaseReadLock(&afs_xvcache);
 
-#ifdef	notdef
-	/*
-	 * XX If LRUme ever is non-zero change the if statement around because
-	 * aix's cc with optimizer on won't necessarily check things in order XX
-	 */
-	if (LRUme && (0 == NBObtainWriteLock(&afs_xdnlc))) {
-	    /* don't block to do this */
-	    /* tnc might have been moved during race condition, */
-	    /* but it's always in a legit hash chain when a lock is granted,
-	     * or else it's on the freelist so prev == NULL,
-	     * so at worst this is redundant */
-	    /* Now that we've got it held, and a lock on the dnlc, we
-	     * should check to be sure that there was no race, and
-	     * bail out if there was. */
-	    if (tnc->prev) {
-		/* special case for only two elements on list - relative ordering
-		 * doesn't change */
-		if (tnc->prev != tnc->next) {
-		    /* remove from old location */
-		    tnc->prev->next = tnc->next;
-		    tnc->next->prev = tnc->prev;
-		    /* insert into new location */
-		    tnc->next = nameHash[skey];
-		    tnc->prev = tnc->next->prev;
-		    tnc->next->prev = tnc;
-		    tnc->prev->next = tnc;
-		}
-		nameHash[skey] = tnc;
-	    }
-	    ReleaseWriteLock(&afs_xdnlc);
-	}
-#endif
     }
 
     return tvc;
