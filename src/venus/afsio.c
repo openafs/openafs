@@ -253,7 +253,6 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
 int
 main(int argc, char **argv)
 {
-    afs_int32 code = 0;
     struct cmd_syndesc *ts;
     char baseName[AFSNAMEMAX];
 
@@ -370,7 +369,7 @@ main(int argc, char **argv)
     if (afscp_Init(NULL) != 0)
 	exit(1);
 
-    code = cmd_Dispatch(argc, argv);
+    cmd_Dispatch(argc, argv);
 
     afscp_Finalize();
     exit(0);
