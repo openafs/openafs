@@ -77,6 +77,7 @@ rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
 
+CFLAGS_ticket5.o = @CFLAGS_NOERROR@
 ticket5.o: ticket5.c v5gen.c v5der.c v5gen-rewrite.h ${INCLS}
 
 crc.o: crc.c ${INCLS}

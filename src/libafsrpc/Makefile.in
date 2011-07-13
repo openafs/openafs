@@ -189,6 +189,7 @@ rxkad_common.o: ${RXKAD}/rxkad_common.c
 ticket.o: ${RXKAD}/ticket.c
 	$(AFS_CCRULE) -I../rxkad $(RXKAD)/ticket.c
 
+CFLAGS_ticket5.o = @CFLAGS_NOERROR@
 ticket5.o: ${RXKAD}/ticket5.c
 	$(AFS_CCRULE) -I../rxkad -I$(RXKAD) $(RXKAD)/ticket5.c
 
