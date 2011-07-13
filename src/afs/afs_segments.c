@@ -169,7 +169,6 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
     afs_hyper_t newDV, oldDV;	/* DV when we start, and finish, respectively */
     struct dcache **dcList;
     unsigned int i, j, minj, moredata, high, off;
-    afs_size_t tlen;
     afs_size_t maxStoredLength;	/* highest offset we've written to server. */
     int safety, marineronce = 0;
 
@@ -238,7 +237,6 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
     origCBs = afs_allCBs;
 
     maxStoredLength = 0;
-    tlen = avc->f.m.Length;
     minj = 0;
 
     do {
