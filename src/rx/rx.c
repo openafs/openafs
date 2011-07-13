@@ -1235,7 +1235,6 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
     MUTEX_EXIT(&conn->conn_data_lock);
 
     /* Check for extant references to this connection */
-    MUTEX_ENTER(&conn->conn_call_lock);
     for (i = 0; i < RX_MAXCALLS; i++) {
 	struct rx_call *call = conn->call[i];
 	if (call) {
@@ -1259,8 +1258,6 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 	    }
 	}
     }
-    MUTEX_EXIT(&conn->conn_call_lock);
-
 #ifdef RX_ENABLE_LOCKS
     if (!havecalls) {
 	if (MUTEX_TRYENTER(&conn->conn_data_lock)) {
@@ -2702,11 +2699,7 @@ rxi_FreeCall(struct rx_call *call)
     call->state = RX_STATE_RESET;
     MUTEX_EXIT(&rx_refcnt_mutex);
     rxi_ResetCall(call, 0);
-
-    MUTEX_ENTER(&conn->conn_call_lock);
-    if (call->conn->call[channel] == call)
-        call->conn->call[channel] = 0;
-    MUTEX_EXIT(&conn->conn_call_lock);
+    call->conn->call[channel] = (struct rx_call *)0;
 
     MUTEX_ENTER(&rx_freeCallQueue_lock);
     SET_CALL_QUEUE_LOCK(call, &rx_freeCallQueue_lock);
@@ -3242,77 +3235,93 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 
     channel = np->header.cid & RX_CHANNELMASK;
     call = conn->call[channel];
-
-    if (call) {
+#ifdef	RX_ENABLE_LOCKS
+    if (call)
 	MUTEX_ENTER(&call->lock);
-        currentCallNumber = conn->callNumber[channel];
-    } else if (type == RX_SERVER_CONNECTION) {  /* No call allocated */
-        MUTEX_ENTER(&conn->conn_call_lock);
-        call = conn->call[channel];
-        if (call) {
-            MUTEX_ENTER(&call->lock);
-            MUTEX_EXIT(&conn->conn_call_lock);
-            currentCallNumber = conn->callNumber[channel];
-        } else {
-            call = rxi_NewCall(conn, channel);  /* returns locked call */
-            MUTEX_EXIT(&conn->conn_call_lock);
-            *call->callNumber = currentCallNumber = np->header.callNumber;
-#ifdef RXDEBUG
-            if (np->header.callNumber == 0)
-                dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
-                     np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
-                     np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
-                     np->header.flags, np, np->length));
+    /* Test to see if call struct is still attached to conn. */
+    if (call != conn->call[channel]) {
+	if (call)
+	    MUTEX_EXIT(&call->lock);
+	if (type == RX_SERVER_CONNECTION) {
+	    call = conn->call[channel];
+	    /* If we started with no call attached and there is one now,
+	     * another thread is also running this routine and has gotten
+	     * the connection channel. We should drop this packet in the tests
+	     * below. If there was a call on this connection and it's now
+	     * gone, then we'll be making a new call below.
+	     * If there was previously a call and it's now different then
+	     * the old call was freed and another thread running this routine
+	     * has created a call on this channel. One of these two threads
+	     * has a packet for the old call and the code below handles those
+	     * cases.
+	     */
+	    if (call)
+		MUTEX_ENTER(&call->lock);
+	} else {
+	    /* This packet can't be for this call. If the new call address is
+	     * 0 then no call is running on this channel. If there is a call
+	     * then, since this is a client connection we're getting data for
+	     * it must be for the previous call.
+	     */
+            if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
+            MUTEX_ENTER(&rx_refcnt_mutex);
+	    conn->refCount--;
+            MUTEX_EXIT(&rx_refcnt_mutex);
+	    return np;
+	}
+    }
 #endif
-            call->state = RX_STATE_PRECALL;
-            clock_GetTime(&call->queueTime);
-            hzero(call->bytesSent);
-            hzero(call->bytesRcvd);
-            /*
-             * If the number of queued calls exceeds the overload
-             * threshold then abort this call.
-             */
-            if ((rx_BusyThreshold > 0) &&
-                (rx_nWaiting > rx_BusyThreshold)) {
-                struct rx_packet *tp;
+    currentCallNumber = conn->callNumber[channel];
 
-                rxi_CallError(call, rx_BusyError);
-                tp = rxi_SendCallAbort(call, np, 1, 0);
-                MUTEX_EXIT(&call->lock);
+    if (type == RX_SERVER_CONNECTION) {	/* We're the server */
+	if (np->header.callNumber < currentCallNumber) {
+            if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
+#ifdef	RX_ENABLE_LOCKS
+	    if (call)
+		MUTEX_EXIT(&call->lock);
+#endif
+            MUTEX_ENTER(&rx_refcnt_mutex);
+	    conn->refCount--;
+            MUTEX_EXIT(&rx_refcnt_mutex);
+	    return np;
+	}
+	if (!call) {
+	    MUTEX_ENTER(&conn->conn_call_lock);
+	    call = rxi_NewCall(conn, channel);
+	    MUTEX_EXIT(&conn->conn_call_lock);
+	    *call->callNumber = np->header.callNumber;
+#ifdef RXDEBUG
+	    if (np->header.callNumber == 0)
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d",
+                      np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
+                      np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
+                      np->header.flags, np, np->length));
+#endif
+	    call->state = RX_STATE_PRECALL;
+	    clock_GetTime(&call->queueTime);
+	    hzero(call->bytesSent);
+	    hzero(call->bytesRcvd);
+	    /*
+	     * If the number of queued calls exceeds the overload
+	     * threshold then abort this call.
+	     */
+	    if ((rx_BusyThreshold > 0) && (rx_nWaiting > rx_BusyThreshold)) {
+		struct rx_packet *tp;
+
+		rxi_CallError(call, rx_BusyError);
+		tp = rxi_SendCallAbort(call, np, 1, 0);
+		MUTEX_EXIT(&call->lock);
                 MUTEX_ENTER(&rx_refcnt_mutex);
-                conn->refCount--;
+		conn->refCount--;
                 MUTEX_EXIT(&rx_refcnt_mutex);
                 if (rx_stats_active)
                     rx_MutexIncrement(rx_stats.nBusies, rx_stats_mutex);
-                return tp;
-            }
-            rxi_KeepAliveOn(call);
-        }
-    } else {    /* RX_CLIENT_CONNECTION and No call allocated */
-        /* This packet can't be for this call. If the new call address is
-         * 0 then no call is running on this channel. If there is a call
-         * then, since this is a client connection we're getting data for
-         * it must be for the previous call.
-         */
-        if (rx_stats_active)
-	    rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
-        MUTEX_ENTER(&rx_refcnt_mutex);
-        conn->refCount--;
-        MUTEX_EXIT(&rx_refcnt_mutex);
-        return np;
-    }
-
-    /* There is a non-NULL locked call at this point */
-    if (type == RX_SERVER_CONNECTION) {	/* We're the server */
-        if (np->header.callNumber < currentCallNumber) {
-            MUTEX_EXIT(&call->lock);
-            if (rx_stats_active)
-		rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-            conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
-            return np;
-        } else if (np->header.callNumber != currentCallNumber) {
+		return tp;
+	    }
+	    rxi_KeepAliveOn(call);
+	} else if (np->header.callNumber != currentCallNumber) {
 	    /* Wait until the transmit queue is idle before deciding
 	     * whether to reset the current call. Chances are that the
 	     * call will be in ether DALLY or HOLD state once the TQ_BUSY
@@ -3387,11 +3396,15 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	}
     } else {			/* we're the client */
 	/* Ignore all incoming acknowledgements for calls in DALLY state */
-	if ((call->state == RX_STATE_DALLY)
+	if (call && (call->state == RX_STATE_DALLY)
 	    && (np->header.type == RX_PACKET_TYPE_ACK)) {
             if (rx_stats_active)
                 rx_MutexIncrement(rx_stats.ignorePacketDally, rx_stats_mutex);
-            MUTEX_EXIT(&call->lock);
+#ifdef  RX_ENABLE_LOCKS
+	    if (call) {
+		MUTEX_EXIT(&call->lock);
+	    }
+#endif
             MUTEX_ENTER(&rx_refcnt_mutex);
 	    conn->refCount--;
             MUTEX_EXIT(&rx_refcnt_mutex);
@@ -3400,10 +3413,14 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 
 	/* Ignore anything that's not relevant to the current call.  If there
 	 * isn't a current call, then no packet is relevant. */
-	if (np->header.callNumber != currentCallNumber) {
+	if (!call || (np->header.callNumber != currentCallNumber)) {
             if (rx_stats_active)
                 rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
-            MUTEX_EXIT(&call->lock);
+#ifdef	RX_ENABLE_LOCKS
+	    if (call) {
+		MUTEX_EXIT(&call->lock);
+	    }
+#endif
             MUTEX_ENTER(&rx_refcnt_mutex);
 	    conn->refCount--;
             MUTEX_EXIT(&rx_refcnt_mutex);
@@ -3412,7 +3429,9 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	/* If the service security object index stamped in the packet does not
 	 * match the connection's security index, ignore the packet */
 	if (np->header.securityIndex != conn->securityIndex) {
+#ifdef	RX_ENABLE_LOCKS
 	    MUTEX_EXIT(&call->lock);
+#endif
             MUTEX_ENTER(&rx_refcnt_mutex);
 	    conn->refCount--;
             MUTEX_EXIT(&rx_refcnt_mutex);
