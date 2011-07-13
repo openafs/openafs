@@ -1021,7 +1021,6 @@ mini_PrintDiskStats(struct mini_line *a_srvline,
 {				/*mini_PrintDiskStats */
 
     static char rn[] = "mini_PrintDiskStats";	/*Routine name */
-    int code;			/*Return code */
     char s[128];		/*String buffer */
     struct onode *curr_disklight;	/*Ptr to current disk light */
     struct onode *srvname_light;	/*Ptr to server name light */
@@ -1077,13 +1076,13 @@ mini_PrintDiskStats(struct mini_line *a_srvline,
 			used_disk_idx, diskdata->label);
 		fflush(scout_debugfd);
 	    }
-	    code = mini_justify(" ",	/*Src buffer */
-				diskdata->label,	/*Dest buffer */
-				scout_col_width[COL_DISK],	/*Dest's width */
-				SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
-				SCOUT_LEFT_TRUNC,	/*Left-truncate */
-				SCOUT_ISNT_LDISK);	/*Not a labeled disk */
-	    code = gator_light_set(curr_disklight, 0);
+	    mini_justify(" ",	/*Src buffer */
+			 diskdata->label,	/*Dest buffer */
+			 scout_col_width[COL_DISK],	/*Dest's width */
+			 SCOUT_RIGHT_JUSTIFY,	/*Right-justify */
+			 SCOUT_LEFT_TRUNC,	/*Left-truncate */
+			 SCOUT_ISNT_LDISK);	/*Not a labeled disk */
+	    gator_light_set(curr_disklight, 0);
 	    if (a_fix_line_num) {
 		curr_disklight->o_y += a_delta_line_num;
 		disk_strparams = (struct gwin_strparams *)(diskdata->llrock);
@@ -1189,14 +1188,14 @@ mini_PrintDiskStats(struct mini_line *a_srvline,
 			    rn, s, found_idx, diskdata->label);
 		    fflush(scout_debugfd);
 		}
-		code = mini_justify(s,	/*Src buffer */
-				    diskdata->label,	/*Dest buffer */
-				    scout_col_width[COL_DISK],	/*Dest's width */
-				    SCOUT_LEFT_JUSTIFY,	/*Left-justify */
-				    SCOUT_LEFT_TRUNC,	/*Left-truncate */
-				    SCOUT_IS_LDISK);	/*Labeled disk */
+		mini_justify(s,	/*Src buffer */
+			     diskdata->label,	/*Dest buffer */
+			     scout_col_width[COL_DISK],	/*Dest's width */
+			     SCOUT_LEFT_JUSTIFY,	/*Left-justify */
+			     SCOUT_LEFT_TRUNC,	/*Left-truncate */
+			     SCOUT_IS_LDISK);	/*Labeled disk */
 
-		code = gator_light_set(sc_disk->disk_lp, pastthreshold);
+		gator_light_set(sc_disk->disk_lp, pastthreshold);
 
 	    }			/*Found disk record */
 	}
