@@ -678,9 +678,6 @@ VolQuery(struct cmd_syndesc * as, void * rock)
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Volume v;
-#ifdef AFS_DEMAND_ATTACH_FS
-    int hi, lo;
-#endif
 
     dafs_prolog();
 
@@ -744,28 +741,14 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    /* statistics structure */
 	    printf("\tstats = {\n");
 
-	    printf("\t\thash_lookups = {\n");
-	    SplitInt64(v.stats.hash_lookups,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
-	    printf("\t\t}\n");
-
-	    printf("\t\thash_short_circuits = {\n");
-	    SplitInt64(v.stats.hash_short_circuits,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
-	    printf("\t\t}\n");
-
-	    printf("\t\thdr_loads = {\n");
-	    SplitInt64(v.stats.hdr_loads,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
-	    printf("\t\t}\n");
-
-	    printf("\t\thdr_gets = {\n");
-	    SplitInt64(v.stats.hdr_gets,hi,lo);
-	    printf("\t\t\thi = %u\n", hi);
-	    printf("\t\t\tlo = %u\n", lo);
+	    printf("\t\thash_lookups = %"AFS_INT64_FMT"\n",
+		   v.stats.hash_lookups);
+	    printf("\t\thash_short_circuits = %"AFS_INT64_FMT"\n",
+		   v.stats.hash_short_circuits);
+	    printf("\t\thdr_loads = %"AFS_INT64_FMT"\n",
+		   v.stats.hdr_loads);
+	    printf("\t\thdr_gets = %"AFS_INT64_FMT"\n",
+		   v.stats.hdr_gets);
 	    printf("\t\t}\n");
 
 	    printf("\t\tattaches         = %u\n", v.stats.attaches);
@@ -1237,7 +1220,6 @@ print_vol_stats_general(VolPkgStats * stats)
 #ifdef AFS_DEMAND_ATTACH_FS
     int i;
 #endif
-    afs_uint32 hi, lo;
 
     printf("VolPkgStats = {\n");
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1247,54 +1229,23 @@ print_vol_stats_general(VolPkgStats * stats)
 	       stats->state_levels[i]);
     }
 
-    SplitInt64(stats->hash_looks, hi, lo);
-    printf("\thash_looks = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->hash_reorders, hi, lo);
-    printf("\thash_reorders = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->salvages, hi, lo);
-    printf("\tsalvages = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->vol_ops, hi, lo);
-    printf("\tvol_ops = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
+    printf("\thash_looks = %"AFS_INT64_FMT"\n",
+	   stats->hash_looks);
+    printf("\thash_reorders = %"AFS_INT64_FMT"\n",
+	   stats->hash_reorders);
+    printf("\tsalvages = %"AFS_INT64_FMT"\n",
+	   stats->salvages);
+    printf("\tvol_ops = %"AFS_INT64_FMT"\n",
+	   stats->vol_ops);
 #endif
-    SplitInt64(stats->hdr_loads, hi, lo);
-    printf("\thdr_loads = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->hdr_gets, hi, lo);
-    printf("\thdr_gets = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->attaches, hi, lo);
-    printf("\tattaches = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->soft_detaches, hi, lo);
-    printf("\tsoft_detaches = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
+    printf("\thdr_loads = %"AFS_INT64_FMT"\n",
+	   stats->hdr_loads);
+    printf("\thdr_gets = %"AFS_INT64_FMT"\n",
+	   stats->hdr_gets);
+    printf("\tattaches = %"AFS_INT64_FMT"\n",
+	   stats->attaches);
+    printf("\tsoft_detaches = %"AFS_INT64_FMT"\n",
+	   stats->soft_detaches);
     printf("\thdr_cache_size = %d\n", stats->hdr_cache_size);
 
     printf("}\n");
@@ -1317,10 +1268,6 @@ print_vol_stats_viceP(struct DiskPartitionStats64 * stats)
 static void
 print_vol_stats_hash(struct VolumeHashChainStats * stats)
 {
-#ifdef AFS_DEMAND_ATTACH_FS
-    afs_uint32 hi, lo;
-#endif
-
     printf("DiskPartitionStats = {\n");
     printf("\ttable_size = %d\n", stats->table_size);
     printf("\tchain_len = %d\n", stats->chain_len);
@@ -1329,23 +1276,12 @@ print_vol_stats_hash(struct VolumeHashChainStats * stats)
     printf("\tchain_cacheCheck = %d\n", stats->chain_cacheCheck);
     printf("\tchain_busy = %d\n", stats->chain_busy);
 
-    SplitInt64(stats->chain_looks, hi, lo);
-    printf("\tchain_looks = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->chain_gets, hi, lo);
-    printf("\tchain_gets = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
-
-    SplitInt64(stats->chain_reorders, hi, lo);
-    printf("\tchain_reorders = {\n");
-    printf("\t\thi = %u\n", hi);
-    printf("\t\tlo = %u\n", lo);
-    printf("\t}\n");
+    printf("\tchain_looks = %"AFS_INT64_FMT"\n",
+	   stats->chain_looks);
+    printf("\tchain_gets = %"AFS_INT64_FMT"\n",
+	   stats->chain_gets);
+    printf("\tchain_reorders = %"AFS_INT64_FMT"\n",
+	   stats->chain_reorders);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     printf("}\n");

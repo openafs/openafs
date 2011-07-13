@@ -8749,16 +8749,14 @@ VVByPListWait_r(struct DiskPartition64 * dp)
 void
 VPrintCacheStats_r(void)
 {
-    afs_uint32 get_hi, get_lo, load_hi, load_lo;
     struct VnodeClassInfo *vcp;
     vcp = &VnodeClassInfo[vLarge];
     Log("Large vnode cache, %d entries, %d allocs, %d gets (%d reads), %d writes\n", vcp->cacheSize, vcp->allocs, vcp->gets, vcp->reads, vcp->writes);
     vcp = &VnodeClassInfo[vSmall];
     Log("Small vnode cache,%d entries, %d allocs, %d gets (%d reads), %d writes\n", vcp->cacheSize, vcp->allocs, vcp->gets, vcp->reads, vcp->writes);
-    SplitInt64(VStats.hdr_gets, get_hi, get_lo);
-    SplitInt64(VStats.hdr_loads, load_hi, load_lo);
-    Log("Volume header cache, %d entries, %d gets, %d replacements\n",
-	VStats.hdr_cache_size, get_lo, load_lo);
+    Log("Volume header cache, %d entries, %"AFS_INT64_FMT" gets, "
+        "%"AFS_INT64_FMT" replacements\n",
+	VStats.hdr_cache_size, VStats.hdr_gets, VStats.hdr_loads);
 }
 
 void

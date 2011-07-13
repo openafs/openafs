@@ -5202,7 +5202,6 @@ SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
 static void
 FillPerfValues(struct afs_PerfStats *a_perfP)
 {				/*FillPerfValues */
-    afs_uint32 hi, lo;
     int dir_Buffers;		/*# buffers in use by dir package */
     int dir_Calls;		/*# read calls in dir package */
     int dir_IOs;		/*# I/O ops in dir package */
@@ -5222,10 +5221,8 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     a_perfP->vcache_S_Reads = VnodeClassInfo[vSmall].reads;
     a_perfP->vcache_S_Writes = VnodeClassInfo[vSmall].writes;
     a_perfP->vcache_H_Entries = VStats.hdr_cache_size;
-    SplitInt64(VStats.hdr_gets, hi, lo);
-    a_perfP->vcache_H_Gets = lo;
-    SplitInt64(VStats.hdr_loads, hi, lo);
-    a_perfP->vcache_H_Replacements = lo;
+    a_perfP->vcache_H_Gets = (int)VStats.hdr_gets;
+    a_perfP->vcache_H_Replacements = (int)VStats.hdr_loads;
 
     /*
      * Directory section.
