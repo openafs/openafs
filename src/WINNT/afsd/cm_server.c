@@ -1039,10 +1039,13 @@ LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 */
 void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 {
-    cm_serverRef_t	*current=*list;
-    unsigned short ipRank = element->server->ipRank;
+    cm_serverRef_t	*current;
+    unsigned short ipRank;
 
     lock_ObtainWrite(&cm_serverLock);
+    current=*list;
+    ipRank = element->server->ipRank;
+
     element->refCount++;                /* increase refCount */
 
     /* insertion into empty list  or at the beginning of the list */
@@ -1071,14 +1074,19 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 */
 long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
 {
-    cm_serverRef_t  **current=list;
-    cm_serverRef_t	*element=0;
-
-    /* if there is max of one element in the list, nothing to sort */
-    if ( (!*current) || !((*current)->next)  )
-        return 1;		/* list unchanged: return success */
+    cm_serverRef_t  **current;
+    cm_serverRef_t   *element;
 
     lock_ObtainWrite(&cm_serverLock);
+    current=list;
+    element=0;
+
+    /* if there is max of one element in the list, nothing to sort */
+    if ( (!*current) || !((*current)->next)  ) {
+        lock_ReleaseWrite(&cm_serverLock);
+        return 1;		/* list unchanged: return success */
+    }
+
     /* if the server is on the list, delete it from list */
     while ( *current )
     {
@@ -1112,14 +1120,17 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
 void cm_RandomizeServer(cm_serverRef_t** list)
 {
     int 		count, picked;
-    cm_serverRef_t*	tsrp = *list, *lastTsrp;
+    cm_serverRef_t*	tsrp, *lastTsrp;
     unsigned short	lowestRank;
 
-    /* an empty list or a list with only one element */
-    if ( !tsrp || ! tsrp->next )
-        return ;
-
     lock_ObtainWrite(&cm_serverLock);
+    tsrp = *list;
+
+    /* an empty list or a list with only one element */
+    if ( !tsrp || ! tsrp->next ) {
+        lock_ReleaseWrite(&cm_serverLock);
+        return ;
+    }
 
     /* count the number of servers with the lowest rank */
     lowestRank = tsrp->server->ipRank;
@@ -1241,11 +1252,14 @@ void cm_RemoveVolumeFromServer(cm_server_t * serverp, afs_uint32 volID)
 
 void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
 {
-    cm_serverRef_t  **current = list;
-    cm_serverRef_t  **nextp = 0;
-    cm_serverRef_t  * next = 0;
+    cm_serverRef_t  **current;
+    cm_serverRef_t  **nextp;
+    cm_serverRef_t  * next;
 
     lock_ObtainWrite(&cm_serverLock);
+    current = list;
+    nextp = 0;
+    next = 0;
 
     if (*list == NULL)
         goto done;
