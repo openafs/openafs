@@ -28,7 +28,7 @@
 
 #include "afsutil.h"
 
-#if AFS_PTHREAD_ENV && !defined(AFS_NT40_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
 # include <pthread.h>
 # ifdef HAVE_PTHREAD_NP_H
 #  include <pthread_np.h>
