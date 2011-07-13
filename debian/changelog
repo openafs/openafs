@@ -1,10 +1,13 @@
-openafs (1.6.0~pre6-2) UNRELEASED; urgency=low
+openafs (1.6.0~pre6-2) unstable; urgency=medium
 
+  * Urgency set to medium since 1.6.0~pre6-1 has been in unstable for some
+    time, blocked only by the armel build problem, and 1.6.0~pre4-1 in
+    testing has serious bugs.
   * Revert the removal of Doxygen's jquery copy.  This has now been fixed
     in the Doxygen package.
   * Disable optimization on armel to work around #630746.
 
- -- Russ Allbery <rra@debian.org>  Tue, 28 Jun 2011 20:15:46 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 13 Jul 2011 14:05:26 -0700
 
 openafs (1.6.0~pre6-1) unstable; urgency=low
 
