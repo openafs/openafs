@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#pragma  GCC diagnostic warning "-Wunused-but-set-variable"
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <string.h>
