@@ -14,8 +14,6 @@
 
 #include <roken.h>
 
-#pragma  GCC diagnostic warning "-Wunused-but-set-variable"
-
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
