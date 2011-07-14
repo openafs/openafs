@@ -1525,7 +1525,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
     struct inode *cacheinode = cachefp->f_dentry->d_inode;
     struct page *newpage, *cachepage;
     struct address_space *cachemapping;
-    int pageindex, endindex;
+    int pageindex;
     int code = 0;
 
     cachemapping = cacheinode->i_mapping;
