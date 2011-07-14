@@ -10,6 +10,10 @@
 #ifndef	_AFSUTIL_PROTOTYPES_H
 #define _AFSUTIL_PROTOTYPES_H
 
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+# include <pthread.h>
+#endif
+
 /* afs_atomlist.c */
 
 
