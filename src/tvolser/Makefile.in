@@ -10,6 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 HELPER_SPLINT=@HELPER_SPLINT@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_CLIENT
 
@@ -54,9 +55,7 @@ LIBS=	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libusd.a          \
 	${TOP_LIBDIR}/libafsrpc.a
 
-all: volserver 
-
-all_vos: vos
+all: volserver vos
 
 CFLAGS_rx_pthread.o = -DDPF_FSLOG
 rx_pthread.o: ${RX}/rx_pthread.c
@@ -222,18 +221,18 @@ volserver: ${objects} ${LIBS}
 install: volserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
-
-install_vos: vos
-	${INSTALL} vos ${DESTDIR}${afssrvsbindir}/vos
-	${INSTALL} vos ${DESTDIR}${sbindir}/vos
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then     \
+	    ${INSTALL} vos ${DESTDIR}${afssrvsbindir}/vos      \
+	    ${INSTALL} vos ${DESTDIR}${sbindir}/vos            \
+	fi
 
 dest: volserver
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} volserver ${DEST}/root.server/usr/afs/bin/volserver
-
-dest_vos: vos
-	${INSTALL} vos ${DEST}/root.server/usr/afs/bin/vos
-	${INSTALL} vos ${DEST}/etc/vos
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
+	    ${INSTALL} vos ${DEST}/root.server/usr/afs/bin/vos \
+	    ${INSTALL} vos ${DEST}/etc/vos \
+	fi
 
 clean:
 	$(RM) -f *.o volserver core AFS_component_version_number.c

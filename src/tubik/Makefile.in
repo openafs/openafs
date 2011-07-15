@@ -10,6 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 HELPER_SPLINT=@HELPER_SPLINT@
+ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 UBIK=$(srcdir)/../ubik
 RX=$(srcdir)/../rx
@@ -209,22 +210,25 @@ install: libubik_pthread.a ubik.h ubik_int.h udebug
 	${INSTALL} -d ${DESTDIR}${includedir}
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
-	${INSTALL_PROGRAM} udebug ${DESTDIR}${bindir}/udebug
-	${INSTALL_PROGRAM} udebug ${DESTDIR}${afssrvbindir}/udebug
 	${INSTALL_DATA} libubik_pthread.a ${DESTDIR}${libdir}/libubik_pthread.a
-	${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h
-	${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then                 \
+	    ${INSTALL_PROGRAM} udebug ${DESTDIR}${bindir}/udebug;          \
+	    ${INSTALL_PROGRAM} udebug ${DESTDIR}${afssrvbindir}/udebug;    \
+	    ${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h;         \
+	    ${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h; \
+	fi
 
 dest: libubik_pthread.a ubik.h ubik_int.h udebug
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL_PROGRAM} udebug ${DEST}/bin/udebug
-	${INSTALL_PROGRAM} udebug ${DEST}/root.server/usr/afs/bin/udebug
 	${INSTALL_DATA} libubik_pthread.a ${DEST}/lib/libubik_pthread.a
-	${INSTALL_DATA} ubik.h ${DEST}/include/ubik.h
-	${INSTALL_DATA} ubik_int.h ${DEST}/include/ubik_int.h
-
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then                    \
+	    ${INSTALL_PROGRAM} udebug ${DEST}/bin/udebug;		      \
+	    ${INSTALL_PROGRAM} udebug ${DEST}/root.server/usr/afs/bin/udebug; \
+	    ${INSTALL_DATA} ubik.h ${DEST}/include/ubik.h;		      \
+	    ${INSTALL_DATA} ubik_int.h ${DEST}/include/ubik_int.h;	      \
+	fi
 #
 # Misc. targets
 #

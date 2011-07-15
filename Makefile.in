@@ -11,7 +11,6 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
-ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
@@ -221,13 +220,9 @@ ubik: cmd comerr auth ubik_depinstall sys
 	+${COMPILE_PART1} ubik ${COMPILE_PART2}
 
 tubik: ubik libafsrpc libafsauthent
-	+[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
+	+case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tubik ${COMPILE_PART2} ;; \
-	*_darwin_[1-6][0-9]) \
-		echo Not building MT ubik for ${SYS_NAME} ;; \
-	*_darwin_*) \
-		${COMPILE_PART1} tubik  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT ubik for ${SYS_NAME} ;; \
 	esac
@@ -238,13 +233,9 @@ ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 	+${COMPILE_PART1} ptserver ${COMPILE_PART2}
 
 tptserver: cmd comerr ptserver tubik libafsrpc libafsauthent
-	+[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
+	+case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tptserver ${COMPILE_PART2} ;; \
-	*_darwin_[1-6][0-9]) \
-		echo Not building MT ptserver for ${SYS_NAME} ;; \
-	*_darwin_*) \
-		${COMPILE_PART1} tptserver  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT ptserver for ${SYS_NAME} ;; \
 	esac
@@ -286,13 +277,9 @@ vlserver: cmd comerr vol audit vlserver_depinstall
 	+${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
 tvlserver: cmd comerr vol audit tubik libafsrpc libafsauthent tvlserver_depinstall
-	+[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
+	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
 		${COMPILE_PART1} tvlserver ${COMPILE_PART2} ;; \
-	*_darwin_[1-6][0-9]) \
-		echo Not building MT tvlserver for ${SYS_NAME} ;; \
-	*_darwin_*) \
-		${COMPILE_PART1} tvlserver  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT tvlserver for ${SYS_NAME} ;; \
 	esac
@@ -323,10 +310,7 @@ volser: cmd comerr tviced usd kauth audit
 tvolser: project tviced usd libafsrpc libafsauthent volser
 	+@case ${SYS_NAME} in						\
 	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*obsd*)   \
-		${COMPILE_PART1} tvolser ${COMPILE_PART2} &&            \
-		if [ "xyes" = "x$(ENABLE_PTHREADED_UNIK)" ] ; then	\
-			$(MAKE) $(COMPILE_PART2B)_vos;  					\
-		fi;;							\
+		${COMPILE_PART1} tvolser ${COMPILE_PART2} ;;            \
 	*)                                                              \
 		echo Not building MT volser for ${SYS_NAME} ;;          \
 	esac
@@ -556,13 +540,9 @@ budb: cmd comerr bubasics uss
 	+${COMPILE_PART1} budb ${COMPILE_PART2}
 
 tbudb: budb
-	+[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
+	+case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tbudb ${COMPILE_PART2} ;; \
-	*_darwin_[1-6][0-9]) \
-		echo Not building MT budb for ${SYS_NAME} ;; \
-	*_darwin_*) \
-		${COMPILE_PART1} tbudb  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT budb for ${SYS_NAME} ;; \
 	esac

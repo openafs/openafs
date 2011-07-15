@@ -169,10 +169,16 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 # Install targets
 #
 install: budb_server
-	${INSTALl_PROGRAM} budb_server ${DESTDIR}${afssrvlibexecdir}/buserver
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then      \
+	    ${INSTALl_PROGRAM} budb_server                      \
+		${DESTDIR}${afssrvlibexecdir}/buserver;         \
+	fi
 
 dest: budb_server
-	${INSTALL_PROGRAM} budb_server ${DEST}/root.server/usr/afs/bin/buserver
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then      \
+	    ${INSTALL_PROGRAM} budb_server			\
+		${DEST}/root.server/usr/afs/bin/buserver	\
+	fi
 
 #
 # Misc targets
