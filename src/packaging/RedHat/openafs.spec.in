@@ -1291,21 +1291,6 @@ fi
   cat CellServDB.local CellServDB.dist > CellServDB ; \
   chmod 644 CellServDB )
 
-echo
-echo The AFS cache is configured for 100 MB. Edit the
-echo /usr/vice/etc/cacheinfo file to change this before
-echo running AFS for the first time. You should also
-echo set your home cell in /usr/vice/etc/ThisCell.
-echo
-echo Also, you may want to edit /etc/pam.d/login and
-echo possibly others there to get an AFS token on login.
-echo Put the line:
-echo 
-echo    auth	   sufficient   %{pamdir}/pam_afs.so try_first_pass ignore_root
-echo
-echo before the one for pwdb.
-echo
-
 %post server
 #on an upgrade, don't enable if we were disabled
 if [ $1 = 1 ] ; then
