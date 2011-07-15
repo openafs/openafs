@@ -204,21 +204,26 @@ ubik_int.xdr.o: ubik_int.xdr.c
 #
 test: all
 
-install: ${DESTDIR}${libdir}/libubik_pthread.a udebug
-	${INSTALL} udebug ${DESTDIR}${bindir}/udebug
-	${INSTALL} udebug ${DESTDIR}${afssrvbindir}/udebug
+install: libubik_pthread.a ubik.h ubik_int.h udebug
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	${INSTALL_PROGRAM} udebug ${DESTDIR}${bindir}/udebug
+	${INSTALL_PROGRAM} udebug ${DESTDIR}${afssrvbindir}/udebug
+	${INSTALL_DATA} libubik_pthread.a ${DESTDIR}${libdir}/libubik_pthread.a
+	${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h
+	${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h
 
-${DEST}/bin/udebug ${DEST}/root.server/usr/afs/bin/udebug: udebug
-	${INSTALL} $? $@
-
-${DEST}/lib/libubik_pthread.a: libubik_pthread.a
-	${INSTALL} $? $@
-
-${DEST}/include/ubik.h: ubik.h
-	${INSTALL} $? $@
-
-${DEST}/include/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
+dest: libubik_pthread.a ubik.h ubik_int.h udebug
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} udebug ${DEST}/bin/udebug
+	${INSTALL_PROGRAM} udebug ${DEST}/root.server/usr/afs/bin/udebug
+	${INSTALL_DATA} libubik_pthread.a ${DEST}/lib/libubik_pthread.a
+	${INSTALL_DATA} ubik.h ${DEST}/include/ubik.h
+	${INSTALL_DATA} ubik_int.h ${DEST}/include/ubik_int.h
 
 #
 # Misc. targets
@@ -229,27 +234,13 @@ clean:
 
 include ../config/Makefile.version
 
-
-${DESTDIR}${libdir}/libubik_pthread.a: libubik_pthread.a
-	${INSTALL} $? $@
-
 ${TOP_LIBDIR}/libubik_pthread.a: libubik_pthread.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/ubik.h: ubik.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/ubik.h: ubik.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
 ${TOP_INCDIR}/ubik_int.h: ubik_int.h
 	${INSTALL} $? $@
 
-dest: \
-	${DEST}/lib/libubik_pthread.a \
-	${DEST}/bin/udebug \
-	${DEST}/root.server/usr/afs/bin/udebug
 
