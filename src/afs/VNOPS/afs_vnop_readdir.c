@@ -738,8 +738,12 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	origOffset = AFS_UIO_OFFSET(auio);
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	if (!(us = BlobScan(tdc, (origOffset >> 5)))
-	    || (afs_dir_GetBlob(tdc, us, &nextEntry) != 0)) {
+	us = BlobScan(tdc, (origOffset >> 5));
+
+	if (us)
+	   afs_dir_GetVerifiedBlob(tdc, us, &nextEntry);
+
+	if (us == 0 || nde == NULL) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */

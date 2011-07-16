@@ -425,25 +425,24 @@ afs_dir_EnumerateDir(dir_file_t dir, int (*proc) (void *, char *name,
 	num = ntohs(dhp->hashTable[i]);
 	while (num != 0) {
 	    /* Walk down the hash table list. */
-	    DErrno = 0;
-	    if (afs_dir_GetBlob(dir, num, &entrybuf) != 0) {
-		if (DErrno) {
-		    /* we failed, return why */
-		    DRelease(&headerbuf, 0);
-		    return DErrno;
-		}
-		break;
-	    }
+	    code = afs_dir_GetVerifiedBlob(dir, num, &entrybuf);
+	    if (code)
+		goto out;
+
 	    ep = (struct DirEntry *)entrybuf.data;
+	    if (!ep)
+		break;
 
 	    num = ntohs(ep->next);
 	    code = (*proc) (hook, ep->name, ntohl(ep->fid.vnode),
 			    ntohl(ep->fid.vunique));
 	    DRelease(&entrybuf, 0);
 	    if (code)
-	    	break;
+		goto out;
 	}
     }
+
+out:
     DRelease(&headerbuf, 0);
     return 0;
 }
@@ -467,9 +466,9 @@ afs_dir_IsEmpty(dir_file_t dir)
 	num = ntohs(dhp->hashTable[i]);
 	while (num != 0) {
 	    /* Walk down the hash table list. */
-	    if (afs_dir_GetBlob(dir, num, &entrybuf) != 0);
+	    if (afs_dir_GetVerifiedBlob(dir, num, &entrybuf) != 0);
 	        break;
-	    ep = (struct DirEntry *)entrybuf.data;
+
 	    if (strcmp(ep->name, "..") && strcmp(ep->name, ".")) {
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
@@ -483,19 +482,75 @@ afs_dir_IsEmpty(dir_file_t dir)
     return 0;
 }
 
-int
-afs_dir_GetBlob(dir_file_t dir, afs_int32 blobno, struct DirBuffer *buffer)
+/* Return a pointer to an entry, given its number. Also return the maximum
+ * size of the entry, which is determined by its position within the directory
+ * page.
+ */
+
+static int
+GetBlobWithLimit(dir_file_t dir, afs_int32 blobno,
+	         struct DirBuffer *buffer, afs_size_t *maxlen)
 {
+    afs_size_t pos;
     int code;
 
+    *maxlen = 0;
     memset(buffer, 0, sizeof(struct DirBuffer));
 
     code = DRead(dir, blobno >> LEPP, buffer);
     if (code)
 	return code;
 
-    buffer->data = (void *)(((long)buffer->data) + 32 * (blobno & (EPP - 1)));
+    pos = 32 * (blobno & (EPP - 1));
 
+    *maxlen = AFS_PAGESIZE - pos - 1;
+
+    buffer->data = (void *)(((char *)buffer->data) + pos);
+
+    return 0;
+}
+
+/* Given an entries number, return a pointer to that entry */
+int
+afs_dir_GetBlob(dir_file_t dir, afs_int32 blobno, struct DirBuffer *buffer)
+{
+    afs_size_t maxlen = 0;
+    return GetBlobWithLimit(dir, blobno, buffer, &maxlen);
+}
+
+/* Return an entry, having verified that the name held within the entry
+ * doesn't overflow off the end of the directory page it is contained
+ * within
+ */
+
+int
+afs_dir_GetVerifiedBlob(dir_file_t file, afs_int32 blobno,
+			struct DirBuffer *outbuf)
+{
+    struct DirEntry *dir;
+    struct DirBuffer buffer;
+    afs_size_t maxlen;
+    int code;
+    char *cp;
+
+    outbuf = NULL;
+
+    code = GetBlobWithLimit(file, blobno, &buffer, &maxlen);
+    if (code)
+	return code;
+
+    dir = (struct DirEntry *)buffer.data;
+
+    /* A blob is only valid if the name within it is NULL terminated before
+     * the end of the blob's containing page */
+    for (cp = dir->name; *cp != '\0' && cp < ((char *)dir) + maxlen; cp++);
+
+    if (*cp != '\0') {
+	DRelease(&buffer, 0);
+	return EIO;
+    }
+
+    *outbuf = buffer;
     return 0;
 }
 
@@ -550,8 +605,9 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
 	return ENOENT;
     }
 
-    code = afs_dir_GetBlob(dir, (u_short) ntohs(dhp->hashTable[i]),
-			   &curr);
+    code = afs_dir_GetVerifiedBlob(dir,
+				   (u_short) ntohs(dhp->hashTable[i]),
+				   &curr);
     if (code) {
 	DRelease(&prev, 0);
 	return code;
@@ -569,22 +625,22 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
 	    return 0;
 	}
 	DRelease(&prev, 0);
-	if (tp->next == 0) {
-	    /* The end of the line */
-	    DRelease(&curr, 0);
-	    return ENOENT;
-	}
 
 	prev = curr;
 	prev.data = &(tp->next);
 
-	code = afs_dir_GetBlob(dir, (u_short) ntohs(tp->next), &curr);
-	if (code) {
-	    DRelease(&prev, 0);
-	    return code;
-	}
+	if (tp->next == 0)
+	    goto out; /* The end of the line */
+
+	code = afs_dir_GetVerifiedBlob(dir, (u_short) ntohs(tp->next),
+				       &curr);
+	if (code)
+	    goto out;
     }
-    /* Never reached */
+
+out:
+    DRelease(&prev, 0);
+    return ENOENT;
 }
 
 static int
@@ -611,8 +667,9 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique,
 
     for (i=0; i<NHASHENT; i++) {
 	if (dhp->hashTable[i] != 0) {
-	    code = afs_dir_GetBlob(dir, (u_short)ntohs(dhp->hashTable[i]),
-				   &curr);
+	    code = afs_dir_GetVerifiedBlob(dir,
+					   (u_short)ntohs(dhp->hashTable[i]),
+					   &curr);
 	    if (code) {
 		DRelease(&header, 0);
 		return code;
@@ -634,7 +691,8 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique,
 		if (next == 0)
 		    break;
 
-		code = afs_dir_GetBlob(dir, (u_short)ntohs(next), &curr);
+		code = afs_dir_GetVerifiedBlob(dir, (u_short)ntohs(next),
+					       &curr);
 		if (code) {
 		    DRelease(&header, 0);
 		    return code;

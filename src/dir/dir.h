@@ -104,6 +104,8 @@ extern int afs_dir_EnumerateDir(dir_file_t dir,
 extern int afs_dir_IsEmpty(dir_file_t dir);
 extern int afs_dir_GetBlob(dir_file_t dir, afs_int32 blobno,
 			   struct DirBuffer *);
+extern int afs_dir_GetVerifiedBlob(dir_file_t dir, afs_int32 blobno,
+				   struct DirBuffer *);
 extern int afs_dir_DirHash(char *string);
 
 extern int afs_dir_InverseLookup (void *dir, afs_uint32 vnode,
