@@ -415,6 +415,7 @@ afs_dir_EnumerateDir(dir_file_t dir, int (*proc) (void *, char *name,
     struct DirHeader *dhp;
     struct DirEntry *ep;
     int code = 0;
+    int elements;
 
     if (DRead(dir, 0, &headerbuf) != 0)
 	return EIO;
@@ -423,7 +424,10 @@ afs_dir_EnumerateDir(dir_file_t dir, int (*proc) (void *, char *name,
     for (i = 0; i < NHASHENT; i++) {
 	/* For each hash chain, enumerate everyone on the list. */
 	num = ntohs(dhp->hashTable[i]);
-	while (num != 0) {
+	elements = 0;
+	while (num != 0 && elements < BIGMAXPAGES * EPP) {
+	    elements++;
+
 	    /* Walk down the hash table list. */
 	    code = afs_dir_GetVerifiedBlob(dir, num, &entrybuf);
 	    if (code)
@@ -456,6 +460,7 @@ afs_dir_IsEmpty(dir_file_t dir)
     struct DirBuffer headerbuf, entrybuf;
     struct DirHeader *dhp;
     struct DirEntry *ep;
+    int elements;
 
     if (DRead(dir, 0, &headerbuf) != 0)
 	return 0;
@@ -464,7 +469,9 @@ afs_dir_IsEmpty(dir_file_t dir)
     for (i = 0; i < NHASHENT; i++) {
 	/* For each hash chain, enumerate everyone on the list. */
 	num = ntohs(dhp->hashTable[i]);
-	while (num != 0) {
+	elements = 0;
+	while (num != 0 && elements < BIGMAXPAGES * EPP) {
+	    elements++;
 	    /* Walk down the hash table list. */
 	    if (afs_dir_GetVerifiedBlob(dir, num, &entrybuf) != 0);
 	        break;
@@ -589,6 +596,7 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
     struct DirBuffer curr, prev;
     struct DirHeader *dhp;
     struct DirEntry *tp;
+    int elements;
 
     memset(prevbuf, 0, sizeof(struct DirBuffer));
     memset(itembuf, 0, sizeof(struct DirBuffer));
@@ -614,8 +622,11 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
     }
 
     prev.data = &(dhp->hashTable[i]);
+    elements = 0;
+    /* Detect circular hash chains. Absolute max size of a directory */
+    while (elements < BIGMAXPAGES * EPP) {
+	elements++;
 
-    while (1) {
 	/* Look at each entry on the hash chain */
 	tp = (struct DirEntry *)curr.data;
 	if (!strcmp(ename, tp->name)) {
@@ -624,6 +635,7 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
 	    *itembuf = curr;
 	    return 0;
 	}
+
 	DRelease(&prev, 0);
 
 	prev = curr;
@@ -657,6 +669,7 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique,
     struct DirBuffer curr, header;
     struct DirHeader *dhp;
     struct DirEntry *tp;
+    int elements;
 
     memset(itembuf, 0, sizeof(struct DirBuffer));
 
@@ -674,8 +687,9 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique,
 		DRelease(&header, 0);
 		return code;
 	    }
-
-	    while (curr.data != NULL) {
+	    elements = 0;
+	    while(curr.data != NULL && elements < BIGMAXPAGES * EPP) {
+		elements++;
 		tp = (struct DirEntry *)curr.data;
 
 		if (vnode == ntohl(tp->fid.vnode)
