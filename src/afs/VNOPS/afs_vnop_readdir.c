@@ -720,8 +720,12 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	origOffset = AFS_UIO_OFFSET(auio);
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	if (!(us = BlobScan(tdc, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(tdc, us))) {
+	us = BlobScan(tdc, (origOffset >> 5));
+
+	if (us)
+	   afs_dir_GetVerifiedBlob(tdc, us, &nde);
+
+	if (us == 0 || nde == NULL) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */
@@ -1008,10 +1012,15 @@ afs1_readdir(avc, auio, acred)
     while (code == 0) {
 	origOffset = AFS_UIO_OFFSET(auio);
 
-	/* scan for the next interesting entry scan for in-use blob otherwise up point at
-	 * this blob note that ode, if non-zero, also represents a held dir page */
-	if (!(us = BlobScan(tdc, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(tdc, us))) {
+	/* scan for the next interesting entry scan for in-use blob
+	 * otherwise up point at this blob note that ode, if non-zero,
+	 * also represents a held dir page */
+	us = BlobScan(tdc, (orginOffset >> 5));
+
+	if (us)
+	    afs_dir_GetVerifiedBlob(tdc, us, &nde);
+
+	if (us == 0 || nde == NULL) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */

@@ -75,6 +75,7 @@ extern void *DNew();
 /* generic renaming */
 #define	NameBlobs	afs_dir_NameBlobs
 #define	GetBlob		afs_dir_GetBlob
+#define GetVerifiedBlob afs_dir_GetVerifiedBlob
 #define	Create		afs_dir_Create
 #define	Length		afs_dir_Length
 #define	Delete		afs_dir_Delete
@@ -391,7 +392,7 @@ EnumerateDir(void *dir, int (*hookproc) (), void *hook)
     register int i;
     int num;
     register struct DirHeader *dhp;
-    register struct DirEntry *ep;
+    struct DirEntry *ep;
 
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
@@ -401,22 +402,21 @@ EnumerateDir(void *dir, int (*hookproc) (), void *hook)
 	num = ntohs(dhp->hashTable[i]);
 	while (num != 0) {
 	    /* Walk down the hash table list. */
-	    DErrno = 0;
-	    ep = GetBlob(dir, num);
-	    if (!ep) {
-		if (DErrno) {
-		    /* we failed, return why */
-		    DRelease(dhp, 0);
-		    return DErrno;
-		}
+	    code = GetVerifiedBlob(dir, num, &ep);
+	    if (code)
+		goto out;
+
+	    if (!ep)
 		break;
-	    }
+
 	    num = ntohs(ep->next);
 	    (*hookproc) (hook, ep->name, ntohl(ep->fid.vnode),
 			 ntohl(ep->fid.vunique));
 	    DRelease(ep, 0);
 	}
     }
+
+out:
     DRelease(dhp, 0);
     return 0;
 }
@@ -428,7 +428,9 @@ IsEmpty(void *dir)
     register int i;
     int num;
     register struct DirHeader *dhp;
-    register struct DirEntry *ep;
+    struct DirEntry *ep;
+    int code;
+
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
 	return 0;
@@ -437,9 +439,13 @@ IsEmpty(void *dir)
 	num = ntohs(dhp->hashTable[i]);
 	while (num != 0) {
 	    /* Walk down the hash table list. */
-	    ep = GetBlob(dir, num);
+	    code = GetVerifiedBlob(dir, num, &ep);
+	    if (code)
+		goto out;
+
 	    if (!ep)
 		break;
+
 	    if (strcmp(ep->name, "..") && strcmp(ep->name, ".")) {
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
@@ -449,19 +455,74 @@ IsEmpty(void *dir)
 	    DRelease(ep, 0);
 	}
     }
+
+out:
     DRelease(dhp, 0);
     return 0;
 }
 
+/* Return a pointer to an entry, given its number. Also return the maximum
+ * size of the entry, which is determined by its position within the directory
+ * page.
+ */
+
+static struct DirEntry *
+GetBlobWithLimit(void *dir, afs_int32 blobno, afs_size_t *maxlen)
+{
+    char *page;
+    afs_size_t pos;
+
+    *maxlen = 0;
+
+    page = DRead(dir, blobno >> LEPP);
+    if (!page)
+	return NULL;
+
+    pos = 32 * (blobno & (EPP - 1));
+
+    *maxlen = AFS_PAGESIZE - pos - 1;
+
+    return (struct DirEntry *)(page + pos);
+}
+
+/* Given an entries number, return a pointer to that entry */
 struct DirEntry *
 GetBlob(void *dir, afs_int32 blobno)
 {
-    /* Return a pointer to an entry, given its number. */
-    struct DirEntry *ep;
-    ep = DRead(dir, blobno >> LEPP);
-    if (!ep)
-	return 0;
-    return (struct DirEntry *)(((long)ep) + 32 * (blobno & (EPP - 1)));
+    afs_size_t maxlen = 0;
+    return GetBlobWithLimit(dir, blobno, &maxlen);
+}
+
+/* Return an entry, having verified that the name held within the entry
+ * doesn't overflow off the end of the directory page it is contained
+ * within
+ */
+
+int
+GetVerifiedBlob(void *file, afs_int32 blobno, struct DirEntry **outdir)
+{
+    struct DirEntry *dir;
+    afs_size_t maxlen;
+    char *cp;
+
+    *outdir = NULL;
+
+    DErrno = 0;
+    dir = GetBlobWithLimit(file, blobno, &maxlen);
+    if (!dir)
+	return DErrno;
+
+    /* A blob is only valid if the name within it is NULL terminated before
+     * the end of the blob's containing page */
+    for (cp = dir->name; *cp != '\0' && cp < ((char *)dir) + maxlen; cp++);
+
+    if (*cp != '\0') {
+	DRelease(dir, 0);
+	return EIO;
+    }
+
+    *outdir = dir;
+    return 0;
 }
 
 int
@@ -491,7 +552,9 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
     register int i;
     register struct DirHeader *dhp;
     register unsigned short *lp;
-    register struct DirEntry *tp;
+    struct DirEntry *tp;
+    int elements;
+
     i = DirHash(ename);
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
@@ -501,11 +564,13 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 	DRelease(dhp, 0);
 	return 0;
     }
-    tp = GetBlob(dir, (u_short) ntohs(dhp->hashTable[i]));
-    if (!tp) {
+
+    GetVerifiedBlob(dir, (u_short) ntohs(dhp->hashTable[i]), &tp);
+    if (tp == NULL) {
 	DRelease(dhp, 0);
-	return 0;
+	return NULL;
     }
+
     lp = &(dhp->hashTable[i]);
     while (1) {
 	/* Look at each hash conflict entry. */
@@ -521,10 +586,10 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 	    DRelease(lp, 0);	/* Release all locks. */
 	    return 0;
 	}
-	tp = GetBlob(dir, (u_short) ntohs(tp->next));
-	if (!tp) {
+	GetVerifiedBlob(dir, (u_short) ntohs(tp->next), &tp);
+	if (tp == NULL) {
 	    DRelease(lp, 0);
-	    return 0;
+	    return NULL;
 	}
     }
 }
