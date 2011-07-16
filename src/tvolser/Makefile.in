@@ -222,16 +222,16 @@ install: volserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then     \
-	    ${INSTALL} vos ${DESTDIR}${afssrvsbindir}/vos      \
-	    ${INSTALL} vos ${DESTDIR}${sbindir}/vos            \
+	    ${INSTALL} vos ${DESTDIR}${afssrvsbindir}/vos;     \
+	    ${INSTALL} vos ${DESTDIR}${sbindir}/vos;           \
 	fi
 
 dest: volserver
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} volserver ${DEST}/root.server/usr/afs/bin/volserver
-	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
-	    ${INSTALL} vos ${DEST}/root.server/usr/afs/bin/vos \
-	    ${INSTALL} vos ${DEST}/etc/vos \
+	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then      \
+	    ${INSTALL} vos ${DEST}/root.server/usr/afs/bin/vos; \
+	    ${INSTALL} vos ${DEST}/etc/vos; 			\
 	fi
 
 clean:

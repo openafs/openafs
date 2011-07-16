@@ -177,7 +177,7 @@ install: budb_server
 dest: budb_server
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then      \
 	    ${INSTALL_PROGRAM} budb_server			\
-		${DEST}/root.server/usr/afs/bin/buserver	\
+		${DEST}/root.server/usr/afs/bin/buserver;	\
 	fi
 
 #
