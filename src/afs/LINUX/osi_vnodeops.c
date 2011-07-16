@@ -261,23 +261,20 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (!dirpos)
 	    break;
 
-	de = afs_dir_GetBlob(tdc, dirpos);
-	if (!de)
-	    break;
-
-	ino = (avc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
-	ino &= 0x7fffffff;	/* Assumes 32 bit ino_t ..... */
-	if (de->name)
-	    len = strlen(de->name);
-	else {
-	    printf("afs_linux_readdir: afs_dir_GetBlob failed, null name (inode %lx, dirpos %d)\n", 
-		   (unsigned long)&tdc->f.inode, dirpos);
-	    DRelease((struct buffer *) de, 0);
+	code = afs_dir_GetVerifiedBlob(tdc, dirpos, &de);
+	if (code) {
+	    afs_warn("Corrupt directory (inode %lx, dirpos %d)",
+		     (unsigned long)&tdc->f.inode, dirpos);
+	    ReleaseSharedLock(&avc->lock);
 	    afs_PutDCache(tdc);
 	    ReleaseReadLock(&avc->lock);
 	    code = -ENOENT;
 	    goto out;
-	}
+        }
+
+	ino = (avc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
+	ino &= 0x7fffffff;	/* Assumes 32 bit ino_t ..... */	
+	len = strlen(de->name);
 
 	/* filldir returns -EINVAL when the buffer is full. */
 #if defined(AFS_LINUX26_ENV) || ((defined(AFS_LINUX24_ENV) || defined(pgoff2loff)) && defined(DECLARE_FSTYPE))
