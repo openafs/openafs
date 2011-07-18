@@ -7,9 +7,9 @@ General Maintenance
     Since we often pull up many upstream fixes from the upstream stable
     branch due to slow upstream release frequencies, we use Git to handle
     merging and patch pullups and do not attempt to export the Git
-    repository state as a patch set.  Accordingly, this package uses
-    source format 1.0, since 3.0 (quilt) doesn't offer many additional
-    features.
+    repository state as a patch set.  This package uses 3.0 (quilt) but
+    configures it to use a single debian patch that includes all the
+    merged changes.
 
     Ideally, any changes that are not strictly Debian packaging changes
     should be submitted upstream first.  Upstream uses Gerrit for patch
@@ -19,8 +19,9 @@ General Maintenance
         http://wiki.openafs.org/AFSLore/GitDevelopers
 
     for information on how to submit patches upstream.  Starting from
-    OpenAFS 1.5, we're no longer carrying any Debian-specific changes
-    outside of the debian/* directory, and we want to keep it that way.
+    OpenAFS 1.5, we're no longer carrying any substantial Debian-specific
+    changes outside of the debian/* directory, only temporary bug
+    workarounds, and we want to keep it that way.
 
 Importing a New Upstream Release
 
@@ -75,7 +76,8 @@ Importing a New Upstream Release
        repository, and <local-tag> is of the form upstream/<version> where
        <version> is the non-Debian portion of the package version number.
        (In other words, including any tildes, but not the dash and the
-       Debian revision.)
+       Debian revision.)  Replace any tildes in the version with periods
+       when forming the local tag (due to Git limitations).
 
     7. Commit the tarball to the repository with pristine-tar, using the
        new local tag as the reference:
@@ -131,4 +133,4 @@ Pulling Upstream Changes
        edited as necessary to keep the length of the changelog lines
        down.
 
- -- Russ Allbery <rra@debian.org>, Tue, 28 Jun 2011 20:14:11 -0700
+ -- Russ Allbery <rra@debian.org>, Mon, 18 Jul 2011 16:52:14 -0700
