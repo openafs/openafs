@@ -177,6 +177,7 @@
 #define RX_PKTFLAG_IOVQ         0x10
 #define RX_PKTFLAG_CP           0x20
 #endif
+#define RX_PKTFLAG_SENT		0x40
 
 /* The rx part of the header of a packet, in host form */
 struct rx_header {
@@ -251,7 +252,6 @@ struct rx_jumboHeader {
 
 struct rx_packet {
     struct rx_queue queueItemHeader;	/* Packets are chained using the queue.h package */
-    struct clock retryTime;	/* When this packet should NEXT be re-transmitted */
     struct clock timeSent;	/* When this packet was transmitted last */
     afs_uint32 firstSerial;	/* Original serial number of this packet */
     struct clock firstSent;	/* When this packet was transmitted first */
@@ -261,7 +261,7 @@ struct rx_packet {
     struct iovec wirevec[RX_MAXWVECS + 1];	/* the new form of the packet */
 
     u_char flags;		/* Flags for local state of this packet */
-    u_char backoff;		/* for multiple re-sends */
+    u_char unused;		/* was backoff, now just here for alignment */
     u_short length;		/* Data length */
     /* NT port relies on the fact that the next two are physically adjacent.
      * If that assumption changes change sendmsg and recvmsg in rx_xmit_nt.c .

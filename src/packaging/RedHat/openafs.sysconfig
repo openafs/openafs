@@ -1,5 +1,5 @@
 # OpenAFS Client Configuration
-AFSD_ARGS="-dynroot -fakestat"
+AFSD_ARGS="-dynroot -fakestat -afsdb"
 
 # OpenAFS Server Configuration
 BOSSERVER_ARGS=

@@ -5,10 +5,8 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.0fc6
-LINUX_PKGVER=1.6.0
-LINUX_PKGREL=0.pre6
-#LINUX_PKGREL=1.1
+MACOS_VERSION=1.6.0fc7
+LINUX_PKGVER=1.6.0pre7
 
 dnl Debian wants the release candidate version in the main upstream version,
 dnl and wants ~ before it.
@@ -18,8 +16,6 @@ if echo "$LINUX_PKGREL" | grep pre >/dev/null 2>/dev/null ; then
 fi
 
 AC_SUBST(MACOS_VERSION)
-AC_SUBST(LINUX_PKGVER)
-AC_SUBST(LINUX_PKGREL)
 AC_SUBST(DEB_PKGVER)
 
 dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
@@ -182,7 +178,6 @@ src/packaging/MacOS/OpenAFS.Description.plist \
 src/packaging/MacOS/OpenAFS.Info.plist \
 src/packaging/MacOS/OpenAFS.info \
 src/packaging/MacOS/buildpkg.sh \
-src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
 src/platform/Makefile \
 src/platform/${MKAFS_OSTYPE}/Makefile \

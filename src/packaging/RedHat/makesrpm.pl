@@ -56,14 +56,6 @@ while(<$fh>) {
     $afsversion = $1;
     next;
   }
-  if (/LINUX_PKGVER=(.*)/) {
-    $linuxver = $1;
-    next;
-  }
-  if (/LINUX_PKGREL=(.*)/) {
-    $linuxrel = $1;
-    next;
-  }
 }
 undef $fh;
 
@@ -71,9 +63,32 @@ if (not defined($afsversion)) {
   $afsversion = `"$srcdir/build-tools/git-version" "$srcdir"`;
 }
 
+# Build the Linux version and release information from the package version
+# We need to handle a number of varieties of package version -
+# Normal: 1.7.0
+# Prereleases: 1.7.0pre1
+# Development trees: 1.7.0dev
+# and RPMS which are built from trees midway between heads, such as 
+# 1.7.0-45-gabcdef or 1.7.0pre1-37-g12345 or 1.7.0dev-56-g98765
+
+if ($afsversion=~m/(.*)(pre[0-9]+)/) {
+    $linuxver=$1;
+    $linuxrel="0.$2";
+} elsif ($afsversion=~m/(.*)dev/) {
+    $linuxver=$1;
+    $linuxrel="0.dev";
+} else {
+    $linuxver=$afsversion;
+    $linuxrel=1;
+}
+
+if ($afsversion=~m/-([0-9]+)-(g[a-f0-9]+)$/) {
+    $linuxrel.=".$1.$2";
+}
+
 # Figure out a major, minor and release so that we know which version we're
 # building, and therefore what the srpm is going to be called
-$afsversion=~/([0-9]+)\.([0-9]+)\.([0-9]+)/;
+$linuxver=~/([0-9]+)\.([0-9]+)\.([0-9]+)/;
 my $major = $1;
 my $minor = $2;
 my $patchlevel = $3;
@@ -156,7 +171,7 @@ system("rpmbuild -bs --define \"dist %undefined\" ".
   or die "rpmbuild failed : $!\n";
 
 # Copy it out to somewhere useful
-if ($major > 1 || ($major == 1 && $minor >= 6)) {
+if (!defined($major) || $major > 1 || ($major == 1 && $minor >= 6)) {
   File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$linuxver-$linuxrel.src.rpm",
 	           "openafs-$linuxver-$linuxrel.src.rpm")
     or die "Unable to copy output RPM : $!\n";

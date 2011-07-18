@@ -726,3 +726,137 @@ xstat_fs_ForceProbeNow(void)
      */
     return (0);
 }
+
+/**
+ * Fill the xstat full perf data structure from the data collection array.
+ *
+ * This function is a client-side decoding of the non-portable xstat_fs full
+ * performance data.  The full perf structure includes timeval structures,
+ * which have platform dependent size.
+ *
+ * To make things even more interesting, the word ordering of the time
+ * values on hosts with 64-bit time depend on endianess. The ordering
+ * within a given afs_int32 is handled by xdr.
+ *
+ * @param[out] aout an address to a stats structure pointer
+ * @param[in] ain array of int32s received
+ * @param[in] alen length of ain
+ * @param[inout] abuf a buffer provided by the caller
+ *
+ * @return 0 on success
+ */
+int
+xstat_fs_DecodeFullPerfStats(struct fs_stats_FullPerfStats **aout,
+			     afs_int32 * ain,
+			     afs_int32 alen,
+			     struct fs_stats_FullPerfStats *abuf)
+{
+    int i;
+    afs_int32 *p;
+    int snbo = -2;	/* detected remote site has network-byte ordering */
+
+    static const int XSTAT_FPS_LEN = sizeof(struct fs_stats_FullPerfStats) / sizeof(afs_int32);	/* local size of fps */
+    static const int XSTAT_FPS_SMALL = 424;	/**< fps size when sizeof(timeval) is 2*sizeof(afs_int32) */
+    static const int XSTAT_FPS_LARGE = 666;	/**< fps size when sizeof(timeval) is 2*sizeof(afs_int64) */
+
+#define DECODE_TV(t) \
+    do { \
+	if (alen == XSTAT_FPS_SMALL) { \
+	    (t).tv_sec = *p++; \
+	    (t).tv_usec = *p++; \
+	} else { \
+	    if (snbo) { \
+		p++; \
+		(t).tv_sec = *p++; \
+		p++; \
+		(t).tv_usec = *p++; \
+	    } else { \
+		(t).tv_sec = *p++; \
+		p++; \
+		(t).tv_usec = *p++; \
+		p++; \
+	    } \
+	} \
+    } while (0)
+
+    if (alen != XSTAT_FPS_SMALL && alen != XSTAT_FPS_LARGE) {
+	return -1;		/* unrecognized size */
+    }
+
+    if (alen == XSTAT_FPS_LEN && alen == XSTAT_FPS_SMALL) {
+	/* Same size, and xdr dealt with byte ordering; no decoding needed. */
+	*aout = (struct fs_stats_FullPerfStats *)ain;
+	return 0;
+    }
+
+    if (alen == XSTAT_FPS_LARGE) {
+	/* Attempt to detect the word ordering of the time values. */
+	struct fs_stats_FullPerfStats *fps =
+	    (struct fs_stats_FullPerfStats *)ain;
+	afs_int32 *epoch = (afs_int32 *) & (fps->det.epoch);
+	if (epoch[0] == 0 && epoch[1] != 0) {
+	    snbo = 1;
+	} else if (epoch[0] != 0 && epoch[1] == 0) {
+	    snbo = 0;
+	} else {
+	    return -2;		/* failed to detect server word ordering */
+	}
+    }
+
+    if (alen == XSTAT_FPS_LEN && alen == XSTAT_FPS_LARGE
+#if defined(WORDS_BIGENDIAN)
+	&& snbo
+#else /* WORDS_BIGENDIAN */
+	&& !snbo
+#endif /* WORDS_BIGENDIAN */
+	) {
+	/* Same size and order; no decoding needed. */
+	*aout = (struct fs_stats_FullPerfStats *)ain;
+	return 0;
+    }
+
+    /* Either different sizes, or different ordering, or both. Schlep over
+     * each field, decoding time values. The fields up to the first time value
+     * can be copied in bulk. */
+    if (xstat_fs_debug) {
+	printf("debug: Decoding xstat full perf stats; length=%d", alen);
+	if (alen == XSTAT_FPS_LARGE) {
+	    printf(", order='%s'", (snbo ? "big-endian" : "little-endian"));
+	}
+	printf("\n");
+    }
+
+    p = ain;
+    memset(abuf, 0, sizeof(struct fs_stats_FullPerfStats));
+    memcpy(abuf, p, sizeof(struct afs_PerfStats));
+    p += sizeof(struct afs_PerfStats) / sizeof(afs_int32);
+
+    DECODE_TV(abuf->det.epoch);
+    for (i = 0; i < FS_STATS_NUM_RPC_OPS; i++) {
+	struct fs_stats_opTimingData *td = abuf->det.rpcOpTimes + i;
+	td->numOps = *p++;
+	td->numSuccesses = *p++;
+	DECODE_TV(td->sumTime);
+	DECODE_TV(td->sqrTime);
+	DECODE_TV(td->minTime);
+	DECODE_TV(td->maxTime);
+    }
+    for (i = 0; i < FS_STATS_NUM_XFER_OPS; i++) {
+	struct fs_stats_xferData *xd = abuf->det.xferOpTimes + i;
+	xd->numXfers = *p++;
+	xd->numSuccesses = *p++;
+	DECODE_TV(xd->sumTime);
+	DECODE_TV(xd->sqrTime);
+	DECODE_TV(xd->minTime);
+	DECODE_TV(xd->maxTime);
+	xd->sumBytes = *p++;
+	xd->minBytes = *p++;
+	xd->maxBytes = *p++;
+	memcpy((void *)xd->count, (void *)p,
+	       sizeof(afs_int32) * FS_STATS_NUM_XFER_BUCKETS);
+	p += FS_STATS_NUM_XFER_BUCKETS;
+    }
+    *aout = abuf;
+    return 0;
+#undef DECODE_TV
+}

@@ -127,7 +127,10 @@ int (*swapNameProgram) (PROCESS, const char *, char *) = 0;
 /* Local static routines */
 static void rxi_DestroyConnectionNoLock(struct rx_connection *conn);
 static void rxi_ComputeRoundTripTime(struct rx_packet *, struct rx_ackPacket *,
-				     struct rx_peer *, struct clock *);
+				     struct rx_call *, struct rx_peer *,
+				     struct clock *);
+static void rxi_Resend(struct rxevent *event, void *arg0, void *arg1,
+		       int istack);
 
 #ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
@@ -139,6 +142,25 @@ struct rx_tq_debug {
     afs_int32 rxi_start_in_error;
 } rx_tq_debug;
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+
+/* Constant delay time before sending an acknowledge of the last packet
+ * received.  This is to avoid sending an extra acknowledge when the
+ * client is about to make another call, anyway, or the server is
+ * about to respond.
+ *
+ * The lastAckDelay may not exceeed 400ms without causing peers to
+ * unecessarily timeout.
+ */
+struct clock rx_lastAckDelay = {0, 400000};
+
+/* Constant delay time before sending a soft ack when none was requested.
+ * This is to make sure we send soft acks before the sender times out,
+ * Normally we wait and send a hard ack when the receiver consumes the packet
+ *
+ * This value has been 100ms in all shipping versions of OpenAFS. Changing it
+ * will require changes to the peer's RTT calculations.
+ */
+struct clock rx_softAckDelay = {0, 100000};
 
 /*
  * rxi_rpc_peer_stat_cnt counts the total number of peer stat structures
@@ -324,10 +346,8 @@ pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
  * to manipulate the queue.
  */
 
-#if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
+#if defined(RX_ENABLE_LOCKS)
 static afs_kmutex_t rx_rpc_stats;
-void rxi_StartUnlocked(struct rxevent *event, void *call,
-                       void *arg1, int istack);
 #endif
 
 /* We keep a "last conn pointer" in rxi_FindConnection. The odds are
@@ -587,12 +607,8 @@ rx_InitHost(u_int host, u_int port)
     rx_connHashTable = (struct rx_connection **)htable;
     rx_peerHashTable = (struct rx_peer **)ptable;
 
-    rx_lastAckDelay.sec = 0;
-    rx_lastAckDelay.usec = 400000;	/* 400 milliseconds */
     rx_hardAckDelay.sec = 0;
     rx_hardAckDelay.usec = 100000;	/* 100 milliseconds */
-    rx_softAckDelay.sec = 0;
-    rx_softAckDelay.usec = 100000;	/* 100 milliseconds */
 
     rxevent_Init(20, rxi_ReScheduleEvents);
 
@@ -622,6 +638,140 @@ int
 rx_Init(u_int port)
 {
     return rx_InitHost(htonl(INADDR_ANY), port);
+}
+
+/* RTT Timer
+ * ---------
+ *
+ * The rxi_rto functions implement a TCP (RFC2988) style algorithm for
+ * maintaing the round trip timer.
+ *
+ */
+
+/*!
+ * Start a new RTT timer for a given call and packet.
+ *
+ * There must be no resendEvent already listed for this call, otherwise this
+ * will leak events - intended for internal use within the RTO code only
+ *
+ * @param[in] call
+ * 	the RX call to start the timer for
+ * @param[in] lastPacket
+ * 	a flag indicating whether the last packet has been sent or not
+ *
+ * @pre call must be locked before calling this function
+ *
+ */
+static_inline void
+rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
+{
+    struct clock now, retryTime;
+
+    clock_GetTime(&now);
+    retryTime = now;
+
+    clock_Add(&retryTime, &call->rto);
+
+    /* If we're sending the last packet, and we're the client, then the server
+     * may wait for an additional 400ms before returning the ACK, wait for it
+     * rather than hitting a timeout */
+    if (lastPacket && call->conn->type == RX_CLIENT_CONNECTION)
+	clock_Addmsec(&retryTime, 400);
+
+    MUTEX_ENTER(&rx_refcnt_mutex);
+    CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
+    MUTEX_EXIT(&rx_refcnt_mutex);
+    call->resendEvent = rxevent_PostNow2(&retryTime, &now, rxi_Resend,
+					 call, 0, istack);
+}
+
+/*!
+ * Cancel an RTT timer for a given call.
+ *
+ *
+ * @param[in] call
+ * 	the RX call to cancel the timer for
+ *
+ * @pre call must be locked before calling this function
+ *
+ */
+
+static_inline void
+rxi_rto_cancel(struct rx_call *call)
+{
+    if (!call->resendEvent)
+	return;
+
+    rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
+}
+
+/*!
+ * Tell the RTO timer that we have sent a packet.
+ *
+ * If the timer isn't already running, then start it. If the timer is running,
+ * then do nothing.
+ *
+ * @param[in] call
+ * 	the RX call that the packet has been sent on
+ * @param[in] lastPacket
+ * 	A flag which is true if this is the last packet for the call
+ *
+ * @pre The call must be locked before calling this function
+ *
+ */
+
+static_inline void
+rxi_rto_packet_sent(struct rx_call *call, int lastPacket, int istack)
+{
+    if (call->resendEvent)
+	return;
+
+    rxi_rto_startTimer(call, lastPacket, istack);
+}
+
+/*!
+ * Tell the RTO timer that we have received an new ACK message
+ *
+ * This function should be called whenever a call receives an ACK that
+ * acknowledges new packets. Whatever happens, we stop the current timer.
+ * If there are unacked packets in the queue which have been sent, then
+ * we restart the timer from now. Otherwise, we leave it stopped.
+ *
+ * @param[in] call
+ * 	the RX call that the ACK has been received on
+ */
+
+static_inline void
+rxi_rto_packet_acked(struct rx_call *call, int istack)
+{
+    struct rx_packet *p, *nxp;
+
+    rxi_rto_cancel(call);
+
+    if (queue_IsEmpty(&call->tq))
+	return;
+
+    for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
+	if (p->header.seq > call->tfirst + call->twind)
+	    return;
+
+	if (!(p->flags & RX_PKTFLAG_ACKED) && p->flags & RX_PKTFLAG_SENT) {
+	    rxi_rto_startTimer(call, p->header.flags & RX_LAST_PACKET, istack);
+	    return;
+	}
+    }
+}
+
+
+/**
+ * Set an initial round trip timeout for a peer connection
+ *
+ * @param[in] secs The timeout to set in seconds
+ */
+
+void
+rx_rto_setPeerTimeoutSecs(struct rx_peer *peer, int secs) {
+    peer->rtt = secs * 8000;
 }
 
 /**
@@ -1203,8 +1353,8 @@ rx_GetConnection(struct rx_connection *conn)
 #ifdef  AFS_GLOBAL_RXLOCK_KERNEL
 /* Wait for the transmit queue to no longer be busy.
  * requires the call->lock to be held */
-static void rxi_WaitforTQBusy(struct rx_call *call) {
-    while (call->flags & RX_CALL_TQ_BUSY) {
+void rxi_WaitforTQBusy(struct rx_call *call) {
+    while (!call->error && (call->flags & RX_CALL_TQ_BUSY)) {
 	call->flags |= RX_CALL_TQ_WAIT;
 	call->tqWaiters++;
 #ifdef RX_ENABLE_LOCKS
@@ -2212,7 +2362,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	} else {
 	    call->state = RX_STATE_DALLY;
 	    rxi_ClearTransmitQueue(call, 0);
-	    rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
+	    rxi_rto_cancel(call);
 	    rxevent_Cancel(call->keepAliveEvent, call,
 			   RX_CALL_REFCOUNT_ALIVE);
 	}
@@ -3020,11 +3170,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	return np;
     }
 
-    MUTEX_ENTER(&conn->conn_data_lock);
-    if (conn->maxSerial < np->header.serial)
-	conn->maxSerial = np->header.serial;
-    MUTEX_EXIT(&conn->conn_data_lock);
-
     /* If the connection is in an error state, send an abort packet and ignore
      * the incoming packet */
     if (conn->error) {
@@ -3149,10 +3294,10 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0)
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%.06d len %d",
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d",
                       np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
                       np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
-                      np->header.flags, np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
+                      np->header.flags, np, np->length));
 #endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -3183,20 +3328,22 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     * flag is cleared.
 	     */
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
-	    while ((call->state == RX_STATE_ACTIVE)
-		   && (call->flags & RX_CALL_TQ_BUSY)) {
-		call->flags |= RX_CALL_TQ_WAIT;
-		call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-		osirx_AssertMine(&call->lock, "rxi_Start lock3");
-		CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-		osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-		call->tqWaiters--;
-		if (call->tqWaiters == 0)
-		    call->flags &= ~RX_CALL_TQ_WAIT;
-	    }
+            if (call->state == RX_STATE_ACTIVE) {
+                rxi_WaitforTQBusy(call);
+                /*
+                 * If we entered error state while waiting,
+                 * must call rxi_CallError to permit rxi_ResetCall
+                 * to processed when the tqWaiter count hits zero.
+                 */
+                if (call->error) {
+                    rxi_CallError(call, call->error);
+                    MUTEX_EXIT(&call->lock);
+                    MUTEX_ENTER(&rx_refcnt_mutex);
+                    conn->refCount--;
+                    MUTEX_EXIT(&rx_refcnt_mutex);
+                    return np;
+                }
+            }
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	    /* If the new call cannot be taken right now send a busy and set
 	     * the error condition in this call, so that it terminates as
@@ -3217,10 +3364,10 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0)
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%06d len %d",
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d",
                       np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
                       np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
-                      np->header.flags, np, np->retryTime.sec, np->retryTime.usec, np->length));
+                      np->header.flags, np, np->length));
 #endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -3973,17 +4120,8 @@ rxi_ReceiveDataPacket(struct rx_call *call,
      * Send an ack when requested by the peer, or once every
      * rxi_SoftAckRate packets until the last packet has been
      * received. Always send a soft ack for the last packet in
-     * the server's reply.
-     *
-     * If we have received all of the packets for the call
-     * immediately send an RX_PACKET_TYPE_ACKALL packet so that
-     * the peer can empty its packet queue and cancel all resend
-     * events.
-     */
-    if (call->flags & RX_CALL_RECEIVE_DONE) {
-        rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
-        rxi_AckAll(NULL, call, 0);
-    } else if (ackNeeded) {
+     * the server's reply. */
+    if (ackNeeded) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
 	np = rxi_SendAck(call, np, serial, ackNeeded, istack);
     } else if (call->nSoftAcks > (u_short) rxi_SoftAckRate) {
@@ -4007,6 +4145,8 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	    call->delayedAckEvent =
 		rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
 	}
+    } else if (call->flags & RX_CALL_RECEIVE_DONE) {
+	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
     }
 
     return np;
@@ -4222,23 +4362,43 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
      * much */
     peer->outPacketSkew = skew;
 
-    /* Check for packets that no longer need to be transmitted, and
-     * discard them.  This only applies to packets positively
-     * acknowledged as having been sent to the peer's upper level.
-     * All other packets must be retained.  So only packets with
-     * sequence numbers < ap->firstPacket are candidates. */
 
     clock_GetTime(&now);
 
-    for (queue_Scan(&call->tq, tp, nxp, rx_packet)) {
-	if (tp->header.seq >= first)
-	    break;
+    /* The transmit queue splits into 4 sections.
+     *
+     * The first section is packets which have now been acknowledged
+     * by a window size change in the ack. These have reached the
+     * application layer, and may be discarded. These are packets
+     * with sequence numbers < ap->firstPacket.
+     *
+     * The second section is packets which have sequence numbers in
+     * the range ap->firstPacket to ap->firstPacket + ap->nAcks. The
+     * contents of the packet's ack array determines whether these
+     * packets are acknowledged or not.
+     *
+     * The third section is packets which fall above the range
+     * addressed in the ack packet. These have not yet been received
+     * by the peer.
+     *
+     * The four section is packets which have not yet been transmitted.
+     * These packets will have a header.serial of 0.
+     */
+
+    /* First section - implicitly acknowledged packets that can be
+     * disposed of
+     */
+
+    tp = queue_First(&call->tq, rx_packet);
+    while(!queue_IsEnd(&call->tq, tp) && tp->header.seq < first) {
+	struct rx_packet *next;
+
+	next = queue_Next(tp, rx_packet);
 	call->tfirst = tp->header.seq + 1;
 
 	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
-
-	    rxi_ComputeRoundTripTime(tp, ap, call->conn->peer, &now);
+	    rxi_ComputeRoundTripTime(tp, ap, call, peer, &now);
 	}
 
 #ifdef ADAPT_WINDOW
@@ -4274,6 +4434,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 #endif /* RXDEBUG_PACKET */
 	    rxi_FreePacket(tp);	/* rxi_FreePacket mustn't wake up anyone, preemptively. */
 	}
+	tp = next;
     }
 
 #ifdef ADAPT_WINDOW
@@ -4285,7 +4446,10 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     /* N.B. we don't turn off any timers here.  They'll go away by themselves, anyway */
 
-    /* Now go through explicit acks/nacks and record the results in
+    /* Second section of the queue - packets for which we are receiving
+     * soft ACKs
+     *
+     * Go through the explicit acks/nacks and record the results in
      * the waiting packets.  These are packets that can't be released
      * yet, even with a positive acknowledge.  This positive
      * acknowledge only means the packet has been received by the
@@ -4295,73 +4459,38 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
      * because this packet was out of sequence) */
 
     call->nSoftAcked = 0;
-    for (missing = 0, queue_Scan(&call->tq, tp, nxp, rx_packet)) {
-
-    	/* Set the acknowledge flag per packet based on the
+    missing = 0;
+    while (!queue_IsEnd(&call->tq, tp) && tp->header.seq < first + nAcks) {
+	/* Set the acknowledge flag per packet based on the
 	 * information in the ack packet. An acknowlegded packet can
 	 * be downgraded when the server has discarded a packet it
 	 * soacked previously, or when an ack packet is received
 	 * out of sequence. */
-	if (tp->header.seq < first) {
-	    /* Implicit ack information */
+	if (ap->acks[tp->header.seq - first] == RX_ACK_TYPE_ACK) {
 	    if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 		newAckCount++;
-	    }
-	    tp->flags |= RX_PKTFLAG_ACKED;
-	} else if (tp->header.seq < first + nAcks) {
-	    /* Explicit ack information:  set it in the packet appropriately */
-	    if (ap->acks[tp->header.seq - first] == RX_ACK_TYPE_ACK) {
-		if (!(tp->flags & RX_PKTFLAG_ACKED)) {
-		    newAckCount++;
-		    tp->flags |= RX_PKTFLAG_ACKED;
-
-		    rxi_ComputeRoundTripTime(tp, ap, call->conn->peer, &now);
+		tp->flags |= RX_PKTFLAG_ACKED;
+		rxi_ComputeRoundTripTime(tp, ap, call, peer, &now);
 #ifdef ADAPT_WINDOW
-		    rxi_ComputeRate(call->conn->peer, call, tp, np,
-				    ap->reason);
+		rxi_ComputeRate(call->conn->peer, call, tp, np, ap->reason);
 #endif
-		}
-		if (missing) {
-		    nNacked++;
-		} else {
-		    call->nSoftAcked++;
-		}
-	    } else /* RX_ACK_TYPE_NACK */ {
-		tp->flags &= ~RX_PKTFLAG_ACKED;
-		missing = 1;
 	    }
-	} else {
+	    if (missing) {
+		nNacked++;
+	    } else {
+		call->nSoftAcked++;
+	    }
+	} else /* RX_ACK_TYPE_NACK */ {
 	    tp->flags &= ~RX_PKTFLAG_ACKED;
 	    missing = 1;
 	}
 
-        /*
-         * Following the suggestion of Phil Kern, we back off the peer's
-         * timeout value for future packets until a successful response
-         * is received for an initial transmission.
-         */
-        if (missing && !peer->backedOff) {
-            struct clock c = peer->timeout;
-            struct clock max_to = {3, 0};
-
-            clock_Add(&peer->timeout, &c);
-            if (clock_Gt(&peer->timeout, &max_to))
-                peer->timeout = max_to;
-            peer->backedOff = 1;
-        }
-
-	/* If packet isn't yet acked, and it has been transmitted at least
-	 * once, reset retransmit time using latest timeout
-	 * ie, this should readjust the retransmit timer for all outstanding
-	 * packets...  So we don't just retransmit when we should know better*/
-
-	if (!(tp->flags & RX_PKTFLAG_ACKED) && !clock_IsZero(&tp->retryTime)) {
-            tp->retryTime = tp->timeSent;
-	    clock_Add(&tp->retryTime, &peer->timeout);
-	    /* shift by eight because one quarter-sec ~ 256 milliseconds */
-	    clock_Addmsec(&(tp->retryTime), ((afs_uint32) tp->backoff) << 8);
-	}
+	tp = queue_Next(tp, rx_packet);
     }
+
+    /* We don't need to take any action with the 3rd or 4th section in the
+     * queue - they're not addressed by the contents of this ACK packet.
+     */
 
     /* If the window has been extended by this acknowledge packet,
      * then wakeup a sender waiting in alloc for window space, or try
@@ -4504,8 +4633,15 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	call->nNacks = 0;
     }
 
+    /* If the packet contained new acknowledgements, rather than just
+     * being a duplicate of one we have previously seen, then we can restart
+     * the RTT timer
+     */
+    if (newAckCount > 0)
+	rxi_rto_packet_acked(call, istack);
+
     if (call->flags & RX_CALL_FAST_RECOVER) {
-	if (nNacked) {
+	if (newAckCount == 0) {
 	    call->cwind = MIN((int)(call->cwind + 1), rx_maxSendWindow);
 	} else {
 	    call->flags &= ~RX_CALL_FAST_RECOVER;
@@ -4516,17 +4652,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	call->nCwindAcks = 0;
     } else if (nNacked && call->nNacks >= (u_short) rx_nackThreshold) {
 	/* Three negative acks in a row trigger congestion recovery */
-#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
-	MUTEX_EXIT(&peer->peer_lock);
-	if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-	    /* someone else is waiting to start recovery */
-	    return np;
-	}
-	call->flags |= RX_CALL_FAST_RECOVER_WAIT;
-	rxi_WaitforTQBusy(call);
-	MUTEX_ENTER(&peer->peer_lock);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	call->flags &= ~RX_CALL_FAST_RECOVER_WAIT;
 	call->flags |= RX_CALL_FAST_RECOVER;
 	call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
 	call->cwind =
@@ -4540,12 +4665,15 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	peer->nDgramPackets = call->nDgramPackets;
 	peer->congestSeq++;
 	call->congestSeq = peer->congestSeq;
+
 	/* Reset the resend times on the packets that were nacked
-	 * so we will retransmit as soon as the window permits*/
+	 * so we will retransmit as soon as the window permits
+	 */
+
 	for (acked = 0, queue_ScanBackwards(&call->tq, tp, nxp, rx_packet)) {
 	    if (acked) {
 		if (!(tp->flags & RX_PKTFLAG_ACKED)) {
-		    clock_Zero(&tp->retryTime);
+		    tp->flags &= ~RX_PKTFLAG_SENT;
 		}
 	    } else if (tp->flags & RX_PKTFLAG_ACKED) {
 		acked = 1;
@@ -4603,7 +4731,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	rxi_ClearTransmitQueue(call, 0);
         rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     } else if (!queue_IsEmpty(&call->tq)) {
-	rxi_Start(0, call, 0, istack);
+	rxi_Start(call, istack);
     }
     return np;
 }
@@ -4741,7 +4869,7 @@ rxi_AttachServerProc(struct rx_call *call,
 	    queue_Append(&rx_incomingCallQueue, call);
 	}
     } else {
-	sq = queue_First(&rx_idleServerQueue, rx_serverQueueEntry);
+	sq = queue_Last(&rx_idleServerQueue, rx_serverQueueEntry);
 
 	/* If hot threads are enabled, and both newcallp and sq->socketp
 	 * are non-null, then this thread will process the call, and the
@@ -4821,6 +4949,7 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
     }
     rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
 		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
+    call->flags |= RX_CALL_ACKALL_SENT;
     if (event)
 	MUTEX_EXIT(&call->lock);
 #else /* RX_ENABLE_LOCKS */
@@ -4828,6 +4957,7 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
 	call->delayedAckEvent = NULL;
     rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
 		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
+    call->flags |= RX_CALL_ACKALL_SENT;
 #endif /* RX_ENABLE_LOCKS */
 }
 
@@ -4874,7 +5004,8 @@ rxi_SetAcksInTransmitQueue(struct rx_call *call)
 	call->flags |= RX_CALL_TQ_SOME_ACKED;
     }
 
-    rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
+    rxi_rto_cancel(call);
+
     call->tfirst = call->tnext;
     call->nSoftAcked = 0;
 
@@ -4918,7 +5049,7 @@ rxi_ClearTransmitQueue(struct rx_call *call, int force)
     }
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
-    rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
+    rxi_rto_cancel(call);
     call->tfirst = call->tnext;	/* implicitly acknowledge all data already sent */
     call->nSoftAcked = 0;
 
@@ -5189,6 +5320,11 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     call->ssthresh = rx_maxSendWindow;
     call->nDgramPackets = peer->nDgramPackets;
     call->congestSeq = peer->congestSeq;
+    call->rtt = peer->rtt;
+    call->rtt_dev = peer->rtt_dev;
+    clock_Zero(&call->rto);
+    clock_Addmsec(&call->rto,
+		  MAX(((call->rtt >> 3) + call->rtt_dev), rx_minPeerTimeout) + 200);
     MUTEX_EXIT(&peer->peer_lock);
 
     flags = call->flags;
@@ -5413,7 +5549,21 @@ rxi_SendAck(struct rx_call *call,
     ap->serial = htonl(serial);
     ap->maxSkew = 0;		/* used to be peer->inPacketSkew */
 
-    ap->firstPacket = htonl(call->rnext);	/* First packet not yet forwarded to reader */
+    /*
+     * First packet not yet forwarded to reader. When ACKALL has been
+     * sent the peer has been told that all received packets will be
+     * delivered to the reader.  The value 'rnext' is used internally
+     * to refer to the next packet in the receive queue that must be
+     * delivered to the reader.  From the perspective of the peer it
+     * already has so report the last sequence number plus one if there
+     * are packets in the receive queue awaiting processing.
+     */
+    if ((call->flags & RX_CALL_ACKALL_SENT) &&
+        !queue_IsEmpty(&call->rq)) {
+        ap->firstPacket = htonl(queue_Last(&call->rq, rx_packet)->header.seq + 1);
+    } else
+        ap->firstPacket = htonl(call->rnext);
+
     ap->previousPacket = htonl(call->rprev);	/* Previous packet received */
 
     /* No fear of running out of ack packet here because there can only be at most
@@ -5559,86 +5709,75 @@ rxi_SendAck(struct rx_call *call,
     return optionalPacket;	/* Return packet for re-use by caller */
 }
 
+struct xmitlist {
+   struct rx_packet **list;
+   int len;
+   int resending;
+};
+
 /* Send all of the packets in the list in single datagram */
 static void
-rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
-	     int istack, int moreFlag, int resending)
+rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
+	     int istack, int moreFlag)
 {
     int i;
     int requestAck = 0;
     int lastPacket = 0;
-    struct clock now, retryTime;
+    struct clock now;
     struct rx_connection *conn = call->conn;
     struct rx_peer *peer = conn->peer;
 
     MUTEX_ENTER(&peer->peer_lock);
-    peer->nSent += len;
-    if (resending)
-	peer->reSends += len;
-    retryTime = peer->timeout;
+    peer->nSent += xmit->len;
+    if (xmit->resending)
+	peer->reSends += xmit->len;
     MUTEX_EXIT(&peer->peer_lock);
 
     if (rx_stats_active) {
-        if (resending)
-            rx_MutexAdd(rx_stats.dataPacketsReSent, len, rx_stats_mutex);
+        if (xmit->resending)
+            rx_MutexAdd(rx_stats.dataPacketsReSent, xmit->len, rx_stats_mutex);
         else
-            rx_MutexAdd(rx_stats.dataPacketsSent, len, rx_stats_mutex);
+            rx_MutexAdd(rx_stats.dataPacketsSent, xmit->len, rx_stats_mutex);
     }
 
     clock_GetTime(&now);
-    clock_Add(&retryTime, &now);
 
-    if (list[len - 1]->header.flags & RX_LAST_PACKET) {
+    if (xmit->list[xmit->len - 1]->header.flags & RX_LAST_PACKET) {
 	lastPacket = 1;
     }
 
     /* Set the packet flags and schedule the resend events */
     /* Only request an ack for the last packet in the list */
-    for (i = 0; i < len; i++) {
-	list[i]->retryTime = retryTime;
-	if (list[i]->header.serial) {
-	    /* Exponentially backoff retry times */
-	    if (list[i]->backoff < MAXBACKOFF) {
-		/* so it can't stay == 0 */
-		list[i]->backoff = (list[i]->backoff << 1) + 1;
-	    } else
-		list[i]->backoff++;
-	    clock_Addmsec(&(list[i]->retryTime),
-			  ((afs_uint32) list[i]->backoff) << 8);
-	}
-
-	/* Wait a little extra for the ack on the last packet */
-	if (lastPacket && !(list[i]->header.flags & RX_CLIENT_INITIATED)) {
-	    clock_Addmsec(&(list[i]->retryTime), 400);
-	}
+    for (i = 0; i < xmit->len; i++) {
+	struct rx_packet *packet = xmit->list[i];
 
 	/* Record the time sent */
-	list[i]->timeSent = now;
+	packet->timeSent = now;
+	packet->flags |= RX_PKTFLAG_SENT;
 
 	/* Ask for an ack on retransmitted packets,  on every other packet
 	 * if the peer doesn't support slow start. Ask for an ack on every
 	 * packet until the congestion window reaches the ack rate. */
-	if (list[i]->header.serial) {
+	if (packet->header.serial) {
 	    requestAck = 1;
 	} else {
-	    /* improved RTO calculation- not Karn */
-	    list[i]->firstSent = now;
+	    packet->firstSent = now;
 	    if (!lastPacket && (call->cwind <= (u_short) (conn->ackRate + 1)
 				|| (!(call->flags & RX_CALL_SLOW_START_OK)
-				    && (list[i]->header.seq & 1)))) {
+				    && (packet->header.seq & 1)))) {
 		requestAck = 1;
 	    }
 	}
 
 	/* Tag this packet as not being the last in this group,
 	 * for the receiver's benefit */
-	if (i < len - 1 || moreFlag) {
-	    list[i]->header.flags |= RX_MORE_PACKETS;
+	if (i < xmit->len - 1 || moreFlag) {
+	    packet->header.flags |= RX_MORE_PACKETS;
 	}
     }
 
     if (requestAck) {
-	list[len - 1]->header.flags |= RX_REQUEST_ACK;
+	xmit->list[xmit->len - 1]->header.flags |= RX_REQUEST_ACK;
     }
 
     /* Since we're about to send a data packet to the peer, it's
@@ -5649,22 +5788,26 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_HOLD(call, RX_CALL_REFCOUNT_SEND);
     MUTEX_EXIT(&rx_refcnt_mutex);
-    if (len > 1) {
-	rxi_SendPacketList(call, conn, list, len, istack);
+    if (xmit->len > 1) {
+	rxi_SendPacketList(call, conn, xmit->list, xmit->len, istack);
     } else {
-	rxi_SendPacket(call, conn, list[0], istack);
+	rxi_SendPacket(call, conn, xmit->list[0], istack);
     }
     MUTEX_ENTER(&call->lock);
     MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_RELE(call, RX_CALL_REFCOUNT_SEND);
     MUTEX_EXIT(&rx_refcnt_mutex);
 
+    /* Tell the RTO calculation engine that we have sent a packet, and
+     * if it was the last one */
+    rxi_rto_packet_sent(call, lastPacket, istack);
+
     /* Update last send time for this call (for keep-alive
      * processing), and for the connection (so that we can discover
      * idle connections) */
     conn->lastSendTime = call->lastSendTime = clock_Sec();
     /* Let a set of retransmits trigger an idle timeout */
-    if (!resending)
+    if (!xmit->resending)
 	call->lastSendData = call->lastSendTime;
 }
 
@@ -5676,59 +5819,80 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
  * We always keep the last list we should have sent so we
  * can set the RX_MORE_PACKETS flags correctly.
  */
+
 static void
 rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
-		 int istack, int resending)
+		 int istack)
 {
-    int i, cnt, lastCnt = 0;
-    struct rx_packet **listP, **lastP = 0;
+    int i;
+    int recovery;
+    struct xmitlist working;
+    struct xmitlist last;
+
     struct rx_peer *peer = call->conn->peer;
     int morePackets = 0;
 
-    for (cnt = 0, listP = &list[0], i = 0; i < len; i++) {
+    memset(&last, 0, sizeof(struct xmitlist));
+    working.list = &list[0];
+    working.len = 0;
+    working.resending = 0;
+
+    recovery = call->flags & RX_CALL_FAST_RECOVER;
+
+    for (i = 0; i < len; i++) {
 	/* Does the current packet force us to flush the current list? */
-	if (cnt > 0
+	if (working.len > 0
 	    && (list[i]->header.serial || (list[i]->flags & RX_PKTFLAG_ACKED)
 		|| list[i]->length > RX_JUMBOBUFFERSIZE)) {
-	    if (lastCnt > 0) {
-		rxi_SendList(call, lastP, lastCnt, istack, 1, resending);
+
+	    /* This sends the 'last' list and then rolls the current working
+	     * set into the 'last' one, and resets the working set */
+
+	    if (last.len > 0) {
+		rxi_SendList(call, &last, istack, 1);
 		/* If the call enters an error state stop sending, or if
 		 * we entered congestion recovery mode, stop sending */
-		if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
+		if (call->error
+		    || (!recovery && (call->flags & RX_CALL_FAST_RECOVER)))
 		    return;
 	    }
-	    lastP = listP;
-	    lastCnt = cnt;
-	    listP = &list[i];
-	    cnt = 0;
+	    last = working;
+	    working.len = 0;
+	    working.resending = 0;
+	    working.list = &list[i];
 	}
 	/* Add the current packet to the list if it hasn't been acked.
 	 * Otherwise adjust the list pointer to skip the current packet.  */
 	if (!(list[i]->flags & RX_PKTFLAG_ACKED)) {
-	    cnt++;
+	    working.len++;
+
+	    if (list[i]->header.serial)
+		working.resending = 1;
+
 	    /* Do we need to flush the list? */
-	    if (cnt >= (int)peer->maxDgramPackets
-		|| cnt >= (int)call->nDgramPackets || cnt >= (int)call->cwind
+	    if (working.len >= (int)peer->maxDgramPackets
+		|| working.len >= (int)call->nDgramPackets 
+		|| working.len >= (int)call->cwind
 		|| list[i]->header.serial
 		|| list[i]->length != RX_JUMBOBUFFERSIZE) {
-		if (lastCnt > 0) {
-		    rxi_SendList(call, lastP, lastCnt, istack, 1, resending);
+		if (last.len > 0) {
+		    rxi_SendList(call, &last, istack, 1);
 		    /* If the call enters an error state stop sending, or if
 		     * we entered congestion recovery mode, stop sending */
 		    if (call->error
-			|| (call->flags & RX_CALL_FAST_RECOVER_WAIT))
+			|| (!recovery && (call->flags & RX_CALL_FAST_RECOVER)))
 			return;
 		}
-		lastP = listP;
-		lastCnt = cnt;
-		listP = &list[i + 1];
-		cnt = 0;
+		last = working;
+		working.len = 0;
+		working.resending = 0;
+		working.list = &list[i + 1];
 	    }
 	} else {
-	    if (cnt != 0) {
+	    if (working.len != 0) {
 		osi_Panic("rxi_SendList error");
 	    }
-	    listP = &list[i + 1];
+	    working.list = &list[i + 1];
 	}
     }
 
@@ -5742,38 +5906,102 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 	 * an acked packet. Since we always send retransmissions
 	 * in a separate packet, we only need to check the first
 	 * packet in the list */
-	if (cnt > 0 && !(listP[0]->flags & RX_PKTFLAG_ACKED)) {
+	if (working.len > 0 && !(working.list[0]->flags & RX_PKTFLAG_ACKED)) {
 	    morePackets = 1;
 	}
-	if (lastCnt > 0) {
-	    rxi_SendList(call, lastP, lastCnt, istack, morePackets,
-			 resending);
+	if (last.len > 0) {
+	    rxi_SendList(call, &last, istack, morePackets);
 	    /* If the call enters an error state stop sending, or if
 	     * we entered congestion recovery mode, stop sending */
-	    if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
+	    if (call->error
+		|| (!recovery && (call->flags & RX_CALL_FAST_RECOVER)))
 		return;
 	}
 	if (morePackets) {
-	    rxi_SendList(call, listP, cnt, istack, 0, resending);
+	    rxi_SendList(call, &working, istack, 0);
 	}
-    } else if (lastCnt > 0) {
-	rxi_SendList(call, lastP, lastCnt, istack, 0, resending);
+    } else if (last.len > 0) {
+	rxi_SendList(call, &last, istack, 0);
+	/* Packets which are in 'working' are not sent by this call */
     }
 }
 
-#ifdef	RX_ENABLE_LOCKS
-/* Call rxi_Start, below, but with the call lock held. */
-void
-rxi_StartUnlocked(struct rxevent *event,
-		  void *arg0, void *arg1, int istack)
+static void
+rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 {
     struct rx_call *call = arg0;
+    struct rx_peer *peer;
+    struct rx_packet *p, *nxp;
+    struct clock maxTimeout = { 60, 0 };
 
     MUTEX_ENTER(&call->lock);
-    rxi_Start(event, call, arg1, istack);
+
+    peer = call->conn->peer;
+
+    /* Make sure that the event pointer is removed from the call
+     * structure, since there is no longer a per-call retransmission
+     * event pending. */
+    if (event == call->resendEvent) {
+        MUTEX_ENTER(&rx_refcnt_mutex);
+	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
+        MUTEX_EXIT(&rx_refcnt_mutex);
+	call->resendEvent = NULL;
+    }
+
+    if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
+	rxi_CheckBusy(call);
+    }
+
+    if (queue_IsEmpty(&call->tq)) {
+	/* Nothing to do. This means that we've been raced, and that an
+	 * ACK has come in between when we were triggered, and when we
+	 * actually got to run. */
+	goto out;
+    }
+
+    /* We're in loss recovery */
+    call->flags |= RX_CALL_FAST_RECOVER;
+
+    /* Mark all of the pending packets in the queue as being lost */
+    for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
+	if (!(p->flags & RX_PKTFLAG_ACKED))
+	    p->flags &= ~RX_PKTFLAG_SENT;
+    }
+
+    /* We're resending, so we double the timeout of the call. This will be
+     * dropped back down by the first successful ACK that we receive.
+     *
+     * We apply a maximum value here of 60 seconds
+     */
+    clock_Add(&call->rto, &call->rto);
+    if (clock_Gt(&call->rto, &maxTimeout))
+	call->rto = maxTimeout;
+
+    /* Packet loss is most likely due to congestion, so drop our window size
+     * and start again from the beginning */
+    if (peer->maxDgramPackets >1) {
+	call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
+        call->MTU = MIN(peer->natMTU, peer->maxMTU);
+    }
+    call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
+    call->nDgramPackets = 1;
+    call->cwind = 1;
+    call->nextCwind = 1;
+    call->nAcks = 0;
+    call->nNacks = 0;
+    MUTEX_ENTER(&peer->peer_lock);
+    peer->MTU = call->MTU;
+    peer->cwind = call->cwind;
+    peer->nDgramPackets = 1;
+    peer->congestSeq++;
+    call->congestSeq = peer->congestSeq;
+    MUTEX_EXIT(&peer->peer_lock);
+
+    rxi_Start(call, istack);
+
+out:
     MUTEX_EXIT(&call->lock);
 }
-#endif /* RX_ENABLE_LOCKS */
 
 /* This routine is called when new packets are readied for
  * transmission and when retransmission may be necessary, or when the
@@ -5781,38 +6009,16 @@ rxi_StartUnlocked(struct rxevent *event,
  * better optimized for new packets, the usual case, now that we've
  * got rid of queues of send packets. XXXXXXXXXXX */
 void
-rxi_Start(struct rxevent *event,
-          void *arg0, void *arg1, int istack)
+rxi_Start(struct rx_call *call, int istack)
 {
-    struct rx_call *call = arg0;
 
     struct rx_packet *p;
     struct rx_packet *nxp;	/* Next pointer for queue_Scan */
-    struct clock now, usenow, retryTime;
-    int haveEvent;
     int nXmitPackets;
     int maxXmitPackets;
-    int resending = 0;
 
-    /* If rxi_Start is being called as a result of a resend event,
-     * then make sure that the event pointer is removed from the call
-     * structure, since there is no longer a per-call retransmission
-     * event pending. */
-    if (event && event == call->resendEvent) {
-        MUTEX_ENTER(&rx_refcnt_mutex);
-	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
-        MUTEX_EXIT(&rx_refcnt_mutex);
-	call->resendEvent = NULL;
-	resending = 1;
-
-	if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
-	    rxi_CheckBusy(call);
-	}
-
-	if (queue_IsEmpty(&call->tq)) {
-	    /* Nothing to do */
-	    return;
-	}
+    if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
+      rxi_CheckBusy(call);
     }
 
     if (call->error) {
@@ -5824,9 +6030,6 @@ rxi_Start(struct rxevent *event,
     }
 
     if (queue_IsNotEmpty(&call->tq)) {	/* If we have anything to send */
-
-    	clock_GetTime(&now);
-	usenow = now;
 
 	/* Send (or resend) any packets that need it, subject to
 	 * window restrictions and congestion burst control
@@ -5855,20 +6058,6 @@ rxi_Start(struct rxevent *event,
 		nXmitPackets = 0;
 		maxXmitPackets = MIN(call->twind, call->cwind);
 		for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
-		    if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-			/* We shouldn't be sending packets if a thread is waiting
-			 * to initiate congestion recovery */
-			dpf(("call %d waiting to initiate fast recovery\n",
-			     *(call->callNumber)));
-			break;
-		    }
-		    if ((nXmitPackets)
-			&& (call->flags & RX_CALL_FAST_RECOVER)) {
-			/* Only send one packet during fast recovery */
-			dpf(("call %d restricted to one packet per send during fast recovery\n",
-			     *(call->callNumber)));
-			break;
-		    }
 #ifdef RX_TRACK_PACKETS
 		    if ((p->flags & RX_PKTFLAG_FREE)
 			|| (!queue_IsEnd(&call->tq, nxp)
@@ -5880,7 +6069,6 @@ rxi_Start(struct rxevent *event,
 #endif
 		    if (p->flags & RX_PKTFLAG_ACKED) {
 			/* Since we may block, don't trust this */
-			usenow.sec = usenow.usec = 0;
                         if (rx_stats_active)
                             rx_MutexIncrement(rx_stats.ignoreAckedPacket, rx_stats_mutex);
 			continue;	/* Ignore this packet if it has been acknowledged */
@@ -5905,17 +6093,14 @@ rxi_Start(struct rxevent *event,
 		    }
 
 		    /* Transmit the packet if it needs to be sent. */
-		    if (!clock_Lt(&now, &p->retryTime)) {
+		    if (!(p->flags & RX_PKTFLAG_SENT)) {
 			if (nXmitPackets == maxXmitPackets) {
 			    rxi_SendXmitList(call, call->xmitList,
-					     nXmitPackets, istack,
-					     resending);
+					     nXmitPackets, istack);
 			    goto restart;
 			}
-                        dpf(("call %d xmit packet %"AFS_PTR_FMT" now %u.%06u retryTime %u.%06u\n",
-                              *(call->callNumber), p,
-                              now.sec, now.usec,
-                              p->retryTime.sec, p->retryTime.usec));
+                        dpf(("call %d xmit packet %"AFS_PTR_FMT"\n",
+                              *(call->callNumber), p));
 			call->xmitList[nXmitPackets++] = p;
 		    }
 		}
@@ -5924,19 +6109,10 @@ rxi_Start(struct rxevent *event,
 		 * ready to send. Now we loop to send the packets */
 		if (nXmitPackets > 0) {
 		    rxi_SendXmitList(call, call->xmitList, nXmitPackets,
-				     istack, resending);
+				     istack);
 		}
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-		/*
-		 * TQ references no longer protected by this flag; they must remain
-		 * protected by the global lock.
-		 */
-		if (call->flags & RX_CALL_FAST_RECOVER_WAIT) {
-		    call->flags &= ~RX_CALL_TQ_BUSY;
-		    rxi_WakeUpTransmitQueue(call);
-		    return;
-		}
 		if (call->error) {
 		    /* We went into the error state while sending packets. Now is
 		     * the time to reset the call. This will also inform the using
@@ -5975,59 +6151,8 @@ rxi_Start(struct rxevent *event,
 			call->flags |= RX_CALL_TQ_CLEARME;
 		}
 #endif /* RX_ENABLE_LOCKS */
-		/* Don't bother doing retransmits if the TQ is cleared. */
-		if (call->flags & RX_CALL_TQ_CLEARME) {
+		if (call->flags & RX_CALL_TQ_CLEARME)
 		    rxi_ClearTransmitQueue(call, 1);
-		} else
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-		{
-
-		    /* Always post a resend event, if there is anything in the
-		     * queue, and resend is possible.  There should be at least
-		     * one unacknowledged packet in the queue ... otherwise none
-		     * of these packets should be on the queue in the first place.
-		     */
-		    if (call->resendEvent) {
-			/* Cancel the existing event and post a new one */
-			rxevent_Cancel(call->resendEvent, call,
-				       RX_CALL_REFCOUNT_RESEND);
-		    }
-
-		    /* The retry time is the retry time on the first unacknowledged
-		     * packet inside the current window */
-		    for (haveEvent =
-			 0, queue_Scan(&call->tq, p, nxp, rx_packet)) {
-			/* Don't set timers for packets outside the window */
-			if (p->header.seq >= call->tfirst + call->twind) {
-			    break;
-			}
-
-			if (!(p->flags & RX_PKTFLAG_ACKED)
-			    && !clock_IsZero(&p->retryTime)) {
-			    haveEvent = 1;
-			    retryTime = p->retryTime;
-			    break;
-			}
-		    }
-
-		    /* Post a new event to re-run rxi_Start when retries may be needed */
-		    if (haveEvent && !(call->flags & RX_CALL_NEED_START)) {
-#ifdef RX_ENABLE_LOCKS
-                        MUTEX_ENTER(&rx_refcnt_mutex);
-			CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
-                        MUTEX_EXIT(&rx_refcnt_mutex);
-			call->resendEvent =
-			    rxevent_PostNow2(&retryTime, &usenow,
-					     rxi_StartUnlocked,
-					     (void *)call, 0, istack);
-#else /* RX_ENABLE_LOCKS */
-			call->resendEvent =
-			    rxevent_PostNow2(&retryTime, &usenow, rxi_Start,
-					     (void *)call, 0, istack);
-#endif /* RX_ENABLE_LOCKS */
-		    }
-		}
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	    } while (call->flags & RX_CALL_NEED_START);
 	    /*
 	     * TQ references no longer protected by this flag; they must remain
@@ -6040,9 +6165,7 @@ rxi_Start(struct rxevent *event,
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     } else {
-	if (call->resendEvent) {
-	    rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
-	}
+	rxi_rto_cancel(call);
     }
 }
 
@@ -6125,8 +6248,8 @@ rxi_CheckCall(struct rx_call *call)
     }
 #endif
     /* RTT + 8*MDEV, rounded up to the next second. */
-    fudgeFactor = (((afs_uint32) conn->peer->rtt >> 3) +
-                   ((afs_uint32) conn->peer->rtt_dev << 1) + 1023) >> 10;
+    fudgeFactor = (((afs_uint32) call->rtt >> 3) +
+                   ((afs_uint32) call->rtt_dev << 1) + 1023) >> 10;
 
     deadTime = conn->secondsUntilDead + fudgeFactor;
     now = clock_Sec();
@@ -6169,7 +6292,7 @@ rxi_CheckCall(struct rx_call *call)
 	    /* Cancel pending events */
 	    rxevent_Cancel(call->delayedAckEvent, call,
 			   RX_CALL_REFCOUNT_DELAY);
-	    rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
+	    rxi_rto_cancel(call);
 	    rxevent_Cancel(call->keepAliveEvent, call,
 			   RX_CALL_REFCOUNT_ALIVE);
 	    if (call->growMTUEvent)
@@ -6634,6 +6757,7 @@ rxi_ChallengeOn(struct rx_connection *conn)
 static void
 rxi_ComputeRoundTripTime(struct rx_packet *p,
 			 struct rx_ackPacket *ack,
+			 struct rx_call *call,
 			 struct rx_peer *peer,
 			 struct clock *now)
 {
@@ -6711,11 +6835,11 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
     /* better rtt calculation courtesy of UMich crew (dave,larry,peter,?) */
 
     /* Apply VanJacobson round-trip estimations */
-    if (peer->rtt) {
+    if (call->rtt) {
 	int delta;
 
 	/*
-	 * srtt (peer->rtt) is in units of one-eighth-milliseconds.
+	 * srtt (call->rtt) is in units of one-eighth-milliseconds.
 	 * srtt is stored as fixed point with 3 bits after the binary
 	 * point (i.e., scaled by 8). The following magic is
 	 * equivalent to the smoothing algorithm in rfc793 with an
@@ -6726,8 +6850,8 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
          * srtt' = srtt + (rtt - srtt)/8
 	 */
 
-	delta = _8THMSEC(&thisRtt) - peer->rtt;
-	peer->rtt += (delta >> 3);
+	delta = _8THMSEC(&thisRtt) - call->rtt;
+	call->rtt += (delta >> 3);
 
 	/*
 	 * We accumulate a smoothed rtt variance (actually, a smoothed
@@ -6750,8 +6874,8 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	if (delta < 0)
 	    delta = -delta;
 
-	delta -= (peer->rtt_dev << 1);
-	peer->rtt_dev += (delta >> 3);
+	delta -= (call->rtt_dev << 1);
+	call->rtt_dev += (delta >> 3);
     } else {
 	/* I don't have a stored RTT so I start with this value.  Since I'm
 	 * probably just starting a call, and will be pushing more data down
@@ -6759,22 +6883,28 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	 * little, and I set deviance to half the rtt.  In practice,
 	 * deviance tends to approach something a little less than
 	 * half the smoothed rtt. */
-	peer->rtt = _8THMSEC(&thisRtt) + 8;
-	peer->rtt_dev = peer->rtt >> 2;	/* rtt/2: they're scaled differently */
+	call->rtt = _8THMSEC(&thisRtt) + 8;
+	call->rtt_dev = call->rtt >> 2;	/* rtt/2: they're scaled differently */
     }
-    /* the timeout is RTT + 4*MDEV + rx_minPeerTimeout msec.
-     * This is because one end or the other of these connections is usually
-     * in a user process, and can be switched and/or swapped out.  So on fast,
-     * reliable networks, the timeout would otherwise be too short. */
-    rtt_timeout = ((peer->rtt >> 3) + peer->rtt_dev) + rx_minPeerTimeout;
-    clock_Zero(&(peer->timeout));
-    clock_Addmsec(&(peer->timeout), rtt_timeout);
+    /* the smoothed RTT time is RTT + 4*MDEV
+     *
+     * We allow a user specified minimum to be set for this, to allow clamping
+     * at a minimum value in the same way as TCP. In addition, we have to allow
+     * for the possibility that this packet is answered by a delayed ACK, so we
+     * add on a fixed 200ms to account for that timer expiring.
+     */
 
-    /* Reset the backedOff flag since we just computed a new timeout value */
-    peer->backedOff = 0;
+    rtt_timeout = MAX(((call->rtt >> 3) + call->rtt_dev),
+		      rx_minPeerTimeout) + 200;
+    clock_Zero(&call->rto);
+    clock_Addmsec(&call->rto, rtt_timeout);
+
+    /* Update the peer, so any new calls start with our values */
+    peer->rtt_dev = call->rtt_dev;
+    peer->rtt = call->rtt;
 
     dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n",
-          p->header.callNumber, p, MSEC(&thisRtt), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
+          p->header.callNumber, p, MSEC(&thisRtt), call->rtt >> 3, call->rtt_dev >> 2, (call->rto.sec), (call->rto.usec)));
 }
 
 
@@ -7042,7 +7172,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
     case RX_ACK_REQUESTED:
 	xferSize =
 	    p->length + RX_HEADER_SIZE + call->conn->securityMaxTrailerSize;
-	xferMs = peer->rtt;
+	xferMs = call->rtt;
 	break;
 
     case RX_ACK_PING_RESPONSE:
@@ -7353,9 +7483,8 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 	    (int)peer->burstWait.sec, (int)peer->burstWait.usec);
 
     fprintf(file,
-	    "   Rtt %d, " "retry time %u.%06d, " "total sent %d, "
-	    "resent %d\n", peer->rtt, (int)peer->timeout.sec,
-	    (int)peer->timeout.usec, peer->nSent, peer->reSends);
+	    "   Rtt %d, " "total sent %d, " "resent %d\n",
+	    peer->rtt, peer->nSent, peer->reSends);
 
     fprintf(file,
 	    "   Packet size %d, " "max in packet skew %d, "
@@ -7733,8 +7862,8 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	peer->burstWait.usec = ntohl(peer->burstWait.usec);
 	peer->rtt = ntohl(peer->rtt);
 	peer->rtt_dev = ntohl(peer->rtt_dev);
-	peer->timeout.sec = ntohl(peer->timeout.sec);
-	peer->timeout.usec = ntohl(peer->timeout.usec);
+	peer->timeout.sec = 0;
+	peer->timeout.usec = 0;
 	peer->nSent = ntohl(peer->nSent);
 	peer->reSends = ntohl(peer->reSends);
 	peer->inPacketSkew = ntohl(peer->inPacketSkew);
@@ -7792,8 +7921,8 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->burstWait.usec = tp->burstWait.usec;
 		peerStats->rtt = tp->rtt;
 		peerStats->rtt_dev = tp->rtt_dev;
-		peerStats->timeout.sec = tp->timeout.sec;
-		peerStats->timeout.usec = tp->timeout.usec;
+		peerStats->timeout.sec = 0;
+		peerStats->timeout.usec = 0;
 		peerStats->nSent = tp->nSent;
 		peerStats->reSends = tp->reSends;
 		peerStats->inPacketSkew = tp->inPacketSkew;

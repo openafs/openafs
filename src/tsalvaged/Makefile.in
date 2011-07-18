@@ -33,7 +33,7 @@ VOL=../vol
 FSINT=../fsint
 
 SALVAGEDOBJS=salvaged.o vol-salvage.o physio.o
-SALVAGEROBJS=salvager.o svol-salvage.o sphysio.o
+SALVAGEROBJS=salvager.o s_vol-salvage.o s_physio.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -44,9 +44,12 @@ UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o 
 VLIBOBJS=volume.o vnode.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \
 	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o
+SVLIBOBJS=s_volume.o s_vnode.o s_vutil.o s_partition.o s_fssync-client.o \
+	 s_clone.o s_nuke.o s_devname.o s_listinodes.o s_ihandle.o \
+	 s_namei_ops.o s_salvsync-server.o s_salvsync-client.o s_daemon_com.o
 
 OBJECTS= ${SALVAGEDOBJS} ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
-SOBJECTS= ${SALVAGEROBJS}
+SOBJECTS= ${SALVAGEROBJS} ${SVLIBOBJS}
 
 FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
@@ -55,7 +58,7 @@ SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIR
 LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libcmd.a
 
 SLIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libdir.a \
-	${TOP_LIBDIR}/libvlib.a ${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libacl.a \
 	${TOP_LIBDIR}/util.a
 
@@ -70,13 +73,40 @@ salvager.o: ${VOL}/salvager.c
 vol-salvage.o: ${VOL}/vol-salvage.c
 	${CCRULE}
 
-svol-salvage.o: ${VOL}/vol-salvage.c
-	${SCCRULE}
-
 physio.o: ${VOL}/physio.c
 	${CCRULE}
 
-sphysio.o: ${VOL}/physio.c
+s_vol-salvage.o: ${VOL}/vol-salvage.c
+	${SCCRULE}
+s_physio.o: ${VOL}/physio.c
+	${SCCRULE}
+s_volume.o: ${VOL}/volume.c
+	${SCCRULE}
+s_vnode.o: ${VOL}/vnode.c
+	${SCCRULE}
+s_vutil.o: ${VOL}/vutil.c
+	${SCCRULE}
+s_partition.o: ${VOL}/partition.c
+	${SCCRULE}
+s_fssync-client.o: ${VOL}/fssync-client.c
+	${SCCRULE}
+s_clone.o: ${VOL}/clone.c
+	${SCCRULE}
+s_nuke.o: ${VOL}/nuke.c
+	${SCCRULE}
+s_devname.o: ${VOL}/devname.c
+	${SCCRULE}
+s_listinodes.o: ${VOL}/listinodes.c
+	${SCCRULE}
+s_ihandle.o: ${VOL}/ihandle.c
+	${SCCRULE}
+s_namei_ops.o: ${VOL}/namei_ops.c
+	${SCCRULE}
+s_salvsync-server.o: ${VOL}/salvsync-server.c
+	${SCCRULE}
+s_salvsync-client.o: ${VOL}/salvsync-client.c
+	${SCCRULE}
+s_daemon_com.o: ${VOL}/daemon_com.c
 	${SCCRULE}
 
 fssync-debug.o: ${VOL}/fssync-debug.c
