@@ -232,9 +232,11 @@ override_dh_installdocs:
 	set -e; if [ -d "$(DOCS)" ] ; then \
 	    for d in arch-overview bos-spec fs-cm-spec rx-spec \
 		     vldb-vol-spec ; do \
-		rm $(DOCS)/html/$$d/jquery.js ; \
-		ln -s /usr/share/javascript/jquery/jquery.min.js \
-		    $(DOCS)/html/$$d/jquery.js ; \
+		if [ -f "$(DOCS)/html/$$d/jquery.js" ] ; then \
+		    rm $(DOCS)/html/$$d/jquery.js ; \
+		    ln -s /usr/share/javascript/jquery/jquery.min.js \
+			$(DOCS)/html/$$d/jquery.js ; \
+		fi ; \
 	    done ; \
 	fi
 

@@ -10,6 +10,10 @@ openafs (1.6.0~pre7-1) UNRELEASED; urgency=low
     - Treat Linux 3.0 as Linux 2.6 for sysname purposes
   * Update README.source for a few changes in procedures and source
     package format.
+  * Reapply the removal of the Doxygen-generated copy of jquery, since
+    this apparently wasn't as fixed as had been advertised.  However, make
+    it conditional on the existence of the jquery.js script, so we should
+    hopefully only fix this where necessary.
 
  -- Russ Allbery <rra@debian.org>  Mon, 18 Jul 2011 16:48:35 -0700
 
