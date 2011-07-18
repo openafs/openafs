@@ -1293,7 +1293,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             if ((rights & (PRSFS_WRITE|PRSFS_DELETE)) && (scp->flags & CM_SCACHEFLAG_RO))
                 return CM_ERROR_READONLY;
 
-            if (cm_HaveAccessRights(scp, userp, rights, &outRights)) {
+            if (cm_HaveAccessRights(scp, userp, reqp, rights, &outRights)) {
                 if (~outRights & rights)
 		    return CM_ERROR_NOACCESS;
             }

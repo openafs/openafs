@@ -33,7 +33,8 @@ int cm_accessPerFileCheck = 0;
  * can't be locked.  Thus, this must always be called in a while loop to stabilize
  * things, since we can always lose the race condition getting to the parent vnode.
  */
-int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32 rights,
+int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *reqp,
+                        afs_uint32 rights,
                         afs_uint32 *outRightsp)
 {
     cm_scache_t *aclScp;
@@ -106,7 +107,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
 		      scp, scp->unixModeBits);
 	    *outRightsp &= ~PRSFS_WRITE;
 	}
-	if ((scp->unixModeBits & 0200) == 0 && !cm_deleteReadOnly) {
+	if ((scp->unixModeBits & 0200) == 0 && !cm_deleteReadOnly && (reqp->flags & CM_REQ_SOURCE_SMB)) {
 	    osi_Log2(afsd_logp,"cm_HaveAccessRights UnixMode removing DELETE scp 0x%p unix 0%o",
 		      scp, scp->unixModeBits);
 	    *outRightsp &= ~PRSFS_DELETE;
