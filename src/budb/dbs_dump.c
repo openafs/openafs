@@ -21,6 +21,7 @@
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <afs/audit.h>
+#include <afs/afsutil.h>
 
 #include "budb.h"
 #include "budb_errs.h"
@@ -56,6 +57,7 @@ setupDbDump(void *param)
     int writeFid = (intptr_t)param;
     afs_int32 code = 0;
 
+    afs_pthread_setname_self("Database Dumper");
     code = InitRPC(&dumpSyncPtr->ut, LOCKREAD, 1);
     if (code)
 	goto error_exit;
@@ -315,6 +317,7 @@ dumpWatcher(void *unused)
 {
     afs_int32 code;
 
+    afs_pthread_setname_self("Database Dump Watchdog");
     while (1) {			/*w */
 
 	/* printf("dumpWatcher\n"); */

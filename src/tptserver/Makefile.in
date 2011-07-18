@@ -19,7 +19,8 @@ PTSERVER=$(srcdir)/../ptserver
 RXOBJS= rx_pthread.o rxkad_errs.o
 
 UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-     volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o
+     volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
+     pthread_threadname.o
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
@@ -93,6 +94,9 @@ hostparse.o: ${UTIL}/hostparse.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
 	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
+
+pthread_threadname.o: ${UTIL}/pthread_threadname.c
+	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
 
 ptserver.o: ${PTSERVER}/ptserver.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptserver.c

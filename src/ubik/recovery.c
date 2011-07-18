@@ -458,6 +458,8 @@ urecovery_Interact(void *dummy)
     int fd = -1;
     afs_int32 pass;
 
+    afs_pthread_setname_self("recovery");
+
     /* otherwise, begin interaction */
     urecovery_state = 0;
     lastProbeTime = 0;

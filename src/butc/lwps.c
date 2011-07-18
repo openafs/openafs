@@ -1638,6 +1638,7 @@ Restorer(void *param) {
     time_t startTime, endTime;
     afs_int32 goodrestore = 0;
 
+    afs_pthread_setname_self("restorer");
     taskId = newNode->taskID;
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
@@ -2104,6 +2105,7 @@ Labeller(void *param)
     afs_uint32 taskId;
     afs_int32 code = 0;
 
+    afs_pthread_setname_self("labeller");
     taskId = labelIfPtr->taskId;
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);

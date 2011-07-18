@@ -122,6 +122,7 @@ BKGLoop(void *unused)
     struct timeval tv;
     int loop = 0;
 
+    afs_pthread_setname_self("vol bkg");
     while (1) {
 	tv.tv_sec = GCWAKEUP;
 	tv.tv_usec = 0;

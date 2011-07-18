@@ -752,6 +752,7 @@ CheckSignal(void *unused)
 static void *
 ShutdownWatchdogLWP(void *unused)
 {
+    afs_pthread_setname_self("ShutdownWatchdog");
     sleep(panic_timeout);
     ViceLogThenPanic(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
                          "within %d seconds; forcing panic\n",

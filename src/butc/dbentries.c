@@ -327,6 +327,7 @@ dbWatcher(void *unused)
     afs_int32 code = 0;
     int i, c, addedDump;
 
+    afs_pthread_setname_self("dbWatcher");
     dlqInit(&entries_to_flush);
     dlqInit(&savedEntries);
 

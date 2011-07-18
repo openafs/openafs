@@ -20,7 +20,7 @@ RXOBJS= rx_pthread.o rxkad_errs.o
 
 UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
      volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
-     get_krbrlm.o
+     pthread_threadname.o get_krbrlm.o
 
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
@@ -90,6 +90,9 @@ hostparse.o: ${UTIL}/hostparse.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
 	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
+
+pthread_threadname.o: ${UTIL}/pthread_threadname.c
+	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
 
 get_krbrlm.o: ${UTIL}/get_krbrlm.c
 	$(AFS_CCRULE) $(UTIL)/get_krbrlm.c

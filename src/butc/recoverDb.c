@@ -16,6 +16,7 @@
 #include <rx/rx.h>
 #include <lwp.h>
 #include <lock.h>
+#include <afs/afsutil.h>
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb.h>
@@ -705,6 +706,7 @@ ScanDumps(void *param)
     afs_uint32 taskId;
     afs_int32 code = 0;
 
+    afs_pthread_setname_self("scandump");
     taskId = ptr->taskId;
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);

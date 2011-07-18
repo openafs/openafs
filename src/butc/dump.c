@@ -1128,6 +1128,7 @@ Dumper(void *param)
     extern struct deviceSyncNode *deviceLatch;
     extern struct tapeConfig globalTapeConfig;
 
+    afs_pthread_setname_self("dumper");
     taskId = nodePtr->taskID;	/* Get task Id */
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
@@ -2029,6 +2030,7 @@ DeleteDump(void *param)
     extern struct udbHandleS udbHandle;
     extern struct deviceSyncNode *deviceLatch;
 
+    afs_pthread_setname_self("deletedump");
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
     clearStatus(taskId, DRIVE_WAIT);

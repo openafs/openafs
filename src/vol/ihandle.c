@@ -25,6 +25,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/afssyscalls.h>
+#include <afs/afsutil.h>
 
 #include "nfs.h"
 #include "ihandle.h"
@@ -988,6 +989,7 @@ ih_sync_all(void) {
 
 void *
 ih_sync_thread(void *dummy) {
+    afs_pthread_setname_self("ih_syncer");
     while(1) {
 
 #ifdef AFS_PTHREAD_ENV

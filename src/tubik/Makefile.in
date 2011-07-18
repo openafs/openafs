@@ -27,7 +27,8 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 RXOBJS = rx_pthread.o
 
 UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-       volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o
+       volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
+       pthread_threadname.o
 
 LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
      ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/libcmd.a \
@@ -86,6 +87,9 @@ hostparse.o: ${UTIL}/hostparse.c
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
 	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
+
+pthread_threadname.o: ${UTIL}/pthread_threadname.c
+	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
 
 #
 # insert comments here
