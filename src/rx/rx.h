@@ -77,9 +77,6 @@
 /* This parameter should not normally be changed */
 #define	RX_PROCESS_PRIORITY	LWP_NORMAL_PRIORITY
 
-/* backoff is fixed point binary.  Ie, units of 1/4 seconds */
-#define MAXBACKOFF 0x1F
-
 #define ADDRSPERSITE 16
 
 #ifndef KDUMP_RX_LOCK
@@ -252,7 +249,6 @@ struct rx_connection {
                                        * call slot, or 0 if the slot is not busy */
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
-    afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
     afs_int32 lastPacketSize; /* last >max attempt */
     afs_int32 lastPacketSizeSeq; /* seq number of attempt */
     afs_int32 lastPingSize; /* last MTU ping attempt */
@@ -400,8 +396,6 @@ struct rx_peer {
     struct rx_queue congestionQueue;	/* Calls that are waiting for non-zero burst value */
     int rtt;			/* Smoothed round trip time, measured in milliseconds/8 */
     int rtt_dev;		/* Smoothed rtt mean difference, in milliseconds/4 */
-    struct clock timeout;	/* Current retransmission delay */
-    int backedOff;              /* Has the timeout been backed off due to a missing packet? */
     int nSent;			/* Total number of distinct data packets sent, not including retransmissions */
     int reSends;		/* Total number of retransmissions for this peer, since this structure was created */
 
@@ -535,6 +529,9 @@ struct rx_call {
     u_short nSoftAcks;		/* The number of delayed soft acks */
     u_short nHardAcks;		/* The number of delayed hard acks */
     u_short congestSeq;		/* Peer's congestion sequence counter */
+    int rtt;
+    int rtt_dev;
+    struct clock rto;		/* The round trip timeout calculated for this call */
     struct rxevent *resendEvent;	/* If this is non-Null, there is a retransmission event pending */
     struct rxevent *timeoutEvent;	/* If this is non-Null, then there is an overall timeout for this call */
     struct rxevent *keepAliveEvent;	/* Scheduled periodically in active calls to keep call alive */
@@ -637,13 +634,14 @@ struct rx_call {
 #define RX_CALL_TQ_SOME_ACKED    512	/* rxi_Start needs to discard ack'd packets. */
 #define RX_CALL_TQ_WAIT		1024	/* Reader is waiting for TQ_BUSY to be reset */
 #define RX_CALL_FAST_RECOVER    2048	/* call is doing congestion recovery */
-#define RX_CALL_FAST_RECOVER_WAIT 4096	/* thread is waiting to start recovery */
+/* 4096 was RX_CALL_FAST_RECOVER_WAIT */
 #define RX_CALL_SLOW_START_OK   8192	/* receiver acks every other packet */
 #define RX_CALL_IOVEC_WAIT	16384	/* waiting thread is using an iovec */
 #define RX_CALL_HAVE_LAST	32768	/* Last packet has been received */
 #define RX_CALL_NEED_START	0x10000	/* tells rxi_Start to start again */
 #define RX_CALL_PEER_BUSY	0x20000 /* the last packet we received on this call was a
                                          * BUSY packet; i.e. the channel for this call is busy */
+#define RX_CALL_ACKALL_SENT     0x40000 /* ACKALL has been sent on the call */
 
 
 /* The structure of the data portion of an acknowledge packet: An acknowledge

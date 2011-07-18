@@ -1052,7 +1052,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	    }
 
 	    if (count > 0) {
-		FDH_REALLYCLOSE(fdP);
+		FDH_CLOSE(fdP);
 		IH_RELEASE(tmp);
 		return 0;
 	    }
@@ -1527,7 +1527,7 @@ GetFreeTag(IHandle_t * ih, int vno)
     }
     FDH_SYNC(fdP);
     FDH_UNLOCKFILE(fdP, offset);
-    FDH_REALLYCLOSE(fdP);
+    FDH_CLOSE(fdP);
     return col;
 
   badGetFreeTag:

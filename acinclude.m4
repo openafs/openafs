@@ -231,18 +231,23 @@ AC_ARG_ENABLE([linux-syscall-probing],
     ,
     [enable_linux_syscall_probing="maybe"])
     
-
 AC_ARG_WITH([xslt-processor],
 	AS_HELP_STRING([--with-xslt-processor=ARG],
 	[which XSLT processor to use (possible choices are: libxslt, saxon, xalan-j, xsltproc)]),
        	XSLTPROC="$withval",
-       	XSLTPROC="libxslt")
+	AC_CHECK_PROGS([XSLTPROC], [libxslt saxon xalan-j xsltproc], [echo]))
 
 AC_ARG_WITH([html-xsl], 
         AS_HELP_STRING([--with-html-xsl],
 	[build HTML documentation using Norman Walsh's DocBook XSL stylesheets (default is no; specify a path to chunk.xsl or docbook.xsl)]),
 	HTML_XSL="$withval",
 	HTML_XSL=no)
+
+AC_ARG_WITH([docbook2pdf],
+	AS_HELP_STRING([--with-docbook2pdf=ARG],
+	[which Docbook to PDF utility to use (possible choices are: docbook2pdf, dblatex)]),
+       	DOCBOOK2PDF="$withval",
+	AC_CHECK_PROGS([DOCBOOK2PDF], [docbook2pdf dblatex], [echo]))
 
 enable_login="no"
 
@@ -345,10 +350,12 @@ case $system in
 		fi
 		AC_MSG_RESULT(linux)
                 if test "x$enable_kernel_module" = "xyes"; then
-                 AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $[]1 $[]2}'`
-                 if test "x${AFS_SYSKVERS}" = "x"; then
-                  AC_MSG_ERROR(Couldn't guess your Linux version [2])
-                 fi
+                 case "$LINUX_VERSION" in
+                  2.2.*) AFS_SYSKVERS=22 ;;
+                  2.4.*) AFS_SYSKVERS=24 ;;
+                  2.6.* | 3.*) AFS_SYSKVERS=26 ;;
+                  *) AC_MSG_ERROR(Couldn't guess your Linux version [2]) ;;
+                 esac
                 fi
                 ;;
         *-solaris*)
@@ -1428,6 +1435,7 @@ AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
 AC_SUBST(HTML_XSL)
 AC_SUBST(XSLTPROC)
+AC_SUBST(DOCBOOK2PDF)
 
 OPENAFS_OSCONF
 OPENAFS_FUSE

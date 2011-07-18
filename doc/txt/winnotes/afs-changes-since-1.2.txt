@@ -1,3 +1,43 @@
+Since 1.5.9906 (1.6pre6)
+ * add support for detection of NTFS symlinks to
+   \\AFS using GetFileInformationByHandleEx which is
+   available on Vista, Server 2008 and beyond.
+
+ * improve thread safety of afs_shl_ext.dll
+
+ * MS11-043 adds response validation for SMB_COM_NEGOTIATE
+   messages received by the SMB Redirector.  OpenAFS failed
+   to properly specify a Challenge and DomainName in the
+   response when the security mode is SMB_AUTH_NONE (or share
+   with password).  This patchset corrects smb_ReceiveNegotiate()
+   so that it adheres to the protocol specification.
+
+ * smb_T2SearchDirSingle() must not fail directory search requests
+   for the _._AFS_IOCTL_._ file.  Although this file does not actually
+   exist, it is successfully processed by CreateFile operations.
+   Therefore, an explicit search for it should return a valid answer.
+
+ * cm_SyncOp/cm_SyncOpDone is used to synchronize the RPC processing
+   to ensure that calls which are in conflict cannot occur at the
+   same time but also to ensure that the ordering of operations
+   is consistent.  cm_MergeStatus() was in many cases executed after
+   cm_SyncOpDone() removed the synchronization barrier which in turn
+   permitted status information to be applied out of order.  Side
+   effects could have included data loss due to client side file
+   truncation.  More commonly two StoreData RPCs would have their
+   status information applied out of order forcing the cache manager
+   to invalidate all of the cached data for the file.
+
+ * cm_NewServer() can result in a call to cm_UpdateVolumeLocation()
+   if a server probe is performed.   In order to avoid recursive
+   calls to cm_UpdateVolumeLocation() do not probe new servers from
+   within cm_UpdateVolumeLocation().
+
+ * Numerous Rx improvements.
+
+ * Fix out of order lock acquisition in smb_ReceiveV3LockingX()
+   which occurs if the lock acquisition fails.
+
 Since 1.5.9905 (1.6pre5)
  * aklog supports dotted Kerberos v5 principal names.
 

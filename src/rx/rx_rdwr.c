@@ -730,6 +730,7 @@ rxi_WriteProc(struct rx_call *call, char *buf,
     do {
 	if (call->nFree == 0) {
 	    MUTEX_ENTER(&call->lock);
+            cp = call->currentPacket;
             if (call->error)
                 call->mode = RX_MODE_ERROR;
 	    if (!call->error && cp) {
@@ -742,23 +743,6 @@ rxi_WriteProc(struct rx_call *call, char *buf,
                 cp->flags &= ~RX_PKTFLAG_CP;
 #endif
 		call->currentPacket = (struct rx_packet *)0;
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-		/* Wait until TQ_BUSY is reset before adding any
-		 * packets to the transmit queue
-		 */
-		while (call->flags & RX_CALL_TQ_BUSY) {
-		    call->flags |= RX_CALL_TQ_WAIT;
-                    call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-		    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-		    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-                    call->tqWaiters--;
-                    if (call->tqWaiters == 0)
-                        call->flags &= ~RX_CALL_TQ_WAIT;
-		}
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 		clock_NewTime();	/* Bogus:  need new time package */
 		/* The 0, below, specifies that it is not the last packet:
 		 * there will be others. PrepareSendPacket may
@@ -766,6 +750,10 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		 * conn->securityMaxTrailerSize */
 		hadd32(call->bytesSent, cp->length);
 		rxi_PrepareSendPacket(call, cp, 0);
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+                /* PrepareSendPacket drops the call lock */
+                rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 #ifdef RX_TRACK_PACKETS
 		cp->flags |= RX_PKTFLAG_TQ;
 #endif
@@ -774,11 +762,11 @@ rxi_WriteProc(struct rx_call *call, char *buf,
                 call->tqc++;
 #endif /* RXDEBUG_PACKET */
                 cp = (struct rx_packet *)0;
-		if (!
-		    (call->
-		     flags & (RX_CALL_FAST_RECOVER |
-			      RX_CALL_FAST_RECOVER_WAIT))) {
-		    rxi_Start(0, call, 0, 0);
+		/* If the call is in recovery, let it exhaust its current
+		 * retransmit queue before forcing it to send new packets
+		 */
+		if (!(call->flags & (RX_CALL_FAST_RECOVER))) {
+		    rxi_Start(call, 0);
 		}
 	    } else if (cp) {
 #ifdef RX_TRACK_PACKETS
@@ -1148,20 +1136,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	call->error = RX_PROTOCOL_ERROR;
     }
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
-    /* Wait until TQ_BUSY is reset before trying to move any
-     * packets to the transmit queue.  */
-    while (!call->error && call->flags & RX_CALL_TQ_BUSY) {
-	call->flags |= RX_CALL_TQ_WAIT;
-        call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-        call->tqWaiters--;
-        if (call->tqWaiters == 0)
-            call->flags &= ~RX_CALL_TQ_WAIT;
-    }
+    rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     cp = call->currentPacket;
 
@@ -1177,6 +1152,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #ifdef RXDEBUG_PACKET
             call->iovqc++;
 #endif /* RXDEBUG_PACKET */
+	    call->currentPacket = (struct rx_packet *)0;
 	}
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
@@ -1204,6 +1180,10 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	     * conn->securityMaxTrailerSize */
 	    hadd32(call->bytesSent, cp->length);
 	    rxi_PrepareSendPacket(call, cp, 0);
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+            /* PrepareSendPacket drops the call lock */
+            rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	    queue_Append(&tmpq, cp);
 #ifdef RXDEBUG_PACKET
             tmpqc++;
@@ -1296,8 +1276,11 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 
     queue_SpliceAppend(&call->tq, &tmpq);
 
-    if (!(call->flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
-	rxi_Start(0, call, 0, 0);
+    /* If the call is in recovery, let it exhaust its current retransmit
+     * queue before forcing it to send new packets
+     */
+    if (!(call->flags & RX_CALL_FAST_RECOVER)) {
+	rxi_Start(call, 0);
     }
 
     /* Wait for the length of the transmit queue to fall below call->twind */
@@ -1383,24 +1366,6 @@ rxi_FlushWrite(struct rx_call *call)
 #endif
 
         MUTEX_ENTER(&call->lock);
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-	/* Wait until TQ_BUSY is reset before adding any
-	 * packets to the transmit queue
-	 */
-	while (call->flags & RX_CALL_TQ_BUSY) {
-	    call->flags |= RX_CALL_TQ_WAIT;
-            call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
-	    CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	    osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
-            call->tqWaiters--;
-            if (call->tqWaiters == 0)
-                call->flags &= ~RX_CALL_TQ_WAIT;
-	}
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-
         if (call->error)
             call->mode = RX_MODE_ERROR;
 
@@ -1430,6 +1395,10 @@ rxi_FlushWrite(struct rx_call *call)
 	/* The 1 specifies that this is the last packet */
 	hadd32(call->bytesSent, cp->length);
 	rxi_PrepareSendPacket(call, cp, 1);
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+        /* PrepareSendPacket drops the call lock */
+        rxi_WaitforTQBusy(call);
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 #ifdef RX_TRACK_PACKETS
 	cp->flags |= RX_PKTFLAG_TQ;
 #endif
@@ -1437,10 +1406,12 @@ rxi_FlushWrite(struct rx_call *call)
 #ifdef RXDEBUG_PACKET
         call->tqc++;
 #endif /* RXDEBUG_PACKET */
-	if (!
-	    (call->
-	     flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
-	    rxi_Start(0, call, 0, 0);
+
+	/* If the call is in recovery, let it exhaust its current retransmit
+	 * queue before forcing it to send new packets
+	 */
+	if (!(call->flags & RX_CALL_FAST_RECOVER)) {
+	    rxi_Start(call, 0);
 	}
         MUTEX_EXIT(&call->lock);
     }

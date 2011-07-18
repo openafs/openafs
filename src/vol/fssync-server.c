@@ -1339,9 +1339,6 @@ FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
     if (vp) {
 	if (FSYNC_partMatch(vcom, vp, 0)) {
-	    /* null out salvsync control state, as it's no longer relevant */
-	    memset(&vp->salvage, 0, sizeof(vp->salvage));
-
 	    VCreateReservation_r(vp);
 	    VWaitExclusiveState_r(vp);
             VDeregisterVolOp_r(vp);
@@ -1349,6 +1346,8 @@ FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
             if (vcom->hdr->reason == FSYNC_SALVAGE) {
 		FSYNC_backgroundSalvage(vp);
             } else {
+		/* null out salvsync control state, as it's no longer relevant */
+		memset(&vp->salvage, 0, sizeof(vp->salvage));
 	        VChangeState_r(vp, VOL_STATE_ERROR);
             }
 

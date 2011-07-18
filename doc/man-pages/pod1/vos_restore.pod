@@ -191,6 +191,18 @@ Leaves the new volume flagged as off-line in the volume database.
 
 Flags the new volume as read-only in the volume database.
 
+=item B<-creation> <I<dump | keep | new>>
+
+Set the creation date of the new volume to the timestamp from the
+dumped volume (dump), from the target volume, if there is one (keep),
+or generate a new one using the current time (new).
+
+=item B<-lastupdate> <I<dump | keep | new>>
+
+Set the last updated date of the new volume to the timestamp from the
+dumped volume (dump), from the target volume, if there is one (keep),
+or generate a new one using the current time (new).
+
 =item B<-nodelete>
 
 This option is available in OpenAFS clients 1.4.7 or

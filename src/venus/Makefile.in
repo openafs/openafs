@@ -298,6 +298,8 @@ install: kdump-build fs livesys up fstrace cmdebug
 	hp_ux11* ) \
 		${INSTALL_SCRIPT} kdump.sh.hp_ux11 ${DESTDIR}${sbindir}/kdump; \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
+	*_fbsd* ) \
+		;; \
 	*) \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
 	esac

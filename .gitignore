@@ -72,6 +72,7 @@ config.log
 /ia64_hpux*
 /ia64_linux*
 /obj
+/packages
 /parisc_linux*
 /ppc_darwin*
 /ppc_nbsd*

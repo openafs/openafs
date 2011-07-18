@@ -24,13 +24,14 @@ SRCS     = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
 	   auqbg007.xml auqbg008.xml appendix.xml appendix_dafs.xml
 HTML_XSL = @HTML_XSL@
 XSLTPROC = @XSLTPROC@
+DOCBOOK2PDF = @DOCBOOK2PDF@
 
 html: $(SRCS) $(VERSFILE).xml
 	$(XSLTPROC) --param navig.graphics 1 \
 	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
 
 pdf: $(SRCS) $(VERSFILE).xml
-	dblatex $(BOOK)
+	$(DOCBOOK2PDF) $(BOOK)
 
 check:
 	xmllint --noout --valid $(BOOK)

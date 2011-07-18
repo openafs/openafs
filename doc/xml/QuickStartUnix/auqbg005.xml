@@ -3295,6 +3295,9 @@ auth  required                pam_unix.so try_first_pass</literallayout>
           <para>The entry for AFS server processes, called either 
           <emphasis role="bold">afs</emphasis> or 
           <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>. 
+          The latter form is preferred since it works regardless of whether
+          your cell name matches your Kerberos realm name and allows multiple
+	  AFS cells to be served from a single Kerberos realm.  
           No user logs in under this identity, but it is used to encrypt the
           server tickets that granted to AFS clients for presentation to 
           server processes during mutual authentication. (The
@@ -3417,7 +3420,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
         </listitem>
         <listitem>
-          <para>Issue the <emphasis role="bold">kadmin quit</emphasis> command to leave <emphasis role="bold">kadmin</emphasis>
+          <para>Issue the <emphasis role="bold">quit</emphasis> command to leave <emphasis role="bold">kadmin</emphasis>
           interactive mode. <programlisting>
    kadmin: <emphasis role="bold">quit</emphasis>
 </programlisting> <indexterm>
@@ -3485,11 +3488,11 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
           <para>asetkey requires the key version number (or kvno) of the 
           <emphasis role="bold">afs/</emphasis><replaceable>cell</replaceable>
-          key. You should have noted this down when creating the key earlier. 
-          The key version number can also be found by running the 
+          key. You should have made note of the kvno when creating the key
+          earlier.  The key version number can also be found by running the 
           <emphasis role="bold">kvno</emphasis> command</para>
 <programlisting>
-   # <emphasis role="bold">kvno afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+   # <emphasis role="bold">kvno -k /etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
 </programlisting>
 
           <para>Once the kvno is known, the key can then be extracted using 
