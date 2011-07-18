@@ -1,3 +1,16 @@
+openafs (1.6.0~pre7-1) UNRELEASED; urgency=low
+
+  * New upstream prerelease.
+    - Substantial Rx updates to correct erroneous behavior
+    - Salvager tries harder to detect linktable issues
+    - Additional documentation
+    - xstat tools now cope with differing timeval structures between
+      endpoints
+    - Don't attach volumes with special status set in demand attach
+    - Treat Linux 3.0 as Linux 2.6 for sysname purposes
+
+ -- Russ Allbery <rra@debian.org>  Mon, 18 Jul 2011 16:48:35 -0700
+
 openafs (1.6.0~pre6-2) unstable; urgency=medium
 
   * Urgency set to medium since 1.6.0~pre6-1 has been in unstable for some
