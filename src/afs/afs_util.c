@@ -368,11 +368,10 @@ afs_data_pointer_to_int32(const void *p)
 }
 
 #ifdef AFS_LINUX20_ENV
-static_inline ino_t
+static_inline afs_int32
 afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
-    ino_t ino = 0;
-    afs_int32 vno = vnode;
+    afs_int32 ino = 0, vno = vnode;
     char digest[16];
     struct md5 ct;
 
@@ -395,9 +394,7 @@ afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 
 	    memcpy(&ino, &digest[offset], sizeof(ino));
 	    ino ^= (ino ^ vno) & 1;
-
-	    /* Clear MSB to ensure a positive inode number */
-	    ino &= ~(1ULL << (sizeof(ino) * 8 - 1));
+	    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
 	}
     }
     return ino;
@@ -406,20 +403,16 @@ afs_calc_inum_md5(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 # define afs_calc_inum_md5(cell, volume, vnode) 0
 #endif
 
-ino_t
+afs_int32
 afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
 {
-    ino_t ino;
+    afs_int32 ino;
 
     ino = afs_calc_inum_md5(cell, volume, vnode);
 
     if (ino == 0 || ino == 1) {
-	/* If we have 32-bit inodes, just shift the volume id 16 bits; but
-	 * if we have 64-bit inodes, we can dedicate 32 bits for the volid,
-	 * and 32 bits for the vnode. */
-	ino = ((ino_t)volume << (sizeof(ino)*4)) + vnode;
+	ino = (volume << 16) + vnode;
     }
-    /* Clear MSB to ensure a positive inode number */
-    ino &= ~(1ULL << (sizeof(ino) * 8 - 1));
+    ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     return ino;
 }

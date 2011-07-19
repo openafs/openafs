@@ -106,7 +106,7 @@ idbg_afsvfslist()
     struct vcache *tvc;
     struct afs_q *tq;
     struct afs_q *uq;
-    ino_t nodeid;		/* what ls prints as 'inode' */
+    afs_int32 nodeid;		/* what ls prints as 'inode' */
 
     AFS_GLOCK();
     for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
