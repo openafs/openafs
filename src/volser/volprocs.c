@@ -904,12 +904,6 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     TSetRxCall(tt, acid, "ReClone");
 
     originalvp = tt->volume;
-    if ((V_type(originalvp) == backupVolume)
-	|| (V_type(originalvp) == readonlyVolume)) {
-	Log("1 Volser: Clone: The volume to be cloned must be a read/write; aborted\n");
-	error = EROFS;
-	goto fail;
-    }
     if ((V_destroyMe(originalvp) == DESTROY_ME) || !V_inService(originalvp)) {
 	Log("1 Volser: Clone: Volume %d is offline and cannot be cloned\n",
 	    V_id(originalvp));
