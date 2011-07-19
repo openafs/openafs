@@ -3018,6 +3018,7 @@ UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
     afs_int32 error = 0;
     int backexists = 1;
     volEntries volumeInfo;
+    int type = 0;
 
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
 
@@ -3104,9 +3105,14 @@ UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
     } else {
 	VPRINT1("Creating a new clone %u ...", acloneid);
 
-	code = AFSVolClone(aconn, ttid, 0,
-			   (flags & RV_RDONLY) ? readonlyVolume : backupVolume,
-			   aname, &acloneid);
+	if (flags & RV_RWONLY)
+		type = readwriteVolume;
+	else if (flags & RV_RDONLY)
+		type = readonlyVolume;
+	else
+		type = backupVolume;
+
+	code = AFSVolClone(aconn, ttid, 0, type, aname, &acloneid);
 	if (code) {
 	    fprintf(STDERR, "Failed to clone the volume %lu\n",
 		    (unsigned long)avolid);

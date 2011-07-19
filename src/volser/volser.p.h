@@ -184,6 +184,7 @@ struct partList {		/*used by the backup system */
 #define RV_NOVLDB	0x040000
 #define RV_NOCLONE	0x080000
 #define RV_NODEL        0x100000
+#define RV_RWONLY	0x200000
 
 struct ubik_client;
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);

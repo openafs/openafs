@@ -703,8 +703,6 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     }
     newId = *newNumber;
 
-    if (newType != readonlyVolume && newType != backupVolume)
-	return EINVAL;
     tt = FindTrans(atrans);
     if (!tt)
 	return ENOENT;
@@ -754,15 +752,8 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	    error = EINVAL;
 	    goto fail;
 	}
-	if (V_type(originalvp) == readonlyVolume
-	    && V_parentId(originalvp) != V_parentId(purgevp)) {
-	    Log("1 Volser: Clone: Volume %u and volume %u were not cloned from the same parent volume; aborted\n", tt->volid, purgeId);
-	    error = EXDEV;
-	    goto fail;
-	}
-	if (V_type(originalvp) == readwriteVolume
-	    && tt->volid != V_parentId(purgevp)) {
-	    Log("1 Volser: Clone: Volume %u was not originally cloned from volume %u; aborted\n", purgeId, tt->volid);
+	if (V_parentId(originalvp) != V_parentId(purgevp)) {
+	    Log("1 Volser: Clone: Volume %u and volume %u were not originally cloned from the same parent; aborted\n", purgeId, tt->volid);
 	    error = EXDEV;
 	    goto fail;
 	}
@@ -925,19 +916,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	error = EXDEV;
 	goto fail;
     }
-    if (V_type(clonevp) != readonlyVolume && V_type(clonevp) != backupVolume) {
-	Log("1 Volser: Clone: The \"recloned\" volume must be a read only volume; aborted\n");
-	error = EINVAL;
-	goto fail;
-    }
-    if (V_type(originalvp) == readonlyVolume
-	&& V_parentId(originalvp) != V_parentId(clonevp)) {
-	Log("1 Volser: Clone: Volume %u and volume %u were not cloned from the same parent volume; aborted\n", tt->volid, cloneId);
-	error = EXDEV;
-	goto fail;
-    }
-    if (V_type(originalvp) == readwriteVolume
-	&& tt->volid != V_parentId(clonevp)) {
+    if (V_parentId(originalvp) != V_parentId(clonevp)) {
 	Log("1 Volser: Clone: Volume %u was not originally cloned from volume %u; aborted\n", cloneId, tt->volid);
 	error = EXDEV;
 	goto fail;

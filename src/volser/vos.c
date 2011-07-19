@@ -2752,7 +2752,12 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
 
     flags = 0;
     if (as->parms[5].items) flags |= RV_OFFLINE;
+    if (as->parms[6].items && as->parms[7].items) {
+	fprintf(STDERR, "vos: cannot specify that a volume be -readwrite and -readonly\n");
+	return EINVAL;
+    }
     if (as->parms[6].items) flags |= RV_RDONLY;
+    if (as->parms[7].items) flags |= RV_RWONLY;
 
 
     code =
@@ -5988,6 +5993,8 @@ main(int argc, char **argv)
 		"leave clone volume offline");
     cmd_AddParm(ts, "-readonly", CMD_FLAG, CMD_OPTIONAL,
 		"make clone volume read-only, not readwrite");
+    cmd_AddParm(ts, "-readwrite", CMD_FLAG, CMD_OPTIONAL,
+		"make clone volume readwrite, not read-only");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("release", ReleaseVolume, NULL, "release a volume");
