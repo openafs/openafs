@@ -519,11 +519,8 @@ struct chservinfo {
 /* state bits for volume */
 #define VRO			1	/* volume is readonly */
 #define VRecheck		2	/* recheck volume info with server */
-#define	VBackup			4	/* is this a backup volume? */
-#define	VForeign		8	/* this is a non-afs volume */
-#define VResort         16	/* server order was rearranged, sort when able */
-#define VMoreReps       32	/* This volume has more replicas than we are   */
-			     /* keeping track of now -- check with VLDB     */
+#define VBackup			4	/* is this a backup volume? */
+#define VForeign		8	/* this is a non-afs volume */
 
 enum repstate { not_busy, end_not_busy = 6, rd_busy, rdwr_busy, offline };
 
