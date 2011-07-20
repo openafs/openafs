@@ -29,6 +29,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_cell.h \
 	$(INCFILEDIR)\cm_config.h \
 	$(INCFILEDIR)\cm_conn.h \
+	$(INCFILEDIR)\cm_error.h \
 	$(INCFILEDIR)\cm_ioctl.h \
 	$(INCFILEDIR)\cm_scache.h \
 	$(INCFILEDIR)\cm_server.h \
