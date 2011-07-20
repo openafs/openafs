@@ -8532,12 +8532,20 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 cm_ReleaseSCache(scp);
                 cm_ReleaseSCache(dscp);
                 cm_ReleaseUser(userp);
+                cm_FreeSpace(spacep);
                 free(realPathp);
                 if (baseFidp)
                     smb_ReleaseFID(baseFidp);
                 return CM_ERROR_EXISTS;
             }
         }
+    } else {
+        cm_ReleaseUser(userp);
+        if (baseFidp)
+            smb_ReleaseFID(baseFidp);
+        cm_FreeSpace(spacep);
+        free(realPathp);
+        return CM_ERROR_NOSUCHPATH;
     }
 
     if (code == 0)
