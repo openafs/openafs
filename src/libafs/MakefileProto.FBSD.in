@@ -86,6 +86,7 @@ include Makefile.common
 # we only do the no-NFS case
 OBJS=	${AFSAOBJS} ${AFSNONFSOBJS}
 
+LIBAFSNONFS=	libafs.ko
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 CFLAGS+= $(DEFINES) ${COMMON_INCLUDE} -I@/sys -Imachine
 
@@ -102,5 +103,5 @@ dest_libafs: $(LIBAFSNONFS)
 	${INSTALL} -m 644 $(LIBAFSNONFS) $(DEST_LIBAFSNONFS)
 
 # This is ugly, but the common infrastructure needs a libafs target.
-libafs: depend libafs.ko
+libafs: depend $(LIBAFSNONFS)
 
