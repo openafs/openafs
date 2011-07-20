@@ -548,7 +548,7 @@ void cm_Daemon(long parm)
         if ((bAddrChangeCheck || now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) &&
             daemon_ShutdownFlag == 0 &&
             powerStateSuspended == 0) {
-            lastVolCheck = now;
+            lastBusyVolCheck = now;
             cm_CheckOfflineVolumes();
             if (daemon_ShutdownFlag == 1)
                 break;
