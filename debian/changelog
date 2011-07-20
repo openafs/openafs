@@ -1,4 +1,4 @@
-openafs (1.6.0~pre7-1) UNRELEASED; urgency=low
+openafs (1.6.0~pre7-1) unstable; urgency=low
 
   * New upstream prerelease.
     - Substantial Rx updates to correct erroneous behavior
@@ -15,7 +15,7 @@ openafs (1.6.0~pre7-1) UNRELEASED; urgency=low
     it conditional on the existence of the jquery.js script, so we should
     hopefully only fix this where necessary.
 
- -- Russ Allbery <rra@debian.org>  Mon, 18 Jul 2011 16:48:35 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 20 Jul 2011 13:04:07 -0700
 
 openafs (1.6.0~pre6-2) unstable; urgency=medium
 
