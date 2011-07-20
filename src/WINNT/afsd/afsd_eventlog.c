@@ -201,6 +201,7 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SERVICE_INCORRECT_VERSIONS:
     case MSG_SERVICE_RUNNING:
     case MSG_SERVICE_STOPPING:
+    case MSG_SERVICE_STOPPED:
     case MSG_SERVICE_ERROR_STOP:
     case MSG_CRYPT_OFF:
     case MSG_CRYPT_ON:

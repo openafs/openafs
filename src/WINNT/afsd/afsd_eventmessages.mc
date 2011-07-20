@@ -438,4 +438,12 @@ Language=English
 Busy call channel when communicating with server %1, retrying ...
 .
 
+MessageId=
+Severity=Informational
+Facility=System
+SymbolicName=MSG_SERVICE_STOPPED
+Language=English
+OpenAFS Shutdown Complete.
+.
+
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */
