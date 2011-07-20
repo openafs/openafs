@@ -1506,6 +1506,8 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     /* Remove the ExceptionFilter */
     SetUnhandledExceptionFilter(NULL);
 
+    LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SERVICE_STOPPED);
+
     if (bRunningAsService) {
         ServiceStatus.dwCurrentState = SERVICE_STOPPED;
         ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
