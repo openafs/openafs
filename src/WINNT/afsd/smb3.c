@@ -8403,6 +8403,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
            createDisp == FILE_OVERWRITE_IF))
     {
         osi_Log0(smb_logp, "NTTranCreate rejecting invalid readDirFlag and createDisp combination");
+        cm_FreeSpace(spacep);
         free(realPathp);
         return CM_ERROR_INVAL;
     }
@@ -8424,6 +8425,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 #else
         osi_Log0(smb_logp, "NTTranCreate rejecting invalid name.");
 #endif
+        cm_FreeSpace(spacep);
         free(realPathp);
         return CM_ERROR_BADNTFILENAME;
     }
@@ -8431,6 +8433,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     userp = smb_GetUserFromVCP(vcp, inp);
     if (!userp) {
     	osi_Log1(smb_logp, "NTTranCreate invalid user [%d]", ((smb_t *) inp)->uid);
+        cm_FreeSpace(spacep);
     	free(realPathp);
     	return CM_ERROR_INVAL;
     }
@@ -8447,6 +8450,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
              */
             osi_Log0(smb_logp, "NTTranCreate received IPC TID");
 #ifndef DFS_SUPPORT
+            cm_FreeSpace(spacep);
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_NOSUCHPATH;
@@ -8457,12 +8461,14 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         if (!baseFidp) {
             osi_Log2(smb_logp, "NTTranCreate Unknown SMB Fid vcp 0x%p fid %d",
                       vcp, baseFid);
+            cm_FreeSpace(spacep);
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_BADFD;
         }
 
         if (baseFidp->scp && (baseFidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+            cm_FreeSpace(spacep);
             free(realPathp);
             cm_ReleaseUser(userp);
 	    smb_CloseFID(vcp, baseFidp, NULL, 0);
@@ -8510,6 +8516,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             int pnc = cm_VolStatus_Notify_DFS_Mapping(dscp, tidPathp, spacep->wdata);
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
+            cm_FreeSpace(spacep);
             free(realPathp);
             if (baseFidp)
                 smb_ReleaseFID(baseFidp);
