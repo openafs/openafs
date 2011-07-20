@@ -393,26 +393,72 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		((afid && afs_IsPrimaryCellNum(afid->Cell))
 		 || (cellp && afs_IsPrimaryCell(cellp)))) {
 		if (!afid) {
-		    afs_warnuser
-			("afs: hard-mount waiting for a vlserver to return to service\n");
+		    static int afs_vl_hm = 0;
+		    int warn = 0;
+		    if (!afs_vl_hm) {
+			afs_vl_hm = warn = 1;
+		    }
+		    if (warn) {
+			afs_warnuser
+		            ("afs: hard-mount waiting for a vlserver to return to service\n");
+		    }
 		    VSleep(hm_retry_int);
 		    afs_CheckServers(1, cellp);
 		    shouldRetry = 1;
+
+		    if (warn) {
+			afs_vl_hm = 0;
+		    }
 		} else {
+		    static int afs_unknown_vhm = 0;
+		    int warn = 0, vp_vhm = 0;
+
 		    tvp = afs_FindVolume(afid, READ_LOCK);
 		    if (!tvp || (tvp->states & VRO)) {
 			shouldRetry = hm_retry_RO;
 		    } else {
 			shouldRetry = hm_retry_RW;
 		    }
+
+		    /* Set 'warn' if we should afs_warnuser. Only let one
+		     * caller call afs_warnuser per hm_retry_int interval per
+		     * volume. */
+		    if (shouldRetry) {
+			if (tvp) {
+			    if (!(tvp->states & VHardMount)) {
+				tvp->states |= VHardMount;
+				warn = vp_vhm = 1;
+			    }
+			} else {
+			    if (!afs_unknown_vhm) {
+				afs_unknown_vhm = 1;
+				warn = 1;
+			    }
+			}
+		    }
+
 		    if (tvp)
 			afs_PutVolume(tvp, READ_LOCK);
+
 		    if (shouldRetry) {
-			afs_warnuser
-			    ("afs: hard-mount waiting for volume %u\n",
-			     afid->Fid.Volume);
+			if (warn) {
+			    afs_warnuser
+			        ("afs: hard-mount waiting for volume %u\n",
+			         afid->Fid.Volume);
+			}
+
 			VSleep(hm_retry_int);
 			afs_CheckServers(1, cellp);
+
+			if (vp_vhm) {
+			    tvp = afs_FindVolume(afid, READ_LOCK);
+			    if (tvp) {
+				tvp->states &= ~VHardMount;
+				afs_PutVolume(tvp, READ_LOCK);
+			    }
+			} else if (warn) {
+			    afs_unknown_vhm = 0;
+			}
 		    }
 		}
 	    } /* if (hm_retry_int ... */

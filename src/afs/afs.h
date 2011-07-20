@@ -521,6 +521,7 @@ struct chservinfo {
 #define VRecheck		2	/* recheck volume info with server */
 #define VBackup			4	/* is this a backup volume? */
 #define VForeign		8	/* this is a non-afs volume */
+#define VHardMount		16	/* we are hard-mount waiting for the vol */
 
 enum repstate { not_busy, end_not_busy = 6, rd_busy, rdwr_busy, offline };
 
