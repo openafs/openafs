@@ -579,6 +579,8 @@ cm_ShutdownSCache(void)
 {
     cm_scache_t * scp;
 
+    cm_GiveUpAllCallbacksAllServersMulti(FALSE);
+
     lock_ObtainWrite(&cm_scacheLock);
 
     for ( scp = cm_data.allSCachesp; scp;
@@ -609,8 +611,6 @@ cm_ShutdownSCache(void)
         lock_FinalizeRWLock(&scp->bufCreateLock);
     }
     lock_ReleaseWrite(&cm_scacheLock);
-
-    cm_GiveUpAllCallbacksAllServersMulti(FALSE);
 
     return cm_dnlcShutdown();
 }

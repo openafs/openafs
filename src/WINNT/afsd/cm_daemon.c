@@ -524,8 +524,9 @@ void cm_Daemon(long parm)
 
         if (bAddrChangeCheck &&
             daemon_ShutdownFlag == 0 &&
-            powerStateSuspended == 0)
+            powerStateSuspended == 0) {
             cm_ForceNewConnectionsAllServers();
+        }
 
         /* check up servers */
         if ((bAddrChangeCheck || now > lastUpServerCheck + cm_daemonCheckUpInterval) &&
@@ -648,8 +649,14 @@ void cm_Daemon(long parm)
 	    now = osi_Time();
         }
 
-        thrd_Sleep(10000);		/* sleep 10 seconds */
+        /*
+         * sleep .5 seconds.  if the thread blocks for a long time
+         * we risk not being able to close the cache before Windows
+         * kills our process during system shutdown.
+         */
+        thrd_Sleep(500);
     }
+
     thrd_SetEvent(cm_Daemon_ShutdownEvent);
 }
 
@@ -662,19 +669,27 @@ void cm_DaemonShutdown(void)
     osi_Wakeup((LONG_PTR) &cm_bkgListp);
 
     /* wait for shutdown */
+    for ( i=0; i<cm_nDaemons; i++) {
+        if (cm_BkgDaemon_ShutdownEvent[i])
+            code = thrd_WaitForSingleObject_Event(cm_BkgDaemon_ShutdownEvent[i], INFINITE);
+    }
+
     if (cm_Daemon_ShutdownEvent)
         code = thrd_WaitForSingleObject_Event(cm_Daemon_ShutdownEvent, INFINITE);
 
     if (cm_LockDaemon_ShutdownEvent)
         code = thrd_WaitForSingleObject_Event(cm_LockDaemon_ShutdownEvent, INFINITE);
 
-    for ( i=0; i<cm_nDaemons; i++) {
-        if (cm_BkgDaemon_ShutdownEvent[i])
-            code = thrd_WaitForSingleObject_Event(cm_BkgDaemon_ShutdownEvent[i], INFINITE);
-    }
-
+#if 0
+    /*
+     * Do not waste precious time waiting for the ipaddr daemon to shutdown.
+     * When it does it means we have lost our network connection and we need
+     * it during cache shutdown in order to notify the file servers that this
+     * client is giving up all callbacks.
+     */
     if (cm_IPAddrDaemon_ShutdownEvent)
         code = thrd_WaitForSingleObject_Event(cm_IPAddrDaemon_ShutdownEvent, INFINITE);
+#endif
 }
 
 void cm_InitDaemon(int nDaemons)
