@@ -32,7 +32,7 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      S<<< [B<-stat> <I<number of stat entries>>] >>> [B<-verbose>]
      [B<-disable-dynamic-vcaches>] 
      S<<< [B<-volumes> <I<number of volume entries>>] >>>
-     [B<-waitclose>]
+     [B<-waitclose>] [B<-rxmaxfrags> <I<max # of fragments>>]
 
 =for html
 </div>
@@ -669,6 +669,20 @@ B<-dynroot> is given.
 =item B<-rxbind>
 
 Bind the Rx socket (one interface only).
+
+=item B<-rxmaxfrags> <I<max # of fragments>>
+
+Set a limit for the maximum number of UDP fragments Rx will send per Rx
+packet, and the maximum number of fragments Rx thinks it can receive when
+advertising its receive size to peers. Practically speaking, setting this
+option means that you will not see Rx data packets that are broken into more
+than N fragments, where N is the value specified for this option. Setting this
+option to 1 effectively prevents fragmentation, and can be useful when dealing
+with networking equipment that does not properly handle UDP fragments.
+
+Note that this option just specifies a maximum. The actual number of fragments
+seen on the wire may be less than what is specified, depending on the
+configuration of the peer.
 
 =item B<-rxmaxmtu> <I<value for maximum MTU>>
 
