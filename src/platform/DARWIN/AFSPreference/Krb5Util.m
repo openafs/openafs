@@ -122,10 +122,66 @@
 		//NSLog(@"Ticket Expiration time: %@", [expirationDate description]);
 		NSTimeInterval secondToExpireTime = [expirationDate timeIntervalSinceNow];
 		if(secondToExpireTime <= secToExpire) {
-			kstatus = KLRenewInitialTickets ( nil, inLoginOptions, nil, nil);
-			//kstatus = KLTicketExpirationTime (nil, kerberosVersion_All, &expireStartTime);
-			//expirationDate = [NSDate dateWithTimeIntervalSince1970:expireStartTime];
-			//NSLog(@"Ticket Renewed Unitl %@", expirationDate);
+#if defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6)
+			krb5_creds in;
+			krb5_error_code ret;
+			krb5_ccache id = NULL;
+			static dispatch_once_t once = 0;
+			static krb5_context kcontext;
+			krb5_principal me=NULL;
+			krb5_principal server=NULL;
+			krb5_timestamp now;
+
+			dispatch_once(&once, ^{
+					krb5_init_context(&kcontext);
+				});
+
+			krb5_timeofday(kcontext, &now);
+			memset((char *)&in, 0, sizeof(in));
+			in.times.starttime = 0;
+			in.times.endtime = now + inTicketLifetime;
+			in.times.renew_till = now + inTicketLifetime;
+
+			krb5_cc_default(kcontext, &id);
+			if (ret == 0) {
+				ret = krb5_cc_get_principal(kcontext, id,
+							    &me);
+				in.client = me;
+			}
+			if (ret == 0) {
+			  ret = krb5_build_principal_ext(kcontext, &server,
+						       krb5_princ_realm(kcontext,
+									in.client)->length,
+						       krb5_princ_realm(kcontext,
+									in.client)->data,
+						       6, "krbtgt",
+						       krb5_princ_realm(kcontext,
+									in.client)->length,
+						       krb5_princ_realm(kcontext,
+									in.client)->data,
+						       0);
+			}
+			if (ret == 0) {
+			  in.server = server;
+			  ret = krb5_get_renewed_creds(kcontext, &in, me, id, server);
+			}
+			if (ret == 0) {
+			  ret = krb5_cc_initialize (kcontext, id, me);
+			  ret = krb5_cc_store_cred(kcontext, id, &in);
+			  krb5_cc_close(kcontext,id);
+			}
+			krb5_free_principal(kcontext, server);
+#else
+			KLPrincipal klprinc = nil;
+			kstatus = KLRenewInitialTickets ( klprinc, inLoginOptions, nil, nil);
+#endif
+
+#if 0
+			/* handoff to growl agent? */
+			kstatus = KLTicketExpirationTime (nil, kerberosVersion_All, &expireStartTime);
+			expirationDate = [NSDate dateWithTimeIntervalSince1970:expireStartTime];
+			BuildNotificationInfo(@"Ticket Renewed Unitl %@", expirationDate,  callbackInfo->dcref, callbackInfo->regref, callbackInfo->icon);
+#endif
 		}
 	}
 	@catch (NSException * e) {
