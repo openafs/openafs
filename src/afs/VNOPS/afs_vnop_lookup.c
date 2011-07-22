@@ -684,7 +684,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct volume *volp = 0;	/* volume ptr */
     struct VenusFid dotdot = {0, {0, 0, 0}};
     int flagIndex = 0;		/* First file with bulk fetch flag set */
-    int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     struct rx_connection *rxconn;
     XSTATS_DECLS;
     dotdot.Cell = 0;
@@ -977,7 +976,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
 
 	    if (!(tcp->parent->srvr->server->flags & SNO_INLINEBULK)) {
-	    retryonce:
 		RX_AFS_GUNLOCK();
 		code =
 		    RXAFS_InlineBulkStatus(rxconn, &fidParm, &statParm,
@@ -985,29 +983,18 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		RX_AFS_GLOCK();
 		if (code == RXGEN_OPCODE) {
 		    tcp->parent->srvr->server->flags |= SNO_INLINEBULK;
-		    inlinebulk = 0;
 		    RX_AFS_GUNLOCK();
 		    code =
 			RXAFS_BulkStatus(rxconn, &fidParm, &statParm,
 					 &cbParm, &volSync);
 		    RX_AFS_GLOCK();
-		} else {
-		    inlinebulk = 1;
-		    if (!code && ((&statsp[0])->errorCode)) {
-			/*
-			 * If this is an error needing retry, do so.
-			 * Retryable errors are all whole-volume or
-			 * whole-server.
-			 */
-			if (afs_Analyze(tcp, rxconn, (&statsp[0])->errorCode,
-					&adp->f.fid, areqp,
-					AFS_STATS_FS_RPCIDX_BULKSTATUS,
-					SHARED_LOCK, NULL) != 0)
-			    goto retryonce;
-		    }
+		} else if (!code) {
+		    /* The InlineBulkStatus call itself succeeded, but we
+		     * may have failed to stat the first entry. Use the error
+		     * from the first entry for processing. */
+		    code = (&statsp[0])->errorCode;
 		}
 	    } else {
-		inlinebulk = 0;
 		RX_AFS_GUNLOCK();
 		code =
 		    RXAFS_BulkStatus(rxconn, &fidParm, &statParm, &cbParm,
@@ -1319,16 +1306,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     if (volp)
 	afs_PutVolume(volp, READ_LOCK);
 
-    /* If we did the InlineBulk RPC pull out the return code */
-    if (inlinebulk && code == 0) {
-	if ((&statsp[0])->errorCode) {
-	    afs_Analyze(tcp, rxconn, (&statsp[0])->errorCode, &adp->f.fid, areqp,
-			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL);
-	    code = (&statsp[0])->errorCode;
-	}
-    } else {
-	code = 0;
-    }
   done2:
     osi_FreeLargeSpace((char *)fidsp);
     osi_Free((char *)statsp, AFSCBMAX * sizeof(AFSFetchStatus));
