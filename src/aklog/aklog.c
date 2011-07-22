@@ -2175,8 +2175,11 @@ get_user_realm(krb5_context context, char **realm)
 
     *realm = NULL;
 
-    if (!_krb425_ccache)
-        krb5_cc_default(context, &_krb425_ccache);
+    if (!_krb425_ccache) {
+	r = krb5_cc_default(context, &_krb425_ccache);
+	if (r)
+	    return r;
+    }
     if (!client_principal) {
 	if (client) {
 	    r = krb5_parse_name(context, client,  &client_principal);
