@@ -565,7 +565,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct volume *volp = 0;	/* volume ptr */
     struct VenusFid dotdot;
     int flagIndex = 0;		/* First file with bulk fetch flag set */
-    int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     struct rx_connection *rxconn;
     XSTATS_DECLS;
 #ifdef AFS_DARWIN80_ENV
@@ -820,14 +819,16 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 					   &cbParm, &volSync);
 		if (code == RXGEN_OPCODE) {
 		    tcp->srvr->server->flags |= SNO_INLINEBULK;
-		    inlinebulk = 0;
 		    code =
 			RXAFS_BulkStatus(rxconn, &fidParm, &statParm,
 					 &cbParm, &volSync);
-		} else
-		    inlinebulk = 1;
+		} else if (!code) {
+		    /* The InlineBulkStatus call itself succeeded, but we
+		     * may have failed to stat the first entry. Use the error
+		     * from the first entry for processing. */
+		    code = (&statsp[0])->errorCode;
+		}
 	    } else {
-		inlinebulk = 0;
 		code =
 		    RXAFS_BulkStatus(rxconn, &fidParm, &statParm, &cbParm,
 				     &volSync);
@@ -1075,16 +1076,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     if (volp)
 	afs_PutVolume(volp, READ_LOCK);
 
-    /* If we did the InlineBulk RPC pull out the return code */
-    if (inlinebulk && code == 0) {
-	if ((&statsp[0])->errorCode) {
-	    afs_Analyze(tcp, rxconn, (&statsp[0])->errorCode, &adp->fid, areqp,
-			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL);
-	    code = (&statsp[0])->errorCode;
-	}
-    } else {
-	code = 0;
-    }
   done2:
     osi_FreeLargeSpace((char *)fidsp);
     osi_Free((char *)statsp, AFSCBMAX * sizeof(AFSFetchStatus));
