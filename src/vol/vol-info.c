@@ -27,21 +27,14 @@
 
 #include <afs/cmd.h>
 #include <afs/dir.h>
-
-#include <rx/xdr.h>
 #include <afs/afsint.h>
-#include "nfs.h"
 #include <afs/errors.h>
+
 #include "lock.h"
-#include "lwp.h"
-#include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
-#include "viceinode.h"
-#include <afs/afssyscalls.h>
-#include <afs/afsutil.h>
 
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
