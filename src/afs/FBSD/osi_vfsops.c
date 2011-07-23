@@ -56,7 +56,7 @@ afs_init(struct vfsconf *vfc)
     }
 #else
     if (sysent[AFS_SYSCALL].sy_call != nosys
-        && sysent[AFS_SYSCALL].sy_call != lkmnosys) {
+        && sysent[AFS_SYSCALL].sy_call != (sy_call_t *)lkmnosys) {
         printf("AFS_SYSCALL in use. aborting\n");
         return EBUSY;
     }
