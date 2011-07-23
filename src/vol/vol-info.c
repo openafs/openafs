@@ -343,6 +343,10 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
     afs_int32 ec = 0;
 
     vp = (Volume *) calloc(1, sizeof(Volume));
+    if (!vp) {
+	fprintf(stderr, "%s: Failed to allocate volume object.\n", progname);
+	return NULL;
+    }
     vp->specialStatus = 0;
     vp->device = dp->device;
     vp->partition = dp;
@@ -358,6 +362,11 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
     vp->goingOffline = 0;
     vp->nUsers = 1;
     vp->header = (struct volHeader *)calloc(1, sizeof(*vp->header));
+    if (!vp->header) {
+	fprintf(stderr, "%s: Failed to allocate volume header.\n", progname);
+	free(vp);
+	return NULL;
+    }
     ec = ReadHdr1(V_diskDataHandle(vp), (char *)&V_disk(vp),
 		  sizeof(V_disk(vp)), VOLUMEINFOMAGIC, VOLUMEINFOVERSION);
     if (!ec) {
@@ -380,6 +389,24 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
     if (ec)
 	return (Volume *) 0;
     return vp;
+}
+
+/**
+ * Simplified detach volume
+ *
+ * param[in] vp       volume object from AttachVolume
+ *
+ * @return none
+ */
+static void
+DetachVolume(Volume * vp)
+{
+    IH_RELEASE(vp->vnodeIndex[vLarge].handle);
+    IH_RELEASE(vp->vnodeIndex[vSmall].handle);
+    IH_RELEASE(vp->diskDataHandle);
+    IH_RELEASE(V_linkHandle(vp));
+    free(vp->header);
+    free(vp);
 }
 
 /**
@@ -807,8 +834,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
     struct afs_stat status;
-    int fd;
-    Volume *vp;
+    int fd = -1;
+    Volume *vp = NULL;
     char headerName[1024];
     afs_sfsize_t n;
 
@@ -816,40 +843,39 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 		       VPartitionPath(dp), name);
     if ((fd = afs_open(headerName, O_RDONLY)) == -1) {
 	fprintf(stderr, "%s: Cannot open volume header %s\n", progname, name);
-	return;
+	goto cleanup;
     }
 
     if (afs_fstat(fd, &status) == -1) {
 	fprintf(stderr, "%s: Cannot read volume header %s\n", progname, name);
-	close(fd);
-	return;
+	goto cleanup;
     }
     n = read(fd, &diskHeader, sizeof(diskHeader));
     if (n != sizeof(diskHeader)
 	|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
 	fprintf(stderr, "%s: Error reading volume header %s\n", progname,
 		name);
-	close(fd);
-	return;
+	goto cleanup;
     }
     if (diskHeader.stamp.version != VOLUMEHEADERVERSION) {
 	fprintf(stderr,
 		"%s: Volume %s, version number is incorrect; volume needs to be salvaged\n",
 		progname, name);
-	close(fd);
-	return;
+	goto cleanup;
     }
+
     DiskToVolumeHeader(&header, &diskHeader);
     if (DumpHeader || ShowSizes) {
 	HandleHeaderFiles(dp, fd, &header);
     }
-    close(fd);
+
     vp = AttachVolume(dp, name, &header);
     if (!vp) {
 	fprintf(stderr, "%s: Error attaching volume header %s\n",
 		progname, name);
-	return;
+	goto cleanup;
     }
+
     if (DumpInfo) {
 	PrintHeader(vp);
     }
@@ -865,10 +891,15 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
 	    volumeTotals.auxsize_k + volumeTotals.vnodesize_k;
 	PrintVolumeSizes(vp);
     }
-    free(vp->header);
-    free(vp);
-}
 
+  cleanup:
+    if (fd != -1) {
+	close(fd);
+    }
+    if (vp) {
+	DetachVolume(vp);
+    }
+}
 
 /**
  * volinfo program entry
