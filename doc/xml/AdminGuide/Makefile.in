@@ -50,7 +50,9 @@ $(BOOK).epub: $(SRCS)
 	fi
 
 $(BOOK).mobi: $(BOOK).epub
-	kindlegen $(BOOK).epub -o $(BOOK).mobi
+	if test -n "$(KINDLEGEN)" && test -x "$(DBTOEPUB)" ; then \
+		kindlegen $(BOOK).epub -o $(BOOK).mobi; \
+	fi
 
 check:
 	xmllint --noout --valid $(BOOK).xml

@@ -259,6 +259,10 @@ AC_ARG_WITH([docbook-stylesheets],
 
 enable_login="no"
 
+dnl Check whether kindlegen exists.  If not, we'll suppress that part of the
+dnl documentation build.
+AC_CHECK_PROGS([KINDLEGEN], [kindlegen])
+
 dnl weird ass systems
 dnl AC_AIX
 AC_ISC_POSIX
