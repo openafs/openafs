@@ -164,8 +164,9 @@ override_dh_install:
 	set -e; for h in doc/protocol/*.h ; do \
 	    mkdir $(DOCS)/html/`basename $$h .h` ; \
 	    cp $$h $(DOCS)/html/`basename $$h .h` ; \
-	    cd $(DOCS)/html/`basename $$h .h` && doxygen *.h && rm *.h \
-		&& mv html/* . && rm -r latex html && cd $(CURDIR) ; \
+	    cd $(DOCS)/html/`basename $$h .h` && doxygen -g && doxygen \
+		&& rm *.h && mv html/* . && rm -r latex html \
+		&& cd $(CURDIR) ; \
 	done
 
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)

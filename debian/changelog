@@ -3,6 +3,9 @@ openafs (1.6.0~pre7-2) UNRELEASED; urgency=low
   * Force use of dblatex to build the manual, even if docbook2pdf is
     available, since the latter dies with errors about TeX capacity.
     (Closes: #635306)
+  * Fix generation of protocol documentation from Doxygen headers.
+    Doxygen cannot be called directly on header files and needs a
+    configuration file to be generated first.  Thanks, Anders Kaseorg.
   * Add another dummy rule for ./debian/rules to the kernel module rules
     file to fix another variation of make-kpkg breakage.
 
