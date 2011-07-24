@@ -411,6 +411,9 @@ I  Other configure options
        the kernel headers).  The SYSNAME should be one of the options
        listed in A2.
 
+   --with-gssapi=DIR
+   --with-gssapi-include=DIR
+   --with-gssapi-lib=DIR
    --with-krb5[=DIR]
    --with-krb5-include=DIR
    --with-krb5-lib=DIR
@@ -429,6 +432,27 @@ I  Other configure options
        Autoconf can't figure out whether to use lib, lib32, or lib64 on
        your platform.
 
+       --with-gssapi is similar, except for the GSS-API libraries instead
+       of the Kerberos libraries.  If you have to manually set the
+       location of the Kerberos libraries, you may need to do the same
+       thing for the GSS-API libraries.
+
+   --with-libintl=DIR
+   --with-libintl-include=DIR
+   --with-libintl-lib=DIR
+       Specifies the install location of the libintl library, used for
+       internationalization, or separately specifies the location of the
+       header files and libraries.  By default, the default system library
+       paths will be searched.  This library is not required on many
+       platforms.
+
+   --with-roken=PATH
+   --with-roken=internal
+       Specifies the install location of the libroken library.  Specify
+       "internal" to use the embedded libroken library that comes with
+       OpenAFS (the default).  This option is primarily useful for
+       building against a system libroken library if you have one.
+
    --with-linux-kernel-build=PATH
    --with-linux-kernel-headers=PATH
    --with-bsd-kernel-build=PATH
@@ -443,10 +467,27 @@ I  Other configure options
        rather than libafs-<VERSION>.ko, which is easier to handle in Linux
        distribution init scripts.
 
+   --with-docbook2pdf=PROGRAM
+       Specifies the program used to convert the DocBook manuals to PDF.
+       Supported choices are fop, dblatex, and docbook2pdf.  By default,
+       the user's path is searched for those programs in that order, and
+       the first one found is used.
+
+   --with-docbook-stylesheets=PATH
+       The location of the DocBook style sheets, used to convert the
+       DocBook manuals to other formats.  By default, a set of likely
+       paths are searched.
+
    --with-html-xsl=PATH
+       Specifies the XSLT style sheet to convert DocBook manuals into
+       HTML.  The default is html/chunk.xsl.  You may wish to use
+       html/docbook.xsml instead.
+
    --with-xslt-processor=PROGRAM
-       Specifies the XSLT style sheet and XSLT processor to use to convert
-       the DocBook manuals into HTML.
+       Specifies the XSLT processor to use to convert the DocBook manuals
+       into HTML.  Supported choices are libxslt, saxon, xalan-j, and
+       xsltproc.  By default, the user's path is searched for those
+       programs in that order, and the first one found is used.
 
    There are also some environment variables that you can set to control
    aspects of the build.  They can be set either on the configure command
