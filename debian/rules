@@ -105,7 +105,8 @@ override_dh_auto_configure:
 	    --sysconfdir=/etc --libexecdir=/usr/lib --with-krb5 \
 	    --localstatedir=/var/lib --enable-supergroups \
 	    --enable-fuse-client --enable-debug --enable-debug-lwp \
-	    --with-xslt-processor=xsltproc --with-html-xsl=$(HTML_XSL) \
+	    --with-docbook2pdf=dblatex --with-xslt-processor=xsltproc \
+	    --with-html-xsl=$(HTML_XSL) \
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 
 # Also build a libafs_tree and build the XML documentation.
