@@ -56,4 +56,4 @@ check:
 	xmllint --noout --valid $(BOOK).xml
 
 clean:
-	rm -f *.html *.pdf
+	rm -f *.aux *.epub *.fo *.html *.log *.mobi *.out *.pdf
