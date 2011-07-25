@@ -1,3 +1,10 @@
+openafs (1.6.0~pre7-3) UNRELEASED; urgency=low
+
+  * Fix another Doxygen call to generate a configuration file, and remove
+    the generated configuration files after Doxygen runs.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 24 Jul 2011 17:30:26 -0700
+
 openafs (1.6.0~pre7-2) unstable; urgency=low
 
   * Force use of dblatex to build the manual, even if docbook2pdf is
