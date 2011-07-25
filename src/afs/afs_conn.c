@@ -596,6 +596,24 @@ afs_PutConn(struct afs_conn *ac, struct rx_connection *rxconn,
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
+    if (ac->refCount < 0) {
+	static int warned = 0;
+	/* So, someone is 'put'ing more refs than they got. From now on, we
+	 * have no idea if the structure is actually still in use, so just
+	 * set the refcount to a really negative number to make it unlikely
+	 * that the count will ever reach 0 and the conn gets freed. This
+	 * leaks memory, but the alternative is panicing, or risking memory
+	 * corruption. */
+	ac->refCount = -10000;
+	if (!warned) {
+	    warned = 1;
+	    afs_warn("afs_PutConn: negative refCount with 0x%lx; this should "
+	             "not ever happen! Trying to carry on anyway, but please "
+	             "report this issue\n",
+	             (unsigned long)(uintptrsz)ac);
+	}
+	return;
+    }
     ac->parent->refCount--;
     rx_PutConnection(rxconn);
 }				/*afs_PutConn */
