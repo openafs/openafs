@@ -84,8 +84,18 @@ typedef enum {
     P_FILENAMES
 } volinfo_parm_t;
 
+/* Vnode details for vnode handling procedures */
+struct VnodeDetails {
+    Volume *vp;
+    VnodeClass class;
+    VnodeDiskObject *vnode;
+    VnodeId vnodeNumber;
+    afs_foff_t offset;
+    int index;
+};
+
 /* Modes */
-static int DumpInfo = 1;            /**< Dump volume information, defualt mode*/
+static int DumpInfo = 0;            /**< Dump volume information */
 static int DumpHeader = 0;          /**< Dump volume header files info */
 static int DumpVnodes = 0;          /**< Dump vnode info */
 static int DumpInodeNumber = 0;     /**< Dump inode numbers with vnodes */
@@ -116,6 +126,16 @@ static struct sizeTotals partitionTotals = { 0, 0, 0, 0, 0, 0 };
 static struct sizeTotals serverTotals = { 0, 0, 0, 0, 0, 0 };
 static int PrintingVolumeSizes = 0;	/*print volume size lines */
 
+/**
+ * List of procedures to call when scanning vnodes.
+ */
+struct VnodeScanProc {
+    struct rx_queue link;
+    const char *heading;
+    void (*proc) (struct VnodeDetails * vdp);
+};
+static struct rx_queue VnodeScanLists[nVNODECLASSES];
+
 /* Forward Declarations */
 void PrintHeader(Volume * vp);
 void HandleAllPart(void);
@@ -124,9 +144,10 @@ void HandleVolume(struct DiskPartition64 *partP, char *name);
 struct DiskPartition64 *FindCurrentPartition(void);
 Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     struct VolumeHeader *header);
-void PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
-		Inode ino, Volume * vp);
 void HandleVnodes(Volume * vp, VnodeClass class);
+static void AddVnodeToSizeTotals(struct VnodeDetails *vdp);
+static void SaveInode(struct VnodeDetails *vdp);
+static void PrintVnode(struct VnodeDetails *vdp);
 
 /**
  * Format time as a timestamp string
@@ -186,6 +207,25 @@ NT_date(FILETIME * ft)
     return result[next];
 }
 #endif
+
+/**
+ * Add vnode size to the running volume totals.
+ *
+ * @param[in]  vdp   vnode details object
+ *
+ * @return none
+ */
+static void
+AddVnodeToSizeTotals(struct VnodeDetails *vdp)
+{
+    afs_fsize_t fileLength;
+
+    VNDISK_GET_LEN(fileLength, vdp->vnode);
+    if (fileLength > 0) {
+	volumeTotals.vnodesize += fileLength;
+	volumeTotals.vnodesize_k += fileLength / 1024;
+    }
+}
 
 /**
  * Print the volume size table heading line, if needed.
@@ -450,6 +490,115 @@ GetPartitionName(afs_uint32 partId, char *partName, afs_size_t partNameSize)
 }
 
 /**
+ * Scan the volumes in the partitions
+ *
+ * Scan the specified volume in the specified partition if both
+ * are given. Scan all the volumes in the specified partition if
+ * only the partition is given.  If neither a partition nor volume
+ * is given, scan all the volumes in all the partitions.  If only
+ * the volume is given, attempt to find it in the current working
+ * directory.
+ *
+ * @param[in] partNameOrId   partition name or id to be scannned
+ * @param[in] volumeId       volume id to be scanned
+ *
+ * @return 0 if successful
+ */
+static int
+ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
+{
+    int err = 0;
+    char partName[64] = "";
+    struct DiskPartition64 *partP = NULL;
+
+#ifndef AFS_NT40_ENV
+    if (geteuid() != 0) {
+	fprintf(stderr, "%s: Must be run as root; sorry\n", progname);
+	return 1;
+    }
+#endif
+
+    DInit(10);
+
+    /* Allow user to specify partition by name or id. */
+    if (partNameOrId) {
+	afs_uint32 partId = volutil_GetPartitionID(partNameOrId);
+	if (partId == -1) {
+	    fprintf(stderr, "%s: Could not parse '%s' as a partition name.\n",
+		    progname, partNameOrId);
+	    return 1;
+	}
+	if (GetPartitionName(partId, partName, sizeof(partName))) {
+	    fprintf(stderr,
+		    "%s: Could not format '%s' as a partition name.\n",
+		    progname, partNameOrId);
+	    return 1;
+	}
+    }
+
+    err = VAttachPartitions();
+    if (err) {
+	fprintf(stderr, "%s: %d partitions had errors during attach.\n",
+		progname, err);
+	return 1;
+    }
+
+    if (partName[0]) {
+	partP = VGetPartition(partName, 0);
+	if (!partP) {
+	    fprintf(stderr,
+		    "%s: %s is not an AFS partition name on this server.\n",
+		    progname, partName);
+	    return 1;
+	}
+    }
+
+    if (!volumeId) {
+	if (!partP) {
+	    HandleAllPart();
+	} else {
+	    HandlePart(partP);
+	}
+    } else {
+	char name1[128];
+
+	if (!partP) {
+	    partP = FindCurrentPartition();
+	    if (!partP) {
+		fprintf(stderr,
+			"%s: Current partition is not a vice partition.\n",
+			progname);
+		return 1;
+	    }
+	}
+	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
+		 afs_printable_uint32_lu(volumeId));
+	HandleVolume(partP, name1);
+    }
+
+    return 0;
+}
+
+/**
+ * Add a vnode scanning procedure
+ *
+ * @param[in]   class   vnode class for this handler
+ * @param[in]   proc    handler proc to be called by HandleVnodes
+ * @param[in]   heading optional string to pring before scanning vnodes
+ *
+ * @return none
+ */
+static void
+AddVnodeHandler(VnodeClass class, void (*proc) (struct VnodeDetails * vdp),
+		const char *heading)
+{
+    struct VnodeScanProc *entry = malloc(sizeof(struct VnodeScanProc));
+    entry->proc = proc;
+    entry->heading = heading;
+    queue_Append(&VnodeScanLists[class], (struct rx_queue *)entry);
+}
+
+/**
  * Process command line options and start scanning
  *
  * @param[in] as     command syntax object
@@ -461,19 +610,10 @@ static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
-    int err = 0;
     afs_uint32 volumeId = 0;
-    char *partNameOrId = 0;
-    char partName[64] = "";
-    struct DiskPartition64 *partP = NULL;
+    char *partNameOrId = NULL;
 
-
-#ifndef AFS_NT40_ENV
-    if (geteuid() != 0) {
-	fprintf(stderr, "%s: Must be run as root; sorry\n", progname);
-	return 1;
-    }
-#endif
+    DumpInfo = 1;		/* volinfo default mode */
 
     if (as->parms[P_ONLINE].items) {
 	fprintf(stderr, "%s: -online not supported\n", progname);
@@ -535,63 +675,21 @@ handleit(struct cmd_syndesc *as, void *arock)
 #endif
     }
 
-    /* Allow user to specify partition by name or id. */
-    if (partNameOrId) {
-	afs_uint32 partId = volutil_GetPartitionID(partNameOrId);
-	if (partId == -1) {
-	    fprintf(stderr, "%s: Could not parse '%s' as a partition name.\n",
-		    progname, partNameOrId);
-	    return 1;
-	}
-	if (GetPartitionName(partId, partName, sizeof(partName))) {
-	    fprintf(stderr,
-		    "%s: Could not format '%s' as a partition name.\n",
-		    progname, partNameOrId);
-	    return 1;
-	}
+    if (SaveInodes) {
+	AddVnodeHandler(vSmall, SaveInode,
+			"Saving all volume files to current directory ...\n");
+    }
+    if (ShowSizes) {
+	AddVnodeHandler(vLarge, AddVnodeToSizeTotals, NULL);
+	AddVnodeHandler(vSmall, AddVnodeToSizeTotals, NULL);
+    }
+    if (DumpVnodes) {
+	AddVnodeHandler(vLarge, PrintVnode, "\nLarge vnodes (directories)\n");
+	AddVnodeHandler(vSmall, PrintVnode,
+			"\nSmall vnodes(files, symbolic links)\n");
     }
 
-    DInit(10);
-
-    err = VAttachPartitions();
-    if (err) {
-	fprintf(stderr, "%s: %d partitions had errors during attach.\n",
-		progname, err);
-    }
-
-    if (partName[0]) {
-	partP = VGetPartition(partName, 0);
-	if (!partP) {
-	    fprintf(stderr,
-		    "%s: %s is not an AFS partition name on this server.\n",
-		    progname, partName);
-	    return 1;
-	}
-    }
-
-    if (!volumeId) {
-	if (!partP) {
-	    HandleAllPart();
-	} else {
-	    HandlePart(partP);
-	}
-    } else {
-	char name1[128];
-
-	if (!partP) {
-	    partP = FindCurrentPartition();
-	    if (!partP) {
-		fprintf(stderr,
-			"%s: Current partition is not a vice partition.\n",
-			progname);
-		return 1;
-	    }
-	}
-	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
-			   afs_printable_uint32_lu(volumeId));
-	HandleVolume(partP, name1);
-    }
-    return 0;
+    return ScanPartitions(partNameOrId, volumeId);
 }
 
 /**
@@ -661,7 +759,9 @@ HandleAllPart(void)
 
 
     for (partP = DiskPartitionList; partP; partP = partP->next) {
-	printf("Processing Partition %s:\n", partP->name);
+	if (DumpInfo || SaveInodes || ShowSizes) {
+	    printf("Processing Partition %s:\n", partP->name);
+	}
 	HandlePart(partP);
 	if (ShowSizes) {
 	    AddSizeTotals(&serverTotals, &partitionTotals);
@@ -879,16 +979,17 @@ HandleVolume(struct DiskPartition64 *dp, char *name)
     if (DumpInfo) {
 	PrintHeader(vp);
     }
-    if (DumpVnodes || ShowSizes || ShowOrphaned) {
-	HandleVnodes(vp, vLarge);
-    }
-    if (DumpVnodes || ShowSizes || SaveInodes || ShowOrphaned) {
-	HandleVnodes(vp, vSmall);
-    }
+
+    HandleVnodes(vp, vLarge);
+    HandleVnodes(vp, vSmall);
+
     if (ShowSizes) {
 	volumeTotals.diskused_k = V_diskused(vp);
 	volumeTotals.size_k =
 	    volumeTotals.auxsize_k + volumeTotals.vnodesize_k;
+	if (SaveInodes) {
+	    PrintingVolumeSizes = 0;	/* print heading again */
+	}
 	PrintVolumeSizes(vp);
     }
 
@@ -909,6 +1010,9 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     afs_int32 code;
+
+    queue_Init(&VnodeScanLists[vLarge]);
+    queue_Init(&VnodeScanLists[vSmall]);
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL, "Dump volume's internal state");
     cmd_AddParm(ts, "-online", CMD_FLAG, CMD_OPTIONAL,
@@ -943,7 +1047,21 @@ main(int argc, char **argv)
     return code;
 }
 
-#define typestring(type) (type == RWVOL? "read/write": type == ROVOL? "readonly": type == BACKVOL? "backup": "unknown")
+/**
+ * Return a display string for the volume type.
+ *
+ * @param[in]  type  volume type
+ *
+ * @return volume type description string
+ */
+static_inline char *
+volumeTypeString(int type)
+{
+    return
+	(type == RWVOL ? "read/write" :
+	 (type == ROVOL ? "readonly" :
+	  (type == BACKVOL ? "backup" : "unknown")));
+}
 
 /**
  * Print the volume header information
@@ -964,7 +1082,7 @@ PrintHeader(Volume * vp)
 	 V_dontSalvage(vp));
     printf
 	("type = %d (%s), uniquifier = %u, needsCallback = %d, destroyMe = %x\n",
-	 V_type(vp), typestring(V_type(vp)), V_uniquifier(vp),
+	 V_type(vp), volumeTypeString(V_type(vp)), V_uniquifier(vp),
 	 V_needsCallback(vp), V_destroyMe(vp));
     printf
 	("id = %u, parentId = %u, cloneId = %u, backupId = %u, restoredFromId = %u\n",
@@ -1039,14 +1157,12 @@ GetFileInfo(FD_t fd, afs_sfsize_t * size, char **ctime, char **mtime,
 /**
  * Copy the inode data to a file in the current directory.
  *
- * @param[in] vp     volume object
- * @param[in] vnode  vnode object
- * @param[in] inode  inode of the source file
+ * @param[in] vdp     vnode details object
  *
  * @return none
  */
 static void
-SaveInode(Volume * vp, struct VnodeDiskObject *vnode, Inode ino)
+SaveInode(struct VnodeDetails *vdp)
 {
     IHandle_t *ih;
     FdHandle_t *fdP;
@@ -1054,12 +1170,13 @@ SaveInode(Volume * vp, struct VnodeDiskObject *vnode, Inode ino)
     int ofd = 0;
     afs_foff_t total;
     ssize_t len;
+    Inode ino = VNDISK_GET_INO(vdp->vnode);
 
     if (!VALID_INO(ino)) {
-        return;
+	return;
     }
 
-    IH_INIT(ih, V_device(vp), V_parentId(vp), ino);
+    IH_INIT(ih, V_device(vdp->vp), V_parentId(vdp->vp), ino);
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
 	fprintf(stderr,
@@ -1134,27 +1251,21 @@ HandleVnodes(Volume * vp, VnodeClass class)
     int vnodeIndex;
     afs_sfsize_t nVnodes;
     afs_foff_t offset = 0;
-    Inode ino;
     IHandle_t *ih = vp->vnodeIndex[class].handle;
     FdHandle_t *fdP = NULL;
     afs_sfsize_t size;
     char *ctime, *atime, *mtime;
+    struct rx_queue *scanList = &VnodeScanLists[class];
+    struct VnodeScanProc *entry;
+    struct VnodeScanProc *next;
 
-    /* print vnode table heading */
-    if (class == vLarge) {
-	if (DumpInfo) {
-	    printf("\nLarge vnodes (directories)\n");
-	}
-    } else {
-	if (DumpInfo) {
-	    printf("\nSmall vnodes(files, symbolic links)\n");
-	    fflush(stdout);
-	}
-	if (SaveInodes) {
-	    printf("Saving all volume files to current directory ...\n");
-	    if (ShowSizes) {
-		PrintingVolumeSizes = 0;	/* print heading again */
-	    }
+    if (queue_IsEmpty(scanList)) {
+	return;
+    }
+
+    for (queue_Scan(scanList, entry, next, VnodeScanProc)) {
+	if (entry->heading) {
+	    printf(entry->heading);
 	}
     }
 
@@ -1188,22 +1299,19 @@ HandleVnodes(Volume * vp, VnodeClass class)
 	 nVnodes && STREAM_READ(vnode, diskSize, 1, file) == 1;
 	 nVnodes--, vnodeIndex++, offset += diskSize) {
 
-	ino = VNDISK_GET_INO(vnode);
-	if (ShowSizes) {
-	    afs_fsize_t fileLength;
+	struct VnodeDetails vnodeDetails;
 
-	    VNDISK_GET_LEN(fileLength, vnode);
-	    if (fileLength > 0) {
-		volumeTotals.vnodesize += fileLength;
-		volumeTotals.vnodesize_k += fileLength / 1024;
+	vnodeDetails.vp = vp;
+	vnodeDetails.class = class;
+	vnodeDetails.vnode = vnode;
+	vnodeDetails.vnodeNumber = bitNumberToVnodeNumber(vnodeIndex, class);
+	vnodeDetails.offset = offset;
+	vnodeDetails.index = vnodeIndex;
+
+        for (queue_Scan(scanList, entry, next, VnodeScanProc)) {
+	    if (entry->proc) {
+		(*entry->proc) (&vnodeDetails);
 	    }
-	}
-	if (SaveInodes && (class == vSmall)) {
-	    SaveInode(vp, vnode, ino);
-	}
-	if (DumpVnodes || ShowOrphaned) {
-	    PrintVnode(offset, vnode,
-		       bitNumberToVnodeNumber(vnodeIndex, class), ino, vp);
 	}
     }
 
@@ -1219,24 +1327,23 @@ HandleVnodes(Volume * vp, VnodeClass class)
 /**
  * Print vnode information
  *
- * @param[in] offset       index offset of this vnode
- * @param[in] vnode        vnode object to be printed
- * @param[in] vnodeNumber  vnode number
- * @param[in] ino          fileserver inode number
- * @param[in] vp           parent volume of the vnode
+ * @param[in] vdp          vnode details object
  *
  * @return none
  */
 void
-PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
-	   Inode ino, Volume * vp)
+PrintVnode(struct VnodeDetails *vdp)
 {
 #if defined(AFS_NAMEI_ENV)
     IHandle_t *ihtmpp;
     namei_t filename;
 #endif
+    afs_foff_t offset = vdp->offset;
+    VnodeDiskObject *vnode = vdp->vnode;
     afs_fsize_t fileLength;
+    Inode ino;
 
+    ino = VNDISK_GET_INO(vnode);
     VNDISK_GET_LEN(fileLength, vnode);
 
     /* The check for orphaned vnodes is currently limited to non-empty
@@ -1247,16 +1354,16 @@ PrintVnode(afs_foff_t offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 
     printf
 	("%10lld Vnode %u.%u.%u cloned: %u, length: %llu linkCount: %d parent: %u",
-	 (long long)offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion,
-	 vnode->cloned, (afs_uintmax_t) fileLength, vnode->linkCount,
-	 vnode->parent);
+	 (long long)offset, vdp->vnodeNumber, vnode->uniquifier,
+	 vnode->dataVersion, vnode->cloned, (afs_uintmax_t) fileLength,
+	 vnode->linkCount, vnode->parent);
     if (DumpInodeNumber)
 	printf(" inode: %s", PrintInode(NULL, ino));
     if (DumpDate)
 	printf(" ServerModTime: %s", date(vnode->serverModifyTime));
 #if defined(AFS_NAMEI_ENV)
     if (PrintFileNames) {
-	IH_INIT(ihtmpp, V_device(vp), V_parentId(vp), ino);
+	IH_INIT(ihtmpp, V_device(vdp->vp), V_parentId(vdp->vp), ino);
 	namei_HandleToName(&filename, ihtmpp);
 #if !defined(AFS_NT40_ENV)
 	printf(" UFS-Filename: %s", filename.n_path);
