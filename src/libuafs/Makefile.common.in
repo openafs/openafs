@@ -20,8 +20,8 @@ RX	=../rx
 AFSINT=../afsint
 LIB	=../lib
 NS_INCL =SRC/../afsweb/netscape_includes
-SWIG_PERL_CFLAGS = -fPIC $(shell perl -MExtUtils::Embed -e ccopts)
-SWIG_PERL_LDFLAGS = -fPIC $(shell perl -MExtUtils::Embed -e ldopts)
+SWIG_PERL_CFLAGS = -fPIC `perl -MExtUtils::Embed -e ccopts`
+SWIG_PERL_LDFLAGS = -fPIC `perl -MExtUtils::Embed -e ldopts`
 SWIG = @SWIG@
 LIBUAFS_BUILD_PERL = @LIBUAFS_BUILD_PERL@
 
