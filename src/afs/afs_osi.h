@@ -17,6 +17,10 @@
 #include <sys/condvar.h>
 #endif
 
+#ifdef AFS_SGI_ENV
+#include "sys/sema.h"		/* for kcondvar_t */
+#endif
+
 #ifdef AFS_NBSD_ENV
 #include <sys/lock.h>
 #endif
@@ -123,6 +127,37 @@ struct afs_osi_WaitHandle {
 
 
 #define	osi_NPACKETS	20	/* number of cluster pkts to alloc */
+
+/*
+ * Various definitions for osi_sleep and its event hash table
+ * DFBSD and SUNOS have no osi_sleep, and HPUX has its own hack for this stuff
+ */
+#define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
+typedef struct afs_event {
+    struct afs_event *next;	/* next in hash chain */
+    char *event;		/* lwp event: an address */
+    int refcount;		/* Is it in use? */
+    int seq;			/* Sequence number: this is incremented
+				 * by wakeup calls; wait will not return until
+				 * it changes */
+#if defined(AFS_AIX_ENV)
+    tid_t cond;
+#elif defined(AFS_DARWIN_ENV)
+#ifdef AFS_DARWIN80_ENV
+    lck_mtx_t *lck;
+    thread_t owner;
+#endif
+    /* no cond member */
+#elif defined(AFS_FBSD_ENV) || defined(AFS_OBSD_ENV)
+    int cond;			/* "all this gluck should probably be replaced by CVs" */
+#elif defined(AFS_LINUX_ENV) || defined(AFS_LINUX24_ENV)
+    wait_queue_head_t cond;
+#elif defined(AFS_NBSD_ENV) || defined(AFS_SOLARIS_ENV) || defined(AFS_SGI_ENV)
+    kcondvar_t cond;		/* Currently associated condition variable */
+#endif
+} afs_event_t;
+extern afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
+extern void shutdown_osisleep(void);
 
 
 /*

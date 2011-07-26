@@ -271,12 +271,46 @@ shutdown_osi(void)
        afs_osi_ctxtp = NULL;
        afs_osi_ctxtp_initialized = 0;
     }
+#endif
+#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_LINUX_ENV)
+    /* LINUX calls this from afs_cleanup() which hooks into module_exit */
     shutdown_osisleep();
 #endif
     if (afs_cold_shutdown) {
 	LOCK_INIT(&afs_ftf, "afs_ftf");
     }
 }
+
+#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_DARWIN_ENV)
+/* DARWIN uses locking, and so must provide its own */
+void
+shutdown_osisleep(void)
+{
+    afs_event_t *tmp;
+    int i;
+
+    for (i=0;i<AFS_EVHASHSIZE;i++) {
+	while ((tmp = afs_evhasht[i]) != NULL) {
+	    afs_evhasht[i] = tmp->next;
+	    if (tmp->refcount > 0) {
+		afs_warn("nonzero refcount in shutdown_osisleep()\n");
+	    } else {
+#if defined(AFS_AIX_ENV)
+		xmfree(tmp);
+#elif defined(AFS_FBSD_ENV)
+		afs_osi_Free(tmp, sizeof(*tmp));
+#elif defined(AFS_SGI_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SOLARIS_ENV)
+		osi_FreeSmallSpace(tmp);
+#elif defined(AFS_LINUX_ENV)
+		kfree(tmp);
+#elif defined(AFS_LINUX24_ENV)
+		osi_linux_free(tmp);
+#endif
+	    }
+	}
+    }
+}
+#endif
 
 #if !defined(AFS_OBSD_ENV) && !defined(AFS_NBSD40_ENV)
 int
