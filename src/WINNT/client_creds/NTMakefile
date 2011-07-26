@@ -69,6 +69,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
         $(DESTDIR)\lib\afskfw.lib \
+        $(DESTDIR)\lib\afs\afscom_err.lib \
         $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afsroken.lib
 

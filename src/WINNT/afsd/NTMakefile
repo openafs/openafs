@@ -266,12 +266,21 @@ $(LANAHELPERLIB): $(LANAHELPERLIB_OBJS)
 
 AFSKFWLIB = $(DESTDIR)\lib\afskfw.lib
 
-AFSKFWLIB_OBJS =\
-      $(OUT)\afskfw.obj
+PTERROBJS=$(OUT)\pterror.obj
+
+$(PTERROBJS): $(AFSROOT)\src\ptserver\pterror.c
+	$(C2OBJ) /Fo$@ $**
+
+KTCERROBJS=$(OUT)\ktc_errors.obj
+
+$(KTCERROBJS): $(AFSROOT)\src\auth\ktc_errors.c
+	$(C2OBJ) /Fo$@ $**
+
+AFSKFWLIB_OBJS = $(OUT)\afskfw.obj
 
 $(AFSKFWLIB_OBJS):
 
-$(AFSKFWLIB): $(AFSKFWLIB_OBJS)
+$(AFSKFWLIB): $(AFSKFWLIB_OBJS) $(PTERROBJS) $(KTCERROBJS)
       $(LIBARCH)
 
 ############################################################################
@@ -288,6 +297,9 @@ LOGON_DLLOBJS =\
 LOGON_DLLLIBS =\
     $(DESTDIR)\lib\afsauthent.lib \
     $(DESTDIR)\lib\libafsconf.lib \
+    $(DESTDIR)\lib\afs\afscom_err.lib \
+    $(DESTDIR)\lib\afs\afsutil.lib \
+    $(DESTDIR)\lib\afsroken.lib \
     $(LANAHELPERLIB) \
     $(AFSKFWLIB)
 
