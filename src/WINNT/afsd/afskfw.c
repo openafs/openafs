@@ -3256,13 +3256,10 @@ KFW_AFS_klog(
         StringCbCopyN( aclient.cell, sizeof(aclient.cell),
                        realm_of_cell, sizeof(aclient.cell) - 1);
 
-        len = min(k5creds->client->realm.length,(int)strlen(realm_of_cell));
         /* For Khimaira, always append the realm name */
-        if ( 1 /* strncmp(realm_of_cell, k5creds->client->realm.data, len) */ ) {
-            StringCbCat( aclient.name, sizeof(aclient.name), "@");
-            len = min(k5creds->client->realm.length, (int)(sizeof(aclient.name) - strlen(aclient.name) - 1));
-            StringCbCatN( aclient.name, sizeof(aclient.name), k5creds->client->realm.data, len);
-        }
+        StringCbCat( aclient.name, sizeof(aclient.name), "@");
+        len = min(k5creds->client->realm.length, (int)(sizeof(aclient.name) - strlen(aclient.name) - 1));
+        StringCbCatN( aclient.name, sizeof(aclient.name), k5creds->client->realm.data, len);
 
 	GetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, NULL, 0);
 	if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
