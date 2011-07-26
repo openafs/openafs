@@ -1399,8 +1399,9 @@ KFW_AFS_get_cred( char * username,
             while ( dot = strchr(pname,'.') ) {
                 *dot = '/';
             }
-            *userrealm++ = '@';
+            *userrealm = '@';
         }
+        userrealm++;
     } else {
         size_t len = strlen(username) + strlen(realm) + 2;
         pname = malloc(len);
@@ -1424,7 +1425,7 @@ KFW_AFS_get_cred( char * username,
         OutputDebugString(realm);
         OutputDebugString("\n");
         OutputDebugString("Realm of User: ");
-        OutputDebugString(userrealm);
+        OutputDebugString(userrealm?userrealm:"<NULL>");
         OutputDebugString("\n");
     }
 
