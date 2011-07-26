@@ -43,6 +43,8 @@
 #include "vnode.h"
 #include "volume.h"
 #include "partition.h"
+#include "daemon_com_inline.h"
+#include "fssync_inline.h"
 
 #ifdef _AIX
 #include <time.h>
@@ -68,7 +70,7 @@ static const char *progname = "volinfo";
 
 /* Command line options */
 typedef enum {
-    P_ONLINE,
+    P_CHECKOUT,
     P_VNODE,
     P_DATE,
     P_INODE,
@@ -95,6 +97,7 @@ struct VnodeDetails {
 };
 
 /* Modes */
+static int Checkout = 0;            /**< Use FSSYNC to checkout volumes from the fileserver. */
 static int DumpInfo = 0;            /**< Dump volume information */
 static int DumpHeader = 0;          /**< Dump volume header files info */
 static int DumpVnodes = 0;          /**< Dump vnode info */
@@ -322,7 +325,7 @@ PrintServerTotals(void)
  *   @retval -1 failed to read file
  */
 int
-ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
+ReadHdr1(IHandle_t * ih, char *to, afs_sfsize_t size, u_int magic, u_int version)
 {
     struct versionStamp *vsn;
     int bad = 0;
@@ -381,6 +384,30 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
 {
     Volume *vp;
     afs_int32 ec = 0;
+
+    if (Checkout) {
+	afs_int32 code;
+	SYNC_response response;
+	VolumeId volid = header->id;
+
+	memset(&response, 0, sizeof(response));
+	code =
+	    FSYNC_VolOp(volid, dp->name, FSYNC_VOL_NEEDVOLUME, V_DUMP,
+			&response);
+	if (code != SYNC_OK) {
+	    if (response.hdr.reason == FSYNC_SALVAGE) {
+		fprintf(stderr,
+			"%s: file server says volume %lu is salvaging.\n",
+			progname, afs_printable_uint32_lu(volid));
+		return NULL;
+	    } else {
+		fprintf(stderr,
+			"%s: attach of volume %lu denied by file server.\n",
+			progname, afs_printable_uint32_lu(volid));
+		return NULL;
+	    }
+	}
+    }
 
     vp = (Volume *) calloc(1, sizeof(Volume));
     if (!vp) {
@@ -441,6 +468,25 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
 static void
 DetachVolume(Volume * vp)
 {
+    if (Checkout) {
+	afs_int32 code;
+	SYNC_response response;
+	memset(&response, 0, sizeof(response));
+
+	code = FSYNC_VolOp(V_id(vp), V_partition(vp)->name,
+			   FSYNC_VOL_ON, FSYNC_WHATEVER, &response);
+	if (code != SYNC_OK) {
+	    fprintf(stderr, "%s: FSSYNC error %d (%s)\n", progname, code,
+		    SYNC_res2string(code));
+	    fprintf(stderr, "%s:  protocol response code was %d (%s)\n",
+		    progname, response.hdr.response,
+		    SYNC_res2string(response.hdr.response));
+	    fprintf(stderr, "%s:  protocol reason code was %d (%s)\n",
+		    progname, response.hdr.reason,
+		    FSYNC_reason2string(response.hdr.reason));
+	}
+    }
+
     IH_RELEASE(vp->vnodeIndex[vLarge].handle);
     IH_RELEASE(vp->vnodeIndex[vSmall].handle);
     IH_RELEASE(vp->diskDataHandle);
@@ -464,7 +510,7 @@ DetachVolume(Volume * vp)
 static int
 GetPartitionName(afs_uint32 partId, char *partName, afs_size_t partNameSize)
 {
-    const int OLD_NUM_DEVICES = 26;	/* a..z */
+    const afs_uint32 OLD_NUM_DEVICES = 26;	/* a..z */
 
     if (partId < OLD_NUM_DEVICES) {
 	if (partNameSize < 8) {
@@ -518,6 +564,14 @@ ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
     }
 #endif
 
+    if (Checkout) {
+	if (!FSYNC_clientInit()) {
+	    fprintf(stderr, "%s: Failed to connect to fileserver.\n",
+		    progname);
+	    return 1;
+	}
+    }
+
     DInit(10);
 
     /* Allow user to specify partition by name or id. */
@@ -526,13 +580,15 @@ ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
 	if (partId == -1) {
 	    fprintf(stderr, "%s: Could not parse '%s' as a partition name.\n",
 		    progname, partNameOrId);
-	    return 1;
+	    err = 1;
+	    goto cleanup;
 	}
 	if (GetPartitionName(partId, partName, sizeof(partName))) {
 	    fprintf(stderr,
 		    "%s: Could not format '%s' as a partition name.\n",
 		    progname, partNameOrId);
-	    return 1;
+	    err = 1;
+	    goto cleanup;
 	}
     }
 
@@ -540,7 +596,8 @@ ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
     if (err) {
 	fprintf(stderr, "%s: %d partitions had errors during attach.\n",
 		progname, err);
-	return 1;
+	err = 1;
+	goto cleanup;
     }
 
     if (partName[0]) {
@@ -549,7 +606,8 @@ ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
 	    fprintf(stderr,
 		    "%s: %s is not an AFS partition name on this server.\n",
 		    progname, partName);
-	    return 1;
+	    err = 1;
+	    goto cleanup;
 	}
     }
 
@@ -568,7 +626,8 @@ ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
 		fprintf(stderr,
 			"%s: Current partition is not a vice partition.\n",
 			progname);
-		return 1;
+		err = 1;
+		goto cleanup;
 	    }
 	}
 	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
@@ -576,7 +635,11 @@ ScanPartitions(char *partNameOrId, afs_uint32 volumeId)
 	HandleVolume(partP, name1);
     }
 
-    return 0;
+  cleanup:
+    if (Checkout) {
+	FSYNC_clientFinis();
+    }
+    return err;
 }
 
 /**
@@ -615,9 +678,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 
     DumpInfo = 1;		/* volinfo default mode */
 
-    if (as->parms[P_ONLINE].items) {
-	fprintf(stderr, "%s: -online not supported\n", progname);
-	return 1;
+    if (as->parms[P_CHECKOUT].items) {
+	Checkout = 1;
     }
     if (as->parms[P_VNODE].items) {
 	DumpVnodes = 1;
@@ -1015,7 +1077,7 @@ main(int argc, char **argv)
     queue_Init(&VnodeScanLists[vSmall]);
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL, "Dump volume's internal state");
-    cmd_AddParm(ts, "-online", CMD_FLAG, CMD_OPTIONAL,
+    cmd_AddParm(ts, "-checkout", CMD_FLAG, CMD_OPTIONAL,
 		"Get info from running fileserver");
     cmd_AddParm(ts, "-vnode", CMD_FLAG, CMD_OPTIONAL, "Dump vnode info");
     cmd_AddParm(ts, "-date", CMD_FLAG, CMD_OPTIONAL,
@@ -1211,7 +1273,7 @@ SaveInode(struct VnodeDetails *vdp)
 	}
 	if (len == 0)
 	    break;		/* No more input */
-	nBytes = write(ofd, buffer, len);
+	nBytes = write(ofd, buffer, (size_t)len);
 	if (nBytes != len) {
 	    FDH_REALLYCLOSE(fdP);
 	    IH_RELEASE(ih);
