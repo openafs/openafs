@@ -3200,9 +3200,16 @@ KFW_AFS_klog(
          * commented out in the code below
          */
         if (KFW_use_krb524() ||
-            k5creds->ticket.length > MAXKTCTICKETLEN)
+            k5creds->ticket.length > MAXKTCTICKETLEN) {
+            if ( IsDebuggerPresent() ) {
+                char message[256];
+                StringCbPrintf(message, sizeof(message),
+                               "switching to krb524 .. ticket length %u\n",
+                               k5creds->ticket.length);
+                OutputDebugString(message);
+            }
             goto try_krb524d;
-
+        }
         memset(&aserver, '\0', sizeof(aserver));
         StringCbCopyN(aserver.name, sizeof(aserver.name),
                       ServiceName, sizeof(aserver.name) - 1);
@@ -3219,6 +3226,11 @@ KFW_AFS_klog(
 
       retry_gettoken5:
         rc = ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            StringCbPrintf(message, sizeof(message), "ktc_GetToken returns: %d\n", rc);
+            OutputDebugString(message);
+        }
         if (rc != 0 && rc != KTC_NOENT && rc != KTC_NOCELL) {
             if ( rc == KTC_NOCM && retry < 20 ) {
                 Sleep(500);
@@ -3272,8 +3284,20 @@ KFW_AFS_klog(
         } else {
             aclient.smbname[0] = '\0';
         }
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            StringCbPrintf(message, sizeof(message), "aclient.name: %s\n", aclient.name);
+            OutputDebugString(message);
+            StringCbPrintf(message, sizeof(message), "aclient.smbname: %s\n", aclient.smbname);
+            OutputDebugString(message);
+        }
 
         rc = ktc_SetToken(&aserver, &atoken, &aclient, (aclient.smbname[0]?AFS_SETTOK_LOGON:0));
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            StringCbPrintf(message, sizeof(message), "ktc_SetToken returns: %d\n", rc);
+            OutputDebugString(message);
+        }
         if (!rc)
             goto cleanup;   /* We have successfully inserted the token */
 
@@ -3348,6 +3372,11 @@ KFW_AFS_klog(
 
   retry_gettoken:
     rc = ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
+    if ( IsDebuggerPresent() ) {
+        char message[256];
+        StringCbPrintf(message, sizeof(message), "ktc_GetToken returns: %d\n", rc);
+        OutputDebugString(message);
+    }
     if (rc != 0 && rc != KTC_NOENT && rc != KTC_NOCELL) {
         if ( rc == KTC_NOCM && retry < 20 ) {
             Sleep(500);
@@ -3396,6 +3425,14 @@ KFW_AFS_klog(
                        smbname, sizeof(aclient.smbname) - 1);
     } else {
         aclient.smbname[0] = '\0';
+    }
+
+    if ( IsDebuggerPresent() ) {
+        char message[256];
+        StringCbPrintf(message, sizeof(message), "aclient.name: %s\n", aclient.name);
+        OutputDebugString(message);
+        StringCbPrintf(message, sizeof(message), "aclient.smbname: %s\n", aclient.smbname);
+        OutputDebugString(message);
     }
 
     if (rc = ktc_SetToken(&aserver, &atoken, &aclient, (aclient.smbname[0]?AFS_SETTOK_LOGON:0)))
