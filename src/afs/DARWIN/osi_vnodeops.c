@@ -2164,8 +2164,8 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
     ovp = AFSTOV(avc);
 
     /* if the type changed, we still need to do a fixup, for bulkstat */
-    if (vnode_vtype(ovp) == avc->f.m.Type && !(avc->f.states & CDeadVnode)
-	&& vnode_vtype(ovp) != VNON)
+    if (!isroot && (vnode_vtype(ovp) == avc->f.m.Type &&
+		    !(avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
     {
 	AFS_GUNLOCK();
 #if 0 /* unsupported */
