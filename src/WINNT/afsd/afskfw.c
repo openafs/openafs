@@ -67,6 +67,8 @@
 #include <osilog.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
+#include <afs/auth.h>
+#include <afs/com_err.h>
 #include <rx/rxkad.h>
 #include <WINNT\afsreg.h>
 #include "cm.h"
@@ -481,6 +483,9 @@ KFW_initialize(void)
         }
         ReleaseMutex(hMutex);
         CloseHandle(hMutex);
+
+        initialize_KTC_error_table();
+        initialize_PT_error_table();
     }
 }
 
@@ -1529,15 +1534,20 @@ KFW_AFS_get_cred( char * username,
         free(cellconfig.linkedCell);
 
     if ( code && reasonP ) {
-        if (pkrb5_get_error_message) {
-            char *msg = pkrb5_get_error_message(ctx, code);
-            StringCbCopyN( reason, sizeof(reason),
-                           msg, sizeof(reason) - 1);
-            *reasonP = reason;
-            pkrb5_free_error_message(ctx, msg);
-        } else {
-            *reasonP = perror_message(code);
+        int freemsg = 0;
+        char *msg = (char *)afs_error_message(code);
+        if (strncmp(msg, "unknown", strlen(msg)) == 0) {
+            if (pkrb5_get_error_message) {
+                msg = pkrb5_get_error_message(ctx, code);
+                freemsg = 1;
+            } else
+                msg = (char *)perror_message(code);
         }
+        StringCbCopyN( reason, sizeof(reason),
+                       msg, sizeof(reason) - 1);
+        *reasonP = reason;
+        if (freemsg)
+            pkrb5_free_error_message(ctx, msg);
     }
     return(code);
 }
