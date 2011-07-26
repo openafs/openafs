@@ -312,6 +312,28 @@ BOOL IsServiceStartPending (void)
     return (Status.dwCurrentState == SERVICE_START_PENDING);
 }
 
+BOOL StartTheService (void)
+{
+    SC_HANDLE hManager;
+    DWORD gle = 0;
+
+    if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ|SERVICE_START)) != NULL)
+    {
+        SC_HANDLE hService;
+        if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ|SERVICE_START)) != NULL)
+        {
+            StartService (hService, 0, NULL);
+            gle = GetLastError();
+            CloseServiceHandle (hService);
+        } else
+            gle = GetLastError();
+
+        CloseServiceHandle (hManager);
+    }
+    DebugEvent("AFS AfsLogon - Service Start Return Code[0x%x]",gle);
+    return (gle == 0);
+}
+
 /* LOOKUPKEYCHAIN: macro to look up the value in the list of keys in order until it's found
    v:variable to receive value (reference type)
    t:type
@@ -931,8 +953,19 @@ DWORD APIENTRY NPLogonNotify(
 
     /* loop until AFS is started. */
     if (afsWillAutoStart) {
-	while (IsServiceRunning() || IsServiceStartPending()) {
-	    DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
+        /*
+         * If the service is configured for auto start but hasn't started yet,
+         * give it a shove.
+         */
+        if (!(IsServiceRunning() || IsServiceStartPending()))
+            StartTheService();
+
+        while ( IsServiceStartPending() ) {
+            Sleep(10);
+        }
+
+	while (IsServiceRunning()) {
+            DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
 			opt.LogonOption,afsWillAutoStart);
 
 	    if (ISADREALM(opt.flags)) {
