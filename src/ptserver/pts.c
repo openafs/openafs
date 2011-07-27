@@ -217,6 +217,12 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	else
 	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
     }
+
+    if (as->parms[23].items) { /* -config */
+	changed = 1;
+	confdir = as->parms[23].items->data;
+    }
+
     if (changed) {
 	CleanUp(as, arock);
 	code = pr_Initialize(sec, confdir, cell);
@@ -1086,6 +1092,7 @@ add_std_args(struct cmd_syndesc *ts)
 		"use user's authentication (default)");
     cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
 		"encrypt commands");
+    cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location");
 }
 
 /*

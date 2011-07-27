@@ -115,6 +115,11 @@ specified foreign cell.
 
 =back
 
+=item B<-config> <I<config directory>>
+
+The location of the directory to use to obtain configuration information,
+including the CellServDB. This is primarily provided for testing purposes.
+
 =item B<-force>
 
 Enables the command to continue executing as far as possible when errors
