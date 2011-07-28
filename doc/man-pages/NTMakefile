@@ -282,6 +282,9 @@ PODS = \
         pod8\bos_util.pod              \
         pod8\buserver.pod              \
         pod8\butc.pod                  \
+        pod8\dafileserver.pod          \
+        pod8\dasalvager.pod            \
+        pod8\davolserver.pod           \
         pod8\fileserver.pod            \
         pod8\fms.pod                   \
         pod8\fstrace.pod               \
