@@ -7,7 +7,7 @@ AC_DEFUN([OPENAFS_SEARCH_DIRLIST],
       break
     fi
   done
-  if test x"$openafs_dirpath" == xno; then
+  if test x"$openafs_dirpath" = xno; then
     [$1]=
   else
     [$1]=$openafs_dirpath
