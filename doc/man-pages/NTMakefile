@@ -343,7 +343,7 @@ PODS = \
 
 html\index.html: $(PODS)
         @echo Building man pages in HTML format
-        perl generate-html
+        $(PERL) generate-html
 
 
 install: html\index.html
@@ -383,10 +383,10 @@ clean::
 .SUFFIXES: .pod.in
 
 {pod1}.pod.in{pod1}.pod::
-        perl merge-pod $<
+        $(PERL) merge-pod $<
 
 {pod5}.pod.in{pod5}.pod::
-        perl merge-pod $<
+        $(PERL) merge-pod $<
 
 {pod8}.pod.in{pod8}.pod::
-        perl merge-pod $<
+        $(PERL) merge-pod $<

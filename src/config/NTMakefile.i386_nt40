@@ -230,6 +230,9 @@ MAKECMD = nmake.exe
 !IF !DEFINED(MIDL)
 MIDL  = midl
 !ENDIF
+!IF !DEFINED(PERL)
+PERL  = perl
+!ENDIF
 
 COMPILE_ET = $(DESTDIR)\bin\compile_et
 RXGEN = $(DESTDIR)\bin\rxgen
