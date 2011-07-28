@@ -1261,7 +1261,6 @@ AC_CHECK_HEADERS([ \
 		   pthread_np.h \
 		   pwd.h \
 		   regex.h \
-		   resolv.h \
 		   security/pam_appl.h \
 		   signal.h \
 		   stdint.h \
@@ -1303,12 +1302,24 @@ AC_CHECK_HEADERS([ \
 		   unistd.h \
 		   windows.h \
 		])
+
+AC_CHECK_HEADERS([resolv.h], [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif])
+
 AC_CHECK_HEADERS([net/if.h],[],[],[AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif])
 
 AC_CHECK_HEADERS([netinet/if_ether.h],[],[],[AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
 #ifdef HAVE_NET_IF_H
 # include <net/if.h>
 #endif])
