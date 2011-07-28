@@ -98,6 +98,7 @@ our $HEADER = <<'EOH';
 EOH
 
 our %HEADINGS = (1 => 'User Commands',
+                 3 => 'C Library Functions',
                  5 => 'Configuration and Data Files',
                  8 => 'Administrator Commands');
 

@@ -386,6 +386,9 @@ clean::
 {pod1}.pod.in{pod1}.pod::
         $(PERL) merge-pod $<
 
+{pod3}.pod.in{pod3}.pod::
+        $(PERL) merge-pod $<
+
 {pod5}.pod.in{pod5}.pod::
         $(PERL) merge-pod $<
 
