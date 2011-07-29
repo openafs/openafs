@@ -114,7 +114,8 @@ void cm_BkgDaemon(void * parm)
         /* we found a request */
         for (rp = cm_bkgListEndp; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
 	{
-	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp))
+	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp) ||
+                rp->scp->flags & CM_SCACHEFLAG_DELETED)
 		break;
 	}
 	if (rp == NULL) {
@@ -131,13 +132,18 @@ void cm_BkgDaemon(void * parm)
 
 	osi_Log1(afsd_logp,"cm_BkgDaemon processing request 0x%p", rp);
 
+        if (rp->scp->flags & CM_SCACHEFLAG_DELETED) {
+            osi_Log1(afsd_logp,"cm_BkgDaemon DELETED scp 0x%x",rp->scp);
+            code = CM_ERROR_BADFD;
+        } else {
 #ifdef DEBUG_REFCOUNT
-	osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
+            osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
-        code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
+            code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
 #ifdef DEBUG_REFCOUNT
-	osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
+            osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
+        }
 
         /*
          * Keep the following list synchronized with the
