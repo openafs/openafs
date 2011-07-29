@@ -119,11 +119,13 @@ afs_unmount(struct vfs *afsp, int flag, afs_ucred_t *credp)
 
     afsp->vfs_flag |= VFS_UNMOUNTED;
 
-    /* release the root vnode, which should be the last reference to us
-     * besides the caller of afs_unmount */
-    rootvp = afs_globalVp;
-    afs_globalVp = NULL;
-    AFS_RELE(rootvp);
+    if (afs_globalVp) {
+	/* release the root vnode, which should be the last reference to us
+	 * besides the caller of afs_unmount */
+	rootvp = afs_globalVp;
+	afs_globalVp = NULL;
+	AFS_RELE(rootvp);
+    }
 
     AFS_GUNLOCK();
     return 0;
