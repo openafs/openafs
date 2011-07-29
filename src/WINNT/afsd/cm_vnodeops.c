@@ -4409,6 +4409,11 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
     struct rx_connection * rxconnp;
     AFSVolSync volSync;
 
+    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+        osi_Log1(afsd_logp, "CALL ReleaseLock on Deleted Vnode scp 0x%p", scp);
+        return 0;
+    }
+
     memset(&volSync, 0, sizeof(volSync));
 
     tfid.Volume = scp->fid.volume;
@@ -4441,7 +4446,7 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
 
     lock_ObtainWrite(&scp->rw);
 
-    return code;
+    return (code != CM_ERROR_BADFD ? code : 0);
 }
 
 /* called with scp->rw held.  May release it during processing, but
