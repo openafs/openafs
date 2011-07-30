@@ -35,31 +35,24 @@
 # endif
 
 void
-afs_pthread_setname(pthread_t thread, const char *threadname)
+afs_pthread_setname_self(const char *threadname)
 {
 # if defined(HAVE_PTHREAD_SET_NAME_NP)
 	/* FreeBSD style */
-	pthread_set_name_np(thread, threadname);
+	pthread_set_name_np(pthread_self(), threadname);
 # elif defined(HAVE_PTHREAD_SETNAME_NP)
 #  if PTHREAD_SETNAME_NP_ARGS == 3
 	/* DECthreads style */
-	pthread_setname_np(thread, threadname, (void *)0);
+	pthread_setname_np(pthread_self(), threadname, (void *)0);
 #  elif PTHREAD_SETNAME_NP_ARGS == 2
 	/* GNU libc on Linux style */
-	pthread_setname_np(thread, threadname);
+	pthread_setname_np(pthread_self(), threadname);
 #  elif PTHREAD_SETNAME_NP_ARGS == 1
 	/* Mac OS style */
-	if (thread == pthread_self())
-		pthread_setname_np(threadname);
+	pthread_setname_np(threadname);
 #  else
 #    error "Could not identify your pthread_setname_np() implementation"
 #  endif
 # endif
-}
-
-void
-afs_pthread_setname_self(const char *threadname)
-{
-	afs_pthread_setname(pthread_self(), threadname);
 }
 #endif

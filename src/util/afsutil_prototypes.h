@@ -138,11 +138,7 @@ extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
 
 /* pthread_threadname.c */
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-extern void afs_pthread_setname(pthread_t thread, const char *threadname);
 extern void afs_pthread_setname_self(const char *threadname);
-#elif defined(AFS_NT40_ENV)
-# define afs_pthread_setname(thread, threadname) (void)0
-# define afs_pthread_setname_self(threadname) (void)0
 #else
 /* Allow unconditional references to afs_pthread_setname_self to
  * reduce #ifdef spaghetti.
