@@ -353,7 +353,8 @@ copy_cellinfo(cellinfo_t *cellinfo)
 
 
 static int
-get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char **local_cell)
+get_cellconfig(const char *config, char *cell,
+	       struct afsconf_cell *cellconfig, char **local_cell)
 {
     int status = AKLOG_SUCCESS;
     struct afsconf_dir *configdir;
@@ -367,10 +368,10 @@ get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char **local_cell)
 	exit(AKLOG_AFS);
     }
 
-    if (!(configdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
+    if (!(configdir = afsconf_Open(config))) {
 	fprintf(stderr,
 		"%s: can't get afs configuration (afsconf_Open(%s))\n",
-		progname, AFSDIR_CLIENT_ETC_DIRPATH);
+		progname, config);
 	exit(AKLOG_AFS);
     }
 
@@ -905,7 +906,8 @@ out:
  * to.
  */
 static int
-auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
+auth_to_cell(krb5_context context, const char *config, 
+	     char *cell, char *realm, char **linkedcell)
 {
     int status = AKLOG_SUCCESS;
     int isForeign = 0;
@@ -919,7 +921,7 @@ auth_to_cell(krb5_context context, char *cell, char *realm, char **linkedcell)
     struct afsconf_cell cellconf;
 
     /* NULL or empty cell returns information on local cell */
-    if ((status = get_cellconfig(cell, &cellconf, &local_cell)))
+    if ((status = get_cellconfig(config, cell, &cellconf, &local_cell)))
 	return(status);
 
     if (linkedcell != NULL) {
@@ -1311,7 +1313,7 @@ add_hosts(char *file)
  * every cell it encounters along the way.
  */
 static int
-auth_to_path(krb5_context context, char *path)
+auth_to_path(krb5_context context, const char *config, char *path)
 {
     int status = AKLOG_SUCCESS;
     int auth_status = AKLOG_SUCCESS;
@@ -1361,7 +1363,8 @@ auth_to_path(krb5_context context, char *path)
 		add_hosts(pathtocheck);
 	    if ((endofcell = strchr(mountpoint, VOLMARKER))) {
 		*endofcell = '\0';
-		if ((auth_status = auth_to_cell(context, cell, NULL, NULL))) {
+		auth_status = auth_to_cell(context, config, cell, NULL, NULL);
+		if (auth_status) {
 		    if (status == AKLOG_SUCCESS)
 			status = auth_status;
 		    else if (status != auth_status)
@@ -1449,6 +1452,7 @@ main(int argc, char *argv[])
     linked_list paths;		/* List of paths to log to */
     ll_node *cur_node;
     char *linkedcell;
+    const char *config = AFSDIR_CLIENT_ETC_DIRPATH;
 
     memset(&cellinfo, 0, sizeof(cellinfo));
 
@@ -1542,7 +1546,12 @@ main(int argc, char *argv[])
 	    }
 	    else
 		usage();
-
+	else if (strcmp(argv[i], "-config") == 0)
+	    if (++i < argc) {
+		config = argv[i];
+	    }
+	    else
+		usage();
 	else if (argv[i][0] == '-')
 	    usage();
 	else if (!pmode && !cmode) {
@@ -1616,7 +1625,7 @@ main(int argc, char *argv[])
     if ((cells.nelements + paths.nelements) == 0) {
 	struct passwd *pwd;
 
-	status = auth_to_cell(context, NULL, NULL, &linkedcell);
+	status = auth_to_cell(context, config, NULL, NULL, &linkedcell);
 
 	/* If this cell is linked to a DCE cell, and user requested -linked,
 	 * get tokens for both. This is very useful when the AFS cell is
@@ -1625,7 +1634,7 @@ main(int argc, char *argv[])
 
 	if (!status && linked && linkedcell != NULL) {
 	    afs_dprintf("Linked cell: %s\n", linkedcell);
-	    status = auth_to_cell(context, linkedcell, NULL, NULL);
+	    status = auth_to_cell(context, config, linkedcell, NULL, NULL);
 	}
 	if (linkedcell) {
 	    free(linkedcell);
@@ -1659,7 +1668,7 @@ main(int argc, char *argv[])
 
 		    afs_dprintf("Found cell %s in %s.\n", fcell, xlog_path);
 
-		    auth_status = auth_to_cell(context, fcell, NULL, NULL);
+		    auth_status = auth_to_cell(context, config, fcell, NULL, NULL);
 		    if (status == AKLOG_SUCCESS)
 			status = auth_status;
 		    else
@@ -1672,14 +1681,16 @@ main(int argc, char *argv[])
 	/* Log to all cells in the cells list first */
 	for (cur_node = cells.first; cur_node; cur_node = cur_node->next) {
 	    memcpy((char *)&cellinfo, cur_node->data, sizeof(cellinfo));
-	    if ((status = auth_to_cell(context, cellinfo.cell, cellinfo.realm,
-				       &linkedcell)))
+	    status = auth_to_cell(context, config, cellinfo.cell,
+				  cellinfo.realm, &linkedcell);
+	    if (status) {
 		somethingswrong++;
-	    else {
+	    } else {
 		if (linked && linkedcell != NULL) {
 		    afs_dprintf("Linked cell: %s\n", linkedcell);
-		    if ((status = auth_to_cell(context, linkedcell,
-					       cellinfo.realm, NULL)))
+		    status = auth_to_cell(context, config, linkedcell,
+					  cellinfo.realm, NULL);
+		    if (status)
 			somethingswrong++;
 		}
 		if (linkedcell != NULL) {
@@ -1691,7 +1702,8 @@ main(int argc, char *argv[])
 
 	/* Then, log to all paths in the paths list */
 	for (cur_node = paths.first; cur_node; cur_node = cur_node->next) {
-	    if ((status = auth_to_path(context, cur_node->data)))
+	    status = auth_to_path(context, config, cur_node->data);
+	    if (status)
 		somethingswrong++;
 	}
 
