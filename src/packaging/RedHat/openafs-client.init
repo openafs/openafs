@@ -61,6 +61,7 @@ stop() {
 
 rhstatus() {
 	status afsd
+	return $?
 }
 
 restart() {
@@ -80,6 +81,7 @@ case "$1" in
         ;;
   status)
         rhstatus
+	exit $?
         ;;
   condrestart)
         [ -f /var/lock/subsys/openafs-client ] && restart || :
