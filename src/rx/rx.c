@@ -3628,6 +3628,33 @@ TooLow(struct rx_packet *ap, struct rx_call *acall)
 }
 #endif /* KERNEL */
 
+/*!
+ * Clear the attach wait flag on a connection and proceed.
+ *
+ * Any processing waiting for a connection to be attached should be
+ * unblocked. We clear the flag and do any other needed tasks.
+ *
+ * @param[in] conn
+ *      the conn to unmark waiting for attach
+ *
+ * @pre conn's conn_data_lock must be locked before calling this function
+ *
+ */
+static void
+rxi_ConnClearAttachWait(struct rx_connection *conn)
+{
+    /* Indicate that rxi_CheckReachEvent is no longer running by
+     * clearing the flag.  Must be atomic under conn_data_lock to
+     * avoid a new call slipping by: rxi_CheckConnReach holds
+     * conn_data_lock while checking RX_CONN_ATTACHWAIT.
+     */
+    conn->flags &= ~RX_CONN_ATTACHWAIT;
+    if (conn->flags & RX_CONN_NAT_PING) {
+	conn->flags &= ~RX_CONN_NAT_PING;
+	rxi_ScheduleNatKeepAliveEvent(conn);
+    }
+}
+
 static void
 rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2)
 {
@@ -3659,12 +3686,7 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2)
 		}
 	    }
 	    if (!call)
-		/* Indicate that rxi_CheckReachEvent is no longer running by
-		 * clearing the flag.  Must be atomic under conn_data_lock to
-		 * avoid a new call slipping by: rxi_CheckConnReach holds
-		 * conn_data_lock while checking RX_CONN_ATTACHWAIT.
-		 */
-		conn->flags &= ~RX_CONN_ATTACHWAIT;
+		rxi_ConnClearAttachWait(conn);
 	    MUTEX_EXIT(&conn->conn_data_lock);
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	}
@@ -4123,7 +4145,7 @@ rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acall)
     if (conn->flags & RX_CONN_ATTACHWAIT) {
 	int i;
 
-	conn->flags &= ~RX_CONN_ATTACHWAIT;
+	rxi_ConnClearAttachWait(conn);
 	MUTEX_EXIT(&conn->conn_data_lock);
 
 	for (i = 0; i < RX_MAXCALLS; i++) {
@@ -5146,7 +5168,7 @@ rxi_ConnectionError(struct rx_connection *conn,
 	if (conn->checkReachEvent) {
 	    rxevent_Cancel(conn->checkReachEvent, (struct rx_call *)0, 0);
 	    conn->checkReachEvent = 0;
-	    conn->flags &= ~RX_CONN_ATTACHWAIT;
+	    conn->flags &= ~(RX_CONN_ATTACHWAIT|RX_CONN_NAT_PING);
             MUTEX_ENTER(&rx_refcnt_mutex);
 	    conn->refCount--;
             MUTEX_EXIT(&rx_refcnt_mutex);
@@ -6400,8 +6422,12 @@ rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds)
 {
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->secondsUntilNatPing = seconds;
-    if (seconds != 0)
-	rxi_ScheduleNatKeepAliveEvent(conn);
+    if (seconds != 0) {
+	if (!(conn->flags & RX_CONN_ATTACHWAIT))
+	    rxi_ScheduleNatKeepAliveEvent(conn);
+	else
+	    conn->flags |= RX_CONN_NAT_PING;
+    }
     MUTEX_EXIT(&conn->conn_data_lock);
 }
 
@@ -6409,7 +6435,11 @@ void
 rxi_NatKeepAliveOn(struct rx_connection *conn)
 {
     MUTEX_ENTER(&conn->conn_data_lock);
-    rxi_ScheduleNatKeepAliveEvent(conn);
+    /* if it's already attached */
+    if (!(conn->flags & RX_CONN_ATTACHWAIT))
+	rxi_ScheduleNatKeepAliveEvent(conn);
+    else
+	conn->flags |= RX_CONN_NAT_PING;
     MUTEX_EXIT(&conn->conn_data_lock);
 }
 
