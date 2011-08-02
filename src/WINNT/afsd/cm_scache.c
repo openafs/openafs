@@ -165,7 +165,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 		bufp->dirtyCounter++;
 		if (bufp->flags & CM_BUF_WAITING) {
-		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%x] bufp 0x%x", scp, bufp);
+		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%p] bufp 0x%x", scp, bufp);
 		    osi_Wakeup((long) &bufp);
 		}
 		lock_ReleaseMutex(&bufp->mx);
@@ -187,7 +187,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 		bufp->dirtyCounter++;
 		if (bufp->flags & CM_BUF_WAITING) {
-		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%x] bufp 0x%x", scp, bufp);
+		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%p] bufp 0x%x", scp, bufp);
 		    osi_Wakeup((long) &bufp);
 		}
 		lock_ReleaseMutex(&bufp->mx);
@@ -289,7 +289,7 @@ cm_scache_t *cm_GetNewSCache(void)
                 if (!lock_TryWrite(&scp->rw))
                     continue;
 
-		osi_Log1(afsd_logp, "GetNewSCache attempting to recycle deleted scp 0x%x", scp);
+		osi_Log1(afsd_logp, "GetNewSCache attempting to recycle deleted scp 0x%p", scp);
 		if (!cm_RecycleSCache(scp, CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS)) {
 
 		    /* we found an entry, so return it */
@@ -302,7 +302,7 @@ cm_scache_t *cm_GetNewSCache(void)
 		    return scp;
 		}
                 lock_ReleaseWrite(&scp->rw);
-		osi_Log1(afsd_logp, "GetNewSCache recycled failed scp 0x%x", scp);
+		osi_Log1(afsd_logp, "GetNewSCache recycled failed scp 0x%p", scp);
 	    } else if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
                 if (!lock_TryWrite(&scp->rw))
                     continue;
@@ -796,7 +796,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             scp->flags |= CM_SCACHEFLAG_INHASH;
         }
         scp->refCount = 1;
-	osi_Log1(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%x", scp);
+	osi_Log1(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%p", scp);
 
         /* must be called after the scp->fid is set */
         cm_FreelanceFetchMountPointString(scp);
@@ -902,9 +902,9 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     lock_ReleaseWrite(&scp->rw);
     scp->refCount = 1;
 #ifdef DEBUG_REFCOUNT
-    afsi_log("%s:%d cm_GetSCache sets refCount to 1 scp 0x%x", file, line, scp);
+    afsi_log("%s:%d cm_GetSCache sets refCount to 1 scp 0x%p", file, line, scp);
 #endif
-    osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%x", scp);
+    osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%p", scp);
 
     /* XXX - The following fields in the cm_scache are
      * uninitialized:
@@ -1553,7 +1553,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
 
     if (statusp->errorCode != 0) {
 	scp->flags |= CM_SCACHEFLAG_EACCESS;
-	osi_Log2(afsd_logp, "Merge, Failure scp %x code 0x%x", scp, statusp->errorCode);
+	osi_Log2(afsd_logp, "Merge, Failure scp 0x%p code 0x%x", scp, statusp->errorCode);
 
 	scp->fileType = 0;	/* unknown */
 
@@ -1600,7 +1600,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
                       scp->cbServerp->addr.sin_addr.s_addr,
                       volp ? volp->namep : "(unknown)");
         }
-        osi_Log3(afsd_logp, "Bad merge, scp %x, scp dv %d, RPC dv %d",
+        osi_Log3(afsd_logp, "Bad merge, scp 0x%p, scp dv %d, RPC dv %d",
                   scp, scp->dataVersion, dataVersion);
         /* we have a number of data fetch/store operations running
          * concurrently, and we can tell which one executed last at the
@@ -1665,7 +1665,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
             scp->fileType = CM_SCACHETYPE_SYMLINK;
     }
     else {
-        osi_Log2(afsd_logp, "Merge, Invalid File Type (%d), scp %x", statusp->FileType, scp);
+        osi_Log2(afsd_logp, "Merge, Invalid File Type (%d), scp 0x%p", statusp->FileType, scp);
         scp->fileType = CM_SCACHETYPE_INVALID;	/* invalid */
     }
     /* and other stuff */
