@@ -73,3 +73,4 @@ EXPORTS
 	lock_ConvertRToW	@66
         osi_LogSaveStringW      @67
         osi_SetLockOrderValidation @68
+        osi_DebugAdd		@69

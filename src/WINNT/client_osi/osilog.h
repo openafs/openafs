@@ -59,6 +59,8 @@ extern void osi_LogFree(osi_log_t *);
 
 extern void osi_LogAdd(osi_log_t *, char *, size_t, size_t, size_t, size_t, size_t);
 
+extern void osi_DebugAdd(osi_log_t *, char *, size_t, size_t, size_t, size_t, size_t);
+
 extern void osi_LogReset(osi_log_t *);
 
 extern long osi_LogFDCreate(osi_fdType_t *, osi_fd_t **);
@@ -89,6 +91,15 @@ extern char *osi_HexifyString(char *s);
 #define osi_Log3(l,f,a,b,c)	do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0, 0); } while(0)
 #define osi_Log4(l,f,a,b,c,d)	do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), 0); } while(0)
 #define osi_Log5(l,f,a,b,c,d,e)	do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e)); } while(0)
+
+#define osi_Debug0(l,f)		     osi_DebugAdd((l), (f), 0, 0, 0, 0, 0)
+#define osi_Debug1(l,f,a)	     osi_DebugAdd((l), (f), (size_t) (a), 0, 0, 0, 0)
+#define osi_Debug2(l,f,a,b)	     osi_DebugAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0, 0)
+#define osi_Debug3(l,f,a,b,c)	     osi_DebugAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0, 0)
+#define osi_Debug4(l,f,a,b,c,d)	     osi_DebugAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), 0)
+#define osi_Debug5(l,f,a,b,c,d,e)    osi_DebugAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e))
+
+
 
 #ifdef DEBUG_VERBOSE
 #define DEBUG_EVENT1(a,b,c) {HANDLE h; char *ptbuf[1],buf[132];\
