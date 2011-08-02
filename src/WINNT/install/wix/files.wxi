@@ -630,6 +630,9 @@
                             <File Id="file_CmdRef_8_bos_util_html"  Name="bos_util.htm"  LongName="bos_util.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_buserver_html"  Name="buserver.htm"  LongName="buserver.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_butc_html"  Name="butc.htm"  LongName="butc.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_dafileserver_html"  Name="dafilese.htm"  LongName="dafileserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_dasalvager_html"  Name="dasalvag.htm"  LongName="dasalvager.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_davolserver_html"  Name="davolser.htm"  LongName="davolserver.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_fileserver_html"  Name="fileserv.htm"  LongName="fileserver.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_fms_html"  Name="fms.htm"  LongName="fms.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_fstrace_html"  Name="fstrace.htm"  LongName="fstrace.html"  DiskId="1"  />
