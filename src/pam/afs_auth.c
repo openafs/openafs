@@ -16,14 +16,15 @@
 #include <sys/wait.h>
 #endif
 
+#include <afs/sys_prototypes.h>
 #include <afs/kautils.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
 #include "afs_message.h"
+#include "afs_pam_msg.h"
 #include "afs_util.h"
-
 
 #define RET(x) { retcode = (x); goto out; }
 
@@ -61,12 +62,15 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     int i;
     PAM_CONST struct pam_conv *pam_convp = NULL;
     int auth_ok;
-    struct passwd unix_pwd, *upwd = NULL;
-    char upwd_buf[2048];	/* size is a guess. */
+    struct passwd *upwd = NULL;
     char *reason = NULL;
     pid_t cpid, rcpid;
     int status;
     struct sigaction newAction, origAction;
+#if !(defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV))
+    char upwd_buf[2048];       /* size is a guess. */
+    struct passwd unix_pwd;
+#endif
 
 
 #ifndef AFS_SUN5_ENV

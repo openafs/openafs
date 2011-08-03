@@ -15,6 +15,7 @@
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
+#include <afs/auth.h>
 #include "afs_message.h"
 #include "afs_util.h"
 
@@ -55,7 +56,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 	    i++;
 	    remain = 1;
 	    remainlifetime = (int)strtol(argv[i], (char **)NULL, 10);
-	    if (remainlifetime == 0)
+	    if (remainlifetime == 0) {
 		if ((errno == EINVAL) || (errno == ERANGE)) {
 		    remainlifetime = REMAINLIFETIME;
 		    pam_afs_syslog(LOG_ERR, PAMAFS_REMAINLIFETIME, argv[i],
@@ -64,6 +65,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 		    no_unlog = 0;
 		    remain = 0;
 		}
+	    }
 	} else if (strcmp(argv[i], "no_unlog") == 0) {
 	    no_unlog = 1;
 	} else {

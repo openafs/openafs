@@ -28,6 +28,8 @@
 
 #include <security/pam_appl.h>
 
+#include <afs/auth.h>
+
 #include "afs_util.h"
 
 

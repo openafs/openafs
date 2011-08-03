@@ -15,9 +15,11 @@
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
+#include <afs/sys_prototypes.h>
 #include <afs/kautils.h>
 
 #include "afs_message.h"
+#include "afs_pam_msg.h"
 #include "afs_util.h"
 
 
@@ -25,7 +27,7 @@
 #define RET(x) { retcode = (x); goto out; }
 
 #if defined(AFS_KERBEROS_ENV)
-extern char *ktc_tkt_string();
+extern char *ktc_tkt_string(void);
 #endif
 
 extern int
@@ -52,13 +54,15 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     char sbuffer[100];
     char *torch_password = NULL;
     int auth_ok = 0;
-    char *lh;
     PAM_CONST char *user = NULL;
     const char *password = NULL;
     int password_expires = -1;
     char *reason = NULL;
-    struct passwd unix_pwd, *upwd = NULL;
-    char upwd_buf[2048];	/* size is a guess. */
+    struct passwd *upwd = NULL;
+#if !(defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV))
+    char upwd_buf[2048];       /* size is a guess. */
+    struct passwd unix_pwd;
+#endif
 
 #ifndef AFS_SUN5_ENV
     openlog(pam_afs_ident, LOG_CONS, LOG_AUTH);

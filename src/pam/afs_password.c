@@ -48,13 +48,16 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     char *localcell;
     PAM_CONST char *user = NULL, *password = NULL;
     char *new_password = NULL, *verify_password = NULL;
-    char upwd_buf[2048];	/* size is a guess. */
     char *reason = NULL;
     struct ktc_encryptionKey oldkey, newkey;
     struct ktc_token token;
     struct ubik_client *conn = 0;
     PAM_CONST struct pam_conv *pam_convp = NULL;
-    struct passwd unix_pwd, *upwd = NULL;
+    struct passwd *upwd = NULL;
+#if !(defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV))
+    char upwd_buf[2048];	/* size is a guess. */
+    struct passwd unix_pwd;
+#endif
 
 #ifndef AFS_SUN5_ENV
     openlog(pam_afs_ident, LOG_CONS, LOG_AUTH);
