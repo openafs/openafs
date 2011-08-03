@@ -304,7 +304,7 @@ dviced: cmd comerr viced vlserver tvlserver libafsrpc libafsauthent
 		echo Not building DAFS viced for ${SYS_NAME} ;; \
 	esac
 
-volser: cmd comerr tviced usd kauth audit
+volser: cmd comerr usd kauth vlserver audit
 	+${COMPILE_PART1} volser ${COMPILE_PART2}
 
 tvolser: project tviced usd libafsrpc libafsauthent volser
