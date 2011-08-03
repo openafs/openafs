@@ -539,7 +539,7 @@ tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
 budb: cmd comerr bubasics uss
 	+${COMPILE_PART1} budb ${COMPILE_PART2}
 
-tbudb: budb
+tbudb: budb tubik
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tbudb ${COMPILE_PART2} ;; \
