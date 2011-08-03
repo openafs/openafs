@@ -546,7 +546,7 @@ tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
 budb: cmd comerr bubasics uss
 	+${COMPILE_PART1} budb ${COMPILE_PART2}
 
-tbudb: budb
+tbudb: budb tubik
 	+[ yes != "$(ENABLE_PTHREADED_UBIK)" ] || case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[of]bsd*|*nbsd[234]*) \
 		${COMPILE_PART1} tbudb ${COMPILE_PART2} ;; \
