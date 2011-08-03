@@ -590,7 +590,7 @@ libafsrpc: rx rxkad rxstat fsint des
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
 
-libafsauthent: ubik auth kauth libafsrpc
+libafsauthent: ubik auth kauth libafsrpc volser vlserver
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
