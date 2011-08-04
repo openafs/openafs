@@ -26,6 +26,9 @@ static long     atomicIndexCounter = 0;
 static DWORD tls_LockRefH = 0;
 static DWORD tls_LockRefT = 0;
 static BOOLEAN lockOrderValidation = 0;
+static osi_lock_ref_t * lock_ref_FreeListp = NULL;
+static osi_lock_ref_t * lock_ref_FreeListEndp = NULL;
+CRITICAL_SECTION lock_ref_CS;
 
 void osi_BaseInit(void)
 {
@@ -39,16 +42,32 @@ void osi_BaseInit(void)
 
     if ((tls_LockRefT = TlsAlloc()) == TLS_OUT_OF_INDEXES)
         osi_panic("TlsAlloc(tls_LockRefT) failure", __FILE__, __LINE__);
+
+    InitializeCriticalSection(&lock_ref_CS);
 }
 
-void osi_SetLockOrderValidation(int on)
+void
+osi_SetLockOrderValidation(int on)
 {
     lockOrderValidation = (BOOLEAN)on;
 }
 
-osi_lock_ref_t *lock_GetLockRef(void * lockp, char type)
+static osi_lock_ref_t *
+lock_GetLockRef(void * lockp, char type)
 {
-    osi_lock_ref_t * lockRefp = (osi_lock_ref_t *)malloc(sizeof(osi_lock_ref_t));
+    osi_lock_ref_t * lockRefp = NULL;
+
+    EnterCriticalSection(&lock_ref_CS);
+    if (lock_ref_FreeListp) {
+        lockRefp = lock_ref_FreeListp;
+        osi_QRemoveHT( (osi_queue_t **) &lock_ref_FreeListp,
+                       (osi_queue_t **) &lock_ref_FreeListEndp,
+                       &lockRefp->q);
+    }
+    LeaveCriticalSection(&lock_ref_CS);
+
+    if (lockRefp == NULL)
+        lockRefp = (osi_lock_ref_t *)malloc(sizeof(osi_lock_ref_t));
 
     memset(lockRefp, 0, sizeof(osi_lock_ref_t));
     lockRefp->type = type;
@@ -64,6 +83,16 @@ osi_lock_ref_t *lock_GetLockRef(void * lockp, char type)
     }
 
     return lockRefp;
+}
+
+static void
+lock_FreeLockRef(osi_lock_ref_t * lockRefp)
+{
+    EnterCriticalSection(&lock_ref_CS);
+    osi_QAddH( (osi_queue_t **) &lock_ref_FreeListp,
+               (osi_queue_t **) &lock_ref_FreeListEndp,
+               &lockRefp->q);
+    LeaveCriticalSection(&lock_ref_CS);
 }
 
 void lock_VerifyOrderRW(osi_queue_t *lockRefH, osi_queue_t *lockRefT, osi_rwlock_t *lockp)
@@ -237,7 +266,7 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
         for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
             if (lockRefp->type == OSI_LOCK_RW && lockRefp->rw == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
-                free(lockRefp);
+                lock_FreeLockRef(lockRefp);
                 found = 1;
                 break;
             }
@@ -285,7 +314,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
         for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
             if (lockRefp->type == OSI_LOCK_RW && lockRefp->rw == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
-                free(lockRefp);
+                lock_FreeLockRef(lockRefp);
                 found = 1;
                 break;
             }
@@ -448,7 +477,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
         for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
             if (lockRefp->type == OSI_LOCK_MUTEX && lockRefp->mx == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
-                free(lockRefp);
+                lock_FreeLockRef(lockRefp);
                 found = 1;
                 break;
             }
@@ -654,7 +683,7 @@ void osi_SleepR(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
             if (lockRefp->type == OSI_LOCK_RW && lockRefp->rw == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
-                free(lockRefp);
+                lock_FreeLockRef(lockRefp);
                 break;
             }
         }
@@ -700,7 +729,7 @@ void osi_SleepW(LONG_PTR sleepVal, struct osi_rwlock *lockp)
         for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
             if (lockRefp->type == OSI_LOCK_RW && lockRefp->rw == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
-                free(lockRefp);
+                lock_FreeLockRef(lockRefp);
                 break;
             }
         }
@@ -744,7 +773,7 @@ void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
         for (lockRefp = (osi_lock_ref_t *)lockRefH ; lockRefp; lockRefp = (osi_lock_ref_t *)osi_QNext(&lockRefp->q)) {
             if (lockRefp->type == OSI_LOCK_MUTEX && lockRefp->mx == lockp) {
                 osi_QRemoveHT(&lockRefH, &lockRefT, &lockRefp->q);
-                free(lockRefp);
+                lock_FreeLockRef(lockRefp);
                 break;
             }
         }
