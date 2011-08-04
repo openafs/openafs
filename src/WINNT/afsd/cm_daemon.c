@@ -174,11 +174,12 @@ void cm_BkgDaemon(void * parm)
             } /* otherwise fall through */
         case 0:  /* success */
         default: /* other error */
-            if (code == 0)
+            if (code == 0) {
                 osi_Log1(afsd_logp,"cm_BkgDaemon SUCCESS: request 0x%p", rp);
-            else
+            } else {
                 osi_Log2(afsd_logp,"cm_BkgDaemon FAILED: request dropped 0x%p code 0x%x",
                          rp, code);
+            }
             cm_ReleaseUser(rp->userp);
             cm_ReleaseSCache(rp->scp);
             free(rp);
