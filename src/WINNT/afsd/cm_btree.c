@@ -2171,7 +2171,7 @@ cm_BPlusEnumAlloc(afs_uint32 entries)
 }
 
 long
-cm_BPlusDirEnumerate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
+cm_BPlusDirEnumerate(cm_scache_t *dscp, cm_user_t *userp, cm_req_t *reqp,
                      afs_uint32 locked, clientchar_t * maskp,
                      afs_uint32 fetchStatus, cm_direnum_t **enumpp)
 {
@@ -2186,23 +2186,23 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 
     /* Read lock the bplus tree so the data can't change */
     if (!locked)
-	lock_ObtainRead(&scp->dirlock);
+	lock_ObtainRead(&dscp->dirlock);
 
     /*
-     * Hold a reference to the directory so that it wont' be
+     * Hold a reference to the directory so that it won't be
      * recycled while the enumeration is active.
      */
-    cm_HoldSCache(scp);
+    cm_HoldSCache(dscp);
     cm_HoldUser(userp);
 
-    if (scp->dirBplus == NULL) {
+    if (dscp->dirBplus == NULL) {
 	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate No BPlus Tree");
         rc = CM_ERROR_WOULDBLOCK;
 	goto done;
     }
 
     /* Compute the number of entries */
-    for (count = 0, leafNode = getleaf(scp->dirBplus); leafNode; leafNode = nextLeafNode) {
+    for (count = 0, leafNode = getleaf(dscp->dirBplus); leafNode; leafNode = nextLeafNode) {
 
 	for ( slot = 1, numentries = numentries(leafNode); slot <= numentries; slot++) {
 	    firstDataNode = getnode(leafNode, slot);
@@ -2240,7 +2240,7 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* Copy the name and fid for each cname entry into the enumeration */
-    for (count = 0, leafNode = getleaf(scp->dirBplus); leafNode; leafNode = nextLeafNode) {
+    for (count = 0, leafNode = getleaf(dscp->dirBplus); leafNode; leafNode = nextLeafNode) {
 
 	for ( slot = 1, numentries = numentries(leafNode); slot <= numentries; slot++) {
 	    firstDataNode = getnode(leafNode, slot);
@@ -2294,21 +2294,28 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 	nextLeafNode = getnextnode(leafNode);
     }
 
-    enump->dscp = scp;
+    enump->dscp = dscp;
     enump->userp = userp;
     enump->reqFlags = reqp->flags;
     enump->fetchStatus = fetchStatus;
 
   done:
     if (!locked)
-	lock_ReleaseRead(&scp->dirlock);
+	lock_ReleaseRead(&dscp->dirlock);
 
     /* if we failed, cleanup any mess */
     if (rc != 0) {
 	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate rc != 0");
 
-        /* release the directory because we failed to generate an enumeration object */
-        cm_ReleaseSCache(scp);
+        /*
+         * release the directory because we failed to generate an enumeration object.
+         * adjust the directory position in the queue to ensure it doesn't get pushed
+         * out by the allocation of a large number of cm_scache objects.
+         */
+        lock_ObtainWrite(&cm_scacheLock);
+        cm_AdjustScacheLRU(dscp);
+        cm_ReleaseSCacheNoLock(dscp);
+        lock_ReleaseWrite(&cm_scacheLock);
         cm_ReleaseUser(userp);
         if (enump) {
 	    for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
@@ -2506,8 +2513,16 @@ cm_BPlusDirFreeEnumeration(cm_direnum_t *enump)
     osi_Log0(afsd_logp, "cm_BPlusDirFreeEnumeration");
 
     if (enump) {
-        /* Release the directory object */
-        cm_ReleaseSCache(enump->dscp);
+        /*
+         * Release the directory object but first adjust its position
+         * in the LRU queue to ensure that it does not get stuck at the
+         * end due to the allocation of a large number of cm_scache
+         * entries in the directory.
+         */
+        lock_ObtainWrite(&cm_scacheLock);
+        cm_AdjustScacheLRU(enump->dscp);
+        cm_ReleaseSCacheNoLock(enump->dscp);
+        lock_ReleaseWrite(&cm_scacheLock);
         cm_ReleaseUser(enump->userp);
 
 	for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
