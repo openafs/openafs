@@ -66,7 +66,12 @@ void cm_AdjustScacheLRU(cm_scache_t *scp)
 {
     lock_AssertWrite(&cm_scacheLock);
     osi_QRemoveHT((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **) &cm_data.scacheLRULastp, &scp->q);
-    osi_QAddH((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **) &cm_data.scacheLRULastp, &scp->q);
+    if (scp->flags & CM_SCACHEFLAG_DELETED) {
+        /* Since it has been deleted make it the first to be recycled. */
+        osi_QAddT((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **) &cm_data.scacheLRULastp, &scp->q);
+    } else {
+        osi_QAddH((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **) &cm_data.scacheLRULastp, &scp->q);
+    }
 }
 
 /* call with cm_scacheLock write-locked and scp rw held */
