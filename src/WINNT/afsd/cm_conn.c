@@ -667,11 +667,12 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		    pscp = cm_FindSCacheParent(scp);
 
 		lock_ObtainWrite(&scp->rw);
+		scp->flags |= CM_SCACHEFLAG_DELETED;
 		lock_ObtainWrite(&cm_scacheLock);
-		cm_RemoveSCacheFromHashTable(scp);
+                cm_AdjustScacheLRU(scp);
+                cm_RemoveSCacheFromHashTable(scp);
 		lock_ReleaseWrite(&cm_scacheLock);
                 cm_LockMarkSCacheLost(scp);
-		scp->flags |= CM_SCACHEFLAG_DELETED;
 		lock_ReleaseWrite(&scp->rw);
 		cm_ReleaseSCache(scp);
 

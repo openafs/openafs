@@ -1688,8 +1688,13 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
         cm_ReleaseSCache(scp);
         if (code == 0) {
 	    lock_ObtainWrite(&scp->rw);
-            if (--scp->linkCount == 0)
+            if (--scp->linkCount == 0) {
                 scp->flags |= CM_SCACHEFLAG_DELETED;
+		lock_ObtainWrite(&cm_scacheLock);
+                cm_AdjustScacheLRU(scp);
+                cm_RemoveSCacheFromHashTable(scp);
+		lock_ReleaseWrite(&cm_scacheLock);
+            }
             cm_DiscardSCache(scp);
 	    lock_ReleaseWrite(&scp->rw);
         }
@@ -3446,6 +3451,10 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
         if (code == 0) {
 	    lock_ObtainWrite(&scp->rw);
             scp->flags |= CM_SCACHEFLAG_DELETED;
+            lock_ObtainWrite(&cm_scacheLock);
+            cm_AdjustScacheLRU(scp);
+            cm_RemoveSCacheFromHashTable(scp);
+            lock_ReleaseWrite(&cm_scacheLock);
 	    lock_ReleaseWrite(&scp->rw);
         }
     }
