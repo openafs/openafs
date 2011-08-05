@@ -210,29 +210,37 @@ MakeLinkCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ViceIoctl blob;
     char * parent;
-    char path[1024] = "";
+    char link[1024] = "";
+    char target_buf[1024] = "";
+    char *target = target_buf;
+    const char * nbname;
+    int nblen;
 
-    if( FAILED(StringCbCopy(path, sizeof(path), as->parms[0].items->data))) {
-        fprintf (stderr, "MakeLinkCmd - input path too long");
+    if( FAILED(StringCbCopy(link, sizeof(link), as->parms[0].items->data))) {
+        fprintf (stderr, "MakeLinkCmd - link path too long");
         exit(1);
     }
-    parent = fs_GetParent(path);
+    if( FAILED(StringCbCopy(target, sizeof(target_buf), as->parms[1].items->data))) {
+        fprintf (stderr, "MakeLinkCmd - target path too long");
+        exit(1);
+    }
+    parent = fs_GetParent(link);
+
+    nbname = fs_NetbiosName();
+    nblen = (int)strlen(nbname);
 
     if (!fs_InAFS(parent)) {
-	const char * nbname = fs_NetbiosName();
-	int len = (int)strlen(nbname);
-
 	if (parent[0] == '\\' && parent[1] == '\\' &&
-	    (parent[len+2] == '\\' && parent[len+3] == '\0' || parent[len+2] == '\0') &&
-	    !strnicmp(nbname,&parent[2],len))
+	    (parent[nblen+2] == '\\' && parent[nblen+3] == '\0' || parent[nblen+2] == '\0') &&
+	    !strnicmp(nbname,&parent[2],nblen))
 	{
-	    if( FAILED(StringCbPrintf(path, sizeof(path),
-                                      "%s%sall%s", parent, parent[len+2]?"":"\\",
+	    if( FAILED(StringCbPrintf(link, sizeof(link),
+                                      "%s%sall%s", parent, parent[nblen+2]?"":"\\",
                                       &as->parms[0].items->data[strlen(parent)]))) {
-                fprintf(stderr, "path cannot be populated\n");
+                fprintf(stderr, "link cannot be populated\n");
                 exit(1);
             }
-	    parent = fs_GetParent(path);
+	    parent = fs_GetParent(link);
 	} else {
             fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
             return 1;
@@ -244,16 +252,31 @@ MakeLinkCmd(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
 
-    fprintf(stderr, "Creating symlink [%s] to [%s]\n", path, as->parms[1].items->data);
+    /*
+     * Fix up the target path to conform to unix notation
+     * if it is a UNC path to the AFS server name.
+     */
+    if (target[0] == '\\' && target[1] == '\\' &&
+        target[nblen+2] == '\\' &&
+		!strnicmp(nbname,&target[2],nblen))
+    {
+        char *p;
+        for ( p=target; *p; p++) {
+            if (*p == '\\')
+                *p = '/';
+        }
+        target++;
+    }
+    fprintf(stderr, "Creating symlink [%s] to [%s]\n", link, target);
 
     /* create symlink with a special pioctl for Windows NT, since it doesn't
      * have a symlink system call.
      */
     blob.out_size = 0;
-    blob.in_size = 1 + (long)strlen(as->parms[1].items->data);
-    blob.in = as->parms[1].items->data;
+    blob.in_size = 1 + (long)strlen(target);
+    blob.in = target;
     blob.out = NULL;
-    code = pioctl_utf8(path, VIOC_SYMLINK, &blob, 0);
+    code = pioctl_utf8(link, VIOC_SYMLINK, &blob, 0);
     if (code) {
 	fs_Die(errno, as->parms[0].items->data);
 	return 1;
