@@ -628,7 +628,7 @@ void *
 saveDbToTape(void *param)
 {
     struct saveDbIf *saveDbIfPtr = (struct saveDbIf *)param;
-    afs_int32 code = 0;
+    afs_int32 code;
     afs_int32 i;
     int wroteLabel;
     afs_uint32 taskId;
@@ -643,6 +643,7 @@ saveDbToTape(void *param)
     afs_pthread_setname_self("Db save");
     expires = (saveDbIfPtr->archiveTime ? NEVERDATE : 0);
     taskId = saveDbIfPtr->taskId;
+    dumpEntry.id = 0;
 
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);	/* lock tape device */
