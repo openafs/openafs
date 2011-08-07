@@ -1647,6 +1647,7 @@ Restorer(void *param) {
     printf("\n\n");
     TLog(taskId, "Restore\n");
 
+    startTime = time(0);
     memset(&tapeInfo, 0, sizeof(tapeInfo));
     if (!CONF_XBSA) {
 	tapeInfo.structVersion = BUTM_MAJORVERSION;
@@ -1682,7 +1683,6 @@ Restorer(void *param) {
 	ERROR_EXIT(TC_NOMEMORY);
     memset(bufferBlock, 0, allocbufferSize);
 
-    startTime = time(0);
     for (rparams.frag = 0; (rparams.frag < newNode->arraySize);
 	 rparams.frag++) {
 	RestoreDesc = &Restore[rparams.frag];
