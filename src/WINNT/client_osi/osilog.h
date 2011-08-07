@@ -83,12 +83,12 @@ extern void osi_LogEvent(char *a,char *b,char *c,...);
 extern char *osi_HexifyString(char *s);
 
 /* define macros */
-#define osi_Log0(l,f)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), 0, 0, 0, 0, 0)
-#define osi_Log1(l,f,a)		if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), 0, 0, 0, 0)
-#define osi_Log2(l,f,a,b)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0, 0)
-#define osi_Log3(l,f,a,b,c)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0, 0)
-#define osi_Log4(l,f,a,b,c,d)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), 0)
-#define osi_Log5(l,f,a,b,c,d,e)	if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e))
+#define osi_Log0(l,f)		do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), 0, 0, 0, 0, 0); } while(0)
+#define osi_Log1(l,f,a)		do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), 0, 0, 0, 0); } while(0)
+#define osi_Log2(l,f,a,b)	do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), 0, 0, 0); } while(0)
+#define osi_Log3(l,f,a,b,c)	do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), 0, 0); } while(0)
+#define osi_Log4(l,f,a,b,c,d)	do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), 0); } while(0)
+#define osi_Log5(l,f,a,b,c,d,e)	do { if ((l) && (l)->enabled) osi_LogAdd((l), (f), (size_t) (a), (size_t) (b), (size_t) (c), (size_t) (d), (size_t) (e)); } while(0)
 
 #ifdef DEBUG_VERBOSE
 #define DEBUG_EVENT1(a,b,c) {HANDLE h; char *ptbuf[1],buf[132];\
