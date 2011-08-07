@@ -23,6 +23,7 @@
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 
 #include <roken.h>		/* Must come after procmgmt.h */
+#include <afs/opr.h>
 
 #include "afsutil.h"
 #include "fileutil.h"
@@ -159,6 +160,8 @@ LogCommandLine(int argc, char **argv, const char *progname,
 {
     int i, l;
     char *commandLine, *cx;
+
+    opr_Assert(argc != 0);
 
     for (l = i = 0; i < argc; i++)
 	l += strlen(argv[i]) + 1;
