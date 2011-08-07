@@ -3736,8 +3736,6 @@ ListVolumes(struct cmd_syndesc *as, void *arock)
 				   &pntr, &count);
 	    if (code) {
 		PrintDiagnostics("listvol", code);
-		if (pntr)
-		    free(pntr);
 		exit(1);
 	    }
 	    if (wantExtendedInfo) {
