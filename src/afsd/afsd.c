@@ -1870,7 +1870,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	else {
 	    ropct = atoi((char *)c + 1);
 	    *c = '\0';
-	    rwpct = atoi((char *)as->parms[30].items->data);
+	    rwpct = atoi((char *)as->parms[34].items->data);
 	    if ((rwpct != 0) && (ropct != 0) && (ropct + rwpct == 100)) {
 		/* -splitcache */
 		enable_splitcache = 1;
