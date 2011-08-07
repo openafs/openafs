@@ -5380,7 +5380,7 @@ out:
 
 DECL_PIOCTL(PGetTokens2)
 {
-    struct cell *cell;
+    struct cell *cell = NULL;
     struct unixuser *tu = NULL;
     afs_int32 iterator;
     char *cellName = NULL;
