@@ -430,6 +430,8 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
     extern struct tapeConfig globalTapeConfig;
     extern struct udbHandleS udbHandle;
 
+    charList.charListT_val = 0;
+    charList.charListT_len = 0;
     blockSize = BUTM_BLKSIZE;
     writeBlock = (char *)malloc(BUTM_BLOCKSIZE);
     if (!writeBlock)
@@ -460,8 +462,6 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
     writeBufPtr = &writeBuffer[0];
     firstcall = 1;
     sequence = 1;
-    charList.charListT_val = 0;
-    charList.charListT_len = 0;
 
     while (1) {			/*w */
 	/* When no data in buffer, read data from the budb_server */
