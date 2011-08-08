@@ -311,7 +311,7 @@ ViceCreateRoot(Volume *vp)
     DirHandle dir;
     struct acl_accessList *ACL;
     AFSFid did;
-    Inode inodeNumber, nearInode;
+    Inode inodeNumber, AFS_UNUSED nearInode;
     struct VnodeDiskObject *vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
     IHandle_t *h;
