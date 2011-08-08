@@ -35,13 +35,12 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 {
     int i;
     int logmask = LOG_UPTO(LOG_INFO);
-    int origmask;
     int remain = 0;
     int remainlifetime = REMAINLIFETIME;
     int no_unlog = 0;
 
     openlog(pam_afs_ident, LOG_CONS | LOG_PID, LOG_AUTH);
-    origmask = setlogmask(logmask);
+    setlogmask(logmask);
 
     /*
      * Parse the user options.  Log an error for any unknown options.

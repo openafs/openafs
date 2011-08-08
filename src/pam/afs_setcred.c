@@ -40,9 +40,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int nowarn = 0;
     int use_first_pass = 1;	/* use the password passed in by auth */
     int try_first_pass = 0;
-    int got_authtok = 0;
     int ignore_uid = 0;
-    int no_unlog = 0;
     uid_t ignore_uid_id = 0;
     int refresh_token = 0;
     int set_expires = 0;	/* the default is to not to set the env variable */
@@ -109,7 +107,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		pam_afs_syslog(LOG_INFO, PAMAFS_OTHERCELL, cell_ptr);
 	    }
 	} else if (strcasecmp(argv[i], "no_unlog") == 0) {
-	    no_unlog = 1;
+	    ;
 	} else if (strcasecmp(argv[i], "refresh_token") == 0) {
 	    refresh_token = 1;
 	} else if (strcasecmp(argv[i], "set_token") == 0) {
@@ -205,7 +203,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
 	} else if (password[0] == '\0') {
 	    /* Actually we *did* get one but it was empty. */
-	    got_authtok = 1;
 	    /* So don't use it. */
 	    password = NULL;
 	    if (use_first_pass) {
@@ -217,7 +214,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	} else {
 	    if (logmask && LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	    got_authtok = 1;
 	}
 	if (!(use_first_pass || try_first_pass)) {
 	    password = NULL;

@@ -38,7 +38,6 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int use_first_pass = 0;
     int try_first_pass = 0;
     int ignore_root = 0;
-    int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
     char *torch_password = NULL;
     int i;
     char my_password_buf[256];
@@ -158,7 +157,6 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     } else {
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	got_authtok = 1;
     }
     if (!(use_first_pass || try_first_pass)) {
 	password = NULL;

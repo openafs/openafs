@@ -54,7 +54,6 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     /* satisfy kdm 2.x
      */
     int use_klog = 0;
-    int set_expires = 0;	/* This option is only used in pam_set_cred() */
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
     PAM_CONST char *user = NULL, *password = NULL;
     afs_int32 password_expires = -1;
@@ -132,7 +131,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    else
 		pam_afs_syslog(LOG_ERR, PAMAFS_CONFLICTOPT, "use_klog");
 	} else if (strcasecmp(argv[i], "setenv_password_expires") == 0) {
-	    set_expires = 1;
+	    ;
 	} else {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_UNKNOWNOPT, argv[i]);
 	}
