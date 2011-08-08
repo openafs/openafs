@@ -336,7 +336,7 @@ dvolser: project tviced usd libafsrpc libafsauthent volser
 		echo Not building DAFS volser for ${SYS_NAME} ;;          \
 	esac
 
-venus: cmd comerr volser ptserver libafscp
+venus: cmd comerr volser ptserver libafscp libafsauthent
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
 	+${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
