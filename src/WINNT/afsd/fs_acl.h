@@ -83,7 +83,8 @@ extern struct Acl *ParseAcl (char *astr, int astr_size);
 
 extern char *AclToString(struct Acl *acl);
 
-extern void ChangeList (struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights);
+extern void ChangeList (struct Acl *al, afs_int32 plus, char *aname,
+                        afs_int32 arights, enum rtype *artypep);
 
 extern struct AclEntry *FindList (struct AclEntry *alist, char *aname);
 
