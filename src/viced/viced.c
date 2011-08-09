@@ -1521,7 +1521,7 @@ CheckParms(void)
 
 /* Miscellaneous routines */
 void
-Die(char *msg)
+Die(const char *msg)
 {
 
     ViceLogThenPanic(0, ("%s\n", msg));

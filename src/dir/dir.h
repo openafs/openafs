@@ -84,6 +84,7 @@ typedef struct dcache * dir_file_t;
 #else
 struct DirHandle;
 typedef struct DirHandle * dir_file_t;
+extern void Die(const char *msg) AFS_NORETURN;
 #endif
 
 extern int afs_dir_NameBlobs(char *name);

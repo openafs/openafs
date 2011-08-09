@@ -22,8 +22,6 @@
 /* Defined in vol/vol-salvage.c */
 extern void Log(const char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
-/* Defined in vol/physio.c */
-extern void Die(char *);
 
 #define printf	Log		/* To make it work with volume salvager */
 

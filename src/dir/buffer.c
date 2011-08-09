@@ -93,8 +93,6 @@ extern void FidZap(dir_file_t);
 extern int  FidVolEq(dir_file_t, afs_int32 vid);
 extern void FidCpy(dir_file_t, dir_file_t fromfile);
 
-extern void Die(char *msg);
-
 int
 DStat(int *abuffers, int *acalls, int *aios)
 {

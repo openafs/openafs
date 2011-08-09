@@ -142,7 +142,7 @@ FidCpy(DirHandle * tofile, DirHandle * fromfile)
 }
 
 void
-Die(char *msg)
+Die(const char *msg)
 {
     printf("%s\n", msg);
     osi_Panic("%s\n", msg);
