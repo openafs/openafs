@@ -86,8 +86,6 @@ cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location"); \
 } while (0)
 
 int rxInitDone = 0;
-struct rx_connection *tconn;
-afs_uint32 tserver;
 extern struct ubik_client *cstruct;
 const char *confdir;
 
@@ -1911,6 +1909,7 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
     struct nvldbentry entry;
     afs_int32 vcode;
     afs_int32 quota;
+    afs_uint32 tserver;
 
     arovolid = &rovolid;
 
@@ -3778,6 +3777,7 @@ SyncVldb(struct cmd_syndesc *as, void *arock)
     char part[10];
     int flags = 0;
     char *volname = 0;
+    afs_uint32 tserver;
 
     tserver = 0;
     if (as->parms[0].items) {
@@ -3858,6 +3858,7 @@ SyncServer(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum, code;	/* part name */
     char part[10];
+    afs_uint32 tserver;
 
     int flags = 0;
 
