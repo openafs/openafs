@@ -110,4 +110,41 @@ extern void cm_utilsInit(void);
 
 extern void cm_utilsCleanup(void);
 
+__inline void
+cm_InterlockedAnd(LONG * pdest, LONG value)
+{
+    LONG orig, current, new;
+
+    current = *pdest;
+
+    do
+    {
+        orig = current;
+        new = orig & value;
+        current = _InterlockedCompareExchange(pdest, new, orig);
+    } while (orig != current);
+}
+
+__inline void
+cm_InterlockedOr(LONG * pdest, LONG value)
+{
+    LONG orig, current, new;
+
+    current = *pdest;
+
+    do
+    {
+        orig = current;
+        new = orig | value;
+        current = _InterlockedCompareExchange(pdest, new, orig);
+    } while (orig != current);
+}
+
+#ifdef DEBUG
+#ifdef _M_IX86
+#define _InterlockedOr   cm_InterlockedOr
+#define _InterlockedAnd  cm_InterlockedAnd
+#endif
+#endif
+
 #endif /*  OPENAFS_WINNT_AFSD_CM_UTILS_H */
