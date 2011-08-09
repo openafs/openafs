@@ -46,11 +46,12 @@ cmdproc(struct cmd_syndesc *as, void * arock)
             if (as->parms[2].items) {
 		data = dbm_fetch(kdb, key);
 		if (!data.dptr) {
-		    fprintf(stderr, "%s: no entry exists\n", ti->data);
+		    fprintf(stderr, "%s: no entry exists\n", (char *)key.dptr);
 		    continue;
 		}
 		if (data.dsize != sizeof(kalog_elt)) {
-		    fprintf(stderr, "%s: data came out corrupt\n", ti->data);
+		    fprintf(stderr, "%s: data came out corrupt\n", 
+			(char *)key.dptr);
 		    continue;
 		}
 		memcpy(&rdata, data.dptr, sizeof(kalog_elt));
