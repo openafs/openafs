@@ -48,9 +48,6 @@
 #include "volint.h"
 #include "volser_internal.h"
 
-/*@printflike@*/ extern void Log(const char *format, ...);
-/*@printflike@*/ extern void Abort(const char *format, ...);
-
 #define VolserVersion "2.0"
 #define N_SECURITY_OBJECTS 3
 
