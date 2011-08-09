@@ -107,6 +107,7 @@ void cm_InitVolume(int newFile, long maxVols)
                 lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock", LOCK_HIERARCHY_VOLUME);
                 _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
                 _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_UPDATING_VL);
+                volp->lastUpdateTime = 0;
                 for (volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
                     volp->vol[volType].state = vl_unknown;
                     volp->vol[volType].serversp = NULL;
@@ -231,6 +232,15 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 osi_Wakeup((LONG_PTR) &volp->flags);
                 return 0;
             }
+            now = time(NULL);
+        }
+
+        /* Do not query again if the last update attempt failed in the last 60 seconds */
+        if ((volp->flags & CM_VOLUMEFLAG_RESET) && (volp->lastUpdateTime > now - 60))
+        {
+            osi_Log3(afsd_logp, "cm_UpdateVolumeLocation unsuccessful update in last 60 seconds -- name %s:%s flags 0x%x",
+                      volp->cellp->name, volp->namep, volp->flags);
+            return(CM_ERROR_ALLDOWN);
         }
 
         _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_UPDATING_VL);
@@ -935,6 +945,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	strncpy(volp->namep, name, VL_MAXNAMELEN);
 	volp->namep[VL_MAXNAMELEN-1] = '\0';
 	volp->flags = CM_VOLUMEFLAG_RESET;
+        volp->lastUpdateTime = 0;
 
         for ( volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
             volp->vol[volType].state = vl_unknown;
@@ -1075,6 +1086,7 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     cm_data.mountRootGen = time(NULL);
     lock_ObtainWrite(&volp->rw);
     _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
+    volp->lastUpdateTime = 0;
 
     code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
     lock_ReleaseWrite(&volp->rw);
@@ -1109,6 +1121,7 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume, cm_user_
             firstTry = 0;
             lock_ObtainWrite(&volp->rw);
             _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
+            volp->lastUpdateTime = 0;
             code = cm_UpdateVolumeLocation(volp->cellp, userp, reqp, volp);
             lock_ReleaseWrite(&volp->rw);
             if (code == 0)
@@ -1175,8 +1188,10 @@ void cm_RefreshVolumes(int lifetime)
 
         if (!(volp->flags & CM_VOLUMEFLAG_RESET)) {
             lock_ObtainWrite(&volp->rw);
-            if (volp->lastUpdateTime + lifetime <= now)
+            if (volp->lastUpdateTime + lifetime <= now) {
                 _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
+                volp->lastUpdateTime = 0;
+            }
             lock_ReleaseWrite(&volp->rw);
         }
 
