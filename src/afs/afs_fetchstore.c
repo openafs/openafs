@@ -1114,9 +1114,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
     osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
-    if (adc) {
-	adc->validPos = base;
-    }
+    adc->validPos = base;
 
     if ( !code ) do {
 	if (avc->f.states & CForeign) {
