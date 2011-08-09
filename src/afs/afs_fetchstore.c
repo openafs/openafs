@@ -471,16 +471,19 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
     afs_size_t bytesToXfer = 10000;	/* # bytes to xfer */
 #endif /* AFS_NOSTATS */
     XSTATS_DECLS;
+    osi_Assert(nchunks != 0);
 
     for (i = 0; i < nchunks && !code; i++) {
 	int stored = 0;
 	struct dcache *tdc = dclist[i];
-	afs_int32 size = tdc->f.chunkBytes;
+	afs_int32 size;
+
 	if (!tdc) {
 	    afs_warn("afs: missing dcache!\n");
 	    storeallmissing++;
 	    continue;	/* panic? */
 	}
+	size = tdc->f.chunkBytes;
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREALL2, ICL_TYPE_POINTER, avc,
 		    ICL_TYPE_INT32, tdc->f.chunk, ICL_TYPE_INT32, tdc->index,
 		    ICL_TYPE_INT32, afs_inode2trace(&tdc->f.inode));
