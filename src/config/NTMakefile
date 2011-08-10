@@ -167,7 +167,7 @@ idirs: doclink
 		$(MKDIR) $(OJT)\ptserver
 !	ENDIF
 !	IF (!EXIST($(OJT)\tptserver))
-		$(MKDIR) $(OJT)\ptserver
+		$(MKDIR) $(OJT)\tptserver
 !	ENDIF
 !	IF (!EXIST($(OJT)\rx))
 		$(MKDIR) $(OJT)\rx
