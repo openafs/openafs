@@ -33,6 +33,7 @@ typedef struct cm_vol_state {
 
 typedef struct cm_volume {
     osi_queue_t q;                      /* LRU queue; cm_volumeLock */
+    afs_uint32 qflags;                  /* by cm_volumeLock */
     afs_uint32  magic;
     struct cm_volume *allNextp;	        /* allVolumes; by cm_volumeLock */
     struct cm_volume *nameNextp;        /* volumeNameHashTable; by cm_volumeLock */
@@ -41,8 +42,7 @@ typedef struct cm_volume {
                                         /* by cm_volumeLock */
     struct cm_vol_state vol[NUM_VOL_TYPES]; /* by cm_volumeLock */
     osi_rwlock_t rw;
-    afs_uint16 flags;			/* by rw */
-    afs_uint16 qflags;                  /* by cm_volumeLock */
+    afs_uint32 flags;			/* by rw */
     afs_int32 refCount;		        /* by Interlocked operations */
     struct cm_server *cbServerpRO;      /* server granting RO callback; by cm_scacheLock */
     time_t cbExpiresRO;                 /* latest RO expiration time; by cm_scacheLock */
