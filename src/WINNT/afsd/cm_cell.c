@@ -119,8 +119,8 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
                 if (code == 0) {   /* got cell from DNS */
                     lock_ObtainMutex(&cp->mx);
                     mxheld = 1;
-                    cp->flags |= CM_CELLFLAG_DNS;
-                    cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+                    _InterlockedOr(&cp->flags, CM_CELLFLAG_DNS);
+                    _InterlockedAnd(&cp->flags, ~CM_CELLFLAG_VLSERVER_INVALID);
 		    cp->timeout = time(0) + ttl;
 #ifdef DEBUG
                     fprintf(stderr, "cell %s: ttl=%d\n", cp->name, ttl);
@@ -131,7 +131,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 		     */
                     lock_ObtainMutex(&cp->mx);
                     mxheld = 1;
-                    cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+                    _InterlockedOr(&cp->flags, CM_CELLFLAG_VLSERVER_INVALID);
                 }
 	    }
 	}
@@ -311,8 +311,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                 } else {   /* got cell from DNS */
                     lock_ObtainMutex(&cp->mx);
                     hasMutex = 1;
-                    cp->flags |= CM_CELLFLAG_DNS;
-                    cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+                    _InterlockedOr(&cp->flags, CM_CELLFLAG_DNS);
+                    _InterlockedAnd(&cp->flags, ~CM_CELLFLAG_VLSERVER_INVALID);
                     cp->timeout = time(0) + ttl;
                 }
             }
@@ -547,7 +547,7 @@ void cm_InitCell(int newFile, long maxCells)
 
             cellp->cellID = AFS_FAKE_ROOT_CELL_ID;
             cellp->vlServersp = NULL;
-            cellp->flags = CM_CELLFLAG_FREELANCE;
+            _InterlockedOr(&cellp->flags, CM_CELLFLAG_FREELANCE);
 
             cm_AddCellToNameHashTable(cellp);
             cm_AddCellToIDHashTable(cellp);
@@ -559,7 +559,7 @@ void cm_InitCell(int newFile, long maxCells)
             for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
                 lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
                 cellp->vlServersp = NULL;
-                cellp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+                _InterlockedOr(&cellp->flags, CM_CELLFLAG_VLSERVER_INVALID);
             }
             lock_ReleaseRead(&cm_cellLock);
         }
@@ -628,7 +628,7 @@ void cm_AddCellToNameHashTable(cm_cell_t *cellp)
 
     cellp->nameNextp = cm_data.cellNameHashTablep[i];
     cm_data.cellNameHashTablep[i] = cellp;
-    cellp->flags |= CM_CELLFLAG_IN_NAMEHASH;
+    _InterlockedOr(&cellp->flags, CM_CELLFLAG_IN_NAMEHASH);
 }
 
 /* call with cell write-locked and mutex held */
@@ -649,7 +649,7 @@ void cm_RemoveCellFromNameHashTable(cm_cell_t *cellp)
 	     lcellpp = &tcellp->nameNextp, tcellp = tcellp->nameNextp) {
 	    if (tcellp == cellp) {
 		*lcellpp = cellp->nameNextp;
-		cellp->flags &= ~CM_CELLFLAG_IN_NAMEHASH;
+		_InterlockedAnd(&cellp->flags, ~CM_CELLFLAG_IN_NAMEHASH);
                 cellp->nameNextp = NULL;
 		break;
 	    }
@@ -672,7 +672,7 @@ void cm_AddCellToIDHashTable(cm_cell_t *cellp)
 
     cellp->idNextp = cm_data.cellIDHashTablep[i];
     cm_data.cellIDHashTablep[i] = cellp;
-    cellp->flags |= CM_CELLFLAG_IN_IDHASH;
+    _InterlockedOr(&cellp->flags, CM_CELLFLAG_IN_IDHASH);
 }
 
 /* call with cell write-locked and mutex held */
@@ -693,7 +693,7 @@ void cm_RemoveCellFromIDHashTable(cm_cell_t *cellp)
 	     lcellpp = &tcellp->idNextp, tcellp = tcellp->idNextp) {
 	    if (tcellp == cellp) {
 		*lcellpp = cellp->idNextp;
-		cellp->flags &= ~CM_CELLFLAG_IN_IDHASH;
+		_InterlockedAnd(&cellp->flags, ~CM_CELLFLAG_IN_IDHASH);
                 cellp->idNextp = NULL;
 		break;
 	    }
@@ -738,14 +738,14 @@ cm_CreateCellWithInfo( char * cellname,
             }
         }
         lock_ObtainMutex(&rock.cellp->mx);
-        rock.cellp->flags &= ~CM_CELLFLAG_DNS;
+        _InterlockedAnd(&rock.cellp->flags, ~CM_CELLFLAG_DNS);
     } else if (cm_dnsEnabled) {
         int ttl;
 
         code = cm_SearchCellByDNS(rock.cellp->name, NULL, &ttl, cm_AddCellProc, &rock);
         lock_ObtainMutex(&rock.cellp->mx);
         if (code == 0) {   /* got cell from DNS */
-            rock.cellp->flags |= CM_CELLFLAG_DNS;
+            _InterlockedOr(&rock.cellp->flags, CM_CELLFLAG_DNS);
             rock.cellp->timeout = time(0) + ttl;
 #ifdef DEBUG
             fprintf(stderr, "cell %s: ttl=%d\n", rock.cellp->name, ttl);
@@ -755,7 +755,7 @@ cm_CreateCellWithInfo( char * cellname,
         lock_ObtainMutex(&rock.cellp->mx);
         rock.cellp->flags &= ~CM_CELLFLAG_DNS;
     }
-    rock.cellp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+    _InterlockedOr(&rock.cellp->flags, CM_CELLFLAG_VLSERVER_INVALID);
     StringCbCopy(rock.cellp->linkedName, CELL_MAXNAMELEN, linked_cellname);
     lock_ReleaseMutex(&rock.cellp->mx);
 
