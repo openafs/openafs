@@ -90,6 +90,7 @@ loop:
 		ReleaseWriteLock(&tvc->lock);
 	    }
 	    ObtainReadLock(&afs_xvcache);
+	    uq = QPrev(tq);
 	    /* our tvc ptr is still good until now */
 	    AFS_FAST_RELE(tvc);
 	}
