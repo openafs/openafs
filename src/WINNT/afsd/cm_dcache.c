@@ -839,7 +839,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
                 lock_ObtainWrite(&scp->rw);
                 rxheld = 1;
             }
-            bp->cmFlags &= ~CM_BUF_CMBKGFETCH;
+            _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMBKGFETCH);
             buf_Release(bp);
             bp = NULL;
             continue;
@@ -854,7 +854,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
         if (code == 0)
             fetched = LargeIntegerAdd(fetched, tblocksize);
         buf_Release(bp);
-        bp->cmFlags &= ~CM_BUF_CMBKGFETCH;
+        _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMBKGFETCH);
     }
 
     if (!rxheld) {
@@ -869,7 +869,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
     {
         bp = buf_Find(scp, &offset);
         if (bp) {
-            bp->cmFlags &= ~CM_BUF_CMBKGFETCH;
+            _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMBKGFETCH);
             buf_Release(bp);
         }
     }
@@ -960,7 +960,7 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 coun
             rwheld = 1;
         }
 
-        bp->cmFlags |= CM_BUF_CMBKGFETCH;
+        _InterlockedOr(&bp->cmFlags, CM_BUF_CMBKGFETCH);
         buf_Release(bp);
     }
 
@@ -1952,7 +1952,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                         * PREFETCHING flag, so the reader waiting for
                         * this buffer will start a prefetch.
                         */
-                        tbufp->cmFlags |= CM_BUF_CMFULLYFETCHED;
+                        _InterlockedOr(&tbufp->cmFlags, CM_BUF_CMFULLYFETCHED);
                         lock_ObtainWrite(&scp->rw);
                         if (scp->flags & CM_SCACHEFLAG_WAITING) {
                             osi_Log1(afsd_logp, "CM GetBuffer Waking scp 0x%p", scp);
@@ -2009,7 +2009,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                  * PREFETCHING flag, so the reader waiting for
                  * this buffer will start a prefetch.
                  */
-                tbufp->cmFlags |= CM_BUF_CMFULLYFETCHED;
+                _InterlockedOr(&tbufp->cmFlags, CM_BUF_CMFULLYFETCHED);
                 lock_ObtainWrite(&scp->rw);
                 if (scp->flags & CM_SCACHEFLAG_WAITING) {
                     osi_Log1(afsd_logp, "CM GetBuffer Waking scp 0x%p", scp);

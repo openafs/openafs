@@ -2016,7 +2016,7 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
 	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY)) {
             buf_Hold(bp);
 	    lock_ObtainMutex(&bp->mx);
-	    bp->cmFlags &= ~CM_BUF_CMSTORING;
+	    _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMSTORING);
 	    bp->flags &= ~CM_BUF_DIRTY;
             bp->dirty_offset = 0;
             bp->dirty_length = 0;

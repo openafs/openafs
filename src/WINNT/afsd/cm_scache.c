@@ -161,7 +161,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    osi_QDFree(qdp);
 	    if (bufp) {
 		lock_ObtainMutex(&bufp->mx);
-		bufp->cmFlags &= ~CM_BUF_CMSTORING;
+		_InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMSTORING);
 		bufp->flags &= ~CM_BUF_DIRTY;
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
@@ -183,7 +183,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    osi_QDFree(qdp);
 	    if (bufp) {
 		lock_ObtainMutex(&bufp->mx);
-		bufp->cmFlags &= ~CM_BUF_CMFETCHING;
+		_InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMFETCHING);
 		bufp->flags &= ~CM_BUF_DIRTY;
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
@@ -1383,7 +1383,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         osi_SetQData(qdp, bufp);
 
         buf_Hold(bufp);
-        bufp->cmFlags |= CM_BUF_CMFETCHING;
+        _InterlockedOr(&bufp->cmFlags, CM_BUF_CMFETCHING);
         osi_QAdd((osi_queue_t **) &scp->bufReadsp, &qdp->q);
     }
 
@@ -1401,13 +1401,13 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         qdp = osi_QDAlloc();
         osi_SetQData(qdp, bufp);
         buf_Hold(bufp);
-        bufp->cmFlags |= CM_BUF_CMSTORING;
+        _InterlockedOr(&bufp->cmFlags, CM_BUF_CMSTORING);
         osi_QAdd((osi_queue_t **) &scp->bufWritesp, &qdp->q);
     }
 
     if (bufp && (flags & CM_SCACHESYNC_WRITE)) {
         /* mark the buffer as being written to. */
-        bufp->cmFlags |= CM_BUF_CMWRITING;
+        _InterlockedOr(&bufp->cmFlags, CM_BUF_CMWRITING);
     }
 
     return 0;
@@ -1456,7 +1456,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	    osi_QDFree(qdp);
 	    release = 1;
 	}
-        bufp->cmFlags &= ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED);
+        _InterlockedAnd(&bufp->cmFlags, ~(CM_BUF_CMFETCHING | CM_BUF_CMFULLYFETCHED));
         if (bufp->flags & CM_BUF_WAITING) {
             osi_Log2(afsd_logp, "CM SyncOpDone FetchData Waking [scp 0x%p] bufp 0x%p", scp, bufp);
             osi_Wakeup((LONG_PTR) &bufp);
@@ -1479,7 +1479,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 	    osi_QDFree(qdp);
 	    release = 1;
 	}
-        bufp->cmFlags &= ~CM_BUF_CMSTORING;
+        _InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMSTORING);
         if (bufp->flags & CM_BUF_WAITING) {
             osi_Log2(afsd_logp, "CM SyncOpDone StoreData Waking [scp 0x%p] bufp 0x%p", scp, bufp);
             osi_Wakeup((LONG_PTR) &bufp);
@@ -1490,7 +1490,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 
     if (bufp && (flags & CM_SCACHESYNC_WRITE)) {
         osi_assertx(bufp->cmFlags & CM_BUF_CMWRITING, "!CM_BUF_CMWRITING");
-        bufp->cmFlags &= ~CM_BUF_CMWRITING;
+        _InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMWRITING);
     }
 
     /* and wakeup anyone who is waiting */
