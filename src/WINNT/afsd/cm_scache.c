@@ -89,7 +89,7 @@ void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
 	    if (tscp == scp) {
 		*lscpp = scp->nextp;
                 scp->nextp = NULL;
-		scp->flags &= ~CM_SCACHEFLAG_INHASH;
+		_InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_INHASH);
 		break;
 	    }
 	}
@@ -210,13 +210,14 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     /* invalidate so next merge works fine;
      * also initialize some flags */
     scp->fileType = 0;
-    scp->flags &= ~(CM_SCACHEFLAG_STATD
+    _InterlockedAnd(&scp->flags,
+                    ~(CM_SCACHEFLAG_STATD
 		     | CM_SCACHEFLAG_DELETED
 		     | CM_SCACHEFLAG_RO
 		     | CM_SCACHEFLAG_PURERO
 		     | CM_SCACHEFLAG_OVERQUOTA
 		     | CM_SCACHEFLAG_OUTOFSPACE
-		     | CM_SCACHEFLAG_EACCESS);
+		     | CM_SCACHEFLAG_EACCESS));
     scp->serverModTime = 0;
     scp->dataVersion = CM_SCACHE_VERSION_BAD;
     scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
@@ -598,7 +599,8 @@ cm_ShutdownSCache(void)
             scp->cbServerp = NULL;
         }
         scp->cbExpires = 0;
-        scp->flags &= ~CM_SCACHEFLAG_CALLBACK;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_CALLBACK);
+        lock_ReleaseWrite(&scp->rw);
 
 #ifdef USE_BPLUS
         if (scp->dirBplus)
@@ -658,7 +660,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
 #endif
                 scp->waitQueueT = NULL;
-                scp->flags &= ~CM_SCACHEFLAG_WAITING;
+                _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_WAITING);
             }
         }
         cm_allFileLocks = NULL;
@@ -794,11 +796,11 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
         scp->dotdotFid.unique=1;
         scp->dotdotFid.vnode=1;
-        scp->flags |= (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO);
+        _InterlockedOr(&scp->flags, (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO));
         if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
             scp->nextp = cm_data.scacheHashTablep[hash];
             cm_data.scacheHashTablep[hash] = scp;
-            scp->flags |= CM_SCACHEFLAG_INHASH;
+            _InterlockedOr(&scp->flags, CM_SCACHEFLAG_INHASH);
         }
         scp->refCount = 1;
 	osi_Log1(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%p", scp);
@@ -887,11 +889,11 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
          * "master" copy is stored (defect 11489)
          */
         if (volp->vol[ROVOL].ID == fidp->volume) {
-	    scp->flags |= (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO);
+	    _InterlockedOr(&scp->flags, (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO));
             if (scp->fid.vnode == 1 && scp->fid.unique == 1)
                 scp->dotdotFid = cm_VolumeStateByType(volp, ROVOL)->dotdotFid;
         } else if (volp->vol[BACKVOL].ID == fidp->volume) {
-	    scp->flags |= CM_SCACHEFLAG_RO;
+	    _InterlockedOr(&scp->flags, CM_SCACHEFLAG_RO);
             if (scp->fid.vnode == 1 && scp->fid.unique == 1)
                 scp->dotdotFid = cm_VolumeStateByType(volp, BACKVOL)->dotdotFid;
         } else {
@@ -903,7 +905,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         cm_PutVolume(volp);
     scp->nextp = cm_data.scacheHashTablep[hash];
     cm_data.scacheHashTablep[hash] = scp;
-    scp->flags |= CM_SCACHEFLAG_INHASH;
+    _InterlockedOr(&scp->flags, CM_SCACHEFLAG_INHASH);
     lock_ReleaseWrite(&scp->rw);
     scp->refCount = 1;
 #ifdef DEBUG_REFCOUNT
@@ -1323,7 +1325,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                      scp, scp->waitCount, scp->waitRequests);
         } else {
             osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING set for 0x%p", scp);
-            scp->flags |= CM_SCACHEFLAG_WAITING;
+            _InterlockedOr(&scp->flags, CM_SCACHEFLAG_WAITING);
             scp->waitCount = scp->waitRequests = 1;
         }
 
@@ -1345,28 +1347,28 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
                  scp, scp->waitCount, scp->waitRequests);
         if (scp->waitCount == 0) {
             osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING reset for 0x%p", scp);
-            scp->flags &= ~CM_SCACHEFLAG_WAITING;
+            _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_WAITING);
             scp->waitRequests = 0;
         }
     } /* big while loop */
 
     /* now, update the recorded state for RPC-type calls */
     if (flags & CM_SCACHESYNC_FETCHSTATUS)
-        scp->flags |= CM_SCACHEFLAG_FETCHING;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_FETCHING);
     if (flags & CM_SCACHESYNC_STORESTATUS)
-        scp->flags |= CM_SCACHEFLAG_STORING;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_STORING);
     if (flags & CM_SCACHESYNC_SETSIZE)
-        scp->flags |= CM_SCACHEFLAG_SIZESETTING;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_SIZESETTING);
     if (flags & CM_SCACHESYNC_STORESIZE)
-        scp->flags |= CM_SCACHEFLAG_SIZESTORING;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_SIZESTORING);
     if (flags & CM_SCACHESYNC_GETCALLBACK)
-        scp->flags |= CM_SCACHEFLAG_GETCALLBACK;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_GETCALLBACK);
     if (flags & CM_SCACHESYNC_STOREDATA_EXCL)
-        scp->flags |= CM_SCACHEFLAG_DATASTORING;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_DATASTORING);
     if (flags & CM_SCACHESYNC_ASYNCSTORE)
-        scp->flags |= CM_SCACHEFLAG_ASYNCSTORING;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_ASYNCSTORING);
     if (flags & CM_SCACHESYNC_LOCK)
-        scp->flags |= CM_SCACHEFLAG_LOCKING;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_LOCKING);
 
     /* now update the buffer pointer */
     if (bufp && (flags & CM_SCACHESYNC_FETCHDATA)) {
@@ -1423,21 +1425,21 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 
     /* now, update the recorded state for RPC-type calls */
     if (flags & CM_SCACHESYNC_FETCHSTATUS)
-        scp->flags &= ~CM_SCACHEFLAG_FETCHING;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_FETCHING);
     if (flags & CM_SCACHESYNC_STORESTATUS)
-        scp->flags &= ~CM_SCACHEFLAG_STORING;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_STORING);
     if (flags & CM_SCACHESYNC_SETSIZE)
-        scp->flags &= ~CM_SCACHEFLAG_SIZESETTING;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_SIZESETTING);
     if (flags & CM_SCACHESYNC_STORESIZE)
-        scp->flags &= ~CM_SCACHEFLAG_SIZESTORING;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_SIZESTORING);
     if (flags & CM_SCACHESYNC_GETCALLBACK)
-        scp->flags &= ~CM_SCACHEFLAG_GETCALLBACK;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_GETCALLBACK);
     if (flags & CM_SCACHESYNC_STOREDATA_EXCL)
-        scp->flags &= ~CM_SCACHEFLAG_DATASTORING;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_DATASTORING);
     if (flags & CM_SCACHESYNC_ASYNCSTORE)
-        scp->flags &= ~CM_SCACHEFLAG_ASYNCSTORING;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_ASYNCSTORING);
     if (flags & CM_SCACHESYNC_LOCK)
-        scp->flags &= ~CM_SCACHEFLAG_LOCKING;
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_LOCKING);
 
     /* now update the buffer pointer */
     if (bufp && (flags & CM_SCACHESYNC_FETCHDATA)) {
@@ -1557,7 +1559,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
 #endif /* AFS_FREELANCE_CLIENT */
 
     if (statusp->errorCode != 0) {
-	scp->flags |= CM_SCACHEFLAG_EACCESS;
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_EACCESS);
 	osi_Log2(afsd_logp, "Merge, Failure scp 0x%p code 0x%x", scp, statusp->errorCode);
 
 	scp->fileType = 0;	/* unknown */
@@ -1586,7 +1588,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	}
 	goto done;
     } else {
-	scp->flags &= ~CM_SCACHEFLAG_EACCESS;
+	_InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_EACCESS);
     }
 
     dataVersion = statusp->dataVersionHigh;
@@ -1819,7 +1821,7 @@ void cm_DiscardSCache(cm_scache_t *scp)
     }
     scp->cbExpires = 0;
     scp->volumeCreationDate = 0;
-    scp->flags &= ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL);
+    _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL));
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
     cm_FreeAllACLEnts(scp);
