@@ -35,21 +35,15 @@
  * FreeBSD implementation notes:
  * Most of these operations require us to frob vm_objects.  Most
  * functions require that the object be locked (with VM_OBJECT_LOCK)
- * on entry and leave it locked on exit.  In order to get the
- * vm_object itself we call VOP_GETVOBJECT on the vnode; the
- * locking protocol requires that we do so with the heavy vnode lock
- * held and the vnode interlock unlocked, and it returns the same
- * way.
+ * on entry and leave it locked on exit.  The locking protocol
+ * requires that we access vp->v_object with the heavy vnode lock
+ * held and the vnode interlock unlocked.
  *
  * The locking protocol for vnodes is defined in
  * kern/vnode_if.src and sys/vnode.h; unfortunately, it is not *quite*
  * constant from version to version so to be properly correct we must
  * check the VCS history of those files.
  */
-
-#ifdef AFS_FBSD60_ENV
-#define VOP_GETVOBJECT(vp, objp) (*(objp) = (vp)->v_object)
-#endif
 
 #if defined(AFS_FBSD80_ENV)
 #define	lock_vnode(v, f)	vn_lock((v), (f))
@@ -154,9 +148,12 @@ osi_VM_StoreAllSegments(struct vcache *avc)
      */
     do {
 	anyio = 0;
-	if (VOP_GETVOBJECT(vp, &obj) == 0 && (obj->flags & OBJ_MIGHTBEDIRTY)) {
+	
+	obj = vp->v_object;
+	if (obj != NULL && obj->flags & OBJ_MIGHTBEDIRTY) {
 	    if (!vget(vp, LK_EXCLUSIVE | LK_RETRY, curthread)) {
-		    if (VOP_GETVOBJECT(vp, &obj) == 0) {
+		    obj = vp->v_object;
+		    if (obj != NULL) {
 			VM_OBJECT_LOCK(obj);
 			vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
 			VM_OBJECT_UNLOCK(obj);
@@ -249,7 +246,8 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 
     vp = AFSTOV(avc);
     ASSERT_VOP_LOCKED(vp, __func__);
-    if (VOP_GETVOBJECT(vp, &obj) == 0) {
+    obj = vp->v_object;
+    if (obj != NULL) {
 	VM_OBJECT_LOCK(obj);
 	vm_object_page_remove(obj, 0, 0, FALSE);
 	VM_OBJECT_UNLOCK(obj);
