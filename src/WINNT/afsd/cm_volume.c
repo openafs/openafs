@@ -105,8 +105,8 @@ void cm_InitVolume(int newFile, long maxVols)
                 afs_uint32 volType;
 
                 lock_InitializeRWLock(&volp->rw, "cm_volume_t rwlock", LOCK_HIERARCHY_VOLUME);
-                volp->flags |= CM_VOLUMEFLAG_RESET;
-                volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
+                _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
+                _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_UPDATING_VL);
                 for (volType = RWVOL; volType < NUM_VOL_TYPES; volType++) {
                     volp->vol[volType].state = vl_unknown;
                     volp->vol[volType].serversp = NULL;
@@ -233,7 +233,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             }
         }
 
-        volp->flags |= CM_VOLUMEFLAG_UPDATING_VL;
+        _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_UPDATING_VL);
         lock_ReleaseWrite(&volp->rw);
 
         if (cellp->flags & CM_CELLFLAG_VLSERVER_INVALID)
@@ -472,7 +472,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         }
 
         if (flags & VLF_DFSFILESET) {
-            volp->flags |= CM_VOLUMEFLAG_DFS_VOLUME;
+            _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_DFS_VOLUME);
             osi_Log1(afsd_logp, "cm_UpdateVolume Volume Group '%s' is a DFS File Set.  Correct behavior is not implemented.",
                      osi_LogSaveString(afsd_logp, volp->namep));
         }
@@ -636,9 +636,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         roNewstate = roServers_alldown ? vl_alldown : vl_online;
         bkNewstate = bkServers_alldown ? vl_alldown : vl_online;
 
-        volp->flags &= ~CM_VOLUMEFLAG_NOEXIST;
+        _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_NOEXIST);
     } else if (code == CM_ERROR_NOSUCHVOLUME || code == VL_NOENT || code == VL_BADNAME) {
-        volp->flags |= CM_VOLUMEFLAG_NOEXIST;
+        _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_NOEXIST);
     } else {
         rwNewstate = roNewstate = bkNewstate = vl_alldown;
     }
@@ -662,9 +662,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     volp->lastUpdateTime = time(NULL);
 
     if (code == 0)
-        volp->flags &= ~CM_VOLUMEFLAG_RESET;
+        _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_RESET);
 
-    volp->flags &= ~CM_VOLUMEFLAG_UPDATING_VL;
+    _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_UPDATING_VL);
     osi_Log4(afsd_logp, "cm_UpdateVolumeLocation done, waking others name %s:%s flags 0x%x code 0x%x",
              osi_LogSaveString(afsd_logp,volp->cellp->name),
              osi_LogSaveString(afsd_logp,volp->namep), volp->flags, code);
@@ -1083,7 +1083,7 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
     /* update it */
     cm_data.mountRootGen = time(NULL);
     lock_ObtainWrite(&volp->rw);
-    volp->flags |= CM_VOLUMEFLAG_RESET;
+    _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
 
     code = cm_UpdateVolumeLocation(cellp, userp, reqp, volp);
     lock_ReleaseWrite(&volp->rw);
@@ -1117,7 +1117,7 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume, cm_user_
             afs_int32 code;
             firstTry = 0;
             lock_ObtainWrite(&volp->rw);
-            volp->flags |= CM_VOLUMEFLAG_RESET;
+            _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
             code = cm_UpdateVolumeLocation(volp->cellp, userp, reqp, volp);
             lock_ReleaseWrite(&volp->rw);
             if (code == 0)
@@ -1185,7 +1185,7 @@ void cm_RefreshVolumes(int lifetime)
         if (!(volp->flags & CM_VOLUMEFLAG_RESET)) {
             lock_ObtainWrite(&volp->rw);
             if (volp->lastUpdateTime + lifetime <= now)
-                volp->flags |= CM_VOLUMEFLAG_RESET;
+                _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
             lock_ReleaseWrite(&volp->rw);
         }
 
@@ -1606,7 +1606,7 @@ void cm_AddVolumeToNameHashTable(cm_volume_t *volp)
 
     volp->nameNextp = cm_data.volumeNameHashTablep[i];
     cm_data.volumeNameHashTablep[i] = volp;
-    volp->qflags |= CM_VOLUME_QFLAG_IN_HASH;
+    _InterlockedOr(&volp->qflags, CM_VOLUME_QFLAG_IN_HASH);
 }
 
 /* call with volume write-locked and mutex held */
@@ -1624,7 +1624,7 @@ void cm_RemoveVolumeFromNameHashTable(cm_volume_t *volp)
 	     lvolpp = &tvolp->nameNextp, tvolp = tvolp->nameNextp) {
 	    if (tvolp == volp) {
 		*lvolpp = volp->nameNextp;
-		volp->qflags &= ~CM_VOLUME_QFLAG_IN_HASH;
+		_InterlockedAnd(&volp->qflags, ~CM_VOLUME_QFLAG_IN_HASH);
                 volp->nameNextp = NULL;
 		break;
 	    }
@@ -1659,7 +1659,7 @@ void cm_AddVolumeToIDHashTable(cm_volume_t *volp, afs_uint32 volType)
         cm_data.volumeBKIDHashTablep[i] = volp;
         break;
     }
-    statep->qflags |= CM_VOLUME_QFLAG_IN_HASH;
+    _InterlockedOr(&statep->qflags, CM_VOLUME_QFLAG_IN_HASH);
 }
 
 
@@ -1696,7 +1696,7 @@ void cm_RemoveVolumeFromIDHashTable(cm_volume_t *volp, afs_uint32 volType)
 	do {
 	    if (tvolp == volp) {
 		*lvolpp = statep->nextp;
-                statep->qflags &= ~CM_VOLUME_QFLAG_IN_HASH;
+                _InterlockedAnd(&statep->qflags, ~CM_VOLUME_QFLAG_IN_HASH);
                 statep->nextp = NULL;
 		break;
 	    }
@@ -1718,7 +1718,7 @@ void cm_AdjustVolumeLRU(cm_volume_t *volp)
     if (volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE)
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     osi_QAddH((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
-    volp->qflags |= CM_VOLUME_QFLAG_IN_LRU_QUEUE;
+    _InterlockedOr(&volp->qflags, CM_VOLUME_QFLAG_IN_LRU_QUEUE);
 
     osi_assertx(cm_data.volumeLRULastp != NULL, "null cm_data.volumeLRULastp");
 }
@@ -1734,7 +1734,7 @@ void cm_MoveVolumeToLRULast(cm_volume_t *volp)
     if (volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE)
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
     osi_QAddT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
-    volp->qflags |= CM_VOLUME_QFLAG_IN_LRU_QUEUE;
+    _InterlockedOr(&volp->qflags, CM_VOLUME_QFLAG_IN_LRU_QUEUE);
 
     osi_assertx(cm_data.volumeLRULastp != NULL, "null cm_data.volumeLRULastp");
 }
@@ -1746,7 +1746,7 @@ void cm_RemoveVolumeFromLRU(cm_volume_t *volp)
 
     if (volp->qflags & CM_VOLUME_QFLAG_IN_LRU_QUEUE) {
         osi_QRemoveHT((osi_queue_t **) &cm_data.volumeLRUFirstp, (osi_queue_t **) &cm_data.volumeLRULastp, &volp->q);
-        volp->qflags &= ~CM_VOLUME_QFLAG_IN_LRU_QUEUE;
+        _InterlockedAnd(&volp->qflags, ~CM_VOLUME_QFLAG_IN_LRU_QUEUE);
     }
 
     osi_assertx(cm_data.volumeLRULastp != NULL, "null cm_data.volumeLRULastp");
