@@ -1051,7 +1051,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
             if (bufp->flags & CM_BUF_DIRTY) {
                 osi_assertx(!(bufp->flags & CM_BUF_WRITING),
                             "WRITING w/o CMSTORING in SetupStoreBIOD");
-                bufp->flags |= CM_BUF_WRITING;
+                _InterlockedOr(&bufp->flags, CM_BUF_WRITING);
                 break;
             }
 
@@ -1494,7 +1494,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
 		    osi_Wakeup((LONG_PTR) bufp);
 		}
 		if (code) {
-		    bufp->flags &= ~CM_BUF_WRITING;
+		    _InterlockedAnd(&bufp->flags, ~CM_BUF_WRITING);
                     switch (code) {
                     case CM_ERROR_NOSUCHFILE:
                     case CM_ERROR_BADFD:
@@ -1507,8 +1507,8 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
                         /*
                          * Apply the fatal error to this buffer.
                          */
-                        bufp->flags &= ~CM_BUF_DIRTY;
-                        bufp->flags |= CM_BUF_ERROR;
+                        _InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
+                        _InterlockedOr(&bufp->flags, CM_BUF_ERROR);
                         bufp->dirty_offset = 0;
                         bufp->dirty_length = 0;
                         bufp->error = code;
@@ -1527,7 +1527,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
                         break;
                     }
 		} else {
-		    bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
+		    _InterlockedAnd(&bufp->flags, ~(CM_BUF_WRITING | CM_BUF_DIRTY));
                     bufp->dirty_offset = bufp->dirty_length = 0;
                 }
 	    }

@@ -165,10 +165,10 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    if (bufp) {
 		lock_ObtainMutex(&bufp->mx);
 		_InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMSTORING);
-		bufp->flags &= ~CM_BUF_DIRTY;
+		_InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
-		bufp->flags |= CM_BUF_ERROR;
+		_InterlockedOr(&bufp->flags, CM_BUF_ERROR);
 		bufp->error = VNOVNODE;
 		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 		bufp->dirtyCounter++;
@@ -187,10 +187,10 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	    if (bufp) {
 		lock_ObtainMutex(&bufp->mx);
 		_InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMFETCHING);
-		bufp->flags &= ~CM_BUF_DIRTY;
+		_InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
-		bufp->flags |= CM_BUF_ERROR;
+		_InterlockedOr(&bufp->flags, CM_BUF_ERROR);
 		bufp->error = VNOVNODE;
 		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 		bufp->dirtyCounter++;
@@ -1746,7 +1746,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
                     *lbpp = bp->hashp;	/* hash out */
                     bp->hashp = NULL;
 
-                    bp->qFlags &= ~CM_BUF_QINHASH;
+                    _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINHASH);
                 }
                 lock_ReleaseMutex(&bp->mx);
             }
