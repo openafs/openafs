@@ -30,6 +30,7 @@
 #include <afs/afsint.h>
 #include <afs/errors.h>
 
+#include "nfs.h"
 #include "lock.h"
 #include "ihandle.h"
 #include "vnode.h"
