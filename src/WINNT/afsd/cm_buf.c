@@ -166,7 +166,7 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
             /* watch for transition from empty to one element */
             if (!cm_data.buf_freeListEndp)
                 cm_data.buf_freeListEndp = cm_data.buf_freeListp;
-            bp->qFlags |= CM_BUF_QINLRU;
+            _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
         }
 
         if (!writeLocked)
@@ -206,7 +206,7 @@ void buf_Release(cm_buf_t *bp)
             /* watch for transition from empty to one element */
             if (!cm_data.buf_freeListEndp)
                 cm_data.buf_freeListEndp = cm_data.buf_freeListp;
-            bp->qFlags |= CM_BUF_QINLRU;
+            _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
         }
         lock_ReleaseWrite(&buf_globalLock);
     }
@@ -269,7 +269,7 @@ buf_Sync(int quitOnShutdown)
 #endif
             *bpp = bp->dirtyp;
             bp->dirtyp = NULL;
-            bp->qFlags &= ~CM_BUF_QINDL;
+            _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINDL);
             if (cm_data.buf_dirtyListp == NULL)
                 cm_data.buf_dirtyListEndp = NULL;
             else if (cm_data.buf_dirtyListEndp == bp)
@@ -482,7 +482,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 cm_data.buf_allp = bp;
 
                 osi_QAdd((osi_queue_t **)&cm_data.buf_freeListp, &bp->q);
-                bp->qFlags |= CM_BUF_QINLRU;
+                _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
                 lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
 
                 /* grab appropriate number of bytes from aligned zone */
@@ -511,7 +511,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 bp->userp = NULL;
                 bp->waitCount = 0;
                 bp->waitRequests = 0;
-                bp->flags &= ~CM_BUF_WAITING;
+                _InterlockedAnd(&bp->flags, ~CM_BUF_WAITING);
                 bp++;
             }
         }
@@ -604,7 +604,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
             osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING already set for 0x%p", bp);
         } else {
             osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING set for 0x%p", bp);
-            bp->flags |= CM_BUF_WAITING;
+            _InterlockedOr(&bp->flags, CM_BUF_WAITING);
             bp->waitCount = bp->waitRequests = 1;
         }
         osi_SleepM((LONG_PTR)bp, &bp->mx);
@@ -616,7 +616,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         bp->waitCount--;
         if (bp->waitCount == 0) {
             osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING reset for 0x%p", bp);
-            bp->flags &= ~CM_BUF_WAITING;
+            _InterlockedAnd(&bp->flags, ~CM_BUF_WAITING);
             bp->waitRequests = 0;
         }
 
@@ -810,8 +810,8 @@ afs_uint32 buf_CleanAsyncLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD || code == CM_ERROR_NOACCESS ||
             code == CM_ERROR_QUOTA || code == CM_ERROR_SPACE || code == CM_ERROR_TOOBIG ||
             code == CM_ERROR_READONLY || code == CM_ERROR_NOSUCHPATH){
-	    bp->flags &= ~CM_BUF_DIRTY;
-	    bp->flags |= CM_BUF_ERROR;
+	    _InterlockedAnd(&bp->flags, ~CM_BUF_DIRTY);
+	    _InterlockedOr(&bp->flags, CM_BUF_ERROR);
             bp->dirty_offset = 0;
             bp->dirty_length = 0;
 	    bp->error = code;
@@ -917,14 +917,14 @@ void buf_Recycle(cm_buf_t *bp)
         if (nextBp)
             nextBp->fileHashBackp = prevBp;
 
-        bp->qFlags &= ~CM_BUF_QINHASH;
+        _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINHASH);
     }
 
     /* make the fid unrecognizable */
     memset(&bp->fid, 0, sizeof(cm_fid_t));
 
     /* clean up junk flags */
-    bp->flags &= ~(CM_BUF_EOF | CM_BUF_ERROR);
+    _InterlockedAnd(&bp->flags, ~(CM_BUF_EOF | CM_BUF_ERROR));
     bp->dataVersion = CM_BUF_VERSION_BAD;	/* unknown so far */
 }
 
@@ -1069,7 +1069,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
             if (scp) {
                 lock_AssertWrite(&buf_globalLock);
 
-                bp->qFlags |= CM_BUF_QINHASH;
+                _InterlockedOr(&bp->qFlags, CM_BUF_QINHASH);
                 bp->fid = scp->fid;
 #ifdef DEBUG
 		bp->scp = scp;
@@ -1098,7 +1098,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                 cm_data.buf_freeListEndp = (cm_buf_t *) osi_QPrev(&bp->q);
             }
             osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-            bp->qFlags &= ~CM_BUF_QINLRU;
+            _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINLRU);
 
             /* prepare to return it.  Give it a refcount */
             bp->refCount = 1;
@@ -1211,7 +1211,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
          * implementation of Readp is cm_BufRead() which simply sets
          * tcount to 0 and returns success.
          */
-        bp->flags |= CM_BUF_READING;
+        _InterlockedOr(&bp->flags, CM_BUF_READING);
         code = (*cm_buf_opsp->Readp)(bp, cm_data.buf_blockSize, &tcount, NULL);
 
 #ifdef DISKCACHE95
@@ -1223,8 +1223,8 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
             /* failure or queued */
             if (code != ERROR_IO_PENDING) {
                 bp->error = code;
-                bp->flags |= CM_BUF_ERROR;
-                bp->flags &= ~CM_BUF_READING;
+                _InterlockedOr(&bp->flags, CM_BUF_ERROR);
+                _InterlockedAnd(&bp->flags, ~CM_BUF_READING);
                 if (bp->flags & CM_BUF_WAITING) {
                     osi_Log1(buf_logp, "buf_Get Waking bp 0x%p", bp);
                     osi_Wakeup((LONG_PTR) bp);
@@ -1244,9 +1244,9 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
             if (tcount < (unsigned long) cm_data.buf_blockSize) {
                 memset(bp->datap+tcount, 0, cm_data.buf_blockSize - tcount);
                 if (tcount == 0)
-                    bp->flags |= CM_BUF_EOF;
+                    _InterlockedOr(&bp->flags, CM_BUF_EOF);
             }
-            bp->flags &= ~CM_BUF_READING;
+            _InterlockedAnd(&bp->flags, ~CM_BUF_READING);
             if (bp->flags & CM_BUF_WAITING) {
                 osi_Log1(buf_logp, "buf_Get Waking bp 0x%p", bp);
                 osi_Wakeup((LONG_PTR) bp);
@@ -1274,7 +1274,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
         if (cm_data.buf_freeListEndp == bp)
             cm_data.buf_freeListEndp = (cm_buf_t *) osi_QPrev(&bp->q);
         osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-        bp->qFlags &= ~CM_BUF_QINLRU;
+        _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINLRU);
     }
     lock_ReleaseWrite(&buf_globalLock);
 
@@ -1370,10 +1370,10 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t 
 	osi_Log1(buf_logp, "buf_SetDirty 0x%p", bp);
 
         /* set dirty bit */
-        bp->flags |= CM_BUF_DIRTY;
+        _InterlockedOr(&bp->flags, CM_BUF_DIRTY);
 
         /* and turn off EOF flag, since it has associated data now */
-        bp->flags &= ~CM_BUF_EOF;
+        _InterlockedAnd(&bp->flags, ~CM_BUF_EOF);
 
         bp->dirty_offset = offset;
         bp->dirty_length = length;
@@ -1398,7 +1398,7 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t 
                 cm_data.buf_dirtyListEndp = bp;
             }
             bp->dirtyp = NULL;
-            bp->qFlags |= CM_BUF_QINDL;
+            _InterlockedOr(&bp->qFlags, CM_BUF_QINDL);
         }
         lock_ReleaseWrite(&buf_globalLock);
     }
@@ -1588,7 +1588,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
              */
             if (LargeIntegerLessThanOrEqualTo(*sizep, bufp->offset)) {
                 /* truncating the entire page */
-                bufp->flags &= ~CM_BUF_DIRTY;
+                _InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
                 bufp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
@@ -1679,8 +1679,8 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
                  * page therefore contains data that can no longer be stored.
                  */
                 lock_ObtainMutex(&bp->mx);
-                bp->flags &= ~CM_BUF_DIRTY;
-                bp->flags |= CM_BUF_ERROR;
+                _InterlockedAnd(&bp->flags, ~CM_BUF_DIRTY);
+                _InterlockedOr(&bp->flags, CM_BUF_ERROR);
                 bp->error = CM_ERROR_BADFD;
                 bp->dirty_offset = 0;
                 bp->dirty_length = 0;
@@ -1810,8 +1810,8 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                      * Do not waste the time attempting to store to
                      * the file server when we know it will fail.
                      */
-                    bp->flags &= ~CM_BUF_DIRTY;
-                    bp->flags |= CM_BUF_ERROR;
+                    _InterlockedAnd(&bp->flags, ~CM_BUF_DIRTY);
+                    _InterlockedOr(&bp->flags, CM_BUF_ERROR);
                     bp->dirty_offset = 0;
                     bp->dirty_length = 0;
                     bp->error = code;
@@ -2017,10 +2017,10 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
             buf_Hold(bp);
 	    lock_ObtainMutex(&bp->mx);
 	    _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMSTORING);
-	    bp->flags &= ~CM_BUF_DIRTY;
+	    _InterlockedAnd(&bp->flags, ~CM_BUF_DIRTY);
             bp->dirty_offset = 0;
             bp->dirty_length = 0;
-	    bp->flags |= CM_BUF_ERROR;
+	    _InterlockedOr(&bp->flags, CM_BUF_ERROR);
 	    bp->error = VNOVNODE;
 	    bp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 	    bp->dirtyCounter++;
