@@ -215,8 +215,6 @@ extern int PrintCallBackStats(void);
 extern void *ShutDown(void *);
 extern void ShutDownAndCore(int dopanic);
 
-extern struct host *h_Alloc(struct rx_connection *r_con);
-extern struct host *h_Alloc_r(struct rx_connection *r_con);
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 		      struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
