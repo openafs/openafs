@@ -993,6 +993,10 @@ tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
 tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
+# Set the executable bit on libraries in libdir, so rpmbuild knows to
+# create "Provides" entries in the package metadata for the libraries
+chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
+
 # Fix the location of restorevol, since it should be available for
 # any user in /usr/bin
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
