@@ -5,13 +5,25 @@
 #include "afsincludes.h"
 
 #define MYBUNDLEID "org.openafs.filesystems.afs"
+extern struct vfsops afs_vfsops;
+
 #ifdef AFS_DARWIN80_ENV
 static vfstable_t afs_vfstable;
-static struct vfs_fsentry afs_vfsentry;
 extern struct vnodeopv_desc afs_vnodeop_opv_desc;
 extern struct vnodeopv_desc afs_dead_vnodeop_opv_desc;
 static struct vnodeopv_desc *afs_vnodeop_opv_desc_list[2] =
    { &afs_vnodeop_opv_desc, &afs_dead_vnodeop_opv_desc };
+
+struct vfs_fsentry afs_vfsentry = {
+  &afs_vfsops,
+  2,
+  afs_vnodeop_opv_desc_list,
+  0,
+  "afs",
+  VFS_TBLNOTYPENUM|VFS_TBLTHREADSAFE|VFS_TBL64BITREADY,
+  NULL,
+  NULL,
+};
 
 #include <sys/conf.h>
 #include <miscfs/devfs/devfs.h>
@@ -28,7 +40,6 @@ struct vfsconf afs_vfsconf;
 #endif
 #include <mach/kmod.h>
 
-extern struct vfsops afs_vfsops;
 extern struct mount *afs_globalVFS;
 extern int Afs_xsetgroups();
 
@@ -38,18 +49,15 @@ extern int maxvfsconf;
 kern_return_t
 afs_modload(struct kmod_info *kmod_info, void *data)
 {
+    int ret;
     osi_Init();
 #ifdef AFS_DARWIN80_ENV
     MUTEX_SETUP();
     afs_global_lock = lck_mtx_alloc_init(openafs_lck_grp, 0);
-    memset(&afs_vfsentry, 0, sizeof(struct vfs_fsentry));
-    strcpy(afs_vfsentry.vfe_fsname, "afs");
-    afs_vfsentry.vfe_vfsops = &afs_vfsops;
-    afs_vfsentry.vfe_vopcnt = 2;
-    afs_vfsentry.vfe_opvdescs = afs_vnodeop_opv_desc_list;
-    afs_vfsentry.vfe_flags = VFS_TBLTHREADSAFE|VFS_TBLNOTYPENUM|VFS_TBL64BITREADY;
-    if (vfs_fsadd(&afs_vfsentry, &afs_vfstable)) {
-	printf("AFS: vfs_fsadd failed. aborting\n");
+
+    if (ret = vfs_fsadd(&afs_vfsentry, &afs_vfstable)) {
+	printf("AFS: vfs_fsadd failed. aborting: %d\n", ret);
+	afs_vfstable = NULL;
 	goto fsadd_out;
     }
     afs_cdev.d_open = &afs_cdev_nop_openclose;
