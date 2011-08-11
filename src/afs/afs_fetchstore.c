@@ -27,8 +27,8 @@
 extern int cacheDiskType;
 
 #ifndef AFS_NOSTATS
-void
-FillStoreStats(int code, int idx, osi_timeval_t *xferStartTime,
+static void
+FillStoreStats(int code, int idx, osi_timeval_t xferStartTime,
 	       afs_size_t bytesToXfer, afs_size_t bytesXferred)
 {
     struct afs_stats_xferData *xferP;
@@ -63,7 +63,7 @@ FillStoreStats(int code, int idx, osi_timeval_t *xferStartTime,
 	else
 	    (xferP->count[8])++;
 
-	afs_stats_GetDiff(elapsedTime, (*xferStartTime), xferStopTime);
+	afs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
 	afs_stats_AddTo((xferP->sumTime), elapsedTime);
 	afs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
 	if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
@@ -522,7 +522,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 
 #ifndef AFS_NOSTATS
 	FillStoreStats(code, AFS_STATS_FS_XFERIDX_STOREDATA,
-		    &xferStartTime, bytesToXfer, bytesXferred);
+		    xferStartTime, bytesToXfer, bytesXferred);
 #endif /* AFS_NOSTATS */
 
 	if ((tdc->f.chunkBytes < afs_OtherCSize)
@@ -1159,7 +1159,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
 	(*ops->destroy)(&rock, code);
 
 #ifndef AFS_NOSTATS
-    FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA, &xferStartTime,
+    FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA, xferStartTime,
 			bytesToXfer, bytesXferred);
 #endif
     XSTATS_END_TIME;
