@@ -313,6 +313,10 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 	    krb5_svc_get_msg(code,&str);
 #elif defined(HAVE_ERROR_MESSAGE)
 	    str = error_message(code);
+#elif defined(KRB5_PROG_ETYPE_NOSUPP) && !(defined(HAVE_KRB5_ENCTYPE_ENABLE) || defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO))
+	    /* Lion gives us nothing to hook here and no weak crypto switch */
+	    if (code == KRB5_PROG_ETYPE_NOSUPP)
+		str = "encryption type not supported; \"allow_weak_crypto = true\" needed in Kerberos configuration";
 #else
 	    ; /* IRIX apparently has neither: use the string we have */
 #endif
