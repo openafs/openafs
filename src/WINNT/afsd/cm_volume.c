@@ -521,6 +521,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tempAddr = htonl(serverNumber[i]);
             tsockAddr.sin_addr.s_addr = tempAddr;
             tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
+#ifdef MULTIHOMED
             if (tsp && (method == 2) && (tsp->flags & CM_SERVERFLAG_UUID)) {
                 /*
                  * Check to see if the uuid of the server we know at this address
@@ -541,6 +542,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                               osi_LogSaveString(afsd_logp, hoststr));
                 }
             }
+#endif
             if (!tsp) {
                 /*
                  * cm_NewServer will probe the file server which in turn will
@@ -577,20 +579,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             if ((tflags & VLSF_RWVOL) && (flags & VLF_RWEXISTS)) {
                 tsrp = cm_NewServerRef(tsp, rwID);
                 cm_InsertServerList(&volp->vol[RWVOL].serversp, tsrp);
-
-                lock_ObtainWrite(&cm_serverLock);
-                tsrp->refCount--;       /* drop allocation reference */
-                lock_ReleaseWrite(&cm_serverLock);
-
                 if (!(tsp->flags & CM_SERVERFLAG_DOWN))
                     rwServers_alldown = 0;
             }
             if ((tflags & VLSF_ROVOL) && (flags & VLF_ROEXISTS)) {
                 tsrp = cm_NewServerRef(tsp, roID);
                 cm_InsertServerList(&volp->vol[ROVOL].serversp, tsrp);
-                lock_ObtainWrite(&cm_serverLock);
-                tsrp->refCount--;       /* drop allocation reference */
-                lock_ReleaseWrite(&cm_serverLock);
                 ROcount++;
 
                 if (!(tsp->flags & CM_SERVERFLAG_DOWN))
@@ -604,9 +598,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             if ((tflags & VLSF_RWVOL) && (flags & VLF_BACKEXISTS)) {
                 tsrp = cm_NewServerRef(tsp, bkID);
                 cm_InsertServerList(&volp->vol[BACKVOL].serversp, tsrp);
-                lock_ObtainWrite(&cm_serverLock);
-                tsrp->refCount--;       /* drop allocation reference */
-                lock_ReleaseWrite(&cm_serverLock);
 
                 if (!(tsp->flags & CM_SERVERFLAG_DOWN))
                     bkServers_alldown = 0;
@@ -1128,7 +1119,7 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume, cm_user_
      * They will be freed by cm_FreeServerList when they get to zero
      */
     for (current = *serverspp; current; current = current->next)
-        current->refCount++;
+        cm_GetServerRef(current, TRUE);
 
     lock_ReleaseWrite(&cm_serverLock);
 
@@ -1226,6 +1217,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
             *volumeUpdatedp = 1;
         }
 
+        lock_ObtainRead(&cm_serverLock);
         if (statep->serversp) {
             alldown = 1;
             alldeleted = 1;
@@ -1240,6 +1232,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                 if (serversp->status == srv_busy || serversp->status == srv_offline)
                     serversp->status = srv_not_busy;
             }
+            lock_ReleaseRead(&cm_serverLock);
 
             if (alldeleted && !(*volumeUpdatedp)) {
                 cm_InitReq(&req);
@@ -1280,6 +1273,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                 statep->state = vl_alldown;
             }
         } else if (statep->state != vl_alldown) {
+            lock_ReleaseRead(&cm_serverLock);
             cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_alldown);
             statep->state = vl_alldown;
         }
