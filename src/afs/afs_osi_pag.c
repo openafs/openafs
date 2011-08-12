@@ -603,7 +603,7 @@ out:
 	    if (key_validate(key) == 0 && key->uid == 0) {	/* also verify in the session keyring? */
 		upag = (afs_uint32) key->payload.value;
 		if (((upag >> 24) & 0xff) == 'A') {
-		    __setpag(&cred, upag, &newpag, 0);
+		    __setpag(&cred, upag, &newpag, 0, NULL);
 		    pag = (afs_int32) upag;
 		}
 	    }

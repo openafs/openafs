@@ -160,7 +160,7 @@ set_pag_in_parent(int pag, int g0, int g1)
 #if defined(AFS_LINUX26_ENV)
 int
 __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
-         int change_parent)
+         int change_parent, struct group_info **old_groups)
 {
     struct group_info *group_info;
     gid_t g0, g1;
@@ -205,18 +205,22 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     for (i = 0; i < group_info->ngroups; ++i)
       GROUP_AT(tmp, i + need_space) = GROUP_AT(group_info, i);
 #endif
-    put_group_info(group_info);
-    group_info = tmp;
+    if (old_groups) {
+	*old_groups = group_info;
+    } else {
+	put_group_info(group_info);
+	group_info = NULL;
+    }
 
 #ifndef AFS_LINUX26_ONEGROUP_ENV
     afs_get_groups_from_pag(*newpag, &g0, &g1);
-    GROUP_AT(group_info, 0) = g0;
-    GROUP_AT(group_info, 1) = g1;
+    GROUP_AT(tmp, 0) = g0;
+    GROUP_AT(tmp, 1) = g1;
 #endif
 
-    afs_setgroups(cr, group_info, change_parent);
+    afs_setgroups(cr, tmp, change_parent);
 
-    put_group_info(group_info);
+    put_group_info(tmp);
 
     return 0;
 }
@@ -296,11 +300,15 @@ out:
 #else
 int
 __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
-         int change_parent)
+         int change_parent, struct group_info **old_groups)
 {
     gid_t *gidset;
     afs_int32 ngroups, code = 0;
     int j;
+
+    if (old_groups) {
+	*old_groups = NULL;
+    }
 
     gidset = (gid_t *) osi_Alloc(NGROUPS * sizeof(gidset[0]));
     ngroups = afs_getgroups(*cr, gidset);
@@ -344,10 +352,11 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
        int change_parent)
 {
     int code;
+    struct group_info *old_groups = NULL;
 
     AFS_STATCNT(setpag);
 
-    code = __setpag(cr, pagvalue, newpag, change_parent);
+    code = __setpag(cr, pagvalue, newpag, change_parent, &old_groups);
 
 #ifdef LINUX_KEYRING_SUPPORT
     if (code == 0) {
@@ -385,6 +394,18 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     }
 #endif /* LINUX_KEYRING_SUPPORT */
 
+    if (code) {
+	if (old_groups) {
+	    afs_setgroups(cr, old_groups, change_parent);
+	    put_group_info(old_groups);
+	    old_groups = NULL;
+	}
+	if (*newpag > -1) {
+	    afs_MarkUserExpired(*newpag);
+	    *newpag = -1;
+	}
+    }
+
     return code;
 }
 
@@ -413,7 +434,7 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
     unlock_kernel();
@@ -449,7 +470,7 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
     unlock_kernel();
@@ -483,7 +504,7 @@ asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
     unlock_kernel();
@@ -529,7 +550,7 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
     unlock_kernel();
@@ -574,7 +595,7 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
     unlock_kernel();
