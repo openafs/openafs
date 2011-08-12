@@ -178,10 +178,16 @@ typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
 } osi_timeval_t;
+typedef struct {
+    afs_int32 tv_sec;
+    afs_int32 tv_usec;
+} osi_timeval32_t;
 #elif defined(AFS_SUN57_ENV)
 typedef struct timeval32 osi_timeval_t;
+typedef struct timeval32 osi_timeval32_t;
 #else
 typedef struct timeval osi_timeval_t;
+typedef struct timeval osi_timeval32_t;
 #endif /* AFS_SGI61_ENV */
 
 #ifndef UKERNEL
