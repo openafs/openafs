@@ -950,6 +950,10 @@ cm_server_vols_t *cm_NewServerVols(void) {
     return tsvp;
 }
 
+/*
+ * cm_NewServerRef() returns with the allocated cm_serverRef_t
+ * with a refCount of 1.
+ */
 cm_serverRef_t *cm_NewServerRef(cm_server_t *serverp, afs_uint32 volID)
 {
     cm_serverRef_t *tsrp;
@@ -1010,6 +1014,34 @@ cm_serverRef_t *cm_NewServerRef(cm_server_t *serverp, afs_uint32 volID)
     return tsrp;
 }
 
+void cm_GetServerRef(cm_serverRef_t *tsrp, int locked)
+{
+    afs_int32 refCount;
+
+    if (!locked)
+        lock_ObtainRead(&cm_serverLock);
+    refCount = InterlockedIncrement(&tsrp->refCount);
+    if (!locked)
+        lock_ReleaseRead(&cm_serverLock);
+}
+
+afs_int32 cm_PutServerRef(cm_serverRef_t *tsrp, int locked)
+{
+    afs_int32 refCount;
+
+    if (!locked)
+        lock_ObtainRead(&cm_serverLock);
+    refCount = InterlockedDecrement(&tsrp->refCount);
+    osi_assertx(refCount >= 0, "cm_serverRef_t refCount underflow");
+
+    if (!locked)
+        lock_ReleaseRead(&cm_serverLock);
+
+    return refCount;
+}
+
+
+
 LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 {
     LONG_PTR sum = 0;
@@ -1035,7 +1067,7 @@ LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 ** Insert a server into the server list keeping the list sorted in
 ** ascending order of ipRank.
 **
-** The refCount of the cm_serverRef_t is increased
+** The refCount of the cm_serverRef_t is not altered.
 */
 void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 {
@@ -1045,8 +1077,6 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
     lock_ObtainWrite(&cm_serverLock);
     current=*list;
     ipRank = element->server->ipRank;
-
-    element->refCount++;                /* increase refCount */
 
     /* insertion into empty list  or at the beginning of the list */
     if ( !current || (current->server->ipRank > ipRank) )
@@ -1065,6 +1095,7 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
     }
     element->next = current->next;
     current->next = element;
+
     lock_ReleaseWrite(&cm_serverLock);
 }
 /*
@@ -1093,7 +1124,7 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
         if ( (*current)->server == server)
         {
             element = (*current);
-            *current = (*current)->next; /* delete it */
+            *current = element->next; /* delete it */
             break;
         }
         current = & ( (*current)->next);
@@ -1107,10 +1138,6 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
     /* re-insert deleted element into the list with modified rank*/
     cm_InsertServerList(list, element);
 
-    /* reduce refCount which was increased by cm_InsertServerList */
-    lock_ObtainWrite(&cm_serverLock);
-    element->refCount--;
-    lock_ReleaseWrite(&cm_serverLock);
     return 0;
 }
 /*
@@ -1255,6 +1282,7 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
     cm_serverRef_t  **current;
     cm_serverRef_t  **nextp;
     cm_serverRef_t  * next;
+    afs_int32         refCount;
 
     lock_ObtainWrite(&cm_serverLock);
     current = list;
@@ -1267,7 +1295,8 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
     while (*current)
     {
         nextp = &(*current)->next;
-        if (--((*current)->refCount) == 0) {
+        refCount = cm_PutServerRef(*current, TRUE);
+        if (refCount == 0) {
             next = *nextp;
 
             if ((*current)->volID)
