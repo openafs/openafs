@@ -1,3 +1,66 @@
+Since 1.5.9907 (1.6pre7)
+
+ * Add Shutdown message to the windows event log
+
+ * Check Offline Volume status according to the specified policy
+   not every time the daemon thread runs.
+
+ * if the directory object cannot be found in the tree, return
+   CM_ERROR_PATHNOTFOUND instead of crashing.
+
+ * avoid memoryt leak of cm_GetSpace() allocations
+
+ * improve afs/kfw error message output.  Include PT and KTC
+   errors.  Impacts afslogon.dll, afscreds.exe and afssrvadm.exe
+
+ * afslogon.dll NPNotifyLogon will now kick start the
+   afsd_service if it is not already in a pending start or
+   started state.
+
+ * properly construct the userrealm in the afskfw library.
+   do not include the '@' in the realm.
+
+ * fix the generation of HTML reference manual pages from
+   POD.
+
+ * No longer send release lock RPCs to a file server for
+   a deleted file.  Each attempt will fail with a VNOVNODE
+   abort.  Multiple aborts can result in the file server
+   throttling the client.
+
+ * cm_BkgDaemon should not perform the job of cm_SyncOp
+   which already properly serializes operations on the
+   a file.
+
+ * cm_BkgDaemon should not perform queued tasks on deleted
+   objects. Doing so is a waste of resources.
+
+ * Avoid rx nat pings prior to connection attachment.
+
+ * After directory enumeration completes move the directory
+   status object to the most recently used position to avoid
+   it being recycled when the directory contains more objects
+   that the status cache can hold.
+
+ * Reduce memory fragmentation caused by lock order validation
+   checks.
+
+ * When a status object is deleted, move its object to the
+   least recently used position in the queue to promote
+   recycling when the reference count drops to zero.
+
+ * Fix the osi_Log macros so they safe for use in if..else
+   statements by wrapping in do..while(0).  Several logged
+   messages were wrong as a result and there may have been
+   other logic errors caused by mismatched if and else
+   statements when braces were not used in the code.
+
+ * Apply interlocked operations to all state and queue fields
+   in the cm_call, cm_volume, cm_scache, and cm_buf objects
+   in order to ensure that operations are atomic.  State flag
+   bits were being lost on multi-processor systems under heavy
+   load.
+
 Since 1.5.9906 (1.6pre6)
  * add support for detection of NTFS symlinks to
    \\AFS using GetFileInformationByHandleEx which is
