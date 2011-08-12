@@ -31,13 +31,11 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
     if (glocked)
 	AFS_GUNLOCK();
 
-    flags = 0;
-    flags = LOCKLEAF;
+    flags = LOCKLEAF | MPSAFE; /* namei must take Giant if needed */
     if (followlink)
 	flags |= FOLLOW;
     else
 	flags |= NOFOLLOW;
-    flags |= MPSAFE; /* namei must take Giant if needed */
     NDINIT(&n, LOOKUP, flags, seg, aname, curthread);
     if ((error = namei(&n)) != 0) {
 	if (glocked)
