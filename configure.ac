@@ -102,6 +102,11 @@ if test -f 'doc/xml/UserGuide/Makefile.in' ; then
 else
    USERGUIDE_MAKEFILE=
 fi
+if test -f 'doc/xml/AdminRef/Makefile.in' ; then
+   ADMINREF_MAKEFILE="doc/xml/AdminRef/Makefile"
+else
+   ADMINREF_MAKEFILE=
+fi
 if test -f 'doc/xml/mobi-fixup.xsl.in' ; then
    MOBI_FIXUP_XSL="doc/xml/mobi-fixup.xsl"
 else
@@ -114,6 +119,7 @@ ${MAN_MAKEFILE} \
 ${ADMINGUIDE_MAKEFILE} \
 ${QSUNIX_MAKEFILE} \
 ${USERGUIDE_MAKEFILE} \
+${ADMINREF_MAKEFILE} \
 ${MOBI_FIXUP_XSL} \
 src/afs/Makefile \
 src/afsd/Makefile \

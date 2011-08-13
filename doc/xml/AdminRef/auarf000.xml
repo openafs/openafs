@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
+        "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
+<!ENTITY preface SYSTEM "preface.xml">
+<!ENTITY sect1 SYSTEM "sect1.xml">
+<!ENTITY sect5 SYSTEM "sect5.xml">
+<!ENTITY sect8 SYSTEM "sect8.xml">
+<!ENTITY % entities SYSTEM "entities.dtd">
+  %entities;
+]>
+
+<book>
+  <bookinfo>
+    <title>OpenAFS Administration Reference</title>
+
+    <mediaobject role="cover">
+      <imageobject>
+        <imagedata fileref="auarf000.png" />
+      </imageobject>
+    </mediaobject>
+
+    <copyright>
+      <year>2000</year>
+
+      <holder>IBM Corporation. All Rights Reserved</holder>
+    </copyright>
+
+    <revhistory>
+      &version;
+
+      <revision>
+        <revnumber>3.6</revnumber>
+
+	<date>April 2000</date>
+
+        <revremark>First IBM Edition, Document Number GC09-4563-00</revremark>
+      </revision>
+    </revhistory>
+
+    <abstract>
+      <para>
+        This reference manual details the syntax of each OpenAFS command
+        and is intended for the experienced AFS administrator, programmer,
+        or user.
+     </para>
+
+      <para>
+        In general, this document does not explain when to use a command
+        or its place in the sequence of commands that make up a
+        complete procedure. For that type of information, refer to the
+        <emphasis>OpenAFS Administration Guide</emphasis>.
+      </para>
+    </abstract>
+  </bookinfo>
+
+  &preface;
+
+  <reference>
+    <title>AFS Commands</title>
+    &sect1;
+  </reference>
+
+  <reference>
+    <title>AFS System Files</title>
+    &sect5;
+  </reference>
+
+  <reference>
+    <title>AFS System Commands</title>
+    &sect8;
+  </reference>
+  <index></index>
+</book>
