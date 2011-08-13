@@ -1075,27 +1075,91 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
     unsigned short ipRank;
 
     lock_ObtainWrite(&cm_serverLock);
-    current=*list;
-    ipRank = element->server->ipRank;
+    /*
+     * Since we are grabbing the serverLock exclusively remove any
+     * deleted serverRef objects with a zero refcount before
+     * inserting the new item.
+     */
+    if (*list) {
+        cm_serverRef_t  **currentp = list;
+        cm_serverRef_t  **nextp = NULL;
+        cm_serverRef_t  * next = NULL;
+
+        for (currentp = list; *currentp; currentp = nextp)
+        {
+            nextp = &(*currentp)->next;
+            if ((*currentp)->refCount == 0 &&
+                (*currentp)->status == srv_deleted) {
+                next = *nextp;
+
+                if ((*currentp)->volID)
+                    cm_RemoveVolumeFromServer((*currentp)->server, (*currentp)->volID);
+                cm_FreeServer((*currentp)->server);
+                free(*currentp);
+                nextp = &next;
+            }
+        }
+    }
 
     /* insertion into empty list  or at the beginning of the list */
-    if ( !current || (current->server->ipRank > ipRank) )
+    if (!(*list))
+    {
+        element->next = NULL;
+        *list = element;
+        goto done;
+    }
+
+    /*
+     * Now that deleted entries have been removed and we know that the
+     * list was not empty, look for duplicates.  If the element we are
+     * inserting already exists, discard it.
+     */
+    for ( current = *list; current; current = current->next)
+    {
+        cm_server_t * server1 = current->server;
+        cm_server_t * server2 = element->server;
+
+        if (current->status == srv_deleted)
+            continue;
+
+        if (server1->type != server2->type)
+            continue;
+
+        if (server1->addr.sin_addr.s_addr != server2->addr.sin_addr.s_addr)
+            continue;
+
+        if ((server1->flags & CM_SERVERFLAG_UUID) != (server2->flags & CM_SERVERFLAG_UUID))
+            continue;
+
+        if ((server1->flags & CM_SERVERFLAG_UUID) &&
+            !afs_uuid_equal(&server1->uuid, &server2->uuid))
+            continue;
+
+        /* we must have a match, discard the new element */
+        free(element);
+        goto done;
+    }
+
+    ipRank = element->server->ipRank;
+
+	/* insertion at the beginning of the list */
+    if ((*list)->server->ipRank > ipRank)
     {
         element->next = *list;
         *list = element;
-        lock_ReleaseWrite(&cm_serverLock);
-        return ;
+        goto done;
     }
 
-    while ( current->next ) /* find appropriate place to insert */
+    /* find appropriate place to insert */
+    for ( current = *list; current->next; current = current->next)
     {
         if ( current->next->server->ipRank > ipRank )
             break;
-        else current = current->next;
     }
     element->next = current->next;
     current->next = element;
 
+  done:
     lock_ReleaseWrite(&cm_serverLock);
 }
 /*
