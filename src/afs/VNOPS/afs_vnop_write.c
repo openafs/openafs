@@ -398,7 +398,8 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 	avc->vc_error = error;
     if (!noLock)
 	ReleaseWriteLock(&avc->lock);
-    afsio_free(tuiop);
+    if (tuiop)
+	afsio_free(tuiop);
 
 #ifndef	AFS_VM_RDWR_ENV
     /*
