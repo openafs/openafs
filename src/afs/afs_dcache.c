@@ -837,7 +837,8 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 		    j = 1;	/* we reclaimed at least one victim */
 		}
 	    }
-	    afs_PutDCache(tdc);
+	    if (tdc)
+		afs_PutDCache(tdc);
 	} 			/* end of for victims loop */
 
 	if (phase < 5) {
