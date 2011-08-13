@@ -5,7 +5,7 @@ increase the amount of detail. Use the B<bos getlog> command to
 display the contents of the log file.
 
 The command's arguments enable the administrator to control many aspects
-of the File Server's performance, as detailed in L<OPTIONS>.  By default
+of the File Server's performance, as detailed in L</OPTIONS>.  By default
 the File Server sets values for many arguments that are suitable
 for a medium-sized file server machine. To set values suitable for a small
 or large file server machine, use the B<-S> or B<-L> flag
