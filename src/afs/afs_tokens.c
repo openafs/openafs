@@ -453,7 +453,8 @@ out:
     osi_Free(pioctlToken, sizeof(struct ktc_tokenUnion));
 
     if (code != 0) {
-	osi_Free(opaque->token_opaque_val, opaque->token_opaque_len);
+	if (opaque->token_opaque_val != NULL)
+	    osi_Free(opaque->token_opaque_val, opaque->token_opaque_len);
 	opaque->token_opaque_val = NULL;
 	opaque->token_opaque_len = 0;
     }
