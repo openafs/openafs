@@ -1304,7 +1304,8 @@ SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
 
     t_name = afs_osi_Alloc(i + 1);
     if (t_name == NULL) {
-	afs_osi_Free(a_hosts->serverList_val, (j * sizeof(afs_int32)));
+	if (tcell != NULL)
+	    afs_osi_Free(a_hosts->serverList_val, (j * sizeof(afs_int32)));
 	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }
