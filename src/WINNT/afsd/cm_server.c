@@ -912,7 +912,7 @@ cm_FindServerByUuid(afsUUID *serverUuid, int type, int locked)
 {
     cm_server_t *tsp;
 
-    if (locked)
+    if (!locked)
         lock_ObtainRead(&cm_serverLock);
 
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
