@@ -523,7 +523,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tsockAddr.sin_family = AF_INET;
             tempAddr = htonl(serverNumber[i]);
             tsockAddr.sin_addr.s_addr = tempAddr;
-            tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
+            tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE, FALSE);
 #ifdef MULTIHOMED
             if (tsp && (method == 2) && (tsp->flags & CM_SERVERFLAG_UUID)) {
                 /*
@@ -569,7 +569,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             if ( (method == 2) && !(tsp->flags & CM_SERVERFLAG_UUID) &&
                  !afs_uuid_is_nil(&serverUUID[i])) {
                 tsp->uuid = serverUUID[i];
-                tsp->flags |= CM_SERVERFLAG_UUID;
+                _InterlockedOr(&tsp->flags, CM_SERVERFLAG_UUID);
             }
 
             /* and add it to the list(s). */

@@ -1876,12 +1876,12 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
         }
         tmp.sin_family = AF_INET;
 
-        tsp = cm_FindServer(&tmp, type);
+        tsp = cm_FindServer(&tmp, type, FALSE);
         if ( tsp )		/* an existing server - ref count increased */
         {
             lock_ObtainMutex(&tsp->mx);
             tsp->ipRank = rank;
-            tsp->flags |= CM_SERVERFLAG_PREF_SET;
+            _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
 	    tsp->adminRank = tsp->ipRank;
             lock_ReleaseMutex(&tsp->mx);
 
@@ -1905,7 +1905,7 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
             tsp = cm_NewServer(&tmp, type, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
             lock_ObtainMutex(&tsp->mx);
             tsp->ipRank = rank;
-            tsp->flags |= CM_SERVERFLAG_PREF_SET;
+            _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
 	    tsp->adminRank = tsp->ipRank;
             lock_ReleaseMutex(&tsp->mx);
             tsp->ipRank = rank;
