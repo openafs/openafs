@@ -366,7 +366,7 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
 
-        tsp = cm_FindServerByIP(host, port, CM_SERVER_FILE);
+        tsp = cm_FindServerByIP(host, port, CM_SERVER_FILE, FALSE);
         if (tsp) {
             cellp = tsp->cellp;
             cm_PutServer(tsp);
@@ -965,7 +965,6 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
 {
     char *p = NULL;
 
-    struct sockaddr_in taddr;
     cm_server_t *tsp = NULL;
     cm_scache_t *scp = NULL;
     cm_cell_t* cellp = NULL;
@@ -989,10 +988,10 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
                 RpcStringFree(&p);
             }
 
-            tsp = cm_FindServerByUuid(serverUuid, CM_SERVER_FILE);
+            tsp = cm_FindServerByUuid(serverUuid, CM_SERVER_FILE, FALSE);
         }
         if (!tsp)
-            tsp = cm_FindServerByIP(host, port, CM_SERVER_FILE);
+            tsp = cm_FindServerByIP(host, port, CM_SERVER_FILE, FALSE);
         if (tsp) {
             cellp = tsp->cellp;
             cm_PutServer(tsp);
@@ -1012,11 +1011,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
     }
 
     if (connp && peerp) {
-	taddr.sin_family = AF_INET;
-	taddr.sin_addr.s_addr = rx_HostOf(rx_PeerOf(rx_ConnectionOf(callp)));
-	taddr.sin_port = rx_PortOf(rx_PeerOf(rx_ConnectionOf(callp)));
-
-	tsp = cm_FindServer(&taddr, CM_SERVER_FILE);
+	tsp = cm_FindServerByIP(host, port, CM_SERVER_FILE, FALSE);
 
 	osi_Log1(afsd_logp, "InitCallbackState3 server %x", tsp);
 
@@ -2043,7 +2038,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
 
             lock_ObtainMutex(&tsp->mx);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
-                tsp->flags |= CM_SERVERFLAG_DOWN;
+                _InterlockedOr(&tsp->flags, CM_SERVERFLAG_DOWN);
                 tsp->downTime = time(NULL);
             }
             /* Now update the volume status */
@@ -2162,7 +2157,7 @@ cm_GiveUpAllCallbacksAllServersMulti(afs_int32 markDown)
 
             lock_ObtainMutex(&tsp->mx);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
-                tsp->flags |= CM_SERVERFLAG_DOWN;
+                _InterlockedOr(&tsp->flags, CM_SERVERFLAG_DOWN);
                 tsp->downTime = time(NULL);
             }
             /* Now update the volume status */

@@ -42,7 +42,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, uns
     probe = !(cellrockp->flags & CM_FLAG_NOPROBE);
 
     /* if this server was previously created by fs setserverprefs */
-    if ( tsp = cm_FindServer(addrp, CM_SERVER_VLDB))
+    if ( tsp = cm_FindServer(addrp, CM_SERVER_VLDB, FALSE))
     {
         if ( !tsp->cellp )
             tsp->cellp = cellp;
