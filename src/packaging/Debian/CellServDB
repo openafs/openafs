@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 13 Dec 2010
+>grand.central.org      #GCO Public CellServDB 14 Aug 2011
 18.9.48.14                      #grand.mit.edu
 128.2.203.61                    #penn.central.org
 130.237.48.87                   #andrew.e.kth.se
@@ -50,9 +50,6 @@
 66.93.118.125                   #stormy
 130.85.24.11                    #weasel
 130.85.24.13                    #straykitten
->setfilepointer.com     #SetFilePointer.com
-69.164.193.174                  #alpha.setfilepointer.com
-174.143.159.53                  #beta.setfilepointer.com
 >sodre.cx               #Sodre.cx
 128.8.140.165                   #greed.sodre.cx
 >ruk.cuni.cz            #Charles University Computer Centre, Prague, CR
@@ -71,6 +68,10 @@
 131.169.2.19                    #afsdb2.desy.de
 131.169.2.20                    #afsdb3.desy.de
 131.169.244.60                  #solar00.desy.de
+>naf.desy.de            #National Analysis Facility at DESY
+141.34.220.32                   #tcsh1-vm1.naf.desy.de
+141.34.230.33                   #tcsh2-vm1.naf.desy.de
+141.34.230.34                   #tcsh3-vm1.naf.desy.de
 >gppc.de                #GPP Chemnitz mbH
 213.187.92.33                   #gpp1.gppc.de
 213.187.92.34                   #paulchen.gppc.de
@@ -103,6 +104,10 @@
 137.226.244.79                  #remus.informatik.rwth-aachen.de
 >combi.tfh-wildau.de    #Philips Research Lab
 194.95.50.106                   #joda13.combi.tfh-wildau.de
+>tu-berlin.de           #TU Berlin
+130.149.204.10                  #afsc-pr-1.tubit.tu-berlin.de
+130.149.204.11                  #afsc-pr-2.tubit.tu-berlin.de
+130.149.204.70                  #afsc-ba-1.tubit.tu-berlin.de
 >tu-bs.de               #Technical University of Braunschweig, Germany
 134.169.1.1                     #rzafs1.rz.tu-bs.de
 134.169.1.5                     #rzafs2.rz.tu-bs.de
@@ -144,8 +149,6 @@
 141.35.2.180                    #afs00.rz.uni-jena.de
 141.35.2.181                    #afs01.rz.uni-jena.de
 141.35.2.182                    #afs02.rz.uni-jena.de
->impetus.uni-koeln.de   #Univ. of Cologne - Geophysics/Meteorology Inst.
-134.95.80.39                    #forano.meteo.uni-koeln.de
 >meteo.uni-koeln.de     #Univ. of Cologne - Inst. for Geophysics & Meteorology
 134.95.144.22                   #afs1.meteo.uni-koeln.de
 134.95.144.24                   #afs2.meteo.uni-koeln.de
@@ -178,15 +181,10 @@
 129.219.10.69                   #authen2.asu.edu
 129.219.10.70                   #authen1.asu.edu
 129.219.10.72                   #authen3.asu.edu
-129.219.100.16                  #authen4.asu.edu
 >mars.asu.edu           #Mars Space Flight Facility - ASU Mars Research
 149.169.146.57                  #kdc1.mars.asu.edu
 149.169.146.58                  #kdc2.mars.asu.edu
 149.169.146.59                  #kdc3.mars.asu.edu
->eecs.berkeley.edu      #University of California, Berkeley - EECS Dept.
-128.32.139.34                   #greed.eecs.berkeley.edu
-128.32.139.35                   #gluttony.eecs.berkeley.edu
-169.229.60.112                  #envy.eecs.berkeley.edu
 >hep.caltech.edu        #Caltech High Energy Physics
 131.215.116.20                  #afs.hep.caltech.edu
 >ugcs.caltech.edu       #Caltech UGCS lab
@@ -248,7 +246,7 @@
 129.170.16.26                   #andromeda.dartmouth.edu
 129.170.16.43                   #cygnusx1.dartmouth.edu
 >cs.hm.edu              #Department Computer Science Munich University Of Applied Science
-129.187.208.2                   #srv1.informatik.fh-muenchen.de
+129.187.208.31                  #afs1.cs.hm.edu
 >eecs.harvard.edu       #Harvard - EECS
 140.247.60.64                   #lefkada.eecs.harvard.edu
 140.247.60.83                   #corfu.eecs.harvard.edu
@@ -340,14 +338,10 @@
 128.174.251.8                   #alnitak.acm.uiuc.edu
 128.174.251.9                   #alnilam.acm.uiuc.edu
 128.174.251.10                  #mintaka.acm.uiuc.edu
->illigal.uiuc.edu       #Illinois Genetic Algorithms Labaratory
-128.174.193.200                 #ial.illigal.uiuc.edu
-128.174.193.201                 #cac.illigal.uiuc.edu
-128.174.193.202                 #gcs.illigal.uiuc.edu
->ncsa.uiuc.edu          #University of Illinois
-141.142.3.5                     #congo.ncsa.uiuc.edu
-141.142.3.8                     #nile.ncsa.uiuc.edu
-141.142.3.9                     #kaskaskia.ncsa.uiuc.edu
+>ncsa.uiuc.edu          #National Center for Supercomputing Applications at Illinois
+141.142.192.66                  #nile-vm.ncsa.uiuc.edu
+141.142.192.143                 #congo-vm.ncsa.uiuc.edu
+141.142.192.144                 #kaskaskia-vm.ncsa.uiuc.edu
 >umbc.edu               #University of Maryland, Baltimore County
 130.85.24.23                    #db2.afs.umbc.edu
 130.85.24.87                    #db3.afs.umbc.edu
@@ -415,9 +409,6 @@
 193.144.209.20                  #gridwall.ifca.unican.es
 >ific.uv.es             #Instituto de Fisica Corpuscular, Valencia, Spain
 147.156.163.11                  #alpha.ific.uv.es
->biocenter.helsinki.fi  #University of Helsinki, Institute of Biotechnology
-128.214.58.174                  #afsdb1.biocenter.helsinki.fi
-128.214.88.114                  #afsdb2.biocenter.helsinki.fi
 >dapnia.saclay.cea.fr   #CEA DAPNIA
 132.166.32.7                    #dphrsg.saclay.cea.fr
 132.166.32.12                   #dphrsl.saclay.cea.fr
@@ -447,8 +438,6 @@
 131.225.68.1                    #fsus01.fnal.gov
 131.225.68.4                    #fsus03.fnal.gov
 131.225.68.14                   #fsus04.fnal.gov
->ic-afs.arc.nasa.gov    #Code IC, Ames Research Center
-128.102.105.62                  #udanax.arc.nasa.gov
 >jpl.nasa.gov           #Jet Propulsion Laboratory
 137.78.160.21                   #afsdb08.jpl.nasa.gov
 137.78.160.22                   #afsdb09.jpl.nasa.gov
@@ -515,7 +504,8 @@
 >ing.uniroma1.it        #Universita' La Sapienza, Fac. Ingeneria
 151.100.85.253                  #alfa.ing.uniroma1.it
 >dia.uniroma3.it        #University Roma Tre - DIA
-193.204.161.79                  #plm.dia.uniroma3.it
+193.204.161.67                  #srv.dia.uniroma3.it
+193.204.161.79                  #aux.dia.uniroma3.it
 193.204.161.118                 #afs.dia.uniroma3.it
 >vn.uniroma3.it         #University of Rome 3, Area Vasca Navale
 193.204.161.136                 #alfa.dia.uniroma3.it
@@ -571,9 +561,14 @@
 >coed.org               #Adam Pennington's Cell
 66.93.61.184                    #vice1.coed.org
 128.237.157.35                  #vice3.coed.org
->dementia.org           #Dementia Unlimited
-128.2.13.209                    #dedlock.dementia.org
-128.2.235.26                    #meredith.dementia.org
+>dementia.org           #Dementia Unlimited (old)
+128.2.13.209                    #dedlock.dementix.org
+128.2.234.204                   #vorkana.dementix.org
+128.2.235.26                    #meredith.dementix.org
+>dementix.org           #Dementia Unlimited
+128.2.13.209                    #dedlock.dementix.org
+128.2.234.204                   #vorkana.dementix.org
+128.2.235.26                    #meredith.dementix.org
 >idahofuturetruck.org   #University of Idaho hybrid vehicle development
 12.18.238.210                   #dsle210.fsr.net
 >jeaton.org             #jeaton.org (Jeffrey Eaton, jeaton@jeaton.org)
@@ -601,14 +596,18 @@
 130.237.32.145                  #sonen.e.kth.se
 130.237.48.7                    #anden.e.kth.se
 130.237.48.244                  #fadern.e.kth.se
+>ict.kth.se             #Royal Institute of Technology, Information and Communication tec
+130.237.216.11                  #afsdb1.ict.kth.se
+130.237.216.12                  #afsdb2.ict.kth.se
+130.237.216.13                  #afsdb3.ict.kth.se
 >isk.kth.se             #Royal Institute of Technology, ISK
 130.237.216.17                  #afsdb1.isk.kth.se
 130.237.216.82                  #afsdb2.isk.kth.se
 130.237.216.83                  #afsdb3.isk.kth.se
->it.kth.se              #Royal Institute of Technology, IT
-130.237.212.15                  #ptah.it.kth.se
-130.237.212.16                  #toth.it.kth.se
-130.237.215.7                   #isis.it.kth.se
+>it.kth.se              #Royal Institute of Technology, Teleinformatics, Kista
+130.237.216.14                  #afsdb1.it.kth.se
+130.237.216.15                  #afsdb2.it.kth.se
+130.237.216.16                  #afsdb3.it.kth.se
 >md.kth.se              #Royal Institute of Technology, MMK
 130.237.57.21                   #euler.md.kth.se
 130.237.57.68                   #trinity.md.kth.se
