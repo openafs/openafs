@@ -780,18 +780,18 @@
         </Control>
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="374" Height="44" FixedSize="yes" TabSkip="no" Text="[BannerBitmap]" />
         <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>Configuration settings from a prior OpenAFS installation is available.</Text>
+          <Text>Configuration settings from a previous OpenAFS installation are available.</Text>
         </Control>
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>[DlgTitleFont]Restore configuration?</Text>
+          <Text>[DlgTitleFont]Preserve configuration?</Text>
         </Control>
         <Control Id="CustomText" Type="Text" X="105" Y="131" Width="230" Height="30">
           <Text>Specify new settings.  Basic settings can be set via this installer.  All others will be reset to defaults.</Text>
         </Control>
         <Control Id="TypicalText" Type="Text" X="105" Y="78" Width="230" Height="20">
-          <Text>Restore and use the saved configuration settings.</Text>
+          <Text>Use the existing or saved configuration.</Text>
         </Control>
       </Dialog>
 
