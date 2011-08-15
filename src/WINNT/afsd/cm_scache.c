@@ -583,20 +583,24 @@ cm_SuspendSCache(void)
 long
 cm_ShutdownSCache(void)
 {
-    cm_scache_t * scp;
+    cm_scache_t * scp, * nextp;
 
     cm_GiveUpAllCallbacksAllServersMulti(FALSE);
 
     lock_ObtainWrite(&cm_scacheLock);
 
     for ( scp = cm_data.allSCachesp; scp;
-          scp = scp->allNextp ) {
+          scp = nextp ) {
+        nextp = scp->allNextp;
+        lock_ReleaseWrite(&cm_scacheLock);
+#ifdef USE_BPLUS
+        lock_ObtainWrite(&scp->dirlock);
+#endif
+        lock_ObtainWrite(&scp->rw);
+        lock_ObtainWrite(&cm_scacheLock);
+
         if (scp->randomACLp) {
-            lock_ReleaseWrite(&cm_scacheLock);
-            lock_ObtainWrite(&scp->rw);
-            lock_ObtainWrite(&cm_scacheLock);
             cm_FreeAllACLEnts(scp);
-            lock_ReleaseWrite(&scp->rw);
         }
 
         if (scp->cbServerp) {
@@ -612,6 +616,7 @@ cm_ShutdownSCache(void)
             freeBtree(scp->dirBplus);
         scp->dirBplus = NULL;
         scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
+        lock_ReleaseWrite(&scp->dirlock);
         lock_FinalizeRWLock(&scp->dirlock);
 #endif
         lock_FinalizeRWLock(&scp->rw);
