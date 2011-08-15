@@ -1480,12 +1480,8 @@ afs_ProcessFS(struct vcache *avc,
 	}
     }
 #ifdef AFS_DARWIN80_ENV
-    if (fixup) {
-	/* perform type correction on underlying vnode */
-	afs_darwin_finalizevnode(avc, NULL, NULL, 0, 1);
-	/* re-acquire the usecount that finalizevnode disposed of */
-	vnode_ref(AFSTOV(avc));
-    }
+    if (fixup)
+	printf("found mistyped vnode!\n");
 #endif
     avc->f.anyAccess = astat->AnonymousAccess;
 #ifdef badidea
