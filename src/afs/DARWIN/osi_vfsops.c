@@ -222,9 +222,10 @@ afs_root(struct mount *mp, struct vnode **vpp)
     int error;
     struct vrequest treq;
     struct vcache *tvp = 0;
+    struct vcache *gvp;
+    int needref=0;
 #ifdef AFS_DARWIN80_ENV
     struct ucred *cr = vfs_context_ucred(ctx);
-    int needref=0;
 #else
     struct proc *p = current_proc();
     struct ucred _cr;
@@ -236,13 +237,13 @@ afs_root(struct mount *mp, struct vnode **vpp)
 #endif
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
+
+again:
     if (mdata == NULL && afs_globalVp
 	&& (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
-#ifdef AFS_DARWIN80_ENV
         needref=1;
-#endif
     } else if (mdata == (qaddr_t) - 1) {
 	error = ENOENT;
     } else {
@@ -266,36 +267,46 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	    /* we really want this to stay around */
 	    if (tvp) {
 		if (mdata == NULL) {
-		    if (afs_globalVp) {
-			afs_PutVCache(afs_globalVp);
-			afs_globalVp = NULL;
-		    }
+		    gvp = afs_globalVp;
 		    afs_globalVp = tvp;
-#ifdef AFS_DARWIN80_ENV
+		    if (gvp) {
+			afs_PutVCache(gvp);
+			if (tvp != afs_globalVp) {
+			    /* someone else got there before us! */
+			    afs_PutVCache(tvp);
+			    tvp = 0;
+			    goto again;
+			}
+		    }
                     needref=1;
-#endif
                 }
 	    } else
 		error = ENOENT;
 	}
     }
     if (tvp) {
-#ifndef AFS_DARWIN80_ENV /* DARWIN80 caller does not need a usecount reference */
+#ifndef AFS_DARWIN80_ENV /* KPI callers don't need a usecount reference */
 	osi_vnhold(tvp, 0);
 	AFS_GUNLOCK();
 	vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, p);
 	AFS_GLOCK();
 #endif
+
+        if (needref)
 #ifdef AFS_DARWIN80_ENV
-        if (needref) /* this iocount is for the caller. the initial iocount
-                        is for the eventual afs_PutVCache. for mdata != null,
-                        there will not be a PutVCache, so the caller gets the
-                        initial (from GetVCache or finalizevnode) iocount*/
-           vnode_get(AFSTOV(tvp));
+	    /* This iocount is for the caller. the initial iocount
+	     * is for the eventual afs_PutVCache. for mdata != null,
+	     * there will not be a PutVCache, so the caller gets the
+	     * initial (from GetVCache or finalizevnode) iocount
+	     */
+	    vnode_get(AFSTOV(tvp));
+#else
+	    ;
 #endif
-	if (mdata == NULL) {
+
+	if (mdata == NULL)
 	    afs_globalVFS = mp;
-	}
+
 	*vpp = AFSTOV(tvp);
 #ifndef AFS_DARWIN80_ENV 
 	AFSTOV(tvp)->v_flag |= VROOT;
