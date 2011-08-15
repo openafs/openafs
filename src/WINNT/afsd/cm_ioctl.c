@@ -2565,7 +2565,7 @@ cm_IoctlSetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 	cm_UsernameToId(uname, ucellp, &ucellp->uid);
 #endif
     }
-    ucellp->flags |= CM_UCELLFLAG_RXKAD;
+    _InterlockedOr(&ucellp->flags, CM_UCELLFLAG_RXKAD);
     lock_ReleaseMutex(&userp->mx);
 
     if (flags & PIOCTL_LOGON) {
@@ -2790,7 +2790,7 @@ cm_IoctlDelToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     ucellp->kvno = 0;
     ucellp->expirationTime = 0;
     ucellp->userName[0] = '\0';
-    ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+    _InterlockedAnd(&ucellp->flags, ~CM_UCELLFLAG_RXKAD);
     ucellp->gen++;
 
     lock_ReleaseMutex(&userp->mx);
@@ -2824,7 +2824,7 @@ cm_IoctlDelAllToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 	ucellp->kvno = 0;
 	ucellp->expirationTime = 0;
 	ucellp->userName[0] = '\0';
-        ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+        _InterlockedAnd(&ucellp->flags, ~CM_UCELLFLAG_RXKAD);
         ucellp->gen++;
     }
 

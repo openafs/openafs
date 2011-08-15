@@ -820,7 +820,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 free(ucellp->ticketp);
                 ucellp->ticketp = NULL;
             }
-            ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+            _InterlockedAnd(&ucellp->flags, ~CM_UCELLFLAG_RXKAD);
             ucellp->gen++;
             lock_ReleaseMutex(&userp->mx);
             if ( timeLeft > 2 )
