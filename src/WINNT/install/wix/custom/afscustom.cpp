@@ -576,7 +576,8 @@ do_reg_copy_value(MSIHANDLE hInstall, HKEY hk_src, HKEY hk_dest, const TCHAR * v
 
     rv = RegQueryValueEx(hk_src, value, 0, &type, buffer, &cb);
     if (rv == ERROR_MORE_DATA) {
-        buffer = new BYTE[cb];
+        // Some types require space for a terminating NUL which might not be present
+        buffer = new BYTE[++cb];
         if (buffer == NULL) {
             ShowMsiActionData(hInstall, _T("Out of memory"));
             return;
@@ -827,6 +828,11 @@ SetAfscredsOptionsFromRegValue(MSIHANDLE hInstall, HKEY hk)
 //
 MSIDLLEXPORT DetectSavedConfiguration( MSIHANDLE hInstall )
 {
+    // Attempt a backup.  If there is something to save, it will be.
+    // If not, nothing has changed.
+    //
+    BackupAFSClientRegistryKeys( hInstall );
+
     {
         MSIHANDLE hRec;
 
