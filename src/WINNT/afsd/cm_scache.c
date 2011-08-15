@@ -139,6 +139,9 @@ void cm_ResetSCacheDirectory(cm_scache_t *scp, afs_int32 dirlock)
 /* called with cm_scacheLock and scp write-locked; recycles an existing scp. */
 long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 {
+    lock_AssertWrite(&cm_scacheLock);
+    lock_AssertWrite(&scp->rw);
+
     if (scp->refCount != 0) {
 	return -1;
     }
@@ -276,7 +279,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 /*
  * called with cm_scacheLock write-locked; find a vnode to recycle.
  * Can allocate a new one if desperate, or if below quota (cm_data.maxSCaches).
- * returns scp->mx held.
+ * returns scp->rw write-locked.
  */
 cm_scache_t *cm_GetNewSCache(void)
 {
@@ -1529,6 +1532,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
     afs_uint64 dataVersion;
     struct cm_volume *volp = NULL;
     struct cm_cell *cellp = NULL;
+
+    lock_AssertWrite(&scp->rw);
 
     // yj: i want to create some fake status for the /afs directory and the
     // entries under that directory
