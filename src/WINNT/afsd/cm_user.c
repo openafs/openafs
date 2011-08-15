@@ -180,7 +180,7 @@ void cm_CheckTokenCache(time_t now)
                             free(ucellp->ticketp);
                             ucellp->ticketp = NULL;
                         }
-                        ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+                        _InterlockedAnd(&ucellp->flags, ~CM_UCELLFLAG_RXKAD);
                         ucellp->gen++;
                         bExpired=TRUE;
                     }

@@ -1195,7 +1195,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 	cm_UsernameToId(uname, ucellp, &ucellp->uid);
 #endif
     }
-    ucellp->flags |= CM_UCELLFLAG_RXKAD;
+    _InterlockedOr(&ucellp->flags, CM_UCELLFLAG_RXKAD);
     lock_ReleaseMutex(&userp->mx);
 
     if ((pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
