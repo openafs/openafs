@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.6.0 (in progress)
+OpenAFS 1.6.0 (2011-08-15)
 
   All platforms
 
@@ -16,6 +16,8 @@ OpenAFS 1.6.0 (in progress)
       Rx busy call channel error handling. (128671)
 
     * Properly enable Rx connection hard timeouts.
+
+    * Rx NAT pings are not enabled until peer has answered.
 
     * Initialize rx_multi lock before use.
 
@@ -33,9 +35,15 @@ OpenAFS 1.6.0 (in progress)
     * xstat tools now cope with differing timeval structures between
       endpoints.
 
+    * Numerous fixes to command argument parsing.
+
     * Documentation updates.
 
   All server platforms
+
+    * A file descriptor leak which could result in corrupted files in the
+      fileserver was fixed. An IMMEDIATE upgrade from previous 1.5 release
+      fileservers is recommended.
 
     * Fix ptserver supergroups support on 64 bit platforms.
 
@@ -92,6 +100,8 @@ OpenAFS 1.6.0 (in progress)
     * Salvager tries harder to detect linktable issues.
 
     * Demand attach: don't attach volumes with special status set.
+
+    * Avoid crashing on host table exhaustion. Instead, defer clients.
 
   Microsoft Windows
 
@@ -196,6 +206,29 @@ OpenAFS 1.6.0 (in progress)
 
     * Correct lock acquisition order during SMB locking.
 
+    * Add shutdown message to event log.
+
+    * Check offline volume status by policy rather than on each daemon
+      thread run.
+
+    * Return error on directory object not found instead of crashing.
+
+    * Improve error message output.
+
+    * afslogin.dll can start afsd_service if it's not starting or started.
+
+    * Optimize away release lock RPCs for deleted files.
+
+    * Background Daemon will not perform operations on deleted files.
+
+    * Resort recently used directories to the top of the LRU if the
+      directory is larger than the stat cache.
+
+    * Resort deleted objects to the bottom of the LRU.
+
+    * Use interlocked operations for state and queue fields to allow safe
+      bit set and clear on multiprocessor systems.
+
   All UNIX client platforms
 
     * Servers now marked down when GetCapabilities returns error.
@@ -223,6 +256,14 @@ OpenAFS 1.6.0 (in progress)
     * Avoid holding unneeded locks when probing server capabilties.
 
     * Do not attempt page flushes for directories.
+
+    * Rx connection reference counting is enabled.
+
+    * An Rx connection reference count leak is fixed in bulkstat.
+
+    * Handle unparsable directory objects.
+
+    * Handle Kerberos cred cache errors in aklog.
 
   AIX
 
@@ -293,6 +334,12 @@ OpenAFS 1.6.0 (in progress)
 
     * Attempt to properly handle SELinux in packaging.
 
+    * Init script properly returns status as exit code.
+
+    * RPM packaging fixes (executable libraries, no postinstall message)
+
+    * Kill i386 from RPM packaging.
+
   MacOS
 
     * MacOS 10.7 support.
@@ -318,6 +365,12 @@ OpenAFS 1.6.0 (in progress)
       to avoid attempting to process data after we can no longer do so.
 
     * Rework logic for bulk status operations to avoid a potential hang.
+
+    * Avoid panic when doing FSEvent synthesis.
+
+    * Fix bug when using non-dynroot.
+
+    * Update Kerberos support in PreferencesPane.
 
   NetBSD
 
@@ -346,6 +399,8 @@ OpenAFS 1.6.0 (in progress)
       to load.
 
     * Try harder to avoid deadlocks on file-larger-than-cache operations.
+
+    * Avoid panic on shutdown when mount failed.
 
 
 OpenAFS 1.5.78 (2010-11-04)
