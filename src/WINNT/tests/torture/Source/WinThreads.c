@@ -7,6 +7,10 @@
     int ResolveLocker(USER_OPTIONS *attachOption);
 #endif
 #ifndef NO_AFS_SOURCE
+    #include <afsconfig.h>
+    #include <afs/param.h>
+    #include <roken.h>
+
     #include <afs\stds.h>
     #include <afs\smb_iocons.h>
     #include <afs\afsint.h>
@@ -580,7 +584,6 @@ int IsOnline(char *strPath)
     int     code;
     int     rc;
     struct  ViceIoctl blob;
-    struct  VolumeStatus *status;
     static PPIOCTL ppioctl = NULL;
     static HINSTANCE hAfsDll = NULL;
 
@@ -597,15 +600,7 @@ int IsOnline(char *strPath)
             blob.in_size = 0;
             blob.out_size = sizeof(space);
             blob.out = space;
-#if 0
-            if (!(code = ppioctl(strPath, VIOCGETVOLSTAT, &blob, 1)))
-            {
-                bret = WINTORTURE_ASFDLL_ONLINE;
-                status = (VolumeStatus *)space;
-                if (!status->Online || !status->InService || !status->Blessed || status->NeedsSalvage)
-                    bret = WINTORTURE_ASFDLL_OFFLINE;
-            }
-#else
+
             errno = 0;
             code = ppioctl(strPath, VIOC_PATH_AVAILABILITY, &blob, 1);
             if (!code) {
@@ -620,7 +615,6 @@ int IsOnline(char *strPath)
                     break;
                 }
             }
-#endif
         }
         else
             bret = WINTORTURE_ASFPIOCTL_NOTFOUND;
