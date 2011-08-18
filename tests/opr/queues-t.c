@@ -55,12 +55,14 @@ stringIntoQueue(char *string, struct opr_queue *q) {
 int
 main(void)
 {
-    struct opr_queue q1, q2, *cursor;
+    struct opr_queue q1, q2, q3, q4, *cursor;
 
-    plan(12);
+    plan(17);
 
     opr_queue_Init(&q1);
     opr_queue_Init(&q2);
+    opr_queue_Init(&q3);
+    opr_queue_Init(&q4);
 
     opr_queue_Append(&q1, &(newEntry('A')->entry));
     opr_queue_Append(&q1, &(newEntry('B')->entry));
@@ -115,6 +117,24 @@ main(void)
     opr_queue_SplitAfterPrepend(&q2, &q1, cursor);
     is_string("NEDMABC12", queueAsString(&q1), "SplitAfterPrepend Q1");
     is_string("XYZ89", queueAsString(&q2), "SplitAfterPrepend Q2");
+
+    /* Swap tests */
+    opr_queue_Swap(&q3, &q4);
+    ok(opr_queue_IsEmpty(&q3) && opr_queue_IsEmpty(&q4), "Swap empty queues");
+
+    opr_queue_Append(&q3, &(newEntry('A')->entry));
+    opr_queue_Append(&q3, &(newEntry('B')->entry));
+    opr_queue_Append(&q3, &(newEntry('C')->entry));
+    opr_queue_Swap(&q3, &q4);
+    ok(opr_queue_IsEmpty(&q3), "Swap with one empty queue Q3");
+    is_string("ABC", queueAsString(&q4), "Swap with one empty queue Q4");
+
+    opr_queue_Append(&q3, &(newEntry('1')->entry));
+    opr_queue_Append(&q3, &(newEntry('2')->entry));
+    opr_queue_Append(&q3, &(newEntry('3')->entry));
+    opr_queue_Swap(&q3, &q4);
+    is_string("ABC", queueAsString(&q3), "Swap Q3");
+    is_string("123", queueAsString(&q4), "Swap Q4");
 
     return 0;
 }
