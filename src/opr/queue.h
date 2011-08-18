@@ -138,6 +138,28 @@ opr_queue_Count(struct opr_queue *q) {
     return n;
 }
 
+static_inline void
+opr_queue_Swap(struct opr_queue *a, struct opr_queue *b)
+{
+    struct opr_queue tq = *b;
+
+    if (a->prev == a) {
+	b->prev = b->next = b;
+    } else {
+	*b = *a;
+	b->prev->next = b;
+	b->next->prev = b;
+    }
+
+    if (tq.prev == b) {
+	a->prev = a->next = a;
+    } else {
+	*a = tq;
+	a->prev->next = a;
+	a->next->prev = a;
+    }
+}
+
 /* Remove the members before pivot from Q1, and append them to Q2 */
 
 static_inline void
