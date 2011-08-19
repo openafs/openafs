@@ -1691,7 +1691,9 @@ void cm_MergeStatus(cm_scache_t *dscp,
     /* and other stuff */
     scp->parentVnode = statusp->ParentVnode;
     scp->parentUnique = statusp->ParentUnique;
-    scp->fsLockCount = statusp->lockCount;
+
+    /* -1 is a write lock; any positive values are read locks */
+    scp->fsLockCount = (afs_int32)statusp->lockCount;
 
     /* and merge in the private acl cache info, if this is more than the public
      * info; merge in the public stuff in any case.

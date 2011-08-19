@@ -193,9 +193,11 @@ typedef struct cm_scache {
                                    have CM_FILELOCK_FLAG_CLIENTONLY
                                    set. */
 
-    afs_uint32   fsLockCount;   /* number of locks held as reported
+    afs_int32    fsLockCount;   /* number of locks held as reported
                                  * by the file server in the most
-                                 * recent fetch status.
+                                 * recent fetch status.  Updated by
+                                 * the locks known to have been acquired
+                                 * or released by this client.
                                  */
 
     /* bulk stat progress */

@@ -4403,8 +4403,20 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
         osi_Log0(afsd_logp, "CALL SetLock SUCCESS");
     }
 
-    lock_ObtainWrite(&scp->rw);
     reqp->flags = reqflags;
+
+    lock_ObtainWrite(&scp->rw);
+    if (code == 0) {
+        /*
+         * The file server does not return a status structure so we must
+         * locally track the file server lock count to the best of our
+         * ability.
+         */
+        if (lockType == LockWrite)
+            scp->fsLockCount = -1;
+        else
+            scp->fsLockCount++;
+    }
     return code;
 }
 
@@ -4454,6 +4466,16 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
                  "CALL ReleaseLock SUCCESS");
 
     lock_ObtainWrite(&scp->rw);
+    if (code == 0) {
+        /*
+         * The file server does not return a status structure so we must
+         * locally track the file server lock count to the best of our
+         * ability.
+         */
+        scp->fsLockCount--;
+        if (scp->fsLockCount < 0)
+            scp->fsLockCount = 0;
+    }
 
     return (code != CM_ERROR_BADFD ? code : 0);
 }
@@ -5421,6 +5443,7 @@ void cm_CheckLocks()
 
                     if (code) {
                         osi_Log1(afsd_logp, "CALL ExtendLock FAILURE, code 0x%x", code);
+                        scp->fsLockCount = 0;
                     } else {
                         osi_Log0(afsd_logp, "CALL ExtendLock SUCCESS");
                         scp->lockDataVersion = scp->dataVersion;
