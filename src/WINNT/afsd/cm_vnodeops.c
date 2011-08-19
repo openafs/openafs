@@ -4857,15 +4857,15 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
         if (force_client_lock && code != CM_ERROR_WOULDBLOCK)
             code = 0;
 
+        cm_HoldUser(userp);
+
         lock_ObtainWrite(&cm_scacheLock);
         fileLock = cm_GetFileLock();
-        lock_ReleaseWrite(&cm_scacheLock);
 #ifdef DEBUG
         fileLock->fid = scp->fid;
 #endif
         fileLock->key = key;
         fileLock->lockType = Which;
-        cm_HoldUser(userp);
         fileLock->userp = userp;
         fileLock->range = range;
         fileLock->flags = (code == 0 ? 0 :
@@ -4878,7 +4878,6 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
 
         fileLock->lastUpdate = (code == 0 && !force_client_lock) ? time(NULL) : 0;
 
-        lock_ObtainWrite(&cm_scacheLock);
         osi_QAddT(&scp->fileLocksH, &scp->fileLocksT, &fileLock->fileq);
         cm_HoldSCacheNoLock(scp);
         fileLock->scp = scp;
@@ -5085,8 +5084,6 @@ long cm_UnlockByKey(cm_scache_t * scp,
                     fileLock->range.length,
                     fileLock->lockType);
 
-            if (scp->fileLocksT == q)
-                scp->fileLocksT = osi_QPrev(q);
             osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, q);
 
             if (IS_LOCK_CLIENTONLY(fileLock)) {
@@ -5209,8 +5206,6 @@ long cm_Unlock(cm_scache_t *scp,
 
     /* discard lock record */
     lock_ConvertRToW(&cm_scacheLock);
-    if (scp->fileLocksT == q)
-        scp->fileLocksT = osi_QPrev(q);
     osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, q);
 
     /*
@@ -5787,8 +5782,6 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
   handleCode:
     if (code != 0 && code != CM_ERROR_WOULDBLOCK) {
 	lock_ObtainWrite(&cm_scacheLock);
-        if (scp->fileLocksT == &oldFileLock->fileq)
-            scp->fileLocksT = osi_QPrev(&oldFileLock->fileq);
         osi_QRemoveHT(&scp->fileLocksH, &scp->fileLocksT, &oldFileLock->fileq);
 	lock_ReleaseWrite(&cm_scacheLock);
     }
