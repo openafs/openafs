@@ -2070,15 +2070,15 @@ cm_GiveUpAllCallbacksAllServers(afs_int32 markDown)
     if (!cm_giveUpAllCBs)
         return;
 
-    lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
         cm_GetServerNoLock(tsp);
-        lock_ReleaseWrite(&cm_serverLock);
+        lock_ReleaseRead(&cm_serverLock);
         cm_GiveUpAllCallbacks(tsp, markDown);
-        lock_ObtainWrite(&cm_serverLock);
+        lock_ObtainRead(&cm_serverLock);
         cm_PutServerNoLock(tsp);
     }
-    lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseRead(&cm_serverLock);
 }
 
 void
