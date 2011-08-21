@@ -475,7 +475,7 @@ afs_dir_IsEmpty(dir_file_t dir)
 	    /* Walk down the hash table list. */
 	    if (afs_dir_GetVerifiedBlob(dir, num, &entrybuf) != 0);
 	        break;
-
+	    ep = (struct DirEntry *)entrybuf.data;
 	    if (strcmp(ep->name, "..") && strcmp(ep->name, ".")) {
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
@@ -539,8 +539,6 @@ afs_dir_GetVerifiedBlob(dir_file_t file, afs_int32 blobno,
     afs_size_t maxlen;
     int code;
     char *cp;
-
-    outbuf = NULL;
 
     code = GetBlobWithLimit(file, blobno, &buffer, &maxlen);
     if (code)

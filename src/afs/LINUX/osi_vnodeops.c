@@ -340,7 +340,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (!dirpos)
 	    break;
 
-	code = afs_dir_GetVerifiedBlob(tdc, dirpos, &de);
+	code = afs_dir_GetVerifiedBlob(tdc, dirpos, &entry);
 	if (code) {
 	    afs_warn("Corrupt directory (inode %lx, dirpos %d)",
 		     (unsigned long)&tdc->f.inode, dirpos);
@@ -350,6 +350,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	    goto out;
         }
 
+	de = (struct DirEntry *)entry.data;
 	ino = afs_calc_inum (avc->f.fid.Cell, avc->f.fid.Fid.Volume,
 			     ntohl(de->fid.vnode));
 	len = strlen(de->name);
