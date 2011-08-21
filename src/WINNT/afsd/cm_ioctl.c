@@ -3262,7 +3262,6 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
             continue;
         if (tsp = tsrp->server) {
             cm_GetServerNoLock(tsp);
-            lock_ReleaseRead(&cm_serverLock);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
                 if (tsrp->status == srv_busy) {
@@ -3274,11 +3273,10 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
                 } else {
                     allOffline = 0;
                     allBusy = 0;
-                    cm_PutServer(tsp);
+                    cm_PutServerNoLock(tsp);
                     goto done;
                 }
             }
-            lock_ObtainRead(&cm_serverLock);
             cm_PutServerNoLock(tsp);
         }
     }
