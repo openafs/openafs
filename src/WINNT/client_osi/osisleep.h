@@ -25,14 +25,15 @@
 #define OSI_SLEEPINFO_W4READ	1	/* waiting for a read lock */
 #define OSI_SLEEPINFO_W4WRITE	2	/* waiting for a write lock */
 typedef struct osi_sleepInfo {
-	osi_queue_t q;
-	LONG_PTR value;		/* sleep value when in a sleep queue, patch addr for turnstiles */
-	size_t tid;		/* thread ID of sleeper */
-	EVENT_HANDLE sema;	/* semaphore for this entry */
-	unsigned short states;	/* states bits */
-	unsigned short idx;	/* sleep hash table we're in, if in hash */
-        unsigned short waitFor;	/* what are we waiting for; used for bulk wakeups */
-	unsigned long refCount; /* reference count from FDs */
+    osi_queue_t q;
+    LONG_PTR value;		/* sleep value when in a sleep queue, patch addr for turnstiles */
+    DWORD *tidp;                /* tid history */
+    size_t tid;		        /* thread ID of sleeper */
+    EVENT_HANDLE sema;	        /* semaphore for this entry */
+    unsigned short states;	/* states bits */
+    unsigned short idx;	        /* sleep hash table we're in, if in hash */
+    unsigned short waitFor;	/* what are we waiting for; used for bulk wakeups */
+    unsigned long refCount;     /* reference count from FDs */
 } osi_sleepInfo_t;
 
 /* first guy is the most recently added process */
@@ -144,8 +145,9 @@ void osi_panic(char *, char *, long);
 
 time_t osi_Time(void);
 
-extern void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp,
-	Crit_Sec *releasep);
+extern void osi_TWait(osi_turnstile_t *turnp, int waitFor,
+                      void *patchp, DWORD *tidp,
+                      Crit_Sec *releasep);
 
 extern void osi_TSignal(osi_turnstile_t *turnp);
 

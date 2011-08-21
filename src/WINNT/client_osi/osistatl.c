@@ -78,7 +78,7 @@ static void lock_ObtainWriteStat(osi_rwlock_t *lockp)
 		lockp->waiters++;
 		if (!ap) ap = osi_QueueActiveInfo(&realp->qi,
 			OSI_ACTIVEFLAGS_WRITER | OSI_ACTIVEFLAGS_WAITER);
-                osi_TWait(&realp->turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, csp);
+                osi_TWait(&realp->turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, lockp->tid, csp);
 		lockp->waiters--;
 		osi_assert((lockp->flags & OSI_LOCKFLAG_EXCL) && lockp->readers == 0);
 	}
@@ -123,7 +123,7 @@ static void lock_ObtainReadStat(osi_rwlock_t *lockp)
 		lockp->waiters++;
 		if (!ap) ap = osi_QueueActiveInfo(&realp->qi,
 			OSI_ACTIVEFLAGS_WAITER | OSI_ACTIVEFLAGS_READER);
-		osi_TWait(&realp->turn, OSI_SLEEPINFO_W4READ, &lockp->readers, csp);
+		osi_TWait(&realp->turn, OSI_SLEEPINFO_W4READ, &lockp->readers, lockp->tid, csp);
                 lockp->waiters--;
                 osi_assert(!(lockp->flags & OSI_LOCKFLAG_EXCL) && lockp->readers > 0);
 	}
@@ -234,7 +234,7 @@ static void lock_ConvertRToWStat(osi_rwlock_t *lockp)
             lockp->waiters++;
             ap = osi_QueueActiveInfo(&realp->qi,
                                      OSI_ACTIVEFLAGS_WRITER | OSI_ACTIVEFLAGS_WAITER);
-            osi_TWait(&realp->turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, csp);
+            osi_TWait(&realp->turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, lockp->tid, csp);
             lockp->waiters--;
             osi_assert((lockp->flags & OSI_LOCKFLAG_EXCL) && lockp->readers == 0);
 
@@ -302,7 +302,7 @@ static void lock_ObtainMutexStat(struct osi_mutex *lockp)
 	if (lockp->waiters > 0 || (lockp->flags & OSI_LOCKFLAG_EXCL)) {
 		lockp->waiters++;
 		ap = osi_QueueActiveInfo(&realp->qi, OSI_ACTIVEFLAGS_WAITER);
-		osi_TWait(&realp->turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, csp);
+		osi_TWait(&realp->turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, &lockp->tid, csp);
 		lockp->waiters--;
                 osi_assert(lockp->flags & OSI_LOCKFLAG_EXCL);
 	}

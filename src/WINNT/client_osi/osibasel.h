@@ -53,11 +53,14 @@ typedef struct osi_mutex {
  *
  * This type of lock has N readers or one writer.
  */
+
+#define OSI_RWLOCK_THREADS 32
+
 typedef struct osi_rwlock {
     char type;			/* for all types; type 0 uses atomic count */
     char flags;			/* flags for base type */
     unsigned short atomicIndex;	/* index into hash table for low-level sync */
-    DWORD tid;			/* writer's tid */
+    DWORD tid[OSI_RWLOCK_THREADS];			/* writer's tid */
     unsigned short waiters;	/* waiters */
     unsigned short readers;	/* readers */
     union {
@@ -149,10 +152,10 @@ extern void osi_SetLockOrderValidation(int);
 
 #define lock_AssertRead(x) osi_assertx(lock_GetRWLockState(x) & OSI_RWLOCK_READHELD, "!OSI_RWLOCK_READHELD")
 
-#define lock_AssertWrite(x) osi_assertx(lock_GetRWLockState(x) & OSI_RWLOCK_WRITEHELD, "!OSI_RWLOCK_WRITEHELD")
+#define lock_AssertWrite(x) osi_assertx((lock_GetRWLockState(x) & OSI_RWLOCK_WRITEHELD) && ((x)->tid[0] == thrd_Current()), "!OSI_RWLOCK_WRITEHELD")
 
 #define lock_AssertAny(x) osi_assertx(lock_GetRWLockState(x) != 0, "!(OSI_RWLOCK_READHELD | OSI_RWLOCK_WRITEHELD)")
 
-#define lock_AssertMutex(x) osi_assertx(lock_GetMutexState(x) & OSI_MUTEX_HELD, "!OSI_MUTEX_HELD")
+#define lock_AssertMutex(x) osi_assertx((lock_GetMutexState(x) & OSI_MUTEX_HELD) && ((x)->tid == thrd_Current()), "!OSI_MUTEX_HELD")
 
 #endif /* OPENAFS_WINNT_CLIENT_OSI_OSIBASEL_H */

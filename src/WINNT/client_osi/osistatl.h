@@ -82,7 +82,7 @@ typedef struct osi_rwlockStat {
 	osi_turnstile_t turn;		/* the real turnstile */
 	unsigned long refCount;		/* so we can iterate cleanly */
 	short states;
-        DWORD tid;
+        DWORD tid[OSI_RWLOCK_THREADS];
 
 	/* statistics */
 	LARGE_INTEGER writeLockedTime;	/* total time held */

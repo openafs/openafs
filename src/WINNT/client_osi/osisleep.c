@@ -125,63 +125,63 @@ void osi_FreeSleepInfo(osi_sleepInfo_t *ap)
 /* allocate a new sleep structure from the free list */
 osi_sleepInfo_t *osi_AllocSleepInfo()
 {
-	osi_sleepInfo_t *ap;
+    osi_sleepInfo_t *ap;
 
-	EnterCriticalSection(&osi_sleepInfoAllocCS);
-	if (!(ap = osi_sleepInfoFreeListp)) {
-		ap = (osi_sleepInfo_t *) malloc(sizeof(osi_sleepInfo_t));
-		ap->sema = CreateSemaphore(NULL, 0, 65536, (char *) 0);
-                osi_sleepInfoAllocs++;
-	}
-	else {
-		osi_sleepInfoFreeListp = (osi_sleepInfo_t *) ap->q.nextp;
-		osi_sleepInfoCount--;
-	}
-	ap->tid = GetCurrentThreadId();
-	ap->states = 0;	/* not signalled yet */
-	LeaveCriticalSection(&osi_sleepInfoAllocCS);
+    EnterCriticalSection(&osi_sleepInfoAllocCS);
+    if (!(ap = osi_sleepInfoFreeListp)) {
+        ap = (osi_sleepInfo_t *) malloc(sizeof(osi_sleepInfo_t));
+        ap->sema = CreateSemaphore(NULL, 0, 65536, (char *) 0);
+        osi_sleepInfoAllocs++;
+    }
+    else {
+        osi_sleepInfoFreeListp = (osi_sleepInfo_t *) ap->q.nextp;
+        osi_sleepInfoCount--;
+    }
+    ap->tid = GetCurrentThreadId();
+    ap->states = 0;	/* not signalled yet */
+    LeaveCriticalSection(&osi_sleepInfoAllocCS);
 
-	return ap;
+    return ap;
 }
 
 int osi_Once(osi_once_t *argp)
 {
-	long i;
+    long i;
 
-	while ((i=InterlockedExchange(&argp->atomic, 1)) != 0) {
-		Sleep(0);
-	}
+    while ((i=InterlockedExchange(&argp->atomic, 1)) != 0) {
+        Sleep(0);
+    }
 
-	if (argp->done == 0) {
-		argp->done = 1;
-		return 1;
-	}
+    if (argp->done == 0) {
+        argp->done = 1;
+        return 1;
+    }
 
-	/* otherwise we've already been initialized, so clear lock and return */
-	InterlockedExchange(&argp->atomic, 0);
-	return 0;
+    /* otherwise we've already been initialized, so clear lock and return */
+    InterlockedExchange(&argp->atomic, 0);
+    return 0;
 }
 
 void osi_EndOnce(osi_once_t *argp)
 {
-	InterlockedExchange(&argp->atomic, 0);
+    InterlockedExchange(&argp->atomic, 0);
 }
 
 int osi_TestOnce(osi_once_t *argp)
 {
-	long localDone;
-	long i;
+    long localDone;
+    long i;
 
-	while ((i=InterlockedExchange(&argp->atomic, 1)) != 0) {
-		Sleep(0);
-	}
+    while ((i=InterlockedExchange(&argp->atomic, 1)) != 0) {
+        Sleep(0);
+    }
 
-	localDone = argp->done;
+    localDone = argp->done;
 
-	/* drop interlock */
-	InterlockedExchange(&argp->atomic, 0);
+    /* drop interlock */
+    InterlockedExchange(&argp->atomic, 0);
 
-	return (localDone? 0 : 1);
+    return (localDone? 0 : 1);
 }
 
 /* Initialize the package, should be called while single-threaded.
@@ -190,74 +190,75 @@ int osi_TestOnce(osi_once_t *argp)
  */
 void osi_Init(void)
 {
-	int i;
-	static osi_once_t once;
-        unsigned long remainder;		/* for division output */
-	osi_fdType_t *typep;
-        SYSTEMTIME sysTime;
-        FILETIME fileTime;
-        osi_hyper_t bootTime;
+    int i;
+    static osi_once_t once;
+    unsigned long remainder;		/* for division output */
+    osi_fdType_t *typep;
+    SYSTEMTIME sysTime;
+    FILETIME fileTime;
+    osi_hyper_t bootTime;
 
-	/* check to see if already initialized; if so, claim success */
-	if (!osi_Once(&once)) return;
+    /* check to see if already initialized; if so, claim success */
+    if (!osi_Once(&once))
+        return;
 
-	/* setup boot time values */
-        GetSystemTime(&sysTime);
-        SystemTimeToFileTime(&sysTime, &fileTime);
+    /* setup boot time values */
+    GetSystemTime(&sysTime);
+    SystemTimeToFileTime(&sysTime, &fileTime);
 
-	/* change the base of the time so it won't be negative for a long time */
-	fileTime.dwHighDateTime -= 28000000;
+    /* change the base of the time so it won't be negative for a long time */
+    fileTime.dwHighDateTime -= 28000000;
 
-        bootTime.HighPart = fileTime.dwHighDateTime;
-        bootTime.LowPart = fileTime.dwLowDateTime;
-        /* now, bootTime is in 100 nanosecond units, and we'd really rather
-         * have it in 1 second units, units 10,000,000 times bigger.
-         * So, we divide.
-         */
-        bootTime = ExtendedLargeIntegerDivide(bootTime, 10000000, &remainder);
-        osi_bootTime = bootTime.LowPart;
+    bootTime.HighPart = fileTime.dwHighDateTime;
+    bootTime.LowPart = fileTime.dwLowDateTime;
+    /* now, bootTime is in 100 nanosecond units, and we'd really rather
+     * have it in 1 second units, units 10,000,000 times bigger.
+     * So, we divide.
+     */
+    bootTime = ExtendedLargeIntegerDivide(bootTime, 10000000, &remainder);
+    osi_bootTime = bootTime.LowPart;
 
-	/* initialize thread-local storage for sleep Info structures */
-	osi_SleepSlot = TlsAlloc();
+    /* initialize thread-local storage for sleep Info structures */
+    osi_SleepSlot = TlsAlloc();
 
-	/* init FD system */
-	osi_InitFD();
+    /* init FD system */
+    osi_InitFD();
 
-	/* initialize critical regions and semaphores */
-	for(i=0;i<OSI_SLEEPHASHSIZE; i++) {
-		InitializeCriticalSection(&osi_critSec[i]);
-		osi_sleepers[i] = (osi_sleepInfo_t *) NULL;
-	        osi_sleepersEnd[i] = (osi_sleepInfo_t *) NULL;
-	}
+    /* initialize critical regions and semaphores */
+    for(i=0;i<OSI_SLEEPHASHSIZE; i++) {
+        InitializeCriticalSection(&osi_critSec[i]);
+        osi_sleepers[i] = (osi_sleepInfo_t *) NULL;
+        osi_sleepersEnd[i] = (osi_sleepInfo_t *) NULL;
+    }
 
-	/* free list CS */
-	InitializeCriticalSection(&osi_sleepInfoAllocCS);
+    /* free list CS */
+    InitializeCriticalSection(&osi_sleepInfoAllocCS);
 
-	/* initialize cookie system */
-	InitializeCriticalSection(&osi_sleepFDCS);
+    /* initialize cookie system */
+    InitializeCriticalSection(&osi_sleepFDCS);
 
-	/* register the FD type */
-	typep = osi_RegisterFDType("sleep", &osi_sleepFDOps, NULL);
-	if (typep) {
-		/* add formatting info */
-		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 0,
-			"Sleep address", OSI_DBRPC_HEX);
-		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 1,
-			"Thread ID", 0);
-		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 2,
-			"States", OSI_DBRPC_HEX);
-	}
+    /* register the FD type */
+    typep = osi_RegisterFDType("sleep", &osi_sleepFDOps, NULL);
+    if (typep) {
+        /* add formatting info */
+        osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 0,
+                             "Sleep address", OSI_DBRPC_HEX);
+        osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 1,
+                             "Thread ID", 0);
+        osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 2,
+                             "States", OSI_DBRPC_HEX);
+    }
 
-	osi_BaseInit();
+    osi_BaseInit();
 
-	osi_StatInit();
+    osi_StatInit();
 
-        osi_InitQueue();
+    osi_InitQueue();
 
-	osi_EndOnce(&once);
+    osi_EndOnce(&once);
 }
 
-void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, CRITICAL_SECTION *releasep)
+void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, DWORD *tidp, CRITICAL_SECTION *releasep)
 {
     osi_sleepInfo_t *sp;
     unsigned int code;
@@ -273,35 +274,36 @@ void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, CRITICAL_SECTI
     sp->refCount = 0;
     sp->waitFor = waitFor;
     sp->value = (LONG_PTR) patchp;
+    sp->tidp   = tidp;
     osi_QAddT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
     if (!turnp->lastp)
 	turnp->lastp = sp;
     LeaveCriticalSection(releasep);
 
-	/* now wait for the signal */
-	while(1) {
-		/* wait */
-		code = WaitForSingleObject(sp->sema,
-                	/* timeout */ INFINITE);
+    /* now wait for the signal */
+    while(1) {
+        /* wait */
+        code = WaitForSingleObject(sp->sema,
+                                    /* timeout */ INFINITE);
 
-		/* if the reason for the wakeup was that we were signalled,
-		 * break out, otherwise try again, since the semaphore count is
-		 * decreased only when we get WAIT_OBJECT_0 back.
-		 */
-		if (code == WAIT_OBJECT_0) break;
-	}	/* while we're waiting */
-
-	/* we're the only one who should be looking at or changing this
-	 * structure after it gets signalled.  Sema sp->sema isn't signalled
-	 * any longer after we're back from WaitForSingleObject, so we can
-	 * free this element directly.
+        /* if the reason for the wakeup was that we were signalled,
+         * break out, otherwise try again, since the semaphore count is
+         * decreased only when we get WAIT_OBJECT_0 back.
          */
-        osi_assert(sp->states & OSI_SLEEPINFO_SIGNALLED);
+        if (code == WAIT_OBJECT_0) break;
+    }	/* while we're waiting */
 
-        osi_FreeSleepInfo(sp);
+    /* we're the only one who should be looking at or changing this
+     * structure after it gets signalled.  Sema sp->sema isn't signalled
+     * any longer after we're back from WaitForSingleObject, so we can
+     * free this element directly.
+     */
+    osi_assert(sp->states & OSI_SLEEPINFO_SIGNALLED);
 
-	/* reobtain, since caller commonly needs it */
-        EnterCriticalSection(releasep);
+    osi_FreeSleepInfo(sp);
+
+    /* reobtain, since caller commonly needs it */
+    EnterCriticalSection(releasep);
 }
 
 /* must be called with a critical section held that guards the turnstile
@@ -311,29 +313,29 @@ void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, CRITICAL_SECTI
  */
 void osi_TSignal(osi_turnstile_t *turnp)
 {
-	osi_sleepInfo_t *sp;
+    osi_sleepInfo_t *sp;
 
-	if (!turnp->lastp)
-	    return;
+    if (!turnp->lastp)
+        return;
 
-        sp = turnp->lastp;
-	turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
-        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
-        sp->states |= OSI_SLEEPINFO_SIGNALLED;
-        ReleaseSemaphore(sp->sema, 1, (long *) 0);
+    sp = turnp->lastp;
+    turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
+    osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
+    sp->states |= OSI_SLEEPINFO_SIGNALLED;
+    ReleaseSemaphore(sp->sema, 1, (long *) 0);
 }
 
 /* like TSignal, only wake *everyone* */
 void osi_TBroadcast(osi_turnstile_t *turnp)
 {
-	osi_sleepInfo_t *sp;
+    osi_sleepInfo_t *sp;
 
-        while(sp = turnp->lastp) {
-		turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
-	        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
-	        sp->states |= OSI_SLEEPINFO_SIGNALLED;
-	        ReleaseSemaphore(sp->sema, 1, (long *) 0);
-	}	/* while someone's still asleep */
+    while(sp = turnp->lastp) {
+        turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
+        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
+        sp->states |= OSI_SLEEPINFO_SIGNALLED;
+        ReleaseSemaphore(sp->sema, 1, (long *) 0);
+    }	/* while someone's still asleep */
 }
 
 /* special turnstile signal for mutexes and locks.  Wakes up only those who
@@ -352,64 +354,71 @@ void osi_TBroadcast(osi_turnstile_t *turnp)
  */
 void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SECTION *csp)
 {
-	osi_sleepInfo_t *tsp;		/* a temp */
-	osi_sleepInfo_t *nsp;		/* a temp */
-        osi_queue_t *wakeupListp;	/* list of dudes to wakeup after dropping lock */
-        int wokeReader;
-        unsigned short *sp;
-        unsigned char *cp;
+    osi_sleepInfo_t *tsp;		/* a temp */
+    osi_sleepInfo_t *nsp;		/* a temp */
+    osi_queue_t *wakeupListp;	/* list of dudes to wakeup after dropping lock */
+    int wokeReader;
+    unsigned short *sp;
+    unsigned char *cp;
 
-	wokeReader = stillHaveReaders;
-	wakeupListp = NULL;
-        while(tsp = turnp->lastp) {
-		/* look at each sleepInfo until we find someone we're not supposed to
-                 * wakeup.
-                 */
-		if (tsp->waitFor & OSI_SLEEPINFO_W4WRITE) {
-			if (wokeReader) break;
-                }
-                else wokeReader = 1;
+    wokeReader = stillHaveReaders;
+    wakeupListp = NULL;
+    while(tsp = turnp->lastp) {
+        /* look at each sleepInfo until we find someone we're not supposed to
+         * wakeup.
+         */
+        if (tsp->waitFor & OSI_SLEEPINFO_W4WRITE) {
+            if (wokeReader)
+                break;
+        }
+        else
+            wokeReader = 1;
 
-                /* otherwise, we will wake this guy.  For now, remove from this list
-                 * and move to private one, so we can do the wakeup after releasing
-                 * the crit sec.
-                 */
-		turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&tsp->q);
-	        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &tsp->q);
+        /* otherwise, we will wake this guy.  For now, remove from this list
+         * and move to private one, so we can do the wakeup after releasing
+         * the crit sec.
+         */
+        turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&tsp->q);
+        osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &tsp->q);
 
-		/* do the patching required for lock obtaining */
-                if (tsp->waitFor & OSI_SLEEPINFO_W4WRITE) {
-			cp = (void *) tsp->value;
-                        (*cp) |= OSI_LOCKFLAG_EXCL;
-                }
-                else if (tsp->waitFor & OSI_SLEEPINFO_W4READ) {
-                	sp = (void *) tsp->value;
-                        (*sp)++;
-                }
-
-                /* and add to our own list */
-                tsp->q.nextp = wakeupListp;
-                wakeupListp = &tsp->q;
-
-                /* now if we woke a writer, we're done, since it is pointless
-                 * to wake more than one writer.
-                 */
-                if (!wokeReader) break;
+        /* do the patching required for lock obtaining */
+        if (tsp->waitFor & OSI_SLEEPINFO_W4WRITE) {
+            cp = (void *) tsp->value;
+            (*cp) |= OSI_LOCKFLAG_EXCL;
+            tsp->tidp[0] = tsp->tid;
+        }
+        else if (tsp->waitFor & OSI_SLEEPINFO_W4READ) {
+            sp = (void *) tsp->value;
+            (*sp)++;
+            if ((*sp) <= OSI_RWLOCK_THREADS)
+                tsp->tidp[(*sp)-1] = tsp->tid;
         }
 
-        /* hit end, or found someone we're not supposed to wakeup */
-	if (csp) LeaveCriticalSection(csp);
+        /* and add to our own list */
+        tsp->q.nextp = wakeupListp;
+        wakeupListp = &tsp->q;
+
+        /* now if we woke a writer, we're done, since it is pointless
+         * to wake more than one writer.
+         */
+        if (!wokeReader)
+            break;
+    }
+
+    /* hit end, or found someone we're not supposed to wakeup */
+    if (csp)
+        LeaveCriticalSection(csp);
 
         /* finally, wakeup everyone we found.  Don't free things since the sleeper
          * will free the sleepInfo structure.
          */
 	for(tsp = (osi_sleepInfo_t *) wakeupListp; tsp; tsp = nsp) {
-		/* pull this out first, since *tsp *could* get freed immediately
-                 * after the ReleaseSemaphore, if a context swap occurs.
-                 */
-		nsp = (osi_sleepInfo_t *) tsp->q.nextp;
-	        tsp->states |= OSI_SLEEPINFO_SIGNALLED;
-	        ReleaseSemaphore(tsp->sema, 1, (long *) 0);
+            /* pull this out first, since *tsp *could* get freed immediately
+             * after the ReleaseSemaphore, if a context swap occurs.
+             */
+            nsp = (osi_sleepInfo_t *) tsp->q.nextp;
+            tsp->states |= OSI_SLEEPINFO_SIGNALLED;
+            ReleaseSemaphore(tsp->sema, 1, (long *) 0);
         }
 }
 
@@ -492,39 +501,39 @@ void osi_WakeupSpin(LONG_PTR sleepValue)
 
 void osi_Sleep(LONG_PTR sleepVal)
 {
-	CRITICAL_SECTION *csp;
+    CRITICAL_SECTION *csp;
 
-	/* may as well save some code by using SleepSched again */
-        csp = &osi_baseAtomicCS[0];
-        EnterCriticalSection(csp);
-	osi_SleepSpin(sleepVal, csp);
+    /* may as well save some code by using SleepSched again */
+    csp = &osi_baseAtomicCS[0];
+    EnterCriticalSection(csp);
+    osi_SleepSpin(sleepVal, csp);
 }
 
 void osi_Wakeup(LONG_PTR sleepVal)
 {
-	/* how do we do osi_Wakeup on a per-lock package type? */
+    /* how do we do osi_Wakeup on a per-lock package type? */
 
-	osi_WakeupSpin(sleepVal);
+    osi_WakeupSpin(sleepVal);
 }
 
 long osi_SleepFDCreate(osi_fdType_t *fdTypep, osi_fd_t **outpp)
 {
-	osi_sleepFD_t *cp;
+    osi_sleepFD_t *cp;
 
-	cp = (osi_sleepFD_t *)malloc(sizeof(*cp));
-	memset((void *) cp, 0, sizeof(*cp));
-	cp->idx = 0;
-	cp->sip = NULL;
+    cp = (osi_sleepFD_t *)malloc(sizeof(*cp));
+    memset((void *) cp, 0, sizeof(*cp));
+    cp->idx = 0;
+    cp->sip = NULL;
 
-	/* done */
-	*outpp = &cp->fd;
-	return 0;
+    /* done */
+    *outpp = &cp->fd;
+    return 0;
 }
 
 long osi_SleepFDClose(osi_fd_t *cp)
 {
-	free((void *) cp);
-	return 0;
+    free((void *) cp);
+    return 0;
 }
 
 /* called with osi_sleepFDCS locked; returns with same, so that
@@ -533,52 +542,55 @@ long osi_SleepFDClose(osi_fd_t *cp)
  */
 void osi_AdvanceSleepFD(osi_sleepFD_t *cp)
 {
-	int idx;		/* index we're dealing with */
-	int oidx;		/* index we locked */
-	osi_sleepInfo_t *sip;
-	osi_sleepInfo_t *nsip;
+    int idx;		/* index we're dealing with */
+    int oidx;		/* index we locked */
+    osi_sleepInfo_t *sip;
+    osi_sleepInfo_t *nsip;
 
-	idx = 0;	/* so we go around once safely */
-	sip = NULL;
-	while(idx < OSI_SLEEPHASHSIZE) {
-		/* cp->sip should be held */
-		idx = cp->idx;
-		EnterCriticalSection(&osi_critSec[idx]);
-		oidx = idx;	/* remember original index; that's the one we locked */
+    idx = 0;	/* so we go around once safely */
+    sip = NULL;
+    while(idx < OSI_SLEEPHASHSIZE) {
+        /* cp->sip should be held */
+        idx = cp->idx;
+        EnterCriticalSection(&osi_critSec[idx]);
+        oidx = idx;	/* remember original index; that's the one we locked */
 
-		/* if there's a sleep info structure in the FD, it should be held; it
-		 * is the one we just processed, so we want to move on to the next.
-		 * If not, then we want to process the chain in the bucket idx points
-		 * to.
-		 */
-		if ((sip = cp->sip) == NULL) {
-			sip = osi_sleepers[idx];
-			if (!sip) idx++;
-			else sip->refCount++;
-		}
-		else {
-			/* it is safe to release the current sleep info guy now
-			 * since we hold the bucket lock.  Pull next guy out first,
-			 * since if sip is deleted, Release will move him into
-			 * free list.
-			 */
-			nsip = (osi_sleepInfo_t *) sip->q.nextp;
-			osi_ReleaseSleepInfo(sip);
-			sip = nsip;
+        /* if there's a sleep info structure in the FD, it should be held; it
+         * is the one we just processed, so we want to move on to the next.
+         * If not, then we want to process the chain in the bucket idx points
+         * to.
+         */
+        if ((sip = cp->sip) == NULL) {
+            sip = osi_sleepers[idx];
+            if (!sip) idx++;
+            else sip->refCount++;
+        }
+        else {
+            /* it is safe to release the current sleep info guy now
+             * since we hold the bucket lock.  Pull next guy out first,
+             * since if sip is deleted, Release will move him into
+             * free list.
+             */
+            nsip = (osi_sleepInfo_t *) sip->q.nextp;
+            osi_ReleaseSleepInfo(sip);
+            sip = nsip;
 
-			if (sip) sip->refCount++;
-			else idx++;
-		}
-		cp->idx = idx;
-		cp->sip = sip;
-		LeaveCriticalSection(&osi_critSec[oidx]);
+            if (sip)
+                sip->refCount++;
+            else
+                idx++;
+        }
+        cp->idx = idx;
+        cp->sip = sip;
+        LeaveCriticalSection(&osi_critSec[oidx]);
 
-		/* now, if we advanced to a new sleep info structure, we're
-		 * done, otherwise we continue and look at the next hash bucket
-		 * until we're out of them.
-		 */
-		if (sip) break;
-	}
+        /* now, if we advanced to a new sleep info structure, we're
+         * done, otherwise we continue and look at the next hash bucket
+         * until we're out of them.
+         */
+        if (sip)
+            break;
+    }
 }
 
 
@@ -620,7 +632,7 @@ long osi_SleepFDGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *parmsp)
 /* finally, DLL-specific code for NT */
 BOOL APIENTRY DLLMain(HANDLE inst, DWORD why, char *reserved)
 {
-	return 1;
+    return 1;
 }
 
 /* some misc functions for setting hash table sizes */
@@ -628,48 +640,51 @@ BOOL APIENTRY DLLMain(HANDLE inst, DWORD why, char *reserved)
 /* return true iff x is prime */
 int osi_IsPrime(unsigned long x)
 {
-	unsigned long c;
+    unsigned long c;
 
-	/* even numbers aren't prime */
-	if ((x & 1) == 0 && x != 2) return 0;
+    /* even numbers aren't prime */
+    if ((x & 1) == 0 && x != 2) return 0;
 
-        for(c = 3; c<x; c += 2) {
-		/* see if x is divisible by c */
-		if ((x % c) == 0) return 0;	/* yup, it ain't prime */
+    for(c = 3; c<x; c += 2) {
+        /* see if x is divisible by c */
+        if ((x % c) == 0)
+            return 0;	/* yup, it ain't prime */
 
-                /* see if we've gone far enough; only have to compute until
-                 * square root of x.
-                 */
-                if (c*c > x) return 1;
-        }
+        /* see if we've gone far enough; only have to compute until
+         * square root of x.
+         */
+        if (c*c > x)
+            return 1;
+    }
 
-	/* probably never get here */
-        return 1;
+    /* probably never get here */
+    return 1;
 }
 
 /* return first prime number less than or equal to x */
 unsigned long osi_PrimeLessThan(unsigned long x) {
-	unsigned long c;
+    unsigned long c;
 
-        for(c = x; c > 1; c--) {
-		if (osi_IsPrime(c)) return c;
-        }
+    for(c = x; c > 1; c--) {
+        if (osi_IsPrime(c))
+            return c;
+    }
 
-	/* ever reached? */
-        return 1;
+    /* ever reached? */
+    return 1;
 }
 
 /* return the # of seconds since some fixed date */
 unsigned long osi_GetBootTime(void)
 {
-	return osi_bootTime;
+    return osi_bootTime;
 }
 
 static int (*notifFunc)(char *, char *, long) = NULL;
 
 void osi_InitPanic(void *anotifFunc)
 {
-	notifFunc = anotifFunc;
+    notifFunc = anotifFunc;
 }
 
 void osi_panic(char *msgp, char *filep, long line)
@@ -712,26 +727,26 @@ time_t osi_Time(void)
 /* get time in seconds since some relatively recent time */
 void osi_GetTime(long *timesp)
 {
-	FILETIME fileTime;
-        SYSTEMTIME sysTime;
-        unsigned long remainder;
-        LARGE_INTEGER bootTime;
+    FILETIME fileTime;
+    SYSTEMTIME sysTime;
+    unsigned long remainder;
+    LARGE_INTEGER bootTime;
 
-	/* setup boot time values */
-        GetSystemTime(&sysTime);
-        SystemTimeToFileTime(&sysTime, &fileTime);
+    /* setup boot time values */
+    GetSystemTime(&sysTime);
+    SystemTimeToFileTime(&sysTime, &fileTime);
 
-	/* change the base of the time so it won't be negative for a long time */
-	fileTime.dwHighDateTime -= 28000000;
+    /* change the base of the time so it won't be negative for a long time */
+    fileTime.dwHighDateTime -= 28000000;
 
-        bootTime.HighPart = fileTime.dwHighDateTime;
-        bootTime.LowPart = fileTime.dwLowDateTime;
-        /* now, bootTime is in 100 nanosecond units, and we'd really rather
-         * have it in 1 microsecond units, units 10 times bigger.
-         * So, we divide.
-         */
-        bootTime = ExtendedLargeIntegerDivide(bootTime, 10, &remainder);
-	bootTime = ExtendedLargeIntegerDivide(bootTime, 1000000, &remainder);
-	timesp[0] = bootTime.LowPart;		/* seconds */
-        timesp[1] = remainder;			/* microseconds */
+    bootTime.HighPart = fileTime.dwHighDateTime;
+    bootTime.LowPart = fileTime.dwLowDateTime;
+    /* now, bootTime is in 100 nanosecond units, and we'd really rather
+     * have it in 1 microsecond units, units 10 times bigger.
+     * So, we divide.
+     */
+    bootTime = ExtendedLargeIntegerDivide(bootTime, 10, &remainder);
+    bootTime = ExtendedLargeIntegerDivide(bootTime, 1000000, &remainder);
+    timesp[0] = bootTime.LowPart;		/* seconds */
+    timesp[1] = remainder;			/* microseconds */
 }
