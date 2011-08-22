@@ -858,7 +858,6 @@ extern int afs_randomMod15(void);
 extern int afs_randomMod127(void);
 extern void afs_SortOneServer(struct server *asp);
 extern void afs_SortServers(struct server *aservers[], int count);
-extern void afs_FlushServer(struct server *srvp);
 extern void afs_RemoveSrvAddr(struct srvAddr *sap);
 extern void afs_ActivateServer(struct srvAddr *sap);
 #ifdef AFS_USERSPACE_IP_ADDR

@@ -1612,9 +1612,9 @@ afs_SetServerPrefs(struct srvAddr *sa)
 /* afs_FlushServer()
  * The addresses on this server struct has changed in some way and will
  * clean up all other structures that may reference it.
- * The afs_xserver and afs_xsrvAddr locks are assumed taken.
+ * The afs_xserver, afs_xvcb and afs_xsrvAddr locks are assumed taken.
  */
-void
+static void
 afs_FlushServer(struct server *srvp)
 {
     afs_int32 i;
@@ -1630,12 +1630,10 @@ afs_FlushServer(struct server *srvp)
     if (srvp->cbrs) {
 	struct afs_cbr *cb, *cbnext;
 
-	  ObtainWriteLock(&afs_xvcb, 300);
 	for (cb = srvp->cbrs; cb; cb = cbnext) {
 	    cbnext = cb->next;
 	    afs_FreeCBR(cb);
 	} srvp->cbrs = (struct afs_cbr *)0;
-	ReleaseWriteLock(&afs_xvcb);
     }
 
     /* If no more srvAddr structs hanging off of this server struct,
@@ -1752,6 +1750,23 @@ afs_GetCapabilities(struct server *ts)
 
 }
 
+static struct server *
+afs_SearchServer(u_short aport, afsUUID * uuidp, afs_int32 locktype,
+		 struct server **oldts, afs_int32 addr_uniquifier)
+{
+    struct server *ts = afs_FindServer(0, aport, uuidp, locktype);
+    if (ts && (ts->sr_addr_uniquifier == addr_uniquifier) && ts->addr) {
+	/* Found a server struct that is multihomed and same
+	 * uniqufier (same IP addrs). The above if statement is the
+	 * same as in InstallUVolumeEntry().
+	 */
+	return ts;
+    }
+    if (ts)
+	*oldts = ts;		/* Will reuse if same uuid */
+    return NULL;
+}
+
 /* afs_GetServer()
  * Return an updated and properly initialized server structure
  * corresponding to the server ID, cell, and port specified.
@@ -1790,22 +1805,37 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
     } else {
 	if (nservers <= 0)
 	    panic("afs_GetServer: incorrect count of servers");
-	ts = afs_FindServer(0, aport, uuidp, locktype);
-	if (ts && (ts->sr_addr_uniquifier == addr_uniquifier) && ts->addr) {
-	    /* Found a server struct that is multihomed and same
-	     * uniqufier (same IP addrs). The above if statement is the
-	     * same as in InstallUVolumeEntry().
-	     */
+
+	ts = afs_SearchServer(aport, uuidp, locktype, &oldts, addr_uniquifier);
+	if (ts) {
 	    ReleaseSharedLock(&afs_xserver);
 	    return ts;
 	}
-	if (ts)
-	    oldts = ts;		/* Will reuse if same uuid */
     }
 
-    UpgradeSToWLock(&afs_xserver, 36);
-    ObtainWriteLock(&afs_xsrvAddr, 116);
+    /*
+     * Lock hierarchy requires xvcb, then xserver. We *have* xserver.
+     * Do a little dance and see if we can grab xvcb. If not, we
+     * need to recheck that oldts is still right after a drop and reobtain.
+     */
+    if (EWOULDBLOCK == NBObtainWriteLock(&afs_xvcb, 300)) {
+	ReleaseSharedLock(&afs_xserver);
+	ObtainWriteLock(&afs_xvcb, 299);
+	ObtainWriteLock(&afs_xserver, 35);
 
+	/* we don't know what changed while we didn't hold the lock */
+	oldts = 0;
+	ts = afs_SearchServer(aport, uuidp, locktype, &oldts,
+			      addr_uniquifier);
+	if (ts) {
+	    ReleaseWriteLock(&afs_xserver);
+	    ReleaseWriteLock(&afs_xvcb);
+	    return ts;
+	}
+    } else {
+	UpgradeSToWLock(&afs_xserver, 36);
+    }
+    ObtainWriteLock(&afs_xsrvAddr, 116);
     srvcount = afs_totalServers;
 
     /* Reuse/allocate a new server structure */
@@ -1938,6 +1968,8 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 	    orphsa->sa_flags &= ~SRVADDR_MH;	/* Not multihomed */
 	}
     }
+    /* We can't need this below, and won't reacquire */
+    ReleaseWriteLock(&afs_xvcb);
 
     srvcount = afs_totalServers - srvcount;	/* # servers added and removed */
     if (srvcount) {
