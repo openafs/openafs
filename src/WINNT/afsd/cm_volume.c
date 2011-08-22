@@ -1275,10 +1275,12 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                 cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_alldown);
                 statep->state = vl_alldown;
             }
-        } else if (statep->state != vl_alldown) {
+        } else {
             lock_ReleaseRead(&cm_serverLock);
-            cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_alldown);
-            statep->state = vl_alldown;
+            if (statep->state != vl_alldown) {
+                cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_alldown);
+                statep->state = vl_alldown;
+            }
         }
     }
 }
