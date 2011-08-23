@@ -70,6 +70,10 @@ iterate over all volumes without others being inserted/deleted.  Same
 hack doesn't work for cache entry locks since we need to be able to
 lock multiple cache entries (but not multiple volumes) simultaneously.
 
+In practice this appears to only be used to protect the status, name,
+and root vnode and uniq. other users are not excluded, although
+exclusion of multiple installs of a volume entry have been poorly done.
+
 15. afs_xdnlc -- locked after afs_xvcache in afs_osidnlc.c.  Shouldn't 
 interact with any of the other locks. 
 

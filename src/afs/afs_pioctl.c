@@ -3972,7 +3972,7 @@ afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
 	    afs_uint32 temp = sp->host.s_addr;
 	    srvr =
 		afs_GetServer(&temp, 1, 0, (vlonly ? AFS_VLPORT : AFS_FSPORT),
-			      WRITE_LOCK, (afsUUID *) 0, 0);
+			      WRITE_LOCK, (afsUUID *) 0, 0, NULL);
 	    srvr->addr->sa_iprank = sp->rank + afs_randomMod15();
 	    afs_PutServer(srvr, WRITE_LOCK);
 	}

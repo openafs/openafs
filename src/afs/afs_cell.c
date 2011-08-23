@@ -1001,7 +1001,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	afs_uint32 temp = acellHosts[i];
 	if (!temp)
 	    break;
-	ts = afs_GetServer(&temp, 1, 0, tc->vlport, WRITE_LOCK, NULL, 0);
+	ts = afs_GetServer(&temp, 1, 0, tc->vlport, WRITE_LOCK, NULL, 0, NULL);
 	ts->cell = tc;
 	ts->flags &= ~SRVR_ISGONE;
 	/* Set the server as a host of the new cell. */
