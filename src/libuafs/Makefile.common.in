@@ -1484,9 +1484,9 @@ $(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULE1)
 
 clean:
-	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx
-	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest $(AFS_OS_CLEAN)
-
+	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi afsd afs afsint config rx
+	-$(RM) -rf h
+	-$(RM) linktest $(AFS_OS_CLEAN)
 
 install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
 	${INSTALL} -d ${DESTDIR}${libdir}
@@ -1531,15 +1531,10 @@ AFSWEB:
 	mkdir -p $@
 
 setup_common:
-	-$(RM) -f h net netinet rpc ufs nfs machine sys inet nsapi afsd
-	-ln -s ${ISYSROOT}/usr/include/sys h
-	-ln -s ${ISYSROOT}/usr/include/net net
-	-ln -s ${ISYSROOT}/usr/include/netinet netinet
-	-ln -s ${ISYSROOT}/usr/include/rpc rpc
-	-ln -s ${ISYSROOT}/usr/include/sys sys
-	-ln -s ${ISYSROOT}/usr/include/nfs nfs
-	-ln -s ${ISYSROOT}/usr/include/inet inet
-	-ln -s ${ISYSROOT}/usr/include/ufs ufs
+	-$(RM) -f nsapi afsd
+	-$(RM) -rf h
+	@TOP_SRCDIR@/libuafs/make_h_tree.pl $(TOP_SRC_AFS) $(TOP_SRC_VNOPS) \
+		$(TOP_SRC_RX)
 	-ln -s $(TOP_SRCDIR)/afsd afsd
 	-ln -s $(NS_INCL) nsapi
 
