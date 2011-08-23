@@ -348,7 +348,7 @@ void
 cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
 {
     cm_scache_t *scp;
-    int hash;
+    afs_uint32 hash;
 
     lock_ObtainWrite(&cm_scacheLock);
     for (hash=0; hash < cm_data.scacheHashTableSize; hash++) {
