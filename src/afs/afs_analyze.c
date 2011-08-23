@@ -174,13 +174,14 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	for (i = 0; i < NMAXNSERVERS && tvp->serverHost[i]; i++) {
 	    oldhosts[i] = tvp->serverHost[i];
 	}
+	ReleaseWriteLock(&tvp->lock);
 
 	if (type == 2) {
-	    InstallUVolumeEntry(tvp, &v->utve, afid->Cell, tcell, &treq);
+	    LockAndInstallUVolumeEntry(tvp, &v->utve, afid->Cell, tcell, &treq);
 	} else if (type == 1) {
-	    InstallNVolumeEntry(tvp, &v->ntve, afid->Cell);
+	    LockAndInstallNVolumeEntry(tvp, &v->ntve, afid->Cell);
 	} else {
-	    InstallVolumeEntry(tvp, &v->tve, afid->Cell);
+	    LockAndInstallVolumeEntry(tvp, &v->tve, afid->Cell);
 	}
 
 	if (i < NMAXNSERVERS && tvp->serverHost[i]) {
