@@ -5608,7 +5608,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
             if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
                 code = CM_ERROR_NOSUCHFILE;
             else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
-                cm_buf_t *bp = buf_Find(dscp, &hzero);
+                cm_buf_t *bp = buf_Find(&dscp->fid, &hzero);
                 if (bp) {
                     buf_Release(bp);
 		    bp = NULL;

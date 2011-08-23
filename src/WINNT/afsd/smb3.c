@@ -3435,7 +3435,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
                         code = CM_ERROR_NOSUCHFILE;
                     else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
-                        cm_buf_t *bp = buf_Find(dscp, &hzero);
+                        cm_buf_t *bp = buf_Find(&dscp->fid, &hzero);
                         if (bp) {
                             buf_Release(bp);
                             bp = NULL;
@@ -3765,7 +3765,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
                     if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
                         code = CM_ERROR_NOSUCHFILE;
                     else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
-                        cm_buf_t *bp = buf_Find(dscp, &hzero);
+                        cm_buf_t *bp = buf_Find(&dscp->fid, &hzero);
                         if (bp) {
                             buf_Release(bp);
                             bp = NULL;
