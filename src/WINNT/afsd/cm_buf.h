@@ -161,13 +161,13 @@ extern void buf_HoldLocked(cm_buf_t *);
 
 extern void buf_WaitIO(cm_scache_t *, cm_buf_t *);
 
-extern cm_buf_t *buf_FindLocked(struct cm_scache *, osi_hyper_t *);
+extern cm_buf_t *buf_FindLocked(struct cm_fid *, osi_hyper_t *);
 
-extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
+extern cm_buf_t *buf_Find(struct cm_fid *, osi_hyper_t *);
 
-extern cm_buf_t *buf_FindAllLocked(struct cm_scache *, osi_hyper_t *, afs_uint32 flags);
+extern cm_buf_t *buf_FindAllLocked(struct cm_fid *, osi_hyper_t *, afs_uint32 flags);
 
-extern cm_buf_t *buf_FindAll(struct cm_scache *, osi_hyper_t *, afs_uint32 flags);
+extern cm_buf_t *buf_FindAll(struct cm_fid *, osi_hyper_t *, afs_uint32 flags);
 
 extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 

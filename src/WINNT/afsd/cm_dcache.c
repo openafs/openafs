@@ -687,7 +687,7 @@ cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, osi_hyper_t *lengt
             break;
         }
 
-        bp = buf_Find(scp, &tbase);
+        bp = buf_Find(&scp->fid, &tbase);
         /* We cheat slightly by not locking the bp mutex. */
         if (bp) {
             if ((bp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING | CM_BUF_CMBKGFETCH)) == 0
@@ -1023,7 +1023,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
         thyper = ConvertLongToLargeInteger(temp);
         tbase = LargeIntegerAdd(*inOffsetp, thyper);
 
-        bufp = buf_Find(scp, &tbase);
+        bufp = buf_Find(&scp->fid, &tbase);
         if (bufp) {
             /* get buffer mutex and scp mutex safely */
             lock_ReleaseWrite(&scp->rw);
@@ -1104,7 +1104,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     tbase = LargeIntegerSubtract(firstModOffset, thyper);
     while(LargeIntegerGreaterThanOrEqualTo(tbase, scanStart)) {
         /* see if we can find the buffer */
-        bufp = buf_Find(scp, &tbase);
+        bufp = buf_Find(&scp->fid, &tbase);
         if (!bufp)
             break;
 
@@ -1164,7 +1164,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     tbase = LargeIntegerAdd(firstModOffset, thyper);
     while(LargeIntegerLessThan(tbase, scanEnd)) {
         /* see if we can find the buffer */
-        bufp = buf_Find(scp, &tbase);
+        bufp = buf_Find(&scp->fid, &tbase);
         if (!bufp)
             break;
 
@@ -1326,7 +1326,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize))
             break;
 
-        tbp = buf_Find(scp, &pageBase);
+        tbp = buf_Find(&scp->fid, &pageBase);
         if (!tbp)
             break;
 
