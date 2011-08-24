@@ -220,8 +220,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	code = -ENOENT;
 	goto out;
     }
-    ObtainSharedLock(&avc->lock, 810);
-    UpgradeSToWLock(&avc->lock, 811);
+    ObtainWriteLock(&avc->lock, 811);
     ObtainReadLock(&tdc->lock);
     /*
      * Make sure that the data in the cache is current. There are two
@@ -233,15 +232,15 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	   && (tdc->dflags & DFFetching)
 	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
-	ReleaseSharedLock(&avc->lock);
+	ReleaseWriteLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
-	ObtainSharedLock(&avc->lock, 812);
+	ObtainWriteLock(&avc->lock, 812);
 	ObtainReadLock(&tdc->lock);
     }
     if (!(avc->f.states & CStatd)
 	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
-	ReleaseSharedLock(&avc->lock);
+	ReleaseWriteLock(&avc->lock);
 	afs_PutDCache(tdc);
 	goto tagain;
     }
