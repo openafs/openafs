@@ -325,6 +325,11 @@ ih_open(IHandle_t * ihP)
 
     /* Do we already have an open file handle for this Inode? */
     for (fdP = ihP->ih_fdtail; fdP != NULL; fdP = fdP->fd_ihprev) {
+	if (fdP->fd_status == FD_HANDLE_CLOSING) {
+	    /* The handle was open when an IH_REALLYCLOSE was issued, so we
+	     * cannot reuse it; it will be closed soon. */
+	    continue;
+	}
 #ifndef HAVE_PIO
 	/*
 	 * If we don't have positional i/o, don't try to share fds, since
@@ -429,7 +434,8 @@ fd_close(FdHandle_t * fdP)
     IH_LOCK;
     osi_Assert(ih_Inited);
     osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE);
+    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+               fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
 
@@ -438,7 +444,8 @@ fd_close(FdHandle_t * fdP)
      * failed (this is determined by checking the ihandle for the flag
      * IH_REALLY_CLOSED) or we have too many open files.
      */
-    if (ihP->ih_flags & IH_REALLY_CLOSED || fdInUseCount > fdCacheSize) {
+    if (fdP->fd_status == FD_HANDLE_CLOSING ||
+        ihP->ih_flags & IH_REALLY_CLOSED || fdInUseCount > fdCacheSize) {
 	IH_UNLOCK;
 	return fd_reallyclose(fdP);
     }
@@ -479,7 +486,8 @@ fd_reallyclose(FdHandle_t * fdP)
     IH_LOCK;
     osi_Assert(ih_Inited);
     osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE);
+    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+               fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
     closeFd = fdP->fd_fd;
@@ -783,7 +791,8 @@ ih_fdclose(IHandle_t * ihP)
 	next = fdP->fd_ihnext;
 	osi_Assert(fdP->fd_ih == ihP);
 	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN
-	       || fdP->fd_status == FD_HANDLE_INUSE);
+	       || fdP->fd_status == FD_HANDLE_INUSE
+	       || fdP->fd_status == FD_HANDLE_CLOSING);
 	if (fdP->fd_status == FD_HANDLE_OPEN) {
 	    DLL_DELETE(fdP, ihP->ih_fdhead, ihP->ih_fdtail, fd_ihnext,
 		       fd_ihprev);
@@ -791,6 +800,7 @@ ih_fdclose(IHandle_t * ihP)
 	    DLL_INSERT_TAIL(fdP, head, tail, fd_next, fd_prev);
 	} else {
 	    closedAll = 0;
+	    fdP->fd_status = FD_HANDLE_CLOSING;
 	    ihP->ih_flags |= IH_REALLY_CLOSED;
 	}
     }
