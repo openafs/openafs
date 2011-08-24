@@ -353,20 +353,22 @@ ih_open(IHandle_t * ihP)
 	 * If we don't have positional i/o, don't try to share fds, since
 	 * we can't do so in a threadsafe way.
 	 */
-	if (fdP->fd_status != FD_HANDLE_INUSE) {
-	    osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
-#else /* HAVE_PIO */
-	if (fdP->fd_status != FD_HANDLE_AVAIL) {
-#endif /* HAVE_PIO */
-	    fdP->fd_refcnt++;
-	    if (fdP->fd_status == FD_HANDLE_OPEN) {
-		fdP->fd_status = FD_HANDLE_INUSE;
-		DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
-	    }
-	    ihP->ih_refcnt++;
-	    IH_UNLOCK;
-	    return fdP;
+	if (fdP->fd_status == FD_HANDLE_INUSE) {
+	    continue;
 	}
+	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
+#else /* HAVE_PIO */
+	osi_Assert(fdP->fd_status != FD_HANDLE_AVAIL);
+#endif /* HAVE_PIO */
+
+	fdP->fd_refcnt++;
+	if (fdP->fd_status == FD_HANDLE_OPEN) {
+	    fdP->fd_status = FD_HANDLE_INUSE;
+	    DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
+	}
+	ihP->ih_refcnt++;
+	IH_UNLOCK;
+	return fdP;
     }
 
     /*
