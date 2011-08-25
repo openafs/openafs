@@ -26,7 +26,6 @@
 		rk_print_version;
 		rk_snprintf;
 		rk_socket;
-		rk_strcasecmp;
 		rk_strlcat;
 		rk_strnlen;
 		rk_strlcpy;
@@ -34,7 +33,6 @@
 		rk_vasprintf;
 		rk_vasnprintf;
 	        rk_vsnprintf;
-		strcasecmp;
 		verr;
 		verrx;
 		vwarn;
