@@ -313,10 +313,6 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 	    krb5_svc_get_msg(code,&str);
 #elif defined(HAVE_ERROR_MESSAGE)
 	    str = error_message(code);
-#elif defined(KRB5_PROG_ETYPE_NOSUPP) && !(defined(HAVE_KRB5_ENCTYPE_ENABLE) || defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO))
-	    /* Lion gives us nothing to hook here and no weak crypto switch */
-	    if (code == KRB5_PROG_ETYPE_NOSUPP)
-		str = "encryption type not supported; \"allow_weak_crypto = true\" needed in Kerberos configuration";
 #else
 	    ; /* IRIX apparently has neither: use the string we have */
 #endif
@@ -1476,7 +1472,34 @@ main(int argc, char *argv[])
     else
 	progname = argv[0];
 
-    krb5_init_context(&context);
+#if defined(KRB5_PROG_ETYPE_NOSUPP) && !(defined(HAVE_KRB5_ENCTYPE_ENABLE) || defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO))
+    {
+	char *filepath = NULL, *newpath = NULL;
+	filepath = getenv("KRB5_CONFIG");
+        if (!filepath) {
+	    int slen;
+#ifndef AFS_DARWIN_ENV
+	    slen = strlen(filepath)+strlen(":/etc/krb5.conf")+1;
+	    newpath = malloc(slen);
+	    snprintf(newpath, slen, "%s:/etc/krb5.conf", filepath);
+#else
+	    slen = strlen("~/Library/Preferences/edu.mit.Kerberos:/Library/Preferences/edu.mit.Kerberos:")+strlen(AFSDIR_CLIENT_ETC_DIRPATH)+strlen("/krb5-weak.conf")+1;
+	    newpath = malloc(slen);
+	    snprintf(newpath, slen, "~/Library/Preferences/edu.mit.Kerberos:/Library/Preferences/edu.mit.Kerberos:%s/krb5-weak.conf", AFSDIR_CLIENT_ETC_DIRPATH);
+#endif
+	}
+	setenv("KRB5_CONFIG", newpath, 1);
+#endif
+	krb5_init_context(&context);
+
+#if defined(KRB5_PROG_ETYPE_NOSUPP) && !(defined(HAVE_KRB5_ENCTYPE_ENABLE) || defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO))
+	free(newpath);
+	if (filepath)
+	    setenv("KRB5_CONFIG", filepath, 1);
+	else
+	    unsetenv("KRB5_CONFIG");
+    }
+#endif
     initialize_KTC_error_table ();
     initialize_U_error_table();
     initialize_RXK_error_table();
