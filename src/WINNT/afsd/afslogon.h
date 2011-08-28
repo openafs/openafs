@@ -45,6 +45,7 @@ SOFTWARE.
 #define REG_CLIENT_TRACE_OPTION_PARM	"TraceOption"
 #define REG_CLIENT_LOGON_OPTION_PARM	"LogonOptions"
 #define REG_CLIENT_LOGON_SCRIPT_PARMW	L"LogonScript"
+#define REG_CLIENT_DEBUG_PARM           "Debug"
 #define REG_CLIENT_REALM_PARM           "Realm"
 #define REG_CLIENT_THESE_CELLS_PARM     "TheseCells"
 #define REG_CLIENT_LOGOFF_TOKENS_PARM	"LogoffPreserveTokens"

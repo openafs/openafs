@@ -37,6 +37,7 @@
 #include <WINNT\afsreg.h>
 
 DWORD TraceOption = 0;
+DWORD Debug = 0;
 
 HANDLE hDLL;
 
@@ -46,7 +47,7 @@ void DebugEvent0(char *a)
 {
     HANDLE h; char *ptbuf[1];
 
-    if (!ISLOGONTRACE(TraceOption))
+    if (!Debug && !ISLOGONTRACE(TraceOption))
         return;
 
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
@@ -63,7 +64,7 @@ void DebugEvent(char *b,...)
     HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
     va_list marker;
 
-    if (!ISLOGONTRACE(TraceOption))
+    if (!Debug && !ISLOGONTRACE(TraceOption))
         return;
 
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
@@ -860,6 +861,14 @@ DWORD APIENTRY NPLogonNotify(
     LSPsize=sizeof(TraceOption);
     RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
                      &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
+
+    RegCloseKey (NPKey);
+
+    (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PROVIDER_SUBKEY,
+                         0, KEY_QUERY_VALUE, &NPKey);
+    LSPsize=sizeof(Debug);
+    RegQueryValueEx(NPKey, REG_CLIENT_DEBUG_PARM, NULL,
+                     &LSPtype, (LPBYTE)&Debug, &LSPsize);
 
     RegCloseKey (NPKey);
 
