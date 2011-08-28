@@ -937,9 +937,9 @@ DWORD APIENTRY NPLogonNotify(
             DebugEvent0("Unable to obtain Root Cell");
             code = KTC_NOCELL;
             reason = "unknown cell";
-            code=0;
         } else {
             DebugEvent("Default cell is %s", cell);
+            code = 0;
         }
 
         /* We get the user's home directory path, if applicable, though we can't lookup the
@@ -964,7 +964,8 @@ DWORD APIENTRY NPLogonNotify(
             Sleep(10);
         }
 
-	while (IsServiceRunning()) {
+        while (IsServiceRunning() && code != KTC_NOCM && code != KTC_NOCMRPC && code != KTC_NOCELL) {
+
             DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
 			opt.LogonOption,afsWillAutoStart);
 
