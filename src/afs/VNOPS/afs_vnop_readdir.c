@@ -741,9 +741,10 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	us = BlobScan(tdc, (origOffset >> 5));
 
 	if (us)
-	   afs_dir_GetVerifiedBlob(tdc, us, &nextEntry);
+	   code = afs_dir_GetVerifiedBlob(tdc, us, &nextEntry);
 
-	if (us == 0 || nde == NULL) {
+	if (us == 0 || code != 0) {
+	    code = 0; /* Reset code - keep old failure behaviour */
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */
