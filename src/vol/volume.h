@@ -994,8 +994,7 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 #define VOL_FREE_BITMAP_WAIT     0x1  /* for demand attach, wait for other exclusive ops to end */
 
 /* VRequestSalvage_r flags */
-#define VOL_SALVAGE_INVALIDATE_HEADER 0x1 /* for demand attach fs, invalidate volume header cache */
-#define VOL_SALVAGE_NO_OFFLINE        0x2 /* we do not need to wait to offline the volume; it has
+#define VOL_SALVAGE_NO_OFFLINE        0x1 /* we do not need to wait to offline the volume; it has
                                            * not been fully attached */
 
 
