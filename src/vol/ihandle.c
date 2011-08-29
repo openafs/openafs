@@ -814,6 +814,10 @@ ih_fdclose(IHandle_t * ihP)
 	       || fdP->fd_status == FD_HANDLE_INUSE
 	       || fdP->fd_status == FD_HANDLE_CLOSING);
 	if (fdP->fd_status == FD_HANDLE_OPEN) {
+	    /* Note that FdHandle_t's do not count against the parent
+	     * IHandle_t ref count when they are FD_HANDLE_OPEN. So, we don't
+	     * need to dec the parent IHandle_t ref count for each one we pull
+	     * off here. */
 	    DLL_DELETE(fdP, ihP->ih_fdhead, ihP->ih_fdtail, fd_ihnext,
 		       fd_ihprev);
 	    DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
