@@ -3200,8 +3200,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                          VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 	goto locked_error;
@@ -3224,8 +3223,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume salvage flag is ON for %s; volume needs salvage\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                           VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3247,8 +3245,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                           VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3270,8 +3267,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
 #if defined(AFS_DEMAND_ATTACH_FS)
 	/* schedule a salvage so the volume goes away on disk */
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                          VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 	VChangeState_r(vp, VOL_STATE_ERROR);
 	vp->nUsers = 0;
 	forcefree = 1;
@@ -3289,8 +3285,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    VGetBitmap_r(ec, vp, i);
 	    if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-		                                          VOL_SALVAGE_NO_OFFLINE);
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 		vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
@@ -3338,8 +3333,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	        "%lu; needs salvage\n", (int)*ec,
 	        afs_printable_uint32_lu(V_id(vp)));
 #ifdef AFS_DEMAND_ATTACH_FS
-	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                              VOL_SALVAGE_NO_OFFLINE);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 	    vp->nUsers = 0;
 #else /* !AFS_DEMAND_ATTACH_FS */
 	    *ec = VSALVAGE;
@@ -3378,7 +3372,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 #ifdef AFS_DEMAND_ATTACH_FS
 		error_state = VOL_STATE_ERROR;
 		/* see if we can recover */
-		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, 0 /*flags*/);
 #endif
 	    }
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -4139,7 +4133,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 		    vp->hashid);
 #ifdef AFS_DEMAND_ATTACH_FS
 	    if (VCanScheduleSalvage()) {
-		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0 /*flags*/);
 	    } else {
 		FreeVolume(vp);
 		vp = NULL;
@@ -4324,7 +4318,7 @@ VForceOffline_r(Volume * vp, int flags)
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    VRequestSalvage_r(&error, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+    VRequestSalvage_r(&error, vp, SALVSYNC_ERROR, 0 /*flags*/);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_PTHREAD_ENV
@@ -5479,8 +5473,8 @@ VCheckSalvage(Volume * vp)
  * @param[in]  flags   see flags note below
  *
  * @note flags:
- *       VOL_SALVAGE_INVALIDATE_HEADER causes volume header cache entry
- *                                     to be invalidated.
+ *       VOL_SALVAGE_NO_OFFLINE do not need to wait to offline the volume; it has
+ *                              not been fully attached
  *
  * @pre VOL_LOCK is held.
  *
@@ -5568,15 +5562,6 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	    VChangeState_r(vp, VOL_STATE_ERROR);
 	    *ec = VSALVAGE;
 	    code = 1;
-	}
-	if (flags & VOL_SALVAGE_INVALIDATE_HEADER) {
-	    /* Instead of ReleaseVolumeHeader, we do FreeVolumeHeader()
-               so that the the next VAttachVolumeByVp_r() invocation
-               of attach2() will pull in a cached header
-               entry and fail, then load a fresh one from disk and attach
-               it to the volume.
-	    */
-	    FreeVolumeHeader(vp);
 	}
     }
     return code;
@@ -6225,7 +6210,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 		VGetBitmap_r(ec, vp, i);
 		if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+		    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0 /*flags*/);
 #else /* AFS_DEMAND_ATTACH_FS */
 		    DeleteVolumeFromHashTable(vp);
 		    vp->shuttingDown = 1;	/* Let who has it free it. */
