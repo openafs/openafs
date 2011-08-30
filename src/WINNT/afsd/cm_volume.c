@@ -1226,8 +1226,9 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                     continue;
 
                 alldeleted = 0;
-                *onlinep = 1;
-                alldown = 0;
+
+                if (!(serversp->server->flags & CM_SERVERFLAG_DOWN))
+                    alldown = 0;
 
                 if (serversp->status == srv_busy || serversp->status == srv_offline)
                     serversp->status = srv_not_busy;
