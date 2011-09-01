@@ -1351,6 +1351,9 @@ void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t 
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
     osi_assertx(bp->refCount > 0, "cm_buf_t refcount 0");
 
+    if (length == 0)
+        return;
+
     if (bp->flags & CM_BUF_DIRTY) {
 
 	osi_Log1(buf_logp, "buf_SetDirty 0x%p already dirty", bp);
