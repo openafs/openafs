@@ -11,7 +11,8 @@
 #define _AFS_PROTOTYPES_H_
 
 /* afs_analyze.c */
-extern int afs_Analyze(struct afs_conn *aconn, afs_int32 acode,
+extern int afs_Analyze(struct afs_conn *aconn,
+		       struct rx_connection *rxconn, afs_int32 acode,
 		       struct VenusFid *afid, struct vrequest *areq,
 		       int op, afs_int32 locktype, struct cell *cellp);
 
@@ -174,21 +175,27 @@ extern afs_int32 cryptall;
 extern afs_rwlock_t afs_xinterface;
 extern afs_rwlock_t afs_xconn;
 extern struct afs_conn *afs_Conn(struct VenusFid *afid,
-			     struct vrequest *areq,
-			     afs_int32 locktype);
+				 struct vrequest *areq,
+				 afs_int32 locktype,
+				 struct rx_connection **rxconn);
 extern struct afs_conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 				 afs_int32 acell, struct unixuser *tu,
 				 int force_if_down, afs_int32 create,
-				 afs_int32 locktype);
+				 afs_int32 locktype,
+				 struct rx_connection **rxconn);
 extern struct afs_conn *afs_ConnByMHosts(struct server *ahosts[],
 				     unsigned short aport, afs_int32 acell,
 				     struct vrequest *areq,
-				     afs_int32 locktype);
+				     afs_int32 locktype,
+				     struct rx_connection **rxconn);
 extern struct afs_conn *afs_ConnByHost(struct server *aserver,
 				   unsigned short aport, afs_int32 acell,
 				   struct vrequest *areq, int aforce,
-				   afs_int32 locktype);
-extern void afs_PutConn(struct afs_conn *ac, afs_int32 locktype);
+				   afs_int32 locktype,
+				   struct rx_connection **rxconn);
+extern void afs_PutConn(struct afs_conn *ac,
+                        struct rx_connection *rxconn,
+			afs_int32 locktype);
 extern void ForceNewConnections(struct srvAddr *sap);
 
 
@@ -493,10 +500,11 @@ extern int afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 				unsigned int high, unsigned int moredata,
 				afs_hyper_t *anewDV,
                                  afs_size_t *amaxStoredLength);
-extern int afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP,
-				afs_size_t abase, struct dcache *adc,
-				struct vcache *avc, afs_int32 size,
-				struct afs_FetchOutput *tsmall);
+extern int afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
+			      struct osi_file *fP,
+			      afs_size_t abase, struct dcache *adc,
+			      struct vcache *avc, afs_int32 size,
+			      struct afs_FetchOutput *tsmall);
 
 /* afs_memcache.c */
 extern int afs_InitMemCache(int blkCount, int blkSize, int flags);

@@ -56,6 +56,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct vcache *tvc;
     struct volume *volp = 0;
     struct afs_fakestat_state fakestate;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
@@ -297,14 +298,14 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     	InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
     	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
+	  tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	    	hostp = tc->srvr->server;	/* remember for callback processing */
 	    	now = osi_Time();
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
 	    	RX_AFS_GUNLOCK();
 	    	code =
-		    RXAFS_CreateFile(tc->id, (struct AFSFid *)&adp->f.fid.Fid,
+		    RXAFS_CreateFile(rxconn, (struct AFSFid *)&adp->f.fid.Fid,
 				 aname, &InStatus, (struct AFSFid *)
 				 &newFid.Fid, &OutFidStatus, &OutDirStatus,
 				 &CallBack, &tsync);
@@ -314,7 +315,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
-	         (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
+	         (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
 	          SHARED_LOCK, NULL));
 
 	if ((code == EEXIST || code == UAEEXIST) &&

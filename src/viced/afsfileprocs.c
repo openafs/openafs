@@ -316,7 +316,7 @@ CallPreamble(struct rx_call *acall, int activecall,
   retry:
     tclient = h_FindClient_r(*tconn);
     if (!tclient) {
-	ViceLog(0, ("CallPreamble: Couldn't get CPS. Too many lockers\n"));
+	ViceLog(0, ("CallPreamble: Couldn't get client.\n"));
 	H_UNLOCK;
 	return VBUSY;
     }

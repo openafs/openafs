@@ -82,7 +82,7 @@
 # End legacy kernel build stuff
 %endif 
 
-%define dkms_version %{pkgrel}%{?dist}
+%define dkms_version %{pkgvers}-%{pkgrel}%{?dist}
 
 # Set 'debugspec' to 1 if you want to debug the spec file.  This will
 # not remove the installed tree as part of the %clean operation
@@ -187,32 +187,15 @@
 # you'll need to tweak that last bit.
 %if !%{build_userspace_on_cmdline} && !%{build_modules_on_cmdline}
 
-%ifarch x86_64 ia64 s390 s390x
 %define build_userspace 1
 %define build_modules 1
-%ifarch x86_64 ia64
+%ifarch %{ix86} x86_64 ia64
 %define build_authlibs 1
 %else
 %define build_authlibs 0
 %endif
-%endif
 
-%ifarch %{ix86}
-%define build_userspace 0
-%define build_modules 1
-%define build_authlibs 1
-%endif
-
-%ifarch i386
-%define build_userspace 1
-%define build_modules 0
-%define build_authlibs 1
-%endif
-
-%endif
-
-# deal with cmdline specification
-%if %{build_userspace_on_cmdline} || %{build_modules_on_cmdline}
+%else
 %if !%{build_userspace_on_cmdline}
 %define build_userspace 0
 %endif
@@ -242,6 +225,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: OpenAFS Gatekeepers <openafs-gatekeepers@openafs.org>
 Group: Networking/Filesystems
 BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
+BuildRequires: perl-devel perl-ExtUtils-Embed
 %if %{krb5support}
 BuildRequires: krb5-devel
 %endif
@@ -255,7 +239,7 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: http://dl.central.org/dl/cellservdb/CellServDB.2010-12-13
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2011-08-14
 
 Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
@@ -403,9 +387,9 @@ authentication may link against them.
 
 %package authlibs-devel
 %if %{build_authlibs}
-Requires: openafs-authlibs = %{version}
+Requires: openafs-authlibs = %{version}-%{release}
 %endif
-Requires: openafs-devel = %{version}
+Requires: openafs-devel = %{version}-%{release}
 Summary: OpenAFS shared library development
 Group: Development/Filesystems
 
@@ -422,6 +406,7 @@ libraries.
 %package devel
 Summary: OpenAFS Development Libraries and Headers
 Group: Development/Filesystems
+Requires: openafs = %{version}-%{release}
 
 %description devel
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -435,7 +420,7 @@ shared libraries.
 
 %package docs
 Summary: OpenAFS user and administrator documentation
-Requires: openafs = %{version}
+Requires: openafs = %{version}-%{release}
 Group: Networking/Filesystems
 
 %description docs
@@ -1008,6 +993,10 @@ tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
 tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
+# Set the executable bit on libraries in libdir, so rpmbuild knows to
+# create "Provides" entries in the package metadata for the libraries
+chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
+
 # Fix the location of restorevol, since it should be available for
 # any user in /usr/bin
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/restorevol $RPM_BUILD_ROOT%{_bindir}/restorevol
@@ -1045,7 +1034,7 @@ PACKAGE_VERSION="%{dkms_version}"
 
 # Items below here should not have to change with each driver version
 PACKAGE_NAME="%{name}"
-MAKE[0]="KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --enable-disconnected --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
+MAKE[0]="KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
 CLEAN="make -C src/libafs clean"
 
 BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
@@ -1305,21 +1294,6 @@ fi
 ( cd /usr/vice/etc ; \
   cat CellServDB.local CellServDB.dist > CellServDB ; \
   chmod 644 CellServDB )
-
-echo
-echo The AFS cache is configured for 100 MB. Edit the
-echo /usr/vice/etc/cacheinfo file to change this before
-echo running AFS for the first time. You should also
-echo set your home cell in /usr/vice/etc/ThisCell.
-echo
-echo Also, you may want to edit /etc/pam.d/login and
-echo possibly others there to get an AFS token on login.
-echo Put the line:
-echo 
-echo    auth	   sufficient   %{pamdir}/pam_afs.so try_first_pass ignore_root
-echo
-echo before the one for pwdb.
-echo
 
 %post server
 #on an upgrade, don't enable if we were disabled

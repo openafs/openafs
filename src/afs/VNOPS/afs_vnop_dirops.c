@@ -40,6 +40,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct vrequest treq;
     afs_int32 code;
     struct afs_conn *tc;
+    struct rx_connection *rxconn;
     struct VenusFid newFid;
     struct dcache *tdc;
     struct dcache *new_dc;
@@ -103,13 +104,13 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     if (!AFS_IS_DISCON_RW) {
     	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
+	  tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_MAKEDIR);
 	    	now = osi_Time();
 	    	RX_AFS_GUNLOCK();
 	    	code =
-		    RXAFS_MakeDir(tc->id,
+		    RXAFS_MakeDir(rxconn,
 		    		(struct AFSFid *)&adp->f.fid.Fid,
 				aname,
 				&InStatus,
@@ -125,7 +126,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
-		    (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
+		 (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_MAKEDIR,
 		     SHARED_LOCK, NULL));
 
     	if (code) {
@@ -263,6 +264,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     struct afs_fakestat_state fakestate;
+    struct rx_connection *rxconn;
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
@@ -332,12 +334,12 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     if (!AFS_IS_DISCON_RW) {
 	/* Not disconnected, can connect to server. */
     	do {
-	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
+	  tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEDIR);
 	    	RX_AFS_GUNLOCK();
 	    	code =
-		    RXAFS_RemoveDir(tc->id,
+		    RXAFS_RemoveDir(rxconn,
 		    		(struct AFSFid *)&adp->f.fid.Fid,
 				aname,
 				&OutDirStatus,
@@ -347,7 +349,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
-	         (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
+	         (tc, rxconn, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_REMOVEDIR,
 	         SHARED_LOCK, NULL));
 
     	if (code) {

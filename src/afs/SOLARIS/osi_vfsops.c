@@ -128,11 +128,13 @@ afs_unmount(struct vfs *afsp, afs_ucred_t *credp)
     afsp->vfs_flag |= VFS_UNMOUNTED;
 #endif /* AFS_SUN58_ENV */
 
-    /* release the root vnode, which should be the last reference to us
-     * besides the caller of afs_unmount */
-    rootvp = afs_globalVp;
-    afs_globalVp = NULL;
-    AFS_RELE(rootvp);
+    if (afs_globalVp) {
+	/* release the root vnode, which should be the last reference to us
+	 * besides the caller of afs_unmount */
+	rootvp = afs_globalVp;
+	afs_globalVp = NULL;
+	AFS_RELE(rootvp);
+    }
 
 #ifndef AFS_SUN58_ENV
     /* shutdown now, since gafs_freevfs() will not be called */

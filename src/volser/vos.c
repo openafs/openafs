@@ -3736,8 +3736,6 @@ ListVolumes(struct cmd_syndesc *as, void *arock)
 				   &pntr, &count);
 	    if (code) {
 		PrintDiagnostics("listvol", code);
-		if (pntr)
-		    free(pntr);
 		exit(1);
 	    }
 	    if (wantExtendedInfo) {
@@ -4410,7 +4408,7 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
 	avolid = vllist->volumeId[RWVOL];
 	vcode = ubik_VL_DeleteEntry(cstruct, 0, avolid, RWVOL);
 	if (vcode) {
-	    fprintf(STDOUT, "Could not delete VDLB entry for  %s\n",
+	    fprintf(STDOUT, "Could not delete VLDB entry for  %s\n",
 		    vllist->name);
 	    totalFail++;
 	    PrintError("", vcode);

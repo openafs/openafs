@@ -288,6 +288,7 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
     struct server *aserver = sa->server;
     struct afs_conn *tc;
     afs_int32 code;
+    struct rx_connection *rxconn;
 
     AFS_STATCNT(CheckVLServer);
     /* Ping dead servers to see if they're back */
@@ -298,16 +299,16 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
 	return;			/* can't do much */
 
     tc = afs_ConnByHost(aserver, aserver->cell->vlport,
-			aserver->cell->cellNum, areq, 1, SHARED_LOCK);
+			aserver->cell->cellNum, areq, 1, SHARED_LOCK, &rxconn);
     if (!tc)
 	return;
-    rx_SetConnDeadTime(tc->id, 3);
+    rx_SetConnDeadTime(rxconn, 3);
 
     RX_AFS_GUNLOCK();
-    code = VL_ProbeServer(tc->id);
+    code = VL_ProbeServer(rxconn);
     RX_AFS_GLOCK();
-    rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
-    afs_PutConn(tc, SHARED_LOCK);
+    rx_SetConnDeadTime(rxconn, afs_rx_deadtime);
+    afs_PutConn(tc, rxconn, SHARED_LOCK);
     /*
      * If probe worked, or probe call not yet defined (for compatibility
      * with old vlsevers), then we treat this server as running again
@@ -593,6 +594,8 @@ afs_CheckServers(int adown, struct cell *acellp)
     memset(caps, 0, j * sizeof(Capabilities));
 
     for (i = 0; i < j; i++) {
+	struct rx_connection *rxconn;
+
 	deltas[i] = 0;
 	sa = addrs[i];
 	ts = sa->server;
@@ -621,7 +624,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	/* get a connection, even if host is down; bumps conn ref count */
 	tu = afs_GetUser(treq.uid, ts->cell->cellNum, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
-			  1 /*force */ , 1 /*create */ , SHARED_LOCK);
+			  1 /*force */ , 1 /*create */ , SHARED_LOCK, &rxconn);
 	afs_PutUser(tu, SHARED_LOCK);
 	if (!tc)
 	    continue;
@@ -629,9 +632,9 @@ afs_CheckServers(int adown, struct cell *acellp)
 	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
 	    || (tc->srvr->server == afs_setTimeHost)) {
 	    conns[nconns]=tc;
-	    rxconns[nconns]=tc->id;
+	    rxconns[nconns]=rxconn;
 	    if (sa->sa_flags & SRVADDR_ISDOWN) {
-		rx_SetConnDeadTime(tc->id, 3);
+		rx_SetConnDeadTime(rxconn, 3);
 		conntimer[nconns]=1;
 	    } else {
 		conntimer[nconns]=0;
@@ -681,7 +684,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 		tc = conns[multi_i];
 		sa = tc->srvr;
 		if (conntimer[multi_i] == 1)
-		  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
+		    rx_SetConnDeadTime(rxconns[multi_i], afs_rx_deadtime);
 		end = osi_Time();
 		results[multi_i]=multi_error;
 		if ((start == end) && !multi_error)
@@ -799,7 +802,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	}
     }
     for (i = 0; i < nconns; i++) {
-	afs_PutConn(conns[i], SHARED_LOCK);     /* done with it now */
+	afs_PutConn(conns[i], rxconns[i], SHARED_LOCK);     /* done with it now */
     }
 
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
@@ -1698,6 +1701,7 @@ afs_GetCapabilities(struct server *ts)
     struct vrequest treq;
     struct afs_conn *tc;
     struct unixuser *tu;
+    struct rx_connection *rxconn;
     afs_int32 code;
 
     if ( !ts || !ts->cell )
@@ -1711,17 +1715,18 @@ afs_GetCapabilities(struct server *ts)
     if ( !tu )
 	return;
     tc = afs_ConnBySA(ts->addr, ts->cell->fsport, ts->cell->cellNum, tu, 0, 1,
-								SHARED_LOCK);
+		      SHARED_LOCK,
+		      &rxconn);
     afs_PutUser(tu, SHARED_LOCK);
     if ( !tc )
 	return;
     /* InitCallBackStateN, triggered by our RPC, may need this */
     ReleaseWriteLock(&afs_xserver);
-    code = RXAFS_GetCapabilities(tc->id, &caps);
+    code = RXAFS_GetCapabilities(rxconn, &caps);
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
-	afs_PutConn(tc, SHARED_LOCK);
+	afs_PutConn(tc, rxconn, SHARED_LOCK);
 	afs_ServerDown(tc->srvr);
 	ForceNewConnections(tc->srvr); /* multi homed clients */
     }

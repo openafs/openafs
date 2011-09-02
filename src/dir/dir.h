@@ -100,6 +100,7 @@ extern int EnumerateDir(void *dir,
 			void *hook);
 extern int IsEmpty(void *dir);
 extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
+extern int GetVerifiedBlob(void *dir, afs_int32 blobno, struct DirEntry **);
 extern int DirHash(char *string);
 
 extern int DStat(int *abuffers, int *acalls, int *aios);
@@ -145,6 +146,7 @@ extern int afs_dir_IsEmpty(void *dir);
 extern int afs_dir_ChangeFid(void *dir, char *entry, afs_uint32 *old_fid,
                		     afs_uint32 *new_fid);
 extern struct DirEntry *afs_dir_GetBlob(void *dir, afs_int32 blobno);
+extern int afs_dir_GetVerifiedBlob(void *, afs_int32, struct DirEntry **);
 #endif
 
 #endif /*       !defined(__AFS_DIR_H) */
