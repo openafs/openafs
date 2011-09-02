@@ -142,7 +142,8 @@ extern long cm_Link(cm_scache_t *dscp, clientchar_t *namep, cm_scache_t *sscp,
                     long flags, cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_SymLink(cm_scache_t *dscp, clientchar_t *namep, fschar_t *contentsp,
-                       long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
+                       long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp,
+                       cm_scache_t **scpp);
 
 extern long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
                             cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,

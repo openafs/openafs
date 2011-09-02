@@ -3210,7 +3210,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
 }
 
 long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, long flags,
-                cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp)
+                cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp, cm_scache_t **scpp)
 {
     cm_conn_t *connp;
     long code;
@@ -3225,6 +3225,9 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t *fnamep = NULL;
+
+    if (scpp)
+        *scpp = NULL;
 
     /* Check for RO volume */
     if (dscp->flags & CM_SCACHEFLAG_RO)
@@ -3314,7 +3317,12 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
                                 userp, reqp, 0);
             }
             lock_ReleaseWrite(&scp->rw);
-            cm_ReleaseSCache(scp);
+
+            if (scpp) {
+                *scpp = scp;
+            } else {
+                cm_ReleaseSCache(scp);
+            }
         }
     }
 
