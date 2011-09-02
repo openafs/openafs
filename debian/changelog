@@ -1,4 +1,4 @@
-openafs (1.6.0-1) UNRELEASED; urgency=low
+openafs (1.6.0-1) unstable; urgency=low
 
   * New upstream stable release.
     - Rx NAT pings are not enabled until peer has answered
@@ -16,7 +16,7 @@ openafs (1.6.0-1) UNRELEASED; urgency=low
     the generated configuration files after Doxygen runs.
   * Update CellServDB to the 2011-08-14 release.
 
- -- Russ Allbery <rra@debian.org>  Sun, 24 Jul 2011 17:30:26 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 01 Sep 2011 18:43:02 -0700
 
 openafs (1.6.0~pre7-2) unstable; urgency=low
 
