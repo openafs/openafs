@@ -1,6 +1,13 @@
 openafs (1.6.0-1) UNRELEASED; urgency=low
 
   * New upstream stable release.
+    - Rx NAT pings are not enabled until peer has answered
+    - Numerous fixes to command argument parsing
+    - Avoid crashing on host table exhaustion and defer clients instead
+    - Rx connection reference counting is enabled
+    - An Rx connection reference count leak is fixed in bulkstat
+    - Handle unparsable directory objects
+    - Handle Kerberos credential cache errors in aklog
   * Fix another Doxygen call to generate a configuration file, and remove
     the generated configuration files after Doxygen runs.
 
