@@ -414,6 +414,22 @@ struct dentry _d;
 ])
 
 
+int (*fsync) (struct file *, loff_t start, loff_t end, int datasync);
+
+AC_DEFUN([LINUX_FOP_F_FSYNC_TAKES_RANGE], [
+  AC_CHECK_LINUX_BUILD([whether file_operations.fsync takes a range],
+		       [ac_cv_linux_func_f_fsync_takes_range],
+		       [#include <linux/fs.h>],
+[struct inode _inode;
+struct file _file;
+loff_t start, end;
+(void)_inode.i_fop->fsync(&_file, start, end, 0);],
+		       [FOP_FSYNC_TAKES_RANGE],
+		       [define if your fops.fsync takes range arguments],
+		       [])
+])
+
+
 AC_DEFUN([LINUX_HAVE_KMEM_CACHE_T], [
   AC_CHECK_LINUX_BUILD([whether kmem_cache_t exists],
 		       [ac_cv_linux_have_kmem_cache_t],
