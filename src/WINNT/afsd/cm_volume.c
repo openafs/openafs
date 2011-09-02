@@ -340,6 +340,27 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                                  &method, userp, reqp);
     }
 
+    /*
+     * What if there was a volume rename?  The volume name no longer exists but the
+     * volume id might.  Try to refresh the volume location information based one
+     * of the readwrite or readonly volume id.
+     */
+    if (code == CM_ERROR_NOSUCHVOLUME) {
+        if (volp->vol[RWVOL].ID != 0) {
+            code = cm_GetEntryByID(cellp, volp->vol[RWVOL].ID, &vldbEntry, &nvldbEntry,
+#ifdef MULTIHOMED
+                                    &uvldbEntry,
+#endif
+                                    &method, userp, reqp);
+        } else if (volp->vol[ROVOL].ID != 0) {
+            code = cm_GetEntryByID(cellp, volp->vol[ROVOL].ID, &vldbEntry, &nvldbEntry,
+#ifdef MULTIHOMED
+                                    &uvldbEntry,
+#endif
+                                    &method, userp, reqp);
+        }
+    }
+
     lock_ObtainWrite(&volp->rw);
     if (code == 0) {
         afs_int32 flags;
