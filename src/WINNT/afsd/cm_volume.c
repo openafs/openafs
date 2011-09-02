@@ -14,6 +14,7 @@
 #include <winsock2.h>
 #include <nb30.h>
 #include <string.h>
+#include <strsafe.h>
 #include <malloc.h>
 #include "afsd.h"
 #include <osi.h>
@@ -161,9 +162,83 @@ cm_VolNameIsID(char *aname)
  *    RXGEN_OPCODE.
  */
 #define MULTIHOMED 1
+
+static long
+cm_GetEntryByName( struct cm_cell *cellp, const char *name,
+                   struct vldbentry *vldbEntryp,
+                   struct nvldbentry *nvldbEntryp,
+#ifdef MULTIHOMED
+                   struct uvldbentry *uvldbEntryp,
+#endif
+                   int *methodp,
+                   cm_user_t *userp,
+                   cm_req_t *reqp
+                   )
+{
+    long code;
+    cm_conn_t *connp;
+    struct rx_connection * rxconnp;
+
+    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s",
+              osi_LogSaveString(afsd_logp,cellp->name),
+              osi_LogSaveString(afsd_logp,name));
+    do {
+
+        code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
+        if (code)
+            continue;
+
+        rxconnp = cm_GetRxConn(connp);
+#ifdef MULTIHOMED
+        code = VL_GetEntryByNameU(rxconnp, name, uvldbEntryp);
+        *methodp = 2;
+        if ( code == RXGEN_OPCODE )
+#endif
+        {
+            code = VL_GetEntryByNameN(rxconnp, name, nvldbEntryp);
+            *methodp = 1;
+        }
+        if ( code == RXGEN_OPCODE ) {
+            code = VL_GetEntryByNameO(rxconnp, name, vldbEntryp);
+            *methodp = 0;
+        }
+        rx_PutConnection(rxconnp);
+    } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
+    code = cm_MapVLRPCError(code, reqp);
+    if ( code )
+        osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x",
+                  osi_LogSaveString(afsd_logp,cellp->name),
+                  osi_LogSaveString(afsd_logp,name), code);
+    else
+        osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS",
+                  osi_LogSaveString(afsd_logp,cellp->name),
+                  osi_LogSaveString(afsd_logp,name));
+    return code;
+}
+
+static long
+cm_GetEntryByID( struct cm_cell *cellp, afs_uint32 id,
+                 struct vldbentry *vldbEntryp,
+                 struct nvldbentry *nvldbEntryp,
+#ifdef MULTIHOMED
+                 struct uvldbentry *uvldbEntryp,
+#endif
+                 int *methodp,
+                 cm_user_t *userp,
+                 cm_req_t *reqp
+                 )
+{
+    char name[64];
+
+    StringCbPrintf(name, sizeof(name), "%u", id);
+
+    return cm_GetEntryByName(cellp, name, vldbEntryp, nvldbEntryp, uvldbEntryp, methodp, userp, reqp);
+}
+
 long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 		     cm_volume_t *volp)
 {
+    struct rx_connection *rxconnp;
     cm_conn_t *connp;
     int i;
     afs_uint32 j, k;
@@ -237,41 +312,11 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             cm_UpdateCell(cellp, 0);
 
         /* now we have volume structure locked and held; make RPC to fill it */
-	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s",
-                  osi_LogSaveString(afsd_logp,volp->cellp->name),
-                  osi_LogSaveString(afsd_logp,volp->namep));
-        do {
-            struct rx_connection * rxconnp;
-
-            code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
-            if (code)
-                continue;
-
-            rxconnp = cm_GetRxConn(connp);
+        code = cm_GetEntryByName(cellp, volp->namep, &vldbEntry, &nvldbEntry,
 #ifdef MULTIHOMED
-            code = VL_GetEntryByNameU(rxconnp, volp->namep, &uvldbEntry);
-            method = 2;
-            if ( code == RXGEN_OPCODE )
+                                 &uvldbEntry,
 #endif
-            {
-                code = VL_GetEntryByNameN(rxconnp, volp->namep, &nvldbEntry);
-                method = 1;
-            }
-            if ( code == RXGEN_OPCODE ) {
-                code = VL_GetEntryByNameO(rxconnp, volp->namep, &vldbEntry);
-                method = 0;
-            }
-            rx_PutConnection(rxconnp);
-        } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
-        code = cm_MapVLRPCError(code, reqp);
-	if ( code )
-	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x",
-		      osi_LogSaveString(afsd_logp,volp->cellp->name),
-                      osi_LogSaveString(afsd_logp,volp->namep), code);
-	else
-	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS",
-		      osi_LogSaveString(afsd_logp,volp->cellp->name),
-                      osi_LogSaveString(afsd_logp,volp->namep));
+                                 &method, userp, reqp);
     }
 
     /* We can end up here with code == CM_ERROR_NOSUCHVOLUME if the base volume name
@@ -288,41 +333,11 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
 
         /* now we have volume structure locked and held; make RPC to fill it */
-	osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s",
-                 osi_LogSaveString(afsd_logp,volp->cellp->name),
-                 osi_LogSaveString(afsd_logp,name));
-        do {
-            struct rx_connection * rxconnp;
-
-            code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
-            if (code)
-                continue;
-
-            rxconnp = cm_GetRxConn(connp);
+        code = cm_GetEntryByName(cellp, name, &vldbEntry, &nvldbEntry,
 #ifdef MULTIHOMED
-            code = VL_GetEntryByNameU(connp->rxconnp, name, &uvldbEntry);
-            method = 2;
-            if ( code == RXGEN_OPCODE )
+                                 &uvldbEntry,
 #endif
-            {
-                code = VL_GetEntryByNameN(connp->rxconnp, name, &nvldbEntry);
-                method = 1;
-            }
-            if ( code == RXGEN_OPCODE ) {
-                code = VL_GetEntryByNameO(connp->rxconnp, name, &vldbEntry);
-                method = 0;
-            }
-            rx_PutConnection(rxconnp);
-        } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
-        code = cm_MapVLRPCError(code, reqp);
-	if ( code )
-	    osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x",
-		     osi_LogSaveString(afsd_logp,volp->cellp->name),
-                     osi_LogSaveString(afsd_logp,name), code);
-	else
-	    osi_Log2(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s SUCCESS",
-		     osi_LogSaveString(afsd_logp,volp->cellp->name),
-                     osi_LogSaveString(afsd_logp,name));
+                                 &method, userp, reqp);
     }
 
     lock_ObtainWrite(&volp->rw);
@@ -405,8 +420,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     memset(&addrs, 0, sizeof(addrs));
 
                     do {
-                        struct rx_connection *rxconnp;
-
                         code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
                         if (code)
                             continue;
