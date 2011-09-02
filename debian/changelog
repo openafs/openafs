@@ -14,6 +14,7 @@ openafs (1.6.0-1) UNRELEASED; urgency=low
     moved some of the system headers.  (Closes: #639063)
   * Fix another Doxygen call to generate a configuration file, and remove
     the generated configuration files after Doxygen runs.
+  * Update CellServDB to the 2011-08-14 release.
 
  -- Russ Allbery <rra@debian.org>  Sun, 24 Jul 2011 17:30:26 -0700
 
