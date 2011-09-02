@@ -1,5 +1,6 @@
-openafs (1.6.0~pre7-3) UNRELEASED; urgency=low
+openafs (1.6.0-1) UNRELEASED; urgency=low
 
+  * New upstream stable release.
   * Fix another Doxygen call to generate a configuration file, and remove
     the generated configuration files after Doxygen runs.
 
