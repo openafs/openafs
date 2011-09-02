@@ -2058,7 +2058,7 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
         tattr.unixModeBits = 0644;
         tattr.clientModTime = time(NULL);
 
-        code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, reqp);
+        code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, reqp, NULL);
     }
 
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
@@ -2129,7 +2129,7 @@ cm_IoctlSymlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dsc
         tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
         tattr.unixModeBits = 0755;
 
-        code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, reqp);
+        code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, reqp, NULL);
     }
 
     if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
