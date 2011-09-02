@@ -425,6 +425,8 @@ afs_linux_release(struct inode *ip, struct file *fp)
 static int
 #if defined(FOP_FSYNC_TAKES_DENTRY)
 afs_linux_fsync(struct file *fp, struct dentry *dp, int datasync)
+#elif defined(FOP_FSYNC_TAKES_RANGE)
+afs_linux_fsync(struct file *fp, loff_t start, loff_t end, int datasync)
 #else
 afs_linux_fsync(struct file *fp, int datasync)
 #endif
@@ -433,9 +435,15 @@ afs_linux_fsync(struct file *fp, int datasync)
     struct inode *ip = FILE_INODE(fp);
     cred_t *credp = crref();
 
+#if defined(FOP_FSYNC_TAKES_RANGE)
+    mutex_lock(&ip->i_mutex);
+#endif
     AFS_GLOCK();
     code = afs_fsync(VTOAFS(ip), credp);
     AFS_GUNLOCK();
+#if defined(FOP_FSYNC_TAKES_RANGE)
+    mutex_unlock(&ip->i_mutex);
+#endif
     crfree(credp);
     return afs_convert_code(code);
 
