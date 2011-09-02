@@ -111,6 +111,7 @@ override_dh_auto_configure:
 
 # Also build a libafs_tree and build the XML documentation.
 override_dh_auto_build:
+	chmod a+x src/libuafs/make_h_tree.pl
 	dh_auto_build
 	$(MAKE) libafs_tree
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
