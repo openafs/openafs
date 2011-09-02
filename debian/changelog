@@ -8,6 +8,10 @@ openafs (1.6.0-1) UNRELEASED; urgency=low
     - An Rx connection reference count leak is fixed in bulkstat
     - Handle unparsable directory objects
     - Handle Kerberos credential cache errors in aklog
+  * Generate stub header files that include the actual system header when
+    building libuafs instead of symlinking h to the appropriate directory.
+    Fixes build failures now that Debian has switched to multiarch and
+    moved some of the system headers.  (Closes: #639063)
   * Fix another Doxygen call to generate a configuration file, and remove
     the generated configuration files after Doxygen runs.
 
