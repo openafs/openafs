@@ -493,7 +493,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 
         /* decode the response */
         lock_ObtainWrite(&cm_volumeLock);
-        if (cm_VolNameIsID(volp->namep)) {
+        if (!cm_VolNameIsID(volp->namep)) {
             size_t    len;
 
             len = strlen(name);
