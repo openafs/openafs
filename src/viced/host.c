@@ -208,7 +208,7 @@ GetHTBlock(void)
 
     if (HTBlocks == h_MAXHOSTTABLES) {
 	ViceLog(0, ("h_MAXHOSTTABLES reached\n"));
-	ShutDownAndCore(PANIC);
+	return;
     }
 
     block = (struct HTBlock *)malloc(sizeof(struct HTBlock));
@@ -241,7 +241,8 @@ GetHT(void)
 
     if (HTFree == NULL)
 	GetHTBlock();
-    osi_Assert(HTFree != NULL);
+    if (HTFree == NULL)
+	return NULL;
     entry = HTFree;
     HTFree = entry->next;
     HTs++;
@@ -684,7 +685,7 @@ h_flushhostcps(afs_uint32 hostaddr, afs_uint16 hport)
  */
 #define	DEF_ROPCONS 2115
 
-struct host *
+static struct host *
 h_Alloc_r(struct rx_connection *r_con)
 {
     struct servent *serverentry;
@@ -694,6 +695,8 @@ h_Alloc_r(struct rx_connection *r_con)
 #endif /* FS_STATS_DETAILED */
 
     host = GetHT();
+    if (!host)
+	return NULL;
 
     host->host = rxr_HostOf(r_con);
     host->port = rxr_PortOf(r_con);
@@ -1970,6 +1973,8 @@ h_GetHost_r(struct rx_connection *tcon)
 	}
     } else {
 	host = h_Alloc_r(tcon);	/* returned held and locked */
+	if (!host)
+	    goto gethost_out;
 	h_gethostcps_r(host, FT_ApproxTime());
 	if (!(host->Console & 1)) {
 	    int pident = 0;
@@ -3379,6 +3384,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
 	osi_Assert(hcps != NULL);
     }
 
+    /* for restoring state, we better be able to get a host! */
     host = GetHT();
     osi_Assert(host != NULL);
 

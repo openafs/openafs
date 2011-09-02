@@ -242,7 +242,9 @@ Done:
 #error "Must have either keyblock or session member of krb5_creds"
 #endif
 
-#if !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
+#ifdef AFS_DARWIN110_ENV
+#define HAVE_NO_KRB5_524 /* MITKerberosShim logs but returns success */
+#elif !defined(HAVE_KRB5_524_CONVERT_CREDS) && defined(HAVE_KRB524_CONVERT_CREDS_KDC)
 #define krb5_524_convert_creds krb524_convert_creds_kdc
 #elif !defined(HAVE_KRB5_524_CONVERT_CREDS) && !defined(HAVE_KRB524_CONVERT_CREDS_KDC)
 #define HAVE_NO_KRB5_524
@@ -337,6 +339,10 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 	    krb5_svc_get_msg(code,&str);
 #elif defined(HAVE_ERROR_MESSAGE)
 	    str = error_message(code);
+#elif defined(KRB5_PROG_ETYPE_NOSUPP) && !(defined(HAVE_KRB5_ENCTYPE_ENABLE) || defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO))
+	    /* Lion gives us nothing to hook here and no weak crypto switch */
+	    if (code == KRB5_PROG_ETYPE_NOSUPP)
+		str = "encryption type not supported; \"allow_weak_crypto = true\" needed in Kerberos configuration";
 #else
 	    ; /* IRIX apparently has neither: use the string we have */
 #endif
@@ -2173,8 +2179,11 @@ get_user_realm(krb5_context context, char **realm)
 
     *realm = NULL;
 
-    if (!_krb425_ccache)
-        krb5_cc_default(context, &_krb425_ccache);
+    if (!_krb425_ccache) {
+	r = krb5_cc_default(context, &_krb425_ccache);
+	if (r)
+	    return r;
+    }
     if (!client_principal) {
 	if (client) {
 	    r = krb5_parse_name(context, client,  &client_principal);

@@ -736,6 +736,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     char *tbuffer, *ve;
     struct afs_conn *tconn;
     struct vrequest treq;
+    struct rx_connection *rxconn;
 
     if (strlen(aname) > VL_MAXNAMELEN)	/* Invalid volume name */
 	return NULL;
@@ -760,34 +761,34 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     do {
 	tconn =
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
-			     &treq, SHARED_LOCK);
+			     &treq, SHARED_LOCK, &rxconn);
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
 		RX_AFS_GUNLOCK();
-		code = VL_GetEntryByNameO(tconn->id, aname, tve);
+		code = VL_GetEntryByNameO(rxconn, aname, tve);
 		RX_AFS_GLOCK();
 	    } else if (tconn->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
 		RX_AFS_GUNLOCK();
-		code = VL_GetEntryByNameN(tconn->id, aname, ntve);
+		code = VL_GetEntryByNameN(rxconn, aname, ntve);
 		RX_AFS_GLOCK();
 	    } else {
 		type = 2;
 		RX_AFS_GUNLOCK();
-		code = VL_GetEntryByNameU(tconn->id, aname, utve);
+		code = VL_GetEntryByNameU(rxconn, aname, utve);
 		RX_AFS_GLOCK();
 		if (!(tconn->srvr->server->flags & SVLSRV_UUID)) {
 		    if (code == RXGEN_OPCODE) {
 			type = 1;
 			RX_AFS_GUNLOCK();
-			code = VL_GetEntryByNameN(tconn->id, aname, ntve);
+			code = VL_GetEntryByNameN(rxconn, aname, ntve);
 			RX_AFS_GLOCK();
 			if (code == RXGEN_OPCODE) {
 			    type = 0;
 			    tconn->srvr->server->flags |= SNO_LHOSTS;
 			    RX_AFS_GUNLOCK();
-			    code = VL_GetEntryByNameO(tconn->id, aname, tve);
+			    code = VL_GetEntryByNameO(rxconn, aname, tve);
 			    RX_AFS_GLOCK();
 			} else if (!code)
 			    tconn->srvr->server->flags |= SYES_LHOSTS;
@@ -798,7 +799,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	    }
 	} else
 	    code = -1;
-    } while (afs_Analyze(tconn, code, NULL, &treq, -1,	/* no op code for this */
+    } while (afs_Analyze(tconn, rxconn, code, NULL, &treq, -1,	/* no op code for this */
 			 SHARED_LOCK, tcell));
 
     if (code) {
@@ -1110,6 +1111,7 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		bulkaddrs addrs;
 		ListAddrByAttributes attrs;
 		afsUUID uuid;
+		struct rx_connection *rxconn;
 
 		memset(&attrs, 0, sizeof(attrs));
 		attrs.Mask = VLADDR_UUID;
@@ -1119,11 +1121,12 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		do {
 		    tconn =
 			afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
-					 tcell->cellNum, areq, SHARED_LOCK);
+					 tcell->cellNum, areq, SHARED_LOCK,
+					 &rxconn);
 		    if (tconn) {
 			RX_AFS_GUNLOCK();
 			code =
-			    VL_GetAddrsU(tconn->id, &attrs, &uuid, &unique,
+			    VL_GetAddrsU(rxconn, &attrs, &uuid, &unique,
 					 &nentries, &addrs);
 			RX_AFS_GLOCK();
 		    } else {
@@ -1135,7 +1138,7 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 			code = VL_NOENT;
 
 		} while (afs_Analyze
-			 (tconn, code, NULL, areq, -1, SHARED_LOCK, tcell));
+			 (tconn, rxconn, code, NULL, areq, -1, SHARED_LOCK, tcell));
 		if (code) {
 		    /* Better handing of such failures; for now we'll simply retry this call */
 		    areq->volumeError = 1;

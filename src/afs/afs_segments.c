@@ -44,6 +44,7 @@ afs_StoreMini(struct vcache *avc, struct vrequest *areq)
     struct AFSVolSync tsync;
     afs_int32 code;
     struct rx_call *tcall;
+    struct rx_connection *rxconn;
     afs_size_t tlen, xlen = 0;
     XSTATS_DECLS;
     AFS_STATCNT(afs_StoreMini);
@@ -56,13 +57,13 @@ afs_StoreMini(struct vcache *avc, struct vrequest *areq)
     avc->f.states &= ~CExtendedFile;
 
     do {
-	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 #ifdef AFS_64BIT_CLIENT
 	  retry:
 #endif
 	    RX_AFS_GUNLOCK();
-	    tcall = rx_NewCall(tc->id);
+	    tcall = rx_NewCall(rxconn);
 	    RX_AFS_GLOCK();
 	    /* Set the client mod time since we always want the file
 	     * to have the client's mod time and not the server's one
@@ -126,7 +127,7 @@ afs_StoreMini(struct vcache *avc, struct vrequest *areq)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STOREDATA,
+	     (tc, rxconn, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STOREDATA,
 	      SHARED_LOCK, NULL));
 
     if (code == 0)

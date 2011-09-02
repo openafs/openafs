@@ -1,3 +1,7 @@
+#ifdef AFS_NT40_ENV
+#include <afs/errmap_nt.h>
+#endif
+
 #ifndef EIO
 #error Cant deal with this case
 #endif /* EIO */
