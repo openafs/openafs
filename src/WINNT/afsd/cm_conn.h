@@ -24,6 +24,10 @@
 #define CM_CONN_NATPINGINTERVAL          0
 #endif
 
+#define CM_CONN_IFS_HARDDEADTIME       120
+#define CM_CONN_IFS_CONNDEADTIME        50
+#define CM_CONN_IFS_IDLEDEADTIME        50
+
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;
 extern DWORD          RDRtimeout;

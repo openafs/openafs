@@ -161,6 +161,19 @@ void cm_InitConn(void)
                 IdleDeadtimeout = (unsigned short) ConnDeadtimeout;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
+        } else {
+            if (ConnDeadtimeout == 0) {
+                ConnDeadtimeout = CM_CONN_IFS_CONNDEADTIME;
+                afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+            }
+            if (HardDeadtimeout == 0) {
+                HardDeadtimeout = CM_CONN_IFS_HARDDEADTIME;
+                afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+            }
+            if (IdleDeadtimeout == 0) {
+                IdleDeadtimeout = CM_CONN_IFS_IDLEDEADTIME;
+                afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+            }
         }
 	osi_EndOnce(&once);
     }
