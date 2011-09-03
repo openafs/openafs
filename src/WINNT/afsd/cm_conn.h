@@ -70,7 +70,8 @@ typedef struct cm_req {
 #define CM_REQ_NEW_CONN_FORCED  0x02
 #define CM_REQ_SOURCE_SMB       0x04
 #define CM_REQ_VOLUME_UPDATED   0x08
-/* 0x10 and 0x20 are reserved for the afs redirector */
+#define CM_REQ_WOW64            0x10
+#define CM_REQ_SOURCE_REDIR     0x20
 #define CM_REQ_OFFLINE_VOL_CHK  0x40
 
 /*
