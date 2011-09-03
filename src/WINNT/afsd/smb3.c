@@ -8270,7 +8270,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (prefetch)
         cm_QueueBKGRequest(scp, cm_BkgPrefetch, 0, 0,
                            scp->length.LowPart, scp->length.HighPart,
-                           userp);
+                           userp, &req);
 
 
     osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %S", fidp->fid,
@@ -9024,7 +9024,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     if (prefetch)
         cm_QueueBKGRequest(scp, cm_BkgPrefetch, 0, 0,
                            scp->length.LowPart, scp->length.HighPart,
-                           userp);
+                           userp, &req);
 
     osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 

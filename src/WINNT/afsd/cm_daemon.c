@@ -144,7 +144,7 @@ void cm_BkgDaemon(void * parm)
 #ifdef DEBUG_REFCOUNT
             osi_Log2(afsd_logp,"cm_BkgDaemon (before) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
-            code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
+            code = (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp, &rp->req);
 #ifdef DEBUG_REFCOUNT
             osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
@@ -192,7 +192,7 @@ void cm_BkgDaemon(void * parm)
 }
 
 void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-	cm_user_t *userp)
+	cm_user_t *userp, cm_req_t *reqp)
 {
     cm_bkgRequest_t *rp;
 
@@ -208,6 +208,7 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
     rp->p2 = p2;
     rp->p3 = p3;
     rp->p4 = p4;
+    rp->req = *reqp;
 
     lock_ObtainWrite(&cm_daemonLock);
     cm_bkgQueueCount++;

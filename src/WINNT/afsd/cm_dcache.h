@@ -13,6 +13,7 @@
 /* bulk I/O descriptor */
 typedef struct cm_bulkIO {
     struct cm_scache *scp;		/* typically unheld vnode ptr */
+    struct cm_req *reqp;                /* the request ptr */
     osi_hyper_t offset;		        /* offset of buffers */
     long length;			/* # of bytes to be transferred */
     int reserved;			/* did we reserve multiple buffers? */
@@ -47,10 +48,10 @@ extern long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp,
 	long inSize, cm_bulkIO_t *biop, cm_user_t *userp, cm_req_t *reqp);
 
 extern afs_int32 cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-	struct cm_user *userp);
+	struct cm_user *userp, cm_req_t *reqp);
 
 extern afs_int32 cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-	struct cm_user *userp);
+	struct cm_user *userp, cm_req_t *reqp);
 
 extern void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
                                 afs_uint32 count,

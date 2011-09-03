@@ -25,7 +25,7 @@ void cm_DaemonShutdown(void);
 void cm_InitDaemon(int nDaemons);
 
 typedef afs_int32 (cm_bkgProc_t)(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3,
-	afs_uint32 p4, struct cm_user *up);
+	afs_uint32 p4, struct cm_user *up, cm_req_t *reqp);
 
 typedef struct cm_bkgRequest {
 	osi_queue_t q;
@@ -35,11 +35,12 @@ typedef struct cm_bkgRequest {
         afs_uint32 p2;
         afs_uint32 p3;
         afs_uint32 p4;
-        struct cm_user *userp;
+        cm_user_t *userp;
+        cm_req_t req;
 } cm_bkgRequest_t;
 
 extern void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1,
-	afs_uint32 p2, afs_uint32 p3, afs_uint32 p4, cm_user_t *userp);
+	afs_uint32 p2, afs_uint32 p3, afs_uint32 p4, cm_user_t *userp, cm_req_t *reqp);
 
 #define CM_MAX_DAEMONS 64
 
