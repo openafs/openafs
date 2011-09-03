@@ -263,8 +263,8 @@ buf_Sync(int quitOnShutdown)
             lock_ObtainWrite(&buf_globalLock);
 #ifdef DEBUG_REFCOUNT
             if (bp->dirtyp == NULL && bp != cm_data.buf_dirtyListEndp) {
-                osi_Log1(afsd_logp,"buf_IncrSyncer bp 0x%p list corruption",bp);
-                afsi_log("buf_IncrSyncer bp 0x%p list corruption", bp);
+                osi_Log1(afsd_logp,"buf_Sync bp 0x%p list corruption",bp);
+                afsi_log("buf_Sync bp 0x%p list corruption", bp);
             }
 #endif
             *bpp = bp->dirtyp;
@@ -324,7 +324,6 @@ void buf_IncrSyncer(long parm)
     long i;
 
     while (buf_ShutdownFlag == 0) {
-
         if (!wasDirty) {
 	    i = SleepEx(5000, 1);
 	    if (i != 0)
