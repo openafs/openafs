@@ -113,7 +113,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 
     /* used for inodes backing_dev_info field, also */
-    afs_backing_dev_info = kmalloc(sizeof(struct backing_dev_info), GFP_NOFS);
+    afs_backing_dev_info = kzalloc(sizeof(struct backing_dev_info), GFP_NOFS);
 #if defined(HAVE_LINUX_BDI_INIT)
     bdi_init(afs_backing_dev_info);
 #endif
