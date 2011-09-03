@@ -961,7 +961,11 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 }
 
 static int
+#if defined(DOP_D_DELETE_TAKES_CONST)
+afs_dentry_delete(const struct dentry *dp)
+#else
 afs_dentry_delete(struct dentry *dp)
+#endif
 {
     if (dp->d_inode && (VTOAFS(dp->d_inode)->f.states & CUnlinked))
 	return 1;		/* bad inode? */
