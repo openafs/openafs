@@ -165,15 +165,11 @@ cm_VolNameIsID(char *aname)
  *    first, and fall back to successively older versions if you get
  *    RXGEN_OPCODE.
  */
-#define MULTIHOMED 1
-
 static long
 cm_GetEntryByName( struct cm_cell *cellp, const char *name,
                    struct vldbentry *vldbEntryp,
                    struct nvldbentry *nvldbEntryp,
-#ifdef MULTIHOMED
                    struct uvldbentry *uvldbEntryp,
-#endif
                    int *methodp,
                    cm_user_t *userp,
                    cm_req_t *reqp
@@ -193,11 +189,9 @@ cm_GetEntryByName( struct cm_cell *cellp, const char *name,
             continue;
 
         rxconnp = cm_GetRxConn(connp);
-#ifdef MULTIHOMED
         code = VL_GetEntryByNameU(rxconnp, name, uvldbEntryp);
         *methodp = 2;
         if ( code == RXGEN_OPCODE )
-#endif
         {
             code = VL_GetEntryByNameN(rxconnp, name, nvldbEntryp);
             *methodp = 1;
@@ -224,9 +218,7 @@ static long
 cm_GetEntryByID( struct cm_cell *cellp, afs_uint32 id,
                  struct vldbentry *vldbEntryp,
                  struct nvldbentry *nvldbEntryp,
-#ifdef MULTIHOMED
                  struct uvldbentry *uvldbEntryp,
-#endif
                  int *methodp,
                  cm_user_t *userp,
                  cm_req_t *reqp
@@ -253,9 +245,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     u_long tempAddr;
     struct vldbentry vldbEntry;
     struct nvldbentry nvldbEntry;
-#ifdef MULTIHOMED
     struct uvldbentry uvldbEntry;
-#endif
     int method = -1;
     int ROcount = 0;
     long code;
@@ -326,9 +316,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 
         /* now we have volume structure locked and held; make RPC to fill it */
         code = cm_GetEntryByName(cellp, volp->namep, &vldbEntry, &nvldbEntry,
-#ifdef MULTIHOMED
                                  &uvldbEntry,
-#endif
                                  &method, userp, reqp);
     }
 
@@ -347,9 +335,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 
         /* now we have volume structure locked and held; make RPC to fill it */
         code = cm_GetEntryByName(cellp, name, &vldbEntry, &nvldbEntry,
-#ifdef MULTIHOMED
                                  &uvldbEntry,
-#endif
                                  &method, userp, reqp);
     }
 
@@ -361,15 +347,11 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     if (code == CM_ERROR_NOSUCHVOLUME) {
         if (volp->vol[RWVOL].ID != 0) {
             code = cm_GetEntryByID(cellp, volp->vol[RWVOL].ID, &vldbEntry, &nvldbEntry,
-#ifdef MULTIHOMED
                                     &uvldbEntry,
-#endif
                                     &method, userp, reqp);
         } else if (volp->vol[ROVOL].ID != 0) {
             code = cm_GetEntryByID(cellp, volp->vol[ROVOL].ID, &vldbEntry, &nvldbEntry,
-#ifdef MULTIHOMED
                                     &uvldbEntry,
-#endif
                                     &method, userp, reqp);
         }
     }
@@ -429,7 +411,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             strncpy(name, nvldbEntry.name, VL_MAXNAMELEN);
             name[VL_MAXNAMELEN - 1] = '\0';
             break;
-#ifdef MULTIHOMED
         case 2:
             flags = uvldbEntry.flags;
             nServers = uvldbEntry.nServers;
@@ -488,7 +469,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             strncpy(name, uvldbEntry.name, VL_MAXNAMELEN);
             name[VL_MAXNAMELEN - 1] = '\0';
             break;
-#endif
         }
 
         /* decode the response */
@@ -568,7 +548,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tempAddr = htonl(serverNumber[i]);
             tsockAddr.sin_addr.s_addr = tempAddr;
             tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE, FALSE);
-#ifdef MULTIHOMED
             if (tsp && (method == 2) && (tsp->flags & CM_SERVERFLAG_UUID)) {
                 /*
                  * Check to see if the uuid of the server we know at this address
@@ -589,7 +568,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                               osi_LogSaveString(afsd_logp, hoststr));
                 }
             }
-#endif
             if (!tsp) {
                 /*
                  * cm_NewServer will probe the file server which in turn will
