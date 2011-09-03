@@ -610,3 +610,17 @@ AC_DEFUN([LINUX_D_COUNT_IS_INT], [
 			[define if dentry->d_count is an int],
 			[-Werror])
 ])
+
+
+AC_DEFUN([LINUX_DOP_D_DELETE_TAKES_CONST], [
+  AC_CHECK_LINUX_BUILD([whether dentry.d_op->d_delete takes a const argument],
+			[ac_cv_linux_dop_d_delete_takes_const],
+			[#include <linux/fs.h>
+			#include <linux/dcache.h>],
+			[struct dentry_operations _d_ops;
+			int _d_del(const struct dentry *de) {return 0;};
+			_d_ops.d_delete = _d_del;],
+			[DOP_D_DELETE_TAKES_CONST],
+			[define if dentry.d_op->d_delete takes a const argument],
+			[-Werror])
+])
