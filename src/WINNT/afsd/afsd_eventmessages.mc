@@ -276,7 +276,7 @@ Severity=Informational
 Facility=System
 SymbolicName=MSG_SERVICE_RUNNING
 Language=English
-OpenAFS Running.
+OpenAFS Running. %1
 .
 
 MessageId=
