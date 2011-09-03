@@ -285,7 +285,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     /* timeleft - get it from reqp the same way as cm_ConnByMServers does */
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
-    timeLeft = HardDeadtimeout - timeUsed;
+    if ( reqp->flags & CM_REQ_SOURCE_SMB )
+        timeLeft = HardDeadtimeout - timeUsed;
+    else
+        timeLeft = 0x0FFFFFFF;
 
     /* get a pointer to the cell */
     if (errorCode) {
