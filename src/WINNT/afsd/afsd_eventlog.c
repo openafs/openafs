@@ -200,7 +200,6 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_UNHANDLED_EXCEPTION:
     case MSG_SMB_ZERO_TRANSACTION_COUNT:
     case MSG_SERVICE_INCORRECT_VERSIONS:
-    case MSG_SERVICE_RUNNING:
     case MSG_SERVICE_STOPPING:
     case MSG_SERVICE_STOPPED:
     case MSG_SERVICE_ERROR_STOP:
@@ -210,6 +209,10 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SERVICE_START_PENDING:
         wNumArgs = 1;
         lpArgs[0] = AFSVersion;
+        break;
+    case MSG_SERVICE_RUNNING:
+        wNumArgs = 1;
+        lpArgs[0] = "SMB interface";
         break;
     case MSG_FLUSH_BAD_SHARE_NAME:
     case MSG_FLUSH_OPEN_ENUM_ERROR:
