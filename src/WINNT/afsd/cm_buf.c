@@ -1342,7 +1342,7 @@ void buf_CleanWait(cm_scache_t * scp, cm_buf_t *bp, afs_uint32 locked)
  *
  * The buffer must be locked before calling this routine.
  */
-void buf_SetDirty(cm_buf_t *bp, afs_uint32 offset, afs_uint32 length, cm_user_t *userp)
+void buf_SetDirty(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 offset, afs_uint32 length, cm_user_t *userp)
 {
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
     osi_assertx(bp->refCount > 0, "cm_buf_t refcount 0");

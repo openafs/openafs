@@ -722,20 +722,18 @@ cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, osi_hyper_t *lengt
 
 afs_int32
 cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-	    cm_user_t *userp)
+	    cm_user_t *userp, cm_req_t *reqp)
 {
     osi_hyper_t toffset;
     long length;
-    cm_req_t req;
     long code = 0;
 
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
 	osi_Log4(afsd_logp, "Skipping BKG store - Deleted scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
     } else {
-	cm_InitReq(&req);
-
 	/* Retries will be performed by the BkgDaemon thread if appropriate */
-	req.flags |= CM_REQ_NORETRY;
+        afs_uint32 req_flags = reqp->flags;
+	reqp->flags |= CM_REQ_NORETRY;
 
 	toffset.LowPart = p1;
 	toffset.HighPart = p2;
@@ -743,9 +741,11 @@ cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_u
 
 	osi_Log4(afsd_logp, "Starting BKG store scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
 
-	code = cm_BufWrite(scp, &toffset, length, /* flags */ 0, userp, &req);
+	code = cm_BufWrite(scp, &toffset, length, /* flags */ 0, userp, reqp);
 
 	osi_Log4(afsd_logp, "Finished BKG store scp 0x%p, offset 0x%x:%08x, code 0x%x", scp, p2, p1, code);
+
+        reqp->flags = req_flags;
     }
 
     /*
@@ -767,6 +767,7 @@ cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_u
         cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_ASYNCSTORE);
         lock_ReleaseWrite(&scp->rw);
     }
+
     return code;
 }
 
@@ -789,7 +790,7 @@ void cm_ClearPrefetchFlag(long code, cm_scache_t *scp, osi_hyper_t *base, osi_hy
  * because there is no harm done.  */
 afs_int32
 cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
-	       cm_user_t *userp)
+	       cm_user_t *userp, cm_req_t *reqp)
 {
     osi_hyper_t length;
     osi_hyper_t base;
@@ -800,12 +801,11 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
     afs_int32 code;
     int rxheld = 0;
     cm_buf_t *bp = NULL;
-    cm_req_t req;
-
-    cm_InitReq(&req);
+    afs_uint32 req_flags;
 
     /* Retries will be performed by the BkgDaemon thread if appropriate */
-    req.flags |= CM_REQ_NORETRY;
+    req_flags = reqp->flags;
+    reqp->flags |= CM_REQ_NORETRY;
 
     fetched.LowPart = 0;
     fetched.HighPart = 0;
@@ -829,7 +829,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
             rxheld = 0;
         }
 
-        code = buf_Get(scp, &offset, &req, &bp);
+        code = buf_Get(scp, &offset, reqp, &bp);
         if (code)
             break;
 
@@ -850,7 +850,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
             rxheld = 1;
         }
 
-        code = cm_GetBuffer(scp, bp, NULL, userp, &req);
+        code = cm_GetBuffer(scp, bp, NULL, userp, reqp);
         if (code == 0)
             fetched = LargeIntegerAdd(fetched, tblocksize);
         buf_Release(bp);
@@ -885,6 +885,8 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
 
     osi_Log4(afsd_logp, "Ending BKG prefetch scp 0x%p code 0x%x fetched 0x%x:%x",
              scp, code, fetched.HighPart, fetched.LowPart);
+
+    reqp->flags = req_flags;
     return code;
 }
 
@@ -973,7 +975,7 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 coun
     cm_QueueBKGRequest(scp, cm_BkgPrefetch,
                        realBase.LowPart, realBase.HighPart,
                        readLength.LowPart, readLength.HighPart,
-                       userp);
+                       userp, reqp);
 }
 
 /* scp must be locked; temporarily unlocked during processing.
@@ -1242,6 +1244,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
     tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
 
     biop->scp = scp;			/* do not hold; held by caller */
+    biop->reqp = reqp;
     biop->offset = *offsetp;
     /* null out the list of buffers */
     biop->bufListp = biop->bufListEndp = NULL;

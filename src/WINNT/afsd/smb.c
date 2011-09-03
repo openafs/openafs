@@ -7456,7 +7456,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 
         /* now copy the data */
 	memcpy(bufferp->datap + bufIndex, op, nbytes);
-        buf_SetDirty(bufferp, bufIndex, nbytes, userp);
+        buf_SetDirty(bufferp, &req, bufIndex, nbytes, userp);
 
         /* adjust counters, pointers, etc. */
         op += nbytes;
@@ -7506,7 +7506,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
                 lock_ReleaseWrite(&scp->rw);
                 cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
                                     writeBackOffset.HighPart,
-                                    smb_AsyncStoreSize, 0, userp);
+                                    smb_AsyncStoreSize, 0, userp, &req);
                 /* cm_SyncOpDone is called at the completion of cm_BkgStore */
             }
         } else {

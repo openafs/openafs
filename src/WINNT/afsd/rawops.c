@@ -322,7 +322,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
 
         /* now copy the data */
 	memcpy(bufferp->datap + bufIndex, op, nbytes);
-        buf_SetDirty(bufferp, bufIndex, nbytes, userp);
+        buf_SetDirty(bufferp, &req, bufIndex, nbytes, userp);
 
         /* adjust counters, pointers, etc. */
         op += nbytes;
@@ -346,7 +346,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
         lock_ReleaseWrite(&scp->rw);
         if (code == 0)
             cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
-                               writeBackOffset.HighPart, cm_chunkSize, 0, userp);
+                               writeBackOffset.HighPart, cm_chunkSize, 0, userp, &req);
     }
 
     /* cm_SyncOpDone is called when cm_BkgStore completes */
