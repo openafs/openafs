@@ -320,13 +320,15 @@ void cm_FreeAllACLEnts(cm_scache_t *scp)
 /*
  * Invalidate all ACL entries for particular user on this particular vnode.
  *
- * The scp must be locked.
+ * The scp must not be locked.
  */
 void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
 {
     cm_aclent_t *aclp;
     cm_aclent_t **laclpp;
+    int found = 0;
 
+    lock_ObtainWrite(&scp->rw);
     lock_ObtainWrite(&cm_aclLock);
     laclpp = &scp->randomACLp;
     for (aclp = *laclpp; aclp; laclpp = &aclp->nextp, aclp = *laclpp) {
@@ -335,10 +337,12 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
             cm_ReleaseUser(aclp->userp);
             aclp->userp = NULL;
             aclp->backp = (struct cm_scache *) 0;
+            found = 1;
             break;
         }
     }
     lock_ReleaseWrite(&cm_aclLock);
+    lock_ReleaseWrite(&scp->rw);
 }
 
 /*
@@ -347,25 +351,24 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
 void
 cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
 {
-    cm_scache_t *scp;
+    cm_scache_t *scp, *nextScp;
     afs_uint32 hash;
 
-    lock_ObtainWrite(&cm_scacheLock);
+    lock_ObtainRead(&cm_scacheLock);
     for (hash=0; hash < cm_data.scacheHashTableSize; hash++) {
-        for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
+        for (scp=cm_data.scacheHashTablep[hash]; scp; scp=nextScp) {
+            nextScp = scp->nextp;
             if (cellp == NULL ||
                 scp->fid.cell == cellp->cellID) {
                 cm_HoldSCacheNoLock(scp);
-                lock_ReleaseWrite(&cm_scacheLock);
-                lock_ObtainWrite(&scp->rw);
+                lock_ReleaseRead(&cm_scacheLock);
                 cm_InvalidateACLUser(scp, userp);
-                lock_ReleaseWrite(&scp->rw);
-                lock_ObtainWrite(&cm_scacheLock);
+                lock_ObtainRead(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
             }
         }
     }
-    lock_ReleaseWrite(&cm_scacheLock);
+    lock_ReleaseRead(&cm_scacheLock);
 }
 
 
