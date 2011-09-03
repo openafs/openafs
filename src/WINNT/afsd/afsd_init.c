@@ -77,6 +77,7 @@ int cm_logChunkSize;
 int cm_chunkSize;
 
 int smb_UseV3 = 1;
+afs_uint32 smb_Enabled = 1;
 
 int LANadapter;
 
@@ -1497,14 +1498,25 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
             smb_AsyncStoreSize = CM_CONFIGDEFAULT_ASYNCSTORESIZE;
         afsi_log("SMBAsyncStoreSize = %d", smb_AsyncStoreSize);
 
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "SMBInterfaceEnabled", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS)
+            smb_Enabled = dwValue ? 1 : 0;
+        afsi_log("SMBInterfaceEnabled = %d", smb_Enabled);
+
         RegCloseKey (parmKey);
     }
 
+    if ( smb_Enabled ) {
     /* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
     smb_Init(afsd_logp, smb_UseV3, numSvThreads, aMBfunc);
     afsi_log("smb_Init complete");
+    } else {
+        afsi_log("smb_Init skipped");
+    }
 
     return 0;
 }

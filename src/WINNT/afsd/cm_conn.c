@@ -147,17 +147,20 @@ void cm_InitConn(void)
          * We base our values on those while making sure we leave
          * enough time for overhead.
          */
-	if (ConnDeadtimeout == 0) {
-	    ConnDeadtimeout = (unsigned short) ((RDRtimeout / 2) < 50 ? (RDRtimeout / 2) : 50);
-            afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
-        }
-	if (HardDeadtimeout == 0) {
-	    HardDeadtimeout = (unsigned short) (RDRtimeout > 125 ? 120 : (RDRtimeout - 5));
-            afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
-        }
-	if (IdleDeadtimeout == 0) {
-	    IdleDeadtimeout = (unsigned short) ConnDeadtimeout;
-            afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+        if (smb_Enabled) {
+            afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
+            if (ConnDeadtimeout == 0) {
+                ConnDeadtimeout = (unsigned short) ((RDRtimeout / 2) < 50 ? (RDRtimeout / 2) : 50);
+                afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+            }
+            if (HardDeadtimeout == 0) {
+                HardDeadtimeout = (unsigned short) (RDRtimeout > 125 ? 120 : (RDRtimeout - 5));
+                afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+            }       
+            if (IdleDeadtimeout == 0) {
+                IdleDeadtimeout = (unsigned short) ConnDeadtimeout;
+                afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
+            }
         }
 	osi_EndOnce(&once);
     }

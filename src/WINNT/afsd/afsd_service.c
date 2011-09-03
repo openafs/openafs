@@ -56,6 +56,7 @@ extern HANDLE afsi_file;
 
 static int powerEventsRegistered = 0;
 extern int powerStateSuspended = 0;
+extern int RDR_Initialized = 0;
 
 static VOID (WINAPI* pRtlCaptureContext)(PCONTEXT ContextRecord) = NULL;
 
@@ -401,7 +402,7 @@ afsd_ServiceControlHandlerEx(
 		    /* This is the message delivered once all devices are up */
                     afsi_log("SERVICE_CONTROL_APMRESUMEAUTOMATIC");
 		    powerStateSuspended = 0;
-		    if (osVersion.dwMajorVersion >= 6) {
+		    if (smb_Enabled && osVersion.dwMajorVersion >= 6) {
 			smb_SetLanAdapterChangeDetected();
                     }
                     dwRet = NO_ERROR;
@@ -1326,9 +1327,20 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         /* Notify any volume status handlers that the cache manager has started */
         cm_VolStatus_Service_Started();
 
+        /*
+         * Set the default for the SMB interface based upon the state of the
+         * Redirector interface.
+         */
+        smb_Enabled = !RDR_Initialized;
+
         code = afsd_InitSMB(&reason, MessageBox);
-        if (code != 0) {
+        if (smb_Enabled && code != 0) {
             afsi_log("afsd_InitSMB failed: %s (code = %d)", reason, code);
+            osi_panic(reason, __FILE__, __LINE__);
+        }
+
+        if (!smb_Enabled && !RDR_Initialized) {
+            afsi_log("Neither RDR nor SMB interfaces available");
             osi_panic(reason, __FILE__, __LINE__);
         }
 

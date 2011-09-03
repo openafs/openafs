@@ -79,7 +79,8 @@ void cm_IpAddrDaemon(long parm)
         Result = NotifyAddrChange(NULL,NULL);
         if (Result == NO_ERROR && daemon_ShutdownFlag == 0) {
             lastIPAddrChange = osi_Time();
-            smb_SetLanAdapterChangeDetected();
+            if (smb_Enabled)
+                smb_SetLanAdapterChangeDetected();
             cm_SetLanAdapterChangeDetected();
             thrd_ResetEvent(cm_IPAddrDaemon_ShutdownEvent);
 	}
