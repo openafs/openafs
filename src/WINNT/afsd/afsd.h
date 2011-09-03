@@ -121,6 +121,8 @@ extern int RDR_Initialized;
 
 extern afs_uint32 smb_Enabled;
 
+extern int cm_virtualCache;
+
 #define DFS_SUPPORT 1
 #define LOG_PACKET 1
 #undef  NOTSERVICE

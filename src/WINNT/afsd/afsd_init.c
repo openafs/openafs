@@ -75,6 +75,7 @@ DWORD cm_mountRootCLen;
 int cm_readonlyVolumeVersioning = 0;
 int cm_logChunkSize;
 int cm_chunkSize;
+int cm_virtualCache = 0;
 
 int smb_UseV3 = 1;
 afs_uint32 smb_Enabled = 1;
@@ -511,7 +512,7 @@ afsd_InitCM(char **reasonP)
     int  rx_max_rwin_size;
     int  rx_max_swin_size;
     int  rx_min_peer_timeout;
-    long virtualCache = 0;
+    DWORD virtualCache = 0;
     fschar_t rootCellName[256];
     struct rx_service *serverp;
     static struct rx_securityClass *nullServerSecurityClassp;
@@ -675,15 +676,56 @@ afsd_InitCM(char **reasonP)
                            (BYTE *) &smb_monitorReqs, &dummyLen);
     afsi_log("SMB request monitoring is %s", (smb_monitorReqs != 0)? "enabled": "disabled");
 
+    dummyLen = sizeof(virtualCache);
+    code = RegQueryValueEx(parmKey, "NonPersistentCaching", NULL, NULL,
+                            (LPBYTE)&virtualCache, &dummyLen);
+    if (!code)
+        cm_virtualCache = virtualCache ? 1 : 0;
+    afsi_log("Cache type is %s", (cm_virtualCache?"VIRTUAL":"FILE"));
+
+    if (!cm_virtualCache) {
+        dummyLen = sizeof(cm_ValidateCache);
+        code = RegQueryValueEx(parmKey, "ValidateCache", NULL, NULL,
+                               (LPBYTE)&cm_ValidateCache, &dummyLen);
+        if ( cm_ValidateCache < 0 || cm_ValidateCache > 2 )
+            cm_ValidateCache = 1;
+        switch (cm_ValidateCache) {
+        case 0:
+            afsi_log("Cache Validation disabled");
+            break;
+        case 1:
+            afsi_log("Cache Validation on Startup");
+            break;
+        case 2:
+            afsi_log("Cache Validation on Startup and Shutdown");
+            break;
+        }
+    }
+
     dummyLen = sizeof(cacheSize);
     code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
                             (BYTE *) &cacheSize, &dummyLen);
-    if (code == ERROR_SUCCESS)
-        afsi_log("Cache size %d", cacheSize);
-    else {
+    if (code != ERROR_SUCCESS)
         cacheSize = CM_CONFIGDEFAULT_CACHESIZE;
-        afsi_log("Default cache size %d", cacheSize);
+
+    if (cm_virtualCache) {
+        MEMORYSTATUSEX memStatus;
+        DWORD maxCacheSize;
+
+        memStatus.dwLength = sizeof(memStatus);
+        if (GlobalMemoryStatusEx(&memStatus)) {
+            /* Set maxCacheSize to 10% of physical memory */
+            maxCacheSize = (DWORD)(memStatus.ullTotalPhys / 1024 / 10);
+        } else {
+            /* Cannot determine physical memory, set limit to 64MB */
+            maxCacheSize = 65536;
+        }
+        if (cacheSize > maxCacheSize) {
+            afsi_log("Requested Cache size %u", cacheSize);
+            cacheSize = maxCacheSize;
+        }
     }
+    afsi_log("Allocated Cache size %u", cacheSize);
 
     dummyLen = sizeof(logChunkSize);
     code = RegQueryValueEx(parmKey, "ChunkSize", NULL, NULL,
@@ -852,30 +894,6 @@ afsd_InitCM(char **reasonP)
             osi_panic("CachePath too long", __FILE__, __LINE__);
         }
         afsi_log("Default cache path %s", cm_CachePath);
-    }
-
-    dummyLen = sizeof(virtualCache);
-    code = RegQueryValueEx(parmKey, "NonPersistentCaching", NULL, NULL,
-                            (LPBYTE)&virtualCache, &dummyLen);
-    afsi_log("Cache type is %s", (virtualCache?"VIRTUAL":"FILE"));
-
-    if (!virtualCache) {
-        dummyLen = sizeof(cm_ValidateCache);
-        code = RegQueryValueEx(parmKey, "ValidateCache", NULL, NULL,
-                               (LPBYTE)&cm_ValidateCache, &dummyLen);
-        if ( cm_ValidateCache < 0 || cm_ValidateCache > 2 )
-            cm_ValidateCache = 1;
-        switch (cm_ValidateCache) {
-        case 0:
-            afsi_log("Cache Validation disabled");
-            break;
-        case 1:
-            afsi_log("Cache Validation on Startup");
-            break;
-        case 2:
-            afsi_log("Cache Validation on Startup and Shutdown");
-            break;
-        }
     }
 
     dummyLen = sizeof(traceOnPanic);
@@ -1317,7 +1335,7 @@ afsd_InitCM(char **reasonP)
 
     cm_InitNormalization();
 
-    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, volumes, cells, cm_chunkSize, cacheBlocks, blockSize);
+    code = cm_InitMappedMemory(cm_virtualCache, cm_CachePath, stats, volumes, cells, cm_chunkSize, cacheBlocks, blockSize);
     afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
         *reasonP = "error initializing cache file";

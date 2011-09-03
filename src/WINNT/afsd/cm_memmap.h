@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, Secure Endpoints Inc.
+ * Copyright 2004-2011, Secure Endpoints Inc.
  * All Rights Reserved.
  *
  * This software has been released under the terms of the IBM Public

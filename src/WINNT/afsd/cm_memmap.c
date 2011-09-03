@@ -11,6 +11,9 @@
 extern void afsi_log(char *pattern, ...);
 extern DWORD cm_ValidateCache;
 
+static HANDLE hMemoryMappedFile = NULL;
+static HANDLE hCacheHeap = NULL;
+
 afs_uint64
 GranularityAdjustment(afs_uint64 size)
 {
@@ -202,8 +205,6 @@ VOID FreeCacheFileSA(PSECURITY_ATTRIBUTES psa)
     GlobalFree(psa);
 }
 
-static HANDLE hMemoryMappedFile = NULL;
-
 int
 cm_IsCacheValid(void)
 {
@@ -260,6 +261,11 @@ cm_ShutdownMappedMemory(void)
     cm_ShutdownCell();
     cm_ShutdownVolume();
 
+    if (hCacheHeap) {
+        HeapFree(hCacheHeap, 0, cm_data.baseAddress);
+        HeapDestroy(hCacheHeap);
+        afsi_log("Memory Heap has been destroyed");
+    } else {
     if (cm_ValidateCache == 2)
         dirty = !cm_IsCacheValid();
 
@@ -268,8 +274,8 @@ cm_ShutdownMappedMemory(void)
     UnmapViewOfFile(config_data_p);
     CloseHandle(hMemoryMappedFile);
     hMemoryMappedFile = NULL;
-
     afsi_log("Memory Mapped File has been closed");
+    }
     return 0;
 }
 
@@ -630,10 +636,8 @@ int
 cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD maxVols, DWORD maxCells,
                     DWORD chunkSize, afs_uint64 cacheBlocks, afs_uint32 blockSize)
 {
-    HANDLE hf = INVALID_HANDLE_VALUE, hm;
-    PSECURITY_ATTRIBUTES psa;
-    int newFile = 1;
     afs_uint64 mappingSize;
+    int newCache = 1;
     DWORD volumeSerialNumber = 0;
     DWORD sidStringSize = 0;
     DWORD rc;
@@ -647,7 +651,21 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
 
     mappingSize = ComputeSizeOfMappingFile(stats, maxVols, maxCells, chunkSize, cacheBlocks, blockSize);
 
-    if ( !virtualCache ) {
+    if ( virtualCache ) {
+        hCacheHeap = HeapCreate( HEAP_GENERATE_EXCEPTIONS, 0, 0);
+
+        baseAddress = HeapAlloc(hCacheHeap, 0, mappingSize);
+
+        if (baseAddress == NULL) {
+            afsi_log("Error allocating Virtual Memory gle=%d",
+                     GetLastError());
+            return CM_ERROR_INVAL;
+        }
+        newCache = 1;
+    } else {
+        HANDLE hf = INVALID_HANDLE_VALUE, hm;
+        PSECURITY_ATTRIBUTES psa;
+
         psa = CreateCacheFileSA();
         hf = CreateFile( cachePath,
                          GENERIC_READ | GENERIC_WRITE,
@@ -767,7 +785,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
                     afsi_log("Previous session terminated prematurely");
                 } else {
                     baseAddress = config_data_p->baseAddress;
-                    newFile = 0;
+                    newCache = 0;
                 }
             } else {
                 afsi_log("Configuration changed or Not a persistent cache file");
@@ -775,7 +793,6 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
             UnmapViewOfFile(config_data_p);
             CloseHandle(hm);
         }
-    }
 
     hm = CreateFileMapping( hf,
                             NULL,
@@ -812,13 +829,15 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
             CloseHandle(hm);
             return CM_ERROR_INVAL;
         }
-        newFile = 1;
+            newCache = 1;
     }
     CloseHandle(hm);
+        hMemoryMappedFile = hf;
+    }
 
     config_data_p = (cm_config_data_t *) baseAddress;
 
-    if (!newFile) {
+    if (!newCache) {
         afsi_log("Reusing existing AFS Cache data:");
         cm_data = *config_data_p;
 
@@ -851,11 +870,11 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
          */
         if (baseAddress != cm_data.baseAddress ||
             cm_ValidateCache && !cm_IsCacheValid()) {
-            newFile = 1;
+            newCache = 1;
         }
     }
 
-    if ( newFile ) {
+    if ( newCache ) {
         afsi_log("Building AFS Cache from scratch");
 	memset(&cm_data, 0, sizeof(cm_config_data_t));
         cm_data.size = sizeof(cm_config_data_t);
@@ -970,24 +989,23 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
     RpcStringFree(&p);
 
     afsi_log("Initializing Volume Data");
-    cm_InitVolume(newFile, maxVols);
+    cm_InitVolume(newCache, maxVols);
 
     afsi_log("Initializing Cell Data");
-    cm_InitCell(newFile, maxCells);
+    cm_InitCell(newCache, maxCells);
 
     afsi_log("Initializing ACL Data");
-    cm_InitACLCache(newFile, 2*stats);
+    cm_InitACLCache(newCache, 2*stats);
 
     afsi_log("Initializing Stat Data");
-    cm_InitSCache(newFile, stats);
+    cm_InitSCache(newCache, stats);
 
     afsi_log("Initializing Data Buffers");
-    cm_InitDCache(newFile, 0, cacheBlocks);
+    cm_InitDCache(newCache, 0, cacheBlocks);
 
     *config_data_p = cm_data;
     config_data_p->dirty = 1;
 
-    hMemoryMappedFile = hf;
     afsi_log("Cache Initialization Complete");
     return 0;
 }
