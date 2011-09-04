@@ -427,7 +427,8 @@ void cm_Daemon(long parm)
     lastDownServerCheck = now - cm_daemonCheckDownInterval/2 + (rand() % cm_daemonCheckDownInterval);
     lastUpServerCheck = now - cm_daemonCheckUpInterval/2 + (rand() % cm_daemonCheckUpInterval);
     lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
-    lastBusyVolCheck = now - cm_daemonCheckOfflineVolInterval/2 * (rand() % cm_daemonCheckOfflineVolInterval);
+    if (cm_daemonCheckOfflineVolInterval)
+        lastBusyVolCheck = now - cm_daemonCheckOfflineVolInterval/2 * (rand() % cm_daemonCheckOfflineVolInterval);
     if (cm_daemonPerformanceTuningInterval)
         lastPerformanceCheck = now - cm_daemonPerformanceTuningInterval/2 * (rand() % cm_daemonPerformanceTuningInterval);
     lastServerRankCheck = now - cm_daemonRankServerInterval/2 * (rand() % cm_daemonRankServerInterval);
@@ -551,7 +552,8 @@ void cm_Daemon(long parm)
             now = osi_Time();
         }
 
-        if ((bAddrChangeCheck || now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) &&
+        if ((bAddrChangeCheck || (cm_daemonCheckOfflineVolInterval &&
+                                  now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval)) &&
             daemon_ShutdownFlag == 0 &&
             powerStateSuspended == 0) {
             lastBusyVolCheck = now;
