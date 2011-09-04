@@ -10,7 +10,7 @@
 #ifndef CM_MEMMAP_H
 #define CM_MEMMAP_H 1
 
-#define CM_CONFIG_DATA_VERSION  15
+#define CM_CONFIG_DATA_VERSION  16
 #define CM_CONFIG_DATA_MAGIC            ('A' | 'F'<<8 | 'S'<<16 | CM_CONFIG_DATA_VERSION<<24)
 
 typedef struct cm_config_data {
@@ -49,6 +49,7 @@ typedef struct cm_config_data {
     cm_scache_t *       rootSCachep;
     cm_scache_t         fakeSCache;
     afs_uint64          fakeDirVersion;
+    afs_uint32          fakeUnique;
 
     cm_aclent_t *       aclLRUp;
     cm_aclent_t	*       aclLRUEndp;

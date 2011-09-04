@@ -231,6 +231,9 @@ void cm_InitFakeRootDir() {
     int sizeOfCurEntry;
     int dirSize;
 
+    /* Increment the fake Uniquifier */
+    cm_data.fakeUnique++;
+
     /* Reserve 2 directory chunks for "." and ".." */
     curChunk += 2;
 
@@ -267,7 +270,7 @@ void cm_InitFakeRootDir() {
     fakeEntry.flag = 1;
     fakeEntry.length = 0;
     fakeEntry.next = 0;
-    fakeEntry.fid.unique = htonl(1);
+    fakeEntry.fid.unique = htonl(1 + cm_data.fakeUnique);
 
     // the first page is special, it uses fakeDirHeader instead of fakePageHeader
     // we fill up the page with dirEntries that belong there and we make changes
@@ -310,7 +313,7 @@ void cm_InitFakeRootDir() {
         noChunks = cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0);
         /* enforce the rule that only directories have odd vnode values */
         fakeEntry.fid.vnode = htonl((curDirEntry + 1) * 2);
-        fakeEntry.fid.unique = htonl(curDirEntry + 1);
+        fakeEntry.fid.unique = htonl(curDirEntry + 1 + cm_data.fakeUnique);
         currentPos = cm_FakeRootDir + curPage * CM_DIR_PAGESIZE + curChunk * CM_DIR_CHUNKSIZE;
 
         memcpy(currentPos, &fakeEntry, CM_DIR_CHUNKSIZE);
@@ -354,7 +357,7 @@ void cm_InitFakeRootDir() {
             noChunks = cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0);
             /* enforce the rule that only directories have odd vnode values */
             fakeEntry.fid.vnode = htonl((curDirEntry + 1) * 2);
-            fakeEntry.fid.unique = htonl(curDirEntry + 1);
+            fakeEntry.fid.unique = htonl(curDirEntry + 1 + cm_data.fakeUnique);
             currentPos = cm_FakeRootDir + curPage * CM_DIR_PAGESIZE + curChunk * CM_DIR_CHUNKSIZE;
             memcpy(currentPos, &fakeEntry, CM_DIR_CHUNKSIZE);
             strcpy(currentPos + 12, (cm_localMountPoints+curDirEntry)->namep);
@@ -504,6 +507,11 @@ int cm_reInitLocalMountPoints() {
 static int
 cm_enforceTrailingDot(char * line, size_t cchLine, DWORD *pdwSize)
 {
+    if (*pdwSize < 4) {
+        afsi_log("invalid string");
+        return 0;
+    }
+
     /* trailing white space first. */
     if (line[(*pdwSize)-1] == '\0') {
         while (isspace(line[(*pdwSize)-2])) {
@@ -1516,8 +1524,9 @@ cm_FreelanceFetchMountPointString(cm_scache_t *scp)
     if (!scp->mountPointStringp[0] &&
         scp->fid.cell == AFS_FAKE_ROOT_CELL_ID &&
         scp->fid.volume == AFS_FAKE_ROOT_VOL_ID &&
-        scp->fid.unique <= cm_noLocalMountPoints) {
-        strncpy(scp->mountPointStringp, cm_localMountPoints[scp->fid.unique-1].mountPointStringp, MOUNTPOINTLEN);
+        (afs_int32)(scp->fid.unique - cm_data.fakeUnique) - 1 >= 0 &&
+        scp->fid.unique - cm_data.fakeUnique <= cm_noLocalMountPoints) {
+        strncpy(scp->mountPointStringp, cm_localMountPoints[scp->fid.unique-cm_data.fakeUnique-1].mountPointStringp, MOUNTPOINTLEN);
         scp->mountPointStringp[MOUNTPOINTLEN-1] = 0;	/* null terminate */
     }
     lock_ReleaseMutex(&cm_Freelance_Lock);
@@ -1531,12 +1540,13 @@ cm_FreelanceFetchFileType(cm_scache_t *scp)
     lock_ObtainMutex(&cm_Freelance_Lock);
     if (scp->fid.cell == AFS_FAKE_ROOT_CELL_ID &&
         scp->fid.volume == AFS_FAKE_ROOT_VOL_ID &&
-        scp->fid.unique <= cm_noLocalMountPoints)
+        (afs_int32)(scp->fid.unique - cm_data.fakeUnique) - 1 >= 0 &&
+        scp->fid.unique - cm_data.fakeUnique <= cm_noLocalMountPoints)
     {
-        scp->fileType = cm_localMountPoints[scp->fid.unique-1].fileType;
+        scp->fileType = cm_localMountPoints[scp->fid.unique-cm_data.fakeUnique-1].fileType;
 
-        if ( scp->fileType == CM_SCACHETYPE_SYMLINK &&
-             !strnicmp(cm_localMountPoints[scp->fid.unique-1].mountPointStringp, "msdfs:", strlen("msdfs:")) )
+        if (scp->fileType == CM_SCACHETYPE_SYMLINK &&
+            !strnicmp(cm_localMountPoints[scp->fid.unique-cm_data.fakeUnique-1].mountPointStringp, "msdfs:", strlen("msdfs:")) )
         {
             scp->fileType = CM_SCACHETYPE_DFSLINK;
         }
