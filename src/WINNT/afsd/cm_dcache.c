@@ -334,10 +334,11 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             nbytes = save_nbytes;
             goto retry;
         }
-
-        /* Prefer StoreData error over rx_EndCall error */
-        if (code1 != 0)
+        /* Prefer rx_EndCall error over StoreData error */
+        if (code1 != 0) {
+            osi_Log2(afsd_logp, "rx_EndCall converted 0x%x to 0x%x", code, code1);
             code = code1;
+        }
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
 
     code = cm_MapRPCError(code, reqp);

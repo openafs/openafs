@@ -1071,7 +1071,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
             /*
              * search the list until we find the server
              * that failed last time.  When we find it
-             * clear the error, skip it and try the one
+             * clear the error, skip it and try the next one
              * in the list.
              */
             if (tsp == reqp->tokenIdleErrorServp)
