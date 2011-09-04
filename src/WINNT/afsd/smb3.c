@@ -1499,7 +1499,7 @@ void smb_SendTran2Error(smb_vc_t *vcp, smb_tran2Packet_t *t2p,
     unsigned long NTStatus;
 
     if (vcp->flags & SMB_VCFLAG_STATUS32)
-        smb_MapNTError(code, &NTStatus);
+        smb_MapNTError(code, &NTStatus, FALSE);
     else
         smb_MapCoreError(code, vcp, &errCode, &errClass);
 
@@ -1562,7 +1562,7 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
 	if (vcp->flags & SMB_VCFLAG_STATUS32) {
 	    unsigned long NTStatus;
 
-	    smb_MapNTError(t2p->error_code, &NTStatus);
+	    smb_MapNTError(t2p->error_code, &NTStatus, FALSE);
 
 	    smbp->rcls = (unsigned char) (NTStatus & 0xff);
 	    smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);

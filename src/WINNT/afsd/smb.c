@@ -3078,7 +3078,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
         smb_FreeNCB(ncbp);
 }
 
-void smb_MapNTError(long code, unsigned long *NTStatusp)
+void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir)
 {
     unsigned long NTStatus;
 
@@ -3094,26 +3094,34 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC0000034L;	/* Name not found */
     }
     else if (code == CM_ERROR_TIMEDOUT) {
+        if (redir)
+            NTStatus = 0xC0020052L; /* RPC_NT_COMM_FAILURE */
+        else {
 #ifdef COMMENT
-        NTStatus = 0xC00000CFL;	/* Sharing Paused */
+            NTStatus = 0xC00000CFL;	/* Sharing Paused */
 
-        /* Do not send Timeout to the SMB redirector.
-         * It causes the redirector to drop the connection */
-        NTStatus = 0x00000102L; /* Timeout */
-        /* do not send Retry to the SMB redirector.
-         * It believes the error comes from the transport
-         * layer not from the SMB server. */
-        NTStatus = 0xC000022DL;	/* Retry */
+            /* Do not send Timeout to the SMB redirector.
+             * It causes the redirector to drop the connection */
+            NTStatus = 0x00000102L; /* Timeout */
+            /* do not send Retry to the SMB redirector.
+             * It believes the error comes from the transport
+             * layer not from the SMB server. */
+            NTStatus = 0xC000022DL;	/* Retry */
 #else
-        NTStatus = 0xC00000B5L;	/* I/O Timeout */
+            NTStatus = 0xC00000B5L;	/* I/O Timeout */
 #endif
+        }
     }
     else if (code == CM_ERROR_RETRY) {
+        if (redir)
+            NTStatus = 0xC000022DL;	/* Retry */
+        else {
 #ifdef COMMENT
         NTStatus = 0xC000022DL;	/* Retry */
 #else
         NTStatus = 0xC00000B5L; /* I/O Timeout */
 #endif
+    }
     }
     else if (code == CM_ERROR_NOACCESS) {
         NTStatus = 0xC0000022L;	/* Access denied */
@@ -8691,7 +8699,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
          */
         if (code) {
             if (vcp->flags & SMB_VCFLAG_STATUS32) {
-                smb_MapNTError(code, &NTStatus);
+                smb_MapNTError(code, &NTStatus, FALSE);
                 outWctp = outp->wctp;
                 smbp = (smb_t *) &outp->data;
                 if (code != CM_ERROR_PARTIALWRITE
@@ -9892,7 +9900,7 @@ void smb_Listener(void *parmp)
 
             if (vcp->flags & SMB_VCFLAG_STATUS32) {
                 unsigned long NTStatus;
-                smb_MapNTError(code, &NTStatus);
+                smb_MapNTError(code, &NTStatus, FALSE);
                 outWctp = outp->wctp;
                 smbp = (smb_t *) &outp->data;
                 *outWctp++ = 0;

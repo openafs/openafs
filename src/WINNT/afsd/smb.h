@@ -733,7 +733,7 @@ extern void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp);
 extern void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 	unsigned char *classp);
 
-extern void smb_MapNTError(long code, unsigned long *NTStatusp);
+extern void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir);
 
 extern void smb_MapWin32Error(long code, unsigned long *Win32Ep);
 
