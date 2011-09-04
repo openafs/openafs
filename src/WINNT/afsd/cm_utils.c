@@ -593,6 +593,43 @@ void cm_Gen8Dot3NameIntW(const clientchar_t * longname, cm_dirFid_t * pfid,
         *shortNameEndp = shortName;
 }
 
+void cm_Gen8Dot3VolNameW(afs_uint32 cell, afs_uint32 volume,
+                         clientchar_t *shortName, clientchar_t **shortNameEndp)
+{
+    clientchar_t number[12];
+    int i, nsize = 0;
+    int validExtension = 0;
+
+    /* Unparse the file's cell and volume numbers */
+    do {
+        number[nsize] = cm_8Dot3Mapping[cell % cm_8Dot3MapSize];
+        nsize++;
+        cell /= cm_8Dot3MapSize;
+    } while (cell);
+    do {
+        number[nsize] = cm_8Dot3Mapping[volume % cm_8Dot3MapSize];
+        nsize++;
+        volume /= cm_8Dot3MapSize;
+    } while (volume && nsize < 8);
+
+    /* Copy uniquifier characters */
+    for (i=0; i < nsize; i++) {
+        *shortName++ = number[i];
+    }
+
+    /* Add extension characters */
+    *shortName++ = '.';	/* copy dot */
+    *shortName++ = 'v';
+    *shortName++ = 'o';
+    *shortName++ = 'l';
+
+    /* Trailing null */
+    *shortName = 0;
+
+    if (shortNameEndp)
+        *shortNameEndp = shortName;
+}
+
 /*! \brief Compare 'pattern' (containing metacharacters '*' and '?') with the file name 'name'.
 
   \note This procedure works recursively calling itself.
