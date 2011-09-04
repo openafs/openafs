@@ -151,64 +151,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	return -1;
     }
 
-    cm_RemoveSCacheFromHashTable(scp);
-
-#if 0
-    if (flags & CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS) {
-	osi_queueData_t *qdp;
-	cm_buf_t *bufp;
-
-	while(qdp = scp->bufWritesp) {
-            bufp = osi_GetQData(qdp);
-	    osi_QRemove((osi_queue_t **) &scp->bufWritesp, &qdp->q);
-	    osi_QDFree(qdp);
-	    if (bufp) {
-		lock_ObtainMutex(&bufp->mx);
-		_InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMSTORING);
-		_InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
-                bufp->dirty_offset = 0;
-                bufp->dirty_length = 0;
-		_InterlockedOr(&bufp->flags, CM_BUF_ERROR);
-		bufp->error = VNOVNODE;
-		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
-		bufp->dirtyCounter++;
-		if (bufp->flags & CM_BUF_WAITING) {
-		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%p] bufp 0x%x", scp, bufp);
-		    osi_Wakeup((long) &bufp);
-		}
-		lock_ReleaseMutex(&bufp->mx);
-		buf_Release(bufp);
-	    }
-        }
-	while(qdp = scp->bufReadsp) {
-            bufp = osi_GetQData(qdp);
-	    osi_QRemove((osi_queue_t **) &scp->bufReadsp, &qdp->q);
-	    osi_QDFree(qdp);
-	    if (bufp) {
-		lock_ObtainMutex(&bufp->mx);
-		_InterlockedAnd(&bufp->cmFlags, ~CM_BUF_CMFETCHING);
-		_InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
-                bufp->dirty_offset = 0;
-                bufp->dirty_length = 0;
-		_InterlockedOr(&bufp->flags, CM_BUF_ERROR);
-		bufp->error = VNOVNODE;
-		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
-		bufp->dirtyCounter++;
-		if (bufp->flags & CM_BUF_WAITING) {
-		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%p] bufp 0x%x", scp, bufp);
-		    osi_Wakeup((long) &bufp);
-		}
-		lock_ReleaseMutex(&bufp->mx);
-		buf_Release(bufp);
-	    }
-        }
-	buf_CleanDirtyBuffers(scp);
-    } else {
-	/* look for things that shouldn't still be set */
-	osi_assertx(scp->bufWritesp == NULL, "non-null cm_scache_t bufWritesp");
-	osi_assertx(scp->bufReadsp == NULL, "non-null cm_scache_t bufReadsp");
-    }
-#endif
 
     /* invalidate so next merge works fine;
      * also initialize some flags */
@@ -284,52 +226,6 @@ cm_scache_t *cm_GetNewSCache(void)
     int retry = 0;
 
     lock_AssertWrite(&cm_scacheLock);
-#if 0
-    /* first pass - look for deleted objects */
-    for ( scp = cm_data.scacheLRULastp;
-	  scp;
-	  scp = (cm_scache_t *) osi_QPrev(&scp->q))
-    {
-	osi_assertx(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.scacheHashTablep,
-                    "invalid cm_scache_t address");
-
-	if (scp->refCount == 0) {
-	    if (scp->flags & CM_SCACHEFLAG_DELETED) {
-                if (!lock_TryWrite(&scp->rw))
-                    continue;
-
-		osi_Log1(afsd_logp, "GetNewSCache attempting to recycle deleted scp 0x%p", scp);
-		if (!cm_RecycleSCache(scp, CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS)) {
-
-		    /* we found an entry, so return it */
-		    /* now remove from the LRU queue and put it back at the
-		     * head of the LRU queue.
-		     */
-		    cm_AdjustScacheLRU(scp);
-
-		    /* and we're done */
-		    return scp;
-		}
-                lock_ReleaseWrite(&scp->rw);
-		osi_Log1(afsd_logp, "GetNewSCache recycled failed scp 0x%p", scp);
-	    } else if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
-                if (!lock_TryWrite(&scp->rw))
-                    continue;
-
-		/* we found an entry, so return it */
-		/* now remove from the LRU queue and put it back at the
-		* head of the LRU queue.
-		*/
-		cm_AdjustScacheLRU(scp);
-
-		/* and we're done */
-		return scp;
-	    }
-	}
-    }
-    osi_Log0(afsd_logp, "GetNewSCache no deleted or recycled entries available for reuse");
-#endif
-
     if (cm_data.currentSCaches >= cm_data.maxSCaches) {
 	/* There were no deleted scache objects that we could use.  Try to find
 	 * one that simply hasn't been used in a while.
