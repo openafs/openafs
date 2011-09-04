@@ -164,11 +164,9 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
 
         if (bp->refCount == 0 &&
             !(bp->qFlags & CM_BUF_QINLRU)) {
-            osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-
-            /* watch for transition from empty to one element */
-            if (!cm_data.buf_freeListEndp)
-                cm_data.buf_freeListEndp = cm_data.buf_freeListp;
+            osi_QAddH( (osi_queue_t **) &cm_data.buf_freeListp,
+                       (osi_queue_t **) &cm_data.buf_freeListEndp,
+                       &bp->q);
             _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
         }
 
@@ -204,11 +202,9 @@ void buf_Release(cm_buf_t *bp)
         lock_ObtainWrite(&buf_globalLock);
         if (bp->refCount == 0 &&
             !(bp->qFlags & CM_BUF_QINLRU)) {
-            osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
-
-            /* watch for transition from empty to one element */
-            if (!cm_data.buf_freeListEndp)
-                cm_data.buf_freeListEndp = cm_data.buf_freeListp;
+            osi_QAddH( (osi_queue_t **) &cm_data.buf_freeListp,
+                       (osi_queue_t **) &cm_data.buf_freeListEndp,
+                       &bp->q);
             _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
         }
         lock_ReleaseWrite(&buf_globalLock);
@@ -483,16 +479,14 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 bp->allp = cm_data.buf_allp;
                 cm_data.buf_allp = bp;
 
-                osi_QAdd((osi_queue_t **)&cm_data.buf_freeListp, &bp->q);
+                osi_QAddH( (osi_queue_t **) &cm_data.buf_freeListp,
+                           (osi_queue_t **) &cm_data.buf_freeListEndp,
+                           &bp->q);
                 _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
                 lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
 
                 /* grab appropriate number of bytes from aligned zone */
                 bp->datap = data;
-
-                /* setup last buffer pointer */
-                if (i == 0)
-                    cm_data.buf_freeListEndp = bp;
 
                 /* next */
                 bp++;
@@ -1089,17 +1083,15 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                 cm_data.buf_fileHashTablepp[i] = bp;
             }
 
-            /* we should move it from the lru queue.  It better still be there,
+            /* we should remove it from the lru queue.  It better still be there,
              * since we've held the global (big) lock since we found it there.
              */
             osi_assertx(bp->qFlags & CM_BUF_QINLRU,
                          "buf_GetNewLocked: LRU screwup");
 
-            if (cm_data.buf_freeListEndp == bp) {
-                /* we're the last guy in this queue, so maintain it */
-                cm_data.buf_freeListEndp = (cm_buf_t *) osi_QPrev(&bp->q);
-            }
-            osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
+            osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_freeListp,
+                           (osi_queue_t **) &cm_data.buf_freeListEndp,
+                           &bp->q);
             _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINLRU);
 
             /* prepare to return it.  Give it a refcount */
@@ -1273,9 +1265,9 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
      */
     lock_ObtainWrite(&buf_globalLock);
     if (bp->qFlags & CM_BUF_QINLRU) {
-        if (cm_data.buf_freeListEndp == bp)
-            cm_data.buf_freeListEndp = (cm_buf_t *) osi_QPrev(&bp->q);
-        osi_QRemove((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
+        osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_freeListp,
+                       (osi_queue_t **) &cm_data.buf_freeListEndp,
+                       &bp->q);
         _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINLRU);
     }
     lock_ReleaseWrite(&buf_globalLock);
