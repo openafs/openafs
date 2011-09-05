@@ -1209,8 +1209,9 @@ cm_EndDirOp(cm_dirOp_t * op)
 
             switch (op->lockType) {
             case CM_DIRLOCK_READ:
-                lock_ReleaseRead(&op->scp->dirlock);
-                /* fall through ... */
+                lock_ConvertRToW(&op->scp->dirlock);
+                op->lockType = CM_DIRLOCK_WRITE;
+                break;
             case CM_DIRLOCK_NONE:
                 lock_ObtainWrite(&op->scp->dirlock);
                 op->lockType = CM_DIRLOCK_WRITE;
