@@ -107,7 +107,7 @@ vFSLog(const char *format, va_list args)
     int num;
 
     currenttime = time(NULL);
-    len = strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y ",
+    len = strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y ",
 		   localtime_r(&currenttime, &tm));
     info = &tbuffer[len];
 

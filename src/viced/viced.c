@@ -464,7 +464,7 @@ FiveMinuteCheckLWP(void *unused)
 	if (printBanner && (++msg & 1)) {	/* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
 	    struct tm tm;
-	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 		     localtime_r(&now, &tm));
 	    ViceLog(2,
 		    ("File server is running at %s\n", tbuffer));
@@ -687,7 +687,7 @@ PrintCounters(void)
 
     FT_GetTimeOfDay(&tpl, 0);
     Statistics = 1;
-    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&StartTime, &tm));
     ViceLog(0, ("Vice was last started at %s\n", tbuffer));
 
@@ -802,7 +802,7 @@ ShutDownAndCore(int dopanic)
     FS_STATE_UNLOCK;
 #endif
 
-    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&now, &tm));
     ViceLog(0, ("Shutting down file server at %s\n", tbuffer));
     if (dopanic)
@@ -852,7 +852,7 @@ ShutDownAndCore(int dopanic)
 	fflush(debugFile);
     }
     now = time(0);
-    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&now, &tm));
     if (dopanic) {
       ViceLog(0, ("File server has terminated abnormally at %s\n", tbuffer));
@@ -2311,7 +2311,7 @@ main(int argc, char *argv[])
     }
 
     t = tp.tv_sec;
-    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&t, &tm));
     ViceLog(0, ("File Server started %s\n", tbuffer));
 #if FS_STATS_DETAILED

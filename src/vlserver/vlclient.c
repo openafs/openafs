@@ -1276,7 +1276,7 @@ dump_stats(vldstats *stats, vital_vlheader *vital_header)
     time_t start_time = stats->start_time;
     struct tm tm;
 
-    strftime(strg, sizeof(strg), "%a %b %d %T %Y",
+    strftime(strg, sizeof(strg), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&start_time, &tm));
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");

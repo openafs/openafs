@@ -2757,7 +2757,7 @@ h_PrintClient(struct host *host, void *rock)
 	H_UNLOCK;
 	return 0;
     }
-    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&LastCall, &tm));
     snprintf(tmpStr, sizeof tmpStr, "Host %s:%d down = %d, LastCall %s\n",
 	     afs_inet_ntoa_r(host->host, hoststr),
@@ -2767,7 +2767,7 @@ h_PrintClient(struct host *host, void *rock)
     for (client = host->FirstClient; client; client = client->next) {
 	if (!client->deleted) {
 	    expTime = client->expTime;
-	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 		     localtime_r(&expTime, &tm));
 	    snprintf(tmpStr, sizeof tmpStr,
 		     "    user id=%d,  name=%s, sl=%s till %s\n",
@@ -2818,7 +2818,7 @@ h_PrintClients(void)
 	return;
     }
     now = FT_ApproxTime();
-    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&now, &tm));
     snprintf(tmpStr, sizeof tmpStr, "List of active users at %s\n\n",
 	     tbuffer);
@@ -2892,7 +2892,7 @@ h_DumpHosts(void)
 	return;
     }
     now = FT_ApproxTime();
-    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&now, &tm));
     snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n\n", tbuffer);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);

@@ -176,7 +176,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     /* Don't print the timestamp or thread id if we recursed */
     if (rec == 0) {
 	currenttime = time(0);
-	if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y ",
+	if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y ",
 		     localtime_r(&currenttime, &tm)) !=0)
 	    audit_ops->append_msg(tbuffer);
 

@@ -33,7 +33,7 @@ AssertionFailed(char *file, int line)
     struct tm tm;
 
     when = time(NULL);
-    strftime(tdate, sizeof(tdate), "%a %b %d %T %Y",
+    strftime(tdate, sizeof(tdate), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&when, &tm));
     fprintf(stderr, "%s Assertion failed! file %s, line %d.\n", tdate, file,
 	    line);

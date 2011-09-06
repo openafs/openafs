@@ -198,7 +198,7 @@ TapeLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
     struct tm tm;
 
     now = time(0);
-    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 		 localtime_r(&now, &tm)) != 0)
 	fprintf(logIO, "%s: ", tbuffer);
 
@@ -255,7 +255,7 @@ ErrorLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
     struct tm tm;
 
     now = time(0);
-    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %T %Y",
+    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 		 localtime_r(&now, &tm)) != 0)
 	fprintf(ErrorlogIO, "%s: ", tbuffer);
 
