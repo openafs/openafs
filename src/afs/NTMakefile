@@ -21,3 +21,5 @@ $(INCDIR)\afs\unified_afs.c $(INCDIR)\afs\unified_afs.h:   unified_afs.et  unifi
 
 install: $(INCDIR)\afs\unified_afs.c $(INCDIR)\afs\afs_stats.h $(INCDIR)\afs\afs_consts.h
 
+clean::
+   $(DEL) unified_afs.c unified_afs.h
