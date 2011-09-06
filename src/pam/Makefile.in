@@ -23,9 +23,6 @@ include @TOP_OBJDIR@/src/config/Makefile.shared
 
 MODULE_CFLAGS=${PAM_CFLAGS}
 
-.c.o:
-	$(AFS_CCRULE) $<
-
 all: test_pam pam_afs.so.1 pam_afs.krb.so.1
 
 CFLAGS_afs_setcred_krb.o = -DAFS_KERBEROS_ENV
