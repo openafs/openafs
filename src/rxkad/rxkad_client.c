@@ -33,6 +33,7 @@
 #endif /* !UKERNEL */
 #else /* ! KERNEL */
 #include <roken.h>
+#include <afs/opr.h>
 #endif /* KERNEL */
 
 

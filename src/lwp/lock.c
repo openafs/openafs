@@ -27,6 +27,8 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
+
 #ifdef AFS_PTHREAD_ENV
 #include <rx/rx.h>
 #endif

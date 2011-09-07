@@ -12,8 +12,8 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <lock.h>
-#include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
 
@@ -355,9 +355,10 @@ ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, int aflags,
 #if defined(AFS_PTHREAD_ENV)
 static int
 ubik_thread_create(pthread_attr_t *tattr, pthread_t *thread, void *proc) {
-    osi_Assert(pthread_attr_init(tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(tattr, PTHREAD_CREATE_DETACHED) == 0);
-    osi_Assert(pthread_create(thread, tattr, proc, NULL) == 0);
+    opr_Verify(pthread_attr_init(tattr) == 0);
+    opr_Verify(pthread_attr_setdetachstate(tattr,
+					   PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_create(thread, tattr, proc, NULL) == 0);
     return 0;
 }
 #endif

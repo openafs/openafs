@@ -236,11 +236,11 @@ extern struct fs_state fs_state;
 #ifdef AFS_NT40_ENV
 #define FS_STATE_INIT    fs_stateInit()
 #else
-#define FS_STATE_INIT    osi_Assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0)
+#define FS_STATE_INIT    opr_Verify(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0)
 #endif
-#define FS_STATE_RDLOCK  osi_Assert(pthread_rwlock_rdlock(&fs_state.state_lock) == 0)
-#define FS_STATE_WRLOCK  osi_Assert(pthread_rwlock_wrlock(&fs_state.state_lock) == 0)
-#define FS_STATE_UNLOCK  osi_Assert(pthread_rwlock_unlock(&fs_state.state_lock) == 0)
+#define FS_STATE_RDLOCK  opr_Verify(pthread_rwlock_rdlock(&fs_state.state_lock) == 0)
+#define FS_STATE_WRLOCK  opr_Verify(pthread_rwlock_wrlock(&fs_state.state_lock) == 0)
+#define FS_STATE_UNLOCK  opr_Verify(pthread_rwlock_unlock(&fs_state.state_lock) == 0)
 
 #define FS_MODE_NORMAL    0
 #define FS_MODE_SHUTDOWN  1

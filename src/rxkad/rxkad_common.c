@@ -36,10 +36,10 @@
 #endif /* !UKERNEL */
 #else /* KERNEL */
 #include <roken.h>
+#include <afs/opr.h>
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define RXKAD_STATS_DECLSPEC __declspec(dllexport)
 #endif
-#include <afs/afsutil.h>
 #endif /* KERNEL */
 
 #include <rx/rx.h>

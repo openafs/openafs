@@ -37,7 +37,7 @@
 
 #include <roken.h>
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/afsint.h>
 #include <afs/errors.h>
 #include <afs/afssyscalls.h>

@@ -19,6 +19,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#include <afs/opr.h>
 #include <afs/errors.h>
 #include <afs/afsutil.h>
 
@@ -54,8 +55,7 @@ static pthread_once_t et_list_once = PTHREAD_ONCE_INIT;
 static void
 et_mutex_once(void)
 {
-    assert(!pthread_mutex_init
-	   (&et_list_mutex, (const pthread_mutexattr_t *)0));
+    opr_Verify(!pthread_mutex_init(&et_list_mutex, NULL));
     et_list_done = 1;
 }
 
@@ -63,9 +63,9 @@ et_mutex_once(void)
 	do { \
 	    if (!et_list_done) \
 		pthread_once(&et_list_once, et_mutex_once); \
-	    assert(pthread_mutex_lock(&et_list_mutex)==0); \
+	    opr_Verify(pthread_mutex_lock(&et_list_mutex)==0); \
 	} while (0)
-#define UNLOCK_ET_LIST assert(pthread_mutex_unlock(&et_list_mutex)==0)
+#define UNLOCK_ET_LIST opr_Verify(pthread_mutex_unlock(&et_list_mutex)==0)
 #else
 #define LOCK_ET_LIST
 #define UNLOCK_ET_LIST

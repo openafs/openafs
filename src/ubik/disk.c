@@ -11,9 +11,9 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <lock.h>
-#include <rx/xdr.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"

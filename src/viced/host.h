@@ -177,7 +177,7 @@ do { \
 				hostList ? (hostList->prev = (h)):0; 	\
 				hostList = (h);                         \
 			        hostCount++;
-#define h_DeleteList_r(h)	osi_Assert(hostCount>0);                    \
+#define h_DeleteList_r(h)	opr_Assert(hostCount>0);                    \
 				hostCount--;                                \
 				(h)->next ? ((h)->next->prev = (h)->prev):0;\
 				(h)->prev ? ((h)->prev->next = (h)->next):0;\

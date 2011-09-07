@@ -14,7 +14,7 @@
 
 #include <ctype.h>
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
@@ -162,7 +162,7 @@ iod_Write(struct iod *iodp, char *buf, int nbytes)
     int code, i;
     int one_success = 0;
 
-    osi_Assert((iodp->call && iodp->ncalls == 1 && !iodp->calls)
+    opr_Assert((iodp->call && iodp->ncalls == 1 && !iodp->calls)
 	   || (!iodp->call && iodp->ncalls >= 1 && iodp->calls));
 
     if (iodp->call) {
@@ -980,15 +980,15 @@ DumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
-    osi_Assert(fdP != NULL);
+    opr_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    osi_Assert(file != NULL);
+    opr_Assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    osi_Assert(size != -1);
+    opr_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
+	opr_Assert((nVnodes + 1) * vcp->diskSize == size);
+	opr_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;
@@ -1148,7 +1148,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	OS_SYNC(afile->str_fd);
     } else {
 	size = OS_SIZE(fdP->fd_fd);
-	osi_Assert(size != -1);
+	opr_Assert(size != -1);
 	nVnodes =
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
@@ -1858,15 +1858,15 @@ SizeDumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     int vnodeIndex;
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
-    osi_Assert(fdP != NULL);
+    opr_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    osi_Assert(file != NULL);
+    opr_Assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
-    osi_Assert(size != -1);
+    opr_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	osi_Assert((nVnodes + 1) * vcp->diskSize == size);
-	osi_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
+	opr_Assert((nVnodes + 1) * vcp->diskSize == size);
+	opr_Assert(STREAM_ASEEK(file, vcp->diskSize) == 0);
     } else
 	nVnodes = 0;
     for (vnodeIndex = 0;

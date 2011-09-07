@@ -48,7 +48,7 @@ VOL_CV_TIMEDWAIT(pthread_cond_t *cv, const struct timespec *ts, int *timedout)
 	    *timedout = 1;
 	}
     }
-    osi_Assert(code == 0);
+    opr_Assert(code == 0);
 }
 #endif /* AFS_PTHREAD_ENV */
 
@@ -268,7 +268,7 @@ VVolLockType(int mode, int writable)
 	    return 0;
 
 	default:
-	    osi_Assert(0 /* unknown checkout mode */);
+	    opr_Assert(0 /* unknown checkout mode */);
 	    return 0;
 	}
     }
@@ -453,11 +453,11 @@ VWaitStateChange_r(Volume * vp)
 {
     VolState state_save = V_attachState(vp);
 
-    osi_Assert(vp->nWaiters || vp->nUsers);
+    opr_Assert(vp->nWaiters || vp->nUsers);
     do {
 	VOL_CV_WAIT(&V_attachCV(vp));
     } while (V_attachState(vp) == state_save);
-    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
+    opr_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**
@@ -515,11 +515,11 @@ VTimedWaitStateChange_r(Volume * vp, const struct timespec *ts, int *atimedout)
 static_inline void
 VWaitExclusiveState_r(Volume * vp)
 {
-    osi_Assert(vp->nWaiters || vp->nUsers);
+    opr_Assert(vp->nWaiters || vp->nUsers);
     while (VIsExclusiveState(V_attachState(vp))) {
 	VOL_CV_WAIT(&V_attachCV(vp));
     }
-    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
+    opr_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**

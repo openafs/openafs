@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <afs/afsint.h>
 #include <afs/ihandle.h>
 #include <afs/nfs.h>

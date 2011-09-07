@@ -50,6 +50,8 @@
 
 #else /* KERNEL */
 #include <roken.h>
+#include <afs/opr.h>
+
 #include <rx/rx.h>
 #include <rx/rx_packet.h>
 #endif /* KERNEL */

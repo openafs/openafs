@@ -14,7 +14,7 @@
 
 #include <roken.h>
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/afsint.h>
@@ -354,7 +354,7 @@ ViceCreateRoot(Volume *vp)
     did.Vnode = (VnodeId) 1;
     did.Unique = 1;
 
-    osi_Assert(!(afs_dir_MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
+    opr_Verify(!(afs_dir_MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
     DFlush();			/* flush all modified dir buffers out */
     DZap(&dir);			/* Remove all buffers for this dir */
     length = afs_dir_Length(&dir);	/* Remember size of this directory */
@@ -394,9 +394,9 @@ ViceCreateRoot(Volume *vp)
     IH_INIT(h, vp->device, V_parentId(vp),
 	    vp->vnodeIndex[vLarge].handle->ih_ino);
     fdP = IH_OPEN(h);
-    osi_Assert(fdP != NULL);
+    opr_Assert(fdP != NULL);
     nBytes = FDH_PWRITE(fdP, vnode, SIZEOF_LARGEDISKVNODE, vnodeIndexOffset(vcp, 1));
-    osi_Assert(nBytes == SIZEOF_LARGEDISKVNODE);
+    opr_Assert(nBytes == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);
     VNDISK_GET_LEN(length, vnode);

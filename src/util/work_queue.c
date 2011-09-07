@@ -11,6 +11,8 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
+
 #include <sys/file.h>
 
 #include <lock.h>
@@ -392,7 +394,7 @@ _afs_wq_node_list_enqueue(struct afs_work_queue_node_list * list,
 	MUTEX_ENTER(&node->lock);
 
 	/* assert state of the world (we set busy, so this should never happen) */
-	osi_Assert(queue_IsNotOnQueue(node));
+	opr_Assert(queue_IsNotOnQueue(node));
     }
 
     if (list->shutdown) {
@@ -400,7 +402,7 @@ _afs_wq_node_list_enqueue(struct afs_work_queue_node_list * list,
 	goto error_unlock;
     }
 
-    osi_Assert(node->qidx == AFS_WQ_NODE_LIST_NONE);
+    opr_Assert(node->qidx == AFS_WQ_NODE_LIST_NONE);
     if (queue_IsEmpty(&list->list)) {
 	/* wakeup a dequeue thread */
 	CV_SIGNAL(&list->cv);
@@ -1282,13 +1284,13 @@ _afs_wq_node_put_r(struct afs_work_queue_node * node,
 {
     afs_uint32 refc;
 
-    osi_Assert(node->refcount > 0);
+    opr_Assert(node->refcount > 0);
     refc = --node->refcount;
     if (drop) {
 	MUTEX_EXIT(&node->lock);
     }
     if (!refc) {
-	osi_Assert(node->qidx == AFS_WQ_NODE_LIST_NONE);
+	opr_Assert(node->qidx == AFS_WQ_NODE_LIST_NONE);
 	_afs_wq_node_free(node);
     }
 

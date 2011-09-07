@@ -259,11 +259,11 @@ VnWaitStateChange_r(Vnode * vnp)
 {
     VnState state_save = Vn_state(vnp);
 
-    osi_Assert(Vn_refcount(vnp));
+    opr_Assert(Vn_refcount(vnp));
     do {
 	VOL_CV_WAIT(&Vn_stateCV(vnp));
     } while (Vn_state(vnp) == state_save);
-    osi_Assert(!(Vn_stateFlags(vnp) & VN_ON_LRU));
+    opr_Assert(!(Vn_stateFlags(vnp) & VN_ON_LRU));
 }
 
 /**
@@ -280,11 +280,11 @@ VnWaitStateChange_r(Vnode * vnp)
 static_inline void
 VnWaitExclusiveState_r(Vnode * vnp)
 {
-    osi_Assert(Vn_refcount(vnp));
+    opr_Assert(Vn_refcount(vnp));
     while (VnIsExclusiveState(Vn_state(vnp))) {
 	VOL_CV_WAIT(&Vn_stateCV(vnp));
     }
-    osi_Assert(!(Vn_stateFlags(vnp) & VN_ON_LRU));
+    opr_Assert(!(Vn_stateFlags(vnp) & VN_ON_LRU));
 }
 
 /**
@@ -301,12 +301,12 @@ VnWaitExclusiveState_r(Vnode * vnp)
 static_inline void
 VnWaitQuiescent_r(Vnode * vnp)
 {
-    osi_Assert(Vn_refcount(vnp));
+    opr_Assert(Vn_refcount(vnp));
     while (VnIsExclusiveState(Vn_state(vnp)) ||
 	   Vn_readers(vnp)) {
 	VOL_CV_WAIT(&Vn_stateCV(vnp));
     }
-    osi_Assert(!(Vn_stateFlags(vnp) & VN_ON_LRU));
+    opr_Assert(!(Vn_stateFlags(vnp) & VN_ON_LRU));
 }
 
 /**
@@ -329,11 +329,11 @@ static_inline void
 VnBeginRead_r(Vnode * vnp)
 {
     if (!Vn_readers(vnp)) {
-	osi_Assert(Vn_state(vnp) == VN_STATE_ONLINE);
+	opr_Assert(Vn_state(vnp) == VN_STATE_ONLINE);
 	VnChangeState_r(vnp, VN_STATE_READ);
     }
     Vn_readers(vnp)++;
-    osi_Assert(Vn_state(vnp) == VN_STATE_READ);
+    opr_Assert(Vn_state(vnp) == VN_STATE_READ);
 }
 
 /**
@@ -356,7 +356,7 @@ VnBeginRead_r(Vnode * vnp)
 static_inline void
 VnEndRead_r(Vnode * vnp)
 {
-    osi_Assert(Vn_readers(vnp) > 0);
+    opr_Assert(Vn_readers(vnp) > 0);
     Vn_readers(vnp)--;
     if (!Vn_readers(vnp)) {
 	CV_BROADCAST(&Vn_stateCV(vnp));

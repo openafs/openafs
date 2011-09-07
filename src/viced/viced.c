@@ -40,7 +40,7 @@
 
 #undef SHARED
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>
@@ -228,7 +228,7 @@ static int fs_stateInit(void)
     fs_state.options.fs_state_verify_after_restore = 1;
 
     CV_INIT(&fs_state.worker_done_cv, "worker done", CV_DEFAULT, 0);
-    osi_Assert(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0);
+    opr_Verify(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0);
 }
 # endif /* AFS_NT40_ENV */
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -728,8 +728,9 @@ ShutDownAndCore(int dopanic)
     if (dopanic) {
 	pthread_t watchdogPid;
 	pthread_attr_t tattr;
-	osi_Assert(pthread_attr_init(&tattr) == 0);
-	osi_Assert(pthread_create(&watchdogPid, &tattr, ShutdownWatchdogLWP, NULL) == 0);
+	opr_Verify(pthread_attr_init(&tattr) == 0);
+	opr_Verify(pthread_create(&watchdogPid, &tattr,
+				  ShutdownWatchdogLWP, NULL) == 0);
     }
 
     /* do not allows new reqests to be served from now on, all new requests
@@ -1456,7 +1457,7 @@ InitPR(void)
 	return code;
     }
 
-    osi_Assert(pthread_key_create(&viced_uclient_key, NULL) == 0);
+    opr_Verify(pthread_key_create(&viced_uclient_key, NULL) == 0);
 
     SystemId = SYSADMINID;
     SystemAnyUser = ANYUSERID;
@@ -2150,16 +2151,16 @@ main(int argc, char *argv[])
     ih_UseLargeCache();
 
     ViceLog(5, ("Starting pthreads\n"));
-    osi_Assert(pthread_attr_init(&tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_attr_init(&tattr) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&tattr,
+					   PTHREAD_CREATE_DETACHED) == 0);
 
-    osi_Assert(pthread_create
-	   (&serverPid, &tattr, FiveMinuteCheckLWP,
-	    &fiveminutes) == 0);
-    osi_Assert(pthread_create
-	   (&serverPid, &tattr, HostCheckLWP, &fiveminutes) == 0);
-    osi_Assert(pthread_create
-	   (&serverPid, &tattr, FsyncCheckLWP, &fiveminutes) == 0);
+    opr_Verify(pthread_create(&serverPid, &tattr, FiveMinuteCheckLWP,
+			      &fiveminutes) == 0);
+    opr_Verify(pthread_create(&serverPid, &tattr, HostCheckLWP,
+			      &fiveminutes) == 0);
+    opr_Verify(pthread_create(&serverPid, &tattr, FsyncCheckLWP,
+			      &fiveminutes) == 0);
 
     gettimeofday(&tp, 0);
 

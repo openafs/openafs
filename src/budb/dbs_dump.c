@@ -13,10 +13,10 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <lock.h>
 #include <ubik.h>
 #include <lwp.h>
-#include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
@@ -154,9 +154,12 @@ DumpDB(struct rx_call *call,
 
 	/* Initialize the thread attributes and launch the thread */
 
-	osi_Assert(pthread_attr_init(&dumperPid_tattr) == 0);
-	osi_Assert(pthread_attr_setdetachstate(&dumperPid_tattr, PTHREAD_CREATE_DETACHED) == 0);
-	osi_Assert(pthread_create(&dumperPid, &dumperPid_tattr, (void *)setupDbDump, NULL) == 0);
+	opr_Verify(pthread_attr_init(&dumperPid_tattr) == 0);
+	opr_Verify(pthread_attr_setdetachstate(&dumperPid_tattr,
+					       PTHREAD_CREATE_DETACHED) == 0);
+	opr_Verify(pthread_create(&dumperPid,
+				  &dumperPid_tattr,
+				  (void *)setupDbDump, NULL) == 0);
 
 #else
 	code =
@@ -173,9 +176,12 @@ DumpDB(struct rx_call *call,
 #ifdef AFS_PTHREAD_ENV
 	/* Initialize the thread attributes and launch the thread */
 
-	osi_Assert(pthread_attr_init(&watcherPid_tattr) == 0);
-	osi_Assert(pthread_attr_setdetachstate(&watcherPid_tattr, PTHREAD_CREATE_DETACHED) == 0);
-	osi_Assert(pthread_create(&watcherPid, &watcherPid_tattr, (void *)dumpWatcher, NULL) == 0);
+	opr_Verify(pthread_attr_init(&watcherPid_tattr) == 0);
+	opr_Verify(pthread_attr_setdetachstate(&watcherPid_tattr,
+					       PTHREAD_CREATE_DETACHED) == 0);
+	opr_Verify(pthread_create(&watcherPid,
+				  &watcherPid_tattr,
+				  (void *)dumpWatcher, NULL) == 0);
 #else
 	/* now create the watcher thread */
 	code =
@@ -338,7 +344,7 @@ dumpWatcher(void *unused)
 	    close(dumpSyncPtr->pipeFid[0]);
 	    close(dumpSyncPtr->pipeFid[1]);
 #ifdef AFS_PTHREAD_ENV
-	    osi_Assert(pthread_cancel(dumpSyncPtr->dumperPid) == 0);
+	    opr_Verify(pthread_cancel(dumpSyncPtr->dumperPid) == 0);
 #else
 	    code = LWP_DestroyProcess(dumpSyncPtr->dumperPid);
 	    if (code)

@@ -24,6 +24,7 @@
 
 #ifdef AFS_DEMAND_ATTACH_FS
 
+#include <afs/opr.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
@@ -414,7 +415,7 @@ _VVGC_scan_start(struct DiskPartition64 * dp)
 	ViceLog(0, ("_VVGC_scan_start: pthread_create failed with %d\n", code));
 
 	old_state = _VVGC_state_change(dp, VVGC_PART_STATE_INVALID);
-	osi_Assert(old_state == VVGC_PART_STATE_UPDATING);
+	opr_Assert(old_state == VVGC_PART_STATE_UPDATING);
     }
 
  error:

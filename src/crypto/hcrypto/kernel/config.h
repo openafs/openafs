@@ -24,19 +24,17 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
+#include "afs/opr.h"
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"
 #include "afs/afsincludes.h"
 #include "afs/afs_prototypes.h"
 
-/* Asserting is a mess - we need the RX headers in order to get a definition
- * for osi_Assert */
 #if defined(assert)
 #undef assert
 #endif
-#define assert osi_Assert
-#include <rx/rx.h>
+#define assert opr_Assert
 
 /* hcrypto uses "static inline", which isn't supported by some of our
  * compilers */

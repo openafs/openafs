@@ -519,7 +519,6 @@ extern afs_kmutex_t rx_if_init_mutex;
 extern afs_kmutex_t rx_if_mutex;
 #endif
 extern osi_socket rxi_GetUDPSocket(u_short port);
-extern void osi_AssertFailU(const char *expr, const char *file, int line) AFS_NORETURN;
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern int rxi_HandleSocketError(int socket);
 

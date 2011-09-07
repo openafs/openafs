@@ -18,6 +18,7 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <ubik.h>
 #include <lock.h>
 #include <afs/audit.h>

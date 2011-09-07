@@ -12,6 +12,7 @@
 #include <afs/stds.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wstrict-prototypes"
@@ -93,7 +94,7 @@ static pthread_key_t random_number_key;
 static void
 afs_random_once(void)
 {
-    osi_Assert(pthread_key_create(&random_number_key, NULL) == 0);
+    opr_Verify(pthread_key_create(&random_number_key, NULL) == 0);
     called_afs_random_once = 1;
 }
 
@@ -322,7 +323,7 @@ ubik_RefreshConn(struct rx_connection *tc)
 pthread_once_t ubik_client_once = PTHREAD_ONCE_INIT;
 pthread_mutex_t ubik_client_mutex;
 #define LOCK_UCLNT_CACHE do { \
-    osi_Assert(pthread_once(&ubik_client_once, ubik_client_init_mutex) == 0); \
+    opr_Verify(pthread_once(&ubik_client_once, ubik_client_init_mutex) == 0); \
     MUTEX_ENTER(&ubik_client_mutex); \
   } while (0)
 #define UNLOCK_UCLNT_CACHE MUTEX_EXIT(&ubik_client_mutex)

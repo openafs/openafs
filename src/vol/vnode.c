@@ -26,7 +26,7 @@
 #include <sys/file.h>
 #endif
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include "rx/rx_queue.h"
 #include <afs/afsint.h>
 #include "nfs.h"
@@ -358,7 +358,7 @@ VInitVnodes(VnodeClass class, int nVnodes)
     vcp->cacheSize = nVnodes;
     switch (class) {
     case vSmall:
-	osi_Assert(CHECKSIZE_SMALLVNODE);
+	opr_Assert(CHECKSIZE_SMALLVNODE);
 	vcp->lruHead = NULL;
 	vcp->residentSize = SIZEOF_SMALLVNODE;
 	vcp->diskSize = SIZEOF_SMALLDISKVNODE;
@@ -383,7 +383,7 @@ VInitVnodes(VnodeClass class, int nVnodes)
 	return 0;
 
     va = (byte *) calloc(nVnodes, vcp->residentSize);
-    osi_Assert(va != NULL);
+    opr_Assert(va != NULL);
     while (nVnodes--) {
 	Vnode *vnp = (Vnode *) va;
 	Vn_refcount(vnp) = 0;	/* no context switches */
@@ -1133,7 +1133,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
     VnChangeState_r(vnp, VN_STATE_ERROR);
     VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 #else
-    osi_Assert(1 == 2);
+    opr_abort();
 #endif
 }
 
@@ -1375,10 +1375,10 @@ VPutVnode_r(Error * ec, Vnode * vnp)
     struct VnodeClassInfo *vcp;
 
     *ec = 0;
-    osi_Assert(Vn_refcount(vnp) != 0);
+    opr_Assert(Vn_refcount(vnp) != 0);
     class = vnodeIdToClass(Vn_id(vnp));
     vcp = &VnodeClassInfo[class];
-    osi_Assert(vnp->disk.vnodeMagic == vcp->magic);
+    opr_Assert(vnp->disk.vnodeMagic == vcp->magic);
     VNLog(200, 2, Vn_id(vnp), (intptr_t) vnp, 0, 0);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1407,7 +1407,7 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 	if (vnp->changed_oldTime || vnp->changed_newTime || vnp->delete) {
 	    Volume *vp = Vn_volume(vnp);
 	    afs_uint32 now = FT_ApproxTime();
-	    osi_Assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
+	    opr_Assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
 
 	    if (vnp->delete) {
 		/* No longer any directory entries for this vnode. Free the Vnode */
@@ -1429,7 +1429,7 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 #ifdef AFS_DEMAND_ATTACH_FS
 		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 #else
-		osi_Assert(V_needsSalvaged(vp));
+		opr_Assert(V_needsSalvaged(vp));
 		*ec = VSALVAGE;
 #endif
 	    } else {
@@ -1517,10 +1517,10 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
 #endif /* AFS_PTHREAD_ENV */
 
     *ec = 0;
-    osi_Assert(Vn_refcount(vnp) != 0);
+    opr_Assert(Vn_refcount(vnp) != 0);
     class = vnodeIdToClass(Vn_id(vnp));
     vcp = &VnodeClassInfo[class];
-    osi_Assert(vnp->disk.vnodeMagic == vcp->magic);
+    opr_Assert(vnp->disk.vnodeMagic == vcp->magic);
     VNLog(300, 2, Vn_id(vnp), (intptr_t) vnp, 0, 0);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1554,7 +1554,7 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
     if (vnp->changed_oldTime || vnp->changed_newTime) {
 	Volume *vp = Vn_volume(vnp);
 	afs_uint32 now = FT_ApproxTime();
-	osi_Assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
+	opr_Assert(Vn_cacheCheck(vnp) == vp->cacheCheck);
 	if (vnp->changed_newTime)
 	    vnp->disk.serverModifyTime = now;
 	if (vnp->changed_newTime)
@@ -1565,7 +1565,7 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
 #ifdef AFS_DEMAND_ATTACH_FS
 	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0);
 #else
-	    osi_Assert(V_needsSalvaged(vp));
+	    opr_Assert(V_needsSalvaged(vp));
 	    *ec = VSALVAGE;
 #endif
 	} else {
@@ -1709,9 +1709,8 @@ VCloseVnodeFiles_r(Volume * vp)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /* XXX need better error handling here */
-    osi_Assert(VInvalidateVnodesByVolume_r(vp,
-				       &ih_vec,
-				       &vec_len) == 0);
+    opr_Verify(VInvalidateVnodesByVolume_r(vp, &ih_vec,
+					   &vec_len) == 0);
 
     /*
      * DAFS:
@@ -1774,9 +1773,8 @@ VReleaseVnodeFiles_r(Volume * vp)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /* XXX need better error handling here */
-    osi_Assert(VInvalidateVnodesByVolume_r(vp,
-				       &ih_vec,
-				       &vec_len) == 0);
+    opr_Verify(VInvalidateVnodesByVolume_r(vp, &ih_vec,
+					   &vec_len) == 0);
 
     /*
      * DAFS:

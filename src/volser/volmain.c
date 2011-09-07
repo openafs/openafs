@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
@@ -484,10 +485,10 @@ main(int argc, char **argv)
 #ifdef AFS_PTHREAD_ENV
 	pthread_t tid;
 	pthread_attr_t tattr;
-	osi_Assert(pthread_attr_init(&tattr) == 0);
-	osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-
-	osi_Assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
+	opr_Verify(pthread_attr_init(&tattr) == 0);
+	opr_Verify(pthread_attr_setdetachstate(&tattr,
+					       PTHREAD_CREATE_DETACHED) == 0);
+	opr_Verify(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);

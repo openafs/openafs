@@ -19,7 +19,7 @@
 
 #include <afs/stds.h>
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <lwp.h>
 #include <lock.h>
 #include <afs/afsint.h>

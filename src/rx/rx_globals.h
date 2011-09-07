@@ -179,7 +179,7 @@ EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-s
     do { \
         ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
         if (ts_info_p == NULL) { \
-            osi_Assert((ts_info_p = rx_ts_info_init()) != NULL); \
+            opr_Verify((ts_info_p = rx_ts_info_init()) != NULL); \
         } \
     } while(0)
 #endif /* AFS_PTHREAD_ENV */

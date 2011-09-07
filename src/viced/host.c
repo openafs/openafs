@@ -354,7 +354,7 @@ getThreadClient(struct ubik_client **client)
     if (code)
 	return code;
 
-    osi_Assert(pthread_setspecific(viced_uclient_key, *client) == 0);
+    opr_Verify(pthread_setspecific(viced_uclient_key, *client) == 0);
 
     return 0;
 }
@@ -743,7 +743,7 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, struct host **hostp)
   restart:
     for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
-	osi_Assert(host);
+	opr_Assert(host);
 	if (!(host->hostFlags & HOSTDELETED) && chain->addr == haddr
 	    && chain->port == hport) {
 	    if ((host->hostFlags & HWHO_INPROGRESS) &&
@@ -790,7 +790,7 @@ h_LookupUuid_r(afsUUID * uuidp)
 
     for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
-	osi_Assert(host);
+	opr_Assert(host);
 	if (!(host->hostFlags & HOSTDELETED) && host->interface
 	    && afs_uuid_equal(&host->interface->uuid, uuidp)) {
             return host;
@@ -1173,7 +1173,7 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
      if (LogLevel >= 125)
 	 afsUUID_to_string(&host->interface->uuid, uuid1, 127);
      for (uhp = &hostUuidHashTable[index]; (uth = *uhp); uhp = &uth->next) {
-         osi_Assert(uth->hostPtr);
+         opr_Assert(uth->hostPtr);
 	 if (uth->hostPtr == host) {
 	     ViceLog(125,
 		     ("h_DeleteHostFromUuidHashTable_r: host %" AFS_PTR_FMT " (uuid %s %s:%d)\n",
@@ -1204,8 +1204,8 @@ invalidateInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     struct Interface *interface;
     char hoststr[16], hoststr2[16];
 
-    osi_Assert(host);
-    osi_Assert(host->interface);
+    opr_Assert(host);
+    opr_Assert(host->interface);
 
     ViceLog(125, ("invalidateInterfaceAddr : host %" AFS_PTR_FMT " (%s:%d) addr %s:%d\n",
 		  host, afs_inet_ntoa_r(host->host, hoststr),
@@ -1358,7 +1358,7 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
 	     AFS_PTR_FMT, afs_inet_ntoa_r(addr, hoststr), ntohs(port),
 	     newHost, oldHost));
 
-    osi_Assert(oldHost != newHost);
+    opr_Assert(oldHost != newHost);
     caps.Capabilities_val = NULL;
 
     if (!sc) {
@@ -1508,8 +1508,8 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     struct Interface *interface;
     char hoststr[16], hoststr2[16];
 
-    osi_Assert(host);
-    osi_Assert(host->interface);
+    opr_Assert(host);
+    opr_Assert(host->interface);
 
     /*
      * Make sure this address is on the list of known addresses
@@ -1574,8 +1574,8 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     struct Interface *interface;
     char hoststr[16], hoststr2[16];
 
-    osi_Assert(host);
-    osi_Assert(host->interface);
+    opr_Assert(host);
+    opr_Assert(host->interface);
 
     ViceLog(125, ("removeInterfaceAddr : host %" AFS_PTR_FMT " (%s:%d) addr %s:%d\n",
 		  host, afs_inet_ntoa_r(host->host, hoststr),
@@ -2146,7 +2146,7 @@ h_GetHost_r(struct rx_connection *tcon)
 				("InitCallBackState3 success on host %" AFS_PTR_FMT " (%s:%d)\n",
 				 host, afs_inet_ntoa_r(host->host, hoststr),
 				 ntohs(host->port)));
-			osi_Assert(interfValid == 1);
+			opr_Assert(interfValid == 1);
 			initInterfaceAddr_r(host, &interf);
 		    }
 		}
@@ -2618,7 +2618,7 @@ h_FindClient_r(struct rx_connection *tcon)
 int
 h_ReleaseClient_r(struct client *client)
 {
-    osi_Assert(client->refCount > 0);
+    opr_Assert(client->refCount > 0);
     client->refCount--;
     return 0;
 }
@@ -3287,7 +3287,7 @@ h_stateSaveHost(struct host * host, void* rock)
 	if_len = sizeof(struct Interface) +
 	    ((host->interface->numberOfInterfaces-1) * sizeof(struct AddrPort));
 	ifp = malloc(if_len);
-	osi_Assert(ifp != NULL);
+	opr_Assert(ifp != NULL);
 	memcpy(ifp, host->interface, if_len);
 	hdr.interfaces = host->interface->numberOfInterfaces;
 	iov[iovcnt].iov_base = (char *) ifp;
@@ -3298,7 +3298,7 @@ h_stateSaveHost(struct host * host, void* rock)
 	hdr.hcps = host->hcps.prlist_len;
 	hcps_len = hdr.hcps * sizeof(afs_int32);
 	hcps = malloc(hcps_len);
-	osi_Assert(hcps != NULL);
+	opr_Assert(hcps != NULL);
 	memcpy(hcps, host->hcps.prlist_val, hcps_len);
 	iov[iovcnt].iov_base = (char *) hcps;
 	iov[iovcnt].iov_len = hcps_len;
@@ -3370,7 +3370,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
 	ifp_len = sizeof(struct Interface) +
 	    ((hdr.interfaces-1) * sizeof(struct AddrPort));
 	ifp = malloc(ifp_len);
-	osi_Assert(ifp != NULL);
+	opr_Assert(ifp != NULL);
 	iov[iovcnt].iov_base = (char *) ifp;
 	iov[iovcnt].iov_len = ifp_len;
 	iovcnt++;
@@ -3378,7 +3378,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
     if (hdr.hcps) {
 	hcps_len = hdr.hcps * sizeof(afs_int32);
 	hcps = malloc(hcps_len);
-	osi_Assert(hcps != NULL);
+	opr_Assert(hcps != NULL);
 	iov[iovcnt].iov_base = (char *) hcps;
 	iov[iovcnt].iov_len = hcps_len;
 	iovcnt++;
@@ -3399,7 +3399,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
     if (!hdr.hcps && hdsk.hcps_valid) {
 	/* valid, zero-length host cps ; does this ever happen? */
 	hcps = malloc(sizeof(afs_int32));
-	osi_Assert(hcps != NULL);
+	opr_Assert(hcps != NULL);
     }
 
     if ((hdsk.hostFlags & HWHO_INPROGRESS) || !(hdsk.hostFlags & ALTADDR)) {
@@ -3414,7 +3414,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
 
     /* for restoring state, we better be able to get a host! */
     host = GetHT();
-    osi_Assert(host != NULL);
+    opr_Assert(host != NULL);
 
     if (ifp) {
 	host->interface = ifp;
@@ -4017,8 +4017,8 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     char uuidstr[128];
     afs_uint16 port7001 = htons(7001);
 
-    osi_Assert(host);
-    osi_Assert(interf);
+    opr_Assert(host);
+    opr_Assert(interf);
 
     number = interf->numberOfInterfaces;
     myAddr = host->host;	/* current interface address */
@@ -4124,7 +4124,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 
     interface->uuid = interf->uuid;
 
-    osi_Assert(!host->interface);
+    opr_Assert(!host->interface);
     host->interface = interface;
 
     if (LogLevel >= 125) {
@@ -4155,7 +4155,7 @@ h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port,
 
     for (hp = &hostAddrHashTable[h_HashIndex(addr)]; (th = *hp);
 	 hp = &th->next) {
-        osi_Assert(th->hostPtr);
+        opr_Assert(th->hostPtr);
         if (th->hostPtr == host && th->addr == addr && th->port == port) {
 	    ViceLog(125, ("h_DeleteHostFromAddrHashTable_r: host %" AFS_PTR_FMT " (%s:%d)\n",
 			  host, afs_inet_ntoa_r(host->host, hoststr),

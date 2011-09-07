@@ -32,7 +32,7 @@
 #define WCOREDUMP(x)	((x) & 0200)
 #endif
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/afsint.h>
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
@@ -504,7 +504,7 @@ SalvageServer(int argc, char **argv)
     ObtainSharedSalvageLock();
 
     child_slot = calloc(Parallel, sizeof(int));
-    osi_Assert(child_slot != NULL);
+    opr_Assert(child_slot != NULL);
 
     /* initialize things */
     VOptDefaults(salvageServer, &opts);
@@ -518,27 +518,22 @@ SalvageServer(int argc, char **argv)
     MUTEX_INIT(&worker_lock, "worker", MUTEX_DEFAULT, 0);
     CV_INIT(&worker_cv, "worker", CV_DEFAULT, 0);
     CV_INIT(&log_cleanup_queue.queue_change_cv, "queuechange", CV_DEFAULT, 0);
-    osi_Assert(pthread_attr_init(&attrs) == 0);
+    opr_Verify(pthread_attr_init(&attrs) == 0);
 
     /* start up the reaper and log cleaner threads */
-    osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
-    osi_Assert(pthread_create(&tid,
-			  &attrs,
-			  &SalvageChildReaperThread,
-			  NULL) == 0);
-    osi_Assert(pthread_create(&tid,
-			  &attrs,
-			  &SalvageLogCleanupThread,
-			  NULL) == 0);
-    osi_Assert(pthread_create(&tid,
-			  &attrs,
-			  &SalvageLogScanningThread,
-			  NULL) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&attrs,
+					   PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_create(&tid, &attrs,
+			      &SalvageChildReaperThread, NULL) == 0);
+    opr_Verify(pthread_create(&tid, &attrs,
+			      &SalvageLogCleanupThread, NULL) == 0);
+    opr_Verify(pthread_create(&tid, &attrs,
+			      &SalvageLogScanningThread, NULL) == 0);
 
     /* loop forever serving requests */
     while (1) {
 	node = SALVSYNC_getWork();
-	osi_Assert(node != NULL);
+	opr_Assert(node != NULL);
 
 	Log("dispatching child to salvage volume %u...\n",
 	    node->command.sop.parent);
@@ -549,7 +544,7 @@ SalvageServer(int argc, char **argv)
 	  if (!child_slot[slot])
 	    break;
 	}
-	osi_Assert (slot < Parallel);
+	opr_Assert (slot < Parallel);
 
     do_fork:
 	pid = Fork();
@@ -658,7 +653,7 @@ SalvageChildReaperThread(void * args)
 	    if (child_slot[slot] == pid)
 		break;
 	}
-	osi_Assert(slot < Parallel);
+	opr_Assert(slot < Parallel);
 	child_slot[slot] = 0;
 	VOL_UNLOCK;
 
@@ -788,7 +783,7 @@ SalvageLogScanningThread(void * arg)
 	prefix_len = strlen(prefix);
 
 	dp = opendir(AFSDIR_LOGS_DIR);
-	osi_Assert(dp);
+	opr_Assert(dp);
 
 	while ((dirp = readdir(dp)) != NULL) {
 	    pid_t pid;

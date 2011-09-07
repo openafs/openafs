@@ -43,6 +43,7 @@
 #else /* KERNEL */
 # include <roken.h>
 # include <assert.h>
+# include <afs/opr.h>
 # if defined(AFS_NT40_ENV)
 #  ifndef EWOULDBLOCK
 #   define EWOULDBLOCK WSAEWOULDBLOCK

@@ -22,7 +22,7 @@
 #include <sys/resource.h>
 #endif
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/afsint.h>
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
@@ -111,7 +111,7 @@ void
 ih_Initialize(void)
 {
     int i;
-    osi_Assert(!ih_Inited);
+    opr_Assert(!ih_Inited);
     ih_Inited = 1;
     DLL_INIT_LIST(ihAvailHead, ihAvailTail);
     DLL_INIT_LIST(fdAvailHead, fdAvailTail);
@@ -124,9 +124,9 @@ ih_Initialize(void)
 #elif defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
     {
 	struct rlimit rlim;
-	osi_Assert(getrlimit(RLIMIT_NOFILE, &rlim) == 0);
+	opr_Verify(getrlimit(RLIMIT_NOFILE, &rlim) == 0);
 	rlim.rlim_cur = rlim.rlim_max;
-	osi_Assert(setrlimit(RLIMIT_NOFILE, &rlim) == 0);
+	opr_Verify(setrlimit(RLIMIT_NOFILE, &rlim) == 0);
 	fdMaxCacheSize = rlim.rlim_cur - vol_io_params.fd_handle_setaside;
 #ifdef AFS_NBSD_ENV
 	/* XXX this is to avoid using up all system fd netbsd is
@@ -140,7 +140,7 @@ ih_Initialize(void)
 	fdMaxCacheSize /= 4;
 #endif
 	fdMaxCacheSize = min(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
-	osi_Assert(fdMaxCacheSize > 0);
+	opr_Assert(fdMaxCacheSize > 0);
     }
 #elif defined(AFS_HPUX_ENV)
     /* Avoid problems with "UFSOpen: igetinode failed" panics on HPUX 11.0 */
@@ -202,9 +202,9 @@ iHandleAllocateChunk(void)
     int i;
     IHandle_t *ihP;
 
-    osi_Assert(ihAvailHead == NULL);
+    opr_Assert(ihAvailHead == NULL);
     ihP = malloc(I_HANDLE_MALLOCSIZE * sizeof(IHandle_t));
-    osi_Assert(ihP != NULL);
+    opr_Assert(ihP != NULL);
     for (i = 0; i < I_HANDLE_MALLOCSIZE; i++) {
 	ihP[i].ih_refcnt = 0;
 	DLL_INSERT_TAIL(&ihP[i], ihAvailHead, ihAvailTail, ih_next, ih_prev);
@@ -241,7 +241,7 @@ ih_init(int dev, int vid, Inode ino)
 	iHandleAllocateChunk();
     }
     ihP = ihAvailHead;
-    osi_Assert(ihP->ih_refcnt == 0);
+    opr_Assert(ihP->ih_refcnt == 0);
     DLL_DELETE(ihP, ihAvailHead, ihAvailTail, ih_next, ih_prev);
     ihP->ih_dev = dev;
     ihP->ih_vid = vid;
@@ -261,8 +261,8 @@ IHandle_t *
 ih_copy(IHandle_t * ihP)
 {
     IH_LOCK;
-    osi_Assert(ih_Inited);
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ih_Inited);
+    opr_Assert(ihP->ih_refcnt > 0);
     ihP->ih_refcnt++;
     IH_UNLOCK;
     return ihP;
@@ -275,9 +275,9 @@ fdHandleAllocateChunk(void)
     int i;
     FdHandle_t *fdP;
 
-    osi_Assert(fdAvailHead == NULL);
+    opr_Assert(fdAvailHead == NULL);
     fdP = malloc(FD_HANDLE_MALLOCSIZE * sizeof(FdHandle_t));
-    osi_Assert(fdP != NULL);
+    opr_Assert(fdP != NULL);
     for (i = 0; i < FD_HANDLE_MALLOCSIZE; i++) {
 	fdP[i].fd_status = FD_HANDLE_AVAIL;
 	fdP[i].fd_refcnt = 0;
@@ -296,10 +296,10 @@ streamHandleAllocateChunk(void)
     int i;
     StreamHandle_t *streamP;
 
-    osi_Assert(streamAvailHead == NULL);
+    opr_Assert(streamAvailHead == NULL);
     streamP = (StreamHandle_t *)
 	malloc(STREAM_HANDLE_MALLOCSIZE * sizeof(StreamHandle_t));
-    osi_Assert(streamP != NULL);
+    opr_Assert(streamP != NULL);
     for (i = 0; i < STREAM_HANDLE_MALLOCSIZE; i++) {
 	streamP[i].str_fd = INVALID_FD;
 	DLL_INSERT_TAIL(&streamP[i], streamAvailHead, streamAvailTail,
@@ -337,9 +337,9 @@ ih_open(IHandle_t * ihP)
 	if (fdP->fd_status == FD_HANDLE_INUSE) {
 	    continue;
 	}
-	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
+	opr_Assert(fdP->fd_status == FD_HANDLE_OPEN);
 #else /* HAVE_PIO */
-	osi_Assert(fdP->fd_status != FD_HANDLE_AVAIL);
+	opr_Assert(fdP->fd_status != FD_HANDLE_AVAIL);
 #endif /* HAVE_PIO */
 
 	fdP->fd_refcnt++;
@@ -372,7 +372,7 @@ ih_open_retry:
      * of open files reaches the size of the cache */
     if ((fdInUseCount > fdCacheSize || fd == INVALID_FD)  && fdLruHead != NULL) {
 	fdP = fdLruHead;
-	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
+	opr_Assert(fdP->fd_status == FD_HANDLE_OPEN);
 	DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
 	DLL_DELETE(fdP, fdP->fd_ih->ih_fdhead, fdP->fd_ih->ih_fdtail,
 		   fd_ihnext, fd_ihprev);
@@ -392,7 +392,7 @@ ih_open_retry:
 	    fdHandleAllocateChunk();
 	}
 	fdP = fdAvailHead;
-	osi_Assert(fdP->fd_status == FD_HANDLE_AVAIL);
+	opr_Assert(fdP->fd_status == FD_HANDLE_AVAIL);
 	DLL_DELETE(fdP, fdAvailHead, fdAvailTail, fd_next, fd_prev);
 	closeFd = INVALID_FD;
     }
@@ -431,9 +431,9 @@ fd_close(FdHandle_t * fdP)
 	return 0;
 
     IH_LOCK;
-    osi_Assert(ih_Inited);
-    osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+    opr_Assert(ih_Inited);
+    opr_Assert(fdInUseCount > 0);
+    opr_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
                fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
@@ -483,9 +483,9 @@ fd_reallyclose(FdHandle_t * fdP)
 	return 0;
 
     IH_LOCK;
-    osi_Assert(ih_Inited);
-    osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+    opr_Assert(ih_Inited);
+    opr_Assert(fdInUseCount > 0);
+    opr_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
                fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
@@ -585,7 +585,7 @@ stream_open(const char *filename, const char *mode)
     } else if (strcmp(mode, "a+") == 0) {
 	fd = OS_OPEN(filename, O_RDWR | O_APPEND | O_CREAT, 0);
     } else {
-	osi_Assert(FALSE);		/* not implemented */
+	opr_abort();		/* not implemented */
     }
 
     if (fd == INVALID_FD) {
@@ -608,7 +608,7 @@ stream_read(void *ptr, afs_fsize_t size, afs_fsize_t nitems,
 	streamP->str_bufoff = 0;
 	streamP->str_buflen = 0;
     } else {
-	osi_Assert(streamP->str_direction == STREAM_DIRECTION_READ);
+	opr_Assert(streamP->str_direction == STREAM_DIRECTION_READ);
     }
 
     bytesRead = 0;
@@ -662,7 +662,7 @@ stream_write(void *ptr, afs_fsize_t size, afs_fsize_t nitems,
 	streamP->str_bufoff = 0;
 	streamP->str_buflen = STREAM_HANDLE_BUFSIZE;
     } else {
-	osi_Assert(streamP->str_direction == STREAM_DIRECTION_WRITE);
+	opr_Assert(streamP->str_direction == STREAM_DIRECTION_WRITE);
     }
 
     nbytes = size * nitems;
@@ -752,7 +752,7 @@ stream_close(StreamHandle_t * streamP, int reallyClose)
     ssize_t rc;
     int retval = 0;
 
-    osi_Assert(streamP != NULL);
+    opr_Assert(streamP != NULL);
     if (streamP->str_direction == STREAM_DIRECTION_WRITE
 	&& streamP->str_bufoff > 0) {
 	rc = OS_PWRITE(streamP->str_fd, streamP->str_buffer,
@@ -789,7 +789,7 @@ ih_fdclose(IHandle_t * ihP)
     int closeCount, closedAll;
     FdHandle_t *fdP, *head, *tail, *next;
 
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ihP->ih_refcnt > 0);
 
     closedAll = 1;
     DLL_INIT_LIST(head, tail);
@@ -802,8 +802,8 @@ ih_fdclose(IHandle_t * ihP)
      */
     for (fdP = ihP->ih_fdhead; fdP != NULL; fdP = next) {
 	next = fdP->fd_ihnext;
-	osi_Assert(fdP->fd_ih == ihP);
-	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN
+	opr_Assert(fdP->fd_ih == ihP);
+	opr_Assert(fdP->fd_status == FD_HANDLE_OPEN
 	       || fdP->fd_status == FD_HANDLE_INUSE
 	       || fdP->fd_status == FD_HANDLE_CLOSING);
 	if (fdP->fd_status == FD_HANDLE_OPEN) {
@@ -826,9 +826,9 @@ ih_fdclose(IHandle_t * ihP)
      * closed all file descriptors.
      */
     if (ihP->ih_refcnt == 1 || closedAll) {
-	osi_Assert(closedAll);
-	osi_Assert(!ihP->ih_fdhead);
-	osi_Assert(!ihP->ih_fdtail);
+	opr_Assert(closedAll);
+	opr_Assert(!ihP->ih_fdhead);
+	opr_Assert(!ihP->ih_fdtail);
     }
 
     if (head == NULL) {
@@ -850,7 +850,7 @@ ih_fdclose(IHandle_t * ihP)
     }
 
     IH_LOCK;
-    osi_Assert(fdInUseCount >= closeCount);
+    opr_Assert(fdInUseCount >= closeCount);
     fdInUseCount -= closeCount;
 
     /*
@@ -891,7 +891,7 @@ ih_reallyclose(IHandle_t * ihP)
 	IH_LOCK;
     }
 
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ihP->ih_refcnt > 0);
 
     ih_fdclose(ihP);
 
@@ -915,7 +915,7 @@ _ih_release_r(IHandle_t * ihP)
     if (!ihP)
 	return 0;
 
-    osi_Assert(ihP->ih_refcnt > 0);
+    opr_Assert(ihP->ih_refcnt > 0);
 
     if (ihP->ih_refcnt > 1) {
 	ihP->ih_refcnt--;

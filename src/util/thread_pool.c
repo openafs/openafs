@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <lock.h>
 #include <afs/afsutil.h>
@@ -148,7 +149,7 @@ _afs_tp_worker_run(void * rock)
 
     /* adjust pool live thread count */
     MUTEX_ENTER(&pool->lock);
-    osi_Assert(pool->nthreads);
+    opr_Assert(pool->nthreads);
     queue_Remove(worker);
     pool->nthreads--;
     if (!pool->nthreads) {
@@ -208,8 +209,8 @@ _afs_tp_worker_start(struct afs_thread_pool * pool,
     worker->pool = pool;
     worker->req_shutdown = 0;
 
-    osi_Assert(pthread_attr_init(&attrs) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_attr_init(&attrs) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
 
     ret = pthread_create(&worker->tid, &attrs, &_afs_tp_worker_run, worker);
 

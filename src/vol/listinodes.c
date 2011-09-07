@@ -21,6 +21,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <ctype.h>
 
@@ -265,7 +266,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
      *      LAST_RSVD_I is a vice inode, with dead beef, and
      *      di_nlink == 2 to indicate the FORCE.
      */
-    osi_Assert(p = ginode(LAST_RSVD_I));
+    opr_Verify(p = ginode(LAST_RSVD_I));
 
     if (p->di_vicemagic == VICEMAGIC && p->di_vicep1 == 0xdeadbeef
 	&& p->di_nlink == 2) {

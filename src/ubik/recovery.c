@@ -12,6 +12,7 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -888,7 +889,7 @@ DoProbe(struct ubik_server *server)
 	}
     }
     UBIK_ADDR_UNLOCK;
-    osi_Assert(i);			/* at least one interface address for this server */
+    opr_Assert(i);			/* at least one interface address for this server */
 
     multi_Rx(conns, i) {
 	multi_DISK_Probe();

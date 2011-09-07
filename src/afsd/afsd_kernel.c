@@ -528,7 +528,7 @@ afsd_fork(int wait, afsd_callback_func cb, void *rock)
     } else {
 	assert(code > 0);
 	if (wait) {
-	    assert(waitpid(code, NULL, 0) != -1);
+	    opr_Verify(waitpid(code, NULL, 0) != -1);
 	}
     }
     return 0;

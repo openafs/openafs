@@ -33,6 +33,7 @@
 
 #if !defined(KERNEL)
 #include <roken.h>
+#include <afs/opr.h>
 #endif
 
 #ifdef KERNEL

@@ -33,7 +33,6 @@
 #define USING_HEIMDAL 1
 #endif
 
-#include "assert.h"
 #include "skipwrap.h"
 
 /* This code borrowed heavily from the previous version of log.  Here is the

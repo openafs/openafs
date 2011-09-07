@@ -37,6 +37,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
         $(DESTDIR)\lib\afsroken.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)

@@ -12,8 +12,8 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <lock.h>
-#include <rx/xdr.h>
 
 #define UBIK_INTERNALS 1
 #include "ubik.h"

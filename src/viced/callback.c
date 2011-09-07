@@ -91,6 +91,7 @@
 #include <sys/file.h>
 #endif
 
+#include <afs/opr.h>
 #include <afs/nfs.h>		/* yuck.  This is an abomination. */
 #include <lwp.h>
 #include <rx/rx.h>
@@ -410,7 +411,7 @@ FDel(struct FileEntry *fe)
 
     while (*p && *p != fei)
 	p = &itofe(*p)->fnext;
-    osi_Assert(*p);
+    opr_Assert(*p);
     *p = fe->fnext;
     FreeFE(fe);
     return 0;
@@ -677,7 +678,7 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
     static struct AFSCBs tc = { 0, 0 };
     int multi_to_cba_map[MAX_CB_HOSTS];
 
-    osi_Assert(ncbas <= MAX_CB_HOSTS);
+    opr_Assert(ncbas <= MAX_CB_HOSTS);
 
     /* sort cba list to avoid makecall issues */
     qsort(cba, ncbas, sizeof(struct cbstruct), CompareCBA);
@@ -1139,7 +1140,7 @@ MultiBreakVolumeCallBack_r(struct host *host,
 	h_Unlock_r(host);
 	return 0;
     }
-    osi_Assert(parms->ncbas <= MAX_CB_HOSTS);
+    opr_Assert(parms->ncbas <= MAX_CB_HOSTS);
 
     /* Do not call MultiBreakCallBack on the current host structure
      ** because it would prematurely release the hold on the host
@@ -2987,7 +2988,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	j++;
     }
 
-    osi_Assert(j);			/* at least one alternate address */
+    opr_Assert(j);			/* at least one alternate address */
     ViceLog(125,
 	    ("Starting multibreakcall back on all addr for host %p (%s:%d)\n",
              host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
@@ -3084,7 +3085,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 	j++;
     }
 
-    osi_Assert(j);			/* at least one alternate address */
+    opr_Assert(j);			/* at least one alternate address */
     ViceLog(125,
 	    ("Starting multiprobe on all addr for host %p (%s:%d)\n",
              host, afs_inet_ntoa_r(host->host, hoststr),

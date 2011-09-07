@@ -17,6 +17,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -26,7 +27,6 @@
 #include "acl.h"
 
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 #include <pthread.h>
 pthread_mutex_t acl_list_mutex;
 #endif /* AFS_PTHREAD_ENV */
@@ -413,7 +413,7 @@ acl_Initialize(char *version)
 		ACL_VERSION, version);
     }
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_init(&acl_list_mutex, NULL) == 0);
+    opr_Verify(pthread_mutex_init(&acl_list_mutex, NULL) == 0);
 #endif /* AFS_PTHREAD_ENV */
     return 0;
 }
@@ -435,12 +435,12 @@ AddToList(struct freeListEntry **pflist, struct freeListEntry *elem)
 {
     /* Adds elem to the freelist flist;  returns 0 */
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_lock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_lock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     elem->next = *pflist;
     *pflist = elem;
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     return 0;
 }
@@ -457,11 +457,11 @@ GetFromList(struct freeListEntry **pflist, struct freeListEntry **elem,
     struct freeListEntry *y, *z;
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_lock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_lock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     if (*pflist == NULL) {
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+	opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
 	return -1;
     }
@@ -471,19 +471,19 @@ GetFromList(struct freeListEntry **pflist, struct freeListEntry **elem,
 	    if (z == NULL) {	/* pulling off the head */
 		*pflist = y->next;
 #ifdef AFS_PTHREAD_ENV
-		assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+		opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
 		return 0;
 	    }
 	    z->next = y->next;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+	    opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
 	    return 0;
 	}
     }
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     return -1;
 }

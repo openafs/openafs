@@ -29,6 +29,7 @@
 #include <direct.h>
 #endif
 
+#include <afs/opr.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
@@ -2248,7 +2249,7 @@ static pthread_key_t wq_key;
 static void
 _namei_wq_keycreate(void)
 {
-    osi_Assert(pthread_key_create(&wq_key, NULL) == 0);
+    opr_Verify(pthread_key_create(&wq_key, NULL) == 0);
 }
 
 /**
@@ -2262,9 +2263,9 @@ _namei_wq_keycreate(void)
 void
 namei_SetWorkQueue(struct afs_work_queue *wq)
 {
-    osi_Assert(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
+    opr_Verify(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
 
-    osi_Assert(pthread_setspecific(wq_key, wq) == 0);
+    opr_Verify(pthread_setspecific(wq_key, wq) == 0);
 }
 
 /**
@@ -2440,7 +2441,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 
     linkHandle.fd_fd = INVALID_FD;
 #ifdef AFS_SALSRV_ENV
-    osi_Assert(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
+    opr_Verify(pthread_once(&wq_once, _namei_wq_keycreate) == 0);
 
     wq = pthread_getspecific(wq_key);
     if (!wq) {
@@ -3154,7 +3155,7 @@ static zlcList_t *zlcCur = NULL;
 static void
 AddToZLCDeleteList(char dir, char *name)
 {
-    osi_Assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
+    opr_Assert(strlen(name) <= MAX_ZLC_NAMELEN - 3);
 
     if (!zlcCur || zlcCur->zlc_n >= MAX_ZLC_NAMES) {
 	if (zlcCur && zlcCur->zlc_next)

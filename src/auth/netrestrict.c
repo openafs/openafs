@@ -18,6 +18,8 @@
 #include <roken.h>
 #include <ctype.h>
 
+#include <afs/opr.h>
+
 #include <rx/rx.h>
 #include <afs/dirpath.h>
 
@@ -117,12 +119,12 @@ parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 * mask,
     afs_uint32 i, neaddrs, nOutaddrs;
     afs_uint32 addr, eAddrs[MAXIPADDRS], eMask[MAXIPADDRS], eMtu[MAXIPADDRS];
 
-    osi_Assert(outAddrs);
-    osi_Assert(reason);
-    osi_Assert(fileName);
-    osi_Assert(nAddrs);
+    opr_Assert(outAddrs);
+    opr_Assert(reason);
+    opr_Assert(fileName);
+    opr_Assert(nAddrs);
     if (mask)
-	osi_Assert(mtu);
+	opr_Assert(mtu);
 
     /* Initialize */
     *nAddrs = 0;
@@ -238,11 +240,11 @@ ParseNetInfoFile_int(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
     int lineNo = 0;
     int l;
 
-    osi_Assert(fileName);
-    osi_Assert(final);
-    osi_Assert(mask);
-    osi_Assert(mtu);
-    osi_Assert(reason);
+    opr_Assert(fileName);
+    opr_Assert(final);
+    opr_Assert(mask);
+    opr_Assert(mtu);
+    opr_Assert(reason);
 
     /* get all network interfaces from the kernel */
     existNu =
@@ -368,12 +370,12 @@ filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[], afs_uint32 mask1[],
     afs_uint32 tmtu[MAXIPADDRS];
     int count = 0, i = 0, j = 0, found = 0;
 
-    osi_Assert(addr1);
-    osi_Assert(addr2);
-    osi_Assert(mask1);
-    osi_Assert(mask2);
-    osi_Assert(mtu1);
-    osi_Assert(mtu2);
+    opr_Assert(addr1);
+    opr_Assert(addr2);
+    opr_Assert(mask1);
+    opr_Assert(mask2);
+    opr_Assert(mtu1);
+    opr_Assert(mtu2);
 
     for (i = 0; i < n1; i++) {
 	found = 0;

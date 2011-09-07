@@ -22,6 +22,7 @@
 #define AUDIT_FAIL_PRIV 4
 #endif /* AFS_AIX32_ENV */
 
+#include <afs/opr.h>
 #include "afs/afsint.h"
 #include <rx/rx.h>
 #include <rx/rxkad.h>
@@ -322,7 +323,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     /* i'm pretty sure all the server apps now call osi_audit_init(),
      * but to be extra careful we'll leave this assert in here for a
      * while to make sure */
-    osi_Assert(audit_lock_initialized);
+    opr_Assert(audit_lock_initialized);
 #endif /* AFS_PTHREAD_ENV */
 
     if ((osi_audit_all < 0) || (osi_echo_trail < 0))

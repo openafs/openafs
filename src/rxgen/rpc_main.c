@@ -663,6 +663,7 @@ C_output(char *infile, char *define, int extend, char *outfile, int append)
 	    f_print(fout, "#include <afsconfig.h>\n");
 	    f_print(fout, "#include <afs/param.h>\n");
 	    f_print(fout, "#include <roken.h>\n");
+	    f_print(fout, "#include <afs/opr.h>\n");
 	    f_print(fout, "#include \"%s\"\n\n", include);
 	}
 	free(include);

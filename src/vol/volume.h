@@ -36,9 +36,9 @@ typedef bit32 FileOffset;	/* Offset in this file */
 
 #ifdef VOL_LOCK_DEBUG
 #define VOL_LOCK_ASSERT_HELD \
-    osi_Assert(vol_glock_holder == pthread_self())
+    opr_Assert(vol_glock_holder == pthread_self())
 #define VOL_LOCK_ASSERT_UNHELD \
-    osi_Assert(vol_glock_holder == 0)
+    opr_Assert(vol_glock_holder == 0)
 #define _VOL_LOCK_SET_HELD \
     vol_glock_holder = pthread_self()
 #define _VOL_LOCK_SET_UNHELD \

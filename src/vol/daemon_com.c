@@ -115,7 +115,7 @@ osi_socket
 SYNC_getSock(SYNC_endpoint_t * endpoint)
 {
     osi_socket sd;
-    osi_Assert((sd = socket(endpoint->domain, SOCK_STREAM, 0)) >= 0);
+    opr_Verify((sd = socket(endpoint->domain, SOCK_STREAM, 0)) >= 0);
     return sd;
 }
 

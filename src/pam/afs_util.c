@@ -16,7 +16,6 @@
 #include <sys/wait.h>
 #endif
 
-#include <assert.h>
 #include <limits.h>
 
 #ifdef AFS_AIX51_ENV

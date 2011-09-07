@@ -25,6 +25,7 @@
 
 /* Block signals to child threads. */
 #include <afs/pthread_nosigs.h>
+#include <afs/opr.h>
 
 #ifdef AFS_NT40_ENV
 #include <wtypes.h>
@@ -77,17 +78,17 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #ifdef MUTEX_INIT
 #undef MUTEX_INIT
 #endif
-#define MUTEX_INIT(a, b, c, d) osi_Assert(pthread_mutex_init(a, NULL) == 0)
+#define MUTEX_INIT(a, b, c, d) opr_Verify(pthread_mutex_init(a, NULL) == 0)
 
 #ifdef MUTEX_DESTROY
 #undef MUTEX_DESTROY
 #endif
-#define MUTEX_DESTROY(l) osi_Assert(pthread_mutex_destroy(l) == 0)
+#define MUTEX_DESTROY(l) opr_Verify(pthread_mutex_destroy(l) == 0)
 
 #ifdef MUTEX_ENTER
 #undef MUTEX_ENTER
 #endif
-#define MUTEX_ENTER(l) osi_Assert(pthread_mutex_lock(l) == 0)
+#define MUTEX_ENTER(l) opr_Verify(pthread_mutex_lock(l) == 0)
 
 #ifdef MUTEX_TRYENTER
 #undef MUTEX_TRYENTER
@@ -97,22 +98,22 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #ifdef MUTEX_EXIT
 #undef MUTEX_EXIT
 #endif
-#define MUTEX_EXIT(l) osi_Assert(pthread_mutex_unlock(l) == 0)
+#define MUTEX_EXIT(l) opr_Verify(pthread_mutex_unlock(l) == 0)
 
 #ifdef CV_INIT
 #undef CV_INIT
 #endif
-#define CV_INIT(cv, a, b, c) osi_Assert(pthread_cond_init(cv, NULL) == 0)
+#define CV_INIT(cv, a, b, c) opr_Verify(pthread_cond_init(cv, NULL) == 0)
 
 #ifdef CV_DESTROY
 #undef CV_DESTROY
 #endif
-#define CV_DESTROY(cv) osi_Assert(pthread_cond_destroy(cv) == 0)
+#define CV_DESTROY(cv) opr_Verify(pthread_cond_destroy(cv) == 0)
 
 #ifdef CV_WAIT
 #undef CV_WAIT
 #endif
-#define CV_WAIT(cv, l) osi_Assert(pthread_cond_wait(cv, l) == 0)
+#define CV_WAIT(cv, l) opr_Verify(pthread_cond_wait(cv, l) == 0)
 
 #ifdef CV_TIMEDWAIT
 #undef CV_TIMEDWAIT
@@ -122,12 +123,12 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #ifdef CV_SIGNAL
 #undef CV_SIGNAL
 #endif
-#define CV_SIGNAL(cv) osi_Assert(pthread_cond_signal(cv) == 0)
+#define CV_SIGNAL(cv) opr_Verify(pthread_cond_signal(cv) == 0)
 
 #ifdef CV_BROADCAST
 #undef CV_BROADCAST
 #endif
-#define CV_BROADCAST(cv) osi_Assert(pthread_cond_broadcast(cv) == 0)
+#define CV_BROADCAST(cv) opr_Verify(pthread_cond_broadcast(cv) == 0)
 
 #endif /* AFS_PTHREAD_ENV */
 

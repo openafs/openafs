@@ -19,7 +19,19 @@ extern void opr_NTAbort(void);
 extern void opr_AssertionFailed(char *, int) AFS_NORETURN;
 extern void opr_AssertFailU(const char *, const char *, int) AFS_NORETURN;
 
+/* opr_Assert is designed to work in a similar way to the operating
+ * system's assert function. This means that in future, it may compile
+ * to a no-op if NDEBUG is defined
+ */
+
 #define opr_Assert(ex) \
+    do {if (!(ex)) opr_AssertionFailed(__FILE__, __LINE__);} while(0)
+
+/* opr_Verify is an assertion function which is guaranteed to always
+ * invoke its expression, regardless of the debugging level selected
+ * at compile time */
+
+#define opr_Verify(ex) \
     do {if (!(ex)) opr_AssertionFailed(__FILE__, __LINE__);} while(0)
 
 /* casestrcpy.c */

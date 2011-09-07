@@ -96,7 +96,7 @@
 #include <mntent.h>
 #endif
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
 #include <afs/errors.h>
@@ -319,7 +319,7 @@ VCheckPartition(char *part, char *devname, int logging)
 	struct dirent *dp;
 
 	dirp = opendir(part);
-	osi_Assert(dirp);
+	opr_Assert(dirp);
 	while ((dp = readdir(dirp))) {
 	    if (dp->d_name[0] == 'V') {
 		Log("This program is compiled with AFS_NAMEI_ENV, but partition %s seems to contain volumes which don't use the namei-interface; aborting\n", part);
@@ -916,7 +916,7 @@ VGetPartition_r(char *name, int abortp)
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
     if (abortp)
-	osi_Assert(dp != NULL);
+	opr_Assert(dp != NULL);
     return dp;
 }
 
@@ -1164,12 +1164,12 @@ VLockPartition_r(char *name)
 	    (FD_t)CreateFile(path, GENERIC_WRITE,
 			    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 			    CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
-	osi_Assert(dp->lock_fd != INVALID_FD);
+	opr_Assert(dp->lock_fd != INVALID_FD);
 
 	memset(&lap, 0, sizeof(lap));
 	rc = LockFileEx((HANDLE) dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1,
 			0, &lap);
-	osi_Assert(rc);
+	opr_Assert(rc);
     }
 }
 
@@ -1254,11 +1254,11 @@ VLockPartition_r(char *name)
 	pausing.tv_usec = 500000;
 	select(0, NULL, NULL, NULL, &pausing);
     }
-    osi_Assert(retries != 0);
+    opr_Assert(retries != 0);
 
 #if defined (AFS_HPUX_ENV)
 
-    osi_Assert(getprivgrp(privGrpList) == 0);
+    opr_Verify(getprivgrp(privGrpList) == 0);
 
     /*
      * In general, it will difficult and time-consuming ,if not impossible,
@@ -1279,26 +1279,26 @@ VLockPartition_r(char *name)
     if (((*globalMask) & privmask(PRIV_LOCKRDONLY)) == 0) {
 	/* allow everybody to set a lock on a read-only file descriptor */
 	(*globalMask) |= privmask(PRIV_LOCKRDONLY);
-	osi_Assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
-	       == 0);
+	opr_Verify(setprivgrp(PRIV_GLOBAL,
+			      privGrpList[globalMaskIndex].priv_mask) == 0);
 
 	lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
 
 	/* remove the privilege granted to everybody to lock a read-only fd */
 	(*globalMask) &= ~(privmask(PRIV_LOCKRDONLY));
-	osi_Assert(setprivgrp(PRIV_GLOBAL, privGrpList[globalMaskIndex].priv_mask)
-	       == 0);
+	opr_Verify(setprivgrp(PRIV_GLOBAL,
+			      privGrpList[globalMaskIndex].priv_mask) == 0);
     } else {
 	/* in this case, we should be able to do this with impunity, anyway */
 	lockfRtn = lockf(dp->lock_fd, F_LOCK, 0);
     }
 
-    osi_Assert(lockfRtn != -1);
+    opr_Assert(lockfRtn != -1);
 #else
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
-    osi_Assert(lockf(dp->lock_fd, F_LOCK, 0) != -1);
+    opr_Verify(lockf(dp->lock_fd, F_LOCK, 0) != -1);
 #else
-    osi_Assert(flock(dp->lock_fd, LOCK_EX) == 0);
+    opr_Verify(flock(dp->lock_fd, LOCK_EX) == 0);
 #endif /* defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) */
 #endif
 }
@@ -1405,7 +1405,7 @@ VGetPartitionById_r(afs_int32 id, int abortp)
     }
 
     if (abortp) {
-	osi_Assert(dp != NULL);
+	opr_Assert(dp != NULL);
     }
     return dp;
 }
@@ -1449,7 +1449,7 @@ VLookupPartition_r(char * path)
 static void
 AddPartitionToTable_r(struct DiskPartition64 *dp)
 {
-    osi_Assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    opr_Assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
     DiskPartitionTable[dp->index] = dp;
 }
 
@@ -1457,7 +1457,7 @@ AddPartitionToTable_r(struct DiskPartition64 *dp)
 static void
 DeletePartitionFromTable_r(struct DiskPartition64 *dp)
 {
-    osi_Assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
+    opr_Assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
     DiskPartitionTable[dp->index] = NULL;
 }
 #endif

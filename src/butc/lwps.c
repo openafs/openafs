@@ -17,7 +17,7 @@
 #include <conio.h>
 #endif
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <lwp.h>
 #include <lock.h>

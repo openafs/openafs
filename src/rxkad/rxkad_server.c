@@ -21,6 +21,7 @@
 #include <sys/systm.h>
 #endif
 
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_packet.h>
@@ -77,8 +78,8 @@ pthread_mutex_t rxkad_random_mutex
 = PTHREAD_MUTEX_INITIALIZER
 #endif
 ;
-#define LOCK_RM osi_Assert(pthread_mutex_lock(&rxkad_random_mutex)==0)
-#define UNLOCK_RM osi_Assert(pthread_mutex_unlock(&rxkad_random_mutex)==0)
+#define LOCK_RM opr_Verify(pthread_mutex_lock(&rxkad_random_mutex)==0)
+#define UNLOCK_RM opr_Verify(pthread_mutex_unlock(&rxkad_random_mutex)==0)
 #else
 #define LOCK_RM
 #define UNLOCK_RM

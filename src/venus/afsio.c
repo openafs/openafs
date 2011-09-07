@@ -62,7 +62,6 @@
 #endif
 #include <hcrypto/md5.h>
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 pthread_key_t uclient_key;
 #endif
 
@@ -259,7 +258,7 @@ main(int argc, char **argv)
 	strlcpy(pnp, argv[0], AFSPATHMAX);
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_key_create(&uclient_key, NULL) == 0);
+    opr_Verify(pthread_key_create(&uclient_key, NULL) == 0);
 #endif
 
     ts = cmd_CreateSyntax("lock", lockFile, (void *)LockWrite,

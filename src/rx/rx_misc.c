@@ -15,6 +15,8 @@
 # include <afsincludes.h>
 #else
 # include <roken.h>
+# include <afs/opr.h>
+
 # include <afs/errors.h>
 # include "xdr.h"
 # ifdef AFS_PTHREAD_ENV

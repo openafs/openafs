@@ -492,6 +492,7 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib \
         $(DESTDIR)\lib\afshcrypto.lib \
         $(LANAHELPERLIB)

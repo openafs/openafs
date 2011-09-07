@@ -76,14 +76,14 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
 #define BEGIN do {
 #define END   } while(0)
 #endif
-#define RXKAD_GLOBAL_STATS_LOCK osi_Assert(pthread_mutex_lock(&rxkad_global_stats_lock)==0)
-#define RXKAD_GLOBAL_STATS_UNLOCK osi_Assert(pthread_mutex_unlock(&rxkad_global_stats_lock)==0)
+#define RXKAD_GLOBAL_STATS_LOCK opr_Verify(pthread_mutex_lock(&rxkad_global_stats_lock)==0)
+#define RXKAD_GLOBAL_STATS_UNLOCK opr_Verify(pthread_mutex_unlock(&rxkad_global_stats_lock)==0)
 #define GET_RXKAD_STATS(stats) rxkad_stats_agg(stats)
 #define GET_RXKAD_THR_STATS(rxkad_stats) \
     BEGIN \
         (rxkad_stats) = ((rxkad_stats_t*)pthread_getspecific(rxkad_stats_key)); \
         if ((rxkad_stats) == NULL) { \
-            osi_Assert(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
+            opr_Verify(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
         } \
     END
 #define INC_RXKAD_STATS(stats_elem) \
@@ -91,7 +91,7 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
         rxkad_stats_t * rxkad_stats; \
         rxkad_stats = ((rxkad_stats_t*)pthread_getspecific(rxkad_stats_key)); \
         if (rxkad_stats == NULL) { \
-            osi_Assert(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
+            opr_Verify(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
         } \
         rxkad_stats->stats_elem++; \
     END
@@ -100,7 +100,7 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
         rxkad_stats_t * rxkad_stats; \
         rxkad_stats = ((rxkad_stats_t*)pthread_getspecific(rxkad_stats_key)); \
         if (rxkad_stats == NULL) { \
-            osi_Assert(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
+            opr_Verify(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
         } \
         rxkad_stats->stats_elem--; \
     END
@@ -110,7 +110,7 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
         rxkad_stats_t * rxkad_stats; \
         rxkad_stats = ((rxkad_stats_t*)pthread_getspecific(rxkad_stats_key)); \
         if (rxkad_stats == NULL) { \
-            osi_Assert(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
+            opr_Verify(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
         } \
         rxkad_stats->stats_elem += inc_value; \
     END
@@ -119,7 +119,7 @@ extern int rxkad_stats_agg(rxkad_stats_t *);
         rxkad_stats_t * rxkad_stats; \
         rxkad_stats = ((rxkad_stats_t*)pthread_getspecific(rxkad_stats_key)); \
         if (rxkad_stats == NULL) { \
-            osi_Assert(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
+            opr_Verify(((rxkad_stats) = rxkad_thr_stats_init()) != NULL); \
         } \
         rxkad_stats->stats_elem -= dec_value; \
     END

@@ -12,8 +12,8 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <lock.h>
-#include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <rx/rx_multi.h>

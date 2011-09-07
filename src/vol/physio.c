@@ -19,8 +19,6 @@
 
 #include <roken.h>
 
-#include <assert.h>
-
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif

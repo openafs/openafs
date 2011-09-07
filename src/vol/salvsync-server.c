@@ -273,9 +273,10 @@ SALVSYNC_salvInit(void)
     }
 
     /* start the salvsync thread */
-    osi_Assert(pthread_attr_init(&tattr) == 0);
-    osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    osi_Assert(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
+    opr_Verify(pthread_attr_init(&tattr) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&tattr,
+					   PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
 }
 
 static void
@@ -305,7 +306,7 @@ SALVSYNC_syncThread(void * args)
     /* when we fork, the child needs to close the salvsync server sockets,
      * otherwise, it may get salvsync requests, instead of the parent
      * salvageserver */
-    osi_Assert(pthread_atfork(NULL, NULL, CleanFDs) == 0);
+    opr_Verify(pthread_atfork(NULL, NULL, CleanFDs) == 0);
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -316,7 +317,7 @@ SALVSYNC_syncThread(void * args)
 
     state->fd = SYNC_getSock(&state->endpoint);
     code = SYNC_bindSock(state);
-    osi_Assert(!code);
+    opr_Assert(!code);
 
     InitHandler();
     AcceptOn();
@@ -354,7 +355,7 @@ SALVSYNC_newconnection(int afd)
 	osi_Panic("SALVSYNC_newconnection:  accept failed, errno==%d\n", errno);
     } else if (!AddHandler(fd, SALVSYNC_com)) {
 	AcceptOff();
-	osi_Assert(AddHandler(fd, SALVSYNC_com));
+	opr_Verify(AddHandler(fd, SALVSYNC_com));
     }
 }
 
@@ -756,7 +757,8 @@ static void
 AcceptOn(void)
 {
     if (AcceptHandler == -1) {
-	osi_Assert(AddHandler(salvsync_server_state.fd, SALVSYNC_newconnection));
+	opr_Verify(AddHandler(salvsync_server_state.fd,
+			      SALVSYNC_newconnection));
 	AcceptHandler = FindHandler(salvsync_server_state.fd);
     }
 }
@@ -765,7 +767,7 @@ static void
 AcceptOff(void)
 {
     if (AcceptHandler != -1) {
-	osi_Assert(RemoveHandler(salvsync_server_state.fd));
+	opr_Verify(RemoveHandler(salvsync_server_state.fd));
 	AcceptHandler = -1;
     }
 }
@@ -1125,7 +1127,7 @@ UpdateCommandPrio(struct SalvageQueueNode * node)
     afs_int32 id;
     afs_uint32 prio;
 
-    osi_Assert(queue_IsOnQueue(node));
+    opr_Assert(queue_IsOnQueue(node));
 
     prio = node->command.sop.prio;
     id = node->partition_id;
@@ -1217,7 +1219,7 @@ SALVSYNC_getWork(void)
     osi_Panic("Node not found\n");
 
  have_node:
-    osi_Assert(node != NULL);
+    opr_Assert(node != NULL);
     node->pid = 0;
     partition_salvaging[node->partition_id]++;
     DeleteFromSalvageQueue(node);

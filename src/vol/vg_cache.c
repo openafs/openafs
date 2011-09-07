@@ -23,6 +23,7 @@
 
 #ifdef AFS_DEMAND_ATTACH_FS
 
+#include <afs/opr.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
@@ -173,7 +174,7 @@ _VVGC_entry_free(VVGCache_entry_t * entry)
 {
     int code = 0;
 
-    osi_Assert(entry->refcnt == 0);
+    opr_Assert(entry->refcnt == 0);
     free(entry);
 
     return code;
@@ -362,7 +363,7 @@ _VVGC_entry_put(struct DiskPartition64 * dp, VVGCache_entry_t * entry)
 {
     int code = 0;
 
-    osi_Assert(entry->refcnt > 0);
+    opr_Assert(entry->refcnt > 0);
 
     if (--entry->refcnt == 0) {
 	VVGCache_entry_t *nentry;
@@ -754,7 +755,7 @@ VVGCache_entry_add_r(struct DiskPartition64 * dp,
 	}
     }
 
-    osi_Assert(!child_ent);
+    opr_Assert(!child_ent);
     child_ent = parent_ent;
     code = _VVGC_hash_entry_add(dp,
 				child,

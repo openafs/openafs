@@ -67,6 +67,8 @@ extern afs_int32 afs_termState;
 #  include <WINNT\afsreg.h>
 # endif
 
+# include <afs/opr.h>
+
 # include "rx_user.h"
 #endif /* KERNEL */
 

@@ -76,7 +76,7 @@ extern pthread_once_t ih_glock_once;
 extern pthread_mutex_t ih_glock_mutex;
 extern void ih_glock_init(void);
 #define IH_LOCK \
-    do { osi_Assert(pthread_once(&ih_glock_once, ih_glock_init) == 0);	\
+    do { opr_Verify(pthread_once(&ih_glock_once, ih_glock_init) == 0);	\
 	MUTEX_ENTER(&ih_glock_mutex); \
     } while (0)
 #define IH_UNLOCK MUTEX_EXIT(&ih_glock_mutex)
@@ -109,7 +109,7 @@ extern void ih_glock_init(void);
 	else 					\
 	    (head) = (ptr)->next;		\
 	(ptr)->next = (ptr)->prev = NULL;	\
-	osi_Assert(!(head) || !((head)->prev)); \
+	opr_Assert(!(head) || !((head)->prev)); \
     } while(0)
 
 /*
@@ -124,7 +124,7 @@ extern void ih_glock_init(void);
 	    (ptr)->prev->next = (ptr);		 \
 	else					 \
 	    (head) = (ptr);			 \
-	osi_Assert((head) && ((head)->prev == NULL));	\
+	opr_Assert((head) && ((head)->prev == NULL));	\
     } while(0)
 
 #endif /* DLL_INIT_LIST */

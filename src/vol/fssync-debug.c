@@ -24,7 +24,7 @@
 #include <WINNT/afsevent.h>
 #endif
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/afsint.h>
 
 #ifndef AFS_NT40_ENV
@@ -351,7 +351,7 @@ common_volop_prolog(struct cmd_syndesc * as, struct fssync_state * state)
     struct cmd_item *ti;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
-    osi_Assert(state->vop != NULL);
+    opr_Assert(state->vop != NULL);
 
     if ((ti = as->parms[COMMON_VOLOP_PARMS_OFFSET].items)) {	/* -volumeid */
 	state->vop->volume = atoi(ti->data);

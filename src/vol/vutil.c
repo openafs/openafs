@@ -27,6 +27,7 @@
 #include <sys/lockf.h>
 #endif
 
+#include <afs/opr.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
@@ -1129,7 +1130,7 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 {
     int code;
 
-    osi_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+    opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
     MUTEX_ENTER(&lf->mutex);
 
@@ -1164,7 +1165,7 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 {
     MUTEX_ENTER(&lf->mutex);
 
-    osi_Assert(lf->fd != INVALID_FD);
+    opr_Assert(lf->fd != INVALID_FD);
 
     if (--lf->refcount < 1) {
 	_VCloseFd(lf->fd);
@@ -1187,7 +1188,7 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 void
 VDiskLockInit(struct VDiskLock *dl, struct VLockFile *lf, afs_uint32 offset)
 {
-    osi_Assert(lf);
+    opr_Assert(lf);
     memset(dl, 0, sizeof(*dl));
     Lock_Init(&dl->rwlock);
     MUTEX_INIT(&dl->mutex, "disklock", MUTEX_DEFAULT, 0);
@@ -1222,7 +1223,7 @@ int
 VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 {
     int code = 0;
-    osi_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+    opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
     if (nonblock) {
 	if (locktype == READ_LOCK) {
@@ -1313,10 +1314,10 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 void
 VReleaseDiskLock(struct VDiskLock *dl, int locktype)
 {
-    osi_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
+    opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
     MUTEX_ENTER(&dl->mutex);
-    osi_Assert(dl->lockers > 0);
+    opr_Assert(dl->lockers > 0);
 
     if (--dl->lockers < 1) {
 	/* no threads are holding this lock anymore, so we can release the
