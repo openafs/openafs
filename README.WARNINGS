@@ -42,9 +42,7 @@ Inhibited warnings
 afs/afs_syscall.c    : old-style
 		     : strict-proto
 		     : all (ukernel) : syscall pointer issues
-afsd/afsd.c          : all           : call_syscall nonsense
 afsd/afsd_kernel.c   : deprecated    : daemon() marked as deprecated on Darwin
-	             : strict-proto  : call_syscall missing prototype
 auth/ktc.c           : all (ukernel) : call_syscall doesn't have a prototype
 bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
 bucoord/ubik_db_if.c : strict-proto  : Ubik_Call

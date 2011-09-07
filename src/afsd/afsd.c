@@ -57,10 +57,6 @@
 #include <afs/param.h>
 #include <roken.h>
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
-#endif
-
 #define VFS 1
 
 #include <afs/stds.h>
@@ -211,15 +207,15 @@ struct in_addr_42 {
 /*
  * Global configuration variables.
  */
-static afs_int32 enable_rxbind = 0;
-static afs_int32 afs_shutdown = 0;
-static afs_int32 cacheBlocks;		/*Num blocks in the cache */
-static afs_int32 cacheFiles;		/*Optimal # of files in workstation cache */
-static afs_int32 rwpct = 0;
-static afs_int32 ropct = 0;
-static afs_int32 cacheStatEntries;	/*Number of stat cache entries */
-static char *cacheBaseDir;		/*Where the workstation AFS cache lives */
-static char *confDir;			/*Where the workstation AFS configuration lives */
+static int enable_rxbind = 0;
+static int afs_shutdown = 0;
+static int cacheBlocks;		/*Num blocks in the cache */
+static int cacheFiles;		/*Optimal # of files in workstation cache */
+static int rwpct = 0;
+static int ropct = 0;
+static int cacheStatEntries;	/*Number of stat cache entries */
+static char *cacheBaseDir;	/*Where the workstation AFS cache lives */
+static char *confDir;		/*Where the workstation AFS configuration lives */
 static char fullpn_DCacheFile[1024];	/*Full pathname of DCACHEFILE */
 static char fullpn_VolInfoFile[1024];	/*Full pathname of VOLINFOFILE */
 static char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
@@ -303,11 +299,13 @@ struct afs_cacheParams cparams;	/* params passed to cache manager */
 
 int PartSizeOverflow(char *path, int cs);
 
+static int afsd_syscall(int code, ...);
+
 #if defined(AFS_SUN510_ENV) && defined(RXK_LISTENER_ENV)
-static void fork_rx_syscall_wait();
+static void fork_rx_syscall_wait(const char *rn, int syscall, ...);
 #endif
-static void fork_rx_syscall();
-static void fork_syscall();
+static void fork_rx_syscall(const char *rn, int syscall, ...);
+static void fork_syscall(const char *rn, int syscall, ...);
 
 enum optionsList {
     OPT_blocks,
@@ -398,7 +396,7 @@ afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
     afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	mtubuf[MAXIPADDRS];
     char reason[1024];
-    afs_int32 code;
+    int code;
 
     code =
 	parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
@@ -408,7 +406,7 @@ afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
     if (code > 0) {
 	/* Note we're refreshing */
 	code = code | 0x40000000;
-	afsd_call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+	afsd_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
     } else
 	printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 	       reason);
@@ -538,7 +536,7 @@ ParseCacheInfoFile(void)
     static char rn[] = "ParseCacheInfoFile";	/*This routine's name */
     FILE *cachefd;		/*Descriptor for cache info file */
     int parseResult;		/*Result of our fscanf() */
-    afs_int32 tCacheBlocks;
+    int tCacheBlocks;
     char tCacheBaseDir[1024], *tbd, tCacheMountDir[1024], *tmd;
 
     if (afsd_debug)
@@ -1412,7 +1410,7 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 {
     int isHomeCell;
     int i, code;
-    afs_int32 cellFlags = 0;
+    int cellFlags = 0;
     afs_int32 hosts[MAXHOSTSPERCELL];
 
     /* figure out if this is the home cell */
@@ -1431,7 +1429,7 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 				 * for upwards compatibility */
 
     /* configure one cell */
-    code = afsd_call_syscall(AFSOP_ADDCELL2, hosts,	/* server addresses */
+    code = afsd_syscall(AFSOP_ADDCELL2, hosts,	/* server addresses */
 			aci->name,	/* cell name */
 			cellFlags,	/* is this the home cell? */
 			aci->linkedCell);	/* Linked cell, if any */
@@ -1445,7 +1443,7 @@ ConfigCellAlias(struct afsconf_cellalias *aca,
 		void *arock, struct afsconf_dir *adir)
 {
     /* push the alias into the kernel */
-    afsd_call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
+    afsd_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
     return 0;
 }
 
@@ -1476,7 +1474,7 @@ AfsdbLookupHandler(void)
 	/* On some platforms you only get 4 args to an AFS call */
 	int sizeArg = ((sizeof acellName) << 16) | (sizeof kernelMsg);
 	code =
-	    afsd_call_syscall(AFSOP_AFSDB_HANDLER, acellName, kernelMsg, sizeArg);
+	    afsd_syscall(AFSOP_AFSDB_HANDLER, acellName, kernelMsg, sizeArg);
 	if (code) {		/* Something is wrong? */
 	    sleep(1);
 	    continue;
@@ -1531,7 +1529,7 @@ BkgHandler(void)
 	/* pushing in a buffer this large */
 	uspc->bufSz = 256;
 
-	code = afsd_call_syscall(AFSOP_BKG_HANDLER, uspc, srcName, dstName);
+	code = afsd_syscall(AFSOP_BKG_HANDLER, uspc, srcName, dstName);
 	if (code) {		/* Something is wrong? */
 	    if (code == -2) /* shutting down */
 		break;
@@ -1646,10 +1644,8 @@ daemon_thread(void *rock)
 	exit(1);
     }
     BkgHandler();
-#elif defined(AFS_AIX32_ENV)
-    afsd_call_syscall(AFSOP_START_BKG, 0);
 #else
-    afsd_call_syscall(AFSOP_START_BKG);
+    afsd_syscall(AFSOP_START_BKG, 0);
 #endif
     return NULL;
 }
@@ -1765,7 +1761,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	 * Cold shutdown is the default
 	 */
 	printf("afsd: Shutting down all afs processes and afs state\n");
-	code = afsd_call_syscall(AFSOP_SHUTDOWN, 1);
+	code = afsd_syscall(AFSOP_SHUTDOWN, 1);
 	if (code) {
 	    printf("afsd: AFS still mounted; Not shutting down\n");
 	    exit(1);
@@ -1819,7 +1815,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	int rxpck;
         cmd_OptionAsInt(as, OPT_rxpck, &rxpck);
 	printf("afsd: set rxpck = %d\n", rxpck);
-	code = afsd_call_syscall(AFSOP_SET_RXPCK, rxpck);
+	code = afsd_syscall(AFSOP_SET_RXPCK, rxpck);
 	if (code) {
 	    printf("afsd: failed to set rxpck\n");
 	    exit(1);
@@ -1886,7 +1882,7 @@ afsd_run(void)
     struct afsconf_dir *cdir;	/* config dir */
     int lookupResult;		/*Result of GetLocalCellName() */
     int i;
-    afs_int32 code;		/*Result of fork() */
+    int code;			/*Result of fork() */
     char *fsTypeMsg = NULL;
     int cacheIteration;		/*How many times through cache verification */
     int vFilesFound;		/*How many data cache files were found in sweep */
@@ -2116,7 +2112,7 @@ afsd_run(void)
     /*
      * Set the primary cell name.
      */
-    afsd_call_syscall(AFSOP_SET_THISCELL, LclCellName);
+    afsd_syscall(AFSOP_SET_THISCELL, LclCellName);
 
     /* Initialize RX daemons and services */
 
@@ -2133,7 +2129,7 @@ afsd_run(void)
 	if (code > 0) {
 	    if (enable_rxbind)
 		code = code | 0x80000000;
-		afsd_call_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
+		afsd_syscall(AFSOP_ADVISEADDR, code, addrbuf, maskbuf, mtubuf);
 	} else
 	    printf("ADVISEADDR: Error in specifying interface addresses:%s\n",
 		   reason);
@@ -2167,7 +2163,7 @@ afsd_run(void)
     fork_rx_syscall(rn, AFSOP_START_RXCALLBACK, preallocs, enable_peer_stats,
                     enable_process_stats);
 #else
-    fork_syscall(rn, AFSOP_START_RXCALLBACK, preallocs);
+    fork_syscall(rn, AFSOP_START_RXCALLBACK, preallocs, 0, 0);
 #endif
 #if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
     if (afsd_verbose)
@@ -2180,7 +2176,7 @@ afsd_run(void)
 	    printf("%s: Forking AFSDB lookup handler.\n", rn);
 	afsd_fork(0, afsdb_thread, NULL);
     }
-    code = afsd_call_syscall(AFSOP_BASIC_INIT, 1);
+    code = afsd_syscall(AFSOP_BASIC_INIT, 1);
     if (code) {
 	printf("%s: Error %d in basic initialization.\n", rn, code);
         exit(1);
@@ -2204,16 +2200,16 @@ afsd_run(void)
     cparams.setTimeFlag = 0;
     cparams.memCacheFlag = cacheFlags;
     cparams.dynamic_vcaches = afsd_dynamic_vcaches;
-	afsd_call_syscall(AFSOP_CACHEINIT, &cparams);
+	afsd_syscall(AFSOP_CACHEINIT, &cparams);
 
     /* do it before we init the cache inodes */
     if (enable_splitcache) {
-	afsd_call_syscall(AFSOP_BUCKETPCT, 1, rwpct);
-	afsd_call_syscall(AFSOP_BUCKETPCT, 2, ropct);
+	afsd_syscall(AFSOP_BUCKETPCT, 1, rwpct);
+	afsd_syscall(AFSOP_BUCKETPCT, 2, ropct);
     }
 
     if (afsd_CloseSynch)
-	afsd_call_syscall(AFSOP_CLOSEWAIT);
+	afsd_syscall(AFSOP_CLOSEWAIT);
 
     /*
      * Sweep the workstation AFS cache directory, remembering the inodes of
@@ -2254,7 +2250,7 @@ afsd_run(void)
 	       fullpn_DCacheFile);
     /* once again, meaningless for a memory-based cache. */
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
-	afsd_call_syscall(AFSOP_CACHEINFO, fullpn_DCacheFile);
+	afsd_syscall(AFSOP_CACHEINFO, fullpn_DCacheFile);
 
     /*
      * Pass the kernel the name of the workstation cache file holding the
@@ -2264,13 +2260,13 @@ afsd_run(void)
 	if (afsd_debug)
 	    printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
 		   fullpn_CellInfoFile);
-	afsd_call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+	afsd_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
     }
 
     if (rxmaxfrags) {
 	if (afsd_verbose)
             printf("%s: Setting rxmaxfrags in kernel = %d\n", rn, rxmaxfrags);
-	code = afsd_call_syscall(AFSOP_SET_RXMAXFRAGS, rxmaxfrags);
+	code = afsd_syscall(AFSOP_SET_RXMAXFRAGS, rxmaxfrags);
         if (code)
             printf("%s: Error seting rxmaxfrags\n", rn);
     }
@@ -2278,7 +2274,7 @@ afsd_run(void)
     if (rxmaxmtu) {
 	if (afsd_verbose)
             printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
-	code = afsd_call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
+	code = afsd_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
         if (code)
             printf("%s: Error seting rxmaxmtu\n", rn);
     }
@@ -2287,7 +2283,7 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Enabling dynroot support in kernel%s.\n", rn,
 		   (enable_dynroot==2)?", not showing cells.":"");
-	code = afsd_call_syscall(AFSOP_SET_DYNROOT, 1);
+	code = afsd_syscall(AFSOP_SET_DYNROOT, 1);
 	if (code)
 	    printf("%s: Error enabling dynroot support.\n", rn);
     }
@@ -2297,7 +2293,7 @@ afsd_run(void)
 	    printf("%s: Enabling fakestat support in kernel%s.\n", rn,
 		   (enable_fakestat==1)?" for all mountpoints."
 		   :" for crosscell mountpoints");
-	code = afsd_call_syscall(AFSOP_SET_FAKESTAT, enable_fakestat);
+	code = afsd_syscall(AFSOP_SET_FAKESTAT, enable_fakestat);
 	if (code)
 	    printf("%s: Error enabling fakestat support.\n", rn);
     }
@@ -2305,7 +2301,7 @@ afsd_run(void)
     if (enable_backuptree) {
 	if (afsd_verbose)
 	    printf("%s: Enabling backup tree support in kernel.\n", rn);
-	code = afsd_call_syscall(AFSOP_SET_BACKUPTREE, enable_backuptree);
+	code = afsd_syscall(AFSOP_SET_BACKUPTREE, enable_backuptree);
 	if (code)
 	    printf("%s: Error enabling backup tree support.\n", rn);
     }
@@ -2353,7 +2349,7 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Calling AFSOP_ROOTVOLUME with '%s'\n", rn,
 		   rootVolume);
-	afsd_call_syscall(AFSOP_ROOTVOLUME, rootVolume);
+	afsd_syscall(AFSOP_ROOTVOLUME, rootVolume);
     }
 
     /*
@@ -2365,7 +2361,7 @@ afsd_run(void)
 	       fullpn_VolInfoFile);
     /* once again, meaningless for a memory-based cache. */
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
-	afsd_call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
+	afsd_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
@@ -2381,7 +2377,7 @@ afsd_run(void)
 	for (currVFile = 0; currVFile < cacheFiles; currVFile++) {
 	    if (!nocachefile) {
 		sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
-		code = afsd_call_syscall(AFSOP_CACHEFILE, fullpn_VFile);
+		code = afsd_syscall(AFSOP_CACHEFILE, fullpn_VFile);
 		if (code) {
 		    if (currVFile == 0) {
 			if (afsd_debug)
@@ -2400,12 +2396,8 @@ afsd_run(void)
 		}
 		/* fall through to setup-by-inode */
 	    }
-#ifdef AFS_SGI62_ENV
-	    afsd_call_syscall(AFSOP_CACHEINODE,
-			 (afs_uint32) (inode_for_V[currVFile] >> 32),
-			 (afs_uint32) (inode_for_V[currVFile] & 0xffffffff));
-#elif !(defined(AFS_LINUX26_ENV) || defined(AFS_CACHE_VNODE_PATH))
-	    afsd_call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
+#if defined(AFS_SGI62_ENV) || !(defined(AFS_LINUX26_ENV) || defined(AFS_CACHE_VNODE_PATH))
+	    afsd_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
 #else
 	    printf
 		("%s: Error calling AFSOP_CACHEINODE: not configured\n",
@@ -2422,7 +2414,7 @@ afsd_run(void)
     if (afsd_debug)
 	printf("%s: Calling AFSOP_GO with cacheSetTime = %d\n", rn,
 	       0);
-	afsd_call_syscall(AFSOP_GO, 0);
+	afsd_syscall(AFSOP_GO, 0);
 
     /*
      * At this point, we have finished passing the kernel all the info
@@ -2562,17 +2554,6 @@ afsd_parse(int argc, char **argv)
     return cmd_Dispatch(argc, argv);
 }
 
-struct afsd_syscall_args {
-    long syscall;
-    long param1;
-    long param2;
-    long param3;
-    long param4;
-    long param5;
-    const char *rn;
-    int rxpri;
-};
-
 /**
  * entry point for calling a syscall from another proc/thread.
  *
@@ -2591,8 +2572,7 @@ call_syscall_thread(void *rock)
 	afsd_set_rx_rtpri();
     }
 
-    code = afsd_call_syscall(args->syscall, args->param1, args->param2,
-                                 args->param3, args->param4, args->param5);
+    code = afsd_call_syscall(args);
     if (code && args->syscall == AFSOP_START_CS) {
 	printf("%s: No check server daemon in client.\n", args->rn);
     }
@@ -2600,6 +2580,86 @@ call_syscall_thread(void *rock)
     free(args);
 
     return NULL;
+}
+
+static void
+afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
+{
+    afsd_syscall_param_t *params;
+
+    memset(args, 0, sizeof(struct afsd_syscall_args));
+
+    args->syscall = syscall;
+    params = args->params;
+
+    switch (syscall) {
+    case AFSOP_RXEVENT_DAEMON:
+	break;
+    case AFSOP_START_BKG:
+    case AFSOP_SHUTDOWN:
+    case AFSOP_SET_RXPCK:
+    case AFSOP_BASIC_INIT:
+    case AFSOP_SET_RXMAXFRAGS:
+      case AFSOP_SET_RXMAXMTU:
+    case AFSOP_SET_DYNROOT:
+    case AFSOP_SET_FAKESTAT:
+    case AFSOP_SET_BACKUPTREE:
+    case AFSOP_GO:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	break;
+    case AFSOP_SET_THISCELL:
+    case AFSOP_ROOTVOLUME:
+    case AFSOP_VOLUMEINFO:
+    case AFSOP_CACHEFILE:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_ADDCELLALIAS:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_AFSDB_HANDLER:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	break;
+    case AFSOP_BKG_HANDLER:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_RXLISTENER_DAEMON:
+    case AFSOP_START_RXCALLBACK:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	break;
+    case AFSOP_ADVISEADDR:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[3] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_ADDCELL2:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, afs_int32)));
+	params[3] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	break;
+    case AFSOP_CACHEINODE:
+#if defined AFS_SGI62_ENV
+	{
+	    afs_int64 tmp = va_arg(ap, afs_int64);
+	    params[0] = CAST_SYSCALL_PARAM((afs_uint32)(tmp >> 32));
+	    params[1] = CAST_SYSCALL_PARAM((afs_uint32)(tmp & 0xffffffff));
+	}
+#else
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, afs_uint32)));
+#endif
+	break;
+    default:
+	printf("Unknown syscall enountered: %d\n", syscall);
+	opr_Assert(0);
+    }
 }
 
 /**
@@ -2612,19 +2672,12 @@ call_syscall_thread(void *rock)
  * @param[in] syscall syscall to run
  */
 static void
-fork_syscall_impl(int rx, int wait, const char *rn, long syscall, long param1,
-                  long param2, long param3, long param4, long param5)
+fork_syscall_impl(int rx, int wait, const char *rn, int syscall, va_list ap)
 {
     struct afsd_syscall_args *args;
 
     args = malloc(sizeof(*args));
-
-    args->syscall = syscall;
-    args->param1 = param1;
-    args->param2 = param2;
-    args->param3 = param3;
-    args->param4 = param4;
-    args->param5 = param5;
+    afsd_syscall_populate(args, syscall, ap);
     args->rxpri = rx;
     args->rn = rn;
 
@@ -2635,20 +2688,26 @@ fork_syscall_impl(int rx, int wait, const char *rn, long syscall, long param1,
  * call a syscall in another process or thread.
  */
 static void
-fork_syscall(const char *rn, long syscall, long param1, long param2,
-             long param3, long param4, long param5)
+fork_syscall(const char *rn, int syscall, ...)
 {
-    fork_syscall_impl(0, 0, rn, syscall, param1, param2, param3, param4, param5);
+    va_list ap;
+
+    va_start(ap, syscall);
+    fork_syscall_impl(0, 0, rn, syscall, ap);
+    va_end(ap);
 }
 
 /**
  * call a syscall in another process or thread, and give it RX priority.
  */
 static void
-fork_rx_syscall(const char *rn, long syscall, long param1, long param2,
-                long param3, long param4, long param5)
+fork_rx_syscall(const char *rn, int syscall, ...)
 {
-    fork_syscall_impl(1, 0, rn, syscall, param1, param2, param3, param4, param5);
+    va_list ap;
+
+    va_start(ap, syscall);
+    fork_syscall_impl(1, 0, rn, syscall, ap);
+    va_end(ap);
 }
 
 #if defined(AFS_SUN510_ENV) && defined(RXK_LISTENER_ENV)
@@ -2657,9 +2716,25 @@ fork_rx_syscall(const char *rn, long syscall, long param1, long param2,
  * for it to finish before returning.
  */
 static void
-fork_rx_syscall_wait(const char *rn, long syscall, long param1, long param2,
-                     long param3, long param4, long param5)
+fork_rx_syscall_wait(const char *rn, int syscall, ...)
 {
-    fork_syscall_impl(1, 1, rn, syscall, param1, param2, param3, param4, param5);
+    va_list ap;
+
+    va_start(ap, syscall);
+    fork_syscall_impl(1, 1, rn, syscall, ap);
+    va_end(ap);
 }
 #endif /* AFS_SUN510_ENV && RXK_LISTENER_ENV */
+
+static int
+afsd_syscall(int syscall, ...)
+{
+    va_list ap;
+    struct afsd_syscall_args args;
+
+    va_start(ap, syscall);
+    afsd_syscall_populate(&args, syscall, ap);
+    va_end(ap);
+
+    return afsd_call_syscall(&args);
+}

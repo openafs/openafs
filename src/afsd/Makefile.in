@@ -51,8 +51,6 @@ vsys: vsys.o
 #
 # Objects
 #
-CFLAGS_afsd.o        = @CFLAGS_NOERROR@
-CFLAGS_afsd_kernel.o = @CFLAGS_NOERROR@
 CFLAGS_afsd_fuse.o   = -I${TOP_SRCDIR}/afs -I${TOP_SRCDIR}/afs/UKERNEL \
 		       -I${TOP_SRCDIR}/rx/UKERNEL -DUKERNEL @FUSE_CFLAGS@
 

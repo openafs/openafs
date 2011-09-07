@@ -12,6 +12,10 @@
 
 #include <roken.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
+
 #define VFS 1
 
 #include <afs/cmd.h>
@@ -128,136 +132,156 @@ afsd_set_afsd_rtpri(void)
     SET_AFSD_RTPRI();
 }
 
-#if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
-
+#if defined(AFS_LINUX20_ENV)
 int
-afsd_call_syscall(long param1, long param2, long param3, long param4, long param5,
-	     long param6, long  param7)
+os_syscall(struct afsd_syscall_args *args)
 {
     int error;
-# ifdef AFS_LINUX20_ENV
-    long eparm[4];
     struct afsprocdata syscall_data;
+
     int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
     if (fd < 0)
 	fd = open(PROC_SYSCALL_ARLA_FNAME, O_RDWR);
-    eparm[0] = param4;
-    eparm[1] = param5;
-    eparm[2] = param6;
-    eparm[3] = param7;
 
-    param4 = (long)eparm;
+    if (fd < 0)
+	return -1;
 
     syscall_data.syscall = AFSCALL_CALL;
-    syscall_data.param1 = param1;
-    syscall_data.param2 = param2;
-    syscall_data.param3 = param3;
-    syscall_data.param4 = param4;
-    if (fd > 0) {
-	error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
-	close(fd);
-    } else
-# endif /* AFS_LINUX20_ENV */
-# ifdef AFS_DARWIN80_ENV
-    struct afssysargs syscall_data;
-    void *ioctldata;
-    int fd = open(SYSCALL_DEV_FNAME,O_RDWR);
-    int syscallnum;
-#ifdef AFS_DARWIN100_ENV
-    int is64 = 0;
+    syscall_data.param1 = args->syscall;
+    syscall_data.param2 = args->params[0];
+    syscall_data.param3 = args->params[1];
+    syscall_data.param4 = (long) &args->params[2];
+
+    error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+    close(fd);
+
+    return error;
+}
+#elif defined(AFS_DARWIN80_ENV)
+
+# if defined(AFS_DARWIN100_ENV)
+static int
+os_syscall64(struct afsd_syscall_args *args)
+{
+    int error;
     struct afssysargs64 syscall64_data;
-    if (sizeof(param1) == 8) {
-	syscallnum = VIOC_SYSCALL64;
-	is64 = 1;
-	ioctldata = &syscall64_data;
-	syscall64_data.syscall = (int)AFSCALL_CALL;
-	syscall64_data.param1 = param1;
-	syscall64_data.param2 = param2;
-	syscall64_data.param3 = param3;
-	syscall64_data.param4 = param4;
-	syscall64_data.param5 = param5;
-	syscall64_data.param6 = param6;
-    } else {
+    int fd = open(SYSCALL_DEV_FNAME, O_RDWR);
+
+    if (fd < 0)
+	return -1;
+
+    syscall64_data.syscall = (int)AFSCALL_CALL;
+    syscall64_data.param1 = args->syscall;
+    syscall64_data.param2 = args->params[0];
+    syscall64_data.param3 = args->params[1];
+    syscall64_data.param4 = args->params[2];
+    syscall64_data.param5 = args->params[3];
+    syscall64_data.param6 = args->params[4];
+
+    error = ioctl(fd, VIOC_SYSCALL64, syscall64_data);
+    close(fd);
+
+    if (error)
+	return error;
+
+    return syscall64_data.retval;
+}
+# endif
+
+static int
+os_syscall(struct afsd_syscall_args *args)
+{
+    int error;
+    struct afssysargs syscall_data;
+    int fd;
+
+# ifdef AFS_DARWIN100_ENV
+    if (sizeof(long) == 8)
+	return os_syscall64(args);
+# endif
+
+    fd = open(SYSCALL_DEV_FNAME, O_RDWR);
+    if (fd < 0)
+	return -1;
+
+    syscall_data.syscall = AFSCALL_CALL;
+    syscall_data.param1 = (unsigned int)(uintptr_t)args->syscall;
+    syscall_data.param2 = (unsigned int)(uintptr_t)args->params[0];
+    syscall_data.param3 = (unsigned int)(uintptr_t)args->params[1];
+    syscall_data.param4 = (unsigned int)(uintptr_t)args->params[2];
+    syscall_data.param5 = (unsigned int)(uintptr_t)args->params[3];
+    syscall_data.param6 = (unsigned int)(uintptr_t)args->params[4];
+
+    error = ioctl(fd, VIOC_SYSCALL, syscall_data);
+    close(fd);
+
+    if (error)
+	return error;
+
+    return syscall_data.retval;
+}
+
+#elif defined(AFS_SUN511_ENV)
+static int
+os_syscall(struct afsd_syscall_args *args)
+{
+    int retval;
+
+    error = ioctl_sun_afs_syscall(AFSCALL_CALL, args->syscall,
+				 args->params[0], args->params[1],
+				 args->params[2], args->params[3],
+				 args->params[4], &retval);
+    if (error)
+	return error;
+
+    return retval;
+}
+#elif defined(AFS_SGI_ENV)
+static int
+os_syscall(struct afsd_syscall_args *args)
+{
+    return afs_syscall(args->syscall, args->params[0], args->params[1],
+		       args->params[2], args->params[3], args->params[4]);
+}
+#elif defined(AFS_AIX32_ENV)
+static int
+os_syscall(struct afsd_syscall_args *args)
+{
+    return syscall(AFSCALL_CALL, args->syscall,
+		   args->params[0], args->params[1], args->params[2],
+		   args->params[3], args->params[4], args->params[5],
+		   args->params[6]);
+}
+#else
+static int
+os_syscall(struct afsd_syscall_args *args)
+{
+    return syscall(AFS_SYSCALL, AFSCALL_CALL, args->syscall,
+		   args->params[0], args->params[1], args->params[2],
+		   args->params[3], args->params[4], args->params[5]);
+}
 #endif
-	syscallnum = VIOC_SYSCALL;
-        ioctldata = &syscall_data;
-	syscall_data.syscall = AFSCALL_CALL;
-	syscall_data.param1 = param1;
-	syscall_data.param2 = param2;
-	syscall_data.param3 = param3;
-	syscall_data.param4 = param4;
-	syscall_data.param5 = param5;
-	syscall_data.param6 = param6;
-#ifdef AFS_DARWIN100_ENV
-    }
-#endif
-    if(fd >= 0) {
-        error = ioctl(fd, syscallnum, ioctldata);
-        close(fd);
-    } else {
-        error = -1;
-    }
-    if (!error) {
-#ifdef AFS_DARWIN100_ENV
-        if (is64)
-            error=syscall64_data.retval;
-        else
-#endif
-            error=syscall_data.retval;
-    }
-# elif defined(AFS_SUN511_ENV)
-	{
-	    int rval;
-	    rval = ioctl_sun_afs_syscall(AFSCALL_CALL, param1, param2, param3,
-	                                 param4, param5, param6, &error);
-	    if (rval) {
-		error = rval;
-	    }
-	}
-# else /* AFS_DARWIN80_ENV */
-	error =
-	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,
-		param5, param6, param7);
-# endif /* !AFS_DARWIN80_ENV */
+
+int
+afsd_call_syscall(struct afsd_syscall_args *args)
+{
+    int error;
+
+    error = os_syscall(args);
 
     if (afsd_debug) {
 #ifdef AFS_NBSD40_ENV
         char *s = strerror(errno);
         printf("SScall(%d, %d, %d)=%d (%d, %s)\n", AFS_SYSCALL, AFSCALL_CALL,
-                param1, error, errno, s);
+                (int)args->params[0], error, errno, s);
 #else
-	printf("SScall(%d, %d, %ld)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
-	       error);
+	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL,
+	       (int)args->params[0], error);
 #endif
     }
 
-    return (error);
-}
-#else /* !AFS_SGI_ENV && !AFS_AIX32_ENV */
-# if defined(AFS_SGI_ENV)
-int
-afsd_call_syscall(call, parm0, parm1, parm2, parm3, parm4)
-{
-
-    int error;
-
-    error = afs_syscall(call, parm0, parm1, parm2, parm3, parm4);
-    if (afsd_verbose)
-	printf("SScall(%d, %d)=%d ", call, parm0, error);
-
     return error;
 }
-# else /* AFS_SGI_ENV */
-int
-afsd_call_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
-{
-
-    return syscall(AFSCALL_CALL, call, parm0, parm1, parm2, parm3, parm4,
-		   parm5, parm6);
-}
-# endif /* !AFS_SGI_ENV */
-#endif /* AFS_SGI_ENV || AFS_AIX32_ENV */
-
 
 #ifdef	AFS_AIX_ENV
 /* Special handling for AIX's afs mount operation since they require much more
