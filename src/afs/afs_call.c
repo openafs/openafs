@@ -1167,32 +1167,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_CheckServers(0, NULL);     /* check up servers */
 	}
     }
-#ifdef	AFS_SGI53_ENV
-    else if (parm == AFSOP_NFSSTATICADDR) {
-	extern int (*nfs_rfsdisptab_v2) ();
-	nfs_rfsdisptab_v2 = (int (*)())parm2;
-    } else if (parm == AFSOP_NFSSTATICADDR2) {
-	extern int (*nfs_rfsdisptab_v2) ();
-# ifdef _K64U64
-	nfs_rfsdisptab_v2 = (int (*)())((parm2 << 32) | (parm3 & 0xffffffff));
-# else /* _K64U64 */
-	nfs_rfsdisptab_v2 = (int (*)())(parm3 & 0xffffffff);
-# endif /* _K64U64 */
-    }
-# if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
-    else if (parm == AFSOP_SBLOCKSTATICADDR2) {
-	extern int (*afs_sblockp) ();
-	extern void (*afs_sbunlockp) ();
-#  ifdef _K64U64
-	afs_sblockp = (int (*)())((parm2 << 32) | (parm3 & 0xffffffff));
-	afs_sbunlockp = (void (*)())((parm4 << 32) | (parm5 & 0xffffffff));
-#  else
-	afs_sblockp = (int (*)())(parm3 & 0xffffffff);
-	afs_sbunlockp = (void (*)())(parm5 & 0xffffffff);
-#  endif /* _K64U64 */
-    }
-# endif /* AFS_SGI62_ENV && !AFS_SGI65_ENV */
-#endif /* AFS_SGI53_ENV */
     else if (parm == AFSOP_SHUTDOWN) {
 	afs_cold_shutdown = 0;
 	if (parm2 == 1)

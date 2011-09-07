@@ -32,8 +32,6 @@ mutex_t afs_init_kern_lock;
 
 #define SYS_setgroups SGI_SETGROUPS
 
-int (*nfs_rfsdisptab_v2) () = NULL;
-
 int afs_fstype;
 lock_t afs_rxlock;
 
@@ -186,11 +184,6 @@ afs_mount(struct vfs *afsp, vnode_t * mvp, struct mounta *uap,
     afsp->vfs_fstype = afs_fstype;
     afsp->vfs_dev = 0xbabebabe;	/* XXX this should be unique */
 
-#ifndef	AFS_NONFSTRANS
-    if (nfs_rfsdisptab_v2)
-	afs_xlatorinit_v2(nfs_rfsdisptab_v2);
-    afs_xlatorinit_v3();
-#endif
     return 0;
 }
 

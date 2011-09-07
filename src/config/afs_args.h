@@ -79,13 +79,6 @@
 #define AFSCALL_INIT_KERNEL_CONFIG 47	/* set vnode glue ops. */
 #endif
 
-#ifdef	AFS_SGI53_ENV
-#define AFSOP_NFSSTATICADDR	 32	/* to contents addr of nfs kernel addr */
-#define AFSOP_NFSSTATICADDRPTR	 33	/* pass addr of variable containing
-					 * address into kernel. */
-#define AFSOP_NFSSTATICADDR2	 34	/* pass address in as hyper. */
-#define AFSOP_SBLOCKSTATICADDR2  35	/* for sblock and sbunlock */
-#endif
 #define	AFSOP_GETMASK		 42	/* stand-in for SIOCGIFNETMASK */
 /* For SGI, this can't interfere with any of the 64 bit inode calls. */
 #define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */
