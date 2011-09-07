@@ -8,6 +8,7 @@ CCOBJ="$CC"
 MT_CC="$CC"
 XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} ${LIB_libintl}"
 MT_LIBS='-lpthread ${XLIBS}'
+XCFLAGS=
 
 dnl debugging and optimization flag defaults
 dnl Note, these are all the defaults for if debug/optimize turned on, and
@@ -707,6 +708,7 @@ CFLAGS_NOERROR=
 CFLAGS_NOSTRICT=
 CFLAGS_NOUNUSED=
 CFLAGS_NOOLDSTYLE=
+XCFLAGS_NOCHECKING="$XCFLAGS"
 
 if test "x$GCC" = "xyes"; then
   if test "x$enable_warnings" = "xyes"; then
