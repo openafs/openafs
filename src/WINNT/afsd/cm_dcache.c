@@ -40,11 +40,10 @@ extern osi_mutex_t cm_Freelance_Lock;
 long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                  cm_user_t *userp, cm_req_t *reqp)
 {
-    /* store the data back from this buffer; the buffer is locked and held,
-     * but the vnode involved isn't locked, yet.  It is held by its
-     * reference from the buffer, which won't change until the buffer is
-     * released by our caller.  Thus, we don't have to worry about holding
-     * bufp->scp.
+    /*
+     * store the data back from this buffer; the buffer is locked and held,
+     * but the vnode involved may or may not be locked depending on whether
+     * or not the CM_BUF_WRITE_SCP_LOCKED flag is set.
      */
     long code, code1;
     cm_scache_t *scp = vscp;
@@ -74,7 +73,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
     memset(&volSync, 0, sizeof(volSync));
 
-    /* now, the buffer may or may not be filled with good data (buf_GetNewLocked
+    /*
+     * now, the buffer may or may not be filled with good data (buf_GetNewLocked
      * drops lots of locks, and may indeed return a properly initialized
      * buffer, although more likely it will just return a new, empty, buffer.
      */
