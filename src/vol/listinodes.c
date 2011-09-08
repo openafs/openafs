@@ -409,7 +409,6 @@ ginode(inum)
 #define	__ASSERT_H__
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
-#include <dirent.h>
 #include <afs/xfsattrs.h>
 /* xfs_ListViceInodes
  *

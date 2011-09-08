@@ -106,10 +106,6 @@ struct ncp_sb_info {
 #define _KERNEL 1
 #endif
 
-#ifndef	AFS_OSF_ENV
-#include <sys/param.h>
-#endif
-
 #ifndef AFS_LINUX20_ENV
 #include <nlist.h>
 #endif
@@ -119,7 +115,6 @@ struct ncp_sb_info {
 #endif
 
 #include <afs/stds.h>
-#include <sys/types.h>
 
 #if defined(AFS_OSF_ENV)
 #define	KERNEL
@@ -128,7 +123,6 @@ struct ncp_sb_info {
 #ifdef	_KERN_LOCK_H_
 #include FFFFF
 #endif
-#include <sys/time.h>
 #include <kern/lock.h>
 #include <sys/vnode.h>
 #include <arch/alpha/pmap.h>
@@ -187,10 +181,6 @@ struct vnode foo;
 #include <sys/user.h>
 #endif
 
-#ifndef AFS_LINUX20_ENV
-#include <sys/socket.h>
-#endif
-
 #ifndef AFS_LINUX26_ENV
 #include <sys/file.h>
 #endif
@@ -212,8 +202,6 @@ struct vnode foo;
 #else
 # include <netinet/in.h>	/* struct in_addr */
 #endif
-
-#include <arpa/inet.h>		/* inet_ntoa() */
 
 #if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
 #ifdef       AFS_SGI_ENV
@@ -339,7 +327,6 @@ typedef enum _spustate {	/* FROM /etc/conf/h/_types.h */
 #endif
 #endif
 #endif
-#include <signal.h>
 #endif
 
 /* AFS includes */
@@ -626,9 +613,6 @@ PrintIPAddr(int addr)
 
 #ifdef AFS_LINUX20_ENV
 /* Find symbols in a live kernel. */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #ifdef AFS_LINUX26_ENV
 #define KSYMS "/proc/kallsyms"

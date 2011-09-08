@@ -33,7 +33,6 @@
 #include <ufs/dir.h>
 #undef	_KERNEL
 #undef	_BSD
-#include <stdio.h>
 #else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>

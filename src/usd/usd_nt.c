@@ -14,7 +14,6 @@
 
 #include <windows.h>
 #include <winioctl.h>
-#include <sys/stat.h>
 #include <crtdbg.h>
 
 #include <afs/errmap_nt.h>

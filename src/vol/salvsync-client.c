@@ -19,11 +19,7 @@
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#endif
-
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
 #include <afs/errors.h>

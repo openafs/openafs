@@ -27,7 +27,6 @@
 #include "vnode.h"
 #include "volume.h"
 #include "viceinode.h"
-#include <dirent.h>
 #include <afs/errmap_nt.h>
 
 #define BASEFILEATTRIBUTE FILE_ATTRIBUTE_NORMAL

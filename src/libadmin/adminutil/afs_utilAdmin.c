@@ -16,6 +16,10 @@
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 
+#ifdef AFS_NT40_ENV
+# include <afs/krb5_nt.h>
+#endif
+
 #include <afs/afs_Admin.h>
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>
@@ -28,10 +32,6 @@
 #include <afs/bnode.h>
 #include <afs/volser.h>
 #include <afs/afscbint.h>
-
-#ifdef AFS_NT40_ENV
-# include <afs/krb5_nt.h>
-#endif
 
 #include "afs_AdminInternal.h"
 #include "afs_utilAdmin.h"

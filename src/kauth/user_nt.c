@@ -204,13 +204,7 @@ static int krbONE = 1;
  * <mit-cpyright.h>.
  */
 
-#include <string.h>
-#include <time.h>
-
 #include "krb.h"
-
-#include <sys/types.h>
-#include <winsock2.h>
 
 static int swap_bytes;
 

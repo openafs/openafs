@@ -67,7 +67,6 @@ int serverLogSyslogFacility = LOG_DAEMON;
 char *serverLogSyslogTag = 0;
 #endif
 
-#include <stdarg.h>
 int LogLevel;
 int mrafsStyleLogs = 0;
 static int threadIdLogs = 0;

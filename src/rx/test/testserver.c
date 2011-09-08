@@ -13,21 +13,9 @@
 #include <afs/param.h>
 #include <roken.h>
 
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <winsock2.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <sys/time.h>
 #endif
-#include <signal.h>
-#include <sys/stat.h>
 
 #include <afs/opr.h>
 #include <rx/rx_clock.h>
@@ -342,7 +330,6 @@ Quit(char *msg)
  *
  * Open file descriptors until file descriptor n or higher is returned.
  */
-#include <sys/stat.h>
 void
 OpenFD(int n)
 {

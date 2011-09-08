@@ -27,7 +27,6 @@
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include <errno.h>
 #include <afs/afssyscalls.h>
 #include "nfs.h"
 #include "ihandle.h"

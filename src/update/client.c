@@ -19,8 +19,6 @@
 #include <WINNT/afsevent.h>
 #include <sys/utime.h>
 #include <direct.h>
-#include <process.h>
-#include <afs/procmgmt.h>
 #endif
 
 #ifdef	AFS_AIX_ENV

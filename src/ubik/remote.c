@@ -11,12 +11,13 @@
 #include <afs/param.h>
 
 #include <roken.h>
+
+#include <assert.h>
+
 #include <afs/opr.h>
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <errno.h>
-#include <assert.h>
 #include <afs/afsutil.h>
 
 #define UBIK_INTERNALS

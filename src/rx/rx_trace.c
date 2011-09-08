@@ -128,7 +128,6 @@ rxi_calltrace(unsigned int event, struct rx_call *call)
 }
 
 #ifdef DUMPTRACE
-#include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
 #endif

@@ -13,8 +13,6 @@
 
 #include <roken.h>
 
-#include <stdarg.h>
-
 #include <afs/dir.h>
 
 long fidCounter = 0;

@@ -77,7 +77,6 @@
 #endif /* AFS_OSF_ENV */
 
 #include <afs/osi_inode.h>
-#include <pwd.h>
 #include "fsck.h"
 
 #ifdef AFS_SUN_ENV

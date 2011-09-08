@@ -96,7 +96,6 @@ extern int isdirty;
 #ifdef	AFS_SUN5_ENV
 #include <sys/mntent.h>
 #include <sys/mnttab.h>
-#include <sys/stat.h>
 #include <sys/vfstab.h>
 
 offset_t llseek();
@@ -1016,7 +1015,6 @@ mounted(name)
 #if	defined(AFS_HPUX101_ENV)
 
 #include "libfs.h"
-#include <sys/stat.h>
 #include <sys/fcntl.h>
 
 int seek_options;

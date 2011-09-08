@@ -33,8 +33,6 @@
 #include <lastlog.h>
 #include <ttyent.h>
 
-#include <grp.h>
-
 static gid_t tty_gid(int default_gid);
 static void getloginname(struct utmp *up);
 

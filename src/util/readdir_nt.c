@@ -24,7 +24,6 @@
 #include <afs/errmap_nt.h>
 #include <windows.h>
 #include <winbase.h>
-#include <dirent.h>
 
 /* opendir() - The case insensitive version of opendir */
 DIR *

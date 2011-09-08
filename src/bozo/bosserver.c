@@ -603,15 +603,7 @@ tweak_config(void)
  * It writes warning messages to the standard error output if certain
  * fundamental errors occur.
  *
- * This routine requires
- *
- * #include <sys/types.h>
- * #include <sys/stat.h>
- * #include <fcntl.h>
- * #include <unistd.h>
- * #include <stdlib.h>
- *
- * and has been tested on:
+ * This routine has been tested on:
  *
  * AIX 4.2
  * Digital Unix 4.0D

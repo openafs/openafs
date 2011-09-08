@@ -15,10 +15,6 @@
 
 #include <ctype.h>
 
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#endif
-
 #include <lwp.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
