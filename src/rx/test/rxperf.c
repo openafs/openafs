@@ -43,42 +43,12 @@ nn * We are using getopt since we want it to be possible to link to
 #include <afs/param.h>
 #include <roken.h>
 
-#include <stdarg.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <winsock2.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <time.h>
-#else
-#include <sys/time.h>
-#include <sys/socket.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
+
 #include <assert.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <signal.h>
-#ifdef HAVE_ERRX
-#include <err.h>		/* not stricly right, but if we have a errx() there
-				 * is hopefully a err.h */
-#endif
+
 #include <rx/rx.h>
 #include <rx/rx_null.h>
 #include <rx/rx_globals.h>

@@ -49,9 +49,6 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include <afs/bosint.h>
 #include <ubik.h>
 #include <ubik_int.h>
-#ifndef AFS_NT40_ENV
-#include <arpa/inet.h>		/* for inet_ntoa() */
-#endif
 
 void
 Usage(void)

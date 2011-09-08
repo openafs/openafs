@@ -13,8 +13,6 @@
 
 #include <roken.h>
 
-#include <fcntl.h>
-
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif

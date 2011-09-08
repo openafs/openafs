@@ -15,7 +15,6 @@
 
 #include <windows.h>
 #include <winioctl.h>
-#include <winsock2.h>
 #define SECURITY_WIN32
 #include <security.h>
 #include <nb30.h>

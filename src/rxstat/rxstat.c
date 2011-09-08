@@ -19,8 +19,6 @@
 #include <rx/rxstat.h>
 #if defined(KERNEL) && !defined(UKERNEL)
 #include "sys/errno.h"
-#else /* KERNEL && !UKERNEL */
-#include <errno.h>
 #endif /* KERNEL && !UKERNEL */
 
 /*

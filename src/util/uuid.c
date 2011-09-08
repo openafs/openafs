@@ -50,7 +50,6 @@
 
 # ifdef AFS_NT40_ENV
 #  include <rpc.h>
-#  include <process.h>
 # else
 #  include <net/if.h>
 #  if !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)

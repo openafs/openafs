@@ -12,16 +12,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
+
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>

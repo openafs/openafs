@@ -20,24 +20,8 @@
 
 #include <assert.h>
 #include <afs/afsutil.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/file.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <dirent.h>
 #include <sys/wait.h>
-
-
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
 
 #ifdef HAVE_SYS_FS_TYPES_H
 #include <sys/fs_types.h>
@@ -75,24 +59,16 @@
 #include <sys/fstyp.h>
 #endif
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
+#include <ctype.h>
 
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-
-#include <netinet/in.h>
+#include <afs/opr.h>
 #include <afs/afs_args.h>
 #include <afs/cellconfig.h>
-#include <ctype.h>
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
 
 #ifdef AFS_DARWIN_ENV
 #ifdef AFS_DARWIN80_ENV
-#include <sys/ioctl.h>
 #include <sys/xattr.h>
 #endif
 #include <mach/mach.h>

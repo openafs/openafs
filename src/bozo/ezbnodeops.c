@@ -15,9 +15,6 @@
 
 #include <lwp.h>
 #include <rx/rx.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#endif
 
 #include <afs/afsutil.h>
 #include "bnode.h"

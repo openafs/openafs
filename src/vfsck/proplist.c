@@ -29,7 +29,6 @@
 #undef	_BSD
 
 #include <afs/osi_inode.h>
-#include <pwd.h>
 #include "fsck.h"
 
 struct prop_entry_desc {

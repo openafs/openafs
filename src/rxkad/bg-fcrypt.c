@@ -667,11 +667,6 @@ rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
  * the test case. Use TEST_KERNEL to get the mangled names.
  */
 
-#include <stdio.h>
-#include <string.h>
-
-#include <time.h>
-
 const char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
 
 const unsigned char key1[8] =

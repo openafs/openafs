@@ -32,10 +32,6 @@
 # endif
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "internal.h"
 
 char *current_token = (char *)NULL;
@@ -72,8 +68,6 @@ typedef
 
 #define YYLTYPE yyltype
 #endif
-
-#include <stdio.h>
 
 #ifndef __cplusplus
 #ifndef __STDC__
@@ -942,23 +936,15 @@ yyparse(YYPARSE_PARAM)
  *
  * For copyright info, see mit-sipb-cr.h.
  */
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
 #include <afs/param.h>
-#include <string.h>
 #include <assert.h>
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
-#include <sys/types.h>
 #include <afs/afsutil.h>
-#else
-#include <sys/time.h>
 #endif
 #include <sys/timeb.h>
 #include "error_table.h"
 #include "mit-sipb-cr.h"
-#include <stdio.h>
 
 /*
  * Copyright 2000, International Business Machines Corporation and others.

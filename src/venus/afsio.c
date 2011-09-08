@@ -36,31 +36,27 @@
 
 #include <roken.h>
 
-#include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #define _CRT_RAND_S
-#include <process.h>
 #include <afs/smb_iocons.h>
 #include <afs/afsd.h>
 #include <afs/cm_ioctl.h>
 #include <afs/pioctl_nt.h>
 #include <WINNT/syscfg.h>
 #else
-#include <netdb.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG 1
 #endif
-#include <sys/stat.h>
+
+#include <afs/opr.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/vlserver.h>
 #include <afs/ihandle.h>
 #include <afs/com_err.h>
 #include <afs/afscp.h>
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-#endif
+
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
 #endif

@@ -17,7 +17,6 @@
 #include <rx/rxstat.h>
 
 #ifdef AFS_NT40_ENV
-# include <winsock2.h>
 # include <afs/krb5_nt.h>
 #endif
 

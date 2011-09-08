@@ -88,9 +88,6 @@ static char lcell[MAXCELLCHARS];
 #define BUFSIZ 4096
 #endif
 
-#ifdef	AFS_HPUX_ENV
-#include <unistd.h>
-#endif
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
 static struct flock fileWlock = { F_WRLCK, 0, 0, 0, 0, 0 };
 static struct flock fileRlock = { F_RDLCK, 0, 0, 0, 0, 0 };
@@ -1109,10 +1106,6 @@ ktc_curpag(void)
   */
 
 #if 0
-#include <stdio.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/file.h>
 #include <krb.h>
 #endif

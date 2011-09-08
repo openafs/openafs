@@ -20,7 +20,6 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_identity.h>
-#include <stdio.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 

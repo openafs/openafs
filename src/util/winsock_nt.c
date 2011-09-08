@@ -15,7 +15,6 @@
 #include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <sys/timeb.h>
 #include <afs/afsutil.h>
 

@@ -364,7 +364,6 @@ c_output(char *infile, char *define, int extend, char *outfile, int append)
 	}
 	f_print(fout, "#ifdef AFS_NT40_ENV\n");
 	f_print(fout, "#define AFS_RXGEN_EXPORT __declspec(dllexport)\n");
-        f_print(fout, "#include <winsock2.h>\n");
 	f_print(fout, "#endif /* AFS_NT40_ENV */\n");
     }
     if (currfile && (include = extendfile(currfile, ".h"))) {

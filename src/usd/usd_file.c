@@ -20,9 +20,6 @@
 #ifdef AFS_DARWIN_ENV
 #include <sys/ioccom.h>
 #endif
-#if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV) || (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN100_ENV))
-#include <sys/ioctl.h>
-#endif
 #ifndef AFS_DARWIN100_ENV
 #include <sys/mtio.h>
 #endif
