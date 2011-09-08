@@ -10,6 +10,9 @@ dnl we guess wrong.  This test is ugly, but it seems to work.
 dnl
 dnl Contributed by Markus Moeller.
 dnl
+dnl The canonical version of this file is maintained in the rra-c-util
+dnl package, available at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+dnl
 dnl Copyright 2007 Russ Allbery <rra@stanford.edu>
 dnl Copyright 2007, 2008 Markus Moeller
 dnl
@@ -28,7 +31,7 @@ AC_DEFUN([_RRA_HEADER_PAM_CONST_SOURCE],
 
 AC_DEFUN([RRA_HEADER_PAM_CONST],
 [AC_CACHE_CHECK([whether PAM prefers const], [rra_cv_header_pam_const],
-    [AC_EGREP_CPP([const void \*\* *item], _RRA_HEADER_PAM_CONST_SOURCE(),
+    [AC_EGREP_CPP([const void \*\* *_?item], _RRA_HEADER_PAM_CONST_SOURCE(),
         [rra_cv_header_pam_const=yes], [rra_cv_header_pam_const=no])])
 AS_IF([test x"$rra_cv_header_pam_const" = xyes],
     [rra_header_pam_const=const], [rra_header_pam_const=])
