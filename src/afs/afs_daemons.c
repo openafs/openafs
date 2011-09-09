@@ -994,7 +994,7 @@ brequest_release(struct brequest *tb)
     afs_BRelease(tb);  /* this grabs and releases afs_xbrs lock */
 }
 
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
 int
 afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2)
 #else
@@ -1011,7 +1011,7 @@ afs_BackgroundDaemon(void)
 	/* Irix with "short stack" exits */
 	afs_BackgroundDaemon_once();
 
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     /* If it's a re-entering syscall, complete the request and release */
     if (uspc->ts > -1) {
         tb = afs_brs;
@@ -1035,7 +1035,7 @@ afs_BackgroundDaemon(void)
 #endif
         /* Otherwise it's a new one */
 	afs_nbrs++;
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     }
 #endif
 
@@ -1049,7 +1049,7 @@ afs_BackgroundDaemon(void)
 		afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
 	    return -2;
 #else
 	    return;
@@ -1113,7 +1113,7 @@ afs_BackgroundDaemon(void)
 	    afs_brsDaemons--;
 	}
     }
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     return -2;
 #endif
 }

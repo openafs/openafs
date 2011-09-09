@@ -221,7 +221,7 @@ extern int afs_CheckRootVolume(void);
 extern void afs_BRelease(struct brequest *ab);
 extern int afs_BBusy(void);
 extern int afs_BioDaemon(afs_int32 nbiods);
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
 extern int afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2);
 #else
 extern void afs_BackgroundDaemon(void);

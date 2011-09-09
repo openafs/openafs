@@ -335,6 +335,9 @@ afsd_thread(void *rock)
 	complete_and_exit(0, 0);
 	break;
     case AFSOP_START_BKG:
+#ifdef AFS_NEW_BKG
+	afs_warn("Install matching afsd! Old background daemons not supported.\n");
+#else
 	sprintf(current->comm, "afs_bkgstart");
 	AFS_GLOCK();
 	complete(arg->complete);
@@ -347,6 +350,7 @@ afsd_thread(void *rock)
 	sprintf(current->comm, "afs_background");
 	afs_BackgroundDaemon();
 	AFS_GUNLOCK();
+#endif
 	complete_and_exit(0, 0);
 	break;
     case AFSOP_START_TRUNCDAEMON:
@@ -649,7 +653,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
     put_vfs_context();
 #endif
 #ifdef AFS_DAEMONOP_ENV
-# if defined(AFS_DARWIN80_ENV)
+# if defined(AFS_NEW_BKG)
     if (parm == AFSOP_BKG_HANDLER) {
 	/* if afs_uspc_param grows this should be checked */
 	struct afs_uspc_param *mvParam = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
@@ -692,7 +696,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_osi_Free(param2, namebufsz);
 	osi_FreeSmallSpace(mvParam);
     } else
-# endif /* DARWIN80 */
+# endif /* AFS_NEW_BKG */
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
 	afs_DaemonOp(parm, parm2, parm3, parm4, parm5, parm6);
@@ -784,7 +788,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
 # endif /* AFS_SGI_ENV */
-# ifndef AFS_DARWIN80_ENV
+# ifndef AFS_NEW_BKG
     } else if (parm == AFSOP_START_BKG) {
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
@@ -805,7 +809,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
 #  endif /* AFS_SGI_ENV */
-# endif /* ! AFS_DARWIN80_ENV */
+# endif /* ! AFS_NEW_BKG */
     } else if (parm == AFSOP_START_TRUNCDAEMON) {
 	while (afs_initState < AFSOP_GO)
 	    afs_osi_Sleep(&afs_initState);

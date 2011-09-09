@@ -33,6 +33,7 @@
 #define DARWIN_REFBASE 3
 #define AFS_WARNUSER_MARINER_ENV 1
 #define AFS_CACHE_VNODE_PATH
+#define AFS_NEW_BKG 1
 #define NEED_IOCTL32
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */

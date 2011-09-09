@@ -1497,7 +1497,7 @@ AfsdbLookupHandler(void)
 #endif
 }
 
-#ifdef AFS_DARWIN_ENV
+#ifdef AFS_NEW_BKG
 static void
 BkgHandler(void)
 {
@@ -1628,7 +1628,7 @@ afsdb_thread(void *rock)
 static void *
 daemon_thread(void *rock)
 {
-#ifdef AFS_DARWIN80_ENV
+#ifdef AFS_NEW_BKG
     /* Since the background daemon runs as a user process,
      * need to drop the controlling TTY, etc.
      */
