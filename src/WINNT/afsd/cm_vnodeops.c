@@ -188,6 +188,9 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     osi_assertx(ldpp != NULL, "null cm_lock_data_t");
     *ldpp = NULL;
 
+    /* Ignore the SYNCHRONIZE privilege */
+    desiredAccess &= ~SYNCHRONIZE;
+
     /* Always allow delete; the RPC will tell us if it's OK */
     rights = 0;
 
