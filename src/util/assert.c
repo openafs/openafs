@@ -12,16 +12,9 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #include "afsutil.h"
-
-#ifdef AFS_NT40_ENV
-void
-afs_NTAbort(void)
-{
-    DebugBreak();
-}
-#endif
 
 #define TIMESTAMP_BUFFER_SIZE 26  /* including the null */
 
@@ -38,5 +31,5 @@ AssertionFailed(char *file, int line)
     fprintf(stderr, "%s Assertion failed! file %s, line %d.\n", tdate, file,
 	    line);
     fflush(stderr);
-    afs_abort();
+    opr_abort();
 }

@@ -25,7 +25,8 @@ RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
 	  $(LIBDIR)\afslwp.lib \
 	  $(LIBDIR)\afs\afsutil.lib \
           $(LIBDIR)\afs\afsreg.lib \
-	  $(LIBDIR)\afsroken.lib
+	  $(LIBDIR)\afsroken.lib \
+	  $(LIBDIR)\opr.lib
 
 $(OUT)\rxdebug.res: rxdebug.rc $(VERSFILE).h
 	$(RC) /Fo$*.RES $(*F).rc 

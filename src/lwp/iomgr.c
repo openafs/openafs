@@ -38,13 +38,11 @@
 
 #include <roken.h>
 
-#ifdef AFS_NT40_ENV
-extern void lwp_abort(void);
-#endif /* AFS_NT40_ENV */
-
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+
+#include <afs/opr.h>
 
 #include "lwp.h"
 #include "timer.h"
@@ -552,7 +550,7 @@ static void *IOMGR(void *dummy)
 		  }
 #endif
 		  iomgr_errno = errno;
-		  lwp_abort();
+		  opr_abort();
 	       }
 	    }
 
@@ -834,7 +832,7 @@ int IOMGR_Select(int fds, fd_set *readfds, fd_set *writefds,
 	fprintf(stderr, "IOMGR_Select: fds=%d, more than max %d\n",
 		fds, FD_SETSIZE);
 	fflush(stderr);
-	lwp_abort();
+	opr_abort();
     }
 #endif
 

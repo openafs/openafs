@@ -233,7 +233,7 @@ osi_Panic(char *msg, ...)
     va_end(ap);
     fflush(stderr);
     fflush(stdout);
-    afs_abort();
+    opr_abort();
 }
 
 /*

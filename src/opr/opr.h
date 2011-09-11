@@ -1,7 +1,14 @@
 #ifndef OPENAFS_OPR_OPR_H
 #define OPENAFS_OPR_OPR_H 1
 
-/* casestrcpy.c */
+/* assert.c */
+#ifdef AFS_NT40_ENV
+# define opr_abort() opr_NTAbort()
+extern void opr_NTAbort(void);
+#else
+# define opr_abort() abort()
+#endif
+
 
 #define lcstring opr_lcstring
 #define ucstring opr_ucstring

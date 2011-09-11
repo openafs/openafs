@@ -19,7 +19,8 @@ LIBS = \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afspthread.lib \
-        $(DESTDIR)\lib\afsroken.lib
+        $(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\opr.lib
 
 
 RXTESTOBJS = $(OUT)\testclient.obj $(OUT)\testserver.obj
