@@ -1559,4 +1559,32 @@ struct afssysa {
 extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 #endif /* AFS_SUN5_ENV */
 
+/* The event hash table, and array */
+
+typedef struct afs_event {
+    struct afs_event *next;	/* next in hash chain */
+    char *event;		/* lwp event: an address */
+    int refcount;		/* Is it in use? */
+    int seq;			/* Sequence number: this is incremented
+				 * by wakeup calls; wait will not return until
+				 * it changes */
+#if defined(AFS_AIX_ENV)
+    tid_t cond;
+#elif defined(AFS_DARWIN_ENV)
+# ifdef AFS_DARWIN80_ENV
+    lck_mtx_t *lck;
+    thread_t owner;
+# endif
+    /* no cond member */
+#elif defined(AFS_FBSD_ENV) || defined(AFS_OBSD_ENV)
+    int cond;			/* "all this gluck should probably be replaced by CVs" */
+#elif defined(AFS_LINUX_ENV) || defined(AFS_LINUX24_ENV)
+    wait_queue_head_t cond;
+#elif defined(AFS_NBSD_ENV) || defined(AFS_SOLARIS_ENV) || defined(AFS_SGI_ENV)
+    kcondvar_t cond;		/* Currently associated condition variable */
+#endif
+} afs_event_t;
+
+extern afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
+
 #endif /* _AFS_H_ */
