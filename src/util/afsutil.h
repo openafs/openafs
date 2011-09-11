@@ -57,14 +57,6 @@ extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);
 extern void SetupLogSignals(void);
 
-/* abort the current process. */
-#ifdef AFS_NT40_ENV
-#define afs_abort() afs_NTAbort()
-#else
-#define afs_abort() abort()
-#endif
-
-
 #ifdef AFS_NT40_ENV
 #ifndef _MFC_VER
 #include <winsock2.h>
@@ -77,8 +69,6 @@ extern void SetupLogSignals(void);
 /* Unbuffer output when Un*x would do line buffering. */
 #define setlinebuf(S) setvbuf(S, NULL, _IONBF, 0)
 
-/* Abort on error, possibly trapping to debugger or dumping a trace. */
-     void afs_NTAbort(void);
 #endif /* AFS_NT40_ENV */
 
 #ifndef HAVE_POSIX_REGEX

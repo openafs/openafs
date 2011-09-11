@@ -26,7 +26,8 @@ LIBS= \
 	$(LIBDIR)\afs\afspioctl.lib \
 	$(LIBDIR)\afs\afsutil.lib \
 	$(LIBDIR)\afs\afsreg.lib \
-	$(LIBDIR)\afsroken.lib
+	$(LIBDIR)\afsroken.lib \
+	$(LIBDIR)\opr.lib
 
 
 install: \

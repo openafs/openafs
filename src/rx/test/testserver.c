@@ -28,6 +28,8 @@
 #endif
 #include <signal.h>
 #include <sys/stat.h>
+
+#include <afs/opr.h>
 #include <rx/rx_clock.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
@@ -319,7 +321,7 @@ Abort(char *msg, ...)
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
     }
-    afs_abort();
+    opr_abort();
     exit(1);
 }
 

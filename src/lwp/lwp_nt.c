@@ -22,6 +22,7 @@
 #include <roken.h>
 
 #ifdef AFS_NT40_ENV
+#include <afs/opr.h>
 #include <afs/afsutil.h>
 #include "lwp.h"
 
@@ -54,7 +55,6 @@ char lwp_debug = 0;
 
 /* Forward declarations */
 static void Dispatcher(void);
-static void Exit_LWP(void);
 static void Abort_LWP(char *msg);
 static VOID WINAPI Enter_LWP(PVOID fiberData);
 static void Initialize_PCB(PROCESS pcb, int priority, int stacksize,
@@ -519,7 +519,7 @@ static void Abort_LWP(char *msg)
     printf("***LWP: Abort --- dumping PCBs ...\n");
     Dump_Processes();
 #endif
-    Exit_LWP();
+    opr_abort();
 }
 
 #ifdef DEBUG
@@ -604,17 +604,6 @@ static void Dispatcher(void)
 
     lwp_cpptr = runnable[i].head;
     SwitchToFiber(lwp_cpptr->fiber);
-}
-
-void lwp_abort(void)
-{
-    afs_NTAbort();
-}
-
-static void Exit_LWP(void)
-{
-
-    lwp_abort();
 }
 
 static void Delete_PCB(PROCESS pid)

@@ -16,6 +16,7 @@ INCFILES = \
 LIBFILE = $(DESTDIR)\lib\opr.lib
 
 LIBOBJS = \
+	$(OUT)\assert.obj \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\AFS_component_version_number.obj
 

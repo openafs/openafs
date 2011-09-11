@@ -72,9 +72,6 @@ extern unsigned int FT_ApproxTime(void);
 #define LWP_ENOROCKS	-15	/* all rocks are in use */
 #define LWP_EBADROCK	-16	/* the specified rock does not exist */
 
-#ifndef AFS_NT40_ENV
-#define lwp_abort() abort()
-#endif
 /* Maximum priority permissible (minimum is always 0) */
 #define LWP_MAX_PRIORITY 4	/* changed from 1 */
 
