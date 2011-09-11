@@ -1063,7 +1063,7 @@ PACKAGE_VERSION="%{dkms_version}"
 
 # Items below here should not have to change with each driver version
 PACKAGE_NAME="%{name}"
-MAKE[0]="KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
+MAKE[0]="KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\${kernelver[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make; mv src/libafs/MODLOAD-*/\\\\\\\$KMODNAME \\\\\\\$DSTKMOD"
 CLEAN="make -C src/libafs clean"
 
 BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
