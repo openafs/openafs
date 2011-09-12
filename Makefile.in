@@ -281,7 +281,7 @@ vlserver: cmd comerr vol audit vlserver_depinstall
 
 tvlserver: cmd comerr vol audit tubik libafsrpc libafsauthent tvlserver_depinstall
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tvlserver ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT tvlserver for ${SYS_NAME} ;; \
@@ -533,7 +533,7 @@ butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
 
 tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_*) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \
