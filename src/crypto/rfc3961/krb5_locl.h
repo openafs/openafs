@@ -88,6 +88,11 @@ typedef enum krb5_keytype {
     KEYTYPE_ARCFOUR_56  = 24
 } krb5_keytype;
 
+#define KRB5_ENCTYPE_NULL KEYTYPE_NULL
+#define KRB5_ENCTYPE_OLD_DES3_CBC_SHA1 KEYTYPE_DES3
+#define KRB5_ENCTYPE_AES128_CTS_HMAC_SHA1_96 KEYTYPE_AES128
+#define KRB5_ENCTYPE_AES256_CTS_HMAC_SHA1_96 KEYTYPE_AES256
+
 typedef struct krb5_salt {
     krb5_salttype salttype;
     krb5_data saltvalue;
@@ -161,6 +166,10 @@ int krb5_data_ct_cmp(const krb5_data *, const krb5_data *);
 int der_copy_octet_string(const krb5_data *, krb5_data *);
 int copy_EncryptionKey(const krb5_keyblock *, krb5_keyblock *);
 int ct_memcmp(const void *p1, const void *p2, size_t len);
+krb5_error_code krb5_enctype_to_string(krb5_context context,
+				       krb5_enctype etype,
+				       char **string);
+
 
 #include "crypto.h"
 

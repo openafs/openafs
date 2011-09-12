@@ -31,6 +31,8 @@
 #define KRB5_LIB_FUNCTION static AFS_UNUSED
 #define KRB5_LIB_CALL
 
+#define KRB5_DEPRECATED_FUNCTION(x)
+
 /* This value shouldn't be hard coded */
 #define KRB5_CONFIG_BADFORMAT                    (-1765328248L)
 
