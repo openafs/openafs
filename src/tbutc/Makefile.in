@@ -96,6 +96,7 @@ list.o: ${BUTC}/list.c ${BUTCINCLS}
 recoverDb.o: ${BUTC}/recoverDb.c ${BUTCINCLS}
 	$(AFS_CCRULE) ${BUTC}/recoverDb.c
 
+CFLAGS_tcudbprocs.o=@CFLAGS_NOERROR@
 tcudbprocs.o: ${BUTC}/tcudbprocs.c ${BUTCINCLS}
 	$(AFS_CCRULE) ${BUTC}/tcudbprocs.c
 
