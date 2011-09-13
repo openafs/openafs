@@ -248,8 +248,8 @@ static afs_int32 cacheFiles;		/*Optimal # of files in workstation cache */
 static afs_int32 rwpct = 0;
 static afs_int32 ropct = 0;
 static afs_int32 cacheStatEntries;	/*Number of stat cache entries */
-static char cacheBaseDir[1024];	/*Where the workstation AFS cache lives */
-static char confDir[1024];		/*Where the workstation AFS configuration lives */
+static char *cacheBaseDir;		/*Where the workstation AFS cache lives */
+static char *confDir;			/*Where the workstation AFS configuration lives */
 static char fullpn_DCacheFile[1024];	/*Full pathname of DCACHEFILE */
 static char fullpn_VolInfoFile[1024];	/*Full pathname of VOLINFOFILE */
 static char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
@@ -264,8 +264,8 @@ static int sawDCacheSize = 0;
 static int sawBiod = 0;
 #endif
 static int sawCacheStatEntries = 0;
-char afsd_cacheMountDir[1024];	/*Mount directory for AFS */
-static char rootVolume[64] = "root.afs";	/*AFS root volume name */
+char *afsd_cacheMountDir;
+static char *rootVolume = NULL;
 #ifdef AFS_XBSD_ENV
 static int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
 #else
@@ -338,6 +338,48 @@ static void fork_rx_syscall_wait();
 #endif
 static void fork_rx_syscall();
 static void fork_syscall();
+
+enum optionsList {
+    OPT_blocks,
+    OPT_files,
+    OPT_rootvol,
+    OPT_stat,
+    OPT_memcache,
+    OPT_cachedir,
+    OPT_mountdir,
+    OPT_daemons,
+    OPT_nosettime,
+    OPT_verbose,
+    OPT_rmtsys,
+    OPT_debug,
+    OPT_chunksize,
+    OPT_dcache,
+    OPT_volumes,
+    OPT_biods,
+    OPT_prealloc,
+    OPT_confdir,
+    OPT_logfile,
+    OPT_waitclose,
+    OPT_shutdown,
+    OPT_peerstats,
+    OPT_processstats,
+    OPT_memallocsleep,
+    OPT_afsdb,
+    OPT_filesdir,
+    OPT_dynroot,
+    OPT_fakestat,
+    OPT_fakestatall,
+    OPT_nomount,
+    OPT_backuptree,
+    OPT_rxbind,
+    OPT_settime,
+    OPT_rxpck,
+    OPT_splitcache,
+    OPT_nodynvcache,
+    OPT_rxmaxmtu,
+    OPT_dynrootsparse,
+    OPT_rxmaxfrags,
+};
 
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 static void
@@ -571,9 +613,9 @@ ParseCacheInfoFile(void)
 	 tbd++);
     /* now copy in the fields not explicitly overridden by cmd args */
     if (!sawCacheMountDir)
-	strcpy(afsd_cacheMountDir, tmd);
+	afsd_cacheMountDir = strdup(tmd);
     if (!sawCacheBaseDir)
-	strcpy(cacheBaseDir, tbd);
+	cacheBaseDir = strdup(tbd);
     if (!sawCacheBlocks)
 	cacheBlocks = tCacheBlocks;
 
@@ -1674,114 +1716,83 @@ mainproc(struct cmd_syndesc *as, void *arock)
 #endif
 
     /* call atoi on the appropriate parsed results */
-    if (as->parms[0].items) {
-	/* -blocks */
-	cacheBlocks = atoi(as->parms[0].items->data);
+    if (cmd_OptionAsInt(as, OPT_blocks, &cacheBlocks) == 0)
 	sawCacheBlocks = 1;
-    }
-    if (as->parms[1].items) {
-	/* -files */
-	cacheFiles = atoi(as->parms[1].items->data);
-	filesSet = 1;		/* set when spec'd on cmd line */
-    }
-    if (as->parms[2].items) {
-	/* -rootvol */
-	strcpy(rootVolume, as->parms[2].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_files, &cacheFiles) == 0)
+	filesSet = 1;
+
+    if (cmd_OptionAsString(as, OPT_rootvol, &rootVolume) == 0)
 	rootVolSet = 1;
-    }
-    if (as->parms[3].items) {
-	/* -stat */
-	cacheStatEntries = atoi(as->parms[3].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_stat, &cacheStatEntries) == 0)
 	sawCacheStatEntries = 1;
-    }
-    if (as->parms[4].items) {
-	/* -memcache */
-	cacheBaseDir[0] = '\0';
+
+    if (cmd_OptionPresent(as, OPT_memcache)) {
+	cacheBaseDir = NULL;
 	sawCacheBaseDir = 1;
 	cacheFlags |= AFSCALL_INIT_MEMCACHE;
     }
-    if (as->parms[5].items) {
-	/* -cachedir */
-	strcpy(cacheBaseDir, as->parms[5].items->data);
+
+    if (cmd_OptionAsString(as, OPT_cachedir, &cacheBaseDir) == 0)
 	sawCacheBaseDir = 1;
-    }
-    if (as->parms[6].items) {
-	/* -mountdir */
-	strcpy(afsd_cacheMountDir, as->parms[6].items->data);
+
+    if (cmd_OptionAsString(as, OPT_mountdir, &afsd_cacheMountDir) == 0)
 	sawCacheMountDir = 1;
-    }
-    if (as->parms[7].items) {
-	/* -daemons */
-	nDaemons = atoi(as->parms[7].items->data);
-    }
-    if (as->parms[8].items) {
-	/* -nosettime */
-	/* noop */
-    }
-    if (as->parms[9].items) {
-	/* -verbose */
-	afsd_verbose = 1;
-    }
-    if (as->parms[10].items) {
-	/* -rmtsys */
+
+    cmd_OptionAsInt(as, OPT_daemons, &nDaemons);
+
+    afsd_verbose = cmd_OptionPresent(as, OPT_verbose);
+
+    if (cmd_OptionPresent(as, OPT_rmtsys)) {
 	afsd_rmtsys = 1;
 #ifdef UKERNEL
 	printf("-rmtsys not supported for UKERNEL\n");
 	return -1;
 #endif
     }
-    if (as->parms[11].items) {
-	/* -debug */
+
+    if (cmd_OptionPresent(as, OPT_debug)) {
 	afsd_debug = 1;
 	afsd_verbose = 1;
     }
-    if (as->parms[12].items) {
-	/* -chunksize */
-	chunkSize = atoi(as->parms[12].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_chunksize, &chunkSize) == 0) {
 	if (chunkSize < 0 || chunkSize > 30) {
 	    printf
 		("afsd:invalid chunk size (not in range 0-30), using default\n");
 	    chunkSize = 0;
 	}
     }
-    if (as->parms[13].items) {
-	/* -dcache */
-	dCacheSize = atoi(as->parms[13].items->data);
+
+    if (cmd_OptionAsInt(as, OPT_dcache, &dCacheSize))
 	sawDCacheSize = 1;
-    }
-    if (as->parms[14].items) {
-	/* -volumes */
-	vCacheSize = atoi(as->parms[14].items->data);
-    }
-    if (as->parms[15].items) {
+
+    cmd_OptionAsInt(as, OPT_volumes, &vCacheSize);
+
+    if (cmd_OptionPresent(as, OPT_biods)) {
 	/* -biods */
 #ifndef	AFS_AIX32_ENV
 	printf
 	    ("afsd: [-biods] currently only enabled for aix3.x VM supported systems\n");
 #else
-	nBiods = atoi(as->parms[15].items->data);
-	sawBiod = 1;
+	cmd_OptionAsInt(as, OPT_biods, &nBiods);
 #endif
     }
-    if (as->parms[16].items) {
-	/* -prealloc */
-	preallocs = atoi(as->parms[16].items->data);
-    }
-    strcpy(confDir, AFSDIR_CLIENT_ETC_DIRPATH);
-    if (as->parms[17].items) {
-	/* -confdir */
-	strcpy(confDir, as->parms[17].items->data);
+    cmd_OptionAsInt(as, OPT_prealloc, &preallocs);
+
+    if (cmd_OptionAsString(as, OPT_confdir, &confDir) == CMD_MISSING) {
+	confDir = strdup(AFSDIR_CLIENT_ETC_DIRPATH);
     }
     sprintf(fullpn_CacheInfo, "%s/%s", confDir, CACHEINFOFILE);
-    if (as->parms[18].items) {
-	/* -logfile */
+
+    if (cmd_OptionPresent(as, OPT_logfile)) {
         printf("afsd: Ignoring obsolete -logfile flag\n");
     }
-    if (as->parms[19].items) {
-	/* -waitclose */
-	afsd_CloseSynch = 1;
-    }
-    if (as->parms[20].items) {
+
+    afsd_CloseSynch = cmd_OptionPresent(as, OPT_waitclose);
+
+    if (cmd_OptionPresent(as, OPT_shutdown)) {
 	/* -shutdown */
 	afs_shutdown = 1;
 	/*
@@ -1795,25 +1806,19 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	}
 	exit(0);
     }
-    if (as->parms[21].items) {
-	/* -enable_peer_stats */
-	enable_peer_stats = 1;
-    }
-    if (as->parms[22].items) {
-	/* -enable_process_stats */
-	enable_process_stats = 1;
-    }
-    if (as->parms[23].items) {
-	/* -mem_alloc_sleep */
+
+    enable_peer_stats = cmd_OptionPresent(as, OPT_peerstats);
+    enable_process_stats = cmd_OptionPresent(as, OPT_processstats);
+
+    if (cmd_OptionPresent(as, OPT_memallocsleep)) {
 	printf("afsd: -mem_alloc_sleep is deprecated -- ignored\n");
     }
-    if (as->parms[24].items) {
-	/* -afsdb */
-	enable_afsdb = 1;
-    }
-    if (as->parms[25].items) {
+
+    enable_afsdb = cmd_OptionPresent(as, OPT_afsdb);
+    if (cmd_OptionPresent(as, OPT_filesdir)) {
 	/* -files_per_subdir */
-	int res = atoi(as->parms[25].items->data);
+	int res;
+        cmd_OptionAsInt(as, OPT_filesdir, &res);
 	if (res < 10 || res > (1 << 30)) {
 	    printf
 		("afsd:invalid number of files per subdir, \"%s\". Ignored\n",
@@ -1822,31 +1827,15 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    nFilesPerDir = res;
 	}
     }
-    if (as->parms[26].items) {
-	/* -dynroot */
-	enable_dynroot = 1;
-    }
-    if (as->parms[27].items) {
-	/* -fakestat */
+    enable_dynroot = cmd_OptionPresent(as, OPT_dynroot);
+
+    if (cmd_OptionPresent(as, OPT_fakestat)) {
 	enable_fakestat = 2;
     }
-    if (as->parms[28].items) {
-	/* -fakestat-all */
+    if (cmd_OptionPresent(as, OPT_fakestatall)) {
 	enable_fakestat = 1;
     }
-    if (as->parms[29].items) {
-	/* -nomount */
-	enable_nomount = 1;
-    }
-    if (as->parms[30].items) {
-	/* -backuptree */
-	enable_backuptree = 1;
-    }
-    if (as->parms[31].items) {
-	/* -rxbind */
-	enable_rxbind = 1;
-    }
-    if (as->parms[32].items) {
+    if (cmd_OptionPresent(as, OPT_settime)) {
 	/* -settime */
 	printf("afsd: -settime ignored\n");
 	printf("afsd: the OpenAFS client no longer sets the system time; "
@@ -1854,10 +1843,15 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	printf("afsd: another such system to synchronize client time\n");
     }
 
+    enable_nomount = cmd_OptionPresent(as, OPT_nomount);
+    enable_backuptree = cmd_OptionPresent(as, OPT_backuptree);
+    enable_rxbind = cmd_OptionPresent(as, OPT_rxbind);
+
     /* set rx_extraPackets */
-    if (as->parms[33].items) {
+    if (cmd_OptionPresent(as, OPT_rxpck)) {
 	/* -rxpck */
-	int rxpck = atoi(as->parms[33].items->data);
+	int rxpck;
+        cmd_OptionAsInt(as, OPT_rxpck, &rxpck);
 	printf("afsd: set rxpck = %d\n", rxpck);
 	code = afsd_call_syscall(AFSOP_SET_RXPCK, rxpck);
 	if (code) {
@@ -1865,25 +1859,28 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 	}
     }
-    if (as->parms[34].items) {
+    if (cmd_OptionPresent(as, OPT_splitcache)) {
 	char *c;
-	if (!as->parms[34].items->data ||
-	    ((c = strchr(as->parms[34].items->data, '/')) == NULL))
+	char *var = NULL;
+
+	cmd_OptionAsString(as, OPT_splitcache, &var);
+
+	if (var == NULL || ((c = strchr(var, '/')) == NULL))
 	    printf
 		("ignoring splitcache (specify as RW/RO percentages: 60/40)\n");
 	else {
-	    ropct = atoi((char *)c + 1);
+	    ropct = atoi(c + 1);
 	    *c = '\0';
-	    rwpct = atoi((char *)as->parms[34].items->data);
+	    rwpct = atoi(var);
 	    if ((rwpct != 0) && (ropct != 0) && (ropct + rwpct == 100)) {
 		/* -splitcache */
 		enable_splitcache = 1;
 	    }
 	}
+	free(var);
     }
-    if (as->parms[35].items) {
+    if (cmd_OptionPresent(as, OPT_nodynvcache)) {
 #ifdef AFS_MAXVCOUNT_ENV
-       /* -disable-dynamic-vcaches */
        afsd_dynamic_vcaches = 0;
 #else
        printf("afsd: Error toggling flag, dynamically allocated vcaches not supported on your platform\n");
@@ -1900,19 +1897,13 @@ mainproc(struct cmd_syndesc *as, void *arock)
     printf("afsd: %s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
-    /* set -rxmaxmtu */
-    if (as->parms[36].items) {
-        /* -rxmaxmtu */
-        rxmaxmtu = atoi(as->parms[36].items->data);
-    }
-    if (as->parms[37].items) {
-	/* -dynroot-sparse */
+    cmd_OptionAsInt(as, OPT_rxmaxmtu, &rxmaxmtu);
+
+    if (cmd_OptionPresent(as, OPT_dynrootsparse)) {
 	enable_dynroot = 2;
     }
-    if (as->parms[38].items) {
-	/* -rxmaxfrags */
-	rxmaxfrags = atoi(as->parms[38].items->data);
-    }
+
+    cmd_OptionAsInt(as, OPT_rxmaxfrags, &rxmaxfrags);
 
     /* parse cacheinfo file if this is a diskcache */
     if (ParseCacheInfoFile()) {
@@ -2033,6 +2024,7 @@ afsd_run(void)
 		chunkSize = 20;
 	    }
 	}
+
 	if (!filesSet) {
 	    cacheFiles = cacheBlocks / 32;	/* Assume 32k avg filesize */
 
@@ -2502,82 +2494,99 @@ afsd_init(void)
     ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
 
     /* 0 - 10 */
-    cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
-		"1024 byte blocks in cache");
-    cmd_AddParm(ts, "-files", CMD_SINGLE, CMD_OPTIONAL, "files in cache");
-    cmd_AddParm(ts, "-rootvol", CMD_SINGLE, CMD_OPTIONAL,
-		"name of AFS root volume");
-    cmd_AddParm(ts, "-stat", CMD_SINGLE, CMD_OPTIONAL,
-		"number of stat entries");
-    cmd_AddParm(ts, "-memcache", CMD_FLAG, CMD_OPTIONAL, "run diskless");
-    cmd_AddParm(ts, "-cachedir", CMD_SINGLE, CMD_OPTIONAL, "cache directory");
-    cmd_AddParm(ts, "-mountdir", CMD_SINGLE, CMD_OPTIONAL, "mount location");
-    cmd_AddParm(ts, "-daemons", CMD_SINGLE, CMD_OPTIONAL,
-		"number of daemons to use");
-    cmd_AddParm(ts, "-nosettime", CMD_FLAG, CMD_OPTIONAL,
-		"don't set the time");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL,
-		"display lots of information");
-    cmd_AddParm(ts, "-rmtsys", CMD_FLAG, CMD_OPTIONAL,
-		"start NFS rmtsysd program");
-
-    /* 11 - 20 */
-    cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL, "display debug info");
-    cmd_AddParm(ts, "-chunksize", CMD_SINGLE, CMD_OPTIONAL,
-		"log(2) of chunk size");
-    cmd_AddParm(ts, "-dcache", CMD_SINGLE, CMD_OPTIONAL,
-		"number of dcache entries");
-    cmd_AddParm(ts, "-volumes", CMD_SINGLE, CMD_OPTIONAL,
-		"number of volume entries");
-    cmd_AddParm(ts, "-biods", CMD_SINGLE, CMD_OPTIONAL,
-		"number of bkg I/O daemons (aix vm)");
-    cmd_AddParm(ts, "-prealloc", CMD_SINGLE, CMD_OPTIONAL,
-		"number of 'small' preallocated blocks");
-    cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,
-		"configuration directory");
-    cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
-		"Place to keep the CM log");
-    cmd_AddParm(ts, "-waitclose", CMD_FLAG, CMD_OPTIONAL,
-		"make close calls synchronous");
-    cmd_AddParm(ts, "-shutdown", CMD_FLAG, CMD_OPTIONAL,
-		"Shutdown all afs state");
-    /* 21 - 30 */
-    cmd_AddParm(ts, "-enable_peer_stats", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
-		"Collect rpc statistics by peer");
-    cmd_AddParm(ts, "-enable_process_stats", CMD_FLAG,
-		CMD_OPTIONAL | CMD_HIDE,
-		"Collect rpc statistics for this process");
-    cmd_AddParm(ts, "-mem_alloc_sleep", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDE),
-		"Allow sleeps when allocating memory cache");
-    cmd_AddParm(ts, "-afsdb", CMD_FLAG, (CMD_OPTIONAL),
-		"Enable AFSDB support");
-    cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL,
-		"log(2) of the number of cache files per cache subdirectory");
-    cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL,
-		"Enable dynroot support");
-    cmd_AddParm(ts, "-fakestat", CMD_FLAG, CMD_OPTIONAL,
-		"Enable fakestat support for cross-cell mounts");
-    cmd_AddParm(ts, "-fakestat-all", CMD_FLAG, CMD_OPTIONAL,
-		"Enable fakestat support for all mounts");
-    cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
-    cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
-		"Prefer backup volumes for mointpoints in backup volumes");
-    /* 31 - 40 */
-    cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
-		"Bind the Rx socket (one interface only)");
-    cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL, "set the time");
-    cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL,
-		"set rx_extraPackets to this value");
-    cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL,
-		"Percentage RW versus RO in cache (specify as 60/40)");
-    cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL,
-		"disable stat/vcache cache growing as needed");
-    cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
-    cmd_AddParm(ts, "-dynroot-sparse", CMD_FLAG, CMD_OPTIONAL,
-		"Enable dynroot support with minimal cell list");
-    cmd_AddParm(ts, "-rxmaxfrags", CMD_SINGLE, CMD_OPTIONAL,
-                "Set the maximum number of UDP fragments Rx should send/receive"
-                " per Rx packet");
+    cmd_AddParmAtOffset(ts, OPT_blocks, "-blocks", CMD_SINGLE,
+		        CMD_OPTIONAL, "1024 byte blocks in cache");
+    cmd_AddParmAtOffset(ts, OPT_files, "-files", CMD_SINGLE,
+		        CMD_OPTIONAL, "files in cache");
+    cmd_AddParmAtOffset(ts, OPT_rootvol, "-rootvol", CMD_SINGLE,
+		        CMD_OPTIONAL, "name of AFS root volume");
+    cmd_AddParmAtOffset(ts, OPT_stat, "-stat", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of stat entries");
+    cmd_AddParmAtOffset(ts, OPT_memcache, "-memcache", CMD_FLAG,
+		        CMD_OPTIONAL, "run diskless");
+    cmd_AddParmAtOffset(ts, OPT_cachedir, "-cachedir", CMD_SINGLE,
+		        CMD_OPTIONAL, "cache directory");
+    cmd_AddParmAtOffset(ts, OPT_mountdir, "-mountdir", CMD_SINGLE,
+		        CMD_OPTIONAL, "mount location");
+    cmd_AddParmAtOffset(ts, OPT_daemons, "-daemons", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of daemons to use");
+    cmd_AddParmAtOffset(ts, OPT_nosettime, "-nosettime", CMD_FLAG,
+		        CMD_OPTIONAL, "don't set the time");
+    cmd_AddParmAtOffset(ts, OPT_verbose, "-verbose", CMD_FLAG,
+		        CMD_OPTIONAL, "display lots of information");
+    cmd_AddParmAtOffset(ts, OPT_rmtsys, "-rmtsys", CMD_FLAG,
+		        CMD_OPTIONAL, "start NFS rmtsysd program");
+    cmd_AddParmAtOffset(ts, OPT_debug, "-debug", CMD_FLAG,
+			CMD_OPTIONAL, "display debug info");
+    cmd_AddParmAtOffset(ts, OPT_chunksize, "-chunksize", CMD_SINGLE,
+		        CMD_OPTIONAL, "log(2) of chunk size");
+    cmd_AddParmAtOffset(ts, OPT_dcache, "-dcache", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of dcache entries");
+    cmd_AddParmAtOffset(ts, OPT_volumes, "-volumes", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of volume entries");
+    cmd_AddParmAtOffset(ts, OPT_biods, "-biods", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of bkg I/O daemons (aix vm)");
+    cmd_AddParmAtOffset(ts, OPT_prealloc, "-prealloc", CMD_SINGLE,
+		        CMD_OPTIONAL, "number of 'small' preallocated blocks");
+    cmd_AddParmAtOffset(ts, OPT_confdir, "-confdir", CMD_SINGLE,
+			CMD_OPTIONAL, "configuration directory");
+    cmd_AddParmAtOffset(ts, OPT_logfile, "-logfile", CMD_SINGLE,
+		        CMD_OPTIONAL, "Place to keep the CM log");
+    cmd_AddParmAtOffset(ts, OPT_waitclose, "-waitclose", CMD_FLAG,
+		        CMD_OPTIONAL, "make close calls synchronous");
+    cmd_AddParmAtOffset(ts, OPT_shutdown, "-shutdown", CMD_FLAG,
+		        CMD_OPTIONAL, "Shutdown all afs state");
+    cmd_AddParmAtOffset(ts, OPT_peerstats, "-enable_peer_stats", CMD_FLAG,
+			CMD_OPTIONAL | CMD_HIDE,
+			"Collect rpc statistics by peer");
+    cmd_AddParmAtOffset(ts, OPT_processstats, "-enable_process_stats",
+		        CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
+			"Collect rpc statistics for this process");
+    cmd_AddParmAtOffset(ts, OPT_memallocsleep, "-mem_alloc_sleep",
+			CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
+			"Allow sleeps when allocating memory cache");
+    cmd_AddParmAtOffset(ts, OPT_afsdb, "-afsdb", CMD_FLAG,
+		        CMD_OPTIONAL, "Enable AFSDB support");
+    cmd_AddParmAtOffset(ts, OPT_filesdir, "-files_per_subdir", CMD_SINGLE,
+			CMD_OPTIONAL,
+		        "log(2) of the number of cache files per "
+			"cache subdirectory");
+    cmd_AddParmAtOffset(ts, OPT_dynroot, "-dynroot", CMD_FLAG,
+		        CMD_OPTIONAL, "Enable dynroot support");
+    cmd_AddParmAtOffset(ts, OPT_fakestat, "-fakestat", CMD_FLAG,
+		        CMD_OPTIONAL,
+			"Enable fakestat support for cross-cell mounts");
+    cmd_AddParmAtOffset(ts, OPT_fakestatall, "-fakestat-all", CMD_FLAG,
+		        CMD_OPTIONAL,
+			"Enable fakestat support for all mounts");
+    cmd_AddParmAtOffset(ts, OPT_nomount, "-nomount", CMD_FLAG,
+		        CMD_OPTIONAL, "Do not mount AFS");
+    cmd_AddParmAtOffset(ts, OPT_backuptree, "-backuptree", CMD_FLAG,
+		        CMD_OPTIONAL,
+			"Prefer backup volumes for mointpoints in backup "
+			"volumes");
+    cmd_AddParmAtOffset(ts, OPT_rxbind, "-rxbind", CMD_FLAG,
+			CMD_OPTIONAL,
+			"Bind the Rx socket (one interface only)");
+    cmd_AddParmAtOffset(ts, OPT_settime, "-settime", CMD_FLAG,
+			CMD_OPTIONAL, "set the time");
+    cmd_AddParmAtOffset(ts, OPT_rxpck, "-rxpck", CMD_SINGLE, CMD_OPTIONAL,
+			"set rx_extraPackets to this value");
+    cmd_AddParmAtOffset(ts, OPT_splitcache, "-splitcache", CMD_SINGLE,
+			CMD_OPTIONAL,
+			"Percentage RW versus RO in cache (specify as 60/40)");
+    cmd_AddParmAtOffset(ts, OPT_nodynvcache, "-disable-dynamic-vcaches",
+			CMD_FLAG, CMD_OPTIONAL,
+			"disable stat/vcache cache growing as needed");
+    cmd_AddParmAtOffset(ts, OPT_rxmaxmtu, "-rxmaxmtu", CMD_SINGLE,
+			CMD_OPTIONAL, "set rx max MTU to use");
+    cmd_AddParmAtOffset(ts, OPT_dynrootsparse, "-dynroot-sparse", CMD_FLAG,
+			CMD_OPTIONAL,
+			"Enable dynroot support with minimal cell list");
+    cmd_AddParmAtOffset(ts, OPT_rxmaxfrags, "-rxmaxfrags", CMD_SINGLE,
+			CMD_OPTIONAL,
+			"Set the maximum number of UDP fragments Rx should "
+			"send/receive per Rx packet");
 }
 
 int

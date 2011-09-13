@@ -16,7 +16,7 @@
 
 extern int afsd_debug;
 extern int afsd_verbose;
-extern char afsd_cacheMountDir[];
+extern char *afsd_cacheMountDir;
 
 void afsd_init(void);
 int afsd_parse(int argc, char **argv);
