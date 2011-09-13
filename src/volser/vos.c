@@ -3477,7 +3477,7 @@ ChangeLocation(struct cmd_syndesc *as, void *arock)
     }
     code = UV_ChangeLocation(aserver, apart, avolid);
     if (code) {
-	PrintDiagnostics("addsite", code);
+	PrintDiagnostics("changeloc", code);
 	exit(1);
     }
     MapPartIdIntoName(apart, apartName);
