@@ -716,7 +716,6 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
-    afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
 #if defined(AFS_AIX52_ENV)
@@ -755,8 +754,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 #endif /* AFS_NT40_ENV */
 
 
-    size = FDH_SIZE(handleP);
-    SplitInt64(size, hi, lo);
+    SplitInt64(howBig, hi, lo);
     if (hi == 0L) {
 	code = DumpInt32(iodp, 'f', lo);
     } else {
@@ -772,7 +770,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	return VOLSERDUMPERROR;
     }
 
-    for (nbytes = size; (nbytes && !error); nbytes -= howMany) {
+    for (nbytes = howBig; (nbytes && !error); nbytes -= howMany) {
 	if (nbytes < howMany)
 	    howMany = nbytes;
 
@@ -812,7 +810,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    /* Now seek over the data we could not get. An error here means we
 	     * can't do the next read.
 	     */
-	    howFar = (size_t)((size - nbytes) + howMany);
+	    howFar = (size_t)((howBig - nbytes) + howMany);
 	}
 
 	/* Now write the data out */
