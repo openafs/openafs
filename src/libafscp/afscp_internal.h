@@ -32,4 +32,8 @@ extern int _StatStuff(const struct afscp_venusfid *,
 #define afs_dprintf(x) printf x
 #endif
 
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char *s, size_t len);
+#endif
+
 #endif /* AFS_SRC_LIBAFSCP_AFSCP_INTERNAL_H */
