@@ -124,12 +124,6 @@ struct afs_osi_WaitHandle {
 
 #define	osi_NPACKETS	20	/* number of cluster pkts to alloc */
 
-/*
- * Various definitions for osi_sleep and its event hash table
- * DFBSD and SUNOS have no osi_sleep, and HPUX has its own hack for this stuff
- */
-#define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
-
 
 
 /*

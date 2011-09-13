@@ -1559,7 +1559,11 @@ struct afssysa {
 extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 #endif /* AFS_SUN5_ENV */
 
-/* The event hash table, and array */
+/*
+ * Various definitions for osi_sleep and its event hash table
+ * DFBSD and SUNOS have no osi_sleep, and HPUX has its own hack for this stuff
+ */
+#define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
 
 typedef struct afs_event {
     struct afs_event *next;	/* next in hash chain */
