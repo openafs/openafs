@@ -17,9 +17,9 @@ done
 echo "Updating configuration..."
 echo "Running aclocal"
 if which aclocal > /dev/null 2>&1; then
-  aclocal -I src/cf
+  aclocal -I src/cf -I src/external/rra-c-util/m4
 elif which aclocal-1.10 > /dev/null 2>&1; then
-  aclocal-1.10 -I src/cf
+  aclocal-1.10 -I src/cf -I src/external/rra-c-util/m4
 else
   echo "No aclocal found on your system (looked for aclocal & aclocal-1.10)"
   exit 1
