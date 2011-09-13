@@ -366,8 +366,18 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 
 	code = afs_dir_GetVerifiedBlob(tdc, dirpos, &entry);
 	if (code) {
-	    afs_warn("Corrupt directory (inode %lx, dirpos %d)",
-		     (unsigned long)&tdc->f.inode, dirpos);
+	    if (!(avc->f.states & CCorrupt)) {
+		struct cell *tc = afs_GetCellStale(avc->f.fid.Cell, READ_LOCK);
+		afs_warn("Corrupt directory (%d.%d.%d.%d [%s] @%lx, pos %d)",
+			 avc->f.fid.Cell, avc->f.fid.Fid.Volume,
+			 avc->f.fid.Fid.Vnode, avc->f.fid.Fid.Unique,
+			 tc ? tc->cellName : "",
+			 (unsigned long)&tdc->f.inode, dirpos);
+		if (tc)
+		    afs_PutCell(tc, READ_LOCK);
+		UpgradeSToWLock(&avc->lock, 814);
+		avc->f.states |= CCorrupt;
+	    }
 	    code = -ENOENT;
 	    goto unlock_out;
         }
