@@ -885,7 +885,7 @@ void buf_Recycle(cm_buf_t *bp)
 
         i = BUF_HASH(&bp->fid, &bp->offset);
         lbpp = &(cm_data.buf_scacheHashTablepp[i]);
-        for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
+        for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = tbp->hashp) {
             if (tbp == bp)
                 break;
         }
