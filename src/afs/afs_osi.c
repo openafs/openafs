@@ -272,7 +272,7 @@ shutdown_osi(void)
        afs_osi_ctxtp_initialized = 0;
     }
 #endif
-#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_LINUX_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_LINUX26_ENV)
     /* LINUX calls this from afs_cleanup() which hooks into module_exit */
     shutdown_osisleep();
 #endif
@@ -301,9 +301,9 @@ shutdown_osisleep(void)
 		afs_osi_Free(tmp, sizeof(*tmp));
 #elif defined(AFS_SGI_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SOLARIS_ENV)
 		osi_FreeSmallSpace(tmp);
-#elif defined(AFS_LINUX_ENV)
+#elif defined(AFS_LINUX26_ENV)
 		kfree(tmp);
-#elif defined(AFS_LINUX24_ENV)
+#elif defined(AFS_LINUX20_ENV)
 		osi_linux_free(tmp);
 #endif
 	    }

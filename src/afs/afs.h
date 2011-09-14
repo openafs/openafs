@@ -1582,7 +1582,7 @@ typedef struct afs_event {
     /* no cond member */
 #elif defined(AFS_FBSD_ENV) || defined(AFS_OBSD_ENV)
     int cond;			/* "all this gluck should probably be replaced by CVs" */
-#elif defined(AFS_LINUX_ENV) || defined(AFS_LINUX24_ENV)
+#elif defined(AFS_LINUX24_ENV)
     wait_queue_head_t cond;
 #elif defined(AFS_NBSD_ENV) || defined(AFS_SOLARIS_ENV) || defined(AFS_SGI_ENV)
     kcondvar_t cond;		/* Currently associated condition variable */
