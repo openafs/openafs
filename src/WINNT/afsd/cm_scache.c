@@ -1646,10 +1646,13 @@ void cm_MergeStatus(cm_scache_t *dscp,
 
                     j = BUF_HASH(&bp->fid, &bp->offset);
                     lbpp = &(cm_data.buf_scacheHashTablepp[j]);
-                    for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = *lbpp) {
+                    for(tbp = *lbpp; tbp; lbpp = &tbp->hashp, tbp = tbp->hashp) {
                         if (tbp == bp)
                             break;
                     }
+
+                    /* we better find it */
+                    osi_assertx(tbp != NULL, "cm_MergeStatus: buf_scacheHashTablepp table screwup");
 
                     *lbpp = bp->hashp;	/* hash out */
                     bp->hashp = NULL;
