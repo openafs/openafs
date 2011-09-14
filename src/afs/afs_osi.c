@@ -299,7 +299,7 @@ shutdown_osisleep(void)
 		xmfree(tmp);
 #elif defined(AFS_FBSD_ENV)
 		afs_osi_Free(tmp, sizeof(*tmp));
-#elif defined(AFS_SGI_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SOLARIS_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SUN5_ENV)
 		osi_FreeSmallSpace(tmp);
 #elif defined(AFS_LINUX26_ENV)
 		kfree(tmp);

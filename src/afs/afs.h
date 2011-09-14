@@ -1584,7 +1584,7 @@ typedef struct afs_event {
     int cond;			/* "all this gluck should probably be replaced by CVs" */
 #elif defined(AFS_LINUX24_ENV)
     wait_queue_head_t cond;
-#elif defined(AFS_NBSD_ENV) || defined(AFS_SOLARIS_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_NBSD_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     kcondvar_t cond;		/* Currently associated condition variable */
 #endif
 } afs_event_t;
