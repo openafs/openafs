@@ -613,7 +613,19 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		;;
 
-	sunx86_510)
+	sunx86_510|sunx86_511)
+		if test "x`echo "${ARCHFLAGS}" | grep m32`" != "x" ; then
+			CURRENTBUILDARCH=i386
+		fi
+		if test "x`echo "${ARCHFLAGS}" | grep m64`" != "x" ; then
+			CURRENTBUILDARCH=amd64
+		fi
+		if test "x${CURRENTBUILDARCH}" = "x" ; then
+			CURRENTBUILDARCH=`isainfo -k`
+		fi
+		if test "${CURRENTBUILDARCH}" = "amd64" ; then
+			XARCHFLAGS="-m64"
+		fi
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
 		LD="/usr/ccs/bin/ld"
@@ -623,31 +635,18 @@ case $AFS_SYSNAME in
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
-		XCFLAGS64='${XCFLAGS} -m64'
-		XCFLAGS="-dy -Bdynamic"
+		XCFLAGS0="-dy -Bdynamic"
+		XCFLAGS64="${XCFLAGS0} -m64"
+		XCFLAGS="${XCFLAGS0} ${XARCHFLAGS}"
+		XLDFLAGS64="-m64"
+		XLDFLAGS="${XARCHFLAGS}"
+		ASFLAGS="${XARCHFLAGS}"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} ${XCFLAGS} -G -z text"
 		;;
 
-	sunx86_511)
-		CC=$SOLARISCC
-		CCOBJ=$SOLARISCC
-		LD="/usr/ccs/bin/ld"
-		MT_CC=$SOLARISCC
-		MT_CFLAGS='-mt'
-		PAM_CFLAGS="-KPIC"
-		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
-		SHLIB_CFLAGS="-KPIC"
-		SHLIB_LDFLAGS="-G -Bsymbolic"
-		XCFLAGS64='${XCFLAGS} -xarch=amd64'
-		XCFLAGS="-dy -Bdynamic"
-		XLIBELFA="-lelf"
-		XLIBKVM="-lkvm"
-		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
-		;;
 esac
 
 MT_CFLAGS="${MT_CFLAGS} -DAFS_PTHREAD_ENV"

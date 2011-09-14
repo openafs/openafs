@@ -287,7 +287,7 @@ syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
 	     sun4x_5* | sunx86_5*) \
 		$(PATH_CPP)  ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
-		as -o syscall.o syscall.ss;		\
+		${AS} ${ASFLAGS} -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 arm_darwin_* ) \
 		touch syscall.c ; \
