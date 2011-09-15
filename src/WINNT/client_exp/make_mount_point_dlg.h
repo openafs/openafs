@@ -20,8 +20,10 @@ class CMakeMountPointDlg : public CDialog
 public:
 	CMakeMountPointDlg(CWnd* pParent = NULL);   // standard constructor
 
-	void SetDir(const CString& strDir)	{ m_strDir = strDir; }
-	BOOL MountWasMade()					{ return m_bMade; }
+	void SetDir(const CString& strDir)   { m_strDir = strDir; }
+        void SetCell(const CString& strCell) { m_strCell = strCell; }
+        void SetVol(const CString& strVol)   { m_strVol = strVol; }
+	BOOL MountWasMade()                  { return m_bMade; }
 
 // Dialog Data
 	//{{AFX_DATA(CMakeMountPointDlg)

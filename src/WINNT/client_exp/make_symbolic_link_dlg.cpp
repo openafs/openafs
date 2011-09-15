@@ -135,8 +135,8 @@ BOOL CMakeSymbolicLinkDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-//	m_Dir.SetWindowText(m_strDir);
-//	m_Name.SetWindowText(m_strName);
+	m_Dir.SetWindowText(m_strDir);
+	m_Name.SetWindowText(m_strName);
 	UpdateData(FALSE);
 
 	return TRUE;  // return TRUE unless you set the focus to a control

@@ -38,14 +38,15 @@ class CShellExt : public CCmdTarget
     DECLARE_DYNCREATE(CShellExt)
 
     BOOL m_bDirSelected;
-    BOOL m_bIsSymlink;	// is symbolic link!
+    BOOL m_bIsSymlink;	    // is symbolic link!
+    BOOL m_bIsMountpoint;	// is mount point!
+    BOOL m_bIsPathInAFS;    // path is in AFS
     TCHAR m_szFile[MAX_PATH];
     BOOL m_bIsOverlayEnabled;
     int  m_overlayObject;
     BOOL IsOverlayEnabled(){return m_bIsOverlayEnabled;}
 
     CStringArray m_astrFileNames;
-
     CShellExt();           // protected constructor used by dynamic creation
     LPMALLOC m_pAlloc;
 
@@ -113,6 +114,11 @@ protected:
         STDMETHOD(SaveCompleted)(LPCOLESTR);
         STDMETHOD(GetCurFile)(LPOLESTR FAR*);
     END_INTERFACE_PART(PersistFileExt)
+
+    BEGIN_INTERFACE_PART(PropertySheetExt, IShellPropSheetExt)
+        STDMETHOD(AddPages)(LPFNADDPROPSHEETPAGE lpfnAddPage, LPARAM lParam);
+        STDMETHOD(ReplacePage)(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
+    END_INTERFACE_PART(PropertySheetExt)
 
     DECLARE_INTERFACE_MAP()
 };

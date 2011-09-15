@@ -627,6 +627,12 @@ BEGIN
     AFX_IDS_APP_TITLE       "AFS ¿Í»§»ú"
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MENU_DELETE         "&Delete"
+    IDS_MENU_CUT            "Cu&t"
+END
+
 #endif    // Chinese (P.R.C.) resources
 /////////////////////////////////////////////////////////////////////////////
 

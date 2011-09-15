@@ -9,6 +9,9 @@
 
 #include <afxpriv.h>
 #include "stdafx.h"
+#include "PropFile.h"
+#include "PropACL.h"
+#include "PropVolume.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <shtypes.h>
@@ -42,12 +45,15 @@ extern "C" {
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
 
 ULONG nCMRefCount = 0;	// IContextMenu ref count
 ULONG nSERefCount = 0;	// IShellExtInit ref count
 ULONG nICRefCount=0;
 ULONG nTPRefCount=0;
 ULONG nXPRefCount=0;
+UINT nPSRefCount=0;
 
 #define PCCHAR(str)	((char *)(const char *)str)
 static char space[AFS_PIOCTL_MAXSIZE];
@@ -89,6 +95,13 @@ CShellExt::CShellExt()
 			  &LSPtype, (LPBYTE)&ShellOption, &LSPsize);
     RegCloseKey (NPKey);
     m_bIsOverlayEnabled=((code==0) && (LSPtype==REG_DWORD) && ((ShellOption & OVERLAYENABLED)!=0));
+
+    INITCOMMONCONTROLSEX used = {
+        sizeof(INITCOMMONCONTROLSEX),
+        ICC_DATE_CLASSES | ICC_WIN95_CLASSES | ICC_BAR_CLASSES | ICC_USEREX_CLASSES
+    };
+    InitCommonControlsEx(&used);
+
     TRACE("Create CShellExt, Ref count %d/n",nCMRefCount);
 }
 
@@ -151,6 +164,7 @@ BEGIN_INTERFACE_MAP(CShellExt, CCmdTarget)
     INTERFACE_PART(CShellExt, IID_IShellIconOverlayIdentifier, IconExt)
     INTERFACE_PART(CShellExt, IID_IQueryInfo , ToolTipExt)
     INTERFACE_PART(CShellExt, IID_IPersistFile , PersistFileExt)
+    INTERFACE_PART(CShellExt, IID_IShellPropSheetExt , PropertySheetExt)
 END_INTERFACE_MAP()
 
 #ifndef _WIN64
@@ -204,24 +218,25 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
     if (uFlags & CMF_VERBSONLY)
 	return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, (USHORT)0);
 
+    if (!pThis->m_bIsPathInAFS)
+	return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, (USHORT)0);
+
     // Check to see if there's already an AFS menu here; if so, remove it
     int nItemsNow = GetMenuItemCount (hMenu);
     CString strAfsItemText = GetMessageString(IDS_AFS_ITEM);
+    CString strDeleteText = GetMessageString(IDS_MENU_DELETE);
+    CString strCutText = GetMessageString(IDS_MENU_CUT);
     LPCTSTR pszAfsItemText = (LPCTSTR)strAfsItemText;
     for (int iItem = 0; iItem < nItemsNow; iItem++) {
 	TCHAR szItemText[256];
 	if (!GetMenuString (hMenu, iItem, szItemText, 256, MF_BYPOSITION))
 	    continue;
-	if (!lstrcmp (szItemText, pszAfsItemText)) {
+	if (lstrcmp (szItemText, pszAfsItemText)==0) {
 	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
 	    continue;
 	}
-	if ((!lstrcmp(szItemText,_T("&Delete")))&&(pThis->m_bIsSymlink)) {	/*this is a symlink - don't present a delete menu!*/
-	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
-	    continue;
-	}
-	if ((!lstrcmp(szItemText,_T("Cu&t")))&&(pThis->m_bIsSymlink)) {	/*same for cut*/
-	    DeleteMenu (hMenu, iItem, MF_BYPOSITION);
+	if (((lstrcmp(szItemText,strDeleteText)==0)||(lstrcmp(szItemText,strCutText)==0))&&((pThis->m_bIsSymlink)||(pThis->m_bIsMountpoint))) {
+        DeleteMenu (hMenu, iItem, MF_BYPOSITION);
 	    continue;
 	}
     }
@@ -584,6 +599,11 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
     if ((pdobj == NULL) && (pidlFolder == NULL))
         return E_FAIL;
 
+    pThis->m_bIsSymlink=false;
+    pThis->m_bIsMountpoint=false;
+    pThis->m_bIsPathInAFS=false;
+    pThis->m_bDirSelected=false;
+
     if (pdobj) {
         //  Use the given IDataObject to get a list of filenames (CF_HDROP)
         hres = pdobj->GetData(&fmte, &medium);
@@ -613,9 +633,12 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
                 strFileName.ReleaseBuffer();
                 if (!IsPathInAfs(strFileName)) {
                 pThis->m_astrFileNames.RemoveAll();
+                pThis->m_bIsPathInAFS=false;
                 break;
                 } else {
-                pThis->m_bIsSymlink=IsSymlink(strFileName);
+                pThis->m_bIsSymlink=pThis->m_bIsSymlink||IsSymlink(strFileName);
+                pThis->m_bIsMountpoint=pThis->m_bIsMountpoint||IsMountPoint(strFileName);
+                pThis->m_bIsPathInAFS=true;
                 }
 
                 if (IsADir(strFileName))
@@ -652,6 +675,8 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
             CString strFileName = CString(szDisplayName);
             if (IsPathInAfs(strFileName)) {
                 pThis->m_bIsSymlink=IsSymlink(strFileName);
+                pThis->m_bIsMountpoint=IsMountPoint(strFileName);
+                pThis->m_bIsPathInAFS=true;
                 pThis->m_astrFileNames.Add(strFileName);
             }
             CoTaskMemFree(szDisplayName);
@@ -778,23 +803,34 @@ STDMETHODIMP CShellExt::XToolTipExt::GetInfoTip(DWORD dwFlags, LPWSTR *ppwszTip)
 {
     METHOD_PROLOGUE(CShellExt, ToolTipExt);
 
-    if (!IsSymlink(pThis->m_szFile))
+    if ((_tcslen(pThis->m_szFile) == 0)||(!IsPathInAfs(pThis->m_szFile)))
+    {
+        ppwszTip=NULL;
+        return S_OK;
+    }
+    bool bIsSymlink = !!IsSymlink(pThis->m_szFile);
+    bool bIsMountpoint = !!IsMountPoint(pThis->m_szFile);
+    if ((!bIsSymlink) && (!bIsMountpoint))
     {
 	ppwszTip=NULL;
 	return S_OK;
     }
     USES_CONVERSION;
     // dwFlags is currently unused.
-    *ppwszTip = (WCHAR*) (pThis->m_pAlloc)->Alloc((1+lstrlen(pThis->m_szFile))*sizeof(WCHAR));
+    CString sInfo;
+    if (bIsSymlink)
+        sInfo = GetSymlink(pThis->m_szFile);
+    else if (bIsMountpoint)
+        sInfo = GetMountpoint(pThis->m_szFile);
+    *ppwszTip = (WCHAR*) (pThis->m_pAlloc)->Alloc((1+sInfo.GetLength())*sizeof(WCHAR));
     if (*ppwszTip)
-    {
-	wcscpy(*ppwszTip, (WCHAR*)T2OLE(pThis->m_szFile));
-    }
+        wcscpy(*ppwszTip, (WCHAR*)T2COLE((LPCTSTR)sInfo));
 
     return S_OK;
 }
 STDMETHODIMP CShellExt::XToolTipExt::GetInfoFlags(LPDWORD pdwFlags)
 {
+    *pdwFlags = 0;
     return S_OK;
 }
 
@@ -851,4 +887,185 @@ STDMETHODIMP CShellExt::XPersistFileExt::SaveCompleted(LPCOLESTR)
 STDMETHODIMP CShellExt::XPersistFileExt::GetCurFile(LPOLESTR FAR*)
 {
     return E_NOTIMPL;
+}
+
+// IShellPropSheetExt
+STDMETHODIMP CShellExt::XPropertySheetExt::QueryInterface(REFIID riid, void** ppv)
+{
+    METHOD_PROLOGUE(CShellExt, PropertySheetExt);
+    return pThis->ExternalQueryInterface(&riid, ppv);
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XPropertySheetExt::AddRef(void)
+{
+    return ++nPSRefCount;
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XPropertySheetExt::Release(void)
+{
+    if (nPSRefCount> 0)
+	nPSRefCount--;
+
+    return nPSRefCount;
+}
+
+BOOL CALLBACK PageProc (HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
+{
+    PropertyPage * sheetpage;
+
+    if (uMessage == WM_INITDIALOG)
+    {
+        sheetpage = (PropertyPage*) ((LPPROPSHEETPAGE) lParam)->lParam;
+        SetWindowLongPtr (hwnd, GWLP_USERDATA, (LONG_PTR) sheetpage);
+        sheetpage->SetHwnd(hwnd);
+    }
+    else
+    {
+        sheetpage = (PropertyPage*) GetWindowLongPtr (hwnd, GWLP_USERDATA);
+    }
+
+    if (sheetpage != 0L)
+        return sheetpage->PropPageProc(hwnd, uMessage, wParam, lParam);
+    else
+        return FALSE;
+}
+
+UINT CALLBACK PropPageCallbackProc ( HWND /*hwnd*/, UINT uMsg, LPPROPSHEETPAGE ppsp )
+{
+    // Delete the page before closing.
+    if (PSPCB_CREATE == uMsg)
+        return TRUE;
+    if (PSPCB_RELEASE == uMsg)
+    {
+        PropertyPage* sheetpage = (PropertyPage*) ppsp->lParam;
+        delete sheetpage;
+    }
+    return TRUE;
+}
+
+STDMETHODIMP CShellExt::XPropertySheetExt::AddPages(LPFNADDPROPSHEETPAGE lpfnAddPage, LPARAM lParam)
+{
+    METHOD_PROLOGUE(CShellExt, PropertySheetExt);
+
+    if(pThis->m_bIsPathInAFS) {
+        // add the property page for files/folder/mount points/symlinks
+        PROPSHEETPAGE psp;
+        SecureZeroMemory(&psp, sizeof(PROPSHEETPAGE));
+        HPROPSHEETPAGE hPage;
+        CPropFile *sheetpage = NULL;
+
+        sheetpage = new CPropFile(pThis->m_astrFileNames);
+
+        if (sheetpage == NULL)
+            return E_OUTOFMEMORY;
+
+        HINSTANCE hInst = 0;
+        TaLocale_GetResource(RT_DIALOG, MAKEINTRESOURCE(IDD_PROPPAGE_FILE), LANG_USER_DEFAULT, &hInst);
+        sheetpage->m_hInst = hInst;
+        sheetpage->m_bIsMountpoint = pThis->m_bIsMountpoint;
+        sheetpage->m_bIsSymlink = pThis->m_bIsSymlink;
+        sheetpage->m_bIsDir=pThis->m_bDirSelected;
+        psp.dwSize = sizeof (psp);
+        psp.dwFlags = PSP_USEREFPARENT | PSP_USETITLE | PSP_USECALLBACK | PSP_USETITLE;
+        psp.hInstance = hInst;
+        psp.pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_FILE);
+        psp.pszIcon = NULL;
+        psp.pszTitle = _T("AFS");
+        psp.pfnDlgProc = (DLGPROC) PageProc;
+        psp.lParam = (LPARAM) sheetpage;
+        psp.pfnCallback = PropPageCallbackProc;
+        psp.pcRefParent = (UINT*) &nPSRefCount;
+
+        hPage = CreatePropertySheetPage (&psp);
+
+        if (hPage != NULL) {
+            if (!lpfnAddPage (hPage, lParam)) {
+                delete sheetpage;
+                DestroyPropertySheetPage (hPage);
+            }
+        }
+    }
+
+    // add the property page for Volume Data
+    PROPSHEETPAGE psp;
+    SecureZeroMemory(&psp, sizeof(PROPSHEETPAGE));
+    HPROPSHEETPAGE hPage;
+    CPropVolume *sheetpage = NULL;
+
+    sheetpage = new CPropVolume(pThis->m_astrFileNames);
+
+    if (sheetpage == NULL)
+        return E_OUTOFMEMORY;
+
+    HINSTANCE hInst = 0;
+    TaLocale_GetResource(RT_DIALOG, MAKEINTRESOURCE(IDD_PROPPAGE_VOLUME), LANG_USER_DEFAULT, &hInst);
+    sheetpage->m_hInst = hInst;
+    sheetpage->m_bIsMountpoint = pThis->m_bIsMountpoint;
+    sheetpage->m_bIsSymlink = pThis->m_bIsSymlink;
+    sheetpage->m_bIsDir=pThis->m_bDirSelected;
+    psp.dwSize = sizeof (psp);
+    psp.dwFlags = PSP_USEREFPARENT | PSP_USETITLE | PSP_USECALLBACK | PSP_USETITLE;
+    psp.hInstance = hInst;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_VOLUME);
+    psp.pszIcon = NULL;
+    psp.pszTitle = _T("AFS Volume");
+    psp.pfnDlgProc = (DLGPROC) PageProc;
+    psp.lParam = (LPARAM) sheetpage;
+    psp.pfnCallback = PropPageCallbackProc;
+    psp.pcRefParent = (UINT*) &nPSRefCount;
+
+    hPage = CreatePropertySheetPage (&psp);
+
+    if (hPage != NULL) {
+        if (!lpfnAddPage (hPage, lParam)) {
+            delete sheetpage;
+            DestroyPropertySheetPage (hPage);
+        }
+    }
+
+    if(pThis->m_bDirSelected) {
+        // add the property page for ACLs
+        PROPSHEETPAGE psp;
+        SecureZeroMemory(&psp, sizeof(PROPSHEETPAGE));
+        HPROPSHEETPAGE hPage;
+        CPropACL *sheetpage = NULL;
+
+        sheetpage = new CPropACL(pThis->m_astrFileNames);
+
+        if (sheetpage == NULL)
+            return E_OUTOFMEMORY;
+
+        HINSTANCE hInst = 0;
+        TaLocale_GetResource(RT_DIALOG, MAKEINTRESOURCE(IDD_PROPPAGE_ACL), LANG_USER_DEFAULT, &hInst);
+        sheetpage->m_hInst = hInst;
+        sheetpage->m_bIsMountpoint = pThis->m_bIsMountpoint;
+        sheetpage->m_bIsSymlink = pThis->m_bIsSymlink;
+        sheetpage->m_bIsDir=pThis->m_bDirSelected;
+        psp.dwSize = sizeof (psp);
+        psp.dwFlags = PSP_USEREFPARENT | PSP_USETITLE | PSP_USECALLBACK | PSP_USETITLE;
+        psp.hInstance = hInst;
+        psp.pszTemplate = MAKEINTRESOURCE(IDD_PROPPAGE_ACL);
+        psp.pszIcon = NULL;
+        psp.pszTitle = _T("AFS ACL");
+        psp.pfnDlgProc = (DLGPROC) PageProc;
+        psp.lParam = (LPARAM) sheetpage;
+        psp.pfnCallback = PropPageCallbackProc;
+        psp.pcRefParent = (UINT*) &nPSRefCount;
+
+        hPage = CreatePropertySheetPage (&psp);
+
+        if (hPage != NULL) {
+            if (!lpfnAddPage (hPage, lParam)) {
+                delete sheetpage;
+                DestroyPropertySheetPage (hPage);
+            }
+        }
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CShellExt::XPropertySheetExt::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam)
+{
+    return E_FAIL;
 }

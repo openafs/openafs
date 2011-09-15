@@ -119,16 +119,18 @@ void CMakeMountPointDlg::CheckEnableOk()
 
 BOOL CMakeMountPointDlg::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+        CDialog::OnInitDialog();
 
-	m_Dir.SetWindowText(m_strDir);
+        m_Dir.SetWindowText(m_strDir);
+        m_Vol.SetWindowText(m_strVol);
+        m_Cell.SetWindowText(m_strCell);
 
-	m_nType = 0;
+        m_nType = 0;
 
-	UpdateData(FALSE);
+        UpdateData(FALSE);
 
-	return TRUE;  // return TRUE unless you set the focus to a control
-	              // EXCEPTION: OCX Property Pages should return FALSE
+        return TRUE;  // return TRUE unless you set the focus to a control
+                      // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CMakeMountPointDlg::OnHelp()

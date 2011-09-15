@@ -131,6 +131,14 @@
 #define IDS_WARNING			       138
 #define IDS_VOLUME_NOT_IN_CELL_WARNING         139
 #define IDS_NOT_SYMLINK_ERROR                  140
+#define IDS_MENU_DELETE                        141
+#define IDS_MENU_CUT                           142
+#define IDS_PROP_MULTIPLEITEMS                 143
+#define IDS_PROP_TYPEDIRECTORY                 144
+#define IDS_PROP_TYPEFILE                      145
+#define IDS_PROP_TYPEMOUNTPOINT                146
+#define IDS_PROP_TYPESYMLINK                   147
+
 
 #define IDM_AUTHENTICATION                    0
 #define IDM_ACL_SET                           1
@@ -182,6 +190,10 @@
 #define ID_SYMBOLICLINK_REMOVE          959
 #define ID_SYMBOLICLINK_SHOW            960
 #define IDD_SYMLINKS                    961
+#define IDD_PROPPAGE_FILE               962
+#define IDD_PROPPAGE_ACL                963
+#define IDD_PROPPAGE_VOLUME             964
+
 #define IDC_LIST                        1001
 #define IDC_PASSWORD                    1002
 #define IDC_OFFLINE_MSG                 1003
@@ -238,15 +250,14 @@
 #define IDC_PERCENT_USED                1054
 #define IDC_TO_DIR                      1055
 #define IDC_CB_H                        1056
-#define IDC_BUTTON1                     1057
 #define IDC_BROWSE                      1058
 #define IDC_ACL_CLEAR                   1059
 #define IDC_ACL_LIST_SET_COPY           1060
 #define IDC_SHOWSTATUS                  1061
 #define IDC_VOL_PART_PROPERTIES         1062
-#define IDC_COLUMN_3                    1063
+#define IDC_FLUSH                       1063
 #define IDC_VOL_PART_UPDATE             1064
-#define IDC_COLUMN_4                    1065
+#define IDC_COLUMN_3                    1065
 #define IDC_MOUNT_POINT_SHOW            1066
 #define IDC_MOUNT_POINT_REMOVE          1067
 #define IDC_MOUNT_POINT_MAKE            1068
@@ -268,15 +279,51 @@
 #define IDC_STATIC_CONTROL2             1084
 #define IDC_SHARE_NAME                  1085
 #define IDC_PATH_NAME                   1086
-
+#define IDC_PROP_FILENAME               1087
+#define IDC_PROP_FID                    1088
+#define IDC_PROP_OWNER                  1089
+#define IDC_PROP_GROUP                  1090
+#define IDC_SHOW                        1091
+#define IDC_REMOVESYMLINK               1092
+#define IDC_REMOVEMOUNTPOINT            1093
+#define IDC_PROP_CELL                   1096
+#define IDC_PROP_FILESERVER             1097
+#define IDC_ATTR_USER_READ              1099
+#define IDC_ATTR_GROUP_READ             1100
+#define IDC_ATTR_OTHER_READ             1101
+#define IDC_ATTR_USER_WRITE             1102
+#define IDC_ATTR_GROUP_WRITE            1103
+#define IDC_ATTR_OTHER_WRITE            1104
+#define IDC_ATTR_USER_EXECUTE           1105
+#define IDC_ATTR_GROUP_EXECUTE          1106
+#define IDC_ATTR_OTHER_WRITE2           1107
+#define IDC_ATTR_OTHER_EXECUTE          1107
+#define IDC_PROP_SMINFO                 1108
+#define IDC_USEDBYTES                   1108
+#define IDC_SYMLINK_LABEL               1109
+#define IDC_USEDBYTES2                  1109
+#define IDC_MOUNTPOINT_LABEL            1110
+#define IDC_PROP_VOLUMENAME             1111
+#define IDC_FREEBYTES                   1112
+#define IDC_TOTALBYTES                  1113
+#define IDC_FREEBYTES2                  1114
+#define IDC_TOTALBYTES2                 1115
+#define IDC_COLUMN_4                    1116
+#define IDC_PROP_TYPE                   1117
+#define IDC_BUTTON2                     1118
+#define IDC_EDIT                        1119
+#define IDC_SERVERS                     1120
+#define IDC_ATTR_SUID_UID               1121
+#define IDC_ATTR_SUID_GID               1122
+#define IDC_ATTR_SUID_VTX               1123
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        163
+#define _APS_NEXT_RESOURCE_VALUE        165
 #define _APS_NEXT_COMMAND_VALUE         32829
-#define _APS_NEXT_CONTROL_VALUE         1087
+#define _APS_NEXT_CONTROL_VALUE         1124
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

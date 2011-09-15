@@ -6,8 +6,9 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
+#include "add_acl_entry_dlg.h"
 
-class CSetAfsAcl : public CDialog
+class CSetAfsAcl : public CDialog, public CSetACLInterface
 {
 	CString m_strDir;
 	CString m_strCellName;

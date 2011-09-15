@@ -363,6 +363,16 @@ STDAPI DllRegisterServer(void)
             return lResult;
     }
 
+    // register property handler
+    wsprintf(szSubKey, TEXT("*\\shellex\\PropertySheetHandlers\\%s"),STR_EXT_TITLE);
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szCLSID))!=NOERROR)
+        return lResult;
+    wsprintf(szSubKey, TEXT("Drive\\shellex\\PropertySheetHandlers\\%s"),STR_EXT_TITLE);
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szCLSID))!=NOERROR)
+        return lResult;
+    wsprintf(szSubKey, TEXT("Directory\\shellex\\PropertySheetHandlers\\%s"),STR_EXT_TITLE);
+    if ((lResult=DoRegCLSID(HKEY_CLASSES_ROOT,szSubKey,szCLSID))!=NOERROR)
+        return lResult;
 
     return S_OK;
 }
@@ -419,6 +429,12 @@ STDAPI DllUnregisterServer(void)
     DoValueDelete(HKEY_CLASSES_ROOT, szSubKey);
     wsprintf(szSubKey, TEXT("%s\\%s"), STR_REG_PATH, STR_EXT_TITLE);
     DoValueDelete(HKEY_LOCAL_MACHINE, szSubKey);
+    wsprintf(szSubKey, TEXT("*\\shellex\\PropertySheetHandlers\\%s"),STR_EXT_TITLE);
+    DoValueDelete(HKEY_CLASSES_ROOT, szSubKey);
+    wsprintf(szSubKey, TEXT("Drive\\shellex\\PropertySheetHandlers\\%s"),STR_EXT_TITLE);
+    DoValueDelete(HKEY_CLASSES_ROOT, szSubKey);
+    wsprintf(szSubKey, TEXT("Directory\\shellex\\PropertySheetHandlers\\%s"),STR_EXT_TITLE);
+    DoValueDelete(HKEY_CLASSES_ROOT, szSubKey);
 
     StringFromIID(IID_IShellExt2, &pwsz);
     if(pwsz)

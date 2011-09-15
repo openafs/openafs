@@ -87,8 +87,6 @@ BOOL CAddAclEntryDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	ASSERT_VALID(m_pAclSetDlg);
-
 	m_NormalEntry.SetCheck(CHECKED);
 	m_Ok.EnableWindow(FALSE);
 

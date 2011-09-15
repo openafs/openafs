@@ -632,6 +632,12 @@ BEGIN
     AFX_IDS_APP_TITLE       "AFS 클라이언트"
 END
 
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MENU_DELETE         "&Delete"
+    IDS_MENU_CUT            "Cu&t"
+END
+
 #endif    // Korean resources
 /////////////////////////////////////////////////////////////////////////////
 

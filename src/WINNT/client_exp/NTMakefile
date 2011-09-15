@@ -55,6 +55,10 @@ DLLOBJS =\
 	$(OUT)\volumeinfo.obj \
 	$(OUT)\make_symbolic_link_dlg.obj \
         $(OUT)\symlinks_dlg.obj \
+        $(OUT)\propbase.obj \
+        $(OUT)\propfile.obj \
+        $(OUT)\propacl.obj \
+        $(OUT)\propvolume.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 AFSD = ..\afsd
@@ -72,14 +76,15 @@ DLLSDKLIBS =\
     mpr.lib
 
 DLLLIBS =\
+        $(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
-	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\libosi.lib \
         $(DESTDIR)\lib\afs\afsreg.lib  \
 	$(DESTDIR)\lib\afs\TaLocaleU.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
-        $(DESTDIR)\lib\afsroken.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
+        $(DESTDIR)\lib\afsroken.lib \
+        $(DESTDIR)\lib\libafsconf.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afs_shl_ext.def $(DLLSDKLIBS)

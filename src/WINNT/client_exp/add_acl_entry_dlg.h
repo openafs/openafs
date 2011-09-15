@@ -6,8 +6,14 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
+#ifndef __ADD_ACL_ENTRY_DLG_H__
+#define __ADD_ACL_ENTRY_DLG_H__
 
-class CSetAfsAcl;
+class CSetACLInterface
+{
+public:
+    virtual BOOL IsNameInUse(BOOL bNormal, const CString& strName) = 0;
+};
 
 /////////////////////////////////////////////////////////////////////////////
 // CAddAclEntryDlg dialog
@@ -17,7 +23,7 @@ class CAddAclEntryDlg : public CDialog
 	BOOL m_bNormal;
 	CString m_Rights;
 	CString m_strName;
-	CSetAfsAcl *m_pAclSetDlg;
+	CSetACLInterface *m_pAclSetDlg;
 
 	CString MakePermString();
 
@@ -25,7 +31,7 @@ class CAddAclEntryDlg : public CDialog
 public:
 	CAddAclEntryDlg(CWnd* pParent = NULL);   // standard constructor
 
-	void SetAclDlg(CSetAfsAcl *pAclSetDlg)	{ m_pAclSetDlg = pAclSetDlg; }
+	void SetAclDlg(CSetACLInterface *pAclSetDlg)	{ m_pAclSetDlg = pAclSetDlg; }
 
 	CString GetName()		{ return m_strName; }
 	CString GetRights()		{ return m_Rights; }
@@ -67,3 +73,5 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
+
+#endif

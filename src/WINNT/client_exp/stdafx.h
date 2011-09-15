@@ -15,6 +15,7 @@
 #endif // _MSC_VER >= 1000
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
+#define ISOLATION_AWARE_ENABLED 1
 
 // Don't include stuff we don't need.
 #define _AFX_NO_DB_SUPPORT
@@ -51,6 +52,7 @@
 #include "help.h"
 
 #include <WINNT/TaLocale.h>
+#include <afxdlgs.h>
 
 #if defined (_DEBUG) && defined (AFS_CRTDBG_MAP_ALLOC)
 #define new DEBUG_NEW

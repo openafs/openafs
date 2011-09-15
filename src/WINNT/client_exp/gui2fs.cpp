@@ -37,6 +37,8 @@ extern "C" {
 #include <afs/afsint.h>
 #include <afs/afs_consts.h>
 #include <afs/cellconfig.h>
+#include <afs/ptserver.h>
+#include <afs/ptuser.h>
 #include <afs/vldbint.h>
 #include <afs/volser.h>
 #include <afs/auth.h>
@@ -47,6 +49,7 @@ extern "C" {
 #include <cm_user.h>
 #include <cm_scache.h>
 #include <cm_ioctl.h>
+#include <cm_config.h>
 }
 
 #define STRSAFE_NO_DEPRECATE
@@ -194,7 +197,7 @@ OpenFile(char *file, char *rwp)
     return fp;
 }
 
-CString StripPath(CString& strPath)
+CString StripPath(const CString& strPath)
 {
     int nIndex = strPath.ReverseFind('\\');
 
@@ -902,10 +905,12 @@ ParseMountPoint(const CString strFile, CString strMountPoint)
     if (nColon >= 0) {
         strCell = strMountPoint.Mid(1, nColon - 1);
         strVolume = strMountPoint.Mid(nColon + 1);
-    } else
+    } else {
         strVolume = strMountPoint.Mid(1);
+        strCell = _T("(local)");
+    }
 
-    strMountPointInfo = strFile + _T("\t") + strVolume + _T("\t") + strCell + _T("\t") + strType;
+    strMountPointInfo = _T("=> ") + strVolume + _T(" : ") + strCell + _T(" cell [") + strType + _T("]");
 
     return strMountPointInfo;
 }
@@ -915,9 +920,38 @@ ParseSymlink(const CString strFile, CString strSymlink)
 {
     CString strSymlinkInfo;
 
-    strSymlinkInfo = strFile + _T("\t") + strSymlink;
+    strSymlinkInfo = _T("-> ") + strSymlink;
 
     return strSymlinkInfo;
+}
+
+BOOL
+GetFID(const CString& path, CString& fidstring, BOOL bLiteral)
+{
+    struct ViceIoctl blob;
+    cm_ioctlQueryOptions_t options;
+    cm_fid_t fid;
+    int code;
+
+    memset(&options, 0, sizeof(options));
+    options.size = sizeof(options);
+    options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+    options.literal = bLiteral ? 1 : 0;
+    blob.in_size = options.size;    /* no variable length data */
+    blob.in = &options;
+    blob.out_size = sizeof(cm_fid_t);
+    blob.out = (char *) &fid;
+
+    code = pioctl_T(path, VIOCGETFID, &blob, 1);
+    fidstring.Empty();
+    if (code == 0) {
+        fidstring.Format( TEXT("%lu.%lu.%lu"),
+                          fid.volume,
+                          fid.vnode,
+                          fid.unique);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 BOOL
@@ -1916,3 +1950,345 @@ ListSymlink(CStringArray& files)
     return !error;
 }
 
+CString
+GetCellName( const CString& strPath )
+{
+    return GetCell(strPath);
+}
+
+CString
+GetServer( const CString& strPath )
+{
+    LONG code;
+    struct ViceIoctl blob;
+    CString server;
+    char space[AFS_PIOCTL_MAXSIZE];
+
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
+    blob.in_size = 0;
+    blob.out = space;
+    memset(space, 0, sizeof(space));
+
+    code = pioctl_T(strPath, VIOCWHEREIS, &blob, 1);
+    if (code) {
+        server=GetAfsError(errno);
+    } else {
+        LONG *hosts = (LONG *)space;
+
+        for (int j = 0; j < AFS_MAXHOSTS; j++) {
+            if (hosts[j] == 0)
+                break;
+            char *hostName = hostutil_GetNameByINet(hosts[j]);
+            server=hostName;
+        }
+    }
+
+    return server;
+}
+
+void
+GetServers( const CString& strPath, CStringArray& servers )
+{
+    LONG code;
+    struct ViceIoctl blob;
+    char space[AFS_PIOCTL_MAXSIZE];
+
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
+    blob.in_size = 0;
+    blob.out = space;
+    memset(space, 0, sizeof(space));
+
+    code = pioctl_T(strPath, VIOCWHEREIS, &blob, 1);
+    if (code) {
+        servers.Add(GetAfsError(errno));
+    } else {
+        LONG *hosts = (LONG *)space;
+
+        for (int j = 0; j < AFS_MAXHOSTS; j++) {
+            if (hosts[j] == 0)
+                break;
+            char *hostName = hostutil_GetNameByINet(hosts[j]);
+            servers.Add(hostName);
+        }
+    }
+}
+
+CString
+GetOwner( const CString& strPath )
+{
+    LONG code;
+    struct ViceIoctl blob;
+    afs_int32 owner[2];
+    CString ret = TEXT("(unknown)");
+
+    blob.in_size = 0;
+    blob.out_size = 2 * sizeof(afs_int32);
+    blob.out = (char *) &owner;
+
+    code = pioctl_T(strPath, VIOCGETOWNER, &blob, 1);
+    if (code == 0 && blob.out_size == 2 * sizeof(afs_int32)) {
+        char oname[PR_MAXNAMELEN] = "(unknown)";
+        char confDir[257];
+        CStringUtf8 cell;
+
+        cell = GetCell(strPath);
+
+        /* Go to the PRDB and see if this all number username is valid */
+        cm_GetConfigDir(confDir, sizeof(confDir));
+
+        pr_Initialize(1, confDir, PCCHAR(cell));
+        pr_SIdToName(owner[0], oname);
+
+        ret.Empty();
+        ret.Format(TEXT("%s [%d]"), (LPCTSTR)CString(oname), owner[0]);
+    }
+
+    return ret;
+}
+
+CString
+GetGroup( const CString& strPath )
+{
+    LONG code;
+    struct ViceIoctl blob;
+    afs_int32 owner[2];
+    CString ret = TEXT("(unknown)");
+
+    blob.in_size = 0;
+    blob.out_size = 2 * sizeof(afs_int32);
+    blob.out = (char *) &owner;
+
+    code = pioctl_T(strPath, VIOCGETOWNER, &blob, 1);
+    if (code == 0 && blob.out_size == 2 * sizeof(afs_int32)) {
+        char gname[PR_MAXNAMELEN] = "(unknown)";
+        char confDir[257];
+        CStringUtf8 cell;
+
+        cell = GetCell(strPath);
+
+        /* Go to the PRDB and see if this all number username is valid */
+        cm_GetConfigDir(confDir, sizeof(confDir));
+
+        pr_Initialize(1, confDir, PCCHAR(cell));
+        pr_SIdToName(owner[1], gname);
+
+        ret.Empty();
+        ret.Format(TEXT("%s [%d]"), (LPCTSTR)CString(gname), owner[1]);
+    }
+
+    return ret;
+}
+
+BOOL
+GetUnixModeBits( const CString& strPath, CString& user, CString& group, CString& other, CString& suid )
+{
+    // the strings must match the unix ls command output: "rwx" means read/write/execute permissions
+
+    LONG code;
+    struct ViceIoctl blob;
+    afs_uint32 unixModeBits;
+    CString ret = TEXT("(unknown)");
+
+    user.Empty();
+    group.Empty();
+    other.Empty();
+    suid.Empty();
+
+    blob.in_size = 0;
+    blob.out_size = sizeof(afs_int32);
+    blob.out = (char *) &unixModeBits;
+
+    code = pioctl_T(strPath, VIOC_GETUNIXMODE, &blob, 1);
+    if (code == 0 && blob.out_size == sizeof(afs_uint32)) {
+        if (unixModeBits & S_IRUSR)
+            user + TEXT("r");
+        if (unixModeBits & S_IWUSR)
+            user + TEXT("w");
+        if (unixModeBits & S_IXUSR)
+            user + TEXT("x");
+
+        if (unixModeBits & S_IRGRP)
+            group + TEXT("r");
+        if (unixModeBits & S_IWGRP)
+            group + TEXT("w");
+        if (unixModeBits & S_IXGRP)
+            group + TEXT("x");
+
+        if (unixModeBits & S_IROTH)
+            other + TEXT("r");
+        if (unixModeBits & S_IWOTH)
+            other + TEXT("w");
+        if (unixModeBits & S_IXOTH)
+            other + TEXT("x");
+
+        if (unixModeBits & S_ISUID)
+            suid + TEXT("s");
+        if (unixModeBits & S_ISGID)
+            suid + TEXT("g");
+        if (unixModeBits & S_ISVTX)
+            suid + TEXT("v");
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+void
+SetUnixModeBits( const CStringArray& files, const CString& user, const CString& group, const CString& other, const CString& suid )
+{
+    // set the unix file attributes for all paths in 'files'.
+    LONG code;
+    struct ViceIoctl blob;
+    struct {
+        cm_ioctlQueryOptions_t options;
+        afs_uint32 unixModeBits;
+    } inData;
+
+    memset(&inData, 0, sizeof(inData));
+    inData.options.size = sizeof(inData.options);
+    inData.options.field_flags = 0;
+    inData.options.literal = 0;            /* always applying to target */
+    blob.in_size = inData.options.size;    /* no variable length data */
+    blob.in = &inData;
+    blob.out = NULL;
+    blob.out_size = 0;
+    inData.unixModeBits = 0;
+
+    if (user.Find(_T("r")) != -1)
+        inData.unixModeBits |= S_IRUSR;
+    if (user.Find(_T("w")) != -1)
+        inData.unixModeBits |= S_IWUSR;
+    if (user.Find(_T("x")) != -1)
+        inData.unixModeBits |= S_IXUSR;
+
+    if (group.Find(_T("r")) != -1)
+        inData.unixModeBits |= S_IRGRP;
+    if (group.Find(_T("w")) != -1)
+        inData.unixModeBits |= S_IWGRP;
+    if (group.Find(_T("x")) != -1)
+        inData.unixModeBits |= S_IXGRP;
+
+    if (other.Find(_T("r")) != -1)
+        inData.unixModeBits |= S_IROTH;
+    if (other.Find(_T("w")) != -1)
+        inData.unixModeBits |= S_IWOTH;
+    if (other.Find(_T("x")) != -1)
+        inData.unixModeBits |= S_IXOTH;
+
+    if (suid.Find(_T("s")) != -1)
+        inData.unixModeBits |= S_ISUID;
+    if (suid.Find(_T("g")) != -1)
+        inData.unixModeBits |= S_ISGID;
+    if (suid.Find(_T("v")) != -1)
+        inData.unixModeBits |= S_ISVTX;
+
+    for (int i = 0; i < files.GetSize(); i++)
+        code = pioctl_T(files[i], VIOC_SETUNIXMODE, &blob, 1);
+}
+
+CString GetMountpoint( const CString& strPath )
+{
+    LONG code;
+    struct ViceIoctl blob;
+    char space[AFS_PIOCTL_MAXSIZE];
+    CString parent_dir;		/* Parent directory of true name */
+    CStringUtf8 last_component;	        /* Last component of true name */
+
+    CString mountPoint;
+
+
+    int last_slash = strPath.ReverseFind(_T('\\'));
+
+    if (last_slash != -1) {
+        last_component.SetString( strPath.Mid(last_slash + 1) );
+        parent_dir.SetString( strPath.Left(last_slash + 1) );
+        FixNetbiosPath(parent_dir);
+    } else {
+        // The path is of the form "C:foo" or just "foo".  If
+        // there is a drive, then use the current directory of
+        // that drive.  Otherwise we just use '.'.
+
+        if (strPath.GetLength() >= 2 && strPath[1] == _T(':')) {
+            parent_dir.Format(_T("%c:."), strPath[0]);
+            last_component.SetString( strPath.Mid(2) );
+        } else {
+            parent_dir.SetString( _T("."));
+            last_component.SetString( strPath );
+        }
+    }
+
+    blob.in_size = last_component.GetLength() + 1;
+    blob.in = last_component.GetBuffer();
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
+    blob.out = space;
+    memset(space, 0, AFS_PIOCTL_MAXSIZE);
+
+    code = pioctl_T(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+
+    last_component.ReleaseBuffer();
+
+    if (code == 0) {
+        int nPos;
+        space[AFS_PIOCTL_MAXSIZE - 1] = '\0';
+        nPos = strlen(space) - 1;
+        if (space[nPos] == '.')
+            space[nPos] = 0;
+        mountPoint = ParseMountPoint(StripPath(strPath), Utf8ToCString(space));
+    } else {
+        if (errno == EINVAL)
+            mountPoint = GetMessageString(IDS_NOT_MOUNT_POINT_ERROR, StripPath(strPath));
+        else
+            mountPoint = GetMessageString(IDS_LIST_MOUNT_POINT_ERROR, GetAfsError(errno, StripPath(strPath)));
+    }
+
+    return mountPoint;
+}
+
+CString GetSymlink( const CString& strPath )
+{
+    LONG code;
+    struct ViceIoctl blob;
+    CString symlink;
+    char space[AFS_PIOCTL_MAXSIZE];
+
+    CString strParent = Parent(strPath);
+    CStringUtf8 ustrLast(LastComponent(strPath));
+
+    FixNetbiosPath(strParent);
+
+    blob.in_size = ustrLast.GetLength() + 1;
+    blob.in = ustrLast.GetBuffer();
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
+    blob.out = space;
+    memset(space, 0, AFS_PIOCTL_MAXSIZE);
+
+    code = pioctl_T(strParent, VIOC_LISTSYMLINK, &blob, 1);
+
+    ustrLast.ReleaseBuffer();
+
+    if (code == 0) {
+        CString syml;
+        int len;
+
+        space[AFS_PIOCTL_MAXSIZE - 1] = '\0';
+        syml = Utf8ToCString(space);
+        len = syml.GetLength();
+
+        if (len > 0) {
+            if (syml[len - 1] == _T('.'))
+                syml.Truncate(len - 1);
+        }
+
+        symlink = ParseSymlink(StripPath(strPath), syml);
+
+    } else {
+        if (errno == EINVAL)
+            symlink = GetMessageString(IDS_NOT_SYMLINK_ERROR, StripPath(strPath));
+        else
+            symlink = GetMessageString(IDS_LIST_MOUNT_POINT_ERROR, GetAfsError(errno, StripPath(strPath)));
+    }
+
+
+    return symlink;
+}
