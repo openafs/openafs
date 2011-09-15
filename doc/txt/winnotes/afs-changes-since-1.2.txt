@@ -1,3 +1,26 @@
+Since 1.6.0002 (1.6.0b)
+
+ * Correct an error in mount point string construction
+   when the user provides a cell alias to "fs mkmount"
+   instead of the full cell name.  Every mount point
+   string must end in a trailing dot.
+
+ * Major improvements to the Explorer Shell Extension.
+
+ * Addition of the AFS Redirector drivers and service
+   interface.
+
+Since 1.6.0001 (1.6.0a)
+
+ * Correct an error in CheckOfflineVolumeState processing
+
+ * Permit NPLogonNotify() to exit immediately if the
+   SetToken error is KTC_NOCM.
+
+Since 1.6.0000 (1.6.0)
+
+ * Avoid a cm_serverLock reference count leak.
+
 Since 1.5.9907 (1.6pre7)
 
  * Add Shutdown message to the windows event log
