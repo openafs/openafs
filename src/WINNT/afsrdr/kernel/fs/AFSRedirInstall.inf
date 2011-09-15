@@ -1,0 +1,84 @@
+;;;
+;;; AFS Redirector Installation file
+;;;
+
+[Version]
+signature   =   "$Windows NT$"
+Class	    =	"AFSRedirector"
+ClassGuid   = 	{63EA509E-71F9-42ec-9C5E-1ECC95E3A1A0}
+Provider    =   %AFS%
+DriverVer   =   04/20/2006,1.0.0.0
+
+[DestinationDirs]
+DefaultDestDir		= 12
+AFS.DriverFiles		= 12
+
+;;
+;; Default install sections
+;;
+
+[DefaultInstall]
+CopyFiles           = AFS.DriverFiles
+
+[SourceDisksNames]
+1 = %Disk1%
+
+[SourceDisksFiles]
+AFSRedir.sys			= 1
+
+[DefaultInstall.Services]
+AddService          = %AFSServiceName%,,AFS.Service
+
+;;
+;; Default uninstall sections
+;;
+
+[DefaultUninstall]
+DelFiles			= AFS.DriverFiles
+DelReg				= AFS.DelRegistry
+
+;
+; Services Section
+;
+
+[AFS.Service]
+DisplayName      = %AFSServiceName%
+Description      = %AFSServiceDesc%
+ServiceBinary    = %12%\AFSRedir.sys
+ServiceType      = 2
+StartType        = 1
+ErrorControl     = 1
+LoadOrderGroup   = "Filesystem"
+AddReg           = AFS.AddRegistry
+
+;
+; Registry Modifications
+;
+
+[AFS.AddRegistry]
+HKLM,%AFSRegistry%,%AFSTraceLevel%,0x00010001 ,0x0001
+HKLM,%AFSRegistry%,%AFSDebugFlags%,0x00010001 ,0x0000
+
+[AFS.DelRegistry]
+HKLM,%AFSRegistry%,%AFSTraceLevel%
+HKLM,%AFSRegistry%,%AFSDebugFlags%
+
+;
+; Copy Files
+;
+
+[AFS.DriverFiles]
+AFSRedir.sys
+
+;;
+;; String Section
+;;
+
+[Strings]
+AFS		    = "OpenAFS"
+AFSServiceDesc	    = "OpenAFS Redirector"
+AFSServiceName	    = "AFSRedirector"
+AFSRegistry	    = "system\currentcontrolset\services\AFSRedirector\Parameters"
+AFSTraceLevel	    = "TraceLevel"
+AFSDebugFlags	    = "DebugFlags"
+Disk1		    = "OpenAFS Media"

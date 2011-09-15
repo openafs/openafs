@@ -1,0 +1,46 @@
+
+TARGETNAME=AFSRedir
+TARGETPATH=..\..\Build
+TARGETTYPE=DRIVER
+
+DRIVERTYPE=FS
+USE_MAPSYM=1
+
+INCLUDES=Include;..\..\Common;
+
+TARGETLIBS=$(DDK_LIB_PATH)\ntstrsafe.lib \
+           $(DDK_LIB_PATH)\wdmsec.lib
+
+TARGETTYPE=DRIVER
+
+SOURCES= AFSInit.cpp \
+         AFSAuthGroupSupport.cpp \
+         AFSBTreeSupport.cpp \
+	 AFSCleanup.cpp \
+	 AFSClose.cpp \
+	 AFSCommSupport.cpp \
+	 AFSCreate.cpp \
+	 AFSData.cpp \
+	 AFSDevControl.cpp \
+	 AFSDirControl.cpp \
+	 AFSEa.cpp \
+	 AFSFastIoSupport.cpp \
+	 AFSFileInfo.cpp \
+	 AFSFlushBuffers.cpp \
+	 AFSFSControl.cpp \
+	 AFSGeneric.cpp \
+	 AFSInternalDevControl.cpp \
+	 AFSLibrarySupport.cpp \
+	 AFSLockControl.cpp \
+	 AFSLogSupport.cpp \
+	 AFSNetworkProviderSupport.cpp \
+	 AFSProcessSupport.cpp \
+	 AFSQuota.cpp \
+	 AFSRDRSupport.cpp \
+	 AFSRead.cpp \
+	 AFSSecurity.cpp \
+	 AFSShutdown.cpp \
+	 AFSSystemControl.cpp \
+	 AFSVolumeInfo.cpp \
+	 AFSWrite.cpp \
+         FileSystem.rc
