@@ -1,0 +1,41 @@
+# Copyright 2004, OpenAFS.ORG and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# include the primary makefile
+RELDIR=WINNT\afsrdr\tools\crash
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+CRASH = ..\..\build\$(CPU)\crash.exe
+
+CRASHOBJS = \
+	$(OUT)\crash.obj
+
+$(CRASHOBJS): $$(@B).cpp
+	$(C2OBJ)  -I..\..\common $**
+
+############################################################################
+
+$(CRASH) : $(CRASHOBJS) $(OUT)\crash.res
+	$(EXECONLINK) $(LINKOPTS)
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+        $(CODESIGN_USERLAND)
+
+install : $(CRASH)
+
+############################################################################
+#
+# Dependencies
+#
+
+$(OUT)\crash.res : crash.rc AFS_component_version_number.h

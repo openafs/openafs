@@ -1,0 +1,41 @@
+# Copyright 2004, OpenAFS.ORG and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# include the primary makefile
+RELDIR=WINNT\afsrdr\tools\gettrace
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+GETTRACE = ..\..\build\$(CPU)\gettrace.exe
+
+GETTRACEOBJS = \
+	$(OUT)\gettrace.obj
+
+$(GETTRACEOBJS): $$(@B).cpp
+	$(C2OBJ)  -I..\..\common $**
+
+############################################################################
+
+$(GETTRACE) : $(GETTRACEOBJS) $(OUT)\gettrace.res
+	$(EXECONLINK) $(LINKOPTS) shlwapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+        $(CODESIGN_USERLAND)
+
+install : $(GETTRACE)
+
+############################################################################
+#
+# Dependencies
+#
+
+$(OUT)\gettrace.res : gettrace.rc AFS_component_version_number.h

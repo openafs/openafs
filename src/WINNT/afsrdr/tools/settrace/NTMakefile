@@ -1,0 +1,41 @@
+# Copyright 2004, OpenAFS.ORG and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# include the primary makefile
+RELDIR=WINNT\afsrdr\tools\settrace
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+############################################################################
+#
+# BUILD TARSETS
+#
+
+SETTRACE = ..\..\build\$(CPU)\settrace.exe
+
+SETTRACEOBJS = \
+	$(OUT)\settrace.obj
+
+$(SETTRACEOBJS): $$(@B).cpp
+	$(C2OBJ)  -I..\..\common $**
+
+############################################################################
+
+$(SETTRACE) : $(SETTRACEOBJS) $(OUT)\settrace.res
+	$(EXECONLINK) $(LINKOPTS) shlwapi.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+        $(CODESIGN_USERLAND)
+
+install : $(SETTRACE)
+
+############################################################################
+#
+# Dependencies
+#
+
+$(OUT)\settrace.res : settrace.rc AFS_component_version_number.h
