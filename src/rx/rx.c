@@ -1837,6 +1837,20 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	    }
 	}
 
+#ifdef	KERNEL
+	if (afs_termState == AFSOP_STOP_RXCALLBACK) {
+#ifdef RX_ENABLE_LOCKS
+	    AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	    afs_termState = AFSOP_STOP_AFS;
+	    afs_osi_Wakeup(&afs_termState);
+#ifdef RX_ENABLE_LOCKS
+	    AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	    return;
+	}
+#endif
+
 	/* if server is restarting( typically smooth shutdown) then do not
 	 * allow any new calls.
 	 */
@@ -1852,20 +1866,8 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 
 	    MUTEX_EXIT(&call->lock);
 	    USERPRI;
+	    continue;
 	}
-#ifdef	KERNEL
-	if (afs_termState == AFSOP_STOP_RXCALLBACK) {
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	    afs_termState = AFSOP_STOP_AFS;
-	    afs_osi_Wakeup(&afs_termState);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	    return;
-	}
-#endif
 
 	tservice = call->conn->service;
 
