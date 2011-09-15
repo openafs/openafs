@@ -327,6 +327,9 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 #ifdef ALLOW_REGISTER
         } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
             int i;
+            int flags = 0;
+            char * smbname = NULL;
+
             if (dflag) {
                 printf("doing first-time registration of %s "
                         "at %s\n", username, cell_to_use);
@@ -342,7 +345,16 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                     aclient->cell[i] = toupper(aclient->cell[i]);
             }
 
-            if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
+            smbname = getenv("AFS_SMBNAME");
+            if ( smbname ) {
+                strncpy(aclient->smbname, smbname, MAXKTCNAMELEN - 1);
+                aclient->smbname[MAXKTCNAMELEN - 1] = '\0';
+                flags = AFS_SETTOK_LOGON;
+                if (dflag)
+                    printf("obtaining tokens for %s\n", aclient->smbname);
+            }
+
+            if ((*status = ktc_SetToken(aserver, atoken, aclient, flags))) {
                 afs_com_err(progname, *status,
                              "while obtaining tokens for cell %s\n",
                              cell_to_use);
@@ -758,6 +770,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     struct afsconf_cell ak_cellconfig; /* General information about the cell */
     int i;
     int getLinkedCell = 0;
+    int flags = 0;
+    char * smbname = getenv("AFS_SMBNAME");
 
     /* try to avoid an expensive call to get_cellconfig */
     if (cell && ll_string_check(&authedcells, cell))
@@ -1026,11 +1040,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     }
 
     if (!force &&
-         !ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
-         atoken.kvno == btoken.kvno &&
-         atoken.ticketLen == btoken.ticketLen &&
-         !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
-         !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
+        !smbname &&
+        !ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
+        atoken.kvno == btoken.kvno &&
+        atoken.ticketLen == btoken.ticketLen &&
+        !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
+        !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
     {
         if (dflag)
             printf("Identical tokens already exist; skipping.\n");
@@ -1098,12 +1113,22 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
             aclient.cell[i] = toupper(aclient.cell[i]);
     }
 
-    if (dflag)
-        printf("Getting tokens.\n");
-    if (status = ktc_SetToken(&aserver, &atoken, &aclient, 0))
+    if ( smbname ) {
+        if (dflag)
+            printf("Setting tokens for %s.\n", smbname);
+
+        strncpy(aclient.smbname, smbname, MAXKTCNAMELEN - 1);
+        aclient.smbname[MAXKTCNAMELEN - 1] = '\0';
+        flags = AFS_SETTOK_LOGON;
+    } else {
+        if (dflag)
+            printf("Setting tokens.\n");
+    }
+
+    if (status = ktc_SetToken(&aserver, &atoken, &aclient, flags))
     {
         afs_com_err(progname, status,
-                     "while obtaining tokens for cell %s\n",
+                     "while setting token for cell %s\n",
                      cell_to_use);
         status = AKLOG_TOKEN;
     }
