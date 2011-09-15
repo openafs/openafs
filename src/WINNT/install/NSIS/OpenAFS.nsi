@@ -65,18 +65,10 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !define REPLACEDLL_NOREGISTER
 
   ;General
-!ifndef AFSIFS
 !ifndef DEBUG
   OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows.exe"
 !else
   OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-DEBUG.exe"
-!endif
-!else
-!ifndef DEBUG
-  OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-IFS.exe"
-!else
-  OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-IFS-DEBUG.exe"
-!endif
 !endif
   SilentInstall normal
   SetCompressor /solid lzma
@@ -582,6 +574,12 @@ Section "!AFS Client" secClient
   Delete "$SYSDIR\afslogon.pdb"
   Delete "$SYSDIR\afscpcc.pdb"
 
+  File "${AFS_RDR_BUILDDIR}\AFSRedirInstall.inf"
+  File "${AFS_RDR_BUILDDIR}\AFSRedirLibInstall.inf"
+  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRedir.sys" "$INSTDIR\Client\Program\AFSRedir.sys" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRedirLib.sys" "$INSTDIR\Client\Program\AFSRedirLib.sys" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.dll" "$SYSDIR\AFSRDFSProvider.dll" "$INSTDIR"
+
    Call AFSLangFiles
 
   ; Get AFS CellServDB file
@@ -715,9 +713,6 @@ Section "!AFS Client" secClient
   nsExec::Exec '$INSTDIR\Common\Service.exe u TransarcAFSDaemon'
   nsExec::Exec '$INSTDIR\Common\Service.exe TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
   nsExec::Exec '$INSTDIR\Common\Service.exe u AfsRdr'
-!ifdef AFSIFS
-  nsExec::Exec '$INSTDIR\Common\Service.exe AfsRdr "System32\DRIVERS\afsrdr.sys" "AFS Redirector"'
-!endif
 skipremove:
   Delete "$INSTDIR\Common\service.exe"
 
@@ -731,6 +726,7 @@ skipremove:
   ; Must also add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\NetworkProvider\HwOrder
   ; and HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\NetworkProvider\Order
   ; to also include the service name.
+  Push "TransarcAFSDaemon"
   Call AddProvider
   ReadINIStr $R0 $1 "Field 7" "State"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" $R0
@@ -769,26 +765,13 @@ skipremove:
   strcpy $REG_DATA_1  "Tcpip"
   strcpy $REG_DATA_2  "NETBIOS"
   strcpy $REG_DATA_3  "RpcSs"
-!ifdef AFSIFS
-  strcpy $REG_DATA_4  "AfsRdr"
-!else
-  strcpy $REG_DATA_4  ""
-!endif
-  Call RegWriteMultiStr
-!ifdef AFSIFS
-  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\AfsRdr" 
-  strcpy $REG_VALUE   "DependOnService" 
-  strcpy $REG_DATA_1  "Tcpip"
-  strcpy $REG_DATA_2  ""
-  strcpy $REG_DATA_3  ""
   strcpy $REG_DATA_4  ""
   Call RegWriteMultiStr
-!endif
 
   ; WinLogon Event Notification
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Impersonate"  1
-  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "$INSTDIR\Client\Program\afslogon.dll"
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "$SYSDIR\afslogon.dll"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logon" "AFS_Logon_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
@@ -798,6 +781,25 @@ skipremove:
 ;  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Impersonate"  0
 ;  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "DLLName" "afslogon.dll"
 ;  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\KFWLogon" "Logon" "KFW_Logon_Event"
+
+   ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "DisplayName"
+   StrCmp $R0 "AFSRedirector" IFSUpgrade IFSNoUpgrade
+IFSUpgrade:
+  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRedir.sys" "$SYSDIR\Drivers\AFSRedir.sys" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRedirLib.sys" "$SYSDIR\Drivers\AFSRedirLib.sys" "$INSTDIR"
+  Goto IFSDone
+IFSNoUpgrade:
+  nsExec::Exec 'rundll32.exe setupapi,InstallHinfSection DefaultInstall 128 $INSTDIR\Client\Program\AFSRedirInstall.inf'
+  nsExec::Exec 'rundll32.exe setupapi,InstallHinfSection DefaultInstall 128 $INSTDIR\Client\Program\AFSRedirLibInstall.inf'
+IFSDone:
+
+  Push "AFSRedirector"
+  Call AddProvider
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "" ""
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "ProviderPath" "$SYSDIR\AFSRDFSProvider.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Name" "OpenAFS Network"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "DeviceName" "\Device\AFSRedirector"
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Class" 1
 
   SetRebootFlag true
   
@@ -1199,6 +1201,13 @@ Section /o "Debug symbols" secDebug
   File "${AFS_CLIENT_BUILDDIR}\afscred.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.pdb"
+  File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
+  File "${AFS_RDR_BUILDDIR}\AFSRedirLib.pdb"
+
+  SetOutPath "$SYSDIR\Drivers"
+  File "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.pdb"
+  File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
+  File "${AFS_RDR_BUILDDIR}\AFSRedirLib.pdb"
 
   SetOutPath "$SYSDIR"
   
@@ -1682,9 +1691,13 @@ StartRemove:
   ; Call un.RemoveAFSVolumes
   nsExec::Exec '$R0 u TransarcAFSServer'
   Delete $R0
+  nsExec::Exec 'rundll32.exe setupapi,InstallHinfSection DefaultUninstall 128 $INSTDIR\Client\Program\AFSRedirInstall.inf'
+  nsExec::Exec 'rundll32.exe setupapi,InstallHinfSection DefaultUninstall 128 $INSTDIR\Client\Program\AFSRedirLibInstall.inf'
   
+  Push "TransarcAFSDaemon"
   Call un.RemoveProvider
-
+  Push "AFSRedirector"
+  Call un.RemoveProvider
   Push "$INSTDIR\Client\Program"
   Call un.RemoveFromPath
   Push "$INSTDIR\Common"
@@ -1893,16 +1906,26 @@ StartRemove:
   ;RmDir /r "$INSTDIR\Server\usr\afs\etc"
   ;RmDir /r "$INSTDIR\Server\usr\afs\local"
   ;RMDIR /r "$INSTDIR\Server\usr\afs\logs"
-  
+
   Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afs_cpa.cpl"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\afslogon.dll"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.exe"
+
+  Delete /REBOOTOK "$SYSDIR\afslogon.dll"
+  Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedir.sys"
+  Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedirLib.sys"
+  Delete /REBOOTOK "$SYSDIR\AFSRDFSProvider.dll"
+  Delete "$INSTDIR\Client\Program\AFSRedirInstall.inf"
+  Delete "$INSTDIR\Client\Program\AFSRedirLibInstall.inf"
 
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afs_cpa.pdb"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\afslogon.pdb"
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.pdb"
+
+  Delete /REBOOTOK "$SYSDIR\afslogon.pdb"
+  Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedir.pdb"
+  Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedirLib.pdb"
+  Delete /REBOOTOK "$SYSDIR\AFSRDFSProvider.pdb"
 
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDIr /r "$INSTDIR\Documentation\html"
@@ -2153,45 +2176,49 @@ done:
 FunctionEnd
 
 Function AddProvider
+   Exch $R2
    Push $R0
    Push $R1
    ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder" "ProviderOrder"
    Push $R0
-   StrCpy $R0 "TransarcAFSDaemon"
-   Push $R0
+   # StrCpy $R0 "TransarcAFSDaemon"
+   Push $R2
    Call StrStr
    Pop $R0
    StrCmp $R0 "" +1 DoOther
    ReadRegStr $R1 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder" "ProviderOrder"   
-   StrCpy $R0 "$R1,TransarcAFSDaemon"
+   StrCpy $R0 "$R1,$R2" # "TransarcAFSDaemon"
    WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder" "ProviderOrder" $R0
 DoOther:
    ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" "ProviderOrder"
    Push $R0
-   StrCpy $R0 "TransarcAFSDaemon"
-   Push $R0
+   # StrCpy $R0 "TransarcAFSDaemon"
+   Push $R2
    Call StrStr
    Pop $R0
    StrCmp $R0 "" +1 End
    ReadRegStr $R1 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" "ProviderOrder"   
-   StrCpy $R0 "$R1,TransarcAFSDaemon"
+   StrCpy $R0 "$R1,$R2" # "TransarcAFSDaemon"
    WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" "ProviderOrder" $R0   
 End:
    Pop $R1
    Pop $R0
+   Pop $R2
 FunctionEnd
 
 Function un.RemoveProvider
+   Exch $R1
    Push $R0
-   StrCpy $R0 "TransarcAFSDaemon"
-   Push $R0
+   # StrCpy $R0 "TransarcAFSDaemon"
+   Push $R1
    StrCpy $R0 "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder"
    Call un.RemoveFromProvider
-   StrCpy $R0 "TransarcAFSDaemon"
-   Push $R0
+   # StrCpy $R0 "TransarcAFSDaemon"
+   Push $R1
    StrCpy $R0 "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order"
    Call un.RemoveFromProvider
    Pop $R0
+   Pop $R1
 FunctionEnd
 
 Function un.RemoveFromProvider

@@ -4,7 +4,7 @@
 #include<lm.h>
 
 #pragma comment(lib,"netapi32.lib")
-#pragma comment(lib,"advapi32.lib");
+#pragma comment(lib,"advapi32.lib")
 
 #define AFSCLIENT_ADMIN_GROUPNAMEW L"AFS Client Admins"
 #define AFSCLIENT_ADMIN_COMMENTW   L"AFS Client Administrators"

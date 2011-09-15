@@ -165,9 +165,7 @@ prebuild:
 !else if ("$(AFSVER_CL)" == "1300")
    echo !define CL_1300 1 >> $(OUT)\nsi-includes.nsi
 !endif
-!if ("$(AFSIFS)" == "TRUE")
-   echo !define AFSIFS 1 >> $(OUT)\nsi-includes.nsi
-!endif
+   echo !define AFS_RDR_BUILDDIR ..\..\afsrdr\build\$(CPU) >> $(OUT)\nsi-includes.nsi
 !if ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
    echo !define DEBUG 1 >>$(OUT)\nsi-includes.nsi
 !endif
