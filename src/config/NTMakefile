@@ -31,6 +31,12 @@ $(INCFILEDIR)\afsconfig.h: afsconfig-windows.h
 	$(COPY) $? $@
 
 idirs: doclink
+!	IF (!EXIST($(SRC)\WINNT\afsrdr\build))
+		$(MKDIR) $(SRC)\WINNT\afsrdr\build
+!	ENDIF
+!	IF (!EXIST($(SRC)\WINNT\afsrdr\build\$(CPU)))
+		$(MKDIR) $(SRC)\WINNT\afsrdr\build\$(CPU)
+!	ENDIF
 !	IF (!EXIST($(OJT)))
 		$(MKDIR) $(OJT)
 !	ENDIF
@@ -283,6 +289,24 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\afslegal\lang))
 		$(MKDIR) $(OJT)\WINNT\afslegal\lang
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr))
+		$(MKDIR) $(OJT)\WINNT\afsrdr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\authgroup))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\authgroup
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\gettrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\gettrace
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\settrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\settrace
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\crash))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\crash
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\afsreg))
 		$(MKDIR) $(OJT)\WINNT\afsreg
 !	ENDIF
@@ -327,6 +351,15 @@ idirs: doclink
 !	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\aklog))
 		$(MKDIR) $(OJT)\WINNT\aklog
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr))
+		$(MKDIR) $(OJT)\WINNT\afsrdr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\kernel))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\kernel
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\npdll))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\npdll
 !	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\bosctlsvc))
 		$(MKDIR) $(OJT)\WINNT\bosctlsvc
@@ -513,7 +546,7 @@ doclink:
 version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version 
 
 NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
-	-$(DEL) NTMakefile.version
+	$(DEL) NTMakefile.version
 !	IF (EXIST(..\..\src\CML\state) || EXIST(..\..\..\src\CML\state))
 		$(COPY) NTMakefile.version-CML NTMakefile.version
 !	ELSE

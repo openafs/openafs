@@ -1,0 +1,179 @@
+# Copyright (c) 2008, 2009, 2010, 2011 Kernel Drivers, LLC.
+# Copyright (c) 2009, 2010, 2011 Your File System, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# - Redistributions of source code must retain the above copyright notice,
+#   this list of conditions and the following disclaimer.
+# - Redistributions in binary form must reproduce the above copyright
+#   notice,
+#   this list of conditions and the following disclaimer in the
+#   documentation
+#   and/or other materials provided with the distribution.
+# - Neither the names of Kernel Drivers, LLC and Your File System, Inc.
+#   nor the names of their contributors may be used to endorse or promote
+#   products derived from this software without specific prior written
+#   permission from Kernel Drivers, LLC and Your File System, Inc.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+# OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+# This file requires Microsoft Windows DDK/WDK 6001 or higher
+
+!IF ("$(CPU)" == "x86")
+CPU = i386
+!ENDIF
+
+RELDIR=WINNT\afsrdr
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+TARGETPATH = $(DESTDIR)\root.client\usr\vice\etc
+
+!IF ("$(CPU)" == "i386")
+DDK_ARCH=X86
+DDK_PLATFORM=WXP
+!ELSE IF ("$(CPU)" == "AMD64")
+DDK_ARCH=x64
+DDK_PLATFORM=WNET
+!ENDIF
+
+!IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
+DDK_BUILDTYPE=FRE
+!ELSE
+DDK_BUILDTYPE=CHK
+!ENDIF
+
+$(OUT)\ddkbuild.cmd: NTMakefile
+        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(DDK_BUILDTYPE) > $@
+        echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
+        echo cd kernel\fs >> $@
+        echo build.exe -M >> $@
+        echo if errorlevel neq 0 exit 1 >> $@
+        echo cd ..\..\build\$(CPU) >> $@
+!IFDEF CODESIGN_KERNEL
+        echo $(CODESIGN_KERNEL) AFSRedir.sys >> $@
+!ENDIF
+        echo cd ..\..\kernel\lib >> $@
+        echo build.exe -M >> $@
+        echo if errorlevel neq 0 exit 1 >> $@
+        echo cd ..\..\build\$(CPU) >> $@
+!IFDEF CODESIGN_KERNEL
+        echo $(CODESIGN_KERNEL) AFSRedirLib.sys >> $@
+!ENDIF
+        echo cd ..\..\npdll >> $@
+        echo build.exe -M >> $@
+        echo if errorlevel neq 0 exit 1 >> $@
+        echo cd ..\build\$(CPU) >> $@
+!IFDEF CODESIGN_KERNEL
+        echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll >> $@
+!ENDIF
+        echo exit 0 >> $@
+
+$(OUT)\ddkclean.cmd: NTMakefile
+        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(DDK_BUILDTYPE) > $@
+        echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
+        echo cd kernel\fs >> $@
+        echo build.exe -c -0 >> $@
+        echo cd ..\lib >> $@
+        echo build.exe -c -0 >> $@
+        echo cd ..\..\npdll >> $@
+        echo build.exe -c -0 >> $@
+        echo exit 0 >> $@
+
+install: clean-build clean-kernel-fs clean-kernel-lib clean-npdll \
+         AFS_component_version_number.h $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd \
+         kernel\fs\AFSRedirInstall.inf \
+         kernel\lib\AFSRedirLibInstall.inf
+!IF !EXIST(build\$(CPU))
+        $(MKDIR) build\$(CPU)
+!ENDIF
+        cd tools\gettrace
+        $(MAKE) -f ntmakefile install
+        cd ..\settrace
+        $(MAKE) -f ntmakefile install
+        cd ..\crash
+        $(MAKE) -f ntmakefile install
+        cd ..\authgroup
+        $(MAKE) -f ntmakefile install
+        cd ..\objstatus
+        $(MAKE) -f ntmakefile install
+        cd ..\..
+        type $(OUT)\ddkbuild.cmd
+        -$(DEL) build\$(CPU)\AFSRedir.sys
+        -$(DEL) build\$(CPU)\AFSRedirLib.sys
+        -$(DEL) build\$(CPU)\AFSRDFSProvider.dll
+        cmd /c start /wait $(OUT)\ddkbuild.cmd
+        cmd /c if not exist build\$(CPU)\AFSRedir.sys exit 1
+        cmd /c if not exist build\$(CPU)\AFSRedirLib.sys exit 1
+        cmd /c if not exist build\$(CPU)\AFSRDFSProvider.dll exit 1
+        $(COPY) kernel\fs\AFSRedirInstall.inf build\$(CPU)\AFSRedirInstall.inf
+        $(COPY) kernel\lib\AFSRedirLibInstall.inf build\$(CPU)\AFSRedirLibInstall.inf
+        $(COPY) build\$(CPU)\* $(TARGETPATH)
+
+clean-build:
+!IF EXIST(build\$(CPU))
+        cd build\$(CPU)
+        -$(DEL) *.sys
+        -$(DEL) *.exe
+        -$(DEL) *.dll
+        -$(DEL) *.pdb
+        -$(DEL) *.inf
+        -$(DEL) *.manifest
+         cd ..\..
+!ENDIF
+
+clean-kernel-fs:
+        cd kernel\fs
+        -$(DEL) *.log
+        -$(DEL) *.wrn
+        -$(DEL) *.aps
+        -$(DEL) *.suo
+        cd ..\..
+
+clean-kernel-lib:
+        cd kernel\lib
+        -$(DEL) *.log
+        -$(DEL) *.wrn
+        -$(DEL) *.aps
+        -$(DEL) *.suo
+        cd ..\..
+
+clean-npdll:
+        cd npdll
+        -$(DEL) *.log
+        -$(DEL) *.wrn
+        -$(DEL) *.aps
+        -$(DEL) *.suo
+        cd ..
+
+clean:: clean-build clean-kernel-fs clean-kernel-lib clean-npdll
+        -$(DEL) $(OUT)\ddkbuild.cmd
+        -type $(OUT)\ddkclean.cmd
+        if exist $(OUT)\ddkclean.cmd start /wait $(OUT)\ddkclean.cmd
+        -$(DEL) $(OUT)\ddkclean.cmd
+        -$(DEL) AFS_component_version_number.h
+        cd tools/gettrace
+        $(MAKE) -f ntmakefile clean
+        cd ../settrace
+        $(MAKE) -f ntmakefile clean
+        cd ../authgroup
+        $(MAKE) -f ntmakefile clean
+        cd ../objstatus
+        $(MAKE) -f ntmakefile clean
+        cd ../crash
+        $(MAKE) -f ntmakefile clean
+        cd ../..

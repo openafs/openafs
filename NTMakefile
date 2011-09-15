@@ -690,6 +690,13 @@ netidmgr_plugin: xstat
 	$(NTMAKE)
 	$(CD) ..\..\..
 
+afsrdr: netidmgr_plugin
+        echo ***** $@
+        $(DOCD) $(SRC)\WINNT\afsrdr
+        $(CD) $(SRC)\WINNT\afsrdr
+        $(NTMAKE)
+        $(CD) ..\..\..
+
 rpctestlib: fsint libafsrpc
      @echo ***** $@
 	$(DOCD) $(TESTS)\$@
@@ -704,7 +711,7 @@ libafscp: libafscp_headers util afs volser vlserver rx auth fsint afsdobjs
 	$(NTMAKE)
 	$(CD) ..\..
 
-extra: netidmgr_plugin rpctestlib
+extra: afsrdr rpctestlib
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      @echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@
