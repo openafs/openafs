@@ -1,0 +1,15 @@
+/*
+ * Copyright 2010, Secure Endpoints Inc.
+ * All Rights Reserved.
+ *
+ * This software has been released under the terms of the MIT License.
+ */
+
+/* Define VERSIONINFO resource */
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Redirector Kernel Library"
+#define AFS_VERINFO_NAME "AFSRedirLib"
+#define AFS_VERINFO_FILENAME "AFSRedirLib.sys"
+
+#include "..\..\..\AFS_component_version_number.h"
+#include "..\..\..\..\..\config\NTVersioninfo.rc"

@@ -1,0 +1,68 @@
+;;;
+;;; AFS Redirector Installation file
+;;;
+
+[Version]
+signature   =   "$Windows NT$"
+Class	    =	"AFSRedirector"
+ClassGuid   = 	{63EA509E-71F9-42ec-9C5E-1ECC95E3A1A0}
+Provider    =   %AFS%
+DriverVer   =   04/20/2006,1.0.0.0
+
+[DestinationDirs]
+DefaultDestDir		= 12
+AFS.DriverFiles		= 12
+
+;;
+;; Default install sections
+;;
+
+[DefaultInstall]
+CopyFiles           = AFS.DriverFiles
+
+[SourceDisksNames]
+1 = %Disk1%
+
+[SourceDisksFiles]
+AFSRedirLib.sys			= 1
+
+[DefaultInstall.Services]
+AddService          = %AFSServiceName%,,AFS.Service
+
+;;
+;; Default uninstall sections
+;;
+
+[DefaultUninstall]
+DelFiles			= AFS.DriverFiles
+
+;
+; Services Section
+;
+
+[AFS.Service]
+DisplayName      = %AFSServiceName%
+Description      = %AFSServiceDesc%
+ServiceBinary    = %12%\AFSRedirLib.sys
+ServiceType      = 2
+StartType        = 3
+ErrorControl     = 1
+LoadOrderGroup   = "Filesystem"
+
+;
+; Copy Files
+;
+
+[AFS.DriverFiles]
+AFSRedirLib.sys
+
+;;
+;; String Section
+;;
+
+[Strings]
+AFS		    = "OpenAFS"
+AFSServiceDesc	    = "OpenAFS Redirector"
+AFSServiceName	    = "AFSLibrary"
+AFSRegistry	    = "system\currentcontrolset\services\AFSLibrary\Parameters"
+Disk1		    = "OpenAFS Media"
