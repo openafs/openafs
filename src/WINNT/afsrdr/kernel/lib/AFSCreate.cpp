@@ -641,6 +641,19 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
+        if ( BooleanFlagOn( ulOptions, FILE_OPEN_REPARSE_POINT) &&
+             pDirectoryCB != NULL &&
+             !BooleanFlagOn( pDirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonCreate (%08lX) Reparse open request but attribute not set for %wZ Type %08lX\n",
+                          Irp,
+                          &uniFileName,
+                          pDirectoryCB->ObjectInformation->FileType);
+        }
+
         //
         // Based on the options passed in, process the file accordingly.
         //

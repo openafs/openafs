@@ -1474,13 +1474,6 @@ AFSSetBasicInfo( IN PIRP Irp,
                 pBuffer->FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
             }
 
-            if( DirectoryCB->ObjectInformation->Fcb->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB ||
-                DirectoryCB->ObjectInformation->Fcb->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
-                DirectoryCB->ObjectInformation->Fcb->Header.NodeTypeCode == AFS_DFS_LINK_FCB)
-            {
-                pBuffer->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
-            }
-
             pCcb->FileUnwindInfo.FileAttributes = DirectoryCB->ObjectInformation->FileAttributes;
 
             DirectoryCB->ObjectInformation->FileAttributes = pBuffer->FileAttributes;

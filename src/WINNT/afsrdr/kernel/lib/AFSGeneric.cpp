@@ -1392,6 +1392,14 @@ AFSEvaluateNode( IN GUID *AuthGroup,
 
         DirEntry->ObjectInformation->FileAttributes = pDirEntry->FileAttributes;
 
+        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
+            pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
+            pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK)
+        {
+
+            DirEntry->ObjectInformation->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+        }
+
         DirEntry->ObjectInformation->EaSize = pDirEntry->EaSize;
 
         DirEntry->ObjectInformation->Links = pDirEntry->Links;
@@ -1563,6 +1571,14 @@ AFSValidateSymLink( IN GUID *AuthGroup,
         DirEntry->ObjectInformation->AllocationSize = pDirEntry->AllocationSize;
 
         DirEntry->ObjectInformation->FileAttributes = pDirEntry->FileAttributes;
+
+        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
+            pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
+            pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK)
+        {
+
+            DirEntry->ObjectInformation->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+        }
 
         DirEntry->ObjectInformation->EaSize = pDirEntry->EaSize;
 
