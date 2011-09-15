@@ -1,4 +1,3 @@
-# rcsid : $Id$
 
 RELDIR=WINNT\install\loopback
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
@@ -66,7 +65,7 @@ $(OUT)\renameconnection.obj: renameconnection.cpp
 	$(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(OUT)\wmi.obj: wmi.cpp
-	$(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
+	$(STATICC2OBJ) -I$(DDK_INCL) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(DLLFILE): $(DLLOBJFILES) $(DLLRES)
 	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $** $(DLLLIBFILES)
