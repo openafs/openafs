@@ -4839,7 +4839,7 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
     for(ti=as->parms[1].items; ti; ti=ti->next) {
         cm_fid_t fid;
         afs_uint32 filetype;
-	char cell[CELL_MAXNAMELEN];
+        char cell[CELL_MAXNAMELEN];
 
         /* once per file */
         memset(&fid, 0, sizeof(fid));

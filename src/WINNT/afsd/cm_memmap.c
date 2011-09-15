@@ -266,15 +266,15 @@ cm_ShutdownMappedMemory(void)
         HeapDestroy(hCacheHeap);
         afsi_log("Memory Heap has been destroyed");
     } else {
-    if (cm_ValidateCache == 2)
-        dirty = !cm_IsCacheValid();
+        if (cm_ValidateCache == 2)
+            dirty = !cm_IsCacheValid();
 
-    *config_data_p = cm_data;
-    config_data_p->dirty = dirty;
-    UnmapViewOfFile(config_data_p);
-    CloseHandle(hMemoryMappedFile);
-    hMemoryMappedFile = NULL;
-    afsi_log("Memory Mapped File has been closed");
+        *config_data_p = cm_data;
+        config_data_p->dirty = dirty;
+        UnmapViewOfFile(config_data_p);
+        CloseHandle(hMemoryMappedFile);
+        hMemoryMappedFile = NULL;
+        afsi_log("Memory Mapped File has been closed");
     }
     return 0;
 }
@@ -794,44 +794,44 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
             CloseHandle(hm);
         }
 
-    hm = CreateFileMapping( hf,
-                            NULL,
-                            PAGE_READWRITE,
-			    (DWORD)(mappingSize >> 32),
-			    (DWORD)(mappingSize & 0xFFFFFFFF),
-                            NULL);
-    if (hm == NULL) {
-        if (GetLastError() == ERROR_DISK_FULL) {
-            afsi_log("Error creating file mapping for \"%s\": disk full [2]",
-                      cachePath);
-            return CM_ERROR_TOOMANYBUFS;
-        }
-        afsi_log("Error creating file mapping for \"%s\": %d",
-                  cachePath, GetLastError());
-        return CM_ERROR_INVAL;
-    }
-    baseAddress = MapViewOfFileEx( hm,
-                                   FILE_MAP_ALL_ACCESS,
-                                   0,
-				   0,
-				   (SIZE_T)mappingSize,
-                                   baseAddress );
-    if (baseAddress == NULL) {
-        afsi_log("Error mapping view of file: %d", GetLastError());
-        baseAddress = MapViewOfFile( hm,
-                                     FILE_MAP_ALL_ACCESS,
-                                     0,
-				     0,
-				     (SIZE_T)mappingSize);
-        if (baseAddress == NULL) {
-            if (hf != INVALID_HANDLE_VALUE)
-                CloseHandle(hf);
-            CloseHandle(hm);
+        hm = CreateFileMapping( hf,
+                                NULL,
+                                PAGE_READWRITE,
+                                (DWORD)(mappingSize >> 32),
+                                (DWORD)(mappingSize & 0xFFFFFFFF),
+                                NULL);
+        if (hm == NULL) {
+            if (GetLastError() == ERROR_DISK_FULL) {
+                afsi_log("Error creating file mapping for \"%s\": disk full [2]",
+                          cachePath);
+                return CM_ERROR_TOOMANYBUFS;
+            }
+            afsi_log("Error creating file mapping for \"%s\": %d",
+                      cachePath, GetLastError());
             return CM_ERROR_INVAL;
         }
+        baseAddress = MapViewOfFileEx( hm,
+                                       FILE_MAP_ALL_ACCESS,
+                                       0,
+                                       0,
+                                       (SIZE_T)mappingSize,
+                                       baseAddress );
+        if (baseAddress == NULL) {
+            afsi_log("Error mapping view of file: %d", GetLastError());
+            baseAddress = MapViewOfFile( hm,
+                                         FILE_MAP_ALL_ACCESS,
+                                         0,
+                                         0,
+                                         (SIZE_T)mappingSize);
+            if (baseAddress == NULL) {
+                if (hf != INVALID_HANDLE_VALUE)
+                    CloseHandle(hf);
+                CloseHandle(hm);
+                return CM_ERROR_INVAL;
+            }
             newCache = 1;
-    }
-    CloseHandle(hm);
+        }
+        CloseHandle(hm);
         hMemoryMappedFile = hf;
     }
 
@@ -936,10 +936,18 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
         cm_data.bufEndOfData = (char *) baseAddress;
 	cm_data.buf_dirtyListp = NULL;
 	cm_data.buf_dirtyListEndp = NULL;
-        cm_data.fakeDirVersion = 0x8;
+        /* Make sure the fakeDirVersion is always increasing */
+        cm_data.fakeDirVersion = time(NULL);
+        cm_data.fakeUnique = 0;
         UuidCreate((UUID *)&cm_data.Uuid);
 	cm_data.volSerialNumber = volumeSerialNumber;
 	memcpy(cm_data.Sid, machineSid, sizeof(machineSid));
+
+        /*
+         * make sure that the file is fully allocated
+         * by writing a non-zero byte to the end
+         */
+        cm_data.baseAddress[mappingSize-1] = 0xFF;
     } else {
 	int gennew = 0;
 

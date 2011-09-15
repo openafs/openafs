@@ -45,6 +45,7 @@
 
 #define LOCK_HIERARCHY_IGNORE                    0
 
+#define LOCK_HIERARCHY_RDR_GLOBAL               10
 #define LOCK_HIERARCHY_SMB_STARTED              20
 #define LOCK_HIERARCHY_SMB_LISTENER             30
 #define LOCK_HIERARCHY_SMB_DIRWATCH             40
@@ -87,5 +88,8 @@
 #define LOCK_HIERARCHY_AFSDBSBMT_GLOBAL       1000
 #define LOCK_HIERARCHY_TOKEN_EVENT_GLOBAL     2000
 #define LOCK_HIERARCHY_SYSCFG_GLOBAL          3000
+
+#define LOCK_HIERARCHY_RDR_EXTENTS               0
 #endif /*  OPENAFS_WINNT_AFSD_CM_H */
+
 

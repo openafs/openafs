@@ -338,6 +338,9 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
             aclp->userp = NULL;
             aclp->backp = (struct cm_scache *) 0;
             found = 1;
+            if (RDR_Initialized && cm_HaveCallback(scp))
+                RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
             break;
         }
     }
@@ -351,6 +354,7 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
 void
 cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
 {
+    cm_volume_t *volp, *nextVolp;
     cm_scache_t *scp, *nextScp;
     afs_uint32 hash;
 
@@ -369,6 +373,40 @@ cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
         }
     }
     lock_ReleaseRead(&cm_scacheLock);
+
+    if (RDR_Initialized) {
+        lock_ObtainRead(&cm_volumeLock);
+        for (hash = 0; hash < cm_data.volumeHashTableSize; hash++) {
+            for ( volp = cm_data.volumeRWIDHashTablep[hash]; volp; volp = nextVolp) {
+                nextVolp = volp->vol[RWVOL].nextp;
+                if ((cellp == NULL || cellp->cellID == volp->cellp->cellID) &&
+                    volp->vol[RWVOL].ID) {
+                    lock_ReleaseRead(&cm_volumeLock);
+                    RDR_InvalidateVolume(volp->cellp->cellID, volp->vol[RWVOL].ID, AFS_INVALIDATE_CREDS);
+                    lock_ObtainRead(&cm_volumeLock);
+                }
+            }
+            for ( volp = cm_data.volumeROIDHashTablep[hash]; volp; volp = nextVolp) {
+                nextVolp = volp->vol[ROVOL].nextp;
+                if ((cellp == NULL || cellp->cellID == volp->cellp->cellID) &&
+                    volp->vol[ROVOL].ID) {
+                    lock_ReleaseRead(&cm_volumeLock);
+                    RDR_InvalidateVolume(volp->cellp->cellID, volp->vol[ROVOL].ID, AFS_INVALIDATE_CREDS);
+                    lock_ObtainRead(&cm_volumeLock);
+                }
+            }
+            for ( volp = cm_data.volumeBKIDHashTablep[hash]; volp; volp = nextVolp) {
+                nextVolp = volp->vol[BACKVOL].nextp;
+                if ((cellp == NULL || cellp->cellID == volp->cellp->cellID) &&
+                    volp->vol[BACKVOL].ID) {
+                    lock_ReleaseRead(&cm_volumeLock);
+                    RDR_InvalidateVolume(volp->cellp->cellID, volp->vol[BACKVOL].ID, AFS_INVALIDATE_CREDS);
+                    lock_ObtainRead(&cm_volumeLock);
+                }
+            }
+        }
+        lock_ReleaseRead(&cm_volumeLock);
+    }
 }
 
 

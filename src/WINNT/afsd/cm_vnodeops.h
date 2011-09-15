@@ -149,7 +149,7 @@ extern long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
                             cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
                             cm_user_t *userp, cm_req_t *reqp);
 
-extern int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch,
+extern int cm_ExpandSysName(cm_req_t *reqp, clientchar_t *inp, clientchar_t *outp, long outSizeCch,
                             unsigned int sysNameIndex);
 
 extern long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp);
@@ -197,15 +197,14 @@ extern long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                     int allowWait, cm_user_t *userp, cm_req_t *reqp,
                     cm_file_lock_t **lockpp);
 
-#define CM_UNLOCK_BY_FID 	0x0001
-
 extern long cm_UnlockByKey(cm_scache_t * scp,
                            cm_key_t key,
                            afs_uint32 flags,
                            cm_user_t * userp,
                            cm_req_t * reqp);
 
-#define CM_UNLOCK_FLAG_MATCH_RANGE      0x01
+#define CM_UNLOCK_FLAG_BY_FID 	        0x0001
+#define CM_UNLOCK_FLAG_MATCH_RANGE      0x0002
 
 extern long cm_Unlock(cm_scache_t *scp, unsigned char sLockType,
                       LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,

@@ -40,6 +40,7 @@ long cm_daemonTokenCheckInterval = 180;
 long cm_daemonCheckOfflineVolInterval = 600;
 long cm_daemonPerformanceTuningInterval = 0;
 long cm_daemonRankServerInterval = 600;
+long cm_daemonRDRShakeExtentsInterval = 0;
 
 osi_rwlock_t cm_daemonLock;
 
@@ -164,7 +165,8 @@ void cm_BkgDaemon(void * parm)
         case CM_ERROR_ALLDOWN:
         case CM_ERROR_ALLOFFLINE:
         case CM_ERROR_PARTIALWRITE:
-            if (rp->procp == cm_BkgStore) {
+            if (rp->procp == cm_BkgStore ||
+                rp->procp == RDR_BkgFetch) {
                 osi_Log2(afsd_logp,
                          "cm_BkgDaemon re-queueing failed request 0x%p code 0x%x",
                          rp, code);
@@ -350,6 +352,13 @@ cm_DaemonCheckInit(void)
     afsi_log("daemonCheckOfflineVolInterval is %d", cm_daemonCheckOfflineVolInterval);
 
     dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonRDRShakeExtentsInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS && dummy)
+	cm_daemonRDRShakeExtentsInterval = dummy;
+    afsi_log("daemonRDRShakeExtentsInterval is %d", cm_daemonRDRShakeExtentsInterval);
+
+    dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonPerformanceTuningInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
     if (code == ERROR_SUCCESS)
@@ -418,6 +427,7 @@ void cm_Daemon(long parm)
     time_t lastBusyVolCheck;
     time_t lastPerformanceCheck;
     time_t lastServerRankCheck;
+    time_t lastRDRShakeExtents;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
@@ -472,6 +482,8 @@ void cm_Daemon(long parm)
     if (cm_daemonPerformanceTuningInterval)
         lastPerformanceCheck = now - cm_daemonPerformanceTuningInterval/2 * (rand() % cm_daemonPerformanceTuningInterval);
     lastServerRankCheck = now - cm_daemonRankServerInterval/2 * (rand() % cm_daemonRankServerInterval);
+    if (cm_daemonRDRShakeExtentsInterval)
+        lastRDRShakeExtents = now - cm_daemonRDRShakeExtentsInterval/2 * (rand() % cm_daemonRDRShakeExtentsInterval);
 
     while (daemon_ShutdownFlag == 0) {
         if (powerStateSuspended) {
@@ -619,6 +631,20 @@ void cm_Daemon(long parm)
             powerStateSuspended == 0) {
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
+            if (daemon_ShutdownFlag == 1)
+                break;
+	    now = osi_Time();
+        }
+
+        if (cm_daemonRDRShakeExtentsInterval &&
+            now > lastRDRShakeExtents + cm_daemonRDRShakeExtentsInterval &&
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
+            cm_req_t req;
+            cm_InitReq(&req);
+            lastRDRShakeExtents = now;
+            if (cm_data.buf_redirCount > cm_data.buf_freeCount)
+                buf_RDRShakeSomeExtentsFree(&req, FALSE, 10 /* seconds */);
             if (daemon_ShutdownFlag == 1)
                 break;
 	    now = osi_Time();

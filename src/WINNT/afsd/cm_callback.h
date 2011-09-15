@@ -79,4 +79,5 @@ extern afs_int32 cm_OfflineROIsValid;
 extern afs_int32 cm_giveUpAllCBs;
 
 extern afs_int32 cm_shutdown;
+
 #endif /*  OPENAFS_WINNT_AFSD_CM_CALLBACK_H */

@@ -11,16 +11,20 @@
 #include <afs/param.h>
 #include <roken.h>
 
-#include "afslogon.h"
-
 #include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
 
 #include <winsock2.h>
+#include <winioctl.h>
+#define SECURITY_WIN32
+#include <sspi.h>
 #include <lm.h>
 #include <nb30.h>
+#include <sddl.h>
+
+#include "afslogon.h"
 
 #include <afs/stds.h>
 #include <afs/pioctl_nt.h>
@@ -810,7 +814,8 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
     return FALSE;
 }  // UnicodeStringToANSI
 
-DWORD APIENTRY NPLogonNotify(
+DWORD APIENTRY
+NPLogonNotify(
 	PLUID lpLogonId,
 	LPCWSTR lpAuthentInfoType,
 	LPVOID lpAuthentInfo,
@@ -849,6 +854,8 @@ DWORD APIENTRY NPLogonNotify(
     LogonOptions_t opt; /* domain specific logon options */
     int retryInterval;
     int sleepInterval;
+
+    CtxtHandle LogonContext;
 
     /* Are we interactive? */
     interactive = (wcsicmp(lpStationName, L"WinSta0") == 0);
@@ -952,7 +959,7 @@ DWORD APIENTRY NPLogonNotify(
         /* Get cell name if doing integrated logon.
            We might overwrite this if we are logging into an AD realm and we find out that
            the user's home dir is in some other cell. */
-        DebugEvent("About to call cm_GetRootCellName()");
+        DebugEvent0("About to call cm_GetRootCellName()");
         code = cm_GetRootCellName(cell);
         if (code < 0) {
             DebugEvent0("Unable to obtain Root Cell");
@@ -972,7 +979,8 @@ DWORD APIENTRY NPLogonNotify(
         }
     }
 
-    /* loop until AFS is started. */
+    AFSCreatePAG(lpLogonId);
+
     if (afsWillAutoStart) {
         /*
          * If the service is configured for auto start but hasn't started yet,
@@ -981,12 +989,12 @@ DWORD APIENTRY NPLogonNotify(
         if (!(IsServiceRunning() || IsServiceStartPending()))
             StartTheService();
 
+        /* loop until AFS is started or fails. */
         while ( IsServiceStartPending() ) {
             Sleep(10);
         }
 
         while (IsServiceRunning() && code != KTC_NOCM && code != KTC_NOCMRPC && code != KTC_NOCELL) {
-
             DebugEvent("while(autostart) LogonOption[%x], Service AutoStart[%d]",
 			opt.LogonOption,afsWillAutoStart);
 
@@ -1004,6 +1012,9 @@ DWORD APIENTRY NPLogonNotify(
 	    /* if Integrated Logon  */
 	    if (ISLOGONINTEGRATED(opt.LogonOption))
 	    {
+                LogonSSP(lpLogonId, &LogonContext);
+                ImpersonateSecurityContext(&LogonContext);
+
 		if ( KFW_is_available() ) {
 		    SetEnvironmentVariable(DO_NOT_REGISTER_VARNAME, "");
                     if (opt.realm) {
@@ -1077,6 +1088,10 @@ DWORD APIENTRY NPLogonNotify(
 		    DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2 Code[%x] uname[%s] smbname=[%s] Cell[%s] PwExp=[%d] Reason=[%s]",
 				code,uname,opt.smbName,cell,pw_exp,reason?reason:"");
 		}
+
+                RevertSecurityContext(&LogonContext);
+                DeleteSecurityContext(&LogonContext);
+
 		if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
 		    for ( ctemp = uname; *ctemp ; ctemp++) {
 			*ctemp = tolower(*ctemp);
@@ -1128,8 +1143,8 @@ DWORD APIENTRY NPLogonNotify(
 	    Sleep(sleepInterval * 1000);
 	    retryInterval -= sleepInterval;
 	}
+        DebugEvent0("while loop exited");
     }
-    DebugEvent0("while loop exited");
 
     /* remove any kerberos 5 tickets currently held by the SYSTEM account
      * for this user

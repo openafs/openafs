@@ -1327,6 +1327,21 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         /* Notify any volume status handlers that the cache manager has started */
         cm_VolStatus_Service_Started();
 
+        code = RDR_Initialize();
+        RDR_Initialized = !code;
+        afsi_log("RDR_Initialize returned: (code = %d)", code);
+
+        if (RDR_Initialized) {
+            if (cm_sysNameCount)
+                RDR_SysName( AFS_SYSNAME_ARCH_32BIT, cm_sysNameCount, cm_sysNameList );
+#ifdef _WIN64
+            if (cm_sysName64Count)
+                RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysName64Count, cm_sysName64List );
+            else if (cm_sysNameCount)
+                RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysNameCount, cm_sysNameList );
+#endif
+        }
+
         /*
          * Set the default for the SMB interface based upon the state of the
          * Redirector interface.
@@ -1464,10 +1479,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
     DismountGlobalDrives();
     afsi_log("Global Drives dismounted");
 
+    if (RDR_Initialized) {
+        RDR_ShutdownNotify();
+        cm_VolStatus_SetRDRNotifications(FALSE);
+        afsi_log("RDR notified of shutdown");
+    }
+
     smb_Shutdown();
     afsi_log("smb shutdown complete");
-
-    RpcShutdown();
 
     cm_ReleaseAllLocks();
 
@@ -1479,7 +1498,14 @@ afsd_Main(DWORD argc, LPTSTR *argv)
 
     afsd_ShutdownCM();
 
+    RpcShutdown();
+
     cm_ShutdownMappedMemory();
+
+    if (RDR_Initialized) {
+        RDR_ShutdownFinal();
+        afsi_log("RDR shutdown complete");
+    }
 
     rx_Finalize();
     afsi_log("rx finalization complete");

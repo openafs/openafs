@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <strsafe.h>
 #include <math.h>
+#include <hcrypto\md5.h>
 
 #include "afsd.h"
 #include "cm_memmap.h"
@@ -59,6 +60,10 @@ osi_log_t *buf_logp = NULL;
 
 /* Global lock protecting hash tables and free lists */
 osi_rwlock_t buf_globalLock;
+
+/* Global lock used to limit the number of RDR Release
+ * Extents requests to one. */
+osi_mutex_t buf_rdrReleaseExtentsLock;
 
 /* ptr to head of the free list (most recently used) and the
  * tail (the guy to remove first).  We use osi_Q* functions
@@ -163,11 +168,12 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
             lock_ConvertRToW(&buf_globalLock);
 
         if (bp->refCount == 0 &&
-            !(bp->qFlags & CM_BUF_QINLRU)) {
+            !(bp->qFlags & (CM_BUF_QINLRU|CM_BUF_QREDIR))) {
             osi_QAddH( (osi_queue_t **) &cm_data.buf_freeListp,
                        (osi_queue_t **) &cm_data.buf_freeListEndp,
                        &bp->q);
             _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
+            buf_IncrementFreeCount();
         }
 
         if (!writeLocked)
@@ -201,11 +207,12 @@ void buf_Release(cm_buf_t *bp)
     if (refCount == 0) {
         lock_ObtainWrite(&buf_globalLock);
         if (bp->refCount == 0 &&
-            !(bp->qFlags & CM_BUF_QINLRU)) {
+            !(bp->qFlags & (CM_BUF_QINLRU|CM_BUF_QREDIR))) {
             osi_QAddH( (osi_queue_t **) &cm_data.buf_freeListp,
                        (osi_queue_t **) &cm_data.buf_freeListEndp,
                        &bp->q);
             _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
+            buf_IncrementFreeCount();
         }
         lock_ReleaseWrite(&buf_globalLock);
     }
@@ -224,13 +231,26 @@ buf_Sync(int quitOnShutdown)
         if (quitOnShutdown && buf_ShutdownFlag)
             break;
 
+        /*
+         * If the buffer is held be the redirector we must fetch
+         * it back in order to determine whether or not it is in
+         * fact dirty.
+         */
+        if (bp->qFlags & CM_BUF_QREDIR) {
+            osi_Log1(buf_logp,"buf_Sync buffer held by redirector bp 0x%p", bp);
+
+            /* Request single buffer from the redirector */
+            buf_RDRShakeAnExtentFree(bp, &req);
+        }
+
         lock_ReleaseRead(&buf_globalLock);
-        /* all dirty buffers are held when they are added to the
-        * dirty list.  No need for an additional hold.
-        */
+        /*
+         * all dirty buffers are held when they are added to the
+         * dirty list.  No need for an additional hold.
+         */
         lock_ObtainMutex(&bp->mx);
 
-        if (bp->flags & CM_BUF_DIRTY && !(bp->qFlags & CM_BUF_QREDIR)) {
+        if ((bp->flags & CM_BUF_DIRTY)) {
             /* start cleaning the buffer; don't touch log pages since
              * the log code counts on knowing exactly who is writing
              * a log page at any given instant.
@@ -339,7 +359,7 @@ long
 buf_ValidateBuffers(void)
 {
     cm_buf_t * bp, *bpf, *bpa, *bpb;
-    afs_uint64 countb = 0, countf = 0, counta = 0;
+    afs_uint64 countb = 0, countf = 0, counta = 0, countr = 0;
 
     if (cm_data.buf_freeListp == NULL && cm_data.buf_freeListEndp != NULL ||
          cm_data.buf_freeListp != NULL && cm_data.buf_freeListEndp == NULL) {
@@ -377,6 +397,20 @@ buf_ValidateBuffers(void)
             afsi_log("cm_ValidateBuffers failure: countf > cm_data.buf_nbuffers");
             fprintf(stderr, "cm_ValidateBuffers failure: countf > cm_data.buf_nbuffers\n");
             return -7;
+        }
+    }
+
+    for ( bp = cm_data.buf_redirListp; bp; bp = (cm_buf_t *) osi_QNext(&bp->q)) {
+        if (!(bp->qFlags & CM_BUF_QREDIR)) {
+            afsi_log("CM_BUF_QREDIR not set on cm_buf_t in buf_redirListp");
+            fprintf(stderr, "CM_BUF_QREDIR not set on cm_buf_t in buf_redirListp");
+            return -9;
+        }
+        countr++;
+        if (countr > cm_data.buf_nbuffers) {
+            afsi_log("cm_ValidateBuffers failure: countr > cm_data.buf_nbuffers");
+            fprintf(stderr, "cm_ValidateBuffers failure: countr > cm_data.buf_nbuffers\n");
+            return -10;
         }
     }
 
@@ -447,6 +481,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
     if (osi_Once(&once)) {
         /* initialize global locks */
         lock_InitializeRWLock(&buf_globalLock, "Global buffer lock", LOCK_HIERARCHY_BUF_GLOBAL);
+        lock_InitializeMutex(&buf_rdrReleaseExtentsLock, "RDR Release Extents lock", LOCK_HIERARCHY_RDR_EXTENTS);
 
         if ( newFile ) {
             /* remember this for those who want to reset it */
@@ -483,6 +518,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                            (osi_queue_t **) &cm_data.buf_freeListEndp,
                            &bp->q);
                 _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
+                buf_IncrementFreeCount();
                 lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
 
                 /* grab appropriate number of bytes from aligned zone */
@@ -508,7 +544,48 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 bp->waitCount = 0;
                 bp->waitRequests = 0;
                 _InterlockedAnd(&bp->flags, ~CM_BUF_WAITING);
+                bp->error = 0;
+                if (bp->qFlags & CM_BUF_QREDIR) {
+                    /*
+                     * extent was not returned by the file system driver.
+                     * clean up the mess.
+                     */
+                    bp->dataVersion = CM_BUF_VERSION_BAD;
+                    _InterlockedAnd(&bp->qFlags, ~CM_BUF_QREDIR);
+                    osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
+                                   (osi_queue_t **) &cm_data.buf_redirListEndp,
+                                   &bp->q);
+                    buf_DecrementRedirCount();
+                    bp->redirq.nextp = bp->redirq.prevp = NULL;
+                    bp->redirLastAccess = 0;
+                    bp->redirReleaseRequested = 0;
+                    buf_Release(bp);
+                }
                 bp++;
+            }
+
+            /*
+             * There should be nothing left in cm_data.buf_redirListp
+             * but double check just to be sure.
+             */
+            for ( bp = cm_data.buf_redirListp;
+                  bp;
+                  bp = cm_data.buf_redirListp)
+            {
+                /*
+                 * extent was not returned by the file system driver.
+                 * clean up the mess.
+                 */
+                bp->dataVersion = CM_BUF_VERSION_BAD;
+                _InterlockedAnd(&bp->qFlags, ~CM_BUF_QREDIR);
+                osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
+                               (osi_queue_t **) &cm_data.buf_redirListEndp,
+                               &bp->q);
+                buf_DecrementRedirCount();
+                bp->redirq.nextp = bp->redirq.prevp = NULL;
+                bp->redirLastAccess = 0;
+                bp->redirReleaseRequested = 0;
+                buf_Release(bp);
             }
         }
 
@@ -868,6 +945,8 @@ void buf_Recycle(cm_buf_t *bp)
 
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
 
+    osi_assertx(!(bp->qFlags & CM_BUF_QREDIR), "can't recycle redir held buffers");
+
     /* if we get here, we know that the buffer still has a 0 ref count,
      * and that it is clean and has no currently pending I/O.  This is
      * the dude to return.
@@ -924,6 +1003,253 @@ void buf_Recycle(cm_buf_t *bp)
     bp->dataVersion = CM_BUF_VERSION_BAD;	/* unknown so far */
 }
 
+
+/*
+ * buf_RDRShakeAnExtentFree
+ * called with buf_globalLock read locked
+ */
+afs_uint32
+buf_RDRShakeAnExtentFree(cm_buf_t *rbp, cm_req_t *reqp)
+{
+    afs_uint32 code = 0;
+    LARGE_INTEGER heldExtents = {0,0};
+    AFSFileExtentCB extentList[1];
+    DWORD extentCount = 0;
+    BOOL locked = FALSE;
+
+    if (!(rbp->qFlags & CM_BUF_QREDIR))
+        return 0;
+
+    lock_ReleaseRead(&buf_globalLock);
+
+    if (!lock_TryMutex(&buf_rdrReleaseExtentsLock)) {
+        osi_Log0(afsd_logp, "Waiting for prior RDR_RequestExtentRelease request to complete");
+        if (reqp->flags & CM_REQ_NORETRY) {
+            code = CM_ERROR_WOULDBLOCK;
+            goto done;
+        }
+
+        lock_ObtainMutex(&buf_rdrReleaseExtentsLock);
+    }
+
+    extentList[0].Flags = 0;
+    extentList[0].Length = cm_data.blockSize;
+    extentList[0].FileOffset.QuadPart = rbp->offset.QuadPart;
+    extentList[0].CacheOffset.QuadPart = rbp->datap - cm_data.baseAddress;
+    extentCount = 1;
+
+    code = RDR_RequestExtentRelease(&rbp->fid, heldExtents, extentCount, extentList);
+
+    lock_ReleaseMutex(&buf_rdrReleaseExtentsLock);
+
+  done:
+    lock_ObtainRead(&buf_globalLock);
+    return code;
+}
+
+/*
+ * buf_RDRShakeFileExtentsFree
+ * requests all extents held by the redirector to be returned for
+ * the specified cm_scache_t.  This function is called with no
+ * locks held.
+ */
+afs_uint32
+buf_RDRShakeFileExtentsFree(cm_scache_t *rscp, cm_req_t *reqp)
+{
+    afs_uint32 code = 0;
+    afs_uint64 n_redir = 0;
+
+    if (!lock_TryMutex(&buf_rdrReleaseExtentsLock)) {
+        osi_Log0(afsd_logp, "Waiting for prior RDR_RequestExtentRelease request to complete");
+        if (reqp->flags & CM_REQ_NORETRY)
+            return CM_ERROR_WOULDBLOCK;
+
+        lock_ObtainMutex(&buf_rdrReleaseExtentsLock);
+    }
+
+    for ( code = CM_ERROR_RETRY; code == CM_ERROR_RETRY; ) {
+        LARGE_INTEGER heldExtents = {0,0};
+        AFSFileExtentCB extentList[1024];
+        DWORD extentCount = 0;
+        cm_buf_t *srbp;
+        time_t now;
+
+        /* only retry if a call to RDR_RequestExtentRelease says to */
+        code = 0;
+        lock_ObtainWrite(&buf_globalLock);
+
+        if (rscp->redirBufCount == 0)
+        {
+            lock_ReleaseWrite(&buf_globalLock);
+            break;
+        }
+
+        time(&now);
+        for ( srbp = redirq_to_cm_buf_t(rscp->redirQueueT);
+              srbp;
+              srbp = ((code == 0 && extentCount == 0) ? redirq_to_cm_buf_t(rscp->redirQueueT) :
+                       redirq_to_cm_buf_t(osi_QPrev(&srbp->redirq))))
+        {
+            extentList[extentCount].Flags = 0;
+            extentList[extentCount].Length = cm_data.blockSize;
+            extentList[extentCount].FileOffset.QuadPart = srbp->offset.QuadPart;
+            extentList[extentCount].CacheOffset.QuadPart = srbp->datap - cm_data.baseAddress;
+            srbp->redirReleaseRequested = now;
+            extentCount++;
+
+            if (extentCount == 1024) {
+                lock_ReleaseWrite(&buf_globalLock);
+                heldExtents.QuadPart = cm_data.buf_redirCount;
+                code = RDR_RequestExtentRelease(&rscp->fid, heldExtents, extentCount, extentList);
+                if (code) {
+                    if (code == CM_ERROR_RETRY) {
+                        /*
+                         * The redirector either is not holding the extents or cannot let them
+                         * go because they are otherwise in use.  At the moment, do nothing.
+                         */
+                    } else
+                        break;
+                }
+                extentCount = 0;
+                lock_ObtainWrite(&buf_globalLock);
+            }
+        }
+        lock_ReleaseWrite(&buf_globalLock);
+
+        if (code == 0 && extentCount > 0) {
+            heldExtents.QuadPart = cm_data.buf_redirCount;
+            code = RDR_RequestExtentRelease(&rscp->fid, heldExtents, extentCount, extentList);
+        }
+
+        if ((code == CM_ERROR_RETRY) && (reqp->flags & CM_REQ_NORETRY)) {
+            code = CM_ERROR_WOULDBLOCK;
+            break;
+        }
+    }
+    lock_ReleaseMutex(&buf_rdrReleaseExtentsLock);
+    return code;
+}
+
+afs_uint32
+buf_RDRShakeSomeExtentsFree(cm_req_t *reqp, afs_uint32 oneFid, afs_uint32 minage)
+{
+    afs_uint32 code = 0;
+
+    if (!lock_TryMutex(&buf_rdrReleaseExtentsLock)) {
+        if (reqp->flags & CM_REQ_NORETRY)
+            return CM_ERROR_WOULDBLOCK;
+
+        osi_Log0(afsd_logp, "Waiting for prior RDR_RequestExtentRelease request to complete");
+        lock_ObtainMutex(&buf_rdrReleaseExtentsLock);
+    }
+
+    for ( code = CM_ERROR_RETRY; code == CM_ERROR_RETRY; ) {
+        LARGE_INTEGER heldExtents;
+        AFSFileExtentCB extentList[1024];
+        DWORD extentCount = 0;
+        cm_buf_t *rbp, *srbp;
+        cm_scache_t *rscp;
+        time_t now;
+        BOOL locked = FALSE;
+
+        /* only retry if a call to RDR_RequestExtentRelease says to */
+        code = 0;
+        lock_ObtainWrite(&buf_globalLock);
+        locked = TRUE;
+
+        for ( rbp = cm_data.buf_redirListEndp;
+              code == 0 && rbp && (!oneFid || extentCount == 0);
+              rbp = (cm_buf_t *) osi_QPrev(&rbp->q))
+        {
+            if (!oneFid)
+                extentCount = 0;
+
+            if (rbp->redirLastAccess >= rbp->redirReleaseRequested) {
+                rscp = cm_FindSCache(&rbp->fid);
+                if (!rscp)
+                    continue;
+
+                time(&now);
+                for ( srbp = redirq_to_cm_buf_t(rscp->redirQueueT);
+                      srbp && extentCount < 1024;
+                      srbp = redirq_to_cm_buf_t(osi_QPrev(&srbp->redirq)))
+                {
+                    /*
+                     * Do not request a release if we have already done so
+                     * or if the extent was delivered to windows less than
+                     * 'minage' seconds ago.
+                     */
+                    if (srbp->redirLastAccess >= srbp->redirReleaseRequested &&
+                         srbp->redirLastAccess < now - minage) {
+                        extentList[extentCount].Flags = 0;
+                        extentList[extentCount].Length = cm_data.blockSize;
+                        extentList[extentCount].FileOffset.QuadPart = srbp->offset.QuadPart;
+                        extentList[extentCount].CacheOffset.QuadPart = srbp->datap - cm_data.baseAddress;
+                        srbp->redirReleaseRequested = now;
+                        extentCount++;
+                    }
+                }
+                cm_ReleaseSCache(rscp);
+            }
+
+            if ( !oneFid && extentCount > 0) {
+                if (locked) {
+                    lock_ReleaseWrite(&buf_globalLock);
+                    locked = FALSE;
+                }
+                heldExtents.QuadPart = cm_data.buf_redirCount;
+                code = RDR_RequestExtentRelease(&rbp->fid, heldExtents, extentCount, extentList);
+            }
+            if (!locked) {
+                lock_ObtainWrite(&buf_globalLock);
+                locked = TRUE;
+            }
+        }
+        if (locked)
+            lock_ReleaseWrite(&buf_globalLock);
+        if (code == 0) {
+            if (oneFid) {
+                heldExtents.QuadPart = cm_data.buf_redirCount;
+                if (rbp && extentCount)
+                    code = RDR_RequestExtentRelease(&rbp->fid, heldExtents, extentCount, extentList);
+                else
+                    code = RDR_RequestExtentRelease(NULL, heldExtents, 1024, NULL);
+            } else {
+                code = 0;
+            }
+        }
+
+        if ((code == CM_ERROR_RETRY) && (reqp->flags & CM_REQ_NORETRY)) {
+            code = CM_ERROR_WOULDBLOCK;
+            break;
+        }
+    }
+    lock_ReleaseMutex(&buf_rdrReleaseExtentsLock);
+    return code;
+}
+
+/* returns 0 if the buffer does not exist, and non-0 if it does */
+static long
+buf_ExistsLocked(struct cm_scache *scp, osi_hyper_t *offsetp)
+{
+    cm_buf_t *bp;
+
+    if (bp = buf_FindLocked(&scp->fid, offsetp)) {
+        /* Do not call buf_ReleaseLocked() because we
+         * do not want to allow the buffer to be added
+         * to the free list.
+         */
+        afs_int32 refCount = InterlockedDecrement(&bp->refCount);
+#ifdef DEBUG_REFCOUNT
+        osi_Log2(afsd_logp,"buf_ExistsLocked bp 0x%p ref %d", bp, refCount);
+        afsi_log("%s:%d buf_ExistsLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, refCount);
+#endif
+        return CM_BUF_EXISTS;
+    }
+
+    return 0;
+}
+
 /* recycle a buffer, removing it from the free list, hashing in its new identity
  * and returning it write-locked so that no one can use it.  Called without
  * any locks held, and can return an error if it loses the race condition and
@@ -940,6 +1266,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
     cm_buf_t *bp;	/* buffer we're dealing with */
     cm_buf_t *nextBp;	/* next buffer in file hash chain */
     afs_uint32 i;	/* temp */
+    afs_uint64 n_bufs, n_nonzero, n_busy, n_dirty, n_own;
 
 #ifdef TESTING
     buf_ValidateBufQueues();
@@ -947,24 +1274,19 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
 
     while(1) {
       retry:
+        n_bufs = 0;
+        n_nonzero = 0;
+        n_own = 0;
+        n_busy = 0;
+        n_dirty = 0;
+
         lock_ObtainRead(&scp->bufCreateLock);
         lock_ObtainWrite(&buf_globalLock);
         /* check to see if we lost the race */
-        if (scp) {
-            if (bp = buf_FindLocked(&scp->fid, offsetp)) {
-		/* Do not call buf_ReleaseLocked() because we
-		 * do not want to allow the buffer to be added
-		 * to the free list.
-		 */
-                afs_int32 refCount = InterlockedDecrement(&bp->refCount);
-#ifdef DEBUG_REFCOUNT
-                osi_Log2(afsd_logp,"buf_GetNewLocked bp 0x%p ref %d", bp, refCount);
-                afsi_log("%s:%d buf_GetNewLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, refCount);
-#endif
-                lock_ReleaseWrite(&buf_globalLock);
-                lock_ReleaseRead(&scp->bufCreateLock);
-                return CM_BUF_EXISTS;
-            }
+        if (buf_ExistsLocked(scp, offsetp)) {
+            lock_ReleaseWrite(&buf_globalLock);
+            lock_ReleaseRead(&scp->bufCreateLock);
+            return CM_BUF_EXISTS;
         }
 
 	/* does this fix the problem below?  it's a simple solution. */
@@ -972,6 +1294,10 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
 	{
 	    lock_ReleaseWrite(&buf_globalLock);
             lock_ReleaseRead(&scp->bufCreateLock);
+
+            if ( RDR_Initialized )
+                goto rdr_release;
+
 	    osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List is empty - sleeping 200ms");
 	    Sleep(200);
 	    goto retry;
@@ -989,28 +1315,30 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
          * starting cleaning I/O for those which are dirty.  If we find
          * a clean buffer, we rehash it, lock it and return it.
          */
-        for(bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+        for (bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+            n_bufs++;
+
             /* check to see if it really has zero ref count.  This
              * code can bump refcounts, at least, so it may not be
              * zero.
              */
-            if (bp->refCount > 0)
+            if (bp->refCount > 0) {
+                n_nonzero++;
                 continue;
+            }
 
             /* we don't have to lock buffer itself, since the ref
              * count is 0 and we know it will stay zero as long as
              * we hold the global lock.
              */
 
-            /* Don't recycle a buffer held by the redirector. */
-            if (bp->qFlags & CM_BUF_QREDIR)
-                continue;
-
             /* don't recycle someone in our own chunk */
             if (!cm_FidCmp(&bp->fid, &scp->fid)
                  && (bp->offset.LowPart & (-cm_chunkSize))
-                 == (offsetp->LowPart & (-cm_chunkSize)))
+                 == (offsetp->LowPart & (-cm_chunkSize))) {
+                n_own++;
                 continue;
+            }
 
             /* if this page is being filled (!) or cleaned, see if
              * the I/O has completed.  If not, skip it, otherwise
@@ -1021,10 +1349,17 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                  * holding the big lock?  Watch for contention
                  * here.
                  */
+                n_busy++;
                 continue;
             }
 
             if (bp->flags & CM_BUF_DIRTY) {
+                n_dirty++;
+
+                /* leave the buffer alone if held by the redirector */
+                if (bp->qFlags & CM_BUF_QREDIR)
+                    continue;
+
                 /* if the buffer is dirty, start cleaning it and
                  * move on to the next buffer.  We do this with
                  * just the lock required to minimize contention
@@ -1047,8 +1382,27 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
 
                 /* now put it back and go around again */
                 buf_Release(bp);
-                goto retry;
+
+                /* but first obtain the locks we gave up
+                 * before the buf_CleanAsync() call */
+                lock_ObtainRead(&scp->bufCreateLock);
+                lock_ObtainWrite(&buf_globalLock);
+
+                /*
+                 * Since we dropped the locks we need to verify that
+                 * another thread has not allocated the buffer for us.
+                 */
+                if (buf_ExistsLocked(scp, offsetp)) {
+                    lock_ReleaseWrite(&buf_globalLock);
+                    lock_ReleaseRead(&scp->bufCreateLock);
+                    return CM_BUF_EXISTS;
+                }
+                continue;
             }
+
+            osi_Log3(afsd_logp, "buf_GetNewLocked: scp 0x%p examined %u buffers before recycling bufp 0x%p",
+                     scp, n_bufs, bp);
+            osi_Log4(afsd_logp, "... nonzero %u; own %u; busy %u; dirty %u", n_nonzero, n_own, n_busy, n_dirty);
 
             /* if we get here, we know that the buffer still has a 0
              * ref count, and that it is clean and has no currently
@@ -1093,6 +1447,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                            (osi_queue_t **) &cm_data.buf_freeListEndp,
                            &bp->q);
             _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINLRU);
+            buf_DecrementFreeCount();
 
             /* prepare to return it.  Give it a refcount */
             bp->refCount = 1;
@@ -1122,7 +1477,23 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
         } /* for all buffers in lru queue */
         lock_ReleaseWrite(&buf_globalLock);
         lock_ReleaseRead(&scp->bufCreateLock);
-	osi_Log0(afsd_logp, "buf_GetNewLocked: Free Buffer List has no buffers with a zero refcount - sleeping 100ms");
+
+	osi_Log1(afsd_logp, "buf_GetNewLocked: Free Buffer List has %u buffers none free", n_bufs);
+        osi_Log4(afsd_logp, "... nonzero %u; own %u; busy %u; dirty %u", n_nonzero, n_own, n_busy, n_dirty);
+
+        if (RDR_Initialized) {
+            afs_uint32 code;
+          rdr_release:
+            code = buf_RDRShakeSomeExtentsFree(reqp, TRUE, 2 /* seconds */);
+            switch (code) {
+            case CM_ERROR_RETRY:
+            case 0:
+                goto retry;
+            case CM_ERROR_WOULDBLOCK:
+                return CM_ERROR_WOULDBLOCK;
+            }
+        }
+
 	Sleep(100);		/* give some time for a buffer to be freed */
     }	/* while loop over everything */
     /* not reached */
@@ -1215,6 +1586,8 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
 
         if (code != 0) {
             /* failure or queued */
+
+            /* unless cm_BufRead() is altered, this path cannot be hit */
             if (code != ERROR_IO_PENDING) {
                 bp->error = code;
                 _InterlockedOr(&bp->flags, CM_BUF_ERROR);
@@ -1269,6 +1642,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
                        (osi_queue_t **) &cm_data.buf_freeListEndp,
                        &bp->q);
         _InterlockedAnd(&bp->qFlags, ~CM_BUF_QINLRU);
+        buf_DecrementFreeCount();
     }
     lock_ReleaseWrite(&buf_globalLock);
 
@@ -1278,30 +1652,6 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf
     buf_ValidateBufQueues();
 #endif /* TESTING */
     return 0;
-}
-
-/* count # of elements in the free list;
- * we don't bother doing the proper locking for accessing dataVersion or flags
- * since it is a pain, and this is really just an advisory call.  If you need
- * to do better at some point, rewrite this function.
- */
-long buf_CountFreeList(void)
-{
-    long count;
-    cm_buf_t *bufp;
-
-    count = 0;
-    lock_ObtainRead(&buf_globalLock);
-    for(bufp = cm_data.buf_freeListp; bufp; bufp = (cm_buf_t *) osi_QNext(&bufp->q)) {
-        /* if the buffer doesn't have an identity, or if the buffer
-         * has been invalidate (by having its DV stomped upon), then
-         * count it as free, since it isn't really being utilized.
-         */
-        if (!(bufp->qFlags & CM_BUF_QINHASH) || bufp->dataVersion == CM_BUF_VERSION_BAD)
-            count++;
-    }
-    lock_ReleaseRead(&buf_globalLock);
-    return count;
 }
 
 /* clean a buffer synchronously */
@@ -1375,7 +1725,14 @@ void buf_SetDirty(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 offset, afs_uint32 le
         bp->dirty_offset = offset;
         bp->dirty_length = length;
 
-        /* and add to the dirty list.
+        /*
+         * if the request is not from the afs redirector,
+         * add to the dirty list.  The redirector interface ensures
+         * that a background store operation is queued for each and
+         * every dirty extent that is released.  Therefore, the
+         * buf_IncrSyncer thread is not required to ensure that
+         * dirty buffers are written to the file server.
+         *
          * we obtain a hold on the buffer for as long as it remains
          * in the list.  buffers are only removed from the list by
          * the buf_IncrSyncer function regardless of when else the
@@ -1385,19 +1742,21 @@ void buf_SetDirty(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 offset, afs_uint32 le
          * elsewhere, never add to the dirty list if the buffer is
          * already there.
          */
-        lock_ObtainWrite(&buf_globalLock);
-        if (!(bp->qFlags & CM_BUF_QINDL)) {
-            buf_HoldLocked(bp);
-            if (!cm_data.buf_dirtyListp) {
-                cm_data.buf_dirtyListp = cm_data.buf_dirtyListEndp = bp;
-            } else {
-                cm_data.buf_dirtyListEndp->dirtyp = bp;
-                cm_data.buf_dirtyListEndp = bp;
+        if (!(reqp->flags & CM_REQ_SOURCE_REDIR)) {
+            lock_ObtainWrite(&buf_globalLock);
+            if (!(bp->qFlags & CM_BUF_QINDL)) {
+                buf_HoldLocked(bp);
+                if (!cm_data.buf_dirtyListp) {
+                    cm_data.buf_dirtyListp = cm_data.buf_dirtyListEndp = bp;
+                } else {
+                    cm_data.buf_dirtyListEndp->dirtyp = bp;
+                    cm_data.buf_dirtyListEndp = bp;
+                }
+                bp->dirtyp = NULL;
+                _InterlockedOr(&bp->qFlags, CM_BUF_QINDL);
             }
-            bp->dirtyp = NULL;
-            _InterlockedOr(&bp->qFlags, CM_BUF_QINDL);
+            lock_ReleaseWrite(&buf_globalLock);
         }
-        lock_ReleaseWrite(&buf_globalLock);
     }
 
     /* and record the last writer */
@@ -1438,6 +1797,13 @@ long buf_CleanAndReset(void)
     lock_ObtainRead(&buf_globalLock);
     for(i=0; i<cm_data.buf_hashSize; i++) {
         for(bp = cm_data.buf_scacheHashTablepp[i]; bp; bp = bp->hashp) {
+            if (bp->qFlags & CM_BUF_QREDIR) {
+                osi_Log1(buf_logp,"buf_CleanAndReset buffer held by redirector bp 0x%p", bp);
+
+                /* Request single extent from the redirector */
+                buf_RDRShakeAnExtentFree(bp, &req);
+            }
+
             if ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
                 buf_HoldLocked(bp);
                 lock_ReleaseRead(&buf_globalLock);
@@ -1547,6 +1913,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 
     buf_HoldLocked(bufp);
     lock_ReleaseRead(&buf_globalLock);
+
     while (bufp) {
         lock_ObtainMutex(&bufp->mx);
 
@@ -1585,7 +1952,29 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
              */
             if (LargeIntegerLessThanOrEqualTo(*sizep, bufp->offset)) {
                 /* truncating the entire page */
+                if (reqp->flags & CM_REQ_SOURCE_REDIR) {
+                    /*
+                     * Implicitly clear the redirector flag
+                     * and release the matching hold.
+                     */
+                    if (bufp->qFlags & CM_BUF_QREDIR) {
+                        osi_Log4(buf_logp,"buf_Truncate taking from file system bufp 0x%p vno 0x%x foffset 0x%x:%x",
+                                 bufp, bufp->fid.vnode, bufp->offset.HighPart, bufp->offset.LowPart);
+                        lock_ObtainWrite(&buf_globalLock);
+                        if (bufp->qFlags & CM_BUF_QREDIR) {
+                            buf_RemoveFromRedirQueue(scp, bufp);
+                            buf_ReleaseLocked(bufp, TRUE);
+                        }
+                        lock_ReleaseWrite(&buf_globalLock);
+                    }
+                } else {
+                    if (RDR_Initialized)
+                        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
+                                             scp->fid.unique, scp->fid.hash,
+                                             scp->fileType, AFS_INVALIDATE_SMB);
+                }
                 _InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
+                bufp->error = 0;
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
                 bufp->dataVersion = CM_BUF_VERSION_BAD;	/* known bad */
@@ -1701,15 +2090,17 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             /* actually, we only know that buffer is clean if ref
              * count is 1, since we don't have buffer itself locked.
              */
-            if (!(bp->flags & CM_BUF_DIRTY)) {
+            if (!(bp->flags & CM_BUF_DIRTY) && !(bp->qFlags & CM_BUF_QREDIR)) {
                 lock_ObtainWrite(&buf_globalLock);
-                if (bp->refCount == 1) {	/* bp is held above */
-                    nbp = bp->fileHashp;
-                    if (nbp)
-                        buf_HoldLocked(nbp);
-                    buf_ReleaseLocked(bp, TRUE);
-                    didRelease = 1;
-                    buf_Recycle(bp);
+                if (!(bp->flags & CM_BUF_DIRTY) && !(bp->qFlags & CM_BUF_QREDIR)) {
+                    if (bp->refCount == 1) {	/* bp is held above */
+                        nbp = bp->fileHashp;
+                        if (nbp)
+                            buf_HoldLocked(nbp);
+                        buf_ReleaseLocked(bp, TRUE);
+                        didRelease = 1;
+                        buf_Recycle(bp);
+                    }
                 }
                 lock_ReleaseWrite(&buf_globalLock);
             }
@@ -1774,6 +2165,11 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
     cm_buf_t *nbp;		/* next one */
     afs_uint32 i;
 
+    if (RDR_Initialized && scp->redirBufCount > 0) {
+        /* Retrieve all extents for this file from the redirector */
+        buf_RDRShakeFileExtentsFree(scp, reqp);
+    }
+
     i = BUF_FILEHASH(&scp->fid);
 
     lock_ObtainRead(&buf_globalLock);
@@ -1784,8 +2180,22 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
     for (; bp; bp = nbp) {
         /* clean buffer synchronously */
         if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
+            /*
+             * If the buffer is held by the redirector we must fetch
+             * it back in order to determine whether or not it is in
+             * fact dirty.
+             */
+            lock_ObtainRead(&buf_globalLock);
+            if (bp->qFlags & CM_BUF_QREDIR) {
+                osi_Log1(buf_logp,"buf_CleanVnode buffer held by redirector bp 0x%p", bp);
+
+                /* Retrieve single extent from the redirector */
+                buf_RDRShakeAnExtentFree(bp, reqp);
+            }
+            lock_ReleaseRead(&buf_globalLock);
+
             lock_ObtainMutex(&bp->mx);
-            if (bp->flags & CM_BUF_DIRTY) {
+            if ((bp->flags & CM_BUF_DIRTY)) {
                 if (userp && userp != bp->userp) {
                     cm_HoldUser(userp);
                     if (bp->userp)
@@ -1992,13 +2402,84 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
     cm_buf_t *bp;
     afs_uint32 bcount = 0;
     afs_uint32 i;
+    long found = 0;
 
     i = BUF_FILEHASH(fidp);
 
+    lock_ObtainRead(&buf_globalLock);
     for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->fileHashp, bcount++) {
-	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY))
-	    return 1;
+	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY)) {
+	    found = 1;
+            break;
+        }
     }
+    lock_ReleaseRead(&buf_globalLock);
+    return 0;
+}
+
+long buf_RDRBuffersExist(cm_fid_t *fidp)
+{
+    cm_buf_t *bp;
+    afs_uint32 bcount = 0;
+    afs_uint32 i;
+    long found = 0;
+
+    if (!RDR_Initialized)
+        return 0;
+
+    i = BUF_FILEHASH(fidp);
+
+    lock_ObtainRead(&buf_globalLock);
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->fileHashp, bcount++) {
+	if (!cm_FidCmp(fidp, &bp->fid) && (bp->qFlags & CM_BUF_QREDIR)) {
+	    found = 1;
+            break;
+        }
+    }
+    lock_ReleaseRead(&buf_globalLock);
+    return 0;
+}
+
+long buf_ClearRDRFlag(cm_scache_t *scp, char *reason)
+{
+    cm_fid_t *fidp = &scp->fid;
+    cm_buf_t *bp;
+    afs_uint32 bcount = 0;
+    afs_uint32 i;
+
+    i = BUF_FILEHASH(fidp);
+
+    lock_ObtainWrite(&scp->rw);
+    lock_ObtainRead(&buf_globalLock);
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->fileHashp, bcount++) {
+	if (!cm_FidCmp(fidp, &bp->fid) && (bp->qFlags & CM_BUF_QREDIR)) {
+            lock_ConvertRToW(&buf_globalLock);
+            if (bp->qFlags & CM_BUF_QREDIR) {
+                osi_Log4(buf_logp,"buf_ClearRDRFlag taking from file system bp 0x%p vno 0x%x foffset 0x%x:%x",
+                          bp, bp->fid.vnode, bp->offset.HighPart, bp->offset.LowPart);
+                buf_RemoveFromRedirQueue(scp, bp);
+                buf_ReleaseLocked(bp, TRUE);
+            }
+            lock_ConvertWToR(&buf_globalLock);
+        }
+    }
+
+    /* Confirm that there are none left */
+    lock_ConvertRToW(&buf_globalLock);
+    for ( bp = redirq_to_cm_buf_t(scp->redirQueueT);
+          bp;
+          bp = redirq_to_cm_buf_t(scp->redirQueueT))
+    {
+        if (bp->qFlags & CM_BUF_QREDIR) {
+            osi_Log4(buf_logp,"buf_ClearRDRFlag taking from file system bufp 0x%p vno 0x%x foffset 0x%x:%x",
+                      bp, bp->fid.vnode, bp->offset.HighPart, bp->offset.LowPart);
+            buf_RemoveFromRedirQueue(scp, bp);
+            buf_ReleaseLocked(bp, TRUE);
+        }
+
+    }
+    lock_ReleaseWrite(&buf_globalLock);
+    lock_ReleaseWrite(&scp->rw);
     return 0;
 }
 
@@ -2032,3 +2513,132 @@ long buf_CleanDirtyBuffers(cm_scache_t *scp)
     return 0;
 }
 #endif
+
+/*
+ * The following routines will not be used on a
+ * regular basis but are very useful in a variety
+ * of scenarios when debugging data corruption.
+ */
+const char *
+buf_HexCheckSum(cm_buf_t * bp)
+{
+    int i, k;
+    static char buf[33];
+    static char tr[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+    for (i=0;i<16;i++) {
+        k = bp->md5cksum[i];
+
+        buf[i*2] = tr[k / 16];
+        buf[i*2+1] = tr[k % 16];
+    }
+    buf[32] = '\0';
+
+    return buf;
+}
+
+void
+buf_ComputeCheckSum(cm_buf_t * bp)
+{
+    MD5_CTX md5;
+
+    MD5_Init(&md5);
+    MD5_Update(&md5, bp->datap, cm_data.blockSize);
+    MD5_Final(bp->md5cksum, &md5);
+
+    osi_Log4(buf_logp, "CheckSum bp 0x%p md5 %s, dirty: offset %u length %u",
+             bp, osi_LogSaveString(buf_logp, buf_HexCheckSum(bp)),
+             bp->dirty_offset, bp->dirty_length);
+}
+
+int
+buf_ValidateCheckSum(cm_buf_t * bp)
+{
+    MD5_CTX md5;
+    unsigned char tmp[16];
+
+    MD5_Init(&md5);
+    MD5_Update(&md5, bp->datap, cm_data.blockSize);
+    MD5_Final(tmp, &md5);
+
+    if (memcmp(tmp, bp->md5cksum, 16) == 0)
+        return 1;
+    return 0;
+}
+
+void
+buf_InsertToRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
+{
+    lock_AssertWrite(&buf_globalLock);
+    if (scp)
+        lock_AssertWrite(&scp->rw);
+
+    if (bufp->qFlags & CM_BUF_QINLRU) {
+        _InterlockedAnd(&bufp->qFlags, ~CM_BUF_QINLRU);
+        osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_freeListp,
+                       (osi_queue_t **) &cm_data.buf_freeListEndp,
+                       &bufp->q);
+        buf_DecrementFreeCount();
+    }
+    _InterlockedOr(&bufp->qFlags, CM_BUF_QREDIR);
+    osi_QAddH( (osi_queue_t **) &cm_data.buf_redirListp,
+               (osi_queue_t **) &cm_data.buf_redirListEndp,
+               &bufp->q);
+    buf_IncrementRedirCount();
+    bufp->redirLastAccess = time(NULL);
+    if (scp) {
+        osi_QAddH( (osi_queue_t **) &scp->redirQueueH,
+                   (osi_queue_t **) &scp->redirQueueT,
+                   &bufp->redirq);
+        scp->redirLastAccess = bufp->redirLastAccess;
+        InterlockedIncrement(&scp->redirBufCount);
+    }
+}
+
+void
+buf_RemoveFromRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
+{
+    lock_AssertWrite(&buf_globalLock);
+    if (scp)
+        lock_AssertWrite(&scp->rw);
+
+    _InterlockedAnd(&bufp->qFlags, ~CM_BUF_QREDIR);
+    osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
+                   (osi_queue_t **) &cm_data.buf_redirListEndp,
+                   &bufp->q);
+    buf_DecrementRedirCount();
+    if (scp) {
+        osi_QRemoveHT( (osi_queue_t **) &scp->redirQueueH,
+                       (osi_queue_t **) &scp->redirQueueT,
+                       &bufp->redirq);
+        InterlockedDecrement(&scp->redirBufCount);
+    }
+}
+
+void
+buf_MoveToHeadOfRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
+{
+    lock_AssertWrite(&buf_globalLock);
+    osi_assertx(bufp->qFlags & CM_BUF_QREDIR,
+                 "buf_MoveToHeadOfRedirQueue buffer not held by redirector");
+
+    if (scp)
+        lock_AssertWrite(&scp->rw);
+
+    osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
+                   (osi_queue_t **) &cm_data.buf_redirListEndp,
+                   &bufp->q);
+    osi_QAddH( (osi_queue_t **) &cm_data.buf_redirListp,
+               (osi_queue_t **) &cm_data.buf_redirListEndp,
+               &bufp->q);
+    bufp->redirLastAccess = time(NULL);
+    if (scp) {
+        osi_QRemoveHT( (osi_queue_t **) &scp->redirQueueH,
+                       (osi_queue_t **) &scp->redirQueueT,
+                       &bufp->redirq);
+        osi_QAddH( (osi_queue_t **) &scp->redirQueueH,
+                   (osi_queue_t **) &scp->redirQueueT,
+                   &bufp->redirq);
+        scp->redirLastAccess = bufp->redirLastAccess;
+    }
+}

@@ -7,7 +7,7 @@
 
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" /DSMB_UNICODE -I..\kfw\inc\loadfuncs \
         -I..\kfw\inc\krb5 -I..\kfw\inc\leash -I$(DESTDIR)\include\afs \
-        -I$(DESTDIR)\include\rx
+        -I$(DESTDIR)\include\rx -I..\afsrdr\common -I..\afsrdr\user
 AFSDEV_NETGUI = 1
 RELDIR=WINNT\afsd
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
@@ -153,9 +153,25 @@ AFSDOBJS=\
 	$(OUT)\ms-wkssvc_s.obj \
 	$(OUT)\rpc_wkssvc.obj \
 	$(OUT)\rpc_srvsvc.obj \
-        $(OUT)\AFS_component_version_number.obj
+        $(OUT)\AFS_component_version_number.obj \
+	$(OUT)\RDRInit.obj \
+	$(OUT)\RDRFunction.obj \
+        $(OUT)\RDRIoctl.obj \
+        $(OUT)\RDRPipe.obj
 
 $(AFSDOBJS):
+
+$(OUT)\RDRInit.obj: ..\afsrdr\user\RDRInit.cpp ..\afsrdr\user\RDRPrototypes.h ..\afsrdr\user\RDRIoctl.h
+	$(CPP2OBJ) ..\afsrdr\user\RDRInit.cpp
+
+$(OUT)\RDRFunction.obj: ..\afsrdr\user\RDRFunction.c ..\afsrdr\user\RDRPrototypes.h ..\afsrdr\user\RDRIoctl.h
+	$(C2OBJ)  ..\afsrdr\user\RDRFunction.c
+
+$(OUT)\RDRIoctl.obj: ..\afsrdr\user\RDRIoctl.c ..\afsrdr\user\RDRIoctl.h
+	$(C2OBJ)  ..\afsrdr\user\RDRIoctl.c
+
+$(OUT)\RDRPipe.obj: ..\afsrdr\user\RDRPipe.c ..\afsrdr\user\RDRPipe.h
+	$(C2OBJ)  ..\afsrdr\user\RDRPipe.c
 
 $(OUT)\cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
@@ -317,7 +333,8 @@ LOGON_DLLSDKLIBS =\
 	activeds.lib \
 	user32.lib \
         userenv.lib \
-        shell32.lib
+        shell32.lib \
+        rpcrt4.lib
 
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def $(LOGON_DLLSDKLIBS)
@@ -450,12 +467,14 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
+        $(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsroken.lib \
+        $(DESTDIR)\lib\afshcrypto.lib \
         $(LANAHELPERLIB)
 
 $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS) $(AFSD_EXELIBS)

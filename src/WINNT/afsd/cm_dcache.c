@@ -22,6 +22,7 @@
 #include <osi.h>
 
 #include "afsd.h"
+#include "smb.h"
 
 #ifdef DEBUG
 extern void afsi_log(char *pattern, ...);
@@ -732,12 +733,12 @@ cm_BkgStore(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_u
     osi_hyper_t toffset;
     long length;
     long code = 0;
+    afs_uint32 req_flags = reqp->flags;
 
     if (scp->flags & CM_SCACHEFLAG_DELETED) {
 	osi_Log4(afsd_logp, "Skipping BKG store - Deleted scp 0x%p, offset 0x%x:%08x, length 0x%x", scp, p2, p1, p3);
     } else {
 	/* Retries will be performed by the BkgDaemon thread if appropriate */
-        afs_uint32 req_flags = reqp->flags;
 	reqp->flags |= CM_REQ_NORETRY;
 
 	toffset.LowPart = p1;
@@ -1420,6 +1421,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
     osi_queueData_t *qdp;
     osi_queueData_t *nqdp;
     int flags;
+    int reportErrorToRedir = 0;
 
     /* Give back reserved buffers */
     if (biop->reserved)
@@ -1477,6 +1479,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
                         bufp->error = code;
                         bufp->dataVersion = CM_BUF_VERSION_BAD;
                         bufp->dirtyCounter++;
+                        reportErrorToRedir = 1;
                         break;
                     case CM_ERROR_TIMEDOUT:
                     case CM_ERROR_ALLDOWN:
@@ -1501,6 +1504,12 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
 	    buf_Release(bufp);
 	    bufp = NULL;
 	}
+
+        if (RDR_Initialized && reportErrorToRedir) {
+            DWORD status;
+            smb_MapNTError(cm_MapRPCError(code, biop->reqp), &status, TRUE);
+            RDR_SetFileStatus( &scp->fid, status);
+        }
     } else {
 	if (!scp_locked)
             lock_ObtainWrite(&scp->rw);

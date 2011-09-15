@@ -197,6 +197,10 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     if (desiredAccess == DELETE)
         goto done_2;
 
+    /* Always allow reading attributes (Hidden, System, Readonly, ...) */
+    if (desiredAccess == FILE_READ_ATTRIBUTES)
+        goto done_2;
+
     if (desiredAccess & (AFS_ACCESS_READ|AFS_ACCESS_EXECUTE))
         rights |= (scp->fileType == CM_SCACHETYPE_DIRECTORY ? PRSFS_LOOKUP : PRSFS_READ);
 
@@ -1327,10 +1331,16 @@ notfound:
     return code;
 }
 
-int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch, unsigned int index)
+int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, long outSizeCch, unsigned int index)
 {
     clientchar_t *tp;
     int prefixCount;
+#ifdef _WIN64
+    int use_sysname64 = 0;
+
+    if (cm_sysName64Count > 0 && reqp && (reqp->flags & CM_REQ_WOW64) && (reqp->flags & CM_REQ_SOURCE_REDIR))
+        use_sysname64 = 1;
+#endif
 
     tp = cm_ClientStrRChr(inp, '@');
     if (tp == NULL)
@@ -1343,6 +1353,11 @@ int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch, uns
     if (outp == NULL)
         return 1;
 
+#ifdef _WIN64
+    if (use_sysname64 && index >= cm_sysName64Count)
+        return -1;
+    else
+#endif
     if (index >= cm_sysNameCount)
         return -1;
 
@@ -1350,8 +1365,14 @@ int cm_ExpandSysName(clientchar_t *inp, clientchar_t *outp, long outSizeCch, uns
     prefixCount = (int)(tp - inp);
 
     cm_ClientStrCpyN(outp, outSizeCch, inp, prefixCount);	/* copy out "a." from "a.@sys" */
-    outp[prefixCount] = 0;		/* null terminate the "a." */
-    cm_ClientStrCat(outp, outSizeCch, cm_sysNameList[index]);/* append i386_nt40 */
+    outp[prefixCount] = 0;		                        /* null terminate the "a." */
+#ifdef _WIN64
+    if (use_sysname64)
+        cm_ClientStrCat(outp, outSizeCch, cm_sysName64List[index]);
+    else
+#endif
+        cm_ClientStrCat(outp, outSizeCch, cm_sysNameList[index]);
+
     return 1;
 }
 
@@ -1494,9 +1515,9 @@ long cm_Lookup(cm_scache_t *dscp, clientchar_t *namep, long flags, cm_user_t *us
         return cm_EvaluateVolumeReference(namep, flags, userp, reqp, outScpp);
     }
 
-    if (cm_ExpandSysName(namep, NULL, 0, 0) > 0) {
+    if (cm_ExpandSysName(reqp, namep, NULL, 0, 0) > 0) {
         for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
-            code = cm_ExpandSysName(namep, tname, lengthof(tname), sysNameIndex);
+            code = cm_ExpandSysName(reqp, namep, tname, lengthof(tname), sysNameIndex);
             if (code > 0) {
                 code = cm_LookupInternal(dscp, tname, flags, userp, reqp, &scp);
 #ifdef DEBUG_REFCOUNT
@@ -1654,6 +1675,11 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     cm_dnlcRemove(dscp, cnamep);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        if (RDR_Initialized &&
+            scp->fileType != CM_SCACHETYPE_FILE && scp->fileType != CM_SCACHETYPE_DIRECTORY)
+            RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode,
+                                 dscp->fid.unique, dscp->fid.hash,
+                                 dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
     } else if (code == CM_ERROR_NOSUCHFILE) {
 	/* windows would not have allowed the request to delete the file
 	 * if it did not believe the file existed.  therefore, we must
@@ -1685,6 +1711,11 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
             }
             cm_DiscardSCache(scp);
 	    lock_ReleaseWrite(&scp->rw);
+            if (RDR_Initialized && !(reqp->flags & CM_REQ_SOURCE_REDIR) &&
+                !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
+                                      scp->fid.unique, scp->fid.hash,
+                                      scp->fileType, AFS_INVALIDATE_DELETED))
+                buf_ClearRDRFlag(scp, "unlink");
         }
     }
 
@@ -2789,7 +2820,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
      */
-    if (cm_ExpandSysName(cnamep, NULL, 0, 0)) {
+    if (cm_ExpandSysName(NULL, cnamep, NULL, 0, 0)) {
         return CM_ERROR_ATSYS;
     }
 
@@ -2973,7 +3004,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
      */
-    if (cm_ExpandSysName(cnamep, NULL, 0, 0)) {
+    if (cm_ExpandSysName(NULL, cnamep, NULL, 0, 0)) {
         return CM_ERROR_ATSYS;
     }
 
@@ -3171,6 +3202,10 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        if (RDR_Initialized)
+            RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode,
+                                 dscp->fid.unique, dscp->fid.hash,
+                                 dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
     }
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -3452,6 +3487,11 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
             cm_RemoveSCacheFromHashTable(scp);
             lock_ReleaseWrite(&cm_scacheLock);
 	    lock_ReleaseWrite(&scp->rw);
+            if (RDR_Initialized && !(reqp->flags & CM_REQ_SOURCE_REDIR) &&
+                !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
+                                      scp->fid.unique, scp->fid.hash,
+                                      scp->fileType, AFS_INVALIDATE_DELETED))
+                buf_ClearRDRFlag(scp, "rmdir");
         }
     }
 
@@ -3830,6 +3870,9 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     cm_DiscardSCache(oldScp);
     lock_ReleaseWrite(&oldScp->rw);
 
+    if (RDR_Initialized)
+        RDR_InvalidateObject(oldScp->fid.cell, oldScp->fid.volume, oldScp->fid.vnode, oldScp->fid.unique,
+                              oldScp->fid.hash, oldScp->fileType, AFS_INVALIDATE_CALLBACK);
   done:
     if (oldScp)
         cm_ReleaseSCache(oldScp);
@@ -5108,6 +5151,12 @@ long cm_UnlockByKey(cm_scache_t * scp,
 
             fileLock->flags |= CM_FILELOCK_FLAG_DELETED;
 
+            cm_ReleaseUser(fileLock->userp);
+            cm_ReleaseSCacheNoLock(scp);
+
+            fileLock->userp = NULL;
+            fileLock->scp = NULL;
+
             n_unlocks++;
         }
     }
@@ -5122,9 +5171,9 @@ long cm_UnlockByKey(cm_scache_t * scp,
         return 0;
     }
 
-    osi_Log1(afsd_logp, "cm_UnlockByKey done with %d locks", n_unlocks);
-
+    code = cm_IntUnlock(scp, userp, reqp);
     osi_Log1(afsd_logp, "cm_UnlockByKey code 0x%x", code);
+
     osi_Log4(afsd_logp, "   Leaving scp with excl[%d], shared[%d], client[%d], serverLock[%d]",
              scp->exclusiveLocks, scp->sharedLocks, scp->clientLocks,
              (int)(signed char) scp->serverLock);
@@ -5132,6 +5181,7 @@ long cm_UnlockByKey(cm_scache_t * scp,
     return code;
 }
 
+/* Called with scp->rw held */
 long cm_Unlock(cm_scache_t *scp,
                unsigned char sLockType,
                LARGE_INTEGER LOffset, LARGE_INTEGER LLength,
@@ -5234,7 +5284,19 @@ long cm_Unlock(cm_scache_t *scp,
     }
 
     fileLock->flags |= CM_FILELOCK_FLAG_DELETED;
+
+    if (userp != NULL) {
+        cm_ReleaseUser(fileLock->userp);
+    } else {
+        userp = fileLock->userp;
+        release_userp = TRUE;
+    }
+    cm_ReleaseSCacheNoLock(scp);
+    fileLock->userp = NULL;
+    fileLock->scp = NULL;
     lock_ReleaseWrite(&cm_scacheLock);
+
+    code = cm_IntUnlock(scp, userp, reqp);
 
     if (release_userp) {
         cm_ReleaseUser(userp);
@@ -5321,15 +5383,16 @@ void cm_CheckLocks()
             fileLock->userp = NULL;
             fileLock->scp = NULL;
 
-            lock_ReleaseWrite(&cm_scacheLock);
-            lock_ObtainWrite(&scp->rw);
-            code = cm_IntUnlock(scp, userp, &req);
-            lock_ReleaseWrite(&scp->rw);
+            if (scp && userp) {
+                lock_ReleaseWrite(&cm_scacheLock);
+                lock_ObtainWrite(&scp->rw);
+                code = cm_IntUnlock(scp, userp, &req);
+                lock_ReleaseWrite(&scp->rw);
 
-            cm_ReleaseUser(fileLock->userp);
-            lock_ObtainWrite(&cm_scacheLock);
-            cm_ReleaseSCacheNoLock(scp);
-
+                cm_ReleaseUser(userp);
+                lock_ObtainWrite(&cm_scacheLock);
+                cm_ReleaseSCacheNoLock(scp);
+            }
             osi_QRemove(&cm_allFileLocks, q);
             cm_PutFileLock(fileLock);
 
@@ -5830,7 +5893,7 @@ cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs_uint16
 int cm_KeyEquals(cm_key_t *k1, cm_key_t *k2, int flags)
 {
     return (k1->session_id == k2->session_id) && (k1->file_id == k2->file_id) &&
-        ((flags & CM_UNLOCK_BY_FID) || (k1->process_id == k2->process_id));
+        ((flags & CM_UNLOCK_FLAG_BY_FID) || (k1->process_id == k2->process_id));
 }
 
 void cm_ReleaseAllLocks(void)

@@ -3117,11 +3117,11 @@ void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir)
             NTStatus = 0xC000022DL;	/* Retry */
         else {
 #ifdef COMMENT
-        NTStatus = 0xC000022DL;	/* Retry */
+            NTStatus = 0xC000022DL;	/* Retry */
 #else
-        NTStatus = 0xC00000B5L; /* I/O Timeout */
+            NTStatus = 0xC00000B5L; /* I/O Timeout */
 #endif
-    }
+        }
     }
     else if (code == CM_ERROR_NOACCESS) {
         NTStatus = 0xC0000022L;	/* Access denied */
@@ -3281,7 +3281,10 @@ void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir)
     else if (code == CM_ERROR_RPC_MOREDATA) {
 	NTStatus = 0x80000005L;	/* Buffer overflow */
     }
-    else  {
+    else {
+        char foo[256];
+        sprintf(foo, "No mapping for 0x%X using 0xC0982001\r\n", code);
+        OutputDebugString(foo);
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
 
@@ -6932,8 +6935,10 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 
         lock_ReleaseMutex(&fidp->mx);
 
-        /* CM_UNLOCK_BY_FID doesn't look at the process ID.  We pass
-              * in zero. */
+        /*
+         * CM_UNLOCK_FLAG_BY_FID doesn't look at the process ID.
+         * We pass in zero.
+         */
         key = cm_GenerateKey(vcp->vcID, 0, fidp->fid);
         lock_ObtainWrite(&scp->rw);
 
@@ -6948,7 +6953,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
             goto post_syncopdone;
         }
 
-        cm_UnlockByKey(scp, key, CM_UNLOCK_BY_FID, userp, &req);
+        cm_UnlockByKey(scp, key, CM_UNLOCK_FLAG_BY_FID, userp, &req);
 
 	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
 

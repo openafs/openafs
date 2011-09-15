@@ -46,11 +46,30 @@
 #include "smb.h"
 #include <WINNT/afsreg.h>
 
+extern DWORD RDR_NetworkAddrChange(void);
+extern DWORD RDR_VolumeStatus(ULONG cellID, ULONG volID, BOOLEAN online);
+extern DWORD RDR_NetworkStatus(BOOLEAN status);
+
 HMODULE hVolStatus = NULL;
 dll_VolStatus_Funcs_t dll_funcs;
 cm_VolStatus_Funcs_t cm_funcs;
 
 static char volstat_NetbiosName[64] = "";
+
+static DWORD RDR_Notifications = 0;
+
+rdr_volstat_evt_t *rdr_evtH = NULL;
+rdr_volstat_evt_t *rdr_evtT = NULL;
+
+static EVENT_HANDLE rdr_q_event = NULL;
+
+static osi_mutex_t rdr_evt_lock;
+
+void
+cm_VolStatus_SetRDRNotifications(DWORD onoff)
+{
+    RDR_Notifications = onoff;
+}
 
 afs_uint32
 cm_VolStatus_Active(void)
@@ -77,16 +96,21 @@ cm_VolStatus_Initialization(void)
         code = RegQueryValueEx(parmKey, "VolStatusHandler", NULL, NULL,
                                 (BYTE *) &wd, &dummyLen);
 
-        if (code == 0) {
+        if (code == ERROR_SUCCESS) {
             dummyLen = sizeof(volstat_NetbiosName);
             code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
                                    (BYTE *)volstat_NetbiosName, &dummyLen);
         }
+        if (code == ERROR_SUCCESS && wd[0])
+            hVolStatus = LoadLibrary(wd);
+
+        dummyLen = sizeof(wd);
+        code = RegQueryValueEx(parmKey, "RDRVolStatNotify", NULL, NULL,
+                                (BYTE *) &RDR_Notifications, &dummyLen);
+
         RegCloseKey (parmKey);
     }
 
-    if (code == ERROR_SUCCESS && wd[0])
-        hVolStatus = LoadLibrary(wd);
     if (hVolStatus) {
         (FARPROC) dll_VolStatus_Initialization = GetProcAddress(hVolStatus, "@VolStatus_Initialization@8");
         if (dll_VolStatus_Initialization) {
@@ -106,6 +130,23 @@ cm_VolStatus_Initialization(void)
         }
     }
 
+    if (RDR_Initialized && RDR_Notifications) {
+        long pid;
+        thread_t phandle;
+
+        lock_InitializeMutex(&rdr_evt_lock, "rdr_evt_lock", LOCK_HIERARCHY_IGNORE);
+
+        phandle = thrd_Create((SecurityAttrib) NULL, 0,
+                                       (ThreadFunc) cm_VolStatus_DeliverNotifications,
+                                       0, 0, &pid, "cm_VolStatus_DeliverNotifications");
+        osi_assertx(phandle != NULL, "cm_VolStatus_DeliverNotifications thread creation failure");
+        thrd_CloseHandle(phandle);
+
+        rdr_q_event = thrd_CreateEvent(NULL, TRUE, TRUE, "rdr_q_event");
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: rdr_q_event");
+    }
+
     osi_Log1(afsd_logp,"cm_VolStatus_Initialization 0x%x", code);
 
     return code;
@@ -118,6 +159,10 @@ long
 cm_VolStatus_Finalize(void)
 {
     osi_Log1(afsd_logp,"cm_VolStatus_Finalize handle 0x%x", hVolStatus);
+
+    if ( RDR_Initialized && RDR_Notifications ) {
+        CloseHandle(rdr_q_event);
+    }
 
     if (hVolStatus == NULL)
         return 0;
@@ -180,6 +225,18 @@ cm_VolStatus_Network_Started(const char * netbios32)
 {
     long code = 0;
 
+    if (RDR_Initialized && RDR_Notifications) {
+        rdr_volstat_evt_t *evp = (rdr_volstat_evt_t *)malloc(sizeof(rdr_volstat_evt_t));
+        evp->type = netstatus;
+        evp->netstatus_data.status = TRUE;
+
+        lock_ObtainMutex(&rdr_evt_lock);
+        osi_QAddH((osi_queue_t **) &rdr_evtH, (osi_queue_t **) &rdr_evtT, &evp->q);
+        lock_ReleaseMutex(&rdr_evt_lock);
+
+        thrd_SetEvent(rdr_q_event);
+    }
+
     if (hVolStatus == NULL)
         return 0;
 
@@ -205,6 +262,18 @@ cm_VolStatus_Network_Stopped(const char * netbios32)
 {
     long code = 0;
 
+    if (RDR_Initialized && RDR_Notifications) {
+        rdr_volstat_evt_t *evp = (rdr_volstat_evt_t *)malloc(sizeof(rdr_volstat_evt_t));
+        evp->type = netstatus;
+        evp->netstatus_data.status = FALSE;
+
+        lock_ObtainMutex(&rdr_evt_lock);
+        osi_QAddH((osi_queue_t **) &rdr_evtH, (osi_queue_t **) &rdr_evtT, &evp->q);
+        lock_ReleaseMutex(&rdr_evt_lock);
+
+        thrd_SetEvent(rdr_q_event);
+    }
+
     if (hVolStatus == NULL)
         return 0;
 
@@ -227,6 +296,17 @@ cm_VolStatus_Network_Addr_Change(void)
 {
     long code = 0;
 
+    if (RDR_Initialized && RDR_Notifications) {
+        rdr_volstat_evt_t *evp = (rdr_volstat_evt_t *)malloc(sizeof(rdr_volstat_evt_t));
+        evp->type = addrchg;
+
+        lock_ObtainMutex(&rdr_evt_lock);
+        osi_QAddH((osi_queue_t **) &rdr_evtH, (osi_queue_t **) &rdr_evtT, &evp->q);
+        lock_ReleaseMutex(&rdr_evt_lock);
+
+        thrd_SetEvent(rdr_q_event);
+    }
+
     if (hVolStatus == NULL)
         return 0;
 
@@ -242,6 +322,34 @@ long
 cm_VolStatus_Change_Notification(afs_uint32 cellID, afs_uint32 volID, enum volstatus status)
 {
     long code = 0;
+
+    if (RDR_Initialized && RDR_Notifications) {
+        rdr_volstat_evt_t *evp = (rdr_volstat_evt_t *)malloc(sizeof(rdr_volstat_evt_t));
+        switch (status) {
+        case vl_alldown:
+        case vl_offline:
+            evp->type = volstatus;
+            evp->volstatus_data.cellID = cellID;
+            evp->volstatus_data.volID = volID;
+            evp->volstatus_data.online = FALSE;
+
+            lock_ObtainMutex(&rdr_evt_lock);
+            osi_QAddH((osi_queue_t **) &rdr_evtH, (osi_queue_t **) &rdr_evtT, &evp->q);
+            lock_ReleaseMutex(&rdr_evt_lock);
+            break;
+        default:
+            evp->type = volstatus;
+            evp->volstatus_data.cellID = cellID;
+            evp->volstatus_data.volID = volID;
+            evp->volstatus_data.online = TRUE;
+
+            lock_ObtainMutex(&rdr_evt_lock);
+            osi_QAddH((osi_queue_t **) &rdr_evtH, (osi_queue_t **) &rdr_evtT, &evp->q);
+            lock_ReleaseMutex(&rdr_evt_lock);
+        }
+
+        thrd_SetEvent(rdr_q_event);
+    }
 
     if (hVolStatus == NULL)
         return 0;
@@ -445,4 +553,39 @@ cm_VolStatus_Path_To_DFSlink(const char * share, const char * path, afs_uint32 *
 
     osi_Log1(afsd_logp,"cm_VolStatus_Path_To_DFSlink code 0x%x",code);
     return code;
+}
+
+void
+cm_VolStatus_DeliverNotifications(void * dummy)
+{
+    rdr_volstat_evt_t *evp, *evprev;
+    afs_uint32 code;
+
+    while ( TRUE ) {
+        code = thrd_WaitForSingleObject_Event( rdr_q_event, INFINITE );
+
+        lock_ObtainMutex(&rdr_evt_lock);
+        for (evp = rdr_evtT; evp; evp = evprev)
+        {
+            evprev = (rdr_volstat_evt_t *) osi_QPrev(&evp->q);
+            osi_QRemoveHT((osi_queue_t **) &rdr_evtH, (osi_queue_t **) &rdr_evtT, &evp->q);
+            lock_ReleaseMutex(&rdr_evt_lock);
+
+            switch ( evp->type ) {
+            case addrchg:
+                RDR_NetworkAddrChange();
+                break;
+            case volstatus:
+                RDR_VolumeStatus(evp->volstatus_data.cellID, evp->volstatus_data.volID, evp->volstatus_data.online);
+                break;
+            case netstatus:
+                RDR_NetworkStatus(evp->netstatus_data.status);
+                break;
+            }
+
+            free(evp);
+            lock_ObtainMutex(&rdr_evt_lock);
+        }
+        lock_ReleaseMutex(&rdr_evt_lock);
+    }
 }

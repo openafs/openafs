@@ -53,8 +53,8 @@ typedef struct cm_conn {
  * to the cache manager functions.
  */
 typedef struct cm_req {
-    DWORD startTime;		/* Quit before RDR times us out */
-    int rpcError;			/* RPC error code */
+    DWORD startTime;		/* GetTickCount() when this struct was initialized */
+    int rpcError;		/* RPC error code */
     int volumeError;		/* volume error code */
     int accessError;		/* access error code */
     struct cm_server * tokenIdleErrorServp;  /* server that reported a token/idle error other than expired */

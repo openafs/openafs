@@ -537,7 +537,7 @@ void cm_PerformancePrintReport(void)
                         "SIZEs- 0kb=%u 1kb=%u 4kb=%u 64kb=%u 1mb=%u 20m=%u 100mb=%u 1gb=%u 2gb=%u larger=%u\r\n\r\n",
                          t,
                          cm_data.currentSCaches, cm_data.maxSCaches, cm_data.currentVolumes, cm_data.maxVolumes,
-                         cm_data.buf_nbuffers - buf_CountFreeList(), cm_data.buf_nbuffers,
+                         cm_data.buf_nbuffers - cm_data.buf_freeCount, cm_data.buf_nbuffers,
                          fid_cnt, fid_w_vol, fid_w_scache, fid_w_callbacks, fid_w_buffers,
                          fid_w_scache_no_vol, fid_w_vol_no_scache, fid_w_scache_no_buf, fid_w_buf_no_scache,
                          rw_vols, ro_vols, bk_vols,

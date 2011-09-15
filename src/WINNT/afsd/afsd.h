@@ -60,6 +60,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_memmap.h"
 #include "cm_freelance.h"
 #include "cm_performance.h"
+#include "cm_rdr.h"
 #include "afsd_init.h"
 #include "afsd_eventlog.h"
 

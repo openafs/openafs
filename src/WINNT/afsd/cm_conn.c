@@ -156,7 +156,7 @@ void cm_InitConn(void)
             if (HardDeadtimeout == 0) {
                 HardDeadtimeout = (unsigned short) (RDRtimeout > 125 ? 120 : (RDRtimeout - 5));
                 afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
-            }       
+            }
             if (IdleDeadtimeout == 0) {
                 IdleDeadtimeout = (unsigned short) ConnDeadtimeout;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
@@ -696,15 +696,23 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		lock_ReleaseWrite(&cm_scacheLock);
                 cm_LockMarkSCacheLost(scp);
 		lock_ReleaseWrite(&scp->rw);
+                if (RDR_Initialized)
+                    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED);
 		cm_ReleaseSCache(scp);
 
  		if (pscp) {
 		    if (cm_HaveCallback(pscp)) {
  			lock_ObtainWrite(&pscp->rw);
  			cm_DiscardSCache(pscp);
- 			lock_ReleaseWrite(&pscp->rw);
- 		    }
- 		    cm_ReleaseSCache(pscp);
+			lock_ReleaseWrite(&pscp->rw);
+
+                        if (RDR_Initialized)
+                            RDR_InvalidateObject(pscp->fid.cell, pscp->fid.volume, pscp->fid.vnode, pscp->fid.unique,
+                                                 pscp->fid.hash, pscp->fileType, AFS_INVALIDATE_EXPIRED);
+
+		    }
+		    cm_ReleaseSCache(pscp);
  		}
 	    }
 	} else {

@@ -62,6 +62,8 @@ typedef struct cm_file_lock {
                                  * cm_scacheLock] */
 } cm_file_lock_t;
 
+#define fileq_to_cm_file_lock_t(q) ((cm_file_lock_t *)((char *) (q) - offsetof(cm_file_lock_t, fileq)))
+
 #define CM_FILELOCK_FLAG_DELETED         0x01
 #define CM_FILELOCK_FLAG_LOST            0x02
 
@@ -223,8 +225,16 @@ typedef struct cm_scache {
                                        Holds queue of
                                        cm_scache_waiter_t
                                        objects. Protected by
-                                       cm_cacheLock. */
+                                       cm_scacheLock. */
     osi_queue_t * waitQueueT;       /* locked by cm_scacheLock */
+
+    /* redirector state - protected by scp->rw */
+    osi_queue_t * redirQueueH;      /* LRU queue of buffers for this
+                                       file that are assigned to the
+                                       afsredir kernel module. */
+    osi_queue_t * redirQueueT;
+    afs_uint32    redirBufCount;    /* Number of buffers held by the redirector */
+    time_t        redirLastAccess;  /* last time redir accessed the vnode */
 } cm_scache_t;
 
 /* dataVersion */
@@ -277,6 +287,8 @@ typedef struct cm_scache {
 #define CM_SCACHEFLAG_EACCESS           0x200000 /* Bulk Stat returned EACCES */
 #define CM_SCACHEFLAG_SMB_FID	        0x400000
 #define CM_SCACHEFLAG_LOCAL             0x800000 /* Locally modified */
+#define CM_SCACHEFLAG_BULKREADING       0x1000000/* Bulk read in progress */
+#define CM_SCACHEFLAG_RDR_IN_USE        0x2000000/* in use by Redirector; advisory */
 
 /* sync flags for calls to the server.  The CM_SCACHEFLAG_FETCHING,
  * CM_SCACHEFLAG_STORING and CM_SCACHEFLAG_SIZESTORING flags correspond to the
@@ -313,6 +325,8 @@ typedef struct cm_scache {
 						 * just fail */
 #define CM_SCACHESYNC_FORCECB		0x200000/* when calling cm_GetCallback()
                                                  * set the force flag */
+
+#define CM_SCACHESYNC_BULKREAD          0x400000/* reading many buffers */
 
 /* flags for cm_RecycleSCache	*/
 #define CM_SCACHE_RECYCLEFLAG_DESTROY_BUFFERS 	0x1

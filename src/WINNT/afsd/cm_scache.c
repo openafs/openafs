@@ -23,6 +23,7 @@
 
 #include "afsd.h"
 #include "cm_btree.h"
+#include <afs/unified_afs.h>
 
 /*extern void afsi_log(char *pattern, ...);*/
 
@@ -154,6 +155,11 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	return -1;
     }
 
+    if (scp->redirBufCount != 0) {
+        return -1;
+    }
+
+    cm_RemoveSCacheFromHashTable(scp);
 
     /* invalidate so next merge works fine;
      * also initialize some flags */
@@ -233,36 +239,64 @@ cm_scache_t *cm_GetNewSCache(void)
 	/* There were no deleted scache objects that we could use.  Try to find
 	 * one that simply hasn't been used in a while.
 	 */
-        for ( scp = cm_data.scacheLRULastp;
-              scp;
-              scp = (cm_scache_t *) osi_QPrev(&scp->q))
-        {
-            /* It is possible for the refCount to be zero and for there still
-             * to be outstanding dirty buffers.  If there are dirty buffers,
-             * we must not recycle the scp. */
-            if (scp->refCount == 0 && scp->bufReadsp == NULL && scp->bufWritesp == NULL) {
-                if (!buf_DirtyBuffersExist(&scp->fid)) {
-                    if (!lock_TryWrite(&scp->rw))
-                        continue;
+        for (retry = 0 ; retry < 2; retry++) {
+            for ( scp = cm_data.scacheLRULastp;
+                  scp;
+                  scp = (cm_scache_t *) osi_QPrev(&scp->q))
+            {
+                /* It is possible for the refCount to be zero and for there still
+                 * to be outstanding dirty buffers.  If there are dirty buffers,
+                 * we must not recycle the scp.
+                 *
+                 * If the object is in use by the redirector, then avoid recycling
+                 * it unless we have to.
+                 */
+                if (scp->refCount == 0 && scp->bufReadsp == NULL && scp->bufWritesp == NULL) {
+                    if (!buf_DirtyBuffersExist(&scp->fid) && !buf_RDRBuffersExist(&scp->fid)) {
+                        cm_fid_t   fid;
+                        afs_uint32 fileType;
 
-                    if (!cm_RecycleSCache(scp, 0)) {
-                        /* we found an entry, so return it */
-                        /* now remove from the LRU queue and put it back at the
-                         * head of the LRU queue.
-                         */
-                        cm_AdjustScacheLRU(scp);
+                        if (!lock_TryWrite(&scp->rw))
+                            continue;
 
-                        /* and we're done */
-                        return scp;
+                        /* Found a likely candidate.  Save type and fid in case we succeed */
+                        fid = scp->fid;
+                        fileType = scp->fileType;
+
+                        if (!cm_RecycleSCache(scp, 0)) {
+                            /* we found an entry, so return it.
+                             * remove from the LRU queue and put it back at the
+                             * head of the LRU queue.
+                             */
+                            cm_AdjustScacheLRU(scp);
+
+                            if (RDR_Initialized) {
+                                /*
+                                 * We drop the cm_scacheLock because it may be required to
+                                 * satisfy an ioctl request from the redirector.  It should
+                                 * be safe to hold the scp->rw lock here because at this
+                                 * point (a) the object has just been recycled so the fid
+                                 * is nul and there are no requests that could possibly
+                                 * be issued by the redirector that would depend upon it.
+                                 */
+                                lock_ReleaseWrite(&cm_scacheLock);
+                                RDR_InvalidateObject( fid.cell, fid.volume, fid.vnode,
+                                                      fid.unique, fid.hash,
+                                                      fileType, AFS_INVALIDATE_EXPIRED);
+                                lock_ObtainWrite(&cm_scacheLock);
+                            }
+
+                            /* and we're done */
+                            return scp;
+                        }
+                        lock_ReleaseWrite(&scp->rw);
+                    } else {
+                        osi_Log1(afsd_logp,"GetNewSCache dirty buffers exist scp 0x%p", scp);
                     }
-                    lock_ReleaseWrite(&scp->rw);
-                } else {
-                    osi_Log1(afsd_logp,"GetNewSCache dirty buffers exist scp 0x%x", scp);
                 }
             }
+            osi_Log1(afsd_logp, "GetNewSCache all scache entries in use (retry = %d)", retry);
         }
-        osi_Log1(afsd_logp, "GetNewSCache all scache entries in use (retry = %d)", retry);
-
         return NULL;
     }
 
@@ -567,7 +601,11 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
 #endif
                 scp->waitQueueT = NULL;
-                _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_WAITING);
+                _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_WAITING | CM_SCACHEFLAG_RDR_IN_USE));
+
+                scp->redirBufCount = 0;
+                scp->redirQueueT = NULL;
+                scp->redirQueueH = NULL;
             }
         }
         cm_allFileLocks = NULL;
@@ -981,6 +1019,9 @@ int cm_SyncOpCheckContinue(cm_scache_t * scp, afs_int32 flags, cm_buf_t * bufp)
  * possibly resulting in a bogus truncation.  The simplest way to avoid this
  * is to serialize all StoreData RPC's.  This is the reason we defined
  * CM_SCACHESYNC_STOREDATA_EXCL and CM_SCACHEFLAG_DATASTORING.
+ *
+ * CM_SCACHESYNC_BULKREAD is used to permit synchronization of multiple bulk
+ * readers which may be requesting overlapping ranges.
  */
 long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *reqp,
                afs_uint32 rights, afs_uint32 flags)
@@ -1208,6 +1249,14 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             }
         }
 
+        if (flags & CM_SCACHESYNC_BULKREAD) {
+            /* Don't allow concurrent fiddling with lock lists */
+            if (scp->flags & CM_SCACHEFLAG_BULKREADING) {
+                osi_Log1(afsd_logp, "CM SyncOp scp 0x%p is BULKREADING want BULKREAD", scp);
+                goto sleep;
+            }
+        }
+
         /* if we get here, we're happy */
         break;
 
@@ -1276,6 +1325,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
         _InterlockedOr(&scp->flags, CM_SCACHEFLAG_ASYNCSTORING);
     if (flags & CM_SCACHESYNC_LOCK)
         _InterlockedOr(&scp->flags, CM_SCACHEFLAG_LOCKING);
+    if (flags & CM_SCACHESYNC_BULKREAD)
+        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_BULKREADING);
 
     /* now update the buffer pointer */
     if (bufp && (flags & CM_SCACHESYNC_FETCHDATA)) {
@@ -1347,6 +1398,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
         _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_ASYNCSTORING);
     if (flags & CM_SCACHESYNC_LOCK)
         _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_LOCKING);
+    if (flags & CM_SCACHESYNC_BULKREAD)
+        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_BULKREADING);
 
     /* now update the buffer pointer */
     if (bufp && (flags & CM_SCACHESYNC_FETCHDATA)) {
@@ -1468,10 +1521,20 @@ void cm_MergeStatus(cm_scache_t *dscp,
 #endif /* AFS_FREELANCE_CLIENT */
 
     if (statusp->errorCode != 0) {
-        _InterlockedOr(&scp->flags, CM_SCACHEFLAG_EACCESS);
-	osi_Log2(afsd_logp, "Merge, Failure scp 0x%p code 0x%x", scp, statusp->errorCode);
+	_InterlockedOr(&scp->flags, CM_SCACHEFLAG_EACCESS);
+        switch (statusp->errorCode) {
+        case EACCES:
+        case UAEACCES:
+        case EPERM:
+        case UAEPERM:
+            _InterlockedOr(&scp->flags, CM_SCACHEFLAG_EACCESS);
+        }
+        osi_Log2(afsd_logp, "Merge, Failure scp 0x%p code 0x%x", scp, statusp->errorCode);
 
-	scp->fileType = 0;	/* unknown */
+        if (scp->fid.vnode & 0x1)
+            scp->fileType = CM_SCACHETYPE_DIRECTORY;
+        else
+            scp->fileType = 0;	/* unknown */
 
 	scp->serverModTime = 0;
 	scp->clientModTime = 0;
@@ -1634,7 +1697,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
             if (cm_FidCmp(&scp->fid, &bp->fid) == 0 &&
                  lock_TryMutex(&bp->mx)) {
                 if (bp->refCount == 0 &&
-                    !(bp->flags & CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)) {
+                    !(bp->flags & (CM_BUF_READING | CM_BUF_WRITING | CM_BUF_DIRTY)) &&
+                    !(bp->qFlags & CM_BUF_QREDIR)) {
                     prevBp = bp->fileHashBackp;
                     bp->fileHashBackp = bp->fileHashp = NULL;
                     if (prevBp)
@@ -1671,8 +1735,18 @@ void cm_MergeStatus(cm_scache_t *dscp,
      * does not update a mountpoint or symlink by altering the contents of
      * the file data; but the Unix CM does.
      */
-    if (scp->dataVersion != dataVersion && !(flags & CM_MERGEFLAG_FETCHDATA))
+    if (scp->dataVersion != dataVersion && !(flags & CM_MERGEFLAG_FETCHDATA)) {
         scp->mountPointStringp[0] = '\0';
+
+        osi_Log5(afsd_logp, "cm_MergeStatus data version change scp 0x%p cell %u vol %u vn %u uniq %u",
+                 scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+
+        osi_Log4(afsd_logp, ".... oldDV 0x%x:%x -> newDV 0x%x:%x",
+                 (afs_uint32)((scp->dataVersion >> 32) & 0xFFFFFFFF),
+                 (afs_uint32)(scp->dataVersion & 0xFFFFFFFF),
+                 (afs_uint32)((dataVersion >> 32) & 0xFFFFFFFF),
+                 (afs_uint32)(dataVersion & 0xFFFFFFFF));
+    }
 
     /* We maintain a range of buffer dataVersion values which are considered
      * valid.  This avoids the need to update the dataVersion on each buffer
@@ -1685,6 +1759,19 @@ void cm_MergeStatus(cm_scache_t *dscp,
          scp->bufDataVersionLow == 0)
         scp->bufDataVersionLow = dataVersion;
 
+    if (RDR_Initialized && scp->dataVersion != CM_SCACHE_VERSION_BAD) {
+        if ( ( !(reqp->flags & CM_REQ_SOURCE_REDIR) || !(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA))) &&
+             scp->dataVersion != dataVersion ) {
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
+                                 scp->fid.unique, scp->fid.hash,
+                                 scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+        } else if ( (reqp->flags & CM_REQ_SOURCE_REDIR) && (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
+                    dataVersion - scp->dataVersion > 1) {
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
+                                 scp->fid.unique, scp->fid.hash,
+                                 scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+        }
+    }
     scp->dataVersion = dataVersion;
 
     /*
@@ -1735,7 +1822,7 @@ void cm_DiscardSCache(cm_scache_t *scp)
     }
     scp->cbExpires = 0;
     scp->volumeCreationDate = 0;
-    _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL));
+    _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL | CM_SCACHEFLAG_RDR_IN_USE));
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
     cm_FreeAllACLEnts(scp);
@@ -1965,7 +2052,7 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
             for (q = scp->fileLocksH; q; q = osi_QNext(q)) {
-                cm_file_lock_t * lockp = (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
+                cm_file_lock_t * lockp = fileq_to_cm_file_lock_t(q);
                 sprintf(output, "  %s lockp=0x%p scp=0x%p, cm_userp=0x%p offset=0x%I64x len=0x%08I64x type=0x%x "
                         "key=0x%I64x flags=0x%x update=0x%I64u\r\n",
                         cookie, lockp, lockp->scp, lockp->userp, lockp->range.offset, lockp->range.length,

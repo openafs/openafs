@@ -1087,6 +1087,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
  	     * be freed when the refCount returns to zero.
  	     */
  	    unp->flags &= ~SMB_USERNAMEFLAG_AFSLOGON;
+            if (usernIsSID)
+                unp->flags |= SMB_USERNAMEFLAG_SID;
  	}
     if (usernIsSID)
         unp->flags |= SMB_USERNAMEFLAG_SID;

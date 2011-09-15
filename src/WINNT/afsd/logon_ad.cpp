@@ -24,17 +24,21 @@ SOFTWARE.
 */
 
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
+
 //#pragma keyword("interface",on)
 //#define interface struct
 #define SECURITY_WIN32
-#include "afslogon.h"
-
 #if (_WIN32_WINNT < 0x0500)
 #error _WIN32_WINNT < 0x0500
 #endif
 
 /**/
 #include <security.h>
+#include <winioctl.h>
 #include <sddl.h>
 #include <unknwn.h>
 #include <oaidl.h>
@@ -42,171 +46,177 @@ SOFTWARE.
 #include <adshlp.h>
 /**/
 
+#include "afslogon.h"
+
+#include "..\afsrdr\common\AFSUserDefines.h"
+#include "..\afsrdr\common\AFSUserIoctl.h"
+#include "..\afsrdr\common\AFSUserStructs.h"
+#include "..\afsrdr\common\AFSProvider.h"
+
 #define SEC_ERR_VALUE(v) if (status==v) return #v
 
 char * _get_sec_err_text(SECURITY_STATUS status) {
-	SEC_ERR_VALUE(SEC_E_OK);
-	SEC_ERR_VALUE(SEC_I_CONTINUE_NEEDED);
-	SEC_ERR_VALUE(SEC_I_COMPLETE_NEEDED);
-	SEC_ERR_VALUE(SEC_I_COMPLETE_AND_CONTINUE);
-	SEC_ERR_VALUE(SEC_E_INCOMPLETE_MESSAGE);
-	SEC_ERR_VALUE(SEC_I_INCOMPLETE_CREDENTIALS);
-	SEC_ERR_VALUE(SEC_E_INVALID_HANDLE);
-	SEC_ERR_VALUE(SEC_E_TARGET_UNKNOWN);
-	SEC_ERR_VALUE(SEC_E_LOGON_DENIED);
-	SEC_ERR_VALUE(SEC_E_INTERNAL_ERROR);
-	SEC_ERR_VALUE(SEC_E_NO_CREDENTIALS);
-	SEC_ERR_VALUE(SEC_E_NO_AUTHENTICATING_AUTHORITY);
-	SEC_ERR_VALUE(SEC_E_INSUFFICIENT_MEMORY);
-	SEC_ERR_VALUE(SEC_E_INVALID_TOKEN);
-	SEC_ERR_VALUE(SEC_E_UNSUPPORTED_FUNCTION);
-	SEC_ERR_VALUE(SEC_E_WRONG_PRINCIPAL);
-	return "Unknown";
+    SEC_ERR_VALUE(SEC_E_OK);
+    SEC_ERR_VALUE(SEC_I_CONTINUE_NEEDED);
+    SEC_ERR_VALUE(SEC_I_COMPLETE_NEEDED);
+    SEC_ERR_VALUE(SEC_I_COMPLETE_AND_CONTINUE);
+    SEC_ERR_VALUE(SEC_E_INCOMPLETE_MESSAGE);
+    SEC_ERR_VALUE(SEC_I_INCOMPLETE_CREDENTIALS);
+    SEC_ERR_VALUE(SEC_E_INVALID_HANDLE);
+    SEC_ERR_VALUE(SEC_E_TARGET_UNKNOWN);
+    SEC_ERR_VALUE(SEC_E_LOGON_DENIED);
+    SEC_ERR_VALUE(SEC_E_INTERNAL_ERROR);
+    SEC_ERR_VALUE(SEC_E_NO_CREDENTIALS);
+    SEC_ERR_VALUE(SEC_E_NO_AUTHENTICATING_AUTHORITY);
+    SEC_ERR_VALUE(SEC_E_INSUFFICIENT_MEMORY);
+    SEC_ERR_VALUE(SEC_E_INVALID_TOKEN);
+    SEC_ERR_VALUE(SEC_E_UNSUPPORTED_FUNCTION);
+    SEC_ERR_VALUE(SEC_E_WRONG_PRINCIPAL);
+    return "Unknown";
 }
 
 #undef SEC_ERR_VALUE
 
-DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
-	DWORD code = 1;
+DWORD
+LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
+    DWORD code = 1;
     SECURITY_STATUS status;
-	CredHandle creds;
-	CtxtHandle ctxclient,ctxserver;
-	TimeStamp expiry;
-	BOOL cont = TRUE;
-	BOOL first = TRUE;
-	SecBufferDesc sdescc,sdescs;
-	SecBuffer stokc,stoks;
-	ULONG cattrs,sattrs;
-	int iters = 10;
+    CredHandle creds;
+    CtxtHandle ctxclient,ctxserver;
+    TimeStamp expiry;
+    BOOL cont = TRUE;
+    BOOL first = TRUE;
+    SecBufferDesc sdescc,sdescs;
+    SecBuffer stokc,stoks;
+    ULONG cattrs,sattrs;
+    int iters = 10;
 
-	outCtx->dwLower = 0;
-	outCtx->dwUpper = 0;
+    outCtx->dwLower = 0;
+    outCtx->dwUpper = 0;
 
-	cattrs = 0;
-	sattrs = 0;
+    cattrs = 0;
+    sattrs = 0;
 
-	status = AcquireCredentialsHandle(
-		NULL,
-		"Negotiate",
-		SECPKG_CRED_BOTH,
-		lpLogonId,
-		NULL,
-		NULL,
-		NULL,
-		&creds,
-		&expiry);
+    status = AcquireCredentialsHandle( NULL,
+                                       "Negotiate",
+                                       SECPKG_CRED_BOTH,
+                                       lpLogonId,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &creds,
+                                       &expiry);
 
-	if (status != SEC_E_OK) {
-		DebugEvent("AcquireCredentialsHandle failed: %lX", status);
-		goto ghp_0;
-	}
+    if (status != SEC_E_OK) {
+        DebugEvent("AcquireCredentialsHandle failed: %lX", status);
+        goto ghp_0;
+    }
 
-	sdescc.cBuffers = 1;
-	sdescc.pBuffers = &stokc;
-	sdescc.ulVersion = SECBUFFER_VERSION;
+    sdescc.cBuffers = 1;
+    sdescc.pBuffers = &stokc;
+    sdescc.ulVersion = SECBUFFER_VERSION;
 
-	stokc.BufferType = SECBUFFER_TOKEN;
-	stokc.cbBuffer = 0;
-	stokc.pvBuffer = NULL;
+    stokc.BufferType = SECBUFFER_TOKEN;
+    stokc.cbBuffer = 0;
+    stokc.pvBuffer = NULL;
 
-	sdescs.cBuffers = 1;
-	sdescs.pBuffers = &stoks;
-	sdescs.ulVersion = SECBUFFER_VERSION;
+    sdescs.cBuffers = 1;
+    sdescs.pBuffers = &stoks;
+    sdescs.ulVersion = SECBUFFER_VERSION;
 
-	stoks.BufferType = SECBUFFER_TOKEN;
-	stoks.cbBuffer = 0;
-	stoks.pvBuffer = NULL;
+    stoks.BufferType = SECBUFFER_TOKEN;
+    stoks.cbBuffer = 0;
+    stoks.pvBuffer = NULL;
 
-	do {
-		status = InitializeSecurityContext(
-			&creds,
-			((first)? NULL:&ctxclient),
-            NULL,
-			ISC_REQ_DELEGATE | ISC_REQ_ALLOCATE_MEMORY,
-			0,
-			SECURITY_NATIVE_DREP,
-			((first)?NULL:&sdescs),
-			0,
-			&ctxclient,
-			&sdescc,
-			&cattrs,
-			&expiry
-			);
+    do {
+        status = InitializeSecurityContext( &creds,
+                                            ((first)? NULL:&ctxclient),
+                                            NULL,
+                                            ISC_REQ_DELEGATE | ISC_REQ_ALLOCATE_MEMORY,
+                                            0,
+                                            SECURITY_NATIVE_DREP,
+                                            ((first)?NULL:&sdescs),
+                                            0,
+                                            &ctxclient,
+                                            &sdescc,
+                                            &cattrs,
+                                            &expiry
+                                            );
 
-		DebugEvent("InitializeSecurityContext returns status[%lX](%s)",status,_get_sec_err_text(status));
+        DebugEvent("InitializeSecurityContext returns status[%lX](%s)",status,_get_sec_err_text(status));
 
-		if (!first) FreeContextBuffer(stoks.pvBuffer);
+        if (!first) FreeContextBuffer(stoks.pvBuffer);
 
-		if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
-			CompleteAuthToken(&ctxclient, &sdescc);
-		}
+        if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+            CompleteAuthToken(&ctxclient, &sdescc);
+        }
 
-		if (status != SEC_I_CONTINUE_NEEDED && status != SEC_I_COMPLETE_AND_CONTINUE) {
-			cont = FALSE;
-		}
+        if (status != SEC_I_CONTINUE_NEEDED && status != SEC_I_COMPLETE_AND_CONTINUE) {
+            cont = FALSE;
+        }
 
-		if (!stokc.cbBuffer && !cont) {
-			DebugEvent("Breaking out after InitializeSecurityContext");
-			break;
-		}
+        if (!stokc.cbBuffer && !cont) {
+            DebugEvent("Breaking out after InitializeSecurityContext");
+            break;
+        }
 
-		status = AcceptSecurityContext(
-			&creds,
-			((first)?NULL:&ctxserver),
-			&sdescc,
-			ASC_REQ_DELEGATE | ASC_REQ_ALLOCATE_MEMORY,
-			SECURITY_NATIVE_DREP,
-			&ctxserver,
-			&sdescs,
-			&sattrs,
-			&expiry);
+        status = AcceptSecurityContext( &creds,
+                                        ((first)?NULL:&ctxserver),
+                                        &sdescc,
+                                        ASC_REQ_DELEGATE | ASC_REQ_ALLOCATE_MEMORY,
+                                        SECURITY_NATIVE_DREP,
+                                        &ctxserver,
+                                        &sdescs,
+                                        &sattrs,
+                                        &expiry);
 
-		DebugEvent("AcceptSecurityContext returns status[%lX](%s)", status, _get_sec_err_text(status));
+        DebugEvent("AcceptSecurityContext returns status[%lX](%s)", status, _get_sec_err_text(status));
 
-		FreeContextBuffer(stokc.pvBuffer);
+        FreeContextBuffer(stokc.pvBuffer);
 
-		if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
-			CompleteAuthToken(&ctxserver,&sdescs);
-		}
+        if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+            CompleteAuthToken(&ctxserver,&sdescs);
+        }
 
-		if (status == SEC_I_CONTINUE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
-			cont = TRUE;
-		}
+        if (status == SEC_I_CONTINUE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+            cont = TRUE;
+        }
 
-		if (!cont)
-			FreeContextBuffer(stoks.pvBuffer);
+        if (!cont)
+            FreeContextBuffer(stoks.pvBuffer);
 
-		first = FALSE;
-		iters--; /* just in case, hard limit on loop */
-	} while (cont && iters);
+        first = FALSE;
+        iters--; /* just in case, hard limit on loop */
+    } while (cont && iters);
 
-	if (sattrs & ASC_RET_DELEGATE) {
-		DebugEvent("Received delegate context");
-		*outCtx = ctxserver;
-		code = 0;
-	} else {
-		DebugEvent("Didn't receive delegate context");
-		outCtx->dwLower = 0;
-		outCtx->dwUpper = 0;
-		DeleteSecurityContext(&ctxserver);
-	}
+    if (sattrs & ASC_RET_DELEGATE) {
+        DebugEvent("Received delegate context");
+        *outCtx = ctxserver;
+        code = 0;
+    } else {
+        DebugEvent("Didn't receive delegate context");
+        outCtx->dwLower = 0;
+        outCtx->dwUpper = 0;
+        DeleteSecurityContext(&ctxserver);
+    }
 
-	DeleteSecurityContext(&ctxclient);
+    DeleteSecurityContext(&ctxclient);
     FreeCredentialsHandle(&creds);
-ghp_0:
-	return code;
+  ghp_0:
+    return code;
 }
 
-DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWSTR domain) {
-	DWORD code = 1; /* default is failure */
-	NTSTATUS rv = 0;
-	HRESULT hr = S_OK;
-	LPWSTR p = NULL;
-	WCHAR adsPath[MAX_PATH] = L"";
-	BOOL coInitialized = FALSE;
+DWORD
+QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWSTR domain) {
+    DWORD code = 1; /* default is failure */
+    NTSTATUS rv = 0;
+    HRESULT hr = S_OK;
+    LPWSTR p = NULL;
+    WCHAR adsPath[MAX_PATH] = L"";
+    BOOL coInitialized = FALSE;
     CHAR ansidomain[256], *a;
 
-	homePath[0] = '\0';
+    homePath[0] = '\0';
 
     /* I trust this is an ASCII domain name */
     for ( p=domain, a=ansidomain; *a = (CHAR)*p; p++, a++);
@@ -227,7 +237,9 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
                                IID_IADsNameTranslate,
                                (void**)&pNto);
 
-        if (FAILED(hr)) { DebugEvent("Can't create nametranslate object"); }
+        if (FAILED(hr)) {
+            DebugEvent("Can't create nametranslate object");
+        }
         else {
             hr = pNto->Init(ADS_NAME_INITTYPE_GC,L"");
             if (FAILED(hr)) {
@@ -242,7 +254,9 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
 
             if (!FAILED(hr)) {
                 hr = pNto->Set(ADS_NAME_TYPE_SID_OR_SID_HISTORY_NAME, p);
-                if (FAILED(hr)) { DebugEvent("Can't set sid string"); }
+                if (FAILED(hr)) {
+                    DebugEvent("Can't set sid string");
+                }
                 else {
                     BSTR bstr;
 
@@ -262,103 +276,104 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
         }
 
         LocalFree(p);
-
     } else {
         DebugEvent("Can't convert sid to string");
     }
 
-	if (adsPath[0]) {
-		WCHAR fAdsPath[MAX_PATH];
-		IADsUser *pAdsUser;
-		BSTR bstHomeDir = NULL;
+    if (adsPath[0]) {
+        WCHAR fAdsPath[MAX_PATH];
+        IADsUser *pAdsUser;
+        BSTR bstHomeDir = NULL;
 
-		hr = StringCchPrintfW(fAdsPath, MAX_PATH, L"LDAP://%s", adsPath);
-		if (hr != S_OK) {
-			DebugEvent("Can't format full adspath");
-			goto cleanup;
-		}
+        hr = StringCchPrintfW(fAdsPath, MAX_PATH, L"LDAP://%s", adsPath);
+        if (hr != S_OK) {
+            DebugEvent("Can't format full adspath");
+            goto cleanup;
+        }
 
-		DebugEvent("Trying adsPath=[%S]", fAdsPath);
+        DebugEvent("Trying adsPath=[%S]", fAdsPath);
 
-		hr = ADsGetObject( fAdsPath, IID_IADsUser, (LPVOID *) &pAdsUser);
-		if (hr != S_OK) {
-			DebugEvent("Can't open IADs object");
-			goto cleanup;
-		}
+        hr = ADsGetObject( fAdsPath, IID_IADsUser, (LPVOID *) &pAdsUser);
+        if (hr != S_OK) {
+            DebugEvent("Can't open IADs object");
+            goto cleanup;
+        }
 
         hr = pAdsUser->get_Profile(&bstHomeDir);
-		if (hr != S_OK) {
-			DebugEvent("Can't get profile directory");
-			goto cleanup_homedir_section;
-		}
+        if (hr != S_OK) {
+            DebugEvent("Can't get profile directory");
+            goto cleanup_homedir_section;
+        }
 
-		wcstombs(homePath, bstHomeDir, homePathLen);
+        wcstombs(homePath, bstHomeDir, homePathLen);
 
-		DebugEvent("Got homepath [%s]", homePath);
+        DebugEvent("Got homepath [%s]", homePath);
 
-		SysFreeString(bstHomeDir);
+        SysFreeString(bstHomeDir);
 
-		code = 0;
+        code = 0;
 
-cleanup_homedir_section:
-		pAdsUser->Release();
-	}
+      cleanup_homedir_section:
+        pAdsUser->Release();
+    }
 
-cleanup:
-	if (coInitialized)
-		CoUninitialize();
+  cleanup:
+    if (coInitialized)
+        CoUninitialize();
 
-	return code;
+    return code;
 }
 
 /* Try to determine the user's AD home path.  *homePath is assumed to be at least MAXPATH bytes.
    If successful, opt.flags is updated with LOGON_FLAG_AD_REALM to indicate that we are dealing with
    an AD realm. */
-DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonOptions_t * opt) {
-	CtxtHandle ctx;
-	DWORD code = 0;
-	SECURITY_STATUS status;
+DWORD
+GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonOptions_t * opt) {
+    CtxtHandle ctx;
+    DWORD code = 0;
+    SECURITY_STATUS status;
 
-	homePath[0] = '\0';
+    homePath[0] = '\0';
 
-	if (LogonSSP(lpLogonId,&ctx)) {
+    if (LogonSSP(lpLogonId,&ctx)) {
         DebugEvent("Failed LogonSSP");
-		return 1;
-    } else {
-		status = ImpersonateSecurityContext(&ctx);
-		if (status == SEC_E_OK) {
-		    PSECURITY_LOGON_SESSION_DATA plsd;
-            NTSTATUS rv;
+        return 1;
+    }
 
-            rv = LsaGetLogonSessionData(lpLogonId, &plsd);
-            if (rv == 0) {
-                PWSTR domain;
+    status = ImpersonateSecurityContext(&ctx);
+    if (status == SEC_E_OK) {
+        PSECURITY_LOGON_SESSION_DATA plsd;
+        NTSTATUS rv;
 
-                domain = (PWSTR)malloc(sizeof(WCHAR) * (plsd->LogonDomain.Length+1));
-                memcpy(domain, plsd->LogonDomain.Buffer, sizeof(WCHAR) * (plsd->LogonDomain.Length));
-                domain[plsd->LogonDomain.Length] = 0;
+        rv = LsaGetLogonSessionData(lpLogonId, &plsd);
+        if (rv == 0) {
+            PWSTR domain;
 
-                if (!QueryAdHomePathFromSid(homePath,homePathLen,plsd->Sid,domain)) {
-                    DebugEvent("Returned home path [%s]",homePath);
-                    opt->flags |= LOGON_FLAG_AD_REALM;
-                }
-                free(domain);
-                LsaFreeReturnBuffer(plsd);
-            } else {
-                DebugEvent("LsaGetLogonSessionData failed [%lX]", rv);
+            domain = (PWSTR)malloc(sizeof(WCHAR) * (plsd->LogonDomain.Length+1));
+            memcpy(domain, plsd->LogonDomain.Buffer, sizeof(WCHAR) * (plsd->LogonDomain.Length));
+            domain[plsd->LogonDomain.Length] = 0;
+
+            if (!QueryAdHomePathFromSid(homePath,homePathLen,plsd->Sid,domain)) {
+                DebugEvent("Returned home path [%s]",homePath);
+                opt->flags |= LOGON_FLAG_AD_REALM;
             }
-            RevertSecurityContext(&ctx);
-		} else {
-			DebugEvent("Can't impersonate context [%lX]",status);
-			code = 1;
-		}
+            free(domain);
+            LsaFreeReturnBuffer(plsd);
+        } else {
+            DebugEvent("LsaGetLogonSessionData failed [%lX]", rv);
+        }
+        RevertSecurityContext(&ctx);
+    } else {
+        DebugEvent("Can't impersonate context [%lX]",status);
+        code = 1;
+    }
 
-        DeleteSecurityContext(&ctx);
-		return code;
-	}
+    DeleteSecurityContext(&ctx);
+    return code;
 }
 
-BOOL GetLocalShortDomain(PWSTR Domain, DWORD cbDomain)
+BOOL
+GetLocalShortDomain(PWSTR Domain, DWORD cbDomain)
 {
     HRESULT hr;
     IADsADSystemInfo *pADsys;
@@ -369,7 +384,7 @@ BOOL GetLocalShortDomain(PWSTR Domain, DWORD cbDomain)
     if (SUCCEEDED(hr))
         coInitialized = TRUE;
 
-    hr = CoCreateInstance(CLSID_ADSystemInfo,
+    hr = CoCreateInstance( CLSID_ADSystemInfo,
                            NULL,
                            CLSCTX_INPROC_SERVER,
                            IID_IADsADSystemInfo,
@@ -388,8 +403,260 @@ BOOL GetLocalShortDomain(PWSTR Domain, DWORD cbDomain)
         pADsys->Release();
     }
 
-	if (coInitialized)
-		CoUninitialize();
+    if (coInitialized)
+        CoUninitialize();
 
     return retval;
+}
+
+static HANDLE
+OpenRedirector(void)
+{
+    HANDLE hControlDevice = NULL;
+
+    hControlDevice = CreateFileW( AFS_SYMLINK_W,
+                                 GENERIC_READ | GENERIC_WRITE,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 NULL,
+                                 OPEN_EXISTING,
+                                 0,
+                                 NULL );
+
+    if( hControlDevice == INVALID_HANDLE_VALUE)
+    {
+        hControlDevice = NULL;
+        DebugEvent("OpenRedirector Failed to open control device error: %d",
+                    GetLastError());
+    }
+
+    return hControlDevice;
+}
+
+void
+AFSCreatePAG(PLUID lpLogonId)
+{
+    BOOLEAN             bRet = FALSE;
+    HANDLE              hControlDevice = NULL;
+    DWORD               dwCopyBytes = 0;
+    AFSAuthGroupRequestCB *pAuthGroup = NULL;
+    WCHAR *             pwchSIDString = NULL;
+    CtxtHandle          ctx;
+    SECURITY_STATUS     status;
+    PSECURITY_LOGON_SESSION_DATA plsd = NULL;
+    NTSTATUS            rv;
+    BOOLEAN             bImpersonated = FALSE;
+
+    GUID stAuthGroup;
+    unsigned char *pchGUID = NULL;
+    DWORD bytesReturned;
+
+    if (LogonSSP(lpLogonId, &ctx)) {
+        DebugEvent("AFSCreatePAG unable to obtain LogonSSP context");
+        return;
+    }
+
+    status = ImpersonateSecurityContext(&ctx);
+    if (status == SEC_E_OK)
+    {
+        bImpersonated = TRUE;
+
+        rv = LsaGetLogonSessionData(lpLogonId, &plsd);
+        if (rv == 0)
+        {
+            if( !ConvertSidToStringSidW( plsd->Sid,
+                                         &pwchSIDString))
+            {
+                DebugEvent("AFSCreatePAG Failed to convert sid to string Error %08X", GetLastError());
+                goto cleanup;
+            }
+
+            pAuthGroup = (AFSAuthGroupRequestCB *)LocalAlloc( LPTR, 0x1000);
+
+            if( pAuthGroup == NULL)
+            {
+                DebugEvent0("AFSCreatePAG Failed auth group allocation");
+                goto cleanup;
+            }
+
+            memset( pAuthGroup, 0, 0x1000);
+
+            pAuthGroup->SIDLength = (USHORT) (wcslen( pwchSIDString) * sizeof( WCHAR));
+            pAuthGroup->SessionId = plsd->Session;
+
+            memcpy( pAuthGroup->SIDString,
+                    pwchSIDString,
+                    pAuthGroup->SIDLength);
+
+            RevertSecurityContext(&ctx);
+
+            bImpersonated = FALSE;
+
+            hControlDevice = OpenRedirector();
+
+            if( hControlDevice == NULL)
+            {
+                DebugEvent0("AFSCreatePAG Failed to open redirector");
+                goto cleanup;
+            }
+
+            bRet = DeviceIoControl( hControlDevice,
+                                   IOCTL_AFS_AUTHGROUP_SID_QUERY,
+                                   NULL,
+                                   0,
+                                   &stAuthGroup,
+                                   sizeof( GUID),
+                                   &bytesReturned,
+                                   NULL);
+
+            if( bRet == FALSE)
+            {
+                DebugEvent("AFSCreatePAG Failed IOCTL_AFS_AUTHGROUP_SID_QUERY Error 0x%08X", GetLastError());
+            }
+            else
+            {
+                if( UuidToString( (UUID *)&stAuthGroup,
+                                  &pchGUID) == RPC_S_OK)
+                {
+                    DebugEvent("AFSCreatePAG Initial AuthGroup %s\n", pchGUID);
+                    RpcStringFree( &pchGUID);
+                }
+                else
+                {
+                    DebugEvent0("AFSCreatePAG Failed to convert GUID to string\n");
+                }
+            }
+
+            ImpersonateSecurityContext(&ctx); bImpersonated = TRUE;
+
+            bRet = DeviceIoControl( hControlDevice,
+                                    IOCTL_AFS_AUTHGROUP_SID_QUERY,
+                                    NULL,
+                                    0,
+                                    &stAuthGroup,
+                                    sizeof( GUID),
+                                    &bytesReturned,
+                                    NULL);
+
+            if( bRet == FALSE)
+            {
+                DebugEvent("AFSCreatePAG Failed IOCTL_AFS_AUTHGROUP_SID_QUERY Impersonation Error 0x%08X", GetLastError());
+            }
+            else
+            {
+                if( UuidToString( (UUID *)&stAuthGroup,
+                                  &pchGUID) == RPC_S_OK)
+                {
+                    DebugEvent("AFSCreatePAG Initial Impersonation AuthGroup %s\n", pchGUID);
+                    RpcStringFree( &pchGUID);
+                }
+                else
+                {
+                    DebugEvent0("AFSCreatePAG Failed to convert GUID to string\n");
+                }
+            }
+
+            RevertSecurityContext(&ctx); bImpersonated = FALSE;
+
+
+            bRet = DeviceIoControl( hControlDevice,
+                                    IOCTL_AFS_AUTHGROUP_LOGON_CREATE,
+                                    pAuthGroup,
+                                    sizeof( AFSAuthGroupRequestCB) + pAuthGroup->SIDLength - 1,
+                                    NULL,
+                                    0,
+                                    &dwCopyBytes,
+                                    NULL);
+
+            if( bRet == FALSE)
+            {
+                DebugEvent("AFSCreatePAG Failed IOCTL_AFS_AUTHGROUP_SID_CREATE Error 0x%08X", GetLastError());
+            }
+            else
+            {
+                bRet = DeviceIoControl( hControlDevice,
+                                        IOCTL_AFS_AUTHGROUP_SID_QUERY,
+                                        NULL,
+                                        0,
+                                        &stAuthGroup,
+                                        sizeof( GUID),
+                                        &bytesReturned,
+                                        NULL);
+
+                if( bRet == FALSE)
+                {
+                    DebugEvent("AFSCreatePAG Failed IOCTL_AFS_AUTHGROUP_SID_QUERY Error 0x%08X", GetLastError());
+                }
+                else
+                {
+                    if( UuidToString( (UUID *)&stAuthGroup,
+                                      &pchGUID) == RPC_S_OK)
+                    {
+                        DebugEvent("AFSCreatePAG New AuthGroup %s\n", pchGUID);
+                        RpcStringFree( &pchGUID);
+                    }
+                    else
+                    {
+                        DebugEvent0("AFSCreatePAG Failed to convert GUID to string\n");
+                    }
+                }
+            }
+
+            ImpersonateSecurityContext(&ctx);
+
+            bRet = DeviceIoControl( hControlDevice,
+                                    IOCTL_AFS_AUTHGROUP_SID_QUERY,
+                                    NULL,
+                                    0,
+                                    &stAuthGroup,
+                                    sizeof( GUID),
+                                    &bytesReturned,
+                                    NULL);
+
+            if( bRet == FALSE)
+            {
+                DebugEvent("AFSCreatePAG Failed IOCTL_AFS_AUTHGROUP_SID_QUERY Impersonation Error 0x%08X", GetLastError());
+            }
+            else
+            {
+                if( UuidToString( (UUID *)&stAuthGroup,
+                                  &pchGUID) == RPC_S_OK)
+                {
+                    DebugEvent("AFSCreatePAG New Impersonation AuthGroup %s\n", pchGUID);
+                    RpcStringFree( &pchGUID);
+                }
+                else
+                {
+                    DebugEvent0("AFSCreatePAG Failed to convert GUID to string\n");
+                }
+            }
+
+            RevertSecurityContext(&ctx);
+        }
+        else
+        {
+            DebugEvent("AFSCreatePAG LsaGetLogonSessionData failed [%lX]", rv);
+        }
+
+    }
+    else
+    {
+        DebugEvent("AFSCreatePAG cannot impersonate context [%lX]", status);
+    }
+
+
+  cleanup:
+
+    if (bImpersonated)
+        RevertSecurityContext(&ctx);
+
+    DeleteSecurityContext(&ctx);
+
+    if (plsd != NULL)
+        LsaFreeReturnBuffer(plsd);
+
+    if ( hControlDevice != NULL)
+        CloseHandle( hControlDevice);
+
+    if( pwchSIDString != NULL)
+        LocalFree( pwchSIDString);
 }

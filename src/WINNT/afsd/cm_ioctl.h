@@ -118,9 +118,10 @@ typedef struct cm_IoctlQueryOptions {
 
 #define MAXNUMSYSNAMES    16      /* max that current constants allow */
 #define   MAXSYSNAME      128     /* max sysname (i.e. @sys) size */
-extern clientchar_t  *cm_sysName;
 extern unsigned int   cm_sysNameCount;
 extern clientchar_t  *cm_sysNameList[MAXNUMSYSNAMES];
+extern unsigned int   cm_sysName64Count;
+extern clientchar_t  *cm_sysName64List[MAXNUMSYSNAMES];
 
 /* Paths that are passed into pioctl calls can be specified using
    UTF-8.  These strings are prefixed with UTF8_PREFIX defined below.

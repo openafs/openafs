@@ -78,7 +78,12 @@ cm_CleanFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
 
-    code = cm_FSync(scp, userp, reqp, FALSE);
+    if (RDR_Initialized &&
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED))
+        code = CM_ERROR_WOULDBLOCK;
+    else
+        code = cm_FSync(scp, userp, reqp, FALSE);
     if (!code) {
         lock_ObtainWrite(&scp->rw);
         cm_DiscardSCache(scp);
@@ -104,7 +109,16 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     }
 #endif
 
-    code = buf_FlushCleanPages(scp, userp, reqp);
+    /*
+     * The file system will forget all knowledge of the object
+     * when it receives this message.
+     */
+    if (RDR_Initialized &&
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_FLUSHED))
+        code = CM_ERROR_WOULDBLOCK;
+    else
+        code = buf_FlushCleanPages(scp, userp, reqp);
 
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
         lock_ObtainWrite(&scp->dirlock);
@@ -530,6 +544,10 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
         lock_ObtainWrite(&scp->rw);
         cm_DiscardSCache(scp);
         lock_ReleaseWrite(&scp->rw);
+
+        if (RDR_Initialized)
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
     }
 
     return code;
@@ -1185,6 +1203,11 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
+    if (RDR_Initialized &&
+        !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                              scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED))
+        buf_ClearRDRFlag(scp, "deleted mp");
+
   done3:
     if (originalName != NULL)
         free(originalName);
@@ -1409,7 +1432,7 @@ cm_IoctlGetCacheParms(struct cm_ioctl *ioctlp, struct cm_user *userp)
     /* and then the actual # of buffers in use (not in the free list, I guess,
      * will be what we do).
      */
-    parms.parms[1] = (cm_data.buf_nbuffers - buf_CountFreeList()) * (cm_data.buf_blockSize / 1024);
+    parms.parms[1] = (cm_data.buf_nbuffers - cm_data.buf_freeCount) * (cm_data.buf_blockSize / 1024);
 
     memcpy(ioctlp->outDatap, &parms, sizeof(parms));
     ioctlp->outDatap += sizeof(parms);
@@ -1679,6 +1702,13 @@ cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp)
  * VIOC_AFS_SYSNAME internals.
  *
  * Assumes that pioctl path has been parsed or skipped.
+ *
+ * In order to support both 32-bit and 64-bit sysname lists
+ * we will treat bit-31 of the setSysName value as a flag
+ * indicating which architecture is being indicated.  If unset
+ * the architecture is 32-bit and if set the architecture is
+ * 64-bit.  This change is backward compatible with cache
+ * managers that do not support this extension.
  */
 afs_int32
 cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
@@ -1688,9 +1718,13 @@ cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
     clientchar_t *inname = NULL;
     int t;
     unsigned int count;
+    int arch64 = 0;
 
     memcpy(&setSysName, ioctlp->inDatap, sizeof(afs_uint32));
     ioctlp->inDatap += sizeof(afs_uint32);
+
+    arch64 = (setSysName & 0x8000000) ? 1 : 0;
+    setSysName &= 0x7FFFFFF;
 
     if (setSysName) {
         /* check my args */
@@ -1716,46 +1750,57 @@ cm_IoctlSysName(struct cm_ioctl *ioctlp, struct cm_user *userp)
     }
 
     /* Not xlating, so local case */
-    if (!cm_sysName)
-        osi_panic("cm_IoctlSysName: !cm_sysName\n", __FILE__, __LINE__);
-
     if (setSysName) {
         /* Local guy; only root can change sysname */
         /* clear @sys entries from the dnlc, once afs_lookup can
          * do lookups of @sys entries and thinks it can trust them */
         /* privs ok, store the entry, ... */
 
-        cm_ClientStrCpy(cm_sysName, lengthof(cm_sysName), inname);
-        cm_ClientStrCpy(cm_sysNameList[0], MAXSYSNAME, inname);
+        cm_ClientStrCpy(arch64 ? cm_sysName64List[0] : cm_sysNameList[0], MAXSYSNAME, inname);
 
         if (setSysName > 1) {       /* ... or list */
             for (count = 1; count < setSysName; ++count) {
                 clientchar_t * newsysname;
 
-                if (!cm_sysNameList[count])
+                if (!(arch64 ? cm_sysName64List[count] : cm_sysNameList[count]))
                     osi_panic("cm_IoctlSysName: no cm_sysNameList entry to write\n",
                               __FILE__, __LINE__);
 
                 newsysname = cm_ParseIoctlStringAlloc(ioctlp, NULL);
-                cm_ClientStrCpy(cm_sysNameList[count], MAXSYSNAME, newsysname);
+                cm_ClientStrCpy(arch64 ? cm_sysName64List[count] : cm_sysNameList[count], MAXSYSNAME, newsysname);
                 free(newsysname);
             }
         }
-        cm_sysNameCount = setSysName;
+        if ( arch64 ) {
+            cm_sysName64Count = setSysName;
+            if (cm_sysName64Count)
+                RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysName64Count, cm_sysName64List );
+            else if (cm_sysNameCount)
+                RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysNameCount, cm_sysNameList );
+        } else {
+            cm_sysNameCount = setSysName;
+            RDR_SysName( AFS_SYSNAME_ARCH_32BIT, cm_sysNameCount, cm_sysNameList );
+        }
     } else {
         afs_uint32 i32;
 
-        /* return the sysname to the caller */
-        i32 = cm_sysNameCount;
+        /* return the sysname list to the caller.
+         * if there is no 64-bit list and 64-bit is requested, use the 32-bit list.
+         */
+        if ( arch64 && cm_sysName64Count == 0 )
+            arch64 = 0;
+
+        i32 = arch64 ? cm_sysName64Count : cm_sysNameCount;
         memcpy(ioctlp->outDatap, &i32, sizeof(afs_int32));
         ioctlp->outDatap += sizeof(afs_int32);	/* skip found flag */
 
-        if (cm_sysNameCount) {
-            for ( count=0; count < cm_sysNameCount ; ++count) {   /* ... or list */
-                if ( !cm_sysNameList[count] || *cm_sysNameList[count] == _C('\0'))
+        if (i32) {
+            for ( count=0; count < i32 ; ++count) {   /* ... or list */
+                if ( !(arch64 ? cm_sysName64List[count] : cm_sysNameList[count]) ||
+                     *(arch64 ? cm_sysName64List[count] : cm_sysNameList[count]) == _C('\0'))
                     osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n",
                               __FILE__, __LINE__);
-                cm_UnparseIoctlString(ioctlp, NULL, cm_sysNameList[count], -1);
+                cm_UnparseIoctlString(ioctlp, NULL, arch64 ? cm_sysName64List[count] : cm_sysNameList[count], -1);
             }
         }
     }
@@ -2346,6 +2391,11 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
+    if (RDR_Initialized &&
+        !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                              scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED))
+        buf_ClearRDRFlag(scp, "deleted link");
+
   done3:
     free(clientp);
 
@@ -2529,8 +2579,14 @@ cm_IoctlSetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     }
 
     if (flags & PIOCTL_LOGON) {
-        userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname,
+        clientchar_t *cname;
+
+        cname = cm_FsStringToClientStringAlloc(smbname, -1, NULL);
+
+        userp = smb_FindCMUserByName(cname, ioctlp->fidp->vcp->rname,
 				     SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
+        if (cname)
+            free(cname);
 	release_userp = 1;
     }
 

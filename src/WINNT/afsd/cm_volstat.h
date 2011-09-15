@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Secure Endpoints Inc.
+ * Copyright (c) 2007-2011 Secure Endpoints Inc.
  *
  * All rights reserved.
  *
@@ -73,6 +73,11 @@ extern long cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp,
 
 extern long cm_VolStatus_Invalidate_DFS_Mapping(cm_scache_t *scp);
 
+extern void cm_VolStatus_DeliverNotifications(void * dummy);
+
+extern void cm_VolStatus_SetRDRNotifications(DWORD onoff);
+
+
 #define DLL_VOLSTATUS_FUNCS_VERSION 2
 typedef struct dll_VolStatus_Funcs {
     afs_uint32          version;
@@ -111,4 +116,23 @@ struct VolStatTest {
 #define VOLSTAT_TEST_CHECK_VOLUME    2
 #define VOLSTAT_TEST_NETWORK_UP      4
 #define VOLSTAT_TEST_NETWORK_DOWN    8
+
+/* redirector - native file system */
+
+enum rdr_event_type { addrchg, volstatus, netstatus };
+
+typedef struct rdr_volstat_evt {
+    osi_queue_t q;
+    enum rdr_event_type type;
+    union {
+        struct {
+            ULONG cellID;
+            ULONG volID;
+            BOOLEAN online;
+        } volstatus_data;
+        struct {
+            BOOLEAN status;
+        } netstatus_data;
+    };
+} rdr_volstat_evt_t;
 

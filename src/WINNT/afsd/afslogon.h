@@ -26,7 +26,6 @@ SOFTWARE.
 /* We only support VC 1200 and above anyway */
 #pragma once
 
-#include <windows.h>
 #include <objbase.h>
 #include <npapi.h>
 #if (_WIN32_WINNT < 0x0501)
@@ -131,6 +130,10 @@ DWORD GetFileCellName(char * path, char * cell, size_t cellLen);
 DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonOptions_t * opt);
 DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWSTR domain);
 BOOL GetLocalShortDomain(PWSTR Domain, DWORD cbDomain);
+
+void AFSCreatePAG(PLUID lpLogonId);
+
+DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx);
 
 #ifdef __cplusplus
 }

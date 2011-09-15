@@ -397,6 +397,15 @@ int cm_noteLocalMountPointChange(afs_int32 locked) {
         lock_ObtainMutex(&cm_Freelance_Lock);
     cm_data.fakeDirVersion++;
     cm_localMountPointChangeFlag = 1;
+
+    if (RDR_Initialized) {
+        cm_fid_t fid;
+        cm_FakeRootFid(&fid);
+        RDR_InvalidateObject( fid.cell, fid.volume, fid.vnode, fid.unique, fid.hash,
+                              CM_SCACHETYPE_DIRECTORY,
+                              AFS_INVALIDATE_DATA_VERSION);
+    }
+
     if (!locked)
         lock_ReleaseMutex(&cm_Freelance_Lock);
     return 1;
@@ -459,6 +468,11 @@ int cm_reInitLocalMountPoints() {
                 lock_ReleaseWrite(&scp->rw);
                 lock_ReleaseWrite(&cm_scacheLock);
                 cm_CallbackNotifyChange(scp);
+
+                if (RDR_Initialized)
+                    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                                         scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
+
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
                 lock_ObtainMutex(&cm_Freelance_Lock);

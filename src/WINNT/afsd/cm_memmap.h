@@ -83,17 +83,30 @@ typedef struct cm_config_data {
     cm_buf_t    *       buf_freeListEndp;
     cm_buf_t	*       buf_dirtyListp;
     cm_buf_t    *       buf_dirtyListEndp;
+    cm_buf_t    *       buf_redirListp;
+    cm_buf_t    *       buf_redirListEndp;
     cm_buf_t	**      buf_scacheHashTablepp;
     cm_buf_t	**      buf_fileHashTablepp;
     cm_buf_t	*       buf_allp;
-    afs_uint64		buf_nbuffers;
     afs_uint32		buf_blockSize;
     afs_uint32		buf_hashSize;
+#ifdef _M_IX86
+    afs_uint32		buf_nbuffers;
+    afs_uint32		buf_nOrigBuffers;
+    afs_uint32          buf_reservedBufs;
+    afs_uint32          buf_maxReservedBufs;
+    afs_uint32          buf_reserveWaiting;
+    afs_uint32          buf_freeCount;
+    afs_uint32          buf_redirCount;
+#else
+    afs_uint64		buf_nbuffers;
     afs_uint64		buf_nOrigBuffers;
     afs_uint64          buf_reservedBufs;
     afs_uint64          buf_maxReservedBufs;
     afs_uint64          buf_reserveWaiting;
-
+    afs_uint64          buf_freeCount;
+    afs_uint64          buf_redirCount;
+#endif
     time_t              mountRootGen;
     afsUUID             Uuid;
     DWORD 		volSerialNumber;

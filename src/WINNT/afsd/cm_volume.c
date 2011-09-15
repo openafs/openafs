@@ -312,7 +312,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         lock_ReleaseWrite(&volp->rw);
 
         if (cellp->flags & CM_CELLFLAG_VLSERVER_INVALID)
-            cm_UpdateCell(cellp, 0);
+             cm_UpdateCell(cellp, 0);
 
         /* now we have volume structure locked and held; make RPC to fill it */
         code = cm_GetEntryByName(cellp, volp->namep, &vldbEntry, &nvldbEntry,
