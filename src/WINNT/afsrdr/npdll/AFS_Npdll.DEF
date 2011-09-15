@@ -1,0 +1,24 @@
+SECTIONS	.AFSNP	READ WRITE SHARED
+
+EXPORTS
+    DllMain                     @1
+    NPLogonNotify               @7
+    NPPasswordChangeNotify      @8
+    NPGetConnection             @12
+    NPGetCaps                   @13
+    NPAddConnection             @17
+    NPCancelConnection          @18
+    NPOpenEnum                  @33
+    NPEnumResource              @34
+    NPCloseEnum                 @35
+    NPFormatNetworkName         @36
+    NPAddConnection3            @38
+    NPGetUniversalName          @40
+    NPGetResourceParent         @41
+    NPGetConnectionPerformance  @49
+    NPGetResourceInformation    @52
+    NPGetConnection3            @54
+
+;    NPGetUser                   @16
+;    NPGetReconnectFlags         @53
+;    I_SystemFocusDialog         @15

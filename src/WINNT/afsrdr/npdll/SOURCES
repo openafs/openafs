@@ -1,0 +1,31 @@
+
+TARGETNAME=AFSRDFSProvider
+TARGETPATH=..\build
+TARGETTYPE=DYNLINK
+
+TARGETLIBS=$(DDK_LIB_PATH)\user32.lib \
+           $(DDK_LIB_PATH)\kernel32.lib \
+           $(DDK_LIB_PATH)\Advapi32.lib
+
+
+UNICODE=1
+NET_C_DEFINES=-DUNICODE
+
+DLLBASE=0x1010000
+
+USE_NTDLL=0
+
+!IF $(FREEBUILD)
+C_DEFINES=$(C_DEFINES)
+!endif
+
+INCLUDES=$(IFSKIT_INC_PATH);..\Common;
+
+SOURCES= AFS_NpdllMain.c \
+         AFS_Npdll.c \
+         AFS_Npdll.rc
+
+UMTYPE=console
+OPTIONAL_NTTEST=
+
+DLLDEF=AFS_Npdll.def
