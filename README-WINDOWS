@@ -14,15 +14,14 @@ prior to Windows 2000 are no longer supported.	As of the OpenAFS 1.5
 series, the Windows 9x components are being removed from the source tree.
 
 
-****** Windows 2000/XP/2003/Vista/2008/Win7/2008-R2 Build Process ******
+****** Windows XP/2003/Vista/2008/Win7/2008-R2 Build Process ******
 
 Building OpenAFS for Windows requires configuring a Windows
 development system by installing compilation tools and header files.
-Open AFS Software development can be done on Windows 2000, XP, 2003, 
-or Vista.  The target system, where OpenAFS will be installed, can be 
-one of:
+Open AFS Software development can be done on XP, 2003, Vista, Win7,
+or 2008 system.  The target system, where OpenAFS will be installed,
+can be one of:
 
- * Windows 2000
  * Windows XP
  * Windows XP SP2
  * Windows 2003 
@@ -31,9 +30,9 @@ one of:
  * Windows 2003 64
  * Windows 2003 R2 (32 or 64)
  * Windows Vista (32 or 64)
- * Windows 2008 (32 or 64)
+ * Windows 2008 (64)
  * Windows 7 (32 or 64)
- * Windows 2008 R2 (32 or 64)
+ * Windows 2008 R2 (64)
 
 The build process is controlled by a nmake file that generates the 
 necessary binaries and binds them into an install package.
@@ -57,12 +56,6 @@ The Microsoft development tools require anywhere from 660 MB to 1.8GB
 of storage depending on which compilers are selected.  The following 
 versions are supported:
 
-    Microsoft Visual Studio .NET 
-      available via a MSDN subscription
-
-    Microsoft Visual Studio .NET 2003
-      available via a MSDN subscription
-
     Microsoft Visual Studio .NET 2005
       available via a MSDN subscription
       (used for OpenAFS.org distribution)
@@ -72,41 +65,32 @@ versions are supported:
 
 One of the following Microsoft SDKs is required:
 
-    Microsoft Platform SDK for Windows Server 2003 SP1
-    Microsoft SDK for Windows 6.0/6.0a
     Microsoft SDK for Windows 6.1
+    Microsoft SDK for Windows 7.0
 
 One of the following Microsoft DDK/WDK is required:
 
-    Microsoft Windows Server 2003 SP1 DDK
-      available via a MSDN subscription or via free CD
-      http://www.microsoft.com/whdc/devtools/ddk/orderddkcd.mspx
-
-    Microsoft Windows Driver Kit 6.0
-    Microsoft Windows Driver Kit 6.1
+    Microsoft Windows Driver Kit 7600
 
 NOTE: Not all combinations of Visual Studio, SDK, and DDK/WDK are 
 known to work.  OpenAFS for Windows is packaged by Secure Endpoints Inc.
 using the following configurations:
 
     32-bit Packages:
-        Built on Windows XP SP3
-        Visual Studio 2005
-        Windows [Platform] SDK 6.0
-        Windows DDK 6.0
+        Built on Windows 7
+        Visual Studio 2008
+        Windows [Platform] SDK 6.0a
+        Windows DDK 7600
         Target: i386_w2k
         APPVER: 5.0
 
     64-bit Packages:
-        Built on Windows Vista 64-bit SP2
-        Visual Studio 2005
-        Windows [Platform] SDK 6.0
-        Windows DDK 6.0
+        Built on Windows 7
+        Visual Studio 2008
+        Windows [Platform] SDK 6.0a
+        Windows DDK 7600
         Target: amd64_w2k
         APPVER: 5.02
-
-These configurations are used because they are the last configurations 
-that still support building for Microsoft Windows 2000.
 
 The Microsoft HTML Help Workshop is required:
 
