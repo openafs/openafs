@@ -41,6 +41,9 @@
 
 #include <loadfuncs-krb5.h>
 #include <krb5.h>
+#include <..\WINNT\afsrdr\common\AFSUserDefines.h>
+#include <..\WINNT\afsrdr\common\AFSUserIoctl.h>
+#include <..\WINNT\afsrdr\common\AFSUserStructs.h>
 
 static char AFSConfigKeyName[] = AFSREG_CLT_SVC_PARAM_SUBKEY;
 
@@ -54,6 +57,7 @@ typedef struct fs_ioctlRequest {
     long nbytes;		/* bytes received (when unmarshalling) */
     char data[FS_IOCTLREQUEST_MAXSIZE];	/* data we're marshalling */
 } fs_ioctlRequest_t;
+
 
 static int
 CMtoUNIXerror(int cm_code)
@@ -135,6 +139,111 @@ IoctlDebug(void)
     }
 
     return debug;
+}
+
+static BOOL
+RDR_Ready(void)
+{
+    HANDLE hDevHandle = NULL;
+    DWORD bytesReturned;
+    AFSDriverStatusRespCB *respBuffer = NULL;
+    DWORD rc = 0;
+    BOOL ready = FALSE;
+
+    hDevHandle = CreateFileW( AFS_SYMLINK_W,
+                             GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE,
+                             NULL,
+                             OPEN_EXISTING,
+                             0,
+                             NULL);
+    if( hDevHandle == INVALID_HANDLE_VALUE)
+    {
+        DWORD gle = GetLastError();
+
+        if (gle && IoctlDebug() ) {
+            char buf[4096];
+            int saveerrno;
+
+            saveerrno = errno;
+            if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                               NULL,
+                               gle,
+                               MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                               buf,
+                               4096,
+                               (va_list *) NULL
+                               ) )
+            {
+                fprintf(stderr,"RDR_Ready CreateFile(%S) failed: 0x%X\r\n\t[%s]\r\n",
+                        AFS_SYMLINK_W,gle,buf);
+            }
+            errno = saveerrno;
+        }
+        return FALSE;
+    }
+
+    //
+    // Allocate a response buffer.
+    //
+    respBuffer = (AFSDriverStatusRespCB *)malloc( sizeof( AFSDriverStatusRespCB));
+    if( respBuffer)
+    {
+
+	memset( respBuffer, '\0', sizeof( AFSDriverStatusRespCB));
+
+        if( !DeviceIoControl( hDevHandle,
+                              IOCTL_AFS_STATUS_REQUEST,
+                              NULL,
+                              0,
+                              (void *)respBuffer,
+                              sizeof( AFSDriverStatusRespCB),
+                              &bytesReturned,
+                              NULL))
+        {
+            //
+            // Error condition back from driver
+            //
+            DWORD gle = GetLastError();
+
+            if (gle && IoctlDebug() ) {
+                char buf[4096];
+                int saveerrno;
+
+                saveerrno = errno;
+                if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                                    NULL,
+                                    gle,
+                                    MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                                    buf,
+                                    4096,
+                                    (va_list *) NULL
+                                    ) )
+                {
+                    fprintf(stderr,"RDR_Ready CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                             AFS_SYMLINK,gle,buf);
+                }
+                errno = saveerrno;
+            }
+            rc = -1;
+            goto cleanup;
+        }
+
+        if (bytesReturned == sizeof(AFSDriverStatusRespCB))
+        {
+            ready = ( respBuffer->Status == AFS_DRIVER_STATUS_READY );
+        }
+    } else
+        rc = ENOMEM;
+
+  cleanup:
+    if (respBuffer)
+        free( respBuffer);
+
+    if (hDevHandle != INVALID_HANDLE_VALUE)
+        CloseHandle(hDevHandle);
+
+    return ready;
 }
 
 static BOOL
@@ -455,6 +564,7 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
     DWORD i;
     BOOL  bIsAFS = FALSE;
     char  subststr[MAX_PATH];
+    char  device[MAX_PATH];
 
     //
     // Handle drive letter substitution created with "SUBST <drive> <path>".
@@ -472,6 +582,14 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
                 return FALSE;
         }
         drivestr = subststr;
+    }
+
+    //
+    // Check for \Device\AFSRedirector
+    //
+    if (QueryDosDevice(drivestr, device, MAX_PATH) &&
+        _strnicmp( device, "\\Device\\AFSRedirector", strlen("\\Device\\AFSRedirector")) == 0) {
+        return TRUE;
     }
 
     //
@@ -573,13 +691,13 @@ DriveIsGlobalAutoMapped(char *drivestr)
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
+    HKEY hk;
     char *drivep = NULL;
-    char netbiosName[MAX_NB_NAME_LENGTH];
+    char netbiosName[MAX_NB_NAME_LENGTH]="AFS";
     DWORD CurrentState = 0;
     char  HostName[64] = "";
     char tbuffer[MAX_PATH]="";
     HANDLE fh;
-    HKEY hk;
     char szUser[128] = "";
     char szClient[MAX_PATH] = "";
     char szPath[MAX_PATH] = "";
@@ -588,6 +706,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD ioctlDebug = IoctlDebug();
     DWORD gle;
     DWORD dwSize = sizeof(szUser);
+    BOOL  usingRDR = FALSE;
     int saveerrno;
     UINT driveType;
     int sharingViolation;
@@ -596,11 +715,63 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     gethostname(HostName, sizeof(HostName));
     if (!DisableServiceManagerCheck() &&
         GetServiceStatus(HostName, TEXT("TransarcAFSDaemon"), &CurrentState) == NOERROR &&
-	CurrentState != SERVICE_RUNNING)
+        CurrentState != SERVICE_RUNNING)
+    {
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl GetServiceStatus(%s) == %d\r\n",
+                    HostName, CurrentState);
+            errno = saveerrno;
+        }
 	return -1;
+    }
 
-    // Populate the Netbios Name
-    lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+    if (RDR_Ready()) {
+        usingRDR = TRUE;
+
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl Redirector is ready\r\n");
+            errno = saveerrno;
+        }
+
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
+        {
+            DWORD dwSize = sizeof(netbiosName);
+            DWORD dwType = REG_SZ;
+            RegQueryValueExA (hk, "NetbiosName", NULL, &dwType, (PBYTE)netbiosName, &dwSize);
+            RegCloseKey (hk);
+
+            if ( ioctlDebug ) {
+                saveerrno = errno;
+                fprintf(stderr, "pioctl NetbiosName = \"%s\"\r\n", netbiosName);
+                errno = saveerrno;
+            }
+        } else {
+            if ( ioctlDebug ) {
+                saveerrno = errno;
+                gle = GetLastError();
+                fprintf(stderr, "pioctl Unable to open \"HKLM\\%s\" using NetbiosName = \"AFS\" GLE=0x%x\r\n",
+                        HostName, CurrentState, gle);
+                errno = saveerrno;
+            }
+        }
+    } else {
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl Redirector is not ready\r\n");
+            errno = saveerrno;
+        }
+
+        if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", netbiosName, sizeof(netbiosName)))
+            lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl NetbiosName = \"%s\"\r\n", netbiosName);
+            errno = saveerrno;
+        }
+    }
 
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
@@ -690,6 +861,12 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
 
+    if ( ioctlDebug ) {
+        saveerrno = errno;
+        fprintf(stderr, "pioctl filename = \"%s\"\r\n", tbuffer);
+        errno = saveerrno;
+    }
+
     fflush(stdout);
     /* now open the file */
     sharingViolation = 0;
@@ -732,7 +909,12 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         GetLastError() != ERROR_SHARING_VIOLATION) {
         int  gonext = 0;
 
-        lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
+        /* with the redirector interface, fail immediately.  there is nothing to retry */
+        if (usingRDR)
+            return -1;
+
+        if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", szClient, sizeof(szClient)))
+            lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
 
         if (RegOpenKey (HKEY_CURRENT_USER,
                          TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
@@ -817,7 +999,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 
   try_lsa_principal:
-    if (fh == INVALID_HANDLE_VALUE &&
+    if (!usingRDR &&
+        fh == INVALID_HANDLE_VALUE &&
         GetLastError() != ERROR_SHARING_VIOLATION) {
         int  gonext = 0;
 
@@ -897,7 +1080,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 
   try_sam_compat:
-    if (fh == INVALID_HANDLE_VALUE &&
+    if (!usingRDR &&
+        fh == INVALID_HANDLE_VALUE &&
         GetLastError() != ERROR_SHARING_VIOLATION) {
         dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
