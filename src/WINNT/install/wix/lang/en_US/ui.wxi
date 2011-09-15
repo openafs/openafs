@@ -690,6 +690,75 @@
           <Text>{\VerdanaBold13}Resuming the [ProductName] [Wizard]</Text>
         </Control>
       </Dialog>
+      <?ifndef BinsOnly?>
+      <Dialog Id="SetupTypeDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
+
+        <Control Id="TypicalIFSLabel" Type="Text" X="85" Y="79" Width="100" Height="10" TabSkip="no">
+          <Text>[DlgTitleFont]&amp;IFS Based Client</Text>
+        </Control>
+        <Control Id="TypicalIFSText" Type="Text" X="85" Y="92" Width="230" Height="20">
+          <Text>Installs the OpenAFS Client as an installable file system driver.  This is more robust than the SMB interface.</Text>
+        </Control>
+        <Control Id="TypicalIFSButton" Type="PushButton" X="40" Y="77" Width="38" Height="38" ToolTip="IFS Based Client Installation" Default="yes" Icon="yes" FixedSize="yes" IconSize="32" Text="[InstallerIcon]">
+          <Publish Property="InstallMode" Value="Typical">1</Publish>
+          <Publish Event="SetInstallLevel" Value="100">1</Publish>
+          <Publish Event="AddLocal" Value="feaClientDriver">1</Publish>
+          <?ifdef DebugSyms?>
+          <Publish Event="AddLocal" Value="feaClientDriverDebug">$(var.DebugSymLowLevel) &lt; 100</Publish>
+          <?endif?>
+          <Publish Event="Remove" Value="feaLoopback">1</Publish>
+          <Publish Event="Remove" Value="feaAfsCreds">1</Publish>
+          <Publish Event="AddLocal" Value="feaAfsConfig">USEAFSCONFIG &lt;&gt; 0</Publish>
+          <?ifdef DebugSyms?>
+          <Publish Event="AddLocal" Value="feaAfsConfigDebug">USEAFSCONFIG &lt;&gt; 0 And $(var.DebugSymLowLevel) &lt; 100</Publish>
+          <Publish Event="Remove" Value="feaAfsCredsDebug">1</Publish>
+          <?endif?>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+        </Control>
+
+        <Control Id="CustomLabel" Type="Text" X="85" Y="122" Width="100" Height="10" TabSkip="no">
+          <Text>[DlgTitleFont]C&amp;ustom</Text>
+        </Control>
+        <Control Id="CustomText" Type="Text" X="85" Y="135" Width="230" Height="30">
+          <Text>Choose which individual components you want to install.  This option is only recommended for advanced users.</Text>
+        </Control>
+        <Control Id="CustomButton" Type="PushButton" X="40" Y="120" Width="38" Height="38" ToolTip="Custom Installation" Icon="yes" FixedSize="yes" IconSize="32" Text="[CustomSetupIcon]">
+          <Publish Property="InstallMode" Value="Custom">1</Publish>
+          <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
+        </Control>
+
+        <Control Id="CompleteLabel" Type="Text" X="85" Y="164" Width="100" Height="10" TabSkip="no">
+          <Text>[DlgTitleFont]C&amp;omplete</Text>
+        </Control>
+        <Control Id="CompleteText" Type="Text" X="85" Y="177" Width="230" Height="20">
+          <Text>Installs the OpenAFS Client, Server and Control Center utilities.  The Client installation will use the IFS interface.</Text>
+        </Control>
+        <Control Id="CompleteButton" Type="PushButton" X="40" Y="162" Width="38" Height="38" ToolTip="Complete Installation" Icon="yes" FixedSize="yes" IconSize="32" Text="[CompleteSetupIcon]">
+          <Publish Property="InstallMode" Value="Complete">1</Publish>
+          <Publish Event="SetInstallLevel" Value="1000">1</Publish>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+        </Control>
+
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
+          <Publish Event="NewDialog" Value="LicenseAgreementDlg">ShowUserRegistrationDlg &lt;&gt; 1 AND NOT (IBMAFS_UPGRADE OR OPENAFS_UPGRADE)</Publish>
+          <Publish Event="NewDialog" Value="UserRegistrationDlg">ShowUserRegistrationDlg = 1 AND NOT (IBMAFS_UPGRADE OR OPENAFS_UPGRADE)</Publish>
+          <Publish Event="NewDialog" Value="RemovePreviousDlg">IBMAFS_UPGRADE OR OPENAFS_UPGRADE OR NSISUNINSTALL &lt;&gt; ""</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Next]" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="374" Height="44" FixedSize="yes" TabSkip="no" Text="[BannerBitmap]" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Choose the setup type that best suits your needs</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>[DlgTitleFont]Choose Setup Type</Text>
+        </Control>
+      </Dialog>
+      <?else?> <!-- BinsOnly -->
       <Dialog Id="SetupTypeDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="TypicalLabel" Type="Text" X="105" Y="65" Width="100" Height="10" TabSkip="no">
           <Text>[DlgTitleFont]&amp;Typical</Text>
@@ -752,6 +821,7 @@
           <Text>Installs the most common program features. Recommended for most users.</Text>
         </Control>
       </Dialog>
+      <?endif?> <!-- BinsOnly -->
 
       <?ifndef BinsOnly ?>
 
@@ -802,7 +872,8 @@
           <Publish Event="NewDialog" Value="RestoreConfigDlg">SAVED_CONFIG</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Text="[ButtonText_Next]">
-          <Publish Event="NewDialog" Value="ConfigCredsDlg">1</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">&amp;feaAfsCreds = 3</Publish>
+	  <Publish Event="NewDialog" Value="VerifyReadyDlg">&amp;feaAfsCreds &lt;&gt; 3</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
@@ -956,6 +1027,68 @@
         <Control Id="Text" Type="Text" X="25" Y="70" Width="320" Height="20">
           <Text>Click Install to begin the installation.  If you want to review or change any of your installation settings, click Back.  Click Cancel to exit the wizard.</Text>
         </Control>
+
+        <?ifdef Debug?>
+        <Control Id="C0" Type="Text" X="25" Y="100" Width="100" Height="10" Text="OpenAFS Client">
+          <Condition Action="disable"><![CDATA[ &feaClient <> 3  ]]></Condition>
+        </Control>
+        <Control Id="C1" Type="Text" X="50" Y="110" Width="100" Height="10" Text="Loopback adapter">
+          <Condition Action="disable"><![CDATA[ &feaLoopback <> 3  ]]></Condition>
+        </Control>
+        <Control Id="C2" Type="Text" X="50" Y="120" Width="100" Height="10" Text="Client Redirector">
+          <Condition Action="disable"><![CDATA[ &feaClientDriver <> 3  ]]></Condition>
+        </Control>
+        <Control Id="C3" Type="Text" X="75" Y="130" Width="100" Height="10" Text="Client Redirector (DBG)">
+          <Condition Action="disable"><![CDATA[ &feaClientDriverDebug <> 3  ]]></Condition>
+        </Control>
+        <Control Id="C4" Type="Text" X="50" Y="140" Width="100" Height="10" Text="AFSCREDS.EXE">
+          <Condition Action="disable"><![CDATA[  &feaAfsCreds <> 3 ]]></Condition>
+        </Control>
+        <Control Id="C5" Type="Text" X="75" Y="150" Width="100" Height="10" Text="AFSCREDS.EXE (DBG)">
+          <Condition Action="disable"><![CDATA[ &feaAfsCredsDebug <> 3]]></Condition>
+        </Control>
+        <Control Id="C6" Type="Text" X="75" Y="160" Width="100" Height="10" Text="AFSCREDS Start Menu Shortcut">
+          <Condition Action="disable"><![CDATA[ &feaCredsStartup <> 3  ]]></Condition>
+        </Control>
+        <Control Id="C7" Type="Text" X="50" Y="170" Width="100" Height="10" Text="AFS_CONFIG.EXE">
+          <Condition Action="disable"><![CDATA[ &feaAfsConfig <> 3  ]]></Condition>
+        </Control>
+        <Control Id="C8" Type="Text" X="75" Y="180" Width="100" Height="10" Text="AFS_CONFIG.EXE (DBG)">
+          <Condition Action="disable"><![CDATA[ &feaAfsConfigDebug <> 3  ]]></Condition>
+        </Control>
+        <Control Id="C9" Type="Text" X="50" Y="190" Width="100" Height="10" Text="NIM Plugin">
+          <Condition Action="disable"><![CDATA[ &feaNetIDMgrPlugin <> 3  ]]></Condition>
+        </Control>
+        <Control Id="CA" Type="Text" X="75" Y="200" Width="100" Height="10" Text="NIM Plugin (DBG)">
+          <Condition Action="disable"><![CDATA[  &DebugSyms <> 3 ]]></Condition>
+        </Control>
+        <Control Id="CB" Type="Text" X="50" Y="210" Width="100" Height="10" Text="Client (DBG)">
+          <Condition Action="disable"><![CDATA[  &feaClientDebug <> 3 ]]></Condition>
+        </Control>
+
+        <Control Id="S0" Type="Text" X="180" Y="100" Width="100" Height="10" Text="OpenAFS Server">
+          <Condition Action="disable"><![CDATA[ &feaServer <> 3  ]]></Condition>
+        </Control>
+        <Control Id="S1" Type="Text" X="205" Y="110" Width="100" Height="10" Text="Server (DBG)">
+          <Condition Action="disable"><![CDATA[ &feaServerDebug <> 3  ]]></Condition>
+        </Control>
+        <Control Id="CC0" Type="Text" X="180" Y="120" Width="100" Height="10" Text="Control Center">
+          <Condition Action="disable"><![CDATA[ &feaControlCenter <> 3  ]]></Condition>
+        </Control>
+        <Control Id="CC1" Type="Text" X="205" Y="130" Width="100" Height="10" Text="Control Center (DBG)">
+          <Condition Action="disable"><![CDATA[ &feaControlCenterDebug <> 3  ]]></Condition>
+        </Control>
+        <Control Id="SD0" Type="Text" X="180" Y="140" Width="100" Height="10" Text="SDK">
+          <Condition Action="disable"><![CDATA[ &feaSDK <> 3  ]]></Condition>
+        </Control>
+        <Control Id="SD1" Type="Text" X="205" Y="150" Width="100" Height="10" Text="SDK (DBG)">
+          <Condition Action="disable"><![CDATA[ &feaSDKDebug <> 3  ]]></Condition>
+        </Control>
+        <Control Id="D0" Type="Text" X="180" Y="160" Width="100" Height="10" Text="Admin Documentation">
+          <Condition Action="disable"><![CDATA[ &feaDocumentation <> 3  ]]></Condition>
+        </Control>
+        <?endif?>
+
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
@@ -1123,6 +1256,12 @@
 	  <ProgressText Action="ConfigureServer">$(loc.ActConfigureServer)</ProgressText>
 	  <ProgressText Action="RemoveNsisInstallation">$(loc.ActRemoveNsisInstallation)</ProgressText>
 	  <ProgressText Action="InstallIDNMRedistributable">$(loc.ActInstallIDNMRedistributable)</ProgressText>
+          <ProgressText Action="InstallRedirNetProvider">$(loc.ActInstallRedirNetProvider)</ProgressText>
+          <ProgressText Action="RemoveRedirNetProvider">$(loc.ActRemoveRedirNetProvider)</ProgressText>
+          <ProgressText Action="UnloadFilterDriver">$(loc.ActUnloadFilterDriver)</ProgressText>
+          <ProgressText Action="UninstallRdrDriver">$(loc.ActUninstallRdrDriver)</ProgressText>
+          <ProgressText Action="InstallRdrDriver">$(loc.ActInstallRdrDriver)</ProgressText>
+          <ProgressText Action="LoadFilterDriver">$(loc.ActLoadFilterDriver)</ProgressText>
 	  
       <AdminUISequence>
         <Show Dialog="FatalError" OnExit="error" />

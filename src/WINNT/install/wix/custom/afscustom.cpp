@@ -172,14 +172,22 @@ _cleanup:
 provider */
 
 MSIDLLEXPORT InstallNetProvider( MSIHANDLE hInstall ) {
-    return InstNetProvider( hInstall, 1 );
+    return InstNetProvider( hInstall, STR_SERVICE, 1 );
 }
 
 MSIDLLEXPORT UninstallNetProvider( MSIHANDLE hInstall) {
-    return InstNetProvider( hInstall, 0 );
+    return InstNetProvider( hInstall, STR_SERVICE, 0 );
 }
 
-DWORD InstNetProvider(MSIHANDLE hInstall, int bInst) {
+MSIDLLEXPORT InstallRedirNetProvider( MSIHANDLE hInstall ) {
+    return InstNetProvider( hInstall, STR_RDRSVC, 1, STR_LANMAN );
+}
+
+MSIDLLEXPORT UninstallRedirNetProvider( MSIHANDLE hInstall) {
+    return InstNetProvider( hInstall, STR_RDRSVC, 0 );
+}
+
+DWORD InstNetProvider(MSIHANDLE hInstall, LPTSTR svcname, int bInst, LPTSTR before) {
     LPTSTR strOrder;
     HKEY hkOrder;
     LONG rv;
@@ -193,11 +201,11 @@ DWORD InstNetProvider(MSIHANDLE hInstall, int bInst) {
     dwSize = 0;
     CHECK(rv = RegQueryValueEx( hkOrder, STR_VAL_ORDER, NULL, NULL, NULL, &dwSize ) );
 
-    strOrder = new TCHAR[ (dwSize + STR_SERVICE_LEN) * sizeof(TCHAR) ];
+    strOrder = new TCHAR[ dwSize / sizeof(TCHAR) + 2 + _tcslen(svcname) ];
 
     CHECK(rv = RegQueryValueEx( hkOrder, STR_VAL_ORDER, NULL, NULL, (LPBYTE) strOrder, &dwSize));
 
-    npi_CheckAndAddRemove( strOrder, STR_SERVICE , bInst);
+    npi_CheckAndAddRemove( strOrder, svcname , bInst, before);
 
     dwSize = (lstrlen( strOrder ) + 1) * sizeof(TCHAR);
 
@@ -220,10 +228,11 @@ _cleanup:
 	str : target string
 	str2: string to add/remove
 	bInst: == 1 if string should be added to target if not already there, otherwise remove string from target if present.
+        if before != NULL, add string before
     */
-int npi_CheckAndAddRemove( LPTSTR str, LPTSTR str2, int bInst ) {
+int npi_CheckAndAddRemove( LPTSTR str, LPTSTR str2, int bInst, LPTSTR before ) {
 
-    LPTSTR target, charset, match;
+    LPTSTR target, charset, btarget, match, bmatch;
     int ret=0;
 
     target = new TCHAR[lstrlen(str)+3];
@@ -238,8 +247,21 @@ int npi_CheckAndAddRemove( LPTSTR str, LPTSTR str2, int bInst ) {
     match = _tcsstr(target, charset);
 
     if ((match) && (bInst)) {
+        if (before != NULL) {
+            bmatch = _tcsstr(target, before);
+            if (bmatch == NULL || bmatch > match) {
         ret = INP_ERR_PRESENT;
         goto cleanup;
+    }
+
+            lstrcpy(str+(match-target), match+lstrlen(str2)+2);
+            str[lstrlen(str)-1]=_T('\0');
+            match = NULL;
+
+        } else {
+            ret = INP_ERR_PRESENT;
+            goto cleanup;
+        }
     }
 
     if ((!match) && (!bInst)) {
@@ -249,8 +271,15 @@ int npi_CheckAndAddRemove( LPTSTR str, LPTSTR str2, int bInst ) {
 
     if (bInst) // && !match
     {
+        if (before == NULL || (bmatch = _tcsstr(str, before)) == NULL) {
        lstrcat(str, _T(","));
        lstrcat(str, str2);
+        } else {
+            size_t s2len = lstrlen(str2);
+            memmove(bmatch + s2len + 1, bmatch, (lstrlen(bmatch) + 1) * sizeof(TCHAR));
+            memcpy(bmatch, str2, s2len * sizeof(TCHAR));
+            bmatch[s2len] = _T(',');
+        }
        ret = INP_ERR_ADDED;
        goto cleanup;
     }

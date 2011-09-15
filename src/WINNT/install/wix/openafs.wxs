@@ -13,7 +13,7 @@
       version of OpenAFS has a different MSI name.  Thus, each version needs a
       unique product code.
       -->
-    <Product 
+    <Product
         Id="????????-????-????-????-????????????"
         Codepage="$(var.Codepage)"
         Language="$(var.LanguageCode)"
@@ -42,7 +42,7 @@
          ShortNames="no"
          SummaryCodepage="1252"
          />
-        
+
         <!-- Launch conditions -->
         <Condition Message="$(loc.StrLaunchCond)">
          <![CDATA[VersionNT >= 500]]>
@@ -57,23 +57,43 @@
          <![CDATA[NOT VersionNT64]]>
         </Condition>
     <?endif?>
-        
-        <!-- Global Properties -->
-        <?include property.wxi?>
-        
-        <!-- File system and registry settings -->
-        <Directory Id="TARGETDIR" Name="SourceDir">
-            <?include platform.wxi?>
-            <?include registry.wxi?>
-            <?include files.wxi?>
-        </Directory>
-        
-        <!-- Features -->
-        <?include feature.wxi?>
-        
-        <!-- User interface -->
-        <?include lang\$(var.Language)\ui.wxi?>
-        
+
+    <!-- Global Properties -->
+    <?include property.wxi?>
+
+    <!-- File system and registry settings -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+        <?include platform.wxi?>
+        <?include registry.wxi?>
+        <?include files.wxi?>
+    </Directory>
+
+    <!-- Features -->
+    <?include feature.wxi?>
+
+    <!-- User interface -->
+    <?include lang\$(var.Language)\ui.wxi?>
+
+    <Property Id="RUNDLL32EXE" Secure="yes">
+      <DirectorySearch Id="RunDLLSearch" Depth="0" Path="[$(var.PISystemFolder)]">
+        <FileSearch Id="RunDLLSearch" Name="rundll32.exe" />
+      </DirectorySearch>
+    </Property>
+
+    <Property Id="SETUPAPIDLL" Secure="yes">
+      <DirectorySearch Id="SetupAPISearch" Depth="0" Path="[$(var.PISystemFolder)]">
+        <FileSearch Id="SetupAPISearch" Name="setupapi.dll" />
+      </DirectorySearch>
+    </Property>
+
+    <Condition Message="Can't find RunDLL32.exe.  We looked in [$(var.PISystemFolder)].">
+      RUNDLL32EXE
+    </Condition>
+
+    <Condition Message="Can't find SetupAPI.DLL.  We looked in [$(var.PISystemFolder)].">
+      SETUPAPIDLL
+    </Condition>
+
         <!-- Custom actions -->
     <?ifndef UseDllLoopbackInstaller?>
         <Binary
@@ -85,8 +105,8 @@
          src="$(var.MediaBinDir)afsloopback.dll"/>
     <?endif?>
         <Binary
-		 Id="BIN_afsCustom"
-		 src="$(var.MediaDllDir)afscustom.dll"/>
+	 Id="BIN_afsCustom"
+	 src="$(var.MediaDllDir)afscustom.dll"/>
     <Binary
        Id="BIN_idndl.exe"
        src="$(var.IDNMRedistDir)\idndl.$(var.Arch).exe" />
@@ -98,77 +118,116 @@
        Impersonate="no"
        />
 
-	<?ifdef UseDllLoopbackInstaller?>
+    <CustomAction Id="InstallRdrDriver" Directory="$(var.PISystemFolder)"
+                  Execute="deferred" Impersonate="no"
+                  ExeCommand='"[RUNDLL32EXE]" [SETUPAPIDLL],InstallHinfSection DefaultInstall 128 [#file_RedirDriverInstall.inf]' />
+
+    <CustomAction Id="UninstallRdrDriver" Directory="$(var.PISystemFolder)"
+                  Execute="deferred" Return="ignore" Impersonate="no"
+                  ExeCommand='"[RUNDLL32EXE]" [SETUPAPIDLL],InstallHinfSection DefaultUninstall 128 [#file_RedirDriverInstall.inf]' />
+
+    <CustomAction Id="InstallRdrLibrary" Directory="$(var.PISystemFolder)"
+                  Execute="deferred" Impersonate="no"
+                  ExeCommand='"[RUNDLL32EXE]" [SETUPAPIDLL],InstallHinfSection DefaultInstall 128 [#file_RedirLibInstall.inf]' />
+
+    <CustomAction Id="UninstallRdrLibrary" Directory="$(var.PISystemFolder)"
+                  Execute="deferred" Return="ignore" Impersonate="no"
+                  ExeCommand='"[RUNDLL32EXE]" [SETUPAPIDLL],InstallHinfSection DefaultUninstall 128 [#file_RedirLibInstall.inf]' />
+
+    <?ifdef UseDllLoopbackInstaller?>
         <CustomAction
-         Id="InstallLoopback"
-         BinaryKey="BIN_afsLoopback"
-         DllEntry="installLoopbackMSI"
-         Execute="deferred" 
-         Impersonate="no"
-         />
-	<?ifdef RemoveLoopback?>
-        <CustomAction
-         Id="RemoveLoopback"
-         BinaryKey="BIN_afsLoopback"
-         DllEntry="uninstallLoopbackMSI"
-         Execute="deferred" 
-         Impersonate="no"
-         />
-        <CustomAction
-         Id="RollbackLoopback"
-         BinaryKey="BIN_afsLoopback"
-         DllEntry="uninstallLoopbackMSI"
-         Execute="deferred" 
-         Impersonate="no"
-         />
-	<?endif?>
-	<?else?>
-		<CustomAction
-		 Id="InstallLoopback"
-		 BinaryKey="BIN_instloop"
-		 ExeCommand="-i"
-		 Impersonate="no"
-		 Execute="deferred"
-		 />
-		<?ifdef RemoveLoopback?>
-			<CustomAction
-			Id="RollbackLoopback"
-			BinaryKey="BIN_instloop"
-			ExeCommand="-u"
-			Impersonate="no"
-			Execute="rollback"
-			/>
-			<CustomAction
-			Id="RemoveLoopback"
-			BinaryKey="BIN_instloop"
-			ExeCommand="-u"
-			Impersonate="no"
-			Execute="deferred"
-			/>
-		<?endif?>
-	<?endif?>
-        <CustomAction
-         Id="InstallNetProvider" 
-         BinaryKey="BIN_afsCustom" 
-         DllEntry="InstallNetProvider"
-         Execute="deferred" 
-         Impersonate="no"
-        />
-		<CustomAction 
-		 Id="RemoveNetProvider" 
-		 BinaryKey="BIN_afsCustom"
-		 DllEntry="UninstallNetProvider"
-		 Return="ignore"
-		 Execute="deferred" 
-                 Impersonate="no"
+            Id="InstallLoopback"
+            BinaryKey="BIN_afsLoopback"
+            DllEntry="installLoopbackMSI"
+            Execute="deferred"
+            Impersonate="no"
+            />
+        <?ifdef RemoveLoopback?>
+            <CustomAction
+                Id="RemoveLoopback"
+                BinaryKey="BIN_afsLoopback"
+                DllEntry="uninstallLoopbackMSI"
+                Execute="deferred"
+                Impersonate="no"
                 />
-		<CustomAction 
-		 Id="RollbackNetProvider" 
-		 BinaryKey="BIN_afsCustom"
-		 DllEntry="UninstallNetProvider"
-		 Return="ignore"
-		 Execute="rollback" />
-		<CustomAction
+            <CustomAction
+                Id="RollbackLoopback"
+                BinaryKey="BIN_afsLoopback"
+                DllEntry="uninstallLoopbackMSI"
+                Execute="deferred"
+                Impersonate="no"
+                />
+        <?endif?>
+    <?else?>
+	<CustomAction
+	    Id="InstallLoopback"
+	    BinaryKey="BIN_instloop"
+	    ExeCommand="-i"
+	    Impersonate="no"
+	    Execute="deferred"
+	    />
+	<?ifdef RemoveLoopback?>
+	    <CustomAction
+		Id="RollbackLoopback"
+		BinaryKey="BIN_instloop"
+		ExeCommand="-u"
+		Impersonate="no"
+		Execute="rollback"
+		/>
+	    <CustomAction
+		Id="RemoveLoopback"
+		BinaryKey="BIN_instloop"
+		ExeCommand="-u"
+		Impersonate="no"
+		Execute="deferred"
+		/>
+	<?endif?>
+    <?endif?>
+    <CustomAction
+       Id="InstallNetProvider"
+       BinaryKey="BIN_afsCustom"
+       DllEntry="InstallNetProvider"
+       Execute="deferred"
+       Impersonate="no"
+       />
+    <CustomAction
+       Id="RemoveNetProvider"
+       BinaryKey="BIN_afsCustom"
+       DllEntry="UninstallNetProvider"
+       Return="ignore"
+       Execute="deferred"
+       Impersonate="no"
+       />
+    <CustomAction
+       Id="RollbackNetProvider"
+       BinaryKey="BIN_afsCustom"
+       DllEntry="UninstallNetProvider"
+       Return="ignore"
+       Execute="rollback"
+       />
+    <CustomAction
+       Id="InstallRedirNetProvider"
+       BinaryKey="BIN_afsCustom"
+       DllEntry="InstallRedirNetProvider"
+       Execute="deferred"
+       Impersonate="no"
+       />
+    <CustomAction
+       Id="RemoveRedirNetProvider"
+       BinaryKey="BIN_afsCustom"
+       DllEntry="UninstallRedirNetProvider"
+       Return="ignore"
+       Execute="deferred"
+       Impersonate="no"
+       />
+    <CustomAction
+       Id="RollbackRedirNetProvider"
+       BinaryKey="BIN_afsCustom"
+       DllEntry="UninstallRedirNetProvider"
+       Return="ignore"
+       Execute="rollback" />
+
+    <CustomAction
 		 Id="ConfigureClient"
 		 BinaryKey="BIN_afsCustom"
 		 DllEntry="ConfigureClientService"
@@ -180,8 +239,8 @@
 		 DllEntry="ConfigureServerService"
 		 Impersonate="no"
 		 Execute="deferred" />
-		<CustomAction 
-		 Id="RemoveNsisInstallation" 
+		<CustomAction
+		 Id="RemoveNsisInstallation"
 		 BinaryKey="BIN_afsCustom"
 		 DllEntry="UninstallNsisInstallation"
 		 Execute="immediate" />
@@ -245,34 +304,45 @@
         <AdvertiseExecuteSequence />
         <AdminExecuteSequence />
         <InstallExecuteSequence>
-			<RemoveExistingProducts After="InstallValidate">(Not Installed) And (IBMAFS_UPGRADE OR OPENAFS_UPGRADE OR AFSPLUGIN_UPGRADE)</RemoveExistingProducts>
-			<Custom Action="RemoveNsisInstallation" Before="AbortInstallationA">NSISUNINSTALL &lt;&gt; "" AND UILevel &gt;= 4</Custom>
-			<Custom Action="AbortInstallationA" Before="CostInitialize">NSISUNINSTALL &lt;&gt; "" AND UILevel &lt; 4</Custom>
-			<!-- Assert that if the server is going to be installed locally after this session, control center and client are also local -->
-			<Custom Action="AbortInstallationB" After="MigrateFeatureStates">
-				<![CDATA[((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
-			</Custom>
-		<?ifdef RemoveLoopback?>
-			<Custom Action="RemoveLoopback" After="SelfRegModules">&amp;feaLoopback=2 OR &amp;feaLoopback=3</Custom>
-            <Custom Action="RollbackLoopback" After="RemoveLoopback">&amp;feaLoopback=3</Custom>
-            <Custom Action="InstallLoopback" After="RollbackLoopback">&amp;feaLoopback=3</Custom>
-		<?else?>
-            <Custom Action="InstallLoopback" After="SelfRegModules">&amp;feaLoopback=3</Custom>
-        <?endif?>
-            <Custom Action="RollbackNetProvider" After="WriteRegistryValues">&amp;feaClient=3</Custom>
-			<Custom Action="InstallNetProvider" After="RollbackNetProvider">&amp;feaClient=3</Custom>
-			<Custom Action="RemoveNetProvider" After="InstallNetProvider">&amp;feaClient=2</Custom>
-      <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">!feaClient=2 And &amp;feaClient=3 And (VersionNT=501 Or VersionNT=502)</Custom>
-			<Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
-			<Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
-                        <Custom Action="RollbackRestoreAFSClientRegistryKeys" After="RemoveNetProvider">!feaClient=2 And &amp;feaClient=3 And RESTORE_CONFIG</Custom>
-                        <Custom Action="RestoreAFSClientRegistryKeys" After="RollbackRestoreAFSClientRegistryKeys">!feaClient=2 And &amp;feaClient=3 And RESTORE_CONFIG</Custom>
-                        <Custom Action="BackupAFSClientRegistryKeys" Before="DeleteServices">!feaClient=3 And &amp;feaClient=2</Custom>
-			<!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
-			<Custom Action="RollbackAFSAdminGroup" Before="CreateAFSAdminGroup">&amp;feaClient=3</Custom>
-			<Custom Action="CreateAFSAdminGroup" Before="CreateFolders">&amp;feaClient=3</Custom>
-                        <Custom Action="SetInstallLocation" Before="RegisterProduct" />
-                        <Custom Action="DetectSavedConfiguration" Before="CostInitialize" />
+	    <RemoveExistingProducts After="InstallValidate">(Not Installed) And (IBMAFS_UPGRADE OR OPENAFS_UPGRADE OR AFSPLUGIN_UPGRADE)</RemoveExistingProducts>
+	    <Custom Action="RemoveNsisInstallation" Before="AbortInstallationA">NSISUNINSTALL &lt;&gt; "" AND UILevel &gt;= 4</Custom>
+	    <Custom Action="AbortInstallationA" Before="CostInitialize">NSISUNINSTALL &lt;&gt; "" AND UILevel &lt; 4</Custom>
+	    <!-- Assert that if the server is going to be installed locally after this session, control center and client are also local -->
+	    <Custom Action="AbortInstallationB" After="MigrateFeatureStates">
+                <![CDATA[((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
+	    </Custom>
+	    <?ifdef RemoveLoopback?>
+	        <Custom Action="RemoveLoopback" After="SelfRegModules">&amp;feaLoopback=2 OR &amp;feaLoopback=3</Custom>
+                <Custom Action="RollbackLoopback" After="RemoveLoopback">&amp;feaLoopback=3</Custom>
+                <Custom Action="InstallLoopback" After="RollbackLoopback">&amp;feaLoopback=3</Custom>
+	    <?else?>
+                <Custom Action="InstallLoopback" After="SelfRegModules">&amp;feaLoopback=3</Custom>
+            <?endif?>
+            <Custom Action="InstallIDNMRedistributable" After="WriteRegistryValues">!feaClient=2 And &amp;feaClient=3  And (VersionNT=501 Or VersionNT=502)</Custom>
+            <Custom Action="RollbackNetProvider" After="InstallIDNMRedistributable">&amp;feaClient=3</Custom>
+            <Custom Action="InstallNetProvider" After="RollbackNetProvider">&amp;feaClient=3</Custom>
+            <Custom Action="RemoveNetProvider" After="InstallNetProvider">&amp;feaClient=2</Custom>
+
+            <Custom Action="RollbackRedirNetProvider" After="InstallNetProvider">&amp;feaClientDriver=3</Custom>
+            <Custom Action="InstallRedirNetProvider" After="RollbackRedirNetProvider">&amp;feaClientDriver=3</Custom>
+            <Custom Action="RemoveRedirNetProvider" After="InstallRedirNetProvider">&amp;feaClientDriver=2</Custom>
+
+            <Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
+            <Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
+            <Custom Action="RollbackRestoreAFSClientRegistryKeys" After="RemoveNetProvider">!feaClient=2 And &amp;feaClient=3 And RESTORE_CONFIG</Custom>
+            <Custom Action="RestoreAFSClientRegistryKeys" After="RollbackRestoreAFSClientRegistryKeys">!feaClient=2 And &amp;feaClient=3 And RESTORE_CONFIG</Custom>
+            <Custom Action="BackupAFSClientRegistryKeys" Before="DeleteServices">!feaClient=3 And &amp;feaClient=2</Custom>
+            <!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
+            <Custom Action="RollbackAFSAdminGroup" Before="CreateAFSAdminGroup">&amp;feaClient=3</Custom>
+            <Custom Action="CreateAFSAdminGroup" Before="CreateFolders">&amp;feaClient=3</Custom>
+            <Custom Action="SetInstallLocation" Before="RegisterProduct" />
+
+            <Custom Action="UninstallRdrDriver" After="InstallInitialize">&amp;feaClientDriver=2 And RUNDLL32EXE And SETUPAPIDLL</Custom>
+            <Custom Action="UninstallRdrLibrary" After="InstallInitialize">&amp;feaClientDriver=2 And RUNDLL32EXE And SETUPAPIDLL</Custom>
+            <Custom Action="InstallRdrDriver" Before="RegisterProduct">&amp;feaClientDriver=3 And RUNDLL32EXE And SETUPAPIDLL</Custom>
+            <Custom Action="InstallRdrLibrary" Before="RegisterProduct">&amp;feaClientDriver=3 And RUNDLL32EXE And SETUPAPIDLL</Custom>
+
+            <Custom Action="DetectSavedConfiguration" Before="CostInitialize" />
             <ScheduleReboot After="PublishProduct">&amp;feaClient=3 OR &amp;feaServer=3 OR &amp;feaClient=2 OR &amp;feaServer=2</ScheduleReboot>
         </InstallExecuteSequence>
 
@@ -281,23 +351,23 @@
         <Upgrade Id="6823EEDD-84FC-4204-ABB3-A80D25779833">
             <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="yes" Maximum="$(var.NumericVersion)" MigrateFeatures="yes" Property="OPENAFS_UPGRADE" />
         </Upgrade>
-        
+
         <!-- MIT's Transarc AFS MSI Installer -->
         <Upgrade Id="5332B94F-DE38-4927-9EAB-51F4A64193A7">
             <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="yes" Maximum="3.6.2" MigrateFeatures="no" Property="IBMAFS_UPGRADE" />
         </Upgrade>
-        
+
   <?if $(env.CPU) = "i386" ?>
         <!-- Secure-Endpoints OpenAFS NetIDMgr plug-in -->
         <Upgrade Id="646D643A-73E3-4C77-AE4A-EDBE313DD45D">
             <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.NumericVersion)" MigrateFeatures="no" Property="AFSPLUGIN_UPGRADE" />
         </Upgrade>
   <?endif?>
-        
+
         <!-- openafs.org NSIS installer is detected using other means -->
         <!-- Please let us know if you want other Installers to be detected and upgraded/removed -->
 
-		<!-- Media -->
-		<Media Id="1" Cabinet="disk1.cab" CompressionLevel="high" EmbedCab="yes" />
+        <!-- Media -->
+        <Media Id="1" Cabinet="disk1.cab" CompressionLevel="high" EmbedCab="yes" />
     </Product>
 </Wix>

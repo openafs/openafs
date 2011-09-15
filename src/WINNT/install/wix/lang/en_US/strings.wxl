@@ -31,6 +31,17 @@
     <String Id="StrNIDMPluginLongDesc">OpenAFS plug-in for Network Identity Manager. Adds AFS token management capabilities to Network Identity Manager.</String>
     <String Id="StrNIDMDebugDesc">Debug symbols for NetIDMgr plug-in</String>
     <String Id="StrNIDMDebugLongDesc">Debugging symbols for the OpenAFS NetIDMgr plug-in.</String>
+  <String Id="StrAFSClientDriverLongDesc">Redirector Driver</String>
+  <String Id="StrAFSClientDriverDesc">OpenAFS File System Redirector Kernel Driver</String>
+  <String Id="StrAFSClientDriverDebugLongDesc">Debug Symbols</String>
+  <String Id="StrAFSClientDriverDebugDesc">Debuging symbols for the OpenAFS File System Redirector Kernel Driver</String>
+  <String Id="StrAFSCredsLongDesc">AFSCREDS.EXE tool for authenticating to AFS.</String>
+  <String Id="StrAFSCredsDebugDesc">Debug symbols for AFS Authentication</String>
+  <String Id="StrAFSCredsDebugLongDesc">Debugging symbols for AFSCREDS.EXE</String>
+  <String Id="StrAfsConfigDesc">Client configuration tool</String>
+  <String Id="StrAfsConfigLongDesc">AFS_CONFIG.EXE tool for configuring the AFS client and managing AFS drive mappings.</String>
+  <String Id="StrAfsConfigDebugDesc">Debug symbols for configuration tool</String>
+  <String Id="StrAfsConfigDebugLongDesc">Debugging symbols for AFS_CONFIG.EXE.</String>
 
     <String Id="StrShlExtDesc">AFS Context Menu Shell Extension</String>
     <String Id="StrShlExt32Desc">AFS Context Menu Shell Extension  (32-bit)</String>
@@ -67,6 +78,12 @@
 	<String Id="ActConfigureServer">Configuring the AFS server service</String>
 	<String Id="ActRemoveNsisInstallation">Removing existing installation of OpenAFS</String>
         <String Id="ActInstallIDNMRedistributable">Installing Microsoft Internationalized Domain Name Mitigation APIs</String>
+  <String Id="ActInstallRedirNetProvider">Installing network provider for filter driver</String>
+  <String Id="ActRemoveRedirNetProvider">Removing network provider for filter driver</String>
+  <String Id="ActUnloadFilterDriver">Unloading filter driver using FLTMC.EXE</String>
+  <String Id="ActUninstallRdrDriver">Uninstalling filter driver</String>
+  <String Id="ActInstallRdrDriver">Installing filter driver</String>
+  <String Id="ActLoadFilterDriver">Loading filter driver using FLTMC.EXE</String>
 	
 	<String Id="StrNsisAbortReason">Installation of OpenAFS for Windows was prematurely terminated because OpenAFS [NSISVERSION] was already installed.</String>
 	<String Id="StrUninstallDesc">Uninstall OpenAFS from the local machine.</String>

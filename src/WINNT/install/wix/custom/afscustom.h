@@ -52,7 +52,8 @@ SOFTWARE.
 #define STR_VAL_ORDER _T("ProviderOrder")
 
 #define STR_SERVICE _T("TransarcAFSDaemon")
-#define STR_SERVICE_LEN 18
+#define STR_RDRSVC  _T("AFSRedirector")
+#define STR_LANMAN  _T("LanmanWorkstation")
 
 #define INP_ERR_PRESENT 1
 #define INP_ERR_ADDED   2
@@ -68,8 +69,8 @@ SOFTWARE.
 #define ERR_GROUP_MEMBER_FAILED 4007
 
 /* non-exported */
-int npi_CheckAndAddRemove( LPTSTR, LPTSTR, int );
-DWORD InstNetProvider(MSIHANDLE, int);
+int npi_CheckAndAddRemove( LPTSTR, LPTSTR, int, LPTSTR);
+DWORD InstNetProvider(MSIHANDLE, LPTSTR, int, LPTSTR = NULL);
 void ShowMsiError(MSIHANDLE, DWORD, DWORD);
 DWORD ConfigService(int);
 UINT createAfsAdminGroup(void);
@@ -79,6 +80,8 @@ UINT removeAfsAdminGroup(void);
 /* exported */
 MSIDLLEXPORT InstallNetProvider( MSIHANDLE );
 MSIDLLEXPORT UninstallNetProvider ( MSIHANDLE );
+MSIDLLEXPORT InstallRedirNetProvider( MSIHANDLE );
+MSIDLLEXPORT UninstallRedirNetProvider ( MSIHANDLE );
 MSIDLLEXPORT ConfigureClientService( MSIHANDLE );
 MSIDLLEXPORT ConfigureServerService( MSIHANDLE );
 MSIDLLEXPORT AbortMsiImmediate( MSIHANDLE );

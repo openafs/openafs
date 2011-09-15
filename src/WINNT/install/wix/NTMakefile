@@ -122,7 +122,8 @@ $(BINWIXOBJ): oafwbins.wxs $(WIXINCLUDES)
 !ENDIF
 		-v0 \
 		-w0 \
-        $(WIXCYGOPT) $(AFSDEV_AUXWIXDEFINES)	oafwbins.wxs
+		-sw1044 \
+                $(AFSDEV_AUXWIXDEFINES)	oafwbins.wxs
 
 $(BINMSIFILE): $(BINWIXOBJ)
 	light -nologo -out $(BINMSIFILE) \

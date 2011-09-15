@@ -110,6 +110,11 @@
         <?define _afscreds_debugsym_guid="38DC7EA0-3130-4C27-8FD5-442660197208"?>
         <?define _afscreds_chm_guid="24A87704-5F47-43Af-9F2B-568AB103ADAF"?>
         <?define clsid_afs_shl_ext="5F820CA1-3DDE-11DB-B2CE-001558092DB5"?>
+        <?define DrvFSRDR_guid="6E8F93A9-5F72-42BA-BDD6-F01BC2A49EF3"?>
+        <?define DrvFSRDRDebug_guid="664E3C2B-8C9A-4BA8-ABE7-764ABCC4D472"?>
+        <?define DrvFSRDR_NP_guid="0EBA5BB2-9C55-41D7-9960-2781E9DEFE32"?>
+        <?define DrvFSRDRDebug_NP_guid="D22607A3-FC17-48C5-87C1-8E010E9D28B3"?>
+        <?define cmp_AfsCredsDebug_guid="C27FC522-CEFF-4B67-A148-57960CF5756D"?>
 
 <?elseif $(var.Platform) = "Intel"?>
 	<?define PISystemFolder="SystemFolder"?>
@@ -220,6 +225,11 @@
         <?define _afscreds_plugin_guid="3477A7C4-9BC9-4AF9-B97D-C96455CC3AF6"?>
         <?define _afscreds_debugsym_guid="DCBE9170-746F-4894-96FA-B8441A133133"?>
         <?define _afscreds_chm_guid="11657F75-67AD-4DBA-8344-BF65B7CCAAD2"?>
+        <?define DrvFSRDR_guid="CAD135D7-A1C6-40CE-9673-03CC36C710A3"?>
+        <?define DrvFSRDRDebug_guid="96B1084E-BA69-4014-9FB8-DAA3F4774BAD"?>
+        <?define DrvFSRDR_NP_guid="0472798F-AE1D-4108-84D8-6657D2DA0AA3"?>
+        <?define DrvFSRDRDebug_NP_guid="2D534142-DFBE-4578-8F3B-C6BC87F7BDCC"?>
+        <?define cmp_AfsCredsDebug_guid="4DD44B24-044F-4D6B-B8ED-AF950E6CA39C"?>
 <?else?>
 	<?error Unknown platform?>
 <?endif?>

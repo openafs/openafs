@@ -13,6 +13,8 @@ DLLRES = $(OUT)\afscustom.res
 DLLEXPORTS=\
 	-EXPORT:InstallNetProvider \
 	-EXPORT:UninstallNetProvider \
+	-EXPORT:InstallRedirNetProvider 	\
+	-EXPORT:UninstallRedirNetProvider 	\
 	-EXPORT:ConfigureClientService \
 	-EXPORT:ConfigureServerService \
 	-EXPORT:AbortMsiImmediate \
@@ -24,7 +26,7 @@ DLLEXPORTS=\
 	-EXPORT:DetectSavedConfiguration
 
 DLLLIBFILES=\
-	msi.lib advapi32.lib netapi32.lib
+	msi.lib advapi32.lib netapi32.lib setupapi.lib
 
 LINK=link
 

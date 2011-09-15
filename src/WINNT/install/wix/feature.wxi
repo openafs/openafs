@@ -17,8 +17,9 @@
                 InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 
                 <Feature Id="feaLoopback" AllowAdvertise="no" Description="$(loc.StrLoopbackLongDesc)"
-                    Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrLoopbackDesc)">
+               Display="expand" InstallDefault="followParent" Level="1030" Title="$(loc.StrLoopbackDesc)">
                     <ComponentRef Id="rcm_Loopback"/>
+        <Condition Level="30">USEREDIRECTOR = 0</Condition>
                 </Feature>
 
             <Feature Id="feaNetIDMgrPlugin" AllowAdvertise="no" Description="$(loc.StrNIDMPluginLongDesc)"
@@ -39,9 +40,9 @@
 			<Condition Level="30">VersionNT = 500 And ServicePackLevel &lt; 3</Condition>
 		</Feature>
 				
-		<Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="30">
+      <Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="1030">
 			<ComponentRef Id="cmp_credsStartup" />
-			<Condition Level="130">CREDSSTARTUP = 0</Condition>
+	<Condition Level="30">CREDSSTARTUP &lt;&gt; 0 And USEAFSCREDS &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
 		</Feature>
 				
 		<?ifdef DebugSyms?>
@@ -49,11 +50,55 @@
 				InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
                 	        <ComponentRef Id="cmp_ClientProgramDebug" />
                     		<ComponentRef Id="cmp_CommonCommonDebug" />
-                    		<ComponentRef Id="cmp_ClientCommonDebug" />
                     		<ComponentRef Id="cmp_ClientSystemDebug" />
                     		<?include runtime_debug.wxi?>
 			</Feature>
 		<?endif?>
+
+      <Feature Id="feaClientDriver" AllowAdvertise="no" Description="$(loc.StrAFSClientDriverLongDesc)" Display="expand"
+               InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDriverDesc)">
+  <?ifndef BinsOnly ?>
+        <ComponentRef Id="Drv_FSRDR" />
+        <ComponentRef Id="Drv_FSRDR_NP" />
+        <Condition Level="1030">USEREDIRECTOR = 0</Condition>
+        <?ifdef DebugSyms?>
+        <Feature Id="feaClientDriverDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDriverDebugLongDesc)" Display="expand"
+                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+          <ComponentRef Id="Drv_FSRDR_Debug" />
+          <ComponentRef Id="Drv_FSRDR_NP_Debug" />
+          <Condition Level="1030">USEREDIRECTOR = 0</Condition>
+        </Feature>
+       <?endif?>
+  <?endif?>
+      </Feature>
+
+      <Feature Id="feaAfsCreds" AllowAdvertise="no" Description="$(loc.StrAFSCredsLongDesc)" Display="expand"
+               InstallDefault="followParent" Level="1030" Title="$(loc.StrAFSCredsDesc)">
+        <ComponentRef Id="cmf_afscreds_EXE" />
+        <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
+        <Condition Level="30">USEAFSCREDS &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
+        <?ifdef DebugSyms?>
+        <Feature Id="feaAfsCredsDebug" AllowAdvertise="no" Description="$(loc.StrAFSCredsDebugLongDesc)" Display="expand"
+                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSCredsDebugDesc)">
+          <ComponentRef Id="cmp_AfsCredsDebug" />
+          <Condition Level="$(var.DebugSymLowLevel)">USEAFSCREDS &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
+        </Feature>
+        <?endif?>
+      </Feature>
+
+      <Feature Id="feaAfsConfig" AllowAdvertise="no" Description="$(loc.StrAFSConfigLongDesc)" Display="expand"
+               InstallDefault="followParent" Level="1030" Title="$(loc.StrAFSConfigDesc)">
+        <ComponentRef Id="cmf_afs_config_EXE" />
+        <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
+        <Condition Level="30">USEAFSCONFIG &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
+        <?ifdef DebugSyms?>
+        <Feature Id="feaAfsConfigDebug" AllowAdvertise="no" Description="$(loc.StrAFSConfigDebugLongDesc)" Display="expand"
+                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSConfigDebugDesc)">
+          <ComponentRef Id="cmp_ClientConfigDebug" />
+          <Condition Level="$(var.DebugSymLowLevel)">USEAFSCONFIG &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
+        </Feature>
+        <?endif?>
+      </Feature>
 
 		<ComponentRef Id="rcm_Client" />
                 <ComponentRef Id="rcm_ClientCacheSize" />
@@ -76,12 +121,9 @@
                 <ComponentRef Id="cmf_afspthread_DLL" />
                 <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
                 <ComponentRef Id="cmf_afsprocmgmt_DLL" />
-                <ComponentRef Id="cmf_afs_config_EXE" />
 
                 <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)"/>
                 <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
-                <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
-                <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
 
@@ -94,7 +136,6 @@
                 <ComponentRef Id="cmf_unlog_EXE" />
                 <ComponentRef Id="cmf_fs_EXE" />
                 <ComponentRef Id="cmf_afsdacl_EXE" />
-                <ComponentRef Id="cmf_afscreds_EXE" />
                 <ComponentRef Id="cmf_afs_shl_ext_DLL" />
                 <ComponentRef Id="cmf_afsd_service_EXE" />
                 <ComponentRef Id="cmf_afslogon_DLL" />
@@ -203,7 +244,6 @@
                 <ComponentRef Id="cmf_afspthread_DLL" />
                 <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
                 <ComponentRef Id="cmf_afsprocmgmt_DLL" />
-                <ComponentRef Id="cmf_afs_config_EXE" />
 				<ComponentRef Id="cmf_TaAfsServerManager_EXE" />
 				<ComponentRef Id="cmf_TaAfsAdmSvr_EXE" />
 				<ComponentRef Id="cmf_TaAfsAccountManager_EXE" />
@@ -214,8 +254,6 @@
                 <ComponentRef Id="cmf_TaAfsAccountManager_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_TaAfsServerManager_$(var.LanguageCode)_DLL" />
-                <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
-                <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
@@ -227,7 +265,6 @@
 					<ComponentRef Id="cmp_Control_CenterDebug" />
 					<ComponentRef Id="cmp_ServerCommonDebug" />
 					<ComponentRef Id="cmp_CommonCommonDebug" />
-					<ComponentRef Id="cmp_ClientCommonDebug" />
 					<?include runtime_debug.wxi?>
 				</Feature>
             <?endif?>
@@ -282,7 +319,9 @@
                 <ComponentRef Id="cmp_Lang_en_US" />
 		
             </Feature>
-  <?else?>
+   <?else?> <!-- 32-bit tools only -->
+
+
             <Feature Id="feaBinaries" AllowAdvertise="no" Description="$(loc.StrBinsOnlyLongDesc)"
                 Display="expand" InstallDefault="followParent" Level="100" Title="$(loc.StrBinsOnlyDesc)">
 
@@ -307,6 +346,17 @@
                     </Feature>
 	    <?endif?>
             </Feature>
+
+      <Feature Id="feaClientDriver" AllowAdvertise="no" Description="$(loc.StrAFSClientDriverLongDesc)" Display="expand"
+               InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDriverDesc)">
+        <ComponentRef Id="Drv_FSRDR_NP" />
+       <?ifdef DebugSyms?>
+        <Feature Id="feaClientDriverDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDriverDebugLongDesc)" Display="expand"
+                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+          <ComponentRef Id="Drv_FSRDR_NP_Debug" />
+        </Feature>
+       <?endif?>
+      </Feature>
 
 		<ComponentRef Id="cmp_CommonDir" />
 

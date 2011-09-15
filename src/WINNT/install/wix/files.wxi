@@ -100,7 +100,7 @@
                     <File Id="fileafsclientadmin_PDB" Name="afscliad.pdb" LongName="afsclientadmin.pdb" DiskId="1" src="$(var.ServerDir)\afsclientadmin.pdb"/>
                 </Component>
               <?ifndef BinsOnly ?>
-                <Component Win64="$(var.Win64)" Id="cmp_ClientCommonDebug" Guid="$(var.cmp_ClientCommonDebug_guid)">
+                <Component Win64="$(var.Win64)" Id="cmp_ClientConfigDebug" Guid="$(var.cmp_ClientCommonDebug_guid)">
                     <File Id="fileafs_config_PDB" Name="afs_cfg.pdb" LongName="afs_config.pdb" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config.pdb"/>
                 </Component>
               <?endif?>
@@ -993,51 +993,51 @@
                         </Directory> <!-- InstallGd -->
                         <Directory Id="dirSysAdminGd_$(var.Language)" Name="SysAd" LongName="SysAdminGd" SourceName="SysAdm" LongSource="SysAdminGd" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\SysAdminGd\">
                             <Component Id="cmp_Sys_Admin_Guide_$(var.Language)" Guid="$(var.DocHtmlSysAdminGuid)">
-                                <File Id="fileauagd000_HTM_$(var.Language)" Name="auagd.htm" LongName="auagd000.htm" KeyPath="yes" DiskId="1" />
-                                <File Id="fileauagd002_HTM_$(var.Language)" Name="auagd~2.htm" LongName="auagd002.htm" DiskId="1" />
-                                <File Id="fileauagd003_HTM_$(var.Language)" Name="auagd~3.htm" LongName="auagd003.htm" DiskId="1" />
-                                <File Id="fileauagd004_HTM_$(var.Language)" Name="auagd~4.htm" LongName="auagd004.htm" DiskId="1" />
-                                <File Id="fileauagd005_HTM_$(var.Language)" Name="auagd~5.htm" LongName="auagd005.htm" DiskId="1" />
-                                <File Id="fileauagd006_HTM_$(var.Language)" Name="auagd~6.htm" LongName="auagd006.htm" DiskId="1" />
-                                <File Id="fileauagd007_HTM_$(var.Language)" Name="auagd~7.htm" LongName="auagd007.htm" DiskId="1" />
-                                <File Id="fileauagd008_HTM_$(var.Language)" Name="auagd~8.htm" LongName="auagd008.htm" DiskId="1" />
-                                <File Id="fileauagd009_HTM_$(var.Language)" Name="auagd~9.htm" LongName="auagd009.htm" DiskId="1" />
-                                <File Id="fileauagd010_HTM_$(var.Language)" Name="auagd~10.htm" LongName="auagd010.htm" DiskId="1" />
-                                <File Id="fileauagd011_HTM_$(var.Language)" Name="auagd~11.htm" LongName="auagd011.htm" DiskId="1" />
-                                <File Id="fileauagd012_HTM_$(var.Language)" Name="auagd~12.htm" LongName="auagd012.htm" DiskId="1" />
-                                <File Id="fileauagd013_HTM_$(var.Language)" Name="auagd~13.htm" LongName="auagd013.htm" DiskId="1" />
-                                <File Id="fileauagd014_HTM_$(var.Language)" Name="auagd~14.htm" LongName="auagd014.htm" DiskId="1" />
-                                <File Id="fileauagd015_HTM_$(var.Language)" Name="auagd~15.htm" LongName="auagd015.htm" DiskId="1" />
-                                <File Id="fileauagd016_HTM_$(var.Language)" Name="auagd~16.htm" LongName="auagd016.htm" DiskId="1" />
-                                <File Id="fileauagd017_HTM_$(var.Language)" Name="auagd~17.htm" LongName="auagd017.htm" DiskId="1" />
-                                <File Id="fileauagd018_HTM_$(var.Language)" Name="auagd~18.htm" LongName="auagd018.htm" DiskId="1" />
-                                <File Id="fileauagd019_HTM_$(var.Language)" Name="auagd~19.htm" LongName="auagd019.htm" DiskId="1" />
-                                <File Id="fileauagd020_HTM_$(var.Language)" Name="auagd~20.htm" LongName="auagd020.htm" DiskId="1" />
-                                <File Id="fileauagd021_HTM_$(var.Language)" Name="auagd~21.htm" LongName="auagd021.htm" DiskId="1" />
-                                <File Id="fileauagd022_HTM_$(var.Language)" Name="auagd~22.htm" LongName="auagd022.htm" DiskId="1" />
-                                <File Id="fileauagd023_HTM_$(var.Language)" Name="auagd~23.htm" LongName="auagd023.htm" DiskId="1" />
-                                <File Id="fileauagd024_HTM_$(var.Language)" Name="auagd~24.htm" LongName="auagd024.htm" DiskId="1" />
-                                <File Id="fileauagd025_HTM_$(var.Language)" Name="auagd~25.htm" LongName="auagd025.htm" DiskId="1" />
-                                <File Id="fileauagd026_HTM_$(var.Language)" Name="auagd~26.htm" LongName="auagd026.htm" DiskId="1" />
+                                <File Id="fileauagd000_HTM_$(var.Language)" Name="auagd000.htm" LongName="auagd000.htm" KeyPath="yes" DiskId="1" />
+                                <File Id="fileauagd002_HTM_$(var.Language)" Name="auagd002.htm" LongName="auagd002.htm" DiskId="1" />
+                                <File Id="fileauagd003_HTM_$(var.Language)" Name="auagd003.htm" LongName="auagd003.htm" DiskId="1" />
+                                <File Id="fileauagd004_HTM_$(var.Language)" Name="auagd004.htm" LongName="auagd004.htm" DiskId="1" />
+                                <File Id="fileauagd005_HTM_$(var.Language)" Name="auagd005.htm" LongName="auagd005.htm" DiskId="1" />
+                                <File Id="fileauagd006_HTM_$(var.Language)" Name="auagd006.htm" LongName="auagd006.htm" DiskId="1" />
+                                <File Id="fileauagd007_HTM_$(var.Language)" Name="auagd007.htm" LongName="auagd007.htm" DiskId="1" />
+                                <File Id="fileauagd008_HTM_$(var.Language)" Name="auagd008.htm" LongName="auagd008.htm" DiskId="1" />
+                                <File Id="fileauagd009_HTM_$(var.Language)" Name="auagd009.htm" LongName="auagd009.htm" DiskId="1" />
+                                <File Id="fileauagd010_HTM_$(var.Language)" Name="auagd010.htm" LongName="auagd010.htm" DiskId="1" />
+                                <File Id="fileauagd011_HTM_$(var.Language)" Name="auagd011.htm" LongName="auagd011.htm" DiskId="1" />
+                                <File Id="fileauagd012_HTM_$(var.Language)" Name="auagd012.htm" LongName="auagd012.htm" DiskId="1" />
+                                <File Id="fileauagd013_HTM_$(var.Language)" Name="auagd013.htm" LongName="auagd013.htm" DiskId="1" />
+                                <File Id="fileauagd014_HTM_$(var.Language)" Name="auagd014.htm" LongName="auagd014.htm" DiskId="1" />
+                                <File Id="fileauagd015_HTM_$(var.Language)" Name="auagd015.htm" LongName="auagd015.htm" DiskId="1" />
+                                <File Id="fileauagd016_HTM_$(var.Language)" Name="auagd016.htm" LongName="auagd016.htm" DiskId="1" />
+                                <File Id="fileauagd017_HTM_$(var.Language)" Name="auagd017.htm" LongName="auagd017.htm" DiskId="1" />
+                                <File Id="fileauagd018_HTM_$(var.Language)" Name="auagd018.htm" LongName="auagd018.htm" DiskId="1" />
+                                <File Id="fileauagd019_HTM_$(var.Language)" Name="auagd019.htm" LongName="auagd019.htm" DiskId="1" />
+                                <File Id="fileauagd020_HTM_$(var.Language)" Name="auagd020.htm" LongName="auagd020.htm" DiskId="1" />
+                                <File Id="fileauagd021_HTM_$(var.Language)" Name="auagd021.htm" LongName="auagd021.htm" DiskId="1" />
+                                <File Id="fileauagd022_HTM_$(var.Language)" Name="auagd022.htm" LongName="auagd022.htm" DiskId="1" />
+                                <File Id="fileauagd023_HTM_$(var.Language)" Name="auagd023.htm" LongName="auagd023.htm" DiskId="1" />
+                                <File Id="fileauagd024_HTM_$(var.Language)" Name="auagd024.htm" LongName="auagd024.htm" DiskId="1" />
+                                <File Id="fileauagd025_HTM_$(var.Language)" Name="auagd025.htm" LongName="auagd025.htm" DiskId="1" />
+                                <File Id="fileauagd026_HTM_$(var.Language)" Name="auagd026.htm" LongName="auagd026.htm" DiskId="1" />
                                 <File Id="filevnode_GIF_$(var.Language)" Name="vnode.gif" LongName="vnode.gif" DiskId="1" />
-                                <File Id="filefserver1_GIF_$(var.Language)" Name="fserv.gif" LongName="fserver1.gif" DiskId="1" />
-                                <File Id="filefserver2_GIF_$(var.Language)" Name="fserv~2.gif" LongName="fserver2.gif" DiskId="1" />
-                                <File Id="fileoverview_GIF_$(var.Language)" Name="overv.gif" LongName="overview.gif" DiskId="1" />
-                                <File Id="filescout1_GIF_$(var.Language)" Name="scout.gif" LongName="scout1.gif" DiskId="1" />
-                                <File Id="filescout2_GIF_$(var.Language)" Name="scout~2.gif" LongName="scout2.gif" DiskId="1" />
-                                <File Id="filescout3_GIF_$(var.Language)" Name="scout~3.gif" LongName="scout3.gif" DiskId="1" />
-                                <File Id="filescout4_GIF_$(var.Language)" Name="scout~4.gif" LongName="scout4.gif" DiskId="1" />
-                                <File Id="filecachmgr_GIF_$(var.Language)" Name="cachm.gif" LongName="cachmgr.gif" DiskId="1" />
+                                <File Id="filefserver1_GIF_$(var.Language)" Name="fserver1.gif" LongName="fserver1.gif" DiskId="1" />
+                                <File Id="filefserver2_GIF_$(var.Language)" Name="fserver2.gif" LongName="fserver2.gif" DiskId="1" />
+                                <File Id="fileoverview_GIF_$(var.Language)" Name="overview.gif" LongName="overview.gif" DiskId="1" />
+                                <File Id="filescout1_GIF_$(var.Language)" Name="scout1.gif" LongName="scout1.gif" DiskId="1" />
+                                <File Id="filescout2_GIF_$(var.Language)" Name="scout2.gif" LongName="scout2.gif" DiskId="1" />
+                                <File Id="filescout3_GIF_$(var.Language)" Name="scout3.gif" LongName="scout3.gif" DiskId="1" />
+                                <File Id="filescout4_GIF_$(var.Language)" Name="scout4.gif" LongName="scout4.gif" DiskId="1" />
+                                <File Id="filecachmgr_GIF_$(var.Language)" Name="cachmgr.gif" LongName="cachmgr.gif" DiskId="1" />
                             </Component>
                         </Directory> <!-- Sys Admin guide -->
                         <Directory Id="dirReleaseNotes_$(var.Language)" Name="Relea" LongName="ReleaseNotes" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\">
                             <Component Id="cmp_Release_Notes_$(var.Language)" Guid="$(var.DocHtmlRelNotesGuid)">
-                                <File Id="fileframes_HTM_$(var.Language)" Name="relnot~2.htm" LongName="relnotes-frames.htm" DiskId="1" />
+                                <File Id="fileframes_HTM_$(var.Language)" Name="relnot-f.htm" LongName="relnotes-frames.htm" DiskId="1" />
                                 <File Id="filelogo_HTM_$(var.Language)" Name="logo.htm" LongName="logo.htm" DiskId="1" />
                                 <File Id="filerelnotes_HTM_$(var.Language)" Name="relnotes.htm" LongName="relnotes.htm" DiskId="1" />
                                 <File Id="filetoc_HTM_$(var.Language)" Name="toc.htm" LongName="toc.htm" DiskId="1" />
                             </Component>
-                            <Directory Id="dirlogo_files_$(var.Language)" Name="logo" LongName="logo_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\logo_files\">
+                            <Directory Id="dirlogo_files_$(var.Language)" Name="logo_f" LongName="logo_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\logo_files\">
                                 <Component Id="cmp_logo_files_$(var.Language)" Guid="$(var.DocHtmlLogoFilesGuid)">
                                     <File Id="filelfimage001_JPG_$(var.Language)" Name="image001.jpg" LongName="image001.jpg" DiskId="1"/>
                                 </Component>
@@ -1174,17 +1174,54 @@
                     </Component>
 
   <?ifndef BinsOnly ?>
+          <Component Id="Drv_FSRDR"
+                     Guid="$(var.DrvFSRDR_guid)"
+                     Win64="$(var.Win64)">
+            <File Id="file_RedirDriverInstall.inf"
+                  Name="afsrdrfs.inf" LongName="AFSRedirInstall.inf"
+                  Vital="yes" DiskId="1"
+                  KeyPath="yes"
+                  />
+            <File Id="file_AFSRedir.sys"
+                  Name="afsredir.sys" LongName="AFSRedir.sys" Vital="yes"
+                  DiskId="1" />
+            <File Id="file_RedirLibInstall.inf"
+                  Name="afsrdrlb.inf" LongName="AFSRedirLibInstall.inf"
+                  Vital="yes" DiskId="1"
+                  />
+            <File Id="file_AFSRedirLib.sys"
+                  Name="afsrdrlb.sys" LongName="AFSRedirLib.sys" Vital="yes"
+                  DiskId="1" />
+          </Component>
+
+     <?ifdef DebugSyms?>
+          <Component Id="Drv_FSRDR_Debug"
+                     Guid="$(var.DrvFSRDRDebug_guid)"
+                     Win64="$(var.Win64)">
+            <File Id="file_AFSRedir.pdb"
+                  Name="afsredir.pdb" LongName="AFSRedir.pdb" Vital="no"
+                  KeyPath="yes"
+                  DiskId="1" />
+            <File Id="file_AFSRedirLib.pdb"
+                  Name="afsrdrlb.pdb" LongName="AFSRedirLib.pdb" Vital="no"
+                  DiskId="1" />
+          </Component>
+     <?endif?>
+
                     <Component Win64="$(var.Win64)" Id="cmf_afsd_service_EXE" Guid="$(var.cmf_afsd_service_EXE_guid)">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
                         <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Remove="both" Wait="yes" />
-                        <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client Service" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
+            <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client Service" Type="ownProcess"
+                            Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
 							<!-- ServiceConfig doesn't currently do what you think it does.
 							     We instead use a custom action to set the service failure actions.
-                            <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="10" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
+                   <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="10"
+                                  SecondFailureActionType="restart" ThirdFailureActionType="none"/>
                             -->
                             <ServiceDependency Id="Tcpip" />
                             <ServiceDependency Id="RpcSs" />
                             <ServiceDependency Id="NetBIOS" />
+              <!-- <ServiceDependency Id="AFSRedirector" /> -->
                             <ServiceDependency Id="PNP_TDI" Group="yes"/>
                         </ServiceInstall>
                         <RemoveFile Id="removeCache" Directory="WindowsVolume" LongName="AFSCache" Name="AFSCache" On="uninstall" />
@@ -1282,10 +1319,16 @@
                         <File Id="fileafs_shl_ext_PDB" Name="afsshext.pdb" LongName="afs_shl_ext.pdb" DiskId="1" />
   <?ifndef BinsOnly ?>
 			<File Id="fileafs_cpa_PDB" Name="afs_cpa.pdb" LongName="afs_cpa.pdb" KeyPath="yes" DiskId="1"/>
-                        <File Id="fileafscreds_PDB" Name="afscreds.pdb" LongName="afscreds.pdb" DiskId="1" />
                         <File Id="fileafsd_service_PDB" Name="afsd_svc.pdb" LongName="afsd_service.pdb" DiskId="1" />
   <?endif?>
                     </Component>
+
+  <?ifndef BinsOnly ?>
+                     <Component Win64="$(var.Win64)" Id="cmp_AfsCredsDebug" Guid="$(var.cmp_AfsCredsDebug_guid)">
+                       <File Id="fileafscreds_PDB" Name="afscreds.pdb" LongName="afscreds.pdb" DiskId="1" />
+                     </Component>
+  <?endif?>
+
                 <?endif?>
                 </Directory> <!-- /Program -->
             </Directory> <!-- /Client -->
@@ -1435,7 +1478,7 @@
                             <File Id="fileosiqueue_H" Name="osiqueue.h" LongName="osiqueue.h" DiskId="1" src="$(var.IncDir)osiqueue.h" /> 
                             <File Id="fileosisleep_H" Name="osisleep.h" LongName="osisleep.h" DiskId="1" src="$(var.IncDir)osisleep.h" /> 
                             <File Id="fileosistatl_H" Name="osistatl.h" LongName="osistatl.h" DiskId="1" src="$(var.IncDir)osistatl.h" /> 
-                            <File Id="fileosithrdnt_H" Name="OSITHR~1.h" LongName="osithrdnt.h" DiskId="1" src="$(var.IncDir)osithrdnt.h" /> 
+                            <File Id="fileosithrdnt_H" Name="OSITHRNT.h" LongName="osithrdnt.h" DiskId="1" src="$(var.IncDir)osithrdnt.h" />
                             <File Id="fileosiutils_H" Name="osiutils.h" LongName="osiutils.h" DiskId="1" src="$(var.IncDir)osiutils.h" /> 
                             <File Id="fileperf_H" Name="perf.h" LongName="perf.h" DiskId="1" src="$(var.IncDir)perf.h" /> 
                             <File Id="filepreempt_H" Name="preempt.h" LongName="preempt.h" DiskId="1" src="$(var.IncDir)preempt.h" /> 
@@ -1450,79 +1493,79 @@
                             <Component Id="cmp_SDK_Include_afs" Guid="DDAE87DF-AFA8-4EAF-BE9C-6A32D6D4ED06">
                                 <File Id="fileacl_H" Name="acl.h" LongName="acl.h" DiskId="1" src="$(var.IncDir)afs\acl.h" /> 
                                 <File Id="fileafscbint_H" Name="afscbint.h" LongName="afscbint.h" DiskId="1" src="$(var.IncDir)afs\afscbint.h" /> 
-                                <File Id="fileafsconfig_H" Name="AFSCON~1.h" LongName="afsconfig.h" DiskId="1" src="$(var.IncDir)afs\afsconfig.h" /> 
+                                <File Id="fileafsconfig_H" Name="AFSCONFG.h" LongName="afsconfig.h" DiskId="1" src="$(var.IncDir)afs\afsconfig.h" />
                                 <File Id="fileafsd_H" Name="afsd.h" LongName="afsd.h" DiskId="1" src="$(var.IncDir)afs\afsd.h" /> 
                                 <File Id="fileafsdicon_H" Name="afsdicon.h" LongName="afsdicon.h" DiskId="1" src="$(var.IncDir)afs\afsdicon.h" /> 
-                                <File Id="fileafsd_eventlog_H" Name="AFSD_E~1.h" LongName="afsd_eventlog.h" DiskId="1" src="$(var.IncDir)afs\afsd_eventlog.h" /> 
+                                <File Id="fileafsd_eventlog_H" Name="AFSD_EVL.h" LongName="afsd_eventlog.h" DiskId="1" src="$(var.IncDir)afs\afsd_eventlog.h" />
                                 <File Id="fileafsint_H" Name="afsint.h" LongName="afsint.h" DiskId="1" src="$(var.IncDir)afs\afsint.h" /> 
                                 <File Id="fileafskfw_H" Name="afskfw.h" LongName="afskfw.h" DiskId="1" src="$(var.IncDir)afs\afskfw.h" /> 
                                 <File Id="fileafsrpc_H" Name="afsrpc.h" LongName="afsrpc.h" DiskId="1" src="$(var.IncDir)afs\afsrpc.h" /> 
-                                <File Id="fileafssyscalls_H" Name="AFSSYS~1.h" LongName="afssyscalls.h" DiskId="1" src="$(var.IncDir)afs\afssyscalls.h" /> 
+                                <File Id="fileafssyscalls_H" Name="AFSSYSCL.h" LongName="afssyscalls.h" DiskId="1" src="$(var.IncDir)afs\afssyscalls.h" />
                                 <File Id="fileafsutil_H" Name="afsutil.h" LongName="afsutil.h" DiskId="1" src="$(var.IncDir)afs\afsutil.h" /> 
-                                <File Id="fileafsutil_prototypes_H" Name="AFSUTI~1.h" LongName="afsutil_prototypes.h" DiskId="1" src="$(var.IncDir)afs\afsutil_prototypes.h" /> 
-                                <File Id="fileafs_Admin_H" Name="AFS_AD~1.h" LongName="afs_Admin.h" DiskId="1" src="$(var.IncDir)afs\afs_Admin.h" /> 
-                                <File Id="fileafs_AdminBosErrors_H" Name="AFS_AD~3.h" LongName="afs_AdminBosErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminBosErrors.h" /> 
-                                <File Id="fileafs_AdminCfgErrors_H" Name="AFS_AD~4.h" LongName="afs_AdminCfgErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminCfgErrors.h" /> 
-                                <File Id="fileafs_AdminClientErrors_H" Name="AF6FF0~1.h" LongName="afs_AdminClientErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminClientErrors.h" /> 
-                                <File Id="fileafs_AdminCommonErrors_H" Name="AFS_AD~2.h" LongName="afs_AdminCommonErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminCommonErrors.h" /> 
-                                <File Id="fileafs_AdminErrors_H" Name="AFF5CC~1.h" LongName="afs_AdminErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminErrors.h" /> 
-                                <File Id="fileafs_AdminKasErrors_H" Name="AF1531~1.h" LongName="afs_AdminKasErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminKasErrors.h" /> 
-                                <File Id="fileafs_AdminMiscErrors_H" Name="AF96DD~1.h" LongName="afs_AdminMiscErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminMiscErrors.h" /> 
-                                <File Id="fileafs_AdminPtsErrors_H" Name="AF18CF~1.h" LongName="afs_AdminPtsErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminPtsErrors.h" /> 
-                                <File Id="fileafs_AdminUtilErrors_H" Name="AF05EE~1.h" LongName="afs_AdminUtilErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminUtilErrors.h" /> 
-                                <File Id="fileafs_AdminVosErrors_H" Name="AF13CC~1.h" LongName="afs_AdminVosErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminVosErrors.h" /> 
+                                <File Id="fileafsutil_prototypes_H" Name="AFSUTILP.h" LongName="afsutil_prototypes.h" DiskId="1" src="$(var.IncDir)afs\afsutil_prototypes.h" />
+                                <File Id="fileafs_Admin_H" Name="AFS_ADMN.h" LongName="afs_Admin.h" DiskId="1" src="$(var.IncDir)afs\afs_Admin.h" />
+                                <File Id="fileafs_AdminBosErrors_H" Name="AFS_ADBE.h" LongName="afs_AdminBosErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminBosErrors.h" />
+                                <File Id="fileafs_AdminCfgErrors_H" Name="AFS_ADCE.h" LongName="afs_AdminCfgErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminCfgErrors.h" />
+                                <File Id="fileafs_AdminClientErrors_H" Name="AFS_ADLE.h" LongName="afs_AdminClientErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminClientErrors.h" />
+                                <File Id="fileafs_AdminCommonErrors_H" Name="AFS_ADME.h" LongName="afs_AdminCommonErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminCommonErrors.h" />
+                                <File Id="fileafs_AdminErrors_H" Name="AFS_ADE.h" LongName="afs_AdminErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminErrors.h" />
+                                <File Id="fileafs_AdminKasErrors_H" Name="AAD_KASE.h" LongName="afs_AdminKasErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminKasErrors.h" />
+                                <File Id="fileafs_AdminMiscErrors_H" Name="AAD_MISE.h" LongName="afs_AdminMiscErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminMiscErrors.h" />
+                                <File Id="fileafs_AdminPtsErrors_H" Name="AAD_PTSE.h" LongName="afs_AdminPtsErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminPtsErrors.h" />
+                                <File Id="fileafs_AdminUtilErrors_H" Name="AAD_UTLE.h" LongName="afs_AdminUtilErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminUtilErrors.h" />
+                                <File Id="fileafs_AdminVosErrors_H" Name="AAD_VOSE.h" LongName="afs_AdminVosErrors.h" DiskId="1" src="$(var.IncDir)afs\afs_AdminVosErrors.h" />
                                 <File Id="fileafs_args_H" Name="afs_args.h" LongName="afs_args.h" DiskId="1" src="$(var.IncDir)afs\afs_args.h" /> 
-                                <File Id="fileafs_bosAdmin_H" Name="AFS_BO~1.h" LongName="afs_bosAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_bosAdmin.h" /> 
-                                <File Id="fileafs_cfgAdmin_H" Name="AFS_CF~1.h" LongName="afs_cfgAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_cfgAdmin.h" /> 
-                                <File Id="fileafs_clientAdmin_H" Name="AFS_CL~1.h" LongName="afs_clientAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_clientAdmin.h" /> 
-                                <File Id="fileafs_kasAdmin_H" Name="AFS_KA~1.h" LongName="afs_kasAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_kasAdmin.h" /> 
-                                <File Id="fileafs_ptsAdmin_H" Name="AFS_PT~1.h" LongName="afs_ptsAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_ptsAdmin.h" /> 
-                                <File Id="fileafs_sysnames_H" Name="AFS_SY~1.h" LongName="afs_sysnames.h" DiskId="1" src="$(var.IncDir)afs\afs_sysnames.h" /> 
-                                <File Id="fileafs_utilAdmin_H" Name="AFS_UT~1.h" LongName="afs_utilAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_utilAdmin.h" /> 
-                                <File Id="fileafs_vosAdmin_H" Name="AFS_VO~1.h" LongName="afs_vosAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_vosAdmin.h" /> 
-                                <File Id="fileassert_H" Name="AFS_AS~1.h" LongName="afs_assert.h" DiskId="1" src="$(var.IncDir)afs\afs_assert.h" /> 
+                                <File Id="fileafs_bosAdmin_H" Name="AFS_BOS1.h" LongName="afs_bosAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_bosAdmin.h" />
+                                <File Id="fileafs_cfgAdmin_H" Name="AFS_CFG1.h" LongName="afs_cfgAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_cfgAdmin.h" />
+                                <File Id="fileafs_clientAdmin_H" Name="AFS_CLI1.h" LongName="afs_clientAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_clientAdmin.h" />
+                                <File Id="fileafs_kasAdmin_H" Name="AFS_KAS1.h" LongName="afs_kasAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_kasAdmin.h" />
+                                <File Id="fileafs_ptsAdmin_H" Name="AFS_PTS1.h" LongName="afs_ptsAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_ptsAdmin.h" />
+                                <File Id="fileafs_sysnames_H" Name="AFS_SYS1.h" LongName="afs_sysnames.h" DiskId="1" src="$(var.IncDir)afs\afs_sysnames.h" />
+                                <File Id="fileafs_utilAdmin_H" Name="AFS_UTI1.h" LongName="afs_utilAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_utilAdmin.h" />
+                                <File Id="fileafs_vosAdmin_H" Name="AFS_VOS1.h" LongName="afs_vosAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_vosAdmin.h" />
+                                <File Id="fileafs_assert_H" Name="AFS_ASS1.h" LongName="afs_assert.h" DiskId="1" src="$(var.IncDir)afs\afs_assert.h" />
                                 <File Id="fileaudit_H" Name="audit.h" LongName="audit.h" DiskId="1" src="$(var.IncDir)afs\audit.h" /> 
                                 <File Id="fileauth_H" Name="auth.h" LongName="auth.h" DiskId="1" src="$(var.IncDir)afs\auth.h" /> 
                                 <File Id="filebnode_H" Name="bnode.h" LongName="bnode.h" DiskId="1" src="$(var.IncDir)afs\bnode.h" /> 
                                 <File Id="filebosint_H" Name="bosint.h" LongName="bosint.h" DiskId="1" src="$(var.IncDir)afs\bosint.h" /> 
                                 <File Id="filebubasics_H" Name="bubasics.h" LongName="bubasics.h" DiskId="1" src="$(var.IncDir)afs\bubasics.h" /> 
                                 <File Id="filebudb_H" Name="budb.h" LongName="budb.h" DiskId="1" src="$(var.IncDir)afs\budb.h" /> 
-                                <File Id="filebudb_client_H" Name="BUDB_C~1.h" LongName="budb_client.h" DiskId="1" src="$(var.IncDir)afs\budb_client.h" /> 
-                                <File Id="filebudb_errs_H" Name="BUDB_E~1.h" LongName="budb_errs.h" DiskId="1" src="$(var.IncDir)afs\budb_errs.h" /> 
+                                <File Id="filebudb_client_H" Name="BUDBCLNT.h" LongName="budb_client.h" DiskId="1" src="$(var.IncDir)afs\budb_client.h" />
+                                <File Id="filebudb_errs_H" Name="BUDBERRS.h" LongName="budb_errs.h" DiskId="1" src="$(var.IncDir)afs\budb_errs.h" />
                                 <File Id="filebumon_H" Name="bumon.h" LongName="bumon.h" DiskId="1" src="$(var.IncDir)afs\bumon.h" /> 
                                 <File Id="filebutc_H" Name="butc.h" LongName="butc.h" DiskId="1" src="$(var.IncDir)afs\butc.h" /> 
                                 <File Id="filebutm_H" Name="butm.h" LongName="butm.h" DiskId="1" src="$(var.IncDir)afs\butm.h" /> 
                                 <File Id="filebutx_H" Name="butx.h" LongName="butx.h" DiskId="1" src="$(var.IncDir)afs\butx.h" /> 
-                                <File Id="filecellconfig_H" Name="CELLCO~1.h" LongName="cellconfig.h" DiskId="1" src="$(var.IncDir)afs\cellconfig.h" /> 
+                                <File Id="filecellconfig_H" Name="CELLCONF.h" LongName="cellconfig.h" DiskId="1" src="$(var.IncDir)afs\cellconfig.h" />
                                 <File Id="filecm_H" Name="cm.h" LongName="cm.h" DiskId="1" src="$(var.IncDir)afs\cm.h" /> 
                                 <File Id="filecmd_H" Name="cmd.h" LongName="cmd.h" DiskId="1" src="$(var.IncDir)afs\cmd.h" /> 
-                                <File Id="filecm_access_H" Name="CM_ACC~1.h" LongName="cm_access.h" DiskId="1" src="$(var.IncDir)afs\cm_access.h" /> 
-                                <File Id="filecm_aclent_H" Name="CM_ACL~1.h" LongName="cm_aclent.h" DiskId="1" src="$(var.IncDir)afs\cm_aclent.h" /> 
+                                <File Id="filecm_access_H" Name="CMACCESS.h" LongName="cm_access.h" DiskId="1" src="$(var.IncDir)afs\cm_access.h" />
+                                <File Id="filecm_aclent_H" Name="CMACLENT.h" LongName="cm_aclent.h" DiskId="1" src="$(var.IncDir)afs\cm_aclent.h" />
                                 <File Id="filecm_buf_H" Name="cm_buf.h" LongName="cm_buf.h" DiskId="1" src="$(var.IncDir)afs\cm_buf.h" /> 
-                                <File Id="filecm_callback_H" Name="CM_CAL~1.h" LongName="cm_callback.h" DiskId="1" src="$(var.IncDir)afs\cm_callback.h" /> 
+                                <File Id="filecm_callback_H" Name="CMCALBAK.h" LongName="cm_callback.h" DiskId="1" src="$(var.IncDir)afs\cm_callback.h" />
                                 <File Id="filecm_cell_H" Name="cm_cell.h" LongName="cm_cell.h" DiskId="1" src="$(var.IncDir)afs\cm_cell.h" /> 
-                                <File Id="filecm_config_H" Name="CM_CON~1.h" LongName="cm_config.h" DiskId="1" src="$(var.IncDir)afs\cm_config.h" /> 
+                                <File Id="filecm_config_H" Name="CMCONFIG.h" LongName="cm_config.h" DiskId="1" src="$(var.IncDir)afs\cm_config.h" />
                                 <File Id="filecm_conn_H" Name="cm_conn.h" LongName="cm_conn.h" DiskId="1" src="$(var.IncDir)afs\cm_conn.h" /> 
-                                <File Id="filecm_daemon_H" Name="CM_DAE~1.h" LongName="cm_daemon.h" DiskId="1" src="$(var.IncDir)afs\cm_daemon.h" /> 
-                                <File Id="filecm_dcache_H" Name="CM_DCA~1.h" LongName="cm_dcache.h" DiskId="1" src="$(var.IncDir)afs\cm_dcache.h" /> 
+                                <File Id="filecm_daemon_H" Name="CMDAEMON.h" LongName="cm_daemon.h" DiskId="1" src="$(var.IncDir)afs\cm_daemon.h" />
+                                <File Id="filecm_dcache_H" Name="CMDCACHE.h" LongName="cm_dcache.h" DiskId="1" src="$(var.IncDir)afs\cm_dcache.h" />
                                 <File Id="filecm_dir_H" Name="cm_dir.h" LongName="cm_dir.h" DiskId="1" src="$(var.IncDir)afs\cm_dir.h" /> 
                                 <File Id="filecm_dnlc_H" Name="cm_dnlc.h" LongName="cm_dnlc.h" DiskId="1" src="$(var.IncDir)afs\cm_dnlc.h" /> 
                                 <File Id="filecm_dns_H" Name="cm_dns.h" LongName="cm_dns.h" DiskId="1" src="$(var.IncDir)afs\cm_dns.h" /> 
-                                <File Id="filecm_dns_private_H" Name="CM_DNS~1.h" LongName="cm_dns_private.h" DiskId="1" src="$(var.IncDir)afs\cm_dns_private.h" /> 
-                                <File Id="filecm_freelance_H" Name="CM_FRE~1.h" LongName="cm_freelance.h" DiskId="1" src="$(var.IncDir)afs\cm_freelance.h" /> 
+                                <File Id="filecm_dns_private_H" Name="CM_DNS_P.h" LongName="cm_dns_private.h" DiskId="1" src="$(var.IncDir)afs\cm_dns_private.h" />
+                                <File Id="filecm_freelance_H" Name="CMFREEL.h" LongName="cm_freelance.h" DiskId="1" src="$(var.IncDir)afs\cm_freelance.h" />
                                 <File Id="filecm_ioctl_H" Name="cm_ioctl.h" LongName="cm_ioctl.h" DiskId="1" src="$(var.IncDir)afs\cm_ioctl.h" /> 
-                                <File Id="filecm_scache_H" Name="CM_SCA~1.h" LongName="cm_scache.h" DiskId="1" src="$(var.IncDir)afs\cm_scache.h" /> 
-                                <File Id="filecm_server_H" Name="CM_SER~1.h" LongName="cm_server.h" DiskId="1" src="$(var.IncDir)afs\cm_server.h" /> 
+                                <File Id="filecm_scache_H" Name="CMSCACHE.h" LongName="cm_scache.h" DiskId="1" src="$(var.IncDir)afs\cm_scache.h" />
+                                <File Id="filecm_server_H" Name="CMSERVER.h" LongName="cm_server.h" DiskId="1" src="$(var.IncDir)afs\cm_server.h" />
                                 <File Id="filecm_user_H" Name="cm_user.h" LongName="cm_user.h" DiskId="1" src="$(var.IncDir)afs\cm_user.h" /> 
                                 <File Id="filecm_utils_H" Name="cm_utils.h" LongName="cm_utils.h" DiskId="1" src="$(var.IncDir)afs\cm_utils.h" /> 
-                                <File Id="filecm_vnodeops_H" Name="CM_VNO~1.h" LongName="cm_vnodeops.h" DiskId="1" src="$(var.IncDir)afs\cm_vnodeops.h" /> 
-                                <File Id="filecm_volume_H" Name="CM_VOL~1.h" LongName="cm_volume.h" DiskId="1" src="$(var.IncDir)afs\cm_volume.h" /> 
+                                <File Id="filecm_vnodeops_H" Name="CMVNODEO.h" LongName="cm_vnodeops.h" DiskId="1" src="$(var.IncDir)afs\cm_vnodeops.h" />
+                                <File Id="filecm_volume_H" Name="CMVOLUME.h" LongName="cm_volume.h" DiskId="1" src="$(var.IncDir)afs\cm_volume.h" />
                                 <File Id="filecom_err_H" Name="com_err.h" LongName="com_err.h" DiskId="1" src="$(var.IncDir)afs\com_err.h" /> 
                                 <File Id="filedir_H" Name="dir.h" LongName="dir.h" DiskId="1" src="$(var.IncDir)afs\dir.h" /> 
                                 <File Id="filedirpath_H" Name="dirpath.h" LongName="dirpath.h" DiskId="1" src="$(var.IncDir)afs\dirpath.h" /> 
-                                <File Id="fileerrmap_nt_H" Name="ERRMAP~1.h" LongName="errmap_nt.h" DiskId="1" src="$(var.IncDir)afs\errmap_nt.h" /> 
+                                <File Id="fileerrmap_nt_H" Name="ERRMAPNT.h" LongName="errmap_nt.h" DiskId="1" src="$(var.IncDir)afs\errmap_nt.h" />
                                 <File Id="fileerrors_H" Name="errors.h" LongName="errors.h" DiskId="1" src="$(var.IncDir)afs\errors.h" /> 
-                                <File Id="fileerror_table_H" Name="ERROR_~1.h" LongName="error_table.h" DiskId="1" src="$(var.IncDir)afs\error_table.h" /> 
+                                <File Id="fileerror_table_H" Name="ERROR_TB.h" LongName="error_table.h" DiskId="1" src="$(var.IncDir)afs\error_table.h" />
                                 <File Id="filefileutil_H" Name="fileutil.h" LongName="fileutil.h" DiskId="1" src="$(var.IncDir)afs\fileutil.h" /> 
                                 <File Id="filefssync_H" Name="fssync.h" LongName="fssync.h" DiskId="1" src="$(var.IncDir)afs\fssync.h" /> 
                                 <File Id="filefs_stats_H" Name="fs_stats.h" LongName="fs_stats.h" DiskId="1" src="$(var.IncDir)afs\fs_stats.h" /> 
@@ -1536,13 +1579,13 @@
                                 <File Id="filekrb_H" Name="krb.h" LongName="krb.h" DiskId="1" src="$(var.IncDir)afs\krb.h" /> 
                                 <File Id="filekrb_prot_H" Name="krb_prot.h" LongName="krb_prot.h" DiskId="1" src="$(var.IncDir)afs\krb_prot.h" /> 
                                 <File Id="filektime_H" Name="ktime.h" LongName="ktime.h" DiskId="1" src="$(var.IncDir)afs\ktime.h" /> 
-                                <File Id="filelanahelper_H" Name="LANAHE~1.h" LongName="lanahelper.h" DiskId="1" src="$(var.IncDir)afs\lanahelper.h" /> 
-                                <File Id="filemit_sipb_cr_H" Name="MIT-SI~1.h" LongName="mit-sipb-cr.h" DiskId="1" src="$(var.IncDir)afs\mit-sipb-cr.h" /> 
+                                <File Id="filelanahelper_H" Name="LANAHELP.h" LongName="lanahelper.h" DiskId="1" src="$(var.IncDir)afs\lanahelper.h" />
+                                <File Id="filemit_sipb_cr_H" Name="MITSIPBC.h" LongName="mit-sipb-cr.h" DiskId="1" src="$(var.IncDir)afs\mit-sipb-cr.h" />
                                 <File Id="filenfs_H" Name="nfs.h" LongName="nfs.h" DiskId="1" src="$(var.IncDir)afs\nfs.h" /> 
                                 <File Id="filentops_H" Name="ntops.h" LongName="ntops.h" DiskId="1" src="$(var.IncDir)afs\ntops.h" /> 
                                 <File Id="fileparam_H" Name="param.h" LongName="param.h" DiskId="1" src="$(var.IncDir)afs\param.h" /> 
-                                <File Id="filepartition_H" Name="PARTIT~1.h" LongName="partition.h" DiskId="1" src="$(var.IncDir)afs\partition.h" /> 
-                                <File Id="filepioctl_nt_H" Name="PIOCTL~1.h" LongName="pioctl_nt.h" DiskId="1" src="$(var.IncDir)afs\pioctl_nt.h" /> 
+                                <File Id="filepartition_H" Name="PARTITON.h" LongName="partition.h" DiskId="1" src="$(var.IncDir)afs\partition.h" />
+                                <File Id="filepioctl_nt_H" Name="PIOCTLNT.h" LongName="pioctl_nt.h" DiskId="1" src="$(var.IncDir)afs\pioctl_nt.h" />
                                 <File Id="fileprclient_H" Name="prclient.h" LongName="prclient.h" DiskId="1" src="$(var.IncDir)afs\prclient.h" /> 
                                 <File Id="fileprerror_H" Name="prerror.h" LongName="prerror.h" DiskId="1" src="$(var.IncDir)afs\prerror.h" /> 
                                 <File Id="fileprint_H" Name="print.h" LongName="print.h" DiskId="1" src="$(var.IncDir)afs\print.h" /> 
@@ -1551,30 +1594,30 @@
                                 <File Id="fileprs_fs_H" Name="prs_fs.h" LongName="prs_fs.h" DiskId="1" src="$(var.IncDir)afs\prs_fs.h" /> 
                                 <File Id="fileptclient_H" Name="ptclient.h" LongName="ptclient.h" DiskId="1" src="$(var.IncDir)afs\ptclient.h" /> 
                                 <File Id="filepterror_H" Name="pterror.h" LongName="pterror.h" DiskId="1" src="$(var.IncDir)afs\pterror.h" /> 
-                                <File Id="filepthread_glock_H" Name="PTHREA~1.h" LongName="pthread_glock.h" DiskId="1" src="$(var.IncDir)afs\pthread_glock.h" /> 
-                                <File Id="filepthread_nosigs_H" Name="PTHREA~2.h" LongName="pthread_nosigs.h" DiskId="1" src="$(var.IncDir)afs\pthread_nosigs.h" /> 
+                                <File Id="filepthread_glock_H" Name="PTHRGLCK.h" LongName="pthread_glock.h" DiskId="1" src="$(var.IncDir)afs\pthread_glock.h" />
+                                <File Id="filepthread_nosigs_H" Name="PTHRNOSG.h" LongName="pthread_nosigs.h" DiskId="1" src="$(var.IncDir)afs\pthread_nosigs.h" />
                                 <File Id="fileptint_H" Name="ptint.h" LongName="ptint.h" DiskId="1" src="$(var.IncDir)afs\ptint.h" /> 
                                 <File Id="fileptserver_H" Name="ptserver.h" LongName="ptserver.h" DiskId="1" src="$(var.IncDir)afs\ptserver.h" /> 
-                                <File Id="filerxgen_consts_H" Name="RXGEN_~1.h" LongName="rxgen_consts.h" DiskId="1" src="$(var.IncDir)afs\rxgen_consts.h" /> 
-                                <File Id="filesecutil_nt_H" Name="SECUTI~1.h" LongName="secutil_nt.h" DiskId="1" src="$(var.IncDir)afs\secutil_nt.h" /> 
+                                <File Id="filerxgen_consts_H" Name="RXGENCON.h" LongName="rxgen_consts.h" DiskId="1" src="$(var.IncDir)afs\rxgen_consts.h" />
+                                <File Id="filesecutil_nt_H" Name="SECUTINT.h" LongName="secutil_nt.h" DiskId="1" src="$(var.IncDir)afs\secutil_nt.h" />
                                 <File Id="filesmb_H" Name="smb.h" LongName="smb.h" DiskId="1" src="$(var.IncDir)afs\smb.h" /> 
                                 <File Id="filesmb3_H" Name="smb3.h" LongName="smb3.h" DiskId="1" src="$(var.IncDir)afs\smb3.h" /> 
-                                <File Id="filesmb_iocons_H" Name="SMB_IO~1.h" LongName="smb_iocons.h" DiskId="1" src="$(var.IncDir)afs\smb_iocons.h" /> 
-                                <File Id="filesmb_ioctl_H" Name="SMB_IO~2.h" LongName="smb_ioctl.h" DiskId="1" src="$(var.IncDir)afs\smb_ioctl.h" /> 
+                                <File Id="filesmb_iocons_H" Name="SMBIOCON.h" LongName="smb_iocons.h" DiskId="1" src="$(var.IncDir)afs\smb_iocons.h" />
+                                <File Id="filesmb_ioctl_H" Name="SMBIOCTL.h" LongName="smb_ioctl.h" DiskId="1" src="$(var.IncDir)afs\smb_ioctl.h" />
                                 <File Id="filestds_H" Name="stds.h" LongName="stds.h" DiskId="1" src="$(var.IncDir)afs\stds.h" /> 
                                 <File Id="filetcdata_H" Name="tcdata.h" LongName="tcdata.h" DiskId="1" src="$(var.IncDir)afs\tcdata.h" /> 
-                                <File Id="fileunified_afs_H" Name="UNIFIE~1.h" LongName="unified_afs.h" DiskId="1" src="$(var.IncDir)afs\unified_afs.h" /> 
+                                <File Id="fileunified_afs_H" Name="UNIAFS.h" LongName="unified_afs.h" DiskId="1" src="$(var.IncDir)afs\unified_afs.h" />
                                 <File Id="fileusd_H" Name="usd.h" LongName="usd.h" DiskId="1" src="$(var.IncDir)afs\usd.h" /> 
                                 <File Id="filevice_H" Name="vice.h" LongName="vice.h" DiskId="1" src="$(var.IncDir)afs\vice.h" /> 
-                                <File Id="fileviceinode_H" Name="VICEIN~1.h" LongName="viceinode.h" DiskId="1" src="$(var.IncDir)afs\viceinode.h" /> 
+                                <File Id="fileviceinode_H" Name="VICEINOD.h" LongName="viceinode.h" DiskId="1" src="$(var.IncDir)afs\viceinode.h" />
                                 <File Id="filevldbint_H" Name="vldbint.h" LongName="vldbint.h" DiskId="1" src="$(var.IncDir)afs\vldbint.h" /> 
                                 <File Id="filevlserver_H" Name="vlserver.h" LongName="vlserver.h" DiskId="1" src="$(var.IncDir)afs\vlserver.h" /> 
-                                <File Id="filevl_opcodes_H" Name="VL_OPC~1.h" LongName="vl_opcodes.h" DiskId="1" src="$(var.IncDir)afs\vl_opcodes.h" /> 
+                                <File Id="filevl_opcodes_H" Name="VLOPCODE.h" LongName="vl_opcodes.h" DiskId="1" src="$(var.IncDir)afs\vl_opcodes.h" />
                                 <File Id="filevnode_H" Name="vnode.h" LongName="vnode.h" DiskId="1" src="$(var.IncDir)afs\vnode.h" /> 
                                 <File Id="filevoldefs_H" Name="voldefs.h" LongName="voldefs.h" DiskId="1" src="$(var.IncDir)afs\voldefs.h" /> 
                                 <File Id="filevolint_H" Name="volint.h" LongName="volint.h" DiskId="1" src="$(var.IncDir)afs\volint.h" /> 
                                 <File Id="filevolser_H" Name="volser.h" LongName="volser.h" DiskId="1" src="$(var.IncDir)afs\volser.h" /> 
-                                <File Id="filevolser_prototypes_H" Name="VOLSER~1.h" LongName="volser_prototypes.h" DiskId="1" src="$(var.IncDir)afs\volser_prototypes.h" /> 
+                                <File Id="filevolser_prototypes_H" Name="VOLSPROT.h" LongName="volser_prototypes.h" DiskId="1" src="$(var.IncDir)afs\volser_prototypes.h" />
                                 <File Id="filevolume_H" Name="volume.h" LongName="volume.h" DiskId="1" src="$(var.IncDir)afs\volume.h" />
                             </Component>
                         </Directory>
@@ -1605,52 +1648,52 @@
                                 <File Id="filefcrypt_H" Name="fcrypt.h" LongName="fcrypt.h" DiskId="1" src="$(var.IncDir)rx\fcrypt.h" /> 
                                 <File Id="filerx_H" Name="rx.h" LongName="rx.h" DiskId="1" src="$(var.IncDir)rx\rx.h" /> 
                                 <File Id="filerxkad_H" Name="rxkad.h" LongName="rxkad.h" DiskId="1" src="$(var.IncDir)rx\rxkad.h" /> 
-                                <File Id="filerxkad_prototypes_H" Name="RXKAD_~1.h" LongName="rxkad_prototypes.h" DiskId="1" src="$(var.IncDir)rx\rxkad_prototypes.h" /> 
+                                <File Id="filerxkad_prototypes_H" Name="RXKAPROT.h" LongName="rxkad_prototypes.h" DiskId="1" src="$(var.IncDir)rx\rxkad_prototypes.h" />
                                 <File Id="filerxstat_H" Name="rxstat.h" LongName="rxstat.h" DiskId="1" src="$(var.IncDir)rx\rxstat.h" /> 
                                 <File Id="filerx_clock_H" Name="rx_clock.h" LongName="rx_clock.h" DiskId="1" src="$(var.IncDir)rx\rx_clock.h" /> 
                                 <File Id="filerx_event_H" Name="rx_event.h" LongName="rx_event.h" DiskId="1" src="$(var.IncDir)rx\rx_event.h" /> 
-                                <File Id="filerx_globals_H" Name="RX_GLO~1.h" LongName="rx_globals.h" DiskId="1" src="$(var.IncDir)rx\rx_globals.h" /> 
+                                <File Id="filerx_globals_H" Name="RXGLOBAL.h" LongName="rx_globals.h" DiskId="1" src="$(var.IncDir)rx\rx_globals.h" />
                                 <File Id="filerx_lwp_H" Name="rx_lwp.h" LongName="rx_lwp.h" DiskId="1" src="$(var.IncDir)rx\rx_lwp.h" /> 
                                 <File Id="filerx_misc_H" Name="rx_misc.h" LongName="rx_misc.h" DiskId="1" src="$(var.IncDir)rx\rx_misc.h" /> 
                                 <File Id="filerx_multi_H" Name="rx_multi.h" LongName="rx_multi.h" DiskId="1" src="$(var.IncDir)rx\rx_multi.h" /> 
                                 <File Id="filerx_null_H" Name="rx_null.h" LongName="rx_null.h" DiskId="1" src="$(var.IncDir)rx\rx_null.h" /> 
-                                <File Id="filerx_packet_H" Name="RX_PAC~1.h" LongName="rx_packet.h" DiskId="1" src="$(var.IncDir)rx\rx_packet.h" /> 
-                                <File Id="filerx_prototypes_H" Name="RX_PRO~1.h" LongName="rx_prototypes.h" DiskId="1" src="$(var.IncDir)rx\rx_prototypes.h" /> 
-                                <File Id="filerx_pthread_H" Name="RX_PTH~1.h" LongName="rx_pthread.h" DiskId="1" src="$(var.IncDir)rx\rx_pthread.h" /> 
+                                <File Id="filerx_packet_H" Name="RXPACKET.h" LongName="rx_packet.h" DiskId="1" src="$(var.IncDir)rx\rx_packet.h" />
+                                <File Id="filerx_prototypes_H" Name="RX_PROT.h" LongName="rx_prototypes.h" DiskId="1" src="$(var.IncDir)rx\rx_prototypes.h" />
+                                <File Id="filerx_pthread_H" Name="RX_PTHRD.h" LongName="rx_pthread.h" DiskId="1" src="$(var.IncDir)rx\rx_pthread.h" />
                                 <File Id="filerx_queue_H" Name="rx_queue.h" LongName="rx_queue.h" DiskId="1" src="$(var.IncDir)rx\rx_queue.h" /> 
                                 <File Id="filerx_user_H" Name="rx_user.h" LongName="rx_user.h" DiskId="1" src="$(var.IncDir)rx\rx_user.h" /> 
-                                <File Id="filerx_xmit_nt_H" Name="RX_XMI~1.h" LongName="rx_xmit_nt.h" DiskId="1" src="$(var.IncDir)rx\rx_xmit_nt.h" /> 
+                                <File Id="filerx_xmit_nt_H" Name="RXXMITNT.h" LongName="rx_xmit_nt.h" DiskId="1" src="$(var.IncDir)rx\rx_xmit_nt.h" />
                                 <File Id="filev5gen_H" Name="v5gen.h" LongName="v5gen.h" DiskId="1" src="$(var.IncDir)rx\v5gen.h" /> 
                                 <File Id="filexdr_H" Name="xdr.h" LongName="xdr.h" DiskId="1" src="$(var.IncDir)rx\xdr.h" /> 
-                                <File Id="filexdr_prototypes_H" Name="XDR_PR~1.h" LongName="xdr_prototypes.h" DiskId="1" src="$(var.IncDir)rx\xdr_prototypes.h" /> 
+                                <File Id="filexdr_prototypes_H" Name="XDR_PROT.h" LongName="xdr_prototypes.h" DiskId="1" src="$(var.IncDir)rx\xdr_prototypes.h" />
                             </Component>
                         </Directory>
                         <Directory Id="dirIncludeWinnt" Name="WINNT">
                             <Component Id="cmp_SDK_Include_Winnt" Guid="BAAF0193-5C33-4EC1-9D40-DD4595F176E6">
-                                <File Id="fileafsapplib_H" Name="AFSAPP~1.h" LongName="afsapplib.h" DiskId="1" src="$(var.IncDir)WINNT\afsapplib.h" /> 
+                                <File Id="fileafsapplib_H" Name="AFSAPPLB.h" LongName="afsapplib.h" DiskId="1" src="$(var.IncDir)WINNT\afsapplib.h" />
                                 <File Id="fileafsclass_H" Name="afsclass.h" LongName="afsclass.h" DiskId="1" src="$(var.IncDir)WINNT\afsclass.h" /> 
-                                <File Id="fileafsclassfn_H" Name="AFSCLA~1.h" LongName="afsclassfn.h" DiskId="1" src="$(var.IncDir)WINNT\afsclassfn.h" /> 
+                                <File Id="fileafsclassfn_H" Name="AFSCLSFN.h" LongName="afsclassfn.h" DiskId="1" src="$(var.IncDir)WINNT\afsclassfn.h" />
                                 <File Id="fileafsevent_H" Name="afsevent.h" LongName="afsevent.h" DiskId="1" src="$(var.IncDir)WINNT\afsevent.h" /> 
                                 <File Id="fileafsreg_H" Name="afsreg.h" LongName="afsreg.h" DiskId="1" src="$(var.IncDir)WINNT\afsreg.h" /> 
                                 <File Id="fileafssw_H" Name="afssw.h" LongName="afssw.h" DiskId="1" src="$(var.IncDir)WINNT\afssw.h" /> 
-                                <File Id="fileal_admsvr_H" Name="AL_ADM~1.h" LongName="al_admsvr.h" DiskId="1" src="$(var.IncDir)WINNT\al_admsvr.h" /> 
-                                <File Id="fileal_dynlink_H" Name="AL_DYN~1.h" LongName="al_dynlink.h" DiskId="1" src="$(var.IncDir)WINNT\al_dynlink.h" /> 
-                                <File Id="fileal_messages_H" Name="AL_MES~1.h" LongName="al_messages.h" DiskId="1" src="$(var.IncDir)WINNT\al_messages.h" /> 
-                                <File Id="fileal_progress_H" Name="AL_PRO~1.h" LongName="al_progress.h" DiskId="1" src="$(var.IncDir)WINNT\al_progress.h" /> 
-                                <File Id="fileal_resource_H" Name="AL_RES~1.h" LongName="al_resource.h" DiskId="1" src="$(var.IncDir)WINNT\al_resource.h" /> 
-                                <File Id="fileal_wizard_H" Name="AL_WIZ~1.h" LongName="al_wizard.h" DiskId="1" src="$(var.IncDir)WINNT\al_wizard.h" /> 
-                                <File Id="filechecklist_H" Name="CHECKL~1.h" LongName="checklist.h" DiskId="1" src="$(var.IncDir)WINNT\checklist.h" /> 
+                                <File Id="fileal_admsvr_H" Name="ALADMSVR.h" LongName="al_admsvr.h" DiskId="1" src="$(var.IncDir)WINNT\al_admsvr.h" />
+                                <File Id="fileal_dynlink_H" Name="ALDYNLNK.h" LongName="al_dynlink.h" DiskId="1" src="$(var.IncDir)WINNT\al_dynlink.h" />
+                                <File Id="fileal_messages_H" Name="ALMESSAG.h" LongName="al_messages.h" DiskId="1" src="$(var.IncDir)WINNT\al_messages.h" />
+                                <File Id="fileal_progress_H" Name="ALPROGRE.h" LongName="al_progress.h" DiskId="1" src="$(var.IncDir)WINNT\al_progress.h" />
+                                <File Id="fileal_resource_H" Name="ALRESRCE.h" LongName="al_resource.h" DiskId="1" src="$(var.IncDir)WINNT\al_resource.h" />
+                                <File Id="fileal_wizard_H" Name="ALWIZARD.h" LongName="al_wizard.h" DiskId="1" src="$(var.IncDir)WINNT\al_wizard.h" />
+                                <File Id="filechecklist_H" Name="CHECKLST.h" LongName="checklist.h" DiskId="1" src="$(var.IncDir)WINNT\checklist.h" />
                                 <File Id="filectl_date_H" Name="ctl_date.h" LongName="ctl_date.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_date.h" /> 
-                                <File Id="filectl_elapsed_H" Name="CTL_EL~1.h" LongName="ctl_elapsed.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_elapsed.h" /> 
-                                <File Id="filectl_sockaddr_H" Name="CTL_SO~1.h" LongName="ctl_sockaddr.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_sockaddr.h" /> 
-                                <File Id="filectl_spinner_H" Name="CTL_SP~1.h" LongName="ctl_spinner.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_spinner.h" /> 
+                                <File Id="filectl_elapsed_H" Name="CTLELAPS.h" LongName="ctl_elapsed.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_elapsed.h" />
+                                <File Id="filectl_sockaddr_H" Name="CTLSOCKA.h" LongName="ctl_sockaddr.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_sockaddr.h" />
+                                <File Id="filectl_spinner_H" Name="CTLSPNNR.h" LongName="ctl_spinner.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_spinner.h" />
                                 <File Id="filectl_time_H" Name="ctl_time.h" LongName="ctl_time.h" DiskId="1" src="$(var.IncDir)WINNT\ctl_time.h" /> 
                                 <File Id="filec_agg_H" Name="c_agg.h" LongName="c_agg.h" DiskId="1" src="$(var.IncDir)WINNT\c_agg.h" /> 
                                 <File Id="filec_cell_H" Name="c_cell.h" LongName="c_cell.h" DiskId="1" src="$(var.IncDir)WINNT\c_cell.h" /> 
                                 <File Id="filec_debug_H" Name="c_debug.h" LongName="c_debug.h" DiskId="1" src="$(var.IncDir)WINNT\c_debug.h" /> 
                                 <File Id="filec_grp_H" Name="c_grp.h" LongName="c_grp.h" DiskId="1" src="$(var.IncDir)WINNT\c_grp.h" /> 
                                 <File Id="filec_ident_H" Name="c_ident.h" LongName="c_ident.h" DiskId="1" src="$(var.IncDir)WINNT\c_ident.h" /> 
-                                <File Id="filec_identlist_H" Name="C_IDEN~1.h" LongName="c_identlist.h" DiskId="1" src="$(var.IncDir)WINNT\c_identlist.h" /> 
+                                <File Id="filec_identlist_H" Name="CIDENTLS.h" LongName="c_identlist.h" DiskId="1" src="$(var.IncDir)WINNT\c_identlist.h" />
                                 <File Id="filec_notify_H" Name="c_notify.h" LongName="c_notify.h" DiskId="1" src="$(var.IncDir)WINNT\c_notify.h" /> 
                                 <File Id="filec_set_H" Name="c_set.h" LongName="c_set.h" DiskId="1" src="$(var.IncDir)WINNT\c_set.h" /> 
                                 <File Id="filec_svc_H" Name="c_svc.h" LongName="c_svc.h" DiskId="1" src="$(var.IncDir)WINNT\c_svc.h" /> 
@@ -1659,40 +1702,40 @@
                                 <File Id="filedialog_H" Name="dialog.h" LongName="dialog.h" DiskId="1" src="$(var.IncDir)WINNT\dialog.h" /> 
                                 <File Id="filefastlist_H" Name="fastlist.h" LongName="fastlist.h" DiskId="1" src="$(var.IncDir)WINNT\fastlist.h" /> 
                                 <File Id="filehashlist_H" Name="hashlist.h" LongName="hashlist.h" DiskId="1" src="$(var.IncDir)WINNT\hashlist.h" /> 
-                                <File Id="fileiTaAfsAdmSvr_H" Name="ITAAFS~1.h" LongName="iTaAfsAdmSvr.h" DiskId="1" src="$(var.IncDir)WINNT\iTaAfsAdmSvr.h" /> 
-                                <File Id="fileiTaAfsAdmSvrTypes_H" Name="ITAAFS~2.h" LongName="iTaAfsAdmSvrTypes.h" DiskId="1" src="$(var.IncDir)WINNT\iTaAfsAdmSvrTypes.h" /> 
+                                <File Id="fileiTaAfsAdmSvr_H" Name="ITAAASVR.h" LongName="iTaAfsAdmSvr.h" DiskId="1" src="$(var.IncDir)WINNT\iTaAfsAdmSvr.h" />
+                                <File Id="fileiTaAfsAdmSvrTypes_H" Name="ITAAASTY.h" LongName="iTaAfsAdmSvrTypes.h" DiskId="1" src="$(var.IncDir)WINNT\iTaAfsAdmSvrTypes.h" />
                                 <File Id="fileregexp_H" Name="regexp.h" LongName="regexp.h" DiskId="1" src="$(var.IncDir)WINNT\regexp.h" /> 
                                 <File Id="fileresize_H" Name="resize.h" LongName="resize.h" DiskId="1" src="$(var.IncDir)WINNT\resize.h" /> 
                                 <File Id="filesettings_H" Name="settings.h" LongName="settings.h" DiskId="1" src="$(var.IncDir)WINNT\settings.h" /> 
                                 <File Id="filesubclass_H" Name="subclass.h" LongName="subclass.h" DiskId="1" src="$(var.IncDir)WINNT\subclass.h" /> 
                                 <File Id="filesyscfg_H" Name="syscfg.h" LongName="syscfg.h" DiskId="1" src="$(var.IncDir)WINNT\syscfg.h" /> 
-                                <File Id="fileTaAfsAdmSvr_H" Name="TAAFSA~1.h" LongName="TaAfsAdmSvr.h" DiskId="1" src="$(var.IncDir)WINNT\TaAfsAdmSvr.h" /> 
-                                <File Id="fileTaAfsAdmSvrClient_H" Name="TAAFSA~2.h" LongName="TaAfsAdmSvrClient.h" DiskId="1" src="$(var.IncDir)WINNT\TaAfsAdmSvrClient.h" /> 
-                                <File Id="fileTaAfsAdmSvrCommon_H" Name="TAAFSA~3.h" LongName="TaAfsAdmSvrCommon.h" DiskId="1" src="$(var.IncDir)WINNT\TaAfsAdmSvrCommon.h" /> 
+                                <File Id="fileTaAfsAdmSvr_H" Name="TAAASRVR.h" LongName="TaAfsAdmSvr.h" DiskId="1" src="$(var.IncDir)WINNT\TaAfsAdmSvr.h" />
+                                <File Id="fileTaAfsAdmSvrClient_H" Name="TAAASCLN.h" LongName="TaAfsAdmSvrClient.h" DiskId="1" src="$(var.IncDir)WINNT\TaAfsAdmSvrClient.h" />
+                                <File Id="fileTaAfsAdmSvrCommon_H" Name="TAAASCOM.h" LongName="TaAfsAdmSvrCommon.h" DiskId="1" src="$(var.IncDir)WINNT\TaAfsAdmSvrCommon.h" />
                                 <File Id="filetalocale_H" Name="talocale.h" LongName="talocale.h" DiskId="1" src="$(var.IncDir)WINNT\talocale.h" /> 
-                                <File Id="filetal_alloc_H" Name="TAL_AL~1.h" LongName="tal_alloc.h" DiskId="1" src="$(var.IncDir)WINNT\tal_alloc.h" /> 
-                                <File Id="filetal_dialog_H" Name="TAL_DI~1.h" LongName="tal_dialog.h" DiskId="1" src="$(var.IncDir)WINNT\tal_dialog.h" /> 
-                                <File Id="filetal_string_H" Name="TAL_ST~1.h" LongName="tal_string.h" DiskId="1" src="$(var.IncDir)WINNT\tal_string.h" /> 
+                                <File Id="filetal_alloc_H" Name="TALALLOC.h" LongName="tal_alloc.h" DiskId="1" src="$(var.IncDir)WINNT\tal_alloc.h" />
+                                <File Id="filetal_dialog_H" Name="TALDIALG.h" LongName="tal_dialog.h" DiskId="1" src="$(var.IncDir)WINNT\tal_dialog.h" />
+                                <File Id="filetal_string_H" Name="TALSTRNG.h" LongName="tal_string.h" DiskId="1" src="$(var.IncDir)WINNT\tal_string.h" />
                                 <File Id="filevptab_H" Name="vptab.h" LongName="vptab.h" DiskId="1" src="$(var.IncDir)WINNT\vptab.h" />
                             </Component>
                         </Directory>
                     </Directory>
                     <Directory Id="dirLib" Name="lib">
                         <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib" Guid="$(var.cmp_SDK_Lib_guid)">
-                            <File Id="fileafsauthent_LIB" Name="AFSAUT~1.lib" LongName="afsauthent.lib" DiskId="1" src="$(var.LibDir)afsauthent.lib" /> 
+                            <File Id="fileafsauthent_LIB" Name="AFSAUTH1.lib" LongName="afsauthent.lib" DiskId="1" src="$(var.LibDir)afsauthent.lib" />
                             <File Id="fileafskfw_LIB" Name="afskfw.lib" LongName="afskfw.lib" DiskId="1" src="$(var.LibDir)afskfw.lib" /> 
                             <File Id="fileafslogon_LIB" Name="afslogon.lib" LongName="afslogon.lib" DiskId="1" src="$(var.LibDir)afslogon.lib" /> 
                             <File Id="fileafslwp_LIB" Name="afslwp.lib" LongName="afslwp.lib" DiskId="1" src="$(var.LibDir)afslwp.lib" /> 
-                            <File Id="fileafspthread_LIB" Name="AFSPTH~1.lib" LongName="afspthread.lib" DiskId="1" src="$(var.LibDir)afspthread.lib" /> 
+                            <File Id="fileafspthread_LIB" Name="AFSPTHRD.lib" LongName="afspthread.lib" DiskId="1" src="$(var.LibDir)afspthread.lib" />
                             <File Id="fileafsrpc_LIB" Name="afsrpc.lib" LongName="afsrpc.lib" DiskId="1" src="$(var.LibDir)afsrpc.lib" /> 
                             <File Id="fileafshcrypto_LIB" Name="afshcryp.lib" LongName="afshcrypto.lib" DiskId="1" src="$(var.LibDir)afshcrypto.lib" /> 
                             <File Id="fileafsroken_LIB" Name="afsroken.lib" LongName="afsroken.lib" DiskId="1" src="$(var.LibDir)afsroken.lib" /> 
                             <File Id="fileafsrx_LIB" Name="afsrx.lib" LongName="afsrx.lib" DiskId="1" src="$(var.LibDir)afsrx.lib" /> 
                             <File Id="fileafsrxkad_LIB" Name="afsrxkad.lib" LongName="afsrxkad.lib" DiskId="1" src="$(var.LibDir)afsrxkad.lib" /> 
-                            <File Id="fileafsrxstat_LIB" Name="AFSRXS~1.lib" LongName="afsrxstat.lib" DiskId="1" src="$(var.LibDir)afsrxstat.lib" /> 
+                            <File Id="fileafsrxstat_LIB" Name="AFSRXSTA.lib" LongName="afsrxstat.lib" DiskId="1" src="$(var.LibDir)afsrxstat.lib" />
                             <File Id="fileafsubik_LIB" Name="afsubik.lib" LongName="afsubik.lib" DiskId="1" src="$(var.LibDir)afsubik.lib" /> 
-                            <File Id="filelanahelper_LIB" Name="LANAHE~1.lib" LongName="lanahelper.lib" DiskId="1" src="$(var.LibDir)lanahelper.lib" /> 
-                            <File Id="filelibafsconf_LIB" Name="LIBAFS~1.lib" LongName="libafsconf.lib" DiskId="1" src="$(var.LibDir)libafsconf.lib" /> 
+                            <File Id="filelanahelper_LIB" Name="LANAHLPR.lib" LongName="lanahelper.lib" DiskId="1" src="$(var.LibDir)lanahelper.lib" />
+                            <File Id="filelibafsconf_LIB" Name="LIBAFCNF.lib" LongName="libafsconf.lib" DiskId="1" src="$(var.LibDir)libafsconf.lib" />
                             <File Id="filelibosi_LIB" Name="libosi.lib" LongName="libosi.lib" DiskId="1" src="$(var.LibDir)libosi.lib" /> 
                         </Component>
                         <?ifdef CygwinArchives?>
@@ -1708,41 +1751,41 @@
                         <Directory Id="dirLibAfs" Name="afs">
                             <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib_Afs" Guid="$(var.cmp_SDK_Lib_Afs_guid)">
                                 <File Id="fileafsacl_LIB" Name="afsacl.lib" LongName="afsacl.lib" DiskId="1" src="$(var.LibDir)afs\afsacl.lib" /> 
-                                <File Id="fileafsadminutil_LIB" Name="AFSADM~1.lib" LongName="afsadminutil.lib" DiskId="1" src="$(var.LibDir)afs\afsadminutil.lib" /> 
+                                <File Id="fileafsadminutil_LIB" Name="AAUTIL.lib" LongName="afsadminutil.lib" DiskId="1" src="$(var.LibDir)afs\afsadminutil.lib" />
                                 <File Id="fileafsaudit_LIB" Name="afsaudit.lib" LongName="afsaudit.lib" DiskId="1" src="$(var.LibDir)afs\afsaudit.lib" /> 
                                 <File Id="fileafsauth_LIB" Name="afsauth.lib" LongName="afsauth.lib" DiskId="1" src="$(var.LibDir)afs\afsauth.lib" /> 
                                 <File Id="fileafsbos_LIB" Name="afsbos.lib" LongName="afsbos.lib" DiskId="1" src="$(var.LibDir)afs\afsbos.lib" /> 
-                                <File Id="fileafsbosadmin_LIB" Name="AFSBOS~1.lib" LongName="afsbosadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsbosadmin.lib" /> 
-                                <File Id="fileafsbubasics_LIB" Name="AFSBUB~1.lib" LongName="afsbubasics.lib" DiskId="1" src="$(var.LibDir)afs\afsbubasics.lib" /> 
+                                <File Id="fileafsbosadmin_LIB" Name="ABOSADM.lib" LongName="afsbosadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsbosadmin.lib" />
+                                <File Id="fileafsbubasics_LIB" Name="ABUBASIC.lib" LongName="afsbubasics.lib" DiskId="1" src="$(var.LibDir)afs\afsbubasics.lib" />
                                 <File Id="fileafsbudb_LIB" Name="afsbudb.lib" LongName="afsbudb.lib" DiskId="1" src="$(var.LibDir)afs\afsbudb.lib" /> 
                                 <File Id="fileafsbutm_LIB" Name="afsbutm.lib" LongName="afsbutm.lib" DiskId="1" src="$(var.LibDir)afs\afsbutm.lib" /> 
                                 <File Id="fileafsbxdb_LIB" Name="afsbxdb.lib" LongName="afsbxdb.lib" DiskId="1" src="$(var.LibDir)afs\afsbxdb.lib" /> 
-                                <File Id="fileafscfgadmin_LIB" Name="AFSCFG~1.lib" LongName="afscfgadmin.lib" DiskId="1" src="$(var.LibDir)afs\afscfgadmin.lib" /> 
+                                <File Id="fileafscfgadmin_LIB" Name="ACFGADMN.lib" LongName="afscfgadmin.lib" DiskId="1" src="$(var.LibDir)afs\afscfgadmin.lib" />
                                 <File Id="fileafsclass_LIB" Name="afsclass.lib" LongName="afsclass.lib" DiskId="1" src="$(var.LibDir)afs\afsclass.lib" /> 
-                                <File Id="fileafsclientadmin_LIB" Name="AFSCLI~1.lib" LongName="afsclientadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsclientadmin.lib" /> 
+                                <File Id="fileafsclientadmin_LIB" Name="ACLIADMN.lib" LongName="afsclientadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsclientadmin.lib" />
                                 <File Id="fileafscmd_LIB" Name="afscmd.lib" LongName="afscmd.lib" DiskId="1" src="$(var.LibDir)afs\afscmd.lib" /> 
-                                <File Id="fileafscom_err_LIB" Name="AFSCOM~1.lib" LongName="afscom_err.lib" DiskId="1" src="$(var.LibDir)afs\afscom_err.lib" /> 
+                                <File Id="fileafscom_err_LIB" Name="ACOMERR.lib" LongName="afscom_err.lib" DiskId="1" src="$(var.LibDir)afs\afscom_err.lib" />
                                 <File Id="fileafsdir_LIB" Name="afsdir.lib" LongName="afsdir.lib" DiskId="1" src="$(var.LibDir)afs\afsdir.lib" /> 
-                                <File Id="fileafseventlog_LIB" Name="AFSEVE~1.lib" LongName="afseventlog.lib" DiskId="1" src="$(var.LibDir)afs\afseventlog.lib" /> 
+                                <File Id="fileafseventlog_LIB" Name="AEVTLOG.lib" LongName="afseventlog.lib" DiskId="1" src="$(var.LibDir)afs\afseventlog.lib" />
                                 <File Id="fileafsint_LIB" Name="afsint.lib" LongName="afsint.lib" DiskId="1" src="$(var.LibDir)afs\afsint.lib" /> 
-                                <File Id="fileafskasadmin_LIB" Name="AFSKAS~1.lib" LongName="afskasadmin.lib" DiskId="1" src="$(var.LibDir)afs\afskasadmin.lib" /> 
-                                <File Id="fileafskauth.krb_LIB" Name="AFSKAU~1.lib" LongName="afskauth.krb.lib" DiskId="1" src="$(var.LibDir)afs\afskauth.krb.lib" /> 
+                                <File Id="fileafskasadmin_LIB" Name="AKASADMN.lib" LongName="afskasadmin.lib" DiskId="1" src="$(var.LibDir)afs\afskasadmin.lib" />
+                                <File Id="fileafskauth.krb_LIB" Name="AKAUTHKB.lib" LongName="afskauth.krb.lib" DiskId="1" src="$(var.LibDir)afs\afskauth.krb.lib" />
                                 <File Id="fileafskauth_LIB" Name="afskauth.lib" LongName="afskauth.lib" DiskId="1" src="$(var.LibDir)afs\afskauth.lib" /> 
-                                <File Id="fileafspioctl_LIB" Name="AFSPIO~1.lib" LongName="afspioctl.lib" DiskId="1" src="$(var.LibDir)afs\afspioctl.lib" /> 
-                                <File Id="fileafsprocmgmt_LIB" Name="AFSPRO~1.lib" LongName="afsprocmgmt.lib" DiskId="1" src="$(var.LibDir)afs\afsprocmgmt.lib" /> 
+                                <File Id="fileafspioctl_LIB" Name="APIOCTL.lib" LongName="afspioctl.lib" DiskId="1" src="$(var.LibDir)afs\afspioctl.lib" />
+                                <File Id="fileafsprocmgmt_LIB" Name="APROCMGM.lib" LongName="afsprocmgmt.lib" DiskId="1" src="$(var.LibDir)afs\afsprocmgmt.lib" />
                                 <File Id="fileafsprot_LIB" Name="afsprot.lib" LongName="afsprot.lib" DiskId="1" src="$(var.LibDir)afs\afsprot.lib" /> 
-                                <File Id="fileafsptsadmin_LIB" Name="AFSPTS~1.lib" LongName="afsptsadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsptsadmin.lib" /> 
+                                <File Id="fileafsptsadmin_LIB" Name="APTSADM.lib" LongName="afsptsadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsptsadmin.lib" />
                                 <File Id="fileafsreg_LIB" Name="afsreg.lib" LongName="afsreg.lib" DiskId="1" src="$(var.LibDir)afs\afsreg.lib" /> 
                                 <File Id="fileafsusd_LIB" Name="afsusd.lib" LongName="afsusd.lib" DiskId="1" src="$(var.LibDir)afs\afsusd.lib" /> 
                                 <File Id="fileafsutil_LIB" Name="afsutil.lib" LongName="afsutil.lib" DiskId="1" src="$(var.LibDir)afs\afsutil.lib" /> 
                                 <File Id="fileafsvldb_LIB" Name="afsvldb.lib" LongName="afsvldb.lib" DiskId="1" src="$(var.LibDir)afs\afsvldb.lib" /> 
                                 <File Id="fileafsvol_LIB" Name="afsvol.lib" LongName="afsvol.lib" DiskId="1" src="$(var.LibDir)afs\afsvol.lib" /> 
-                                <File Id="fileafsvolser_LIB" Name="AFSVOL~1.lib" LongName="afsvolser.lib" DiskId="1" src="$(var.LibDir)afs\afsvolser.lib" /> 
-                                <File Id="fileafsvosadmin_LIB" Name="AFSVOS~1.lib" LongName="afsvosadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsvosadmin.lib" /> 
+                                <File Id="fileafsvolser_LIB" Name="AVOLSRVR.lib" LongName="afsvolser.lib" DiskId="1" src="$(var.LibDir)afs\afsvolser.lib" />
+                                <File Id="fileafsvosadmin_LIB" Name="AVOSADM.lib" LongName="afsvosadmin.lib" DiskId="1" src="$(var.LibDir)afs\afsvosadmin.lib" />
                                 <File Id="filemtafsint_LIB" Name="mtafsint.lib" LongName="mtafsint.lib" DiskId="1" src="$(var.LibDir)afs\mtafsint.lib" /> 
-                                <File Id="filemtafsvldb_LIB" Name="MTAFSV~1.lib" LongName="mtafsvldb.lib" DiskId="1" src="$(var.LibDir)afs\mtafsvldb.lib" /> 
-                                <File Id="fileTaAfsAdmSvrClient_LIB" Name="TAAFSA~1.lib" LongName="TaAfsAdmSvrClient.lib" DiskId="1" src="$(var.LibDir)afs\TaAfsAdmSvrClient.lib" /> 
-                                <File Id="fileTaAfsAppLib_LIB" Name="TAAFSA~2.lib" LongName="TaAfsAppLib.lib" DiskId="1" src="$(var.LibDir)afs\TaAfsAppLib.lib" /> 
+                                <File Id="filemtafsvldb_LIB" Name="MTAVLDB.lib" LongName="mtafsvldb.lib" DiskId="1" src="$(var.LibDir)afs\mtafsvldb.lib" />
+                                <File Id="fileTaAfsAdmSvrClient_LIB" Name="TAAASCLN.lib" LongName="TaAfsAdmSvrClient.lib" DiskId="1" src="$(var.LibDir)afs\TaAfsAdmSvrClient.lib" />
+                                <File Id="fileTaAfsAppLib_LIB" Name="TAAALIB.lib" LongName="TaAfsAppLib.lib" DiskId="1" src="$(var.LibDir)afs\TaAfsAppLib.lib" />
                                 <File Id="filetalocale_LIB" Name="talocale.lib" LongName="talocale.lib" DiskId="1" src="$(var.LibDir)afs\talocale.lib" /> 
                             </Component>
                             <?ifdef CygwinArchives?>
@@ -1777,6 +1820,34 @@
     <Directory Id="WindowsVolume" Name="." />
     <Directory Id="WindowsFolder" Name="." />
   <?endif?>
+
+    <Directory Id="$(var.PISystemFolder)" Name=".">
+      <Component Id="Drv_FSRDR_NP"
+                 Guid="$(var.DrvFSRDR_NP_guid)"
+                 Win64="$(var.Win64)">
+        <File Id="file_AFSRDFSProvider.dll" Name="AFSRDFSP.DLL" LongName="AFSRDFSProvider.dll" Vital="yes"
+              Source="$(var.ClientDir)\AFSRDFSProvider.dll"
+              DiskId="1" />
+        <?ifndef BinsOnly?>
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Rdr01" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Id="reg_Rdr02" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[#file_AFSRDFSProvider.dll]" Id="reg_Rdr03" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Class" Type="integer" Value="1" Id="reg_Rdr04" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Name" Type="string" Value="OpenAFS Network" Id="reg_Rdr05" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="DeviceName" Type="string" Value="\Device\AFSRedirector" Id="reg_Rdr06" />
+        <?endif?>
+      </Component>
+     <?ifdef DebugSyms?>
+      <Component Id="Drv_FSRDR_NP_Debug"
+                 Guid="$(var.DrvFSRDRDebug_NP_guid)"
+                 Win64="$(var.Win64)">
+        <File Id="file_AFSRDFSProvider.pdb"
+              Name="AFSRDFSP.PDB" LongName="AFSRDFSProvider.pdb" Vital="no"
+              Source="$(var.ClientDir)\AFSRDFSProvider.pdb"
+              DiskId="1" />
+      </Component>
+     <?endif?>
+    </Directory>
 
 	<!-- Shared assembly runtime for VS 2005 -->
 	<?if $(env.AFSVER_CL) = "1400"?>
