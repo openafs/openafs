@@ -2014,7 +2014,7 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
             goto done;
         }
 
-        StringCbPrintfA(mpInfo, sizeof(mpInfo), "%c%s:%s", (char) *mpp,
+        StringCbPrintfA(mpInfo, sizeof(mpInfo), "%c%s:%s.", (char) *mpp,
                         fullCell, fsvolume);
 
     } else {
