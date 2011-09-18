@@ -121,9 +121,9 @@ DInit(int abuffers)
     Lock_Init(&afs_bufferLock);
     /* Align each element of Buffers on a doubleword boundary */
     tsize = (sizeof(struct buffer) + 7) & ~7;
-    tp = (char *)malloc(abuffers * tsize);
-    Buffers = (struct buffer **)malloc(abuffers * sizeof(struct buffer *));
-    BufferData = (char *)malloc(abuffers * BUFFER_PAGE_SIZE);
+    tp = malloc(abuffers * tsize);
+    Buffers = malloc(abuffers * sizeof(struct buffer *));
+    BufferData = malloc(abuffers * BUFFER_PAGE_SIZE);
     timecounter = 0;
     LastBuffer = (struct buffer *)tp;
     nbuffers = abuffers;
