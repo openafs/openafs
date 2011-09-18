@@ -113,7 +113,7 @@ BEGIN
     EDITTEXT        IDC_CFG_VERSION,68,54,172,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Company",IDC_CFG_LBL_COMPANY,14,75,31,8
     EDITTEXT        IDC_CFG_COMPANY,68,72,172,14,ES_AUTOHSCROLL | ES_READONLY
-    PUSHBUTTON      "OpenAFS Control Panel",IDC_CFG_CPL,128,161,112,14
+//    PUSHBUTTON      "OpenAFS Control Panel",IDC_CFG_CPL,128,161,112,14
     GROUPBOX        "Startup options",IDC_CFG_STARTGRP,7,99,241,48
     CONTROL         "Prevent AFSCreds.exe from starting automatically when you log in to Windows.",IDC_CFG_STARTAFSCREDS,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,14,108,226,22
