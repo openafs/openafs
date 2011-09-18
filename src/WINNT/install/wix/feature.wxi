@@ -90,6 +90,7 @@
                InstallDefault="followParent" Level="1030" Title="$(loc.StrAFSConfigDesc)">
         <ComponentRef Id="cmf_afs_config_EXE" />
         <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
+        <ComponentRef Id="cmf_afs_cpa_CPL" />
         <Condition Level="30">USEAFSCONFIG &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
         <?ifdef DebugSyms?>
         <Feature Id="feaAfsConfigDebug" AllowAdvertise="no" Description="$(loc.StrAFSConfigDebugLongDesc)" Display="expand"
@@ -109,7 +110,6 @@
 
                 <ComponentRef Id="efl_CellServDB" />
                 <ComponentRef Id="cpf_CellServDB" />
-                <ComponentRef Id="cmf_afs_cpa_CPL" />
 
                 <ComponentRef Id="cmf_afsadminutil_DLL" />
                 <ComponentRef Id="cmf_afsclientadmin_DLL" />
@@ -229,7 +229,6 @@
                 <ComponentRef Id="rcm_Control_Center" />
                 <ComponentRef Id="cmp_CommonDir" />
                 
-                <ComponentRef Id="cmf_afs_cpa_CPL" />
                 <ComponentRef Id="cmf_afsbosadmin_DLL" />
                 <ComponentRef Id="cmf_afscfgadmin_DLL" />
                 <ComponentRef Id="cmf_afsclientadmin_DLL" />
