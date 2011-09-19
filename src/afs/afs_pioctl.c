@@ -4022,7 +4022,7 @@ DECL_PIOCTL(PSetSPrefs)
 
     ssp = (struct setspref *)ainPtr;
     if (ainSize < (sizeof(struct setspref)
-		   + sizeof(struct spref) * ssp->num_servers-1))
+		   + sizeof(struct spref) * (ssp->num_servers-1)))
 	return EINVAL;
 
     afs_setsprefs(&(ssp->servers[0]), ssp->num_servers,
