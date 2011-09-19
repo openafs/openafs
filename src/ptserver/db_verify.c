@@ -210,7 +210,7 @@ readUbikHeader(struct misc_data *misc)
     }
 
     uheader.magic = ntohl(uheader.magic);
-    uheader.size = ntohl(uheader.size);
+    uheader.size = ntohs(uheader.size);
     uheader.version.epoch = ntohl(uheader.version.epoch);
     uheader.version.counter = ntohl(uheader.version.counter);
 
