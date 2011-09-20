@@ -454,14 +454,14 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     /* If filldir didn't fill in the last one this is still pointing to that
      * last attempt.
      */
+    code = 0;
+
+unlock_out:
 #if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE)
     ctx->pos = (loff_t) offset;
 #else
     fp->f_pos = (loff_t) offset;
 #endif
-    code = 0;
-
-unlock_out:
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     UpgradeSToWLock(&avc->lock, 813);
