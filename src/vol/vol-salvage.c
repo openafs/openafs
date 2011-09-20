@@ -233,7 +233,7 @@ FILE *logFile = 0;	/* one of {/usr/afs/logs,/vice/file}/SalvageLog */
 struct SalvInfo {
     Device fileSysDevice;    /**< The device number of the current partition
 			      *   being salvaged */
-    char fileSysPath[8];     /**< The path of the mounted partition currently
+    char fileSysPath[9];     /**< The path of the mounted partition currently
                               *   being salvaged, i.e. the directory containing
                               *   the volume headers */
     char *fileSysPathName;   /**< NT needs this to make name pretty log. */
