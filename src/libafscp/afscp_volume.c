@@ -78,8 +78,9 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
     struct afscp_server *server;
     afs_int32 code, vtype, type, srv;
     void *s;
-    /* struct in_addr i; */
-
+#ifdef AFSCP_DEBUG
+    struct in_addr i;
+#endif
     if (intype == RWVOL)
 	vtype = VLSF_RWVOL;
     else if (intype == ROVOL)
@@ -174,11 +175,12 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
 
     ret->voltype = intype;
     server = afscp_ServerByIndex(ret->servers[0]);
-    /* if (server != NULL)
-     * i.s_addr = server->addrs[0];
-     * else
-     * i.s_addr = 0; */
-    /* i.s_addr is set but not used later */
+#ifdef AFSCP_DEBUG
+    if (server != NULL)
+	i.s_addr = server->addrs[0];
+    else
+	i.s_addr = 0;
+#endif
     afs_dprintf(("New volume BYNAME %s (%lu) on %s (%d)\n", ret->name,
 		 afs_printable_uint32_lu(ret->id),
 		 inet_ntoa(i), ret->servers[0]));
@@ -202,7 +204,9 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
     int voltype = -1;
     char idbuffer[16];
     void *s;
-    /* struct in_addr i; */
+#ifdef AFSCP_DEBUG
+    struct in_addr i;
+#endif
 
     memset(&key, 0, sizeof(key));
     key.id = id;
@@ -314,11 +318,12 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
     }
     ret->voltype = voltype;
     server = afscp_ServerByIndex(ret->servers[0]);
-    /* if (server)
-     * i.s_addr = server->addrs[0];
-     * else
-     * i.s_addr = 0; */
-    /* i.s_addr is set but not referenced later */
+#ifdef AFSCP_DEBUG
+    if (server)
+	i.s_addr = server->addrs[0];
+    else
+	i.s_addr = 0;
+#endif
     afs_dprintf(("New volume BYID %s (%lu) on %s (%d)\n", ret->name,
 		 afs_printable_uint32_lu(ret->id), inet_ntoa(i),
 		 ret->servers[0]));
