@@ -9,14 +9,14 @@
 
 /* Test of the ktc_*Token() routines */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <errno.h>
-
-#include <afsconfig.h>
-#include <afs/param.h>
-
 
 #include <afs/stds.h>
 #include <afs/afsutil.h>
