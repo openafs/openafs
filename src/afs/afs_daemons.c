@@ -26,7 +26,7 @@
 
 #if defined(AFS_CACHE_BYPASS)
 #include "afs/afs_bypasscache.h"
-#endif// defined(AFS_CACHE_BYPASS)
+#endif /* AFS_CACHE_BYPASS */
 /* background request queue size */
 afs_lock_t afs_xbrs;		/* lock for brs */
 static int brsInit = 0;

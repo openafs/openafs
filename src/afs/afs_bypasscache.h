@@ -61,8 +61,7 @@
 #ifndef _AFS_BYPASSCACHE_H
 #define _AFS_BYPASSCACHE_H
 
-#if defined(AFS_CACHE_BYPASS)
-
+#if defined(AFS_CACHE_BYPASS) || defined(UKERNEL)
 #include <afsconfig.h>
 #include "afs/param.h"
 #include "afs/sysincludes.h"
@@ -71,8 +70,8 @@
 #define AFS_CACHE_BYPASS_DISABLED -1
 
 #ifdef UKERNEL
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 1024 * sizeof(long) / 8
+#ifndef PAGE_CACHE_SIZE
+#define PAGE_CACHE_SIZE 4096
 #endif
 #endif
 
@@ -85,13 +84,7 @@ struct nocache_read_request {
     u_offset_t offset;
     struct seg *segment;
     caddr_t address;
-#elif defined(AFS_SGI_ENV)
-    /* SGI (of some vintage) */
-    int32 offset;
-    int32 rem;
-    int32 pmp; /* mmm */
-    int32 length;
-#elif defined(AFS_LINUX24_ENV) || defined(AFS_USR_LINUX24_ENV)
+#elif defined(AFS_LINUX24_ENV) || defined(UKERNEL)
     /* The tested platform, as CITI impl. just packs ab->parms */
     struct uio *auio;
     struct vrequest *areq;
@@ -146,7 +139,5 @@ afs_int32
 afs_PrefetchNoCache(struct vcache *avc, afs_ucred_t *acred,
 			struct nocache_read_request *bparms);
 
-
-#endif /* AFS_CACHE_BYPASS */
+#endif /* AFS_CACHE_BYPASS || UKERNEL */
 #endif /* _AFS_BYPASSCACHE_H */
-

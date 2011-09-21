@@ -90,6 +90,8 @@ extern int uafs_pwrite_r(int fd, char *buf, int len, off_t offset);
 extern int uafs_read(int fd, char *buf, int len);
 extern int uafs_pread(int fd, char *buf, int leni, off_t offset);
 extern int uafs_pread_r(int fd, char *buf, int len, off_t offset);
+extern int uafs_pread_nocache(int fd, char *buf, int leni, off_t offset);
+extern int uafs_pread_nocache_r(int fd, char *buf, int len, off_t offset);
 extern int uafs_fsync(int fd);
 extern int uafs_fsync_r(int fd);
 extern int uafs_close(int fd);
