@@ -29,6 +29,7 @@
 #include "afs/kauth.h"
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
+#include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
 #include "afsd/afsd.h"
 
@@ -2368,6 +2369,71 @@ uafs_read(int fd, char *buf, int len)
     retval = uafs_pread_r(fd, buf, len, afs_FileOffsets[fd]);
     AFS_GUNLOCK();
     return retval;
+}
+
+int
+uafs_pread_nocache(int fd, char *buf, int len, off_t offset)
+{
+    int retval;
+    AFS_GLOCK();
+    retval = uafs_pread_nocache_r(fd, buf, len, offset);
+    AFS_GUNLOCK();
+    return retval;
+}
+
+int
+uafs_pread_nocache_r(int fd, char *buf, int len, off_t offset)
+{
+    int code;
+    struct iovec iov[1];
+    struct usr_vnode *fileP;
+    struct nocache_read_request *bparms;
+    struct usr_uio uio;
+
+    /*
+     * Make sure this is an open file
+     */
+    fileP = afs_FileTable[fd];
+    if (fileP == NULL) {
+	errno = EBADF;
+	return -1;
+    }
+
+    /* these get freed in PrefetchNoCache, so... */
+    bparms = afs_osi_Alloc(sizeof(struct nocache_read_request));
+    bparms->areq = afs_osi_Alloc(sizeof(struct vrequest));
+
+    afs_InitReq(bparms->areq, get_user_struct()->u_cred);
+
+    bparms->auio = &uio;
+    bparms->offset = offset;
+    bparms->length = len;
+
+    /*
+     * set up the uio buffer
+     */
+    iov[0].iov_base = buf;
+    iov[0].iov_len = len;
+    uio.uio_iov = &iov[0];
+    uio.uio_iovcnt = 1;
+    uio.uio_offset = offset;
+    uio.uio_segflg = 0;
+    uio.uio_fmode = FREAD;
+    uio.uio_resid = len;
+
+    /*
+     * do the read
+     */
+    code = afs_PrefetchNoCache(VTOAFS(fileP), get_user_struct()->u_cred,
+			       bparms);
+
+    if (code) {
+	errno = code;
+	return -1;
+    }
+
+    afs_FileOffsets[fd] = uio.uio_offset;
+    return (len - uio.uio_resid);
 }
 
 int

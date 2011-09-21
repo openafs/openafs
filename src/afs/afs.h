@@ -129,10 +129,7 @@ struct sysname_info {
 #define	BOP_FETCH	1	/* parm1 is chunk to get */
 #define	BOP_STORE	2	/* parm1 is chunk to store */
 #define	BOP_PATH	3	/* parm1 is path, parm2 is chunk to fetch */
-
-#if defined(AFS_CACHE_BYPASS)
 #define	BOP_FETCH_NOCACHE	4   /* parms are: vnode ptr, offset, segment ptr, addr, cred ptr */
-#endif
 #ifdef AFS_DARWIN_ENV
 #define	BOP_MOVE	5	 /* ptr1 afs_uspc_param ptr2 sname ptr3 dname */
 #endif
@@ -642,7 +639,6 @@ struct SimpleLocks {
 
 /*... to be continued ...  */
 
-#if defined(AFS_CACHE_BYPASS)
 /* vcache (file) cachingStates bits */
 #define FCSDesireBypass   0x1	/* This file should bypass the cache */
 #define FCSBypass         0x2	/* This file is currently NOT being cached */
@@ -656,7 +652,6 @@ struct SimpleLocks {
 										 * lock vcache (it's already locked) */
 #define TRANSSetManualBit		0x4	/* The Transition routine should set FCSManuallySet so that
 									 * filename checking does not override pioctl requests */
-#endif /* AFS_CACHE_BYPASS */
 
 #define	CPSIZE	    2
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
@@ -846,14 +841,13 @@ struct vcache {
     short flockCount;		/* count of flock readers, or -1 if writer */
     char mvstat;		/* 0->normal, 1->mt pt, 2->root. */
 
-#if defined(AFS_CACHE_BYPASS)
-	char cachingStates;			/* Caching policies for this file */
-	afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */
+    char cachingStates;			/* Caching policies for this file */
+    afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */
+
 #if defined(AFS_LINUX24_ENV)
-	off_t next_seq_offset;	/* Next sequential offset (used by prefetch/readahead) */
-#else
-	off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
-#endif
+    off_t next_seq_offset;	/* Next sequential offset (used by prefetch/readahead) */
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI65_ENV)
+    off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
 #endif
 
 #if	defined(AFS_SUN5_ENV)
