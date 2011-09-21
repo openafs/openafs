@@ -75,6 +75,15 @@ afscp_AnonymousAuth(int state)
 
 static struct afsconf_dir *confdir;
 
+void
+afscp_SetConfDir(char *confDir)
+{
+    if (confdir != NULL)
+	afsconf_Close(confdir);
+
+    confdir = afsconf_Open(confDir);
+}
+
 static int
 _GetCellInfo(char *cell, struct afsconf_cell *celldata)
 {

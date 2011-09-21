@@ -108,6 +108,8 @@ void afscp_Finalize(void);
 int afscp_Insecure(void);
 int afscp_AnonymousAuth(int);
 
+void afscp_SetConfDir(char *confDir);
+
 struct afscp_cell *afscp_DefaultCell(void);
 struct afscp_cell *afscp_CellByName(const char *, const char *);
 int afscp_SetDefaultRealm(const char *);
