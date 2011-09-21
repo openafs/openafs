@@ -57,8 +57,14 @@ DDK_BUILDTYPE=FRE
 DDK_BUILDTYPE=CHK
 !ENDIF
 
+!IF ("$(_RunOacr)" == "TRUE")
+OACR = oacr
+!ELSE
+OACR = no_oacr
+!ENDIF
+
 $(OUT)\ddkbuild.cmd: NTMakefile
-        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(DDK_BUILDTYPE) > $@
+        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(DDK_BUILDTYPE) $(OACR) > $@
         echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
         echo cd kernel\fs >> $@
         echo build.exe -M >> $@
@@ -84,7 +90,7 @@ $(OUT)\ddkbuild.cmd: NTMakefile
         echo exit 0 >> $@
 
 $(OUT)\ddkclean.cmd: NTMakefile
-        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(DDK_BUILDTYPE) > $@
+        echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(DDK_BUILDTYPE) $(OACR) > $@
         echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
         echo cd kernel\fs >> $@
         echo build.exe -c -0 >> $@
