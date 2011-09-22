@@ -1905,7 +1905,7 @@ InitVL(void)
     code = vl_Initialize(AFSDIR_SERVER_ETC_DIRPATH);
     if (code != 0) {
 	ViceLog(0,
-		("Couldn't initialize protection library; code=%d.\n", code));
+		("Couldn't initialize volume location library; code=%d.\n", code));
 	return code;
     }
 
