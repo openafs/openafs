@@ -140,6 +140,7 @@
 
 #define AFS_ENV                 1
 #define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_CLIENT        1
 #if defined(__ppc__)
 #define AFS_PPC_ENV		1
 #elif defined(__i386__) || defined(__amd64__)
