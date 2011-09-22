@@ -110,6 +110,10 @@ bozo_ReBozo(void)
     if (DoLogging) {
 	status |= BOSEXIT_LOGGING_FLAG;
     }
+    /* if rxbind is set, pass "-rxbind" to new bosserver */
+    if (rxBind) {
+	status |= BOSEXIT_RXBIND_FLAG;
+    }
     exit(status);
 #else
     /* exec new bosserver process */
@@ -127,6 +131,11 @@ bozo_ReBozo(void)
     /* if logging is on, pass "-log" to new bosserver */
     if (DoLogging) {
 	argv[i] = "-log";
+	i++;
+    }
+    /* if rxbind is set, pass "-rxbind" to new bosserver */
+    if (rxBind) {
+	argv[i] = "-rxbind";
 	i++;
     }
 #ifndef AFS_NT40_ENV
