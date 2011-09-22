@@ -124,6 +124,7 @@ struct bozo_bosEntryStats {
 #define BOSEXIT_DORESTART(code)  (((code) & ~(0xF)) == BOSEXIT_RESTART)
 #define BOSEXIT_NOAUTH_FLAG    0x01
 #define BOSEXIT_LOGGING_FLAG   0x02
+#define BOSEXIT_RXBIND_FLAG    0x04
 #endif
 
 /* max time to wait for fileserver shutdown */
