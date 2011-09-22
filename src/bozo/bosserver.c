@@ -173,6 +173,8 @@ bozo_ReBozo(void)
 	close(i);
     }
 
+    unlink(AFSDIR_SERVER_BOZRXBIND_FILEPATH);
+
     execv(argv[0], argv);	/* should not return */
     _exit(1);
 #endif /* AFS_NT40_ENV */
@@ -812,6 +814,34 @@ bozo_DeletePidFile(char *ainst, char *aname)
     return 0;
 }
 
+/**
+ * Create the rxbind file of this bosserver.
+ *
+ * @param host  bind address of this server
+ *
+ * @returns status
+ */
+void
+bozo_CreateRxBindFile(afs_uint32 host)
+{
+    char buffer[16];
+    FILE *fp;
+
+    if (host == htonl(INADDR_ANY)) {
+	host = htonl(0x7f000001);
+    }
+
+    afs_inet_ntoa_r(host, buffer);
+    bozo_Log("Listening on %s:%d\n", buffer, AFSCONF_NANNYPORT);
+    if ((fp = fopen(AFSDIR_SERVER_BOZRXBIND_FILEPATH, "w")) == NULL) {
+	bozo_Log("Unable to open rxbind address file: %s, code=%d\n",
+		 AFSDIR_SERVER_BOZRXBIND_FILEPATH, errno);
+    } else {
+	fprintf(fp, "%s\n", buffer);
+	fclose(fp);
+    }
+}
+
 /* start a process and monitor it */
 
 #include "AFS_component_version_number.c"
@@ -1134,6 +1164,8 @@ main(int argc, char **argv, char **envp)
 	     code, AFSDIR_SERVER_BOZCONF_FILEPATH);
 	exit(code);
     }
+
+    bozo_CreateRxBindFile(host);	/* for local scripts */
 
     /* opened the cell databse */
     bozo_confdir = tdir;
