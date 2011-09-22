@@ -3150,7 +3150,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct cmd_item *ti;
     char name[80];
-    afs_int32 rank;
+    int rank;
     struct setspref *ssp;
     int error = 0;		/* -1 means error message printed,
 				 * >0 means errno value for unprinted message */
@@ -3177,7 +3177,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
 	    perror(ti->data);
 	    error = -1;
 	} else {
-	    while (fscanf(infd, "%79s%ld", name, (long int *)&rank) != EOF) {
+	    while (fscanf(infd, "%79s%d", name, &rank) != EOF) {
 		code = addServer(name, (unsigned short)rank);
 		if (code)
 		    error = code;
@@ -3187,7 +3187,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
 
     ti = as->parms[3].items;	/* -stdin */
     if (ti) {
-	while (scanf("%79s%ld", name, (long int *)&rank) != EOF) {
+	while (scanf("%79s%d", name, &rank) != EOF) {
 	    code = addServer(name, (unsigned short)rank);
 	    if (code)
 		error = code;
