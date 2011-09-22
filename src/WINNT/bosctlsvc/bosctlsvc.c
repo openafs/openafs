@@ -417,6 +417,11 @@ BosserverDoExitEvent(pid_t cpid,
 		    restartArgv[i] = "-log";
 		    i++;
 		}
+		if (exitCode & BOSEXIT_RXBIND_FLAG) {
+		    /* pass "-rxbind" to new bosserver */
+		    restartArgv[i] = "-rxbind";
+		    i++;
+		}
 		restartArgv[i] = NULL;
 	    }
 	}
