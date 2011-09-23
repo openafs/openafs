@@ -473,7 +473,7 @@ afs_dir_IsEmpty(dir_file_t dir)
 	while (num != 0 && elements < BIGMAXPAGES * EPP) {
 	    elements++;
 	    /* Walk down the hash table list. */
-	    if (afs_dir_GetVerifiedBlob(dir, num, &entrybuf) != 0);
+	    if (afs_dir_GetVerifiedBlob(dir, num, &entrybuf) != 0)
 	        break;
 	    ep = (struct DirEntry *)entrybuf.data;
 	    if (strcmp(ep->name, "..") && strcmp(ep->name, ".")) {
