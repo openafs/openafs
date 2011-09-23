@@ -34,6 +34,7 @@
 #define AFS_NBSD30_ENV 1
 #define AFS_NBSD40_ENV 1
 #define AFS_NBSD50_ENV 1
+#define AFS_NBSD60_ENV 1
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 
