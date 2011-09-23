@@ -58,9 +58,7 @@ int DirAccessOK(void);
 /* fsbnodeops.c */
 char *copystr(char *a);
 
-/* bosoprocs.c */
-void *bozo_ShutdownAndExit(void *arock /* really int asignal */);
-
+/* inline functions */
 static_inline struct bozo_key *
 ktc_to_bozoptr(struct ktc_encryptionKey *key) {
     return (struct bozo_key *)key;
