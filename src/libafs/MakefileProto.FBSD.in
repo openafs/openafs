@@ -46,6 +46,9 @@ AFS_OS_NONFSOBJS = \
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
 
+# keep symbols if --enable-debug-kernel
+DEBUG_FLAGS = @DEBUG_FLAGS@
+
 # We are not doing very well (WARNS=2 brings in printf format type checking)
 WARNS= 1
 # We have some sketchy code that redeclares prototypes

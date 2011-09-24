@@ -665,6 +665,12 @@ case $AFS_SYSNAME in
 		AC_SUBST(install_XFS_SIZE_CHECK)
 		AC_SUBST(dest_XFS_SIZE_CHECK)
 	;;
+	*_fbsd_*)
+		if test "x$enable_debug_kernel" = "xyes"; then
+			DEBUG_FLAGS=-g
+			AC_SUBST(DEBUG_FLAGS)
+		fi
+	;;
 esac
 
 dnl Disable the default for debugging/optimization if not enabled
