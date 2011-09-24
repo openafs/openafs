@@ -23,9 +23,12 @@ REM     SYS_NAME = AFS system name
 REM Choose one of "i386_w2k", "amd64_w2k", or "i64_w2k"
 SET SYS_NAME=i386_w2k
 
-REM Specify the targeted version of Windows and IE: 
+REM Specify the minimum version of Windows and IE:
 REM   0x500 for Windows 2000 and above
-REM   0x502 for Windows XP 64 and above
+REM   0x501 for Windows XP 32 and above
+REM   0x502 for Windows XP 64 and Server 2003 and above
+REM   0x600 for Windows Vista and Server 2008 and above
+REM   0x700 for Windows 7 and Server 2008 R2 and above
 SET APPVER=0x500
 SET _WIN32_IE=0x500
 
@@ -41,6 +44,7 @@ REM                  "1200" for VC6
 REM                  "1300" for VC7 (.NET)
 REM                  "1310" for .NET 2003
 REM                  "1400" for VC8 (VS2005)
+REM                  "1500" for VC9 (VS2008)
 set AFSVER_CL=1400
 
 REM ########################################################################
@@ -59,11 +63,20 @@ set BISON_SIMPLE=c:\bin\bison.simple
 set BISON_HAIRY=c:\bin\bison.hairy
 
 REM ########################################################################
-REM Code Signing Definitions for signtool.exe
+REM Code Signing Definitions for signtool.exe (optional)
 
 REM SET CODESIGN_DESC=OpenAFS for Windows
 REM SET CODESIGN_TIMESTAMP=<URL for Time Stamp Service>
 REM SET CODESIGN_URL=<Support URL displayed in Add/Remove Programs>
+REM SET CODESIGN_CROSS_CERT=<Cross signing certificate path>
+REM SET CODESIGN_OTHER=<other options required for certificate selection>
+
+REM ########################################################################
+REM Symbol Store Support
+
+REM SET SYMSTORE_EXE="C:\WinDDK\7600.16385.0\Debuggers\symstore.exe"
+REM SET SYMSTORE_ROOT=<Path to symbol store>
+REM SET SYMSTORE_COMMENT=<Comment to add to entries>
 
 REM ########################################################################
 REM Accept build type as an argument; default to checked.
@@ -102,13 +115,25 @@ REM Location of Microsoft Visual C++ development folder (8.3 short name)
 set MSVCDIR=c:\progra~1\MID05A~1\vc
 
 REM Location of Microsoft Platform SDK (8.3 short name)
-set MSSDKDIR=c:\progra~1\MIC977~1
+set MSSDKDIR=C:\progra~1\MIA713~1\Windows\v6.0a
 
 REM Location of npapi.h (from DDK or Platform SDK samples - 8.3 short name)
-set NTDDKDIR=C:\WINDDK\6000
+set NTDDKDIR=C:\WINDDK\7600.16385.0
 
 REM Location of Microsoft IDN Normalization SDK
 set MSIDNNLS=C:\progra~1\MI5913~1
+
+REM Location of the WiX Installer Toolkit
+set WIX=c:\tools\wix.2.0.5325
+
+REM Location of Cygwin
+set CYGWINDIR=c:\cygwin
+
+REM Location of ActivePerl for Windows
+set PERL=c:\perl
+
+REM Location of Microsoft Code Signing Tool
+SET SIGNTOOL=C:\winddk\7600.16385.0\bin\amd64\signtool.exe
 
 set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include;%MSIDNNLS%\include
 IF "%AFSVER_CL%" == "1400" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
@@ -123,7 +148,8 @@ IF "%AFSVER_CL%" == "1310" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1300" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1200" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\mfc\lib
 
-set AFSDEV_BIN=%MSSDKDIR%\bin;%MSVCDIR%\bin
+set AFSDEV_BIN=%MSSDKDIR%\bin;%MSVCDIR%\bin;%PERL%\bin;%CYGWINDIR%\bin;%WIX%
+
 goto end
 
 :usage
