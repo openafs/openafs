@@ -1605,6 +1605,8 @@ int main(int argc, char *argv[])
         validate_krb5_availability();
         if (krb5_init_context(&context))
             return(AKLOG_KERBEROS);
+        if (krb5_enctype_valid(context, ETYPE_DES_CBC_CRC))
+            krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
     } else
         validate_krb4_availability();
     afs_set_com_err_hook(redirect_errors);

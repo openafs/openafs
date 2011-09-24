@@ -170,4 +170,6 @@ DWORD KFW_get_default_mslsa_import(krb5_context);
 
 DWORD KFW_get_default_lifetime(krb5_context, const char *);
 
+void KFW_enable_DES(krb5_context);
+
 #endif /* AFSKFW_INT_H */

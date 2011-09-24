@@ -114,6 +114,9 @@ khm_krb5_initialize(khm_handle ident,
         goto on_error;
     }
 
+    if (krb5_enctype_valid(*ctx, ETYPE_DES_CBC_CRC))
+        krb5_enctype_enable(*ctx, ETYPE_DES_CBC_CRC);
+
     if(*cache == 0) {
         wchar_t wccname[MAX_PATH];
         khm_size cbwccname;

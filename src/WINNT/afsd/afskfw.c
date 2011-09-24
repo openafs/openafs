@@ -160,6 +160,8 @@ KFW_initialize(void)
 
             if ( KFW_is_available() ) {
                 char rootcell[CELL_MAXNAMELEN+1];
+
+                KFW_enable_DES(NULL);
 #ifdef USE_MS2MIT
                 KFW_import_windows_lsa();
 #endif /* USE_MS2MIT */
@@ -1081,6 +1083,27 @@ KFW_import_ccache_data(void)
 
   cleanup:
     if (context)
+        krb5_free_context(context);
+}
+
+void
+KFW_enable_DES(krb5_context alt_context)
+{
+    krb5_context context;
+    krb5_error_code code;
+
+    if ( alt_context ) {
+        context = alt_context;
+    } else {
+        code = krb5_init_context(&context);
+        if (code) goto cleanup;
+    }
+
+    if (krb5_enctype_valid(context, ETYPE_DES_CBC_CRC))
+        krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
+
+  cleanup:
+    if (context && (context != alt_context))
         krb5_free_context(context);
 }
 

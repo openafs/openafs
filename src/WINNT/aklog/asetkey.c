@@ -97,6 +97,7 @@ main(int argc, char **argv)
 	printf("asetkey: can't initialize conf dir '%s'\n", confdir);
 	exit(1);
     }
+
     if (strcmp(argv[1], "add")==0) {
 	krb5_context context;
 	krb5_principal principal;
@@ -110,6 +111,8 @@ main(int argc, char **argv)
 	}
 
 	krb5_init_context(&context);
+        if (krb5_enctype_valid(context, ETYPE_DES_CBC_CRC))
+            krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
 
 	kvno = atoi(argv[2]);
 	retval = krb5_parse_name(context, argv[4], &principal);
