@@ -97,4 +97,31 @@ extern int cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **
 extern int cmd_OptionAsFlag(struct cmd_syndesc *syn, int pos, int *value);
 extern int cmd_OptionPresent(struct cmd_syndesc *syn, int pos);
 
+/* Config files */
+
+struct cmd_config_binding {
+    enum { cmd_config_string, cmd_config_list } type;
+    char *name;
+    struct cmd_config_binding *next;
+    union {
+	char *string;
+	struct cmd_config_binding *list;
+	void *generic;
+    } u;
+};
+
+/* Raw config file access */
+typedef struct cmd_config_binding cmd_config_binding;
+typedef struct cmd_config_binding cmd_config_section;
+
+extern int cmd_RawConfigParseFileMulti(const char *, cmd_config_section **);
+extern int cmd_RawConfigParseFile(const char *, cmd_config_section **);
+extern int cmd_RawConfigFileFree(cmd_config_section *s);
+extern const char* cmd_RawConfigGetString(const cmd_config_section *,
+					  const char *, ...);
+extern int cmd_RawConfigGetBool(const cmd_config_section *, int, ...);
+extern int cmd_RawConfigGetInt(const cmd_config_section *, int, ...);
+extern const cmd_config_binding *cmd_RawConfigGetList
+	(const cmd_config_section *, ...);
+
 #endif /* __CMD_INCL__ */

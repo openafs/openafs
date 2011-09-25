@@ -12,8 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 HELPER_SPLINT=@HELPER_SPLINT@
 
 
-objects =base64.o config_file.o ktime.o volparse.o \
-	 hostparse.o exec.o \
+objects =base64.o ktime.o volparse.o hostparse.o exec.o \
 	 hputil.o kreltime.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
 	 afs_atomlist.o afs_lhash.o pthread_glock.o tabular_output.o \
@@ -21,7 +20,6 @@ objects =base64.o config_file.o ktime.o volparse.o \
 
 objects_pic = \
 	base64_pic.o \
-	config_file_pic.o \
 	ktime_pic.o \
 	volparse_pic.o \
 	hostparse_pic.o \
@@ -178,9 +176,6 @@ ${objects}: ${includes}
 AFS_component_version_number_pic.o: AFS_component_version_number.c
 	$(SHD_CCRULE) AFS_component_version_number.c
 
-config_file.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
-	$(AFS_CCRULE) -c ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c 
-
 sys.o: sys.c AFS_component_version_number.c ${includes}
 
 sys: sys.o 
@@ -189,9 +184,6 @@ sys: sys.o
 # PIC objects build rules
 base64_pic.o: ${srcdir}/base64.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/base64.c
-
-config_file_pic.o: ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c krb5_locl.h
-	$(SHD_CCRULE) ${TOP_SRCDIR}/external/heimdal/krb5/config_file.c
 
 ktime_pic.o: ${srcdir}/ktime.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/ktime.c

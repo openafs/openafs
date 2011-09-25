@@ -27,15 +27,6 @@ extern int base32_to_int(char *s);
 extern char *int_to_base64(b64_string_t s, int a);
 extern int base64_to_int(char *s);
 
-/* config_file.c && krb5_locl.h */
-typedef struct afs_config_section_struct afs_config_section;
-extern int afs_config_parse_file_multi(const char *, afs_config_section **);
-extern int afs_config_parse_file(const char *, afs_config_section **);
-extern int afs_config_file_free(afs_config_section *s);
-extern const char* fs_config_get_string(const afs_config_section *, ...);
-extern int afs_config_get_bool(const afs_config_section *, ...);
-extern int afs_config_get_int(const afs_config_section *c, ...);
-
 /* dirpath.c */
 extern unsigned int initAFSDirPath(void);
 extern const char *getDirPath(afsdir_id_t string_id);

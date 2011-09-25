@@ -19,6 +19,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <roken.h>
+
+#include "cmd.h"
+
 #ifndef TRUE
 # define TRUE 1
 #endif
@@ -38,21 +42,11 @@
 
 #define N_(X,Y) X
 
-struct krb5_config_binding {
-    enum { krb5_config_string, krb5_config_list } type;
-    char *name;
-    struct krb5_config_binding *next;
-    union {
-        char *string;
-        struct krb5_config_binding *list;
-        void *generic;
-    } u;
-};
+typedef struct cmd_config_binding krb5_config_binding;
+typedef struct cmd_config_binding krb5_config_section;
 
-typedef struct krb5_config_binding krb5_config_binding;
-
-typedef krb5_config_binding krb5_config_section;
-typedef krb5_config_section afs_config_section;
+#define krb5_config_list cmd_config_list
+#define krb5_config_string cmd_config_string
 
 struct krb5_context_data {
     krb5_config_section *cf;
@@ -73,6 +67,10 @@ static const void *_krb5_config_vget_next(krb5_context,
 static const char *krb5_config_vget_string(krb5_context,
 					   const krb5_config_section *,
 					   va_list);
+static const char *krb5_config_vget_string_default(krb5_context,
+					   const krb5_config_section *,
+					   const char *,
+					   va_list);
 static const krb5_config_binding * krb5_config_vget_list
 	(krb5_context, const krb5_config_section *, va_list);
 static krb5_error_code krb5_config_parse_file_multi
@@ -81,10 +79,10 @@ static krb5_error_code krb5_config_parse_file
 	(krb5_context, const char *, krb5_config_section **);
 static krb5_error_code krb5_config_file_free
 	(krb5_context, krb5_config_section *);
-static krb5_boolean krb5_config_vget_bool
-	(krb5_context, const krb5_config_section *,va_list);
-static int krb5_config_vget_int
-	(krb5_context, const krb5_config_section *, va_list);
+static krb5_boolean krb5_config_vget_bool_default
+	(krb5_context, const krb5_config_section *, int, va_list);
+static int krb5_config_vget_int_default
+	(krb5_context, const krb5_config_section *, int, va_list);
 
 static krb5_error_code
 krb5_string_to_deltat(const char *str, krb5_deltat *t) {
@@ -98,11 +96,6 @@ KRB5_LIB_FUNCTION void krb5_clear_error_message(krb5_context context) {
 static void krb5_set_error_message(krb5_context context, krb5_error_code ret,
 				   const char *fmt, ...) {
     return;
-}
-
-/* Play it safe, by saying we're always suid. */
-static int issuid(void) {
-    return 1;
 }
 
 static int _krb5_homedir_access(krb5_context context) {
@@ -124,59 +117,74 @@ krb5_abortx(krb5_context context, const char *fmt, ...)
 /* Wrappers */
 
 int
-afs_config_parse_file_multi(const char *fname, afs_config_section **res) {
+cmd_RawConfigParseFileMulti(const char *fname, cmd_config_section **res) {
     return krb5_config_parse_file_multi(NULL, fname, res);
 }
 
 int
-afs_config_parse_file(const char *fname, afs_config_section **res) {
+cmd_RawConfigParseFile(const char *fname, cmd_config_section **res) {
     return krb5_config_parse_file(NULL, fname, res);
 }
 
 int
-afs_config_file_free(afs_config_section *s) {
+cmd_RawConfigFileFree(cmd_config_section *s) {
     return krb5_config_file_free(NULL, s);
 }
 
 const char*
-afs_config_get_string(const afs_config_section *c, ...)
+cmd_RawConfigGetString(const cmd_config_section *c,
+		       const char *defval, ...)
 {
     const char *ret;
     va_list args;
 
     assert(c != NULL);
 
-    va_start(args, c);
-    ret = krb5_config_vget_string (NULL, c, args);
+    va_start(args, defval);
+    ret = krb5_config_vget_string_default (NULL, c, defval, args);
     va_end(args);
     return ret;
 }
 
 int
-afs_config_get_bool(const afs_config_section *c, ...)
+cmd_RawConfigGetBool(const cmd_config_section *c, int defval, ...)
 {
     va_list ap;
     krb5_boolean ret;
 
     assert(c != NULL);
 
-    va_start(ap, c);
-    ret = krb5_config_vget_bool (NULL, c, ap);
+    va_start(ap, defval);
+    ret = krb5_config_vget_bool_default (NULL, c, defval, ap);
     va_end(ap);
     return ret;
 }
 
 int
-afs_config_get_int(const krb5_config_section *c, ...)
+cmd_RawConfigGetInt(const cmd_config_section *c, int defval, ...)
 {
     va_list ap;
     int ret;
 
     assert(c != NULL);
 
-    va_start(ap, c);
-    ret = krb5_config_vget_int (NULL, c, ap);
+    va_start(ap, defval);
+    ret = krb5_config_vget_int_default (NULL, c, defval, ap);
     va_end(ap);
     return ret;
 }
 
+const cmd_config_binding *
+cmd_RawConfigGetList(const cmd_config_section *c, ...)
+{
+    va_list ap;
+    const cmd_config_binding *ret;
+
+    assert(c != NULL);
+
+    va_start(ap, c);
+    ret = krb5_config_vget_list (NULL, c, ap);
+    va_end(ap);
+
+    return ret;
+}

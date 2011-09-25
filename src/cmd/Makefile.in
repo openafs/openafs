@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
-LIBOBJS=cmd_errors.o cmd.o 
+LIBOBJS=cmd_errors.o cmd.o config_file.o
 LIBPICOBJS=cmd_errors_pic.o cmd_pic.o
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
@@ -41,6 +41,9 @@ cmd_errors.c: cmd.h
 cmd_errors.o: cmd_errors.c
 
 cmd.o: cmd.c cmd.h
+
+config_file.o: $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c krb5_locl.h
+	$(AFS_CCRULE) -c $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c
 
 cmd_errors64.o: cmd_errors.c
 	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
