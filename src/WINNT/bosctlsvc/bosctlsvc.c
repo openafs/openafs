@@ -35,7 +35,7 @@
 
 #define BOSSERVER_STARTMSG_EXE  "afslegal.exe"
 
-#define BOSSERVER_RESTART_ARG_MAX  2  /* "-noauth", "-log" */
+#define BOSSERVER_RESTART_ARG_MAX  3  /* "-noauth", "-log", "-rxbind" */
 #define BOSSERVER_WAIT_TIME_HINT  60  /* seconds */
 #define BOSSERVER_STOP_TIME_MAX  (FSSDTIME + 60)  /* seconds */
 
