@@ -102,7 +102,17 @@ util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
     *errorTextP = afs_error_message(code);
 #ifdef AFS_KRB5_ERROR_ENV
     if (strncmp(*errorTextP, "unknown", strlen("unknown")) == 0) {
-        *errorTextP = krb5_get_error_message(NULL, code);
+        krb5_context context;
+        if (!krb5_init_context(&context))
+        {
+            char *msg;
+            msg = krb5_get_error_message(context, code);
+            if (msg) {
+                *errorTextP = strdup(msg);
+                krb5_free_error_message(context, msg);
+            }
+            krb5_free_context(context);
+        }
     }
 #endif
     rc = 1;

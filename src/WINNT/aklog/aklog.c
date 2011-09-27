@@ -211,6 +211,8 @@ void akexit(int exit_code)
 void
 redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 {
+    krb5_context context;
+
     if (who) {
         fputs(who, stderr);
         fputs(": ", stderr);
@@ -219,13 +221,18 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
         int freestr = 0;
         char *str = (char *)afs_error_message(code);
         if (strncmp(str, "unknown", strlen(str)) == 0) {
-            str = krb5_get_error_message(NULL, code);
-            freestr = 1;
+            if (krb5_init_context(&context))
+            {
+                str = krb5_get_error_message(NULL, code);
+                freestr = 1;
+            }
         }
         fputs(str, stderr);
         fputs(" ", stderr);
-        if (freestr)
-            krb5_free_error_message(NULL, str);
+        if (freestr) {
+            krb5_free_error_message(context, str);
+            krb5_free_context(context);
+        }
     }
     if (fmt) {
         vfprintf(stderr, fmt, ap);
