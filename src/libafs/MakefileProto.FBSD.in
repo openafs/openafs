@@ -47,7 +47,10 @@ KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
 
 # keep symbols if --enable-debug-kernel
-DEBUG_FLAGS = @DEBUG_FLAGS@
+AC_DEBUG_FLAGS = @DEBUG_FLAGS@
+.if !empty(AC_DEBUG_FLAGS)
+DEBUG_FLAGS=	${AC_DEBUG_FLAGS}
+.endif
 
 # We are not doing very well (WARNS=2 brings in printf format type checking)
 WARNS= 1
