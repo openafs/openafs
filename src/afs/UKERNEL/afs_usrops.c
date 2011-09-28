@@ -1741,16 +1741,12 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 	     */
 	    nextVc = NULL;
 	    nextVp = NULL;
-#ifdef AFS_WEB_ENHANCEMENTS
 	    if ((nextPathP != NULL && *nextPathP != '\0') || !no_eval_mtpt)
 		code = afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred, 0);
 	    else
 		code =
 		    afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred,
 			       AFS_LOOKUP_NOEVAL);
-#else
-	    code = afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred, 0);
-#endif /* AFS_WEB_ENHANCEMENTS */
 	    if (nextVc)
 		nextVp=AFSTOV(nextVc);
 	    if (code != 0) {
@@ -3612,7 +3608,6 @@ uafs_afsPathName(char *path)
     return NULL;
 }
 
-#ifdef AFS_WEB_ENHANCEMENTS
 /*
  * uafs_klog_nopag
  * klog but don't allocate a new pag
@@ -3788,6 +3783,4 @@ uafs_getRights(char *path)
     AFS_GUNLOCK();
     return afs_rights;
 }
-#endif /* AFS_WEB_ENHANCEMENTS */
-
 #endif /* UKERNEL */
