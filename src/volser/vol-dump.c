@@ -530,6 +530,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     afs_ino_str_t stmp;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
+#else
+    LARGE_INTEGER fileSize;
 #endif
     afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
@@ -541,7 +543,11 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	fprintf(stderr, "dumping file for vnode %d\n", vnode);
 
 #ifdef AFS_NT40_ENV
-    howBig = _filelength(handleP->fd_fd);
+    if (!GetFileSizeEx(handleP->fd_fd, &fileSize)) {
+        Log("DumpFile: GetFileSizeEx returned error code %d on descriptor %d\n", GetLastError(), handleP->fd_fd);
+	    return VOLSERDUMPERROR;
+    }
+    howBig = fileSize.QuadPart;
     howMany = 4096;
 
 #else
