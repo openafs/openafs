@@ -274,7 +274,7 @@ VInitPartition(char *path, char *devname, Device dev)
  * Use partition name as devname.
  */
 int
-VCheckPartition(char *part, char *devname)
+VCheckPartition(char *part, char *devname, int logging)
 {
     struct afs_stat_st status;
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
@@ -289,6 +289,15 @@ VCheckPartition(char *part, char *devname)
     if (afs_stat(part, &status) < 0) {
 	Log("VInitVnodes: Couldn't find file system %s; ignored\n", part);
 	return 0;
+    }
+    if (logging) {
+	Log("This program is compiled without AFS_NAMEI_ENV, and "
+	    "partition %s is mounted with the 'logging' option. "
+	    "Using the inode fileserver backend with 'logging' UFS "
+	    "partitions causes volume corruption, so please either "
+	    "mount the partition without logging, or use the namei "
+	    "fileserver backend. Aborting...\n", part);
+	return -1;
     }
 #ifndef AFS_AIX32_ENV
     if (programType == fileServer) {
@@ -412,7 +421,7 @@ VAttachPartitions2(void)
 	/* Only keep track of "/vicepx" partitions since automounter
 	 * may hose us */
 	if (VIsAlwaysAttach(pname, &wouldattach)) {
-	    VCheckPartition(pname, "");
+	    VCheckPartition(pname, "", 0);
 	} else {
 	    struct afs_stat_st st;
 	    if (wouldattach && VGetPartition(pname, 0) == NULL &&
@@ -456,6 +465,7 @@ VAttachPartitions(void)
 	exit(-1);
     }
     while (!getmntent(mntfile, &mnt)) {
+	int logging = 0;
 	/* Ignore non ufs or non read/write partitions */
 	/* but allow zfs too if we're in the NAMEI environment */
 	if (
@@ -474,17 +484,11 @@ VAttachPartitions(void)
 
 #ifndef AFS_NAMEI_ENV
 	if (hasmntopt(&mnt, "logging") != NULL) {
-	    Log("This program is compiled without AFS_NAMEI_ENV, and "
-	        "partition %s is mounted with the 'logging' option. "
-		"Using the inode fileserver backend with 'logging' UFS "
-		"partitions causes volume corruption, so please either "
-		"mount the partition without logging, or use the namei "
-		"fileserver backend. Aborting...\n", mnt.mnt_mountp);
-	    errors++;
+	    logging = 1;
 	}
 #endif /* !AFS_NAMEI_ENV */
 
-	if (VCheckPartition(mnt.mnt_mountp, mnt.mnt_special) < 0)
+	if (VCheckPartition(mnt.mnt_mountp, mnt.mnt_special, logging) < 0)
 	    errors++;
     }
 
@@ -517,7 +521,7 @@ VAttachPartitions(void)
 	if (VIsAlwaysAttach(mntent->mnt_dir, NULL))
 	    continue;
 
-	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
+	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname, 0) < 0)
 	    errors++;
     }
 
@@ -620,7 +624,7 @@ VAttachPartitions(void)
 	if (VIsAlwaysAttach(part, NULL))
 	    continue;
 
-	if (VCheckPartition(part, vmt2dataptr(vmountp, VMT_OBJECT)) < 0)
+	if (VCheckPartition(part, vmt2dataptr(vmountp, VMT_OBJECT), 0) < 0)
 	    errors++;
     }
 
@@ -650,7 +654,7 @@ VAttachPartitions(void)
 	if (VIsAlwaysAttach(fsent->fs_file, NULL))
 	    continue;
 
-	if (VCheckPartition(fsent->fs_file, fsent->fs_spec) < 0)
+	if (VCheckPartition(fsent->fs_file, fsent->fs_spec, 0) < 0)
 	    errors++;
     }
     endfsent();
@@ -834,7 +838,7 @@ VAttachPartitions(void)
 	if (VIsAlwaysAttach(mntent->mnt_dir, NULL))
 	    continue;
 
-	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname) < 0)
+	if (VCheckPartition(mntent->mnt_dir, mntent->mnt_fsname, 0) < 0)
 	    errors++;
     }
     endmntent(mfd);
