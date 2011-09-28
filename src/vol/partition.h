@@ -88,10 +88,10 @@ struct VDiskLock {
 #endif /* AFS_DEMAND_ATTACH_FS || AFS_DEMAND_ATTACH_UTIL */
 
 
-/* For NT, the roles of "name" and "devName" are reversed. That is, "name"
- * refers to the drive letter name and "devName" refers to the /vicep style
- * or name. The reason for this is that a lot of places assume that "name"
- * is the right thing to use to access the partition. Silly of them isn't it?
+/* For NT, the roles of "name" and "devName" are no longer reversed. 
+ * That is, "name" refers to the canonical name (/vicep) style and
+ * "devName" refers to drive name.
+ *
  * The NT version of VInitPartition does the intial setup. There is an NT
  * variant for VGetPartition as well. Also, the VolPartitionInfo RPC does
  * a swap before sending the data out on the wire.
