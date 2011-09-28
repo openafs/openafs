@@ -331,7 +331,7 @@ afs_access(OSI_VC_DECL(avc), afs_int32 amode,
     }
 }
 
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 /*
  * afs_getRights
  * This function is just an interface to afs_GetAccessBits
@@ -355,4 +355,4 @@ afs_getRights(OSI_VC_DECL(avc), afs_int32 arights,
 
     return afs_GetAccessBits(avc, arights, &treq);
 }
-#endif /* defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS) */
+#endif /* defined(UKERNEL) */

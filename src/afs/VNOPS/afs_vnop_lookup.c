@@ -1783,10 +1783,10 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (tvc->mvstat == 1 && (tvc->f.states & CMValid) && tvc->mvid != NULL)
 	  force_eval = 1; /* This is now almost for free, get it correct */
 
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 	if (!(flags & AFS_LOOKUP_NOEVAL))
 	    /* don't eval mount points */
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+#endif /* UKERNEL */
 	    if (tvc->mvstat == 1 && force_eval) {
 		/* a mt point, possibly unevaluated */
 		struct volume *tvolp;
@@ -1894,13 +1894,13 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (afs_mariner)
 	    afs_AddMarinerName(aname, tvc);
 
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 	if (!(flags & AFS_LOOKUP_NOEVAL)) {
 	    /* Here we don't enter the name into the DNLC because we want the
 	     * evaluated mount dir to be there (the vcache for the mounted
 	     * volume) rather than the vc of the mount point itself.  We can
 	     * still find the mount point's vc in the vcache by its fid. */
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+#endif /* UKERNEL */
 	    if (!hit && force_eval) {
 		osi_dnlc_enter(adp, aname, tvc, &versionNo);
 	    } else {
@@ -1913,7 +1913,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		return 0;	/* can't have been any errors if hit and !code */
 #endif
 	    }
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 	}
 #endif
     }

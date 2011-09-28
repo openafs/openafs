@@ -36,11 +36,11 @@ extern int afs_shuttingdown;
 
 /* Exported variables */
 afs_uint32 pag_epoch;
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 afs_uint32 pagCounter = 1;
 #else
 afs_uint32 pagCounter = 0;
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+#endif /* UKERNEL */
 
 #ifdef AFS_LINUX26_ONEGROUP_ENV
 #define NUMPAGGROUPS 1
@@ -73,7 +73,7 @@ afs_uint32 pagCounter = 0;
  * anyway, so the pag is an alternative handle which is somewhat more
  * secure (although of course not absolutely secure).
 */
-#if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
+#if !defined(UKERNEL)
 afs_uint32
 genpag(void)
 {
@@ -125,7 +125,7 @@ getpag(void)
     return (pagCounter);
 #endif
 }
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+#endif /* UKERNEL */
 
 /* used to require 10 seconds between each setpag to guarantee that
  * PAGs never wrap - which would be a security hole.  If we presume
@@ -292,7 +292,7 @@ afs_setpag(void)
     return (code);
 }
 
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 /*
  * afs_setpag_val
  * This function is like setpag but sets the current thread's pag id to a
@@ -415,7 +415,7 @@ afs_getpag_val(void)
     return pagvalue;
 }
 #endif
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+#endif /* UKERNEL */
 
 
 /* Note - needs to be available on AIX, others can be static - rework this */
@@ -503,13 +503,13 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 	h = (g0 >> 14);
 	h = (g1 >> 14) + h + h + h;
 	ret = ((h << 28) | l);
-# if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+# if defined(UKERNEL)
 	return ret;
 # else
 	/* Additional testing */
 	if (((ret >> 24) & 0xff) == 'A')
 	    return ret;
-# endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+# endif /* UKERNEL */
     }
     return NOPAG;
 }
@@ -522,9 +522,9 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
     AFS_STATCNT(afs_get_groups_from_pag);
     *g0p = pag;
     *g1p = 0;
-# if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
+# if !defined(UKERNEL)
     pag &= 0x7fffffff;
-# endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+# endif /* UKERNEL */
     g0 = 0x3fff & (pag >> 14);
     g1 = 0x3fff & pag;
     g0 |= ((pag >> 28) / 3) << 14;
