@@ -703,6 +703,8 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     afs_ino_str_t stmp;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
+#else
+    LARGE_INTEGER fileSize;
 #endif
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
@@ -715,7 +717,11 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 #endif
 
 #ifdef AFS_NT40_ENV
-    howBig = _filelength(handleP->fd_fd);
+    if (!GetFileSizeEx(handleP->fd_fd, &fileSize)) {
+        Log("DumpFile: GetFileSizeEx returned error code %d on descriptor %d\n", GetLastError(), handleP->fd_fd);
+	    return VOLSERDUMPERROR;
+    }
+    howBig = fileSize.QuadPart;
     howMany = 4096;
 
 #else
