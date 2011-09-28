@@ -15,4 +15,4 @@
 #define  AFS_VERINFO_FILENAME "afshcrypto.dll"
 
 #include "AFS_component_version_number.h"
-#include "..\config\NTVersioninfo.rc"
+#include "..\..\config\NTVersioninfo.rc"
