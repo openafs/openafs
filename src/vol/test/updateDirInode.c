@@ -97,7 +97,7 @@
 #include "volume.h"
 #include "vldb.h"
 #include "partition.h"
-#include "afs/afs_assert.h"
+#include "afs/opr_assert.h"
 #include "filesignal.h"
 #include "vutils.h"
 #include "daemon_com.h"

@@ -33,7 +33,6 @@
 #include "voldefs.h"
 #include "partition.h"
 #include <dirent.h>
-#include <afs/afs_assert.h>
 
 
 char *prog = "nincdec";
