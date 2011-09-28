@@ -2459,6 +2459,16 @@ uafs_GetAttr(struct usr_vnode *vp, struct stat *stats)
     stats->st_atime = attrs.va_atime.tv_sec;
     stats->st_mtime = attrs.va_mtime.tv_sec;
     stats->st_ctime = attrs.va_ctime.tv_sec;
+    /* preserve dv if possible */
+#if defined(HAVE_STRUCT_STAT_ST_CTIMESPEC)
+    stats->st_atimespec.tv_nsec = attrs.va_atime.tv_usec * 1000;
+    stats->st_mtimespec.tv_nsec = attrs.va_mtime.tv_usec * 1000;
+    stats->st_ctimespec.tv_nsec = attrs.va_ctime.tv_usec * 1000;
+#elif defined(HAVE_STRUCT_STAT_ST_CTIMENSEC)
+    stats->st_atimensec = attrs.va_atime.tv_usec * 1000;
+    stats->st_mtimensec = attrs.va_mtime.tv_usec * 1000;
+    stats->st_ctimensec = attrs.va_ctime.tv_usec * 1000;
+#endif
     stats->st_blksize = attrs.va_blocksize;
     stats->st_blocks = attrs.va_blocks;
 
