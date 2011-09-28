@@ -79,6 +79,10 @@ $(HCRYPTO_INCFILES):$(HCRYPTO)\$$(@B).h
 $(INCFILES):$$(@B).h
 	$(COPY) $** $(INCFILEDIR)
 
+RESFILE = $(OUT)\afshcrypto.res
+
+$(RESFILE): afshcrypto.rc AFS_component_version_number.h
+
 !if !defined(NMAKE)
 NTMAKE = nmake /nologo /f ntmakefile
 !endif
@@ -86,7 +90,7 @@ NTMAKE = nmake /nologo /f ntmakefile
 DLLLIBS = \
 	$(DESTDIR)\lib\afsroken.lib
 
-$(LIBFILE): $(LOCAL_OBJS) $(HCRYPTO_OBJS) $(DLLLIBS)
+$(LIBFILE): $(LOCAL_OBJS) $(HCRYPTO_OBJS) $(RESFILE) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afshcrypto.def shell32.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
