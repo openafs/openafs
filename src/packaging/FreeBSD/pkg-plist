@@ -136,7 +136,6 @@ include/openafs/afs/volume_inline.h
 include/openafs/afs/salvsync.h
 include/openafs/afs/daemon_com.h
 include/openafs/afs/vsutils_prototypes.h
-include/openafs/afs/afs_assert.h
 include/openafs/des.h
 include/openafs/des_conf.h
 include/openafs/des_odd.h

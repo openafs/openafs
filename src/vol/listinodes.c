@@ -94,7 +94,6 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 #if defined (AFS_AIX_ENV) || defined (AFS_HPUX_ENV)
 #include <sys/ino.h>
 #endif
-#include <afs/afs_assert.h>
 
 #include "lock.h"
 #include "ihandle.h"

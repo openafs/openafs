@@ -13,7 +13,6 @@
 #include <roken.h>
 #include <sys/file.h>
 
-#include <afs/afs_assert.h>
 #include <lock.h>
 
 #define __AFS_WORK_QUEUE_IMPL 1
