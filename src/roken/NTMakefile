@@ -68,6 +68,10 @@ $(ROKEN_INCFILES):$(ROKEN)\$$(@B).h
 $(INCFILES):$$(@B).h
 	$(COPY) $** $(INCFILEDIR)
 
+RESFILE = $(OUT)\afsroken.res
+
+$(RESFILE): afsroken.rc AFS_component_version_number.h
+
 roken.h: $(ROKEN)\roken.h.in
 	$(COPY) $** $@
 
@@ -84,7 +88,7 @@ NTMAKE = nmake /nologo /f ntmakefile
 DLLLIBS = \
 #       $(DESTDIR)\lib\afs\afsreg.lib
 
-$(LIBFILE): $(ROKEN_OBJS) $(DLLLIBS)
+$(LIBFILE): $(ROKEN_OBJS) $(RESFILE) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsroken.def shell32.lib
 	$(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
