@@ -1350,6 +1350,9 @@ AC_CHECK_TYPES([fsblkcnt_t],,,[
 #endif
 ])
 
+dnl see what struct stat has for timestamps
+AC_CHECK_MEMBERS([struct stat.st_ctimespec, struct stat.st_ctimensec])
+
 dnl check for curses-lib
 save_LIBS=$LIBS
 AC_CHECK_LIB( [ncurses], [setupterm],
