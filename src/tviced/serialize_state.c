@@ -138,13 +138,13 @@ fs_stateSave(void)
      * BUT, this still has one flaw -- what do we do about rx worker threads that
      * are blocked in the host package making an RPC call to a cm???
      *
-     * perhaps we need a refcounter that keeps track of threads blocked in rpc calls
-     * with H_LOCK dropped (and the host struct likely left in an inconsistent state)
-     *
-     * or better yet, we need to associate a state machine with each host object
-     * (kind of like demand attach Volume structures).
-     *
-     * sigh. I suspect we'll need to revisit this issue
+     * currently we try to detect if a host struct is in an inconsistent state
+     * when we go to save it to disk, and just skip the hosts that we think may
+     * be inconsistent (see h_isBusy_r in host.c). This has the problem of causing
+     * more InitCallBackState's when we come back up, but the number of hosts in
+     * such a state should be small. In the future, we could try to lock hosts
+     * (with some deadline so we don't wait forever) before serializing, but at
+     * least for now it does not seem worth the trouble.
      */
 
     if (fs_state.options.fs_state_verify_before_save) {
