@@ -12,6 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <assert.h>
 #include <roken.h>
 
 #include <afs/afsint.h>
@@ -25,6 +26,7 @@
 void
 fsstats_StartOp(struct fsstats *stats, int index)
 {
+    assert(index >= 0 && index < FS_STATS_NUM_RPC_OPS);
     stats->opP = &(afs_FullPerfStats.det.rpcOpTimes[index]);
     FS_LOCK;
     (stats->opP->numOps)++;
@@ -57,6 +59,7 @@ fsstats_FinishOp(struct fsstats *stats, int code)
 void
 fsstats_StartXfer(struct fsstats *stats, int index)
 {
+    assert(index >= 0 && index < FS_STATS_NUM_XFER_OPS);
     FT_GetTimeOfDay(&stats->xferStartTime, NULL);
     stats->xferP = &(afs_FullPerfStats.det.xferOpTimes[index]);
 }
