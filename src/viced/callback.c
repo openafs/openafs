@@ -2456,6 +2456,12 @@ cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe,
 
     for (idx = 0; idx < niovecs; idx++) {
 	cbdsk = (struct CBDiskEntry *) iov[idx].iov_base;
+
+	if (cbdsk->cb.hhead < state->h_map.len &&
+	    state->h_map.entries[cbdsk->cb.hhead].valid == FS_STATE_IDX_SKIPPED) {
+	    continue;
+	}
+
 	if ((cb = GetCB()) == NULL) {
 	    ViceLog(0, ("cb_stateRestoreCBs: ran out of free CallBack structures\n"));
 	    ret = 1;
