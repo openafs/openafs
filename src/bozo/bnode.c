@@ -46,6 +46,7 @@
 #endif
 
 #define BNODE_LWP_STACKSIZE	(16 * 1024)
+#define BNODE_ERROR_COUNT_MAX   16   /* maximum number of retries */
 
 int bnode_waiting = 0;
 static PROCESS bproc_pid;	/* pid of waker-upper */
@@ -271,6 +272,14 @@ bnode_WaitStatus(struct bnode *abnode, int astatus)
 	abnode->flags |= BNODE_WAIT;
 	LWP_WaitProcess(abnode);
     }
+}
+
+int
+bnode_ResetErrorCount(struct bnode *abnode)
+{
+    abnode->errorStopCount = 0;
+    abnode->errorStopDelay = 0;
+    return 0;
 }
 
 int
@@ -620,12 +629,13 @@ bproc(void *unused)
 		    tb = tp->bnode;
 		    bnode_Hold(tb);
 
-		    /* count restarts in last 10 seconds */
+		    /* count restarts in last 30 seconds */
 		    if (temp > tb->rsTime + 30) {
-			/* it's been 10 seconds we've been counting */
+			/* it's been 30 seconds we've been counting */
 			tb->rsTime = temp;
 			tb->rsCount = 0;
 		    }
+
 
 		    if (WIFSIGNALED(status) == 0) {
 			/* exited, not signalled */
@@ -676,17 +686,27 @@ bproc(void *unused)
 				 tb->notifier);
 			hdl_notifier(tp);
 		    }
-		    BOP_PROCEXIT(tb, tp);
 
-		    bnode_Check(tb);
-		    if (tb->rsCount++ > 10) {
-			/* 10 in 10 seconds */
+		    if (tb->goal && tb->rsCount++ > 10) {
+			/* 10 in 30 seconds */
+			if (tb->errorStopCount >= BNODE_ERROR_COUNT_MAX) {
+			    tb->errorStopDelay = 0;	/* max reached, give up. */
+			} else {
+			    tb->errorStopCount++;
+			    if (!tb->errorStopDelay) {
+				tb->errorStopDelay = 1;
+			    } else {
+			        tb->errorStopDelay *= 2;
+			    }
+			}
 			tb->flags |= BNODE_ERRORSTOP;
 			bnode_SetGoal(tb, BSTAT_SHUTDOWN);
 			bozo_Log
 			    ("BNODE '%s' repeatedly failed to start, perhaps missing executable.\n",
 			     tb->name);
 		    }
+		    BOP_PROCEXIT(tb, tp);
+		    bnode_Check(tb);
 		    bnode_Release(tb);	/* bnode delete can happen here */
 		    DeleteProc(tp);
 		} else
@@ -987,6 +1007,7 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
 	free(tp);
 	return errno;
     }
+    bozo_Log("%s started pid %ld: %s\n", abnode->name, cpid, aexecString);
 
     bnode_FreeTokens(tlist);
     allProcs = tp;

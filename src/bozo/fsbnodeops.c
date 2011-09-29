@@ -472,7 +472,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	goto done;
     }
     bnode_SetTimeout(fsbnode2bnode(te), POLLTIME);
-    		/* ask for timeout activations every 10 seconds */
+		/* ask for timeout activations every 20 seconds */
     RestoreSalFlag(te);		/* restore needsSalvage flag based on file's existence */
     SetNeedsClock(te);		/* compute needsClock field */
 
@@ -601,7 +601,7 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	goto done;
     }
     bnode_SetTimeout(fsbnode2bnode(te), POLLTIME);
-    		/* ask for timeout activations every 10 seconds */
+		/* ask for timeout activations every 20 seconds */
     RestoreSalFlag(te);		/* restore needsSalvage flag based on file's existence */
     SetNeedsClock(te);		/* compute needsClock field */
 
@@ -680,6 +680,16 @@ fs_timeout(struct bnode *bn)
 		 SDTIME);
 	}
     }
+
+    if ((abnode->b.flags & BNODE_ERRORSTOP) && !abnode->salRunning
+	&& !abnode->volRunning && !abnode->fileRunning && !abnode->scanRunning
+	&& !abnode->salsrvRunning) {
+	bnode_SetStat(bn, BSTAT_NORMAL);
+    }
+    else {
+	bnode_ResetErrorCount(bn);
+    }
+
     SetNeedsClock(abnode);
     return 0;
 }
@@ -784,6 +794,8 @@ fs_procexit(struct bnode *bn, struct bnode_proc *aproc)
 static void
 SetNeedsClock(struct fsbnode *ab)
 {
+    afs_int32 timeout = POLLTIME;
+
     if ((ab->fileSDW && !ab->fileKillSent) || (ab->volSDW && !ab->volKillSent)
 	|| (ab->scanSDW && !ab->scanKillSent) || (ab->salSDW && !ab->salKillSent)
 	|| (ab->salsrvSDW && !ab->salsrvKillSent)) {
@@ -791,15 +803,29 @@ SetNeedsClock(struct fsbnode *ab)
 	ab->needsClock = 1;
     } else if (ab->b.goal == 1 && ab->fileRunning && ab->volRunning
 	&& (!ab->scancmd || ab->scanRunning)
-	&& (!ab->salsrvcmd || ab->salsrvRunning))
-	ab->needsClock = 0;	/* running normally */
-    else if (ab->b.goal == 0 && !ab->fileRunning && !ab->volRunning
-	     && !ab->salRunning && !ab->scanRunning && !ab->salsrvRunning)
-	ab->needsClock = 0;	/* halted normally */
-    else
+	&& (!ab->salsrvcmd || ab->salsrvRunning)) {
+	if (ab->b.errorStopCount) {
+	    /* reset error count after running for a bit */
+	    ab->needsClock = 1;
+	} else {
+	    ab->needsClock = 0;	/* running normally */
+	}
+    } else if ((ab->b.goal == 0) && !ab->fileRunning && !ab->volRunning
+	       && !ab->salRunning && !ab->scanRunning && !ab->salsrvRunning) {
+	if (ab->b.flags & BNODE_ERRORSTOP && ab->b.errorStopDelay) {
+	    bozo_Log("%s will retry start in %d seconds\n", ab->b.name,
+		     ab->b.errorStopDelay);
+	    ab->needsClock = 1;	/* halted for errors, retry later */
+	    timeout = ab->b.errorStopDelay;
+	} else {
+	    ab->needsClock = 0;	/* halted normally */
+	}
+    } else
 	ab->needsClock = 1;	/* other */
-    if (ab->needsClock && !bnode_PendingTimeout(fsbnode2bnode(ab)))
-	bnode_SetTimeout(fsbnode2bnode(ab), POLLTIME);
+
+    if (ab->needsClock && (!bnode_PendingTimeout(fsbnode2bnode(ab))
+			   || ab->b.period != timeout))
+	bnode_SetTimeout(fsbnode2bnode(ab), timeout);
     if (!ab->needsClock)
 	bnode_SetTimeout(fsbnode2bnode(ab), 0);
 }
