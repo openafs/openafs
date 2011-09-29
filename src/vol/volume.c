@@ -2781,7 +2781,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
         SYNC_response res;
         memset(&res, 0, sizeof(res));
 
-	if (FSYNC_VolOp(volid, VPartitionPath(partp), FSYNC_VOL_NEEDVOLUME, mode, &res)
+	if (FSYNC_VolOp(volid, partp->name, FSYNC_VOL_NEEDVOLUME, mode, &res)
 	    != SYNC_OK) {
 
             if (res.hdr.reason == FSYNC_SALVAGE) {
@@ -2917,7 +2917,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
 #if defined(AFS_DEMAND_ATTACH_FS) && defined(FSSYNC_BUILD_CLIENT)
     if (!peek && *ec == 0 && retry == 0 && VMustCheckoutVolume(mode)) {
 
-	code = FSYNC_VerifyCheckout(volid, VPartitionPath(partp), FSYNC_VOL_NEEDVOLUME, mode);
+	code = FSYNC_VerifyCheckout(volid, partp->name, FSYNC_VOL_NEEDVOLUME, mode);
 
 	if (code == SYNC_DENIED) {
 	    /* must retry checkout; fileserver no longer thinks we have
@@ -5765,7 +5765,7 @@ VScheduleSalvage_r(Volume * vp)
 	 * set the volume to an exclusive state and drop the lock
 	 * around the SALVSYNC call
 	 */
-	strlcpy(partName, VPartitionPath(vp->partition), sizeof(partName));
+	strlcpy(partName, vp->partition->name, sizeof(partName));
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
 	VOL_UNLOCK;
 
