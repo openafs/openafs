@@ -2937,6 +2937,37 @@ static int h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h);
 static void h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out);
 static void h_diskEntryToHost_r(struct hostDiskEntry * in, struct host * out);
 
+/**
+ * Is this host busy?
+ *
+ * This is just a hint and should not be trusted; this should probably only be
+ * used by the host state serialization code when trying to detect if a host
+ * can be sanely serialized to disk or not. If this function returns 1, the
+ * host may be in an invalid state and thus should not be saved to disk.
+ */
+static int
+h_isBusy_r(struct host *host)
+{
+    struct Lock *hostLock = &host->lock;
+    int locked = 0;
+
+    LOCK_LOCK(hostLock);
+    if (hostLock->excl_locked || hostLock->readers_reading) {
+	locked = 1;
+    }
+    LOCK_UNLOCK(hostLock);
+
+    if (locked) {
+	return 1;
+    }
+
+    if ((host->hostFlags & HWHO_INPROGRESS) || !(host->hostFlags & ALTADDR)) {
+	/* We shouldn't hit this if the host wasn't locked, but just in case... */
+	return 1;
+    }
+
+    return 0;
+}
 
 /* this procedure saves all host state to disk for fast startup */
 int
@@ -3257,6 +3288,16 @@ h_stateSaveHost(struct host * host, void* rock)
     afs_int32 * hcps = NULL;
     struct iovec iov[4];
     int iovcnt = 2;
+
+    if (h_isBusy_r(host)) {
+	char hoststr[16];
+	ViceLog(1, ("Not saving host %s:%d to disk; host appears busy\n",
+	            afs_inet_ntoa_r(host->host, hoststr), (int)ntohs(host->port)));
+	/* Make sure we don't try to save callbacks to disk for this host, or
+	 * we'll get confused on restore */
+	DeleteAllCallBacks_r(host, 1);
+	return 0;
+    }
 
     memset(&hdr, 0, sizeof(hdr));
 
