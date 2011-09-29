@@ -4311,7 +4311,7 @@ LockVolume(struct SalvInfo *salvinfo, VolumeId volumeId)
 	      afs_printable_uint32_lu(volumeId));
     }
 
-    code = FSYNC_VerifyCheckout(volumeId, salvinfo->fileSysPathName, FSYNC_VOL_OFF, FSYNC_SALVAGE);
+    code = FSYNC_VerifyCheckout(volumeId, salvinfo->fileSysPartition->name, FSYNC_VOL_OFF, FSYNC_SALVAGE);
     if (code == SYNC_DENIED) {
 	/* need to retry checking out volumes */
 	return -1;
