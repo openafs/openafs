@@ -25,7 +25,6 @@
 void
 fsstats_StartOp(struct fsstats *stats, int index)
 {
-    stats->index = index;
     stats->opP = &(afs_FullPerfStats.det.rpcOpTimes[index]);
     FS_LOCK;
     (stats->opP->numOps)++;
@@ -56,10 +55,10 @@ fsstats_FinishOp(struct fsstats *stats, int code)
 }
 
 void
-fsstats_StartXfer(struct fsstats *stats)
+fsstats_StartXfer(struct fsstats *stats, int index)
 {
     FT_GetTimeOfDay(&stats->xferStartTime, NULL);
-    stats->xferP = &(afs_FullPerfStats.det.xferOpTimes[stats->index]);
+    stats->xferP = &(afs_FullPerfStats.det.xferOpTimes[index]);
 }
 
 void

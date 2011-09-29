@@ -2287,7 +2287,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
 	parentwhentargetnotdir = NULL;
     }
 
-    fsstats_StartXfer(&fsstats);
+    fsstats_StartXfer(&fsstats, FS_STATS_XFERIDX_FETCHDATA);
 
     /* actually do the data transfer */
     errorCode =
@@ -2900,7 +2900,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
 	parentwhentargetnotdir = NULL;
     }
 
-    fsstats_StartXfer(&fsstats);
+    fsstats_StartXfer(&fsstats, FS_STATS_XFERIDX_STOREDATA);
 
     errorCode =
 	StoreData_RXStyle(volptr, targetptr, Fid, client, acall, Pos, Length,
