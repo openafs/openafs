@@ -3416,6 +3416,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
     h_InsertList_r(host);
 
     /* setup host id map entry */
+    state->h_map.entries[hdsk.index].valid = FS_STATE_IDX_VALID;
     state->h_map.entries[hdsk.index].old_idx = hdsk.index;
     state->h_map.entries[hdsk.index].new_idx = host->index;
 
@@ -3481,7 +3482,8 @@ h_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
     if (old >= state->h_map.len) {
 	ViceLog(0, ("h_OldToNew: index %d is out of range\n", old));
 	ret = 1;
-    } else if (state->h_map.entries[old].old_idx != old) { /* sanity check */
+    } else if (state->h_map.entries[old].valid != FS_STATE_IDX_VALID ||
+               state->h_map.entries[old].old_idx != old) { /* sanity check */
 	ViceLog(0, ("h_OldToNew: index %d points to an invalid host record\n", old));
 	ret = 1;
     } else {
