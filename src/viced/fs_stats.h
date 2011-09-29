@@ -340,7 +340,6 @@ extern afs_uint32 FS_HostAddr_HBO;
 
 /* Logging helper functions */
 struct fsstats {
-    int index;
     struct fs_stats_opTimingData *opP;
     struct fs_stats_xferData *xferP;
     struct timeval opStartTime;
@@ -349,7 +348,7 @@ struct fsstats {
 
 extern void fsstats_StartOp(struct fsstats *stats, int index);
 extern void fsstats_FinishOp(struct fsstats *stats, int code);
-extern void fsstats_StartXfer(struct fsstats *stats);
+extern void fsstats_StartXfer(struct fsstats *stats, int index);
 extern void fsstats_FinishXfer(struct fsstats *, int, afs_sfsize_t,
 			       afs_sfsize_t, int *);
 
