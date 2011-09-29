@@ -41,6 +41,7 @@
 
 /* values for the 'valid' field in idx_map_entry_t */
 #define FS_STATE_IDX_VALID 1
+#define FS_STATE_IDX_SKIPPED 2
 
 /*
  * on-disk structures
