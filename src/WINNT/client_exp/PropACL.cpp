@@ -33,24 +33,23 @@ BOOL CPropACL::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lPa
             CString sText;
 
             if(filenames.GetCount() > 1) {
-            // multiple items selected
-            LoadString(sText, IDS_PROP_MULTIPLEITEMS);
-            SetDlgItemText(hwnd, IDC_PROP_FILENAME, sText);
+                // multiple items selected
+                LoadString(sText, IDS_PROP_MULTIPLEITEMS);
+                SetDlgItemText(hwnd, IDC_PROP_FILENAME, sText);
 
-            EnablePermChanges(FALSE);
-            EnableWindow(GetDlgItem(m_hwnd, IDC_ADD), FALSE);
-            EnableWindow(GetDlgItem(m_hwnd, IDC_COPY), FALSE);
-            } else {
-            SetDlgItemText(hwnd, IDC_PROP_FILENAME, filenames.GetAt(0));
-
-            if (GetRights(filenames.GetAt(0), m_Normal, m_Negative)) {
                 EnablePermChanges(FALSE);
+                EnableWindow(GetDlgItem(m_hwnd, IDC_ADD), FALSE);
+                EnableWindow(GetDlgItem(m_hwnd, IDC_COPY), FALSE);
+            } else {
+                SetDlgItemText(hwnd, IDC_PROP_FILENAME, filenames.GetAt(0));
 
-                int tabstops[2] = {10,58};
-                SendDlgItemMessage(hwnd, IDC_NORMAL_RIGHTS, LB_SETTABSTOPS, 2, (LPARAM)&tabstops);
-                FillACLList();
-            }
+                if (GetRights(filenames.GetAt(0), m_Normal, m_Negative)) {
+                    EnablePermChanges(FALSE);
 
+                    int tabstops[2] = {10,58};
+                    SendDlgItemMessage(hwnd, IDC_NORMAL_RIGHTS, LB_SETTABSTOPS, 2, (LPARAM)&tabstops);
+                    FillACLList();
+                }
             }
             return TRUE;
         }
@@ -93,7 +92,7 @@ BOOL CPropACL::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lPa
                     if (dlg.DoModal() == IDCANCEL)
                         return FALSE;
 
-                    OnNothingSelected();
+                    OnSelChange();
 
                     CString name = dlg.GetName();
                     CString rights = dlg.GetRights();
@@ -110,6 +109,7 @@ BOOL CPropACL::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lPa
                     FillACLList();
                     ShowRights(rights);
                     EnablePermChanges(TRUE);
+                    EnableWindow(GetDlgItem(m_hwnd, IDC_REMOVE), TRUE);
                     return TRUE;
                 }
             case IDC_COPY:
@@ -125,10 +125,15 @@ BOOL CPropACL::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lPa
                     BOOL bClear = dlg.GetClear();
 
                     CopyACL(strToDir, m_Normal, m_Negative, bClear);
+                    OnSelChange();
                     return TRUE;
                 }
+            case IDC_REMOVE:
+                OnRemove();
+                return TRUE;
             case IDC_CLEAN:
                 CleanACL(filenames);
+                OnSelChange();
                 return TRUE;
             case IDC_READ:
             case IDC_WRITE:
@@ -158,7 +163,7 @@ void CPropACL::FillACLList()
     }
 
     for (i = 0; i < m_Negative.GetSize(); i += 2) {
-        CString sText = _T("+\t") + m_Negative[i + 1] + _T("\t") + m_Negative[i];
+        CString sText = _T("-\t") + m_Negative[i + 1] + _T("\t") + m_Negative[i];
         SendDlgItemMessage(m_hwnd, IDC_NORMAL_RIGHTS, LB_ADDSTRING, 0, (LPARAM)(LPCTSTR)sText);
     }
 }
@@ -211,7 +216,7 @@ void CPropACL::OnNothingSelected()
 {
     SendDlgItemMessage(m_hwnd, IDC_NORMAL_RIGHTS, LB_SETSEL, FALSE, (LPARAM)-1);
 
-    ShowRights(_T(""));				// Show no rights
+    ShowRights(_T(""));			// Show no rights
     EnablePermChanges(FALSE);		// Allow no rights changes
     EnableWindow(GetDlgItem(m_hwnd, IDC_REMOVE), FALSE);
 }
@@ -225,6 +230,10 @@ void CPropACL::OnSelection()
 void CPropACL::OnSelChange()
 {
     int nNum = (int)SendDlgItemMessage(m_hwnd, IDC_NORMAL_RIGHTS, LB_GETSELCOUNT, 0, 0);
+
+    if (nNum <= 0)
+        EnableWindow(GetDlgItem(m_hwnd, IDC_REMOVE), FALSE);
+
     if (nNum != 1) {
         ShowRights(_T(""));
         EnablePermChanges(FALSE);
@@ -235,8 +244,8 @@ void CPropACL::OnSelChange()
     SendDlgItemMessage(m_hwnd, IDC_NORMAL_RIGHTS, LB_GETSELITEMS, 1, (LPARAM)&nSel);
 
     CString strRights;
-    if (nSel >= m_Normal.GetCount()) {
-        nSel -= (int)m_Normal.GetCount();
+    if (nSel * 2 >= m_Normal.GetCount()) {
+        nSel -= (int)m_Normal.GetCount() / 2;
         strRights = m_Negative[(nSel * 2) + 1];
     } else {
         strRights = m_Normal[(nSel * 2) + 1];
@@ -260,8 +269,8 @@ void CPropACL::OnRemove()
     for (int i = nNum - 1; i >= 0; i--) {
         SendDlgItemMessage(m_hwnd, IDC_NORMAL_RIGHTS, LB_DELETESTRING, pIndexes[i], 0);
 
-        if (pIndexes[i] >= m_Normal.GetCount()) {
-            pIndexes[i] -= (int)m_Normal.GetCount();
+        if (pIndexes[i] * 2 >= m_Normal.GetCount()) {
+            pIndexes[i] -= (int)m_Normal.GetCount() / 2;
             m_Negative.RemoveAt((pIndexes[i] * 2), 2);
         } else {
             m_Normal.RemoveAt((pIndexes[i] * 2), 2);
@@ -270,7 +279,7 @@ void CPropACL::OnRemove()
 
     delete [] pIndexes;
 
-    OnNothingSelected();
+    OnSelChange();
 }
 
 BOOL CPropACL::IsNameInUse( BOOL bNormal, const CString& strName )
@@ -294,10 +303,13 @@ void CPropACL::OnPermChange()
     SendDlgItemMessage(m_hwnd, IDC_NORMAL_RIGHTS, LB_GETSELITEMS, 1, (LPARAM)&nSel);
 
     CString str = MakeRightsString();
-    if (nSel >= m_Normal.GetCount()) {
-        nSel -= (int)m_Normal.GetCount();
+    if (nSel * 2 >= m_Normal.GetCount()) {
+        nSel -= (int)m_Normal.GetCount() / 2;
         m_Negative[(2 * nSel) + 1] = str;
         str += _T("\t") + m_Negative[(2 * nSel)];
+
+        // restore value for LB_SETSEL message
+        nSel += (int)m_Normal.GetCount() / 2;
     } else {
         m_Normal[(2 * nSel) + 1] = str;
         str += _T("\t") + m_Normal[(2 * nSel)];
@@ -307,4 +319,6 @@ void CPropACL::OnPermChange()
     SendDlgItemMessage(m_hwnd, IDC_NORMAL_RIGHTS, LB_SETSEL, TRUE, nSel);
 
     SendMessage(GetParent(m_hwnd), PSM_CHANGED, (WPARAM)m_hwnd, 0);
+
+    OnSelChange();
 }
