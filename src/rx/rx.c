@@ -1851,6 +1851,10 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	    (*tservice->afterProc) (call, code);
 
 	rx_EndCall(call, code);
+
+	if (tservice->postProc)
+	    (*tservice->postProc) (code);
+
         if (rx_stats_active) {
             MUTEX_ENTER(&rx_stats_mutex);
             rxi_nCalls++;

@@ -152,6 +152,8 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 #define rx_SetBeforeProc(service,proc) ((service)->beforeProc = (proc))
 #define rx_GetAfterProc(service) ((service)->afterProc)
 #define rx_GetBeforeProc(service) ((service)->beforeProc)
+#define rx_SetPostProc(service,proc) ((service)->postProc = (proc))
+#define rx_GetPostProc(service) ((service)->postProc)
 
 /* Define a procedure to be called when a server connection is created */
 #define rx_SetNewConnProc(service, proc) ((service)->newConnProc = (proc))
@@ -315,6 +317,7 @@ struct rx_service {
     void (*newConnProc) (struct rx_connection * tcon);	/* Routine to call when a server connection is created */
     void (*beforeProc) (struct rx_call * acall);	/* routine to call before a call is executed */
     void (*afterProc) (struct rx_call * acall, afs_int32 code);	/* routine to call after a call is executed */
+    void (*postProc) (afs_int32 code);	/* routine to call after the call has ended */
     u_short maxProcs;		/* Maximum procs to be used for this service */
     u_short minProcs;		/* Minimum # of requests guaranteed executable simultaneously */
     u_short connDeadTime;	/* Seconds until a client of this service will be declared dead, if it is not responding */
