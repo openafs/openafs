@@ -3384,6 +3384,16 @@ h_stateRestoreHost(struct fs_dump_state * state)
 	osi_Assert(hcps != NULL);
     }
 
+    if ((hdsk.hostFlags & HWHO_INPROGRESS) || !(hdsk.hostFlags & ALTADDR)) {
+	char hoststr[16];
+	ViceLog(0, ("h_stateRestoreHost: skipping host %s:%d due to invalid flags 0x%x\n",
+	            afs_inet_ntoa_r(hdsk.host, hoststr), (int)ntohs(hdsk.port),
+	            (unsigned)hdsk.hostFlags));
+	bail = 0;
+	state->h_map.entries[hdsk.index].valid = FS_STATE_IDX_SKIPPED;
+	goto done;
+    }
+
     /* for restoring state, we better be able to get a host! */
     host = GetHT();
     osi_Assert(host != NULL);
