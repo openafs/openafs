@@ -39,6 +39,9 @@
 
 #define HOST_STATE_VALID_WINDOW 1800 /* 30 minutes */
 
+/* values for the 'valid' field in idx_map_entry_t */
+#define FS_STATE_IDX_VALID 1
+
 /*
  * on-disk structures
  */
@@ -205,6 +208,7 @@ struct AVDiskEntry {
  * dump runtime state
  */
 struct idx_map_entry_t {
+    byte valid;                            /* whether or not this entry has been populated */
     afs_uint32 old_idx;                    /* host hash id from last runtime */
     afs_uint32 new_idx;                    /* host hash id for this runtime */
 };
