@@ -1132,8 +1132,13 @@
                     <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_DLL" Guid="$(var.cmf_afs_shl_ext_DLL_guid)">
                         <File Id="fileafs_shl_ext_DLL" Name="afsshext.dll" LongName="afs_shl_ext.dll" KeyPath="yes" DiskId="1">
                             <Class Id="$(var.clsid_afs_shl_ext)" Advertise="no" Context="InprocServer32" Description="$(loc.StrShlExtDesc)" ThreadingModel="apartment">
-                                <ProgId Id="AfsClientContextMenu.1" Description="$(loc.StrShlExtDesc)">
-                                    <ProgId Id="AfsClientContextMenu" />
+                                <ProgId Id="AfsClientShellExt.1" Description="$(loc.StrShlExtDesc)">
+                                    <ProgId Id="AfsClientShellExt" />
+                                </ProgId>
+                            </Class>
+                            <Class Id="$(var.clsid_afs_shl_ext2)" Advertise="no" Context="InprocServer32" Description="$(loc.StrShlExt2Desc)" ThreadingModel="apartment">
+                                <ProgId Id="AfsClientShellExt2.1" Description="$(loc.StrShlExt2Desc)">
+                                    <ProgId Id="AfsClientShellExt2" />
                                 </ProgId>
                             </Class>
                         </File>
@@ -1141,6 +1146,13 @@
                     <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_1033_DLL" Guid="$(var.cmf_afs_shl_ext_1033_DLL_guid)">
                         <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                     </Component>
+                    <Component Win64="$(var.Win64)" Id="cmf_afs_mount_ICO" Guid="$(var.cmf_afs_mount_ICO_guid)">
+                        <File Id="fileafs_mount_ICO" Name="mount.ico" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\mount.ico"/>
+                    </Component>
+                    <Component Win64="$(var.Win64)" Id="cmf_afs_link_ICO" Guid="$(var.cmf_afs_link_ICO_guid)">
+                        <File Id="fileafs_link_ICO" Name="link.ico" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\link.ico"/>
+                    </Component>
+
 
                     <Component Win64="$(var.Win64)" Id="_afscreds_en_us"
                         Guid="$(var._afscreds_en_us_guid)" DiskId="1">

@@ -45,6 +45,8 @@
 
     <String Id="StrShlExtDesc">AFS Context Menu Shell Extension</String>
     <String Id="StrShlExt32Desc">AFS Context Menu Shell Extension  (32-bit)</String>
+    <String Id="StrShlExt2Desc">AFS Overlay Handler Shell Extension</String>
+    <String Id="StrShlExt232Desc">AFS Overlay Handler Shell Extension  (32-bit)</String>
     <String Id="StrAfsCredsDesc">Authentication for AFS</String>
     <String Id="StrHlpFileDesc">AFS Client Help</String>
     <String Id="StrSvrMgrDesc">Server Manager</String>
