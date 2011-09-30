@@ -66,6 +66,10 @@ struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
 static PROCESS bozo_pid;
 const char *bozo_fileName;
 FILE *bozo_logFile;
+#ifndef AFS_NT40_ENV
+static int bozo_argc = 0;
+static char** bozo_argv = NULL;
+#endif
 
 const char *DoCore;
 int DoLogging = 0;
@@ -112,61 +116,12 @@ int
 bozo_ReBozo(void)
 {
 #ifdef AFS_NT40_ENV
-    /* exit with restart code; SCM integrator process will restart bosserver */
-    int status = BOSEXIT_RESTART;
-
-    /* if noauth flag is set, pass "-noauth" to new bosserver */
-    if (afsconf_GetNoAuthFlag(bozo_confdir)) {
-	status |= BOSEXIT_NOAUTH_FLAG;
-    }
-    /* if logging is on, pass "-log" to new bosserver */
-    if (DoLogging) {
-	status |= BOSEXIT_LOGGING_FLAG;
-    }
-    /* if rxbind is set, pass "-rxbind" to new bosserver */
-    if (rxBind) {
-	status |= BOSEXIT_RXBIND_FLAG;
-    }
-    exit(status);
+    /* exit with restart code; SCM integrator process will restart bosserver with
+       the same arguments */
+    exit(BOSEXIT_RESTART);
 #else
     /* exec new bosserver process */
-    char *argv[4];
     int i = 0;
-
-    argv[i] = (char *)AFSDIR_SERVER_BOSVR_FILEPATH;
-    i++;
-
-    /* if noauth flag is set, pass "-noauth" to new bosserver */
-    if (afsconf_GetNoAuthFlag(bozo_confdir)) {
-	argv[i] = "-noauth";
-	i++;
-    }
-    /* if logging is on, pass "-log" to new bosserver */
-    if (DoLogging) {
-	argv[i] = "-log";
-	i++;
-    }
-    /* if rxbind is set, pass "-rxbind" to new bosserver */
-    if (rxBind) {
-	argv[i] = "-rxbind";
-	i++;
-    }
-#ifndef AFS_NT40_ENV
-    /* if syslog logging is on, pass "-syslog" to new bosserver */
-    if (DoSyslog) {
-	char *arg = (char *)malloc(40);	/* enough for -syslog=# */
-	if (DoSyslogFacility != LOG_DAEMON) {
-	    snprintf(arg, 40, "-syslog=%d", DoSyslogFacility);
-	} else {
-	    strcpy(arg, "-syslog");
-	}
-	argv[i] = arg;
-	i++;
-    }
-#endif
-
-    /* null-terminate argument list */
-    argv[i] = NULL;
 
     /* close random fd's */
     for (i = 3; i < 64; i++) {
@@ -175,7 +130,7 @@ bozo_ReBozo(void)
 
     unlink(AFSDIR_SERVER_BOZRXBIND_FILEPATH);
 
-    execv(argv[0], argv);	/* should not return */
+    execv(bozo_argv[0], bozo_argv);	/* should not return */
     _exit(1);
 #endif /* AFS_NT40_ENV */
 }
@@ -923,8 +878,23 @@ main(int argc, char **argv, char **envp)
     }
 #endif
 
+#ifndef AFS_NT40_ENV
+    /* save args for restart */
+    bozo_argc = argc;
+    bozo_argv = malloc((argc+1) * sizeof(char*));
+    if (!bozo_argv) {
+	fprintf(stderr, "%s: Failed to allocate argument list.\n", argv[0]);
+	exit(1);
+    }
+    bozo_argv[0] = (char*)AFSDIR_SERVER_BOSVR_FILEPATH; /* expected path */
+    bozo_argv[bozo_argc] = NULL; /* null terminate list */
+#endif	/* AFS_NT40_ENV */
+
     /* parse cmd line */
     for (code = 1; code < argc; code++) {
+#ifndef AFS_NT40_ENV
+	bozo_argv[code] = argv[code];
+#endif	/* AFS_NT40_ENV */
 	if (strcmp(argv[code], "-noauth") == 0) {
 	    /* set noauth flag */
 	    noAuth = 1;
