@@ -64,15 +64,39 @@
     </Component>
     <?endif?>                                                  <!-- /!LiteClient -->
     <Component Id="rcm_Client" Guid="$(var.rcm_client_guid)" Win64="$(var.Win64)">
+        <!-- First Client Shell Extension Class -->
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_NoUninstall2" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_NoUninstall" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{$(var.clsid_afs_shl_ext)}" Type="string" Value="$(loc.StrShlExtDesc)" Id="reg_Client_NoUninstall3" />
+
         <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client19" />
         <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client20" />
         <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client45" />
         <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client46" />
-        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client48" />
-        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client49" />
+        <Registry Root="HKCR" Key="DIRECTORY\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client48" />
+        <Registry Root="HKCR" Key="DIRECTORY\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client49" />
+        <Registry Root="HKCR" Key="LibraryFolder\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client56" />
+        <Registry Root="HKCR" Key="LibraryFolder\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client57" />
+        <Registry Root="HKCR" Key="Folder\shellex\{00021500-0000-0000-C000-000000000046}" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client58" />
+        <Registry Root="HKCR" Key="Folder\shellex\{00021500-0000-0000-C000-000000000046}" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client59" />
+
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Mount Point Overlay" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_66" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Mount Point Overlay" Value="{$(var.clsid_afs_shl_ext)}" Type="string" Id="reg_Client_67" />
+
+        <!-- Second Client Shell Extension Class -->
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_NoUninstall7" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_NoUninstall8" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{$(var.clsid_afs_shl_ext2)}" Type="string" Value="$(loc.StrShlExt2Desc)" Id="reg_Client_NoUninstall9" />
+
+        <Registry Root="HKCR" Key="*\shellex\PropertySheetHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client60" />
+        <Registry Root="HKCR" Key="*\shellex\PropertySheetHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext2)}" Id="reg_Client61" />
+        <Registry Root="HKCR" Key="Drive\shellex\PropertySheetHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client62" />
+        <Registry Root="HKCR" Key="Drive\shellex\PropertySheetHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext2)}" Id="reg_Client63" />
+        <Registry Root="HKCR" Key="Directory\shellex\PropertySheetHandlers\AFS Client Shell Extension" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client64" />
+        <Registry Root="HKCR" Key="Directory\shellex\PropertySheetHandlers\AFS Client Shell Extension" Type="string" Value="{$(var.clsid_afs_shl_ext2)}" Id="reg_Client65" />
+
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Symlink Overlay" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_68" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Symlink Overlay" Value="{$(var.clsid_afs_shl_ext2)}" Type="string" Id="reg_Client_69" />
 
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client" Id="reg_Client2" KeyPath="yes" />
@@ -198,7 +222,7 @@
     </Component>
     <?endif?>                   <!-- /!LiteClient-->
 
-    <!-- Work around bug KB30673.  Only for Windows 2000. -->    
+    <!-- Work around bug KB30673.  Only for Windows 2000. -->
     <Component Id="rcm_KB301673" Guid="$(var.rcm_kb301673_guid)" Win64="$(var.Win64)">
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\NetBT\Parameters" Name="SmbDeviceEnabled" Type="integer" Value="0" Id="reg_KB301673" KeyPath="yes" />
     </Component>
@@ -237,15 +261,40 @@
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="VersionString" Type="string" Value="$(var.NumericVersion)" Id="reg_Client_Bins24" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="InstallDateString" Type="string" Value="$(var.InstallTimestamp)" Id="reg_Client_Bins26" />
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client 32-Bit Binaries\$(var.NumericVersion)" Name="Description" Type="string" Value="$(loc.StrAFSCCDesc)" Id="reg_Client_Bins27" />
+
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_Client_Bins28" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_Client_Bins29" />
         <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{$(var.clsid_afs_shl_ext)}" Type="string" Value="$(loc.StrShlExt32Desc)" Id="reg_Client_Bins30" />
+
+        <!-- First Client Shell Extension Class -->
         <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins31" />
         <Registry Root="HKCR" Key="*\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client_Bins32" />
         <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins33" />
         <Registry Root="HKCR" Key="FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client_Bins34" />
-        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins35" />
-        <Registry Root="HKCR" Key="DIRECTORY\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client_Bins36" />
+        <Registry Root="HKCR" Key="DIRECTORY\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Client_Bins35" />
+        <Registry Root="HKCR" Key="DIRECTORY\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_Client_Bins36" />
+
+        <Registry Root="HKCR" Key="LibraryFolder\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_ClientBins37" />
+        <Registry Root="HKCR" Key="LibraryFolder\Background\shellex\ContextMenuHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext)}" Id="reg_ClientBins38" />
+
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Mount Point Overlay (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_ClientBins39" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Mount Point Overlay (32-bit)" Value="{$(var.clsid_afs_shl_ext)}" Type="string" Id="reg_ClientBins40" />
+
+        <!-- Second Client Shell Extension Class -->
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Id="reg_ClientBins41" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Action="createKey" Id="reg_ClientBins42" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{$(var.clsid_afs_shl_ext2)}" Type="string" Value="$(loc.StrShlExt232Desc)" Id="reg_ClientBins43" />
+
+        <Registry Root="HKCR" Key="*\shellex\PropertySheetHandlers\AFS Client Shell  (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_ClientBins44" />
+        <Registry Root="HKCR" Key="*\shellex\PropertySheetHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext2)}" Id="reg_ClientBins45" />
+        <Registry Root="HKCR" Key="Drive\shellex\PropertySheetHandlers\AFS Client Shell Extension (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_ClientBins46" />
+        <Registry Root="HKCR" Key="Drive\shellex\PropertySheetHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext2)}" Id="reg_ClientBins47" />
+        <Registry Root="HKCR" Key="Directory\shellex\PropertySheetHandlers\AFS Client Shell Extension (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_ClientBins48" />
+        <Registry Root="HKCR" Key="Directory\shellex\PropertySheetHandlers\AFS Client Shell Extension (32-bit)" Type="string" Value="{$(var.clsid_afs_shl_ext2)}" Id="reg_ClientBins49" />
+
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Symlink Overlay (32-bit)" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_ClientBins50" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\AFS Symlink Overlay (32-bit)" Value="{$(var.clsid_afs_shl_ext2)}" Type="string" Id="reg_ClientBins51" />
+
     </Component>
 <?endif?>
 </Include>

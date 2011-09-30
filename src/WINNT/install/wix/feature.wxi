@@ -125,7 +125,6 @@
                 <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)"/>
                 <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
-                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
 
                 <ComponentRef Id="cmf_instloop_EXE" />
                 <ComponentRef Id="cmf_afsshare_EXE" />
@@ -137,6 +136,9 @@
                 <ComponentRef Id="cmf_fs_EXE" />
                 <ComponentRef Id="cmf_afsdacl_EXE" />
                 <ComponentRef Id="cmf_afs_shl_ext_DLL" />
+                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_mount_ICO" />
+                <ComponentRef Id="cmf_afs_link_ICO" />
                 <ComponentRef Id="cmf_afsd_service_EXE" />
                 <ComponentRef Id="cmf_afslogon_DLL" />
                 <ComponentRef Id="cmf_afscpcc_EXE" />
@@ -254,7 +256,6 @@
                 <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_TaAfsServerManager_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
-                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
                 <ComponentRef Id="cmp_Lang_$(var.Language)" />
 
@@ -391,6 +392,8 @@
                 <ComponentRef Id="cmf_backup_EXE" />
                 <ComponentRef Id="cmf_afs_shl_ext_DLL" />
                 <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_mount_ICO" />
+                <ComponentRef Id="cmf_afs_link_ICO" />
 
                 <ComponentRef Id="rcm_BinsOnly_Parm" />
             	<ComponentRef Id="cmf_aklog_EXE" />
