@@ -35,7 +35,6 @@
 
 #define BOSSERVER_STARTMSG_EXE  "afslegal.exe"
 
-#define BOSSERVER_RESTART_ARG_MAX  3  /* "-noauth", "-log", "-rxbind" */
 #define BOSSERVER_WAIT_TIME_HINT  60  /* seconds */
 #define BOSSERVER_STOP_TIME_MAX  (FSSDTIME + 60)  /* seconds */
 
@@ -76,7 +75,6 @@ static void BosserverDoStopEvent(pid_t cpid,
 static void BosserverDoExitEvent(pid_t cpid,
 				 BOOL *doWait,
 				 BOOL *doRestart,
-				 char **restartArgv,
 				 DWORD *stopStatus,
 				 BOOL *isWin32Code);
 
@@ -382,7 +380,6 @@ static void
 BosserverDoExitEvent(pid_t cpid,
 		     BOOL *doWait,
 		     BOOL *doRestart,
-		     char **restartArgv,
 		     DWORD *stopStatus,
 		     BOOL *isWin32Code)
 {
@@ -402,27 +399,6 @@ BosserverDoExitEvent(pid_t cpid,
 		/* bosserver requests restart */
 		int i;
 		*doRestart = TRUE;
-
-		/* set up bosserver argument list */
-		restartArgv[0] = (char *)AFSDIR_SERVER_BOSVR_FILEPATH;
-		i = 1;
-
-		if (exitCode & BOSEXIT_NOAUTH_FLAG) {
-		    /* pass "-noauth" to new bosserver */
-		    restartArgv[i] = "-noauth";
-		    i++;
-		}
-		if (exitCode & BOSEXIT_LOGGING_FLAG) {
-		    /* pass "-log" to new bosserver */
-		    restartArgv[i] = "-log";
-		    i++;
-		}
-		if (exitCode & BOSEXIT_RXBIND_FLAG) {
-		    /* pass "-rxbind" to new bosserver */
-		    restartArgv[i] = "-rxbind";
-		    i++;
-		}
-		restartArgv[i] = NULL;
 	    }
 	}
 
@@ -464,9 +440,8 @@ BosserverRun(DWORD argc,
     /* Set env variable forcing process mgmt lib to spawn processes detached */
     (void)putenv(PMGT_SPAWN_DETACHED_ENV_NAME "=1");
 
-    /* Alloc block with room for at least BOSSERVER_RESTART_ARG_MAX args */
-    i = max((argc + 1), (BOSSERVER_RESTART_ARG_MAX + 2));
-    spawn_argv = (char **)malloc(i * sizeof(char *));
+    /* Alloc block with room for arguments plus a terminator */
+    spawn_argv = (char **)malloc((argc + 1) * sizeof(char *));
 
     if (spawn_argv == NULL) {
 	/* failed to malloc required space; can not continue */
@@ -536,7 +511,7 @@ BosserverRun(DWORD argc,
 		/* exit event signaled; see function comment for outcomes */
 		BosserverDoExitEvent(cpid,
 				     &doWait,
-				     &doRestart, spawn_argv,
+				     &doRestart,
 				     stopStatus, isWin32Code);
 
 	    } else {
