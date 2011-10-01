@@ -299,15 +299,15 @@
 #define IDC_ATTR_OTHER_WRITE2           1107
 #define IDC_ATTR_OTHER_EXECUTE          1107
 #define IDC_PROP_SMINFO                 1108
-#define IDC_USEDBYTES                   1108
+#define IDC_QUOTA_MAX                   1108
 #define IDC_SYMLINK_LABEL               1109
-#define IDC_USEDBYTES2                  1109
+#define IDC_QUOTA_USED                  1109
 #define IDC_MOUNTPOINT_LABEL            1110
 #define IDC_PROP_VOLUMENAME             1111
-#define IDC_FREEBYTES                   1112
-#define IDC_TOTALBYTES                  1113
-#define IDC_FREEBYTES2                  1114
-#define IDC_TOTALBYTES2                 1115
+#define IDC_QUOTA_PERCENT               1112
+#define IDC_PARTITION_SIZE              1113
+#define IDC_PARTITION_FREE              1114
+#define IDC_PARTITION_PERCENT           1115
 #define IDC_COLUMN_4                    1116
 #define IDC_PROP_TYPE                   1117
 #define IDC_BUTTON2                     1118
@@ -316,6 +316,8 @@
 #define IDC_ATTR_SUID_UID               1121
 #define IDC_ATTR_SUID_GID               1122
 #define IDC_ATTR_SUID_VTX               1123
+#define IDC_PROP_VID                    1124
+#define IDC_PROP_VOLUME_STATUS          1125
 
 // Next default values for new objects
 //
@@ -323,7 +325,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        165
 #define _APS_NEXT_COMMAND_VALUE         32829
-#define _APS_NEXT_CONTROL_VALUE         1124
+#define _APS_NEXT_CONTROL_VALUE         1126
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

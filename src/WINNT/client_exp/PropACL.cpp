@@ -40,6 +40,8 @@ BOOL CPropACL::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lPa
                 EnablePermChanges(FALSE);
                 EnableWindow(GetDlgItem(m_hwnd, IDC_ADD), FALSE);
                 EnableWindow(GetDlgItem(m_hwnd, IDC_COPY), FALSE);
+                EnableWindow(GetDlgItem(m_hwnd, IDC_CLEAN), FALSE);
+                EnableWindow(GetDlgItem(m_hwnd, IDC_REMOVE), FALSE);
             } else {
                 SetDlgItemText(hwnd, IDC_PROP_FILENAME, filenames.GetAt(0));
 

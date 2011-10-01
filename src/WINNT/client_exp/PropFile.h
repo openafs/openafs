@@ -10,6 +10,7 @@ public:
     virtual BOOL PropPageProc(HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
 
 private:
+    void EnableUnixMode(BOOL bEnable);
     void ShowUnixMode(const CString& strUserRights, const CString& strGroupRights, const CString& strOtherRights, const CString& strSuidRights);
     void EnablePermChanges(BOOL bEnable);
     void MakeUnixModeString(CString& userRights, CString& groupRights, CString& otherRights, CString& suidRights);

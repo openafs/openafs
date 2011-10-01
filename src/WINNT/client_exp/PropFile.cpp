@@ -34,53 +34,71 @@ BOOL CPropFile::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lP
 
             CString sText;
 
-            if(filenames.GetCount() > 1) {
+            if (filenames.GetCount() <= 0) {
+
+                ShowWindow(GetDlgItem(m_hwnd, IDC_REMOVEMOUNTPOINT), SW_HIDE);
+                ShowWindow(GetDlgItem(m_hwnd, IDC_SYMLINK_LABEL), SW_HIDE);
+                ShowWindow(GetDlgItem(m_hwnd, IDC_MOUNTPOINT_LABEL), SW_HIDE);
+                EnableUnixMode(FALSE);
+
+            }
+            else if(filenames.GetCount() > 1) {
                 // multiple items selected
                 LoadString(sText, IDS_PROP_MULTIPLEITEMS);
                 SetDlgItemText(hwnd, IDC_PROP_TYPE, sText);
+
+                ShowWindow(GetDlgItem(m_hwnd, IDC_REMOVEMOUNTPOINT), SW_HIDE);
+                ShowWindow(GetDlgItem(m_hwnd, IDC_SYMLINK_LABEL), SW_HIDE);
+                ShowWindow(GetDlgItem(m_hwnd, IDC_MOUNTPOINT_LABEL), SW_HIDE);
+                EnableUnixMode(FALSE);
+
+                sText = GetCellName(filenames.GetAt(0), FALSE);
+                m_cellName = sText;
+                SetDlgItemText(hwnd, IDC_PROP_CELL, sText);
+
             } else {
-                if (m_bIsDir)
+                if (m_bIsMountpoint)
+                    LoadString(sText, IDS_PROP_TYPEMOUNTPOINT);
+                else if (m_bIsSymlink)
+                    LoadString(sText, IDS_PROP_TYPESYMLINK);
+                else if (m_bIsDir)
                     LoadString(sText, IDS_PROP_TYPEDIRECTORY);
                 else
                     LoadString(sText, IDS_PROP_TYPEFILE);
-                if (m_bIsMountpoint)
-                    LoadString(sText, IDS_PROP_TYPEMOUNTPOINT);
-                if (m_bIsSymlink)
-                    LoadString(sText, IDS_PROP_TYPESYMLINK);
-                SetDlgItemText(hwnd, IDC_PROP_TYPE, sText);
-            }
-            if (m_bIsMountpoint) {
-                ShowWindow(GetDlgItem(m_hwnd, IDC_REMOVEMOUNTPOINT), SW_SHOW);
-                ShowWindow(GetDlgItem(m_hwnd, IDC_SYMLINK_LABEL), SW_HIDE);
-            }
-            if (m_bIsSymlink) {
-                ShowWindow(GetDlgItem(m_hwnd, IDC_MOUNTPOINT_LABEL), SW_HIDE);
-            }
-            CString user, group, other, suid;
-            GetUnixModeBits(filenames.GetAt(0), user, group, other, suid);
-            ShowUnixMode(user, group, other, suid);
 
-            if (filenames.GetCount() == 1) {
+                SetDlgItemText(hwnd, IDC_PROP_TYPE, sText);
+
+                if (m_bIsMountpoint) {
+                    ShowWindow(GetDlgItem(m_hwnd, IDC_REMOVEMOUNTPOINT), SW_SHOW);
+                }
+                if (!m_bIsSymlink) {
+                    ShowWindow(GetDlgItem(m_hwnd, IDC_SYMLINK_LABEL), SW_HIDE);
+                }
+                if (!m_bIsMountpoint) {
+                    ShowWindow(GetDlgItem(m_hwnd, IDC_MOUNTPOINT_LABEL), SW_HIDE);
+                }
+
+                if (!m_bIsMountpoint && !m_bIsSymlink) {
+                    ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), SW_HIDE);
+                }
+
+                if (m_bIsSymlink) {
+                    ShowWindow(GetDlgItem(m_hwnd, IDC_REMOVESYMLINK), SW_SHOW);
+                }
+
+                CString user, group, other, suid;
+                EnableUnixMode(TRUE);
+                GetUnixModeBits(filenames.GetAt(0), user, group, other, suid);
+                ShowUnixMode(user, group, other, suid);
+
                 SetDlgItemText(hwnd, IDC_PROP_FILENAME, filenames.GetAt(0));
                 if (!GetFID(filenames.GetAt(0), sText, TRUE))
                     sText = _T("(unknown)");
                 SetDlgItemText(hwnd, IDC_PROP_FID, sText);
-                sText = GetCellName(filenames.GetAt(0));
-                m_cellName = sText;
-                SetDlgItemText(hwnd, IDC_PROP_CELL, sText);
-                sText = GetServer(filenames.GetAt(0));
-                m_volName = sText;
-                SetDlgItemText(hwnd, IDC_PROP_FILESERVER, sText);
                 sText = GetOwner(filenames.GetAt(0));
                 SetDlgItemText(hwnd, IDC_PROP_OWNER, sText);
                 sText = GetGroup(filenames.GetAt(0));
                 SetDlgItemText(hwnd, IDC_PROP_GROUP, sText);
-
-                if (!m_bIsMountpoint && !m_bIsSymlink)
-                    ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), SW_HIDE);
-
-                if (!m_bIsMountpoint && m_bIsSymlink)
-                    ShowWindow(GetDlgItem(m_hwnd, IDC_REMOVESYMLINK), SW_SHOW);
 
                 if (m_bIsMountpoint){
                     sText = GetMountpoint(filenames.GetAt(0));
@@ -92,6 +110,10 @@ BOOL CPropFile::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lP
                     sText = sText.Mid(sText.Find('\t')+1);
                     SetDlgItemText(hwnd, IDC_PROP_SMINFO, sText);
                 }
+
+                sText = GetCellName(filenames.GetAt(0));
+                m_cellName = sText;
+                SetDlgItemText(hwnd, IDC_PROP_CELL, sText);
             }
             return TRUE;
         }
@@ -200,6 +222,25 @@ void CPropFile::ShowUnixMode(const CString& strUserRights, const CString& strGro
     SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_UID, BM_SETCHECK, (strSuidRights.Find(_T("s")) == -1) ? UNCHECKED : CHECKED, 0);
     SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_GID, BM_SETCHECK, (strSuidRights.Find(_T("g")) == -1) ? UNCHECKED : CHECKED, 0);
     SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_VTX, BM_SETCHECK, (strSuidRights.Find(_T("v")) == -1) ? UNCHECKED : CHECKED, 0);
+}
+
+void CPropFile::EnableUnixMode(BOOL bEnable)
+{
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_USER_READ), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_USER_WRITE), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_USER_EXECUTE), bEnable);
+
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_GROUP_READ), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_GROUP_WRITE), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_GROUP_EXECUTE), bEnable);
+
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_OTHER_READ), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_OTHER_WRITE), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_OTHER_EXECUTE), bEnable);
+
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_SUID_UID), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_SUID_GID), bEnable);
+    EnableWindow(GetDlgItem(m_hwnd, IDC_ATTR_SUID_VTX), bEnable);
 }
 
 void CPropFile::MakeUnixModeString(CString& userRights, CString& groupRights, CString& otherRights, CString& suidRights)
