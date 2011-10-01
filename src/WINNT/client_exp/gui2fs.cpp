@@ -1215,7 +1215,10 @@ LastComponent(const CString& path)
 }
 
 static CString
-GetCell(const CString & path)
+GetCell(const CString & path, BOOL bFollow = TRUE);
+
+static CString
+GetCell(const CString & path, BOOL bFollow)
 {
     char cellname[MAXCELLCHARS];
     afs_int32 code;
@@ -1518,7 +1521,7 @@ RemoveMount(CStringArray& files)
 }
 
 BOOL
-GetVolumeInfo(CString strFile, CVolInfo& volInfo)
+GetVolumeInfo(CString strFile, CVolInfo& volInfo, BOOL bFollow)
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1526,9 +1529,10 @@ GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     char *name;
     char space[AFS_PIOCTL_MAXSIZE];
     HOURGLASS hourglass;
+    CString strTarget = bFollow ? strFile : Parent(strFile);
 
-    volInfo.m_strFilePath = strFile;
-    volInfo.m_strFileName = StripPath(strFile);
+    volInfo.m_strFilePath = strTarget;
+    volInfo.m_strFileName = StripPath(strTarget);
 
     /*
 	volInfo.m_strName = "VolumeName";
@@ -1546,9 +1550,9 @@ GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     blob.in_size = 0;
     blob.out = space;
 
-    code = pioctl_T(strFile, VIOCGETVOLSTAT, &blob, 1);
+    code = pioctl_T(strTarget, VIOCGETVOLSTAT, &blob, 1);
     if (code || blob.out_size < sizeof(*status)) {
-        volInfo.m_strErrorMsg = GetAfsError(errno, strFile);
+        volInfo.m_strErrorMsg = GetAfsError(errno, strTarget);
         return FALSE;
     }
 
@@ -1563,6 +1567,25 @@ GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     volInfo.m_nPartSize = status->PartMaxBlocks;
     volInfo.m_nPartFree = status->PartBlocksAvail;
     volInfo.m_nDup = -1;
+
+    errno = 0;
+    code = pioctl_T(strTarget, VIOC_PATH_AVAILABILITY, &blob, 1);
+    switch (errno) {
+    case 0:
+        volInfo.m_strAvail =_T("Online");
+        break;
+    case ENXIO:
+        volInfo.m_strAvail = _T("Offline");
+        break;
+    case ENOSYS:
+        volInfo.m_strAvail = _T("Unreachable");
+        break;
+    case EBUSY:
+        volInfo.m_strAvail = _T("Busy");
+        break;
+    default:
+        volInfo.m_strAvail = _T("Unknown");
+    }
 
     return TRUE;
 }
@@ -1951,13 +1974,13 @@ ListSymlink(CStringArray& files)
 }
 
 CString
-GetCellName( const CString& strPath )
+GetCellName( const CString& strPath, BOOL bFollow )
 {
-    return GetCell(strPath);
+    return GetCell(bFollow ? strPath : Parent(strPath));
 }
 
 CString
-GetServer( const CString& strPath )
+GetServer( const CString& strPath, BOOL bFollow )
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1969,7 +1992,7 @@ GetServer( const CString& strPath )
     blob.out = space;
     memset(space, 0, sizeof(space));
 
-    code = pioctl_T(strPath, VIOCWHEREIS, &blob, 1);
+    code = pioctl_T(bFollow ? strPath : Parent(strPath), VIOCWHEREIS, &blob, 1);
     if (code) {
         server=GetAfsError(errno);
     } else {
@@ -1987,7 +2010,7 @@ GetServer( const CString& strPath )
 }
 
 void
-GetServers( const CString& strPath, CStringArray& servers )
+GetServers( const CString& strPath, CStringArray& servers, BOOL bFollow )
 {
     LONG code;
     struct ViceIoctl blob;
@@ -1998,7 +2021,7 @@ GetServers( const CString& strPath, CStringArray& servers )
     blob.out = space;
     memset(space, 0, sizeof(space));
 
-    code = pioctl_T(strPath, VIOCWHEREIS, &blob, 1);
+    code = pioctl_T(bFollow ? strPath : Parent(strPath), VIOCWHEREIS, &blob, 1);
     if (code) {
         servers.Add(GetAfsError(errno));
     } else {
@@ -2014,7 +2037,7 @@ GetServers( const CString& strPath, CStringArray& servers )
 }
 
 CString
-GetOwner( const CString& strPath )
+GetOwner( const CString& strPath, BOOL bFollow )
 {
     LONG code;
     struct ViceIoctl blob;
@@ -2025,13 +2048,13 @@ GetOwner( const CString& strPath )
     blob.out_size = 2 * sizeof(afs_int32);
     blob.out = (char *) &owner;
 
-    code = pioctl_T(strPath, VIOCGETOWNER, &blob, 1);
+    code = pioctl_T(bFollow ? strPath : Parent(strPath), VIOCGETOWNER, &blob, 1);
     if (code == 0 && blob.out_size == 2 * sizeof(afs_int32)) {
         char oname[PR_MAXNAMELEN] = "(unknown)";
         char confDir[257];
         CStringUtf8 cell;
 
-        cell = GetCell(strPath);
+        cell = GetCell(strPath, bFollow);
 
         /* Go to the PRDB and see if this all number username is valid */
         cm_GetConfigDir(confDir, sizeof(confDir));
@@ -2047,7 +2070,7 @@ GetOwner( const CString& strPath )
 }
 
 CString
-GetGroup( const CString& strPath )
+GetGroup( const CString& strPath, BOOL bFollow )
 {
     LONG code;
     struct ViceIoctl blob;
@@ -2058,13 +2081,13 @@ GetGroup( const CString& strPath )
     blob.out_size = 2 * sizeof(afs_int32);
     blob.out = (char *) &owner;
 
-    code = pioctl_T(strPath, VIOCGETOWNER, &blob, 1);
+    code = pioctl_T(bFollow ? strPath : Parent(strPath), VIOCGETOWNER, &blob, 1);
     if (code == 0 && blob.out_size == 2 * sizeof(afs_int32)) {
         char gname[PR_MAXNAMELEN] = "(unknown)";
         char confDir[257];
         CStringUtf8 cell;
 
-        cell = GetCell(strPath);
+        cell = GetCell(strPath, bFollow);
 
         /* Go to the PRDB and see if this all number username is valid */
         cm_GetConfigDir(confDir, sizeof(confDir));

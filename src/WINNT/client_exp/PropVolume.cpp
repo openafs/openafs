@@ -27,49 +27,58 @@ BOOL CPropVolume::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM 
             sheetpage->SetHwnd(hwnd);
             AfxSetResourceHandle(m_hInst);
 
-            CString sText;
+            BOOL bFollow = (filenames.GetCount() == 1 && m_bIsMountpoint);
 
-            CString user, group, other, suid;
-            GetUnixModeBits(filenames.GetAt(0), user, group, other, suid);
+            if(filenames.GetCount() >= 1) {
+                CString sText;
 
-            if(filenames.GetCount() > 1) {
-                // multiple items selected
-                LoadString(sText, IDS_PROP_MULTIPLEITEMS);
-                SetDlgItemText(hwnd, IDC_PROP_FILENAME, sText);
-            } else {
                 SetDlgItemText(hwnd, IDC_PROP_VOLUMENAME, filenames.GetAt(0));
-                if (!GetFID(filenames.GetAt(0), sText, TRUE))
-                    sText = _T("(unknown)");
-                SetDlgItemText(hwnd, IDC_PROP_FID, sText);
-                sText = GetCellName(filenames.GetAt(0));
+                sText = GetCellName(filenames.GetAt(0), bFollow);
                 SetDlgItemText(hwnd, IDC_PROP_CELL, sText);
-                sText = GetServer(filenames.GetAt(0));
+                sText = GetServer(filenames.GetAt(0), bFollow);
                 SetDlgItemText(hwnd, IDC_PROP_FILESERVER, sText);
-                sText = GetOwner(filenames.GetAt(0));
-                SetDlgItemText(hwnd, IDC_PROP_OWNER, sText);
-                sText = GetGroup(filenames.GetAt(0));
-                SetDlgItemText(hwnd, IDC_PROP_GROUP, sText);
 
                 TCHAR buf[100];
                 CVolInfo volInfo;
-                GetVolumeInfo(filenames.GetAt(0), volInfo);
-                SetDlgItemText(hwnd, IDC_PROP_VOLUMENAME, volInfo.m_strName);
-                sText.Format(_T("%ld bytes"), volInfo.m_nPartSize - volInfo.m_nPartFree);
-                SetDlgItemText(hwnd, IDC_USEDBYTES, sText);
-                StrFormatByteSize64(volInfo.m_nPartSize - volInfo.m_nPartFree, buf, 100);
-                SetDlgItemText(hwnd, IDC_USEDBYTES2, buf);
-                sText.Format(_T("%ld bytes"), volInfo.m_nPartFree);
-                SetDlgItemText(hwnd, IDC_FREEBYTES, sText);
-                StrFormatByteSize64(volInfo.m_nPartFree, buf, 100);
-                SetDlgItemText(hwnd, IDC_FREEBYTES2, buf);
-                sText.Format(_T("%ld bytes"), volInfo.m_nPartSize);
-                SetDlgItemText(hwnd, IDC_TOTALBYTES, sText);
-                StrFormatByteSize64(volInfo.m_nPartSize, buf, 100);
-                SetDlgItemText(hwnd, IDC_TOTALBYTES2, buf);
+
+                if (GetVolumeInfo(filenames.GetAt(0), volInfo, bFollow)) {
+                    SetDlgItemText(hwnd, IDC_PROP_VOLUMENAME, volInfo.m_strName);
+
+                    SetDlgItemText(hwnd, IDC_PROP_VOLUME_STATUS, volInfo.m_strAvail);
+
+                    sText.Format(_T("%u"), volInfo.m_nID);
+                    SetDlgItemText(hwnd, IDC_PROP_VID, sText);
+
+                    if (volInfo.m_nQuota == 0) {
+                        SetDlgItemText(hwnd, IDC_QUOTA_MAX, _T("unlimited"));
+                        SetDlgItemText(hwnd, IDC_QUOTA_PERCENT, _T("0.00%"));
+                    } else {
+                        StrFormatByteSize64(volInfo.m_nQuota*1024, buf, 100);
+                        SetDlgItemText(hwnd, IDC_QUOTA_MAX, buf);
+
+                        sText.Format(_T("%.2f%%"), ((double)volInfo.m_nUsed / (double)volInfo.m_nQuota) * 100);
+                        SetDlgItemText(hwnd, IDC_QUOTA_PERCENT, sText);
+                    }
+
+                    StrFormatByteSize64(volInfo.m_nUsed*1024, buf, 100);
+                    SetDlgItemText(hwnd, IDC_QUOTA_USED, buf);
+
+                    StrFormatByteSize64(volInfo.m_nPartSize*1024, buf, 100);
+                    SetDlgItemText(hwnd, IDC_PARTITION_SIZE, buf);
+                    StrFormatByteSize64(volInfo.m_nPartFree*1024, buf, 100);
+                    SetDlgItemText(hwnd, IDC_PARTITION_FREE, buf);
+
+                    sText.Format(_T("%.2f%%"), ((double)volInfo.m_nPartFree / (double)volInfo.m_nPartSize) * 100);
+                    SetDlgItemText(hwnd, IDC_PARTITION_PERCENT, sText);
+                }
+                else
+                {
+                    SetDlgItemText(hwnd, IDC_PROP_VOLUMENAME, volInfo.m_strErrorMsg);
+                }
 
                 // "where is" info
                 CStringArray servers;
-                GetServers(filenames.GetAt(0), servers);
+                GetServers(filenames.GetAt(0), servers, bFollow);
                 int tabstops[1] = {118};
                 SendDlgItemMessage(hwnd, IDC_SERVERS, LB_SETTABSTOPS, 1, (LPARAM)&tabstops);
                 for (int i=0;i<servers.GetCount();++i){

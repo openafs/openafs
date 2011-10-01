@@ -16,6 +16,7 @@ public:
 	CString m_strFilePath;
 	CString m_strFileName;
 	CString m_strName;
+        CString m_strAvail;
 	unsigned __int64 m_nID;
 	unsigned __int64 m_nQuota;
 	unsigned __int64 m_nNewQuota;
