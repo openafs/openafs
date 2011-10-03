@@ -2563,7 +2563,8 @@ h_FindClient_r(struct rx_connection *tcon)
      */
     oldClient = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (oldClient && oldClient != client && oldClient->sid == rxr_CidOf(tcon)
-	&& oldClient->VenusEpoch == rxr_GetEpoch(tcon)) {
+	&& oldClient->VenusEpoch == rxr_GetEpoch(tcon)
+	&& !(oldClient->host->hostFlags & HOSTDELETED)) {
 	char hoststr[16];
 	if (!oldClient->deleted) {
 	    /* if we didn't create it, it's not ours to put back */
