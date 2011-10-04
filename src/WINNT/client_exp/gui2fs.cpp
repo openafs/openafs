@@ -1027,11 +1027,7 @@ FixNetbiosPath(CString& path)
         CString nbroot;
         const char * nbname = NetbiosName();
 
-#ifdef UNICODE
-        nbroot.Format(_T("\\\\%S\\"), nbname);
-#else
         nbroot.Format(_T("\\\\%s\\"), nbname);
-#endif
 
         if (nbroot.CompareNoCase(path) == 0) {
             path.Append(_T("all\\"));
