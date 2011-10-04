@@ -2120,32 +2120,32 @@ GetUnixModeBits( const CString& strPath, CString& user, CString& group, CString&
     code = pioctl_T(strPath, VIOC_GETUNIXMODE, &blob, 1);
     if (code == 0 && blob.out_size == sizeof(afs_uint32)) {
         if (unixModeBits & S_IRUSR)
-            user + TEXT("r");
+            user += _T("r");
         if (unixModeBits & S_IWUSR)
-            user + TEXT("w");
+            user += _T("w");
         if (unixModeBits & S_IXUSR)
-            user + TEXT("x");
+            user += _T("x");
 
         if (unixModeBits & S_IRGRP)
-            group + TEXT("r");
+            group += _T("r");
         if (unixModeBits & S_IWGRP)
-            group + TEXT("w");
+            group += _T("w");
         if (unixModeBits & S_IXGRP)
-            group + TEXT("x");
+            group += _T("x");
 
         if (unixModeBits & S_IROTH)
-            other + TEXT("r");
+            other += _T("r");
         if (unixModeBits & S_IWOTH)
-            other + TEXT("w");
+            other += _T("w");
         if (unixModeBits & S_IXOTH)
-            other + TEXT("x");
+            other += _T("x");
 
         if (unixModeBits & S_ISUID)
-            suid + TEXT("s");
+            suid += _T("s");
         if (unixModeBits & S_ISGID)
-            suid + TEXT("g");
+            suid += _T("g");
         if (unixModeBits & S_ISVTX)
-            suid + TEXT("v");
+            suid += _T("v");
 
         return TRUE;
     }
