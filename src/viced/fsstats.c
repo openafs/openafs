@@ -21,7 +21,6 @@
 #include "viced.h"
 #include "fs_stats.h"
 
-#if FS_STATS_DETAILED
 
 void
 fsstats_StartOp(struct fsstats *stats, int index)
@@ -131,36 +130,3 @@ fsstats_FinishXfer(struct fsstats *stats, int code,
     }
     FS_UNLOCK;
 }
-
-#else
-
-void
-fsstats_StartOp(struct fsstats *stats, int index)
-{
-    return;
-}
-
-void
-fsstats_FinishOp(struct fsstats *stats, int code)
-{
-    return;
-}
-
-void
-fsstats_StartXfer(struct fsstats *stats)
-{
-    return;
-}
-
-void
-fsstats_FinishXfer(struct fsstats *stats, int code,
-		   afs_sfsize_t bytesToXfer, afs_sfsize_t bytesXferred,
-		   int *remainder)
-{
-    return;
-}
-
-
-
-
-#endif

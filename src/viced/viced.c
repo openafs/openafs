@@ -624,7 +624,6 @@ ClearXStatValues(void)
      * Zero all xstat-related structures.
      */
     memset((&afs_perfstats), 0, sizeof(struct afs_PerfStats));
-#if FS_STATS_DETAILED
     memset((&afs_FullPerfStats), 0,
 	   sizeof(struct fs_stats_FullPerfStats));
 
@@ -656,7 +655,6 @@ ClearXStatValues(void)
 #  endif
     afs_perfstats.sysname_ID = SYS_NAME_ID_UNDEFINED;
 # endif /* SYS_NAME_ID */
-#endif
 
 }				/*ClearXStatValues */
 
@@ -2290,9 +2288,7 @@ main(int argc, char *argv[])
     strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&t, &tm));
     ViceLog(0, ("File Server started %s\n", tbuffer));
-#if FS_STATS_DETAILED
     afs_FullPerfStats.det.epoch.tv_sec = StartTime = tp.tv_sec;
-#endif
 #ifdef AFS_PTHREAD_ENV
     while (1) {
 	sleep(1000);		/* long time */

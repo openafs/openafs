@@ -151,10 +151,8 @@ extern afs_int32 dataVersionHigh;
 
 extern int SystemId;
 static struct AFSCallStatistics AFSCallStats;
-#if FS_STATS_DETAILED
 struct fs_stats_FullPerfStats afs_FullPerfStats;
 extern int AnonymousID;
-#endif /* FS_STATS_DETAILED */
 #if OPENAFS_VOL_STATS
 static const char nullString[] = "";
 #endif /* OPENAFS_VOL_STATS */
@@ -1469,20 +1467,14 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
  */
 static void
 Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
-			 int author, int linkcount,
-#if FS_STATS_DETAILED
-			 char a_inSameNetwork
-#endif				/* FS_STATS_DETAILED */
-    )
+			 int author, int linkcount, char a_inSameNetwork)
 {
     afs_fsize_t newlength;	/* Holds new directory length */
     afs_fsize_t parentLength;
     Error errorCode;
-#if FS_STATS_DETAILED
     Date currDate;		/*Current date */
     int writeIdx;		/*Write index to bump */
     int timeIdx;		/*Authorship time index to bump */
-#endif /* FS_STATS_DETAILED */
 
     parentptr->disk.dataVersion++;
     newlength = (afs_fsize_t) afs_dir_Length(dir);
@@ -1500,7 +1492,6 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
     }
     VN_SET_LEN(parentptr, newlength);
 
-#if FS_STATS_DETAILED
     /*
      * Update directory write stats for this volume.  Note that the auth
      * counter is located immediately after its associated ``distance''
@@ -1532,7 +1523,6 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
     } else {
 	V_stat_dirDiffAuthor(volptr, timeIdx)++;
     }
-#endif /* FS_STATS_DETAILED */
 
     parentptr->disk.author = author;
     parentptr->disk.linkCount = linkcount;
@@ -1555,11 +1545,9 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 			 Vnode * parentptr, Volume * volptr,
 			 afs_fsize_t length)
 {
-#if FS_STATS_DETAILED
     Date currDate;		/*Current date */
     int writeIdx;		/*Write index to bump */
     int timeIdx;		/*Authorship time index to bump */
-#endif /* FS_STATS_DETAILED */
 
     if (Caller & (TVS_CFILE | TVS_SLINK | TVS_MKDIR)) {	/* initialize new file */
 	targetptr->disk.parent = parentptr->vnodeNumber;
@@ -1571,7 +1559,6 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 	targetptr->disk.linkCount = (Caller & TVS_MKDIR ? 2 : 1);
 	/* the inode was created in Alloc_NewVnode() */
     }
-#if FS_STATS_DETAILED
     /*
      * Update file write stats for this volume.  Note that the auth
      * counter is located immediately after its associated ``distance''
@@ -1612,7 +1599,6 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 	    V_stat_fileDiffAuthor(volptr, timeIdx)++;
 	}
     }
-#endif /* FS_STATS_DETAILED */
 
     if (!(Caller & TVS_SSTATUS))
 	targetptr->disk.author = client->ViceId;
@@ -1947,7 +1933,7 @@ RXUpdate_VolumeStatus(Volume * volptr, AFSStoreVolumeStatus * StoreVolStatus,
     if (strlen(Motd) > 0) {
 	strcpy(V_motd(volptr), Motd);
     }
-#endif /* FS_STATS_DETAILED */
+#endif
     VUpdateVolume(&errorCode, volptr);
     return (errorCode);
 
@@ -2174,10 +2160,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     struct fsstats fsstats;
     afs_sfsize_t bytesToXfer;  /* # bytes to xfer */
     afs_sfsize_t bytesXferred; /* # bytes actually xferred */
-
-#if FS_STATS_DETAILED
     int readIdx;		/* Index of read stats array to bump */
-#endif /* FS_STATS_DETAILED */
 
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_FETCHDATA);
 
@@ -2214,7 +2197,6 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
 
     SetVolumeSync(Sync, volptr);
 
-#if FS_STATS_DETAILED
     /*
      * Remember that another read operation was performed.
      */
@@ -2228,7 +2210,6 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
 	V_stat_reads(volptr, readIdx + 1)++;
     }
     FS_UNLOCK;
-#endif /* FS_STATS_DETAILED */
     /* Check whether the caller has permission access to fetch the data */
     if ((errorCode =
 	 Check_PermissionRights(targetptr, client, rights, CHK_FETCHDATA, 0)))
@@ -3197,14 +3178,9 @@ SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     }
 
     /* Update the vnode status of the parent dir */
-#if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount,
 			     client->InSameNetwork);
-#else
-    Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount);
-#endif /* FS_STATS_DETAILED */
 
     /* Return the updated parent dir's status back to caller */
     GetStatus(parentptr, OutDirStatus, rights, anyrights, 0);
@@ -3340,14 +3316,9 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     }
 
     /* update the status of the parent vnode */
-#if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount,
 			     client->InSameNetwork);
-#else
-    Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount);
-#endif /* FS_STATS_DETAILED */
 
     /* update the status of the new file's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_CFILE, client, InStatus,
@@ -3785,17 +3756,10 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     osi_Assert(afs_dir_Delete(&olddir, OldName) == 0);
 
     /* if the directory length changes, reflect it in the statistics */
-#if FS_STATS_DETAILED
     Update_ParentVnodeStatus(oldvptr, volptr, &olddir, client->ViceId,
 			     oldvptr->disk.linkCount, client->InSameNetwork);
     Update_ParentVnodeStatus(newvptr, volptr, &newdir, client->ViceId,
 			     newvptr->disk.linkCount, client->InSameNetwork);
-#else
-    Update_ParentVnodeStatus(oldvptr, volptr, &olddir, client->ViceId,
-			     oldvptr->disk.linkCount);
-    Update_ParentVnodeStatus(newvptr, volptr, &newdir, client->ViceId,
-			     newvptr->disk.linkCount);
-#endif /* FS_STATS_DETAILED */
 
     if (oldvptr == newvptr)
 	oldvptr->disk.dataVersion--;	/* Since it was bumped by 2! */
@@ -4016,14 +3980,9 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     }
 
     /* update the status of the parent vnode */
-#if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount,
 			     client->InSameNetwork);
-#else
-    Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount);
-#endif /* FS_STATS_DETAILED */
 
     /* update the status of the new symbolic link file vnode */
     Update_TargetVnodeStatus(targetptr, TVS_SLINK, client, InStatus,
@@ -4212,14 +4171,9 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* update the status in the parent vnode */
     /**WARNING** --> disk.author SHOULDN'T be modified???? */
-#if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount,
 			     client->InSameNetwork);
-#else
-    Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount);
-#endif /* FS_STATS_DETAILED */
 
     targetptr->disk.linkCount++;
     targetptr->disk.author = client->ViceId;
@@ -4373,14 +4327,9 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     }
 
     /* Update the status for the parent dir */
-#if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &parentdir, client->ViceId,
 			     parentptr->disk.linkCount + 1,
 			     client->InSameNetwork);
-#else
-    Update_ParentVnodeStatus(parentptr, volptr, &parentdir, client->ViceId,
-			     parentptr->disk.linkCount + 1);
-#endif /* FS_STATS_DETAILED */
 
     /* Point to target's ACL buffer and copy the parent's ACL contents to it */
     osi_Assert((SetAccessList
@@ -4523,14 +4472,9 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     }
 
     /* Update the status for the parent dir; link count is also adjusted */
-#if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount - 1,
 			     client->InSameNetwork);
-#else
-    Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount - 1);
-#endif /* FS_STATS_DETAILED */
 
     /* Return to the caller the updated parent dir status */
     GetStatus(parentptr, OutDirStatus, rights, anyrights, NULL);
@@ -5391,7 +5335,6 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 */
 
 	afs_perfstats.numPerfCalls++;
-#if FS_STATS_DETAILED
 	afs_FullPerfStats.overall.numPerfCalls = afs_perfstats.numPerfCalls;
 	FillPerfValues(&afs_FullPerfStats.overall);
 
@@ -5404,7 +5347,6 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	memcpy(dataBuffP, &afs_FullPerfStats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes >> 2;
 	a_dataP->AFS_CollData_val = dataBuffP;
-#endif
 	break;
 
     case AFS_XSTATSCOLL_CBSTATS:

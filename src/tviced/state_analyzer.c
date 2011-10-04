@@ -1248,11 +1248,7 @@ dump_he_entry(void)
     DPFV1("hcpsfailed", "u", he_cursor.he.hcpsfailed);
     DPFV1("hcps_valid", "u", he_cursor.he.hcps_valid);
     if (hdrs.hdr.stats_detailed) {
-#ifdef FS_STATS_DETAILED
 	DPFV1("InSameNetwork", "u", he_cursor.he.InSameNetwork);
-#else
-	DPFV1("InSameNetwork", "u", he_cursor.he.padding1[0]);
-#endif
     }
     DPFV1("hcps_len", "u", he_cursor.he.hcps_len);
     DPFT1("LastCall", he_cursor.he.LastCall);

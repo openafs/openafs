@@ -21,10 +21,6 @@
 
 #include <afs/param.h>		/*System configuration info */
 
-/*
- * Decide if we're keeping detailed File Server stats.
- */
-#define FS_STATS_DETAILED 1
 
 /*
  * Performance numbers.
@@ -136,7 +132,6 @@ struct afs_PerfStats {
     afs_int32 spare[28];
 };
 
-#if FS_STATS_DETAILED
 /*
  * Assign each of the File Server's RPC interface routines an index.
  */
@@ -321,7 +316,6 @@ struct fs_stats_FullPerfStats {
  * AFS_XSTATSCOLL_FULL_PERF_INFO collection to the xstat package.
  */
 extern struct fs_stats_FullPerfStats afs_FullPerfStats;
-#endif /* FS_STATS_DETAILED */
 
 
 /*

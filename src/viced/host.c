@@ -492,7 +492,6 @@ h_NBLock_r(struct host *host)
 }
 
 
-#if FS_STATS_DETAILED
 /*------------------------------------------------------------------------
  * PRIVATE h_AddrInSameNetwork
  *
@@ -568,7 +567,6 @@ h_AddrInSameNetwork(afs_uint32 a_targetAddr, afs_uint32 a_candAddr)
 	return (0);
 
 }				/*h_AddrInSameNetwork */
-#endif /* FS_STATS_DETAILED */
 
 
 /* Assumptions: called with held host */
@@ -680,9 +678,7 @@ h_Alloc_r(struct rx_connection *r_con)
 {
     struct servent *serverentry;
     struct host *host;
-#if FS_STATS_DETAILED
     afs_uint32 newHostAddr_HBO;	/*New host IP addr, in host byte order */
-#endif /* FS_STATS_DETAILED */
 
     host = GetHT();
     if (!host)
@@ -722,7 +718,6 @@ h_Alloc_r(struct rx_connection *r_con)
     h_Hold_r(host);
     h_Lock_r(host);
     h_InsertList_r(host);	/* update global host List */
-#if FS_STATS_DETAILED
     /*
      * Compare the new host's IP address (in host byte order) with ours
      * (the File Server's), remembering if they are in the same network.
@@ -730,7 +725,6 @@ h_Alloc_r(struct rx_connection *r_con)
     newHostAddr_HBO = (afs_uint32) ntohl(host->host);
     host->InSameNetwork =
 	h_AddrInSameNetwork(FS_HostAddr_HBO, newHostAddr_HBO);
-#endif /* FS_STATS_DETAILED */
     return host;
 
 }				/*h_Alloc_r */
@@ -2473,9 +2467,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	    ObtainWriteLock(&client->lock);
 	    client->refCount = 1;
 	    client->host = host;
-#if FS_STATS_DETAILED
 	    client->InSameNetwork = host->InSameNetwork;
-#endif /* FS_STATS_DETAILED */
 	    client->ViceId = viceid;
 	    client->expTime = expTime;	/* rx only */
 	    client->authClass = authClass;	/* rx only */
@@ -3480,9 +3472,7 @@ h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out)
     out->ActiveCall = in->ActiveCall;
     out->cpsCall = in->cpsCall;
     out->cblist = in->cblist;
-#ifdef FS_STATS_DETAILED
     out->InSameNetwork = in->InSameNetwork;
-#endif
 
     /* special fields we save, but are not memcpy'd back on restore */
     out->index = in->index;
@@ -3503,9 +3493,7 @@ h_diskEntryToHost_r(struct hostDiskEntry * in, struct host * out)
     out->ActiveCall = in->ActiveCall;
     out->cpsCall = in->cpsCall;
     out->cblist = in->cblist;
-#ifdef FS_STATS_DETAILED
     out->InSameNetwork = in->InSameNetwork;
-#endif
 }
 
 /* index translation routines */

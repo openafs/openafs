@@ -67,11 +67,9 @@ struct host {
     afs_uint16 port;		/* port address of host */
     char Console;		/* XXXX This host is a console */
     unsigned short hostFlags;		/*  bit map */
-#if FS_STATS_DETAILED
     char InSameNetwork;		/*Is host's addr in the same network as
 				 * the File Server's? */
     char dummy[3];		/* for padding */
-#endif				/* FS_STATS_DETAILED */
     char hcpsfailed;		/* Retry the cps call next time */
     prlist hcps;		/* cps for hostip acls */
     afs_uint32 LastCall;	/* time of last call from host */
@@ -127,12 +125,8 @@ struct client {
 				 * structure */
     char authClass;		/* auth type, RX-only */
     char prfail;		/* True if prserver couldn't be contacted */
-#if FS_STATS_DETAILED
     char InSameNetwork;		/* Is client's IP address in the same
 				 * network as ours? */
-#else				/* FS_STATS_DETAILED */
-    char dummy;			/* For padding */
-#endif				/* FS_STATS_DETAILED */
     struct Lock lock;		/* lock to ensure CPS valid if entry
 				 * on host's clients list. */
 };

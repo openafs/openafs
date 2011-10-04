@@ -934,11 +934,7 @@ fs_stateFillHeader(struct fs_state_header * hdr)
 #else
     hdr->endianness = 0;
 #endif
-#ifdef FS_STATS_DETAILED
     hdr->stats_detailed = 1;
-#else
-    hdr->stats_detailed = 0;
-#endif
     if (strlcpy(hdr->server_version_string, cml_version_number, sizeof(hdr->server_version_string))
 	>= sizeof(hdr->server_version_string)) {
 	ViceLog(0, ("fs_stateFillHeader: WARNING -- cml_version_number field truncated\n"));
@@ -976,17 +972,10 @@ fs_stateCheckHeader(struct fs_state_header * hdr)
 	ret = 1;
     }
 
-#ifdef FS_STATS_DETAILED
     else if (!hdr->stats_detailed) {
 	ViceLog(0, ("fs_stateCheckHeader: wrong config flags\n"));
 	ret = 1;
     }
-#else /* FS_STATS_DETAILED */
-    else if (hdr->stats_detailed) {
-	ViceLog(0, ("fs_stateCheckHeader: wrong config flags\n"));
-	ret = 1;
-    }
-#endif /* FS_STATS_DETAILED */
 
     else if (!afs_uuid_equal(&hdr->server_uuid, &FS_HostUUID)) {
 	ViceLog(0, ("fs_stateCheckHeader: server UUID does not match this server's UUID\n"));

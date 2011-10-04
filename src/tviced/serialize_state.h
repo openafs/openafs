@@ -102,12 +102,8 @@ struct hostDiskEntry {
     byte Console;		/* XXXX This host is a console */
     byte hcpsfailed;	        /* Retry the cps call next time */
     byte hcps_valid;            /* prlist_val not null */
-#if FS_STATS_DETAILED
     byte InSameNetwork;	        /*Is host's addr in the same network as
 				 * the File Server's? */
-#else
-    byte padding1[1];	        /* for padding */
-#endif				/* FS_STATS_DETAILED */
     afs_uint32 hcps_len;        /* length of hcps */
     afs_uint32 LastCall;	/* time of last call from host */
     afs_uint32 ActiveCall;	/* time of any call but gettime */
