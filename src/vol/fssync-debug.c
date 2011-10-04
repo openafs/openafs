@@ -856,11 +856,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
 	printf("\texpirationDate   = %u\n", v.expirationDate);
 	printf("\tbackupDate       = %u\n", v.backupDate);
 	printf("\tcopyDate         = %u\n", v.copyDate);
-#ifdef OPENAFS_VOL_STATS
 	printf("\tstat_initialized = %d\n", v.stat_initialized);
-#else
-        printf("\tmtd              = '%s'\n", v.motd);
-#endif
 	printf("}\n");
     }
 

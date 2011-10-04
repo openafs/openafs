@@ -293,12 +293,7 @@ typedef struct VolumePackageOptions {
 #define ACLVERSION		1
 #define LINKTABLEVERSION	1
 
-/*
- * Define whether we are keeping detailed statistics on volume dealings.
- */
-#define OPENAFS_VOL_STATS	1
 
-#if OPENAFS_VOL_STATS
 /*
  * Define various indices and counts used in keeping volume-level statistics.
  */
@@ -327,7 +322,6 @@ typedef struct VolumePackageOptions {
 #define VOL_STATS_TIME_IDX_3	3	/*1 hr to 24 hrs */
 #define VOL_STATS_TIME_IDX_4	4	/*1 day to 7 days */
 #define VOL_STATS_TIME_IDX_5	5	/*Greater than 1 week */
-#endif /* OPENAFS_VOL_STATS */
 
 /* Volume header.  This is the contents of the named file representing
  * the volume.  Read-only by the file server!
@@ -465,17 +459,12 @@ typedef struct VolumeDiskData {
      * set when the copy is created */
     Date copyDate;
 
-#if OPENAFS_VOL_STATS
     bit32 stat_initialized;	/*Are the stat fields below set up? */
     bit32 reserved4[7];
-#else
-    bit32 reserved4[8];
-#endif				/* OPENAFS_VOL_STATS */
 
     /* messages */
 #define VMSGSIZE 128
     char offlineMessage[VMSGSIZE];	/* Why the volume is offline */
-#if OPENAFS_VOL_STATS
 #define VOL_STATS_BYTES 128
     /*
      * Keep per-volume aggregate statistics on type and distance of access,
@@ -487,9 +476,6 @@ typedef struct VolumeDiskData {
     bit32 stat_fileDiffAuthor[VOL_STATS_NUM_TIME_FIELDS];
     bit32 stat_dirSameAuthor[VOL_STATS_NUM_TIME_FIELDS];
     bit32 stat_dirDiffAuthor[VOL_STATS_NUM_TIME_FIELDS];
-#else
-    char motd[VMSGSIZE];	/* Volume "message of the day" */
-#endif				/* OPENAFS_VOL_STATS */
 
 } VolumeDiskData;
 
@@ -782,7 +768,6 @@ struct volHeader {
 #define V_offlineMessage(vp)	((vp)->header->diskstuff.offlineMessage)
 #define V_disk(vp)		((vp)->header->diskstuff)
 #define V_motd(vp)		((vp)->header->diskstuff.motd)
-#if OPENAFS_VOL_STATS
 #define V_stat_initialized(vp)	((vp)->header->diskstuff.stat_initialized)
 #define V_stat_area(vp)		(((vp)->header->diskstuff.stat_reads))
 #define V_stat_reads(vp, idx)	(((vp)->header->diskstuff.stat_reads)[idx])
@@ -791,7 +776,6 @@ struct volHeader {
 #define V_stat_fileDiffAuthor(vp, idx) (((vp)->header->diskstuff.stat_fileDiffAuthor)[idx])
 #define V_stat_dirSameAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirSameAuthor)[idx])
 #define V_stat_dirDiffAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirDiffAuthor)[idx])
-#endif /* OPENAFS_VOL_STATS */
 #define V_volUpCounter(vp)		((vp)->header->diskstuff.volUpdateCounter)
 
 /* File offset computations.  The offset values in the volume header are

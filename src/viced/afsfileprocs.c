@@ -157,9 +157,7 @@ extern int SystemId;
 static struct AFSCallStatistics AFSCallStats;
 struct fs_stats_FullPerfStats afs_FullPerfStats;
 extern int AnonymousID;
-#if OPENAFS_VOL_STATS
 static const char nullString[] = "";
-#endif /* OPENAFS_VOL_STATS */
 
 struct afs_FSStats {
     afs_int32 NothingYet;
@@ -1976,16 +1974,10 @@ RXUpdate_VolumeStatus(Volume * volptr, AFSStoreVolumeStatus * StoreVolStatus,
     if (strlen(Name) > 0) {
 	strcpy(V_name(volptr), Name);
     }
-#if OPENAFS_VOL_STATS
     /*
      * We don't overwrite the motd field, since it's now being used
      * for stats
      */
-#else
-    if (strlen(Motd) > 0) {
-	strcpy(V_motd(volptr), Motd);
-    }
-#endif
     VUpdateVolume(&errorCode, volptr);
     return (errorCode);
 
@@ -2027,20 +2019,11 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
 	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
     strcpy(*offMsg, V_offlineMessage(volptr));
-#if OPENAFS_VOL_STATS
     *motd = malloc(1);
     if (!*motd) {
 	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
     strcpy(*motd, nullString);
-#else
-    temp = strlen(V_motd(volptr)) + 1;
-    *motd = malloc(temp);
-    if (!*motd) {
-	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
-    }
-    strcpy(*motd, V_motd(volptr));
-#endif /* OPENAFS_VOL_STATS */
     return 0;
 }				/*RXGetVolumeStatus */
 

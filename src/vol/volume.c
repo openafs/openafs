@@ -3202,7 +3202,6 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     if (!*ec) {
 	struct IndexFileHeader iHead;
 
-#if OPENAFS_VOL_STATS
 	/*
 	 * We just read in the diskstuff part of the header.  If the detailed
 	 * volume stats area has not yet been initialized, we should bzero the
@@ -3212,7 +3211,6 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    memset((V_stat_area(vp)), 0, VOL_STATS_BYTES);
 	    V_stat_initialized(vp) = 1;
 	}
-#endif /* OPENAFS_VOL_STATS */
 
 	(void)ReadHeader(ec, vp->vnodeIndex[vSmall].handle,
 			 (char *)&iHead, sizeof(iHead),
@@ -6640,11 +6638,7 @@ VolumeExternalName_r(VolumeId volumeId, char * name, size_t len)
 /* Volume Usage Statistics routines                */
 /***************************************************/
 
-#if OPENAFS_VOL_STATS
 #define OneDay	(86400)		/* 24 hours' worth of seconds */
-#else
-#define OneDay	(24*60*60)	/* 24 hours */
-#endif /* OPENAFS_VOL_STATS */
 
 static time_t
 Midnight(time_t t) {
@@ -6715,14 +6709,12 @@ VAdjustVolumeStatistics_r(Volume * vp)
 	V_dayUse(vp) = 0;
 	V_dayUseDate(vp) = Midnight(now);
 
-#if OPENAFS_VOL_STATS
 	/*
 	 * All we need to do is bzero the entire VOL_STATS_BYTES of
 	 * the detailed volume statistics area.
 	 */
 	memset((V_stat_area(vp)), 0, VOL_STATS_BYTES);
-#endif /* OPENAFS_VOL_STATS */
-    }
+	}
 
     /*It's been more than a day of collection */
     /*
