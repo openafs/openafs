@@ -247,6 +247,15 @@ copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
 	return EIO;
     }
     outfdP = IH_OPEN(outh);
+    /*
+     * In case that a file with the same (NAMEI) name existed before and is still
+     * open outfdP may point to the wrong (unlinked) file. To make sure we write
+     * into the correct file it's safer to 1st FDH_REALLYCLOSE it and then to
+     * re-open it.
+     */
+    if (outfdP)
+	FDH_REALLYCLOSE(outfdP);
+    outfdP = IH_OPEN(outh);
     if (!outfdP) {
 	sprintf(m->line, "Couldn't open output directory %u.%u.%u\n",
 		    outfdP->fd_ih->ih_vid,
@@ -496,7 +505,7 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     afs_int32 code;
     Inode ino, newino;
     DirHandle dir;
-    IHandle_t *h;
+    IHandle_t *h, *hp;
     struct VnodeDiskObject vnode;
     FdHandle_t *fdP, *fdP2;
     afs_uint64 size;
@@ -604,6 +613,13 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     }
     code = afs_dir_Create(&dir, name, &fid);
     FidZap(&dir);
+
+    /* Make sure the directory file doesn't remain open */
+    IH_INIT(hp, V_device(vol), V_parentId(vol), ino);
+    fdP = IH_OPEN(hp);
+    if (fdP)
+	FDH_REALLYCLOSE(fdP);
+    IH_RELEASE(hp);
 
     class = vLarge;
     vcp = &VnodeClassInfo[class];
