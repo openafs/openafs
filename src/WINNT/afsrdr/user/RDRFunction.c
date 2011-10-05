@@ -1645,6 +1645,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     BOOL                bScpLocked = FALSE;
     BOOL                bDscpLocked = FALSE;
     BOOL                bFlushFile = FALSE;
+    cm_key_t            key;
 
     RDR_InitReq(&req);
     if ( bWow64 )
@@ -1806,8 +1807,6 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     }
 
     if (bUnlockFile || bDeleteFile) {
-        cm_key_t    key;
-
         if (!bScpLocked) {
             lock_ObtainWrite(&scp->rw);
             bScpLocked = TRUE;
@@ -1820,9 +1819,9 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
             goto on_error;
         }
 
-        /* the scp is now locked and current */
         key = cm_GenerateKey(CM_SESSION_IFS, CleanupCB->ProcessId, 0);
 
+        /* the scp is now locked and current */
         code = cm_UnlockByKey(scp, key,
                               bDeleteFile ? CM_UNLOCK_FLAG_BY_FID : 0,
                               userp, &req);
@@ -1887,6 +1886,44 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
         code = cm_SetAttr(scp, &setAttr, userp, &req);
     } else
         code = 0;
+
+    /* Now drop the lock enforcing the share access */
+    if ( CleanupCB->FileAccess != AFS_FILE_ACCESS_NOLOCK) {
+        unsigned int sLockType;
+        LARGE_INTEGER LOffset, LLength;
+
+        if (CleanupCB->FileAccess == AFS_FILE_ACCESS_SHARED)
+            sLockType = LOCKING_ANDX_SHARED_LOCK;
+        else
+            sLockType = 0;
+
+        key = cm_GenerateKey(CM_SESSION_IFS, SMB_FID_QLOCK_PID, CleanupCB->Identifier);
+
+        LOffset.HighPart = SMB_FID_QLOCK_HIGH;
+        LOffset.LowPart = SMB_FID_QLOCK_LOW;
+        LLength.HighPart = 0;
+        LLength.LowPart = SMB_FID_QLOCK_LENGTH;
+
+        if (!bScpLocked) {
+            lock_ObtainWrite(&scp->rw);
+            bScpLocked = TRUE;
+        }
+
+        code = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_LOCK);
+        if (code == 0)
+        {
+            code = cm_Unlock(scp, sLockType, LOffset, LLength, key, 0, userp, &req);
+
+            cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+
+            if (code == CM_ERROR_RANGE_NOT_LOCKED)
+            {
+                osi_Log3(afsd_logp, "RDR_CleanupFileEntry Range Not Locked -- FileAccess 0x%x ProcessId 0x%x HandleId 0x%x",
+                         CleanupCB->FileAccess, CleanupCB->ProcessId, CleanupCB->Identifier);
+
+            }
+        }
+    }
 
   on_error:
     if (bDscpLocked)
@@ -2600,9 +2637,13 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
         osi_Log1(afsd_logp, "RDR_OpenFileEntry LOCAL_SYSTEM access check skipped scp=0x%p",
                  scp);
         pResultCB->GrantedAccess = OpenCB->DesiredAccess;
+        pResultCB->FileAccess = AFS_FILE_ACCESS_NOLOCK;
         code = 0;
-    } else {
+    }
+    else
+    {
         int count = 0;
+
         do {
             if (count++ > 0) {
                 Sleep(350);
@@ -2610,15 +2651,64 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
                          "RDR_OpenFileEntry repeating open check scp=0x%p userp=0x%p code=0x%x",
                          scp, userp, code);
             }
-            code = cm_CheckNTOpen(scp, OpenCB->DesiredAccess, OPEN_ALWAYS, userp, &req, &ldp);
+            code = cm_CheckNTOpen(scp, OpenCB->DesiredAccess, OpenCB->ShareAccess,
+                                  OPEN_ALWAYS,
+                                  OpenCB->ProcessId, OpenCB->Identifier,
+                                  userp, &req, &ldp);
             if (code == 0)
                 code = RDR_CheckAccess(scp, userp, &req, OpenCB->DesiredAccess, &pResultCB->GrantedAccess);
             cm_CheckNTOpenDone(scp, userp, &req, &ldp);
         } while (count < 100 && (code == CM_ERROR_RETRY || code == CM_ERROR_WOULDBLOCK));
     }
 
+    /*
+     * If we are restricting sharing, we should do so with a suitable
+     * share lock.
+     */
+    if (code == 0 && scp->fileType == CM_SCACHETYPE_FILE && !(OpenCB->ShareAccess & FILE_SHARE_WRITE)) {
+        cm_key_t key;
+        LARGE_INTEGER LOffset, LLength;
+        int sLockType;
+
+        LOffset.HighPart = SMB_FID_QLOCK_HIGH;
+        LOffset.LowPart = SMB_FID_QLOCK_LOW;
+        LLength.HighPart = 0;
+        LLength.LowPart = SMB_FID_QLOCK_LENGTH;
+
+        /*
+         * If we are not opening the file for writing, then we don't
+         * try to get an exclusive lock.  No one else should be able to
+         * get an exclusive lock on the file anyway, although someone
+         * else can get a shared lock.
+         */
+        if ((OpenCB->ShareAccess & FILE_SHARE_READ) || !(OpenCB->DesiredAccess & AFS_ACCESS_WRITE))
+        {
+            sLockType = LOCKING_ANDX_SHARED_LOCK;
+        } else {
+            sLockType = 0;
+        }
+
+        key = cm_GenerateKey(CM_SESSION_IFS, SMB_FID_QLOCK_PID, OpenCB->Identifier);
+
+        lock_ObtainWrite(&scp->rw);
+        code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, &req, NULL);
+        lock_ReleaseWrite(&scp->rw);
+
+        if (code) {
+            code = CM_ERROR_SHARING_VIOLATION;
+            pResultCB->FileAccess = AFS_FILE_ACCESS_NOLOCK;
+        } else {
+            if (sLockType == LOCKING_ANDX_SHARED_LOCK)
+                pResultCB->FileAccess = AFS_FILE_ACCESS_SHARED;
+            else
+                pResultCB->FileAccess = AFS_FILE_ACCESS_EXCLUSIVE;
+        }
+    } else {
+        pResultCB->FileAccess = AFS_FILE_ACCESS_NOLOCK;
+    }
+
     cm_ReleaseUser(sysUserp);
-    if (bHoldFid)
+    if (code == 0 && bHoldFid)
         RDR_FlagScpInUse( scp, FALSE );
     cm_ReleaseSCache(scp);
 
@@ -2633,6 +2723,91 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
         osi_Log0(afsd_logp, "RDR_OpenFileEntry SUCCESS");
     }
     return;
+}
+
+void
+RDR_ReleaseFileAccess( IN cm_user_t *userp,
+                       IN AFSFileID FileId,
+                       IN AFSFileAccessReleaseCB *ReleaseFileCB,
+                       IN BOOL bWow64,
+                       IN DWORD ResultBufferLength,
+                       IN OUT AFSCommResult **ResultCB)
+{
+    cm_key_t key;
+    unsigned int sLockType;
+    LARGE_INTEGER LOffset, LLength;
+    cm_scache_t *scp = NULL;
+    cm_fid_t    Fid;
+    afs_uint32  code;
+    cm_req_t    req;
+    DWORD       status;
+
+    RDR_InitReq(&req);
+    if ( bWow64 )
+        req.flags |= CM_REQ_WOW64;
+
+    osi_Log4(afsd_logp, "RDR_ReleaseFileAccess File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              FileId.Cell, FileId.Volume,
+              FileId.Vnode, FileId.Unique);
+
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
+    if (!(*ResultCB)) {
+        osi_Log0(afsd_logp, "RDR_ReleaseFileAccess out of memory");
+	return;
+    }
+
+    memset( *ResultCB, '\0', sizeof( AFSCommResult));
+
+    if (ReleaseFileCB->FileAccess == AFS_FILE_ACCESS_NOLOCK)
+        return;
+
+    /* Process the release */
+    Fid.cell = FileId.Cell;
+    Fid.volume = FileId.Volume;
+    Fid.vnode = FileId.Vnode;
+    Fid.unique = FileId.Unique;
+    Fid.hash = FileId.Hash;
+
+    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    if (code) {
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        osi_Log2(afsd_logp, "RDR_ReleaseFileAccess cm_GetSCache FID failure code=0x%x status=0x%x",
+                  code, status);
+        return;
+    }
+
+    if (ReleaseFileCB->FileAccess == AFS_FILE_ACCESS_SHARED)
+        sLockType = LOCKING_ANDX_SHARED_LOCK;
+    else
+        sLockType = 0;
+
+    key = cm_GenerateKey(CM_SESSION_IFS, SMB_FID_QLOCK_PID, ReleaseFileCB->Identifier);
+
+    LOffset.HighPart = SMB_FID_QLOCK_HIGH;
+    LOffset.LowPart = SMB_FID_QLOCK_LOW;
+    LLength.HighPart = 0;
+    LLength.LowPart = SMB_FID_QLOCK_LENGTH;
+
+    lock_ObtainWrite(&scp->rw);
+
+    code = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_LOCK);
+    if (code == 0)
+    {
+        code = cm_Unlock(scp, sLockType, LOffset, LLength, key, 0, userp, &req);
+
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
+
+        if (code == CM_ERROR_RANGE_NOT_LOCKED)
+        {
+            osi_Log3(afsd_logp, "RDR_ReleaseFileAccess Range Not Locked -- FileAccess 0x%x ProcessId 0x%x HandleId 0x%x",
+                     ReleaseFileCB->FileAccess, ReleaseFileCB->ProcessId, ReleaseFileCB->Identifier);
+        }
+    }
+
+    lock_ReleaseWrite(&scp->rw);
+
+    osi_Log0(afsd_logp, "RDR_ReleaseFileAccessEntry SUCCESS");
 }
 
 static const char *

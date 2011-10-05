@@ -800,6 +800,29 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             break;
         }
 
+        case AFS_REQUEST_TYPE_RELEASE_FILE_ACCESS:
+        {
+            AFSFileAccessReleaseCB *pFileAccessReleaseCB = (AFSFileAccessReleaseCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FILE_ACCESS Index %08lX File %08lX.%08lX.%08lX.%08lX",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
+
+            RDR_ReleaseFileAccess( userp,
+                                   RequestBuffer->FileId,
+                                   pFileAccessReleaseCB,
+                                   bWow64,
+                                   RequestBuffer->ResultBufferLength,
+                                   &pResultCB);
+
+            break;
+        }
+
         case AFS_REQUEST_TYPE_PIOCTL_OPEN:
         {
             AFSPIOCtlOpenCloseRequestCB *pPioctlCB = (AFSPIOCtlOpenCloseRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);

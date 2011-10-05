@@ -178,15 +178,29 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 }
 
 /* return success if we can open this file in this mode */
-long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
-                    unsigned int createDisp, cm_user_t *userp, cm_req_t *reqp,
+long cm_CheckNTOpen(cm_scache_t *scp,
+                    unsigned int desiredAccess,
+                    unsigned int shareAccess,
+                    unsigned int createDisp,
+                    afs_offs_t process_id,
+                    afs_offs_t handle_id,
+                    cm_user_t *userp, cm_req_t *reqp,
 		    cm_lock_data_t **ldpp)
 {
     long rights;
     long code = 0;
+    afs_uint16 session_id;
 
     osi_assertx(ldpp != NULL, "null cm_lock_data_t");
     *ldpp = NULL;
+
+    /* compute the session id */
+    if (reqp->flags & CM_REQ_SOURCE_SMB)
+        session_id = CM_SESSION_SMB;
+    else if (reqp->flags & CM_REQ_SOURCE_REDIR)
+        session_id = CM_SESSION_IFS;
+    else
+        session_id = CM_SESSION_CMINT;
 
     /* Ignore the SYNCHRONIZE privilege */
     desiredAccess &= ~SYNCHRONIZE;
@@ -231,8 +245,9 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
         code = CM_ERROR_NOACCESS;
 
     if (code == 0 &&
-             ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
-             scp->fileType == CM_SCACHETYPE_FILE) {
+        !(shareAccess & FILE_SHARE_WRITE) &&
+        ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
+        scp->fileType == CM_SCACHETYPE_FILE) {
         cm_key_t key;
         unsigned int sLockType;
         LARGE_INTEGER LOffset, LLength;
@@ -240,11 +255,12 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
         /* Check if there's some sort of lock on the file at the
            moment. */
 
-        key = cm_GenerateKey(CM_SESSION_CMINT,0,0);
         if (rights & PRSFS_WRITE)
             sLockType = 0;
         else
             sLockType = LOCKING_ANDX_SHARED_LOCK;
+
+        key = cm_GenerateKey(session_id, process_id, 0);
 
         /* single byte lock at offset 0x0100 0000 0000 0000 */
         LOffset.HighPart = CM_FLSHARE_OFFSET_HIGH;
@@ -255,29 +271,30 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp, NULL);
 
         if (code == 0) {
-	    (*ldpp) = (cm_lock_data_t *)malloc(sizeof(cm_lock_data_t));
-	    if (!*ldpp) {
-		code = ENOMEM;
-		goto _done;
-	    }
+            (*ldpp) = (cm_lock_data_t *)malloc(sizeof(cm_lock_data_t));
+            if (!*ldpp) {
+                code = ENOMEM;
+                goto _done;
+            }
 
-	    (*ldpp)->key = key;
-	    (*ldpp)->sLockType = sLockType;
-	    (*ldpp)->LOffset.HighPart = LOffset.HighPart;
-	    (*ldpp)->LOffset.LowPart = LOffset.LowPart;
-	    (*ldpp)->LLength.HighPart = LLength.HighPart;
-	    (*ldpp)->LLength.LowPart = LLength.LowPart;
+            (*ldpp)->key = key;
+            (*ldpp)->sLockType = sLockType;
+            (*ldpp)->LOffset.HighPart = LOffset.HighPart;
+            (*ldpp)->LOffset.LowPart = LOffset.LowPart;
+            (*ldpp)->LLength.HighPart = LLength.HighPart;
+            (*ldpp)->LLength.LowPart = LLength.LowPart;
         } else {
-            /* In this case, we allow the file open to go through even
-               though we can't enforce mandatory locking on the
-               file. */
+            /*
+             * In this case, we allow the file open to go through even
+             * though we can't enforce mandatory locking on the
+             * file. */
             if (code == CM_ERROR_NOACCESS &&
-                !(rights & PRSFS_WRITE))
+                 !(rights & PRSFS_WRITE))
                 code = 0;
             else {
-		if (code == CM_ERROR_LOCK_NOT_GRANTED)
-		    code = CM_ERROR_SHARING_VIOLATION;
-	    }
+                if (code == CM_ERROR_LOCK_NOT_GRANTED)
+                    code = CM_ERROR_SHARING_VIOLATION;
+            }
         }
     } else if (code != 0) {
         goto _done;
@@ -294,9 +311,9 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 			       cm_lock_data_t ** ldpp)
 {
-    osi_Log2(afsd_logp,"cm_CheckNTOpenDone scp 0x%p ldp 0x%p", scp, *ldpp);
+	osi_Log2(afsd_logp,"cm_CheckNTOpenDone scp 0x%p ldp 0x%p", scp, ldpp ? *ldpp : 0);
     lock_ObtainWrite(&scp->rw);
-    if (*ldpp) {
+    if (ldpp && *ldpp) {
 	cm_Unlock(scp, (*ldpp)->sLockType, (*ldpp)->LOffset, (*ldpp)->LLength,
 		  (*ldpp)->key, 0, userp, reqp);
 	free(*ldpp);
@@ -4417,14 +4434,22 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     AFSVolSync volSync;
     afs_uint32 reqflags = reqp->flags;
 
+    osi_Log2(afsd_logp, "CALL SetLock scp 0x%p for lock %d", scp, lockType);
+
+	if ((lockType != LOCKING_ANDX_SHARED_LOCK && scp->fsLockCount != 0) ||
+		(lockType == LOCKING_ANDX_SHARED_LOCK && scp->fsLockCount < 0))
+	{
+		code = CM_ERROR_LOCK_NOT_GRANTED;
+        osi_Log2(afsd_logp, "CALL SetLock FAILURE, fsLockCount %d code 0x%x", scp->fsLockCount, code);
+		return code;
+	}
+
     memset(&volSync, 0, sizeof(volSync));
 
     tfid.Volume = scp->fid.volume;
     tfid.Vnode = scp->fid.vnode;
     tfid.Unique = scp->fid.unique;
     cfid = scp->fid;
-
-    osi_Log2(afsd_logp, "CALL SetLock scp 0x%p for lock %d", scp, lockType);
 
     reqp->flags |= CM_REQ_NORETRY;
     lock_ReleaseWrite(&scp->rw);
@@ -5889,7 +5914,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead)
     return code;
 }
 
-cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs_uint16 file_id)
+cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs_uint64 file_id)
 {
     cm_key_t key;
 

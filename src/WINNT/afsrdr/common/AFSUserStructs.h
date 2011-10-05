@@ -303,6 +303,10 @@ typedef struct _AFS_FILE_OPEN_CB
 
     ULONG           ShareAccess;
 
+    ULONGLONG       ProcessId;
+
+    ULONGLONG       Identifier;
+
 } AFSFileOpenCB;
 
 typedef struct _AFS_FILE_OPEN_RESULT_CB
@@ -310,7 +314,20 @@ typedef struct _AFS_FILE_OPEN_RESULT_CB
 
     ULONG           GrantedAccess;
 
+    ULONG           FileAccess;
+
 } AFSFileOpenResultCB;
+
+typedef struct _AFS_FILE_ACCESS_RELEASE_CB
+{
+
+    ULONG           FileAccess;
+
+    ULONGLONG       ProcessId;
+
+    ULONGLONG       Identifier;
+
+} AFSFileAccessReleaseCB;
 
 //
 // IO Interace control blocks for extent processing when performing
@@ -955,6 +972,10 @@ typedef struct _AFS_FILE_CLEANUP_CB
     ULONG           FileAttributes;
 
     ULONGLONG       ProcessId;
+
+    ULONG           FileAccess;
+
+    ULONGLONG       Identifier;
 
 } AFSFileCleanupCB;
 

@@ -89,6 +89,7 @@
 #define AFS_REQUEST_TYPE_CREATE_LINK             0x0000001E
 #define AFS_REQUEST_TYPE_CREATE_MOUNTPOINT       0x0000001F
 #define AFS_REQUEST_TYPE_CREATE_SYMLINK          0x00000020
+#define AFS_REQUEST_TYPE_RELEASE_FILE_ACCESS     0x00000021
 
 //
 // Request Flags, these are passed up from the file system
@@ -300,5 +301,12 @@
 #define AFS_SYSNAME_ARCH_32BIT 0
 #define AFS_SYSNAME_ARCH_64BIT 1
 
+//
+// Server file access granted to callers on open
+//
+
+#define AFS_FILE_ACCESS_NOLOCK          0x00000000
+#define AFS_FILE_ACCESS_EXCLUSIVE       0x00000001
+#define AFS_FILE_ACCESS_SHARED          0x00000002
 
 #endif /* _AFS_USER_DEFINE_H */
