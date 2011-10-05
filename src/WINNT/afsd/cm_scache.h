@@ -26,7 +26,7 @@ typedef struct cm_fid {
 typedef struct cm_key {
     afs_offs_t process_id;      /* process IDs can be 64bit on 64bit environments */
     afs_uint16 session_id;
-    afs_uint16 file_id;
+    afs_uint64 file_id;         /* afs redir uses File Object pointers as file id */
 } cm_key_t;
 
 typedef struct cm_range {

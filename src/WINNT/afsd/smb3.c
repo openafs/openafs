@@ -7827,7 +7827,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
      * scp is NULL.
      */
     if (code == 0 && !treeCreate) {
-        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
+        code = cm_CheckNTOpen(scp, desiredAccess, shareAccess, createDisp, 0, fidp->fid, userp, &req, &ldp);
         if (code) {
             cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             if (dscp)
@@ -7874,7 +7874,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
                     cm_ReleaseSCache(scp);
                     scp = targetScp;
-		    code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
+		    code = cm_CheckNTOpen(scp, desiredAccess, shareAccess, createDisp, 0, fidp->fid, userp, &req, &ldp);
 		    if (code) {
                         cm_CheckNTOpenDone(scp, userp, &req, &ldp);
 			if (dscp)
@@ -8621,7 +8621,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
      * scp is NULL.
      */
     if (code == 0) {
-        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
+        code = cm_CheckNTOpen(scp, desiredAccess, shareAccess, createDisp, 0, fidp->fid, userp, &req, &ldp);
         if (code) {
             cm_CheckNTOpenDone(scp, userp, &req, &ldp);
             cm_ReleaseSCache(dscp);
@@ -8663,7 +8663,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 		    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
                     cm_ReleaseSCache(scp);
                     scp = targetScp;
-		    code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req, &ldp);
+		    code = cm_CheckNTOpen(scp, desiredAccess, shareAccess, createDisp, 0, fidp->fid, userp, &req, &ldp);
 		    if (code) {
                         cm_CheckNTOpenDone(scp, userp, &req, &ldp);
                         cm_ReleaseSCache(dscp);

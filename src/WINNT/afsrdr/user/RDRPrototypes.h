@@ -149,6 +149,14 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
                    IN OUT AFSCommResult **ResultCB);
 
 void
+RDR_ReleaseFileAccess( IN cm_user_t *userp,
+                       IN AFSFileID FileId,
+                       IN AFSFileAccessReleaseCB *ReleaseFileCB,
+                       IN BOOL bWow64,
+                       IN DWORD ResultBufferLength,
+                       IN OUT AFSCommResult **ResultCB);
+
+void
 RDR_CleanupFileEntry( IN cm_user_t *userp,
                       IN AFSFileID FileId,
                       IN WCHAR *FileName,

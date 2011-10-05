@@ -108,6 +108,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
         stFileCleanup.ProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
+        stFileCleanup.Identifier = (ULONGLONG)pFileObject;
+
         //
         // Perform the cleanup functionality depending on the type of node it is
         //
@@ -359,6 +361,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     ulNotificationFlags |= AFS_REQUEST_FLAG_FILE_DELETED;
 
                     //
+                    // Indicate the file access mode that is being released
+                    //
+
+                    stFileCleanup.FileAccess = pCcb->FileAccess;
+
+                    //
                     // Push the request to the service
                     //
 
@@ -519,6 +527,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ulNotificationFlags |= AFS_REQUEST_FLAG_FLUSH_FILE;
                     }
+
+                    //
+                    // Indicate the file access mode that is being released
+                    //
+
+                    stFileCleanup.FileAccess = pCcb->FileAccess;
 
                     //
                     // Push the request to the service
@@ -683,6 +697,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     ulNotificationFlags |= AFS_REQUEST_FLAG_FILE_DELETED;
 
                     //
+                    // Indicate the file access mode that is being released
+                    //
+
+                    stFileCleanup.FileAccess = pCcb->FileAccess;
+
+                    //
                     // Push the request to the service
                     //
 
@@ -784,6 +804,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                             (ULONG)FILE_ACTION_MODIFIED);
                         }
                     }
+
+                    //
+                    // Indicate the file access mode that is being released
+                    //
+
+                    stFileCleanup.FileAccess = pCcb->FileAccess;
 
                     AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                        ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
@@ -936,6 +962,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     ulNotificationFlags |= AFS_REQUEST_FLAG_FILE_DELETED;
 
                     //
+                    // Indicate the file access mode that is being released
+                    //
+
+                    stFileCleanup.FileAccess = pCcb->FileAccess;
+
+                    //
                     // Push the request to the service
                     //
 
@@ -1037,6 +1069,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                             (ULONG)FILE_ACTION_MODIFIED);
                         }
                     }
+
+                    //
+                    // Indicate the file access mode that is being released
+                    //
+
+                    stFileCleanup.FileAccess = pCcb->FileAccess;
 
                     AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                        ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,

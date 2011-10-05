@@ -2416,6 +2416,8 @@ AFSProcessOpen( IN PIRP Irp,
     ULONG       ulResultLen = 0;
     AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    ULONG       ulFileAccess = 0;
+    AFSFileAccessReleaseCB stReleaseFileAccess;
 
     __Enter
     {
@@ -2666,6 +2668,10 @@ AFSProcessOpen( IN PIRP Irp,
 
         stOpenCB.ShareAccess = usShareAccess;
 
+        stOpenCB.ProcessId = (ULONGLONG)PsGetCurrentProcessId();
+
+        stOpenCB.Identifier = (ULONGLONG)pFileObject;
+
         stOpenResultCB.GrantedAccess = 0;
 
         ulResultLen = sizeof( AFSFileOpenResultCB);
@@ -2692,6 +2698,12 @@ AFSProcessOpen( IN PIRP Irp,
 
             try_return( ntStatus);
         }
+
+        //
+        // Save the granted access in case we need to release it below
+        //
+
+        ulFileAccess = stOpenResultCB.FileAccess;
 
         //
         // Check if there is a conflict
@@ -2738,6 +2750,8 @@ AFSProcessOpen( IN PIRP Irp,
         bAllocatedCcb = TRUE;
 
         (*Ccb)->DirectoryCB = DirectoryCB;
+
+        (*Ccb)->FileAccess = ulFileAccess;
 
         //
         // Perform the access check on the target if this is a mount point or symlink
@@ -2855,6 +2869,26 @@ try_exit:
 
         if( !NT_SUCCESS( ntStatus))
         {
+
+            if ( ulFileAccess > 0)
+            {
+
+                stReleaseFileAccess.ProcessId = (ULONGLONG)PsGetCurrentProcessId();
+
+                stReleaseFileAccess.FileAccess = ulFileAccess;
+
+                stReleaseFileAccess.Identifier = (ULONGLONG)pFileObject;
+
+                AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_ACCESS,
+                                   AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                   AuthGroup,
+                                   &DirectoryCB->NameInformation.FileName,
+                                   &pObjectInfo->FileId,
+                                   (void *)&stReleaseFileAccess,
+                                   sizeof( AFSFileAccessReleaseCB),
+                                   NULL,
+                                   NULL);
+            }
 
             if( bAllocatedCcb)
             {

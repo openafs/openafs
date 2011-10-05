@@ -174,9 +174,14 @@ typedef struct cm_lock_data {
     LARGE_INTEGER LOffset, LLength;
 } cm_lock_data_t;
 
-extern long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
-                           unsigned int createDisp, cm_user_t *userp,
-                           cm_req_t *reqp, cm_lock_data_t ** ldpp);
+extern long cm_CheckNTOpen(cm_scache_t *scp,
+                           unsigned int desiredAccess,
+                           unsigned int shareAccess,
+                           unsigned int createDisp,
+                           afs_offs_t process_id,
+                           afs_offs_t handle_id,
+                           cm_user_t *userp, cm_req_t *reqp,
+                           cm_lock_data_t ** ldpp);
 
 extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 			       cm_lock_data_t ** ldpp);
@@ -233,7 +238,7 @@ extern long cm_RetryLock(cm_file_lock_t *oldFileLock, int client_is_dead);
 #define CM_SESSION_CMINT    0xfffd
 #define CM_SESSION_RESERVED 0xfff0
 
-extern cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs_uint16 file_id);
+extern cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs_uint64 file_id);
 
 extern int cm_KeyEquals(cm_key_t * k1, cm_key_t * k2, int flags);
 

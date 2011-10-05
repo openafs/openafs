@@ -140,6 +140,12 @@ typedef struct _AFS_CCB
 
     } FileUnwindInfo;
 
+    //
+    // Granted File Access
+    //
+
+    ULONG               FileAccess;
+
 } AFSCcb;
 
 //
