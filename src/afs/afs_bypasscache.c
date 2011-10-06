@@ -379,7 +379,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	code = rx_Read(acall, (char *)&length, sizeof(afs_int32));
 	COND_RE_GLOCK(locked);
 	if (code != sizeof(afs_int32)) {
-	    result = 0;
+	    result = EIO;
 	    afs_warn("Preread error. code: %d instead of %d\n",
 		code, (int)sizeof(afs_int32));
 	    unlock_and_release_pages(auio);
@@ -429,15 +429,17 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		    COND_RE_GLOCK(locked);
 		    if (bytes < 0) {
 		        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", bytes);
-			result = 0;
+			result = bytes;
 			unlock_and_release_pages(auio);
 			goto done;
 		    } else if (bytes == 0) {
-			result = 0;
+			/* we failed to read the full length */
+			result = EIO;
 			afs_warn("afs_NoCacheFetchProc: rx_Read returned zero. Aborting.\n");
 			unlock_and_release_pages(auio);
 			goto done;
 		    }
+		    size -= bytes;
 		    length -= bytes;
 		    iovno = 0;
 		}
@@ -445,14 +447,14 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= PAGE_CACHE_SIZE) {
 		    /* Copy entire (or rest of) current iovec into current page */
 		    if (pp)
-		      copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio);
+			copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio);
 		    pageoff += rxiov[iovno].iov_len - iovoff;
 		    iovno++;
 		    iovoff = 0;
 		} else {
 		    /* Copy only what's needed to fill current page */
 		    if (pp)
-		      copy_page(pp, pageoff, rxiov, iovno, iovoff, auio);
+			copy_page(pp, pageoff, rxiov, iovno, iovoff, auio);
 		    iovoff += PAGE_CACHE_SIZE - pageoff;
 		    pageoff = PAGE_CACHE_SIZE;
 		}
@@ -654,7 +656,8 @@ done:
      * Copy appropriate fields into vcache
      */
 
-    afs_ProcessFS(avc, &tcallspec->OutStatus, areq);
+    if (!code)
+	afs_ProcessFS(avc, &tcallspec->OutStatus, areq);
 
     osi_Free(areq, sizeof(struct vrequest));
     osi_Free(tcallspec, sizeof(struct tlocal1));
