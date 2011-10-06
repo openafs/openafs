@@ -19,7 +19,10 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <afs/afsutil.h>
+#include <fcntl.h>
 
 /*
  * XXX CHANGE the following depedent stuff XXX
@@ -32,16 +35,15 @@
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct stat tstat;
     FILE *fin = stdin;
     char buf[BUFSIZ], *bufp, *bufp1, *typep, *cmd, *bp;
-    afs_int32 code, c, fd, id, pflags = -1, len, core = 0, lastE = 0;
-    char comLine[60], coreName[40], name[40], lastErrorName[50];
-    afs_int32 pid = -1, lastExit = -1, lastSignal = -1, rsCount = -1;
+    afs_int32 code, c, fd, pflags = -1, len, core = 0;
+    char comLine[60], coreName[40], name[40];
+    afs_int32 pid = -1, rsCount = -1;
     afs_int32 procStarts = -1;
     afs_int32 errorCode = -1, errorSignal = -1, goal = -1;
     time_t procStartTime = -1, rsTime = -1, lastAnyExit = -1, lastErrorExit = -1;
@@ -68,12 +70,6 @@ main(argc, argv)
 		    strcpy(coreName, cmd);
 		else if (!strcmp(typep, "pid:"))
 		    pid = atoi(cmd);
-#ifdef	notdef
-		else if (!strcmp(typep, "lastExit:"))
-		    lastExit = atoi(cmd);
-		else if (!strcmp(typep, "lastSignal:"))
-		    lastSignal = atoi(cmd);
-#endif
 		else if (!strcmp(typep, "flags:"))
 		    pflags = atoi(cmd);
 		else if (!strcmp(typep, "END")) {
@@ -171,12 +167,6 @@ main(argc, argv)
 		  (core ? (c ? "a recent " : "an 'old' ") : "no "),
 		  (core ? bp : ""));
     bufp += strlen(bufp);
-#ifdef	notdef
-    (void)sprintf(bufp, "Last Exit code %d\n", lastExit);
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "Last Signal number %d\n", lastSignal);
-    bufp += strlen(bufp);
-#endif
     if (pflags == 1)
 	strcpy(bp, "PROCESS STARTED");
     else if (pflags == 2)
@@ -216,16 +206,6 @@ main(argc, argv)
     bufp += strlen(bufp);
     (void)sprintf(bufp, "Last process terminating signal %d\n", errorSignal);
     bufp += strlen(bufp);
-#ifdef	notdef
-    if (strcmp(lastErrorName, "(null)"))
-	lastE = 1;
-    if (lastE) {
-	(void)sprintf(bufp,
-		      "Short name of process that failed last in this bnode is: %s\n",
-		      lastErrorName);
-	bufp += strlen(bufp);
-    }
-#endif
     (void)sprintf(bufp, "The server is now %srunning\n",
 		  (goal ? "" : "not "));
     bufp += strlen(bufp);

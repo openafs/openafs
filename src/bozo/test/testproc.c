@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static int ignore = 0;
 static int sleepTime = 10;
@@ -27,7 +28,7 @@ trim(char *s)
     }
 }
 
-int
+void
 readfile(void)
 {
     FILE *fp;
