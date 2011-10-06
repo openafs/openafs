@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 MODULE_CFLAGS=$(LDIRS) $(LIBS)
 
-all: testproc smail-notifier
+all: testproc
 
 install:  
 
@@ -20,14 +20,11 @@ install:
 testproc: testproc.c 
 	$(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) -o testproc testproc.c
 
-smail-notifier: smail-notifier.c 
-	$(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) -o smail-notifier smail-notifier.c
-
 #
 # Misc targets
 #
 clean:
-	$(RM) -f  *.a *.o testproc smail-notifier core
+	$(RM) -f  *.a *.o testproc core
 
 dest:  
 
