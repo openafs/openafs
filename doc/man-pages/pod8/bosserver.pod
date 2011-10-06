@@ -7,11 +7,22 @@ bosserver - Initializes the BOS Server
 =for html
 <div class="synopsis">
 
-B<bosserver> [B<-noauth>] [B<-log>] [B<-enable_peer_stats>]
-    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
-    [B<-enable_process_stats>] [B<-allow-dotted-principals>]
-    [B<-cores=>(none|<I<path>>)]
-    [B<-restricted>] [B<-help>]
+B<bosserver>
+    S<<< [B<-noauth>] >>>
+    S<<< [B<-log>] >>>
+    S<<< [B<-enable_peer_stats>] >>>
+    S<<< [B<-auditlog> <I<log path>>] >>>
+    S<<< [B<-audit-interface> ( file | sysvmq )] >>>
+    S<<< [B<-enable_process_stats>] >>>
+    S<<< [B<-allow-dotted-principals>] >>>
+    S<<< [B<-cores>[=none|<I<path>>]] >>>
+    S<<< [B<-restricted>] >>>
+    S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+    S<<< [B<-rxbind>] >>>
+    S<<< [B<-syslog>[=<I<facility>>]>] >>>
+    S<<< [B<-pidfiles>[=<I<path>>]] >>>
+    S<<< [B<-nofork>] >>>
+    S<<< [B<-help>] >>>
 
 =for html
 </div>
@@ -170,6 +181,46 @@ of commands are unavailable. Note that this flag persists across reboots.
 Once a server has been placed in restricted mode, it can only be opened up
 by sending the SIGFPE signal.
 
+=item B<-rxmaxmtu> <I<bytes>>
+
+Sets the maximum transmission unit for the RX protocol.
+
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only.  If not specified, the
+Rx socket will listen on all interfaces.
+
+=item B<-syslog>[=<I<facility>>]>
+
+Specifies that logging output should go to syslog instead of the normal
+log file.  B<-syslog>=I<facility> can be used to specify to which facility
+the log message should be sent.
+
+=item B<-pidfiles>[=<I<path>>]
+
+Create a one-line file containing the process id (pid) for each non-cron
+process started by the BOS Server.  This file is removed by the BOS Server when
+the process exits.  The optional <I<path>> argument specifies the path where
+the pid files are to be created.  The default location is C</usr/afs/local>.
+
+The name of the pid files for C<simple> BOS Server process types are the BOS
+Server instance name followed by C<.pid>.
+
+The name of the pid files for C<fs> and C<dafs> BOS Server process types are
+the BOS Server type name, C<fs> or C<dafs>, followed by the BOS Server core
+name of the process, followed by C<.pid>.  The pid file name for the
+C<fileserver> process is C<fs.file.pid>. The pid file name for the C<volserver>
+is C<fs.vol.pid>.
+
+BOS Server instance names are specfied using the B<bos create> command.  See
+L<bos_create> for a description of the BOS Server process types and instance
+names.
+
+=item B<-nofork>
+
+Run the BOS Server in the foreground. By default, the BOS Server process will
+fork and detach the stdio, stderr, and stdin streams.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -182,7 +233,7 @@ ignored.
 The following command initializes the BOS Server and logs the names of
 users who issue privileged B<bos> commands.
 
-   % bosserver -log &
+   % bosserver -log
 
 =head1 PRIVILEGE REQUIRED
 
