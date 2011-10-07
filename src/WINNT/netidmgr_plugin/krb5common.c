@@ -53,8 +53,8 @@ khm_krb5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
     const char *errText;
     int krb5Error = ((int)(rc & 255));
 
-    if (pkrb5_get_error_message)
-        errText = pkrb5_get_error_message(rc);
+    if (*ctx && pkrb5_get_error_message)
+        errText = pkrb5_get_error_message(*ctx, rc);
     else
         errText = perror_message(rc);
     _snprintf(message, sizeof(message),
@@ -62,8 +62,8 @@ khm_krb5_error(krb5_error_code rc, LPCSTR FailedFunctionName,
         errText,
         krb5Error,
         FailedFunctionName);
-    if (pkrb5_free_error_message)
-        pkrb5_free_error_message(errText);
+    if (*ctx && pkrb5_free_error_message)
+        pkrb5_free_error_message(*ctx, errText);
 
     MessageBoxA(NULL, message, "Kerberos Five", MB_OK | MB_ICONERROR |
         MB_TASKMODAL |

@@ -197,6 +197,8 @@ static int use524 = FALSE;  /* use krb524? */
 static krb5_context context = 0;
 static krb5_ccache _krb425_ccache = 0;
 
+static krb5_error_code (KRB5_CALLCONV *pkrb5_init_context)(krb5_context *context) = NULL;
+static krb5_error_code (KRB5_CALLCONV *pkrb5_free_context)(krb5_context context) = NULL;
 static char * (KRB5_CALLCONV *pkrb5_get_error_message)(krb5_context context, krb5_error_code code)=NULL;
 static void (KRB5_CALLCONV *pkrb5_free_error_message)(krb5_context context, char *s) = NULL;
 
@@ -217,6 +219,8 @@ void akexit(int exit_code)
 void
 redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 {
+    krb5_context context;
+
     if (who) {
         fputs(who, stderr);
         fputs(": ", stderr);
@@ -225,16 +229,22 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
         int freestr = 0;
         char *str = (char *)afs_error_message(code);
         if (strncmp(str, "unknown", strlen(str)) == 0) {
-            if (pkrb5_get_error_message) {
+            if (pkrb5_init_context &&
+                pkrb5_get_error_message &&
+                !pkrb5_init_context(&context))
+            {
                 str = pkrb5_get_error_message(NULL, code);
                 freestr = 1;
-            } else
+            } else {
                 str = (char *)error_message(code);
+            }
         }
         fputs(str, stderr);
         fputs(" ", stderr);
-        if (freestr)
+        if (freestr) {
             pkrb5_free_error_message(NULL, str);
+            pkrb5_free_context(context);
+        }
     }
     if (fmt) {
         vfprintf(stderr, fmt, ap);
@@ -1416,6 +1426,8 @@ load_krb5_error_message_funcs(void)
 {
     HINSTANCE h = LoadLibrary(KRB5LIB);
     if (h) {
+        (FARPROC)pkrb5_init_context = GetProcAddress(h, "krb5_init_context");
+        (FARPROC)pkrb5_free_context = GetProcAddress(h, "krb5_free_context");
         (FARPROC)pkrb5_get_error_message = GetProcAddress(h, "krb5_get_error_message");
         (FARPROC)pkrb5_free_error_message = GetProcAddress(h, "krb5_free_error_message");
     }
