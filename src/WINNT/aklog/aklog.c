@@ -221,7 +221,7 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
         int freestr = 0;
         char *str = (char *)afs_error_message(code);
         if (strncmp(str, "unknown", strlen(str)) == 0) {
-            if (krb5_init_context(&context))
+            if (!krb5_init_context(&context))
             {
                 str = krb5_get_error_message(NULL, code);
                 freestr = 1;
