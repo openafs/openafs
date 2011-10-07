@@ -22,9 +22,9 @@ B<dafileserver>
     S<<< [B<-rxdbg>] >>>
     S<<< [B<-rxdbge>] >>>
     S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
-    S<<< [B<-nojumbo> >>>
-    S<<< [B<-jumbo> >>>
-    S<<< [B<-rxbind> >>>
+    S<<< [B<-nojumbo>] >>>
+    S<<< [B<-jumbo>] >>>
+    S<<< [B<-rxbind>] >>>
     S<<< [B<-allow-dotted-principals>] >>>
     S<<< [B<-L>] >>>
     S<<< [B<-S>] >>>
