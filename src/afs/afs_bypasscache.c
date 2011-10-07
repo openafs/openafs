@@ -661,8 +661,8 @@ done:
     osi_Free(bparms, sizeof(struct nocache_read_request));
 #ifndef UKERNEL
     /* in UKERNEL, the "pages" are passed in */
-    osi_Free(auio, sizeof(struct uio));
     osi_Free(iovecp, auio->uio_iovcnt * sizeof(struct iovec));
+    osi_Free(auio, sizeof(struct uio));
 #endif
     return code;
 }
