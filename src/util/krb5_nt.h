@@ -26,10 +26,7 @@
 
 #ifdef AFS_NT40_ENV
 
-# include <krb5\krb5.h>
-# include <com_err.h>
-
 extern void initialize_krb5(void);
-extern const char * fetch_krb5_error_message(krb5_context, krb5_error_code);
+extern const char * fetch_krb5_error_message(afs_uint32);
 
 #endif /* AFS_NT40_ENV */

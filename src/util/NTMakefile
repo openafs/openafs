@@ -23,6 +23,7 @@ INCFILES =\
 	$(INCFILEDIR)\pthread_nosigs.h \
 	$(INCFILEDIR)\errmap_nt.h \
 	$(INCFILEDIR)\dirpath.h \
+        $(INCFILEDIR)\krb5_nt.h \
 	$(INCFILEDIR)\ktime.h \
 	$(INCFILEDIR)\fileutil.h \
 	$(INCFILEDIR)\afsutil_prototypes.h \
@@ -43,6 +44,7 @@ LIBOBJS = \
 	$(OUT)\base32.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
+        $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
         $(OUT)\netutils.obj \
@@ -61,6 +63,7 @@ MT_LIBOBJS = \
 	$(OUT)\base32.obj \
 	$(OUT)\get_krbrlm.obj \
 	$(OUT)\hostparse.obj \
+        $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
         $(OUT)\netutils.obj \
