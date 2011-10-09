@@ -32,6 +32,8 @@ static int enablePositional = 1;
 static int enableAbbreviation = 1;
 static void *beforeRock, *afterRock;
 static char initcmd_opcode[] = "initcmd";	/*Name of initcmd opcode */
+static cmd_config_section *globalConfig = NULL;
+static const char *commandName = NULL;
 
 /* take name and string, and return null string if name is empty, otherwise return
    the concatenation of the two strings */
@@ -1247,18 +1249,95 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
     }
 }
 
+/* Read a string in from our configuration file. This checks in
+ * multiple places within this file - firstly in the section
+ * [command_subcommand], then in [command], then in [subcommand]
+ *
+ * Returns CMD_MISSING if there is no configuration file configured,
+ * or if the file doesn't contain information for the specified option
+ * in any of these sections.
+ */
+
+static int
+_get_file_string(struct cmd_syndesc *syn, int pos, const char **str)
+{
+    char *section;
+    char *optionName;
+
+    /* Nothing on the command line, try the config file if we have one */
+    if (globalConfig == NULL)
+	return CMD_MISSING;
+
+    /* March past any leading -'s */
+    for (optionName = syn->parms[pos].name;
+	 *optionName == '-'; optionName++);
+
+    /* First, try the command_subcommand form */
+    if (syn->name != NULL && commandName != NULL) {
+	asprintf(&section, "%s_%s", commandName, syn->name);
+	*str = cmd_RawConfigGetString(globalConfig, NULL, section,
+				      optionName, NULL);
+	free(section);
+	if (*str)
+	    return 0;
+    }
+
+    /* Then, try the command form */
+    if (commandName != NULL) {
+	*str = cmd_RawConfigGetString(globalConfig, NULL, commandName,
+				      optionName, NULL);
+	if (*str)
+	    return 0;
+    }
+
+    /* Then, the defaults section */
+    *str = cmd_RawConfigGetString(globalConfig, NULL, "defaults",
+				  optionName, NULL);
+    if (*str)
+	return 0;
+
+    /* Nothing there, return MISSING */
+    return CMD_MISSING;
+}
+
+static int
+_get_config_string(struct cmd_syndesc *syn, int pos, const char **str)
+{
+    *str = NULL;
+
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+
+    /* It's a flag, they probably shouldn't be using this interface to access
+     * it, but don't blow up for now */
+    if (syn->parms[pos].items == &dummy)
+        return 0;
+
+    /* We have a value on the command line - this overrides anything in the
+     * configuration file */
+    if (syn->parms[pos].items != NULL &&
+	syn->parms[pos].items->data != NULL) {
+	*str = syn->parms[pos].items->data;
+	return 0;
+    }
+
+    return _get_file_string(syn, pos, str);
+}
+
 int
 cmd_OptionAsInt(struct cmd_syndesc *syn, int pos, int *value)
 {
-    if (pos > syn->nParms)
-	return CMD_EXCESSPARMS;
-    if (syn->parms[pos].items == NULL ||
-	syn->parms[pos].items->data == NULL)
-	return CMD_MISSING;
-    if (syn->parms[pos].items == &dummy)
-	return 0;
+    const char *str;
+    int code;
 
-    *value = strtol(syn->parms[pos].items->data, NULL, 10);
+    code =_get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL)
+	return CMD_MISSING;
+
+    *value = strtol(str, NULL, 10);
 
     return 0;
 }
@@ -1267,15 +1346,17 @@ int
 cmd_OptionAsUint(struct cmd_syndesc *syn, int pos,
 		 unsigned int *value)
 {
-    if (pos > syn->nParms)
-	return CMD_EXCESSPARMS;
-    if (syn->parms[pos].items == NULL ||
-	syn->parms[pos].items->data == NULL)
-	return CMD_MISSING;
-    if (syn->parms[pos].items == &dummy)
-	return 0;
+    const char *str;
+    int code;
 
-    *value = strtoul(syn->parms[pos].items->data, NULL, 10);
+    code = _get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL)
+	return CMD_MISSING;
+
+    *value = strtoul(str, NULL, 10);
 
     return 0;
 }
@@ -1283,17 +1364,20 @@ cmd_OptionAsUint(struct cmd_syndesc *syn, int pos,
 int
 cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
 {
-    if (pos > syn->nParms)
-	return CMD_EXCESSPARMS;
-    if (syn->parms[pos].items == NULL || syn->parms[pos].items->data == NULL)
-	return CMD_MISSING;
-    if (syn->parms[pos].items == &dummy)
-	return 0;
+    const char *str;
+    int code;
 
     if (*value)
 	free(*value);
 
-    *value = strdup(syn->parms[pos].items->data);
+    code = _get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL)
+	return CMD_MISSING;
+
+    *value = strdup(str);
 
     return 0;
 }
@@ -1301,32 +1385,115 @@ cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
 int
 cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **value)
 {
+    const char *str;
+    struct cmd_item *item, **last;
+    const char *start, *end;
+    int code;
+
     if (pos > syn->nParms)
 	return CMD_EXCESSPARMS;
-    if (syn->parms[pos].items == NULL)
-	return CMD_MISSING;
+
+    /* If we have a list already, just return the existing list */
+    if (syn->parms[pos].items != NULL) {
+	*value = syn->parms[pos].items;
+	return 0;
+    }
+
+    code = _get_file_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    /* Use strchr to split str into elements, and build a recursive list
+     * from them. Hang this list off the configuration structure, so that
+     * it is returned by any future calls to this function, and is freed
+     * along with everything else when the syntax description is freed
+     */
+    last = &syn->parms[pos].items;
+    start = str;
+    while ((end = strchr(start, ' '))) {
+	item = calloc(1, sizeof(struct cmd_item));
+	item->data = malloc(end - start + 1);
+	strlcpy(item->data, start, end - start + 1);
+	*last = item;
+	last = &item->next;
+	for (start = end; *start == ' '; start++); /* skip any whitespace */
+    }
+
+    /* Catch the final element */
+    if (*start != '\0') {
+	item = calloc(1, sizeof(struct cmd_item));
+	item->data = malloc(strlen(start) + 1);
+	strlcpy(item->data, start, strlen(start) + 1);
+	*last = item;
+    }
 
     *value = syn->parms[pos].items;
+
     return 0;
 }
 
 int
 cmd_OptionAsFlag(struct cmd_syndesc *syn, int pos, int *value)
 {
-    if (pos > syn->nParms)
-	return CMD_EXCESSPARMS;
-    if (syn->parms[pos].items == NULL)
-	return CMD_MISSING;
+    const char *str = NULL;
+    int code;
 
-    *value = 1;
+    code = _get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL ||
+	strcasecmp(str, "yes") == 0 ||
+	strcasecmp(str, "true") == 0 ||
+	atoi(str))
+	*value = 1;
+    else
+	*value = 0;
+
     return 0;
 }
 
 int
 cmd_OptionPresent(struct cmd_syndesc *syn, int pos)
 {
-    if (pos > syn->nParms || syn->parms[pos].items == NULL)
-	return 0;
+    const char *str;
+    int code;
 
-    return 1;
+    code = _get_config_string(syn, pos, &str);
+    if (code == 0)
+	return 1;
+
+    return 0;
+}
+
+int
+cmd_OpenConfigFile(const char *file)
+{
+    if (globalConfig) {
+	cmd_RawConfigFileFree(globalConfig);
+	globalConfig = NULL;
+    }
+
+    return cmd_RawConfigParseFile(file, &globalConfig);
+}
+
+void
+cmd_SetCommandName(const char *command)
+{
+    commandName = command;
+}
+
+const cmd_config_section *
+cmd_RawFile(void)
+{
+    return globalConfig;
+}
+
+const cmd_config_section *
+cmd_RawSection(void)
+{
+    if (globalConfig == NULL || commandName == NULL)
+	return NULL;
+
+    return cmd_RawConfigGetList(globalConfig, commandName, NULL);
 }

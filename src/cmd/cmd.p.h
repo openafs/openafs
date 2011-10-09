@@ -124,4 +124,9 @@ extern int cmd_RawConfigGetInt(const cmd_config_section *, int, ...);
 extern const cmd_config_binding *cmd_RawConfigGetList
 	(const cmd_config_section *, ...);
 
+extern int cmd_OpenConfigFile(const char *file);
+extern void cmd_SetCommandName(const char *command);
+extern const cmd_config_section *cmd_RawFile(void);
+extern const cmd_config_section *cmd_RawSection(void);
+
 #endif /* __CMD_INCL__ */

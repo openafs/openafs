@@ -14,7 +14,8 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 INCDIRS= -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I..
 LDIRS= -L${TOP_LIBDIR} -L..
 LIBS= -lsys -lubik -lvldb -lauth -lrxkad -lafshcrypto_lwp \
-      -lafscom_err -lcmd -lrx -llwp -lafsutil $(LIB_roken)
+      -lafscom_err -lcmd -lrx -llwp -lafsutil -lopr \
+      $(LIB_roken) $(XLIBS)
 
 all test:  fulltest owntest idtest getinitparams
 

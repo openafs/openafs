@@ -92,9 +92,10 @@ main(int argc, char **argv)
     int code;
     int tc;
     int retval;
+    char *path;
     char *retstring = NULL;
 
-    plan(96);
+    plan(109);
 
     initialize_CMD_error_table();
 
@@ -226,7 +227,8 @@ main(int argc, char **argv)
 	      " ... 1st option matches");
     is_string("two", retopts->parms[copt_second].items->data,
 	      " ... 2nd option matches");
-    ok(retopts->parms[copt_flag].items != NULL, " ... 3rd option matches");
+    ok(retopts->parms[copt_flag].items != NULL,
+	      " ... 3rd option matches");
 
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
@@ -356,6 +358,33 @@ main(int argc, char **argv)
     checkList(list, "one", "two", "three", NULL);
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
+
+    /* Now, try adding a configuration file into the mix */
+    if (getenv("SOURCE") == NULL)
+	path = strdup("test1.conf");
+    else
+	asprintf(&path, "%s/command/test1.conf", getenv("SOURCE"));
+
+    cmd_SetCommandName("test");
+    code = cmd_OpenConfigFile(path);
+    is_int(0, code, "cmd_OpenConfigFile succeeds");
+
+    code = cmd_ParseLine("-first 1", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "cmd_Parse succeeds when we have a config file");
+    code = cmd_OptionAsInt(retopts, copt_perhaps, &retval);
+    is_int(0, code, "cmd_OptionsAsInt succeeds");
+    is_int(10, retval, " ... and we have the correct value for perhaps");
+    code = cmd_OptionAsString(retopts, copt_sanity, &retstring);
+    is_int(0, code, "cmd_OptionAsString succeeds");
+    is_string("testing", retstring,
+	      " ... and we have the correct value for sanity");
+
+    /* Check breaking up a list of options */
+    code = cmd_OptionAsList(retopts, copt_second, &list);
+    is_int(0, code, "cmd_OptionAsList succeeds");
+    checkList(list, "one", "two", "three", "four", NULL);
 
     return 0;
 }

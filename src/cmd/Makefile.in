@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
 LIBOBJS=cmd_errors.o cmd.o config_file.o
-LIBPICOBJS=cmd_errors_pic.o cmd_pic.o
+LIBPICOBJS=cmd_errors_pic.o cmd_pic.o config_file_pic.o
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
 all: ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcmd_pic.a ${TOP_INCDIR}/afs/cmd.h
@@ -58,6 +58,9 @@ cmd_errors_pic.o: cmd_errors.c
 
 cmd_pic.o: cmd.c cmd.h
 	$(SHD_CCRULE) ${srcdir}/cmd.c
+
+config_file_pic.o: $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c krb5_locl.h
+	$(SHD_CCRULE) $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
