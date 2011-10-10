@@ -1245,7 +1245,7 @@ HandleVnodes(Volume * vp, VnodeClass class)
     for (opr_queue_Scan(scanList, cursor)) {
 	struct VnodeScanProc *entry = (struct VnodeScanProc *)cursor;
 	if (entry->heading) {
-	    printf(entry->heading);
+	    printf("%s", entry->heading);
 	}
     }
 
