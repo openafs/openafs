@@ -1265,7 +1265,7 @@ HandleVnodes(Volume * vp, VnodeClass class)
 
     for (queue_Scan(scanList, entry, next, VnodeScanProc)) {
 	if (entry->heading) {
-	    printf(entry->heading);
+	    printf("%s", entry->heading);
 	}
     }
 
