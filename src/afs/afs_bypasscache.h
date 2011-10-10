@@ -71,7 +71,9 @@
 #define AFS_CACHE_BYPASS_DISABLED -1
 
 #ifdef UKERNEL
+#ifdef AFS_USR_LINUX24_ENV
 typedef struct uio uio_t;
+#endif
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 1024 * sizeof(long) / 8
 #endif
