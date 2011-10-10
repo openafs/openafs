@@ -2072,7 +2072,7 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		${DEST}/root.perf/include/afs/afs_sysnames.h
 	${INSTALL_DATA} $(TOP_INCDIR)/afs/afs_stats.h \
 		${DEST}/root.perf/include/afs/afs_stats.h
-	${INSTALL_DATA} $(TOP_SRCDIR)/afs/sysincludes.h \
+	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/sysincludes.h \
 		${DEST}/root.perf/include/afs/sysincludes.h
 	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
 		${DEST}/root.perf/include/afs/afs_usrops.h
