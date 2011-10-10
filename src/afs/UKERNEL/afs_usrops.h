@@ -153,5 +153,6 @@ extern void uafs_Shutdown(void);
 extern void uafs_mount(void);
 extern void uafs_setMountDir(const char *dir);
 extern int uafs_fork(int wait, void* (*cbf) (void *), void *rock);
+extern int uafs_access(char *path, int amode);
 
 #endif /* __AFS_USROPS_H__ */
