@@ -3835,6 +3835,45 @@ uafs_statmountpoint_r(char *path)
  * Get a list of rights for the current user on path.
  */
 int
+uafs_access(char *path, int flags)
+{
+    int code;
+    struct vnode *vp;
+    int fileMode = 0;
+
+    if (flags & R_OK) {
+	fileMode |= VREAD;
+    }
+    if (flags & W_OK) {
+	fileMode |= VWRITE;
+    }
+    if (flags & X_OK) {
+	fileMode |= VEXEC;
+    }
+
+    AFS_GLOCK();
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1, 0);
+    if (code != 0) {
+	errno = code;
+	AFS_GUNLOCK();
+	return -1;
+    }
+
+    code = afs_access(VTOAFS(vp), fileMode, get_user_struct()->u_cred);
+    VN_RELE(vp);
+
+    if (code != 0)
+	errno = code;
+
+    AFS_GUNLOCK();
+    return code ? -1 : 0;
+}
+
+/*
+ * uafs_getRights
+ * Get a list of rights for the current user on path.
+ */
+int
 uafs_getRights(char *path)
 {
     int code;
