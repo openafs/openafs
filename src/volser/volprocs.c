@@ -1898,22 +1898,6 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 
 }
 
-/*extract the volume id from string vname. Its of the form " V0*<id>.vol  "*/
-afs_int32
-ExtractVolId(char vname[])
-{
-    int i;
-    char name[VOLSER_MAXVOLNAME + 1];
-
-    strcpy(name, vname);
-    i = 0;
-    while (name[i] == 'V' || name[i] == '0')
-	i++;
-
-    name[11] = '\0';		/* smash the "." */
-    return (atol(&name[i]));
-}
-
 /*return the name of the next volume header in the directory associated with dirp and dp.
 *the volume id is  returned in volid, and volume header name is returned in volname*/
 int
@@ -1924,7 +1908,7 @@ GetNextVol(DIR * dirp, char *volname, afs_uint32 * volid)
     dp = readdir(dirp);		/*read next entry in the directory */
     if (dp) {
 	if ((dp->d_name[0] == 'V') && !strcmp(&(dp->d_name[11]), VHDREXT)) {
-	    *volid = ExtractVolId(dp->d_name);
+	    *volid = VolumeNumber(dp->d_name);
 	    strcpy(volname, dp->d_name);
 	    return 0;		/*return the name of the file representing a volume */
 	} else {
