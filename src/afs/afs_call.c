@@ -960,7 +960,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #if	(!defined(AFS_NONFSTRANS)) || defined(AFS_AIX_IAUTH_ENV)
 	afs_nfsclient_init();
 #endif
-	afs_uuid_create(&afs_cb_interface.uuid);
+	if (afs_uuid_create(&afs_cb_interface.uuid) != 0)
+	    memset(&afs_cb_interface.uuid, 0, sizeof(afsUUID));
+
 	printf("found %d non-empty cache files (%d%%).\n",
 	       afs_stats_cmperf.cacheFilesReused,
 	       (100 * afs_stats_cmperf.cacheFilesReused) /
