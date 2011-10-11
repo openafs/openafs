@@ -257,6 +257,10 @@ rxk_InitializeSocket(void)
     usr_assert(rc == 0);
 #endif /* AFS_USR_AIX_ENV */
 
+#ifdef FD_CLOEXEC
+    fcntl(sock, F_SETFD, FD_CLOEXEC);
+#endif
+
     usockp->sock = sock;
     usockp->port = lcladdr.sin_port;
 
