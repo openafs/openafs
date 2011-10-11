@@ -235,7 +235,6 @@ FindBlobs(dir_file_t dir, int nblobs)
 
 	    /* read the page in. */
 	    if (DRead(dir, i, &pagebuf) != 0) {
-		DRelease(&headerbuf, 1);
 		break;
 	    }
 	    pp = (struct PageHeader *)pagebuf.data;
