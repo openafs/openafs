@@ -381,7 +381,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     }
     done:
     afs_PutFakeStat(&fakestate);
-#ifndef AFS_DARWIN80_ENV
+#if !defined(AFS_DARWIN80_ENV) && !defined(UKERNEL)
     /* we can't track by thread, it's not exported in the KPI; only do
        this on !macos */
     osi_Assert(!WriteLocked(&adp->lock) || (adp->lock.pid_writer != MyPidxx));
