@@ -422,10 +422,16 @@ afs_CacheTruncateDaemon(void)
 	    for (counter = 0; counter < 10; counter++) {
 		space_needed =
 		    afs_blocksUsed - afs_blocksDiscarded - cb_lowat;
+		if (space_needed < 0)
+		    space_needed = 0;
 		slots_needed =
 		    dc_hiwat - afs_freeDCCount - afs_discardDCCount;
-		afs_GetDownD(slots_needed, &space_needed, 0);
+		if (slots_needed < 0)
+		    slots_needed = 0;
+		if (slots_needed || space_needed)
+		    afs_GetDownD(slots_needed, &space_needed, 0);
 		if ((space_needed <= 0) && (slots_needed <= 0)) {
+		    afs_CacheTooFull = 0;
 		    break;
 		}
 		if (afs_termState == AFSOP_STOP_TRUNCDAEMON)
