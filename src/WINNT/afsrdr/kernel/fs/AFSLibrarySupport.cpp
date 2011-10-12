@@ -477,6 +477,11 @@ AFSClearLibraryRequest()
 
     __Enter
     {
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "%s Inflight Count %08lX\n",
+                      __FUNCTION__,
+                      pDevExt->Specific.Control.InflightLibraryRequests);
 
         if( InterlockedDecrement( &pDevExt->Specific.Control.InflightLibraryRequests) == 0)
         {
@@ -486,11 +491,6 @@ AFSClearLibraryRequest()
                         FALSE);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOAD_LIBRARY,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "%s Inflight Count %08lX\n",
-                      __FUNCTION__,
-                      pDevExt->Specific.Control.InflightLibraryRequests);
     }
 
     return ntStatus;
