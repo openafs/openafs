@@ -82,9 +82,13 @@ if ($afsversion=~m/(.*)(pre[0-9]+)/) {
     $linuxrel=1;
 }
 
-if ($afsversion=~m/-([0-9]+)-(g[a-f0-9]+)$/) {
-    $linuxrel.=".$1.$2";
+if ($afsversion=~m/(.*)-([0-9]+)-(g[a-f0-9]+)$/) {
+    $linuxver = $1 if ($linuxver eq $afsversion);
+    $linuxrel.=".$2.$3";
 }
+
+print "Linux release is $linuxrel\n";
+print "Linux version is $linuxver\n";
 
 # Figure out a major, minor and release so that we know which version we're
 # building, and therefore what the srpm is going to be called
