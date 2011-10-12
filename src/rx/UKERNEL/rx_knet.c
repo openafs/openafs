@@ -73,6 +73,9 @@ rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
      * for processing.
      */
     while (1) {
+        /* See if a check for additional packets was issued */
+        rx_CheckPackets();
+
 	tp = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE);
 	usr_assert(tp != NULL);
 	rc = rxi_ReadPacket(usockp, tp, &host, &port);
