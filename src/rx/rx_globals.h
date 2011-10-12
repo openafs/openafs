@@ -481,7 +481,6 @@ EXT osi_socket rx_minSocketNumber GLOBALSINIT(0x7fffffff);
 #define	RX_MAX_QUOTA	15	/* part of min packet computation */
 EXT int rx_packetQuota[RX_N_PACKET_CLASSES] GLOBALSINIT(RX_PACKET_QUOTAS);
 EXT int meltdown_1pkt GLOBALSINIT(1);	/* prefer to schedule single-packet calls */
-EXT int rxi_doreclaim GLOBALSINIT(1);	/* if discard one packet, discard all */
 EXT int rxi_md2cnt GLOBALSINIT(0);	/* counter of skipped calls */
 EXT int rxi_2dchoice GLOBALSINIT(1);	/* keep track of another call to schedule */
 

@@ -3803,8 +3803,9 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
 	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems\n", np));
-	if (rxi_doreclaim)
-	    rxi_ClearReceiveQueue(call);
+        /* We used to clear the receive queue here, in an attempt to free
+         * packets. However this is unsafe if the queue has received a
+         * soft ACK for the final packet */
 	clock_GetTime(&now);
 	when = now;
 	clock_Add(&when, &rx_softAckDelay);
