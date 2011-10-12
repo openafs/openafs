@@ -955,7 +955,7 @@ extern pthread_cond_t usr_sleep_cond;
     do { \
 	pthread_attr_t attr; \
 	assert(pthread_attr_init(&attr) == 0); \
-	assert(pthread_attr_setstacksize(&attr, 124288) == 0); \
+	assert(pthread_attr_setstacksize(&attr, 122880) == 0);	   \
 	assert(pthread_create((A), &attr, (B), (void *)(C)) == 0); \
 	assert(pthread_attr_destroy(&attr) == 0); \
     } while(0)
