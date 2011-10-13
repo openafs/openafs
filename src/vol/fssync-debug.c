@@ -456,6 +456,10 @@ VolOnline(struct cmd_syndesc * as, void * rock)
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
 
+    if (state.vop->partName==0 || *(state.vop->partName)==0) {
+	fprintf(stderr, "required argument -partition not given\n");
+	return -1;
+    }
     do_volop(&state, FSYNC_VOL_ON, NULL);
 
     return 0;

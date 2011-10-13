@@ -691,6 +691,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     Volume * vp;
     Error error;
 
+    /* Verify the partition name is null terminated. */
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
 	code = SYNC_FAILED;
@@ -700,6 +701,13 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     /* so, we need to attach the volume */
 
 #ifdef AFS_DEMAND_ATTACH_FS
+    /* Verify the partition name is not empty. */
+    if (*vcom->vop->partName == 0) {
+	res->hdr.reason = FSYNC_BAD_PART;
+	code = SYNC_FAILED;
+	goto done;
+    }
+
     /* check DAFS permissions */
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp &&
@@ -780,11 +788,11 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 			       V_VOLUPD);
     if (vp)
 	VPutVolume_r(vp);
+#endif /* !AFS_DEMAND_ATTACH_FS */
     if (error) {
 	code = SYNC_DENIED;
 	res->hdr.reason = error;
     }
-#endif /* !AFS_DEMAND_ATTACH_FS */
 
  done:
     return code;
