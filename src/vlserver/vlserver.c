@@ -190,7 +190,7 @@ main(int argc, char **argv)
 
     vl_dbaseName = strdup(AFSDIR_SERVER_VLDB_FILEPATH);
     configDir = strdup(AFSDIR_SERVER_ETC_DIRPATH);
-    logFile = strdup(AFSDIR_SERVER_PTLOG_FILEPATH);
+    logFile = strdup(AFSDIR_SERVER_VLOG_FILEPATH);
 
     cmd_DisableAbbreviations();
     cmd_DisablePositionalCommands();
