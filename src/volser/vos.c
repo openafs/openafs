@@ -1881,7 +1881,7 @@ volOffline(struct cmd_syndesc *as, void *arock)
 
     transflag = (as->parms[4].items ? ITBusy : ITOffline);
     sleeptime = (as->parms[3].items ? atol(as->parms[3].items->data) : 0);
-    transdone = (sleeptime ? 0 /*online */ : VTOutOfService);
+    transdone = ((sleeptime || as->parms[4].items) ? 0 /*online */ : VTOutOfService);
     if (as->parms[4].items && !as->parms[3].items) {
 	fprintf(STDERR, "-sleep option must be used with -busy flag\n");
 	return -1;
