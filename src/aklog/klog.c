@@ -557,10 +557,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     } else
 #endif
     snprintf (service_temp, sizeof service_temp, "afs/%s", cellconfig->name);
-    if (writeTicketFile)
-	service = 0;
-    else
-	service = service_temp;
 
     klog_arg->pp = &pass;
     klog_arg->pstore = passwd;
@@ -575,30 +571,26 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 #else
     krb5_get_init_creds_opt_init(gic_opts);
 #endif
+
     for (;;) {
-	code = krb5_get_init_creds_password(k5context,
+        code = krb5_get_init_creds_password(k5context,
 	    incred,
 	    princ,
 	    pass,
 	    pf,	/* prompter */
 	    pa,	/* data */
 	    0,	/* start_time */
-	    service,	/* in_tkt_service */
+	    0,	/* in_tkt_service */
 	    gic_opts);
-	if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || service != service_temp) break;
-#ifdef AFS_RXK5
-	if (authtype & FORCE_RXK5) break;
-#endif
-	service = "afs";
+	if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN)
+            break;
     }
     memset(passwd, 0, sizeof(passwd));
     if (code) {
 	char *r = 0;
 	if (krb5_get_default_realm(k5context, &r))
 	    r = 0;
-	if (service)
-	    afs_com_err(rn, code, "Unable to authenticate to use %s", service);
-	else if (r)
+	if (r)
 	    afs_com_err(rn, code, "Unable to authenticate in realm %s", r);
 	else
 	    afs_com_err(rn, code, "Unable to authenticate to use cell %s",
@@ -607,63 +599,64 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	KLOGEXIT(code);
     }
 
-    if (service) {
-	afscred = incred;
-    } else {
-	for (;;writeTicketFile = 0) {
-	    if (writeTicketFile) {
-		what = "getting default ccache";
-		code = krb5_cc_default(k5context, &cc);
-	    } else {
-		what = "krb5_cc_resolve";
-		code = krb5_cc_resolve(k5context, "MEMORY:core", &cc);
-		if (code) goto Failed;
-	    }
-	    what = "initializing ccache";
-	    code = krb5_cc_initialize(k5context, cc, princ);
-	    if (code) goto Failed;
-	    what = "writing Kerberos ticket file";
-	    code = krb5_cc_store_cred(k5context, cc, incred);
-	    if (code) goto Failed;
-	    if (writeTicketFile)
-		fprintf(stderr,
-		    "Wrote ticket file to %s\n",
-		    krb5_cc_get_name(k5context, cc));
-	    break;
-	Failed:
-	    if (code)
-		afs_com_err(rn, code, "%s", what);
-	    if (writeTicketFile) {
-		if (cc) {
-		    krb5_cc_close(k5context, cc);
-		    cc = 0;
-		}
-		continue;
-	    }
-	    KLOGEXIT(code);
-	}
-
-	for (service = service_temp;;service = "afs") {
-	    memset(mcred, 0, sizeof *mcred);
-	    mcred->client = princ;
-	    code = krb5_parse_name(k5context, service, &mcred->server);
-	    if (code) {
-		afs_com_err(rn, code, "Unable to parse service <%s>\n", service);
-		KLOGEXIT(code);
-	    }
-	    if (tofree) { free(tofree); tofree = 0; }
-	    if (!(code = krb5_unparse_name(k5context, mcred->server, &outname)))
-		tofree = outname;
-	    else outname = service;
-	    code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
-	    krb5_free_principal(k5context, mcred->server);
-	    if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || service != service_temp) break;
-#ifdef AFS_RXK5
-	    if (authtype & FORCE_RXK5) break;
-#endif
-	}
-	afscred = outcred;
+    for (;;writeTicketFile = 0) {
+        if (writeTicketFile) {
+            what = "getting default ccache";
+            code = krb5_cc_default(k5context, &cc);
+        } else {
+            what = "krb5_cc_resolve";
+            code = krb5_cc_resolve(k5context, "MEMORY:core", &cc);
+            if (code) goto Failed;
+        }
+        what = "initializing ccache";
+        code = krb5_cc_initialize(k5context, cc, princ);
+        if (code) goto Failed;
+        what = "writing Kerberos ticket file";
+        code = krb5_cc_store_cred(k5context, cc, incred);
+        if (code) goto Failed;
+        if (writeTicketFile)
+            fprintf(stderr,
+                    "Wrote ticket file to %s\n",
+                    krb5_cc_get_name(k5context, cc));
+        break;
+      Failed:
+        if (code)
+            afs_com_err(rn, code, "%s", what);
+        if (writeTicketFile) {
+            if (cc) {
+                krb5_cc_close(k5context, cc);
+                cc = 0;
+            }
+            continue;
+        }
+        KLOGEXIT(code);
     }
+
+    for (service = service_temp;;service = "afs") {
+        memset(mcred, 0, sizeof *mcred);
+        mcred->client = princ;
+        /* Ask for DES since that is what rxkad understands */
+        if (service && !strncmp(service, "afs", 3))
+            get_creds_enctype(mcred) = ENCTYPE_DES_CBC_CRC;
+        code = krb5_parse_name(k5context, service, &mcred->server);
+        if (code) {
+            afs_com_err(rn, code, "Unable to parse service <%s>\n", service);
+            KLOGEXIT(code);
+        }
+        if (tofree) { free(tofree); tofree = 0; }
+        if (!(code = krb5_unparse_name(k5context, mcred->server, &outname)))
+            tofree = outname;
+        else outname = service;
+        code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
+        krb5_free_principal(k5context, mcred->server);
+        if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || service != service_temp) break;
+#ifdef AFS_RXK5
+        if (authtype & FORCE_RXK5)
+            break;
+#endif
+    }
+    afscred = outcred;
+
     if (code) {
 	afs_com_err(rn, code, "Unable to get credentials to use %s", outname);
 	KLOGEXIT(code);
@@ -687,6 +680,13 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     {
 	struct ktc_principal aserver[1], aclient[1];
 	struct ktc_token atoken[1];
+
+        if (get_cred_keylen(afscred) != sizeof(atoken->sessionKey)) {
+            afs_com_err(rn, 0, "Invalid rxkad key length (%u != 8) key type (%u)",
+                        get_cred_keylen(afscred),
+                        get_creds_enctype(afscred));
+            KLOGEXIT(1);
+        }
 
 	memset(atoken, 0, sizeof *atoken);
 	if (evil) {
