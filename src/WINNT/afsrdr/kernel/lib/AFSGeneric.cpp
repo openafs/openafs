@@ -5962,14 +5962,14 @@ try_exit:
             // offset by the length of the server name
             //
 
-            AFSExFreePool( pwchBuffer);
-
             if( uniFullPathName.Length > 0 &&
                 pwchBuffer != (WCHAR *)((char *)uniFullPathName.Buffer - ulNameDifference))
             {
 
                 AFSExFreePool( uniFullPathName.Buffer);
             }
+
+            AFSExFreePool( pwchBuffer);
         }
     }
 
@@ -6482,14 +6482,14 @@ try_exit:
             // offset by the length of the server name
             //
 
-            AFSExFreePool( pwchBuffer);
-
             if( uniFullPathName.Length > 0 &&
                 pwchBuffer != (WCHAR *)((char *)uniFullPathName.Buffer - ulNameDifference))
             {
 
                 AFSExFreePool( uniFullPathName.Buffer);
             }
+
+            AFSExFreePool( pwchBuffer);
         }
     }
 
