@@ -2075,7 +2075,7 @@ try_exit:
 
                 InterlockedDecrement( &Fcb->OpenReferenceCount);
 
-                ExFreePool( pWorkItem);
+                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2159,7 +2159,7 @@ try_exit:
             if( pWorkItem != NULL)
             {
 
-                ExFreePool( pWorkItem);
+                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2243,7 +2243,7 @@ try_exit:
             if( pWorkItem != NULL)
             {
 
-                ExFreePool( pWorkItem);
+                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2312,7 +2312,7 @@ try_exit:
             if( pWorkItem != NULL)
             {
 
-                ExFreePool( pWorkItem);
+                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2421,7 +2421,7 @@ try_exit:
             if( pWorkItem != NULL)
             {
 
-                ExFreePool( pWorkItem);
+                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }
         }
     }
