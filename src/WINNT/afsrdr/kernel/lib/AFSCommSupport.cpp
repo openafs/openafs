@@ -1638,7 +1638,16 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
         // Pass back the dir enum entry
         //
 
-        *DirEnumEntry = pDirEnumCB;
+        if( DirEnumEntry != NULL)
+        {
+
+            *DirEnumEntry = pDirEnumCB;
+        }
+        else
+        {
+
+            AFSExFreePool( pDirEnumCB);
+        }
 
 try_exit:
 
