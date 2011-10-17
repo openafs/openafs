@@ -1166,11 +1166,6 @@ try_exit:
 
             AFSExFreePool( pResultCB);
         }
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-        }
     }
 
     return ntStatus;
