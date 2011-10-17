@@ -287,9 +287,8 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitFcb Initialized Fcb %08lX Name %wZ\n",
-                                                    pFcb,
-                                                    &DirEntry->NameInformation.FileName);
-
+                      pFcb,
+                      &DirEntry->NameInformation.FileName);
 
 try_exit:
 

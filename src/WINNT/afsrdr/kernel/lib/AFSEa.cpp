@@ -68,7 +68,7 @@ AFSQueryEA( IN PDEVICE_OBJECT LibDeviceObject,
                       "AFSQueryEa Entry for FO %08lX\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
-                              ntStatus);
+                            ntStatus);
 
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
@@ -112,7 +112,7 @@ AFSSetEA( IN PDEVICE_OBJECT LibDeviceObject,
                       "AFSSetEa Entry for FO %08lX\n", pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
-                              ntStatus);
+                            ntStatus);
 
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )

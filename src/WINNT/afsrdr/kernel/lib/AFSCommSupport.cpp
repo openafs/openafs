@@ -323,12 +323,12 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NODE_COUNT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSEnumerateDirectory Adding entry %wZ Inc Count %d to parent FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pDirNode->NameInformation.FileName,
-                                  ObjectInfoCB->Specific.Directory.DirectoryNodeCount,
-                                  ObjectInfoCB->FileId.Cell,
-                                  ObjectInfoCB->FileId.Volume,
-                                  ObjectInfoCB->FileId.Vnode,
-                                  ObjectInfoCB->FileId.Unique);
+                              &pDirNode->NameInformation.FileName,
+                              ObjectInfoCB->Specific.Directory.DirectoryNodeCount,
+                              ObjectInfoCB->FileId.Cell,
+                              ObjectInfoCB->FileId.Volume,
+                              ObjectInfoCB->FileId.Vnode,
+                              ObjectInfoCB->FileId.Unique);
 
                 if( pDirNode->Type.Data.ShortNameTreeEntry.HashIndex != 0)
                 {
@@ -414,11 +414,11 @@ try_exit:
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSEnumerateDirectory Resetting content for FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                      ObjectInfoCB->FileId.Cell,
-                                      ObjectInfoCB->FileId.Volume,
-                                      ObjectInfoCB->FileId.Vnode,
-                                      ObjectInfoCB->FileId.Unique,
-                                      ntStatus);
+                          ObjectInfoCB->FileId.Cell,
+                          ObjectInfoCB->FileId.Volume,
+                          ObjectInfoCB->FileId.Vnode,
+                          ObjectInfoCB->FileId.Unique,
+                          ntStatus);
 
             AFSResetDirectoryContent( ObjectInfoCB);
         }
@@ -677,11 +677,11 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSVerifyDirectoryContent Verified entry %wZ for parent FID %08lX-%08lX-%08lX-%08lX\n",
-                                                      &uniDirName,
-                                                      ObjectInfoCB->FileId.Cell,
-                                                      ObjectInfoCB->FileId.Volume,
-                                                      ObjectInfoCB->FileId.Vnode,
-                                                      ObjectInfoCB->FileId.Unique);
+                                          &uniDirName,
+                                          ObjectInfoCB->FileId.Cell,
+                                          ObjectInfoCB->FileId.Volume,
+                                          ObjectInfoCB->FileId.Vnode,
+                                          ObjectInfoCB->FileId.Unique);
 
 
                             //
@@ -701,11 +701,11 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
                                                   "AFSVerifyDirectoryContent Setting VERIFY on entry %wZ for FID %08lX-%08lX-%08lX-%08lX\n",
-                                                              &uniDirName,
-                                                              ObjectInfoCB->FileId.Cell,
-                                                              ObjectInfoCB->FileId.Volume,
-                                                              ObjectInfoCB->FileId.Vnode,
-                                                              ObjectInfoCB->FileId.Unique);
+                                                  &uniDirName,
+                                                  ObjectInfoCB->FileId.Cell,
+                                                  ObjectInfoCB->FileId.Volume,
+                                                  ObjectInfoCB->FileId.Vnode,
+                                                  ObjectInfoCB->FileId.Unique);
 
                                     SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
                                     pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
@@ -874,12 +874,12 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NODE_COUNT,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSVerifyDirectoryContent Adding entry %wZ Inc Count %d to parent FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pDirNode->NameInformation.FileName,
-                                  ObjectInfoCB->Specific.Directory.DirectoryNodeCount,
-                                  ObjectInfoCB->FileId.Cell,
-                                  ObjectInfoCB->FileId.Volume,
-                                  ObjectInfoCB->FileId.Vnode,
-                                  ObjectInfoCB->FileId.Unique);
+                              &pDirNode->NameInformation.FileName,
+                              ObjectInfoCB->Specific.Directory.DirectoryNodeCount,
+                              ObjectInfoCB->FileId.Cell,
+                              ObjectInfoCB->FileId.Volume,
+                              ObjectInfoCB->FileId.Vnode,
+                              ObjectInfoCB->FileId.Unique);
 
                 if( pDirNode->Type.Data.ShortNameTreeEntry.HashIndex != 0)
                 {
