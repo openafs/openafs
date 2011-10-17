@@ -1938,16 +1938,16 @@ AFSProcessCreate( IN PIRP               Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment count on Fcb %08lX Cnt %d\n",
-                                                    *Fcb,
-                                                    (*Fcb)->OpenReferenceCount);
+                      *Fcb,
+                      (*Fcb)->OpenReferenceCount);
 
         InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment handle count on Fcb %08lX Cnt %d\n",
-                                                    (*Fcb),
-                                                    (*Fcb)->OpenHandleCount);
+                      (*Fcb),
+                      (*Fcb)->OpenHandleCount);
 
         //
         // Increment the open reference and handle on the parent node

@@ -1373,9 +1373,9 @@ AFSShutdownRedirector()
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Shutting down redirector Extent count %08lX Request count %08lX\n",
-                                __FUNCTION__,
-                                pControlDevExt->Specific.Control.ExtentCount,
-                                pControlDevExt->Specific.Control.OutstandingServiceRequestCount);
+                      __FUNCTION__,
+                      pControlDevExt->Specific.Control.ExtentCount,
+                      pControlDevExt->Specific.Control.OutstandingServiceRequestCount);
 
         //
         // Set the shutdown flag so the worker is more agressive in tearing down extents
@@ -1400,8 +1400,8 @@ AFSShutdownRedirector()
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                              "AFSShutdownRedirector Failed to complete all service requests Remaining count %08lX\n",
-                                                    pControlDevExt->Specific.Control.OutstandingServiceRequestCount);
+                          "AFSShutdownRedirector Failed to complete all service requests Remaining count %08lX\n",
+                          pControlDevExt->Specific.Control.OutstandingServiceRequestCount);
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1425,8 +1425,8 @@ AFSShutdownRedirector()
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                              "AFSShutdownRedirector Failed to purge all extents Remaining count %08lX\n",
-                                                    pControlDevExt->Specific.Control.ExtentCount);
+                          "AFSShutdownRedirector Failed to purge all extents Remaining count %08lX\n",
+                          pControlDevExt->Specific.Control.ExtentCount);
 
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
@@ -1444,10 +1444,10 @@ try_exit:
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "%s Completed shut down of redirector Extent count %08lX Request count %08lX Status %08lX\n",
-                                __FUNCTION__,
-                                pControlDevExt->Specific.Control.ExtentCount,
-                                pControlDevExt->Specific.Control.OutstandingServiceRequestCount,
-                                ntStatus);
+                      __FUNCTION__,
+                      pControlDevExt->Specific.Control.ExtentCount,
+                      pControlDevExt->Specific.Control.OutstandingServiceRequestCount,
+                      ntStatus);
     }
 
     return ntStatus;

@@ -2206,8 +2206,8 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSDeleteDirEntry Decrement count on object %08lX Cnt %d\n",
-                                                    DirEntry->ObjectInformation,
-                                                    DirEntry->ObjectInformation->ObjectReferenceCount);
+                      DirEntry->ObjectInformation,
+                      DirEntry->ObjectInformation->ObjectReferenceCount);
 
         ExDeleteResourceLite( &DirEntry->NonPaged->Lock);
 

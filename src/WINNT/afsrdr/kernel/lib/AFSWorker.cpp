@@ -1120,7 +1120,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSPrimaryWorker Deleting deleted object %08lX\n",
-                                                                    pCurrentObject);
+                                              pCurrentObject);
 
                                 AFSDeleteObjectInfo( pCurrentObject);
 
@@ -1275,8 +1275,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
                                                   "AFSPrimaryWorker Deleting DE %wZ Object %08lX\n",
-                                                                    &pCurrentDirEntry->NameInformation.FileName,
-                                                                    pCurrentChildObject);
+                                                  &pCurrentDirEntry->NameInformation.FileName,
+                                                  pCurrentChildObject);
 
                                     AFSDeleteDirEntry( pCurrentObject,
                                                        pCurrentDirEntry);
@@ -1319,7 +1319,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                       AFS_TRACE_LEVEL_VERBOSE,
                                                       "AFSPrimaryWorker Deleting object %08lX\n",
-                                                                            pCurrentChildObject);
+                                                      pCurrentChildObject);
 
                                         AFSDeleteObjectInfo( pCurrentChildObject);
                                     }
@@ -1342,10 +1342,10 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NODE_COUNT,
                                               AFS_TRACE_LEVEL_VERBOSE,
                                               "AFSPrimaryWorker Reset count to 0 on parent FID %08lX-%08lX-%08lX-%08lX\n",
-                                                  pCurrentObject->FileId.Cell,
-                                                  pCurrentObject->FileId.Volume,
-                                                  pCurrentObject->FileId.Vnode,
-                                                  pCurrentObject->FileId.Unique);
+                                              pCurrentObject->FileId.Cell,
+                                              pCurrentObject->FileId.Volume,
+                                              pCurrentObject->FileId.Vnode,
+                                              pCurrentObject->FileId.Unique);
 
 
                                 //

@@ -4024,7 +4024,7 @@ AFSInitializeSpecialShareNameList()
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeSpecialShareNameList (srvsvc) Initializing count (1) on object %08lX\n",
-                                                    pObjectInfoCB);
+                      pObjectInfoCB);
 
         pObjectInfoCB->ObjectReferenceCount = 1;
 
@@ -4109,7 +4109,7 @@ AFSInitializeSpecialShareNameList()
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeSpecialShareNameList (wkssvc) Initializing count (1) on object %08lX\n",
-                                                    pObjectInfoCB);
+                      pObjectInfoCB);
 
         pObjectInfoCB->ObjectReferenceCount = 1;
 
@@ -4196,7 +4196,7 @@ AFSInitializeSpecialShareNameList()
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitializeSpecialShareNameList (ipc$) Initializing count (1) on object %08lX\n",
-                                                    pObjectInfoCB);
+                      pObjectInfoCB);
 
         pObjectInfoCB->ObjectReferenceCount = 1;
 
@@ -5427,8 +5427,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
 
         pObjectInfoCB->FileAttributes = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
 
-        ulEntryLength = sizeof( AFSDirectoryCB) +
-                                     AFSPIOCtlName.Length;
+        ulEntryLength = sizeof( AFSDirectoryCB) + AFSPIOCtlName.Length;
 
         pDirNode = (AFSDirectoryCB *)AFSExAllocatePoolWithTag( PagedPool,
                                                                ulEntryLength,

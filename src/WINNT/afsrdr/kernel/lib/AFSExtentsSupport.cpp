@@ -347,7 +347,9 @@ try_exit:
             AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
         }
 
-        if (pRelease) {
+        if (pRelease)
+        {
+
             AFSExFreePool( pRelease);
         }
     }
@@ -2064,8 +2066,8 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSFindFcbToClean Increment count on Fcb %08lX Cnt %d\n",
-                                                            pCurrentObject,
-                                                            pCurrentObject->ObjectReferenceCount);
+                              pCurrentObject,
+                              pCurrentObject->ObjectReferenceCount);
 
                 bLocatedEntry = TRUE;
 
@@ -2201,8 +2203,8 @@ AFSProcessExtentFailure( PIRP Irp)
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessExtentFailure Increment count on object %08lX Cnt %d\n",
-                                                        pObjectInfo,
-                                                        pObjectInfo->ObjectReferenceCount);
+                          pObjectInfo,
+                          pObjectInfo->ObjectReferenceCount);
         }
 
         AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -2433,8 +2435,8 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessReleaseFileExtents Increment count on object %08lX Cnt %d\n",
-                                                            pObjectInfo,
-                                                            pObjectInfo->ObjectReferenceCount);
+                              pObjectInfo,
+                              pObjectInfo->ObjectReferenceCount);
             }
 
             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -2580,8 +2582,8 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessReleaseFileExtents Failed to release extents Status %08lX\n",
-                                                            ntStatus);
+                          "AFSProcessReleaseFileExtents Failed to release extents Status %08lX\n",
+                          ntStatus);
 
             try_return( ntStatus );
         }
@@ -2591,7 +2593,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                              "AFSProcessReleaseFileExtents Failed to release ANY extents\n");
+                          "AFSProcessReleaseFileExtents Failed to release ANY extents\n");
         }
 
         ulSz = sizeof(AFSReleaseFileExtentsResultCB);
@@ -2645,8 +2647,8 @@ try_exit:
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessReleaseFileExtents Decrement count on object %08lX Cnt %d\n",
-                                                        pObjectInfo,
-                                                        pObjectInfo->ObjectReferenceCount);
+                          pObjectInfo,
+                          pObjectInfo->ObjectReferenceCount);
         }
     }
 
