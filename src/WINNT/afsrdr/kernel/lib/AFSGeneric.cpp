@@ -5448,10 +5448,6 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
         if( pNonPagedDirEntry == NULL)
         {
 
-            AFSExFreePool( pDirNode);
-
-            AFSDeleteObjectInfo( pObjectInfoCB);
-
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
@@ -5492,7 +5488,21 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
 
 try_exit:
 
-        NOTHING;
+        if ( !NT_SUCCESS( ntStatus))
+        {
+
+            if ( pDirNode != NULL)
+            {
+
+                AFSExFreePool( pDirNode);
+            }
+
+            if ( pObjectInfoCB != NULL)
+            {
+
+                AFSDeleteObjectInfo( pObjectInfoCB);
+            }
+        }
     }
 
     return ntStatus;
