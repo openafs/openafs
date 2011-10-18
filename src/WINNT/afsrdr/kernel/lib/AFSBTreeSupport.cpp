@@ -690,7 +690,8 @@ AFSRemoveCaseInsensitiveDirEntry( IN AFSDirectoryCB **RootNode,
 
             try_return( ntStatus);
         }
-        else if( DirEntry->CaseInsensitiveList.fLink != NULL)
+
+        if( DirEntry->CaseInsensitiveList.fLink != NULL)
         {
 
             //
@@ -710,6 +711,10 @@ AFSRemoveCaseInsensitiveDirEntry( IN AFSDirectoryCB **RootNode,
                 {
                     pParentNode->CaseInsensitiveTreeEntry.leftLink = (void *)pNewHeadEntry;
                 }
+            }
+            else
+            {
+                *RootNode = pNewHeadEntry;
             }
 
             if( pRightNode != NULL)
@@ -732,7 +737,7 @@ AFSRemoveCaseInsensitiveDirEntry( IN AFSDirectoryCB **RootNode,
 
             pNewHeadEntry->CaseInsensitiveTreeEntry.rightLink = pRightNode;
 
-            SetFlag( ((AFSDirectoryCB *)DirEntry->CaseInsensitiveList.fLink)->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+            SetFlag( pNewHeadEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
 
             try_return( ntStatus);
         }
