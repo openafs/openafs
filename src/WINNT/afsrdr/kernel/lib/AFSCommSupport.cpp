@@ -1329,7 +1329,7 @@ AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
             if( DirectoryCB->ObjectInformation->ParentObjectInformation->DataVersion.QuadPart != stDeleteResult.ParentDataVersion.QuadPart)
             {
 
-                DirectoryCB->ObjectInformation->ParentObjectInformation->Flags |= AFS_OBJECT_FLAGS_VERIFY;
+                SetFlag( DirectoryCB->ObjectInformation->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
                 DirectoryCB->ObjectInformation->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
             }
