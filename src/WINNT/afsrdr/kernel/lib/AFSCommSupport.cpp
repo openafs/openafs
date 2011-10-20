@@ -267,6 +267,13 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
 
                     pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
                                                                                        TRUE);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Initialized short name %wZ for DE %p for %wZ\n",
+                                  &uniShortName,
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
                 }
 
                 //
@@ -279,9 +286,21 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                 {
 
                     ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = pDirNode;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Insert DE %p to head of case sensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
                 }
                 else
                 {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Insert DE %p to case sensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
 
                     AFSInsertCaseSensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                                     pDirNode);
@@ -290,12 +309,24 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                 if( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead == NULL)
                 {
 
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Insert DE %p to head of case insensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
+
                     ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = pDirNode;
 
                     SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
                 }
                 else
                 {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Insert DE %p to case insensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
 
                     AFSInsertCaseInsensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                                       pDirNode);
@@ -340,10 +371,22 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                     if( ObjectInfoCB->Specific.Directory.ShortNameTree == NULL)
                     {
 
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSEnumerateDirectory Insert DE %p to head of shortname tree for %wZ\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName);
+
                         ObjectInfoCB->Specific.Directory.ShortNameTree = pDirNode;
                     }
                     else
                     {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSEnumerateDirectory Insert DE %p to shortname tree for %wZ\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName);
 
                         AFSInsertShortNameDirEntry( ObjectInfoCB->Specific.Directory.ShortNameTree,
                                                     pDirNode);
@@ -818,6 +861,13 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                     pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
                                                                                        TRUE);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent Initialized short name %wZ for DE %p for %wZ\n",
+                                  &uniShortName,
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
                 }
 
                 //
@@ -830,12 +880,24 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                 {
 
                     ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = pDirNode;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent Insert DE %p to head of case sensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
                 }
                 else
                 {
 
                     AFSInsertCaseSensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                                     pDirNode);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent Insert DE %p to case sensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
                 }
 
                 if( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead == NULL)
@@ -844,12 +906,24 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = pDirNode;
 
                     SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent Insert DE %p to head of case insensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
                 }
                 else
                 {
 
                     AFSInsertCaseInsensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                                       pDirNode);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent Insert DE %p to case insensitive tree for %wZ\n",
+                                  pDirNode,
+                                  &pDirNode->NameInformation.FileName);
                 }
 
                 if( ObjectInfoCB->Specific.Directory.DirectoryNodeListHead == NULL)
@@ -892,12 +966,24 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     {
 
                         ObjectInfoCB->Specific.Directory.ShortNameTree = pDirNode;
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVerifyDirectoryContent Insert DE %p to head of shortname tree for %wZ\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName);
                     }
                     else
                     {
 
                         AFSInsertShortNameDirEntry( ObjectInfoCB->Specific.Directory.ShortNameTree,
                                                     pDirNode);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVerifyDirectoryContent Insert DE %p to shortname tree for %wZ\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName);
                     }
                 }
 
@@ -1151,6 +1237,13 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
 
             pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
                                                                                TRUE);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyFileCreate Initialized short name %wZ for DE %p for %wZ\n",
+                          &uniShortName,
+                          pDirNode,
+                          &pDirNode->NameInformation.FileName);
         }
 
         //

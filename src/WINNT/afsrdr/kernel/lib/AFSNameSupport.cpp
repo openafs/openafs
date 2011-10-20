@@ -2053,18 +2053,36 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
         // Insert the node into the directory node tree
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInsertDirectoryNode Insert DE %p for %wZ Clearing NOT_IN flag\n",
+                      DirEntry,
+                      &DirEntry->NameInformation.FileName);
+
         ClearFlag( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
         if( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead == NULL)
         {
 
             ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = DirEntry;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInsertDirectoryNode Insert DE %p to head of case sensitive tree for %wZ\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName);
         }
         else
         {
 
             AFSInsertCaseSensitiveDirEntry( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                             DirEntry);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInsertDirectoryNode Insert DE %p to case sensitive tree for %wZ\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName);
         }
 
         if( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead == NULL)
@@ -2073,12 +2091,24 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
             ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = DirEntry;
 
             SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInsertDirectoryNode Insert DE %p to head of case insensitive tree for %wZ\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName);
         }
         else
         {
 
             AFSInsertCaseInsensitiveDirEntry( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                               DirEntry);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInsertDirectoryNode Insert DE %p to case sensitive tree for %wZ\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName);
         }
 
         //
@@ -2092,12 +2122,24 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
             {
 
                 ParentObjectInfo->Specific.Directory.ShortNameTree = DirEntry;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInsertDirectoryNode Insert DE %p to head of shortname tree for %wZ\n",
+                              DirEntry,
+                              &DirEntry->NameInformation.FileName);
             }
             else
             {
 
                 AFSInsertShortNameDirEntry( ParentObjectInfo->Specific.Directory.ShortNameTree,
                                             DirEntry);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInsertDirectoryNode Insert DE %p to shortname tree for %wZ\n",
+                              DirEntry,
+                              &DirEntry->NameInformation.FileName);
             }
         }
 
@@ -2253,6 +2295,16 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
 
             AFSRemoveNameEntry( ParentObjectInfo,
                                 DirEntry);
+        }
+        else
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveDirNodeFromParent DE %p for %wZ NOT removing entry due to flag set\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName);
+
         }
 
         if( RemoveFromEnumList &&
