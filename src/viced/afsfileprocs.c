@@ -7482,6 +7482,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	FDH_SYNC(fdP);
     }
     if (errorCode) {
+	Error tmp_errorCode = 0;
 	afs_sfsize_t nfSize = FDH_SIZE(fdP);
 	osi_Assert(nfSize >= 0);
 	/* something went wrong: adjust size and return */
@@ -7495,9 +7496,12 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	if (origfdP) FDH_REALLYCLOSE(origfdP);
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
-	VAdjustDiskUsage(&errorCode, volptr,
+	VAdjustDiskUsage(&tmp_errorCode, volptr,
 			 (afs_sfsize_t) (nBlocks(nfSize) -
 					 nBlocks(NewLength)), 0);
+	if (tmp_errorCode) {
+	    errorCode = tmp_errorCode;
+	}
 	return errorCode;
     }
     if (origfdP) {					/* finish CopyOnWrite */
