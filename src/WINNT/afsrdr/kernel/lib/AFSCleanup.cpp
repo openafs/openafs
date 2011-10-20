@@ -422,6 +422,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                             AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
                         }
+                        else
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
+                                          pCcb->DirectoryCB,
+                                          &pCcb->DirectoryCB->NameInformation.FileName);
+                        }
                     }
                 }
                 else
@@ -731,6 +740,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                             AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
                         }
+                        else
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
+                                          pCcb->DirectoryCB,
+                                          &pCcb->DirectoryCB->NameInformation.FileName);
+                        }
                     }
                 }
 
@@ -974,6 +992,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                 pCcb->DirectoryCB);
 
                             AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                        }
+                        else
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSCleanup DE %p for %wZ NOT removing entry due to flag set\n",
+                                          pCcb->DirectoryCB,
+                                          &pCcb->DirectoryCB->NameInformation.FileName);
                         }
                     }
                 }

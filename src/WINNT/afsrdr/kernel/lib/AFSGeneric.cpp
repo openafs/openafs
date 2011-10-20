@@ -1031,7 +1031,7 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             bAllocatedObjectCB = TRUE;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitDirEntry initialized object %08lX Parent Object %08lX for %wZ\n",
                           pObjectInfoCB,
@@ -1127,6 +1127,16 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             pDirNode->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pDirNode->NameInformation.FileName,
                                                                            TRUE);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitDirEntry Initialized DE %p for %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
+                      pDirNode,
+                      FileName,
+                      ParentObjectInfo->FileId.Cell,
+                      ParentObjectInfo->FileId.Volume,
+                      ParentObjectInfo->FileId.Vnode,
+                      ParentObjectInfo->FileId.Unique);
 
         if( TargetName != NULL &&
             TargetName->Length > 0)
@@ -6973,6 +6983,12 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveNameEntry DE %p for %wZ has NOT_IN flag set\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName);
+
             try_return( ntStatus);
         }
 
@@ -6982,8 +6998,20 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         // Remove the entry from the parent tree
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRemoveNameEntry DE %p for %wZ removing from case sensitive tree\n",
+                      DirEntry,
+                      &DirEntry->NameInformation.FileName);
+
         AFSRemoveCaseSensitiveDirEntry( &ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                         DirEntry);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRemoveNameEntry DE %p for %wZ removing from case insensitive tree\n",
+                      DirEntry,
+                      &DirEntry->NameInformation.FileName);
 
         AFSRemoveCaseInsensitiveDirEntry( &ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                           DirEntry);
@@ -6996,9 +7024,21 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             // From the short name tree
             //
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRemoveNameEntry DE %p for %wZ removing from shortname tree\n",
+                          DirEntry,
+                          &DirEntry->NameInformation.FileName);
+
             AFSRemoveShortNameDirEntry( &ParentObjectInfo->Specific.Directory.ShortNameTree,
                                         DirEntry);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRemoveNameEntry DE %p for %wZ setting NOT_IN flag\n",
+                      DirEntry,
+                      &DirEntry->NameInformation.FileName);
 
         SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
