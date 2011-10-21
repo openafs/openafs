@@ -1751,6 +1751,7 @@ AFSSetRenameInfo( IN PIRP Irp)
     ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
     UNICODE_STRING uniFullTargetPath;
     BOOLEAN bCommonParent = FALSE;
+    ULONG oldFileIndex;
 
     __Enter
     {
@@ -2110,6 +2111,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
         AFSReleaseResource( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
+        oldFileIndex = pSrcCcb->DirectoryCB->FileIndex;
         if( !bCommonParent)
         {
 
@@ -2120,7 +2122,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             //
 
             pSrcCcb->DirectoryCB->FileIndex =
-                            (ULONG)InterlockedIncrement( &pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.ContentIndex);
+                            (ULONG)InterlockedIncrement( &pTargetDcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.ContentIndex);
         }
 
         //
@@ -2142,6 +2144,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Attempt to re-insert the directory entry
             //
 
+            pSrcCcb->DirectoryCB->FileIndex = oldFileIndex;
             AFSInsertDirectoryNode( pSrcFcb->ObjectInformation->ParentObjectInformation,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
@@ -2202,6 +2205,7 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Attempt to re-insert the directory entry
             //
 
+            pSrcCcb->DirectoryCB->FileIndex = oldFileIndex;
             AFSInsertDirectoryNode( pSrcFcb->ObjectInformation->ParentObjectInformation,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
