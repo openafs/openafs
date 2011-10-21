@@ -87,7 +87,7 @@ afs_linux_pag_from_groups(struct group_info *group_info) {
 
 static inline void
 afs_linux_pag_to_groups(afs_uint32 newpag,
-			struct group_info *old, struct group_info *new) {
+			struct group_info *old, struct group_info **new) {
     int need_space = 0;
     int i;
     gid_t g0;
