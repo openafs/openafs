@@ -2061,7 +2061,6 @@ AFSOpenTargetDirectory( IN PIRP Irp,
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
-    BOOLEAN bRemoveAccess = FALSE;
     BOOLEAN bAllocatedCcb = FALSE;
     BOOLEAN bReleaseFcb = FALSE, bAllocatedFcb = FALSE;
     AFSObjectInfoCB *pParentObject = NULL, *pTargetObject = NULL;
@@ -2297,13 +2296,6 @@ try_exit:
             }
 
             *Ccb = NULL;
-
-            if( bRemoveAccess)
-            {
-
-                IoRemoveShareAccess( pFileObject,
-                                     &pParentObject->Fcb->ShareAccess);
-            }
 
             if( bAllocatedFcb)
             {
