@@ -290,9 +290,8 @@ extern struct rxevent *rxevent_Post(struct clock *when, struct clock *now,
 extern void shutdown_rxevent(void);
 extern struct rxepoch *rxepoch_Allocate(struct clock *when);
 extern void rxevent_Init(int nEvents, void (*scheduler) (void));
-extern void rxevent_Cancel_1(struct rxevent *ev,
-			     struct rx_call *call,
-			     int type);
+extern void rxevent_Cancel(struct rxevent **ev, struct rx_call *call,
+			   int type);
 extern int rxevent_RaiseEvents(struct clock *next);
 
 

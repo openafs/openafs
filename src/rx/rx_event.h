@@ -83,33 +83,9 @@ extern struct rxevent *rxevent_Post( /* when, func, arg, arg1 */ );
  * pending.  Also see the warning, above.  The event pointer supplied
  * is zeroed.
  */
-#ifdef RX_ENABLE_LOCKS
-#ifdef RX_REFCOUNT_CHECK
-#define	rxevent_Cancel(event_ptr, call, type)			    \
-	BEGIN					    \
-	    if (event_ptr) {			    \
-		rxevent_Cancel_1(event_ptr, call, type);	    \
-		event_ptr = NULL;	    \
-	    }					    \
-	END
-#else /* RX_REFCOUNT_CHECK */
-#define	rxevent_Cancel(event_ptr, call, type)			    \
-	BEGIN					    \
-	    if (event_ptr) {			    \
-		rxevent_Cancel_1(event_ptr, call, 0);	    \
-		event_ptr = NULL;	    \
-	    }					    \
-	END
-#endif /* RX_REFCOUNT_CHECK */
-#else /* RX_ENABLE_LOCKS */
-#define	rxevent_Cancel(event_ptr, call, type)			    \
-	BEGIN					    \
-	    if (event_ptr) {			    \
-		rxevent_Cancel_1(event_ptr, NULL, 0);	    \
-		event_ptr = NULL;	    \
-	    }					    \
-	END
-#endif /* RX_ENABLE_LOCKS */
+#if 0
+extern struct rxevent *rxevent_Cancel(struct rxevent *, struct rx_call *, int)
+#endif
 
 /* The actions specified for each event that has reached the current clock
  * time will be taken.  The current time returned by GetTime is used
