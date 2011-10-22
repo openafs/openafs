@@ -121,8 +121,7 @@ extern void rxi_AttachServerProc(struct rx_call *call,
 				 struct rx_call **newcallp);
 extern void rxi_AckAll(struct rxevent *event, struct rx_call *call,
 		       char *dummy);
-extern void rxi_SendDelayedAck(struct rxevent *event,
-			       void *call /* struct rx_call *call */, void *dummy);
+extern void rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *now);
 extern void rxi_ClearTransmitQueue(struct rx_call *call,
 				   int force);
 extern void rxi_ClearReceiveQueue(struct rx_call *call);

@@ -100,6 +100,8 @@ static void rxi_ComputeRoundTripTime(struct rx_packet *, struct rx_ackPacket *,
 				     struct clock *);
 static void rxi_Resend(struct rxevent *event, void *arg0, void *arg1,
 		       int istack);
+static void rxi_SendDelayedAck(struct rxevent *event, void *call,
+                               void *dummy);
 
 #ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
@@ -754,6 +756,38 @@ rx_SetBusyChannelError(afs_int32 error)
     osi_Assert(rxinit_status != 0);
     rxi_busyChannelError = error;
 }
+
+/**
+ * Set a delayed ack event on the specified call for the given time
+ *
+ * @param[in] call - the call on which to set the event
+ * @param[in] offset - the delay from now after which the event fires
+ */
+void
+rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
+{
+    struct clock now, when;
+
+    clock_GetTime(&now);
+    when = now;
+    clock_Add(&when, offset);
+
+    if (!call->delayedAckEvent
+	|| clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
+
+        rxevent_Cancel(call->delayedAckEvent, call,
+		       RX_CALL_REFCOUNT_DELAY);
+	MUTEX_ENTER(&rx_refcnt_mutex);
+	CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
+	MUTEX_EXIT(&rx_refcnt_mutex);
+
+	call->delayedAckEvent = rxevent_PostNow(&when, &now,
+						rxi_SendDelayedAck,
+						call, 0);
+    }
+}
+
+
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
  * a new thread in this service.  Could be "no" for two reasons: over the
@@ -3786,7 +3820,6 @@ rxi_ReceiveDataPacket(struct rx_call *call,
     afs_uint32 serial=0, flags=0;
     int isFirst;
     struct rx_packet *tnp;
-    struct clock when, now;
     if (rx_stats_active)
         rx_atomic_inc(&rx_stats.dataPacketsRead);
 
@@ -3806,20 +3839,8 @@ rxi_ReceiveDataPacket(struct rx_call *call,
         /* We used to clear the receive queue here, in an attempt to free
          * packets. However this is unsafe if the queue has received a
          * soft ACK for the final packet */
-	clock_GetTime(&now);
-	when = now;
-	clock_Add(&when, &rx_softAckDelay);
-	if (!call->delayedAckEvent
-	    || clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
-	    rxevent_Cancel(call->delayedAckEvent, call,
-			   RX_CALL_REFCOUNT_DELAY);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	rxi_PostDelayedAckEvent(call, &rx_softAckDelay);
 
-	    call->delayedAckEvent =
-		rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
-	}
 	/* we've damaged this call already, might as well do it in. */
 	return np;
     }
@@ -4105,23 +4126,10 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
 	np = rxi_SendAck(call, np, serial, RX_ACK_IDLE, istack);
     } else if (call->nSoftAcks) {
-	clock_GetTime(&now);
-	when = now;
-	if (haveLast && !(flags & RX_CLIENT_INITIATED)) {
-	    clock_Add(&when, &rx_lastAckDelay);
-	} else {
-	    clock_Add(&when, &rx_softAckDelay);
-	}
-	if (!call->delayedAckEvent
-	    || clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
-	    rxevent_Cancel(call->delayedAckEvent, call,
-			   RX_CALL_REFCOUNT_DELAY);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-            MUTEX_EXIT(&rx_refcnt_mutex);
-	    call->delayedAckEvent =
-		rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
-	}
+	if (haveLast && !(flags & RX_CLIENT_INITIATED))
+	    rxi_PostDelayedAckEvent(call, &rx_lastAckDelay);
+	else
+	    rxi_PostDelayedAckEvent(call, &rx_softAckDelay);
     } else if (call->flags & RX_CALL_RECEIVE_DONE) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
     }
