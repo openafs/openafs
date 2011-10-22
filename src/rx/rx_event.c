@@ -337,9 +337,10 @@ int rxevent_Cancel_type = 0;
 #endif
 
 void
-rxevent_Cancel_1(struct rxevent *ev, struct rx_call *call,
-		 int type)
+rxevent_Cancel(struct rxevent **evp, struct rx_call *call, int type)
 {
+    struct rxevent *ev = *evp;
+
 #ifdef RXDEBUG
     if (rx_Log_event) {
 	struct clock now;
@@ -359,6 +360,9 @@ rxevent_Cancel_1(struct rxevent *ev, struct rx_call *call,
 	MUTEX_EXIT(&rxevent_lock);
 	return;
     }
+
+    *evp = NULL;
+
 #ifdef RX_ENABLE_LOCKS
     /* It's possible we're currently processing this event. */
     if (queue_IsOnQueue(ev)) {

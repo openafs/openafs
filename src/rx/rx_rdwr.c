@@ -172,7 +172,7 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 			call->nHardAcks++;
 			if (!(call->flags & RX_CALL_RECEIVE_DONE)) {
 			    if (call->nHardAcks > (u_short) rxi_HardAckRate) {
-				rxevent_Cancel(call->delayedAckEvent, call,
+				rxevent_Cancel(&call->delayedAckEvent, call,
 					       RX_CALL_REFCOUNT_DELAY);
 				rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 			    } else {
@@ -523,7 +523,7 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
      * send a hard ack. */
     if (didConsume && (!(call->flags & RX_CALL_RECEIVE_DONE))) {
 	if (call->nHardAcks > (u_short) rxi_HardAckRate) {
-	    rxevent_Cancel(call->delayedAckEvent, call,
+	    rxevent_Cancel(&call->delayedAckEvent, call,
 			   RX_CALL_REFCOUNT_DELAY);
 	    rxi_SendAck(call, 0, serial, RX_ACK_DELAY, 0);
 	    didHardAck = 1;
