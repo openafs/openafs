@@ -1907,6 +1907,17 @@ AFSSetRenameInfo( IN PIRP Irp)
                                               &pTargetDirEntry);
         }
 
+        if( pTargetDirEntry == NULL && RtlIsNameLegalDOS8Dot3( &uniTargetName,
+                                                               NULL,
+                                                               NULL))
+        {
+            //
+            // Try the short name
+            //
+            AFSLocateShortNameDirEntry( pTargetParentObject->Specific.Directory.ShortNameTree,
+                                        ulTargetCRC,
+                                        &pTargetDirEntry);
+        }
         //
         // Increment our ref count on the dir entry
         //
