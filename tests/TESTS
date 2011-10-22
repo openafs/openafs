@@ -1,10 +1,10 @@
 util/ktime
 util/exec-alt
-util/queues
 auth/keys
 auth/superuser
 auth/authcon
 cmd/command
+opr/queues
 ptserver/pt_util
 ptserver/pts-man
 volser/vos-man

@@ -255,6 +255,7 @@ tests/Makefile \
 tests/auth/Makefile \
 tests/cmd/Makefile \
 tests/common/Makefile \
+tests/opr/Makefile \
 tests/rpctestlib/Makefile \
 tests/tap/Makefile \
 tests/util/Makefile \
