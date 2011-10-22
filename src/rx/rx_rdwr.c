@@ -176,25 +176,9 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 					       RX_CALL_REFCOUNT_DELAY);
 				rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 			    } else {
-				struct clock when, now;
-				clock_GetTime(&now);
-				when = now;
 				/* Delay to consolidate ack packets */
-				clock_Add(&when, &rx_hardAckDelay);
-				if (!call->delayedAckEvent
-				    || clock_Gt(&call->delayedAckEvent->
-						eventTime, &when)) {
-				    rxevent_Cancel(call->delayedAckEvent,
-						   call,
-						   RX_CALL_REFCOUNT_DELAY);
-                                    MUTEX_ENTER(&rx_refcnt_mutex);
-				    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-                                    MUTEX_EXIT(&rx_refcnt_mutex);
-                                    call->delayedAckEvent =
-				      rxevent_PostNow(&when, &now,
-						     rxi_SendDelayedAck, call,
-						     0);
-				}
+				rxi_PostDelayedAckEvent(call,
+							&rx_hardAckDelay);
 			    }
 			}
 			break;
@@ -544,21 +528,8 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 	    rxi_SendAck(call, 0, serial, RX_ACK_DELAY, 0);
 	    didHardAck = 1;
 	} else {
-	    struct clock when, now;
-	    clock_GetTime(&now);
-	    when = now;
 	    /* Delay to consolidate ack packets */
-	    clock_Add(&when, &rx_hardAckDelay);
-	    if (!call->delayedAckEvent
-		|| clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
-		rxevent_Cancel(call->delayedAckEvent, call,
-			       RX_CALL_REFCOUNT_DELAY);
-                MUTEX_ENTER(&rx_refcnt_mutex);
-		CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-                MUTEX_EXIT(&rx_refcnt_mutex);
-		call->delayedAckEvent =
-		    rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
-	    }
+	    rxi_PostDelayedAckEvent(call, &rx_hardAckDelay);
 	}
     }
     return didHardAck;
