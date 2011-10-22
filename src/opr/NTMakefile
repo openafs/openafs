@@ -13,13 +13,15 @@ INCFILEDIR = $(DESTDIR)\include\afs
 INCFILES = \
 	$(INCFILEDIR)\opr.h \
 	$(INCFILEDIR)\opr_assert.h \
-	$(DESTDIR)\include\opr\queue.h
+	$(DESTDIR)\include\opr\queue.h \
+	$(DESTDIR)\include\opr\rbtree.h
 
 LIBFILE = $(DESTDIR)\lib\opr.lib
 
 LIBOBJS = \
 	$(OUT)\assert.obj \
 	$(OUT)\casestrcpy.obj \
+	$(OUT)\rbtree.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 $(LIBOBJS): $(INCFILES)
