@@ -577,20 +577,11 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               NULL,
                               pParentDirectoryCB->OpenReferenceCount);
 
-                InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pDirectoryCB->NameInformation.FileName,
-                              pDirectoryCB,
-                              NULL,
-                              pDirectoryCB->OpenReferenceCount);
-
                 //
-                // The name array also contains a reference to the pDirectoryCB so we need to remove it
-                // Note that this could decrement the count to zero allowing it to be deleted, hence
-                // don't access the pointer contents beyond here.
+                // Do NOT decrement the reference count on the pDirectoryCB yet.
+                // The BackupEntry below might drop the count to zero leaving
+                // the entry subject to being deleted and we need some of the
+                // contents during later processing
                 //
 
                 AFSBackupEntry( pNameArray);
@@ -613,6 +604,21 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                                &uniComponentName,
                                                &pFcb,
                                                &pCcb);
+            if( pDirectoryCB != NULL)
+            {
+                //
+                // It is now safe to drop the Reference Count
+                //
+                InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCreate Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pDirectoryCB->NameInformation.FileName,
+                              pDirectoryCB,
+                              NULL,
+                              pDirectoryCB->OpenReferenceCount);
+            }
 
             if( !NT_SUCCESS( ntStatus))
             {
