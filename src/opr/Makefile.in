@@ -2,11 +2,12 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-objects = assert.o casestrcpy.o
+objects = assert.o casestrcpy.o rbtree.o
 
 all: $(TOP_INCDIR)/afs/opr.h \
      $(TOP_INCDIR)/afs/opr_assert.h \
      $(TOP_INCDIR)/opr/queue.h \
+     $(TOP_INCDIR)/opr/rbtree.h \
      $(TOP_LIBDIR)/libopr.a
 
 libopr.a: $(objects)
@@ -25,6 +26,9 @@ $(TOP_INCDIR)/afs/opr_assert.h: opr_assert.h
 
 $(TOP_INCDIR)/opr/queue.h: queue.h
 	$(INSTALL_DATA) queue.h $@
+
+$(TOP_INCDIR)/opr/rbtree.h: rbtree.h
+	$(INSTALL_DATA) rbtree.h $@
 
 clean:
 	rm -f $(objects) libopr.a

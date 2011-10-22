@@ -5,6 +5,7 @@ auth/superuser
 auth/authcon
 cmd/command
 opr/queues
+opr/rbtree
 ptserver/pt_util
 ptserver/pts-man
 volser/vos-man
