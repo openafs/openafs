@@ -557,7 +557,9 @@ afs_PrefetchNoCache(struct vcache *avc,
 		    struct nocache_read_request *bparms)
 {
     struct uio *auio;
+#ifndef UKERNEL
     struct iovec *iovecp;
+#endif
     struct vrequest *areq;
     afs_int32 code = 0;
     struct rx_connection *rxconn;
@@ -576,7 +578,9 @@ afs_PrefetchNoCache(struct vcache *avc,
 
     auio = bparms->auio;
     areq = bparms->areq;
+#ifndef UKERNEL
     iovecp = auio->uio_iov;
+#endif
 
     tcallspec = (struct tlocal1 *) osi_Alloc(sizeof(struct tlocal1));
     do {
