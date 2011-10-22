@@ -148,12 +148,6 @@ extern int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 #else /* RX_ENABLE_LOCKS */
 extern int rxi_CheckCall(struct rx_call *call);
 #endif /* RX_ENABLE_LOCKS */
-extern void rxi_KeepAliveEvent(struct rxevent *event,
-			       void *call /* struct rx_call *call */,
-			       void *dummy);
-extern void rxi_GrowMTUEvent(struct rxevent *event,
-			     void *call /* struct rx_call *call */,
-			     void *dummy);
 extern void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
 extern void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
 extern void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
@@ -161,18 +155,10 @@ extern void rxi_KeepAliveOn(struct rx_call *call);
 extern void rxi_NatKeepAliveOn(struct rx_connection *conn);
 extern void rxi_GrowMTUOn(struct rx_call *call);
 extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds);
-extern void rxi_SendDelayedConnAbort(struct rxevent *event,
-				     void *conn, /* struct rx_connection *conn */
-				     void *dummy);
-extern void rxi_SendDelayedCallAbort(struct rxevent *event,
-				     void *call, /* struct rx_call *call */
-				     void *dummy);
 extern void rxi_ChallengeEvent(struct rxevent *event,
 			       void *conn, /* struct rx_connection *conn */
 			       void *arg1, int atries);
 extern void rxi_ChallengeOn(struct rx_connection *conn);
-extern void rxi_ReapConnections(struct rxevent *unused, void *unused1,
-				void *unused2);
 extern int rxs_Release(struct rx_securityClass *aobj);
 #ifndef KERNEL
 extern void rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
@@ -297,27 +283,10 @@ extern void rx_ReleaseCachedConnection(struct rx_connection *conn);
 /* rx_event.c */
 extern int rxevent_nFree;
 extern int rxevent_nPosted;
-#if 0
-extern struct rxevent *rxevent_Post(struct clock *when,
-				    void (*func) (struct rxevent * event,
-						  struct rx_connection * conn,
-						  struct rx_call * acall),
-				    void *arg, void *arg1);
-/* this func seems to be called with tons of different style routines, need to look
-at another time. */
-#else
-extern struct rxevent *rxevent_Post(struct clock *when,
-				    void (*func) (struct rxevent *, void *, void *),
-				    void *arg, void *arg1);
-extern struct rxevent *rxevent_Post2(struct clock *when,
-				    void (*func) (struct rxevent *, void *, void *, int),
-				    void *arg, void *arg1, int arg2);
-extern struct rxevent *rxevent_PostNow(struct clock *when, struct clock *now,
-				       void (*func) (struct rxevent *, void *, void *), void *arg, void *arg1);
-extern struct rxevent *rxevent_PostNow2(struct clock *when, struct clock *now,
-					void (*func) (struct rxevent *, void *, void *, int), void *arg,
-					void *arg1, int arg2);
-#endif
+extern struct rxevent *rxevent_Post(struct clock *when, struct clock *now,
+				     void (*func) (struct rxevent *, void *,
+						   void *, int),
+				     void *arg, void *arg1, int arg2);
 extern void shutdown_rxevent(void);
 extern struct rxepoch *rxepoch_Allocate(struct clock *when);
 extern void rxevent_Init(int nEvents, void (*scheduler) (void));

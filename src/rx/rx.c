@@ -101,7 +101,13 @@ static void rxi_ComputeRoundTripTime(struct rx_packet *, struct rx_ackPacket *,
 static void rxi_Resend(struct rxevent *event, void *arg0, void *arg1,
 		       int istack);
 static void rxi_SendDelayedAck(struct rxevent *event, void *call,
-                               void *dummy);
+                               void *dummy, int dummy2);
+static void rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1,
+				     void *dummy, int dummy2);
+static void rxi_SendDelayedConnAbort(struct rxevent *event, void *arg1,
+				     void *unused, int unused2);
+static void rxi_ReapConnections(struct rxevent *unused, void *unused1,
+				void *unused2, int unused3);
 
 #ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
@@ -650,8 +656,8 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
     MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
     MUTEX_EXIT(&rx_refcnt_mutex);
-    call->resendEvent = rxevent_PostNow2(&retryTime, &now, rxi_Resend,
-					 call, 0, istack);
+    call->resendEvent = rxevent_Post(&retryTime, &now, rxi_Resend,
+				     call, NULL, istack);
 }
 
 /*!
@@ -781,9 +787,9 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
 	CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
 	MUTEX_EXIT(&rx_refcnt_mutex);
 
-	call->delayedAckEvent = rxevent_PostNow(&when, &now,
-						rxi_SendDelayedAck,
-						call, 0);
+	call->delayedAckEvent = rxevent_Post(&when, &now,
+					     rxi_SendDelayedAck,
+					     call, NULL, 0);
     }
 }
 
@@ -948,7 +954,7 @@ rx_StartServer(int donateMe)
     }
 
     /* Turn on reaping of idle server connections */
-    rxi_ReapConnections(NULL, NULL, NULL);
+    rxi_ReapConnections(NULL, NULL, NULL, 0);
 
     USERPRI;
 
@@ -2390,7 +2396,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	    rxevent_Cancel(call->delayedAckEvent, call,
 			   RX_CALL_REFCOUNT_DELAY);
 	    call->delayedAckEvent = NULL;
-	    rxi_SendDelayedAck(NULL, call, NULL);
+	    rxi_SendDelayedAck(NULL, call, NULL, 0);
 	}
 
 	/* We need to release the call lock since it's lower than the
@@ -3690,7 +3696,7 @@ rxi_ConnClearAttachWait(struct rx_connection *conn)
 }
 
 static void
-rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2)
+rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
 {
     struct rx_connection *conn = arg1;
     struct rx_call *acall = arg2;
@@ -3740,9 +3746,9 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2)
                 MUTEX_ENTER(&rx_refcnt_mutex);
 		conn->refCount++;
                 MUTEX_EXIT(&rx_refcnt_mutex);
-		conn->checkReachEvent =
-		    rxevent_PostNow(&when, &now, rxi_CheckReachEvent, conn,
-				    NULL);
+		conn->checkReachEvent = rxevent_Post(&when, &now,
+						     rxi_CheckReachEvent, conn,
+						     NULL, 0);
 	    }
 	    MUTEX_EXIT(&conn->conn_data_lock);
 	}
@@ -3774,7 +3780,7 @@ rxi_CheckConnReach(struct rx_connection *conn, struct rx_call *call)
     conn->flags |= RX_CONN_ATTACHWAIT;
     MUTEX_EXIT(&conn->conn_data_lock);
     if (!conn->checkReachEvent)
-	rxi_CheckReachEvent(NULL, conn, call);
+	rxi_CheckReachEvent(NULL, conn, call, 0);
 
     return 1;
 }
@@ -4925,7 +4931,8 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
 }
 
 void
-rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused)
+rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
+		   int unused2)
 {
     struct rx_call *call = arg1;
 #ifdef RX_ENABLE_LOCKS
@@ -5086,7 +5093,7 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ABORT);
         MUTEX_EXIT(&rx_refcnt_mutex);
 	call->delayedAbortEvent =
-	    rxevent_PostNow(&when, &now, rxi_SendDelayedCallAbort, call, 0);
+	    rxevent_Post(&when, &now, rxi_SendDelayedCallAbort, call, 0, 0);
     }
     return packet;
 }
@@ -5132,7 +5139,7 @@ rxi_SendConnectionAbort(struct rx_connection *conn,
 	when = now;
 	clock_Addmsec(&when, rxi_connAbortDelay);
 	conn->delayedAbortEvent =
-	    rxevent_PostNow(&when, &now, rxi_SendDelayedConnAbort, conn, 0);
+	    rxevent_Post(&when, &now, rxi_SendDelayedConnAbort, conn, NULL, 0);
     }
     return packet;
 }
@@ -6332,7 +6339,8 @@ mtuout:
 }
 
 void
-rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
+rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
+		      void *dummy, int dummy2)
 {
     struct rx_connection *conn = arg1;
     struct rx_header theader;
@@ -6399,7 +6407,7 @@ rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn)
 	conn->refCount++; /* hold a reference for this */
         MUTEX_EXIT(&rx_refcnt_mutex);
 	conn->natKeepAliveEvent =
-	    rxevent_PostNow(&when, &now, rxi_NatKeepAliveEvent, conn, 0);
+	    rxevent_Post(&when, &now, rxi_NatKeepAliveEvent, conn, NULL, 0);
     }
 }
 
@@ -6436,7 +6444,8 @@ rxi_NatKeepAliveOn(struct rx_connection *conn)
  * keep-alive packet (if we're actually trying to keep the call alive)
  */
 void
-rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
+rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
+		   int dummy2)
 {
     struct rx_call *call = arg1;
     struct rx_connection *conn;
@@ -6479,7 +6488,7 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy)
 
 /* Does what's on the nameplate. */
 void
-rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy)
+rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
 {
     struct rx_call *call = arg1;
     struct rx_connection *conn;
@@ -6534,7 +6543,7 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
         MUTEX_EXIT(&rx_refcnt_mutex);
 	call->keepAliveEvent =
-	    rxevent_PostNow(&when, &now, rxi_KeepAliveEvent, call, 0);
+	    rxevent_Post(&when, &now, rxi_KeepAliveEvent, call, NULL, 0);
     }
 }
 
@@ -6559,7 +6568,7 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
         MUTEX_EXIT(&rx_refcnt_mutex);
 	call->growMTUEvent =
-	    rxevent_PostNow(&when, &now, rxi_GrowMTUEvent, call, 0);
+	    rxevent_Post(&when, &now, rxi_GrowMTUEvent, call, NULL, 0);
     }
 }
 
@@ -6589,8 +6598,8 @@ rxi_GrowMTUOn(struct rx_call *call)
 /* This routine is called to send connection abort messages
  * that have been delayed to throttle looping clients. */
 void
-rxi_SendDelayedConnAbort(struct rxevent *event,
-			 void *arg1, void *unused)
+rxi_SendDelayedConnAbort(struct rxevent *event, void *arg1, void *unused,
+			 int unused2)
 {
     struct rx_connection *conn = arg1;
 
@@ -6614,9 +6623,9 @@ rxi_SendDelayedConnAbort(struct rxevent *event,
 
 /* This routine is called to send call abort messages
  * that have been delayed to throttle looping clients. */
-void
-rxi_SendDelayedCallAbort(struct rxevent *event,
-			 void *arg1, void *dummy)
+static void
+rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1, void *dummy,
+			 int dummy2)
 {
     struct rx_call *call = arg1;
 
@@ -6690,7 +6699,7 @@ rxi_ChallengeEvent(struct rxevent *event,
 	when = now;
 	when.sec += RX_CHALLENGE_TIMEOUT;
 	conn->challengeEvent =
-	    rxevent_PostNow2(&when, &now, rxi_ChallengeEvent, conn, 0,
+	    rxevent_Post(&when, &now, rxi_ChallengeEvent, conn, 0,
 			 (tries - 1));
     }
 }
@@ -6870,7 +6879,8 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 /* Find all server connections that have not been active for a long time, and
  * toss them */
 void
-rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
+rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
+		    int unused3)
 {
     struct clock now, when;
     clock_GetTime(&now);
@@ -7077,7 +7087,7 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 
     when = now;
     when.sec += RX_REAP_TIME;	/* Check every RX_REAP_TIME seconds */
-    rxevent_Post(&when, rxi_ReapConnections, 0, 0);
+    rxevent_Post(&when, &now, rxi_ReapConnections, 0, NULL, 0);
 }
 
 

@@ -197,10 +197,10 @@ rxepoch_Allocate(struct clock *when)
  * "when" argument specifies when "func" should be called, in clock (clock.h)
  * units. */
 
-static struct rxevent *
-_rxevent_Post(struct clock *when, struct clock *now,
+struct rxevent *
+rxevent_Post(struct clock *when, struct clock *now,
 	      void (*func) (struct rxevent *, void *, void *, int),
-	      void *arg, void *arg1, int arg2, int newargs)
+	      void *arg, void *arg1, int arg2)
 {
     struct rxevent *ev, *evqe, *evqpr;
     struct rxepoch *ep, *epqe, *epqpr;
@@ -291,15 +291,10 @@ _rxevent_Post(struct clock *when, struct clock *now,
 
     /* Record user defined event state */
     ev->eventTime = *when;
-    if (newargs) {
-	ev->func.newfunc = func;
-    } else {
-	ev->func.oldfunc = (void (*)(struct rxevent *, void *, void*))func;
-    }
+    ev->func = func;
     ev->arg = arg;
     ev->arg1 = arg1;
     ev->arg2 = arg2;
-    ev->newargs = newargs;
     rxevent_nPosted += 1;	/* Rather than ++, to shut high-C up
 				 *  regarding never-set variables
 				 */
@@ -329,46 +324,6 @@ _rxevent_Post(struct clock *when, struct clock *now,
     return ev;
 }
 
-struct rxevent *
-rxevent_Post(struct clock *when,
-	     void (*func) (struct rxevent *, void *, void *),
-	     void *arg, void *arg1)
-{
-    struct clock now;
-    clock_Zero(&now);
-    return _rxevent_Post(when, &now,
-			 (void (*)(struct rxevent *, void *, void *, int))func,
-			 arg, arg1, 0, 0);
-}
-
-struct rxevent *
-rxevent_Post2(struct clock *when,
-	      void (*func) (struct rxevent *, void *, void *, int),
-	      void *arg, void *arg1, int arg2)
-{
-    struct clock now;
-    clock_Zero(&now);
-    return _rxevent_Post(when, &now, func, arg, arg1, arg2, 1);
-}
-
-struct rxevent *
-rxevent_PostNow(struct clock *when, struct clock *now,
-		void (*func) (struct rxevent *, void *, void *),
-		void *arg, void *arg1)
-{
-    return _rxevent_Post(when, now,
-			 (void (*)(struct rxevent *, void *, void *, int))func,
-			 arg, arg1, 0, 0);
-}
-
-struct rxevent *
-rxevent_PostNow2(struct clock *when, struct clock *now,
-                 void (*func) (struct rxevent *, void *, void *, int),
-		 void *arg, void *arg1, int arg2)
-{
-    return _rxevent_Post(when, now, func, arg, arg1, arg2, 1);
-}
-
 /* Cancel an event by moving it from the event queue to the free list.
  * Warning, the event must be on the event queue!  If not, this should core
  * dump (reference through 0).  This routine should be called using the macro
@@ -392,7 +347,7 @@ rxevent_Cancel_1(struct rxevent *ev, struct rx_call *call,
 	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %"
 		AFS_PTR_FMT ", %p" AFS_PTR_FMT ")\n",
 		(int)now.sec, (int)now.usec, (int)ev->eventTime.sec,
-		(int)ev->eventTime.usec, ev->func.newfunc,
+		(int)ev->eventTime.usec, ev->func,
 		ev->arg);
     }
 #endif
@@ -480,11 +435,7 @@ rxevent_RaiseEvents(struct clock *next)
 	    queue_Remove(ev);
 	    rxevent_nPosted--;
 	    MUTEX_EXIT(&rxevent_lock);
-	    if (ev->newargs) {
-		ev->func.newfunc(ev, ev->arg, ev->arg1, ev->arg2);
-	    } else {
-		ev->func.oldfunc(ev, ev->arg, ev->arg1);
-	    }
+	    ev->func(ev, ev->arg, ev->arg1, ev->arg2);
 	    MUTEX_ENTER(&rxevent_lock);
 	    queue_Append(&rxevent_free, ev);
 	    rxevent_nFree++;

@@ -33,14 +33,10 @@
 struct rxevent {
     struct rx_queue junk;	/* Events are queued */
     struct clock eventTime;	/* When this event times out (in clock.c units) */
-    union {
-	void (*oldfunc) (struct rxevent *, void *, void *);
-	void (*newfunc) (struct rxevent *, void *, void *, int);
-    } func; 			/* Function to call when this expires */
+    void (*func) (struct rxevent *, void *, void *, int);
     void *arg;			/* Argument to the function */
     void *arg1;			/* Another argument */
     int arg2;			/* An integer argument */
-    int newargs;		/* Nonzero if new-form arguments should be used */
 };
 
 /* We used to maintain a sorted list of events, but the amount of CPU
