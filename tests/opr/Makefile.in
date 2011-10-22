@@ -1,0 +1,18 @@
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
+MODULE_CFLAGS = -I$(srcdir)/..
+
+LIBS=../tap/libtap.a $(abs_top_builddir)/lib/libopr.a
+
+tests = queues-t
+
+all check test tests: $(tests)
+
+queues-t: queues-t.o
+	$(AFS_LDRULE) queues-t.o ../tap/libtap.a $(XLIBS)
+
+clean distclean:
+	$(RM) -f $(tests) *.o core

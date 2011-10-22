@@ -6,6 +6,7 @@ objects = assert.o casestrcpy.o
 
 all: $(TOP_INCDIR)/afs/opr.h \
      $(TOP_INCDIR)/afs/opr_assert.h \
+     $(TOP_INCDIR)/opr/queue.h \
      $(TOP_LIBDIR)/libopr.a
 
 libopr.a: $(objects)
@@ -21,6 +22,12 @@ $(TOP_INCDIR)/afs/opr.h: opr.h
 
 $(TOP_INCDIR)/afs/opr_assert.h: opr_assert.h
 	$(INSTALL_DATA) opr_assert.h $@
+
+$(TOP_INCDIR)/opr/queue.h: queue.h
+	$(INSTALL_DATA) queue.h $@
+
+clean:
+	rm -f $(objects) libopr.a
 
 install: libopr.a
 	$(INSTALL_DATA) libopr.a $(DESTDIR)$(libdir)/libopr.a
