@@ -57,6 +57,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libafsrpc.a \
             ${TOP_LIBDIR}/libcmd.a \
 	    ${TOP_LIBDIR}/util.a \
+	    $(TOP_LIBDIR)/libopr.a \
 	    ${TOP_LIBDIR}/libusd.a \
 	    ${TOP_LIBDIR}/libprocmgmt.a
 

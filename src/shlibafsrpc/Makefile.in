@@ -39,7 +39,8 @@ SYSOBJS =\
 UTILOBJS =\
 	assert.o \
 	casestrcpy.o \
-	base64.o
+	base64.o \
+	rbtree.o
 
 COMERROBJS =\
 	error_msg.o \
@@ -276,6 +277,9 @@ casestrcpy.o: ${OPR}/casestrcpy.c
 
 assert.o: ${OPR}/assert.c
 	$(AFS_CCRULE) $(OPR)/assert.c
+
+rbtree.o: ${OPR}/rbtree.c
+	$(AFS_CCRULE) $(OPR)/rbtree.c
 
 base64.o: ${UTIL}/base64.c
 	$(AFS_CCRULE) $(UTIL)/base64.c

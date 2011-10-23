@@ -529,6 +529,7 @@ struct rx_call {
     struct rxevent *keepAliveEvent;	/* Scheduled periodically in active calls to keep call alive */
     struct rxevent *growMTUEvent;      /* Scheduled periodically in active calls to discover true maximum MTU */
     struct rxevent *delayedAckEvent;	/* Scheduled after all packets are received to send an ack if a reply or new call is not generated soon */
+    struct clock delayedAckTime;        /* Time that next delayed ack was scheduled  for */
     struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
     int abortCode;		/* error code from last RPC */
     int abortCount;		/* number of times last error was sent */

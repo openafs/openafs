@@ -9,6 +9,9 @@
 
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
+
+#include "rx_queue.h"
+
 #if defined(AFS_NT40_ENV)
 #include "rx_xmit_nt.h"
 #endif

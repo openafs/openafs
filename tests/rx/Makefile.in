@@ -1,0 +1,24 @@
+# Build rules for the OpenAFS RX test suite.
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+MODULE_CFLAGS = -I$(srcdir)/..
+
+LIBS = ../tap/libtap.a \
+       $(abs_top_builddir)/lib/libafsrpc.a \
+       $(abs_top_builddir)/lib/libopr.a
+
+tests = event-t
+
+all check test tests: $(tests)
+
+event-t: event-t.o $(LIBS)
+	$(AFS_LDRULE) event-t.o $(LIBS) $(XLIBS)
+
+install:
+
+clean distclean:
+	$(RM) -f $(tests) *.o core
