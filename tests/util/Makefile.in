@@ -7,7 +7,9 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 MODULE_CFLAGS = -I$(srcdir)/..
 
-LIBS = ../tap/libtap.a $(abs_top_builddir)/lib/util.a
+LIBS = ../tap/libtap.a \
+       $(abs_top_builddir)/lib/util.a \
+       $(abs_top_builddir)/lib/libopr.a
 
 tests = ktime-t exec-alt-t
 
