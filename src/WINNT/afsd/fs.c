@@ -3091,14 +3091,19 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
     char confDir[257];
+    int secFlags;
 
     cm_GetConfigDir(confDir, sizeof(confDir));
 
-    code = ugen_ClientInit(noAuthFlag, confDir,
-			   info->name, 0, &uclient,
-                           NULL, pn, rxkad_clear,
-                           VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
-                           0, 0, USER_SERVICE_ID);
+    secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
+
+    if (noAuthFlag)
+	secFlags |= AFSCONF_SECOPTS_NOAUTH;
+
+    code = ugen_ClientInitFlags(confDir, info->name, secFlags,
+			        &uclient, NULL, VLDB_MAXSERVERS,
+				AFSCONF_VLDBSERVICE, 50);
+
     rxInitDone = 1;
     return code;
 }

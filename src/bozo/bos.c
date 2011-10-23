@@ -1675,8 +1675,12 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	confdir =
 	    (localauth ? AFSDIR_SERVER_ETC_DIRPATH :
 	     AFSDIR_CLIENT_ETC_DIRPATH);
-	code = vsu_ClientInit( /* noauth */ 1, confdir, tmpname,
-			      /* server auth */ 0, &cstruct, (int (*)())0);
+
+	code = vsu_ClientInit(confdir, tmpname,
+			      AFSCONF_SECOPTS_FALLBACK_NULL |
+			      AFSCONF_SECOPTS_NOAUTH,
+			      NULL, &cstruct);
+
 	if (code == 0) {
 	    newID = vsu_GetVolumeID(as->parms[2].items->data, cstruct, &err);
 	    if (newID == 0) {

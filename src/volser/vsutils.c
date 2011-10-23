@@ -38,7 +38,6 @@
 #include "vsutils_prototypes.h"
 
 struct ubik_client *cstruct;
-static rxkad_level vsu_rxkad_level = rxkad_clear;
 
 static void
 ovlentry_to_nvlentry(struct vldbentry *oentryp,
@@ -392,38 +391,18 @@ VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
     return code;
 }
 
-
-/*
-  Set encryption.  If 'cryptflag' is nonzero, encrpytion is turned on
-  for authenticated connections; if zero, encryption is turned off.
-  Calling this function always results in a level of at least rxkad_auth;
-  to get a rxkad_clear connection, simply don't call this.
-*/
-void
-vsu_SetCrypt(int cryptflag)
-{
-    if (cryptflag) {
-	vsu_rxkad_level = rxkad_crypt;
-    } else {
-	vsu_rxkad_level = rxkad_auth;
-    }
-}
-
-
 /*
   Get the appropriate type of ubik client structure out from the system.
 */
-afs_int32
-vsu_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
-               struct ubik_client **uclientp,
-	       int (*secproc)(struct rx_securityClass *, afs_int32))
+int
+vsu_ClientInit(const char *confDir, char *cellName, int secFlags,
+	       int (*secproc)(struct rx_securityClass *, afs_int32),
+	       struct ubik_client **uclientp)
 {
-    return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp,
-			   secproc, "vsu_ClientInit", vsu_rxkad_level,
-			   VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
-			   0, 0, USER_SERVICE_ID);
+    return ugen_ClientInitFlags(confDir, cellName, secFlags, uclientp,
+				secproc, VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE,
+				90);
 }
-
 
 /*extract the name of volume <name> without readonly or backup suffixes
  * and return the result as <rname>.

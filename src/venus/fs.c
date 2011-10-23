@@ -67,7 +67,6 @@ static int PruneList(struct AclEntry **, int);
 static int CleanAcl(struct Acl *, char *);
 static int SetVolCmd(struct cmd_syndesc *as, void *arock);
 static int GetCellName(char *, struct afsconf_cell *);
-static int VLDBInit(int, struct afsconf_cell *);
 static void Die(int, char *);
 
 /*
@@ -1863,6 +1862,7 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
     struct afsconf_cell info;
     struct vldbentry vldbEntry;
     struct ViceIoctl blob;
+    struct afsconf_dir *dir;
 
 /*
 
@@ -1917,14 +1917,31 @@ defect #3069
 		   &blob, 1);
     }
 
-    code = GetCellName(cellName ? cellName : space, &info);
+    dir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
+    if (!dir) {
+	fprintf(stderr,
+		"Could not process files in configuration directory (%s).\n",
+		AFSDIR_CLIENT_ETC_DIRPATH);
+        return 1;
+    }
+
+    code = afsconf_GetCellInfo(dir, cellName ? cellName : space,
+		               AFSCONF_VLDBSERVICE, &info);
     if (code) {
+	fprintf(stderr,
+		"%s: cell %s not in %s\n", pn, cellName ? cellName : space,
+		AFSDIR_CLIENT_CELLSERVDB_FILEPATH);
 	return 1;
     }
+
     if (!(as->parms[4].items)) {
 	/* not fast, check which cell the mountpoint is being created in */
-	/* not fast, check name with VLDB */
-	code = VLDBInit(1, &info);
+	code = ugen_ClientInitCell(dir, &info,
+				   AFSCONF_SECOPTS_FALLBACK_NULL |
+				   AFSCONF_SECOPTS_NOAUTH,
+				   &uclient, VLDB_MAXSERVERS,
+				   AFSCONF_VLDBSERVICE, 50);
+
 	if (code == 0) {
 	    /* make the check.  Don't complain if there are problems with init */
 	    code =
@@ -3034,21 +3051,6 @@ GetCellName(char *cellName, struct afsconf_cell *info)
     }
 
     return 0;
-}
-
-
-static int
-VLDBInit(int noAuthFlag, struct afsconf_cell *info)
-{
-    afs_int32 code;
-
-    code = ugen_ClientInit(noAuthFlag, (char *) AFSDIR_CLIENT_ETC_DIRPATH,
-			   info->name, 0, &uclient,
-                           NULL, pn, rxkad_clear,
-                           VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
-                           0, 0, USER_SERVICE_ID);
-    rxInitDone = 1;
-    return code;
 }
 
 static struct ViceIoctl gblob;

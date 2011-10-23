@@ -188,10 +188,9 @@ struct partList {		/*used by the backup system */
 struct ubik_client;
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);
 extern int vsu_ExtractName(char rname[], char name[]);
-extern afs_int32 vsu_ClientInit(int noAuthFlag, const char *confDir,
-				char *cellName, afs_int32 sauth,
-				struct ubik_client **uclientp,
-				int (*secproc)(struct rx_securityClass *, afs_int32));
-extern void vsu_SetCrypt(int cryptflag);
-
+extern afs_int32 vsu_ClientInit(const char *confDir, char *cellName,
+				int secFlags,
+				int (*secproc)(struct rx_securityClass *,
+					       afs_int32),
+				struct ubik_client **uclientp);
 #endif /* _VOLSER_ */

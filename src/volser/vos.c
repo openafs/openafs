@@ -5817,31 +5817,35 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     char *tcell;
     afs_int32 code;
-    afs_int32 sauth;
+    int secFlags;
 
     /* Initialize the ubik_client connection */
     rx_SetRxDeadTime(90);
-    cstruct = (struct ubik_client *)0;
+    cstruct = NULL;
+    secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
 
-    sauth = 0;
     tcell = NULL;
     if (as->parms[12].items)	/* if -cell specified */
 	tcell = as->parms[12].items->data;
+
+    if (as->parms[13].items)
+	secFlags |= AFSCONF_SECOPTS_NOAUTH;
+
     if (as->parms[14].items)	/* -serverauth specified */
-	sauth = 1;
+	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
+
     if (as->parms[16].items     /* -encrypt specified */
 #ifdef AFS_NT40_ENV
         || win32_enableCrypt()
 #endif /* AFS_NT40_ENV */
          )
-	vsu_SetCrypt(1);
+	secFlags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
 
     if (as->parms[18].items)   /* -config flag set */
 	confdir = as->parms[18].items->data;
 
-    if ((code =
-	 vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
-			&cstruct, UV_SetSecurity))) {
+    if ((code = vsu_ClientInit(confdir, tcell, secFlags, UV_SetSecurity,
+			       &cstruct))) {
 	fprintf(STDERR, "could not initialize VLDB library (code=%lu) \n",
 		(unsigned long)code);
 	exit(1);

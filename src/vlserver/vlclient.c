@@ -134,12 +134,11 @@ GetVolume(int vol, struct vldbentry *entry)
 
 /* Almost identical's to pr_Initialize in vlserver/pruser.c */
 afs_int32
-vl_Initialize(int auth, char *confDir, int server, char *cellp)
+vl_Initialize(char *confDir, int secFlags, int server, char *cellp)
 {
-    return ugen_ClientInit(auth?0:1, confDir, cellp, 0,
-			  &cstruct, NULL, "vl_Initialize", rxkad_clear,
-			  MAXSERVERS, AFSCONF_VLDBSERVICE, 50, server,
-			  htons(AFSCONF_VLDBPORT), USER_SERVICE_ID);
+    return ugen_ClientInitServer(confDir, cellp, secFlags, &cstruct,
+				 MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
+				 server, htons(AFSCONF_VLDBPORT));
 }
 
 /* return host address in network byte order */
@@ -174,14 +173,14 @@ handleit(struct cmd_syndesc *as, void *arock)
     char *cellp = 0;
     struct VldbUpdateEntry updateentry;
     struct VldbListByAttributes listbyattributes;
-    int noAuth = 1;		/* Default is authenticated connections */
+    int secFlags = AFSCONF_SECOPTS_FALLBACK_NULL;
 
     if ((ti = as->parms[0].items))	/* -cellpath <dir> */
 	strcpy(confdir, ti->data);
     if (as->parms[1].items)	/* -server */
 	strcpy(confdir, AFSDIR_SERVER_ETC_DIRPATH);
     if (as->parms[2].items)	/* -noauth */
-	noAuth = 0;
+	secFlags |= AFSCONF_SECOPTS_NOAUTH;
     if ((ti = as->parms[3].items)) {	/* -host */
 	server = GetServer(ti->data);
 	if (server == 0) {
@@ -190,7 +189,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	}
 	sawserver = 1;
     }
-    if (!sawserver && noAuth && (!(ti = as->parms[4].items))) {
+    if (sawserver && !as->parms[2].items && (!(ti = as->parms[4].items))) {
 	printf
 	    ("Must also specify the -cell' option along with -host for authenticated conns\n");
 	exit(1);
@@ -198,7 +197,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     if ((ti = as->parms[4].items)) {	/* -cell */
 	cellp = ti->data;
     }
-    if ((code = vl_Initialize(noAuth, confdir, server, cellp))) {
+    if ((code = vl_Initialize(confdir, secFlags, server, cellp))) {
 	printf("Couldn't initialize vldb library (code=%d).\n", code);
 	exit(1);
     }
