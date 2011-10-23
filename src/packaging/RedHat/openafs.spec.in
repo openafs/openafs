@@ -839,6 +839,7 @@ export KRB5_CONFIG
        --bindir=%{_bindir} \
        --sbindir=%{_sbindir} \
        --disable-strip-binaries \
+       --enable-debug \
        --with-linux-kernel-packaging \
 %if %{build_modules}
        --with-linux-kernel-headers=${ksrc} \
