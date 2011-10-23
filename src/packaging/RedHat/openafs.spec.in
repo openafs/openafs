@@ -1562,12 +1562,14 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/libafshcrypto.a
 %{_libdir}/libafshcrypto.so
 %{_libdir}/liblwp.a
+%{_libdir}/libopr.a
 %{_libdir}/librokenafs.a
 %{_libdir}/librokenafs.so
 %{_libdir}/librx.a
 %{_libdir}/librxkad.a
 %{_libdir}/librxstat.a
 %{_libdir}/libubik.a
+%{_libdir}/libubik_pthread.a
 %{_mandir}/man1/rxgen.*
 %{_mandir}/man1/afs_compile_et.*
 
