@@ -17,8 +17,12 @@
 /* KDUMP_KERNEL is defined when kdump includes this header. */
 #ifndef KDUMP_KERNEL
 
+typedef int afs_kmutex_t;
+
 #define CALL_HOLD(call, type)
+#define CALL_HOLD_R(call, type)
 #define CALL_RELE(call, type)
+#define CALL_RELE_R(call, type)
 
 #define MUTEX_DESTROY(a)
 #define MUTEX_ENTER(a)
