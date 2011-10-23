@@ -433,8 +433,10 @@ afs_dir_EnumerateDir(dir_file_t dir, int (*proc) (void *, char *name,
 		goto out;
 
 	    ep = (struct DirEntry *)entrybuf.data;
-	    if (!ep)
+	    if (!ep) {
+		DRelease(&entrybuf, 0);
 		break;
+	    }
 
 	    num = ntohs(ep->next);
 	    code = (*proc) (hook, ep->name, ntohl(ep->fid.vnode),
