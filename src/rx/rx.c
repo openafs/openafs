@@ -78,6 +78,7 @@ extern afs_int32 afs_termState;
 #include "rx_trace.h"
 #include "rx_internal.h"
 #include "rx_stats.h"
+#include "rx_event.h"
 
 #include <afs/rxgen_consts.h>
 
@@ -196,7 +197,6 @@ extern afs_kmutex_t des_init_mutex;
 extern afs_kmutex_t des_random_mutex;
 extern afs_kmutex_t rx_clock_mutex;
 extern afs_kmutex_t rxi_connCacheMutex;
-extern afs_kmutex_t rx_event_mutex;
 extern afs_kmutex_t event_handler_mutex;
 extern afs_kmutex_t listener_mutex;
 extern afs_kmutex_t rx_if_init_mutex;
@@ -222,7 +222,6 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rx_refcnt_mutex, "refcnts", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&epoch_mutex, "epoch", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rx_event_mutex, "event", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&event_handler_mutex, "event handler", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxi_connCacheMutex, "conn cache", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&listener_mutex, "listener", MUTEX_DEFAULT, 0);
@@ -776,7 +775,7 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
     clock_Add(&when, offset);
 
     if (!call->delayedAckEvent
-	|| clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
+	|| clock_Gt(&call->delayedAckTime, &when)) {
 
         rxevent_Cancel(&call->delayedAckEvent, call,
 		       RX_CALL_REFCOUNT_DELAY);
@@ -787,10 +786,9 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
 	call->delayedAckEvent = rxevent_Post(&when, &now,
 					     rxi_SendDelayedAck,
 					     call, NULL, 0);
+	call->delayedAckTime = when;
     }
 }
-
-
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
  * a new thread in this service.  Could be "no" for two reasons: over the
@@ -3698,7 +3696,12 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
     int i, waiting;
 
     MUTEX_ENTER(&conn->conn_data_lock);
-    conn->checkReachEvent = NULL;
+
+    if (event) {
+	rxevent_Put(conn->checkReachEvent);
+	conn->checkReachEvent = NULL;
+    }
+
     waiting = conn->flags & RX_CONN_ATTACHWAIT;
     if (event) {
         MUTEX_ENTER(&rx_refcnt_mutex);
@@ -4904,6 +4907,7 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
 #ifdef RX_ENABLE_LOCKS
     if (event) {
 	MUTEX_ENTER(&call->lock);
+	rxevent_Put(call->delayedAckEvent);
 	call->delayedAckEvent = NULL;
         MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_ACKALL);
@@ -4915,8 +4919,10 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
     if (event)
 	MUTEX_EXIT(&call->lock);
 #else /* RX_ENABLE_LOCKS */
-    if (event)
+    if (event) {
+	rxevent_Put(call->delayedAckEvent);
 	call->delayedAckEvent = NULL;
+    }
     rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
 		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
     call->flags |= RX_CALL_ACKALL_SENT;
@@ -4931,8 +4937,10 @@ rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
 #ifdef RX_ENABLE_LOCKS
     if (event) {
 	MUTEX_ENTER(&call->lock);
-	if (event == call->delayedAckEvent)
+	if (event == call->delayedAckEvent) {
+	    rxevent_Put(call->delayedAckEvent);
 	    call->delayedAckEvent = NULL;
+	}
         MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
         MUTEX_EXIT(&rx_refcnt_mutex);
@@ -4941,8 +4949,10 @@ rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
     if (event)
 	MUTEX_EXIT(&call->lock);
 #else /* RX_ENABLE_LOCKS */
-    if (event)
+    if (event) {
+	rxevent_Put(call->delayedAckEvent);
 	call->delayedAckEvent = NULL;
+    }
     (void)rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 #endif /* RX_ENABLE_LOCKS */
 }
@@ -5895,6 +5905,7 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
         MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
         MUTEX_EXIT(&rx_refcnt_mutex);
+	rxevent_Put(call->resendEvent);
 	call->resendEvent = NULL;
     }
 
@@ -6369,6 +6380,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     MUTEX_ENTER(&rx_refcnt_mutex);
     /* Only reschedule ourselves if the connection would not be destroyed */
     if (conn->refCount <= 1) {
+	rxevent_Put(conn->natKeepAliveEvent);
 	conn->natKeepAliveEvent = NULL;
         MUTEX_EXIT(&rx_refcnt_mutex);
 	MUTEX_EXIT(&conn->conn_data_lock);
@@ -6376,6 +6388,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     } else {
 	conn->refCount--; /* drop the reference for this */
         MUTEX_EXIT(&rx_refcnt_mutex);
+	rxevent_Put(conn->natKeepAliveEvent);
 	conn->natKeepAliveEvent = NULL;
 	rxi_ScheduleNatKeepAliveEvent(conn);
 	MUTEX_EXIT(&conn->conn_data_lock);
@@ -6442,8 +6455,12 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
     CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
     MUTEX_EXIT(&rx_refcnt_mutex);
     MUTEX_ENTER(&call->lock);
-    if (event == call->keepAliveEvent)
+
+    if (event == call->keepAliveEvent) {
+	rxevent_Put(call->keepAliveEvent);
 	call->keepAliveEvent = NULL;
+    }
+
     now = clock_Sec();
 
 #ifdef RX_ENABLE_LOCKS
@@ -6485,8 +6502,10 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
     MUTEX_EXIT(&rx_refcnt_mutex);
     MUTEX_ENTER(&call->lock);
 
-    if (event == call->growMTUEvent)
+    if (event == call->growMTUEvent) {
+	rxevent_Put(call->growMTUEvent);
 	call->growMTUEvent = NULL;
+    }
 
 #ifdef RX_ENABLE_LOCKS
     if (rxi_CheckCall(call, 0)) {
@@ -6594,6 +6613,7 @@ rxi_SendDelayedConnAbort(struct rxevent *event, void *arg1, void *unused,
     struct rx_packet *packet;
 
     MUTEX_ENTER(&conn->conn_data_lock);
+    rxevent_Put(conn->delayedAbortEvent);
     conn->delayedAbortEvent = NULL;
     error = htonl(conn->error);
     conn->abortCount++;
@@ -6620,6 +6640,7 @@ rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1, void *dummy,
     struct rx_packet *packet;
 
     MUTEX_ENTER(&call->lock);
+    rxevent_Put(call->delayedAbortEvent);
     call->delayedAbortEvent = NULL;
     error = htonl(call->error);
     call->abortCount++;
@@ -6646,7 +6667,11 @@ rxi_ChallengeEvent(struct rxevent *event,
 {
     struct rx_connection *conn = arg0;
 
-    conn->challengeEvent = NULL;
+    if (event) {
+	rxevent_Put(conn->challengeEvent);
+	conn->challengeEvent = NULL;
+    }
+
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	struct rx_packet *packet;
 	struct clock when, now;
@@ -7074,7 +7099,7 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 
     when = now;
     when.sec += RX_REAP_TIME;	/* Check every RX_REAP_TIME seconds */
-    rxevent_Post(&when, &now, rxi_ReapConnections, 0, NULL, 0);
+    rxevent_Put(rxevent_Post(&when, &now, rxi_ReapConnections, 0, NULL, 0));
 }
 
 

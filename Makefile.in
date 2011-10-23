@@ -941,6 +941,7 @@ distclean: clean
 	tests/auth/Makefile \
 	tests/cmd/Makefile \
 	tests/common/Makefile \
+	tests/rx/Makefile \
 	tests/opr/Makefile \
 	tests/util/Makefile \
 	tests/volser/Makefile \

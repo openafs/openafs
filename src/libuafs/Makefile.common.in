@@ -101,7 +101,7 @@ linktest: UAFS/$(LIBUAFS)
 		$(LDFLAGS_roken) $(LDFLAGS_hcrypto) -o linktest \
 		${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL \
 		UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/libafsutil.a \
+		${TOP_LIBDIR}/libafsutil.a $(TOP_LIBDIR)/libopr.a \
 		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(TEST_LIBS) $(XLIBS)
 
 CRULE1=	$(CC) $(COMMON_INCLUDE) $(CPPFLAGS_roken) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
@@ -2033,8 +2033,10 @@ $(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o UAFS.pic/libuafs_pic.a
 		$(SWIG_PERL_LDFLAGS) $(LDFLAGS) \
 		$(PERLUAFS)/ukernel_swig_perl.o \
 		UAFS.pic/libuafs_pic.a ${TOP_LIBDIR}/libcmd_pic.a \
-		${TOP_LIBDIR}/libafsutil_pic.a $(LDFLAGS_roken) \
-		$(LDFLAGS_hcrypto) $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) \
+		${TOP_LIBDIR}/libafsutil_pic.a \
+		$(TOP_LIBDIR)/libopr.a \
+		$(LDFLAGS_roken) $(LDFLAGS_hcrypto) $(LIB_hcrypto) \
+		$(LIB_roken) $(LIB_crypt) \
 		$(XLIBS)
 
 clean:
