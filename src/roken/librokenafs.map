@@ -20,10 +20,12 @@
 		rk_erealloc;
 		rk_flock;
 		rk_gettimeofday;
+		rk_getprogname;
 		rk_hex_encode;
 		rk_localtime_r;
 		rk_mkstemp;
 		rk_print_version;
+		rk_setprogname;
 		rk_snprintf;
 		rk_socket;
 		rk_strlcat;
