@@ -270,44 +270,45 @@ done:
 #ifdef UKERNEL
 typedef void * bypass_page_t;
 
-#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio)	\
+#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
     do { \
+	int dolen = auio->uio_iov[curiov].iov_len - pageoff; \
 	memcpy(((char *)pp) + pageoff,		       \
-	       ((char *)rxiov[iovno].iov_base) + iovoff,	\
-	       PAGE_CACHE_SIZE - pageoff);			\
-	auio->uio_resid -= (PAGE_CACHE_SIZE - pageoff);		\
+	       ((char *)rxiov[iovno].iov_base) + iovoff, dolen);	\
+	auio->uio_resid -= dolen; \
     } while(0)
 
-#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio)	\
+#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
     do { \
+	int dolen = rxiov[iovno].iov_len - iovoff; \
 	memcpy(((char *)pp) + pageoff,				\
-	       ((char *)rxiov[iovno].iov_base) + iovoff,	\
-	       rxiov[iovno].iov_len - iovoff);			\
-	auio->uio_resid -= (rxiov[iovno].iov_len - iovoff);	\
+	       ((char *)rxiov[iovno].iov_base) + iovoff, dolen);	\
+	auio->uio_resid -= dolen;	\
     } while(0)
 
 #define unlock_and_release_pages(auio)
-#define release_full_page(pp)
+#define release_full_page(pp, pageoff)
+
 #else
 typedef struct page * bypass_page_t;
 
-#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio)	\
+#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
     do { \
         char *address;						\
+	int dolen = auio->uio_iov[curiov].iov_len - pageoff; \
 	address = kmap_atomic(pp, KM_USER0); \
 	memcpy(address + pageoff, \
-	       (char *)(rxiov[iovno].iov_base) + iovoff,	\
-	       PAGE_CACHE_SIZE - pageoff); \
+	       (char *)(rxiov[iovno].iov_base) + iovoff, dolen);	\
 	kunmap_atomic(address, KM_USER0); \
     } while(0)
 
-#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio)	\
+#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
     do { \
         char *address; \
+	int dolen = rxiov[iovno].iov_len - iovoff; \
 	address = kmap_atomic(pp, KM_USER0); \
 	memcpy(address + pageoff, \
-	       (char *)(rxiov[iovno].iov_base) + iovoff,	\
-	       rxiov[iovno].iov_len - iovoff); \
+	       (char *)(rxiov[iovno].iov_base) + iovoff, dolen);	\
 	kunmap_atomic(address, KM_USER0); \
     } while(0)
 
@@ -335,7 +336,7 @@ typedef struct page * bypass_page_t;
 	} \
     } while(0)
 
-#define release_full_page(pp) \
+#define release_full_page(pp, pageoff)			\
     do { \
 	/* this is appropriate when no caller intends to unlock \
 	 * and release the page */ \
@@ -421,7 +422,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	for (curpage = 0; curpage <= iovmax; curpage++) {
 	    pageoff = 0;
 	    /* properly, this should track uio_resid, not a fixed page size! */
-	    while (pageoff < PAGE_CACHE_SIZE) {
+	    while (pageoff < auio->uio_iov[curpage].iov_len) {
 		/* If no more iovs, issue new read. */
 		if (iovno >= nio) {
 		    COND_GUNLOCK(locked);
@@ -440,29 +441,30 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 			goto done;
 		    }
 		    size -= bytes;
-		    length -= bytes;
 		    iovno = 0;
 		}
 		pp = (bypass_page_t)auio->uio_iov[curpage].iov_base;
-		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= PAGE_CACHE_SIZE) {
+		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= auio->uio_iov[curpage].iov_len) {
 		    /* Copy entire (or rest of) current iovec into current page */
 		    if (pp)
-			copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio);
+			copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curpage);
+		    length -= (rxiov[iovno].iov_len - iovoff);
 		    pageoff += rxiov[iovno].iov_len - iovoff;
 		    iovno++;
 		    iovoff = 0;
 		} else {
 		    /* Copy only what's needed to fill current page */
 		    if (pp)
-			copy_page(pp, pageoff, rxiov, iovno, iovoff, auio);
-		    iovoff += PAGE_CACHE_SIZE - pageoff;
-		    pageoff = PAGE_CACHE_SIZE;
+			copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curpage);
+		    length -= (auio->uio_iov[curpage].iov_len - pageoff);
+		    iovoff += auio->uio_iov[curpage].iov_len - pageoff;
+		    pageoff = auio->uio_iov[curpage].iov_len;
 		}
 
 		/* we filled a page, or this is the last page.  conditionally release it */
-		if (pp && ((pageoff == PAGE_CACHE_SIZE && release_pages)
-				|| (length == 0 && iovno >= nio)))
-		    release_full_page(pp);
+		if (pp && ((pageoff == auio->uio_iov[curpage].iov_len &&
+			    release_pages) || (length == 0 && iovno >= nio)))
+		    release_full_page(pp, pageoff);
 
 		if (length == 0 && iovno >= nio)
 		    goto done;
