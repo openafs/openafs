@@ -206,6 +206,7 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
 			ReleaseWriteLock(&tb->lock);
 			entry->buffer = tb;
 			entry->data = tb->data;
+			return 0;
 		    }
 		} else
 		    break;
