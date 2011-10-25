@@ -1114,7 +1114,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     AFSDeleteObjectInfo( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
-                                    ExFreePool( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB);
+                                    ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
+
+                                    AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged);
+
+                                    AFSExFreePool( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB);
                                 }
 
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
@@ -1311,9 +1315,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                             ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
 
-                                            ExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged);
+                                            AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged);
 
-                                            ExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB);
+                                            AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB);
                                         }
 
                                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
