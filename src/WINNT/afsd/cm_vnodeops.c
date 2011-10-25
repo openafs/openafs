@@ -3586,21 +3586,28 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         goto done;
     }
 
-    code = cm_Lookup(newDscp, cNewNamep, CM_FLAG_CASEFOLD, userp, reqp, &newScp);
-    if (code == 0) {
-        /* found a matching object with the new name */
-        if (cm_FidCmp(&oldScp->fid, &newScp->fid)) {
-            /* and they don't match so return an error */
-            osi_Log2(afsd_logp, "cm_Rename newDscp 0x%p cNewName %S new name already exists",
-                      newDscp, osi_LogSaveStringW(afsd_logp, cNewNamep));
+    /* Case sensitive lookup.  If this succeeds we are done. */
+    code = cm_Lookup(newDscp, cNewNamep, 0, userp, reqp, &newScp);
+    if (code) {
+        /*
+         * Case insensitive lookup.  If this succeeds, it could have found the
+         * same file with a name that differs only by case or it could be a
+         * different file entirely.
+         */
+        code = cm_Lookup(newDscp, cNewNamep, CM_FLAG_CASEFOLD, userp, reqp, &newScp);
+        if (code == 0) {
+            /* found a matching object with the new name */
+            if (cm_FidCmp(&oldScp->fid, &newScp->fid)) {
+                /* and they don't match so return an error */
+                osi_Log2(afsd_logp, "cm_Rename newDscp 0x%p cNewName %S new name already exists",
+                          newDscp, osi_LogSaveStringW(afsd_logp, cNewNamep));
+                code = CM_ERROR_EXISTS;
+            }
+            cm_ReleaseSCache(newScp);
+            newScp = NULL;
+        } else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
             code = CM_ERROR_EXISTS;
         }
-        cm_ReleaseSCache(newScp);
-        newScp = NULL;
-    } else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
-        code = CM_ERROR_EXISTS;
-    } else {
-        code = 0;
     }
 
     /* Check for RO volume */
