@@ -12,7 +12,8 @@ INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES = \
 	$(INCFILEDIR)\opr.h \
-	$(INCFILEDIR)\opr_assert.h
+	$(INCFILEDIR)\opr_assert.h \
+	$(DESTDIR)\include\opr\queue.h
 
 LIBFILE = $(DESTDIR)\lib\opr.lib
 
