@@ -861,7 +861,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                 if (scp) {
                     code = RDR_PopulateCurrentEntry(pCurrentEntry, dwMaxEntryLength,
                                                      dscp, scp, userp, &req,
-                                                     entryp->name, entryp->shortName,
+                                                     entryp->name,
+                                                     cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
                                                      (bWow64 ? RDR_POP_WOW64 : 0) |
                                                      (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0),
                                                      &pCurrentEntry, &dwMaxEntryLength);
@@ -869,7 +870,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                 } else {
                     code = RDR_PopulateCurrentEntryNoScp( pCurrentEntry, dwMaxEntryLength,
                                                           dscp, &entryp->fid, userp, &req,
-                                                          entryp->name, entryp->shortName,
+                                                          entryp->name,
+                                                          cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
                                                           (bWow64 ? RDR_POP_WOW64 : 0),
                                                           &pCurrentEntry, &dwMaxEntryLength);
                 }
@@ -1385,6 +1387,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
             cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
         else
             shortName[0] = '\0';
+
         code = RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                         dscp, scp, userp, &req, FileName, shortName,
                                         RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
@@ -2303,6 +2306,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
             cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
         else
             shortName[0] = '\0';
+
         RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                  newDscp, scp, userp, &req, TargetFileName, shortName,
                                  RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
