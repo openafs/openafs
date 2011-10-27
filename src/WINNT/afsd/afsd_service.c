@@ -249,6 +249,7 @@ afsd_ServiceControlHandlerEx(
     long code;
     DWORD dwRet = ERROR_CALL_NOT_IMPLEMENTED;
     OSVERSIONINFO osVersion;
+    DWORD dwCurrentState = ServiceStatus.dwCurrentState;
 
     /* Get the version of Windows */
     memset(&osVersion, 0x00, sizeof(osVersion));
@@ -272,7 +273,8 @@ afsd_ServiceControlHandlerEx(
         SetServiceStatus(StatusHandle, &ServiceStatus);
 
         /* Write all dirty buffers back to server */
-	if ( !lana_OnlyLoopback() )
+	if (dwCurrentState == SERVICE_RUNNING &&
+            !lana_OnlyLoopback() )
 	    buf_CleanAndReset();
 
         /* Force trace if requested */
