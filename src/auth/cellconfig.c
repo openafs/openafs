@@ -351,6 +351,12 @@ _afsconf_UpToDate(struct afsconf_dir *adir)
     char *cellservDB;
     struct stat tstat;
     int code;
+    time_t now = time(0);
+
+    if (adir->timeCheck == now) {
+	return 1; /* stat no more than once a second */
+    }
+    adir->timeCheck = now;
 
     _afsconf_CellServDBPath(adir, &cellservDB);
     if (cellservDB == NULL)
@@ -403,6 +409,7 @@ _afsconf_Touch(struct afsconf_dir *adir)
 #endif
 
     adir->timeRead = 0;		/* just in case */
+    adir->timeCheck = 0;
 
     _afsconf_CellServDBPath(adir, &cellservDB);
     if (cellservDB == NULL)
