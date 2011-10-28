@@ -1,3 +1,10 @@
+openafs (1.6.0-2) UNRELEASED; urgency=low
+
+  * Add support for armhf.  Patch from Konstantinos Margaritis.
+    (Closes: #645395)
+
+ -- Russ Allbery <rra@debian.org>  Thu, 27 Oct 2011 17:10:16 -0700
+
 openafs (1.6.0-1) unstable; urgency=low
 
   * New upstream stable release.
