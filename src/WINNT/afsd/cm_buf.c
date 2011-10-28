@@ -1333,9 +1333,10 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
              */
 
             /* don't recycle someone in our own chunk */
-            if (!cm_FidCmp(&bp->fid, &scp->fid)
-                 && (bp->offset.LowPart & (-cm_chunkSize))
-                 == (offsetp->LowPart & (-cm_chunkSize))) {
+            if (!cm_FidCmp(&bp->fid, &scp->fid) &&
+                bp->dataVersion >= scp->bufDataVersionLow &&
+                bp->dataVersion <= scp->dataVersion &&
+                (bp->offset.LowPart & (-cm_chunkSize)) == (offsetp->LowPart & (-cm_chunkSize))) {
                 n_own++;
                 continue;
             }
