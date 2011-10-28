@@ -3582,6 +3582,9 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
             newScp = NULL;
         } else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
             code = CM_ERROR_EXISTS;
+        } else {
+            /* The target does not exist.  Clear the error and perform the rename. */
+            code = 0;
         }
     }
 
