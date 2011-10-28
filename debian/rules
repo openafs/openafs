@@ -19,7 +19,7 @@ LDFLAGS  := $(shell dpkg-buildflags --get LDFLAGS)
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
     DEBIAN_OPT_FLAGS = --disable-optimize --disable-optimize-lwp
     DEBIAN_KERN_FLAGS = --disable-optimize-kernel
-else ifeq (arm-linux-gnueabi,$(DEB_HOST_GNU_TYPE))
+else ifneq (,$(findstring arm-linux-gnueabi,$(DEB_HOST_GNU_TYPE)))
     DEBIAN_OPT_FLAGS = --disable-optimize --disable-optimize-lwp
     DEBIAN_KERN_FLAGS = --disable-optimize-kernel
 else
