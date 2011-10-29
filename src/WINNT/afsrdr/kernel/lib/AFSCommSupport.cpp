@@ -717,6 +717,46 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                             SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID);
 
+                            if( pCurrentDirEntry->ShortNameLength > 0 &&
+                                pDirNode->NameInformation.ShortNameLength > 0)
+                            {
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name %S New short name %S\n",
+                                              &uniDirName,
+                                              &pDirNode->NameInformation.FileName,
+                                              pDirNode->NameInformation.ShortName,
+                                              pCurrentDirEntry->ShortName);
+                            }
+                            else if( pCurrentDirEntry->ShortNameLength == 0 &&
+                                     pDirNode->NameInformation.ShortNameLength > 0)
+                            {
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name %S New short name NULL\n",
+                                              &uniDirName,
+                                              &pDirNode->NameInformation.FileName,
+                                              pDirNode->NameInformation.ShortName);
+                            }
+                            else if( pCurrentDirEntry->ShortNameLength > 0 &&
+                                     pDirNode->NameInformation.ShortNameLength == 0)
+                            {
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name NULL New short name %S\n",
+                                              &uniDirName,
+                                              &pDirNode->NameInformation.FileName,
+                                              pCurrentDirEntry->ShortName);
+                            }
+                            else
+                            {
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name NULL New short name NULL\n",
+                                              &uniDirName,
+                                              &pDirNode->NameInformation.FileName);
+                            }
+
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSVerifyDirectoryContent Verified entry %wZ for parent FID %08lX-%08lX-%08lX-%08lX\n",
@@ -777,7 +817,8 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyDirectoryContent Processing dir entry %wZ with different FID, same name in parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                  "AFSVerifyDirectoryContent Processing dir entry %p %wZ with different FID, same name in parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                  pDirNode,
                                   &pDirNode->NameInformation.FileName,
                                   ObjectInfoCB->FileId.Cell,
                                   ObjectInfoCB->FileId.Volume,
@@ -793,12 +834,17 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSVerifyDirectoryContent Deleting dir entry %wZ from parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                      "AFSVerifyDirectoryContent Different FIDs - Deleting DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pDirNode,
                                       &pDirNode->NameInformation.FileName,
                                       ObjectInfoCB->FileId.Cell,
                                       ObjectInfoCB->FileId.Volume,
                                       ObjectInfoCB->FileId.Vnode,
-                                      ObjectInfoCB->FileId.Unique);
+                                      ObjectInfoCB->FileId.Unique,
+                                      pCurrentDirEntry->FileId.Cell,
+                                      pCurrentDirEntry->FileId.Volume,
+                                      pCurrentDirEntry->FileId.Vnode,
+                                      pCurrentDirEntry->FileId.Unique);
 
                         AFSDeleteDirEntry( ObjectInfoCB,
                                            pDirNode);
@@ -806,17 +852,21 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     else
                     {
 
+                        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_DELETED);
+
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSVerifyDirectoryContent Setting dir entry %p name %wZ DELETED in parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                      "AFSVerifyDirectoryContent Different FIDs - removing DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
                                       pDirNode,
                                       &pDirNode->NameInformation.FileName,
                                       ObjectInfoCB->FileId.Cell,
                                       ObjectInfoCB->FileId.Volume,
                                       ObjectInfoCB->FileId.Vnode,
-                                      ObjectInfoCB->FileId.Unique);
-
-                        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_DELETED);
+                                      ObjectInfoCB->FileId.Unique,
+                                      pCurrentDirEntry->FileId.Cell,
+                                      pCurrentDirEntry->FileId.Volume,
+                                      pCurrentDirEntry->FileId.Vnode,
+                                      pCurrentDirEntry->FileId.Unique);
 
                         AFSRemoveNameEntry( ObjectInfoCB,
                                             pDirNode);
@@ -864,10 +914,13 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyDirectoryContent Initialized short name %wZ for DE %p for %wZ\n",
-                                  &uniShortName,
+                                  "AFSVerifyDirectoryContent NO short name for DE %p for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   pDirNode,
-                                  &pDirNode->NameInformation.FileName);
+                                  &pDirNode->NameInformation.FileName,
+                                  pCurrentDirEntry->FileId.Cell,
+                                  pCurrentDirEntry->FileId.Volume,
+                                  pCurrentDirEntry->FileId.Vnode,
+                                  pCurrentDirEntry->FileId.Unique);
                 }
 
                 //

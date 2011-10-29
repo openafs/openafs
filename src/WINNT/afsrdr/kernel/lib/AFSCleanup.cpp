@@ -417,6 +417,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                             AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                             TRUE);
 
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSCleanup DE %p for %wZ removing entry\n",
+                                          pCcb->DirectoryCB,
+                                          &pCcb->DirectoryCB->NameInformation.FileName);
+
                             AFSRemoveNameEntry( pObjectInfo->ParentObjectInformation,
                                                 pCcb->DirectoryCB);
 

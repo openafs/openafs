@@ -1946,6 +1946,13 @@ AFSSetRenameInfo( IN PIRP Irp)
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
             }
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetRenameInfo Target %wZ exists DE %p Count %08lX, performing delete of target\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pTargetDirEntry->OpenReferenceCount);
+
             bTargetEntryExists = TRUE;
         }
 
@@ -2292,6 +2299,12 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             pSrcCcb->DirectoryCB->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
                                                                                            TRUE);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Initialized short name hash for %wZ longname %wZ\n",
+                          &uniShortName,
+                          &pSrcCcb->DirectoryCB->NameInformation.FileName);
         }
         else
         {
@@ -2401,10 +2414,9 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetRenameInfo Setting DELETE flag in dir entry %p name %wZ to tmp %wZ\n",
+                          "AFSSetRenameInfo Setting DELETE flag in dir entry %p name %wZ\n",
                           pTargetDirEntry,
-                          &pTargetDirEntry->NameInformation.FileName,
-                          &uniTmpTargetName);
+                          &pTargetDirEntry->NameInformation.FileName);
 
             SetFlag( pTargetDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
 
@@ -2432,7 +2444,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSSetRenameInfo Failed to flush section for deleted temp file %wZ\n",
+                                  "AFSSetRenameInfo Failed to delete section for target file %wZ\n",
                                   &pTargetDirEntry->NameInformation.FileName);
                 }
 

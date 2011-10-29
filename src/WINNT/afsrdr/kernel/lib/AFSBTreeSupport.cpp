@@ -368,11 +368,10 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirectoryCB *RootNode,
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_WARNING,
-                              "AFSInsertCaseSensitiveDirEntry Attempt to re-insert a CRC %I64X\n",
-                              DirEntry->CaseSensitiveTreeEntry.HashIndex);
-
-                ASSERT( FALSE);
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInsertCaseSensitiveDirEntry Collision with DE %p for %wZ\n",
+                              pCurrentEntry,
+                              &pCurrentEntry->NameInformation.FileName);
 
                 ntStatus = STATUS_UNSUCCESSFUL;
 
@@ -1083,6 +1082,13 @@ AFSInsertShortNameDirEntry( IN AFSDirectoryCB *RootNode,
             }
             else
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInsertShortNameDirEntry Collision with DE %p for shortname %S and %wZ\n",
+                              pCurrentEntry,
+                              pCurrentEntry->NameInformation.ShortName,
+                              &pCurrentEntry->NameInformation.FileName);
 
                 break;
             }

@@ -3250,6 +3250,13 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
             {
 
                 ClearFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSValidateDirectoryCache Clear VALID flag on DE %p Reference count %08lX\n",
+                              pCurrentDirEntry,
+                              pCurrentDirEntry->OpenReferenceCount);
+
             }
 
             pCurrentDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;
@@ -3280,6 +3287,12 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
                 continue;
             }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSValidateDirectoryCache Processing INVALID DE %p Reference count %08lX\n",
+                          pCurrentDirEntry,
+                          pCurrentDirEntry->OpenReferenceCount);
 
             if( pCurrentDirEntry->OpenReferenceCount == 0)
             {
