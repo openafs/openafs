@@ -1030,9 +1030,6 @@ void
 AFSCompleteRequest( IN PIRP Irp,
                     IN ULONG Status);
 
-void
-AFSBuildCRCTable( void);
-
 ULONG
 AFSGenerateCRC( IN PUNICODE_STRING FileName,
                 IN BOOLEAN UpperCaseName);
