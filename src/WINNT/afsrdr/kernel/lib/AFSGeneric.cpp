@@ -1022,10 +1022,10 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         pDirNode->ObjectInformation = pObjectInfoCB;
 
         //
-        // Set valid entry
+        // Set valid entry and NOT_IN_PARENT flag
         //
 
-        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID);
+        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID | AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
         pDirNode->FileIndex = FileIndex;
 
@@ -3246,20 +3246,62 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
         while( pCurrentDirEntry != NULL)
         {
 
+            pNextDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;
+
             if( !BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_FAKE))
             {
 
-                ClearFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID);
+                //
+                // If this entry has been deleted then process it here
+                //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSValidateDirectoryCache Clear VALID flag on DE %p Reference count %08lX\n",
-                              pCurrentDirEntry,
-                              pCurrentDirEntry->OpenReferenceCount);
+                if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
+                    pCurrentDirEntry->OpenReferenceCount == 0)
+                {
 
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSValidateDirectoryCache Deleting dir entry %p name %wZ\n",
+                                  pCurrentDirEntry,
+                                  &pCurrentDirEntry->NameInformation.FileName);
+
+                    AFSDeleteDirEntry( ObjectInfo,
+                                       pCurrentDirEntry);
+                }
+                else
+                {
+
+                    ClearFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSValidateDirectoryCache Clear VALID flag on DE %p Reference count %08lX\n",
+                                  pCurrentDirEntry,
+                                  pCurrentDirEntry->OpenReferenceCount);
+
+                    //
+                    // We pull the short name from the parent tree since it could change below
+                    //
+
+                    if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSValidateDirectoryCache Removing DE %p (%08lX) from shortname tree for %wZ\n",
+                                      pCurrentDirEntry,
+                                      pCurrentDirEntry->Type.Data.ShortNameTreeEntry.HashIndex,
+                                      &pCurrentDirEntry->NameInformation.FileName);
+
+                        AFSRemoveShortNameDirEntry( &ObjectInfo->Specific.Directory.ShortNameTree,
+                                                    pCurrentDirEntry);
+
+                        ClearFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
+                    }
+                }
             }
 
-            pCurrentDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;
+            pCurrentDirEntry = pNextDirEntry;
         }
 
         //
@@ -3282,6 +3324,49 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 
             if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID))
             {
+
+                if( !BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME) &&
+                    pCurrentDirEntry->Type.Data.ShortNameTreeEntry.HashIndex > 0)
+                {
+
+                    if( ObjectInfo->Specific.Directory.ShortNameTree == NULL)
+                    {
+
+                        ObjectInfo->Specific.Directory.ShortNameTree = pCurrentDirEntry;
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSValidateDirectoryCache Insert DE %p to head of shortname tree for %wZ\n",
+                                      pCurrentDirEntry,
+                                      &pCurrentDirEntry->NameInformation.FileName);
+
+                        SetFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
+                    }
+                    else
+                    {
+
+                        if( !NT_SUCCESS( AFSInsertShortNameDirEntry( ObjectInfo->Specific.Directory.ShortNameTree,
+                                                                     pCurrentDirEntry)))
+                        {
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSValidateDirectoryCache Failed to insert DE %p (%08lX) to shortname tree for %wZ\n",
+                                          pCurrentDirEntry,
+                                          pCurrentDirEntry->Type.Data.ShortNameTreeEntry.HashIndex,
+                                          &pCurrentDirEntry->NameInformation.FileName);
+                        }
+                        else
+                        {
+                            SetFlag( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSValidateDirectoryCache Insert DE %p to shortname tree for %wZ\n",
+                                          pCurrentDirEntry,
+                                          &pCurrentDirEntry->NameInformation.FileName);
+                        }
+                    }
+                }
 
                 pCurrentDirEntry = pNextDirEntry;
 
@@ -6958,8 +7043,7 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         AFSRemoveCaseInsensitiveDirEntry( &ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                           DirEntry);
 
-        if( ParentObjectInfo->Specific.Directory.ShortNameTree &&
-            DirEntry->Type.Data.ShortNameTreeEntry.HashIndex != 0)
+        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME))
         {
 
             //
@@ -6974,6 +7058,8 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             AFSRemoveShortNameDirEntry( &ParentObjectInfo->Specific.Directory.ShortNameTree,
                                         DirEntry);
+
+            ClearFlag( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
         }
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -6983,6 +7069,8 @@ AFSRemoveNameEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                       &DirEntry->NameInformation.FileName);
 
         SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
+
+        ClearFlag( DirEntry->Flags, AFS_DIR_ENTRY_CASE_INSENSTIVE_LIST_HEAD);
 
 try_exit:
 
@@ -7119,7 +7207,7 @@ AFSValidateDirList( IN AFSObjectInfoCB *ObjectInfo)
 
     BOOLEAN bIsValid = TRUE;
     ULONG ulCount = 0;
-    AFSDirectoryCB *pCurrentDirEntry = NULL;
+    AFSDirectoryCB *pCurrentDirEntry = NULL, *pDirEntry = NULL;
 
     pCurrentDirEntry = ObjectInfo->Specific.Directory.DirectoryNodeListHead;
 
@@ -7129,6 +7217,21 @@ AFSValidateDirList( IN AFSObjectInfoCB *ObjectInfo)
         if( !BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_FAKE))
         {
             ulCount++;
+
+            if( !BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
+            {
+
+                pDirEntry = NULL;
+
+                AFSLocateCaseSensitiveDirEntry( ObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                (ULONG)pCurrentDirEntry->CaseSensitiveTreeEntry.HashIndex,
+                                                &pDirEntry);
+
+                if( pDirEntry == NULL)
+                {
+                    DbgBreakPoint();
+                }
+            }
         }
 
         pCurrentDirEntry = (AFSDirectoryCB *)pCurrentDirEntry->ListEntry.fLink;

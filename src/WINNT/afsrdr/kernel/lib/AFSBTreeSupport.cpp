@@ -1083,6 +1083,8 @@ AFSInsertShortNameDirEntry( IN AFSDirectoryCB *RootNode,
             else
             {
 
+                ntStatus = STATUS_UNSUCCESSFUL;
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSInsertShortNameDirEntry Collision with DE %p for shortname %S and %wZ\n",

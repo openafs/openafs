@@ -885,7 +885,8 @@ AFSLocateDirEntryByIndex( IN AFSObjectInfoCB *ObjectInfo,
 
 NTSTATUS
 AFSSnapshotDirectory( IN AFSFcb *Fcb,
-                      IN AFSCcb *Ccb);
+                      IN AFSCcb *Ccb,
+                      IN BOOLEAN ResetIndex);
 
 NTSTATUS
 AFSFsRtlNotifyFullChangeDirectory( IN AFSObjectInfoCB *ObjectInfo,

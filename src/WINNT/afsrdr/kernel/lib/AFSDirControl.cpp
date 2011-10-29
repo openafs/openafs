@@ -262,14 +262,73 @@ AFSQueryDirectory( IN PIRP Irp)
         }
 
         //
-        // Grab the directory node hdr tree lock shared while parsing the directory
+        // Grab the directory node hdr tree lock while parsing the directory
         // contents
         //
 
-        AFSAcquireShared( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                          TRUE);
+        AFSAcquireExcl( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
 
         bReleaseMain = TRUE;
+
+        //
+        // Before attempting to insert the new entry, check if we need to validate the parent
+        //
+
+        if( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryDirectory Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          &pCcb->DirectoryCB->NameInformation.FileName,
+                          pFcb->ObjectInformation->FileId.Cell,
+                          pFcb->ObjectInformation->FileId.Volume,
+                          pFcb->ObjectInformation->FileId.Vnode,
+                          pFcb->ObjectInformation->FileId.Unique);
+
+            ntStatus = AFSVerifyEntry( &pFcb->AuthGroup,
+                                       pCcb->DirectoryCB);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSQueryDirectory Failed to verify parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              pFcb->ObjectInformation->FileId.Cell,
+                              pFcb->ObjectInformation->FileId.Volume,
+                              pFcb->ObjectInformation->FileId.Vnode,
+                              pFcb->ObjectInformation->FileId.Unique,
+                              ntStatus);
+
+                try_return( ntStatus);
+            }
+
+            //
+            // Perform a new snapshot of the directory
+            //
+
+            ntStatus = AFSSnapshotDirectory( pFcb,
+                                             pCcb,
+                                             FALSE);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSQueryDirectory Snapshot directory failure for parent %wZ Mask %wZ Status %08lX\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              &pCcb->MaskName,
+                              ntStatus);
+
+                try_return( ntStatus);
+            }
+        }
+
+        AFSConvertToShared( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
         //
         // We can now safely drop the lock on the node
@@ -295,7 +354,8 @@ AFSQueryDirectory( IN PIRP Irp)
         {
 
             ntStatus = AFSSnapshotDirectory( pFcb,
-                                             pCcb);
+                                             pCcb,
+                                             TRUE);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -540,7 +600,7 @@ AFSQueryDirectory( IN PIRP Irp)
                               FileInformationClass);
 
                 try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
-            }
+        }
 
         AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -595,6 +655,8 @@ AFSQueryDirectory( IN PIRP Irp)
                      BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED))
             {
 
+                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+
                 continue;
             }
 
@@ -617,6 +679,8 @@ AFSQueryDirectory( IN PIRP Irp)
                     if( !FlagOn( pObjectInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
                     {
 
+                        InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+
                         continue;
                     }
                 }
@@ -635,6 +699,8 @@ AFSQueryDirectory( IN PIRP Irp)
                                                       TRUE,
                                                       NULL))
                         {
+
+                            InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                             continue;
                         }
@@ -655,6 +721,8 @@ AFSQueryDirectory( IN PIRP Irp)
                                                          &pCcb->MaskName,
                                                          TRUE))
                             {
+
+                                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                                 continue;
                             }
@@ -728,6 +796,8 @@ AFSQueryDirectory( IN PIRP Irp)
                 //
 
                 pCcb->CurrentDirIndex--;
+
+                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                 try_return( ntStatus = STATUS_SUCCESS);
             }
@@ -849,6 +919,8 @@ AFSQueryDirectory( IN PIRP Irp)
                                   Irp,
                                   FileInformationClass);
 
+                    InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+
                     try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
 
                     break;
@@ -874,8 +946,12 @@ AFSQueryDirectory( IN PIRP Irp)
             if( ulBytesConverted < pDirEntry->NameInformation.FileName.Length)
             {
 
+                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+
                 try_return( ntStatus = STATUS_BUFFER_OVERFLOW);
             }
+
+            InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
             dStatus = STATUS_SUCCESS;
 
@@ -1109,6 +1185,9 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
             // Get to a valid entry
             //
 
+            AFSAcquireShared( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                              TRUE);
+
             while( ulCount < pSnapshotHdr->EntryCount)
             {
 
@@ -1145,6 +1224,8 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
                                       ObjectInfo->FileId.Volume,
                                       ObjectInfo->FileId.Vnode,
                                       ObjectInfo->FileId.Unique);
+
+                        InterlockedIncrement( &pDirEntry->OpenReferenceCount);
                     }
                     else
                     {
@@ -1177,6 +1258,8 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
                 Ccb->CurrentDirIndex++;
             }
+
+            AFSReleaseResource( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
 
 try_exit:
@@ -1281,7 +1364,8 @@ try_exit:
 
 NTSTATUS
 AFSSnapshotDirectory( IN AFSFcb *Fcb,
-                      IN AFSCcb *Ccb)
+                      IN AFSCcb *Ccb,
+                      IN BOOLEAN ResetIndex)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -1292,19 +1376,23 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
     __Enter
     {
 
-        //
-        // Set it up so we still get the . and .. entries for empty directories
-        //
-
-        if( BooleanFlagOn( Ccb->Flags, CCB_FLAG_RETURN_RELATIVE_ENTRIES))
+        if( ResetIndex)
         {
 
-            Ccb->CurrentDirIndex = AFS_DIR_ENTRY_INITIAL_DIR_INDEX;
-        }
-        else
-        {
+            //
+            // Set it up so we still get the . and .. entries for empty directories
+            //
 
-            Ccb->CurrentDirIndex = AFS_DIR_ENTRY_INITIAL_ROOT_INDEX;
+            if( BooleanFlagOn( Ccb->Flags, CCB_FLAG_RETURN_RELATIVE_ENTRIES))
+            {
+
+                Ccb->CurrentDirIndex = AFS_DIR_ENTRY_INITIAL_DIR_INDEX;
+            }
+            else
+            {
+
+                Ccb->CurrentDirIndex = AFS_DIR_ENTRY_INITIAL_ROOT_INDEX;
+            }
         }
 
         if( Fcb->ObjectInformation->Specific.Directory.DirectoryNodeCount == 0)
