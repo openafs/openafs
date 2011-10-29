@@ -2354,9 +2354,12 @@ afs_linux_permission(struct inode *ip, int mode)
     cred_t *credp;
     int tmp = 0;
 
+    /* Check for RCU path walking */
 #if defined(IOP_PERMISSION_TAKES_FLAGS)
-    /* We don't support RCU path walking */
     if (flags & IPERM_FLAG_RCU)
+       return -ECHILD;
+#elif defined(MAY_NOT_BLOCK)
+    if (mode & MAY_NOT_BLOCK)
        return -ECHILD;
 #endif
 
