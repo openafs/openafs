@@ -2016,6 +2016,13 @@ try_exit:
             if( bFileCreated)
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessCreate Create failed, removing DE %p from aprent object %p Status %08lX\n",
+                              pDirEntry,
+                              pParentObjectInfo,
+                              ntStatus);
+
                 //
                 // Remove the dir entry from the parent
                 //
