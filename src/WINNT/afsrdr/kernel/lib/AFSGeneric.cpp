@@ -324,43 +324,6 @@ AFSCompleteRequest( IN PIRP Irp,
 }
 
 //
-// Function: AFSBuildCRCTable
-//
-// Description:
-//
-//      This function builds the CRC table for mapping filenames to a CRC value.
-//
-// Return:
-//
-//      A status is returned for the function
-//
-
-void
-AFSBuildCRCTable()
-{
-    ULONG crc;
-    int i, j;
-
-    for ( i = 0; i <= 255; i++)
-    {
-        crc = i;
-        for ( j = 8; j > 0; j--)
-        {
-            if (crc & 1)
-            {
-                crc = ( crc >> 1 ) ^ CRC32_POLYNOMIAL;
-            }
-            else
-            {
-                crc >>= 1;
-            }
-        }
-
-        AFSCRCTable[ i ] = crc;
-    }
-}
-
-//
 // Function: AFSGenerateCRC
 //
 // Description:
@@ -377,54 +340,20 @@ AFSGenerateCRC( IN PUNICODE_STRING FileName,
                 IN BOOLEAN UpperCaseName)
 {
 
-    ULONG crc;
-    ULONG temp1, temp2;
-    UNICODE_STRING UpcaseString;
-    WCHAR *lpbuffer;
-    USHORT size = 0;
+    ULONG ulCRC = 0;
+    NTSTATUS ntStatus = STATUS_SUCCESS;
 
-    if( !AFSCRCTable[1])
+    ntStatus = RtlHashUnicodeString( FileName,
+                                     UpperCaseName,
+                                     HASH_STRING_ALGORITHM_DEFAULT,
+                                     &ulCRC);
+
+    if( !NT_SUCCESS( ntStatus))
     {
-        AFSBuildCRCTable();
+        ulCRC = 0;
     }
 
-    crc = 0xFFFFFFFFL;
-
-    if( UpperCaseName)
-    {
-
-        RtlUpcaseUnicodeString( &UpcaseString,
-                                FileName,
-                                TRUE);
-
-        lpbuffer = UpcaseString.Buffer;
-
-        size = (UpcaseString.Length/sizeof( WCHAR));
-    }
-    else
-    {
-
-        lpbuffer = FileName->Buffer;
-
-        size = (FileName->Length/sizeof( WCHAR));
-    }
-
-    while (size--)
-    {
-        temp1 = (crc >> 8) & 0x00FFFFFFL;
-        temp2 = AFSCRCTable[((int)crc ^ *lpbuffer++) & 0xff];
-        crc = temp1 ^ temp2;
-    }
-
-    if( UpperCaseName)
-    {
-
-        RtlFreeUnicodeString( &UpcaseString);
-    }
-
-    crc ^= 0xFFFFFFFFL;
-
-    return crc;
+    return ulCRC;
 }
 
 void *

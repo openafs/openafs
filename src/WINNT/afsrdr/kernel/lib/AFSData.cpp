@@ -50,8 +50,6 @@ PDEVICE_OBJECT      AFSControlDeviceObject = NULL;
 
 PDEVICE_OBJECT      AFSRDRDeviceObject = NULL;
 
-unsigned long       AFSCRCTable[ 256];
-
 UNICODE_STRING      AFSRegistryPath;
 
 HANDLE              AFSSysProcess = NULL;

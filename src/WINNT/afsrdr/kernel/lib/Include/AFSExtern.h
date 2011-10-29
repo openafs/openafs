@@ -51,8 +51,6 @@ extern PDEVICE_OBJECT      AFSRDRDeviceObject;
 
 extern FAST_IO_DISPATCH    AFSFastIoDispatch;
 
-extern unsigned long       AFSCRCTable[];
-
 extern UNICODE_STRING      AFSRegistryPath;
 
 extern ULONG               AFSDebugFlags;
