@@ -263,17 +263,35 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                     //
 
                     uniShortName.Length = pDirNode->NameInformation.ShortNameLength;
+                    uniShortName.MaximumLength = uniShortName.Length;
                     uniShortName.Buffer = pDirNode->NameInformation.ShortName;
 
-                    pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
-                                                                                       TRUE);
+                    if( !RtlIsNameLegalDOS8Dot3( &pDirNode->NameInformation.FileName,
+                                                 NULL,
+                                                 NULL))
+                    {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSEnumerateDirectory Initialized short name %wZ for DE %p for %wZ\n",
-                                  &uniShortName,
-                                  pDirNode,
-                                  &pDirNode->NameInformation.FileName);
+                        pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
+                                                                                           TRUE);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSEnumerateDirectory Initialized short name %wZ for DE %p for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      &uniShortName,
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName,
+                                      pCurrentDirEntry->FileId.Cell,
+                                      pCurrentDirEntry->FileId.Volume,
+                                      pCurrentDirEntry->FileId.Vnode,
+                                      pCurrentDirEntry->FileId.Unique);
+                    }
+                    else
+                    {
+                        pDirNode->NameInformation.ShortNameLength = 0;
+
+                        RtlZeroMemory( pDirNode->NameInformation.ShortName,
+                                       (12 * sizeof( WCHAR)));
+                    }
                 }
 
                 //
@@ -302,9 +320,33 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                                   pDirNode,
                                   &pDirNode->NameInformation.FileName);
 
-                    AFSInsertCaseSensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
-                                                    pDirNode);
+                    if( !NT_SUCCESS( AFSInsertCaseSensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                                     pDirNode)))
+                    {
+
+                        //
+                        // Delete this dir entry and continue on
+                        //
+
+                        AFSDeleteDirEntry( ObjectInfoCB,
+                                           pDirNode);
+
+                        pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
+
+                        if( ulResultLen >= ulEntryLength)
+                        {
+                            ulResultLen -= ulEntryLength;
+                        }
+                        else
+                        {
+                            ulResultLen = 0;
+                        }
+
+                        continue;
+                    }
                 }
+
+                ClearFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
                 if( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead == NULL)
                 {
@@ -378,18 +420,23 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                                       &pDirNode->NameInformation.FileName);
 
                         ObjectInfoCB->Specific.Directory.ShortNameTree = pDirNode;
+
+                        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
                     }
                     else
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSEnumerateDirectory Insert DE %p to shortname tree for %wZ\n",
-                                      pDirNode,
-                                      &pDirNode->NameInformation.FileName);
+                        if( NT_SUCCESS( AFSInsertShortNameDirEntry( ObjectInfoCB->Specific.Directory.ShortNameTree,
+                                                                    pDirNode)))
+                        {
+                            SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
 
-                        AFSInsertShortNameDirEntry( ObjectInfoCB->Specific.Directory.ShortNameTree,
-                                                    pDirNode);
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSEnumerateDirectory Insert DE %p to shortname tree for %wZ\n",
+                                          pDirNode,
+                                          &pDirNode->NameInformation.FileName);
+                        }
                     }
                 }
 
@@ -907,10 +954,38 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     //
 
                     uniShortName.Length = pDirNode->NameInformation.ShortNameLength;
+                    uniShortName.MaximumLength = uniShortName.Length;
                     uniShortName.Buffer = pDirNode->NameInformation.ShortName;
 
-                    pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
-                                                                                       TRUE);
+                    if( !RtlIsNameLegalDOS8Dot3( &pDirNode->NameInformation.FileName,
+                                                 NULL,
+                                                 NULL))
+                    {
+
+                        pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
+                                                                                           TRUE);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVerifyDirectoryContent Initialized short name %wZ for DE %p for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      &uniShortName,
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName,
+                                      pCurrentDirEntry->FileId.Cell,
+                                      pCurrentDirEntry->FileId.Volume,
+                                      pCurrentDirEntry->FileId.Vnode,
+                                      pCurrentDirEntry->FileId.Unique);
+                    }
+                    else
+                    {
+                        pDirNode->NameInformation.ShortNameLength = 0;
+
+                        RtlZeroMemory( pDirNode->NameInformation.ShortName,
+                                       (12 * sizeof( WCHAR)));
+                    }
+                }
+                else
+                {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -943,15 +1018,46 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                 else
                 {
 
-                    AFSInsertCaseSensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
-                                                    pDirNode);
+                    if( !NT_SUCCESS( AFSInsertCaseSensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                                                     pDirNode)))
+                    {
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVerifyDirectoryContent Failed to nsert DE %p to case sensitive tree for %wZ\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyDirectoryContent Insert DE %p to case sensitive tree for %wZ\n",
-                                  pDirNode,
-                                  &pDirNode->NameInformation.FileName);
+                        //
+                        // Delete this dir entry and continue on
+                        //
+
+                        AFSDeleteDirEntry( ObjectInfoCB,
+                                           pDirNode);
+
+                        pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
+
+                        if( ulResultLen >= ulEntryLength)
+                        {
+                            ulResultLen -= ulEntryLength;
+                        }
+                        else
+                        {
+                            ulResultLen = 0;
+                        }
+
+                        continue;
+                    }
+                    else
+                    {
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVerifyDirectoryContent Insert DE %p to case sensitive tree for %wZ\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName);
+                    }
                 }
+
+                ClearFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
                 if( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead == NULL)
                 {
@@ -1025,18 +1131,32 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                                       "AFSVerifyDirectoryContent Insert DE %p to head of shortname tree for %wZ\n",
                                       pDirNode,
                                       &pDirNode->NameInformation.FileName);
+
+                        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
                     }
                     else
                     {
 
-                        AFSInsertShortNameDirEntry( ObjectInfoCB->Specific.Directory.ShortNameTree,
-                                                    pDirNode);
+                        if( !NT_SUCCESS( AFSInsertShortNameDirEntry( ObjectInfoCB->Specific.Directory.ShortNameTree,
+                                                                     pDirNode)))
+                        {
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSVerifyDirectoryContent Failed to insert DE %p (%08lX) to shortname tree for %wZ\n",
+                                          pDirNode,
+                                          pDirNode->Type.Data.ShortNameTreeEntry.HashIndex,
+                                          &pDirNode->NameInformation.FileName);
+                        }
+                        else
+                        {
+                            SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSVerifyDirectoryContent Insert DE %p to shortname tree for %wZ\n",
-                                      pDirNode,
-                                      &pDirNode->NameInformation.FileName);
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSVerifyDirectoryContent Insert DE %p to shortname tree for %wZ\n",
+                                          pDirNode,
+                                          &pDirNode->NameInformation.FileName);
+                        }
                     }
                 }
 
@@ -1589,14 +1709,59 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
         if( DirectoryCB->NameInformation.ShortNameLength > 0)
         {
 
+            UNICODE_STRING uniShortName;
+
+            uniShortName.Length = DirectoryCB->NameInformation.ShortNameLength;
+            uniShortName.MaximumLength = uniShortName.Length;
+            uniShortName.Buffer = DirectoryCB->NameInformation.ShortName;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyRename Update old short name %wZ for DE %p for %wZ\n",
+                          &uniShortName,
+                          DirectoryCB,
+                          &DirectoryCB->NameInformation.FileName);
+
+            DirectoryCB->NameInformation.ShortNameLength = pRenameResultCB->DirEnum.ShortNameLength;
+
             RtlCopyMemory( DirectoryCB->NameInformation.ShortName,
                            pRenameResultCB->DirEnum.ShortName,
                            DirectoryCB->NameInformation.ShortNameLength);
+
+            uniShortName.Length = DirectoryCB->NameInformation.ShortNameLength;
+            uniShortName.MaximumLength = uniShortName.Length;
+            uniShortName.Buffer = DirectoryCB->NameInformation.ShortName;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyRename Initialized short name %wZ for DE %p for %wZ\n",
+                          &uniShortName,
+                          DirectoryCB,
+                          &DirectoryCB->NameInformation.FileName);
+        }
+        else
+        {
+
+            UNICODE_STRING uniShortName;
+
+            uniShortName.Length = DirectoryCB->NameInformation.ShortNameLength;
+            uniShortName.MaximumLength = uniShortName.Length;
+            uniShortName.Buffer = DirectoryCB->NameInformation.ShortName;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyRename Removing old short name %wZ for DE %p for %wZ\n",
+                          &uniShortName,
+                          DirectoryCB,
+                          &DirectoryCB->NameInformation.FileName);
+
+            DirectoryCB->NameInformation.ShortNameLength = 0;
+
+            DirectoryCB->Type.Data.ShortNameTreeEntry.HashIndex = 0;
         }
 
         if( UpdatedFID != NULL)
         {
-
             *UpdatedFID = pRenameResultCB->DirEnum.FileId;
         }
 

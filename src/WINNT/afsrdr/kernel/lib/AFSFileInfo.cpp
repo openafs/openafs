@@ -1746,12 +1746,13 @@ AFSSetRenameInfo( IN PIRP Irp)
     AFSObjectInfoCB *pSrcObject = NULL, *pTargetObject = NULL;
     AFSObjectInfoCB *pSrcParentObject = NULL, *pTargetParentObject = NULL;
     AFSFileID stNewFid, stTmpTargetFid;
-    UNICODE_STRING uniTmpTargetName;
-    BOOLEAN bReplaceTmpTargetEntry = FALSE;
     ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
     UNICODE_STRING uniFullTargetPath;
     BOOLEAN bCommonParent = FALSE;
     ULONG oldFileIndex;
+    BOOLEAN bReleaseVolumeLock = FALSE;
+    BOOLEAN bReleaseTargetDirLock = FALSE;
+    BOOLEAN bReleaseSourceDirLock = FALSE;
 
     __Enter
     {
@@ -1762,10 +1763,6 @@ AFSSetRenameInfo( IN PIRP Irp)
         pSrcCcb = (AFSCcb *)pSrcFileObj->FsContext2;
 
         pSrcObject = pSrcFcb->ObjectInformation;
-
-        uniTmpTargetName.Length = 0;
-        uniTmpTargetName.MaximumLength = 0;
-        uniTmpTargetName.Buffer = NULL;
 
         //
         // Perform some basic checks to ensure FS integrity
@@ -1879,14 +1876,26 @@ AFSSetRenameInfo( IN PIRP Irp)
         // If the target exists be sure the ReplaceIfExists flag is set
         //
 
-        AFSAcquireShared( pTargetParentObject->VolumeCB->VolumeLock,
-                          TRUE);
+        AFSAcquireExcl( pTargetParentObject->VolumeCB->VolumeLock,
+                        TRUE);
+
+        bReleaseVolumeLock = TRUE;
 
         ulTargetCRC = AFSGenerateCRC( &uniTargetName,
                                       FALSE);
 
-        AFSAcquireShared( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                          TRUE);
+        AFSAcquireExcl( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        bReleaseTargetDirLock = TRUE;
+
+        if( pTargetParentObject != pSrcFcb->ObjectInformation->ParentObjectInformation)
+        {
+            AFSAcquireExcl( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            TRUE);
+
+            bReleaseSourceDirLock = TRUE;
+        }
 
         AFSLocateCaseSensitiveDirEntry( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                         ulTargetCRC,
@@ -1918,24 +1927,20 @@ AFSSetRenameInfo( IN PIRP Irp)
                                         ulTargetCRC,
                                         &pTargetDirEntry);
         }
+
         //
         // Increment our ref count on the dir entry
         //
 
         if( pTargetDirEntry != NULL)
         {
+
+            ASSERT( pTargetParentObject == pTargetDirEntry->ObjectInformation->ParentObjectInformation);
+
             InterlockedIncrement( &pTargetDirEntry->OpenReferenceCount);
-        }
-
-        AFSReleaseResource( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-        if( pTargetDirEntry != NULL)
-        {
 
             if( !bReplaceIfExists)
             {
-
-                AFSReleaseResource( pTargetParentObject->VolumeCB->VolumeLock);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
@@ -1953,10 +1958,22 @@ AFSSetRenameInfo( IN PIRP Irp)
                           pTargetDirEntry,
                           pTargetDirEntry->OpenReferenceCount);
 
+            //
+            // Pull the directory entry from the parent
+            //
+
+            AFSRemoveDirNodeFromParent( pTargetParentObject,
+                                        pTargetDirEntry,
+                                        FALSE);
+
             bTargetEntryExists = TRUE;
         }
-
-        AFSReleaseResource( pTargetParentObject->VolumeCB->VolumeLock);
+        else
+        {
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetRenameInfo Target Target does NOT exist, normal rename\n");
+        }
 
         //
         // Extract off the final component name from the Fcb
@@ -1980,29 +1997,9 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             if( FsRtlAreNamesEqual( &uniTargetName,
                                     &uniSourceName,
-                                    TRUE,
+                                    FALSE,
                                     NULL))
             {
-
-                //
-                // Check for case only rename
-                //
-
-                if( !FsRtlAreNamesEqual( &uniTargetName,
-                                         &uniSourceName,
-                                         FALSE,
-                                         NULL))
-                {
-
-                    //
-                    // Just move in the new case form of the name
-                    //
-
-                    RtlCopyMemory( pSrcCcb->DirectoryCB->NameInformation.FileName.Buffer,
-                                   uniTargetName.Buffer,
-                                   uniTargetName.Length);
-                }
-
                 try_return( ntStatus = STATUS_SUCCESS);
             }
         }
@@ -2013,123 +2010,17 @@ AFSSetRenameInfo( IN PIRP Irp)
         }
 
         //
-        // If the target name exists then we need to 'move' the target before
-        // sending the rename to the service
-        //
-
-        if( bReplaceIfExists &&
-            pTargetDirEntry != NULL)
-        {
-
-            //
-            // What we will do is temporarily rename the file to a tmp file
-            // so we can back out if anything fails below
-            // First thing is to remove the original target from the parent
-            //
-
-            AFSAcquireExcl( pTargetDirEntry->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                            TRUE);
-
-            AFSRemoveDirNodeFromParent( pTargetDirEntry->ObjectInformation->ParentObjectInformation,
-                                        pTargetDirEntry,
-                                        TRUE);
-
-            AFSReleaseResource( pTargetDirEntry->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-            pTargetDirEntry->FileIndex = (ULONG)InterlockedIncrement( &pTargetDirEntry->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.ContentIndex);
-
-            uniTmpTargetName.Length = 0;
-            uniTmpTargetName.MaximumLength = uniTargetName.Length + (4 * sizeof( WCHAR));
-
-            uniTmpTargetName.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                         uniTmpTargetName.MaximumLength,
-                                                                         AFS_GENERIC_MEMORY_11_TAG);
-
-            if( uniTmpTargetName.Buffer == NULL)
-            {
-
-                //
-                // Re-insert the entry
-                //
-
-                AFSInsertDirectoryNode( pTargetDirEntry->ObjectInformation->ParentObjectInformation,
-                                        pTargetDirEntry,
-                                        TRUE);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSSetRenameInfo Failed tmp buffer allocation during rename of %wZ\n",
-                              &pSrcCcb->DirectoryCB->NameInformation.FileName);
-
-                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-            }
-
-            RtlZeroMemory( uniTmpTargetName.Buffer,
-                           uniTmpTargetName.MaximumLength);
-
-            uniTmpTargetName.Length = uniTargetName.Length;
-
-            RtlCopyMemory( uniTmpTargetName.Buffer,
-                           uniTargetName.Buffer,
-                           uniTmpTargetName.Length);
-
-            RtlCopyMemory( &uniTmpTargetName.Buffer[ uniTmpTargetName.Length/sizeof( WCHAR)],
-                           L".tmp",
-                           4 * sizeof( WCHAR));
-
-            uniTmpTargetName.Length += (4 * sizeof( WCHAR));
-
-            ntStatus = AFSNotifyRename( pTargetDirEntry->ObjectInformation,
-                                        pTargetDirEntry->ObjectInformation->ParentObjectInformation,
-                                        pTargetDcb->ObjectInformation,
-                                        pTargetDirEntry,
-                                        &uniTmpTargetName,
-                                        &stTmpTargetFid);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                //
-                // Re-insert the entry
-                //
-
-                AFSInsertDirectoryNode( pTargetDirEntry->ObjectInformation->ParentObjectInformation,
-                                        pTargetDirEntry,
-                                        TRUE);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSSetRenameInfo Failed rename of %wZ to tmp %wZ Status %08lX\n",
-                              &pSrcCcb->DirectoryCB->NameInformation.FileName,
-                              &uniTmpTargetName,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            //
-            // Indicate we need to replace this entry if any failure occurs below
-            //
-
-            bReplaceTmpTargetEntry = TRUE;
-        }
-
-        //
         // We need to remove the DirEntry from the parent node, update the index
         // and reinsert it into the parent tree. Note that for entries with the
         // same parent we do not pull the node from the enumeration list
         //
 
-        AFSAcquireExcl( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                        TRUE);
-
         AFSRemoveDirNodeFromParent( pSrcFcb->ObjectInformation->ParentObjectInformation,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
 
-        AFSReleaseResource( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
         oldFileIndex = pSrcCcb->DirectoryCB->FileIndex;
+
         if( !bCommonParent)
         {
 
@@ -2182,7 +2073,7 @@ AFSSetRenameInfo( IN PIRP Irp)
         //
 
         if( pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation == pTargetParentObject &&
-            !bReplaceTmpTargetEntry)
+            !bTargetEntryExists)
         {
 
             ulNotificationAction = FILE_ACTION_RENAMED_OLD_NAME;
@@ -2250,9 +2141,6 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Remove the old information entry
             //
 
-            AFSAcquireExcl( pSrcObject->VolumeCB->ObjectInfoTree.TreeLock,
-                            TRUE);
-
             AFSRemoveHashEntry( &pSrcObject->VolumeCB->ObjectInfoTree.TreeHead,
                                 &pSrcObject->TreeEntry);
 
@@ -2277,8 +2165,6 @@ AFSSetRenameInfo( IN PIRP Irp)
                 AFSInsertHashEntry( pSrcObject->VolumeCB->ObjectInfoTree.TreeHead,
                                     &pSrcObject->TreeEntry);
             }
-
-            AFSReleaseResource( pSrcObject->VolumeCB->ObjectInfoTree.TreeLock);
         }
 
         //
@@ -2291,10 +2177,14 @@ AFSSetRenameInfo( IN PIRP Irp)
         pSrcCcb->DirectoryCB->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pSrcCcb->DirectoryCB->NameInformation.FileName,
                                                                                    TRUE);
 
-        if( pSrcCcb->DirectoryCB->NameInformation.ShortNameLength > 0)
+        if( pSrcCcb->DirectoryCB->NameInformation.ShortNameLength > 0 &&
+            !RtlIsNameLegalDOS8Dot3( &pSrcCcb->DirectoryCB->NameInformation.FileName,
+                                     NULL,
+                                     NULL))
         {
 
             uniShortName.Length = pSrcCcb->DirectoryCB->NameInformation.ShortNameLength;
+            uniShortName.MaximumLength = uniShortName.Length;
             uniShortName.Buffer = pSrcCcb->DirectoryCB->NameInformation.ShortName;
 
             pSrcCcb->DirectoryCB->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
@@ -2369,48 +2259,8 @@ AFSSetRenameInfo( IN PIRP Irp)
         // delete the tmp target we created above
         //
 
-        if( bReplaceTmpTargetEntry)
+        if( bTargetEntryExists)
         {
-
-            RtlCopyMemory( &pTargetDirEntry->ObjectInformation->FileId,
-                           &stTmpTargetFid,
-                           sizeof( AFSFileID));
-
-            //
-            // Update the name in the dir entry
-            //
-
-            ntStatus = AFSUpdateDirEntryName( pTargetDirEntry,
-                                              &uniTmpTargetName);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSSetRenameInfo Failed update of target dir entry %wZ to tmp %wZ Status %08lX\n",
-                              &pTargetDirEntry->NameInformation.FileName,
-                              &uniTmpTargetName,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            ntStatus = AFSNotifyDelete( pTargetDirEntry,
-                                        FALSE);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetRenameInfo object deletion failure dir entry %p name %wZ to tmp %wZ\n",
-                              pTargetDirEntry,
-                              &pTargetDirEntry->NameInformation.FileName,
-                              &uniTmpTargetName);
-
-                try_return( ntStatus);
-            }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2435,11 +2285,11 @@ AFSSetRenameInfo( IN PIRP Irp)
                                 TRUE);
 
                 //
-                // Try and flush the cache map
+                // Close the section in the event it was mapped
                 //
 
-                if( !MmFlushImageSection( &pTargetFcb->NPFcb->SectionObjectPointers,
-                                          MmFlushForDelete))
+                if( !MmForceSectionClosed( &pTargetFcb->NPFcb->SectionObjectPointers,
+                                           TRUE))
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2453,54 +2303,19 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             ASSERT( pTargetDirEntry->OpenReferenceCount > 0);
 
-            InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
+            InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount); // The count we added above
 
             if( pTargetDirEntry->OpenReferenceCount == 0)
             {
 
-                SetFlag( pTargetDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
-
-                ASSERT( BooleanFlagOn( pTargetDirEntry->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE));
-
-                //
-                // Free up the name buffer if it was reallocated
-                //
-
-                if( BooleanFlagOn( pTargetDirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
-                {
-
-                    AFSExFreePool( pTargetDirEntry->NameInformation.FileName.Buffer);
-                }
-
-                if( BooleanFlagOn( pTargetDirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
-                {
-
-                    AFSExFreePool( pTargetDirEntry->NameInformation.TargetName.Buffer);
-                }
-
-                //
-                // Dereference the object for this dir entry
-                //
-
-                ASSERT( pTargetDirEntry->ObjectInformation->ObjectReferenceCount > 0);
-
-                InterlockedDecrement( &pTargetDirEntry->ObjectInformation->ObjectReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetRenameInfo Decrement3 count on object %08lX Cnt %d\n",
-                              pTargetDirEntry->ObjectInformation,
-                              pTargetDirEntry->ObjectInformation->ObjectReferenceCount);
+                              "AFSSetRenameInfo Deleting dir entry %p name %wZ\n",
+                              pTargetDirEntry,
+                              &pTargetDirEntry->NameInformation.FileName);
 
-                //
-                // Free up the dir entry
-                //
-
-                ExDeleteResourceLite( &pTargetDirEntry->NonPaged->Lock);
-
-                AFSExFreePool( pTargetDirEntry->NonPaged);
-
-                AFSExFreePool( pTargetDirEntry);
+                AFSDeleteDirEntry( pTargetParentObject,
+                                   pTargetDirEntry);
             }
 
             pTargetDirEntry = NULL;
@@ -2512,46 +2327,11 @@ try_exit:
         if( !NT_SUCCESS( ntStatus))
         {
 
-            if( bReplaceTmpTargetEntry)
+            if( bTargetEntryExists)
             {
-
-                AFSNotifyRename( pTargetDirEntry->ObjectInformation,
-                                 pTargetDirEntry->ObjectInformation->ParentObjectInformation,
-                                 pTargetDcb->ObjectInformation,
-                                 pTargetDirEntry,
-                                 &uniTargetName,
-                                 &stTmpTargetFid);
-
-                //
-                // Replace the target entry
-                //
-
-                AFSAcquireExcl( pTargetDirEntry->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock,
-                                TRUE);
-
-                if( pTargetDirEntry->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead == NULL)
-                {
-
-                    pTargetDirEntry->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead = &pTargetDirEntry->ObjectInformation->TreeEntry;
-                }
-                else
-                {
-                    AFSInsertHashEntry( pTargetDirEntry->ObjectInformation->VolumeCB->ObjectInfoTree.TreeHead,
-                                        &pTargetDirEntry->ObjectInformation->TreeEntry);
-                }
-
-                AFSReleaseResource( pTargetDirEntry->ObjectInformation->VolumeCB->ObjectInfoTree.TreeLock);
-
-                //
-                // We always need to update the FileIndex since this entry will be put at the 'end'
-                // of the enumeraiton list. If we don't it will cause recursion ...
-                //
-
-                pTargetDirEntry->FileIndex = (ULONG)InterlockedIncrement( &pTargetDirEntry->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.ContentIndex);
-
                 AFSInsertDirectoryNode( pTargetDirEntry->ObjectInformation->ParentObjectInformation,
                                         pTargetDirEntry,
-                                        TRUE);
+                                        FALSE);
             }
         }
 
@@ -2561,10 +2341,19 @@ try_exit:
             InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
         }
 
-        if( uniTmpTargetName.Buffer != NULL)
+        if( bReleaseVolumeLock)
         {
+            AFSReleaseResource( pTargetParentObject->VolumeCB->VolumeLock);
+        }
 
-            AFSExFreePool( uniTmpTargetName.Buffer);
+        if( bReleaseTargetDirLock)
+        {
+            AFSReleaseResource( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
+
+        if( bReleaseSourceDirLock)
+        {
+            AFSReleaseResource( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
     }
 

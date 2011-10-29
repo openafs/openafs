@@ -1943,7 +1943,7 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDirectoryCB *pDirNode = NULL;
+    AFSDirectoryCB *pDirNode = NULL, *pExistingDirNode = NULL;
     UNICODE_STRING uniShortName;
     LARGE_INTEGER liFileSize = {0,0};
 
@@ -2005,6 +2005,68 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
             try_return( ntStatus);
         }
 
+        AFSAcquireExcl( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        //
+        // Before attempting to insert the new entry, check if we need to validate the parent
+        //
+
+        if( BooleanFlagOn( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCreateDirEntry Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          &ParentDirCB->NameInformation.FileName,
+                          ParentObjectInfo->FileId.Cell,
+                          ParentObjectInfo->FileId.Volume,
+                          ParentObjectInfo->FileId.Vnode,
+                          ParentObjectInfo->FileId.Unique);
+
+            ntStatus = AFSVerifyEntry( AuthGroup,
+                                       ParentDirCB);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSCreateDirEntry Failed to verify parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              &ParentDirCB->NameInformation.FileName,
+                              ParentObjectInfo->FileId.Cell,
+                              ParentObjectInfo->FileId.Volume,
+                              ParentObjectInfo->FileId.Vnode,
+                              ParentObjectInfo->FileId.Unique,
+                              ntStatus);
+
+                AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                try_return( ntStatus);
+            }
+        }
+
+        //
+        // Check for the entry in the event we raced with some other thread
+        //
+
+        AFSLocateCaseSensitiveDirEntry( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                        (ULONG)pDirNode->CaseSensitiveTreeEntry.HashIndex,
+                                        &pExistingDirNode);
+
+        if( pExistingDirNode != NULL)
+        {
+
+            AFSDeleteDirEntry( ParentObjectInfo,
+                               pDirNode);
+
+            *DirEntry = pExistingDirNode;
+
+            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSCreateDirEntry Inserting dir entry in parent %wZ FID %08lX-%08lX-%08lX-%08lX Component %wZ\n",
@@ -2029,6 +2091,8 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
 
         *DirEntry = pDirNode;
 
+        AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
 try_exit:
 
         NOTHING;
@@ -2046,8 +2110,7 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
     __Enter
     {
 
-        AFSAcquireExcl( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                        TRUE);
+        ASSERT( ExIsResourceAcquiredExclusiveLite( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock));
 
         //
         // Insert the node into the directory node tree
@@ -2128,18 +2191,31 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
                               "AFSInsertDirectoryNode Insert DE %p to head of shortname tree for %wZ\n",
                               DirEntry,
                               &DirEntry->NameInformation.FileName);
+
+                SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
             }
             else
             {
 
-                AFSInsertShortNameDirEntry( ParentObjectInfo->Specific.Directory.ShortNameTree,
-                                            DirEntry);
+                if( !NT_SUCCESS( AFSInsertShortNameDirEntry( ParentObjectInfo->Specific.Directory.ShortNameTree,
+                                                             DirEntry)))
+                {
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSInsertDirectoryNode Failed to insert DE %p to shortname tree for %wZ\n",
+                                  DirEntry,
+                                  &DirEntry->NameInformation.FileName);
+                }
+                else
+                {
+                    SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInsertDirectoryNode Insert DE %p to shortname tree for %wZ\n",
-                              DirEntry,
-                              &DirEntry->NameInformation.FileName);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSInsertDirectoryNode Insert DE %p to shortname tree for %wZ\n",
+                                  DirEntry,
+                                  &DirEntry->NameInformation.FileName);
+                }
             }
         }
 
@@ -2189,8 +2265,6 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
                               ParentObjectInfo->FileId.Vnode,
                               ParentObjectInfo->FileId.Unique);
         }
-
-        AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
     }
 
     return;
@@ -2243,7 +2317,10 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         ASSERT( DirEntry->ObjectInformation->ObjectReferenceCount > 0);
 
-        InterlockedDecrement( &DirEntry->ObjectInformation->ObjectReferenceCount);
+        if( InterlockedDecrement( &DirEntry->ObjectInformation->ObjectReferenceCount) == 0)
+        {
+            SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
+        }
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -3707,9 +3784,20 @@ AFSCheckCellName( IN GUID *AuthGroup,
             else
             {
 
-                AFSInsertCaseSensitiveDirEntry( pDirHdr->CaseSensitiveTreeHead,
-                                                pDirNode);
+                if( !NT_SUCCESS( AFSInsertCaseSensitiveDirEntry( pDirHdr->CaseSensitiveTreeHead,
+                                                                 pDirNode)))
+                {
+
+                    AFSDeleteDirEntry( &AFSGlobalRoot->ObjectInformation,
+                                       pDirNode);
+
+                    AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+                }
             }
+
+            ClearFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE);
 
             if( pDirHdr->CaseInsensitiveTreeHead == NULL)
             {

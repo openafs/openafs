@@ -1776,6 +1776,43 @@ AFSProcessCreate( IN PIRP               Irp,
 
         pObjectInfo = pDirEntry->ObjectInformation;
 
+        if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_NOT_EVALUATED) ||
+            pObjectInfo->FileType == AFS_FILE_TYPE_UNKNOWN)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessCreate (%08lX) Evaluating object %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          Irp,
+                          &pDirEntry->NameInformation.FileName,
+                          pObjectInfo->FileId.Cell,
+                          pObjectInfo->FileId.Volume,
+                          pObjectInfo->FileId.Vnode,
+                          pObjectInfo->FileId.Unique);
+
+            ntStatus = AFSEvaluateNode( AuthGroup,
+                                        pDirEntry);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSProcessCreate (%08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              Irp,
+                              &pDirEntry->NameInformation.FileName,
+                              pObjectInfo->FileId.Cell,
+                              pObjectInfo->FileId.Volume,
+                              pObjectInfo->FileId.Vnode,
+                              pObjectInfo->FileId.Unique,
+                              ntStatus);
+
+                try_return( ntStatus);
+            }
+
+            ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_NOT_EVALUATED);
+        }
+
         //
         // We may have raced and the Fcb is already created
         //
@@ -2030,8 +2067,24 @@ try_exit:
                 AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                 TRUE);
 
-                AFSDeleteDirEntry( pParentObjectInfo,
-                                   pDirEntry);
+                SetFlag( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
+
+                //
+                // Pull the directory entry from the parent
+                //
+
+                AFSRemoveDirNodeFromParent( pParentObjectInfo,
+                                            pDirEntry,
+                                            FALSE); // Leave it in the enum list so the worker cleans it up
+
+                AFSNotifyDelete( pDirEntry,
+                                 FALSE);
+
+                //
+                // Tag the parent as needing verification
+                //
+
+                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
                 AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
             }
