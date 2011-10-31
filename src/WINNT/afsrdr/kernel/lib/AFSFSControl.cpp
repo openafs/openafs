@@ -301,18 +301,6 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request\n");
 
-                if( ulOutputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
-                {
-
-                    ntStatus = STATUS_BUFFER_TOO_SMALL;
-
-                    Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer);
-
-                    break;
-                }
-
-                ulRemainingLen -= FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer);
-
                 //
                 // Check if we have the reparse entry set on the entry
                 //
@@ -324,6 +312,18 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                     break;
                 }
+
+                if( ulOutputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
+                {
+
+                    ntStatus = STATUS_BUFFER_TOO_SMALL;
+
+                    Irp->IoStatus.Information = FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer);
+
+                    break;
+                }
+
+                ulRemainingLen -= FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer);
 
                 //
                 // Populate the data in the reparse buffer
@@ -546,14 +546,6 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request\n");
 
-                if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
-                {
-
-                    ntStatus = STATUS_INVALID_PARAMETER;
-
-                    break;
-                }
-
                 //
                 // Check if we have the reparse entry set on the entry
                 //
@@ -562,6 +554,14 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 {
 
                     ntStatus = STATUS_NOT_A_REPARSE_POINT;
+
+                    break;
+                }
+
+                if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
 
                     break;
                 }
@@ -600,14 +600,6 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_DELETE_REPARSE_POINT request\n");
 
-                if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
-                {
-
-                    ntStatus = STATUS_INVALID_PARAMETER;
-
-                    break;
-                }
-
                 //
                 // Check if we have the reparse entry set on the entry
                 //
@@ -616,6 +608,14 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 {
 
                     ntStatus = STATUS_NOT_A_REPARSE_POINT;
+
+                    break;
+                }
+
+                if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
+                {
+
+                    ntStatus = STATUS_INVALID_PARAMETER;
 
                     break;
                 }
