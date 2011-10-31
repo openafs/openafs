@@ -72,6 +72,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     int require_64bit_ops = 0;
     int call_was_64bit = 0;
     int scp_locked = flags & CM_BUF_WRITE_SCP_LOCKED;
+    int storedata_excl = 0;
 
     osi_assertx(userp != NULL, "null cm_user_t");
     osi_assertx(scp != NULL, "null cm_scache_t");
@@ -95,6 +96,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
     /* Serialize StoreData RPC's; for rationale see cm_scache.c */
     (void) cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA_EXCL);
+    storedata_excl = 1;
 
     code = cm_SetupStoreBIOD(scp, offsetp, length, &biod, userp, reqp);
     if (code) {
@@ -108,10 +110,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     if (biod.length == 0) {
         osi_Log0(afsd_logp, "cm_SetupStoreBIOD length 0");
         cm_ReleaseBIOD(&biod, 1, 0, 1);	/* should be a NOOP */
-        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
-        if (!scp_locked)
-            lock_ReleaseWrite(&scp->rw);
-        return 0;
+        code = 0;
+        goto exit_storedata_excl;
     }
 
     /* prepare the output status for the store */
@@ -308,6 +308,36 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                 }
                 nbytes -= wbytes;
 #endif /* USE_RX_IOVEC */
+
+                /*
+                 * Rx supports an out of band signalling mechanism that permits
+                 * RPC specific status information to be communicated in the
+                 * reverse direction of the channel.  For RXAFS_StoreData, the
+                 * 0-bit is set once all of the permission checks have completed
+                 * and the volume/vnode locks have been obtained by the file
+                 * server.  The signal is intended to notify the Unix afs client
+                 * that is performing store-on-close that it is safe to permit
+                 * the close operation to complete while the store continues
+                 * in the background.  All of the callbacks have been broken
+                 * and the locks will not be dropped until the RPC completes
+                 * which prevents any other operation from being initiated on
+                 * the vnode until the store is finished.
+                 *
+                 * The Windows client does not perform store-on-close.  Instead
+                 * it uses the CM_SCACHESYNC_STOREDATA_EXCL request flag and
+                 * CM_SCACHEFLAG_DATASTORING scache state to ensure that store
+                 * operations are serialized.  The 0-bit signal permits the
+                 * CM_SCACHEFLAG_DATASTORING state to the dropped which in
+                 * turn permits another thread to prep its own BIOD in parallel.
+                 * This is safe because it is impossible for that second store
+                 * RPC to complete before this one does.
+                 */
+                if ( storedata_excl && (rx_GetRemoteStatus(rxcallp) & 1)) {
+                    lock_ObtainWrite(&scp->rw);
+                    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
+                    lock_ReleaseWrite(&scp->rw);
+                    storedata_excl = 0;
+                }
             }	/* while more bytes to write */
         }	/* if RPC started successfully */
 
@@ -392,7 +422,10 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         else if (code == CM_ERROR_QUOTA)
             _InterlockedOr(&scp->flags, CM_SCACHEFLAG_OVERQUOTA);
     }
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
+
+  exit_storedata_excl:
+    if (storedata_excl)
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
 
     if (!scp_locked)
         lock_ReleaseWrite(&scp->rw);
