@@ -818,7 +818,7 @@ AFSQueryDirectory( IN PIRP Irp)
                 //  Now fill the base parts of the structure that are applicable.
                 case FileIdBothDirectoryInformation:
                 case FileBothDirectoryInformation:
-
+                {
                     pBothDirInfo = (PFILE_BOTH_DIR_INFORMATION)&pBuffer[ ulNextEntry];
 
                     pBothDirInfo->ShortNameLength = (CHAR)pDirEntry->NameInformation.ShortNameLength;
@@ -829,14 +829,15 @@ AFSQueryDirectory( IN PIRP Irp)
                                        &pDirEntry->NameInformation.ShortName[ 0],
                                        pBothDirInfo->ShortNameLength);
                     }
+                }
                 case FileIdFullDirectoryInformation:
                 case FileFullDirectoryInformation:
-
+                {
                     pFullDirInfo = (PFILE_FULL_DIR_INFORMATION)&pBuffer[ ulNextEntry];
                     pFullDirInfo->EaSize = 0;
-
+                }
                 case FileDirectoryInformation:
-
+                {
                     pDirInfo = (PFILE_DIRECTORY_INFORMATION)&pBuffer[ ulNextEntry];
 
                     if( bUseFileInfo)
@@ -902,17 +903,18 @@ AFSQueryDirectory( IN PIRP Irp)
                     pDirInfo->FileNameLength = pDirEntry->NameInformation.FileName.Length;
 
                     break;
+                }
 
                 case FileNamesInformation:
-
+                {
                     pNamesInfo = (PFILE_NAMES_INFORMATION)&pBuffer[ ulNextEntry];
                     pNamesInfo->FileIndex = pDirEntry->FileIndex;
                     pNamesInfo->FileNameLength = pDirEntry->NameInformation.FileName.Length;
 
                     break;
-
+                }
                 default:
-
+                {
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSQueryDirectory (%08lX) Unknown FileInformationClass %u\n",
@@ -924,6 +926,7 @@ AFSQueryDirectory( IN PIRP Irp)
                     try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
 
                     break;
+                }
             }
 
             ulBytesConverted = ulBytesRemainingInBuffer - ulBaseLength >= pDirEntry->NameInformation.FileName.Length ?
