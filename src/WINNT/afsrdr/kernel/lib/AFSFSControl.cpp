@@ -284,6 +284,20 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 break;
             }
 
+#ifndef FSCTL_CSC_INTERNAL
+#define FSCTL_CSC_INTERNAL                  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 107, METHOD_NEITHER, FILE_ANY_ACCESS)
+#endif
+            case FSCTL_CSC_INTERNAL:
+            {
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSProcessUserFsRequest Processing FSCTL_CSC_INTERNAL request\n");
+
+                ntStatus = STATUS_INVALID_DEVICE_REQUEST;
+
+                break;
+            }
+
             case FSCTL_GET_REPARSE_POINT:
             {
 
