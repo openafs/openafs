@@ -207,7 +207,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
             case FSCTL_OPLOCK_BREAK_NOTIFY:
             case FSCTL_OPLOCK_BREAK_ACK_NO_2:
             case FSCTL_REQUEST_FILTER_OPLOCK :
-
+            {
                 //
                 // Note that implementing this call will probably need us
                 // to call the server as well as adding code in read and
@@ -219,9 +219,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
+            }
 
             case FSCTL_LOCK_VOLUME:
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_LOCK_VOLUME request\n");
@@ -229,9 +230,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
+            }
 
             case FSCTL_UNLOCK_VOLUME:
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_UNLOCK_VOLUME request\n");
@@ -239,9 +241,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
+            }
 
             case FSCTL_DISMOUNT_VOLUME:
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_DISMOUNT_VOLUME request\n");
@@ -249,9 +252,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
+            }
 
             case FSCTL_MARK_VOLUME_DIRTY:
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_MARK_VOLUME_DIRTY request\n");
@@ -259,9 +263,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
+            }
 
             case FSCTL_IS_VOLUME_DIRTY:
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_DIRTY request\n");
@@ -269,9 +274,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
+            }
 
             case FSCTL_IS_VOLUME_MOUNTED:
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_MOUNTED request\n");
@@ -279,9 +285,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
+            }
 
             case FSCTL_IS_PATHNAME_VALID:
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_IS_PATHNAME_VALID request\n");
