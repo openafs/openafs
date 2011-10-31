@@ -2084,9 +2084,14 @@
       index, rather than a full copy of the volume contents. Only if the
       read/write volume moves to another partition or changes
       substantially does the read-only volume consume significant disk
-      space. Read-only volumes kept on other partitions always consume the
-      full amount of disk space that the read/write source consumed when
-      the read-only volume was created.</para>
+      space. Read-only volumes kept on other servers' partitions always
+      consume the full amount of disk space that the read/write source
+      consumed when the read-only volume was created.</para>
+
+      <para>You cannot have a replica volume on a different partition of
+      the same server hosting the read/write volume. "Cheap" read-only
+      volumes must be on the same partition as the read/write; all other
+      read-only volumes must be on different servers.</para>
     </sect2>
 
     <sect2 id="Header_58">
