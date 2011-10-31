@@ -653,7 +653,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing default (%08lX) request\n", ulFsControlCode);
 
-                ntStatus = STATUS_INVALID_PARAMETER;
+                ntStatus = STATUS_INVALID_DEVICE_REQUEST;
 
                 break;
         }
