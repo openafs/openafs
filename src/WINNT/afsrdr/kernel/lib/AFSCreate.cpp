@@ -739,23 +739,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               &pParentDirectoryCB->NameInformation.FileName,
                               ntStatus);
             }
-            else
-            {
-
-                //
-                // Reference the new dir entry
-                //
-
-                InterlockedIncrement( &pCcb->DirectoryCB->OpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Increment (Create) count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pCcb->DirectoryCB->NameInformation.FileName,
-                              pCcb->DirectoryCB,
-                              pCcb,
-                              pCcb->DirectoryCB->OpenReferenceCount);
-            }
 
             //
             // Dereference the parent entry
@@ -2068,6 +2051,19 @@ try_exit:
                                 TRUE);
 
                 SetFlag( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
+
+                //
+                // Decrement the reference added during initialization of the DE
+                //
+
+                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessCreate Decrement count on %wZ DE %p Cnt %d\n",
+                              &pDirEntry->NameInformation.FileName,
+                              pDirEntry,
+                              pDirEntry->OpenReferenceCount);
 
                 //
                 // Pull the directory entry from the parent
