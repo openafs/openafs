@@ -2060,6 +2060,15 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
             AFSDeleteDirEntry( ParentObjectInfo,
                                pDirNode);
 
+            InterlockedIncrement( &pExistingDirNode->OpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCreateDirEntry Increment count on %wZ DE %p Cnt %d\n",
+                          &pExistingDirNode->NameInformation.FileName,
+                          pExistingDirNode,
+                          pExistingDirNode->OpenReferenceCount);
+
             *DirEntry = pExistingDirNode;
 
             AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -2084,6 +2093,15 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
         AFSInsertDirectoryNode( ParentObjectInfo,
                                 pDirNode,
                                 TRUE);
+
+        InterlockedIncrement( &pDirNode->OpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSCreateDirEntry Increment2 count on %wZ DE %p Cnt %d\n",
+                      &pDirNode->NameInformation.FileName,
+                      pDirNode,
+                      pDirNode->OpenReferenceCount);
 
         //
         // Pass back the dir entry

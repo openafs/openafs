@@ -1325,8 +1325,6 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                                             ulCRC,
                                             &pDirNode);
 
-            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
             if( pDirNode != NULL)
             {
 
@@ -1335,10 +1333,23 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                               "AFSNotifyFileCreate Located dir entry for file %wZ\n",
                               FileName);
 
+                InterlockedIncrement( &pDirNode->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSNotifyFileCreate Increment count on %wZ DE %p Cnt %d\n",
+                              &pDirNode->NameInformation.FileName,
+                              pDirNode,
+                              pDirNode->OpenReferenceCount);
+
                 *DirNode = pDirNode;
+
+                AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                 try_return( ntStatus = STATUS_REPARSE);
             }
+
+            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
             //
             // We are unsure of our current data so set the verify flag. It may already be set
