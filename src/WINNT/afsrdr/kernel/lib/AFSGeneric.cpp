@@ -1115,12 +1115,17 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
             pObjectInfoCB->FileAttributes = DirEnumEntry->FileAttributes;
 
-            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
-                pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK ||
+            if( pObjectInfoCB->FileType == AFS_FILE_TYPE_MOUNTPOINT)
+            {
+
+                pObjectInfoCB->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+            }
+
+            if (pObjectInfoCB->FileType == AFS_FILE_TYPE_SYMLINK ||
                 pObjectInfoCB->FileType == AFS_FILE_TYPE_DFSLINK)
             {
 
-                pObjectInfoCB->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+                pObjectInfoCB->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
             }
 
             pObjectInfoCB->EaSize = DirEnumEntry->EaSize;
@@ -1331,12 +1336,17 @@ AFSEvaluateNode( IN GUID *AuthGroup,
 
         DirEntry->ObjectInformation->FileAttributes = pDirEntry->FileAttributes;
 
-        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
-            pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
+        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        {
+
+            DirEntry->ObjectInformation->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+        }
+
+        if( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
             pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            DirEntry->ObjectInformation->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            DirEntry->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
         }
 
         DirEntry->ObjectInformation->EaSize = pDirEntry->EaSize;
@@ -1511,12 +1521,17 @@ AFSValidateSymLink( IN GUID *AuthGroup,
 
         DirEntry->ObjectInformation->FileAttributes = pDirEntry->FileAttributes;
 
-        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
-            pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
+        if( pDirEntry->FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        {
+
+            DirEntry->ObjectInformation->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+        }
+
+        if( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK ||
             pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            DirEntry->ObjectInformation->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            DirEntry->ObjectInformation->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
         }
 
         DirEntry->ObjectInformation->EaSize = pDirEntry->EaSize;
@@ -3509,12 +3524,17 @@ AFSUpdateMetaData( IN AFSDirectoryCB *DirEntry,
 
         pObjectInfo->FileAttributes = DirEnumEntry->FileAttributes;
 
-        if( pObjectInfo->FileType == AFS_FILE_TYPE_MOUNTPOINT ||
-            pObjectInfo->FileType == AFS_FILE_TYPE_SYMLINK ||
+        if( pObjectInfo->FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        {
+
+            pObjectInfo->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+        }
+
+        if( pObjectInfo->FileType == AFS_FILE_TYPE_SYMLINK ||
             pObjectInfo->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            pObjectInfo->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            pObjectInfo->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
         }
 
         pObjectInfo->EaSize = DirEnumEntry->EaSize;
@@ -5925,13 +5945,22 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
         if( pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_MOUNTPOINT)
         {
 
-            FileInfo->FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+            FileInfo->FileAttributes = (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
         }
         else if( pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK ||
                  pDirectoryEntry->ObjectInformation->FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
-            FileInfo->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            if ( FileInfo->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+            {
+
+                FileInfo->FileAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+            }
+            else
+            {
+
+                FileInfo->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+            }
         }
 
         FileInfo->AllocationSize = pDirectoryEntry->ObjectInformation->AllocationSize;
