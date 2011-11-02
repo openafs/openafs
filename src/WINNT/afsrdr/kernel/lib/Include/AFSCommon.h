@@ -1342,6 +1342,10 @@ AFSValidNameFormat( IN UNICODE_STRING *FileName);
 NTSTATUS
 AFSCreateDefaultSecurityDescriptor( void);
 
+void
+AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
+                       OUT UNICODE_STRING *ParentPath);
+
 //
 // AFSWorker.cpp Prototypes
 //
