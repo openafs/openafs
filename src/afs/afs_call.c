@@ -58,7 +58,6 @@ krwlock_t afsifinfo_lock;
 
 afs_int32 afs_initState = 0;
 afs_int32 afs_termState = 0;
-afs_int32 afs_setTime = 0;
 int afs_cold_shutdown = 0;
 char afs_SynchronousCloses = '\0';
 static int afs_CB_Running = 0;
@@ -981,7 +980,10 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
 	afs_CacheInit_Done = 1;
         code = afs_icl_InitLogs();
-	afs_setTime = cparms.setTimeFlag;
+	if (cparms.setTimeFlag) {
+	    afs_warn("afs: AFSOP_CACHEINIT setTimeFlag ignored; are you "
+	             "running an old afsd?\n");
+	}
 
 	code =
 	    afs_CacheInit(cparms.cacheScaches, cparms.cacheFiles,
@@ -1064,7 +1066,11 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	while (afs_initState < AFSOP_GO)
 	    afs_osi_Sleep(&afs_initState);
 	afs_initState = 101;
-	afs_setTime = parm2;
+	if (parm2) {
+	    /* parm2 used to set afs_setTime */
+	    afs_warn("afs: AFSOP_GO setTime flag ignored; are you running an "
+	             "old afsd?\n");
+	}
 	if (afs_tpct1 + afs_tpct2 != 100) {
 	    afs_tpct1 = 0;
 	    afs_tpct2 = 0;
@@ -1478,7 +1484,7 @@ void
 shutdown_afstest(void)
 {
     AFS_STATCNT(shutdown_afstest);
-    afs_initState = afs_termState = afs_setTime = 0;
+    afs_initState = afs_termState = 0;
     AFS_Running = afs_CB_Running = 0;
     afs_CacheInit_Done = afs_Go_Done = 0;
     if (afs_cold_shutdown) {

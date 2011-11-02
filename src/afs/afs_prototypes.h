@@ -30,7 +30,6 @@ extern void shutdown_bufferpackage(void);
 
 /* afs_call.c */
 extern int afs_cold_shutdown;
-extern afs_int32 afs_setTime;
 extern char afs_rootVolumeName[64];
 extern void afs_shutdown(void);
 extern void afs_FlushCBs(void);
@@ -856,7 +855,6 @@ extern afs_rwlock_t afs_icl_lock;
 extern struct srvAddr *afs_srvAddrs[NSERVERS];
 extern struct server *afs_servers[NSERVERS];
 extern int afs_totalServers;
-extern struct server *afs_setTimeHost;
 extern struct server *afs_FindServer(afs_int32 aserver, afs_uint16 aport,
 				     afsUUID * uuidp, afs_int32 locktype);
 extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
