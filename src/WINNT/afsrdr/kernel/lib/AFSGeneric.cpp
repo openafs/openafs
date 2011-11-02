@@ -8243,3 +8243,35 @@ try_exit:
 
     return ntStatus;
 }
+
+void
+AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
+                       OUT UNICODE_STRING *ParentPath)
+{
+
+    USHORT usIndex = 0;
+
+    *ParentPath = *FullFileName;
+
+    //
+    // If the final character is a \, jump over it
+    //
+
+    if( ParentPath->Buffer[ (ParentPath->Length/sizeof( WCHAR)) - 1] == L'\\')
+    {
+        ParentPath->Length -= sizeof( WCHAR);
+    }
+
+    while( ParentPath->Buffer[ (ParentPath->Length/sizeof( WCHAR)) - 1] != L'\\')
+    {
+        ParentPath->Length -= sizeof( WCHAR);
+    }
+
+    //
+    // And the separator
+    //
+
+    ParentPath->Length -= sizeof( WCHAR);
+
+    return;
+}
