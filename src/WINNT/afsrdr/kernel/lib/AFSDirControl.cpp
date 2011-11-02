@@ -766,6 +766,8 @@ AFSQueryDirectory( IN PIRP Irp)
                                                            &stFileInfo)))
                 {
 
+                    ulAdditionalAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
+
                     bUseFileInfo = TRUE;
                 }
             }
@@ -851,7 +853,7 @@ AFSQueryDirectory( IN PIRP Irp)
                         pDirInfo->EndOfFile = stFileInfo.EndOfFile;
                         pDirInfo->AllocationSize = stFileInfo.AllocationSize;
 
-                        pDirInfo->FileAttributes = stFileInfo.FileAttributes;
+                        pDirInfo->FileAttributes = stFileInfo.FileAttributes | ulAdditionalAttributes;
                     }
                     else if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_FAKE))
                     {
