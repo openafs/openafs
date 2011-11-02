@@ -750,6 +750,8 @@ case $AFS_SYSNAME in
     *_linux_26) AFS_PARAM_COMMON=param.linux26.h ;;
 esac
 
+OPENAFS_OSCONF
+
 case $AFS_SYSNAME in *_linux* | *_umlinux*)
 
 		# Add (sub-) architecture-specific paths needed by conftests
@@ -1096,6 +1098,7 @@ else
   fi
   
 fi
+XLIBS="$LIB_AFSDB $XLIBS"
 
 AC_CHECK_RESOLV_RETRANS
 
@@ -1616,7 +1619,6 @@ AC_DEFINE_UNQUOTED([PTHREAD_SETNAME_NP_ARGS], $pthread_setname_np_args, [Number 
 fi
 LIBS="$save_LIBS"
 
-OPENAFS_OSCONF
 openafs_cv_saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $XCFLAGS_NOCHECKING"
 
