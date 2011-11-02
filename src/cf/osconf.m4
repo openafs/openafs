@@ -616,6 +616,7 @@ case $AFS_SYSNAME in
 	sunx86_510)
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
+		CFLAGS="$CFLAGS $XARCHFLAGS"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt'
