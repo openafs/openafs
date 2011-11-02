@@ -745,6 +745,12 @@ AFSQueryBasicInfo( IN PIRP Irp,
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    ULONG ulFileAttribs = 0;
+    AFSCcb *pCcb = NULL;
+    IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    AFSFileInfoCB stFileInfo;
+    AFSDirectoryCB *pParentDirectoryCB = NULL;
+    UNICODE_STRING uniParentPath;
 
     if( *Length >= sizeof( FILE_BASIC_INFORMATION))
     {
@@ -752,24 +758,47 @@ AFSQueryBasicInfo( IN PIRP Irp,
         RtlZeroMemory( Buffer,
                        *Length);
 
+        ulFileAttribs = DirectoryCB->ObjectInformation->FileAttributes;
+
+        if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+            pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
+
+            AFSRetrieveParentPath( &pCcb->FullFileName,
+                                   &uniParentPath);
+
+            RtlZeroMemory( &stFileInfo,
+                           sizeof( AFSFileInfoCB));
+
+            if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
+                                                       DirectoryCB,
+                                                       &uniParentPath,
+                                                       NULL,
+                                                       &stFileInfo)))
+            {
+                ulFileAttribs = stFileInfo.FileAttributes;
+            }
+        }
+
         Buffer->CreationTime = DirectoryCB->ObjectInformation->CreationTime;
         Buffer->LastAccessTime = DirectoryCB->ObjectInformation->LastAccessTime;
         Buffer->LastWriteTime = DirectoryCB->ObjectInformation->LastWriteTime;
         Buffer->ChangeTime = DirectoryCB->ObjectInformation->ChangeTime;
-        Buffer->FileAttributes = DirectoryCB->ObjectInformation->FileAttributes;
+        Buffer->FileAttributes = ulFileAttribs;
 
         if( DirectoryCB->NameInformation.FileName.Buffer[ 0] == L'.' &&
-                 BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES))
+            BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES))
         {
 
             if ( Buffer->FileAttributes != FILE_ATTRIBUTE_NORMAL)
             {
-
                 Buffer->FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
             }
             else
             {
-
                 Buffer->FileAttributes = FILE_ATTRIBUTE_HIDDEN;
             }
         }
@@ -793,9 +822,12 @@ AFSQueryStandardInfo( IN PIRP Irp,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSFileInfoCB stFileInformation;
     AFSCcb *pCcb = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    AFSFileInfoCB stFileInfo;
+    AFSDirectoryCB *pParentDirectoryCB = NULL;
+    UNICODE_STRING uniParentPath;
+    ULONG ulFileAttribs = 0;
 
     if( *Length >= sizeof( FILE_STANDARD_INFORMATION))
     {
@@ -808,14 +840,36 @@ AFSQueryStandardInfo( IN PIRP Irp,
         Buffer->NumberOfLinks = 1;
         Buffer->DeletePending = BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
-        RtlZeroMemory( &stFileInformation,
-                       sizeof( AFSFileInfoCB));
-
         Buffer->AllocationSize.QuadPart = (ULONGLONG)((DirectoryCB->ObjectInformation->AllocationSize.QuadPart/PAGE_SIZE) + 1) * PAGE_SIZE;
 
         Buffer->EndOfFile = DirectoryCB->ObjectInformation->EndOfFile;
 
-        Buffer->Directory = BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_DIRECTORY);
+        ulFileAttribs = DirectoryCB->ObjectInformation->FileAttributes;
+
+        if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+            pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
+
+            AFSRetrieveParentPath( &pCcb->FullFileName,
+                                   &uniParentPath);
+
+            RtlZeroMemory( &stFileInfo,
+                           sizeof( AFSFileInfoCB));
+
+            if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
+                                                       DirectoryCB,
+                                                       &uniParentPath,
+                                                       NULL,
+                                                       &stFileInfo)))
+            {
+                ulFileAttribs = stFileInfo.FileAttributes;
+            }
+        }
+
+        Buffer->Directory = BooleanFlagOn( ulFileAttribs, FILE_ATTRIBUTE_DIRECTORY);
 
         *Length -= sizeof( FILE_STANDARD_INFORMATION);
     }
@@ -1240,12 +1294,43 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSCcb *pCcb = NULL;
+    PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    AFSFileInfoCB stFileInfo;
+    AFSDirectoryCB *pParentDirectoryCB = NULL;
+    UNICODE_STRING uniParentPath;
+    ULONG ulFileAttribs = 0;
 
     RtlZeroMemory( Buffer,
                    *Length);
 
     if( *Length >= sizeof( FILE_NETWORK_OPEN_INFORMATION))
     {
+
+        ulFileAttribs = DirectoryCB->ObjectInformation->FileAttributes;
+
+        if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+            pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
+
+            AFSRetrieveParentPath( &pCcb->FullFileName,
+                                   &uniParentPath);
+
+            RtlZeroMemory( &stFileInfo,
+                           sizeof( AFSFileInfoCB));
+
+            if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
+                                                       DirectoryCB,
+                                                       &uniParentPath,
+                                                       NULL,
+                                                       &stFileInfo)))
+            {
+                ulFileAttribs = stFileInfo.FileAttributes;
+            }
+        }
 
         Buffer->CreationTime.QuadPart = DirectoryCB->ObjectInformation->CreationTime.QuadPart;
         Buffer->LastAccessTime.QuadPart = DirectoryCB->ObjectInformation->LastAccessTime.QuadPart;
@@ -1255,7 +1340,7 @@ AFSQueryNetworkInfo( IN PIRP Irp,
         Buffer->AllocationSize.QuadPart = DirectoryCB->ObjectInformation->AllocationSize.QuadPart;
         Buffer->EndOfFile.QuadPart = DirectoryCB->ObjectInformation->EndOfFile.QuadPart;
 
-        Buffer->FileAttributes = DirectoryCB->ObjectInformation->FileAttributes;
+        Buffer->FileAttributes = ulFileAttribs;
 
         if( DirectoryCB->NameInformation.FileName.Buffer[ 0] == L'.' &&
             BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES))
@@ -1364,6 +1449,12 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
     NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
     ULONG ulCopyLength = 0;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSCcb *pCcb = NULL;
+    PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    AFSFileInfoCB stFileInfo;
+    AFSDirectoryCB *pParentDirectoryCB = NULL;
+    UNICODE_STRING uniParentPath;
+    ULONG ulFileAttribs = 0;
 
     if( *Length >= sizeof( FILE_ATTRIBUTE_TAG_INFORMATION))
     {
@@ -1371,7 +1462,32 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
         RtlZeroMemory( Buffer,
                        *Length);
 
-        Buffer->FileAttributes = DirectoryCB->ObjectInformation->FileAttributes;
+        ulFileAttribs = DirectoryCB->ObjectInformation->FileAttributes;
+
+        if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
+        {
+
+            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+            pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
+
+            AFSRetrieveParentPath( &pCcb->FullFileName,
+                                   &uniParentPath);
+
+            RtlZeroMemory( &stFileInfo,
+                           sizeof( AFSFileInfoCB));
+
+            if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
+                                                       DirectoryCB,
+                                                       &uniParentPath,
+                                                       NULL,
+                                                       &stFileInfo)))
+            {
+                ulFileAttribs = stFileInfo.FileAttributes;
+            }
+        }
+
+        Buffer->FileAttributes = ulFileAttribs;
 
         if( DirectoryCB->NameInformation.FileName.Buffer[ 0] == L'.' &&
             BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES))
