@@ -780,6 +780,8 @@ AFSQueryBasicInfo( IN PIRP Irp,
                                                        &stFileInfo)))
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
+
+                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
             }
         }
 
@@ -1329,6 +1331,8 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                                                        &stFileInfo)))
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
+
+                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
             }
         }
 
@@ -1484,6 +1488,8 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
                                                        &stFileInfo)))
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
+
+                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
             }
         }
 
