@@ -70,7 +70,6 @@
 
 /* Exported variables */
 afs_rwlock_t afs_xserver;	/* allocation lock for servers */
-struct server *afs_setTimeHost = 0;	/* last host we used for time */
 struct server *afs_servers[NSERVERS];	/* Hashed by server`s uuid & 1st ip */
 afs_rwlock_t afs_xsrvAddr;	/* allocation lock for srvAddrs */
 struct srvAddr *afs_srvAddrs[NSERVERS];	/* Hashed by server's ip */
@@ -155,11 +154,6 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 	 * All ips are down we treat the whole server down
 	 */
 	a_serverP->flags |= SRVR_ISDOWN;
-	/*
-	 * If this was our time server, search for another time server
-	 */
-	if (a_serverP == afs_setTimeHost)
-	    afs_setTimeHost = 0;
     } else {
 	sa->sa_flags &= ~SRVADDR_ISDOWN;
 	/* If any ips are up, the server is also marked up */
@@ -558,138 +552,6 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 }
 
 void
-CkSrv_SetTime(struct rx_connection **rxconns, int nconns, int nservers,
-	      struct afs_conn **conns, struct srvAddr **addrs)
-{
-    struct afs_conn *tc;
-    afs_int32 start, end = 0, delta;
-    osi_timeval_t tv;
-    struct srvAddr *sa;
-    afs_int32 *conntimer, *results, *deltas;
-    afs_int32 i = 0;
-    char tbuffer[CVBS];
-
-    conntimer = afs_osi_Alloc(nservers * sizeof (afs_int32));
-    osi_Assert(conntimer != NULL);
-    results = afs_osi_Alloc(nservers * sizeof (afs_int32));
-    osi_Assert(results != NULL);
-    deltas = afs_osi_Alloc(nservers * sizeof (afs_int32));
-    osi_Assert(deltas != NULL);
-
-    /* make sure we're starting from zero */
-    memset(&deltas, 0, sizeof(deltas));
-
-    start = osi_Time();         /* time the gettimeofday call */
-    AFS_GUNLOCK();
-    if ( afs_setTimeHost == NULL ) {
-	multi_Rx(rxconns,nconns)
-	{
-	    tv.tv_sec = tv.tv_usec = 0;
-	    multi_RXAFS_GetTime(
-		(afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
-	    tc = conns[multi_i];
-	    sa = tc->parent->srvr;
-	    if (conntimer[multi_i] == 1)
-		rx_SetConnDeadTime(rxconns[multi_i], afs_rx_deadtime);
-	    end = osi_Time();
-	    results[multi_i]=multi_error;
-	    if ((start == end) && !multi_error)
-		deltas[multi_i] = end - tv.tv_sec;
-	} multi_End;
-    } else {			/* find and query setTimeHost only */
-	for ( i = 0 ; i < nservers ; i++ ) {
-	    if ( conns[i] == NULL || conns[i]->parent->srvr == NULL )
-		continue;
-	    if ( conns[i]->parent->srvr->server == afs_setTimeHost ) {
-		tv.tv_sec = tv.tv_usec = 0;
-		results[i] = RXAFS_GetTime(rxconns[i],
-					   (afs_uint32 *)&tv.tv_sec,
-					   (afs_uint32 *)&tv.tv_usec);
-		end = osi_Time();
-		if ((start == end) && !results[i])
-		    deltas[i] = end - tv.tv_sec;
-		break;
-	    }
-	}
-    }
-    AFS_GLOCK();
-
-    if ( afs_setTimeHost == NULL )
-	CkSrv_MarkUpDown(conns, nconns, results);
-    else /* We lack info for other than this host */
-	CkSrv_MarkUpDown(&conns[i], 1, &results[i]);
-
-    /*
-     * If we're supposed to set the time, and the call worked
-     * quickly (same second response) and this is the host we
-     * use for the time and the time is really different, then
-     * really set the time
-     */
-    if (afs_setTime != 0) {
-	for (i=0; i<nconns; i++) {
-	    delta = deltas[i];
-	    tc = conns[i];
-	    sa = tc->parent->srvr;
-
-	    if ((tc->parent->srvr->server == afs_setTimeHost ||
-		 /* Sync only to a server in the local cell */
-		 (afs_setTimeHost == (struct server *)0 &&
-		  afs_IsPrimaryCell(sa->server->cell)))) {
-		/* set the time */
-		char msgbuf[90];  /* strlen("afs: setting clock...") + slop */
-		delta = end - tv.tv_sec;   /* how many secs fast we are */
-
-		afs_setTimeHost = tc->parent->srvr->server;
-		/* see if clock has changed enough to make it worthwhile */
-		if (delta >= AFS_MINCHANGE || delta <= -AFS_MINCHANGE) {
-		    end = osi_Time();
-		    if (delta > AFS_MAXCHANGEBACK) {
-			/* setting clock too far back, just do it a little */
-			tv.tv_sec = end - AFS_MAXCHANGEBACK;
-		    } else {
-			tv.tv_sec = end - delta;
-		    }
-		    afs_osi_SetTime(&tv);
-		    if (delta > 0) {
-			strcpy(msgbuf, "afs: setting clock back ");
-			if (delta > AFS_MAXCHANGEBACK) {
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS],
-						     AFS_MAXCHANGEBACK));
-			    afs_strcat(msgbuf, " seconds (of ");
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS],
-						     delta -
-						     AFS_MAXCHANGEBACK));
-			    afs_strcat(msgbuf, ", via ");
-			    print_internet_address(msgbuf, sa,
-						   "); clock is still fast.",
-						   0);
-			} else {
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS], delta));
-			    afs_strcat(msgbuf, " seconds (via ");
-			    print_internet_address(msgbuf, sa, ").", 0);
-			}
-		    } else {
-			strcpy(msgbuf, "afs: setting clock ahead ");
-			afs_strcat(msgbuf,
-				   afs_cv2string(&tbuffer[CVBS], -delta));
-			afs_strcat(msgbuf, " seconds (via ");
-			print_internet_address(msgbuf, sa, ").", 0);
-		    }
-                    /* We're only going to set it once; why bother looping? */
-		    break;
-		}
-	    }
-	}
-    }
-    afs_osi_Free(conntimer, nservers * sizeof(afs_int32));
-    afs_osi_Free(deltas, nservers * sizeof(afs_int32));
-    afs_osi_Free(results, nservers * sizeof(afs_int32));
-}
-
-void
 CkSrv_GetCaps(struct rx_connection **rxconns, int nconns, int nservers,
 	      struct afs_conn **conns, struct srvAddr **addrs)
 {
@@ -743,8 +605,7 @@ CkSrv_GetCaps(struct rx_connection **rxconns, int nconns, int nservers,
 void
 afs_CheckServers(int adown, struct cell *acellp)
 {
-    afs_LoopServers(adown?AFS_LS_DOWN:AFS_LS_UP, acellp, 1, CkSrv_GetCaps,
-		    afs_setTime?CkSrv_SetTime:NULL);
+    afs_LoopServers(adown?AFS_LS_DOWN:AFS_LS_UP, acellp, 1, CkSrv_GetCaps, NULL);
 }
 
 /* adown: AFS_LS_UP   - check only up
@@ -857,8 +718,7 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 	if (!tc)
 	    continue;
 
-	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
-	    || (tc->parent->srvr->server == afs_setTimeHost)) {
+	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)) {
 	    conns[nconns]=tc;
 	    rxconns[nconns]=rxconn;
 	    if (sa->sa_flags & SRVADDR_ISDOWN) {

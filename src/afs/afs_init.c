@@ -188,7 +188,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     cm_initParams.cmi_firstChunkSize = AFS_FIRSTCSIZE;
     cm_initParams.cmi_otherChunkSize = AFS_OTHERCSIZE;
     cm_initParams.cmi_cacheSize = afs_cacheBlocks;
-    cm_initParams.cmi_setTime = afs_setTime;
+    cm_initParams.cmi_setTime = 0;
     cm_initParams.cmi_memCache = (aflags & AFSCALL_INIT_MEMCACHE) ? 1 : 0;
 
     return 0;
@@ -854,7 +854,6 @@ shutdown_AFS(void)
 	afs_sysname = 0;
 	afs_sysnamecount = 0;
 	afs_marinerHost = 0;
-	afs_setTimeHost = NULL;
 	afs_volCounter = 1;
 	afs_waitForever = afs_waitForeverCount = 0;
 	afs_FVIndex = -1;
