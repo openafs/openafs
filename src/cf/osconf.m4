@@ -628,6 +628,7 @@ case $AFS_SYSNAME in
 		fi
 		CC=$SOLARISCC
 		CCOBJ=$SOLARISCC
+		CFLAGS="$CFLAGS $XARCHFLAGS"
 		LD="/usr/ccs/bin/ld"
 		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt'
