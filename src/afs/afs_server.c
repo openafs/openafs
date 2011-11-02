@@ -693,7 +693,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	      } multi_End;
 	    }
 	else {			/* find and query setTimeHost only */
-	    for ( i = 0 ; i < j ; i++ ) {
+	    for ( i = 0 ; i < nconns ; i++ ) {
 		if ( conns[i] == NULL || conns[i]->srvr == NULL )
 		    continue;
 		if ( conns[i]->srvr->server == afs_setTimeHost ) {
