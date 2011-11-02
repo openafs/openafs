@@ -746,6 +746,7 @@ AFSQueryBasicInfo( IN PIRP Irp,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     ULONG ulFileAttribs = 0;
+    AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFileInfoCB stFileInfo;
@@ -760,10 +761,11 @@ AFSQueryBasicInfo( IN PIRP Irp,
 
         ulFileAttribs = DirectoryCB->ObjectInformation->FileAttributes;
 
+        pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
+        pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
         if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
         {
-
-            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
             pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
 
@@ -772,6 +774,12 @@ AFSQueryBasicInfo( IN PIRP Irp,
 
             RtlZeroMemory( &stFileInfo,
                            sizeof( AFSFileInfoCB));
+
+            //
+            // Can't hold the Fcb while evaluating the path, leads to lock inversion
+            //
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
 
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
@@ -783,6 +791,9 @@ AFSQueryBasicInfo( IN PIRP Irp,
 
                 ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
             }
+
+            AFSAcquireShared( &pFcb->NPFcb->Resource,
+                              TRUE);
         }
 
         Buffer->CreationTime = DirectoryCB->ObjectInformation->CreationTime;
@@ -824,6 +835,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFileInfoCB stFileInfo;
@@ -834,6 +846,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
     if( *Length >= sizeof( FILE_STANDARD_INFORMATION))
     {
 
+        pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
         pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
         RtlZeroMemory( Buffer,
@@ -851,8 +864,6 @@ AFSQueryStandardInfo( IN PIRP Irp,
         if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
         {
 
-            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
-
             pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
 
             AFSRetrieveParentPath( &pCcb->FullFileName,
@@ -860,6 +871,12 @@ AFSQueryStandardInfo( IN PIRP Irp,
 
             RtlZeroMemory( &stFileInfo,
                            sizeof( AFSFileInfoCB));
+
+            //
+            // Can't hold the Fcb while evaluating the path, leads to lock inversion
+            //
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
 
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
@@ -869,6 +886,9 @@ AFSQueryStandardInfo( IN PIRP Irp,
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
             }
+
+            AFSAcquireShared( &pFcb->NPFcb->Resource,
+                              TRUE);
         }
 
         Buffer->Directory = BooleanFlagOn( ulFileAttribs, FILE_ATTRIBUTE_DIRECTORY);
@@ -1296,6 +1316,7 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFileInfoCB stFileInfo;
@@ -1311,10 +1332,11 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
         ulFileAttribs = DirectoryCB->ObjectInformation->FileAttributes;
 
+        pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
+        pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
         if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
         {
-
-            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
             pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
 
@@ -1323,6 +1345,12 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
             RtlZeroMemory( &stFileInfo,
                            sizeof( AFSFileInfoCB));
+
+            //
+            // Can't hold the Fcb while evaluating the path, leads to lock inversion
+            //
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
 
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
@@ -1334,6 +1362,9 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
                 ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
             }
+
+            AFSAcquireShared( &pFcb->NPFcb->Resource,
+                              TRUE);
         }
 
         Buffer->CreationTime.QuadPart = DirectoryCB->ObjectInformation->CreationTime.QuadPart;
@@ -1453,6 +1484,7 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
     NTSTATUS ntStatus = STATUS_BUFFER_TOO_SMALL;
     ULONG ulCopyLength = 0;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSFileInfoCB stFileInfo;
@@ -1468,10 +1500,11 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
 
         ulFileAttribs = DirectoryCB->ObjectInformation->FileAttributes;
 
+        pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
+        pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
         if( DirectoryCB->ObjectInformation->FileType == AFS_FILE_TYPE_SYMLINK)
         {
-
-            pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
             pParentDirectoryCB = AFSGetParentEntry( pCcb->NameArray);
 
@@ -1480,6 +1513,12 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
 
             RtlZeroMemory( &stFileInfo,
                            sizeof( AFSFileInfoCB));
+
+            //
+            // Can't hold the Fcb while evaluating the path, leads to lock inversion
+            //
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
 
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
@@ -1491,6 +1530,9 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
 
                 ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
             }
+
+            AFSAcquireShared( &pFcb->NPFcb->Resource,
+                              TRUE);
         }
 
         Buffer->FileAttributes = ulFileAttribs;
