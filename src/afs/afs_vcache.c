@@ -350,13 +350,13 @@ afs_FreeCBR(struct afs_cbr *asp)
 }
 
 static void
-FlushAllVCBs(struct rx_connection **rxconns, int nconns, int nservers,
-	     struct afs_conn **conns, struct srvAddr **addrs)
+FlushAllVCBs(int nconns, struct rx_connection **rxconns,
+	     struct afs_conn **conns)
 {
     afs_int32 *results;
     afs_int32 i;
 
-    results = afs_osi_Alloc(nservers * sizeof (afs_int32));
+    results = afs_osi_Alloc(nconns * sizeof (afs_int32));
     osi_Assert(results != NULL);
 
     AFS_GUNLOCK();
@@ -375,11 +375,11 @@ FlushAllVCBs(struct rx_connection **rxconns, int nconns, int nservers,
     for ( i = 0 ; i < nconns ; i++ ) {
 	if (results[i] == 0) {
 	    /* Unchain all of them */
-	    while (addrs[i]->server->cbrs)
-		afs_FreeCBR(addrs[i]->server->cbrs);
+	    while (conns[i]->parent->srvr->server->cbrs)
+		afs_FreeCBR(conns[i]->parent->srvr->server->cbrs);
 	}
     }
-    afs_osi_Free(results, nservers * sizeof(afs_int32));
+    afs_osi_Free(results, nconns * sizeof(afs_int32));
 }
 
 /*!
