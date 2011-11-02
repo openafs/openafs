@@ -145,6 +145,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     ULONG               ulParseFlags = 0;
     GUID                stAuthGroup;
     ULONG               ulNameProcessingFlags = 0;
+    BOOLEAN             bOpenedReparsePoint = FALSE;
 
     __Enter
     {
@@ -648,16 +649,22 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         }
 
         if ( BooleanFlagOn( ulOptions, FILE_OPEN_REPARSE_POINT) &&
-             pDirectoryCB != NULL &&
-             !BooleanFlagOn( pDirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+             pDirectoryCB != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonCreate (%08lX) Reparse open request but attribute not set for %wZ Type %08lX\n",
-                          Irp,
-                          &uniFileName,
-                          pDirectoryCB->ObjectInformation->FileType);
+            if( !BooleanFlagOn( pDirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+            {
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonCreate (%08lX) Reparse open request but attribute not set for %wZ Type %08lX\n",
+                              Irp,
+                              &uniFileName,
+                              pDirectoryCB->ObjectInformation->FileType);
+            }
+            else
+            {
+                bOpenedReparsePoint = TRUE;
+            }
         }
 
         //
@@ -1050,6 +1057,11 @@ try_exit:
 
                         ClearFlag( ulParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER);
                     }
+                }
+
+                if( bOpenedReparsePoint)
+                {
+                    SetFlag( pCcb->Flags, CCB_FLAG_MASK_OPENED_REPARSE_POINT);
                 }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
