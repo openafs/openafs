@@ -2488,6 +2488,19 @@ copy_realm_of_ticket(krb5_context context, char * dest, size_t destlen, krb5_cre
     }
 }
 
+static int
+KFW_AFS_continue_aklog_processing_after_krb5_error(krb5_error_code code)
+{
+    if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+        code == KRB5_ERR_HOST_REALM_UNKNOWN ||
+        code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
+        code == KRB5KRB_AP_ERR_MSG_TYPE) {
+        return 1;
+    }
+
+    return 0;
+}
+
 int
 KFW_AFS_klog(
     krb5_context alt_context,
@@ -2615,7 +2628,6 @@ KFW_AFS_klog(
         StringCbCopyN( CellName, sizeof(CellName),
                        cell, sizeof(CellName) - 1);
 
-    /* This is for Kerberos v4 only */
     if (strlen(realm) == 0)
         StringCbCopyN( RealmName, sizeof(RealmName),
                        realm_of_cell, sizeof(RealmName) - 1);
@@ -2665,21 +2677,15 @@ KFW_AFS_klog(
                       realm_of_user, sizeof(realm_of_cell) - 1);
     }
 
-    if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
-        code == KRB5_ERR_HOST_REALM_UNKNOWN ||
-        code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-        code == KRB5KRB_AP_ERR_MSG_TYPE) {
-        /*
-         * If there was a specific realm we are supposed to try
-         * then use it
-         */
-        if (strlen(realm) != 0) {
+    if (KFW_AFS_continue_aklog_processing_after_krb5_error(code)) {
+        if (strcmp(realm_of_user, RealmName)) {
             /* service/cell@REALM */
             increds.server = 0;
             code = krb5_build_principal(context, &increds.server,
-                                        (int)strlen(realm),
-                                        realm,
+                                        (int)strlen(RealmName),
+                                        RealmName,
                                         ServiceName,
+                                        CellName,
                                         0);
 
             if ( IsDebuggerPresent() ) {
@@ -2697,81 +2703,15 @@ KFW_AFS_klog(
 
             if (!code)
                 code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
-
-            if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
-                 code == KRB5_ERR_HOST_REALM_UNKNOWN ||
-                 code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-                 code == KRB5KRB_AP_ERR_MSG_TYPE) {
-                /* Or service@REALM */
-                krb5_free_principal(context,increds.server);
-                increds.server = 0;
-                code = krb5_build_principal(context, &increds.server,
-                                            (int)strlen(realm),
-                                            realm,
-                                            ServiceName,
-                                            0);
-
-                if ( IsDebuggerPresent() ) {
-                    char * cname, *sname;
-                    krb5_unparse_name(context, increds.client, &cname);
-                    krb5_unparse_name(context, increds.server, &sname);
-                    DebugPrintf("Getting tickets for \"%s\" and service \"%s\"\n", cname, sname);
-                    krb5_free_unparsed_name(context,cname);
-                    krb5_free_unparsed_name(context,sname);
-                }
-
-                if (!code)
-                    code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
-            }
-
-            if (code == 0) {
-                /* we have a local realm for the cell */
-                StringCbCopyN( realm_of_cell, sizeof(realm_of_cell),
-                               realm, sizeof(realm_of_cell) - 1);
-            }
-        } else {
-            if (strcmp(realm_of_user, realm_of_cell)) {
-                /* Then service/cell@CELL_REALM */
-                krb5_free_principal(context,increds.server);
-                increds.server = 0;
-                code = krb5_build_principal(context, &increds.server,
-                                            (int)strlen(realm_of_cell),
-                                            realm_of_cell,
-                                            ServiceName,
-                                            CellName,
-                                             0);
-                if ( IsDebuggerPresent()) {
-                    char * cname, *sname;
-                    krb5_unparse_name(context, increds.client, &cname);
-                    krb5_unparse_name(context, increds.server, &sname);
-                    OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
-                    OutputDebugString("Trying again: getting tickets for \"");
-                    OutputDebugString(cname);
-                    OutputDebugString("\" and service \"");
-                    OutputDebugString(sname);
-                    OutputDebugString("\"\n");
-                    krb5_free_unparsed_name(context,cname);
-                    krb5_free_unparsed_name(context,sname);
-                }
-
-                if (!code)
-                    code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
-
-                if (!code && !strlen(realm_of_cell))
-                    copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
-            }
         }
 
-        if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
-             code == KRB5_ERR_HOST_REALM_UNKNOWN ||
-             code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-             code == KRB5KRB_AP_ERR_MSG_TYPE) {
-            /* Finally service@CELL_REALM */
+        if (KFW_AFS_continue_aklog_processing_after_krb5_error(code)) {
+            /* Or service@REALM */
             krb5_free_principal(context,increds.server);
             increds.server = 0;
             code = krb5_build_principal(context, &increds.server,
-                                        (int)strlen(realm_of_cell),
-                                        realm_of_cell,
+                                        (int)strlen(RealmName),
+                                        RealmName,
                                         ServiceName,
                                         0);
 
@@ -2779,18 +2719,18 @@ KFW_AFS_klog(
                 char * cname, *sname;
                 krb5_unparse_name(context, increds.client, &cname);
                 krb5_unparse_name(context, increds.server, &sname);
-                DebugPrintf("krb5_get_credentials() returned Service Principal Unknown\n"
-                            "Trying again: getting tickets for \"%s\" and service \"%s\"\n", cname, sname);
+                DebugPrintf("Getting tickets for \"%s\" and service \"%s\"\n", cname, sname);
                 krb5_free_unparsed_name(context,cname);
                 krb5_free_unparsed_name(context,sname);
             }
 
             if (!code)
                 code = krb5_get_credentials(context, 0, cc, &increds, &k5creds);
-            if (!code && !strlen(realm_of_cell))
-                copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
         }
     }
+    
+    if (!code)
+        copy_realm_of_ticket(context, realm_of_cell, sizeof(realm_of_cell), k5creds);
 
     if (code) {
         DebugPrintf("krb5_get_credentials returns: %d\n", code);
