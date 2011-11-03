@@ -679,31 +679,22 @@ get_default_ccache_name_for_principal(krb5_context context, krb5_principal princ
                                       char ** cc_name)
 {
     char * pname = NULL;
-    char * epname = NULL;
     krb5_error_code code;
     size_t len = 0;
-    char temppath[MAX_PATH]="";
 
     *cc_name = NULL;
 
     code = krb5_unparse_name(context, principal, &pname);
     if (code) goto cleanup;
 
-    escape_unsafe_principal_characters(pname, &epname);
-
-    len = strlen(epname);
-    len += 21;
+    len = strlen(pname) + 5;
     *cc_name = (char *) malloc(len);
 
-    GetTempPathA(MAX_PATH, temppath);
-    StringCbPrintfA(*cc_name, len, "FILE:%skrb5cc_%s", temppath, epname);
+    StringCbPrintfA(*cc_name, len, "API:%s", pname, GetCurrentThreadId());
 
 cleanup:
     if (pname)
         krb5_free_unparsed_name(context, pname);
-
-    if (epname)
-        free(epname);
 
     return;
 }
