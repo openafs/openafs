@@ -183,6 +183,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "partition.h"
 #include "daemon_com.h"
 #include "fssync.h"
+#include "fssync_inline.h"
 #include "volume_inline.h"
 #include "salvsync.h"
 #include "viceinode.h"
@@ -4435,8 +4436,8 @@ static int isDAFS = -1;
 int
 AskDAFS(void)
 {
-    afs_int32 code, i, ret = 0;
     SYNC_response res;
+    afs_int32 code = 1, i;
 
     /* we don't care if we race. the answer shouldn't change */
     if (isDAFS != -1)
@@ -4444,35 +4445,29 @@ AskDAFS(void)
 
     memset(&res, 0, sizeof(res));
 
-    for (i = 0; i < 3; i++) {
-	code = FSYNC_VolOp(1, NULL,
-	                   FSYNC_VOL_QUERY_VOP, FSYNC_SALVAGE, &res);
-
-	if (code == SYNC_OK) {
-	    ret = 1;
-	    break;
-	} else if (code == SYNC_DENIED) {
-	    ret = 1;
-	    break;
-	} else if (code == SYNC_BAD_COMMAND) {
-	    ret = 0;
-	    break;
-	} else if (code == SYNC_FAILED) {
-	    if (res.hdr.reason == FSYNC_UNKNOWN_VOLID)
-		ret = 1;
-	    else
-		ret = 0;
-	    break;
-	} else if (i < 2) {
-	    /* try it again */
-	    Log("AskDAFS:  request to query fileserver failed; trying again...\n");
+    for (i = 0; code && i < 3; i++) {
+	code = FSYNC_VolOp(0, NULL, FSYNC_VOL_LISTVOLUMES, FSYNC_SALVAGE, &res);
+	if (code) {
+	    Log("AskDAFS: FSYNC_VOL_LISTVOLUMES failed with code %ld reason "
+	        "%ld (%s); trying again...\n", (long)code, (long)res.hdr.reason,
+	        FSYNC_reason2string(res.hdr.reason));
 	    FSYNC_clientFinis();
 	    FSYNC_clientInit();
 	}
     }
 
-    isDAFS = ret;
-    return ret;
+    if (code) {
+	Log("AskDAFS: could not determine DAFS-ness, assuming not DAFS\n");
+	res.hdr.flags = 0;
+    }
+
+    if ((res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS)) {
+	isDAFS = 1;
+    } else {
+	isDAFS = 0;
+    }
+
+    return isDAFS;
 }
 
 static void
