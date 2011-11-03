@@ -216,6 +216,8 @@ eval {
 	system("git rebase --whitespace=fix HEAD^") == 0
 	    or print STDERR "WARNING: Fixing whitespace errors failed.\n";
     }
+    system("GIT_EDITOR=true git commit --amend") == 0
+      or print STDERR "WARNING: Firing commit msg hooks failed.\n";
   }
 };
 
