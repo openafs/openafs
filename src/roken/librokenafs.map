@@ -25,6 +25,7 @@
 		rk_localtime_r;
 		rk_mkstemp;
 		rk_print_version;
+		rk_setenv;
 		rk_setprogname;
 		rk_snprintf;
 		rk_socket;
@@ -32,6 +33,7 @@
 		rk_strnlen;
 		rk_strlcpy;
 		rk_strsep;
+		rk_unsetenv;
 		rk_vasprintf;
 		rk_vasnprintf;
 	        rk_vsnprintf;
