@@ -208,7 +208,7 @@ eval {
     }
     undef $fh;
     $author="--author '$author'" if ($author);
-    system("git commit -F $tempdir/commit-msg $author") == 0
+    system("git commit --no-verify -F $tempdir/commit-msg $author") == 0
       or die "Commit failed : $!\n";
     if ($nowhitespace) {
 	print STDERR "WARNING: not fixing whitespace errors.\n";
