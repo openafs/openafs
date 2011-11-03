@@ -1473,6 +1473,7 @@ AC_REPLACE_FUNCS([ \
 	gettimeofday \
 	localtime_r \
 	mkstemp \
+	setenv \
 	strcasecmp \
 	strlcat \
 	strnlen \
@@ -1482,6 +1483,7 @@ AC_REPLACE_FUNCS([ \
 	tfind \
 	tsearch \
 	twalk \
+	unsetenv \
 	verr \
 	verrx \
 	vsyslog \

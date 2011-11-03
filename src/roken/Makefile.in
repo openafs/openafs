@@ -124,6 +124,9 @@ net_read.o: ${UPSTREAM}/net_read.c
 net_write.o: ${UPSTREAM}/net_write.c
 	$(AFS_CCRULE) $(UPSTREAM)/net_write.c
 
+setenv.o: ${UPSTREAM}/setenv.c
+	$(AFS_CCRULE) $(UPSTREAM)/setenv.c
+
 socket.o: ${UPSTREAM}/socket.c
 	$(AFS_CCRULE) $(UPSTREAM)/socket.c
 
@@ -144,6 +147,9 @@ strnlen.o: ${UPSTREAM}/strnlen.c
 
 strsep.o: ${UPSTREAM}/strsep.c
 	$(AFS_CCRULE) $(UPSTREAM)/strsep.c
+
+unsetenv.o: ${UPSTREAM}/unsetenv.c
+	$(AFS_CCRULE) $(UPSTREAM)/unsetenv.c
 
 verr.o: ${UPSTREAM}/verr.c err.h
 	$(AFS_CCRULE) $(UPSTREAM)/verr.c
