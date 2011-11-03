@@ -479,6 +479,8 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
     opts->interrupt_rxcall = NULL;
     opts->offline_timeout = -1;
     opts->offline_shutdown_timeout = -1;
+    opts->usage_threshold = 128;
+    opts->usage_rate_limit = 5;
 
 #ifdef FAST_RESTART
     opts->unsafe_attach = 1;
@@ -6674,10 +6676,16 @@ VBumpVolumeUsage_r(Volume * vp)
     if (now - V_dayUseDate(vp) > OneDay)
 	VAdjustVolumeStatistics_r(vp);
     /*
-     * Save the volume header image to disk after every 128 bumps to dayUse.
+     * Save the volume header image to disk after a threshold of bumps to dayUse,
+     * at most every usage_rate_limit seconds.
      */
-    if ((V_dayUse(vp)++ & 127) == 0) {
+    V_dayUse(vp)++;
+    vp->usage_bumps_outstanding++;
+    if (vp->usage_bumps_outstanding >= vol_opts.usage_threshold
+	&& vp->usage_bumps_next_write <= now) {
 	Error error;
+	vp->usage_bumps_outstanding = 0;
+	vp->usage_bumps_next_write = now + vol_opts.usage_rate_limit;
 	VUpdateVolume_r(&error, vp, VOL_UPDATE_WAIT);
     }
 }

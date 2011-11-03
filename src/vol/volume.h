@@ -271,6 +271,9 @@ typedef struct VolumePackageOptions {
                                    *   during shutdown, we will still only wait
                                    *   for this amount of time in total, not e.g.
                                    *   for each going-offline volume encountered. */
+    afs_int32 usage_threshold;    /*< number of accesses before writing volume header */
+    afs_int32 usage_rate_limit;   /*< minimum number of seconds before writing volume
+                                   *  header, after usage_threshold is exceeded */
 } VolumePackageOptions;
 
 /* Magic numbers and version stamps for each type of file */
@@ -717,6 +720,8 @@ typedef struct Volume {
     VolumeVLRUState vlru;         /* state specific to the VLRU */
     FSSYNC_VolOp_info * pending_vol_op;  /* fssync command info for any pending vol ops */
 #endif /* AFS_DEMAND_ATTACH_FS */
+    int usage_bumps_outstanding; /**< to rate limit the usage update i/o by accesses */
+    int usage_bumps_next_write;  /**< to rate limit the usage update i/o by time */
 } Volume;
 
 struct volHeader {
