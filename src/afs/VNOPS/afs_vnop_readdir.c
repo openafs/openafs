@@ -914,6 +914,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 #endif /* AFS_SGI53_ENV */
 	
 	DRelease(&oldEntry, 0);
+	oldEntry = nextEntry;
 	ode = nde;
 	AFS_UIO_SETOFFSET(auio, (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5));
     }
