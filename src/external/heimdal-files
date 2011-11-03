@@ -81,6 +81,7 @@ lib/roken/net_write.c		roken/net_write.c
 lib/roken/roken.h.in		roken/roken.h.in
 lib/roken/roken-common.h	roken/roken-common.h
 lib/roken/search.hin		roken/search.hin
+lib/roken/setenv.c		roken/setenv.c
 lib/roken/socket.c		roken/socket.c
 lib/roken/snprintf.c		roken/snprintf.c
 lib/roken/strerror_r.c		roken/strerror_r.c
@@ -89,6 +90,7 @@ lib/roken/strlcpy.c		roken/strlcpy.c
 lib/roken/strnlen.c		roken/strnlen.c
 lib/roken/strsep.c		roken/strsep.c
 lib/roken/tsearch.c		roken/tsearch.c
+lib/roken/unsetenv.c		roken/unsetenv.c
 lib/roken/verr.c		roken/verr.c
 lib/roken/verrx.c		roken/verrx.c
 lib/roken/vsyslog.c		roken/vsyslog.c
