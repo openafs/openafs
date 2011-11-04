@@ -141,6 +141,7 @@ AFSQueryDirectory( IN PIRP Irp)
     ULONG ulBytesConverted;
     AFSDirectoryCB *pDirEntry = NULL;
     BOOLEAN bReleaseMain = FALSE;
+    BOOLEAN bReleaseFcb = FALSE;
     ULONG ulTargetFileType = AFS_FILE_TYPE_UNKNOWN;
     AFSFileInfoCB       stFileInfo;
     BOOLEAN         bUseFileInfo = TRUE;
@@ -221,6 +222,8 @@ AFSQueryDirectory( IN PIRP Irp)
             AFSAcquireExcl( &pFcb->NPFcb->Resource,
                             TRUE);
 
+            bReleaseFcb = TRUE;
+
             //
             // Tell the service to prime the cache of the directory content
             //
@@ -230,8 +233,6 @@ AFSQueryDirectory( IN PIRP Irp)
 
             if( !NT_SUCCESS( ntStatus))
             {
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
@@ -259,6 +260,8 @@ AFSQueryDirectory( IN PIRP Irp)
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
+
+            bReleaseFcb = TRUE;
         }
 
         //
@@ -335,6 +338,8 @@ AFSQueryDirectory( IN PIRP Irp)
         //
 
         AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+        bReleaseFcb = FALSE;
 
         //
         // Start processing the data
@@ -968,6 +973,12 @@ try_exit:
         {
 
             AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
+
+        if ( bReleaseFcb)
+        {
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
         }
 
         if( pFcb != NULL)
