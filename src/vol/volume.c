@@ -7905,6 +7905,51 @@ VInitVolumeHeaderCache(afs_uint32 howMany)
 	ReleaseVolumeHeader(hp++);
 }
 
+/* get a volume header off of the volume header LRU.
+ *
+ * @return volume header
+ *  @retval NULL no usable volume header is available on the LRU
+ *
+ * @pre VOL_LOCK held
+ *
+ * @post for DAFS, if the returned header is associated with a volume, that
+ *       volume is NOT in an exclusive state
+ *
+ * @internal volume package internal use only.
+ */
+#ifdef AFS_DEMAND_ATTACH_FS
+static struct volHeader*
+GetVolHeaderFromLRU(void)
+{
+    struct volHeader *hd = NULL, *qh, *nqh;
+    /* Usually, a volume in an exclusive state will not have its header on
+     * the LRU. However, it is possible for this to occur when a salvage
+     * request is received over FSSYNC, and possibly in other corner cases.
+     * So just skip over headers whose volumes are in an exclusive state. We
+     * could VWaitExclusiveState_r instead, but not waiting is faster and
+     * easier to do */
+    for (queue_Scan(&volume_hdr_LRU, qh, nqh, volHeader)) {
+	if (!hd->back || !VIsExclusiveState(V_attachState(hd->back))) {
+	    queue_Remove(qh);
+	    hd = qh;
+	    break;
+	}
+    }
+    return hd;
+}
+#else /* AFS_DEMAND_ATTACH_FS */
+static struct volHeader*
+GetVolHeaderFromLRU(void)
+{
+    struct volHeader *hd = NULL;
+    if (queue_IsNotEmpty(&volume_hdr_LRU)) {
+	hd = queue_First(&volume_hdr_LRU, volHeader);
+	queue_Remove(hd);
+    }
+    return hd;
+}
+#endif /* !AFS_DEMAND_ATTACH_FS */
+
 /**
  * get a volume header and attach it to the volume object.
  *
@@ -7973,12 +8018,8 @@ GetVolumeHeader(Volume * vp)
             V_attachFlags(vp) &= ~(VOL_HDR_IN_LRU);
 #endif
 	} else {
-	    /* we need to grab a new element off the LRU */
-	    if (queue_IsNotEmpty(&volume_hdr_LRU)) {
-		/* grab an element and pull off of LRU */
-		hd = queue_First(&volume_hdr_LRU, volHeader);
-		queue_Remove(hd);
-	    } else {
+	    hd = GetVolHeaderFromLRU();
+	    if (!hd) {
 		/* LRU is empty, so allocate a new volHeader
 		 * this is probably indicative of a leak, so let the user know */
 		hd = (struct volHeader *)calloc(1, sizeof(struct volHeader));
@@ -7995,8 +8036,8 @@ GetVolumeHeader(Volume * vp)
 		 * be sync'd out to disk */
 
 #ifdef AFS_DEMAND_ATTACH_FS
-		/* if hd->back were in an exclusive state, then
-		 * its volHeader would not be on the LRU... */
+		/* GetVolHeaderFromLRU had better not give us back a header
+		 * with a volume in exclusive state... */
 		osi_Assert(!VIsExclusiveState(V_attachState(hd->back)));
 #endif
 
