@@ -1917,6 +1917,7 @@ AFSSetRenameInfo( IN PIRP Irp)
     BOOLEAN bReleaseVolumeLock = FALSE;
     BOOLEAN bReleaseTargetDirLock = FALSE;
     BOOLEAN bReleaseSourceDirLock = FALSE;
+    PERESOURCE  pSourceDirLock = NULL;
 
     __Enter
     {
@@ -2036,10 +2037,6 @@ AFSSetRenameInfo( IN PIRP Irp)
             try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
         }
 
-        //
-        // If the target exists be sure the ReplaceIfExists flag is set
-        //
-
         AFSAcquireExcl( pTargetParentObject->VolumeCB->VolumeLock,
                         TRUE);
 
@@ -2059,6 +2056,8 @@ AFSSetRenameInfo( IN PIRP Irp)
                             TRUE);
 
             bReleaseSourceDirLock = TRUE;
+
+            pSourceDirLock = pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock;
         }
 
         AFSLocateCaseSensitiveDirEntry( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
@@ -2517,7 +2516,7 @@ try_exit:
 
         if( bReleaseSourceDirLock)
         {
-            AFSReleaseResource( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+            AFSReleaseResource( pSourceDirLock);
         }
     }
 
