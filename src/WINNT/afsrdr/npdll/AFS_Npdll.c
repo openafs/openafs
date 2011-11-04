@@ -912,6 +912,11 @@ NPCancelConnection( LPWSTR  lpName,
 #endif
                 try_return( dwStatus = WN_NOT_CONNECTED);
             }
+
+            //
+            // NPGetConnection returns the buffer size not the length without NUL
+            //
+            dwRemoteNameLength -= sizeof( WCHAR);
         }
         else
         {
