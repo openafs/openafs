@@ -1152,10 +1152,6 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {
-	    if (DoLogging) {
-		Log("RestoreVolume ProcessIndex: Set up %d inodes for volume %d\n",
-		    nVnodes, V_id(vp));
-	    }
 	    Buf = malloc(nVnodes * sizeof(afs_foff_t));
 	    if (Buf == NULL) {
 		STREAM_CLOSE(afile);
@@ -1174,9 +1170,6 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 		    cnt++;
 		}
 		offset += vcp->diskSize;
-	    }
-	    if (DoLogging) {
-		Log("RestoreVolume ProcessIndex: found %d inodes\n", cnt);
 	    }
 	    *Bufp = Buf;
 	    *sizep = nVnodes;
@@ -1321,9 +1314,6 @@ ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
 	if (!ReadInt32(iodp, &vnode->uniquifier))
 	    return VOLSERREAD_DUMPERROR;
 
-	if (DoLogging) {
-	    Log("ReadVnodes: setup %d/%d\n", vnodeNumber, vnode->uniquifier);
-	}
 	while ((tag = iod_getc(iodp)) > D_MAX && tag != EOF) {
 	    haveStuff = 1;
             if (critical)
