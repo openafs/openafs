@@ -228,24 +228,8 @@ rxkad_errs.o: ../rxkad/rxkad_errs.c
 ptclient.o: ${PTSERVER}/ptclient.c
 	${AFS_CCRULE} -I../ptserver ${PTSERVER}/ptclient.c
 
-# The special treatment of this file for hp_ux110 is because of a bug
-# in version A.11.01.00 of the HP C compiler.  This bug appears to be
-# fixed in version A.11.01.02 of the HP C compiler, however this version
-# of the compiler is not installed on all of our build machines.
-# The symptom of the problem is an error when linking the pthread fileserver:
-# /usr/ccs/bin/ld: TP override with DATA_ONE_SYM fixup for non thread local
-# storage symbol pr_Initialize in file DEST/lib/libafsauthent.a(ptuser.o)
 ptuser.o: ${PTSERVER}/ptuser.c
-	set -x; \
-	case ${SYS_NAME} in \
-	hp_ux11*) \
-		set X `echo ${AFS_CCRULE} -I../ptserver ${PTSERVER}/ptuser.c | sed s/-g//`; shift; \
-		"$$@" \
-		;; \
-	*) \
-		${AFS_CCRULE} -I../ptserver ${PTSERVER}/ptuser.c \
-		;; \
-	esac
+	${AFS_CCRULE} -I../ptserver ${PTSERVER}/ptuser.c
 
 display.o: ${PTSERVER}/display.c
 	${AFS_CCRULE} -I../ptserver ${PTSERVER}/display.c
