@@ -1,27 +1,26 @@
 /*
-
-Copyright 2004 by the Massachusetts Institute of Technology
-
-All rights reserved.
-
-Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby granted,
-provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in
-supporting documentation, and that the name of the Massachusetts
-Institute of Technology (M.I.T.) not be used in advertising or publicity
-pertaining to distribution of the software without specific, written
-prior permission.
-
-M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
-ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
-M.I.T. BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
-ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
-SOFTWARE.
-
-*/
+ * Copyright 2004 by the Massachusetts Institute of Technology
+ *
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and that
+ * both that copyright notice and this permission notice appear in
+ * supporting documentation, and that the name of the Massachusetts
+ * Institute of Technology (M.I.T.) not be used in advertising or publicity
+ * pertaining to distribution of the software without specific, written
+ * prior permission.
+ *
+ * M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+ * M.I.T. BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ * SOFTWARE.
+ *
+ */
 
 #define _WIN32_DCOM
 #include <windows.h>
@@ -44,59 +43,182 @@ SOFTWARE.
 /* an IPv4, enabled port with global scope */
 struct global_afs_port_type {
     LPWSTR	name;
-    LONG	port;
+    LONG	n_port;
+    LPWSTR      str_port;
     NET_FW_IP_PROTOCOL protocol;
 };
 
 typedef struct global_afs_port_type global_afs_port_t;
 
 global_afs_port_t afs_clientPorts[] = {
-    { L"AFS CacheManager Callback (UDP)", 7001, NET_FW_IP_PROTOCOL_UDP }
+    { L"AFS CacheManager Callback (UDP)", 7001, L"7001", NET_FW_IP_PROTOCOL_UDP }
 #ifdef AFS_TCP
-,   { L"AFS CacheManager Callback (TCP)", 7001, NET_FW_IP_PROTOCOL_TCP }
+,   { L"AFS CacheManager Callback (TCP)", 7001, L"7001", NET_FW_IP_PROTOCOL_TCP }
 #endif
 };
 
 global_afs_port_t afs_serverPorts[] = {
-    { L"AFS File Server (UDP)", 7000, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS File Server (UDP)", 7000, L"7000", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS File Server (TCP)", 7000, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS File Server (TCP)", 7000, L"7000", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS User & Group Database (UDP)", 7002, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS User & Group Database (UDP)", 7002, L"7002", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS User & Group Database (TCP)", 7002, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS User & Group Database (TCP)", 7002, L"7002", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS Volume Location Database (UDP)", 7003, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS Volume Location Database (UDP)", 7003, L"7003", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS Volume Location Database (TCP)", 7003, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS Volume Location Database (TCP)", 7003, L"7003", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS/Kerberos Authentication (UDP)", 7004, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS/Kerberos Authentication (UDP)", 7004, L"7004", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS/Kerberos Authentication (TCP)", 7004, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS/Kerberos Authentication (TCP)", 7004, L"7004", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS Volume Mangement (UDP)", 7005, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS Volume Mangement (UDP)", 7005, L"7005", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS Volume Mangement (TCP)", 7005, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS Volume Mangement (TCP)", 7005, L"7005", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS Error Interpretation (UDP)", 7006, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS Error Interpretation (UDP)", 7006, L"7006", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS Error Interpretation (TCP)", 7006, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS Error Interpretation (TCP)", 7006, L"7006", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS Basic Overseer (UDP)", 7007, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS Basic Overseer (UDP)", 7007, L"7007", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS Basic Overseer (TCP)", 7007, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS Basic Overseer (TCP)", 7007, L"7007", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS Server-to-server Updater (UDP)", 7008, NET_FW_IP_PROTOCOL_UDP },
+    { L"AFS Server-to-server Updater (UDP)", 7008, L"7008", NET_FW_IP_PROTOCOL_UDP },
 #ifdef AFS_TCP
-    { L"AFS Server-to-server Updater (TCP)", 7008, NET_FW_IP_PROTOCOL_TCP },
+    { L"AFS Server-to-server Updater (TCP)", 7008, L"7008", NET_FW_IP_PROTOCOL_TCP },
 #endif
-    { L"AFS Remote Cache Manager (UDP)", 7009, NET_FW_IP_PROTOCOL_UDP }
+    { L"AFS Remote Cache Manager (UDP)", 7009, L"7009", NET_FW_IP_PROTOCOL_UDP }
 #ifdef AFS_TCP
-,    { L"AFS Remote Cache Manager (TCP)", 7009, NET_FW_IP_PROTOCOL_TCP }
+,   { L"AFS Remote Cache Manager (TCP)", 7009, L"7009", NET_FW_IP_PROTOCOL_TCP }
 #endif
 };
 
-HRESULT icf_OpenFirewallProfile(INetFwProfile ** fwProfile) {
+HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, int nPorts)
+{
+    INetFwPolicy2 *pNetFwPolicy2 = NULL;
+    INetFwRules *pFwRules = NULL;
+    INetFwRule *pFwRule = NULL;
+    WCHAR wFilename[1024] = L"C:\\Program Files\\OpenAFS\\Client\\Program\\afsd_service.exe";
+
+    long CurrentProfilesBitMask = 0;
+    int  i;
+
+    GetModuleFileNameW(NULL, wFilename, 1024);
+
+    BSTR bstrRuleGroup = SysAllocString(L"OpenAFS Firewall Rules");
+    BSTR bstrRuleApplication = SysAllocString(wFilename);
+    BSTR bstrRuleService = SysAllocString(wServiceName);
+
+    HRESULT hrComInit = S_OK;
+    HRESULT hr = S_OK;
+
+    // Retrieve INetFwPolicy2
+    hr = CoCreateInstance( __uuidof(NetFwPolicy2),
+                           NULL,
+                           CLSCTX_INPROC_SERVER,
+                           __uuidof(INetFwPolicy2),
+                           (void**)&pNetFwPolicy2);
+    if (FAILED(hr))
+    {
+	DEBUGOUT(("Can't create NetFwPolicy2\n"));
+        goto Cleanup;
+    }
+
+    // Retrieve INetFwRules
+    hr = pNetFwPolicy2->get_Rules(&pFwRules);
+    if (FAILED(hr))
+    {
+        DEBUGOUT(("get_Rules failed\n"));
+        goto Cleanup;
+    }
+
+    for ( i=0; i < nPorts; i++)
+    {
+        BSTR bstrRuleName = SysAllocString(ports[i].name);
+        BSTR bstrRuleDescription = SysAllocString(ports[i].name);
+        BSTR bstrRuleLPorts = SysAllocString(ports[i].str_port);
+
+        hr = pFwRules->Item(bstrRuleName, &pFwRule);
+        if (FAILED(hr))
+        {
+            // Create a new Firewall Rule object.
+            hr = CoCreateInstance( __uuidof(NetFwRule),
+                                   NULL,
+                                   CLSCTX_INPROC_SERVER,
+                                   __uuidof(INetFwRule),
+                                   (void**)&pFwRule);
+            if (SUCCEEDED(hr))
+            {
+                // Populate the Firewall Rule object
+                pFwRule->put_Name(bstrRuleName);
+                pFwRule->put_Description(bstrRuleDescription);
+                pFwRule->put_ApplicationName(bstrRuleApplication);
+                pFwRule->put_ServiceName(bstrRuleService);
+                pFwRule->put_Protocol(ports[i].protocol);
+                pFwRule->put_LocalPorts(bstrRuleLPorts);
+                pFwRule->put_Grouping(bstrRuleGroup);
+                pFwRule->put_Profiles(NET_FW_PROFILE2_ALL);
+                pFwRule->put_Action(NET_FW_ACTION_ALLOW);
+                pFwRule->put_Enabled(VARIANT_TRUE);
+
+                // Add the Firewall Rule
+                hr = pFwRules->Add(pFwRule);
+                if (FAILED(hr))
+                {
+                    DEBUGOUT(("Firewall Rule Add failed\n"));
+                }
+            }
+            else
+            {
+                DEBUGOUT(("CoCreateInstance INetFwRule failed\n"));
+            }
+        }
+
+        SysFreeString(bstrRuleName);
+        SysFreeString(bstrRuleDescription);
+        SysFreeString(bstrRuleLPorts);
+    }
+
+  Cleanup:
+
+    // Free BSTR's
+    SysFreeString(bstrRuleGroup);
+    SysFreeString(bstrRuleApplication);
+    SysFreeString(bstrRuleService);
+
+    // Release the INetFwRule object
+    if (pFwRule != NULL)
+    {
+        pFwRule->Release();
+    }
+
+    // Release the INetFwRules object
+    if (pFwRules != NULL)
+    {
+        pFwRules->Release();
+    }
+
+    // Release the INetFwPolicy2 object
+    if (pNetFwPolicy2 != NULL)
+    {
+        pNetFwPolicy2->Release();
+    }
+
+    // Uninitialize COM.
+    if (SUCCEEDED(hrComInit))
+    {
+        CoUninitialize();
+    }
+
+    return 0;
+}
+
+
+HRESULT icf_OpenFirewallProfile(INetFwProfile ** fwProfile)
+{
     HRESULT hr = S_OK;
     INetFwMgr* fwMgr = NULL;
     INetFwPolicy* fwPolicy = NULL;
@@ -172,7 +294,7 @@ HRESULT icf_CheckAndAddPorts(INetFwProfile * fwProfile, global_afs_port_t * port
 	BOOL bCreate = FALSE;
 	fwPort = NULL;
 
-	hr = fwPorts->Item(ports[i].port, ports[i].protocol, &fwPort);
+	hr = fwPorts->Item(ports[i].n_port, ports[i].protocol, &fwPort);
 	if (SUCCEEDED(hr)) {
 	    DEBUGOUTW((L"Found port for %S\n",ports[i].name));
             hr = fwPort->get_Enabled(&vbEnabled);
@@ -218,7 +340,7 @@ HRESULT icf_CheckAndAddPorts(INetFwProfile * fwProfile, global_afs_port_t * port
 		    goto abandon_port;
 		}
 
-		hr = fwPort->put_Port( ports[i].port );
+		hr = fwPort->put_Port( ports[i].n_port );
 		if (FAILED(hr)) {
 		    DEBUGOUT(("Can't set Port\n"));
 		    rhr = hr;
@@ -283,15 +405,18 @@ long icf_CheckAndAddAFSPorts(int portset) {
     BOOL coInitialized = FALSE;
     INetFwProfile * fwProfile = NULL;
     global_afs_port_t * ports;
+    WCHAR * wServiceName;
     int nports;
     long code = 0;
 
     if (portset == AFS_PORTSET_CLIENT) {
 	ports = afs_clientPorts;
 	nports = sizeof(afs_clientPorts) / sizeof(*afs_clientPorts);
+        wServiceName = L"TransarcAFSDaemon";
     } else if (portset == AFS_PORTSET_SERVER) {
 	ports = afs_serverPorts;
 	nports = sizeof(afs_serverPorts) / sizeof(*afs_serverPorts);
+        wServiceName = L"TransarcAFSServer";
     } else
 	return 1; /* Invalid port set */
 
@@ -306,22 +431,26 @@ long icf_CheckAndAddAFSPorts(int portset) {
     // not necessarily catastrophic if the call failed.  We'll try to
     // continue as if it succeeded.
 
-    hr = icf_OpenFirewallProfile(&fwProfile);
+    hr = icf_CheckAndAddPorts2(wServiceName, ports, nports);
     if (FAILED(hr)) {
-	// Ok. That didn't work.  This could be because the machine we
-	// are running on doesn't have Windows Firewall.  We'll return
-	// a failure to the caller, which shouldn't be taken to mean
-	// it's catastrophic.
-	DEBUGOUT(("Can't open Firewall profile\n"));
-	code = 2;
-	goto cleanup;
-    }
+        DEBUGOUT(("INetFwProfile2 failed, trying INetFwProfile\n"));
+        hr = icf_OpenFirewallProfile(&fwProfile);
+        if (FAILED(hr)) {
+            // Ok. That didn't work.  This could be because the machine we
+            // are running on doesn't have Windows Firewall.  We'll return
+            // a failure to the caller, which shouldn't be taken to mean
+            // it's catastrophic.
+            DEBUGOUT(("Can't open Firewall profile\n"));
+            code = 2;
+            goto cleanup;
+        }
 
-    // Now that we have a firewall profile, we can start checking
-    // and adding the ports that we want.
-    hr = icf_CheckAndAddPorts(fwProfile, ports, nports);
-    if (FAILED(hr))
-	code = 3;
+        // Now that we have a firewall profile, we can start checking
+        // and adding the ports that we want.
+        hr = icf_CheckAndAddPorts(fwProfile, ports, nports);
+        if (FAILED(hr))
+            code = 3;
+    }
 
   cleanup:
     if (coInitialized) {
