@@ -224,7 +224,10 @@ URL: http://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: OpenAFS Gatekeepers <openafs-gatekeepers@openafs.org>
 Group: Networking/Filesystems
-BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison, systemd-units
+BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
+%if 0%{?fedora} >= 15
+BuildRequires: systemd-units
+%endif
 BuildRequires: perl-devel perl-ExtUtils-Embed
 %if %{krb5support}
 BuildRequires: krb5-devel
@@ -1384,6 +1387,7 @@ if [ $1 -eq 0 ] ; then
 fi
 %endif
 
+%if 0%{?fedora} >= 15
 %postun client
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 if [ $1 -ge 1 ] ; then
@@ -1397,6 +1401,7 @@ if [ $1 -ge 1 ] ; then
     # Package upgrade, not uninstall
     /bin/systemctl try-restart openafs-server.service >/dev/null 2>&1 || :
 fi
+%endif
 
 %if %{build_dkmspkg}
 %post -n dkms-%{name}
@@ -1454,6 +1459,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 %endif
 
+%if 0%{?fedora} >= 15
 %triggerun -- openafs-client < 1.6.0-1
 # Save the current service runlevel info
 # User must manually run systemd-sysv-convert --apply httpd
@@ -1479,6 +1485,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 # Run these because the SysV package being removed won't do them
 /sbin/chkconfig --del openafs-server >/dev/null 2>&1 || :
 /bin/systemctl try-restart openafs-server.service >/dev/null 2>&1 || : 
+%endif
 
 ##############################################################################
 ###
