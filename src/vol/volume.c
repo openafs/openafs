@@ -7929,7 +7929,7 @@ GetVolHeaderFromLRU(void)
      * could VWaitExclusiveState_r instead, but not waiting is faster and
      * easier to do */
     for (queue_Scan(&volume_hdr_LRU, qh, nqh, volHeader)) {
-	if (!hd->back || !VIsExclusiveState(V_attachState(hd->back))) {
+	if (!qh->back || !VIsExclusiveState(V_attachState(qh->back))) {
 	    queue_Remove(qh);
 	    hd = qh;
 	    break;
