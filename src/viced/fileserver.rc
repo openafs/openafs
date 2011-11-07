@@ -9,7 +9,7 @@
 
 /* Define VERSIONINFO resource */
 
-#define  AFS_VERINFO_FILE_DESCRIPTION "AFS File Server"
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS File Server (Threaded)"
 #define  AFS_VERINFO_NAME "fileserver"
 #define  AFS_VERINFO_FILENAME "fileserver.exe"
 

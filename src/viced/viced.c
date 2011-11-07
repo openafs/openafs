@@ -73,9 +73,7 @@
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
-#ifdef AFS_PTHREAD_ENV
-# include <afs/softsig.h>
-#endif
+#include <afs/softsig.h>
 #if defined(AFS_SGI_ENV)
 # include "sys/schedctl.h"
 # include "sys/lock.h"
@@ -96,12 +94,8 @@ static afs_int32 Do_VLRegisterRPC(void);
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
 
-#ifdef AFS_PTHREAD_ENV
 pthread_mutex_t fsync_glock_mutex;
 pthread_cond_t fsync_cond;
-#else
-char fsync_wait[1];
-#endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_NT40_ENV
 # define NT_OPEN_MAX    1024	/* This is an arbitrary no. we came up with for
@@ -177,9 +171,7 @@ static int offline_shutdown_timeout = -1; /* -offline-shutdown-timeout option */
 
 struct timeval tp;
 
-#ifdef AFS_PTHREAD_ENV
 pthread_key_t viced_uclient_key;
-#endif
 
 /*
  * FileServer's name and IP address, both network byte order and
@@ -269,7 +261,6 @@ CheckDescriptors(void *unused)
 }				/*CheckDescriptors */
 
 
-#ifdef AFS_PTHREAD_ENV
 void
 CheckSignal_Signal(int x)
 {
@@ -287,25 +278,6 @@ CheckDescriptors_Signal(int x)
 {
     CheckDescriptors(NULL);
 }
-#else /* AFS_PTHREAD_ENV */
-void
-CheckSignal_Signal(int x)
-{
-    IOMGR_SoftSig(CheckSignal, 0);
-}
-
-void
-ShutDown_Signal(int x)
-{
-    IOMGR_SoftSig(ShutDown, 0);
-}
-
-void
-CheckDescriptors_Signal(int x)
-{
-    IOMGR_SoftSig(CheckDescriptors, 0);
-}
-#endif /* AFS_PTHREAD_ENV */
 
 /* check whether caller is authorized to manage RX statistics */
 int
@@ -327,7 +299,7 @@ ResetCheckSignal(void)
     signo = SIGXCPU;
 #endif
 
-#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_NT40_ENV)
     softsig_signal(signo, CheckSignal_Signal);
 #else
     signal(signo, CheckSignal_Signal);
@@ -338,11 +310,7 @@ static void
 ResetCheckDescriptors(void)
 {
 #ifndef AFS_NT40_ENV
-# if defined(AFS_PTHREAD_ENV)
     softsig_signal(SIGTERM, CheckDescriptors_Signal);
-# else
-    (void)signal(SIGTERM, CheckDescriptors_Signal);
-# endif
 #endif
 }
 
@@ -395,7 +363,7 @@ CheckAdminName(void)
 static void
 setThreadId(char *s)
 {
-#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_NT40_ENV)
     int threadId;
 
     /* set our 'thread-id' so that the host hold table works */
@@ -424,11 +392,7 @@ FiveMinuteCheckLWP(void *unused)
     while (1) {
 #endif
 
-#ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
-#else /* AFS_PTHREAD_ENV */
-	IOMGR_Sleep(fiveminutes);
-#endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_DEMAND_ATTACH_FS
 	FS_STATE_WRLOCK;
@@ -449,9 +413,6 @@ FiveMinuteCheckLWP(void *unused)
 	if (FS_registered == 1)
 	    Do_VLRegisterRPC();
 	/* Force wakeup in case we missed something; pthreads does timedwait */
-#ifndef AFS_PTHREAD_ENV
-	LWP_NoYieldSignal(fsync_wait);
-#endif
 	if (printBanner && (++msg & 1)) {	/* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
 	    struct tm tm;
@@ -494,11 +455,7 @@ HostCheckLWP(void *unused)
     while(1) {
 #endif
 
-#ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
-#else /* AFS_PTHREAD_ENV */
-	IOMGR_Sleep(fiveminutes);
-#endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_DEMAND_ATTACH_FS
 	FS_STATE_WRLOCK;
@@ -534,9 +491,7 @@ static void *
 FsyncCheckLWP(void *unused)
 {
     afs_int32 code;
-#ifdef AFS_PTHREAD_ENV
     struct timespec fsync_next;
-#endif
     ViceLog(1, ("Starting fsync check process\n"));
 
     setThreadId("FsyncCheckLWP");
@@ -550,7 +505,6 @@ FsyncCheckLWP(void *unused)
     while(1) {
 #endif
 	FSYNC_LOCK;
-#ifdef AFS_PTHREAD_ENV
 	/* rounding is fine */
 	fsync_next.tv_nsec = 0;
 	fsync_next.tv_sec = time(0) + fiveminutes;
@@ -559,10 +513,6 @@ FsyncCheckLWP(void *unused)
 			    &fsync_next);
 	if (code != 0 && code != ETIMEDOUT)
 	    ViceLog(0, ("pthread_cond_timedwait returned %d\n", code));
-#else /* AFS_PTHREAD_ENV */
-	if ((code = LWP_WaitProcess(fsync_wait)) != LWP_SUCCESS)
-	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
-#endif /* AFS_PTHREAD_ENV */
 	FSYNC_UNLOCK;
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -757,17 +707,10 @@ ShutDownAndCore(int dopanic)
     char tbuffer[32];
 
     if (dopanic) {
-#ifdef AFS_PTHREAD_ENV
 	pthread_t watchdogPid;
 	pthread_attr_t tattr;
 	osi_Assert(pthread_attr_init(&tattr) == 0);
 	osi_Assert(pthread_create(&watchdogPid, &tattr, ShutdownWatchdogLWP, NULL) == 0);
-#else
-	PROCESS watchdogPid;
-	osi_Assert(LWP_CreateProcess
-	       (ShutdownWatchdogLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	        NULL, "ShutdownWatchdog", &watchdogPid) == LWP_SUCCESS);
-#endif
     }
 
     /* do not allows new reqests to be served from now on, all new requests
@@ -943,13 +886,13 @@ ParseRights(char *arights)
 static int
 max_fileserver_thread(void)
 {
-#if defined(AFS_PTHREAD_ENV) && (defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV))
+#if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV)
     long ans;
 
     ans = sysconf(_SC_THREAD_THREADS_MAX);
     if (0 < ans && ans < MAX_FILESERVER_THREAD)
 	return (int)ans;
-#endif /* defined(AFS_PTHREAD_ENV) */
+#endif
     return MAX_FILESERVER_THREAD;
 }
 
@@ -1081,10 +1024,8 @@ ParseArgs(int argc, char *argv[])
     cmd_AddParmAtOffset(opts, OPT_hostcpsrefresh, "-hr", CMD_SINGLE,
 			CMD_OPTIONAL, "hours between host CPS refreshes");
 
-#if defined(AFS_PTHREAD_ENV)
     cmd_AddParmAtOffset(opts, OPT_vattachthreads, "-vattachpar", CMD_SINGLE,
 			CMD_OPTIONAL, "# of volume attachment threads");
-#endif
 
     cmd_AddParmAtOffset(opts, OPT_abortthreshold, "-abortthreshold",
 			CMD_SINGLE, CMD_OPTIONAL,
@@ -1289,9 +1230,7 @@ ParseArgs(int argc, char *argv[])
 	hostaclRefresh = optval * 60 * 60;
     }
 
-#ifdef AFS_PTHREAD_ENV
     cmd_OptionAsInt(opts, OPT_vattachthreads, &vol_attach_threads);
-#endif /* AFS_PTHREAD_ENV */
 
     cmd_OptionAsInt(opts, OPT_abortthreshold, &abort_threshold);
 
@@ -1300,13 +1239,6 @@ ParseArgs(int argc, char *argv[])
 	busyonrst = 0;
 
     if (cmd_OptionAsInt(opts, OPT_offline_timeout, &offline_timeout) == 0) {
-#ifndef AFS_PTHREAD_ENV
-	if (offline_timeout != -1) {
-	    printf("The only valid -offline-timeout value for the LWP "
-		   "fileserver is -1\n");
-	    return -1;
-	}
-#endif /* AFS_PTHREAD_ENV */
 	if (offline_timeout < -1) {
 	    printf("Invalid -offline-timeout value %d; the only valid "
 		   "negative value is -1\n", offline_timeout);
@@ -1316,13 +1248,6 @@ ParseArgs(int argc, char *argv[])
 
     if (cmd_OptionAsInt(opts, OPT_offline_shutdown_timeout,
 			&offline_shutdown_timeout) == 0) {
-#ifndef AFS_PTHREAD_ENV
-	if (offline_shutdown_timeout != -1) {
-	    printf("The only valid -offline-shutdown-timeout value for the "
-		   "LWP fileserver is -1\n");
-	    return -1;
-	}
-#endif /* AFS_PTHREAD_ENV */
 	if (offline_shutdown_timeout < -1) {
 	    printf("Invalid -offline-timeout value %d; the only valid "
 		   "negative value is -1\n", offline_shutdown_timeout);
@@ -1520,9 +1445,7 @@ InitPR(void)
 	return code;
     }
 
-#ifdef AFS_PTHREAD_ENV
     osi_Assert(pthread_key_create(&viced_uclient_key, NULL) == 0);
-#endif
 
     SystemId = SYSADMINID;
     SystemAnyUser = ANYUSERID;
@@ -1548,11 +1471,7 @@ InitPR(void)
 	AnonymousID = ANONYMOUSID;
 	return 0;
       sleep:
-#ifdef AFS_PTHREAD_ENV
 	sleep(30);
-#else /* AFS_PTHREAD_ENV */
-	IOMGR_Sleep(30);
-#endif /* AFS_PTHREAD_ENV */
     }
 }				/*InitPR */
 
@@ -1866,12 +1785,8 @@ main(int argc, char *argv[])
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
     struct rx_service *tservice;
-#ifdef AFS_PTHREAD_ENV
     pthread_t serverPid;
     pthread_attr_t tattr;
-#else /* AFS_PTHREAD_ENV */
-    PROCESS parentPid, serverPid;
-#endif /* AFS_PTHREAD_ENV */
     struct hostent *he;
     int minVnodesRequired;	/* min size of vnode cache */
 #ifndef AFS_NT40_ENV
@@ -1912,9 +1827,7 @@ main(int argc, char *argv[])
     if (ParseArgs(argc, argv)) {
 	exit(-1);
     }
-#ifdef AFS_PTHREAD_ENV
     MUTEX_INIT(&fileproc_glock_mutex, "fileproc", MUTEX_DEFAULT, 0);
-#endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -1939,7 +1852,7 @@ main(int argc, char *argv[])
 
     LogCommandLine(argc, argv, "starting", "", "File server", FSLog);
 
-#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_NT40_ENV)
     /* initialize the pthread soft signal handler thread */
     softsig_init();
 #endif
@@ -2008,19 +1921,13 @@ main(int argc, char *argv[])
 		("The system supports a max of %d open files and we are starting %d threads (ihandle fd cache is %d)\n",
 		 curLimit, lwps, vol_io_params.fd_max_cachesize));
     }
-#ifndef AFS_PTHREAD_ENV
-    osi_Assert(LWP_InitializeProcessSupport(LWP_MAX_PRIORITY - 2, &parentPid) ==
-	   LWP_SUCCESS);
-#endif /* !AFS_PTHREAD_ENV */
 
     /* Initialize volume support */
     if (!novbc) {
 	V_BreakVolumeCallbacks = BreakVolumeCallBacksLater;
     }
 
-#ifdef AFS_PTHREAD_ENV
     SetLogThreadNumProgram( rx_GetThreadNum );
-#endif
 
     /* initialize libacl routines */
     acl_Initialize(ACL_VERSION);
@@ -2202,7 +2109,7 @@ main(int argc, char *argv[])
     /* Install handler to catch the shutdown signal;
      * bosserver assumes SIGQUIT shutdown
      */
-#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_NT40_ENV)
     softsig_signal(SIGQUIT, ShutDown_Signal);
 #else
     (void)signal(SIGQUIT, ShutDown_Signal);
@@ -2231,7 +2138,6 @@ main(int argc, char *argv[])
      */
     ih_UseLargeCache();
 
-#ifdef AFS_PTHREAD_ENV
     ViceLog(5, ("Starting pthreads\n"));
     osi_Assert(pthread_attr_init(&tattr) == 0);
     osi_Assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
@@ -2243,20 +2149,6 @@ main(int argc, char *argv[])
 	   (&serverPid, &tattr, HostCheckLWP, &fiveminutes) == 0);
     osi_Assert(pthread_create
 	   (&serverPid, &tattr, FsyncCheckLWP, &fiveminutes) == 0);
-#else /* AFS_PTHREAD_ENV */
-    ViceLog(5, ("Starting LWP\n"));
-    osi_Assert(LWP_CreateProcess
-	   (FiveMinuteCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "FiveMinuteChecks",
-	    &serverPid) == LWP_SUCCESS);
-
-    osi_Assert(LWP_CreateProcess
-	   (HostCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
-    osi_Assert(LWP_CreateProcess
-	   (FsyncCheckLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
-	    (void *)&fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
-#endif /* AFS_PTHREAD_ENV */
 
     FT_GetTimeOfDay(&tp, 0);
 
@@ -2289,12 +2181,8 @@ main(int argc, char *argv[])
 	     localtime_r(&t, &tm));
     ViceLog(0, ("File Server started %s\n", tbuffer));
     afs_FullPerfStats.det.epoch.tv_sec = StartTime = tp.tv_sec;
-#ifdef AFS_PTHREAD_ENV
     while (1) {
 	sleep(1000);		/* long time */
     }
-#else /* AFS_PTHREAD_ENV */
-    osi_Assert(LWP_WaitProcess(&parentPid) == LWP_SUCCESS);
-#endif /* AFS_PTHREAD_ENV */
     return 0;
 }

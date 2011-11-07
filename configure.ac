@@ -229,7 +229,6 @@ src/tests/Makefile \
 src/tests/run-tests \
 src/tsalvaged/Makefile \
 src/tsm41/Makefile \
-src/tviced/Makefile \
 src/tvolser/Makefile \
 src/ubik/Makefile \
 src/tubik/Makefile \

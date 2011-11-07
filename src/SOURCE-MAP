@@ -267,10 +267,6 @@ Tivoli storage manager support for the backup system.
 
 Pthreaded ubik build dir.
 
- -- tviced
-
-Pthreaded version of the fileserver.
-
  -- tvlsever
 
 Pthreaded vlserver build dir.

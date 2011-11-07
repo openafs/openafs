@@ -107,7 +107,7 @@
 #include "host.h"
 #include "callback.h"
 #ifdef AFS_DEMAND_ATTACH_FS
-#include "../tviced/serialize_state.h"
+#include "serialize_state.h"
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 
@@ -1187,11 +1187,7 @@ MultiBreakVolumeLaterCallBack(struct host *host, void *rock)
  * Now uses multi-RX for CallBack RPC in a different thread,
  * only marking them here.
  */
-#ifdef AFS_PTHREAD_ENV
 extern pthread_cond_t fsync_cond;
-#else
-extern char fsync_wait[];
-#endif
 
 int
 BreakVolumeCallBacksLater(afs_uint32 volume)
@@ -1230,13 +1226,9 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
     }
 
     ViceLog(25, ("Fsync thread wakeup\n"));
-#ifdef AFS_PTHREAD_ENV
     FSYNC_LOCK;
     CV_BROADCAST(&fsync_cond);
     FSYNC_UNLOCK;
-#else
-    LWP_NoYieldSignal(fsync_wait);
-#endif
     return 0;
 }
 

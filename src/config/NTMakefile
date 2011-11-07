@@ -211,9 +211,6 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\tbutc))
 		$(MKDIR) $(OJT)\tbutc
 !	ENDIF
-!	IF (!EXIST($(OJT)\tviced))
-		$(MKDIR) $(OJT)\tviced
-!	ENDIF
 !	IF (!EXIST($(OJT)\tvolser))
 		$(MKDIR) $(OJT)\tvolser
 !	ENDIF

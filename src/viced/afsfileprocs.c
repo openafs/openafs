@@ -107,9 +107,7 @@ extern void SetDirHandle(DirHandle * dir, Vnode * vnode);
 extern void FidZap(DirHandle * file);
 extern void FidZero(DirHandle * file);
 
-#ifdef AFS_PTHREAD_ENV
 pthread_mutex_t fileproc_glock_mutex;
-#endif /* AFS_PTHREAD_ENV */
 
 /* Useful local defines used by this module */
 
@@ -334,9 +332,7 @@ CallPreamble(struct rx_call *acall, int activecall,
     int retry_flag = 1;
     int code = 0;
     char hoststr[16], hoststr2[16];
-#ifdef AFS_PTHREAD_ENV
     struct ubik_client *uclient;
-#endif
     *ahostp = NULL;
 
     if (!tconn) {
@@ -367,7 +363,6 @@ CallPreamble(struct rx_call *acall, int activecall,
 	/* Take down the old connection and re-read the key file */
 	ViceLog(0,
 		("CallPreamble: Couldn't get CPS. Reconnect to ptserver\n"));
-#ifdef AFS_PTHREAD_ENV
 	uclient = (struct ubik_client *)pthread_getspecific(viced_uclient_key);
 
 	/* Is it still necessary to drop this? We hit the net, we should... */
@@ -381,9 +376,7 @@ CallPreamble(struct rx_call *acall, int activecall,
 	if (!code)
 	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
 	H_LOCK;
-#else
-	code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
-#endif
+
 	if (code) {
 	    h_ReleaseClient_r(tclient);
 	    h_Release_r(thost);
@@ -523,12 +516,8 @@ CheckVnodeWithCall(AFSFid * fid, Volume ** volptr, struct VCallByVol *cbv,
 		VRESTARTING
 #endif
 		;
-#ifdef AFS_PTHREAD_ENV
 	    static const struct timespec timeout_ts = { 0, 0 };
 	    static const struct timespec * const ts = &timeout_ts;
-#else
-	    static const struct timespec * const ts = NULL;
-#endif
 
 	    errorCode = 0;
 	    *volptr = VGetVolumeWithCall(&local_errorCode, &errorCode,
@@ -732,9 +721,6 @@ GetRights(struct client *client, struct acl_accessList *ACL,
 {
     extern prlist SystemAnyUserCPS;
     afs_int32 hrights = 0;
-#ifndef AFS_PTHREAD_ENV
-    int code;
-#endif
 
     if (acl_CheckRights(ACL, &SystemAnyUserCPS, anyrights) != 0) {
 	ViceLog(0, ("CheckRights failed\n"));
@@ -748,13 +734,7 @@ GetRights(struct client *client, struct acl_accessList *ACL,
     H_LOCK;
     while (client->host->hostFlags & HCPS_INPROGRESS) {
 	client->host->hostFlags |= HCPS_WAITING;	/* I am waiting */
-#ifdef AFS_PTHREAD_ENV
 	CV_WAIT(&client->host->cond, &host_glock_mutex);
-#else /* AFS_PTHREAD_ENV */
-	if ((code =
-	     LWP_WaitProcess(&(client->host->hostFlags))) != LWP_SUCCESS)
-	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
-#endif /* AFS_PTHREAD_ENV */
     }
 
     if (!client->host->hcps.prlist_len || !client->host->hcps.prlist_val) {
@@ -1380,9 +1360,6 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 		return EIO;
 	    }
 	}
-#ifndef AFS_PTHREAD_ENV
-	IOMGR_Poll();
-#endif /* !AFS_PTHREAD_ENV */
     }
     FDH_REALLYCLOSE(targFdP);
     rc = IH_DEC(V_linkHandle(volptr), VN_GET_INO(targetptr),

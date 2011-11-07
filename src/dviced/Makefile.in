@@ -17,7 +17,6 @@ MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_SERVER \
 
 RX=$(srcdir)/../rx
 VICED=$(srcdir)/../viced
-TVICED=$(srcdir)/../tviced
 VLSERVER=$(srcdir)/../vlserver
 LWP=$(srcdir)/../lwp
 LIBACL=$(srcdir)/../libacl
@@ -83,8 +82,8 @@ callback.o: ${VICED}/callback.c
 fsstats.o: ${VICED}/fsstats.c
 	$(AFS_CCRULE) $(VICED)/fsstats.c
 
-serialize_state.o: ${TVICED}/serialize_state.c
-	$(AFS_CCRULE) $(TVICED)/serialize_state.c
+serialize_state.o: ${VICED}/serialize_state.c
+	$(AFS_CCRULE) $(VICED)/serialize_state.c
 
 uuid.o: ${UTIL}/uuid.c
 	$(AFS_CCRULE) $(UTIL)/uuid.c
@@ -211,8 +210,8 @@ afsint.ss.o: ../fsint/afsint.ss.c
 afsint.xdr.o: ../fsint/afsint.xdr.c
 	$(AFS_CCRULE) ../fsint/afsint.xdr.c
 
-state_analyzer.o: ${TVICED}/state_analyzer.c
-	$(AFS_CCRULE) $(TVICED)/state_analyzer.c
+state_analyzer.o: ${VICED}/state_analyzer.c
+	$(AFS_CCRULE) $(VICED)/state_analyzer.c
 
 dafileserver: ${objects} ${LIBS}
 	$(AFS_LDRULE) ${objects} \

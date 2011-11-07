@@ -50,12 +50,10 @@
 #include "callback.h"
 #ifdef AFS_DEMAND_ATTACH_FS
 #include "../util/afsutil_prototypes.h"
-#include "../tviced/serialize_state.h"
+#include "serialize_state.h"
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-#ifdef AFS_PTHREAD_ENV
 pthread_mutex_t host_glock_mutex;
-#endif /* AFS_PTHREAD_ENV */
 
 extern int Console;
 extern int CurrentConnections;
@@ -208,10 +206,8 @@ GetHTBlock(void)
 	ViceLog(0, ("Failed malloc in GetHTBlock\n"));
 	ShutDownAndCore(PANIC);
     }
-#ifdef AFS_PTHREAD_ENV
     for (i = 0; i < (h_HTSPERBLOCK); i++)
 	CV_INIT(&block->entry[i].cond, "block entry", CV_DEFAULT, 0);
-#endif /* AFS_PTHREAD_ENV */
     for (i = 0; i < (h_HTSPERBLOCK); i++)
 	Lock_Init(&block->entry[i].lock);
     for (i = 0; i < (h_HTSPERBLOCK - 1); i++)
@@ -340,7 +336,6 @@ hpr_End(struct ubik_client *uclient)
 int
 hpr_GetHostCPS(afs_int32 host, prlist *CPS)
 {
-#ifdef AFS_PTHREAD_ENV
     afs_int32 code;
     afs_int32 over;
     struct ubik_client *uclient =
@@ -366,15 +361,11 @@ hpr_GetHostCPS(afs_int32 host, prlist *CPS)
                 host);
     }
     return 0;
-#else
-    return pr_GetHostCPS(host, CPS);
-#endif
 }
 
 int
 hpr_NameToId(namelist *names, idlist *ids)
 {
-#ifdef AFS_PTHREAD_ENV
     afs_int32 code;
     afs_int32 i;
     struct ubik_client *uclient =
@@ -392,15 +383,11 @@ hpr_NameToId(namelist *names, idlist *ids)
         stolower(names->namelist_val[i]);
     code = ubik_PR_NameToID(uclient, 0, names, ids);
     return code;
-#else
-    return pr_NameToId(names, ids);
-#endif
 }
 
 int
 hpr_IdToName(idlist *ids, namelist *names)
 {
-#ifdef AFS_PTHREAD_ENV
     afs_int32 code;
     struct ubik_client *uclient =
 	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
@@ -415,15 +402,11 @@ hpr_IdToName(idlist *ids, namelist *names)
 
     code = ubik_PR_IDToName(uclient, 0, ids, names);
     return code;
-#else
-    return pr_IdToName(ids, names);
-#endif
 }
 
 int
 hpr_GetCPS(afs_int32 id, prlist *CPS)
 {
-#ifdef AFS_PTHREAD_ENV
     afs_int32 code;
     afs_int32 over;
     struct ubik_client *uclient =
@@ -448,9 +431,6 @@ hpr_GetCPS(afs_int32 id, prlist *CPS)
                 id);
     }
     return 0;
-#else
-    return pr_GetCPS(id, CPS);
-#endif
 }
 
 static short consolePort = 0;
@@ -580,12 +560,7 @@ h_gethostcps_r(struct host *host, afs_int32 now)
     while (host->hostFlags & HCPS_INPROGRESS) {
 	slept = 1;		/* I did sleep */
 	host->hostFlags |= HCPS_WAITING;	/* I am sleeping now */
-#ifdef AFS_PTHREAD_ENV
 	CV_WAIT(&host->cond, &host_glock_mutex);
-#else /* AFS_PTHREAD_ENV */
-	if ((code = LWP_WaitProcess(&(host->hostFlags))) != LWP_SUCCESS)
-	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
-#endif /* AFS_PTHREAD_ENV */
     }
 
 
@@ -641,12 +616,7 @@ h_gethostcps_r(struct host *host, afs_int32 now)
     /* signal all who are waiting */
     if (host->hostFlags & HCPS_WAITING) {	/* somebody is waiting */
 	host->hostFlags &= ~HCPS_WAITING;
-#ifdef AFS_PTHREAD_ENV
 	CV_BROADCAST(&host->cond);
-#else /* AFS_PTHREAD_ENV */
-	if ((code = LWP_NoYieldSignal(&(host->hostFlags))) != LWP_SUCCESS)
-	    ViceLog(0, ("LWP_NoYieldSignal returns %d\n", code));
-#endif /* AFS_PTHREAD_ENV */
     }
 }
 

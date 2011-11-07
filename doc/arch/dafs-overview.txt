@@ -245,7 +245,7 @@ the reader count.
 
  - viced state serialization
 
-See src/tviced/serialize_state.* and ShutDownAndCore in
+See src/viced/serialize_state.* and ShutDownAndCore in
 src/viced/viced.c
 
 Before DAFS, whenever a fileserver restarted, it lost all information

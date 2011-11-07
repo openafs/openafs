@@ -410,14 +410,7 @@ volser: vol
 	$(NTMAKE)
 	$(CD) ..\..
 
-viced: volser
-     @echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-update: viced
+update: volser
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -466,14 +459,14 @@ libafsauthent: bu_utils
 	$(NTMAKE)
 	$(CD) ..\..
 
-tviced: libafsauthent
+viced: libafsauthent
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
-tvolser: tviced
+tvolser: viced
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

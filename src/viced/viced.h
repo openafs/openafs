@@ -193,7 +193,6 @@ extern int saneacls;
 #define MAX_FILESERVER_THREAD 16384 /* max number of threads in fileserver */
 #define FILESERVER_HELPER_THREADS 8 /* Listner, IOMGR, FiveMinute, FsyncCk
 					 * HostCheck, Signal, min 2 for RXSTATS */
-#ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 extern pthread_mutex_t fileproc_glock_mutex;
 #define FS_LOCK MUTEX_ENTER(&fileproc_glock_mutex);
@@ -201,12 +200,6 @@ extern pthread_mutex_t fileproc_glock_mutex;
 extern pthread_mutex_t fsync_glock_mutex;
 #define FSYNC_LOCK MUTEX_ENTER(&fsync_glock_mutex);
 #define FSYNC_UNLOCK MUTEX_EXIT(&fsync_glock_mutex);
-#else /* AFS_PTHREAD_ENV */
-#define FS_LOCK
-#define FS_UNLOCK
-#define FSYNC_LOCK
-#define FSYNC_UNLOCK
-#endif /* AFS_PTHREAD_ENV */
 
 
 #ifdef AFS_DEMAND_ATTACH_FS

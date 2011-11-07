@@ -14,7 +14,6 @@
 
 #include "fs_stats.h"		/*File Server stats package */
 
-#ifdef AFS_PTHREAD_ENV
 /*
  * There are three locks in the host package.
  * the global hash lock protects hash chains.
@@ -28,10 +27,6 @@ extern pthread_mutex_t host_glock_mutex;
 #define H_LOCK MUTEX_ENTER(&host_glock_mutex);
 #define H_UNLOCK MUTEX_EXIT(&host_glock_mutex);
 extern pthread_key_t viced_uclient_key;
-#else /* AFS_PTHREAD_ENV */
-#define H_LOCK
-#define H_UNLOCK
-#endif /* AFS_PTHREAD_ENV */
 
 #define h_MAXHOSTTABLEENTRIES 1000
 #define h_HASHENTRIES 256	/* Power of 2 */
@@ -87,9 +82,7 @@ struct host {
     afs_uint32 index;		/* Host table index, for vicecb.c */
     struct Lock lock;		/* Write lock for synchronization of
 				 * VenusDown flag */
-#ifdef AFS_PTHREAD_ENV
     pthread_cond_t cond;	/* used to wait on hcpsValid */
-#endif				/* AFS_PTHREAD_ENV */
 };
 
 /* * Don't zero the index, lock or condition varialbles */
