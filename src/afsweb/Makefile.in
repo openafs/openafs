@@ -186,7 +186,8 @@ OBJS=$(LIBOBJS) apache_afs_weblog.o weblog.o
 
 .c.o:
 	$(CCOBJ) -c $(XCFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
-
+%.o: %.c
+	$(CCOBJ) -c $(XCFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
 
 weblog: weblog.o $(APACHE_AFS_COMMON_LIB)
 	$(CC) -o $@ weblog.o $(APACHE_AFS_COMMON_LIB) $(LIBS) $(XLIBS)
