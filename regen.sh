@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 while getopts "q" flag
 do
@@ -36,7 +36,7 @@ autoheader
 #automake
 
 echo "Deleting autom4te.cache directory"
-rm -r autom4te.cache
+rm -rf autom4te.cache
 
 if [ $skipman ] ; then
     echo "Skipping man page build"
