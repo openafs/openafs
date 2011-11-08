@@ -4,7 +4,8 @@ AFS_CCRULE =$(LWP_CCRULE)
 
 .c.o:
 	$(AFS_CCRULE) $<
-
+%.o: %.c
+	$(AFS_CCRULE) $<
 .m.o:
 	$(AFS_CCRULE) $<
 
