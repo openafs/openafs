@@ -1226,6 +1226,8 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
     vol.cloneId = cookie->clone;
     vol.parentId = cookie->parent;
 
+    V_needsSalvaged(vp) = 0;
+
     tdelo = delo;
     while (1) {
 	if (ReadVnodes(iodp, vp, 0, b1, s1, b2, s2, tdelo)) {
@@ -1267,6 +1269,11 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 
   clean:
     ClearVolumeStats(&vol);
+    if (V_needsSalvaged(vp)) {
+	/* needsSalvaged may have been set while we tried to write volume data.
+	 * prevent it from getting overwritten. */
+	vol.needsSalvaged = V_needsSalvaged(vp);
+    }
     CopyVolumeHeader(&vol, &V_disk(vp));
     V_destroyMe(vp) = 0;
     VUpdateVolume(&vupdate, vp);
