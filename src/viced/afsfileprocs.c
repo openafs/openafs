@@ -3767,6 +3767,9 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	ViceLog(25, ("Rename : calling CopyOnWrite on  target dir\n"));
 	if ((errorCode = CopyOnWrite(fileptr, volptr, 0, MAXFSIZE)))
 	    goto Bad_Rename;
+	/* since copyonwrite would mean fileptr has a new handle, do it here */
+	FidZap(&filedir);
+	SetDirHandle(&filedir, fileptr);
     }
 
     /* If the new name exists already, delete it and the file it points to */
