@@ -608,6 +608,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 // For now deny access on this call
                 //
 
+                ntStatus = STATUS_INVALID_PARAMETER;
+
                 break;
             }
 
