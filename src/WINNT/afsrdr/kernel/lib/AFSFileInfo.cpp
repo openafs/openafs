@@ -807,6 +807,15 @@ AFSQueryBasicInfo( IN PIRP Irp,
                               TRUE);
         }
 
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSQueryBasicInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
+                      &pCcb->DirectoryCB->NameInformation.FileName,
+                      pCcb->DirectoryCB->ObjectInformation->FileType,
+                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      ulFileAttribs);
+
         Buffer->CreationTime = DirectoryCB->ObjectInformation->CreationTime;
         Buffer->LastAccessTime = DirectoryCB->ObjectInformation->LastAccessTime;
         Buffer->LastWriteTime = DirectoryCB->ObjectInformation->LastWriteTime;
@@ -901,6 +910,14 @@ AFSQueryStandardInfo( IN PIRP Irp,
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSQueryStandardInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
+                      &pCcb->DirectoryCB->NameInformation.FileName,
+                      pCcb->DirectoryCB->ObjectInformation->FileType,
+                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      ulFileAttribs);
 
         Buffer->Directory = BooleanFlagOn( ulFileAttribs, FILE_ATTRIBUTE_DIRECTORY);
 
@@ -1378,6 +1395,14 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                               TRUE);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSQueryNetworkInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
+                      &pCcb->DirectoryCB->NameInformation.FileName,
+                      pCcb->DirectoryCB->ObjectInformation->FileType,
+                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      ulFileAttribs);
+
         Buffer->CreationTime.QuadPart = DirectoryCB->ObjectInformation->CreationTime.QuadPart;
         Buffer->LastAccessTime.QuadPart = DirectoryCB->ObjectInformation->LastAccessTime.QuadPart;
         Buffer->LastWriteTime.QuadPart = DirectoryCB->ObjectInformation->LastWriteTime.QuadPart;
@@ -1545,6 +1570,14 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSAttribTagInfo %wZ Type 0x%x Attrib 0x%x -> 0x%x\n",
+                      &pCcb->DirectoryCB->NameInformation.FileName,
+                      pCcb->DirectoryCB->ObjectInformation->FileType,
+                      pCcb->DirectoryCB->ObjectInformation->FileAttributes,
+                      ulFileAttribs);
 
         Buffer->FileAttributes = ulFileAttribs;
 

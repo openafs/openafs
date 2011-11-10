@@ -299,7 +299,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              pCcb->DirectoryCB->ObjectInformation->FileType,
+                              pCcb->DirectoryCB->ObjectInformation->FileAttributes);
 
                 //
                 // Check if we have the reparse entry set on the entry
@@ -544,7 +547,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              pCcb->DirectoryCB->ObjectInformation->FileType,
+                              pCcb->DirectoryCB->ObjectInformation->FileAttributes);
 
                 //
                 // Check if we have the reparse entry set on the entry
@@ -598,7 +604,10 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_DELETE_REPARSE_POINT request\n");
+                              "AFSProcessUserFsRequest Processing FSCTL_DELETE_REPARSE_POINT request %wZ Type 0x%x Attrib 0x%x\n",
+                              &pCcb->DirectoryCB->NameInformation.FileName,
+                              pCcb->DirectoryCB->ObjectInformation->FileType,
+                              pCcb->DirectoryCB->ObjectInformation->FileAttributes);
 
                 //
                 // Check if we have the reparse entry set on the entry
