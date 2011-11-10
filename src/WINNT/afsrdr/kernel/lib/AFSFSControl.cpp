@@ -293,6 +293,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_IS_PATHNAME_VALID request\n");
 
+                ntStatus = STATUS_SUCCESS;
+
                 break;
             }
 
