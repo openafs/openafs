@@ -456,15 +456,17 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     if (bMustFake) {
         switch (scp->fileType) {
         case CM_SCACHETYPE_DIRECTORY:
+            pCurrentEntry->FileAttributes = SMB_ATTR_DIRECTORY;
+            break;
         case CM_SCACHETYPE_MOUNTPOINT:
         case CM_SCACHETYPE_INVALID:
-            pCurrentEntry->FileAttributes = SMB_ATTR_DIRECTORY;
+            pCurrentEntry->FileAttributes = SMB_ATTR_DIRECTORY | SMB_ATTR_REPARSE_POINT;
             break;
         case CM_SCACHETYPE_SYMLINK:
             if (cm_TargetPerceivedAsDirectory(scp->mountPointStringp))
-                pCurrentEntry->FileAttributes = SMB_ATTR_DIRECTORY;
+                pCurrentEntry->FileAttributes = SMB_ATTR_DIRECTORY | SMB_ATTR_REPARSE_POINT;
             else
-                pCurrentEntry->FileAttributes = SMB_ATTR_NORMAL;
+                pCurrentEntry->FileAttributes = SMB_ATTR_REPARSE_POINT;
             break;
         default:
             /* if we get here we either have a normal file
