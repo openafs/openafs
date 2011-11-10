@@ -1120,6 +1120,11 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
                 pDirEntry = ObjectInfo->Specific.Directory.PIOCtlDirectoryCB;
 
+                if( pDirEntry != NULL)
+                {
+                    InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                }
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNextDirEntry Returning PIOctl entry %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
@@ -1146,6 +1151,11 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
             pDirEntry = AFSGlobalDotDirEntry;
 
+            if( pDirEntry != NULL)
+            {
+                InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+            }
+
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSLocateNextDirEntry Returning1 snapshot entry %wZ in parent FID %08lX-%08lX-%08lX-%08lX\n",
@@ -1163,6 +1173,11 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
             //
 
             pDirEntry = AFSGlobalDotDotDirEntry;
+
+            if( pDirEntry != NULL)
+            {
+                InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+            }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
