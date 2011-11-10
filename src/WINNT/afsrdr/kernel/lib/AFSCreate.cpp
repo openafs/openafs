@@ -648,21 +648,29 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        if ( BooleanFlagOn( ulOptions, FILE_OPEN_REPARSE_POINT) &&
-             pDirectoryCB != NULL)
+        if ( BooleanFlagOn( ulOptions, FILE_OPEN_REPARSE_POINT))
         {
 
-            if( !BooleanFlagOn( pDirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
+            if( pDirectoryCB == NULL ||
+                !BooleanFlagOn( pDirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
             {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate (%08lX) Reparse open request but attribute not set for %wZ Type %08lX\n",
+                              "AFSCommonCreate (%08lX) Reparse open request but attribute not set for %wZ DirCB %p Type %08lX\n",
                               Irp,
                               &uniFileName,
-                              pDirectoryCB->ObjectInformation->FileType);
+                              pDirectoryCB,
+                              pDirectoryCB ? pDirectoryCB->ObjectInformation->FileType : 0);
             }
             else
             {
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCommonCreate (%08lX) Opening as reparse point %wZ Type %08lX\n",
+                              Irp,
+                              &uniFileName,
+                              pDirectoryCB->ObjectInformation->FileType);
+
                 bOpenedReparsePoint = TRUE;
             }
         }
@@ -1459,7 +1467,7 @@ AFSOpenRoot( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSOpenRoot (%08lX) Failed to open file in service Status %08lX\n",
+                          "AFSOpenRoot (%08lX) Failed open in service AFSRoot Status %08lX\n",
                           Irp,
                           ntStatus);
 
