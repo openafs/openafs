@@ -1006,6 +1006,11 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 		/* Try to remove directory. If it fails, that's ok.
 		 * Salvage will clean up.
 		 */
+		char *slash = strrchr(name.n_path, OS_DIRSEPC);
+		if (slash) {
+		    /* avoid an rmdir() on the file we just unlinked */
+		    *slash = '\0';
+		}
 		(void)namei_RemoveDataDirectories(&name);
 	    }
 	}
