@@ -761,6 +761,12 @@ AFSQueryRemoteProtocolInfo( IN PIRP Irp,
                             IN OUT PLONG Length);
 
 NTSTATUS
+AFSQueryPhysicalNameInfo( IN PIRP Irp,
+                          IN AFSDirectoryCB *DirectoryCB,
+                          IN OUT PFILE_NETWORK_PHYSICAL_NAME_INFORMATION Buffer,
+                          IN OUT PLONG Length);
+
+NTSTATUS
 AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp);
 

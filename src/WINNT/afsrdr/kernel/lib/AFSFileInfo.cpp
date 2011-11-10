@@ -383,11 +383,22 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                 break;
             }
 
-        default:
+            case FileNetworkPhysicalNameInformation:
+            {
 
-                ntStatus = STATUS_INVALID_PARAMETER;
+                ntStatus = AFSQueryPhysicalNameInfo( Irp,
+                                                     pCcb->DirectoryCB,
+                                                     (FILE_NETWORK_PHYSICAL_NAME_INFORMATION *)pBuffer,
+                                                     &lLength);
 
                 break;
+            }
+
+            default:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+                break;
+            }
         }
 
 try_exit:
@@ -1598,6 +1609,105 @@ AFSQueryRemoteProtocolInfo( IN PIRP Irp,
         *Length -= sizeof( FILE_REMOTE_PROTOCOL_INFORMATION);
 
         ntStatus = STATUS_SUCCESS;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueryPhysicalNameInfo( IN PIRP Irp,
+                          IN AFSDirectoryCB *DirectoryCB,
+                          IN OUT PFILE_NETWORK_PHYSICAL_NAME_INFORMATION Buffer,
+                          IN OUT PLONG Length)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    ULONG ulCopyLength = 0;
+    ULONG cchCopied = 0;
+    AFSFcb *pFcb = NULL;
+    AFSCcb *pCcb = NULL;
+    IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    BOOLEAN bAddLeadingSlash = FALSE;
+    USHORT usFullNameLength = 0;
+
+    pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
+
+    pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
+    if( *Length >= FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName))
+    {
+
+        RtlZeroMemory( Buffer,
+                       *Length);
+
+        if( pCcb->FullFileName.Length == 0 ||
+            pCcb->FullFileName.Buffer[ 0] != L'\\')
+        {
+            bAddLeadingSlash = TRUE;
+        }
+
+        usFullNameLength = pCcb->FullFileName.Length;
+
+        if( bAddLeadingSlash)
+        {
+            usFullNameLength += sizeof( WCHAR);
+        }
+
+        if( *Length >= (LONG)(FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName) + (LONG)usFullNameLength))
+        {
+            ulCopyLength = (LONG)usFullNameLength;
+        }
+        else
+        {
+
+            ulCopyLength = *Length - FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName);
+
+            ntStatus = STATUS_BUFFER_OVERFLOW;
+        }
+
+        Buffer->FileNameLength = (ULONG)usFullNameLength;
+
+        *Length -= FIELD_OFFSET( FILE_NETWORK_PHYSICAL_NAME_INFORMATION, FileName);
+
+        if( ulCopyLength > 0)
+        {
+
+            if( bAddLeadingSlash)
+            {
+
+                Buffer->FileName[ cchCopied] = L'\\';
+
+                ulCopyLength -= sizeof( WCHAR);
+                *Length -= sizeof( WCHAR);
+                cchCopied++;
+            }
+
+            if( ulCopyLength >= pCcb->FullFileName.Length)
+            {
+
+                RtlCopyMemory( &Buffer->FileName[ cchCopied],
+                               pCcb->FullFileName.Buffer,
+                               pCcb->FullFileName.Length);
+
+                ulCopyLength -= pCcb->FullFileName.Length;
+                *Length -= pCcb->FullFileName.Length;
+                cchCopied += pCcb->FullFileName.Length/sizeof( WCHAR);
+            }
+            else
+            {
+
+                RtlCopyMemory( &Buffer->FileName[ cchCopied],
+                               pCcb->FullFileName.Buffer,
+                               ulCopyLength);
+
+                *Length -= ulCopyLength;
+            }
+        }
+    }
+    else
+    {
+
+        ntStatus = STATUS_BUFFER_TOO_SMALL;
     }
 
     return ntStatus;
