@@ -581,7 +581,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 if( ulInputBufferLen < FIELD_OFFSET( REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer.DataBuffer))
                 {
 
-                    ntStatus = STATUS_INVALID_PARAMETER;
+                    ntStatus = STATUS_IO_REPARSE_DATA_INVALID;
 
                     break;
                 }
