@@ -226,6 +226,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_LOCK_VOLUME request\n");
 
+                ntStatus = STATUS_NOT_IMPLEMENTED;
+
                 break;
 
             case FSCTL_UNLOCK_VOLUME:
@@ -233,6 +235,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_UNLOCK_VOLUME request\n");
+
+                ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
 
@@ -242,6 +246,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_DISMOUNT_VOLUME request\n");
 
+                ntStatus = STATUS_NOT_IMPLEMENTED;
+
                 break;
 
             case FSCTL_MARK_VOLUME_DIRTY:
@@ -249,6 +255,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_MARK_VOLUME_DIRTY request\n");
+
+                ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
 
@@ -258,6 +266,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_DIRTY request\n");
 
+                ntStatus = STATUS_NOT_IMPLEMENTED;
+
                 break;
 
             case FSCTL_IS_VOLUME_MOUNTED:
@@ -265,6 +275,8 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_MOUNTED request\n");
+
+                ntStatus = STATUS_NOT_IMPLEMENTED;
 
                 break;
 
