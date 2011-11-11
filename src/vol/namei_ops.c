@@ -1422,6 +1422,9 @@ namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrite
     }
 
     rc = FDH_PREAD(h, (char*)&row, sizeof(row), offset);
+    if (rc == -1)
+	goto bad_getLinkByte;
+
     if ((rc == 0 || !((row >> index) & NAMEI_TAGMASK)) && fixup && nowrite)
         return 1;
     if (rc == 0 && fixup) {
