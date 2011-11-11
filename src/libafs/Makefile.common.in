@@ -19,6 +19,7 @@ TOP_SRC_AFS = ${TOP_SRCDIR}/afs
 TOP_SRC_RXSTAT = ${TOP_SRCDIR}/rxstat
 TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
 TOP_SRC_RX = ${TOP_SRCDIR}/rx
+TOP_SRC_OPR = $(TOP_SRCDIR)/opr
 TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
 TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
 
@@ -150,6 +151,7 @@ AFSAOBJS = \
 	rx_packet.o	\
 	rx_multi.o	\
 	rx_stats.o	\
+	opr_rbtree.o	\
 	xdr_rx.o	\
 	xdr_mem.o	\
 	xdr_len.o	\
@@ -242,6 +244,7 @@ AFSPAGOBJS = \
 	rx_packet.o	\
 	rx_multi.o	\
 	rx_stats.o	\
+	opr_rbtree.o	\
 	xdr_rx.o	\
 	xdr_mem.o	\
 	xdr_len.o	\
@@ -439,6 +442,9 @@ rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_packet.c
 rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_stats.c
+opr_rbtree.o: $(TOP_SRC_OPR)/rbtree.c
+	$(CRULE_OPT) $(TOP_SRC_OPR)/rbtree.c
+CFLAGS-opr-rbtree.o = -I$(TOP_INCDIR)/opr
 xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_rx.c
 Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
