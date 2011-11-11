@@ -63,7 +63,7 @@ struct {
  * to the replacement as appropriate.
  */
 
-static inline void
+static_inline void
 update_parent_ptr(struct opr_rbtree *head, struct opr_rbtree_node *old,
 		  struct opr_rbtree_node *replacement)
 {
@@ -159,14 +159,14 @@ opr_rbtree_prev(struct opr_rbtree_node *node)
     return parent;
 }
 
-static inline void
+static_inline void
 initnode(struct opr_rbtree_node *node)
 {
     node->left = node->right = node->parent = NULL;
     node->red = 1;
 }
 
-static inline void
+static_inline void
 rotateright(struct opr_rbtree *head, struct opr_rbtree_node *node)
 {
     struct opr_rbtree_node *left = node->left;
@@ -183,7 +183,7 @@ rotateright(struct opr_rbtree *head, struct opr_rbtree_node *node)
     node->parent = left;
 }
 
-static inline void
+static_inline void
 rotateleft(struct opr_rbtree *head, struct opr_rbtree_node *node)
 {
     struct opr_rbtree_node *right = node->right;
@@ -200,7 +200,7 @@ rotateleft(struct opr_rbtree *head, struct opr_rbtree_node *node)
     node->parent = right;
 }
 
-static inline void
+static_inline void
 swapnode(struct opr_rbtree_node **a, struct opr_rbtree_node **b)
 {
     struct opr_rbtree_node *tmp;
