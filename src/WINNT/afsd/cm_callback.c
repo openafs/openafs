@@ -1770,6 +1770,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         if (scp->dataVersion != cm_data.fakeDirVersion) {
             memset(&afsStatus, 0, sizeof(afsStatus));
             memset(&volSync, 0, sizeof(volSync));
+            InterlockedIncrement(&scp->activeRPCs);
 
             // Fetch the status info
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
@@ -1800,6 +1801,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         lock_ReleaseWrite(&scp->rw);
 
         /* now make the RPC */
+        InterlockedIncrement(&scp->activeRPCs);
         osi_Log4(afsd_logp, "CALL FetchStatus scp 0x%p vol %u vn %u uniq %u",
                  scp, sfid.volume, sfid.vnode, sfid.unique);
         do {
@@ -1828,6 +1830,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, NULL, 0);
+            InterlockedDecrement(&scp->activeRPCs);
         }
 
         /* if we got an error, return to caller */

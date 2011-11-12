@@ -1638,6 +1638,8 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     }
 
     /* make the RPC */
+    InterlockedIncrement(&dscp->activeRPCs);
+
     afsFid.Volume = dscp->fid.volume;
     afsFid.Vnode = dscp->fid.vnode;
     afsFid.Unique = dscp->fid.unique;
@@ -1669,12 +1671,15 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     cm_dnlcRemove(dscp, cnamep);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-    } else if (code == CM_ERROR_NOSUCHFILE) {
-	/* windows would not have allowed the request to delete the file
-	 * if it did not believe the file existed.  therefore, we must
-	 * have an inconsistent view of the world.
-	 */
-	dscp->cbServerp = NULL;
+    } else {
+        InterlockedDecrement(&scp->activeRPCs);
+        if (code == CM_ERROR_NOSUCHFILE) {
+            /* windows would not have allowed the request to delete the file
+             * if it did not believe the file existed.  therefore, we must
+             * have an inconsistent view of the world.
+             */
+            dscp->cbServerp = NULL;
+        }
     }
     cm_SyncOpDone(dscp, NULL, sflags);
     lock_ReleaseWrite(&dscp->rw);
@@ -2509,6 +2514,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                                                &bbp->callbacks[j],
                                                &volSync,
                                                CM_CALLBACK_MAINTAINCOUNT);
+                    InterlockedIncrement(&scp->activeRPCs);
                     cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
                     lock_ReleaseWrite(&scp->rw);
                 } else {
@@ -2744,6 +2750,8 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     lock_ReleaseRead(&scp->rw);
 
     /* now make the RPC */
+    InterlockedIncrement(&scp->activeRPCs);
+
     osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%p", scp);
     do {
         code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
@@ -2768,6 +2776,8 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     if (code == 0)
         cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp, reqp,
                         CM_MERGEFLAG_FORCE|CM_MERGEFLAG_STOREDATA);
+    else
+        InterlockedDecrement(&scp->activeRPCs);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
 
     /* if we're changing the mode bits, discard the ACL cache,
@@ -2846,6 +2856,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
+    InterlockedIncrement(&dscp->activeRPCs);
     osi_Log1(afsd_logp, "CALL CreateFile scp 0x%p", dscp);
     do {
         code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
@@ -2879,6 +2890,8 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     lock_ObtainWrite(&dscp->rw);
     if (code == 0)
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+    else
+        InterlockedDecrement(&dscp->activeRPCs);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
@@ -2896,6 +2909,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
             if (!cm_HaveCallback(scp)) {
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                            &newFileCallback, &volSync, 0);
+                InterlockedIncrement(&scp->activeRPCs);
                 cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
                                userp, reqp, 0);
                 didEnd = 1;
@@ -3029,6 +3043,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
+    InterlockedIncrement(&dscp->activeRPCs);
     osi_Log1(afsd_logp, "CALL MakeDir scp 0x%p", dscp);
     do {
         code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
@@ -3062,6 +3077,8 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     lock_ObtainWrite(&dscp->rw);
     if (code == 0)
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+    else
+        InterlockedDecrement(&dscp->activeRPCs);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
@@ -3078,6 +3095,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
             if (!cm_HaveCallback(scp)) {
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &newDirCallback, &volSync, 0);
+                InterlockedIncrement(&scp->activeRPCs);
                 cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
                                 userp, reqp, 0);
                 didEnd = 1;
@@ -3150,6 +3168,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
 
     /* try the RPC now */
+    InterlockedIncrement(&dscp->activeRPCs);
     osi_Log1(afsd_logp, "CALL Link scp 0x%p", dscp);
     do {
         code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
@@ -3186,6 +3205,8 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+    } else {
+        InterlockedDecrement(&dscp->activeRPCs);
     }
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -3203,6 +3224,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     /* Update the linked object status */
     if (code == 0) {
         lock_ObtainWrite(&sscp->rw);
+        InterlockedIncrement(&sscp->activeRPCs);
         cm_MergeStatus(NULL, sscp, &newLinkStatus, &volSync, userp, reqp, 0);
         lock_ReleaseWrite(&sscp->rw);
     }
@@ -3258,6 +3280,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
+    InterlockedIncrement(&dscp->activeRPCs);
     osi_Log1(afsd_logp, "CALL Symlink scp 0x%p", dscp);
     do {
         code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
@@ -3290,6 +3313,8 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     lock_ObtainWrite(&dscp->rw);
     if (code == 0)
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+    else
+        InterlockedDecrement(&dscp->activeRPCs);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
@@ -3316,6 +3341,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
+                InterlockedIncrement(&scp->activeRPCs);
                 cm_MergeStatus(dscp, scp, &newLinkStatus, &volSync,
                                 userp, reqp, 0);
             }
@@ -3411,6 +3437,7 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     didEnd = 0;
 
     /* try the RPC now */
+    InterlockedIncrement(&dscp->activeRPCs);
     osi_Log1(afsd_logp, "CALL RemoveDir scp 0x%p", dscp);
     do {
         code = cm_ConnFromFID(&dscp->fid, userp, reqp, &connp);
@@ -3443,6 +3470,8 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     if (code == 0) {
         cm_dnlcRemove(dscp, cnamep);
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+    } else {
+        InterlockedDecrement(&dscp->activeRPCs);
     }
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
@@ -3737,6 +3766,9 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     newNamep = cm_ClientStringToFsStringAlloc(cNewNamep, -1, NULL);
 
     /* try the RPC now */
+    InterlockedIncrement(&oldDscp->activeRPCs);
+    if (!oneDir)
+        InterlockedIncrement(&newDscp->activeRPCs);
     osi_Log2(afsd_logp, "CALL Rename old scp 0x%p new scp 0x%p",
               oldDscp, newDscp);
     do {
@@ -3777,6 +3809,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     if (code == 0)
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
                        userp, reqp, CM_MERGEFLAG_DIROP);
+    else
+        InterlockedDecrement(&oldDscp->activeRPCs);
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&oldDscp->rw);
 
@@ -3817,6 +3851,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         if (code == 0)
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, reqp, CM_MERGEFLAG_DIROP);
+        else
+            InterlockedIncrement(&newDscp->activeRPCs);
         cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         lock_ReleaseWrite(&newDscp->rw);
 

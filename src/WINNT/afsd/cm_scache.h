@@ -223,6 +223,8 @@ typedef struct cm_scache {
                                        objects. Protected by
                                        cm_cacheLock. */
     osi_queue_t * waitQueueT;       /* locked by cm_scacheLock */
+
+    afs_uint32 activeRPCs;              /* atomic */
 } cm_scache_t;
 
 /* dataVersion */
