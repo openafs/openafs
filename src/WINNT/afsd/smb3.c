@@ -7826,6 +7826,18 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
      * by dscp, or we may have found the file directly.  If code is non-zero,
      * scp is NULL.
      */
+
+    /*
+     * open the file itself
+     * allocate the fidp early so the smb fid can be used by cm_CheckNTOpen()
+     */
+    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+    osi_assertx(fidp, "null smb_fid_t");
+
+    /* save a reference to the user */
+    cm_HoldUser(userp);
+    fidp->userp = userp;
+
     if (code == 0 && !treeCreate) {
         code = cm_CheckNTOpen(scp, desiredAccess, shareAccess, createDisp, 0, fidp->fid, userp, &req, &ldp);
         if (code) {
@@ -7835,6 +7847,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             if (scp)
                 cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
+	    smb_CloseFID(vcp, fidp, NULL, 0);
+	    smb_ReleaseFID(fidp);
             free(realPathp);
             return code;
         }
@@ -7848,6 +7862,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             if (scp)
                 cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
+	    smb_CloseFID(vcp, fidp, NULL, 0);
+	    smb_ReleaseFID(fidp);
             free(realPathp);
             return CM_ERROR_EXISTS;
         }
@@ -7882,6 +7898,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			if (scp)
 			    cm_ReleaseSCache(scp);
 			cm_ReleaseUser(userp);
+                        smb_CloseFID(vcp, fidp, NULL, 0);
+                        smb_ReleaseFID(fidp);
 			free(realPathp);
 			return code;
 		    }
@@ -7900,6 +7918,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if (scp)
             cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
         free(realPathp);
         return CM_ERROR_NOSUCHFILE;
     } else if (realDirFlag == 0 || realDirFlag == -1) {
@@ -8051,6 +8071,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if (dscp)
             cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
         free(realPathp);
         return code;
     }
@@ -8084,6 +8106,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
+	    smb_CloseFID(vcp, fidp, NULL, 0);
+	    smb_ReleaseFID(fidp);
             free(realPathp);
             return CM_ERROR_ISDIR;
         }
@@ -8097,17 +8121,11 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if (dscp)
             cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
         free(realPathp);
         return CM_ERROR_NOTDIR;
     }
-
-    /* open the file itself */
-    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-    osi_assertx(fidp, "null smb_fid_t");
-
-    /* save a reference to the user */
-    cm_HoldUser(userp);
-    fidp->userp = userp;
 
     /* If we are restricting sharing, we should do so with a suitable
        share lock. */
@@ -8146,7 +8164,6 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             if (dscp)
                 cm_ReleaseSCache(dscp);
 	    cm_ReleaseUser(userp);
-	    /* Shouldn't this be smb_CloseFID()?  fidp->flags = SMB_FID_DELETE; */
 	    smb_CloseFID(vcp, fidp, NULL, 0);
 	    smb_ReleaseFID(fidp);
             free(realPathp);
