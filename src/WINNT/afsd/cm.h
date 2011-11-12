@@ -56,21 +56,20 @@
 #define LOCK_HIERARCHY_SMB_UID                  90
 #define LOCK_HIERARCHY_SMB_RAWBUF              100
 #define LOCK_HIERARCHY_SMB_RCT_GLOBAL          110
-#define LOCK_HIERARCHY_SMB_USERNAME            115
 #define LOCK_HIERARCHY_SMB_VC                  120
 #define LOCK_HIERARCHY_SMB_MONITOR             125
 
 
-#define LOCK_HIERARCHY_DAEMON_GLOBAL           400
-
 #define LOCK_HIERARCHY_SCACHE_DIRLOCK          500
-#define LOCK_HIERARCHY_SCACHE_BUFCREATE        510
-#define LOCK_HIERARCHY_BUFFER                  530
-#define LOCK_HIERARCHY_SCACHE                  540
-#define LOCK_HIERARCHY_BUF_GLOBAL              550
-#define LOCK_HIERARCHY_VOLUME                  560
-#define LOCK_HIERARCHY_USER                    570
-#define LOCK_HIERARCHY_SCACHE_GLOBAL           580
+#define LOCK_HIERARCHY_DAEMON_GLOBAL           510
+#define LOCK_HIERARCHY_SMB_USERNAME            520
+#define LOCK_HIERARCHY_SCACHE_BUFCREATE        530
+#define LOCK_HIERARCHY_BUFFER                  540
+#define LOCK_HIERARCHY_SCACHE                  550
+#define LOCK_HIERARCHY_BUF_GLOBAL              560
+#define LOCK_HIERARCHY_VOLUME                  570
+#define LOCK_HIERARCHY_USER                    580
+#define LOCK_HIERARCHY_SCACHE_GLOBAL           590
 #define LOCK_HIERARCHY_CONN_GLOBAL             600
 #define LOCK_HIERARCHY_CELL                    620
 #define LOCK_HIERARCHY_CELL_GLOBAL             630
