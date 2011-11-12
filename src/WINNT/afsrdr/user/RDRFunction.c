@@ -3161,7 +3161,6 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         osi_Log1(afsd_logp, "RDR_RequestFileExtentsAsync cm_GetSCache FID failure code=0x%x",
                   code);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
-        RDR_SetFileStatus( &scp->fid, status);
         return FALSE;
     }
 
