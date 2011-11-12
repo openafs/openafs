@@ -235,6 +235,8 @@ typedef struct cm_scache {
     osi_queue_t * redirQueueT;
     afs_uint32    redirBufCount;    /* Number of buffers held by the redirector */
     time_t        redirLastAccess;  /* last time redir accessed the vnode */
+
+    afs_uint32 activeRPCs;              /* atomic */
 } cm_scache_t;
 
 /* dataVersion */

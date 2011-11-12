@@ -152,6 +152,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         require_64bit_ops = 1;
     }
 
+    InterlockedIncrement(&scp->activeRPCs);
     lock_ReleaseWrite(&scp->rw);
 
     /* now we're ready to do the store operation */
@@ -417,6 +418,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
         cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     } else {
+        InterlockedDecrement(&scp->activeRPCs);
         if (code == CM_ERROR_SPACE)
             _InterlockedOr(&scp->flags, CM_SCACHEFLAG_OUTOFSPACE);
         else if (code == CM_ERROR_QUOTA)
@@ -478,6 +480,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         require_64bit_ops = 1;
     }
 
+    InterlockedIncrement(&scp->activeRPCs);
     lock_ReleaseWrite(&scp->rw);
 
     cm_AFSFidFromFid(&tfid, &scp->fid);
@@ -570,6 +573,8 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             _InterlockedAnd(&scp->mask, ~CM_SCACHEMASK_LENGTH);
         cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
+    } else {
+        InterlockedDecrement(&scp->activeRPCs);
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
 
@@ -1702,6 +1707,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         return 0;
     }
 
+    InterlockedIncrement(&scp->activeRPCs);
     lock_ReleaseWrite(&scp->rw);
     scp_locked = 0;
 
@@ -2145,6 +2151,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
     if (code == 0)
         cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
+    else
+        InterlockedDecrement(&scp->activeRPCs);
 
     return code;
 }
@@ -2206,6 +2214,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
         require_64bit_ops = 1;
     }
 
+    InterlockedIncrement(&scp->activeRPCs);
     osi_Log2(afsd_logp, "cm_GetData: fetching data scp %p DV 0x%x", scp, scp->dataVersion);
 
 #ifdef AFS_FREELANCE_CLIENT
@@ -2494,6 +2503,8 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
 
     if (code == 0)
         cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
+    else
+        InterlockedDecrement(&scp->activeRPCs);
 
     return code;
 }

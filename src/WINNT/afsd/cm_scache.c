@@ -596,6 +596,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->openShares = 0;
                 scp->openExcls = 0;
                 scp->waitCount = 0;
+                scp->activeRPCs = 0;
 #ifdef USE_BPLUS
                 scp->dirBplus = NULL;
                 scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
@@ -1481,8 +1482,12 @@ void cm_MergeStatus(cm_scache_t *dscp,
     afs_uint64 dataVersion;
     struct cm_volume *volp = NULL;
     struct cm_cell *cellp = NULL;
+    int rdr_invalidate = 0;
+    afs_uint32 activeRPCs;
 
     lock_AssertWrite(&scp->rw);
+
+    activeRPCs = 1 + InterlockedDecrement(&scp->activeRPCs);
 
     // yj: i want to create some fake status for the /afs directory and the
     // entries under that directory
@@ -1665,13 +1670,13 @@ void cm_MergeStatus(cm_scache_t *dscp,
 
     if (scp->dataVersion != 0 &&
         (!(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && dataVersion != scp->dataVersion ||
-         (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && dataVersion - scp->dataVersion > 1)) {
+         (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && dataVersion - scp->dataVersion > activeRPCs)) {
         /*
          * We now know that all of the data buffers that we have associated
          * with this scp are invalid.  Subsequent operations will go faster
          * if the buffers are removed from the hash tables.
          *
-         * We do not remove directory buffers if the dataVersion delta is 1 because
+         * We do not remove directory buffers if the dataVersion delta is 'activeRPCs' because
          * those version numbers will be updated as part of the directory operation.
          *
          * We do not remove storedata buffers because they will still be valid.
@@ -1754,22 +1759,18 @@ void cm_MergeStatus(cm_scache_t *dscp,
      * merge status no longer has performance characteristics derived from
      * the size of the file.
      */
-    if (((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion > 1) ||
+    if (((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion > activeRPCs) ||
          (!(flags & CM_MERGEFLAG_STOREDATA) && scp->dataVersion != dataVersion) ||
          scp->bufDataVersionLow == 0)
         scp->bufDataVersionLow = dataVersion;
 
     if (RDR_Initialized && scp->dataVersion != CM_SCACHE_VERSION_BAD) {
         if ( ( !(reqp->flags & CM_REQ_SOURCE_REDIR) || !(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA))) &&
-             scp->dataVersion != dataVersion ) {
-            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
-                                 scp->fid.unique, scp->fid.hash,
-                                 scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+             scp->dataVersion != dataVersion && (dataVersion - scp->dataVersion > activeRPCs - 1)) {
+            rdr_invalidate = 1;
         } else if ( (reqp->flags & CM_REQ_SOURCE_REDIR) && (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
-                    dataVersion - scp->dataVersion > 1) {
-            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
-                                 scp->fid.unique, scp->fid.hash,
-                                 scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+                    dataVersion - scp->dataVersion > activeRPCs) {
+            rdr_invalidate = 1;
         }
     }
     scp->dataVersion = dataVersion;
@@ -1799,10 +1800,23 @@ void cm_MergeStatus(cm_scache_t *dscp,
             lock_ReleaseWrite(&volp->rw);
         }
     }
+
   done:
     if (volp)
         cm_PutVolume(volp);
 
+    /*
+     * The scache rw lock cannot be held across the invalidation.
+     * Doing so can result in deadlocks with other threads processing
+     * requests initiated by the afs redirector.
+     */
+    if (rdr_invalidate) {
+        lock_ReleaseWrite(&scp->rw);
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
+                             scp->fid.unique, scp->fid.hash,
+                             scp->fileType, AFS_INVALIDATE_DATA_VERSION);
+        lock_ObtainWrite(&scp->rw);
+    }
 }
 
 /* note that our stat cache info is incorrect, so force us eventually
