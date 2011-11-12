@@ -376,7 +376,7 @@ extern long cm_GetSCache(cm_fid_t *, cm_scache_t **, struct cm_user *,
 	struct cm_req *);
 #endif
 
-extern cm_scache_t *cm_GetNewSCache(void);
+extern cm_scache_t *cm_GetNewSCache(afs_uint32 locked);
 
 extern __inline int cm_FidCmp(cm_fid_t *, cm_fid_t *);
 
