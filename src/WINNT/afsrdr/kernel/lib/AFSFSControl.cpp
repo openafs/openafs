@@ -296,6 +296,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_SUCCESS;
 
                 break;
+            }
 
 #ifndef FSCTL_CSC_INTERNAL
 #define FSCTL_CSC_INTERNAL                  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 107, METHOD_NEITHER, FILE_ANY_ACCESS)
@@ -680,7 +681,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
             }
 
             default :
-
+            {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing default (%08lX) request\n", ulFsControlCode);
@@ -688,6 +689,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 ntStatus = STATUS_INVALID_DEVICE_REQUEST;
 
                 break;
+            }
         }
 
 try_exit:
