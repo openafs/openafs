@@ -503,10 +503,8 @@ afs_vop_lookup(ap)
 
     cnp->cn_flags |= MPSAFE; /* steel */
 
-#ifndef AFS_FBSD70_ENV
     if (flags & ISDOTDOT)
-	VOP_UNLOCK(dvp, 0, p);
-#endif
+	MA_VOP_UNLOCK(dvp, 0, p);
 
     AFS_GLOCK();
     error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
@@ -531,7 +529,7 @@ afs_vop_lookup(ap)
      * we also always return the vnode locked. */
 
     if (flags & ISDOTDOT) {
-	MA_VOP_UNLOCK(dvp, 0, p);
+	/* vp before dvp since we go root to leaf, and .. comes first */
 	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	ma_vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY, p);
 	/* always return the child locked */
