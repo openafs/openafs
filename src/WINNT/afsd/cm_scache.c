@@ -680,6 +680,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     int special = 0; // yj: boolean variable to test if file is on root.afs
     int isRoot = 0;
     extern cm_fid_t cm_rootFid;
+    afs_int32 refCount;
 
     hash = CM_SCACHE_HASH(fidp);
 
@@ -766,8 +767,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             cm_data.scacheHashTablep[hash] = scp;
             _InterlockedOr(&scp->flags, CM_SCACHEFLAG_INHASH);
         }
-        scp->refCount = 1;
-	osi_Log1(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%p", scp);
+        refCount = InterlockedIncrement(&scp->refCount);
+	osi_Log2(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%p refCount %d", scp, refCount);
         lock_ReleaseWrite(&cm_scacheLock);
 
         /* must be called after the scp->fid is set */
@@ -889,13 +890,13 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     scp->nextp = cm_data.scacheHashTablep[hash];
     cm_data.scacheHashTablep[hash] = scp;
     _InterlockedOr(&scp->flags, CM_SCACHEFLAG_INHASH);
+    refCount = InterlockedIncrement(&scp->refCount);
     lock_ReleaseWrite(&cm_scacheLock);
     lock_ReleaseWrite(&scp->rw);
-    scp->refCount = 1;
 #ifdef DEBUG_REFCOUNT
-    afsi_log("%s:%d cm_GetSCache sets refCount to 1 scp 0x%p", file, line, scp);
+    afsi_log("%s:%d cm_GetSCache sets refCount to 1 scp 0x%p refCount %d", file, line, scp, refCount);
 #endif
-    osi_Log1(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%p", scp);
+    osi_Log2(afsd_logp,"cm_GetSCache sets refCount to 1 scp 0x%p refCount %d", scp, refCount);
 
     /* XXX - The following fields in the cm_scache are
      * uninitialized:
