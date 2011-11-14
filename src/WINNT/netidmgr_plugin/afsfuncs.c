@@ -849,13 +849,18 @@ afs_klog(khm_handle identity,
 
             memset(&increds, 0, sizeof(increds));
 
-            pkrb5_cc_get_principal(context, k5cc, &client_principal);
-            i = krb5_princ_realm(context, client_principal)->length;
-            if (i > MAXKTCREALMLEN-1)
-                i = MAXKTCREALMLEN-1;
-            StringCchCopyNA(realm_of_user, ARRAYLENGTH(realm_of_user),
-                            krb5_princ_realm(context, client_principal)->data,
-                            i);
+            r = pkrb5_cc_get_principal(context, k5cc, &client_principal);
+            if (!r) {
+                i = krb5_princ_realm(context, client_principal)->length;
+                if (i > MAXKTCREALMLEN-1)
+                    i = MAXKTCREALMLEN-1;
+                StringCchCopyNA(realm_of_user, ARRAYLENGTH(realm_of_user),
+                                krb5_princ_realm(context, client_principal)->data,
+                                i);
+            } else {
+                _reportf(L"krb5_cc_get_principal returns code %d", r);
+                goto try_krb4;
+            }
         } else {
             _reportf(L"khm_krb5_initialize returns code %d", r);
             goto try_krb4;
