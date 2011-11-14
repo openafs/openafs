@@ -2138,7 +2138,7 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "before osi_NetSend()");
 	AFS_GUNLOCK();
-    } else
+    }
 #else
     if (waslocked)
 	AFS_GUNLOCK();
@@ -2155,7 +2155,7 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 		   "after osi_NetSend()");
 	if (!waslocked)
 	    AFS_GUNLOCK();
-    } else
+    }
 #else
     if (waslocked)
 	AFS_GLOCK();
@@ -2265,7 +2265,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		       "before osi_NetSend()");
 	    AFS_GUNLOCK();
-	} else
+	}
 #else
 	if (waslocked)
 	    AFS_GUNLOCK();
@@ -2305,7 +2305,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 		       "after osi_NetSend()");
 	    if (!waslocked)
 		AFS_GUNLOCK();
-	} else
+	}
 #else
 	if (waslocked)
 	    AFS_GLOCK();
