@@ -59,6 +59,34 @@
 #include "rx_null.h"
 #include "rx_multi.h"
 
+/* These items are part of the new RX API. They're living in this section
+ * for now, to keep them separate from everything else... */
+
+/* Connection management */
+struct rx_connection;
+
+extern void rx_SetConnectionEpoch(struct rx_connection *conn, int epoch);
+extern int  rx_GetConnectionEpoch(struct rx_connection *conn);
+extern void rx_SetConnectionId(struct rx_connection *conn, int id);
+extern int  rx_GetConnectionId(struct rx_connection *conn);
+extern void *rx_GetSecurityData(struct rx_connection *conn);
+extern void  rx_SetSecurityData(struct rx_connection *conn, void *data);
+extern int  rx_IsUsingPktCksum(struct rx_connection *conn);
+extern void rx_SetSecurityHeaderSize(struct rx_connection *conn, int size);
+extern int  rx_GetSecurityHeaderSize(struct rx_connection *conn);
+extern void rx_SetSecurityMaxTrailerSize(struct rx_connection *conn, int size);
+extern int  rx_GetSecurityMaxTrailerSize(struct rx_connection *conn);
+extern void rx_SetServerConnIdleDeadErr(struct rx_connection *conn, int err);
+extern void rx_SetMsgsizeRetryErr(struct rx_connection *conn, int err);
+extern int  rx_IsServerConn(struct rx_connection *conn);
+extern int  rx_IsClientConn(struct rx_connection *conn);
+extern struct rx_securityClass *rx_SecurityObjectOf(const struct rx_connection *);
+extern struct rx_peer *rx_PeerOf(struct rx_connection *);
+extern u_short rx_ServiceIdOf(struct rx_connection *);
+extern int rx_SecurityClassOf(struct rx_connection *);
+extern struct rx_service *rx_ServiceOf(struct rx_connection *);
+extern int rx_ConnError(struct rx_connection *);
+
 /* Configurable parameters */
 #define	RX_IDLE_DEAD_TIME	60	/* default idle dead time */
 #define	RX_MAX_SERVICES		20	/* Maximum number of services that may be installed */
@@ -95,23 +123,12 @@ int ntoh_syserr_conv(int error);
 #define	RX_DONTWAIT 0
 
 #define	rx_ConnectionOf(call)		((call)->conn)
-#define	rx_PeerOf(conn)			((conn)->peer)
 #define	rx_HostOf(peer)			((peer)->host)
 #define	rx_PortOf(peer)			((peer)->port)
 #define	rx_SetLocalStatus(call, status)	((call)->localStatus = (status))
 #define rx_GetLocalStatus(call, status) ((call)->localStatus)
 #define	rx_GetRemoteStatus(call)	((call)->remoteStatus)
 #define	rx_Error(call)			((call)->error)
-#define	rx_ConnError(conn)		((conn)->error)
-#define	rx_IsServerConn(conn)		((conn)->type == RX_SERVER_CONNECTION)
-#define	rx_IsClientConn(conn)		((conn)->type == RX_CLIENT_CONNECTION)
-/* Don't use these; use the IsServerConn style */
-#define	rx_ServerConn(conn)		((conn)->type == RX_SERVER_CONNECTION)
-#define	rx_ClientConn(conn)		((conn)->type == RX_CLIENT_CONNECTION)
-#define rx_IsUsingPktCksum(conn)	((conn)->flags & RX_CONN_USING_PACKET_CKSUM)
-#define rx_ServiceIdOf(conn)		((conn)->serviceId)
-#define	rx_SecurityClassOf(conn)	((conn)->securityIndex)
-#define rx_SecurityObjectOf(conn)	((conn)->securityObject)
 
 static_inline int
 rx_IsLoopbackAddr(afs_uint32 addr)
@@ -166,13 +183,9 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 /* Enable or disable asymmetric client checking for a service */
 #define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
 
-#define rx_SetServerConnIdleDeadErr(conn,err) ((conn)->idleDeadErr = (err))
 
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
-
-/* Set the error to use for retrying a connection during MTU tuning */
-#define rx_SetMsgsizeRetryErr(conn, err) ((conn)->msgsizeRetryErr = (err))
 
 /* If this flag is set,no new requests are processed by rx, all new requests are
 returned with an error code of RX_CALL_DEAD ( transient error ) */
@@ -212,76 +225,6 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
-
-/* A connection is an authenticated communication path, allowing
-   limited multiple asynchronous conversations. */
-#ifdef KDUMP_RX_LOCK
-struct rx_connection_rx_lock {
-    struct rx_connection_rx_lock *next;	/*  on hash chain _or_ free list */
-    struct rx_peer_rx_lock *peer;
-#else
-struct rx_connection {
-    struct rx_connection *next;	/*  on hash chain _or_ free list */
-    struct rx_peer *peer;
-#endif
-#ifdef	RX_ENABLE_LOCKS
-    afs_kmutex_t conn_call_lock;	/* locks conn_call_cv */
-    afs_kcondvar_t conn_call_cv;
-    afs_kmutex_t conn_data_lock;	/* locks packet data */
-#endif
-    afs_uint32 epoch;		/* Process start time of client side of connection */
-    afs_uint32 cid;		/* Connection id (call channel is bottom bits) */
-    afs_int32 error;		/* If this connection is in error, this is it */
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *call[RX_MAXCALLS];
-#else
-    struct rx_call *call[RX_MAXCALLS];
-#endif
-    afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
-    afs_uint32 rwind[RX_MAXCALLS];
-    u_short twind[RX_MAXCALLS];
-    afs_uint32 lastBusy[RX_MAXCALLS]; /* timestamp of the last time we got an
-                                       * RX_PACKET_TYPE_BUSY packet for this
-                                       * call slot, or 0 if the slot is not busy */
-    afs_uint32 serial;		/* Next outgoing packet serial number */
-    afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
-    afs_int32 lastPacketSize; /* last >max attempt */
-    afs_int32 lastPacketSizeSeq; /* seq number of attempt */
-    afs_int32 lastPingSize; /* last MTU ping attempt */
-    afs_int32 lastPingSizeSer; /* serial of last MTU ping attempt */
-    struct rxevent *challengeEvent;	/* Scheduled when the server is challenging a     */
-    struct rxevent *delayedAbortEvent;	/* Scheduled to throttle looping client */
-    struct rxevent *checkReachEvent;	/* Scheduled when checking reachability */
-    int abortCount;		/* count of abort messages sent */
-    /* client-- to retransmit the challenge */
-    struct rx_service *service;	/* used by servers only */
-    u_short serviceId;		/* To stamp on requests (clients only) */
-    afs_int32 refCount;	        /* Reference count (rx_refcnt_mutex) */
-    u_char flags;		/* Defined below - (conn_data_lock) */
-    u_char type;		/* Type of connection, defined below */
-    u_char secondsUntilPing;	/* how often to ping for each active call */
-    u_char securityIndex;	/* corresponds to the security class of the */
-    /* securityObject for this conn */
-    struct rx_securityClass *securityObject;	/* Security object for this connection */
-    void *securityData;		/* Private data for this conn's security class */
-    u_short securityHeaderSize;	/* Length of security module's packet header data */
-    u_short securityMaxTrailerSize;	/* Length of security module's packet trailer data */
-
-    int timeout;		/* Overall timeout per call (seconds) for this conn */
-    int lastSendTime;		/* Last send time for this connection */
-    u_short secondsUntilDead;	/* Maximum silence from peer before RX_CALL_DEAD */
-    u_short hardDeadTime;	/* hard max for call execution */
-    u_short idleDeadTime;	/* max time a call can be idle (no data) */
-    u_char ackRate;		/* how many packets between ack requests */
-    u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
-    afs_int32 idleDeadErr;
-    afs_int32 secondsUntilNatPing;	/* how often to ping conn */
-    struct rxevent *natKeepAliveEvent; /* Scheduled to keep connection open */
-    afs_int32 msgsizeRetryErr;
-    int nSpecific;		/* number entries in specific data */
-    void **specific;		/* pointer to connection specific data */
-};
-
 
 /* A service is installed by rx_NewService, and specifies a service type that
  * is exported by this process.  Incoming calls are stamped with the service

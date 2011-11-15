@@ -298,14 +298,6 @@ struct rx_packet {
     ((struct rx_packet *) \
      ((char *)(CP) - ((char *)(&(PP)->localdata[0])-(char *)(PP))))
 
-/* Macros callable by security modules, to set header/trailer lengths,
- * set actual packet size, and find the beginning of the security
- * header (or data) */
-#define rx_SetSecurityHeaderSize(conn, length) ((conn)->securityHeaderSize = (length))
-#define rx_SetSecurityMaxTrailerSize(conn, length) ((conn)->securityMaxTrailerSize = (length))
-#define rx_GetSecurityHeaderSize(conn) ((conn)->securityHeaderSize)
-#define rx_GetSecurityMaxTrailerSize(conn) ((conn)->securityMaxTrailerSize)
-
 /* This is the address of the data portion of the packet.  Any encryption
  * headers will be at this address, the actual data, for a data packet, will
  * start at this address + the connection's security header size. */

@@ -87,7 +87,7 @@ SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag,
     afs_int32 error;
 
     *errornumber = 0;
-    SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
+    SETCLIENTCONTEXT(blob, rx_HostOf(rx_PeerOf(call->conn)), creds->uid,
 		     creds->group0, creds->group1, PSETPAG, NFS_EXPORTER);
     data.in = (caddr_t) blob;
     data.in_size = sizeof(blob);
@@ -117,7 +117,7 @@ SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path,
     afs_uint32 blob[PIOCTL_HEADER];
 
     *errornumber = 0;
-    SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
+    SETCLIENTCONTEXT(blob, rx_HostOf(rx_PeerOf(call->conn)), creds->uid,
 		     creds->group0, creds->group1, cmd, NFS_EXPORTER);
     data.in =
 	(char *)malloc(InData->rmtbulk_len +

@@ -80,6 +80,8 @@ extern afs_int32 afs_termState;
 #include "rx_stats.h"
 #include "rx_event.h"
 
+#include "rx_conn.h"
+
 #include <afs/rxgen_consts.h>
 
 #ifndef KERNEL

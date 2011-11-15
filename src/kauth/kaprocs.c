@@ -647,7 +647,7 @@ kamCreateUser(struct rx_call *call, char *aname, char *ainstance,
 	return code;
     }
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, NULL, NULL, NULL, rx_PeerOf(call->conn)->host,
 	  LOG_CRUSER);
     return code;
 }
@@ -923,7 +923,7 @@ kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
 	goto abort;
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, NULL, NULL, NULL, rx_PeerOf(call->conn)->host,
 	  LOG_CHPASSWD);
     return code;
 
@@ -1246,14 +1246,14 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     DES_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
 		     &user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, sname, sinst, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, sname, sinst, NULL, rx_PeerOf(call->conn)->host,
 	  LOG_AUTHENTICATE);
     return code;
 
   abort:
     COUNT_ABO;
     ubik_AbortTrans(tt);
-    KALOG(aname, ainstance, sname, sinst, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, sname, sinst, NULL, rx_PeerOf(call->conn)->host,
 	  LOG_AUTHFAILED);
     return code;
 }
@@ -1455,7 +1455,7 @@ kamSetFields(struct rx_call *call,
 	goto abort;
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, NULL, NULL, NULL, rx_PeerOf(call->conn)->host,
 	  LOG_SETFIELDS);
     return code;
 
@@ -1528,7 +1528,7 @@ kamDeleteUser(struct rx_call *call, char *aname, char *ainstance)
 	goto abort;
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, NULL, NULL, NULL, rx_PeerOf(call->conn)->host,
 	  LOG_DELUSER);
     return code;
 }
@@ -1932,7 +1932,7 @@ GetTicket(int version,
 		     &schedule, ktc_to_cblockptr(&authSessionKey), ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(name, instance, sname, sinstance, (import ? authDomain : NULL),
-	  call->conn->peer->host, LOG_GETTICKET);
+	  rx_PeerOf(call->conn)->host, LOG_GETTICKET);
     return code;
 
   abort:
@@ -2258,7 +2258,7 @@ SKAM_Unlock(struct rx_call *call,
     kaux_write(to, 0, 0);	/* zero failure counters at this offset */
 
     code = ubik_EndTrans(tt);
-    KALOG(aname, ainstance, NULL, NULL, NULL, call->conn->peer->host,
+    KALOG(aname, ainstance, NULL, NULL, NULL, rx_PeerOf(call->conn)->host,
 	  LOG_UNLOCK);
     goto exit;
 

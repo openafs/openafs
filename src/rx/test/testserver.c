@@ -253,8 +253,8 @@ int SimpleRequest(struct rx_call *call)
 		 strlen("So long, and thanks for all the fish!\n"));
     }
     if (debugFile)
-	rx_PrintPeerStats(debugFile, rx_PeerOf(call->conn));
-    rx_PrintPeerStats(stdout, rx_PeerOf(call->conn));
+	rx_PrintPeerStats(debugFile, rx_PeerOf(rx_ConnectionOf(call)));
+    rx_PrintPeerStats(stdout, rx_PeerOf(rx_ConnectionOf(call)));
     return 0;
 }
 
@@ -302,8 +302,8 @@ FileRequest(struct rx_call *call)
     printf("Received file %s\n", rcvFile);
     close(fd);
     if (debugFile)
-	rx_PrintPeerStats(debugFile, rx_PeerOf(call->conn));
-    rx_PrintPeerStats(stdout, rx_PeerOf(call->conn));
+	rx_PrintPeerStats(debugFile, rx_PeerOf(rx_ConnectionOf(call)));
+    rx_PrintPeerStats(stdout, rx_PeerOf(rx_ConnectionOf(call)));
     return 0;
 }
 

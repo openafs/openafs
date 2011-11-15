@@ -72,7 +72,7 @@ typedef struct rpc_test_request_ctx {
 
 
 #define CTX_FOR_RXCALL(call) \
-    (rx_GetServiceSpecific((rx_ConnectionOf(call))->service, ctx_key))
+    (rx_GetServiceSpecific((rx_ServiceOf(rx_ConnectionOf(call))), ctx_key))
 
 afs_int32 rpc_test_PkgInit();
 void rpc_test_PkgShutdown();

@@ -60,6 +60,8 @@
 #include "rx_queue.h"
 #include "rx_globals.h"
 
+#include "rx_conn.h"
+
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */
 static int rxdb_fileID = RXDB_FILE_RX_RDWR;

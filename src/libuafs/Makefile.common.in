@@ -201,6 +201,7 @@ UAFSOBJ = \
 	$(UOBJ)/rx_stats.o \
 	$(UOBJ)/rx_packet.o \
 	$(UOBJ)/rx_conncache.o \
+	$(UOBJ)/rx_conn.o \
 	$(UOBJ)/xdr_rx.o \
 	$(UOBJ)/Kvldbint.cs.o \
 	$(UOBJ)/Kvldbint.xdr.o \
@@ -346,6 +347,7 @@ PICUAFSOBJ = \
 	$(PICOBJ)/rx_stats.o \
 	$(PICOBJ)/rx_packet.o \
 	$(PICOBJ)/rx_conncache.o \
+	$(PICOBJ)/rx_conn.o \
 	$(PICOBJ)/xdr_rx.o \
 	$(PICOBJ)/Kvldbint.cs.o \
 	$(PICOBJ)/Kvldbint.xdr.o \
@@ -491,6 +493,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/rx_stats.o \
 	$(WEBOBJ)/rx_packet.o \
 	$(WEBOBJ)/rx_conncache.o \
+	$(WEBOBJ)/rx_conn.o \
 	$(WEBOBJ)/xdr_rx.o \
 	$(WEBOBJ)/Kvldbint.cs.o \
 	$(WEBOBJ)/Kvldbint.xdr.o \
@@ -630,6 +633,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/rx_stats.o \
 	$(WEBOBJ)/rx_packet.o \
 	$(WEBOBJ)/rx_conncache.o \
+	$(WEBOBJ)/rx_conn.o \
 	$(WEBOBJ)/xdr_rx.o \
 	$(WEBOBJ)/Kvldbint.cs.o \
 	$(WEBOBJ)/Kvldbint.xdr.o \
@@ -773,6 +777,7 @@ JUAFSOBJ = \
 	$(JUAFS)/rx_stats.o \
 	$(JUAFS)/rx_packet.o \
 	$(JUAFS)/rx_conncache.o \
+	$(JUAFS)/rx_conn.o \
 	$(JUAFS)/xdr_rx.o \
 	$(JUAFS)/Kvldbint.cs.o \
 	$(JUAFS)/Kvldbint.xdr.o \
@@ -973,6 +978,8 @@ $(UOBJ)/rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
 $(UOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE1)
 $(UOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
+	$(CRULE1)
+$(UOBJ)/rx_conn.o: $(TOP_SRCDIR)/rx/rx_conn.c
 	$(CRULE1)
 $(UOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE1)
@@ -1270,6 +1277,8 @@ $(PICOBJ)/rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
 $(PICOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULEPIC)
 $(PICOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
+	$(CRULEPIC)
+$(PICOBJ)/rx_conn.o: $(TOP_SRCDIR)/rx/rx_conn.c
 	$(CRULEPIC)
 $(PICOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULEPIC)
@@ -1569,6 +1578,8 @@ $(WEBOBJ)/rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
 $(WEBOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE2)
 $(WEBOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
+	$(CRULE2)
+$(WEBOBJ)/rx_conn.o: $(TOP_SRCDIR)/rx/rx_conn.c
 	$(CRULE2)
 $(WEBOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE2)
@@ -1872,6 +1883,8 @@ $(JUAFS)/rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
 $(JUAFS)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE1)
 $(JUAFS)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
+	$(CRULE1)
+$(JUAFS)/rx_conn.o: $(TOP_SRC_RX)/rx_conn.c
 	$(CRULE1)
 $(JUAFS)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE1)

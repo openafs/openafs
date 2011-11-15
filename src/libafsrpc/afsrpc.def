@@ -297,6 +297,28 @@ EXPORTS
 	rx_GetThreadNum				@305
 	rx_SetThreadNum				@306
 
+        rx_SetConnectionEpoch                   @307
+        rx_GetConnectionEpoch                   @308
+        rx_SetConnectionId                      @309
+        rx_GetConnectionId                      @310
+        rx_GetSecurityData                      @311
+        rx_SetSecurityData                      @312
+        rx_IsUsingPktCksum                      @313
+        rx_SetSecurityHeaderSize                @314
+        rx_GetSecurityHeaderSize                @315
+        rx_SetSecurityMaxTrailerSize            @316
+        rx_GetSecurityMaxTrailerSize            @317
+        rx_SetServerConnIdleDeadErr             @318
+        rx_SetMsgsizeRetryErr                   @319
+        rx_IsServerConn                         @320
+        rx_IsClientConn                         @321
+        rx_SecurityObjectOf                     @322
+        rx_PeerOf                               @323
+        rx_ServiceIdOf                          @324
+        rx_SecurityClassOf                      @325
+        rx_ServiceOf                            @326
+        rx_ConnError                            @327
+
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA
