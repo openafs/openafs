@@ -169,13 +169,12 @@ int
 rxkad_CheckAuthentication(struct rx_securityClass *aobj,
 			  struct rx_connection *aconn)
 {
-    struct rxkad_sconn *sconn;
+    struct rxkad_sconn *sconn = rx_GetSecurityData(aconn);
 
     /* first make sure the object exists */
-    if (!aconn->securityData)
+    if (!sconn)
 	return RXKADINCONSISTENCY;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
     return !sconn->authenticated;
 }
 
@@ -186,10 +185,9 @@ int
 rxkad_CreateChallenge(struct rx_securityClass *aobj,
 		      struct rx_connection *aconn)
 {
-    struct rxkad_sconn *sconn;
+    struct rxkad_sconn *sconn = rx_GetSecurityData(aconn);
     struct rxkad_sprivate *tsp;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
     sconn->challengeID = get_random_int32();
     sconn->authenticated = 0;	/* conn unauth. 'til we hear back */
     /* initialize level from object's minimum acceptable level */
@@ -204,13 +202,12 @@ int
 rxkad_GetChallenge(struct rx_securityClass *aobj, struct rx_connection *aconn,
 		   struct rx_packet *apacket)
 {
-    struct rxkad_sconn *sconn;
+    struct rxkad_sconn *sconn = rx_GetSecurityData(aconn);
     char *challenge;
     int challengeSize;
     struct rxkad_v2Challenge c_v2;	/* version 2 */
     struct rxkad_oldChallenge c_old;	/* old style */
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
     if (rx_IsUsingPktCksum(aconn))
 	sconn->cksumSeen = 1;
 
@@ -267,7 +264,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     unsigned int pos;
     struct rxkad_serverinfo *rock;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
+    sconn = rx_GetSecurityData(aconn);
     tsp = (struct rxkad_sprivate *)aobj->privateData;
 
     if (sconn->cksumSeen) {
@@ -435,7 +432,7 @@ rxkad_GetServerInfo(struct rx_connection * aconn, rxkad_level * level,
 {
     struct rxkad_sconn *sconn;
 
-    sconn = (struct rxkad_sconn *)aconn->securityData;
+    sconn = rx_GetSecurityData(aconn);
     if (sconn && sconn->authenticated && sconn->rock
 	&& (time(0) < sconn->expirationTime)) {
 	if (level)

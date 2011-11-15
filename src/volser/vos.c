@@ -2890,8 +2890,8 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
 	if (rxConn == 0)
 	    break;
 	rx_SetConnDeadTime(rxConn, rx_connDeadTime);
-	if (rxConn->service)
-	    rxConn->service->connDeadTime = rx_connDeadTime;
+	if (rx_ServiceOf(rxConn))
+	    rx_ServiceOf(rxConn)->connDeadTime = rx_connDeadTime;
     }
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
@@ -5667,8 +5667,8 @@ Sizes(struct cmd_syndesc *as, void *arock)
 	if (rxConn == 0)
 	    break;
 	rx_SetConnDeadTime(rxConn, rx_connDeadTime);
-	if (rxConn->service)
-	    rxConn->service->connDeadTime = rx_connDeadTime;
+	if (rx_ServiceOf(rxConn))
+	    rx_ServiceOf(rxConn)->connDeadTime = rx_connDeadTime;
     }
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);

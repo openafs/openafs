@@ -18,6 +18,8 @@
 
 #include "rx.h"
 
+#include "rx_conn.h"
+
 /*
  * We initialize rxi_connectionCache at compile time, so there is no
  * need to call queue_Init(&rxi_connectionCache).

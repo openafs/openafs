@@ -2362,8 +2362,8 @@ h_FindClient_r(struct rx_connection *tcon)
     int created = 0;
 
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
-    if (client && client->sid == rxr_CidOf(tcon)
-	&& client->VenusEpoch == rxr_GetEpoch(tcon)
+    if (client && client->sid == rx_GetConnectionId(tcon)
+	&& client->VenusEpoch == rx_GetConnectionEpoch(tcon)
 	&& !(client->host->hostFlags & HOSTDELETED)
 	&& !client->deleted) {
 
@@ -2442,8 +2442,8 @@ h_FindClient_r(struct rx_connection *tcon)
     retryfirstclient:
 	/* First try to find the client structure */
 	for (client = host->FirstClient; client; client = client->next) {
-	    if (!client->deleted && (client->sid == rxr_CidOf(tcon))
-		&& (client->VenusEpoch == rxr_GetEpoch(tcon))) {
+	    if (!client->deleted && (client->sid == rx_GetConnectionId(tcon))
+		&& (client->VenusEpoch == rx_GetConnectionEpoch(tcon))) {
 		client->refCount++;
 		H_UNLOCK;
 		ObtainWriteLock(&client->lock);
@@ -2462,8 +2462,8 @@ h_FindClient_r(struct rx_connection *tcon)
             }
 	    /* Retry to find the client structure */
 	    for (client = host->FirstClient; client; client = client->next) {
-		if (!client->deleted && (client->sid == rxr_CidOf(tcon))
-		    && (client->VenusEpoch == rxr_GetEpoch(tcon))) {
+		if (!client->deleted && (client->sid == rx_GetConnectionId(tcon))
+		    && (client->VenusEpoch == rx_GetConnectionEpoch(tcon))) {
 		    h_Unlock_r(host);
 		    goto retryfirstclient;
 		}
@@ -2479,8 +2479,8 @@ h_FindClient_r(struct rx_connection *tcon)
 	    client->ViceId = viceid;
 	    client->expTime = expTime;	/* rx only */
 	    client->authClass = authClass;	/* rx only */
-	    client->sid = rxr_CidOf(tcon);
-	    client->VenusEpoch = rxr_GetEpoch(tcon);
+	    client->sid = rx_GetConnectionId(tcon);
+	    client->VenusEpoch = rx_GetConnectionEpoch(tcon);
 	    client->CPS.prlist_val = NULL;
 	    client->CPS.prlist_len = 0;
 	    h_Unlock_r(host);
@@ -2541,8 +2541,9 @@ h_FindClient_r(struct rx_connection *tcon)
      * the RPC from the other client structure's rock.
      */
     oldClient = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
-    if (oldClient && oldClient != client && oldClient->sid == rxr_CidOf(tcon)
-	&& oldClient->VenusEpoch == rxr_GetEpoch(tcon)
+    if (oldClient && oldClient != client
+	&& oldClient->sid == rx_GetConnectionId(tcon)
+	&& oldClient->VenusEpoch == rx_GetConnectionEpoch(tcon)
 	&& !(oldClient->host->hostFlags & HOSTDELETED)) {
 	char hoststr[16];
 	if (!oldClient->deleted) {
@@ -2583,7 +2584,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	                oldClient, oldClient->sid, oldClient->refCount,
 	                oldClient->host, oldClient->host->refCount, tcon,
 	                afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
-	                ntohs(rxr_PortOf(tcon)), rxr_CidOf(tcon),
+	                ntohs(rxr_PortOf(tcon)), rx_GetConnectionId(tcon),
 	                client, client->sid, client->refCount,
 	                client->host, client->host->refCount));
 	    /* rx_SetSpecific will be done immediately below */
@@ -2656,10 +2657,11 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 	H_UNLOCK;
 	return VBUSY;
     }
-    if (rxr_CidOf(tcon) != client->sid || rxr_GetEpoch(tcon) != client->VenusEpoch) {
+    if (rx_GetConnectionId(tcon) != client->sid
+	|| rx_GetConnectionEpoch(tcon) != client->VenusEpoch) {
 	ViceLog(0,
 		("GetClient: tcon %p tcon sid %d client sid %d\n",
-		 tcon, rxr_CidOf(tcon), client->sid));
+		 tcon, rx_GetConnectionId(tcon), client->sid));
 	H_UNLOCK;
 	return VBUSY;
     }
@@ -2675,7 +2677,7 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 	ViceLog(0, ("GetClient: got deleted client, connection will appear "
 	            "anonymous; tcon %p cid %x client %p ref %d host %p "
 	            "(%s:%d) href %d ViceId %d\n",
-	            tcon, rxr_CidOf(tcon), client, client->refCount,
+	            tcon, rx_GetConnectionId(tcon), client, client->refCount,
 	            client->host,
 	            afs_inet_ntoa_r(client->host->host, hoststr),
 	            (int)ntohs(client->host->port), client->host->refCount,

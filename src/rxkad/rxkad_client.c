@@ -135,8 +135,8 @@ rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
 	UNLOCK_CUID;
 	return 0;
     }
-    aconn->epoch = Cuid[0];
-    aconn->cid = Cuid[1];
+    rx_SetConnectionEpoch(aconn, Cuid[0]);
+    rx_SetConnectionId(aconn, Cuid[1]);
     Cuid[1] += 1 << RX_CIDSHIFT;
     UNLOCK_CUID;
     return 0;

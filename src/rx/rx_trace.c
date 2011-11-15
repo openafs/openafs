@@ -29,6 +29,8 @@ main(int argc, char **argv)
 #include "rx_internal.h"
 #include "rx_trace.h"
 
+#include "rx_conn.h"
+
 #ifdef RXTRACEON
 char rxi_tracename[80] = "/tmp/rxcalltrace";
 #else

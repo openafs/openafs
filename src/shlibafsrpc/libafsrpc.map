@@ -160,6 +160,11 @@
 	rx_identity_free;
 	rx_InterruptCall;
 	rx_SetBusyChannelError;
+	rx_PeerOf;
+	rx_SecurityClassOf;
+	rx_ServiceIdOf;
+	rx_SecurityObjectOf;
+	rx_ConnError;
     local:
 	*;
 };

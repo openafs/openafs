@@ -1335,22 +1335,22 @@ cs_ProcTail_setup(definition * defp, int split_flag)
 	if (PackageStatIndex[PackageIndex]) {
 	    if (!split_flag) {
 		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_conn->peer, %s,\n",
+			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_conn), %s,\n",
 			PackageStatIndex[PackageIndex]);
 	    } else {
 		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_call->conn->peer, %s,\n",
+			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn), %s,\n",
 			PackageStatIndex[PackageIndex]);
 	    }
 	} else {
 	    if (!split_flag) {
 		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_conn->peer,\n"
+			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_conn),\n"
 			"\t\t(((afs_uint32)(ntohs(z_conn->serviceId) << 16)) \n"
 			"\t\t| ((afs_uint32)ntohs(z_conn->peer->port))),\n");
 	    } else {
 		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(z_call->conn->peer,\n"
+			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn),\n"
 			"\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
 			"\t\t((afs_uint32)ntohs(z_call->conn->peer->port))),\n");
 	    }
@@ -1737,7 +1737,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 	f_print(fout, "\t    clock_Sub(&__EXEC, &z_call->startTime);\n");
 	f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
 	f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
-	f_print(fout, "\t    rx_IncrementTimeAndCount(z_call->conn->peer,");
+	f_print(fout, "\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn),");
 	if (PackageStatIndex[PackageIndex]) {
 	    f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
 	} else {
@@ -1762,7 +1762,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 	    f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
 	    f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
 	    f_print(fout,
-		    "\t    rx_IncrementTimeAndCount(z_call->conn->peer,");
+		    "\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn),");
 	    if (PackageStatIndex[PackageIndex]) {
 		f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
 	    } else {

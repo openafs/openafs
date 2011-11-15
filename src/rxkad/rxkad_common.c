@@ -205,11 +205,11 @@ rxkad_SetupEndpoint(struct rx_connection *aconnp,
 {
     afs_int32 i;
 
-    aendpointp->cuid[0] = htonl(aconnp->epoch);
-    i = aconnp->cid & RX_CIDMASK;
+    aendpointp->cuid[0] = htonl(rx_GetConnectionEpoch(aconnp));
+    i = rx_GetConnectionId(aconnp) & RX_CIDMASK;
     aendpointp->cuid[1] = htonl(i);
     aendpointp->cksum = 0;	/* used as cksum only in chal resp. */
-    aendpointp->securityIndex = htonl(aconnp->securityIndex);
+    aendpointp->securityIndex = htonl(rx_SecurityClassOf(aconnp));
     return 0;
 }
 
@@ -336,26 +336,28 @@ int
 rxkad_NewConnection(struct rx_securityClass *aobj,
 		    struct rx_connection *aconn)
 {
-    if (aconn->securityData)
+    if (rx_GetSecurityData(aconn) != NULL)
 	return RXKADINCONSISTENCY;	/* already allocated??? */
 
     if (rx_IsServerConn(aconn)) {
-	int size = sizeof(struct rxkad_sconn);
-	aconn->securityData = rxi_Alloc(size);
-	memset(aconn->securityData, 0, size);	/* initialize it conveniently */
+	struct rxkad_sconn *data;
+	data = rxi_Alloc(sizeof(struct rxkad_sconn));
+	memset(data, 0, sizeof(struct rxkad_sconn));
+	rx_SetSecurityData(aconn, data);
     } else {			/* client */
 	struct rxkad_cprivate *tcp;
-	struct rxkad_cconn *tccp;
-	int size = sizeof(struct rxkad_cconn);
-	tccp = rxi_Alloc(size);
-	aconn->securityData = (char *)tccp;
-	memset(aconn->securityData, 0, size);	/* initialize it conveniently */
+	struct rxkad_cconn *data;
+
+	data = rxi_Alloc(sizeof(struct rxkad_cconn));
+	memset(data, 0, sizeof(struct rxkad_cconn));
+	rx_SetSecurityData(aconn, data);
+
 	tcp = (struct rxkad_cprivate *)aobj->privateData;
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	rxkad_SetLevel(aconn, tcp->level);	/* set header and trailer sizes */
 	rxkad_AllocCID(aobj, aconn);	/* CHANGES cid AND epoch!!!! */
-	rxkad_DeriveXORInfo(aconn, (fc_KeySchedule *)tcp->keysched, (char *)tcp->ivec, (char *)tccp->preSeq);
+	rxkad_DeriveXORInfo(aconn, (fc_KeySchedule *)tcp->keysched, (char *)tcp->ivec, (char *)data->preSeq);
 	INC_RXKAD_STATS(connections[rxkad_LevelIndex(tcp->level)]);
     }
 
@@ -372,9 +374,9 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
     if (rx_IsServerConn(aconn)) {
 	struct rxkad_sconn *sconn;
 	struct rxkad_serverinfo *rock;
-	sconn = (struct rxkad_sconn *)aconn->securityData;
+	sconn = rx_GetSecurityData(aconn);
 	if (sconn) {
-	    aconn->securityData = 0;
+	    rx_SetSecurityData(aconn, NULL);
 	    if (sconn->authenticated)
 		INC_RXKAD_STATS(destroyConn[rxkad_LevelIndex(sconn->level)]);
 	    else
@@ -389,12 +391,12 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
     } else {			/* client */
 	struct rxkad_cconn *cconn;
 	struct rxkad_cprivate *tcp;
-	cconn = (struct rxkad_cconn *)aconn->securityData;
+	cconn = rx_GetSecurityData(aconn);
 	tcp = (struct rxkad_cprivate *)aobj->privateData;
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	if (cconn) {
-	    aconn->securityData = 0;
+	    rx_SetSecurityData(aconn, NULL);
 	    rxi_Free(cconn, sizeof(struct rxkad_cconn));
 	}
 	INC_RXKAD_STATS(destroyClient);
@@ -431,7 +433,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     checkCksum = 0;		/* init */
     if (rx_IsServerConn(tconn)) {
 	struct rxkad_sconn *sconn;
-	sconn = (struct rxkad_sconn *)tconn->securityData;
+	sconn = rx_GetSecurityData(tconn);
 	if (rx_GetPacketCksum(apacket) != 0)
 	    sconn->cksumSeen = 1;
 	checkCksum = sconn->cksumSeen;
@@ -451,7 +453,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     } else {			/* client connection */
 	struct rxkad_cconn *cconn;
 	struct rxkad_cprivate *tcp;
-	cconn = (struct rxkad_cconn *)tconn->securityData;
+	cconn = rx_GetSecurityData(tconn);
 	if (rx_GetPacketCksum(apacket) != 0)
 	    cconn->cksumSeen = 1;
 	checkCksum = cconn->cksumSeen;
@@ -521,7 +523,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     len = rx_GetDataSize(apacket);
     if (rx_IsServerConn(tconn)) {
 	struct rxkad_sconn *sconn;
-	sconn = (struct rxkad_sconn *)tconn->securityData;
+	sconn = rx_GetSecurityData(tconn);
 	if (sconn && sconn->authenticated
 	    && (osi_Time() < sconn->expirationTime)) {
 	    level = sconn->level;
@@ -538,7 +540,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     } else {			/* client connection */
 	struct rxkad_cconn *cconn;
 	struct rxkad_cprivate *tcp;
-	cconn = (struct rxkad_cconn *)tconn->securityData;
+	cconn = rx_GetSecurityData(tconn);
 	tcp = (struct rxkad_cprivate *)aobj->privateData;
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
@@ -597,15 +599,20 @@ int
 rxkad_GetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	       struct rx_securityObjectStats *astats)
 {
+    void *securityData;
+
     astats->type = 3;
     astats->level = ((struct rxkad_cprivate *)aobj->privateData)->level;
-    if (!aconn->securityData) {
+
+    securityData = rx_GetSecurityData(aconn);
+
+    if (!securityData) {
 	astats->flags |= 1;
 	return 0;
     }
     if (rx_IsServerConn(aconn)) {
-	struct rxkad_sconn *sconn;
-	sconn = (struct rxkad_sconn *)aconn->securityData;
+	struct rxkad_sconn *sconn = securityData;
+
 	astats->level = sconn->level;
 	if (sconn->authenticated)
 	    astats->flags |= 2;
@@ -617,8 +624,8 @@ rxkad_GetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	astats->bytesSent = sconn->stats.bytesSent;
 	astats->packetsSent = sconn->stats.packetsSent;
     } else {			/* client connection */
-	struct rxkad_cconn *cconn;
-	cconn = (struct rxkad_cconn *)aconn->securityData;
+	struct rxkad_cconn *cconn = securityData;
+
 	if (cconn->cksumSeen)
 	    astats->flags |= 8;
 	astats->bytesReceived = cconn->stats.bytesReceived;

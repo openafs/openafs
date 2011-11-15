@@ -97,6 +97,7 @@ main(int argc, char **argv)
     int logstdout = 0;
     struct rx_connection *conn;
     struct rx_call *call;
+    struct rx_peer *peer;
     int err = 0;
     int nCalls = 1, nBytes = 1;
     int bufferSize = 4000000;
@@ -238,12 +239,13 @@ main(int argc, char **argv)
 	Abort("unable to make a new connection");
 
     /* Set initial parameters.  This is (currently) not the approved interface */
+    peer = rx_PeerOf(conn);
     if (burst)
-	conn->peer->burstSize = conn->peer->burst = burst;
+	peer->burstSize = peer->burst = burst;
     if (!clock_IsZero(&burstTime))
-	conn->peer->burstWait = burstTime;
+	peer->burstWait = burstTime;
     if (!clock_IsZero(&retryTime))
-	conn->peer->rtt = _8THMSEC(&retryTime);
+	peer->rtt = _8THMSEC(&retryTime);
     if (sendFile)
 	SendFile(sendFile, conn);
     else {

@@ -77,7 +77,8 @@ RXOBJS =\
 	rx_rdwr.o \
 	rx_stats.o \
 	rx_trace.o \
-	rx_multi.o
+	rx_multi.o \
+	rx_conn.o
 
 RXSTATOBJS =\
 	rxstat.o \
@@ -162,6 +163,9 @@ rx.o: ${RX}/rx.c
 
 rx_conncache.o: ${RX}/rx_conncache.c
 	$(AFS_CCRULE) $(RX)/rx_conncache.c
+
+rx_conn.o : ${RX}/rx_conn.c
+	$(AFS_CCRULE) $(RX)/rx_conn.c
 
 rx_null.o: ${RX}/rx_null.c
 	$(AFS_CCRULE) $(RX)/rx_null.c

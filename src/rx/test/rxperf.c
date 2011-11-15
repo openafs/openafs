@@ -897,7 +897,7 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 
     if (dumpstats) {
 	rx_PrintStats(stdout);
-	rx_PrintPeerStats(stdout, conn->peer);
+	rx_PrintPeerStats(stdout, rx_PeerOf(conn));
     }
     rx_Finalize();
 

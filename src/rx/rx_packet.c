@@ -66,6 +66,8 @@
 #include "rx_internal.h"
 #include "rx_stats.h"
 
+#include "rx_conn.h"
+
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */
 static int rxdb_fileID = RXDB_FILE_RX_PACKET;
