@@ -863,15 +863,14 @@ afs_uint32 buf_CleanAsyncLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 
             offset = bp->offset;
             LargeIntegerAdd(offset, ConvertLongToLargeInteger(bp->dirty_offset));
+            /*
+             * Only specify the dirty length of the current buffer in the call
+             * to cm_BufWrite().  It is the responsibility of cm_BufWrite()
+             * to determine if it is appropriate to fill a full chunk of data
+             * when storing to the file server.
+             */
             code = (*cm_buf_opsp->Writep)(scp, &offset,
-#if 1
-                                          /* we might as well try to write all of the contiguous
-                                           * dirty buffers in one RPC
-                                           */
-                                          cm_chunkSize,
-#else
                                           bp->dirty_length,
-#endif
                                           flags, bp->userp, reqp);
             osi_Log3(buf_logp, "buf_CleanAsyncLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
         }
