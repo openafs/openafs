@@ -90,6 +90,47 @@ void cm_IpAddrDaemon(long parm)
     thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
 }
 
+afs_int32 cm_RequestWillBlock(cm_bkgRequest_t *rp)
+{
+    afs_int32 willBlock = 0;
+
+    if (rp->procp == cm_BkgStore) {
+        /*
+         * If the datastoring flag is set, it means that another
+         * thread is already performing an exclusive store operation
+         * on this file.  The exclusive state will be cleared once
+         * the file server locks the vnode.  Therefore, at most two
+         * threads can be actively involved in storing data at a time
+         * on a file.
+         */
+        lock_ObtainRead(&rp->scp);
+        willBlock = (rp->scp->flags & CM_SCACHEFLAG_DATASTORING);
+        lock_ReleaseRead(&rp->scp);
+    }
+    else if (rp->procp == RDR_BkgFetch || rp->procp == cm_BkgPrefetch) {
+        /*
+         * Attempt to determine if there is a conflict on the requested
+         * range of the file.  If the first in the range does not exist
+         * in the cache assume there is no conflict.  If the buffer does
+         * exist, check to see if an I/O operation is in progress
+         * by using the writing and reading flags as an indicator.
+         */
+        osi_hyper_t base;
+        cm_buf_t *bufp = NULL;
+
+        base.LowPart = rp->p1;
+        base.HighPart = rp->p2;
+
+        bufp = buf_Find(&rp->scp->fid, &base);
+        if (bufp) {
+            willBlock = (bufp->flags & (CM_BUF_WRITING|CM_BUF_READING));
+            buf_Release(bufp);
+        }
+    }
+
+    return willBlock;
+}
+
 void cm_BkgDaemon(void * parm)
 {
     cm_bkgRequest_t *rp;
@@ -107,6 +148,8 @@ void cm_BkgDaemon(void * parm)
 
     lock_ObtainWrite(&cm_daemonLock);
     while (daemon_ShutdownFlag == 0) {
+        int willBlock = 0;
+
         if (powerStateSuspended) {
             Sleep(1000);
             continue;
@@ -120,14 +163,35 @@ void cm_BkgDaemon(void * parm)
         /* we found a request */
         for (rp = cm_bkgListEndp; rp; rp = (cm_bkgRequest_t *) osi_QPrev(&rp->q))
 	{
-	    if (cm_ServerAvailable(&rp->scp->fid, rp->userp) ||
-                rp->scp->flags & CM_SCACHEFLAG_DELETED)
+            if (rp->scp->flags & CM_SCACHEFLAG_DELETED)
 		break;
+
+            /*
+             * If the request has active I/O such that this worker would
+             * be forced to block, leave the request in the queue and move
+             * on to one that might be available for servicing.
+             */
+            if (cm_RequestWillBlock(rp)) {
+                willBlock++;
+                continue;
+            }
+
+            if (cm_ServerAvailable(&rp->scp->fid, rp->userp))
+                break;
 	}
-	if (rp == NULL) {
-	    /* we couldn't find a request that we could process at the current time */
+
+        if (rp == NULL) {
+	    /*
+             * Couldn't find a request that we could process at the
+             * current time.  If there were requests that would cause
+             * the worker to block, sleep for 25ms so it can promptly
+             * respond when it is available.  Otherwise, sleep for 1s.
+             *
+             * This polling cycle needs to be replaced with a proper
+             * producer/consumer dynamic worker pool.
+             */
 	    lock_ReleaseWrite(&cm_daemonLock);
-	    Sleep(1000);
+	    Sleep(willBlock ? 25 : 1000);
 	    lock_ObtainWrite(&cm_daemonLock);
 	    continue;
 	}
