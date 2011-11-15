@@ -228,13 +228,14 @@ typedef struct cm_scache {
                                        cm_scacheLock. */
     osi_queue_t * waitQueueT;       /* locked by cm_scacheLock */
 
-    /* redirector state - protected by scp->rw */
+    /* redirector state - protected by scp->redirMx */
     osi_queue_t * redirQueueH;      /* LRU queue of buffers for this
                                        file that are assigned to the
                                        afsredir kernel module. */
     osi_queue_t * redirQueueT;
     afs_uint32    redirBufCount;    /* Number of buffers held by the redirector */
     time_t        redirLastAccess;  /* last time redir accessed the vnode */
+    osi_mutex_t   redirMx;
 
     afs_uint32 activeRPCs;              /* atomic */
 } cm_scache_t;
