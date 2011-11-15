@@ -147,7 +147,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
             AFSRtlSetSaclSecurityDescriptor = (PAFSRtlSetSaclSecurityDescriptor)MmGetSystemRoutineAddress( &uniRoutine);
         }
-
+#endif
         ntStatus = AFSCreateDefaultSecurityDescriptor();
 
         if( !NT_SUCCESS( ntStatus))
@@ -157,7 +157,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
             ntStatus = STATUS_SUCCESS;
         }
-#endif
+
         //
         // Initilize the control device
         //
