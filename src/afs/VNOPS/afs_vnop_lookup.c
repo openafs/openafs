@@ -67,14 +67,14 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     /* Start by figuring out and finding the cell */
     cpos = afs_strchr(data, ':');	/* if cell name present */
     if (cpos) {
+	afs_uint32 mtptCellnum;
 	volnamep = cpos + 1;
 	*cpos = 0;
-	if ((afs_strtoi_r(data, &endptr, &cellnum) == 0) &&
-	    (endptr == cpos))
-	    tcell = afs_GetCell(cellnum, READ_LOCK);
-	else {
+	if ((afs_strtoi_r(data, &endptr, &mtptCellnum) == 0) &&
+	    (endptr == cpos)) {
+	    tcell = afs_GetCell(mtptCellnum, READ_LOCK);
+	} else {
 	    tcell = afs_GetCellByName(data, READ_LOCK);
-	    cellnum = 0;
 	}
 	*cpos = ':';
     } else if (cellnum) {
