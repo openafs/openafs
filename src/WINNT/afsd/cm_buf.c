@@ -2571,8 +2571,8 @@ void
 buf_InsertToRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
 {
     lock_AssertWrite(&buf_globalLock);
-    if (scp)
-        lock_AssertWrite(&scp->rw);
+
+    lock_ObtainMutex(&scp->redirMx);
 
     if (bufp->qFlags & CM_BUF_QINLRU) {
         _InterlockedAnd(&bufp->qFlags, ~CM_BUF_QINLRU);
@@ -2594,14 +2594,16 @@ buf_InsertToRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
         scp->redirLastAccess = bufp->redirLastAccess;
         InterlockedIncrement(&scp->redirBufCount);
     }
+
+    lock_ReleaseMutex(&scp->redirMx);
 }
 
 void
 buf_RemoveFromRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
 {
     lock_AssertWrite(&buf_globalLock);
-    if (scp)
-        lock_AssertWrite(&scp->rw);
+
+    lock_ObtainMutex(&scp->redirMx);
 
     _InterlockedAnd(&bufp->qFlags, ~CM_BUF_QREDIR);
     osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
@@ -2614,6 +2616,8 @@ buf_RemoveFromRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
                        &bufp->redirq);
         InterlockedDecrement(&scp->redirBufCount);
     }
+
+    lock_ReleaseMutex(&scp->redirMx);
 }
 
 void
@@ -2623,8 +2627,7 @@ buf_MoveToHeadOfRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
     osi_assertx(bufp->qFlags & CM_BUF_QREDIR,
                  "buf_MoveToHeadOfRedirQueue buffer not held by redirector");
 
-    if (scp)
-        lock_AssertWrite(&scp->rw);
+    lock_ObtainMutex(&scp->redirMx);
 
     osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
                    (osi_queue_t **) &cm_data.buf_redirListEndp,
@@ -2642,4 +2645,6 @@ buf_MoveToHeadOfRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
                    &bufp->redirq);
         scp->redirLastAccess = bufp->redirLastAccess;
     }
+
+    lock_ReleaseMutex(&scp->redirMx);
 }

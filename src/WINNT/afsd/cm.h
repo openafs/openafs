@@ -67,6 +67,7 @@
 #define LOCK_HIERARCHY_BUFFER                  540
 #define LOCK_HIERARCHY_SCACHE                  550
 #define LOCK_HIERARCHY_BUF_GLOBAL              560
+#define LOCK_HIERARCHY_SCACHE_REDIRMX          565
 #define LOCK_HIERARCHY_VOLUME                  570
 #define LOCK_HIERARCHY_USER                    580
 #define LOCK_HIERARCHY_SCACHE_GLOBAL           590

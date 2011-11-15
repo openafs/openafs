@@ -2959,13 +2959,8 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
 
         code = cm_GetBuffer(scp, bufp, NULL, userp, reqp);
         if (code == 0) {
-            if (bufp->flags & CM_BUF_DIRTY) {
-                if (rwheld) {
-                    lock_ReleaseWrite(&scp->rw);
-                    rwheld = 0;
-                }
-                cm_BufWrite(scp, &bufp->offset, cm_chunkSize, 0, userp, reqp);
-            }
+            if (bufp->flags & CM_BUF_DIRTY)
+                cm_BufWrite(scp, &bufp->offset, cm_chunkSize, CM_BUF_WRITE_SCP_LOCKED, userp, reqp);
 
             if (!(bufp->qFlags & CM_BUF_QREDIR)) {
 #ifdef VALIDATE_CHECK_SUM
@@ -2974,18 +2969,12 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
                 char dbgstr[1024];
 #endif
 #endif
-                if (!rwheld) {
-                    lock_ObtainWrite(&scp->rw);
-                    rwheld = 1;
-                }
                 lock_ObtainWrite(&buf_globalLock);
                 if (!(bufp->flags & CM_BUF_DIRTY) &&
                     bufp->cmFlags == 0 &&
                     !(bufp->qFlags & CM_BUF_QREDIR)) {
                     buf_InsertToRedirQueue(scp, bufp);
                     lock_ReleaseWrite(&buf_globalLock);
-                    lock_ReleaseWrite(&scp->rw);
-                    rwheld = 0;
 
 #ifdef VALIDATE_CHECK_SUM
                     buf_ComputeCheckSum(bufp);
@@ -3030,12 +3019,6 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
                 osi_Log4(afsd_logp, "RDR_BkgFetch Extent2FS Already held by Redirector bufp 0x%p foffset 0x%p coffset 0x%p len 0x%x",
                           bufp, bufp->offset.QuadPart, bufp->datap - RDR_extentBaseAddress, cm_data.blockSize);
             }
-
-            if (rwheld) {
-                lock_ReleaseWrite(&scp->rw);
-                rwheld = 0;
-            }
-
         } else {
             /*
              * depending on what the error from cm_GetBuffer is
@@ -3268,12 +3251,10 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                     char dbgstr[1024];
 #endif
 #endif
-                    lock_ObtainWrite(&scp->rw);
                     lock_ObtainWrite(&buf_globalLock);
                     if (!(bufp->qFlags & CM_BUF_QREDIR)) {
                         buf_InsertToRedirQueue(scp, bufp);
                         lock_ReleaseWrite(&buf_globalLock);
-                        lock_ReleaseWrite(&scp->rw);
 
 #ifdef VALIDATE_CHECK_SUM
                         buf_ComputeCheckSum(bufp);
@@ -3314,11 +3295,9 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                          * However, we know the buffer is in recent use so move the buffer to the
                          * front of the queue
                          */
-                        lock_ObtainWrite(&scp->rw);
                         lock_ObtainWrite(&buf_globalLock);
                         buf_MoveToHeadOfRedirQueue(scp, bufp);
                         lock_ReleaseWrite(&buf_globalLock);
-                        lock_ReleaseWrite(&scp->rw);
 
                         osi_Log4(afsd_logp, "RDR_RequestFileExtentsAsync Extent2FS Already held by Redirector bufp 0x%p foffset 0x%p coffset 0x%p len 0x%x",
                                  bufp, ByteOffset.QuadPart, bufp->datap - RDR_extentBaseAddress, cm_data.blockSize);
@@ -3486,13 +3465,9 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                           pExtent->CacheOffset.LowPart);
 
                 /* Move the buffer to the front of the queue */
-                if (scp)
-                    lock_ObtainWrite(&scp->rw);
                 lock_ObtainWrite(&buf_globalLock);
                 buf_MoveToHeadOfRedirQueue(scp, bufp);
                 lock_ReleaseWrite(&buf_globalLock);
-                if (scp)
-                    lock_ReleaseWrite(&scp->rw);
                 buf_Release(bufp);
                 continue;
             }
@@ -3519,19 +3494,12 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                              (pExtent->Flags & AFS_EXTENT_FLAG_RELEASE) )
                         {
                             if (bufp->qFlags & CM_BUF_QREDIR) {
-                                if (scp)
-                                    lock_ObtainWrite(&scp->rw);
                                 lock_ObtainWrite(&buf_globalLock);
                                 if (bufp->qFlags & CM_BUF_QREDIR) {
                                     buf_RemoveFromRedirQueue(scp, bufp);
-                                    lock_ReleaseWrite(&scp->rw);
                                     buf_ReleaseLocked(bufp, TRUE);
-                                } else {
-                                    if (scp)
-                                        lock_ReleaseWrite(&scp->rw);
                                 }
-                                if (scp)
-                                    lock_ReleaseWrite(&buf_globalLock);
+                                lock_ReleaseWrite(&buf_globalLock);
                             }
 #ifdef ODS_DEBUG
                             snprintf( dbgstr, 1024,
@@ -3986,13 +3954,9 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                               pExtent->CacheOffset.LowPart);
 
                     /* Move the buffer to the front of the queue */
-                    if (scp)
-                        lock_ObtainWrite(&scp->rw);
                     lock_ObtainWrite(&buf_globalLock);
                     buf_MoveToHeadOfRedirQueue(scp, bufp);
                     lock_ReleaseWrite(&buf_globalLock);
-                    if (scp)
-                        lock_ReleaseWrite(&scp->rw);
                     buf_Release(bufp);
                     continue;
                 }
@@ -4028,17 +3992,10 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                                  (pExtent->Flags & AFS_EXTENT_FLAG_RELEASE) )
                             {
                                 if (bufp->qFlags & CM_BUF_QREDIR) {
-                                    if (scp)
-                                        lock_ObtainWrite(&scp->rw);
                                     lock_ObtainWrite(&buf_globalLock);
                                     if (bufp->qFlags & CM_BUF_QREDIR) {
                                         buf_RemoveFromRedirQueue(scp, bufp);
-                                        if (scp)
-                                            lock_ReleaseWrite(&scp->rw);
                                         buf_ReleaseLocked(bufp, TRUE);
-                                    } else {
-                                        if (scp)
-                                            lock_ReleaseWrite(&scp->rw);
                                     }
                                     lock_ReleaseWrite(&buf_globalLock);
                                 }
@@ -4384,17 +4341,10 @@ RDR_ReleaseFailedSetFileExtents( IN cm_user_t *userp,
 
             lock_ObtainMutex(&bufp->mx);
             if (bufp->qFlags & CM_BUF_QREDIR) {
-                if (scp)
-                    lock_ObtainWrite(&scp->rw);
                 lock_ObtainWrite(&buf_globalLock);
                 if (bufp->qFlags & CM_BUF_QREDIR) {
                     buf_RemoveFromRedirQueue(scp, bufp);
-                    if (scp)
-                        lock_ReleaseWrite(&scp->rw);
                     buf_ReleaseLocked(bufp, TRUE);
-                } else {
-                    if (scp)
-                        lock_ReleaseWrite(&scp->rw);
                 }
                 lock_ReleaseWrite(&buf_globalLock);
             }

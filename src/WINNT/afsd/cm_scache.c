@@ -329,6 +329,7 @@ cm_GetNewSCache(afs_uint32 locked)
 #ifdef USE_BPLUS
     lock_InitializeRWLock(&scp->dirlock, "cm_scache_t dirlock", LOCK_HIERARCHY_SCACHE_DIRLOCK);
 #endif
+    lock_InitializeMutex(&scp->redirMx, "cm_scache_t redirMx", LOCK_HIERARCHY_SCACHE_REDIRMX);
     scp->serverLock = -1;
 
     /* and put it in the LRU queue */
@@ -390,6 +391,7 @@ void cm_fakeSCacheInit(int newFile)
     lock_InitializeRWLock(&cm_data.fakeSCache.rw, "cm_scache_t rw", LOCK_HIERARCHY_SCACHE);
     lock_InitializeRWLock(&cm_data.fakeSCache.bufCreateLock, "cm_scache_t bufCreateLock", LOCK_HIERARCHY_SCACHE_BUFCREATE);
     lock_InitializeRWLock(&cm_data.fakeSCache.dirlock, "cm_scache_t dirlock", LOCK_HIERARCHY_SCACHE_DIRLOCK);
+    lock_InitializeMutex(&cm_data.fakeSCache.redirMx, "cm_scache_t redirMx", LOCK_HIERARCHY_SCACHE_REDIRMX);
 }
 
 long
@@ -572,6 +574,7 @@ cm_ShutdownSCache(void)
 #endif
         lock_FinalizeRWLock(&scp->rw);
         lock_FinalizeRWLock(&scp->bufCreateLock);
+        lock_FinalizeMutex(&scp->redirMx);
     }
     lock_ReleaseWrite(&cm_scacheLock);
 
@@ -625,6 +628,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->redirBufCount = 0;
                 scp->redirQueueT = NULL;
                 scp->redirQueueH = NULL;
+                lock_InitializeMutex(&scp->redirMx, "cm_scache_t redirMx", LOCK_HIERARCHY_SCACHE_REDIRMX);
             }
         }
         cm_allFileLocks = NULL;
