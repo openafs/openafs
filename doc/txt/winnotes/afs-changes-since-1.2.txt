@@ -1,3 +1,150 @@
+Since 1.7.0100 (1.7.1)
+
+ * Windows: install control panel only if afs_config
+   Add the AFS control panel to the AFS Configuration Tool
+   component so that it is installed only if afs_config.exe
+   is going to be installed.
+
+ * Windows: Disable Control Panel button in NIM
+   Since afs_config.exe is no longer installed, remove the
+   OpenAFS control panel button from the Network Identity Manager
+   provider.
+
+ * Fix fs setserverprefs when used on db servers.
+
+ * Add missing version info to afshcrypto.dll and
+   afsroken.dll.
+
+ * Add Explorer Shell Property Sheets
+
+ * Add Explorer Shell Mount Point and Symlink Overlays
+
+ * Add Explorer Shell InfoTips
+
+ * Add Explorer Shell Background Context Menu
+
+ * Fix a bug in the Explorer Shell extension that could
+   cause an exception.  (netbios name string type)
+
+ * Fix Rx ACKALL processing
+
+ * Fix Rx receive queue processing
+
+ * Fix Rx finalize
+
+ * Fix a variety of races in the afs redirector that could
+   result in blue screens of death.
+
+ * Fix a short name processing bug in the afs redirector
+   that could result in blue screens of death.
+
+ * Fix file rename processing.  Do not delete an existing
+   file before renaming.  The file server will do that
+   automatically.
+
+ * Fix memory leak in afs redirector pioctl processing.
+
+ * Do not crash during shutdown if the service never fully
+   started.
+
+ * Improve algorithm for buffer recycling to avoid skipping
+   out of date versions.
+
+ * Change error codes for unsupported FSCTL operations in
+   the afs redirector for better application compatibility.
+
+ * Correct ordering of reparse point tests.  Test for
+   "is a reparse point" before testing for "buffer too small".
+
+ * Return proper file attribute for symlinks.  The attribute
+   should be "reparse point" combined with the file attribute
+   of the symlink target.
+
+ * Track when a reparse point is opened as a reparse point
+   and do not resolve the target object.  Applies to mount
+   points and symlinks.
+
+ * Fix deadlock in Symlink attribute retrieval.
+
+ * Fix AFSRDFS Network Provider processing of Cancel Connection
+   requests.
+
+ * Add support for File Server out of band notification that the
+   vnode object has been successfully locked.  This permits the
+   cache manager to begin constructing the next StoreBIOD structure
+   in parallel with the current StoreData RPC.
+
+ * Add FileNetworkPhysicalNameInfo query support which is required
+   on Windows Vista and Windows 7.  It replaces a WNet API query.
+
+ * Implement FSCTL_IS_PATHNAME_VALID.
+
+ * Implement File Share Access.
+   Use file server locks to enforce file share access modes
+   via the afs redirector interface.  The approach taken
+   integrates share mode enforcement with the file server
+   lock tracking code in the service.  The share mode
+   enforcement mimics that of the SMB Server interface.
+
+   This patchset includes two functional changes to
+   the previous locking and share mode processing:
+
+     1. The cm_scache_t fsLockCount field is used to
+        determine if the desired lock can be granted
+        by the file server.  If not, the RXAFS_SetLock()
+        request is skipped and the request is failed
+        locally.
+
+     2. cm_CheckNTOpen() now accepts the desired and
+        and share access modes.  The share access mode
+        is used to determine if a test lock should be
+        obtained at all.  If the share mode is FILE_SHARE_WRITE
+        then no lock is requested.  This change permits
+        Microsoft Office applications to offer the user
+        the ability to open the file in read-only mode
+        and notify the user when the document can be
+        opened in read-write mode.
+
+ * Add Vista/Win7 Advanced Firewall Security
+
+ * Fix locking hierarchy in the service to prevent deadlocks
+   during calls into the afs redirector.
+
+ * Track the number of active RPCs per status object.  Use this
+   information when deciding if the currently cached data should
+   be discarded.  This is necessary when it is possible for RPC
+   completions to be processed out of order.
+
+ * Improve performance of cm_GetSCache() and avoid a race that
+   could in theory result in two status objects for the same FID.
+
+ * Create a default security descriptor to be used for all
+   QuerySecurityInfo requests.  Do not return
+   STATUS_INSUFFICIENT_RESOURCES.
+
+ * Improve fairness of background daemon worker threads to
+   prevent a store of a larger than cache file from starving
+   all other RPCs on the system.
+
+ * Change cm_SetupStoreBIOD algorithm to be more efficient when
+   constructing the list of dirty buffers to be stored to the
+   file server in a single RPC.
+
+ * Increase default number of daemon threads to 16 since the
+   afs redirector uses background daemon threads for all fetch
+   and store operations.
+
+ * Reduce contention between service <-> redirector extent
+   processing and all other operations that require access to
+   the status object rw lock by creating a dedicated mutex
+   for extent queue processing.
+
+ * Avoid performing double work when buf_CleanAsyncLocked is
+   called.
+
+ * No longer install the IBM AFS .HLP files.  They are so out
+   of date that reading them does more harm than good.
+
 Since 1.6.0002 (1.6.0b)
 
  * Correct an error in mount point string construction
