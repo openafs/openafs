@@ -659,6 +659,9 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 	return -1;
     }
 
+    /* init the keys queue before any call to afsconf_CloseInternal() */
+    _afsconf_InitKeys(adir);
+
     /* The CellServDB file is now open.
      * The following code parses the contents of the
      * file and creates a list with the first cell entry
@@ -810,9 +813,8 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 
     if (tf != NULL)
 	fclose(tf);
-    /* now read the fs keys, if possible */
 
-    _afsconf_InitKeys(adir);
+    /* now read the fs keys, if possible */
     code = _afsconf_LoadKeys(adir);
 
     return code;
