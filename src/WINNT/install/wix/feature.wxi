@@ -191,7 +191,6 @@
                 <ComponentRef Id="cmf_afssvrcfg_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
-                <ComponentRef Id="cmp_Lang_$(var.Language)" />
             
                 <ComponentRef Id="cmf_vlserver_EXE" />
                 <ComponentRef Id="cmf_volinfo_EXE" />
@@ -260,7 +259,6 @@
                 <ComponentRef Id="cmf_TaAfsServerManager_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
                 <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
-                <ComponentRef Id="cmp_Lang_$(var.Language)" />
 
             <?ifdef DebugSyms?>
 				<Feature Id="feaControlCenterDebug" AllowAdvertise="no" Description="$(loc.StrAFSCCDebugLongDesc)"
@@ -319,7 +317,6 @@
                 <ComponentRef Id="cmp_User_Guide_en_US" />
 
                 <ComponentRef Id="cmf_afs_nt_HLP_en_US" />
-                <ComponentRef Id="cmp_Lang_en_US" />
 		
             </Feature>
    <?else?> <!-- 32-bit tools only -->
