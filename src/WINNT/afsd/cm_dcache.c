@@ -1049,8 +1049,8 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     biop->offset = firstModOffset;
     bufp = NULL;	/* this buffer and reference added to the queue */
 
-    /* compute the window surrounding *inOffsetp of size cm_chunkSize */
-    scanStart = *inOffsetp;
+    /* compute the window surrounding firstModOffset of size cm_chunkSize */
+    scanStart = firstModOffset;
     scanStart.LowPart &= (-cm_chunkSize);
     thyper = ConvertLongToLargeInteger(cm_chunkSize);
     scanEnd = LargeIntegerAdd(scanStart, thyper);
