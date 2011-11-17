@@ -1124,6 +1124,7 @@ AFSProcessIrpRequest( IN PIRP Irp)
     AFSPoolEntry    *pEntry = NULL, *pPrevEntry = NULL;
     AFSCommRequest  *pRequest = NULL;
     BOOLEAN          bReleaseRequestThread = FALSE;
+    PVOID            Objects[2];
 
     __Enter
     {
@@ -1162,6 +1163,19 @@ AFSProcessIrpRequest( IN PIRP Irp)
         }
 
         //
+        // Populate the objects array for the non release only threads
+        // Release only workers can only process release extent events
+        // whereas normal workers can process any kind of event.
+        // Release only workers are present to ensure there cannot be
+        // a deadlock due to all extents held by the redirector and
+        // there not be a worker available to release them.
+        //
+
+        Objects[0] = &pCommSrvc->IrpPoolHasReleaseEntries;
+
+        Objects[1] = &pCommSrvc->IrpPoolHasEntries;
+
+        //
         // Wait on the 'have items' event until we can retrieve an item
         //
 
@@ -1176,23 +1190,36 @@ AFSProcessIrpRequest( IN PIRP Irp)
                                                   UserMode,
                                                   TRUE,
                                                   NULL);
+
+                if( ntStatus != STATUS_SUCCESS)
+                {
+
+                    ntStatus = STATUS_DEVICE_NOT_READY;
+
+                    break;
+                }
+
             }
             else
             {
 
-                ntStatus = KeWaitForSingleObject( &pCommSrvc->IrpPoolHasEntries,
-                                                  UserRequest,
-                                                  UserMode,
-                                                  TRUE,
-                                                  NULL);
-            }
+                ntStatus = KeWaitForMultipleObjects( 2,
+                                                     Objects,
+                                                     WaitAny,
+                                                     UserRequest,
+                                                     UserMode,
+                                                     TRUE,
+                                                     NULL,
+                                                     NULL);
 
-            if( ntStatus != STATUS_SUCCESS)
-            {
+                if( ntStatus != STATUS_WAIT_0 &&
+                    ntStatus != STATUS_WAIT_1)
+                {
 
-                ntStatus = STATUS_DEVICE_NOT_READY;
+                    ntStatus = STATUS_DEVICE_NOT_READY;
 
-                break;
+                    break;
+                }
             }
 
             //
