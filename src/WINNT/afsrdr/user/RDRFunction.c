@@ -3286,7 +3286,6 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                                  bufp, ByteOffset.QuadPart, bufp->datap - RDR_extentBaseAddress, cm_data.blockSize);
                     } else {
                         lock_ReleaseWrite(&buf_globalLock);
-                        lock_ReleaseWrite(&scp->rw);
                     }
                 } else {
                     if (bBufRelease) {
