@@ -103,9 +103,9 @@ afs_int32 cm_RequestWillBlock(cm_bkgRequest_t *rp)
          * threads can be actively involved in storing data at a time
          * on a file.
          */
-        lock_ObtainRead(&rp->scp);
+        lock_ObtainRead(&rp->scp->rw);
         willBlock = (rp->scp->flags & CM_SCACHEFLAG_DATASTORING);
-        lock_ReleaseRead(&rp->scp);
+        lock_ReleaseRead(&rp->scp->rw);
     }
     else if (rp->procp == RDR_BkgFetch || rp->procp == cm_BkgPrefetch) {
         /*
