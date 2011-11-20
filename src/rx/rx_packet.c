@@ -1348,9 +1348,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 	 * just wait.  */
 	NETPRI;
 	call->flags |= RX_CALL_WAIT_PACKETS;
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_PACKET);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	MUTEX_EXIT(&call->lock);
 	rx_waitingForPackets = 1;
 
@@ -1361,9 +1359,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 #endif
 	MUTEX_EXIT(&rx_freePktQ_lock);
 	MUTEX_ENTER(&call->lock);
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_PACKET);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	call->flags &= ~RX_CALL_WAIT_PACKETS;
 	USERPRI;
     }

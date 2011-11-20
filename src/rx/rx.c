@@ -663,9 +663,7 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
     if (lastPacket && call->conn->type == RX_CLIENT_CONNECTION)
 	clock_Addmsec(&retryTime, 400);
 
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
-    MUTEX_EXIT(&rx_refcnt_mutex);
     call->resendEvent = rxevent_Post(&retryTime, &now, rxi_Resend,
 				     call, NULL, istack);
 }
@@ -790,9 +788,7 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
 
         rxevent_Cancel(&call->delayedAckEvent, call,
 		       RX_CALL_REFCOUNT_DELAY);
-	MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-	MUTEX_EXIT(&rx_refcnt_mutex);
 
 	call->delayedAckEvent = rxevent_Post(&when, &now,
 					     rxi_SendDelayedAck,
@@ -1499,9 +1495,7 @@ rx_NewCall(struct rx_connection *conn)
                          */
                         call->state = RX_STATE_RESET;
                         MUTEX_EXIT(&conn->conn_call_lock);
-                        MUTEX_ENTER(&rx_refcnt_mutex);
                         CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
-                        MUTEX_EXIT(&rx_refcnt_mutex);
                         rxi_ResetCall(call, 0);
                         (*call->callNumber)++;
                         if (MUTEX_TRYENTER(&conn->conn_call_lock))
@@ -1533,9 +1527,7 @@ rx_NewCall(struct rx_connection *conn)
                          * Instead, cycle through one more time to see if
                          * we can find a call that can call our own.
                          */
-                        MUTEX_ENTER(&rx_refcnt_mutex);
                         CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
-                        MUTEX_EXIT(&rx_refcnt_mutex);
                         wait = 0;
                     }
                     MUTEX_EXIT(&call->lock);
@@ -1552,9 +1544,7 @@ rx_NewCall(struct rx_connection *conn)
 
                 /* rxi_NewCall returns with mutex locked */
 		call = rxi_NewCall(conn, i);
-                MUTEX_ENTER(&rx_refcnt_mutex);
                 CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
-                MUTEX_EXIT(&rx_refcnt_mutex);
 		break;
 	    }
 	}
@@ -2135,9 +2125,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	     call));
 
 	MUTEX_EXIT(&call->lock);
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
-        MUTEX_EXIT(&rx_refcnt_mutex);
     } else {
 	dpf(("rx_GetCall(socketp=%p, *socketp=0x%x)\n", socketp, *socketp));
     }
@@ -2458,9 +2446,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
         rxi_FreePackets(0, &call->iovq);
     MUTEX_EXIT(&call->lock);
 
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
-    MUTEX_EXIT(&rx_refcnt_mutex);
     if (conn->type == RX_CLIENT_CONNECTION) {
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags &= ~RX_CONN_BUSY;
@@ -4814,9 +4800,7 @@ rxi_AttachServerProc(struct rx_call *call,
 	    *tnop = sq->tno;
 	    *sq->socketp = socket;
 	    clock_GetTime(&call->startTime);
-            MUTEX_ENTER(&rx_refcnt_mutex);
 	    CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
-            MUTEX_EXIT(&rx_refcnt_mutex);
 	} else {
 	    sq->newcall = call;
 	}
@@ -4875,9 +4859,7 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
 	MUTEX_ENTER(&call->lock);
 	rxevent_Put(call->delayedAckEvent);
 	call->delayedAckEvent = NULL;
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_ACKALL);
-        MUTEX_EXIT(&rx_refcnt_mutex);
     }
     rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
 		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
@@ -4907,9 +4889,7 @@ rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
 	    rxevent_Put(call->delayedAckEvent);
 	    call->delayedAckEvent = NULL;
 	}
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
-        MUTEX_EXIT(&rx_refcnt_mutex);
     }
     (void)rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
     if (event)
@@ -5058,9 +5038,7 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 	clock_GetTime(&now);
 	when = now;
 	clock_Addmsec(&when, rxi_callAbortDelay);
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ABORT);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	call->delayedAbortEvent =
 	    rxevent_Post(&when, &now, rxi_SendDelayedCallAbort, call, 0, 0);
     }
@@ -5709,18 +5687,14 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
     rxevent_Cancel(&call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
 
     MUTEX_EXIT(&call->lock);
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_HOLD(call, RX_CALL_REFCOUNT_SEND);
-    MUTEX_EXIT(&rx_refcnt_mutex);
     if (xmit->len > 1) {
 	rxi_SendPacketList(call, conn, xmit->list, xmit->len, istack);
     } else {
 	rxi_SendPacket(call, conn, xmit->list[0], istack);
     }
     MUTEX_ENTER(&call->lock);
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_RELE(call, RX_CALL_REFCOUNT_SEND);
-    MUTEX_EXIT(&rx_refcnt_mutex);
 
     /* Tell the RTO calculation engine that we have sent a packet, and
      * if it was the last one */
@@ -5866,9 +5840,7 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
      * structure, since there is no longer a per-call retransmission
      * event pending. */
     if (event == call->resendEvent) {
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	rxevent_Put(call->resendEvent);
 	call->resendEvent = NULL;
     }
@@ -6112,13 +6084,9 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
 
     /* Actually send the packet, filling in more connection-specific fields */
     MUTEX_EXIT(&call->lock);
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_HOLD(call, RX_CALL_REFCOUNT_SEND);
-    MUTEX_EXIT(&rx_refcnt_mutex);
     rxi_SendPacket(call, conn, p, istack);
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_RELE(call, RX_CALL_REFCOUNT_SEND);
-    MUTEX_EXIT(&rx_refcnt_mutex);
     MUTEX_ENTER(&call->lock);
 
     /* Update last send time for this call (for keep-alive
@@ -6415,9 +6383,7 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
     struct rx_connection *conn;
     afs_uint32 now;
 
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
-    MUTEX_EXIT(&rx_refcnt_mutex);
     MUTEX_ENTER(&call->lock);
 
     if (event == call->keepAliveEvent) {
@@ -6461,9 +6427,7 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
     struct rx_call *call = arg1;
     struct rx_connection *conn;
 
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
-    MUTEX_EXIT(&rx_refcnt_mutex);
     MUTEX_ENTER(&call->lock);
 
     if (event == call->growMTUEvent) {
@@ -6509,9 +6473,7 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 	clock_GetTime(&now);
 	when = now;
 	when.sec += call->conn->secondsUntilPing;
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	call->keepAliveEvent =
 	    rxevent_Post(&when, &now, rxi_KeepAliveEvent, call, NULL, 0);
     }
@@ -6534,9 +6496,7 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 	}
 
 	when.sec += secs;
-        MUTEX_ENTER(&rx_refcnt_mutex);
 	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
-        MUTEX_EXIT(&rx_refcnt_mutex);
 	call->growMTUEvent =
 	    rxevent_Post(&when, &now, rxi_GrowMTUEvent, call, NULL, 0);
     }
@@ -6616,9 +6576,7 @@ rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1, void *dummy,
 	rxi_FreePacket(packet);
     }
     MUTEX_EXIT(&call->lock);
-    MUTEX_ENTER(&rx_refcnt_mutex);
     CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
-    MUTEX_EXIT(&rx_refcnt_mutex);
 }
 
 /* This routine is called periodically (every RX_AUTH_REQUEST_TIMEOUT
