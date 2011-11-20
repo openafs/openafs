@@ -1392,8 +1392,6 @@ afsd_InitCM(char **reasonP)
     }
 
     if ( rx_mtu != -1 ) {
-        extern void rx_SetMaxMTU(int);
-
         rx_SetMaxMTU(rx_mtu);
         afsi_log("rx_SetMaxMTU %d successful", rx_mtu);
     }
