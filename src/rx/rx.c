@@ -186,6 +186,13 @@ afs_kmutex_t rx_atomic_mutex;
 /* Forward prototypes */
 static struct rx_call * rxi_NewCall(struct rx_connection *, int);
 
+static_inline void
+putConnection (struct rx_connection *conn) {
+    MUTEX_ENTER(&rx_refcnt_mutex);
+    conn->refCount--;
+    MUTEX_EXIT(&rx_refcnt_mutex);
+}
+
 #ifdef AFS_PTHREAD_ENV
 
 /*
@@ -3191,9 +3198,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	MUTEX_ENTER(&conn->conn_data_lock);
 	if (np->header.type != RX_PACKET_TYPE_ABORT)
 	    np = rxi_SendConnectionAbort(conn, np, 1, 0);
-        MUTEX_ENTER(&rx_refcnt_mutex);
-	conn->refCount--;
-        MUTEX_EXIT(&rx_refcnt_mutex);
+	putConnection(conn);
 	MUTEX_EXIT(&conn->conn_data_lock);
 	return np;
     }
@@ -3206,32 +3211,23 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    afs_int32 errcode = ntohl(rx_GetInt32(np, 0));
 	    dpf(("rxi_ReceivePacket ABORT rx_GetInt32 = %d\n", errcode));
 	    rxi_ConnectionError(conn, errcode);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return np;
 	}
 	case RX_PACKET_TYPE_CHALLENGE:
 	    tnp = rxi_ReceiveChallengePacket(conn, np, 1);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return tnp;
 	case RX_PACKET_TYPE_RESPONSE:
 	    tnp = rxi_ReceiveResponsePacket(conn, np, 1);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return tnp;
 	case RX_PACKET_TYPE_PARAMS:
 	case RX_PACKET_TYPE_PARAMS + 1:
 	case RX_PACKET_TYPE_PARAMS + 2:
 	    /* ignore these packet types for now */
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return np;
-
 
 	default:
 	    /* Should not reach here, unless the peer is broken: send an
@@ -3239,9 +3235,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    rxi_ConnectionError(conn, RX_PROTOCOL_ERROR);
 	    MUTEX_ENTER(&conn->conn_data_lock);
 	    tnp = rxi_SendConnectionAbort(conn, np, 1, 0);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    MUTEX_EXIT(&conn->conn_data_lock);
 	    return tnp;
 	}
@@ -3286,9 +3280,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
                 rxi_CallError(call, rx_BusyError);
                 tp = rxi_SendCallAbort(call, np, 1, 0);
                 MUTEX_EXIT(&call->lock);
-                MUTEX_ENTER(&rx_refcnt_mutex);
-                conn->refCount--;
-                MUTEX_EXIT(&rx_refcnt_mutex);
+		putConnection(conn);
                 if (rx_stats_active)
                     rx_atomic_inc(&rx_stats.nBusies);
                 return tp;
@@ -3303,9 +3295,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
          */
         if (rx_stats_active)
             rx_atomic_inc(&rx_stats.spuriousPacketsRead);
-        MUTEX_ENTER(&rx_refcnt_mutex);
-        conn->refCount--;
-        MUTEX_EXIT(&rx_refcnt_mutex);
+	putConnection(conn);
         return np;
     }
 
@@ -3315,9 +3305,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
             MUTEX_EXIT(&call->lock);
             if (rx_stats_active)
                 rx_atomic_inc(&rx_stats.spuriousPacketsRead);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-            conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
             return np;
         } else if (np->header.callNumber != currentCallNumber) {
 	    /* Wait until the transmit queue is idle before deciding
@@ -3336,9 +3324,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
                 if (call->error) {
                     rxi_CallError(call, call->error);
                     MUTEX_EXIT(&call->lock);
-                    MUTEX_ENTER(&rx_refcnt_mutex);
-                    conn->refCount--;
-                    MUTEX_EXIT(&rx_refcnt_mutex);
+		    putConnection(conn);
                     return np;
                 }
             }
@@ -3353,9 +3339,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 		tp = rxi_SendSpecial(call, conn, np, RX_PACKET_TYPE_BUSY,
 				     NULL, 0, 1);
 		MUTEX_EXIT(&call->lock);
-                MUTEX_ENTER(&rx_refcnt_mutex);
-		conn->refCount--;
-                MUTEX_EXIT(&rx_refcnt_mutex);
+		putConnection(conn);
 		return tp;
 	    }
 	    rxi_ResetCall(call, 0);
@@ -3382,9 +3366,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 		rxi_CallError(call, rx_BusyError);
 		tp = rxi_SendCallAbort(call, np, 1, 0);
 		MUTEX_EXIT(&call->lock);
-                MUTEX_ENTER(&rx_refcnt_mutex);
-		conn->refCount--;
-                MUTEX_EXIT(&rx_refcnt_mutex);
+		putConnection(conn);
                 if (rx_stats_active)
                     rx_atomic_inc(&rx_stats.nBusies);
 		return tp;
@@ -3400,9 +3382,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
             if (rx_stats_active)
                 rx_atomic_inc(&rx_stats.ignorePacketDally);
             MUTEX_EXIT(&call->lock);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return np;
 	}
 
@@ -3412,18 +3392,14 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
             if (rx_stats_active)
                 rx_atomic_inc(&rx_stats.spuriousPacketsRead);
             MUTEX_EXIT(&call->lock);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return np;
 	}
 	/* If the service security object index stamped in the packet does not
 	 * match the connection's security index, ignore the packet */
 	if (np->header.securityIndex != conn->securityIndex) {
 	    MUTEX_EXIT(&call->lock);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return np;
 	}
 
@@ -3444,9 +3420,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #ifdef	RX_ENABLE_LOCKS
 		rxi_SetAcksInTransmitQueue(call);
 #else
-                MUTEX_ENTER(&rx_refcnt_mutex);
-		conn->refCount--;
-                MUTEX_EXIT(&rx_refcnt_mutex);
+		putConnection(conn);
 		return np;	/* xmitting; drop packet */
 #endif
 	    } else {
@@ -3474,9 +3448,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
                     if (rx_stats_active)
                         rx_atomic_inc(&rx_stats.spuriousPacketsRead);
 		    MUTEX_EXIT(&call->lock);
-                    MUTEX_ENTER(&rx_refcnt_mutex);
-		    conn->refCount--;
-                    MUTEX_EXIT(&rx_refcnt_mutex);
+		    putConnection(conn);
 		    return np;
 		}
 	    }
@@ -3538,9 +3510,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	dpf(("rxi_ReceivePacket ABORT rx_DataOf = %d\n", errdata));
 	rxi_CallError(call, errdata);
 	MUTEX_EXIT(&call->lock);
-        MUTEX_ENTER(&rx_refcnt_mutex);
-	conn->refCount--;
-        MUTEX_EXIT(&rx_refcnt_mutex);
+	putConnection(conn);
 	return np;		/* xmitting; drop packet */
     }
     case RX_PACKET_TYPE_BUSY: {
@@ -3557,9 +3527,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	MUTEX_EXIT(&call->lock);
 	MUTEX_EXIT(&conn->conn_call_lock);
 
-	MUTEX_ENTER(&rx_refcnt_mutex);
-	conn->refCount--;
-	MUTEX_EXIT(&rx_refcnt_mutex);
+	putConnection(conn);
 	return np;
     }
 
@@ -3582,9 +3550,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    break;
 #else /* RX_ENABLE_LOCKS */
 	    MUTEX_EXIT(&call->lock);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	    return np;		/* xmitting; drop packet */
 #endif /* RX_ENABLE_LOCKS */
 	}
@@ -3606,9 +3572,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     /* we've received a legit packet, so the channel is not busy */
     call->flags &= ~RX_CALL_PEER_BUSY;
     MUTEX_EXIT(&call->lock);
-    MUTEX_ENTER(&rx_refcnt_mutex);
-    conn->refCount--;
-    MUTEX_EXIT(&rx_refcnt_mutex);
+    putConnection(conn);
     return np;
 }
 
@@ -3708,9 +3672,7 @@ rxi_CheckReachEvent(struct rxevent *event, void *arg1, void *arg2, int dummy)
 
     waiting = conn->flags & RX_CONN_ATTACHWAIT;
     if (event) {
-        MUTEX_ENTER(&rx_refcnt_mutex);
-	conn->refCount--;
-        MUTEX_EXIT(&rx_refcnt_mutex);
+	putConnection(conn);
     }
     MUTEX_EXIT(&conn->conn_data_lock);
 
@@ -5170,9 +5132,7 @@ rxi_ConnectionError(struct rx_connection *conn,
 	if (conn->checkReachEvent) {
 	    rxevent_Cancel(&conn->checkReachEvent, NULL, 0);
 	    conn->flags &= ~(RX_CONN_ATTACHWAIT|RX_CONN_NAT_PING);
-            MUTEX_ENTER(&rx_refcnt_mutex);
-	    conn->refCount--;
-            MUTEX_EXIT(&rx_refcnt_mutex);
+	    putConnection(conn);
 	}
 	MUTEX_EXIT(&conn->conn_data_lock);
 	for (i = 0; i < RX_MAXCALLS; i++) {
