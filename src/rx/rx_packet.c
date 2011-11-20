@@ -67,6 +67,7 @@
 #include "rx_stats.h"
 
 #include "rx_conn.h"
+#include "rx_call.h"
 
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */

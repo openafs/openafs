@@ -55,6 +55,7 @@
 
 #include "rx.h"
 #include "rx_atomic.h"
+#include "rx_call.h"
 
 struct rxevent {
     struct opr_queue q;

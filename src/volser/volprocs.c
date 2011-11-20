@@ -2831,10 +2831,12 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	pntr->callValid = 0;
 	if (tt->rxCallPtr) {	/*record call related info */
 	    pntr->callValid = 1;
+#if 0
 	    pntr->readNext = tt->rxCallPtr->rnext;
 	    pntr->transmitNext = tt->rxCallPtr->tnext;
 	    pntr->lastSendTime = tt->rxCallPtr->lastSendTime;
 	    pntr->lastReceiveTime = tt->rxCallPtr->lastReceiveTime;
+#endif
 	}
         VTRANS_OBJ_UNLOCK(tt);
 	pntr++;

@@ -129,7 +129,7 @@ AuthOkay(struct rx_call *call, char *name)
 	return 0;
 
     if (rx_SecurityClassOf(rx_ConnectionOf(call)) == 2) {
-	code = rxkad_GetServerInfo(call->conn, &level, 0, 0, 0, 0, 0);
+	code = rxkad_GetServerInfo(rx_ConnectionOf(call), &level, 0, 0, 0, 0, 0);
 	if (code)
 	    return 0;
     } else

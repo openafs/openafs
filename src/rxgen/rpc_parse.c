@@ -1237,12 +1237,6 @@ cs_ProcMarshallInParams_setup(definition * defp, int split_flag)
     if (!(split_flag > 1) || (noofallparams != 0)) {
 	f_print(fout, "\tXDR z_xdrs;\n");
     }
-    /*
-     * Print out client side stat gathering call
-     */
-    if (xflag && split_flag != 1) {
-	f_print(fout, "\tstruct clock __QUEUE, __EXEC;\n");
-    }
 
     if ((!split_flag) || (split_flag == 1)) {
 	f_print(fout, "\txdrrx_create(&z_xdrs, z_call, XDR_ENCODE);\n");
@@ -1328,39 +1322,18 @@ cs_ProcTail_setup(definition * defp, int split_flag)
     }
     if (xflag && split_flag != 1) {
 	f_print(fout, "\tif (rx_enable_stats) {\n");
-	f_print(fout, "\t    clock_GetTime(&__EXEC);\n");
-	f_print(fout, "\t    clock_Sub(&__EXEC, &z_call->startTime);\n");
-	f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
-	f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
 	if (PackageStatIndex[PackageIndex]) {
-	    if (!split_flag) {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_conn), %s,\n",
-			PackageStatIndex[PackageIndex]);
-	    } else {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn), %s,\n",
-			PackageStatIndex[PackageIndex]);
-	    }
-	} else {
-	    if (!split_flag) {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_conn),\n"
-			"\t\t(((afs_uint32)(ntohs(z_conn->serviceId) << 16)) \n"
-			"\t\t| ((afs_uint32)ntohs(z_conn->peer->port))),\n");
-	    } else {
-		f_print(fout,
-			"\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn),\n"
-			"\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
-			"\t\t((afs_uint32)ntohs(z_call->conn->peer->port))),\n");
-	    }
-	}
-	if (xflag) {
-	    f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, &__QUEUE, &__EXEC,\n",
-		    no_of_stat_funcs, PackagePrefix[PackageIndex]);
 	    f_print(fout,
-		    "\t\t&z_call->bytesSent, &z_call->bytesRcvd, 1);\n");
+		    "\t    rx_RecordCallStatistics(z_call, %s,\n",
+		    PackageStatIndex[PackageIndex]);
+	} else {
+	    f_print(fout,
+		    "\t    rx_RecordCallStatistics(z_call, \n"
+		    "\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
+		    "\t\t((afs_uint32)ntohs(z_call->conn->peer->port))),\n");
 	}
+	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 1);\n",
+		no_of_stat_funcs, PackagePrefix[PackageIndex]);
 	f_print(fout, "\t}\n\n");
     }
     f_print(fout, "\treturn z_result;\n}\n\n");
@@ -1400,9 +1373,6 @@ ss_ProcName_setup(definition * defp)
 		PackagePrefix[PackageIndex], defp->pc.proc_name);
 	f_print(fout, "struct rx_call *z_call, XDR *z_xdrs)\n{\n");
 	f_print(fout, "\t" "afs_int32 z_result;\n");
-	if (xflag) {
-	    f_print(fout, "\tstruct clock __QUEUE, __EXEC;\n");
-	}
 
 	for (plist = defp->pc.plists; plist; plist = plist->next)
 	    if (plist->component_kind == DEF_PARAM) {
@@ -1733,11 +1703,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 
     if (xflag) {
 	f_print(fout, "\tif (rx_enable_stats) {\n");
-	f_print(fout, "\t    clock_GetTime(&__EXEC);\n");
-	f_print(fout, "\t    clock_Sub(&__EXEC, &z_call->startTime);\n");
-	f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
-	f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
-	f_print(fout, "\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn),");
+	f_print(fout, "\t    rx_RecordCallStatistics(z_call,");
 	if (PackageStatIndex[PackageIndex]) {
 	    f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
 	} else {
@@ -1745,9 +1711,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 		    "\n\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
 		    "\t\t((afs_uint32)ntohs(z_call->conn->service->servicePort))),\n");
 	}
-	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, &__QUEUE, &__EXEC,\n",
+	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 0);\n",
 		no_of_stat_funcs, PackagePrefix[PackageIndex]);
-	f_print(fout, "\t\t&z_call->bytesSent, &z_call->bytesRcvd, 0);\n");
 	f_print(fout, "\t}\n\n");
     }
 
@@ -1757,12 +1722,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 
 	if (xflag) {
 	    f_print(fout, "\tif (rx_enable_stats) {\n");
-	    f_print(fout, "\t    clock_GetTime(&__EXEC);\n");
-	    f_print(fout, "\t    clock_Sub(&__EXEC, &z_call->startTime);\n");
-	    f_print(fout, "\t    __QUEUE = z_call->startTime;\n");
-	    f_print(fout, "\t    clock_Sub(&__QUEUE, &z_call->queueTime);\n");
 	    f_print(fout,
-		    "\t    rx_IncrementTimeAndCount(rx_PeerOf(z_call->conn),");
+		    "\t    rx_RecordCallStatistics(z_call,");
 	    if (PackageStatIndex[PackageIndex]) {
 		f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
 	    } else {
@@ -1770,10 +1731,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 			"\n\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
 			"\t\t((afs_uint32)ntohs(z_call->conn->service->servicePort))),\n");
 	    }
-	    f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, &__QUEUE, &__EXEC,\n",
+	    f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 0);\n",
 		    no_of_stat_funcs, PackagePrefix[PackageIndex]);
-	    f_print(fout,
-		    "\t\t&z_call->bytesSent, &z_call->bytesRcvd, 0);\n");
 	    f_print(fout, "\t}\n\n");
 	}
 

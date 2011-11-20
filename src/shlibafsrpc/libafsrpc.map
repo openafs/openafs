@@ -165,6 +165,8 @@
 	rx_ServiceIdOf;
 	rx_SecurityObjectOf;
 	rx_ConnError;
+	rx_ConnectionOf;
+	rx_RecordCallStatistics;
     local:
 	*;
 };

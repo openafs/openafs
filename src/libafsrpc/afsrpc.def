@@ -319,6 +319,15 @@ EXPORTS
         rx_ServiceOf                            @326
         rx_ConnError                            @327
 
+        rx_ConnectionOf                         @328
+        rx_Error                                @329
+        rx_GetRemoteStatus                      @330
+        rx_SetLocalStatus                       @331
+        rx_GetCallAbortCode                     @332
+        rx_SetCallAbortCode                     @333
+        rx_RecordCallStatistics                 @334
+
+
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA

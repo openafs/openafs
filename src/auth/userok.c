@@ -697,8 +697,8 @@ rxkadSuperUser(struct afsconf_dir *adir, struct rx_call *acall,
     int code;
 
     /* get auth details from server connection */
-    code = rxkad_GetServerInfo(acall->conn, NULL, &exp, tname, tinst, tcell,
-			       NULL);
+    code = rxkad_GetServerInfo(rx_ConnectionOf(acall), NULL, &exp, tname,
+			       tinst, tcell, NULL);
     if (code)
 	return 0;		/* bogus connection/other error */
 

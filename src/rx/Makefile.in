@@ -20,10 +20,10 @@ XDROBJS_common = xdr.o xdr_array.o xdr_rx.o xdr_mem.o xdr_len.o xdr_afsuuid.o
 
 XDROBJS = xdr_arrayn.o ${XDROBJS_common}
 
-RXOBJS_common = rx_clock.o rx_conn.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o \
-	rx_globals.o rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o rx_trace.o \
-	rx_conncache.o rx_opaque.o rx_identity.o rx_stats.o \
-	xdr_int32.o xdr_int64.o xdr_update.o xdr_refernce.o
+RXOBJS_common = rx_clock.o rx_call.o rx_conn.o rx_event.o rx_user.o rx_lwp.o \
+		rx.o rx_null.o rx_globals.o rx_getaddr.o rx_misc.o rx_packet.o \
+		rx_rdwr.o rx_trace.o rx_conncache.o rx_opaque.o rx_identity.o \
+		rx_stats.o xdr_int32.o xdr_int64.o xdr_update.o xdr_refernce.o
 
 RXOBJS = ${RXOBJS_common} 
 
