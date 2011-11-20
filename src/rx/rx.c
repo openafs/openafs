@@ -82,6 +82,7 @@ extern afs_int32 afs_termState;
 
 #include "rx_conn.h"
 #include "rx_call.h"
+#include "rx_packet.h"
 
 #include <afs/rxgen_consts.h>
 

@@ -33,6 +33,9 @@
 #include "rx_atomic.h"
 #include "rx_globals.h"
 #include "rx_stats.h"
+#ifdef AFS_NT40_ENV
+#include "rx_xmit_nt.h"
+#endif
 
 #define MAXTHREADNAMELENGTH 64
 
@@ -461,7 +464,13 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 #endif
 	    return -1;
 	}
-	while ((err = select(socket + 1, 0, sfds, 0, 0)) != 1) {
+	while ((err = select(
+#ifdef AFS_NT40_ENV
+                             0,
+#else
+                             socket + 1,
+#endif
+                             0, sfds, 0, 0)) != 1) {
 	    if (err >= 0 || errno != EINTR)
 		osi_Panic("rxi_sendmsg: select error %d.%d", err, errno);
 	    FD_ZERO(sfds);

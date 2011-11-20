@@ -41,6 +41,9 @@
 # include <roken.h>
 #endif /* KERNEL */
 
+#include "rx.h"
+#include "rx_clock.h"
+#include "rx_packet.h"
 #include "rx_globals.h"
 
 void rx_SetMaxReceiveWindow(int packets)
