@@ -136,6 +136,7 @@ AFSAOBJS = \
 	Kvice.cs.o	\
 	fcrypt.o		\
 	rx.o		\
+	rx_call.o	\
 	rx_conn.o	\
 	rx_rdwr.o	\
 	rx_clock.o	\
@@ -230,6 +231,7 @@ AFSPAGOBJS = \
 	xdr_int32.o	\
 	xdr_int64.o	\
 	rx.o		\
+	rx_call.o	\
 	rx_conn.o	\
 	rx_rdwr.o	\
 	rx_clock.o	\
@@ -358,6 +360,8 @@ afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
 	$(CRULE_NOOPT) $(TOP_SRC_VNOPS)/afs_vnop_write.c
 afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
 	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_volume.c
+rx_call.o: $(TOP_SRC_RX)/rx_call.c
+	$(CRULE_OPT) $(TOP_SRC_RX)/rx_call.c
 rx_conn.o: $(TOP_SRC_RX)/rx_conn.c
 	$(CRULE_OPT) $(TOP_SRC_RX)/rx_conn.c
 rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c

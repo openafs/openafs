@@ -30,6 +30,7 @@ main(int argc, char **argv)
 #include "rx_trace.h"
 
 #include "rx_conn.h"
+#include "rx_call.h"
 
 #ifdef RXTRACEON
 char rxi_tracename[80] = "/tmp/rxcalltrace";

@@ -275,7 +275,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                 temp = rx_Writev(rxcallp, tiov, tnio, vbytes);
                 if (temp != vbytes) {
                     osi_Log3(afsd_logp, "rx_Writev failed bp 0x%p, %d != %d", bufp, temp, vbytes);
-                    code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                    code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
                     break;
                 }
 
@@ -1847,7 +1847,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                     nbytes_hi = ntohl(nbytes_hi);
                 } else {
                     nbytes_hi = 0;
-		    code = rxcallp->error;
+		    code = rx_Error(rxcallp);
                     code1 = rx_EndCall(rxcallp, code);
                     rxcallp = NULL;
                 }
@@ -1896,7 +1896,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 }
             } else {
                 osi_Log1(afsd_logp, "cm_GetBuffer rx_Read32 returns %d != 4", temp);
-                code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
             }
         }
         /* for the moment, nbytes_hi will always be 0 if code == 0
@@ -1937,7 +1937,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                     if (fs_fetchdata_offset_bug && first_read)
                         length_found = 0;
                     else
-                        code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                        code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
                     break;
                 }
 
@@ -2014,7 +2014,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                     if (fs_fetchdata_offset_bug && first_read)
                         length_found = 0;
                     else
-                        code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                        code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
                     break;
                 }
                 first_read = 0;
@@ -2303,7 +2303,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                     nbytes_hi = ntohl(nbytes_hi);
                 } else {
                     nbytes_hi = 0;
-		    code = rxcallp->error;
+		    code = rx_Error(rxcallp);
                     code1 = rx_EndCall(rxcallp, code);
                     rxcallp = NULL;
                 }
@@ -2351,7 +2351,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                 }
             } else {
                 osi_Log1(afsd_logp, "cm_GetData rx_Read32 returns %d != 4", temp);
-                code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
             }
         }
         /* for the moment, nbytes_hi will always be 0 if code == 0
@@ -2383,7 +2383,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                     if (fs_fetchdata_offset_bug && first_read)
                         length_found = 0;
                     else
-                        code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                        code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
                     break;
                 }
 
@@ -2430,7 +2430,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                     if (fs_fetchdata_offset_bug && first_read)
                         length_found = 0;
                     else
-                        code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                        code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
                     break;
                 }
                 first_read = 0;

@@ -601,7 +601,7 @@ SBOZO_ListKeys(struct rx_call *acall, afs_int32 an, afs_int32 *akvno,
     memset(akeyinfo, 0, sizeof(struct bozo_keyInfo));
 
     noauth = afsconf_GetNoAuthFlag(bozo_confdir);
-    rxkad_GetServerInfo(acall->conn, &enc_level, 0, 0, 0, 0, 0);
+    rxkad_GetServerInfo(rx_ConnectionOf(acall), &enc_level, 0, 0, 0, 0, 0);
     /*
      * only return actual keys in noauth or if this is an encrypted connection
      */
@@ -638,7 +638,7 @@ SBOZO_AddKey(struct rx_call *acall, afs_int32 an, struct bozo_key *akey)
 	goto fail;
     }
     noauth = afsconf_GetNoAuthFlag(bozo_confdir);
-    rxkad_GetServerInfo(acall->conn, &enc_level, 0, 0, 0, 0, 0);
+    rxkad_GetServerInfo(rx_ConnectionOf(acall), &enc_level, 0, 0, 0, 0, 0);
     if ((!noauth) && (enc_level != rxkad_crypt)) {
 	code = BZENCREQ;
 	goto fail;

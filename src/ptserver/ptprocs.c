@@ -2122,7 +2122,7 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
     else if (code == 1) {	/* vab class */
 	goto done;		/* no longer supported */
     } else if (code == 2) {	/* kad class */
-	if ((code = rxkad_GetServerInfo(acall->conn, NULL, NULL,
+	if ((code = rxkad_GetServerInfo(rx_ConnectionOf(acall), NULL, NULL,
 					name, inst, tcell, NULL)))
 	    goto done;
 
