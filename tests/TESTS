@@ -4,6 +4,7 @@ auth/keys
 auth/superuser
 auth/authcon
 cmd/command
+opr/jhash
 opr/queues
 opr/rbtree
 ptserver/pt_util
