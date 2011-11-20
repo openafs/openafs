@@ -55,8 +55,8 @@ INT
 #endif /* AFS_NT40_ENV */
 
 #include "rx.h"
-#include "rx_packet.h"
 #include "rx_globals.h"
+#include "rx_packet.h"
 #include "rx_xmit_nt.h"
 #include <malloc.h>
 #include <errno.h>

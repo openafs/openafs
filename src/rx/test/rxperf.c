@@ -82,6 +82,7 @@ nn * We are using getopt since we want it to be possible to link to
 #include <rx/rx.h>
 #include <rx/rx_null.h>
 #include <rx/rx_globals.h>
+#include <rx/rx_packet.h>
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>

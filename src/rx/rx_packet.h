@@ -130,23 +130,6 @@
 #define RX_PACKET_TYPE_PARAMS       9	/* exchange size params (showUmine) */
 #define RX_PACKET_TYPE_VERSION	   13	/* get AFS version */
 
-
-#define	RX_PACKET_TYPES	    {"data", "ack", "busy", "abort", "ackall", "challenge", "response", "debug", "params", "unused", "unused", "unused", "version"}
-#define	RX_N_PACKET_TYPES	    13	/* Must agree with above list;
-					 * counts 0
-					 * WARNING: if this number ever
-					 * grows past 13, rxdebug packets
-					 * will need to be modified */
-
-/* Packet classes, for rx_AllocPacket and rx_packetQuota */
-#define	RX_PACKET_CLASS_RECEIVE	    0
-#define	RX_PACKET_CLASS_SEND	    1
-#define	RX_PACKET_CLASS_SPECIAL	    2
-#define	RX_PACKET_CLASS_RECV_CBUF   3
-#define	RX_PACKET_CLASS_SEND_CBUF   4
-
-#define	RX_N_PACKET_CLASSES	    5	/* Must agree with above list */
-
 /* Flags for rx_header flags field */
 #define	RX_CLIENT_INITIATED	1	/* Packet is sent/received from client side of call */
 #define	RX_REQUEST_ACK		2	/* Peer requests acknowledgement */
@@ -212,9 +195,7 @@ struct rx_jumboHeader {
     u_short cksum;		/* packet header checksum */
 };
 
-/* For most Unixes, maximum elements in an iovec is 16 */
-#define RX_MAXIOVECS 16		        /* limit for ReadvProc/WritevProc */
-#define RX_MAXWVECS (RX_MAXIOVECS-1)	/* need one iovec for packet header */
+
 
 /*
  * The values for the RX buffer sizes are calculated to ensure efficient

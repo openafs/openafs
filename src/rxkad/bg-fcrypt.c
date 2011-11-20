@@ -51,6 +51,7 @@
 #else /* KERNEL */
 #include <roken.h>
 #include <rx/rx.h>
+#include <rx/rx_packet.h>
 #endif /* KERNEL */
 
 #include "fcrypt.h"

@@ -43,6 +43,7 @@
 #endif /* KERNEL */
 
 #include <rx/rx.h>
+#include <rx/rx_packet.h>
 #include <rx/xdr.h>
 
 #include "stats.h"

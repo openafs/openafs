@@ -12,6 +12,7 @@
 
 
 #include "rx/rx_kcommon.h"
+#include "rx/rx_packet.h"
 #include "rx/rx_atomic.h"
 #include "rx/rx_stats.h"
 

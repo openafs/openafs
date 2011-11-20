@@ -30,6 +30,7 @@
 #endif /* KERNEL */
 
 #include <rx/rx.h>
+#include <rx/rx_packet.h>
 #include <rx/rxkad_stats.h>
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT

@@ -494,6 +494,7 @@ main(int argc, char **argv)
 	afs_com_err(whoami, code, "Ubik init failed");
 	PT_EXIT(2);
     }
+
 #if defined(SUPERGROUPS)
     pt_hook_write();
 #endif

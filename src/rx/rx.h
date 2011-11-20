@@ -52,9 +52,9 @@
 #endif
 #endif /* KERNEL */
 
+#include "rx_queue.h"
 #include "rx_clock.h"
 #include "rx_event.h"
-#include "rx_packet.h"
 #include "rx_misc.h"
 #include "rx_null.h"
 #include "rx_multi.h"
@@ -62,8 +62,11 @@
 /* These items are part of the new RX API. They're living in this section
  * for now, to keep them separate from everything else... */
 
-/* Connection management */
 struct rx_connection;
+struct rx_call;
+struct rx_packet;
+
+/* Connection management */
 
 extern void rx_SetConnectionEpoch(struct rx_connection *conn, int epoch);
 extern int  rx_GetConnectionEpoch(struct rx_connection *conn);
@@ -101,6 +104,29 @@ extern void rx_RecordCallStatistics(struct rx_call *call,
 				    unsigned int totalFunc,
 				    int isServer);
 
+
+/* Packets */
+
+/* Packet classes, for rx_AllocPacket and rx_packetQuota */
+#define	RX_PACKET_CLASS_RECEIVE	    0
+#define	RX_PACKET_CLASS_SEND	    1
+#define	RX_PACKET_CLASS_SPECIAL	    2
+#define	RX_PACKET_CLASS_RECV_CBUF   3
+#define	RX_PACKET_CLASS_SEND_CBUF   4
+
+#define	RX_N_PACKET_CLASSES	    5	/* Must agree with above list */
+
+#define	RX_PACKET_TYPES	    {"data", "ack", "busy", "abort", "ackall", "challenge", "response", "debug", "params", "unused", "unused", "unused", "version"}
+#define	RX_N_PACKET_TYPES	    13	/* Must agree with above list;
+					 * counts 0
+					 * WARNING: if this number ever
+					 * grows past 13, rxdebug packets
+					 * will need to be modified */
+
+
+/* For most Unixes, maximum elements in an iovec is 16 */
+#define RX_MAXIOVECS 16		        /* limit for ReadvProc/WritevProc */
+#define RX_MAXWVECS (RX_MAXIOVECS-1)	/* need one iovec for packet header */
 
 /* Debugging */
 
@@ -143,6 +169,7 @@ extern void rx_RecordCallStatistics(struct rx_call *call,
 #define RX_CALL_ACKALL_SENT     0x40000 /* ACKALL has been sent on the call */
 
 #endif
+
 
 /* Configurable parameters */
 #define	RX_IDLE_DEAD_TIME	60	/* default idle dead time */
@@ -652,6 +679,7 @@ struct rx_securityClass {
 #define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
 #define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
 #define RXS_SetConfiguration(obj, conn, type, value, currentValue) RXS_OP(obj, SetConfiguration,(obj,conn,type,value,currentValue))
+
 
 
 /* Structure for keeping rx statistics.  Note that this structure is returned

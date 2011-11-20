@@ -38,6 +38,7 @@
 
 #include <rx/rx.h>
 #include <rx/xdr.h>
+#include <rx/rx_packet.h>
 
 #include "rxkad.h"
 #include "stats.h"
