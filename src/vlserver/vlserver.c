@@ -301,15 +301,7 @@ main(int argc, char **argv)
 
     cmd_OptionAsFlag(opts, OPT_rxbind, &rxBind);
 
-    if (cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU) == 0) {
-	if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-	    (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-	    printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		   rxMaxMTU, RX_MIN_PACKET_SIZE,
-		   RX_MAX_PACKET_DATA_SIZE);
-	    return -1;
-	}
-    }
+    cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU);
 
     /* rxkad options */
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
@@ -406,7 +398,10 @@ main(int argc, char **argv)
 	rx_SetNoJumbo();
     }
     if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    printf("rxMaxMTU %d invalid\n", rxMaxMTU);
+	    return -1;
+	}
     }
     rx_SetRxDeadTime(50);
 

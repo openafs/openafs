@@ -318,13 +318,6 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 	    rxMaxMTU = atoi(argv[++code]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		       rxMaxMTU, RX_MIN_PACKET_SIZE,
-		       RX_MAX_PACKET_DATA_SIZE);
-		exit(1);
-	    }
 	} else if (strcmp(argv[code], "-sleep") == 0) {
 	    sscanf(argv[++code], "%d/%d", &TTsleep, &TTrun);
 	    if ((TTsleep < 0) || (TTrun <= 0)) {
@@ -454,7 +447,10 @@ main(int argc, char **argv)
 	rx_SetNoJumbo();
     }
     if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    fprintf(stderr, "rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    VS_EXIT(1);
+	}
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(420);

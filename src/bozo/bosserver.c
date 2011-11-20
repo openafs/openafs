@@ -955,13 +955,6 @@ main(int argc, char **argv, char **envp)
 		exit(1);
 	    }
 	    rxMaxMTU = atoi(argv[++code]);
-	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-			rxMaxMTU, RX_MIN_PACKET_SIZE,
-			RX_MAX_PACKET_DATA_SIZE);
-		exit(1);
-	    }
 	}
 	else if (strcmp(argv[code], "-auditlog") == 0) {
 	    auditFileName = argv[++code];
@@ -1193,7 +1186,10 @@ main(int argc, char **argv, char **envp)
     rx_SetNoJumbo();
 
     if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    bozo_Log("bosserver: rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    exit(1);
+	}
     }
 
     tservice = rx_NewServiceHost(host, 0, /* service id */ 1,

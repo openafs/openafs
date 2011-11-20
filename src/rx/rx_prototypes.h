@@ -605,7 +605,7 @@ extern void osi_Panic(char *fmt, ...) AFS_NORETURN;
 
 extern void rx_GetIFInfo(void);
 extern void rx_SetNoJumbo(void);
-extern void rx_SetMaxMTU(int mtu);
+extern int rx_SetMaxMTU(int mtu);
 
 /* rx_xmit_nt.c */
 

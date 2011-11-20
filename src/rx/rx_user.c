@@ -764,10 +764,15 @@ rx_SetNoJumbo(void)
 
 /* Override max MTU.  If rx_SetNoJumbo is called, it must be
    called before calling rx_SetMaxMTU since SetNoJumbo clobbers rx_maxReceiveSize */
-void
+int
 rx_SetMaxMTU(int mtu)
 {
+    if (mtu < RX_MIN_PACKET_SIZE || mtu > RX_MAX_PACKET_DATA_SIZE)
+	return EINVAL;
+
     rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
+
+    return 0;
 }
 
 #if defined(ADAPT_PMTU)

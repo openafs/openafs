@@ -1426,15 +1426,7 @@ ParseArgs(int argc, char *argv[])
     cmd_OptionAsFlag(opts, OPT_rxdbge, &eventlog);
     cmd_OptionAsInt(opts, OPT_rxpck, &rxpackets);
 
-    if (cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU) == 0) {
-	if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
-	    (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-	    printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
-		   rxMaxMTU, RX_MIN_PACKET_SIZE,
-		   RX_MAX_PACKET_DATA_SIZE);
-	    return(-1);
-	}
-    }
+    cmd_OptionAsInt(opts, OPT_rxmaxmtu, &rxMaxMTU);
 
     if (cmd_OptionAsInt(opts, OPT_udpsize, &optval) == 0) {
 	if (optval < rx_GetMinUdpBufSize()) {
@@ -2069,7 +2061,10 @@ main(int argc, char *argv[])
 	rx_SetNoJumbo();
     }
     if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    ViceLog(0, ("rxMaxMTU %d is invalid\n", rxMaxMTU));
+	    exit(1);
+	}
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(30);
