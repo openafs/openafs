@@ -556,6 +556,20 @@ fd_reallyclose(FdHandle_t * fdP)
      */
     if (!ihP->ih_fdhead) {
 	ihP->ih_flags &= ~IH_REALLY_CLOSED;
+    } else {
+	FdHandle_t *lfdP, *next;
+	int clear = 1;
+	for (lfdP = ihP->ih_fdhead; lfdP != NULL; lfdP = next) {
+	    next = lfdP->fd_ihnext;
+	    osi_Assert(lfdP->fd_ih == ihP);
+	    if (lfdP->fd_status != FD_HANDLE_CLOSING) {
+		clear = 0;
+		break;
+	    }
+	}
+	/* no *future* fd should be subjected to this */
+	if (clear)
+	    ihP->ih_flags &= ~IH_REALLY_CLOSED;
     }
 
     if (fdP->fd_refcnt == 0) {
