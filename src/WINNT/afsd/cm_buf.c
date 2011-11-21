@@ -488,7 +488,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
             cm_data.buf_nOrigBuffers = cm_data.buf_nbuffers;
 
             /* lower hash size to a prime number */
-	    cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cm_data.buf_nbuffers/7 + 1));
+	    cm_data.buf_hashSize = cm_NextHighestPowerOf2((afs_uint32)(cm_data.buf_nbuffers/7));
 
             /* create hash table */
             memset((void *)cm_data.buf_scacheHashTablepp, 0, cm_data.buf_hashSize * sizeof(cm_buf_t *));

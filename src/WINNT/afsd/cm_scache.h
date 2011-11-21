@@ -10,6 +10,8 @@
 #ifndef OPENAFS_WINNT_AFSD_CM_SCACHE_H
 #define OPENAFS_WINNT_AFSD_CM_SCACHE_H 1
 
+#include <opr/jhash.h>
+
 #define MOUNTPOINTLEN   1024    /* max path length for symlink; same as AFSPATHMAX */
 
 typedef struct cm_fid {
@@ -347,11 +349,12 @@ typedef struct cm_scache {
  * doesn't necessarily know the cell in the case of a multihomed server
  * contacting us from a mystery address.
  */
-#define CM_SCACHE_HASH(fidp)	(((unsigned long)	\
-				   ((fidp)->volume +	\
-				    (fidp)->vnode +	\
-				    (fidp)->unique))	\
-					% cm_data.scacheHashTableSize)
+
+#define CM_FID_GEN_HASH(fidp) do { \
+    (fidp)->hash = opr_jhash(&(fidp)->volume, 3, 0); \
+} while(0)
+
+#define CM_SCACHE_HASH(fidp) ((fidp)->hash & (cm_data.scacheHashTableSize - 1))
 
 #include "cm_conn.h"
 #include "cm_buf.h"

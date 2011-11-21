@@ -13,6 +13,8 @@
 #define OPENAFS_WINNT_AFSD_BUF_H 1
 
 #include <osi.h>
+#include <opr/jhash.h>
+
 #ifdef DISKCACHE95
 #include "cm_diskcache.h"
 #endif /* DISKCACHE95 */
@@ -28,13 +30,10 @@
 #define CM_BUF_CACHETYPE_VIRTUAL 2
 extern int buf_cacheType;
 
-/* force it to be signed so that mod comes out positive or 0 */
-#define BUF_HASH(fidp,offsetp) ((((fidp)->hash \
-				+(offsetp)->LowPart) / cm_data.buf_blockSize)	\
-				   % cm_data.buf_hashSize)
+#define BUF_HASH(fidp, offsetp) \
+    (opr_jhash((uint32_t *)(offsetp), 2, (fidp)->hash) & (cm_data.buf_hashSize - 1))
 
-/* another hash fn */
-#define BUF_FILEHASH(fidp) ((fidp)->hash % cm_data.buf_hashSize)
+#define BUF_FILEHASH(fidp) ((fidp)->hash & (cm_data.buf_hashSize - 1))
 
 #define CM_BUF_MAGIC    ('B' | 'U' <<8 | 'F'<<16 | 'F'<<24)
 

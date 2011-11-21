@@ -150,4 +150,7 @@ cm_InterlockedOr(LONG * pdest, LONG value)
 #endif
 #endif
 
+extern afs_uint32
+cm_NextHighestPowerOf2(afs_uint32 n);
+
 #endif /*  OPENAFS_WINNT_AFSD_CM_UTILS_H */
