@@ -753,7 +753,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             scp = cm_GetNewSCache(FALSE);    /* returns scp->rw held */
             if (scp == NULL) {
                 osi_Log0(afsd_logp,"cm_GetSCache unable to obtain *new* scache entry");
-                lock_ReleaseWrite(&cm_scacheLock);
                 return CM_ERROR_WOULDBLOCK;
             }
         } else {
