@@ -50,7 +50,7 @@ afs_uint64
 ComputeSizeOfCellHT(DWORD maxcells)
 {
     afs_uint64 size;
-    size = osi_PrimeLessThan((afs_uint32)(maxcells/7 + 1)) * sizeof(cm_cell_t *);
+    size = cm_NextHighestPowerOf2((afs_uint32)(maxcells/7)) * sizeof(cm_cell_t *);
     return size;
 }
 
@@ -58,7 +58,7 @@ afs_uint64
 ComputeSizeOfVolumeHT(DWORD maxvols)
 {
     afs_uint64 size;
-    size = osi_PrimeLessThan((afs_uint32)(maxvols/7 + 1)) * sizeof(cm_volume_t *);
+    size = cm_NextHighestPowerOf2((afs_uint32)(maxvols/7)) * sizeof(cm_volume_t *);
     return size;
 }
 
@@ -90,7 +90,7 @@ afs_uint64
 ComputeSizeOfSCacheHT(DWORD stats)
 {
     afs_uint64 size;
-    size = osi_PrimeLessThan(stats / 2 + 1) * sizeof(cm_scache_t *);;
+    size = cm_NextHighestPowerOf2(stats / 2 ) * sizeof(cm_scache_t *);;
     return size;
 }
 
@@ -114,7 +114,7 @@ afs_uint64
 ComputeSizeOfDataHT(afs_uint64 cacheBlocks)
 {
     afs_uint64 size;
-    size = osi_PrimeLessThan((afs_uint32)(cacheBlocks/7 + 1)) * sizeof(cm_buf_t *);
+    size = cm_NextHighestPowerOf2((afs_uint32)(cacheBlocks/7)) * sizeof(cm_buf_t *);
     return size;
 }
 
@@ -884,9 +884,10 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
         cm_data.chunkSize = chunkSize;
         cm_data.blockSize = blockSize;
         cm_data.bufferSize = mappingSize;
-        cm_data.scacheHashTableSize = osi_PrimeLessThan(stats / 2 + 1);
-        cm_data.volumeHashTableSize = osi_PrimeLessThan((afs_uint32)(maxVols/7 + 1));
-        cm_data.cellHashTableSize = osi_PrimeLessThan((afs_uint32)(maxCells/7 + 1));
+
+        cm_data.scacheHashTableSize = cm_NextHighestPowerOf2(stats / 2);
+        cm_data.volumeHashTableSize = cm_NextHighestPowerOf2((afs_uint32)(maxVols/7));
+        cm_data.cellHashTableSize = cm_NextHighestPowerOf2((afs_uint32)(maxCells/7));
         if (virtualCache) {
             cm_data.cacheType = CM_BUF_CACHETYPE_VIRTUAL;
         } else {
@@ -896,7 +897,7 @@ cm_InitMappedMemory(DWORD virtualCache, char * cachePath, DWORD stats, DWORD max
         cm_data.buf_nbuffers = cacheBlocks;
         cm_data.buf_nOrigBuffers = 0;
         cm_data.buf_blockSize = blockSize;
-        cm_data.buf_hashSize = osi_PrimeLessThan((afs_uint32)(cacheBlocks/7 + 1));
+        cm_data.buf_hashSize = cm_NextHighestPowerOf2((afs_uint32)(cacheBlocks/7));
 
         cm_data.mountRootGen = 0;
 

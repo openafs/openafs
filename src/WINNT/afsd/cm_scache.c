@@ -353,7 +353,7 @@ void cm_SetFid(cm_fid_t *fidp, afs_uint32 cell, afs_uint32 volume, afs_uint32 vn
     fidp->volume = volume;
     fidp->vnode = vnode;
     fidp->unique = unique;
-    fidp->hash = ((cell & 0xF) << 28) | ((volume & 0x3F) << 22) | ((vnode & 0x7FF) << 11) | (unique & 0x7FF);
+    CM_FID_GEN_HASH(fidp);
 }
 
 /* like strcmp, only for fids */

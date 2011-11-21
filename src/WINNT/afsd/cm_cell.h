@@ -46,7 +46,7 @@ typedef struct cm_cell_rock {
 
 #define CM_CELL_NAME_HASH(name)  (SDBMHash(name) % cm_data.cellHashTableSize)
 
-#define CM_CELL_ID_HASH(id)   ((unsigned long) id % cm_data.cellHashTableSize)
+#define CM_CELL_ID_HASH(id)   (opr_jhash_int(id, 0) & (cm_data.cellHashTableSize - 1))
 
 extern void cm_InitCell(int newFile, long maxCells);
 

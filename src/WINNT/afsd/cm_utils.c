@@ -1103,3 +1103,16 @@ void cm_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime)
 
     *unixTimep = mktime(&localTm);
 }
+
+afs_uint32
+cm_NextHighestPowerOf2(afs_uint32 n)
+{
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n++;
+    return n;
+}

@@ -10,6 +10,8 @@
 #ifndef OPENAFS_WINNT_AFSD_CM_VOLUME_H
 #define OPENAFS_WINNT_AFSD_CM_VOLUME_H 1
 
+#include <opr/jhash.h>
+
 #define VL_MAXNAMELEN                   65
 
 #define CM_VOLUME_MAGIC    ('V' | 'O' <<8 | 'L'<<16 | 'M'<<24)
@@ -82,8 +84,9 @@ extern long cm_FindVolumeByID(struct cm_cell *cellp, afs_uint32 volumeID,
  * doesn't necessarily know the cell in the case of a multihomed server
  * contacting us from a mystery address.
  */
-#define CM_VOLUME_ID_HASH(volid)   ((unsigned long) volid \
-					% cm_data.volumeHashTableSize)
+
+#define CM_VOLUME_ID_HASH(volid) \
+    (opr_jhash_int((volid), 0) & (cm_data.volumeHashTableSize - 1))
 
 #define CM_VOLUME_NAME_HASH(name)  (SDBMHash(name) % cm_data.volumeHashTableSize)
 

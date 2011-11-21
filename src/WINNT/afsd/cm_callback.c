@@ -169,6 +169,7 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
     tfid.volume = fidp->Volume;
     tfid.vnode = fidp->Vnode;
     tfid.unique = fidp->Unique;
+    CM_FID_GEN_HASH(&tfid);
     hash = CM_SCACHE_HASH(&tfid);
 
     osi_Log3(afsd_logp, "RevokeCallback vol %u vn %u uniq %u",
