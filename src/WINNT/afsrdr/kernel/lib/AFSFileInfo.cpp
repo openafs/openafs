@@ -3154,6 +3154,10 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             case FileBasicInformation:
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessPIOCtlQueryInfo (FileBasicInformation)\n");
+
                 if ( *Length >= sizeof( FILE_BASIC_INFORMATION))
                 {
                     PFILE_BASIC_INFORMATION pBasic = (PFILE_BASIC_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
@@ -3168,7 +3172,7 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                 }
                 else
                 {
-                    ntStatus = STATUS_BUFFER_OVERFLOW;
+                    ntStatus = STATUS_BUFFER_TOO_SMALL;
                 }
 
                 break;
@@ -3176,6 +3180,10 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
 
             case FileStandardInformation:
             {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessPIOCtlQueryInfo (FileStandardInformation)\n");
 
                 if ( *Length >= sizeof( FILE_STANDARD_INFORMATION))
                 {
@@ -3191,7 +3199,7 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                 }
                 else
                 {
-                    ntStatus = STATUS_BUFFER_OVERFLOW;
+                    ntStatus = STATUS_BUFFER_TOO_SMALL;
                 }
 
                 break;
@@ -3206,6 +3214,10 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                 USHORT usFullNameLength = 0;
                 PFILE_NAME_INFORMATION pNameInfo = (PFILE_NAME_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
                 UNICODE_STRING uniName;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessPIOCtlQueryInfo (FileNameInformation)\n");
 
                 pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
@@ -3298,6 +3310,10 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
 
                 PFILE_INTERNAL_INFORMATION pInternalInfo = (PFILE_INTERNAL_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessPIOCtlQueryInfo (FileInternalInformation)\n");
+
                 if( *Length >= sizeof( FILE_INTERNAL_INFORMATION))
                 {
 
@@ -3316,6 +3332,105 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                 break;
             }
 
+            case FileAllInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileAllInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FileEaInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileEaInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FilePositionInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FilePositionInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FileAlternateNameInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileAlternateNameInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FileNetworkOpenInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileNetworkOpenInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FileStreamInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileStreamInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FileAttributeTagInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileAttributeTagInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FileRemoteProtocolInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileRemoteProtocolInformation) Not Implemented\n");
+
+                break;
+            }
+
+            case FileNetworkPhysicalNameInformation:
+            {
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSProcessPIOCtlQueryInfo (FileNetworkPhysicalNameInformation) Not Implemented\n");
+
+                break;
+            }
+
             default:
             {
                 ntStatus = STATUS_INVALID_PARAMETER;
@@ -3329,6 +3444,11 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
             }
         }
     }
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_PIOCTL_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSProcessPIOCtlQueryInfo ntStatus %08lX\n",
+                  ntStatus);
 
     return ntStatus;
 }
