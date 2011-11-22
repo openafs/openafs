@@ -1610,6 +1610,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     cm_dirOp_t dirop;
     cm_scache_t *scp = NULL;
     int free_fnamep = FALSE;
+    int invalidate = 0;
 
     memset(&volSync, 0, sizeof(volSync));
 
@@ -1694,11 +1695,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     cm_dnlcRemove(dscp, cnamep);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-        if (RDR_Initialized &&
-            scp->fileType != CM_SCACHETYPE_FILE && scp->fileType != CM_SCACHETYPE_DIRECTORY)
-            RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode,
-                                 dscp->fid.unique, dscp->fid.hash,
-                                 dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
+        invalidate = 1;
     } else {
         InterlockedDecrement(&scp->activeRPCs);
         if (code == CM_ERROR_NOSUCHFILE) {
@@ -1719,6 +1716,12 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
 #endif
     }
     cm_EndDirOp(&dirop);
+
+    if (invalidate && RDR_Initialized &&
+        scp->fileType != CM_SCACHETYPE_FILE && scp->fileType != CM_SCACHETYPE_DIRECTORY)
+        RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode,
+                              dscp->fid.unique, dscp->fid.hash,
+                              dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
 
     if (scp) {
         cm_ReleaseSCache(scp);
@@ -3175,6 +3178,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t * fnamep = NULL;
+    int invalidate = 0;
 
     memset(&volSync, 0, sizeof(volSync));
 
@@ -3238,10 +3242,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-        if (RDR_Initialized)
-            RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode,
-                                 dscp->fid.unique, dscp->fid.hash,
-                                 dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
+        invalidate = 1;
     } else {
         InterlockedDecrement(&dscp->activeRPCs);
     }
@@ -3257,6 +3258,11 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
         }
     }
     cm_EndDirOp(&dirop);
+
+    if (invalidate && RDR_Initialized)
+        RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode,
+                             dscp->fid.unique, dscp->fid.hash,
+                             dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
 
     /* Update the linked object status */
     if (code == 0) {

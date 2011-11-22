@@ -1898,6 +1898,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
     long code;
     long bufferPos;
     afs_uint32 i;
+    afs_uint32 invalidate = 0;
 
     /* assert that cm_bufCreateLock is held in write mode */
     lock_AssertWrite(&scp->bufCreateLock);
@@ -1968,10 +1969,7 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
                         lock_ReleaseWrite(&buf_globalLock);
                     }
                 } else {
-                    if (RDR_Initialized)
-                        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
-                                             scp->fid.unique, scp->fid.hash,
-                                             scp->fileType, AFS_INVALIDATE_SMB);
+                    invalidate = 1;
                 }
                 _InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
                 bufp->error = 0;
@@ -2019,6 +2017,11 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 #ifdef TESTING
     buf_ValidateBufQueues();
 #endif /* TESTING */
+
+    if (invalidate && RDR_Initialized)
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
+                             scp->fid.unique, scp->fid.hash,
+                             scp->fileType, AFS_INVALIDATE_SMB);
 
     /* done */
     return code;
