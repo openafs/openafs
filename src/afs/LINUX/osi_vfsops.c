@@ -114,6 +114,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
+    memset(afs_backing_dev_info, 0, sizeof(struct backing_dev_info));
 #if defined(HAVE_LINUX_BDI_INIT)
     bdi_init(afs_backing_dev_info);
 #endif
