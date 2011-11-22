@@ -1881,6 +1881,22 @@ VShutdownVolume_r(Volume * vp)
 /* Header I/O routines                             */
 /***************************************************/
 
+static const char *
+HeaderName(bit32 magic)
+{
+    switch (magic) {
+    case VOLUMEINFOMAGIC:
+	return "volume info";
+    case SMALLINDEXMAGIC:
+	return "small index";
+    case LARGEINDEXMAGIC:
+	return "large index";
+    case LINKTABLEMAGIC:
+	return "link table";
+    }
+    return "unknown";
+}
+
 /* open a descriptor for the inode (h),
  * read in an on-disk structure into buffer (to) of size (size),
  * verify versionstamp in structure has magic (magic) and
@@ -1892,29 +1908,63 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
 {
     struct versionStamp *vsn;
     FdHandle_t *fdP;
+    afs_sfsize_t nbytes;
+    afs_ino_str_t stmp;
 
     *ec = 0;
     if (h == NULL) {
+	Log("ReadHeader: Null inode handle argument for %s header file.\n",
+	    HeaderName(magic));
 	*ec = VSALVAGE;
 	return;
     }
 
     fdP = IH_OPEN(h);
     if (fdP == NULL) {
+	Log("ReadHeader: Failed to open %s header file "
+	    "(volume=%u, inode=%s); errno=%d\n", HeaderName(magic), h->ih_vid,
+	    PrintInode(stmp, h->ih_ino), errno);
 	*ec = VSALVAGE;
 	return;
     }
 
     vsn = (struct versionStamp *)to;
-    if (FDH_PREAD(fdP, to, size, 0) != size || vsn->magic != magic) {
+    nbytes = FDH_PREAD(fdP, to, size, 0);
+    if (nbytes < 0) {
+	Log("ReadHeader: Failed to read %s header file "
+	    "(volume=%u, inode=%s); errno=%d\n", HeaderName(magic), h->ih_vid,
+	    PrintInode(stmp, h->ih_ino), errno);
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
 	return;
     }
+    if (nbytes != size) {
+	Log("ReadHeader: Incorrect number of bytes read from %s header file "
+	    "(volume=%u, inode=%s); expected=%d, read=%d\n",
+	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino), size,
+	    (int)nbytes);
+	*ec = VSALVAGE;
+	FDH_REALLYCLOSE(fdP);
+	return;
+    }
+    if (vsn->magic != magic) {
+	Log("ReadHeader: Incorrect magic for %s header file "
+	    "(volume=%u, inode=%s); expected=0x%x, read=0x%x\n",
+	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino), magic,
+	    vsn->magic);
+	*ec = VSALVAGE;
+	FDH_REALLYCLOSE(fdP);
+	return;
+    }
+
     FDH_CLOSE(fdP);
 
     /* Check is conditional, in case caller wants to inspect version himself */
     if (version && vsn->version != version) {
+	Log("ReadHeader: Incorrect version for %s header file "
+	    "(volume=%u, inode=%s); expected=%x, read=%x\n",
+	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino),
+	    version, vsn->version);
 	*ec = VSALVAGE;
     }
 }
