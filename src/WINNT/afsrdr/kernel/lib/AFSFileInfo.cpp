@@ -3183,8 +3183,8 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
 
                     pStandard->NumberOfLinks = 1;
                     pStandard->DeletePending = 0;
-                    pStandard->AllocationSize.QuadPart = 4096;
-                    pStandard->EndOfFile.QuadPart = 4096;
+                    pStandard->AllocationSize.QuadPart = 0;
+                    pStandard->EndOfFile.QuadPart = 0;
                     pStandard->Directory = 0;
 
                     *Length -= sizeof( FILE_STANDARD_INFORMATION);
