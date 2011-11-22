@@ -327,6 +327,7 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
     cm_aclent_t *aclp;
     cm_aclent_t **laclpp;
     int found = 0;
+    int callback = 0;
 
     lock_ObtainWrite(&scp->rw);
     lock_ObtainWrite(&cm_aclLock);
@@ -338,14 +339,17 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
             aclp->userp = NULL;
             aclp->backp = (struct cm_scache *) 0;
             found = 1;
-            if (RDR_Initialized && cm_HaveCallback(scp))
-                RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
             break;
         }
     }
     lock_ReleaseWrite(&cm_aclLock);
+    if (found)
+        callback = cm_HaveCallback(scp);
     lock_ReleaseWrite(&scp->rw);
+
+    if (found && callback && RDR_Initialized)
+        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
 }
 
 /*

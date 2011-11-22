@@ -398,6 +398,9 @@ int cm_noteLocalMountPointChange(afs_int32 locked) {
     cm_data.fakeDirVersion++;
     cm_localMountPointChangeFlag = 1;
 
+    if (!locked)
+        lock_ReleaseMutex(&cm_Freelance_Lock);
+
     if (RDR_Initialized) {
         cm_fid_t fid;
         cm_FakeRootFid(&fid);
@@ -405,9 +408,6 @@ int cm_noteLocalMountPointChange(afs_int32 locked) {
                               CM_SCACHETYPE_DIRECTORY,
                               AFS_INVALIDATE_DATA_VERSION);
     }
-
-    if (!locked)
-        lock_ReleaseMutex(&cm_Freelance_Lock);
     return 1;
 }
 
