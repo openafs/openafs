@@ -259,13 +259,13 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		    areq->skipserver[i] = 1;
 		}
 	    }
-	    afs_PutVolume(tvp, READ_LOCK);
 	    for (i = 0; i < AFS_MAXHOSTS; i++) {
 	        if (tvp->serverHost[i] && areq->skipserver[i] == 0) {
 		    serversleft = 1;
 		    break;
 		}
 	    }
+	    afs_PutVolume(tvp, READ_LOCK);
 	    return serversleft;
 	}
     }
