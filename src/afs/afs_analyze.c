@@ -604,7 +604,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	     */
 	    goto out;
 	}
-	markeddown = afs_ServerDown(sa);
+	markeddown = afs_ServerDown(sa, acode);
 	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;
@@ -730,7 +730,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     }
     /* check for ubik errors; treat them like crashed servers */
     else if (acode >= ERROR_TABLE_BASE_U && acode < ERROR_TABLE_BASE_U + 255) {
-	afs_ServerDown(sa);
+	afs_ServerDown(sa, acode);
 	if (aerrP)
 	    (aerrP->err_Server)++;
 	shouldRetry = 1;	/* retryable (maybe one is working) */

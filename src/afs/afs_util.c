@@ -196,7 +196,7 @@ afs_strdup(char *s)
 
 void
 print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
-		       int flag)
+		       int flag, int code)
 {
     struct server *aserver = sa->server;
     char *ptr = "\n";
@@ -216,12 +216,12 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 		" (multi-homed address; other same-host interfaces may still be down)\n";
 	}
     }
-    afs_warn("%s%d.%d.%d.%d in cell %s%s%s", preamble, (address >> 24),
+    afs_warn("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
 	     (address >> 16) & 0xff, (address >> 8) & 0xff, (address) & 0xff,
-	     aserver->cell->cellName, postamble, ptr);
-    afs_warnuser("%s%d.%d.%d.%d in cell %s%s%s", preamble, (address >> 24),
+	     aserver->cell->cellName, postamble, code, ptr);
+    afs_warnuser("%s%d.%d.%d.%d in cell %s%s (code %d)%s", preamble, (address >> 24),
 		 (address >> 16) & 0xff, (address >> 8) & 0xff,
-		 (address) & 0xff, aserver->cell->cellName, postamble, ptr);
+		 (address) & 0xff, aserver->cell->cellName, postamble, code, ptr);
 
 }				/*print_internet_address */
 

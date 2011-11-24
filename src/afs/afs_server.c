@@ -238,7 +238,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 
 
 afs_int32
-afs_ServerDown(struct srvAddr *sa)
+afs_ServerDown(struct srvAddr *sa, int code)
 {
     struct server *aserver = sa->server;
 
@@ -248,10 +248,10 @@ afs_ServerDown(struct srvAddr *sa)
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
     if (sa->sa_portal == aserver->cell->vlport)
 	print_internet_address
-	    ("afs: Lost contact with volume location server ", sa, "", 1);
+	    ("afs: Lost contact with volume location server ", sa, "", 1, code);
     else
 	print_internet_address("afs: Lost contact with file server ", sa, "",
-			       1);
+			       1, code);
     return 1;
 }				/*ServerDown */
 
@@ -318,7 +318,7 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
 	if (tc->srvr == sa) {
 	    afs_MarkServerUpOrDown(sa, 0);
 	    print_internet_address("afs: volume location server ", sa,
-				   " is back up", 2);
+				   " is back up", 2, code);
 	}
     }
 
@@ -539,7 +539,8 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 	if (( results[i] >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) &&
 	    (tc->srvr == sa)) {
 	    /* server back up */
-	    print_internet_address("afs: file server ", sa, " is back up", 2);
+	    print_internet_address("afs: file server ", sa, " is back up", 2,
+			           results[i]);
 
 	    ObtainWriteLock(&afs_xserver, 244);
 	    ObtainWriteLock(&afs_xsrvAddr, 245);
@@ -553,7 +554,7 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 	} else {
 	    if (results[i] < 0) {
 		/* server crashed */
-		afs_ServerDown(sa);
+		afs_ServerDown(sa, results[i]);
 		ForceNewConnections(sa);  /* multi homed clients */
 	    }
 	}
@@ -667,19 +668,19 @@ CkSrv_SetTime(struct rx_connection **rxconns, int nconns, int nservers,
 			    afs_strcat(msgbuf, ", via ");
 			    print_internet_address(msgbuf, sa,
 						   "); clock is still fast.",
-						   0);
+						   0, 0);
 			} else {
 			    afs_strcat(msgbuf,
 				       afs_cv2string(&tbuffer[CVBS], delta));
 			    afs_strcat(msgbuf, " seconds (via ");
-			    print_internet_address(msgbuf, sa, ").", 0);
+			    print_internet_address(msgbuf, sa, ").", 0, 0);
 			}
 		    } else {
 			strcpy(msgbuf, "afs: setting clock ahead ");
 			afs_strcat(msgbuf,
 				   afs_cv2string(&tbuffer[CVBS], -delta));
 			afs_strcat(msgbuf, " seconds (via ");
-			print_internet_address(msgbuf, sa, ").", 0);
+			print_internet_address(msgbuf, sa, ").", 0, 0);
 		    }
                     /* We're only going to set it once; why bother looping? */
 		    break;
@@ -1808,7 +1809,7 @@ afs_GetCapabilities(struct server *ts)
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
-	afs_ServerDown(tc->srvr);
+	afs_ServerDown(tc->srvr, code);
 	ForceNewConnections(tc->srvr); /* multi homed clients */
     }
     afs_PutConn(tc, rxconn, SHARED_LOCK);
