@@ -5092,7 +5092,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
 					 &volStat, &Name, &OfflineMsg, &MOTD);
 	    rx_PutConnection(rxconnp);
 
-	} while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
+	} while (cm_Analyze(connp, userp, &req, &scp->fid, 0, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
         if (code == 0) {
             pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;

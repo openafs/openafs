@@ -263,6 +263,7 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_ALL_SERVERS_BUSY:
     case MSG_ALL_SERVERS_OFFLINE:
     case MSG_ALL_SERVERS_DOWN:
+    case MSG_RX_IDLE_DEAD_TIMEOUT:
 	wNumArgs = 2;
 	lpArgs[0] = va_arg(listArgs, LPTSTR);
 	StringCbPrintf(lpStrings[1],STRLEN,"%d",va_arg(listArgs,afs_int32));
