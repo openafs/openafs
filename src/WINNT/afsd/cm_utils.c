@@ -211,9 +211,10 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
     if (error == RX_CALL_DEAD ||
         error == RX_CALL_TIMEOUT ||
         error == RX_CALL_BUSY ||
-        error == RX_CALL_IDLE ||
         error == RX_MSGSIZE)
         error = CM_ERROR_RETRY;
+    else if (error == RX_CALL_IDLE)
+        error = EIO;
     else if (error < 0)
         error = CM_ERROR_UNKNOWN;
     else if (error == EINVAL)

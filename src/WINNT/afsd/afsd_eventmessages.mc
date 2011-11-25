@@ -446,4 +446,12 @@ Language=English
 OpenAFS Shutdown Complete.
 .
 
+MessageId=
+Severity=Warning
+Facility=System
+SymbolicName=MSG_RX_IDLE_DEAD_TIMEOUT
+Language=English
+Idle dead timeout when communicating with server %1.
+.
+
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */

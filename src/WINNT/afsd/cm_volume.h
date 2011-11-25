@@ -31,6 +31,8 @@ typedef struct cm_vol_state {
 /* RWVOL, ROVOL, BACKVOL are defined in cm.h */
 #define NUM_VOL_TYPES 3
 
+#define CM_VOL_STATE_FLAG_REPLICATED    1
+
 typedef struct cm_volume {
     osi_queue_t q;                      /* LRU queue; cm_volumeLock */
     afs_uint32 qflags;                  /* by cm_volumeLock */
