@@ -30,6 +30,7 @@ DWORD RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
 unsigned short ConnDeadtimeout = CM_CONN_CONNDEADTIME;
 unsigned short HardDeadtimeout = CM_CONN_HARDDEADTIME;
 unsigned short IdleDeadtimeout = CM_CONN_IDLEDEADTIME;
+unsigned short ReplicaIdleDeadtimeout = CM_CONN_IDLEDEADTIME_REP;
 unsigned short NatPingInterval = CM_CONN_NATPINGINTERVAL;
 
 #define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
@@ -127,6 +128,13 @@ void cm_InitConn(void)
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
 	    dummyLen = sizeof(DWORD);
+	    code = RegQueryValueEx(parmKey, "ReplicaIdleDeadTimeout", NULL, NULL,
+				    (BYTE *) &dwValue, &dummyLen);
+	    if (code == ERROR_SUCCESS) {
+                ReplicaIdleDeadtimeout = (unsigned short)dwValue;
+                afsi_log("ReplicaIdleDeadTimeout is %d", ReplicaIdleDeadtimeout);
+            }
+	    dummyLen = sizeof(DWORD);
 	    code = RegQueryValueEx(parmKey, "NatPingInterval", NULL, NULL,
 				    (BYTE *) &dwValue, &dummyLen);
 	    if (code == ERROR_SUCCESS) {
@@ -146,6 +154,15 @@ void cm_InitConn(void)
          *
          * We base our values on those while making sure we leave
          * enough time for overhead.
+         *
+         * To further complicate matters we need to take into account
+         * file server hard dead timeouts as they affect the length
+         * of time it takes the file server to give up when attempting
+         * to break callbacks to unresponsive clients.  The file
+         * server hard dead timeout is 120 seconds.
+         *
+         * For SMB, we have no choice but to timeout quickly.  For
+         * the AFS redirector, we can wait.
          */
         if (smb_Enabled) {
             afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
@@ -161,6 +178,10 @@ void cm_InitConn(void)
                 IdleDeadtimeout = 10 * (unsigned short) HardDeadtimeout;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
+            if (ReplicaIdleDeadtimeout == 0) {
+                ReplicaIdleDeadtimeout = (unsigned short) HardDeadtimeout;
+                afsi_log("ReplicaIdleDeadTimeout is %d", ReplicaIdleDeadtimeout);
+            }
         } else {
             if (ConnDeadtimeout == 0) {
                 ConnDeadtimeout = CM_CONN_IFS_CONNDEADTIME;
@@ -174,6 +195,10 @@ void cm_InitConn(void)
                 IdleDeadtimeout = CM_CONN_IFS_IDLEDEADTIME;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
+            if (IdleDeadtimeout == 0) {
+                ReplicaIdleDeadtimeout = CM_CONN_IFS_IDLEDEADTIME_REP;
+                afsi_log("ReplicaIdleDeadTimeout is %d", ReplicaIdleDeadtimeout);
+            }
         }
 	osi_EndOnce(&once);
     }
@@ -186,10 +211,11 @@ void cm_InitReq(cm_req_t *reqp)
 }
 
 static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
-	struct cm_req *reqp, cm_serverRef_t ***serversppp)
+	struct cm_req *reqp, afs_uint32 *replicated, cm_serverRef_t ***serversppp)
 {
     long code;
     cm_volume_t *volp = NULL;
+    cm_vol_state_t *volstatep = NULL;
     cm_cell_t *cellp = NULL;
 
     if (!fidp) {
@@ -205,6 +231,8 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     if (code)
         return code;
 
+    volstatep = cm_VolumeStateByID(volp, fidp->volume);
+    *replicated = (volstatep->flags & CM_VOL_STATE_FLAG_REPLICATED);
     *serversppp = cm_GetVolServers(volp, fidp->volume, userp, reqp);
 
     lock_ObtainRead(&cm_volumeLock);
@@ -230,11 +258,15 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
  * volSyncp and/or cbrp may also be NULL.
  */
 int
-cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
+cm_Analyze(cm_conn_t *connp,
+           cm_user_t *userp,
+           cm_req_t *reqp,
            struct cm_fid *fidp,
+           afs_uint32 storeOp,
            AFSVolSync *volSyncp,
            cm_serverRef_t * serversp,
-           cm_callbackRequest_t *cbrp, long errorCode)
+           cm_callbackRequest_t *cbrp,
+           long errorCode)
 {
     cm_server_t *serverp = NULL;
     cm_serverRef_t **serverspp = NULL;
@@ -243,6 +275,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     cm_ucell_t *ucellp;
     cm_volume_t * volp = NULL;
     cm_vol_state_t *statep = NULL;
+    cm_scache_t * scp = NULL;
+    afs_uint32 replicated;
     int retry = 0;
     int free_svr_list = 0;
     int dead_session;
@@ -415,7 +449,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                         retry = 1;
                     } else {
                         if (!serversp) {
-                            code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+                            code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
                             if (code == 0) {
                                 serversp = *serverspp;
                                 free_svr_list = 1;
@@ -473,7 +507,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     /* special codes:  VBUSY and VRESTARTING */
     else if (errorCode == VBUSY || errorCode == VRESTARTING) {
         if (!serversp && fidp) {
-            code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+            code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
             if (code == 0) {
                 serversp = *serverspp;
                 free_svr_list = 1;
@@ -624,7 +658,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
              * from the server list if it was moved or is not present.
              */
             if (!serversp || location_updated) {
-                code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+                code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
                 if (code == 0) {
                     serversp = *serverspp;
                     free_svr_list = 1;
@@ -675,8 +709,6 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             retry = 1;
     } else if ( errorCode == VNOVNODE ) {
 	if ( fidp ) {
-	    cm_scache_t * scp;
-
 	    osi_Log4(afsd_logp, "cm_Analyze passed VNOVNODE cell %u vol %u vn %u uniq %u.",
 		      fidp->cell, fidp->volume, fidp->vnode, fidp->unique);
 
@@ -742,6 +774,24 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             reqp->idleError++;
         }
 
+        if (fidp && storeOp)
+            scp = cm_FindSCache(fidp);
+        if (scp) {
+            if (cm_HaveCallback(scp)) {
+                lock_ObtainWrite(&scp->rw);
+                cm_DiscardSCache(scp);
+                lock_ReleaseWrite(&scp->rw);
+
+                /*
+                * We really should notify the redirector that we discarded
+                * the status information but doing so in this case is not
+                * safe as it can result in a deadlock with extent release
+                * processing.
+                */
+            }
+            cm_ReleaseSCache(scp);
+        }
+
         if (timeLeft > 2) {
             if (!fidp) { /* vldb */
                 retry = 1;
@@ -794,6 +844,132 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                  osi_LogSaveString(afsd_logp,addr));
         retry = 1;
     }
+    else if (errorCode == RX_CALL_IDLE) {
+        /*
+         * RPC failed because the server failed to respond with data
+         * within the idle dead timeout period.  This could be for a variety
+         * of reasons:
+         *  1. The server could have a bad partition such as a failed
+         *     disk or iSCSI target and all I/O to that partition is
+         *     blocking on the server and will never complete.
+         *
+         *  2. The server vnode may be locked by another client request
+         *     that is taking a very long time.
+         *
+         *  3. The server may have a very long queue of requests
+         *     pending and is unable to process this request.
+         *
+         *  4. The server could be malicious and is performing a denial
+         *     of service attack against the client.
+         *
+         * If this is a request against a .readonly with alternate sites
+         * the server should be marked down for this request and the
+         * client should fail over to another server.  If this is a
+         * request against a single source, the client may retry once.
+         */
+        if (serverp)
+            sprintf(addr, "%d.%d.%d.%d",
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+        if (fidp) {
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
+                                     CM_GETVOL_FLAG_NO_LRU_UPDATE,
+                                     &volp);
+            if (code == 0) {
+                statep = cm_VolumeStateByID(volp, fidp->volume);
+
+                if (statep)
+                    replicated = (statep->flags & CM_VOL_STATE_FLAG_REPLICATED);
+
+                lock_ObtainRead(&cm_volumeLock);
+                cm_PutVolume(volp);
+                lock_ReleaseRead(&cm_volumeLock);
+                volp = NULL;
+            }
+
+            if (storeOp)
+                scp = cm_FindSCache(fidp);
+	    if (scp) {
+                if (cm_HaveCallback(scp)) {
+                    lock_ObtainWrite(&scp->rw);
+                    cm_DiscardSCache(scp);
+                    lock_ReleaseWrite(&scp->rw);
+
+                    /*
+                     * We really should notify the redirector that we discarded
+                     * the status information but doing so in this case is not
+                     * safe as it can result in a deadlock with extent release
+                     * processing.
+                     */
+                }
+                cm_ReleaseSCache(scp);
+            }
+        }
+
+        if (replicated && serverp) {
+            reqp->tokenIdleErrorServp = serverp;
+            reqp->tokenError = errorCode;
+
+            if (timeLeft > 2)
+                retry = 1;
+        }
+
+        LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_IDLE_DEAD_TIMEOUT, addr, retry);
+        osi_Log2(afsd_logp, "cm_Analyze: RPC failed due to idle dead timeout addr[%s] retry=%u",
+                 osi_LogSaveString(afsd_logp,addr), retry);
+    }
+    else if (errorCode == RX_CALL_DEAD) {
+        /* mark server as down */
+        if (serverp)
+            sprintf(addr, "%d.%d.%d.%d",
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+        osi_Log2(afsd_logp, "cm_Analyze: Rx Call Dead addr[%s] forcedNew[%s]",
+                 osi_LogSaveString(afsd_logp,addr),
+                 (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
+
+        if (serverp) {
+            if ((reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
+                lock_ObtainMutex(&serverp->mx);
+                if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
+                    _InterlockedOr(&serverp->flags, CM_SERVERFLAG_DOWN);
+                    serverp->downTime = time(NULL);
+                }
+                lock_ReleaseMutex(&serverp->mx);
+            } else {
+                reqp->flags |= CM_REQ_NEW_CONN_FORCED;
+                forcing_new = 1;
+                cm_ForceNewConnections(serverp);
+            }
+        }
+
+        if (fidp && storeOp)
+            scp = cm_FindSCache(fidp);
+        if (scp) {
+            if (cm_HaveCallback(scp)) {
+                lock_ObtainWrite(&scp->rw);
+                cm_DiscardSCache(scp);
+                lock_ReleaseWrite(&scp->rw);
+
+                /*
+                * We really should notify the redirector that we discarded
+                * the status information but doing so in this case is not
+                * safe as it can result in a deadlock with extent release
+                * processing.
+                */
+            }
+            cm_ReleaseSCache(scp);
+        }
+
+        if ( timeLeft > 2 )
+            retry = 1;
+    }
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */
         if (serverp)
@@ -803,35 +979,20 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                     ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
                     ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
-        if (errorCode == RX_CALL_DEAD)
-            osi_Log2(afsd_logp, "cm_Analyze: Rx Call Dead addr[%s] forcedNew[%s]",
-                     osi_LogSaveString(afsd_logp,addr),
-                     (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
-        else
-            osi_Log3(afsd_logp, "cm_Analyze: Rx Misc Error[%d] addr[%s] forcedNew[%s]",
-                     errorCode,
-                     osi_LogSaveString(afsd_logp,addr),
-                     (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
+        osi_Log3(afsd_logp, "cm_Analyze: Rx Misc Error[%d] addr[%s] forcedNew[%s]",
+                 errorCode,
+                 osi_LogSaveString(afsd_logp,addr),
+                 (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
 
         if (serverp) {
-            lock_ObtainMutex(&serverp->mx);
-            if (errorCode == RX_CALL_DEAD &&
-                (reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
-                if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
-                    _InterlockedOr(&serverp->flags, CM_SERVERFLAG_DOWN);
-                    serverp->downTime = time(NULL);
-                }
+            if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
+                reqp->tokenIdleErrorServp = serverp;
+                reqp->tokenError = errorCode;
             } else {
-                if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
-                    reqp->tokenIdleErrorServp = serverp;
-                    reqp->tokenError = errorCode;
-                } else {
-                    reqp->flags |= CM_REQ_NEW_CONN_FORCED;
-                    forcing_new = 1;
-                }
+                reqp->flags |= CM_REQ_NEW_CONN_FORCED;
+                forcing_new = 1;
+                cm_ForceNewConnections(serverp);
             }
-            lock_ReleaseMutex(&serverp->mx);
-            cm_ForceNewConnections(serverp);
         }
         if ( timeLeft > 2 )
             retry = 1;
@@ -1042,8 +1203,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     return retry;
 }
 
-long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
-	cm_req_t *reqp, cm_conn_t **connpp)
+long cm_ConnByMServers(cm_serverRef_t *serversp, afs_uint32 replicated, cm_user_t *usersp,
+                       cm_req_t *reqp, cm_conn_t **connpp)
 {
     long code;
     cm_serverRef_t *tsrp;
@@ -1099,7 +1260,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                 } else {
                     allOffline = 0;
                     allBusy = 0;
-                    code = cm_ConnByServer(tsp, usersp, connpp);
+                    code = cm_ConnByServer(tsp, usersp, replicated, connpp);
                     if (code == 0) {        /* cm_CBS only returns 0 */
                         cm_PutServer(tsp);
 #ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
@@ -1184,7 +1345,7 @@ void cm_GCConnections(cm_server_t *serverp)
 }
 
 static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
-                               cm_server_t *serverp)
+                               cm_server_t *serverp, afs_uint32 replicated)
 {
     unsigned short port;
     int serviceID;
@@ -1240,7 +1401,12 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     /*
      * Setting idle dead timeout to a non-zero value activates RX_CALL_IDLE errors
      */
-    rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
+    if (replicated) {
+        tcp->flags &= CM_CONN_FLAG_REPLICATION;
+        rx_SetConnIdleDeadTime(tcp->rxconnp, ReplicaIdleDeadtimeout);
+    } else {
+        rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
+    }
 
     /*
      * Let the Rx library know that we can auto-retry if an
@@ -1264,7 +1430,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         rxs_Release(secObjp);   /* Decrement the initial refCount */
 }
 
-long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
+long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicated, cm_conn_t **connpp)
 {
     cm_conn_t *tcp;
     cm_ucell_t *ucellp;
@@ -1277,7 +1443,9 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
     lock_ObtainMutex(&userp->mx);
     lock_ObtainRead(&cm_connLock);
     for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
-        if (tcp->userp == userp)
+        if (tcp->userp == userp &&
+            (replicated && (tcp->flags & CM_CONN_FLAG_REPLICATION) ||
+             !replicated && !(tcp->flags & CM_CONN_FLAG_REPLICATION)))
             break;
     }
 
@@ -1304,7 +1472,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         lock_ObtainMutex(&tcp->mx);
         tcp->serverp = serverp;
         tcp->cryptlevel = rxkad_clear;
-        cm_NewRXConnection(tcp, ucellp, serverp);
+        cm_NewRXConnection(tcp, ucellp, serverp, replicated);
         tcp->refCount = 1;
         lock_ReleaseMutex(&tcp->mx);
         lock_ReleaseWrite(&cm_connLock);
@@ -1325,7 +1493,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
 	    tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
             rx_SetConnSecondsUntilNatPing(tcp->rxconnp, 0);
             rx_DestroyConnection(tcp->rxconnp);
-            cm_NewRXConnection(tcp, ucellp, serverp);
+            cm_NewRXConnection(tcp, ucellp, serverp, replicated);
         }
         lock_ReleaseMutex(&tcp->mx);
     }
@@ -1346,10 +1514,11 @@ long cm_ServerAvailable(struct cm_fid *fidp, struct cm_user *userp)
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+    afs_uint32 replicated;
 
     cm_InitReq(&req);
 
-    code = cm_GetServerList(fidp, userp, &req, &serverspp);
+    code = cm_GetServerList(fidp, userp, &req, &replicated, &serverspp);
     if (code)
         return 0;
 
@@ -1394,15 +1563,15 @@ long cm_ConnFromFID(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
 {
     long code;
     cm_serverRef_t **serverspp;
+    afs_uint32 replicated;
 
     *connpp = NULL;
 
-    code = cm_GetServerList(fidp, userp, reqp, &serverspp);
-    if (code) {
+    code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
+    if (code)
         return code;
-    }
 
-    code = cm_ConnByMServers(*serverspp, userp, reqp, connpp);
+    code = cm_ConnByMServers(*serverspp, replicated, userp, reqp, connpp);
     cm_FreeServerList(serverspp, 0);
     return code;
 }
@@ -1413,12 +1582,16 @@ long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, struct cm_us
 {
     long code;
     cm_serverRef_t **serverspp;
+    afs_uint32 replicated;
+    cm_vol_state_t * volstatep;
 
     *connpp = NULL;
 
+    volstatep = cm_VolumeStateByID(volp, volid);
+    replicated = (volstatep->flags & CM_VOL_STATE_FLAG_REPLICATED);
     serverspp = cm_GetVolServers(volp, volid, userp, reqp);
 
-    code = cm_ConnByMServers(*serverspp, userp, reqp, connpp);
+    code = cm_ConnByMServers(*serverspp, replicated, userp, reqp, connpp);
     cm_FreeServerList(serverspp, 0);
     return code;
 }

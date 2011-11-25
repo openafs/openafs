@@ -20,6 +20,9 @@
 #ifndef CM_CONN_IDLEDEADTIME
 #define CM_CONN_IDLEDEADTIME             0
 #endif
+#ifndef CM_CONN_IDLEDEADTIME_REP
+#define CM_CONN_IDLEDEADTIME_REP         0
+#endif
 #ifndef CM_CONN_NATPINGINTERVAL
 #define CM_CONN_NATPINGINTERVAL          0
 #endif
@@ -27,6 +30,7 @@
 #define CM_CONN_IFS_HARDDEADTIME       120
 #define CM_CONN_IFS_CONNDEADTIME        60
 #define CM_CONN_IFS_IDLEDEADTIME      1200
+#define CM_CONN_IFS_IDLEDEADTIME_REP   180      /* must be larger than file server hard dead timeout = 120 */
 
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;
@@ -45,7 +49,8 @@ typedef struct cm_conn {
 	int cryptlevel;			/* encrytion status */
 } cm_conn_t;
 
-#define CM_CONN_FLAG_FORCE_NEW	1
+#define CM_CONN_FLAG_FORCE_NEW          1
+#define CM_CONN_FLAG_REPLICATION        2
 
 /*
  * structure used for tracking RPC progress
@@ -132,15 +137,16 @@ extern void cm_InitConn(void);
 extern void cm_InitReq(cm_req_t *reqp);
 
 extern int cm_Analyze(cm_conn_t *connp, struct cm_user *up, struct cm_req *reqp,
-	struct cm_fid *fidp,
-	struct AFSVolSync *volInfop,
-        cm_serverRef_t * serversp,
-	struct cm_callbackRequest *cbrp, long code);
+                      struct cm_fid *fidp,
+                      afs_uint32 storeOp,
+                      struct AFSVolSync *volInfop,
+                      cm_serverRef_t * serversp,
+                      struct cm_callbackRequest *cbrp, long code);
 
-extern long cm_ConnByMServers(struct cm_serverRef *, struct cm_user *,
+extern long cm_ConnByMServers(struct cm_serverRef *, afs_uint32, struct cm_user *,
 	cm_req_t *, cm_conn_t **);
 
-extern long cm_ConnByServer(struct cm_server *, struct cm_user *, cm_conn_t **);
+extern long cm_ConnByServer(struct cm_server *, struct cm_user *, afs_uint32, cm_conn_t **);
 
 extern long cm_ConnFromFID(struct cm_fid *, struct cm_user *, struct cm_req *,
 	cm_conn_t **);

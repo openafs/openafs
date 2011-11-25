@@ -1858,7 +1858,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
                                      &afsStatus, &callback, &volSync);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &sfid, &volSync, NULL,
+        } while (cm_Analyze(connp, userp, reqp, &sfid, 0, &volSync, NULL,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);
         if (code)
@@ -2072,7 +2072,7 @@ cm_GiveUpAllCallbacks(cm_server_t *tsp, afs_int32 markDown)
 
     if ((tsp->type == CM_SERVER_FILE) && !(tsp->flags & CM_SERVERFLAG_DOWN))
     {
-        code = cm_ConnByServer(tsp, cm_rootUserp, &connp);
+        code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &connp);
         if (code == 0) {
             rxconnp = cm_GetRxConn(connp);
             rx_SetConnDeadTime(rxconnp, 10);
@@ -2167,7 +2167,7 @@ cm_GiveUpAllCallbacksAllServersMulti(afs_int32 markDown)
         lock_ReleaseRead(&cm_serverLock);
 
         serversp[nconns] = tsp;
-        code = cm_ConnByServer(tsp, cm_rootUserp, &conns[nconns]);
+        code = cm_ConnByServer(tsp, cm_rootUserp, FALSE, &conns[nconns]);
         if (code) {
             lock_ObtainRead(&cm_serverLock);
             cm_PutServerNoLock(tsp);

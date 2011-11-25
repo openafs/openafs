@@ -184,7 +184,7 @@ cm_GetEntryByName( struct cm_cell *cellp, const char *name,
               osi_LogSaveString(afsd_logp,name));
     do {
 
-        code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
+        code = cm_ConnByMServers(cellp->vlServersp, FALSE, userp, reqp, &connp);
         if (code)
             continue;
 
@@ -201,7 +201,7 @@ cm_GetEntryByName( struct cm_cell *cellp, const char *name,
             *methodp = 0;
         }
         rx_PutConnection(rxconnp);
-    } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, NULL, 0, NULL, cellp->vlServersp, NULL, code));
     code = cm_MapVLRPCError(code, reqp);
     if ( code )
         osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x",
@@ -257,6 +257,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 #endif
     afs_uint32 volType;
     time_t now;
+    int replicated = 0;
 
     lock_AssertWrite(&volp->rw);
 
@@ -388,6 +389,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         case 0:
             flags = vldbEntry.flags;
             nServers = vldbEntry.nServers;
+            replicated = (nServers > 0);
             rwID = vldbEntry.volumeId[0];
             roID = vldbEntry.volumeId[1];
             bkID = vldbEntry.volumeId[2];
@@ -401,6 +403,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         case 1:
             flags = nvldbEntry.flags;
             nServers = nvldbEntry.nServers;
+            replicated = (nServers > 0);
             rwID = nvldbEntry.volumeId[0];
             roID = nvldbEntry.volumeId[1];
             bkID = nvldbEntry.volumeId[2];
@@ -414,6 +417,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         case 2:
             flags = uvldbEntry.flags;
             nServers = uvldbEntry.nServers;
+            replicated = (nServers > 0);
             rwID = uvldbEntry.volumeId[0];
             roID = uvldbEntry.volumeId[1];
             bkID = uvldbEntry.volumeId[2];
@@ -435,14 +439,14 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     memset(&addrs, 0, sizeof(addrs));
 
                     do {
-                        code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
+                        code = cm_ConnByMServers(cellp->vlServersp, FALSE, userp, reqp, &connp);
                         if (code)
                             continue;
 
                         rxconnp = cm_GetRxConn(connp);
                         code = VL_GetAddrsU(rxconnp, &attrs, &uuid, &unique, &nentries, &addrs);
                         rx_PutConnection(rxconnp);
-                    } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
+                    } while (cm_Analyze(connp, userp, reqp, NULL, 0, NULL, cellp->vlServersp, NULL, code));
 
                     if ( code ) {
                         code = cm_MapVLRPCError(code, reqp);
@@ -520,6 +524,10 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 volp->vol[ROVOL].ID = roID;
                 cm_AddVolumeToIDHashTable(volp, ROVOL);
             }
+            if (replicated)
+                _InterlockedOr(&volp->vol[ROVOL].flags, CM_VOL_STATE_FLAG_REPLICATED);
+            else
+                _InterlockedAnd(&volp->vol[ROVOL].flags, ~CM_VOL_STATE_FLAG_REPLICATED);
         } else {
             if (volp->vol[ROVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
@@ -1286,7 +1294,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                     code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
                                                  &volStat, &Name, &OfflineMsg, &MOTD);
                     rx_PutConnection(rxconnp);
-                } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, NULL, NULL, NULL, code));
+                } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, 0, NULL, NULL, NULL, code));
                 code = cm_MapRPCError(code, &req);
 
                 lock_ObtainWrite(&volp->rw);
