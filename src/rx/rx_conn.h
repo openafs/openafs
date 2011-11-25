@@ -42,7 +42,6 @@ struct rx_connection {
                                        * RX_PACKET_TYPE_BUSY packet for this
                                        * call slot, or 0 if the slot is not busy */
     afs_uint32 serial;		/* Next outgoing packet serial number */
-    afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 lastPacketSize; /* last >max attempt */
     afs_int32 lastPacketSizeSeq; /* seq number of attempt */
     afs_int32 lastPingSize; /* last MTU ping attempt */

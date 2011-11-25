@@ -1983,8 +1983,6 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tpeer.rtt_dev = htonl(tp->rtt_dev);
 			tpeer.nSent = htonl(tp->nSent);
 			tpeer.reSends = htonl(tp->reSends);
-			tpeer.inPacketSkew = htonl(tp->inPacketSkew);
-			tpeer.outPacketSkew = htonl(tp->outPacketSkew);
 			tpeer.natMTU = htons(tp->natMTU);
 			tpeer.maxMTU = htons(tp->maxMTU);
 			tpeer.maxDgramPackets = htons(tp->maxDgramPackets);
