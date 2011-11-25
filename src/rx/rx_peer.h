@@ -43,14 +43,6 @@ struct rx_peer {
     int nSent;			/* Total number of distinct data packets sent, not including retransmissions */
     int reSends;		/* Total number of retransmissions for this peer, since this structure was created */
 
-/* Skew: if a packet is received N packets later than expected (based
- * on packet serial numbers), then we define it to have a skew of N.
- * The maximum skew values allow us to decide when a packet hasn't
- * been received yet because it is out-of-order, as opposed to when it
- * is likely to have been dropped. */
-    afs_uint32 inPacketSkew;	/* Maximum skew on incoming packets */
-    afs_uint32 outPacketSkew;	/* Peer-reported max skew on our sent packets */
-
     /* the "natural" MTU, excluding IP,UDP headers, is negotiated by the endpoints */
     u_short natMTU;
     u_short maxMTU;

@@ -3028,8 +3028,6 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	conn->lastSendTime = clock_Sec();	/* don't GC immediately */
 	conn->epoch = epoch;
 	conn->cid = cid & RX_CIDMASK;
-	/* conn->serial = conn->lastSerial = 0; */
-	/* conn->timeout = 0; */
 	conn->ackRate = RX_FAST_ACK_RATE;
 	conn->service = service;
 	conn->serviceId = serviceId;
@@ -3170,7 +3168,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     int channel;
     afs_uint32 currentCallNumber;
     int type;
-    int skew;
 #ifdef RXDEBUG
     char *packetType;
 #endif
@@ -3508,31 +3505,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     osirx_AssertMine(&call->lock, "rxi_ReceivePacket middle");
     /* Set remote user defined status from packet */
     call->remoteStatus = np->header.userStatus;
-
-    /* Note the gap between the expected next packet and the actual
-     * packet that arrived, when the new packet has a smaller serial number
-     * than expected.  Rioses frequently reorder packets all by themselves,
-     * so this will be quite important with very large window sizes.
-     * Skew is checked against 0 here to avoid any dependence on the type of
-     * inPacketSkew (which may be unsigned).  In C, -1 > (unsigned) 0 is always
-     * true!
-     * The inPacketSkew should be a smoothed running value, not just a maximum.  MTUXXX
-     * see CalculateRoundTripTime for an example of how to keep smoothed values.
-     * I think using a beta of 1/8 is probably appropriate.  93.04.21
-     */
-    MUTEX_ENTER(&conn->conn_data_lock);
-    skew = conn->lastSerial - np->header.serial;
-    conn->lastSerial = np->header.serial;
-    MUTEX_EXIT(&conn->conn_data_lock);
-    if (skew > 0) {
-	struct rx_peer *peer;
-	peer = conn->peer;
-	if (skew > peer->inPacketSkew) {
-	    dpf(("*** In skew changed from %d to %d\n",
-                  peer->inPacketSkew, skew));
-	    peer->inPacketSkew = skew;
-	}
-    }
 
     /* Now do packet type-specific processing */
     switch (np->header.type) {
@@ -4231,8 +4203,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     afs_uint32 first;
     afs_uint32 prev;
     afs_uint32 serial;
-    /* because there are CM's that are bogus, sending weird values for this. */
-    afs_uint32 skew = 0;
     int nbytes;
     int missing;
     int acked;
@@ -4254,8 +4224,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     first = ntohl(ap->firstPacket);
     prev = ntohl(ap->previousPacket);
     serial = ntohl(ap->serial);
-    /* temporarily disabled -- needs to degrade over time
-     * skew = ntohs(ap->maxSkew); */
 
     /* Ignore ack packets received out of order */
     if (first < call->tfirst ||
@@ -4303,11 +4271,11 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	size_t len;
 
 	len = _snprintf(msg, sizeof(msg),
-			"tid[%d] RACK: reason %s serial %u previous %u seq %u skew %d first %u acks %u space %u ",
+			"tid[%d] RACK: reason %s serial %u previous %u seq %u first %u acks %u space %u ",
 			 GetCurrentThreadId(), rx_ack_reason(ap->reason),
 			 ntohl(ap->serial), ntohl(ap->previousPacket),
-			 (unsigned int)np->header.seq, (unsigned int)skew,
-			 ntohl(ap->firstPacket), ap->nAcks, ntohs(ap->bufferSpace) );
+			 (unsigned int)np->header.seq, ntohl(ap->firstPacket),
+			 ap->nAcks, ntohs(ap->bufferSpace) );
 	if (nAcks) {
 	    int offset;
 
@@ -4321,10 +4289,10 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 #else /* AFS_NT40_ENV */
     if (rx_Log) {
 	fprintf(rx_Log,
-		"RACK: reason %x previous %u seq %u serial %u skew %d first %u",
+		"RACK: reason %x previous %u seq %u serial %u first %u",
 		ap->reason, ntohl(ap->previousPacket),
 		(unsigned int)np->header.seq, (unsigned int)serial,
-		(unsigned int)skew, ntohl(ap->firstPacket));
+		ntohl(ap->firstPacket));
 	if (nAcks) {
 	    int offset;
 	    for (offset = 0; offset < nAcks; offset++)
@@ -4354,13 +4322,6 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    }
 	}
     }
-
-    /* Update the outgoing packet skew value to the latest value of
-     * the peer's incoming packet skew value.  The ack packet, of
-     * course, could arrive out of order, but that won't affect things
-     * much */
-    peer->outPacketSkew = skew;
-
 
     clock_GetTime(&now);
 
@@ -7322,10 +7283,7 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 	    "   Rtt %d, " "total sent %d, " "resent %d\n",
 	    peer->rtt, peer->nSent, peer->reSends);
 
-    fprintf(file,
-	    "   Packet size %d, " "max in packet skew %d, "
-	    "max out packet skew %d\n", peer->ifMTU, (int)peer->inPacketSkew,
-	    (int)peer->outPacketSkew);
+    fprintf(file, "   Packet size %d\n", peer->ifMTU);
 }
 #endif
 
@@ -7702,8 +7660,6 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	peer->timeout.usec = 0;
 	peer->nSent = ntohl(peer->nSent);
 	peer->reSends = ntohl(peer->reSends);
-	peer->inPacketSkew = ntohl(peer->inPacketSkew);
-	peer->outPacketSkew = ntohl(peer->outPacketSkew);
 	peer->natMTU = ntohs(peer->natMTU);
 	peer->maxMTU = ntohs(peer->maxMTU);
 	peer->maxDgramPackets = ntohs(peer->maxDgramPackets);
@@ -7760,8 +7716,6 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->timeout.usec = 0;
 		peerStats->nSent = tp->nSent;
 		peerStats->reSends = tp->reSends;
-		peerStats->inPacketSkew = tp->inPacketSkew;
-		peerStats->outPacketSkew = tp->outPacketSkew;
 		peerStats->natMTU = tp->natMTU;
 		peerStats->maxMTU = tp->maxMTU;
 		peerStats->maxDgramPackets = tp->maxDgramPackets;
