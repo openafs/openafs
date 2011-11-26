@@ -62,7 +62,7 @@ static EVENT_HANDLE cm_IPAddrDaemon_ShutdownEvent = NULL;
 static EVENT_HANDLE cm_BkgDaemon_ShutdownEvent[CM_MAX_DAEMONS] =
        {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
-void cm_IpAddrDaemon(long parm)
+void * cm_IpAddrDaemon(void * vparm)
 {
     extern void smb_CheckVCs(void);
     char * name = "cm_IPAddrDaemon_ShutdownEvent";
@@ -88,6 +88,8 @@ void cm_IpAddrDaemon(long parm)
     }
 
     thrd_SetEvent(cm_IPAddrDaemon_ShutdownEvent);
+    pthread_exit(NULL);
+    return NULL;
 }
 
 afs_int32 cm_RequestWillBlock(cm_bkgRequest_t *rp)
@@ -131,12 +133,12 @@ afs_int32 cm_RequestWillBlock(cm_bkgRequest_t *rp)
     return willBlock;
 }
 
-void cm_BkgDaemon(void * parm)
+void * cm_BkgDaemon(void * vparm)
 {
     cm_bkgRequest_t *rp;
     afs_int32 code;
     char name[32] = "";
-    long daemonID = (long)(LONG_PTR)parm;
+    long daemonID = (long)(LONG_PTR)vparm;
 
     snprintf(name, sizeof(name), "cm_BkgDaemon_ShutdownEvent%u", daemonID);
 
@@ -255,6 +257,8 @@ void cm_BkgDaemon(void * parm)
     }
     lock_ReleaseWrite(&cm_daemonLock);
     thrd_SetEvent(cm_BkgDaemon_ShutdownEvent[daemonID]);
+    pthread_exit(NULL);
+    return NULL;
 }
 
 void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
@@ -443,7 +447,7 @@ cm_DaemonCheckInit(void)
 }
 
 /* periodic lock check daemon */
-void cm_LockDaemon(long parm)
+void * cm_LockDaemon(void * vparm)
 {
     time_t now;
     time_t lastLockCheck;
@@ -476,10 +480,12 @@ void cm_LockDaemon(long parm)
         thrd_Sleep(1000);		/* sleep 1 second */
     }
     thrd_SetEvent(cm_LockDaemon_ShutdownEvent);
+    pthread_exit(NULL);
+    return NULL;
 }
 
 /* periodic check daemon */
-void cm_Daemon(long parm)
+void * cm_Daemon(void *vparm)
 {
     time_t now;
     time_t lastVolCheck;
@@ -758,6 +764,8 @@ void cm_Daemon(long parm)
     }
 
     thrd_SetEvent(cm_Daemon_ShutdownEvent);
+    pthread_exit(NULL);
+    return NULL;
 }
 
 void cm_DaemonShutdown(void)
@@ -795,9 +803,13 @@ void cm_DaemonShutdown(void)
 void cm_InitDaemon(int nDaemons)
 {
     static osi_once_t once;
-    long pid;
-    thread_t phandle;
+    pthread_t phandle;
+    pthread_attr_t tattr;
+    int pstatus;
     int i;
+
+    pthread_attr_init(&tattr);
+    pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 
     cm_nDaemons = (nDaemons > CM_MAX_DAEMONS) ? CM_MAX_DAEMONS : nDaemons;
 
@@ -807,28 +819,21 @@ void cm_InitDaemon(int nDaemons)
         osi_EndOnce(&once);
 
 	/* creating IP Address Change monitor daemon */
-        phandle = thrd_Create((SecurityAttrib) 0, 0,
-                               (ThreadFunc) cm_IpAddrDaemon, 0, 0, &pid, "cm_IpAddrDaemon");
-        osi_assertx(phandle != NULL, "cm_IpAddrDaemon thread creation failure");
-        thrd_CloseHandle(phandle);
+        pstatus = pthread_create(&phandle, &tattr, cm_IpAddrDaemon, 0);
+        osi_assertx(pstatus == 0, "cm_IpAddrDaemon thread creation failure");
 
         /* creating pinging daemon */
-        phandle = thrd_Create((SecurityAttrib) 0, 0,
-                               (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
-        osi_assertx(phandle != NULL, "cm_Daemon thread creation failure");
-        thrd_CloseHandle(phandle);
+        pstatus = pthread_create(&phandle, &tattr, cm_Daemon, 0);
+        osi_assertx(pstatus == 0, "cm_Daemon thread creation failure");
 
-        phandle = thrd_Create((SecurityAttrib) 0, 0,
-                               (ThreadFunc) cm_LockDaemon, 0, 0, &pid, "cm_LockDaemon");
-        osi_assertx(phandle != NULL, "cm_LockDaemon thread creation failure");
-        thrd_CloseHandle(phandle);
+        pstatus = pthread_create(&phandle, &tattr, cm_LockDaemon, 0);
+        osi_assertx(pstatus == 0, "cm_LockDaemon thread creation failure");
 
 	for(i=0; i < cm_nDaemons; i++) {
-            phandle = thrd_Create((SecurityAttrib) 0, 0,
-                                   (ThreadFunc) cm_BkgDaemon, (LPVOID)(LONG_PTR)i, 0, &pid,
-                                   "cm_BkgDaemon");
-            osi_assertx(phandle != NULL, "cm_BkgDaemon thread creation failure");
-            thrd_CloseHandle(phandle);
+            pstatus = pthread_create(&phandle, &tattr, cm_BkgDaemon, (LPVOID)(LONG_PTR)i);
+            osi_assertx(pstatus == 0, "cm_BkgDaemon thread creation failure");
         }
     }
+
+    pthread_attr_destroy(&tattr);
 }
