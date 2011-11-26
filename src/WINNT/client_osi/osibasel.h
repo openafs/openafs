@@ -28,17 +28,18 @@
  * lock using an atomic increment operation.
  */
 typedef struct osi_mutex {
-    char type;			/* for all types; type 0 uses atomic count */
-    char flags;			/* flags for base type */
+    short type;			/* for all types; type 0 uses atomic count */
     unsigned short atomicIndex;	/* index of lock for low-level sync */
+    int flags;			/* flags for base type */
     DWORD tid;			/* tid of thread that owns the lock */
-    unsigned short waiters;	/* waiters */
-    unsigned short pad;
+    int waiters;	        /* waiters */
+    unsigned short level;       /* locking hierarchy level */
+    short pad1;
+    int pad2;
     union {
         void *privateDatap;	/* data pointer for non-zero types */
         osi_turnstile_t turn;	/* turnstile */
     } d;
-    unsigned short level;       /* locking hierarchy level */
 } osi_mutex_t;
 
 /* a read/write lock.  This structure has two forms.  In the
@@ -54,20 +55,21 @@ typedef struct osi_mutex {
  * This type of lock has N readers or one writer.
  */
 
-#define OSI_RWLOCK_THREADS 32
+#define OSI_RWLOCK_THREADS 64
 
 typedef struct osi_rwlock {
-    char type;			/* for all types; type 0 uses atomic count */
-    char flags;			/* flags for base type */
+    short type;			/* for all types; type 0 uses atomic count */
     unsigned short atomicIndex;	/* index into hash table for low-level sync */
-    DWORD tid[OSI_RWLOCK_THREADS];			/* writer's tid */
-    unsigned short waiters;	/* waiters */
-    unsigned short readers;	/* readers */
+    int flags;                  /* flags */
+    int waiters;	        /* waiters */
+    int readers;	        /* readers */
+    DWORD tid[OSI_RWLOCK_THREADS];	/* writer's tid */
+    short pad2;
+    unsigned short level;       /* locking hierarchy level */
     union {
         void *privateDatap;	/* data pointer for non-zero types */
         osi_turnstile_t turn;	/* turnstile */
     } d;
-    unsigned short level;       /* locking hierarchy level */
 } osi_rwlock_t;
 
 
