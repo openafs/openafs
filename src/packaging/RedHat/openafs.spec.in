@@ -693,11 +693,11 @@ case %{kernvers} in
    2.4.*)
        kv='24'
        ;;
-   2.6.*)
+   2.6.* | 3.*)
        kv='26'
        ;;
    *)
-       echo "I don't know how to build linux-`expr ${kernvers} : \(^[0-9]*[.][0-9]*\)`"
+       echo "I don't know how to build linux-`expr %{kernvers} : '\(^[0-9]*[.][0-9]*\)'`"
        exit 1
        ;;
 esac
@@ -972,12 +972,12 @@ case %{kernvers} in
        kv='24'
        kmodend=.o
        ;;
-   2.6.*)
+   2.6.* | 3.*)
        kv='26'
        kmodend=.ko
        ;;
    *)
-       echo "I don't know how to build linux-`expr ${kernvers} : \(^[0-9]*[.][0-9]*\)`"
+       echo "I don't know how to build linux-`expr %{kernvers} : '\(^[0-9]*[.][0-9]*\)'`"
        exit 1
        ;;
 esac
