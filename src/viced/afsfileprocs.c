@@ -6374,7 +6374,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     int linkCount = 0;		/* link count on inode */
     afs_fsize_t CoW_off, CoW_len;
     ssize_t nBytes;
-    FdHandle_t *fdP, *origfdP = NULL;
+    FdHandle_t *fdP;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     afs_ino_str_t stmp;
 
@@ -6437,32 +6437,20 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	     * mechanisms (i.e. copy on write overhead.) Also the right size
 	     * of the disk will be recorded...
 	     */
-	    origfdP = fdP;
+	    FDH_CLOSE(fdP);
 	    VN_GET_LEN(size, targetptr);
 	    volptr->partition->flags &= ~PART_DONTUPDATE;
 	    VSetPartitionDiskUsage(volptr->partition);
 	    volptr->partition->flags |= PART_DONTUPDATE;
 	    if ((errorCode = VDiskUsage(volptr, nBlocks(size)))) {
 		volptr->partition->flags &= ~PART_DONTUPDATE;
-		FDH_CLOSE(origfdP);
 		return (errorCode);
 	    }
 
-	    CoW_len = (FileLength >= (Length + Pos)) ? FileLength - Length : Pos;
-	    CopyOnWrite_calls++;
-	    if (CoW_len == 0) CopyOnWrite_size0++;
-	    if (Pos == 0) CopyOnWrite_off0++;
-	    if (CoW_len > CopyOnWrite_maxsize) CopyOnWrite_maxsize = CoW_len;
-
-	    ViceLog(1, ("StoreData : calling CopyOnWrite on vnode %u.%u (%s) "
-			"off 0x0 size 0x%llx\n",
-			afs_printable_VolumeId_u(V_id(volptr)),
-			afs_printable_VnodeId_u(targetptr->vnodeNumber),
-			V_name(volptr), Pos));
-	    if ((errorCode = CopyOnWrite(targetptr, volptr, 0, Pos))) {
+	    ViceLog(25, ("StoreData : calling CopyOnWrite on  target dir\n"));
+	    if ((errorCode = CopyOnWrite(targetptr, volptr, 0, MAXFSIZE))) {
 		ViceLog(25, ("StoreData : CopyOnWrite failed\n"));
 		volptr->partition->flags &= ~PART_DONTUPDATE;
-		FDH_CLOSE(origfdP);
 		return (errorCode);
 	    }
 	    volptr->partition->flags &= ~PART_DONTUPDATE;
@@ -6471,7 +6459,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    if (fdP == NULL) {
 		ViceLog(25,
 			("StoreData : Reopen after CopyOnWrite failed\n"));
-		FDH_REALLYCLOSE(origfdP);
 		return ENOENT;
 	    }
 	}
@@ -6503,7 +6490,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	 AdjustDiskUsage(volptr, adjustSize,
 			 adjustSize - SpareComp(volptr)))) {
 	FDH_CLOSE(fdP);
-	if (origfdP) FDH_REALLYCLOSE(origfdP);
 	return (errorCode);
     }
 
@@ -6598,9 +6584,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	 * need to update the target vnode.
 	 */
 	targetptr->changed_newTime = 1;
-	if (origfdP && (bytesTransfered < Length))	/* Need to "finish" CopyOnWrite still */
-	    CopyOnWrite2(origfdP, fdP, Pos + bytesTransfered, NewLength - Pos - bytesTransfered);
-	if (origfdP) FDH_REALLYCLOSE(origfdP);
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
 	VAdjustDiskUsage(&tmp_errorCode, volptr,
@@ -6610,17 +6593,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    errorCode = tmp_errorCode;
 	}
 	return errorCode;
-    }
-    if (origfdP) {					/* finish CopyOnWrite */
-	if ( (CoW_off = Pos + Length) < NewLength) {
-	    errorCode = CopyOnWrite2(origfdP, fdP, CoW_off, CoW_len = NewLength - CoW_off);
-	    ViceLog(1, ("StoreData : CopyOnWrite2 on vnode %u.%u (%s) "
-			"off 0x%llx size 0x%llx returns %d\n",
-                        afs_printable_VolumeId_u(V_id(volptr)),
-			afs_printable_VnodeId_u(targetptr->vnodeNumber),
-			V_name(volptr), CoW_off, CoW_len, errorCode));
-	}
-	FDH_REALLYCLOSE(origfdP);
     }
     FDH_CLOSE(fdP);
 
