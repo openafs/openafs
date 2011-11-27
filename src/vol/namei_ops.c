@@ -135,7 +135,10 @@ namei_iread(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 	return -1;
 
     nBytes = FDH_PREAD(fdP, buf, size, offset);
-    FDH_CLOSE(fdP);
+    if (nBytes < 0)
+	FDH_REALLYCLOSE(fdP);
+    else
+	FDH_CLOSE(fdP);
     return nBytes;
 }
 
@@ -150,7 +153,10 @@ namei_iwrite(IHandle_t * h, afs_foff_t offset, char *buf, afs_fsize_t size)
 	return -1;
 
     nBytes = FDH_PWRITE(fdP, buf, size, offset);
-    FDH_CLOSE(fdP);
+    if (nBytes < 0)
+	FDH_REALLYCLOSE(fdP);
+    else
+	FDH_CLOSE(fdP);
     return nBytes;
 }
 
