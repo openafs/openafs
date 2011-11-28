@@ -508,7 +508,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	    shouldRetry = 1;
 	    goto out;
 	}
-	if (acode == RX_CALL_TIMEOUT) {
+	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE || acode == RX_CALL_BUSY) {
 	    serversleft = afs_BlackListOnce(areq, afid, tsp);
 	    if (afid)
 		tvp = afs_FindVolume(afid, READ_LOCK);

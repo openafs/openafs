@@ -172,13 +172,13 @@ cm_PingServer(cm_server_t *tsp)
     }	/* got an unauthenticated connection to this server */
 
     lock_ObtainMutex(&tsp->mx);
-    if (code >= 0 || code == RXGEN_OPCODE || code == CM_RX_RETRY_BUSY_CALL) {
+    if (code >= 0 || code == RXGEN_OPCODE || code == RX_CALL_BUSY) {
 	/* mark server as up */
 	_InterlockedAnd(&tsp->flags, ~CM_SERVERFLAG_DOWN);
         tsp->downTime = 0;
 
 	/* we currently handle 32-bits of capabilities */
-	if (code != RXGEN_OPCODE && code != CM_RX_RETRY_BUSY_CALL &&
+	if (code != RXGEN_OPCODE && code != RX_CALL_BUSY &&
             caps.Capabilities_len > 0) {
 	    tsp->capabilities = caps.Capabilities_val[0];
 	    xdr_free((xdrproc_t) xdr_Capabilities, &caps);
@@ -457,13 +457,13 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             wasDown = tsp->flags & CM_SERVERFLAG_DOWN;
 
             if (results[i] >= 0 || results[i] == RXGEN_OPCODE ||
-                results[i] == CM_RX_RETRY_BUSY_CALL)  {
+                results[i] == RX_CALL_BUSY)  {
                 /* mark server as up */
                 _InterlockedAnd(&tsp->flags, ~CM_SERVERFLAG_DOWN);
                 tsp->downTime = 0;
 
                 /* we currently handle 32-bits of capabilities */
-                if (results[i] != RXGEN_OPCODE && results[i] != CM_RX_RETRY_BUSY_CALL &&
+                if (results[i] != RXGEN_OPCODE && results[i] != RX_CALL_BUSY &&
                     caps[i].Capabilities_len > 0) {
                     tsp->capabilities = caps[i].Capabilities_val[0];
                     xdr_free((xdrproc_t) xdr_Capabilities, &caps[i]);
@@ -623,7 +623,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
             lock_ObtainMutex(&tsp->mx);
             wasDown = tsp->flags & CM_SERVERFLAG_DOWN;
 
-            if (results[i] >= 0 || results[i] == CM_RX_RETRY_BUSY_CALL)  {
+            if (results[i] >= 0 || results[i] == RX_CALL_BUSY)  {
                 /* mark server as up */
                 _InterlockedAnd(&tsp->flags, ~CM_SERVERFLAG_DOWN);
                 tsp->downTime = 0;
