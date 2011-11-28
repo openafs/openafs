@@ -888,7 +888,7 @@
           <Text>[DlgTitleFont]Configure AFS Client</Text>
         </Control>
         <Control Id="CellLabel" Type="Text"                     X="45"  Y="73"  Width="100" Height="15" TabSkip="no" Text="Default &amp;Cell" />
-        <Control Id="CellEdit" Type="Edit"                      X="150" Y="73"  Width="115" Height="18" Property="AFSCELLNAME" Text="{120}" />
+        <Control Id="CellEdit" Type="Edit"                      X="150" Y="73"  Width="115" Height="18" Property="AFSCELLNAME" Text="{255}" />
         <Control Id="LogonOptionsLabel" Type="Text"             X="45"  Y="100" Width="100" Height="15" Text="Integrated logon" />
         <Control Id="LogonOptionSel" Type="RadioButtonGroup"    X="150" Y="100" Width="120" Height="20" Property="LOGONOPTIONS" />
         <Control Id="SecurityLevelLabel" Type="Text"		X="45"	Y="120"	Width="100" Height="15" Text="AFS crypt security" />
