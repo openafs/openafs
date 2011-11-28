@@ -181,12 +181,12 @@ static unsigned int rxi_rpc_peer_stat_cnt;
 static unsigned int rxi_rpc_process_stat_cnt;
 
 /*
- * rxi_busyChannelError is the error to return to the application when a call
- * channel appears busy (inferred from the receipt of RX_PACKET_TYPE_BUSY
- * packets on the channel), and there are other call channels in the
- * connection that are not busy. If 0, we do not return errors upon receiving
- * busy packets; we just keep trying on the same call channel until we hit a
- * timeout.
+ * rxi_busyChannelError is a boolean.  It indicates whether or not RX_CALL_BUSY
+ * errors should be reported to the application when a call channel appears busy
+ * (inferred from the receipt of RX_PACKET_TYPE_BUSY packets on the channel),
+ * and there are other call channels in the connection that are not busy.
+ * If 0, we do not return errors upon receiving busy packets; we just keep
+ * trying on the same call channel until we hit a timeout.
  */
 static afs_int32 rxi_busyChannelError = 0;
 
@@ -775,17 +775,17 @@ rx_rto_setPeerTimeoutSecs(struct rx_peer *peer, int secs) {
 }
 
 /**
- * Sets the error generated when a busy call channel is detected.
+ * Enables or disables the busy call channel error (RX_CALL_BUSY).
  *
- * @param[in] error The error to return for a call on a busy channel.
+ * @param[in] onoff Non-zero to enable busy call channel errors.
  *
  * @pre Neither rx_Init nor rx_InitHost have been called yet
  */
 void
-rx_SetBusyChannelError(afs_int32 error)
+rx_SetBusyChannelError(afs_int32 onoff)
 {
     osi_Assert(rxinit_status != 0);
-    rxi_busyChannelError = error;
+    rxi_busyChannelError = onoff ? 1 : 0;
 }
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
@@ -1102,6 +1102,7 @@ void
 rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds)
 {
     conn->idleDeadTime = seconds;
+    conn->idleDeadDetection = (seconds ? 1 : 0);
     rxi_CheckConnTimeouts(conn);
 }
 
@@ -2979,8 +2980,8 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	conn->nSpecific = 0;
 	conn->specific = NULL;
 	rx_SetConnDeadTime(conn, service->connDeadTime);
-	rx_SetConnIdleDeadTime(conn, service->idleDeadTime);
-	rx_SetServerConnIdleDeadErr(conn, service->idleDeadErr);
+	conn->idleDeadTime = service->idleDeadTime;
+	conn->idleDeadDetection = service->idleDeadErr ? 1 : 0;
 	for (i = 0; i < RX_MAXCALLS; i++) {
 	    conn->twind[i] = rx_initSendWindow;
 	    conn->rwind[i] = rx_initReceiveWindow;
@@ -3080,7 +3081,7 @@ rxi_CheckBusy(struct rx_call *call)
 	 * rxi_busyChannelError so the application can retry the request,
 	 * presumably on a less-busy call channel. */
 
-	rxi_CallError(call, rxi_busyChannelError);
+	rxi_CallError(call, RX_CALL_BUSY);
     }
 }
 
@@ -5118,18 +5119,27 @@ struct rx_packet *
 rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 		  int istack, int force)
 {
-    afs_int32 error;
+    afs_int32 error, cerror;
     struct clock when, now;
 
     if (!call->error)
 	return packet;
 
+    switch (call->error) {
+    case RX_CALL_IDLE:
+    case RX_CALL_BUSY:
+        cerror = RX_CALL_TIMEOUT;
+        break;
+    default:
+        cerror = call->error;
+    }
+
     /* Clients should never delay abort messages */
     if (rx_IsClientConn(call->conn))
 	force = 1;
 
-    if (call->abortCode != call->error) {
-	call->abortCode = call->error;
+    if (call->abortCode != cerror) {
+	call->abortCode = cerror;
 	call->abortCount = 0;
     }
 
@@ -5139,7 +5149,7 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 	    rxevent_Cancel(call->delayedAbortEvent, call,
 			   RX_CALL_REFCOUNT_ABORT);
 	}
-	error = htonl(call->error);
+	error = htonl(cerror);
 	call->abortCount++;
 	packet =
 	    rxi_SendSpecial(call, call->conn, packet, RX_PACKET_TYPE_ABORT,
@@ -6268,6 +6278,7 @@ rxi_CheckCall(struct rx_call *call)
     afs_uint32 fudgeFactor;
     int cerror = 0;
     int newmtu = 0;
+    int idle_timeout = 0;
 
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (call->flags & RX_CALL_TQ_BUSY) {
@@ -6346,7 +6357,7 @@ rxi_CheckCall(struct rx_call *call)
 	 * attached process can die reasonably gracefully. */
     }
 
-    if (conn->idleDeadTime) {
+    if (conn->idleDeadDetection && conn->idleDeadTime) {
 	idleDeadTime = conn->idleDeadTime + fudgeFactor;
     }
 
@@ -6359,10 +6370,11 @@ rxi_CheckCall(struct rx_call *call)
 	    goto mtuout;
 	}
     }
-    if (call->lastSendData && idleDeadTime && (conn->idleDeadErr != 0)
+    if (call->lastSendData && idleDeadTime
         && ((call->lastSendData + idleDeadTime) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
-	    cerror = conn->idleDeadErr;
+	    cerror = conn->service ? conn->service->idleDeadErr : RX_CALL_IDLE;
+            idle_timeout = 1;
 	    goto mtuout;
 	}
     }
@@ -6380,8 +6392,8 @@ rxi_CheckCall(struct rx_call *call)
     }
     return 0;
 mtuout:
-    if (conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT
-	&& call->lastReceiveTime) {
+    if (conn->msgsizeRetryErr && cerror != RX_CALL_TIMEOUT && !idle_timeout &&
+        call->lastReceiveTime) {
 	int oldMTU = conn->peer->ifMTU;
 
 	/* if we thought we could send more, perhaps things got worse */
@@ -6595,7 +6607,7 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy)
      */
     if ((conn->peer->maxPacketSize != 0) &&
 	(conn->peer->natMTU < RX_MAX_PACKET_SIZE) &&
-	(conn->idleDeadErr))
+	conn->idleDeadDetection)
 	(void)rxi_SendAck(call, NULL, 0, RX_ACK_MTU, 0);
     rxi_ScheduleGrowMTUEvent(call, 0);
     MUTEX_EXIT(&call->lock);

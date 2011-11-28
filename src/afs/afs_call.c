@@ -115,7 +115,7 @@ afs_InitSetup(int preallocs)
 
     memset(afs_zeros, 0, AFS_ZEROS);
 
-    rx_SetBusyChannelError(RX_CALL_TIMEOUT);
+    rx_SetBusyChannelError(1);  /* turn on busy call error reporting */
 
     /* start RX */
     if(!afscall_set_rxpck_received)

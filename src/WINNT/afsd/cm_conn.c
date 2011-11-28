@@ -747,7 +747,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
         retry = 1;
     }
-    else if (errorCode == CM_RX_RETRY_BUSY_CALL) {
+    else if (errorCode == RX_CALL_BUSY) {
         /*
          * RPC failed because the selected call channel
          * is currently busy on the server.  Unconditionally
@@ -990,7 +990,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     /* If not allowed to retry, don't */
     if (!forcing_new && (reqp->flags & CM_REQ_NORETRY) &&
-        (errorCode != RX_MSGSIZE && errorCode != CM_RX_RETRY_BUSY_CALL))
+        (errorCode != RX_MSGSIZE && errorCode != RX_CALL_BUSY))
 	retry = 0;
     else if (retry && dead_session)
         retry = 0;
@@ -1207,12 +1207,11 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
                                     secIndex);
     rx_SetConnDeadTime(tcp->rxconnp, ConnDeadtimeout);
     rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
-    rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
 
     /*
-     * Register the error to be returned on an idle dead timeout
+     * Setting idle dead timeout to a non-zero value activates RX_CALL_IDLE errors
      */
-    rx_SetServerConnIdleDeadErr(tcp->rxconnp, RX_CALL_DEAD);
+    rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
 
     /*
      * Let the Rx library know that we can auto-retry if an

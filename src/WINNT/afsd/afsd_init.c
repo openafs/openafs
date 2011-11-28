@@ -1343,7 +1343,7 @@ afsd_InitCM(char **reasonP)
         afsi_log("rx_SetUdpBufSize %d", rx_udpbufsize);
     }
 
-    rx_SetBusyChannelError(CM_RX_RETRY_BUSY_CALL);
+    rx_SetBusyChannelError(1);  /* Activate busy call channel reporting */
 
     /* initialize RX, and tell it to listen to the callbackport,
      * which is used for callback RPC messages.
