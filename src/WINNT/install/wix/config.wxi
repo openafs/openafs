@@ -37,10 +37,10 @@
 
 	<!-- Configuration options, allow for commandline specification -->
     <?ifndef CellName?>
-        <?define CellName="openafs.org"?>
+        <?define CellName="<enter.your.cell>"?>
     <?endif?>
     <?ifndef LogonOptions?>
-		<?define LogonOptions="1"?>
+		<?define LogonOptions="0"?>
     <?endif?>
     <?ifndef FreelanceMode?>
 		<?define FreelanceMode="1"?>
