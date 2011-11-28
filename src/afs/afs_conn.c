@@ -460,8 +460,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (service == 52) {
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
-	/* set to a RX_CALL_TIMEOUT error to allow MTU retry to trigger */
-	rx_SetServerConnIdleDeadErr(tc->id, RX_CALL_DEAD);
+
+        /* Setting idle dead time to non-zero activates RX_CALL_IDLE errors. */
 	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
 
 	/*

@@ -308,7 +308,7 @@ EXPORTS
         rx_GetSecurityHeaderSize                @315
         rx_SetSecurityMaxTrailerSize            @316
         rx_GetSecurityMaxTrailerSize            @317
-        rx_SetServerConnIdleDeadErr             @318
+        ; @318 is available
         rx_SetMsgsizeRetryErr                   @319
         rx_IsServerConn                         @320
         rx_IsClientConn                         @321

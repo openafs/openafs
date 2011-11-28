@@ -79,7 +79,6 @@ extern void rx_SetSecurityHeaderSize(struct rx_connection *conn, int size);
 extern int  rx_GetSecurityHeaderSize(struct rx_connection *conn);
 extern void rx_SetSecurityMaxTrailerSize(struct rx_connection *conn, int size);
 extern int  rx_GetSecurityMaxTrailerSize(struct rx_connection *conn);
-extern void rx_SetServerConnIdleDeadErr(struct rx_connection *conn, int err);
 extern void rx_SetMsgsizeRetryErr(struct rx_connection *conn, int err);
 extern int  rx_IsServerConn(struct rx_connection *conn);
 extern int  rx_IsClientConn(struct rx_connection *conn);
@@ -242,7 +241,10 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 /* Define procedure to set service dead time */
 #define rx_SetIdleDeadTime(service,time) ((service)->idleDeadTime = (time))
 
-/* Define error to return in server connections when failing to answer */
+/*
+ * Define error to return in server connections when failing to answer.
+ * (server only) For example, AFS viced sends VNOSERVICE.
+ */
 #define rx_SetServerIdleDeadErr(service,err) ((service)->idleDeadErr = (err))
 
 /* Define procedures for getting and setting before and after execute-request procs */
@@ -263,7 +265,6 @@ rx_IsLoopbackAddr(afs_uint32 addr)
 
 /* Enable or disable asymmetric client checking for a service */
 #define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
-
 
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
@@ -546,34 +547,57 @@ struct rx_ackPacket {
 #define	RX_CHECKREACH_TIMEOUT	2	/* Number of seconds before another ping is generated */
 #define	RX_CHECKREACH_TTL	60	/* Re-check reachability this often */
 
-/* RX error codes.  RX uses error codes from -1 to -64.  Rxgen may use other error codes < -64; user programs are expected to return positive error codes */
+/*
+ * RX error codes.  RX uses error codes from -1 to -64 and -100.
+ * Rxgen uses other error codes < -64 (see src/rxgen/rpc_errors.h);
+ * user programs are expected to return positive error codes
+ */
 
 /* Something bad happened to the connection; temporary loss of communication */
 #define	RX_CALL_DEAD		    (-1)
 
-/* An invalid operation, such as a client attempting to send data after having received the beginning of a reply from the server */
+/*
+ * An invalid operation, such as a client attempting to send data
+ * after having received the beginning of a reply from the server.
+ */
 #define	RX_INVALID_OPERATION	    (-2)
 
 /* An optional timeout per call may be specified */
 #define	RX_CALL_TIMEOUT		    (-3)
 
-/* End of data on a read */
+/* End of data on a read.  Not currently in use. */
 #define	RX_EOF			    (-4)
 
-/* Some sort of low-level protocol error */
+/* Some sort of low-level protocol error. */
 #define	RX_PROTOCOL_ERROR	    (-5)
 
-/* Generic user abort code; used when no more specific error code needs to be communicated.  For example, multi rx clients use this code to abort a multi rx call */
+/*
+ * Generic user abort code; used when no more specific error code needs to be
+ * communicated.  For example, multi rx clients use this code to abort a multi-
+ * rx call.
+ */
 #define	RX_USER_ABORT		    (-6)
 
-/* Port already in use (from rx_Init) */
+/* Port already in use (from rx_Init).  This error is never sent on the wire. */
 #define RX_ADDRINUSE		    (-7)
 
 /* EMSGSIZE returned from network.  Packet too big, must fragment */
 #define RX_MSGSIZE		    (-8)
 
+/*
+ * Idle dead timeout error.  This error is never sent on the wire.
+ * rxi_SendCallAbort() translates RX_CALL_IDLE to RX_CALL_TIMEOUT.
+ */
+#define RX_CALL_IDLE                (-9)
+
+/*
+ * Busy call channel error.  This error is never sent on the wire.
+ * rxi_SendCallAbort() translates RX_CALL_BUSY to RX_CALL_TIMEOUT.
+ */
+#define RX_CALL_BUSY                (-10)
+
 /* transient failure detected ( possibly the server is restarting ) */
-/* this shud be equal to VRESTARTING ( util/errors.h ) for old clients to work */
+/* this should be equal to VRESTARTING ( util/errors.h ) for old clients to work */
 #define RX_RESTARTING		    (-100)
 
 typedef enum {

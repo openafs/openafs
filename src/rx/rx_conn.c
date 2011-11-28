@@ -78,12 +78,6 @@ rx_GetSecurityMaxTrailerSize(struct rx_connection *conn)
 }
 
 void
-rx_SetServerConnIdleDeadErr(struct rx_connection *conn, int err)
-{
-    conn->idleDeadErr = err;
-}
-
-void
 rx_SetMsgsizeRetryErr(struct rx_connection *conn, int err)
 {
     conn->msgsizeRetryErr = err;
