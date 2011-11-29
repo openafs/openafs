@@ -1,4 +1,4 @@
-openafs (1.6.0-2) UNRELEASED; urgency=low
+openafs (1.6.0-2) unstable; urgency=low
 
   * Apply upstream deltas for Linux 3.1 and 3.2 (Closes: #649765):
     - [f129142] Linux: 3.1: update RCU path walking detection in
@@ -10,7 +10,7 @@ openafs (1.6.0-2) UNRELEASED; urgency=low
   * Add support for armhf.  Patch from Konstantinos Margaritis.
     (Closes: #645395)
 
- -- Russ Allbery <rra@debian.org>  Thu, 27 Oct 2011 17:10:16 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 28 Nov 2011 17:53:45 -0800
 
 openafs (1.6.0-1) unstable; urgency=low
 
