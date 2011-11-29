@@ -1801,7 +1801,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
             lock_ReleaseWrite(&scp->rw);
             bScpLocked = FALSE;
         }
-        code = buf_CleanVnode(scp, userp, &req);
+        code = cm_FSync(scp, userp, &req, bScpLocked);
         if (bLastHandle && code)
             goto on_error;
     }
