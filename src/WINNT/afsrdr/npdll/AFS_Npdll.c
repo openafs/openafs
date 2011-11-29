@@ -72,6 +72,12 @@
 
 ULONG _cdecl AFSDbgPrint( PWCHAR Format, ... );
 
+static DWORD APIENTRY
+NPGetConnectionCommon( LPWSTR  lpLocalName,
+                       LPWSTR  lpRemoteName,
+                       LPDWORD lpBufferSize,
+                       BOOL    bDriveSubstOk);
+
 #define WNNC_DRIVER( major, minor ) ( major * 0x00010000 + minor )
 
 #define OPENAFS_PROVIDER_NAME           L"OpenAFS Network"
@@ -912,9 +918,10 @@ NPCancelConnection( LPWSTR  lpName,
             // Get the remote name for the connection, if we are handling it
             //
 
-            dwStatus = NPGetConnection( lpName,
-                                        wchRemoteName,
-                                        &dwRemoteNameLength);
+            dwStatus = NPGetConnectionCommon( wchLocalName,
+                                              wchRemoteName,
+                                              &dwRemoteNameLength,
+                                              FALSE);
 
             if( dwStatus != WN_SUCCESS ||
                 dwRemoteNameLength == 0)
@@ -1155,6 +1162,20 @@ NPGetConnection( LPWSTR  lpLocalName,
                  LPDWORD lpBufferSize)
 {
 
+    return NPGetConnectionCommon( lpLocalName,
+                                  lpRemoteName,
+                                  lpBufferSize,
+                                  TRUE);
+}
+
+DWORD
+APIENTRY
+NPGetConnectionCommon( LPWSTR  lpLocalName,
+                       LPWSTR  lpRemoteName,
+                       LPDWORD lpBufferSize,
+                       BOOL    bDriveSubstOk)
+{
+
     DWORD    dwStatus = WN_NOT_CONNECTED;
     WCHAR    wchLocalName[3];
     WCHAR    wchSubstName[MAX_PATH + 1];
@@ -1195,7 +1216,8 @@ NPGetConnection( LPWSTR  lpLocalName,
 
         dwPassedSize = *lpBufferSize;
 
-        if ( !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName)))
+        if ( !bDriveSubstOk ||
+             !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName)))
         {
             wchLocalName[0] = towupper(lpLocalName[0]);
             wchLocalName[1] = L':';
