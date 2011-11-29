@@ -179,7 +179,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     /* UBIK skips the voting if 1 server - so we fudge it here */
     if (udebug.amSyncSite && (udebug.nServers == 1)) {
-	udebug.lastYesHost = hostAddr;
+	udebug.lastYesHost = ntohl(hostAddr);
 	udebug.lastYesTime = udebug.now;
 	udebug.lastYesState = 1;
 	udebug.lastYesClaim = udebug.now;
