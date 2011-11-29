@@ -1,5 +1,12 @@
 openafs (1.6.0-2) UNRELEASED; urgency=low
 
+  * Apply upstream deltas for Linux 3.1 and 3.2 (Closes: #649765):
+    - [f129142] Linux: 3.1: update RCU path walking detection in
+      permission i_op (Closes: #649996)
+    - [7f55b45] Linux: d_delete now takes a const argument
+    - [737a280] Linux: 3.2: Use set_nlink to update i_nlink
+    - [364fad6] Linux: 3.1: adapt to fsync changes
+    - [032736b] Linux: make sure backing_dev_info is zeroed
   * Add support for armhf.  Patch from Konstantinos Margaritis.
     (Closes: #645395)
 
