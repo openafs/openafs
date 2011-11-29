@@ -1253,17 +1253,21 @@ NPGetConnectionCommon( LPWSTR  lpLocalName,
                 HRESULT hr;
                 WCHAR  *pwch;
                 DWORD   dwCount = 0;
+                DWORD   dwRequiredSize;
 
 #ifdef AFS_DEBUG_TRACE
                 AFSDbgPrint( L"NPGetConnection drive substitution %s is AFS\n",
                              wchSubstName);
 #endif
 
+                dwRequiredSize = wcslen( wchSubstName) * sizeof( WCHAR) + sizeof( WCHAR);
+
                 if ( lpRemoteName == NULL ||
-                     dwPassedSize == 0)
+                     dwPassedSize == 0 ||
+                     dwRequiredSize > *lpBufferSize)
                 {
 
-                    *lpBufferSize = wcslen( wchSubstName) * sizeof( WCHAR) + sizeof( WCHAR);
+                    *lpBufferSize = dwRequiredSize;
 
                     try_return( dwStatus = WN_MORE_DATA);
 
@@ -1274,7 +1278,7 @@ NPGetConnectionCommon( LPWSTR  lpLocalName,
                 if ( SUCCEEDED(hr))
                 {
 
-                    for ( dwCount = 0, pwch = lpRemoteName; *pwch; pwch++ )
+                    for ( dwCount = 0, pwch = lpRemoteName; *pwch && pwch < lpRemoteName + (*lpBufferSize); pwch++ )
                     {
                         if ( *pwch == L'\\' )
                         {
