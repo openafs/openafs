@@ -817,6 +817,10 @@ NPAddConnection3( HWND            hwndOwner,
                     else
                     {
 
+#ifdef AFS_DEBUG_TRACE
+                        AFSDbgPrint( L"NPAddConnection3 QueryDosDeviceW assigned drive %s\n", wchLocalName);
+#endif
+
                         dwStatus = WN_SUCCESS;
                     }
 
@@ -869,6 +873,7 @@ NPCancelConnection( LPWSTR  lpName,
     DWORD    dwBufferSize = 0;
     BOOL     bLocalName = TRUE;
     HANDLE   hControlDevice = NULL;
+    WCHAR    wchLocalName[ 3];
     WCHAR   *pwchLocalName = NULL;
 
     __Enter
@@ -889,10 +894,19 @@ NPCancelConnection( LPWSTR  lpName,
         {
 
             bLocalName = FALSE;
-        }
 
-        if( bLocalName)
+            wchLocalName[0] = L'\0';
+
+            StringCchCopyW( wchRemoteName, MAX_PATH+1, lpName);
+
+            dwRemoteNameLength = (wcslen( wchRemoteName) * sizeof( WCHAR));
+        }
+        else
         {
+
+            wchLocalName[0] = towupper(lpName[0]);
+            wchLocalName[1] = L':';
+            wchLocalName[2] = L'\0';
 
             //
             // Get the remote name for the connection, if we are handling it
@@ -918,15 +932,13 @@ NPCancelConnection( LPWSTR  lpName,
             //
             dwRemoteNameLength -= sizeof( WCHAR);
         }
-        else
-        {
-
-            StringCchCopyW( wchRemoteName, MAX_PATH+1, lpName);
-
-            dwRemoteNameLength = (wcslen( wchRemoteName) * sizeof( WCHAR));
-        }
 
         wchRemoteName[ dwRemoteNameLength/sizeof( WCHAR)] = L'\0';
+
+#ifdef AFS_DEBUG_TRACE
+        AFSDbgPrint( L"NPCancelConnection Attempting to cancel '%s' -> '%s'\n",
+                     wchLocalName, wchRemoteName);
+#endif
 
         dwBufferSize = sizeof( AFSNetworkProviderConnectionCB) + dwRemoteNameLength;
 
@@ -941,7 +953,7 @@ NPCancelConnection( LPWSTR  lpName,
         if( bLocalName)
         {
 
-            pConnectCB->LocalName = towupper(lpName[0]);
+            pConnectCB->LocalName = wchLocalName[0];
         }
         else
         {
@@ -995,7 +1007,7 @@ NPCancelConnection( LPWSTR  lpName,
 #ifdef AFS_DEBUG_TRACE
             DWORD gle = GetLastError();
 
-            AFSDbgPrint( L"NPCancelConnection Failed to cancel connection to file system - gle 0x%x\n", gle);
+            AFSDbgPrint( L"NPCancelConnection DeviceIoControl failed - gle 0x%x\n", gle);
 #endif
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
@@ -1003,10 +1015,19 @@ NPCancelConnection( LPWSTR  lpName,
         dwStatus = stCancelConn.Status;
 
 #ifdef AFS_DEBUG_TRACE
+        if ( dwStatus == WN_NOT_CONNECTED )
+        {
 
-        AFSDbgPrint( L"NPCancelConnection Cancel connection to file system - Name %s Status %08lX\n",
-                     lpName,
-                     dwStatus);
+            AFSDbgPrint( L"NPCancelConnection Cancel connection to file system - Name %s Status WN_NOT_CONNECTED\n",
+                         lpName);
+        }
+        else
+        {
+
+            AFSDbgPrint( L"NPCancelConnection Cancel connection to file system - Name %s Status %08lX\n",
+                         lpName,
+                         dwStatus);
+        }
 #endif
 
         if( dwStatus == WN_SUCCESS &&
@@ -1055,8 +1076,6 @@ NPCancelConnection( LPWSTR  lpName,
 
             if( !bLocalName)
             {
-
-                WCHAR wchLocalName[ 3];
 
                 wchLocalName[ 0] = stCancelConn.LocalName;
 
