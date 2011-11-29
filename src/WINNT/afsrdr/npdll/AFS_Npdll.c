@@ -2206,6 +2206,15 @@ NPEnumResource( HANDLE  hEnum,
             try_return( dwStatus = WN_NET_ERROR);
         }
 
+        if( pEnumCB->Type != RESOURCETYPE_ANY && pEnumCB->Type != RESOURCETYPE_DISK)
+        {
+
+#ifdef AFS_DEBUG_TRACE
+            AFSDbgPrint( L"NPEnumResource Non-DISK queries are not supported, returning WN_NO_MORE_ENTRIES\n");
+#endif
+            try_return( dwStatus = WN_NO_MORE_ENTRIES);
+        }
+
         //
         // Handle the special cases here
         //   0. Provider Network Root
