@@ -3952,11 +3952,11 @@ AFSRetrieveAuthId()
     return liAuthId;
 }
 
-static BOOL
+static DWORD
 Debug(void)
 {
     static int init = 0;
-    static BOOL debug = 0;
+    static DWORD debug = 0;
 
     if ( !init ) {
         HKEY hk;
@@ -3975,6 +3975,76 @@ Debug(void)
     return debug;
 }
 
+static char *
+cm_Utf16ToUtf8Alloc(const WCHAR * s, int cch_src, int *pcch_dest)
+{
+    int cch_dest;
+    char * dest;
+
+    if (s == NULL || cch_src == 0 || *s == L'\0') {
+        if (pcch_dest)
+            *pcch_dest = ((cch_src != 0)?1:0);
+        return NULL;
+    }
+
+    cch_dest = WideCharToMultiByte(CP_UTF8, 0, s, cch_src, NULL, 0, NULL, FALSE);
+
+    if (cch_dest == 0) {
+        if (pcch_dest)
+            *pcch_dest = cch_dest;
+        return NULL;
+    }
+
+    dest = HeapAlloc( GetProcessHeap(), 0, (cch_dest + 1) * sizeof(char));
+
+    WideCharToMultiByte(CP_UTF8, 0, s, cch_src, dest, cch_dest, NULL, FALSE);
+    dest[cch_dest] = 0;
+
+    if (pcch_dest)
+        *pcch_dest = cch_dest;
+
+    return dest;
+}
+
+static void
+AppendDebugStringToLogFile(WCHAR *wszbuffer)
+{
+    HANDLE hFile;
+    int len;
+    char * buffer;
+	DWORD dwWritten;
+	BOOL bRet;
+
+    if ( !wszbuffer || !wszbuffer[0] )
+        return;
+
+    len = (int)wcslen(wszbuffer);
+
+    buffer = cm_Utf16ToUtf8Alloc(wszbuffer, len, &len);
+
+    if (!buffer)
+        return;
+
+    hFile = CreateFileW( L"C:\\TEMP\\AFSRDFSProvider.log",
+                         FILE_APPEND_DATA,
+                         FILE_SHARE_WRITE,
+                         NULL,
+                         OPEN_ALWAYS,
+                         FILE_ATTRIBUTE_NORMAL,
+                         NULL);
+
+    if ( hFile == INVALID_HANDLE_VALUE ) {
+        OutputDebugString(L"C:\\AFSRDFSProvider.log cannot be opened.\n");
+        return;
+    }
+
+    bRet = WriteFile( hFile, buffer, len, &dwWritten, NULL);
+
+    bRet = CloseHandle(hFile);
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+}
+
 ULONG
 _cdecl
 AFSDbgPrint(
@@ -3985,8 +4055,9 @@ AFSDbgPrint(
     HRESULT rc = S_OK;
     WCHAR wszbuffer[512];
     va_list marker;
+    DWORD debug = Debug();
 
-    if ( !Debug() )
+    if (debug == 0)
         return 0;
 
     va_start( marker, Format );
@@ -4001,10 +4072,14 @@ AFSDbgPrint(
 
         rc = StringCbVPrintfW( &wszbuffer[ 14], sizeof(wszbuffer) - 14, Format, marker);
 
-        if (SUCCEEDED(rc))
-            OutputDebugString( wszbuffer );
-        else
+        if (SUCCEEDED(rc)) {
+            if (debug & 1)
+                OutputDebugString( wszbuffer );
+            if (debug & 2)
+                AppendDebugStringToLogFile(wszbuffer);
+        } else {
             OutputDebugString(L"AFSDbgPrint Failed to create string\n");
+        }
     }
     return SUCCEEDED(rc) ? 1 : 0;
 }
