@@ -1325,48 +1325,6 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     return 0;			/* success */
 }				/*CopyOnWrite */
 
-static int
-CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
-             afs_sfsize_t size)
-{
-    char *buff = malloc(COPYBUFFSIZE);
-    size_t length;
-    ssize_t rdlen;
-    ssize_t wrlen;
-    int rc = 0;
-    afs_foff_t done = off;
-
-    if (size > FDH_SIZE(targFdP) - off)
-	size = FDH_SIZE(targFdP) - off;
-
-    while (size > 0) {
-	if (size > COPYBUFFSIZE) {	/* more than a buffer */
-	    length = COPYBUFFSIZE;
-	    size -= COPYBUFFSIZE;
-	} else {
-	    length = size;
-	    size = 0;
-	}
-	rdlen = FDH_PREAD(targFdP, buff, length, done);
-	if (rdlen == length) {
-	    wrlen = FDH_PWRITE(newFdP, buff, length, done);
-	    done += rdlen;
-	}
-	else
-	    wrlen = 0;
-
-	if ((rdlen != length) || (wrlen != length)) {
-	    /* no error recovery, at the worst we'll have a "hole"
-	     * in the file */
-	    rc = 1;
-	    break;
-	}
-    }
-    free(buff);
-    return rc;
-}
-
-
 /*
  * Common code to handle with removing the Name (file when it's called from
  * SAFS_RemoveFile() or an empty dir when called from SAFS_rmdir()) from a
@@ -7344,7 +7302,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_fsize_t NewLength;	/* size after this store completes */
     afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
     int linkCount = 0;		/* link count on inode */
-    afs_fsize_t CoW_off, CoW_len;
     ssize_t nBytes;
     FdHandle_t *fdP;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
