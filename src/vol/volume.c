@@ -4016,9 +4016,17 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 	    vp = NULL;
 	    break;
 	}
-#endif
 
-#ifdef AFS_DEMAND_ATTACH_FS
+	if (VIsErrorState(V_attachState(vp))) {
+	    /* make sure we don't take a vp in VOL_STATE_ERROR state and use
+	     * it, or transition it out of that state */
+	    if (!*ec) {
+		*ec = VNOVOL;
+	    }
+	    vp = NULL;
+	    break;
+	}
+
 	/*
 	 * this test MUST happen after VAttachVolymeByVp, so vol_op_state is
 	 * not VolOpRunningUnknown (attach2 would have converted it to Online
