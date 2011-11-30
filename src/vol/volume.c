@@ -2149,7 +2149,8 @@ VPreAttachVolumeByVp_r(Error * ec,
 	 *   - volume is in an error state
 	 *   - volume is pre-attached
 	 */
-	Log("VPreattachVolumeByVp_r: volume %u not in quiescent state\n", vid);
+	Log("VPreattachVolumeByVp_r: volume %u not in quiescent state (state %u flags 0x%x)\n",
+	    vid, V_attachState(vp), V_attachFlags(vp));
 	goto done;
     } else if (vp) {
 	/* we're re-attaching a volume; clear out some old state */
