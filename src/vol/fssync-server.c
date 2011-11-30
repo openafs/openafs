@@ -751,10 +751,25 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    /* first, check to see whether we have such a volume defined */
-    vp = VPreAttachVolumeById_r(&error,
-				vcom->vop->partName,
-				vcom->vop->volume);
+
+    if (vp &&
+        FSYNC_partMatch(vcom, vp, 0) &&
+        vp->pending_vol_op &&
+        vp->pending_vol_op->vol_op_state == FSSYNC_VolOpRunningOnline &&
+        V_attachState(vp) == VOL_STATE_ATTACHED) {
+
+	/* noop; the volume stayed online for the volume operation and we were
+	 * simply told that the vol op is done. The vp we already have is fine,
+	 * so avoid confusing volume routines with trying to preattach an
+	 * attached volume. */
+
+    } else {
+	/* first, check to see whether we have such a volume defined */
+	vp = VPreAttachVolumeById_r(&error,
+				    vcom->vop->partName,
+				    vcom->vop->volume);
+    }
+
     if (vp) {
 	VCreateReservation_r(vp);
 	VWaitExclusiveState_r(vp);
