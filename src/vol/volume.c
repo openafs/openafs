@@ -3114,7 +3114,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     if (*ec == VNOVOL) {
 	/* if the volume doesn't exist, skip straight to 'error' so we don't
 	 * request a salvage */
-	goto unlocked_error;
+	VOL_LOCK;
+	goto error_notbroken;
     }
 
     if (!*ec) {
@@ -3208,7 +3209,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	goto locked_error;
     } else if (*ec) {
 	/* volume operation in progress */
-	goto unlocked_error;
+	VOL_LOCK;
+	goto error_notbroken;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
@@ -3407,7 +3409,10 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
     return vp;
 
+#ifndef AFS_DEMAND_ATTACH_FS
 unlocked_error:
+#endif
+
     VOL_LOCK;
 locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3420,6 +3425,7 @@ locked_error:
 	VReleaseVolumeHandles_r(vp);
     }
 
+ error_notbroken:
 #ifdef AFS_DEMAND_ATTACH_FS
     VCheckSalvage(vp);
     if (forcefree) {
