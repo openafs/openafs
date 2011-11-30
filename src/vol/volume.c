@@ -3420,6 +3420,10 @@ unlocked_error:
 locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
     if (!VIsErrorState(V_attachState(vp))) {
+	if (VIsErrorState(error_state)) {
+	    Log("attach2: forcing vol %u to error state (state %u flags 0x%x ec %d)\n",
+	        vp->hashid, V_attachState(vp), V_attachFlags(vp), *ec);
+	}
 	VChangeState_r(vp, error_state);
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
