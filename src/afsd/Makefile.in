@@ -29,7 +29,7 @@ AFSLIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/util.a \
 	$(TOP_LIBDIR)/libopr.a
 
-UAFSLIBS=${TOP_LIBDIR}/libuafs.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a
+UAFSLIBS=${TOP_LIBDIR}/libuafs.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libopr.a
 
 FUSE_LIBS=@FUSE_LIBS@
 
