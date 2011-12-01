@@ -1603,7 +1603,9 @@ void cm_MergeStatus(cm_scache_t *dscp,
             scp->parentVnode = 0;
             scp->parentUnique = 0;
 	}
-	goto done;
+
+        if (RDR_Initialized)
+            rdr_invalidate = 1;
     } else {
 	_InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_EACCESS);
     }
@@ -1804,8 +1806,10 @@ void cm_MergeStatus(cm_scache_t *dscp,
          scp->bufDataVersionLow == 0)
         scp->bufDataVersionLow = dataVersion;
 
-    if (RDR_Initialized && scp->dataVersion != CM_SCACHE_VERSION_BAD) {
-        if ( ( !(reqp->flags & CM_REQ_SOURCE_REDIR) || !(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA))) &&
+    if (RDR_Initialized) {
+        if (scp->dataVersion != CM_SCACHE_VERSION_BAD) {
+            rdr_invalidate = 1;
+        } else if ( ( !(reqp->flags & CM_REQ_SOURCE_REDIR) || !(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA))) &&
              scp->dataVersion != dataVersion && (dataVersion - scp->dataVersion > activeRPCs - 1)) {
             rdr_invalidate = 1;
         } else if ( (reqp->flags & CM_REQ_SOURCE_REDIR) && (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
