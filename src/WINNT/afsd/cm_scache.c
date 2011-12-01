@@ -1567,7 +1567,6 @@ void cm_MergeStatus(cm_scache_t *dscp,
 #endif /* AFS_FREELANCE_CLIENT */
 
     if (statusp->errorCode != 0) {
-	_InterlockedOr(&scp->flags, CM_SCACHEFLAG_EACCESS);
         switch (statusp->errorCode) {
         case EACCES:
         case UAEACCES:
