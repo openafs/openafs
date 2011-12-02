@@ -337,7 +337,8 @@ buf_Sync(int quitOnShutdown)
 }
 
 /* incremental sync daemon.  Writes all dirty buffers every 5000 ms */
-void buf_IncrSyncer(long parm)
+static void *
+buf_IncrSyncer(void * parm)
 {
     long wasDirty = 0;
     long i;
@@ -353,6 +354,9 @@ void buf_IncrSyncer(long parm)
 
         wasDirty = buf_Sync(1);
     } /* whole daemon's while loop */
+
+    pthread_exit(NULL);
+    return NULL;
 }
 
 long
@@ -461,9 +465,10 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
 {
     static osi_once_t once;
     cm_buf_t *bp;
-    thread_t phandle;
+    pthread_t phandle;
+    pthread_attr_t tattr;
+    int pstatus;
     long i;
-    unsigned long pid;
     char *data;
 
     if ( newFile ) {
@@ -602,12 +607,13 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
         osi_EndOnce(&once);
 
         /* and create the incr-syncer */
-        phandle = thrd_Create(0, 0,
-                               (ThreadFunc) buf_IncrSyncer, 0, 0, &pid,
-                               "buf_IncrSyncer");
+        pthread_attr_init(&tattr);
+        pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 
-        osi_assertx(phandle != NULL, "buf: can't create incremental sync proc");
-        CloseHandle(phandle);
+        pstatus = pthread_create(&phandle, &tattr, buf_IncrSyncer, 0);
+        osi_assertx(pstatus == 0, "buf: can't create incremental sync proc");
+
+        pthread_attr_destroy(&tattr);
     }
 
 #ifdef TESTING
