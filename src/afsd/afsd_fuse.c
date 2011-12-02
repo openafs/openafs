@@ -545,6 +545,12 @@ main(int argc, char **argv)
 	 * in df/mount/mnttab/etc output. */
 	fuse_opt_add_arg(&fuse_args, "-ouse_ino,fsname=AFS");
 
+	if (getuid() == 0) {
+	    /* allow other users to access the mountpoint. only do this for
+	     * root, since non-root may or may not be able to do this */
+	    fuse_opt_add_arg(&fuse_args, "-oallow_other");
+	}
+
 	code = uafs_Setup("/afs");
 	if (code) {
 		errno = code;
