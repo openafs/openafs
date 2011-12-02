@@ -3215,21 +3215,22 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                 else
                     minLength = scp->length;
 
-                if (LargeIntegerGreaterThanOrEqualTo(bufp->offset, minLength)) {
+                if (!bHaveBuffer &&
+                    LargeIntegerGreaterThanOrEqualTo(bufp->offset, minLength)) {
                     memset(bufp->datap, 0, cm_data.buf_blockSize);
                     bufp->dataVersion = scp->dataVersion;
                     bHaveBuffer = TRUE;
                 }
-                lock_ReleaseRead(&scp->rw);
-
-                if ((RequestExtentsCB->Flags & AFS_EXTENT_FLAG_CLEAN) &&
-                     ByteOffset.QuadPart <= bufp->offset.QuadPart &&
-                     EndOffset.QuadPart >= bufp->offset.QuadPart + cm_data.blockSize) {
+                else if ((RequestExtentsCB->Flags & AFS_EXTENT_FLAG_CLEAN) &&
+                         ByteOffset.QuadPart <= bufp->offset.QuadPart &&
+                         EndOffset.QuadPart >= bufp->offset.QuadPart + cm_data.blockSize)
+                {
                     memset(bufp->datap, 0, cm_data.blockSize);
                     bufp->dataVersion = scp->dataVersion;
                     buf_SetDirty(bufp, &req, 0, cm_data.blockSize, userp);
                     bHaveBuffer = TRUE;
                 }
+                lock_ReleaseRead(&scp->rw);
             }
 
             /*
