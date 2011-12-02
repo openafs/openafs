@@ -805,14 +805,14 @@ STDMETHODIMP CShellExt::XToolTipExt::GetInfoTip(DWORD dwFlags, LPWSTR *ppwszTip)
 
     if ((_tcslen(pThis->m_szFile) == 0)||(!IsPathInAfs(pThis->m_szFile)))
     {
-        ppwszTip=NULL;
+        *ppwszTip=NULL;
         return S_OK;
     }
     bool bIsSymlink = !!IsSymlink(pThis->m_szFile);
     bool bIsMountpoint = !!IsMountPoint(pThis->m_szFile);
     if ((!bIsSymlink) && (!bIsMountpoint))
     {
-	ppwszTip=NULL;
+	*ppwszTip=NULL;
 	return S_OK;
     }
     USES_CONVERSION;
