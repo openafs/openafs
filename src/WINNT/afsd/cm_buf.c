@@ -938,7 +938,7 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 }
 
 /* Called with a zero-ref count buffer and with the buf_globalLock write locked.
- * recycles the buffer, and leaves it ready for reuse with a ref count of 1.
+ * recycles the buffer, and leaves it ready for reuse with a ref count of 0.
  * The buffer must already be clean, and no I/O should be happening to it.
  */
 void buf_Recycle(cm_buf_t *bp)
