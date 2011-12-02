@@ -1816,7 +1816,7 @@ CreateLinkTable(struct SalvInfo *salvinfo, struct InodeSummary *isp, Inode ino)
 
     if (!VALID_INO(ino))
 	ino =
-	    IH_CREATE(NULL, salvinfo->fileSysDevice, salvinfo->fileSysPath, 0, isp->volumeId,
+	    IH_CREATE(NULL, salvinfo->fileSysDevice, salvinfo->fileSysPath, 0, isp->RWvolumeId,
 		      INODESPECIAL, VI_LINKTABLE, isp->RWvolumeId);
     if (!VALID_INO(ino))
 	Abort
