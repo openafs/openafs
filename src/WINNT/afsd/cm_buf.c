@@ -1321,8 +1321,11 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
          * a clean buffer, we rehash it, lock it and return it.
          */
         for (bp = cm_data.buf_freeListEndp; bp; bp=(cm_buf_t *) osi_QPrev(&bp->q)) {
+            int cleaned = 0;
+
             n_bufs++;
 
+          retry_2:
             /* check to see if it really has zero ref count.  This
              * code can bump refcounts, at least, so it may not be
              * zero.
@@ -1366,6 +1369,10 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                 if (bp->qFlags & CM_BUF_QREDIR)
                     continue;
 
+                /* protect against cleaning the same buffer more than once. */
+                if (cleaned)
+                    continue;
+
                 /* if the buffer is dirty, start cleaning it and
                  * move on to the next buffer.  We do this with
                  * just the lock required to minimize contention
@@ -1405,7 +1412,16 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                     lock_ReleaseRead(&scp->bufCreateLock);
                     return CM_BUF_EXISTS;
                 }
-                continue;
+
+                /*
+                 * We just cleaned this buffer so we need to
+                 * restart the loop with this buffer so it
+                 * can be retested.  Set 'cleaned' so we
+                 * do not attempt another call to buf_Clean()
+                 * if the prior attempt failed.
+                 */
+                cleaned = 1;
+                goto retry_2;
             }
 
             osi_Log3(afsd_logp, "buf_GetNewLocked: scp 0x%p examined %u buffers before recycling bufp 0x%p",
