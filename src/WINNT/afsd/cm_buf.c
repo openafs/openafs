@@ -1474,7 +1474,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
             buf_DecrementFreeCount();
 
             /* prepare to return it.  Give it a refcount */
-            bp->refCount = 1;
+            InterlockedIncrement(&bp->refCount);
 #ifdef DEBUG_REFCOUNT
             osi_Log2(afsd_logp,"buf_GetNewLocked bp 0x%p ref %d", bp, 1);
             afsi_log("%s:%d buf_GetNewLocked bp 0x%p, ref %d", __FILE__, __LINE__, bp, 1);
