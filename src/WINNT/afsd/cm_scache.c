@@ -1807,14 +1807,34 @@ void cm_MergeStatus(cm_scache_t *dscp,
         scp->bufDataVersionLow = dataVersion;
 
     if (RDR_Initialized) {
-        if (scp->dataVersion != CM_SCACHE_VERSION_BAD) {
+        /*
+         * The redirector maintains its own cached status information which
+         * must be updated when a DV change occurs that is not the result
+         * of a redirector initiated data change.
+         *
+         * If the current old DV is BAD, send a DV change notification.
+         *
+         * If the DV has changed and request was not initiated by the
+         * redirector, send a DV change notification.
+         *
+         * If the request was initiated by the redirector, send a notification
+         * for store and directory operations that result in a DV change greater
+         * than the number of active RPCs or any other operation that results
+         * in an unexpected DV change such as FetchStatus.
+         */
+
+        if (scp->dataVersion == CM_SCACHE_VERSION_BAD) {
             rdr_invalidate = 1;
-        } else if ( ( !(reqp->flags & CM_REQ_SOURCE_REDIR) || !(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA))) &&
-             scp->dataVersion != dataVersion && (dataVersion - scp->dataVersion > activeRPCs - 1)) {
+        } else if (!(reqp->flags & CM_REQ_SOURCE_REDIR) && scp->dataVersion != dataVersion) {
             rdr_invalidate = 1;
-        } else if ( (reqp->flags & CM_REQ_SOURCE_REDIR) && (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
-                    dataVersion - scp->dataVersion > activeRPCs) {
-            rdr_invalidate = 1;
+        } else if (reqp->flags & CM_REQ_SOURCE_REDIR) {
+            if (!(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
+                (dataVersion - scp->dataVersion > activeRPCs - 1)) {
+                rdr_invalidate = 1;
+            } else if ((flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
+                       dataVersion - scp->dataVersion > activeRPCs) {
+                rdr_invalidate = 1;
+            }
         }
     }
     scp->dataVersion = dataVersion;
