@@ -285,7 +285,8 @@ rxevent_Post(struct clock *when, struct clock *now,
 	eventSchedule.raised = 1;
 	clock_Zero(&eventSchedule.next);
 	MUTEX_EXIT(&eventTree.lock);
-	(*eventSchedule.func)();
+	if (eventSchedule.func != NULL)
+	    (*eventSchedule.func)();
 	return rxevent_get(ev);
     }
 
