@@ -1256,8 +1256,10 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
      * Only file servers implement client callbacks and we only need one ping
      * to be sent to each server.
      */
-    if (NatPingInterval && serverp->type == CM_SERVER_FILE && secIndex == 0)
+    if (NatPingInterval && serverp->type == CM_SERVER_FILE &&
+         (ucellp->flags & CM_UCELLFLAG_ROOTUSER)) {
         rx_SetConnSecondsUntilNatPing(tcp->rxconnp, NatPingInterval);
+    }
 
     tcp->ucgen = ucellp->gen;
     if (secObjp)
