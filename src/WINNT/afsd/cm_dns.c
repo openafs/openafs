@@ -509,7 +509,7 @@ void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHost
 
   /* ptr should now be at the start of the answer RR sections */
 
-  answerCount = MIN(answerCount, AFSMAXCELLHOSTS);
+  answerCount = min(answerCount, AFSMAXCELLHOSTS);
 #ifdef DEBUG
   fprintf(stderr, "processRep_AFSDB: answerCount=%d\n", answerCount);
 #endif /* DEBUG */
