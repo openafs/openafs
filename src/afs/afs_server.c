@@ -1194,7 +1194,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
     return;
 }
 #else /* AFS_USERSPACE_IP_ADDR */
-#if (! defined(AFS_SUN5_ENV)) && (! defined(AFS_DARWIN_ENV)) && (! defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
+#if (! defined(AFS_SUN5_ENV)) && (! defined(AFS_DARWIN_ENV)) && (! defined(AFS_OBSD47_ENV)) && (! defined(AFS_FBSD_ENV)) && defined(USEIFADDR)
 void
 afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 {
@@ -1231,7 +1231,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 #endif /* IFF_POINTTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
-#if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
+#if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV) || defined(AFS_FBSD_ENV)) && defined(USEIFADDR)
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
 #endif
@@ -1240,7 +1240,11 @@ afsi_SetServerIPRank(struct srvAddr *sa, rx_ifaddr_t ifa)
 {
     struct sockaddr sout;
     struct sockaddr_in *sin;
+#if defined(AFS_DARWIN80_ENV) && !defined(UKERNEL)
     int t;
+#else
+    void *t;
+#endif
 
     afs_uint32 subnetmask, myAddr, myNet, myDstaddr, mySubnet, netMask;
     afs_uint32 serverAddr;
@@ -1564,7 +1568,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #else
 	  TAILQ_FOREACH(ifa, &in_ifaddrhead, ia_link) {
 #endif
-	    afsi_SetServerIPRank(sa, ifa);
+	    afsi_SetServerIPRank(sa, &ifa->ia_ifa);
     }}
 #elif defined(AFS_OBSD_ENV)
     {
