@@ -37,10 +37,11 @@ typedef struct cm_ucell {
 #endif
 } cm_ucell_t;
 
-#define CM_UCELLFLAG_HASTIX	1	/* has Kerberos tickets */
-#define CM_UCELLFLAG_RXKAD	2	/* an rxkad connection */
-#define CM_UCELLFLAG_BADTIX	4	/* tickets are bad or expired */
-#define CM_UCELLFLAG_RXGK       8       /* an rxgk connection */
+#define CM_UCELLFLAG_HASTIX	  1	/* has Kerberos tickets */
+#define CM_UCELLFLAG_RXKAD	  2	/* an rxkad connection */
+#define CM_UCELLFLAG_BADTIX	  4	/* tickets are bad or expired */
+#define CM_UCELLFLAG_RXGK         8     /* an rxgk connection */
+#define CM_UCELLFLAG_ROOTUSER  0x10     /* cm_rootUser connection */
 
 typedef struct cm_user {
     unsigned long refCount;             /* ref count - cm_userLock */

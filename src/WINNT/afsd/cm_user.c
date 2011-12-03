@@ -72,6 +72,8 @@ cm_ucell_t *cm_GetUCell(cm_user_t *userp, cm_cell_t *cellp)
             ucp->iterator = 1;
         userp->cellInfop = ucp;
         ucp->cellp = cellp;
+        if (userp == cm_rootUserp)
+            ucp->flags |= CM_UCELLFLAG_ROOTUSER;
     }
 
     return ucp;
