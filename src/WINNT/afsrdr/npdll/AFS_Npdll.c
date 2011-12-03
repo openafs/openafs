@@ -2568,7 +2568,17 @@ NPEnumResource( HANDLE  hEnum,
 
                 pNetResource->dwType = RESOURCETYPE_DISK;
             }
-            pNetResource->dwUsage       = pConnectionCB->Usage;
+
+            if ( pEnumCB->Scope == RESOURCE_CONNECTED)
+            {
+
+                pNetResource->dwUsage       = 0;
+            }
+            else
+            {
+
+                pNetResource->dwUsage       = pConnectionCB->Usage;
+            }
 
             // setup string area at opposite end of buffer
             StringZone = (PWCHAR)( (PBYTE) StringZone - SpaceNeeded);
