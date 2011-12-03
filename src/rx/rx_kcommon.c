@@ -757,12 +757,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 
     addr = ntohl(addr);
 
-#if defined(AFS_DARWIN_ENV)
-    for (ifa = TAILQ_FIRST(&in_ifaddrhead); ifa;
-	 ifa = TAILQ_NEXT(ifa, ia_link)) {
-#else
     for (ifa = in_ifaddr; ifa; ifa = ifa->ia_next) {
-#endif
 	if ((addr & ifa->ia_netmask) == ifa->ia_net) {
 	    if ((addr & ifa->ia_subnetmask) == ifa->ia_subnet) {
 		if (IA_SIN(ifa)->sin_addr.s_addr == addr) {	/* ie, ME!!!  */
