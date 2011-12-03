@@ -4268,8 +4268,8 @@ static void cm_LockRangeSubtract(cm_range_t * pos, const cm_range_t * neg)
     afs_int64 int_begin;
     afs_int64 int_end;
 
-    int_begin = MAX(pos->offset, neg->offset);
-    int_end = MIN(pos->offset+pos->length, neg->offset+neg->length);
+    int_begin = max(pos->offset, neg->offset);
+    int_end = min(pos->offset+pos->length, neg->offset+neg->length);
 
     if (int_begin < int_end) {
         if (int_begin == pos->offset) {

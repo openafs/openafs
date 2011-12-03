@@ -1950,7 +1950,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
                     osi_assertx(bufferp != NULL, "null cm_buf_t");
 
-                    len = MIN(tiov[iov].iov_len - iov_offset, cm_data.buf_blockSize - buffer_offset);
+                    len = min(tiov[iov].iov_len - iov_offset, cm_data.buf_blockSize - buffer_offset);
                     memcpy(bufferp + buffer_offset, tiov[iov].iov_base + iov_offset, len);
                     iov_offset += len;
                     buffer_offset += len;
@@ -2396,7 +2396,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
 
                     osi_assertx(bufferp != NULL, "null cm_buf_t");
 
-                    len = MIN(tiov[iov].iov_len - iov_offset, data_length - buffer_offset);
+                    len = min(tiov[iov].iov_len - iov_offset, data_length - buffer_offset);
                     memcpy(bufferp + buffer_offset, tiov[iov].iov_base + iov_offset, len);
                     iov_offset += len;
                     buffer_offset += len;
