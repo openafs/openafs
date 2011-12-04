@@ -1,3 +1,62 @@
+Since 1.7.0201 (1.7.2a)
+
+ * Replaced hash tables in afsd_service with Jenkin's hashes
+   which are significantly faster to compute and provide a
+   more even distribution.
+
+ * Prevent a potential panic condition that could occur
+   when releasing a stat cache lock that wasn't held.
+
+ * Prevent potential deadlocks between the afsd-service
+   and the afsredirlib.sys driver.
+
+ * Report the size of the _._AFS_IOCTL_._ pioctl file
+   as 0 bytes to prevent anti-virus filters from attempting
+   to read their contents.
+
+ * Convert the "Daemon" threads to pthreads.  These threads
+   access afsrpc.dll which is a pthread library.  There is a
+   limit of 63 non-pthread threads which can access pthread
+   libraries.  Exceeding the limit will result in 100% cpu
+   utilization.
+
+ * Convert osi_mutex and osi_rwlock structures 32-bit aligned
+   fields.  Improves access times.
+
+ * Ensure that metadata changes are flushed to the file server
+   on last handle close.
+
+ * Use red-black trees to manage Rx events.  Improved performance.
+
+ * MSI installers disable integrated logon by default.  Too many
+   users install OpenAFS without Kerberos or even a cell and
+   become sad when integrated logon must wait for authentication
+   timeouts.
+
+ * Chris Orsi's overlay icons for symlinks and mount points
+   added to the Explorer Shell.
+
+ * Fix network provider connection cancelation.  Addresses an
+   issue that prevented Group Policy Object drive mappings from
+   succeeding.
+
+ * Prevent NPEnumResources from returning DISK objects when
+   the query was for PRINT objects.
+
+ * Modify algorithm that determines when afsredirlib.sys should
+   be notified of a data version change.
+
+ * Fix Explorer Shell extension GetInfoTip response when the
+   current object is not in AFS.  This was causing a crash of
+   IE8 when the Favorites Side Bar is in use.
+
+ * Fix NPEnumResorces CONNECTED query response to avoid specifying
+   a "usage" mode.  A non-zero value causes mpr.dll to filter the
+   NETRESOURCE entry.
+
+ * Nat Pings are disabled by default.  When they are enabled ensure
+   that only the anonymous cache manager connection activates them.
+
 Since 1.7.0100 (1.7.1)
 
  * Windows: install control panel only if afs_config
