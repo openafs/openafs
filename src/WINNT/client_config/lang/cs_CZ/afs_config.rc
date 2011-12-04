@@ -1,0 +1,753 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS Client Configuration"
+#define AFS_VERINFO_NAME "afs_config"
+#define AFS_VERINFO_FILENAME "afs_config.exe"
+#define AFS_VERINFO_LANG_CODE 0x405
+#define AFS_VERINFO_CHARSET 1250
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUSD)
+#ifdef _WIN32
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+#pragma code_page(1250)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_GENERAL_NT DIALOGEX 0, 0, 220, 225
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ObecnÈ"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "NastavenÌ klienta",IDC_STATIC,7,7,206,142
+    LTEXT           "&N·zev buÚky:",IDC_STATIC,13,23,55,8
+    EDITTEXT        IDC_CELL,70,22,114,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    CONTROL         "&ZÌskat AFS tokeny p¯i p¯ihlaöov·nÌ do Windows",IDC_LOGON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,50,193,10
+    LTEXT           "Pozn·mka: tyto ovl·dacÌ prvky jsou neaktivnÌ, protoûe sluûba AFS klienta nenÌ spuötÏna.",IDC_WARN,13,124,193,17
+    GROUPBOX        "Stav klienta",IDC_STATIC,7,157,206,61
+    LTEXT           "(probÌh· zjiöùov·nÌ aktu·lnÌho stavu)",IDC_STATUS,13,172,193,17
+    PUSHBUTTON      "&Spustit sluûbu",IDC_SERVICE_START,88,195,57,14
+    PUSHBUTTON      "Zas&tavit sluûbu",IDC_SERVICE_STOP,149,195,57,14
+END
+
+IDD_GENERAL_95 DIALOGEX 0, 0, 245, 145
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ObecnÈ"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "NastavenÌ klienta",IDC_STATIC,7,7,231,131
+    LTEXT           "&Br·na:",IDC_STATIC,13,28,20,8
+    EDITTEXT        IDC_GATEWAY,57,27,110,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "P¯ipojit &nynÌ",IDC_GATEWAY_CONN,172,27,57,14
+    LTEXT           "N·ze&v buÚky:",IDC_STATIC,13,51,43,8
+    EDITTEXT        IDC_CELL,57,49,110,13,ES_LOWERCASE | ES_AUTOHSCROLL | WS_DISABLED | NOT WS_TABSTOP
+    CONTROL         "&ZÌskat AFS tokeny p¯i p¯ihlaöov·nÌ do Windows",IDC_LOGON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,73,193,10
+    LTEXT           "Pozn·mka: tyto ovl·dacÌ prvky jsou neaktivnÌ, protoûe AFS Light nenÌ p¯ipojen k AFS br·nÏ.",IDC_WARN,13,114,219,17
+END
+
+IDD_PREFS_NT DIALOGEX 0, 0, 220, 225
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NastavenÌ"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "NastavenÌ serveru",-1,7,7,206,211
+    CONTROL         "Zobrazit nastavenÌ &souborovÈho serveru",IDC_SHOW_FS,
+                    "Button",BS_AUTORADIOBUTTON,13,21,193,10
+    CONTROL         "Zobrazit &nastavenÌ serveru pro spr·vu umÌstÏnÌ svazk˘",IDC_SHOW_VLS,
+                    "Button",BS_AUTORADIOBUTTON,13,34,193,10
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0xb,13,49,173,120
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,84,172,50,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,137,172,50,14
+    PUSHBUTTON      "^",IDC_UP,191,97,15,14,BS_ICON
+    PUSHBUTTON      "v",IDC_DOWN,191,117,15,14,BS_ICON
+    PUSHBUTTON      "&Importovat...",IDC_IMPORT,13,172,50,14
+    LTEXT           "Pozn·mka: tyto ovl·dacÌ prvky jsou neaktivnÌ, protoûe sluûba AFS klienta nenÌ spuötÏna.",IDC_WARN,13,193,193,17
+END
+
+IDD_HOSTS_NT DIALOGEX 0, 0, 220, 225
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "BuÚky AFS"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "BuÚky AFS",IDC_STATIC,7,7,206,211
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,21,193,168
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,51,195,50,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,104,195,50,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,157,195,50,14
+END
+
+IDD_DRIVES_NT DIALOGEX 0, 0, 220, 225
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "PÌsmena jednotek"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "PÌsmena jednotek",IDC_STATIC,6,7,207,211
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,13,32,193,135
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,75,171,42,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,120,171,42,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,165,171,42,14
+    LTEXT           "PÌsmena jednotek p¯i¯azen· k cest·m v AFS:",IDC_STATIC,13,21,193,8
+    PUSHBUTTON      "Po&kroËilÈ...",IDC_ADVANCED,13,171,53,14
+    LTEXT           "Pozn·mka: tyto ovl·dacÌ prvky jsou neaktivnÌ, protoûe sluûba AFS klienta nenÌ spuötÏna.",IDC_WARN,13,193,193,17
+END
+
+IDD_ADVANCED_NT DIALOGEX 0, 0, 220, 247
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "PokroËilÈ"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_CACHE_SIZE,111,21,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CACHE_PATH,110,41,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CHUNK_SIZE,110,61,32,13,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_STAT_ENTRIES,111,82,32,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&P¯ihl·öenÌ...",IDC_LOGON_PARMS,13,128,56,14
+    PUSHBUTTON      "&Glob·lnÌ jednotky",IDC_AUTOMAP_PARMS,13,172,56,14
+    PUSHBUTTON      "&R˘znÈ...",IDC_MISC_PARMS,13,216,56,14
+    GROUPBOX        "NastavenÌ vyrovn·vacÌ pamÏti",IDC_STATIC,7,7,206,100
+    LTEXT           "&Velikost vyrovn·vacÌ pamÏti:",IDC_STATIC,13,23,94,8
+    LTEXT           "kb",IDC_INUSE,156,23,48,8
+    LTEXT           "V&elikost bloku:",IDC_STATIC,13,64,71,8
+    LTEXT           "kb",IDC_STATIC,157,64,47,8
+    LTEXT           "&Stavov· vyrovn·vacÌ pamÏù:",IDC_STATIC,13,85,95,8
+    LTEXT           "z·znam˘",IDC_STATIC,157,85,49,8
+    LTEXT           "&Cesta k vyrovn·vacÌ pamÏti:",IDC_STATIC,13,44,94,8
+    GROUPBOX        "DalöÌ pokroËil· nastavenÌ",IDC_STATIC,7,118,206,122
+    LTEXT           "Vytvo¯it glob·lnÌ p¯i¯azenÌ AFS jednotek.",IDC_STATIC,74,174,132,10
+    LTEXT           "Upravit nastavenÌ p¯ihlaöov·nÌ.",IDC_STATIC,74,130,133,10
+    LTEXT           "NastavenÌ dalöÌch parametr˘.",IDC_STATIC,74,218,132,10
+    PUSHBUTTON      "&Diagnostika...",IDC_DIAG_PARMS,13,150,56,14
+    LTEXT           "PovolenÌ nastavenÌ pro ladÏnÌ chyb.",IDC_STATIC,74,152,132,10
+    PUSHBUTTON      "P¯ip&ojenÌ...",IDC_BINDING_PARMS,13,194,56,14
+    LTEXT           "ZmÏnit nastavenÌ vazeb na sÌùov˝ adaptÈr.",IDC_STATIC,74,196,133,10
+END
+
+IDD_PREFS_EDIT DIALOGEX 0, 0, 251, 123
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NastavenÌ priority serveru"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "M˘ûete nastavit prioritu pro server v tÈto AFS buÚce. Servery s niûöÌm ËÌslem priority jsou dotazov·ny jako prvnÌ p¯i hled·nÌ dat v AFS.",IDC_STATIC,7,7,237,17
+    LTEXT           "&Server:",IDC_STATIC,29,38,24,8
+    LTEXT           "&Priorita:",IDC_STATIC,29,55,29,8
+    EDITTEXT        IDC_SERVER,63,36,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RANK,63,52,36,13,ES_AUTOHSCROLL
+    LTEXT           "Tip: m˘ûete nastavit priority pro vÌce server˘ najednou pomocÌ tlaËÌtka Importovat a textovÈho souboru, kter˝ bude obsahovat servery a jejich priority.",IDC_STATIC,7,72,237,30
+    PUSHBUTTON      "Storno",IDCANCEL,140,102,50,14
+    PUSHBUTTON      "OK",IDOK,86,102,50,14
+    PUSHBUTTON      "N·povÏda",9,194,102,50,14
+END
+
+IDD_CELL_EDIT DIALOGEX 0, 0, 244, 223
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Vlastnosti buÚky"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Informace na tÈto str·nce urËujÌ, jak m· AFS kontaktovat danou buÚku.",IDC_STATIC,4,4,236,8
+    LTEXT           "BuÚka &AFS:",IDC_STATIC,4,24,36,8
+    EDITTEXT        IDC_CELL,50,22,105,13,ES_LOWERCASE | ES_AUTOHSCROLL
+    LTEXT           "&Submount:",IDC_STATIC,4,41,38,8
+    EDITTEXT        IDC_COMMENT,50,39,181,13,ES_AUTOHSCROLL
+    GROUPBOX        "Servery",IDC_STATIC,4,61,236,158
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x1b,13,76,217,117
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,75,198,50,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,128,198,50,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,181,198,50,14
+END
+
+IDD_SERVER_EDIT DIALOGEX 0, 0, 251, 112
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "P¯idat/upravit server"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Zadejte n·zev serveru spravujÌcÌho umÌstÏnÌ svazk˘ v danÈ buÚce.",IDC_STATIC,7,7,237,8
+    LTEXT           "&N·zev serveru:",IDC_STATIC,7,31,54,8
+    EDITTEXT        IDC_COMMENT,63,29,170,13,ES_AUTOHSCROLL
+    LTEXT           "&Adresa serveru:",IDC_STATIC,7,52,51,8
+    CONTROL         "&PouûÌt n·sledujÌcÌ adresu:",IDC_ADDR_SPECIFIC,"Button",BS_AUTORADIOBUTTON,63,52,100,10
+    CONTROL         "&Automaticky zjistit adresu",IDC_ADDR_LOOKUP,"Button",BS_AUTORADIOBUTTON,63,66,111,10
+    CONTROL         "",IDC_SERVER,"SockAddr",WS_BORDER | WS_TABSTOP,168,51,65,13
+    PUSHBUTTON      "Storno",IDCANCEL,140,91,50,14
+    PUSHBUTTON      "OK",IDOK,86,91,50,14
+    PUSHBUTTON      "N·povÏda",9,194,91,50,14
+END
+
+IDD_DRIVE_EDIT DIALOGEX 0, 0, 297, 156
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "P¯i¯adit pÌsmeno jednotky"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "M˘ûete p¯i¯adit pÌsmena jednotek k cest·m v AFS.",IDC_STATIC,7,7,283,8
+    LTEXT           "Nap¯Ìklad pokud p¯ipojÌte jednotku Q jako /afs/acme.com/usr/bob, tak soubory dostupnÈ v AFS na cestÏ /afs/acme.com/usr/bob/* budou na vaöem poËÌtaËi dostupnÈ v ko¯enovÈm adres·¯i jednotky Q.",IDC_STATIC,7,26,283,27
+    LTEXT           "&PÌsmeno jednotky:",IDC_STATIC,15,60,59,8
+    COMBOBOX        IDC_DRIVE,77,57,63,206,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS &cesta:",IDC_STATIC,14,78,33,8
+    EDITTEXT        IDC_PATH,77,75,168,13,ES_AUTOHSCROLL
+    LTEXT           "&Submount:",IDC_STATIC,14,97,38,8
+    EDITTEXT        IDC_DESC,77,94,72,13,ES_AUTOHSCROLL
+    CONTROL         "&Znovu p¯ipojit p¯i p¯ihl·öenÌ",IDC_PERSISTENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,77,112,188,10
+    PUSHBUTTON      "Storno",IDCANCEL,186,135,50,14
+    PUSHBUTTON      "OK",IDOK,132,135,50,14
+    PUSHBUTTON      "N·povÏda",9,240,135,50,14
+END
+
+IDD_DRIVES_95 DIALOGEX 0, 0, 245, 145
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "PÌsmena jednotek"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "PÌsmena jednotek",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"OpenAFS_CheckList",WS_BORDER | WS_TABSTOP | 0x153,13,32,219,60
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,100,95,42,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,145,95,42,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,190,95,42,14
+    LTEXT           "PÌsmena jednotek p¯i¯azen· k cest·m v AFS:",IDC_STATIC,13,21,193,8
+    LTEXT           "Pozn·mka: tyto ovl·dacÌ prvky jsou neaktivnÌ, protoûe AFS Light nenÌ p¯ipojen k AFS br·nÏ.",IDC_WARN,13,116,219,17
+END
+
+IDD_HOSTS_95 DIALOGEX 0, 0, 245, 145
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "BuÚky AFS"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "BuÚky AFS",IDC_STATIC,7,7,231,131
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,19,218,94
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,75,116,50,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,128,116,50,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,181,116,50,14
+END
+
+IDD_STARTSTOP DIALOGEX 0, 0, 238, 49
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Sluûba AFS klienta"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC,4,1,230,44
+    ICON            IDI_MAIN,IDC_STATIC,14,15,20,20
+    LTEXT           "ProsÌm Ëekejte, probÌh· spouötÏnÌ sluûby AFS klienta...",IDC_STARTING,37,20,190,8
+    LTEXT           "ProsÌm Ëekejte, probÌh· zastavov·nÌ sluûby AFS klienta...",IDC_STOPPING,37,20,190,8
+END
+
+IDD_HOSTS_CCENTER DIALOGEX 0, 0, 220, 256
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ObecnÈ"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "V˝chozÌ buÚka",IDC_STATIC,7,7,206,54
+    LTEXT           "Zadejte n·zev v˝chozÌ buÚky AFS pro spr·vu:",IDC_STATIC,14,19,164,8
+    LTEXT           "V˝chozÌ buÚka:",IDC_STATIC,14,37,52,8
+    EDITTEXT        IDC_CELL,69,35,137,14,ES_LOWERCASE | ES_AUTOHSCROLL
+    GROUPBOX        "BuÚky AFS",IDC_STATIC,7,69,206,180
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x11b,13,84,193,137
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,51,227,50,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,104,227,50,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,157,227,50,14
+END
+
+IDD_MISC_CONFIG_PARMS DIALOGEX 0, 0, 220, 170
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "R˘zn· nastavenÌ"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_PROBE,90,16,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DAEMONS,90,36,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THREADS,90,56,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SYSNAME,90,76,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MOUNTDIR,90,96,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ROOTVOLUME,90,116,83,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,55,143,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,109,143,50,14
+    PUSHBUTTON      "N·povÏda",9,163,143,50,14
+    GROUPBOX        "Parametry",IDC_STATIC,7,7,206,130
+    LTEXT           "&TestovacÌ interval:",IDC_STATIC,15,18,71,8
+    LTEXT           "sekund",IDC_STATIC,138,18,68,8
+    LTEXT           "&Vl·ken na pozadÌ:",IDC_STATIC,15,38,71,8
+    LTEXT           "vl·ken",IDC_STATIC,138,38,68,8
+    LTEXT           "Vl·ken sluûeb:",IDC_STATIC,15,58,71,8
+    LTEXT           "vl·ken",IDC_STATIC,138,58,68,8
+    LTEXT           "N·zev s&ystÈmu:",IDC_STATIC,15,78,71,8
+    LTEXT           "&Adres·¯ p¯ipojenÌ AFS:",IDC_STATIC,15,98,71,8
+    LTEXT           "N·zev &ko¯enovÈho svazku:",IDC_STATIC,15,117,71,17
+END
+
+IDD_DIAG_PARMS DIALOGEX 0, 0, 217, 135
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NastavenÌ diagnostiky"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_TRACE_LOG_BUF_SIZE,140,20,32,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,52,114,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,106,114,50,14
+    PUSHBUTTON      "N·povÏda",9,160,114,50,14
+    GROUPBOX        "Parametry pro logov·nÌ bÏhu",IDC_STATIC,7,7,203,54
+    LTEXT           "&Velikost vyrovn·vacÌ pamÏti:",IDC_STATIC,13,22,118,8
+    LTEXT           "kb",IDC_STATIC,190,24,9,8
+    GROUPBOX        "Parametry pro logov·nÌ ud·lostÌ",IDC_STATIC,7,69,203,35
+    COMBOBOX        IDC_TRAP_ON_PANIC,140,40,32,61,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&P¯i chybÏ spustit ladÏnÌ:",IDC_STATIC,13,42,116,8
+    LTEXT           "Hl·sit spuötÏnÌ relace:",IDC_STATIC,13,86,70,8
+    COMBOBOX        IDC_REPORT_SESSION_STARTUPS,140,84,32,64,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_LOGIN_CONFIG_PARMS DIALOGEX 0, 0, 214, 93
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NastavenÌ p¯ihlaöov·nÌ"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_LOGIN_RETRY_INTERVAL,166,18,32,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_FAIL_SILENTLY,166,39,32,40,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,48,72,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,102,72,50,14
+    PUSHBUTTON      "N·povÏda",9,157,72,50,14
+    LTEXT           "»ek·nÌ na &p¯ihl·öenÌ:",IDC_STATIC,13,20,122,8
+    GROUPBOX        "Parametry",IDC_STATIC,7,7,200,54
+    LTEXT           "&NeupozorÚovat na chyby p¯i p¯ihl·öenÌ:",IDC_STATIC,13,41,141,8
+END
+
+IDD_GLOBAL_DRIVES DIALOGEX 0, 0, 253, 169
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Glob·lnÌ jednotky"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "Zav¯Ìt",IDOK,141,148,50,14
+    PUSHBUTTON      "N·povÏda",9,196,148,50,14
+    PUSHBUTTON      "&P¯idat",IDC_ADD,108,117,42,14
+    GROUPBOX        "Glob·lnÏ p¯ipojovanÈ AFS jednotky",IDC_STATIC,7,7,239,133
+    CONTROL         "",IDC_GLOBAL_DRIVE_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x1b,14,20,226,89
+    PUSHBUTTON      "&ZmÏnit",IDC_CHANGE,153,117,42,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,198,117,42,14
+END
+
+IDD_GLOBAL_DRIVES_ADDEDIT DIALOGEX 0, 0, 247, 118
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "P¯ipojit glob·lnÌ jednotku"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    COMBOBOX        IDC_DRIVE,86,23,63,206,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_PATH,86,42,145,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESC,86,62,72,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,82,96,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,136,96,50,14
+    PUSHBUTTON      "N·povÏda",9,190,96,50,14
+    LTEXT           "&PÌsmeno jednotky:",IDC_STATIC,16,25,59,8
+    LTEXT           "AFS &cesta:",IDC_STATIC,16,44,36,8
+    LTEXT           "&Submount:",IDC_STATIC,15,64,38,8
+    GROUPBOX        "Glob·lnÌ jednotka AFS",IDC_STATIC,7,7,232,80
+END
+
+IDD_BINDING_CONFIG_PARAMS DIALOGEX 0, 0, 220, 149
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "P¯ipojenÌ"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "PouûÌt v˝chozÌ NIC",IDC_DEFAULTNIC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,14,82,10
+    COMBOBOX        IDC_NICSELECTION,15,41,159,66,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,55,128,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,109,128,50,14
+    PUSHBUTTON      "N·povÏda",9,163,128,50,14
+    GROUPBOX        "V˝bÏr sÌùovÈho adaptÈru",IDC_STATIC,7,5,206,57
+    LTEXT           "Zvolit NIC pro p¯ipojenÌ",IDC_STATICLANA,15,29,78,8
+    LTEXT           "",IDC_BINDING_MESSAGE,7,68,206,41
+END
+
+IDD_SUBMOUNTS DIALOGEX 0, 0, 244, 198
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Submounty"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Tento poËÌtaË m˘ûe poskytovat submount--sÌùovÈ sdÌlenÌ v AFS.",IDC_STATIC,4,4,200,8
+    GROUPBOX        "Submounty",IDC_STATIC,4,26,236,168
+    LTEXT           "N·sledujÌcÌ submounty jsou sdÌleny z tohoto poËÌtaËe:",IDC_STATIC,10,42,220,8
+    CONTROL         "",IDC_LIST,"OpenAFS_FastList",WS_BORDER | WS_TABSTOP | 0x413,10,54,223,115
+    PUSHBUTTON      "&P¯idat...",IDC_ADD,78,173,50,14
+    PUSHBUTTON      "&ZmÏnit...",IDC_EDIT,131,173,50,14
+    PUSHBUTTON      "&Odebrat",IDC_REMOVE,184,173,50,14
+END
+
+IDD_SUBMOUNT_EDIT DIALOGEX 0, 0, 270, 112
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Zvolit submount"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Submount v·m umoûnÌ sdÌlet strom AFS podadres·¯˘ pomocÌ sdÌlenÌ Windows.",IDC_STATIC,7,7,256,8
+    LTEXT           "&Submount:",IDC_STATIC,22,27,35,8
+    LTEXT           "AFS &cesta:",IDC_STATIC,22,43,33,8
+    EDITTEXT        IDC_SUBMOUNT,63,25,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MAPPING,63,41,181,13,ES_AUTOHSCROLL
+    LTEXT           "VyplÚte kr·tk˝ n·zev pro submount a plnou AFS cestu. AFS cesta m˘ûe zaËÌnat ""\\afs"" (pokud tak nezaËÌn·, ""\\afs"" bude doplnÏno automaticky).",IDC_STATIC,7,64,256,18
+    PUSHBUTTON      "Storno",IDCANCEL,159,91,50,14
+    PUSHBUTTON      "OK",IDOK,105,91,50,14
+    PUSHBUTTON      "N·povÏda",9,213,91,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_GENERAL_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_GENERAL_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_PREFS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_HOSTS_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_DRIVES_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_ADVANCED_NT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 240
+    END
+
+    IDD_PREFS_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 116
+    END
+
+    IDD_CELL_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 219
+    END
+
+    IDD_SERVER_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_DRIVE_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 290
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
+    END
+
+    IDD_DRIVES_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_HOSTS_95, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_STARTSTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 234
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 45
+    END
+
+    IDD_HOSTS_CCENTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 249
+    END
+
+    IDD_MISC_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_DIAG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_LOGIN_CONFIG_PARMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 207
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 86
+    END
+
+    IDD_GLOBAL_DRIVES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 246
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+
+    IDD_BINDING_CONFIG_PARAMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_SUBMOUNTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 240
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 194
+    END
+
+    IDD_SUBMOUNT_EDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 263
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 105
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_TITLE_NT            "NastavenÌ AFS klienta"
+    IDS_TITLE_95            "NastavenÌ AFS Light"
+    IDS_STATE_STOPPED       "Sluûba AFS klienta je nynÌ zastavena."
+    IDS_STATE_RUNNING       "Sluûba AFS klienta je spuötÏna."
+    IDS_STATE_STARTING      "ProsÌm Ëekejte, probÌh· spouötÏnÌ sluûby AFS klienta..."
+    IDS_STATE_STOPPING      "ProsÌm Ëekejte, probÌh· zastavov·nÌ sluûby AFS klienta..."
+    IDS_STATE_UNKNOWN       "Sluûba AFS klienta nenÌ spr·vnÏ nastavena."
+    IDS_SERVICE_FAIL_START  "SpuötÏnÌ sluûby AFS klienta se nezda¯ilo. Zkontrolujte, zda m·te opr·vnÏnÌ k provedenÌ tÈto operace.\n\nChyba 0x%1."
+    IDS_SERVICE_FAIL_STOP   "ZastavenÌ sluûby AFS klienta se nezda¯ilo. Zkontrolujte, zda m·te opr·vnÏnÌ k provedenÌ tÈto operace.\n\nChyba 0x%1."
+    IDS_WARN_STOPPED        "NÏkterÈ ovl·dacÌ prvky jsou neaktivnÌ, protoûe sluûba AFS klienta nenÌ spuötÏna.."
+    IDS_WARN_ADMIN          "NÏkterÈ ovl·dacÌ prvky jsou neaktivnÌ, protoûe nejste Ëlenem skupiny AFS Administrators."
+    IDS_CELL_UNKNOWN        "(nezn·m˝)"
+    IDS_GATEWAY_UNKNOWN     "(nezn·m˝)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BADLOOKUP_DESC      "Windows nemohl najÌt sÌùovou adresu %1. Zkontrolujte, zda je n·zev poËÌtaËe zad·n spr·vnÏ."
+    IDS_NEWSUB_DESC         "Nelze pouûÌt n·zev submountu, kter˝ byl zad·n p¯i p¯ipojov·nÌ k sÌùovÈ jednotce.\n\nZadan˝ submount je jiû pouûÌv·n jinou AFS cestou."
+    IDS_BADSUB_DESC         "Zadan˝ submount pÌsmena diskovÈ jednotky nelze pouûÌt.\n\nSubmount nesmÌ b˝t delöÌ neû 12 znak˘ a nesmÌ obsahovat mezery ani tabul·tory."
+    IDS_BADGATEWAY_DESC     "Nelze kontaktovat zadanou br·nu.\n\nZkontrolujte, zda je v˝chozÌ br·na zad·na spr·vnÏ."
+    IDS_BADGWCELL_DESC      "Pro buÚku AFS pouûÌvanou zadanou br·nou nelze najÌt û·dnÈ informace o jejÌm nastavenÌ.\n\nPokud si p¯ejete nastavit AFS klienta pro novou buÚku, musÌte nejprve p¯idat informace o nastavenÌ tÈto buÚky na z·loûce BuÚky AFS.\n\nBuÚka: %1"
+    IDS_TITLE_CAUTION_NT    "V˝straha - NastavenÌ AFS klienta"
+    IDS_TITLE_CAUTION_95    "V˝straha - NastavenÌ AFS Light"
+    IDS_TITLE_ERROR_NT      "Chyba - NastavenÌ AFS klienta"
+    IDS_TITLE_ERROR_95      "Chyba - NastavenÌ AFS Light"
+    IDS_SHRINKCACHE         "Velikost vyrovn·vacÌ pamÏti AFS klienta nem˘ûe b˝t zmenöena, dokud bÏûÌ sluûba AFS kliena.\n\nPro zmenöenÌ velikosti vyrovn·vacÌ pamÏti, zastavte sluûbu AFS klienta stiskem tlaËÌtka Zastavit sluûbu na z·loûce ObecnÈ."
+    IDS_BADCELL_DESC_CC     "Nelze nalÈzt û·dnÈ informace o nastavenÌ zadanÈ buÚky AFS.\n\n+"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STOP_DESC           "Soubory uloûenÈ na AFS nebudou p¯ÌstupnÈ z tohoto poËÌtaËe, pokud zastavÌte sluûbu AFS klienta.\n\nOpravdu si p¯ejete zastavit tuto sluûbu?"
+    IDS_PREFCOL_SERVER      "Server"
+    IDS_PREFCOL_RANK        "Priorita"
+    IDS_TIP_PREFS           "Tip: Servery s niûöÌm ËÌslem priority budou mÌt p¯ednost p¯ed ostatnÌmi p¯i ËtenÌ soubor˘ z AFS."
+    IDS_PREFERROR_RESOLVE   "AFS se nezda¯ilo nalezenÌ serveru %1. ProsÌm zkontrolujte, zda je n·zev serveru zad·n spr·vnÏ."
+    IDS_FILTER_TXT          "TextovÈ soubory (*.TXT);*.TXT;"
+    IDS_HOSTREM_MANY        "Zvolili jste odstranÏnÌ vöech kontaktnÌch informacÌ pro zvolenÈ buÚky AFS.\n\nOpravdu si p¯ejete odstranit tyto z·znamy?"
+    IDS_HOSTREM_ONE         "Zvolili jste odstranÏnÌ vöech kontaktnÌch informacÌ pro AFS buÚku %1.\n\nOpravdu si p¯ejete odstranit tento z·znam?"
+    IDS_CELLEDIT_TITLE      "%1 - Vlastnosti"
+    IDS_CELLADD_TITLE       "Nov· buÚka"
+    IDS_SVRCOL_SERVER       "Adresa"
+    IDS_SVRCOL_COMMENT      "N·zev serveru"
+    IDS_TIP_DRIVES          "Tip: M˘ûete p¯ipojit sÌùovou jednotku zaökrtnutÌm pole vedle pÌsmena p¯i¯azenÈ jednotky."
+    IDS_MAP_LETTER          "*:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DRIVE_MAP           "%1: \t%2"
+    IDS_ERROR_MAP           "Chyba p¯i p¯ipojov·nÌ sÌùovÈ jednotky"
+    IDS_ERROR_MAP_DESC      "AFS se nezda¯ilo p¯ipojit cestu v AFS jako sÌùovou jednotku. Zkontrolujte, zda zvolenÈ pÌsmeno jednotky nenÌ jiû pouûÌv·no.\n\nChyba: 0x%1."
+    IDS_ERROR_UNMAP         "Chyba p¯i p¯ipojov·nÌ sÌùovÈ jednotky"
+    IDS_ERROR_UNMAP_DESC    "AFS se nezda¯ilo odpojenÌ danÈ sÌùovÈ jednotky. Zkontrolujte, zda uveden· jednotka nenÌ pr·vÏ pouûÌv·na.\n\nChyba: 0x%1."
+    IDS_ADDSERVER_TITLE     "P¯idat server"
+    IDS_EDITSERVER_TITLE    "Upravit server"
+    IDS_SUBCOL_SHARE        "Submount"
+    IDS_SUBCOL_PATH         "AFS cesta"
+    IDS_SUBMOUNTS_TITLE     "Submounty"
+    IDS_BADCELL_DESC        "Nelze nalÈzt û·dnÈ informace o nastavenÌ zadanÈ buÚky AFS.\n\n+"
+    IDS_BADCELL_DESC2       "Zkontrolujte, zda je n·zev buÚky zad·n spr·vnÏ. Pokud si p¯ejete nastavit AFS klienta pro novou buÚku, musÌte nejprve p¯idat informace o nastavenÌ tÈto buÚky na z·loûce BuÚky AFS."
+    IDS_KB_IN_USE           "kb (%1 kb in use)"
+    IDS_NOGATEWAY_TITLE     "Neplatn· AFS br·na"
+    IDS_NOGATEWAY_DESC      "AFS Light nelze nastavit, protoûe nenÌ zad·na AFS br·na.\n\nProsÌm zadejte n·zev nebo IP adresu AFS br·ny do p¯ÌsluönÈho pole."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOCELL_DESC         "Nelze nastavit AFS klienta, protoûe nenÌ zad·na buÚka AFS.\n\nProsÌm zadejte n·zev buÚky AFS do p¯ÌsluönÈho pole."
+    IDS_STOPPED_NOCELL      "MusÌte uvÈst buÚku AFS p¯ed spuötÏnÌm sluûby AFS klienta."
+    IDS_OKSTOP_DESC         "Sluûba AFS klienta nenÌ spuötÏna. Soubory uloûenÈ na AFS nebudou p¯ÌstupnÈ z tohoto poËÌtaËe, dokud nespustÌte sluûbu AFS klienta.\n\nP¯ejete si tuto sluûbu spustit nynÌ?"
+    IDS_BADMAP_DESC         "AFS nem˘ûe p¯i¯adit pÌsmeno jednotky k uvedenÈ cestÏ, protoûe na jejÌm zaË·tku chybÌ ""\\afs"".\n\nUjistÏte se, ûe zadan· cesta zaËÌn· ""\\afs"", a opakujte akci znovu."
+    IDS_RESTART_TITLE       "NastavenÌ AFS klienta"
+    IDS_RESTART_DESC        "NÏkterÈ provedenÈ zmÏny se neprojevÌ, dokud sluûba AFS klienta nebude zastavena a znovu spuötÏna.\n\nP¯ejete si sluûbu zastavit a znovu spustit nynÌ?"
+    IDS_KB_ONLY             "kb"
+    IDS_FAILCONFIG_AUTHENT  "P¯i pokusu o povolenÌ nebo zak·z·nÌ ovÏ¯ov·nÌ p¯i p¯ihlaöov·nÌ nastala chyba.\n\nChyba %1"
+    IDS_FAILCONFIG_PREFS    "NÏkterÈ ze zadan˝ch priorit server˘ nemohou b˝t pouûity.\n\nChyba %1"
+    IDS_FAILCONFIG_CACHE    "Zadanou velikost vyrovn·vacÌ pamÏti AFS klienta nelze pouûÌt.\n\nChyba %1"
+    IDS_FAILCONFIG_PROBE    "Zadan˝ testovacÌ interval AFS klienta nelze pouûÌt.\n\nChyba %1"
+    IDS_FAILCONFIG_SYSNAME  "Zadan˝ n·zev systÈmu nelze pouûÌt.\n\nChyba %1"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BADCELL_DESC_CC2    "Zkontrolujte, zda je n·zev buÚky zad·n spr·vnÏ. Pokud se spr·vn˝ n·zev buÚky neobjevÌ v seznamu bunÏk AFS, pouûijte tlaËÌtko P¯idat pro vytvo¯enÌ z·znamu novÈ buÚky."
+    IDS_NOCELL_DESC_CC      "Ovl·dacÌ centrum AFS nelze nastavit, protoûe nenÌ uvedena v˝chozÌ buÚka AFS.\n\nProsÌm zadejte n·zev buÚky AFS do p¯ÌsluönÈho pole."
+    IDS_TITLE_CAUTION_CCENTER "V˝straha - NastavenÌ ovl·dacÌho centra AFS"
+    IDS_TITLE_ERROR_CCENTER "Chyba - NastavenÌ ovl·dacÌho centra AFS"
+    IDS_TITLE_CCENTER       "NastavenÌ ovl·dacÌho centra AFS"
+    IDS_YES                 "Ano"
+    IDS_NO                  "Ne"
+    IDS_DRIVE               "Jednotka"
+END
+
+#endif    // Neutral (Sys. Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+#pragma code_page(1250)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#include <windows.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS Client Configuration""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON                    "afs_config.ico"
+IDI_UP                  ICON                    "up.ico"
+IDI_DOWN                ICON                    "down.ico"
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

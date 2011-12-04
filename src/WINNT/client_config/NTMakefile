@@ -127,7 +127,7 @@ install : $(COPYHEADERS) $(EXEFILE) lang
 
 install9x: install
 
-lang:: en_US ja_JP ko_KR zh_TW zh_CN pt_BR es_ES de_DE
+lang:: en_US ja_JP ko_KR zh_TW zh_CN pt_BR es_ES de_DE cs_CZ
 
 
 ############################################################################
@@ -175,6 +175,11 @@ de_DE:
 	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
+cs_CZ:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
+    $(CD) ..
+
 $(OUT)\afs_config_stub.res : afs_config_stub.rc AFS_component_version_number.h
 
 clean::
@@ -190,6 +195,7 @@ clean::
 	if exist $(NTLANG) $(NTLANG) pt_BR $(MAKECMD) /nologo /e /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) es_ES $(MAKECMD) /nologo /e /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) cs_CZ $(MAKECMD) /nologo /e /f NTMakefile clean
     $(CD) ..
 
 mkdir:

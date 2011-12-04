@@ -48,7 +48,7 @@ WIXCYGOPT=-dCygwinArchives
 WIXCYGOPT=
 !ENDIF
 
-LANGUAGES=en_US de_DE es_ES ja_JP ko_KR pt_BR zh_CN zh_TW
+LANGUAGES=en_US de_DE es_ES ja_JP ko_KR pt_BR zh_CN zh_TW cs_CZ
 
 languages:
 # Don't bother with non en_US for now.  The other builds comprise of either
@@ -59,6 +59,7 @@ languages:
 #	$(MAKE) /f NTMakefile /nologo LANG=%l lang
 #	)
 	$(MAKE) /f NTMakefile /nologo LANG=en_US lang
+	$(MAKE) /f NTMakefile /nologo LANG=cs_CZ lang
 
 lang:: lang_clean $(MSIFILE) $(BINMSIFILE)
 

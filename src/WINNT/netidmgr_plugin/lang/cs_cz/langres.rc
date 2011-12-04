@@ -1,0 +1,316 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "..\..\langres.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral (Sys. Default) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEUSD)
+#ifdef _WIN32
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+#pragma code_page(1250)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_NC_AFS DIALOGEX 0, 0, 300, 166
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "NastavenÌ p¯ihlaöov·nÌ AFS",IDC_STATIC,7,7,286,11,SS_SUNKEN | NOT WS_GROUP
+    CONTROL         "ZÌskat p¯ihlaöovacÌ ˙daje &AFS ",IDC_NCAFS_OBTAIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,19,140,12
+    GROUPBOX        "P¯ihlaöovacÌ ˙daje pro",IDC_STATIC,7,32,286,54
+    LTEXT           "&BuÚka",IDC_STATIC,12,41,42,10
+    COMBOBOX        IDC_NCAFS_CELL,57,38,152,48,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&SfÈra",IDC_STATIC,12,57,42,10
+    COMBOBOX        IDC_NCAFS_REALM,57,54,152,48,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Metoda",IDC_STATIC,12,73,42,10
+    COMBOBOX        IDC_NCAFS_METHOD,57,70,152,48,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&P¯idat/Aktualizovat",IDC_NCAFS_ADD_TOKEN,213,38,77,13,BS_NOTIFY
+    PUSHBUTTON      "&Odstranit",IDC_NCAFS_DELETE_TOKEN,213,70,77,13,BS_NOTIFY
+    CONTROL         "",IDC_NCAFS_TOKENLIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,88,286,71
+END
+
+IDD_CFG_IDS_TAB DIALOGEX 0, 0, 235, 151
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "ZÌskat p¯ihlaöovacÌ ˙daje AFS pro novÈ identity",IDC_CFG_OBTAIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,184,10
+END
+
+IDD_CFG_ID_TAB DIALOGEX 0, 0, 235, 151
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "ZÌskat p¯ihlaöovacÌ ˙daje &AFS",IDC_NCAFS_OBTAIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,140,12
+    GROUPBOX        "P¯ihlaöovacÌ ˙daje pro",IDC_STATIC,7,18,221,56
+    LTEXT           "&BuÚka",IDC_STATIC,13,28,42,10
+    COMBOBOX        IDC_NCAFS_CELL,57,25,92,48,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&SfÈra",IDC_STATIC,13,44,42,10
+    COMBOBOX        IDC_NCAFS_REALM,57,41,91,48,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Metoda",IDC_STATIC,13,60,42,10
+    COMBOBOX        IDC_NCAFS_METHOD,57,57,91,48,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&P¯idat/Aktualizovat",IDC_NCAFS_ADD_TOKEN,154,26,70,13,BS_NOTIFY
+    PUSHBUTTON      "&Odstranit",IDC_NCAFS_DELETE_TOKEN,154,56,70,13,BS_NOTIFY
+    CONTROL         "",IDC_NCAFS_TOKENLIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,75,221,69
+END
+
+IDD_CFG_AFS DIALOGEX 0, 0, 255, 182
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Sluûba AFS",IDC_CFG_SVCGRP,7,7,241,86
+    LTEXT           "Stav sluûby",IDC_CFG_LBL_STATUS,14,18,38,8
+    EDITTEXT        IDC_CFG_STATUS,68,16,172,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Zastavit sluûbu",IDC_CFG_STOP,68,34,56,14
+    PUSHBUTTON      "Spustit sluûbu",IDC_CFG_START,125,34,56,14
+    CONTROL         "",IDC_CFG_PROGRESS,"msctls_progress32",NOT WS_VISIBLE | WS_BORDER,184,38,56,8
+    LTEXT           "Verze",IDC_CFG_LBL_VERSION,14,57,19,8
+    EDITTEXT        IDC_CFG_VERSION,68,54,172,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "SpoleËnost",IDC_CFG_LBL_COMPANY,14,75,36,8
+    EDITTEXT        IDC_CFG_COMPANY,68,72,172,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Ovl·dacÌ panel OpenAFS",IDC_CFG_CPL,128,161,112,14
+    GROUPBOX        "Po spuötÏnÌ",IDC_CFG_STARTGRP,7,99,241,48
+    CONTROL         "Zak·zat automatickÈ spouötÏnÌ AFSCreds.exe p¯i p¯ihlaöov·nÌ do Windows.",IDC_CFG_STARTAFSCREDS,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,14,108,226,22
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_NC_AFS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 293
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
+    END
+
+    IDD_CFG_IDS_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 144
+    END
+
+    IDD_CFG_ID_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 144
+    END
+
+    IDD_CFG_AFS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 248
+        VERTGUIDE, 14
+        VERTGUIDE, 68
+        VERTGUIDE, 240
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 175
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_CTXMENU MENU
+BEGIN
+    POPUP "Dummy popup"
+    BEGIN
+        MENUITEM "Otev¯Ìt spr·vce sÌùov˝ch identit", ID_DEFAULT
+        MENUITEM SEPARATOR
+        MENUITEM "N·povÏda pro poskytovatele p¯ihlaöovacÌch ˙daj˘ OpenAFS", ID_SHOWHELP
+        MENUITEM "Pozn·mky k verzi OpenAFS",    ID_RELEASENOTES
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_AFS_SHORT_DESC      "AFS tokeny"
+    IDS_AFS_LONG_DESC       "AFS tokeny"
+    IDS_AFS_NAME            "AFS"
+    IDS_NCAFS_COL_CELL      "BuÚka"
+    IDS_NCAFS_COL_REALM     "SfÈra"
+    IDS_NCAFS_COL_METHOD    "Metoda"
+    IDS_NC_METHOD_AUTO      "(Automaticky)"
+    IDS_NC_METHOD_KRB5      "Kerberos v5"
+    IDS_NC_METHOD_KRB4      "Kerberos v4"
+    IDS_NC_METHOD_KRB524    "Kerberos v5 to v4"
+    IDS_NC_REALM_AUTO       "(Automaticky)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NC_TT_NO_CELL       "NenÌ zad·na AFS buÚka pro ovÏ¯ov·nÌ identit."
+    IDS_NC_TT_CANT_ADD      "Nelze p¯idat nov˝ token"
+    IDS_NC_TT_MALFORMED_CELL "Zadan˝ n·zev buÚky obsahuje neplatnÈ znaky."
+    IDS_NC_TT_NO_REALM      "NenÌ zad·na sfÈra Kerberos, kter· m· b˝t pouûita pro zÌsk·nÌ token˘ k buÚce."
+    IDS_NC_AUTO             "(Automaticky)"
+    IDS_NC_TT_MALFORMED_REALM "Zadan˝ n·zev sfÈry obsahuje neplatnÈ znaky."
+    IDS_NC_TT_CANT_UPDATE   "Nelze aktualizovat token"
+    IDS_AFS_CREDTEXT_DIS    "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: AFS je zak·z·no. (kliknÏte <a id=""AfsCred:Enable"">zde</a> pro povolenÌ)</p>"
+    IDS_AFS_CREDTEXT_0      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: Nejsou vybr·ny p¯ihlaöovacÌ ˙daje</p>"
+    IDS_AFS_CREDTEXT_1      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: P¯ihlaöovacÌ ˙daje pro buÚku %s</p>"
+    IDS_AFS_CREDTEXT_N      "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: P¯ihlaöovacÌ ˙daje pro buÚky %s</p>"
+    IDS_ATTR_CELL_SHORT_DESC "BuÚka"
+    IDS_ATTR_REALM_SHORT_DESC "SfÈra"
+    IDS_ATTR_METHOD_SHORT_DESC "Metoda"
+    IDS_ATTR_CLIENT_SHORT_DESC "Klientsk˝ princip·l"
+    IDS_ATTR_CLIENT_PRINC_SHORT_DESC "Klientsk˝ princip·l"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ATTR_SERVER_PRINC_SHORT_DESC "Serverov˝ princip·l"
+    IDS_DEF_LOCATION        "Spr·vce vyrovn·vacÌ pamÏti AFS"
+    IDS_PLUGIN_DESC         "Poskytovatel p¯ihlaöovacÌch ˙daj˘ AFS"
+    IDS_CFG_IDS_TAB         "AFS"
+    IDS_CFG_ID_TAB          "AFS"
+    IDS_CFG_MAIN_LONG       "NastavenÌ AFS"
+    IDS_CFG_MAIN_SHORT      "AFS"
+    IDS_CFG_SVCSTATUS       "Stav je nezn·m˝,Zastaveno,SpouötÏnÌ ...,Zastavov·nÌ ...,SpuötÏno,PokraËov·nÌ ...,Pozastavov·nÌ ...,Pozastaveno,Stav je nezn·m˝"
+    IDS_NC_METHODL_AUTO     "(Automaticky zjistit metodu)"
+    IDS_NC_METHODL_KRB5     "Kerberos v5"
+    IDS_NC_METHODL_KRB4     "Kerberos v4"
+    IDS_NC_METHODL_KRB524   "Kerberos v5 na v4"
+    IDS_NC_METHOD_INVALID   "(Neplatn˝ identifik·tor metody)"
+    IDS_NC_TT_CONFLICT      "P¯ihlaöovacÌ ˙daje pro buÚku %s jsou jiû uvedeny u identity %s.\nP¯ejete si zachovat p¯ihlaöovacÌ ˙daje pro tuto buÚku i pro jinÈ identity?"
+    IDS_NC_TT_PROBLEM       "ProblÈm s nov˝mi p¯ihlaöovacÌmi ˙daji"
+    IDS_NC_TT_CONFLICTM     "P¯ihlaöovacÌ ˙daje pro buÚku %s jsou jiû uvedeny u identity %s.\nP¯ejete si zachovat p¯ihlaöovacÌ ˙daje pro tuto buÚku i pro jinÈ identity?"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NC_TT_DETAILS       "Podrobnosti p¯ihlaöovacÌch ˙daj˘"
+    IDS_NC_TT_CONFLICTD     "Tyto p¯ihlaöovacÌ ˙daje jiû existujÌ pod jinou identitou."
+    IDS_NC_TT_EXPIRED       "Platnost souËasn˝ch p¯ihlaöovacÌch ˙daj˘ vypröela."
+    IDS_NC_TT_EXISTS        "Tyto p¯ihlaöovacÌ ˙daje jiû existujÌ pro tuto identitu."
+    IDS_NC_TT_NEW           "Toto jsou novÈ p¯ihlaöovacÌ ˙daje pro tuto identitu."
+    IDS_CFG_CANTSTART       "Sluûbu AFS nelze spustit.\n\n"
+    IDS_CFG_CANTSTOP        "Sluûbu AFS nelze zastavit.\n\n"
+    IDS_ERR_CELLCONFIG      "Nelze najÌt informace o nastavenÌ buÚky %1!S!."
+    IDS_ERR_NOSERVICE       "Sluûba AFS nenÌ spuötÏna.  Pokud je OpenAFS nainstalov·no, m˘ûete spustit tuto sluûbu pomocÌ ovl·dacÌho panelu AFS."
+    IDS_ERR_CELLCONFIG_S    "Navr·cen˝ chybov˝ kÛd byl %2!d!."
+    IDS_ERR_GENERAL         "Nelze zÌskat p¯ihlaöovacÌ ˙daje pro buÚku %1!S!."
+    IDS_ACTION_AFS_HELP     "AFS"
+    IDS_ACTION_AFS_HELP_TT  "Zobrazit dokumentaci z·suvnÈho modulu OpenAFS"
+    IDS_CRED_TT_NONE        "é·dnÈ AFS tokeny"
+    IDS_CRED_TT_TOK         "Tokeny pro"
+    IDS_CRED_TT_NOS         "Sluûba OpenAFS nenÌ spuötÏna."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CRED_TT_SERR        "Sluûba OpenAFS neodpovÌd·."
+    IDS_ACT_OPEN            "&Otev¯Ìt spr·vce sÌùov˝ch identit"
+    IDS_ACT_NEW             "&ZÌskat novÈ p¯ihlaöovacÌ ˙daje ..."
+END
+
+#endif    // Neutral (Sys. Default) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "..\\..\\langres.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_AFSTOKEN            ICON                    "..\\..\\images\\afstoken.ico"
+IDI_AFSPLUGIN           ICON                    "..\\..\\images\\OpenAFS.ico"
+IDI_NC_NEW              ICON                    "..\\..\\images\\nc_new.ico"
+IDI_NC_EXIST            ICON                    "..\\..\\images\\nc_exist.ico"
+IDI_NC_NOTOWNED         ICON                    "..\\..\\images\\nc_notowned.ico"
+IDI_CRED_BROKEN         ICON                    "..\\..\\images\\creds_broke.ico"
+IDI_CRED_NONE           ICON                    "..\\..\\images\\creds_none.ico"
+IDI_CRED_OK             ICON                    "..\\..\\images\\creds_ok.ico"
+IDI_CRED_SVCSTOP        ICON                    "..\\..\\images\\creds_stopped.ico"
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

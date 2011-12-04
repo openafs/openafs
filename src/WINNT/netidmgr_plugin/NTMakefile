@@ -170,7 +170,7 @@ lang::
 # languages.
 
 # Begin language block
-LANG=en_us
+LANG=en_US
 
 LANGDLL=$(EXEDIR)\afscred_$(LANG).dll
 
@@ -185,6 +185,23 @@ $(OUT)\langres_ver_$(LANG).res: version.rc
 
 $(OUT)\langres_$(LANG).res: lang\$(LANG)\langres.rc
 	$(RC) /fo $@ $**
+
+LANG2=cs_CZ
+
+LANGDLL2=$(EXEDIR)\afscred_$(LANG2).dll
+
+lang:: $(LANGDLL2)
+
+$(LANGDLL2): $(OUT)\langres_$(LANG2).res $(OUT)\langres_ver_$(LANG2).res
+	$(DLLRESLINK)
+        $(CODESIGN_USERLAND)
+
+$(OUT)\langres_ver_$(LANG2).res: version.rc
+	$(RC) /d LANGVER /d LANG_$(LANG2) /fo $@ $**
+
+$(OUT)\langres_$(LANG2).res: lang\$(LANG2)\langres.rc
+	$(RC) /fo $@ $**
+
 # End language block
 
 clean::

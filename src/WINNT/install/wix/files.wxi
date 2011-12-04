@@ -137,6 +137,36 @@
                 </Component>
             <?endif?>
                 <!-- <</LanguageSpecific:1033/en_US>> -->
+                <!-- <<LanguageSpecific:1029/cs_CZ>> -->
+            <?if $(var.Language) ="cs_CZ"?>
+            <?ifndef LiteClient?>
+                <Component Win64="$(var.Win64)" Id="cmf_afseventmsg_1029_DLL" Guid="$(var.cmf_afseventmsg_1029_DLL_guid)">
+                    <File Id="fileafseventmsg_1029_DLL" Name="afse1029.dll" LongName="afseventmsg_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afseventmsg_1029.dll"/>
+                </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afsserver_1029_DLL" Guid="$(var.cmf_afsserver_1029_DLL_guid)">
+                    <File Id="fileafsserver_1029_DLL" Name="afss1029.dll" LongName="afsserver_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsserver_1029.dll"/>
+                </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afssvrcfg_1029_DLL" Guid="$(var.cmf_afssvrcfg_1029_DLL_guid)">
+                    <File Id="fileafssvrcfg_1029_DLL" Name="afsv1029.dll" LongName="afssvrcfg_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afssvrcfg_1029.dll"/>
+                </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAccountManager_1029_DLL" Guid="$(var.cmf_TaAfsAccountManager_1029_DLL_guid)">
+                    <File Id="fileTaAfsAccountManager_1029_DLL" Name="tacm1029.dll" LongName="TaAfsAccountManager_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAccountManager_1029.dll"/>
+                </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsServerManager_1029_DLL" Guid="$(var.cmf_TaAfsServerManager_1029_DLL_guid)">
+                    <File Id="fileTaAfsServerManager_1029_DLL" Name="tasm1029.dll" LongName="TaAfsServerManager_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager_1029.dll"/>
+                </Component>
+              <?endif?>
+                <Component Win64="$(var.Win64)" Id="cmf_TaAfsAppLib_1029_DLL" Guid="$(var.cmf_TaAfsAppLib_1029_DLL_guid)">
+                    <File Id="fileTaAfsAppLib_1029_DLL" Name="taal1029.dll" LongName="TaAfsAppLib_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib_1029.dll"/>
+                </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afs_config_1029_DLL" Guid="$(var.cmf_afs_config_1029_DLL_guid)">
+                    <File Id="fileafs_config_1029_DLL" Name="acfg1029.dll" LongName="afs_config_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config_1029.dll"/>
+                </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_afs_cpa_1029_DLL" Guid="$(var.cmf_afs_cpa_1029_DLL_guid)">
+                    <File Id="fileafs_cpa_1029_DLL" Name="acpa1029.dll" LongName="afs_cpa_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_cpa_1029.dll"/>
+                </Component>
+            <?endif?>
+                <!-- <</LanguageSpecific:1029/cs_CZ>> -->
   <?endif?> <!-- /ifndef BinsOnly -->
 
   <!-- Dependencies -->
@@ -324,34 +354,32 @@
   <?ifndef BinsOnly?>
             <Directory Id="dirDocumentation" Name="Docum" LongName="Documentation" SourceName="Docs">
 		    <!-- The following directory and everything below it is language dependent. -->
-                    <?if $(var.Language) = "en_US"?>
-                        <Component Id="cmp_Sys_Admin_Guide_en_US" Guid="$(var.DocChmSysAdminGuid)">
-                        <File Id="file_admin_guide_CHM_$(var.Language)" Name="AdminGd.chm" LongName="AdminGuide.chm" KeyPath="yes" DiskId="1" src="$(var.DocDir)\xml\AdminGuide\htmlhelp.chm">
-                	          <Shortcut Id="scDocAdmin_en_US" Directory="dirShortCutDocs" Name="AdminGd.lnk" LongName="Administrator Guide.lnk" Description="$(loc.StrDocAdminGdLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
-                        </File>
-                        </Component>
-                        <Component Id="cmp_User_Guide_en_US" Guid="$(var.DocChmUserGuid)">
-                        <File Id="file_user_guide_CHM_$(var.Language)" Name="UserGd.chm" LongName="UserGuide.chm" KeyPath="yes" DiskId="1"  src="$(var.DocDir)\xml\UserGuide\htmlhelp.chm">
-                	          <Shortcut Id="scDocUser_en_US" Directory="dirShortCutDocs" Name="UserGd.lnk" LongName="User Guide.lnk" Description="$(loc.StrDocUserGdLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
-                        </File>
-                        </Component>
-                        <Component Id="cmp_Release_Notes_en_US" Guid="$(var.DocChmRelNotesGuid)">
-                        <File Id="file_relnotes_CHM_$(var.Language)" Name="RelNotes.chm" LongName="ReleaseNotes.chm" KeyPath="yes" DiskId="1"  src="$(var.DocDir)\xml\ReleaseNotesWindows\htmlhelp.chm">
-                	          <Shortcut Id="scDocRelNotes_en_US" Directory="dirShortCutDocs" Name="RelNotes.lnk" LongName="Release Notes.lnk" Description="$(loc.StrDocRelNotesLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
-                        </File>
-                        </Component>
-                    <?endif?>                        
+                    <Component Id="cmp_Sys_Admin_Guide_$(var.Language)" Guid="$(var.DocChmSysAdminGuid)">
+                    <File Id="file_admin_guide_CHM_$(var.Language)" Name="AdminGd.chm" LongName="AdminGuide.chm" KeyPath="yes" DiskId="1" src="$(var.DocDir)\xml\AdminGuide\htmlhelp.chm">
+                              <Shortcut Id="scDocAdmin_$(var.Language)" Directory="dirShortCutDocs" Name="AdminGd.lnk" LongName="Administrator Guide.lnk" Description="$(loc.StrDocAdminGdLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                    </File>
+                    </Component>
+                    <Component Id="cmp_User_Guide_$(var.Language)" Guid="$(var.DocChmUserGuid)">
+                    <File Id="file_user_guide_CHM_$(var.Language)" Name="UserGd.chm" LongName="UserGuide.chm" KeyPath="yes" DiskId="1"  src="$(var.DocDir)\xml\UserGuide\htmlhelp.chm">
+                              <Shortcut Id="scDocUser_$(var.Language)" Directory="dirShortCutDocs" Name="UserGd.lnk" LongName="User Guide.lnk" Description="$(loc.StrDocUserGdLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                    </File>
+                    </Component>
+                    <Component Id="cmp_Release_Notes_$(var.Language)" Guid="$(var.DocChmRelNotesGuid)">
+                    <File Id="file_relnotes_CHM_$(var.Language)" Name="RelNotes.chm" LongName="ReleaseNotes.chm" KeyPath="yes" DiskId="1"  src="$(var.DocDir)\xml\ReleaseNotesWindows\htmlhelp.chm">
+                              <Shortcut Id="scDocRelNotes_$(var.Language)" Directory="dirShortCutDocs" Name="RelNotes.lnk" LongName="Release Notes.lnk" Description="$(loc.StrDocRelNotesLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                    </File>
+                    </Component>
+
                     <Directory Id="dirHtml_$(var.Language)" Name="Html" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\">
-                    <?if $(var.Language) = "en_US"?>
-                        <Directory Id="dirCmdRef_en_US" Name="CmdRef" src="$(var.DocDir)\man-pages\html\">
-                            <Component Id="cmp_Cmd_Ref_en_US" Guid="$(var.DocHtmlCmdRefGuid)">
-                                <File Id="file_CmdRef_Index_HTM_en_US" Name="index.htm" LongName="index.html" KeyPath="yes" DiskId="1">
+                        <Directory Id="dirCmdRef_$(var.Language)" Name="CmdRef" src="$(var.DocDir)\man-pages\html\">
+                            <Component Id="cmp_Cmd_Ref_$(var.Language)" Guid="$(var.DocHtmlCmdRefGuid)">
+                                <File Id="file_CmdRef_Index_HTM_$(var.Language)" Name="index.htm" LongName="index.html" KeyPath="yes" DiskId="1">
 			          <Shortcut Id="scDocRefMan_$(var.Language)" Directory="dirShortCutDocs" Name="RefMan.lnk" LongName="Reference Manual.lnk" Description="$(loc.StrDocRefManLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                                 </File>
-                                <File Id="file_CmdRef_Style_CSS_en_US" Name="style.css" LongName="style.css" DiskId="1" />
+                                <File Id="file_CmdRef_Style_CSS_$(var.Language)" Name="style.css" LongName="style.css" DiskId="1" />
                             </Component>
-                        <Directory Id="dirCmdRef1_en_US" Name="1" src="$(var.DocDir)\man-pages\html\1\">
-                            <Component Id="cmp_Cmd_Ref_1_en_US" Guid="$(var.DocHtmlCmdRef1Guid)">
+                        <Directory Id="dirCmdRef1_$(var.Language)" Name="1" src="$(var.DocDir)\man-pages\html\1\">
+                            <Component Id="cmp_Cmd_Ref_1_$(var.Language)" Guid="$(var.DocHtmlCmdRef1Guid)">
                             <File Id="file_CmdRef_1_afs_html" Name="afs.htm" LongName="afs.html" KeyPath="yes" DiskId="1" />
                             <File Id="file_CmdRef_1_afs_compile_et_html" Name="afs_comp.htm" LongName="afs_compile_et.html" DiskId="1" />
                             <File Id="file_CmdRef_1_afsmonitor_html" Name="afsmonit.htm" LongName="afsmonitor.html" DiskId="1" />
@@ -497,13 +525,13 @@
                             <File Id="file_CmdRef_1_xstat_fs_test_html"  Name="xstat_fs.htm"  LongName="xstat_fs_test.html"  DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_1 -->
-                        <Directory Id="dirCmdRef3_en_US" Name="3" src="$(var.DocDir)\man-pages\html\3\">
-                            <Component Id="cmp_Cmd_Ref_3_en_US" Guid="$(var.DocHtmlCmdRef3Guid)">
+                        <Directory Id="dirCmdRef3_$(var.Language)" Name="3" src="$(var.DocDir)\man-pages\html\3\">
+                            <Component Id="cmp_Cmd_Ref_3_$(var.Language)" Guid="$(var.DocHtmlCmdRef3Guid)">
                             <File Id="file_CmdRef_3_AFS_ukernel_html"  Name="AFS_uker.htm"  LongName="AFS.ukernel.html"  KeyPath="yes"  DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_3 -->
-                        <Directory Id="dirCmdRef5_en_US" Name="5" src="$(var.DocDir)\man-pages\html\5\">
-                            <Component Id="cmp_Cmd_Ref_5_en_US" Guid="$(var.DocHtmlCmdRef5Guid)">
+                        <Directory Id="dirCmdRef5_$(var.Language)" Name="5" src="$(var.DocDir)\man-pages\html\5\">
+                            <Component Id="cmp_Cmd_Ref_5_$(var.Language)" Guid="$(var.DocHtmlCmdRef5Guid)">
                             <File Id="file_CmdRef_5_afs_html"  Name="afs.htm"  LongName="afs.html"  KeyPath="yes"  DiskId="1"  />
                             <File Id="file_CmdRef_5_afsmonitor_html"  Name="afsmonit.htm"  LongName="afsmonitor.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_afszcm_cat_html"  Name="afszcm.htm"  LongName="afszcm.cat.html"    DiskId="1"  />
@@ -545,8 +573,8 @@
                             <File Id="file_CmdRef_5_VolserLog_html"  Name="VolserLo.htm"  LongName="VolserLog.html"    DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_5 -->
-                        <Directory Id="dirCmdRef8_en_US" Name="8" src="$(var.DocDir)\man-pages\html\8\">
-                            <Component Id="cmp_Cmd_Ref_8_en_US" Guid="$(var.DocHtmlCmdRef8Guid)">
+                        <Directory Id="dirCmdRef8_$(var.Language)" Name="8" src="$(var.DocDir)\man-pages\html\8\">
+                            <Component Id="cmp_Cmd_Ref_8_$(var.Language)" Guid="$(var.DocHtmlCmdRef8Guid)">
                             <File Id="file_CmdRef_8_afsd_html"  Name="afsd.htm"  LongName="afsd.html"  KeyPath="yes"  DiskId="1"  />
                             <File Id="file_CmdRef_8_asetkey_html"  Name="asetkey.htm"  LongName="asetkey.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_backup_html"  Name="backup.htm"  LongName="backup.html"  DiskId="1"  />
@@ -1046,9 +1074,8 @@
                             </Directory>
                         </Directory> <!-- Release Notes -->
                     <?endif?>
-                    </Directory> <!-- Html -->
+                </Directory> <!-- Html -->
             </Directory> <!-- Documentation -->
-  <?endif?>
 
             <Directory Id="dirClient" Name="Client">
   <?ifndef BinsOnly ?>
@@ -1091,23 +1118,34 @@
   <?ifndef BinsOnly ?>
 
         <!-- en_US help -->
-
+        <?if $(var.Language) = "en_US"?>
                     <Component Id="cmf_afs_nt_HLP_en_US" Guid="E9CAF872-E71B-466E-9560-9E6F542128E4">
                         <File Id="fileafs_nt_HLP_en_US" Name="afs-nt.hlp" LongName="afs-nt.hlp" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\doc\help\en_US\afs-nt.hlp" />
                         <File Id="fileafs_nt2_CNT_en_US" Name="afs-nt.cnt" LongName="afs-nt.cnt" DiskId="1" src="$(var.SrcDir)WINNT\doc\help\en_US\afs-nt.cnt" />
                     </Component>
-
-                    <Component Win64="$(var.Win64)" Id="cmf_afscreds_EXE" Guid="$(var.cmf_afscreds_EXE_guid)">
-                        <File Id="fileafscreds_EXE" Name="afscreds.exe" LongName="afscreds.exe" KeyPath="yes" DiskId="1">
-							<Shortcut Id="scAfsCreds" Directory="dirShortCut" Name="Auth.lnk" LongName="Authentication.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
-                        </File>
-                    </Component>
                     <Component Win64="$(var.Win64)" Id="cmf_afscreds_1033_DLL" Guid="$(var.cmf_afscreds_1033_DLL_guid)">
                         <File Id="fileafscreds_1033_DLL" Name="acrd1033.dll" LongName="afscreds_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afscreds_1033.dll"/>
                     </Component>
+        <?endif?>
+
+        <?if $(var.Language) = "cs_CZ"?>
+                    <Component Id="cmf_afs_nt_HLP_cs_CZ" Guid="A049407A-17C3-477E-A91F-E9EDB8A3820E">
+                        <File Id="fileafs_nt_HLP_cs_CZ" Name="afs-nt.hlp" LongName="afs-nt.hlp" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\doc\help\en_US\afs-nt.hlp" />
+                        <File Id="fileafs_nt2_CNT_cs_CZ" Name="afs-nt.cnt" LongName="afs-nt.cnt" DiskId="1" src="$(var.SrcDir)WINNT\doc\help\en_US\afs-nt.cnt" />
+                    </Component>
+                    <Component Win64="$(var.Win64)" Id="cmf_afscreds_1029_DLL" Guid="$(var.cmf_afscreds_1029_DLL_guid)">
+                        <File Id="fileafscreds_1029_DLL" Name="acrd1029.dll" LongName="afscreds_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afscreds_1029.dll"/>
+                    </Component>
+        <?endif?>
+
+                    <Component Win64="$(var.Win64)" Id="cmf_afscreds_EXE" Guid="$(var.cmf_afscreds_EXE_guid)">
+                        <File Id="fileafscreds_EXE" Name="afscreds.exe" LongName="afscreds.exe" KeyPath="yes" DiskId="1">
+			    <Shortcut Id="scAfsCreds" Directory="dirShortCut" Name="Auth.lnk" LongName="Authentication.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                        </File>
+                    </Component>
                     <Component Win64="$(var.Win64)" Id="cmp_credsStartup" Guid="$(var.cmp_credsStartup_guid)">
-						<Shortcut Id="scAfsCredsStart" Directory="StartupFolder" Name="AFSAuth.lnk" LongName="AFS Credentials.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" Target="[#fileafscreds_EXE]"/>
-						<Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="StartupShortcutInstalled" Type="integer" Value="1" Id="reg_CredsAutoStart" KeyPath="yes" />
+			<Shortcut Id="scAfsCredsStart" Directory="StartupFolder" Name="AFSAuth.lnk" LongName="AFS Credentials.lnk" Description="$(loc.StrAfsCredsDesc)" Arguments="[CREDSAUTOINIT] [CREDSRENEWDRMAP] [CREDSIPCHDET] [CREDSQUIET] [CREDSSHOW]" Icon="ico_afscreds" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" Target="[#fileafscreds_EXE]"/>
+			<Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion" Name="StartupShortcutInstalled" Type="integer" Value="1" Id="reg_CredsAutoStart" KeyPath="yes" />
                     </Component>
   <?endif?>
 
@@ -1125,9 +1163,16 @@
                             </Class>
                         </File>
                     </Component>
+                    <?if $(var.Language) = "en_US"?>
                     <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_1033_DLL" Guid="$(var.cmf_afs_shl_ext_1033_DLL_guid)">
                         <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                     </Component>
+                    <?endif?>
+                    <?if $(var.Language) = "cs_CZ"?>
+                    <Component Win64="$(var.Win64)" Id="cmf_afs_shl_ext_1029_DLL" Guid="$(var.cmf_afs_shl_ext_1029_DLL_guid)">
+                        <File Id="fileafs_shl_ext_1029_DLL" Name="ashl1029.dll" LongName="afs_shl_ext_1029.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1029.dll"/>
+                    </Component>
+                    <?endif?>
                     <Component Win64="$(var.Win64)" Id="cmf_afs_mount_ICO" Guid="$(var.cmf_afs_mount_ICO_guid)">
                         <File Id="fileafs_mount_ICO" Name="mount.ico" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\mount.ico"/>
                     </Component>
