@@ -268,3 +268,6 @@ typedef int errno_t;
 
 /* Build afsroken.dll as a dynamic library */
 #define ROKEN_LIB_DYNAMIC 1
+
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
