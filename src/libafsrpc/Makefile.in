@@ -65,6 +65,7 @@ RXOBJS =\
 	rx_opaque.o \
 	rx_call.o \
 	rx_conn.o \
+	rx_peer.o \
 	rx_conncache.o \
 	rx_globals.o \
 	rx_identity.o \
@@ -142,6 +143,9 @@ rx.o: ${RX}/rx.c
 
 rx_conncache.o: ${RX}/rx_conncache.c
 	$(AFS_CCRULE) $(RX)/rx_conncache.c
+
+rx_peer.o: $(RX)/rx_peer.c
+	$(AFS_CCRULE) $(RX)/rx_peer.c
 
 rx_conn.o: ${RX}/rx_conn.c
 	$(AFS_CCRULE) $(RX)/rx_conn.c

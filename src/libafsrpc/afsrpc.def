@@ -328,6 +328,8 @@ EXPORTS
         rx_RecordCallStatistics                 @334
 	rx_KeepAliveOn				@335
 	rx_KeepAliveOff				@336
+	rx_HostOf				@337
+        rx_PortOf                               @338
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

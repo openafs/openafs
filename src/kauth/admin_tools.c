@@ -555,7 +555,7 @@ Unlock(struct cmd_syndesc *as, void *arock)
 	    server = 0;
 	    if (conn && conn->conns[count - 1]
 		&& rx_PeerOf(conn->conns[count - 1])) {
-		server = rx_PeerOf(conn->conns[count - 1])->host;
+		server = rx_HostOf(rx_PeerOf(conn->conns[count - 1]));
 	    }
 	    afs_com_err(whoami, code,
 		    "so %s.%s may still be locked (on server %d.%d.%d.%d)",

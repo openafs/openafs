@@ -80,6 +80,7 @@ extern afs_int32 afs_termState;
 #include "rx_stats.h"
 #include "rx_event.h"
 
+#include "rx_peer.h"
 #include "rx_conn.h"
 #include "rx_call.h"
 #include "rx_packet.h"
