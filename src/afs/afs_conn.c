@@ -146,8 +146,10 @@ release_conns_user_server(struct unixuser *xu, struct server *xs)
                     AFS_GUNLOCK();
                 for(cix = 0; cix < CVEC_LEN; ++cix) {
                     tc = &(tcv->cvec[cix]);
-                    if (tc->activated)
+                    if (tc->activated) {
+                        rx_SetConnSecondsUntilNatPing(tc->id, 0);
                         rx_DestroyConnection(tc->id);
+                    }
                 }
                 if (glocked)
                     AFS_GLOCK();
@@ -175,8 +177,10 @@ release_conns_vector(struct sa_conn_vector *xcv)
             AFS_GUNLOCK(); \
         for(cix = 0; cix < CVEC_LEN; ++cix) {
             tc = &(tcv->cvec[cix]);
-            if (tc->activated)
-                rx_DestroyConnection( tc->id );
+            if (tc->activated) {
+                rx_SetConnSecondsUntilNatPing(tc->id, 0);
+                rx_DestroyConnection(tc->id);
+            }
         }
         if (glocked)
             AFS_GLOCK();
@@ -431,7 +435,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (tc->id) {
 	    if (glocked)
                 AFS_GUNLOCK();
-	    rx_DestroyConnection(tc->id);
+            rx_SetConnSecondsUntilNatPing(tc->id, 0);
+            rx_DestroyConnection(tc->id);
 	    if (glocked)
                 AFS_GLOCK();
 	}
