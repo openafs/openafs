@@ -276,6 +276,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	csec = (struct rx_securityClass *)0;
 	if (tc->id) {
 	    AFS_GUNLOCK();
+	    rx_SetConnSecondsUntilNatPing(tc->id, 0);
 	    rx_DestroyConnection(tc->id);
 	    AFS_GLOCK();
 	}
