@@ -5505,7 +5505,7 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
     if (!FidArray && !CallBackArray) {
 	ViceLog(1,
 		("SAFS_GiveUpAllCallBacks: host=%x\n",
-		 (rx_PeerOf(tcon) ? rx_PeerOf(tcon)->host : 0)));
+		 (rx_PeerOf(tcon) ? rx_HostOf(rx_PeerOf(tcon)) : 0)));
 	errorCode = GetClient(tcon, &client);
 	if (!errorCode) {
 	    H_LOCK;
@@ -5518,7 +5518,7 @@ common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
 	    ViceLog(0,
 		    ("GiveUpCallBacks: #Fids %d < #CallBacks %d, host=%x\n",
 		     FidArray->AFSCBFids_len, CallBackArray->AFSCBs_len,
-		     (rx_PeerOf(tcon) ? rx_PeerOf(tcon)->host : 0)));
+		     (rx_PeerOf(tcon) ? rx_HostOf(rx_PeerOf(tcon)) : 0)));
 	    errorCode = EINVAL;
 	    goto Bad_GiveUpCallBacks;
 	}

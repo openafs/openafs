@@ -12,18 +12,16 @@
 
 #include <roken.h>
 
-#include <rx/rx.h>
+#include "rx.h"
 
-/* services available on incoming message port */
-int
-SBC_Print(struct rx_call *acall, afs_int32 acode, afs_int32 aflags,
-	 char *amessage)
-{
-    struct rx_connection *tconn;
-    struct rx_peer *tpeer;
+#include "rx_atomic.h"
+#include "rx_clock.h"
+#include "rx_peer.h"
 
-    tconn = rx_ConnectionOf(acall);
-    tpeer = rx_PeerOf(tconn);
-    printf("From %08x: %s <%d>\n", rx_HostOf(tpeer), amessage, acode);
-    return 0;
+afs_uint32 rx_HostOf(struct rx_peer *peer) {
+    return peer->host;
+}
+
+u_short rx_PortOf(struct rx_peer *peer) {
+    return peer->port;
 }

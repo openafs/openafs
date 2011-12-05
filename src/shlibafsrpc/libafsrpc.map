@@ -179,6 +179,8 @@
 	rx_GetSecurityHeaderSize;
 	rx_SetSecurityHeaderSize;
 	rx_SetSecurityMaxTrailerSize;
+	rx_HostOf;
+	rx_PortOf;
     local:
 	*;
 };

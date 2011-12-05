@@ -38,7 +38,7 @@ RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj \
 	 $(OUT)\rx_packet.obj $(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj \
 	 $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj $(OUT)\rx_opaque.obj \
 	 $(OUT)\rx_identity.obj $(OUT)\rx_stats.obj \
-         $(OUT)\rx_call.obj $(OUT)\rx_conn.obj
+         $(OUT)\rx_call.obj $(OUT)\rx_conn.obj $(OUT)\rx_peer.obj
 
 RXSTATBJS = $(OUT)\rxstat.obj $(OUT)\rxstat.ss.obj $(OUT)\rxstat.xdr.obj $(OUT)\rxstat.cs.obj
 

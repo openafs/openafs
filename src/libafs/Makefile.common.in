@@ -138,6 +138,7 @@ AFSAOBJS = \
 	rx.o		\
 	rx_call.o	\
 	rx_conn.o	\
+	rx_peer.o	\
 	rx_rdwr.o	\
 	rx_clock.o	\
 	rx_event.o	\
@@ -233,6 +234,7 @@ AFSPAGOBJS = \
 	rx.o		\
 	rx_call.o	\
 	rx_conn.o	\
+        rx_peer.o       \
 	rx_rdwr.o	\
 	rx_clock.o	\
 	rx_event.o	\
@@ -364,6 +366,8 @@ rx_call.o: $(TOP_SRC_RX)/rx_call.c
 	$(CRULE_OPT) $(TOP_SRC_RX)/rx_call.c
 rx_conn.o: $(TOP_SRC_RX)/rx_conn.c
 	$(CRULE_OPT) $(TOP_SRC_RX)/rx_conn.c
+rx_peer.o: $(TOP_SRC_RX)/rx_peer.c
+	$(CRULE_OPT) $(TOP_SRC_RX)/rx_peer.c
 rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
 	$(CRULE_OPT) $(TOP_SRC_RX)/rx_rdwr.c
 afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c

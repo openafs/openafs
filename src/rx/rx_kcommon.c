@@ -20,6 +20,7 @@
 #include "rx_packet.h"
 #include "rx_internal.h"
 #include "rx_stats.h"
+#include "rx_peer.h"
 
 #ifdef AFS_HPUX110_ENV
 #include "h/tihdr.h"

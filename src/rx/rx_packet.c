@@ -66,6 +66,7 @@
 #include "rx_internal.h"
 #include "rx_stats.h"
 
+#include "rx_peer.h"
 #include "rx_conn.h"
 #include "rx_call.h"
 
