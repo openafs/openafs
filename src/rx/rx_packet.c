@@ -86,13 +86,21 @@ static int AllocPacketBufs(int class, int num_pkts, struct rx_queue *q);
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 				afs_uint32 ahost, short aport,
 				afs_int32 istack);
+static struct rx_packet *rxi_AllocPacketNoLock(int class);
+
+#ifndef KERNEL
+static void rxi_MorePacketsNoLock(int apackets);
+#endif
 
 #ifdef RX_ENABLE_TSFPQ
-static int
-rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global);
+static int rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first,
+				 int flush_global);
+static void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local,
+					int allow_overcommit);
 #else
-static int rxi_FreeDataBufsToQueue(struct rx_packet *p,
-				   afs_uint32 first,
+static void rxi_FreePacketNoLock(struct rx_packet *p);
+static int rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first);
+static int rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first,
 				   struct rx_queue * q);
 #endif
 
@@ -666,7 +674,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 
 #ifndef KERNEL
 /* Add more packet buffers */
-void
+static void
 rxi_MorePacketsNoLock(int apackets)
 {
 #ifdef RX_ENABLE_TSFPQ
@@ -732,7 +740,7 @@ rxi_FreeAllPackets(void)
 }
 
 #ifdef RX_ENABLE_TSFPQ
-void
+static void
 rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
 {
     struct rx_ts_info_t * rx_ts_info;
@@ -794,21 +802,8 @@ rx_CheckPackets(void)
    */
 
 /* Actually free the packet p. */
-#ifdef RX_ENABLE_TSFPQ
-void
-rxi_FreePacketNoLock(struct rx_packet *p)
-{
-    struct rx_ts_info_t * rx_ts_info;
-    dpf(("Free %"AFS_PTR_FMT"\n", p));
-
-    RX_TS_INFO_GET(rx_ts_info);
-    RX_TS_FPQ_CHECKIN(rx_ts_info,p);
-    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
-        RX_TS_FPQ_LTOG(rx_ts_info);
-    }
-}
-#else /* RX_ENABLE_TSFPQ */
-void
+#ifndef RX_ENABLE_TSFPQ
+static void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
     dpf(("Free %"AFS_PTR_FMT"\n", p));
@@ -820,7 +815,7 @@ rxi_FreePacketNoLock(struct rx_packet *p)
 #endif /* RX_ENABLE_TSFPQ */
 
 #ifdef RX_ENABLE_TSFPQ
-void
+static void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
     struct rx_ts_info_t * rx_ts_info;
@@ -875,7 +870,6 @@ rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue *
 
     return count;
 }
-#endif
 
 /*
  * free packet continuation buffers into the global free packet pool
@@ -886,7 +880,7 @@ rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct rx_queue *
  * returns:
  *   zero always
  */
-int
+static int
 rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
 {
     struct iovec *iov;
@@ -903,7 +897,8 @@ rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
     return 0;
 }
 
-#ifdef RX_ENABLE_TSFPQ
+#else
+
 /*
  * free packet continuation buffers into the thread-local free pool
  *
@@ -1097,7 +1092,7 @@ rxi_FreePacket(struct rx_packet *p)
  * The header is absolutely necessary, besides, this is the way the
  * length field is usually used */
 #ifdef RX_ENABLE_TSFPQ
-struct rx_packet *
+static struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
     struct rx_packet *p;
@@ -1160,7 +1155,7 @@ rxi_AllocPacketNoLock(int class)
     return p;
 }
 #else /* RX_ENABLE_TSFPQ */
-struct rx_packet *
+static struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
     struct rx_packet *p;
@@ -1220,7 +1215,7 @@ rxi_AllocPacketNoLock(int class)
 #endif /* RX_ENABLE_TSFPQ */
 
 #ifdef RX_ENABLE_TSFPQ
-struct rx_packet *
+static struct rx_packet *
 rxi_AllocPacketTSFPQ(int class, int pull_global)
 {
     struct rx_packet *p;
