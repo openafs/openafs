@@ -118,7 +118,6 @@ struct rx_call {
 #define RX_CALL_REFCOUNT_ALIVE  3	/* keep alive event */
 #define RX_CALL_REFCOUNT_PACKET 4	/* waiting for packets. */
 #define RX_CALL_REFCOUNT_SEND   5	/* rxi_Send */
-#define RX_CALL_REFCOUNT_ACKALL 6	/* rxi_AckAll */
 #define RX_CALL_REFCOUNT_ABORT  7	/* delayed abort */
 #define RX_CALL_REFCOUNT_MTU    8       /* grow mtu event */
 #define RX_CALL_REFCOUNT_MAX    9	/* array size. */

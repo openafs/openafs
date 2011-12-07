@@ -116,8 +116,7 @@ static void rxi_ReapConnections(struct rxevent *unused, void *unused1,
 static struct rx_packet *rxi_SendCallAbort(struct rx_call *call,
 					   struct rx_packet *packet,
 					   int istack, int force);
-static void rxi_AckAll(struct rxevent *event, struct rx_call *call,
-		       char *dummy);
+static void rxi_AckAll(struct rx_call *call);
 static struct rx_connection
 	*rxi_FindConnection(osi_socket socket, afs_uint32 host, u_short port,
 			    u_short serviceId, afs_uint32 cid,
@@ -1299,7 +1298,7 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 			|| call->state == RX_STATE_ACTIVE) {
 			rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 		    } else {
-			rxi_AckAll(NULL, call, 0);
+			rxi_AckAll(call);
 		    }
 		}
 		MUTEX_EXIT(&call->lock);
@@ -4915,30 +4914,12 @@ rxi_AttachServerProc(struct rx_call *call,
  * a new call is being prepared (in the case of a client) or a reply
  * is being prepared (in the case of a server).  Rather than sending
  * an ack packet, an ACKALL packet is sent. */
-void
-rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
+static void
+rxi_AckAll(struct rx_call *call)
 {
-#ifdef RX_ENABLE_LOCKS
-    if (event) {
-	MUTEX_ENTER(&call->lock);
-	rxevent_Put(call->delayedAckEvent);
-	call->delayedAckEvent = NULL;
-	CALL_RELE(call, RX_CALL_REFCOUNT_ACKALL);
-    }
-    rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
-		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
+    rxi_SendSpecial(call, call->conn, NULL, RX_PACKET_TYPE_ACKALL, 
+		    NULL, 0, 0);
     call->flags |= RX_CALL_ACKALL_SENT;
-    if (event)
-	MUTEX_EXIT(&call->lock);
-#else /* RX_ENABLE_LOCKS */
-    if (event) {
-	rxevent_Put(call->delayedAckEvent);
-	call->delayedAckEvent = NULL;
-    }
-    rxi_SendSpecial(call, call->conn, (struct rx_packet *)0,
-		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
-    call->flags |= RX_CALL_ACKALL_SENT;
-#endif /* RX_ENABLE_LOCKS */
 }
 
 static void
