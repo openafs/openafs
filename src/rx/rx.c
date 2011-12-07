@@ -113,9 +113,46 @@ static void rxi_SendDelayedConnAbort(struct rxevent *event, void *arg1,
 				     void *unused, int unused2);
 static void rxi_ReapConnections(struct rxevent *unused, void *unused1,
 				void *unused2, int unused3);
+static struct rx_packet *rxi_SendCallAbort(struct rx_call *call,
+					   struct rx_packet *packet,
+					   int istack, int force);
+static void rxi_AckAll(struct rxevent *event, struct rx_call *call,
+		       char *dummy);
+static struct rx_connection
+	*rxi_FindConnection(osi_socket socket, afs_uint32 host, u_short port,
+			    u_short serviceId, afs_uint32 cid,
+			    afs_uint32 epoch, int type, u_int securityIndex);
+static struct rx_packet
+	*rxi_ReceiveDataPacket(struct rx_call *call, struct rx_packet *np,
+			       int istack, osi_socket socket,
+			       afs_uint32 host, u_short port, int *tnop,
+			       struct rx_call **newcallp);
+static struct rx_packet
+	*rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
+			      int istack);
+static struct rx_packet
+	*rxi_ReceiveResponsePacket(struct rx_connection *conn,
+				   struct rx_packet *np, int istack);
+static struct rx_packet
+	*rxi_ReceiveChallengePacket(struct rx_connection *conn,
+				    struct rx_packet *np, int istack);
+static void rxi_AttachServerProc(struct rx_call *call, osi_socket socket,
+				 int *tnop, struct rx_call **newcallp);
+static void rxi_ClearTransmitQueue(struct rx_call *call, int force);
+static void rxi_ClearReceiveQueue(struct rx_call *call);
+static void rxi_ResetCall(struct rx_call *call, int newcall);
+static void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
+static void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
+static void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
+static void rxi_KeepAliveOn(struct rx_call *call);
+static void rxi_GrowMTUOn(struct rx_call *call);
+static void rxi_ChallengeOn(struct rx_connection *conn);
 
 #ifdef RX_ENABLE_LOCKS
+static int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
+#else
+static int rxi_CheckCall(struct rx_call *call);
 #endif
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
@@ -2927,7 +2964,7 @@ rxi_FindPeer(afs_uint32 host, u_short port,
  * parameter must match the existing index for the connection.  If a
  * server connection is created, it will be created using the supplied
  * index, if the index is valid for this service */
-struct rx_connection *
+static struct rx_connection *
 rxi_FindConnection(osi_socket socket, afs_uint32 host,
 		   u_short port, u_short serviceId, afs_uint32 cid,
 		   afs_uint32 epoch, int type, u_int securityIndex)
@@ -3787,7 +3824,7 @@ TryAttach(struct rx_call *acall, osi_socket socket,
  * appropriate to the call (the call is in the right state, etc.).  This
  * routine can return a packet to the caller, for re-use */
 
-struct rx_packet *
+static struct rx_packet *
 rxi_ReceiveDataPacket(struct rx_call *call,
 		      struct rx_packet *np, int istack,
 		      osi_socket socket, afs_uint32 host, u_short port,
@@ -4180,7 +4217,7 @@ rx_ack_reason(int reason)
 
 
 /* The real smarts of the whole thing.  */
-struct rx_packet *
+static struct rx_packet *
 rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		     int istack)
 {
@@ -4685,7 +4722,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 }
 
 /* Received a response to a challenge packet */
-struct rx_packet *
+static struct rx_packet *
 rxi_ReceiveResponsePacket(struct rx_connection *conn,
 			  struct rx_packet *np, int istack)
 {
@@ -4742,7 +4779,7 @@ rxi_ReceiveResponsePacket(struct rx_connection *conn,
  * back to the server.  The server is responsible for retrying the
  * challenge if it fails to get a response. */
 
-struct rx_packet *
+static struct rx_packet *
 rxi_ReceiveChallengePacket(struct rx_connection *conn,
 			   struct rx_packet *np, int istack)
 {
@@ -4780,7 +4817,7 @@ rxi_ReceiveChallengePacket(struct rx_connection *conn,
 /* Find an available server process to service the current request in
  * the given call structure.  If one isn't available, queue up this
  * call so it eventually gets one */
-void
+static void
 rxi_AttachServerProc(struct rx_call *call,
 		     osi_socket socket, int *tnop,
 		     struct rx_call **newcallp)
@@ -4904,7 +4941,7 @@ rxi_AckAll(struct rxevent *event, struct rx_call *call, char *dummy)
 #endif /* RX_ENABLE_LOCKS */
 }
 
-void
+static void
 rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
 		   int unused2)
 {
@@ -4967,7 +5004,7 @@ rxi_SetAcksInTransmitQueue(struct rx_call *call)
 
 /* Clear out the transmit queue for the current call (all packets have
  * been received by peer) */
-void
+static void
 rxi_ClearTransmitQueue(struct rx_call *call, int force)
 {
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
@@ -5010,7 +5047,7 @@ rxi_ClearTransmitQueue(struct rx_call *call, int force)
 #endif
 }
 
-void
+static void
 rxi_ClearReceiveQueue(struct rx_call *call)
 {
     if (queue_IsNotEmpty(&call->rq)) {
@@ -5031,7 +5068,7 @@ rxi_ClearReceiveQueue(struct rx_call *call)
 }
 
 /* Send an abort packet for the specified call */
-struct rx_packet *
+static struct rx_packet *
 rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 		  int istack, int force)
 {
@@ -5205,7 +5242,7 @@ rxi_CallError(struct rx_call *call, afs_int32 error)
  * unprotected macros, and may only be reset by non-interrupting code.
  */
 
-void
+static void
 rxi_ResetCall(struct rx_call *call, int newcall)
 {
     int flags;
@@ -6155,10 +6192,10 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
  */
 #ifdef RX_ENABLE_LOCKS
 int
-rxi_CheckCall(struct rx_call *call, int haveCTLock)
+static rxi_CheckCall(struct rx_call *call, int haveCTLock)
 #else /* RX_ENABLE_LOCKS */
 int
-rxi_CheckCall(struct rx_call *call)
+static rxi_CheckCall(struct rx_call *call)
 #endif				/* RX_ENABLE_LOCKS */
 {
     struct rx_connection *conn = call->conn;
@@ -6398,7 +6435,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     }
 }
 
-void
+static void
 rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn)
 {
     if (!conn->natKeepAliveEvent && conn->secondsUntilNatPing) {
@@ -6425,18 +6462,6 @@ rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds)
 	else
 	    conn->flags |= RX_CONN_NAT_PING;
     }
-    MUTEX_EXIT(&conn->conn_data_lock);
-}
-
-void
-rxi_NatKeepAliveOn(struct rx_connection *conn)
-{
-    MUTEX_ENTER(&conn->conn_data_lock);
-    /* if it's already attached */
-    if (!(conn->flags & RX_CONN_ATTACHWAIT))
-	rxi_ScheduleNatKeepAliveEvent(conn);
-    else
-	conn->flags |= RX_CONN_NAT_PING;
     MUTEX_EXIT(&conn->conn_data_lock);
 }
 
@@ -6536,7 +6561,7 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
     MUTEX_EXIT(&call->lock);
 }
 
-void
+static void
 rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 {
     if (!call->keepAliveEvent) {
@@ -6550,7 +6575,7 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
     }
 }
 
-void
+static void
 rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 {
     if (!call->growMTUEvent) {
@@ -6574,7 +6599,7 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 }
 
 /* N.B. rxi_KeepAliveOff:  is defined earlier as a macro */
-void
+static void
 rxi_KeepAliveOn(struct rx_call *call)
 {
     /* Pretend last packet received was received now--i.e. if another
@@ -6600,7 +6625,7 @@ rx_KeepAliveOn(struct rx_call *call)
     rxi_KeepAliveOn(call);
 }
 
-void
+static void
 rxi_GrowMTUOn(struct rx_call *call)
 {
     struct rx_connection *conn = call->conn;
@@ -6612,7 +6637,7 @@ rxi_GrowMTUOn(struct rx_call *call)
 
 /* This routine is called to send connection abort messages
  * that have been delayed to throttle looping clients. */
-void
+static void
 rxi_SendDelayedConnAbort(struct rxevent *event, void *arg1, void *unused,
 			 int unused2)
 {
@@ -6668,7 +6693,7 @@ rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1, void *dummy,
  * seconds) to ask the client to authenticate itself.  The routine
  * issues a challenge to the client, which is obtained from the
  * security object associated with the connection */
-void
+static void
 rxi_ChallengeEvent(struct rxevent *event,
 		   void *arg0, void *arg1, int tries)
 {
@@ -6729,7 +6754,7 @@ rxi_ChallengeEvent(struct rxevent *event,
  * security object associated with the connection is asked to create
  * the challenge at this time.  N.B.  rxi_ChallengeOff is a macro,
  * defined earlier. */
-void
+static void
 rxi_ChallengeOn(struct rx_connection *conn)
 {
     if (!conn->challengeEvent) {
@@ -6897,7 +6922,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 
 /* Find all server connections that have not been active for a long time, and
  * toss them */
-void
+static void
 rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 		    int unused3)
 {
