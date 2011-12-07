@@ -12,7 +12,8 @@
 
 
 #include "rx/rx_kcommon.h"
-
+#include "rx_atomic.h"
+#include "rx_internal.h"
 
 #define SECONDS_TO_SLEEP	0
 #define NANO_SECONDS_TO_SLEEP	100000000	/* 100 milliseconds */

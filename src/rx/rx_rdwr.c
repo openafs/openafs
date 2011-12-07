@@ -59,7 +59,8 @@
 #include "rx_clock.h"
 #include "rx_queue.h"
 #include "rx_globals.h"
-
+#include "rx_atomic.h"
+#include "rx_internal.h"
 #include "rx_conn.h"
 #include "rx_call.h"
 #include "rx_packet.h"

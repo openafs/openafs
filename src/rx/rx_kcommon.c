@@ -16,8 +16,9 @@
 
 
 #include "rx/rx_kcommon.h"
-#include "rx_packet.h"
 #include "rx_atomic.h"
+#include "rx_packet.h"
+#include "rx_internal.h"
 #include "rx_stats.h"
 
 #ifdef AFS_HPUX110_ENV

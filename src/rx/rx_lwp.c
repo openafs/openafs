@@ -32,6 +32,7 @@
 #include "rx.h"
 #include "rx_atomic.h"
 #include "rx_globals.h"
+#include "rx_internal.h"
 #include "rx_stats.h"
 #ifdef AFS_NT40_ENV
 #include "rx_xmit_nt.h"

@@ -80,85 +80,11 @@ extern void rx_SetArrivalProc(struct rx_call *call,
 extern afs_int32 rx_EndCall(struct rx_call *call, afs_int32 rc);
 extern void rx_InterruptCall(struct rx_call *call, afs_int32 error);
 extern void rx_Finalize(void);
-extern void rxi_PacketsUnWait(void);
 extern void *rxi_Alloc(size_t size);
 extern void rxi_Free(void *addr, size_t size);
-extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
-			   afs_uint32 port, int mtu);
-extern struct rx_peer *rxi_FindPeer(afs_uint32 host,
-				    u_short port,
-				    struct rx_peer *origPeer, int create);
-extern struct rx_connection *rxi_FindConnection(osi_socket socket,
-						afs_uint32 host,
-						u_short port,
-						u_short serviceId,
-						afs_uint32 cid,
-						afs_uint32 epoch, int type,
-						u_int securityIndex);
-extern struct rx_packet *rxi_ReceivePacket(struct rx_packet *np,
-					   osi_socket socket, afs_uint32 host,
-					   u_short port, int *tnop,
-					   struct rx_call **newcallp);
-extern int rxi_IsConnInteresting(struct rx_connection *aconn);
-extern struct rx_packet *rxi_ReceiveDataPacket(struct rx_call *call,
-					       struct rx_packet *np,
-					       int istack, osi_socket socket,
-					       afs_uint32 host, u_short port,
-					       int *tnop,
-					       struct rx_call **newcallp);
-extern struct rx_packet *rxi_ReceiveAckPacket(struct rx_call *call,
-					      struct rx_packet *np,
-					      int istack);
-extern struct rx_packet *rxi_ReceiveResponsePacket(struct
-						   rx_connection *conn, struct rx_packet
-						   *np, int istack);
-extern struct rx_packet *rxi_ReceiveChallengePacket(struct
-						    rx_connection *conn, struct rx_packet
-						    *np, int istack);
-extern void rxi_AttachServerProc(struct rx_call *call,
-				 osi_socket socket,
-				 int *tnop,
-				 struct rx_call **newcallp);
-extern void rxi_AckAll(struct rxevent *event, struct rx_call *call,
-		       char *dummy);
-extern void rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *now);
-extern void rxi_ClearTransmitQueue(struct rx_call *call,
-				   int force);
-extern void rxi_ClearReceiveQueue(struct rx_call *call);
-extern struct rx_packet *rxi_SendCallAbort(struct rx_call *call,
-					   struct rx_packet *packet,
-					   int istack, int force);
-extern struct rx_packet *rxi_SendConnectionAbort(struct rx_connection
-						 *conn,
-						 struct rx_packet *packet,
-						 int istack, int force);
-extern void rxi_ConnectionError(struct rx_connection *conn,
-				afs_int32 error);
 extern void rxi_CallError(struct rx_call *call, afs_int32 error);
-extern void rxi_ResetCall(struct rx_call *call,
-			  int newcall);
-extern struct rx_packet *rxi_SendAck(struct rx_call *call, struct rx_packet
-				     *optionalPacket, int serial, int reason,
-				     int istack);
-extern void rxi_Start(struct rx_call *call, int istack);
-extern void rxi_Send(struct rx_call *call,
-		     struct rx_packet *p, int istack);
-#ifdef RX_ENABLE_LOCKS
-extern int rxi_CheckCall(struct rx_call *call, int haveCTLock);
-#else /* RX_ENABLE_LOCKS */
-extern int rxi_CheckCall(struct rx_call *call);
-#endif /* RX_ENABLE_LOCKS */
-extern void rxi_ScheduleKeepAliveEvent(struct rx_call *call);
-extern void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
-extern void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
-extern void rxi_KeepAliveOn(struct rx_call *call);
-extern void rxi_NatKeepAliveOn(struct rx_connection *conn);
-extern void rxi_GrowMTUOn(struct rx_call *call);
-extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds);
-extern void rxi_ChallengeEvent(struct rxevent *event,
-			       void *conn, /* struct rx_connection *conn */
-			       void *arg1, int atries);
-extern void rxi_ChallengeOn(struct rx_connection *conn);
+extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn,
+					  afs_int32 seconds);
 extern void rx_KeepAliveOn(struct rx_call *call);
 extern void rx_KeepAliveOff(struct rx_call *call);
 extern int rxs_Release(struct rx_securityClass *aobj);
@@ -463,6 +389,7 @@ extern void multi_Finalize_Ignore(struct multi_handle *mh);
 /* rx_null.c */
 extern struct rx_securityClass *rxnull_NewServerSecurityObject(void);
 extern struct rx_securityClass *rxnull_NewClientSecurityObject(void);
+
 
 /* rx_packet.c */
 extern afs_int32 rx_SlowGetInt32(struct rx_packet *packet, size_t offset);
