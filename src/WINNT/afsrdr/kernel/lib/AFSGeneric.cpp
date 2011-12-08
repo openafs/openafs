@@ -8083,9 +8083,34 @@ AFSCreateDefaultSecurityDescriptor()
     SECURITY_DESCRIPTOR *pSecurityDescr = NULL;
     ULONG ulSDLength = 0;
     SECURITY_DESCRIPTOR *pRelativeSecurityDescr = NULL;
+    PSID pWorldSID = NULL;
+    ULONG *pulSubAuthority = NULL;
+    ULONG ulWorldSIDLEngth = 0;
 
     __Enter
     {
+
+        ulWorldSIDLEngth = RtlLengthRequiredSid( 1);
+
+        pWorldSID = (PSID)ExAllocatePoolWithTag( PagedPool,
+                                                 ulWorldSIDLEngth,
+                                                 AFS_GENERIC_MEMORY_29_TAG);
+
+        if( pWorldSID == NULL)
+        {
+            AFSPrint( "AFSCreateDefaultSecurityDescriptor unable to allocate World SID\n");
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pWorldSID,
+                       ulWorldSIDLEngth);
+
+        RtlInitializeSid( pWorldSID,
+                          &SeWorldSidAuthority,
+                          1);
+
+        pulSubAuthority = RtlSubAuthoritySid(pWorldSID, 0);
+        *pulSubAuthority = SECURITY_WORLD_RID;
 
         if( AFSRtlSetSaclSecurityDescriptor == NULL)
         {
@@ -8206,6 +8231,39 @@ AFSCreateDefaultSecurityDescriptor()
             }
         }
 
+        //
+        // Add in the group and owner to the SD
+        //
+
+        if( AFSRtlSetGroupSecurityDescriptor != NULL)
+        {
+            ntStatus = AFSRtlSetGroupSecurityDescriptor( pSecurityDescr,
+                                                         pWorldSID,
+                                                         FALSE);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSPrint( "AFSCreateDefaultSecurityDescriptor RtlSetGroupSecurityDescriptor failed ntStatus %08lX\n",
+                          ntStatus);
+
+                try_return( ntStatus);
+            }
+        }
+
+        ntStatus = RtlSetOwnerSecurityDescriptor( pSecurityDescr,
+                                                  pWorldSID,
+                                                  FALSE);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSPrint( "AFSCreateDefaultSecurityDescriptor RtlSetOwnerSecurityDescriptor failed ntStatus %08lX\n",
+                      ntStatus);
+
+            try_return( ntStatus);
+        }
+
         if( !RtlValidSecurityDescriptor( pSecurityDescr))
         {
 
@@ -8268,6 +8326,11 @@ try_exit:
         {
             ExFreePool( pACE);
         }
+
+        if( pWorldSID != NULL)
+        {
+            ExFreePool( pWorldSID);
+        }
     }
 
     return ntStatus;
@@ -8304,3 +8367,4 @@ AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
 
     return;
 }
+

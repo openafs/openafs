@@ -147,7 +147,14 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
             AFSRtlSetSaclSecurityDescriptor = (PAFSRtlSetSaclSecurityDescriptor)MmGetSystemRoutineAddress( &uniRoutine);
         }
+
 #endif
+
+        RtlInitUnicodeString( &uniRoutine,
+                              L"RtlSetGroupSecurityDescriptor");
+
+        AFSRtlSetGroupSecurityDescriptor = (PAFSRtlSetGroupSecurityDescriptor)MmGetSystemRoutineAddress( &uniRoutine);
+
         ntStatus = AFSCreateDefaultSecurityDescriptor();
 
         if( !NT_SUCCESS( ntStatus))

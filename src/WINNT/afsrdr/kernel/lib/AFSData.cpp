@@ -114,4 +114,8 @@ PAFSRtlSetSaclSecurityDescriptor AFSRtlSetSaclSecurityDescriptor = NULL;
 
 SECURITY_DESCRIPTOR *AFSDefaultSD = NULL;
 
+PAFSRtlSetGroupSecurityDescriptor AFSRtlSetGroupSecurityDescriptor = NULL;
+
+SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+
 }
