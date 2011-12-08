@@ -1,3 +1,11 @@
+openafs (1.6.0-3) unstable; urgency=low
+
+  * Apply upstream deltas to fix file corruption issue in file server:
+    - [c73b6644] viced: disable accelerated copyonwrite
+    - [4e05bc3b] remove CopyOnWrite2 and unused vars
+
+ -- Russ Allbery <rra@debian.org>  Wed, 07 Dec 2011 18:47:48 -0800
+
 openafs (1.6.0-2) unstable; urgency=low
 
   * Apply upstream deltas for Linux 3.1 and 3.2 (Closes: #649765):
