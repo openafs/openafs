@@ -97,6 +97,10 @@ extern PAFSRtlSetSaclSecurityDescriptor AFSRtlSetSaclSecurityDescriptor;
 
 extern SECURITY_DESCRIPTOR *AFSDefaultSD;
 
+extern PAFSRtlSetGroupSecurityDescriptor AFSRtlSetGroupSecurityDescriptor;
+
+extern SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority;
+
 }
 
 #endif /* _AFS_EXTERN_H */

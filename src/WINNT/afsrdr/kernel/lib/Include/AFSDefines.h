@@ -86,6 +86,12 @@ NTSTATUS
                                      PACL Sacl,
                                      BOOLEAN SaclDefaulted);
 
+typedef
+NTSTATUS
+(*PAFSRtlSetGroupSecurityDescriptor)( IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
+                                      IN PSID  Group  OPTIONAL,
+                                      IN BOOLEAN  GroupDefaulted);
+
 //
 // Worker thread count
 //
