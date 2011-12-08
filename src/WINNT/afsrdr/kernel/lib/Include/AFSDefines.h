@@ -158,7 +158,7 @@ NTSTATUS
 
 #define AFS_OBJECT_LIFETIME             300000000
 
-#define AFS_EXTENT_REQUEST_TIME         100000000
+#define AFS_EXTENT_REQUEST_TIME        1200000000
 
 //
 // How big to make the runs
