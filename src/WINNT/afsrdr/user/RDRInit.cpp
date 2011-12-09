@@ -115,6 +115,8 @@ DWORD  dwOvEvIdx = 0;
 
 extern "C" wchar_t RDR_UNCName[64]=L"AFS";
 
+HANDLE RDR_SuspendEvent = INVALID_HANDLE_VALUE;
+
 /* returns 0 on success */
 extern "C" DWORD
 RDR_Initialize(void)
@@ -124,6 +126,12 @@ RDR_Initialize(void)
     HKEY parmKey;
     DWORD dummyLen;
     DWORD numSvThreads = CM_CONFIGDEFAULT_SVTHREADS;
+
+    // Initialize the Suspend Event
+    RDR_SuspendEvent = CreateEvent( NULL,
+                                    TRUE, // manual reset event
+                                    TRUE, // signaled
+                                    NULL);
 
     dwRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
@@ -468,6 +476,8 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
 
                 break;
             }
+
+            WaitForSingleObject( RDR_SuspendEvent, INFINITE);
 
             //
             // Go process the request
@@ -2053,4 +2063,16 @@ RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList)
         free( requestBuffer);
 
     return rc;
+}
+
+extern "C" VOID
+RDR_Suspend( VOID)
+{
+    ResetEvent( RDR_SuspendEvent);
+}
+
+extern "C" VOID
+RDR_Resume( VOID)
+{
+    SetEvent( RDR_SuspendEvent);
 }
