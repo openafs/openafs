@@ -1088,11 +1088,14 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
             goto done;
         }
 
-        if (!(pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && rpc_sid) {
-            osi_Log1(smb_logp,"smb_IoctlSetToken Rpc Sid [%S]",
-                     osi_LogSaveClientString(smb_logp, rpc_sid));
-            if (!cm_ClientStrCmp(NTSID_LOCAL_SYSTEM, rpc_sid))
-                pflags |= AFSCALL_FLAG_LOCAL_SYSTEM;
+        if (rpc_sid) {
+            if (!(pflags & AFSCALL_FLAG_LOCAL_SYSTEM)) {
+                osi_Log1(smb_logp,"smb_IoctlSetToken Rpc Sid [%S]",
+                         osi_LogSaveClientString(smb_logp, rpc_sid));
+                if (!cm_ClientStrCmp(NTSID_LOCAL_SYSTEM, rpc_sid))
+                    pflags |= AFSCALL_FLAG_LOCAL_SYSTEM;
+            }
+            LocalFree(rpc_sid);
         }
 
         if (!(pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
