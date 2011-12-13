@@ -2837,9 +2837,12 @@ ReleaseVolume(struct cmd_syndesc *as, void *arock)
     afs_uint32 aserver;
     afs_int32 apart, vtype, code, err;
     int force = 0;
+    int stayUp = 0;
 
     if (as->parms[1].items)
 	force = 1;
+    if (as->parms[2].items)
+	stayUp = 1;
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
     if (avolid == 0) {
 	if (err)
@@ -2865,7 +2868,8 @@ ReleaseVolume(struct cmd_syndesc *as, void *arock)
 	return E2BIG;
     }
 
-    code = UV_ReleaseVolume(avolid, aserver, apart, force);
+    code = UV_ReleaseVolume(avolid, aserver, apart, force, stayUp);
+
     if (code) {
 	PrintDiagnostics("release", code);
 	return code;
@@ -5990,6 +5994,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"force a complete release");
+    cmd_AddParm(ts, "-stayonline", CMD_FLAG, CMD_OPTIONAL,
+		"release to cloned temp vol, then clone back to repsite RO");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("dump", DumpVolumeCmd, NULL, "dump a volume");
