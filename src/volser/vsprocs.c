@@ -3804,7 +3804,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 					nservers + 1);
     results.manyResults_val =
 	(afs_int32 *) malloc(sizeof(afs_int32) * nservers + 1);
-    if (!replicas || !times || !!!results.manyResults_val || !toconns)
+    if (!replicas || !times || !results.manyResults_val || !toconns)
 	ONERROR0(ENOMEM,
 		"Failed to create transaction on the release clone\n");
 
