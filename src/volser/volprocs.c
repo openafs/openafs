@@ -772,13 +772,17 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     salv_vp = originalvp;
 #endif
 
-    newvp =
-	VCreateVolume(&error, originalvp->partition->name, newId,
-		      V_parentId(originalvp));
-    if (error) {
-	Log("1 Volser: Clone: Couldn't create new volume; clone aborted\n");
-	newvp = (Volume *) 0;
-	goto fail;
+    if (purgeId == newId) {
+	newvp = purgevp;
+    } else {
+	newvp =
+	    VCreateVolume(&error, originalvp->partition->name, newId,
+			  V_parentId(originalvp));
+	if (error) {
+	    Log("1 Volser: Clone: Couldn't create new volume; clone aborted\n");
+	    newvp = (Volume *) 0;
+	    goto fail;
+	}
     }
     if (newType == readonlyVolume)
 	V_cloneId(originalvp) = newId;
