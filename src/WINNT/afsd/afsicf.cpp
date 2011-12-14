@@ -22,6 +22,10 @@
  *
  */
 
+/*
+ * Copyright 2011 by Your File System, Inc.
+ */
+
 #define _WIN32_DCOM
 #include <windows.h>
 #include <netfw.h>
@@ -106,11 +110,14 @@ HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, i
     long CurrentProfilesBitMask = 0;
     int  i;
 
+#ifndef TESTMAIN
     GetModuleFileNameW(NULL, wFilename, 1024);
+#endif
 
     BSTR bstrRuleGroup = SysAllocString(L"OpenAFS Firewall Rules");
     BSTR bstrRuleApplication = SysAllocString(wFilename);
     BSTR bstrRuleService = SysAllocString(wServiceName);
+    BSTR bstrInterfaceTypes = SysAllocString(L"all");
 
     HRESULT hrComInit = S_OK;
     HRESULT hr = S_OK;
@@ -135,6 +142,9 @@ HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, i
         goto Cleanup;
     }
 
+    if ( nPorts == 0 )
+        DEBUGOUT(("No port specified\n"));
+
     for ( i=0; i < nPorts; i++)
     {
         BSTR bstrRuleName = SysAllocString(ports[i].name);
@@ -156,24 +166,64 @@ HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, i
                 pFwRule->put_Name(bstrRuleName);
                 pFwRule->put_Description(bstrRuleDescription);
                 pFwRule->put_ApplicationName(bstrRuleApplication);
-                pFwRule->put_ServiceName(bstrRuleService);
-                pFwRule->put_Protocol(ports[i].protocol);
-                pFwRule->put_LocalPorts(bstrRuleLPorts);
-                pFwRule->put_Grouping(bstrRuleGroup);
-                pFwRule->put_Profiles(NET_FW_PROFILE2_ALL);
-                pFwRule->put_Action(NET_FW_ACTION_ALLOW);
-                pFwRule->put_Enabled(VARIANT_TRUE);
 
                 // Add the Firewall Rule
                 hr = pFwRules->Add(pFwRule);
                 if (FAILED(hr))
                 {
-                    DEBUGOUT(("Firewall Rule Add failed\n"));
+                    DEBUGOUT(("Advanced Firewall Rule Add failed\n"));
+                }
+                else
+                {
+                    DEBUGOUT(("Advanced Firewall Rule Add successful\n"));
+
+                    //
+                    // Do not assign the service name to the rule.
+                    // Only specify the executable name. According to feedback
+                    // in openafs-info, the service name filter blocks the rule.
+                    //
+                    pFwRule->put_ServiceName(NULL);
+                    pFwRule->put_Protocol(ports[i].protocol);
+                    pFwRule->put_LocalPorts(bstrRuleLPorts);
+                    pFwRule->put_Grouping(bstrRuleGroup);
+                    pFwRule->put_Profiles(NET_FW_PROFILE2_ALL);
+                    pFwRule->put_Action(NET_FW_ACTION_ALLOW);
+                    pFwRule->put_Enabled(VARIANT_TRUE);
+                    pFwRule->put_EdgeTraversal(VARIANT_TRUE);
+                    pFwRule->put_InterfaceTypes(bstrInterfaceTypes);
                 }
             }
             else
             {
                 DEBUGOUT(("CoCreateInstance INetFwRule failed\n"));
+            }
+        }
+        else
+        {
+            DEBUGOUT(("INetFwRule already exists\n"));
+
+            hr = pFwRule->put_ServiceName(NULL);
+            if (SUCCEEDED(hr))
+            {
+                DEBUGOUT(("INetFwRule Service Name Updated\n"));
+            }
+
+            hr = pFwRule->put_ApplicationName(bstrRuleApplication);
+            if (SUCCEEDED(hr))
+            {
+                DEBUGOUT(("INetFwRule Application Name Updated\n"));
+            }
+
+            hr = pFwRule->put_EdgeTraversal(VARIANT_TRUE);
+            if (SUCCEEDED(hr))
+            {
+                DEBUGOUT(("INetFwRule Edge Traversal Updated\n"));
+            }
+
+            hr = pFwRule->put_InterfaceTypes(bstrInterfaceTypes);
+            if (SUCCEEDED(hr))
+            {
+                DEBUGOUT(("INetFwRule Interface Types Updated\n"));
             }
         }
 
@@ -188,6 +238,7 @@ HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, i
     SysFreeString(bstrRuleGroup);
     SysFreeString(bstrRuleApplication);
     SysFreeString(bstrRuleService);
+    SysFreeString(bstrInterfaceTypes);
 
     // Release the INetFwRule object
     if (pFwRule != NULL)
@@ -417,9 +468,10 @@ long icf_CheckAndAddAFSPorts(int portset) {
 	ports = afs_serverPorts;
 	nports = sizeof(afs_serverPorts) / sizeof(*afs_serverPorts);
         wServiceName = L"TransarcAFSServer";
-    } else
+    } else {
+        DEBUGOUT(("Invalid port set\n"));
 	return 1; /* Invalid port set */
-
+    }
     hr = CoInitializeEx( NULL,
 			 COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
 			 );
