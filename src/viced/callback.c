@@ -1508,6 +1508,19 @@ GetSomeSpace_r(struct host *hostp, int locked)
     struct lih_params params;
     int i = 0;
 
+    if (cbstuff.GotSomeSpaces == 0) {
+	/* only log this once; if GSS is getting called constantly, that's not
+	 * good but don't make things worse by spamming the log. */
+	ViceLog(0, ("We have run out of callback space; forcing callback revocation. "
+	            "This suggests the fileserver is configured with insufficient "
+	            "callbacks; you probably want to increase the -cb fileserver "
+	            "parameter (current setting: %u). The fileserver will continue "
+	            "to operate, but this may indicate a severe performance problem\n",
+	            cbstuff.nblks));
+	ViceLog(0, ("This message is logged at most once; for more information "
+	            "see the OpenAFS documentation and fileserver xstat collection 3\n"));
+    }
+
     cbstuff.GotSomeSpaces++;
     ViceLog(5,
 	    ("GSS: First looking for timed out call backs via CleanupCallBacks\n"));
