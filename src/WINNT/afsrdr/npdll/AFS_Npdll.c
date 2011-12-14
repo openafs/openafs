@@ -260,7 +260,7 @@ static BOOL
 DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
 {
     WCHAR drive[3];
-    WCHAR device[MAX_PATH + 1];
+    WCHAR device[MAX_PATH + 26];
     HRESULT hr = S_OK;
 
     memset( subststr, 0, substlen);
@@ -268,7 +268,15 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
     drive[1] = drivestr[1];
     drive[2] = 0;
 
-    if ( QueryDosDevice(drive, device, MAX_PATH) )
+    if ( substlen < 3 * sizeof( WCHAR))
+    {
+        //
+        // Cannot represent "D:"
+        //
+        return FALSE;
+    }
+
+    if ( QueryDosDevice(drive, device, MAX_PATH + 26) )
     {
 #ifdef AFS_DEBUG_TRACE
         AFSDbgPrint( L"DriveSubstitution QueryDosDevice %s [%s -> %s]\n",
@@ -293,18 +301,17 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
                 subststr[0] = drive[0];
                 subststr[1] = L':';
                 subststr[2] = L'\0';
-
             }
 
             hr = S_OK;
 
             if ( device[6] )
             {
-                hr = StringCchCat( subststr, substlen, &device[6]);
+                hr = StringCbCat( subststr, substlen, &device[6]);
             }
             if ( SUCCEEDED(hr) && drivestr[2] )
             {
-                hr = StringCchCat( subststr, substlen, &drivestr[2]);
+                hr = StringCbCat( subststr, substlen, &drivestr[2]);
             }
 
             if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
@@ -330,13 +337,13 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
 
             subststr[0] = L'\\';
 
-            hr = StringCbCopyN(&subststr[1], substlen - sizeof(WCHAR), &device[7], MAX_PATH);
+            hr = StringCbCopyN(&subststr[1], substlen - sizeof(WCHAR), &device[7], sizeof(device));
 
             if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
             {
                 if ( drivestr[2] )
                 {
-                    hr = StringCchCat( subststr, substlen, &drivestr[2]);
+                    hr = StringCbCat( subststr, substlen, &drivestr[2]);
                 }
                 else
                 {
@@ -366,16 +373,15 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
             // \Device\AFSRedirector\;X:\\afs\cellname
             //
 
-            hr = StringCbCopyN( subststr, substlen,
-                                 &device[3 + sizeof( AFS_RDR_DEVICE_NAME) / sizeof( WCHAR)],
-                                 MAX_PATH * sizeof( WCHAR));
+            hr = StringCbCopy( subststr, substlen,
+                               &device[3 + sizeof( AFS_RDR_DEVICE_NAME) / sizeof( WCHAR)]);
 
             if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
             {
 
                 if ( drivestr[2] )
                 {
-                    hr = StringCchCat( subststr, substlen, &drivestr[2]);
+                    hr = StringCbCat( subststr, substlen, &drivestr[2]);
                 }
                 else
                 {
@@ -606,6 +612,7 @@ NPAddConnection3( HWND            hwndOwner,
     HANDLE   hControlDevice = NULL;
     HANDLE   hToken = NULL;
     LARGE_INTEGER liAuthId = {0,0};
+    HRESULT  hr;
 
     __Enter
     {
@@ -643,8 +650,15 @@ NPAddConnection3( HWND            hwndOwner,
             wchLocalName[2] = L'\0';
         }
 
-        StringCchCopy(wchRemoteName, MAX_PATH+1, lpNetResource->lpRemoteName);
-        wchRemoteName[MAX_PATH] = L'\0';
+        hr = StringCbCopy(wchRemoteName, sizeof( wchRemoteName), lpNetResource->lpRemoteName);
+        if ( FAILED(hr))
+        {
+
+#ifdef AFS_DEBUG_TRACE
+            AFSDbgPrint( L"NPAddConnection3 lpRemoteName longer than MAX_PATH, returning WN_BAD_NETNAME\n");
+#endif
+            return WN_BAD_NETNAME;
+        }
 
         //
         // Allocate our buffer to pass to the redirector filter
@@ -737,11 +751,11 @@ NPAddConnection3( HWND            hwndOwner,
             lpNetResource->lpLocalName != NULL)
         {
 
-            WCHAR TempBuf[MAX_PATH+1];
+            WCHAR TempBuf[MAX_PATH+26];
 
             if( !QueryDosDeviceW( wchLocalName,
                                   TempBuf,
-                                  MAX_PATH+1))
+                                  MAX_PATH+26))
             {
 
                 if( GetLastError() != ERROR_FILE_NOT_FOUND)
@@ -758,17 +772,12 @@ NPAddConnection3( HWND            hwndOwner,
                 {
 
                     UNICODE_STRING uniConnectionName;
-                    UNICODE_STRING uniDeviceName;
-
-                    uniDeviceName.Length = (wcslen( AFS_RDR_DEVICE_NAME) * sizeof( WCHAR));
-                    uniDeviceName.MaximumLength = uniDeviceName.Length;
-                    uniDeviceName.Buffer = AFS_RDR_DEVICE_NAME;
 
                     //
                     // Create a symbolic link object to the device we are redirecting
                     //
 
-                    uniConnectionName.MaximumLength = (USHORT)( uniDeviceName.Length +
+                    uniConnectionName.MaximumLength = (USHORT)( wcslen( AFS_RDR_DEVICE_NAME) * sizeof( WCHAR) +
                                                                 pConnectCB->RemoteNameLength +
                                                                 8 +              // Local name and \;
                                                                 sizeof(WCHAR));   //  Space for NULL-termination.
@@ -788,21 +797,49 @@ NPAddConnection3( HWND            hwndOwner,
                         try_return( dwStatus = GetLastError());
                     }
 
-                    CopyMemory( uniConnectionName.Buffer,
-                                uniDeviceName.Buffer,
-                                uniDeviceName.Length);
+                    hr = StringCbCopyW( uniConnectionName.Buffer,
+                                        uniConnectionName.MaximumLength,
+                                        AFS_RDR_DEVICE_NAME);
+                    if ( FAILED(hr))
+                    {
+#ifdef AFS_DEBUG_TRACE
+                        AFSDbgPrint( L"NPAddConnection3 uniConnectionBuffer too small\n");
+#endif
+                        try_return( dwStatus = WN_OUT_OF_MEMORY);
+                    }
 
-                    StringCchCatW( uniConnectionName.Buffer,
-                                   uniConnectionName.MaximumLength,
-                                   L"\\;" );
+                    hr = StringCbCatW( uniConnectionName.Buffer,
+                                       uniConnectionName.MaximumLength,
+                                       L"\\;" );
+                    if ( FAILED(hr))
+                    {
+#ifdef AFS_DEBUG_TRACE
+                        AFSDbgPrint( L"NPAddConnection3 uniConnectionBuffer too small\n");
+#endif
+                        try_return( dwStatus = WN_OUT_OF_MEMORY);
+                    }
 
-                    StringCchCatW( uniConnectionName.Buffer,
-                                   uniConnectionName.MaximumLength,
-                                   wchLocalName);
+                    hr = StringCbCatW( uniConnectionName.Buffer,
+                                       uniConnectionName.MaximumLength,
+                                       wchLocalName);
+                    if ( FAILED(hr))
+                    {
+#ifdef AFS_DEBUG_TRACE
+                        AFSDbgPrint( L"NPAddConnection3 uniConnectionBuffer too small\n");
+#endif
+                        try_return( dwStatus = WN_OUT_OF_MEMORY);
+                    }
 
-                    StringCchCatW( uniConnectionName.Buffer,
-                                   uniConnectionName.MaximumLength,
-                                   wchRemoteName);
+                    hr = StringCbCatW( uniConnectionName.Buffer,
+                                       uniConnectionName.MaximumLength,
+                                       wchRemoteName);
+                    if ( FAILED(hr))
+                    {
+#ifdef AFS_DEBUG_TRACE
+                        AFSDbgPrint( L"NPAddConnection3 uniConnectionBuffer too small\n");
+#endif
+                        try_return( dwStatus = WN_OUT_OF_MEMORY);
+                    }
 
 #ifdef AFS_DEBUG_TRACE
                     AFSDbgPrint( L"NPAddConnection3 DefineDosDevice Local %s connection name %s\n",
@@ -881,6 +918,7 @@ NPCancelConnection( LPWSTR  lpName,
     HANDLE   hControlDevice = NULL;
     WCHAR    wchLocalName[ 3];
     WCHAR   *pwchLocalName = NULL;
+    HRESULT hr;
 
     __Enter
     {
@@ -903,7 +941,15 @@ NPCancelConnection( LPWSTR  lpName,
 
             wchLocalName[0] = L'\0';
 
-            StringCchCopyW( wchRemoteName, MAX_PATH+1, lpName);
+            hr = StringCbCopyW( wchRemoteName, sizeof( wchRemoteName), lpName);
+
+            if ( FAILED(hr))
+            {
+#ifdef AFS_DEBUG_TRACE
+                AFSDbgPrint( L"NPCancelConnection lpName longer than MAX_PATH\n");
+#endif
+                try_return( dwStatus = WN_OUT_OF_MEMORY);
+            }
 
             dwRemoteNameLength = (wcslen( wchRemoteName) * sizeof( WCHAR));
         }
@@ -970,9 +1016,9 @@ NPCancelConnection( LPWSTR  lpName,
 
         pConnectCB->RemoteNameLength = (USHORT)dwRemoteNameLength;
 
-        StringCchCopyW( pConnectCB->RemoteName,
-                        MAX_PATH+1,
-                        wchRemoteName);
+        StringCbCopyW( pConnectCB->RemoteName,
+                       dwRemoteNameLength + sizeof( WCHAR),
+                       wchRemoteName);
 
         pConnectCB->Version = AFS_NETWORKPROVIDER_INTERFACE_VERSION_1;
 
@@ -1043,17 +1089,12 @@ NPCancelConnection( LPWSTR  lpName,
         {
 
             UNICODE_STRING uniConnectionName;
-            UNICODE_STRING uniDeviceName;
-
-            uniDeviceName.Length = (wcslen( AFS_RDR_DEVICE_NAME) * sizeof( WCHAR));
-            uniDeviceName.MaximumLength = uniDeviceName.Length;
-            uniDeviceName.Buffer = AFS_RDR_DEVICE_NAME;
 
             //
             // Create a symbolic link object to the device we are redirecting
             //
 
-            uniConnectionName.MaximumLength = (USHORT)( uniDeviceName.Length +
+            uniConnectionName.MaximumLength = (USHORT)( wcslen( AFS_RDR_DEVICE_NAME) * sizeof( WCHAR) +
                                                         dwRemoteNameLength +
                                                         8 +             // Local name and \;
                                                         sizeof(WCHAR)); //  Space for NULL-termination.
@@ -1073,13 +1114,29 @@ NPCancelConnection( LPWSTR  lpName,
                 try_return( dwStatus = GetLastError());
             }
 
-            CopyMemory( uniConnectionName.Buffer,
-                        uniDeviceName.Buffer,
-                        uniDeviceName.Length);
+            hr = StringCbCopyW( uniConnectionName.Buffer,
+                                uniConnectionName.MaximumLength,
+                                AFS_RDR_DEVICE_NAME);
 
-            StringCchCatW( uniConnectionName.Buffer,
-                           uniConnectionName.MaximumLength,
-                           L"\\;" );
+            if ( FAILED(hr))
+            {
+#ifdef AFS_DEBUG_TRACE
+                AFSDbgPrint( L"NPCancelConnection uniConnectionName buffer too small (1)\n");
+#endif
+                try_return( dwStatus = WN_OUT_OF_MEMORY);
+            }
+
+            hr = StringCbCatW( uniConnectionName.Buffer,
+                               uniConnectionName.MaximumLength,
+                               L"\\;" );
+
+            if ( FAILED(hr))
+            {
+#ifdef AFS_DEBUG_TRACE
+                AFSDbgPrint( L"NPCancelConnection uniConnectionName buffer too small (2)\n");
+#endif
+                try_return( dwStatus = WN_OUT_OF_MEMORY);
+            }
 
             if( !bLocalName)
             {
@@ -1090,25 +1147,49 @@ NPCancelConnection( LPWSTR  lpName,
 
                 wchLocalName[ 2] = L'\0';
 
-                StringCchCatW( uniConnectionName.Buffer,
-                               uniConnectionName.MaximumLength,
-                               wchLocalName);
+                hr = StringCbCatW( uniConnectionName.Buffer,
+                                   uniConnectionName.MaximumLength,
+                                   wchLocalName);
+
+                if ( FAILED(hr))
+                {
+#ifdef AFS_DEBUG_TRACE
+                    AFSDbgPrint( L"NPCancelConnection uniConnectionName buffer too small (3)\n");
+#endif
+                    try_return( dwStatus = WN_OUT_OF_MEMORY);
+                }
 
                 pwchLocalName = wchLocalName;
             }
             else
             {
 
-                StringCchCatW( uniConnectionName.Buffer,
-                               uniConnectionName.MaximumLength,
-                               lpName);
+                hr = StringCbCatW( uniConnectionName.Buffer,
+                                   uniConnectionName.MaximumLength,
+                                   lpName);
+
+                if ( FAILED(hr))
+                {
+#ifdef AFS_DEBUG_TRACE
+                    AFSDbgPrint( L"NPCancelConnection uniConnectionName buffer too small (4)\n");
+#endif
+                    try_return( dwStatus = WN_OUT_OF_MEMORY);
+                }
 
                 pwchLocalName = lpName;
             }
 
-            StringCchCatW( uniConnectionName.Buffer,
-                           uniConnectionName.MaximumLength,
-                           wchRemoteName);
+            hr = StringCbCatW( uniConnectionName.Buffer,
+                               uniConnectionName.MaximumLength,
+                               wchRemoteName);
+
+            if ( FAILED(hr))
+            {
+#ifdef AFS_DEBUG_TRACE
+                AFSDbgPrint( L"NPCancelConnection uniConnectionName buffer too small (5)\n");
+#endif
+                try_return( dwStatus = WN_OUT_OF_MEMORY);
+            }
 
             if( !DefineDosDevice( DDD_REMOVE_DEFINITION | DDD_RAW_TARGET_PATH | DDD_EXACT_MATCH_ON_REMOVE,
                                   pwchLocalName,
@@ -1178,7 +1259,7 @@ NPGetConnectionCommon( LPWSTR  lpLocalName,
 
     DWORD    dwStatus = WN_NOT_CONNECTED;
     WCHAR    wchLocalName[3];
-    WCHAR    wchSubstName[MAX_PATH + 1];
+    WCHAR    wchSubstName[1024 + 26];
     AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
     DWORD    dwError = 0;
     DWORD    dwBufferSize = 0;
@@ -1461,7 +1542,7 @@ NPGetConnection3( IN     LPCWSTR lpLocalName,
 
     DWORD    dwStatus = WN_NOT_CONNECTED;
     WCHAR    wchLocalName[3];
-    WCHAR    wchSubstName[MAX_PATH + 1];
+    WCHAR    wchSubstName[1024 + 26];
     AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
     DWORD    dwError = 0;
     DWORD    dwBufferSize = 0;
@@ -3149,7 +3230,8 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
 {
     DWORD    dwStatus = WN_NOT_CONNECTED;
     WCHAR    wchLocalName[3];
-    WCHAR    wchSubstName[MAX_PATH + 1];
+    WCHAR   *pwchSubstName = NULL;
+    DWORD    dwSubstNameLength = 0;
     AFSNetworkProviderConnectionCB   *pConnectCB = NULL;
     DWORD    dwError = 0;
     DWORD    dwBufferSize = 0;
@@ -3202,9 +3284,21 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
             try_return( dwStatus = WN_BAD_VALUE);
         }
 
+        dwSubstNameLength = (dwLocalPathLength + 26) * sizeof( WCHAR);
+
+        pwchSubstName = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwSubstNameLength);
+
+        if ( pwchSubstName == NULL)
+        {
+#ifdef AFS_DEBUG_TRACE
+            AFSDbgPrint( L"NPGetUniversalName unable to allocate substitution name buffer.\n");
+#endif
+            try_return( dwStatus = WN_OUT_OF_MEMORY);
+        }
+
         memset(lpBuffer, 0, dwPassedSize);
 
-        if ( !DriveSubstitution( lpLocalPath, wchSubstName, sizeof( wchSubstName)))
+        if ( !DriveSubstitution( lpLocalPath, pwchSubstName, dwSubstNameLength))
         {
             wchLocalName[0] = towupper(lpLocalPath[0]);
             wchLocalName[1] = L':';
@@ -3221,34 +3315,34 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
 
             ReadServerNameString();
 
-            if ( wchSubstName[0] != L'\\' &&
-                 wchSubstName[1] == L':')
+            if ( pwchSubstName[0] != L'\\' &&
+                 pwchSubstName[1] == L':')
             {
 
-                wchLocalName[0] = towupper(wchSubstName[0]);
+                wchLocalName[0] = towupper(pwchSubstName[0]);
                 wchLocalName[1] = L':';
                 wchLocalName[2] = L'\0';
 
 #ifdef AFS_DEBUG_TRACE
                 AFSDbgPrint( L"NPGetUniversalName Requesting UNC for drive substitution %s -> %s\n",
-                             wchSubstName,
+                             pwchSubstName,
                              wchLocalName);
 #endif
             }
-            else if ( _wcsnicmp( wchSubstName, wszServerNameUNC, cbServerNameUNCLength / sizeof( WCHAR)) == 0 &&
-                      ( wchSubstName[cbServerNameUNCLength / sizeof( WCHAR)] == L'\\' ||
-                        wchSubstName[cbServerNameUNCLength / sizeof( WCHAR)] == 0))
+            else if ( _wcsnicmp( pwchSubstName, wszServerNameUNC, cbServerNameUNCLength / sizeof( WCHAR)) == 0 &&
+                      ( pwchSubstName[cbServerNameUNCLength / sizeof( WCHAR)] == L'\\' ||
+                        pwchSubstName[cbServerNameUNCLength / sizeof( WCHAR)] == 0))
             {
                 HRESULT hr;
 
 #ifdef AFS_DEBUG_TRACE
                 AFSDbgPrint( L"NPGetUniversalName drive substitution %s is AFS; Level 0x%x BufferSize 0x%x\n",
-                             wchSubstName,
+                             pwchSubstName,
                              dwInfoLevel,
                              dwPassedSize);
 #endif
 
-                dwBufferSize = (wcslen( wchSubstName) + 1) * sizeof( WCHAR);
+                dwBufferSize = (wcslen( pwchSubstName) + 1) * sizeof( WCHAR);
 
                 switch( dwInfoLevel)
                 {
@@ -3275,7 +3369,7 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
                     pUniversalInfo->lpUniversalName = (LPTSTR)((char *)lpBuffer + sizeof( UNIVERSAL_NAME_INFO));
 
                     memcpy( pUniversalInfo->lpUniversalName,
-                            wchSubstName,
+                            pwchSubstName,
                             min( dwBufferSize, dwRemainingLength));
 
                     dwRemainingLength -= min( dwBufferSize, dwRemainingLength);
@@ -3318,7 +3412,7 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
                     pRemoteInfo->lpUniversalName = (LPTSTR)((char *)lpBuffer + sizeof( REMOTE_NAME_INFO));
 
                     memcpy( pRemoteInfo->lpUniversalName,
-                            wchSubstName,
+                            pwchSubstName,
                             min( dwRemainingLength, dwBufferSize));
 
                     dwRemainingLength -= min( dwRemainingLength, dwBufferSize);
@@ -3335,7 +3429,7 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
                         pRemoteInfo->lpConnectionName = (LPTSTR)((char *)pRemoteInfo->lpUniversalName + dwBufferSize);
 
                         memcpy( pRemoteInfo->lpConnectionName,
-                                wchSubstName,
+                                pwchSubstName,
                                 min( dwRemainingLength, dwBufferSize));
 
                         dwRemainingLength -= min( dwRemainingLength, dwBufferSize) - sizeof( WCHAR);
@@ -3378,7 +3472,7 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
 
 #ifdef AFS_DEBUG_TRACE
                 AFSDbgPrint( L"NPGetUniversalName drive substitution %s is not AFS\n",
-                             wchSubstName);
+                             pwchSubstName);
 #endif
                 try_return( dwStatus = WN_NOT_CONNECTED);
             }
@@ -3611,6 +3705,12 @@ try_exit:
             CloseHandle( hControlDevice);
         }
 
+        if ( pwchSubstName)
+        {
+
+            HeapFree( GetProcessHeap(), 0, (PVOID) pwchSubstName);
+        }
+
         if( pConnectCB != NULL)
         {
 
@@ -3635,6 +3735,11 @@ GetFormatFlags( DWORD dwFlags)
     //
 
     Buffer[0] = L'\0';
+
+    if ( dwFlags == 0)
+    {
+        return L"NONE";
+    }
 
     if ( dwFlags & WNFMT_MULTILINE )
     {
@@ -3841,7 +3946,6 @@ OpenRedirector()
 {
 
     HANDLE hControlDevice = NULL;
-    WCHAR wchError[ 256];
 
     hControlDevice = CreateFile( AFS_SYMLINK_W,
                                  GENERIC_READ | GENERIC_WRITE,
@@ -4022,8 +4126,8 @@ AppendDebugStringToLogFile(WCHAR *wszbuffer)
     HANDLE hFile;
     int len;
     char * buffer;
-	DWORD dwWritten;
-	BOOL bRet;
+    DWORD dwWritten;
+    BOOL bRet;
 
     if ( !wszbuffer || !wszbuffer[0] )
         return;
