@@ -1195,6 +1195,11 @@ afs_ResetVolumeInfo(struct volume *tv)
     AFS_STATCNT(afs_ResetVolumeInfo);
     ObtainWriteLock(&tv->lock, 117);
     tv->states |= VRecheck;
+
+    /* the hard-mount code in afs_Analyze may not be able to reset this flag
+     * when VRecheck is set, so clear it here to ensure it gets cleared. */
+    tv->states &= ~VHardMount;
+
     for (i = 0; i < AFS_MAXHOSTS; i++)
 	tv->status[i] = not_busy;
     if (tv->name) {
