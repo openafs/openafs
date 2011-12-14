@@ -106,7 +106,8 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
 // Pull all the extents away from the FCB.
 //
 BOOLEAN
-AFSTearDownFcbExtents( IN AFSFcb *Fcb )
+AFSTearDownFcbExtents( IN AFSFcb *Fcb,
+                       IN GUID *AuthGroup)
 {
     BOOLEAN             bFoundExtents = FALSE;
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
@@ -118,9 +119,30 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb )
     BOOLEAN              locked = FALSE;
     NTSTATUS             ntStatus;
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    GUID                *pAuthGroup = AuthGroup;
+    GUID                 stAuthGroup;
 
     __Enter
     {
+
+        if( pAuthGroup == NULL)
+        {
+
+            RtlZeroMemory( &stAuthGroup,
+                           sizeof( GUID));
+
+            ntStatus = AFSRetrieveValidAuthGroup( Fcb,
+                                                  NULL,
+                                                  TRUE,
+                                                  &stAuthGroup);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                try_return( ntStatus);
+            }
+
+            pAuthGroup = &stAuthGroup;
+        }
 
         //
         // Ensure that no one is working with the extents and grab the
@@ -276,7 +298,7 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb )
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                          &Fcb->AuthGroup,
+                                          pAuthGroup,
                                           NULL,
                                           &Fcb->ObjectInformation->FileId,
                                           pRelease,
@@ -668,6 +690,7 @@ try_exit:
 
 NTSTATUS
 AFSRequestExtents( IN AFSFcb *Fcb,
+                   IN AFSCcb *Ccb,
                    IN PLARGE_INTEGER Offset,
                    IN ULONG Size,
                    OUT BOOLEAN *FullyMapped)
@@ -905,7 +928,7 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
                                           0,
-                                          &Fcb->AuthGroup,
+                                          &Ccb->AuthGroup,
                                           NULL,
                                           &Fcb->ObjectInformation->FileId,
                                           &request,
@@ -945,6 +968,7 @@ try_exit:
 
 NTSTATUS
 AFSRequestExtentsAsync( IN AFSFcb *Fcb,
+                        IN AFSCcb *Ccb,
                         IN PLARGE_INTEGER Offset,
                         IN ULONG Size)
 {
@@ -1043,7 +1067,7 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
                                           0,
-                                          &Fcb->AuthGroup,
+                                          &Ccb->AuthGroup,
                                           NULL,
                                           &Fcb->ObjectInformation->FileId,
                                           &request,
@@ -2292,6 +2316,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
     AFSObjectInfoCB                   *pObjectInfo = NULL;
     BOOLEAN                            bLocked = FALSE;
     BOOLEAN                            bDirtyExtents = FALSE;
+    GUID                               stAuthGroup;
 
     __Enter
     {
@@ -2558,8 +2583,21 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
         // Stash away the auth group
         //
 
+        RtlZeroMemory( &stAuthGroup,
+                       sizeof( GUID));
+
+        ntStatus = AFSRetrieveValidAuthGroup( pFcb,
+                                              NULL,
+                                              TRUE,
+                                              &stAuthGroup);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+            try_return( ntStatus);
+        }
+
         RtlCopyMemory( &pFile->AuthGroup,
-                       &pFcb->AuthGroup,
+                       &stAuthGroup,
                        sizeof( GUID));
 
         //
@@ -2726,7 +2764,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSFlushExtents( IN AFSFcb *Fcb)
+AFSFlushExtents( IN AFSFcb *Fcb,
+                 IN GUID *AuthGroup)
 {
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     AFSExtent           *pExtent, *pNextExtent;
@@ -2741,6 +2780,8 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     LARGE_INTEGER        liLastFlush;
     AFSExtent           *pDirtyListHead = NULL, *pDirtyListTail = NULL;
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    GUID                *pAuthGroup = AuthGroup;
+    GUID                 stAuthGroup;
 
     ASSERT( Fcb->Header.NodeTypeCode == AFS_FILE_FCB);
 
@@ -2754,6 +2795,25 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
     __Enter
     {
+
+        if( pAuthGroup == NULL)
+        {
+
+            RtlZeroMemory( &stAuthGroup,
+                           sizeof( GUID));
+
+            ntStatus = AFSRetrieveValidAuthGroup( Fcb,
+                                                  NULL,
+                                                  TRUE,
+                                                  &stAuthGroup);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                try_return( ntStatus);
+            }
+
+            pAuthGroup = &stAuthGroup;
+        }
 
         //
         // Lock extents while we count and set up the array to send to
@@ -2953,7 +3013,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                          &Fcb->AuthGroup,
+                                          pAuthGroup,
                                           NULL,
                                           &Fcb->ObjectInformation->FileId,
                                           pRelease,
@@ -3020,7 +3080,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb)
+AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
+                            IN GUID *AuthGroup)
 {
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     AFSExtent           *pExtent;
@@ -3035,6 +3096,8 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb)
     LARGE_INTEGER        liLastFlush;
     ULONG                ulRemainingExtentLength = 0;
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    GUID                *pAuthGroup = AuthGroup;
+    GUID                 stAuthGroup;
 
     ASSERT( Fcb->Header.NodeTypeCode == AFS_FILE_FCB);
 
@@ -3048,6 +3111,25 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb)
 
     __Enter
     {
+
+        if( pAuthGroup == NULL)
+        {
+
+            RtlZeroMemory( &stAuthGroup,
+                           sizeof( GUID));
+
+            ntStatus = AFSRetrieveValidAuthGroup( Fcb,
+                                                  NULL,
+                                                  TRUE,
+                                                  &stAuthGroup);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                try_return( ntStatus);
+            }
+
+            pAuthGroup = &stAuthGroup;
+        }
 
         //
         // Look for a start in the list to flush entries
@@ -3236,7 +3318,7 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb)
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                          &Fcb->AuthGroup,
+                                          pAuthGroup,
                                           NULL,
                                           &Fcb->ObjectInformation->FileId,
                                           pRelease,

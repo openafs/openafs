@@ -178,6 +178,8 @@ typedef struct _AFS_NONPAGED_FCB
 
     FAST_MUTEX      AdvancedHdrMutex;
 
+    ERESOURCE       CcbListLock;
+
     union
     {
 
@@ -301,10 +303,12 @@ typedef struct AFS_FCB
     struct _AFS_OBJECT_INFORMATION_CB   *ObjectInformation;
 
     //
-    // Authentication group GUID
+    // Ccb list pointers
     //
 
-    GUID  AuthGroup;
+    struct _AFS_CCB    *CcbListHead;
+
+    struct _AFS_CCB    *CcbListTail;
 
     //
     // Union for node type specific information

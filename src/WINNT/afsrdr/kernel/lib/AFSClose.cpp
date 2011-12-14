@@ -136,7 +136,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_CLOSE,
                                    AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                   &pFcb->AuthGroup,
+                                   &pCcb->AuthGroup,
                                    NULL,
                                    &stParentFileId,
                                    (void *)&stPIOCtlClose,
@@ -150,7 +150,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Remove the Ccb and de-allocate it
                 //
 
-                ntStatus = AFSRemoveCcb( pCcb);
+                ntStatus = AFSRemoveCcb( pFcb,
+                                         pCcb);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
@@ -230,7 +231,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Remove the Ccb and de-allocate it
                 //
 
-                ntStatus = AFSRemoveCcb( pCcb);
+                ntStatus = AFSRemoveCcb( pFcb,
+                                         pCcb);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
@@ -303,27 +305,6 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 KeQueryTickCount( &pFcb->ObjectInformation->LastAccessCount);
 
                 pDirCB = pCcb->DirectoryCB;
-
-                //
-                // Remove the Ccb and de-allocate it
-                //
-
-                ntStatus = AFSRemoveCcb( pCcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_WARNING,
-                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n",
-                                  ntStatus);
-
-                    //
-                    // We can't actually fail a close operation so reset the status
-                    //
-
-                    ntStatus = STATUS_SUCCESS;
-                }
 
                 //
                 // If this entry is deleted then remove the object from the volume tree
@@ -482,7 +463,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     if( pFcb->Specific.File.ExtentsDirtyCount)
                     {
 
-                        AFSFlushExtents( pFcb);
+                        AFSFlushExtents( pFcb,
+                                         &pCcb->AuthGroup);
                     }
 
                     //
@@ -500,7 +482,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     // Tear 'em down, we'll not be needing them again
                     //
 
-                    if( AFSTearDownFcbExtents( pFcb))
+                    if( AFSTearDownFcbExtents( pFcb,
+                                               &pCcb->AuthGroup))
                     {
 
                         //
@@ -510,7 +493,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                         AFSProcessRequest( AFS_REQUEST_TYPE_FLUSH_FILE,
                                            AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                           &pFcb->AuthGroup,
+                                           &pCcb->AuthGroup,
                                            NULL,
                                            &pFcb->ObjectInformation->FileId,
                                            NULL,
@@ -528,11 +511,34 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                         if( pFcb->Specific.File.ExtentsDirtyCount)
                         {
 
-                            AFSFlushExtents( pFcb);
+                            AFSFlushExtents( pFcb,
+                                             &pCcb->AuthGroup);
                         }
                     }
 
                     AFSReleaseResource( &pFcb->NPFcb->Resource);
+                }
+
+                //
+                // Remove the Ccb and de-allocate it
+                //
+
+                ntStatus = AFSRemoveCcb( pFcb,
+                                         pCcb);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_WARNING,
+                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n",
+                                  ntStatus);
+
+                    //
+                    // We can't actually fail a close operation so reset the status
+                    //
+
+                    ntStatus = STATUS_SUCCESS;
                 }
 
                 //
@@ -597,7 +603,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Remove the Ccb and de-allocate it
                 //
 
-                ntStatus = AFSRemoveCcb( pCcb);
+                ntStatus = AFSRemoveCcb( pFcb,
+                                         pCcb);
 
                 if( !NT_SUCCESS( ntStatus))
                 {

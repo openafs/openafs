@@ -424,7 +424,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( !bPagingIo && !bNonCachedIo)
         {
 
-            ntStatus = AFSRequestExtentsAsync( pFcb, &liStartingByte, ulByteCount);
+            ntStatus = AFSRequestExtentsAsync( pFcb, pCcb, &liStartingByte, ulByteCount);
 
             if (!NT_SUCCESS(ntStatus))
             {
@@ -761,7 +761,7 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_WRITE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      &pFcb->AuthGroup,
+                                      &pCcb->AuthGroup,
                                       NULL,
                                       &stParentFID,
                                       (void *)&stIORequestCB,
@@ -889,6 +889,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                       ByteCount);
 
         ntStatus = AFSRequestExtentsAsync( pFcb,
+                                           pCcb,
                                            &StartingByte,
                                            ByteCount);
 
@@ -959,6 +960,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                               ByteCount);
 
                 ntStatus = AFSRequestExtentsAsync( pFcb,
+                                                   pCcb,
                                                    &StartingByte,
                                                    ByteCount);
 
@@ -1672,7 +1674,7 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
 
     ntStatus = AFSUpdateFileInformation( &Fcb->ObjectInformation->ParentObjectInformation->FileId,
                                          Fcb->ObjectInformation,
-                                         &Fcb->AuthGroup);
+                                         &pCcb->AuthGroup);
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -1804,7 +1806,7 @@ AFSShareWrite( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIPE_WRITE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      &pFcb->AuthGroup,
+                                      &pCcb->AuthGroup,
                                       &pCcb->DirectoryCB->NameInformation.FileName,
                                       NULL,
                                       pIoRequest,

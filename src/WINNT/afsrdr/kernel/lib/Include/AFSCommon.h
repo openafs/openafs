@@ -189,10 +189,12 @@ AFSUpdateFileInformation( IN AFSFileID *ParentFid,
 
 NTSTATUS
 AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
-                 IN BOOLEAN CheckOnly);
+                 IN GUID           *AuthGroup,
+                 IN BOOLEAN         CheckOnly);
 
 NTSTATUS
 AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
+                 IN GUID            *AuthGroup,
                  IN AFSObjectInfoCB *ParentObjectInfo,
                  IN AFSObjectInfoCB *TargetParentObjectInfo,
                  IN AFSDirectoryCB *DirectoryCB,
@@ -346,6 +348,7 @@ AFSExtentContains( IN AFSExtent *Extent, IN PLARGE_INTEGER Offset);
 
 NTSTATUS
 AFSRequestExtents( IN  AFSFcb *Fcb,
+                   IN  AFSCcb *Ccb,
                    IN  PLARGE_INTEGER Offset,
                    IN  ULONG Size,
                    OUT BOOLEAN *FullyMApped);
@@ -358,6 +361,7 @@ BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb,
 
 NTSTATUS
 AFSRequestExtentsAsync( IN AFSFcb *Fcb,
+                        IN AFSCcb *Ccb,
                         IN PLARGE_INTEGER Offset,
                         IN ULONG Size);
 
@@ -379,10 +383,12 @@ AFSProcessSetExtents( IN AFSFcb *pFcb,
                       IN AFSFileExtentCB *Result);
 
 NTSTATUS
-AFSFlushExtents( IN AFSFcb *pFcb);
+AFSFlushExtents( IN AFSFcb *pFcb,
+                 IN GUID *AuthGroup);
 
 NTSTATUS
-AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb);
+AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
+                            IN GUID *AuthGroup);
 
 VOID
 AFSMarkDirty( IN AFSFcb *pFcb,
@@ -391,7 +397,8 @@ AFSMarkDirty( IN AFSFcb *pFcb,
               IN LARGE_INTEGER *StartingByte);
 
 BOOLEAN
-AFSTearDownFcbExtents( IN AFSFcb *Fcb ) ;
+AFSTearDownFcbExtents( IN AFSFcb *Fcb,
+                       IN GUID *AuthGroup);
 
 void
 AFSTrimExtents( IN AFSFcb *Fcb,
@@ -503,7 +510,12 @@ void
 AFSRemoveFcb( IN AFSFcb *Fcb);
 
 NTSTATUS
-AFSRemoveCcb( IN AFSCcb *Ccb);
+AFSRemoveCcb( IN AFSFcb *Fcb,
+              IN AFSCcb *Ccb);
+
+NTSTATUS
+AFSInsertCcb( IN AFSFcb *Fcb,
+              IN AFSCcb *Ccb);
 
 //
 // AFSNameSupport.cpp Prototypes
@@ -577,7 +589,8 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 NTSTATUS
 AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
                    IN PFILE_OBJECT FileObject,
-                   IN UNICODE_STRING *RemainingPath);
+                   IN UNICODE_STRING *RemainingPath,
+                   IN GUID *AuthGroup);
 
 //
 // AFSNetworkProviderSupport.cpp
@@ -1253,6 +1266,7 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                            IN AFSDirectoryCB *DirectoryCB,
                            IN UNICODE_STRING *ParentPathName,
                            IN AFSNameArrayHdr *RelatedNameArray,
+                           IN GUID           *AuthGroup,
                            OUT AFSFileInfoCB *FileInfo);
 
 AFSObjectInfoCB *
@@ -1352,6 +1366,12 @@ void
 AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
                        OUT UNICODE_STRING *ParentPath);
 
+NTSTATUS
+AFSRetrieveValidAuthGroup( IN AFSFcb *Fcb,
+                           IN AFSObjectInfoCB *ObjectInfo,
+                           IN BOOLEAN WriteAccess,
+                           OUT GUID *AuthGroup);
+
 //
 // AFSWorker.cpp Prototypes
 //
@@ -1418,7 +1438,8 @@ NTSTATUS
 AFSShutdownVolumeWorker( IN AFSVolumeCB *VolumeCB);
 
 NTSTATUS
-AFSQueueFlushExtents( IN AFSFcb *Fcb);
+AFSQueueFlushExtents( IN AFSFcb *Fcb,
+                      IN GUID *AuthGroup);
 
 NTSTATUS
 AFSQueueAsyncRead( IN PDEVICE_OBJECT DeviceObject,

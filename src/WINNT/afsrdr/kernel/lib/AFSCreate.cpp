@@ -1042,6 +1042,10 @@ try_exit:
             if( pCcb != NULL)
             {
 
+                RtlCopyMemory( &pCcb->AuthGroup,
+                               &stAuthGroup,
+                               sizeof( GUID));
+
                 //
                 // If we have a substitute name, then use it
                 //
@@ -1124,10 +1128,6 @@ try_exit:
 
                 ClearFlag( pFcb->Flags, AFS_FCB_FILE_CLOSED);
 
-                RtlCopyMemory( &pFcb->AuthGroup,
-                               &stAuthGroup,
-                               sizeof( GUID));
-
                 //
                 // For files perform additional processing
                 //
@@ -1168,6 +1168,12 @@ try_exit:
                 //
 
                 KeQuerySystemTime( &pFcb->ObjectInformation->LastAccessTime);
+
+                if( pCcb != NULL)
+                {
+                    AFSInsertCcb( pFcb,
+                                  pCcb);
+                }
             }
             else
             {
@@ -1611,6 +1617,8 @@ AFSOpenRoot( IN PIRP Irp,
 
         (*Ccb)->DirectoryCB = VolumeCB->DirectoryCB;
 
+        (*Ccb)->GrantedAccess = *pDesiredAccess;
+
         //
         // OK, update the share access on the fileobject
         //
@@ -1682,7 +1690,8 @@ try_exit:
             if( bAllocatedCcb)
             {
 
-                AFSRemoveCcb( *Ccb);
+                AFSRemoveCcb( NULL,
+                              *Ccb);
 
                 *Ccb = NULL;
             }
@@ -1911,6 +1920,8 @@ AFSProcessCreate( IN PIRP               Irp,
 
         (*Ccb)->DirectoryCB = pDirEntry;
 
+        (*Ccb)->GrantedAccess = *pDesiredAccess;
+
         //
         // If this is a file, update the headers filesizes.
         //
@@ -2116,6 +2127,7 @@ try_exit:
                                             FALSE); // Leave it in the enum list so the worker cleans it up
 
                 AFSNotifyDelete( pDirEntry,
+                                 AuthGroup,
                                  FALSE);
 
                 //
@@ -2130,7 +2142,8 @@ try_exit:
             if( bAllocatedCcb)
             {
 
-                AFSRemoveCcb( *Ccb);
+                AFSRemoveCcb( NULL,
+                              *Ccb);
             }
 
             if( bAllocatedFcb)
@@ -2286,6 +2299,8 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
         (*Ccb)->DirectoryCB = ParentDirectoryCB;
 
+        (*Ccb)->GrantedAccess = *pDesiredAccess;
+
         if( TargetDirectoryCB != NULL &&
             FsRtlAreNamesEqual( &TargetDirectoryCB->NameInformation.FileName,
                                 TargetName,
@@ -2396,7 +2411,8 @@ try_exit:
             if( bAllocatedCcb)
             {
 
-                AFSRemoveCcb( *Ccb);
+                AFSRemoveCcb( NULL,
+                              *Ccb);
             }
 
             *Ccb = NULL;
@@ -2508,6 +2524,7 @@ AFSProcessOpen( IN PIRP Irp,
         {
 
             ntStatus = AFSNotifyDelete( DirectoryCB,
+                                        AuthGroup,
                                         TRUE);
 
             if( !NT_SUCCESS( ntStatus))
@@ -2775,6 +2792,8 @@ AFSProcessOpen( IN PIRP Irp,
 
         (*Ccb)->FileAccess = ulFileAccess;
 
+        (*Ccb)->GrantedAccess = *pDesiredAccess;
+
         //
         // Perform the access check on the target if this is a mount point or symlink
         //
@@ -2915,7 +2934,8 @@ try_exit:
             if( bAllocatedCcb)
             {
 
-                AFSRemoveCcb( *Ccb);
+                AFSRemoveCcb( NULL,
+                              *Ccb);
             }
 
             *Ccb = NULL;
@@ -3131,6 +3151,8 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         (*Ccb)->DirectoryCB = DirectoryCB;
 
+        (*Ccb)->GrantedAccess = *pDesiredAccess;
+
         //
         // Need to purge any data currently in the cache
         //
@@ -3335,7 +3357,8 @@ try_exit:
             if( bAllocatedCcb)
             {
 
-                AFSRemoveCcb( *Ccb);
+                AFSRemoveCcb( NULL,
+                              *Ccb);
             }
 
             *Ccb = NULL;
@@ -3616,7 +3639,8 @@ try_exit:
             if( bAllocatedCcb)
             {
 
-                AFSRemoveCcb( *Ccb);
+                AFSRemoveCcb( NULL,
+                              *Ccb);
 
                 *Ccb = NULL;
             }
@@ -3830,7 +3854,8 @@ try_exit:
             if( bAllocatedCcb)
             {
 
-                AFSRemoveCcb( *Ccb);
+                AFSRemoveCcb( NULL,
+                              *Ccb);
 
                 *Ccb = NULL;
             }

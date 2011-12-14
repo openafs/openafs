@@ -379,7 +379,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                                   pCcb->DirectoryCB->ObjectInformation->FileId.Vnode,
                                   pCcb->DirectoryCB->ObjectInformation->FileId.Unique);
 
-                    ntStatus = AFSVerifyEntry( &pFcb->AuthGroup,
+                    ntStatus = AFSVerifyEntry( &pCcb->AuthGroup,
                                                pCcb->DirectoryCB);
 
                     if( !NT_SUCCESS( ntStatus))

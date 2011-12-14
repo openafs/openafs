@@ -146,6 +146,8 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry,
 
         ExInitializeResourceLite( &pNPFcb->PagingResource);
 
+        ExInitializeResourceLite( &pNPFcb->CcbListLock);
+
         pFcb->Header.Resource = &pNPFcb->Resource;
 
         pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
@@ -315,6 +317,8 @@ try_exit:
                     AFSReleaseResource( &pNPFcb->Resource);
 
                     ExDeleteResourceLite( &pNPFcb->PagingResource);
+
+                    ExDeleteResourceLite( &pNPFcb->CcbListLock);
 
                     ExDeleteResourceLite( &pNPFcb->Resource);
                 }
@@ -930,6 +934,8 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
 
         ExInitializeResourceLite( &pNPFcb->PagingResource);
 
+        ExInitializeResourceLite( &pNPFcb->CcbListLock);
+
         pFcb->Header.Resource = &pNPFcb->Resource;
 
         pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
@@ -1001,6 +1007,8 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb)
         ExDeleteResourceLite( &RootFcb->NPFcb->Resource);
 
         ExDeleteResourceLite( &RootFcb->NPFcb->PagingResource);
+
+        ExDeleteResourceLite( &RootFcb->NPFcb->CcbListLock);
 
         //
         // The non paged region
@@ -1077,7 +1085,7 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
 
     ExDeleteResourceLite( &Fcb->NPFcb->PagingResource);
 
-
+    ExDeleteResourceLite( &Fcb->NPFcb->CcbListLock);
 
     //
     // The non paged region
@@ -1165,10 +1173,51 @@ try_exit:
 //
 
 NTSTATUS
-AFSRemoveCcb( IN AFSCcb *Ccb)
+AFSRemoveCcb( IN AFSFcb *Fcb,
+              IN AFSCcb *Ccb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+
+    if( Fcb != NULL &&
+        BooleanFlagOn( Ccb->Flags, CCB_FLAG_INSERTED_CCB_LIST))
+    {
+
+        AFSAcquireExcl( &Fcb->NPFcb->CcbListLock,
+                        TRUE);
+
+        if( Ccb->ListEntry.fLink == NULL)
+        {
+
+            Fcb->CcbListTail = (AFSCcb *)Ccb->ListEntry.bLink;
+
+            if( Fcb->CcbListTail != NULL)
+            {
+                Fcb->CcbListTail->ListEntry.fLink = NULL;
+            }
+        }
+        else
+        {
+            ((AFSCcb *)(Ccb->ListEntry.fLink))->ListEntry.bLink = Ccb->ListEntry.bLink;
+        }
+
+        if( Ccb->ListEntry.bLink == NULL)
+        {
+
+            Fcb->CcbListHead = (AFSCcb *)Ccb->ListEntry.fLink;
+
+            if( Fcb->CcbListHead != NULL)
+            {
+                Fcb->CcbListHead->ListEntry.bLink = NULL;
+            }
+        }
+        else
+        {
+            ((AFSCcb *)(Ccb->ListEntry.bLink))->ListEntry.fLink = Ccb->ListEntry.fLink;
+        }
+
+        AFSReleaseResource( &Fcb->NPFcb->CcbListLock);
+    }
 
     if( Ccb->MaskName.Buffer != NULL)
     {
@@ -1213,6 +1262,36 @@ AFSRemoveCcb( IN AFSCcb *Ccb)
     //
 
     AFSExFreePool( Ccb);
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSInsertCcb( IN AFSFcb *Fcb,
+              IN AFSCcb *Ccb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+
+    AFSAcquireExcl( &Fcb->NPFcb->CcbListLock,
+                    TRUE);
+
+    if( Fcb->CcbListHead == NULL)
+    {
+        Fcb->CcbListHead = Ccb;
+    }
+    else
+    {
+        Fcb->CcbListTail->ListEntry.fLink = (void *)Ccb;
+
+        Ccb->ListEntry.bLink = (void *)Fcb->CcbListTail;
+    }
+
+    Fcb->CcbListTail = Ccb;
+
+    SetFlag( Ccb->Flags, CCB_FLAG_INSERTED_CCB_LIST);
+
+    AFSReleaseResource( &Fcb->NPFcb->CcbListLock);
 
     return ntStatus;
 }

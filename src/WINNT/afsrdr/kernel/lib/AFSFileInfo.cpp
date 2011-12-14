@@ -672,7 +672,7 @@ try_exit:
 
             ntStatus = AFSUpdateFileInformation( &stParentFileId,
                                                  pFcb->ObjectInformation,
-                                                 &pFcb->AuthGroup);
+                                                 &pCcb->AuthGroup);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -796,6 +796,7 @@ AFSQueryBasicInfo( IN PIRP Irp,
                                                        DirectoryCB,
                                                        &uniParentPath,
                                                        NULL,
+                                                       &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
@@ -902,6 +903,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
                                                        DirectoryCB,
                                                        &uniParentPath,
                                                        NULL,
+                                                       &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
@@ -1384,6 +1386,7 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                                                        DirectoryCB,
                                                        &uniParentPath,
                                                        NULL,
+                                                       &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
@@ -1560,6 +1563,7 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
                                                        DirectoryCB,
                                                        &uniParentPath,
                                                        NULL,
+                                                       &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
                 ulFileAttribs = stFileInfo.FileAttributes;
@@ -1927,6 +1931,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
             //
 
             ntStatus = AFSNotifyDelete( DirectoryCB,
+                                        &pCcb->AuthGroup,
                                         TRUE);
 
             if( !NT_SUCCESS( ntStatus))
@@ -2330,6 +2335,7 @@ AFSSetRenameInfo( IN PIRP Irp)
         //
 
         ntStatus = AFSNotifyRename( pSrcFcb->ObjectInformation,
+                                    &pSrcCcb->AuthGroup,
                                     pSrcFcb->ObjectInformation->ParentObjectInformation,
                                     pTargetDcb->ObjectInformation,
                                     pSrcCcb->DirectoryCB,
@@ -2770,7 +2776,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
     {
         ntStatus = AFSUpdateFileInformation( &pFcb->ObjectInformation->ParentObjectInformation->FileId,
                                              pFcb->ObjectInformation,
-                                             &pFcb->AuthGroup);
+                                             &pCcb->AuthGroup);
     }
 
     if (NT_SUCCESS(ntStatus))
@@ -2931,7 +2937,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 
         ntStatus = AFSUpdateFileInformation( &pFcb->ObjectInformation->ParentObjectInformation->FileId,
                                              pFcb->ObjectInformation,
-                                             &pFcb->AuthGroup);
+                                             &pCcb->AuthGroup);
 
         if( NT_SUCCESS(ntStatus))
         {
