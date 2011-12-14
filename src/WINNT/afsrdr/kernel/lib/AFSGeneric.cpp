@@ -1825,7 +1825,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                     // for any writes or reads to the cache to complete)
                     //
 
-                    (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb);
+                    (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb,
+                                                  NULL);
                 }
 
                 break;
@@ -1892,7 +1893,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                     // for any writes or reads to the cache to complete)
                     //
 
-                    (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb);
+                    (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb,
+                                                  NULL);
                 }
 
                 pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
@@ -2444,7 +2446,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                         // for any writes or reads to the cache to complete)
                         //
 
-                        (VOID) AFSTearDownFcbExtents( pFcb);
+                        (VOID) AFSTearDownFcbExtents( pFcb,
+                                                      NULL);
                     }
 
                     pCurrentObject = (AFSObjectInfoCB *)pCurrentObject->ListEntry.fLink;
@@ -2836,7 +2839,8 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     if ( bPurgeExtents)
                     {
-                        AFSFlushExtents( pObjectInfo->Fcb);
+                        AFSFlushExtents( pObjectInfo->Fcb,
+                                         AuthGroup);
                     }
 
                     //
@@ -3156,7 +3160,8 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
                     // for any writes or reads to the cache to complete)
                     //
 
-                    (VOID) AFSTearDownFcbExtents( pFcb);
+                    (VOID) AFSTearDownFcbExtents( pFcb,
+                                                  NULL);
                 }
 
                 pCurrentObject = (AFSObjectInfoCB *)pCurrentObject->ListEntry.fLink;
@@ -3914,7 +3919,8 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                     if ( bPurgeExtents)
                     {
-                        AFSFlushExtents( pCurrentFcb);
+                        AFSFlushExtents( pCurrentFcb,
+                                         AuthGroup);
                     }
 
                     //
@@ -5598,6 +5604,7 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                            IN AFSDirectoryCB *DirectoryCB,
                            IN UNICODE_STRING *ParentPathName,
                            IN AFSNameArrayHdr *RelatedNameArray,
+                           IN GUID           *AuthGroup,
                            OUT AFSFileInfoCB *FileInfo)
 {
 
@@ -5610,7 +5617,6 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
     WCHAR *pwchBuffer = NULL;
     UNICODE_STRING uniComponentName, uniRemainingPath, uniParsedName;
     ULONG ulNameDifference = 0;
-    GUID *pAuthGroup = NULL;
 
     __Enter
     {
@@ -5627,17 +5633,8 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
             AFSReleaseResource( &DirectoryCB->NonPaged->Lock);
 
-            if( ParentDirectoryCB->ObjectInformation->Fcb != NULL)
-            {
-                pAuthGroup = &ParentDirectoryCB->ObjectInformation->Fcb->AuthGroup;
-            }
-            else if( DirectoryCB->ObjectInformation->Fcb != NULL)
-            {
-                pAuthGroup = &DirectoryCB->ObjectInformation->Fcb->AuthGroup;
-            }
-
             ntStatus = AFSEvaluateTargetByID( DirectoryCB->ObjectInformation,
-                                              pAuthGroup,
+                                              AuthGroup,
                                               FALSE,
                                               &pDirEntry);
 
@@ -6292,10 +6289,20 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
     WCHAR *pwchBuffer = NULL;
     UNICODE_STRING uniComponentName, uniRemainingPath, uniParsedName;
     ULONG ulNameDifference = 0;
-    GUID *pAuthGroup = NULL;
+    GUID    stAuthGroup;
 
     __Enter
     {
+
+        ntStatus = AFSRetrieveValidAuthGroup( NULL,
+                                              DirectoryCB->ObjectInformation,
+                                              FALSE,
+                                              &stAuthGroup);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+            try_return( ntStatus);
+        }
 
         //
         // Retrieve a target name for the entry
@@ -6309,13 +6316,8 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 
             AFSReleaseResource( &DirectoryCB->NonPaged->Lock);
 
-            if( DirectoryCB->ObjectInformation->Fcb != NULL)
-            {
-                pAuthGroup = &DirectoryCB->ObjectInformation->Fcb->AuthGroup;
-            }
-
             ntStatus = AFSEvaluateTargetByID( DirectoryCB->ObjectInformation,
-                                              pAuthGroup,
+                                              &stAuthGroup,
                                               FALSE,
                                               &pDirEntry);
 
@@ -6667,10 +6669,12 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 // Now perform another flush on the file
                 //
 
-                if( !NT_SUCCESS( AFSFlushExtents( Fcb)))
+                if( !NT_SUCCESS( AFSFlushExtents( Fcb,
+                                                  NULL)))
                 {
 
-                    AFSReleaseExtentsWithFlush( Fcb);
+                    AFSReleaseExtentsWithFlush( Fcb,
+                                                NULL);
                 }
             }
 
@@ -6679,7 +6683,8 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
             {
 
-                AFSTearDownFcbExtents( Fcb);
+                AFSTearDownFcbExtents( Fcb,
+                                       NULL);
             }
 
             try_return( ntStatus);
@@ -6699,12 +6704,13 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
               (liTime.QuadPart - Fcb->Specific.File.LastServerFlush.QuadPart)
                                                     >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart))
         {
-
-            if( !NT_SUCCESS( AFSFlushExtents( Fcb)) &&
+            if( !NT_SUCCESS( AFSFlushExtents( Fcb,
+                                              NULL)) &&
                 Fcb->OpenReferenceCount == 0)
             {
 
-                AFSReleaseExtentsWithFlush( Fcb);
+                AFSReleaseExtentsWithFlush( Fcb,
+                                            NULL);
             }
         }
         else if( BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
@@ -6715,7 +6721,8 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
             // The file has been marked as invalid.  Dump it
             //
 
-            AFSTearDownFcbExtents( Fcb);
+            AFSTearDownFcbExtents( Fcb,
+                                   NULL);
         }
 
         //
@@ -6779,7 +6786,8 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 // Tear em down we'll not be needing them again
                 //
 
-                AFSTearDownFcbExtents( Fcb);
+                AFSTearDownFcbExtents( Fcb,
+                                       NULL);
             }
         }
 
@@ -8396,3 +8404,105 @@ AFSRetrieveParentPath( IN UNICODE_STRING *FullFileName,
     return;
 }
 
+NTSTATUS
+AFSRetrieveValidAuthGroup( IN AFSFcb *Fcb,
+                           IN AFSObjectInfoCB *ObjectInfo,
+                           IN BOOLEAN WriteAccess,
+                           OUT GUID *AuthGroup)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    GUID     stAuthGroup, stZeroAuthGroup;
+    BOOLEAN  bFoundAuthGroup = FALSE;
+    AFSCcb  *pCcb = NULL;
+    AFSFcb *pFcb = Fcb;
+
+    __Enter
+    {
+
+        RtlZeroMemory( &stAuthGroup,
+                       sizeof( GUID));
+
+        RtlZeroMemory( &stZeroAuthGroup,
+                       sizeof( GUID));
+
+        if( Fcb == NULL)
+        {
+
+            if( ObjectInfo != NULL &&
+                ObjectInfo->Fcb != NULL)
+            {
+                pFcb = ObjectInfo->Fcb;
+            }
+        }
+
+        if( pFcb != NULL)
+        {
+
+            AFSAcquireShared( &Fcb->NPFcb->CcbListLock,
+                              TRUE);
+
+            pCcb = Fcb->CcbListHead;
+
+            while( pCcb != NULL)
+            {
+
+                if( WriteAccess &&
+                    pCcb->GrantedAccess & FILE_WRITE_DATA)
+                {
+                    RtlCopyMemory( &stAuthGroup,
+                                   &pCcb->AuthGroup,
+                                   sizeof( GUID));
+
+                    bFoundAuthGroup = TRUE;
+
+                    break;
+                }
+                else if( pCcb->GrantedAccess != 0)
+                {
+                    //
+                    // At least get the read-only access
+                    //
+
+                    RtlCopyMemory( &stAuthGroup,
+                                   &pCcb->AuthGroup,
+                                   sizeof( GUID));
+
+                    bFoundAuthGroup = TRUE;
+                }
+
+                pCcb = (AFSCcb *)pCcb->ListEntry.fLink;
+            }
+
+            AFSReleaseResource( &Fcb->NPFcb->CcbListLock);
+        }
+
+        if( !bFoundAuthGroup)
+        {
+
+            AFSRetrieveAuthGroupFnc( (ULONGLONG)PsGetCurrentProcessId(),
+                                     (ULONGLONG)PsGetCurrentThreadId(),
+                                      &stAuthGroup);
+
+            if( RtlCompareMemory( &stZeroAuthGroup,
+                                  &stAuthGroup,
+                                  sizeof( GUID)) == sizeof( GUID))
+            {
+
+                DbgPrint("AFSRetrieveValidAuthGroup Failed to locate PAG\n");
+
+                try_return( ntStatus = STATUS_ACCESS_DENIED);
+            }
+        }
+
+        RtlCopyMemory( AuthGroup,
+                       &stAuthGroup,
+                       sizeof( GUID));
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}

@@ -935,7 +935,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         ntStatus = AFSProcessDFSLink( pDirEntry,
                                                       FileObject,
-                                                      &uniRemainingPath);
+                                                      &uniRemainingPath,
+                                                      AuthGroup);
                     }
                     else
                     {
@@ -4304,14 +4305,14 @@ try_exit:
 NTSTATUS
 AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
                    IN PFILE_OBJECT FileObject,
-                   IN UNICODE_STRING *RemainingPath)
+                   IN UNICODE_STRING *RemainingPath,
+                   IN GUID *AuthGroup)
 {
 
     NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
     UNICODE_STRING uniReparseName;
     UNICODE_STRING uniMUPDeviceName;
     AFSDirEnumEntry *pDirEntry = NULL;
-    GUID *pAuthGroup = NULL;
 
     __Enter
     {
@@ -4333,13 +4334,8 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
         if( DirEntry->NameInformation.TargetName.Length == 0)
         {
 
-            if( DirEntry->ObjectInformation->Fcb != NULL)
-            {
-                pAuthGroup = &DirEntry->ObjectInformation->Fcb->AuthGroup;
-            }
-
             ntStatus = AFSEvaluateTargetByID( DirEntry->ObjectInformation,
-                                              pAuthGroup,
+                                              AuthGroup,
                                               FALSE,
                                               &pDirEntry);
 

@@ -354,7 +354,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     // the file
                     //
 
-                    AFSTearDownFcbExtents( pFcb);
+                    AFSTearDownFcbExtents( pFcb,
+                                           &pCcb->AuthGroup);
 
                     ntStatus = STATUS_SUCCESS;
 
@@ -372,7 +373,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                                   ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                                  &pFcb->AuthGroup,
+                                                  &pCcb->AuthGroup,
                                                   &pCcb->DirectoryCB->NameInformation.FileName,
                                                   &pObjectInfo->FileId,
                                                   &stFileCleanup,
@@ -513,7 +514,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     if( pFcb->Specific.File.ExtentsDirtyCount)
                     {
 
-                        AFSFlushExtents( pFcb);
+                        AFSFlushExtents( pFcb,
+                                         &pCcb->AuthGroup);
                     }
 
                     if( pFcb->OpenHandleCount == 0)
@@ -540,7 +542,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                        ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                       &pFcb->AuthGroup,
+                                       &pCcb->AuthGroup,
                                        &pCcb->DirectoryCB->NameInformation.FileName,
                                        &pObjectInfo->FileId,
                                        &stFileCleanup,
@@ -708,7 +710,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                                   ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                                  &pFcb->AuthGroup,
+                                                  &pCcb->AuthGroup,
                                                   &pCcb->DirectoryCB->NameInformation.FileName,
                                                   &pObjectInfo->FileId,
                                                   &stFileCleanup,
@@ -813,7 +815,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                        ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                       &pFcb->AuthGroup,
+                                       &pCcb->AuthGroup,
                                        &pCcb->DirectoryCB->NameInformation.FileName,
                                        &pObjectInfo->FileId,
                                        &stFileCleanup,
@@ -973,7 +975,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                                   ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                                  &pFcb->AuthGroup,
+                                                  &pCcb->AuthGroup,
                                                   &pCcb->DirectoryCB->NameInformation.FileName,
                                                   &pObjectInfo->FileId,
                                                   &stFileCleanup,
@@ -1078,7 +1080,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
                                        ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                       &pFcb->AuthGroup,
+                                       &pCcb->AuthGroup,
                                        &pCcb->DirectoryCB->NameInformation.FileName,
                                        &pObjectInfo->FileId,
                                        &stFileCleanup,

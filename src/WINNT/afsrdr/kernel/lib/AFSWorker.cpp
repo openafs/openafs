@@ -685,12 +685,14 @@ AFSWorkerThread( IN PVOID Context)
                     case AFS_WORK_FLUSH_FCB:
                     {
 
-                        ntStatus = AFSFlushExtents( pWorkItem->Specific.Fcb.Fcb);
+                        ntStatus = AFSFlushExtents( pWorkItem->Specific.Fcb.Fcb,
+                                                    &pWorkItem->AuthGroup);
 
                         if( !NT_SUCCESS( ntStatus))
                         {
 
-                            AFSReleaseExtentsWithFlush( pWorkItem->Specific.Fcb.Fcb);
+                            AFSReleaseExtentsWithFlush( pWorkItem->Specific.Fcb.Fcb,
+                                                        &pWorkItem->AuthGroup);
                         }
 
                         ASSERT( pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount != 0);
@@ -1949,7 +1951,8 @@ AFSQueueWorkerRequestAtHead( IN AFSWorkItem *WorkItem)
 }
 
 NTSTATUS
-AFSQueueFlushExtents( IN AFSFcb *Fcb)
+AFSQueueFlushExtents( IN AFSFcb *Fcb,
+                      IN GUID *AuthGroup)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -2022,6 +2025,10 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb)
         pWorkItem->ProcessID = (ULONGLONG)PsGetCurrentProcessId();
 
         pWorkItem->RequestType = AFS_WORK_FLUSH_FCB;
+
+        RtlCopyMemory( &pWorkItem->AuthGroup,
+                       AuthGroup,
+                       sizeof( GUID));
 
         pWorkItem->Specific.Fcb.Fcb = Fcb;
 

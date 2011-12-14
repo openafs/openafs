@@ -81,6 +81,8 @@ typedef struct _AFS_CCB
 
     ULONG         Flags;
 
+    AFSListEntry  ListEntry;
+
     //
     // Directory enumeration informaiton
     //
@@ -121,6 +123,8 @@ typedef struct _AFS_CCB
 
     UNICODE_STRING          NotifyMask;
 
+    ACCESS_MASK             GrantedAccess;
+
     //
     // File unwind info
     //
@@ -145,6 +149,12 @@ typedef struct _AFS_CCB
     //
 
     ULONG               FileAccess;
+
+    //
+    // Authentication group GUID
+    //
+
+    GUID                AuthGroup;
 
 } AFSCcb;
 
@@ -574,6 +584,8 @@ typedef struct _AFS_WORK_ITEM
     ULONG    Size;
 
     ULONGLONG   ProcessID;
+
+    GUID     AuthGroup;
 
     union
     {

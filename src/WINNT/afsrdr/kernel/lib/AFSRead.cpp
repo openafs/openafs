@@ -195,6 +195,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT       pFileObject = pIrpSp->FileObject;
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
+    AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
     BOOLEAN            bSynchronousIo = IoIsOperationSynchronous(Irp);
     VOID              *pSystemBuffer = NULL;
     BOOLEAN            bPagingIo = BooleanFlagOn( Irp->Flags, IRP_PAGING_IO);
@@ -285,6 +286,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
                       ulReadByteCount);
 
         ntStatus = AFSRequestExtentsAsync( pFcb,
+                                           pCcb,
                                            &StartingByte,
                                            ulReadByteCount);
 
@@ -357,6 +359,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
                               ulReadByteCount);
 
                 ntStatus = AFSRequestExtentsAsync( pFcb,
+                                                   pCcb,
                                                    &StartingByte,
                                                    ulReadByteCount);
 
@@ -700,7 +703,8 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         // The data is there now.  Give back the extents now so the service
         // has some in hand
         //
-        (VOID) AFSReleaseExtentsWithFlush( pFcb);
+        (VOID) AFSReleaseExtentsWithFlush( pFcb,
+                                           &pCcb->AuthGroup);
 
 try_exit:
 
@@ -1151,7 +1155,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         if( !bPagingIo && !bNonCachedIo)
         {
 
-            ntStatus = AFSRequestExtentsAsync( pFcb, &liStartingByte, ulByteCount);
+            ntStatus = AFSRequestExtentsAsync( pFcb, pCcb, &liStartingByte, ulByteCount);
 
             if (!NT_SUCCESS(ntStatus))
             {
@@ -1316,7 +1320,8 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
             pFcb->Specific.File.ExtentLength > 1500)
         {
 
-            AFSQueueFlushExtents( pFcb);
+            AFSQueueFlushExtents( pFcb,
+                                  &pCcb->AuthGroup);
         }
 #endif
 
@@ -1450,7 +1455,7 @@ AFSIOCtlRead( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIOCTL_READ,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      &pFcb->AuthGroup,
+                                      &pCcb->AuthGroup,
                                       NULL,
                                       &stParentFID,
                                       (void *)&stIORequestCB,
@@ -1564,7 +1569,7 @@ AFSShareRead( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIPE_READ,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      &pFcb->AuthGroup,
+                                      &pCcb->AuthGroup,
                                       &pCcb->DirectoryCB->NameInformation.FileName,
                                       NULL,
                                       (void *)&stIoRequest,

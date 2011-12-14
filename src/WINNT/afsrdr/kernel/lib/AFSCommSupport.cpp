@@ -1543,14 +1543,14 @@ try_exit:
 
 NTSTATUS
 AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
-                 IN BOOLEAN CheckOnly)
+                 IN GUID           *AuthGroup,
+                 IN BOOLEAN         CheckOnly)
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
     ULONG ulResultLen = 0;
     AFSFileDeleteCB stDelete;
     AFSFileDeleteResultCB stDeleteResult;
     ULONG ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
-    GUID *pAuthGroup = NULL;
 
     __Enter
     {
@@ -1566,14 +1566,9 @@ AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
             ulRequestFlags |= AFS_REQUEST_FLAG_CHECK_ONLY;
         }
 
-        if( DirectoryCB->ObjectInformation->Fcb != NULL)
-        {
-            pAuthGroup = &DirectoryCB->ObjectInformation->Fcb->AuthGroup;
-        }
-
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DELETE_FILE,
                                       ulRequestFlags,
-                                      pAuthGroup,
+                                      AuthGroup,
                                       &DirectoryCB->NameInformation.FileName,
                                       &DirectoryCB->ObjectInformation->FileId,
                                       &stDelete,
@@ -1622,6 +1617,7 @@ try_exit:
 
 NTSTATUS
 AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
+                 IN GUID            *AuthGroup,
                  IN AFSObjectInfoCB *ParentObjectInfo,
                  IN AFSObjectInfoCB *TargetParentObjectInfo,
                  IN AFSDirectoryCB *DirectoryCB,
@@ -1633,7 +1629,6 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
     AFSFileRenameCB *pRenameCB = NULL;
     AFSFileRenameResultCB *pRenameResultCB = NULL;
     ULONG ulResultLen = 0;
-    GUID *pAuthGroup = NULL;
 
     __Enter
     {
@@ -1665,11 +1660,6 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
                        TargetName->Buffer,
                        TargetName->Length);
 
-        if( ObjectInfo->Fcb != NULL)
-        {
-            pAuthGroup = &ObjectInfo->Fcb->AuthGroup;
-        }
-
         //
         // Use the same buffer for the result control block
         //
@@ -1680,7 +1670,7 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RENAME_FILE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      pAuthGroup,
+                                      AuthGroup,
                                       &DirectoryCB->NameInformation.FileName,
                                       &ObjectInfo->FileId,
                                       pRenameCB,
@@ -2042,7 +2032,6 @@ AFSNotifyPipeTransceive( IN AFSCcb *Ccb,
     void *pInputSystemBuffer = NULL, *pOutputSystemBuffer = NULL;
     ULONG ulBufferLength = OutputLength;
     AFSPipeIORequestCB *pIoRequest = NULL;
-    GUID *pAuthGroup = NULL;
 
     __Enter
     {
@@ -2095,11 +2084,6 @@ AFSNotifyPipeTransceive( IN AFSCcb *Ccb,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        if( Ccb->DirectoryCB->ObjectInformation->Fcb != NULL)
-        {
-            pAuthGroup = &Ccb->DirectoryCB->ObjectInformation->Fcb->AuthGroup;
-        }
-
         //
         // Send the call to the service
         //
@@ -2108,7 +2092,7 @@ AFSNotifyPipeTransceive( IN AFSCcb *Ccb,
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIPE_TRANSCEIVE,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      pAuthGroup,
+                                      &Ccb->AuthGroup,
                                       &Ccb->DirectoryCB->NameInformation.FileName,
                                       NULL,
                                       pIoRequest,
@@ -2172,7 +2156,6 @@ AFSNotifySetPipeInfo( IN AFSCcb *Ccb,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSPipeInfoRequestCB *pInfoRequest = NULL;
-    GUID *pAuthGroup = NULL;
 
     __Enter
     {
@@ -2203,18 +2186,13 @@ AFSNotifySetPipeInfo( IN AFSCcb *Ccb,
                        DataBuffer,
                        InputLength);
 
-        if( Ccb->DirectoryCB->ObjectInformation->Fcb != NULL)
-        {
-            pAuthGroup = &Ccb->DirectoryCB->ObjectInformation->Fcb->AuthGroup;
-        }
-
         //
         // Send the call to the service
         //
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIPE_SET_INFO,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      pAuthGroup,
+                                      &Ccb->AuthGroup,
                                       &Ccb->DirectoryCB->NameInformation.FileName,
                                       NULL,
                                       pInfoRequest,
@@ -2257,7 +2235,6 @@ AFSNotifyQueryPipeInfo( IN AFSCcb *Ccb,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSPipeInfoRequestCB stInfoRequest;
     ULONG ulBytesProcessed = 0;
-    GUID *pAuthGroup = NULL;
 
     __Enter
     {
@@ -2275,18 +2252,13 @@ AFSNotifyQueryPipeInfo( IN AFSCcb *Ccb,
 
         ulBytesProcessed = OutputLength;
 
-        if( Ccb->DirectoryCB->ObjectInformation->Fcb != NULL)
-        {
-            pAuthGroup = &Ccb->DirectoryCB->ObjectInformation->Fcb->AuthGroup;
-        }
-
         //
         // Send the call to the service
         //
 
         ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_PIPE_QUERY_INFO,
                                       AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                      pAuthGroup,
+                                      &Ccb->AuthGroup,
                                       &Ccb->DirectoryCB->NameInformation.FileName,
                                       NULL,
                                       &stInfoRequest,

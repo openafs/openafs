@@ -228,7 +228,7 @@ AFSQueryDirectory( IN PIRP Irp)
             // Tell the service to prime the cache of the directory content
             //
 
-            ntStatus = AFSEnumerateDirectoryNoResponse( &pFcb->AuthGroup,
+            ntStatus = AFSEnumerateDirectoryNoResponse( &pCcb->AuthGroup,
                                                         &pFcb->ObjectInformation->FileId);
 
             if( !NT_SUCCESS( ntStatus))
@@ -290,7 +290,7 @@ AFSQueryDirectory( IN PIRP Irp)
                           pFcb->ObjectInformation->FileId.Vnode,
                           pFcb->ObjectInformation->FileId.Unique);
 
-            ntStatus = AFSVerifyEntry( &pFcb->AuthGroup,
+            ntStatus = AFSVerifyEntry( &pCcb->AuthGroup,
                                        pCcb->DirectoryCB);
 
             if( !NT_SUCCESS( ntStatus))
@@ -742,7 +742,7 @@ AFSQueryDirectory( IN PIRP Irp)
             //
 
             AFSValidateEntry( pDirEntry,
-                              &pFcb->AuthGroup,
+                              &pCcb->AuthGroup,
                               FALSE,
                               FALSE);
 
@@ -768,6 +768,7 @@ AFSQueryDirectory( IN PIRP Irp)
                                                            pDirEntry,
                                                            &pCcb->FullFileName,
                                                            pCcb->NameArray,
+                                                           &pCcb->AuthGroup,
                                                            &stFileInfo)))
                 {
 

@@ -119,12 +119,14 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
         // Now, flush to the server - if there is stuff to do
         //
 
-        ntStatus = AFSFlushExtents( pFcb);
+        ntStatus = AFSFlushExtents( pFcb,
+                                    &pCcb->AuthGroup);
 
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSReleaseExtentsWithFlush( pFcb);
+            AFSReleaseExtentsWithFlush( pFcb,
+                                        &pCcb->AuthGroup);
 
             ntStatus = STATUS_SUCCESS;
         }
