@@ -38,7 +38,6 @@
 	<?define cmp_ServerCommonDebug_guid="038086D4-DE3F-43CD-9D72-75880FF80E98"?>
 	<?define cmp_CommonCommonDebug_guid="3C3A3415-0C86-454C-9C73-7C11E93A1E76"?>
 	<?define cmp_ClientCommonDebug_guid="2A8370D0-F2B2-45E3-99EB-39679A520F42"?>
-
 	<?define cmf_afseventmsg_1033_DLL_guid="1A880CB4-2A5C-4719-906D-1DD07B0106E2"?>
 	<?define cmf_afsserver_1033_DLL_guid="01E363E2-EFF7-4E1C-AAF0-AAA999DF1AAA"?>
 	<?define cmf_afssvrcfg_1033_DLL_guid="E7875BE0-F5EB-4FE1-B327-A8B36581BE6F"?>
@@ -49,18 +48,6 @@
 	<?define cmf_afs_config_1033_DLL_guid="D8A8C1AB-C47E-4208-B1F6-33A9526806E9"?>
 	<?define cmf_afs_cpa_1033_DLL_guid="08B5C87E-E4E0-4886-99FA-FB266BDCABF5"?>
 	<?define cmf_afs_shl_ext_1033_DLL_guid="5CA0BB73-35E2-4244-8891-DDD261244E06"?>
-
-	<?define cmf_afseventmsg_1029_DLL_guid="1D8F64F7-63B0-4586-A6B1-E4F98FF0E247"?>
-	<?define cmf_afsserver_1029_DLL_guid="7A3345BB-C1B1-49CC-8366-F7E765D104E8"?>
-	<?define cmf_afssvrcfg_1029_DLL_guid="C3593D9A-6D23-4A77-B0DD-2830DF24371F"?>
-	<?define cmf_TaAfsAccountManager_1029_DLL_guid="7E5B3382-44F2-4104-84B0-EF28FC3FAA62"?>
-	<?define cmf_TaAfsAppLib_1029_DLL_guid="60D0B31F-895A-45D9-B2AC-B0F253D75880"?>
-	<?define cmf_TaAfsServerManager_1029_DLL_guid="03BE57DA-E030-4B30-A5B5-47C632D82736"?>
-	<?define cmf_afscreds_1029_DLL_guid="90E0C637-C442-4F7A-88D0-E6E2E7D94339"?>
-	<?define cmf_afs_config_1029_DLL_guid="A8691E1F-E5B4-427D-9522-F0E436837343"?>
-	<?define cmf_afs_cpa_1029_DLL_guid="4DC9FC39-9A99-4085-825A-2A188BF60236"?>
-	<?define cmf_afs_shl_ext_1029_DLL_guid="8A0EE1F7-90FB-408C-A855-5A14CA802DF9"?>
-
         <?define cmf_afs_mount_ICO_guid="78420061-9042-40B5-A1AE-A6E9EA5CE88C"?>
         <?define cmf_afs_link_ICO_guid="950BDA4E-6210-4925-A9E4-B70A937BD9A7"?>
 	<?define cmf_TaAfsServerManager_EXE_guid="D63E9DC0-4998-444F-A6BE-0B974FA718ED"?>
@@ -169,7 +156,6 @@
 	<?define cmp_ServerCommonDebug_guid="4132C211-5577-48DE-9C66-214EEC0E6BC4"?>
 	<?define cmp_CommonCommonDebug_guid="7F47902F-B92D-42A3-BDEF-AFFC79C66F0C"?>
 	<?define cmp_ClientCommonDebug_guid="BFA4097D-3013-46AD-86EB-2160376FB55C"?>
-
 	<?define cmf_afseventmsg_1033_DLL_guid="2DBBE232-2DA5-421F-9C83-93278598634A"?>
 	<?define cmf_afsserver_1033_DLL_guid="2EC8BA3C-0A5C-48C5-A370-36265C43A93F"?>
 	<?define cmf_afssvrcfg_1033_DLL_guid="70F7B4AA-E89F-4786-A3F1-27725E613F53"?>
@@ -180,18 +166,6 @@
 	<?define cmf_afs_config_1033_DLL_guid="6DE08ED9-2B64-4D39-A50E-62FEAC91DF88"?>
 	<?define cmf_afs_cpa_1033_DLL_guid="12EE2B31-4320-4A6B-90F7-7A03ECF5A0DA"?>
 	<?define cmf_afs_shl_ext_1033_DLL_guid="9FF6C6CA-C731-4319-8777-E6DBAEFC3A4B"?>
-
-	<?define cmf_afseventmsg_1029_DLL_guid="D8DE6667-EA70-4E73-B0E8-624A3419CD15"?>
-	<?define cmf_afsserver_1029_DLL_guid="CF2E01D9-2931-425A-8AD7-42B780A6843B"?>
-	<?define cmf_afssvrcfg_1029_DLL_guid="22755BF5-3C6B-4F24-AFA3-70E6E466F742"?>
-	<?define cmf_TaAfsAccountManager_1029_DLL_guid="B5FD9969-4252-41BA-BD29-1F10FF489579"?>
-	<?define cmf_TaAfsAppLib_1029_DLL_guid="A42D922A-1320-4199-A353-D1FC677B5BC1"?>
-	<?define cmf_TaAfsServerManager_1029_DLL_guid="786F7953-01B9-4240-8DED-DC3AD60F110F"?>
-	<?define cmf_afscreds_1029_DLL_guid="410992AD-A848-4C3F-BB76-42255EA692A8"?>
-	<?define cmf_afs_config_1029_DLL_guid="9DD674C9-A10B-470A-A513-7ADE26551A64"?>
-	<?define cmf_afs_cpa_1029_DLL_guid="25D67858-695F-4276-8E8E-002D44F2DDAA"?>
-	<?define cmf_afs_shl_ext_1029_DLL_guid="BB78C96D-FE28-426A-BB31-C57D6243FEF6"?>
-
         <?define cmf_afs_mount_ICO_guid="681552AD-7671-470D-B4CE-26290AC95AC7"?>
         <?define cmf_afs_link_ICO_guid="66E7BD99-114B-46E8-830B-73FA17C043FB"?>
 	<?define cmf_TaAfsServerManager_EXE_guid="B890FB93-2EFD-44B6-8CB3-7A6AFABFF029"?>

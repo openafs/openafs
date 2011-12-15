@@ -36,24 +36,18 @@
 
 #else
 
-#ifdef LANG_en_US
+#ifdef LANG_en_us
 
 #define STR_FILEDESC "English(US) language resources for OpenAFS plugin"
 #define STR_INTNAME  "afscred_en_us"
 #define STR_ORIGNAME "afscred_en_us.dll"
 
 #else
-#ifdef LANG_cs_CZ
-
-#define STR_FILEDESC "Czech(CZ) language resources for OpenAFS plugin"
-#define STR_INTNAME  "afscred_cs_cz"
-#define STR_ORIGNAME "afscred_cs_cz.dll"
-#else
 
 #error Unknown langugae
 
 #endif
-#endif
+
 #endif
 
 1 VERSIONINFO 

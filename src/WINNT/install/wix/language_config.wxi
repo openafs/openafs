@@ -11,144 +11,73 @@
         <?define Language="en_US"?>
     <?endif?>
     
-    <?if $(var.Language) = "en_US"?>
-        <?define Codepage="1252"?>
-        <?define LanguageCode="1033"?>
+    <!-- (( en_US )) -->
+    <?define Codepage="1252"?>
+    <?define LanguageCode="1033"?>
 
-        <?define Manufacturer="OpenAFS.org"?>
-        <?ifdef BinsOnly?>
-            <?ifdef Debug?>
-                <?define PackageComments="OpenAFS for Windows (Tools and libraries) $(var.NumericVersion) CHECKED"?>
-                <?define ProductComments="OpenAFS for Windows (Tools and libraries) CHECKED build." ?>
-            <?else?>
-                <?define PackageComments="OpenAFS for Windows (Tools and libraries) $(var.NumericVersion)"?>
-                <?define ProductComments="OpenAFS for Windows. Tools and libraries."?>
-            <?endif?>
-        <?else?>
-            <?ifdef Debug?>
-                <?define PackageComments="OpenAFS for Windows $(var.NumericVersion) CHECKED"?>
-                <?define ProductComments="OpenAFS for Windows. CHECKED build." ?>
-            <?else?>
-                <?define PackageComments="OpenAFS for Windows $(var.NumericVersion)"?>
-                <?define ProductComments="OpenAFS for Windows. Client and server components for using AFS."?>
-            <?endif?>
-        <?endif?>
+    <?define Manufacturer="OpenAFS.org"?>
+<?ifdef BinsOnly?>
+  <?ifdef Debug?>
+    <?define PackageComments="OpenAFS for Windows (Tools and libraries) $(var.NumericVersion) CHECKED"?>
+    <?define ProductComments="OpenAFS for Windows (Tools and libraries) CHECKED build." ?>
+  <?else?>
+    <?define PackageComments="OpenAFS for Windows (Tools and libraries) $(var.NumericVersion)"?>
+    <?define ProductComments="OpenAFS for Windows. Tools and libraries."?>
+  <?endif?>
+<?else?>
+  <?ifdef Debug?>
+    <?define PackageComments="OpenAFS for Windows $(var.NumericVersion) CHECKED"?>
+    <?define ProductComments="OpenAFS for Windows. CHECKED build." ?>
+  <?else?>
+    <?define PackageComments="OpenAFS for Windows $(var.NumericVersion)"?>
+    <?define ProductComments="OpenAFS for Windows. Client and server components for using AFS."?>
+  <?endif?>
+<?endif?>
 
-        <?define Languages="$(var.LanguageCode)"?>
+    <?define Languages="$(var.LanguageCode)"?>
 
-        <?ifdef BinsOnly?>
-          <?if $(var.Platform) = "x64" ?>
-            <?define ProductName="OpenAFS for Windows (64-bit binaries)"?>
-          <?else?>
-            <?define ProductName="OpenAFS for Windows (32-bit binaries)"?>
-          <?endif?>
-        <?else?>
-          <?if $(var.Platform) = "x64" ?>
-            <?define ProductName="OpenAFS for Windows (64-bit)"?>
-          <?else?>
-            <?define ProductName="OpenAFS for Windows"?>
-          <?endif?>
-        <?endif?>
-
-        <!-- Localized packages should have different product codes -->
-        <!-- Each product release should have a different product code -->
-        <?ifndef ProductCode?>
-            <?define ProductCode="????????-????-????-????-????????????"?>
-        <?endif?>
-
-        <?ifndef BinsOnly?>
-            <!-- Same goes for localized components -->
-            <?define DocHtmlIndexGuid="B656CA5A-5179-42D8-8972-2F128AEDE751"?>
-            <?define DocHtmlGuid="C9595172-72DF-4F30-8C43-C16583CFB8B1"?>
-            <?define DocHtmlCmdRefGuid="94168F07-82F6-442A-BE10-21EF72CB741D"?>
-            <?define DocHtmlCmdRef1Guid="440BC8BA-93ED-4202-9684-D893B8A3B2E3"?>
-            <?define DocHtmlCmdRef3Guid="71F8CA2E-32D8-11E0-ADD9-098FDFD72085"?>
-            <?define DocHtmlCmdRef5Guid="034AF6E4-2295-4107-8D78-A49AB3BC74A8"?>
-            <?define DocHtmlCmdRef8Guid="CCD33334-20E3-4b2d-AD14-097961BFF0F6"?>
-            <?define DocHtmlInstallGuid="921E151E-9FD2-49A8-B297-0222E22ECAC7"?>
-            <?define DocHtmlSysAdminGuid="F82AD828-C412-4211-88D7-DF18D5C79DBA"?>
-            <?define DocHtmlRelNotesGuid="CC369D09-B786-412F-B832-720AC06CC3BC"?>
-            <?define DocHtmlRelnotesFilesGuid="D39E1662-F475-4D33-A6B5-CBC7B77891D0"?>
-            <?define DocHtmlLogoFilesGuid="24E7F4AF-5D41-4D7B-B9DF-FA5787BAC787"?>
-            <?define DocHtmlIndexFilesGuid="EEEA73B6-36CD-4471-BF5C-9317B90CA3CC"?>
-
-            <?define DocChmSysAdminGuid="9D78A7CB-AD7A-4464-AAF6-0046512033E8"?>
-            <?define DocChmUserGuid="B2603B9D-DD21-4B3D-B6DB-0F8E7AC58D85"?>
-            <?define DocChmRelNotesGuid="9206FE77-95FA-41D6-A014-B5903E9B1FC2"?>
-        <?endif?>
-
-        <!-- /(( en_US )) -->
+<?ifdef BinsOnly?>
+  <?if $(var.Platform) = "x64" ?>
+    <?define ProductName="OpenAFS for Windows (64-bit binaries)"?>
+  <?else?>
+    <?define ProductName="OpenAFS for Windows (32-bit binaries)"?>
+  <?endif?>
+<?else?>
+  <?if $(var.Platform) = "x64" ?>
+    <?define ProductName="OpenAFS for Windows (64-bit)"?>
+  <?else?>
+    <?define ProductName="OpenAFS for Windows"?>
+  <?endif?>
+<?endif?>
+    
+    <!-- Localized packages should have different product codes -->
+    <!-- Each product release should have a different product code -->
+    <?ifndef ProductCode?>
+        <?define ProductCode="????????-????-????-????-????????????"?>
     <?endif?>
 
-    <?if $(var.Language) = "cs_CZ"?>
-        <?define Codepage="1250"?>
-        <?define LanguageCode="1029"?>
+<?ifndef BinsOnly?>    
+    <!-- Same goes for localized components -->
+    <?define DocHtmlIndexGuid="B656CA5A-5179-42D8-8972-2F128AEDE751"?>
+    <?define DocHtmlGuid="C9595172-72DF-4F30-8C43-C16583CFB8B1"?>
+    <?define DocHtmlCmdRefGuid="94168F07-82F6-442A-BE10-21EF72CB741D"?>
+    <?define DocHtmlCmdRef1Guid="440BC8BA-93ED-4202-9684-D893B8A3B2E3"?>
+    <?define DocHtmlCmdRef3Guid="71F8CA2E-32D8-11E0-ADD9-098FDFD72085"?>
+    <?define DocHtmlCmdRef5Guid="034AF6E4-2295-4107-8D78-A49AB3BC74A8"?>
+    <?define DocHtmlCmdRef8Guid="CCD33334-20E3-4b2d-AD14-097961BFF0F6"?>
+    <?define DocHtmlInstallGuid="921E151E-9FD2-49A8-B297-0222E22ECAC7"?>
+    <?define DocHtmlSysAdminGuid="F82AD828-C412-4211-88D7-DF18D5C79DBA"?>
+    <?define DocHtmlRelNotesGuid="CC369D09-B786-412F-B832-720AC06CC3BC"?>
+    <?define DocHtmlRelnotesFilesGuid="D39E1662-F475-4D33-A6B5-CBC7B77891D0"?>
+    <?define DocHtmlLogoFilesGuid="24E7F4AF-5D41-4D7B-B9DF-FA5787BAC787"?>
+    <?define DocHtmlIndexFilesGuid="EEEA73B6-36CD-4471-BF5C-9317B90CA3CC"?>
 
-        <?define Manufacturer="OpenAFS.org"?>
-        <?ifdef BinsOnly?>
-            <?ifdef Debug?>
-                <?define PackageComments="OpenAFS for Windows (Tools and libraries) $(var.NumericVersion) CHECKED"?>
-                <?define ProductComments="OpenAFS for Windows (Tools and libraries) CHECKED build." ?>
-            <?else?>
-                <?define PackageComments="OpenAFS for Windows (Tools and libraries) $(var.NumericVersion)"?>
-                <?define ProductComments="OpenAFS for Windows. Tools and libraries."?>
-            <?endif?>
-        <?else?>
-            <?ifdef Debug?>
-                <?define PackageComments="OpenAFS for Windows $(var.NumericVersion) CHECKED"?>
-                <?define ProductComments="OpenAFS for Windows. CHECKED build." ?>
-            <?else?>
-                <?define PackageComments="OpenAFS for Windows $(var.NumericVersion)"?>
-                <?define ProductComments="OpenAFS for Windows. Client and server components for using AFS."?>
-            <?endif?>
-        <?endif?>
+    <?define DocChmSysAdminGuid="9D78A7CB-AD7A-4464-AAF6-0046512033E8"?>
+    <?define DocChmUserGuid="B2603B9D-DD21-4B3D-B6DB-0F8E7AC58D85"?>
+    <?define DocChmRelNotesGuid="9206FE77-95FA-41D6-A014-B5903E9B1FC2"?>
+<?endif?>
+	<!-- other language specific strings are defined in the strings.wxl file -->	
 
-        <?define Languages="$(var.LanguageCode)"?>
-
-        <?ifdef BinsOnly?>
-          <?if $(var.Platform) = "x64" ?>
-            <?define ProductName="OpenAFS for Windows (64-bit binaries)"?>
-          <?else?>
-            <?define ProductName="OpenAFS for Windows (32-bit binaries)"?>
-          <?endif?>
-        <?else?>
-          <?if $(var.Platform) = "x64" ?>
-            <?define ProductName="OpenAFS for Windows (64-bit)"?>
-          <?else?>
-            <?define ProductName="OpenAFS for Windows"?>
-          <?endif?>
-        <?endif?>
-
-        <!-- Localized packages should have different product codes -->
-        <!-- Each product release should have a different product code -->
-        <?ifndef ProductCode?>
-            <?define ProductCode="????????-????-????-????-????????????"?>
-        <?endif?>
-
-        <?ifndef BinsOnly?>
-            <!-- Same goes for localized components -->
-            <?define DocHtmlIndexGuid="09D2899B-E1AB-4A8B-9838-1B5D009E42C7"?>
-            <?define DocHtmlGuid="0679E7D1-42AF-4EA1-8747-80335D668918"?>
-            <?define DocHtmlCmdRefGuid="A6223027-70FE-4DF6-A8C7-8C0F377F7A26"?>
-            <?define DocHtmlCmdRef1Guid="CE7306F6-F38D-411B-9974-A7359B2E9672"?>
-            <?define DocHtmlCmdRef3Guid="36878C93-4E98-420C-92B2-9DF132D8F08A"?>
-            <?define DocHtmlCmdRef5Guid="79DAE506-D410-4943-BDF3-FDE65889A577"?>
-            <?define DocHtmlCmdRef8Guid="DBC74568-4B01-42BD-95F3-E872D7246757"?>
-            <?define DocHtmlInstallGuid="4931E7BD-2194-417D-BB1E-ACFF694F76E9"?>
-            <?define DocHtmlSysAdminGuid="835AD6D4-BC91-4958-A7D1-BC5EF8235527"?>
-            <?define DocHtmlRelNotesGuid="D3536B46-5F95-4A3A-8F22-746D725CDFEE"?>
-            <?define DocHtmlRelnotesFilesGuid="69486149-589C-4A20-8CBD-43C20A98C401"?>
-            <?define DocHtmlLogoFilesGuid="AB0CC434-2876-486C-ABDA-1E14A9D4AFA0"?>
-            <?define DocHtmlIndexFilesGuid="4B36C048-8E06-44CF-9039-004894492603"?>
-
-            <?define DocChmSysAdminGuid="FE192FAC-FF29-4F17-81BA-1DA55A4772BF"?>
-            <?define DocChmUserGuid="07AD5968-ACD3-4DC4-8FD3-B744863FC6ED"?>
-            <?define DocChmRelNotesGuid="A86CBDB6-B6E5-452D-B96F-86A824062822"?>
-        <?endif?>
-
-        <!-- /(( cs_CZ )) -->
-    <?endif?>
-
-    <!-- other language specific strings are defined in the strings.wxl file -->
+    <!-- /(( en_US )) -->
 
 </Include>

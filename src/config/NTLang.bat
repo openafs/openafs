@@ -104,16 +104,6 @@ if "%1"=="es_ES" goto es_ES
 if "%1"=="ES_ES" goto es_ES
 if "%1"=="ES_es" goto es_ES
 
-rem # Detect requests for Spanish
-rem
-if "%1"=="czech" goto cs_CZ
-if "%1"=="Czech" goto cs_CZ
-if "%1"=="CZECH" goto cs_CZ
-if "%1"=="cs_cz" goto cs_CZ
-if "%1"=="cs_CZ" goto cs_CZ
-if "%1"=="CS_CZ" goto cs_CZ
-if "%1"=="CS_cz" goto cs_CZ
-
 rem # Complain if we couldn't match the requested language
 rem
 echo Don't know how to build language %1.
@@ -195,13 +185,6 @@ set LANGID=1032
 set LANGNAME=de_DE
 set LANGCP=1252
 echo Building German resources (%LANGID%, %LANGNAME%)
-goto arg2
-
-:cs_CZ
-set LANGID=1029
-set LANGNAME=cs_CZ
-set LANGCP=1250
-echo Building Czech resources (%LANGID%, %LANGNAME%)
 goto arg2
 
 ###############################################################################

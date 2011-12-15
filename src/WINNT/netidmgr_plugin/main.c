@@ -48,8 +48,7 @@ khm_handle csp_afscred      = NULL;
 khm_handle csp_params       = NULL;
 
 kmm_module_locale locales[] = {
-    LOCALE_DEF(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US), L"afscred_en_us.dll", KMM_MLOC_FLAG_DEFAULT),
-    LOCALE_DEF(MAKELANGID(LANG_CZECH,SUBLANG_CZECH_CZECH_REPUBLIC), L"afscred_cs_cz.dll", 0)
+    LOCALE_DEF(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US), L"afscred_en_us.dll", KMM_MLOC_FLAG_DEFAULT)
 };
 int n_locales = ARRAYLENGTH(locales);
 

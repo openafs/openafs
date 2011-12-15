@@ -9,7 +9,7 @@
            <ComponentRef Id="efl_replace_afs_CMD" />
            <ComponentRef Id="efl_uninstall_EXE" />
 
-           <ComponentRef Id="cmp_Release_Notes_$(var.Language)" />
+           <ComponentRef Id="cmp_Release_Notes_en_US" />
   <?endif?>
 
   <?ifndef BinsOnly ?>
@@ -306,16 +306,17 @@
             
             <Feature Id="feaDocumentation" AllowAdvertise="no" Description="$(loc.StrAFSDocLongDesc)"
                 Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSDocDesc)">
-        	<ComponentRef Id="rcm_Documentation" />
-                <ComponentRef Id="cmp_Cmd_Ref_$(var.Language)" />
-                <ComponentRef Id="cmp_Cmd_Ref_1_$(var.Language)" />
-                <ComponentRef Id="cmp_Cmd_Ref_3_$(var.Language)" />
-                <ComponentRef Id="cmp_Cmd_Ref_5_$(var.Language)" />
-                <ComponentRef Id="cmp_Cmd_Ref_8_$(var.Language)" />
-                <ComponentRef Id="cmp_Sys_Admin_Guide_$(var.Language)" />
-                <ComponentRef Id="cmp_User_Guide_$(var.Language)" />
 
-                <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
+        	<ComponentRef Id="rcm_Documentation" />
+                <ComponentRef Id="cmp_Cmd_Ref_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_1_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_3_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_5_en_US" />
+                <ComponentRef Id="cmp_Cmd_Ref_8_en_US" />
+                <ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
+                <ComponentRef Id="cmp_User_Guide_en_US" />
+
+                <ComponentRef Id="cmf_afs_nt_HLP_en_US" />
 		
             </Feature>
    <?else?> <!-- 32-bit tools only -->

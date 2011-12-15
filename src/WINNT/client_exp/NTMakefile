@@ -116,7 +116,7 @@ install: $(DLLFILE) $(ICONS) lang
 ############################################################################
 # Language target
 
-lang:: en_US ja_JP ko_KR zh_TW zh_CN pt_BR es_ES de_DE cs_CZ
+lang:: en_US ja_JP ko_KR zh_TW zh_CN pt_BR es_ES de_DE
 
 en_US:
 	$(CD) lang
@@ -158,10 +158,6 @@ de_DE:
 	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
     $(CD) ..
 
-cs_CZ:
-	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
-    $(CD) ..
 
 ############################################################################
 # Local clean target; augments predefined clean target
@@ -178,7 +174,6 @@ clean::
 	if exist $(NTLANG) $(NTLANG) pt_BR $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) es_ES $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) cs_CZ $(MAKECMD) /nologo /f NTMakefile clean
     $(CD) ..
 
 mkdir:
