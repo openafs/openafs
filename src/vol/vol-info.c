@@ -1472,7 +1472,7 @@ main(int argc, char **argv)
     base = strrchr(argv[0], '/');
 #ifdef AFS_NT40_ENV
     if (!base) {
-	base = strrchr(pathname, '\\');
+	base = strrchr(argv[0], '\\');
     }
 #endif /* AFS_NT40_ENV */
     if (!base) {
@@ -1810,7 +1810,7 @@ GetDirEntry(Volume * vp, VnodeDiskObject * pvnode, VnodeId cvnid,
 int
 LookupPath(struct VnodeDetails *vdp)
 {
-    const int MAX_PATH_LEN = 1023;
+#define MAX_PATH_LEN 1023
     static char path_buffer[MAX_PATH_LEN + 1];
     static char dirent[MAX_PATH_LEN + 1];
     char vnode_buffer[SIZEOF_LARGEDISKVNODE];
@@ -1860,11 +1860,11 @@ LookupPath(struct VnodeDetails *vdp)
 
 	if (space < (len + 1)) {
 	    fprintf(stderr,
-		    "%s: Failed to lookup path for fid %lu.%lu.%lu: path exceeds max length (%d).\n",
+		    "%s: Failed to lookup path for fid %lu.%lu.%lu: path exceeds max length (%u).\n",
 		    progname, afs_printable_uint32_lu(V_id(vdp->vp)),
 		    afs_printable_uint32_lu(vdp->vnodeNumber),
 		    afs_printable_uint32_lu(vdp->vnode->uniquifier),
-		    sizeof(path_buffer) - 1);
+		    MAX_PATH_LEN);
 	    cursor = NULL;
 	    code = -1;
 	    break;
@@ -1900,7 +1900,7 @@ LookupPath(struct VnodeDetails *vdp)
 static int
 ReadSymlinkTarget(struct VnodeDetails *vdp)
 {
-    const int MAX_SYMLINK_LEN = 1023;
+#define MAX_SYMLINK_LEN 1023
     static char buffer[MAX_SYMLINK_LEN + 1];
     int code;
     Volume *vp = vdp->vp;
@@ -1922,7 +1922,8 @@ ReadSymlinkTarget(struct VnodeDetails *vdp)
 		afs_printable_uint32_lu(V_id(vp)),
 		afs_printable_uint32_lu(vnodeNumber),
 		afs_printable_uint32_lu(vnode->uniquifier),
-		afs_printable_uint32_lu(vnode->dataVersion), MAX_SYMLINK_LEN,
+		afs_printable_uint32_lu(vnode->dataVersion),
+                MAX_SYMLINK_LEN,
 		fileLength);
 	return -1;
     }
