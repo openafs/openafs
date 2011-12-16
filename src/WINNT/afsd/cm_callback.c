@@ -983,6 +983,8 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
     cm_cell_t* cellp = NULL;
     afs_uint32 hash;
     int discarded;
+    cm_fid_t discardFid;
+    afs_uint32 discardType;
     struct rx_connection *connp;
     struct rx_peer *peerp;
     unsigned long host = 0;
@@ -1073,6 +1075,8 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
                     if (cm_ServerEqual(scp->cbServerp, tsp)) {
                         osi_Log4(afsd_logp, "InitCallbackState3 Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                                   scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+                        discardFid = scp->fid;
+                        discardType = scp->fileType;
                         cm_DiscardSCache(scp);
                         discarded = 1;
                     }
@@ -1081,8 +1085,8 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
                 if (discarded) {
                     cm_CallbackNotifyChange(scp);
                     if (RDR_Initialized)
-                        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                                              scp->fid.hash, scp->fileType, AFS_INVALIDATE_EXPIRED);
+                        RDR_InvalidateObject(discardFid.cell, discardFid.volume, discardFid.vnode, discardFid.unique,
+                                             discardFid.hash, discardType, AFS_INVALIDATE_EXPIRED);
                 }
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
@@ -2021,7 +2025,7 @@ void cm_CheckCBExpiration(void)
 
             if (RDR_Initialized)
                 RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                                      scp->fid.hash, scp->fileType, AFS_INVALIDATE_EXPIRED);
+                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_EXPIRED);
 
             cm_CallbackNotifyChange(scp);
 

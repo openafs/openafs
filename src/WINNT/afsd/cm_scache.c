@@ -140,12 +140,17 @@ void cm_ResetSCacheDirectory(cm_scache_t *scp, afs_int32 dirlock)
 /* called with cm_scacheLock and scp write-locked; recycles an existing scp. */
 long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 {
+    cm_fid_t fid;
+    afs_uint32 fileType;
+    int callback;
+
     lock_AssertWrite(&cm_scacheLock);
     lock_AssertWrite(&scp->rw);
 
     if (scp->refCount != 0) {
 	return -1;
     }
+
 
     if (scp->flags & CM_SCACHEFLAG_SMB_FID) {
 	osi_Log1(afsd_logp,"cm_RecycleSCache CM_SCACHEFLAG_SMB_FID detected scp 0x%p", scp);
@@ -158,6 +163,10 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     if (scp->redirBufCount != 0) {
         return -1;
     }
+
+    fid = scp->fid;
+    fileType = scp->fileType;
+    callback = scp->cbExpires ? 1 : 0;
 
     cm_RemoveSCacheFromHashTable(scp);
 
@@ -220,6 +229,23 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     cm_FreeAllACLEnts(scp);
 
     cm_ResetSCacheDirectory(scp, 0);
+
+    if (RDR_Initialized && callback) {
+        /*
+        * We drop the cm_scacheLock because it may be required to
+        * satisfy an ioctl request from the redirector.  It should
+        * be safe to hold the scp->rw lock here because at this
+        * point (a) the object has just been recycled so the fid
+        * is nul and there are no requests that could possibly
+        * be issued by the redirector that would depend upon it.
+        */
+        lock_ReleaseWrite(&cm_scacheLock);
+        RDR_InvalidateObject( fid.cell, fid.volume, fid.vnode,
+                              fid.unique, fid.hash,
+                              fileType, AFS_INVALIDATE_EXPIRED);
+        lock_ObtainWrite(&cm_scacheLock);
+    }
+
     return 0;
 }
 
@@ -283,22 +309,6 @@ cm_GetNewSCache(afs_uint32 locked)
                              * head of the LRU queue.
                              */
                             cm_AdjustScacheLRU(scp);
-
-                            if (RDR_Initialized) {
-                                /*
-                                 * We drop the cm_scacheLock because it may be required to
-                                 * satisfy an ioctl request from the redirector.  It should
-                                 * be safe to hold the scp->rw lock here because at this
-                                 * point (a) the object has just been recycled so the fid
-                                 * is nul and there are no requests that could possibly
-                                 * be issued by the redirector that would depend upon it.
-                                 */
-                                lock_ReleaseWrite(&cm_scacheLock);
-                                RDR_InvalidateObject( fid.cell, fid.volume, fid.vnode,
-                                                      fid.unique, fid.hash,
-                                                      fileType, AFS_INVALIDATE_EXPIRED);
-                                lock_ObtainWrite(&cm_scacheLock);
-                            }
 
                             /* and we're done */
                             osi_assertx(!(scp->flags & CM_SCACHEFLAG_INHASH), "CM_SCACHEFLAG_INHASH set");

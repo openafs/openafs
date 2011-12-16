@@ -678,6 +678,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     } else if ( errorCode == VNOVNODE ) {
 	if ( fidp ) {
 	    cm_scache_t * scp;
+
 	    osi_Log4(afsd_logp, "cm_Analyze passed VNOVNODE cell %u vol %u vn %u uniq %u.",
 		      fidp->cell, fidp->volume, fidp->vnode, fidp->unique);
 
