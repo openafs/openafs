@@ -2898,10 +2898,16 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                     AFSAcquireExcl( pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                     TRUE);
 
-                    AFSValidateDirectoryCache( pObjectInfo,
-                                               AuthGroup);
+                    ntStatus = AFSValidateDirectoryCache( pObjectInfo,
+                                                          AuthGroup);
 
                     AFSReleaseResource( pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                    if ( !NT_SUCCESS( ntStatus))
+                    {
+
+                        try_return( ntStatus);
+                    }
                 }
 
                 //
@@ -3323,8 +3329,13 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
         // Reget the directory contents
         //
 
-        AFSVerifyDirectoryContent( ObjectInfo,
-                                   AuthGroup);
+        ntStatus = AFSVerifyDirectoryContent( ObjectInfo,
+                                              AuthGroup);
+
+        if ( !NT_SUCCESS( ntStatus))
+        {
+            try_return( ntStatus);
+        }
 
         //
         // Now start again and tear down any entries not valid
@@ -3438,6 +3449,8 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
             AFSPrint("AFSValidateDirectoryCache Invalid count ...\n");
         }
 #endif
+
+try_exit:
 
         if( bAcquiredLock)
         {
