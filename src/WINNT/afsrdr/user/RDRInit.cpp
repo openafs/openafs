@@ -1520,15 +1520,14 @@ RDR_SetFileStatus( cm_fid_t *fidp,
     AFSExtentFailureCB  SetFileStatusCB;
     DWORD               bytesReturned;
     DWORD               gle;
-    AFSFileID          *pFileId = (AFSFileID *)fidp;
 
-    SetFileStatusCB.FileId = *pFileId;
+    RDR_fid2FID(fidp, &SetFileStatusCB.FileId);
     SetFileStatusCB.FailureStatus = dwStatus;
 
     if (afsd_logp->enabled) {
         swprintf( wchBuffer, L"RDR_SetFileStatus IOCTL_AFS_EXTENT_FAILURE_CB Fid %08lX.%08lX.%08lX.%08lX Status 0x%lX",
-                  pFileId->Cell, pFileId->Volume,
-                  pFileId->Vnode, pFileId->Unique,
+                  SetFileStatusCB.FileId.Cell, SetFileStatusCB.FileId.Volume,
+                  SetFileStatusCB.FileId.Vnode, SetFileStatusCB.FileId.Unique,
                   dwStatus);
 
         osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
