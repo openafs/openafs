@@ -926,7 +926,9 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonCreate Failed to open root (2) Status %08lX\n",
+                              "AFSCommonCreate Failed to open volume root %08lX-%08lX Status %08lX\n",
+                              pVolumeCB->ObjectInformation.FileId.Cell,
+                              pVolumeCB->ObjectInformation.FileId.Volume,
                               ntStatus);
 
                 InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
@@ -1465,11 +1467,31 @@ AFSOpenRoot( IN PIRP Irp,
         if( !NT_SUCCESS( ntStatus))
         {
 
+            UNICODE_STRING uniGUID;
+
+            uniGUID.Length = 0;
+            uniGUID.MaximumLength = 0;
+            uniGUID.Buffer = NULL;
+
+            if( AuthGroup != NULL)
+            {
+                RtlStringFromGUID( *AuthGroup,
+                                   &uniGUID);
+            }       
+
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSOpenRoot (%08lX) Failed open in service AFSRoot Status %08lX\n",
+                          "AFSOpenRoot (%08lX) Failed open in service volume %08lX-%08lX AuthGroup %wZ Status %08lX\n",
                           Irp,
+                          VolumeCB->ObjectInformation.FileId.Cell,
+                          VolumeCB->ObjectInformation.FileId.Volume,
+                          &uniGUID,
                           ntStatus);
+
+            if( AuthGroup != NULL)
+            {
+                RtlFreeUnicodeString( &uniGUID);
+            }
 
             try_return( ntStatus);
         }
