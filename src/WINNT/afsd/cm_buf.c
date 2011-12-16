@@ -2629,6 +2629,9 @@ buf_RemoveFromRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
 {
     lock_AssertWrite(&buf_globalLock);
 
+    if (!(bufp->qFlags & CM_BUF_QREDIR))
+        return;
+
     lock_ObtainMutex(&scp->redirMx);
 
     _InterlockedAnd(&bufp->qFlags, ~CM_BUF_QREDIR);
@@ -2650,8 +2653,8 @@ void
 buf_MoveToHeadOfRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
 {
     lock_AssertWrite(&buf_globalLock);
-    osi_assertx(bufp->qFlags & CM_BUF_QREDIR,
-                 "buf_MoveToHeadOfRedirQueue buffer not held by redirector");
+    if (!(bufp->qFlags & CM_BUF_QREDIR))
+        return;
 
     lock_ObtainMutex(&scp->redirMx);
 
