@@ -682,6 +682,7 @@ AFSRequestExtents( IN AFSFcb *Fcb,
     LARGE_INTEGER        liAlignedOffset;
     ULONG                ulAlignedLength = 0;
     LARGE_INTEGER        liTimeOut;
+    ULONGLONG            ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
     //
     // Check our extents, then fire off a request if we need to.
@@ -717,10 +718,11 @@ AFSRequestExtents( IN AFSFcb *Fcb,
         {
 
             //
-            // If this isn't the same process which caused the failure then try to request them again
+            // If this isn't the same process which caused the failure
+            // then try to request them again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == (ULONGLONG)PsGetCurrentProcessId())
+            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId)
             {
                 ntStatus = pNPFcb->Specific.File.ExtentsRequestStatus;
 
@@ -764,7 +766,7 @@ AFSRequestExtents( IN AFSFcb *Fcb,
             // If this isn't the same process which caused the failure then try to request them again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == (ULONGLONG)PsGetCurrentProcessId())
+            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId)
             {
                 ntStatus = pNPFcb->Specific.File.ExtentsRequestStatus;
 
@@ -792,10 +794,11 @@ AFSRequestExtents( IN AFSFcb *Fcb,
             {
 
                 //
-                // If this isn't the same process which caused the failure then try to request them again
+                // If this isn't the same process which caused the failure
+                // then try to request them again
                 //
 
-                if( Fcb->Specific.File.ExtentRequestProcessId == (ULONGLONG)PsGetCurrentProcessId())
+                if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId)
                 {
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -955,6 +958,7 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
     LARGE_INTEGER        liAlignedOffset;
     ULONG                ulAlignedLength = 0;
     BOOLEAN              bRegionMapped = FALSE;
+    ULONGLONG            ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
     __Enter
     {
@@ -973,7 +977,7 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
             // If this isn't the same process which caused the failure then try to request them again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == (ULONGLONG)PsGetCurrentProcessId())
+            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId)
             {
                 try_return( ntStatus = pNPFcb->Specific.File.ExtentsRequestStatus);
             }
@@ -2660,6 +2664,7 @@ AFSWaitForExtentMapping( AFSFcb *Fcb )
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
     LARGE_INTEGER liTimeOut;
+    ULONGLONG            ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
     __Enter
     {
@@ -2673,7 +2678,7 @@ AFSWaitForExtentMapping( AFSFcb *Fcb )
             // If this isn't the same process which caused the failure then try to request them again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == (ULONGLONG)PsGetCurrentProcessId())
+            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId)
             {
                 try_return( ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus);
             }
@@ -2693,10 +2698,12 @@ AFSWaitForExtentMapping( AFSFcb *Fcb )
         {
 
             //
-            // If this isn't the same process which caused the failure then try to request them again
+            // If this isn't the same process which caused the failure
+            // and this isn't the System process, then try to request them again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == (ULONGLONG)PsGetCurrentProcessId())
+            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId ||
+                ullProcessId == 0x4)
             {
                 try_return( ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus);
             }
