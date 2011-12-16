@@ -2056,7 +2056,6 @@ AFSSetRenameInfo( IN PIRP Irp)
     ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
     UNICODE_STRING uniFullTargetPath;
     BOOLEAN bCommonParent = FALSE;
-    ULONG oldFileIndex;
     BOOLEAN bReleaseVolumeLock = FALSE;
     BOOLEAN bReleaseTargetDirLock = FALSE;
     BOOLEAN bReleaseSourceDirLock = FALSE;
@@ -2325,21 +2324,6 @@ AFSSetRenameInfo( IN PIRP Irp)
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
 
-        oldFileIndex = pSrcCcb->DirectoryCB->FileIndex;
-
-        if( !bCommonParent)
-        {
-
-            //
-            // We always need to update the FileIndex since this entry will be put at the 'end'
-            // of the enumeraiton list. If we don't it will cause recursion ... We do this
-            // here to cover any failures which might occur below
-            //
-
-            pSrcCcb->DirectoryCB->FileIndex =
-                            (ULONG)InterlockedIncrement( &pTargetDcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.ContentIndex);
-        }
-
         //
         // OK, this is a simple rename. Issue the rename
         // request to the service.
@@ -2359,7 +2343,6 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Attempt to re-insert the directory entry
             //
 
-            pSrcCcb->DirectoryCB->FileIndex = oldFileIndex;
             AFSInsertDirectoryNode( pSrcFcb->ObjectInformation->ParentObjectInformation,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
@@ -2420,7 +2403,6 @@ AFSSetRenameInfo( IN PIRP Irp)
             // Attempt to re-insert the directory entry
             //
 
-            pSrcCcb->DirectoryCB->FileIndex = oldFileIndex;
             AFSInsertDirectoryNode( pSrcFcb->ObjectInformation->ParentObjectInformation,
                                     pSrcCcb->DirectoryCB,
                                     !bCommonParent);
