@@ -1741,7 +1741,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                 ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
             }
 
-            if( InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION)
+            if( InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION ||
+                InvalidateCB->Reason == AFS_INVALIDATE_FLUSHED)
             {
                 ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
             }
@@ -2476,7 +2477,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                     ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
                 }
 
-                if( Reason == AFS_INVALIDATE_DATA_VERSION)
+                if( Reason == AFS_INVALIDATE_DATA_VERSION ||
+                    Reason == AFS_INVALIDATE_FLUSHED)
                 {
                     ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
                 }
@@ -2553,7 +2555,8 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                         ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
                     }
 
-                    if( Reason == AFS_INVALIDATE_DATA_VERSION)
+                    if( Reason == AFS_INVALIDATE_DATA_VERSION ||
+                        Reason == AFS_INVALIDATE_FLUSHED)
                     {
                         ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
                     }
