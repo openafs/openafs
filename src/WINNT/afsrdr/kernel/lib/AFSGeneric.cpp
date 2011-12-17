@@ -1709,10 +1709,12 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             else
             {
 
-                if( InvalidateCB->Reason == AFS_INVALIDATE_FLUSHED ||
-                    InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION)
+                if( InvalidateCB->Reason == AFS_INVALIDATE_FLUSHED)
                 {
+
                     pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+
+                    SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                 }
 
                 pObjectInfo->Expiration.QuadPart = 0;
@@ -1878,6 +1880,23 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                     (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb);
                 }
 
+                pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+
+
+                if( pObjectInfo->FileType == AFS_FILE_TYPE_FILE)
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSInvalidateCache Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
+                                  pObjectInfo->FileId.Cell,
+                                  pObjectInfo->FileId.Volume,
+                                  pObjectInfo->FileId.Vnode,
+                                  pObjectInfo->FileId.Unique);
+
+                    SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+                }
+
                 // Fall through to the default processing
             }
 
@@ -1927,26 +1946,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                               pObjectInfo->FileId.Unique);
 
                 SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
-
-                if( InvalidateCB->Reason == AFS_INVALIDATE_FLUSHED ||
-                    InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION)
-                {
-                    pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
-
-                    if( pObjectInfo->FileType == AFS_FILE_TYPE_FILE)
-                    {
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSInvalidateCache Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                                      pObjectInfo->FileId.Cell,
-                                      pObjectInfo->FileId.Volume,
-                                      pObjectInfo->FileId.Vnode,
-                                      pObjectInfo->FileId.Unique);
-
-                        SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                    }
-                }
 
                 break;
             }
@@ -2460,8 +2459,7 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 
                 SetFlag( VolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                if( Reason == AFS_INVALIDATE_FLUSHED ||
-                    Reason == AFS_INVALIDATE_DATA_VERSION)
+                if( Reason == AFS_INVALIDATE_FLUSHED)
                 {
 
                     VolumeCB->ObjectInformation.DataVersion.QuadPart = (ULONGLONG)-1;
@@ -2520,25 +2518,25 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 
                     SetFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                    if( Reason == AFS_INVALIDATE_FLUSHED ||
-                        Reason == AFS_INVALIDATE_DATA_VERSION)
+                    if( Reason == AFS_INVALIDATE_FLUSHED)
                     {
 
                         pCurrentObject->DataVersion.QuadPart = (ULONGLONG)-1;
+                    }
 
-                        if( pCurrentObject->FileType == AFS_FILE_TYPE_FILE)
-                        {
+                    if( Reason == AFS_INVALIDATE_FLUSHED &&
+                        pCurrentObject->FileType == AFS_FILE_TYPE_FILE)
+                    {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSInvalidateVolume Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                                          pCurrentObject->FileId.Cell,
-                                          pCurrentObject->FileId.Volume,
-                                          pCurrentObject->FileId.Vnode,
-                                          pCurrentObject->FileId.Unique);
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSInvalidateVolume Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
+                                      pCurrentObject->FileId.Cell,
+                                      pCurrentObject->FileId.Volume,
+                                      pCurrentObject->FileId.Vnode,
+                                      pCurrentObject->FileId.Unique);
 
-                            SetFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                        }
+                        SetFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                     }
 
                     if( pCurrentObject->FileType == AFS_FILE_TYPE_DIRECTORY)
