@@ -1629,10 +1629,10 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             AFSFsRtlNotifyFullReportChange( &pVolumeCB->ObjectInformation,
                                             NULL,
                                             FILE_NOTIFY_CHANGE_FILE_NAME |
-                                                FILE_NOTIFY_CHANGE_DIR_NAME |
-                                                FILE_NOTIFY_CHANGE_NAME |
-                                                FILE_NOTIFY_CHANGE_ATTRIBUTES |
-                                                FILE_NOTIFY_CHANGE_SIZE,
+                                            FILE_NOTIFY_CHANGE_DIR_NAME |
+                                            FILE_NOTIFY_CHANGE_NAME |
+                                            FILE_NOTIFY_CHANGE_ATTRIBUTES |
+                                            FILE_NOTIFY_CHANGE_SIZE,
                                             FILE_ACTION_MODIFIED);
 
             InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
