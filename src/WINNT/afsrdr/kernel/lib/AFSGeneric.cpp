@@ -1814,6 +1814,20 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                                                 ulFilter,
                                                 FILE_ACTION_REMOVED);
 
+                if( pObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
+                    pObjectInfo->Fcb != NULL)
+                {
+
+
+                    //
+                    // Clear out the extents
+                    // And get rid of them (note this involves waiting
+                    // for any writes or reads to the cache to complete)
+                    //
+
+                    (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb);
+                }
+
                 break;
             }
 
