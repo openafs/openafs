@@ -2276,8 +2276,8 @@ AFSSetRenameInfo( IN PIRP Irp)
         else
         {
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSSetRenameInfo Target Target does NOT exist, normal rename\n");
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Target does NOT exist, normal rename\n");
         }
 
         //
