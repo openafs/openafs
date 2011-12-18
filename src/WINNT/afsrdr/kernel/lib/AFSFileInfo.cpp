@@ -482,6 +482,7 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
     PFILE_OBJECT pFileObject = NULL;
     BOOLEAN bReleaseMain = FALSE;
     BOOLEAN bUpdateFileInfo = FALSE;
+    BOOLEAN bReleaseVolumeLock = FALSE;
     AFSFileID stParentFileId;
 
     __try
@@ -505,6 +506,15 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
         bCanQueueRequest = !(IoIsOperationSynchronous( Irp) | (KeGetCurrentIrql() != PASSIVE_LEVEL));
         FileInformationClass = pIrpSp->Parameters.SetFile.FileInformationClass;
+
+        if( FileInformationClass == FileRenameInformation)
+        {
+
+            AFSAcquireExcl( pFcb->ObjectInformation->VolumeCB->VolumeLock,
+                            TRUE);
+
+            bReleaseVolumeLock = TRUE;
+        }
 
         //
         // Grab the Fcb EXCL
@@ -664,6 +674,11 @@ try_exit:
         {
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
+        }
+
+        if( bReleaseVolumeLock)
+        {
+            AFSReleaseResource( pFcb->ObjectInformation->VolumeCB->VolumeLock);
         }
 
         if( NT_SUCCESS( ntStatus) &&
@@ -2061,7 +2076,6 @@ AFSSetRenameInfo( IN PIRP Irp)
     ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
     UNICODE_STRING uniFullTargetPath;
     BOOLEAN bCommonParent = FALSE;
-    BOOLEAN bReleaseVolumeLock = FALSE;
     BOOLEAN bReleaseTargetDirLock = FALSE;
     BOOLEAN bReleaseSourceDirLock = FALSE;
     PERESOURCE  pSourceDirLock = NULL;
@@ -2183,11 +2197,6 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
         }
-
-        AFSAcquireExcl( pTargetParentObject->VolumeCB->VolumeLock,
-                        TRUE);
-
-        bReleaseVolumeLock = TRUE;
 
         ulTargetCRC = AFSGenerateCRC( &uniTargetName,
                                       FALSE);
@@ -2633,11 +2642,6 @@ try_exit:
         {
 
             InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
-        }
-
-        if( bReleaseVolumeLock)
-        {
-            AFSReleaseResource( pTargetParentObject->VolumeCB->VolumeLock);
         }
 
         if( bReleaseTargetDirLock)
