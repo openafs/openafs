@@ -1,3 +1,64 @@
+Since 1.7.0300 (1.7.3)
+
+ * Include the World SID as the owner and group in the
+   security DACL for all objects.   This matches the
+   behavior of the SMB interface.
+
+ * Increase timeout for extent request retries from the
+   redirector to the service to two minutes from 10 seconds.
+   Retrying while a request may be blocked on a file server
+   response increases the load on the service without benefit.
+   This retry is intended as a safety measure to deadlocks
+   as a result of a lost extent request due to a race.
+
+ * Suspend and resume power management support for the
+   redirector interface.  Permits Office applications to
+   continue editing documents after a resume with network
+   restoration.
+
+ * Correct a memory leak when setting tokens via the SMB
+   interface.
+
+ * Correct a stack overrun in the AFSRDFSProvider.dll.
+
+ * Update Advanced Firewall Rules by not restricting the
+   rule to the TransarcAFSDaemon service.  Make it applicable
+   to all processes named afsd_service.exe.
+
+ * Correct a BSOD when renaming a directory into the root
+   directory of a volume via the Explorer Shell.
+
+ * When a directory enumeration fails in the redirector the
+   error must be handled and not treated as success.
+
+ * Properly convert FID structures from the service to the
+   redirector when setting file extents access failures.
+
+ * When invalidating a FID due to cm_scache_t recycling be
+   sure to save the FID and file type so that the redirector
+   can be told.  Previously the 0.0.0.0 FID was specified
+   which did not result in a match.
+
+ * If an extent access error is set on a file, report that
+   error in response to all system paging i/o requests on that
+   file.
+
+ * Do not flush extents back to the service unless the
+   data version changes.
+
+ * If an "fs flush" command is issued against an object,
+   send a notification to all listeners that the object size
+   has changed just in case.
+
+ * Convert AuthGroup tracking from the File Control Block
+   to the Context Control Block.  This permits different
+   AuthGroups to the tracked for each handle that is open.
+
+ * Ensure that a newline is added to HOSTS and LMHOSTS if the
+   original file did not end with a newline.
+
+ * Avoid potential kernel deadlock during file rename operations.
+
 Since 1.7.0201 (1.7.2a)
 
  * Replaced hash tables in afsd_service with Jenkin's hashes
