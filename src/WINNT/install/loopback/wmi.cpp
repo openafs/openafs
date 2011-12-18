@@ -436,7 +436,7 @@ WMIEnableStatic(
         }
 
         hr = V_I4(&v_ret_value);
-        if(hr != 0)
+        if (hr != 0)
             ReportMessage(0,"EnableStatic failed ", NULL,NULL,hr);
         else
         {
@@ -495,7 +495,7 @@ WMIEnableStatic(
 	ReportMessage(0,"WARNING: Could not determine return value for SetDynamicDNSRegistration ",NULL,NULL, hr2);
     } else {
 	hr2 = V_I4(&v_ret_value);
-	if(hr2 != 0)
+	if (hr2 != 0)
 	    ReportMessage(0,"SetDynamicDNSRegistration failed ", NULL,NULL,hr2);
 	else
 	    ReportMessage(0,"SetDynamicDNSRegistration succeeded",NULL,NULL,0);
@@ -550,7 +550,7 @@ WMIEnableStatic(
 	ReportMessage(0,"WARNING: Could not determine return value for SetTcpipNetbios ",NULL,NULL, hr2);
     } else {
 	hr2 = V_I4(&v_ret_value);
-	if(hr2 != 0)
+	if (hr2 != 0)
 	    ReportMessage(0,"SetTcpipNetbios failed ", NULL,NULL,hr2);
 	else
 	    ReportMessage(0,"SetTcpipNetbios succeeded",NULL,NULL,0);
@@ -588,7 +588,8 @@ WMIEnableStatic(
 * LoopbackBindings :  unbind all other
 *       protocols except TCP/IP, netbios, netbt.
 */
-extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
+extern "C" HRESULT
+LoopbackBindings (LPCWSTR loopback_guid)
 {
     HRESULT			hr = 0;
     INetCfg			*pCfg = NULL;
@@ -630,7 +631,7 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
         pAdapter->GetInstanceGuid( &g );
         StringFromGUID2(g, device_guid, 99);
 
-        if(!wcscmp( device_guid, loopback_guid )) // found loopback adapter
+        if (!wcscmp( device_guid, loopback_guid )) // found loopback adapter
         {
             INetCfgComponentBindings *pBindings;
             INetCfgBindingPath *pPath;
@@ -640,10 +641,10 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
             ReportMessage(0,"LoopbackBindings found", NULL, device_guid,0 );
 
             hr = pAdapter->QueryInterface( IID_INetCfgComponentBindings, (void**) &pBindings);
-            if(hr==S_OK)
+            if (hr==S_OK)
             {
                 hr = pBindings->EnumBindingPaths( EBP_ABOVE, &pEnumPaths );
-                if(hr==S_OK)
+                if (hr==S_OK)
                 {
                     while(pEnumPaths->Next( 1, &pPath, NULL ) == S_OK)
                     {
@@ -718,22 +719,23 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
 
 cleanup:
 
-    if(bConfigChanged) pCfg->Apply();
+    if (bConfigChanged) pCfg->Apply();
 
-    if(pAdapter) pAdapter->Release();
+    if (pAdapter) pAdapter->Release();
 
-    if(bInitialized) pCfg->Uninitialize();
-    if(bLockGranted) pLock->ReleaseWriteLock();
+    if (bInitialized) pCfg->Uninitialize();
+    if (bLockGranted) pLock->ReleaseWriteLock();
 
-    if(pLock) pLock->Release();
-    if(pCfg) pCfg->Release();
+    if (pLock) pLock->Release();
+    if (pCfg) pCfg->Release();
 
     if (hr) ReportMessage(0,"LoopbackBindings() is returning ",0,0,hr);
     return hr;
 }
 
 
-extern "C" DWORD SetIpAddress(LPCWSTR guid, LPCWSTR ip, LPCWSTR mask)
+extern "C"
+DWORD SetIpAddress(LPCWSTR guid, LPCWSTR ip, LPCWSTR mask)
 {
     ReportMessage(0,"Running SetIpAddress()...",0,0,0);
     HRESULT hr = 0;
@@ -746,7 +748,8 @@ extern "C" DWORD SetIpAddress(LPCWSTR guid, LPCWSTR ip, LPCWSTR mask)
 }
 
 /* Set MAXLANA in the registry to the specified value, unless the existing registry value is larger */
-DWORD AdjustMaxLana(DWORD dwMaxLana)
+static DWORD
+AdjustMaxLana(DWORD dwMaxLana)
 {
 
     LONG ret = 0;
@@ -796,132 +799,137 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 {
     char szIp[2048], szName[2048];
     char etcPath[MAX_PATH];
-	char tempPath[MAX_PATH];
-	char buffer[2048], temp[2048];
-	char *str;
-	HRESULT rv;
-	DWORD fa,len;
-	FILE *hFile, *hTemp;
+    char tempPath[MAX_PATH];
+    char buffer[2048], temp[2048];
+    char *str;
+    HRESULT rv;
+    DWORD fa,len;
+    FILE *hFile, *hTemp;
+    size_t nameLen;
 
     _snprintf(szIp, 2047, "%S", swIp);
     _snprintf(szName, 2047, "%S", swName);
     strupr(szName);
+    nameLen = strlen(szName);
     ReportMessage(0,"Starting UpdateHostsFile() on file",szFilename,0,0);
 
-	rv = SHGetFolderPathA( NULL, CSIDL_SYSTEM, NULL, SHGFP_TYPE_CURRENT , etcPath );
-	if(rv != S_OK) return FALSE;
+    rv = SHGetFolderPathA( NULL, CSIDL_SYSTEM, NULL, SHGFP_TYPE_CURRENT, etcPath );
+    if (rv != S_OK)
+        return FALSE;
 
-	strcat( etcPath, ETCDIR );
+    strcat( etcPath, ETCDIR );
 
-	fa = GetFileAttributesA( etcPath );
+    fa = GetFileAttributesA( etcPath );
 
-	if(fa == INVALID_FILE_ATTRIBUTES)
-	{
-		// the directory doesn't exist
-		// it should be there. non-existence implies more things are wrong
-		ReportMessage(0, "Path does not exist ", etcPath,0,0 );
-		return FALSE;
-	}
+    if (fa == INVALID_FILE_ATTRIBUTES)
+    {
+        // the directory doesn't exist
+        // it should be there. non-existence implies more things are wrong
+        ReportMessage(0, "Path does not exist ", etcPath,0,0 );
+        return FALSE;
+    }
 
-	strcpy( tempPath, etcPath );
-	strcat( etcPath, "\\" );
-	strcat( etcPath, szFilename );
+    strcpy( tempPath, etcPath );
+    strcat( etcPath, "\\" );
+    strcat( etcPath, szFilename );
 
-	fa = GetFileAttributesA( etcPath );
+    fa = GetFileAttributesA( etcPath );
 
-	if(fa == INVALID_FILE_ATTRIBUTES)
-	{
-		ReportMessage(0, "File not found. Creating...", szFilename,0,0);
+    if (fa == INVALID_FILE_ATTRIBUTES)
+    {
+        ReportMessage(0, "File not found. Creating...", szFilename,0,0);
 
-		hFile = fopen( etcPath, "w" );
-		if(!hFile)
-		{
-			ReportMessage(0,"FAILED : can't create file",etcPath,0,errno);
-			return FALSE;
-		}
+        hFile = fopen( etcPath, "w" );
+        if (!hFile)
+        {
+            ReportMessage(0,"FAILED : can't create file",etcPath,0,errno);
+            return FALSE;
+        }
 
-		fprintf(hFile, "%s\t%s%s\n", szIp, szName, (bPre)?"\t#PRE":"");
+        fprintf(hFile, "%s\t%s%s\n", szIp, szName, (bPre)?"\t#PRE":"");
 
-		fclose( hFile );
+        fclose( hFile );
 
-		ReportMessage(1,"done",0,0,0);
-	}
-	else // the file exists. parse and update
-	{
+        ReportMessage(1,"done",0,0,0);
+    }
+    else // the file exists. parse and update
+    {
 
-		ReportMessage(1, "Updating file ...",szFilename,0,0 );
+        ReportMessage(1, "Updating file ...",szFilename,0,0 );
 
-		hFile = fopen( etcPath, "r");
-		if(!hFile)
-		{
-			ReportMessage(0,"FAILED : can't open file",etcPath,0,errno);
-			return FALSE;
-		}
+        hFile = fopen( etcPath, "r");
+        if (!hFile)
+        {
+            ReportMessage(0,"FAILED : can't open file",etcPath,0,errno);
+            return FALSE;
+        }
 
-		strcat( tempPath, szFilename );
-		strcat( tempPath, ".tmp" );
-		hTemp = fopen( tempPath, "w");
-		if(!hTemp)
-		{
-			ReportMessage(0,"FAILED : can't create temp file",tempPath,0,errno);
-			fclose(hFile);
-			return FALSE;
-		}
+        strcat( tempPath, szFilename );
+        strcat( tempPath, ".tmp" );
+        hTemp = fopen( tempPath, "w");
+        if (!hTemp)
+        {
+            ReportMessage(0,"FAILED : can't create temp file",tempPath,0,errno);
+            fclose(hFile);
+            return FALSE;
+        }
 
-		while(fgets( buffer, 2046, hFile))
-		{
-			strcpy( temp, buffer );
-			strupr( temp );
+        while(fgets( buffer, 2046, hFile))
+        {
+            size_t len;
 
-            if ((strlen(temp)<1) || (*(temp+strlen(temp)-1)!='\n')) strcat(temp, "\n");
+            strcpy( temp, buffer );
+            strupr( temp );
+            len = strlen(temp);
 
-			if(!(str = strstr(temp, szName)))
-			{
-				fputs( buffer, hTemp );
-			}
-			else
-			{
-				// check for FOOBAFS or AFSY
-				//if(str <= temp || (*(str-1) != '-' && !isspace(*(str+strlen(szName)))))
-				if ( (str == temp) || (!*(str+strlen(szName))) || (!isspace(*(str-1))) || (!isspace(*(str+strlen(szName)))) )
-                    fputs( buffer, hTemp );
-			}
-		}
+            if ((len < 1) || (temp[len-1] != '\n'))
+                strcat(temp, "\n");
 
+            if (!(str = strstr(temp, szName)))
+            {
+                fputs( temp, hTemp );
+            }
+            else
+            {
+                // check for FOOBAFS or AFSY
+                if ( (str == temp) || (!str[nameLen]) || (!isspace(*(str-1))) || (!isspace(str[nameLen])) )
+                    fputs( temp, hTemp );
+            }
+        }
 
-		len = 2048;
-		GetComputerNameA( buffer, &len );
-		buffer[11] = 0;
-		fprintf( hTemp, "%s\t%s%s\n", szIp, szName, (bPre)?"\t#PRE":"");
+        len = 2048;
+        GetComputerNameA( buffer, &len );
+        buffer[11] = 0;
+        fprintf( hTemp, "%s\t%s%s\n", szIp, szName, (bPre)?"\t#PRE":"");
 
-		fclose( hTemp );
-		fclose( hFile );
+        fclose( hTemp );
+        fclose( hFile );
 
-		strcpy(buffer, etcPath);
-		strcat(buffer, ".old");
+        strcpy(buffer, etcPath);
+        strcat(buffer, ".old");
 
-        if(!DeleteFileA(buffer)) {
+        if (!DeleteFileA(buffer)) {
             DWORD status;
             int i;
             char * eos;
 
             status = GetLastError();
-            if(status == ERROR_ACCESS_DENIED) {
+            if (status == ERROR_ACCESS_DENIED) {
                 /* try changing the file attribtues. */
-                if(SetFileAttributesA(buffer, FILE_ATTRIBUTE_NORMAL) &&
+                if (SetFileAttributesA(buffer, FILE_ATTRIBUTE_NORMAL) &&
                     DeleteFileA(buffer)) {
                     status = 0;
                     ReportMessage(0,"Changed attributes and deleted back host file", buffer, 0, 0);
                 }
             }
-            if(status && status != ERROR_FILE_NOT_FOUND) {
+            if (status && status != ERROR_FILE_NOT_FOUND) {
                 /* we can't delete the file.  Try to come up with
                    a different name that's not already taken. */
                 srand(GetTickCount());
                 eos = buffer + strlen(buffer);
                 for(i=0; i < 50; i++) {
                     itoa(rand(), eos, 16);
-                    if(GetFileAttributesA(buffer) == INVALID_FILE_ATTRIBUTES &&
+                    if (GetFileAttributesA(buffer) == INVALID_FILE_ATTRIBUTES &&
                         GetLastError() == ERROR_FILE_NOT_FOUND)
                         break;
                 }
@@ -930,20 +938,20 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
             }
         }
 
-        if(!MoveFileA( etcPath, buffer )) {
+        if (!MoveFileA( etcPath, buffer )) {
             ReportMessage(0,"FAILED: Can't rename old file", etcPath, 0, GetLastError());
             return FALSE;
         }
 
-		if(!MoveFileA( tempPath, etcPath ) != 0)
-		{
-			ReportMessage(0,"FAILED : Can't rename new file", tempPath, 0, GetLastError());
-			return FALSE;
-		}
+        if (!MoveFileA( tempPath, etcPath ) != 0)
+        {
+            ReportMessage(0,"FAILED : Can't rename new file", tempPath, 0, GetLastError());
+            return FALSE;
+        }
 
-	}
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 #ifdef TEST
