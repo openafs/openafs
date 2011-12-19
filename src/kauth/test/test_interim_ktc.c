@@ -9,15 +9,15 @@
 
 /* Test ktc related calls as well as some file access stuff. */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/types.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/file.h>
 #include <arpa/inet.h>
 #include <afs/prs_fs.h>
-#include <afsconfig.h>
-#include <afs/param.h>
-
 
 #include <afs/stds.h>
 #include <afs/com_err.h>

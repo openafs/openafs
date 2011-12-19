@@ -8,9 +8,10 @@
 #ifndef __AKLOG_H__
 #define __AKLOG_H__
 
+#include <afsconfig.h>
+
 #include <krb5.h>
 #include "linked_list.h"
-#include <afsconfig.h>
 
 #ifdef __STDC__
 #define ARGS(x) x

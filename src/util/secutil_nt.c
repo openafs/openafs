@@ -9,8 +9,8 @@
 
 /* Security related utilities for the Windows platform */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 #include <afs/stds.h>
 
 #include <stddef.h>

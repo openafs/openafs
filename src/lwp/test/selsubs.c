@@ -8,6 +8,10 @@
  */
 
 /* selsubs.c - common code for client and server. */
+#include <afsconfig.h>
+#include <afs/param.h>
+
+
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -24,10 +28,6 @@
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <sys/stat.h>
-
-#include <afsconfig.h>
-#include <afs/param.h>
-
 
 
 #include "lwp.h"

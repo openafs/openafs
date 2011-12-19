@@ -31,11 +31,11 @@
  * SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-#include <afsconfig.h>
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -13,8 +13,8 @@
  * specifies the terms and conditions for redistribution.
  */
 
-#include <sys/param.h>
 #include <afsconfig.h>
+#include <sys/param.h>
 
 
 #include <stdio.h>

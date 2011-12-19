@@ -14,13 +14,13 @@
  *
  */
 
+#include <afsconfig.h>
+#include "afs/param.h"
+
 #include <unistd.h>
 #ifdef AFS_SUN510_ENV
 #include <sys/cred.h>
 #endif
-
-#include <afsconfig.h>
-#include "afs/param.h"
 
 
 #include "afs/sysincludes.h"
