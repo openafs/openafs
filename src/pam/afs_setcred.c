@@ -7,14 +7,15 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <syslog.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <errno.h>
-#include <afsconfig.h>
-#include <afs/param.h>
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>

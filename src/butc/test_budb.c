@@ -7,12 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/types.h>
-#include <netinet/in.h>
-
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <sys/types.h>
+#include <netinet/in.h>
 
 #include <afs/budb_client.h>
 #include <afs/budb.h>

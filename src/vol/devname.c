@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/param.h>
 #include <afsconfig.h>
+#include <sys/param.h>
 
 
 #include <afs/param.h>

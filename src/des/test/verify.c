@@ -11,13 +11,13 @@
  * 		-1 ==> error
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <errno.h>
 #include <des.h>
-#include <afsconfig.h>
-#include <afs/param.h>
-
 
 
 extern char *errmsg();

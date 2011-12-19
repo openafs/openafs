@@ -17,10 +17,10 @@
  *
  *-------------------------------------------------------------------------*/
 
-#include <stdio.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <stdio.h>
 
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>

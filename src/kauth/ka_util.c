@@ -9,15 +9,15 @@
  *		     output of this program to be valid.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <sys/file.h>
-
-#include <afsconfig.h>
-#include <afs/param.h>
 
 
 #include <lock.h>
