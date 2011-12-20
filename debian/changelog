@@ -1,6 +1,17 @@
 openafs (1.6.1~pre1-1) UNRELEASED; urgency=low
 
   * New upstream prerelease.
+    - Install new afsio utility.
+    - Fixes performance issues in both the client and the server.
+    - Rate-limit waiting for volume messages in kernel logs.
+    - Avoid a possible memory allocation issue in ticket data management.
+    - Disable MTU discovery.
+    - Reduce the quantity of NAT pings sent by the client.
+    - Various fixes for demand-attach file servers.
+    - Fix volume lock violations.
+    - Report the bosserver -rxbind address in a file.
+    - Revert process group changes on keyring failure.
+    - Various fixes for the salvager.
 
  -- Russ Allbery <rra@debian.org>  Tue, 20 Dec 2011 12:41:51 -0800
 
