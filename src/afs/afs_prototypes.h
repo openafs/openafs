@@ -635,11 +635,11 @@ extern void afs_osi_SetTime(osi_timeval_t * atv);
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
-extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
-extern void setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf,
+extern int osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw);
+extern void setup_uio(struct uio *uiop, struct iovec *iovecp, const char *buf,
 		      afs_offs_t pos, int count, uio_flag_t flag,
 		      uio_seg_t seg);
-extern int uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop);
+extern int uiomove(char *dp, int length, uio_flag_t rw, struct uio *uiop);
 extern void osi_linux_free_inode_pages(void);
 #endif
 extern void osi_linux_mask(void);
@@ -846,7 +846,8 @@ extern struct server *afs_FindServer(afs_int32 aserver, afs_uint16 aport,
 extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
 				    afs_int32 acell, u_short aport,
 				    afs_int32 locktype, afsUUID * uuidp,
-				    afs_int32 addr_uniquifier);
+				    afs_int32 addr_uniquifier,
+				    struct volume *tv);
 extern void afs_GetCapabilities(struct server *ts);
 extern void ForceAllNewConnections(void);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
@@ -858,8 +859,6 @@ extern int afs_randomMod15(void);
 extern int afs_randomMod127(void);
 extern void afs_SortOneServer(struct server *asp);
 extern void afs_SortServers(struct server *aservers[], int count);
-extern void afs_FlushServer(struct server *srvp);
-extern void afs_RemoveSrvAddr(struct srvAddr *sap);
 extern void afs_ActivateServer(struct srvAddr *sap);
 #ifdef AFS_USERSPACE_IP_ADDR
 extern void afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
@@ -911,8 +910,9 @@ extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_DARWIN100_ENV
 extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
-#elif defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)
-/* afs3_syscall prototype is in sys/sysproto.h */
+#elif (defined(AFS_FBSD90_ENV) || defined(AFS_FBSD82_ENV)) && (__FreeBSD_version < 900044)
+/* afs3_syscall prototype is in sys/sysproto.h
+   Yes, they put it in, then took it out again (renamed with a sys_ prefix) */
 #elif defined(AFS_FBSD_ENV)
 extern int afs3_syscall(struct thread *p, void *args);
 #elif defined(AFS_NBSD40_ENV)
@@ -1336,16 +1336,16 @@ extern struct volume *afs_FindVolume(struct VenusFid *afid,
 				     afs_int32 locktype);
 extern struct volume *afs_freeVolList;
 extern afs_int32 fvTable[NFENTRIES];
-extern void InstallVolumeEntry(struct volume *av, struct vldbentry *ve,
-			       int acell);
-extern void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve,
-				int acell);
-extern void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
-				int acell, struct cell *tcell,
-				struct vrequest *areq);
+extern void LockAndInstallVolumeEntry(struct volume *av, struct vldbentry *ve,
+				      int acell);
+extern void LockAndInstallNVolumeEntry(struct volume *av, struct nvldbentry *ve,
+				       int acell);
+extern void LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
+				       int acell, struct cell *tcell,
+				       struct vrequest *areq);
 extern void afs_ResetVolumeInfo(struct volume *tv);
 extern struct volume *afs_MemGetVolSlot(void);
-extern void afs_ResetVolumes(struct server *srvp);
+extern void afs_ResetVolumes(struct server *srvp, struct volume *tv);
 extern struct volume *afs_GetVolume(struct VenusFid *afid,
 				    struct vrequest *areq,
 				    afs_int32 locktype);

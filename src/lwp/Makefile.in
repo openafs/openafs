@@ -73,23 +73,30 @@ process.o	: process.s process.i386.s process.c lwp.o
 		$(RM) -f process.o ; \
 		CURRENTBUILDARCH="${ARCHFLAGS}"; \
 		if [ -z "$${CURRENTBUILDARCH}" ] ; then \
-		    CURRENTBUILDARCH=`$(CC) -dM -E -xc /dev/null | grep 'ppc\|i386\|x86_64\|arm'`; \
+		    CURRENTBUILDARCH=`$(CC) -dM -E -xc /dev/null | grep 'ppc\|i386\|x86_64\|armv6|armv7'`; \
 		fi; \
 		ppc=`echo $${CURRENTBUILDARCH} | grep -q ppc && echo process.ppc.o` ; \
 		i386=`echo $${CURRENTBUILDARCH} | grep -q i386 && echo process.i386.o` ; \
 		amd64=`echo $${CURRENTBUILDARCH} | grep -q x86_64 && echo process.amd64.o` ; \
-		arm=`echo $${CURRENTBUILDARCH} | grep -q arm && echo process.arm.o` ; \
-		if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${amd64}" -a -z "$${arm}" ] ; then \
+		armv6=`echo $${CURRENTBUILDARCH} | grep -q armv6 && echo process.armv6.o` ; \
+		armv7=`echo $${CURRENTBUILDARCH} | grep -q armv7 && echo process.armv7.o` ; \
+		if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" ] ; then \
 			if [ `arch` = ppc ] ; then \
 				ppc=yes ; \
 			else \
 				i386=yes ; \
 			fi ; \
 		fi ; \
-		if [ -n "$${arm}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.s -o "$${arm}" ; \
-			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" ] ; then \
-				${MV} "$${arm}" process.o ; \
+		if [ -n "$${armv6}" ] ; then \
+			$(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.s -o "$${armv6}" ; \
+			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv7}" ] ; then \
+				${MV} "$${armv6}" process.o ; \
+			fi ; \
+		fi ; \
+		if [ -n "$${armv7}" ] ; then \
+			$(CC) -x assembler-with-cpp -c -arch armv7 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.s -o "$${armv7}" ; \
+			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv6}" ] ; then \
+				${MV} "$${armv7}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${ppc}" ] ; then \
@@ -111,7 +118,7 @@ process.o	: process.s process.i386.s process.c lwp.o
 			fi ; \
 		fi ; \
 		if [ ! -f process.o ] ; then \
-			lipo -create $${amd64} $${i386} $${ppc} $${arm} -output process.o ;\
+			lipo -create $${amd64} $${i386} $${ppc} $${armv6} $${armv7} -output process.o ;\
 		fi ;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \

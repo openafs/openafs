@@ -1775,8 +1775,7 @@ Initdb(void)
     }
 
     if (build) {
-	/* Only rebuild database if the db was deleted (the header is zero) and we
-	 * are running noAuth. */
+	/* Only rebuild database if the db was deleted (the header is zero) */
 	char *bp = (char *)&cheader;
 	int i;
 	for (i = 0; i < sizeof(cheader); i++) {
@@ -1786,11 +1785,6 @@ Initdb(void)
 			"Can't rebuild database because it is not empty");
 		break;
 	    }
-	}
-	if (!pr_noAuth) {
-	    code = PRDBBAD;
-	    afs_com_err(whoami, code,
-	                "Can't rebuild database because not running NoAuth");
 	}
     }
 

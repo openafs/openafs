@@ -28,6 +28,7 @@
 #include "bnode.h"
 #include "bosprototypes.h"
 
+extern char *DoPidFiles;
 
 struct bnode *ez_create(char *, char *, char *, char *, char *, char *);
 static int ez_hascore(struct bnode *bnode);
@@ -39,6 +40,7 @@ static int ez_setstat(struct bnode *bnode, afs_int32 status);
 static int ez_procexit(struct bnode *bnode, struct bnode_proc *proc);
 static int ez_getstring(struct bnode *bnode, char *abuffer, afs_int32 alen);
 static int ez_getparm(struct bnode *bnode, afs_int32, char *, afs_int32);
+static int ez_procstarted(struct bnode *bnode, struct bnode_proc *proc);
 
 #define	SDTIME		60	/* time in seconds given to a process to evaporate */
 
@@ -53,6 +55,7 @@ struct bnode_ops ezbnode_ops = {
     ez_getparm,
     ez_restartp,
     ez_hascore,
+    ez_procstarted
 };
 
 static int
@@ -186,12 +189,27 @@ ez_setstat(struct bnode *bn, afs_int32 astatus)
 }
 
 static int
+ez_procstarted(struct bnode *bn, struct bnode_proc *aproc)
+{
+    int code = 0;
+
+    if (DoPidFiles) {
+	code = bozo_CreatePidFile(bn->name, NULL, aproc->pid);
+    }
+    return code;;
+}
+
+static int
 ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
 {
     struct ezbnode *abnode = (struct ezbnode *)bn;
 
     /* process has exited */
     afs_int32 code;
+
+    if (DoPidFiles) {
+	bozo_DeletePidFile(bn->name, NULL);
+    }
 
     abnode->waitingForShutdown = 0;
     abnode->running = 0;

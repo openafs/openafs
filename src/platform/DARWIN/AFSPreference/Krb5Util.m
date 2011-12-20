@@ -24,6 +24,7 @@
 			@throw [NSException exceptionWithName:@"Krb5Util"
 					    reason:@"getNewTicketIfNotPresent"
 					    userInfo:nil];
+#if !(defined(MAC_OS_X_VERSION_10_7) && (MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6))
 		    else {
 			KLLifetime valuel;
 			KLSize sizel = sizeof (valuel);
@@ -72,7 +73,7 @@
 			    kstatus = KLLoginOptionsSetAddressless
 				(inLoginOptions, value);
 		    }
-
+#endif
 		    if (kstatus == noErr)
 			kstatus = KLAcquireNewInitialTickets(nil,
 							     inLoginOptions,

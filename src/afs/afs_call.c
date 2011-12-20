@@ -35,6 +35,13 @@
 #define	AFS_MINBUFFERS	50
 #endif
 
+#if (defined(AFS_SUN5_ENV) || (defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+/* If AFS_DAEMONOP_ENV is defined, it indicates we run "daemon" AFS syscalls by
+ * spawning a kernel thread to do the work, instead of running them in the
+ * calling process. */
+# define AFS_DAEMONOP_ENV
+#endif
+
 struct afsop_cell {
     afs_int32 hosts[AFS_MAXCELLHOSTS];
     char cellName[100];
@@ -124,6 +131,39 @@ afs_InitSetup(int preallocs)
 
     return code;
 }
+
+#ifdef AFS_DAEMONOP_ENV
+static int
+daemonOp_common(long parm, long parm2, long parm3, long parm4, long parm5,
+                long parm6)
+{
+    int code;
+    if (parm == AFSOP_START_RXCALLBACK) {
+	if (afs_CB_Running)
+	    return -1;
+# ifdef RXK_LISTENER_ENV
+    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
+	if (afs_RX_Running)
+	    return -1;
+	afs_RX_Running = 1;
+# endif
+	code = afs_InitSetup(parm2);
+	if (parm3) {
+	    rx_enablePeerRPCStats();
+	}
+	if (parm4) {
+	    rx_enableProcessRPCStats();
+	}
+	if (code)
+	    return -1;
+    } else if (parm == AFSOP_START_AFS) {
+	if (AFS_Running)
+	    return -1;
+    }				/* other functions don't need setup in the parent */
+    return 0;
+}
+#endif /* AFS_DAEMONOP_ENV */
+
 #if defined(AFS_DARWIN80_ENV)
 struct afsd_thread_info {
     unsigned long parm;
@@ -215,32 +255,11 @@ void
 afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 	     long parm6)
 {
-    int code;
     struct afsd_thread_info info;
     thread_t thread;
-
-    if (parm == AFSOP_START_RXCALLBACK) {
-	if (afs_CB_Running)
-	    return;
-#ifdef RXK_LISTENER_ENV
-    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
-	if (afs_RX_Running)
-	    return;
-	afs_RX_Running = 1;
-#endif
-	code = afs_InitSetup(parm2);
-	if (parm3) {
-	    rx_enablePeerRPCStats();
-	}
-	if (parm4) {
-	    rx_enableProcessRPCStats();
-	}
-	if (code)
-	    return;
-    } else if (parm == AFSOP_START_AFS) {
-	if (AFS_Running)
-	    return;
-    }				/* other functions don't need setup in the parent */
+    if (daemonOp_common(parm, parm2, parm3, parm4, parm5, parm6)) {
+	return;
+    }
     info.parm = parm;
     kernel_thread_start((thread_continue_t)afsd_thread, &info, &thread);
     AFS_GUNLOCK();
@@ -254,9 +273,9 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 
 #if defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)
 struct afsd_thread_info {
-#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
-#endif
+# endif
     unsigned long parm;
     struct completion *complete;
 };
@@ -266,20 +285,20 @@ afsd_thread(void *rock)
 {
     struct afsd_thread_info *arg = rock;
     unsigned long parm = arg->parm;
-#ifdef SYS_SETPRIORITY_EXPORTED
+# ifdef SYS_SETPRIORITY_EXPORTED
     int (*sys_setpriority) (int, int, int) = sys_call_table[__NR_setpriority];
-#endif
-#if defined(AFS_LINUX26_ENV)
+# endif
+# if defined(AFS_LINUX26_ENV)
     daemonize("afsd");
-#else
+# else
     daemonize();
-#endif
+# endif
 				/* doesn't do much, since we were forked from keventd, but
 				 * does call mm_release, which wakes up our parent (since it
 				 * used CLONE_VFORK) */
-#if !defined(AFS_LINUX26_ENV)
+# if !defined(AFS_LINUX26_ENV)
     reparent_to_init();
-#endif
+# endif
     afs_osi_MaskSignals();
     switch (parm) {
     case AFSOP_START_RXCALLBACK:
@@ -349,13 +368,13 @@ afsd_thread(void *rock)
 	break;
     case AFSOP_RXEVENT_DAEMON:
 	sprintf(current->comm, "afs_evtstart");
-#ifdef SYS_SETPRIORITY_EXPORTED
+# ifdef SYS_SETPRIORITY_EXPORTED
 	sys_setpriority(PRIO_PROCESS, 0, -10);
-#else
-#ifdef CURRENT_INCLUDES_NICE
+# else
+#  ifdef CURRENT_INCLUDES_NICE
 	current->nice = -10;
-#endif
-#endif
+#  endif
+# endif
 	AFS_GLOCK();
 	complete(arg->complete);
 	while (afs_initState < AFSOP_START_BKG)
@@ -368,13 +387,13 @@ afsd_thread(void *rock)
 #ifdef RXK_LISTENER_ENV
     case AFSOP_RXLISTENER_DAEMON:
 	sprintf(current->comm, "afs_lsnstart");
-#ifdef SYS_SETPRIORITY_EXPORTED
+# ifdef SYS_SETPRIORITY_EXPORTED
 	sys_setpriority(PRIO_PROCESS, 0, -10);
-#else
-#ifdef CURRENT_INCLUDES_NICE
+# else
+#  ifdef CURRENT_INCLUDES_NICE
 	current->nice = -10;
-#endif
-#endif
+#  endif
+# endif
 	AFS_GLOCK();
 	complete(arg->complete);
 	afs_initState = AFSOP_START_AFS;
@@ -396,15 +415,15 @@ afsd_thread(void *rock)
 }
 
 void
-#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
 afsd_launcher(struct work_struct *work)
-#else
+# else
 afsd_launcher(void *rock)
-#endif
+# endif
 {
-#if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct afsd_thread_info *rock = container_of(work, struct afsd_thread_info, tq);
-#endif
+# endif
 
     if (!kernel_thread(afsd_thread, (void *)rock, CLONE_VFORK | SIGCHLD))
 	afs_warn("kernel_thread failed. afs startup will not complete\n");
@@ -414,55 +433,35 @@ void
 afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 	     long parm6)
 {
-    int code;
     DECLARE_COMPLETION(c);
-#if defined(AFS_LINUX26_ENV)
-#if defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV)
+#  if defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
-#endif
-#else
+#  endif
+# else
     struct tq_struct tq;
-#endif
+# endif
     struct afsd_thread_info info;
-    if (parm == AFSOP_START_RXCALLBACK) {
-	if (afs_CB_Running)
-	    return;
-#ifdef RXK_LISTENER_ENV
-    } else if (parm == AFSOP_RXLISTENER_DAEMON) {
-	if (afs_RX_Running)
-	    return;
-	afs_RX_Running = 1;
-#endif
-	code = afs_InitSetup(parm2);
-	if (parm3) {
-	    rx_enablePeerRPCStats();
-	}
-	if (parm4) {
-	    rx_enableProcessRPCStats();
-	}
-	if (code)
-	    return;
-    } else if (parm == AFSOP_START_AFS) {
-	if (AFS_Running)
-	    return;
-    }				/* other functions don't need setup in the parent */
+    if (daemonOp_common(parm, parm2, parm3, parm4, parm5, parm6)) {
+	return;
+    }
     info.complete = &c;
     info.parm = parm;
-#if defined(AFS_LINUX26_ENV)
-#if !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX26_ENV)
+#  if !defined(INIT_WORK_HAS_DATA)
     INIT_WORK(&info.tq, afsd_launcher);
     schedule_work(&info.tq);
-#else
+#  else
     INIT_WORK(&tq, afsd_launcher, &info);
     schedule_work(&tq);
-#endif
-#else
+#  endif
+# else
     tq.sync = 0;
     INIT_LIST_HEAD(&tq.list);
     tq.routine = afsd_launcher;
     tq.data = &info;
     schedule_task(&tq);
-#endif
+# endif
     AFS_GUNLOCK();
     /* we need to wait cause we passed stack pointers around.... */
     wait_for_completion(&c);
@@ -470,8 +469,117 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 }
 #endif
 
+#ifdef AFS_SUN5_ENV
+struct afs_daemonop_args {
+    kcondvar_t cv;
+    long parm;
+};
+
+static void
+afsd_thread(struct afs_daemonop_args *args)
+{
+    long parm = args->parm;
+
+    AFS_GLOCK();
+    cv_signal(&args->cv);
+
+    switch (parm) {
+    case AFSOP_START_RXCALLBACK:
+	if (afs_CB_Running)
+	    goto out;
+	afs_CB_Running = 1;
+	while (afs_RX_Running != 2)
+	    afs_osi_Sleep(&afs_RX_Running);
+	afs_RXCallBackServer();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_AFS:
+	if (AFS_Running)
+	    goto out;
+	AFS_Running = 1;
+	while (afs_initState < AFSOP_START_AFS)
+	    afs_osi_Sleep(&afs_initState);
+	afs_initState = AFSOP_START_BKG;
+	afs_osi_Wakeup(&afs_initState);
+	afs_Daemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_BKG:
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	if (afs_initState < AFSOP_GO) {
+	    afs_initState = AFSOP_GO;
+	    afs_osi_Wakeup(&afs_initState);
+	}
+	afs_BackgroundDaemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_TRUNCDAEMON:
+	while (afs_initState < AFSOP_GO)
+	    afs_osi_Sleep(&afs_initState);
+	afs_CacheTruncateDaemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_START_CS:
+	afs_CheckServerDaemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_RXEVENT_DAEMON:
+	while (afs_initState < AFSOP_START_BKG)
+	    afs_osi_Sleep(&afs_initState);
+	afs_rxevent_daemon();
+	AFS_GUNLOCK();
+	return;
+    case AFSOP_RXLISTENER_DAEMON:
+	afs_initState = AFSOP_START_AFS;
+	afs_osi_Wakeup(&afs_initState);
+	afs_RX_Running = 2;
+	afs_osi_Wakeup(&afs_RX_Running);
+	afs_osi_RxkRegister();
+	rxk_Listener();
+	AFS_GUNLOCK();
+	return;
+    default:
+	AFS_GUNLOCK();
+	afs_warn("Unknown op %ld in afsd_thread()\n", parm);
+	return;
+    }
+ out:
+    AFS_GUNLOCK();
+    return;
+}
+
+static void
+afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
+	     long parm6)
+{
+    struct afs_daemonop_args args;
+
+    if (daemonOp_common(parm, parm2, parm3, parm4, parm5, parm6)) {
+	return;
+    }
+
+    args.parm = parm;
+
+    cv_init(&args.cv, "AFS DaemonOp cond var", CV_DEFAULT, NULL);
+
+    if (thread_create(NULL, 0, afsd_thread, &args, 0, &p0, TS_RUN,
+        minclsyspri) == NULL) {
+
+	afs_warn("thread_create failed: AFS startup will not complete\n");
+    }
+
+    /* we passed &args to the new thread, which is on the stack. wait until
+     * it has read the arguments so it doesn't try to read the args after we
+     * have returned */
+    cv_wait(&args.cv, &afs_global_lock);
+
+    cv_destroy(&args.cv);
+}
+#endif /* AFS_SUN5_ENV */
+
 #ifdef AFS_DARWIN100_ENV
-#define AFSKPTR(X) k ## X
+# define AFSKPTR(X) k ## X
 int
 afs_syscall_call(long parm, long parm2, long parm3,
 		 long parm4, long parm5, long parm6)
@@ -484,7 +592,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 			      CAST_USER_ADDR_T((parm6)));
 }
 #else
-#define AFSKPTR(X) ((caddr_t)X)
+# define AFSKPTR(X) ((caddr_t)X)
 #endif
 int
 #ifdef AFS_DARWIN100_ENV
@@ -521,9 +629,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 		    && (parm != AFSOP_GETMTU) && (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
 #if defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
-#if defined(KERNEL_HAVE_UERROR)
+# if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
-#endif
+# endif
 	code = EACCES;
 #else
 	code = EPERM;
@@ -538,8 +646,8 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #ifdef AFS_DARWIN80_ENV
     put_vfs_context();
 #endif
-#if ((defined(AFS_LINUX24_ENV) && defined(HAVE_LINUX_COMPLETION_H)) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
-#if defined(AFS_DARWIN80_ENV)
+#ifdef AFS_DAEMONOP_ENV
+# if defined(AFS_DARWIN80_ENV)
     if (parm == AFSOP_BKG_HANDLER) {
 	/* if afs_uspc_param grows this should be checked */
 	struct afs_uspc_param *mvParam = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
@@ -580,25 +688,25 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_osi_Free(param2, namebufsz);
 	osi_FreeSmallSpace(mvParam);
     } else
-#endif /* DARWIN80 */
+# endif /* DARWIN80 */
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
 	|| parm == AFSOP_RXLISTENER_DAEMON) {
 	afs_DaemonOp(parm, parm2, parm3, parm4, parm5, parm6);
     }
-#else /* !(AFS_LINUX24_ENV && !UKERNEL) */
+#else /* !AFS_DAEMONOP_ENV */
     if (parm == AFSOP_START_RXCALLBACK) {
 	if (afs_CB_Running)
 	    goto out;
 	afs_CB_Running = 1;
-#ifndef RXK_LISTENER_ENV
+# ifndef RXK_LISTENER_ENV
 	code = afs_InitSetup(parm2);
 	if (!code)
-#endif /* !RXK_LISTENER_ENV */
+# endif /* !RXK_LISTENER_ENV */
 	{
-#ifdef RXK_LISTENER_ENV
+# ifdef RXK_LISTENER_ENV
 	    while (afs_RX_Running != 2)
 		afs_osi_Sleep(&afs_RX_Running);
-#else /* !RXK_LISTENER_ENV */
+# else /* !RXK_LISTENER_ENV */
 	    if (parm3) {
 		rx_enablePeerRPCStats();
 	    }
@@ -607,17 +715,17 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    }
 	    afs_initState = AFSOP_START_AFS;
 	    afs_osi_Wakeup(&afs_initState);
-#endif /* RXK_LISTENER_ENV */
+# endif /* RXK_LISTENER_ENV */
 	    afs_osi_Invisible();
 	    afs_RXCallBackServer();
 	    afs_osi_Visible();
 	}
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, code);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     }
-#ifdef RXK_LISTENER_ENV
+# ifdef RXK_LISTENER_ENV
     else if (parm == AFSOP_RXLISTENER_DAEMON) {
 	if (afs_RX_Running)
 	    goto out;
@@ -635,18 +743,18 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_osi_Invisible();
 	    afs_RX_Running = 2;
 	    afs_osi_Wakeup(&afs_RX_Running);
-#ifndef UKERNEL
+#  ifndef UKERNEL
 	    afs_osi_RxkRegister();
-#endif /* !UKERNEL */
+#  endif /* !UKERNEL */
 	    rxk_Listener();
 	    afs_osi_Visible();
 	}
-#ifdef	AFS_SGI_ENV
+#  ifdef	AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, code);
-#endif /* AFS_SGI_ENV */
+#  endif /* AFS_SGI_ENV */
     }
-#endif /* RXK_LISTENER_ENV */
+# endif /* RXK_LISTENER_ENV */
     else if (parm == AFSOP_START_AFS) {
 	/* afs daemon */
 	if (AFS_Running)
@@ -660,19 +768,19 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_osi_Invisible();
 	afs_Daemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     } else if (parm == AFSOP_START_CS) {
 	afs_osi_Invisible();
 	afs_CheckServerDaemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+# ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
-#ifndef AFS_DARWIN80_ENV
+# endif /* AFS_SGI_ENV */
+# ifndef AFS_DARWIN80_ENV
     } else if (parm == AFSOP_START_BKG) {
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
@@ -682,18 +790,18 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
 	/* start the bkg daemon */
 	afs_osi_Invisible();
-# ifdef AFS_AIX32_ENV
+#  ifdef AFS_AIX32_ENV
 	if (parm2)
 	    afs_BioDaemon(parm2);
 	else
-# endif /* AFS_AIX32_ENV */
+#  endif /* AFS_AIX32_ENV */
 	    afs_BackgroundDaemon();
 	afs_osi_Visible();
-# ifdef AFS_SGI_ENV
+#  ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-# endif /* AFS_SGI_ENV */
-#endif /* ! AFS_DARWIN80_ENV */
+#  endif /* AFS_SGI_ENV */
+# endif /* ! AFS_DARWIN80_ENV */
     } else if (parm == AFSOP_START_TRUNCDAEMON) {
 	while (afs_initState < AFSOP_GO)
 	    afs_osi_Sleep(&afs_initState);
@@ -701,25 +809,25 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_osi_Invisible();
 	afs_CacheTruncateDaemon();
 	afs_osi_Visible();
-#ifdef	AFS_SGI_ENV
+# ifdef	AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
     }
-#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+# if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
     else if (parm == AFSOP_RXEVENT_DAEMON) {
 	while (afs_initState < AFSOP_START_BKG)
 	    afs_osi_Sleep(&afs_initState);
 	afs_osi_Invisible();
 	afs_rxevent_daemon();
 	afs_osi_Visible();
-#ifdef AFS_SGI_ENV
+#  ifdef AFS_SGI_ENV
 	AFS_GUNLOCK();
 	exit(CLD_EXITED, 0);
-#endif /* AFS_SGI_ENV */
+#  endif /* AFS_SGI_ENV */
     }
-#endif /* AFS_SUN5_ENV || RXK_LISTENER_ENV */
-#endif /* AFS_LINUX24_ENV && !UKERNEL */
+# endif /* AFS_SUN5_ENV || RXK_LISTENER_ENV || RXK_UPCALL_ENV */
+#endif /* AFS_DAEMONOP_ENV */
     else if (parm == AFSOP_BASIC_INIT) {
 	afs_int32 temp;
 
@@ -960,7 +1068,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #if	(!defined(AFS_NONFSTRANS)) || defined(AFS_AIX_IAUTH_ENV)
 	afs_nfsclient_init();
 #endif
-	afs_uuid_create(&afs_cb_interface.uuid);
+	if (afs_uuid_create(&afs_cb_interface.uuid) != 0)
+	    memset(&afs_cb_interface.uuid, 0, sizeof(afsUUID));
+
 	printf("found %d non-empty cache files (%d%%).\n",
 	       afs_stats_cmperf.cacheFilesReused,
 	       (100 * afs_stats_cmperf.cacheFilesReused) /
@@ -1054,25 +1164,25 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	nfs_rfsdisptab_v2 = (int (*)())parm2;
     } else if (parm == AFSOP_NFSSTATICADDR2) {
 	extern int (*nfs_rfsdisptab_v2) ();
-#ifdef _K64U64
+# ifdef _K64U64
 	nfs_rfsdisptab_v2 = (int (*)())((parm2 << 32) | (parm3 & 0xffffffff));
-#else /* _K64U64 */
+# else /* _K64U64 */
 	nfs_rfsdisptab_v2 = (int (*)())(parm3 & 0xffffffff);
-#endif /* _K64U64 */
+# endif /* _K64U64 */
     }
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
+# if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
     else if (parm == AFSOP_SBLOCKSTATICADDR2) {
 	extern int (*afs_sblockp) ();
 	extern void (*afs_sbunlockp) ();
-#ifdef _K64U64
+#  ifdef _K64U64
 	afs_sblockp = (int (*)())((parm2 << 32) | (parm3 & 0xffffffff));
 	afs_sbunlockp = (void (*)())((parm4 << 32) | (parm5 & 0xffffffff));
-#else
+#  else
 	afs_sblockp = (int (*)())(parm3 & 0xffffffff);
 	afs_sbunlockp = (void (*)())(parm5 & 0xffffffff);
-#endif /* _K64U64 */
+#  endif /* _K64U64 */
     }
-#endif /* AFS_SGI62_ENV && !AFS_SGI65_ENV */
+# endif /* AFS_SGI62_ENV && !AFS_SGI65_ENV */
 #endif /* AFS_SGI53_ENV */
     else if (parm == AFSOP_SHUTDOWN) {
 	afs_cold_shutdown = 0;
@@ -1087,27 +1197,27 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #ifdef	AFS_HPUX_ENV
 	vfsmount(parm2, parm3, parm4, parm5);
 #else /* defined(AFS_HPUX_ENV) */
-#if defined(KERNEL_HAVE_UERROR)
+# if defined(KERNEL_HAVE_UERROR)
 	setuerror(EINVAL);
-#else
+# else
 	code = EINVAL;
-#endif
+# endif
 #endif /* defined(AFS_HPUX_ENV) */
     } else if (parm == AFSOP_CLOSEWAIT) {
 	afs_SynchronousCloses = 'S';
     } else if (parm == AFSOP_GETMTU) {
 	afs_uint32 mtu = 0;
 #if	!defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
-#ifdef AFS_USERSPACE_IP_ADDR
+# ifdef AFS_USERSPACE_IP_ADDR
 	afs_int32 i;
 	i = rxi_Findcbi(parm2);
 	mtu = ((i == -1) ? htonl(1500) : afs_cb_interface.mtu[i]);
-#else /* AFS_USERSPACE_IP_ADDR */
+# else /* AFS_USERSPACE_IP_ADDR */
 	rx_ifnet_t tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, NULL);	/*  make iterative */
 	mtu = (tifnp ? rx_ifnet_mtu(tifnp) : htonl(1500));
-#endif /* else AFS_USERSPACE_IP_ADDR */
+# endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
 	    AFS_COPYOUT((caddr_t) & mtu, AFSKPTR(parm3),
@@ -1131,7 +1241,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
     } else if (parm == AFSOP_GETMASK) {	/* parm2 == addr in net order */
 	afs_uint32 mask = 0;
 #if	!defined(AFS_SUN5_ENV)
-#ifdef AFS_USERSPACE_IP_ADDR
+# ifdef AFS_USERSPACE_IP_ADDR
 	afs_int32 i;
 	i = rxi_Findcbi(parm2);
 	if (i != -1) {
@@ -1139,13 +1249,13 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	} else {
 	    code = -1;
 	}
-#else /* AFS_USERSPACE_IP_ADDR */
+# else /* AFS_USERSPACE_IP_ADDR */
 	rx_ifnet_t tifnp;
 
 	tifnp = rxi_FindIfnet(parm2, &mask);	/* make iterative */
 	if (!tifnp)
 	    code = -1;
-#endif /* else AFS_USERSPACE_IP_ADDR */
+# endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
 	    AFS_COPYOUT((caddr_t) & mask, AFSKPTR(parm3),
@@ -1303,11 +1413,11 @@ afs_shutdown(void)
     /* cancel rx event daemon */
     while (afs_termState == AFSOP_STOP_RXEVENT)
 	afs_osi_Sleep(&afs_termState);
-#if defined(RXK_LISTENER_ENV)
-#ifndef UKERNEL
+# if defined(RXK_LISTENER_ENV)
+#  ifndef UKERNEL
     afs_warn("UnmaskRxkSignals... ");
     afs_osi_UnmaskRxkSignals();
-#endif
+#  endif
     /* cancel rx listener */
     afs_warn("RxListener... ");
     osi_StopListener();		/* This closes rx_socket. */
@@ -1315,7 +1425,7 @@ afs_shutdown(void)
 	afs_warn("Sleep... ");
 	afs_osi_Sleep(&afs_termState);
     }
-#endif
+# endif
 #endif
 
 #if defined(AFS_SUN510_ENV) || defined(RXK_UPCALL_ENV)

@@ -114,6 +114,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 
     /* used for inodes backing_dev_info field, also */
     afs_backing_dev_info = osi_Alloc(sizeof(struct backing_dev_info));
+    memset(afs_backing_dev_info, 0, sizeof(struct backing_dev_info));
 #if defined(HAVE_LINUX_BDI_INIT)
     bdi_init(afs_backing_dev_info);
 #endif
@@ -439,7 +440,11 @@ void
 vattr2inode(struct inode *ip, struct vattr *vp)
 {
     ip->i_ino = vp->va_nodeid;
+#ifdef HAVE_SET_NLINK
+    set_nlink(ip, vp->va_nlink);
+#else
     ip->i_nlink = vp->va_nlink;
+#endif
     ip->i_blocks = vp->va_blocks;
 #ifdef STRUCT_INODE_HAS_I_BLKBITS
     ip->i_blkbits = AFS_BLKBITS;

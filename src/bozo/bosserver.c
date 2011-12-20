@@ -70,6 +70,7 @@ FILE *bozo_logFile;
 const char *DoCore;
 int DoLogging = 0;
 int DoSyslog = 0;
+const char *DoPidFiles = NULL;
 #ifndef AFS_NT40_ENV
 int DoSyslogFacility = LOG_DAEMON;
 #endif
@@ -122,6 +123,10 @@ bozo_ReBozo(void)
     if (DoLogging) {
 	status |= BOSEXIT_LOGGING_FLAG;
     }
+    /* if rxbind is set, pass "-rxbind" to new bosserver */
+    if (rxBind) {
+	status |= BOSEXIT_RXBIND_FLAG;
+    }
     exit(status);
 #else
     /* exec new bosserver process */
@@ -139,6 +144,11 @@ bozo_ReBozo(void)
     /* if logging is on, pass "-log" to new bosserver */
     if (DoLogging) {
 	argv[i] = "-log";
+	i++;
+    }
+    /* if rxbind is set, pass "-rxbind" to new bosserver */
+    if (rxBind) {
+	argv[i] = "-rxbind";
 	i++;
     }
 #ifndef AFS_NT40_ENV
@@ -162,6 +172,8 @@ bozo_ReBozo(void)
     for (i = 3; i < 64; i++) {
 	close(i);
     }
+
+    unlink(AFSDIR_SERVER_BOZRXBIND_FILEPATH);
 
     execv(argv[0], argv);	/* should not return */
     _exit(1);
@@ -718,6 +730,118 @@ background(void)
 #endif /* ! AFS_NT40_ENV */
 #endif
 
+static char *
+make_pid_filename(char *ainst, char *aname)
+{
+    char *buffer = NULL;
+    int length;
+
+    length = strlen(DoPidFiles) + strlen(ainst) + 6;
+    if (aname && *aname) {
+	length += strlen(aname) + 1;
+    }
+    buffer = malloc(length * sizeof(char));
+    if (!buffer) {
+	if (aname) {
+	    bozo_Log("Failed to alloc pid filename buffer for %s.%s.\n",
+		     ainst, aname);
+	} else {
+	    bozo_Log("Failed to alloc pid filename buffer for %s.\n", ainst);
+	}
+    } else {
+	if (aname && *aname) {
+	    snprintf(buffer, length, "%s/%s.%s.pid", DoPidFiles, ainst,
+		     aname);
+	} else {
+	    snprintf(buffer, length, "%s/%s.pid", DoPidFiles, ainst);
+	}
+    }
+    return buffer;
+}
+
+/**
+ * Write a file containing the pid of the named process.
+ *
+ * @param ainst instance name
+ * @param aname sub-process name of the instance, may be null
+ * @param apid  process id of the newly started process
+ *
+ * @returns status
+ */
+int
+bozo_CreatePidFile(char *ainst, char *aname, pid_t apid)
+{
+    int code = 0;
+    char *pidfile = NULL;
+    FILE *fp;
+
+    pidfile = make_pid_filename(ainst, aname);
+    if (!pidfile) {
+	return ENOMEM;
+    }
+    if ((fp = fopen(pidfile, "w")) == NULL) {
+	bozo_Log("Failed to open pidfile %s; errno=%d\n", pidfile, errno);
+	free(pidfile);
+	return errno;
+    }
+    if (fprintf(fp, "%ld\n", afs_printable_int32_ld(apid)) < 0) {
+	code = errno;
+    }
+    if (fclose(fp) != 0) {
+	code = errno;
+    }
+    free(pidfile);
+    return code;
+}
+
+/**
+ * Clean a pid file for a process which just exited.
+ *
+ * @param ainst instance name
+ * @param aname sub-process name of the instance, may be null
+ *
+ * @returns status
+ */
+int
+bozo_DeletePidFile(char *ainst, char *aname)
+{
+    char *pidfile = NULL;
+    pidfile = make_pid_filename(ainst, aname);
+    if (pidfile) {
+	unlink(pidfile);
+	free(pidfile);
+    }
+    return 0;
+}
+
+/**
+ * Create the rxbind file of this bosserver.
+ *
+ * @param host  bind address of this server
+ *
+ * @returns status
+ */
+void
+bozo_CreateRxBindFile(afs_uint32 host)
+{
+    char buffer[16];
+    FILE *fp;
+
+    if (host == htonl(INADDR_ANY)) {
+	host = htonl(0x7f000001);
+    }
+
+    afs_inet_ntoa_r(host, buffer);
+    bozo_Log("Listening on %s:%d\n", buffer, AFSCONF_NANNYPORT);
+    if ((fp = fopen(AFSDIR_SERVER_BOZRXBIND_FILEPATH, "w")) == NULL) {
+	bozo_Log("Unable to open rxbind address file: %s, code=%d\n",
+		 AFSDIR_SERVER_BOZRXBIND_FILEPATH, errno);
+    } else {
+	fprintf(fp, "%s\n", buffer);
+	fclose(fp);
+    }
+}
+
 /* start a process and monitor it */
 
 #include "AFS_component_version_number.c"
@@ -862,6 +986,10 @@ main(int argc, char **argv, char **envp)
 		printf("Invalid audit interface '%s'\n", interface);
 		exit(1);
 	    }
+	} else if (strncmp(argv[code], "-pidfiles=", 10) == 0) {
+	    DoPidFiles = (argv[code]+10);
+	} else if (strncmp(argv[code], "-pidfiles", 9) == 0) {
+	    DoPidFiles = AFSDIR_BOSCONFIG_DIR;
 	}
 	else {
 
@@ -873,16 +1001,20 @@ main(int argc, char **argv, char **envp)
 		   "[-audit-interafce <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-syslog[=FACILITY]] "
+		   "[-restricted] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-cores=<none|path>] \n"
+		   "[-pidfiles[=path]] "
 		   "[-nofork] " "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
 		   "[-audit-interafce <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
+		   "[-restricted] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-cores=<none|path>] \n"
+		   "[-pidfiles[=path]] "
 		   "[-help]\n");
 #endif
 	    fflush(stdout);
@@ -975,8 +1107,28 @@ main(int argc, char **argv, char **envp)
     /* Write current state of directory permissions to log file */
     DirAccessOK();
 
+    if (rxBind) {
+	afs_int32 ccode;
+	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
+	    AFSDIR_SERVER_NETINFO_FILEPATH) {
+	    char reason[1024];
+	    ccode = parseNetFiles(SHostAddrs, NULL, NULL,
+	                          ADDRSPERSITE, reason,
+	                          AFSDIR_SERVER_NETINFO_FILEPATH,
+	                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+        } else {
+            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
+        }
+        if (ccode == 1)
+            host = SHostAddrs[0];
+    }
+
     for (i = 0; i < 10; i++) {
-	code = rx_Init(htons(AFSCONF_NANNYPORT));
+	if (rxBind) {
+	    code = rx_InitHost(host, htons(AFSCONF_NANNYPORT));
+	} else {
+	    code = rx_Init(htons(AFSCONF_NANNYPORT));
+	}
 	if (code) {
 	    bozo_Log("can't initialize rx: code=%d\n", code);
 	    sleep(3);
@@ -1035,6 +1187,8 @@ main(int argc, char **argv, char **envp)
 	exit(code);
     }
 
+    bozo_CreateRxBindFile(host);	/* for local scripts */
+
     /* opened the cell databse */
     bozo_confdir = tdir;
 
@@ -1044,28 +1198,15 @@ main(int argc, char **argv, char **envp)
     afsconf_SetNoAuthFlag(tdir, noAuth);
     afsconf_BuildServerSecurityObjects(tdir, 0, &securityClasses, &numClasses);
 
+    if (DoPidFiles) {
+	bozo_CreatePidFile("bosserver", NULL, getpid());
+    }
+
     /* Disable jumbograms */
     rx_SetNoJumbo();
 
     if (rxMaxMTU != -1) {
 	rx_SetMaxMTU(rxMaxMTU);
-    }
-
-    if (rxBind) {
-	afs_int32 ccode;
-        if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
-            AFSDIR_SERVER_NETINFO_FILEPATH) {
-            char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-                                           ADDRSPERSITE, reason,
-                                           AFSDIR_SERVER_NETINFO_FILEPATH,
-                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-        } else
-	{
-            ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
-        }
-        if (ccode == 1)
-            host = SHostAddrs[0];
     }
 
     tservice = rx_NewServiceHost(host, 0, /* service id */ 1,

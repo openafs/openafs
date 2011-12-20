@@ -514,7 +514,7 @@ GetEntryByName(struct rx_call *rxcall,
     char rxstr[AFS_RXINFO_LEN];
 
     if (NameIsId(volname)) {
-	return GetEntryByID(rxcall, atoi(volname), -1, aentry, new, this_op);
+	return GetEntryByID(rxcall, strtoul(volname, NULL, 10), -1, aentry, new, this_op);
     }
     if (InvalidVolname(volname))
 	return VL_BADNAME;

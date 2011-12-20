@@ -287,6 +287,66 @@ SetVolumeSync(struct AFSVolSync *async, Volume * avol)
     FS_UNLOCK;
 }				/*SetVolumeSync */
 
+/**
+ * Verify that the on-disk size for a vnode matches the length in the vnode
+ * index.
+ *
+ * @param[in] vp   Volume pointer
+ * @param[in] vnp  Vnode pointer
+ * @param[in] alen Size of the vnode on disk, if known. If unknown, give -1,
+ *                 and CheckLength itself will determine the on-disk size.
+ *
+ * @return operation status
+ *  @retval 0 lengths match
+ *  @retval nonzero Error; either the lengths do not match or there was an
+ *                  error determining the on-disk size. The volume should be
+ *                  taken offline and salvaged.
+ */
+static int
+CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
+{
+    afs_sfsize_t vlen;
+    VN_GET_LEN(vlen, vnp);
+
+    if (alen < 0) {
+	FdHandle_t *fdP;
+
+	fdP = IH_OPEN(vnp->handle);
+	if (fdP == NULL) {
+	    ViceLog(0, ("CheckLength: cannot open inode for fid %lu.%lu.%lu\n",
+	                afs_printable_uint32_lu(vp->hashid),
+	                afs_printable_uint32_lu(Vn_id(vnp)),
+	                afs_printable_uint32_lu(vnp->disk.uniquifier)));
+	    return -1;
+	}
+	alen = FDH_SIZE(fdP);
+	FDH_CLOSE(fdP);
+	if (alen < 0) {
+	    afs_int64 alen64 = alen;
+	    ViceLog(0, ("CheckLength: cannot get size for inode for fid "
+	                "%lu.%lu.%lu; FDH_SIZE returned %" AFS_INT64_FMT "\n",
+	                afs_printable_uint32_lu(vp->hashid),
+	                afs_printable_uint32_lu(Vn_id(vnp)),
+	                afs_printable_uint32_lu(vnp->disk.uniquifier),
+	                alen64));
+	    return -1;
+	}
+    }
+
+    if (alen != vlen) {
+	afs_int64 alen64 = alen, vlen64 = vlen;
+	ViceLog(0, ("Fid %lu.%lu.%lu has inconsistent length (index "
+	            "%" AFS_INT64_FMT ", inode %" AFS_INT64_FMT "); volume "
+	            "must be salvaged\n",
+	            afs_printable_uint32_lu(vp->hashid),
+	            afs_printable_uint32_lu(Vn_id(vnp)),
+	            afs_printable_uint32_lu(vnp->disk.uniquifier),
+	            vlen64, alen64));
+	return -1;
+    }
+    return 0;
+}
+
 /*
  * Note that this function always returns a held host, so
  * that CallPostamble can block without the host's disappearing.
@@ -489,9 +549,15 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		VRESTARTING
 #endif
 		;
+#ifdef AFS_PTHREAD_ENV
+	    static const struct timespec timeout_ts = { 0, 0 };
+	    static const struct timespec * const ts = &timeout_ts;
+#else
+	    static const struct timespec * const ts = NULL;
+#endif
 
 	    errorCode = 0;
-	    *volptr = VGetVolumeNoWait(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
+	    *volptr = VGetVolumeTimed(&local_errorCode, &errorCode, (afs_int32) fid->Volume, ts);
 	    if (!errorCode) {
 		osi_Assert(*volptr);
 		break;
@@ -1265,48 +1331,6 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     return 0;			/* success */
 }				/*CopyOnWrite */
 
-static int
-CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_foff_t off,
-             afs_sfsize_t size)
-{
-    char *buff = malloc(COPYBUFFSIZE);
-    size_t length;
-    ssize_t rdlen;
-    ssize_t wrlen;
-    int rc = 0;
-    afs_foff_t done = off;
-
-    if (size > FDH_SIZE(targFdP) - off)
-	size = FDH_SIZE(targFdP) - off;
-
-    while (size > 0) {
-	if (size > COPYBUFFSIZE) {	/* more than a buffer */
-	    length = COPYBUFFSIZE;
-	    size -= COPYBUFFSIZE;
-	} else {
-	    length = size;
-	    size = 0;
-	}
-	rdlen = FDH_PREAD(targFdP, buff, length, done);
-	if (rdlen == length) {
-	    wrlen = FDH_PWRITE(newFdP, buff, length, done);
-	    done += rdlen;
-	}
-	else
-	    wrlen = 0;
-
-	if ((rdlen != length) || (wrlen != length)) {
-	    /* no error recovery, at the worst we'll have a "hole"
-	     * in the file */
-	    rc = 1;
-	    break;
-	}
-    }
-    free(buff);
-    return rc;
-}
-
-
 /*
  * Common code to handle with removing the Name (file when it's called from
  * SAFS_RemoveFile() or an empty dir when called from SAFS_rmdir()) from a
@@ -1325,6 +1349,12 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
     /* watch for invalid names */
     if (!strcmp(Name, ".") || !strcmp(Name, ".."))
 	return (EINVAL);
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VTakeOffline(volptr);
+	return VSALVAGE;
+    }
+
     if (parentptr->disk.cloned) {
 	ViceLog(25, ("DeleteTarget : CopyOnWrite called\n"));
 	if ((errorCode = CopyOnWrite(parentptr, volptr, 0, MAXFSIZE))) {
@@ -1734,6 +1764,12 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 		("Insufficient space to allocate %" AFS_INT64_FMT " blocks\n",
 		 (afs_intmax_t) BlocksPreallocatedForVnode));
 	return (errorCode);
+    }
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
+	VTakeOffline(volptr);
+	return VSALVAGE;
     }
 
     *targetptr = VAllocVnode(&errorCode, volptr, FileType);
@@ -3944,6 +3980,13 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	goto Bad_Rename;
     }
 
+    if (CheckLength(volptr, oldvptr, -1) ||
+        CheckLength(volptr, newvptr, -1)) {
+	VTakeOffline(volptr);
+	errorCode = VSALVAGE;
+	goto Bad_Rename;
+    }
+
     /* The CopyOnWrite might return ENOSPC ( disk full). Even if the second
      *  call to CopyOnWrite returns error, it is not necessary to revert back
      *  the effects of the first call because the contents of the volume is
@@ -4127,6 +4170,9 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	ViceLog(25, ("Rename : calling CopyOnWrite on  target dir\n"));
 	if ((errorCode = CopyOnWrite(fileptr, volptr, 0, MAXFSIZE)))
 	    goto Bad_Rename;
+	/* since copyonwrite would mean fileptr has a new handle, do it here */
+	FidZap(&filedir);
+	SetDirHandle(&filedir, fileptr);
     }
 
     /* If the new name exists already, delete it and the file it points to */
@@ -4631,6 +4677,12 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     if (((DirFid->Vnode & 1) && (ExistingFid->Vnode & 1)) || (DirFid->Vnode == ExistingFid->Vnode)) {	/* at present, */
 	/* AFS fileservers always have directory vnodes that are odd.   */
 	errorCode = EISDIR;
+	goto Bad_Link;
+    }
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VTakeOffline(volptr);
+	errorCode = VSALVAGE;
 	goto Bad_Link;
     }
 
@@ -7081,6 +7133,11 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 		    volptr->hashid));
 	return EIO;
     }
+    if (CheckLength(volptr, targetptr, tlen)) {
+	FDH_CLOSE(fdP);
+	VTakeOffline(volptr);
+	return VSALVAGE;
+    }
     if (Pos > tlen) {
 	Len = 0;
     }
@@ -7264,9 +7321,8 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_fsize_t NewLength;	/* size after this store completes */
     afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
     int linkCount = 0;		/* link count on inode */
-    afs_fsize_t CoW_off, CoW_len;
     ssize_t nBytes;
-    FdHandle_t *fdP, *origfdP = NULL;
+    FdHandle_t *fdP;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     afs_ino_str_t stmp;
 
@@ -7312,6 +7368,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 			volptr->hashid));
 	    return EIO;
 	}
+	if (CheckLength(volptr, targetptr, DataLength)) {
+	    FDH_CLOSE(fdP);
+	    VTakeOffline(volptr);
+	    return VSALVAGE;
+	}
 
 	if (linkCount != 1) {
 	    afs_fsize_t size;
@@ -7326,32 +7387,20 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	     * mechanisms (i.e. copy on write overhead.) Also the right size
 	     * of the disk will be recorded...
 	     */
-	    origfdP = fdP;
+	    FDH_CLOSE(fdP);
 	    VN_GET_LEN(size, targetptr);
 	    volptr->partition->flags &= ~PART_DONTUPDATE;
 	    VSetPartitionDiskUsage(volptr->partition);
 	    volptr->partition->flags |= PART_DONTUPDATE;
 	    if ((errorCode = VDiskUsage(volptr, nBlocks(size)))) {
 		volptr->partition->flags &= ~PART_DONTUPDATE;
-		FDH_CLOSE(origfdP);
 		return (errorCode);
 	    }
 
-	    CoW_len = (FileLength >= (Length + Pos)) ? FileLength - Length : Pos;
-	    CopyOnWrite_calls++;
-	    if (CoW_len == 0) CopyOnWrite_size0++;
-	    if (Pos == 0) CopyOnWrite_off0++;
-	    if (CoW_len > CopyOnWrite_maxsize) CopyOnWrite_maxsize = CoW_len;
-
-	    ViceLog(1, ("StoreData : calling CopyOnWrite on vnode %u.%u (%s) "
-			"off 0x0 size 0x%llx\n",
-			afs_printable_VolumeId_u(V_id(volptr)),
-			afs_printable_VnodeId_u(targetptr->vnodeNumber),
-			V_name(volptr), Pos));
-	    if ((errorCode = CopyOnWrite(targetptr, volptr, 0, Pos))) {
+	    ViceLog(25, ("StoreData : calling CopyOnWrite on  target dir\n"));
+	    if ((errorCode = CopyOnWrite(targetptr, volptr, 0, MAXFSIZE))) {
 		ViceLog(25, ("StoreData : CopyOnWrite failed\n"));
 		volptr->partition->flags &= ~PART_DONTUPDATE;
-		FDH_CLOSE(origfdP);
 		return (errorCode);
 	    }
 	    volptr->partition->flags &= ~PART_DONTUPDATE;
@@ -7360,7 +7409,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	    if (fdP == NULL) {
 		ViceLog(25,
 			("StoreData : Reopen after CopyOnWrite failed\n"));
-		FDH_REALLYCLOSE(origfdP);
 		return ENOENT;
 	    }
 	}
@@ -7392,7 +7440,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	 AdjustDiskUsage(volptr, adjustSize,
 			 adjustSize - SpareComp(volptr)))) {
 	FDH_CLOSE(fdP);
-	if (origfdP) FDH_REALLYCLOSE(origfdP);
 	return (errorCode);
     }
 
@@ -7482,6 +7529,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	FDH_SYNC(fdP);
     }
     if (errorCode) {
+	Error tmp_errorCode = 0;
 	afs_sfsize_t nfSize = FDH_SIZE(fdP);
 	osi_Assert(nfSize >= 0);
 	/* something went wrong: adjust size and return */
@@ -7490,26 +7538,15 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	 * need to update the target vnode.
 	 */
 	targetptr->changed_newTime = 1;
-	if (origfdP && (bytesTransfered < Length))	/* Need to "finish" CopyOnWrite still */
-	    CopyOnWrite2(origfdP, fdP, Pos + bytesTransfered, NewLength - Pos - bytesTransfered);
-	if (origfdP) FDH_REALLYCLOSE(origfdP);
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
-	VAdjustDiskUsage(&errorCode, volptr,
+	VAdjustDiskUsage(&tmp_errorCode, volptr,
 			 (afs_sfsize_t) (nBlocks(nfSize) -
 					 nBlocks(NewLength)), 0);
-	return errorCode;
-    }
-    if (origfdP) {					/* finish CopyOnWrite */
-	if ( (CoW_off = Pos + Length) < NewLength) {
-	    errorCode = CopyOnWrite2(origfdP, fdP, CoW_off, CoW_len = NewLength - CoW_off);
-	    ViceLog(1, ("StoreData : CopyOnWrite2 on vnode %u.%u (%s) "
-			"off 0x%llx size 0x%llx returns %d\n",
-                        afs_printable_VolumeId_u(V_id(volptr)),
-			afs_printable_VnodeId_u(targetptr->vnodeNumber),
-			V_name(volptr), CoW_off, CoW_len, errorCode));
+	if (tmp_errorCode) {
+	    errorCode = tmp_errorCode;
 	}
-	FDH_REALLYCLOSE(origfdP);
+	return errorCode;
     }
     FDH_CLOSE(fdP);
 

@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenAFS Client Service
+After=syslog.target network.target
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/sysconfig/openafs
+ExecStartPre=/bin/sed -n 'w/usr/vice/etc/CellServDB' /usr/vice/etc/CellServDB.local /usr/vice/etc/CellServDB.dist
+ExecStartPre=/bin/chmod 0644 /usr/vice/etc/CellServDB
+ExecStartPre=/sbin/modprobe openafs
+ExecStart=/usr/vice/etc/afsd $AFSD_ARGS
+ExecStop=/bin/umount /afs
+ExecStop=/usr/vice/etc/afsd -shutdown
+ExecStop=/sbin/rmmod openafs
+KillMode=none
+
+[Install]
+WantedBy=multi-user.target

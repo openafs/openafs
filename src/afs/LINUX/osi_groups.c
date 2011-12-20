@@ -87,7 +87,7 @@ afs_linux_pag_from_groups(struct group_info *group_info) {
 
 static inline void
 afs_linux_pag_to_groups(afs_uint32 newpag,
-			struct group_info *old, struct group_info *new) {
+			struct group_info *old, struct group_info **new) {
     int need_space = 0;
     int i;
     gid_t g0;
@@ -141,7 +141,7 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
 int
 __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
-         int change_parent)
+         int change_parent, struct group_info **old_groups)
 {
     struct group_info *group_info;
     struct group_info *tmp;
@@ -152,12 +152,16 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_linux_pag_to_groups(*newpag, group_info, &tmp);
 
-    put_group_info(group_info);
-    group_info = tmp;
+    if (old_groups) {
+	*old_groups = group_info;
+    } else {
+	put_group_info(group_info);
+	group_info = NULL;
+    }
 
-    afs_setgroups(cr, group_info, change_parent);
+    afs_setgroups(cr, tmp, change_parent);
 
-    put_group_info(group_info);
+    put_group_info(tmp);
 
     return 0;
 }
@@ -235,10 +239,11 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
        int change_parent)
 {
     int code;
+    struct group_info *old_groups = NULL;
 
     AFS_STATCNT(setpag);
 
-    code = __setpag(cr, pagvalue, newpag, change_parent);
+    code = __setpag(cr, pagvalue, newpag, change_parent, &old_groups);
 
 #ifdef LINUX_KEYRING_SUPPORT
     if (code == 0 && afs_cr_rgid(*cr) != NFSXLATOR_CRED) {
@@ -265,6 +270,18 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     }
 #endif /* LINUX_KEYRING_SUPPORT */
 
+    if (code) {
+	if (old_groups) {
+	    afs_setgroups(cr, old_groups, change_parent);
+	    put_group_info(old_groups);
+	    old_groups = NULL;
+	}
+	if (*newpag > -1) {
+	    afs_MarkUserExpired(*newpag);
+	    *newpag = -1;
+	}
+    }
+
     return code;
 }
 
@@ -290,7 +307,7 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
 
@@ -321,7 +338,7 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
 
@@ -350,7 +367,7 @@ asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
     
@@ -387,7 +404,7 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
     
@@ -422,7 +439,7 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
-	code = __setpag(&cr, old_pag, &junk, 0);
+	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
 
@@ -575,7 +592,7 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 		if (afs_linux_cred_is_current(cred) &&
                     ((keyring_pag >> 24) & 0xff) == 'A' &&
 		    keyring_pag != afs_linux_pag_from_groups(current_group_info())) {
-			__setpag(&cred, keyring_pag, &newpag, 0);
+			__setpag(&cred, keyring_pag, &newpag, 0, NULL);
 		}
 	    }
 	    key_put(key);

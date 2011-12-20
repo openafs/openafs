@@ -1,0 +1,56 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=libacl
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+############################################################################
+# Install inc files
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\afscp.h
+
+
+############################################################################
+# build afscp.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afscp.lib
+
+afscflags = -I..\WINNT\kfw\inc\krb5 $(afscflags)
+
+LIBOBJS =\
+	$(OUT)\afscp_callback.obj \
+	$(OUT)\afscp_server.obj \
+	$(OUT)\afscp_fid.obj \
+	$(OUT)\afscp_volume.obj \
+	$(OUT)\afscp_file.obj \
+	$(OUT)\afscp_dir.obj \
+	$(OUT)\afscp_init.obj \
+	$(OUT)\afscp_util.obj \
+	$(OUT)\afscp_dirops.obj \
+	$(OUT)\afscp_roken.obj \
+	$(OUT)\afscp_acl.obj \
+	$(OUT)\AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+
+############################################################################
+# install afscp.lib
+
+install_headers: $(INCFILES)
+
+install: $(LIBFILE)
+
+clean::
+	$(DEL) $(INCFILES)
+
+mkdir:

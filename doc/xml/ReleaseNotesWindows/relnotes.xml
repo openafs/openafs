@@ -676,7 +676,7 @@
       <indexterm significance="normal">
         <primary>fs setcrypt</primary>
       </indexterm>
-      <para>The OpenAFS for Windows installer by default activates a weak form of encrypted data transfer between the AFS client and the AFS servers. This is often referred to as "fcrypt" mode. Encrypted data transfer can be turned on or off with the "fs crypt" command. Transitions between "crypt" and "non-crypt" modes are logged to the Windows Application Event Log. </para>
+      <para>The OpenAFS for Windows installer by default activates a weak form of encrypted data transfer between the AFS client and the AFS servers. This is often referred to as "fcrypt" mode. Encrypted data transfer can be turned on or off with the "fs setcrypt" command. Transitions between "crypt" and "non-crypt" modes are logged to the Windows Application Event Log. </para>
     </section>
     <section>
       <title id="Authenticated_SMB_Access_to_Client_Service">3.15. Authenticated SMB Access to the OpenAFS Client Service</title>

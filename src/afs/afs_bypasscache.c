@@ -60,9 +60,7 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
-
-#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
-
+#if defined(AFS_CACHE_BYPASS) || defined(UKERNEL)
 #include "afs/afs_bypasscache.h"
 
 /*
@@ -269,15 +267,61 @@ done:
  * afs_PrefetchNoCache, all of the pages they've been passed need
  * to be unlocked.
  */
+#ifdef UKERNEL
+typedef void * bypass_page_t;
+
+#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
+    do { \
+	int dolen = auio->uio_iov[curiov].iov_len - pageoff; \
+	memcpy(((char *)pp) + pageoff,		       \
+	       ((char *)rxiov[iovno].iov_base) + iovoff, dolen);	\
+	auio->uio_resid -= dolen; \
+    } while(0)
+
+#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
+    do { \
+	int dolen = rxiov[iovno].iov_len - iovoff; \
+	memcpy(((char *)pp) + pageoff,				\
+	       ((char *)rxiov[iovno].iov_base) + iovoff, dolen);	\
+	auio->uio_resid -= dolen;	\
+    } while(0)
+
+#define unlock_and_release_pages(auio)
+#define release_full_page(pp, pageoff)
+
+#else
+typedef struct page * bypass_page_t;
+
+#define copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
+    do { \
+        char *address;						\
+	int dolen = auio->uio_iov[curiov].iov_len - pageoff; \
+	address = kmap_atomic(pp, KM_USER0); \
+	memcpy(address + pageoff, \
+	       (char *)(rxiov[iovno].iov_base) + iovoff, dolen);	\
+	kunmap_atomic(address, KM_USER0); \
+    } while(0)
+
+#define copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curiov)	\
+    do { \
+        char *address; \
+	int dolen = rxiov[iovno].iov_len - iovoff; \
+	address = kmap_atomic(pp, KM_USER0); \
+	memcpy(address + pageoff, \
+	       (char *)(rxiov[iovno].iov_base) + iovoff, dolen);	\
+	kunmap_atomic(address, KM_USER0); \
+    } while(0)
+
+
 #define unlock_and_release_pages(auio) \
     do { \
 	struct iovec *ciov;	\
-	struct page *pp; \
+	bypass_page_t pp; \
 	afs_int32 iovmax; \
 	afs_int32 iovno = 0; \
 	ciov = auio->uio_iov; \
 	iovmax = auio->uio_iovcnt - 1;	\
-	pp = (struct page*) ciov->iov_base;	\
+	pp = (bypass_page_t) ciov->iov_base;	\
 	while(1) { \
 	    if (pp) { \
 		if (PageLocked(pp)) \
@@ -288,15 +332,29 @@ done:
 	    if(iovno > iovmax) \
 		break; \
 	    ciov = (auio->uio_iov + iovno);	\
-	    pp = (struct page*) ciov->iov_base;	\
+	    pp = (bypass_page_t) ciov->iov_base;	\
 	} \
     } while(0)
+
+#define release_full_page(pp, pageoff)			\
+    do { \
+	/* this is appropriate when no caller intends to unlock \
+	 * and release the page */ \
+	SetPageUptodate(pp); \
+	if(PageLocked(pp)) \
+	    unlock_page(pp); \
+	else \
+	    afs_warn("afs_NoCacheFetchProc: page not locked!\n"); \
+	put_page(pp); /* decrement refcount */ \
+    } while(0)
+
+#endif
 
 /* no-cache prefetch routine */
 static afs_int32
 afs_NoCacheFetchProc(struct rx_call *acall,
                      struct vcache *avc,
-					 uio_t *auio,
+		     struct uio *auio,
                      afs_int32 release_pages,
 		     afs_int32 size)
 {
@@ -305,16 +363,15 @@ afs_NoCacheFetchProc(struct rx_call *acall,
     int moredata, iovno, iovoff, iovmax, result, locked;
     struct iovec *ciov;
     struct iovec *rxiov;
-    int nio;
-    struct page *pp;
-    char *address;
+    int nio = 0;
+    bypass_page_t pp;
 
     int curpage, bytes;
     int pageoff;
 
     rxiov = osi_AllocSmallSpace(sizeof(struct iovec) * RX_MAXIOVECS);
     ciov = auio->uio_iov;
-    pp = (struct page*) ciov->iov_base;
+    pp = (bypass_page_t) ciov->iov_base;
     iovmax = auio->uio_iovcnt - 1;
     iovno = iovoff = result = 0;
 
@@ -323,7 +380,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	code = rx_Read(acall, (char *)&length, sizeof(afs_int32));
 	COND_RE_GLOCK(locked);
 	if (code != sizeof(afs_int32)) {
-	    result = 0;
+	    result = EIO;
 	    afs_warn("Preread error. code: %d instead of %d\n",
 		code, (int)sizeof(afs_int32));
 	    unlock_and_release_pages(auio);
@@ -364,7 +421,8 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 
 	for (curpage = 0; curpage <= iovmax; curpage++) {
 	    pageoff = 0;
-	    while (pageoff < 4096) {
+	    /* properly, this should track uio_resid, not a fixed page size! */
+	    while (pageoff < auio->uio_iov[curpage].iov_len) {
 		/* If no more iovs, issue new read. */
 		if (iovno >= nio) {
 		    COND_GUNLOCK(locked);
@@ -372,53 +430,42 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 		    COND_RE_GLOCK(locked);
 		    if (bytes < 0) {
 		        afs_warn("afs_NoCacheFetchProc: rx_Read error. Return code was %d\n", bytes);
-			result = 0;
+			result = bytes;
 			unlock_and_release_pages(auio);
 			goto done;
 		    } else if (bytes == 0) {
-			result = 0;
+			/* we failed to read the full length */
+			result = EIO;
 			afs_warn("afs_NoCacheFetchProc: rx_Read returned zero. Aborting.\n");
 			unlock_and_release_pages(auio);
 			goto done;
 		    }
-		    length -= bytes;
+		    size -= bytes;
 		    iovno = 0;
 		}
-		pp = (struct page *)auio->uio_iov[curpage].iov_base;
-		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= PAGE_CACHE_SIZE) {
+		pp = (bypass_page_t)auio->uio_iov[curpage].iov_base;
+		if (pageoff + (rxiov[iovno].iov_len - iovoff) <= auio->uio_iov[curpage].iov_len) {
 		    /* Copy entire (or rest of) current iovec into current page */
-		    if (pp) {
-			address = kmap_atomic(pp, KM_USER0);
-			memcpy(address + pageoff, rxiov[iovno].iov_base + iovoff,
-				rxiov[iovno].iov_len - iovoff);
-			kunmap_atomic(address, KM_USER0);
-		    }
+		    if (pp)
+			copy_pages(pp, pageoff, rxiov, iovno, iovoff, auio, curpage);
+		    length -= (rxiov[iovno].iov_len - iovoff);
 		    pageoff += rxiov[iovno].iov_len - iovoff;
 		    iovno++;
 		    iovoff = 0;
 		} else {
 		    /* Copy only what's needed to fill current page */
-		    if (pp) {
-			address = kmap_atomic(pp, KM_USER0);
-			memcpy(address + pageoff, rxiov[iovno].iov_base + iovoff,
-				PAGE_CACHE_SIZE - pageoff);
-			kunmap_atomic(address, KM_USER0);
-		    }
-		    iovoff += PAGE_CACHE_SIZE - pageoff;
-		    pageoff = PAGE_CACHE_SIZE;
+		    if (pp)
+			copy_page(pp, pageoff, rxiov, iovno, iovoff, auio, curpage);
+		    length -= (auio->uio_iov[curpage].iov_len - pageoff);
+		    iovoff += auio->uio_iov[curpage].iov_len - pageoff;
+		    pageoff = auio->uio_iov[curpage].iov_len;
 		}
+
 		/* we filled a page, or this is the last page.  conditionally release it */
-		if (pp && ((pageoff == PAGE_CACHE_SIZE && release_pages)
-				|| (length == 0 && iovno >= nio))) {
-		    /* this is appropriate when no caller intends to unlock
-		     * and release the page */
-                    SetPageUptodate(pp);
-                    if(PageLocked(pp))
-                        unlock_page(pp);
-                    else
-                        afs_warn("afs_NoCacheFetchProc: page not locked!\n");
-                    put_page(pp); /* decrement refcount */
-		}
+		if (pp && ((pageoff == auio->uio_iov[curpage].iov_len &&
+			    release_pages) || (length == 0 && iovno >= nio)))
+		    release_full_page(pp, pageoff);
+
 		if (length == 0 && iovno >= nio)
 		    goto done;
 	    }
@@ -497,7 +544,7 @@ cleanup:
     osi_Free(areq, sizeof(struct vrequest));
     osi_Free(bparms->auio->uio_iov,
 	     bparms->auio->uio_iovcnt * sizeof(struct iovec));
-    osi_Free(bparms->auio, sizeof(uio_t));
+    osi_Free(bparms->auio, sizeof(struct uio));
     osi_Free(bparms, sizeof(struct nocache_read_request));
     return code;
 }
@@ -509,8 +556,10 @@ afs_PrefetchNoCache(struct vcache *avc,
 		    afs_ucred_t *acred,
 		    struct nocache_read_request *bparms)
 {
-    uio_t *auio;
+    struct uio *auio;
+#ifndef UKERNEL
     struct iovec *iovecp;
+#endif
     struct vrequest *areq;
     afs_int32 code = 0;
     struct rx_connection *rxconn;
@@ -530,7 +579,9 @@ afs_PrefetchNoCache(struct vcache *avc,
 
     auio = bparms->auio;
     areq = bparms->areq;
+#ifndef UKERNEL
     iovecp = auio->uio_iov;
+#endif
 
     tcallspec = (struct tlocal1 *) osi_Alloc(sizeof(struct tlocal1));
     do {
@@ -613,14 +664,17 @@ done:
      * Copy appropriate fields into vcache
      */
 
-    afs_ProcessFS(avc, &tcallspec->OutStatus, areq);
+    if (!code)
+	afs_ProcessFS(avc, &tcallspec->OutStatus, areq);
 
     osi_Free(areq, sizeof(struct vrequest));
     osi_Free(tcallspec, sizeof(struct tlocal1));
-    osi_Free(iovecp, auio->uio_iovcnt * sizeof(struct iovec));
     osi_Free(bparms, sizeof(struct nocache_read_request));
-    osi_Free(auio, sizeof(uio_t));
+#ifndef UKERNEL
+    /* in UKERNEL, the "pages" are passed in */
+    osi_Free(iovecp, auio->uio_iovcnt * sizeof(struct iovec));
+    osi_Free(auio, sizeof(struct uio));
+#endif
     return code;
 }
-
-#endif /* AFS_CACHE_BYPASS && AFS_LINUX24_ENV */
+#endif

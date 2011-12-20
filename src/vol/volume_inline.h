@@ -17,6 +17,38 @@
 # include "lock.h"
 #endif
 
+#ifdef AFS_PTHREAD_ENV
+/**
+ * @param[in] cv cond var
+ * @param[in] ts deadline, or NULL to wait forever
+ * @param[out] timedout  set to 1 if we returned due to the deadline, 0 if we
+ *                       returned due to the cond var getting signalled. If
+ *                       NULL, it is ignored.
+ */
+static_inline void
+VOL_CV_TIMEDWAIT(pthread_cond_t *cv, const struct timespec *ts, int *timedout)
+{
+    int code;
+    if (timedout) {
+	*timedout = 0;
+    }
+    if (!ts) {
+	VOL_CV_WAIT(cv);
+	return;
+    }
+    VOL_LOCK_DBG_CV_WAIT_BEGIN;
+    code = CV_TIMEDWAIT(cv, &vol_glock_mutex, ts);
+    VOL_LOCK_DBG_CV_WAIT_END;
+    if (code == ETIMEDOUT) {
+	code = 0;
+	if (timedout) {
+	    *timedout = 1;
+	}
+    }
+    osi_Assert(code == 0);
+}
+#endif /* AFS_PTHREAD_ENV */
+
 /**
  * tell caller whether the given program type represents a salvaging
  * program.
@@ -302,6 +334,7 @@ VIsExclusiveState(VolState state)
     case VOL_STATE_VNODE_CLOSE:
     case VOL_STATE_VNODE_RELEASE:
     case VOL_STATE_VLRU_ADD:
+    case VOL_STATE_SCANNING_RXCALLS:
 	return 1;
     default:
 	return 0;
@@ -422,6 +455,47 @@ VWaitStateChange_r(Volume * vp)
 	VOL_CV_WAIT(&V_attachCV(vp));
     } while (V_attachState(vp) == state_save);
     osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
+}
+
+/**
+ * wait for the volume to change states within a certain amount of time
+ *
+ * @param[in] vp  volume object pointer
+ * @param[in] ts  deadline (absolute time) or NULL to wait forever
+ *
+ * @pre VOL_LOCK held; ref held on volume
+ * @post VOL_LOCK held; volume state has changed and/or it is after the time
+ *       specified in ts
+ *
+ * @note DEMAND_ATTACH_FS only
+ * @note if ts is NULL, this is identical to VWaitStateChange_r
+ */
+static_inline void
+VTimedWaitStateChange_r(Volume * vp, const struct timespec *ts, int *atimedout)
+{
+    VolState state_save;
+    int timeout;
+
+    if (atimedout) {
+	*atimedout = 0;
+    }
+
+    if (!ts) {
+	VWaitStateChange_r(vp);
+	return;
+    }
+
+    state_save = V_attachState(vp);
+
+    assert(vp->nWaiters || vp->nUsers);
+    do {
+	VOL_CV_TIMEDWAIT(&V_attachCV(vp), ts, &timeout);
+    } while (V_attachState(vp) == state_save && !timeout);
+    assert(V_attachState(vp) != VOL_STATE_FREED);
+
+    if (atimedout && timeout) {
+	*atimedout = 1;
+    }
 }
 
 /**

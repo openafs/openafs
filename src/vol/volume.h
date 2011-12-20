@@ -95,6 +95,7 @@ extern pthread_t vol_glock_holder;
 #define VOL_UNLOCK MUTEX_EXIT(&vol_glock_mutex)
 #define VOL_CV_WAIT(cv) CV_WAIT((cv), &vol_glock_mutex)
 #endif /* !VOL_LOCK_DEBUG */
+
 #define VSALVSYNC_LOCK MUTEX_ENTER(&vol_salvsync_mutex)
 #define VSALVSYNC_UNLOCK MUTEX_EXIT(&vol_salvsync_mutex)
 #define VTRANS_LOCK MUTEX_ENTER(&vol_trans_mutex)
@@ -175,9 +176,11 @@ typedef enum {
     VOL_STATE_SALVAGE_REQ       = 21,   /**< volume has been requested to be salvaged,
                                          *   but is waiting for other users to go away
                                          *   so it can be offlined */
+    VOL_STATE_SCANNING_RXCALLS  = 22,   /**< volume is scanning vp->rx_call_list
+                                         *   to interrupt RX calls */
     /* please add new states directly above this line */
-    VOL_STATE_FREED             = 22,   /**< debugging aid */
-    VOL_STATE_COUNT             = 23    /**< total number of valid states */
+    VOL_STATE_FREED             = 23,   /**< debugging aid */
+    VOL_STATE_COUNT             = 24    /**< total number of valid states */
 } VolState;
 
 /**
@@ -249,6 +252,9 @@ typedef struct VolumePackageOptions {
     afs_int32 canUseSALVSYNC;     /**< can we use the SALVSYNC channel? (DAFS) */
     afs_int32 unsafe_attach;      /**< can we bypass checking the inUse vol
                                    *   header on attach? */
+    void (*interrupt_rxcall) (struct rx_call *call, afs_int32 error);
+                                  /**< callback to interrupt RX calls accessing
+                                   *   a going-offline volume */
 } VolumePackageOptions;
 
 /* Magic numbers and version stamps for each type of file */
@@ -623,6 +629,14 @@ typedef struct VolumeVLRUState {
 } VolumeVLRUState;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+/**
+ * node for a volume's rx_call_list.
+ */
+struct VCallByVol {
+    struct rx_queue q;
+    struct rx_call *call;
+};
+
 typedef struct Volume {
     struct rx_queue q;          /* Volume hash chain pointers */
     VolumeId hashid;		/* Volume number -- for hash table lookup */
@@ -672,6 +686,8 @@ typedef struct Volume {
 				 * volume list--the list of volumes that will be
 				 * salvaged should the file server crash */
     struct rx_queue vnode_list; /**< linked list of cached vnodes for this volume */
+    struct rx_queue rx_call_list; /**< linked list of split RX calls using this
+                                   *   volume (fileserver only) */
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState attach_state;      /* what stage of attachment has been completed */
     afs_uint32 attach_flags;    /* flags related to attachment state */
@@ -767,9 +783,13 @@ struct volHeader {
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
 extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
-extern Volume *VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId);
+extern Volume *VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
+                               const struct timespec *ts);
+extern Volume *VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
+                                  const struct timespec *ts, struct VCallByVol *cbv);
 extern Volume *VGetVolume_r(Error * ec, VolId volumeId);
 extern void VPutVolume(Volume *);
+extern void VPutVolumeWithCall(Volume *vp, struct VCallByVol *cbv);
 extern void VPutVolume_r(Volume *);
 extern void VOffline(Volume * vp, char *message);
 extern void VOffline_r(Volume * vp, char *message);
@@ -829,6 +849,7 @@ extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
 extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
 			   char **namep);
 extern char *vol_DevName(dev_t adev, char *wpath);
+extern afs_int32 VIsGoingOffline(struct Volume *vp);
 
 struct VLockFile;
 extern void VLockFileInit(struct VLockFile *lf, const char *path);
@@ -994,8 +1015,7 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 #define VOL_FREE_BITMAP_WAIT     0x1  /* for demand attach, wait for other exclusive ops to end */
 
 /* VRequestSalvage_r flags */
-#define VOL_SALVAGE_INVALIDATE_HEADER 0x1 /* for demand attach fs, invalidate volume header cache */
-#define VOL_SALVAGE_NO_OFFLINE        0x2 /* we do not need to wait to offline the volume; it has
+#define VOL_SALVAGE_NO_OFFLINE        0x1 /* we do not need to wait to offline the volume; it has
                                            * not been fully attached */
 
 

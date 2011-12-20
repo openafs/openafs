@@ -64,6 +64,9 @@
 /* Define if you have the socket function.  */
 #define HAVE_SOCKET
 
+/* Define if you have the strnlen function.  */
+#define HAVE_STRNLEN 1
+
 /* Define if you have the <direct.h> header file.  */
 #undef HAVE_DIRECT_H
 
@@ -204,7 +207,8 @@
 #endif
 
 /* Windows does not provide socklen_t prior to WDK 6.0 */
-#undef HAVE_SOCKLEN_T
+#define HAVE_SOCKLEN_T 1
+typedef int socklen_t;
 
 #if (_MSC_VER < 1400)
 typedef int errno_t;
@@ -245,3 +249,4 @@ typedef int errno_t;
 #endif
 
 #define HAVE_CONIO_H 1
+#define HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE 1

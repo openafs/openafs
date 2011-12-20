@@ -73,6 +73,18 @@
 
 #define nFILES	(sizeof (stuff)/sizeof(struct stuff))
 
+#ifndef AFS_NT40_ENV
+# ifdef O_LARGEFILE
+#  define AFS_SETLKW   F_SETLKW64
+#  define AFS_SETLK    F_SETLK64
+#  define afs_st_flock flock64
+# else
+#  define AFS_SETLKW   F_SETLKW
+#  define AFS_SETLK    F_SETLK
+#  define afs_st_flock flock
+# endif
+#endif
+
 /* Note:  the volume creation functions herein leave the destroyMe flag in the
    volume header ON:  this means that the volumes will not be attached by the
    file server and WILL BE DESTROYED the next time a system salvage is performed */
@@ -971,14 +983,14 @@ static_inline int
 _VLockFd(int fd, afs_uint32 offset, int locktype, int nonblock)
 {
     int l_type = F_WRLCK;
-    int cmd = F_SETLKW;
-    struct flock sf;
+    int cmd = AFS_SETLKW;
+    struct afs_st_flock sf;
 
     if (locktype == READ_LOCK) {
 	l_type = F_RDLCK;
     }
     if (nonblock) {
-	cmd = F_SETLK;
+	cmd = AFS_SETLK;
     }
 
     sf.l_start = offset;
@@ -1035,14 +1047,14 @@ _VCloseFd(int fd)
 static_inline void
 _VUnlockFd(int fd, afs_uint32 offset)
 {
-    struct flock sf;
+    struct afs_st_flock sf;
 
     sf.l_start = offset;
     sf.l_len = 1;
     sf.l_type = F_UNLCK;
     sf.l_whence = SEEK_SET;
 
-    if (fcntl(fd, F_SETLK, &sf)) {
+    if (fcntl(fd, AFS_SETLK, &sf)) {
 	Log("_VUnlockFd: fcntl failed with error %d when trying to unlock "
 	    "fd %d\n", errno, fd);
     }

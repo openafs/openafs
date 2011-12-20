@@ -2460,6 +2460,12 @@ cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe,
 
     for (idx = 0; idx < niovecs; idx++) {
 	cbdsk = (struct CBDiskEntry *) iov[idx].iov_base;
+
+	if (cbdsk->cb.hhead < state->h_map.len &&
+	    state->h_map.entries[cbdsk->cb.hhead].valid == FS_STATE_IDX_SKIPPED) {
+	    continue;
+	}
+
 	if ((cb = GetCB()) == NULL) {
 	    ViceLog(0, ("cb_stateRestoreCBs: ran out of free CallBack structures\n"));
 	    ret = 1;
@@ -2526,6 +2532,7 @@ cb_stateDiskEntryToFE(struct fs_dump_state * state,
 	ret = 1;
 	goto done;
     }
+    state->fe_map.entries[in->index].valid = FS_STATE_IDX_VALID;
     state->fe_map.entries[in->index].old_idx = in->index;
     state->fe_map.entries[in->index].new_idx = fetoi(out);
 
@@ -2556,6 +2563,7 @@ cb_stateDiskEntryToCB(struct fs_dump_state * state,
 	ret = 1;
 	goto done;
     }
+    state->cb_map.entries[in->index].valid = FS_STATE_IDX_VALID;
     state->cb_map.entries[in->index].old_idx = in->index;
     state->cb_map.entries[in->index].new_idx = cbtoi(out);
 
@@ -2590,7 +2598,8 @@ fe_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
     if (old >= state->fe_map.len) {
 	ViceLog(0, ("fe_OldToNew: index %d is out of range\n", old));
 	ret = 1;
-    } else if (state->fe_map.entries[old].old_idx != old) { /* sanity check */
+    } else if (state->fe_map.entries[old].valid != FS_STATE_IDX_VALID ||
+               state->fe_map.entries[old].old_idx != old) { /* sanity check */
 	ViceLog(0, ("fe_OldToNew: index %d points to an invalid FileEntry record\n", old));
 	ret = 1;
     } else {
@@ -2615,7 +2624,8 @@ cb_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
     if (old >= state->cb_map.len) {
 	ViceLog(0, ("cb_OldToNew: index %d is out of range\n", old));
 	ret = 1;
-    } else if (state->cb_map.entries[old].old_idx != old) { /* sanity check */
+    } else if (state->cb_map.entries[old].valid != FS_STATE_IDX_VALID ||
+               state->cb_map.entries[old].old_idx != old) { /* sanity check */
 	ViceLog(0, ("cb_OldToNew: index %d points to an invalid CallBack record\n", old));
 	ret = 1;
     } else {

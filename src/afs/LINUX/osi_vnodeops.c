@@ -220,8 +220,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	code = -ENOENT;
 	goto out;
     }
-    ObtainSharedLock(&avc->lock, 810);
-    UpgradeSToWLock(&avc->lock, 811);
+    ObtainWriteLock(&avc->lock, 811);
     ObtainReadLock(&tdc->lock);
     /*
      * Make sure that the data in the cache is current. There are two
@@ -233,15 +232,15 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	   && (tdc->dflags & DFFetching)
 	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
-	ReleaseSharedLock(&avc->lock);
+	ReleaseWriteLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
-	ObtainSharedLock(&avc->lock, 812);
+	ObtainWriteLock(&avc->lock, 812);
 	ObtainReadLock(&tdc->lock);
     }
     if (!(avc->f.states & CStatd)
 	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
-	ReleaseSharedLock(&avc->lock);
+	ReleaseWriteLock(&avc->lock);
 	afs_PutDCache(tdc);
 	goto tagain;
     }
@@ -425,6 +424,8 @@ afs_linux_release(struct inode *ip, struct file *fp)
 static int
 #if defined(FOP_FSYNC_TAKES_DENTRY)
 afs_linux_fsync(struct file *fp, struct dentry *dp, int datasync)
+#elif defined(FOP_FSYNC_TAKES_RANGE)
+afs_linux_fsync(struct file *fp, loff_t start, loff_t end, int datasync)
 #else
 afs_linux_fsync(struct file *fp, int datasync)
 #endif
@@ -433,9 +434,15 @@ afs_linux_fsync(struct file *fp, int datasync)
     struct inode *ip = FILE_INODE(fp);
     cred_t *credp = crref();
 
+#if defined(FOP_FSYNC_TAKES_RANGE)
+    mutex_lock(&ip->i_mutex);
+#endif
     AFS_GLOCK();
     code = afs_fsync(VTOAFS(ip), credp);
     AFS_GUNLOCK();
+#if defined(FOP_FSYNC_TAKES_RANGE)
+    mutex_unlock(&ip->i_mutex);
+#endif
     crfree(credp);
     return afs_convert_code(code);
 
@@ -961,7 +968,11 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 }
 
 static int
+#if defined(DOP_D_DELETE_TAKES_CONST)
+afs_dentry_delete(const struct dentry *dp)
+#else
 afs_dentry_delete(struct dentry *dp)
+#endif
 {
     if (dp->d_inode && (VTOAFS(dp->d_inode)->f.states & CUnlinked))
 	return 1;		/* bad inode? */
@@ -1336,7 +1347,7 @@ afs_linux_ireadlink(struct inode *ip, char *target, int maxlen, uio_seg_t seg)
 {
     int code;
     cred_t *credp = crref();
-    uio_t tuio;
+    struct uio tuio;
     struct iovec iov;
 
     setup_uio(&tuio, &iov, target, (afs_offs_t) 0, maxlen, UIO_READ, seg);
@@ -1384,16 +1395,21 @@ static int afs_linux_follow_link(struct dentry *dentry, struct nameidata *nd)
     AFS_GUNLOCK();
 
     if (code < 0) {
-	goto out;
+	return code;
     }
 
     name[code] = '\0';
-    code = vfs_follow_link(nd, name);
+    nd_set_link(nd, name);
+    return 0;
+}
 
-out:
-    osi_Free(name, PATH_MAX);
-
-    return code;
+static void
+afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
+{
+    char *name = nd_get_link(nd);
+    if (name && !IS_ERR(name)) {
+	osi_Free(name, PATH_MAX);
+    }
 }
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
@@ -1620,7 +1636,7 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
 {
     afs_int32 code;
     char *address;
-    uio_t *auio;
+    struct uio *auio;
     struct iovec *iovecp;
     struct inode *ip = FILE_INODE(fp);
     afs_int32 cnt = page_count(pp);
@@ -1639,7 +1655,7 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
     address = kmap(pp);
     ClearPageError(pp);
 
-    auio = osi_Alloc(sizeof(uio_t));
+    auio = osi_Alloc(sizeof(struct uio));
     iovecp = osi_Alloc(sizeof(struct iovec));
 
     setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
@@ -1671,7 +1687,7 @@ afs_linux_fillpage(struct file *fp, struct page *pp)
 
     kunmap(pp);
 
-    osi_Free(auio, sizeof(uio_t));
+    osi_Free(auio, sizeof(struct uio));
     osi_Free(iovecp, sizeof(struct iovec));
 
     crfree(credp);
@@ -1714,7 +1730,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 			   struct list_head *page_list, unsigned num_pages)
 {
     afs_int32 page_ix;
-    uio_t *auio;
+    struct uio *auio;
     afs_offs_t offset;
     struct iovec* iovecp;
     struct nocache_read_request *ancr;
@@ -1732,7 +1748,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     /* background thread must free: iovecp, auio, ancr */
     iovecp = osi_Alloc(num_pages * sizeof(struct iovec));
 
-    auio = osi_Alloc(sizeof(uio_t));
+    auio = osi_Alloc(sizeof(struct uio));
     auio->uio_iov = iovecp;
     auio->uio_iovcnt = num_pages;
     auio->uio_flag = UIO_READ;
@@ -1818,7 +1834,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
         /* If there is nothing for the background thread to handle,
          * it won't be freeing the things that we never gave it */
         osi_Free(iovecp, num_pages * sizeof(struct iovec));
-        osi_Free(auio, sizeof(uio_t));
+        osi_Free(auio, sizeof(struct uio));
         osi_Free(ancr, sizeof(struct nocache_read_request));
     }
     /* we do not flush, release, or unmap pages--that will be
@@ -1832,7 +1848,7 @@ static int
 afs_linux_bypass_readpage(struct file *fp, struct page *pp)
 {
     cred_t *credp = NULL;
-    uio_t *auio;
+    struct uio *auio;
     struct iovec *iovecp;
     struct nocache_read_request *ancr;
     int code;
@@ -1851,7 +1867,7 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
     ClearPageError(pp);
 
     /* receiver frees */
-    auio = osi_Alloc(sizeof(uio_t));
+    auio = osi_Alloc(sizeof(struct uio));
     iovecp = osi_Alloc(sizeof(struct iovec));
 
     /* address can be NULL, because we overwrite it with 'pp', below */
@@ -2058,7 +2074,7 @@ afs_linux_page_writeback(struct inode *ip, struct page *pp,
     char *buffer;
     afs_offs_t base;
     int code = 0;
-    uio_t tuio;
+    struct uio tuio;
     struct iovec iovec;
     int f_flags = 0;
 
@@ -2245,9 +2261,12 @@ afs_linux_permission(struct inode *ip, int mode)
     cred_t *credp;
     int tmp = 0;
 
+    /* Check for RCU path walking */
 #if defined(IOP_PERMISSION_TAKES_FLAGS)
-    /* We don't support RCU path walking */
     if (flags & IPERM_FLAG_RCU)
+       return -ECHILD;
+#elif defined(MAY_NOT_BLOCK)
+    if (mode & MAY_NOT_BLOCK)
        return -ECHILD;
 #endif
 
@@ -2447,6 +2466,7 @@ static struct inode_operations afs_symlink_iops = {
 #else /* !defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE) */
   .readlink = 		afs_linux_readlink,
   .follow_link =	afs_linux_follow_link,
+  .put_link =		afs_linux_put_link,
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
   .setattr =		afs_notify_change,
 };

@@ -57,6 +57,7 @@
 #include "afs/audit.h"
 #include <afs/dir.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include <afs/vol_prototypes.h>
 #include <afs/errors.h>
 
@@ -320,7 +321,7 @@ XAttachVolume(afs_int32 *error, afs_uint32 avolid, afs_int32 apartid, int amode)
 }
 
 /* Adapted from the file server; create a root directory for this volume */
-static int
+static Error
 ViceCreateRoot(Volume *vp)
 {
     DirHandle dir;
@@ -344,7 +345,11 @@ ViceCreateRoot(Volume *vp)
 	IH_CREATE(V_linkHandle(vp), V_device(vp),
 		  VPartitionPath(V_partition(vp)), nearInode, V_parentId(vp),
 		  1, 1, 0);
-    osi_Assert(VALID_INO(inodeNumber));
+    if (!VALID_INO(inodeNumber)) {
+	Log("ViceCreateRoot: IH_CREATE: %s\n", afs_error_message(errno));
+	free(vnode);
+	return EIO;
+    }
 
     SetSalvageDirHandle(&dir, V_parentId(vp), vp->device, inodeNumber);
     did.Volume = V_id(vp);
@@ -400,7 +405,7 @@ ViceCreateRoot(Volume *vp)
     V_diskused(vp) = nBlocks(length);
 
     free(vnode);
-    return 1;
+    return 0;
 }
 
 afs_int32
@@ -576,8 +581,17 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
     V_inService(vp) = V_blessed(vp) = 1;
     V_type(vp) = atype;
     AssignVolumeName(&V_disk(vp), aname, 0);
-    if (doCreateRoot)
-	ViceCreateRoot(vp);
+    if (doCreateRoot) {
+	error = ViceCreateRoot(vp);
+	if (error) {
+	    Log("1 Volser: CreateVolume: Unable to create volume root dir; "
+	        "error code %u\n", (unsigned)error);
+	    DeleteTrans(tt, 1);
+	    V_needsSalvaged(vp) = 1;
+	    VDetachVolume(&junk, vp);
+	    return EIO;
+	}
+    }
     V_destroyMe(vp) = DESTROY_ME;
     V_inService(vp) = 0;
     V_maxquota(vp) = 5000;	/* set a quota of 5000 at init time */
@@ -703,8 +717,6 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     }
     newId = *newNumber;
 
-    if (newType != readonlyVolume && newType != backupVolume)
-	return EINVAL;
     tt = FindTrans(atrans);
     if (!tt)
 	return ENOENT;
@@ -754,15 +766,8 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	    error = EINVAL;
 	    goto fail;
 	}
-	if (V_type(originalvp) == readonlyVolume
-	    && V_parentId(originalvp) != V_parentId(purgevp)) {
-	    Log("1 Volser: Clone: Volume %u and volume %u were not cloned from the same parent volume; aborted\n", tt->volid, purgeId);
-	    error = EXDEV;
-	    goto fail;
-	}
-	if (V_type(originalvp) == readwriteVolume
-	    && tt->volid != V_parentId(purgevp)) {
-	    Log("1 Volser: Clone: Volume %u was not originally cloned from volume %u; aborted\n", purgeId, tt->volid);
+	if (V_parentId(originalvp) != V_parentId(purgevp)) {
+	    Log("1 Volser: Clone: Volume %u and volume %u were not originally cloned from the same parent; aborted\n", purgeId, tt->volid);
 	    error = EXDEV;
 	    goto fail;
 	}
@@ -851,8 +856,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 	DeleteTrans(ttc, 1);
 #ifdef AFS_DEMAND_ATTACH_FS
     if (salv_vp && error != VVOLEXISTS && error != EXDEV) {
-	Error salv_error;
-	VRequestSalvage_r(&salv_error, salv_vp, FSYNC_SALVAGE, 0);
+	V_needsSalvaged(salv_vp) = 1;
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
     return error;
@@ -904,12 +908,6 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     TSetRxCall(tt, acid, "ReClone");
 
     originalvp = tt->volume;
-    if ((V_type(originalvp) == backupVolume)
-	|| (V_type(originalvp) == readonlyVolume)) {
-	Log("1 Volser: Clone: The volume to be cloned must be a read/write; aborted\n");
-	error = EROFS;
-	goto fail;
-    }
     if ((V_destroyMe(originalvp) == DESTROY_ME) || !V_inService(originalvp)) {
 	Log("1 Volser: Clone: Volume %d is offline and cannot be cloned\n",
 	    V_id(originalvp));
@@ -931,19 +929,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	error = EXDEV;
 	goto fail;
     }
-    if (V_type(clonevp) != readonlyVolume && V_type(clonevp) != backupVolume) {
-	Log("1 Volser: Clone: The \"recloned\" volume must be a read only volume; aborted\n");
-	error = EINVAL;
-	goto fail;
-    }
-    if (V_type(originalvp) == readonlyVolume
-	&& V_parentId(originalvp) != V_parentId(clonevp)) {
-	Log("1 Volser: Clone: Volume %u and volume %u were not cloned from the same parent volume; aborted\n", tt->volid, cloneId);
-	error = EXDEV;
-	goto fail;
-    }
-    if (V_type(originalvp) == readwriteVolume
-	&& tt->volid != V_parentId(clonevp)) {
+    if (V_parentId(originalvp) != V_parentId(clonevp)) {
 	Log("1 Volser: Clone: Volume %u was not originally cloned from volume %u; aborted\n", cloneId, tt->volid);
 	error = EXDEV;
 	goto fail;
@@ -1898,22 +1884,6 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 
 }
 
-/*extract the volume id from string vname. Its of the form " V0*<id>.vol  "*/
-afs_int32
-ExtractVolId(char vname[])
-{
-    int i;
-    char name[VOLSER_MAXVOLNAME + 1];
-
-    strcpy(name, vname);
-    i = 0;
-    while (name[i] == 'V' || name[i] == '0')
-	i++;
-
-    name[11] = '\0';		/* smash the "." */
-    return (atol(&name[i]));
-}
-
 /*return the name of the next volume header in the directory associated with dirp and dp.
 *the volume id is  returned in volid, and volume header name is returned in volname*/
 int
@@ -1924,7 +1894,7 @@ GetNextVol(DIR * dirp, char *volname, afs_uint32 * volid)
     dp = readdir(dirp);		/*read next entry in the directory */
     if (dp) {
 	if ((dp->d_name[0] == 'V') && !strcmp(&(dp->d_name[11]), VHDREXT)) {
-	    *volid = ExtractVolId(dp->d_name);
+	    *volid = VolumeNumber(dp->d_name);
 	    strcpy(volname, dp->d_name);
 	    return 0;		/*return the name of the file representing a volume */
 	} else {
@@ -2228,7 +2198,10 @@ GetVolInfo(afs_uint32 partId,
     }
 
     /* Get volume from volserver */
-    tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
+    if (mode == VOL_INFO_LIST_MULTIPLE)
+	tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
+    else
+	tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n",
 	    volumeId, pname, volname, error);

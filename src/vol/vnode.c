@@ -17,8 +17,9 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
+#ifndef MAXINT
 #define MAXINT     (~(1<<((sizeof(int)*8)-1)))
-
+#endif
 
 #include <errno.h>
 #include <stdio.h>

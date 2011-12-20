@@ -21,7 +21,7 @@
 
 
 int
-pam_afs_printf(struct pam_conv *pam_convp, int error, int fmt_msgid, ...)
+pam_afs_printf(PAM_CONST struct pam_conv *pam_convp, int error, int fmt_msgid, ...)
 {
     va_list args;
     char buf[PAM_MAX_MSG_SIZE];
@@ -55,7 +55,7 @@ pam_afs_printf(struct pam_conv *pam_convp, int error, int fmt_msgid, ...)
 
 
 int
-pam_afs_prompt(struct pam_conv *pam_convp, char **response, int echo,
+pam_afs_prompt(PAM_CONST struct pam_conv *pam_convp, char **response, int echo,
 	       int fmt_msgid, ...)
 {
     va_list args;

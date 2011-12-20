@@ -69,7 +69,7 @@ main(int argc, char **argv)
 
     argc--, av++;
     if (argc < 1) {
-	printf("usage: pxclient <serverHost>\n");
+	printf("usage: fsprobe <serverHost>\n");
 	exit(1);
     }
     memset(&host, 0, sizeof(struct sockaddr_in));
@@ -95,7 +95,7 @@ main(int argc, char **argv)
 	exit(1);
     }
 
-    code = ubik_Call(RXAFS_GetTime, cstruct, 0, &tv.tv_sec, &tv.tv_usec);
+    code = RXAFS_GetTime(cstruct->conns[0], (afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
     if (!code)
 	printf("AFS_GetTime on %s sec=%ld, usec=%ld\n", av[0], tv.tv_sec,
 	       (long int)tv.tv_usec);

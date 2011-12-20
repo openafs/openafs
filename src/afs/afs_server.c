@@ -693,7 +693,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	      } multi_End;
 	    }
 	else {			/* find and query setTimeHost only */
-	    for ( i = 0 ; i < j ; i++ ) {
+	    for ( i = 0 ; i < nconns ; i++ ) {
 		if ( conns[i] == NULL || conns[i]->srvr == NULL )
 		    continue;
 		if ( conns[i]->srvr->server == afs_setTimeHost ) {
@@ -1194,7 +1194,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
     return;
 }
 #else /* AFS_USERSPACE_IP_ADDR */
-#if (! defined(AFS_SUN5_ENV)) && (! defined(AFS_DARWIN_ENV)) && (! defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
+#if (! defined(AFS_SUN5_ENV)) && (! defined(AFS_DARWIN_ENV)) && (! defined(AFS_OBSD47_ENV)) && (! defined(AFS_FBSD_ENV)) && defined(USEIFADDR)
 void
 afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 {
@@ -1231,7 +1231,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 #endif /* IFF_POINTTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
-#if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV)) && defined(USEIFADDR)
+#if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV) || defined(AFS_FBSD_ENV)) && defined(USEIFADDR)
 #ifndef afs_min
 #define afs_min(A,B) ((A)<(B)) ? (A) : (B)
 #endif
@@ -1240,7 +1240,11 @@ afsi_SetServerIPRank(struct srvAddr *sa, rx_ifaddr_t ifa)
 {
     struct sockaddr sout;
     struct sockaddr_in *sin;
+#if defined(AFS_DARWIN80_ENV) && !defined(UKERNEL)
     int t;
+#else
+    void *t;
+#endif
 
     afs_uint32 subnetmask, myAddr, myNet, myDstaddr, mySubnet, netMask;
     afs_uint32 serverAddr;
@@ -1564,7 +1568,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #else
 	  TAILQ_FOREACH(ifa, &in_ifaddrhead, ia_link) {
 #endif
-	    afsi_SetServerIPRank(sa, ifa);
+	    afsi_SetServerIPRank(sa, &ifa->ia_ifa);
     }}
 #elif defined(AFS_OBSD_ENV)
     {
@@ -1608,30 +1612,28 @@ afs_SetServerPrefs(struct srvAddr *sa)
 /* afs_FlushServer()
  * The addresses on this server struct has changed in some way and will
  * clean up all other structures that may reference it.
- * The afs_xserver and afs_xsrvAddr locks are assumed taken.
+ * The afs_xserver, afs_xvcb and afs_xsrvAddr locks are assumed taken.
  */
-void
-afs_FlushServer(struct server *srvp)
+static void
+afs_FlushServer(struct server *srvp, struct volume *tv)
 {
     afs_int32 i;
     struct server *ts, **pts;
 
     /* Find any volumes residing on this server and flush their state */
-      afs_ResetVolumes(srvp);
+    afs_ResetVolumes(srvp, tv);
 
     /* Flush all callbacks in the all vcaches for this specific server */
-      afs_FlushServerCBs(srvp);
+    afs_FlushServerCBs(srvp);
 
     /* Remove all the callbacks structs */
     if (srvp->cbrs) {
 	struct afs_cbr *cb, *cbnext;
 
-	  ObtainWriteLock(&afs_xvcb, 300);
 	for (cb = srvp->cbrs; cb; cb = cbnext) {
 	    cbnext = cb->next;
 	    afs_FreeCBR(cb);
 	} srvp->cbrs = (struct afs_cbr *)0;
-	ReleaseWriteLock(&afs_xvcb);
     }
 
     /* If no more srvAddr structs hanging off of this server struct,
@@ -1666,9 +1668,10 @@ afs_FlushServer(struct server *srvp)
  * remains connected to a server struct.
  * The afs_xserver and afs_xsrvAddr locks are assumed taken.
  *    It is not removed from the afs_srvAddrs hash chain.
+ * If resetting volumes, do not reset volume tv
  */
-void
-afs_RemoveSrvAddr(struct srvAddr *sap)
+static void
+afs_RemoveSrvAddr(struct srvAddr *sap, struct volume *tv)
 {
     struct srvAddr **psa, *sa;
     struct server *srv;
@@ -1687,7 +1690,7 @@ afs_RemoveSrvAddr(struct srvAddr *sap)
 	sa->server = 0;
 
 	/* Flush the server struct since it's IP address has changed */
-	afs_FlushServer(srv);
+	afs_FlushServer(srv, tv);
     }
 }
 
@@ -1748,16 +1751,53 @@ afs_GetCapabilities(struct server *ts)
 
 }
 
-/* afs_GetServer()
- * Return an updated and properly initialized server structure
- * corresponding to the server ID, cell, and port specified.
- * If one does not exist, then one will be created.
- * aserver and aport must be in NET byte order.
+static struct server *
+afs_SearchServer(u_short aport, afsUUID * uuidp, afs_int32 locktype,
+		 struct server **oldts, afs_int32 addr_uniquifier)
+{
+    struct server *ts = afs_FindServer(0, aport, uuidp, locktype);
+    if (ts && (ts->sr_addr_uniquifier == addr_uniquifier) && ts->addr) {
+	/* Found a server struct that is multihomed and same
+	 * uniqufier (same IP addrs). The above if statement is the
+	 * same as in InstallUVolumeEntry().
+	 */
+	return ts;
+    }
+    if (ts)
+	*oldts = ts;		/* Will reuse if same uuid */
+    return NULL;
+}
+
+/*!
+ * Return an updated and properly initialized server structure.
+ *
+ * Takes a server ID, cell, and port.
+ * If server does not exist, then one will be created.
+ * @param[in] aserverp
+ *      The server address in network byte order
+ * @param[in] nservers
+ *      The number of IP addresses claimed by the server
+ * @param[in] acell
+ *      The cell the server is in
+ * @param[in] aport
+ *      The port for the server (fileserver or vlserver) in network byte order
+ * @param[in] locktype
+ *      The type of lock to hold when iterating server hash (unused).
+ * @param[in] uuidp
+ *      The uuid for servers supporting one.
+ * @param[in] addr_uniquifier
+ *      The vldb-provider per-instantiated-server uniquifer counter.
+ * @param[in] tv
+ *      A volume not to reset information for if the server addresses
+ *      changed.
+ *
+ * @return
+ *      A server structure matching the request.
  */
 struct server *
-afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
+afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 	      u_short aport, afs_int32 locktype, afsUUID * uuidp,
-	      afs_int32 addr_uniquifier)
+	      afs_int32 addr_uniquifier, struct volume *tv)
 {
     struct server *oldts = 0, *ts, *newts, *orphts = 0;
     struct srvAddr *oldsa, *newsa, *nextsa, *orphsa;
@@ -1772,7 +1812,7 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
     /* Check if the server struct exists and is up to date */
     if (!uuidp) {
 	if (nservers != 1)
-	    panic("afs_GetServer: incorect count of servers");
+	    panic("afs_GetServer: incorrect count of servers");
 	ObtainReadLock(&afs_xsrvAddr);
 	ts = afs_FindServer(aserverp[0], aport, NULL, locktype);
 	ReleaseReadLock(&afs_xsrvAddr);
@@ -1786,22 +1826,37 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
     } else {
 	if (nservers <= 0)
 	    panic("afs_GetServer: incorrect count of servers");
-	ts = afs_FindServer(0, aport, uuidp, locktype);
-	if (ts && (ts->sr_addr_uniquifier == addr_uniquifier) && ts->addr) {
-	    /* Found a server struct that is multihomed and same
-	     * uniqufier (same IP addrs). The above if statement is the
-	     * same as in InstallUVolumeEntry().
-	     */
+
+	ts = afs_SearchServer(aport, uuidp, locktype, &oldts, addr_uniquifier);
+	if (ts) {
 	    ReleaseSharedLock(&afs_xserver);
 	    return ts;
 	}
-	if (ts)
-	    oldts = ts;		/* Will reuse if same uuid */
     }
 
-    UpgradeSToWLock(&afs_xserver, 36);
-    ObtainWriteLock(&afs_xsrvAddr, 116);
+    /*
+     * Lock hierarchy requires xvcb, then xserver. We *have* xserver.
+     * Do a little dance and see if we can grab xvcb. If not, we
+     * need to recheck that oldts is still right after a drop and reobtain.
+     */
+    if (EWOULDBLOCK == NBObtainWriteLock(&afs_xvcb, 300)) {
+	ReleaseSharedLock(&afs_xserver);
+	ObtainWriteLock(&afs_xvcb, 299);
+	ObtainWriteLock(&afs_xserver, 35);
 
+	/* we don't know what changed while we didn't hold the lock */
+	oldts = 0;
+	ts = afs_SearchServer(aport, uuidp, locktype, &oldts,
+			      addr_uniquifier);
+	if (ts) {
+	    ReleaseWriteLock(&afs_xserver);
+	    ReleaseWriteLock(&afs_xvcb);
+	    return ts;
+	}
+    } else {
+	UpgradeSToWLock(&afs_xserver, 36);
+    }
+    ObtainWriteLock(&afs_xsrvAddr, 116);
     srvcount = afs_totalServers;
 
     /* Reuse/allocate a new server structure */
@@ -1844,7 +1899,7 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 		break;
 	}
 	if (oldsa && (oldsa->server != newts)) {
-	    afs_RemoveSrvAddr(oldsa);	/* Remove from its server struct */
+	    afs_RemoveSrvAddr(oldsa, tv);	/* Remove from its server struct */
 	    oldsa->next_sa = newts->addr;	/* Add to the  new server struct */
 	    newts->addr = oldsa;
 	}
@@ -1926,7 +1981,7 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 	    /* Hang the srvAddr struct off of the server structure. The server
 	     * may have multiple srvAddrs, but it won't be marked multihomed.
 	     */
-	    afs_RemoveSrvAddr(orphsa);	/* remove */
+	    afs_RemoveSrvAddr(orphsa, tv);	/* remove */
 	    orphsa->next_sa = orphts->addr;	/* hang off server struct */
 	    orphts->addr = orphsa;
 	    orphsa->server = orphts;
@@ -1934,6 +1989,8 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 	    orphsa->sa_flags &= ~SRVADDR_MH;	/* Not multihomed */
 	}
     }
+    /* We can't need this below, and won't reacquire */
+    ReleaseWriteLock(&afs_xvcb);
 
     srvcount = afs_totalServers - srvcount;	/* # servers added and removed */
     if (srvcount) {
@@ -1947,6 +2004,8 @@ afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers, afs_int32 acell,
 	if (afs_stats_cmperf.srvRecords > afs_stats_cmperf.srvRecordsHWM)
 	    afs_stats_cmperf.srvRecordsHWM = afs_stats_cmperf.srvRecords;
     }
+    /* We can't need this below, and won't reacquire */
+    ReleaseWriteLock(&afs_xvcb);
 
     ReleaseWriteLock(&afs_xsrvAddr);
 

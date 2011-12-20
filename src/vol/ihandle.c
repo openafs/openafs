@@ -343,25 +343,32 @@ ih_open(IHandle_t * ihP)
 
     /* Do we already have an open file handle for this Inode? */
     for (fdP = ihP->ih_fdtail; fdP != NULL; fdP = fdP->fd_ihprev) {
+	if (fdP->fd_status == FD_HANDLE_CLOSING) {
+	    /* The handle was open when an IH_REALLYCLOSE was issued, so we
+	     * cannot reuse it; it will be closed soon. */
+	    continue;
+	}
 #ifndef HAVE_PIO
 	/*
 	 * If we don't have positional i/o, don't try to share fds, since
 	 * we can't do so in a threadsafe way.
 	 */
-	if (fdP->fd_status != FD_HANDLE_INUSE) {
-	    osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
-#else /* HAVE_PIO */
-	if (fdP->fd_status != FD_HANDLE_AVAIL) {
-#endif /* HAVE_PIO */
-	    fdP->fd_refcnt++;
-	    if (fdP->fd_status == FD_HANDLE_OPEN) {
-		fdP->fd_status = FD_HANDLE_INUSE;
-		DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
-	    }
-	    ihP->ih_refcnt++;
-	    IH_UNLOCK;
-	    return fdP;
+	if (fdP->fd_status == FD_HANDLE_INUSE) {
+	    continue;
 	}
+	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN);
+#else /* HAVE_PIO */
+	osi_Assert(fdP->fd_status != FD_HANDLE_AVAIL);
+#endif /* HAVE_PIO */
+
+	fdP->fd_refcnt++;
+	if (fdP->fd_status == FD_HANDLE_OPEN) {
+	    fdP->fd_status = FD_HANDLE_INUSE;
+	    DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
+	}
+	ihP->ih_refcnt++;
+	IH_UNLOCK;
+	return fdP;
     }
 
     /*
@@ -445,7 +452,8 @@ fd_close(FdHandle_t * fdP)
     IH_LOCK;
     osi_Assert(ih_Inited);
     osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE);
+    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+               fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
 
@@ -454,16 +462,17 @@ fd_close(FdHandle_t * fdP)
      * failed (this is determined by checking the ihandle for the flag
      * IH_REALLY_CLOSED) or we have too many open files.
      */
-    if (ihP->ih_flags & IH_REALLY_CLOSED || fdInUseCount > fdCacheSize) {
+    if (fdP->fd_status == FD_HANDLE_CLOSING ||
+        ihP->ih_flags & IH_REALLY_CLOSED || fdInUseCount > fdCacheSize) {
 	IH_UNLOCK;
 	return fd_reallyclose(fdP);
     }
 
     fdP->fd_refcnt--;
     if (fdP->fd_refcnt == 0) {
-    /* Put this descriptor back into the cache */
-    fdP->fd_status = FD_HANDLE_OPEN;
-    DLL_INSERT_TAIL(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
+	/* Put this descriptor back into the cache */
+	fdP->fd_status = FD_HANDLE_OPEN;
+	DLL_INSERT_TAIL(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
     }
 
     /* If this is not the only reference to the Inode then we can decrement
@@ -496,20 +505,21 @@ fd_reallyclose(FdHandle_t * fdP)
     IH_LOCK;
     osi_Assert(ih_Inited);
     osi_Assert(fdInUseCount > 0);
-    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE);
+    osi_Assert(fdP->fd_status == FD_HANDLE_INUSE ||
+               fdP->fd_status == FD_HANDLE_CLOSING);
 
     ihP = fdP->fd_ih;
     closeFd = fdP->fd_fd;
     fdP->fd_refcnt--;
 
     if (fdP->fd_refcnt == 0) {
-    DLL_DELETE(fdP, ihP->ih_fdhead, ihP->ih_fdtail, fd_ihnext, fd_ihprev);
-    DLL_INSERT_TAIL(fdP, fdAvailHead, fdAvailTail, fd_next, fd_prev);
+	DLL_DELETE(fdP, ihP->ih_fdhead, ihP->ih_fdtail, fd_ihnext, fd_ihprev);
+	DLL_INSERT_TAIL(fdP, fdAvailHead, fdAvailTail, fd_next, fd_prev);
 
-    fdP->fd_status = FD_HANDLE_AVAIL;
-    fdP->fd_refcnt = 0;
-    fdP->fd_ih = NULL;
-    fdP->fd_fd = INVALID_FD;
+	fdP->fd_status = FD_HANDLE_AVAIL;
+	fdP->fd_refcnt = 0;
+	fdP->fd_ih = NULL;
+	fdP->fd_fd = INVALID_FD;
     }
 
     /* All the file descriptor handles have been closed; reset
@@ -521,10 +531,10 @@ fd_reallyclose(FdHandle_t * fdP)
     }
 
     if (fdP->fd_refcnt == 0) {
-    IH_UNLOCK;
-    OS_CLOSE(closeFd);
-    IH_LOCK;
-    fdInUseCount -= 1;
+	IH_UNLOCK;
+	OS_CLOSE(closeFd);
+	IH_LOCK;
+	fdInUseCount -= 1;
     }
 
     /* If this is not the only reference to the Inode then we can decrement
@@ -801,14 +811,20 @@ ih_fdclose(IHandle_t * ihP)
 	next = fdP->fd_ihnext;
 	osi_Assert(fdP->fd_ih == ihP);
 	osi_Assert(fdP->fd_status == FD_HANDLE_OPEN
-	       || fdP->fd_status == FD_HANDLE_INUSE);
+	       || fdP->fd_status == FD_HANDLE_INUSE
+	       || fdP->fd_status == FD_HANDLE_CLOSING);
 	if (fdP->fd_status == FD_HANDLE_OPEN) {
+	    /* Note that FdHandle_t's do not count against the parent
+	     * IHandle_t ref count when they are FD_HANDLE_OPEN. So, we don't
+	     * need to dec the parent IHandle_t ref count for each one we pull
+	     * off here. */
 	    DLL_DELETE(fdP, ihP->ih_fdhead, ihP->ih_fdtail, fd_ihnext,
 		       fd_ihprev);
 	    DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
 	    DLL_INSERT_TAIL(fdP, head, tail, fd_next, fd_prev);
 	} else {
 	    closedAll = 0;
+	    fdP->fd_status = FD_HANDLE_CLOSING;
 	    ihP->ih_flags |= IH_REALLY_CLOSED;
 	}
     }

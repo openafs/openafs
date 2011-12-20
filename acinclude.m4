@@ -723,6 +723,7 @@ case $AFS_SYSNAME in
     *_nbsd30)   AFS_PARAM_COMMON=param.nbsd30.h  ;;
     *_nbsd40)   AFS_PARAM_COMMON=param.nbsd40.h  ;;
     *_nbsd50)   AFS_PARAM_COMMON=param.nbsd50.h  ;;
+    *_nbsd60)   AFS_PARAM_COMMON=param.nbsd60.h  ;;
     *_obsd31)   AFS_PARAM_COMMON=param.obsd31.h  ;;
     *_obsd32)   AFS_PARAM_COMMON=param.obsd32.h  ;;
     *_obsd33)   AFS_PARAM_COMMON=param.obsd33.h  ;;
@@ -916,9 +917,11 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_IOP_I_PERMISSION_TAKES_FLAGS
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PUT_LINK_TAKES_COOKIE
+		 LINUX_DOP_D_DELETE_TAKES_CONST
 	  	 LINUX_DOP_D_REVALIDATE_TAKES_NAMEIDATA
 	  	 LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T
 	  	 LINUX_FOP_F_FSYNC_TAKES_DENTRY
+		 LINUX_FOP_F_FSYNC_TAKES_RANGE
 	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
@@ -941,6 +944,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_HAVE_DCACHE_LOCK
 		 LINUX_D_COUNT_IS_INT
+		 LINUX_HAVE_SET_NLINK
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled
@@ -1248,6 +1252,7 @@ AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/sta
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 AC_CHECK_HEADERS(et/com_err.h)
 AC_CHECK_HEADERS(ncurses.h curses.h)
+AC_CHECK_HEADERS(search.h)
 
 AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/types.h>
@@ -1261,6 +1266,9 @@ AC_CHECK_TYPES([fsblkcnt_t],,,[
 #include <sys/statvfs.h>
 #endif
 ])
+
+dnl see what struct stat has for timestamps
+AC_CHECK_MEMBERS([struct stat.st_ctimespec, struct stat.st_ctimensec])
 
 dnl check for curses-lib
 save_LIBS=$LIBS
@@ -1297,7 +1305,7 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
-AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit)
+AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit strnlen tsearch)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)

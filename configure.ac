@@ -5,8 +5,8 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.0
-LINUX_PKGVER=1.6.0
+MACOS_VERSION=1.6.1fc1
+LINUX_PKGVER=1.6.1pre1
 
 dnl Debian wants the release candidate version in the main upstream version,
 dnl and wants ~ before it.
@@ -72,7 +72,7 @@ AS_IF([test x"$KRB5_LIBS" != x],
                      [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
      AC_CHECK_HEADERS([kerberosIV/krb.h])
      AC_CHECK_HEADERS([kerberosV/heim_err.h])
-     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.session,
+     AC_CHECK_MEMBERS([krb5_creds.keyblock, krb5_creds.keyblock.enctype, krb5_creds.session,
                        krb5_prompt.type], , , [#include <krb5.h>])
      RRA_LIB_KRB5_RESTORE])
 AC_SUBST([BUILD_KRB5])
@@ -217,6 +217,7 @@ src/usd/test/Makefile \
 src/uss/Makefile \
 src/util/Makefile \
 src/util/test/Makefile \
+src/libafscp/Makefile \
 src/venus/Makefile \
 src/venus/test/Makefile \
 src/vfsck/Makefile \

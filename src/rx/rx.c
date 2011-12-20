@@ -81,7 +81,7 @@ extern afs_int32 afs_termState;
 #include "sys/lockl.h"
 #include "sys/lock_def.h"
 #endif /* AFS_AIX41_ENV */
-# include "rxgen_consts.h"
+# include "afs/rxgen_consts.h"
 #else /* KERNEL */
 # include <sys/types.h>
 # include <string.h>
@@ -1837,6 +1837,20 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	    }
 	}
 
+#ifdef	KERNEL
+	if (afs_termState == AFSOP_STOP_RXCALLBACK) {
+#ifdef RX_ENABLE_LOCKS
+	    AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	    afs_termState = AFSOP_STOP_AFS;
+	    afs_osi_Wakeup(&afs_termState);
+#ifdef RX_ENABLE_LOCKS
+	    AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	    return;
+	}
+#endif
+
 	/* if server is restarting( typically smooth shutdown) then do not
 	 * allow any new calls.
 	 */
@@ -1852,20 +1866,8 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 
 	    MUTEX_EXIT(&call->lock);
 	    USERPRI;
+	    continue;
 	}
-#ifdef	KERNEL
-	if (afs_termState == AFSOP_STOP_RXCALLBACK) {
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	    afs_termState = AFSOP_STOP_AFS;
-	    afs_osi_Wakeup(&afs_termState);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	    return;
-	}
-#endif
 
 	tservice = call->conn->service;
 
@@ -1878,6 +1880,10 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	    (*tservice->afterProc) (call, code);
 
 	rx_EndCall(call, code);
+
+	if (tservice->postProc)
+	    (*tservice->postProc) (code);
+
         if (rx_stats_active) {
             MUTEX_ENTER(&rx_stats_mutex);
             rxi_nCalls++;
@@ -3849,8 +3855,9 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
 	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems", np));
-	if (rxi_doreclaim)
-	    rxi_ClearReceiveQueue(call);
+        /* We used to clear the receive queue here, in an attempt to free
+         * packets. However this is unsafe if the queue has received a
+         * soft ACK for the final packet */
 	clock_GetTime(&now);
 	when = now;
 	clock_Add(&when, &rx_softAckDelay);
@@ -5475,7 +5482,7 @@ rxi_SendAck(struct rx_call *call,
     struct rx_packet *rqp;
     struct rx_packet *nxp;	/* For queue_Scan */
     struct rx_packet *p;
-    u_char offset;
+    u_char offset = 0;
     afs_int32 templ;
     afs_uint32 padbytes = 0;
 #ifdef RX_ENABLE_TSFPQ
@@ -5583,37 +5590,38 @@ rxi_SendAck(struct rx_call *call,
     if ((call->flags & RX_CALL_ACKALL_SENT) &&
         !queue_IsEmpty(&call->rq)) {
         ap->firstPacket = htonl(queue_Last(&call->rq, rx_packet)->header.seq + 1);
-    } else
+    } else {
         ap->firstPacket = htonl(call->rnext);
 
-    ap->previousPacket = htonl(call->rprev);	/* Previous packet received */
+	ap->previousPacket = htonl(call->rprev);	/* Previous packet received */
 
-    /* No fear of running out of ack packet here because there can only be at most
-     * one window full of unacknowledged packets.  The window size must be constrained
-     * to be less than the maximum ack size, of course.  Also, an ack should always
-     * fit into a single packet -- it should not ever be fragmented.  */
-    for (offset = 0, queue_Scan(&call->rq, rqp, nxp, rx_packet)) {
-	if (!rqp || !call->rq.next
-	    || (rqp->header.seq > (call->rnext + call->rwind))) {
+	/* No fear of running out of ack packet here because there can only be at most
+	 * one window full of unacknowledged packets.  The window size must be constrained
+	 * to be less than the maximum ack size, of course.  Also, an ack should always
+	 * fit into a single packet -- it should not ever be fragmented.  */
+	for (offset = 0, queue_Scan(&call->rq, rqp, nxp, rx_packet)) {
+	    if (!rqp || !call->rq.next
+		|| (rqp->header.seq > (call->rnext + call->rwind))) {
 #ifndef RX_ENABLE_TSFPQ
-	    if (!optionalPacket)
-		rxi_FreePacket(p);
+		if (!optionalPacket)
+		    rxi_FreePacket(p);
 #endif
-	    rxi_CallError(call, RX_CALL_DEAD);
-	    return optionalPacket;
-	}
+		rxi_CallError(call, RX_CALL_DEAD);
+		return optionalPacket;
+	    }
 
-	while (rqp->header.seq > call->rnext + offset)
-	    ap->acks[offset++] = RX_ACK_TYPE_NACK;
-	ap->acks[offset++] = RX_ACK_TYPE_ACK;
+	    while (rqp->header.seq > call->rnext + offset)
+		ap->acks[offset++] = RX_ACK_TYPE_NACK;
+	    ap->acks[offset++] = RX_ACK_TYPE_ACK;
 
-	if ((offset > (u_char) rx_maxReceiveWindow) || (offset > call->rwind)) {
+	    if ((offset > (u_char) rx_maxReceiveWindow) || (offset > call->rwind)) {
 #ifndef RX_ENABLE_TSFPQ
-	    if (!optionalPacket)
-		rxi_FreePacket(p);
+		if (!optionalPacket)
+		    rxi_FreePacket(p);
 #endif
-	    rxi_CallError(call, RX_CALL_DEAD);
-	    return optionalPacket;
+		rxi_CallError(call, RX_CALL_DEAD);
+		return optionalPacket;
+	    }
 	}
     }
 

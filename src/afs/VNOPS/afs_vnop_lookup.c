@@ -67,14 +67,14 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     /* Start by figuring out and finding the cell */
     cpos = afs_strchr(data, ':');	/* if cell name present */
     if (cpos) {
+	afs_uint32 mtptCellnum;
 	volnamep = cpos + 1;
 	*cpos = 0;
-	if ((afs_strtoi_r(data, &endptr, &cellnum) == 0) &&
-	    (endptr == cpos))
-	    tcell = afs_GetCell(cellnum, READ_LOCK);
-	else {
+	if ((afs_strtoi_r(data, &endptr, &mtptCellnum) == 0) &&
+	    (endptr == cpos)) {
+	    tcell = afs_GetCell(mtptCellnum, READ_LOCK);
+	} else {
 	    tcell = afs_GetCellByName(data, READ_LOCK);
-	    cellnum = 0;
 	}
 	*cpos = ':';
     } else if (cellnum) {
@@ -942,6 +942,36 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK, &rxconn);
 	if (tcp) {
 	    hostp = tcp->srvr->server;
+
+	    for (i = 0; i < fidIndex; i++) {
+		/* we must set tvcp->callback before the BulkStatus call, so
+		 * we can detect concurrent InitCallBackState's */
+
+		afid.Cell = adp->f.fid.Cell;
+		afid.Fid.Volume = adp->f.fid.Fid.Volume;
+		afid.Fid.Vnode = fidsp[i].Vnode;
+		afid.Fid.Unique = fidsp[i].Unique;
+
+		do {
+		    retry = 0;
+		    ObtainReadLock(&afs_xvcache);
+		    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */);
+		    ReleaseReadLock(&afs_xvcache);
+		} while (tvcp && retry);
+
+		if (!tvcp) {
+		    continue;
+		}
+
+		if ((tvcp->f.states & CBulkFetching) &&
+		     (tvcp->f.m.Length == statSeqNo)) {
+		    tvcp->callback = hostp;
+		}
+
+		afs_PutVCache(tvcp);
+		tvcp = NULL;
+	    }
+
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
 
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
@@ -1752,10 +1782,10 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (tvc->mvstat == 1 && (tvc->f.states & CMValid) && tvc->mvid != NULL)
 	  force_eval = 1; /* This is now almost for free, get it correct */
 
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 	if (!(flags & AFS_LOOKUP_NOEVAL))
 	    /* don't eval mount points */
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+#endif /* UKERNEL */
 	    if (tvc->mvstat == 1 && force_eval) {
 		/* a mt point, possibly unevaluated */
 		struct volume *tvolp;
@@ -1863,13 +1893,13 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (afs_mariner)
 	    afs_AddMarinerName(aname, tvc);
 
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 	if (!(flags & AFS_LOOKUP_NOEVAL)) {
 	    /* Here we don't enter the name into the DNLC because we want the
 	     * evaluated mount dir to be there (the vcache for the mounted
 	     * volume) rather than the vc of the mount point itself.  We can
 	     * still find the mount point's vc in the vcache by its fid. */
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+#endif /* UKERNEL */
 	    if (!hit && force_eval) {
 		osi_dnlc_enter(adp, aname, tvc, &versionNo);
 	    } else {
@@ -1882,7 +1912,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		return 0;	/* can't have been any errors if hit and !code */
 #endif
 	    }
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 	}
 #endif
     }

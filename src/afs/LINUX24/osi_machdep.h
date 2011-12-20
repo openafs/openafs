@@ -197,14 +197,14 @@ typedef struct task_struct afs_proc_t;
 /* UIO manipulation */
 typedef enum { AFS_UIOSYS, AFS_UIOUSER } uio_seg_t;
 typedef enum { UIO_READ, UIO_WRITE } uio_flag_t;
-typedef struct uio {
+struct uio {
     struct iovec *uio_iov;
     int uio_iovcnt;
     afs_offs_t uio_offset;
     uio_seg_t uio_seg;
     int uio_resid;
     uio_flag_t uio_flag;
-} uio_t;
+};
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset

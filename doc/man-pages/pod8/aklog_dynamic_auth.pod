@@ -1,0 +1,104 @@
+=head1 NAME
+
+aklog_dynamic_auth - LAM module to obtain AFS tokens from Kerberos tickets
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+  K5AFS:
+    program = /usr/lib/security/aklog_dynamic_auth
+    options = authonly
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<aklog_dynamic_auth> is an AIX LAM (Loadable Authentication Modules)
+module that can create new AFS sessions and acquire AFS tokens from
+Kerberos 5 tickets. It is similar in function to the L<aklog(1)> program,
+and various PAM modules such as L<pam_afs_session(8)>.
+
+B<aklog_dynamic_auth> does not obtain any credentials on its own, nor does
+it deal with passwords of any kind. You must have another way of obtaining
+Kerberos 5 tickets before invoking B<aklog_dynamic_auth> in order for it
+to do anything useful. AIX comes with a B<KRB5> LAM module that can do
+this.
+
+=head1 OPTIONS
+
+Beyond the normal LAM options, B<aklog_dynamic_auth> understands the
+following options.
+
+=over 4
+
+=item B<uidpag>
+
+If this is specified, B<aklog_dynamic_auth> will try to only utilize
+UID-based PAGs. This means that when acquiring credentials,
+B<aklog_dynamic_auth> will not try to create a new PAG, and instead will
+set tokens for the current UID. If the current UID is root,
+B<aklog_dynamic_auth> will look up the UID of the user we are
+authenticating for, and will set tokens for that UID instead.
+
+Specifying this option is necessary for AFS tokens to be refreshed with
+the CDE screen locking program, and possibly other LAM users.
+
+Note that if B<aklog_dynamic_auth> is run from a context that has a real
+PAG, it is impossible for it to set the tokens for a particular UID. If
+B<uidpag> is set and this situation is detected, B<aklog_dynamic_auth>
+will log an error, but will attempt to continue and will just create a new
+PAG, as if B<uidpag> were not set.
+
+=item B<localuid>
+
+Normally, B<aklog_dynamic_auth> will look up the AFS ID of the username
+for which it is acquiring credentials by looking the in AFS Protection
+Database. Specifying the B<localuid> option instead causes
+B<aklog_dynamic_auth> to look up the relevant user via L<getpwnam(3)>, and
+to use the returned UID for the AFS ID.
+
+This will only work correctly if the IDs of local users and their AFS IDs
+in the AFS Protection Database are synchronized, and will only work for
+users of the local cell.
+
+Specifying B<localuid> makes B<aklog_dynamic_auth> avoid calling AFS pt
+routines, which can crash certain long-running daemons that call into LAM.
+
+=back
+
+=head1 EXAMPLES
+
+The following example allows the user C<userid> to login with Kerberos 5
+credentials and obtain AFS tokens on success. If Kerberos 5 authentication
+fails, we fall back to using local authentication. The
+B<aklog_dynamic_aklog> options for B<uidpag> and B<localuid>
+
+In C</usr/lib/security/methods.cfg>:
+
+  KRB5:
+    program = /usr/lib/security/KRB5
+    program_64 = /usr/lib/security/KRB5_64
+    options = authonly,kadmind=no
+
+  K5AFS:
+    program = /usr/lib/security/aklog_dynamic_auth
+    options = uidpag,localuid,authonly
+
+In C</etc/security/user>:
+
+  userid:
+    SYSTEM = "(KRB5[SUCCESS] and K5AFS) OR compat"
+
+=head1 SEE ALSO
+
+L<aklog(1)>
+
+=head1 COPYRIGHT
+
+Copyright Sine Nomine Associates 2011
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Andrew Deason for OpenAFS.

@@ -34,22 +34,22 @@
  void selfRepair(char *selfPath);
  void runWithSelfRepair(char *selfPath,int argc, char *argv[]);
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	if (argc < 2)
-		return; // nothing to do
+		return 1; // nothing to do
 	NSString *cmdString = [NSString stringWithCString:(const char *)argv[1] encoding:NSUTF8StringEncoding];
 
 	if(argc == 2 && [cmdString rangeOfString:@"stop_afs"].location!=NSNotFound ){
 		if (setuid(0) == -1)
-			return;
+			return 1;
 		const char *stopArgs[] = {"stop", 0L};
 		[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
 									  args:stopArgs
 									output:nil];
 	} else 	if(argc == 2 && [cmdString rangeOfString:@"start_afs"].location!=NSNotFound){
 		if (setuid(0) == -1)
-			return;
+			return 1;
 		const char *startArgs[] = {"start", 0L};
 		[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
 									  args:startArgs
@@ -61,7 +61,7 @@ void main(int argc, char *argv[])
 		[PListManager krb5TiketAtLoginTime:[[NSNumber numberWithInt:arg2] boolValue]];
 	} else if(argc == 3 && [cmdString rangeOfString:@"start_afs_at_startup"].location!=NSNotFound){
 		if (setuid(0) == -1)
-			return;
+			return 1;
 		BOOL enable = strcmp("enable", argv[2])==0;
 		NSLog(@"Manage start_afs_at_startup with option %s from helper", argv[2]);
 		[PListManager launchctlStringCommand:enable?@"load":@"unload"
@@ -74,6 +74,7 @@ void main(int argc, char *argv[])
 		printf("afshlp:afs daemon registration result:%d",checkAfsDaemon);
 #endif
 	}
+	return 0;
 }
 
 #if 0

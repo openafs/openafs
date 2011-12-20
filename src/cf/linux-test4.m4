@@ -414,6 +414,22 @@ struct dentry _d;
 ])
 
 
+int (*fsync) (struct file *, loff_t start, loff_t end, int datasync);
+
+AC_DEFUN([LINUX_FOP_F_FSYNC_TAKES_RANGE], [
+  AC_CHECK_LINUX_BUILD([whether file_operations.fsync takes a range],
+		       [ac_cv_linux_func_f_fsync_takes_range],
+		       [#include <linux/fs.h>],
+[struct inode _inode;
+struct file _file;
+loff_t start, end;
+(void)_inode.i_fop->fsync(&_file, start, end, 0);],
+		       [FOP_FSYNC_TAKES_RANGE],
+		       [define if your fops.fsync takes range arguments],
+		       [])
+])
+
+
 AC_DEFUN([LINUX_HAVE_KMEM_CACHE_T], [
   AC_CHECK_LINUX_BUILD([whether kmem_cache_t exists],
 		       [ac_cv_linux_have_kmem_cache_t],
@@ -602,5 +618,31 @@ AC_DEFUN([LINUX_D_COUNT_IS_INT], [
 			_d.d_count = 1;],
 			[D_COUNT_INT],
 			[define if dentry->d_count is an int],
+			[-Werror])
+])
+
+
+AC_DEFUN([LINUX_DOP_D_DELETE_TAKES_CONST], [
+  AC_CHECK_LINUX_BUILD([whether dentry.d_op->d_delete takes a const argument],
+			[ac_cv_linux_dop_d_delete_takes_const],
+			[#include <linux/fs.h>
+			#include <linux/dcache.h>],
+			[struct dentry_operations _d_ops;
+			int _d_del(const struct dentry *de) {return 0;};
+			_d_ops.d_delete = _d_del;],
+			[DOP_D_DELETE_TAKES_CONST],
+			[define if dentry.d_op->d_delete takes a const argument],
+			[-Werror])
+])
+
+
+AC_DEFUN([LINUX_HAVE_SET_NLINK], [
+  AC_CHECK_LINUX_BUILD([for set_nlink],
+			[ac_cv_linux_have_set_nlink],
+			[#include <linux/fs.h>],
+			[struct inode _inode;
+			set_nlink(&_inode, 1);],
+			[HAVE_SET_NLINK],
+			[define if set_nlink exists],
 			[-Werror])
 ])

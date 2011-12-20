@@ -43,21 +43,21 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int try_first_pass = 0;
     int ignore_root = 0;
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
-    int torch_password = 1;
+    char *torch_password = NULL;
     int i;
     char my_password_buf[256];
     char instance[256];
     char realm[256];
     char cell[256];
     char *localcell;
-    char *user = NULL, *password = NULL;
+    PAM_CONST char *user = NULL, *password = NULL;
     char *new_password = NULL, *verify_password = NULL;
     char upwd_buf[2048];	/* size is a guess. */
     char *reason = NULL;
     struct ktc_encryptionKey oldkey, newkey;
     struct ktc_token token;
     struct ubik_client *conn = 0;
-    struct pam_conv *pam_convp = NULL;
+    PAM_CONST struct pam_conv *pam_convp = NULL;
     struct passwd unix_pwd, *upwd = NULL;
 
 #ifndef AFS_SUN56_ENV
@@ -97,7 +97,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     }
 
     /* Try to get the user-interaction info, if available. */
-    errcode = pam_get_item(pamh, PAM_CONV, (const void **)&pam_convp);
+    errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_WARNING, PAMAFS_NO_USER_INT);
 	pam_convp = NULL;
@@ -105,7 +105,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
     /* Who are we trying to authenticate here? */
     if ((errcode =
-	 pam_get_user(pamh, (const char **)&user,
+	 pam_get_user(pamh, &user,
 		      "AFS username: ")) != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_NOUSER, errcode);
 	RET(PAM_USER_UNKNOWN);
@@ -119,15 +119,15 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
      * and its uid==0, and "ignore_root" was given in pam.conf,
      * ignore the user.
      */
-#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV)
-#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
     if (i == 0)			/* getpwnam_r success */
 	upwd = &unix_pwd;
 #endif /* else AFS_HPUX110_ENV */
-    if (ignore_root && i == 0 && upwd->pw_uid == 0) {
+    if (ignore_root && i == 0 && upwd && upwd->pw_uid == 0) {
 	pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
 	RET(PAM_AUTH_ERR);
     }
@@ -143,7 +143,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     }
 #endif
 
-    errcode = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+    errcode = pam_get_item(pamh, PAM_AUTHTOK, (PAM_CONST void **)&password);
     if (errcode != PAM_SUCCESS || password == NULL) {
 	if (use_first_pass) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_PASSWD_REQ, user);
@@ -154,13 +154,11 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
-	torch_password = 0;
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	torch_password = 0;
 	got_authtok = 1;
     }
     if (!(use_first_pass || try_first_pass)) {
@@ -168,7 +166,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     }
 
     if (password == NULL) {
-	torch_password = 1;
+	char *prompt_password;
 	if (use_first_pass)
 	    RET(PAM_AUTH_ERR);	/* shouldn't happen */
 	if (try_first_pass)
@@ -178,12 +176,12 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    RET(PAM_AUTH_ERR);
 	}
 
-	errcode = pam_afs_prompt(pam_convp, &password, 0, PAMAFS_PWD_PROMPT);
-	if (errcode != PAM_SUCCESS || password == NULL) {
+	errcode = pam_afs_prompt(pam_convp, &prompt_password, 0, PAMAFS_PWD_PROMPT);
+	if (errcode != PAM_SUCCESS || prompt_password == NULL) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_GETPASS_FAILED);
 	    RET(PAM_AUTH_ERR);
 	}
-	if (password[0] == '\0') {
+	if (prompt_password[0] == '\0') {
 	    pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	    RET(PAM_NEW_AUTHTOK_REQD);
 	}
@@ -195,23 +193,23 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	 * this storage, copy it to a buffer that won't need to be freed
 	 * later, and free this storage now.
 	 */
-	strncpy(my_password_buf, password, sizeof(my_password_buf));
+	strncpy(my_password_buf, prompt_password, sizeof(my_password_buf));
 	my_password_buf[sizeof(my_password_buf) - 1] = '\0';
-	memset(password, 0, strlen(password));
-	free(password);
-	password = my_password_buf;
+	memset(prompt_password, 0, strlen(password));
+	free(prompt_password);
+	password = torch_password = my_password_buf;
     }
 
-    if ((code = ka_VerifyUserPassword(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, user,	/* kerberos name */
+    if ((code = ka_VerifyUserPassword(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, (char *)user,	/* kerberos name */
 				      NULL,	/* instance */
 				      NULL,	/* realm */
-				      password,	/* password */
+				      (char *)password,	/* password */
 				      0,	/* spare 2 */
 				      &reason /* error string */ )) != 0) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_LOGIN_FAILED, user, reason);
 	RET(PAM_AUTH_ERR);
     }
-    torch_password = 0;
+    torch_password = NULL;
     pam_set_item(pamh, PAM_AUTHTOK, password);
     pam_set_item(pamh, PAM_OLDAUTHTOK, password);
     if (flags & PAM_PRELIM_CHECK) {
@@ -275,10 +273,10 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     strcpy(realm, localcell);
     strcpy(cell, realm);
     /* oldkey is not used in ka_ChangePassword (only for ka_auth) */
-    ka_StringToKey(password, realm, &oldkey);
+    ka_StringToKey((char *)password, realm, &oldkey);
     ka_StringToKey(new_password, realm, &newkey);
     if ((code =
-	 ka_GetAdminToken(user, instance, realm, &oldkey, 20, &token,
+	 ka_GetAdminToken((char *)user, instance, realm, &oldkey, 20, &token,
 			  0)) != 0) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
 	RET(PAM_AUTH_ERR);
@@ -289,7 +287,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	pam_afs_syslog(LOG_ERR, PAMAFS_KAERROR, code);
 	RET(PAM_AUTH_ERR);
     }
-    if ((code = ka_ChangePassword(user,	/* kerberos name */
+    if ((code = ka_ChangePassword((char *)user,	/* kerberos name */
 				  instance,	/* instance */
 				  conn,	/* conn */
 				  0,	/* old password unused */
@@ -304,7 +302,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
   out:
     if (password && torch_password) {
-	memset(password, 0, strlen(password));
+	memset(torch_password, 0, strlen(torch_password));
     }
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV

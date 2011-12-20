@@ -134,7 +134,7 @@ static void ktc_LocalCell(void);
 #ifdef AFS_DUX40_ENV
 #define PIOCTL afs_pioctl
 #elif defined(UKERNEL)
-#define PIOCTL(A,B,C,D) call_syscall(AFSCALL_PIOCTL,A,B,C,D)
+#define PIOCTL(A,B,C,D) (errno = (call_syscall(AFSCALL_PIOCTL,A,B,C,D)), errno?-1:0)
 #else
 #define PIOCTL pioctl
 #endif

@@ -207,7 +207,11 @@ extern afs_int32 FSYNC_GenericOp(void * ext_hdr, size_t ext_len,
 				 int command, int reason,
 				 SYNC_response * res);
 
-/* volume operations control interface */
+/*
+ * volume operations control interface
+ *
+ * FSYNC_VolOp must be called with the partition name and not the partition path.
+ */
 extern afs_int32 FSYNC_VolOp(VolumeId volume, char *partName, int com, int reason,
 			     SYNC_response * res);
 

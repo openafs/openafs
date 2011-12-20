@@ -171,6 +171,9 @@ typedef struct FdHandle_s {
 #define FD_HANDLE_AVAIL		1	/* handle is not open and available */
 #define FD_HANDLE_OPEN		2	/* handle is open and not in use */
 #define FD_HANDLE_INUSE		3	/* handle is open and in use */
+#define FD_HANDLE_CLOSING	4	/* handle is open, in use, and has been
+					 * IH_REALLYCLOSE'd. It should not be
+					 * used for subsequent opens. */
 
 /* buffered file descriptor handle */
 #define STREAM_HANDLE_BUFSIZE	2048	/* buffer size for STR_READ/STR_WRITE */
