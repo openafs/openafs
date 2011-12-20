@@ -698,6 +698,12 @@ h_Alloc_r(struct rx_connection *r_con)
     if (!host)
 	return NULL;
 
+    h_Hold_r(host);
+    /* acquire the host lock withot dropping H_LOCK. we can do this here
+     * because we know we will not block; we just created this host and
+     * nobody else knows about it. */
+    ObtainWriteLock(&host->lock);
+
     host->host = rxr_HostOf(r_con);
     host->port = rxr_PortOf(r_con);
 
@@ -729,8 +735,6 @@ h_Alloc_r(struct rx_connection *r_con)
     h_gethostcps(host);		/* do this under host hold/lock */
 #endif
     host->FirstClient = NULL;
-    h_Hold_r(host);
-    h_Lock_r(host);
     h_InsertList_r(host);	/* update global host List */
 #if FS_STATS_DETAILED
     /*
