@@ -59,11 +59,11 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     int use_klog = 0;
     int set_expires = 0;	/* This option is only used in pam_set_cred() */
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
-    char *user = NULL, *password = NULL;
+    PAM_CONST char *user = NULL, *password = NULL;
     afs_int32 password_expires = -1;
-    int torch_password = 1;
+    char *torch_password = NULL;
     int i;
-    struct pam_conv *pam_convp = NULL;
+    PAM_CONST struct pam_conv *pam_convp = NULL;
     int auth_ok;
     struct passwd unix_pwd, *upwd = NULL;
     char upwd_buf[2048];	/* size is a guess. */
@@ -150,7 +150,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 		       refresh_token, set_token, dont_fork, use_klog);
 
     /* Try to get the user-interaction info, if available. */
-    errcode = pam_get_item(pamh, PAM_CONV, (const void **)&pam_convp);
+    errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_WARNING, PAMAFS_NO_USER_INT);
 	pam_convp = NULL;
@@ -158,7 +158,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 
     /* Who are we trying to authenticate here? */
     if ((errcode =
-	 pam_get_user(pamh, (const char **)&user,
+	 pam_get_user(pamh, &user,
 		      "login: ")) != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_NOUSER, errcode);
 	RET(PAM_USER_UNKNOWN);
@@ -175,23 +175,21 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     /* enhanced: use "ignore_uid <number>" to specify the largest uid
      * which should be ignored by this module
      */
-#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV)
-#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
     if (i == 0)			/* getpwnam_r success */
 	upwd = &unix_pwd;
 #endif /* else AFS_HPUX110_ENV */
-    if (ignore_uid && i == 0 && upwd->pw_uid <= ignore_uid_id) {
+    if (ignore_uid && i == 0 && upwd && upwd->pw_uid <= ignore_uid_id) {
 	pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
 	RET(PAM_AUTH_ERR);
     }
 #else
 #if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV)
     upwd = getpwnam(user);
-#elif   defined(_POSIX_PTHREAD_SEMANTICS) && defined(AFS_SUN5_ENV)
-    getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
 #endif
@@ -200,7 +198,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	RET(PAM_AUTH_ERR);
     }
 #endif
-    errcode = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+    errcode = pam_get_item(pamh, PAM_AUTHTOK, (PAM_CONST void **)&password);
     if (errcode != PAM_SUCCESS || password == NULL) {
 	if (use_first_pass) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_PASSWD_REQ, user);
@@ -211,13 +209,11 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
-	torch_password = 0;
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	torch_password = 0;
 	got_authtok = 1;
     }
     if (!(use_first_pass || try_first_pass)) {
@@ -226,8 +222,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 
   try_auth:
     if (password == NULL) {
-
-	torch_password = 1;
+	char *prompt_password;
 
 	if (use_first_pass)
 	    RET(PAM_AUTH_ERR);	/* shouldn't happen */
@@ -239,12 +234,12 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    RET(PAM_AUTH_ERR);
 	}
 
-	errcode = pam_afs_prompt(pam_convp, &password, 0, PAMAFS_PWD_PROMPT);
-	if (errcode != PAM_SUCCESS || password == NULL) {
+	errcode = pam_afs_prompt(pam_convp, &prompt_password, 0, PAMAFS_PWD_PROMPT);
+	if (errcode != PAM_SUCCESS || prompt_password == NULL) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_GETPASS_FAILED);
 	    RET(PAM_AUTH_ERR);
 	}
-	if (password[0] == '\0') {
+	if (prompt_password[0] == '\0') {
 	    pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	    RET(PAM_NEW_AUTHTOK_REQD);
 	}
@@ -257,11 +252,11 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	 * later, and free this storage now.
 	 */
 
-	strncpy(my_password_buf, password, sizeof(my_password_buf));
+	strncpy(my_password_buf, prompt_password, sizeof(my_password_buf));
 	my_password_buf[sizeof(my_password_buf) - 1] = '\0';
-	memset(password, 0, strlen(password));
-	free(password);
-	password = my_password_buf;
+	memset(prompt_password, 0, strlen(prompt_password));
+	free(prompt_password);
+	password = torch_password = my_password_buf;
 
     }
 
@@ -315,19 +310,19 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 		if (logmask && LOG_MASK(LOG_DEBUG))
 		    syslog(LOG_DEBUG, "in child");
 		if (refresh_token || set_token)
-		    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, user,	/* kerberos name */
+		    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 						      NULL,	/* instance */
 						      cell_ptr,	/* realm */
-						      password,	/* password */
+						      (char *)password,	/* password */
 						      0,	/* default lifetime */
 						      &password_expires, 0,	/* spare 2 */
 						      &reason
 						      /* error string */ );
 		else
-		    code = ka_VerifyUserPassword(KA_USERAUTH_VERSION, user,	/* kerberos name */
+		    code = ka_VerifyUserPassword(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 						 NULL,	/* instance */
 						 cell_ptr,	/* realm */
-						 password,	/* password */
+						 (char *)password,	/* password */
 						 0,	/* spare 2 */
 						 &reason /* error string */ );
 		if (code) {
@@ -366,18 +361,18 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    syslog(LOG_DEBUG, "dont_fork");
 	if (refresh_token || set_token)
-	    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, user,	/* kerberos name */
+	    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					      NULL,	/* instance */
 					      cell_ptr,	/* realm */
-					      password,	/* password */
+					      (char *)password,	/* password */
 					      0,	/* default lifetime */
 					      &password_expires, 0,	/* spare 2 */
 					      &reason /* error string */ );
 	else
-	    code = ka_VerifyUserPassword(KA_USERAUTH_VERSION, user,	/* kerberos name */
+	    code = ka_VerifyUserPassword(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					 NULL,	/* instance */
 					 cell_ptr,	/* realm */
-					 password,	/* password */
+					 (char *)password,	/* password */
 					 0,	/* spare 2 */
 					 &reason /* error string */ );
 	if (logmask && LOG_MASK(LOG_DEBUG))
@@ -403,7 +398,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
      * after pam_afs
      */
     if (!got_authtok) {
-	torch_password = 0;
+	torch_password = NULL;
 	(void)pam_set_item(pamh, PAM_AUTHTOK, password);
     }
 
@@ -419,7 +414,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	char *tmp = strdup(password);
 	(void)pam_set_data(pamh, pam_afs_lh, tmp, lc_cleanup);
 	if (torch_password)
-	    memset(password, 0, strlen(password));
+	    memset(torch_password, 0, strlen(torch_password));
     }
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV

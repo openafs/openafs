@@ -59,7 +59,7 @@ static struct buffer *newslot(struct ubik_dbase *adbase, afs_int32 afid,
 static int initd = 0;
 #define	BADFID	    0xffffffff
 
-static int DTrunc(struct ubik_dbase *dbase, afs_int32 fid, afs_int32 length);
+static int DTrunc(struct ubik_trans *atrans, afs_int32 fid, afs_int32 length);
 
 static struct ubik_trunc *freeTruncList = 0;
 
@@ -316,28 +316,50 @@ Dmru(struct buffer *abuf)
     LruBuffer->lru_prev = abuf;
 }
 
+static_inline int
+MatchBuffer(struct buffer *buf, int page, afs_int32 fid,
+            struct ubik_trans *atrans)
+{
+    if (buf->page != page) {
+	return 0;
+    }
+    if (buf->file != fid) {
+	return 0;
+    }
+    if (atrans->type == UBIK_READTRANS && buf->dirty) {
+	/* if 'buf' is dirty, it has uncommitted changes; we do not want to
+	 * see uncommitted changes if we are a read transaction, so skip over
+	 * it. */
+	return 0;
+    }
+    if (buf->dbase != atrans->dbase) {
+	return 0;
+    }
+    return 1;
+}
+
 /*!
  * \brief Get a pointer to a particular buffer.
  */
 static char *
-DRead(struct ubik_dbase *dbase, afs_int32 fid, int page)
+DRead(struct ubik_trans *atrans, afs_int32 fid, int page)
 {
     /* Read a page from the disk. */
     struct buffer *tb, *lastbuffer;
     afs_int32 code;
+    struct ubik_dbase *dbase = atrans->dbase;
 
     calls++;
     lastbuffer = LruBuffer->lru_prev;
 
-    if ((lastbuffer->page == page) && (lastbuffer->file == fid)
-	&& (lastbuffer->dbase == dbase)) {
+    if (MatchBuffer(lastbuffer, page, fid, atrans)) {
 	tb = lastbuffer;
 	tb->lockers++;
 	lastb++;
 	return tb->data;
     }
     for (tb = phTable[pHash(page)]; tb; tb = tb->hashNext) {
-	if (tb->page == page && tb->file == fid && tb->dbase == dbase) {
+	if (MatchBuffer(tb, page, fid, atrans)) {
 	    Dmru(tb);
 	    tb->lockers++;
 	    return tb->data;
@@ -372,11 +394,12 @@ DRead(struct ubik_dbase *dbase, afs_int32 fid, int page)
  * \brief Zap truncated pages.
  */
 static int
-DTrunc(struct ubik_dbase *dbase, afs_int32 fid, afs_int32 length)
+DTrunc(struct ubik_trans *atrans, afs_int32 fid, afs_int32 length)
 {
     afs_int32 maxPage;
     struct buffer *tb;
     int i;
+    struct ubik_dbase *dbase = atrans->dbase;
 
     maxPage = (length + UBIK_PAGESIZE - 1) >> UBIK_LOGPAGESIZE;	/* first invalid page now in file */
     for (i = 0, tb = Buffers; i < nbuffers; i++, tb++) {
@@ -447,7 +470,7 @@ DoTruncs(struct ubik_trans *atrans)
     tproc = atrans->dbase->truncate;
     for (tt = atrans->activeTruncs; tt; tt = nt) {
 	nt = tt->next;
-	DTrunc(atrans->dbase, tt->file, tt->length);	/* zap pages from buffer cache */
+	DTrunc(atrans, tt->file, tt->length);	/* zap pages from buffer cache */
 	code = (*tproc) (atrans->dbase, tt->file, tt->length);
 	if (code)
 	    rcode = code;
@@ -566,11 +589,12 @@ DRelease(char *ap, int flag)
  * always call DFlush/DSync as a pair.
  */
 static int
-DFlush(struct ubik_dbase *adbase)
+DFlush(struct ubik_trans *atrans)
 {
     int i;
     afs_int32 code;
     struct buffer *tb;
+    struct ubik_dbase *adbase = atrans->dbase;
 
     tb = Buffers;
     for (i = 0; i < nbuffers; i++, tb++) {
@@ -590,7 +614,7 @@ DFlush(struct ubik_dbase *adbase)
  * \brief Flush all modified buffers.
  */
 static int
-DAbort(struct ubik_dbase *adbase)
+DAbort(struct ubik_trans *atrans)
 {
     int i;
     struct buffer *tb;
@@ -606,17 +630,39 @@ DAbort(struct ubik_dbase *adbase)
     return 0;
 }
 
+/**
+ * Invalidate any buffers that are duplicates of abuf. Duplicate buffers
+ * can appear if a read transaction reads a page that is dirty, then that
+ * dirty page is synced. The read transaction will skip over the dirty page,
+ * and create a new buffer, and when the dirty page is synced, it will be
+ * identical (except for contents) to the read-transaction buffer.
+ */
+static void
+DedupBuffer(struct buffer *abuf)
+{
+    struct buffer *tb;
+    for (tb = phTable[pHash(abuf->page)]; tb; tb = tb->hashNext) {
+	if (tb->page == abuf->page && tb != abuf && tb->file == abuf->file
+	    && tb->dbase == abuf->dbase) {
+
+	    tb->file = BADFID;
+	    Dlru(tb);
+	}
+    }
+}
+
 /*!
  * \attention DSync() must only be called after DFlush(), due to its interpretation of dirty flag.
  */
 static int
-DSync(struct ubik_dbase *adbase)
+DSync(struct ubik_trans *atrans)
 {
     int i;
     afs_int32 code;
     struct buffer *tb;
     afs_int32 file;
     afs_int32 rCode;
+    struct ubik_dbase *adbase = atrans->dbase;
 
     rCode = 0;
     while (1) {
@@ -625,8 +671,10 @@ DSync(struct ubik_dbase *adbase)
 	    if (tb->dirty == 1) {
 		if (file == BADFID)
 		    file = tb->file;
-		if (file != BADFID && tb->file == file)
+		if (file != BADFID && tb->file == file) {
 		    tb->dirty = 0;
+		    DedupBuffer(tb);
+		}
 	    }
 	}
 	if (file == BADFID)
@@ -643,9 +691,10 @@ DSync(struct ubik_dbase *adbase)
  * \brief Same as DRead(), only do not even try to read the page.
  */
 static char *
-DNew(struct ubik_dbase *dbase, afs_int32 fid, int page)
+DNew(struct ubik_trans *atrans, afs_int32 fid, int page)
 {
     struct buffer *tb;
+    struct ubik_dbase *dbase = atrans->dbase;
 
     if ((tb = newslot(dbase, fid, page)) == 0)
 	return NULL;
@@ -663,14 +712,12 @@ udisk_read(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 {
     char *bp;
     afs_int32 offset, len, totalLen;
-    struct ubik_dbase *dbase;
 
     if (atrans->flags & TRDONE)
 	return UDONE;
     totalLen = 0;
-    dbase = atrans->dbase;
     while (alen > 0) {
-	bp = DRead(dbase, afile, apos >> UBIK_LOGPAGESIZE);
+	bp = DRead(atrans, afile, apos >> UBIK_LOGPAGESIZE);
 	if (!bp)
 	    return UEOF;
 	/* otherwise, min of remaining bytes and end of buffer to user mode */
@@ -731,7 +778,6 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 {
     char *bp;
     afs_int32 offset, len, totalLen;
-    struct ubik_dbase *dbase;
     struct ubik_trunc *tt;
     afs_int32 code;
 
@@ -740,9 +786,8 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
     if (atrans->type != UBIK_WRITETRANS)
 	return UBADTYPE;
 
-    dbase = atrans->dbase;
     /* first write the data to the log */
-    code = udisk_LogWriteData(dbase, afile, abuffer, apos, alen);
+    code = udisk_LogWriteData(atrans->dbase, afile, abuffer, apos, alen);
     if (code)
 	return code;
 
@@ -757,9 +802,9 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
     /* now update vm */
     totalLen = 0;
     while (alen > 0) {
-	bp = DRead(dbase, afile, apos >> UBIK_LOGPAGESIZE);
+	bp = DRead(atrans, afile, apos >> UBIK_LOGPAGESIZE);
 	if (!bp) {
-	    bp = DNew(dbase, afile, apos >> UBIK_LOGPAGESIZE);
+	    bp = DNew(atrans, afile, apos >> UBIK_LOGPAGESIZE);
 	    if (!bp)
 		return UIOERROR;
 	    memset(bp, 0, UBIK_PAGESIZE);
@@ -867,10 +912,10 @@ udisk_commit(struct ubik_trans *atrans)
 	/* If we fail anytime after this, then panic and let the
 	 * recovery replay the log.
 	 */
-	code = DFlush(dbase);	/* write dirty pages to respective files */
+	code = DFlush(atrans);	/* write dirty pages to respective files */
 	if (code)
 	    panic("Writing Ubik DB modifications\n");
-	code = DSync(dbase);	/* sync the files and mark pages not dirty */
+	code = DSync(atrans);	/* sync the files and mark pages not dirty */
 	if (code)
 	    panic("Synchronizing Ubik DB modifications\n");
 
@@ -921,7 +966,7 @@ udisk_abort(struct ubik_trans *atrans)
 	code = (*dbase->truncate) (dbase, LOGFILE, 0);
 	if (code)
 	    panic("Truncating Ubik logfile during an abort\n");
-	DAbort(dbase);		/* remove all dirty pages */
+	DAbort(atrans);		/* remove all dirty pages */
     }
 
     /* When the transaction is marked done, it also means the logfile

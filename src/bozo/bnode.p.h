@@ -16,6 +16,7 @@
 #define	BOP_GETPARM(bnode, n, b, l)	((*(bnode)->ops->getparm)((bnode),(n),(b),(l)))
 #define	BOP_RESTARTP(bnode)	((*(bnode)->ops->restartp)((bnode)))
 #define BOP_HASCORE(bnode)	((*(bnode)->ops->hascore)((bnode)))
+#define BOP_PROCSTARTED(bnode,p)	((*(bnode)->ops->procstarted)((bnode),(p)))
 
 struct bnode_proc;
 
@@ -31,6 +32,7 @@ struct bnode_ops {
 		     afs_int32 alen);
     int (*restartp) ( struct bnode *);
     int (*hascore) ( struct bnode *);
+    int (*procstarted) ( struct bnode *, struct bnode_proc * );
 };
 
 struct bnode_type {
@@ -124,6 +126,7 @@ struct bozo_bosEntryStats {
 #define BOSEXIT_DORESTART(code)  (((code) & ~(0xF)) == BOSEXIT_RESTART)
 #define BOSEXIT_NOAUTH_FLAG    0x01
 #define BOSEXIT_LOGGING_FLAG   0x02
+#define BOSEXIT_RXBIND_FLAG    0x04
 #endif
 
 /* max time to wait for fileserver shutdown */
@@ -138,3 +141,5 @@ extern afs_int32 bnode_Create(char *atype, char *ainstance, struct bnode ** abp,
 extern struct bnode *bnode_FindInstance(char *aname);
 extern int bnode_WaitStatus(struct bnode *abnode, int astatus);
 extern int bnode_SetStat(struct bnode *abnode, int agoal);
+extern int bnode_CreatePidFile(struct bnode *abnode, struct bnode_proc *aproc, char *name);
+extern int bnode_DestroyPidFile(struct bnode *abnode, struct bnode_proc *aproc);

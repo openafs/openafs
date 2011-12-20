@@ -276,15 +276,21 @@ ReplayLog(struct ubik_dbase *adbase)
 	    } else if (opcode == LOGABORT)
 		panic("log abort\n");
 	    else if (opcode == LOGEND) {
+		struct ubik_version version;
 		tpos += 4;
 		code =
 		    (*adbase->read) (adbase, LOGFILE, (char *)buffer, tpos,
 				     2 * sizeof(afs_int32));
 		if (code != 2 * sizeof(afs_int32))
 		    return UBADLOG;
-		code = (*adbase->setlabel) (adbase, 0, (ubik_version *)buffer);
+		version.epoch = ntohl(buffer[0]);
+		version.counter = ntohl(buffer[1]);
+		code = (*adbase->setlabel) (adbase, 0, &version);
 		if (code)
 		    return code;
+		ubik_print("Successfully replayed log for interrupted "
+		           "transaction; db version is now %ld.%ld\n",
+		           (long) version.epoch, (long) version.counter);
 		logIsGood = 1;
 		break;		/* all done now */
 	    } else if (opcode == LOGTRUNCATE) {
@@ -770,17 +776,18 @@ urecovery_Interact(void *dummy)
 	    if (ubik_dbase->flags & DBWRITING) {
 		struct timeval tv;
 		int safety = 0;
-		tv.tv_sec = 0;
-		tv.tv_usec = 50000;
+		long cur_usec = 50000;
 		while ((ubik_dbase->flags & DBWRITING) && (safety < 500)) {
 		    DBRELE(ubik_dbase);
 		    /* sleep for a little while */
+		    tv.tv_sec = 0;
+		    tv.tv_usec = cur_usec;
 #ifdef AFS_PTHREAD_ENV
 		    select(0, 0, 0, 0, &tv);
 #else
 		    IOMGR_Select(0, 0, 0, 0, &tv);
 #endif
-		    tv.tv_usec += 10000;
+		    cur_usec += 10000;
 		    safety++;
 		    DBHOLD(ubik_dbase);
 		}

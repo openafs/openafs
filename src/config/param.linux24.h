@@ -94,7 +94,6 @@
 #define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 #define AFS_HAVE_FFS		1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
-#define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */
 
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
@@ -115,13 +114,16 @@
 
 #endif /* !defined(UKERNEL) */
 
-/* needed so glibc version will be defined */
-#include <afs/afs_sysnames.h>
+#if defined(UKERNEL) || !defined(KERNEL)
+#include <features.h>
+#endif
 
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
 #define USE_UCONTEXT
 #endif
 #endif
+
+#include <afs/afs_sysnames.h>
 
 #endif /* AFS_PARAM_COMMON_H */

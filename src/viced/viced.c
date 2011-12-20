@@ -205,10 +205,6 @@ struct timeval tp;
 pthread_key_t viced_uclient_key;
 #endif
 
-#ifdef AFS_PTHREAD_ENV
-pthread_key_t viced_uclient_key;
-#endif
-
 /*
  * FileServer's name and IP address, both network byte order and
  * host byte order.
@@ -1200,11 +1196,17 @@ ParseArgs(int argc, char *argv[])
 		return -1;
 	    }
 	} else if (!strcmp(argv[i], "-vhashsize")) {
+	    int hashsize;
             if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for %s\n", argv[i]);
 		return -1;
 	    }
-	    VSetVolHashSize(atoi(argv[++i]));
+	    hashsize = atoi(argv[++i]);
+	    if (VSetVolHashSize(hashsize)) {
+		fprintf(stderr, "specified -vhashsize (%s) is invalid or out "
+		                "of range\n", argv[i]);
+		return -1;
+	    }
 	} else if (!strcmp(argv[i], "-vlrudisable")) {
 	    VLRU_SetOptions(VLRU_SET_ENABLED, 0);
 	} else if (!strcmp(argv[i], "-vlruthresh")) {

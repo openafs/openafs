@@ -72,13 +72,27 @@ afs_pickSecurityObject(struct afs_conn *conn, int *secLevel)
 
     /* Do we have tokens ? */
     if (conn->user->vid != UNDEFVID) {
+	char *ticket;
+	struct ClearToken ct;
+
 	*secLevel = 2;
+
+	/* Make a copy of the ticket data to give to rxkad, because the
+	 * the ticket data could change while rxkad is sleeping for memory
+	 * allocation. We should implement locking on unixuser
+	 * structures to fix this properly, but for now, this is easier. */
+	ticket = afs_osi_Alloc(MAXKTCTICKETLEN);
+	memcpy(ticket, conn->user->stp, conn->user->stLen);
+	memcpy(&ct, &conn->user->ct, sizeof(ct));
+
 	/* kerberos tickets on channel 2 */
 	secObj = rxkad_NewClientSecurityObject(
 		    cryptall ? rxkad_crypt : rxkad_clear,
-                    (struct ktc_encryptionKey *)conn->user->ct.HandShakeKey,
-		    conn->user->ct.AuthHandle,
-		    conn->user->stLen, conn->user->stp);
+                    (struct ktc_encryptionKey *)ct.HandShakeKey,
+		    ct.AuthHandle,
+		    conn->user->stLen, ticket);
+
+	afs_osi_Free(ticket, MAXKTCTICKETLEN);
      }
      if (secObj == NULL) {
 	*secLevel = 0;
@@ -276,6 +290,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	csec = (struct rx_securityClass *)0;
 	if (tc->id) {
 	    AFS_GUNLOCK();
+	    rx_SetConnSecondsUntilNatPing(tc->id, 0);
 	    rx_DestroyConnection(tc->id);
 	    AFS_GLOCK();
 	}
@@ -300,14 +315,13 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	/* set to a RX_CALL_TIMEOUT error to allow MTU retry to trigger */
 	rx_SetServerConnIdleDeadErr(tc->id, RX_CALL_DEAD);
 	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
-	rx_SetMsgsizeRetryErr(tc->id, RX_MSGSIZE);
 
 	/*
 	 * Only do this for the base connection, not per-user.
 	 * Will need to be revisited if/when CB gets security.
 	 */
 	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad) &&
-	    (tu->vid == UNDEFVID))
+	    (tu->vid == UNDEFVID) && (tu->uid == 0))
 	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */

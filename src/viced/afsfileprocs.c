@@ -287,6 +287,66 @@ SetVolumeSync(struct AFSVolSync *async, Volume * avol)
     FS_UNLOCK;
 }				/*SetVolumeSync */
 
+/**
+ * Verify that the on-disk size for a vnode matches the length in the vnode
+ * index.
+ *
+ * @param[in] vp   Volume pointer
+ * @param[in] vnp  Vnode pointer
+ * @param[in] alen Size of the vnode on disk, if known. If unknown, give -1,
+ *                 and CheckLength itself will determine the on-disk size.
+ *
+ * @return operation status
+ *  @retval 0 lengths match
+ *  @retval nonzero Error; either the lengths do not match or there was an
+ *                  error determining the on-disk size. The volume should be
+ *                  taken offline and salvaged.
+ */
+static int
+CheckLength(struct Volume *vp, struct Vnode *vnp, afs_sfsize_t alen)
+{
+    afs_sfsize_t vlen;
+    VN_GET_LEN(vlen, vnp);
+
+    if (alen < 0) {
+	FdHandle_t *fdP;
+
+	fdP = IH_OPEN(vnp->handle);
+	if (fdP == NULL) {
+	    ViceLog(0, ("CheckLength: cannot open inode for fid %lu.%lu.%lu\n",
+	                afs_printable_uint32_lu(vp->hashid),
+	                afs_printable_uint32_lu(Vn_id(vnp)),
+	                afs_printable_uint32_lu(vnp->disk.uniquifier)));
+	    return -1;
+	}
+	alen = FDH_SIZE(fdP);
+	FDH_CLOSE(fdP);
+	if (alen < 0) {
+	    afs_int64 alen64 = alen;
+	    ViceLog(0, ("CheckLength: cannot get size for inode for fid "
+	                "%lu.%lu.%lu; FDH_SIZE returned %" AFS_INT64_FMT "\n",
+	                afs_printable_uint32_lu(vp->hashid),
+	                afs_printable_uint32_lu(Vn_id(vnp)),
+	                afs_printable_uint32_lu(vnp->disk.uniquifier),
+	                alen64));
+	    return -1;
+	}
+    }
+
+    if (alen != vlen) {
+	afs_int64 alen64 = alen, vlen64 = vlen;
+	ViceLog(0, ("Fid %lu.%lu.%lu has inconsistent length (index "
+	            "%" AFS_INT64_FMT ", inode %" AFS_INT64_FMT "); volume "
+	            "must be salvaged\n",
+	            afs_printable_uint32_lu(vp->hashid),
+	            afs_printable_uint32_lu(Vn_id(vnp)),
+	            afs_printable_uint32_lu(vnp->disk.uniquifier),
+	            vlen64, alen64));
+	return -1;
+    }
+    return 0;
+}
+
 /*
  * Note that this function always returns a held host, so
  * that CallPostamble can block without the host's disappearing.
@@ -489,9 +549,15 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		VRESTARTING
 #endif
 		;
+#ifdef AFS_PTHREAD_ENV
+	    static const struct timespec timeout_ts = { 0, 0 };
+	    static const struct timespec * const ts = &timeout_ts;
+#else
+	    static const struct timespec * const ts = NULL;
+#endif
 
 	    errorCode = 0;
-	    *volptr = VGetVolumeNoWait(&local_errorCode, &errorCode, (afs_int32) fid->Volume);
+	    *volptr = VGetVolumeTimed(&local_errorCode, &errorCode, (afs_int32) fid->Volume, ts);
 	    if (!errorCode) {
 		osi_Assert(*volptr);
 		break;
@@ -1283,6 +1349,12 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
     /* watch for invalid names */
     if (!strcmp(Name, ".") || !strcmp(Name, ".."))
 	return (EINVAL);
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VTakeOffline(volptr);
+	return VSALVAGE;
+    }
+
     if (parentptr->disk.cloned) {
 	ViceLog(25, ("DeleteTarget : CopyOnWrite called\n"));
 	if ((errorCode = CopyOnWrite(parentptr, volptr, 0, MAXFSIZE))) {
@@ -1692,6 +1764,12 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 		("Insufficient space to allocate %" AFS_INT64_FMT " blocks\n",
 		 (afs_intmax_t) BlocksPreallocatedForVnode));
 	return (errorCode);
+    }
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
+	VTakeOffline(volptr);
+	return VSALVAGE;
     }
 
     *targetptr = VAllocVnode(&errorCode, volptr, FileType);
@@ -3902,6 +3980,13 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	goto Bad_Rename;
     }
 
+    if (CheckLength(volptr, oldvptr, -1) ||
+        CheckLength(volptr, newvptr, -1)) {
+	VTakeOffline(volptr);
+	errorCode = VSALVAGE;
+	goto Bad_Rename;
+    }
+
     /* The CopyOnWrite might return ENOSPC ( disk full). Even if the second
      *  call to CopyOnWrite returns error, it is not necessary to revert back
      *  the effects of the first call because the contents of the volume is
@@ -4085,6 +4170,9 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	ViceLog(25, ("Rename : calling CopyOnWrite on  target dir\n"));
 	if ((errorCode = CopyOnWrite(fileptr, volptr, 0, MAXFSIZE)))
 	    goto Bad_Rename;
+	/* since copyonwrite would mean fileptr has a new handle, do it here */
+	FidZap(&filedir);
+	SetDirHandle(&filedir, fileptr);
     }
 
     /* If the new name exists already, delete it and the file it points to */
@@ -4589,6 +4677,12 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     if (((DirFid->Vnode & 1) && (ExistingFid->Vnode & 1)) || (DirFid->Vnode == ExistingFid->Vnode)) {	/* at present, */
 	/* AFS fileservers always have directory vnodes that are odd.   */
 	errorCode = EISDIR;
+	goto Bad_Link;
+    }
+
+    if (CheckLength(volptr, parentptr, -1)) {
+	VTakeOffline(volptr);
+	errorCode = VSALVAGE;
 	goto Bad_Link;
     }
 
@@ -7039,6 +7133,11 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 		    volptr->hashid));
 	return EIO;
     }
+    if (CheckLength(volptr, targetptr, tlen)) {
+	FDH_CLOSE(fdP);
+	VTakeOffline(volptr);
+	return VSALVAGE;
+    }
     if (Pos > tlen) {
 	Len = 0;
     }
@@ -7269,6 +7368,11 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 			volptr->hashid));
 	    return EIO;
 	}
+	if (CheckLength(volptr, targetptr, DataLength)) {
+	    FDH_CLOSE(fdP);
+	    VTakeOffline(volptr);
+	    return VSALVAGE;
+	}
 
 	if (linkCount != 1) {
 	    afs_fsize_t size;
@@ -7425,6 +7529,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	FDH_SYNC(fdP);
     }
     if (errorCode) {
+	Error tmp_errorCode = 0;
 	afs_sfsize_t nfSize = FDH_SIZE(fdP);
 	osi_Assert(nfSize >= 0);
 	/* something went wrong: adjust size and return */
@@ -7435,9 +7540,12 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	targetptr->changed_newTime = 1;
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
-	VAdjustDiskUsage(&errorCode, volptr,
+	VAdjustDiskUsage(&tmp_errorCode, volptr,
 			 (afs_sfsize_t) (nBlocks(nfSize) -
 					 nBlocks(NewLength)), 0);
+	if (tmp_errorCode) {
+	    errorCode = tmp_errorCode;
+	}
 	return errorCode;
     }
     FDH_CLOSE(fdP);

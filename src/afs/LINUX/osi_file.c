@@ -333,7 +333,7 @@ osi_InitCacheInfo(char *aname)
  * kernel space.
  */
 int
-osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
+osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw)
 {
     struct file *filp = osifile->filp;
     mm_segment_t old_fs = {0};
@@ -401,7 +401,7 @@ osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
  * Setup a uio struct.
  */
 void
-setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf, afs_offs_t pos,
+setup_uio(struct uio *uiop, struct iovec *iovecp, const char *buf, afs_offs_t pos,
 	  int count, uio_flag_t flag, uio_seg_t seg)
 {
     iovecp->iov_base = (char *)buf;
@@ -420,7 +420,7 @@ setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf, afs_offs_t pos,
  * UIO_WRITE : uio -> dp
  */
 int
-uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop)
+uiomove(char *dp, int length, uio_flag_t rw, struct uio *uiop)
 {
     int count;
     struct iovec *iov;

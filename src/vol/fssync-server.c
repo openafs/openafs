@@ -332,12 +332,15 @@ FSYNC_sync(void * args)
 	    CallHandler(FSYNC_readfds, nfds, POLLIN|POLLPRI);
 #else
 	int maxfd;
+	struct timeval s_timeout;
 	GetHandler(&FSYNC_readfds, &maxfd);
+	s_timeout.tv_sec = SYNC_SELECT_TIMEOUT;
+	s_timeout.tv_usec = 0;
 	/* Note: check for >= 1 below is essential since IOMGR_select
 	 * doesn't have exactly same semantics as select.
 	 */
 #ifdef AFS_PTHREAD_ENV
-	if (select(maxfd + 1, &FSYNC_readfds, NULL, NULL, NULL) >= 1)
+	if (select(maxfd + 1, &FSYNC_readfds, NULL, NULL, &s_timeout) >= 1)
 #else /* AFS_PTHREAD_ENV */
 	if (IOMGR_Select(maxfd + 1, &FSYNC_readfds, NULL, NULL, NULL) >= 1)
 #endif /* AFS_PTHREAD_ENV */
@@ -691,6 +694,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     Volume * vp;
     Error error;
 
+    /* Verify the partition name is null terminated. */
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
 	code = SYNC_FAILED;
@@ -700,6 +704,13 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     /* so, we need to attach the volume */
 
 #ifdef AFS_DEMAND_ATTACH_FS
+    /* Verify the partition name is not empty. */
+    if (*vcom->vop->partName == 0) {
+	res->hdr.reason = FSYNC_BAD_PART;
+	code = SYNC_FAILED;
+	goto done;
+    }
+
     /* check DAFS permissions */
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
     if (vp &&
@@ -760,10 +771,25 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    /* first, check to see whether we have such a volume defined */
-    vp = VPreAttachVolumeById_r(&error,
-				vcom->vop->partName,
-				vcom->vop->volume);
+
+    if (vp &&
+        FSYNC_partMatch(vcom, vp, 0) &&
+        vp->pending_vol_op &&
+        vp->pending_vol_op->vol_op_state == FSSYNC_VolOpRunningOnline &&
+        V_attachState(vp) == VOL_STATE_ATTACHED) {
+
+	/* noop; the volume stayed online for the volume operation and we were
+	 * simply told that the vol op is done. The vp we already have is fine,
+	 * so avoid confusing volume routines with trying to preattach an
+	 * attached volume. */
+
+    } else {
+	/* first, check to see whether we have such a volume defined */
+	vp = VPreAttachVolumeById_r(&error,
+				    vcom->vop->partName,
+				    vcom->vop->volume);
+    }
+
     if (vp) {
 	VCreateReservation_r(vp);
 	VWaitExclusiveState_r(vp);
@@ -780,11 +806,11 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 			       V_VOLUPD);
     if (vp)
 	VPutVolume_r(vp);
+#endif /* !AFS_DEMAND_ATTACH_FS */
     if (error) {
 	code = SYNC_DENIED;
 	res->hdr.reason = error;
     }
-#endif /* !AFS_DEMAND_ATTACH_FS */
 
  done:
     return code;
@@ -982,7 +1008,6 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	case VOL_STATE_PREATTACHED:
 	case VOL_STATE_SALVAGING:
 	case VOL_STATE_ERROR:
-	case VOL_STATE_DELETED:
 	    /* register the volume operation metadata with the volume
 	     *
 	     * if the volume is currently pre-attached, attach2()
@@ -990,6 +1015,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	     * attaching the volume would be safe */
 	    VRegisterVolOp_r(vp, &info);
 	    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
+	    /* fall through */
+
+	case VOL_STATE_DELETED:
 	    goto done;
 	default:
 	    break;
@@ -1010,7 +1038,6 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
             case VOL_STATE_PREATTACHED:
             case VOL_STATE_SALVAGING:
             case VOL_STATE_ERROR:
-            case VOL_STATE_DELETED:
                 /* register the volume operation metadata with the volume
                  *
                  * if the volume is currently pre-attached, attach2()
@@ -1018,6 +1045,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
                  * attaching the volume would be safe */
                 VRegisterVolOp_r(vp, &info);
                 vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
+		/* fall through */
+
+            case VOL_STATE_DELETED:
                 goto done;
             default:
                 break;
@@ -1256,6 +1286,10 @@ FSYNC_com_VolDone(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		 * possibly by putting the vp back on the VLRU. */
 
 		code = SYNC_OK;
+	    } else if (V_attachState(vp) == VOL_STATE_DELETED) {
+		VDeregisterVolOp_r(vp);
+		res->hdr.reason = FSYNC_UNKNOWN_VOLID;
+
 	    } else {
 		code = SYNC_DENIED;
 		res->hdr.reason = FSYNC_BAD_STATE;
@@ -1545,10 +1579,20 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
     vp = VLookupVolume_r(&error, vcom->vop->volume, NULL);
 
+    if (vp) {
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
+    }
+
     if (vp && vp->pending_vol_op) {
-	osi_Assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
-	memcpy(res->payload.buf, vp->pending_vol_op, sizeof(FSSYNC_VolOp_info));
-	res->hdr.response_len += sizeof(FSSYNC_VolOp_info);
+	if (!FSYNC_partMatch(vcom, vp, 1)) {
+	    res->hdr.reason = FSYNC_WRONG_PART;
+	    code = SYNC_FAILED;
+	} else {
+	    osi_Assert(sizeof(FSSYNC_VolOp_info) <= res->payload.len);
+	    memcpy(res->payload.buf, vp->pending_vol_op, sizeof(FSSYNC_VolOp_info));
+	    res->hdr.response_len += sizeof(FSSYNC_VolOp_info);
+	}
     } else {
 	if (!vp || V_attachState(vp) == VOL_STATE_DELETED) {
 	    res->hdr.reason = FSYNC_UNKNOWN_VOLID;
@@ -1558,6 +1602,10 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    res->hdr.reason = FSYNC_NO_PENDING_VOL_OP;
 	}
 	code = SYNC_FAILED;
+    }
+
+    if (vp) {
+	VCancelReservation_r(vp);
     }
     return code;
 }

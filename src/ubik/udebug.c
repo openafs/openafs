@@ -223,10 +223,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 		 ((udebug.nServers > 1) ? "s" : ""));
 	}
 	printf("Recovery state %x\n", udebug.recoveryState);
-	if (udebug.activeWrite) {
-	    printf("I am currently managing write trans %d.%d\n",
-		   udebug.epochTime, udebug.tidCounter);
-	}
     } else {
 	if (isClone)
 	    printf("I am a clone and never can become sync site\n");
@@ -241,6 +237,14 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	printf("Sync host %s was set %d secs ago\n",
 	       afs_inet_ntoa_r(htonl(udebug.syncHost), hoststr),
 	       afs_cast_time_t(diff));
+    }
+
+    if (udebug.activeWrite) {
+	printf("I am currently managing write trans %d.%d\n",
+	       udebug.epochTime, udebug.tidCounter);
+    } else {
+	printf("The last trans I handled was %d.%d\n",
+	       udebug.epochTime, udebug.tidCounter);
     }
 
     printf("Sync site's db version is %d.%d\n", udebug.syncVersion.epoch,

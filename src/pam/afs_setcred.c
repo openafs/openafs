@@ -51,15 +51,15 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int set_expires = 0;	/* the default is to not to set the env variable */
     int use_klog = 0;
     int i;
-    struct pam_conv *pam_convp = NULL;
+    PAM_CONST struct pam_conv *pam_convp = NULL;
     char my_password_buf[256];
     char *cell_ptr = NULL;
     char sbuffer[100];
-    char *password = NULL;
-    int torch_password = 1;
+    char *torch_password = NULL;
     int auth_ok = 0;
     char *lh;
-    char *user = NULL;
+    PAM_CONST char *user = NULL;
+    const char *password = NULL;
     int password_expires = -1;
     char *reason = NULL;
     struct passwd unix_pwd, *upwd = NULL;
@@ -133,7 +133,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass,
 		       try_first_pass, ignore_uid, ignore_uid_id, 8, 8, 8, 8);
     /* Try to get the user-interaction info, if available. */
-    errcode = pam_get_item(pamh, PAM_CONV, (const void **)&pam_convp);
+    errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
 	if (logmask && LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NO_USER_INT);
@@ -142,7 +142,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
     /* Who are we trying to authenticate here? */
     if ((errcode =
-	 pam_get_user(pamh, (const char **)&user,
+	 pam_get_user(pamh, (PAM_CONST char **)&user,
 		      "AFS username:")) != PAM_SUCCESS) {
 	pam_afs_syslog(LOG_ERR, PAMAFS_NOUSER, errcode);
 	RET(PAM_USER_UNKNOWN);
@@ -155,15 +155,15 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     /* enhanced: use "ignore_uid <number>" to specify the largest uid
      * which should be ignored by this module
      */
-#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV)
-#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV) || defined(AFS_SUN58_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
     if (i == 0)			/* getpwnam_r success */
 	upwd = &unix_pwd;
 #endif /* AFS_HPUX110_ENV */
-    if (ignore_uid && i == 0 && upwd->pw_uid <= ignore_uid_id) {
+    if (ignore_uid && i == 0 && upwd && upwd->pw_uid <= ignore_uid_id) {
 	pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
 	RET(PAM_AUTH_ERR);
     }
@@ -207,7 +207,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	} else if (password[0] == '\0') {
 	    /* Actually we *did* get one but it was empty. */
 	    got_authtok = 1;
-	    torch_password = 0;
 	    /* So don't use it. */
 	    password = NULL;
 	    if (use_first_pass) {
@@ -219,7 +218,6 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	} else {
 	    if (logmask && LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
-	    torch_password = 0;
 	    got_authtok = 1;
 	}
 	if (!(use_first_pass || try_first_pass)) {
@@ -228,8 +226,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
       try_auth:
 	if (password == NULL) {
-
-	    torch_password = 1;
+	    char *prompt_password;
 
 	    if (use_first_pass)
 		RET(PAM_AUTH_ERR);	/* shouldn't happen */
@@ -242,12 +239,12 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    }
 
 	    errcode =
-		pam_afs_prompt(pam_convp, &password, 0, PAMAFS_PWD_PROMPT);
-	    if (errcode != PAM_SUCCESS || password == NULL) {
+		pam_afs_prompt(pam_convp, &prompt_password, 0, PAMAFS_PWD_PROMPT);
+	    if (errcode != PAM_SUCCESS || prompt_password == NULL) {
 		pam_afs_syslog(LOG_ERR, PAMAFS_GETPASS_FAILED);
 		RET(PAM_AUTH_ERR);
 	    }
-	    if (password[0] == '\0') {
+	    if (prompt_password[0] == '\0') {
 		if (logmask && LOG_MASK(LOG_DEBUG))
 		    pam_afs_syslog(LOG_DEBUG, PAMAFS_NILPASSWORD);
 		RET(PAM_NEW_AUTHTOK_REQD);
@@ -260,11 +257,11 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	     * later, and free this storage now.
 	     */
 
-	    strncpy(my_password_buf, password, sizeof(my_password_buf));
+	    strncpy(my_password_buf, prompt_password, sizeof(my_password_buf));
 	    my_password_buf[sizeof(my_password_buf) - 1] = '\0';
-	    memset(password, 0, strlen(password));
-	    free(password);
-	    password = my_password_buf;
+	    memset(prompt_password, 0, strlen(prompt_password));
+	    free(prompt_password);
+	    password = torch_password = my_password_buf;
 	}
 	/*
 	 * We only set a PAG here, if we haven't got one before in
@@ -284,10 +281,10 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		auth_ok = !do_klog(user, password, "00:00:01", cell_ptr);
 		ktc_ForgetAllTokens();
 	    } else {
-		if (ka_VerifyUserPassword(KA_USERAUTH_VERSION, user,	/* kerberos name */
+		if (ka_VerifyUserPassword(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					  NULL,	/* instance */
 					  cell_ptr,	/* realm */
-					  password,	/* password */
+					  (char*)password,	/* password */
 					  0,	/* spare 2 */
 					  &reason	/* error string */
 		    )) {
@@ -303,10 +300,10 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    if (use_klog)
 		auth_ok = !do_klog(user, password, NULL, cell_ptr);
 	    else {
-		if (ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, user,	/* kerberos name */
+		if (ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
 					       NULL,	/* instance */
 					       cell_ptr,	/* realm */
-					       password,	/* password */
+					       (char*)password,	/* password */
 					       0,	/* default lifetime */
 					       &password_expires, 0,	/* spare 2 */
 					       &reason	/* error string */
@@ -326,7 +323,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
 	/* pam_sm_authenticate should have set this
 	 * if (auth_ok && !got_authtok) {
-	 *     torch_password = 0;
+	 *     torch_password = NULL;
 	 *     (void) pam_set_item(pamh, PAM_AUTHTOK, password);
 	 * }
 	 */
@@ -358,7 +355,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 
   out:
     if (password && torch_password)
-	memset(password, 0, strlen(password));
+	memset(torch_password, 0, strlen(torch_password));
     (void)setlogmask(origmask);
 #ifndef AFS_SUN56_ENV
     closelog();

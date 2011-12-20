@@ -1484,7 +1484,7 @@ $(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULE1)
 
 clean:
-	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi afsd afs afsint config rx
+	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx
 	-$(RM) -rf h
 	-$(RM) linktest $(AFS_OS_CLEAN)
 
@@ -1509,7 +1509,7 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		${DEST}/root.perf/include/afs/afs_sysnames.h
 	${INSTALL_DATA} $(TOP_INCDIR)/afs/afs_stats.h \
 		${DEST}/root.perf/include/afs/afs_stats.h
-	${INSTALL_DATA} $(TOP_SRCDIR)/afs/sysincludes.h \
+	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/sysincludes.h \
 		${DEST}/root.perf/include/afs/sysincludes.h
 	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
 		${DEST}/root.perf/include/afs/afs_usrops.h
@@ -1560,7 +1560,7 @@ UAFS/$(LIBUAFS): setup_uafs
 
 JUAFS/$(LIBJUAFS): setup_juafs
 	cd JUAFS && \
-	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=-DAFS_WEB_ENHANCEMENTS && \
+	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=&& \
 	$(RANLIB) $(LIBJUAFS)
 
 AFSWEB/$(LIBAFSWEB): setup_nsafs

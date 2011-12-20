@@ -34,7 +34,14 @@ stop() {
 		echo
 		return 1
 	fi
-	/usr/bin/bos shutdown localhost -wait -localauth
+	if [ "x$BOSSERVER_HOST" = "x" ] ; then
+		if [ -f /usr/afs/local/bosserver.rxbind ] ; then
+			BOSSERVER_HOST=`cat /usr/afs/local/bosserver.rxbind`
+		else
+			BOSSERVER_HOST="localhost"
+		fi
+	fi
+	/usr/bin/bos shutdown $BOSSERVER_HOST -wait -localauth
 	RETVAL=$?
 	if [ $RETVAL -ne 0 ] ; then
 		echo -n $"failed to shutdown OpenAFS"
@@ -46,6 +53,7 @@ stop() {
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/openafs-server
+	[ $RETVAL -eq 0 ] && rm -f /usr/afs/local/bosserver.rxbind
 	return $RETVAL
 }
 

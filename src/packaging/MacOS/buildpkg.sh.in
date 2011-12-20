@@ -144,6 +144,7 @@ if [ $firstpass = yes ]; then
 	echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
     fi
     cp afs.conf $PKGROOT/private/var/db/openafs/etc/config/afs.conf.sample
+    cp krb5-weak.conf $PKGROOT/private/var/db/openafs/etc/krb5-weak.conf
 
     cp decode-panic $PKGROOT/Library/OpenAFS/Tools/tools
     chmod a+x $PKGROOT/Library/OpenAFS/Tools/tools/decode-panic

@@ -10,6 +10,10 @@
 #ifndef _BOSPROTOTYPES_H_
 #define _BOSPROTOTYPES_H_
 
+#ifdef AFS_NT40_ENV
+typedef int pid_t;
+#endif
+
 #include <rx/rxkad.h>
 
 /* bnode.c */
@@ -43,6 +47,8 @@ int bnode_Deactivate(struct bnode *abnode);
 void bozo_Log(char *format, ... );
 int bozo_ReBozo(void);
 int WriteBozoFile(char *aname);
+int bozo_CreatePidFile(char *ainst, char *aname, pid_t apid);
+int bozo_DeletePidFile(char *ainst, char *aname);
 
 /* bosoprocs.c */
 int GetRequiredDirPerm(const char *path);

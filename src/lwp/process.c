@@ -10,19 +10,14 @@
 /* process.c - manage lwp context switches be means of setjmp/longjmp. */
 
 #include <afsconfig.h>
+#include <afs/param.h>
 
-/*
- * We must include at least one system header on Linux prior to including
- * afs/param.h, or the __GLIBC__ and __GLIBC_MINOR__ macros will not yet be
- * defined and we won't know whether we're using ucontext.
- */
 #include <stdio.h>
 #include <assert.h>
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
 
-#include <afs/param.h>
 
 #include "lwp.h"
 

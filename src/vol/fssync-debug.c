@@ -332,7 +332,10 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
 	state->reason = atoi(ti->data);
+    } else {
+	state->reason = FSYNC_WHATEVER;
     }
+
     if ((ti = as->parms[COMMON_PARMS_OFFSET+1].items)) {	/* -programtype */
 	if (!strcmp(ti->data, "fileServer")) {
 	    programType = fileServer;
@@ -456,6 +459,10 @@ VolOnline(struct cmd_syndesc * as, void * rock)
     common_prolog(as, &state);
     common_volop_prolog(as, &state);
 
+    if (state.vop->partName==0 || *(state.vop->partName)==0) {
+	fprintf(stderr, "required argument -partition not given\n");
+	return -1;
+    }
     do_volop(&state, FSYNC_VOL_ON, NULL);
 
     return 0;
@@ -1491,8 +1498,6 @@ VGCDel(struct cmd_syndesc * as, void * rock)
 	return -1;
     }
     child = atoi(ti->data);
-
-    state.reason = FSYNC_WHATEVER;
 
     common_prolog(as, &state);
     fprintf(stderr, "calling FSYNC_VCGDel\n");

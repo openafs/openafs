@@ -37,7 +37,7 @@ extern afs_rwlock_t afs_xnfssrv;
 /* osi_file.c */
 extern afs_rwlock_t afs_xosi;
 extern int osi_InitCacheInfo(char *aname);
-extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
+extern int osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw);
 extern struct file *afs_linux_raw_open(afs_dcache_id_t *ainode);
 
 /* osi_ioctl.c */
@@ -91,7 +91,7 @@ extern void afs_fill_inode(struct inode *ip, struct vattr *vattr);
 extern void osi_keyring_init(void);
 extern void osi_keyring_shutdown(void);
 extern int __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
-		    int change_parent);
+		    int change_parent, struct group_info **old_groups);
 #ifdef LINUX_KEYRING_SUPPORT
 extern afs_int32 osi_get_keyring_pag(afs_ucred_t *);
 extern struct key_type key_type_afs_pag;

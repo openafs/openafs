@@ -89,6 +89,9 @@
 #define uuid_memcpy(A,B,C)	memcpy(A,B,C)
 #endif /* KERNEL */
 
+#ifdef UKERNEL
+# include "rx/rx_prototypes.h"
+#endif
 
 typedef struct {
     char eaddr[6];		/* 6 bytes of ethernet hardware address */
@@ -431,38 +434,38 @@ static int
 uuid_get_address(uuid_address_p_t addr)
 {
     afs_int32 code;
-    afs_uint32 addr1;
-    struct hostent *he;
+    afs_uint32 addr1 = 0;
+    struct hostent *he = NULL;
 
     code = gethostname(hostName1, 64);
-    if (code) {
-	printf("gethostname() failed\n");
-#ifdef AFS_NT40_ENV
-	return ENOENT;
-#else
-	return errno;
+    if (!code)
+	he = gethostbyname(hostName1);
+
+    if (he)
+	uuid_memcpy(&addr1, he->h_addr_list[0], 4);
+#ifdef UKERNEL
+    else
+	addr1=rxi_getaddr();
 #endif
-    }
-    he = gethostbyname(hostName1);
-    if (!he) {
-	printf("Can't find address for '%s'\n", hostName1);
+
+    if (!addr1) {
 #ifdef AFS_NT40_ENV
 	return ENOENT;
 #else
 	return errno;
 #endif
     } else {
-	uuid_memcpy(&addr1, he->h_addr_list[0], 4);
 	addr1 = ntohl(addr1);
 	uuid_memcpy(addr->eaddr, &addr1, 4);
 	addr->eaddr[4] = 0xaa;
 	addr->eaddr[5] = 0x77;
-#ifdef  UUID_DEBUG
-	printf("uuid_get_address: %02x-%02x-%02x-%02x-%02x-%02x\n",
-	       addr->eaddr[0], addr->eaddr[1], addr->eaddr[2], addr->eaddr[3],
-	       addr->eaddr[4], addr->eaddr[5]);
-#endif
     }
+
+#ifdef  UUID_DEBUG
+    printf("uuid_get_address: %02x-%02x-%02x-%02x-%02x-%02x\n",
+	   addr->eaddr[0], addr->eaddr[1], addr->eaddr[2], addr->eaddr[3],
+	   addr->eaddr[4], addr->eaddr[5]);
+#endif
     return 0;
 }
 

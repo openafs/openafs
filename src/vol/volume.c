@@ -126,8 +126,8 @@
 #include "common.h"
 #include "afs/afs_assert.h"
 #include "vutils.h"
-#ifndef AFS_NT40_ENV
 #include <afs/dir.h>
+#ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif
 
@@ -199,7 +199,8 @@ static void VCloseVolumeHandles_r(Volume * vp);
 static void LoadVolumeHeader(Error * ec, Volume * vp);
 static int VCheckOffline(Volume * vp);
 static int VCheckDetach(Volume * vp);
-static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flags);
+static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId,
+                          Volume * hint, const struct timespec *ts);
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
 				 * defined when not linked with vice, XXXX */
@@ -509,6 +510,8 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
     opts->canScheduleSalvage = 0;
     opts->canUseFSSYNC = 0;
     opts->canUseSALVSYNC = 0;
+
+    opts->interrupt_rxcall = NULL;
 
 #ifdef FAST_RESTART
     opts->unsafe_attach = 1;
@@ -937,6 +940,7 @@ VInitVolumePackageThread(void *args)
             vp->partition = partition;
             vp->hashid = vid;
             queue_Init(&vp->vnode_list);
+            queue_Init(&vp->rx_call_list);
 	    CV_INIT(&V_attachCV(vp), "partattach", CV_DEFAULT, 0);
 
             vb->batch[vb->size++] = vp;
@@ -1877,6 +1881,22 @@ VShutdownVolume_r(Volume * vp)
 /* Header I/O routines                             */
 /***************************************************/
 
+static const char *
+HeaderName(bit32 magic)
+{
+    switch (magic) {
+    case VOLUMEINFOMAGIC:
+	return "volume info";
+    case SMALLINDEXMAGIC:
+	return "small index";
+    case LARGEINDEXMAGIC:
+	return "large index";
+    case LINKTABLEMAGIC:
+	return "link table";
+    }
+    return "unknown";
+}
+
 /* open a descriptor for the inode (h),
  * read in an on-disk structure into buffer (to) of size (size),
  * verify versionstamp in structure has magic (magic) and
@@ -1888,29 +1908,63 @@ ReadHeader(Error * ec, IHandle_t * h, char *to, int size, bit32 magic,
 {
     struct versionStamp *vsn;
     FdHandle_t *fdP;
+    afs_sfsize_t nbytes;
+    afs_ino_str_t stmp;
 
     *ec = 0;
     if (h == NULL) {
+	Log("ReadHeader: Null inode handle argument for %s header file.\n",
+	    HeaderName(magic));
 	*ec = VSALVAGE;
 	return;
     }
 
     fdP = IH_OPEN(h);
     if (fdP == NULL) {
+	Log("ReadHeader: Failed to open %s header file "
+	    "(volume=%u, inode=%s); errno=%d\n", HeaderName(magic), h->ih_vid,
+	    PrintInode(stmp, h->ih_ino), errno);
 	*ec = VSALVAGE;
 	return;
     }
 
     vsn = (struct versionStamp *)to;
-    if (FDH_PREAD(fdP, to, size, 0) != size || vsn->magic != magic) {
+    nbytes = FDH_PREAD(fdP, to, size, 0);
+    if (nbytes < 0) {
+	Log("ReadHeader: Failed to read %s header file "
+	    "(volume=%u, inode=%s); errno=%d\n", HeaderName(magic), h->ih_vid,
+	    PrintInode(stmp, h->ih_ino), errno);
 	*ec = VSALVAGE;
 	FDH_REALLYCLOSE(fdP);
 	return;
     }
+    if (nbytes != size) {
+	Log("ReadHeader: Incorrect number of bytes read from %s header file "
+	    "(volume=%u, inode=%s); expected=%d, read=%d\n",
+	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino), size,
+	    (int)nbytes);
+	*ec = VSALVAGE;
+	FDH_REALLYCLOSE(fdP);
+	return;
+    }
+    if (vsn->magic != magic) {
+	Log("ReadHeader: Incorrect magic for %s header file "
+	    "(volume=%u, inode=%s); expected=0x%x, read=0x%x\n",
+	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino), magic,
+	    vsn->magic);
+	*ec = VSALVAGE;
+	FDH_REALLYCLOSE(fdP);
+	return;
+    }
+
     FDH_CLOSE(fdP);
 
     /* Check is conditional, in case caller wants to inspect version himself */
     if (version && vsn->version != version) {
+	Log("ReadHeader: Incorrect version for %s header file "
+	    "(volume=%u, inode=%s); expected=%x, read=%x\n",
+	    HeaderName(magic), h->ih_vid, PrintInode(stmp, h->ih_ino),
+	    version, vsn->version);
 	*ec = VSALVAGE;
     }
 }
@@ -2147,7 +2201,8 @@ VPreAttachVolumeByVp_r(Error * ec,
 	 *   - volume is in an error state
 	 *   - volume is pre-attached
 	 */
-	Log("VPreattachVolumeByVp_r: volume %u not in quiescent state\n", vid);
+	Log("VPreattachVolumeByVp_r: volume %u not in quiescent state (state %u flags 0x%x)\n",
+	    vid, V_attachState(vp), V_attachFlags(vp));
 	goto done;
     } else if (vp) {
 	/* we're re-attaching a volume; clear out some old state */
@@ -2169,6 +2224,7 @@ VPreAttachVolumeByVp_r(Error * ec,
 	osi_Assert(vp != NULL);
 	memset(vp, 0, sizeof(Volume));
 	queue_Init(&vp->vnode_list);
+	queue_Init(&vp->rx_call_list);
 	CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
     }
 
@@ -2398,6 +2454,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
       vp->device = partp->device;
       vp->partition = partp;
       queue_Init(&vp->vnode_list);
+      queue_Init(&vp->rx_call_list);
 #ifdef AFS_DEMAND_ATTACH_FS
       CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -2779,7 +2836,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
         SYNC_response res;
         memset(&res, 0, sizeof(res));
 
-	if (FSYNC_VolOp(volid, VPartitionPath(partp), FSYNC_VOL_NEEDVOLUME, mode, &res)
+	if (FSYNC_VolOp(volid, partp->name, FSYNC_VOL_NEEDVOLUME, mode, &res)
 	    != SYNC_OK) {
 
             if (res.hdr.reason == FSYNC_SALVAGE) {
@@ -2915,7 +2972,7 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
 #if defined(AFS_DEMAND_ATTACH_FS) && defined(FSSYNC_BUILD_CLIENT)
     if (!peek && *ec == 0 && retry == 0 && VMustCheckoutVolume(mode)) {
 
-	code = FSYNC_VerifyCheckout(volid, VPartitionPath(partp), FSYNC_VOL_NEEDVOLUME, mode);
+	code = FSYNC_VerifyCheckout(volid, partp->name, FSYNC_VOL_NEEDVOLUME, mode);
 
 	if (code == SYNC_DENIED) {
 	    /* must retry checkout; fileserver no longer thinks we have
@@ -3052,8 +3109,8 @@ attach_check_vop(Error *ec, VolumeId volid, struct DiskPartition64 *partp,
  * @param[in] path     full path to the volume header .vol file
  * @param[in] partp    disk partition object for the attaching partition
  * @param[in] vp       volume object; vp->hashid, vp->device, vp->partition,
- *                     vp->vnode_list, and V_attachCV (for DAFS) should already
- *                     be initialized
+ *                     vp->vnode_list, vp->rx_call_list, and V_attachCV (for
+ *                     DAFS) should already be initialized
  * @param[in] isbusy   1 if vp->specialStatus should be set to VBUSY; that is,
  *                     if there is a volume operation running for this volume
  *                     that should set the volume to VBUSY during its run. 0
@@ -3110,7 +3167,8 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     if (*ec == VNOVOL) {
 	/* if the volume doesn't exist, skip straight to 'error' so we don't
 	 * request a salvage */
-	goto unlocked_error;
+	VOL_LOCK;
+	goto error_notbroken;
     }
 
     if (!*ec) {
@@ -3198,14 +3256,14 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n", path, *ec);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                          VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 	goto locked_error;
     } else if (*ec) {
 	/* volume operation in progress */
-	goto unlocked_error;
+	VOL_LOCK;
+	goto error_notbroken;
     }
 #else /* AFS_DEMAND_ATTACH_FS */
     if (*ec) {
@@ -3222,8 +3280,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume salvage flag is ON for %s; volume needs salvage\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                           VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3245,8 +3302,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	if (!VCanScheduleSalvage()) {
 	    Log("VAttachVolume: volume %s needs to be salvaged; not attached.\n", path);
 	}
-	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                           VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_NO_OFFLINE);
 	vp->nUsers = 0;
 
 #else /* AFS_DEMAND_ATTACH_FS */
@@ -3268,8 +3324,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
 #if defined(AFS_DEMAND_ATTACH_FS)
 	/* schedule a salvage so the volume goes away on disk */
-	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                          VOL_SALVAGE_NO_OFFLINE);
+	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 	VChangeState_r(vp, VOL_STATE_ERROR);
 	vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -3287,8 +3342,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    VGetBitmap_r(ec, vp, i);
 	    if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-		                                          VOL_SALVAGE_NO_OFFLINE);
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 		vp->nUsers = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
@@ -3336,8 +3390,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	        "%lu; needs salvage\n", (int)*ec,
 	        afs_printable_uint32_lu(V_id(vp)));
 #ifdef AFS_DEMAND_ATTACH_FS
-	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER |
-	                                              VOL_SALVAGE_NO_OFFLINE);
+	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 	    vp->nUsers = 0;
 #else /* !AFS_DEMAND_ATTACH_FS */
 	    *ec = VSALVAGE;
@@ -3376,7 +3429,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 #ifdef AFS_DEMAND_ATTACH_FS
 		error_state = VOL_STATE_ERROR;
 		/* see if we can recover */
-		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
+		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, 0 /*flags*/);
 #endif
 	    }
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3409,11 +3462,18 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 
     return vp;
 
+#ifndef AFS_DEMAND_ATTACH_FS
 unlocked_error:
+#endif
+
     VOL_LOCK;
 locked_error:
 #ifdef AFS_DEMAND_ATTACH_FS
     if (!VIsErrorState(V_attachState(vp))) {
+	if (VIsErrorState(error_state)) {
+	    Log("attach2: forcing vol %u to error state (state %u flags 0x%x ec %d)\n",
+	        vp->hashid, V_attachState(vp), V_attachFlags(vp), *ec);
+	}
 	VChangeState_r(vp, error_state);
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -3422,6 +3482,7 @@ locked_error:
 	VReleaseVolumeHandles_r(vp);
     }
 
+ error_notbroken:
 #ifdef AFS_DEMAND_ATTACH_FS
     VCheckSalvage(vp);
     if (forcefree) {
@@ -3510,6 +3571,46 @@ VHold_r(Volume * vp)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+/**** volume timeout-related stuff ****/
+
+#ifdef AFS_PTHREAD_ENV
+
+static_inline int
+VTimedOut(const struct timespec *ts)
+{
+    struct timeval tv;
+    int code;
+
+    if (ts->tv_sec == 0) {
+	/* short-circuit; this will have always timed out */
+	return 1;
+    }
+
+    code = gettimeofday(&tv, NULL);
+    if (code) {
+	Log("Error %d from gettimeofday, assuming we have not timed out\n", errno);
+	/* assume no timeout; failure mode is we just wait longer than normal
+	 * instead of returning errors when we shouldn't */
+	return 0;
+    }
+
+    if (tv.tv_sec < ts->tv_sec ||
+        (tv.tv_sec == ts->tv_sec && tv.tv_usec*1000 < ts->tv_nsec)) {
+
+	return 0;
+    }
+
+    return 1;
+}
+
+#else /* AFS_PTHREAD_ENV */
+
+/* Waiting a certain amount of time for offlining volumes is not supported
+ * for LWP due to a lack of primitives. So, we never time out */
+# define VTimedOut(x) (0)
+
+#endif /* !AFS_PTHREAD_ENV */
+
 #if 0
 static int
 VHold(Volume * vp)
@@ -3522,6 +3623,113 @@ VHold(Volume * vp)
 }
 #endif
 
+static afs_int32
+VIsGoingOffline_r(struct Volume *vp)
+{
+    afs_int32 code = 0;
+
+    if (vp->goingOffline) {
+	if (vp->specialStatus) {
+	    code = vp->specialStatus;
+	} else if (V_inService(vp) == 0 || V_blessed(vp) == 0) {
+	    code = VNOVOL;
+	} else {
+	    code = VOFFLINE;
+	}
+    }
+
+    return code;
+}
+
+/**
+ * Tell the caller if a volume is waiting to go offline.
+ *
+ * @param[in] vp  The volume we want to know about
+ *
+ * @return volume status
+ *   @retval 0 volume is not waiting to go offline, go ahead and use it
+ *   @retval nonzero volume is waiting to offline, and give the returned code
+ *           as an error to anyone accessing the volume
+ *
+ * @pre VOL_LOCK is NOT held
+ * @pre caller holds a heavyweight reference on vp
+ */
+afs_int32
+VIsGoingOffline(struct Volume *vp)
+{
+    afs_int32 code;
+
+    VOL_LOCK;
+    code = VIsGoingOffline_r(vp);
+    VOL_UNLOCK;
+
+    return code;
+}
+
+/**
+ * Register an RX call with a volume.
+ *
+ * @param[inout] ec        Error code; if unset when passed in, may be set if
+ *                         the volume starts going offline
+ * @param[out]   client_ec @see GetVolume
+ * @param[in] vp   Volume struct
+ * @param[in] cbv  VCallByVol struct containing the RX call to register
+ *
+ * @pre VOL_LOCK held
+ * @pre caller holds heavy ref on vp
+ *
+ * @internal
+ */
+static void
+VRegisterCall_r(Error *ec, Error *client_ec, Volume *vp, struct VCallByVol *cbv)
+{
+    if (vp && cbv) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	if (!*ec) {
+	    /* just in case the volume started going offline after we got the
+	     * reference to it... otherwise, if the volume started going
+	     * offline right at the end of GetVolume(), we might race with the
+	     * RX call scanner, and return success and add our cbv to the
+	     * rx_call_list _after_ the scanner has scanned the list. */
+	    *ec = VIsGoingOffline_r(vp);
+	    if (client_ec) {
+		*client_ec = *ec;
+	    }
+	}
+
+	while (V_attachState(vp) == VOL_STATE_SCANNING_RXCALLS) {
+	    VWaitStateChange_r(vp);
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+	queue_Prepend(&vp->rx_call_list, cbv);
+    }
+}
+
+/**
+ * Deregister an RX call with a volume.
+ *
+ * @param[in] vp   Volume struct
+ * @param[in] cbv  VCallByVol struct containing the RX call to deregister
+ *
+ * @pre VOL_LOCK held
+ * @pre caller holds heavy ref on vp
+ *
+ * @internal
+ */
+static void
+VDeregisterCall_r(Volume *vp, struct VCallByVol *cbv)
+{
+    if (cbv && queue_IsOnQueue(cbv)) {
+#ifdef AFS_DEMAND_ATTACH_FS
+	while (V_attachState(vp) == VOL_STATE_SCANNING_RXCALLS) {
+	    VWaitStateChange_r(vp);
+	}
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+	queue_Remove(cbv);
+    }
+}
 
 /***************************************************/
 /* get and put volume routines                     */
@@ -3566,6 +3774,22 @@ VPutVolume(Volume * vp)
     VOL_UNLOCK;
 }
 
+/**
+ * Puts a volume reference obtained with VGetVolumeWithCall.
+ *
+ * @param[in] vp  Volume struct
+ * @param[in] cbv VCallByVol struct given to VGetVolumeWithCall, or NULL if none
+ *
+ * @pre VOL_LOCK is NOT held
+ */
+void
+VPutVolumeWithCall(Volume *vp, struct VCallByVol *cbv)
+{
+    VOL_LOCK;
+    VDeregisterCall_r(vp, cbv);
+    VPutVolume_r(vp);
+    VOL_UNLOCK;
+}
 
 /* Get a pointer to an attached volume.  The pointer is returned regardless
    of whether or not the volume is in service or on/off line.  An error
@@ -3580,14 +3804,49 @@ VGetVolume(Error * ec, Error * client_ec, VolId volumeId)
     return retVal;
 }
 
-/* same as VGetVolume, but if a volume is waiting to go offline, we return
- * that it is actually offline, instead of waiting for it to go offline */
+/* same as VGetVolume, but if a volume is waiting to go offline, we only wait
+ * until time ts. If we have waited longer than that, we return that it is
+ * actually offline, instead of waiting for it to go offline */
 Volume *
-VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId)
+VGetVolumeTimed(Error * ec, Error * client_ec, VolId volumeId,
+                const struct timespec *ts)
 {
     Volume *retVal;
     VOL_LOCK;
-    retVal = GetVolume(ec, client_ec, volumeId, NULL, 1);
+    retVal = GetVolume(ec, client_ec, volumeId, NULL, ts);
+    VOL_UNLOCK;
+    return retVal;
+}
+
+/**
+ * Get a volume reference associated with an RX call.
+ *
+ * @param[out] ec @see GetVolume
+ * @param[out] client_ec @see GetVolume
+ * @param[in] volumeId @see GetVolume
+ * @param[in] ts  How long to wait for going-offline volumes (absolute time).
+ *                If NULL, wait forever. If ts->tv_sec == 0, return immediately
+ *                with an error if the volume is going offline.
+ * @param[in] cbv Contains an RX call to be associated with this volume
+ *                reference. This call may be interrupted if the volume is
+ *                requested to go offline while we hold a ref on it. Give NULL
+ *                to not associate an RX call with this reference.
+ *
+ * @return @see GetVolume
+ *
+ * @note for LWP builds, ts must be NULL
+ *
+ * @note A reference obtained with this function MUST be put back with
+ *       VPutVolumeWithCall
+ */
+Volume *
+VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
+                   const struct timespec *ts, struct VCallByVol *cbv)
+{
+    Volume *retVal;
+    VOL_LOCK;
+    retVal = GetVolume(ec, client_ec, volumeId, NULL, ts);
+    VRegisterCall_r(ec, client_ec, retVal, cbv);
     VOL_UNLOCK;
     return retVal;
 }
@@ -3595,7 +3854,7 @@ VGetVolumeNoWait(Error * ec, Error * client_ec, VolId volumeId)
 Volume *
 VGetVolume_r(Error * ec, VolId volumeId)
 {
-    return GetVolume(ec, NULL, volumeId, NULL, 0);
+    return GetVolume(ec, NULL, volumeId, NULL, NULL);
 }
 
 /* try to get a volume we've previously looked up */
@@ -3603,7 +3862,7 @@ VGetVolume_r(Error * ec, VolId volumeId)
 Volume *
 VGetVolumeByVp_r(Error * ec, Volume * vp)
 {
-    return GetVolume(ec, NULL, vp->hashid, vp, 0);
+    return GetVolume(ec, NULL, vp->hashid, vp, NULL);
 }
 
 /**
@@ -3613,17 +3872,24 @@ VGetVolumeByVp_r(Error * ec, Volume * vp)
  * @param[out] client_ec  wire error code to be given to clients
  * @param[in]  volumeId   ID of the volume we want
  * @param[in]  hint       optional hint for hash lookups, or NULL
- * @param[in]  nowait     0 to wait for a 'goingOffline' volume to go offline
- *                        before returning, 1 to return immediately
+ * @param[in]  timeout    absolute deadline for waiting for the volume to go
+ *                        offline, if it is going offline. NULL to wait forever.
  *
  * @return a volume handle for the specified volume
  *  @retval NULL an error occurred, or the volume is in such a state that
  *               we cannot load a header or return any volume struct
  *
  * @note for DAFS, caller must NOT hold a ref count on 'hint'
+ *
+ * @note 'timeout' is only checked if the volume is actually going offline; so
+ *       if you pass timeout->tv_sec = 0, this will exhibit typical
+ *       nonblocking behavior.
+ *
+ * @note for LWP builds, 'timeout' must be NULL
  */
 static Volume *
-GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowait)
+GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
+          const struct timespec *timeout)
 {
     Volume *vp = hint;
     /* pull this profiling/debugging code out of regular builds */
@@ -3805,9 +4071,17 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 	    vp = NULL;
 	    break;
 	}
-#endif
 
-#ifdef AFS_DEMAND_ATTACH_FS
+	if (VIsErrorState(V_attachState(vp))) {
+	    /* make sure we don't take a vp in VOL_STATE_ERROR state and use
+	     * it, or transition it out of that state */
+	    if (!*ec) {
+		*ec = VNOVOL;
+	    }
+	    vp = NULL;
+	    break;
+	}
+
 	/*
 	 * this test MUST happen after VAttachVolymeByVp, so vol_op_state is
 	 * not VolOpRunningUnknown (attach2 would have converted it to Online
@@ -3861,7 +4135,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 		    vp->hashid);
 #ifdef AFS_DEMAND_ATTACH_FS
 	    if (VCanScheduleSalvage()) {
-		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0 /*flags*/);
 	    } else {
 		FreeVolume(vp);
 		vp = NULL;
@@ -3883,19 +4157,26 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int nowa
 
 	if (programType == fileServer) {
 	    VGET_CTR_INC(V9);
-	    if (vp->goingOffline && !nowait) {
-		VGET_CTR_INC(V10);
+	    if (vp->goingOffline) {
+		if (timeout && VTimedOut(timeout)) {
+		    /* we've timed out; don't wait for the vol */
+		} else {
+		    VGET_CTR_INC(V10);
 #ifdef AFS_DEMAND_ATTACH_FS
-		/* wait for the volume to go offline */
-		if (V_attachState(vp) == VOL_STATE_GOING_OFFLINE) {
-		    VWaitStateChange_r(vp);
-		}
+		    /* wait for the volume to go offline */
+		    if (V_attachState(vp) == VOL_STATE_GOING_OFFLINE) {
+			VTimedWaitStateChange_r(vp, timeout, NULL);
+		    }
 #elif defined(AFS_PTHREAD_ENV)
-		VOL_CV_WAIT(&vol_put_volume_cond);
+		    VOL_CV_TIMEDWAIT(&vol_put_volume_cond, timeout, NULL);
 #else /* AFS_PTHREAD_ENV */
-		LWP_WaitProcess(VPutVolume);
+		    /* LWP has no timed wait, so the caller better not be
+		     * expecting one */
+		    osi_Assert(!timeout);
+		    LWP_WaitProcess(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
-		continue;
+		    continue;
+		}
 	    }
 	    if (vp->specialStatus) {
 		VGET_CTR_INC(V11);
@@ -4039,7 +4320,7 @@ VForceOffline_r(Volume * vp, int flags)
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    VRequestSalvage_r(&error, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+    VRequestSalvage_r(&error, vp, SALVSYNC_ERROR, 0 /*flags*/);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_PTHREAD_ENV
@@ -4195,11 +4476,17 @@ VDetachVolume_r(Error * ec, Volume * vp)
 	notifyServer = vp->needsPutBack;
 	if (V_destroyMe(vp) == DESTROY_ME)
 	    useDone = FSYNC_VOL_LEAVE_OFF;
-#ifdef AFS_DEMAND_ATTACH_FS
+# ifdef AFS_DEMAND_ATTACH_FS
 	else if (!V_blessed(vp) || !V_inService(vp))
 	    useDone = FSYNC_VOL_LEAVE_OFF;
-#endif
+# endif
     }
+# ifdef AFS_DEMAND_ATTACH_FS
+    if (V_needsSalvaged(vp)) {
+	notifyServer = 0;
+	VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, 0);
+    }
+# endif
     tpartp = vp->partition;
     volume = V_id(vp);
     DeleteVolumeFromHashTable(vp);
@@ -4274,15 +4561,17 @@ VCloseVolumeHandles_r(Volume * vp)
     VolState state_save;
 
     state_save = VChangeState_r(vp, VOL_STATE_OFFLINING);
+
+    VOL_UNLOCK;
 #endif
 
-    /* demand attach fs
-     *
-     * XXX need to investigate whether we can perform
-     * DFlushVolume outside of vol_glock_mutex...
-     *
-     * VCloseVnodeFiles_r drops the glock internally */
     DFlushVolume(vp->hashid);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+#endif
+
+    /* DAFS: VCloseVnodeFiles_r drops the glock internally */
     VCloseVnodeFiles_r(vp);
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -4326,13 +4615,17 @@ VReleaseVolumeHandles_r(Volume * vp)
     VolState state_save;
 
     state_save = VChangeState_r(vp, VOL_STATE_DETACHING);
+
+    VOL_UNLOCK;
 #endif
 
-    /* XXX need to investigate whether we can perform
-     * DFlushVolume outside of vol_glock_mutex... */
     DFlushVolume(vp->hashid);
 
-    VReleaseVnodeFiles_r(vp); /* releases the glock internally */
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+#endif
+
+    VReleaseVnodeFiles_r(vp); /* DAFS: releases the glock internally */
 
 #ifdef AFS_DEMAND_ATTACH_FS
     VOL_UNLOCK;
@@ -5030,8 +5323,8 @@ VCheckSalvage(Volume * vp)
  * @param[in]  flags   see flags note below
  *
  * @note flags:
- *       VOL_SALVAGE_INVALIDATE_HEADER causes volume header cache entry
- *                                     to be invalidated.
+ *       VOL_SALVAGE_NO_OFFLINE do not need to wait to offline the volume; it has
+ *                              not been fully attached
  *
  * @pre VOL_LOCK is held.
  *
@@ -5104,6 +5397,10 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 		    VOfflineForSalvage_r(vp);
 		}
 	    }
+	    /* If we are non-fileserver, we're telling the fileserver to
+	     * salvage the vol, so we don't need to give it back separately. */
+	    vp->needsPutBack = 0;
+
 	    *ec = VSALVAGING;
 	} else {
 	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
@@ -5115,15 +5412,6 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	    VChangeState_r(vp, VOL_STATE_ERROR);
 	    *ec = VSALVAGE;
 	    code = 1;
-	}
-	if (flags & VOL_SALVAGE_INVALIDATE_HEADER) {
-	    /* Instead of ReleaseVolumeHeader, we do FreeVolumeHeader()
-               so that the the next VAttachVolumeByVp_r() invocation
-               of attach2() will pull in a cached header
-               entry and fail, then load a fresh one from disk and attach
-               it to the volume.
-	    */
-	    FreeVolumeHeader(vp);
 	}
     }
     return code;
@@ -5312,7 +5600,7 @@ VScheduleSalvage_r(Volume * vp)
 	 * set the volume to an exclusive state and drop the lock
 	 * around the SALVSYNC call
 	 */
-	strlcpy(partName, VPartitionPath(vp->partition), sizeof(partName));
+	strlcpy(partName, vp->partition->name, sizeof(partName));
 	state_save = VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
 	VOL_UNLOCK;
 
@@ -5772,7 +6060,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 		VGetBitmap_r(ec, vp, i);
 		if (*ec) {
 #ifdef AFS_DEMAND_ATTACH_FS
-		    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
+		    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, 0 /*flags*/);
 #else /* AFS_DEMAND_ATTACH_FS */
 		    DeleteVolumeFromHashTable(vp);
 		    vp->shuttingDown = 1;	/* Let who has it free it. */
@@ -7466,6 +7754,51 @@ VInitVolumeHeaderCache(afs_uint32 howMany)
 	ReleaseVolumeHeader(hp++);
 }
 
+/* get a volume header off of the volume header LRU.
+ *
+ * @return volume header
+ *  @retval NULL no usable volume header is available on the LRU
+ *
+ * @pre VOL_LOCK held
+ *
+ * @post for DAFS, if the returned header is associated with a volume, that
+ *       volume is NOT in an exclusive state
+ *
+ * @internal volume package internal use only.
+ */
+#ifdef AFS_DEMAND_ATTACH_FS
+static struct volHeader*
+GetVolHeaderFromLRU(void)
+{
+    struct volHeader *hd = NULL, *qh, *nqh;
+    /* Usually, a volume in an exclusive state will not have its header on
+     * the LRU. However, it is possible for this to occur when a salvage
+     * request is received over FSSYNC, and possibly in other corner cases.
+     * So just skip over headers whose volumes are in an exclusive state. We
+     * could VWaitExclusiveState_r instead, but not waiting is faster and
+     * easier to do */
+    for (queue_Scan(&volume_hdr_LRU, qh, nqh, volHeader)) {
+	if (!qh->back || !VIsExclusiveState(V_attachState(qh->back))) {
+	    queue_Remove(qh);
+	    hd = qh;
+	    break;
+	}
+    }
+    return hd;
+}
+#else /* AFS_DEMAND_ATTACH_FS */
+static struct volHeader*
+GetVolHeaderFromLRU(void)
+{
+    struct volHeader *hd = NULL;
+    if (queue_IsNotEmpty(&volume_hdr_LRU)) {
+	hd = queue_First(&volume_hdr_LRU, volHeader);
+	queue_Remove(hd);
+    }
+    return hd;
+}
+#endif /* !AFS_DEMAND_ATTACH_FS */
+
 /**
  * get a volume header and attach it to the volume object.
  *
@@ -7534,12 +7867,8 @@ GetVolumeHeader(Volume * vp)
             V_attachFlags(vp) &= ~(VOL_HDR_IN_LRU);
 #endif
 	} else {
-	    /* we need to grab a new element off the LRU */
-	    if (queue_IsNotEmpty(&volume_hdr_LRU)) {
-		/* grab an element and pull off of LRU */
-		hd = queue_First(&volume_hdr_LRU, volHeader);
-		queue_Remove(hd);
-	    } else {
+	    hd = GetVolHeaderFromLRU();
+	    if (!hd) {
 		/* LRU is empty, so allocate a new volHeader
 		 * this is probably indicative of a leak, so let the user know */
 		hd = (struct volHeader *)calloc(1, sizeof(struct volHeader));
@@ -7556,8 +7885,8 @@ GetVolumeHeader(Volume * vp)
 		 * be sync'd out to disk */
 
 #ifdef AFS_DEMAND_ATTACH_FS
-		/* if hd->back were in an exclusive state, then
-		 * its volHeader would not be on the LRU... */
+		/* GetVolHeaderFromLRU had better not give us back a header
+		 * with a volume in exclusive state... */
 		osi_Assert(!VIsExclusiveState(V_attachState(hd->back)));
 #endif
 
@@ -7757,8 +8086,8 @@ FreeVolumeHeader(Volume * vp)
 int
 VSetVolHashSize(int logsize)
 {
-    /* 64 to 16384 hash buckets seems like a reasonable range */
-    if ((logsize < 6 ) || (logsize > 14)) {
+    /* 64 to 268435456 hash buckets seems like a reasonable range */
+    if ((logsize < 6 ) || (logsize > 28)) {
         return -1;
     }
 

@@ -11,10 +11,27 @@ INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
+KRB5CFLAGS = @KRB5_CPPFLAGS@
+KRB5LIBS = @KRB5_LIBS@
 
 INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/cmd.h \
 	${TOP_INCDIR}/afs/afsutil.h
+
+AFSIO_INCLS=${TOP_INCDIR}/afs/afsint.h \
+	${TOP_INCDIR}/afs/cmd.h \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/vlserver.h \
+	${TOP_INCDIR}/afs/ihandle.h \
+	${TOP_INCDIR}/afs/com_err.h \
+	${TOP_INCDIR}/afs/afscp.h \
+	${TOP_INCDIR}/afs/afsutil.h
+
+AFSIO_LIBS=${TOP_LIBDIR}/libafscp.a \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libcmd.a \
+	$(TOP_LIBDIR)/libafsutil.a
 
 FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libvldb.a \
@@ -45,7 +62,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 
 LIBS = ${FSLIBS} 
 
-all: fs up fstrace cmdebug livesys kdump-build cacheout
+all: fs up fstrace cmdebug livesys kdump-build cacheout afsio
 
 #
 # Build targets
@@ -55,6 +72,9 @@ cacheout: cacheout.o
 
 cacheout.o: cacheout.c
 
+PTH_CFLAGS=$(COMMON_CFLAGS) $(MT_CFLAGS)
+PTH_LDFLAGS=$(COMMON_LDFLAGS) $(MT_LDFLAGS)
+PTH_CCRULE=$(MT_CC) $(PTH_CFLAGS) -o $@ -c
 
 up.o: up.c AFS_component_version_number.c
 
@@ -66,10 +86,18 @@ fs.o: fs.c ${INCLS} AFS_component_version_number.c
 fs: fs.o $(LIBS)
 	${CC} ${CFLAGS} -o fs fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) ${XLIBS}
 
-afsio.o: afsio.c ${INCLS} AFS_component_version_number.c
+afsio.o: ${srcdir}/afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
+	${PTH_CCRULE} ${srcdir}/afsio.c
+vldbint.cs.o: ../vlserver/vldbint.cs.c
+	${PTH_CCRULE} ../vlserver/vldbint.cs.c
+vldbint.xdr.o: ../vlserver/vldbint.xdr.c
+	${PTH_CCRULE}  ../vlserver/vldbint.xdr.c
+afscbint.ss.o: ../fsint/afscbint.ss.c
+	${PTH_CCRULE} ../fsint/afscbint.ss.c
 
-afsio: afsio.o $(LIBS)
-	${CC} ${CFLAGS} -o afsio afsio.o ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libafsint.a $(LIBS) ${XLIBS}
+afsio: afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS}
+	$(MT_CC) @KRB5_CPPFLAGS@ $(PTH_LDFLAGS) $(PTH_CFLAGS) -o afsio afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS} \
+		${MT_LIBS} ${XLIBS} ${KRB5LIBS}
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 
@@ -267,7 +295,7 @@ kdump-alpha_linux-@LINUX_VERSION@: kdump-alpha_linux-@LINUX_VERSION@.o
 #
 # Install targets
 #
-install: kdump-build fs livesys up fstrace cmdebug
+install: kdump-build fs livesys up fstrace cmdebug afsio
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL} -d ${DESTDIR}${sbindir}
@@ -277,6 +305,7 @@ install: kdump-build fs livesys up fstrace cmdebug
 	${INSTALL_PROGRAM} up ${DESTDIR}${bindir}/up
 	${INSTALL_PROGRAM} fstrace ${DESTDIR}${sbindir}/fstrace
 	${INSTALL_PROGRAM} cmdebug ${DESTDIR}${bindir}/cmdebug
+	${INSTALL_PROGRAM} afsio ${DESTDIR}${bindir}/afsio ;
 	-set -x; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
@@ -307,7 +336,7 @@ install: kdump-build fs livesys up fstrace cmdebug
 		${INSTALL_PROGRAM} kdump64 ${DESTDIR}${sbindir}/kdump; \
 	fi
 
-dest: kdump-build fs livesys up fstrace cmdebug
+dest: kdump-build fs livesys up fstrace cmdebug afsio
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/etc
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
@@ -317,6 +346,7 @@ dest: kdump-build fs livesys up fstrace cmdebug
 	${INSTALL_PROGRAM} up ${DEST}/bin/up
 	${INSTALL_PROGRAM} fstrace ${DEST}/etc/fstrace
 	${INSTALL_PROGRAM} cmdebug ${DEST}/bin/cmdebug
+	${INSTALL_PROGRAM} afsio ${DEST}/bin/afsio
 	-set -x; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
@@ -355,7 +385,7 @@ dest: kdump-build fs livesys up fstrace cmdebug
 #
 
 clean:
-	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys dedebug
+	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys dedebug afsio
 
 test:
 	cd test; $(MAKE)

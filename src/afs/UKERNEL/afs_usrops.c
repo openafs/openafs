@@ -29,6 +29,7 @@
 #include "afs/kauth.h"
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
+#include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
 #include "afsd/afsd.h"
 
@@ -1741,16 +1742,12 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 	     */
 	    nextVc = NULL;
 	    nextVp = NULL;
-#ifdef AFS_WEB_ENHANCEMENTS
 	    if ((nextPathP != NULL && *nextPathP != '\0') || !no_eval_mtpt)
 		code = afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred, 0);
 	    else
 		code =
 		    afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred,
 			       AFS_LOOKUP_NOEVAL);
-#else
-	    code = afs_lookup(VTOAFS(vp), pathP, &nextVc, get_user_struct()->u_cred, 0);
-#endif /* AFS_WEB_ENHANCEMENTS */
 	    if (nextVc)
 		nextVp=AFSTOV(nextVc);
 	    if (code != 0) {
@@ -2375,6 +2372,71 @@ uafs_read(int fd, char *buf, int len)
 }
 
 int
+uafs_pread_nocache(int fd, char *buf, int len, off_t offset)
+{
+    int retval;
+    AFS_GLOCK();
+    retval = uafs_pread_nocache_r(fd, buf, len, offset);
+    AFS_GUNLOCK();
+    return retval;
+}
+
+int
+uafs_pread_nocache_r(int fd, char *buf, int len, off_t offset)
+{
+    int code;
+    struct iovec iov[1];
+    struct usr_vnode *fileP;
+    struct nocache_read_request *bparms;
+    struct usr_uio uio;
+
+    /*
+     * Make sure this is an open file
+     */
+    fileP = afs_FileTable[fd];
+    if (fileP == NULL) {
+	errno = EBADF;
+	return -1;
+    }
+
+    /* these get freed in PrefetchNoCache, so... */
+    bparms = afs_osi_Alloc(sizeof(struct nocache_read_request));
+    bparms->areq = afs_osi_Alloc(sizeof(struct vrequest));
+
+    afs_InitReq(bparms->areq, get_user_struct()->u_cred);
+
+    bparms->auio = &uio;
+    bparms->offset = offset;
+    bparms->length = len;
+
+    /*
+     * set up the uio buffer
+     */
+    iov[0].iov_base = buf;
+    iov[0].iov_len = len;
+    uio.uio_iov = &iov[0];
+    uio.uio_iovcnt = 1;
+    uio.uio_offset = offset;
+    uio.uio_segflg = 0;
+    uio.uio_fmode = FREAD;
+    uio.uio_resid = len;
+
+    /*
+     * do the read
+     */
+    code = afs_PrefetchNoCache(VTOAFS(fileP), get_user_struct()->u_cred,
+			       bparms);
+
+    if (code) {
+	errno = code;
+	return -1;
+    }
+
+    afs_FileOffsets[fd] = uio.uio_offset;
+    return (len - uio.uio_resid);
+}
+
+int
 uafs_pread(int fd, char *buf, int len, off_t offset)
 {
     int retval;
@@ -2463,6 +2525,16 @@ uafs_GetAttr(struct usr_vnode *vp, struct stat *stats)
     stats->st_atime = attrs.va_atime.tv_sec;
     stats->st_mtime = attrs.va_mtime.tv_sec;
     stats->st_ctime = attrs.va_ctime.tv_sec;
+    /* preserve dv if possible */
+#if defined(HAVE_STRUCT_STAT_ST_CTIMESPEC)
+    stats->st_atimespec.tv_nsec = attrs.va_atime.tv_usec * 1000;
+    stats->st_mtimespec.tv_nsec = attrs.va_mtime.tv_usec * 1000;
+    stats->st_ctimespec.tv_nsec = attrs.va_ctime.tv_usec * 1000;
+#elif defined(HAVE_STRUCT_STAT_ST_CTIMENSEC)
+    stats->st_atimensec = attrs.va_atime.tv_usec * 1000;
+    stats->st_mtimensec = attrs.va_mtime.tv_usec * 1000;
+    stats->st_ctimensec = attrs.va_ctime.tv_usec * 1000;
+#endif
     stats->st_blksize = attrs.va_blocksize;
     stats->st_blocks = attrs.va_blocks;
 
@@ -3612,7 +3684,6 @@ uafs_afsPathName(char *path)
     return NULL;
 }
 
-#ifdef AFS_WEB_ENHANCEMENTS
 /*
  * uafs_klog_nopag
  * klog but don't allocate a new pag
@@ -3765,6 +3836,45 @@ uafs_statmountpoint_r(char *path)
  * Get a list of rights for the current user on path.
  */
 int
+uafs_access(char *path, int flags)
+{
+    int code;
+    struct vnode *vp;
+    int fileMode = 0;
+
+    if (flags & R_OK) {
+	fileMode |= VREAD;
+    }
+    if (flags & W_OK) {
+	fileMode |= VWRITE;
+    }
+    if (flags & X_OK) {
+	fileMode |= VEXEC;
+    }
+
+    AFS_GLOCK();
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1, 0);
+    if (code != 0) {
+	errno = code;
+	AFS_GUNLOCK();
+	return -1;
+    }
+
+    code = afs_access(VTOAFS(vp), fileMode, get_user_struct()->u_cred);
+    VN_RELE(vp);
+
+    if (code != 0)
+	errno = code;
+
+    AFS_GUNLOCK();
+    return code ? -1 : 0;
+}
+
+/*
+ * uafs_getRights
+ * Get a list of rights for the current user on path.
+ */
+int
 uafs_getRights(char *path)
 {
     int code;
@@ -3788,6 +3898,4 @@ uafs_getRights(char *path)
     AFS_GUNLOCK();
     return afs_rights;
 }
-#endif /* AFS_WEB_ENHANCEMENTS */
-
 #endif /* UKERNEL */

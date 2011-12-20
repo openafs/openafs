@@ -30,6 +30,8 @@
 #include <windows.h>
 #include "krb5_nt.h"
 
+static krb5_error_code (KRB5_CALLCONV *pkrb5_init_context)(krb5_context *context) = NULL;
+static krb5_error_code (KRB5_CALLCONV *pkrb5_free_context)(krb5_context context) = NULL;
 static char * (KRB5_CALLCONV *pkrb5_get_error_message)(krb5_context context, krb5_error_code code) = NULL;
 static void (KRB5_CALLCONV *pkrb5_free_error_message)(krb5_context context, char *s) = NULL;
 
@@ -57,6 +59,8 @@ initialize_krb5(void)
      */
     HINSTANCE h = LoadLibrary(KRB5LIB);
     if (h) {
+        (FARPROC)pkrb5_init_context = GetProcAddress(h, "krb5_init_context");
+        (FARPROC)pkrb5_free_context = GetProcAddress(h, "krb5_free_context");
         (FARPROC)pkrb5_get_error_message = GetProcAddress(h, "krb5_get_error_message");
         (FARPROC)pkrb5_free_error_message = GetProcAddress(h, "krb5_free_error_message");
     }
@@ -66,15 +70,28 @@ const char *
 fetch_krb5_error_message(krb5_context context, krb5_error_code code)
 {
     static char errorText[1024];
+    char *msg = NULL;
+    int free_context = 0;
 
-    if (pkrb5_get_error_message) {
-        char *msg = pkrb5_get_error_message(context, code);
+    if (pkrb5_init_context && pkrb5_get_error_message) {
+
+        if (context == NULL) {
+            if (krb5_init_context(&context) != 0)
+                goto done;
+            free_context = 1;
+        }
+
+        msg = pkrb5_get_error_message(context, code);
         if (msg) {
             strncpy(errorText, msg, sizeof(errorText));
             errorText[sizeof(errorText)-1]='\0';
             pkrb5_free_error_message(context, msg);
-            return errorText;
+            msg = errorText;
         }
+
+        if (free_context)
+            pkrb5_free_context(context);
     }
-    return NULL;
+  done:
+    return msg;
 }

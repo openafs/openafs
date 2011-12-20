@@ -73,6 +73,9 @@ rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
      * for processing.
      */
     while (1) {
+        /* See if a check for additional packets was issued */
+        rx_CheckPackets();
+
 	tp = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE);
 	usr_assert(tp != NULL);
 	rc = rxi_ReadPacket(usockp, tp, &host, &port);
@@ -256,6 +259,10 @@ rxk_InitializeSocket(void)
 		    sizeof(optval));
     usr_assert(rc == 0);
 #endif /* AFS_USR_AIX_ENV */
+
+#ifdef FD_CLOEXEC
+    fcntl(sock, F_SETFD, FD_CLOEXEC);
+#endif
 
     usockp->sock = sock;
     usockp->port = lcladdr.sin_port;

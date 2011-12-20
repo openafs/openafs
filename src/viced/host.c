@@ -2386,11 +2386,12 @@ h_FindClient_r(struct rx_connection *tcon)
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client && client->sid == rxr_CidOf(tcon)
 	&& client->VenusEpoch == rxr_GetEpoch(tcon)
-	&& !(client->host->hostFlags & HOSTDELETED)) {
+	&& !(client->host->hostFlags & HOSTDELETED)
+	&& !client->deleted) {
 
 	client->refCount++;
 	h_Hold_r(client->host);
-	if (!client->deleted && client->prfail != 2) {
+	if (client->prfail != 2) {
 	    /* Could add shared lock on client here */
 	    /* note that we don't have to lock entry in this path to
 	     * ensure CPS is initialized, since we don't call rx_SetSpecific
@@ -2563,7 +2564,8 @@ h_FindClient_r(struct rx_connection *tcon)
      */
     oldClient = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (oldClient && oldClient != client && oldClient->sid == rxr_CidOf(tcon)
-	&& oldClient->VenusEpoch == rxr_GetEpoch(tcon)) {
+	&& oldClient->VenusEpoch == rxr_GetEpoch(tcon)
+	&& !(oldClient->host->hostFlags & HOSTDELETED)) {
 	char hoststr[16];
 	if (!oldClient->deleted) {
 	    /* if we didn't create it, it's not ours to put back */
@@ -2937,6 +2939,37 @@ static int h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h);
 static void h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out);
 static void h_diskEntryToHost_r(struct hostDiskEntry * in, struct host * out);
 
+/**
+ * Is this host busy?
+ *
+ * This is just a hint and should not be trusted; this should probably only be
+ * used by the host state serialization code when trying to detect if a host
+ * can be sanely serialized to disk or not. If this function returns 1, the
+ * host may be in an invalid state and thus should not be saved to disk.
+ */
+static int
+h_isBusy_r(struct host *host)
+{
+    struct Lock *hostLock = &host->lock;
+    int locked = 0;
+
+    LOCK_LOCK(hostLock);
+    if (hostLock->excl_locked || hostLock->readers_reading) {
+	locked = 1;
+    }
+    LOCK_UNLOCK(hostLock);
+
+    if (locked) {
+	return 1;
+    }
+
+    if ((host->hostFlags & HWHO_INPROGRESS) || !(host->hostFlags & ALTADDR)) {
+	/* We shouldn't hit this if the host wasn't locked, but just in case... */
+	return 1;
+    }
+
+    return 0;
+}
 
 /* this procedure saves all host state to disk for fast startup */
 int
@@ -3258,6 +3291,16 @@ h_stateSaveHost(struct host * host, void* rock)
     struct iovec iov[4];
     int iovcnt = 2;
 
+    if (h_isBusy_r(host)) {
+	char hoststr[16];
+	ViceLog(1, ("Not saving host %s:%d to disk; host appears busy\n",
+	            afs_inet_ntoa_r(host->host, hoststr), (int)ntohs(host->port)));
+	/* Make sure we don't try to save callbacks to disk for this host, or
+	 * we'll get confused on restore */
+	DeleteAllCallBacks_r(host, 1);
+	return 0;
+    }
+
     memset(&hdr, 0, sizeof(hdr));
 
     if (state->h_hdr->index_max < host->index) {
@@ -3384,6 +3427,16 @@ h_stateRestoreHost(struct fs_dump_state * state)
 	osi_Assert(hcps != NULL);
     }
 
+    if ((hdsk.hostFlags & HWHO_INPROGRESS) || !(hdsk.hostFlags & ALTADDR)) {
+	char hoststr[16];
+	ViceLog(0, ("h_stateRestoreHost: skipping host %s:%d due to invalid flags 0x%x\n",
+	            afs_inet_ntoa_r(hdsk.host, hoststr), (int)ntohs(hdsk.port),
+	            (unsigned)hdsk.hostFlags));
+	bail = 0;
+	state->h_map.entries[hdsk.index].valid = FS_STATE_IDX_SKIPPED;
+	goto done;
+    }
+
     /* for restoring state, we better be able to get a host! */
     host = GetHT();
     osi_Assert(host != NULL);
@@ -3416,6 +3469,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
     h_InsertList_r(host);
 
     /* setup host id map entry */
+    state->h_map.entries[hdsk.index].valid = FS_STATE_IDX_VALID;
     state->h_map.entries[hdsk.index].old_idx = hdsk.index;
     state->h_map.entries[hdsk.index].new_idx = host->index;
 
@@ -3481,7 +3535,8 @@ h_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
     if (old >= state->h_map.len) {
 	ViceLog(0, ("h_OldToNew: index %d is out of range\n", old));
 	ret = 1;
-    } else if (state->h_map.entries[old].old_idx != old) { /* sanity check */
+    } else if (state->h_map.entries[old].valid != FS_STATE_IDX_VALID ||
+               state->h_map.entries[old].old_idx != old) { /* sanity check */
 	ViceLog(0, ("h_OldToNew: index %d points to an invalid host record\n", old));
 	ret = 1;
     } else {

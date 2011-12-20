@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Load the OpenAFS kernel module at boot
+exec /sbin/modprobe openafs
