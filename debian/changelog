@@ -1,3 +1,9 @@
+openafs (1.6.1~pre1-1) UNRELEASED; urgency=low
+
+  * New upstream prerelease.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 20 Dec 2011 12:41:51 -0800
+
 openafs (1.6.0-3) unstable; urgency=low
 
   * Apply upstream deltas to fix file corruption issue in file server:
