@@ -48,11 +48,12 @@ DOC_PACKAGES = -plibpam-openafs-kaserver -popenafs-dbserver -popenafs-fuse \
 
 # These are files that we know we don't want to install.  List them so that we
 # can use dh_install --fail-missing and catch anything new that shows up.
-IGNORE = -XAuthLog -Xcopyauth -Xdlog -Xdpass -Xfms.log -Xfs_chgrp.1	   \
-	-Xfs_chown.1 -Xfs_cscpolicy.1 -Xfs_flushall.1 -Xfs_memdump.1	   \
-	-Xfs_minidump.1 -Xfs_trace.1 -Xkadb_check -Xkaserver -Xkdb -Xkdump \
-	-Xkpwvalid -Xpagsh.krb -Xsymlink -Xtokens.krb -Xuss -Xvldb_convert \
-	-Xvsys -Xxfs_size_check
+IGNORE = -XAuthLog -Xaklog_dynamic_auth.8 -Xcopyauth -Xdlog -Xdpass	\
+	-Xfms.log -Xfs_chgrp.1 -Xfs_chown.1 -Xfs_cscpolicy.1		\
+	-Xfs_flushall.1 -Xfs_memdump.1 -Xfs_minidump.1 -Xfs_trace.1	\
+	-Xkadb_check -Xkaserver -Xkdb -Xkdump -Xkpwvalid -Xpagsh.krb	\
+	-Xsymlink -Xtokens.krb -Xuss -Xvldb_convert -Xvsys		\
+	-Xxfs_size_check
 
 # Installed via other means since we have to rename them.
 IGNORE += -Xafsd.fuse.8 -Xpam_afs
