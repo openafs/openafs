@@ -1,4 +1,4 @@
-openafs (1.6.1~pre1-1) UNRELEASED; urgency=low
+openafs (1.6.1~pre1-1) unstable; urgency=low
 
   * New upstream prerelease.
     - Install new afsio utility.
@@ -13,7 +13,7 @@ openafs (1.6.1~pre1-1) UNRELEASED; urgency=low
     - Revert process group changes on keyring failure.
     - Various fixes for the salvager.
 
- -- Russ Allbery <rra@debian.org>  Tue, 20 Dec 2011 12:41:51 -0800
+ -- Russ Allbery <rra@debian.org>  Tue, 20 Dec 2011 13:51:57 -0800
 
 openafs (1.6.0-3) unstable; urgency=low
 
