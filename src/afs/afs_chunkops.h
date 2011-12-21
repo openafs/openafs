@@ -60,8 +60,7 @@ struct afs_cacheOps {
     int (*close) (struct osi_file * fp);
     int (*vreadUIO) (afs_dcache_id_t *, struct uio *);
     int (*vwriteUIO) (struct vcache *, afs_dcache_id_t *, struct uio *);
-    struct dcache *(*GetDSlot) (afs_int32 aslot,
-				struct dcache * tmpdc);
+    struct dcache *(*GetDSlot) (afs_int32 aslot);
     struct volume *(*GetVolSlot) (void);
     int (*HandleLink) (struct vcache * avc, struct vrequest * areq);
 };
@@ -72,7 +71,7 @@ struct afs_cacheOps {
 #define	afs_CFileRead(file, offset, data, size) (*(afs_cacheType->fread))(file, offset, data, size)
 #define	afs_CFileWrite(file, offset, data, size) (*(afs_cacheType->fwrite))(file, offset, data, size)
 #define	afs_CFileClose(handle)		(*(afs_cacheType->close))(handle)
-#define	afs_GetDSlot(slot, adc)		(*(afs_cacheType->GetDSlot))(slot, adc)
+#define	afs_GetDSlot(slot)		(*(afs_cacheType->GetDSlot))(slot)
 #define	afs_GetVolSlot()		(*(afs_cacheType->GetVolSlot))()
 #define	afs_HandleLink(avc, areq)	(*(afs_cacheType->HandleLink))(avc, areq)
 

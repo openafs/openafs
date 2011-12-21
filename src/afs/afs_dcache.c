@@ -672,7 +672,7 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 	 * during the truncate operation.
 	 */
 	for (i = 0; i < victimPtr; i++) {
-	    tdc = afs_GetDSlot(victims[i], 0);
+	    tdc = afs_GetDSlot(victims[i]);
 	    /* We got tdc->tlock(R) here */
 	    if (tdc->refCount == 1)
 		victimDCs[i] = tdc;
@@ -1085,7 +1085,7 @@ afs_FreeDiscardedDCache(void)
     /*
      * Get an entry from the list of discarded cache elements
      */
-    tdc = afs_GetDSlot(afs_discardDCList, 0);
+    tdc = afs_GetDSlot(afs_discardDCList);
     osi_Assert(tdc->refCount == 1);
     ReleaseReadLock(&tdc->tlock);
 
@@ -1311,7 +1311,7 @@ afs_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 	i = afs_dvnextTbl[index];	/* next pointer this hash table */
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    int releaseTlock = 1;
-	    tdc = afs_GetDSlot(index, NULL);
+	    tdc = afs_GetDSlot(index);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		if (sync) {
 		    if ((afs_indexFlags[index] & IFDataMod) == 0
@@ -1400,7 +1400,7 @@ afs_DCacheMissingChunks(struct vcache *avc)
     for (index = afs_dvhashTbl[i]; index != NULLIDX; index = i) {
         i = afs_dvnextTbl[index];
         if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-            tdc = afs_GetDSlot(index, NULL);
+            tdc = afs_GetDSlot(index);
             if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		totalChunks--;
             }
@@ -1453,7 +1453,7 @@ afs_FindDCache(struct vcache *avc, afs_size_t abyte)
     ObtainWriteLock(&afs_xdcache, 278);
     for (index = afs_dchashTbl[i]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-	    tdc = afs_GetDSlot(index, NULL);
+	    tdc = afs_GetDSlot(index);
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid) && chunk == tdc->f.chunk) {
 		break;		/* leaving refCount high for caller */
@@ -1501,7 +1501,7 @@ afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
 	|| ((lock & 2) && afs_freeDCList != NULLIDX)) {
 
 	afs_indexFlags[afs_freeDCList] &= ~IFFree;
-	tdc = afs_GetDSlot(afs_freeDCList, 0);
+	tdc = afs_GetDSlot(afs_freeDCList);
 	osi_Assert(tdc->refCount == 1);
 	ReleaseReadLock(&tdc->tlock);
 	ObtainWriteLock(&tdc->lock, 604);
@@ -1509,7 +1509,7 @@ afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
 	afs_freeDCCount--;
     } else {
 	afs_indexFlags[afs_discardDCList] &= ~IFDiscarded;
-	tdc = afs_GetDSlot(afs_discardDCList, 0);
+	tdc = afs_GetDSlot(afs_discardDCList);
 	osi_Assert(tdc->refCount == 1);
 	ReleaseReadLock(&tdc->tlock);
 	ObtainWriteLock(&tdc->lock, 605);
@@ -1769,7 +1769,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	us = NULLIDX;
 	for (index = afs_dchashTbl[i]; index != NULLIDX;) {
 	    if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-		tdc = afs_GetDSlot(index, NULL);
+		tdc = afs_GetDSlot(index);
 		ReleaseReadLock(&tdc->tlock);
 		/*
 		 * Locks held:
@@ -2561,14 +2561,13 @@ afs_WriteThroughDSlots(void)
  *
  * Parameters:
  *	aslot : Dcache slot to look at.
- *	tmpdc : Ptr to dcache entry.
  *
  * Environment:
  *	Must be called with afs_xdcache write-locked.
  */
 
 struct dcache *
-afs_MemGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
+afs_MemGetDSlot(afs_int32 aslot)
 {
     struct dcache *tdc;
     int existing = 0;
@@ -2588,31 +2587,26 @@ afs_MemGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
 	ConvertWToRLock(&tdc->tlock);
 	return tdc;
     }
-    if (tmpdc == NULL) {
-	if (!afs_freeDSList)
-	    afs_GetDownDSlot(4);
-	if (!afs_freeDSList) {
-	    /* none free, making one is better than a panic */
-	    afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
-	    tdc = afs_osi_Alloc(sizeof(struct dcache));
-	    osi_Assert(tdc != NULL);
+    if (!afs_freeDSList)
+	afs_GetDownDSlot(4);
+    if (!afs_freeDSList) {
+	/* none free, making one is better than a panic */
+	afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
+	tdc = afs_osi_Alloc(sizeof(struct dcache));
+	osi_Assert(tdc != NULL);
 #ifdef	KERNEL_HAVE_PIN
-	    pin((char *)tdc, sizeof(struct dcache));	/* XXX */
+	pin((char *)tdc, sizeof(struct dcache));	/* XXX */
 #endif
-	} else {
-	    tdc = afs_freeDSList;
-	    afs_freeDSList = (struct dcache *)tdc->lruq.next;
-	    existing = 1;
-	}
-	tdc->dflags = 0;	/* up-to-date, not in free q */
-	tdc->mflags = 0;
-	QAdd(&afs_DLRU, &tdc->lruq);
-	if (tdc->lruq.prev == &tdc->lruq)
-	    osi_Panic("lruq 3");
     } else {
-	tdc = tmpdc;
-	tdc->f.states = 0;
+	tdc = afs_freeDSList;
+	afs_freeDSList = (struct dcache *)tdc->lruq.next;
+	existing = 1;
     }
+    tdc->dflags = 0;	/* up-to-date, not in free q */
+    tdc->mflags = 0;
+    QAdd(&afs_DLRU, &tdc->lruq);
+    if (tdc->lruq.prev == &tdc->lruq)
+	osi_Panic("lruq 3");
 
     /* initialize entry */
     tdc->f.fid.Cell = 0;
@@ -2636,8 +2630,7 @@ afs_MemGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
     AFS_RWLOCK_INIT(&tdc->mflock, "dcache flock");
     ObtainReadLock(&tdc->tlock);
 
-    if (tmpdc == NULL)
-	afs_indexTable[aslot] = tdc;
+    afs_indexTable[aslot] = tdc;
     return tdc;
 
 }				/*afs_MemGetDSlot */
@@ -2653,13 +2646,12 @@ unsigned int last_error = 0, lasterrtime = 0;
  *
  * Parameters:
  *	aslot : Dcache slot to look at.
- *	tmpdc : Ptr to dcache entry.
  *
  * Environment:
  *	afs_xdcache lock write-locked.
  */
 struct dcache *
-afs_UFSGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
+afs_UFSGetDSlot(afs_int32 aslot)
 {
     afs_int32 code;
     struct dcache *tdc;
@@ -2681,36 +2673,28 @@ afs_UFSGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
 	ConvertWToRLock(&tdc->tlock);
 	return tdc;
     }
+
     /* otherwise we should read it in from the cache file */
-    /*
-     * If we weren't passed an in-memory region to place the file info,
-     * we have to allocate one.
-     */
-    if (tmpdc == NULL) {
-	if (!afs_freeDSList)
-	    afs_GetDownDSlot(4);
-	if (!afs_freeDSList) {
-	    /* none free, making one is better than a panic */
-	    afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
-	    tdc = afs_osi_Alloc(sizeof(struct dcache));
-	    osi_Assert(tdc != NULL);
+    if (!afs_freeDSList)
+	afs_GetDownDSlot(4);
+    if (!afs_freeDSList) {
+	/* none free, making one is better than a panic */
+	afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
+	tdc = afs_osi_Alloc(sizeof(struct dcache));
+	osi_Assert(tdc != NULL);
 #ifdef	KERNEL_HAVE_PIN
-	    pin((char *)tdc, sizeof(struct dcache));	/* XXX */
+	pin((char *)tdc, sizeof(struct dcache));	/* XXX */
 #endif
-	} else {
-	    tdc = afs_freeDSList;
-	    afs_freeDSList = (struct dcache *)tdc->lruq.next;
-	    existing = 1;
-	}
-	tdc->dflags = 0;	/* up-to-date, not in free q */
-	tdc->mflags = 0;
-	QAdd(&afs_DLRU, &tdc->lruq);
-	if (tdc->lruq.prev == &tdc->lruq)
-	    osi_Panic("lruq 3");
     } else {
-	tdc = tmpdc;
-	tdc->f.states = 0;
+	tdc = afs_freeDSList;
+	afs_freeDSList = (struct dcache *)tdc->lruq.next;
+	existing = 1;
     }
+    tdc->dflags = 0;	/* up-to-date, not in free q */
+    tdc->mflags = 0;
+    QAdd(&afs_DLRU, &tdc->lruq);
+    if (tdc->lruq.prev == &tdc->lruq)
+	osi_Panic("lruq 3");
 
     /*
      * Seek to the aslot'th entry and read it in.
@@ -2772,8 +2756,7 @@ afs_UFSGetDSlot(afs_int32 aslot, struct dcache *tmpdc)
      * If we didn't read into a temporary dcache region, update the
      * slot pointer table.
      */
-    if (tmpdc == NULL)
-	afs_indexTable[aslot] = tdc;
+    afs_indexTable[aslot] = tdc;
     return tdc;
 
 }				/*afs_UFSGetDSlot */
@@ -2891,7 +2874,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	return EINVAL;
 
     ObtainWriteLock(&afs_xdcache, 282);
-    tdc = afs_GetDSlot(index, NULL);
+    tdc = afs_GetDSlot(index);
     ReleaseReadLock(&tdc->tlock);
     ReleaseWriteLock(&afs_xdcache);
 
