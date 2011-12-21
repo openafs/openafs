@@ -71,7 +71,7 @@ afs_FindDCacheByFid(struct VenusFid *afid)
     ObtainWriteLock(&afs_xdcache, 758);
     for (index = afs_dvhashTbl[i]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == afid->Fid.Unique) {
-	    tdc = afs_GetDSlot(index);
+	    tdc = afs_GetValidDSlot(index);
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, afid)) {
 		break;		/* leaving refCount high for caller */
@@ -853,7 +853,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     ObtainWriteLock(&afs_xdcache, 743);
     for (index = afs_dvhashTbl[hash]; index != NULLIDX; index = hash) {
         hash = afs_dvnextTbl[index];
-        tdc = afs_GetDSlot(index);
+        tdc = afs_GetValidDSlot(index);
         ReleaseReadLock(&tdc->tlock);
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
             if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {

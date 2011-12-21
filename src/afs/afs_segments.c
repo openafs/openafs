@@ -252,7 +252,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 	for (j = 0; index != NULLIDX;) {
 	    if ((afs_indexFlags[index] & IFDataMod)
 		&& (afs_indexUnique[index] == avc->f.fid.Fid.Unique)) {
-		tdc = afs_GetDSlot(index);	/* refcount+1. */
+		tdc = afs_GetValidDSlot(index);	/* refcount+1. */
 		ReleaseReadLock(&tdc->tlock);
 		if (!FidCmp(&tdc->f.fid, &avc->f.fid) && tdc->f.chunk >= minj) {
 		    off = tdc->f.chunk - minj;
@@ -356,7 +356,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 		 index != NULLIDX && safety < afs_cacheFiles + 2;) {
 
 		if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-		    tdc = afs_GetDSlot(index);
+		    tdc = afs_GetValidDSlot(index);
 		    ReleaseReadLock(&tdc->tlock);
 
 		    if (!FidCmp(&tdc->f.fid, &avc->f.fid)
@@ -520,7 +520,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-	    tdc = afs_GetDSlot(index);
+	    tdc = afs_GetValidDSlot(index);
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
 		dcListMax++;
@@ -534,7 +534,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-	    tdc = afs_GetDSlot(index);
+	    tdc = afs_GetValidDSlot(index);
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file? we'll zap it */
@@ -712,7 +712,7 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
     dcCount = 0;
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-	    tdc = afs_GetDSlot(index);
+	    tdc = afs_GetValidDSlot(index);
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
 		dcCount++;
@@ -730,7 +730,7 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
 
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
-	    tdc = afs_GetDSlot(index);
+	    tdc = afs_GetValidDSlot(index);
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file, and modified, we'll store it back */
