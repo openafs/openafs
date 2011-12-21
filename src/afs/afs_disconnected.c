@@ -72,11 +72,13 @@ afs_FindDCacheByFid(struct VenusFid *afid)
     for (index = afs_dvhashTbl[i]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == afid->Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
-	    ReleaseReadLock(&tdc->tlock);
-	    if (!FidCmp(&tdc->f.fid, afid)) {
-		break;		/* leaving refCount high for caller */
+	    if (tdc) {
+		ReleaseReadLock(&tdc->tlock);
+		if (!FidCmp(&tdc->f.fid, afid)) {
+		    break;		/* leaving refCount high for caller */
+		}
+		afs_PutDCache(tdc);
 	    }
-	    afs_PutDCache(tdc);
 	}
 	index = afs_dvnextTbl[index];
     }

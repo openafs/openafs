@@ -674,13 +674,15 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 	for (i = 0; i < victimPtr; i++) {
 	    tdc = afs_GetValidDSlot(victims[i]);
 	    /* We got tdc->tlock(R) here */
-	    if (tdc->refCount == 1)
+	    if (tdc && tdc->refCount == 1)
 		victimDCs[i] = tdc;
 	    else
 		victimDCs[i] = 0;
-	    ReleaseReadLock(&tdc->tlock);
-	    if (!victimDCs[i])
-		afs_PutDCache(tdc);
+	    if (tdc) {
+		ReleaseReadLock(&tdc->tlock);
+		if (!victimDCs[i])
+		    afs_PutDCache(tdc);
+	    }
 	}
 	for (i = 0; i < victimPtr; i++) {
 	    /* q is first elt in dcache entry */
@@ -1201,7 +1203,7 @@ afs_GetDownDSlot(int anumber)
 		}
 #else
 		tdc->dflags &= ~DFEntryMod;
-		afs_WriteDCache(tdc, 1);
+		osi_Assert(afs_WriteDCache(tdc, 1) == 0);
 #endif
 	    }
 
@@ -1312,6 +1314,7 @@ afs_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    int releaseTlock = 1;
 	    tdc = afs_GetValidDSlot(index);
+	    if (!tdc) osi_Panic("afs_TryToSmush tdc");
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		if (sync) {
 		    if ((afs_indexFlags[index] & IFDataMod) == 0
@@ -1401,11 +1404,13 @@ afs_DCacheMissingChunks(struct vcache *avc)
         i = afs_dvnextTbl[index];
         if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
             tdc = afs_GetValidDSlot(index);
-            if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
-		totalChunks--;
-            }
-            ReleaseReadLock(&tdc->tlock);
-            afs_PutDCache(tdc);
+	    if (tdc) {
+		if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
+		    totalChunks--;
+		}
+		ReleaseReadLock(&tdc->tlock);
+		afs_PutDCache(tdc);
+	    }
         }
     }
     ReleaseWriteLock(&afs_xdcache);
@@ -1454,6 +1459,7 @@ afs_FindDCache(struct vcache *avc, afs_size_t abyte)
     for (index = afs_dchashTbl[i]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
+	    if (!tdc) osi_Panic("afs_FindDCache tdc");
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid) && chunk == tdc->f.chunk) {
 		break;		/* leaving refCount high for caller */
@@ -1770,6 +1776,10 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	for (index = afs_dchashTbl[i]; index != NULLIDX;) {
 	    if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 		tdc = afs_GetValidDSlot(index);
+		if (!tdc) {
+		    ReleaseWriteLock(&afs_xdcache);
+		    goto done;
+		}
 		ReleaseReadLock(&tdc->tlock);
 		/*
 		 * Locks held:
@@ -2523,7 +2533,7 @@ afs_WriteThroughDSlots(void)
 	    if (wrLock && (tdc->dflags & DFEntryMod)) {
 		tdc->dflags &= ~DFEntryMod;
 		ObtainWriteLock(&afs_xdcache, 620);
-		afs_WriteDCache(tdc, 1);
+		osi_Assert(afs_WriteDCache(tdc, 1) == 0);
 		ReleaseWriteLock(&afs_xdcache);
 		touchedit = 1;
 	    }
@@ -3002,7 +3012,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
     tdc->f.states &= ~DWriting;
     tdc->dflags &= ~DFEntryMod;
     /* don't set f.modTime; we're just cleaning up */
-    afs_WriteDCache(tdc, 0);
+    osi_Assert(afs_WriteDCache(tdc, 0) == 0);
     ReleaseWriteLock(&afs_xdcache);
     ReleaseWriteLock(&tdc->lock);
     afs_PutDCache(tdc);
