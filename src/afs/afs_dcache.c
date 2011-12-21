@@ -2829,6 +2829,19 @@ afs_WriteDCache(struct dcache *adc, int atime)
     osi_Assert(WriteLocked(&afs_xdcache));
     if (atime)
 	adc->f.modTime = osi_Time();
+
+    if ((afs_indexFlags[adc->index] & (IFFree | IFDiscarded)) == 0 &&
+        adc->f.fid.Fid.Volume == 0) {
+	/* If a dcache slot is not on the free or discard list, it must be
+	 * in the hash table. Thus, the volume must be non-zero, since that
+	 * is how we determine whether or not to unhash the entry when kicking
+	 * it out of the cache. Do this check now, since otherwise this can
+	 * cause hash table corruption and a panic later on after we read the
+	 * entry back in. */
+	osi_Panic("afs_WriteDCache zero volume index %d flags 0x%x\n",
+	          adc->index, (unsigned)afs_indexFlags[adc->index]);
+    }
+
     /*
      * Seek to the right dcache slot and write the in-memory image out to disk.
      */
@@ -2838,8 +2851,12 @@ afs_WriteDCache(struct dcache *adc, int atime)
 		      sizeof(struct fcache) * adc->index +
 		      sizeof(struct afs_fheader), (char *)(&adc->f),
 		      sizeof(struct fcache));
-    if (code != sizeof(struct fcache))
+    if (code != sizeof(struct fcache)) {
+	afs_warn("afs: failed to write to CacheItems off %ld code %d/%d\n",
+	         (long)(sizeof(struct fcache) * adc->index + sizeof(struct afs_fheader)),
+	         (int)code, (int)sizeof(struct fcache));
 	return EIO;
+    }
     return 0;
 }
 
