@@ -557,7 +557,7 @@ DNew(struct dcache *adc, int page)
      * DFlush due to lock hierarchy issues */
     if ((page + 1) * AFS_BUFFER_PAGESIZE > adc->f.chunkBytes) {
 	afs_AdjustSize(adc, (page + 1) * AFS_BUFFER_PAGESIZE);
-	afs_WriteDCache(adc, 1);
+	osi_Assert(afs_WriteDCache(adc, 1) == 0);
     }
     ObtainWriteLock(&tb->lock, 265);
     tb->lockers++;

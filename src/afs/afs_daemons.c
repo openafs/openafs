@@ -1176,7 +1176,7 @@ afs_sgidaemon(void)
 	    SPUNLOCK(afs_sgibklock, s);
 	    AFS_GLOCK();
 	    tdc->dflags &= ~DFEntryMod;
-	    afs_WriteDCache(tdc, 1);
+	    osi_Assert(afs_WriteDCache(tdc, 1) == 0);
 	    AFS_GUNLOCK();
 	    s = SPLOCK(afs_sgibklock);
 	}

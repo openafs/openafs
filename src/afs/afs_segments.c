@@ -255,6 +255,11 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 	    if ((afs_indexFlags[index] & IFDataMod)
 		&& (afs_indexUnique[index] == avc->f.fid.Fid.Unique)) {
 		tdc = afs_GetValidDSlot(index);	/* refcount+1. */
+		if (!tdc) {
+		    ReleaseWriteLock(&afs_xdcache);
+		    code = EIO;
+		    goto done;
+		}
 		ReleaseReadLock(&tdc->tlock);
 		if (!FidCmp(&tdc->f.fid, &avc->f.fid) && tdc->f.chunk >= minj) {
 		    off = tdc->f.chunk - minj;
@@ -317,6 +322,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 	minj += NCHUNKSATONCE;
     } while (!code && moredata);
 
+ done:
     UpgradeSToWLock(&avc->lock, 29);
 
     /* send a trivial truncation store if did nothing else */
@@ -359,6 +365,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 
 		if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 		    tdc = afs_GetValidDSlot(index);
+		    if (!tdc) osi_Panic("afs_StoreAllSegments tdc dv");
 		    ReleaseReadLock(&tdc->tlock);
 
 		    if (!FidCmp(&tdc->f.fid, &avc->f.fid)
@@ -523,6 +530,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
+	    if (!tdc) osi_Panic("afs_InvalidateAllSegments tdc count");
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
 		dcListMax++;
@@ -537,6 +545,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
+	    if (!tdc) osi_Panic("afs_InvalidateAllSegments tdc store");
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file? we'll zap it */
@@ -715,6 +724,11 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
+	    if (!tdc) {
+		ReleaseWriteLock(&afs_xdcache);
+		code = EIO;
+		goto done;
+	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
 		dcCount++;
@@ -733,6 +747,7 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
+	    if (!tdc) osi_Panic("afs_TruncateAllSegments tdc");
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file, and modified, we'll store it back */
@@ -780,6 +795,9 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
 
     osi_Free(tdcArray, dcCount * sizeof(struct dcache *));
 
+    code = 0;
+
+ done:
 #if	(defined(AFS_SUN5_ENV))
     ObtainWriteLock(&avc->vlock, 547);
     if (--avc->activeV == 0 && (avc->vstates & VRevokeWait)) {
@@ -789,5 +807,5 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
     ReleaseWriteLock(&avc->vlock);
 #endif
 
-    return 0;
+    return code;
 }

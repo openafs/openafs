@@ -3484,6 +3484,9 @@ DECL_PIOCTL(PFlushVolumeData)
 	if (!(afs_indexFlags[i] & IFEverUsed))
 	    continue;		/* never had any data */
 	tdc = afs_GetValidDSlot(i);
+	if (!tdc) {
+	    continue;
+	}
 	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
 	    ReleaseReadLock(&tdc->tlock);
 	    if (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell) {
