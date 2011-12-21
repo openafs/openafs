@@ -258,8 +258,7 @@ extern void afs_FlushDCache(struct dcache *adc);
 extern void shutdown_dcache(void);
 extern void afs_CacheTruncateDaemon(void);
 extern afs_int32 afs_fsfragsize;
-extern struct dcache *afs_MemGetDSlot(afs_int32 aslot,
-				      struct dcache *tmpdc);
+extern struct dcache *afs_MemGetDSlot(afs_int32 aslot);
 extern struct dcache *afs_GetDCache(struct vcache *avc,
 				    afs_size_t abyte,
 				    struct vrequest *areq,
@@ -281,8 +280,7 @@ extern void afs_TryToSmush(struct vcache *avc,
 extern void updateV2DC(int lockVc, struct vcache *v, struct dcache *d,
 		       int src);
 extern void afs_WriteThroughDSlots(void);
-extern struct dcache *afs_UFSGetDSlot(afs_int32 aslot,
-				      struct dcache *tmpdc);
+extern struct dcache *afs_UFSGetDSlot(afs_int32 aslot);
 extern int afs_WriteDCache(struct dcache *adc, int atime);
 extern int afs_wakeup(struct vcache *avc);
 extern int afs_InitCacheFile(char *afile, ino_t ainode);
