@@ -1904,6 +1904,12 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	/* -dynroot-sparse */
 	enable_dynroot = 2;
     }
+
+    /* parse cacheinfo file if this is a diskcache */
+    if (ParseCacheInfoFile()) {
+	exit(1);
+    }
+
     return 0;
 }
 
@@ -1938,11 +1944,6 @@ afsd_run(void)
     } else {
 	if (afsd_verbose)
 	    printf("%s: My home cell is '%s'\n", rn, LclCellName);
-    }
-
-    /* parse cacheinfo file if this is a diskcache */
-    if (ParseCacheInfoFile()) {
-	exit(1);
     }
 
     if (!enable_nomount) {
