@@ -153,12 +153,20 @@ NTSTATUS
 #define AFS_OBJECT_FLAGS_VERIFY_DATA                    0x00000200
 
 //
+// Define one second in terms of 100 nS units
+//
+
+#define AFS_ONE_SECOND          10000000
+#define AFS_ONE_MILLISECOND     10000
+#define AFS_ONE_MICROSECOND     10
+
+//
 // Fcb lifetime in seconds
 //
 
-#define AFS_OBJECT_LIFETIME             300000000
+#define AFS_OBJECT_LIFETIME             30 * AFS_ONE_SECOND
 
-#define AFS_EXTENT_REQUEST_TIME        1200000000
+#define AFS_EXTENT_REQUEST_TIME         10 * AFS_ONE_SECOND
 
 //
 // How big to make the runs
@@ -186,12 +194,6 @@ NTSTATUS
     )
 
 #define CRC32_POLYNOMIAL     0xEDB88320L;
-
-//
-// Define one second in terms of 100 nS units
-//
-
-#define AFS_ONE_SECOND          10000000
 
 #define AFS_SERVER_FLUSH_DELAY  30
 #define AFS_SERVER_PURGE_DELAY  60
