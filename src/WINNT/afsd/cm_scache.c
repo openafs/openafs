@@ -1833,7 +1833,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
          * in an unexpected DV change such as FetchStatus.
          */
 
-        if (scp->dataVersion == CM_SCACHE_VERSION_BAD) {
+        if (scp->dataVersion == CM_SCACHE_VERSION_BAD && dataVersion != 0) {
             rdr_invalidate = 1;
         } else if (!(reqp->flags & CM_REQ_SOURCE_REDIR) && scp->dataVersion != dataVersion) {
             rdr_invalidate = 1;
