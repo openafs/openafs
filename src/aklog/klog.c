@@ -683,7 +683,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
         if (get_cred_keylen(afscred) != sizeof(atoken->sessionKey)) {
             afs_com_err(rn, 0, "Invalid rxkad key length (%u != 8) key type (%u)",
-                        get_cred_keylen(afscred),
+                        (unsigned)get_cred_keylen(afscred),
                         get_creds_enctype(afscred));
             KLOGEXIT(1);
         }
