@@ -216,7 +216,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	if (!afs_shuttingdown)
 	    osi_Panic("osi_Read called with null param");
 	else
-	    return EIO;
+	    return -EIO;
     }
 
     if (offset != -1)
@@ -251,7 +251,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	if (!afs_shuttingdown)
 	    osi_Panic("afs_osi_Write called with null param");
 	else
-	    return EIO;
+	    return -EIO;
     }
 
     if (offset != -1)

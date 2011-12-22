@@ -142,7 +142,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 	if (!afs_shuttingdown)
 	    osi_Panic("osi_Read called with null param");
 	else
-	    return EIO;
+	    return -EIO;
     }
 
     if (offset != -1)
