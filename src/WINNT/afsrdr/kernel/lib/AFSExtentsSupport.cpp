@@ -798,6 +798,34 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
                                           NULL,
                                           NULL);
 
+            if (  ntStatus == STATUS_ACCESS_DENIED)
+            {
+                GUID                 stAuthGroup;
+                DWORD                ntStatus2;
+
+                ntStatus2 = AFSRetrieveValidAuthGroup( Fcb,
+                                                      NULL,
+                                                      TRUE,
+                                                      &stAuthGroup);
+
+                if ( NT_SUCCESS( ntStatus2) &&
+                     RtlCompareMemory( &stAuthGroup,
+                                       &Ccb->AuthGroup,
+                                       sizeof( GUID)) != sizeof( GUID))
+                {
+
+                    ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
+                                                  0,
+                                                  &stAuthGroup,
+                                                  NULL,
+                                                  &Fcb->ObjectInformation->FileId,
+                                                  &request,
+                                                  sizeof( AFSRequestExtentsCB ),
+                                                  NULL,
+                                                  NULL);
+                }
+            }
+
             if( NT_SUCCESS( ntStatus))
             {
 
