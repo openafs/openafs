@@ -539,7 +539,14 @@ main(int argc, char **argv)
 	int code;
 	struct fuse_args args = FUSE_ARGS_INIT(argc-1, &argv[1]);
 	fuse_opt_add_arg(&afsd_args, argv[0]);
+
+#ifdef AFS_SUN511_ENV
+	/* for some reason, Solaris 11 FUSE takes the filesystem name from
+	 * argv[0], and ignores the -ofsname option */
+	fuse_opt_add_arg(&fuse_args, "AFS");
+#else
 	fuse_opt_add_arg(&fuse_args, argv[0]);
+#endif
 
 	/* let us determine file inode numbers, not FUSE. also make "AFS" appear
 	 * in df/mount/mnttab/etc output. */
@@ -565,7 +572,12 @@ main(int argc, char **argv)
 	/* pass "-- /mount/dir" to fuse to specify dir to mount; "--" is
 	 * just to make sure fuse doesn't interpret the mount dir as a flag
 	 */
+#ifndef AFS_SUN511_ENV
+	/* This seems to screw up option parsing on Solaris 11 FUSE, so just
+	 * don't do it. This makes it slightly more annoying to mount on a dir
+	 * called -foo or something, but oh well. */
 	fuse_opt_add_arg(&fuse_args, "--");
+#endif
 	fuse_opt_add_arg(&fuse_args, uafs_MountDir());
 
 	return fuse_main(fuse_args.argc, fuse_args.argv, &fuafsd_oper, NULL);
