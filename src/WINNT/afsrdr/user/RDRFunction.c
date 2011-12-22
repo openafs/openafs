@@ -1799,11 +1799,20 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     }
 
     if (bLastHandle || bFlushFile) {
-        if (bScpLocked) {
-            lock_ReleaseWrite(&scp->rw);
-            bScpLocked = FALSE;
+        if (!bScpLocked) {
+            lock_ObtainWrite(&scp->rw);
+            bScpLocked = TRUE;
         }
-        code = cm_FSync(scp, userp, &req, bScpLocked);
+        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code == 0) {
+            if (bScpLocked) {
+                lock_ReleaseWrite(&scp->rw);
+                bScpLocked = FALSE;
+            }
+
+            code = cm_FSync(scp, userp, &req, bScpLocked);
+        }
         if (bLastHandle && code)
             goto on_error;
     }
@@ -3785,7 +3794,12 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
 
     if (scp) {
         if (ReleaseExtentsCB->Flags & AFS_EXTENT_FLAG_FLUSH) {
-            code = buf_CleanVnode(scp, userp, &req);
+            lock_ObtainWrite(&scp->rw);
+            code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
+                             CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            lock_ReleaseWrite(&scp->rw);
+            if (code == 0)
+                code = cm_FSync(scp, userp, &req, FALSE);
         }
         else if (dirty) {
             osi_hyper_t offset = {0,0};
