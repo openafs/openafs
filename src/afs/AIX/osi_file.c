@@ -198,7 +198,9 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	    goto retry_IO;
 	}
 	setuerror(code);
-	code = -1;
+	if (code > 0) {
+	    code *= -1;
+	}
     }
     return code;
 }
@@ -241,7 +243,9 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	    afs_warnuser
 		("\n\n\n*** Cache partition is FULL - Decrease cachesize!!! ***\n\n");
 	setuerror(code);
-	code = -1;
+	if (code > 0) {
+	    code *= -1;
+	}
     }
     if (afile->proc) {
 	(*afile->proc) (afile, code);

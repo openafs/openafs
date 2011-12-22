@@ -231,7 +231,9 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
     } else {
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, auio.uio_resid,
 		   ICL_TYPE_INT32, code);
-	code = -1;
+	if (code > 0) {
+	    code *= -1;
+	}
     }
     return code;
 }
@@ -267,7 +269,9 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	if (code == ENOSPC)
 	    afs_warnuser
 		("\n\n\n*** Cache partition is FULL - Decrease cachesize!!! ***\n\n");
-	code = -1;
+	if (code > 0) {
+	    code *= -1;
+	}
     }
 
     if (afile->proc)
