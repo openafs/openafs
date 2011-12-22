@@ -68,6 +68,11 @@ extern osi_log_t *afsd_logp;
 }
 #include <RDRPrototypes.h>
 
+static DWORD
+RDR_SetFileStatus2( AFSFileID * pFileId,
+                    GUID *pAuthGroup,
+                    DWORD dwStatus);
+
 #ifndef FlagOn
 #define FlagOn(_F,_SF)        ((_F) & (_SF))
 #endif
@@ -1379,7 +1384,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
               osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
           }
 
-          RDR_SetFileStatus( (cm_fid_t *)&RequestBuffer->FileId, STATUS_NO_MEMORY);
+          RDR_SetFileStatus2( &RequestBuffer->FileId, &RequestBuffer->AuthGroup, STATUS_NO_MEMORY);
        }
     }
     else if (RequestBuffer->RequestType == AFS_REQUEST_TYPE_BYTE_RANGE_LOCK) {
@@ -1514,6 +1519,7 @@ RDR_SetFileExtents( AFSSetFileExtentsCB *pSetFileExtentsResultCB,
 
 extern "C" DWORD
 RDR_SetFileStatus( cm_fid_t *fidp,
+                   GUID *pAuthGroup,
                    DWORD dwStatus)
 {
     WCHAR               wchBuffer[1024];
@@ -1522,6 +1528,7 @@ RDR_SetFileStatus( cm_fid_t *fidp,
     DWORD               gle;
 
     RDR_fid2FID(fidp, &SetFileStatusCB.FileId);
+    memcpy(&SetFileStatusCB.AuthGroup, pAuthGroup, sizeof(GUID));
     SetFileStatusCB.FailureStatus = dwStatus;
 
     if (afsd_logp->enabled) {
@@ -1548,6 +1555,43 @@ RDR_SetFileStatus( cm_fid_t *fidp,
     return 0;
 }
 
+static DWORD
+RDR_SetFileStatus2( AFSFileID *pFileId,
+                   GUID *pAuthGroup,
+                   DWORD dwStatus)
+{
+    WCHAR               wchBuffer[1024];
+    AFSExtentFailureCB  SetFileStatusCB;
+    DWORD               bytesReturned;
+    DWORD               gle;
+
+    memcpy(&SetFileStatusCB.FileId, pFileId, sizeof(AFSFileID));
+    memcpy(&SetFileStatusCB.AuthGroup, pAuthGroup, sizeof(GUID));
+    SetFileStatusCB.FailureStatus = dwStatus;
+
+    if (afsd_logp->enabled) {
+        swprintf( wchBuffer, L"RDR_SetFileStatus2 IOCTL_AFS_EXTENT_FAILURE_CB Fid %08lX.%08lX.%08lX.%08lX Status 0x%lX",
+                  SetFileStatusCB.FileId.Cell, SetFileStatusCB.FileId.Volume,
+                  SetFileStatusCB.FileId.Vnode, SetFileStatusCB.FileId.Unique,
+                  dwStatus);
+
+        osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+    }
+
+    if( !RDR_DeviceIoControl( glDevHandle,
+                              IOCTL_AFS_SET_FILE_EXTENT_FAILURE,
+                              (void *)&SetFileStatusCB,
+                              sizeof(AFSExtentFailureCB),
+                              (void *)NULL,
+                              0,
+                              &bytesReturned ))
+    {
+        gle = GetLastError();
+        return gle;
+    }
+
+    return 0;
+}
 
 extern "C" DWORD
 RDR_RequestExtentRelease(cm_fid_t *fidp, LARGE_INTEGER numOfHeldExtents, DWORD numOfExtents, AFSFileExtentCB *extentList)

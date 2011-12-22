@@ -480,6 +480,8 @@ typedef struct _AFS_EXTENT_FAILURE_CB
 
     ULONG           FailureStatus;
 
+    GUID            AuthGroup;      // Length: sizeof(GUID) */
+
 } AFSExtentFailureCB;
 
 //

@@ -49,6 +49,7 @@ typedef struct cm_user {
     osi_mutex_t mx;		        /* mutex */
     int vcRefs;			        /* count of references from virtual circuits */
     long flags;
+    GUID authgroup;                     /* AFS redirector */
 } cm_user_t;
 
 #define CM_USERFLAG_DELETE	1	/* delete on last reference */

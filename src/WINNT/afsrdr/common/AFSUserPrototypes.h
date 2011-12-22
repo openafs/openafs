@@ -50,7 +50,7 @@ extern DWORD RDR_NetworkAddrChange(void);
 
 extern DWORD RDR_InvalidateVolume( IN ULONG cellID, IN ULONG volID, IN ULONG reason);
 
-extern DWORD RDR_SetFileStatus( IN cm_fid_t *pFileId, IN DWORD dwStatus);
+extern DWORD RDR_SetFileStatus( IN cm_fid_t *pFileId, IN GUID *pAuthGroup, IN DWORD dwStatus);
 
 extern DWORD
 RDR_InvalidateObject( IN ULONG cellID, IN ULONG volID, IN ULONG vnode,

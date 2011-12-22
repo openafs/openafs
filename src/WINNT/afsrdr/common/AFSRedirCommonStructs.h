@@ -196,6 +196,8 @@ typedef struct _AFS_NONPAGED_FCB
 
             NTSTATUS        ExtentsRequestStatus;
 
+            GUID            ExtentsRequestAuthGroup;
+
             struct _AFS_FSD_EXTENT  *DirtyListHead;
 
             struct _AFS_FSD_EXTENT  *DirtyListTail;

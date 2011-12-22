@@ -13,6 +13,7 @@
 /* bulk I/O descriptor */
 typedef struct cm_bulkIO {
     struct cm_scache *scp;		/* typically unheld vnode ptr */
+    struct cm_user *userp;              /* the user of the request */
     struct cm_req *reqp;                /* the request ptr */
     osi_hyper_t offset;		        /* offset of buffers */
     long length;			/* # of bytes to be transferred */

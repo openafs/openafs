@@ -117,6 +117,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     HANDLE             hCallingUser = OnBehalfOf;
     ULONG              ulExtensionLength = 0;
     BOOLEAN            bRetry = FALSE;
+    ULONGLONG          ullProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -397,13 +398,13 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
         if( !bPagingIo &&
             ( pFcb->Specific.File.ExtentRequestProcessId == 0 ||
-              ( PsGetCurrentProcessId() != AFSSysProcess &&
-                pFcb->Specific.File.ExtentRequestProcessId != (ULONGLONG)PsGetCurrentProcessId())))
+              ( ullProcessId != (ULONGLONG)AFSSysProcess &&
+                pFcb->Specific.File.ExtentRequestProcessId != ullProcessId)))
         {
 
-            pFcb->Specific.File.ExtentRequestProcessId = (ULONGLONG)PsGetCurrentProcessId();
+            pFcb->Specific.File.ExtentRequestProcessId = ullProcessId;
 
-            if( pFcb->Specific.File.ExtentRequestProcessId == (ULONGLONG)AFSSysProcess)
+            if( ullProcessId == (ULONGLONG)AFSSysProcess)
             {
                 AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
@@ -411,8 +412,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                               __FUNCTION__,
                               pFcb);
             }
-
-            pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
         }
 
         //
@@ -941,7 +940,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
             bLocked= FALSE;
 
             //
-            // We will re-request the extents after 10 seconds of waiting for them
+            // We will re-request the extents after waiting for them
             //
 
             KeQueryTickCount( &liCurrentTime);
@@ -994,7 +993,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
             // Wait for it
             //
 
-            ntStatus =  AFSWaitForExtentMapping ( pFcb );
+            ntStatus =  AFSWaitForExtentMapping ( pFcb, pCcb);
 
             if (!NT_SUCCESS(ntStatus))
             {
