@@ -231,8 +231,10 @@ RDR_UserFromAuthGroup( IN GUID *pGuid)
 
     unp = smb_FindUserByName(UuidString, cname, SMB_FLAG_CREATE);
     lock_ObtainMutex(&unp->mx);
-    if (!unp->userp)
+    if (!unp->userp) {
         unp->userp = cm_NewUser();
+        memcpy(&unp->userp->authgroup, pGuid, sizeof(GUID));
+    }
     unp->flags |= SMB_USERNAMEFLAG_SID;
     lock_ReleaseMutex(&unp->mx);
     userp = unp->userp;
@@ -2899,7 +2901,7 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
     FileId.Hash = scp->fid.hash;
 
     if ((GetTickCount() - reqp->startTime) / 1000 > HardDeadtimeout * 5) {
-        RDR_SetFileStatus( &scp->fid, STATUS_IO_TIMEOUT);
+        RDR_SetFileStatus( &scp->fid, &userp->authgroup, STATUS_IO_TIMEOUT);
         return 0;
     }
 
@@ -2929,7 +2931,7 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
         osi_Log2(afsd_logp, "RDR_BkgFetch cm_SyncOp failure scp=0x%p code=0x%x",
                  scp, code);
         smb_MapNTError(cm_MapRPCError(code, reqp), &status, TRUE);
-        RDR_SetFileStatus( &scp->fid, status);
+        RDR_SetFileStatus( &scp->fid, &userp->authgroup, status);
         return code;
     }
     lock_ReleaseWrite(&scp->rw);
@@ -3088,7 +3090,7 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
 
     if (reportErrorToRedir) {
         smb_MapNTError(cm_MapRPCError(code, reqp), &status, TRUE);
-        RDR_SetFileStatus( &scp->fid, status);
+        RDR_SetFileStatus( &scp->fid, &userp->authgroup, status);
     }
 
     osi_Log4(afsd_logp, "Ending BKG Fetch scp 0x%p code 0x%x fetched 0x%x:%x",
@@ -3172,7 +3174,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync cm_SyncOp failure scp=0x%p code=0x%x",
                  scp, code);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
-        RDR_SetFileStatus( &scp->fid, status);
+        RDR_SetFileStatus( &scp->fid, &userp->authgroup, status);
         return FALSE;
     }
 
@@ -3210,7 +3212,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                     break;
                 default:
                     smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
-                    RDR_SetFileStatus(&FileId, status);
+                    RDR_SetFileStatus(&FileId, &userp->authgroup, status);
                     bHaveBuffer = FALSE;
                     code = 0;
                 }

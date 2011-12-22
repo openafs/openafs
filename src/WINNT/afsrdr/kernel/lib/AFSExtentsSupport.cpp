@@ -125,7 +125,10 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
     __Enter
     {
 
-        if( pAuthGroup == NULL)
+        if( pAuthGroup == NULL ||
+            RtlCompareMemory( pAuthGroup,
+                              &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                              sizeof( GUID)) == sizeof( GUID))
         {
 
             RtlZeroMemory( &stAuthGroup,
@@ -709,15 +712,24 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
         {
 
             //
-            // If this isn't the same process which caused the failure then try to request them again
+            // If this isn't the same authgroup which caused the failure
+            // then try to request them again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId)
+            if( RtlCompareMemory( &pNPFcb->Specific.File.ExtentsRequestAuthGroup,
+                                  &Ccb->AuthGroup,
+                                  sizeof( GUID)) == sizeof( GUID))
             {
-                try_return( ntStatus = pNPFcb->Specific.File.ExtentsRequestStatus);
-            }
 
-            pNPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+                ntStatus = pNPFcb->Specific.File.ExtentsRequestStatus;
+
+                pNPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+
+                RtlZeroMemory( &pNPFcb->Specific.File.ExtentsRequestAuthGroup,
+                               sizeof( GUID));
+
+                try_return( ntStatus);
+            }
         }
 
         //
@@ -1982,6 +1994,10 @@ AFSProcessExtentFailure( PIRP Irp)
 
         pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestStatus = pFailureCB->FailureStatus;
 
+        RtlCopyMemory( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                       &pFailureCB->AuthGroup,
+                       sizeof( GUID));
+
         KeSetEvent( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
                     0,
                     FALSE);
@@ -2409,7 +2425,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSWaitForExtentMapping( AFSFcb *Fcb )
+AFSWaitForExtentMapping( AFSFcb *Fcb,
+                         AFSCcb *Ccb)
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
     LARGE_INTEGER liTimeOut;
@@ -2424,18 +2441,27 @@ AFSWaitForExtentMapping( AFSFcb *Fcb )
         {
 
             //
-            // If this isn't the same process which caused the failure then try to request them again
+            // If this isn't the same authgroup which caused the failure
+            // then try to request them again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId)
+            if( RtlCompareMemory( &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                                  &Ccb->AuthGroup,
+                                  sizeof( GUID)) == sizeof( GUID))
             {
-                try_return( ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus);
-            }
 
-            Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+                ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus;
+
+                Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+
+                RtlZeroMemory( &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                               sizeof( GUID));
+
+                try_return( ntStatus);
+            }
         }
 
-        liTimeOut.QuadPart = -(50000000);
+        liTimeOut.QuadPart = -(1 * AFS_ONE_SECOND);
 
         ntStatus = KeWaitForSingleObject( &Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
                                           Executive,
@@ -2447,17 +2473,26 @@ AFSWaitForExtentMapping( AFSFcb *Fcb )
         {
 
             //
-            // If this isn't the same process which caused the failure
-            // and this isn't the System process, then try to request them again
+            // If this isn't the same authgroup which caused the failure
+            // or the System Process,
+            // then try to request the extents again
             //
 
-            if( Fcb->Specific.File.ExtentRequestProcessId == ullProcessId ||
-                ullProcessId == 0x4)
+            if( RtlCompareMemory( &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                                  &Ccb->AuthGroup,
+                                  sizeof( GUID)) == sizeof( GUID) ||
+                ullProcessId == (ULONGLONG)AFSSysProcess)
             {
-                try_return( ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus);
-            }
 
-            Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+                ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus;
+
+                Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+
+                RtlZeroMemory( &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                               sizeof( GUID));
+
+                try_return( ntStatus);
+            }
         }
 
         if( ntStatus == STATUS_TIMEOUT)
@@ -2507,7 +2542,10 @@ AFSFlushExtents( IN AFSFcb *Fcb,
     __Enter
     {
 
-        if( pAuthGroup == NULL)
+        if( pAuthGroup == NULL ||
+            RtlCompareMemory( pAuthGroup,
+                              &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                              sizeof( GUID)) == sizeof( GUID))
         {
 
             RtlZeroMemory( &stAuthGroup,
@@ -2823,7 +2861,10 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
     __Enter
     {
 
-        if( pAuthGroup == NULL)
+        if( pAuthGroup == NULL ||
+            RtlCompareMemory( pAuthGroup,
+                              &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                              sizeof( GUID)) == sizeof( GUID))
         {
 
             RtlZeroMemory( &stAuthGroup,

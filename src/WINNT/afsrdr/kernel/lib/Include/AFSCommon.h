@@ -366,7 +366,8 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
                         IN ULONG Size);
 
 NTSTATUS
-AFSWaitForExtentMapping ( IN AFSFcb *Fcb );
+AFSWaitForExtentMapping ( IN AFSFcb *Fcb,
+                          IN AFSCcb *Ccb);
 
 NTSTATUS
 AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents );

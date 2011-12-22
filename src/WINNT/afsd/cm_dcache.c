@@ -1008,6 +1008,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 
     /* clear things out */
     biop->scp = scp;			/* do not hold; held by caller */
+    biop->userp = userp;                /* do not hold; held by caller */
     biop->offset = *inOffsetp;
     biop->length = 0;
     biop->bufListp = NULL;
@@ -1247,6 +1248,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
     tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
 
     biop->scp = scp;			/* do not hold; held by caller */
+    biop->userp = userp;                /* do not hold; held by caller */
     biop->reqp = reqp;
     biop->offset = *offsetp;
     /* null out the list of buffers */
@@ -1546,7 +1548,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
         if (RDR_Initialized && reportErrorToRedir) {
             DWORD status;
             smb_MapNTError(cm_MapRPCError(code, biop->reqp), &status, TRUE);
-            RDR_SetFileStatus( &scp->fid, status);
+            RDR_SetFileStatus( &scp->fid, &biop->userp->authgroup, status);
         }
     } else {
 	if (!scp_locked)

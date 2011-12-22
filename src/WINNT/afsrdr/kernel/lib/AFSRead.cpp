@@ -388,7 +388,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
                           StartingByte.QuadPart,
                           ulReadByteCount);
 
-            ntStatus =  AFSWaitForExtentMapping ( pFcb );
+            ntStatus =  AFSWaitForExtentMapping ( pFcb, pCcb);
 
             if (!NT_SUCCESS(ntStatus))
             {
@@ -1142,8 +1142,6 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
             }
 
             pFcb->Specific.File.ExtentThreadId = (ULONGLONG)PsGetCurrentThreadId();
-
-            pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
         }
 #endif
 
