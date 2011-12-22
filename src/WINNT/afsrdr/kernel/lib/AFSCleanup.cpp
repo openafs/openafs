@@ -217,6 +217,46 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                 TRUE);
 
                 //
+                // If the handle has write permission ...
+                //
+
+                if( (pCcb->GrantedAccess & FILE_WRITE_DATA) &&
+                    CcIsFileCached( pIrpSp->FileObject))
+                {
+
+                    __try
+                    {
+
+                        CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
+                                      NULL,
+                                      0,
+                                      &stIoSB);
+
+                        if( !NT_SUCCESS( stIoSB.Status))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSCleanup CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                          &pCcb->FullFileName,
+                                          pObjectInfo->FileId.Cell,
+                                          pObjectInfo->FileId.Volume,
+                                          pObjectInfo->FileId.Vnode,
+                                          pObjectInfo->FileId.Unique,
+                                          stIoSB.Status,
+                                          stIoSB.Information);
+
+                            ntStatus = stIoSB.Status;
+                        }
+                    }
+                    __except( EXCEPTION_EXECUTE_HANDLER)
+                    {
+
+                        ntStatus = GetExceptionCode();
+                    }
+                }
+
+                //
                 // Uninitialize the cache map. This call is unconditional.
                 //
 
@@ -467,51 +507,13 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     }
 
                     //
-                    // Flush out any dirty pages on every handle close to reduce strain on the afs cache
-                    //
-
-                    if( CcIsFileCached( pIrpSp->FileObject))
-                    {
-
-                        __try
-                        {
-
-                            CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
-                                          NULL,
-                                          0,
-                                          &stIoSB);
-
-                            if( !NT_SUCCESS( stIoSB.Status))
-                            {
-
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                              AFS_TRACE_LEVEL_ERROR,
-                                              "AFSCleanup CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
-                                              &pCcb->FullFileName,
-                                              pObjectInfo->FileId.Cell,
-                                              pObjectInfo->FileId.Volume,
-                                              pObjectInfo->FileId.Vnode,
-                                              pObjectInfo->FileId.Unique,
-                                              stIoSB.Status,
-                                              stIoSB.Information);
-
-                                ntStatus = stIoSB.Status;
-                            }
-                        }
-                        __except( EXCEPTION_EXECUTE_HANDLER)
-                        {
-
-                            ntStatus = GetExceptionCode();
-                        }
-                    }
-
-                    //
                     // Attempt to flush any dirty extents to the server. This may be a little
                     // aggressive, to flush whenever the handle is closed, but it ensures
                     // coherency.
                     //
 
-                    if( pFcb->Specific.File.ExtentsDirtyCount)
+                    if( (pCcb->GrantedAccess & FILE_WRITE_DATA) &&
+                        pFcb->Specific.File.ExtentsDirtyCount != 0)
                     {
 
                         AFSFlushExtents( pFcb,
