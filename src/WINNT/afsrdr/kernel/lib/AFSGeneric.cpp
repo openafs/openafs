@@ -8458,7 +8458,7 @@ AFSRetrieveValidAuthGroup( IN AFSFcb *Fcb,
 
                     break;
                 }
-                else if( pCcb->GrantedAccess != 0)
+                else if( pCcb->GrantedAccess & FILE_READ_DATA)
                 {
                     //
                     // At least get the read-only access
