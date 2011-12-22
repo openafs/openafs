@@ -1734,7 +1734,9 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-    if (scp->redirBufCount > 0) {
+    if ((bLastHandle || bFlushFile) &&
+        scp->redirBufCount > 0)
+    {
         LARGE_INTEGER heldExtents;
         AFSFileExtentCB extentList[1024];
         DWORD extentCount = 0;
