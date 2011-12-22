@@ -479,6 +479,10 @@ afs_PutConn(struct afs_conn *ac, struct rx_connection *rxconn,
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
+    if (ac->refCount < 0) {
+	osi_Panic("afs_PutConn: refcount imbalance 0x%lx %d",
+	          (unsigned long)(uintptrsz)ac, (int)ac->refCount);
+    }
     rx_PutConnection(rxconn);
 }				/*afs_PutConn */
 
