@@ -259,7 +259,9 @@ cm_scache_t *
 cm_GetNewSCache(afs_uint32 locked)
 {
     cm_scache_t *scp = NULL;
-    int retry = 0;
+    cm_scache_t *scp_prev = NULL;
+    cm_scache_t *scp_next = NULL;
+    int attempt = 0;
 
     if (locked)
         lock_AssertWrite(&cm_scacheLock);
@@ -270,11 +272,24 @@ cm_GetNewSCache(afs_uint32 locked)
 	/* There were no deleted scache objects that we could use.  Try to find
 	 * one that simply hasn't been used in a while.
 	 */
-        for (retry = 0 ; retry < 2; retry++) {
+        for (attempt = 0 ; attempt < 128; attempt++) {
+            afs_uint32 count = 0;
+
             for ( scp = cm_data.scacheLRULastp;
                   scp;
                   scp = (cm_scache_t *) osi_QPrev(&scp->q))
             {
+                /*
+                 * We save the prev and next pointers in the
+                 * LRU because we are going to drop the cm_scacheLock and
+                 * the order of the list could change out from beneath us.
+                 * If both changed, it means that this entry has been moved
+                 * within the LRU and it should no longer be recycled.
+                 */
+                scp_prev = (cm_scache_t *) osi_QPrev(&scp->q);
+                scp_next = (cm_scache_t *) osi_QNext(&scp->q);
+                count++;
+
                 /* It is possible for the refCount to be zero and for there still
                  * to be outstanding dirty buffers.  If there are dirty buffers,
                  * we must not recycle the scp.
@@ -290,14 +305,27 @@ cm_GetNewSCache(afs_uint32 locked)
                     buf_dirty = buf_DirtyBuffersExist(&scp->fid);
                     if (!buf_dirty)
                         buf_rdr = buf_RDRBuffersExist(&scp->fid);
-                    lock_ObtainWrite(&cm_scacheLock);
 
                     if (!buf_dirty && !buf_rdr) {
                         cm_fid_t   fid;
                         afs_uint32 fileType;
 
-                        if (!lock_TryWrite(&scp->rw))
-                            continue;
+                        if (!lock_TryWrite(&scp->rw)) {
+                            lock_ObtainWrite(&cm_scacheLock);
+                            if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
+                                scp_next != (cm_scache_t *) osi_QNext(&scp->q))
+                                break;
+                            else
+                                continue;
+                        }
+
+                        lock_ObtainWrite(&cm_scacheLock);
+                        if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
+                            scp_next != (cm_scache_t *) osi_QNext(&scp->q))
+                        {
+                            lock_ReleaseWrite(&scp->rw);
+                            break;
+                        }
 
                         /* Found a likely candidate.  Save type and fid in case we succeed */
                         fid = scp->fid;
@@ -315,12 +343,23 @@ cm_GetNewSCache(afs_uint32 locked)
                             goto done;
                         }
                         lock_ReleaseWrite(&scp->rw);
+                    } else if (!buf_rdr) {
+                        osi_Log1(afsd_logp, "GetNewSCache dirty buffers scp 0x%p", scp);
+                        lock_ObtainWrite(&cm_scacheLock);
+                        if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
+                            scp_next != (cm_scache_t *) osi_QNext(&scp->q))
+                            break;
                     } else {
-                        osi_Log1(afsd_logp,"GetNewSCache dirty buffers exist scp 0x%p", scp);
+                        osi_Log1(afsd_logp,"GetNewSCache redirector is holding extents scp 0x%p", scp);
+                        lock_ObtainWrite(&cm_scacheLock);
+                        if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
+                            scp_next != (cm_scache_t *) osi_QNext(&scp->q))
+                            break;
                     }
                 }
-            }
-            osi_Log1(afsd_logp, "GetNewSCache all scache entries in use (retry = %d)", retry);
+            } /* for */
+
+            osi_Log2(afsd_logp, "GetNewSCache all scache entries in use (attempt = %d, count = %u)", attempt, count);
         }
         goto done;
     }
