@@ -1057,8 +1057,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
 
     flags = CM_SCACHESYNC_GETSTATUS
         | CM_SCACHESYNC_STOREDATA
-        | CM_SCACHESYNC_BUFLOCKED
-        | CM_SCACHESYNC_NOWAIT;
+        | CM_SCACHESYNC_BUFLOCKED;
 
     /* start by looking backwards until scanStart */
     /* hyper version of cm_data.buf_blockSize */
