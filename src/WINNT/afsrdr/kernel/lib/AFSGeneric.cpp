@@ -5780,9 +5780,6 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
             pVolumeCB = ParentDirectoryCB->ObjectInformation->VolumeCB;
 
-            AFSAcquireShared( pVolumeCB->VolumeLock,
-                              TRUE);
-
             pParentDirEntry = ParentDirectoryCB;
         }
         else
@@ -5860,9 +5857,6 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
 
             pVolumeCB = AFSGlobalRoot;
 
-            AFSAcquireShared( pVolumeCB->VolumeLock,
-                              TRUE);
-
             pParentDirEntry = AFSGlobalRoot->DirectoryCB;
         }
 
@@ -5920,8 +5914,6 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                                   "AFSRetrieveFileAttributes Decrement count on volume %08lX Cnt %d\n",
                                   pVolumeCB,
                                   pVolumeCB->VolumeReferenceCount);
-
-                    AFSReleaseResource( pVolumeCB->VolumeLock);
                 }
 
                 if( pDirectoryEntry != NULL)
@@ -6032,8 +6024,6 @@ try_exit:
                           "AFSRetrieveFileAttributes Decrement2 count on volume %08lX Cnt %d\n",
                           pVolumeCB,
                           pVolumeCB->VolumeReferenceCount);
-
-            AFSReleaseResource( pVolumeCB->VolumeLock);
         }
 
         if( pNameArray != NULL)
@@ -6441,9 +6431,6 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
 
         pVolumeCB = AFSGlobalRoot;
 
-        AFSAcquireShared( pVolumeCB->VolumeLock,
-                          TRUE);
-
         pParentDirEntry = AFSGlobalRoot->DirectoryCB;
 
         InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
@@ -6496,8 +6483,6 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                                   "AFSEvaluateRootEntry Decrement count on volume %08lX Cnt %d\n",
                                   pVolumeCB,
                                   pVolumeCB->VolumeReferenceCount);
-
-                    AFSReleaseResource( pVolumeCB->VolumeLock);
                 }
 
                 if( pDirectoryEntry != NULL)
@@ -6557,8 +6542,6 @@ try_exit:
                           "AFSEvaluateRootEntry2 Decrement count on volume %08lX Cnt %d\n",
                           pVolumeCB,
                           pVolumeCB->VolumeReferenceCount);
-
-            AFSReleaseResource( pVolumeCB->VolumeLock);
         }
 
         if( pNameArray != NULL)
@@ -7742,9 +7725,6 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
 
             pVolumeCB = AFSGlobalRoot;
 
-            AFSAcquireShared( pVolumeCB->VolumeLock,
-                              TRUE);
-
             pParentDirEntry = AFSGlobalRoot->DirectoryCB;
 
             //
@@ -7802,8 +7782,6 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                                       "AFSGetObjectStatus Decrement count on volume %08lX Cnt %d\n",
                                       pVolumeCB,
                                       pVolumeCB->VolumeReferenceCount);
-
-                        AFSReleaseResource( pVolumeCB->VolumeLock);
                     }
 
                     if( pDirectoryEntry != NULL)
@@ -7859,8 +7837,6 @@ AFSGetObjectStatus( IN AFSGetStatusInfoCB *GetStatusInfo,
                               "AFSRetrieveFileAttributes Decrement2 count on volume %08lX Cnt %d\n",
                               pVolumeCB,
                               pVolumeCB->VolumeReferenceCount);
-
-                AFSReleaseResource( pVolumeCB->VolumeLock);
             }
         }
 

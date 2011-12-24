@@ -379,7 +379,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // We have our root node shared
+        // We have a reference on the root volume
         //
 
         bReleaseVolume = TRUE;
@@ -1241,8 +1241,6 @@ try_exit:
                           "AFSCommonCreate Decrement count on Volume %08lX Cnt %d\n",
                           pVolumeCB,
                           pVolumeCB->VolumeReferenceCount);
-
-            AFSReleaseResource( pVolumeCB->VolumeLock);
         }
 
         //

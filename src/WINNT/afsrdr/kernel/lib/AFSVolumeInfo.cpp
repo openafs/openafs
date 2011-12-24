@@ -79,8 +79,8 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
         FsInformationClass = pIrpSp->Parameters.QueryVolume.FsInformationClass;
         pBuffer = Irp->AssociatedIrp.SystemBuffer;
 
-        AFSAcquireExcl( pVolumeCB->VolumeLock,
-                        TRUE);
+        AFSAcquireShared( pVolumeCB->VolumeLock,
+                          TRUE);
 
         bReleaseResource = TRUE;
 
