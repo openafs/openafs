@@ -203,6 +203,10 @@ adjustTimes(void)
 
     clock_Sub(&adjTime, &now);
 
+    /* If there are no events in the tree, then there's nothing to adjust */
+    if (eventTree.first == NULL)
+	goto out;
+
     node = opr_rbtree_first(&eventTree.head);
     while(node) {
 	struct rxevent *event = opr_containerof(node, struct rxevent, node);
