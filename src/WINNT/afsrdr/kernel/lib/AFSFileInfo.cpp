@@ -482,7 +482,6 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
     PFILE_OBJECT pFileObject = NULL;
     BOOLEAN bReleaseMain = FALSE;
     BOOLEAN bUpdateFileInfo = FALSE;
-    BOOLEAN bReleaseVolumeLock = FALSE;
     AFSFileID stParentFileId;
 
     __try
@@ -506,15 +505,6 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
         bCanQueueRequest = !(IoIsOperationSynchronous( Irp) | (KeGetCurrentIrql() != PASSIVE_LEVEL));
         FileInformationClass = pIrpSp->Parameters.SetFile.FileInformationClass;
-
-        if( FileInformationClass == FileRenameInformation)
-        {
-
-            AFSAcquireExcl( pFcb->ObjectInformation->VolumeCB->VolumeLock,
-                            TRUE);
-
-            bReleaseVolumeLock = TRUE;
-        }
 
         //
         // Grab the Fcb EXCL
@@ -674,11 +664,6 @@ try_exit:
         {
 
             AFSReleaseResource( &pFcb->NPFcb->Resource);
-        }
-
-        if( bReleaseVolumeLock)
-        {
-            AFSReleaseResource( pFcb->ObjectInformation->VolumeCB->VolumeLock);
         }
 
         if( NT_SUCCESS( ntStatus) &&
@@ -2440,6 +2425,9 @@ AFSSetRenameInfo( IN PIRP Irp)
                             &stNewFid))
         {
 
+            AFSAcquireExcl( pSrcObject->VolumeCB->ObjectInfoTree.TreeLock,
+                            TRUE);
+
             //
             // Remove the old information entry
             //
@@ -2468,6 +2456,8 @@ AFSSetRenameInfo( IN PIRP Irp)
                 AFSInsertHashEntry( pSrcObject->VolumeCB->ObjectInfoTree.TreeHead,
                                     &pSrcObject->TreeEntry);
             }
+
+            AFSReleaseResource( pSrcObject->VolumeCB->ObjectInfoTree.TreeLock);
         }
 
         //

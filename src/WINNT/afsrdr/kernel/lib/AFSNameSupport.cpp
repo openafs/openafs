@@ -663,12 +663,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                           pCurrentVolume,
                                           pCurrentVolume->VolumeReferenceCount);
 
-                            AFSReleaseResource( pCurrentVolume->VolumeLock);
-
                             pCurrentVolume = AFSGlobalRoot;
-
-                            AFSAcquireShared( pCurrentVolume->VolumeLock,
-                                              TRUE);
 
                             InterlockedIncrement( &pCurrentVolume->VolumeReferenceCount);
 
@@ -826,8 +821,6 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                   pCurrentVolume,
                                   pCurrentVolume->VolumeReferenceCount);
 
-                    AFSReleaseResource( pCurrentVolume->VolumeLock);
-
                     ntStatus = AFSBuildMountPointTarget( AuthGroup,
                                                          pDirEntry,
                                                          &pCurrentVolume);
@@ -856,8 +849,6 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     }
 
                     ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
-
-                    ASSERT( ExIsResourceAcquiredLite( pCurrentVolume->VolumeLock));
 
                     //
                     // Replace the current name for the mp with the volume root of the target
@@ -1875,8 +1866,6 @@ try_exit:
 
                 ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
 
-                ASSERT( ExIsResourceAcquiredLite( pCurrentVolume->VolumeLock));
-
                 InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
@@ -1884,8 +1873,6 @@ try_exit:
                               "AFSLocateNameEntry Decrement3 count on volume %08lX Cnt %d\n",
                               pCurrentVolume,
                               pCurrentVolume->VolumeReferenceCount);
-
-                AFSReleaseResource( pCurrentVolume->VolumeLock);
             }
 
             if( RootPathName->Buffer != uniFullPathName.Buffer)
@@ -2625,11 +2612,11 @@ AFSParseName( IN PIRP Irp,
             *FileName = pIrpSp->FileObject->FileName;
 
             //
-            // Grab the root node exclusive before returning
+            // Grab the root node while checking state
             //
 
-            AFSAcquireExcl( pVolumeCB->VolumeLock,
-                            TRUE);
+            AFSAcquireShared( pVolumeCB->VolumeLock,
+                              TRUE);
 
             if( BooleanFlagOn( pVolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
                 BooleanFlagOn( pVolumeCB->Flags, AFS_VOLUME_FLAGS_OFFLINE))
@@ -2679,7 +2666,7 @@ AFSParseName( IN PIRP Irp,
                 }
             }
 
-            AFSConvertToShared( pVolumeCB->VolumeLock);
+            AFSReleaseResource( pVolumeCB->VolumeLock);
 
             if( BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
             {
@@ -2711,8 +2698,6 @@ AFSParseName( IN PIRP Irp,
                                   pDirEntry->ObjectInformation->FileId.Unique,
                                   ntStatus);
 
-                    AFSReleaseResource( pVolumeCB->VolumeLock);
-
                     try_return( ntStatus);
                 }
             }
@@ -2739,8 +2724,6 @@ AFSParseName( IN PIRP Irp,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSParseName (%08lX) Failed to allocate full name buffer\n",
                               Irp);
-
-                AFSReleaseResource( pVolumeCB->VolumeLock);
 
                 try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
             }
@@ -2807,8 +2790,6 @@ AFSParseName( IN PIRP Irp,
 
                     AFSExFreePool( uniFullName.Buffer);
 
-                    AFSReleaseResource( pVolumeCB->VolumeLock);
-
                     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
                 }
 
@@ -2836,8 +2817,6 @@ AFSParseName( IN PIRP Irp,
 
                     AFSExFreePool( uniFullName.Buffer);
 
-                    AFSReleaseResource( pVolumeCB->VolumeLock);
-
                     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
                 }
 
@@ -2855,8 +2834,6 @@ AFSParseName( IN PIRP Irp,
                               Irp);
 
                 AFSExFreePool( uniFullName.Buffer);
-
-                AFSReleaseResource( pVolumeCB->VolumeLock);
 
                 try_return( ntStatus);
             }
@@ -3036,8 +3013,8 @@ AFSParseName( IN PIRP Irp,
         // Be sure we are online and ready to go
         //
 
-        AFSAcquireExcl( AFSGlobalRoot->VolumeLock,
-                        TRUE);
+        AFSAcquireShared( AFSGlobalRoot->VolumeLock,
+                          TRUE);
 
         if( BooleanFlagOn( AFSGlobalRoot->ObjectInformation.Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
             BooleanFlagOn( AFSGlobalRoot->Flags, AFS_VOLUME_FLAGS_OFFLINE))
@@ -3087,6 +3064,8 @@ AFSParseName( IN PIRP Irp,
             }
         }
 
+        AFSReleaseResource( AFSGlobalRoot->VolumeLock);
+
         if( !BooleanFlagOn( AFSGlobalRoot->ObjectInformation.Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
         {
 
@@ -3107,8 +3086,6 @@ AFSParseName( IN PIRP Irp,
                               "AFSParseName (%08lX) Failed enumeraiton of root Status %08lX\n",
                               Irp,
                               ntStatus);
-
-                AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
                 try_return( ntStatus);
             }
@@ -3137,8 +3114,6 @@ AFSParseName( IN PIRP Irp,
                           AFSGlobalRoot->DirectoryCB,
                           NULL,
                           AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
-
-            AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
             *VolumeCB = NULL;
 
@@ -3206,8 +3181,6 @@ AFSParseName( IN PIRP Irp,
                               NULL,
                               AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
 
-                AFSReleaseResource( AFSGlobalRoot->VolumeLock);
-
                 *VolumeCB = NULL;
 
                 FileName->Length = 0;
@@ -3251,8 +3224,6 @@ AFSParseName( IN PIRP Irp,
                               NULL,
                               AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
 
-                AFSReleaseResource( AFSGlobalRoot->VolumeLock);
-
                 ClearFlag( *ParseFlags, AFS_PARSE_FLAG_ROOT_ACCESS);
 
                 *VolumeCB = NULL;
@@ -3271,8 +3242,6 @@ AFSParseName( IN PIRP Irp,
                           "AFSParseName (%08lX) Returning root share name %wZ access\n",
                           Irp,
                           &uniComponentName);
-
-            AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
             //
             // Add in the full share name to pass back
@@ -3382,7 +3351,6 @@ AFSParseName( IN PIRP Irp,
 
                     if( !NT_SUCCESS( ntStatus))
                     {
-                        AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
                         if ( bIsAllShare &&
                              uniRemainingPath.Length == 0 &&
@@ -3527,12 +3495,6 @@ AFSParseName( IN PIRP Irp,
         }
 
         //
-        // We only need the volume shared at this point
-        //
-
-        AFSConvertToShared( pVolumeCB->VolumeLock);
-
-        //
         // Init our name array
         //
 
@@ -3546,8 +3508,6 @@ AFSParseName( IN PIRP Irp,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSParseName (%08lX) Failed to initialize name array\n",
                           Irp);
-
-            AFSReleaseResource( pVolumeCB->VolumeLock);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -3596,7 +3556,6 @@ try_exit:
 
         if( *VolumeCB != NULL)
         {
-
             ASSERT( (*VolumeCB)->VolumeReferenceCount > 1);
         }
 
@@ -3717,12 +3676,6 @@ AFSCheckCellName( IN GUID *AuthGroup,
         {
 
             //
-            // We have the global root on entry so drop it now
-            //
-
-            AFSReleaseResource( AFSGlobalRoot->VolumeLock);
-
-            //
             // Build the root volume entry
             //
 
@@ -3732,14 +3685,6 @@ AFSCheckCellName( IN GUID *AuthGroup,
 
             if( !NT_SUCCESS( ntStatus))
             {
-
-                //
-                // On failure this routine is expecting to hold the global root
-                //
-
-                AFSAcquireShared( AFSGlobalRoot->VolumeLock,
-                                  TRUE);
-
                 try_return( ntStatus);
             }
 
@@ -4116,8 +4061,6 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
             AFSReleaseResource( &pVolumeCB->RootFcb->NPFcb->Resource);
         }
 
-        AFSConvertToShared( pVolumeCB->VolumeLock);
-
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSBuildMountPointTarget Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
@@ -4128,6 +4071,8 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
                       pVolumeCB->ObjectInformation.FileId.Unique);
 
         InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+
+        AFSReleaseResource( pVolumeCB->VolumeLock);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -4273,8 +4218,6 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
             AFSReleaseResource( &pVolumeCB->RootFcb->NPFcb->Resource);
         }
 
-        AFSConvertToShared( pVolumeCB->VolumeLock);
-
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSBuildRootVolume Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
@@ -4285,6 +4228,8 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
                       pVolumeCB->ObjectInformation.FileId.Unique);
 
         InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+
+        AFSReleaseResource( pVolumeCB->VolumeLock);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,

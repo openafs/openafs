@@ -803,7 +803,6 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
             if( ExIsResourceAcquiredLite( VolumeCB->VolumeLock))
             {
-
                 AFSReleaseResource( VolumeCB->VolumeLock);
             }
 
