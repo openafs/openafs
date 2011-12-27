@@ -28,7 +28,7 @@ typedef struct osi_sleepInfo {
     osi_queue_t q;
     LONG_PTR value;		/* sleep value when in a sleep queue, patch addr for turnstiles */
     DWORD *tidp;                /* tid history */
-    size_t tid;		        /* thread ID of sleeper */
+    DWORD tid;		        /* thread ID of sleeper */
     EVENT_HANDLE sema;	        /* semaphore for this entry */
     unsigned short states;	/* states bits */
     unsigned short idx;	        /* sleep hash table we're in, if in hash */
