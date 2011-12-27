@@ -311,8 +311,10 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
         }
     }
 
-    /* releasing a read lock can allow readers or writers */
-    if (--(lockp->readers) == 0 && !osi_TEmpty(&lockp->d.turn)) {
+	lockp->readers--;
+
+    /* releasing a read lock can allow writers */
+    if (lockp->readers == 0 && lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, csp);
     }
     else {
@@ -365,7 +367,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
     lockp->tid[0] = 0;
 
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
-    if (!osi_TEmpty(&lockp->d.turn)) {
+    if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, csp);
     }
     else {
@@ -398,7 +400,7 @@ void lock_ConvertWToR(osi_rwlock_t *lockp)
 
     osi_assertx(lockp->readers == 1, "read lock not one");
 
-    if (!osi_TEmpty(&lockp->d.turn)) {
+    if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, /* still have readers */ 1, csp);
     }
     else {
@@ -541,7 +543,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
 
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
     lockp->tid = 0;
-    if (!osi_TEmpty(&lockp->d.turn)) {
+    if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, csp);
     }
     else {
@@ -753,7 +755,7 @@ void osi_SleepR(LONG_PTR sleepVal, struct osi_rwlock *lockp)
     /* XXX better to get the list of things to wakeup from TSignalForMLs, and
      * then do the wakeup after SleepSpin releases the low-level mutex.
      */
-    if (--(lockp->readers) == 0 && !osi_TEmpty(&lockp->d.turn)) {
+    if (--(lockp->readers) == 0 && lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, NULL);
     }
 
@@ -799,7 +801,7 @@ void osi_SleepW(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
     lockp->tid[0] = 0;
-    if (!osi_TEmpty(&lockp->d.turn)) {
+    if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, NULL);
     }
 
@@ -844,7 +846,7 @@ void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
 
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
     lockp->tid = 0;
-    if (!osi_TEmpty(&lockp->d.turn)) {
+    if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, NULL);
     }
 
