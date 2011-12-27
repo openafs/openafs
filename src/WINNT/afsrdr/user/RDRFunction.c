@@ -2962,7 +2962,7 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
              * we need to re-queue this extent fetch.
              */
             force_retry = 1;
-            continue;
+            break;
         }
 
         if (!rwheld) {
@@ -3063,6 +3063,7 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
                  * non-fatal errors.  re-queue the exent
                  */
                 code = CM_ERROR_RETRY;
+                force_retry = 1;
             }
         }
 
