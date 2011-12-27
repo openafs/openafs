@@ -149,6 +149,10 @@ extern void osi_TWait(osi_turnstile_t *turnp, int waitFor,
                       void *patchp, DWORD *tidp,
                       Crit_Sec *releasep);
 
+extern void osi_TWaitExt(osi_turnstile_t *turnp, int waitFor,
+                         void *patchp, DWORD *tidp,
+                         Crit_Sec *releasep, int prepend);
+
 extern void osi_TSignal(osi_turnstile_t *turnp);
 
 extern void osi_TBroadcast(osi_turnstile_t *turnp);
