@@ -2972,9 +2972,6 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
 
         code = cm_GetBuffer(scp, bufp, NULL, userp, reqp);
         if (code == 0) {
-            if (bufp->flags & CM_BUF_DIRTY)
-                cm_BufWrite(scp, &bufp->offset, cm_chunkSize, CM_BUF_WRITE_SCP_LOCKED, userp, reqp);
-
             if (!(bufp->qFlags & CM_BUF_QREDIR)) {
 #ifdef VALIDATE_CHECK_SUM
 #ifdef ODS_DEBUG
@@ -2982,6 +2979,9 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
                 char dbgstr[1024];
 #endif
 #endif
+                if (bufp->flags & CM_BUF_DIRTY)
+                    cm_BufWrite(scp, &bufp->offset, cm_data.buf_blockSize, CM_BUF_WRITE_SCP_LOCKED, userp, reqp);
+
                 lock_ObtainWrite(&buf_globalLock);
                 if (!(bufp->flags & CM_BUF_DIRTY) &&
                     bufp->cmFlags == 0 &&
