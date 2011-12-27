@@ -325,7 +325,6 @@ void osi_TSignal(osi_turnstile_t *turnp)
         return;
 
     sp = turnp->lastp;
-    turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
     osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
     sp->states |= OSI_SLEEPINFO_SIGNALLED;
     ReleaseSemaphore(sp->sema, 1, (long *) 0);
@@ -337,7 +336,6 @@ void osi_TBroadcast(osi_turnstile_t *turnp)
     osi_sleepInfo_t *sp;
 
     while(sp = turnp->lastp) {
-        turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&sp->q);
         osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
         sp->states |= OSI_SLEEPINFO_SIGNALLED;
         ReleaseSemaphore(sp->sema, 1, (long *) 0);
@@ -384,7 +382,6 @@ void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SE
          * and move to private one, so we can do the wakeup after releasing
          * the crit sec.
          */
-        turnp->lastp = (osi_sleepInfo_t *) osi_QPrev(&tsp->q);
         osi_QRemoveHT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &tsp->q);
 
         /* do the patching required for lock obtaining */
