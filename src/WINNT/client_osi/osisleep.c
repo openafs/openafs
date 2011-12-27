@@ -392,9 +392,9 @@ void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SE
         }
         else if (tsp->waitFor & OSI_SLEEPINFO_W4READ) {
             sp = (void *) tsp->value;
+            if ((*sp) < OSI_RWLOCK_THREADS)
+                tsp->tidp[*sp] = tsp->tid;
             (*sp)++;
-            if ((*sp) <= OSI_RWLOCK_THREADS)
-                tsp->tidp[(*sp)-1] = tsp->tid;
         }
 
         /* and add to our own list */
