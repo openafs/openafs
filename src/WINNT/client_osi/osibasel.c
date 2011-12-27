@@ -445,7 +445,7 @@ void lock_ConvertRToW(osi_rwlock_t *lockp)
         osi_assertx(lockp->readers > 0, "read lock underflow");
 
         lockp->waiters++;
-        osi_TWait(&lockp->d.turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, lockp->tid, csp);
+        osi_TWaitExt(&lockp->d.turn, OSI_SLEEPINFO_W4WRITE, &lockp->flags, lockp->tid, csp, FALSE);
         lockp->waiters--;
         osi_assertx(lockp->waiters >= 0, "waiters underflow");
         osi_assert(lockp->readers == 0 && (lockp->flags & OSI_LOCKFLAG_EXCL));

@@ -260,6 +260,11 @@ void osi_Init(void)
 
 void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, DWORD *tidp, CRITICAL_SECTION *releasep)
 {
+    osi_TWaitExt(turnp, waitFor, patchp, tidp, releasep, TRUE);
+}
+
+void osi_TWaitExt(osi_turnstile_t *turnp, int waitFor, void *patchp, DWORD *tidp, CRITICAL_SECTION *releasep, int prepend)
+{
     osi_sleepInfo_t *sp;
     unsigned int code;
 
@@ -275,9 +280,10 @@ void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp, DWORD *tidp, C
     sp->waitFor = waitFor;
     sp->value = (LONG_PTR) patchp;
     sp->tidp   = tidp;
-    osi_QAddT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
-    if (!turnp->lastp)
-	turnp->lastp = sp;
+    if (prepend)
+        osi_QAddH((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
+    else
+        osi_QAddT((osi_queue_t **) &turnp->firstp, (osi_queue_t **) &turnp->lastp, &sp->q);
     LeaveCriticalSection(releasep);
 
     /* now wait for the signal */
