@@ -158,7 +158,7 @@ void cm_InitConn(void)
                 afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
             }
             if (IdleDeadtimeout == 0) {
-                IdleDeadtimeout = (unsigned short) ConnDeadtimeout;
+                IdleDeadtimeout = 10 * (unsigned short) HardDeadtimeout;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
         } else {
@@ -1238,6 +1238,8 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
                                     secIndex);
     rx_SetConnDeadTime(tcp->rxconnp, ConnDeadtimeout);
     rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
+
+    /* Disable Idle Dead Timeout processing as it can lead to data corruption. */
     rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);
 
     /*
