@@ -25,8 +25,8 @@
 #endif
 
 #define CM_CONN_IFS_HARDDEADTIME       120
-#define CM_CONN_IFS_CONNDEADTIME        50
-#define CM_CONN_IFS_IDLEDEADTIME        50
+#define CM_CONN_IFS_CONNDEADTIME        60
+#define CM_CONN_IFS_IDLEDEADTIME      1200
 
 extern unsigned short ConnDeadtimeout;
 extern unsigned short HardDeadtimeout;
