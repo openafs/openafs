@@ -996,6 +996,8 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
             (*ResultCB)->ResultStatus = status;
+            if ( status == STATUS_INVALID_HANDLE)
+                status = STATUS_OBJECT_PATH_INVALID;
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByName cm_GetSCache parentFID failure code=0x%x status=0x%x",
                       code, status);
             free(wszName);
@@ -1168,6 +1170,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         if (code) {
             cm_ReleaseSCache(scp);
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            if ( status == STATUS_INVALID_HANDLE)
+                status = STATUS_OBJECT_PATH_INVALID;
             (*ResultCB)->ResultStatus = status;
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByID cm_GetSCache parentFID failure code=0x%x status=0x%x",
                       code, status);
@@ -1182,6 +1186,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         if (code) {
             cm_ReleaseSCache(scp);
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            if ( status == STATUS_INVALID_HANDLE)
+                status = STATUS_OBJECT_PATH_INVALID;
             (*ResultCB)->ResultStatus = status;
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByID cm_GetSCache parentFID failure code=0x%x status=0x%x",
                       code, status);
@@ -1297,6 +1303,8 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
+        if ( status == STATUS_INVALID_HANDLE)
+            status = STATUS_OBJECT_PATH_INVALID;
         osi_Log2(afsd_logp, "RDR_CreateFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
                   code, status);
         return;
@@ -1470,6 +1478,8 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
+        if ( status == STATUS_INVALID_HANDLE)
+            status = STATUS_OBJECT_PATH_INVALID;
         osi_Log2(afsd_logp, "RDR_UpdateFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
                   code, status);
         return;
@@ -1681,6 +1691,8 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
         code = cm_GetSCache(&parentFid, &dscp, userp, &req);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            if ( status == STATUS_INVALID_HANDLE)
+                status = STATUS_OBJECT_PATH_INVALID;
             (*ResultCB)->ResultStatus = status;
             osi_Log2(afsd_logp, "RDR_CleanupFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
                      code, status);
@@ -2032,6 +2044,8 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     code = cm_GetSCache(&parentFid, &dscp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        if ( status == STATUS_INVALID_HANDLE)
+            status = STATUS_OBJECT_PATH_INVALID;
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_DeleteFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
                   code, status);
@@ -2225,6 +2239,8 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     if (code) {
         osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache source parent failed code 0x%x", code);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        if ( status == STATUS_INVALID_HANDLE)
+            status = STATUS_OBJECT_PATH_INVALID;
         (*ResultCB)->ResultStatus = status;
         return;
     }
@@ -2235,6 +2251,8 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     if (code) {
         osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_SyncOp oldDscp 0x%p failed code 0x%x", oldDscp, code);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        if ( status == STATUS_INVALID_HANDLE)
+            status = STATUS_OBJECT_PATH_INVALID;
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&oldDscp->rw);
         cm_ReleaseSCache(oldDscp);
