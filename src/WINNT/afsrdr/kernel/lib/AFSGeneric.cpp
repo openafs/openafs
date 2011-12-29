@@ -7998,10 +7998,10 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSCheckSymlinkAccess Failing symlink access to entry %wZ ACCESS_DENIED\n",
+                      "AFSCheckSymlinkAccess Failing symlink access to entry %wZ REPARSE_POINT_NOT_RESOLVED\n",
                       ComponentName);
 
-        ntStatus = STATUS_ACCESS_DENIED;
+        ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
 
         InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
