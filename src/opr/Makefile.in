@@ -20,19 +20,19 @@ $(TOP_LIBDIR)/libopr.a: libopr.a
 	$(INSTALL_DATA) libopr.a $@
 
 $(TOP_INCDIR)/afs/opr.h: opr.h
-	$(INSTALL_DATA) opr.h $@
+	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/afs/opr_assert.h: opr_assert.h
-	$(INSTALL_DATA) opr_assert.h $@
+	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/opr/jhash.h: jhash.h
-	$(INSTALL_DATA) jhash.h $@
+	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/opr/queue.h: queue.h
-	$(INSTALL_DATA) queue.h $@
+	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/opr/rbtree.h: rbtree.h
-	$(INSTALL_DATA) rbtree.h $@
+	$(INSTALL_DATA) $? $@
 
 clean:
 	rm -f $(objects) libopr.a
