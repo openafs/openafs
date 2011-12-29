@@ -694,14 +694,14 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 // fail with collision
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Object name collision on create of %wZ Status %08lX\n",
-                              &pDirectoryCB->NameInformation.FileName,
-                              ntStatus);
-
                 if( pDirectoryCB != NULL)
                 {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonCreate Object name collision on create of %wZ Status %08lX\n",
+                                  &pDirectoryCB->NameInformation.FileName,
+                                  ntStatus);
 
                     InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
@@ -715,6 +715,11 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 }
                 else
                 {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonCreate Object name collision on create Status %08lX\n",
+                                  ntStatus);
 
                     InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
 
@@ -1941,8 +1946,8 @@ AFSProcessCreate( IN PIRP               Irp,
 
             AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                             *Ccb,
-									        (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-									        (ULONG)FILE_ACTION_ADDED);
+                                            (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+                                            (ULONG)FILE_ACTION_ADDED);
 
             (*Fcb)->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
         }
@@ -1967,8 +1972,8 @@ AFSProcessCreate( IN PIRP               Irp,
 
             AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                             *Ccb,
-									        (ULONG)FILE_NOTIFY_CHANGE_DIR_NAME,
-									        (ULONG)FILE_ACTION_ADDED);
+                                            (ULONG)FILE_NOTIFY_CHANGE_DIR_NAME,
+                                            (ULONG)FILE_ACTION_ADDED);
         }
         else if( (*Fcb)->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
                  (*Fcb)->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB ||
@@ -1987,8 +1992,8 @@ AFSProcessCreate( IN PIRP               Irp,
 
             AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                             *Ccb,
-									        (ULONG)FILE_NOTIFY_CHANGE_DIR_NAME,
-									        (ULONG)FILE_ACTION_ADDED);
+                                            (ULONG)FILE_NOTIFY_CHANGE_DIR_NAME,
+                                            (ULONG)FILE_ACTION_ADDED);
         }
 
         //

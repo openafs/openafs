@@ -483,7 +483,7 @@ AFSInsertCaseInsensitiveDirEntry( IN AFSDirectoryCB *RootNode,
             {
 
                 //
-                // Inser the the entry at the end of the insensitive list
+                // Insert the the entry at the end of the insensitive list
                 //
 
                 while( pCurrentEntry->CaseInsensitiveList.fLink != NULL)

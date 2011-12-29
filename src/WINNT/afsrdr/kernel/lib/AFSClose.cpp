@@ -377,10 +377,14 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSClose Deleting dir entry %08lX (%08lX) for %wZ\n",
+                                      "AFSClose Deleting dir entry %08lX (%08lX) for %wZ  FID %08lX-%08lX-%08lX-%08lX\n",
                                       pDirCB,
                                       pObjectInfo,
-                                      &pDirCB->NameInformation.FileName);
+                                      &pDirCB->NameInformation.FileName,
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique);
 
                         //
                         // Remove and delete the directory entry from the parent list
