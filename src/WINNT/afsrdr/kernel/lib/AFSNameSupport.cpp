@@ -154,7 +154,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                               pCurrentObject->FileId.Volume,
                               pCurrentObject->FileId.Vnode,
                               pCurrentObject->FileId.Unique,
-                              ntStatus);
+                              STATUS_FILE_DELETED);
 
                 try_return( ntStatus = STATUS_FILE_DELETED);
             }
@@ -171,7 +171,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                               pCurrentObject->FileId.Volume,
                               pCurrentObject->FileId.Vnode,
                               pCurrentObject->FileId.Unique,
-                              ntStatus);
+                              STATUS_DELETE_PENDING);
 
                 try_return( ntStatus = STATUS_DELETE_PENDING);
             }
@@ -1557,7 +1557,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSLocateNameEntry (FO: %08lX) Deleted parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSLocateNameEntry (FO: %08lX) Deleted entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               FileObject,
                               &pDirEntry->NameInformation.FileName,
                               pCurrentObject->FileId.Cell,
@@ -1581,7 +1581,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 if( InterlockedDecrement( &pDirEntry->OpenReferenceCount) == 0)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING|AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSLocateNameEntry Deleting dir entry %08lX (%08lX) for %wZ\n",
                                   pDirEntry,
