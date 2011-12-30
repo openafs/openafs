@@ -590,6 +590,16 @@ typedef struct _AFS_FILE_EVAL_TARGET_CB
 } AFSEvalTargetCB;
 
 
+typedef struct _AFS_FILE_EVAL_RESULT_CB
+{
+
+    LARGE_INTEGER   ParentDataVersion;
+
+    AFSDirEnumEntry DirEnum;
+
+} AFSFileEvalResultCB;
+
+
 //
 // Control structure for read and write requests through the PIOCtl interface
 //

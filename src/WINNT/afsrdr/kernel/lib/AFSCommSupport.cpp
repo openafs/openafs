@@ -1788,6 +1788,7 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSEvalTargetCB stTargetID;
     ULONG ulResultBufferLength;
+    AFSFileEvalResultCB *pEvalResultCB = NULL;
     AFSDirEnumEntry *pDirEnumCB = NULL;
     ULONG ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
 
@@ -1807,11 +1808,11 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         // Allocate our response buffer
         //
 
-        pDirEnumCB = (AFSDirEnumEntry *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                  PAGE_SIZE,
-                                                                  AFS_GENERIC_MEMORY_2_TAG);
+        pEvalResultCB = (AFSFileEvalResultCB *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                         PAGE_SIZE,
+                                                                         AFS_GENERIC_MEMORY_30_TAG);
 
-        if( pDirEnumCB == NULL)
+        if( pEvalResultCB == NULL)
         {
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
@@ -1836,7 +1837,7 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
                                       &ObjectInfo->FileId,
                                       &stTargetID,
                                       sizeof( AFSEvalTargetCB),
-                                      pDirEnumCB,
+                                      pEvalResultCB,
                                       &ulResultBufferLength);
 
         if( ntStatus != STATUS_SUCCESS)
@@ -1867,15 +1868,29 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         if( DirEnumEntry != NULL)
         {
 
-            *DirEnumEntry = pDirEnumCB;
-        }
-        else
-        {
+            pDirEnumCB = (AFSDirEnumEntry *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                      PAGE_SIZE,
+                                                                      AFS_GENERIC_MEMORY_2_TAG);
 
-            AFSExFreePool( pDirEnumCB);
+            if( pDirEnumCB == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlCopyMemory( pDirEnumCB, &pEvalResultCB->DirEnum,
+                           ulResultBufferLength - sizeof( AFSFileEvalResultCB) + sizeof( AFSDirEnumEntry));
+
+            *DirEnumEntry = pDirEnumCB;
         }
 
 try_exit:
+
+        if( pEvalResultCB != NULL)
+        {
+
+            AFSExFreePool( pEvalResultCB);
+        }
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -1903,6 +1918,7 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSEvalTargetCB stTargetID;
     ULONG ulResultBufferLength;
+    AFSFileEvalResultCB *pEvalResultCB = NULL;
     AFSDirEnumEntry *pDirEnumCB = NULL;
 
     __Enter
@@ -1914,11 +1930,11 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
         // Allocate our response buffer
         //
 
-        pDirEnumCB = (AFSDirEnumEntry *)AFSExAllocatePoolWithTag( PagedPool,
-                                                                  PAGE_SIZE,
-                                                                  AFS_GENERIC_MEMORY_3_TAG);
+        pEvalResultCB = (AFSFileEvalResultCB *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                         PAGE_SIZE,
+                                                                         AFS_GENERIC_MEMORY_31_TAG);
 
-        if( pDirEnumCB == NULL)
+        if( pEvalResultCB == NULL)
         {
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
@@ -1937,7 +1953,7 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
                                       NULL,
                                       &stTargetID,
                                       sizeof( AFSEvalTargetCB),
-                                      pDirEnumCB,
+                                      pEvalResultCB,
                                       &ulResultBufferLength);
 
         if( ntStatus != STATUS_SUCCESS)
@@ -1953,15 +1969,29 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
         if( DirEnumEntry != NULL)
         {
 
-            *DirEnumEntry = pDirEnumCB;
-        }
-        else
-        {
+            pDirEnumCB = (AFSDirEnumEntry *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                      PAGE_SIZE,
+                                                                      AFS_GENERIC_MEMORY_3_TAG);
 
-            AFSExFreePool( pDirEnumCB);
+            if( pDirEnumCB == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlCopyMemory( pDirEnumCB, &pEvalResultCB->DirEnum,
+                           ulResultBufferLength - sizeof( AFSFileEvalResultCB) + sizeof( AFSDirEnumEntry));
+
+            *DirEnumEntry = pDirEnumCB;
         }
 
 try_exit:
+
+        if( pEvalResultCB != NULL)
+        {
+
+            AFSExFreePool( pEvalResultCB);
+        }
 
         if( !NT_SUCCESS( ntStatus))
         {

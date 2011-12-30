@@ -940,8 +940,9 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                         IN DWORD    ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB)
 {
+    AFSFileEvalResultCB *pEvalResultCB = NULL;
     AFSDirEnumEntry * pCurrentEntry;
-    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
+    size_t size = ResultBufferLength ? sizeof(AFSCommResult) + ResultBufferLength - 1 : sizeof(AFSCommResult);
     afs_uint32  code = 0;
     cm_scache_t * scp = NULL;
     cm_scache_t * dscp = NULL;
@@ -981,9 +982,13 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     }
 
     memset(*ResultCB, 0, size);
-    (*ResultCB)->ResultBufferLength = ResultBufferLength;
-    if (ResultBufferLength)
-        pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
+    (*ResultCB)->ResultBufferLength = 0;
+    dwRemaining = ResultBufferLength;
+    if (ResultBufferLength >= sizeof( AFSFileEvalResultCB)) {
+        pEvalResultCB = (AFSFileEvalResultCB *)&(*ResultCB)->ResultData;
+        pCurrentEntry = &pEvalResultCB->DirEnum;
+        dwRemaining -= (sizeof( AFSFileEvalResultCB) - sizeof( AFSDirEnumEntry));
+    }
 
     if (ParentID.Cell != 0) {
         parentFid.cell   = ParentID.Cell;
@@ -1066,7 +1071,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
             shortName[0] = '\0';
         }
 
-        code = RDR_PopulateCurrentEntry(pCurrentEntry, ResultBufferLength,
+        code = RDR_PopulateCurrentEntry(pCurrentEntry, dwRemaining,
                                         dscp, scp, userp, &req,
                                         FileName, shortName,
                                         (bWow64 ? RDR_POP_WOW64 : 0) |
@@ -1082,6 +1087,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByName FAILURE code=0x%x status=0x%x",
                       code, status);
         } else {
+            pEvalResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
             (*ResultCB)->ResultStatus = STATUS_SUCCESS;
             (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
             osi_Log0(afsd_logp, "RDR_EvaluateNodeByName SUCCESS");
@@ -1111,8 +1117,9 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
                       IN DWORD     ResultBufferLength,
                       IN OUT AFSCommResult **ResultCB)
 {
-    AFSDirEnumEntry * pCurrentEntry;
-    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
+    AFSFileEvalResultCB *pEvalResultCB = NULL;
+    AFSDirEnumEntry * pCurrentEntry = NULL;
+    size_t size = ResultBufferLength ? sizeof(AFSCommResult) + ResultBufferLength - 1 : sizeof(AFSCommResult);
     afs_uint32  code = 0;
     cm_scache_t * scp = NULL;
     cm_scache_t * dscp = NULL;
@@ -1134,10 +1141,13 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     }
 
     memset(*ResultCB, 0, size);
-    (*ResultCB)->ResultBufferLength = ResultBufferLength;
+    (*ResultCB)->ResultBufferLength = 0;
     dwRemaining = ResultBufferLength;
-    if (ResultBufferLength)
-        pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
+    if (ResultBufferLength >= sizeof( AFSFileEvalResultCB)) {
+        pEvalResultCB = (AFSFileEvalResultCB *)&(*ResultCB)->ResultData;
+        pCurrentEntry = &pEvalResultCB->DirEnum;
+        dwRemaining -= (sizeof( AFSFileEvalResultCB) - sizeof( AFSDirEnumEntry));
+    }
 
     RDR_InitReq(&req);
     if ( bWow64 )
@@ -1225,7 +1235,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         return;
     }
 
-    code = RDR_PopulateCurrentEntry(pCurrentEntry, ResultBufferLength,
+    code = RDR_PopulateCurrentEntry(pCurrentEntry, dwRemaining,
                                     dscp, scp, userp, &req, NULL, NULL,
                                     (bWow64 ? RDR_POP_WOW64 : 0) |
                                     (bNoFollow ? 0 : (RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS)),
@@ -1242,6 +1252,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         osi_Log2(afsd_logp, "RDR_EvaluateNodeByID FAILURE code=0x%x status=0x%x",
                  code, status);
     } else {
+        pEvalResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
+
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
         osi_Log0(afsd_logp, "RDR_EvaluateNodeByID SUCCESS");
