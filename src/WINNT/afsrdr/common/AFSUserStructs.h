@@ -214,6 +214,8 @@ typedef struct _AFS_DIR_ENUM_ENTRY
 
     WCHAR           ShortName[12];
 
+    ULONG           NTStatus;           /* Error code during enumeration */
+
     /* Long Filename and Target (Symlink and MountPoint only) to follow without NULs */
 
 } AFSDirEnumEntry;
@@ -223,6 +225,10 @@ typedef struct _AFS_DIR_ENUM_RESP
 {
 
     ULONG_PTR       EnumHandle;
+
+    LARGE_INTEGER   SnapshotDataVersion; /* DV at time Name/FID list was generated */
+
+    LARGE_INTEGER   CurrentDataVersion;   /* DV at time this header was constructed */
 
     AFSDirEnumEntry Entry[ 1];     /* Each entry is Quad aligned */
 
