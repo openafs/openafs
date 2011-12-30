@@ -1554,6 +1554,15 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
     }
 }
 
+static afs_uint32
+dv_diff(afs_uint64 dv1, afs_uint64 dv2)
+{
+    if ( dv1 - dv2 > 0x7FFFFFFF )
+        return (afs_uint32)(dv2 - dv1);
+    else
+        return (afs_uint32)(dv1 - dv2);
+}
+
 /* merge in a response from an RPC.  The scp must be locked, and the callback
  * is optional.
  *
@@ -1648,7 +1657,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
         scp->fsLockCount = 0;
 
-	if (dscp) {
+	if (dscp && dscp != scp) {
             scp->parentVnode = dscp->fid.vnode;
             scp->parentUnique = dscp->fid.unique;
 	} else {
@@ -1678,6 +1687,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
                       scp->cbServerp->addr.sin_addr.s_addr,
                       volp ? volp->namep : "(unknown)");
         }
+
         osi_Log3(afsd_logp, "Bad merge, scp 0x%p, scp dv %d, RPC dv %d",
                   scp, scp->dataVersion, dataVersion);
         /* we have a number of data fetch/store operations running
@@ -1762,9 +1772,10 @@ void cm_MergeStatus(cm_scache_t *dscp,
         cm_AddACLCache(scp, userp, statusp->CallerAccess);
     }
 
-    if (dataVersion != 0 &&
-        (!(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && dataVersion != scp->dataVersion ||
-         (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && dataVersion - scp->dataVersion > activeRPCs)) {
+    if (dataVersion != 0 && scp->dataVersion != CM_SCACHE_VERSION_BAD &&
+        (!(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) && (dataVersion != scp->dataVersion) ||
+         (flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
+         (dv_diff(dataVersion, scp->dataVersion) > activeRPCs))) {
         /*
          * We now know that all of the data buffers that we have associated
          * with this scp are invalid.  Subsequent operations will go faster
@@ -1853,9 +1864,9 @@ void cm_MergeStatus(cm_scache_t *dscp,
      * merge status no longer has performance characteristics derived from
      * the size of the file.
      */
-    if (((flags & CM_MERGEFLAG_STOREDATA) && dataVersion - scp->dataVersion > activeRPCs) ||
-         (!(flags & CM_MERGEFLAG_STOREDATA) && scp->dataVersion != dataVersion) ||
-         scp->bufDataVersionLow == 0)
+    if (((flags & (CM_MERGEFLAG_STOREDATA|CM_MERGEFLAG_DIROP)) && (dv_diff(dataVersion, scp->dataVersion) > activeRPCs)) ||
+         (!(flags & (CM_MERGEFLAG_STOREDATA|CM_MERGEFLAG_DIROP)) && (scp->dataVersion != dataVersion)) ||
+         scp->bufDataVersionLow == CM_SCACHE_VERSION_BAD)
         scp->bufDataVersionLow = dataVersion;
 
     if (RDR_Initialized) {
@@ -1881,10 +1892,10 @@ void cm_MergeStatus(cm_scache_t *dscp,
             rdr_invalidate = 1;
         } else if (reqp->flags & CM_REQ_SOURCE_REDIR) {
             if (!(flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
-                (dataVersion - scp->dataVersion > activeRPCs - 1)) {
+                (dv_diff(dataVersion, scp->dataVersion) > activeRPCs - 1)) {
                 rdr_invalidate = 1;
             } else if ((flags & (CM_MERGEFLAG_DIROP|CM_MERGEFLAG_STOREDATA)) &&
-                       dataVersion - scp->dataVersion > activeRPCs) {
+                       dv_diff(dataVersion, scp->dataVersion) > activeRPCs) {
                 rdr_invalidate = 1;
             }
         }
