@@ -3009,8 +3009,13 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSVerifyEntry Attempt to verify node of type %d\n",
-                              pObjectInfo->FileType);
+                              "AFSVerifyEntry Attempt to verify node of type %d %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              pObjectInfo->FileType,
+                              &DirEntry->NameInformation.FileName,
+                              pObjectInfo->FileId.Cell,
+                              pObjectInfo->FileId.Volume,
+                              pObjectInfo->FileId.Vnode,
+                              pObjectInfo->FileId.Unique);
 
                 break;
         }
@@ -3749,7 +3754,8 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSValidateEntry Failed to evaluate entry %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          "AFSValidateEntry Failed to evaluate entry FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          FastCall,
                           &DirEntry->NameInformation.FileName,
                           pObjectInfo->FileId.Cell,
                           pObjectInfo->FileId.Volume,
@@ -3766,7 +3772,8 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSValidateEntry Validating entry %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X returned DV %I64X FT %d\n",
+                      "AFSValidateEntry Validating entry FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X returned DV %I64X FT %d\n",
+                      FastCall,
                       &DirEntry->NameInformation.FileName,
                       pObjectInfo->FileId.Cell,
                       pObjectInfo->FileId.Volume,
@@ -4062,8 +4069,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
-                              "AFSValidateEntry Attempt to verify node of type %d\n",
-                              pObjectInfo->FileType);
+                              "AFSValidateEntry Attempt to verify node of type %d FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              pObjectInfo->FileType,
+                              FastCall,
+                              &DirEntry->NameInformation.FileName,
+                              pObjectInfo->FileId.Cell,
+                              pObjectInfo->FileId.Volume,
+                              pObjectInfo->FileId.Vnode,
+                              pObjectInfo->FileId.Unique);
 
                 break;
         }
