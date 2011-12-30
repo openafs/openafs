@@ -1154,7 +1154,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
 }
 
 /* Check if it is safe for us to perform local directory updates.
-   Called with op->scp->rw unlocked. */
+   Called with op->scp->rw write-locked. */
 int
 cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
 {
@@ -1164,7 +1164,8 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
     if (op->scp == NULL)
         return 0;
 
-    lock_ObtainWrite(&op->scp->rw);
+    lock_AssertWrite(&op->scp->rw);
+
     code = cm_DirCheckStatus(op, 1);
 
     if (code == 0 &&
@@ -1177,7 +1178,6 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
 
         rc = 1;
     }
-    lock_ReleaseWrite(&op->scp->rw);
 
     if (rc)
         osi_Log0(afsd_logp, "cm_CheckDirOpForSingleChange succeeded");
