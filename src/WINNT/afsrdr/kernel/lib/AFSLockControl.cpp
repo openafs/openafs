@@ -108,6 +108,15 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
+        else if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSLockControl Failing request against Invalid Fcb\n");
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
 
         //
         // Post the request to the service for checks

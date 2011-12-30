@@ -139,6 +139,15 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus);
         }
 
+        else if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB)
+        {
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryFileInfo request against Invalid Fcb\n");
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
+
         //
         // Process the request
         //
@@ -555,6 +564,16 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetFileInfo Request failed due to read only volume\n",
                           Irp);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
+
+        if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB &&
+            FileInformationClass != FileDispositionInformation)
+        {
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetFileInfo request against Invalid Fcb\n");
 
             try_return( ntStatus = STATUS_ACCESS_DENIED);
         }
@@ -1976,7 +1995,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
                     try_return( ntStatus = STATUS_DIRECTORY_NOT_EMPTY);
                 }
             }
-            else
+            else if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
             {
 
                 //

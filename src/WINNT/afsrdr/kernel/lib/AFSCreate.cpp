@@ -1977,7 +1977,8 @@ AFSProcessCreate( IN PIRP               Irp,
         }
         else if( (*Fcb)->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
                  (*Fcb)->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB ||
-                 (*Fcb)->Header.NodeTypeCode == AFS_DFS_LINK_FCB)
+                 (*Fcb)->Header.NodeTypeCode == AFS_DFS_LINK_FCB ||
+                 (*Fcb)->Header.NodeTypeCode == AFS_INVALID_FCB)
         {
 
             //
@@ -2690,7 +2691,8 @@ AFSProcessOpen( IN PIRP Irp,
         }
         else if( pObjectInfo->Fcb->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
                  pObjectInfo->Fcb->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB ||
-                 pObjectInfo->Fcb->Header.NodeTypeCode == AFS_DFS_LINK_FCB)
+                 pObjectInfo->Fcb->Header.NodeTypeCode == AFS_DFS_LINK_FCB ||
+                 pObjectInfo->Fcb->Header.NodeTypeCode == AFS_INVALID_FCB)
         {
 
         }

@@ -276,8 +276,7 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry,
         }
         else
         {
-            ASSERT( FALSE);
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            pFcb->Header.NodeTypeCode = AFS_INVALID_FCB;
         }
 
         //
