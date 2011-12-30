@@ -2302,6 +2302,7 @@ cm_BPlusDirEnumerate(cm_scache_t *dscp, cm_user_t *userp, cm_req_t *reqp,
     enump->userp = userp;
     enump->reqFlags = reqp->flags;
     enump->fetchStatus = fetchStatus;
+    enump->dataVersion = dscp->dirDataVersion;
 
   done:
     if (!locked)
@@ -2340,10 +2341,14 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
 {
     cm_scache_t *dscp = enump->dscp;
     cm_user_t   *userp = enump->userp;
-    cm_bulkStat_t *bsp;
+    cm_bulkStat_t *bsp = NULL;
+    afs_uint32 ** bs_errorCodep = NULL;
+    afs_uint32    dscp_errorCode = 0;
     afs_uint32 count;
     afs_uint32 code = 0;
     cm_req_t req;
+    int i;
+    cm_scache_t   *tscp;
 
     cm_InitReq(&req);
     req.flags = enump->reqFlags;
@@ -2352,14 +2357,36 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         return 0;
 
     bsp = malloc(sizeof(cm_bulkStat_t));
-    if (!bsp)
-        return ENOMEM;
+    if (!bsp) {
+        code = ENOMEM;
+        goto done;
+    }
     memset(bsp, 0, sizeof(cm_bulkStat_t));
 
-    for ( count = 0; count < enump->count; count++ ) {
-        cm_scache_t   *tscp = cm_FindSCache(&enump->entry[count].fid);
-        int i;
+    bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
+    if (!bs_errorCodep) {
+        code = ENOMEM;
+        goto done;
+    }
 
+    /*
+     * In order to prevent the directory callback from expiring
+     * on really large directories with many symlinks to mount
+     * points such as /afs/andrew.cmu.edu/usr/, always include
+     * the directory fid in the search.
+     */
+    bsp->fids[0].Volume = dscp->fid.volume;
+    bsp->fids[0].Vnode = dscp->fid.vnode;
+    bsp->fids[0].Unique = dscp->fid.unique;
+    bs_errorCodep[0] = &dscp_errorCode;
+    bsp->counter++;
+
+    for ( count = 0; count < enump->count; count++ ) {
+        if ( !wcscmp(L".", enump->entry[count].name) || !wcscmp(L"..", enump->entry[count].name) ) {
+            continue;
+        }
+        
+        tscp = cm_FindSCache(&enump->entry[count].fid);
         if (tscp) {
             if (lock_TryWrite(&tscp->rw)) {
                 /* we have an entry that we can look at */
@@ -2371,6 +2398,7 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
                     lock_ReleaseWrite(&tscp->rw);
                     cm_ReleaseSCache(tscp);
                     enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+                    enump->entry[count].errorCode = 0;
                     continue;
                 }
                 lock_ReleaseWrite(&tscp->rw);
@@ -2383,24 +2411,64 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         bsp->fids[i].Vnode = enump->entry[count].fid.vnode;
         bsp->fids[i].Unique = enump->entry[count].fid.unique;
         enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+        bs_errorCodep[i] = &enump->entry[count].errorCode;
 
         if (bsp->counter == AFSCBMAX) {
             code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+            if (code)
+                goto done;
+
+            for ( i=0; i<bsp->counter; i++) {
+                *(bs_errorCodep[i]) = cm_MapRPCError(bsp->stats[i].errorCode, &req);
+            }
+
+            if (dscp_errorCode) {
+                code = dscp_errorCode;
+                goto done;
+            }
             memset(bsp, 0, sizeof(cm_bulkStat_t));
+            /*
+             * In order to prevent the directory callback from expiring
+             * on really large directories with many symlinks to mount
+             * points such as /afs/andrew.cmu.edu/usr/, always include
+             * the directory fid in the search.
+             */
+            bsp->fids[0].Volume = dscp->fid.volume;
+            bsp->fids[0].Vnode = dscp->fid.vnode;
+            bsp->fids[0].Unique = dscp->fid.unique;
+            bs_errorCodep[0] = &dscp_errorCode;
+            bsp->counter++;
         }
     }
 
-    if (bsp->counter > 0)
+    if (bsp->counter > 0) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+        if (code)
+            goto done;
 
-    free(bsp);
+        for ( i=0; i<bsp->counter; i++) {
+            *(bs_errorCodep[i]) = cm_MapRPCError(bsp->stats[i].errorCode, &req);
+        }
+
+        if (dscp_errorCode) {
+            code = dscp_errorCode;
+            goto done;
+        }
+    }
+
+  done:
+    if (bsp)
+        free(bsp);
+    if (bs_errorCodep)
+        free(bs_errorCodep);
+
     return code;
 }
 
 /*
  * Similar to cm_BPlusDirEnumBulkStat() except that only
  * one RPC is issued containing the provided scp FID and up to
- * AFSCBMAX - 1 other FIDs for which the status info has yet
+ * AFSCBMAX - 2 other FIDs for which the status info has yet
  * to be obtained.
  */
 long
@@ -2408,10 +2476,14 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
 {
     cm_scache_t *dscp = enump->dscp;
     cm_user_t   *userp = enump->userp;
-    cm_bulkStat_t *bsp;
+    cm_bulkStat_t *bsp = NULL;
+    afs_uint32 ** bs_errorCodep = NULL;
+    afs_uint32    dscp_errorCode = 0;
+    afs_uint32    scp_errorCode = 0;
     afs_uint32 code = 0;
     afs_uint32 i;
     cm_req_t req;
+    cm_scache_t   *tscp;
 
     cm_InitReq(&req);
     req.flags = enump->reqFlags;
@@ -2420,59 +2492,65 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
         return 0;
 
     bsp = malloc(sizeof(cm_bulkStat_t));
-    if (!bsp)
-        return ENOMEM;
+    if (!bsp) {
+        code = ENOMEM;
+        goto done;
+    }
     memset(bsp, 0, sizeof(cm_bulkStat_t));
 
-     /*
-      * In order to prevent the directory callback from expiring
-      * on really large directories with many symlinks to mount
-      * points such as /afs/andrew.cmu.edu/usr/, always include
-      * the directory fid in the search.
-      */
-    if (lock_TryWrite(&dscp->rw)) {
-        bsp->fids[bsp->counter].Volume = dscp->fid.volume;
-        bsp->fids[bsp->counter].Vnode = dscp->fid.vnode;
-        bsp->fids[bsp->counter].Unique = dscp->fid.unique;
-        bsp->counter++;
-        lock_ReleaseWrite(&dscp->rw);
+    bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
+    if (!bs_errorCodep) {
+        code = ENOMEM;
+        goto done;
     }
 
-    /* First process the requested scp if we can */
-    if (lock_TryWrite(&scp->rw)) {
-        bsp->fids[bsp->counter].Volume = scp->fid.volume;
-        bsp->fids[bsp->counter].Vnode = scp->fid.vnode;
-        bsp->fids[bsp->counter].Unique = scp->fid.unique;
-        bsp->counter++;
-        lock_ReleaseWrite(&scp->rw);
-    }
+    /*
+     * In order to prevent the directory callback from expiring
+     * on really large directories with many symlinks to mount
+     * points such as /afs/andrew.cmu.edu/usr/, always include
+     * the directory fid in the search.
+     */
+    bsp->fids[0].Volume = dscp->fid.volume;
+    bsp->fids[0].Vnode = dscp->fid.vnode;
+    bsp->fids[0].Unique = dscp->fid.unique;
+    bs_errorCodep[0] = &dscp_errorCode;
+    bsp->counter++;
+
+    /*
+     * There is an assumption that this FID is located
+     * within the directory enumeration but it could be
+     * the case that the enumeration is out of date and
+     * the FID is not listed.  So we explicitly add it
+     * after the directory FID and then skip it later
+     * if we find it.
+     */
+    bsp->fids[1].Volume = scp->fid.volume;
+    bsp->fids[1].Vnode = scp->fid.vnode;
+    bsp->fids[1].Unique = scp->fid.unique;
+    bs_errorCodep[1] = &scp_errorCode;
+    bsp->counter++;
 
     if (enump->count <= AFSCBMAX - 1) {
         i = 0;
     } else {
         /*
-         * Find the requested FID in the enumeration
-         * and start from there.
+         * Find the requested FID in the enumeration and start from there.
          */
         for (i=0; i < enump->count && cm_FidCmp(&scp->fid, &enump->entry[i].fid); i++);
     }
 
     for ( ; bsp->counter < AFSCBMAX && i < enump->count; i++) {
-        cm_scache_t   *tscp;
-        int count = bsp->counter;
-
         if ( !wcscmp(L".", enump->entry[i].name) || !wcscmp(L"..", enump->entry[i].name) ) {
             continue;
-        } else {
-            tscp = cm_FindSCache(&enump->entry[i].fid);
-            if (scp == tscp) {
-                enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+        }
+
+        tscp = cm_FindSCache(&enump->entry[i].fid);
+        if (tscp) {
+            if (tscp == scp) {
                 cm_ReleaseSCache(tscp);
                 continue;
             }
-        }
 
-        if (tscp) {
             if (lock_TryWrite(&tscp->rw)) {
                 /* we have an entry that we can look at */
                 if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
@@ -2483,25 +2561,45 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
                     lock_ReleaseWrite(&tscp->rw);
                     cm_ReleaseSCache(tscp);
                     enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+                    enump->entry[i].errorCode = 0;
                     continue;
                 }
                 lock_ReleaseWrite(&tscp->rw);
             }	/* got lock */
-            if (scp != tscp)
-                cm_ReleaseSCache(tscp);
+            cm_ReleaseSCache(tscp);
         } /* found entry */
 
-        bsp->fids[count].Volume = enump->entry[i].fid.volume;
-        bsp->fids[count].Vnode = enump->entry[i].fid.vnode;
-        bsp->fids[count].Unique = enump->entry[i].fid.unique;
-        bsp->counter++;
+        bsp->fids[bsp->counter].Volume = enump->entry[i].fid.volume;
+        bsp->fids[bsp->counter].Vnode = enump->entry[i].fid.vnode;
+        bsp->fids[bsp->counter].Unique = enump->entry[i].fid.unique;
         enump->entry[i].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+        bs_errorCodep[bsp->counter] = &enump->entry[i].errorCode;
+        bsp->counter++;
     }
 
-    if (bsp->counter > 0)
+    if (bsp->counter > 0) {
         code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+        /* Now process any errors that might have occurred */
+        if (code)
+            goto done;
 
-    free(bsp);
+        for ( i=0; i<bsp->counter; i++) {
+            *(bs_errorCodep[i]) = cm_MapRPCError(bsp->stats[i].errorCode, &req);
+        }
+
+        /* Check if there was an error on the requested FID, if so return it */
+        if ( scp_errorCode ) {
+            code = scp_errorCode;
+            goto done;
+        }
+    }
+
+  done:
+    if (bsp)
+        free(bsp);
+    if (bs_errorCodep)
+        free(bs_errorCodep);
+
     return code;
 }
 
@@ -2510,10 +2608,14 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
 {
     cm_scache_t *dscp = enump->dscp;
     cm_user_t   *userp = enump->userp;
-    cm_bulkStat_t *bsp;
+    cm_bulkStat_t *bsp = NULL;
+    afs_uint32 ** bs_errorCodep = NULL;
+    afs_uint32    dscp_errorCode = 0;
     afs_uint32 count;
     afs_uint32 code = 0;
     cm_req_t req;
+    cm_scache_t   *tscp;
+    int i;
 
     cm_InitReq(&req);
     req.flags = enump->reqFlags;
@@ -2522,14 +2624,36 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
         return 0;
 
     bsp = malloc(sizeof(cm_bulkStat_t));
-    if (!bsp)
-        return ENOMEM;
+    if (!bsp) {
+        code = ENOMEM;
+        goto done;
+    }
     memset(bsp, 0, sizeof(cm_bulkStat_t));
 
-    for ( count = enump->next; count < enump->count; count++ ) {
-        cm_scache_t   *tscp = cm_FindSCache(&enump->entry[count].fid);
-        int i;
+    bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
+    if (!bs_errorCodep) {
+        code = ENOMEM;
+        goto done;
+    }
 
+    /*
+     * In order to prevent the directory callback from expiring
+     * on really large directories with many symlinks to mount
+     * points such as /afs/andrew.cmu.edu/usr/, always include
+     * the directory fid in the search.
+     */
+    bsp->fids[0].Volume = dscp->fid.volume;
+    bsp->fids[0].Vnode = dscp->fid.vnode;
+    bsp->fids[0].Unique = dscp->fid.unique;
+    bs_errorCodep[0] = &dscp_errorCode;
+    bsp->counter++;
+
+    for ( count = enump->next; count < enump->count && bsp->counter < AFSCBMAX; count++ ) {
+        if ( !wcscmp(L".", enump->entry[count].name) || !wcscmp(L"..", enump->entry[count].name) ) {
+            continue;
+        }
+
+        tscp = cm_FindSCache(&enump->entry[count].fid);
         if (tscp) {
             if (lock_TryWrite(&tscp->rw)) {
                 /* we have an entry that we can look at */
@@ -2541,6 +2665,7 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
                     lock_ReleaseWrite(&tscp->rw);
                     cm_ReleaseSCache(tscp);
                     enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+                    enump->entry[count].errorCode = 0;
                     continue;
                 }
                 lock_ReleaseWrite(&tscp->rw);
@@ -2548,22 +2673,36 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
             cm_ReleaseSCache(tscp);
         }	/* found entry */
 
-        i = bsp->counter++;
-        bsp->fids[i].Volume = enump->entry[count].fid.volume;
-        bsp->fids[i].Vnode = enump->entry[count].fid.vnode;
-        bsp->fids[i].Unique = enump->entry[count].fid.unique;
+        bsp->fids[bsp->counter].Volume = enump->entry[count].fid.volume;
+        bsp->fids[bsp->counter].Vnode = enump->entry[count].fid.vnode;
+        bsp->fids[bsp->counter].Unique = enump->entry[count].fid.unique;
         enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+        bs_errorCodep[bsp->counter] = &enump->entry[count].errorCode;
+        bsp->counter++;
+    }
 
-        if (bsp->counter == AFSCBMAX) {
-            code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
-            break;
+    if (bsp->counter > 0) {
+        code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+        /* Now process any errors that might have occurred */
+        if (code)
+            goto done;
+
+        for ( i=0; i<bsp->counter; i++) {
+            *(bs_errorCodep[i]) = cm_MapRPCError(bsp->stats[i].errorCode, &req);
+        }
+
+        if (dscp_errorCode) {
+            code = dscp_errorCode;
+            goto done;
         }
     }
 
-    if (bsp->counter > 0 && bsp->counter < AFSCBMAX)
-        code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+  done:
+    if (bsp)
+        free(bsp);
+    if (bs_errorCodep)
+        free(bs_errorCodep);
 
-    free(bsp);
     return code;
 }
 

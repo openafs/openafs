@@ -158,6 +158,7 @@ typedef struct cm_direnum_entry {
     cm_fid_t 	 fid;
     normchar_t   shortName[13];
     afs_uint32   flags;
+    afs_uint32   errorCode;
 } cm_direnum_entry_t;
 
 #define CM_DIRENUM_FLAG_GOT_STATUS     1
@@ -165,6 +166,7 @@ typedef struct cm_direnum_entry {
 typedef struct cm_direnum {
     cm_scache_t        *dscp;
     cm_user_t          *userp;
+    afs_uint64          dataVersion;    /* enumeration snapshot dir version */
     afs_uint32          reqFlags;
     afs_uint32		count;
     afs_uint32  	next;
