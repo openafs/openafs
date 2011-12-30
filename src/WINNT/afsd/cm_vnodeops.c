@@ -1696,6 +1696,14 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         invalidate = 1;
+        if (cm_CheckDirOpForSingleChange(&dirop) && cnamep) {
+            lock_ReleaseWrite(&dscp->rw);
+            cm_DirDeleteEntry(&dirop, fnamep);
+#ifdef USE_BPLUS
+            cm_BPlusDirDeleteEntry(&dirop, cnamep);
+#endif
+            lock_ObtainWrite(&dscp->rw);
+        }
     } else {
         InterlockedDecrement(&scp->activeRPCs);
         if (code == CM_ERROR_NOSUCHFILE) {
@@ -1706,15 +1714,10 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
             dscp->cbServerp = NULL;
         }
     }
+
     cm_SyncOpDone(dscp, NULL, sflags);
     lock_ReleaseWrite(&dscp->rw);
 
-    if (code == 0 && cm_CheckDirOpForSingleChange(&dirop) && cnamep) {
-        cm_DirDeleteEntry(&dirop, fnamep);
-#ifdef USE_BPLUS
-        cm_BPlusDirDeleteEntry(&dirop, cnamep);
-#endif
-    }
     cm_EndDirOp(&dirop);
 
     if (invalidate && RDR_Initialized &&
@@ -2924,10 +2927,20 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    if (code == 0)
+    if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-    else
+        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            lock_ReleaseWrite(&dscp->rw);
+            cm_DirCreateEntry(&dirop, fnamep, &newFid);
+#ifdef USE_BPLUS
+            cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
+#endif
+            lock_ObtainWrite(&dscp->rw);
+        }
+    } else {
         InterlockedDecrement(&dscp->activeRPCs);
+    }
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
@@ -2937,7 +2950,6 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
      * info.
      */
     if (code == 0) {
-        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
@@ -2958,12 +2970,6 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     if (!didEnd)
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
 
-    if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
-        cm_DirCreateEntry(&dirop, fnamep, &newFid);
-#ifdef USE_BPLUS
-        cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
-#endif
-    }
     cm_EndDirOp(&dirop);
 
     if (fnamep)
@@ -3111,10 +3117,20 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    if (code == 0)
+    if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-    else
+        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            lock_ReleaseWrite(&dscp->rw);
+            cm_DirCreateEntry(&dirop, fnamep, &newFid);
+#ifdef USE_BPLUS
+            cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
+#endif
+            lock_ObtainWrite(&dscp->rw);
+        }
+    } else {
         InterlockedDecrement(&dscp->activeRPCs);
+    }
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
@@ -3124,7 +3140,6 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
      * info.
      */
     if (code == 0) {
-        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
@@ -3144,12 +3159,6 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     if (!didEnd)
         cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
 
-    if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
-        cm_DirCreateEntry(&dirop, fnamep, &newFid);
-#ifdef USE_BPLUS
-        cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
-#endif
-    }
     cm_EndDirOp(&dirop);
 
     free(fnamep);
@@ -3243,20 +3252,21 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     if (code == 0) {
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         invalidate = 1;
+
+        if (cm_CheckDirOpForSingleChange(&dirop)) {
+            lock_ReleaseWrite(&dscp->rw);
+            cm_DirCreateEntry(&dirop, fnamep, &sscp->fid);
+#ifdef USE_BPLUS
+            cm_BPlusDirCreateEntry(&dirop, cnamep, &sscp->fid);
+#endif
+            lock_ObtainWrite(&dscp->rw);
+        }
     } else {
         InterlockedDecrement(&dscp->activeRPCs);
     }
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
-    if (code == 0) {
-        if (cm_CheckDirOpForSingleChange(&dirop)) {
-            cm_DirCreateEntry(&dirop, fnamep, &sscp->fid);
-#ifdef USE_BPLUS
-            cm_BPlusDirCreateEntry(&dirop, cnamep, &sscp->fid);
-#endif
-        }
-    }
     cm_EndDirOp(&dirop);
 
     if (invalidate && RDR_Initialized)
@@ -3354,23 +3364,25 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
         dirop.lockType = CM_DIRLOCK_WRITE;
     }
     lock_ObtainWrite(&dscp->rw);
-    if (code == 0)
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
-    else
-        InterlockedDecrement(&dscp->activeRPCs);
-    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
-    lock_ReleaseWrite(&dscp->rw);
-
     if (code == 0) {
+        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         if (cm_CheckDirOpForSingleChange(&dirop)) {
+            lock_ReleaseWrite(&dscp->rw);
             cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
 
             cm_DirCreateEntry(&dirop, fnamep, &newFid);
 #ifdef USE_BPLUS
             cm_BPlusDirCreateEntry(&dirop, cnamep, &newFid);
 #endif
+            lock_ObtainWrite(&dscp->rw);
         }
+    } else {
+        InterlockedDecrement(&dscp->activeRPCs);
     }
+    cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
+    lock_ReleaseWrite(&dscp->rw);
+
     cm_EndDirOp(&dirop);
 
     /* now try to create the new dir's entry, too, but be careful to
@@ -3379,7 +3391,6 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
      * info.
      */
     if (code == 0) {
-        cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         code = cm_GetSCache(&newFid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
@@ -3513,20 +3524,20 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     if (code == 0) {
         cm_dnlcRemove(dscp, cnamep);
         cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        if (cm_CheckDirOpForSingleChange(&dirop) && cnamep != NULL) {
+            lock_ReleaseWrite(&dscp->rw);
+            cm_DirDeleteEntry(&dirop, fnamep);
+#ifdef USE_BPLUS
+            cm_BPlusDirDeleteEntry(&dirop, cnamep);
+#endif
+            lock_ObtainWrite(&dscp->rw);
+        }
     } else {
         InterlockedDecrement(&dscp->activeRPCs);
     }
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&dscp->rw);
 
-    if (code == 0) {
-        if (cm_CheckDirOpForSingleChange(&dirop) && cnamep != NULL) {
-            cm_DirDeleteEntry(&dirop, fnamep);
-#ifdef USE_BPLUS
-            cm_BPlusDirDeleteEntry(&dirop, cnamep);
-#endif
-        }
-    }
     cm_EndDirOp(&dirop);
 
     if (scp) {
@@ -3852,41 +3863,44 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         lock_ObtainWrite(&oldDirOp.scp->dirlock);
         oldDirOp.lockType = CM_DIRLOCK_WRITE;
     }
-    lock_ObtainWrite(&oldDscp->rw);
 
-    if (code == 0)
+    lock_ObtainWrite(&oldDscp->rw);
+    if (code == 0) {
         cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
                        userp, reqp, CM_MERGEFLAG_DIROP);
-    else
+        if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
+            lock_ReleaseWrite(&oldDscp->rw);
+#ifdef USE_BPLUS
+            diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
+            if (diropCode == CM_ERROR_INEXACT_MATCH)
+                diropCode = 0;
+            else if (diropCode == EINVAL)
+#endif
+                diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
+
+            if (diropCode == 0) {
+                if (oneDir) {
+                    diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
+#ifdef USE_BPLUS
+                    cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
+#endif
+                }
+
+                if (diropCode == 0) {
+                    diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
+#ifdef USE_BPLUS
+                    cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
+#endif
+                }
+            }
+            lock_ObtainWrite(&oldDscp->rw);
+        }
+    } else {
         InterlockedDecrement(&oldDscp->activeRPCs);
+    }
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&oldDscp->rw);
 
-    if (code == 0 && cm_CheckDirOpForSingleChange(&oldDirOp)) {
-#ifdef USE_BPLUS
-        diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
-        if (diropCode == CM_ERROR_INEXACT_MATCH)
-            diropCode = 0;
-        else if (diropCode == EINVAL)
-#endif
-            diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
-
-        if (diropCode == 0) {
-            if (oneDir) {
-                diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
-#ifdef USE_BPLUS
-                cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
-#endif
-            }
-
-            if (diropCode == 0) {
-                diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
-#ifdef USE_BPLUS
-                cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
-#endif
-            }
-        }
-    }
     cm_EndDirOp(&oldDirOp);
 
     /* and update it for the new one, too, if necessary */
@@ -3896,37 +3910,39 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
             newDirOp.lockType = CM_DIRLOCK_WRITE;
         }
         lock_ObtainWrite(&newDscp->rw);
-        if (code == 0)
+        if (code == 0) {
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, reqp, CM_MERGEFLAG_DIROP);
-        else
-            InterlockedIncrement(&newDscp->activeRPCs);
-        cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
-        lock_ReleaseWrite(&newDscp->rw);
-
 #if 0
-        /*
-         * The following optimization does not work.
-         * When the file server processed a RXAFS_Rename() request the
-         * FID of the object being moved between directories is not
-         * preserved.  The client does not know the new FID nor the
-         * version number of the target.  Not only can we not create
-         * the directory entry in the new directory, but we can't
-         * preserve the cached data for the file.  It must be re-read
-         * from the file server.  - jaltman, 2009/02/20
-         */
-        if (code == 0) {
+            /*
+             * The following optimization does not work.
+             * When the file server processed a RXAFS_Rename() request the
+             * FID of the object being moved between directories is not
+             * preserved.  The client does not know the new FID nor the
+             * version number of the target.  Not only can we not create
+             * the directory entry in the new directory, but we can't
+             * preserve the cached data for the file.  It must be re-read
+             * from the file server.  - jaltman, 2009/02/20
+             */
             /* we only make the local change if we successfully made
-               the change in the old directory AND there was only one
-               change in the new directory */
+             * the change in the old directory AND there was only one
+             * change in the new directory
+             */
             if (diropCode == 0 && cm_CheckDirOpForSingleChange(&newDirOp)) {
+                lock_ReleaseWrite(&newDscp->rw);
                 cm_DirCreateEntry(&newDirOp, newNamep, &fileFid);
 #ifdef USE_BPLUS
                 cm_BPlusDirCreateEntry(&newDirOp, cNewNamep, &fileFid);
 #endif
+                lock_ObtainWrite(&newDscp->rw);
             }
-        }
 #endif /* 0 */
+        } else {
+            InterlockedIncrement(&newDscp->activeRPCs);
+        }
+        cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
+        lock_ReleaseWrite(&newDscp->rw);
+
         cm_EndDirOp(&newDirOp);
     }
 
