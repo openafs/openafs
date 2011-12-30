@@ -380,6 +380,9 @@ cm_GetNewSCache(afs_uint32 locked)
 #endif
     lock_InitializeMutex(&scp->redirMx, "cm_scache_t redirMx", LOCK_HIERARCHY_SCACHE_REDIRMX);
     scp->serverLock = -1;
+    scp->dataVersion = CM_SCACHE_VERSION_BAD;
+    scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
+    scp->lockDataVersion = CM_SCACHE_VERSION_BAD;
 
     /* and put it in the LRU queue */
     osi_QAddH((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **)&cm_data.scacheLRULastp, &scp->q);
