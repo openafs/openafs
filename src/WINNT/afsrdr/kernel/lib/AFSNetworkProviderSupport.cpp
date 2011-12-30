@@ -1656,7 +1656,6 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
         if( pConnection == NULL)
         {
             UNICODE_STRING uniFullName;
-            AFSFileID stFileID;
             AFSDirEnumEntry *pDirEnumEntry = NULL;
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_NETWORK_PROVIDER,
@@ -1670,17 +1669,11 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
             AFSReleaseResource( &pRDRDevExt->Specific.RDR.ProviderListLock);
 
             //
-            // Perform a case insensitive search
-            //
-
-            //
             // OK, ask the CM about this component name
             //
 
-            stFileID = AFSGlobalRoot->ObjectInformation.FileId;
-
             ntStatus = AFSEvaluateTargetByName( NULL,
-                                                &stFileID,
+                                                &AFSGlobalRoot->ObjectInformation,
                                                 &uniShareName,
                                                 &pDirEnumEntry);
 
