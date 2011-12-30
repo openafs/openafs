@@ -3581,7 +3581,6 @@ AFSCheckCellName( IN GUID *AuthGroup,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     UNICODE_STRING uniName;
-    AFSFileID stFileID;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSDirHdr *pDirHdr = &AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr;
@@ -3644,10 +3643,8 @@ AFSCheckCellName( IN GUID *AuthGroup,
         // OK, ask the CM about this component name
         //
 
-        stFileID = AFSGlobalRoot->ObjectInformation.FileId;
-
         ntStatus = AFSEvaluateTargetByName( AuthGroup,
-                                            &stFileID,
+                                            &AFSGlobalRoot->ObjectInformation,
                                             CellName,
                                             &pDirEnumEntry);
 

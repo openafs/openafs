@@ -1848,7 +1848,7 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
             // verification
             //
 
-            if( ntStatus == STATUS_INVALID_HANDLE)
+            if( ntStatus == STATUS_OBJECT_PATH_INVALID)
             {
 
                 if( ObjectInfo->ParentObjectInformation != NULL)
@@ -1910,7 +1910,7 @@ try_exit:
 
 NTSTATUS
 AFSEvaluateTargetByName( IN GUID *AuthGroup,
-                         IN AFSFileID *ParentFileId,
+                         IN AFSObjectInfoCB *ParentObjectInfo,
                          IN PUNICODE_STRING SourceName,
                          OUT AFSDirEnumEntry **DirEnumEntry)
 {
@@ -1924,7 +1924,7 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
     __Enter
     {
 
-        stTargetID.ParentId = *ParentFileId;
+        stTargetID.ParentId = ParentObjectInfo->FileId;
 
         //
         // Allocate our response buffer
@@ -1958,6 +1958,11 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
 
         if( ntStatus != STATUS_SUCCESS)
         {
+
+            if( ntStatus == STATUS_OBJECT_PATH_INVALID)
+            {
+                SetFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+            }
 
             try_return( ntStatus);
         }

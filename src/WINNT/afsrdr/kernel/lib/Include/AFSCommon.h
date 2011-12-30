@@ -209,7 +209,7 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
 
 NTSTATUS
 AFSEvaluateTargetByName( IN GUID *AuthGroup,
-                         IN AFSFileID *ParentFileId,
+                         IN AFSObjectInfoCB *ParentObjectInfo,
                          IN PUNICODE_STRING SourceName,
                          OUT AFSDirEnumEntry **DirEnumEntry);
 
