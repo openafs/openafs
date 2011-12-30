@@ -282,8 +282,12 @@ RDR_FlagScpInUse( IN cm_scache_t *scp, IN BOOL bLocked )
 }
 
 /*
- * Obtain the status information for the specified object and
- *
+ * Obtain the status information for the specified object using
+ * an inline bulk status rpc.  cm_BPlusDirEnumBulkStatOne() will
+ * obtain current status for the directory object, the object
+ * which is the focus of the inquiry and as many other objects
+ * in the directory for which there are not callbacks registered
+ * since we are likely to be asked for other objects in the directory.
  */
 static afs_uint32
 RDR_BulkStatLookup( cm_scache_t *dscp,
@@ -308,7 +312,6 @@ RDR_BulkStatLookup( cm_scache_t *dscp,
                   code);
     }
 
-
     if (enump)
     {
         code = cm_BPlusDirEnumBulkStatOne(enump, scp);
@@ -328,7 +331,7 @@ RDR_BulkStatLookup( cm_scache_t *dscp,
 #define RDR_POP_WOW64              0x04
 #define RDR_POP_NO_GETSTATUS       0x08
 
-afs_uint32
+static afs_uint32
 RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                           IN  DWORD             dwMaxEntryLength,
                           IN  cm_scache_t     * dscp,
@@ -338,6 +341,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                           IN  wchar_t         * name,
                           IN  wchar_t         * shortName,
                           IN  DWORD             dwFlags,
+                          IN  afs_uint32        cmError,
                           OUT AFSDirEnumEntry **ppNextEntry,
                           OUT DWORD           * pdwRemainingLength)
 {
@@ -403,7 +407,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                 lock_ReleaseWrite(&scp->rw);
                 code = RDR_BulkStatLookup(dscp, scp, userp, reqp);
                 if (code) {
-                    osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry RXR_BulkStatLookup failed for scp=0x%p code=0x%x",
+                    osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry RDR_BulkStatLookup failed for scp=0x%p code=0x%x",
                              scp, code);
                     return code;
                 }
@@ -417,8 +421,10 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                     bMustFake = TRUE;
             }
         }
-
     }
+
+    /* Populate the error code */
+    smb_MapNTError(cmError, &pCurrentEntry->NTStatus, TRUE);
 
     /* Populate the real or fake data */
     pCurrentEntry->FileId.Cell = scp->fid.cell;
@@ -498,8 +504,8 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     wcsncpy(wname, name, len);
     pCurrentEntry->FileNameLength = (ULONG)(sizeof(WCHAR) * len);
 
-    osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry scp=0x%p fileType=%d",
-              scp, scp->fileType);
+    osi_Log3(afsd_logp, "RDR_PopulateCurrentEntry scp=0x%p fileType=%d dv=%u",
+              scp, scp->fileType, (afs_uint32)scp->dataVersion);
 
     if (!(dwFlags & RDR_POP_NO_GETSTATUS))
         cm_SyncOpDone( scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -620,7 +626,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     return code;
 }
 
-afs_uint32
+static afs_uint32
 RDR_PopulateCurrentEntryNoScp( IN  AFSDirEnumEntry * pCurrentEntry,
                                IN  DWORD             dwMaxEntryLength,
                                IN  cm_scache_t     * dscp,
@@ -630,6 +636,7 @@ RDR_PopulateCurrentEntryNoScp( IN  AFSDirEnumEntry * pCurrentEntry,
                                IN  wchar_t         * name,
                                IN  wchar_t         * shortName,
                                IN  DWORD             dwFlags,
+                               IN  afs_uint32        cmError,
                                OUT AFSDirEnumEntry **ppNextEntry,
                                OUT DWORD           * pdwRemainingLength)
 {
@@ -661,6 +668,10 @@ RDR_PopulateCurrentEntryNoScp( IN  AFSDirEnumEntry * pCurrentEntry,
 
     dwEntryLength = sizeof(AFSDirEnumEntry);
 
+    /* Populate the error code */
+    smb_MapNTError(cmError, &pCurrentEntry->NTStatus, TRUE);
+
+    /* Populate the fake data */
     pCurrentEntry->FileId.Cell = fidp->cell;
     pCurrentEntry->FileId.Volume = fidp->volume;
     pCurrentEntry->FileId.Vnode = fidp->vnode;
@@ -809,16 +820,20 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         return;
     }
 
+    osi_Log1(afsd_logp, "RDR_EnumerateDirectory dv=%u", (afs_uint32)dscp->dataVersion);
+
     /*
      * If there is no enumeration handle, then this is a new query
-     * and we must perform an enumeration for the specified object
+     * and we must perform an enumeration for the specified object.
      */
     if (QueryCB->EnumHandle == (ULONG_PTR)NULL) {
         cm_dirOp_t    dirop;
 
         code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ, CM_DIROP_FLAG_NONE, &dirop);
         if (code == 0) {
-            code = cm_BPlusDirEnumerate(dscp, userp, &req, TRUE, NULL, !bSkipStatus, &enump);
+            code = cm_BPlusDirEnumerate(dscp, userp, &req,
+                                        TRUE /* dir locked */, NULL /* no mask */,
+                                        TRUE /* fetch status? */, &enump);
             if (code) {
                 osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BPlusDirEnumerate failure code=0x%x",
                           code);
@@ -832,43 +847,56 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         enump = (cm_direnum_t *)QueryCB->EnumHandle;
     }
 
-    if (enump && ResultBufferLength) {
-        cm_direnum_entry_t * entryp = NULL;
+    if (enump) {
+        if (ResultBufferLength == 0) {
+            code = cm_BPlusDirEnumBulkStat(enump);
+            if (code) {
+                osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BPlusDirEnumBulkStat failure code=0x%x",
+                          code);
+            }
+        } else {
+            cm_direnum_entry_t * entryp = NULL;
 
-      getnextentry:
-        if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t)) {
-            osi_Log0(afsd_logp, "RDR_EnumerateDirectory out of space, returning");
-            goto outofspace;
-        }
+            pDirEnumResp->SnapshotDataVersion.QuadPart = enump->dataVersion;
 
-        code = cm_BPlusDirNextEnumEntry(enump, &entryp);
-
-        if ((code == 0 || code == CM_ERROR_STOPNOW) && entryp) {
-            cm_scache_t *scp;
-            int stopnow = (code == CM_ERROR_STOPNOW);
-
-            if ( !wcscmp(L".", entryp->name) || !wcscmp(L"..", entryp->name) ) {
-                osi_Log0(afsd_logp, "RDR_EnumerateDirectory skipping . or ..");
-                if (stopnow)
-                    goto outofspace;
-                goto getnextentry;
+          getnextentry:
+            if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t)) {
+                osi_Log0(afsd_logp, "RDR_EnumerateDirectory out of space, returning");
+                goto outofspace;
             }
 
-            if ( FALSE /* bSkipStatus */) {
-                scp = cm_FindSCache(&entryp->fid);
-                code = 0;
-            } else {
-                code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
-            }
+            code = cm_BPlusDirNextEnumEntry(enump, &entryp);
 
-            if (!code) {
+            if ((code == 0 || code == CM_ERROR_STOPNOW) && entryp) {
+                cm_scache_t *scp = NULL;
+                int stopnow = (code == CM_ERROR_STOPNOW);
+
+                if ( !wcscmp(L".", entryp->name) || !wcscmp(L"..", entryp->name) ) {
+                    osi_Log0(afsd_logp, "RDR_EnumerateDirectory skipping . or ..");
+                    if (stopnow)
+                        goto outofspace;
+                    goto getnextentry;
+                }
+
+                if (bSkipStatus) {
+                    code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
+                    if (code) {
+                        osi_Log5(afsd_logp, "RDR_EnumerateDirectory cm_GetSCache failure cell %u vol %u vnode %u uniq %u code=0x%x",
+                                 entryp->fid.cell, entryp->fid.volume, entryp->fid.vnode, entryp->fid.unique, code);
+                    }
+                } else {
+                    code = entryp->errorCode;
+                    scp = code ? NULL : cm_FindSCache(&entryp->fid);
+                }
+
                 if (scp) {
-                    code = RDR_PopulateCurrentEntry(pCurrentEntry, dwMaxEntryLength,
+                    code = RDR_PopulateCurrentEntry( pCurrentEntry, dwMaxEntryLength,
                                                      dscp, scp, userp, &req,
                                                      entryp->name,
                                                      cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
                                                      (bWow64 ? RDR_POP_WOW64 : 0) |
                                                      (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0),
+                                                     code,
                                                      &pCurrentEntry, &dwMaxEntryLength);
                     cm_ReleaseSCache(scp);
                 } else {
@@ -877,14 +905,9 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                                                           entryp->name,
                                                           cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
                                                           (bWow64 ? RDR_POP_WOW64 : 0),
+                                                          code,
                                                           &pCurrentEntry, &dwMaxEntryLength);
                 }
-                if (stopnow)
-                    goto outofspace;
-                goto getnextentry;
-            } else {
-                osi_Log2(afsd_logp, "RDR_EnumerateDirectory cm_GetSCache failure scp=0x%p code=0x%x",
-                          scp, code);
                 if (stopnow)
                     goto outofspace;
                 goto getnextentry;
@@ -892,13 +915,6 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         }
     }
 
-    if (enump && ResultBufferLength == 0) {
-        code = cm_BPlusDirEnumBulkStat(enump);
-        if (code) {
-            osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BPlusDirEnumBulkStat failure code=0x%x",
-                      code);
-        }
-    }
   outofspace:
 
     if (code || enump->next == enump->count || ResultBufferLength == 0) {
@@ -920,6 +936,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwMaxEntryLength;
 
         pDirEnumResp->EnumHandle = (ULONG_PTR) enump;
+        pDirEnumResp->CurrentDataVersion.QuadPart = dscp->dataVersion;
     }
 
     if (dscp)
@@ -1076,7 +1093,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                                         FileName, shortName,
                                         (bWow64 ? RDR_POP_WOW64 : 0) |
                                         (bNoFollow ? 0 : (RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS)),
-                                        NULL, &dwRemaining);
+                                        0, NULL, &dwRemaining);
         if (bHoldFid)
             RDR_FlagScpInUse( scp, FALSE );
         cm_ReleaseSCache(scp);
@@ -1239,7 +1256,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
                                     dscp, scp, userp, &req, NULL, NULL,
                                     (bWow64 ? RDR_POP_WOW64 : 0) |
                                     (bNoFollow ? 0 : (RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS)),
-                                    NULL, &dwRemaining);
+                                    0, NULL, &dwRemaining);
 
     if (bHoldFid)
         RDR_FlagScpInUse( scp, FALSE );
@@ -1415,7 +1432,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         code = RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                         dscp, scp, userp, &req, FileName, shortName,
                                         RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
-                                        NULL, &dwRemaining);
+                                        0, NULL, &dwRemaining);
 
         if (bHoldFid)
             RDR_FlagScpInUse( scp, FALSE );
@@ -1625,7 +1642,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
         code = RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                         dscp, scp, userp, &req, NULL, NULL,
                                         RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
-                                        NULL, &dwRemaining);
+                                        0, NULL, &dwRemaining);
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
         osi_Log0(afsd_logp, "RDR_UpdateFileEntry SUCCESS");
     } else {
@@ -2400,7 +2417,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                  newDscp, scp, userp, &req, TargetFileName, shortName,
                                  RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
-                                 NULL, &dwRemaining);
+                                 0, NULL, &dwRemaining);
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
         cm_ReleaseSCache(scp);
 
