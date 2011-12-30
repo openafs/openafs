@@ -883,6 +883,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
             case AFS_SYMBOLIC_LINK_FCB:
             case AFS_MOUNT_POINT_FCB:
             case AFS_DFS_LINK_FCB:
+            case AFS_INVALID_FCB:
             {
 
                 //
