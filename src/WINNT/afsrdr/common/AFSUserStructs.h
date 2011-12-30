@@ -981,6 +981,14 @@ typedef struct _AFS_FILE_CLEANUP_CB
 
 } AFSFileCleanupCB;
 
+typedef struct _AFS_FILE_CLEANUP_RESULT_CB
+{
+
+    LARGE_INTEGER   ParentDataVersion;
+
+} AFSFileCleanupResultCB;
+
+
 //
 // Trace configuration cb
 //

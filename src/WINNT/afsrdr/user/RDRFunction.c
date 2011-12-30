@@ -1642,7 +1642,8 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
                       IN DWORD ResultBufferLength,
                       IN OUT AFSCommResult **ResultCB)
 {
-    size_t size = sizeof(AFSCommResult);
+    AFSFileCleanupResultCB *pResultCB = NULL;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
     cm_fid_t            Fid;
     cm_fid_t            parentFid;
     afs_uint32          code = 0;
@@ -1967,14 +1968,21 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
             code = cm_Unlink(dscp, NULL, FileName, userp, &req);
     }
 
+    if ( ResultBufferLength >=  sizeof( AFSFileCleanupResultCB))
+    {
+        (*ResultCB)->ResultBufferLength = sizeof( AFSFileCleanupResultCB);
+        pResultCB = (AFSFileCleanupResultCB *)&(*ResultCB)->ResultData;
+        pResultCB->ParentDataVersion.QuadPart = dscp ? dscp->dataVersion : 0;
+    } else {
+        (*ResultCB)->ResultBufferLength = 0;
+    }
+
     if (code == 0) {
         (*ResultCB)->ResultStatus = 0;
-        (*ResultCB)->ResultBufferLength = 0;
         osi_Log0(afsd_logp, "RDR_CleanupFileEntry SUCCESS");
     } else {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
-        (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_CleanupFileEntry FAILURE code=0x%x status=0x%x",
                   code, status);
     }
