@@ -1429,6 +1429,18 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 if( pCurrentObject->Fcb != NULL)
                                 {
 
+                                    //
+                                    // Acquire and drop the Fcb resource to synchronize
+                                    // with a potentially active AFSCleanup() which sets
+                                    // the OpenReferenceCount to zero while holding the
+                                    // resource.
+                                    //
+
+                                    AFSAcquireExcl( &pCurrentObject->Fcb->NPFcb->Resource,
+                                                    TRUE);
+
+                                    AFSReleaseResource( &pCurrentObject->Fcb->NPFcb->Resource);
+
                                     AFSCleanupFcb( pCurrentObject->Fcb,
                                                    TRUE);
 
