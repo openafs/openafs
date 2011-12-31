@@ -620,15 +620,19 @@ AFSInitVolume( IN GUID *AuthGroup,
             {
 
                 pDeviceExt->Specific.RDR.VolumeTree.TreeHead = &pVolumeCB->TreeEntry;
+
+                SetFlag( pVolumeCB->Flags, AFS_VOLUME_INSERTED_HASH_TREE);
             }
             else
             {
 
-                AFSInsertHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
-                                    &pVolumeCB->TreeEntry);
-            }
+                if ( NT_SUCCESS( AFSInsertHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
+                                                     &pVolumeCB->TreeEntry)))
+                {
 
-            SetFlag( pVolumeCB->Flags, AFS_VOLUME_INSERTED_HASH_TREE);
+                    SetFlag( pVolumeCB->Flags, AFS_VOLUME_INSERTED_HASH_TREE);
+                }
+            }
 
             if( pDeviceExt->Specific.RDR.VolumeListHead == NULL)
             {

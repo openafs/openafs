@@ -1462,8 +1462,6 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
                               "AFSInsertHashEntry Attempt to re-insert a CRC %I64X\n",
                               FileIDEntry->HashIndex);
 
-                ASSERT( FALSE);
-
                 ntStatus = STATUS_UNSUCCESSFUL;
 
                 break;

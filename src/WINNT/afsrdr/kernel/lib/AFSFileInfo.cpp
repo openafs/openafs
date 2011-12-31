@@ -2453,8 +2453,17 @@ AFSSetRenameInfo( IN PIRP Irp)
             else
             {
 
-                AFSInsertHashEntry( pSrcObject->VolumeCB->ObjectInfoTree.TreeHead,
-                                    &pSrcObject->TreeEntry);
+                if ( !NT_SUCCESS( AFSInsertHashEntry( pSrcObject->VolumeCB->ObjectInfoTree.TreeHead,
+                                                     &pSrcObject->TreeEntry)))
+                {
+
+                    //
+                    // Lost a race, an ObjectInfo object already exists for this FID.
+                    // Let this copy be garbage collected.
+                    //
+
+                    ClearFlag( pSrcObject->Flags, AFS_OBJECT_INSERTED_HASH_TREE);
+                }
             }
 
             AFSReleaseResource( pSrcObject->VolumeCB->ObjectInfoTree.TreeLock);
