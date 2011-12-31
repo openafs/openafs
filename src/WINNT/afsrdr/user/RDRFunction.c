@@ -1639,6 +1639,8 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
 
         pResultCB = (AFSFileUpdateResultCB *)(*ResultCB)->ResultData;
 
+        pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
+
         code = RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                         dscp, scp, userp, &req, NULL, NULL,
                                         RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
