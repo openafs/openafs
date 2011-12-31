@@ -3613,14 +3613,14 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                cm_req_t *reqp)
 {
     cm_conn_t *connp;
-    long code;
+    long code = 0;
     AFSFid oldDirAFSFid;
     AFSFid newDirAFSFid;
-    int didEnd;
     AFSFetchStatus updatedOldDirStatus;
     AFSFetchStatus updatedNewDirStatus;
     AFSVolSync volSync;
-    int oneDir;
+    int oneDir = 0;
+    int bTargetExists = 0;
     struct rx_connection * rxconnp;
     cm_dirOp_t oldDirOp;
     cm_fid_t   fileFid;
@@ -3628,7 +3628,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     cm_dirOp_t newDirOp;
     fschar_t * newNamep = NULL;
     int free_oldNamep = FALSE;
-    cm_scache_t *oldScp = NULL, *newScp = NULL;
+    cm_scache_t *oldScp = NULL, *oldTargetScp = NULL;
+    int rpc_skipped = 0;
 
     memset(&volSync, 0, sizeof(volSync));
 
@@ -3637,53 +3638,18 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         cm_ClientStrLen(cNewNamep) == 0)
         return CM_ERROR_INVAL;
 
-    /*
-     * Before we permit the operation, make sure that we do not already have
-     * an object in the destination directory that has a case-insensitive match
-     * for this name UNLESS the matching object is the object we are renaming.
-     */
-    code = cm_Lookup(oldDscp, cOldNamep, 0, userp, reqp, &oldScp);
-    if (code) {
-        osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p cOldName %S old name lookup failed",
-                 oldDscp, osi_LogSaveStringW(afsd_logp, cOldNamep));
-        goto done;
-    }
-
-    /* Case sensitive lookup.  If this succeeds we are done. */
-    code = cm_Lookup(newDscp, cNewNamep, 0, userp, reqp, &newScp);
-    if (code) {
-        /*
-         * Case insensitive lookup.  If this succeeds, it could have found the
-         * same file with a name that differs only by case or it could be a
-         * different file entirely.
-         */
-        code = cm_Lookup(newDscp, cNewNamep, CM_FLAG_CASEFOLD, userp, reqp, &newScp);
-        if (code == 0) {
-            /* found a matching object with the new name */
-            if (cm_FidCmp(&oldScp->fid, &newScp->fid)) {
-                /* and they don't match so return an error */
-                osi_Log2(afsd_logp, "cm_Rename newDscp 0x%p cNewName %S new name already exists",
-                          newDscp, osi_LogSaveStringW(afsd_logp, cNewNamep));
-                code = CM_ERROR_EXISTS;
-            }
-            cm_ReleaseSCache(newScp);
-            newScp = NULL;
-        } else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
-            code = CM_ERROR_EXISTS;
-        } else {
-            /* The target does not exist.  Clear the error and perform the rename. */
-            code = 0;
-        }
+    /* check for identical names */
+    if (oldDscp == newDscp &&
+        cm_ClientStrCmp(cOldNamep, cNewNamep) == 0) {
+        osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p newDscp 0x%p CM_ERROR_RENAME_IDENTICAL",
+                  oldDscp, newDscp);
+        return CM_ERROR_RENAME_IDENTICAL;
     }
 
     /* Check for RO volume */
-    if (code == 0 &&
-        (oldDscp->flags & CM_SCACHEFLAG_RO) || (newDscp->flags & CM_SCACHEFLAG_RO)) {
-        code = CM_ERROR_READONLY;
+    if ((oldDscp->flags & CM_SCACHEFLAG_RO) || (newDscp->flags & CM_SCACHEFLAG_RO)) {
+        return CM_ERROR_READONLY;
     }
-
-    if (code)
-        goto done;
 
     if (oldNamep == NULL) {
         code = -1;
@@ -3704,21 +3670,12 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         }
     }
 
-
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our call
      * completes.  We do this in vnode order so that we don't deadlock,
      * which makes the code a little verbose.
      */
     if (oldDscp == newDscp) {
-        /* check for identical names */
-        if (cm_ClientStrCmp(cOldNamep, cNewNamep) == 0) {
-            osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p newDscp 0x%p CM_ERROR_RENAME_IDENTICAL",
-                      oldDscp, newDscp);
-            code = CM_ERROR_RENAME_IDENTICAL;
-            goto done;
-        }
-
         oneDir = 1;
         cm_BeginDirOp(oldDscp, userp, reqp, CM_DIRLOCK_NONE,
                       CM_DIROP_FLAG_NONE, &oldDirOp);
@@ -3820,7 +3777,55 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     if (code)
         goto done;
 
-    didEnd = 0;
+    /*
+     * The source and destination directories are now locked and no other local
+     * changes can occur.
+     *
+     * Before we permit the operation, make sure that we do not already have
+     * an object in the destination directory that has a case-insensitive match
+     * for this name UNLESS the matching object is the object we are renaming.
+     */
+    code = cm_Lookup(oldDscp, cOldNamep, 0, userp, reqp, &oldScp);
+    if (code) {
+        osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p cOldName %S old name lookup failed",
+                 oldDscp, osi_LogSaveStringW(afsd_logp, cOldNamep));
+        rpc_skipped = 1;
+        goto post_rpc;
+    }
+
+    /* Case sensitive lookup.  If this succeeds we are done. */
+    code = cm_Lookup(newDscp, cNewNamep, 0, userp, reqp, &oldTargetScp);
+    if (code) {
+        /*
+         * Case insensitive lookup.  If this succeeds, it could have found the
+         * same file with a name that differs only by case or it could be a
+         * different file entirely.
+         */
+        code = cm_Lookup(newDscp, cNewNamep, CM_FLAG_CASEFOLD, userp, reqp, &oldTargetScp);
+        if (code == 0) {
+            /* found a matching object with the new name */
+            if (cm_FidCmp(&oldScp->fid, &oldTargetScp->fid)) {
+                /* and they don't match so return an error */
+                osi_Log2(afsd_logp, "cm_Rename newDscp 0x%p cNewName %S new name already exists",
+                          newDscp, osi_LogSaveStringW(afsd_logp, cNewNamep));
+                code = CM_ERROR_EXISTS;
+            }
+            cm_ReleaseSCache(oldTargetScp);
+            oldTargetScp = NULL;
+        } else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
+            code = CM_ERROR_EXISTS;
+        } else {
+            /* The target does not exist.  Clear the error and perform the rename. */
+            code = 0;
+        }
+    } else {
+        bTargetExists = 1;
+    }
+
+    if (code) {
+        rpc_skipped = 1;
+        goto post_rpc;
+    }
 
     newNamep = cm_ClientStringToFsStringAlloc(cNewNamep, -1, NULL);
 
@@ -3858,6 +3863,7 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     else
         osi_Log0(afsd_logp, "CALL Rename SUCCESS");
 
+  post_rpc:
     /* update the individual stat cache entries for the directories */
     if (oldDirOp.scp) {
         lock_ObtainWrite(&oldDirOp.scp->dirlock);
@@ -3870,6 +3876,13 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                        userp, reqp, CM_MERGEFLAG_DIROP);
         if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
             lock_ReleaseWrite(&oldDscp->rw);
+            if (bTargetExists && oneDir) {
+                diropCode = cm_DirDeleteEntry(&oldDirOp, newNamep);
+#ifdef USE_BPLUS
+                cm_BPlusDirDeleteEntry(&oldDirOp, cNewNamep);
+#endif
+            }
+
 #ifdef USE_BPLUS
             diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
             if (diropCode == CM_ERROR_INEXACT_MATCH)
@@ -3896,7 +3909,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
             lock_ObtainWrite(&oldDscp->rw);
         }
     } else {
-        InterlockedDecrement(&oldDscp->activeRPCs);
+        if (!rpc_skipped)
+            InterlockedDecrement(&oldDscp->activeRPCs);
     }
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
     lock_ReleaseWrite(&oldDscp->rw);
@@ -3913,32 +3927,31 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         if (code == 0) {
             cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
                             userp, reqp, CM_MERGEFLAG_DIROP);
-#if 0
+
             /*
-             * The following optimization does not work.
-             * When the file server processed a RXAFS_Rename() request the
-             * FID of the object being moved between directories is not
-             * preserved.  The client does not know the new FID nor the
-             * version number of the target.  Not only can we not create
-             * the directory entry in the new directory, but we can't
-             * preserve the cached data for the file.  It must be re-read
-             * from the file server.  - jaltman, 2009/02/20
-             */
-            /* we only make the local change if we successfully made
+             * we only make the local change if we successfully made
              * the change in the old directory AND there was only one
              * change in the new directory
              */
             if (diropCode == 0 && cm_CheckDirOpForSingleChange(&newDirOp)) {
                 lock_ReleaseWrite(&newDscp->rw);
+
+                if (bTargetExists && !oneDir) {
+                    diropCode = cm_DirDeleteEntry(&newDirOp, newNamep);
+#ifdef USE_BPLUS
+                    cm_BPlusDirDeleteEntry(&newDirOp, cNewNamep);
+#endif
+                }
+
                 cm_DirCreateEntry(&newDirOp, newNamep, &fileFid);
 #ifdef USE_BPLUS
                 cm_BPlusDirCreateEntry(&newDirOp, cNewNamep, &fileFid);
 #endif
                 lock_ObtainWrite(&newDscp->rw);
             }
-#endif /* 0 */
         } else {
-            InterlockedIncrement(&newDscp->activeRPCs);
+            if (!rpc_skipped)
+                InterlockedIncrement(&newDscp->activeRPCs);
         }
         cm_SyncOpDone(newDscp, NULL, CM_SCACHESYNC_STOREDATA);
         lock_ReleaseWrite(&newDscp->rw);
@@ -3946,21 +3959,36 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         cm_EndDirOp(&newDirOp);
     }
 
-    /*
-     * After the rename the file server has invalidated the callbacks
-     * on the file that was moved nor do we have a directory reference
-     * to it anymore.
-     */
-    lock_ObtainWrite(&oldScp->rw);
-    cm_DiscardSCache(oldScp);
-    lock_ReleaseWrite(&oldScp->rw);
+    if (code == 0) {
+        /*
+         * After the rename the file server has invalidated the callbacks
+         * on the file that was moved and destroyed any target file.
+         */
+        lock_ObtainWrite(&oldScp->rw);
+        cm_DiscardSCache(oldScp);
+        lock_ReleaseWrite(&oldScp->rw);
 
-    if (RDR_Initialized)
-        RDR_InvalidateObject(oldScp->fid.cell, oldScp->fid.volume, oldScp->fid.vnode, oldScp->fid.unique,
-                              oldScp->fid.hash, oldScp->fileType, AFS_INVALIDATE_CALLBACK);
+        if (RDR_Initialized)
+            RDR_InvalidateObject(oldScp->fid.cell, oldScp->fid.volume, oldScp->fid.vnode, oldScp->fid.unique,
+                                  oldScp->fid.hash, oldScp->fileType, AFS_INVALIDATE_CALLBACK);
+
+        if (oldTargetScp) {
+            lock_ObtainWrite(&oldTargetScp->rw);
+            cm_DiscardSCache(oldTargetScp);
+            lock_ReleaseWrite(&oldTargetScp->rw);
+
+            if (RDR_Initialized)
+                RDR_InvalidateObject(oldTargetScp->fid.cell, oldTargetScp->fid.volume, oldTargetScp->fid.vnode, oldTargetScp->fid.unique,
+                                     oldTargetScp->fid.hash, oldTargetScp->fileType, AFS_INVALIDATE_CALLBACK);
+        }
+    }
+
   done:
     if (oldScp)
         cm_ReleaseSCache(oldScp);
+
+    if (oldTargetScp)
+        cm_ReleaseSCache(oldTargetScp);
 
     if (free_oldNamep)
         free(oldNamep);

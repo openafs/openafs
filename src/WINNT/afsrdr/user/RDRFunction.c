@@ -2216,8 +2216,12 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     DWORD                  TargetFileNameLength = pRenameCB->TargetNameLength;
     cm_fid_t               SourceParentFid;
     cm_fid_t               TargetParentFid;
+    cm_fid_t		   SourceFid;
+    cm_fid_t		   OrigTargetFid = {0,0,0,0,0};
+    cm_fid_t		   TargetFid;
     cm_scache_t *          oldDscp;
     cm_scache_t *          newDscp;
+    cm_dirOp_t dirop;
     wchar_t                shortName[13];
     wchar_t                SourceFileName[260];
     wchar_t                TargetFileName[260];
@@ -2341,11 +2345,17 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         return;
     }
 
+    /* Obtain the original FID just for debugging purposes */
+    code = cm_BeginDirOp( oldDscp, userp, &req, CM_DIRLOCK_READ, CM_DIROP_FLAG_NONE, &dirop);
+    if (code == 0) {
+        code = cm_BPlusDirLookup(&dirop, SourceFileName, &SourceFid);
+        code = cm_BPlusDirLookup(&dirop, TargetFileName, &OrigTargetFid);
+        cm_EndDirOp(&dirop);
+    }
+
     code = cm_Rename( oldDscp, NULL, SourceFileName,
                       newDscp, TargetFileName, userp, &req);
     if (code == 0) {
-        cm_dirOp_t dirop;
-        cm_fid_t   targetFid;
         cm_scache_t *scp = 0;
         DWORD dwRemaining;
 
@@ -2361,7 +2371,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
 
         code = cm_BeginDirOp( newDscp, userp, &req, CM_DIRLOCK_READ, CM_DIROP_FLAG_NONE, &dirop);
         if (code == 0) {
-            code = cm_BPlusDirLookup(&dirop, TargetFileName, &targetFid);
+            code = cm_BPlusDirLookup(&dirop, TargetFileName, &TargetFid);
             cm_EndDirOp(&dirop);
         }
 
@@ -2375,10 +2385,10 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         }
 
         osi_Log4(afsd_logp, "RDR_RenameFileEntry Target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
-                  targetFid.cell,  targetFid.volume,
-                  targetFid.vnode, targetFid.unique);
+                  TargetFid.cell,  TargetFid.volume,
+                  TargetFid.vnode, TargetFid.unique);
 
-        code = cm_GetSCache(&targetFid, &scp, userp, &req);
+        code = cm_GetSCache(&TargetFid, &scp, userp, &req);
         if (code) {
             osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache target failed code 0x%x", code);
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
