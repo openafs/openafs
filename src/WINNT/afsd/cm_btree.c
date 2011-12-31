@@ -2709,6 +2709,8 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
 long
 cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 {
+    long code;
+
     if (enump == NULL || entrypp == NULL || enump->next >= enump->count) {
 	if (entrypp)
 	    *entrypp = NULL;
@@ -2717,8 +2719,11 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
     }
 
     if (enump->fetchStatus &&
-        !(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS))
-        cm_BPlusDirEnumBulkStatNext(enump);
+		!(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS)) {
+        code = cm_BPlusDirEnumBulkStatNext(enump);
+        if (code)
+            return code;
+    }
 
     *entrypp = &enump->entry[enump->next++];
     if ( enump->next == enump->count ) {
@@ -2734,6 +2739,8 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 long
 cm_BPlusDirPeekNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 {
+    long code;
+
     if (enump == NULL || entrypp == NULL || enump->next >= enump->count) {
 	if (entrypp)
 	    *entrypp = NULL;
@@ -2742,8 +2749,11 @@ cm_BPlusDirPeekNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
     }
 
     if (enump->fetchStatus &&
-        !(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS))
-        cm_BPlusDirEnumBulkStatNext(enump);
+        !(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS)) {
+        code = cm_BPlusDirEnumBulkStatNext(enump);
+        if (code)
+            return code;
+    }
 
     *entrypp = &enump->entry[enump->next];
     if ( enump->next == enump->count ) {
