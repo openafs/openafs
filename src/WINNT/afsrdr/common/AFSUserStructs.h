@@ -524,6 +524,8 @@ typedef struct _AFS_FILE_UPDATE_CB
 typedef struct _AFS_FILE_UPDATE_RESULT_CB
 {
 
+    LARGE_INTEGER   ParentDataVersion;
+
     AFSDirEnumEntry DirEnum;
 
 } AFSFileUpdateResultCB;
