@@ -655,6 +655,11 @@ struct file_operations afs_dir_fops = {
   .open =	afs_linux_open,
   .release =	afs_linux_release,
   .llseek =	default_llseek,
+#ifdef HAVE_LINUX_NOOP_FSYNC
+  .fsync =	noop_fsync,
+#else
+  .fsync =	simple_sync_file,
+#endif
 };
 
 struct file_operations afs_file_fops = {

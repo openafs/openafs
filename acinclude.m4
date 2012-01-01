@@ -896,6 +896,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([zero_user_segments],
 				     [#include <linux/highmem.h>],
 				     [zero_user_segments(NULL, 0, 0, 0, 0);])
+		 AC_CHECK_LINUX_FUNC([noop_fsync],
+				     [#include <linux/fs.h>],
+				     [noop_fsync(NULL, 0, 0, 0);])
 
 		 dnl Consequences - things which get set as a result of the
 		 dnl                above tests
