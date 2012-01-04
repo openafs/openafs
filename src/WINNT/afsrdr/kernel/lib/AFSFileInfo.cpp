@@ -2130,20 +2130,6 @@ AFSSetRenameInfo( IN PIRP Irp)
                 try_return( ntStatus = STATUS_ACCESS_DENIED);
             }
         }
-        else
-        {
-
-            if( pSrcFcb->OpenHandleCount > 1)
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSSetRenameInfo Attempt to rename directory with open references %wZ\n",
-                              &pSrcCcb->DirectoryCB->NameInformation.FileName);
-
-                try_return( ntStatus = STATUS_ACCESS_DENIED);
-            }
-        }
 
         //
         // Resolve the target fileobject
