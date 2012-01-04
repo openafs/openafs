@@ -162,14 +162,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (IOCtl) Decrement handle count on Fcb %08lX Cnt %d\n",
-                              pFcb,
-                              pFcb->OpenHandleCount);
-
                 //
                 // Decrement the open child handle count
                 //
@@ -186,6 +178,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   pObjectInfo->ParentObjectInformation,
                                   pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
                 }
+
+                InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup (IOCtl) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              pFcb,
+                              pFcb->OpenHandleCount);
 
                 //
                 // And finally, release the Fcb if we acquired it.
@@ -291,14 +291,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (File) Decrement handle count on Fcb %08lX Cnt %d\n",
-                              pFcb,
-                              pFcb->OpenHandleCount);
-
                 if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
                 {
 
@@ -354,11 +346,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 }
 
                 //
-                // If the count has dropped to zero and there is a pending delete
-                // then delete the node
+                // If the count has dropped to one and there is a pending delete
+                // then delete the node.  The final count will be decremented just
+                // before the Fcb->NPFcb->Resource is released.
                 //
 
-                if( pFcb->OpenHandleCount == 0 &&
+                if( pFcb->OpenHandleCount == 1 &&
                     BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
                 {
 
@@ -520,7 +513,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                          &pCcb->AuthGroup);
                     }
 
-                    if( pFcb->OpenHandleCount == 0)
+                    if( pFcb->OpenHandleCount == 1)
                     {
 
                         //
@@ -590,6 +583,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
                 }
 
+                InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup (File) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              pFcb,
+                              pFcb->OpenHandleCount);
+
                 //
                 // And finally, release the Fcb if we acquired it.
                 //
@@ -639,14 +640,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (Dir) Decrement handle count on Fcb %08lX Cnt %d\n",
-                              pFcb,
-                              pFcb->OpenHandleCount);
-
                 if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
                 {
 
@@ -686,11 +679,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 }
 
                 //
-                // If the count has dropped to zero and there is a pending delete
-                // then delete the node
+                // If the count has dropped to one and there is a pending delete
+                // then delete the node.  The final count will be decremented just
+                // before the Fcb->NPFcb->Resource is released.
                 //
 
-                if( pFcb->OpenHandleCount == 0 &&
+                if( pFcb->OpenHandleCount == 1 &&
                     BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
                 {
 
@@ -871,6 +865,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
                 }
 
+                InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup (Dir) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              pFcb,
+                              pFcb->OpenHandleCount);
+
                 //
                 // And finally, release the Fcb if we acquired it.
                 //
@@ -904,14 +906,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 //
 
                 ASSERT( pFcb->OpenHandleCount != 0);
-
-                InterlockedDecrement( &pFcb->OpenHandleCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (MP/SL) Decrement handle count on Fcb %08lX Cnt %d\n",
-                              pFcb,
-                              pFcb->OpenHandleCount);
 
                 if( pFcb->ObjectInformation->ParentObjectInformation != NULL)
                 {
@@ -952,11 +946,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 }
 
                 //
-                // If the count has dropped to zero and there is a pending delete
-                // then delete the node
+                // If the count has dropped to one and there is a pending delete
+                // then delete the node.  The final count will be decremented just
+                // before the Fcb->NPFcb->Resource is released.
                 //
 
-                if( pFcb->OpenHandleCount == 0 &&
+                if( pFcb->OpenHandleCount == 1 &&
                     BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
                 {
 
@@ -1129,6 +1124,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
                 }
 
+                InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup (Share) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              pFcb,
+                              pFcb->OpenHandleCount);
+
                 //
                 // And finally, release the Fcb if we acquired it.
                 //
@@ -1152,14 +1155,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (Share) Decrement handle count on Fcb %08lX Cnt %d\n",
-                              pFcb,
-                              pFcb->OpenHandleCount);
-
                 //
                 // Decrement the open child handle count
                 //
@@ -1176,6 +1171,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   pObjectInfo->ParentObjectInformation,
                                   pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
                 }
+
+                InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup (MP/SL) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              pFcb,
+                              pFcb->OpenHandleCount);
 
                 //
                 // And finally, release the Fcb if we acquired it.
