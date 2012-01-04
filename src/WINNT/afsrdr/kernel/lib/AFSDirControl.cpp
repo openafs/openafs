@@ -223,26 +223,6 @@ AFSQueryDirectory( IN PIRP Irp)
                             TRUE);
 
             bReleaseFcb = TRUE;
-
-            //
-            // Tell the service to prime the cache of the directory content
-            //
-
-            ntStatus = AFSEnumerateDirectoryNoResponse( &pCcb->AuthGroup,
-                                                        &pFcb->ObjectInformation->FileId);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSQueryDirectory Enumerate directory failure for parent %wZ Mask %wZ Status %08lX\n",
-                              &pCcb->DirectoryCB->NameInformation.FileName,
-                              &pCcb->MaskName,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
         }
         else
         {
