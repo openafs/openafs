@@ -1796,7 +1796,9 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                                   pObjectInfo->ParentObjectInformation->FileId.Unique);
 
                     SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
                     pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+
                     pObjectInfo->ParentObjectInformation->Expiration.QuadPart = 0;
                 }
 

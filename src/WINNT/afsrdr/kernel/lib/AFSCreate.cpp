@@ -1486,7 +1486,7 @@ AFSOpenRoot( IN PIRP Irp,
             {
                 RtlStringFromGUID( *AuthGroup,
                                    &uniGUID);
-            }       
+            }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
@@ -2139,6 +2139,8 @@ try_exit:
                 //
 
                 SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
 
                 AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
             }

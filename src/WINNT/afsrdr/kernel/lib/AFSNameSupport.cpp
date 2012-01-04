@@ -195,8 +195,17 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                               pCurrentObject->FileId.Vnode,
                               pCurrentObject->FileId.Unique);
 
+                //
+                // Directory TreeLock should be exclusively held
+                //
+
+                AFSAcquireExcl( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                TRUE);
+
                 ntStatus = AFSVerifyEntry( AuthGroup,
                                            pDirEntry);
+
+                AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
@@ -319,8 +328,17 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       pCurrentObject->FileId.Vnode,
                                       pCurrentObject->FileId.Unique);
 
+                        //
+                        // Directory TreeLock should be exclusively held
+                        //
+
+                        AFSAcquireExcl( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                        TRUE);
+
                         ntStatus = AFSVerifyEntry( AuthGroup,
                                                    pDirEntry);
+
+                        AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                         if( !NT_SUCCESS( ntStatus))
                         {
@@ -1493,8 +1511,17 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       pParentDirEntry->ObjectInformation->FileId.Vnode,
                                       pParentDirEntry->ObjectInformation->FileId.Unique);
 
+                        //
+                        // Directory TreeLock should be exclusively held
+                        //
+
+                        AFSAcquireExcl( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                        TRUE);
+
                         ntStatus = AFSVerifyEntry( AuthGroup,
                                                    pParentDirEntry);
+
+                        AFSReleaseResource( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                         if( !NT_SUCCESS( ntStatus))
                         {
@@ -2044,24 +2071,79 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
 
         if( pExistingDirNode != NULL)
         {
+            if (AFSIsEqualFID( &pDirNode->ObjectInformation->FileId,
+                               &pExistingDirNode->ObjectInformation->FileId))
+            {
 
-            AFSDeleteDirEntry( ParentObjectInfo,
-                               pDirNode);
+                AFSDeleteDirEntry( ParentObjectInfo,
+                                   pDirNode);
 
-            InterlockedIncrement( &pExistingDirNode->OpenReferenceCount);
+                InterlockedIncrement( &pExistingDirNode->OpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCreateDirEntry Increment count on %wZ DE %p Cnt %d\n",
-                          &pExistingDirNode->NameInformation.FileName,
-                          pExistingDirNode,
-                          pExistingDirNode->OpenReferenceCount);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCreateDirEntry Increment count on %wZ DE %p Cnt %d\n",
+                              &pExistingDirNode->NameInformation.FileName,
+                              pExistingDirNode,
+                              pExistingDirNode->OpenReferenceCount);
 
-            *DirEntry = pExistingDirNode;
+                *DirEntry = pExistingDirNode;
 
-            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-            try_return( ntStatus = STATUS_SUCCESS);
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+            else
+            {
+
+                //
+                // Need to tear down this entry and rebuild it below
+                //
+
+                if( pExistingDirNode->OpenReferenceCount == 0)
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCreateDirEntry Different FIDs - Deleting DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                  pExistingDirNode,
+                                  &pExistingDirNode->NameInformation.FileName,
+                                  pExistingDirNode->ObjectInformation->FileId.Cell,
+                                  pExistingDirNode->ObjectInformation->FileId.Volume,
+                                  pExistingDirNode->ObjectInformation->FileId.Vnode,
+                                  pExistingDirNode->ObjectInformation->FileId.Unique,
+                                  pDirNode->ObjectInformation->FileId.Cell,
+                                  pDirNode->ObjectInformation->FileId.Volume,
+                                  pDirNode->ObjectInformation->FileId.Vnode,
+                                  pDirNode->ObjectInformation->FileId.Unique);
+
+                    AFSDeleteDirEntry( ParentObjectInfo,
+                                       pExistingDirNode);
+                }
+                else
+                {
+
+                    SetFlag( pExistingDirNode->Flags, AFS_DIR_ENTRY_DELETED);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCreateDirEntry Different FIDs - Removing DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                  pExistingDirNode,
+                                  &pExistingDirNode->NameInformation.FileName,
+                                  pExistingDirNode->ObjectInformation->FileId.Cell,
+                                  pExistingDirNode->ObjectInformation->FileId.Volume,
+                                  pExistingDirNode->ObjectInformation->FileId.Vnode,
+                                  pExistingDirNode->ObjectInformation->FileId.Unique,
+                                  pDirNode->ObjectInformation->FileId.Cell,
+                                  pDirNode->ObjectInformation->FileId.Volume,
+                                  pDirNode->ObjectInformation->FileId.Vnode,
+                                  pDirNode->ObjectInformation->FileId.Unique);
+
+                    AFSRemoveNameEntry( ParentObjectInfo,
+                                        pExistingDirNode);
+                }
+
+            }
         }
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2234,7 +2316,7 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInsertDirectoryNode Inserting entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lXStatus %08lX\n",
+                          "AFSInsertDirectoryNode Inserting entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                           DirEntry,
                           &DirEntry->NameInformation.FileName,
                           DirEntry->ObjectInformation->FileId.Cell,
@@ -2681,8 +2763,17 @@ AFSParseName( IN PIRP Irp,
                               pDirEntry->ObjectInformation->FileId.Vnode,
                               pDirEntry->ObjectInformation->FileId.Unique);
 
+                //
+                // Directory TreeLock should be exclusively held
+                //
+
+                AFSAcquireExcl( pDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                TRUE);
+
                 ntStatus = AFSVerifyEntry( AuthGroup,
                                            pDirEntry);
+
+                AFSReleaseResource( pDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
