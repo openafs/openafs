@@ -115,7 +115,8 @@ AFSParseMountPointTarget( IN  UNICODE_STRING *Target,
 
     // If a colon is not found, it means there is no cell
 
-    if ( Cell->Buffer[ Cell->Length / sizeof( WCHAR)] == L':')
+    if ( Cell->Length < Target->Length - sizeof( WCHAR) &&
+         Cell->Buffer[ Cell->Length / sizeof( WCHAR)] == L':')
     {
 
         Cell->MaximumLength = Cell->Length;
