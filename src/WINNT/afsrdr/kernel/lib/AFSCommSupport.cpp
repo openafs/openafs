@@ -60,6 +60,8 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
     __Enter
     {
 
+        ASSERT( ExIsResourceAcquiredExclusiveLite( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.TreeLock));
+
         uniGUID.Length = 0;
         uniGUID.MaximumLength = 0;
         uniGUID.Buffer = NULL;
@@ -125,18 +127,31 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
         {
 
             //
-            // Go and retrieve the directory contents
+            // If the enumeration handle is -1 then we are done
             //
 
-            ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
-                                          ulRequestFlags,
-                                          AuthGroup,
-                                          NULL,
-                                          &ObjectInfoCB->FileId,
-                                          (void *)pDirQueryCB,
-                                          sizeof( AFSDirQueryCB),
-                                          pBuffer,
-                                          &ulResultLen);
+            if( ((ULONG)-1) == pDirQueryCB->EnumHandle )
+            {
+
+                ntStatus = STATUS_NO_MORE_ENTRIES;
+            }
+            else
+            {
+
+                //
+                // Go and retrieve the directory contents
+                //
+
+                ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
+                                              ulRequestFlags,
+                                              AuthGroup,
+                                              NULL,
+                                              &ObjectInfoCB->FileId,
+                                              (void *)pDirQueryCB,
+                                              sizeof( AFSDirQueryCB),
+                                              pBuffer,
+                                              &ulResultLen);
+            }
 
             if( ntStatus != STATUS_SUCCESS ||
                 ulResultLen == 0)
@@ -147,13 +162,51 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                 {
 
                     ntStatus = STATUS_SUCCESS;
+
+                    pDirEnumResponse = (AFSDirEnumResp *)pBuffer;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Directory Complete FID %08lX-%08lX-%08lX-%08lX Snapshot-DV %08lX:%08lX Current-DV %08lX:%08lX Status %08lX\n",
+                                  ObjectInfoCB->FileId.Cell,
+                                  ObjectInfoCB->FileId.Volume,
+                                  ObjectInfoCB->FileId.Vnode,
+                                  ObjectInfoCB->FileId.Unique,
+                                  pDirEnumResponse->SnapshotDataVersion.HighPart,
+                                  pDirEnumResponse->SnapshotDataVersion.LowPart,
+                                  pDirEnumResponse->CurrentDataVersion.HighPart,
+                                  pDirEnumResponse->CurrentDataVersion.LowPart,
+                                  ntStatus);
+
+                    ObjectInfoCB->DataVersion = pDirEnumResponse->SnapshotDataVersion;
+
+                    if ( pDirEnumResponse->SnapshotDataVersion.QuadPart != pDirEnumResponse->CurrentDataVersion.QuadPart )
+                    {
+
+                        SetFlag( ObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                        ObjectInfoCB->DataVersion.QuadPart = (ULONGLONG)-1;
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSEnumerateDirectory Force Verify due to DV change during enumeration FID %08lX-%08lX-%08lX-%08lX\n",
+                                      ObjectInfoCB->FileId.Cell,
+                                      ObjectInfoCB->FileId.Volume,
+                                      ObjectInfoCB->FileId.Vnode,
+                                      ObjectInfoCB->FileId.Unique);
+                    }
                 }
                 else
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSEnumerateDirectory Failed to enumerate directory Status %08lX\n",
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Failed to enumerate directory FID %08lX-%08lX-%08lX-%08lX AuthGroup %wZ Status %08lX\n",
+                                  ObjectInfoCB->FileId.Cell,
+                                  ObjectInfoCB->FileId.Volume,
+                                  ObjectInfoCB->FileId.Vnode,
+                                  ObjectInfoCB->FileId.Unique,
+                                  &uniGUID,
                                   ntStatus);
                 }
 
@@ -163,6 +216,18 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
             pDirEnumResponse = (AFSDirEnumResp *)pBuffer;
 
             pCurrentDirEntry = (AFSDirEnumEntry *)pDirEnumResponse->Entry;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSEnumerateDirectory Enumerating FID %08lX-%08lX-%08lX-%08lX Snapshot-DV %08lX:%08lX Current-DV %08lX:%08lX\n",
+                          ObjectInfoCB->FileId.Cell,
+                          ObjectInfoCB->FileId.Volume,
+                          ObjectInfoCB->FileId.Vnode,
+                          ObjectInfoCB->FileId.Unique,
+                          pDirEnumResponse->SnapshotDataVersion.HighPart,
+                          pDirEnumResponse->SnapshotDataVersion.LowPart,
+                          pDirEnumResponse->CurrentDataVersion.HighPart,
+                          pDirEnumResponse->CurrentDataVersion.LowPart);
 
             //
             // Remove the leading header from the processed length
@@ -200,25 +265,114 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                 {
 
                     //
-                    // Duplicate entry, skip it
+                    // Check that the FIDs are the same
                     //
 
-                    ulEntryLength = QuadAlign( sizeof( AFSDirEnumEntry) +
-                                                    uniDirName.Length +
-                                                    uniTargetName.Length);
-
-                    pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
-
-                    if( ulResultLen >= ulEntryLength)
+                    if( AFSIsEqualFID( &pCurrentDirEntry->FileId,
+                                       &pDirNode->ObjectInformation->FileId))
                     {
-                        ulResultLen -= ulEntryLength;
+
+                        //
+                        // Duplicate entry, skip it
+                        //
+
+                        ulEntryLength = QuadAlign( sizeof( AFSDirEnumEntry) +
+                                                   uniDirName.Length +
+                                                   uniTargetName.Length);
+
+                        pCurrentDirEntry = (AFSDirEnumEntry *)((char *)pCurrentDirEntry + ulEntryLength);
+
+                        if( ulResultLen >= ulEntryLength)
+                        {
+                            ulResultLen -= ulEntryLength;
+                        }
+                        else
+                        {
+                            ulResultLen = 0;
+                        }
+
+                        //
+                        // Update the metadata for the entry
+                        //
+
+                        if( pDirNode->ObjectInformation->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
+                        {
+
+                            AFSUpdateMetaData( pDirNode,
+                                               pCurrentDirEntry);
+
+                            if( pDirNode->ObjectInformation->FileType == AFS_FILE_TYPE_DIRECTORY)
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSEnumerateDirectory Setting VERIFY on entry %wZ for FID %08lX-%08lX-%08lX-%08lX\n",
+                                              &uniDirName,
+                                              pDirNode->ObjectInformation->FileId.Cell,
+                                              pDirNode->ObjectInformation->FileId.Volume,
+                                              pDirNode->ObjectInformation->FileId.Vnode,
+                                              pDirNode->ObjectInformation->FileId.Unique);
+
+                                SetFlag( pDirNode->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                                pDirNode->ObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                            }
+                        }
+
+                        continue;
                     }
                     else
                     {
-                        ulResultLen = 0;
-                    }
 
-                    continue;
+                        //
+                        // Need to tear down this entry and rebuild it below
+                        //
+
+                        if( pDirNode->OpenReferenceCount == 0)
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSEnumerateDirectory Different FIDs - Deleting DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                          pDirNode,
+                                          &pDirNode->NameInformation.FileName,
+                                          pDirNode->ObjectInformation->FileId.Cell,
+                                          pDirNode->ObjectInformation->FileId.Volume,
+                                          pDirNode->ObjectInformation->FileId.Vnode,
+                                          pDirNode->ObjectInformation->FileId.Unique,
+                                          pCurrentDirEntry->FileId.Cell,
+                                          pCurrentDirEntry->FileId.Volume,
+                                          pCurrentDirEntry->FileId.Vnode,
+                                          pCurrentDirEntry->FileId.Unique);
+
+                            AFSDeleteDirEntry( ObjectInfoCB,
+                                               pDirNode);
+                        }
+                        else
+                        {
+
+                            SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_DELETED);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSEnumerateDirectory Different FIDs - Removing DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                          pDirNode,
+                                          &pDirNode->NameInformation.FileName,
+                                          pDirNode->ObjectInformation->FileId.Cell,
+                                          pDirNode->ObjectInformation->FileId.Volume,
+                                          pDirNode->ObjectInformation->FileId.Vnode,
+                                          pDirNode->ObjectInformation->FileId.Unique,
+                                          pCurrentDirEntry->FileId.Cell,
+                                          pCurrentDirEntry->FileId.Volume,
+                                          pCurrentDirEntry->FileId.Vnode,
+                                          pCurrentDirEntry->FileId.Unique);
+
+                            AFSRemoveNameEntry( ObjectInfoCB,
+                                                pDirNode);
+                        }
+
+                        pDirNode = NULL;
+                    }
                 }
 
                 pDirNode = AFSInitDirEntry( ObjectInfoCB,
@@ -235,13 +389,33 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                     break;
                 }
 
+                AFSUpdateMetaData( pDirNode,
+                                   pCurrentDirEntry);
+
+                if( ObjectInfoCB->FileType == AFS_FILE_TYPE_DIRECTORY)
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSEnumerateDirectory Setting VERIFY on entry %wZ for FID %08lX-%08lX-%08lX-%08lX\n",
+                                  &uniDirName,
+                                  ObjectInfoCB->FileId.Cell,
+                                  ObjectInfoCB->FileId.Volume,
+                                  ObjectInfoCB->FileId.Vnode,
+                                  ObjectInfoCB->FileId.Unique);
+
+                    SetFlag( ObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                    ObjectInfoCB->DataVersion.QuadPart = (ULONGLONG)-1;
+                }
+
                 //
                 // Set up the entry length
                 //
 
                 ulEntryLength = QuadAlign( sizeof( AFSDirEnumEntry) +
-                                                    pCurrentDirEntry->FileNameLength +
-                                                    pCurrentDirEntry->TargetNameLength);
+                                           pCurrentDirEntry->FileNameLength +
+                                           pCurrentDirEntry->TargetNameLength);
 
                 //
                 // Init the short name if we have one
@@ -297,8 +471,6 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                 //
                 // Insert the node into the name tree
                 //
-
-                ASSERT( ExIsResourceAcquiredExclusiveLite( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.TreeLock));
 
                 if( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead == NULL)
                 {
@@ -469,16 +641,6 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEnumerateDirectory EnumHandle %08lX\n",
                           pDirQueryCB->EnumHandle);
-
-            //
-            // If the enumeration handle is -1 then we are done
-            //
-
-            if( ((ULONG)-1) == pDirQueryCB->EnumHandle )
-            {
-
-                break;
-            }
         }
 
 try_exit:
@@ -591,6 +753,8 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
     __Enter
     {
 
+        ASSERT( ExIsResourceAcquiredExclusiveLite( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.TreeLock));
+
         uniGUID.Length = 0;
         uniGUID.MaximumLength = 0;
         uniGUID.Buffer = NULL;
@@ -650,18 +814,31 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
         {
 
             //
-            // Go and retrieve the directory contents
+            // If the enumeration handle is -1 then we are done
             //
 
-            ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
-                                          ulRequestFlags,
-                                          AuthGroup,
-                                          NULL,
-                                          &ObjectInfoCB->FileId,
-                                          (void *)pDirQueryCB,
-                                          sizeof( AFSDirQueryCB),
-                                          pBuffer,
-                                          &ulResultLen);
+            if( ((ULONG)-1) == pDirQueryCB->EnumHandle )
+            {
+
+                ntStatus = STATUS_NO_MORE_ENTRIES;
+            }
+            else
+            {
+
+                //
+                // Go and retrieve the directory contents
+                //
+
+                ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_DIR_ENUM,
+                                              ulRequestFlags,
+                                              AuthGroup,
+                                              NULL,
+                                              &ObjectInfoCB->FileId,
+                                              (void *)pDirQueryCB,
+                                              sizeof( AFSDirQueryCB),
+                                              pBuffer,
+                                              &ulResultLen);
+            }
 
             if( ntStatus != STATUS_SUCCESS ||
                 ulResultLen == 0)
@@ -671,14 +848,52 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     ntStatus == STATUS_NO_MORE_ENTRIES)
                 {
 
+                    pDirEnumResponse = (AFSDirEnumResp *)pBuffer;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent Directory Complete FID %08lX-%08lX-%08lX-%08lX Snapshot-DV %08lX:%08lX Current-DV %08lX:%08lX Status %08lX\n",
+                                  ObjectInfoCB->FileId.Cell,
+                                  ObjectInfoCB->FileId.Volume,
+                                  ObjectInfoCB->FileId.Vnode,
+                                  ObjectInfoCB->FileId.Unique,
+                                  pDirEnumResponse->SnapshotDataVersion.HighPart,
+                                  pDirEnumResponse->SnapshotDataVersion.LowPart,
+                                  pDirEnumResponse->CurrentDataVersion.HighPart,
+                                  pDirEnumResponse->CurrentDataVersion.LowPart,
+                                  ntStatus);
+
                     ntStatus = STATUS_SUCCESS;
+
+                    ObjectInfoCB->DataVersion = pDirEnumResponse->SnapshotDataVersion;
+
+                    if ( pDirEnumResponse->SnapshotDataVersion.QuadPart != pDirEnumResponse->CurrentDataVersion.QuadPart )
+                    {
+
+                        SetFlag( ObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                        pDirNode->ObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSVerifyDirectoryContent Force Verify due to DV change during enumeration FID %08lX-%08lX-%08lX-%08lX\n",
+                                      ObjectInfoCB->FileId.Cell,
+                                      ObjectInfoCB->FileId.Volume,
+                                      ObjectInfoCB->FileId.Vnode,
+                                      ObjectInfoCB->FileId.Unique);
+                    }
                 }
                 else
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSVerifyDirectoryContent Failed to enumerate directory Status %08lX\n",
+                                  "AFSVerifyDirectoryContent Failed to enumerate directory FID %08lX-%08lX-%08lX-%08lX AuthGroup %wZ Status %08lX\n",
+                                  ObjectInfoCB->FileId.Cell,
+                                  ObjectInfoCB->FileId.Volume,
+                                  ObjectInfoCB->FileId.Vnode,
+                                  ObjectInfoCB->FileId.Unique,
+                                  &uniGUID,
                                   ntStatus);
                 }
 
@@ -688,6 +903,18 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
             pDirEnumResponse = (AFSDirEnumResp *)pBuffer;
 
             pCurrentDirEntry = (AFSDirEnumEntry *)pDirEnumResponse->Entry;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSVerifyDirectoryContent EnumResponse FID %08lX-%08lX-%08lX-%08lX Snapshot-DV %08lX:%08lX Current-DV %08lX:%08lX\n",
+                          ObjectInfoCB->FileId.Cell,
+                          ObjectInfoCB->FileId.Volume,
+                          ObjectInfoCB->FileId.Vnode,
+                          ObjectInfoCB->FileId.Unique,
+                          pDirEnumResponse->SnapshotDataVersion.HighPart,
+                          pDirEnumResponse->SnapshotDataVersion.LowPart,
+                          pDirEnumResponse->CurrentDataVersion.HighPart,
+                          pDirEnumResponse->CurrentDataVersion.LowPart);
 
             //
             // Remove the leading header from the processed length
@@ -716,8 +943,6 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                 ulCRC = AFSGenerateCRC( &uniDirName,
                                         FALSE);
-
-                ASSERT( ExIsResourceAcquiredExclusiveLite( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.TreeLock));
 
                 AFSLocateCaseSensitiveDirEntry( ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                                 ulCRC,
@@ -769,9 +994,13 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                             {
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name %S New short name %S\n",
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) parent FID %08lX-%08lX-%08lX-%08lX old short name %S New short name %S\n",
                                               &uniDirName,
                                               &pDirNode->NameInformation.FileName,
+                                              ObjectInfoCB->FileId.Cell,
+                                              ObjectInfoCB->FileId.Volume,
+                                              ObjectInfoCB->FileId.Vnode,
+                                              ObjectInfoCB->FileId.Unique,
                                               pDirNode->NameInformation.ShortName,
                                               pCurrentDirEntry->ShortName);
                             }
@@ -780,9 +1009,13 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                             {
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name %S New short name NULL\n",
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) parent FID %08lX-%08lX-%08lX-%08lX old short name %S New short name NULL\n",
                                               &uniDirName,
                                               &pDirNode->NameInformation.FileName,
+                                              ObjectInfoCB->FileId.Cell,
+                                              ObjectInfoCB->FileId.Volume,
+                                              ObjectInfoCB->FileId.Vnode,
+                                              ObjectInfoCB->FileId.Unique,
                                               pDirNode->NameInformation.ShortName);
                             }
                             else if( pCurrentDirEntry->ShortNameLength > 0 &&
@@ -790,36 +1023,33 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                             {
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name NULL New short name %S\n",
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) parent FID %08lX-%08lX-%08lX-%08lX old short name NULL New short name %S\n",
                                               &uniDirName,
                                               &pDirNode->NameInformation.FileName,
+                                              ObjectInfoCB->FileId.Cell,
+                                              ObjectInfoCB->FileId.Volume,
+                                              ObjectInfoCB->FileId.Vnode,
+                                              ObjectInfoCB->FileId.Unique,
                                               pCurrentDirEntry->ShortName);
                             }
                             else
                             {
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) old short name NULL New short name NULL\n",
+                                              "AFSVerifyDirectoryContent Verified entry %wZ (%wZ) parent FID %08lX-%08lX-%08lX-%08lX old short name NULL New short name NULL\n",
                                               &uniDirName,
-                                              &pDirNode->NameInformation.FileName);
+                                              &pDirNode->NameInformation.FileName,
+                                              ObjectInfoCB->FileId.Cell,
+                                              ObjectInfoCB->FileId.Volume,
+                                              ObjectInfoCB->FileId.Vnode,
+                                              ObjectInfoCB->FileId.Unique);
                             }
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSVerifyDirectoryContent Verified entry %wZ for parent FID %08lX-%08lX-%08lX-%08lX\n",
-                                          &uniDirName,
-                                          ObjectInfoCB->FileId.Cell,
-                                          ObjectInfoCB->FileId.Volume,
-                                          ObjectInfoCB->FileId.Vnode,
-                                          ObjectInfoCB->FileId.Unique);
-
 
                             //
                             // Update the metadata for the entry
                             //
 
-                            if( pObjectInfo->DataVersion.QuadPart == 0 ||
-                                pObjectInfo->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
+                            if( pObjectInfo->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
                             {
 
                                 AFSUpdateMetaData( pDirNode,
@@ -838,8 +1068,8 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                                                   pObjectInfo->FileId.Unique);
 
                                     SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
                                     pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
-                                    pObjectInfo->Expiration.QuadPart = 0;
                                 }
                             }
 
@@ -902,7 +1132,7 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                         SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_DELETED);
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      AFS_TRACE_LEVEL_WARNING,
                                       "AFSVerifyDirectoryContent Different FIDs - removing DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
                                       pDirNode,
                                       &pDirNode->NameInformation.FileName,
@@ -919,6 +1149,18 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                                             pDirNode);
                     }
                 }
+                else
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent New entry %wZ for parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                  &uniDirName,
+                                  ObjectInfoCB->FileId.Cell,
+                                  ObjectInfoCB->FileId.Volume,
+                                  ObjectInfoCB->FileId.Vnode,
+                                  ObjectInfoCB->FileId.Unique);
+                }
 
                 pDirNode = AFSInitDirEntry( ObjectInfoCB,
                                             &uniDirName,
@@ -932,6 +1174,26 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
                     break;
+                }
+
+                AFSUpdateMetaData( pDirNode,
+                                   pCurrentDirEntry);
+
+                if( ObjectInfoCB->FileType == AFS_FILE_TYPE_DIRECTORY)
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSVerifyDirectoryContent Setting VERIFY on entry %wZ for FID %08lX-%08lX-%08lX-%08lX\n",
+                                  &uniDirName,
+                                  ObjectInfoCB->FileId.Cell,
+                                  ObjectInfoCB->FileId.Volume,
+                                  ObjectInfoCB->FileId.Vnode,
+                                  ObjectInfoCB->FileId.Unique);
+
+                    SetFlag( ObjectInfoCB->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                    ObjectInfoCB->DataVersion.QuadPart = (ULONGLONG)-1;
                 }
 
                 //
@@ -1160,6 +1422,8 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     }
                 }
 
+                SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID);
+
                 //
                 // Next dir entry
                 //
@@ -1184,16 +1448,6 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
             //
 
             pDirQueryCB->EnumHandle = pDirEnumResponse->EnumHandle;
-
-            //
-            // If the enumeration handle is -1 then we are done
-            //
-
-            if( ((ULONG)-1) == pDirQueryCB->EnumHandle )
-            {
-
-                break;
-            }
         }
 
 try_exit:
@@ -1302,14 +1556,22 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
         // The check is to ensure the DV has been modified
         //
 
-        if( liOldDataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1 ||
-            liOldDataVersion.QuadPart != ParentObjectInfo->DataVersion.QuadPart)
+        AFSAcquireExcl( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        if( ParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSNotifyFileCreate Raced with an invalidate call and a re-enumeration for entry %wZ\n",
-                          FileName);
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSNotifyFileCreate Raced with an invalidate call and a re-enumeration for entry %wZ ParentFID %08lX-%08lX-%08lX-%08lX Version (%08lX:%08lX != %08lX:%08lX - 1)\n",
+                          FileName,
+                          ParentObjectInfo->FileId.Cell,
+                          ParentObjectInfo->FileId.Volume,
+                          ParentObjectInfo->FileId.Vnode,
+                          ParentObjectInfo->FileId.Unique,
+                          ParentObjectInfo->DataVersion.QuadPart,
+                          pResultCB->ParentDataVersion.QuadPart);
 
             //
             // We raced so go and lookup the directory entry in the parent
@@ -1317,9 +1579,6 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
 
             ulCRC = AFSGenerateCRC( FileName,
                                     FALSE);
-
-            AFSAcquireShared( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                              TRUE);
 
             AFSLocateCaseSensitiveDirEntry( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
                                             ulCRC,
@@ -1330,26 +1589,97 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSNotifyFileCreate Located dir entry for file %wZ\n",
+                              "AFSNotifyFileCreate Located dir entry %p for file %wZ\n",
+                              pDirNode,
                               FileName);
 
-                InterlockedIncrement( &pDirNode->OpenReferenceCount);
+                if ( AFSIsEqualFID( &pDirNode->ObjectInformation->FileId,
+                                    &pResultCB->DirEnum.FileId))
+                {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSNotifyFileCreate Increment count on %wZ DE %p Cnt %d\n",
-                              &pDirNode->NameInformation.FileName,
-                              pDirNode,
-                              pDirNode->OpenReferenceCount);
+                    InterlockedIncrement( &pDirNode->OpenReferenceCount);
 
-                *DirNode = pDirNode;
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSNotifyFileCreate Increment count on %wZ DE %p Cnt %d\n",
+                                  &pDirNode->NameInformation.FileName,
+                                  pDirNode,
+                                  pDirNode->OpenReferenceCount);
 
-                AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                    *DirNode = pDirNode;
 
-                try_return( ntStatus = STATUS_REPARSE);
+                    AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                    try_return( ntStatus = STATUS_REPARSE);
+                }
+                else
+                {
+
+                    //
+                    // We found an entry that matches the desired name but it is not the
+                    // same as the one that was created for us by the file server.
+                    //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSNotifyFileCreate Found matching name entry %wZ DE %p FID %08lX-%08lX-%08lX-%08lX != FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileName,
+                                  pDirNode,
+                                  pDirNode->ObjectInformation->FileId.Cell,
+                                  pDirNode->ObjectInformation->FileId.Volume,
+                                  pDirNode->ObjectInformation->FileId.Vnode,
+                                  pDirNode->ObjectInformation->FileId.Unique,
+                                  pResultCB->DirEnum.FileId.Cell,
+                                  pResultCB->DirEnum.FileId.Volume,
+                                  pResultCB->DirEnum.FileId.Vnode,
+                                  pResultCB->DirEnum.FileId.Unique);
+
+                    if( pDirNode->OpenReferenceCount == 0)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSNotifyFileCreate Different FIDs - Deleting DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName,
+                                      pDirNode->ObjectInformation->FileId.Cell,
+                                      pDirNode->ObjectInformation->FileId.Volume,
+                                      pDirNode->ObjectInformation->FileId.Vnode,
+                                      pDirNode->ObjectInformation->FileId.Unique,
+                                      pResultCB->DirEnum.FileId.Cell,
+                                      pResultCB->DirEnum.FileId.Volume,
+                                      pResultCB->DirEnum.FileId.Vnode,
+                                      pResultCB->DirEnum.FileId.Unique);
+
+                        AFSDeleteDirEntry( ParentObjectInfo,
+                                           pDirNode);
+                    }
+                    else
+                    {
+
+                        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_DELETED);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSNotifyFileCreate Different FIDs - Removing DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName,
+                                      pDirNode->ObjectInformation->FileId.Cell,
+                                      pDirNode->ObjectInformation->FileId.Volume,
+                                      pDirNode->ObjectInformation->FileId.Vnode,
+                                      pDirNode->ObjectInformation->FileId.Unique,
+                                      pResultCB->DirEnum.FileId.Cell,
+                                      pResultCB->DirEnum.FileId.Volume,
+                                      pResultCB->DirEnum.FileId.Vnode,
+                                      pResultCB->DirEnum.FileId.Unique);
+
+                        AFSRemoveNameEntry( ParentObjectInfo,
+                                            pDirNode);
+                    }
+
+                    pDirNode = NULL;
+                }
             }
-
-            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
             //
             // We are unsure of our current data so set the verify flag. It may already be set
@@ -1368,7 +1698,19 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
             //
 
             ParentObjectInfo->DataVersion = pResultCB->ParentDataVersion;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyFileCreate entry %wZ ParentFID %08lX-%08lX-%08lX-%08lX Version %08lX:%08lX\n",
+                          FileName,
+                          ParentObjectInfo->FileId.Cell,
+                          ParentObjectInfo->FileId.Volume,
+                          ParentObjectInfo->FileId.Vnode,
+                          ParentObjectInfo->FileId.Unique,
+                          ParentObjectInfo->DataVersion.QuadPart);
         }
+
+        AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1591,11 +1933,11 @@ AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
             try_return( ntStatus);
         }
 
-        if( !CheckOnly)
+        if( CheckOnly)
         {
 
             //
-            // Update the parent data version
+            // Validate the parent data version
             //
 
             if( DirectoryCB->ObjectInformation->ParentObjectInformation->DataVersion.QuadPart != stDeleteResult.ParentDataVersion.QuadPart)
@@ -1603,8 +1945,39 @@ AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
 
                 SetFlag( DirectoryCB->ObjectInformation->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
+                DirectoryCB->ObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+            }
+        }
+        else
+        {
+
+            //
+            // Update the parent data version
+            //
+
+            if( DirectoryCB->ObjectInformation->ParentObjectInformation->DataVersion.QuadPart != stDeleteResult.ParentDataVersion.QuadPart - 1)
+            {
+
+                SetFlag( DirectoryCB->ObjectInformation->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                DirectoryCB->ObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+            }
+            else
+            {
+
+                //
+                // TODO -- The entry must be removed from the directory at which point the
+                // Directory data version number can be updated.  Until then we must force
+                // a verification.
+                //
+                // DirectoryCB->ObjectInformation->ParentObjectInformation->DataVersion.QuadPart = stDeleteResult.ParentDataVersion.QuadPart;
+                //
+
+                SetFlag( DirectoryCB->ObjectInformation->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
                 DirectoryCB->ObjectInformation->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
             }
+
         }
 
 try_exit:
@@ -1697,9 +2070,31 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
         // Update the information from the returned data
         //
 
-        ParentObjectInfo->DataVersion = pRenameResultCB->SourceParentDataVersion;
+        if ( ParentObjectInfo->DataVersion.QuadPart == pRenameResultCB->SourceParentDataVersion.QuadPart - 1)
+        {
 
-        TargetParentObjectInfo->DataVersion = pRenameResultCB->TargetParentDataVersion;
+            ParentObjectInfo->DataVersion = pRenameResultCB->SourceParentDataVersion;
+        }
+        else
+        {
+
+            SetFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            ParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+        }
+
+        if ( TargetParentObjectInfo->DataVersion.QuadPart == pRenameResultCB->TargetParentDataVersion.QuadPart - 1)
+        {
+
+            TargetParentObjectInfo->DataVersion = pRenameResultCB->TargetParentDataVersion;
+        }
+        else
+        {
+
+            SetFlag( TargetParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            TargetParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+        }
 
         //
         // Move over the short name
@@ -1855,10 +2250,25 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
                 {
 
                     SetFlag( ObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                    ObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
                 }
             }
 
             try_return( ntStatus);
+        }
+
+        //
+        // Validate the parent data version
+        //
+
+        if ( ObjectInfo->ParentObjectInformation != NULL &&
+             ObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pEvalResultCB->ParentDataVersion.QuadPart)
+        {
+
+            SetFlag( ObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            ObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
         }
 
         //
@@ -1961,10 +2371,26 @@ AFSEvaluateTargetByName( IN GUID *AuthGroup,
 
             if( ntStatus == STATUS_OBJECT_PATH_INVALID)
             {
+
                 SetFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                ParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
             }
 
             try_return( ntStatus);
+        }
+
+        //
+        // Validate the parent data version
+        //
+
+        if ( ParentObjectInfo != NULL &&
+             ParentObjectInfo->DataVersion.QuadPart != pEvalResultCB->ParentDataVersion.QuadPart)
+        {
+
+            SetFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            ParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
         }
 
         //
