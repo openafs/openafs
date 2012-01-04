@@ -361,7 +361,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     if( pDirEntry->NameInformation.TargetName.Length == 0)
                     {
 
-                        ntStatus = STATUS_ACCESS_DENIED;
+                        ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
@@ -845,7 +845,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                         bReleaseCurrentVolume = FALSE;
 
-                        try_return( ntStatus = STATUS_ACCESS_DENIED);
+                        try_return( ntStatus);
                     }
 
                     ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
@@ -3915,7 +3915,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
                               DirectoryCB->ObjectInformation->FileId.Vnode,
                               DirectoryCB->ObjectInformation->FileId.Unique);
 
-                try_return( ntStatus = STATUS_ACCESS_DENIED);
+                try_return( ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED);
             }
 
             AFSAcquireExcl( &DirectoryCB->NonPaged->Lock,
@@ -4298,7 +4298,7 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
                 if( NT_SUCCESS( ntStatus))
                 {
 
-                    ntStatus = STATUS_ACCESS_DENIED;
+                    ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
                 }
 
                 try_return( ntStatus);

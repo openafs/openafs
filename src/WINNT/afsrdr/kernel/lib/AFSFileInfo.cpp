@@ -565,7 +565,7 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                           "AFSSetFileInfo Request failed due to read only volume\n",
                           Irp);
 
-            try_return( ntStatus = STATUS_ACCESS_DENIED);
+            try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
         }
 
         if( pFcb->Header.NodeTypeCode == AFS_INVALID_FCB &&

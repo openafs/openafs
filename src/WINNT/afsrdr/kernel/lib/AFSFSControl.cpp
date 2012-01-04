@@ -412,7 +412,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                         if( pCcb->DirectoryCB->NameInformation.TargetName.Length == 0)
                         {
 
-                            ntStatus = STATUS_ACCESS_DENIED;
+                            ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
 
                             break;
                         }
@@ -451,7 +451,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                         if( pCcb->DirectoryCB->NameInformation.TargetName.Length == 0)
                         {
-                            ntStatus = STATUS_ACCESS_DENIED;
+                            ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
 
                             break;
                         }
@@ -505,7 +505,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                         if( pCcb->DirectoryCB->NameInformation.TargetName.Length == 0)
                         {
 
-                            ntStatus = STATUS_ACCESS_DENIED;
+                            ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
 
                             break;
                         }

@@ -1779,7 +1779,7 @@ AFSProcessCreate( IN PIRP               Irp,
                           "AFSProcessCreate Request failed due to read only volume %wZ\n",
                           FullFileName);
 
-            try_return( ntStatus = STATUS_ACCESS_DENIED);
+            try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
         }
 
         pParentObjectInfo = ParentDirCB->ObjectInformation;
@@ -3006,7 +3006,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                           Irp,
                           &DirectoryCB->NameInformation.FileName);
 
-            try_return( ntStatus = STATUS_ACCESS_DENIED);
+            try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
         }
 
         pParentObjectInfo = ParentDirCB->ObjectInformation;

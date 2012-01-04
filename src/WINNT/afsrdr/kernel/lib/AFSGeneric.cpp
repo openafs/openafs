@@ -5658,7 +5658,7 @@ AFSRetrieveFileAttributes( IN AFSDirectoryCB *ParentDirectoryCB,
                 if( pDirEntry != NULL)
                 {
 
-                    ntStatus = STATUS_ACCESS_DENIED;
+                    ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
                 }
 
                 try_return( ntStatus);
@@ -6331,7 +6331,7 @@ AFSEvaluateRootEntry( IN AFSDirectoryCB *DirectoryCB,
                 if( pDirEntry != NULL)
                 {
 
-                    ntStatus = STATUS_ACCESS_DENIED;
+                    ntStatus = STATUS_REPARSE_POINT_NOT_RESOLVED;
                 }
 
                 try_return( ntStatus);
