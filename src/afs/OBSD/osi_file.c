@@ -164,7 +164,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32,
 		   (unsigned int) resid, ICL_TYPE_INT32, code);
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     return code;
@@ -199,7 +199,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	    afile->size = afile->offset;
     } else {
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
 
