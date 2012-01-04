@@ -146,6 +146,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     GUID                stAuthGroup;
     ULONG               ulNameProcessingFlags = 0;
     BOOLEAN             bOpenedReparsePoint = FALSE;
+    LONG                lCount;
 
     __Enter
     {
@@ -364,15 +365,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               "AFSCommonCreate Failed to open root Status %08lX\n",
                               ntStatus);
 
-                InterlockedDecrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement1 count on &wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Decrement1 count on &wZ DE %p Ccb %p Cnt %d\n",
                               &AFSGlobalRoot->DirectoryCB->NameInformation.FileName,
                               AFSGlobalRoot->DirectoryCB,
                               NULL,
-                              AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+                              lCount);
             }
 
             try_return( ntStatus);
@@ -568,15 +569,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 // Perform in this order to prevent thrashing
                 //
 
-                InterlockedIncrement( &pParentDirectoryCB->OpenReferenceCount);
+                lCount = InterlockedIncrement( &pParentDirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Increment1 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pParentDirectoryCB->NameInformation.FileName,
                               pParentDirectoryCB,
                               NULL,
-                              pParentDirectoryCB->OpenReferenceCount);
+                              lCount);
 
                 //
                 // Do NOT decrement the reference count on the pDirectoryCB yet.
@@ -610,15 +611,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 //
                 // It is now safe to drop the Reference Count
                 //
-                InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pDirectoryCB->NameInformation.FileName,
                               pDirectoryCB,
                               NULL,
-                              pDirectoryCB->OpenReferenceCount);
+                              lCount);
             }
 
             if( !NT_SUCCESS( ntStatus))
@@ -634,15 +635,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 // Decrement the reference on the parent
                 //
 
-                InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement3 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Decrement3 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pParentDirectoryCB->NameInformation.FileName,
                               pParentDirectoryCB,
                               NULL,
-                              pParentDirectoryCB->OpenReferenceCount);
+                              lCount);
             }
 
             try_return( ntStatus);
@@ -703,15 +704,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                   &pDirectoryCB->NameInformation.FileName,
                                   ntStatus);
 
-                    InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCreate Decrement4 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  "AFSCommonCreate Decrement4 count on %wZ DE %p Ccb %p Cnt %d\n",
                                   &pDirectoryCB->NameInformation.FileName,
                                   pDirectoryCB,
                                   NULL,
-                                  pDirectoryCB->OpenReferenceCount);
+                                  lCount);
                 }
                 else
                 {
@@ -725,7 +726,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCreate Decrement5 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  "AFSCommonCreate Decrement5 count on %wZ DE %p Ccb %p Cnt %d\n",
                                   &pParentDirectoryCB->NameInformation.FileName,
                                   pParentDirectoryCB,
                                   NULL,
@@ -764,7 +765,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             // Dereference the parent entry
             //
 
-            InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -772,7 +773,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                           &pParentDirectoryCB->NameInformation.FileName,
                           pParentDirectoryCB,
                           NULL,
-                          pParentDirectoryCB->OpenReferenceCount);
+                          lCount);
 
             try_return( ntStatus);
         }
@@ -831,28 +832,28 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 if( pDirectoryCB != NULL)
                 {
 
-                    InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCreate Decrement7a count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  "AFSCommonCreate Decrement7a count on %wZ DE %p Ccb %p Cnt %d\n",
                                   &pDirectoryCB->NameInformation.FileName,
                                   pDirectoryCB,
                                   NULL,
-                                  pDirectoryCB->OpenReferenceCount);
+                                  lCount);
                 }
                 else
                 {
 
-                    InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCreate Decrement7b count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  "AFSCommonCreate Decrement7b count on %wZ DE %p Ccb %p Cnt %d\n",
                                   &pParentDirectoryCB->NameInformation.FileName,
                                   pParentDirectoryCB,
                                   NULL,
-                                  pParentDirectoryCB->OpenReferenceCount);
+                                  lCount);
                 }
             }
 
@@ -878,15 +879,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               "AFSCommonCreate (%08lX) Attempt to open root as delete on close\n",
                               Irp);
 
-                InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement8 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Decrement8 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pDirectoryCB->NameInformation.FileName,
                               pDirectoryCB,
                               NULL,
-                              pDirectoryCB->OpenReferenceCount);
+                              lCount);
 
                 try_return( ntStatus = STATUS_CANNOT_DELETE);
             }
@@ -903,15 +904,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               "AFSCommonCreate (%08lX) Attempt to open root as target directory\n",
                               Irp);
 
-                InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement9 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Decrement9 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pDirectoryCB->NameInformation.FileName,
                               pDirectoryCB,
                               NULL,
-                              pDirectoryCB->OpenReferenceCount);
+                              lCount);
 
                 try_return( ntStatus = STATUS_INVALID_PARAMETER);
             }
@@ -936,15 +937,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               pVolumeCB->ObjectInformation.FileId.Volume,
                               ntStatus);
 
-                InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement10 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Decrement10 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pDirectoryCB->NameInformation.FileName,
                               pDirectoryCB,
                               NULL,
-                              pDirectoryCB->OpenReferenceCount);
+                              lCount);
             }
 
             try_return( ntStatus);
@@ -992,15 +993,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                               &pDirectoryCB->NameInformation.FileName,
                               ntStatus);
 
-                InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Decrement11 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Decrement11 count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pDirectoryCB->NameInformation.FileName,
                               pDirectoryCB,
                               NULL,
-                              pDirectoryCB->OpenReferenceCount);
+                              lCount);
             }
 
             try_return( ntStatus);
@@ -1027,15 +1028,15 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                           &pDirectoryCB->NameInformation.FileName,
                           ntStatus);
 
-            InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pDirectoryCB->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCreate Decrement12 count on %wZ DE %p Ccb %p Cnt %d\n",
+                          "AFSCommonCreate Decrement12 count on %wZ DE %p Ccb %p Cnt %d\n",
                           &pDirectoryCB->NameInformation.FileName,
                           pDirectoryCB,
                           NULL,
-                          pDirectoryCB->OpenReferenceCount);
+                          lCount);
         }
 
 try_exit:
@@ -1085,7 +1086,7 @@ try_exit:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCreate Count on %wZ DE %p Ccb %p Cnt %d\n",
+                              "AFSCommonCreate Count on %wZ DE %p Ccb %p Cnt %d\n",
                               &pCcb->DirectoryCB->NameInformation.FileName,
                               pCcb->DirectoryCB,
                               pCcb,
@@ -1239,13 +1240,13 @@ try_exit:
         if( bReleaseVolume)
         {
 
-            InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonCreate Decrement count on Volume %08lX Cnt %d\n",
                           pVolumeCB,
-                          pVolumeCB->VolumeReferenceCount);
+                          lCount);
         }
 
         //
@@ -1265,6 +1266,7 @@ AFSOpenRedirector( IN PIRP Irp,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    LONG lCount;
 
     __Enter
     {
@@ -1296,25 +1298,25 @@ AFSOpenRedirector( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &AFSRedirectorRoot->RootFcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &AFSRedirectorRoot->RootFcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenRedirector Increment count on Fcb %08lX Cnt %d\n",
                       AFSRedirectorRoot->RootFcb,
-                      AFSRedirectorRoot->RootFcb->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &AFSRedirectorRoot->RootFcb->OpenHandleCount);
+        lCount = InterlockedIncrement( &AFSRedirectorRoot->RootFcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenRedirector Increment handle count on Fcb %08lX Cnt %d\n",
                       AFSRedirectorRoot->RootFcb,
-                      AFSRedirectorRoot->RootFcb->OpenHandleCount);
+                      lCount);
 
         *Fcb = AFSRedirectorRoot->RootFcb;
 
-        InterlockedIncrement( &(*Ccb)->DirectoryCB->OpenReferenceCount);
+        lCount = InterlockedIncrement( &(*Ccb)->DirectoryCB->OpenReferenceCount);
 
         //
         // Return the open result for this file
@@ -1337,6 +1339,7 @@ AFSOpenAFSRoot( IN PIRP Irp,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    LONG lCount;
 
     __Enter
     {
@@ -1368,21 +1371,21 @@ AFSOpenAFSRoot( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &AFSGlobalRoot->RootFcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &AFSGlobalRoot->RootFcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenAFSRoot Increment count on Fcb %08lX Cnt %d\n",
                       AFSGlobalRoot->RootFcb,
-                      AFSGlobalRoot->RootFcb->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &AFSGlobalRoot->RootFcb->OpenHandleCount);
+        lCount = InterlockedIncrement( &AFSGlobalRoot->RootFcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenAFSRoot Increment handle count on Fcb %08lX Cnt %d\n",
                       AFSGlobalRoot->RootFcb,
-                      AFSGlobalRoot->RootFcb->OpenHandleCount);
+                      lCount);
 
         *Fcb = AFSGlobalRoot->RootFcb;
 
@@ -1418,6 +1421,7 @@ AFSOpenRoot( IN PIRP Irp,
     AFSFileOpenCB   stOpenCB;
     AFSFileOpenResultCB stOpenResultCB;
     ULONG       ulResultLen = 0;
+    LONG        lCount;
 
     __Enter
     {
@@ -1649,21 +1653,21 @@ AFSOpenRoot( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &VolumeCB->RootFcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenRoot Increment count on Fcb %08lX Cnt %d\n",
                       VolumeCB->RootFcb,
-                      VolumeCB->RootFcb->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &VolumeCB->RootFcb->OpenHandleCount);
+        lCount = InterlockedIncrement( &VolumeCB->RootFcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenRoot Increment handle count on Fcb %08lX Cnt %d\n",
                       VolumeCB->RootFcb,
-                      VolumeCB->RootFcb->OpenHandleCount);
+                      lCount);
 
         //
         // Indicate the object is held
@@ -1733,6 +1737,7 @@ AFSProcessCreate( IN PIRP               Irp,
     AFSDirectoryCB *pDirEntry = NULL;
     AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -2010,41 +2015,41 @@ AFSProcessCreate( IN PIRP               Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
+        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment count on Fcb %08lX Cnt %d\n",
                       *Fcb,
-                      (*Fcb)->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &(*Fcb)->OpenHandleCount);
+        lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment handle count on Fcb %08lX Cnt %d\n",
                       (*Fcb),
-                      (*Fcb)->OpenHandleCount);
+                      lCount);
 
         //
         // Increment the open reference and handle on the parent node
         //
 
-        InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment child open handle count on Parent object %08lX Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
-                      pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                      lCount);
 
-        InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessCreate Increment child open ref count on Parent object %08lX Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
-                      pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                      lCount);
 
         if( ulOptions & FILE_DELETE_ON_CLOSE)
         {
@@ -2113,14 +2118,14 @@ try_exit:
                 // Decrement the reference added during initialization of the DE
                 //
 
-                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessCreate Decrement count on %wZ DE %p Cnt %d\n",
                               &pDirEntry->NameInformation.FileName,
                               pDirEntry,
-                              pDirEntry->OpenReferenceCount);
+                              lCount);
 
                 //
                 // Pull the directory entry from the parent
@@ -2188,6 +2193,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
     BOOLEAN bReleaseFcb = FALSE, bAllocatedFcb = FALSE;
     AFSObjectInfoCB *pParentObject = NULL, *pTargetObject = NULL;
     UNICODE_STRING uniTargetName;
+    LONG lCount;
 
     __Enter
     {
@@ -2363,21 +2369,21 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &pParentObject->Fcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pParentObject->Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenTargetDirectory Increment count on Fcb %08lX Cnt %d\n",
                       pParentObject->Fcb,
-                      pParentObject->Fcb->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &pParentObject->Fcb->OpenHandleCount);
+        lCount = InterlockedIncrement( &pParentObject->Fcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenTargetDirectory Increment handle count on Fcb %08lX Cnt %d\n",
                       pParentObject->Fcb,
-                      pParentObject->Fcb->OpenHandleCount);
+                      lCount);
 
         //
         // Increment the open reference and handle on the parent node
@@ -2386,21 +2392,21 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         if( pParentObject->ParentObjectInformation != NULL)
         {
 
-            InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+            lCount = InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSOpenTargetDirectory Increment child open handle count on Parent object %08lX Cnt %d\n",
                           pParentObject->ParentObjectInformation,
-                          pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                          lCount);
 
-            InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+            lCount = InterlockedIncrement( &pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSOpenTargetDirectory Increment child open ref count on Parent object %08lX Cnt %d\n",
                           pParentObject->ParentObjectInformation,
-                          pParentObject->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                          lCount);
         }
 
 try_exit:
@@ -2462,6 +2468,7 @@ AFSProcessOpen( IN PIRP Irp,
     AFSObjectInfoCB *pObjectInfo = NULL;
     ULONG       ulFileAccess = 0;
     AFSFileAccessReleaseCB stReleaseFileAccess;
+    LONG lCount;
 
     __Enter
     {
@@ -2587,13 +2594,13 @@ AFSProcessOpen( IN PIRP Irp,
         // Reference the Fcb so it won't go away while we call into the service for processing
         //
 
-        InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
-                      pObjectInfo->Fcb->OpenReferenceCount);
+                      lCount);
 
         //
         // Check access on the entry
@@ -2828,41 +2835,41 @@ AFSProcessOpen( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment2 count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
-                      pObjectInfo->Fcb->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
+        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment handle count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
-                      pObjectInfo->Fcb->OpenHandleCount);
+                      lCount);
 
         //
         // Increment the open reference and handle on the parent node
         //
 
-        InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open handle count on Parent object %08lX Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
-                      pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                      lCount);
 
-        InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOpen Increment child open ref count on Parent object %08lX Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
-                      pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                      lCount);
 
         if( BooleanFlagOn( ulOptions, FILE_DELETE_ON_CLOSE))
         {
@@ -2904,13 +2911,13 @@ try_exit:
             // Remove the reference we added initially
             //
 
-            InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessOpen Decrement count on Fcb %08lX Cnt %d\n",
                           pObjectInfo->Fcb,
-                          pObjectInfo->Fcb->OpenReferenceCount);
+                          lCount);
 
             AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
         }
@@ -2986,6 +2993,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
     USHORT usShareAccess;
     AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -3075,13 +3083,13 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         // Reference the Fcb so it won't go away while processing the request
         //
 
-        InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
-                      pObjectInfo->Fcb->OpenReferenceCount);
+                      lCount);
 
         //
         // Check access on the entry
@@ -3294,41 +3302,41 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         // Increment the open count on this Fcb.
         //
 
-        InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment2 count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
-                      pObjectInfo->Fcb->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
+        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment handle count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
-                      pObjectInfo->Fcb->OpenHandleCount);
+                      lCount);
 
         //
         // Increment the open reference and handle on the parent node
         //
 
-        InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open handle count on Parent object %08lX Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
-                      pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                      lCount);
 
-        InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Increment child open ref count on Parent object %08lX Cnt %d\n",
                       pObjectInfo->ParentObjectInformation,
-                      pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                      lCount);
 
         *Fcb = pObjectInfo->Fcb;
 
@@ -3347,13 +3355,13 @@ try_exit:
             // Remove the reference we added above to prevent tear down
             //
 
-            InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessOverwriteSupersede Decrement count on Fcb %08lX Cnt %d\n",
                           pObjectInfo->Fcb,
-                          pObjectInfo->Fcb->OpenReferenceCount);
+                          lCount);
 
             AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
         }
@@ -3420,6 +3428,7 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
     AFSPIOCtlOpenCloseRequestCB stPIOCtlOpen;
     AFSFileID stFileID;
     AFSObjectInfoCB *pParentObjectInfo = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -3557,7 +3566,7 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
         // Reference the directory entry
         //
 
-        InterlockedIncrement( &((*Ccb)->DirectoryCB->OpenReferenceCount));
+        lCount = InterlockedIncrement( &((*Ccb)->DirectoryCB->OpenReferenceCount));
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -3565,47 +3574,47 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
                       &(*Ccb)->DirectoryCB->NameInformation.FileName,
                       (*Ccb)->DirectoryCB,
                       (*Ccb),
-                      (*Ccb)->DirectoryCB->OpenReferenceCount);
+                      lCount);
 
         //
         // Increment the open reference and handle on the node
         //
 
-        InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
+        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment count on Fcb %08lX Cnt %d\n",
                       (*Fcb),
-                      (*Fcb)->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &(*Fcb)->OpenHandleCount);
+        lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment handle count on Fcb %08lX Cnt %d\n",
                       (*Fcb),
-                      (*Fcb)->OpenHandleCount);
+                      lCount);
 
         //
         // Increment the open reference and handle on the parent node
         //
 
-        InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment child open handle count on Parent object %08lX Cnt %d\n",
                       pParentObjectInfo,
-                      pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
+                      lCount);
 
-        InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenIOCtlFcb Increment child open ref count on Parent object %08lX Cnt %d\n",
                       pParentObjectInfo,
-                      pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
+                      lCount);
 
         //
         // Return the open result for this file
@@ -3620,7 +3629,7 @@ try_exit:
         // is already referenced
         //
 
-        InterlockedDecrement( &ParentDirCB->OpenReferenceCount);
+        lCount = InterlockedDecrement( &ParentDirCB->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -3628,7 +3637,7 @@ try_exit:
                       &ParentDirCB->NameInformation.FileName,
                       ParentDirCB,
                       NULL,
-                      ParentDirCB->OpenReferenceCount);
+                      lCount);
 
         //
         // If we created the Fcb we need to release the resources
@@ -3687,6 +3696,7 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
     BOOLEAN bReleaseFcb = FALSE, bAllocatedCcb = FALSE, bAllocateFcb = FALSE;
     AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSPipeOpenCloseRequestCB stPipeOpen;
+    LONG lCount;
 
     __Enter
     {
@@ -3805,41 +3815,41 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         // Increment the open count on this Fcb
         //
 
-        InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
+        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment count on Fcb %08lX Cnt %d\n",
                       (*Fcb),
-                      (*Fcb)->OpenReferenceCount);
+                      lCount);
 
-        InterlockedIncrement( &(*Fcb)->OpenHandleCount);
+        lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment handle count on Fcb %08lX Cnt %d\n",
                       (*Fcb),
-                      (*Fcb)->OpenHandleCount);
+                      lCount);
 
         //
         // Increment the open reference and handle on the parent node
         //
 
-        InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment child open handle count on Parent object %08lX Cnt %d\n",
                       pParentObjectInfo,
-                      pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
+                      lCount);
 
-        InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
+        lCount = InterlockedIncrement( &pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSOpenSpecialShareFcb Increment child open ref count on Parent object %08lX Cnt %d\n",
                       pParentObjectInfo,
-                      pParentObjectInfo->Specific.Directory.ChildOpenReferenceCount);
+                      lCount);
 
         //
         // Return the open result for this file

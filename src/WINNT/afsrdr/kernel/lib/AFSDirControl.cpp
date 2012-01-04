@@ -147,6 +147,7 @@ AFSQueryDirectory( IN PIRP Irp)
     BOOLEAN         bUseFileInfo = TRUE;
     AFSObjectInfoCB *pObjectInfo = NULL;
     ULONG ulAdditionalAttributes = 0;
+    LONG lCount;
 
     __Enter
     {
@@ -640,7 +641,7 @@ AFSQueryDirectory( IN PIRP Irp)
                      BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED))
             {
 
-                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                 continue;
             }
@@ -664,7 +665,7 @@ AFSQueryDirectory( IN PIRP Irp)
                     if( !FlagOn( pObjectInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
                     {
 
-                        InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                         continue;
                     }
@@ -685,7 +686,7 @@ AFSQueryDirectory( IN PIRP Irp)
                                                       NULL))
                         {
 
-                            InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                            lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                             continue;
                         }
@@ -707,7 +708,7 @@ AFSQueryDirectory( IN PIRP Irp)
                                                          TRUE))
                             {
 
-                                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                                 continue;
                             }
@@ -785,7 +786,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 pCcb->CurrentDirIndex--;
 
-                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                 try_return( ntStatus = STATUS_SUCCESS);
             }
@@ -909,7 +910,7 @@ AFSQueryDirectory( IN PIRP Irp)
                                   Irp,
                                   FileInformationClass);
 
-                    InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                     try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
 
@@ -937,12 +938,12 @@ AFSQueryDirectory( IN PIRP Irp)
             if( ulBytesConverted < pDirEntry->NameInformation.FileName.Length)
             {
 
-                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                 try_return( ntStatus = STATUS_BUFFER_OVERFLOW);
             }
 
-            InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
             dStatus = STATUS_SUCCESS;
 
@@ -1087,6 +1088,7 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
     AFSSnapshotHdr *pSnapshotHdr = NULL;
     AFSSnapshotEntry *pSnapshotEntry = NULL;
     ULONG ulCount = 0;
+    LONG lCount;
 
     __Enter
     {
@@ -1106,7 +1108,8 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
                 if( pDirEntry != NULL)
                 {
-                    InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+
+                    lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
                 }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1137,7 +1140,8 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
             if( pDirEntry != NULL)
             {
-                InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+
+                lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1160,7 +1164,8 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
             if( pDirEntry != NULL)
             {
-                InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+
+                lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1237,7 +1242,7 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
                                       ObjectInfo->FileId.Vnode,
                                       ObjectInfo->FileId.Unique);
 
-                        InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
                     }
                     else
                     {

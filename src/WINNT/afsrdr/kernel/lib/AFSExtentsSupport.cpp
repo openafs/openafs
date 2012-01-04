@@ -121,6 +121,7 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     GUID                *pAuthGroup = AuthGroup;
     GUID                 stAuthGroup;
+    LONG                 lCount;
 
     __Enter
     {
@@ -279,9 +280,11 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                 le = le->Flink;
                 AFSExFreePool( pEntry);
 
-                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
 
-                if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
+                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+                if( lCount == 0)
                 {
 
                     KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
@@ -860,6 +863,7 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
     BOOLEAN           bFoundExtent = FALSE;
     LIST_ENTRY       *pSkipEntries[AFS_NUM_EXTENT_LISTS] = { 0 };
     AFSDeviceExt     *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    LONG              lCount;
 
     //
     // Grab the extents exclusive for the duration
@@ -1037,9 +1041,11 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
 
                 InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, (LONG)(pExtent->Size/1024));
 
-                InterlockedIncrement( &Fcb->Specific.File.ExtentCount);
+                lCount = InterlockedIncrement( &Fcb->Specific.File.ExtentCount);
 
-                if( InterlockedIncrement( &pControlDevExt->Specific.Control.ExtentCount) == 1)
+                lCount = InterlockedIncrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+                if( lCount == 1)
                 {
 
                     KeClearEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent);
@@ -1247,6 +1253,7 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
     AFSDeviceExt *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     ULONGLONG     ullIndex = 0;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    LONG          lCount;
 
     __Enter
     {
@@ -1286,7 +1293,7 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
                           pVolumeCB->ObjectInfoTree.TreeLock,
                           PsGetCurrentThread());
 
-            InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
         }
 
         AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -1310,7 +1317,7 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
         AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
 
-        InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
         //
         // Now locate the Object in this volume
@@ -1329,13 +1336,13 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
             // Reference the node so it won't be torn down
             //
 
-            InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessSetFileExtents Increment count on object %08lX Cnt %d\n",
                           pObjectInfo,
-                          pObjectInfo->ObjectReferenceCount);
+                          lCount);
         }
 
         AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -1410,13 +1417,13 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessSetFileExtents Decrement count on object %08lX Cnt %d\n",
                           pObjectInfo,
-                          pObjectInfo->ObjectReferenceCount);
+                          lCount);
         }
     }
 
@@ -1441,6 +1448,7 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     BOOLEAN              bReleaseAll = FALSE;
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    LONG                 lCount;
 
     __Enter
     {
@@ -1618,7 +1626,7 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
 
                     FileExtents[*ExtentCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
 
-                    InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                    lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
 
                     *DirtyExtents = TRUE;
                 }
@@ -1653,9 +1661,11 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
             //
             AFSExFreePool( pExtent);
 
-            InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+            lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
 
-            if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
+            lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+            if( lCount == 0)
             {
 
                 KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
@@ -1683,6 +1693,7 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
     BOOLEAN bLocatedEntry = FALSE;
     AFSObjectInfoCB *pCurrentObject = NULL;
     BOOLEAN bReleaseVolumeListLock = FALSE;
+    LONG lCount;
 
     pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
@@ -1713,7 +1724,7 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
                       pVolumeCB->ObjectInfoTree.TreeLock,
                       PsGetCurrentThread());
 
-        InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
         AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.VolumeListLock);
 
@@ -1722,7 +1733,7 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
         AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
 
-        InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
         if( NULL == LastFcb)
         {
@@ -1840,13 +1851,13 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
                 // A hit a very palpable hit.  Pin it
                 //
 
-                InterlockedIncrement( &pCurrentObject->ObjectReferenceCount);
+                lCount = InterlockedIncrement( &pCurrentObject->ObjectReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSFindFcbToClean Increment count on Fcb %08lX Cnt %d\n",
                               pCurrentObject,
-                              pCurrentObject->ObjectReferenceCount);
+                              lCount);
 
                 bLocatedEntry = TRUE;
 
@@ -1892,6 +1903,7 @@ AFSProcessExtentFailure( PIRP Irp)
     AFSVolumeCB                       *pVolumeCB = NULL;
     ULONGLONG                          ullIndex = 0;
     AFSObjectInfoCB                   *pObjectInfo = NULL;
+    LONG                               lCount;
 
     __Enter
     {
@@ -1937,7 +1949,7 @@ AFSProcessExtentFailure( PIRP Irp)
                           pVolumeCB->ObjectInfoTree.TreeLock,
                           PsGetCurrentThread());
 
-            InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
         }
 
         AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -1957,7 +1969,7 @@ AFSProcessExtentFailure( PIRP Irp)
         AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                           TRUE);
 
-        InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
         //
         // Now locate the Object in this volume
@@ -1977,13 +1989,13 @@ AFSProcessExtentFailure( PIRP Irp)
             // Reference the node so it won't be torn down
             //
 
-            InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessExtentFailure Increment count on object %08lX Cnt %d\n",
                           pObjectInfo,
-                          pObjectInfo->ObjectReferenceCount);
+                          lCount);
         }
 
         AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -2038,13 +2050,13 @@ AFSProcessExtentFailure( PIRP Irp)
 
         AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
 
-        InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+        lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessExtentFailure Decrement count on object %08lX Cnt %d\n",
                       pObjectInfo,
-                      pObjectInfo->ObjectReferenceCount);
+                      lCount);
 
 try_exit:
 
@@ -2072,6 +2084,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
     BOOLEAN                            bLocked = FALSE;
     BOOLEAN                            bDirtyExtents = FALSE;
     GUID                               stAuthGroup;
+    LONG                               lCount;
 
     __Enter
     {
@@ -2175,7 +2188,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                               pVolumeCB->ObjectInfoTree.TreeLock,
                               PsGetCurrentThread());
 
-                InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+                lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
             }
 
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -2195,7 +2208,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
             AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
                               TRUE);
 
-            InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
             //
             // Now locate the Object in this volume
@@ -2214,13 +2227,13 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                 // Reference the node so it won't be torn down
                 //
 
-                InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+                lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSProcessReleaseFileExtents Increment count on object %08lX Cnt %d\n",
                               pObjectInfo,
-                              pObjectInfo->ObjectReferenceCount);
+                              lCount);
             }
 
             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -2439,13 +2452,13 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessReleaseFileExtents Decrement count on object %08lX Cnt %d\n",
                           pObjectInfo,
-                          pObjectInfo->ObjectReferenceCount);
+                          lCount);
         }
     }
 
@@ -2556,6 +2569,7 @@ AFSFlushExtents( IN AFSFcb *Fcb,
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     GUID                *pAuthGroup = AuthGroup;
     GUID                 stAuthGroup;
+    LONG                 lCount;
 
     ASSERT( Fcb->Header.NodeTypeCode == AFS_FILE_FCB);
 
@@ -2601,7 +2615,7 @@ AFSFlushExtents( IN AFSFcb *Fcb,
 
         bExtentsLocked = TRUE;
 
-        InterlockedIncrement( &Fcb->Specific.File.QueuedFlushCount);
+        lCount = InterlockedIncrement( &Fcb->Specific.File.QueuedFlushCount);
 
         //
         // Clear our queued flush event
@@ -2678,7 +2692,7 @@ AFSFlushExtents( IN AFSFcb *Fcb,
                 pExtent->DirtyList.fLink = NULL;
                 pExtent->DirtyList.bLink = NULL;
 
-                InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
 
                 //
                 // Clear the flag in advance of the write. If we do
@@ -2736,9 +2750,11 @@ AFSFlushExtents( IN AFSFcb *Fcb,
 
                 AFSExFreePool( pExtent);
 
-                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
 
-                if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
+                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+                if( lCount == 0)
                 {
 
                     KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
@@ -2823,7 +2839,9 @@ AFSFlushExtents( IN AFSFcb *Fcb,
 
 try_exit:
 
-        if( InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount) == 0)
+        lCount = InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount);
+
+        if( lCount == 0)
         {
 
             KeSetEvent( &pNPFcb->Specific.File.QueuedFlushEvent,
@@ -2875,6 +2893,7 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     GUID                *pAuthGroup = AuthGroup;
     GUID                 stAuthGroup;
+    LONG                 lCount;
 
     ASSERT( Fcb->Header.NodeTypeCode == AFS_FILE_FCB);
 
@@ -3020,7 +3039,7 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
 
                         pRelease->FileExtents[count].Flags |= AFS_EXTENT_FLAG_DIRTY;
 
-                        InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                        lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
                     }
 
                     AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
@@ -3044,9 +3063,11 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
 
                 AFSExFreePool( pExtent);
 
-                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
 
-                if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
+                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+                if( lCount == 0)
                 {
 
                     KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
@@ -3160,6 +3181,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
     AFSExtent     *pNextExtent, *pCurrentExtent = NULL;
     ULONG ulCount = 0;
     BOOLEAN bInsertTail = FALSE, bInsertHead = FALSE;
+    LONG lCount;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -3283,7 +3305,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
             // Up the dirty count
             //
 
-            InterlockedIncrement( &Fcb->Specific.File.ExtentsDirtyCount);
+            lCount = InterlockedIncrement( &Fcb->Specific.File.ExtentsDirtyCount);
         }
         else
         {
@@ -3299,7 +3321,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
 
         ASSERT( pExtent->ActiveCount > 0);
 
-        InterlockedDecrement( &pExtent->ActiveCount);
+        lCount = InterlockedDecrement( &pExtent->ActiveCount);
 
         pExtent = pNextExtent;
 
@@ -3407,6 +3429,7 @@ AFSTrimExtents( IN AFSFcb *Fcb,
     LARGE_INTEGER        liAlignedOffset = {0,0};
     AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    LONG                 lCount;
 
     __Enter
     {
@@ -3546,9 +3569,11 @@ AFSTrimExtents( IN AFSFcb *Fcb,
                 //
                 AFSExFreePool( pExtent);
 
-                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
 
-                if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
+                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+                if( lCount == 0)
                 {
 
                     KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
@@ -3595,6 +3620,7 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
     NTSTATUS             ntStatus = STATUS_SUCCESS;
     AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    LONG                 lCount;
 
     __Enter
     {
@@ -3670,9 +3696,11 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
                 //
                 AFSExFreePool( pExtent);
 
-                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
 
-                if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
+                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+                if( lCount == 0)
                 {
 
                     KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
@@ -3708,19 +3736,20 @@ AFSReferenceActiveExtents( IN AFSExtent *StartExtent,
     AFSExtent     *pExtent = StartExtent;
     AFSExtent     *pNextExtent;
     ULONG          ulCount = 0;
+    LONG           lCount;
 
     while( ulCount < ExtentsCount)
     {
 
         pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
 
-        InterlockedIncrement( &pExtent->ActiveCount);
+        lCount = InterlockedIncrement( &pExtent->ActiveCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_ACTIVE_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSReferenceActiveExtents Increment count on extent %08lX Cnt %d\n",
                       pExtent,
-                      pExtent->ActiveCount);
+                      lCount);
 
         pExtent = pNextExtent;
 
@@ -3738,21 +3767,22 @@ AFSDereferenceActiveExtents( IN AFSExtent *StartExtent,
     AFSExtent     *pExtent = StartExtent;
     AFSExtent     *pNextExtent;
     ULONG          ulCount = 0;
+    LONG            lCount;
 
     while( ulCount < ExtentsCount)
     {
 
         pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
 
+        ASSERT( pExtent->ActiveCount > 0);
+
+        lCount = InterlockedDecrement( &pExtent->ActiveCount);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_ACTIVE_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSDereferenceActiveExtents Decrement count on extent %08lX Cnt %d\n",
                       pExtent,
-                      pExtent->ActiveCount);
-
-        ASSERT( pExtent->ActiveCount > 0);
-
-        InterlockedDecrement( &pExtent->ActiveCount);
+                      lCount);
 
         pExtent = pNextExtent;
 

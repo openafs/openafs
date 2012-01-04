@@ -2083,6 +2083,7 @@ AFSSetRenameInfo( IN PIRP Irp)
     BOOLEAN bReleaseTargetDirLock = FALSE;
     BOOLEAN bReleaseSourceDirLock = FALSE;
     PERESOURCE  pSourceDirLock = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -2246,7 +2247,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             ASSERT( pTargetParentObject == pTargetDirEntry->ObjectInformation->ParentObjectInformation);
 
-            InterlockedIncrement( &pTargetDirEntry->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pTargetDirEntry->OpenReferenceCount);
 
             if( !bReplaceIfExists)
             {
@@ -2534,13 +2535,13 @@ AFSSetRenameInfo( IN PIRP Irp)
         if( pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation != pTargetParentObject)
         {
 
-            InterlockedDecrement( &pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+            lCount = InterlockedDecrement( &pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
-            InterlockedDecrement( &pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+            lCount = InterlockedDecrement( &pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
-            InterlockedIncrement( &pTargetParentObject->Specific.Directory.ChildOpenHandleCount);
+            lCount = InterlockedIncrement( &pTargetParentObject->Specific.Directory.ChildOpenHandleCount);
 
-            InterlockedIncrement( &pTargetParentObject->Specific.Directory.ChildOpenReferenceCount);
+            lCount = InterlockedIncrement( &pTargetParentObject->Specific.Directory.ChildOpenReferenceCount);
 
             pSrcCcb->DirectoryCB->ObjectInformation->ParentObjectInformation = pTargetParentObject;
 
@@ -2610,9 +2611,9 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             ASSERT( pTargetDirEntry->OpenReferenceCount > 0);
 
-            InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount); // The count we added above
+            lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount); // The count we added above
 
-            if( pTargetDirEntry->OpenReferenceCount == 0)
+            if( lCount == 0)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2645,7 +2646,7 @@ try_exit:
         if( pTargetDirEntry != NULL)
         {
 
-            InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
         }
 
         if( bReleaseTargetDirLock)

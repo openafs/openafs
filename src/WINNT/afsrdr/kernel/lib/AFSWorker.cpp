@@ -338,6 +338,7 @@ AFSInitVolumeWorker( IN AFSVolumeCB *VolumeCB)
     HANDLE hThread;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     PKSTART_ROUTINE pStartRoutine = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -395,7 +396,9 @@ AFSInitVolumeWorker( IN AFSVolumeCB *VolumeCB)
                                               FALSE,
                                               NULL);
 
-            if( InterlockedIncrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount) > 0)
+            lCount = InterlockedIncrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount);
+
+            if( lCount > 0)
             {
 
                 KeClearEvent( &pControlDeviceExt->Specific.Control.VolumeWorkerCloseEvent);
@@ -631,6 +634,7 @@ AFSWorkerThread( IN PVOID Context)
     BOOLEAN freeWorkItem = TRUE;
     BOOLEAN exitThread = FALSE;
     AFSDeviceExt *pLibraryDevExt = NULL;
+    LONG lCount;
 
     pLibraryDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
@@ -697,7 +701,7 @@ AFSWorkerThread( IN PVOID Context)
 
                         ASSERT( pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount != 0);
 
-                        InterlockedDecrement( &pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount);
+                        lCount = InterlockedDecrement( &pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount);
 
                         break;
                     }
@@ -897,6 +901,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     AFSVolumeCB *pVolumeCB = NULL, *pNextVolume = NULL;
     LARGE_INTEGER liCurrentTime;
     BOOLEAN bVolumeObject = FALSE;
+    LONG lCount;
 
     pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
@@ -1547,7 +1552,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSPrimaryVolumeWorkerThread Exiting\n");
 
-    if( InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount) == 0)
+    lCount = InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount);
+
+    if( lCount == 0)
     {
 
         KeSetEvent( &pControlDeviceExt->Specific.Control.VolumeWorkerCloseEvent,
@@ -1573,6 +1580,7 @@ AFSVolumeWorkerThread( IN PVOID Context)
     LARGE_INTEGER DueTime;
     LONG TimeOut;
     KTIMER Timer;
+    LONG lCount;
 
     pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
@@ -1641,7 +1649,9 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
     KeCancelTimer( &Timer);
 
-    if( InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount) == 0)
+    lCount = InterlockedDecrement( &pControlDeviceExt->Specific.Control.VolumeWorkerThreadCount);
+
+    if( lCount == 0)
     {
 
         KeSetEvent( &pControlDeviceExt->Specific.Control.VolumeWorkerCloseEvent,
@@ -1660,6 +1670,7 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDevExt = NULL;
+    LONG lCount;
 
     pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
@@ -1672,11 +1683,13 @@ AFSInsertWorkitem( IN AFSWorkItem *WorkItem)
     AFSAcquireExcl( &pDevExt->Specific.Library.QueueLock,
                     TRUE);
 
+    lCount = InterlockedIncrement( &pDevExt->Specific.Library.QueueItemCount);
+
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitem Inserting work item %08lX Count %08lX\n",
                   WorkItem,
-                  InterlockedIncrement( &pDevExt->Specific.Library.QueueItemCount));
+                  lCount);
 
     if( pDevExt->Specific.Library.QueueTail != NULL) // queue already has nodes
     {
@@ -1708,6 +1721,7 @@ AFSInsertIOWorkitem( IN AFSWorkItem *WorkItem)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDevExt = NULL;
+    LONG lCount;
 
     pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
@@ -1720,11 +1734,13 @@ AFSInsertIOWorkitem( IN AFSWorkItem *WorkItem)
     AFSAcquireExcl( &pDevExt->Specific.Library.IOQueueLock,
                     TRUE);
 
+    lCount = InterlockedIncrement( &pDevExt->Specific.Library.IOQueueItemCount);
+
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitem Inserting IO work item %08lX Count %08lX\n",
                   WorkItem,
-                  InterlockedIncrement( &pDevExt->Specific.Library.IOQueueItemCount));
+                  lCount);
 
     if( pDevExt->Specific.Library.IOQueueTail != NULL) // queue already has nodes
     {
@@ -1756,6 +1772,7 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDevExt = NULL;
+    LONG lCount;
 
     pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
@@ -1772,11 +1789,13 @@ AFSInsertWorkitemAtHead( IN AFSWorkItem *WorkItem)
 
     pDevExt->Specific.Library.QueueHead = WorkItem;
 
+    lCount = InterlockedIncrement( &pDevExt->Specific.Library.QueueItemCount);
+
     AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSInsertWorkitemAtHead Inserting work item %08lX Count %08lX\n",
                   WorkItem,
-                  InterlockedIncrement( &pDevExt->Specific.Library.QueueItemCount));
+                  lCount);
 
     //
     // indicate that the queue has nodes
@@ -1798,6 +1817,7 @@ AFSRemoveWorkItem()
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSWorkItem        *pWorkItem = NULL;
     AFSDeviceExt *pDevExt = NULL;
+    LONG lCount;
 
     pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
@@ -1815,11 +1835,13 @@ AFSRemoveWorkItem()
 
         pWorkItem = pDevExt->Specific.Library.QueueHead;
 
+        lCount = InterlockedDecrement( &pDevExt->Specific.Library.QueueItemCount);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveWorkItem Removing work item %08lX Count %08lX Thread %08lX\n",
                       pWorkItem,
-                      InterlockedDecrement( &pDevExt->Specific.Library.QueueItemCount),
+                      lCount,
                       PsGetCurrentThreadId());
 
         pDevExt->Specific.Library.QueueHead = pDevExt->Specific.Library.QueueHead->next;
@@ -1849,6 +1871,7 @@ AFSRemoveIOWorkItem()
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSWorkItem        *pWorkItem = NULL;
     AFSDeviceExt *pDevExt = NULL;
+    LONG lCount;
 
     pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
@@ -1866,11 +1889,13 @@ AFSRemoveIOWorkItem()
 
         pWorkItem = pDevExt->Specific.Library.IOQueueHead;
 
+        lCount = InterlockedDecrement( &pDevExt->Specific.Library.IOQueueItemCount);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveWorkItem Removing work item %08lX Count %08lX Thread %08lX\n",
                       pWorkItem,
-                      InterlockedDecrement( &pDevExt->Specific.Library.IOQueueItemCount),
+                      lCount,
                       PsGetCurrentThreadId());
 
         pDevExt->Specific.Library.IOQueueHead = pDevExt->Specific.Library.IOQueueHead->next;
@@ -1994,6 +2019,7 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSWorkItem *pWorkItem = NULL;
+    LONG lCount;
 
     __try
     {
@@ -2011,7 +2037,9 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
         // queue down. We'll decrement it just below.
         //
 
-        if( InterlockedIncrement( &Fcb->Specific.File.QueuedFlushCount) > 3)
+        lCount = InterlockedIncrement( &Fcb->Specific.File.QueuedFlushCount);
+
+        if( lCount > 3)
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
@@ -2068,13 +2096,13 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
 
         pWorkItem->Specific.Fcb.Fcb = Fcb;
 
-        InterlockedIncrement( &Fcb->OpenReferenceCount);
+        lCount = InterlockedIncrement( &Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueueFlushExtents Increment count on Fcb %08lX Cnt %d\n",
-                                                    Fcb,
-                                                    Fcb->OpenReferenceCount);
+                      Fcb,
+                      lCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -2102,7 +2130,9 @@ try_exit:
         // Remove the count we added above
         //
 
-        if( InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount) == 0)
+        lCount = InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount);
+
+        if( lCount == 0)
         {
 
             KeSetEvent( &Fcb->NPFcb->Specific.File.QueuedFlushEvent,
@@ -2116,7 +2146,7 @@ try_exit:
             if( pWorkItem != NULL)
             {
 
-                InterlockedDecrement( &Fcb->OpenReferenceCount);
+                lCount = InterlockedDecrement( &Fcb->OpenReferenceCount);
 
                 ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
             }

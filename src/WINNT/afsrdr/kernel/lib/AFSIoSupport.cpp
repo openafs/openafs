@@ -280,6 +280,7 @@ AFSStartIos( IN PFILE_OBJECT     CacheFileObject,
     PIRP                pIrp;
     NTSTATUS            ntStatus = STATUS_SUCCESS;
     PDEVICE_OBJECT      pDeviceObject = NULL;
+    LONG                lCount;
 
     __Enter
     {
@@ -304,7 +305,7 @@ AFSStartIos( IN PFILE_OBJECT     CacheFileObject,
             // Bump the count *before* we start the IO, that way if it
             // completes real fast it will still not set the event
             //
-            InterlockedIncrement(&Gather->Count);
+            lCount = InterlockedIncrement(&Gather->Count);
 
             //
             // Set the completion routine.
@@ -338,12 +339,16 @@ VOID
 AFSCompleteIo( IN AFSGatherIo *Gather,
                IN NTSTATUS Status)
 {
+    LONG lCount;
+
     if (!NT_SUCCESS(Status)) {
 
         Gather->Status = Status;
     }
 
-    if (0 == InterlockedDecrement( &Gather->Count )) {
+    lCount = InterlockedDecrement( &Gather->Count );
+
+    if (0 == lCount) {
         //
         // Last outstanding IO.  Complete the parent and
         // do whatever it takes to clean up

@@ -66,6 +66,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
     AFSVolumeCB      *pCurrentVolume = *VolumeCB;
     BOOLEAN           bReleaseCurrentVolume = TRUE;
     BOOLEAN           bSubstitutedName = FALSE;
+    LONG              lCount;
 
     __Enter
     {
@@ -515,7 +516,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // Dereference the current entry ..
                         //
 
-                        InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
@@ -523,7 +524,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       &pDirEntry->NameInformation.FileName,
                                       pDirEntry,
                                       NULL,
-                                      pDirEntry->OpenReferenceCount);
+                                      lCount);
 
                         //
                         // OK, need to back up one entry for the correct parent since the current
@@ -536,7 +537,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // Increment our reference on this dir entry
                         //
 
-                        InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
@@ -544,7 +545,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       &pDirEntry->NameInformation.FileName,
                                       pDirEntry,
                                       NULL,
-                                      pDirEntry->OpenReferenceCount);
+                                      lCount);
 
                         if( BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_ROOT_VOLUME))
                         {
@@ -673,30 +674,30 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                           pCurrentObject->FileId.Vnode,
                                           pCurrentObject->FileId.Unique);
 
-                            InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
+                            lCount = InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSLocateNameEntry Decrement count on volume %08lX Cnt %d\n",
                                           pCurrentVolume,
-                                          pCurrentVolume->VolumeReferenceCount);
+                                          lCount);
 
                             pCurrentVolume = AFSGlobalRoot;
 
-                            InterlockedIncrement( &pCurrentVolume->VolumeReferenceCount);
+                            lCount = InterlockedIncrement( &pCurrentVolume->VolumeReferenceCount);
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSLocateNameEntry Increment count on volume %08lX Cnt %d\n",
                                           pCurrentVolume,
-                                          pCurrentVolume->VolumeReferenceCount);
+                                          lCount);
                         }
 
                         //
                         // Dereference our current dir entry
                         //
 
-                        InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
@@ -704,7 +705,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       &pDirEntry->NameInformation.FileName,
                                       pDirEntry,
                                       NULL,
-                                      pDirEntry->OpenReferenceCount);
+                                      lCount);
 
                         pDirEntry = pCurrentVolume->DirectoryCB;
 
@@ -712,7 +713,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // Reference the new dir entry
                         //
 
-                        InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                       AFS_TRACE_LEVEL_VERBOSE,
@@ -720,7 +721,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       &pDirEntry->NameInformation.FileName,
                                       pDirEntry,
                                       NULL,
-                                      pDirEntry->OpenReferenceCount);
+                                      lCount);
 
                         //
                         // Reset the name array
@@ -780,7 +781,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Increment our link count
                     //
 
-                    InterlockedIncrement( &pNameArray->LinkCount);
+                    lCount = InterlockedIncrement( &pNameArray->LinkCount);
 
                     continue;
                 }
@@ -831,7 +832,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
 
-                    InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
+                    lCount = InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -880,7 +881,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Deref and ref count the entries
                     //
 
-                    InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -888,11 +889,11 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                   &pDirEntry->NameInformation.FileName,
                                   pDirEntry,
                                   NULL,
-                                  pDirEntry->OpenReferenceCount);
+                                  lCount);
 
                     pDirEntry = pCurrentVolume->DirectoryCB;
 
-                    InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                    lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -900,7 +901,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                   &pDirEntry->NameInformation.FileName,
                                   pDirEntry,
                                   NULL,
-                                  pDirEntry->OpenReferenceCount);
+                                  lCount);
 
                     pParentDirEntry = NULL;
 
@@ -908,7 +909,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Increment our link count
                     //
 
-                    InterlockedIncrement( &pNameArray->LinkCount);
+                    lCount = InterlockedIncrement( &pNameArray->LinkCount);
 
                     continue;
                 }
@@ -1187,8 +1188,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 //
                 // Need to back up one entry in the name array
                 //
-
-                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -1196,7 +1196,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                               &pDirEntry->NameInformation.FileName,
                               pDirEntry,
                               NULL,
-                              pDirEntry->OpenReferenceCount);
+                              lCount);
 
                 pDirEntry = AFSBackupEntry( NameArray);
 
@@ -1210,7 +1210,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     try_return(ntStatus = STATUS_OBJECT_PATH_INVALID);
                 }
 
-                InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
 
                 if( BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_ROOT_VOLUME))
                 {
@@ -1557,7 +1557,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Increment our dir entry ref count
                     //
 
-                    InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                    lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -1565,7 +1565,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                   &pDirEntry->NameInformation.FileName,
                                   pDirEntry,
                                   NULL,
-                                  pDirEntry->OpenReferenceCount);
+                                  lCount);
                 }
 
                 AFSReleaseResource( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -1605,7 +1605,9 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 AFSAcquireExcl( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock,
                                 TRUE);
 
-                if( InterlockedDecrement( &pDirEntry->OpenReferenceCount) == 0)
+                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+
+                if( lCount == 0)
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING|AFS_SUBSYSTEM_CLEANUP_PROCESSING,
@@ -1713,7 +1715,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
             // Decrement the previous parent
             //
 
-            InterlockedDecrement( &pParentDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pParentDirEntry->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1721,7 +1723,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                           &pParentDirEntry->NameInformation.FileName,
                           pParentDirEntry,
                           NULL,
-                          pParentDirEntry->OpenReferenceCount);
+                          lCount);
 
             //
             // If we ended up substituting a name in the component then update
@@ -1864,7 +1866,7 @@ try_exit:
             if( pDirEntry != NULL)
             {
 
-                InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -1872,12 +1874,12 @@ try_exit:
                               &pDirEntry->NameInformation.FileName,
                               pDirEntry,
                               NULL,
-                              pDirEntry->OpenReferenceCount);
+                              lCount);
             }
             else if( pParentDirEntry != NULL)
             {
 
-                InterlockedDecrement( &pParentDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pParentDirEntry->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -1885,7 +1887,7 @@ try_exit:
                               &pParentDirEntry->NameInformation.FileName,
                               pParentDirEntry,
                               NULL,
-                              pParentDirEntry->OpenReferenceCount);
+                              lCount);
             }
 
             if( bReleaseCurrentVolume)
@@ -1893,13 +1895,13 @@ try_exit:
 
                 ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
 
-                InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
+                lCount = InterlockedDecrement( &pCurrentVolume->VolumeReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNameEntry Decrement3 count on volume %08lX Cnt %d\n",
                               pCurrentVolume,
-                              pCurrentVolume->VolumeReferenceCount);
+                              lCount);
             }
 
             if( RootPathName->Buffer != uniFullPathName.Buffer)
@@ -1961,6 +1963,7 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
     AFSDirectoryCB *pDirNode = NULL, *pExistingDirNode = NULL;
     UNICODE_STRING uniShortName;
     LARGE_INTEGER liFileSize = {0,0};
+    LONG lCount;
 
     __Enter
     {
@@ -2078,14 +2081,14 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                 AFSDeleteDirEntry( ParentObjectInfo,
                                    pDirNode);
 
-                InterlockedIncrement( &pExistingDirNode->OpenReferenceCount);
+                lCount = InterlockedIncrement( &pExistingDirNode->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCreateDirEntry Increment count on %wZ DE %p Cnt %d\n",
                               &pExistingDirNode->NameInformation.FileName,
                               pExistingDirNode,
-                              pExistingDirNode->OpenReferenceCount);
+                              lCount);
 
                 *DirEntry = pExistingDirNode;
 
@@ -2164,14 +2167,14 @@ AFSCreateDirEntry( IN GUID            *AuthGroup,
                                 pDirNode,
                                 TRUE);
 
-        InterlockedIncrement( &pDirNode->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pDirNode->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSCreateDirEntry Increment2 count on %wZ DE %p Cnt %d\n",
                       &pDirNode->NameInformation.FileName,
                       pDirNode,
-                      pDirNode->OpenReferenceCount);
+                      lCount);
 
         //
         // Pass back the dir entry
@@ -2194,6 +2197,8 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
                         IN AFSDirectoryCB *DirEntry,
                         IN BOOLEAN InsertInEnumList)
 {
+
+    LONG lCount;
 
     __Enter
     {
@@ -2341,17 +2346,17 @@ AFSInsertDirectoryNode( IN AFSObjectInfoCB *ParentObjectInfo,
 
             SetFlag( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_ENUM_LIST);
 
-            InterlockedIncrement( &ParentObjectInfo->Specific.Directory.DirectoryNodeCount);
+            lCount = InterlockedIncrement( &ParentObjectInfo->Specific.Directory.DirectoryNodeCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NODE_COUNT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInsertDirectoryNode Adding entry %wZ Inc Count %d to parent FID %08lX-%08lX-%08lX-%08lX\n",
-                              &DirEntry->NameInformation.FileName,
-                              ParentObjectInfo->Specific.Directory.DirectoryNodeCount,
-                              ParentObjectInfo->FileId.Cell,
-                              ParentObjectInfo->FileId.Volume,
-                              ParentObjectInfo->FileId.Vnode,
-                              ParentObjectInfo->FileId.Unique);
+                          &DirEntry->NameInformation.FileName,
+                          lCount,
+                          ParentObjectInfo->FileId.Cell,
+                          ParentObjectInfo->FileId.Volume,
+                          ParentObjectInfo->FileId.Vnode,
+                          ParentObjectInfo->FileId.Unique);
         }
     }
 
@@ -2364,6 +2369,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    LONG lCount;
 
     __Enter
     {
@@ -2405,7 +2411,9 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         ASSERT( DirEntry->ObjectInformation->ObjectReferenceCount > 0);
 
-        if( InterlockedDecrement( &DirEntry->ObjectInformation->ObjectReferenceCount) == 0)
+        lCount = InterlockedDecrement( &DirEntry->ObjectInformation->ObjectReferenceCount);
+
+        if( lCount == 0)
         {
             SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
         }
@@ -2437,6 +2445,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    LONG lCount;
 
     __Enter
     {
@@ -2510,7 +2519,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
 
             ASSERT( ParentObjectInfo->Specific.Directory.DirectoryNodeCount > 0);
 
-            InterlockedDecrement( &ParentObjectInfo->Specific.Directory.DirectoryNodeCount);
+            lCount = InterlockedDecrement( &ParentObjectInfo->Specific.Directory.DirectoryNodeCount);
 
             ClearFlag( DirEntry->Flags, AFS_DIR_ENTRY_INSERTED_ENUM_LIST);
 
@@ -2518,7 +2527,7 @@ AFSRemoveDirNodeFromParent( IN AFSObjectInfoCB *ParentObjectInfo,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveDirNodeFromParent Removing entry %wZ Dec Count %d to parent FID %08lX-%08lX-%08lX-%08lX\n",
                           &DirEntry->NameInformation.FileName,
-                          ParentObjectInfo->Specific.Directory.DirectoryNodeCount,
+                          lCount,
                           ParentObjectInfo->FileId.Cell,
                           ParentObjectInfo->FileId.Volume,
                           ParentObjectInfo->FileId.Vnode,
@@ -2637,6 +2646,7 @@ AFSParseName( IN PIRP Irp,
     AFSFcb             *pRelatedFcb = NULL;
     BOOLEAN             bReleaseTreeLock = FALSE;
     BOOLEAN             bIsAllShare = FALSE;
+    LONG                lCount;
 
     __Enter
     {
@@ -2948,17 +2958,17 @@ AFSParseName( IN PIRP Irp,
             // Increment our volume reference count
             //
 
-            InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSParseName Increment count on volume %08lX Cnt %d\n",
                           pVolumeCB,
-                          pVolumeCB->VolumeReferenceCount);
+                          lCount);
 
             *ParentDirectoryCB = pDirEntry;
 
-            InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2966,7 +2976,7 @@ AFSParseName( IN PIRP Irp,
                           &pDirEntry->NameInformation.FileName,
                           pDirEntry,
                           NULL,
-                          pDirEntry->OpenReferenceCount);
+                          lCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
@@ -3196,7 +3206,7 @@ AFSParseName( IN PIRP Irp,
                           "AFSParseName (%08lX) Returning global root access\n",
                           Irp);
 
-            InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+            lCount = InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -3204,7 +3214,7 @@ AFSParseName( IN PIRP Irp,
                           &AFSGlobalRoot->DirectoryCB->NameInformation.FileName,
                           AFSGlobalRoot->DirectoryCB,
                           NULL,
-                          AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+                          lCount);
 
             *VolumeCB = NULL;
 
@@ -3262,7 +3272,7 @@ AFSParseName( IN PIRP Irp,
                               "AFSParseName (%08lX) Returning global root access\n",
                               Irp);
 
-                InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+                lCount = InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -3270,7 +3280,7 @@ AFSParseName( IN PIRP Irp,
                               &AFSGlobalRoot->DirectoryCB->NameInformation.FileName,
                               AFSGlobalRoot->DirectoryCB,
                               NULL,
-                              AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+                              lCount);
 
                 *VolumeCB = NULL;
 
@@ -3305,7 +3315,7 @@ AFSParseName( IN PIRP Irp,
                               "AFSParseName (%08lX) Returning root PIOCtl access\n",
                               Irp);
 
-                InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+                lCount = InterlockedIncrement( &AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -3313,7 +3323,7 @@ AFSParseName( IN PIRP Irp,
                               &AFSGlobalRoot->DirectoryCB->NameInformation.FileName,
                               AFSGlobalRoot->DirectoryCB,
                               NULL,
-                              AFSGlobalRoot->DirectoryCB->OpenReferenceCount);
+                              lCount);
 
                 ClearFlag( *ParseFlags, AFS_PARSE_FLAG_ROOT_ACCESS);
 
@@ -3368,7 +3378,7 @@ AFSParseName( IN PIRP Irp,
 
             ClearFlag( *ParseFlags, AFS_PARSE_FLAG_ROOT_ACCESS);
 
-            InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -3376,7 +3386,7 @@ AFSParseName( IN PIRP Irp,
                           &pDirEntry->NameInformation.FileName,
                           pDirEntry,
                           NULL,
-                          pDirEntry->OpenReferenceCount);
+                          lCount);
 
             try_return( ntStatus = STATUS_SUCCESS);
         }
@@ -3568,7 +3578,7 @@ AFSParseName( IN PIRP Irp,
             uniRemainingPath.Length += sizeof( WCHAR);
             uniRemainingPath.MaximumLength += sizeof( WCHAR);
 
-            InterlockedIncrement( &pVolumeCB->DirectoryCB->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pVolumeCB->DirectoryCB->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -3576,7 +3586,7 @@ AFSParseName( IN PIRP Irp,
                           &pVolumeCB->DirectoryCB->NameInformation.FileName,
                           pVolumeCB->DirectoryCB,
                           NULL,
-                          pVolumeCB->DirectoryCB->OpenReferenceCount);
+                          lCount = pVolumeCB->DirectoryCB->OpenReferenceCount);
 
             //
             // Pass back the parent being the volume root
@@ -3619,13 +3629,13 @@ AFSParseName( IN PIRP Irp,
         // Increment our reference on the volume
         //
 
-        InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSParseName Increment2 count on global volume %08lX Cnt %d\n",
                       pVolumeCB,
-                      pVolumeCB->VolumeReferenceCount);
+                      lCount);
 
 try_exit:
 
@@ -3678,6 +3688,7 @@ AFSCheckCellName( IN GUID *AuthGroup,
     AFSDirectoryCB *pDirNode = NULL;
     UNICODE_STRING uniDirName, uniTargetName;
     AFSVolumeCB *pVolumeCB = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -3778,7 +3789,7 @@ AFSCheckCellName( IN GUID *AuthGroup,
 
             *ShareDirEntry = pVolumeCB->DirectoryCB;
 
-            InterlockedIncrement( &pVolumeCB->DirectoryCB->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pVolumeCB->DirectoryCB->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -3786,18 +3797,20 @@ AFSCheckCellName( IN GUID *AuthGroup,
                           &pVolumeCB->DirectoryCB->NameInformation.FileName,
                           pVolumeCB->DirectoryCB,
                           NULL,
-                          pVolumeCB->DirectoryCB->OpenReferenceCount);
+                          lCount);
 
-            InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
         }
         else
         {
+
+            lCount = InterlockedIncrement( &pDirHdr->ContentIndex);
 
             pDirNode = AFSInitDirEntry( &AFSGlobalRoot->ObjectInformation,
                                         &uniDirName,
                                         &uniTargetName,
                                         pDirEnumEntry,
-                                        (ULONG)InterlockedIncrement( &pDirHdr->ContentIndex));
+                                        (ULONG)lCount);
 
             if( pDirNode == NULL)
             {
@@ -3882,19 +3895,19 @@ AFSCheckCellName( IN GUID *AuthGroup,
 
             SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_INSERTED_ENUM_LIST);
 
-            InterlockedIncrement( &AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeCount);
+            lCount = InterlockedIncrement( &AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NODE_COUNT,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCheckCellName Adding entry %wZ Inc Count %d to parent FID %08lX-%08lX-%08lX-%08lX\n",
-                              &pDirNode->NameInformation.FileName,
-                              AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeCount,
-                              AFSGlobalRoot->ObjectInformation.FileId.Cell,
-                              AFSGlobalRoot->ObjectInformation.FileId.Volume,
-                              AFSGlobalRoot->ObjectInformation.FileId.Vnode,
-                              AFSGlobalRoot->ObjectInformation.FileId.Unique);
+                          &pDirNode->NameInformation.FileName,
+                          lCount,
+                          AFSGlobalRoot->ObjectInformation.FileId.Cell,
+                          AFSGlobalRoot->ObjectInformation.FileId.Volume,
+                          AFSGlobalRoot->ObjectInformation.FileId.Vnode,
+                          AFSGlobalRoot->ObjectInformation.FileId.Unique);
 
-            InterlockedIncrement( &pDirNode->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pDirNode->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -3902,7 +3915,7 @@ AFSCheckCellName( IN GUID *AuthGroup,
                           &pDirNode->NameInformation.FileName,
                           pDirNode,
                           NULL,
-                          pDirNode->OpenReferenceCount);
+                          lCount);
 
             AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -3939,6 +3952,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
     ULONGLONG       ullIndex = 0;
     AFSVolumeCB *pVolumeCB = NULL;
     AFSFileID stTargetFileID;
+    LONG lCount;
 
     __Enter
     {
@@ -4114,14 +4128,14 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
             // deadlock with invalidation
             //
 
-            InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
 
             AFSAcquireExcl( pVolumeCB->VolumeLock,
                             TRUE);
 
-            InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
         }
 
         if( pVolumeCB->RootFcb == NULL)
@@ -4158,7 +4172,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
                       pVolumeCB->ObjectInformation.FileId.Vnode,
                       pVolumeCB->ObjectInformation.FileId.Unique);
 
-        InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
         AFSReleaseResource( pVolumeCB->VolumeLock);
 
@@ -4166,7 +4180,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSBuildMountPointTarget Increment count on volume %08lX Cnt %d\n",
                       pVolumeCB,
-                      pVolumeCB->VolumeReferenceCount);
+                      lCount);
 
         *TargetVolumeCB = pVolumeCB;
 
@@ -4194,6 +4208,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
     UNICODE_STRING uniDirName, uniTargetName;
     ULONGLONG       ullIndex = 0;
     AFSVolumeCB *pVolumeCB = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -4270,14 +4285,14 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
             // deadlock with invalidation
             //
 
-            InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
 
             AFSAcquireExcl( pVolumeCB->VolumeLock,
                             TRUE);
 
-            InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
         }
 
 
@@ -4315,7 +4330,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
                       pVolumeCB->ObjectInformation.FileId.Vnode,
                       pVolumeCB->ObjectInformation.FileId.Unique);
 
-        InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
         AFSReleaseResource( pVolumeCB->VolumeLock);
 
@@ -4323,7 +4338,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSBuildRootVolume Increment count on volume %08lX Cnt %d\n",
                       pVolumeCB,
-                      pVolumeCB->VolumeReferenceCount);
+                      lCount);
 
         *TargetVolumeCB = pVolumeCB;
 
