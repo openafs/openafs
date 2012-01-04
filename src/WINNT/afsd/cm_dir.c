@@ -1169,14 +1169,23 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
     code = cm_DirCheckStatus(op, 1);
 
     if (code == 0 &&
-        op->dataVersion == op->scp->dataVersion - 1) {
-        /* only one set of changes happened between cm_BeginDirOp()
-           and this function.  It is safe for us to perform local
-           changes. */
+        op->dataVersion == op->scp->dataVersion - 1)
+    {
+        /*
+         * only one set of changes happened between cm_BeginDirOp()
+         * and this function.  It is safe for us to perform local
+         * changes. */
         op->newDataVersion = op->scp->dataVersion;
         op->newLength = op->scp->serverLength;
 
         rc = 1;
+    } else {
+        /*
+         * The directory buffers are no longer up to date.
+         */
+        op->scp->bufDataVersionLow = op->scp->dataVersion;
+
+        rc = 0;
     }
 
     if (rc)
