@@ -1156,7 +1156,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (Share) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (MP/SL) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
                               pFcb->OpenHandleCount);
 
@@ -1204,7 +1204,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (MP/SL) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              "AFSCleanup (Share) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
                               pFcb->OpenHandleCount);
 
