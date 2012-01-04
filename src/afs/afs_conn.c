@@ -469,7 +469,11 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 * Will need to be revisited if/when CB gets security.
 	 */
 	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad) &&
-	    (tu->viceId == UNDEFVID) && (tu->uid == 0))
+	    (tu->viceId == UNDEFVID)
+#ifndef UKERNEL /* ukernel runs as just one uid anyway */
+	    && (tu->uid == 0)
+#endif
+	    )
 	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
