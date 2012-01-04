@@ -3678,7 +3678,7 @@ CreateRootDir(struct SalvInfo *salvinfo, VolumeDiskData *volHeader,
     Inode *ip;
     afs_sfsize_t bytes;
     struct VnodeEssence *vep;
-    Inode readmeinode;
+    Inode readmeinode = 0;
     time_t now = time(NULL);
 
     if (!salvinfo->vnodeInfo[vLarge].vnodes && !salvinfo->vnodeInfo[vSmall].vnodes) {
