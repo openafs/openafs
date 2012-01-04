@@ -66,6 +66,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
     IO_STATUS_BLOCK stIoSB;
     AFSObjectInfoCB *pObjectInfo = NULL;
     AFSFileCleanupCB stFileCleanup;
+    AFSFileCleanupResultCB *pResultCB = NULL;
+    ULONG ulResultLen = 0;
     ULONG   ulNotificationFlags = 0;
 
     __try
@@ -109,6 +111,26 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
         stFileCleanup.ProcessId = (ULONGLONG)PsGetCurrentProcessId();
 
         stFileCleanup.Identifier = (ULONGLONG)pFileObject;
+
+        //
+        // Allocate our return buffer
+        //
+
+        pResultCB = (AFSFileCleanupResultCB *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                        PAGE_SIZE,
+                                                                        AFS_GENERIC_MEMORY_32_TAG);
+
+        if( pResultCB == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pResultCB,
+                       PAGE_SIZE);
+
+        ulResultLen = PAGE_SIZE;
+
 
         //
         // Perform the cleanup functionality depending on the type of node it is
@@ -411,8 +433,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                   &pObjectInfo->FileId,
                                                   &stFileCleanup,
                                                   sizeof( AFSFileCleanupCB),
-                                                  NULL,
-                                                  NULL);
+                                                  pResultCB,
+                                                  &ulResultLen);
 
                     if( !NT_SUCCESS( ntStatus) &&
                         ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
@@ -535,15 +557,17 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     // Push the request to the service
                     //
 
-                    AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
-                                       ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                       &pCcb->AuthGroup,
-                                       &pCcb->DirectoryCB->NameInformation.FileName,
-                                       &pObjectInfo->FileId,
-                                       &stFileCleanup,
-                                       sizeof( AFSFileCleanupCB),
-                                       NULL,
-                                       NULL);
+                    ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
+                                                  ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                                  &pCcb->AuthGroup,
+                                                  &pCcb->DirectoryCB->NameInformation.FileName,
+                                                  &pObjectInfo->FileId,
+                                                  &stFileCleanup,
+                                                  sizeof( AFSFileCleanupCB),
+                                                  pResultCB,
+                                                  &ulResultLen);
+
+                    ntStatus = STATUS_SUCCESS;
                 }
 
                 //
@@ -711,8 +735,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                   &pObjectInfo->FileId,
                                                   &stFileCleanup,
                                                   sizeof( AFSFileCleanupCB),
-                                                  NULL,
-                                                  NULL);
+                                                  pResultCB,
+                                                  &ulResultLen);
 
                     if( !NT_SUCCESS( ntStatus) &&
                         ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
@@ -809,15 +833,17 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     stFileCleanup.FileAccess = pCcb->FileAccess;
 
-                    AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
-                                       ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                       &pCcb->AuthGroup,
-                                       &pCcb->DirectoryCB->NameInformation.FileName,
-                                       &pObjectInfo->FileId,
-                                       &stFileCleanup,
-                                       sizeof( AFSFileCleanupCB),
-                                       NULL,
-                                       NULL);
+                    ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
+                                                  ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                                  &pCcb->AuthGroup,
+                                                  &pCcb->DirectoryCB->NameInformation.FileName,
+                                                  &pObjectInfo->FileId,
+                                                  &stFileCleanup,
+                                                  sizeof( AFSFileCleanupCB),
+                                                  pResultCB,
+                                                  &ulResultLen);
+
+                    ntStatus = STATUS_SUCCESS;
                 }
 
                 //
@@ -978,8 +1004,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                   &pObjectInfo->FileId,
                                                   &stFileCleanup,
                                                   sizeof( AFSFileCleanupCB),
-                                                  NULL,
-                                                  NULL);
+                                                  pResultCB,
+                                                  &ulResultLen);
 
                     if( !NT_SUCCESS( ntStatus) &&
                         ntStatus != STATUS_OBJECT_NAME_NOT_FOUND)
@@ -1076,15 +1102,17 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     stFileCleanup.FileAccess = pCcb->FileAccess;
 
-                    AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
-                                       ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                       &pCcb->AuthGroup,
-                                       &pCcb->DirectoryCB->NameInformation.FileName,
-                                       &pObjectInfo->FileId,
-                                       &stFileCleanup,
-                                       sizeof( AFSFileCleanupCB),
-                                       NULL,
-                                       NULL);
+                    ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_CLEANUP_PROCESSING,
+                                                  ulNotificationFlags | AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                                  &pCcb->AuthGroup,
+                                                  &pCcb->DirectoryCB->NameInformation.FileName,
+                                                  &pObjectInfo->FileId,
+                                                  &stFileCleanup,
+                                                  sizeof( AFSFileCleanupCB),
+                                                  pResultCB,
+                                                  &ulResultLen);
+
+                    ntStatus = STATUS_SUCCESS;
                 }
 
                 //
@@ -1201,6 +1229,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
 
 try_exit:
+
+        if( pResultCB != NULL)
+        {
+
+            AFSExFreePool( pResultCB);
+        }
 
         if( pFileObject != NULL)
         {
