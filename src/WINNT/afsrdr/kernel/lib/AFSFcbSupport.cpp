@@ -358,6 +358,7 @@ AFSInitVolume( IN GUID *AuthGroup,
     BOOLEAN bReleaseLocks = FALSE;
     AFSVolumeInfoCB stVolumeInformation;
     AFSNonPagedDirectoryCB *pNonPagedDirEntry = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -415,7 +416,7 @@ AFSInitVolume( IN GUID *AuthGroup,
                 // So we don't lock with an invalidation call ...
                 //
 
-                InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+                lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
                 AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
 
@@ -426,7 +427,7 @@ AFSInitVolume( IN GUID *AuthGroup,
                 AFSAcquireExcl( pVolumeCB->VolumeLock,
                                 TRUE);
 
-                InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
                 *VolumeCB = pVolumeCB;
 

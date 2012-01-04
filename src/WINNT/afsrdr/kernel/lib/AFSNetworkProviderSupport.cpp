@@ -1235,6 +1235,7 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
     ULONG ulIndex = 0;
     BOOLEAN bContinueProcessing = TRUE;
     AFSFileInfoCB stFileInformation;
+    LONG lCount;
 
     __Enter
     {
@@ -1298,7 +1299,7 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             }
         }
 
-        InterlockedIncrement( &pShareDirEntry->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pShareDirEntry->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1306,7 +1307,7 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                       &pShareDirEntry->NameInformation.FileName,
                       pShareDirEntry,
                       NULL,
-                      pShareDirEntry->OpenReferenceCount);
+                      lCount);
 
         AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -1394,15 +1395,15 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             pDirEntry = (AFSDirectoryCB *)pDirEntry->ListEntry.fLink;
         }
 
-        InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
+        lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEnumerateConnection Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
-                                                    &pTargetDirEntry->NameInformation.FileName,
-                                                    pTargetDirEntry,
-                                                    NULL,
-                                                    pTargetDirEntry->OpenReferenceCount);
+                      &pTargetDirEntry->NameInformation.FileName,
+                      pTargetDirEntry,
+                      NULL,
+                      lCount);
 
         *CopiedLength = ulCopiedLength;
 
@@ -1412,7 +1413,15 @@ try_exit:
 
         if( pShareDirEntry != NULL)
         {
-            InterlockedDecrement( &pShareDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pShareDirEntry->OpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSEnumerateConnection1 Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pShareDirEntry->NameInformation.FileName,
+                          pShareDirEntry,
+                          NULL,
+                          lCount);
         }
     }
 

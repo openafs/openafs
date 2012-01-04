@@ -69,6 +69,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
     AFSFileCleanupResultCB *pResultCB = NULL;
     ULONG ulResultLen = 0;
     ULONG   ulNotificationFlags = 0;
+    LONG    lCount;
 
     __try
     {
@@ -153,15 +154,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (RootAll) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenHandleCount);
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+                              lCount);
 
                 FsRtlNotifyCleanup( pControlDeviceExt->Specific.Control.NotifySync,
                                     &pControlDeviceExt->Specific.Control.DirNotifyList,
@@ -192,28 +193,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0)
                 {
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (IOCtl) Decrement child open handle count on Parent object %08lX Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                                  lCount);
                 }
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (IOCtl) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenHandleCount);
-
-                //
-                // And finally, release the Fcb if we acquired it.
-                //
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+                              lCount);
 
                 break;
             }
@@ -628,28 +625,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ASSERT( pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0);
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (File) Decrement child open handle count on Parent object %08lX Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                                  lCount);
                 }
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (File) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenHandleCount);
-
-                //
-                // And finally, release the Fcb if we acquired it.
-                //
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+                              lCount);
 
                 break;
             }
@@ -946,28 +939,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ASSERT( pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0);
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Dir) Decrement child open handle count on Parent object %08lX Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                                  lCount);
                 }
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (Dir) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenHandleCount);
-
-                //
-                // And finally, release the Fcb if we acquired it.
-                //
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+                              lCount);
 
                 break;
             }
@@ -1241,28 +1230,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ASSERT( pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0);
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (MP/SL) Decrement child open handle count on Parent object %08lX Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                                  lCount);
                 }
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (MP/SL) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenHandleCount);
-
-                //
-                // And finally, release the Fcb if we acquired it.
-                //
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+                              lCount);
 
                 break;
             }
@@ -1289,28 +1274,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0)
                 {
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Share) Decrement child open handle count on Parent object %08lX Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                                  lCount);
                 }
 
-                InterlockedDecrement( &pFcb->OpenHandleCount);
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup (Share) Decrement handle count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenHandleCount);
-
-                //
-                // And finally, release the Fcb if we acquired it.
-                //
-
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+                              lCount);
 
                 break;
             }
