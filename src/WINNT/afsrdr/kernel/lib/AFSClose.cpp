@@ -510,15 +510,13 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 else
                 {
 
-                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                        pFcb->Specific.File.ExtentsDirtyCount &&
+                        (pCcb->GrantedAccess & FILE_WRITE_DATA))
                     {
 
-                        if( pFcb->Specific.File.ExtentsDirtyCount)
-                        {
-
-                            AFSFlushExtents( pFcb,
-                                             &pCcb->AuthGroup);
-                        }
+                        AFSFlushExtents( pFcb,
+                                         &pCcb->AuthGroup);
                     }
 
                     AFSReleaseResource( &pFcb->NPFcb->Resource);
