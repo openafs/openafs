@@ -3441,6 +3441,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     cm_req_t    req;
     int         dirty = 0;
     int         released = 0;
+    int         deleted = 0;
     DWORD       status;
 #ifdef ODS_DEBUG
 #ifdef VALIDATE_CHECK_SUM
@@ -3480,13 +3481,20 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                   code, status);
     }
 
+    deleted = scp && (scp->flags & CM_SCACHEFLAG_DELETED);
+
     /*
      * We do not stop processing as a result of being unable to find the cm_scache object.
      * If this occurs something really bad has happened since the cm_scache object must have
      * been recycled while extents were held by the redirector.  However, we will be resilient
      * and carry on without it.
+     *
+     * If the file is known to be deleted, there is no point attempting to ask the
+     * file server about it or update the attributes.
      */
-    if (scp && ReleaseExtentsCB->AllocationSize.QuadPart != scp->length.QuadPart) {
+    if (scp && ReleaseExtentsCB->AllocationSize.QuadPart != scp->length.QuadPart &&
+        !deleted)
+    {
         cm_attr_t setAttr;
 
         memset(&setAttr, 0, sizeof(cm_attr_t));
@@ -3949,6 +3957,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
         cm_scache_t *    scp = NULL;
         int              dirty = 0;
         int              released = 0;
+        int              deleted = 0;
         char * p;
 
         userp = RDR_UserFromAuthGroup( &pFileCB->AuthGroup);
@@ -3980,6 +3989,8 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
              * from accepting the extents back from the redirector.
              */
         }
+
+        deleted = scp && (scp->flags & CM_SCACHEFLAG_DELETED);
 
         /* if the scp was not found, do not perform the length check */
         if (scp && (pFileCB->AllocationSize.QuadPart != scp->length.QuadPart)) {
@@ -4118,8 +4129,8 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
 #endif
                             }
 
-                            if ( (ReleaseFileExtentsResultCB->Flags & AFS_EXTENT_FLAG_DIRTY) ||
-                                 (pExtent->Flags & AFS_EXTENT_FLAG_DIRTY) )
+                            if ((ReleaseFileExtentsResultCB->Flags & AFS_EXTENT_FLAG_DIRTY) ||
+                                (pExtent->Flags & AFS_EXTENT_FLAG_DIRTY))
                             {
 #ifdef VALIDATE_CHECK_SUM
                                 if ( buf_ValidateCheckSum(bufp) ) {
@@ -4157,8 +4168,10 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                                                       pExtent->CacheOffset.HighPart,
                                                       pExtent->CacheOffset.LowPart);
 
-                                            buf_SetDirty(bufp, &req, pExtent->DirtyOffset, pExtent->DirtyLength, userp);
-                                            dirty++;
+                                            if (!deleted) {
+                                                buf_SetDirty(bufp, &req, pExtent->DirtyOffset, pExtent->DirtyLength, userp);
+                                                dirty++;
+                                            }
                                         } else {
 #ifdef ODS_DEBUG
                                             snprintf(dbgstr, 1024,
@@ -4184,8 +4197,10 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                                     }
                                 }
 #else /* !VALIDATE_CHECK_SUM */
-                                buf_SetDirty(bufp, &req, pExtent->DirtyOffset, pExtent->DirtyLength, userp);
-                                dirty++;
+                                if (!deleted) {
+                                    buf_SetDirty(bufp, &req, pExtent->DirtyOffset, pExtent->DirtyLength, userp);
+                                    dirty++;
+                                }
 #ifdef ODS_DEBUG
                                 snprintf(dbgstr, 1024,
                                           "RDR_ProcessReleaseFileExtentsResult dirty! vol 0x%x vno 0x%x uniq 0x%x foffset 0x%x:%x coffset 0x%x:%x\n",
@@ -4203,7 +4218,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
 #ifdef ODS_DEBUG
                                 HexCheckSum(md5dbg, sizeof(md5dbg), bufp->md5cksum);
 #endif
-                                if ( !buf_ValidateCheckSum(bufp) ) {
+                                if (!buf_ValidateCheckSum(bufp) ) {
                                     buf_ComputeCheckSum(bufp);
 #ifdef ODS_DEBUG
                                     HexCheckSum(md5dbg3, sizeof(md5dbg2), bufp->md5cksum);
@@ -4227,8 +4242,10 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
 #ifdef DEBUG
                                     DebugBreak();
 #endif
-                                    buf_SetDirty(bufp, &req, pExtent->DirtyOffset, pExtent->DirtyLength, userp);
-                                    dirty++;
+                                    if (!deleted) {
+                                        buf_SetDirty(bufp, &req, pExtent->DirtyOffset, pExtent->DirtyLength, userp);
+                                        dirty++;
+                                    }
                                 } else {
                                     buf_ComputeCheckSum(bufp);
 #ifdef ODS_DEBUG
