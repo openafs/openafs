@@ -21,11 +21,15 @@
 #include "kautils.h"
 #include "kaserver.h"
 
+#if !defined(offsetof)
+#include <stddef.h>             /* for definition of offsetof() */
+#endif
+
 extern Date cheaderReadTime;	/* time cheader last read in */
 
-#define set_header_word(tt,field,value) kawrite ((tt), ((char *)&(cheader.field) - (char *)&cheader), ((cheader.field = (value)), (char *)&(cheader.field)), sizeof(afs_int32))
+#define set_header_word(tt,field,value) kawrite ((tt), (offsetof(struct kaheader, field)), ((cheader.field = (value)), (char *)&(cheader.field)), sizeof(afs_int32))
 
-#define inc_header_word(tt,field) kawrite ((tt), ((char *)&(cheader.field) - (char *)&cheader), ((cheader.field = (htonl(ntohl(cheader.field)+1))), (char *)&(cheader.field)), sizeof(afs_int32))
+#define inc_header_word(tt,field) kawrite ((tt), (offsetof(struct kaheader, field)), ((cheader.field = (htonl(ntohl(cheader.field)+1))), (char *)&(cheader.field)), sizeof(afs_int32))
 
 static int index_OK(afs_int32);
 

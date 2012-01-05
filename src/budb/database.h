@@ -12,6 +12,10 @@
 #include <lock.h>
 #include "budb.h"
 
+#if !defined(offsetof)
+#include <stddef.h>             /* for definition of offsetof() */
+#endif
+
 typedef afs_uint32 dbadr;
 
 struct hashTable {
@@ -289,7 +293,7 @@ struct memoryDB {		/* in core copies of database structures */
 extern struct memoryDB db;
 
 #define set_header_word(ut,field,value) \
-    dbwrite ((ut), ((char *)&(db.h.field) - (char *)&db.h), \
+    dbwrite ((ut), (offsetof(struct dbHeader, field)), \
 	     ((db.h.field = (value)), (char *)&(db.h.field)), \
 	     sizeof(afs_int32))
 
