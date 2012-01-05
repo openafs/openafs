@@ -131,12 +131,12 @@ static void ucs_ProcParams_setup(definition * defp, int split_flag);
 static void ucs_ProcTail_setup(definition * defp, int split_flag);
 static void ss_Proc_CodeGeneration(definition * defp);
 static void ss_ProcName_setup(definition * defp);
-static void ss_ProcParams_setup(definition * defp, int *somefrees);
-static void ss_ProcSpecial_setup(definition * defp, int *somefrees);
+static void ss_ProcParams_setup(definition * defp);
+static void ss_ProcSpecial_setup(definition * defp);
 static void ss_ProcUnmarshallInParams_setup(definition * defp);
 static void ss_ProcCallRealProc_setup(definition * defp);
 static void ss_ProcMarshallOutParams_setup(definition * defp);
-static void ss_ProcTail_setup(definition * defp, int somefrees);
+static void ss_ProcTail_setup(definition * defp);
 static int opcode_holes_exist(void);
 static void er_ProcDeclExterns_setup(void);
 static void er_ProcProcsArray_setup(void);
@@ -1343,17 +1343,15 @@ cs_ProcTail_setup(definition * defp, int split_flag)
 static void
 ss_Proc_CodeGeneration(definition * defp)
 {
-    int somefrees = 0;
-
     defp->can_fail = 0;
     ss_ProcName_setup(defp);
     if (!cflag) {
-	ss_ProcParams_setup(defp, &somefrees);
-	ss_ProcSpecial_setup(defp, &somefrees);
+	ss_ProcParams_setup(defp);
+	ss_ProcSpecial_setup(defp);
 	ss_ProcUnmarshallInParams_setup(defp);
 	ss_ProcCallRealProc_setup(defp);
 	ss_ProcMarshallOutParams_setup(defp);
-	ss_ProcTail_setup(defp, somefrees);
+	ss_ProcTail_setup(defp);
     }
 }
 
@@ -1384,7 +1382,7 @@ ss_ProcName_setup(definition * defp)
 
 
 static void
-ss_ProcParams_setup(definition * defp, int *somefrees)
+ss_ProcParams_setup(definition * defp)
 {
     proc1_list *plist, *plist1;
     list *listp;
@@ -1408,7 +1406,6 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 			plist->pl.param_name);
 	    } else {
 		plist->pl.param_flag |= FREETHIS_PARAM;
-		*somefrees = 1;
 		f_print(fout, "\t%s %s=(%s)0", plist->pl.param_type,
 			plist->pl.param_name, plist->pl.param_type);
 	    }
@@ -1423,7 +1420,6 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 			f_print(fout, ", %s", plist1->pl.param_name);
 		    } else {
 			plist1->pl.param_flag |= FREETHIS_PARAM;
-			*somefrees = 1;
 			f_print(fout, ", *%s=(%s)0", plist1->pl.param_name,
 				plist1->pl.param_type);
 		    }
@@ -1456,7 +1452,7 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 
 
 static void
-ss_ProcSpecial_setup(definition * defp, int *somefrees)
+ss_ProcSpecial_setup(definition * defp)
 {
     proc1_list *plist;
     definition *defp1;
@@ -1475,22 +1471,18 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 		if (streq(string, structname(plist->pl.param_type))) {
 		    plist->pl.string_name = spec->sdef.string_name;
 		    plist->pl.param_flag |= FREETHIS_PARAM;
-		    *somefrees = 1;
 		    fprintf(fout, "\n\t%s.%s = 0;", plist->pl.param_name,
 			    spec->sdef.string_name);
 		}
 	    }
 	}
     }
-    if (!*somefrees)
-	fprintf(fout, "\n");
     for (listp = typedef_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
 		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
 		    plist->pl.param_flag |= FREETHIS_PARAM;
-		    *somefrees = 1;
 		    switch (defp1->pc.rel) {
 		    case REL_ARRAY:
 			plist->pl.string_name = alloc(40);
@@ -1526,7 +1518,6 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 	    if (plist->component_kind == DEF_PARAM) {
 		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
 		    plist->pl.param_flag |= FREETHIS_PARAM;
-		    *somefrees = 1;
 		    fprintf(fout, "\n\tmemset(&%s, 0, sizeof(%s));",
 				 plist->pl.param_name, defp1->def_name);
 		}
@@ -1629,30 +1620,36 @@ ss_ProcMarshallOutParams_setup(definition * defp)
     }
 }
 
+static void
+ss_ProcTail_frees(char *xdrfunc, int *somefrees) {
+    if (!*somefrees) {
+	f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
+        f_print(fout, "\tif ((!%s)", xdrfunc);
+	*somefrees = 1;
+    } else {
+	f_print(fout, "\n\t    || (!%s)", xdrfunc);
+    }
+}
+
 
 static void
-ss_ProcTail_setup(definition * defp, int somefrees)
+ss_ProcTail_setup(definition * defp)
 {
     proc1_list *plist;
     definition *defp1;
     list *listp;
-    int firsttime = 0;
+    int somefrees = 0;
 
     if (defp->can_fail) {
 	f_print(fout, "fail:\n");
     }
-    for (plist = defp->pc.plists; plist; plist = plist->next) {
-	if (plist->component_kind == DEF_PARAM
-	    && (plist->pl.param_flag & FREETHIS_PARAM))
-	    somefrees = 1;
-    }
-    if (somefrees)
-	f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
+
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM
 		&& (plist->pl.param_flag & FREETHIS_PARAM))
-	    f_print(fout, "\tif (!%s) goto fail1;\n", plist->scode);
+	    ss_ProcTail_frees(plist->scode, &somefrees);
     }
+
     for (listp = typedef_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
@@ -1664,13 +1661,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 		    switch (defp1->pc.rel) {
 		    case REL_ARRAY:
 		    case REL_POINTER:
-			if (!somefrees && !firsttime) {
-			    firsttime = 1;
-			    f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
-			}
-			somefrees = 1;
-			f_print(fout, "\tif (!%s) goto fail1;\n",
-				plist->scode);
+			ss_ProcTail_frees(plist->scode, &somefrees);
 			break;
 		    default:
 			break;
@@ -1679,6 +1670,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 	    }
 	}
     }
+
     for (listp = uniondef_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
@@ -1688,17 +1680,16 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 		&& !(plist->pl.param_flag & FREETHIS_PARAM)) {
 		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
 		    if (plist->pl.param_flag & INDIRECT_PARAM) {
-			if (!somefrees && !firsttime) {
-			    firsttime = 1;
-			    f_print(fout, "\tz_xdrs->x_op = XDR_FREE;\n");
-			}
-			somefrees = 1;
-			f_print(fout, "\tif (!%s) goto fail1;\n",
-				plist->scode);
+			ss_ProcTail_frees(plist->scode, &somefrees);
 		    }
 		}
 	    }
 	}
+    }
+
+    if (somefrees) {
+	f_print(fout, ")\n");
+	f_print(fout, "\t\tz_result = RXGEN_SS_XDRFREE;\n\n");
     }
 
     if (xflag) {
@@ -1717,29 +1708,7 @@ ss_ProcTail_setup(definition * defp, int somefrees)
     }
 
     f_print(fout, "\treturn z_result;\n");
-    if (somefrees) {
-	f_print(fout, "fail1:\n");
-
-	if (xflag) {
-	    f_print(fout, "\tif (rx_enable_stats) {\n");
-	    f_print(fout,
-		    "\t    rx_RecordCallStatistics(z_call,");
-	    if (PackageStatIndex[PackageIndex]) {
-		f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
-	    } else {
-		f_print(fout,
-			"\n\t\t(((afs_uint32)(ntohs(rx_ServiceIdOf(rx_ConnectionOf(z_call))) << 16)) |\n"
-			"\t\t((afs_uint32)ntohs(rx_ServiceOf(rx_ConnectionOf(z_call))->servicePort))),\n");
-	    }
-	    f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 0);\n",
-		    no_of_stat_funcs, PackagePrefix[PackageIndex]);
-	    f_print(fout, "\t}\n\n");
-	}
-
-	f_print(fout, "\treturn RXGEN_SS_XDRFREE;\n}\n\n");
-    } else {
-	f_print(fout, "}\n\n");
-    }
+    f_print(fout, "}\n\n");
 }
 
 
