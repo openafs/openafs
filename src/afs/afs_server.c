@@ -725,7 +725,8 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 		conntimer[nconns]=0;
 	    }
 	    nconns++;
-	}
+	} else /* not holding, kill ref */
+	    afs_PutConn(tc, rxconn, SHARED_LOCK);
     } /* Outer loop over addrs */
 
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
