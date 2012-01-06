@@ -167,6 +167,8 @@
 	rx_ConnError;
 	rx_ConnectionOf;
 	rx_RecordCallStatistics;
+	rx_KeepAliveOn;
+	rx_KeepAliveOff;
     local:
 	*;
 };
