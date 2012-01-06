@@ -2068,7 +2068,7 @@ $(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o UAFS.pic/libuafs_pic.a
 clean:
 	-$(RM) -rf UAFS* JUAFS* AFSWEB* PERLUAFS nsapi afsd afs afsint config rx
 	-$(RM) -rf h
-	-$(RM) linktest $(AFS_OS_CLEAN)
+	-$(RM) -f linktest $(AFS_OS_CLEAN)
 
 install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS) UAFS.pic/libuafs_pic.a \
 		@LIBUAFS_BUILD_PERL@
@@ -2129,11 +2129,13 @@ JUAFS:
 AFSWEB:
 	mkdir -p $@
 
-setup_common:
-	-$(RM) -f nsapi afsd
+h: $(TOP_SRC_AFS)/*.c $(TOP_SRC_VNOPS)/*.c $(TOP_SRC_RX)/*.c
 	-$(RM) -rf h
 	@TOP_SRCDIR@/libuafs/make_h_tree.pl $(TOP_SRC_AFS) $(TOP_SRC_VNOPS) \
 		$(TOP_SRC_RX)
+
+setup_common: h
+	-$(RM) -f nsapi afsd
 	-ln -s $(TOP_SRCDIR)/afsd afsd
 	-ln -s $(NS_INCL) nsapi
 
