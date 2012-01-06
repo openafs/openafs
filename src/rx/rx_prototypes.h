@@ -159,6 +159,8 @@ extern void rxi_ChallengeEvent(struct rxevent *event,
 			       void *conn, /* struct rx_connection *conn */
 			       void *arg1, int atries);
 extern void rxi_ChallengeOn(struct rx_connection *conn);
+extern void rx_KeepAliveOn(struct rx_call *call);
+extern void rx_KeepAliveOff(struct rx_call *call);
 extern int rxs_Release(struct rx_securityClass *aobj);
 #ifndef KERNEL
 extern void rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
