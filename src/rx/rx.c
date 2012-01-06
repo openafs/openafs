@@ -6655,6 +6655,20 @@ rxi_KeepAliveOn(struct rx_call *call)
     rxi_ScheduleKeepAliveEvent(call);
 }
 
+/*
+ * Solely in order that callers not need to include rx_call.h
+ */
+void
+rx_KeepAliveOff(struct rx_call *call)
+{
+    rxi_KeepAliveOff(call);
+}
+void
+rx_KeepAliveOn(struct rx_call *call)
+{
+    rxi_KeepAliveOn(call);
+}
+
 void
 rxi_GrowMTUOn(struct rx_call *call)
 {
