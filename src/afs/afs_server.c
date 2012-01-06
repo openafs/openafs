@@ -640,7 +640,8 @@ afs_CheckServers(int adown, struct cell *acellp)
 		conntimer[nconns]=0;
 	    }
 	    nconns++;
-	}
+	} else /* not holding, kill ref */
+	    afs_PutConn(tc, rxconn, SHARED_LOCK);
     } /* Outer loop over addrs */
 
     AFS_GUNLOCK();
