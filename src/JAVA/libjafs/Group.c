@@ -22,6 +22,8 @@
 #include "Internal.h"
 #include "org_openafs_jafs_Group.h"
 
+#include <afs_vosAdmin.h>
+
 #include <stdio.h>
 #include <afs_ptsAdmin.h>
 #include <afs_AdminPtsErrors.h>
