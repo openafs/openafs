@@ -282,9 +282,6 @@ int
 rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 {
     int bytes;
-    int tcurlen;
-    int tnLeft;
-    char *tcurpos;
     SPLVAR;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
@@ -299,15 +296,12 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
      * Most common case, all of the data is in the current iovec.
      * We are relying on nLeft being zero unless the call is in receive mode.
      */
-    tcurlen = call->curlen;
-    tnLeft = call->nLeft;
-    if (!call->error && tcurlen > nbytes && tnLeft > nbytes) {
-	tcurpos = call->curpos;
-        memcpy(buf, tcurpos, nbytes);
+    if (!call->error && call->curlen > nbytes && call->nLeft > nbytes) {
+        memcpy(buf, call->curpos, nbytes);
 
-	call->curpos = tcurpos + nbytes;
-	call->curlen = tcurlen - nbytes;
-	call->nLeft = tnLeft - nbytes;
+	call->curpos += nbytes;
+	call->curlen -= nbytes;
+	call->nLeft  -= nbytes;
 
         if (!call->nLeft && call->currentPacket != NULL) {
             /* out of packet.  Get another one. */
@@ -328,9 +322,6 @@ int
 rx_ReadProc32(struct rx_call *call, afs_int32 * value)
 {
     int bytes;
-    int tcurlen;
-    int tnLeft;
-    char *tcurpos;
     SPLVAR;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
@@ -345,17 +336,15 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
      * Most common case, all of the data is in the current iovec.
      * We are relying on nLeft being zero unless the call is in receive mode.
      */
-    tcurlen = call->curlen;
-    tnLeft = call->nLeft;
-    if (!call->error && tcurlen >= sizeof(afs_int32)
-	&& tnLeft >= sizeof(afs_int32)) {
-	tcurpos = call->curpos;
+    if (!call->error && call->curlen >= sizeof(afs_int32)
+	&& call->nLeft >= sizeof(afs_int32)) {
 
-        memcpy((char *)value, tcurpos, sizeof(afs_int32));
+        memcpy((char *)value, call->curpos, sizeof(afs_int32));
 
-        call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
-	call->nLeft = (u_short)(tnLeft - sizeof(afs_int32));
+        call->curpos += sizeof(afs_int32);
+	call->curlen -= sizeof(afs_int32);
+	call->nLeft  -= sizeof(afs_int32);
+
         if (!call->nLeft && call->currentPacket != NULL) {
             /* out of packet.  Get another one. */
             rxi_FreePacket(call->currentPacket);
