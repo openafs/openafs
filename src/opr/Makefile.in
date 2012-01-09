@@ -44,5 +44,5 @@ install: libopr.a
 dest: libopr.a
 	$(INSTALL_DATA) libopr.a $(DEST)/lib/libopr.a
 
-buildtools: $(HEADERS)
+buildtools: $(HEADERS) $(TOP_LIBDIR)/libopr.a
 

@@ -64,6 +64,7 @@ generated: force buildtools
 	+${COMPILE_PART1} config ${COMPILE_PART2A} generated_clean
 	+${COMPILE_PART1} roken ${COMPILE_PART2A} clean
 	+${COMPILE_PART1} crypto/hcrypto ${COMPILE_PART2A} clean
+	+${COMPILE_PART1} opr ${COMPILE_PART2A} clean
 
 install: all install_dirs
 	$(MAKE) build COMPILE_PART2B=install
