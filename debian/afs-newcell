@@ -233,7 +233,7 @@ run("bos create $server dafs dafs"
     . " -cmd /usr/lib/openafs/davolserver"
     . " -cmd /usr/lib/openafs/salvageserver"
     . " -cmd /usr/lib/openafs/dasalvager -localauth");
-unwind("bos delete $server fs -localauth");
+unwind("bos delete $server dafs -localauth");
 
 # Make sure that there is no scheduled general restart time; it's not needed.
 run("bos setrestart $server -time never -general -localauth");

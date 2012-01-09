@@ -3,6 +3,8 @@ openafs (1.6.1~pre1-2) UNRELEASED; urgency=low
   * Fix afs-newcell's creation of the file server process to pass
     -localauth.  This was broken when demand-attach support was
     added.  Thanks, Florian Hatat.  (Closes: #652973)
+  * Fix afs-newcell's unwind of file server process creation.  Thanks,
+    Davor.  (Closes: #655136)
   * Translation updates:
     - Danish, thanks Joe Hansen.  (Closes: #654933)
 
