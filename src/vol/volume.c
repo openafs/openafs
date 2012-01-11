@@ -5629,6 +5629,10 @@ VScheduleSalvage_r(Volume * vp)
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "denied\n", afs_printable_uint32_lu(vp->hashid));
 		break;
+	    case SYNC_FAILED:
+		Log("VScheduleSalvage_r: Salvage request for volume %lu "
+		    "failed\n", afs_printable_uint32_lu(vp->hashid));
+		break;
 	    default:
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "received unknown protocol error %d\n",
