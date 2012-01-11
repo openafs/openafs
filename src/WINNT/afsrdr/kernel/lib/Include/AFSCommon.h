@@ -391,6 +391,10 @@ NTSTATUS
 AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
                             IN GUID *AuthGroup);
 
+NTSTATUS
+AFSReleaseCleanExtents( IN AFSFcb *Fcb,
+                        IN GUID *AuthGroup);
+
 VOID
 AFSMarkDirty( IN AFSFcb *pFcb,
               IN AFSExtent *StartExtent,
@@ -421,6 +425,9 @@ AFSDereferenceActiveExtents( IN AFSExtent *StartExtent,
 void
 AFSRemoveEntryDirtyList( IN AFSFcb *Fcb,
                          IN AFSExtent *Extent);
+
+AFSExtent *
+ExtentFor( PLIST_ENTRY le, ULONG SkipList );
 
 #if GEN_MD5
 void
@@ -1373,6 +1380,10 @@ AFSRetrieveValidAuthGroup( IN AFSFcb *Fcb,
                            IN BOOLEAN WriteAccess,
                            OUT GUID *AuthGroup);
 
+NTSTATUS
+AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
+                            IN ULONG InvalidateReason);
+
 //
 // AFSWorker.cpp Prototypes
 //
@@ -1465,6 +1476,10 @@ AFSQueueStartIos( IN PFILE_OBJECT CacheFileObject,
                   IN AFSIoRun *IoRuns,
                   IN ULONG RunCount,
                   IN AFSGatherIo *GatherIo);
+
+NTSTATUS
+AFSQueueInvalidateObject( IN AFSObjectInfoCB *ObjectInfo,
+                          IN ULONG InvalidateReason);
 
 //
 // AFSMD5Support.cpp Prototypes

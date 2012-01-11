@@ -737,6 +737,17 @@ AFSWorkerThread( IN PVOID Context)
                         break;
                     }
 
+                    case AFS_WORK_INVALIDATE_OBJECT:
+                    {
+
+                        AFSPerformObjectInvalidate( pWorkItem->Specific.Invalidate.ObjectInfo,
+                                                    pWorkItem->Specific.Invalidate.InvalidateReason);
+
+                        freeWorkItem = TRUE;
+
+                        break;
+                    }
+
                     case AFS_WORK_START_IOS:
                     {
 
@@ -2504,6 +2515,80 @@ try_exit:
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueStartIos\n");
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueueInvalidateObject( IN AFSObjectInfoCB *ObjectInfo,
+                          IN ULONG InvalidateReason)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+
+    __try
+    {
+
+        pWorkItem = (AFSWorkItem *) AFSLibExAllocatePoolWithTag( NonPagedPool,
+                                                                 sizeof(AFSWorkItem),
+                                                                 AFS_WORK_ITEM_TAG);
+        if (NULL == pWorkItem)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueInvalidateObject Failed to allocate work item\n");
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        RtlZeroMemory( pWorkItem,
+                       sizeof(AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        pWorkItem->RequestType = AFS_WORK_INVALIDATE_OBJECT;
+
+        pWorkItem->Specific.Invalidate.ObjectInfo = ObjectInfo;
+
+        pWorkItem->Specific.Invalidate.InvalidateReason = InvalidateReason;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueInvalidateObject Workitem %08lX\n",
+                      pWorkItem);
+
+        ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueInvalidateObject Request complete Status %08lX\n",
+                      ntStatus);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( pWorkItem != NULL)
+            {
+                ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueInvalidateObject Failed to queue request Status %08lX\n",
+                          ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueInvalidateObject\n");
     }
 
     return ntStatus;

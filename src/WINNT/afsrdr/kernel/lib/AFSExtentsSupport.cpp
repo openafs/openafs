@@ -39,7 +39,6 @@
 
 #define AFS_MAX_FCBS_TO_DROP 10
 
-static AFSExtent *ExtentFor( PLIST_ENTRY le, ULONG SkipList );
 static AFSExtent *NextExtent( AFSExtent *Extent, ULONG SkipList );
 static ULONG ExtentsMasks[AFS_NUM_EXTENT_LISTS] = AFS_EXTENTS_MASKS;
 static VOID VerifyExtentsLists(AFSFcb *Fcb);
@@ -3169,6 +3168,264 @@ try_exit:
     return ntStatus;
 }
 
+NTSTATUS
+AFSReleaseCleanExtents( IN AFSFcb *Fcb,
+                        IN GUID *AuthGroup)
+{
+    AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
+    AFSExtent           *pExtent;
+    LIST_ENTRY          *le;
+    AFSReleaseExtentsCB *pRelease = NULL;
+    ULONG                count = 0;
+    ULONG                initialDirtyCount = 0;
+    BOOLEAN              bExtentsLocked = FALSE;
+    ULONG                total = 0;
+    ULONG                sz = 0;
+    NTSTATUS             ntStatus = STATUS_SUCCESS;
+    LARGE_INTEGER        liLastFlush;
+    ULONG                ulRemainingExtentLength = 0;
+    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    GUID                *pAuthGroup = AuthGroup;
+    GUID                 stAuthGroup;
+
+    ASSERT( Fcb->Header.NodeTypeCode == AFS_FILE_FCB);
+
+    //
+    // Save, then reset the flush time
+    //
+
+    liLastFlush = Fcb->Specific.File.LastServerFlush;
+
+    KeQueryTickCount( &Fcb->Specific.File.LastServerFlush);
+
+    __Enter
+    {
+
+        if( pAuthGroup == NULL ||
+            RtlCompareMemory( pAuthGroup,
+                              &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
+                              sizeof( GUID)) == sizeof( GUID))
+        {
+
+            RtlZeroMemory( &stAuthGroup,
+                           sizeof( GUID));
+
+            ntStatus = AFSRetrieveValidAuthGroup( Fcb,
+                                                  NULL,
+                                                  TRUE,
+                                                  &stAuthGroup);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                try_return( ntStatus);
+            }
+
+            pAuthGroup = &stAuthGroup;
+        }
+
+        //
+        // Look for a start in the list to flush entries
+        //
+
+        total = count;
+
+        sz = sizeof( AFSReleaseExtentsCB ) + (AFS_MAXIMUM_EXTENT_RELEASE_COUNT * sizeof ( AFSFileExtentCB ));
+
+        pRelease = (AFSReleaseExtentsCB*) AFSExAllocatePoolWithTag( NonPagedPool,
+                                                                    sz,
+                                                                    AFS_EXTENT_RELEASE_TAG);
+        if( NULL == pRelease)
+        {
+
+            try_return ( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        while( Fcb->Specific.File.ExtentLength > (LONG)ulRemainingExtentLength)
+        {
+
+            AFSLockForExtentsTrim( Fcb);
+
+            bExtentsLocked = TRUE;
+
+            pRelease->Flags = AFS_EXTENT_FLAG_RELEASE;
+
+            //
+            // Update the metadata for this call
+            //
+
+            pRelease->AllocationSize = Fcb->ObjectInformation->EndOfFile;
+            pRelease->CreateTime = Fcb->ObjectInformation->CreationTime;
+            pRelease->ChangeTime = Fcb->ObjectInformation->ChangeTime;
+            pRelease->LastAccessTime = Fcb->ObjectInformation->LastAccessTime;
+            pRelease->LastWriteTime = Fcb->ObjectInformation->LastWriteTime;
+
+            count = 0;
+
+            le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+
+            while( count < AFS_MAXIMUM_EXTENT_RELEASE_COUNT &&
+                   le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
+            {
+
+                pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
+
+                le = le->Flink;
+
+                if( pExtent->ActiveCount > 0 ||
+                    BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+                {
+                    continue;
+                }
+
+                pRelease->FileExtents[count].Flags = AFS_EXTENT_FLAG_RELEASE;
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSReleaseCleanExtents Releasing extent %p fid %08lX-%08lX-%08lX-%08lX Offset %I64X Len %08lX\n",
+                              pExtent,
+                              Fcb->ObjectInformation->FileId.Cell,
+                              Fcb->ObjectInformation->FileId.Volume,
+                              Fcb->ObjectInformation->FileId.Vnode,
+                              Fcb->ObjectInformation->FileId.Unique,
+                              pExtent->FileOffset.QuadPart,
+                              pExtent->Size);
+
+                pRelease->FileExtents[count].Length = pExtent->Size;
+                pRelease->FileExtents[count].DirtyLength = pExtent->Size;
+                pRelease->FileExtents[count].DirtyOffset = 0;
+                pRelease->FileExtents[count].CacheOffset = pExtent->CacheOffset;
+                pRelease->FileExtents[count].FileOffset = pExtent->FileOffset;
+
+#if GEN_MD5
+                RtlCopyMemory( pRelease->FileExtents[count].MD5,
+                               pExtent->MD5,
+                               sizeof(pExtent->MD5));
+
+                pRelease->FileExtents[count].Flags |= AFS_EXTENT_FLAG_MD5_SET;
+#endif
+
+                //
+                // Need to pull this extent from the main list as well
+                //
+
+                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
+                {
+                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
+                    {
+                        RemoveEntryList( &pExtent->Lists[i] );
+                    }
+                }
+
+                InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
+
+                InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
+
+                AFSExFreePool( pExtent);
+
+                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+                if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
+                {
+
+                    KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
+                                0,
+                                FALSE);
+                }
+
+                count ++;
+            }
+
+            //
+            // If we are done then get out
+            //
+
+            if( count == 0)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSReleaseCleanExtents No more dirty extents found\n");
+
+                break;
+            }
+
+            //
+            // Fire off the request synchronously
+            //
+
+            sz = sizeof( AFSReleaseExtentsCB ) + (count * sizeof ( AFSFileExtentCB ));
+
+            pRelease->ExtentCount = count;
+
+            //
+            // Drop the extents lock for the duration of the call to
+            // the network.  We have pinned the extents so, even
+            // though we might get extents added during this period,
+            // but none will be removed.  Hence we can carry on from
+            // le.
+            //
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSReleaseCleanExtents Releasing Fcb extents lock %08lX thread %08lX\n",
+                          &pNPFcb->Specific.File.ExtentsResource,
+                          PsGetCurrentThread());
+
+            AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource);
+            bExtentsLocked = FALSE;
+
+            ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
+                                          AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                          pAuthGroup,
+                                          NULL,
+                                          &Fcb->ObjectInformation->FileId,
+                                          pRelease,
+                                          sz,
+                                          NULL,
+                                          NULL);
+
+            if( !NT_SUCCESS(ntStatus))
+            {
+
+                //
+                // Regardless of whether or not the AFSProcessRequest() succeeded, the extents
+                // were released (if AFS_EXTENT_FLAG_RELEASE was set).  Log the error so it is known.
+                //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSReleaseCleanExtents AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS failed fid %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              Fcb->ObjectInformation->FileId.Cell,
+                              Fcb->ObjectInformation->FileId.Volume,
+                              Fcb->ObjectInformation->FileId.Vnode,
+                              Fcb->ObjectInformation->FileId.Unique,
+                              ntStatus);
+            }
+        }
+
+try_exit:
+
+        if (bExtentsLocked)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSReleaseCleanExtents Releasing Fcb extents lock %08lX thread %08lX\n",
+                          &pNPFcb->Specific.File.ExtentsResource,
+                          PsGetCurrentThread());
+
+            AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
+        }
+
+        if (pRelease)
+        {
+            AFSExFreePool( pRelease);
+        }
+    }
+
+    return ntStatus;
+}
+
 VOID
 AFSMarkDirty( IN AFSFcb *Fcb,
               IN AFSExtent *StartExtent,
@@ -3345,7 +3602,8 @@ AFSMarkDirty( IN AFSFcb *Fcb,
 // Helper functions
 //
 
-static AFSExtent *ExtentFor(PLIST_ENTRY le, ULONG SkipList)
+AFSExtent *
+ExtentFor(PLIST_ENTRY le, ULONG SkipList)
 {
     return CONTAINING_RECORD( le, AFSExtent, Lists[SkipList] );
 }

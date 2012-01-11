@@ -116,7 +116,7 @@ NTSTATUS
 #define AFS_WORK_ASYNCH_WRITE                   0x0004
 #define AFS_WORK_UNUSED_5                       0x0005
 #define AFS_WORK_ENUMERATE_GLOBAL_ROOT          0x0006
-#define AFS_WORK_UNUSED_7                       0x0007
+#define AFS_WORK_INVALIDATE_OBJECT              0x0007
 #define AFS_WORK_START_IOS                      0x0008
 
 //
