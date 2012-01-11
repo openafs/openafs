@@ -636,6 +636,15 @@ typedef struct _AFS_WORK_ITEM
 
         struct
         {
+
+            AFSObjectInfoCB *ObjectInfo;
+
+            ULONG            InvalidateReason;
+
+        } Invalidate;
+
+        struct
+        {
             char     Context[ 1];
 
         } Other;

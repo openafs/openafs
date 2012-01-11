@@ -1819,19 +1819,10 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                                                 ulFilter,
                                                 FILE_ACTION_REMOVED);
 
-                if( pObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
-                    pObjectInfo->Fcb != NULL)
+                if( NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
+                                                          InvalidateCB->Reason)))
                 {
-
-
-                    //
-                    // Clear out the extents
-                    // And get rid of them (note this involves waiting
-                    // for any writes or reads to the cache to complete)
-                    //
-
-                    (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb,
-                                                  NULL);
+                    pObjectInfo = NULL; // We'll dec the count in the worker item
                 }
 
                 break;
@@ -1968,6 +1959,13 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                               pObjectInfo->FileId.Unique);
 
                 SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                if( InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION &&
+                    NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
+                                                          InvalidateCB->Reason)))
+                {
+                    pObjectInfo = NULL; // We'll dec the count in the worker item
+                }
 
                 break;
             }
@@ -8520,6 +8518,115 @@ AFSRetrieveValidAuthGroup( IN AFSFcb *Fcb,
 try_exit:
 
         NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
+                            IN ULONG InvalidateReason)
+{
+
+    NTSTATUS            ntStatus = STATUS_SUCCESS;
+    IO_STATUS_BLOCK     stIoStatus;
+    LIST_ENTRY         *le;
+    AFSExtent          *pEntry;
+    ULONG               ulProcessCount = 0;
+    ULONG               ulCount = 0;
+
+    __Enter
+    {
+
+        switch( InvalidateReason)
+        {
+
+            case AFS_INVALIDATE_DELETED:
+            {
+
+                if( ObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
+                    ObjectInfo->Fcb != NULL)
+                {
+
+
+                    //
+                    // Clear out the extents
+                    // And get rid of them (note this involves waiting
+                    // for any writes or reads to the cache to complete)
+                    //
+
+                    (VOID) AFSTearDownFcbExtents( ObjectInfo->Fcb,
+                                                  NULL);
+                }
+
+                break;
+            }
+
+            case AFS_INVALIDATE_DATA_VERSION:
+            {
+
+                if( ObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
+                    ObjectInfo->Fcb != NULL)
+                {
+
+                    AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Resource,
+                                    TRUE);
+
+                    AFSLockForExtentsTrim( ObjectInfo->Fcb);
+
+                    __try
+                    {
+
+                        le = ObjectInfo->Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+
+                        ulProcessCount = 0;
+
+                        ulCount = (ULONG)ObjectInfo->Fcb->Specific.File.ExtentCount;
+
+                        while( ulProcessCount < ulCount)
+                        {
+                            pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
+
+                            if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                            {
+                                CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                     &pEntry->FileOffset,
+                                                     pEntry->Size,
+                                                     FALSE);
+                            }
+
+                            ulProcessCount++;
+                            le = le->Flink;
+                        }
+                    }
+                    __except( EXCEPTION_EXECUTE_HANDLER)
+                    {
+
+                        ntStatus = GetExceptionCode();
+                    }
+
+                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+
+                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+
+                    AFSReleaseCleanExtents( ObjectInfo->Fcb,
+                                            NULL);
+                }
+
+                break;
+            }
+
+            default:
+            {
+
+                break;
+            }
+        }
+
+        if( ObjectInfo != NULL)
+        {
+            InterlockedDecrement( &ObjectInfo->ObjectReferenceCount);
+        }
     }
 
     return ntStatus;
