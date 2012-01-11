@@ -67,7 +67,8 @@
 
 #ifdef FSSYNC_BUILD_CLIENT
 static void
-RemoveInodes(struct afs_inode_info *stuff, Device dev, VolumeId vid)
+RemoveInodes(struct afs_inode_info *stuff, Device dev, VolumeId parent,
+             VolumeId vid)
 {
     int i;
     IHandle_t *handle;
@@ -75,11 +76,16 @@ RemoveInodes(struct afs_inode_info *stuff, Device dev, VolumeId vid)
     /* This relies on the fact that IDEC only needs the device and NT only
      * needs the dev and vid to decrement volume special files.
      */
-    IH_INIT(handle, dev, vid, -1);
+    IH_INIT(handle, dev, parent, -1);
     for (i = 0; i < MAXINODETYPE; i++) {
 	Inode inode = *stuff[i].inode;
-	if (VALID_INO(inode))
-	    IH_DEC(handle, inode, vid);
+	if (VALID_INO(inode)) {
+	    if (stuff[i].inodeType == VI_LINKTABLE) {
+		IH_DEC(handle, inode, parent);
+	    } else {
+		IH_DEC(handle, inode, vid);
+	    }
+	}
     }
     IH_RELEASE(handle);
 }
@@ -237,7 +243,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 	  bad:
 	    if (handle)
 		IH_RELEASE(handle);
-	    RemoveInodes(stuff, device, vol.id);
+	    RemoveInodes(stuff, device, vol.parentId, vol.id);
 	    if (!*ec) {
 		*ec = VNOVOL;
 	    }
