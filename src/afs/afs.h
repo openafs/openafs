@@ -96,12 +96,14 @@ extern int afs_shuttingdown;
 #define	AFS_RXDEADTIME	50
 #define AFS_HARDDEADTIME	120
 #define	AFS_IDLEDEADTIME	1200
+#define AFS_IDLEDEADTIME_REP    180 /* more than fs's cb dead time */
 #define AFS_BLKBITS	12
 #define AFS_BLKSIZE	(1 << AFS_BLKBITS)
 
 extern afs_int32 afs_rx_deadtime;
 extern afs_int32 afs_rx_harddead;
 extern afs_int32 afs_rx_idledead;
+extern afs_int32 afs_rx_idledead_rep;
 
 struct sysname_info {
     char *name;
@@ -380,6 +382,8 @@ struct unixuser {
 struct sa_conn_vector;
 typedef struct sa_conn_vector * p_sa_conn_vector; /* forward decl */
 
+#define CONN_REPLICATED 0x1
+
 struct afs_conn {
     int refCount;
     int activated;
@@ -403,6 +407,7 @@ struct sa_conn_vector {
     struct srvAddr *srvr;	/* server associated with this conn */
     short refCount;		/* reference count for allocation */
     unsigned short port;	/* port associated with this connection */
+    int flags;
 
     /* next connection to return when all in cvec are fully utilized */
     int select_index; 

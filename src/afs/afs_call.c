@@ -74,6 +74,7 @@ char afs_cachebasedir[1024];
 afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
 afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
 afs_int32 afs_rx_idledead = AFS_IDLEDEADTIME;
+afs_int32 afs_rx_idledead_rep = AFS_IDLEDEADTIME_REP;
 
 static int afscall_set_rxpck_received = 0;
 
