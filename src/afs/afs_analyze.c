@@ -117,7 +117,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	VSleep(2);		/* Better safe than sorry. */
 	tconn =
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
-			     &treq, SHARED_LOCK, &rxconn);
+			     &treq, SHARED_LOCK, 0, &rxconn);
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;

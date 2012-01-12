@@ -125,6 +125,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
     int notbusy;
     int i;
     struct srvAddr *sa1p;
+    afs_int32 replicated = -1; /* a single RO will increment to 0 */
 
     *rxconn = NULL;
 
@@ -161,6 +162,8 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
      */
     for (notbusy = not_busy; (!lowp && (notbusy <= end_not_busy)); notbusy++) {
 	for (i = 0; i < AFS_MAXHOSTS && tv->serverHost[i]; i++) {
+	    if (tv->states & VRO)
+		replicated++;
 	    if (((areq->tokenError > 0)||(areq->idleError > 0))
 		&& (areq->skipserver[i] == 1))
 		continue;
@@ -182,12 +185,20 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
 	    }
 	}
     }
+    if ((replicated == -1) && (tv->states & VRO)) {
+	for (i = 0; i < AFS_MAXHOSTS && tv->serverHost[i]; i++) {
+	    if (tv->states & VRO)
+		replicated++;
+	}
+    } else
+	replicated = 0;
+
     afs_PutVolume(tv, READ_LOCK);
 
     if (lowp) {
 	tu = afs_GetUser(areq->uid, afid->Cell, SHARED_LOCK);
 	tconn = afs_ConnBySA(lowp, fsport, afid->Cell, tu, 0 /*!force */ ,
-			     1 /*create */ , locktype, rxconn);
+			     1 /*create */ , locktype, replicated, rxconn);
 
 	afs_PutUser(tu, SHARED_LOCK);
     }
@@ -205,6 +216,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
  * @param tu Connect as this user.
  * @param force_if_down
  * @param create
+ * @param replicated
  * @param locktype Specifies type of lock to be used for this function.
  *
  * @return The new connection.
@@ -212,12 +224,14 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
 struct afs_conn *
 afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	     struct unixuser *tu, int force_if_down, afs_int32 create,
-	     afs_int32 locktype, struct rx_connection **rxconn)
+	     afs_int32 locktype, afs_int32 replicated,
+	     struct rx_connection **rxconn)
 {
     struct afs_conn *tc = 0;
     struct rx_securityClass *csec;	/*Security class object */
     int isec;			/*Security index */
     int service;
+    int isrep = (replicated > 0)?CONN_REPLICATED:0;
 
     *rxconn = NULL;
 
@@ -229,7 +243,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
     ObtainSharedLock(&afs_xconn, 15);
     /* Get conn by port and user. */
     for (tc = sap->conns; tc; tc = tc->next) {
-	if (tc->user == tu && tc->port == aport) {
+	if (tc->user == tu && tc->port == aport &&
+	    (isrep == (tc->flags & CONN_REPLICATED))) {
 	    break;
 	}
     }
@@ -263,6 +278,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	tc->refCount = 0;	/* bumped below */
 	tc->forceConnectFS = 1;
 	tc->id = (struct rx_connection *)0;
+	if (isrep)
+	    tc->flags |= CONN_REPLICATED;
 	tc->next = sap->conns;
 	sap->conns = tc;
 	afs_ActivateServer(sap);
@@ -314,14 +331,22 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	}
 	/* set to a RX_CALL_TIMEOUT error to allow MTU retry to trigger */
 	rx_SetServerConnIdleDeadErr(tc->id, RX_CALL_DEAD);
-	rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
+        /* Setting idle dead time to non-zero activates RX_CALL_IDLE errors. */
+	if (isrep)	  
+	    rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead_rep);
+	else
+	    rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
 
 	/*
 	 * Only do this for the base connection, not per-user.
 	 * Will need to be revisited if/when CB gets security.
 	 */
 	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad) &&
-	    (tu->vid == UNDEFVID) && (tu->uid == 0))
+	    (tu->vid == UNDEFVID) && (isrep == 0)
+#ifndef UKERNEL /* ukernel runs as just one uid anyway */
+	    && (tu->uid == 0)
+#endif
+	    )
 	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
@@ -350,13 +375,14 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
  * @param areq The request.
  * @param aforce Force connection?
  * @param locktype Type of lock to be used.
+ * @param replicated
  *
  * @return The established connection.
  */
 struct afs_conn *
 afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 	       struct vrequest *areq, int aforce, afs_int32 locktype,
-	       struct rx_connection **rxconn)
+	       afs_int32 replicated, struct rx_connection **rxconn)
 {
     struct unixuser *tu;
     struct afs_conn *tc = 0;
@@ -382,7 +408,7 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
     for (sa = aserver->addr; sa; sa = sa->next_sa) {
 	tc = afs_ConnBySA(sa, aport, acell, tu, aforce,
 			  0 /*don't create one */ ,
-			  locktype, rxconn);
+			  locktype, replicated, rxconn);
 	if (tc)
 	    break;
     }
@@ -391,7 +417,7 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 	for (sa = aserver->addr; sa; sa = sa->next_sa) {
 	    tc = afs_ConnBySA(sa, aport, acell, tu, aforce,
 			      1 /*create one */ ,
-			      locktype, rxconn);
+			      locktype, replicated, rxconn);
 	    if (tc)
 		break;
 	}
@@ -412,13 +438,15 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
  * @param acell The cell where all of this happens.
  * @param areq The request.
  * @param locktype Type of lock to be used.
+ * @param replicated
  *
  * @return The established connection or NULL.
  */
 struct afs_conn *
 afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
 		 afs_int32 acell, struct vrequest *areq,
-		 afs_int32 locktype, struct rx_connection **rxconn)
+		 afs_int32 locktype, afs_int32 replicated,
+		 struct rx_connection **rxconn)
 {
     afs_int32 i;
     struct afs_conn *tconn;
@@ -431,7 +459,8 @@ afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
     for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	if ((ts = ahosts[i]) == NULL)
 	    break;
-	tconn = afs_ConnByHost(ts, aport, acell, areq, 0, locktype, rxconn);
+	tconn = afs_ConnByHost(ts, aport, acell, areq, 0, locktype,
+			       replicated, rxconn);
 	if (tconn) {
 	    return tconn;
 	}
