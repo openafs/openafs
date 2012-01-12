@@ -120,7 +120,8 @@ struct rx_call {
 #define RX_CALL_REFCOUNT_SEND   5	/* rxi_Send */
 #define RX_CALL_REFCOUNT_ACKALL 6	/* rxi_AckAll */
 #define RX_CALL_REFCOUNT_ABORT  7	/* delayed abort */
-#define RX_CALL_REFCOUNT_MAX    8	/* array size. */
+#define RX_CALL_REFCOUNT_MTU    8       /* grow mtu event */
+#define RX_CALL_REFCOUNT_MAX    9	/* array size. */
 #ifdef RX_REFCOUNT_CHECK
     short refCDebug[RX_CALL_REFCOUNT_MAX];
 #endif				/* RX_REFCOUNT_CHECK */

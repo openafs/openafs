@@ -5224,7 +5224,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     }
 
 
-    rxevent_Cancel(&call->growMTUEvent, call, RX_CALL_REFCOUNT_ALIVE);
+    rxevent_Cancel(&call->growMTUEvent, call, RX_CALL_REFCOUNT_MTU);
 
     if (call->delayedAbortEvent) {
 	rxevent_Cancel(&call->delayedAbortEvent, call, RX_CALL_REFCOUNT_ABORT);
@@ -6246,7 +6246,7 @@ rxi_CheckCall(struct rx_call *call)
 	    rxevent_Cancel(&call->keepAliveEvent, call,
 			   RX_CALL_REFCOUNT_ALIVE);
 	    rxevent_Cancel(&call->growMTUEvent, call,
-			   RX_CALL_REFCOUNT_ALIVE);
+			   RX_CALL_REFCOUNT_MTU);
             MUTEX_ENTER(&rx_refcnt_mutex);
             /* if rxi_FreeCall returns 1 it has freed the call */
 	    if (call->refCount == 0 &&
@@ -6494,7 +6494,7 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
     struct rx_call *call = arg1;
     struct rx_connection *conn;
 
-    CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
+    CALL_RELE(call, RX_CALL_REFCOUNT_MTU);
     MUTEX_ENTER(&call->lock);
 
     if (event == call->growMTUEvent) {
@@ -6563,7 +6563,7 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 	}
 
 	when.sec += secs;
-	CALL_HOLD(call, RX_CALL_REFCOUNT_ALIVE);
+	CALL_HOLD(call, RX_CALL_REFCOUNT_MTU);
 	call->growMTUEvent =
 	    rxevent_Post(&when, &now, rxi_GrowMTUEvent, call, NULL, 0);
     }
