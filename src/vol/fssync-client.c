@@ -117,7 +117,7 @@ FSYNC_askfs(SYNC_command * com, SYNC_response * res)
 	break;
     case SYNC_COM_ERROR:
     case SYNC_BAD_COMMAND:
-	Log("FSYNC_askfs: fatal FSSYNC protocol error; volume management functionality disabled until next fileserver restart\n");
+	Log("FSYNC_askfs: internal FSSYNC protocol error %d\n", code);
 	break;
     case SYNC_DENIED:
 	Log("FSYNC_askfs: FSSYNC request denied for reason=%d\n", res->hdr.reason);

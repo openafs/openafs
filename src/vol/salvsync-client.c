@@ -97,7 +97,7 @@ SALVSYNC_askSalv(SYNC_command * com, SYNC_response * res)
       break;
     case SYNC_COM_ERROR:
     case SYNC_BAD_COMMAND:
-	Log("SALVSYNC_askSalv: fatal SALVSYNC protocol error; online salvager functionality disabled until next fileserver restart\n");
+	Log("SALVSYNC_askSalv: internal SALVSYNC protocol error %d\n", code);
 	break;
     case SYNC_DENIED:
 	Log("SALVSYNC_askSalv: SALVSYNC request denied for reason=%d\n", res->hdr.reason);

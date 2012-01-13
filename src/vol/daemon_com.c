@@ -255,16 +255,11 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
     int tries;
     afs_uint32 now, timeout, code=SYNC_OK;
 
-    if (state->fatal_error) {
-	return SYNC_COM_ERROR;
-    }
-
     if (state->fd == OSI_NULLSOCKET) {
 	SYNC_connect(state);
     }
 
     if (state->fd == OSI_NULLSOCKET) {
-	state->fatal_error = 1;
 	return SYNC_COM_ERROR;
     }
 
@@ -300,10 +295,9 @@ SYNC_ask(SYNC_client_state * state, SYNC_command * com, SYNC_response * res)
     }
 
     if (code == SYNC_COM_ERROR) {
-	Log("SYNC_ask: fatal protocol error on circuit '%s'; disabling sync "
-	    "protocol until next server restart\n",
-	    state->proto_name);
-	state->fatal_error = 1;
+	Log("SYNC_ask: too many / too latent fatal protocol errors on circuit "
+	    "'%s'; giving up (tries %d timeout %d)\n",
+	    state->proto_name, tries, timeout);
     }
 
     return code;
