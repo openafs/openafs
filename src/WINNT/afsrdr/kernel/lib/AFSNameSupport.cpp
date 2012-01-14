@@ -3097,6 +3097,18 @@ AFSParseName( IN PIRP Irp,
             }
         }
 
+        if( FsRtlDoesNameContainWildCards( &uniFullName))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSParseName (%08lX) Component %wZ contains wild cards\n",
+                          Irp,
+                          &uniFullName);
+
+            try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
+        }
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSParseName (%08lX) Processing full name %wZ\n",
@@ -3246,11 +3258,24 @@ AFSParseName( IN PIRP Irp,
                           &uniComponentName,
                           &uniRemainingPath);
 
+        if( FsRtlDoesNameContainWildCards( &uniFullName))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSParseName (%08lX) Component %wZ contains wild cards\n",
+                          Irp,
+                          &uniComponentName);
+
+            try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
+        }
+
         //
         // If this is the ALL access then perform some additional processing
         //
 
-        if( RtlCompareUnicodeString( &uniComponentName,
+        if( uniComponentName.Length == 0 ||
+            RtlCompareUnicodeString( &uniComponentName,
                                      &AFSGlobalRootName,
                                      TRUE) == 0)
         {
