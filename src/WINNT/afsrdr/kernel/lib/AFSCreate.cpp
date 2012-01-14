@@ -1416,6 +1416,7 @@ AFSOpenRoot( IN PIRP Irp,
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
+    ULONG ulOptions;
     BOOLEAN bAllocatedCcb = FALSE;
     BOOLEAN bReleaseFcb = FALSE;
     AFSFileOpenCB   stOpenCB;
@@ -1428,8 +1429,23 @@ AFSOpenRoot( IN PIRP Irp,
 
         pDesiredAccess = &pIrpSp->Parameters.Create.SecurityContext->DesiredAccess;
         usShareAccess = pIrpSp->Parameters.Create.ShareAccess;
+        ulOptions = pIrpSp->Parameters.Create.Options;
 
         pFileObject = pIrpSp->FileObject;
+
+        if( BooleanFlagOn( ulOptions, FILE_NON_DIRECTORY_FILE))
+        {
+
+            ntStatus = STATUS_FILE_IS_A_DIRECTORY;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSOpenRoot (%08lX) Attempt to open root as file Status %08lX\n",
+                          Irp,
+                          ntStatus);
+
+            try_return( ntStatus);
+        }
 
         //
         // Check if we should go and retrieve updated information for the node
