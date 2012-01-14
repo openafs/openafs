@@ -275,9 +275,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         } else {
             cm_GetServer(serverp);
         }
-        lock_ObtainWrite(&cm_callbackLock);
         cbrp->serverp = serverp;
-        lock_ReleaseWrite(&cm_callbackLock);
     }
 
     /* if timeout - check that it did not exceed the HardDead timeout

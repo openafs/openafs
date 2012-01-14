@@ -198,13 +198,13 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
             osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u",
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
-            if (RDR_Initialized)
-                RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
-
             lock_ObtainWrite(&scp->rw);
             cm_DiscardSCache(scp);
             lock_ReleaseWrite(&scp->rw);
+
+            if (RDR_Initialized)
+                RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
+                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
 
             cm_CallbackNotifyChange(scp);
 
@@ -1640,52 +1640,40 @@ void cm_StartCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp)
  *
  * Called with scp write locked, so we can discard the callbacks easily with
  * this locking hierarchy.
+ *
+ * Performs cleanup of the stack allocated cm_callbackRequest_t object.
+ *
+ * Returns 0 on success and non-zero if the callback lost a race.
  */
-void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
-                                AFSCallBack *cbp, AFSVolSync *volSyncp, long flags)
+int
+cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
+                           AFSCallBack *cbp, AFSVolSync *volSyncp, long flags)
 {
     cm_racingRevokes_t *revp;		/* where we are */
     cm_racingRevokes_t *nrevp;		/* where we'll be next */
-    int freeFlag;
+    int freeRacingRevokes;
+    int freeServer;
     cm_server_t * serverp = NULL;
-    int discardScp = 0, discardVolCB = 0;
+    int lostRace = 0;
 
     lock_ObtainWrite(&cm_callbackLock);
     if (flags & CM_CALLBACK_MAINTAINCOUNT) {
         osi_assertx(cm_activeCallbackGrantingCalls > 0,
                     "CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
+        freeServer = 0;
     }
     else {
         osi_assertx(cm_activeCallbackGrantingCalls-- > 0,
                     "!CM_CALLBACK_MAINTAINCOUNT && cm_activeCallbackGrantingCalls == 0");
+        freeServer = 1;
     }
     if (cm_activeCallbackGrantingCalls == 0)
-        freeFlag = 1;
+        freeRacingRevokes = 1;
     else
-        freeFlag = 0;
+        freeRacingRevokes = 0;
 
-    /* record the callback; we'll clear it below if we really lose it */
-    if (cbrp) {
-	if (scp) {
-            if (!cm_ServerEqual(scp->cbServerp, cbrp->serverp)) {
-                serverp = scp->cbServerp;
-                if (!freeFlag)
-                    cm_GetServer(cbrp->serverp);
-                scp->cbServerp = cbrp->serverp;
-            } else {
-                if (freeFlag)
-                    serverp = cbrp->serverp;
-            }
-            scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
-        } else {
-            if (freeFlag)
-                serverp = cbrp->serverp;
-        }
-        if (freeFlag)
-            cbrp->serverp = NULL;
-    }
-
-    /* a callback was actually revoked during our granting call, so
+    /*
+     * a callback was revoked during our granting call, so
      * run down the list of revoked fids, looking for ours.
      * If activeCallbackGrantingCalls is zero, free the elements, too.
      *
@@ -1714,31 +1702,39 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                       scp,
                       cbrp->callbackCount, revp->callbackCount,
                       cm_callbackCount);
-            discardScp = 1;
+            lostRace = 1;
             if ((scp->flags & CM_SCACHEFLAG_PURERO) &&
                  (revp->flags & CM_RACINGFLAG_ALL))
                 cm_callbackDiscardROVolumeByFID(&scp->fid);
         }
-        if (freeFlag)
+        if (freeRacingRevokes)
             free(revp);
     }
 
     /* if we freed the list, zap the pointer to it */
-    if (freeFlag)
+    if (freeRacingRevokes)
         cm_racingRevokesp = NULL;
-
     lock_ReleaseWrite(&cm_callbackLock);
 
-    if ( discardScp ) {
-        cm_DiscardSCache(scp);
-        lock_ReleaseWrite(&scp->rw);
-        cm_CallbackNotifyChange(scp);
-        if (RDR_Initialized)
-            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
-        lock_ObtainWrite(&scp->rw);
-    } else {
-        if (scp && scp->flags & CM_SCACHEFLAG_PURERO) {
+    /* record the callback if we didn't lose it */
+    if (!lostRace && scp) {
+        if (cbrp) {
+            if (!cm_ServerEqual(scp->cbServerp, cbrp->serverp)) {
+                serverp = scp->cbServerp;
+                scp->cbServerp = cbrp->serverp;
+                if (freeServer) {
+                    cbrp->serverp = NULL;
+                } else {
+                    cm_GetServer(scp->cbServerp);
+                }
+            } else if (freeServer) {
+                serverp = cbrp->serverp;
+                cbrp->serverp = NULL;
+            }
+            scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
+        }
+
+        if (scp->flags & CM_SCACHEFLAG_PURERO) {
             cm_volume_t * volp = cm_GetVolumeByFID(&scp->fid);
             if (volp) {
                 if (volSyncp) {
@@ -1757,12 +1753,27 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
             }
         }
     }
+    else
+    {
+        /*
+         * No need to discard the cm_scache object or notify the
+         * afs redirector or smb client about a change if we did lose
+         * the race.  That was done when the callback was processed in
+         * cm_RevokeCallback().
+         */
+        if (cbrp && freeServer) {
+            serverp = cbrp->serverp;
+            cbrp->serverp = NULL;
+        }
+    }
 
     if ( serverp ) {
         lock_ObtainWrite(&cm_serverLock);
         cm_FreeServer(serverp);
         lock_ReleaseWrite(&cm_serverLock);
     }
+
+    return lostRace;
 }
 
 /* if flags is 1, we want to force the code to make one call, anyway.
@@ -1861,8 +1872,9 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
         lock_ObtainWrite(&scp->rw);
         if (code == 0) {
-            cm_EndCallbackGrantingCall(scp, &cbr, &callback, &volSync, 0);
-            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
+            int lostRace = cm_EndCallbackGrantingCall(scp, &cbr, &callback, &volSync, 0);
+            if (!lostRace)
+                cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, NULL, 0);
             InterlockedDecrement(&scp->activeRPCs);
