@@ -603,7 +603,11 @@ afsd_InitCM(char **reasonP)
     dummyLen = sizeof(maxcpus);
     code = RegQueryValueEx(parmKey, "MaxCPUs", NULL, NULL,
                             (BYTE *) &maxcpus, &dummyLen);
-    if (code == ERROR_SUCCESS) {
+    if (code != ERROR_SUCCESS) {
+        maxcpus = 2;
+    }
+
+    {
         HANDLE hProcess;
         DWORD_PTR processAffinityMask, systemAffinityMask;
 
@@ -612,7 +616,7 @@ afsd_InitCM(char **reasonP)
         if ( hProcess != NULL &&
              GetProcessAffinityMask(hProcess, &processAffinityMask, &systemAffinityMask) )
         {
-            int i, n, bits;
+            int i, n, bits, cpu_count = 0;
             DWORD_PTR mask, newAffinityMask;
 
 #if defined(_WIN64)
@@ -620,19 +624,26 @@ afsd_InitCM(char **reasonP)
 #else
             bits = 32;
 #endif
-            for ( i=0, n=0, mask=1, newAffinityMask=0; i<bits && n<maxcpus; i++ ) {
+            for ( i=0, n=0, mask=1, newAffinityMask=0; i<bits; i++ ) {
                 if ( processAffinityMask & mask ) {
-                    newAffinityMask |= mask;
-                    n++;
+                    cpu_count++;
+                    if (n<maxcpus) {
+                        newAffinityMask |= mask;
+                        n++;
+                    }
                 }
                 mask *= 2;
             }
 
-            SetProcessAffinityMask(hProcess, newAffinityMask);
+            if (maxcpus == 0) {
+                afsi_log("No CPU Restrictions; %d cpu(s) available", cpu_count);
+            } else {
+                SetProcessAffinityMask(hProcess, newAffinityMask);
+            }
             CloseHandle(hProcess);
-            afsi_log("CPU Restrictions set to %d cpu(s); %d cpu(s) available", maxcpus, n);
+            afsi_log("CPU Restrictions set to %d cpu(s); %d cpu(s) available", maxcpus, cpu_count);
         } else {
-            afsi_log("CPU Restrictions set to %d cpu(s); unable to access process information", maxcpus);
+            afsi_log("CPU Restrictions requested %d cpu(s); unable to access process information", maxcpus);
         }
     }
 
