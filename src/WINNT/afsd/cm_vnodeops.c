@@ -2396,6 +2396,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
     long filex;
     AFSVolSync volSync;
     cm_callbackRequest_t cbReq;
+    int lostRace;
     long filesThisCall;
     long i;
     long j;
@@ -2549,12 +2550,13 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                      (scp->flags & CM_SCACHEFLAG_EACCESS))
                 {
                     lock_ConvertRToW(&scp->rw);
-                    cm_EndCallbackGrantingCall(scp, &cbReq,
-                                               &bbp->callbacks[j],
-                                               &volSync,
-                                               CM_CALLBACK_MAINTAINCOUNT);
+                    lostRace = cm_EndCallbackGrantingCall(scp, &cbReq,
+                                                          &bbp->callbacks[j],
+                                                          &volSync,
+                                                          CM_CALLBACK_MAINTAINCOUNT);
                     InterlockedIncrement(&scp->activeRPCs);
-                    cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
+                    if (!lostRace)
+                        cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
                     lock_ReleaseWrite(&scp->rw);
                 } else {
                     lock_ReleaseRead(&scp->rw);
@@ -2839,6 +2841,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     cm_fid_t newFid;
     cm_scache_t *scp = NULL;
     int didEnd;
+    int lostRace;
     AFSStoreStatus inStatus;
     AFSFetchStatus updatedDirStatus;
     AFSFetchStatus newFileStatus;
@@ -2955,11 +2958,12 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
             lock_ObtainWrite(&scp->rw);
 	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
-                cm_EndCallbackGrantingCall(scp, &cbReq,
-                                           &newFileCallback, &volSync, 0);
+                lostRace = cm_EndCallbackGrantingCall(scp, &cbReq,
+                                                      &newFileCallback, &volSync, 0);
                 InterlockedIncrement(&scp->activeRPCs);
-                cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
-                               userp, reqp, 0);
+                if (!lostRace)
+                    cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
+                                   userp, reqp, 0);
                 didEnd = 1;
             }
             lock_ReleaseWrite(&scp->rw);
@@ -3030,6 +3034,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     cm_fid_t newFid;
     cm_scache_t *scp = NULL;
     int didEnd;
+    int lostRace;
     AFSStoreStatus inStatus;
     AFSFetchStatus updatedDirStatus;
     AFSFetchStatus newDirStatus;
@@ -3144,11 +3149,12 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
-                cm_EndCallbackGrantingCall(scp, &cbReq,
-                                            &newDirCallback, &volSync, 0);
+                lostRace = cm_EndCallbackGrantingCall(scp, &cbReq,
+                                                      &newDirCallback, &volSync, 0);
                 InterlockedIncrement(&scp->activeRPCs);
-                cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
-                                userp, reqp, 0);
+                if (!lostRace)
+                    cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
+                                   userp, reqp, 0);
                 didEnd = 1;
             }
             lock_ReleaseWrite(&scp->rw);
