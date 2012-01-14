@@ -7432,10 +7432,9 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
         ulTimeIncrement = KeQueryTimeIncrement();
 
         pControlDevExt->Specific.Control.ObjectLifeTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)AFS_OBJECT_LIFETIME / (ULONGLONG)ulTimeIncrement);
-        pControlDevExt->Specific.Control.FcbPurgeTimeCount.QuadPart = AFS_ONE_SECOND;
-        pControlDevExt->Specific.Control.FcbPurgeTimeCount.QuadPart *= AFS_SERVER_PURGE_DELAY;
+        pControlDevExt->Specific.Control.FcbPurgeTimeCount.QuadPart = AFS_SERVER_PURGE_DELAY;
         pControlDevExt->Specific.Control.FcbPurgeTimeCount.QuadPart /= ulTimeIncrement;
-        pControlDevExt->Specific.Control.FcbFlushTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)(AFS_ONE_SECOND * AFS_SERVER_FLUSH_DELAY) / (ULONGLONG)ulTimeIncrement);
+        pControlDevExt->Specific.Control.FcbFlushTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)AFS_SERVER_FLUSH_DELAY / (ULONGLONG)ulTimeIncrement);
         pControlDevExt->Specific.Control.ExtentRequestTimeCount.QuadPart = (ULONGLONG)((ULONGLONG)AFS_EXTENT_REQUEST_TIME/(ULONGLONG)ulTimeIncrement);
 
         //

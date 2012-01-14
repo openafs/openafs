@@ -164,7 +164,7 @@ NTSTATUS
 // Fcb lifetime in seconds
 //
 
-#define AFS_OBJECT_LIFETIME             30 * AFS_ONE_SECOND
+#define AFS_OBJECT_LIFETIME             600 * AFS_ONE_SECOND
 
 #define AFS_EXTENT_REQUEST_TIME         10 * AFS_ONE_SECOND
 
@@ -195,8 +195,8 @@ NTSTATUS
 
 #define CRC32_POLYNOMIAL     0xEDB88320L;
 
-#define AFS_SERVER_FLUSH_DELAY  30
-#define AFS_SERVER_PURGE_DELAY  60
+#define AFS_SERVER_FLUSH_DELAY  (5LL * AFS_ONE_SECOND)
+#define AFS_SERVER_PURGE_DELAY  (300LL * AFS_ONE_SECOND)
 //
 // PURGE_SLEEP is the number of PURGE_DELAYS we wait before we will unilaterally
 // give back extents.
