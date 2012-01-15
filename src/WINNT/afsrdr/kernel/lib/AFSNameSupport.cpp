@@ -305,6 +305,9 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         try_return( ntStatus);
                     }
 
+                    AFSAcquireExcl( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                    TRUE);
+
                     AFSAcquireExcl( &pDirEntry->NonPaged->Lock,
                                     TRUE);
 
@@ -332,9 +335,6 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         //
                         // Directory TreeLock should be exclusively held
                         //
-
-                        AFSAcquireExcl( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                        TRUE);
 
                         ntStatus = AFSVerifyEntry( AuthGroup,
                                                    pDirEntry);
@@ -371,6 +371,11 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                             continue;
                         }
+                    }
+                    else
+                    {
+
+                        AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
                     }
 
                     //
