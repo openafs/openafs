@@ -176,11 +176,14 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
 
     if (lockp->flags & OSI_LOCKFLAG_EXCL) {
         osi_assertx(lockp->tid[0] != tid, "OSI_RWLOCK_WRITEHELD");
-    } else {
+    }
+#ifdef DEBUG
+    else {
         for ( i=0; i < lockp->readers && i < OSI_RWLOCK_THREADS; i++ ) {
             osi_assertx(lockp->tid[i] != tid, "OSI_RWLOCK_READHELD");
         }
     }
+#endif
 
     /* here we have the fast lock, so see if we can obtain the real lock */
     if (lockp->waiters > 0 || (lockp->flags & OSI_LOCKFLAG_EXCL) ||
@@ -235,11 +238,14 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
 
     if (lockp->flags & OSI_LOCKFLAG_EXCL) {
         osi_assertx(lockp->tid[0] != tid, "OSI_RWLOCK_WRITEHELD");
-    } else {
+    }
+#ifdef DEBUG
+    else {
         for ( i=0; i < lockp->readers && i < OSI_RWLOCK_THREADS; i++ ) {
             osi_assertx(lockp->tid[i] != tid, "OSI_RWLOCK_READHELD");
         }
     }
+#endif
 
     /* here we have the fast lock, so see if we can obtain the real lock */
     if (lockp->waiters > 0 || (lockp->flags & OSI_LOCKFLAG_EXCL)) {
@@ -250,8 +256,11 @@ void lock_ObtainRead(osi_rwlock_t *lockp)
         osi_assert(!(lockp->flags & OSI_LOCKFLAG_EXCL) && lockp->readers > 0);
     } else {
         /* if we're here, all clear to set the lock */
-        if (++lockp->readers <= OSI_RWLOCK_THREADS)
+        lockp->readers++;
+#ifdef DEBUG
+        if (lockp->readers <= OSI_RWLOCK_THREADS)
             lockp->tid[lockp->readers-1] = tid;
+#endif
     }
     LeaveCriticalSection(csp);
 
@@ -302,14 +311,16 @@ void lock_ReleaseRead(osi_rwlock_t *lockp)
 
     osi_assertx(lockp->readers > 0, "read lock not held");
 
-    for ( i=0; i < lockp->readers; i++) {
+#ifdef DEBUG
+    for ( i=0; i < lockp->readers && i < OSI_RWLOCK_THREADS; i++) {
         if ( lockp->tid[i] == tid ) {
-            for ( ; i < lockp->readers - 1; i++)
+            for ( ; i < (lockp->readers - 1) && i < (OSI_RWLOCK_THREADS - 1); i++)
                 lockp->tid[i] = lockp->tid[i+1];
             lockp->tid[i] = 0;
             break;
         }
     }
+#endif
 
 	lockp->readers--;
 
@@ -363,7 +374,6 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
 
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "write lock not held");
     osi_assertx(lockp->tid[0] == thrd_Current(), "write lock not held by current thread");
-
     lockp->tid[0] = 0;
 
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
@@ -396,6 +406,7 @@ void lock_ConvertWToR(osi_rwlock_t *lockp)
 
     /* convert write lock to read lock */
     lockp->flags &= ~OSI_LOCKFLAG_EXCL;
+    lockp->tid[0] = 0;
     lockp->readers++;
 
     osi_assertx(lockp->readers == 1, "read lock not one");
@@ -428,14 +439,16 @@ void lock_ConvertRToW(osi_rwlock_t *lockp)
     osi_assertx(!(lockp->flags & OSI_LOCKFLAG_EXCL), "write lock held");
     osi_assertx(lockp->readers > 0, "read lock not held");
 
-    for ( i=0; i < lockp->readers; i++) {
+#ifdef DEBUG
+    for ( i=0; i < lockp->readers && i < OSI_RWLOCK_THREADS; i++) {
         if ( lockp->tid[i] == tid ) {
-            for ( ; i < lockp->readers - 1; i++)
+            for ( ; i < (lockp->readers - 1) && i < (OSI_RWLOCK_THREADS - 1); i++)
                 lockp->tid[i] = lockp->tid[i+1];
             lockp->tid[i] = 0;
             break;
         }
     }
+#endif
 
     if (--(lockp->readers) == 0) {
         /* convert read lock to write lock */
@@ -586,8 +599,11 @@ int lock_TryRead(struct osi_rwlock *lockp)
     }
     else {
         /* if we're here, all clear to set the lock */
-        if (++(lockp->readers) < OSI_RWLOCK_THREADS)
+        lockp->readers++;
+#ifdef DEBUG
+        if (lockp->readers < OSI_RWLOCK_THREADS)
             lockp->tid[lockp->readers-1] = thrd_Current();
+#endif
         i = 1;
     }
 
@@ -743,14 +759,16 @@ void osi_SleepR(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 
     osi_assertx(lockp->readers > 0, "osi_SleepR: not held");
 
-    for ( i=0; i < lockp->readers; i++) {
+#ifdef DEBUG
+    for ( i=0; i < lockp->readers && i < OSI_RWLOCK_THREADS; i++) {
         if ( lockp->tid[i] == tid ) {
-            for ( ; i < lockp->readers - 1; i++)
+            for ( ; i < (lockp->readers - 1) && i < (OSI_RWLOCK_THREADS - 1); i++)
                 lockp->tid[i] = lockp->tid[i+1];
             lockp->tid[i] = 0;
             break;
         }
     }
+#endif
 
     /* XXX better to get the list of things to wakeup from TSignalForMLs, and
      * then do the wakeup after SleepSpin releases the low-level mutex.
