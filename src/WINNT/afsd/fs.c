@@ -3106,7 +3106,7 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 static struct ViceIoctl gblob;
 static int debug = 0;
 /*
- * here follow some routines in suport of the setserverprefs and
+ * here follow some routines in support of the setserverprefs and
  * getserverprefs commands.  They are:
  * SetPrefCmd  "top-level" routine
  * addServer   adds a server to the list of servers to be poked into the
