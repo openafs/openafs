@@ -2271,7 +2271,7 @@ PrintPartitionId(Volume * vp)
     } else {
 	fprintf(stderr, "Invalid partition for volume id %lu\n",
 		afs_printable_uint32_lu(V_id(vp)));
-	printf(PLACEHOLDER);
+	printf("%s", PLACEHOLDER);
     }
 }
 
@@ -2374,7 +2374,7 @@ PrintNamei(Volume * vp, VnodeDiskObject * vnode)
     printf("%s", name.n_path);
     IH_RELEASE(ihP);
 #else
-    printf(PLACEHOLDER);
+    printf("%s", PLACEHOLDER);
 #endif
 }
 
@@ -2481,7 +2481,7 @@ PrintColumns(struct VnodeDetails *vdp, const char *desc)
 	    if (vdp->t == VNODE_U_POS_ACCESS || vdp->t == VNODE_U_NEG_ACCESS) {
 		printf("%d", vdp->u.access->id);
 	    } else {
-		printf(PLACEHOLDER);
+		printf("%s", PLACEHOLDER);
 	    }
 	    break;
 	case col_arights:
