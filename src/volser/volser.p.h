@@ -35,6 +35,7 @@
 #define volser_RW	0
 #define volser_RO	1
 #define	volser_BACK	2
+#define	volser_RWREPL	3
 
 #define	THOLD(tt)	((tt)->refCount++)
 
@@ -152,6 +153,7 @@ struct partList {		/*used by the backup system */
 #define ITSROVOL    0x02
 #define ITSRWVOL    0x04
 #define ITSBACKVOL  0x08
+#define ITSRWREPL   0x10
 #define RO_DONTUSE  0x20
 
 #define VLOP_RESTORE 0x100	/*this is bogus, clashes with VLOP_DUMP */

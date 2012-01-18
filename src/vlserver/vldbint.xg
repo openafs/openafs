@@ -195,6 +195,7 @@ const VLOP_DUMP        = 0x100;
 %#define	VLSF_BACKVOL	    0x08
 %#define	VLSF_UUID	    0x10
 %#define	VLSF_DONTUSE	    0x20
+%#define	VLSF_RWREPLICA	    0x40    /* Volume is a RW replica */
 
 typedef	vldbentry bulkentries<>;
 typedef	nvldbentry nbulkentries<>;
