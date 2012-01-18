@@ -624,15 +624,3 @@ AC_DEFUN([LINUX_DOP_D_DELETE_TAKES_CONST], [
 			[define if dentry.d_op->d_delete takes a const argument],
 			[-Werror])
 ])
-
-
-AC_DEFUN([LINUX_HAVE_SET_NLINK], [
-  AC_CHECK_LINUX_BUILD([for set_nlink],
-			[ac_cv_linux_have_set_nlink],
-			[#include <linux/fs.h>],
-			[struct inode _inode;
-			set_nlink(&_inode, 1);],
-			[HAVE_SET_NLINK],
-			[define if set_nlink exists],
-			[-Werror])
-])

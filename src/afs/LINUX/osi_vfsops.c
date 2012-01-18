@@ -439,7 +439,7 @@ void
 vattr2inode(struct inode *ip, struct vattr *vp)
 {
     ip->i_ino = vp->va_nodeid;
-#ifdef HAVE_SET_NLINK
+#ifdef HAVE_LINUX_SET_NLINK
     set_nlink(ip, vp->va_nlink);
 #else
     ip->i_nlink = vp->va_nlink;
