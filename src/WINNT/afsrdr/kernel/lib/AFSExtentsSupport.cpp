@@ -3430,7 +3430,8 @@ VOID
 AFSMarkDirty( IN AFSFcb *Fcb,
               IN AFSExtent *StartExtent,
               IN ULONG ExtentsCount,
-              IN LARGE_INTEGER *StartingByte)
+              IN LARGE_INTEGER *StartingByte,
+              IN BOOLEAN DerefExtents)
 {
 
     AFSNonPagedFcb *pNPFcb = Fcb->NPFcb;
@@ -3439,6 +3440,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
     ULONG ulCount = 0;
     BOOLEAN bInsertTail = FALSE, bInsertHead = FALSE;
     LONG lCount;
+    BOOLEAN bLocked = FALSE;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -3446,7 +3448,11 @@ AFSMarkDirty( IN AFSFcb *Fcb,
                   &Fcb->NPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
 
-    AFSAcquireShared( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE);
+    if( !ExIsResourceAcquiredLite( &Fcb->NPFcb->Specific.File.ExtentsResource))
+    {
+        AFSAcquireShared( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE);
+        bLocked = TRUE;
+    }
 
     AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
                     TRUE);
@@ -3576,9 +3582,11 @@ AFSMarkDirty( IN AFSFcb *Fcb,
                       pExtent,
                       pExtent->ActiveCount);
 
-        ASSERT( pExtent->ActiveCount > 0);
-
-        lCount = InterlockedDecrement( &pExtent->ActiveCount);
+        if( DerefExtents)
+        {
+            ASSERT( pExtent->ActiveCount > 0);
+            lCount = InterlockedDecrement( &pExtent->ActiveCount);
+        }
 
         pExtent = pNextExtent;
 
@@ -3593,7 +3601,10 @@ AFSMarkDirty( IN AFSFcb *Fcb,
                   &Fcb->NPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
 
-    AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
+    if( bLocked)
+    {
+        AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
+    }
 
     return;
 }

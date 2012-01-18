@@ -836,6 +836,7 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
     LARGE_INTEGER      liCurrentTime, liLastRequestTime;
     AFSDeviceExt      *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
     PFILE_OBJECT       pCacheFileObject = NULL;
+    BOOLEAN            bDerefExtents = FALSE;
 
     __Enter
     {
@@ -1164,6 +1165,8 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
         AFSReferenceActiveExtents( pStartExtent,
                                    extentsCount);
 
+        bDerefExtents = TRUE;
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNonCachedWrite Releasing(2) Fcb extents lock %08lX SHARED %08lX\n",
@@ -1307,31 +1310,34 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        //
-        // Since this is dirty we can mark the extents dirty now.
-        // AFSMarkDirty will dereference the extents.  Do not call
-        // AFSDereferenceActiveExtents() in this code path.
-        //
-
-        AFSMarkDirty( pFcb,
-                      pStartExtent,
-                      extentsCount,
-                      &StartingByte);
-
-        if (!bPagingIo)
-        {
-            //
-            // This was an uncached user write - tell the server to do
-            // the flush when the worker thread next wakes up
-            //
-            pFcb->Specific.File.LastServerFlush.QuadPart = 0;
-        }
-
-        //
-        // All done
-        //
-
 try_exit:
+
+        if( NT_SUCCESS( ntStatus) &&
+            pStartExtent != NULL &&
+            Irp->IoStatus.Information > 0)
+        {
+
+            //
+            // Since this is dirty we can mark the extents dirty now.
+            // AFSMarkDirty will dereference the extents.  Do not call
+            // AFSDereferenceActiveExtents() in this code path.
+            //
+
+            AFSMarkDirty( pFcb,
+                          pStartExtent,
+                          extentsCount,
+                          &StartingByte,
+                          bDerefExtents);
+
+            if (!bPagingIo)
+            {
+                //
+                // This was an uncached user write - tell the server to do
+                // the flush when the worker thread next wakes up
+                //
+                pFcb->Specific.File.LastServerFlush.QuadPart = 0;
+            }
+        }
 
         if( pCacheFileObject != NULL)
         {
