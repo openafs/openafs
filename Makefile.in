@@ -551,7 +551,7 @@ tbudb: budb tubik
 		echo Not building MT budb for ${SYS_NAME} ;; \
 	esac
 
-bucoord: cmd comerr bubasics budb volser
+bucoord: cmd comerr bubasics budb volser butm
 	+${COMPILE_PART1} bucoord ${COMPILE_PART2}
 
 xstat: cmd comerr fsint viced

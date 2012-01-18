@@ -73,104 +73,104 @@ $(TOP_INCDIR)/roken-common.h: $(UPSTREAM)/roken-common.h
 err.h: ${UPSTREAM}/err.hin
 	cp $? $@
 
-base64.o: $(UPSTREAM)/base64.c
+base64.o: $(UPSTREAM)/base64.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/base64.c
 
-cloexec.o: ${UPSTREAM}/cloexec.c
+cloexec.o: ${UPSTREAM}/cloexec.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/cloexec.c
 
-ct.o: ${UPSTREAM}/ct.c
+ct.o: ${UPSTREAM}/ct.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/ct.c
 
-daemon.o: ${UPSTREAM}/daemon.c
+daemon.o: ${UPSTREAM}/daemon.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/daemon.c
 
-ecalloc.o: ${UPSTREAM}/ecalloc.c
+ecalloc.o: ${UPSTREAM}/ecalloc.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/ecalloc.c
 
-emalloc.o: ${UPSTREAM}/emalloc.c
+emalloc.o: ${UPSTREAM}/emalloc.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/emalloc.c
 
-erealloc.o: ${UPSTREAM}/erealloc.c
+erealloc.o: ${UPSTREAM}/erealloc.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/erealloc.c
 
-err.o: ${UPSTREAM}/err.c err.h
+err.o: ${UPSTREAM}/err.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/err.c
 
-errx.o: ${UPSTREAM}/errx.c err.h
+errx.o: ${UPSTREAM}/errx.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/errx.c
 
-flock.o: ${UPSTREAM}/flock.c
+flock.o: ${UPSTREAM}/flock.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/flock.c
 
-getopt.o: ${UPSTREAM}/getopt.c
+getopt.o: ${UPSTREAM}/getopt.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/getopt.c
 
-getprogname.o: ${UPSTREAM}/getprogname.c
+getprogname.o: ${UPSTREAM}/getprogname.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/getprogname.c
 
-hex.o: ${UPSTREAM}/hex.c
+hex.o: ${UPSTREAM}/hex.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hex.c
 
-issuid.o: ${UPSTREAM}/issuid.c
+issuid.o: ${UPSTREAM}/issuid.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/issuid.c
 
-mkstemp.o: ${UPSTREAM}/mkstemp.c
+mkstemp.o: ${UPSTREAM}/mkstemp.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/mkstemp.c
 
-net_read.o: ${UPSTREAM}/net_read.c
+net_read.o: ${UPSTREAM}/net_read.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/net_read.c
 
-net_write.o: ${UPSTREAM}/net_write.c
+net_write.o: ${UPSTREAM}/net_write.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/net_write.c
 
-setenv.o: ${UPSTREAM}/setenv.c
+setenv.o: ${UPSTREAM}/setenv.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/setenv.c
 
-socket.o: ${UPSTREAM}/socket.c
+socket.o: ${UPSTREAM}/socket.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/socket.c
 
 # The upstream snprintf.c has some pointer warnings in it
 CFLAGS_snprintf.o = @CFLAGS_NOERROR@
 
-snprintf.o: ${UPSTREAM}/snprintf.c
+snprintf.o: ${UPSTREAM}/snprintf.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/snprintf.c
 
-strlcat.o: ${UPSTREAM}/strlcat.c
+strlcat.o: ${UPSTREAM}/strlcat.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/strlcat.c
 
-strlcpy.o: ${UPSTREAM}/strlcpy.c
+strlcpy.o: ${UPSTREAM}/strlcpy.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/strlcpy.c
 
-strnlen.o: ${UPSTREAM}/strnlen.c
+strnlen.o: ${UPSTREAM}/strnlen.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/strnlen.c
 
-strsep.o: ${UPSTREAM}/strsep.c
+strsep.o: ${UPSTREAM}/strsep.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/strsep.c
 
-unsetenv.o: ${UPSTREAM}/unsetenv.c
+unsetenv.o: ${UPSTREAM}/unsetenv.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/unsetenv.c
 
-verr.o: ${UPSTREAM}/verr.c err.h
+verr.o: ${UPSTREAM}/verr.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/verr.c
 
-verrx.o: ${UPSTREAM}/verrx.c err.h
+verrx.o: ${UPSTREAM}/verrx.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/verrx.c
 
-vsyslog.o: ${UPSTREAM}/vsyslog.c
+vsyslog.o: ${UPSTREAM}/vsyslog.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/vsyslog.c
 
-vwarn.o: ${UPSTREAM}/vwarn.c err.h
+vwarn.o: ${UPSTREAM}/vwarn.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/vwarn.c
 
-vwarnx.o: ${UPSTREAM}/vwarnx.c err.h
+vwarnx.o: ${UPSTREAM}/vwarnx.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/vwarnx.c
 
-warn.o: ${UPSTREAM}/warn.c err.h
+warn.o: ${UPSTREAM}/warn.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/warn.c
 
-warnerr.o: ${UPSTREAM}/warnerr.c err.h
+warnerr.o: ${UPSTREAM}/warnerr.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/warnerr.c
 
-warnx.o: ${UPSTREAM}/warnx.c err.h
+warnx.o: ${UPSTREAM}/warnx.c err.h ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/warnx.c

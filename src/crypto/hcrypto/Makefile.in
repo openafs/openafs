@@ -160,92 +160,92 @@ CFLAGS_test_cipher.o= -I${UPSTREAM}/roken/
 CFLAGS_rand-unix.o=@CFLAGS_NOERROR@
 CFLAGS_evp.o=-DHAVE_CONFIG_H
 
-aes.o: ${UPSTREAM}/hcrypto/aes.c
+aes.o: ${UPSTREAM}/hcrypto/aes.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/aes.c
 
-bn.o: ${UPSTREAM}/hcrypto/bn.c
+bn.o: ${UPSTREAM}/hcrypto/bn.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/bn.c
 
-camellia.o: ${UPSTREAM}/hcrypto/camellia.c
+camellia.o: ${UPSTREAM}/hcrypto/camellia.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/camellia.c
 
-camellia-ntt.o: ${UPSTREAM}/hcrypto/camellia-ntt.c
+camellia-ntt.o: ${UPSTREAM}/hcrypto/camellia-ntt.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/camellia-ntt.c
 
-des.o: ${UPSTREAM}/hcrypto/des.c
+des.o: ${UPSTREAM}/hcrypto/des.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/des.c
 	
-evp.o: ${UPSTREAM}/hcrypto/evp.c
+evp.o: ${UPSTREAM}/hcrypto/evp.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp.c
 	
-evp-hcrypto.o: ${UPSTREAM}/hcrypto/evp-hcrypto.c
+evp-hcrypto.o: ${UPSTREAM}/hcrypto/evp-hcrypto.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp-hcrypto.c
 	
-evp-cc.o: ${UPSTREAM}/hcrypto/evp-cc.c
+evp-cc.o: ${UPSTREAM}/hcrypto/evp-cc.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/evp-cc.c
 
-hmac.o: ${UPSTREAM}/hcrypto/hmac.c
+hmac.o: ${UPSTREAM}/hcrypto/hmac.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/hmac.c
 
-md2.o: ${UPSTREAM}/hcrypto/md2.c
+md2.o: ${UPSTREAM}/hcrypto/md2.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/md2.c
 
-md4.o: ${UPSTREAM}/hcrypto/md4.c
+md4.o: ${UPSTREAM}/hcrypto/md4.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/md4.c
 
-md5.o: ${UPSTREAM}/hcrypto/md5.c
+md5.o: ${UPSTREAM}/hcrypto/md5.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/md5.c
 
-pkcs5.o: ${UPSTREAM}/hcrypto/pkcs5.c
+pkcs5.o: ${UPSTREAM}/hcrypto/pkcs5.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/pkcs5.c
 
-rand-egd.o: ${UPSTREAM}/hcrypto/rand-egd.c
+rand-egd.o: ${UPSTREAM}/hcrypto/rand-egd.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-egd.c
 
-rand-fortuna.o: ${UPSTREAM}/hcrypto/rand-fortuna.c
+rand-fortuna.o: ${UPSTREAM}/hcrypto/rand-fortuna.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-fortuna.c
 
-rand-timer.o: ${UPSTREAM}/hcrypto/rand-timer.c
+rand-timer.o: ${UPSTREAM}/hcrypto/rand-timer.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-timer.c
 
-rand-unix.o: ${UPSTREAM}/hcrypto/rand-unix.c
+rand-unix.o: ${UPSTREAM}/hcrypto/rand-unix.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand-unix.c
 
-rand.o: ${UPSTREAM}/hcrypto/rand.c
+rand.o: ${UPSTREAM}/hcrypto/rand.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rand.c
 
-rc2.o: ${UPSTREAM}/hcrypto/rc2.c
+rc2.o: ${UPSTREAM}/hcrypto/rc2.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rc2.c
 
-rc4.o: ${UPSTREAM}/hcrypto/rc4.c
+rc4.o: ${UPSTREAM}/hcrypto/rc4.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rc4.c
 
-rijndael-alg-fst.o: ${UPSTREAM}/hcrypto/rijndael-alg-fst.c
+rijndael-alg-fst.o: ${UPSTREAM}/hcrypto/rijndael-alg-fst.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rijndael-alg-fst.c
 
-rnd_keys.o: ${UPSTREAM}/hcrypto/rnd_keys.c
+rnd_keys.o: ${UPSTREAM}/hcrypto/rnd_keys.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/rnd_keys.c
 
-sha.o: ${UPSTREAM}/hcrypto/sha.c
+sha.o: ${UPSTREAM}/hcrypto/sha.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/sha.c
 
-sha256.o: ${UPSTREAM}/hcrypto/sha256.c
+sha256.o: ${UPSTREAM}/hcrypto/sha256.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/sha256.c
 
-sha512.o: ${UPSTREAM}/hcrypto/sha512.c
+sha512.o: ${UPSTREAM}/hcrypto/sha512.c ${HEADERS}
 	${AFS_CCRULE} $(UPSTREAM)/hcrypto/sha512.c
 
-ui.o: ${UPSTREAM}/hcrypto/ui.c
+ui.o: ${UPSTREAM}/hcrypto/ui.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/ui.c
 
-validate.o: ${UPSTREAM}/hcrypto/validate.c
+validate.o: ${UPSTREAM}/hcrypto/validate.c ${HEADERS}
 	${AFS_CCRULE} ${UPSTREAM}/hcrypto/validate.c
 
-test_cipher.o: ${UPSTREAM}/hcrypto/test_cipher.c
+test_cipher.o: ${UPSTREAM}/hcrypto/test_cipher.c ${HEADERS}
 	$(AFS_CCRULE) $(UPSTREAM)/hcrypto/test_cipher.c
 
 # LWP Targets
 
-rand-fortuna_lwp.o: ${UPSTREAM}/hcrypto/rand-fortuna.c
+rand-fortuna_lwp.o: ${UPSTREAM}/hcrypto/rand-fortuna.c ${HEADERS}
 	$(LWP_CCRULE) $(UPSTREAM)/hcrypto/rand-fortuna.c
 
