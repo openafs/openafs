@@ -1094,11 +1094,16 @@ struct dentry_operations afs_dentry_operations = {
  * name is in kernel space at this point.
  */
 static int
+#if defined(IOP_MKDIR_TAKES_UMODE_T)
+afs_linux_create(struct inode *dip, struct dentry *dp, umode_t mode,
+		 struct nameidata *nd)
+#else
 #ifdef IOP_CREATE_TAKES_NAMEIDATA
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode,
 		 struct nameidata *nd)
 #else
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
+#endif
 #endif
 {
     struct vattr vattr;
@@ -1327,7 +1332,11 @@ afs_linux_symlink(struct inode *dip, struct dentry *dp, const char *target)
 }
 
 static int
+#if defined(IOP_MKDIR_TAKES_UMODE_T)
+afs_linux_mkdir(struct inode *dip, struct dentry *dp, umode_t mode)
+#else
 afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
+#endif
 {
     int code;
     cred_t *credp = crref();
