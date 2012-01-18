@@ -494,8 +494,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
 //
 
 NTSTATUS
-AFSInitFcb( IN AFSDirectoryCB   *DirEntry,
-            IN OUT AFSFcb     **Fcb);
+AFSInitFcb( IN AFSDirectoryCB   *DirEntry);
 
 NTSTATUS
 AFSInitVolume( IN GUID *AuthGroup,
