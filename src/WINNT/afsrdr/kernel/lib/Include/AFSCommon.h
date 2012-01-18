@@ -399,7 +399,8 @@ VOID
 AFSMarkDirty( IN AFSFcb *pFcb,
               IN AFSExtent *StartExtent,
               IN ULONG ExtentsCount,
-              IN LARGE_INTEGER *StartingByte);
+              IN LARGE_INTEGER *StartingByte,
+              IN BOOLEAN DerefExtents);
 
 BOOLEAN
 AFSTearDownFcbExtents( IN AFSFcb *Fcb,
