@@ -51,8 +51,7 @@
 //
 
 NTSTATUS
-AFSInitFcb( IN AFSDirectoryCB  *DirEntry,
-            IN OUT AFSFcb     **Fcb)
+AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -128,6 +127,7 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry,
                        sizeof( AFSNonPagedFcb));
 
         pNPFcb->Size = sizeof( AFSNonPagedFcb);
+
         pNPFcb->Type = AFS_NON_PAGED_FCB;
 
         //
@@ -166,14 +166,6 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry,
                         TRUE);
 
         pFcb->NPFcb = pNPFcb;
-
-        //
-        // Initialize some fields in the Fcb
-        //
-
-        pFcb->ObjectInformation = pObjectInfo;
-
-        pObjectInfo->Fcb = pFcb;
 
         //
         // Set type specific information
@@ -280,26 +272,52 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry,
         }
 
         //
-        // And return the Fcb
+        // Initialize some fields in the Fcb
         //
 
-        *Fcb = pFcb;
+        if ( InterlockedCompareExchangePointer( (PVOID *)&pObjectInfo->Fcb, pFcb, NULL) != NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInitFcb Raced Fcb %08lX pFcb %08lX Name %wZ\n",
+                          pObjectInfo->Fcb,
+                          pFcb,
+                          &DirEntry->NameInformation.FileName);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
+                          &pObjectInfo->Fcb->NPFcb->Resource,
+                          PsGetCurrentThread());
+
+            AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
+                            TRUE);
+
+            try_return( ntStatus = STATUS_REPARSE);
+        }
+
+        pFcb->ObjectInformation = pObjectInfo;
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitFcb Initialized Fcb %08lX Name %wZ\n",
-                      pFcb,
+                      &pObjectInfo->Fcb,
                       &DirEntry->NameInformation.FileName);
 
 try_exit:
 
-        if( !NT_SUCCESS( ntStatus))
+        if( ntStatus != STATUS_SUCCESS)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSInitFcb Failed to initialize fcb Status %08lX\n",
-                          ntStatus);
+            if ( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSInitFcb Failed to initialize fcb Status %08lX\n",
+                              ntStatus);
+            }
 
             if( pFcb != NULL)
             {
@@ -329,12 +347,6 @@ try_exit:
             {
 
                 AFSExFreePool( pNPFcb);
-            }
-
-            if( Fcb != NULL)
-            {
-
-                *Fcb = NULL;
             }
         }
     }

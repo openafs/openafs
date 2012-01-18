@@ -1896,10 +1896,12 @@ AFSProcessCreate( IN PIRP               Irp,
             // Allocate and initialize the Fcb for the file.
             //
 
-            ntStatus = AFSInitFcb( pDirEntry,
-                                   Fcb);
+            ntStatus = AFSInitFcb( pDirEntry);
 
-            if( !NT_SUCCESS( ntStatus))
+            *Fcb = pObjectInfo->Fcb;
+
+            if( !NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_REPARSE)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1912,7 +1914,13 @@ AFSProcessCreate( IN PIRP               Irp,
                 try_return( ntStatus);
             }
 
-            bAllocatedFcb = TRUE;
+            if ( ntStatus != STATUS_REPARSE)
+            {
+
+                bAllocatedFcb = TRUE;
+            }
+
+            ntStatus = STATUS_SUCCESS;
         }
 
         bReleaseFcb = TRUE;
@@ -2252,10 +2260,12 @@ AFSOpenTargetDirectory( IN PIRP Irp,
             // Allocate and initialize the Fcb for the file.
             //
 
-            ntStatus = AFSInitFcb( ParentDirectoryCB,
-                                   Fcb);
+            ntStatus = AFSInitFcb( ParentDirectoryCB);
 
-            if( !NT_SUCCESS( ntStatus))
+            *Fcb = pParentObject->Fcb;
+
+            if( !NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_REPARSE)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2268,7 +2278,13 @@ AFSOpenTargetDirectory( IN PIRP Irp,
                 try_return( ntStatus);
             }
 
-            bAllocatedFcb = TRUE;
+            if ( ntStatus == STATUS_REPARSE)
+            {
+
+                bAllocatedFcb = TRUE;
+            }
+
+            ntStatus = STATUS_SUCCESS;
         }
 
         bReleaseFcb = TRUE;
@@ -2579,10 +2595,10 @@ AFSProcessOpen( IN PIRP Irp,
         if( pObjectInfo->Fcb == NULL)
         {
 
-            ntStatus = AFSInitFcb( DirectoryCB,
-                                   &pObjectInfo->Fcb);
+            ntStatus = AFSInitFcb( DirectoryCB);
 
-            if( !NT_SUCCESS( ntStatus))
+            if( !NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_REPARSE)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2595,7 +2611,13 @@ AFSProcessOpen( IN PIRP Irp,
                 try_return( ntStatus);
             }
 
-            bAllocatedFcb = TRUE;
+            if ( ntStatus != STATUS_REPARSE)
+            {
+
+                bAllocatedFcb = TRUE;
+            }
+
+            ntStatus = STATUS_SUCCESS;
         }
         else
         {
@@ -3068,10 +3090,12 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         if( pObjectInfo->Fcb == NULL)
         {
 
-            ntStatus = AFSInitFcb( DirectoryCB,
-                                   Fcb);
+            ntStatus = AFSInitFcb( DirectoryCB);
 
-            if( !NT_SUCCESS( ntStatus))
+            *Fcb = pObjectInfo->Fcb;
+
+            if( !NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_REPARSE)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3084,7 +3108,13 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                 try_return( ntStatus);
             }
 
-            bAllocatedFcb = TRUE;
+            if ( ntStatus != STATUS_REPARSE)
+            {
+
+                bAllocatedFcb = TRUE;
+            }
+
+            ntStatus = STATUS_SUCCESS;
         }
         else
         {
@@ -3476,10 +3506,12 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
             // Allocate and initialize the Fcb for the file.
             //
 
-            ntStatus = AFSInitFcb( pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB,
-                                   Fcb);
+            ntStatus = AFSInitFcb( pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB);
 
-            if( !NT_SUCCESS( ntStatus))
+            *Fcb = pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb;
+
+            if( !NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_REPARSE)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3491,7 +3523,13 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
                 try_return( ntStatus);
             }
 
-            bAllocatedFcb = TRUE;
+            if ( ntStatus != STATUS_REPARSE)
+            {
+
+                bAllocatedFcb = TRUE;
+            }
+
+            ntStatus = STATUS_SUCCESS;
         }
         else
         {
@@ -3734,10 +3772,12 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
             // Allocate and initialize the Fcb for the file.
             //
 
-            ntStatus = AFSInitFcb( DirectoryCB,
-                                   Fcb);
+            ntStatus = AFSInitFcb( DirectoryCB);
 
-            if( !NT_SUCCESS( ntStatus))
+            *Fcb = DirectoryCB->ObjectInformation->Fcb;
+
+            if( !NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_REPARSE)
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
@@ -3749,7 +3789,13 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
                 try_return( ntStatus);
             }
 
-            bAllocateFcb = TRUE;
+            if ( ntStatus != STATUS_REPARSE)
+            {
+
+                bAllocateFcb = TRUE;
+            }
+
+            ntStatus = STATUS_SUCCESS;
         }
         else
         {
