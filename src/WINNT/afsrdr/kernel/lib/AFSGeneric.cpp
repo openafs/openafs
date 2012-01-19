@@ -8565,6 +8565,10 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
             case AFS_INVALIDATE_DATA_VERSION:
             {
 
+                LARGE_INTEGER liCurrentOffset = {0,0};
+                LARGE_INTEGER liFlushLength = {0,0};
+                ULONG ulFlushLength = 0;
+
                 if( ObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
                     ObjectInfo->Fcb != NULL)
                 {
@@ -8583,20 +8587,69 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                         ulCount = (ULONG)ObjectInfo->Fcb->Specific.File.ExtentCount;
 
-                        while( ulProcessCount < ulCount)
+                        if( ulCount > 0)
                         {
                             pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
 
-                            if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                            while( ulProcessCount < ulCount)
                             {
-                                CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                     &pEntry->FileOffset,
-                                                     pEntry->Size,
-                                                     FALSE);
-                            }
+                                pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
 
-                            ulProcessCount++;
-                            le = le->Flink;
+                                if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                                {
+                                    if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                              &pEntry->FileOffset,
+                                                              pEntry->Size,
+                                                              FALSE))
+                                    {
+                                        SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                                    }
+                                }
+
+                                if( liCurrentOffset.QuadPart < pEntry->FileOffset.QuadPart)
+                                {
+
+                                    liFlushLength.QuadPart = pEntry->FileOffset.QuadPart - liCurrentOffset.QuadPart;
+
+                                    while( liFlushLength.QuadPart > 0)
+                                    {
+
+                                        if( liFlushLength.QuadPart > 512 * 1024000)
+                                        {
+                                            ulFlushLength = 512 * 1024000;
+                                        }
+                                        else
+                                        {
+                                            ulFlushLength = liFlushLength.LowPart;
+                                        }
+
+                                        if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                  &liCurrentOffset,
+                                                                  ulFlushLength,
+                                                                  FALSE))
+                                        {
+                                            SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                                        }
+
+                                        liFlushLength.QuadPart -= ulFlushLength;
+                                    }
+                                }
+
+                                liCurrentOffset.QuadPart = pEntry->FileOffset.QuadPart + pEntry->Size;
+
+                                ulProcessCount++;
+                                le = le->Flink;
+                            }
+                        }
+                        else
+                        {
+                            if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                      NULL,
+                                                      0,
+                                                      FALSE))
+                            {
+                                SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                            }
                         }
                     }
                     __except( EXCEPTION_EXECUTE_HANDLER)

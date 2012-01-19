@@ -636,6 +636,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+                if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE))
+                {
+                    InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+                    ClearFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+
+                    AFSPerformObjectInvalidate( pObjectInfo,
+                                                AFS_INVALIDATE_DATA_VERSION);
+                }
+
                 lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
