@@ -136,6 +136,7 @@ NTSTATUS
 #define AFS_FCB_FLAG_UPDATE_ACCESS_TIME                      0x00000010
 #define AFS_FCB_FLAG_UPDATE_CREATE_TIME                      0x00000020
 #define AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME                  0x00000040
+#define AFS_FCB_FLAG_PURGE_ON_CLOSE                          0x00000080
 
 //
 // Object information flags
