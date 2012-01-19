@@ -188,34 +188,9 @@ void buf_ReleaseDbg(cm_buf_t *bp, char *file, long line)
 void buf_Release(cm_buf_t *bp)
 #endif
 {
-    afs_int32 refCount;
-
-    /* ensure that we're in the LRU queue if our ref count is 0 */
-    osi_assertx(bp->magic == CM_BUF_MAGIC,"incorrect cm_buf_t magic");
-
-    refCount = InterlockedDecrement(&bp->refCount);
-#ifdef DEBUG_REFCOUNT
-    osi_Log2(afsd_logp,"buf_Release bp 0x%p ref %d", bp, refCount);
-    afsi_log("%s:%d buf_ReleaseLocked bp 0x%p, ref %d", file, line, bp, refCount);
-#endif
-#ifdef DEBUG
-    if (refCount < 0)
-	osi_panic("buf refcount 0",__FILE__,__LINE__);;
-#else
-    osi_assertx(refCount >= 0, "cm_buf_t refCount == 0");
-#endif
-    if (refCount == 0) {
-        lock_ObtainWrite(&buf_globalLock);
-        if (bp->refCount == 0 &&
-            !(bp->qFlags & (CM_BUF_QINLRU|CM_BUF_QREDIR))) {
-            osi_QAddH( (osi_queue_t **) &cm_data.buf_freeListp,
-                       (osi_queue_t **) &cm_data.buf_freeListEndp,
-                       &bp->q);
-            _InterlockedOr(&bp->qFlags, CM_BUF_QINLRU);
-            buf_IncrementFreeCount();
-        }
-        lock_ReleaseWrite(&buf_globalLock);
-    }
+    lock_ObtainRead(&buf_globalLock);
+    buf_ReleaseLocked(bp, FALSE);
+    lock_ReleaseRead(&buf_globalLock);
 }
 
 long
