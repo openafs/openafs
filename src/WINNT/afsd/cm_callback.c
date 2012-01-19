@@ -523,7 +523,6 @@ extern osi_rwlock_t cm_aclLock;
 extern osi_rwlock_t buf_globalLock;
 extern osi_rwlock_t cm_cellLock;
 extern osi_rwlock_t cm_connLock;
-extern osi_rwlock_t cm_daemonLock;
 extern osi_rwlock_t cm_dnlcLock;
 extern osi_rwlock_t cm_scacheLock;
 extern osi_rwlock_t cm_serverLock;
@@ -558,7 +557,6 @@ static struct _ltable {
     {"cm_connLock",      (char*)&cm_connLock,           LOCKTYPE_RW},
     {"cm_userLock",      (char*)&cm_userLock,           LOCKTYPE_RW},
     {"cm_volumeLock",    (char*)&cm_volumeLock,         LOCKTYPE_RW},
-    {"cm_daemonLock",    (char*)&cm_daemonLock,         LOCKTYPE_RW},
     {"cm_dnlcLock",      (char*)&cm_dnlcLock,           LOCKTYPE_RW},
     {"cm_utilsLock",     (char*)&cm_utilsLock,          LOCKTYPE_RW},
     {"smb_globalLock",   (char*)&smb_globalLock,        LOCKTYPE_RW},
