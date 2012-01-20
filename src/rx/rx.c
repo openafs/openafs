@@ -2676,16 +2676,16 @@ rxi_NewCall(struct rx_connection *conn, int channel)
  *
  * call->lock amd rx_refcnt_mutex are held upon entry.
  * haveCTLock is set when called from rxi_ReapConnections.
+ *
+ * return 1 if the call is freed, 0 if not.
  */
-static void
+static int
 rxi_FreeCall(struct rx_call *call, int haveCTLock)
 {
     int channel = call->channel;
     struct rx_connection *conn = call->conn;
+    u_char state = call->state;
 
-
-    if (call->state == RX_STATE_DALLY || call->state == RX_STATE_HOLD)
-	(*call->callNumber)++;
     /*
      * We are setting the state to RX_STATE_RESET to
      * ensure that no one else will attempt to use this
@@ -2698,10 +2698,24 @@ rxi_FreeCall(struct rx_call *call, int haveCTLock)
     MUTEX_EXIT(&rx_refcnt_mutex);
     rxi_ResetCall(call, 0);
 
-    MUTEX_ENTER(&conn->conn_call_lock);
-    if (call->conn->call[channel] == call)
-        call->conn->call[channel] = 0;
-    MUTEX_EXIT(&conn->conn_call_lock);
+    if (MUTEX_TRYENTER(&conn->conn_call_lock))
+    {
+        if (state == RX_STATE_DALLY || state == RX_STATE_HOLD)
+            (*call->callNumber)++;
+
+        if (call->conn->call[channel] == call)
+            call->conn->call[channel] = 0;
+        MUTEX_EXIT(&conn->conn_call_lock);
+    } else {
+        /*
+         * We couldn't obtain the conn_call_lock so we can't
+         * disconnect the call from the connection.  Set the
+         * call state to dally so that the call can be reused.
+         */
+        MUTEX_ENTER(&rx_refcnt_mutex);
+        call->state = RX_STATE_DALLY;
+        return 0;
+    }
 
     MUTEX_ENTER(&rx_freeCallQueue_lock);
     SET_CALL_QUEUE_LOCK(call, &rx_freeCallQueue_lock);
@@ -2751,6 +2765,7 @@ rxi_FreeCall(struct rx_call *call, int haveCTLock)
 	MUTEX_EXIT(&conn->conn_data_lock);
     }
     MUTEX_ENTER(&rx_refcnt_mutex);
+    return 1;
 }
 
 rx_atomic_t rxi_Allocsize = RX_ATOMIC_INIT(0);
@@ -6222,10 +6237,12 @@ rxi_CheckCall(struct rx_call *call)
 	    rxevent_Cancel(&call->growMTUEvent, call,
 			   RX_CALL_REFCOUNT_ALIVE);
             MUTEX_ENTER(&rx_refcnt_mutex);
-	    if (call->refCount == 0) {
-		rxi_FreeCall(call, haveCTLock);
+            /* if rxi_FreeCall returns 1 it has freed the call */
+	    if (call->refCount == 0 &&
+                rxi_FreeCall(call, haveCTLock))
+            {
                 MUTEX_EXIT(&rx_refcnt_mutex);
-		return -2;
+                return -2;
 	    }
             MUTEX_EXIT(&rx_refcnt_mutex);
 	    return -1;
