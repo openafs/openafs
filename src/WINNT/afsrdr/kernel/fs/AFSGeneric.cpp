@@ -721,11 +721,11 @@ AFSInitializeControlDevice()
         //
 
         KeInitializeEvent( &pDeviceExt->Specific.Control.CommServiceCB.IrpPoolHasEntries,
-                           NotificationEvent,
+                           SynchronizationEvent,
                            FALSE);
 
         KeInitializeEvent( &pDeviceExt->Specific.Control.CommServiceCB.IrpPoolHasReleaseEntries,
-                           NotificationEvent,
+                           SynchronizationEvent,
                            FALSE);
 
         KeInitializeEvent( &pDeviceExt->Specific.Control.ExtentReleaseEvent,

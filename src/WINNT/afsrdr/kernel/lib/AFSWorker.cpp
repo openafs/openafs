@@ -70,7 +70,7 @@ AFSInitializeWorkerPool()
         pDevExt->Specific.Library.WorkerCount = 0;
 
         KeInitializeEvent( &pDevExt->Specific.Library.WorkerQueueHasItems,
-                           NotificationEvent,
+                           SynchronizationEvent,
                            FALSE);
 
         //
@@ -152,7 +152,7 @@ AFSInitializeWorkerPool()
         pDevExt->Specific.Library.IOWorkerCount = 0;
 
         KeInitializeEvent( &pDevExt->Specific.Library.IOWorkerQueueHasItems,
-                           NotificationEvent,
+                           SynchronizationEvent,
                            FALSE);
 
         //
@@ -265,10 +265,33 @@ AFSRemoveWorkerPool()
     pDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
 
     //
-    // Loop through the workers shutting them down
+    // Loop through the workers shutting them down in two stages.
+    // First, clear AFS_WORKER_PROCESS_REQUESTS so that workers
+    // stop processing requests.  Second, call AFSShutdownWorkerThread()
+    // to wake the workers and wait for them to exit.
     //
 
     pCurrentWorker = pDevExt->Specific.Library.PoolHead;
+
+    while( index < pDevExt->Specific.Library.WorkerCount)
+    {
+
+        ClearFlag( pCurrentWorker->State, AFS_WORKER_PROCESS_REQUESTS);
+
+        pCurrentWorker = pCurrentWorker->fLink;
+
+        if ( pCurrentWorker == NULL)
+        {
+
+            break;
+        }
+
+        index++;
+    }
+
+    pCurrentWorker = pDevExt->Specific.Library.PoolHead;
+
+    index = 0;
 
     while( index < pDevExt->Specific.Library.WorkerCount)
     {
@@ -295,8 +318,31 @@ AFSRemoveWorkerPool()
     ExDeleteResourceLite( &pDevExt->Specific.Library.QueueLock);
 
     //
-    // Loop through the IO workers shutting them down
+    // Loop through the IO workers shutting them down in two stages.
+    // First, clear AFS_WORKER_PROCESS_REQUESTS so that workers
+    // stop processing requests.  Second, call AFSShutdownWorkerThread()
+    // to wake the workers and wait for them to exit.
     //
+
+    pCurrentWorker = pDevExt->Specific.Library.IOPoolHead;
+
+    index = 0;
+
+    while( index < pDevExt->Specific.Library.IOWorkerCount)
+    {
+
+        ClearFlag( pCurrentWorker->State, AFS_WORKER_PROCESS_REQUESTS);
+
+        pCurrentWorker = pCurrentWorker->fLink;
+
+        if ( pCurrentWorker == NULL)
+        {
+
+            break;
+        }
+
+        index++;
+    }
 
     pCurrentWorker = pDevExt->Specific.Library.IOPoolHead;
 
@@ -515,7 +561,7 @@ AFSShutdownVolumeWorker( IN AFSVolumeCB *VolumeCB)
 //
 // Description:
 //
-//      This function shusdown a worker thread in the pool
+//      This function shutsdown a worker thread in the pool
 //
 // Return:
 //
@@ -532,12 +578,6 @@ AFSShutdownWorkerThread( IN AFSWorkQueueContext *PoolContext)
     if( PoolContext->WorkerThreadObject != NULL &&
         BooleanFlagOn( PoolContext->State, AFS_WORKER_INITIALIZED))
     {
-
-        //
-        // Clear the 'keep processing' flag
-        //
-
-        ClearFlag( PoolContext->State, AFS_WORKER_PROCESS_REQUESTS);
 
         //
         // Wake up the thread if it is a sleep
@@ -585,12 +625,6 @@ AFSShutdownIOWorkerThread( IN AFSWorkQueueContext *PoolContext)
     {
 
         //
-        // Clear the 'keep processing' flag
-        //
-
-        ClearFlag( PoolContext->State, AFS_WORKER_PROCESS_REQUESTS);
-
-        //
         // Wake up the thread if it is a sleep
         //
 
@@ -632,7 +666,6 @@ AFSWorkerThread( IN PVOID Context)
     AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)Context;
     AFSWorkItem *pWorkItem;
     BOOLEAN freeWorkItem = TRUE;
-    BOOLEAN exitThread = FALSE;
     AFSDeviceExt *pLibraryDevExt = NULL;
     LONG lCount;
 
@@ -646,21 +679,20 @@ AFSWorkerThread( IN PVOID Context)
                 0,
                 FALSE);
 
-
     //
     // Indicate we are initialized
     //
 
     SetFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
+    ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+
     while( BooleanFlagOn( pPoolContext->State, AFS_WORKER_PROCESS_REQUESTS))
     {
-
-        ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -772,7 +804,22 @@ AFSWorkerThread( IN PVOID Context)
                 }
             }
         }
+
+        ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+
     } // worker thread loop
+
+    ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
+
+    // Wake up another worker so they too can exit
+
+    KeSetEvent( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
+                0,
+                FALSE);
 
     PsTerminateSystemThread( 0);
 
@@ -787,7 +834,6 @@ AFSIOWorkerThread( IN PVOID Context)
     AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)Context;
     AFSWorkItem *pWorkItem;
     BOOLEAN freeWorkItem = TRUE;
-    BOOLEAN exitThread = FALSE;
     AFSDeviceExt *pLibraryDevExt = NULL, *pRdrDevExt = NULL;
 
     pLibraryDevExt = (AFSDeviceExt *)AFSLibraryDeviceObject->DeviceExtension;
@@ -807,14 +853,14 @@ AFSIOWorkerThread( IN PVOID Context)
 
     SetFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
 
+    ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+
     while( BooleanFlagOn( pPoolContext->State, AFS_WORKER_PROCESS_REQUESTS))
     {
-
-        ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -886,7 +932,22 @@ AFSIOWorkerThread( IN PVOID Context)
                 }
             }
         }
+
+        ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+
     } // worker thread loop
+
+    ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
+
+    // Wake up another IOWorker so they too can exit
+
+    KeSetEvent( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
+                0,
+                FALSE);
 
     PsTerminateSystemThread( 0);
 
@@ -901,7 +962,6 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     AFSWorkQueueContext *pPoolContext = (AFSWorkQueueContext *)&AFSGlobalRoot->VolumeWorkerContext;
     AFSDeviceExt *pControlDeviceExt = NULL;
     AFSDeviceExt *pRDRDeviceExt = NULL;
-    BOOLEAN exitThread = FALSE;
     LARGE_INTEGER DueTime;
     LONG TimeOut;
     KTIMER Timer;
@@ -1861,13 +1921,18 @@ AFSRemoveWorkItem()
         {
 
             pDevExt->Specific.Library.QueueTail = NULL;
-
-            KeResetEvent(&(pDevExt->Specific.Library.WorkerQueueHasItems));
         }
-    }
-    else
-    {
-        KeResetEvent(&(pDevExt->Specific.Library.WorkerQueueHasItems));
+        else
+        {
+
+            //
+            // Wake up another worker
+            //
+
+            KeSetEvent( &(pDevExt->Specific.Library.WorkerQueueHasItems),
+                        0,
+                        FALSE);
+        }
     }
 
     AFSReleaseResource( &pDevExt->Specific.Library.QueueLock);
@@ -1915,13 +1980,18 @@ AFSRemoveIOWorkItem()
         {
 
             pDevExt->Specific.Library.IOQueueTail = NULL;
-
-            KeResetEvent(&(pDevExt->Specific.Library.IOWorkerQueueHasItems));
         }
-    }
-    else
-    {
-        KeResetEvent(&(pDevExt->Specific.Library.IOWorkerQueueHasItems));
+        else
+        {
+
+            //
+            // Wake up another worker
+            //
+
+            KeSetEvent( &(pDevExt->Specific.Library.IOWorkerQueueHasItems),
+                        0,
+                        FALSE);
+        }
     }
 
     AFSReleaseResource( &pDevExt->Specific.Library.IOQueueLock);

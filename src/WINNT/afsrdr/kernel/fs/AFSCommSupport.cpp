@@ -938,11 +938,8 @@ AFSCleanupIrpPool()
 
         //
         // Set the event to release any waiting workers
+        // (everyone waits on IrpPoolHasReleaseEntries)
         //
-
-        KeSetEvent( &pCommSrvc->IrpPoolHasEntries,
-                    0,
-                    FALSE);
 
         KeSetEvent( &pCommSrvc->IrpPoolHasReleaseEntries,
                     0,
@@ -1240,6 +1237,14 @@ AFSProcessIrpRequest( IN PIRP Irp)
 
                 AFSReleaseResource( &pCommSrvc->IrpPoolLock);
 
+                //
+                // Wake up the next worker since this is a SynchronizationEvent
+                //
+
+                KeSetEvent( &pCommSrvc->IrpPoolHasReleaseEntries,
+                            0,
+                            FALSE);
+
                 try_return( ntStatus = STATUS_DEVICE_NOT_READY);
             }
 
@@ -1291,16 +1296,16 @@ AFSProcessIrpRequest( IN PIRP Irp)
                     pEntry = pEntry->fLink;
                 }
 
-                if( pCommSrvc->RequestPoolHead == NULL)
+                if( pEntry != NULL)
                 {
 
-                    KeClearEvent( &pCommSrvc->IrpPoolHasEntries);
-                }
+                    //
+                    // There might be another release entry pending
+                    //
 
-                if( pEntry == NULL)
-                {
-
-                    KeClearEvent( &pCommSrvc->IrpPoolHasReleaseEntries);
+                    KeSetEvent( &pCommSrvc->IrpPoolHasReleaseEntries,
+                                0,
+                                FALSE);
                 }
 
                 //
@@ -1326,11 +1331,13 @@ AFSProcessIrpRequest( IN PIRP Irp)
 
                         pCommSrvc->RequestPoolTail = NULL;
                     }
-                }
-                else
-                {
+                    else
+                    {
 
-                    KeClearEvent( &pCommSrvc->IrpPoolHasEntries);
+                        KeSetEvent( &pCommSrvc->IrpPoolHasEntries,
+                                    0,
+                                    FALSE);
+                    }
                 }
 
                 //
