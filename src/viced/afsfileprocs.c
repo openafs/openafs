@@ -1806,7 +1806,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	return VSALVAGE;
     }
 
-    *targetptr = VAllocVnode(&errorCode, volptr, FileType);
+    *targetptr = VAllocVnode(&errorCode, volptr, FileType, 0, 0);
     if (errorCode != 0) {
 	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
 	return (errorCode);

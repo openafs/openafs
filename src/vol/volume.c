@@ -180,9 +180,6 @@ pthread_t vol_glock_holder = 0;
 #endif
 
 
-#define VOLUME_BITMAP_GROWSIZE	16	/* bytes, => 128vnodes */
-					/* Must be a multiple of 4 (1 word) !! */
-
 /* this parameter needs to be tunable at runtime.
  * 128 was really inadequate for largish servers -- at 16384 volumes this
  * puts average chain length at 128, thus an average 65 deref's to find a volptr.
@@ -6201,6 +6198,25 @@ VChildProcReconnectFS(void)
 /* volume bitmap routines                          */
 /***************************************************/
 
+/*
+ * Grow the bitmap by the defined increment
+ */
+void
+VGrowBitmap(struct vnodeIndex *index)
+{
+    byte *bp;
+
+    bp = realloc(index->bitmap, index->bitmapSize + VOLUME_BITMAP_GROWSIZE);
+    osi_Assert(bp != NULL);
+    index->bitmap = bp;
+    bp += index->bitmapSize;
+    memset(bp, 0, VOLUME_BITMAP_GROWSIZE);
+    index->bitmapOffset = index->bitmapSize;
+    index->bitmapSize += VOLUME_BITMAP_GROWSIZE;
+
+    return;
+}
+
 /**
  * allocate a vnode bitmap number for the vnode
  *
@@ -6322,14 +6338,8 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
 	bp += sizeof(bit32) /* i.e. 4 */ ;
     }
     /* No bit map entry--must grow bitmap */
-    bp = (byte *)
-	realloc(index->bitmap, index->bitmapSize + VOLUME_BITMAP_GROWSIZE);
-    osi_Assert(bp != NULL);
-    index->bitmap = bp;
-    bp += index->bitmapSize;
-    memset(bp, 0, VOLUME_BITMAP_GROWSIZE);
-    index->bitmapOffset = index->bitmapSize;
-    index->bitmapSize += VOLUME_BITMAP_GROWSIZE;
+    VGrowBitmap(index);
+    bp = index->bitmap;
     *bp = 1;
     ret = index->bitmapOffset * 8;
 #ifdef AFS_DEMAND_ATTACH_FS

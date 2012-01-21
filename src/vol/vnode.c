@@ -556,11 +556,11 @@ VLookupVnode(Volume * vp, VnodeId vnodeId)
 
 
 Vnode *
-VAllocVnode(Error * ec, Volume * vp, VnodeType type)
+VAllocVnode(Error * ec, Volume * vp, VnodeType type, VnodeId in_vnode, Unique in_unique)
 {
     Vnode *retVal;
     VOL_LOCK;
-    retVal = VAllocVnode_r(ec, vp, type);
+    retVal = VAllocVnode_r(ec, vp, type, in_vnode, in_unique);
     VOL_UNLOCK;
     return retVal;
 }
@@ -571,6 +571,8 @@ VAllocVnode(Error * ec, Volume * vp, VnodeType type)
  * @param[out] ec    error code return
  * @param[in]  vp    volume object pointer
  * @param[in]  type  desired vnode type
+ * @param[in]  type  desired vnode ID (optional)
+ * @param[in]  type  desired vnode Unique (optional)
  *
  * @return vnode object pointer
  *
@@ -580,7 +582,7 @@ VAllocVnode(Error * ec, Volume * vp, VnodeType type)
  * @post vnode allocated and returned
  */
 Vnode *
-VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
+VAllocVnode_r(Error * ec, Volume * vp, VnodeType type, VnodeId in_vnode, Unique in_unique)
 {
     Vnode *vnp;
     VnodeId vnodeNumber;
@@ -588,6 +590,9 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
     struct VnodeClassInfo *vcp;
     VnodeClass class;
     Unique unique;
+    struct vnodeIndex *index;
+    unsigned int offset;
+
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState vol_state_save;
 #endif
@@ -624,10 +629,6 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	return NULL;
     }
 
-    unique = vp->nextVnodeUnique++;
-    if (!unique)
-	unique = vp->nextVnodeUnique++;
-
     if (vp->nextVnodeUnique > V_uniquifier(vp)) {
 	VUpdateVolume_r(ec, vp, 0);
 	if (*ec)
@@ -640,12 +641,63 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    return NULL;
     }
 
-    /* Find a slot in the bit map */
-    bitNumber = VAllocBitmapEntry_r(ec, vp, &vp->vnodeIndex[class],
-				    VOL_ALLOC_BITMAP_WAIT);
-    if (*ec)
-	return NULL;
-    vnodeNumber = bitNumberToVnodeNumber(bitNumber, class);
+    /*
+     * If in_vnode and in_unique are specified, we are asked to
+     * allocate a specifc vnode slot.  Used by RW replication to
+     * keep vnode IDs consistent with the master.
+     */
+
+    if (!in_vnode) {
+	unique = vp->nextVnodeUnique++;
+	if (!unique)
+	    unique = vp->nextVnodeUnique++;
+
+	if (vp->nextVnodeUnique > V_uniquifier(vp)) {
+	    VUpdateVolume_r(ec, vp, 0);
+	    if (*ec)
+		return NULL;
+	}
+
+	/* Find a slot in the bit map */
+	bitNumber = VAllocBitmapEntry_r(ec, vp, &vp->vnodeIndex[class],
+		VOL_ALLOC_BITMAP_WAIT);
+
+	if (*ec)
+	    return NULL;
+	vnodeNumber = bitNumberToVnodeNumber(bitNumber, class);
+    } else {
+	index = &vp->vnodeIndex[class];
+	if (!in_unique) {
+	    *ec = VNOVNODE;
+	    return NULL;
+	}
+	/* Catch us up to where the master is */
+	if (in_unique > vp->nextVnodeUnique)
+	    vp->nextVnodeUnique = in_unique+1;
+
+	if (vp->nextVnodeUnique > V_uniquifier(vp)) {
+	    VUpdateVolume_r(ec, vp, 0);
+	    if (*ec)
+		return NULL;
+	}
+
+	unique = in_unique;
+	bitNumber = vnodeIdToBitNumber(in_vnode);
+	offset = bitNumber >> 3;
+
+	/* Mark vnode in use. Grow bitmap if needed. */
+	if ((offset >= index->bitmapSize)
+		|| ((*(index->bitmap + offset) & (1 << (bitNumber & 0x7))) == 0))
+	    VGrowBitmap(index);
+	/* Should not happen */
+	if (*(index->bitmap + offset) & (1 << (bitNumber & 0x7))) {
+	    *ec = VNOVNODE;
+	    return NULL;
+	}
+
+	*(index->bitmap + offset) |= (1 << (bitNumber & 0x7));
+	vnodeNumber = in_vnode;
+    }
 
     /*
      * DAFS:

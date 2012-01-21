@@ -271,8 +271,11 @@ extern void VPutVnode(Error * ec, Vnode * vnp);
 extern void VPutVnode_r(Error * ec, Vnode * vnp);
 extern int VVnodeWriteToRead(Error * ec, Vnode * vnp);
 extern int VVnodeWriteToRead_r(Error * ec, Vnode * vnp);
-extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type);
-extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type);
+extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type,
+	VnodeId in_vnode, Unique in_unique);
+extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type,
+	VnodeId in_vnode, Unique in_unique);
+
 /*extern VFreeVnode();*/
 extern Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp, struct Volume *vp,
                               VnodeId vnodeNumber);

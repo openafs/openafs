@@ -807,6 +807,7 @@ extern Volume *VCreateVolume(Error * ec, char *partname, VolId volumeId,
 			     VolId parentId);
 extern Volume *VCreateVolume_r(Error * ec, char *partname, VolId volumeId,
 			       VolId parentId);
+extern void VGrowBitmap(struct vnodeIndex *index);
 extern int VAllocBitmapEntry(Error * ec, Volume * vp,
 			     struct vnodeIndex *index);
 extern int VAllocBitmapEntry_r(Error * ec, Volume * vp,
@@ -1021,6 +1022,8 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 #define VOL_SALVAGE_NO_OFFLINE        0x1 /* we do not need to wait to offline the volume; it has
                                            * not been fully attached */
 
+#define VOLUME_BITMAP_GROWSIZE  16	/* bytes, => 128vnodes */
+					/* Must be a multiple of 4 (1 word) !! */
 
 #if	defined(NEARINODE_HINT)
 #define V_pref(vp,nearInode)  nearInodeHash(V_id(vp),(nearInode)); (nearInode) %= V_partition(vp)->f_files
