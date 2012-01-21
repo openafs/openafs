@@ -118,11 +118,6 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     MEMORYSTATUSEX memStatus;
     DWORD maxMemoryCacheSize;
 
-#if 0
-    /*
-     * For now disable the memory extent interface because there
-     * have been reports of data corruption.
-     */
     memStatus.dwLength = sizeof(memStatus);
     if (GlobalMemoryStatusEx(&memStatus)) {
         /*
@@ -141,9 +136,6 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
          */
         maxMemoryCacheSize = 65536;
     }
-#else
-    maxMemoryCacheSize = 0;
-#endif
 
     *pRedirInitInfoLen = (DWORD) (sizeof(AFSRedirectorInitInfo) + (cm_CachePathLen + TempPathLen) * sizeof(WCHAR));
     *ppRedirInitInfo = (AFSRedirectorInitInfo *)malloc(*pRedirInitInfoLen);
