@@ -92,7 +92,7 @@ smb_InitIoctl(void)
     smb_ioctlProcsp[VIOC_SETGROUP] = smb_IoctlSetGroup;
     smb_ioctlProcsp[VIOCNEWCELL2] = smb_IoctlNewCell2;
     smb_ioctlProcsp[VIOC_SETUNIXMODE] = smb_IoctlSetUnixMode;
-    smb_ioctlProcsp[VIOC_GETUNIXMODE] = smb_IoctlSetUnixMode;
+    smb_ioctlProcsp[VIOC_GETUNIXMODE] = smb_IoctlGetUnixMode;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
