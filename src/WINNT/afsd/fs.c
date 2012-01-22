@@ -5267,7 +5267,7 @@ int wmain(int argc, wchar_t **wargv)
     cmd_CreateAlias(ts, "sb");
 
     ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, NULL, "set cache manager encryption flag");
-    cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
+    cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on, auth or off");
 
     ts = cmd_CreateSyntax("getcrypt", GetCryptCmd, NULL, "get cache manager encryption flag");
 
