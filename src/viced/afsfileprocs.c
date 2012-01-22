@@ -1592,6 +1592,8 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
  * Update the target file's (or dir's) status block after the specified
  * operation is complete. Note that some other fields maybe updated by
  * the individual module.
+ * If remote is set, the volume is a RW replica and access checks can
+ * be skipped.
  */
 
 /* XXX INCOMPLETE - More attention is needed here! */
@@ -1599,7 +1601,7 @@ static void
 Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 			 struct client *client, AFSStoreStatus * InStatus,
 			 Vnode * parentptr, Volume * volptr,
-			 afs_fsize_t length)
+			 afs_fsize_t length, int remote)
 {
     Date currDate;		/*Current date */
     int writeIdx;		/*Write index to bump */
@@ -1660,7 +1662,7 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 	targetptr->disk.author = client->ViceId;
     if (Caller & TVS_SDATA) {
 	targetptr->disk.dataVersion++;
-	if (VanillaUser(client)) {
+	if (!remote && VanillaUser(client)) {
 	    targetptr->disk.modeBits &= ~04000;	/* turn off suid for file. */
 #ifdef CREATE_SGUID_ADMIN_ONLY
 	    targetptr->disk.modeBits &= ~02000;	/* turn off sgid for file. */
@@ -1678,7 +1680,7 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
     }
     if (InStatus->Mask & AFS_SETOWNER) {
 	/* admin is allowed to do chmod, chown as well as chown, chmod. */
-	if (VanillaUser(client)) {
+	if (!remote && VanillaUser(client)) {
 	    targetptr->disk.modeBits &= ~04000;	/* turn off suid for file. */
 #ifdef CREATE_SGUID_ADMIN_ONLY
 	    targetptr->disk.modeBits &= ~02000;	/* turn off sgid for file. */
@@ -1696,10 +1698,10 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 	int modebits = InStatus->UnixModeBits;
 #define	CREATE_SGUID_ADMIN_ONLY 1
 #ifdef CREATE_SGUID_ADMIN_ONLY
-	if (VanillaUser(client))
+	if (!remote && VanillaUser(client))
 	    modebits = modebits & 0777;
 #endif
-	if (VanillaUser(client)) {
+	if (!remote && VanillaUser(client)) {
 	    targetptr->disk.modeBits = modebits;
 	} else {
 	    targetptr->disk.modeBits = modebits;
@@ -2923,7 +2925,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     rx_KeepAliveOff(acall);
     /* Update the status of the target's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_SDATA, client, InStatus,
-			     targetptr, volptr, 0);
+			     targetptr, volptr, 0, 0);
     rx_KeepAliveOn(acall);
 
     /* Get the updated File's status back to the caller */
@@ -3135,7 +3137,7 @@ SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
     /* Update the status of the target's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_SSTATUS, client, InStatus,
 			     (parentwhentargetnotdir ? parentwhentargetnotdir
-			      : targetptr), volptr, 0);
+			      : targetptr), volptr, 0, 0);
 
     rx_KeepAliveOn(acall);
 
@@ -3398,7 +3400,7 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* update the status of the new file's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_CFILE, client, InStatus,
-			     parentptr, volptr, 0);
+			     parentptr, volptr, 0, 0);
 
     rx_KeepAliveOn(acall);
 
@@ -4065,7 +4067,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* update the status of the new symbolic link file vnode */
     Update_TargetVnodeStatus(targetptr, TVS_SLINK, client, InStatus,
-			     parentptr, volptr, strlen((char *)LinkContents));
+			     parentptr, volptr, strlen((char *)LinkContents), 0);
 
     /* Write the contents of the symbolic link name into the target inode */
     fdP = IH_OPEN(targetptr->handle);
@@ -4424,7 +4426,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* update the status for the target vnode */
     Update_TargetVnodeStatus(targetptr, TVS_MKDIR, client, InStatus,
-			     parentptr, volptr, 0);
+			     parentptr, volptr, 0, 0);
 
     /* Actually create the New directory in the directory package */
     SetDirHandle(&dir, targetptr);
