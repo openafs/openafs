@@ -96,6 +96,8 @@ smb_InitIoctl(void)
     smb_ioctlProcsp[VIOCNEWCELL2] = smb_IoctlNewCell2;
     smb_ioctlProcsp[VIOC_SETUNIXMODE] = smb_IoctlSetUnixMode;
     smb_ioctlProcsp[VIOC_GETUNIXMODE] = smb_IoctlGetUnixMode;
+    smb_ioctlProcsp[VIOC_SETVERIFYDATA] = smb_IoctlSetVerifyData;
+    smb_ioctlProcsp[VIOC_GETVERIFYDATA] = smb_IoctlGetVerifyData;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -2177,5 +2179,21 @@ smb_IoctlSetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
     cm_ReleaseSCache(scp);
 
     return code;
+}
+
+afs_int32
+smb_IoctlGetVerifyData(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
+{
+    cm_SkipIoctlPath(&ioctlp->ioctl);
+
+    return cm_IoctlGetVerifyData(&ioctlp->ioctl);
+}
+
+afs_int32
+smb_IoctlSetVerifyData(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
+{
+    cm_SkipIoctlPath(&ioctlp->ioctl);
+
+    return cm_IoctlSetVerifyData(&ioctlp->ioctl);
 }
 

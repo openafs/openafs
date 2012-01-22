@@ -54,6 +54,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     cm_scache_t *scp = vscp;
     afs_int32 nbytes;
     afs_int32 save_nbytes;
+    cm_scache_t save_scache;
     long temp;
     AFSFetchStatus outStatus;
     AFSStoreStatus inStatus;
@@ -152,11 +153,14 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         require_64bit_ops = 1;
     }
 
+    /* now we're ready to do the store operation */
+  retry_rpc:
     InterlockedIncrement(&scp->activeRPCs);
     lock_ReleaseWrite(&scp->rw);
 
-    /* now we're ready to do the store operation */
     save_nbytes = nbytes;
+    save_scache = *scp;
+
     do {
         code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code)
@@ -421,6 +425,15 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             _InterlockedOr(&scp->flags, CM_SCACHEFLAG_OUTOFSPACE);
         else if (code == CM_ERROR_QUOTA)
             _InterlockedOr(&scp->flags, CM_SCACHEFLAG_OVERQUOTA);
+    }
+
+    if ( cm_verifyData )
+    {
+        if (!cm_VerifyStoreData(&biod, &save_scache)) {
+            /* file server content doesn't match what we sent. */
+            nbytes = save_nbytes;
+            goto retry_rpc;
+        }
     }
 
     cm_ReleaseBIOD(&biod, 1, code, 1);
@@ -1009,6 +1022,7 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     /* clear things out */
     biop->scp = scp;			/* do not hold; held by caller */
     biop->userp = userp;                /* do not hold; held by caller */
+    biop->reqp = reqp;
     biop->offset = *inOffsetp;
     biop->length = 0;
     biop->bufListp = NULL;
@@ -1080,6 +1094,10 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
     /* put this element in the list */
     qdp = osi_QDAlloc();
     osi_SetQData(qdp, bufp);
+
+    if ( cm_verifyData )
+        buf_ComputeCheckSum(bufp);
+
     /* don't have to hold bufp, since held by buf_Find above */
     osi_QAddH((osi_queue_t **) &biop->bufListp,
               (osi_queue_t **) &biop->bufListEndp,
@@ -1145,6 +1163,10 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
          */
         qdp = osi_QDAlloc();
         osi_SetQData(qdp, bufp);
+
+        if ( cm_verifyData )
+            buf_ComputeCheckSum(bufp);
+
         /* no buf_hold necessary, since we have it held from buf_Find */
         osi_QAddT((osi_queue_t **) &biop->bufListp,
                   (osi_queue_t **) &biop->bufListEndp,
@@ -1205,6 +1227,10 @@ long cm_SetupStoreBIOD(cm_scache_t *scp, osi_hyper_t *inOffsetp, long inSize,
          */
         qdp = osi_QDAlloc();
         osi_SetQData(qdp, bufp);
+
+        if ( cm_verifyData )
+            buf_ComputeCheckSum(bufp);
+
         /* no buf_hold necessary, since we have it held from buf_Find */
         osi_QAddH((osi_queue_t **) &biop->bufListp,
                   (osi_queue_t **) &biop->bufListEndp,
@@ -2508,4 +2534,270 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
         InterlockedDecrement(&scp->activeRPCs);
 
     return code;
+}
+
+/*
+ * cm_VerifyStoreData.   Function passed a rw locked cm_scache_t and a store data biod.
+ *
+ * Return 1 if the data verifies; 0 if not.
+ */
+
+long
+cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
+{
+    long code=0, code1=0;
+    afs_uint32 nbytes;			/* bytes in transfer */
+    afs_uint32 nbytes_hi = 0;           /* high-order 32 bits of bytes in transfer */
+    afs_uint64 length_found = 0;
+    long rbytes;			/* bytes in rx_Read call */
+    long temp;
+    AFSFetchStatus afsStatus;
+    AFSCallBack callback;
+    AFSVolSync volSync;
+    AFSFid tfid;
+    struct rx_call *rxcallp;
+    struct rx_connection *rxconnp;
+    cm_conn_t *connp;
+    int require_64bit_ops = 0;
+    int call_was_64bit = 0;
+    int fs_fetchdata_offset_bug = 0;
+    int first_read = 1;
+    int scp_locked = 1;
+    char * bufferp = malloc(biod->length);
+    long verified = 0;
+    cm_scache_t *scp = biod->scp;
+    cm_user_t *userp = biod->userp;
+    cm_req_t *reqp = biod->reqp;
+    afs_uint64 dataVersion = scp->dataVersion;
+
+    memset(&volSync, 0, sizeof(volSync));
+    memset(bufferp, 0, biod->length);
+
+    cm_AFSFidFromFid(&tfid, &scp->fid);
+
+    if (LargeIntegerGreaterThan(LargeIntegerAdd(biod->offset,
+                                                ConvertLongToLargeInteger(biod->length)),
+                                ConvertLongToLargeInteger(LONG_MAX))) {
+        require_64bit_ops = 1;
+    }
+
+    InterlockedIncrement(&scp->activeRPCs);
+    osi_Log2(afsd_logp, "cm_VerifyStoreData: fetching data scp %p DV 0x%x", scp, scp->dataVersion);
+
+    if (scp_locked) {
+        lock_ReleaseWrite(&scp->rw);
+        scp_locked = 0;
+    }
+
+    /* now make the call */
+    do {
+        code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
+        if (code)
+            continue;
+
+        rxconnp = cm_GetRxConn(connp);
+        rxcallp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
+
+        nbytes = nbytes_hi = 0;
+
+        if (SERVERHAS64BIT(connp)) {
+            call_was_64bit = 1;
+
+            osi_Log4(afsd_logp, "CALL FetchData64 scp 0x%p, off 0x%x:%08x, size 0x%x",
+                     scp, biod->offset.HighPart, biod->offset.LowPart, biod->length);
+
+            code = StartRXAFS_FetchData64(rxcallp, &tfid, biod->offset.QuadPart, biod->length);
+
+            if (code == 0) {
+                temp = rx_Read32(rxcallp, &nbytes_hi);
+                if (temp == sizeof(afs_int32)) {
+                    nbytes_hi = ntohl(nbytes_hi);
+                } else {
+                    nbytes_hi = 0;
+		    code = rx_Error(rxcallp);
+                    code1 = rx_EndCall(rxcallp, code);
+                    rxcallp = NULL;
+                }
+            }
+        } else {
+            call_was_64bit = 0;
+        }
+
+        if (code == RXGEN_OPCODE || !SERVERHAS64BIT(connp)) {
+            if (require_64bit_ops) {
+                osi_Log0(afsd_logp, "Skipping FetchData.  Operation requires FetchData64");
+                code = CM_ERROR_TOOBIG;
+            } else {
+                if (!rxcallp) {
+                    rxconnp = cm_GetRxConn(connp);
+                    rxcallp = rx_NewCall(rxconnp);
+                    rx_PutConnection(rxconnp);
+                }
+
+                osi_Log3(afsd_logp, "CALL FetchData scp 0x%p, off 0x%x, size 0x%x",
+                         scp, biod->offset.LowPart, biod->length);
+
+                code = StartRXAFS_FetchData(rxcallp, &tfid, biod->offset.LowPart, biod->length);
+
+                SET_SERVERHASNO64BIT(connp);
+            }
+        }
+
+        if (code == 0) {
+            temp  = rx_Read32(rxcallp, &nbytes);
+            if (temp == sizeof(afs_int32)) {
+                nbytes = ntohl(nbytes);
+                FillInt64(length_found, nbytes_hi, nbytes);
+                if (length_found > biod->length) {
+                    /*
+                     * prior to 1.4.12 and 1.5.65 the file server would return
+                     * (filesize - offset) if the requested offset was greater than
+                     * the filesize.  The correct return value would have been zero.
+                     * Force a retry by returning an RX_PROTOCOL_ERROR.  If the cause
+                     * is a race between two RPCs issues by this cache manager, the
+                     * correct thing will happen the second time.
+                     */
+                    osi_Log0(afsd_logp, "cm_GetData length_found > biod.length");
+                    fs_fetchdata_offset_bug = 1;
+                }
+            } else {
+                osi_Log1(afsd_logp, "cm_GetData rx_Read32 returns %d != 4", temp);
+                code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
+            }
+        }
+        /* for the moment, nbytes_hi will always be 0 if code == 0
+           because data_length is a 32-bit quantity. */
+
+        if (code == 0) {
+            /* fill length_found of data from the pipe into the pages.
+             * When we stop, qdp will point at the last page we're
+             * dealing with, and bufferp will tell us where we
+             * stopped.  We'll need this info below when we clear
+             * the remainder of the last page out (and potentially
+             * clear later pages out, if we fetch past EOF).
+             */
+            while (length_found > 0) {
+                /* assert that there are still more buffers;
+                 * our check above for length_found being less than
+                 * data_length should ensure this.
+                 */
+                osi_assertx(bufferp != NULL, "null cm_buf_t");
+
+                /* read rbytes of data */
+                rbytes = (afs_uint32)(length_found > biod->length ? biod->length : length_found);
+                temp = rx_Read(rxcallp, bufferp, rbytes);
+                if (temp < rbytes) {
+                    /*
+                     * If the file server returned (filesize - offset),
+                     * then the first rx_Read will return zero octets of data.
+                     * If it does, do not treat it as an error.  Correct the
+                     * length_found and continue as if the file server said
+                     * it was sending us zero octets of data.
+                     */
+                    if (fs_fetchdata_offset_bug && first_read)
+                        length_found = 0;
+                    else
+                        code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
+                    break;
+                }
+                first_read = 0;
+
+                /* and adjust counters */
+                length_found -= temp;
+            }
+        }
+
+        if (code == 0) {
+            if (call_was_64bit)
+                code = EndRXAFS_FetchData64(rxcallp, &afsStatus, &callback, &volSync);
+            else
+                code = EndRXAFS_FetchData(rxcallp, &afsStatus, &callback, &volSync);
+        } else {
+            if (call_was_64bit)
+                osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData64 skipped due to error %d", code);
+            else
+                osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData skipped due to error %d", code);
+        }
+
+        if (rxcallp)
+            code1 = rx_EndCall(rxcallp, code);
+
+        if (code1 == RXKADUNKNOWNKEY)
+            osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
+
+        /* If we are avoiding a file server bug, ignore the error state */
+        if (fs_fetchdata_offset_bug && first_read && length_found == 0 && code == -451) {
+            /* Clone the current status info and clear the error state */
+            scp_locked = cm_CloneStatus(scp, userp, scp_locked, &afsStatus, &volSync);
+            if (scp_locked) {
+                lock_ReleaseWrite(&scp->rw);
+                scp_locked = 0;
+            }
+            code = 0;
+        /* Prefer the error value from FetchData over rx_EndCall */
+        } else if (code == 0 && code1 != 0)
+            code = code1;
+        osi_Log0(afsd_logp, "CALL FetchData DONE");
+
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, 0, &volSync, NULL, NULL, code));
+
+  fetchingcompleted:
+    code = cm_MapRPCError(code, reqp);
+
+    if (!scp_locked)
+        lock_ObtainWrite(&scp->rw);
+
+    if (code == 0)
+        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
+    else
+        InterlockedDecrement(&scp->activeRPCs);
+
+    if (code == 0)
+    {
+        if (dataVersion == scp->dataVersion)
+        {
+            osi_queueData_t *qdp = NULL;
+            cm_buf_t *bufp;
+            afs_uint32 buf_offset;
+            afs_uint32 bytes_compared = 0;
+            afs_uint32 cmp_length;
+            int md5_match = 1;
+
+            verified = 1;
+
+            while ( bytes_compared < biod->length )
+            {
+                if (qdp == NULL) {
+                    qdp = biod->bufListEndp;
+                    buf_offset = biod->offset.LowPart % cm_data.buf_blockSize;
+                } else {
+                    qdp = (osi_queueData_t *) osi_QPrev(&qdp->q);
+                    buf_offset = 0;
+                }
+                cmp_length =  cm_data.buf_blockSize - buf_offset;
+
+                osi_assertx(qdp != NULL, "null osi_queueData_t");
+                bufp = osi_GetQData(qdp);
+
+                if (memcmp(bufferp+bytes_compared, bufp->datap+buf_offset, cmp_length) != 0)
+                {
+                    verified = 0;
+                    md5_match = buf_ValidateCheckSum(bufp);
+
+                    osi_Log5(afsd_logp, "cm_VerifyDataStore verification failed scp 0x%p bufp 0x%p offset 0x%x:%08x md5 %s",
+                             scp, bufp, bufp->offset.HighPart, bufp->offset.LowPart, md5_match ? "match" : "no-match");
+                }
+                bytes_compared += cmp_length;
+            }
+        } else {
+            osi_Log4(afsd_logp, "cm_VerifyStoreData unable to verify due to data version change scp 0x%p, off 0x%x:%08x, size 0x%x",
+                     scp, biod->offset.HighPart, biod->offset.LowPart, biod->length);
+        }
+    }
+
+    if (bufferp)
+        free(bufferp);
+
+    return verified;
 }

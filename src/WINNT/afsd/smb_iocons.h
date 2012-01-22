@@ -101,6 +101,8 @@ struct sbstruct {
 #define VIOCNEWCELL2                    0x37
 #define VIOC_GETUNIXMODE                0x38
 #define VIOC_SETUNIXMODE                0x39
+#define VIOC_GETVERIFYDATA              0x3A
+#define VIOC_SETVERIFYDATA              0x3B
 
 #define VIOC_VOLSTAT_TEST               0x3F
 

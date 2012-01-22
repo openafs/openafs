@@ -124,6 +124,8 @@ extern afs_uint32 smb_Enabled;
 
 extern int cm_virtualCache;
 
+extern afs_int32 cm_verifyData;
+
 #define DFS_SUPPORT 1
 #define LOG_PACKET 1
 #undef  NOTSERVICE
