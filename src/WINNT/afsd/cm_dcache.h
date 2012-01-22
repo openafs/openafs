@@ -65,4 +65,6 @@ extern long cm_ShutdownDCache(void);
 extern long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                  cm_user_t *userp, cm_req_t *reqp);
 
+extern long cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *scp);
+
 #endif /*  OPENAFS_WINNT_AFSD_CM_DCACHE_H */

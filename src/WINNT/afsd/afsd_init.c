@@ -76,6 +76,7 @@ int cm_readonlyVolumeVersioning = 0;
 int cm_logChunkSize;
 int cm_chunkSize;
 int cm_virtualCache = 0;
+afs_int32 cm_verifyData = 0;
 
 int smb_UseV3 = 1;
 afs_uint32 smb_Enabled = 1;
@@ -1020,7 +1021,12 @@ afsd_InitCM(char **reasonP)
     else
 	LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_CRYPT_OFF);
 
-    dummyLen = sizeof(cryptall);
+    dummyLen = sizeof(cm_verifyData);
+    code = RegQueryValueEx(parmKey, "VerifyData", NULL, NULL,
+                           (BYTE *) &cm_verifyData, &dummyLen);
+    afsi_log("VerifyData is %s", cm_verifyData?"on":"off");
+
+    dummyLen = sizeof(cm_anonvldb);
     code = RegQueryValueEx(parmKey, "ForceAnonVLDB", NULL, NULL,
                             (BYTE *) &cm_anonvldb, &dummyLen);
     afsi_log("CM ForceAnonVLDB is %s", cm_anonvldb ? "on" : "off");

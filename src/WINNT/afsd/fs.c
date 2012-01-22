@@ -5007,6 +5007,77 @@ ChModCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
+static afs_int32
+SetDataVerifyCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code = 0, flag;
+    struct ViceIoctl blob;
+    char *tp;
+
+#ifdef WIN32
+    if ( !fs_IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
+
+    tp = as->parms[0].items->data;
+    if (strcmp(tp, "on") == 0)
+      flag = 1;
+    else if (strcmp(tp, "off") == 0)
+      flag = 0;
+    else {
+      fprintf (stderr, "%s: %s must be \"on\" or \"off\".\n", pn, tp);
+      return EINVAL;
+    }
+
+    blob.in = (char *) &flag;
+    blob.in_size = sizeof(flag);
+    blob.out_size = 0;
+    code = pioctl_utf8(0, VIOC_SETVERIFYDATA, &blob, 1);
+    if (code)
+        fs_Die(code, NULL);
+    return 0;
+}
+
+static afs_int32
+GetDataVerifyCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code = 0, flag;
+    struct ViceIoctl blob;
+    char *tp;
+    errno_t err;
+
+    blob.in = NULL;
+    blob.in_size = 0;
+    blob.out_size = sizeof(flag);
+    blob.out = space;
+
+    code = pioctl_utf8(0, VIOC_GETVERIFYDATA, &blob, 1);
+
+    if (code || blob.out_size != sizeof(flag))
+        fs_Die(code, NULL);
+    else {
+        tp = space;
+#if _MSC_VER < 1400
+        memcpy(&flag, tp, sizeof(afs_int32));
+#else
+        err = memcpy_s(&flag, sizeof(flag), tp, sizeof(afs_int32));
+        if ( err ) {
+            fprintf (stderr, "memcpy_s failure on flag");
+            exit(1);
+        }
+#endif
+
+      printf("Data verify mode is currently ");
+      if (flag == 1)
+        printf("on.\n");
+      else
+        printf("off.\n");
+    }
+    return 0;
+}
+
 #ifndef WIN32
 #include "AFS_component_version_number.c"
 #endif
@@ -5340,6 +5411,11 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "UNIX mode bits");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
+
+    ts = cmd_CreateSyntax("setverify", SetDataVerifyCmd, NULL, "set cache manager data verify mode");
+    cmd_AddParm(ts, "-verify", CMD_SINGLE, 0, "on or off");
+
+    ts = cmd_CreateSyntax("getverify", GetDataVerifyCmd, NULL, "get cache manager data verify mode");
 
     code = cmd_Dispatch(argc, argv);
 

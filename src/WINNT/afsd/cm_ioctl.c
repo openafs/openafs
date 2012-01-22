@@ -3564,3 +3564,31 @@ cm_IoctlSetUnixMode(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t 
     }
     return code;
 }
+
+/*
+ * VIOC_GETVERIFYDATA internals.
+ *
+ * Assumes that pioctl path has been parsed or skipped.
+ */
+afs_int32
+cm_IoctlGetVerifyData(cm_ioctl_t *ioctlp)
+{
+    memcpy(ioctlp->outDatap, &cm_verifyData, sizeof(cm_verifyData));
+    ioctlp->outDatap += sizeof(cm_verifyData);
+
+    return 0;
+}
+
+/*
+ * VIOC_SETVERIFYDATA internals.
+ *
+ * Assumes that pioctl path has been parsed or skipped.
+ */
+afs_int32
+cm_IoctlSetVerifyData(cm_ioctl_t *ioctlp)
+{
+    memcpy(&cm_verifyData, ioctlp->inDatap, sizeof(cm_verifyData));
+
+    return 0;
+}
+

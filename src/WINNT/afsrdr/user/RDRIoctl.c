@@ -139,6 +139,8 @@ RDR_InitIoctl(void)
     RDR_ioctlProcsp[VIOCNEWCELL2] = RDR_IoctlNewCell2;
     RDR_ioctlProcsp[VIOC_GETUNIXMODE] = RDR_IoctlGetUnixMode;
     RDR_ioctlProcsp[VIOC_SETUNIXMODE] = RDR_IoctlSetUnixMode;
+    RDR_ioctlProcsp[VIOC_GETVERIFYDATA] = RDR_IoctlGetVerifyData;
+    RDR_ioctlProcsp[VIOC_SETVERIFYDATA] = RDR_IoctlSetVerifyData;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -1968,4 +1970,20 @@ RDR_IoctlSetUnixMode(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
     cm_ReleaseSCache(scp);
 
     return code;
+}
+
+afs_int32
+RDR_IoctlGetVerifyData(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
+{
+    cm_SkipIoctlPath(&ioctlp->ioctl);
+
+    return cm_IoctlGetVerifyData(&ioctlp->ioctl);
+}
+
+afs_int32
+RDR_IoctlSetVerifyData(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
+{
+    cm_SkipIoctlPath(&ioctlp->ioctl);
+
+    return cm_IoctlSetVerifyData(&ioctlp->ioctl);
 }
