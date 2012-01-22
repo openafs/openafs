@@ -790,6 +790,7 @@ VanillaUser(struct client *client)
  *      locktype            : indicates what kind of lock to take on vnodes
  *      rights              : returns a pointer to caller's rights
  *      anyrights           : returns a pointer to anonymous' rights
+ *      remote		    : indicates that the volume is a remote RW replica
  *
  * Returns:
  *      0 on success
@@ -807,7 +808,7 @@ GetVolumePackageWithCall(struct rx_call *acall, struct VCallByVol *cbv,
                          AFSFid * Fid, Volume ** volptr, Vnode ** targetptr,
                          int chkforDir, Vnode ** parent,
 			 struct client **client, int locktype,
-			 afs_int32 * rights, afs_int32 * anyrights)
+			 afs_int32 * rights, afs_int32 * anyrights, int remote)
 {
     struct acl_accessList *aCL;	/* Internal access List */
     int aCLSize;		/* size of the access list */
@@ -831,38 +832,43 @@ GetVolumePackageWithCall(struct rx_call *acall, struct VCallByVol *cbv,
 	    goto gvpdone;
 	}
     }
-    if ((errorCode =
-	 SetAccessList(targetptr, volptr, &aCL, &aCLSize, parent,
-		       (chkforDir == MustBeDIR ? (AFSFid *) 0 : Fid),
-		       (chkforDir == MustBeDIR ? 0 : locktype))) != 0)
-	goto gvpdone;
-    if (chkforDir == MustBeDIR)
-	osi_Assert((*parent) == 0);
-    if (!(*client)) {
-	if ((errorCode = GetClient(tcon, client)) != 0)
+    /*
+     * If the remote flag is set, the current call is dealing with a remote RW
+     * replica, and it can be assumed that the appropriate access checks were
+     * done by the calling server hosting the master volume.
+     */
+    if (!remote) {
+	if ((errorCode = SetAccessList(targetptr, volptr, &aCL, &aCLSize, parent,
+		(chkforDir == MustBeDIR ? (AFSFid *) 0 : Fid),
+		(chkforDir == MustBeDIR ? 0 : locktype))) != 0)
 	    goto gvpdone;
+	if (chkforDir == MustBeDIR)
+	    osi_Assert((*parent) == 0);
 	if (!(*client)) {
-	    errorCode = EINVAL;
-	    goto gvpdone;
+	    if ((errorCode = GetClient(tcon, client)) != 0)
+		goto gvpdone;
+	    if (!(*client))
+		errorCode = EINVAL;
+		goto gvpdone;
 	}
-    }
-    GetRights(*client, aCL, rights, anyrights);
-    /* ok, if this is not a dir, set the PRSFS_ADMINISTER bit iff we're the owner */
-    if ((*targetptr)->disk.type != vDirectory) {
-	/* anyuser can't be owner, so only have to worry about rights, not anyrights */
-	if ((*targetptr)->disk.owner == (*client)->ViceId)
-	    (*rights) |= PRSFS_ADMINISTER;
-	else
-	    (*rights) &= ~PRSFS_ADMINISTER;
-    }
+	GetRights(*client, aCL, rights, anyrights);
+	/* ok, if this is not a dir, set the PRSFS_ADMINISTER bit iff we're the owner */
+	if ((*targetptr)->disk.type != vDirectory) {
+	    /* anyuser can't be owner, so only have to worry about rights, not anyrights */
+	    if ((*targetptr)->disk.owner == (*client)->ViceId)
+		(*rights) |= PRSFS_ADMINISTER;
+	    else
+		(*rights) &= ~PRSFS_ADMINISTER;
+	}
 #ifdef ADMIN_IMPLICIT_LOOKUP
-    /* admins get automatic lookup on everything */
-    if (!VanillaUser(*client))
-	(*rights) |= PRSFS_LOOKUP;
+	/* admins get automatic lookup on everything */
+	if (!VanillaUser(*client))
+	    (*rights) |= PRSFS_LOOKUP;
 #endif /* ADMIN_IMPLICIT_LOOKUP */
 gvpdone:
     if (errorCode)
 	rx_KeepAliveOn(acall);
+    }
     return errorCode;
 
 }				/*GetVolumePackage */
@@ -875,7 +881,7 @@ GetVolumePackage(struct rx_call *acall, AFSFid * Fid, Volume ** volptr,
 {
     return GetVolumePackageWithCall(acall, NULL, Fid, volptr, targetptr,
                                     chkforDir, parent, client, locktype,
-                                    rights, anyrights);
+                                    rights, anyrights, 0);
 }
 
 
@@ -2228,7 +2234,7 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     if ((errorCode =
 	 GetVolumePackageWithCall(acall, cbv, Fid, &volptr, &targetptr, DONTCHECK,
 			  &parentwhentargetnotdir, &client, READ_LOCK,
-			  &rights, &anyrights)))
+			  &rights, &anyrights, 0)))
 	goto Bad_FetchData;
 
     SetVolumeSync(Sync, volptr);
