@@ -812,10 +812,15 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     int hostindex;
     char hoststr[16];
 
-    ViceLog(7,
-	    ("BCB: BreakCallBack(Host %p all but %s:%d, (%u,%u,%u))\n",
-	     xhost, afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
-	     fid->Volume, fid->Vnode, fid->Unique));
+    if (xhost)
+	ViceLog(7,
+		("BCB: BreakCallBack(Host %p all but %s:%d, (%u,%u,%u))\n",
+		 xhost, afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
+		 fid->Volume, fid->Vnode, fid->Unique));
+    else
+	ViceLog(7,
+		("BCB: BreakCallBack(No Host, (%u,%u,%u))\n",
+		fid->Volume, fid->Vnode, fid->Unique));
 
     H_LOCK;
     cbstuff.BreakCallBacks++;
@@ -823,7 +828,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     if (!fe) {
 	goto done;
     }
-    hostindex = h_htoi(xhost);
+    hostindex = xhost ? h_htoi(xhost) : 0;
     cb = itocb(fe->firstcb);
     if (!cb || ((fe->ncbs == 1) && (cb->hhead == hostindex) && !flag)) {
 	/* the most common case is what follows the || */
