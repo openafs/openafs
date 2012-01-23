@@ -1087,7 +1087,7 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 	    continue;		/* wrong volume don't use this volume */
 	}
 
-	if (!(ve->serverFlags[i] & VLSERVER_FLAG_UUID)) {
+	if (!(ve->serverFlags[i] & VLSF_UUID)) {
 	    /* The server has no uuid */
 	    serverid = htonl(ve->serverNumber[i].time_low);
 	    ts = afs_GetServer(&serverid, 1, acell, cellp->fsport,

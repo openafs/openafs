@@ -3204,7 +3204,7 @@ vlentry_to_uvldbentry(struct vl_ctx *ctx, struct nvlentry *VlEntry,
 
 	    tuuid = exp->ex_hostuuid;
 	    afs_ntohuuid(&tuuid);
-	    VldbEntry->serverFlags[i] |= VLSERVER_FLAG_UUID;
+	    VldbEntry->serverFlags[i] |= VLSF_UUID;
 	    VldbEntry->serverNumber[i] = tuuid;
 	    VldbEntry->serverUnique[i] = ntohl(exp->ex_uniquifier);
 	} else {

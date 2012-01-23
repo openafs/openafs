@@ -133,7 +133,7 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
 	    afs_dprintf(("uvldbentry server %d flags: %x\n", srv,
 			 u.u.serverFlags[srv]));
 
-	    if ((u.u.serverFlags[srv] & VLSERVER_FLAG_UUID) == 0)
+	    if ((u.u.serverFlags[srv] & VLSF_UUID) == 0)
 		server =
 		    afscp_ServerByAddr(cell, u.u.serverNumber[srv].time_low);
 	    else
@@ -257,7 +257,7 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
 	for (srv = 0; srv < u.u.nServers; srv++) {
 	    if ((u.u.serverFlags[srv] & vtype) == 0)
 		continue;
-	    if ((u.u.serverFlags[srv] & VLSERVER_FLAG_UUID) == 0)
+	    if ((u.u.serverFlags[srv] & VLSF_UUID) == 0)
 		server =
 		    afscp_ServerByAddr(cell, u.u.serverNumber[srv].time_low);
 	    else

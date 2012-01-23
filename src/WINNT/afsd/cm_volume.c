@@ -422,7 +422,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             roID = uvldbEntry.volumeId[1];
             bkID = uvldbEntry.volumeId[2];
             for ( i=0, j=0; code == 0 && i<nServers && j<NMAXNSERVERS; i++ ) {
-                if ( !(uvldbEntry.serverFlags[i] & VLSERVER_FLAG_UUID) ) {
+                if ( !(uvldbEntry.serverFlags[i] & VLSF_UUID) ) {
                     serverFlags[j] = uvldbEntry.serverFlags[i];
                     serverNumber[j] = uvldbEntry.serverNumber[i].time_low;
                     j++;

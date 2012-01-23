@@ -65,8 +65,6 @@ const	VLUPDATE_REPS_MODSERV	=	0x0400;
 const	VLUPDATE_REPS_MODPART	=	0x0800;
 const	VLUPDATE_REPS_MODFLAG	=	0x1000;
 
-const	VLSERVER_FLAG_UUID	= 	0x0010;
-
 /*typedef	string volumename<VL_MAXNAMELEN>;*/
 
 const	DEFAULTBULK	=	10000;
@@ -195,7 +193,8 @@ const VLOP_DUMP        = 0x100;
 %#define	VLSF_ROVOL	    0x02
 %#define	VLSF_RWVOL	    0x04
 %#define	VLSF_BACKVOL	    0x08
-%#define	VLSF_DONTUSE	    0x20    /* no conflict with VLSERVER_FLAG_UUID */
+%#define	VLSF_UUID	    0x10
+%#define	VLSF_DONTUSE	    0x20
 
 typedef	vldbentry bulkentries<>;
 typedef	nvldbentry nbulkentries<>;
