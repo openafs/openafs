@@ -1154,6 +1154,9 @@ NTSTATUS
 AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                      IN ULONG Reason);
 
+VOID
+AFSInvalidateAllVolumes( VOID);
+
 NTSTATUS
 AFSVerifyEntry( IN GUID *AuthGroup,
                 IN AFSDirectoryCB *DirectoryCB);
