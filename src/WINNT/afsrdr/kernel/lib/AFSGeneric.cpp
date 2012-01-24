@@ -2566,6 +2566,67 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
     return ntStatus;
 }
 
+VOID
+AFSInvalidateAllVolumes( VOID)
+{
+    AFSVolumeCB *pVolumeCB = NULL;
+    AFSVolumeCB *pNextVolumeCB = NULL;
+    AFSDeviceExt *pRDRDeviceExt = NULL;
+    LONG lCount;
+
+    pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSInvalidateAllVolumes Acquiring RDR VolumeListLock lock %08lX SHARED %08lX\n",
+                  &pRDRDeviceExt->Specific.RDR.VolumeListLock,
+                  PsGetCurrentThread());
+
+    AFSAcquireShared( &pRDRDeviceExt->Specific.RDR.VolumeListLock,
+                      TRUE);
+
+    pVolumeCB = pRDRDeviceExt->Specific.RDR.VolumeListHead;
+
+    if ( pVolumeCB)
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInvalidateAllVolumes Acquiring VolumeRoot ObjectInfoTree lock %08lX SHARED %08lX\n",
+                      pVolumeCB->ObjectInfoTree.TreeLock,
+                      PsGetCurrentThread());
+
+        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+    }
+
+    while( pVolumeCB != NULL)
+    {
+
+        pNextVolumeCB = (AFSVolumeCB *)pVolumeCB->ListEntry.fLink;
+
+        if ( pNextVolumeCB)
+        {
+
+            lCount = InterlockedIncrement( &pNextVolumeCB->VolumeReferenceCount);
+        }
+
+        AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.VolumeListLock);
+
+        // do I need to hold the volume lock here?
+
+        AFSInvalidateVolume( pVolumeCB, AFS_INVALIDATE_EXPIRED);
+
+        AFSAcquireShared( &pRDRDeviceExt->Specific.RDR.VolumeListLock,
+                          TRUE);
+
+        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+        pVolumeCB = pNextVolumeCB;
+    }
+
+    AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.VolumeListLock);
+}
+
 NTSTATUS
 AFSVerifyEntry( IN GUID *AuthGroup,
                 IN AFSDirectoryCB *DirEntry)
@@ -7440,6 +7501,13 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
         AFSGlobalRoot->ObjectInformation.Fcb->Header.NodeTypeCode = AFS_ROOT_ALL;
 
         SetFlag( AFSGlobalRoot->Flags, AFS_VOLUME_ACTIVE_GLOBAL_ROOT);
+
+        //
+        // Invalidate all known volumes since contact with the service and therefore
+        // the file server was lost.
+        //
+
+        AFSInvalidateAllVolumes();
 
         //
         // Drop the locks acquired above
