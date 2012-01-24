@@ -1114,6 +1114,10 @@ AFSValidateSymLink( IN GUID *AuthGroup,
 NTSTATUS
 AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB);
 
+NTSTATUS
+AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
+                     IN     ULONG Reason);
+
 BOOLEAN
 AFSIsChildOfParent( IN AFSFcb *Dcb,
                     IN AFSFcb *Fcb);
