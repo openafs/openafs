@@ -1553,6 +1553,312 @@ try_exit:
 }
 
 NTSTATUS
+AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
+                     IN     ULONG Reason)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    IO_STATUS_BLOCK stIoStatus;
+    ULONG ulFilter = 0;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSInvalidateObject Invalidation on node type %d for fid %08lX-%08lX-%08lX-%08lX Reason %d\n",
+                  (*ppObjectInfo)->FileType,
+                  (*ppObjectInfo)->FileId.Cell,
+                  (*ppObjectInfo)->FileId.Volume,
+                  (*ppObjectInfo)->FileId.Vnode,
+                  (*ppObjectInfo)->FileId.Unique,
+                  Reason);
+
+    if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_SYMLINK ||
+        (*ppObjectInfo)->FileType == AFS_FILE_TYPE_DFSLINK ||
+        (*ppObjectInfo)->FileType == AFS_FILE_TYPE_MOUNTPOINT)
+    {
+        //
+        // We only act on the mount point itself, not the target. If the
+        // node has been deleted then mark it as such otherwise indicate
+        // it requires verification
+        //
+
+        if( Reason == AFS_INVALIDATE_DELETED)
+        {
+            SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID);
+        }
+        else
+        {
+
+            if( Reason == AFS_INVALIDATE_FLUSHED)
+            {
+
+                (*ppObjectInfo)->DataVersion.QuadPart = (ULONGLONG)-1;
+
+                SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+            }
+
+            (*ppObjectInfo)->Expiration.QuadPart = 0;
+
+            (*ppObjectInfo)->TargetFileId.Vnode = 0;
+
+            (*ppObjectInfo)->TargetFileId.Unique = 0;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateObject Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
+                          (*ppObjectInfo)->FileId.Cell,
+                          (*ppObjectInfo)->FileId.Volume,
+                          (*ppObjectInfo)->FileId.Vnode,
+                          (*ppObjectInfo)->FileId.Unique);
+
+            SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY);
+        }
+
+        ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
+
+        if( Reason == AFS_INVALIDATE_CREDS)
+        {
+            ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
+        }
+
+        if( Reason == AFS_INVALIDATE_DATA_VERSION ||
+            Reason == AFS_INVALIDATE_FLUSHED)
+        {
+            ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
+        }
+        else
+        {
+            ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
+        }
+
+        AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
+                                        NULL,
+                                        FILE_NOTIFY_CHANGE_FILE_NAME |
+                                        FILE_NOTIFY_CHANGE_ATTRIBUTES,
+                                        FILE_ACTION_MODIFIED);
+
+        try_return( ntStatus);
+    }
+
+    //
+    // Depending on the reason for invalidation then perform work on the node
+    //
+
+    switch( Reason)
+    {
+
+    case AFS_INVALIDATE_DELETED:
+        {
+
+            //
+            // Mark this node as invalid
+            //
+
+            SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_DELETED);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateObject Set DELETE flag on fid %08lX-%08lX-%08lX-%08lX\n",
+                          (*ppObjectInfo)->FileId.Cell,
+                          (*ppObjectInfo)->FileId.Volume,
+                          (*ppObjectInfo)->FileId.Vnode,
+                          (*ppObjectInfo)->FileId.Unique);
+
+            if( (*ppObjectInfo)->ParentObjectInformation != NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInvalidateObject Set VERIFY flag on parent fid %08lX-%08lX-%08lX-%08lX\n",
+                              (*ppObjectInfo)->ParentObjectInformation->FileId.Cell,
+                              (*ppObjectInfo)->ParentObjectInformation->FileId.Volume,
+                              (*ppObjectInfo)->ParentObjectInformation->FileId.Vnode,
+                              (*ppObjectInfo)->ParentObjectInformation->FileId.Unique);
+
+                SetFlag( (*ppObjectInfo)->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                (*ppObjectInfo)->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+
+                (*ppObjectInfo)->ParentObjectInformation->Expiration.QuadPart = 0;
+            }
+
+            if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_DIRECTORY)
+            {
+                ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
+            }
+            else
+            {
+                ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
+            }
+
+            AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
+                                            NULL,
+                                            ulFilter,
+                                            FILE_ACTION_REMOVED);
+
+            if( NT_SUCCESS( AFSQueueInvalidateObject( (*ppObjectInfo),
+                                                      Reason)))
+            {
+                (*ppObjectInfo) = NULL; // We'll dec the count in the worker item
+            }
+
+            break;
+        }
+
+    case AFS_INVALIDATE_FLUSHED:
+        {
+
+            if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_FILE &&
+                (*ppObjectInfo)->Fcb != NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInvalidateObject Flush/purge file fid %08lX-%08lX-%08lX-%08lX\n",
+                              (*ppObjectInfo)->FileId.Cell,
+                              (*ppObjectInfo)->FileId.Volume,
+                              (*ppObjectInfo)->FileId.Vnode,
+                              (*ppObjectInfo)->FileId.Unique);
+
+                AFSAcquireExcl( &(*ppObjectInfo)->Fcb->NPFcb->Resource,
+                                TRUE);
+
+                __try
+                {
+
+                    CcFlushCache( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectPointers,
+                                  NULL,
+                                  0,
+                                  &stIoStatus);
+
+                    if( !NT_SUCCESS( stIoStatus.Status))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSInvalidateObject CcFlushCache failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                      (*ppObjectInfo)->FileId.Cell,
+                                      (*ppObjectInfo)->FileId.Volume,
+                                      (*ppObjectInfo)->FileId.Vnode,
+                                      (*ppObjectInfo)->FileId.Unique,
+                                      stIoStatus.Status,
+                                      stIoStatus.Information);
+
+                        ntStatus = stIoStatus.Status;
+                    }
+
+                    CcPurgeCacheSection( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectPointers,
+                                         NULL,
+                                         0,
+                                         FALSE);
+                }
+                __except( EXCEPTION_EXECUTE_HANDLER)
+                {
+
+                    ntStatus = GetExceptionCode();
+                }
+
+                AFSReleaseResource( &(*ppObjectInfo)->Fcb->NPFcb->Resource);
+
+                //
+                // Clear out the extents
+                // Get rid of them (note this involves waiting
+                // for any writes or reads to the cache to complete)
+                //
+
+                (VOID) AFSTearDownFcbExtents( (*ppObjectInfo)->Fcb,
+                                              NULL);
+            }
+
+            (*ppObjectInfo)->DataVersion.QuadPart = (ULONGLONG)-1;
+
+
+            if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_FILE)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInvalidateObject Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
+                              (*ppObjectInfo)->FileId.Cell,
+                              (*ppObjectInfo)->FileId.Volume,
+                              (*ppObjectInfo)->FileId.Vnode,
+                              (*ppObjectInfo)->FileId.Unique);
+
+                SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+            }
+
+            // Fall through to the default processing
+        }
+
+    default:
+        {
+
+            if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_DIRECTORY)
+            {
+                ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
+            }
+            else
+            {
+                ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
+            }
+
+            if( Reason == AFS_INVALIDATE_CREDS)
+            {
+                ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
+            }
+
+            if( Reason == AFS_INVALIDATE_DATA_VERSION)
+            {
+                ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
+            }
+            else
+            {
+                ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
+            }
+
+            AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
+                                            NULL,
+                                            ulFilter,
+                                            FILE_ACTION_MODIFIED);
+
+            //
+            // Indicate this node requires re-evaluation for the remaining reasons
+            //
+
+            (*ppObjectInfo)->Expiration.QuadPart = 0;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateObject Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
+                          (*ppObjectInfo)->FileId.Cell,
+                          (*ppObjectInfo)->FileId.Volume,
+                          (*ppObjectInfo)->FileId.Vnode,
+                          (*ppObjectInfo)->FileId.Unique);
+
+            SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            if( Reason == AFS_INVALIDATE_DATA_VERSION ||
+                (*ppObjectInfo)->FileType == AFS_FILE_TYPE_FILE &&
+                ( Reason == AFS_INVALIDATE_CALLBACK ||
+                  Reason == AFS_INVALIDATE_EXPIRED))
+            {
+                if ( NT_SUCCESS( AFSQueueInvalidateObject( (*ppObjectInfo),
+                                                           AFS_INVALIDATE_DATA_VERSION)))
+                {
+
+                    (*ppObjectInfo) = NULL; // We'll dec the count in the worker item
+                }
+            }
+
+            break;
+        }
+    }
+
+  try_exit:
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 {
 
@@ -1565,12 +1871,21 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
     BOOLEAN     bIsChild = FALSE;
     ULONGLONG   ullIndex = 0;
     AFSObjectInfoCB *pObjectInfo = NULL;
-    IO_STATUS_BLOCK stIoStatus;
-    ULONG ulFilter = 0;
     LONG lCount;
 
     __Enter
     {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInvalidateCache Invalidation FID %08lX-%08lX-%08lX-%08lX Type %d WholeVolume %d Reason %d\n",
+                      InvalidateCB->FileID.Cell,
+                      InvalidateCB->FileID.Volume,
+                      InvalidateCB->FileID.Vnode,
+                      InvalidateCB->FileID.Unique,
+                      InvalidateCB->FileType,
+                      InvalidateCB->WholeVolume,
+                      InvalidateCB->Reason);
 
         //
         // Need to locate the Fcb for the directory to purge
@@ -1615,6 +1930,16 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         if( !NT_SUCCESS( ntStatus) ||
             pVolumeCB == NULL)
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInvalidateCache Invalidation FAILURE Unable to locate volume node FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          InvalidateCB->FileID.Cell,
+                          InvalidateCB->FileID.Volume,
+                          InvalidateCB->FileID.Vnode,
+                          InvalidateCB->FileID.Unique,
+                          ntStatus);
+
             try_return( ntStatus = STATUS_SUCCESS);
         }
 
@@ -1622,43 +1947,45 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         // If this is a whole volume invalidation then go do it now
         //
 
-        if( InvalidateCB->WholeVolume ||
-            AFSIsVolumeFID( &InvalidateCB->FileID))
+        if( InvalidateCB->WholeVolume)
         {
 
             ntStatus = AFSInvalidateVolume( pVolumeCB,
                                             InvalidateCB->Reason);
-
-            AFSFsRtlNotifyFullReportChange( &pVolumeCB->ObjectInformation,
-                                            NULL,
-                                            FILE_NOTIFY_CHANGE_FILE_NAME |
-                                            FILE_NOTIFY_CHANGE_DIR_NAME |
-                                            FILE_NOTIFY_CHANGE_NAME |
-                                            FILE_NOTIFY_CHANGE_ATTRIBUTES |
-                                            FILE_NOTIFY_CHANGE_SIZE,
-                                            FILE_ACTION_MODIFIED);
 
             lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
             try_return( ntStatus);
         }
 
-        AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
-                          TRUE);
+        if ( AFSIsVolumeFID( &InvalidateCB->FileID))
+        {
 
-        lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+            pObjectInfo = &pVolumeCB->ObjectInformation;
+        }
+        else
+        {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInvalidateCache Decrement count on volume %08lX Cnt %d\n",
-                      pVolumeCB,
-                      pVolumeCB->VolumeReferenceCount);
+            AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
+                              TRUE);
 
-        ullIndex = AFSCreateLowIndex( &InvalidateCB->FileID);
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
-        ntStatus = AFSLocateHashEntry( pVolumeCB->ObjectInfoTree.TreeHead,
-                                       ullIndex,
-                                       (AFSBTreeEntry **)&pObjectInfo);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateCache Decrement count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          pVolumeCB->VolumeReferenceCount);
+
+            ullIndex = AFSCreateLowIndex( &InvalidateCB->FileID);
+
+            ntStatus = AFSLocateHashEntry( pVolumeCB->ObjectInfoTree.TreeHead,
+                                           ullIndex,
+                                           (AFSBTreeEntry **)&pObjectInfo);
+
+            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+        }
 
         if( pObjectInfo != NULL)
         {
@@ -1676,300 +2003,24 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                           lCount);
         }
 
-        AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
         if( !NT_SUCCESS( ntStatus) ||
             pObjectInfo == NULL)
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInvalidateCache Invalidation FAILURE Unable to locate object FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          InvalidateCB->FileID.Cell,
+                          InvalidateCB->FileID.Volume,
+                          InvalidateCB->FileID.Vnode,
+                          InvalidateCB->FileID.Unique,
+                          ntStatus);
+
             try_return( ntStatus = STATUS_SUCCESS);
         }
 
-        if( pObjectInfo->FileType == AFS_FILE_TYPE_SYMLINK ||
-            pObjectInfo->FileType == AFS_FILE_TYPE_DFSLINK ||
-            pObjectInfo->FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateCache Invalidation on node type %d for fid %08lX-%08lX-%08lX-%08lX Reason %d\n",
-                          pObjectInfo->FileType,
-                          pObjectInfo->FileId.Cell,
-                          pObjectInfo->FileId.Volume,
-                          pObjectInfo->FileId.Vnode,
-                          pObjectInfo->FileId.Unique,
-                          InvalidateCB->Reason);
-
-            //
-            // We only act on the mount point itself, not the target. If the
-            // node has been deleted then mark it as such otherwise indicate
-            // it requires verification
-            //
-
-            if( InvalidateCB->Reason == AFS_INVALIDATE_DELETED)
-            {
-                SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID);
-            }
-            else
-            {
-
-                if( InvalidateCB->Reason == AFS_INVALIDATE_FLUSHED)
-                {
-
-                    pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
-
-                    SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                }
-
-                pObjectInfo->Expiration.QuadPart = 0;
-
-                pObjectInfo->TargetFileId.Vnode = 0;
-
-                pObjectInfo->TargetFileId.Unique = 0;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInvalidateCache Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                              pObjectInfo->FileId.Cell,
-                              pObjectInfo->FileId.Volume,
-                              pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique);
-
-                SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
-            }
-
-            ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
-
-            if( InvalidateCB->Reason == AFS_INVALIDATE_CREDS)
-            {
-                ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
-            }
-
-            if( InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION ||
-                InvalidateCB->Reason == AFS_INVALIDATE_FLUSHED)
-            {
-                ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
-            }
-            else
-            {
-                ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
-            }
-
-            AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
-                                            NULL,
-                                            FILE_NOTIFY_CHANGE_FILE_NAME |
-                                            FILE_NOTIFY_CHANGE_ATTRIBUTES,
-                                            FILE_ACTION_MODIFIED);
-
-            try_return( ntStatus);
-        }
-
-        //
-        // Depending on the reason for invalidation then perform work on the node
-        //
-
-        switch( InvalidateCB->Reason)
-        {
-
-            case AFS_INVALIDATE_DELETED:
-            {
-
-                //
-                // Mark this node as invalid
-                //
-
-                SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_DELETED);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInvalidateCache Set DELETE flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                              pObjectInfo->FileId.Cell,
-                              pObjectInfo->FileId.Volume,
-                              pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique);
-
-                if( pObjectInfo->ParentObjectInformation != NULL)
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSInvalidateCache Set VERIFY flag on parent fid %08lX-%08lX-%08lX-%08lX\n",
-                                  pObjectInfo->ParentObjectInformation->FileId.Cell,
-                                  pObjectInfo->ParentObjectInformation->FileId.Volume,
-                                  pObjectInfo->ParentObjectInformation->FileId.Vnode,
-                                  pObjectInfo->ParentObjectInformation->FileId.Unique);
-
-                    SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
-
-                    pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
-
-                    pObjectInfo->ParentObjectInformation->Expiration.QuadPart = 0;
-                }
-
-                if( pObjectInfo->FileType == AFS_FILE_TYPE_DIRECTORY)
-                {
-                    ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
-                }
-                else
-                {
-                    ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
-                }
-
-                AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
-                                                NULL,
-                                                ulFilter,
-                                                FILE_ACTION_REMOVED);
-
-                if( NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
-                                                          InvalidateCB->Reason)))
-                {
-                    pObjectInfo = NULL; // We'll dec the count in the worker item
-                }
-
-                break;
-            }
-
-            case AFS_INVALIDATE_FLUSHED:
-            {
-
-                if( pObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
-                    pObjectInfo->Fcb != NULL)
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSInvalidateCache Flush/purge file fid %08lX-%08lX-%08lX-%08lX\n",
-                                  pObjectInfo->FileId.Cell,
-                                  pObjectInfo->FileId.Volume,
-                                  pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique);
-
-                    AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
-                                    TRUE);
-
-                    __try
-                    {
-
-                        CcFlushCache( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                      NULL,
-                                      0,
-                                      &stIoStatus);
-
-                        if( !NT_SUCCESS( stIoStatus.Status))
-                        {
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                          AFS_TRACE_LEVEL_ERROR,
-                                          "AFSInvalidateCache CcFlushCache failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
-                                          pObjectInfo->FileId.Cell,
-                                          pObjectInfo->FileId.Volume,
-                                          pObjectInfo->FileId.Vnode,
-                                          pObjectInfo->FileId.Unique,
-                                          stIoStatus.Status,
-                                          stIoStatus.Information);
-
-                            ntStatus = stIoStatus.Status;
-                        }
-
-                        CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                             NULL,
-                                             0,
-                                             FALSE);
-                    }
-                    __except( EXCEPTION_EXECUTE_HANDLER)
-                    {
-
-                        ntStatus = GetExceptionCode();
-                    }
-
-                    AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Resource);
-
-                    //
-                    // Clear out the extents
-                    // Get rid of them (note this involves waiting
-                    // for any writes or reads to the cache to complete)
-                    //
-
-                    (VOID) AFSTearDownFcbExtents( pObjectInfo->Fcb,
-                                                  NULL);
-                }
-
-                pObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
-
-
-                if( pObjectInfo->FileType == AFS_FILE_TYPE_FILE)
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSInvalidateCache Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                                  pObjectInfo->FileId.Cell,
-                                  pObjectInfo->FileId.Volume,
-                                  pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique);
-
-                    SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                }
-
-                // Fall through to the default processing
-            }
-
-            default:
-            {
-
-                if( pObjectInfo->FileType == AFS_FILE_TYPE_DIRECTORY)
-                {
-                    ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
-                }
-                else
-                {
-                    ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
-                }
-
-                if( InvalidateCB->Reason == AFS_INVALIDATE_CREDS)
-                {
-                    ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
-                }
-
-                if( InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION)
-                {
-                    ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
-                }
-                else
-                {
-                    ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
-                }
-
-                AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
-                                                NULL,
-                                                ulFilter,
-                                                FILE_ACTION_MODIFIED);
-
-                //
-                // Indicate this node requires re-evaluation for the remaining reasons
-                //
-
-                pObjectInfo->Expiration.QuadPart = 0;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInvalidateCache Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                              pObjectInfo->FileId.Cell,
-                              pObjectInfo->FileId.Volume,
-                              pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique);
-
-                SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
-
-                if( InvalidateCB->Reason == AFS_INVALIDATE_DATA_VERSION &&
-                    NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
-                                                          InvalidateCB->Reason)))
-                {
-                    pObjectInfo = NULL; // We'll dec the count in the worker item
-                }
-
-                break;
-            }
-        }
+        AFSInvalidateObject( &pObjectInfo,
+                             InvalidateCB->Reason);
 
 try_exit:
 
@@ -2371,8 +2422,10 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSFcb *pFcb = NULL;
     AFSObjectInfoCB *pCurrentObject = NULL;
+    AFSObjectInfoCB *pNextObject = NULL;
+    LONG lCount;
+    AFSFcb *pFcb = NULL;
     ULONG ulFilter = 0;
 
     __Enter
@@ -2401,203 +2454,113 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
                 // Mark this volume as invalid
                 //
 
-                VolumeCB->ObjectInformation.Expiration.QuadPart = 0;
-
                 SetFlag( VolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID);
 
                 SetFlag( VolumeCB->Flags, AFS_VOLUME_FLAGS_OFFLINE);
 
-                AFSFsRtlNotifyFullReportChange( &VolumeCB->ObjectInformation,
-                                                NULL,
-                                                FILE_NOTIFY_CHANGE_DIR_NAME,
-                                                FILE_ACTION_REMOVED);
-
-                AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
-                                  TRUE);
-
-                pCurrentObject = VolumeCB->ObjectInfoListHead;
-
-                while( pCurrentObject != NULL)
-                {
-
-                    if( pCurrentObject->FileType == AFS_FILE_TYPE_DIRECTORY)
-                    {
-                        ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
-                    }
-                    else
-                    {
-                        ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
-                    }
-
-                    AFSFsRtlNotifyFullReportChange( pCurrentObject,
-                                                    NULL,
-                                                    ulFilter,
-                                                    FILE_ACTION_REMOVED);
-
-                    SetFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID);
-
-                    pFcb = pCurrentObject->Fcb;
-
-                    if( pFcb != NULL &&
-                        pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
-                    {
-
-
-                        //
-                        // Clear out the extents
-                        // And get rid of them (note this involves waiting
-                        // for any writes or reads to the cache to complete)
-                        //
-
-                        (VOID) AFSTearDownFcbExtents( pFcb,
-                                                      NULL);
-                    }
-
-                    pCurrentObject = (AFSObjectInfoCB *)pCurrentObject->ListEntry.fLink;
-                }
-
-                AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
-
-                break;
-            }
-
-            default:
-            {
-
-                //
-                // Indicate this node requires re-evaluation for the remaining reasons
-                //
-
-                VolumeCB->ObjectInformation.Expiration.QuadPart = 0;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSInvalidateVolume Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                              VolumeCB->ObjectInformation.FileId.Cell,
-                              VolumeCB->ObjectInformation.FileId.Volume,
-                              VolumeCB->ObjectInformation.FileId.Vnode,
-                              VolumeCB->ObjectInformation.FileId.Unique);
-
-                SetFlag( VolumeCB->ObjectInformation.Flags, AFS_OBJECT_FLAGS_VERIFY);
-
-                if( Reason == AFS_INVALIDATE_FLUSHED)
-                {
-
-                    VolumeCB->ObjectInformation.DataVersion.QuadPart = (ULONGLONG)-1;
-                }
-
-                //
-                // Notify anyone that cares
-                //
-
-                ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
-
-                if( Reason == AFS_INVALIDATE_CREDS)
-                {
-                    ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
-                }
-
-                if( Reason == AFS_INVALIDATE_DATA_VERSION ||
-                    Reason == AFS_INVALIDATE_FLUSHED)
-                {
-                    ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
-                }
-                else
-                {
-                    ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
-                }
-
-                AFSFsRtlNotifyFullReportChange( &VolumeCB->ObjectInformation,
-                                                NULL,
-                                                ulFilter,
-                                                FILE_ACTION_MODIFIED);
-
-                //
-                // Volume invalidations require all objects in the volume be re-verified
-                //
-
-                AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
-                                  TRUE);
-
-                pCurrentObject = VolumeCB->ObjectInfoListHead;
-
-                while( pCurrentObject != NULL)
-                {
-
-                    pCurrentObject->Expiration.QuadPart = 0;
-
-                    pCurrentObject->TargetFileId.Vnode = 0;
-
-                    pCurrentObject->TargetFileId.Unique = 0;
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSInvalidateVolume Setting VERIFY flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                                  pCurrentObject->FileId.Cell,
-                                  pCurrentObject->FileId.Volume,
-                                  pCurrentObject->FileId.Vnode,
-                                  pCurrentObject->FileId.Unique);
-
-                    SetFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_VERIFY);
-
-                    if( Reason == AFS_INVALIDATE_FLUSHED)
-                    {
-
-                        pCurrentObject->DataVersion.QuadPart = (ULONGLONG)-1;
-                    }
-
-                    if( Reason == AFS_INVALIDATE_FLUSHED &&
-                        pCurrentObject->FileType == AFS_FILE_TYPE_FILE)
-                    {
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSInvalidateVolume Setting VERIFY_DATA flag on fid %08lX-%08lX-%08lX-%08lX\n",
-                                      pCurrentObject->FileId.Cell,
-                                      pCurrentObject->FileId.Volume,
-                                      pCurrentObject->FileId.Vnode,
-                                      pCurrentObject->FileId.Unique);
-
-                        SetFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                    }
-
-                    if( pCurrentObject->FileType == AFS_FILE_TYPE_DIRECTORY)
-                    {
-                        ulFilter = FILE_NOTIFY_CHANGE_DIR_NAME;
-                    }
-                    else
-                    {
-                        ulFilter = FILE_NOTIFY_CHANGE_FILE_NAME;
-                    }
-
-                    if( Reason == AFS_INVALIDATE_CREDS)
-                    {
-                        ulFilter |= FILE_NOTIFY_CHANGE_SECURITY;
-                    }
-
-                    if( Reason == AFS_INVALIDATE_DATA_VERSION ||
-                        Reason == AFS_INVALIDATE_FLUSHED)
-                    {
-                        ulFilter |= FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE;
-                    }
-                    else
-                    {
-                        ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
-                    }
-
-                    AFSFsRtlNotifyFullReportChange( pCurrentObject,
-                                                    NULL,
-                                                    ulFilter,
-                                                    FILE_ACTION_MODIFIED);
-
-                    pCurrentObject = (AFSObjectInfoCB *)pCurrentObject->ListEntry.fLink;
-                }
-
-                AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
-
                 break;
             }
         }
+
+        //
+        // Invalidate the volume root directory
+        //
+
+        pCurrentObject = &VolumeCB->ObjectInformation;
+
+        if ( pCurrentObject )
+        {
+
+            lCount = InterlockedIncrement( &pCurrentObject->ObjectReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateVolumeObjects Increment count on object %08lX Cnt %d\n",
+                          pCurrentObject,
+                          lCount);
+
+            AFSInvalidateObject( &pCurrentObject,
+                                 Reason);
+
+            lCount = InterlockedDecrement( &pCurrentObject->ObjectReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateVolumeObjects Decrement count on object %08lX Cnt %d\n",
+                          pCurrentObject,
+                          lCount);
+        }
+
+        //
+        // Apply invalidation to all other volume objects
+        //
+
+        AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
+                          TRUE);
+
+        pCurrentObject = VolumeCB->ObjectInfoListHead;
+
+        if ( pCurrentObject)
+        {
+
+            //
+            // Reference the node so it won't be torn down
+            //
+
+            lCount = InterlockedIncrement( &pCurrentObject->ObjectReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateVolumeObjects Increment count on object %08lX Cnt %d\n",
+                          pCurrentObject,
+                          lCount);
+        }
+
+        while( pCurrentObject != NULL)
+        {
+
+            pNextObject = (AFSObjectInfoCB *)pCurrentObject->ListEntry.fLink;
+
+            if ( pNextObject)
+            {
+
+                //
+                // Reference the node so it won't be torn down
+                //
+
+                lCount = InterlockedIncrement( &pNextObject->ObjectReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInvalidateVolumeObjects Increment count on object %08lX Cnt %d\n",
+                              pNextObject,
+                              lCount);
+            }
+
+            AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
+
+            AFSInvalidateObject( &pCurrentObject,
+                                 Reason);
+
+            if ( pCurrentObject )
+            {
+
+                lCount = InterlockedDecrement( &pCurrentObject->ObjectReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInvalidateVolumeObjects Decrement count on object %08lX Cnt %d\n",
+                              pCurrentObject,
+                              lCount);
+            }
+
+            AFSAcquireShared( VolumeCB->ObjectInfoTree.TreeLock,
+                              TRUE);
+
+            pCurrentObject = pNextObject;
+        }
+
+        AFSReleaseResource( VolumeCB->ObjectInfoTree.TreeLock);
     }
 
     return ntStatus;
@@ -2763,7 +2726,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSInvalidateCache Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX ntStatus %08lX\n",
+                                  "AFSVerifyEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX ntStatus %08lX\n",
                                   &DirEntry->NameInformation.FileName,
                                   pObjectInfo->FileId.Cell,
                                   pObjectInfo->FileId.Volume,
