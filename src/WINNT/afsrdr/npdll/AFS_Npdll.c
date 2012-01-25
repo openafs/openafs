@@ -257,11 +257,13 @@ typedef struct _AFS_ENUM_CB
 // dos drive letter to which the source is mapped.
 //
 static BOOL
-DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
+DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen, DWORD * pStatus)
 {
     WCHAR drive[3];
     WCHAR device[MAX_PATH + 26];
     HRESULT hr = S_OK;
+
+    *pStatus = WN_SUCCESS;
 
     memset( subststr, 0, substlen);
     drive[0] = drivestr[0];
@@ -295,7 +297,7 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
             drive[1] = L':';
             drive[2] = L'\0';
 
-            if ( !DriveSubstitution(drive, subststr, substlen) )
+            if ( !DriveSubstitution(drive, subststr, substlen, pStatus) )
             {
 
                 subststr[0] = drive[0];
@@ -317,8 +319,12 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
             if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
             {
 
+                if ( hr == STRSAFE_E_INSUFFICIENT_BUFFER )
+                    *pStatus = WN_MORE_DATA;
+
 #ifdef AFS_DEBUG_TRACE
-                    AFSDbgPrint( L"DriveSubstitution %s -> %s\n",
+                    AFSDbgPrint( L"DriveSubstitution (hr = %X) %s -> %s\n",
+                                 hr,
                                  drivestr,
                                  subststr);
 #endif
@@ -337,29 +343,26 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
 
             subststr[0] = L'\\';
 
-            hr = StringCbCopyN(&subststr[1], substlen - sizeof(WCHAR), &device[7], sizeof(device));
+            hr = StringCbCopyN(&subststr[1], substlen - sizeof(WCHAR), &device[7], sizeof(device) - 7 * sizeof(WCHAR));
+
+            if ( SUCCEEDED(hr) && drivestr[2] )
+            {
+                hr = StringCbCat( subststr, substlen, &drivestr[2]);
+            }
 
             if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
             {
-                if ( drivestr[2] )
-                {
-                    hr = StringCbCat( subststr, substlen, &drivestr[2]);
-                }
-                else
-                {
-                    hr = S_OK;
-                }
 
-                if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
-                {
+                if ( hr == STRSAFE_E_INSUFFICIENT_BUFFER )
+                    *pStatus = WN_MORE_DATA;
 
 #ifdef AFS_DEBUG_TRACE
-                    AFSDbgPrint( L"DriveSubstitution %s -> %s\n",
+                    AFSDbgPrint( L"DriveSubstitution (hr = %X) %s -> %s\n",
+                                 hr,
                                  drivestr,
                                  subststr);
 #endif
-                    return TRUE;
-                }
+                return TRUE;
             }
 
 #ifdef AFS_DEBUG_TRACE
@@ -376,28 +379,24 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
             hr = StringCbCopy( subststr, substlen,
                                &device[3 + sizeof( AFS_RDR_DEVICE_NAME) / sizeof( WCHAR)]);
 
+            if ( SUCCEEDED(hr) && drivestr[2] )
+            {
+                hr = StringCbCat( subststr, substlen, &drivestr[2]);
+            }
+
             if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
             {
 
-                if ( drivestr[2] )
-                {
-                    hr = StringCbCat( subststr, substlen, &drivestr[2]);
-                }
-                else
-                {
-                    hr = S_OK;
-                }
-
-                if ( SUCCEEDED(hr) || hr == STRSAFE_E_INSUFFICIENT_BUFFER)
-                {
+                if ( hr == STRSAFE_E_INSUFFICIENT_BUFFER )
+                    *pStatus = WN_MORE_DATA;
 
 #ifdef AFS_DEBUG_TRACE
-                    AFSDbgPrint( L"DriveSubstitution %s -> %s\n",
-                                 drivestr,
-                                 subststr);
+                AFSDbgPrint( L"DriveSubstitution (hr = %X) %s -> %s\n",
+                             hr,
+                             drivestr,
+                             subststr);
 #endif
-                    return TRUE;
-                }
+                return TRUE;
             }
 
 #ifdef AFS_DEBUG_TRACE
@@ -420,8 +419,6 @@ DriveSubstitution(LPCWSTR drivestr, LPWSTR subststr, size_t substlen)
                      GetLastError());
 #endif
     }
-
-
 
     return FALSE;
 }
@@ -1298,7 +1295,7 @@ NPGetConnectionCommon( LPWSTR  lpLocalName,
         dwPassedSize = *lpBufferSize;
 
         if ( !bDriveSubstOk ||
-             !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName)))
+             !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName), &dwStatus))
         {
             wchLocalName[0] = towupper(lpLocalName[0]);
             wchLocalName[1] = L':';
@@ -1602,7 +1599,7 @@ NPGetConnection3( IN     LPCWSTR lpLocalName,
             try_return( dwStatus = WN_MORE_DATA);
         }
 
-        if ( !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName)))
+        if ( !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName), &dwStatus))
         {
             wchLocalName[0] = towupper(lpLocalName[0]);
             wchLocalName[1] = L':';
@@ -3284,7 +3281,7 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
             try_return( dwStatus = WN_BAD_VALUE);
         }
 
-        dwSubstNameLength = (dwLocalPathLength + 26) * sizeof( WCHAR);
+        dwSubstNameLength = 4096;
 
         pwchSubstName = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwSubstNameLength);
 
@@ -3298,7 +3295,7 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
 
         memset(lpBuffer, 0, dwPassedSize);
 
-        if ( !DriveSubstitution( lpLocalPath, pwchSubstName, dwSubstNameLength))
+        if ( !DriveSubstitution( lpLocalPath, pwchSubstName, dwSubstNameLength, &dwStatus))
         {
             wchLocalName[0] = towupper(lpLocalPath[0]);
             wchLocalName[1] = L':';
