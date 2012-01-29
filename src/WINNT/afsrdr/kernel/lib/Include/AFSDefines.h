@@ -96,8 +96,8 @@ NTSTATUS
 // Worker thread count
 //
 
-#define AFS_WORKER_COUNT        5
-#define AFS_IO_WORKER_COUNT     5
+#define AFS_WORKER_COUNT        16
+#define AFS_IO_WORKER_COUNT     8
 
 //
 // Worker thread states
