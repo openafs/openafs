@@ -7,7 +7,7 @@
   <bookinfo>
     <title>OpenAFS for Windows Release Notes</title>
     <copyright>
-      <year>2003-2011</year>
+      <year>2003-2012</year>
       <holder>Secure Endpoints Inc. and Your File System Inc.</holder>
     </copyright>
     <legalnotice>
@@ -185,6 +185,19 @@
       </para>
       <para>It is important to note that AFS file servers are character-set agnostic.  All file system object names are stored as octet strings without any character set tagging.  If a file system object is created using OEM Code Page 858 and then interpreted as UTF-8 it is likely that the object name will appear to be gibberish.  OpenAFS for Windows goes to great lengths to ensure that the object name is converted to a form that will permit the user to rename the object using Unicode.  Accessing UTF-8 names on UNIX systems that have the locale set to one of the ISO Latin character sets will result in the UTF-8 strings appearing to be gibberish.  </para>
       <para>UNIX AFS can not perform Unicode Normalization for string comparisons.  Although it is possible to store and read Unicode object names, it is possible that a user may not be able to open an object by typing the name of the object at the keyboard.  GUI point and click operations should permit any object to be accessed.</para>
+      <section>
+        <title>3.1.1. Interoperability with MacOS X</title>
+        <indexterm>
+          <primary>MacOS X</primary>
+        </indexterm>
+        <para>MacOS X uses UTF-8 Normalization Form D (NFD) whereas Microsoft Windows and most other
+          applications use UTF-8 Normalization Form C (NFC).  The difference is that in NFD Unicode
+          character sequences containing diacritical marks are decomposed whereas in NFC the Unicode
+          character sequences use combined characters whenever possible.  Whereas Microsoft Windows
+          can display and manipulate files stored using NFD, MacOS X Finder does have trouble with
+          filenames that are NFC encoded.  All file names stored by the OpenAFS Windows client use
+          NFC.</para>
+      </section>
     </section>
     <section id="Kerberos_v5_Requirements">
       <title>3.2. Requirements for Kerberos v5 Authentication</title>
@@ -267,9 +280,18 @@
                 principal. A user object must be used.</para>
             </listitem>
             <listitem>
-              <para>Starting with Windows Server 2008 R2, Microsoft has disabled the single DES
-                encryption types.  DES must be enabled via Group Policy in order for Active
-                Directory to be used as a KDC for OpenAFS.</para>
+              <para>Starting with Windows 7 and Windows Server 2008 R2, Microsoft has disabled the
+                single DES encryption types,<ulink
+                  url="http://technet.microsoft.com/en-us/library/dd560670(WS.10).aspx">TechNet:
+                  Changes in Kerberos Authentication</ulink>. DES must be enabled via Group Policy
+                in order for Active Directory to be used as a KDC for OpenAFS.  Enable weak
+                encryption becuase of AFS... Start &gt; Administrative Tools &gt; Group Policy
+                Management Expand Forest &gt; Domains &gt; (domain name) &gt; Group Policy Objects
+                &gt; Default Domain Policy Right-click "Default Domain Policy" and select "Edit"
+                Expand "Computer Configuration" &gt; "Policies" &gt; "Windows Settings” &gt;
+                "Security Settings” &gt; "Local Policies” &gt; "Security Options” Double click
+                "Network security: Configure encryption types allowed for Kerberos” Select "Define
+                this policy setting", then select "DES_CBC_CRC" and all the others... Press "OK" </para>
             </listitem>
           </itemizedlist></para>
       </section>
@@ -347,6 +369,16 @@
             <para>the AFS Service is running but there is a communication error preventing access to \\AFS</para>
           </listitem>
         </itemizedlist>
+      </section>
+      <section>
+        <title>3.2.4. Heimdal 1.5 and Weak Encryption Types</title>
+        <para>Just as Microsoft disabled the use of Weak Encryption Types in Windows 7 and Windows
+          Server 2008 R2, Heimdal and MIT have disabled the use of weak encryption types in their
+          latest releases.  In order to use Heimdal 1.5 or MIT Kerberos 1.9 or later with OpenAFS,
+          the weak encryption types including DES-CBC-CRC and DES-CBC-MD5 must be enabled.  In
+          Heimdal, this is performed by adding "allow_weak_crypto = true" to the [libdefaults]
+          section of the %SystemRoot%\ProgramData\krb5.conf file.</para>
+        <para>Futures versions of OpenAFS will not have this requirement.</para>
       </section>
     </section>
     <section>
@@ -771,7 +803,10 @@
       <indexterm significance="normal">
         <primary>64-bit file sizes</primary>
       </indexterm>
-      <para>As of release 1.5.3, OpenAFS for Windows supports files larger than 2GB. The maximum file size is now 16777216 terabytes when the AFS File Server supports large files. If the AFS File Server does not support 64-bit file sizes, then the maximum size of files stored on that server remains 2GB.</para>
+      <para>As of release 1.5.3, OpenAFS for Windows supports files larger than 2GB. The maximum
+        file size is now 16777216 terabytes when the AFS File Server supports large files. If the
+        AFS File Server does not support 64-bit file sizes, then the maximum size of files stored on
+        that server remains 2GB.  </para>
     </section>
     <section>
       <title id="Encrypted_AFS_Network_Communication">3.14. Encrypted AFS Network Communication</title>
@@ -1824,11 +1859,11 @@
       <indexterm significance="normal">
         <primary>TraceOption</primary>
       </indexterm>
-      <para>If you are having trouble with the Integrated Logon operations it is often useful to be able to obtain a log of what it is attempting to do. Setting Bit 0 of the
-        <link linkend="Value_TraceOption">TraceOption</link> registry value:
-      </para>
-      <para> [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-      <para> REG_DWORD TraceOption = 0x01</para>
+      <para>If you are having trouble with the Integrated Logon operations it is often useful to be
+        able to obtain a log of what it is attempting to do. Setting the <link
+          linkend="Value_AFSLogon_Debug">Debug</link> registry value: </para>
+      <para> [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
+      <para> REG_DWORD Debug = 0x01</para>
       <para>will instruct the Integrated Logon Network Provider and Event Handlers to log information to the Windows Event Log: Application under the name "AFS Logon".</para>
     </section>
     <section>
@@ -3124,7 +3159,7 @@
             <emphasis>Value: Daemons</emphasis>
           </para>
           <para>Type: DWORD</para>
-          <para>Default: 4 (CM_CONFIGDEFAULT_DAEMONS)</para>
+          <para>Default: 16 (CM_CONFIGDEFAULT_DAEMONS)</para>
           <para>Variable: numBkgD</para>
           <para>Number of background daemons (number of threads of cm_BkgDaemon). (see cm_BkgDaemon in cm_daemon.c)</para>
         </section>
@@ -3630,18 +3665,30 @@ Variable: rx_nojumbo</para>
             <primary>IdleDeadTimeout</primary>
           </indexterm>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-          <para>
-                     Type: DWORD
-                  </para>
-          <para>
-                        Default: 0 (seconds)
-                  </para>
-          <para>
-                        Variable: IdleDeadtimeout
-                  </para>
-          <para>The Idle Dead Time determines how long the cache manager will wait for an RPC to complete when the service is responding that it is busy.
-                        If the timeout occurs on a replicated object, the cache manager can choose to fail over to an alternate replica.
-                        This value is typically the same as the ConnDeadTimeout. </para>
+          <para>Type: DWORD </para>
+          <para>Default: 1200 (seconds) </para>
+          <para>Variable: IdleDeadtimeout </para>
+          <para>The Idle Dead Time determines how long the cache manager will wait for an RPC on a
+            non-replicated volume to complete when the service is responding only with keep alive
+            messages.  When there is no replica available there is no other file server to try.  An
+            idle dead timeout in this case is fatal.  This option is intended to protect a client
+            against a file server that never responds.  This value must be larger that the file
+            server hard dead timeout of 120 seconds.</para>
+        </section>
+        <section>
+          <title>Value: ReplicaIdleDeadTimeout</title>
+          <indexterm>
+            <primary>ReplicaIdleDeadTimeout</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD</para>
+          <para>Default: 180 (seconds)</para>
+          <para>Variable: ReplicaIdleDeadtimeout</para>
+          <para>The Replica Idle Dead Time determines how long the cache manager will wait for an
+            RPC on a replicated volume to complete when the service is responding only with keep
+            alive messages.  When a volume is replicated the cache manager can choose to retry the
+            request against a file server hosting one of the replicas.  This value must be larger
+            that the file server hard dead timeout of 120 seconds.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_NATPingInterval">Value: NATPingInterval</title>
@@ -3718,9 +3765,11 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1..32} or {1..64} depending on the architecture
                   </para>
-          <para>
-Default: &lt;no default&gt;</para>
-          <para>If this value is specified, afsd_service.exe will restrict itself to executing on the specified number of CPUs if there are a greater number installed in the machine. </para>
+          <para> Default: 2</para>
+          <para>If this value is specified, afsd_service.exe will restrict itself to executing on
+            the specified number of CPUs if there are a greater number installed in the machine.
+            Performance profiling shows that overall system performance degrades when the
+            afsd_service.exe is permitted to execute on more than two cores.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_SmbAuthType">Value: SmbAuthType</title>
@@ -3948,8 +3997,7 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
-          <para>
-Default: 0</para>
+          <para> Default: 1</para>
           <para>Determines whether or not the AFS Cache Manager will give up all callbacks prior to the service being suspended or shutdown.  Doing so will have significant performance benefits for the file servers.  However, file servers older than 1.4.6 can become unstable if the GiveUpAllCallBacks RPC is executed.</para>
           <para>0: do not perform GiveUpAllCallBacks RPCs</para>
           <para>1: perform GiveUpAllCallBacks RPCs </para>
@@ -3962,15 +4010,14 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
-          <para>
-Default: 0</para>
-          <para>
-                     Determines whether or not the AFS Cache Manager will will make use of the volume version information reported
-                     by the file server as part of the AFSVolSync data structure.  Use of volume version information can significantly
-                     reduce the number of FetchStatus RPCs issued on objects stored in read-only volumes.  This functionality is
-                     disabled by default because all OpenAFS file servers older than OpenAFS 1.4.10 failed to include valid volume
-                     version information as part of the BulkStatus and InlineBulkStatus RPCs.
-                  </para>
+          <para>Default: 0</para>
+          <para>Determines whether or not the AFS Cache Manager will will make use of the volume
+            version information reported by the file server as part of the AFSVolSync data
+            structure. Use of volume version information can significantly reduce the number of
+            FetchStatus RPCs issued on objects stored in read-only volumes. This functionality is
+            disabled by default because all OpenAFS file servers older than OpenAFS 1.4.10 failed to
+            include valid volume version information as part of the BulkStatus and InlineBulkStatus
+            RPCs. </para>
           <para>0: do not make use of volume version information</para>
           <para>1: make use of volume version information</para>
         </section>
@@ -3982,8 +4029,7 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
-          <para>
-Default: 0</para>
+          <para>Default: 0</para>
           <para>Determines whether or not the AFS Cache Manager will give preference to .backup volumes when following mount points that originate in a .backup volume.</para>
           <para>0: do not prefer .backup volumes when the mount point originates in a .backup volume.</para>
           <para>1: prefer .backup volumes when the mount point originates in a .backup volume.</para>
@@ -3996,9 +4042,22 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {bytes}
                   </para>
-          <para>
-Default: 262144</para>
+          <para>Default: 262144</para>
           <para>Specifies the UDP socket receive and send buffer sizes..</para>
+        </section>
+        <section>
+          <title>Value: VerifyData</title>
+          <indexterm>
+            <primary>VerifyData</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}</para>
+          <para>Default: 0</para>
+          <para>1: after every RXAFS_StoreData RPC immediately perform an RXAFS_FetchData RPC and
+            verify that the data was correctly stored on the file server.  If the data does not
+            match, retry the store operation until it does.</para>
+          <para>The "fs getverify" and "fs setverify {on, off}" commands can be used to query and
+            set this value at runtime.</para>
         </section>
       </section>
       <section>
@@ -4422,8 +4481,7 @@ Default: &lt;none&gt;</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD
                   </para>
-          <para>
-Default: 0</para>
+          <para>Default: 0</para>
           <para>Do not display message boxes if the login fails.</para>
         </section>
       </section>
@@ -4438,9 +4496,16 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
           <para>Type: DWORD
                   </para>
-          <para>
-Default: 0</para>
+          <para>Default: 0</para>
           <para>Disables visible warnings during logon.</para>
+        </section>
+        <section>
+          <title id="Value_AFSLogon_Debug">Value: Debug</title>
+          <para>Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
+          <para>Type: DWORD</para>
+          <para>Default: 0</para>
+          <para>Set to 1 to turn on "AFS Logon" event logging to the Windows Event Log.</para>
         </section>
         <section>
           <title id="NP_Regkey_TransarcAFSDaemon_NetworkProvider_AuthentProviderPath">Value: AuthentProviderPath</title>
@@ -4521,201 +4586,236 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
           <para>Specifies the DLL to use for the network provider</para>
         </section>
       </section>
-    </section>
-    <section id="Domain_Specific_Configuration">
-      <title>A.2.1 Domain specific configuration keys for the Network Provider</title>
-      <indexterm significance="normal">
-        <primary>domain logon configuration</primary>
-      </indexterm>
-      <para>The network provider can be configured to have different behavior depending on the domain that the user logs into. These settings are only relevant when using integrated login. A domain refers to an Active Directory (AD) domain, a trusted Kerberos (non-AD) realm or the local machine (i.e. local account logins). The domain name that is used for selecting the domain would be the domain that is passed into the NPLogonNotify function of the network provider.</para>
-      <para>Domain specific registry keys are:</para>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</title>
-        <para> (NP key)</para>
-      </section>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</title>
-        <para> (Domains key)</para>
-      </section>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_DomainName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;Domain Name&gt;]</title>
-        <para> (Specific domain key. One per domain.)</para>
-      </section>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_LocalHost">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
-        <para> (Localhost key)</para>
-      </section>
-      <section>
-        <title id="Domain_Example">Domain Specific Example:</title>
-        <para>HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider</para>
-        <para> |</para>
-        <para> +- Domain</para>
-        <para> +-AD1.EXAMPLE.COM</para>
-        <para> +-AD2.EXAMPLE.NET</para>
-        <para> +-LOCALHOST</para>
-        <para>Each of the domain specific keys can have the set of values described in 2.1.1. The effective values are chosen as described in 2.1.2.</para>
-      </section>
-      <section>
-        <title id="Domain_Specific_Configuration_Values">A.2.1.1 Domain Specific Configuration Values</title>
-        <section id="Domain_Specific_Regkeys">
-          <title>Regkeys: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain name"]
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
-          <section>
-            <title id="Domain_Specific_Regkeys_LogonOptions">Value: LogonOptions</title>
-            <indexterm significance="normal">
-              <primary>LogonOptions</primary>
-            </indexterm>
-            <para id="Value_LogonOptions">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD
-                  </para>
-            <para>
-Default: 0x01</para>
-            <para>NSIS/WiX: depends on user configuration</para>
-            <para>
-              <simplelist type="vert">
-                <member>0x00 - Integrated Logon is not used
-</member>
-                <member>
-0x01 - Integrated Logon is used
-</member>
-                <member>
-0x02 - High Security Mode is used (deprecated)
-</member>
-                <member>
-0x03 - Integrated Logon with High Security Mode is used (deprecated)
-</member>
-              </simplelist>
-            </para>
-            <para>High Security Mode generates random SMB names for the creation of Drive Mappings. This mode should not be used without Integrated Logon.</para>
-            <para>As of 1.3.65 the SMB server supports SMB authentication. The High Security Mode should not be used when using SMB authentication (SMBAuthType setting is non zero).</para>
+      <section id="Domain_Specific_Configuration">
+        <title>A.2.1 Domain specific configuration keys for the Network Provider</title>
+        <indexterm significance="normal">
+          <primary>domain logon configuration</primary>
+        </indexterm>
+        <para>The network provider can be configured to have different behavior depending on the
+          domain that the user logs into. These settings are only relevant when using integrated
+          login. A domain refers to an Active Directory (AD) domain, a trusted Kerberos (non-AD)
+          realm or the local machine (i.e. local account logins). The domain name that is used for
+          selecting the domain would be the domain that is passed into the NPLogonNotify function of
+          the network provider.</para>
+        <para>Domain specific registry keys are:</para>
+        <section>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</title>
+          <para> (NP key)</para>
+        </section>
+        <section>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</title>
+          <para> (Domains key)</para>
+        </section>
+        <section>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_DomainName">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;Domain
+            Name&gt;]</title>
+          <para> (Specific domain key. One per domain.)</para>
+        </section>
+        <section>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_LocalHost">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
+          <para> (Localhost key)</para>
+        </section>
+        <section>
+          <title id="Domain_Example">Domain Specific Example:</title>
+          <para>HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider</para>
+          <para> |</para>
+          <para> +- Domain</para>
+          <para> +-AD1.EXAMPLE.COM</para>
+          <para> +-AD2.EXAMPLE.NET</para>
+          <para> +-LOCALHOST</para>
+          <para>Each of the domain specific keys can have the set of values described in 2.1.1. The
+            effective values are chosen as described in 2.1.2.</para>
+        </section>
+        <section>
+          <title id="Domain_Specific_Configuration_Values">A.2.1.1 Domain Specific Configuration
+            Values</title>
+          <section id="Domain_Specific_Regkeys">
+            <title>Regkeys:
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain
+              name"]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
+            <section>
+              <title id="Domain_Specific_Regkeys_LogonOptions">Value: LogonOptions</title>
+              <indexterm significance="normal">
+                <primary>LogonOptions</primary>
+              </indexterm>
+              <para id="Value_LogonOptions"
+                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>Type: DWORD </para>
+              <para> Default: 0x01</para>
+              <para>NSIS/WiX: depends on user configuration</para>
+              <para>
+                <simplelist type="vert">
+                  <member>0x00 - Integrated Logon is not used </member>
+                  <member> 0x01 - Integrated Logon is used </member>
+                  <member> 0x02 - High Security Mode is used (deprecated) </member>
+                  <member> 0x03 - Integrated Logon with High Security Mode is used (deprecated)
+                  </member>
+                </simplelist>
+              </para>
+              <para>High Security Mode generates random SMB names for the creation of Drive
+                Mappings. This mode should not be used without Integrated Logon.</para>
+              <para>As of 1.3.65 the SMB server supports SMB authentication. The High Security Mode
+                should not be used when using SMB authentication (SMBAuthType setting is non
+                zero).</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_FailLoginsSilently">Value:
+                FailLoginsSilently</title>
+              <indexterm significance="normal">
+                <primary>FailLoginsSilently</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>Type: DWORD (1|0) </para>
+              <para> Default: 0 </para>
+              <para> NSIS/WiX: (not set)</para>
+              <para>If true, does not display any visible warnings in the event of an error during
+                the integrated login process.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_LogonScript">Value: LogonScript</title>
+              <indexterm significance="normal">
+                <primary>LogonScript</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>Type: REG_SZ or REG_EXPAND_SZ </para>
+              <para> Default: (null) </para>
+              <para> NSIS/WiX: (only value under NP key) &lt;install path&gt;\afscreds.exe -:%s -x
+                -a -m -n -q</para>
+              <para>A logon script that will be scheduled to be run after the profile load is
+                complete. If using the REG_EXPAND_SZ type, you can use any system environment
+                variable as "%varname%" which would be expanded at the time the network provider is
+                run. Optionally using a "%s" in the value would result in it being expanded into the
+                AFS SMB username for the session.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_LoginRetryInterval">Value:
+                LoginRetryInterval</title>
+              <indexterm significance="normal">
+                <primary>LoginRetryInterval</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>Type: DWORD </para>
+              <para> Default: 30 </para>
+              <para> NSIS/WiX: (not set)</para>
+              <para>If the OpenAFS client service has not started yet, the network provider will
+                wait for a maximum of "LoginRetryInterval" seconds while retrying every
+                "LoginSleepInterval" seconds to check if the service is up.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_LoginSleepInterval">Value:
+                LoginSleepInterval</title>
+              <indexterm significance="normal">
+                <primary>LoginSleepInterval</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>Type: DWORD </para>
+              <para> Default: 5 </para>
+              <para> NSIS/WiX: (not set)</para>
+              <para>See description of LoginRetryInterval.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_Realm">Value: Realm</title>
+              <indexterm significance="normal">
+                <primary>Realm</primary>
+              </indexterm>
+              <para id="Value_Realm"
+                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>Type: REG_SZ </para>
+              <para> NSIS: &lt;not set&gt;</para>
+              <para>When Kerberos v5 is being used, Realm specifies the Kerberos v5 realm that
+                should be appended to the first component of the Domain logon username to construct
+                the Kerberos v5 principal for which AFS tokens should be obtained.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_TheseCells">Value: TheseCells</title>
+              <indexterm significance="normal">
+                <primary>TheseCells</primary>
+              </indexterm>
+              <para id="Value_TheseCells"
+                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>Type: REG_MULTI_SZ </para>
+              <para> NSIS: &lt;not set&gt;</para>
+              <para>When Kerberos v5 is being used, TheseCells provides a list of additional cells
+                for which tokens should be obtained with the default Kerberos v5 principal.</para>
+            </section>
           </section>
+        </section>
+        <section>
+          <title id="Selection_Effective_Values_for_Domain_Specific_Configuration">A.2.1.2 Selection
+            of effective values for domain specific configuration</title>
+          <para>During login to domain X, where X is the domain passed into NPLogonNotify as
+            lpAuthentInfo-&gt;LogonDomainName or the string 'LOCALHOST' if
+            lpAuthentInfo-&gt;LogonDomainName equals the name of the computer, the following keys
+            will be looked up.</para>
+          <para>1. NP key.
+            ("HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider")</para>
+          <para>2. Domains key. (NP key\"Domain")</para>
+          <para>3. Specific domain key. (Domains key\X)</para>
+          <para>If the specific domain key does not exist, then the domains key will be ignored. All
+            the configuration information in this case will come from the NP key.</para>
+          <para>If the specific domain key exists, then for each of the values metioned in (2), they
+            will be looked up in the specific domain key, domains key and the NP key successively
+            until the value is found. The first instance of the value found this way will be the
+            effective for the login session. If no such instance can be found, the default will be
+            used. To re-iterate, a value in a more specific key supercedes a value in a less
+            specific key. The exceptions to this rule are stated below.</para>
+        </section>
+        <section>
+          <title id="Domain_Specific_Configuration_Exceptions">A.2.1.3 Exceptions to A.2.1.2</title>
+          <para>To retain backwards compatibility, the following exceptions are made to
+            A.2.1.2.</para>
           <section>
-            <title id="Domain_Specific_Regkeys_FailLoginsSilently">Value: FailLoginsSilently</title>
+            <title id="Domain_Specific_Configuration_Exception_FailLoginsSilently">2.1.3.1
+              'FailLoginsSilently'</title>
             <indexterm significance="normal">
               <primary>FailLoginsSilently</primary>
             </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD (1|0)
-                  </para>
-            <para>
-Default: 0
-                  </para>
-            <para>
-NSIS/WiX: (not set)</para>
-            <para>If true, does not display any visible warnings in the event of an error during the integrated login process.</para>
+            <para>Historically, the 'FailLoginsSilently' value was in
+              HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters key and not in the
+              NP key. Therefore, for backwards compatibility, the value in the Parameters key will
+              supercede all instances of this value in other keys. In the absence of this value in
+              the Parameters key, normal scope rules apply.</para>
           </section>
           <section>
-            <title id="Domain_Specific_Regkeys_LogonScript">Value: LogonScript</title>
+            <title id="Domain_Specific_Configuration_Exception_LogonScript">2.1.3.2
+              'LogonScript'</title>
             <indexterm significance="normal">
               <primary>LogonScript</primary>
             </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: REG_SZ or REG_EXPAND_SZ
-                  </para>
-            <para>
-Default: (null)
-                  </para>
-            <para>
-NSIS/WiX: (only value under NP key) &lt;install path&gt;\afscreds.exe -:%s -x -a -m -n -q</para>
-            <para>A logon script that will be scheduled to be run after the profile load is complete. If using the REG_EXPAND_SZ type, you can use any system environment variable as "%varname%" which would be expanded at the time the network provider is run. Optionally using a "%s" in the value would result in it being expanded into the AFS SMB username for the session.</para>
+            <para>If a 'LogonScript' is not specified in the specific domain key nor in the domains
+              key, the value in the NP key will only be checked if the effective 'LogonOptions'
+              specify a high security integrated login. If a logon script is specified in the
+              specific domain key or the domains key, it will be used regardless of the high
+              security setting. Please be aware of this when setting this value.</para>
           </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_LoginRetryInterval">Value: LoginRetryInterval</title>
-            <indexterm significance="normal">
-              <primary>LoginRetryInterval</primary>
-            </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD
-                  </para>
-            <para>
-Default: 30
-                  </para>
-            <para>
-NSIS/WiX: (not set)</para>
-            <para>If the OpenAFS client service has not started yet, the network provider will wait for a maximum of "LoginRetryInterval" seconds while retrying every "LoginSleepInterval" seconds to check if the service is up.</para>
-          </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_LoginSleepInterval">Value: LoginSleepInterval</title>
-            <indexterm significance="normal">
-              <primary>LoginSleepInterval</primary>
-            </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD
-                  </para>
-            <para>
-Default: 5
-                  </para>
-            <para>
-NSIS/WiX: (not set)</para>
-            <para>See description of LoginRetryInterval.</para>
-          </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_Realm">Value: Realm</title>
-            <indexterm significance="normal">
-              <primary>Realm</primary>
-            </indexterm>
-            <para id="Value_Realm">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: REG_SZ
-                  </para>
-            <para>
-NSIS: &lt;not set&gt;</para>
-            <para>When Kerberos v5 is being used, Realm specifies the Kerberos v5 realm that should be appended to the first component of the Domain logon username to construct the Kerberos v5 principal for which AFS tokens should be obtained.</para>
-          </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_TheseCells">Value: TheseCells</title>
-            <indexterm significance="normal">
-              <primary>TheseCells</primary>
-            </indexterm>
-            <para id="Value_TheseCells">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: REG_MULTI_SZ
-                  </para>
-            <para>
-NSIS: &lt;not set&gt;</para>
-            <para>When Kerberos v5 is being used, TheseCells provides a list of additional cells for which tokens should be obtained with the default Kerberos v5 principal.</para>
-          </section>
-        </section>
-      </section>
-      <section>
-        <title id="Selection_Effective_Values_for_Domain_Specific_Configuration">A.2.1.2 Selection of effective values for domain specific configuration</title>
-        <para>During login to domain X, where X is the domain passed into NPLogonNotify as lpAuthentInfo-&gt;LogonDomainName or the string 'LOCALHOST' if lpAuthentInfo-&gt;LogonDomainName equals the name of the computer, the following keys will be looked up.</para>
-        <para>1. NP key. ("HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider")</para>
-        <para>2. Domains key. (NP key\"Domain")</para>
-        <para>3. Specific domain key. (Domains key\X)</para>
-        <para>If the specific domain key does not exist, then the domains key will be ignored. All the configuration information in this case will come from the NP key.</para>
-        <para>If the specific domain key exists, then for each of the values metioned in (2), they will be looked up in the specific domain key, domains key and the NP key successively until the value is found. The first instance of the value found this way will be the effective for the login session. If no such instance can be found, the default will be used. To re-iterate, a value in a more specific key supercedes a value in a less specific key. The exceptions to this rule are stated below.</para>
-      </section>
-      <section>
-        <title id="Domain_Specific_Configuration_Exceptions">A.2.1.3 Exceptions to A.2.1.2</title>
-        <para>To retain backwards compatibility, the following exceptions are made to A.2.1.2.</para>
-        <section>
-          <title id="Domain_Specific_Configuration_Exception_FailLoginsSilently">2.1.3.1 'FailLoginsSilently'</title>
-          <indexterm significance="normal">
-            <primary>FailLoginsSilently</primary>
-          </indexterm>
-          <para>Historically, the 'FailLoginsSilently' value was in HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters key and not in the NP key. Therefore, for backwards compatibility, the value in the Parameters key will supercede all instances of this value in other keys. In the absence of this value in the Parameters key, normal scope rules apply.</para>
-        </section>
-        <section>
-          <title id="Domain_Specific_Configuration_Exception_LogonScript">2.1.3.2 'LogonScript'</title>
-          <indexterm significance="normal">
-            <primary>LogonScript</primary>
-          </indexterm>
-          <para>If a 'LogonScript' is not specified in the specific domain key nor in the domains key, the value in the NP key will only be checked if the effective 'LogonOptions' specify a high security integrated login. If a logon script is specified in the specific domain key or the domains key, it will be used regardless of the high security setting. Please be aware of this when setting this value.</para>
         </section>
       </section>
     </section>
@@ -4935,8 +5035,7 @@ Default: &lt;none&gt;</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client\Mappings]</para>
           <para>Type: REG_SZ
                   </para>
-          <para>
-Default: &lt;none&gt;</para>
+          <para>Default: &lt;none&gt;</para>
           <para>These values are used to store the AFS path in UNIX notation to which the drive letter is to be mapped.</para>
           <para>These values used to be stored in the afsdsbmt.ini file.</para>
         </section>
@@ -4971,6 +5070,105 @@ Default: RPC encryption is on
         <para>
 Default: local RPC
                 </para>
+      </section>
+    </section>
+    <section>
+      <title>A.5 AFS Redirector Parameters</title>
+      <indexterm>
+        <primary>afsredir.sys</primary>
+      </indexterm>
+      <indexterm>
+        <primary>afsredirlib.sys</primary>
+      </indexterm>
+      <para>The AFS Redirector is implemented with three components:
+        %windir%\system32\drivers\AFSRedir.sys, %windir%\system32\drivers\AFSRedirLib.sys and
+        %windir%\system32\AFSRDFSProvider.dll.  These components provide the interface between the
+        Windows Installable File System interface and the WNet application interface and the AFS
+        file system.  The </para>
+      <section>
+        <title>[HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</title>
+        <para/>
+        <section>
+          <title>Value: DebugFlags</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0</para>
+          <para>Bit 0 (0x1): Trigger Debug Break on AFSRedir.sys start.  Used for kernel
+            debugging.</para>
+          <para>Bit 1 (0x2): Output trace logging to Kernel Debugger.  Used for kernel
+            debugging.</para>
+          <para>Bit 2 (0x4): Enable Force Crash Ioctl.  Checked builds only.  Used for force a
+            BSOD.</para>
+          <para>Bit 3 (0x8): Enable Bug Check on all exceptions.  Normally exceptions are caught by
+            handlers.  Used during testing.</para>
+          <para>Bit 4 (0x10): Reserved.</para>
+          <para>Bit 5 (0x20): Do not start the AFS Redirector if Windows did not perform a clean
+            shutdown.</para>
+        </section>
+        <section>
+          <title>Value: TraceBufferSize</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0 {0 .. 10000} (KBs)</para>
+          <para>Specifies the size of the circular trace log buffer allocated within kernel memory.
+            0 disables trace logging.</para>
+        </section>
+        <section>
+          <title>Value: TraceLevel</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0 {0..4}</para>
+          <para>0: No logging; 1: Error; 2: Warning; 3: Verbose; 4: Maximum Verbosity</para>
+        </section>
+        <section>
+          <title>Value: TraceSubsystem</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0</para>
+          <para>Bit 0 (0x1): I/O Subsystem</para>
+          <para>Bit 1 (0x2): File Control Blocks and Name Processing</para>
+          <para>Bit 2 (0x4): Lock Processing (requires Verbose or higher level)</para>
+          <para>Bit 3 (0x8): Extent Processing</para>
+          <para>Bit 4 (0x10): Worker Thread Processing</para>
+          <para>Bit 5 (0x20): Reference counting of directory entries</para>
+          <para>Bit 6 (0x40): Reference counting of objects</para>
+          <para>Bit 7 (0x80): Reference counting of volumes</para>
+          <para>Bit 8 (0x100): Reference counting of file control blocks</para>
+          <para>Bit 9 (0x200): Garbage Collection</para>
+          <para>Bit 10 (0x400): Pipe and share processing</para>
+          <para>Bit 11 (0x800): Directory notification interface</para>
+          <para>Bit 12 (0x1000): Network Provider support processing</para>
+          <para>Bit 13 (0x2000): Directory node count processing</para>
+          <para>Bit 14 (0x4000): PIOCTL processing</para>
+          <para>Bit 15 (0x8000): Authentication Group creation and assignment</para>
+          <para>Bit 16 (0x10000): Library load and unload, task queuing</para>
+          <para>Bit 17 (0x20000): Process creation and destruction</para>
+          <para>Bit 18 (0x40000): Extent Active counting</para>
+          <para>Bit 19 (0x80000): Redirector initialization</para>
+        </section>
+      </section>
+      <section>
+        <title>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</title>
+        <para/>
+        <section>
+          <title>Value: Debug</title>
+          <para>RegKey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0</para>
+          <para>Set to 1 to log all AFSRDFSProvider Network Provider requests to
+            C:\TEMP\AFSRDFSProvider.log.  The C:\TEMP directory cannot be changed and must
+            exist.</para>
+        </section>
+        <section>
+          <title>Value: Name</title>
+          <para>RegKey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider]</para>
+          <para>Type: REG_SZ</para>
+          <para>Default: "OpenAFS Network"</para>
+          <para>This value defines the name displayed in the Explorer Shell and to which network
+            drive mappings are made.</para>
+        </section>
       </section>
     </section>
   </chapter>
