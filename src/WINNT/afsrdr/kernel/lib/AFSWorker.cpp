@@ -700,13 +700,24 @@ AFSWorkerThread( IN PVOID Context)
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
+
+            ntStatus = STATUS_SUCCESS;
         }
         else
         {
 
             pWorkItem = AFSRemoveWorkItem();
 
-            if( pWorkItem != NULL)
+            if( pWorkItem == NULL)
+            {
+
+                ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
+                                                  Executive,
+                                                  KernelMode,
+                                                  FALSE,
+                                                  NULL);
+            }
+            else
             {
 
                 freeWorkItem = TRUE;
@@ -802,15 +813,10 @@ AFSWorkerThread( IN PVOID Context)
 
                     ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
                 }
+
+                ntStatus = STATUS_SUCCESS;
             }
         }
-
-        ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.WorkerQueueHasItems,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
-
     } // worker thread loop
 
     ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
@@ -868,13 +874,24 @@ AFSIOWorkerThread( IN PVOID Context)
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSIOWorkerThread Wait for queue items failed Status %08lX\n", ntStatus);
+
+            ntStatus = STATUS_SUCCESS;
         }
         else
         {
 
             pWorkItem = AFSRemoveIOWorkItem();
 
-            if( pWorkItem != NULL)
+            if( pWorkItem == NULL)
+            {
+
+                ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
+                                                  Executive,
+                                                  KernelMode,
+                                                  FALSE,
+                                                  NULL);
+            }
+            else
             {
 
                 freeWorkItem = TRUE;
@@ -930,15 +947,10 @@ AFSIOWorkerThread( IN PVOID Context)
 
                     ExFreePoolWithTag( pWorkItem, AFS_WORK_ITEM_TAG);
                 }
+
+                ntStatus = STATUS_SUCCESS;
             }
         }
-
-        ntStatus = KeWaitForSingleObject( &pLibraryDevExt->Specific.Library.IOWorkerQueueHasItems,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
-
     } // worker thread loop
 
     ClearFlag( pPoolContext->State, AFS_WORKER_INITIALIZED);
