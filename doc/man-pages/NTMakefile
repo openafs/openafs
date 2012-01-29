@@ -58,6 +58,7 @@ PODS = \
         pod1\fs_getcrypt.pod           \
         pod1\fs_getfid.pod             \
         pod1\fs_getserverprefs.pod     \
+        pod1\fs_getverify.pod          \
         pod1\fs_help.pod               \
         pod1\fs_listacl.pod            \
         pod1\fs_listaliases.pod        \
@@ -83,6 +84,7 @@ PODS = \
         pod1\fs_setcrypt.pod           \
         pod1\fs_setquota.pod           \
         pod1\fs_setserverprefs.pod     \
+        pod1\fs_setverify.pod          \
         pod1\fs_setvol.pod             \
         pod1\fs_storebehind.pod        \
         pod1\fs_sysname.pod            \
