@@ -1309,10 +1309,12 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
 
-            sprintf( pBuffer,
-                     "Failed to post IOCTL_AFS_PROCESS_IRP_RESULT gle %X",
-                     GetLastError());
-            osi_panic(pBuffer, __FILE__, __LINE__);
+            if (gle != ERROR_NOT_READY) {
+                sprintf( pBuffer,
+                         "Failed to post IOCTL_AFS_PROCESS_IRP_RESULT gle %X",
+                         GetLastError());
+                osi_panic(pBuffer, __FILE__, __LINE__);
+            }
         }
 
     }
@@ -1364,7 +1366,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                                  dwResultBufferLength);
                 }
 
-                if (gle != ERROR_GEN_FAILURE) {
+                if (gle != ERROR_GEN_FAILURE &&
+                    gle != ERROR_NOT_READY) {
                     sprintf( pBuffer,
                              "Failed to post IOCTL_AFS_SET_FILE_EXTENTS gle %X",
                              gle);
@@ -1417,10 +1420,12 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 }
 
 
-                // TODO - instead of a panic we should release the locks
-                sprintf( pBuffer,
-                         "Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle %X", gle);
-                osi_panic(pBuffer, __FILE__, __LINE__);
+                if (gle != ERROR_NOT_READY) {
+                    // TODO - instead of a panic we should release the locks
+                    sprintf( pBuffer,
+                             "Failed to post IOCTL_AFS_SET_BYTE_RANGE_LOCKS gle %X", gle);
+                    osi_panic(pBuffer, __FILE__, __LINE__);
+                }
             }
 
             free(SetByteRangeLockResultCB);
