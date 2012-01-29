@@ -1495,10 +1495,11 @@ rx_NewCall(struct rx_connection *conn)
                          * effect on overall system performance.
                          */
                         call->state = RX_STATE_RESET;
+                        CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
+                        (*call->callNumber)++;
                         MUTEX_EXIT(&conn->conn_call_lock);
                         CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
                         rxi_ResetCall(call, 0);
-                        (*call->callNumber)++;
                         if (MUTEX_TRYENTER(&conn->conn_call_lock))
                             break;
 
@@ -1660,12 +1661,14 @@ rxi_GetCallNumberVector(struct rx_connection *aconn,
     SPLVAR;
 
     NETPRI;
+    MUTEX_ENTER(&aconn->conn_call_lock);
     for (i = 0; i < RX_MAXCALLS; i++) {
 	if ((tcall = aconn->call[i]) && (tcall->state == RX_STATE_DALLY))
 	    aint32s[i] = aconn->callNumber[i] + 1;
 	else
 	    aint32s[i] = aconn->callNumber[i];
     }
+    MUTEX_EXIT(&aconn->conn_call_lock);
     USERPRI;
     return 0;
 }
@@ -1679,12 +1682,14 @@ rxi_SetCallNumberVector(struct rx_connection *aconn,
     SPLVAR;
 
     NETPRI;
+    MUTEX_ENTER(&aconn->conn_call_lock);
     for (i = 0; i < RX_MAXCALLS; i++) {
 	if ((tcall = aconn->call[i]) && (tcall->state == RX_STATE_DALLY))
 	    aconn->callNumber[i] = aint32s[i] - 1;
 	else
 	    aconn->callNumber[i] = aint32s[i];
     }
+    MUTEX_EXIT(&aconn->conn_call_lock);
     USERPRI;
     return 0;
 }
@@ -3040,11 +3045,12 @@ rxi_CheckBusy(struct rx_call *call)
     int channel = call->channel;
     int freechannel = 0;
     int i;
-    afs_uint32 callNumber = *call->callNumber;
+    afs_uint32 callNumber;
 
     MUTEX_EXIT(&call->lock);
 
     MUTEX_ENTER(&conn->conn_call_lock);
+    callNumber = *call->callNumber;
 
     /* Are there any other call slots on this conn that we should try? Look for
      * slots that are empty and are either non-busy, or were marked as busy
@@ -3078,8 +3084,6 @@ rxi_CheckBusy(struct rx_call *call)
 	}
     }
 
-    MUTEX_EXIT(&conn->conn_call_lock);
-
     MUTEX_ENTER(&call->lock);
 
     /* Since the call->lock and conn->conn_call_lock have been released it is
@@ -3099,6 +3103,7 @@ rxi_CheckBusy(struct rx_call *call)
 
 	rxi_CallError(call, RX_CALL_BUSY);
     }
+    MUTEX_EXIT(&conn->conn_call_lock);
 }
 
 /* There are two packet tracing routines available for testing and monitoring
@@ -3244,22 +3249,23 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     }
 
     channel = np->header.cid & RX_CHANNELMASK;
+    MUTEX_ENTER(&conn->conn_call_lock);
     call = conn->call[channel];
 
     if (call) {
 	MUTEX_ENTER(&call->lock);
         currentCallNumber = conn->callNumber[channel];
+        MUTEX_EXIT(&conn->conn_call_lock);
     } else if (type == RX_SERVER_CONNECTION) {  /* No call allocated */
-        MUTEX_ENTER(&conn->conn_call_lock);
         call = conn->call[channel];
         if (call) {
             MUTEX_ENTER(&call->lock);
-            MUTEX_EXIT(&conn->conn_call_lock);
             currentCallNumber = conn->callNumber[channel];
+            MUTEX_EXIT(&conn->conn_call_lock);
         } else {
             call = rxi_NewCall(conn, channel);  /* returns locked call */
-            MUTEX_EXIT(&conn->conn_call_lock);
             *call->callNumber = currentCallNumber = np->header.callNumber;
+            MUTEX_EXIT(&conn->conn_call_lock);
 #ifdef RXDEBUG
             if (np->header.callNumber == 0)
                 dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
@@ -3345,6 +3351,11 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 		return tp;
 	    }
 	    rxi_ResetCall(call, 0);
+            /*
+             * The conn_call_lock is not held but no one else should be
+             * using this call channel while we are processing this incoming
+             * packet.  This assignment should be safe.
+             */
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0)
