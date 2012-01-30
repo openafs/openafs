@@ -197,7 +197,7 @@ Description: AFS distributed filesystem kernel module DKMS source
  control, authentication, backup and administrative management.
  .
  This package contains the source for the AFS kernel module, packaged with
- approriate configuration for DKMS to build new modules dynamically.
+ appropriate configuration for DKMS to build new modules dynamically.
 
 Package: libpam-openafs-kaserver
 Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
