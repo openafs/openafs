@@ -1923,11 +1923,16 @@ AFSNotifyDelete( IN AFSDirectoryCB *DirectoryCB,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSNotifyDelete failed FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                          &DirectoryCB->ObjectInformation->FileId.Cell,
-                          &DirectoryCB->ObjectInformation->FileId.Volume,
-                          &DirectoryCB->ObjectInformation->FileId.Vnode,
-                          &DirectoryCB->ObjectInformation->FileId.Unique,
+                          "AFSNotifyDelete failed ParentFID %08lX-%08lX-%08lX-%08lX %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          stDelete.ParentId.Cell,
+                          stDelete.ParentId.Volume,
+                          stDelete.ParentId.Vnode,
+                          stDelete.ParentId.Unique,
+                          &DirectoryCB->NameInformation.FileName,
+                          DirectoryCB->ObjectInformation->FileId.Cell,
+                          DirectoryCB->ObjectInformation->FileId.Volume,
+                          DirectoryCB->ObjectInformation->FileId.Vnode,
+                          DirectoryCB->ObjectInformation->FileId.Unique,
                           ntStatus);
 
             try_return( ntStatus);
