@@ -1066,7 +1066,6 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
          */
         StringCchCopyNW(wszName, cbName, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH);
         StringCbCatNW(wszName, cbName, FileName, FileNameLength);
-        cm_strlwr_utf16(wszName);
         bVol = TRUE;
 
         code = cm_EvaluateVolumeReference(wszName, CM_FLAG_CHECKPATH, userp, &req, &scp);
