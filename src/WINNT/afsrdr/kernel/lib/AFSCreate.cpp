@@ -2138,6 +2138,10 @@ try_exit:
 
                 SetFlag( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
 
+                AFSNotifyDelete( pDirEntry,
+                                 AuthGroup,
+                                 FALSE);
+
                 //
                 // Decrement the reference added during initialization of the DE
                 //
@@ -2158,10 +2162,6 @@ try_exit:
                 AFSRemoveDirNodeFromParent( pParentObjectInfo,
                                             pDirEntry,
                                             FALSE); // Leave it in the enum list so the worker cleans it up
-
-                AFSNotifyDelete( pDirEntry,
-                                 AuthGroup,
-                                 FALSE);
 
                 //
                 // Tag the parent as needing verification
