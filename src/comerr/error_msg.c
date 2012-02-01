@@ -154,12 +154,16 @@ _intlize(const char *msg, int base, char *str, size_t len)
 static_inline const char *
 _intlize(const char *msg, int base, char *str, size_t len)
 {
+#if defined(HAVE_LIBINTL)
     char domain[12 +20];
+#endif
     if (!str)
 	return msg;
-    snprintf(domain, sizeof(domain), "heim_com_err%d", base);
 #if defined(HAVE_LIBINTL)
+    snprintf(domain, sizeof(domain), "heim_com_err%d", base);
     strlcpy(str, dgettext(domain, msg), len);
+#else
+    strlcpy(str, msg, len);
 #endif
     return str;
 }
