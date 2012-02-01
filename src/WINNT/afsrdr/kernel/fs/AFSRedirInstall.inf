@@ -57,7 +57,7 @@ AddReg           = AFS.AddRegistry
 
 [AFS.AddRegistry]
 HKLM,%AFSRegistry%,%AFSTraceLevel%,0x00010001 ,0x0001
-HKLM,%AFSRegistry%,%AFSDebugFlags%,0x00010001 ,0x0000
+HKLM,%AFSRegistry%,%AFSDebugFlags%,0x00010001 ,0x0008
 
 [AFS.DelRegistry]
 HKLM,%AFSRegistry%,%AFSTraceLevel%
