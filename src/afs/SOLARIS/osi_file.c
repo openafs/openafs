@@ -18,7 +18,6 @@
 
 
 int afs_osicred_initialized = 0;
-afs_ucred_t afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;
@@ -81,9 +80,9 @@ VnodeToIno(vnode_t * vp)
 
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
 #ifdef AFS_SUN511_ENV
-    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+    code = VOP_GETATTR(vp, &vattr, 0, afs_osi_credp, NULL);
 #else
-    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+    code = VOP_GETATTR(vp, &vattr, 0, afs_osi_credp);
 #endif
     if (code) {
 	osi_Panic("VnodeToIno");
@@ -100,9 +99,9 @@ VnodeToDev(vnode_t * vp)
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
 #ifdef AFS_SUN511_ENV
-    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+    code = VOP_GETATTR(vp, &vattr, 0, afs_osi_credp, NULL);
 #else
-    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+    code = VOP_GETATTR(vp, &vattr, 0, afs_osi_credp);
 #endif
     AFS_GLOCK();
     if (code) {
@@ -125,9 +124,9 @@ VnodeToSize(vnode_t * vp)
     vattr.va_mask = AT_SIZE;
     AFS_GUNLOCK();
 #ifdef AFS_SUN511_ENV
-    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred, NULL);
+    code = VOP_GETATTR(vp, &vattr, 0, afs_osi_credp, NULL);
 #else
-    code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
+    code = VOP_GETATTR(vp, &vattr, 0, afs_osi_credp);
 #endif
     AFS_GLOCK();
     if (code) {
@@ -195,14 +194,14 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
  
 	VN_HOLD(rootdir); /* released in loopuppnvp */
 	code = lookuppnvp(&lookpn, NULL, FOLLOW, NULL, &vp, 
-           rootdir, rootdir, &afs_osi_cred); 
+           rootdir, rootdir, afs_osi_credp);
     if (code != 0)  
         osi_Panic("UfsOpen: lookuppnvp failed %ld %s", code, ainode->ufs);
 	
 #ifdef AFS_SUN511_ENV
-    code = VOP_OPEN(&vp, FREAD|FWRITE, &afs_osi_cred, NULL);
+    code = VOP_OPEN(&vp, FREAD|FWRITE, afs_osi_credp, NULL);
 #else
-    code = VOP_OPEN(&vp, FREAD|FWRITE, &afs_osi_cred);
+    code = VOP_OPEN(&vp, FREAD|FWRITE, afs_osi_credp);
 #endif
 
     if (code != 0)
@@ -243,9 +242,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
     }
     if (!afs_osicred_initialized) {
-	/* valid for alpha_osf, SunOS, Ultrix */
-	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
-	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
+	afs_osi_credp = kcred;
 	afs_osicred_initialized = 1;
     }
 #ifdef AFS_HAVE_VXFS
@@ -266,9 +263,9 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     tvattr.va_mask = AT_ALL;
     AFS_GUNLOCK();
 #ifdef AFS_SUN511_ENV 
-    code = VOP_GETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred, NULL);
+    code = VOP_GETATTR(afile->vnode, &tvattr, 0, afs_osi_credp, NULL);
 #else
-    code = VOP_GETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred);
+    code = VOP_GETATTR(afile->vnode, &tvattr, 0, afs_osi_credp);
 #endif
     AFS_GLOCK();
     if (code == 0) {
@@ -319,10 +316,10 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     {
 	caller_context_t ct;
 
-	code = VOP_SETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred, &ct);
+	code = VOP_SETATTR(afile->vnode, &tvattr, 0, afs_osi_credp, &ct);
     }
 #else
-    code = VOP_SETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred);
+    code = VOP_SETATTR(afile->vnode, &tvattr, 0, afs_osi_credp);
 #endif
     AFS_GLOCK();
     ReleaseWriteLock(&afs_xosi);
@@ -372,7 +369,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
     AFS_GUNLOCK();
     code =
 	gop_rdwr(UIO_READ, afile->vnode, (caddr_t) aptr, asize, afile->offset,
-		 AFS_UIOSYS, 0, 0, &afs_osi_cred, &resid);
+		 AFS_UIOSYS, 0, 0, afs_osi_credp, &resid);
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;
@@ -404,7 +401,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
     AFS_GUNLOCK();
     code =
 	gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize,
-		 afile->offset, AFS_UIOSYS, 0, RLIM64_INFINITY, &afs_osi_cred,
+		 afile->offset, AFS_UIOSYS, 0, RLIM64_INFINITY, afs_osi_credp,
 		 &resid);
     AFS_GLOCK();
     if (code == 0) {

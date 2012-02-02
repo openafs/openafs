@@ -88,6 +88,8 @@ osi_Init(void)
 	/* Can't just invent one, must use crget() because of mutex */
 	afs_osi_credp =
 	  crdup(osi_curcred());
+#elif defined(AFS_SUN5_ENV)
+	afs_osi_credp = kcred;
 #else
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 #if defined(AFS_LINUX26_ENV)
