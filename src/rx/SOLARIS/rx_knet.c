@@ -13,6 +13,7 @@
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
+#include "rx/rx_packet.h"
 
 
 #include "inet/common.h"
