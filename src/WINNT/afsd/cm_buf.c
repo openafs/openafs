@@ -2131,6 +2131,33 @@ long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 }
 
 /* Must be called with scp->rw held */
+long buf_InvalidateBuffers(cm_scache_t * scp)
+{
+    cm_buf_t * bp;
+    afs_uint32 i;
+    int found = 0;
+
+    lock_AssertAny(&scp->rw);
+
+    i = BUF_FILEHASH(&scp->fid);
+
+    lock_ObtainRead(&buf_globalLock);
+
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp = bp->fileHashp) {
+        if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
+            bp->dataVersion = CM_BUF_VERSION_BAD;
+            found = 1;
+        }
+    }
+    lock_ReleaseRead(&buf_globalLock);
+
+    if (found)
+        return 0;
+    else
+        return ENOENT;
+}
+
+/* Must be called with scp->rw held */
 long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion)
 {
     cm_buf_t * bp;

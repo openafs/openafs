@@ -218,6 +218,8 @@ extern long buf_DirtyBuffersExist(cm_fid_t * fidp);
 
 extern long buf_CleanDirtyBuffers(cm_scache_t *scp);
 
+extern long buf_InvalidateBuffers(cm_scache_t * scp);
+
 extern long buf_RDRBuffersExist(cm_fid_t *fidp);
 
 extern long buf_ClearRDRFlag(cm_scache_t *scp, char * reason);
