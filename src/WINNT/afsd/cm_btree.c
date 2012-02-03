@@ -271,7 +271,7 @@ Nptr bplus_Lookup(Tree *B, keyT key)
     Nptr	leafNode;
 
 #ifdef DEBUG_BTREE
-    StringCbPrintfA(B->message, sizeof(B->message), "LOOKUP:  key %s.\n", key.name);
+    StringCbPrintfA(B->message, sizeof(B->message), "LOOKUP:  key %S.\n", key.name);
     OutputDebugString(B->message);
 #endif
 
@@ -291,7 +291,7 @@ Nptr bplus_Lookup(Tree *B, keyT key)
         dataNode = getnode(leafNode, slot);
         data = getdatavalue(dataNode);
 
-        StringCbPrintfA(B->message, sizeof(B->message), "LOOKUP: %s found on page %d value (%d.%d.%d).\n",
+        StringCbPrintfA(B->message, sizeof(B->message), "LOOKUP: %S found on page %d value (%d.%d.%d).\n",
                  key.name,
                  getnodenumber(B, leafNode),
                  data.fid.volume,
@@ -459,7 +459,7 @@ void insert(Tree *B, keyT key, dataT data)
     Nptr newNode;
 
 #ifdef DEBUG_BTREE
-    StringCbPrintfA(B->message, sizeof(B->message), "INSERT:  key %s.\n", key.name);
+    StringCbPrintfA(B->message, sizeof(B->message), "INSERT:  key %S.\n", key.name);
     osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
 
@@ -737,7 +737,7 @@ void delete(Tree *B, keyT key)
     Nptr newNode;
 
 #ifdef DEBUG_BTREE
-    StringCbPrintfA(B->message, sizeof(B->message), "DELETE:  key %s.\n", key.name);
+    StringCbPrintfA(B->message, sizeof(B->message), "DELETE:  key %S.\n", key.name);
     osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
 #endif
 
@@ -1412,7 +1412,7 @@ void showNode(Tree *B, const char * where, Nptr n)
     for (x = 1; x <= numentries(n); x++) {
         StringCbPrintfA(B->message, sizeof(B->message), "| entry %6d ", x);
         osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
-        StringCbPrintfA(B->message, sizeof(B->message), "| key = %6s ", getkey(n, x).name);
+        StringCbPrintfA(B->message, sizeof(B->message), "| key = %6S ", getkey(n, x).name);
         osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
         StringCbPrintfA(B->message, sizeof(B->message), "| node = %6d  |\n", getnodenumber(B, getnode(n, x)));
         osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
@@ -1444,8 +1444,8 @@ void showBtree(Tree *B)
     osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     StringCbPrintfA(B->message, sizeof(B->message), "|  theKey      %6s  |\n", getfunkey(B).name);
     osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
-    StringCbPrintfA(B->message, sizeof(B->message), "|  theData     %d.%d.%d |\n", getfundata(B).volume,
-             getfundata(B).vnode, getfundata(B).unique);
+    StringCbPrintfA(B->message, sizeof(B->message), "|  theData     %s (%d.%d.%d) |\n", getfundata(B).fsname, getfundata(B).fid.volume,
+             getfundata(B).fid.vnode, getfundata(B).fid.unique);
     osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
     StringCbPrintfA(B->message, sizeof(B->message), "-  --  --  --  --  --  -\n");
     osi_Log1(afsd_logp, "BPlus: %s", osi_LogSaveString(afsd_logp, B->message));
