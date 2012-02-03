@@ -12,6 +12,7 @@
 
 
 #include "rx/rx_kcommon.h"
+#include "rx/rx_packet.h"
 #include "h/tcp-param.h"
 /* This must be loaded after proc.h to avoid macro collision with a variable*/
 #include "netinet/udp_var.h"
