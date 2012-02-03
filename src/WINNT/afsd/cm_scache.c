@@ -1863,10 +1863,13 @@ void cm_MergeStatus(cm_scache_t *dscp,
      * object during an uncontested storeData operation.  As a result this
      * merge status no longer has performance characteristics derived from
      * the size of the file.
+     *
+     * For directory buffers, only current dataVersion values are up to date.
      */
     if (((flags & (CM_MERGEFLAG_STOREDATA|CM_MERGEFLAG_DIROP)) && (dv_diff(dataVersion, scp->dataVersion) > activeRPCs)) ||
          (!(flags & (CM_MERGEFLAG_STOREDATA|CM_MERGEFLAG_DIROP)) && (scp->dataVersion != dataVersion)) ||
-         scp->bufDataVersionLow == CM_SCACHE_VERSION_BAD)
+         scp->bufDataVersionLow == CM_SCACHE_VERSION_BAD ||
+         scp->fileType == CM_SCACHETYPE_DIRECTORY)
         scp->bufDataVersionLow = dataVersion;
 
     if (RDR_Initialized) {
