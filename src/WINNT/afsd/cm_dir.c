@@ -1424,7 +1424,7 @@ cm_DirOpDelBuffer(cm_dirOp_t * op, cm_buf_t * bufferp, int flags)
                          (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ));
 
 #ifdef DEBUG
-            osi_assert(bufferp->dataVersion == op->dataVersion);
+            osi_assert(bufferp->dataVersion == op->dataVersion || bufferp->dataVersion == CM_BUF_VERSION_BAD);
 #endif
 
             lock_ReleaseWrite(&op->scp->rw);
