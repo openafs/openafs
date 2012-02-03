@@ -1179,8 +1179,6 @@ cm_CheckDirOpForSingleChange(cm_dirOp_t * op)
         /*
          * The directory buffers are no longer up to date.
          */
-        op->scp->bufDataVersionLow = op->scp->dataVersion;
-
         rc = 0;
     }
     lock_ReleaseWrite(&op->scp->rw);
