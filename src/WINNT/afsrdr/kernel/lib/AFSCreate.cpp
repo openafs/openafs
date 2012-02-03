@@ -187,6 +187,21 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                  (ULONGLONG)PsGetCurrentThreadId(),
                                   &stAuthGroup);
 
+        //
+        // If we are in shutdown mode then fail the request
+        //
+
+        if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSCommonCreate (%08lX) Open request after shutdown\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_TOO_LATE);
+        }
+
         if( !BooleanFlagOn( AFSGlobalRoot->ObjectInformation.Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED))
         {
 
@@ -202,21 +217,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                 try_return( ntStatus);
             }
-        }
-
-        //
-        // If we are in shutdown mode then fail the request
-        //
-
-        if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN))
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_WARNING,
-                          "AFSCommonCreate (%08lX) Open request after shutdown\n",
-                          Irp);
-
-            try_return( ntStatus = STATUS_TOO_LATE);
         }
 
         //
