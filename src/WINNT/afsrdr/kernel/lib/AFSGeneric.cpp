@@ -5552,6 +5552,7 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
     AFSDirectoryCB *pDirNode = NULL;
     ULONG ulEntryLength = 0;
     AFSNonPagedDirectoryCB *pNonPagedDirEntry = NULL;
+    LONG lCount;
 
     __Enter
     {
@@ -5633,11 +5634,33 @@ AFSInitPIOCtlDirectoryCB( IN AFSObjectInfoCB *ObjectInfo)
         pDirNode->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pDirNode->NameInformation.FileName,
                                                                        TRUE);
 
-        ObjectInfo->Specific.Directory.PIOCtlDirectoryCB = pDirNode;
+        if ( InterlockedCompareExchangePointer( (PVOID *)&ObjectInfo->Specific.Directory.PIOCtlDirectoryCB, pDirNode, NULL) != NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInitPIOCtlDirectoryCB Raced PIOCtlDirectoryCB %08lX pFcb %08lX\n",
+                          ObjectInfo->Specific.Directory.PIOCtlDirectoryCB,
+                          pDirNode);
+
+            //
+            // Increment the open reference and handle on the node
+            //
+
+            lCount = InterlockedIncrement( &pDirNode->ObjectInformation->ObjectReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitPIOCtlDirectoryCB Increment count on Object %08lX Cnt %d\n",
+                          pDirNode->ObjectInformation,
+                          lCount);
+
+            try_return( ntStatus = STATUS_REPARSE);
+        }
 
 try_exit:
 
-        if ( !NT_SUCCESS( ntStatus))
+        if ( ntStatus != STATUS_SUCCESS)
         {
 
             if ( pDirNode != NULL)
