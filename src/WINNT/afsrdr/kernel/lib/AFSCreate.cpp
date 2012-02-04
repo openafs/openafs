@@ -1900,8 +1900,7 @@ AFSProcessCreate( IN PIRP               Irp,
 
             *Fcb = pObjectInfo->Fcb;
 
-            if( !NT_SUCCESS( ntStatus) &&
-                ntStatus != STATUS_REPARSE)
+            if( !NT_SUCCESS( ntStatus))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1922,6 +1921,18 @@ AFSProcessCreate( IN PIRP               Irp,
 
             ntStatus = STATUS_SUCCESS;
         }
+
+        //
+        // Increment the open count on this Fcb
+        //
+
+        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessCreate Increment count on Fcb %08lX Cnt %d\n",
+                      *Fcb,
+                      lCount);
 
         bReleaseFcb = TRUE;
 
@@ -2035,18 +2046,6 @@ AFSProcessCreate( IN PIRP               Irp,
                           pFileObject,
                           &(*Fcb)->ShareAccess);
 
-        //
-        // Increment the open count on this Fcb
-        //
-
-        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessCreate Increment count on Fcb %08lX Cnt %d\n",
-                      *Fcb,
-                      lCount);
-
         lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -2112,6 +2111,21 @@ try_exit:
 
         if( bReleaseFcb)
         {
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                //
+                // Decrement the open count on this Fcb
+                //
+
+                lCount = InterlockedDecrement( &(*Fcb)->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessCreate Decrement count on Fcb %08lX Cnt %d\n",
+                              *Fcb,
+                              lCount);
+            }
 
             AFSReleaseResource( &(*Fcb)->NPFcb->Resource);
         }
@@ -2264,8 +2278,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
             *Fcb = pParentObject->Fcb;
 
-            if( !NT_SUCCESS( ntStatus) &&
-                ntStatus != STATUS_REPARSE)
+            if( !NT_SUCCESS( ntStatus))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2286,6 +2299,18 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
             ntStatus = STATUS_SUCCESS;
         }
+
+        //
+        // Increment the open count on this Fcb
+        //
+
+        lCount = InterlockedIncrement( &pParentObject->Fcb->OpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSOpenTargetDirectory Increment count on Fcb %08lX Cnt %d\n",
+                      pParentObject->Fcb,
+                      lCount);
 
         bReleaseFcb = TRUE;
 
@@ -2397,18 +2422,6 @@ AFSOpenTargetDirectory( IN PIRP Irp,
                               &pParentObject->Fcb->ShareAccess);
         }
 
-        //
-        // Increment the open count on this Fcb
-        //
-
-        lCount = InterlockedIncrement( &pParentObject->Fcb->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSOpenTargetDirectory Increment count on Fcb %08lX Cnt %d\n",
-                      pParentObject->Fcb,
-                      lCount);
-
         lCount = InterlockedIncrement( &pParentObject->Fcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -2445,6 +2458,21 @@ try_exit:
 
         if( bReleaseFcb)
         {
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                //
+                // Decrement the open count on this Fcb
+                //
+
+                lCount = InterlockedDecrement( &pParentObject->Fcb->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSOpenTargetDirectory Decrement count on Fcb %08lX Cnt %d\n",
+                              pParentObject->Fcb,
+                              lCount);
+            }
 
             AFSReleaseResource( &pParentObject->Fcb->NPFcb->Resource);
         }
@@ -2597,8 +2625,7 @@ AFSProcessOpen( IN PIRP Irp,
 
             ntStatus = AFSInitFcb( DirectoryCB);
 
-            if( !NT_SUCCESS( ntStatus) &&
-                ntStatus != STATUS_REPARSE)
+            if( !NT_SUCCESS( ntStatus))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2626,19 +2653,19 @@ AFSProcessOpen( IN PIRP Irp,
                             TRUE);
         }
 
-        bReleaseFcb = TRUE;
-
         //
-        // Reference the Fcb so it won't go away while we call into the service for processing
+        // Increment the open count on this Fcb
         //
 
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessOpen Increment count on Fcb %08lX Cnt %d\n",
+                      "AFSProcessOpen Increment2 count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
                       lCount);
+
+        bReleaseFcb = TRUE;
 
         //
         // Check access on the entry
@@ -2869,18 +2896,6 @@ AFSProcessOpen( IN PIRP Irp,
                               &pObjectInfo->Fcb->ShareAccess);
         }
 
-        //
-        // Increment the open count on this Fcb
-        //
-
-        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessOpen Increment2 count on Fcb %08lX Cnt %d\n",
-                      pObjectInfo->Fcb,
-                      lCount);
-
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -2945,17 +2960,20 @@ try_exit:
         if( bReleaseFcb)
         {
 
-            //
-            // Remove the reference we added initially
-            //
+            if( !NT_SUCCESS( ntStatus))
+            {
+                //
+                // Decrement the open count on this Fcb
+                //
 
-            lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessOpen Decrement count on Fcb %08lX Cnt %d\n",
-                          pObjectInfo->Fcb,
-                          lCount);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessOpen Decrement2 count on Fcb %08lX Cnt %d\n",
+                              pObjectInfo->Fcb,
+                              lCount);
+            }
 
             AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
         }
@@ -3094,8 +3112,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
             *Fcb = pObjectInfo->Fcb;
 
-            if( !NT_SUCCESS( ntStatus) &&
-                ntStatus != STATUS_REPARSE)
+            if( !NT_SUCCESS( ntStatus))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3123,19 +3140,19 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                             TRUE);
         }
 
-        bReleaseFcb = TRUE;
-
         //
-        // Reference the Fcb so it won't go away while processing the request
+        // Increment the open count on this Fcb.
         //
 
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessOverwriteSupersede Increment count on Fcb %08lX Cnt %d\n",
+                      "AFSProcessOverwriteSupersede Increment2 count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
                       lCount);
+
+        bReleaseFcb = TRUE;
 
         //
         // Check access on the entry
@@ -3344,18 +3361,6 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             Irp->IoStatus.Information = FILE_OVERWRITTEN;
         }
 
-        //
-        // Increment the open count on this Fcb.
-        //
-
-        lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessOverwriteSupersede Increment2 count on Fcb %08lX Cnt %d\n",
-                      pObjectInfo->Fcb,
-                      lCount);
-
         lCount = InterlockedIncrement( &pObjectInfo->Fcb->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -3397,17 +3402,20 @@ try_exit:
         if( bReleaseFcb)
         {
 
-            //
-            // Remove the reference we added above to prevent tear down
-            //
+            if( !NT_SUCCESS( ntStatus))
+            {
+                //
+                // Decrement the open count on this Fcb.
+                //
 
-            lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pObjectInfo->Fcb->OpenReferenceCount);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessOverwriteSupersede Decrement count on Fcb %08lX Cnt %d\n",
-                          pObjectInfo->Fcb,
-                          lCount);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessOverwriteSupersede Decrement2 count on Fcb %08lX Cnt %d\n",
+                              pObjectInfo->Fcb,
+                              lCount);
+            }
 
             AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
         }
@@ -3510,8 +3518,7 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
 
             *Fcb = pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb;
 
-            if( !NT_SUCCESS( ntStatus) &&
-                ntStatus != STATUS_REPARSE)
+            if( !NT_SUCCESS( ntStatus))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3539,6 +3546,18 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
             AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
                             TRUE);
         }
+
+        //
+        // Increment the open reference and handle on the node
+        //
+
+        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSOpenIOCtlFcb Increment count on Fcb %08lX Cnt %d\n",
+                      (*Fcb),
+                      lCount);
 
         bReleaseFcb = TRUE;
 
@@ -3631,16 +3650,8 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
                       lCount);
 
         //
-        // Increment the open reference and handle on the node
+        // Increment the handle on the node
         //
-
-        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSOpenIOCtlFcb Increment count on Fcb %08lX Cnt %d\n",
-                      (*Fcb),
-                      lCount);
 
         lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
@@ -3699,6 +3710,21 @@ try_exit:
 
         if( bReleaseFcb)
         {
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                //
+                // Decrement the open reference and handle on the node
+                //
+
+                lCount = InterlockedDecrement( &(*Fcb)->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSOpenIOCtlFcb Decrement count on Fcb %08lX Cnt %d\n",
+                              (*Fcb),
+                              lCount);
+            }
 
             AFSReleaseResource( &(*Fcb)->NPFcb->Resource);
         }
@@ -3776,8 +3802,7 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
 
             *Fcb = DirectoryCB->ObjectInformation->Fcb;
 
-            if( !NT_SUCCESS( ntStatus) &&
-                ntStatus != STATUS_REPARSE)
+            if( !NT_SUCCESS( ntStatus))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_PIPE_PROCESSING,
@@ -3805,6 +3830,18 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
             AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
                             TRUE);
         }
+
+        //
+        // Increment the open count on this Fcb
+        //
+
+        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSOpenSpecialShareFcb Increment count on Fcb %08lX Cnt %d\n",
+                      (*Fcb),
+                      lCount);
 
         bReleaseFcb = TRUE;
 
@@ -3873,18 +3910,6 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
             try_return( ntStatus);
         }
 
-        //
-        // Increment the open count on this Fcb
-        //
-
-        lCount = InterlockedIncrement( &(*Fcb)->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSOpenSpecialShareFcb Increment count on Fcb %08lX Cnt %d\n",
-                      (*Fcb),
-                      lCount);
-
         lCount = InterlockedIncrement( &(*Fcb)->OpenHandleCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
@@ -3923,6 +3948,21 @@ try_exit:
 
         if( bReleaseFcb)
         {
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+                //
+                // Decrement the open count on this Fcb
+                //
+
+                lCount = InterlockedDecrement( &(*Fcb)->OpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSOpenSpecialShareFcb Decrement count on Fcb %08lX Cnt %d\n",
+                              (*Fcb),
+                              lCount);
+            }
 
             AFSReleaseResource( &(*Fcb)->NPFcb->Resource);
         }
