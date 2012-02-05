@@ -807,11 +807,11 @@ wix-lite: loopback man-pages documentation
    $(NTMAKE) LITECLIENT=1
    $(CD) ..\..\..\..
 
-media: install NSIS wix
-
 install-nsis: install NSIS
 
 install-wix: install wix
 
 install-wix-lite: install wix-lite
+
+media: install-wix
 
