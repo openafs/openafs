@@ -548,7 +548,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                     ulRemainingLen -= pReparseBuffer->ReparseDataLength;
 
-                    pReparseBuffer->ReparseTag = IO_REPARSE_TAG_OPENAFS_DFS;
+                    pReparseBuffer->ReparseTag = IO_REPARSE_TAG_SURROGATE|IO_REPARSE_TAG_OPENAFS_DFS;
 
                     RtlCopyMemory( &pReparseBuffer->ReparseGuid,
                                    &GUID_AFS_REPARSE_GUID,
@@ -595,7 +595,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                     break;
                 }
 
-                if( pReparseBuffer->ReparseTag != IO_REPARSE_TAG_OPENAFS_DFS)
+                if( (pReparseBuffer->ReparseTag & 0x0000FFFF) != IO_REPARSE_TAG_OPENAFS_DFS)
                 {
 
                     ntStatus = STATUS_IO_REPARSE_TAG_MISMATCH;
@@ -654,7 +654,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                     break;
                 }
 
-                if( pReparseBuffer->ReparseTag != IO_REPARSE_TAG_OPENAFS_DFS)
+                if( (pReparseBuffer->ReparseTag & 0x0000FFFF) != IO_REPARSE_TAG_OPENAFS_DFS)
                 {
 
                     ntStatus = STATUS_IO_REPARSE_TAG_MISMATCH;
