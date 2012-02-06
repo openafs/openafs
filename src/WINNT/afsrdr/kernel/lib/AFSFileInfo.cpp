@@ -1622,7 +1622,7 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
 
         if( BooleanFlagOn( DirectoryCB->ObjectInformation->FileAttributes, FILE_ATTRIBUTE_REPARSE_POINT))
         {
-            Buffer->ReparseTag = IO_REPARSE_TAG_OPENAFS_DFS;
+            Buffer->ReparseTag = IO_REPARSE_TAG_SURROGATE|IO_REPARSE_TAG_OPENAFS_DFS;
         }
 
         *Length -= sizeof( FILE_ATTRIBUTE_TAG_INFORMATION);
