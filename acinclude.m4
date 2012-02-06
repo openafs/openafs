@@ -200,7 +200,7 @@ AC_ARG_ENABLE([optimize-kernel],
         [disable compilation of the kernel module with optimization (defaults
          based on platform)])],
     , 
-    [enable_optimize_kernel="yes"])
+    [enable_optimize_kernel=""])
 AC_ARG_ENABLE([debug-lwp],
     [AS_HELP_STRING([--enable-debug-lwp],
         [enable compilation of the LWP code with debugging information
