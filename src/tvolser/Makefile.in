@@ -93,13 +93,13 @@ volint.xdr.o: ../volser/volint.xdr.c
 	$(AFS_CCRULE) ../volser/volint.xdr.c
 
 vsprocs.o: ${VOLSER}/vsprocs.c
-	$(AFS_CCRULE) $(VOLSER)/vsprocs.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/vsprocs.c
 
 vsutils.o: ${VOLSER}/vsutils.c
-	$(AFS_CCRULE) $(VOLSER)/vsutils.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/vsutils.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
-	$(AFS_CCRULE) $(VOLSER)/lockprocs.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/lockprocs.c
 
 uuid.o: ${UTIL}/uuid.c
 	$(AFS_CCRULE) $(UTIL)/uuid.c
@@ -208,7 +208,7 @@ namei_ops.o: ${VOL}/namei_ops.c
 	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 vos.o: ${VOLSER}/vos.c
-	$(AFS_CCRULE) $(VOLSER)/vos.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/vos.c
 
 vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
 	$(AFS_LDRULE) vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} \

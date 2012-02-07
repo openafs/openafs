@@ -271,10 +271,10 @@ vsprocs.o: $(VOLSER)/vsprocs.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/vsprocs.c
 
 vsutils.o: $(VOLSER)/vsutils.c
-	$(AFS_CCRULE) $(VOLSER)/vsutils.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/vsutils.c
 
 lockprocs.o: $(VOLSER)/lockprocs.c
-	$(AFS_CCRULE) $(VOLSER)/lockprocs.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/lockprocs.c
 
 volint.xdr.o: ../volser/volint.xdr.c
 	$(AFS_CCRULE) ../volser/volint.xdr.c
@@ -282,8 +282,8 @@ volint.xdr.o: ../volser/volint.xdr.c
 volint.cs.o: ../volser/volint.cs.c
 	$(AFS_CCRULE) ../volser/volint.cs.c
 
-volerr.o: $(VOLSER)/volerr.c
-	$(AFS_CCRULE) $(VOLSER)/volerr.c
+volerr.o: ../volser/volerr.c
+	$(AFS_CCRULE) ../volser/volerr.c
 
 vldbint.xdr.o: ../vlserver/vldbint.xdr.c
 	$(AFS_CCRULE) ../vlserver/vldbint.xdr.c
@@ -291,8 +291,8 @@ vldbint.xdr.o: ../vlserver/vldbint.xdr.c
 vldbint.cs.o: ../vlserver/vldbint.cs.c
 	$(AFS_CCRULE) ../vlserver/vldbint.cs.c
 
-vl_errors.o: $(VLSERVER)/vl_errors.c
-	$(AFS_CCRULE) $(VLSERVER)/vl_errors.c
+vl_errors.o: ../vlserver/vl_errors.c
+	$(AFS_CCRULE) ../vlserver/vl_errors.c
 
 clean:
 	$(RM) -f *.o *.a libafsauthent*
