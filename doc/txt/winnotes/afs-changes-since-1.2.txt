@@ -1,3 +1,37 @@
+Since 1.7.0500 (1.7.5)
+
+ * OpenAFS Reparse Points are surrogates.  Set the surrogate
+   bit as part of the the tag value.
+
+ * Avoid race during PIOCtl DirNode allocation in AFSRedirLib.
+
+ * Hold references to File Control Block across reverse ioctl
+   calls to the service to avoid FCB tear down during the call.
+
+ * Increase size of afs redirector worker thread pools in
+   AFS Redirector
+
+ * Run afs redirector worker threads until there are no tasks
+   left to process.  Do not sleep after each task and wait for
+   a wake of signal.
+
+ * If the afsd_service shutdown has begun, do not permit new
+   requests to start processing in AFS Redirector.
+
+ * Install AFSRedir.sys with DebugFlags = 0x8 in order to
+   force bug checks in the redirector when an error occurs.
+   This will produce better diagnostics by catching the error
+   at the source of the problem instead of waiting for an
+   exception to be thrown elsewhere in the kernel.
+
+ * The afsd service should not lower case volume names when
+   parsing \\afs\cell#volume\ requests.   cell names are
+   case insensitive but volume names are case sensitive.
+
+ * Correct error in afsd_service directory processing that could
+   result in out of date directory pages being used to construct
+   directory B+ trees.
+
 Since 1.7.0400 (1.7.4)
 
  * A broad range of changes to file extent management to improve
