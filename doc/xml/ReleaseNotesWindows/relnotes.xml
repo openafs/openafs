@@ -3130,6 +3130,7 @@
           <para>Default: -1</para>
           <para>Variable: LANadapter</para>
           <para>LAN adapter number to use. This is the lana number of the LAN adapter that the SMB server should bind to. If unspecified or set to -1, a LAN adapter with named 'AFS' or a loopback adapter will be selected. If neither are present, then all available adapters will be bound to. When binding to a non-loopback adapter, the NetBIOS name hostname%-AFS' will be used (where %hostname% is the NetBIOS name of the host truncated to 11 characters). Otherwise, the NetBIOS name will be 'AFS'.</para>
+          <para>[This parameter is ignored unless SMB mode is active.]</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_CacheSize">Value: CacheSize</title>
@@ -3152,6 +3153,17 @@
           <para>Default: 20 (CM_CONFIGDEFAULT_CHUNKSIZE)</para>
           <para>Variable: cm_logChunkSize (cm_chunkSize = 1 &lt;&lt; cm_logChunkSize)</para>
           <para>Size of chunk for reading and writing. Actual chunk size is 2^cm_logChunkSize. The default chunk size is therefore 1 MB.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_BlockSize">Value: BlockSize</title>
+          <indexterm>
+            <primary>BlockSize</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD</para>
+          <para>Default: 4096 (CM_CONFIGDEFAULT_BLOCKSIZE)</para>
+          <para>Size of buffer allocation.  Must be an even multiple of 1024 and (2^cm_logChuckSize
+            mod BlockSize) must equal zero.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Daemons">Value: Daemons</title>
@@ -5148,7 +5160,7 @@ Default: local RPC
         </section>
       </section>
       <section>
-        <title>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</title>
+        <title>[HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider]</title>
         <para/>
         <section>
           <title>Value: Debug</title>
