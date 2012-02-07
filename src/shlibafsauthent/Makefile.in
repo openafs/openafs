@@ -209,7 +209,7 @@ acfg_errors.o: ${AUTH}/acfg_errors.c
 	${CCRULE}
 
 cmd.o: ${CMD}/cmd.c
-	${CCRULE}
+	${CCRULE} -I../cmd
 
 cmd_errors.o: ${CMD}/cmd_errors.c
 	${CCRULE}
