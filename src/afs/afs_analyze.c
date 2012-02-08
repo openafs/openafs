@@ -117,7 +117,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 	VSleep(2);		/* Better safe than sorry. */
 	tconn =
 	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
-			     &treq, SHARED_LOCK, &rxconn);
+			     &treq, SHARED_LOCK, 0, &rxconn);
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
@@ -273,6 +273,61 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
     return serversleft;
 }
 
+/*------------------------------------------------------------------------
+ * afs_ClearStatus
+ *
+ * Description:
+ *	Analyze the outcome of an RPC operation, taking whatever support
+ *	actions are necessary.
+ *
+ * Arguments:
+ *	afid  : The FID of the file involved in the action.  This argument
+ *		may be null if none was involved.
+ *      op    : which RPC we are analyzing.
+ *      avp   : A pointer to the struct volume, if we already have one.
+ *
+ * Returns:
+ *	Non-zero value if the related RPC operation can be retried,
+ *	zero otherwise.
+ *
+ * Environment:
+ *	This routine is called when we got a network error,
+ *      and discards state if the operation was a data-mutating
+ *      operation.
+ *------------------------------------------------------------------------*/
+static int
+afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
+{
+    struct volume *tvp = NULL;
+
+    /* if it's not a write op, we have nothing to veto and shouldn't clear. */
+    if (!AFS_STATS_FS_RPCIDXES_ISWRITE(op)) {
+	return 1;
+    }
+
+    if (avp)
+	tvp = avp;
+    else if (afid)
+	tvp = afs_FindVolume(afid, READ_LOCK);
+
+    /* don't assume just discarding will fix if no cached volume */
+    if (tvp) {
+	struct vcache *tvc;
+	ObtainReadLock(&afs_xvcache);
+	if ((tvc = afs_FindVCache(afid, 0, 0))) {
+	    ReleaseReadLock(&afs_xvcache);
+	    tvc->f.states &= ~(CStatd | CUnique);
+	    afs_PutVCache(tvc);
+	} else {
+	    ReleaseReadLock(&afs_xvcache);
+	}
+    }
+    if (!avp)
+	afs_PutVolume(tvp, READ_LOCK);
+
+    /* not retriable: we may have raced ourselves */
+    return 0;
+}
 
 /*------------------------------------------------------------------------
  * EXPORTED afs_Analyze
@@ -465,8 +520,12 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	    else {
 		if (acode == RX_MSGSIZE)
 		    shouldRetry = 1;
-		else
+		else {
 		    areq->networkError = 1;
+		    /* do not promote to shouldRetry if not already */
+		    if (afs_ClearStatus(afid, op, NULL) == 0)
+			shouldRetry = 0;
+		}
 	    }
 	}
 	return shouldRetry;
@@ -512,18 +571,21 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	    shouldRetry = 1;
 	    goto out;
 	}
-	if (acode == RX_CALL_TIMEOUT) {
+	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE || acode == RX_CALL_BUSY) {
 	    serversleft = afs_BlackListOnce(areq, afid, tsp);
 	    if (afid)
 		tvp = afs_FindVolume(afid, READ_LOCK);
-	    if (!afid || !tvp || (tvp->states & VRO))
-		areq->idleError++;
 	    if ((serversleft == 0) && tvp &&
 		((tvp->states & VRO) || (tvp->states & VBackup))) {
 		shouldRetry = 0;
 	    } else {
 		shouldRetry = 1;
 	    }
+	    if (!afid || !tvp || (tvp->states & VRO))
+		areq->idleError++;
+	    else if (afs_ClearStatus(afid, op, tvp) == 0)
+		shouldRetry = 0;
+
 	    if (tvp)
 		afs_PutVolume(tvp, READ_LOCK);
 	    /* By doing this, we avoid ever marking a server down

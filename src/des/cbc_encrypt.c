@@ -17,9 +17,9 @@
  * Originally written 8/85 by Steve Miller, MIT Project Athena.
  */
 
-#include "mit-cpyright.h"
 #include <afsconfig.h>
 #include <afs/param.h>
+#include "mit-cpyright.h"
 
 #ifndef KERNEL
 #include <stdio.h>

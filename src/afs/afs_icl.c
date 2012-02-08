@@ -407,6 +407,7 @@ afs_icl_Event4(struct afs_icl_set *setp, afs_int32 eventID,
 	return 0;
 
     AFS_ASSERT_GLOCK();
+    afs_icl_SetHold(setp);
     mask = lAndT >> 24 & 0xff;	/* mask of which logs to log to */
     ix = ICL_EVENTBYTE(eventID);
     ObtainReadLock(&setp->lock);
@@ -422,6 +423,7 @@ afs_icl_Event4(struct afs_icl_set *setp, afs_int32 eventID,
 	}
     }
     ReleaseReadLock(&setp->lock);
+    afs_icl_SetRele(setp);
     return 0;
 }
 

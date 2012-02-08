@@ -887,6 +887,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
 				     [#include <linux/rcupdate.h>],
 				     [rcu_read_lock();])
+		 AC_CHECK_LINUX_FUNC([set_nlink],
+				     [#include <linux/fs.h>],
+				     [set_nlink(NULL, 1);])
 		 AC_CHECK_LINUX_FUNC([splice_direct_to_actor],
 				     [#include <linux/splice.h>],
 				     [splice_direct_to_actor(NULL,NULL,NULL);])
@@ -896,6 +899,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([zero_user_segments],
 				     [#include <linux/highmem.h>],
 				     [zero_user_segments(NULL, 0, 0, 0, 0);])
+		 AC_CHECK_LINUX_FUNC([noop_fsync],
+				     [#include <linux/fs.h>],
+				     [noop_fsync(NULL, 0, 0, 0);])
 
 		 dnl Consequences - things which get set as a result of the
 		 dnl                above tests
@@ -944,7 +950,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_HAVE_DCACHE_LOCK
 		 LINUX_D_COUNT_IS_INT
-		 LINUX_HAVE_SET_NLINK
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled
@@ -1310,6 +1315,7 @@ AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strc
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
 AC_CHECK_FUNCS(fseeko64 ftello64 pread preadv pwrite pwritev preadv64 pwritev64)
+AC_CHECK_FUNCS([setenv unsetenv])
 
 case $AFS_SYSNAME in
 *hp_ux* | *hpux*)

@@ -11,12 +11,12 @@
  * ALL RIGHTS RESERVED
  */
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

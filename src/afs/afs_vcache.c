@@ -410,7 +410,7 @@ afs_FlushVCBs(afs_int32 lockit)
 		    for (safety3 = 0; safety3 < AFS_MAXHOSTS * 2; safety3++) {
 			tc = afs_ConnByHost(tsp, tsp->cell->fsport,
 					    tsp->cell->cellNum, &treq, 0,
-					    SHARED_LOCK, &rxconn);
+					    SHARED_LOCK, 0, &rxconn);
 			if (tc) {
 			    XSTATS_START_TIME
 				(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);

@@ -31,10 +31,10 @@
  *
  * originally written by Steve Miller, MIT Project Athena
  */
-#include "mit-cpyright.h"
-
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include "mit-cpyright.h"
 
 
 #ifndef KERNEL

@@ -14,9 +14,10 @@
 /*
  * --------------------- Required definitions ---------------------
  */
-#include <stdlib.h>
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <stdlib.h>
 
 
 #ifdef	AFS_AIX32_ENV

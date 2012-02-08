@@ -7,6 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include "afsconfig.h"
+
 #define	MAXLINELEN	1024
 #define	MAXTOKLEN	100
 #include <sys/param.h>
@@ -15,7 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "afsconfig.h"
 #include <string.h>
 
 #define TOK_DONTUSE 1		/* Don't copy if match and this flag is set. */

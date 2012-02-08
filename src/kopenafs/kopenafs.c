@@ -12,6 +12,9 @@
  * included in the libsys code.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <errno.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -26,9 +29,7 @@
 #include <sys/param.h>
 #include <unistd.h>
 
-#include <afsconfig.h>
 #include <afs/afssyscalls.h>
-#include <afs/param.h>
 #include <kopenafs.h>
 
 static volatile sig_atomic_t syscall_okay = 1;

@@ -299,7 +299,8 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
 	return;			/* can't do much */
 
     tc = afs_ConnByHost(aserver, aserver->cell->vlport,
-			aserver->cell->cellNum, areq, 1, SHARED_LOCK, &rxconn);
+			aserver->cell->cellNum, areq, 1, SHARED_LOCK, 0,
+			&rxconn);
     if (!tc)
 	return;
     rx_SetConnDeadTime(rxconn, 3);
@@ -624,7 +625,8 @@ afs_CheckServers(int adown, struct cell *acellp)
 	/* get a connection, even if host is down; bumps conn ref count */
 	tu = afs_GetUser(treq.uid, ts->cell->cellNum, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
-			  1 /*force */ , 1 /*create */ , SHARED_LOCK, &rxconn);
+			  1 /*force */ , 1 /*create */ , SHARED_LOCK, 0,
+			  &rxconn);
 	afs_PutUser(tu, SHARED_LOCK);
 	if (!tc)
 	    continue;
@@ -640,7 +642,8 @@ afs_CheckServers(int adown, struct cell *acellp)
 		conntimer[nconns]=0;
 	    }
 	    nconns++;
-	}
+	} else /* not holding, kill ref */
+	    afs_PutConn(tc, rxconn, SHARED_LOCK);
     } /* Outer loop over addrs */
 
     AFS_GUNLOCK();
@@ -1718,8 +1721,7 @@ afs_GetCapabilities(struct server *ts)
     if ( !tu )
 	return;
     tc = afs_ConnBySA(ts->addr, ts->cell->fsport, ts->cell->cellNum, tu, 0, 1,
-		      SHARED_LOCK,
-		      &rxconn);
+		      SHARED_LOCK, 0, &rxconn);
     afs_PutUser(tu, SHARED_LOCK);
     if ( !tc )
 	return;

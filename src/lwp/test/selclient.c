@@ -34,6 +34,9 @@
  * on IRIX 6.2 and 6.4.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -49,10 +52,6 @@
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <time.h>
-
-#include <afsconfig.h>
-#include <afs/param.h>
-
 
 
 #include "lwp.h"

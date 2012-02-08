@@ -7,14 +7,13 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <stdio.h>
-#include <afsconfig.h>
-#include <afs/param.h>
-
-
 
 #include "AFS_component_version_number.c"
 

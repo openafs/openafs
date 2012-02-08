@@ -43,7 +43,10 @@
 #define AFS_STATS(arg) arg
 #ifndef KERNEL
 /* NOTE: Ensure this is the same size in user and kernel mode. */
-typedef struct timeval osi_timeval_t;
+typedef struct {
+    afs_int32 tv_sec;
+    afs_int32 tv_usec;
+} osi_timeval32_t;
 #endif /* !KERNEL */
 
 #define XSTATS_DECLS struct afs_stats_opTimingData *opP = NULL; \
@@ -864,6 +867,8 @@ struct afs_stats_CMPerf {
 
 #define AFS_STATS_NUM_FS_RPC_OPS		29
 
+#define AFS_STATS_FS_RPCIDXES_ISWRITE(X)        (((X > AFS_STATS_FS_RPCIDX_FETCHSTATUS) && (X < AFS_STATS_FS_RPCIDX_GETSTATISTICS)) || (X == AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS))
+
 #define AFS_STATS_FS_XFERIDX_FETCHDATA		 0
 #define AFS_STATS_FS_XFERIDX_STOREDATA		 1
 
@@ -886,10 +891,10 @@ struct afs_stats_CMPerf {
 struct afs_stats_opTimingData {
     afs_int32 numOps;		/*Number of operations executed */
     afs_int32 numSuccesses;	/*Number of successful ops */
-    osi_timeval_t sumTime;	/*Sum of sample timings */
-    osi_timeval_t sqrTime;	/*Sum of squares of sample timings */
-    osi_timeval_t minTime;	/*Minimum timing value observed */
-    osi_timeval_t maxTime;	/*Minimum timing value observed */
+    osi_timeval32_t sumTime;	/*Sum of sample timings */
+    osi_timeval32_t sqrTime;	/*Sum of squares of sample timings */
+    osi_timeval32_t minTime;	/*Minimum timing value observed */
+    osi_timeval32_t maxTime;	/*Minimum timing value observed */
 };
 
 /*
@@ -912,10 +917,10 @@ struct afs_stats_opTimingData {
 struct afs_stats_xferData {
     afs_int32 numXfers;		/*Number of successful xfers */
     afs_int32 numSuccesses;	/*Number of successful xfers */
-    osi_timeval_t sumTime;	/*Sum of timing values */
-    osi_timeval_t sqrTime;	/*Sum of squares of timing values */
-    osi_timeval_t minTime;	/*Minimum xfer time recorded */
-    osi_timeval_t maxTime;	/*Maximum xfer time recorded */
+    osi_timeval32_t sumTime;	/*Sum of timing values */
+    osi_timeval32_t sqrTime;	/*Sum of squares of timing values */
+    osi_timeval32_t minTime;	/*Minimum xfer time recorded */
+    osi_timeval32_t maxTime;	/*Maximum xfer time recorded */
     afs_int32 sumBytes;		/*Sum of KBytes transferred */
     afs_int32 minBytes;		/*Minimum value observed */
     afs_int32 maxBytes;		/*Maximum value observed */

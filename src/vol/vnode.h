@@ -274,7 +274,8 @@ extern int VVnodeWriteToRead_r(Error * ec, Vnode * vnp);
 extern Vnode *VAllocVnode(Error * ec, struct Volume *vp, VnodeType type);
 extern Vnode *VAllocVnode_r(Error * ec, struct Volume *vp, VnodeType type);
 /*extern VFreeVnode();*/
-extern Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp);
+extern Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp, struct Volume *vp,
+                              VnodeId vnodeNumber);
 extern Vnode *VLookupVnode(struct Volume * vp, VnodeId vnodeId);
 
 extern void AddToVVnList(struct Volume * vp, Vnode * vnp);

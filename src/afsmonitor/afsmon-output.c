@@ -15,12 +15,12 @@
  *
  *-------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <time.h>
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <string.h>
 
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
 
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>

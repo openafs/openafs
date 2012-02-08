@@ -316,7 +316,6 @@ To a kernel module for your running kernel, just run:
 Requires: binutils, openafs = %{version}
 %if 0%{?fedora} >= 15
 Requires: systemd-units
-BuildRequires: systemd-units
 Requires(post): systemd-units, systemd-sysv
 Requires(preun): systemd-units
 Requires(postun): systemd-units
@@ -347,7 +346,6 @@ Summary: OpenAFS Filesystem Server
 Group: Networking/Filesystems
 %if 0%{?fedora} >= 15
 Requires: systemd-units
-BuildRequires: systemd-units
 Requires(post): systemd-units, systemd-sysv
 Requires(preun): systemd-units
 Requires(postun): systemd-units
@@ -1390,17 +1388,9 @@ fi
 %if 0%{?fedora} >= 15
 %postun client
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-if [ $1 -ge 1 ] ; then
-    # Package upgrade, not uninstall
-    /bin/systemctl try-restart openafs-client.service >/dev/null 2>&1 || :
-fi
 
 %postun server
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-if [ $1 -ge 1 ] ; then
-    # Package upgrade, not uninstall
-    /bin/systemctl try-restart openafs-server.service >/dev/null 2>&1 || :
-fi
 %endif
 
 %if %{build_dkmspkg}
@@ -1466,12 +1456,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 # to migrate them to systemd targets
 /usr/bin/systemd-sysv-convert --save openafs-client >/dev/null 2>&1 ||:
 
-# If the package is allowed to autostart:
-/bin/systemctl --no-reload enable openafs-client.service >/dev/null 2>&1 ||:
-
-# Run these because the SysV package being removed won't do them
+# Run this because the SysV package being removed won't do it
 /sbin/chkconfig --del openafs-client >/dev/null 2>&1 || :
-/bin/systemctl try-restart openafs-client.service >/dev/null 2>&1 || : 
 
 %triggerun -- openafs-server < 1.6.0-1
 # Save the current service runlevel info
@@ -1479,12 +1465,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 # to migrate them to systemd targets
 /usr/bin/systemd-sysv-convert --save openafs-server >/dev/null 2>&1 ||:
 
-# If the package is allowed to autostart:
-/bin/systemctl --no-reload enable openafs-server.service >/dev/null 2>&1 ||:
-
-# Run these because the SysV package being removed won't do them
+# Run this because the SysV package being removed won't do it
 /sbin/chkconfig --del openafs-server >/dev/null 2>&1 || :
-/bin/systemctl try-restart openafs-server.service >/dev/null 2>&1 || : 
 %endif
 
 ##############################################################################
