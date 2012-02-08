@@ -1,5 +1,19 @@
-openafs (1.6.1~pre1-2) UNRELEASED; urgency=low
+openafs (1.6.1~pre2-1) UNRELEASED; urgency=low
 
+  * New upstream prerelease.
+    - Disable server-side Rx keepalive during disk I/O.
+    - Avoid timing out on non-kernel busy Rx channels.
+    - Add separate client connection pool for replicated volumes.
+    - Remove SYNC client disable behavior on some error patterns.
+    - Correctly test for the end of the Rx call queue.
+    - Fix cleanup of special inodes on the server.
+    - Provide a public Rx function for toggling keepalive.
+    - Fix connection management in the client checkserver loop.
+    - Discard cached state in the client when unsure of validity.
+    - Fix thread safety of free inode management with demand-attach.
+    - Fix xstat handling of time values on 64-bit platforms.
+    - Increase the idledead time.
+    - Fix return status of fsync on a directory.
   * Fix afs-newcell's creation of the file server process to pass
     -localauth.  This was broken when demand-attach support was
     added.  Thanks, Florian Hatat.  (Closes: #652973)
