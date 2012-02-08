@@ -144,7 +144,6 @@ typedef struct SYNC_client_state {
     int retry_limit;            /**< max number of times for SYNC_ask to retry */
     afs_int32 hard_timeout;     /**< upper limit on time to keep trying */
     char * proto_name;          /**< sync protocol associated with this conn */
-    byte fatal_error;           /**< nonzero if fatal error on this client conn */
     afs_uint32 pkt_seq;         /**< packet xmit sequence counter */
     afs_uint32 com_seq;         /**< command xmit sequence counter */
 } SYNC_client_state;

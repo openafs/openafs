@@ -144,6 +144,8 @@
 	afs_xdr_vector;
 	rx_InterruptCall;
 	rx_SetBusyChannelError;
+	rx_KeepAliveOn;
+	rx_KeepAliveOff;
     local:
 	*;
 };

@@ -25,7 +25,7 @@ extern void rx_rto_setPeerTimeoutSecs(struct rx_peer *, int secs);
 extern void rx_SetEpoch(afs_uint32 epoch);
 extern int rx_Init(u_int port);
 extern int rx_InitHost(u_int host, u_int port);
-extern void rx_SetBusyChannelError(afs_int32 error);
+extern void rx_SetBusyChannelError(afs_int32 onoff);
 #ifdef AFS_NT40_ENV
 extern void rx_DebugOnOff(int on);
 extern void rx_StatsOnOff(int on);
@@ -191,6 +191,8 @@ extern void rxi_ChallengeEvent(struct rxevent *event,
 extern void rxi_ChallengeOn(struct rx_connection *conn);
 extern void rxi_ReapConnections(struct rxevent *unused, void *unused1,
 				void *unused2);
+extern void rx_KeepAliveOn(struct rx_call *call);
+extern void rx_KeepAliveOff(struct rx_call *call);
 extern int rxs_Release(struct rx_securityClass *aobj);
 #ifndef KERNEL
 extern void rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,

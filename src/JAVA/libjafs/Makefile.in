@@ -36,10 +36,10 @@ SHARED_FLAGS = -shared -Xlinker -Bsymbolic
 OBJECT_FLAGS = -fPIC -c
 
 ifeq "$(BUILD_TYPE)" "admin"
-	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ ${JNI_INC}
+	INC := -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ ${JNI_INC}
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} -I${TOP_SRCDIR}/config ${MT_CFLAGS}
 else
-	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} ${JNI_INC}
+	INC := -I${TOP_SRCDIR}/config -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} ${JNI_INC}
 	CFLAGS := ${INC} ${DBG} ${OPTMZ} ${FSINCLUDES} -D_REENTRANT -DLIBJUAFS ${MT_CFLAGS}
 endif
 
@@ -94,9 +94,8 @@ LIBJAFS_OBJS +=\
 	${LIBJAFSADMDIR}Internal.o \
 	${LIBJAFSADMDIR}UserToken.o \
 	${LIBJAFSADMDIR}VersionInfo.o \
-	${TOP_SRCDIR}/libuafs/UAFS/AFS_component_version_number.o \
 	${TOP_SRCDIR}/libuafs/UAFS/xdr_int32.o \
-        ${TOP_SRCDIR}/util/rxkstats.o
+	${TOP_SRCDIR}/util/rxkstats.o
 
 ifeq (${SYS_NAME}, ppc64_linux26)
 LIBJAFSADM_OBJS =\
@@ -123,7 +122,6 @@ LIBJAFSADM_OBJS +=\
 	${LIBJAFSADMDIR}Server.o \
 	${LIBJAFSADMDIR}User.o \
 	${LIBJAFSADMDIR}Version2.o \
-	${TOP_SRCDIR}/libuafs/UAFS/AFS_component_version_number.o \
 	${LIBJAFSADMDIR}Volume.o
 
 CORRELATING_SOURCE_FILES =\

@@ -34,6 +34,9 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,8 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "portable_defns.h"
 #include "gc.h"
 
-#include <afsconfig.h>
-#include <afs/param.h>
 #include <afs/afsutil.h>
 
 /*#define MINIMAL_GC*/

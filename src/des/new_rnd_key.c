@@ -13,10 +13,10 @@
  * without license from the U.S. Commerce department.
  */
 
-#include "mit-cpyright.h"
-
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include "mit-cpyright.h"
 
 
 #ifndef KERNEL

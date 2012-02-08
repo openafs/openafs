@@ -286,6 +286,9 @@ EXPORTS
 
 	rx_SetBusyChannelError                  @304
 
+	rx_KeepAliveOn				@335
+	rx_KeepAliveOff				@336
+
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA

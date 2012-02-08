@@ -1486,7 +1486,7 @@ $(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 clean:
 	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx
 	-$(RM) -rf h
-	-$(RM) linktest $(AFS_OS_CLEAN)
+	-$(RM) -f linktest $(AFS_OS_CLEAN)
 
 install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
 	${INSTALL} -d ${DESTDIR}${libdir}
@@ -1530,11 +1530,13 @@ JUAFS:
 AFSWEB:
 	mkdir -p $@
 
-setup_common:
-	-$(RM) -f nsapi afsd
+h: $(TOP_SRC_AFS)/*.c $(TOP_SRC_VNOPS)/*.c $(TOP_SRC_RX)/*.c
 	-$(RM) -rf h
 	@TOP_SRCDIR@/libuafs/make_h_tree.pl $(TOP_SRC_AFS) $(TOP_SRC_VNOPS) \
 		$(TOP_SRC_RX)
+
+setup_common: h
+	-$(RM) -f nsapi afsd
 	-ln -s $(TOP_SRCDIR)/afsd afsd
 	-ln -s $(NS_INCL) nsapi
 

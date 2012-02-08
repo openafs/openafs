@@ -11,11 +11,11 @@
 #define AFS_INCLUDES_H 1
 
 
+#include <afsconfig.h>
+
 #ifdef UKERNEL
 #include <UKERNEL/afsincludes.h>
 #else
-
-#include <afsconfig.h>
 
 /* AFS based headers */
 #include "afs/stds.h"

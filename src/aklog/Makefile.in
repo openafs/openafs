@@ -18,8 +18,8 @@ AFSLIBS = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libauth.a \
 	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafscom_err.a \
 	  ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a
 
-SRCS=	aklog.c krb_util.c linked_list.c
-OBJS=   aklog.o krb_util.o linked_list.o
+SRCS=	aklog.c aklog_roken.c krb_util.c linked_list.c
+OBJS=   aklog.o aklog_roken.o krb_util.o linked_list.o
 
 all: aklog asetkey klog
 

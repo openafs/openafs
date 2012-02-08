@@ -11,6 +11,9 @@
  *		     output of this program to be valid.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/time.h>
@@ -25,8 +28,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include <afsconfig.h>
-#include <afs/param.h>
 #include <afs/com_err.h>
 
 
