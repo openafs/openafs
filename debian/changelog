@@ -1,4 +1,4 @@
-openafs (1.6.1~pre2-1) UNRELEASED; urgency=low
+openafs (1.6.1~pre2-1) unstable; urgency=low
 
   * New upstream prerelease.
     - Disable server-side Rx keepalive during disk I/O.
@@ -23,7 +23,7 @@ openafs (1.6.1~pre2-1) UNRELEASED; urgency=low
   * Translation updates:
     - Danish, thanks Joe Hansen.  (Closes: #654933)
 
- -- Russ Allbery <rra@debian.org>  Thu, 22 Dec 2011 10:30:30 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 08 Feb 2012 14:30:07 -0800
 
 openafs (1.6.1~pre1-1) unstable; urgency=low
 
