@@ -2094,6 +2094,7 @@ AFSSetRenameInfo( IN PIRP Irp)
         pSrcCcb = (AFSCcb *)pSrcFileObj->FsContext2;
 
         pSrcObject = pSrcFcb->ObjectInformation;
+        pSrcParentObject = pSrcFcb->ObjectInformation->ParentObjectInformation;
 
         //
         // Perform some basic checks to ensure FS integrity
@@ -2133,6 +2134,15 @@ AFSSetRenameInfo( IN PIRP Irp)
         }
 
         //
+        // Extract off the final component name from the Fcb
+        //
+
+        uniSourceName.Length = (USHORT)pSrcCcb->DirectoryCB->NameInformation.FileName.Length;
+        uniSourceName.MaximumLength = uniSourceName.Length;
+
+        uniSourceName.Buffer = pSrcCcb->DirectoryCB->NameInformation.FileName.Buffer;
+
+        //
         // Resolve the target fileobject
         //
 
@@ -2146,7 +2156,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             pRenameInfo = (PFILE_RENAME_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
-            pTargetParentObject = pSrcFcb->ObjectInformation->ParentObjectInformation;
+            pTargetParentObject = pSrcParentObject;
 
             pTargetDcb = pTargetParentObject->Fcb;
 
@@ -2175,6 +2185,31 @@ AFSSetRenameInfo( IN PIRP Irp)
         }
 
         //
+        // The quick check to see if they are not really performing a rename
+        // Do the names match? Only do this where the parent directories are
+        // the same
+        //
+
+        if( pTargetParentObject == pSrcParentObject)
+        {
+
+            if( FsRtlAreNamesEqual( &uniTargetName,
+                                    &uniSourceName,
+                                    FALSE,
+                                    NULL))
+            {
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+
+            bCommonParent = TRUE;
+        }
+        else
+        {
+
+            bCommonParent = FALSE;
+        }
+
+        //
         // We do not allow cross-volume renames to occur
         //
 
@@ -2197,7 +2232,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
         bReleaseTargetDirLock = TRUE;
 
-        if( pTargetParentObject != pSrcFcb->ObjectInformation->ParentObjectInformation)
+        if( pTargetParentObject != pSrcParentObject)
         {
             AFSAcquireExcl( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
                             TRUE);
@@ -2283,40 +2318,6 @@ AFSSetRenameInfo( IN PIRP Irp)
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetRenameInfo Target does NOT exist, normal rename\n");
-        }
-
-        //
-        // Extract off the final component name from the Fcb
-        //
-
-        uniSourceName.Length = (USHORT)pSrcCcb->DirectoryCB->NameInformation.FileName.Length;
-        uniSourceName.MaximumLength = uniSourceName.Length;
-
-        uniSourceName.Buffer = pSrcCcb->DirectoryCB->NameInformation.FileName.Buffer;
-
-        //
-        // The quick check to see if they are not really performing a rename
-        // Do the names match? Only do this where the parent directories are
-        // the same
-        //
-
-        if( pTargetParentObject == pSrcFcb->ObjectInformation->ParentObjectInformation)
-        {
-
-            bCommonParent = TRUE;
-
-            if( FsRtlAreNamesEqual( &uniTargetName,
-                                    &uniSourceName,
-                                    FALSE,
-                                    NULL))
-            {
-                try_return( ntStatus = STATUS_SUCCESS);
-            }
-        }
-        else
-        {
-
-            bCommonParent = FALSE;
         }
 
         //
