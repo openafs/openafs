@@ -2198,9 +2198,7 @@ try_exit:
             if( bAllocatedFcb)
             {
 
-                AFSRemoveFcb( pObjectInfo->Fcb);
-
-                pObjectInfo->Fcb = NULL;
+                AFSRemoveFcb( &pObjectInfo->Fcb);
             }
 
             *Fcb = NULL;
@@ -2492,9 +2490,7 @@ try_exit:
             if( bAllocatedFcb)
             {
 
-                AFSRemoveFcb( pParentObject->Fcb);
-
-                pParentObject->Fcb = NULL;
+                AFSRemoveFcb( &pParentObject->Fcb);
             }
 
             *Fcb = NULL;
@@ -3013,9 +3009,7 @@ try_exit:
             if( bAllocatedFcb)
             {
 
-                AFSRemoveFcb( pObjectInfo->Fcb);
-
-                pObjectInfo->Fcb = NULL;
+                AFSRemoveFcb( &pObjectInfo->Fcb);
             }
 
             *Fcb = NULL;
@@ -3435,9 +3429,7 @@ try_exit:
             if( bAllocatedFcb)
             {
 
-                AFSRemoveFcb( pObjectInfo->Fcb);
-
-                pObjectInfo->Fcb = NULL;
+                AFSRemoveFcb( &pObjectInfo->Fcb);
             }
 
             *Fcb = NULL;
@@ -3737,9 +3729,9 @@ try_exit:
 
                 AFSRemoveCcb( NULL,
                               *Ccb);
-
-                *Ccb = NULL;
             }
+
+            *Ccb = NULL;
 
             if( bAllocatedFcb)
             {
@@ -3748,14 +3740,10 @@ try_exit:
                 // Need to tear down this Fcb since it is not in the tree for the worker thread
                 //
 
-                AFSRemoveFcb( *Fcb);
-
-                pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb = NULL;
+                AFSRemoveFcb( &pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
             }
 
             *Fcb = NULL;
-
-            *Ccb = NULL;
         }
     }
 
@@ -3975,9 +3963,9 @@ try_exit:
 
                 AFSRemoveCcb( NULL,
                               *Ccb);
-
-                *Ccb = NULL;
             }
+
+            *Ccb = NULL;
 
             if( bAllocateFcb)
             {
@@ -3986,14 +3974,10 @@ try_exit:
                 // Need to tear down this Fcb since it is not in the tree for the worker thread
                 //
 
-                AFSRemoveFcb( *Fcb);
-
-                DirectoryCB->ObjectInformation->Fcb = NULL;
+                AFSRemoveFcb( &DirectoryCB->ObjectInformation->Fcb);
             }
 
             *Fcb = NULL;
-
-            *Ccb = NULL;
         }
     }
 
