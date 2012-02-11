@@ -113,21 +113,21 @@ entries, use the B<vos changeaddr> command with the B<-remove> argument.
 
 =head1 EXAMPLES
 
-The following command displays the VLDB server entries in the ABC
+The following command displays the VLDB server entries in the Example
 Corporation cell:
 
    % vos listaddrs
-   sv5.abc.com
-   sv1.abc.com
-   sv2.abc.com  afs2.abc.com
-   sv6.abc.com
+   sv5.example.com
+   sv1.example.com
+   sv2.example.com  afs2.example.com
+   sv6.example.com
 
 The following command displays the VLDB server entry and UUID for
-host sv5.abc.com in the ABC Corporation cell:
+host sv5.example.com in the Example Corporation cell:
 
-   % vos listaddrs -p -ho sv5.abc.com
+   % vos listaddrs -p -ho sv5.example.com
    UUID: 000c5aff-8246-1699-96-c4-437b5a45aa77
-   sv5.abc.com
+   sv5.example.com
 
 =head1 PRIVILEGE REQUIRED
 

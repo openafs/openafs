@@ -60,7 +60,7 @@ L<bos(8)>.
 
 =item B<-host> <I<host name>>+
 
-Specifies the fully-qualified host name (such as C<db1.abc.com>) of each
+Specifies the fully-qualified host name (such as C<db1.example.com>) of each
 database server machine to register in the F<CellServDB> file.
 
 =item B<-cell> <I<cell name>>
@@ -96,11 +96,11 @@ ignored.
 
 =head1 EXAMPLES
 
-The following command adds the database server machines C<db2.abc.com> and
-C<db3.abc.com> to the F</usr/afs/etc/CellServDB> file on the machine
-C<fs1.abc.com> (the system control machine).
+The following command adds the database server machines C<db2.example.com> and
+C<db3.example.com> to the F</usr/afs/etc/CellServDB> file on the machine
+C<fs1.example.com> (the system control machine).
 
-   % bos addhost -server fs1.abc.com -host db2.abc.com db3.abc.com
+   % bos addhost -server fs1.example.com -host db2.example.com db3.example.com
 
 =head1 PRIVILEGE REQUIRED
 

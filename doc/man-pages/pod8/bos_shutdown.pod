@@ -96,14 +96,14 @@ ignored.
 =head1 EXAMPLES
 
 The following command stops all processes other than the BOS Server on the
-machine C<fs3.abc.com>.
+machine C<fs3.example.com>.
 
-   % bos shutdown fs3.abc.com
+   % bos shutdown fs3.example.com
 
 The following command stops the C<upserver> process (server portion of the
-Update Server) on the machine C<fs5.abc.com>.
+Update Server) on the machine C<fs5.example.com>.
 
-   % bos shutdown -server fs5.abc.com -instance upserver
+   % bos shutdown -server fs5.example.com -instance upserver
 
 =head1 PRIVILEGE REQUIRED
 

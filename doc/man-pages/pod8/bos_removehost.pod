@@ -51,7 +51,7 @@ L<bos(8)>.
 
 =item B<-host> <I<host name>>+
 
-Specifies the fully-qualified host name (such as C<fs2.abc.com>) of each
+Specifies the fully-qualified host name (such as C<fs2.example.com>) of each
 database server machine to remove from the B<CellServDB> file.
 
 =item B<-cell> <I<cell name>>
@@ -83,10 +83,10 @@ ignored.
 =head1 EXAMPLES
 
 The following command removes the former database server machine
-C<db2.abc.com> from the F<CellServDB> file on the system control machine
-C<fs1.abc.com>.
+C<db2.example.com> from the F<CellServDB> file on the system control machine
+C<fs1.example.com>.
 
-   % bos removehost -server fs1.abc.com -host db2.abc.com
+   % bos removehost -server fs1.example.com -host db2.example.com
 
 =head1 PRIVILEGE REQUIRED
 

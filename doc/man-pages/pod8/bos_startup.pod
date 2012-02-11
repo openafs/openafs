@@ -83,16 +83,16 @@ ignored.
 =head1 EXAMPLES
 
 The following command starts all processes marked with status flag C<Run>
-in the F<BosConfig> file on the machine C<fs3.abc.com> that are not
+in the F<BosConfig> file on the machine C<fs3.example.com> that are not
 currently running.
 
-   % bos startup fs3.abc.com
+   % bos startup fs3.example.com
 
 The following command starts the B<buserver>, B<kaserver>, B<ptserver>,
-and B<vlserver> processes running on the machine C<db2.abc.com>, even if
+and B<vlserver> processes running on the machine C<db2.example.com>, even if
 their status flags in the F<BosConfig> file are C<NotRun>.
 
-   % bos startup -server db2.abc.com \
+   % bos startup -server db2.example.com \
        -instance buserver kaserver ptserver vlserver
 
 =head1 PRIVILEGE REQUIRED

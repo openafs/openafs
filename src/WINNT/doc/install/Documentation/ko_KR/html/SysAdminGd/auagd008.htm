@@ -356,7 +356,7 @@ AFS에서 사용하는 데이터 암호화 루틴을 각국 언어판 AFS의 갱신 서버에서는
 <A NAME="IDX5942"></A>
 <A NAME="IDX5943"></A>
 <P><DT><B>ThisCell
-</B><DD>셀의 완전한 인터넷 도메인 형식 이름(예: <TT>abc.com</TT>)을
+</B><DD>셀의 완전한 인터넷 도메인 형식 이름(예: <TT>example.com</TT>)을
 정의하는 단일 행으로 구성된 ASCII 파일. <I>AFS 빠른 시작</I>에서 지시하는 것처럼
 셀의 첫 번째 파일 서버 시스템의 설치 중에 <B>bos
 setcellname</B> 명령을 사용하여 이 파일을 작성하십시오.
@@ -893,18 +893,18 @@ AFS 복제 관리 데이터베이스를 유지하는 네 가지 프로세스를 실행합니다.
 </PRE>
 <P>단순 파일 서버 시스템은 <B>upclientbin</B> 프로세스를
 실행하므로 출력에는 다음과 같은 메시지가 포함됩니다. 이것은
-<B>fs7.abc.com</B>이 해당 시스템 유형에 대한 2진 분산
+<B>fs7.example.com</B>이 해당 시스템 유형에 대한 2진 분산
 시스템임을 나타냅니다.
 <PRE>   Instance upclientbin, (type is simple) currently running normally.
    Process last started at Wed Mar 10  23:37:09 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs7.abc.com -t 60 /usr/afs/bin'
+   Command 1 is '/usr/afs/bin/upclient fs7.example.com -t 60 /usr/afs/bin'
 </PRE>
 <P>미국판 AFS를 실행하는 경우 단순 파일 서버 시스템은 <B>upclientetc</B>
 프로세스를 실행하므로 출력에는 다음과 같은 메시지가 포함됩니다.
-이것은 <B>fs1.abc.com</B>이 시스템 제어 시스템임을 나타냅니다.
+이것은 <B>fs1.example.com</B>이 시스템 제어 시스템임을 나타냅니다.
 <PRE>   Instance upclientetc, (type is simple) currently running normally.
    Process last started at Mon Mar 22  05:23:49 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs1.abc.com -t 60 /usr/afs/etc'
+   Command 1 is '/usr/afs/bin/upclient fs1.example.com -t 60 /usr/afs/etc'
 </PRE>
 <P><H4><A NAME="HDRWQ99">시스템 제어 시스템의 출력</A></H4>
 <P>미국판 AFS를 실행하고 있으며 시스템 제어 시스템에 대해 <B>bos status</B> 명령을 실행한 경우 출력에는 다음과 유사한
@@ -923,11 +923,11 @@ AFS 복제 관리 데이터베이스를 유지하는 네 가지 프로세스를 실행합니다.
 <P>시스템 제어 시스템이 2진 분산 시스템이 아닌 경우 출력에는
 <B>upclientetc</B> 프로세스에 대한 오류 메시지가 포함되지만
 <B>upclientbin</B> 프로세스에 대해서는 완전한 목록이
-포함됩니다(이 경우 시스템 <B>fs5.abc.com</B>을 2진
+포함됩니다(이 경우 시스템 <B>fs5.example.com</B>을 2진
 분산 시스템으로 참조함).
 <PRE>   Instance upclientbin, (type is simple) currently running normally.
    Process last started at Mon Mar 22  05:23:49 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs5.abc.com -t 60 /usr/afs/bin'
+   Command 1 is '/usr/afs/bin/upclient fs5.example.com -t 60 /usr/afs/bin'
    bos: failed to get instance info for 'upclientetc' (no such entity)
 </PRE>
 <P><H4><A NAME="HDRWQ100">2진 분산 시스템의 출력</A></H4>
@@ -941,10 +941,10 @@ AFS 복제 관리 데이터베이스를 유지하는 네 가지 프로세스를 실행합니다.
    bos: failed to get instance info for 'upclientbin' (no such entity)
 </PRE>
 <P>이 시스템이 우연히 시스템 제어 시스템이 되지 않는 한 다음과 같은 메시지는
-시스템 제어 시스템을 참조합니다(이 경우 <B>fs3.abc.com</B>).
+시스템 제어 시스템을 참조합니다(이 경우 <B>fs3.example.com</B>).
 <PRE>   Instance upclientetc, (type is simple) currently running normally.
    Process last started at Mon Apr 5 05:23:49 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs3.abc.com -t 60 /usr/afs/etc'
+   Command 1 is '/usr/afs/bin/upclient fs3.example.com -t 60 /usr/afs/etc'
 </PRE>
 <HR><H2><A NAME="HDRWQ101" HREF="auagd002.htm#ToC_119">데이터베이스 서버 시스템 관리</A></H2>
 <P>이 절에서는 데이터베이스 서버 시스템을 관리하는 방법을 설명합니다.
@@ -1922,11 +1922,11 @@ AFS 파일 공간의 일반적 위치에 파일 사본 <B>/afs/</B><VAR>cell_name</VAR><B>/serv
 나타난 순서대로 시스템을 나열합니다. 또한 다음 예에서처럼 각 시스템에
 <TT>Host</TT> 색인 번호를 지정합니다. 색인과 시스템의 IP 주소, 이름
 또는 Ubik 조정자나 보조 사이트로서의 역할 간의 내재된 관계는 없습니다.
-<PRE>   % <B>bos listhosts fs1.abc.com</B>
-   Cell name is abc.com
-       Host 1 is fs1.abc.com
-       Host 2 is fs7.abc.com
-       Host 3 is fs4.abc.com
+<PRE>   % <B>bos listhosts fs1.example.com</B>
+   Cell name is example.com
+       Host 1 is fs1.example.com
+       Host 2 is fs7.example.com
+       Host 3 is fs4.example.com
 </PRE>
 <P>출력은 명명 서비스(예: 도메인 이름 서비스 또는 로컬 호스트 테이블)가
 제대로 기능하는 한 IP 주소 대신 이름별로 시스템을 나열합니다. IP 주소를
@@ -1975,7 +1975,7 @@ AFS 파일 공간의 일반적 위치에 파일 사본 <B>/afs/</B><VAR>cell_name</VAR><B>/serv
 AFS를 사용하는 경우 각 서버 시스템을 차례대로 명명합니다.
 <P><DT><B><VAR>host name</VAR>
 </B><DD><B>CellServDB</B> 파일에 추가할 각 데이터베이스 서버
-시스템의 완전히 규정된 호스트 이름을 지정합니다 (예: <B>fs4.abc.com</B>). BOS 서버는 <B>gethostbyname(&nbsp;)</B> 루틴을 사용하여 각 시스템의 IP 주소를 얻고 이름과 주소를 자동으로
+시스템의 완전히 규정된 호스트 이름을 지정합니다 (예: <B>fs4.example.com</B>). BOS 서버는 <B>gethostbyname(&nbsp;)</B> 루틴을 사용하여 각 시스템의 IP 주소를 얻고 이름과 주소를 자동으로
 기록합니다.
 </DL>
 </LI><LI>모든 데이터베이스 서버 시스템에서 인증 서버, 백업 서버, VL 서버를
@@ -2039,7 +2039,7 @@ AFS를 사용하는 경우 각 서버 시스템을 차례대로 명명합니다.
 AFS를 사용하는 경우 각 서버 시스템을 차례대로 명명합니다.
 <P><DT><B><VAR>host name</VAR>
 </B><DD><B>CellServDB</B> 파일에서 제거할 각 데이터베이스 서버
-시스템의 완전히 규정된 호스트 이름을 지정합니다 (예: <B>fs4.abc.com</B>).
+시스템의 완전히 규정된 호스트 이름을 지정합니다 (예: <B>fs4.example.com</B>).
 </DL>
 </LI><LI>모든 데이터베이스 서버 시스템에서 인증 서버, 백업 서버, VL 서버를
 재시작하여 새로운 시스템 집합이 새로운 Ubik 조정자에 포함되게 하십시오.

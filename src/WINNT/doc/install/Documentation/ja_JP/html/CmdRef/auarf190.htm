@@ -52,11 +52,11 @@
 <P><B>-long</B> フラグを指定すると、セッション・キーおよびトークンを構成する 8 進数が、トークンのキー・バージョン番号およびバイト数と一緒に出力されます。(バイト数が 56 でない場合には、エラーが発生しています。)
 <P>有効期限の代わりにマーカー <TT>[>> POSTDATED &lt;]</TT> が表示された場合、チケットは表示された時間まで有効になりません。(内部呼び出しによって日付の古いチケットを作成することができますが、そのための標準インターフェースは用意されていません。)
 <P><STRONG>例</STRONG>
-<P>以下の 2 つの例は、<B>abc.com</B> セルの AFS UID
-1020 および <B>test.abc.com</B> セルの AFS UID 35 のユーザーの場合です。ユーザーは、最初のセルのマシンで作業しており、両方のセルで認証されています。
+<P>以下の 2 つの例は、<B>example.com</B> セルの AFS UID
+1020 および <B>test.example.com</B> セルの AFS UID 35 のユーザーの場合です。ユーザーは、最初のセルのマシンで作業しており、両方のセルで認証されています。
 <PRE>   % <B>kas listtickets</B>
    User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
-   User's (AFS ID 35@test.abc.com) tokens for afs@test.abc.com  \
+   User's (AFS ID 35@test.example.com) tokens for afs@test.example.com  \
              [Expires Wed Mar 31 13:54:26 1999]
 
    % <B>kas listtickets -name afs -long</B>

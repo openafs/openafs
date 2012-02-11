@@ -75,9 +75,9 @@ ignored.
 
 The following command changes the status flag for the C<upclientbin> and
 C<upclientetc> processes to C<Run> in the F<BosConfig> file on the machine
-C<fs6.abc.com> and starts them running.
+C<fs6.example.com> and starts them running.
 
-   % bos start -server fs6.abc.com -instance upclientbin upclientetc
+   % bos start -server fs6.example.com -instance upclientbin upclientetc
 
 =head1 PRIVILEGE REQUIRED
 

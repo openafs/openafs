@@ -194,7 +194,7 @@ AFS のコールバックのシステムは、通常はキャッシュ・マネージャーがファイルおよびデ
 <A NAME="IDX7326"></A>
 <A NAME="IDX7327"></A>
 <P><DT><B>ThisCell
-</B><DD>この ASCII ファイルは、マシンが所属するセルの完全なドメイン形式の名前を指定する単一の行を含みます。<TT>abc.com</TT> および <TT>stateu.edu</TT> がその一例です。この値は、マシンのユーザーが認証済みユーザーとなり、コマンド・インタープリター (たとえば、
+</B><DD>この ASCII ファイルは、マシンが所属するセルの完全なドメイン形式の名前を指定する単一の行を含みます。<TT>example.com</TT> および <TT>example.org</TT> がその一例です。この値は、マシンのユーザーが認証済みユーザーとなり、コマンド・インタープリター (たとえば、
 <B>bos</B>) がサーバー・プロセスにアクセスする、デフォルトのセルを定義します。
 <P>
 <P><I>AFS インストールの手引き</I> には、AFS クライアントの機能をインストールする際に行うこのファイルの作成方法が記載されています。クライアント・マシンのセル・メンバーシップの変更について確認するには、
@@ -562,21 +562,21 @@ AFS サーバー・プロセスはこのトークンをユーザーが認証された証拠として受信します。
 1 行目の形式は次のとおりです。
 <PRE>   ><VAR>cell_name</VAR>      #<VAR>organization</VAR>
 </PRE>
-<P>ここで、<VAR>cell_name</VAR> は、セルの完全インターネット・ドメイン名であり (たとえば、<B>abc.com</B>)、<VAR>organization</VAR> は任意の数のスペースおよび番号記号 (<TT>#</TT>) の後に続く任意指定フィールドであり、セルが対応している組織の名前を指定することができます (たとえば、ABC Corporation)。1 行目の後には、各データベース・サーバー・マシンを示す分離された行が続きます。各行の形式は次のとおりです。
+<P>ここで、<VAR>cell_name</VAR> は、セルの完全インターネット・ドメイン名であり (たとえば、<B>example.com</B>)、<VAR>organization</VAR> は任意の数のスペースおよび番号記号 (<TT>#</TT>) の後に続く任意指定フィールドであり、セルが対応している組織の名前を指定することができます (たとえば、Example Corporation)。1 行目の後には、各データベース・サーバー・マシンを示す分離された行が続きます。各行の形式は次のとおりです。
 <PRE>      <VAR>IP_address</VAR>   #<VAR>machine_name</VAR>
 </PRE>
-<P>ここで、<VAR>IP_address</VAR> は、小数点付き 10 進数形式のマシンの IP アドレスです (たとえば、192.12.105.3)。任意の数のスペースおよび番号記号 (<TT>#</TT>) の後に続くのは、マシンの完全に修飾されたホスト名を示す <VAR>machine_name</VAR> です (たとえば、<B>db1.abc.com</B>)。この場合、番号記号はコメントを示しているわけではなく、
+<P>ここで、<VAR>IP_address</VAR> は、小数点付き 10 進数形式のマシンの IP アドレスです (たとえば、192.12.105.3)。任意の数のスペースおよび番号記号 (<TT>#</TT>) の後に続くのは、マシンの完全に修飾されたホスト名を示す <VAR>machine_name</VAR> です (たとえば、<B>db1.example.com</B>)。この場合、番号記号はコメントを示しているわけではなく、
 <VAR> machine_name</VAR> は必須フィールドです。
 <P>セルが表示される順序は重要ではありませんが、クライアント・マシンのホーム・セルを最初に表示すると便利です。ファイルには、何もブランク行を入れないでください。最後の項目の後にもブランク行を入れてはなりません。
 <P>以下の例は、それぞれのセルに 3 つのデータベース・サーバー・マシンが存在する 2 つのセルの項目を示します。
-<PRE>   >abc.com       #ABC Corporation (home cell)
-   192.12.105.3      #db1.abc.com
-   192.12.105.4      #db2.abc.com
-   192.12.105.55     #db3.abc.com
-   >stateu.edu    #State University cell
-   138.255.68.93     #serverA.stateu.edu
-   138.255.68.72     #serverB.stateu.edu
-   138.255.33.154    #serverC.stateu.edu
+<PRE>   >example.com       #Example Corporation (home cell)
+   192.12.105.3      #db1.example.com
+   192.12.105.4      #db2.example.com
+   192.12.105.55     #db3.example.com
+   >example.org    #Example Organization cell
+   138.255.68.93     #serverA.example.org
+   138.255.68.72     #serverB.example.org
+   138.255.33.154    #serverC.example.org
 </PRE>
 <P><H3><A NAME="HDRWQ555" HREF="auagd002.htm#ToC_453">クライアントの CellServDB ファイルの保守</A></H3>
 <A NAME="IDX7406"></A>
@@ -638,9 +638,9 @@ AFS にアクセスできるようになる前にそのファイルを読み取ってカーネル・メモリーに入
 <PRE>   % <B>fs listcells</B>
       .
       .
-   Cell abc.com on hosts db1.abc.com db2.abc.com db3.abc.com
-   Cell stateu.edu on hosts SERVERA.STATEU.EDU SERVERB.STATEU.EDU
-			    SERVERC.STATEU.EDU
+   Cell example.com on hosts db1.example.com db2.example.com db3.example.com
+   Cell example.org on hosts SERVERA.EXAMPLE.ORG SERVERB.EXAMPLE.ORG
+			    SERVERC.EXAMPLE.ORG
    Cell ghi.org on hosts 191.255.64.111 191.255.64.112
       .
       .
@@ -1021,11 +1021,11 @@ the <B>-servers</B> 引き数によって割り当てられたランクが優先されます。同じコマン
 <B>-numeric</B> フラグは使用されていないので、IP アドレスの表示は現在、そのアドレスをホスト名に変換できないことを示しています。
 <P>
 <PRE>   % <B>fs gp</B>
-   fs5.abc.com         20000
-   fs1.abc.com         30014
-   server1.stateu.edu  40011
-   fs3.abc.com         20001
-   fs4.abc.com         30001
+   fs5.example.com         20000
+   fs1.example.com         30014
+   server1.example.org  40011
+   fs3.example.com         20001
+   fs4.example.com         30001
    192.12.106.120      40002
    192.12.106.119      40001
       .   .   .   .   .     . .

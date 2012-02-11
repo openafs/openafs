@@ -84,11 +84,11 @@
       machines are configured and how much storage space is available to each user. The organization corresponding to a cell can be
       a company, a university department, or any defined group of users. From a hardware perspective, a cell is a grouping of client
       machines and server machines defined to belong to the same cell. <indexterm><primary>cells</primary><secondary>defined</secondary></indexterm> An AFS <emphasis>site</emphasis> is a
-      grouping of one or more related cells. For example, the cells at the ABC Corporation form a single site. <indexterm><primary>site defined</primary></indexterm></para>
+      grouping of one or more related cells. For example, the cells at the Example Corporation form a single site. <indexterm><primary>site defined</primary></indexterm></para>
 
       <para>By convention, the subdirectories of the <emphasis role="bold">/afs</emphasis> directory are cellular filespaces, each
       of which contains subdirectories and files that belong to a single cell. For example, directories and files relevant to the
-      ABC Corporation cell are stored in the subdirectory <emphasis role="bold">/afs/abc.com</emphasis>.</para>
+      Example Corporation cell are stored in the subdirectory <emphasis role="bold">/afs/example.com</emphasis>.</para>
 
       <para>While each cell organizes and maintains its own filespace, it can also connect with the filespace of other AFS cells.
       The result is a huge filespace that enables file sharing within and across cells. <indexterm><primary>communication</primary><secondary>among cells and sites</secondary></indexterm></para>
@@ -118,8 +118,8 @@
       <para>If your system administrator has followed the conventional practice, your home directory corresponds to one volume,
       which keeps its contents together on one partition of a file server machine. User volumes are typically named <emphasis
       role="bold">user.</emphasis><replaceable>username</replaceable>. For example, the volume for a user named <emphasis
-      role="bold">smith</emphasis> in the cell <emphasis role="bold">abc.com</emphasis> is called <emphasis
-      role="bold">user.smith</emphasis> and is mounted at the directory <emphasis role="bold">/afs/abc.com/usr/smith</emphasis>.
+      role="bold">smith</emphasis> in the cell <emphasis role="bold">example.com</emphasis> is called <emphasis
+      role="bold">user.smith</emphasis> and is mounted at the directory <emphasis role="bold">/afs/example.com/usr/smith</emphasis>.
       <indexterm><primary>examples</primary><secondary>volume/mount point interaction</secondary></indexterm></para>
 
       <para>Because AFS volumes are stored on different file server machines, when a machine becomes unavailable only the volumes on
@@ -140,9 +140,9 @@
       error message. For instructions on checking volume quota, see <link linkend="HDRWQ39">Displaying Volume Quota</link>.</para>
 
       <para>Volumes have completely independent quotas. For example, say that the current working directory is <emphasis
-      role="bold">/afs/abc.com/usr/smith</emphasis>, which is the mount point for the <emphasis role="bold">user.smith</emphasis>
+      role="bold">/afs/example.com/usr/smith</emphasis>, which is the mount point for the <emphasis role="bold">user.smith</emphasis>
       volume with 1000 free blocks. You try to copy a 500 block file from the current working directory to the <emphasis
-      role="bold">/afs/abc.com/usr/pat</emphasis> directory, the mount point for the volume <emphasis
+      role="bold">/afs/example.com/usr/pat</emphasis> directory, the mount point for the volume <emphasis
       role="bold">user.pat</emphasis>. However, you get an error message saying there is not enough space. You check the volume
       quota for <emphasis role="bold">user.pat</emphasis>, and find that the volume only has 50 free blocks.</para>
     </sect2>

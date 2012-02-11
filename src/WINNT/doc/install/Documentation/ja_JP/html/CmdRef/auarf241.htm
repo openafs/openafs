@@ -61,10 +61,10 @@
 </B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
 </DL>
 <P><STRONG>例</STRONG>
-<P>以下の例では、<B>bos create</B> コマンドが、ホスト・マシン <B>fs1.abc.com</B> 上の <B>upserver</B> プロセスを定義して、開始します。最後のパラメーター (引用符で囲まれています) は、
+<P>以下の例では、<B>bos create</B> コマンドが、ホスト・マシン <B>fs1.example.com</B> 上の <B>upserver</B> プロセスを定義して、開始します。最後のパラメーター (引用符で囲まれています) は、
 <B>/usr/afs/bin</B> ディレクトリーの内容を非暗号化形式で、および <B>/usr/afs/etc</B> ディレクトリーの内容を暗号化形式で配布するように、
 <B>upserver</B> プロセスに指示しています。
-<PRE>   % <B>bos create  -server fs1.abc.com -instance upserver -type simple</B>   \
+<PRE>   % <B>bos create  -server fs1.example.com -instance upserver -type simple</B>   \
                  <B>-cmd "/usr/afs/bin/upserver /usr/afs/bin -crypt /usr/afs/etc"</B>
 </PRE>
 <P><STRONG>必要となる特権</STRONG>

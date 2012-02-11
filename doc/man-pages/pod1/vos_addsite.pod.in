@@ -106,10 +106,10 @@ versions later than 1.4.1 or 1.5.0.
 
 =head1 EXAMPLES
 
-The following example, appropriate in the State University cell, defines a
+The following example, appropriate in the Example Organization cell, defines a
 read-only site for the cell's C<root.afs> volume.
 
-   % vos addsite -server sv7.stateu.edu -partition /vicepb -id root.afs
+   % vos addsite -server sv7.example.org -partition /vicepb -id root.afs
 
 =head1 PRIVILEGE REQUIRED
 

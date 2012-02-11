@@ -79,7 +79,7 @@
 <P>
 <P>これは、<B>uss add</B> コマンドの引き数 <B>-pwexpires</B> に対応します。テンプレート・ファイルで対応する変数は、$PWEXPIRES です。
 <P><DT><B><VAR>file_server</VAR>
-</B><DD>新規ユーザーのボリュームを作成するファイル・サーバー・マシンを指定します。完全修飾されたホスト名 (たとえば、<B>fs1.abc.com</B>) を指定するようにしてください。ボリューム作成時に名前を解決するときにセルのネーム・サービスが使用可能であれば、省略形を使用することができます。
+</B><DD>新規ユーザーのボリュームを作成するファイル・サーバー・マシンを指定します。完全修飾されたホスト名 (たとえば、<B>fs1.example.com</B>) を指定するようにしてください。ボリューム作成時に名前を解決するときにセルのネーム・サービスが使用可能であれば、省略形を使用することができます。
 <P>
 <P>これは、<B>uss add</B> コマンドの引き数 <B>-server</B> に対応します。テンプレート・ファイルで対応する変数は、$SERVER です。
 <P><DT><B><VAR>partition</VAR>
@@ -188,13 +188,13 @@ ID が必要になります。
 <B>V</B> 命令を参照しています (これは、テンプレート・ファイルでは単一行でなければなりません)。
 <PRE>   add smith:John Smith:::fs1:a:::::marketing
    add jones:Pat Jones:::fs3:c:::::finance
-   V user.$USER $SERVER.abc.com /vicep$PART 2000 \
-       /afs/abc.com/usr/$3/$USER $UID $USER all
+   V user.$USER $SERVER.example.com /vicep$PART 2000 \
+       /afs/example.com/usr/$3/$USER $UID $USER all
 
 </PRE>
-<P>最初の <B>add</B> 命令により、初期パスワード <B>changeme</B> と保護サーバーによって提供された $UID に値を持つ <B>smith</B> というアカウントを、保護データベースおよび認証データベースに作成しています。ボリューム <B>user.smith</B> は、ファイル・サーバー・マシン <B>fs1.abc.com</B> の区画 <B>/vicepa</B> にあり、
-<B>/afs/abc.com/usr/marketing/smith</B> にマウントされます。このアカウントには自分のホーム・ディレクトリーがあり、そのルート・ディレクトリーのアクセス制御リスト (ACL) ですべてのアクセス権が許可されています。
-<B> jones</B> のアカウントも同様ですが、このボリュームはファイル・サーバー・マシン <B>fs3.abc.com</B> の区画 <B>/vicepc</B> にあり、<B>/afs/abc.com/usr/finance/jones</B> にマウントされます。
+<P>最初の <B>add</B> 命令により、初期パスワード <B>changeme</B> と保護サーバーによって提供された $UID に値を持つ <B>smith</B> というアカウントを、保護データベースおよび認証データベースに作成しています。ボリューム <B>user.smith</B> は、ファイル・サーバー・マシン <B>fs1.example.com</B> の区画 <B>/vicepa</B> にあり、
+<B>/afs/example.com/usr/marketing/smith</B> にマウントされます。このアカウントには自分のホーム・ディレクトリーがあり、そのルート・ディレクトリーのアクセス制御リスト (ACL) ですべてのアクセス権が許可されています。
+<B> jones</B> のアカウントも同様ですが、このボリュームはファイル・サーバー・マシン <B>fs3.example.com</B> の区画 <B>/vicepc</B> にあり、<B>/afs/example.com/usr/finance/jones</B> にマウントされます。
 <P>ボリュームのマウント・ポイント、UID、$1 変数、および $2 変数に対応するフィールド(サンプルの先頭行の <TT>a</TT> と <TT>marketing</TT> の間) は空になっています。これは、対応する変数がテンプレート・ファイルにないためです。初期パスワードのフィールドも空になっています。
 <P>次の <B>add</B> 命令は前の例と同じ結果になりますが、値のない番号変数に空のフィールドを明示的に指定しています。
 <PRE>   add smith:John Smith:::fs1:a:::::marketing::::::
@@ -205,12 +205,12 @@ ID が必要になります。
 <B>savevolume</B> 命令のセットがある完全なバルク入力ファイルの例です。ユーザー <B>smith</B>、<B>pat</B>、および <B>rogers</B> に対する <B>delete</B> 命令が <B>savevolume</B> 命令の前にあり、3 番目のフィールドがすべて空になっているので、該当するホーム・ボリュームは削除されます。
 <B>savevolume</B> 命令で設定されたデフォルトが適用されるので、ユーザー <B>terry</B> のボリュームは保存されますが、ユーザー <B>johnson</B> のボリュームは、その <B>delete</B> 命令の
 3 番目のフィールドで現在のデフォルトが無効になるので、削除されます。
-<PRE>   delete smith:/afs/abc.com/usr/smith
-   delete pat:/afs/abc.com/usr/pat
-   delete rogers:/afs/abc.com/usr/rogers
+<PRE>   delete smith:/afs/example.com/usr/smith
+   delete pat:/afs/example.com/usr/pat
+   delete rogers:/afs/example.com/usr/rogers
    savevolume
-   delete terry:/afs/abc.com/usr/terry
-   delete johnson:/afs/abc.com/usr/johnson:delvolume
+   delete terry:/afs/example.com/usr/terry
+   delete johnson:/afs/example.com/usr/johnson:delvolume
 
 </PRE>
 <P>次の例は、<B>add</B> 命令と <B>delete</B> 命令の間に <B>exec</B> 命令があるバルク入力ファイルの例です。追加操作が完了し、削除操作が開始すると、<B>uss bulk</B> コマンドが発行された コマンド・シェルに次のメッセージが表示されます。

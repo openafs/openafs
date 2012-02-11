@@ -111,16 +111,16 @@ ignored.
 =head1 EXAMPLES
 
 The following example removes all files from the F</usr/afs/bin> directory
-on the machine C<fs3.abc.com> that have a C<.BAK> or C<.OLD> extension.
+on the machine C<fs3.example.com> that have a C<.BAK> or C<.OLD> extension.
 
-   % bos prune -server fs3.abc.com -bak -old
+   % bos prune -server fs3.example.com -bak -old
 
 The following example removes all files from the F</usr/afs/bin> directory
-on the machine C<db2.abc.com> that have a C<.BAK> or C<.OLD> extension,
+on the machine C<db2.example.com> that have a C<.BAK> or C<.OLD> extension,
 and all files from the F</usr/afs/logs> directory that have a C<core.>
 prefix.
 
-   % bos prune -server db2.abc.com -all
+   % bos prune -server db2.example.com -all
 
 =head1 PRIVILEGE REQUIRED
 

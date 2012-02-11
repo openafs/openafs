@@ -84,23 +84,23 @@
 
 </PRE>
 <P><STRONG>例</STRONG>
-<P>以下のコマンドは、発行者を <B>dce.abc.com</B> セルの <B>cell_admin</B> として認証します。
-<PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com</B>
+<P>以下のコマンドは、発行者を <B>dce.example.com</B> セルの <B>cell_admin</B> として認証します。
+<PRE>   % <B>dlog -principal cell_admin -cell dce.example.com</B>
    Password: <VAR>cell_admin's password</VAR>
 
 </PRE>
-<P>以下の例では、発行者は <B>cell_admin</B> として <B>dce.abc.com</B> セルを認証して、100 時間のチケット存続時間を要求しています。
+<P>以下の例では、発行者は <B>cell_admin</B> として <B>dce.example.com</B> セルを認証して、100 時間のチケット存続時間を要求しています。
 <B>tokens</B> コマンドは、ユーザーがユーザー <B>cell_admin</B> として DCE 証明書を獲得したことを確認します。
-AFS ID は、<B>dce.abc.com</B> セルの DCE レジストリーで
+AFS ID は、<B>dce.example.com</B> セルの DCE レジストリーで
 <B>cell_admin</B> に割り当てられた UNIX ID <B>1</B> と同じです。
-<PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com -lifetime 100</B>
+<PRE>   % <B>dlog -principal cell_admin -cell dce.example.com -lifetime 100</B>
    Password: <VAR>cell_admin's password</VAR>
 
    % <B>tokens</B>
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12]
-   User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14]
+   User's (AFS ID 1) tokens for afs@dce.example.com [Expires Jul 6 14:12]
+   User's (AFS ID 4758) tokens for afs@example.com [Expires Jul 2 13:14]
       --End of list--
 
 </PRE>

@@ -119,9 +119,9 @@ specified partition.
 =head1 EXAMPLES
 
 The following command displays all partitions on the file server machine
-C<fs2.abc.com>.
+C<fs2.example.com>.
 
-   % vos partinfo fs2.abc.com
+   % vos partinfo fs2.example.com
    Free space on partition /vicepa: 27301 K blocks out of total 549197
    Free space on partition /vicepb: 13646 K blocks out of total 69194
    Free space on partition /vicepc: 31798 K blocks out of total 320315

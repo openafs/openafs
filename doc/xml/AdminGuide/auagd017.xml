@@ -547,14 +547,14 @@
           </listitem>
         </orderedlist></para>
 
-      <para>As an example, the template file used by the ABC Corporation includes the following <emphasis role="bold">E</emphasis>
+      <para>As an example, the template file used by the Example Corporation includes the following <emphasis role="bold">E</emphasis>
       instruction to create a file called <emphasis role="bold">passwd_</emphasis>username in the directory <emphasis
-      role="bold">/afs/.abc.com/common/etc/newaccts</emphasis> (the entire contents of the template file appear in <link
+      role="bold">/afs/.example.com/common/etc/newaccts</emphasis> (the entire contents of the template file appear in <link
       linkend="HDRWQ471">Example uss Templates</link> and a full description of the <emphasis role="bold">E</emphasis> instruction
       appears in <link linkend="HDRWQ476">Creating One-Line Files with the E Instruction</link>):</para>
 
       <programlisting>
-   E /afs/.abc.com/common/etc/newaccts/passwd_$USER 0644 root \
+   E /afs/.example.com/common/etc/newaccts/passwd_$USER 0644 root \
         "$USER:X:$UID:11:$NAME:$MTPT:/bin/csh"
 </programlisting>
 
@@ -562,7 +562,7 @@
       <emphasis role="bold">passwd_smith</emphasis> which contains the following line:</para>
 
       <programlisting>
-   smith:X:1205:11:Joe L. Smith:/afs/abc.com/usr/usr1/smith:/bin/csh
+   smith:X:1205:11:Joe L. Smith:/afs/example.com/usr/usr1/smith:/bin/csh
 </programlisting>
 
       <para>A shell script is probably the easiest way to incorporate a set of files created in this manner into a common source
@@ -578,14 +578,14 @@
 
       <para><emphasis role="bold">Example C Shell Script</emphasis></para>
 
-      <para>The first example is a simple C shell script suitable for the ABC Corporation cell. It incorporates the individual files
-      found in the <emphasis role="bold">/afs/.abc.com/common/uss/newaccts</emphasis> directory into a new version of the global
-      password file found in the <emphasis role="bold">/afs/.abc.com/common/etc</emphasis> directory, sorting the files into
+      <para>The first example is a simple C shell script suitable for the Example Corporation cell. It incorporates the individual files
+      found in the <emphasis role="bold">/afs/.example.com/common/uss/newaccts</emphasis> directory into a new version of the global
+      password file found in the <emphasis role="bold">/afs/.example.com/common/etc</emphasis> directory, sorting the files into
       alphabetical order. It takes care to save the current version with a <emphasis role="bold">.old</emphasis> extension, then
       removes the individual files when done.</para>
 
       <programlisting>
-   set  dir = /afs/.abc.com/common
+   set  dir = /afs/.example.com/common
    cat  $dir/uss/newaccts/passwd_* $dir/etc/passwd  &gt;!  $dir/etc/passwd.new
    mv  $dir/etc/passwd  $dir/etc/passwd.old
    sort  $dir/etc/passwd.new  &gt;  $dir/etc/passwd
@@ -597,17 +597,17 @@
       <para>The second, more elaborate, example is a Bourne shell script that first verifies that there are new <emphasis
       role="bold">passwd_</emphasis>username files to be incorporated into the global password file. While running, it checks that
       each new entry does not already exist. Like the shorter C shell example, it incorporates the individual files found in the
-      <emphasis role="bold">/afs/.abc.com/common/uss/newaccts</emphasis> directory into a new version of the global <emphasis
-      role="bold">passwd</emphasis> file found in the <emphasis role="bold">/afs/.abc.com/common/etc</emphasis> directory.</para>
+      <emphasis role="bold">/afs/.example.com/common/uss/newaccts</emphasis> directory into a new version of the global <emphasis
+      role="bold">passwd</emphasis> file found in the <emphasis role="bold">/afs/.example.com/common/etc</emphasis> directory.</para>
 
       <programlisting>
    #!/bin/sh
-   DESTDIR=/afs/.abc.com/common/uss/newaccts
+   DESTDIR=/afs/.example.com/common/uss/newaccts
    cd  $DESTDIR
-   DEST=/afs/.abc.com/common/etc
-   cp /afs/.abc.com/common/etc/passwd   /afs/.abc.com/common/uss/newaccts/passwd
+   DEST=/afs/.example.com/common/etc
+   cp /afs/.example.com/common/etc/passwd   /afs/.example.com/common/uss/newaccts/passwd
    echo "copied in passwd file."
-   PASSWD=/afs/.abc.com/common/uss/newaccts/passwd
+   PASSWD=/afs/.example.com/common/uss/newaccts/passwd
    ENTRIES=`ls passwd_*`
    case $ENTRIES in 
    "")
@@ -630,7 +630,7 @@
            esac
            mv  $i  ../old.passdir/done_${i}
         done
-        cd  /afs/.abc.com/common/uss/newaccts
+        cd  /afs/.example.com/common/uss/newaccts
         echo  "sorting password file"
         sort  ${PASSWD}  &gt;  ${PASSWD}.sorted
         echo  "installing files"     
@@ -1100,13 +1100,13 @@
       <link linkend="HDRWQ473">Creating a Volume with the V Instruction</link>.</para>
 
       <para>If some aspect of account configuration is partly constant and partly variable, you can combine variables and constants
-      in an instruction field. For example, suppose that the ABC Corporation mounts user volumes in the <emphasis
-      role="bold">/afs/abc.com/usr</emphasis> directory. That part of the pathname is constant, but the name of the mount point and
+      in an instruction field. For example, suppose that the Example Corporation mounts user volumes in the <emphasis
+      role="bold">/afs/example.com/usr</emphasis> directory. That part of the pathname is constant, but the name of the mount point and
       home directory is the user's username, which corresponds to the $USER variable. To configure accounts in this way, combine a
       constant string and a variable in the <emphasis role="bold">V</emphasis> instruction's mount_point field as follows:</para>
 
       <programlisting>
-   /afs/abc.com/usr/$USER
+   /afs/example.com/usr/$USER
 </programlisting>
 
       <para>Then provide the value for the $USER variable with the <emphasis role="bold">-user</emphasis> argument to the <emphasis
@@ -1258,13 +1258,13 @@
 
       <para>The first example creates a basic account. It contains two <emphasis role="bold">G</emphasis> instructions and a
       <emphasis role="bold">V</emphasis> instruction that defines the volume name, file server machine, partition, quota in
-      kilobytes, mount point, home directory owner, and home directory access control list. In the ABC Corporation cell, a suitable
+      kilobytes, mount point, home directory owner, and home directory access control list. In the Example Corporation cell, a suitable
       template is:</para>
 
       <programlisting>
-   G /afs/.abc.com/usr1
-   G /afs/.abc.com/usr2
-   V  user.$USER  $SERVER.abc.com  /vicep$PART  5000  $AUTO/$USER   $UID  \
+   G /afs/.example.com/usr1
+   G /afs/.example.com/usr2
+   V  user.$USER  $SERVER.example.com  /vicep$PART  5000  $AUTO/$USER   $UID  \
         $USER all staff rl
 </programlisting>
 
@@ -1288,7 +1288,7 @@
       <para>The Protection Server automatically assigns an AFS UID for the $UID variable, and the <emphasis role="bold">G</emphasis>
       instructions provide a value for the $AUTO variable.</para>
 
-      <para>The following example template file creates a full account in the ABC Corporation cell. The following sections about
+      <para>The following example template file creates a full account in the Example Corporation cell. The following sections about
       each type of instruction describe the effect of the examples. Note that the <emphasis role="bold">V</emphasis> and <emphasis
       role="bold">E</emphasis> instructions appear on two lines each only for the sake of legibility.</para>
 
@@ -1296,12 +1296,12 @@
    #
    # Specify the available grouping directories
    #
-   G /afs/.abc.com/usr1
-   G /afs/.abc.com/usr2
+   G /afs/.example.com/usr1
+   G /afs/.example.com/usr2
    #
    # Create the user's home volume
    #
-   V user.$USER $SERVER.abc.com /vicep$PART 5000 /afs/.abc.com/$AUTO/$USER \
+   V user.$USER $SERVER.example.com /vicep$PART 5000 /afs/.example.com/$AUTO/$USER \
         $UID $USER all abc:staff rl
    #
    # Create directories and files for mail
@@ -1312,18 +1312,18 @@
    #
    # Here are some useful scripts for login etc.
    #
-   F $MTPT/.Xbiff 0755 $UID /afs/abc.com/admin/user/proto
-   F $MTPT/.Xresources 0644 $UID /afs/abc.com/admin/user/proto
-   F $MTPT/.Xsession 0755 $UID /afs/abc.com/admin/user/proto
-   F $MTPT/.cshrc 0755 $UID /afs/abc.com/admin/user/proto
-   F $MTPT/.login 0755 $UID /afs/abc.com/admin/user/proto
-   F $MTPT/.logout 0755 $UID /afs/abc.com/admin/user/proto
-   F $MTPT/.twmrc 0644 $UID /afs/abc.com/admin/user/proto
-   F $MTPT/preferences 0644 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.Xbiff 0755 $UID /afs/example.com/admin/user/proto
+   F $MTPT/.Xresources 0644 $UID /afs/example.com/admin/user/proto
+   F $MTPT/.Xsession 0755 $UID /afs/example.com/admin/user/proto
+   F $MTPT/.cshrc 0755 $UID /afs/example.com/admin/user/proto
+   F $MTPT/.login 0755 $UID /afs/example.com/admin/user/proto
+   F $MTPT/.logout 0755 $UID /afs/example.com/admin/user/proto
+   F $MTPT/.twmrc 0644 $UID /afs/example.com/admin/user/proto
+   F $MTPT/preferences 0644 $UID /afs/example.com/admin/user/proto
    #
    # Make a passwd entry
    #
-   E /afs/.abc.com/common/etc/newaccts/passwd_$USER 0644 root \
+   E /afs/.example.com/common/etc/newaccts/passwd_$USER 0644 root \
         "$USER:X:$UID:11:$NAME:$MTPT:/bin/csh"
    #
    # Put in the standard password/authentication checks
@@ -1336,7 +1336,7 @@
    #
    # Here we set up the symbolic link to public directory
    #
-   S /afs/abc.com/public/$USER $MTPT/public
+   S /afs/example.com/public/$USER $MTPT/public
 </programlisting>
 
       <indexterm>
@@ -1406,15 +1406,15 @@
 
       <para>Specify the read/write path to each directory, to avoid the failure that results when you attempt to create a new mount
       point in a read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-      pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the concept
+      pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion of the concept
       of read/write and read-only paths through the filespace, see <link linkend="HDRWQ208">Mounting Volumes</link>.</para>
 
-      <para>For example, the ABC Corporation example template for a full account in <link linkend="HDRWQ471">Example uss
+      <para>For example, the Example Corporation example template for a full account in <link linkend="HDRWQ471">Example uss
       Templates</link> defines two directories:</para>
 
       <programlisting>
-   G /afs/.abc.com/usr1
-   G /afs/.abc.com/usr2
+   G /afs/.example.com/usr1
+   G /afs/.example.com/usr2
 </programlisting>
 
       <para>and puts the value <emphasis role="bold">$AUTO/$USER</emphasis> in the <emphasis role="bold">V</emphasis> instruction's
@@ -1426,7 +1426,7 @@
 </programlisting>
 
       <para>and specify a more complete pathname in the <emphasis role="bold">V</emphasis> instruction's mount_point field:
-      <emphasis role="bold">/afs/.abc.com/$AUTO/$USER</emphasis>. <indexterm>
+      <emphasis role="bold">/afs/.example.com/$AUTO/$USER</emphasis>. <indexterm>
           <primary>uss commands</primary>
 
           <secondary>volume</secondary>
@@ -1499,8 +1499,8 @@
       only for legibility):</para>
 
       <programlisting>
-   V  user.$USER  $SERVER.abc.com  /vicep$PART  5000  \
-       /afs/.abc.com/$AUTO/$USER  $UID  $USER all abc:staff rl
+   V  user.$USER  $SERVER.example.com  /vicep$PART  5000  \
+       /afs/.example.com/$AUTO/$USER  $UID  $USER all abc:staff rl
 </programlisting>
 
       <para>The <emphasis role="bold">V</emphasis> instruction's syntax is as follows:</para>
@@ -1529,7 +1529,7 @@
               role="bold">uss add</emphasis> command or from the bulk input file <emphasis role="bold">add</emphasis> instruction's
               username field.</para>
 
-              <para>The ABC Corporation example uses the value <emphasis role="bold">user.$USER</emphasis> to assign the
+              <para>The Example Corporation example uses the value <emphasis role="bold">user.$USER</emphasis> to assign the
               conventional volume name, <emphasis role="bold">user.</emphasis>username. When creating an account for user <emphasis
               role="bold">smith</emphasis>, for example, you then include <emphasis role="bold">-user smith</emphasis> as an
               argument to the <emphasis role="bold">uss add</emphasis> command, or place the value <emphasis
@@ -1543,7 +1543,7 @@
 
             <listitem>
               <para>Names the file server machine on which to create the new volume. It is best to provide a fully qualified host
-              name (for example, <emphasis role="bold">fs1.abc.com</emphasis>), but an abbreviated form is acceptable if the cell's
+              name (for example, <emphasis role="bold">fs1.example.com</emphasis>), but an abbreviated form is acceptable if the cell's
               naming service is available to resolve it at the time the volume is created.</para>
 
               <para>To place different users' volumes on different file server machines, use the $SERVER variable in this field, and
@@ -1553,10 +1553,10 @@
               completely on the command line is to combine a constant and the $SERVER variable. Specifically, the constant specifies
               the domain-name suffix common to all the file server machines.</para>
 
-              <para>In the ABC Corporation example, all of the file server machines in the cell share the <emphasis
-              role="bold">abc.com</emphasis> domain name suffix, so the server field combines a variable and constant: <emphasis
-              role="bold">$SERVER.abc.com</emphasis>. To place the new volume on the machine <emphasis
-              role="bold">fs1.abc.com</emphasis>, you then include <emphasis role="bold">-server fs1</emphasis> as an argument to
+              <para>In the Example Corporation example, all of the file server machines in the cell share the <emphasis
+              role="bold">example.com</emphasis> domain name suffix, so the server field combines a variable and constant: <emphasis
+              role="bold">$SERVER.example.com</emphasis>. To place the new volume on the machine <emphasis
+              role="bold">fs1.example.com</emphasis>, you then include <emphasis role="bold">-server fs1</emphasis> as an argument to
               the <emphasis role="bold">uss add</emphasis> command, or place the value <emphasis role="bold">fs1</emphasis> in the
               bulk input file <emphasis role="bold">add</emphasis> instruction's server field.</para>
             </listitem>
@@ -1577,7 +1577,7 @@
               instruction. Because all full partition names start with the <emphasis role="bold">/vicep</emphasis> string, it is
               convenient to combine that string as a constant with the $PART variable.</para>
 
-              <para>The ABC Corporation example template combines the constant string <emphasis role="bold">/vicep</emphasis> and
+              <para>The Example Corporation example template combines the constant string <emphasis role="bold">/vicep</emphasis> and
               the $PART variable in this way, as <emphasis role="bold">/vicep$PART</emphasis>. <indexterm>
                   <primary>uss commands</primary>
 
@@ -1612,7 +1612,7 @@
               with the <emphasis role="bold">-var</emphasis> argument to the <emphasis role="bold">uss add</emphasis> command or in
               the appropriate field of the bulk input file <emphasis role="bold">add</emphasis> instruction.</para>
 
-              <para>The ABC Corporation example grants a 5000 KB initial quota to every new user. <indexterm>
+              <para>The Example Corporation example grants a 5000 KB initial quota to every new user. <indexterm>
                   <primary>uss commands</primary>
 
                   <secondary>volume</secondary>
@@ -1644,7 +1644,7 @@
 
               <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to create the
               new mount point in a read-only volume. By convention, you indicate the read/write path by placing a period before the
-              cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). If you use the
+              cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). If you use the
               $AUTO variable in this field, the directories named by each <emphasis role="bold">G</emphasis> instruction possibly
               already indicate the read/write path. For further discussion of the concept of read/write and read-only paths through
               the filespace, see <link linkend="HDRWQ208">Mounting Volumes</link>.</para>
@@ -1669,7 +1669,7 @@
                     role="bold">/afs/</emphasis>cellname<emphasis role="bold">/usr</emphasis> is an AFS-appropriate variation on the
                     UNIX <emphasis role="bold">/usr</emphasis> convention. This choice is most appropriate for a cell with a small
                     number of user accounts. The simplest way to implement this choice is to combine a constant string and the $USER
-                    variable, as in <emphasis role="bold">/afs/.abc.com/usr/$USER</emphasis>.</para>
+                    variable, as in <emphasis role="bold">/afs/.example.com/usr/$USER</emphasis>.</para>
                   </listitem>
 
                   <listitem>
@@ -1682,17 +1682,17 @@
                     linkend="HDRWQ472">Evenly Distributing User Home Directories with the G Instruction</link>, the <emphasis
                     role="bold">uss</emphasis> command interpreter substitutes the directory that is defined by a preceding
                     <emphasis role="bold">G</emphasis> template instruction and that currently has the fewest entries. The example
-                    ABC Corporation template illustrates this choice by using the value <emphasis
-                    role="bold">/afs/.abc.com/$AUTO/$USER</emphasis>.</para>
+                    Example Corporation template illustrates this choice by using the value <emphasis
+                    role="bold">/afs/.example.com/$AUTO/$USER</emphasis>.</para>
                   </listitem>
 
                   <listitem>
                     <para>Distributing home directories into multiple directories that reflect divisions like academic or corporate
                     departments. Perhaps the simplest way to implement this scheme is to use the $MTPT variable to represent the
-                    department, as in <emphasis role="bold">/afs/.ghi.com/usr/$MTPT/$USER</emphasis>. You then provide <emphasis
+                    department, as in <emphasis role="bold">/afs/.example.com/usr/$MTPT/$USER</emphasis>. You then provide <emphasis
                     role="bold">-user smith</emphasis> and <emphasis role="bold">-mount acctg</emphasis> arguments to the <emphasis
                     role="bold">uss add</emphasis> command to create the mount point <emphasis
-                    role="bold">/afs/.ghi.com/usr/acctg/smith</emphasis>.</para>
+                    role="bold">/afs/.example.com/usr/acctg/smith</emphasis>.</para>
                   </listitem>
 
                   <listitem>
@@ -1704,10 +1704,10 @@
                     letters.</para>
 
                     <para>Perhaps the simplest way to implement this scheme is to use the $MTPT variable to represent the letter or
-                    letters, as in <emphasis role="bold">/afs/.jkl.com/usr/$MTPT/$USER</emphasis>. Then provide the <emphasis
+                    letters, as in <emphasis role="bold">/afs/.example.com/usr/$MTPT/$USER</emphasis>. Then provide the <emphasis
                     role="bold">-user smith</emphasis> and <emphasis role="bold">-mount s/m</emphasis> arguments to the <emphasis
                     role="bold">uss add</emphasis> command to create the mount point <emphasis
-                    role="bold">/afs/.jkl.com/usr/s/m/smith</emphasis>.</para>
+                    role="bold">/afs/.example.com/usr/s/m/smith</emphasis>.</para>
                   </listitem>
                 </itemizedlist></para>
             </listitem>
@@ -1719,7 +1719,7 @@
             <listitem>
               <para>Specifies the username or UID of the user to be designated the mount point's owner in the output from the UNIX
               <emphasis role="bold">ls -ld</emphasis> command. To follow the standard convention for home directory ownership, use
-              the $UID variable in this field, as in the ABC Corporation example template. The Protection Server then automatically
+              the $UID variable in this field, as in the Example Corporation example template. The Protection Server then automatically
               assigns an AFS UID unless you provide the <emphasis role="bold">-uid</emphasis> argument to the <emphasis
               role="bold">uss add</emphasis> command or fill in the uid field in the bulk input file <emphasis
               role="bold">add</emphasis> instruction. (If you are converting existing UNIX accounts, see the discussion of
@@ -1761,7 +1761,7 @@
               role="bold">uss</emphasis> command interpreter automatically deletes that user from any ACLs set during the creation
               process.</para>
 
-              <para>The ABC Corporation example uses the following value to grant all permissions to the new user and <emphasis
+              <para>The Example Corporation example uses the following value to grant all permissions to the new user and <emphasis
               role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) and <emphasis role="bold">l</emphasis> (<emphasis
               role="bold">lookup</emphasis>) permissions to the members of the <emphasis role="bold">abc:staff</emphasis>
               group:</para>
@@ -1855,12 +1855,12 @@
 
               <para>Specify the read/write pathname to the directory, to avoid the failure that results when you attempt to create a
               new directory in a read-only volume. By convention, you indicate the read/write path by placing a period before the
-              cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). If you use the
+              cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). If you use the
               $MTPT variable in this field, the value in the <emphasis role="bold">V</emphasis> instruction's mount_point field
               possibly already indicates the read/write path. For further discussion of the concept of read/write and read-only
               paths through the filespace, see <link linkend="HDRWQ208">Mounting Volumes</link>.</para>
 
-              <para>The ABC Corporation example uses the value <emphasis role="bold">$MTPT/Mailbox</emphasis> to place the <emphasis
+              <para>The Example Corporation example uses the value <emphasis role="bold">$MTPT/Mailbox</emphasis> to place the <emphasis
               role="bold">Mailbox</emphasis> subdirectory in the user's home directory.</para>
             </listitem>
           </varlistentry>
@@ -1875,7 +1875,7 @@
               role="bold">rw-r--r--</emphasis>. The first (owner) <emphasis role="bold">x</emphasis> bit must be turned on to enable
               access to a directory.</para>
 
-              <para>The ABC Corporation example uses the value <emphasis role="bold">0700</emphasis> to set the mode bits on the
+              <para>The Example Corporation example uses the value <emphasis role="bold">0700</emphasis> to set the mode bits on the
               <emphasis role="bold">Mailbox</emphasis> subdirectory to <emphasis role="bold">rwxr-----</emphasis>.</para>
             </listitem>
           </varlistentry>
@@ -1887,7 +1887,7 @@
               <para>Specifies the username or UID of the user to be designated the directory's owner in the output from the UNIX
               <emphasis role="bold">ls -ld</emphasis> command.</para>
 
-              <para>If the directory resides in AFS, place the $UID variable in this field, as in the ABC Corporation example
+              <para>If the directory resides in AFS, place the $UID variable in this field, as in the Example Corporation example
               template. The Protection Server then automatically assigns an AFS UID unless you provide the <emphasis
               role="bold">-uid</emphasis> argument to the <emphasis role="bold">uss add</emphasis> command or fill in the uid field
               in the bulk input file <emphasis role="bold">add</emphasis> instruction. (If you are converting existing UNIX
@@ -1935,7 +1935,7 @@
               directory is on the local disk, as detailed in <link linkend="HDRWQ470">About Creating Local Disk Directories and
               Files</link>.</para>
 
-              <para>The ABC Corporation example uses the following value to grant all permissions to the new user, no permissions to
+              <para>The Example Corporation example uses the following value to grant all permissions to the new user, no permissions to
               the members of the <emphasis role="bold">abc:staff</emphasis> group, and the <emphasis role="bold">l</emphasis>
               (<emphasis role="bold">lookup</emphasis>), <emphasis role="bold">i</emphasis> (<emphasis
               role="bold">insert</emphasis>), and <emphasis role="bold">k</emphasis> (<emphasis role="bold">lock</emphasis>)
@@ -2012,7 +2012,7 @@
       in the full account template in <link linkend="HDRWQ471">Example uss Templates</link>:</para>
 
       <programlisting>
-   F $MTPT/.login 0755 $UID /afs/abc.com/admin/user/proto
+   F $MTPT/.login 0755 $UID /afs/example.com/admin/user/proto
 </programlisting>
 
       <para>The <emphasis role="bold">F</emphasis> instruction's syntax is as follows:</para>
@@ -2042,12 +2042,12 @@
 
               <para>Specify the read/write path to the file, to avoid the failure that results when you attempt to create a new file
               in a read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-              pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). If you use the $MTPT variable
+              pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). If you use the $MTPT variable
               in this field, the value in the <emphasis role="bold">V</emphasis> instruction's mount_point field possibly already
               indicates the read/write path. For further discussion of the concept of read/write and read-only paths through the
               filespace, see <link linkend="HDRWQ208">Mounting Volumes</link>.</para>
 
-              <para>The ABC Corporation example uses the value <emphasis role="bold">$MTPT/.login</emphasis> to place a file called
+              <para>The Example Corporation example uses the value <emphasis role="bold">$MTPT/.login</emphasis> to place a file called
               <emphasis role="bold">.login</emphasis> in the user's home directory.</para>
             </listitem>
           </varlistentry>
@@ -2061,7 +2061,7 @@
               role="bold">rwxr-xr-x</emphasis>, and <emphasis role="bold">0644</emphasis> to <emphasis
               role="bold">rw-r--r--</emphasis>.</para>
 
-              <para>The ABC Corporation example uses the value <emphasis role="bold">0755</emphasis> to set the mode bits on the
+              <para>The Example Corporation example uses the value <emphasis role="bold">0755</emphasis> to set the mode bits on the
               <emphasis role="bold">.login</emphasis> file to <emphasis role="bold">rwxr-xr-x</emphasis>.</para>
             </listitem>
           </varlistentry>
@@ -2073,7 +2073,7 @@
               <para>Specifies the username or UID of the user to be designated the file's owner in the output from the UNIX
               <emphasis role="bold">ls -l</emphasis> command.</para>
 
-              <para>If the file resides in AFS, place the $UID variable in this field, as in the ABC Corporation example template.
+              <para>If the file resides in AFS, place the $UID variable in this field, as in the Example Corporation example template.
               The Protection Server then automatically assigns an AFS UID unless you provide the <emphasis
               role="bold">-uid</emphasis> argument to the <emphasis role="bold">uss add</emphasis> command or fill in the uid field
               in the bulk input file <emphasis role="bold">add</emphasis> instruction. (If you are converting existing UNIX
@@ -2093,8 +2093,8 @@
               <para>Names the AFS or local directory that houses the prototype file to copy. The prototype file's name must match
               the final element in the pathname field.</para>
 
-              <para>The ABC Corporation example references a prototype file called <emphasis role="bold">.login</emphasis> in the
-              directory <emphasis role="bold">/afs/abc.com/admin/user/proto</emphasis>.</para>
+              <para>The Example Corporation example references a prototype file called <emphasis role="bold">.login</emphasis> in the
+              directory <emphasis role="bold">/afs/example.com/admin/user/proto</emphasis>.</para>
             </listitem>
           </varlistentry>
         </variablelist></para>
@@ -2158,12 +2158,12 @@
       <para>The <emphasis role="bold">E</emphasis> instruction is particularly suited to creating an entry for the new user in the
       cell's common source password file, which is then copied to client machines to serve as the local password file (<emphasis
       role="bold">/etc/passwd</emphasis> or equivalent). The following discussion of the fields refers to an example of this type of
-      use, from the ABC Corporation's full account template shown in <link linkend="HDRWQ471">Example uss Templates</link>. For
+      use, from the Example Corporation's full account template shown in <link linkend="HDRWQ471">Example uss Templates</link>. For
       further discussion of how to incorporate the files created in this way into a common source password file, see <link
       linkend="HDRWQ458">Creating a Common Source Password File</link>.</para>
 
       <programlisting>
-   E /afs/.abc.com/common/etc/newaccts/passwd_$USER 0644 root  \
+   E /afs/.example.com/common/etc/newaccts/passwd_$USER 0644 root  \
       "$USER:X:$UID:11:$NAME:$MTPT:/bin/csh"
 </programlisting>
 
@@ -2195,16 +2195,16 @@
 
               <para>Specify the read/write path to the file, to avoid the failure that results when you attempt to create a new file
               in a read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-              pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). If you use the $MTPT variable
+              pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). If you use the $MTPT variable
               in this field, the value in the <emphasis role="bold">V</emphasis> instruction's mount_point field possibly already
               indicates the read/write path. For further discussion of the concept of read/write and read-only paths through the
               filespace, see <link linkend="HDRWQ208">Mounting Volumes</link>.</para>
 
-              <para>The ABC Corporation example writes the file created by the <emphasis role="bold">E</emphasis> instruction to
-              <emphasis role="bold">/afs/.abc.com/common/etc/newaccts</emphasis> directory, naming it after the new user:</para>
+              <para>The Example Corporation example writes the file created by the <emphasis role="bold">E</emphasis> instruction to
+              <emphasis role="bold">/afs/.example.com/common/etc/newaccts</emphasis> directory, naming it after the new user:</para>
 
               <programlisting>
-   /afs/.abc.com/common/etc/newaccts/passwd_$USER
+   /afs/.example.com/common/etc/newaccts/passwd_$USER
 </programlisting>
             </listitem>
           </varlistentry>
@@ -2218,7 +2218,7 @@
               role="bold">rwxr-xr-x</emphasis>, and <emphasis role="bold">0644</emphasis> to <emphasis
               role="bold">rw-r--r--</emphasis>.</para>
 
-              <para>The ABC Corporation example uses the value <emphasis role="bold">0644</emphasis> to set the mode bits on the
+              <para>The Example Corporation example uses the value <emphasis role="bold">0644</emphasis> to set the mode bits on the
               <emphasis role="bold">passwd_</emphasis>user file to <emphasis role="bold">r-xr--r--</emphasis>.</para>
             </listitem>
           </varlistentry>
@@ -2240,7 +2240,7 @@
               <emphasis role="bold">uss</emphasis> command. For a discussion of the complications that arise from designating
               another user, see <link linkend="HDRWQ470">About Creating Local Disk Directories and Files</link>.</para>
 
-              <para>The ABC Corporation example is creating an AFS file intended for incorporation into the common password file,
+              <para>The Example Corporation example is creating an AFS file intended for incorporation into the common password file,
               rather than for direct use by the new user. It therefore designates the local superuser <emphasis
               role="bold">root</emphasis> as the owner of the new file. Designating an alternate owner on an AFS file does not
               introduce complications: issuing the <emphasis role="bold">chown</emphasis> command on AFS files requires membership
@@ -2257,7 +2257,7 @@
               contains one or more spaces. It cannot contain the newline character, but can contain any of the standard variables,
               which the command interpreter resolves as it creates the file.</para>
 
-              <para>The ABC Corporation example has the following value in the contents field, to create a password file
+              <para>The Example Corporation example has the following value in the contents field, to create a password file
               entry:</para>
 
               <programlisting>
@@ -2367,7 +2367,7 @@
       namely</para>
 
       <programlisting>
-   S /afs/abc.com/public/$USER $MTPT/public
+   S /afs/example.com/public/$USER $MTPT/public
 </programlisting>
 
       <para>The <emphasis role="bold">L</emphasis> and <emphasis role="bold">S</emphasis> instructions' syntax is as follows:</para>
@@ -2409,11 +2409,11 @@
               symbolic link whose contents begin with one of those characters, it interprets it as a regular or read/write mount
               point, respectively.</para>
 
-              <para>The ABC Corporation example creates a link to the publicly readable volume created and mounted by a preceding
+              <para>The Example Corporation example creates a link to the publicly readable volume created and mounted by a preceding
               <emphasis role="bold">X</emphasis> instruction, by specifying the path to its mount point:</para>
 
               <programlisting>
-   /afs/abc.com/public/$USER
+   /afs/example.com/public/$USER
 </programlisting>
             </listitem>
           </varlistentry>
@@ -2427,12 +2427,12 @@
 
               <para>Specify the read/write path to the link, to avoid the failure that results when you attempt to create a new link
               in a read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-              pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). If you use the $MTPT variable
+              pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). If you use the $MTPT variable
               in this field, the value in the <emphasis role="bold">V</emphasis> instruction's mount_point field possibly already
               indicates the read/write path. For further discussion of the concept of read/write and read-only paths through the
               filespace, see <link linkend="HDRWQ208">Mounting Volumes</link>.</para>
 
-              <para>The ABC Corporation example creates a link called <emphasis role="bold">public</emphasis> in the user's home
+              <para>The Example Corporation example creates a link called <emphasis role="bold">public</emphasis> in the user's home
               directory:</para>
 
               <programlisting>
@@ -2520,7 +2520,7 @@
               <para>Names the Authentication Database entry on which to impose security restrictions. Use the $USER variable to read
               in the username from the <emphasis role="bold">uss add</emphasis> command's <emphasis role="bold">-user</emphasis>
               argument, or from the username field of an <emphasis role="bold">add</emphasis> instruction in the bulk input file.
-              The ABC Corporation example uses this value.</para>
+              The Example Corporation example uses this value.</para>
             </listitem>
           </varlistentry>
 
@@ -2540,7 +2540,7 @@
               <emphasis role="bold">-pwexpires</emphasis> argument. If the <emphasis role="bold">A</emphasis> instruction does not
               appear in the template file, by default the user's password never expires.</para>
 
-              <para>The ABC Corporation example sets a password lifetime of 250 days.</para>
+              <para>The Example Corporation example sets a password lifetime of 250 days.</para>
             </listitem>
           </varlistentry>
 
@@ -2554,7 +2554,7 @@
               and <emphasis role="bold">noreuse</emphasis> to prohibit it. If the <emphasis role="bold">A</emphasis> instruction
               does not appear in the template file, the default is to allow password reuse.</para>
 
-              <para>The ABC Corporation example prohibits password reuse.</para>
+              <para>The Example Corporation example prohibits password reuse.</para>
             </listitem>
           </varlistentry>
 
@@ -2573,7 +2573,7 @@
               role="bold">A</emphasis> instruction does not appear in the template file, the default is to allow an unlimited number
               of failures.</para>
 
-              <para>The ABC Corporation example sets the limit to nine failed attempts.</para>
+              <para>The Example Corporation example sets the limit to nine failed attempts.</para>
             </listitem>
           </varlistentry>
 
@@ -2591,7 +2591,7 @@
               infinite lockout time, in which case an administrator must always issue the <emphasis role="bold">kas
               unlock</emphasis> command to unlock the account.</para>
 
-              <para>The ABC Corporation example sets the lockout time to 25 minutes, which is rounded up to 25 minutes 30 seconds
+              <para>The Example Corporation example sets the lockout time to 25 minutes, which is rounded up to 25 minutes 30 seconds
               (the next highest multiple of 8.5 minutes).</para>
             </listitem>
           </varlistentry>
@@ -2659,8 +2659,8 @@
       can contain any of the standard variables, which the <emphasis role="bold">uss</emphasis> command interpreter resolves before
       passing the command on to the appropriate other command interpreter, but it cannot contain newline characters.</para>
 
-      <para>The ABC Corporation example invokes a script called <emphasis role="bold">create_public_vol</emphasis>, which creates
-      another volume associated with the new user and mounts it in a publicly readable part of the ABC Corporation's
+      <para>The Example Corporation example invokes a script called <emphasis role="bold">create_public_vol</emphasis>, which creates
+      another volume associated with the new user and mounts it in a publicly readable part of the Example Corporation's
       filespace:</para>
 
       <programlisting>
@@ -3052,7 +3052,7 @@
 
                 <listitem>
                   <para>Names the file server machine on which to create the new user's home volume. It is best to provide a fully
-                  qualified hostname (for example, <emphasis role="bold">fs1.abc.com</emphasis>), but an abbreviated form is
+                  qualified hostname (for example, <emphasis role="bold">fs1.example.com</emphasis>), but an abbreviated form is
                   acceptable provided that the cell's naming service is available to resolve it when you issue the <emphasis
                   role="bold">uss add</emphasis> command.</para>
 
@@ -3203,10 +3203,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
-            points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a regular
+            replicated volume (and is easier to overlook in that case). For example, the Example Corporation template puts the mount
+            points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a regular
             directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted at the
-            <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it by creating a
+            <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it by creating a
             new mount point the administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>
@@ -3450,7 +3450,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to delete
                   a mount point from a read-only volume. By convention, you indicate the read/write path by placing a period before
-                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For
+                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For
                   further discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ208">Mounting Volumes</link>.</para>
                 </listitem>
@@ -3494,10 +3494,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
-            points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a regular
+            replicated volume (and is easier to overlook in that case). For example, the Example Corporation template puts the mount
+            points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a regular
             directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted at the
-            <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it by deleting a
+            <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it by deleting a
             mount point the administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>
@@ -3751,12 +3751,12 @@
    add smith:John Smith:js_pswd
 </programlisting>
 
-      <para>The next two example <emphasis role="bold">add</emphasis> instructions require that the administrator of the ABC
-      Corporation cell (<emphasis role="bold">abc.com</emphasis>) has written a <emphasis role="bold">uss</emphasis> template file
+      <para>The next two example <emphasis role="bold">add</emphasis> instructions require that the administrator of the Example
+      Corporation cell (<emphasis role="bold">example.com</emphasis>) has written a <emphasis role="bold">uss</emphasis> template file
       with the following <emphasis role="bold">V</emphasis> instruction in it:</para>
 
       <programlisting>
-   V user.$USER $SERVER.abc.com /vicep$PART 10000 /afs/.abc.com/usr/$3/$USER \
+   V user.$USER $SERVER.example.com /vicep$PART 10000 /afs/.example.com/usr/$3/$USER \
        $UID $USER all
 </programlisting>
 
@@ -3772,11 +3772,11 @@
       role="bold">smith</emphasis>. His initial password is the default string <emphasis role="bold">changeme</emphasis>, and the
       Protection Server generates his AFS UID. His home volume, called <emphasis role="bold">user.smith</emphasis>, has a 10,000 KB
       quota, resides on partition <emphasis role="bold">/vicepa</emphasis> of file server machine <emphasis
-      role="bold">fs1.abc.com</emphasis>, and is mounted at <emphasis role="bold">/afs/.abc.com/usr/marketing/smith</emphasis>. The
+      role="bold">fs1.example.com</emphasis>, and is mounted at <emphasis role="bold">/afs/.example.com/usr/marketing/smith</emphasis>. The
       final <emphasis role="bold">$UID $USER all</emphasis> part of the <emphasis role="bold">V</emphasis> instruction gives him
       ownership of his home directory and all permissions on its ACL. The account for <emphasis role="bold">jones</emphasis> is
       similar, except that it resides on partition <emphasis role="bold">/vicepc</emphasis> of file server machine <emphasis
-      role="bold">fs3.abc.com</emphasis> and is mounted at <emphasis role="bold">/afs/.abc.com/usr/finance/jones</emphasis>.</para>
+      role="bold">fs3.example.com</emphasis> and is mounted at <emphasis role="bold">/afs/.example.com/usr/finance/jones</emphasis>.</para>
 
       <para>Notice that the fields corresponding to mount_point, uid, var1, and var2 are empty (between the values
       <computeroutput>a</computeroutput> and <computeroutput>marketing</computeroutput> on the first example line) because the
@@ -3800,12 +3800,12 @@
       of the <emphasis role="bold">delete</emphasis> instruction overrides the current default.</para>
 
       <programlisting>
-   delete smith:/afs/abc.com/usr/smith
-   delete pat:/afs/abc.com/usr/pat
-   delete rogers:/afs/abc.com/usr/rogers
+   delete smith:/afs/example.com/usr/smith
+   delete pat:/afs/example.com/usr/pat
+   delete rogers:/afs/example.com/usr/rogers
    savevolume
-   delete terry:/afs/abc.com/usr/terry
-   delete johnson:/afs/abc.com/usr/johnson:delvolume
+   delete terry:/afs/example.com/usr/terry
+   delete johnson:/afs/example.com/usr/johnson:delvolume
 </programlisting>
 
       <para>The following example <emphasis role="bold">exec</emphasis> instruction is useful as a separator between a set of
@@ -4034,10 +4034,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
-            points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a regular
+            replicated volume (and is easier to overlook in that case). For example, the Example Corporation template puts the mount
+            points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a regular
             directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted at the
-            <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it by creating or
+            <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it by creating or
             deleting a mount point, the administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>

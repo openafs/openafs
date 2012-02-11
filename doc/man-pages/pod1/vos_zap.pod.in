@@ -111,10 +111,10 @@ read-only or backup volume.
 =head1 EXAMPLES
 
 The following example removes the volume with volume ID 536870988 from the
-F</vicepf> partition of the file server machine C<fs6.abc.com>, without
+F</vicepf> partition of the file server machine C<fs6.example.com>, without
 noting the change in the VLDB.
 
-   % vos zap -server fs6.abc.com -partition f -id 536870988
+   % vos zap -server fs6.example.com -partition f -id 536870988
 
 =head1 PRIVILEGE REQUIRED
 

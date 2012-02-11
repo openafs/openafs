@@ -138,39 +138,39 @@ differs from the issuer's local UID.
 =head1 EXAMPLES
 
 The following example illustrates a typical use of this command. The
-issuer C<smith> is working on the machine C<nfscli1.abc.com> and has user
-ID C<1020> on that machine. The translator machine C<tx4.abc.com> uses an
-AFS-modified login utility, so C<smith> obtains tokens for the ABC
+issuer C<smith> is working on the machine C<nfscli1.example.com> and has user
+ID C<1020> on that machine. The translator machine C<tx4.example.com> uses an
+AFS-modified login utility, so C<smith> obtains tokens for the Example
 Corporation cell automatically upon login via the B<telnet> program. She
-then issues the B<klog> command to obtain tokens as C<admin> in the ABC
-Corporation's test cell, C<test.abc.com>, and the B<knfs> command to
+then issues the B<klog> command to obtain tokens as C<admin> in the Example
+Corporation's test cell, C<test.example.com>, and the B<knfs> command to
 associate both tokens with the credential structure identified by machine
 name C<nfs-cli1> and user ID C<1020>. She breaks the connection to C<tx4>
 and works on C<nfscli1>.
 
-   % telnet tx4.abc.com
+   % telnet tx4.example.com
    . . .
    login: smith
    Password:
    AFS(R) login
 
-   % klog admin -cell test.abc.com
+   % klog admin -cell test.example.com
    Password:
 
-   % knfs nfscli1.abc.com 1020
+   % knfs nfscli1.example.com 1020
 
    % exit
 
 The following example shows user smith again connecting to the machine
 C<tx4> via the B<telnet> program and discarding the tokens.
 
-   % telnet translator4.abc.com
+   % telnet translator4.example.com
    . . .
    login: smith
    Password:
    AFS(R) login
 
-   % knfs nfscli1.abc.com 1020 -unlog
+   % knfs nfscli1.example.com 1020 -unlog
 
    % exit
 

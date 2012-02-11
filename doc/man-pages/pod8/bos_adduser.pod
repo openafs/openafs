@@ -73,10 +73,10 @@ ignored.
 =head1 EXAMPLES
 
 The following command adds the user names C<pat> and C<smith> to the
-F</usr/afs/etc/UserList> file on the machine C<fs1.abc.com> (the system
+F</usr/afs/etc/UserList> file on the machine C<fs1.example.com> (the system
 control machine).
 
-   % bos adduser -server fs1.abc.com -user pat smith
+   % bos adduser -server fs1.example.com -user pat smith
 
 =head1 PRIVILEGE REQUIRED
 

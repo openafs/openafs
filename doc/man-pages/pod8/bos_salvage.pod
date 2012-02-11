@@ -314,20 +314,20 @@ ignored.
 =head1 EXAMPLES
 
 The following command salvages all volumes on the F</vicepd> partition of
-the machine C<db3.abc.com>:
+the machine C<db3.example.com>:
 
-   % bos salvage -server db3.abc.com -partition /vicepd
+   % bos salvage -server db3.example.com -partition /vicepd
 
 The following command salvages the volume with volume ID number 536870988
-on partition F</vicepb> of the machine C<fs2.abc.com>:
+on partition F</vicepb> of the machine C<fs2.example.com>:
 
-   % bos salvage -server fs2.abc.com -partition /vicepb -volume 536870988
+   % bos salvage -server fs2.example.com -partition /vicepb -volume 536870988
 
 The following command salvages all volumes on the machine
-C<fs4.abc.com>. Six Salvager processes run in parallel rather than the
+C<fs4.example.com>. Six Salvager processes run in parallel rather than the
 default four.
 
-   % bos salvage -server fs4.abc.com -all -parallel 6
+   % bos salvage -server fs4.example.com -all -parallel 6
 
 =head1 PRIVILEGE REQUIRED
 

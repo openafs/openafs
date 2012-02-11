@@ -1508,16 +1508,16 @@
       Machine names appear in the format in which they were specified with the <emphasis role="bold">backup addhost</emphasis>
       command.</para>
 
-      <para>The following example output lists the Tape Coordinators currently defined in the Backup Database of the ABC Corporation
+      <para>The following example output lists the Tape Coordinators currently defined in the Backup Database of the Example Corporation
       cell:</para>
 
       <programlisting>
    % <emphasis role="bold">backup listhosts</emphasis>
    Tape hosts:
-       Host backup1.abc.com, port offset 0
-       Host backup1.abc.com, port offset 2
-       Host backup2.abc.com, port offset 1
-       Host backup2.abc.com, port offset 3
+       Host backup1.example.com, port offset 0
+       Host backup1.example.com, port offset 2
+       Host backup2.example.com, port offset 1
+       Host backup2.example.com, port offset 3
 </programlisting>
     </sect2>
   </sect1>
@@ -1638,7 +1638,7 @@
           <para>Every volume on a specific file server machine, specify its fully qualified hostname as the <emphasis
           role="bold">-server</emphasis> argument and use the regular expression <emphasis role="bold">.*</emphasis> for the
           <emphasis role="bold">-partition</emphasis> and -<emphasis role="bold">volume</emphasis> arguments (for example: <emphasis
-          role="bold">-server fs1.abc.com -partition .* -volume .*</emphasis>)</para>
+          role="bold">-server fs1.example.com -partition .* -volume .*</emphasis>)</para>
         </listitem>
 
         <listitem>
@@ -1660,7 +1660,7 @@
           <para>All volumes on one partition, specify the machine's fully qualified hostname as the <emphasis
           role="bold">-server</emphasis> argument and the full partition name as the <emphasis role="bold">-partition</emphasis>
           argument, and use the regular expression <emphasis role="bold">.*</emphasis> for the <emphasis
-          role="bold">-volume</emphasis> argument (for example: <emphasis role="bold">-server fs2.abc.com -partition /vicepb -volume
+          role="bold">-volume</emphasis> argument (for example: <emphasis role="bold">-server fs2.example.com -partition /vicepb -volume
           .*</emphasis>).</para>
         </listitem>
 
@@ -1866,7 +1866,7 @@
 
                 <listitem>
                   <para>Defines the set of one or more file server machines that house the volumes in the volume entry. Provide
-                  either one fully-qualified hostname (such as <emphasis role="bold">fs1.abc.com</emphasis>) or the metacharacter
+                  either one fully-qualified hostname (such as <emphasis role="bold">fs1.example.com</emphasis>) or the metacharacter
                   expression <emphasis role="bold">.*</emphasis> (period and asterisk), which matches all machine names in the
                   VLDB.</para>
                 </listitem>
@@ -1973,8 +1973,8 @@
           <programlisting>
    backup&gt; <emphasis role="bold">listv</emphasis>
    Volume set pat+jones (temporary):
-     Entry 1: server fs1.abc.com, partition /vicepe, volumes: user.pat.backup
-     Entry 2: server fs5.abc.com, partition /viceph, volumes: user.jones.backup
+     Entry 1: server fs1.example.com, partition /vicepe, volumes: user.pat.backup
+     Entry 2: server fs5.example.com, partition /viceph, volumes: user.jones.backup
    Volume set user:
      Entry 1: server .*, partition .*, volumes: user.*\.backup
    Volume set sun:
@@ -3341,7 +3341,7 @@ volume_set_name<emphasis role="bold">.</emphasis>dump_level_name<emphasis role="
    tape name = monthly_guest
    AFS tape name = guests.monthly.3
    creationTime =  Mon Feb  1 04:06:40 1999
-   cell = abc.com
+   cell = example.com
    size = 2150000 Kbytes
    dump path = /monthly
    dump id = 917860000

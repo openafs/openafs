@@ -93,9 +93,9 @@ simply omitting it.
 =head1 EXAMPLES
 
 The following command examines the time stamps on the files with basename
-C<kaserver> on the machine C<fs2.abc.com>:
+C<kaserver> on the machine C<fs2.example.com>:
 
-   % bos getdate -server fs2.abc.com -file kaserver
+   % bos getdate -server fs2.example.com -file kaserver
    File /usr/afs/bin/kaserver dated Mon Jan 4 10:00:36 1999.
    .BAK file dated Wed Dec 9 18:55:04 1998, no .OLD file.
 

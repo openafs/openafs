@@ -199,9 +199,9 @@ inaccessible, they all responded to the previous probe.
    All servers are running.
 
 The following example probes machines in the Cache Manager's memory list
-that belong to the C<stateu.edu> cell:
+that belong to the C<example.org> cell:
 
-   % fs checkservers -cell stateu.edu
+   % fs checkservers -cell example.org
    All servers are running.
 
 The following example probes all server machines in the Cache Manager's
@@ -209,7 +209,7 @@ memory list. It reports that two machines did not respond to the probe.
 
    % fs checkservers -all
    These servers unavailable due to network or server problems:
-   fs1.abc.com SV3.STATE.EDU.
+   fs1.example.com SV3.EXAMPLE.ORG.
 
 =head1 PRIVILEGE REQUIRED
 

@@ -249,10 +249,10 @@ UNIX 파일 시스템의 한 요소 간의 기호 연결(UNIX <B>ln -s</B> 명령으로 작성)을 작�
 규칙에 따르면 셀 이름은 AFS 경로 이름의 두 번째 요소이므로 고유한 셀 이름을
 사용하면 셀에서 로컬 AFS 파일 공간의 하위 레벨에서 동일한 디렉토리 이름을
 사용하는 경우에도 모든 AFS 경로 이름이 파일을 고유하게 식별합니다.
-예를 들어 두 ABC Corporation의 셀 및 State University 셀에서 사용자
+예를 들어 두 Example Corporation의 셀 및 Example Organization 셀에서 사용자
 <B>pat</B>에 대해 하나의 홈 디렉토리를 가질 수 있습니다.
-바로 경로 이름인 <B>/afs/abc.com/usr/pat</B>와
-<B>/afs/stateu.edu/usr/pat</B>가 고유하기 때문입니다.
+바로 경로 이름인 <B>/afs/example.com/usr/pat</B>와
+<B>/afs/example.org/usr/pat</B>가 고유하기 때문입니다.
 <P>규칙에 따르면 셀 이름은 사이트 이름에 대해 ARPA 인터넷 도메인 시스템 규칙을
 따릅니다. 사용자가 이미 인터넷 사이트이면 인터넷 도메인 이름으로 셀
 이름을 선택하는 것이 가장 쉽습니다.
@@ -275,9 +275,9 @@ UNIX 파일 시스템의 한 요소 간의 기호 연결(UNIX <B>ln -s</B> 명령으로 작성)을 작�
 <P>
 <DL>
 <P><DT><B>.com
-</B><DD>비즈니스 및 다른 상용 기관의 경우. 예: <B>ABC Corporation 셀의 경우 abc.com</B>.
+</B><DD>비즈니스 및 다른 상용 기관의 경우. 예: <B>Example Corporation 셀의 경우 example.com</B>.
 <P><DT><B>.edu
-</B><DD>대학과 같은 교육 기관의 경우. 예: <B>State University 셀의 경우 stateu.edu</B>.
+</B><DD>대학과 같은 교육 기관의 경우. 예: <B>Example Organization 셀의 경우 example.org</B>.
 <P><DT><B>.gov
 </B><DD>미국 정부 기관의 경우.
 <P><DT><B>.mil
@@ -552,24 +552,24 @@ AFS 제품 지원부에서 각 개인에게 알리지 않습니다. 따라서 정기적으로 파일이
 그 파일 트리를 볼 수 있고 액세스할 수 있는 각 셀에 해당 디렉토리를
 배치한다는 것입니다. 최소한 로컬 셀에 대해 하나의 디렉토리가 있어야
 합니다. 이러한 각 디렉토리는 지정된 셀의 <B>root.cell</B>
-볼륨으로의 마운트 포인트입니다. 예를 들어 ABC Corporation 셀에서
-<B>/afs/abc.com</B>은 셀 자체의 <B>root.cell</B>
-볼륨에 대한 마운트 포인트이고 <B>stateu.edu</B>는
-State University 셀의 <B>root.cell</B> 볼륨에 대한
+볼륨으로의 마운트 포인트입니다. 예를 들어 Example Corporation 셀에서
+<B>/afs/example.com</B>은 셀 자체의 <B>root.cell</B>
+볼륨에 대한 마운트 포인트이고 <B>example.org</B>는
+Example Organization 셀의 <B>root.cell</B> 볼륨에 대한
 마운트 포인트입니다. <B>fs lsmount</B> 명령을 실행하면 command displays
 마운트 포인트가 표시됩니다.
-<PRE>   % <B>fs lsmount /afs/abc.com</B>
-   '/afs/abc.com' is a mount point for volume '#root.cell'
-   % <B>fs lsmount /afs/stateu.edu</B>
-   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+<PRE>   % <B>fs lsmount /afs/example.com</B>
+   '/afs/example.com' is a mount point for volume '#root.cell'
+   % <B>fs lsmount /afs/example.org</B>
+   '/afs/example.org' is a mount point for volume '#example.org:root.cell'
 </PRE>
 <P>경로 이름을 쓸 때 입력해야 하는 글자 수를 줄이려면 사용자가 자주 액세스하는
 각 셀(특히 홈 셀)의 마운트 포인트에 대한 축약 이름을 포함하는 기호 연결을
-작성할 수 있습니다. 예를 들어 ABC Corporation 셀에서
-<B>/afs/abc</B>는 <B>fs lsmount</B> 명령이 보여주는 것처럼 <B>/afs/abc.com</B>
+작성할 수 있습니다. 예를 들어 Example Corporation 셀에서
+<B>/afs/example</B>는 <B>fs lsmount</B> 명령이 보여주는 것처럼 <B>/afs/example.com</B>
 마운트 포인트에 대한 기호 연결입니다.
-<PRE>   % <B>fs lsmount /afs/abc</B>
-   '/afs/abc' is a symbolic link, leading to a mount point for volume '#root.cell'
+<PRE>   % <B>fs lsmount /afs/example</B>
+   '/afs/example' is a symbolic link, leading to a mount point for volume '#root.cell'
 </PRE>
 <A NAME="IDX5689"></A>
 <A NAME="IDX5690"></A>
@@ -680,8 +680,8 @@ State University 셀의 <B>root.cell</B> 볼륨에 대한
 및 <B>.backup</B> 확장자를 추가하지 마십시오. 볼륨 서버는
 볼륨의 읽기 전용 또는 백업 버전을 작성할 때 자동으로 이들 확장자를 추가합니다.
 </LI><LI>각각 파일 공간의 최상위(<B>/afs</B>) 레벨과 이 레벨
-바로 아래의 셀 이름에(예: ABC Corporation 셀의
-<B>/afs/abc.com</B>) 마운트된 <B>root.afs</B>
+바로 아래의 셀 이름에(예: Example Corporation 셀의
+<B>/afs/example.com</B>) 마운트된 <B>root.afs</B>
 및 <B>root.cell</B>이라는 볼륨이 있어야 합니다.
 <P>
 <P>이들 이름에서 벗어나면 혼란과 불필요한 작업량만 늘어날 뿐입니다.
@@ -1139,8 +1139,8 @@ AFS 시스템 이름(CPU/운영 체제 유형)을 <VAR>@sys</VAR> 변수로 자동으로 대체합니다
 이것은 다양한 유형의 시스템에 동일한 연결을 배치하고 해당 시스템 유형에
 대한 2진 파일에 각 시스템이 여전히 액세스할 수 있음을 의미합니다.
 예를 들어 AIX 4.2가 실행되는 시스템의 캐쉬 관리 프로그램은
-<B>/afs/abc.com/@sys</B>에서 <B>/afs/abc.com/rs_aix42</B>로 변환하지만 Solaris 7이 실행되는 시스템은
-이를 <B>/afs/abc.com/sun4x_57</B>로 변환합니다.
+<B>/afs/example.com/@sys</B>에서 <B>/afs/example.com/rs_aix42</B>로 변환하지만 Solaris 7이 실행되는 시스템은
+이를 <B>/afs/example.com/sun4x_57</B>로 변환합니다.
 <P><VAR>@sys</VAR> 변수를 사용하려는 경우 <I>AFS 릴리스 노트</I>에 지정하는 것처럼 일반적인
 AFS 시스템 유형 이름을 사용하는 것이 가장 간단합니다. 캐쉬 관리 프로그램은
 초기설정 중에 커널 메모리에 로컬 시스템의 시스템 유형 이름을 기록합니다.
@@ -1352,8 +1352,8 @@ UNIX UID와 일치하게 합니다.
 없다는 것이지만 실제 마운트 포인트를 참조하는 일반 <B>usr</B>
 디렉토리에 기호 연결을 작성하는 것이 해결 방법이 될 수 있습니다.
 예를 들어 사용자 <B>smith</B>의 볼륨이
-<B>/afs/bigcell.com/usr17/smith</B> 디렉토리에 마운트된 경우
-<B>/afs/bigcell.com/usr/smith</B> 디렉토리는
+<B>/afs/bigcell.example.com/usr17/smith</B> 디렉토리에 마운트된 경우
+<B>/afs/bigcell.example.com/usr/smith</B> 디렉토리는
 <B>../usr17/smith</B> 디렉토리로의 기호 연결이 됩니다.
 이러한 방식으로 사용자 <B>smith</B>가 있는 디렉토리를
 알지 못하는 사람은 <B>usr/smith</B>라는 연결을 통해 해당
@@ -1728,23 +1728,23 @@ ACL에는 <B>l</B> (<B>lookup</B>)
    Tokens held by the Cache Manager:
           --End of list--
 </PRE>
-<P>다음은 ABC Corporation 셀에서 AFS UID 1000을 가진 사용자에 대한 출력
+<P>다음은 Example Corporation 셀에서 AFS UID 1000을 가진 사용자에 대한 출력
 결과를 보여 줍니다.
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com  [Expires Jun  2 10:00]
+   User's (AFS ID 1000) tokens for afs@example.com  [Expires Jun  2 10:00]
        --End of list--
 </PRE>
-<P>다음은 ABC Corporation 셀, State University 셀 및 DEF Company 셀에서
+<P>다음은 Example Corporation 셀, Example Organization 셀 및 Example Network 셀에서
 인증을 받은 사용자에 대한 출력 결과를 보여 줍니다. 사용자는 세 가지
 셀에서 다른 AFS UID를 가집니다. 마지막 셀에 대한 토큰은 만기되었습니다.
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com  [Expires Jun  2 10:00]
-   User's (AFS ID 4286) tokens for afs@stateu.edu  [Expires Jun  3 1:34]
-   User's (AFS ID 22) tokens for afs@def.com  [>>Expired&lt;&lt;]
+   User's (AFS ID 1000) tokens for afs@example.com  [Expires Jun  2 10:00]
+   User's (AFS ID 4286) tokens for afs@example.org  [Expires Jun  3 1:34]
+   User's (AFS ID 22) tokens for afs@example.net  [>>Expired&lt;&lt;]
        --End of list--
 </PRE>
 <P><B>tokens</B> 명령의 Kerberos 버전(<B>tokens.krb</B>
@@ -1753,8 +1753,8 @@ ACL에는 <B>l</B> (<B>lookup</B>)
 또한 <A HREF="#HDRWQ70">Kerberos 인증 지원</A>을 참조하십시오.
 <PRE>   % <B>tokens.krb</B>
    Tokens held by the Cache Manager:
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jun  2 10:00]
-   User smith's tokens for krbtgt.ABC.COM@abc.com [Expires Jun  2 10:00]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jun  2 10:00]
+   User smith's tokens for krbtgt.Example.COM@example.com [Expires Jun  2 10:00]
      --End of list--
 </PRE>
 <P><H3><A NAME="Header_82" HREF="auagd002.htm#ToC_82">사용자에 대한 토큰 기본 수명 설정</A></H3>

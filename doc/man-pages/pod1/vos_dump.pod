@@ -199,9 +199,9 @@ ignored.
 =head1 EXAMPLES
 
 The following command writes a full dump of the volume C<user.terry> to
-the file F</afs/abc.com/common/dumps/terry.dump>.
+the file F</afs/example.com/common/dumps/terry.dump>.
 
-   % vos dump -id user.terry -time 0 -file /afs/abc.com/common/dumps/terry.dump
+   % vos dump -id user.terry -time 0 -file /afs/example.com/common/dumps/terry.dump
 
 The following command writes an incremental dump of the volume
 C<user.smith> to the file C<smith.990131.dump> in the current working

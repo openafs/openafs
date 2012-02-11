@@ -898,7 +898,7 @@
 
                 <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to create
                 the new mount point in a read-only volume. By convention, you indicate the read/write path by placing a period
-                before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>).
+                before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>).
                 For further discussion of the concept of read/write and read-only paths through the filespace, see <link
                 linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
               </listitem>
@@ -943,7 +943,7 @@
 
                 <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to change a
                 read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
-                pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion of the
+                pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion of the
                 concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of Mount
                 Point Traversal</link>.</para>
               </listitem>
@@ -1075,10 +1075,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). Suppose, for example, that the ABC Corporation puts the
-            mount points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a
+            replicated volume (and is easier to overlook in that case). Suppose, for example, that the Example Corporation puts the
+            mount points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a
             regular directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted
-            at the <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it by
+            at the <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it by
             creating a new mount point the administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>
@@ -2091,10 +2091,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
-            points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a regular
+            replicated volume (and is easier to overlook in that case). For example, the Example Corporation template puts the mount
+            points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a regular
             directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted at the
-            <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it the
+            <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it the
             administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>
@@ -2455,7 +2455,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to delete
                   a mount point from a read-only volume. By convention, you indicate the read/write path by placing a period before
-                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For
+                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For
                   further discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ208">Mounting Volumes</link>.</para>
                 </listitem>
@@ -2507,10 +2507,10 @@
 
           <note>
             <para>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
-            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
-            points for user volumes in the <emphasis role="bold">/afs/abc.com/usr</emphasis> directory. Because that is a regular
+            replicated volume (and is easier to overlook in that case). For example, the Example Corporation template puts the mount
+            points for user volumes in the <emphasis role="bold">/afs/example.com/usr</emphasis> directory. Because that is a regular
             directory rather than a mount point, it resides in the <emphasis role="bold">root.cell</emphasis> volume mounted at the
-            <emphasis role="bold">/afs/abc.com</emphasis> directory. That volume is replicated, so after changing it by deleting a
+            <emphasis role="bold">/afs/example.com</emphasis> directory. That volume is replicated, so after changing it by deleting a
             mount point the administrator must issue the <emphasis role="bold">vos release</emphasis> command.</para>
           </note>
         </listitem>

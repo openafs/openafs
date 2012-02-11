@@ -1286,7 +1286,7 @@
           </varlistentry>
         </variablelist></para>
 
-      <para>The following example is from the ABC Corporation cell. The issuer provides no options, so the output includes user and
+      <para>The following example is from the Example Corporation cell. The issuer provides no options, so the output includes user and
       machine entries.</para>
 
       <programlisting>
@@ -1886,7 +1886,7 @@
       particularly suitable for <emphasis>group use</emphasis>, which is described in <link linkend="HDRWQ545">Using Groups
       Effectively</link>.</para>
 
-      <para>Suppose, for example, that the manager of the ABC Corporation's Accounting Department, user <emphasis
+      <para>Suppose, for example, that the manager of the Example Corporation's Accounting Department, user <emphasis
       role="bold">smith</emphasis>, creates a group that includes all of the corporation's accountants and places the group on the
       ACLs of directories that house departmental records. Using a prefix-less group rather than a regular group is appropriate for
       the following reasons: <itemizedlist>

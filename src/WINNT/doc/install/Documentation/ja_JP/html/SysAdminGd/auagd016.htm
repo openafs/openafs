@@ -192,7 +192,7 @@ AIX 4.2 ‚ ‚é‚¢‚Í Solaris 2.6 ‚ğÀs‚µ‚Ä‚¢‚éƒ}ƒVƒ“‚ğ“¯‚¶ƒvƒ‚Æƒ^ƒCƒvEƒtƒ@ƒCƒ‹‚ğ
    # Base package definitions.
    #
    %ifndef	cell
-   %define	cell	abc.com
+   %define	cell	example.com
    %endif	cell
    %ifndef	sys
    %include /etc/package.sys
@@ -333,11 +333,11 @@ AFS ‚Ö‚ÌƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN) ‚É•ÛŠÇ‚µ‚Ü‚·B‚»‚Ìã‚ÅAPATH ŠÂ‹«•Ï”‚ğİ’è‚µA
 <PRE>   <B>F</B>[<VAR>update_code</VAR>]   <VAR>file</VAR>   <VAR>source_file</VAR>  [<VAR>owner</VAR>   <VAR>group</VAR>   <VAR>mode_bits</VAR>]
 </PRE>
 <P>ƒ\[ƒX‚Æ‚µ‚Ä
-<B>/afs/abc.com/rs_aix42/bin/grep</B> ‚ğg—p‚µ‚ÄAƒ[ƒJƒ‹EƒfƒBƒXƒNã‚Éƒtƒ@ƒCƒ‹ <B>/bin/grep</B> ‚ğì¬/XV‚·‚é—áB
-<PRE>   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+<B>/afs/example.com/rs_aix42/bin/grep</B> ‚ğg—p‚µ‚ÄAƒ[ƒJƒ‹EƒfƒBƒXƒNã‚Éƒtƒ@ƒCƒ‹ <B>/bin/grep</B> ‚ğì¬/XV‚·‚é—áB
+<PRE>   F /bin/grep /afs/example.com/rs_aix42 root wheel 755
 </PRE>
 <P>‰º‚Ì—á‚Å‚ÍA2 ‚Â‚ÌXVƒR[ƒh‚ªg—p‚³‚ê‚Ä‚¨‚èA<I>owner</I> A<I>group</I> ‚¨‚æ‚Ñ <I>mode_bits</I> ƒXƒƒbƒg‚ª‹ó‚Å‚·B‚»‚Ì‚½‚ßA‚»‚ÌƒfƒBƒXƒNEƒtƒ@ƒCƒ‹‚Í‚»‚ê‚ç‚ÌƒXƒƒbƒg‚Éƒ\[ƒXEƒtƒ@ƒCƒ‹‚Ì’l‚ğÌ—p‚µ‚Ü‚·B
-<PRE>   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+<PRE>   FAQ /usr/vice/etc/ThisCell /afs/example.com/common/etc/ThisCell
 </PRE>
 <A NAME="IDX7545"></A>
 <A NAME="IDX7546"></A>
@@ -353,11 +353,11 @@ AFS ‚Ö‚ÌƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN) ‚É•ÛŠÇ‚µ‚Ü‚·B‚»‚Ìã‚ÅAPATH ŠÂ‹«•Ï”‚ğİ’è‚µA
 </PRE>
 <TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>’:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">–¼‘O‚ª”Ô†‹L† (<B>#</B>) ‚Ü‚½‚Íƒp[ƒZƒ“ƒg‹L† (<B>%</B>) ‚Ån‚Ü‚éƒtƒ@ƒCƒ‹‚É‘Î‚µ‚ÄA‹L†ƒŠƒ“ƒN‚ğì¬‚µ‚Ä‚Í‚¢‚¯‚Ü‚¹‚ñBƒLƒƒƒbƒVƒ…Eƒ}ƒl[ƒWƒƒ[‚Í‚±‚Ì‚æ‚¤‚ÈƒŠƒ“ƒN‚ğ‚»‚ê‚¼‚ê•W€‚ÌA‚Ü‚½‚Í“Ç‚İæ‚è / ‘‚«‚İƒ{ƒŠƒ…[ƒ€‚É‘Î‚·‚éƒ}ƒEƒ“ƒgEƒ|ƒCƒ“ƒg‚Æ‰ğß‚µ‚Ü‚·B
 </TD></TR></TABLE>
-<P>ˆÈ‰º‚Ì—á‚ÍAƒ[ƒJƒ‹EƒfƒBƒXƒNã‚Ì <B>/etc/ftpd</B> ‚©‚ç AFS “à‚Ì <B>/afs/abc.com/hp_ux110/etc/ftpd</B> ‚Ö‚ÌƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN‚ğì¬‚µ‚Ü‚·B<I>owner</I>A<I>group</I> ‚¨‚æ‚Ñ <I>mode_bits</I> ‚ÌŠeƒtƒB[ƒ‹ƒh‚ª‹ó‚Ì‚½‚ßAƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN‚Í‚±‚ê‚ç‚ÌƒtƒB[ƒ‹ƒh‚ÉÀÛ‚Ìƒtƒ@ƒCƒ‹‚©‚ç’l‚ğÌ—p‚µ‚Ü‚·B
-<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110
+<P>ˆÈ‰º‚Ì—á‚ÍAƒ[ƒJƒ‹EƒfƒBƒXƒNã‚Ì <B>/etc/ftpd</B> ‚©‚ç AFS “à‚Ì <B>/afs/example.com/hp_ux110/etc/ftpd</B> ‚Ö‚ÌƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN‚ğì¬‚µ‚Ü‚·B<I>owner</I>A<I>group</I> ‚¨‚æ‚Ñ <I>mode_bits</I> ‚ÌŠeƒtƒB[ƒ‹ƒh‚ª‹ó‚Ì‚½‚ßAƒVƒ“ƒ{ƒŠƒbƒNEƒŠƒ“ƒN‚Í‚±‚ê‚ç‚ÌƒtƒB[ƒ‹ƒh‚ÉÀÛ‚Ìƒtƒ@ƒCƒ‹‚©‚ç’l‚ğÌ—p‚µ‚Ü‚·B
+<PRE>   L /etc/ftpd /afs/example.com/hp_ux110
 </PRE>
 <P>‚±‚Ì—á‚ÍA<B>A</B> XVƒR[ƒh‚ğg—p‚µ‚Ä‚¢‚Ü‚·B
-<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote
+<PRE>   LA /etc/printcap /afs/example.com/common/etc/printcap.remote
                root wheel 644
 </PRE>
 <A NAME="IDX7549"></A>

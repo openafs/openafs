@@ -72,9 +72,9 @@ ignored.
 =head1 EXAMPLES
 
 The following example removes the users C<pat> and C<jones> from the
-F<UserList> file on the system control machine C<fs1.abc.com>.
+F<UserList> file on the system control machine C<fs1.example.com>.
 
-   % bos removeuser -server fs1.abc.com -user pat jones
+   % bos removeuser -server fs1.example.com -user pat jones
 
 =head1 PRIVILEGE REQUIRED
 

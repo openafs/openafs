@@ -186,9 +186,9 @@ The following command removes the VLDB entry for the volume C<user.temp>.
 
 The following command removes the VLDB entry for every volume whose name
 begins with the string C<test> and for which the VLDB lists a site on the
-file server machine C<fs3.abc.com>.
+file server machine C<fs3.example.com>.
 
-   % vos delentry -prefix test -server fs3.abc.com
+   % vos delentry -prefix test -server fs3.example.com
 
 =head1 PRIVILEGE REQUIRED
 

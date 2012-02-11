@@ -103,7 +103,7 @@
         <variablelist>
           <varlistentry><term><emphasis role="bold"><replaceable>host name</replaceable></emphasis></term>
           <listitem><para>Specifies the fully-qualified hostname of your NFS client machine (such as
-          <emphasis role="bold">nfs52.abc.com</emphasis>).</para></listitem></varlistentry>
+          <emphasis role="bold">nfs52.example.com</emphasis>).</para></listitem></varlistentry>
           <varlistentry><term><emphasis role="bold"><replaceable>user ID</replaceable></emphasis></term>
           <listitem><para>Specifies your UNIX UID or equivalent (not your username) on the NFS client machine. If your
           system administrator has followed the conventional practice, then your UNIX and AFS UIDs are the same. If you

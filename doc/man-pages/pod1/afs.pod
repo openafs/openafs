@@ -110,7 +110,7 @@ the rules outlined in L<"Conditions for Omitting Switches">.
 
 The I<value> names a particular entity of the type specified by the
 preceding switch. For example, the proper value for a B<-server> switch is
-a server machine name like C<fs3.abc.com>. Unlike switches (which have a
+a server machine name like C<fs3.example.com>. Unlike switches (which have a
 required form), values vary depending on what the issuer wants to
 accomplish. Values appear surrounded by angle brackets (C<< <> >>) in
 command descriptions and the online help to show that they are
@@ -144,7 +144,7 @@ argument. Flags are always optional.
 The following example illustrates the different parts of a command that
 belongs to an AFS command suite.
 
-   % bos getdate -server fs1.abc.com -file ptserver kaserver
+   % bos getdate -server fs1.example.com -file ptserver kaserver
 
 where
 
@@ -158,13 +158,13 @@ in this suite.
 =item *
 
 B<getdate> is the operation code. It tells the BOS Server on the specified
-server machine (in this case C<fs1.abc.com>) to report the modification
+server machine (in this case C<fs1.example.com>) to report the modification
 dates of binary files in the local F</usr/afs/bin> directory.
 
 =item *
 
-C<-server fs1.abc.com> is one argument, with B<-server> as the switch and
-C<fs1.abc.com> as the value. This argument specifies the server machine on
+C<-server fs1.example.com> is one argument, with B<-server> as the switch and
+C<fs1.example.com> as the value. This argument specifies the server machine on
 which BOS Server is to collect and report binary dates.
 
 =item *
@@ -273,18 +273,18 @@ the preceding argument.
 
 Consider again the example command from L<"An Example Command">.
 
-   % bos getdate -server fs1.abc.com -file ptserver kaserver
+   % bos getdate -server fs1.example.com -file ptserver kaserver
 
 This command has two required arguments: the server machine name
 (identified by the B<-server> switch) and binary file name (identified by
 the B<-file> switch). The second argument accepts multiple values. By
 complying with all three conditions, the issuer can omit the switches:
 
-   % bos getdate fs1.abc.com ptserver kaserver
+   % bos getdate fs1.example.com ptserver kaserver
 
 Because there are no switches, the bos command interpreter relies on the
 order of arguments. It assumes that the first element following the
-operation code, C<fs1.abc.com>, is the server machine name, and that the
+operation code, C<fs1.example.com>, is the server machine name, and that the
 next argument, C<ptserver>, is a binary file name. Then, because the
 command's second (and last) argument accepts multiple values, the command
 interpreter correctly interprets C<kaserver> as an additional value for
@@ -296,7 +296,7 @@ there is only one value per argument, the arguments do not appear in the
 prescribed order, and a switch is provided for one argument but not the
 other.
 
-   % bos getdate ptserver -server fs1.abc.com
+   % bos getdate ptserver -server fs1.example.com
 
 =head3 Rules for Using Abbreviations and Aliases
 
@@ -378,7 +378,7 @@ conditions listed in L<"Conditions for Omitting Switches">.
 =head4 Abbreviating Server Machine Names
 
 AFS server machines must have fully-qualified Internet-style host names
-(for example, C<fs1.abc.com>), but it is not always necessary to type the
+(for example, C<fs1.example.com>), but it is not always necessary to type the
 full name on the command line. AFS commands accept unambiguous shortened
 forms, but depend on the cell's name service (such as the Domain Name
 Service) or a local host table to resolve a shortened name to the
@@ -418,7 +418,7 @@ will not work well; stopping with F</vicepiu> is highly recommended.
 =head4 Abbreviating Cell Names
 
 A cell's full name usually matches its Internet domain name (such as
-B<stateu.edu> for the State University or C<abc.com> for ABC
+B<example.org> for the Example Organization or C<example.com> for Example
 Corporation). Some AFS commands accept unambiguous shortened forms,
 usually with respect to the local F</usr/vice/etc/CellServDB file> but
 sometimes depending on the ability of the local name service to resolve

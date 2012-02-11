@@ -225,9 +225,9 @@ question mark indicates that the BOS Server does not check that bit.
 =head1 EXAMPLES
 
 The following example command displays the status of processes on the
-machine B<fs3.abc.com>:
+machine B<fs3.example.com>:
 
-   % bos status fs3.abc.com
+   % bos status fs3.example.com
    Instance buserver, currently running normally.
    Instance kaserver, currently running normally.
    Instance ptserver, currently running normally.
@@ -239,9 +239,9 @@ machine B<fs3.abc.com>:
 
 The following example command displays a detailed status report for the
 B<fs> and B<ptserver> processes on the machine
-B<fs1.abc.com>.
+B<fs1.example.com>.
 
-   % bos status -server fs1.abc.com -instance fs ptserver -long
+   % bos status -server fs1.example.com -instance fs ptserver -long
    Instance fs, (type is fs), currently running normally.
       Auxiliary status is: file server running.
       Process last started at Wed Jan 7 5:34:49 1998 (3 proc starts)

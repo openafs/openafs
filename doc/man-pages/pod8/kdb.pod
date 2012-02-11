@@ -119,12 +119,12 @@ The final line of output sums the number of entries.
 
 =head1 EXAMPLES
 
-The following example shows the output of the B<kdb> command in the ABC
-Corporation cell (C<abc.com>):
+The following example shows the output of the B<kdb> command in the Example
+Corporation cell (C<example.com>):
 
    % kdb
    Printing all entries found in /usr/afs/logs/AuthLog
-   admin,krbtgt.ABC.COM:auth
+   admin,krbtgt.EXAMPLE.COM:auth
    admin,afs:gtck
    admin:cruser
    admin:delu

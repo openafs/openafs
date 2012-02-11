@@ -144,27 +144,27 @@ AFS 配布には、通知プログラムが組み込まれていないが、この引き数は管理者が使用でき
 </B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
 </DL>
 <P><STRONG>例</STRONG>
-<P>次のコマンドは、マシン <B>fs3.abc.com</B> に simple プロセス <B>kaserver</B> を定義し、開始しています。
-<PRE>   % <B>bos create -server fs3.abc.com -instance kaserver -type simple</B>  \
+<P>次のコマンドは、マシン <B>fs3.example.com</B> に simple プロセス <B>kaserver</B> を定義し、開始しています。
+<PRE>   % <B>bos create -server fs3.example.com -instance kaserver -type simple</B>  \
                 <B>-cmd /usr/afs/bin/kaserver</B>
 
 </PRE>
-<P>次のコマンドは、マシン <B>fs4.abc.com</B> に simple プロセス <B>upclientbin</B> を定義し、開始しています。このコマンドは、バイナリー・ファイルに対する更新のソースとして、<B>fs1.abc.com</B> を参照し、<B>/usr/afs/bin</B> ディレクトリーに対する変更を 120 秒ごとに検査しています。
-<PRE>   % <B>bos create -server fs4.abc.com -instance upclientbin -type simple</B>  \
-                <B>-cmd "/usr/afs/bin/upclient fs1.abc.com -clear -t 120</B>  \
+<P>次のコマンドは、マシン <B>fs4.example.com</B> に simple プロセス <B>upclientbin</B> を定義し、開始しています。このコマンドは、バイナリー・ファイルに対する更新のソースとして、<B>fs1.example.com</B> を参照し、<B>/usr/afs/bin</B> ディレクトリーに対する変更を 120 秒ごとに検査しています。
+<PRE>   % <B>bos create -server fs4.example.com -instance upclientbin -type simple</B>  \
+                <B>-cmd "/usr/afs/bin/upclient fs1.example.com -clear -t 120</B>  \
                 <B>/usr/afs/bin"</B>
 
 </PRE>
-<P>次のコマンドは、マシン <B>fs4.abc.com</B> に fs プロセス <B>fs</B> を作成しています。このコマンドは、1 行に入力してください。
-<PRE>   % <B>bos create -server fs4.abc.com -instance fs -type fs</B>  \
+<P>次のコマンドは、マシン <B>fs4.example.com</B> に fs プロセス <B>fs</B> を作成しています。このコマンドは、1 行に入力してください。
+<PRE>   % <B>bos create -server fs4.example.com -instance fs -type fs</B>  \
                 <B>-cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver</B>  \
                 <B>/usr/afs/bin/salvager</B>
 
 </PRE>
-<P>以下のコマンドは、<B>userbackup</B> と呼ばれる <B>cron</B> プロセスを、マシン <B>fs5.abc.com</B> 上で作成します。その結果、BOS サーバーは、指示された <B>vos backupsys</B> コマンドを毎日 3:00 a.m. に発行します (このコマンドは、すべてのボリュームのバックアップ・バージョンを、名前が <B>user</B> で始まるファイル・システムに作成します)。
+<P>以下のコマンドは、<B>userbackup</B> と呼ばれる <B>cron</B> プロセスを、マシン <B>fs5.example.com</B> 上で作成します。その結果、BOS サーバーは、指示された <B>vos backupsys</B> コマンドを毎日 3:00 a.m. に発行します (このコマンドは、すべてのボリュームのバックアップ・バージョンを、名前が <B>user</B> で始まるファイル・システムに作成します)。
 <B>vos</B> コマンドには完全なパス名を指定し、
 <B>-localauth</B> フラグ付けて発行してください。また、<B>bos create</B> コマンドは、すべて 1行に入力してください。
-<PRE>   % <B>bos create -server fs5.abc.com -instance userbackup -type cron</B>  \
+<PRE>   % <B>bos create -server fs5.example.com -instance userbackup -type cron</B>  \
                 <B>-cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" 03:00</B>
 
 </PRE>

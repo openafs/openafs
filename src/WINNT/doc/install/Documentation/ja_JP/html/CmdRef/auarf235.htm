@@ -48,7 +48,7 @@ AFS サーバー・プロセスでは、サーバーのローカル・セルで認証されていることを確認す
 これには、セルの仕様が含まれます。
 </LI><LI>トークンの有効期限が切れる日時。
 </LI></UL>
-<P>このコマンドの Kerberos バージョン <B>tokens.krb</B> の出力において、Kerberos チケット獲得のチケットについて、チケットの所有者、チケットを発行する Kerberos チケット獲得サービス (<B>krbtgt.ABC.COM</B>)、およびチケットの有効期限などの情報を表示します。
+<P>このコマンドの Kerberos バージョン <B>tokens.krb</B> の出力において、Kerberos チケット獲得のチケットについて、チケットの所有者、チケットを発行する Kerberos チケット獲得サービス (<B>krbtgt.EXAMPLE.COM</B>)、およびチケットの有効期限などの情報を表示します。
 <P>出力の最後に、<TT>--End of list--</TT> の文字列が表示されます。ユーザーが任意のセルで認証されていない場合でも、この行はすべて表示されます。
 <P><STRONG>例</STRONG>
 <P>以下の例は、発行側が任意のセルで認証されていない場合の例です。
@@ -58,31 +58,31 @@ AFS サーバー・プロセスでは、サーバーのローカル・セルで認証されていることを確認す
       --End of list--
 
 </PRE>
-<P>次の例は、発行側が ABC Corporation のセルで認証されて、AFS UID
+<P>次の例は、発行側が Example Corporation のセルで認証されて、AFS UID
 1000 を持っているときの出力例です。
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 2 10:00]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jan 2 10:00]
       --End of list--
 
 </PRE>
-<P>以下の例は、発行側が ABC Corporation セル、State University セル、および XYZ Company セルで認証されている場合の出力例です。このユーザーは、3 つのセルで異なる AFS UID を持っています。最後のセルのトークンは、有効期限が切れています。
+<P>以下の例は、発行側が Example Corporation セル、Example Organization セル、および Example Network セルで認証されている場合の出力例です。このユーザーは、3 つのセルで異なる AFS UID を持っています。最後のセルのトークンは、有効期限が切れています。
 <PRE>   % <B>tokens</B>
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 3 10:00]
-   User's (AFS ID 4286) tokens for afs@stateu.edu [Expires Jan 3 1:34]
-   User's (AFS ID 22) tokens for afs@xyz.com [>>Expired&lt;]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jan 3 10:00]
+   User's (AFS ID 4286) tokens for afs@example.org [Expires Jan 3 1:34]
+   User's (AFS ID 22) tokens for afs@example.net [>>Expired&lt;]
       --End of list--
 
 </PRE>
-<P>発行側が <B>klog.krb</B> コマンドを使用して ABC Corporation セルで認証後に、コマンドの <B>tokens.krb</B> バージョンを使用した出力例を以下に示します。
+<P>発行側が <B>klog.krb</B> コマンドを使用して Example Corporation セルで認証後に、コマンドの <B>tokens.krb</B> バージョンを使用した出力例を以下に示します。
 <PRE>   % <B>tokens.krb</B>
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 31 00:09]
-   User smiths tokens for krbtgt.ABC.COM@abc.com [Expires Jan 31 00:09]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jan 31 00:09]
+   User smiths tokens for krbtgt.EXAMPLE.COM@example.com [Expires Jan 31 00:09]
       --End of list--
 
 </PRE>

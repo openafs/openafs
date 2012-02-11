@@ -113,19 +113,19 @@ ignored.
 =head1 EXAMPLES
 
 The following command stops and restarts all processes running on the
-machine C<fs3.abc.com>, including the BOS Server.
+machine C<fs3.example.com>, including the BOS Server.
 
-   % bos restart -server fs3.abc.com -bosserver
+   % bos restart -server fs3.example.com -bosserver
 
 The following command stops and restarts all processes running on the
-machine C<fs5.abc.com>, excluding the BOS Server.
+machine C<fs5.example.com>, excluding the BOS Server.
 
-   % bos restart -server fs5.abc.com -all
+   % bos restart -server fs5.example.com -all
 
 The following command stops and restarts the Protection Server and Volume
-Location (VL) Server processes on the machine C<db3.abc.com>:
+Location (VL) Server processes on the machine C<db3.example.com>:
 
-   % bos restart -server db3.abc.com -instance ptserver vlserver
+   % bos restart -server db3.example.com -instance ptserver vlserver
 
 =head1 PRIVILEGE REQUIRED
 

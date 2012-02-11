@@ -66,11 +66,11 @@ ignored.
 
 =head1 EXAMPLES
 
-The following command reboots the machine C<fs2.abc.com>. The issuer has
+The following command reboots the machine C<fs2.example.com>. The issuer has
 previously issued the B<bos shutdown> command to shutdown all processes
 cleanly.
 
-   % bos exec -server fs2.abc.com -cmd /sbin/shutdown -r now
+   % bos exec -server fs2.example.com -cmd /sbin/shutdown -r now
 
 =head1 PRIVILEGE REQUIRED
 

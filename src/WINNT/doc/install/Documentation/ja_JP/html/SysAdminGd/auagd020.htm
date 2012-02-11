@@ -295,9 +295,9 @@ ACL の <B>a</B> アクセス権を持つディレクトリー上では、ユーザーは独自のグループを
 </PRE>
 <P><TT>Normal rights</TT> ヘッダーが次の行に表示されます。その後、各行にユーザーまたはグループ名、アクセス権のセットの対が表示されます。権限は、<A HREF="#HDRWQ783">AFS ACL アクセス権</A>で定義された単一文字として、かならず <B>rlidwka</B>の順序で表示されます。禁止アクセス権が含まれる場合は、
 <TT>Negative rights</TT> ヘッダーが次に表示され、その後、禁止アクセス権の対が表示されます。
-<P>以下の例は、ABC Corporation セルにおける、ユーザー <B>terry</B>のホーム・ディレクトリーの ACL が表示されます。
-<PRE>   % <B>fs la /afs/abc.com/usr/terry</B>
-   Access list for /afs/abc.com/usr/terry is
+<P>以下の例は、Example Corporation セルにおける、ユーザー <B>terry</B>のホーム・ディレクトリーの ACL が表示されます。
+<PRE>   % <B>fs la /afs/example.com/usr/terry</B>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
       system:authuser rl
       pat rlw
@@ -353,7 +353,7 @@ ACL の <B>a</B> アクセス権を持つディレクトリー上では、ユーザーは独自のグループを
 </B><DD><B>-acl</B> 引き数によって定義された ACL 項目に適用する、1つまたは服すのディレクトリーを指定します。パス名の一部は、現行作業ディレクトリーとの関連で解釈されます。
 <P>
 <P>各ディレクトリーに読み取り / 書き込みパスを指定して、読み取り専用ボリュームを変更しようとするときに障害が発生するのを防ぎます。規則では、パス名の第 2 レベルのセル名の前にピリオドを付けて、読み取り / 書き込みパスを指定します (たとえば、
-<B>/afs/.abc.com</B>)。ファイル・スペースの読み取り / 書き込みパス、および読み取り専用パスの概念についての詳細は、
+<B>/afs/.example.com</B>)。ファイル・スペースの読み取り / 書き込みパス、および読み取り専用パスの概念についての詳細は、
 <A HREF="auagd010.htm#HDRWQ295">マウント・ポイント横断の規則</A> を参照してください。
 <P>
 <P>パス名自体またはパス名の一部として、以下の表記を使用することもできます。
@@ -523,7 +523,7 @@ ACL の <B>a</B> アクセス権を持つディレクトリー上では、ユーザーは独自のグループを
 </B><DD>送信元 ACL をコピーする各あて先ディレクトリーの名前を指定します。パス名の一部は、現行作業ディレクトリーとの関連で解釈されます。ファイル名は受け入れ不可です。
 <P>
 <P>各ディレクトリーに読み取り / 書き込みパスを指定して、読み取り専用ボリュームを変更しようとするときに障害が発生するのを防ぎます。規則では、パス名の第 2 レベルのセル名の前にピリオドを付けて、読み取り / 書き込みパスを指定します (たとえば、
-<B>/afs/.abc.com</B>)。ファイル・スペースの読み取り / 書き込みパス、および読み取り専用パスの概念についての詳細は、
+<B>/afs/.example.com</B>)。ファイル・スペースの読み取り / 書き込みパス、および読み取り専用パスの概念についての詳細は、
 <A HREF="auagd010.htm#HDRWQ295">マウント・ポイント横断の規則</A> を参照してください。
 <P><DT><B>-clear
 </B><DD>それぞれのあて先ディレクトリーの ACL を送信元 ACL で上書きします。
@@ -561,16 +561,16 @@ ACL の <B>a</B> アクセス権を持つディレクトリー上では、ユーザーは独自のグループを
 <A NAME="IDX8092"></A>
 <HR><H2><A NAME="HDRWQ795" HREF="auagd002.htm#ToC_648">古くなった AFS ID を ACL から除去する</A></H2>
 <P>保護データベースからユーザーまたはグループの項目を削除しようとすると、<B>fs listacl</B> コマンドにより、名前ではなく ACL 項目のユーザーの AFS UID (またはグループの AFS GID) が表示されます。次の例では、ユーザー <B>terry</B> が、グループ <B>terry:friends</B> (AFS GID -567) の ACL 項目を、
-ABC Corporation セル内の自分のホーム・ディレクトリーに持っていて、そのグループを保護データベースから除去します。
-<PRE>   % <B>fs listacl /afs/abc.com/usr/terry</B>
-   Access list for /afs/abc.com/usr/terry is
+Example Corporation セル内の自分のホーム・ディレクトリーに持っていて、そのグループを保護データベースから除去します。
+<PRE>   % <B>fs listacl /afs/example.com/usr/terry</B>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
      terry:friends rlik
      system:anyuser l
      terry rlidwka
    % <B>pts delete terry:friends</B>
-   % <B>fs listacl /afs/abc.com/usr/terry</B>
-   Access list for /afs/abc.com/usr/terry is
+   % <B>fs listacl /afs/example.com/usr/terry</B>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
      -567 rlik
      system:anyuser l
@@ -600,7 +600,7 @@ ABC Corporation セル内の自分のホーム・ディレクトリーに持っていて、そのグループを
 </B><DD>ACL を消去する各ディレクトリーを指定します。この引き数がファイルを指定している場合、そのディレクトリーの ACL が消去されます。この引き数を省略すると、現行作業ディレクトリーの ACL が消去されます。
 <P>
 <P>各ディレクトリーに読み取り / 書き込みパスを指定して、読み取り専用ボリュームを変更しようとするときに障害が発生するのを防ぎます。規則では、パス名の第 2 レベルのセル名の前にピリオドを付けて、読み取り / 書き込みパスを指定します (たとえば、
-<B>/afs/.abc.com</B>)。ファイル・スペースの読み取り / 書き込みパス、および読み取り専用パスの概念についての詳細は、
+<B>/afs/.example.com</B>)。ファイル・スペースの読み取り / 書き込みパス、および読み取り専用パスの概念についての詳細は、
 <A HREF="auagd010.htm#HDRWQ295">マウント・ポイント横断の規則</A> を参照してください。
 <P>
 <P>パス名自体またはパス名の一部として、以下の表記を使用することもできます。

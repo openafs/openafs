@@ -142,9 +142,9 @@ F</vicepa> partition in a site definition.
 
 The following command unlocks all locked VLDB entries that refer to
 volumes on the F</vicepc> partition of the file server machine
-C<fs3.abc.com>.
+C<fs3.example.com>.
 
-   % vos unlockvldb -server fs3.abc.com -partition c
+   % vos unlockvldb -server fs3.example.com -partition c
 
 =head1 PRIVILEGE REQUIRED
 

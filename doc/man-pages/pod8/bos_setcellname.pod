@@ -66,8 +66,8 @@ L<bos(8)>.
 =item B<-name> <I<cell name>>
 
 Defines the cell name, using standard Internet domain name format (the
-actual domain name is usually appropriate). Examples are C<abc.com> for
-the ABC Corporation and C<stateu.edu> for the State University. It must
+actual domain name is usually appropriate). Examples are C<example.com> for
+the Example Corporation and C<example.org> for the Example Organization. It must
 match the value of the B<-cell> argument, if that is provided.
 
 =item B<-cell> <I<cell name>>
@@ -98,11 +98,11 @@ ignored.
 
 =head1 EXAMPLES
 
-The following command defines the cell name C<abc.com> in the F<ThisCell>
-and F<CellServDB> files on the machine C<fs1.abc.com> as it is installed
+The following command defines the cell name C<example.com> in the F<ThisCell>
+and F<CellServDB> files on the machine C<fs1.example.com> as it is installed
 as the cell's first server machine.
 
-   % bos setcellname -server fs1.abc.com -name abc.com
+   % bos setcellname -server fs1.example.com -name example.com
 
 =head1 PRIVILEGE REQUIRED
 

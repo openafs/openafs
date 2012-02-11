@@ -147,9 +147,9 @@
 </LI><LI><TT>Writes Affecting Authorship</TT> 表には、指定されたボリュームのファイルおよびディレクトリーに対して実行された、書き込み操作についての情報が表示されます。
 </LI></UL>
 <P><STRONG>例</STRONG>
-<P>次の例は、フラグが指定されていない場合、ファイル・サーバー・マシン <B>fs2.abc.com</B> 上の <B>/vicepb</B> 区画の出力を示しています。
-<PRE>   % <B>vos listvol -server fs2.abc.com -partition b</B>
-   Total number of volumes on server fs2.abc.com   \
+<P>次の例は、フラグが指定されていない場合、ファイル・サーバー・マシン <B>fs2.example.com</B> 上の <B>/vicepb</B> 区画の出力を示しています。
+<PRE>   % <B>vos listvol -server fs2.example.com -partition b</B>
+   Total number of volumes on server fs2.example.com   \
                                        partition /vicepb : 66
    sys                  1969534847 RW       1582 K On-line
    sys.backup           1969535105 BK       1582 K On-line
@@ -161,8 +161,8 @@
 
 </PRE>
 <P>次の例は、<B>-fast</B> フラグを追加した場合の出力例です。
-<PRE>   % <B>vos listvol -server fs2.abc.com -partition b -fast</B>
-   Total number of volumes on server fs2.abc.com   \
+<PRE>   % <B>vos listvol -server fs2.example.com -partition b -fast</B>
+   Total number of volumes on server fs2.example.com   \
                                        partition /vicepb : 66
     1969516782
     1969516784
@@ -172,20 +172,20 @@
 
 </PRE>
 <P>次の例は、<B>-long</B> フラグによって 2 つのボリュームが表示された例を表しています。
-<PRE>   % <B>vos listvol -server fs2.abc.com -partition b -long</B>
-   Total number of volumes on server fs2.abc.com \
+<PRE>   % <B>vos listvol -server fs2.example.com -partition b -long</B>
+   Total number of volumes on server fs2.example.com \
                                        partition /vicepb: 66
          .                   .      .         .   .    .
          .                   .      .         .   .    .
    user.pat             1969534536 RW      17518 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Mon Jun 12 09:02:25 1989
         Last Update Thu May 20 17:39:34 1999
         1573 accesses in the past day (i.e., vnode references)
    user.pat.backup      1969534538 BK      17537 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Tue Jun 13 04:37:59 1989

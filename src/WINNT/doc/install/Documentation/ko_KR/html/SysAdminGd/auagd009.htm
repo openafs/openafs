@@ -596,7 +596,7 @@ shutdown</B> 명령을 사용하여 프로세스를 정지했거나 BOS 서버가 여러 번의
 실행되고 있습니다.
 <P>다음 예에는 <B>backupusers</B>라고 하는 사용자 정의
 cron 항목이 들어 있습니다.
-<PRE>   % <B>bos status fs3.abc.com</B>
+<PRE>   % <B>bos status fs3.example.com</B>
    Instance kaserver, currently running normally.
    Instance ptserver, currently running normally.
    Instance vlserver, has core file, currently running normally.
@@ -669,9 +669,9 @@ BOS 서버가 시작된 이후에 프로세스가 종료된 경우에는 나타나지 않습니다.
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/logs</B>
 </TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
 </TD></TR></TABLE>
-<P>다음은 시스템 <B>fs3.abc.com</B>에서 실행되는
+<P>다음은 시스템 <B>fs3.example.com</B>에서 실행되는
 <B>fs</B> 프로세스에 대한 확장된 출력 결과를 보여 줍니다.
-<PRE>   % <B>bos status fs3.abc.com fs -long</B>
+<PRE>   % <B>bos status fs3.example.com fs -long</B>
    Instance fs, (type is fs), currently running normally.
        Auxiliary status is file server running
    Process last started at Mon May 3 8:29:19 1999 (3 proc starts)
@@ -837,24 +837,24 @@ BOS 서버가 시작된 이후에 프로세스가 종료된 경우에는 나타나지 않습니다.
 <B>bos create</B> 명령 참조 페이지를 참조하십시오.
 </DL>
 </LI></OL>
-<P>다음 예제는 시스템 <B>db2.abc.com</B>의 보호 서버를 정의하고
+<P>다음 예제는 시스템 <B>db2.example.com</B>의 보호 서버를 정의하고
 시작합니다.
 <PRE>
-   % <B>bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</B>
+   % <B>bos create db2.example.com ptserver simple /usr/afs/bin/ptserver</B>
 
 </PRE>
-<P>다음 예제는 시스템 <B>fs6.abc.com</B>의
+<P>다음 예제는 시스템 <B>fs6.example.com</B>의
 <B>fs</B> 프로세스를 정의하고 시작합니다.
 <PRE>
-   % <B>bos create fs6.abc.com fs fs /usr/afs/bin/fileserver </B>  \
+   % <B>bos create fs6.example.com fs fs /usr/afs/bin/fileserver </B>  \
         <B>/usr/afs/bin/volserver /usr/afs/bin/salvager</B>
 
 </PRE>
-<P>다음 예제는 시스템 <B>fs3.abc.com</B>에서
+<P>다음 예제는 시스템 <B>fs3.example.com</B>에서
 <B>backupuser</B> 프로세스라고 하는 cron 프로세스를
 정의하고 시작합니다. 이 프로세스는 매일 새벽 3시에 실행되도록 예정되어
 있습니다.
-<PRE>   % <B>bos create fs3.abc.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</B>
+<PRE>   % <B>bos create fs3.example.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</B>
 </PRE>
 <P><H3><A NAME="Header_184" HREF="auagd002.htm#ToC_184">프로세스를 정지하고 BosConfig 파일에서 제거하려면</A></H3>
 <A NAME="IDX6349"></A>

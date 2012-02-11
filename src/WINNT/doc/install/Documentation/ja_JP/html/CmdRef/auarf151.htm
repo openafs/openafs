@@ -63,22 +63,22 @@
 <B>fs flushmount</B> コマンドを使用してそのマウント・ポイントを破棄し、キャッシュ・マネージャーにマウント・ポイントを最新表示させてください。
 <P><STRONG>例</STRONG>
 <P>次の例では、ユーザー <B>smith</B> のホーム・ディレクトリーのマウント・ポイントを示しています。
-<PRE>   % <B>fs lsmount /afs/abc.com/usr/smith</B>
-   '/afs/abc.com/usr/smith' is a mount point for volume '#user.smith'
+<PRE>   % <B>fs lsmount /afs/example.com/usr/smith</B>
+   '/afs/example.com/usr/smith' is a mount point for volume '#user.smith'
 
 </PRE>
 <P>以下の例は、
-ABC Corporation セルの <TT>root.cell</TT> ボリューム用の、正規マウント・ポイントと読み取り / 書き込みマウント・ポイントの両方を示しています。
-<PRE>   % <B>fs lsmount /afs/abc.com</B>
-   '/afs/abc.com' is a mount point for volume '#root.cell'
+Example Corporation セルの <TT>root.cell</TT> ボリューム用の、正規マウント・ポイントと読み取り / 書き込みマウント・ポイントの両方を示しています。
+<PRE>   % <B>fs lsmount /afs/example.com</B>
+   '/afs/example.com' is a mount point for volume '#root.cell'
 
-   % <B>fs lsmount /afs/.abc.com</B>
-   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   % <B>fs lsmount /afs/.example.com</B>
+   '/afs/.example.com' is a mount point for volume '%root.cell'
 
 </PRE>
-<P>次の例では、セルラー・マウント・ポイントを示しています。ここでは、State University セルの <TT>root.cell</TT> ボリュームが ABC Corporation セルのツリーにマウントしています。
-<PRE>   % <B>fs lsmount /afs/stateu.edu</B>
-   '/afs/stateu.edu' is a mount point for volume '#stateu.edu:root.cell'
+<P>次の例では、セルラー・マウント・ポイントを示しています。ここでは、Example Organization セルの <TT>root.cell</TT> ボリュームが Example Corporation セルのツリーにマウントしています。
+<PRE>   % <B>fs lsmount /afs/example.org</B>
+   '/afs/example.org' is a mount point for volume '#example.org:root.cell'
 
 </PRE>
 <P><STRONG>必要となる特権</STRONG>

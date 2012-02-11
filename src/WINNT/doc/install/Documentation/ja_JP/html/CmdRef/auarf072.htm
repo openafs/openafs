@@ -113,19 +113,19 @@
 
 </PRE>
 <P><STRONG>例</STRONG>
-<P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームを復元します。このサイトは、マシン <B>fs5.abc.com</B> の <B>/vicepd</B> 区画上にあります。ポート・オフセット 3 のテープ・コーディネーターが復元操作を行います。
-<PRE>   % <B>backup diskrestore -server fs5.abc.com -partition /vicepd -portoffset 3</B>
+<P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームを復元します。このサイトは、マシン <B>fs5.example.com</B> の <B>/vicepd</B> 区画上にあります。ポート・オフセット 3 のテープ・コーディネーターが復元操作を行います。
+<PRE>   % <B>backup diskrestore -server fs5.example.com -partition /vicepd -portoffset 3</B>
 
 </PRE>
 <P>次のコマンドは、
-VLDB が読み取り / 書き込みサイト (マシン <B>fs1.abc.com</B> の <B>/vicepb</B> 区画上) をリストするボリュームを、新規サイト (マシン <B>fs3.abc.com</B> の <B>/vicepa</B> 区画上) に復元します。ポート・オフセット 0 のテープ・コーディネーターが復元操作を行います。
+VLDB が読み取り / 書き込みサイト (マシン <B>fs1.example.com</B> の <B>/vicepb</B> 区画上) をリストするボリュームを、新規サイト (マシン <B>fs3.example.com</B> の <B>/vicepa</B> 区画上) に復元します。ポート・オフセット 0 のテープ・コーディネーターが復元操作を行います。
 (印刷の都合上、ここではコマンドを 2 行で表示します。)
-<PRE>   % <B>backup diskrestore  -server fs1.abc.com -partition /vicepb </B>   \
-                         <B>-newserver fs3.abc.com -newpartition /vicepa</B>
+<PRE>   % <B>backup diskrestore  -server fs1.example.com -partition /vicepb </B>   \
+                         <B>-newserver fs3.example.com -newpartition /vicepa</B>
 
 </PRE>
-<P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームの復元に必要な磁気テープをリストします。このサイトは、マシン <B>fs4.abc.com</B> の <B>/vicepm</B> 区画上にあります。
-<PRE>   % <B>backup diskrestore -server fs4.abc.com -partition /vicepm -n</B>
+<P>次のコマンドは、VLDB が読み取り / 書き込みサイトをリストするボリュームの復元に必要な磁気テープをリストします。このサイトは、マシン <B>fs4.example.com</B> の <B>/vicepm</B> 区画上にあります。
+<PRE>   % <B>backup diskrestore -server fs4.example.com -partition /vicepm -n</B>
    Tapes needed:
    user.sunday1.1
    user.sunday1.2

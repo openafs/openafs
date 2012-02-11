@@ -40,7 +40,7 @@ and one or more processes on other machines.
 Specifies the machine that is running the Cache Manager or server process
 for which to trace Rx activity. Provide the machine's IP address in dotted
 decimal format, its fully qualified host name (for example,
-C<fs1.abc.com>), or the shortest abbreviated form of its host name that
+C<fs1.example.com>), or the shortest abbreviated form of its host name that
 distinguishes it from other machines. Successful use of an abbreviated
 form depends on the availability of a name resolution service (such as the
 Domain Name Service or a local host table) at the time the command is

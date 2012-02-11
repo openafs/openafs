@@ -78,9 +78,9 @@ ignored.
 =head1 EXAMPLES
 
 The following example command stops the B<upserver> and B<runntp>
-processes on the machine C<fs7.abc.com>.
+processes on the machine C<fs7.example.com>.
 
-   % bos stop -server fs7.abc.com -instance upserver runntp
+   % bos stop -server fs7.example.com -instance upserver runntp
 
 =head1 PRIVILEGE REQUIRED
 

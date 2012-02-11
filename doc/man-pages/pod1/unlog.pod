@@ -56,10 +56,10 @@ The following command discards all tokens.
 
    % unlog
 
-The following command discards only the tokens for the C<abc.com> and
-C<stateu.edu> cells.
+The following command discards only the tokens for the C<prod.example.com> and
+C<testcell.example.org> cells.
 
-   % unlog -cell abc.com stateu
+   % unlog -cell prod.example.com testcell
 
 =head1 PRIVILEGE REQUIRED
 

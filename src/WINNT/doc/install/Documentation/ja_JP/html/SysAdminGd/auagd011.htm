@@ -521,13 +521,13 @@ UNIX モード・ビットを訂正してください。
 </LI></OL>
 <P>コマンドの出力には、現在バックアップ・データベースに記録されている磁気テープ・コーディネーターとそのポート・オフセット番号が表示されます。ポート・オフセット番号が表示されても、関連する磁気テープ・コーディネーターが実行されているとは限りません。マシン名は、<B>backup addhost</B> コマンドに指定した形式で表示されます。
 <P>次の例は、
-ABC Corporation セルのバックアップ・データベースに現在定義されている磁気テープ・コーディネーターを表示しています。
+Example Corporation セルのバックアップ・データベースに現在定義されている磁気テープ・コーディネーターを表示しています。
 <PRE>   % <B>backup listhosts</B>
    Tape hosts:
-       Host backup1.abc.com, port offset 0
-       Host backup1.abc.com, port offset 2
-       Host backup2.abc.com, port offset 1
-       Host backup2.abc.com, port offset 3
+       Host backup1.example.com, port offset 0
+       Host backup1.example.com, port offset 2
+       Host backup2.example.com, port offset 1
+       Host backup2.example.com, port offset 3
 </PRE>
 <HR><H2><A NAME="HDRWQ365" HREF="auagd002.htm#ToC_290">ボリューム・セットおよびボリューム項目の定義および表示</A></H2>
 <P>バックアップ・システムは、個々のファイル単位ではなく、ボリューム単位でデータを処理します。バックアップ操作を実行する前に、<B>backup addvolset</B> コマンドを使って<I>ボリューム・セット</I> というボリュームのグループを定義する必要があります。ボリューム・セットには、最大 31 文字までの名前を付けることができます。名前には、ピリオド (<B> .</B>) を除くすべての文字を使用することができます。シェルに対して特殊な意味を持つメタ文字は使用しないようにしてください。
@@ -571,7 +571,7 @@ ABC Corporation セルのバックアップ・データベースに現在定義されている磁気テープ・
 </LI><LI>特定のファイル・サーバー・マシン上のすべてのボリュームを指定する場合には、
 <B>-server</B> 引き数に完全修飾ホスト名を指定し、
 <B>-partition</B> および
-<B>-volume</B> 引き数には正規表現 <B>.*</B> を使用してください (たとえば、<B>-server fs1.abc.com -partition .* -volume .*</B>)。
+<B>-volume</B> 引き数には正規表現 <B>.*</B> を使用してください (たとえば、<B>-server fs1.example.com -partition .* -volume .*</B>)。
 </LI><LI>いろいろなファイル・サーバー・マシンの同じ名前の区画にあるすべてのボリュームを指定する場合には、
 <B> -partition</B> 引き数に区画の完全名を指定し、
 <B>-server</B> および
@@ -586,7 +586,7 @@ ABC Corporation セルのバックアップ・データベースに現在定義されている磁気テープ・
 </LI><LI>1 つの区画にあるすべてのボリュームを指定する場合には、
 <B>-server</B> 引き数にマシンの完全修飾ホスト名を、
 <B>-partition</B> 引き数に完全な区画名を指定し、
-<B>-volume</B> 引き数に正規表現 <B>.*</B> を使用してください (たとえば、<B>-server fs2.abc.com -partition /vicepb -volume .*</B>)。
+<B>-volume</B> 引き数に正規表現 <B>.*</B> を使用してください (たとえば、<B>-server fs2.example.com -partition /vicepb -volume .*</B>)。
 </LI><LI>単一のボリュームを指定する場合には、<B>-volume</B> 引き数に完全なボリューム名を指定してください。VLDB から項目を検索するときの検索時間を短くするために、
 <B>-server</B> および <B>-partition</B> 引き数に実際のマシン名と実際の区画名をそれぞれ指定することができます。ただし、後でボリュームを移動する可能性もあるので、マシン名と区画名には正規表現 <B>.*</B> を使用したほうが有効です。
 </LI></UL>
@@ -668,7 +668,7 @@ listvolsets</B> コマンドを使用します。
 </B><DD>ボリューム項目を追加するボリューム・セットの名前を指定します。このボリューム・セットはすでに存在していなければなりません。
 (ボリューム・セットを作成する場合には、<B>backup addvolset</B> コマンドを使用してください。)
 <P><DT><B>-server
-</B><DD>ボリューム項目のボリュームを格納する 1 つ以上のファイル・サーバー・セットを定義します。完全修飾のホスト名 (たとえば <B>fs1.abc.com</B>) を指定するか、メタ文字式 <B>.*</B> (ピリオドとアスタリスク) を使用してください。この式は、VLDB にあるすべてのマシン名に一致します。
+</B><DD>ボリューム項目のボリュームを格納する 1 つ以上のファイル・サーバー・セットを定義します。完全修飾のホスト名 (たとえば <B>fs1.example.com</B>) を指定するか、メタ文字式 <B>.*</B> (ピリオドとアスタリスク) を使用してください。この式は、VLDB にあるすべてのマシン名に一致します。
 <P><DT><B>-partition
 </B><DD>ボリューム項目のボリュームを格納する 1 つ以上の区画セットを定義します。完全修飾の区画名 (たとえば <B>/vicepa</B>) を指定するか、メタ文字式 <B>.*</B> (ピリオドとアスタリスク ) を使用してください。この式は、すべての区画名に一致します。
 <P><DT><B>-volumes
@@ -701,8 +701,8 @@ listvolsets</B> コマンドを使用します。
 <P>
 <PRE>   backup> <B>listv</B>
    Volume set pat+jones (temporary):
-     Entry 1: server fs1.abc.com, partition /vicepe, volumes: user.pat.backup
-     Entry 2: server fs5.abc.com, partition /viceph, volumes: user.jones.backup
+     Entry 1: server fs1.example.com, partition /vicepe, volumes: user.pat.backup
+     Entry 2: server fs5.example.com, partition /viceph, volumes: user.jones.backup
    Volume set user:
      Entry 1: server .*, partition .*, volumes: user.*\.backup
    Volume set sun:
@@ -1267,7 +1267,7 @@ AFS 磁気テープ名は <TT>AFS tape name</TT> フィールドに表示されます。いずれかの名
    tape name = monthly_guest
    AFS tape name = guests.monthly.3
    creationTime =  Mon Feb  1 04:06:40 1999
-   cell = abc.com
+   cell = example.com
    size = 2150000 Kbytes
    dump path = /monthly
    dump id = 917860000

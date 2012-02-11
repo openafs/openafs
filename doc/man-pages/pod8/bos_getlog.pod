@@ -122,9 +122,9 @@ The remainder of the output depends on the particular log file.
 =head1 EXAMPLES
 
 The following example displays the FileLog file from the machine
-C<fs3.abc.com>:
+C<fs3.example.com>:
 
-   % bos getlog -server fs3.abc.com -file FileLog
+   % bos getlog -server fs3.example.com -file FileLog
    Fetching log file 'FileLog'...
    Sun Nov 8 04:00:34 1998 File server starting
    Sun Nov 8 04:00:39 1998 Partition /vicepa:  attached 21 volumes;

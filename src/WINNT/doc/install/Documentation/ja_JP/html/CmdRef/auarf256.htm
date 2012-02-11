@@ -149,12 +149,12 @@
 <PRE>   % <B>vos backupsys -prefix user</B>
 
 </PRE>
-<P>次の例は、ABC Corporation セルに適合したもので、ファイル・サーバー・マシン <B>fs3.abc.com</B> のすべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
-<PRE>   % <B>vos backupsys -server fs3.abc.com</B>
+<P>次の例は、Example Corporation セルに適合したもので、ファイル・サーバー・マシン <B>fs3.example.com</B> のすべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
+<PRE>   % <B>vos backupsys -server fs3.example.com</B>
 
 </PRE>
-<P>次の例では、State University セルのファイル・サーバー・マシン <B>db1.stateu.edu</B> に、名前に文字列 <B>temp</B> を含むボリュームを除く、すべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
-<PRE>   % <B>vos backupsys  -server db1.stateu.edu -prefix '^.*temp'</B>
+<P>次の例では、Example Organization セルのファイル・サーバー・マシン <B>db1.example.org</B> に、名前に文字列 <B>temp</B> を含むボリュームを除く、すべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。
+<PRE>   % <B>vos backupsys  -server db1.example.org -prefix '^.*temp'</B>
 
 </PRE>
 <P>次の例では、名前に文字列 <B>source</B> を含むボリュームを除き、名前に文字列 <B>source.current</B> を含むボリュームを含む、セルの VLDB にリストされている、すべての読み取り / 書き込みボリュームのバックアップ・バージョンを作成します。

@@ -67,11 +67,11 @@
    Database OK
 
 </PRE>
-<P>次のコマンドでは、バックアップ・データベースに損傷はあるが、オーファン・ブロックまたは無効なテープ・コーディネーター項目はないことが分かります。また、マシン <B>db1.abc.com</B> で実行されているバックアップ・サーバーがデータベースのコピーを検査したことが分かります。
+<P>次のコマンドでは、バックアップ・データベースに損傷はあるが、オーファン・ブロックまたは無効なテープ・コーディネーター項目はないことが分かります。また、マシン <B>db1.example.com</B> で実行されているバックアップ・サーバーがデータベースのコピーを検査したことが分かります。
 <PRE>   % <B>backup dbverify -detail</B>
    Database OK
    Orphan blocks 0
-   Database checker was db1.abc.com
+   Database checker was db1.example.com
 
 </PRE>
 <P><STRONG>必要となる特権</STRONG>

@@ -150,10 +150,10 @@ ignored.
 =head1 EXAMPLES
 
 The following example B<bos create> command creates a C<buserver> process
-on the file server machine C<fs3.abc.com>. It appears here on two lines
+on the file server machine C<fs3.example.com>. It appears here on two lines
 only for legibility.
 
-   % bos create -server fs3.abc.com -instance buserver \
+   % bos create -server fs3.example.com -instance buserver \
                 -type simple -cmd /usr/afs/bin/buserver
 
 =head1 PRIVILEGE REQUIRED

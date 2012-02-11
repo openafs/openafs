@@ -10,7 +10,7 @@ of this file, one for a AFS client and one for an AFS server.
 =head2 Client ThisCell
 
 The client version of the F<ThisCell> file defines the complete Internet
-domain-style name (for example, C<abc.com>) of the cell to which the local
+domain-style name (for example, C<example.com>) of the cell to which the local
 client machine belongs. It must reside in the F</usr/vice/etc> directory
 on every AFS client machine. To change a client machine's cell membership,
 edit the file and reboot the machine.
@@ -71,7 +71,7 @@ configuration can be more confusing than useful.
 =head2 Server ThisCell
 
 The server version of the F<ThisCell> file defines the complete Internet
-domain-style name (for example, C<abc.com>) of the cell to which the
+domain-style name (for example, C<example.com>) of the cell to which the
 server machine belongs. It must reside in the F</usr/afs/etc> directory on
 every AFS server machine.
 

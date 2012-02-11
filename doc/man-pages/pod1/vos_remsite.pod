@@ -116,10 +116,10 @@ ignored.
 =head1 EXAMPLES
 
 The following command removes the mistakenly defined read-only site
-F</viceph> on the file server machine C<fs5.abc.com> from the VLDB entry
+F</viceph> on the file server machine C<fs5.example.com> from the VLDB entry
 for the volume C<root.cell>.
 
-   % vos remsite -server fs5.abc.com -partition h -id root.cell
+   % vos remsite -server fs5.example.com -partition h -id root.cell
 
 =head1 PRIVILEGE REQUIRED
 

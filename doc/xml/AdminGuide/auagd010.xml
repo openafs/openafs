@@ -915,7 +915,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to change
                   a read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at
-                  the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further discussion
+                  the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further discussion
                   of the concept of read/write and read-only paths through the filespace, see <link linkend="HDRWQ209">The Rules of
                   Mount Point Traversal</link>.</para>
                 </listitem>
@@ -1807,14 +1807,14 @@
 
       <para>The following example command creates a <emphasis role="bold">cron</emphasis> process called <emphasis
       role="bold">backupusers</emphasis> in the <emphasis role="bold">/usr/afs/local/BosConfig</emphasis> file on the machine
-      <emphasis role="bold">fs3.abc.com</emphasis>. The process runs every day at 1:00 a.m. to create a backup version of every
+      <emphasis role="bold">fs3.example.com</emphasis>. The process runs every day at 1:00 a.m. to create a backup version of every
       volume in the cell whose name starts with the string <emphasis role="bold">user</emphasis>. The <emphasis
       role="bold">-localauth</emphasis> flag enables the process to invoke the privileged <emphasis role="bold">vos
       backupsys</emphasis> command while unauthenticated. Note that the <emphasis role="bold">-cmd</emphasis> argument specifies a
       complete pathname for the <emphasis role="bold">vos</emphasis> binary, because the PATH environment variable for the BOS
       Server (running as the local superuser <emphasis role="bold">root</emphasis>) generally does not include the path to AFS
       binaries. <programlisting>
-   % <emphasis role="bold">bos create fs3.abc.com backupusers cron</emphasis>\ 
+   % <emphasis role="bold">bos create fs3.example.com backupusers cron</emphasis>\ 
   <emphasis role="bold">-cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" "1:00"</emphasis>
 </programlisting></para>
 
@@ -2245,7 +2245,7 @@
             <para>It is conventional to create only one read/write mount point in a cell's filespace, using it to mount the cell's
             <emphasis role="bold">root.cell</emphasis> volume just below the AFS filespace root (by convention, <emphasis
             role="bold">/afs/.</emphasis><replaceable>cellname</replaceable>). As indicated, it is conventional to place a period at
-            the start of the read/write mount point's name (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). The period
+            the start of the read/write mount point's name (for example, <emphasis role="bold">/afs/.example.com</emphasis>). The period
             distinguishes the read/write mount point from the regular mount point for the <emphasis role="bold">root.cell</emphasis>
             volume at the same level. This is the only case in which it is conventional to create two mount points for the same
             volume. A desirable side effect of this naming convention for this read/write mount point is that it does not appear in
@@ -2401,37 +2401,37 @@
 </programlisting>
 
       <para>For a regular mount point, a number sign (<computeroutput>#</computeroutput>) precedes the volume name string, as in the
-      following example command issued on a client machine in the <emphasis role="bold">abc.com</emphasis> cell.</para>
+      following example command issued on a client machine in the <emphasis role="bold">example.com</emphasis> cell.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/abc.com/usr/terry</emphasis>
-   '/afs/abc.com/usr/terry' is a mount point for volume '#user.terry'
+   % <emphasis role="bold">fs lsmount /afs/example.com/usr/terry</emphasis>
+   '/afs/example.com/usr/terry' is a mount point for volume '#user.terry'
 </programlisting>
 
       <para>For a read/write mount point, a percent sign (<computeroutput>%</computeroutput>) precedes the volume name string, as in
-      the following example command issued on a client machine in the <emphasis role="bold">abc.com</emphasis> cell. The cell's
+      the following example command issued on a client machine in the <emphasis role="bold">example.com</emphasis> cell. The cell's
       administrators have followed the convention of preceding the read/write mount point's name with a period.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/.abc.com</emphasis>
-   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   % <emphasis role="bold">fs lsmount /afs/.example.com</emphasis>
+   '/afs/.example.com' is a mount point for volume '%root.cell'
 </programlisting>
 
       <para>For a cellular mount point, a cell name and colon (<computeroutput>:</computeroutput>) follow the number or percent sign
       and precede the volume name string, as in the following example command issued on a client machine in the <emphasis
-      role="bold">abc.com</emphasis> cell.</para>
+      role="bold">example.com</emphasis> cell.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/ghi.gov</emphasis>
-   '/afs/ghi.gov' is a mount point for volume '#ghi.gov:root.cell'
+   % <emphasis role="bold">fs lsmount /afs/example.org</emphasis>
+   '/afs/example.org' is a mount point for volume '#example.org:root.cell'
 </programlisting>
 
       <para>For a symbolic link to a mount point, the output is of the form shown in the following example command issued on a
-      client machine in the <emphasis role="bold">abc.com</emphasis> cell.</para>
+      client machine in the <emphasis role="bold">example.com</emphasis> cell.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs lsmount /afs/abc</emphasis>
-   '/afs/abc' is a symbolic link, leading to a mount point for volume '#root.cell'
+   % <emphasis role="bold">fs lsmount /afs/example</emphasis>
+   '/afs/example' is a symbolic link, leading to a mount point for volume '#root.cell'
 </programlisting>
 
       <para>If the directory is not a mount point or is not in AFS, the output reads as follows.</para>
@@ -2527,7 +2527,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to create
                   a new mount point in a read-only volume. By convention, you indicate the read/write path by placing a period
-                  before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>).
+                  before the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>).
                   For further discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
                 </listitem>
@@ -2750,7 +2750,7 @@
 
                   <para>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to delete
                   a mount point from a read-only volume. By convention, you indicate the read/write path by placing a period before
-                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For
+                  the cell name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For
                   further discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
                 </listitem>
@@ -3075,7 +3075,7 @@
    user.terry
        RWrite: 50489902    Backup: 50489904
        number of sites -&gt; 1
-          server fs3.abc.com partition /vicepc RW Site
+          server fs3.example.com partition /vicepc RW Site
 </programlisting>
     </sect2>
 
@@ -3294,8 +3294,8 @@
       following example:</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol  fs2.abc.com /vicepb</emphasis>
-   Total number of volumes on server fs2.abc.com \
+   % <emphasis role="bold">vos listvol  fs2.example.com /vicepb</emphasis>
+   Total number of volumes on server fs2.example.com \
                                        partition /vicepb : 66
    sys                  1969534847 RW       1582 K On-line
    sys.backup           1969535105 BK       1582 K On-line
@@ -3321,8 +3321,8 @@
       off-line, and busy volumes) is omitted.</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol fs3.abc.com /vicepa -f</emphasis>
-   Total number of volumes on server fs3.abc.com  \
+   % <emphasis role="bold">vos listvol fs3.example.com /vicepa -f</emphasis>
+   Total number of volumes on server fs3.example.com  \
                                        partition /vicepa: 37
    50489902
    50489904
@@ -3481,20 +3481,20 @@
       <para>An example of the output when the <emphasis role="bold">-long</emphasis> flag is included:</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol fs2.abc.com b -long</emphasis>
-   Total number of volumes on server fs2.abc.com
+   % <emphasis role="bold">vos listvol fs2.example.com b -long</emphasis>
+   Total number of volumes on server fs2.example.com
                                        partition /vicepb: 66
          .                   .      .         .   .    .
          .                   .      .         .   .    .
    user.pat             1969534536 RW      17518 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Mon Jun 12 09:02:25 1989
         Last Update Thu Jan  4 17:39:34 1990
         1573 accesses in the past day (i.e., vnode references)
    user.pat.backup      1969534538 BK      17537 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Fri Jan  5 06:37:59 1990
@@ -3531,9 +3531,9 @@
       <para>An example of the output when the <emphasis role="bold">-extended</emphasis> flag is included:</para>
 
       <programlisting>
-   % <emphasis role="bold">vos listvol fs3.abc.com a -extended</emphasis>
+   % <emphasis role="bold">vos listvol fs3.example.com a -extended</emphasis>
    common.bboards   1969535592 RW    23149 K used 9401 files On-line
-       fs3.abc.com /vicepa
+       fs3.example.com /vicepa
        RWrite 1969535592 ROnly          0 Backup 1969535594
        MaxQuota      30000 K
        Creation    Mon Mar  8 14:26:05 1999
@@ -3686,7 +3686,7 @@
       <programlisting>
    % <emphasis role="bold">vos examine user.terry</emphasis>
    user.terry                    536870981 RW   3459 K On-line
-       fs3.abc.com /vicepa
+       fs3.example.com /vicepa
        Write 5360870981   ROnly          0  Backup 536870983
        MaxQuota      40000 K
        Creation    Mon Jun 12 15:22:06 1989
@@ -3694,7 +3694,7 @@
        5719 accesses in the past day (i.e., vnode references)
        RWrite: 5360870981   Backup: 536870983
        number of sites -&gt; 1
-          server fs3.abc.com partition /vicepa RW Site
+          server fs3.example.com partition /vicepa RW Site
        Volume is currently LOCKED
 </programlisting>
     </sect2>
@@ -3915,7 +3915,7 @@
         <para>The following is an example of the output:</para>
 
         <programlisting>
-   % <emphasis role="bold">fs listquota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs listquota /afs/example.com/usr/terry</emphasis>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      15000    5071       34%         86%
 </programlisting>
@@ -3993,7 +3993,7 @@
         <computeroutput>vid</computeroutput> field.</para>
 
         <programlisting>
-   % <emphasis role="bold">fs examine /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs examine /afs/example.com/usr/terry</emphasis>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073
@@ -4088,8 +4088,8 @@
             example:</para>
 
             <programlisting>
-   % <emphasis role="bold">fs whereis /afs/abc.com/user/terry</emphasis>
-   File /afs/abc.com/usr/terry is on host fs2.abc.com
+   % <emphasis role="bold">fs whereis /afs/example.com/user/terry</emphasis>
+   File /afs/example.com/usr/terry is on host fs2.example.com
 </programlisting>
           </listitem>
 
@@ -5170,7 +5170,7 @@
 
                   <para>Specify the read/write path to the file or directory, to avoid the failure that results when you attempt to
                   change a read-only volume. By convention, you indicate the read/write path by placing a period before the cell
-                  name at the pathname's second level (for example, <emphasis role="bold">/afs/.abc.com</emphasis>). For further
+                  name at the pathname's second level (for example, <emphasis role="bold">/afs/.example.com</emphasis>). For further
                   discussion of the concept of read/write and read-only paths through the filespace, see <link
                   linkend="HDRWQ209">The Rules of Mount Point Traversal</link>.</para>
                 </listitem>
@@ -5331,7 +5331,7 @@
       <para>The following example illustrates the output produced by this command:</para>
 
       <programlisting>
-   % <emphasis role="bold">fs quota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs quota /afs/example.com/usr/terry</emphasis>
    34% of quota used.
 </programlisting>
 
@@ -5411,7 +5411,7 @@
       kilobyte units), the percent quota used, and the percentage of space on the volume's host partition that is used.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs listquota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs listquota /afs/example.com/usr/terry</emphasis>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      15000    5071       34%         86%
 </programlisting>
@@ -5498,7 +5498,7 @@
       current size (both in kilobyte units), and the free and total number of kilobyte blocks on the volume's host partition.</para>
 
       <programlisting>
-   % <emphasis role="bold">fs examine /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs examine /afs/example.com/usr/terry</emphasis>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073

@@ -69,7 +69,7 @@
           <listitem>
             <para>The <emphasis>value</emphasis> names a particular entity of the type specified by the preceding switch. For
             example, the proper value for a <emphasis role="bold">-server</emphasis> switch is a server machine name like <emphasis
-            role="bold">fs3.abc.com</emphasis>. Unlike switches (which have a required form), values vary depending on what the
+            role="bold">fs3.example.com</emphasis>. Unlike switches (which have a required form), values vary depending on what the
             issuer wants to accomplish. Values appear surrounded by angle brackets (<emphasis role="bold">&lt; &gt;</emphasis>) in
             command descriptions and the online help to show that they are user-supplied variable information.</para>
           </listitem>
@@ -100,7 +100,7 @@
       <para>The following example illustrates the different parts of a command that belongs to an AFS command suite.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos getdate -server fs1.abc.com -file ptserver kaserver</emphasis>
+   % <emphasis role="bold">bos getdate -server fs1.example.com -file ptserver kaserver</emphasis>
 </programlisting>
 
       <para>where <itemizedlist>
@@ -111,13 +111,13 @@
 
           <listitem>
             <para><emphasis role="bold">getdate</emphasis> is the operation code. It tells the BOS Server on the specified server
-            machine (in this case <emphasis role="bold">fs1.abc.com</emphasis>) to report the modification dates of binary files in
+            machine (in this case <emphasis role="bold">fs1.example.com</emphasis>) to report the modification dates of binary files in
             the local <emphasis role="bold">/usr/afs/bin</emphasis> directory.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">-server fs1.abc.com</emphasis> is one argument, with <emphasis
-            role="bold">-server</emphasis> as the switch and <emphasis role="bold">fs1.abc.com</emphasis> as the value. This
+            <para><emphasis role="bold">-server fs1.example.com</emphasis> is one argument, with <emphasis
+            role="bold">-server</emphasis> as the switch and <emphasis role="bold">fs1.example.com</emphasis> as the value. This
             argument specifies the server machine on which BOS Server is to collect and report binary dates.</para>
           </listitem>
 
@@ -209,7 +209,7 @@
         <para>Consider again the example command from <link linkend="HDRCOMMAND-EX">An Example Command</link>.</para>
 
         <programlisting>
-   % <emphasis role="bold">bos getdate -server fs1.abc.com -file ptserver kaserver</emphasis>
+   % <emphasis role="bold">bos getdate -server fs1.example.com -file ptserver kaserver</emphasis>
 </programlisting>
 
         <para>This command has two required arguments: the server machine name (identified by the <emphasis
@@ -218,11 +218,11 @@
         switches:</para>
 
         <programlisting>
-   % <emphasis role="bold">bos getdate fs1.abc.com ptserver kaserver</emphasis>
+   % <emphasis role="bold">bos getdate fs1.example.com ptserver kaserver</emphasis>
 </programlisting>
 
         <para>Because there are no switches, the <emphasis role="bold">bos</emphasis> command interpreter relies on the order of
-        arguments. It assumes that the first element following the operation code, <emphasis role="bold">fs1.abc.com</emphasis>, is
+        arguments. It assumes that the first element following the operation code, <emphasis role="bold">fs1.example.com</emphasis>, is
         the server machine name, and that the next argument, <emphasis role="bold">ptserver</emphasis>, is a binary file name. Then,
         because the command's second (and last) argument accepts multiple values, the command interpreter correctly interprets
         <emphasis role="bold">kaserver</emphasis> as an additional value for it.</para>
@@ -232,7 +232,7 @@
         arguments do not appear in the prescribed order, and a switch is provided for one argument but not the other.</para>
 
         <programlisting>
-   % <emphasis role="bold">bos getdate ptserver -server fs1.abc.com</emphasis>
+   % <emphasis role="bold">bos getdate ptserver -server fs1.example.com</emphasis>
 </programlisting>
       </sect3>
     </sect2>
@@ -310,7 +310,7 @@
         <title>Abbreviating Server Machine Names</title>
 
         <para>AFS server machines must have fully-qualified Internet-style host names (for example, <emphasis
-        role="bold">fs1.abc.com</emphasis>), but it is not always necessary to type the full name on the command line. AFS commands
+        role="bold">fs1.example.com</emphasis>), but it is not always necessary to type the full name on the command line. AFS commands
         accept unambiguous shortened forms, but depend on the cell's name service (such as the Domain Name Service) or a local host
         table to resolve a shortened name to the fully-qualified equivalent when the command is issued.</para>
 
@@ -357,8 +357,8 @@
       <sect3 id="HDRCELLABBREV">
         <title>Abbreviating Cell Names</title>
 
-        <para>A cell's full name usually matches its Internet domain name (such as <emphasis role="bold">stateu.edu</emphasis> for
-        the State University or <emphasis role="bold">abc.com</emphasis> for ABC Corporation). Some AFS commands accept unambiguous
+        <para>A cell's full name usually matches its Internet domain name (such as <emphasis role="bold">example.org</emphasis> for
+        the Example Organization or <emphasis role="bold">example.com</emphasis> for Example Corporation). Some AFS commands accept unambiguous
         shortened forms, usually with respect to the local <emphasis role="bold">/usr/vice/etc/CellServDB file</emphasis> but
         sometimes depending on the ability of the local name service to resolve the corresponding domain name.</para>
       </sect3>

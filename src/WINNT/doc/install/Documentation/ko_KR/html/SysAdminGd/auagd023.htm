@@ -64,7 +64,7 @@
 규칙에 따라 생략될 수 있습니다.
 </LI><LI><I>값</I>은 앞의 스위치에서 지정한 유형의 특정
 엔티티를 명명합니다. 예를 들어 <B>-server</B> 스위치에 대한
-적절한 값은 <B>fs3.abc.com</B>과 같은 서버 시스템 이름입니다.
+적절한 값은 <B>fs3.example.com</B>과 같은 서버 시스템 이름입니다.
 스위치(필수 양식을 가짐)와는 달리 값은 실행자가 수행하려는 작업에 따라
 달라질 수 있습니다. 값은 명령 설명과 온라인 도움말에서 앵글
 괄호(<B>&lt; ></B>)로 묶여서 사용자 제공 변수 정보임을
@@ -87,7 +87,7 @@
 나타날 수 있습니다. 플래그는 항상 선택적입니다.
 <P><H3><A NAME="HDRCOMMAND-EX" HREF="auagd002.htm#ToC_695">예제 명령</A></H3>
 <P>다음 예제는 AFS 명령 집합에 속하는 명령의 다른 부분을 설명합니다.
-<PRE>   % <B>bos getdate -server fs1.abc.com -file ptserver kaserver </B>
+<PRE>   % <B>bos getdate -server fs1.example.com -file ptserver kaserver </B>
 
 </PRE>
 <P>여기서,
@@ -95,11 +95,11 @@
 <LI><B>bos</B>는 명령 집합입니다. BOS 서버는 이 집합에 있는
 대부분의 명령을 실행합니다.
 </LI><LI><B>getdate</B>는 연산 코드입니다. 이것은 지정된 서버
-시스템(이 경우에는 <B>fs1.abc.com</B>)의 BOS 서버에게
+시스템(이 경우에는 <B>fs1.example.com</B>)의 BOS 서버에게
 로컬 <B>/usr/afs/bin</B> 디렉토리의 2진 파일 수정일을
 보고하게 합니다.
-</LI><LI><B>-server fs1.abc.com</B>은 인수이며 스위치로서
-<B>-server</B>와 값으로서 <B>fs1.abc.com</B>을
+</LI><LI><B>-server fs1.example.com</B>은 인수이며 스위치로서
+<B>-server</B>와 값으로서 <B>fs1.example.com</B>을
 가집니다. 이 인수는 BOS 서버가 2진 날짜를 수집하고 보고하는 서버 시스템을
 지정합니다.
 </LI><LI><B>-file ptserver kaserver</B>는 여러 값을 취하는
@@ -160,7 +160,7 @@
 </LI></UL>
 <P><H4><A NAME="Header_698">스위치 생략의 예</A></H4>
 <P><A HREF="#HDRCOMMAND-EX">예제 명령</A>에서 예제 명령을 다시 살펴 보십시오.
-<PRE>   % <B> bos getdate -server fs1.abc.com -file ptserver kaserver</B>
+<PRE>   % <B> bos getdate -server fs1.example.com -file ptserver kaserver</B>
 
 </PRE>
 <P>이 명령은 두 개의 필수 인수를 가집니다. 바로 서버 시스템
@@ -168,12 +168,12 @@
 이름(<B>-file</B> 스위치로 식별)입니다. 두 번째
 인수는 여러 값을 수용합니다. 세 가지 규칙을 모두 준수함으로써
 실행자는 다음과 같이 스위치를 생략할 수 있습니다.
-<PRE>   % <B>bos getdate fs1.abc.com ptserver kaserver</B>
+<PRE>   % <B>bos getdate fs1.example.com ptserver kaserver</B>
 
 </PRE>
 <P>스위치가 없으므로 <B>bos</B> 명령 인터프리터는
 인수의 순서에 의존합니다. 또한 연산 코드 다음에 나오는 첫째
-요소인 <B>fs1.abc.com</B>이 서버 시스템 이름이고
+요소인 <B>fs1.example.com</B>이 서버 시스템 이름이고
 다음 인수인 <B>ptserver</B>가 2진 파일 이름이라고
 가정합니다. 그런 다음 명령의 두 번째(및 마지막) 인수가 여러
 값을 허용하므로 명령 인터프리터는 <B>kaserver</B>를
@@ -182,7 +182,7 @@
 위반하므로 허용되지 않습니다. 인수 당 하나의 값만 있다고
 해도 인수가 미리 지정한 순서대로 나타나지 않고 하나의 인수에
 대해 스위치가 제공되지만 이것도 지정한 순서와 다릅니다.
-<PRE>   % <B>bos getdate ptserver -server fs1.abc.com</B>
+<PRE>   % <B>bos getdate ptserver -server fs1.example.com</B>
 
 </PRE>
 <P><H3><A NAME="HDRWQ615" HREF="auagd002.htm#ToC_699">약어 및 별명 사용 규칙</A></H3>
@@ -236,7 +236,7 @@ seta</B>(가장 짧은 축약형) 및 <B>fs sa</B>(별명)의 세 가지
 가능합니다.
 <P><H4><A NAME="HDRFMSABBREV">서버 시스템 이름 약어 사용</A></H4>
 <P>AFS 서버 시스템은 완전 규정화된 인터넷 양식 호스트 이름(예:
-<B>fs1.abc.com</B>)을 가져야 하지만 명령행에 항상 전체
+<B>fs1.example.com</B>)을 가져야 하지만 명령행에 항상 전체
 이름을 입력할 필요는 없습니다. AFS 명령은 명확한 축약 형태를 허용하지만
 셀의 이름 서비스(예: 도메인 이름 서비스)나 로컬 호스트 테이블에 따라
 명령이 실행될 때 축약 이름을 완전 규정화된 이름으로 해석합니다.
@@ -264,9 +264,9 @@ seta</B>(가장 짧은 축약형) 및 <B>fs sa</B>(별명)의 세 가지
 
 </PRE>
 <P><H4><A NAME="HDRCELLABBREV">셀 이름 약어 사용</A></H4>
-<P>셀의 전체 이름은 보통 그 인터넷 도메인 이름(예: State University의 경우
-<B>stateu.edu</B>, ABC Corporation의 경우
-<B>abc.com</B>)와 일치합니다. 일부 AFS 명령은 로컬
+<P>셀의 전체 이름은 보통 그 인터넷 도메인 이름(예: Example Organization의 경우
+<B>example.org</B>, Example Corporation의 경우
+<B>example.com</B>)와 일치합니다. 일부 AFS 명령은 로컬
 <B>/usr/vice/etc/CellServDB</B>와 관련하여 명확한 축약 형태를
 허용하지만 로컬 이름 서비스의 능력에 따라 해당 도메인 이름을 해석하기도 합니다.
 <P><H3><A NAME="HDRWQ616" HREF="auagd002.htm#ToC_705">AFS 명령에 대한 온라인 도움말 표시</A></H3>

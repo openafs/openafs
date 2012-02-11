@@ -100,7 +100,7 @@ in kilobytes.
 The following example shows the output for the volume C<user.smith> and
 the partition housing it:
 
-   % fs examine -path /afs/abc.com/usr/smith
+   % fs examine -path /afs/example.com/usr/smith
    Volume status for vid = 50489902 named user.smith
    Current maximum quota is 15000
    Current blocks used are 5073

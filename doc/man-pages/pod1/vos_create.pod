@@ -188,10 +188,10 @@ created the volume:
 =head1 EXAMPLES
 
 The following command creates the read/write volume C<user.pat> on the
-F</vicepf> partition of the file server machine C<fs4.abc.com>.
+F</vicepf> partition of the file server machine C<fs4.example.com>.
 
-   % vos create -server fs4.abc.com -partition /vicepf -name user.pat
-   Volume user.pat created on partition /vicepf of fs4.abc.com
+   % vos create -server fs4.example.com -partition /vicepf -name user.pat
+   Volume user.pat created on partition /vicepf of fs4.example.com
 
 =head1 PRIVILEGE REQUIRED
 

@@ -1089,7 +1089,7 @@
 
             <listitem>
               <para>An ASCII file that consists of a single line defining the complete Internet domain-style name of the cell (such
-              as <computeroutput>abc.com</computeroutput>). You create this file with the <emphasis role="bold">bos
+              as <computeroutput>example.com</computeroutput>). You create this file with the <emphasis role="bold">bos
               setcellname</emphasis> command during the installation of your cell's first file server machine, as instructed in the
               <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
@@ -2339,23 +2339,23 @@
 </programlisting>
 
       <para>A simple file server machine runs the <emphasis role="bold">upclientbin</emphasis> process, so the output includes a
-      message like the following. It indicates that <emphasis role="bold">fs7.abc.com</emphasis> is the binary distribution machine
+      message like the following. It indicates that <emphasis role="bold">fs7.example.com</emphasis> is the binary distribution machine
       for this system type.</para>
 
       <programlisting>
    Instance upclientbin, (type is simple) currently running normally.
    Process last started at Wed Mar 10  23:37:09 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs7.abc.com -t 60 /usr/afs/bin'
+   Command 1 is '/usr/afs/bin/upclient fs7.example.com -t 60 /usr/afs/bin'
 </programlisting>
 
       <para>If you run the United States edition of AFS, a simple file server machine also runs the <emphasis
       role="bold">upclientetc</emphasis> process, so the output includes a message like the following. It indicates that <emphasis
-      role="bold">fs1.abc.com</emphasis> is the system control machine.</para>
+      role="bold">fs1.example.com</emphasis> is the system control machine.</para>
 
       <programlisting>
    Instance upclientetc, (type is simple) currently running normally.
    Process last started at Mon Mar 22  05:23:49 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs1.abc.com -t 60 /usr/afs/etc'
+   Command 1 is '/usr/afs/bin/upclient fs1.example.com -t 60 /usr/afs/etc'
 </programlisting>
 
       <sect3 id="HDRWQ99">
@@ -2384,12 +2384,12 @@
         <para>If the system control machine is not a binary distribution machine, the output includes an error message for the
         <emphasis role="bold">upclientetc</emphasis> process, but a complete a listing for the <emphasis
         role="bold">upclientbin</emphasis> process (in this case it refers to the machine <emphasis
-        role="bold">fs5.abc.com</emphasis> as the binary distribution machine):</para>
+        role="bold">fs5.example.com</emphasis> as the binary distribution machine):</para>
 
         <programlisting>
    Instance upclientbin, (type is simple) currently running normally.
    Process last started at Mon Mar 22  05:23:49 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs5.abc.com -t 60 /usr/afs/bin'
+   Command 1 is '/usr/afs/bin/upclient fs5.example.com -t 60 /usr/afs/bin'
    bos: failed to get instance info for 'upclientetc' (no such entity)
 </programlisting>
       </sect3>
@@ -2409,12 +2409,12 @@
 </programlisting>
 
         <para>Unless this machine also happens to be the system control machine, a message like the following references the system
-        control machine (in this case, <emphasis role="bold">fs3.abc.com</emphasis>):</para>
+        control machine (in this case, <emphasis role="bold">fs3.example.com</emphasis>):</para>
 
         <programlisting>
    Instance upclientetc, (type is simple) currently running normally.
    Process last started at Mon Apr 5 05:23:49 1999 (1 proc start)
-   Command 1 is '/usr/afs/bin/upclient fs3.abc.com -t 60 /usr/afs/etc'
+   Command 1 is '/usr/afs/bin/upclient fs3.example.com -t 60 /usr/afs/etc'
 </programlisting>
       </sect3>
     </sect2>
@@ -4128,11 +4128,11 @@
       secondary site.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos listhosts fs1.abc.com</emphasis>
-   Cell name is abc.com
-       Host 1 is fs1.abc.com
-       Host 2 is fs7.abc.com
-       Host 3 is fs4.abc.com
+   % <emphasis role="bold">bos listhosts fs1.example.com</emphasis>
+   Cell name is example.com
+       Host 1 is fs1.example.com
+       Host 2 is fs7.example.com
+       Host 3 is fs4.example.com
 </programlisting>
 
       <para>The output lists machines by name rather than IP address as long as the naming service (such as the Domain Name Service
@@ -4264,7 +4264,7 @@
 
                 <listitem>
                   <para>Specifies the fully qualified hostname of each database server machine to add to the <emphasis
-                  role="bold">CellServDB</emphasis> file (for example: <emphasis role="bold">fs4.abc.com</emphasis>). The BOS Server
+                  role="bold">CellServDB</emphasis> file (for example: <emphasis role="bold">fs4.example.com</emphasis>). The BOS Server
                   uses the <emphasis role="bold">gethostbyname()</emphasis> routine to obtain each machine's IP address and records
                   both the name and address automatically.</para>
                 </listitem>
@@ -4419,7 +4419,7 @@
 
                 <listitem>
                   <para>Specifies the fully qualified hostname of each database server machine to remove from the <emphasis
-                  role="bold">CellServDB</emphasis> file (for example: <emphasis role="bold">fs4.abc.com</emphasis>).</para>
+                  role="bold">CellServDB</emphasis> file (for example: <emphasis role="bold">fs4.example.com</emphasis>).</para>
                 </listitem>
               </varlistentry>
             </variablelist></para>

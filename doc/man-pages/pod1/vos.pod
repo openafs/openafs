@@ -240,7 +240,7 @@ L<B<vos move>|vos_move(1)> command also accept this notation.
 Identifies the file server machine that houses, or is to house, the
 volumes or AFS server partitions of interest. Provide the machine's IP
 address in dotted decimal format, its fully qualified host name (for
-example, C<fs1.abc.com>), or the shortest abbreviated form of its host
+example, C<fs1.example.com>), or the shortest abbreviated form of its host
 name that distinguishes it from other machines. Successful use of an
 abbreviated form depends on the availability of a name resolution service
 (such as the Domain Name Service or a local host table) at the time the

@@ -186,25 +186,25 @@ Server, it produces a message similar to the following:
 =head1 EXAMPLES
 
 The following command authenticates the issuer as cell_admin in the
-C<dce.abc.com> cell.
+C<dce.example.com> cell.
 
-   % dlog -principal cell_admin -cell dce.abc.com
+   % dlog -principal cell_admin -cell dce.example.com
    Password: <cell_admin's password>
 
 In the following example, the issuer authenticates as cell_admin to the
-C<dce.abc.com> cell and request a ticket lifetime of 100 hours. The
+C<dce.example.com> cell and request a ticket lifetime of 100 hours. The
 B<tokens> command confirms that the user obtained DCE credentials as the
 user C<cell_admin>: the AFS ID is equivalent to the UNIX ID of C<1>
-assigned to C<cell_admin> in C<dce.abc.com> cell's DCE registry.
+assigned to C<cell_admin> in C<dce.example.com> cell's DCE registry.
 
-   % dlog -principal cell_admin -cell dce.abc.com -lifetime 100
+   % dlog -principal cell_admin -cell dce.example.com -lifetime 100
    Password: <cell_admin's password>
 
    % tokens
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12]
-   User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14]
+   User's (AFS ID 1) tokens for afs@dce.example.com [Expires Jul 6 14:12]
+   User's (AFS ID 4758) tokens for afs@example.com [Expires Jul 2 13:14]
 
       --End of list--
 

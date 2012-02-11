@@ -114,18 +114,18 @@ ignored.
 
 The following example illustrates the kind of output that can appear
 when a volume operation was about to be attempted on the Volume Server
-on C<fs1.abc.com>, but the process performing the operation never
+on C<fs1.example.com>, but the process performing the operation never
 actually did anything with the volume:
 
-   % vos status fs1.abc.com
+   % vos status fs1.example.com
    --------------------------------------------
    transaction: 575  created: Fri Oct 16 16:55:54 2009
    attachFlags: offline
    volume: 536871080 partition: /vicepb procedure: TransCreate
    --------------------------------------------
-   % vos endtrans fs1.abc.com 575
-   % vos status fs1.abc.com
-   No active transactions on fs1.abc.com
+   % vos endtrans fs1.example.com 575
+   % vos status fs1.example.com
+   No active transactions on fs1.example.com
 
 =head1 PRIVILEGE REQUIRED
 

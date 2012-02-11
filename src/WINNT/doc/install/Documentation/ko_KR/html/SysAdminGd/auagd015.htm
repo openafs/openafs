@@ -321,7 +321,7 @@ VL 서버 프로세스를 실행하는 셀내의 시스템입니다.
 <A NAME="IDX7332"></A>
 <P><DT><B>ThisCell
 </B><DD>이 ASCII 파일에는 시스템이 속하는 셀에 대한 도메인 유형의
-완전한 이름을 지정하는 한 행이 들어 있습니다. 예는 <TT>abc.com</TT> 및 <TT>stateu.edu</TT>입니다. 이 값은 시스템 사용자가
+완전한 이름을 지정하는 한 행이 들어 있습니다. 예는 <TT>example.com</TT> 및 <TT>example.org</TT>입니다. 이 값은 시스템 사용자가
 인증받게 되는 기본 셀을 정의하고, 여기에서는 명령 해석기(예를
 들면 <B>bos</B> 명령)가 서버 프로세스에 접속합니다.
 <P>
@@ -952,7 +952,7 @@ ID(fID) 및 버전 번호와 같은 작은 정보를 기록합니다.
 <PRE>   ><VAR>cell_name</VAR>      #<VAR>organization</VAR>
 </PRE>
 <P>여기서 <VAR>cell_name</VAR>은 셀의 완전한 인터넷 도메인 이름(예를 들면
-<B>abc.com</B>)이고, <VAR>organization</VAR>은 몇개의
+<B>example.com</B>)이고, <VAR>organization</VAR>은 몇개의
 공백과 번호 사인(<TT>#</TT>) 다음에 오는 선택적인 필드이므로,
 셀이 해당되는 조직(예: ABC 회사)에 이름을 지정할 수 있습니다.
 첫번째 행 다음에는 각 데이터베이스 서버 시스템에 대해 별도의 행이
@@ -962,21 +962,21 @@ ID(fID) 및 버전 번호와 같은 작은 정보를 기록합니다.
 <P>여기서 <VAR>IP_address</VAR>는 소숫점 형식으로 된 시스템의 IP
 주소(예: 192.12.105.3)입니다. 몇개의 공백과 번호 사인(<TT>#</TT>)
 다음에는 시스템의 완전한 호스트 이름인 <VAR>machine_name</VAR>이
-옵니다(예: <B>db1.abc.com</B>). 이 경우 번호
+옵니다(예: <B>db1.example.com</B>). 이 경우 번호
 사인은 설명을 나타내지 않으며, <VAR>machine_name</VAR>은 필수 필드입니다.
 <P>셀이 표시되는 순서는 중요하지 않지만, 클라이언트 시스템의 홈 셀에
 먼저 넣으면 편리합니다. 마지막 항목 다음이라도 파일에 공백 행을
 넣지 마십시오.
 <P>다음 예에서는 두 셀에 대한 항목들을 보여주며, 각각에는 3개의
 데이터베이스 서버 시스템이 있습니다.
-<PRE>   >abc.com       #ABC Corporation (home cell)
-   192.12.105.3      #db1.abc.com
-   192.12.105.4      #db2.abc.com
-   192.12.105.55     #db3.abc.com
-   >stateu.edu    #State University cell
-   138.255.68.93     #serverA.stateu.edu
-   138.255.68.72     #serverB.stateu.edu
-   138.255.33.154    #serverC.stateu.edu
+<PRE>   >example.com       #Example Corporation (home cell)
+   192.12.105.3      #db1.example.com
+   192.12.105.4      #db2.example.com
+   192.12.105.55     #db3.example.com
+   >example.org    #Example Organization cell
+   138.255.68.93     #serverA.example.org
+   138.255.68.72     #serverB.example.org
+   138.255.33.154    #serverC.example.org
 </PRE>
 <P><H3><A NAME="HDRWQ408" HREF="auagd002.htm#ToC_453">클라이언트 CellServDB 파일 유지</A></H3>
 <A NAME="IDX7411"></A>
@@ -1077,9 +1077,9 @@ ID(fID) 및 버전 번호와 같은 작은 정보를 기록합니다.
 <B>fs listcells</B>
       .
       .
-   Cell abc.com on hosts db1.abc.com db2.abc.com db3.abc.com
-   Cell stateu.edu on hosts SERVERA.STATEU.EDU SERVERB.STATEU.EDU
-			    SERVERC.STATEU.EDU
+   Cell example.com on hosts db1.example.com db2.example.com db3.example.com
+   Cell example.org on hosts SERVERA.EXAMPLE.ORG SERVERB.EXAMPLE.ORG
+			    SERVERC.EXAMPLE.ORG
    Cell ghi.org on hosts 191.255.64.111 191.255.64.112
       .
       .
@@ -1695,11 +1695,11 @@ setserverprefs</B> 명령에 있는 <B>-vlserver</B> 인수 다음에 이 순위를 나열하십시
 주소가 표시되면 이것을 호스트 이름으로 변환할 수 없음을 의미합니다.
 <P>
 <PRE>   % <B>fs gp</B>
-   fs5.abc.com         20000
-   fs1.abc.com         30014
-   server1.stateu.edu  40011
-   fs3.abc.com         20001
-   fs4.abc.com         30001
+   fs5.example.com         20000
+   fs1.example.com         30014
+   server1.example.org  40011
+   fs3.example.com         20001
+   fs4.example.com         30001
    192.12.106.120      40002
    192.12.106.119      40001
       .   .   .   .   .     . .

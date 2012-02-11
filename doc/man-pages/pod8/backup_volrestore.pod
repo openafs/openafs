@@ -266,28 +266,28 @@ the restore operation.
 =head1 EXAMPLES
 
 The following command restores the volume user.pat to partition F</vicepa>
-on machine C<fs5.abc.com>:
+on machine C<fs5.example.com>:
 
-   % backup volrestore -server fs5.abc.com -partition a -volume user.pat
+   % backup volrestore -server fs5.example.com -partition a -volume user.pat
 
 The following command restores the volumes C<user.smith> and C<user.terry>
-to partition F</vicepb> on machine C<fs4.abc.com>, adding a C<.rst>
+to partition F</vicepb> on machine C<fs4.example.com>, adding a C<.rst>
 extension to each volume name and preserving the existing C<user.smith>
 and C<user.terry> volumes.  Only dumps created before 5:00 p.m. on 31
 January 1998 are restored. (The command is shown here on multiple lines
 only for legibility reasons.)
 
-   % backup volrestore -server fs4.abc.com -partition b  \
+   % backup volrestore -server fs4.example.com -partition b  \
                        -volume user.smith user.terry  \
                        -extension .rst -date 1/31/1998 17:00
 
 The following command restores the volume user.pat to partition F</vicepb>
-on machine C<fs4.abc.com>. The Tape Coordinator with port offset 1 handles
+on machine C<fs4.example.com>. The Tape Coordinator with port offset 1 handles
 the tape containing the full dump; the Tape Coordinator with port offset 0
 handles all tapes containing incremental dumps. (The command is shown here
 on two lines only for legibility reasons.)
 
-   % backup volrestore -server fs5.abc.com -partition a  \
+   % backup volrestore -server fs5.example.com -partition a  \
                        -volume user.pat -portoffset 1 0
 
 =head1 PRIVILEGE REQUIRED

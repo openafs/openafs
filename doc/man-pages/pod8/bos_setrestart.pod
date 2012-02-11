@@ -151,14 +151,14 @@ ignored.
 =head1 EXAMPLES
 
 The following command sets the general restart time on the machine
-C<fs4.abc.com> to Saturday at 3:30 am.
+C<fs4.example.com> to Saturday at 3:30 am.
 
-   % bos setrestart -server fs4.abc.com -time "sat 3:30" -general
+   % bos setrestart -server fs4.example.com -time "sat 3:30" -general
 
 The following command sets the binary restart time on the machine
-C<fs6.abc.com> to 11:45 pm.
+C<fs6.example.com> to 11:45 pm.
 
-   % bos setrestart -server fs6.abc.com -time 23:45 -newbinary
+   % bos setrestart -server fs6.example.com -time 23:45 -newbinary
 
 =head1 PRIVILEGE REQUIRED
 

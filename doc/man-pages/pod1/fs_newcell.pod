@@ -79,19 +79,19 @@ ignored.
 =head1 EXAMPLES
 
 The following example changes the machine's kernel-resident list of
-database server machines for the ABC Corporation cell to include the
-machines C<db1.abc.com> and C<db2.abc.com>:
+database server machines for the Example Corporation cell to include the
+machines C<db1.example.com> and C<db2.example.com>:
 
-   % fs newcell -name abc.com -servers db1.abc.com db2.abc.com
+   % fs newcell -name example.com -servers db1.example.com db2.example.com
 
-The following example links the DCE cell C<dce.abc.com> to the AFS cell
-C<abc.com>. The AFS client contacts the Fileset Location (FL) servers
-C<db1.dce.abc.com> and C<db2.dce.abc.com> for fileset location information
-as it interprets a DFS pathname.
+The following example links the DCE cell C<dce.example.com> to the AFS cell
+C<example.com>. The AFS client contacts the Fileset Location (FL) servers
+C<db1.dce.example.com> and C<db2.dce.example.com> for fileset location
+information as it interprets a DFS pathname.
 
-   % fs newcell -name dce.abc.com \
-       -servers db1.dce.abc.com db2.dce.abc.com \
-       -linkedcell abc.com
+   % fs newcell -name dce.example.com \
+       -servers db1.dce.example.com db2.dce.example.com \
+       -linkedcell example.com
 
 =head1 PRIVILEGE REQUIRED
 

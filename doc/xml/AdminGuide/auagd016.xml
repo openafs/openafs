@@ -474,7 +474,7 @@
    # Base package definitions.
    #
    %ifndef      cell
-   %define      cell    abc.com
+   %define      cell    example.com
    %endif       cell
    %ifndef      sys
    %include /etc/package.sys
@@ -752,10 +752,10 @@
 </programlisting>
 
       <para>An example which creates/updates the file <emphasis role="bold">/bin/grep</emphasis> on the local disk, using <emphasis
-      role="bold">/afs/abc.com/rs_aix42/bin/grep</emphasis> as the source:</para>
+      role="bold">/afs/example.com/rs_aix42/bin/grep</emphasis> as the source:</para>
 
       <programlisting>
-   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+   F /bin/grep /afs/example.com/rs_aix42 root wheel 755
 </programlisting>
 
       <para>In the following example, two update codes are used, and the <emphasis>owner</emphasis>, <emphasis>group</emphasis> and
@@ -763,7 +763,7 @@
       slots.</para>
 
       <programlisting>
-   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+   FAQ /usr/vice/etc/ThisCell /afs/example.com/common/etc/ThisCell
 </programlisting>
 
       <indexterm>
@@ -816,18 +816,18 @@
       </note>
 
       <para>The following example creates a symbolic link from the <emphasis role="bold">/etc/ftpd</emphasis> directory on the local
-      disk to the <emphasis role="bold">/afs/abc.com/hp_ux110/etc/ftpd</emphasis> file in AFS. Since the <emphasis>owner</emphasis>,
+      disk to the <emphasis role="bold">/afs/example.com/hp_ux110/etc/ftpd</emphasis> file in AFS. Since the <emphasis>owner</emphasis>,
       <emphasis>group</emphasis> and <emphasis>mode_bits</emphasis> fields are empty, the symbolic link adopts values for those
       fields from the actual file:</para>
 
       <programlisting>
-   L /etc/ftpd /afs/abc.com/hp_ux110 
+   L /etc/ftpd /afs/example.com/hp_ux110 
 </programlisting>
 
       <para>This example uses the <emphasis role="bold">A</emphasis> update code:</para>
 
       <programlisting>
-   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote 
+   LA /etc/printcap /afs/example.com/common/etc/printcap.remote 
                root wheel 644
 </programlisting>
 

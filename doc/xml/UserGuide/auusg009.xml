@@ -152,7 +152,7 @@
         <para>The command produces output as in the following example:</para>
 
         <programlisting>
-   % <emphasis role="bold">fs listquota /afs/abc.com/usr/terry</emphasis>
+   % <emphasis role="bold">fs listquota /afs/example.com/usr/terry</emphasis>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      10000    3400       34%         86%
 </programlisting>
@@ -212,7 +212,7 @@
 </programlisting></para>
 
         <para>For <replaceable>directory</replaceable>, provide the complete pathname to the directory (for example, <emphasis
-        role="bold">/afs/abc.com/usr/</emphasis><replaceable>your_username</replaceable>). This is necessary because AFS cannot
+        role="bold">/afs/example.com/usr/</emphasis><replaceable>your_username</replaceable>). This is necessary because AFS cannot
         interpret pathname abbreviations if you do not have the <emphasis role="bold">l</emphasis> (<emphasis
         role="bold">lookup</emphasis>) permission.</para>
       </listitem>

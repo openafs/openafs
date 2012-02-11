@@ -94,12 +94,12 @@ ignored.
 =head1 EXAMPLES
 
 The following example bos create command defines and starts an B<upserver>
-process on the host machine C<fs1.abc.com>. The last parameter (enclosed
+process on the host machine C<fs1.example.com>. The last parameter (enclosed
 in quotes) instructs the B<upserver> process to distribute the contents of
 the F</usr/afs/bin> directory in unencrypted form and the contents of the
 F</usr/afs/etc> directory in encrypted form.
 
-   % bos create  -server fs1.abc.com -instance upserver -type simple \
+   % bos create  -server fs1.example.com -instance upserver -type simple \
        -cmd "/usr/afs/bin/upserver /usr/afs/bin -crypt /usr/afs/etc"
 
 =head1 PRIVILEGE REQUIRED
