@@ -515,7 +515,7 @@ NTSTATUS
 AFSInitCcb( IN OUT AFSCcb **Ccb);
 
 void
-AFSRemoveFcb( IN AFSFcb *Fcb);
+AFSRemoveFcb( IN AFSFcb **Fcb);
 
 NTSTATUS
 AFSRemoveCcb( IN AFSFcb *Fcb,

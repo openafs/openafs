@@ -792,7 +792,7 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
             if( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
             {
 
-                AFSRemoveFcb( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+                AFSRemoveFcb( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
             }
 
             AFSDeleteObjectInfo( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
@@ -1054,8 +1054,18 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb)
 //
 
 void
-AFSRemoveFcb( IN AFSFcb *Fcb)
+AFSRemoveFcb( IN AFSFcb **ppFcb)
 {
+
+    AFSFcb * pFcb;
+
+    pFcb = (AFSFcb *) InterlockedCompareExchangePointer( (PVOID *)ppFcb, NULL, (PVOID)(*ppFcb));
+
+    if ( pFcb == NULL)
+    {
+
+        return;
+    }
 
     //
     // Uninitialize the file lock if it is a file
@@ -1064,23 +1074,23 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveFcb Removing Fcb %08lX\n",
-                  Fcb);
+                  pFcb);
 
-    if( Fcb->Header.NodeTypeCode == AFS_FILE_FCB)
+    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
     {
 
-        FsRtlUninitializeFileLock( &Fcb->Specific.File.FileLock);
+        FsRtlUninitializeFileLock( &pFcb->Specific.File.FileLock);
 
         //
         // The resource we allocated
         //
 
-        ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource );
+        ExDeleteResourceLite( &pFcb->NPFcb->Specific.File.ExtentsResource );
 
-        ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
+        ExDeleteResourceLite( &pFcb->NPFcb->Specific.File.DirtyExtentsListLock);
 
     }
-    else if( Fcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+    else if( pFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
     {
 
 
@@ -1090,29 +1100,29 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     // Tear down the FM specific contexts
     //
 
-    FsRtlTeardownPerStreamContexts( &Fcb->Header);
+    FsRtlTeardownPerStreamContexts( &pFcb->Header);
 
     //
     // Delete the resources
     //
 
-    ExDeleteResourceLite( &Fcb->NPFcb->Resource);
+    ExDeleteResourceLite( &pFcb->NPFcb->Resource);
 
-    ExDeleteResourceLite( &Fcb->NPFcb->PagingResource);
+    ExDeleteResourceLite( &pFcb->NPFcb->PagingResource);
 
-    ExDeleteResourceLite( &Fcb->NPFcb->CcbListLock);
+    ExDeleteResourceLite( &pFcb->NPFcb->CcbListLock);
 
     //
     // The non paged region
     //
 
-    AFSExFreePool( Fcb->NPFcb);
+    AFSExFreePool( pFcb->NPFcb);
 
     //
     // And the Fcb itself, which includes the name
     //
 
-    AFSExFreePool( Fcb);
+    AFSExFreePool( pFcb);
 
     return;
 }

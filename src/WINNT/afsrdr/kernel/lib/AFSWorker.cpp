@@ -1056,8 +1056,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                 continue;
             }
 
-            if( pVolumeCB->ObjectInfoListHead == NULL &&
-                pVolumeCB != AFSGlobalRoot)
+            if( pVolumeCB->ObjectInfoListHead == NULL)
             {
 
                 AFSReleaseResource( pVolumeCB->VolumeLock);
@@ -1202,7 +1201,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     AFSReleaseResource( &pCurrentObject->Fcb->NPFcb->Resource);
 
-                                    AFSRemoveFcb( pCurrentObject->Fcb);
+                                    AFSRemoveFcb( &pCurrentObject->Fcb);
                                 }
 
                                 if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
@@ -1211,7 +1210,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
                                     {
 
-                                        AFSRemoveFcb( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+                                        AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
                                     }
 
                                     AFSDeleteObjectInfo( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
@@ -1412,7 +1411,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                             AFSReleaseResource( &pCurrentChildObject->Fcb->NPFcb->Resource);
 
-                                            AFSRemoveFcb( pCurrentChildObject->Fcb);
+                                            AFSRemoveFcb( &pCurrentChildObject->Fcb);
                                         }
 
                                         if( pCurrentChildObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
@@ -1422,7 +1421,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                             if( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
                                             {
 
-                                                AFSRemoveFcb( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+                                                AFSRemoveFcb( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
                                             }
 
                                             AFSDeleteObjectInfo( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
@@ -1556,7 +1555,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     AFSReleaseResource( &pCurrentObject->Fcb->NPFcb->Resource);
 
-                                    AFSRemoveFcb( pCurrentObject->Fcb);
+                                    AFSRemoveFcb( &pCurrentObject->Fcb);
                                 }
 
                                 AFSDeleteObjectInfo( pCurrentObject);
