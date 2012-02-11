@@ -4349,10 +4349,10 @@ and so may already be available at your site.</para>
    192.12.105.3      #db1.example.com
    192.12.105.4      #db2.example.com
    192.12.105.55     #db3.example.com
-   &gt;stateu.edu    #State University cell
-   138.255.68.93     #serverA.stateu.edu
-   138.255.68.72     #serverB.stateu.edu
-   138.255.33.154    #serverC.stateu.edu
+   &gt;example.org    #Example Organization cell
+   138.255.68.93     #serverA.example.org
+   138.255.68.72     #serverB.example.org
+   138.255.33.154    #serverC.example.org
 </programlisting>
 
     <indexterm>
@@ -5540,7 +5540,7 @@ and so may already be available at your site.</para>
 
           <para>For the <replaceable>partition name</replaceable> argument, substitute the name of one of the machine's AFS server
           partitions (such as <emphasis role="bold">/vicepa</emphasis>). For the <replaceable>cellname</replaceable> argument,
-          substitute your cell's fully-qualified Internet domain name (such as <emphasis role="bold">abc.com</emphasis>).</para>
+          substitute your cell's fully-qualified Internet domain name (such as <emphasis role="bold">example.com</emphasis>).</para>
 
           <programlisting>
    # <emphasis role="bold">/usr/afs/bin/vos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <emphasis
@@ -5572,8 +5572,8 @@ and so may already be available at your site.</para>
 
         <listitem>
           <para><emphasis role="bold">(Optional)</emphasis> Create a symbolic link to a shortened cell name, to reduce the length of
-          pathnames for users in the local cell. For example, in the <emphasis role="bold">abc.com</emphasis> cell, <emphasis
-          role="bold">/afs/abc</emphasis> is a link to <emphasis role="bold">/afs/abc.com</emphasis>. <programlisting>
+          pathnames for users in the local cell. For example, in the <emphasis role="bold">example.com</emphasis> cell, <emphasis
+          role="bold">/afs/example</emphasis> is a link to <emphasis role="bold">/afs/example.com</emphasis>. <programlisting>
    # <emphasis role="bold">cd /afs</emphasis>
    # <emphasis role="bold">ln -s</emphasis>  <replaceable>full_cellname</replaceable>  <replaceable>short_cellname</replaceable>
 </programlisting> <indexterm>

@@ -122,30 +122,30 @@ ReleaseClone の場合は <TT>RClone</TT> というフィールドに設定されます。
 <P><TT>New release</TT> および <TT>Old release</TT> フラグの詳細な説明については、
 <B>vos release</B> コマンドの解説ページを参照してください。
 <P><STRONG>例</STRONG>
-<P>次のコマンドは、<B>usr</B> という名前の ABC Corporation ボリュームの VLDB 情報を表示します。このボリュームには、次のように 2 つの読み取り専用の複写サイトがあります。
+<P>次のコマンドは、<B>usr</B> という名前の Example Corporation ボリュームの VLDB 情報を表示します。このボリュームには、次のように 2 つの読み取り専用の複写サイトがあります。
 <PRE>   % <B>vos listvldb -name usr</B>
    usr
     RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
     number of sites -> 3
-       server fs1.abc.com partition /vicepa RO Site
-       server fs3.abc.com partition /vicepa RO Site
-       server fs2.abc.com partition /vicepb RW Site
+       server fs1.example.com partition /vicepa RO Site
+       server fs3.example.com partition /vicepa RO Site
+       server fs2.example.com partition /vicepb RW Site
 
 </PRE>
-<P>次の例は、ファイル・サーバー・マシン <B>fs4.abc.com</B> にある 2 つのボリュームの項目を表示しています。最初の VLDB 項目は現在ロックされています。このマシンをボリューム・サイトに指定する項目は 508 あります。
-<PRE>   % <B>vos listvldb -server fs4.abc.com</B>
-   VLDB entries for server fs4.abc.com
+<P>次の例は、ファイル・サーバー・マシン <B>fs4.example.com</B> にある 2 つのボリュームの項目を表示しています。最初の VLDB 項目は現在ロックされています。このマシンをボリューム・サイトに指定する項目は 508 あります。
+<PRE>   % <B>vos listvldb -server fs4.example.com</B>
+   VLDB entries for server fs4.example.com
        .       .           .        .
        .       .           .        .
    user.smith
     RWrite: 278541326   ROnly: 278541327   Backup: 278542328
     number of sites -> 1
-      server fs4.abc.com partition /vicepg RW Site
+      server fs4.example.com partition /vicepg RW Site
        Volume is currently LOCKED
       user.terry
        RWrite 354287190   ROnly 354287191   Backup 354287192
        number of sites -> 1
-         server fs4.abc.com partition /vicepc RW Site
+         server fs4.example.com partition /vicepc RW Site
          .       .           .        .
          .       .           .        .
       Total entries: 508

@@ -129,14 +129,14 @@ ignored.
 =head1 EXAMPLES
 
 The following bos create command creates an C<upclientbin> process on the
-machine C<fs4.abc.com> that refers to the machine C<fs1.abc.com> as the
-source for the F</usr/afs/bin> directory (thus C<fs1.abc.com> is the
-binary distribution machine for machines of C<fs4.abc.com>'s type). The
+machine C<fs4.example.com> that refers to the machine C<fs1.example.com> as the
+source for the F</usr/afs/bin> directory (thus C<fs1.example.com> is the
+binary distribution machine for machines of C<fs4.example.com>'s type). The
 files in the F</usr/afs/bin> directory are distributed every 120 seconds.
 The command requests transfer in unencrypted form.
 
-   % bos create  -server fs4.abc.com -instance upclientbin -type simple \
-                 -cmd "/usr/afs/bin/upclient fs1.abc.com -clear \
+   % bos create  -server fs4.example.com -instance upclientbin -type simple \
+                 -cmd "/usr/afs/bin/upclient fs1.example.com -clear \
                  -t 120 /usr/afs/bin"
 
 =head1 PRIVILEGE REQUIRED

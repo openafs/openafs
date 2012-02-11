@@ -55,7 +55,7 @@ Specify the read/write path to each directory to avoid the
 failure that results from attempting to change a read-only volume. By
 convention, the read/write path is indicated by placing a period before
 the cell name at the pathname's second level (for example,
-F</afs/.abc.com>). For further discussion of the concept of read/write and
+F</afs/.example.com>). For further discussion of the concept of read/write and
 read-only paths through the filespace, see the B<fs mkmount> reference
 page.
 

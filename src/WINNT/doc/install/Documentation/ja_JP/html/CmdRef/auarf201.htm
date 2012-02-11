@@ -91,36 +91,36 @@ knfs: 'passwd sync' モードの変換プログラム。
 リモート uid はローカル uid と同じでなければなりません。
 </PRE>
 <P><STRONG>例</STRONG>
-<P>以下の例は、このコマンドの一般的な使用例を表しています。発行者 <B>smith</B> は、マシン <B>nfscli1.abc.com</B> で作業し、そのマシン上で、ユーザー ID <B>1020</B> を割り振られています。変換プログラム・マシン <B>tx4.abc.com</B> は、
+<P>以下の例は、このコマンドの一般的な使用例を表しています。発行者 <B>smith</B> は、マシン <B>nfscli1.example.com</B> で作業し、そのマシン上で、ユーザー ID <B>1020</B> を割り振られています。変換プログラム・マシン <B>tx4.example.com</B> は、
 AFS 修正ログイン・ユーティリティーを使用します。したがって、<B>smith</B> は、
 <B>telnet</B> プログラム経由のログインで、
-ABC Corporation セルのトークンを自動的に取得します。次に発行者は <B>klog</B> コマンドを発行して、
-ABC Corporation のテスト・セル <B> test.abc.com</B> で、
+Example Corporation セルのトークンを自動的に取得します。次に発行者は <B>klog</B> コマンドを発行して、
+Example Corporation のテスト・セル <B> test.example.com</B> で、
 <B>admin</B> としてトークンを取得し、さらに <B>knfs</B> コマンドを発行して、この両方のトークンを、マシンの名前 <B>nfs-cli1</B> と、ユーザー ID <B>1020</B> が識別する、信用証明書構造体と対応付けます。発行者は <B>tx4</B> への接続を切断し、
 <B>nfscli1</B> 上で作業を行います。
-<PRE>   % <B>telnet tx4.abc.com</B>
+<PRE>   % <B>telnet tx4.example.com</B>
    . . .
    login: <B>smith</B>
    Password:
    AFS(R) login
 
-   % <B>klog admin -cell test.abc.com</B>
+   % <B>klog admin -cell test.example.com</B>
    Password:
 
-   % <B>knfs nfscli1.abc.com 1020</B>
+   % <B>knfs nfscli1.example.com 1020</B>
 
    % <B>exit</B>
 
 </PRE>
 <P>次の例は、ユーザー <B>smith</B> が、
 <B>telnet</B> プログラム経由で、再びマシン <B>tx4</B> に接続し、トークンを破棄したことを示しています。
-<PRE>   % <B>telnet translator4.abc.com</B>
+<PRE>   % <B>telnet translator4.example.com</B>
    . . .
    login: <B>smith</B>
    Password:
    AFS(R) login
 
-   % <B>knfs nfscli1.abc.com 1020 -unlog</B>
+   % <B>knfs nfscli1.example.com 1020 -unlog</B>
 
    % <B>exit</B>
 </PRE>

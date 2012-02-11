@@ -135,9 +135,9 @@ ignored.
 =head1 EXAMPLES
 
 The following example command verifies the VLDB entry for each volume
-stored on the file server machine C<fs4.abc.com>.
+stored on the file server machine C<fs4.example.com>.
 
-   % vos syncvldb fs4.abc.com
+   % vos syncvldb fs4.example.com
 
 =head1 PRIVILEGE REQUIRED
 

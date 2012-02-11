@@ -502,8 +502,8 @@
 
             <listitem>
               <para>This ASCII file contains a single line that specifies the complete domain-style name of the cell to which the
-              machine belongs. Examples are <computeroutput>abc.com</computeroutput> and
-              <computeroutput>stateu.edu</computeroutput>. This value defines the default cell in which the machine's users become
+              machine belongs. Examples are <computeroutput>example.com</computeroutput> and
+              <computeroutput>example.org</computeroutput>. This value defines the default cell in which the machine's users become
               authenticated, and in which the command interpreters (for example, the <emphasis role="bold">bos</emphasis> command)
               contact server processes.</para>
 
@@ -1794,9 +1794,9 @@
    &gt;cell_name      #organization
 </programlisting>
 
-      <para>where cell_name is the cell's complete Internet domain name (for example, <emphasis role="bold">abc.com</emphasis>) and
+      <para>where cell_name is the cell's complete Internet domain name (for example, <emphasis role="bold">example.com</emphasis>) and
       organization is an optional field that follows any number of spaces and the number sign (<computeroutput>#</computeroutput>)
-      and can name the organization to which the cell corresponds (for example, the ABC Corporation). After the first line comes a
+      and can name the organization to which the cell corresponds (for example, the Example Corporation). After the first line comes a
       separate line for each database server machine. Each line has the following format:</para>
 
       <programlisting>
@@ -1805,7 +1805,7 @@
 
       <para>where IP_address is the machine's IP address in dotted decimal format (for example, 192.12.105.3). Following any number
       of spaces and the number sign (<computeroutput>#</computeroutput>) is machine_name, the machine's fully-qualified hostname
-      (for example, <emphasis role="bold">db1.abc.com</emphasis>). In this case, the number sign does not indicate a comment:
+      (for example, <emphasis role="bold">db1.example.com</emphasis>). In this case, the number sign does not indicate a comment:
       machine_name is a required field.</para>
 
       <para>The order in which the cells appear is not important, but it is convenient to put the client machine's home cell first.
@@ -1814,14 +1814,14 @@
       <para>The following example shows entries for two cells, each of which has three database server machines:</para>
 
       <programlisting>
-   &gt;abc.com       #ABC Corporation (home cell)
-   192.12.105.3      #db1.abc.com
-   192.12.105.4      #db2.abc.com
-   192.12.105.55     #db3.abc.com
-   &gt;stateu.edu    #State University cell
-   138.255.68.93     #serverA.stateu.edu
-   138.255.68.72     #serverB.stateu.edu
-   138.255.33.154    #serverC.stateu.edu
+   &gt;example.com   #Example Corporation (home cell)
+   192.12.105.3      #db1.example.com
+   192.12.105.4      #db2.example.com
+   192.12.105.55     #db3.example.com
+   &gt;example.org    #Example Organization cell
+   138.255.68.93     #serverA.example.org
+   138.255.68.72     #serverB.example.org
+   138.255.33.154    #serverC.example.org
 </programlisting>
     </sect2>
 
@@ -1977,10 +1977,10 @@
    % <emphasis role="bold">fs listcells</emphasis>
       .
       .
-   Cell abc.com on hosts db1.abc.com db2.abc.com db3.abc.com
-   Cell stateu.edu on hosts SERVERA.STATEU.EDU SERVERB.STATEU.EDU 
-                            SERVERC.STATEU.EDU
-   Cell ghi.org on hosts 191.255.64.111 191.255.64.112
+   Cell example.com on hosts db1.example.com db2.example.com db3.example.com
+   Cell example.org on hosts SERVERA.EXAMPLE.ORG SERVERB.EXAMPLE.ORG 
+                            SERVERC.EXAMPLE.ORG
+   Cell example.net on hosts 191.255.64.111 191.255.64.112
       .
       .
 </programlisting>
@@ -3078,11 +3078,11 @@
 
           <programlisting>
    % <emphasis role="bold">fs gp</emphasis>
-   fs5.abc.com         20000
-   fs1.abc.com         30014
-   server1.stateu.edu  40011
-   fs3.abc.com         20001
-   fs4.abc.com         30001
+   fs5.example.com     20000
+   fs1.example.com     30014
+   server1.example.org 40011
+   fs3.example.com     20001
+   fs4.example.com     30001
    192.12.106.120      40002
    192.12.106.119      40001
       .   .   .   .   .     . .

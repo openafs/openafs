@@ -167,9 +167,9 @@ backup version, if any.
 
 The following example removes the read-only volume C<root.afs.readonly>
 from one of its sites, the F</vicepa> partition on the file server machine
-C<fs1.abc.com>.
+C<fs1.example.com>.
 
-   % vos remove fs1.abc.com  a  root.afs.readonly
+   % vos remove fs1.example.com  a  root.afs.readonly
 
 =head1 PRIVILEGE REQUIRED
 

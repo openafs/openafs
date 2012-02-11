@@ -126,20 +126,20 @@ UNIX の標準表記では 2038 年 2 月までしか表現できないので、
 
 </PRE>
 <P><STRONG>例</STRONG>
-<P>次のコマンドは、マシン <B>fs5.abc.com</B> の区画 <B>/vicepa</B> にボリューム <B>user.pat</B> を復元しています。
-<PRE>   % <B>backup volrestore -server fs5.abc.com -partition a -volume user.pat</B>
+<P>次のコマンドは、マシン <B>fs5.example.com</B> の区画 <B>/vicepa</B> にボリューム <B>user.pat</B> を復元しています。
+<PRE>   % <B>backup volrestore -server fs5.example.com -partition a -volume user.pat</B>
 
 </PRE>
-<P>次のコマンドは、ボリューム <B>user.smith</B> および <B>user.terry</B> をマシン <B>fs4.abc.com</B> の区画 <B>/vicepb</B> に復元しています。このコマンドでは、各ボリューム名に拡張子 <B>.rst</B> を追加して、既存の <B>user.smith</B> および <B>user.terry</B> ボリュームを保存しています。ここでは、1998 年 1 月 31 日午後 5 時 00 分以前に作成されたダンプだけを復元しています。
+<P>次のコマンドは、ボリューム <B>user.smith</B> および <B>user.terry</B> をマシン <B>fs4.example.com</B> の区画 <B>/vicepb</B> に復元しています。このコマンドでは、各ボリューム名に拡張子 <B>.rst</B> を追加して、既存の <B>user.smith</B> および <B>user.terry</B> ボリュームを保存しています。ここでは、1998 年 1 月 31 日午後 5 時 00 分以前に作成されたダンプだけを復元しています。
 (ここで示したコマンドは、読みやすくするために複数行で表示されています。)
-<PRE>   % <B>backup volrestore -server fs4.abc.com -partition b</B>  \
+<PRE>   % <B>backup volrestore -server fs4.example.com -partition b</B>  \
                        <B>-volume user.smith user.terry</B>  \
                        <B>-extension .rst -date 1/31/1998 17:00</B>
 
 </PRE>
-<P>次のコマンドは、マシン <B>fs4.abc.com</B> の区画 <B>/vicepb</B> に、ボリューム <B>user.pat</B> を復元しています。ポート・オフセット 1 のテープ・コーディネーターがフル・ダンプのある磁気テープを処理し、ポート・オフセット 0 のテープ・コーディネーターがインクリメンタル・ダンプのあるすべての磁気テープを処理しています。
+<P>次のコマンドは、マシン <B>fs4.example.com</B> の区画 <B>/vicepb</B> に、ボリューム <B>user.pat</B> を復元しています。ポート・オフセット 1 のテープ・コーディネーターがフル・ダンプのある磁気テープを処理し、ポート・オフセット 0 のテープ・コーディネーターがインクリメンタル・ダンプのあるすべての磁気テープを処理しています。
 (ここで示したコマンドは、読みやすくするために 2 行で表示されています。)
-<PRE>   % <B>backup volrestore -server fs5.abc.com -partition a</B>  \
+<PRE>   % <B>backup volrestore -server fs5.example.com -partition a</B>  \
                        <B>-volume user.pat -portoffset 1 0</B>
 
 </PRE>

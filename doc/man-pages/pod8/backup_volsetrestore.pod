@@ -376,10 +376,10 @@ named F</tmp/restore>:
 
 The F</tmp/restore> file has the following contents:
 
-   fs1.abc.com b user.pat
-   fs1.abc.com b user.terry
-   fs1.abc.com b user.smith
-   fs2.abc.com c user.jones
+   fs1.example.com b user.pat
+   fs1.example.com b user.terry
+   fs1.example.com b user.smith
+   fs2.example.com c user.jones
           .         .     .
           .         .     .
 

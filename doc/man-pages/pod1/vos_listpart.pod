@@ -90,9 +90,9 @@ The last line of the output reports the total number of partitions.
 
 =head1 EXAMPLES
 
-The following command displays the partitions on C<fs1.abc.com>:
+The following command displays the partitions on C<fs1.example.com>:
 
-   % vos listpart fs1.abc.com
+   % vos listpart fs1.example.com
    The partitions on the server are:
        /vicepa     /vicepb     /vicepc     /vicepd
    Total:  4

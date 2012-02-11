@@ -191,7 +191,7 @@ The output in the Tape Coordinator window reads:
    tape name = oct.guest.dump
    AFS tape name = guests.monthly.3
    creationTime = Thu Oct 1 00:10:00 1998
-   cell = abc.com
+   cell = example.com
    size = 2097152 Kbytes
    dump path = /monthly
    dump id = 907215000
@@ -211,7 +211,7 @@ The output in the Tape Coordinator window reads:
    tape name = <NULL>
    AFS tape name = guests.monthly.2
    creationTime = Sun Nov 1 00:58:20 1998
-   cell = abc.com
+   cell = example.com
    size = 2097152 Kbytes
    dump path = /monthly
    dump id = 909899900

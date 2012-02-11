@@ -84,9 +84,9 @@ ignored.
 =head1 EXAMPLES
 
 The following example disables authorization checking on the machine
-C<fs7.abc.com>:
+C<fs7.example.com>:
 
-   % bos setauth -server fs7.abc.com -authrequired off
+   % bos setauth -server fs7.example.com -authrequired off
 
 =head1 PRIVILEGE REQUIRED
 

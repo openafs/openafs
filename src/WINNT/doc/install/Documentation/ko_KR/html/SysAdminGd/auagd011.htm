@@ -857,10 +857,10 @@ removeuser</B> 명령들을 사용하십시오.
 테이프 조정자를 나열합니다.
 <PRE>   % <B>backup listhosts</B>
    Tape hosts:
-       Host backup1.abc.com, port offset 0
-       Host backup1.abc.com, port offset 2
-       Host backup2.abc.com, port offset 1
-       Host backup2.abc.com, port offset 3
+       Host backup1.example.com, port offset 0
+       Host backup1.example.com, port offset 2
+       Host backup2.example.com, port offset 1
+       Host backup2.example.com, port offset 3
 </PRE>
 <HR><H2><A NAME="HDRWQ265" HREF="auagd002.htm#ToC_290">볼륨 세트와 볼륨 항목의 정의 및 표시</A></H2>
 <P>백업 시스템은 개별 파일이 아닌 볼륨 레벨에서 데이터를 처리합니다.
@@ -939,7 +939,7 @@ addvolentry</B> 명령의 3개 인수에 대해 다음 유형의 값들을
 <B>-server</B> 인수로서 완전한 호스트 이름을 지정하고
 <B>-partition</B> 및 -<B>volume</B>
 인수에 대해 일반 표현식 <B>.*</B>를 사용합니다(예를
-들어 <B> -server fs1.abc.com -partition .* -volume .*</B>).
+들어 <B> -server fs1.example.com -partition .* -volume .*</B>).
 </LI><LI>여러 파일 서버 시스템의 파티션에 있는 이름이 같은 모든 볼륨,
 <B>-partition</B> 인수에 완전한 파티션 이름을 지정하고
 <B>-server</B> 및 <B>-volume</B> 인수에
@@ -956,7 +956,7 @@ addvolentry</B> 명령의 3개 인수에 대해 다음 유형의 값들을
 <B>-partition</B> 인수로서 완전한 파티션 이름을
 지정하며, <B>-volume</B> 인수에 대해
 <B>.*</B> 일반 표현식을 사용합니다(예를 들면
-<B>-server fs2.abc.com -partition /vicepb -volume .*</B>).
+<B>-server fs2.example.com -partition /vicepb -volume .*</B>).
 </LI><LI>단일 볼륨, <B>-volume</B> 인수로서 완전한 이름을
 지정합니다. 대응되는 항목을 찾기 위해 VLDB를 통한 시간이 소요되는
 탐색을 통과하려면, <B>-server</B> 및 <B>-partition</B> 인수 각각에 대해 실제 시스템과 파티션 이름을 지정할 수 있습니다.
@@ -1082,7 +1082,7 @@ volsetrestore</B> 명령을 사용하여 함께 백업하지 않아도 되는 볼륨
 작성하십시오).
 <P><DT><B>-server
 </B><DD>볼륨 항목내에 볼륨들이 있는 하나 이상의 파일 서버 시스템 세트를
-정의합니다. 하나의 완전한 호스트 이름(<B>fs1.abc.com</B>과
+정의합니다. 하나의 완전한 호스트 이름(<B>fs1.example.com</B>과
 같은)이나 메타문자 표현식 <B>.*</B>(점과 별표)을 입력하십시오.
 이것은 VLDB에 있는 모든 시스템 이름에 대응합니다.
 <P><DT><B>-partition
@@ -1130,8 +1130,8 @@ volsetrestore</B> 명령을 사용하여 함께 백업하지 않아도 되는 볼륨
 <P>
 <PRE>   backup> <B>listv</B>
    Volume set pat+jones (temporary):
-     Entry 1: server fs1.abc.com, partition /vicepe, volumes: user.pat.backup
-     Entry 2: server fs5.abc.com, partition /viceph, volumes: user.jones.backup
+     Entry 1: server fs1.example.com, partition /vicepe, volumes: user.pat.backup
+     Entry 2: server fs5.example.com, partition /viceph, volumes: user.jones.backup
    Volume set user:
      Entry 1: server .*, partition .*, volumes: user.*\.backup
    Volume set sun:
@@ -1942,7 +1942,7 @@ id</TT> 각각)를 보고합니다. <TT>cell</TT> 필드에서는 덤프 동작이
    tape name = monthly_guest
    AFS tape name = guests.monthly.3
    creationTime =  Mon Feb  1 04:06:40 1999
-   cell = abc.com
+   cell = example.com
    size = 2150000 Kbytes
    dump path = /monthly
    dump id = 917860000

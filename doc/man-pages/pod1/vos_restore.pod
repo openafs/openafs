@@ -257,12 +257,12 @@ ignored.
 =head1 EXAMPLES
 
 The following command restores the contents of the dump file
-F</afs/abc.com/common/dumps/terry.dump> to the F</vicepc> partition on the
-file server machine C<fs3.abc.com>. The restored volume is named
+F</afs/example.com/common/dumps/terry.dump> to the F</vicepc> partition on the
+file server machine C<fs3.example.com>. The restored volume is named
 C<user.terry>.
 
-   % cd /afs/abc.com/common/dumps
-   % vos restore -file terry.dump -server fs3.abc.com -partition c \
+   % cd /afs/example.com/common/dumps
+   % vos restore -file terry.dump -server fs3.example.com -partition c \
        -name user.terry
 
 =head1 PRIVILEGE REQUIRED

@@ -168,10 +168,10 @@ The C<lastReceiveTime> and C<lastSendTime> are for internal use.
 =head1 EXAMPLES
 
 The following example illustrates the kind of output that sometimes
-appears when the Volume Server on C<fs1.abc.com> is executing a dump at
+appears when the Volume Server on C<fs1.example.com> is executing a dump at
 the time this command is issued.
 
-   % vos status fs1.abc.com
+   % vos status fs1.example.com
    --------------------------------------------
    transaction: 575  created: Tue Jan 2 8:34:56 1990
    attachFlags: offline

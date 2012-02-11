@@ -160,7 +160,7 @@ Specify the read/write path to the directory, to avoid the failure that
 results from attempting to create a new mount point in a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
-F</afs/.abc.com>). For further discussion of the concept of read/write and
+F</afs/.example.com>). For further discussion of the concept of read/write and
 read-only paths through the filespace, see L</DESCRIPTION>.
 
 =item B<-vol> <I<volume name>>
@@ -203,26 +203,26 @@ ignored.
 =head1 EXAMPLES
 
 The following command creates a regular mount point, mounting the volume
-C<user.smith> at F</afs/abc.com/usr/smith>:
+C<user.smith> at F</afs/example.com/usr/smith>:
 
-   % cd /afs/abc.com/usr
+   % cd /afs/example.com/usr
    % fs mkmount -dir smith -vol user.smith
 
 The following commands create a read/write mount point and a regular mount
-point for the ABC Corporation cell's C<root.cell> volume in that cell's
+point for the Example Corporation cell's C<root.cell> volume in that cell's
 file tree. The second command follows the convention of putting a period
 at the beginning of the read/write mount point's name.
 
-   % fs mkmount -dir /afs/abc.com -vol root.cell
-   % fs mkmount -dir /afs/.abc.com -vol root.cell -rw
+   % fs mkmount -dir /afs/example.com -vol root.cell
+   % fs mkmount -dir /afs/.example.com -vol root.cell -rw
 
-The following command mounts the State University cell's C<root.cell>
-volume in the ABC Corporation cell's file tree, creating a regular
-cellular mount point called F</afs/stateu.edu>. When a ABC Corporation
-Cache Manager encounters this mount point, it crosses into the State
-University cell on a read-only path.
+The following command mounts the Example Organization cell's C<root.cell>
+volume in the Example Corporation cell's file tree, creating a regular
+cellular mount point called F</afs/example.org>. When a Example Corporation
+Cache Manager encounters this mount point, it crosses into the Example
+Organization cell on a read-only path.
 
-   % fs mkmount -dir /afs/stateu.edu -vol root.cell -c stateu.edu
+   % fs mkmount -dir /afs/example.org -vol root.cell -c example.org
 
 =head1 PRIVILEGE REQUIRED
 

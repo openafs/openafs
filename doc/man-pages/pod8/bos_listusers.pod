@@ -74,9 +74,9 @@ B<bos> and B<vos> commands.
 =head1 EXAMPLES
 
 The following example lists the users from UserList file on the machine
-C<fs4.abc.com>.
+C<fs4.example.com>.
 
-   % bos listusers fs4.abc.com
+   % bos listusers fs4.example.com
    SUsers are: pat smith jones terry
 
 =head1 PRIVILEGE REQUIRED

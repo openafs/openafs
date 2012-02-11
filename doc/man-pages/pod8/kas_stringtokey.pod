@@ -77,10 +77,10 @@ The output is of the following form:
 =head1 EXAMPLES
 
 The following example shows the octal key equivalent of the string
-C<new_pswd> in the ABC Corporation cell.
+C<new_pswd> in the Example Corporation cell.
 
    % kas stringtokey new_pswd
-   Converting new_pswd in realm 'ABC.COM' yields
+   Converting new_pswd in realm 'EXAMPLE.COM' yields
        key='\346\307\364\320\263\233\342\354'.
 
 =head1 PRIVILEGE REQUIRED

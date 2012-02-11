@@ -236,7 +236,7 @@ Specify the read/write path to the directory, to avoid the failure that
 results from attempting to create a new directory in a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
-F</afs/.abc.com>). For further discussion of the concept of read/write and
+F</afs/.example.com>). For further discussion of the concept of read/write and
 read-only paths through the filespace, see the reference page for the B<fs
 mkmount> command.
 
@@ -333,7 +333,7 @@ Specifies the file's full pathname. It can include variables.
 Specify the read/write path to the file, to avoid the failure that results
 from attempting to create a new file in a read-only volume. By convention,
 the read/write path is indicated by placing a period before the cell name
-at the pathname's second level (for example, F</afs/.abc.com>). For
+at the pathname's second level (for example, F</afs/.example.com>). For
 further discussion of the concept of read/write and read-only paths
 through the filespace, see the reference page for the B<fs mkmount>
 command.
@@ -417,7 +417,7 @@ filename. It can include variables.
 Specify the read/write path to the file, to avoid the failure that results
 from attempting to create a new file in a read-only volume. By convention,
 the read/write path is indicated by placing a period before the cell name
-at the pathname's second level (for example, F</afs/.abc.com>). For
+at the pathname's second level (for example, F</afs/.example.com>). For
 further discussion of the concept of read/write and read-only paths
 through the filespace, see the reference page for the B<fs mkmount>
 command.
@@ -495,7 +495,7 @@ results from attempting to create a new mount point in a read-only volume
 when the $AUTO variable is used in a C<V> instruction's <mount_point>
 field. By convention, the read/write path is indicated by placing a period
 before the cell name at the pathname's second level (for example,
-F</afs/.abc.com>). For further discussion of the concept of read/write and
+F</afs/.example.com>). For further discussion of the concept of read/write and
 read-only paths through the filespace, see the reference page for the B<fs
 mkmount> command.
 
@@ -553,7 +553,7 @@ Specifies the complete pathname of the second name for the file.
 Specify the read/write path to the link, to avoid the failure that results
 from attempting to create a new link in a read-only volume. By convention,
 the read/write path is indicated by placing a period before the cell name
-at the pathname's second level (for example, F</afs/.abc.com>). For
+at the pathname's second level (for example, F</afs/.example.com>). For
 further discussion of the concept of read/write and read-only paths
 through the filespace, see the reference page for the B<fs mkmount>
 command.
@@ -599,7 +599,7 @@ field in the bulk input file B<add> instruction.
 
 Names the file server machine on which to create the new user's volume. It
 is best to provide the fully-qualified hostname (for example,
-C<fs1.abc.com>), but an abbreviated form is acceptable provided that the
+C<fs1.example.com>), but an abbreviated form is acceptable provided that the
 cell's naming service is available to resolve it at the time the volume is
 created. To read in the value from the B<uss add> command's B<-server>
 argument, specify the value $SERVER.
@@ -643,7 +643,7 @@ Specify the read/write path to the mount point, to avoid the failure that
 results from attempting to create a new mount point in a read-only
 volume. By convention, the read/write path is indicated by placing a
 period before the cell name at the pathname's second level (for example,
-F</afs/.abc.com>). If the $AUTO variable appears in this field, the
+F</afs/.example.com>). If the $AUTO variable appears in this field, the
 directories named by each C<G> instruction possibly already indicate the
 read/write path. For further discussion of the concept of read/write and
 read-only paths through the filespace, see the reference page for the B<fs
@@ -731,13 +731,13 @@ suitable for incorporating into the cell's global F</etc/password> file.
 
    E  $USER.etcp  0644 root "$USER:X:$UID:10:$NAME:$MTPT:/bin/csh"
 
-The following example C<F> instruction, appropriate for the ABC
+The following example C<F> instruction, appropriate for the Example
 Corporation cell, copies a prototype F<.login> file into the user's home
 directory.
 
-   F $MTPT/.login 0644 $UID /afs/abc.com/common/uss/skel/.login
+   F $MTPT/.login 0644 $UID /afs/example.com/common/uss/skel/.login
 
-In the following example, the State University cell's administrators
+In the following example, the Example Organization cell's administrators
 have decided to distribute user home directories evenly into three
 directories. They define three C<G> instructions:
 
@@ -748,14 +748,14 @@ directories. They define three C<G> instructions:
 and then put the following value in the <mount_point> field of the C<V>
 instruction:
 
-   /afs/stateu.edu/$AUTO/$USER
+   /afs/example.org/$AUTO/$USER
 
 Alternatively, if they include the entire directory pathname in the C<G>
 instruction:
 
-   G /afs/stateu.edu/usr1
-   G /afs/stateu.edu/usr2
-   G /afs/stateu.edu/usr3
+   G /afs/example.org/usr1
+   G /afs/example.org/usr2
+   G /afs/example.org/usr3
 
 then the <mount_point> field of the C<V> instruction specifies only the
 following:
@@ -767,27 +767,27 @@ files F<mail> and F<mbox> in the user's home directory.
 
    L $MTPT/mbox $MTPT/mail
 
-The following example C<S> instruction, appropriate for the ABC
+The following example C<S> instruction, appropriate for the Example
 Corporation cell, links the file F<Mail/outgoing> in the user's home
-directory to the file F</afs/abc.com/common/mail/outgoing>.
+directory to the file F</afs/example.com/common/mail/outgoing>.
 
-   S /afs/abc.com/common/mail/outgoing $MTPT/Mail/outgoing
+   S /afs/example.com/common/mail/outgoing $MTPT/Mail/outgoing
 
 The following example C<V> instruction creates a volume called
 C<user.I<username>> on the F</vicepa> partition of the specified file
 server machine, assigning it a quota of 3000 kilobyte blocks. The mount
-point is under F</afs/abc.com/usr> and matches the username (the value of
+point is under F</afs/example.com/usr> and matches the username (the value of
 the $USER variable). The user owns the home directory and has all
 access rights to it. The instruction appears on two lines only for
 legibility; it must appear on a single line in the template file.
 
-   V user.$USER $SERVER.abc.com /vicepa 3000 \
-           /afs/abc.com/usr/$USER $UID $USER all
+   V user.$USER $SERVER.example.com /vicepa 3000 \
+           /afs/example.com/usr/$USER $UID $USER all
 
 The following example C<X> instruction mounts the backup version of the
 user's volume at the F<OldFiles> subdirectory.
 
-   X "fs mkm /afs/abc.com/usr/$USER/OldFiles   user.$USER.backup"
+   X "fs mkm /afs/example.com/usr/$USER/OldFiles   user.$USER.backup"
 
 =head1 SEE ALSO
 

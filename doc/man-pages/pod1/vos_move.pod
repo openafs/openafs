@@ -179,11 +179,11 @@ ignored.
 =head1 EXAMPLES
 
 The following example moves the volume C<user.smith> from the F</vicepb>
-partition on the file server machine C<fs3.abc.com> to the F</vicepg>
-partition on the file server machine C<fs7.abc.com>.
+partition on the file server machine C<fs3.example.com> to the F</vicepg>
+partition on the file server machine C<fs7.example.com>.
 
-   % vos move -id user.smith -fromserver fs3.abc.com -frompartition b \
-       -toserver fs7.abc.com -topartition g
+   % vos move -id user.smith -fromserver fs3.example.com -frompartition b \
+       -toserver fs7.example.com -topartition g
 
 =head1 PRIVILEGE REQUIRED
 

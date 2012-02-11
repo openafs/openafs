@@ -353,14 +353,14 @@ L<vos_release(1)>.
 
 =head1 EXAMPLES
 
-The following example shows output for the ABC Corporation volume called
+The following example shows output for the Example Corporation volume called
 C<usr> with two read-only replication sites (this volume is mounted at the
-F</afs/abc.com/usr> directory). For the sake of illustration, the output
+F</afs/example.com/usr> directory). For the sake of illustration, the output
 shows the volume as locked.
 
    % vos examine usr
    usr                           536870981 RW   3459 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 5360870981   ROnly 536870982   Backup 536870983
         MaxQuota      40000 K
         Creation    Mon Jun 12 15:22:06 1989
@@ -369,9 +369,9 @@ shows the volume as locked.
         5719 accesses in the past day (i.e., vnode references)
         RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
         number of sites -> 3
-           server fs1.abc.com partition /vicepa RO Site
-           server fs3.abc.com partition /vicepa RO Site
-           server fs2.abc.com partition /vicepb RW Site
+           server fs1.example.com partition /vicepa RO Site
+           server fs3.example.com partition /vicepa RO Site
+           server fs2.example.com partition /vicepb RW Site
         Volume is currently LOCKED
 
 The following example shows the output for the volume C<user.terry> using
@@ -379,7 +379,7 @@ the B<-extended> flag. The volume has no read-only replication sites.
 
    % vos examine -id user.terry -extended
    user.terry         354287190 RW    2302 K used 119 files On-line
-       fs4.abc.com /vicepc
+       fs4.example.com /vicepc
        RWrite 354287190 ROnly          0 Backup 354287192
        MaxQuota       5000 K
        Creation    Wed Nov 25 17:38:57 1992
@@ -410,7 +410,7 @@ the B<-extended> flag. The volume has no read-only replication sites.
              |-------------------------------------------|
        RWrite: 354287190    Backup: 354287192
        number of sites -> 1
-          server fs4.abc.com partition /vicepc RW Site
+          server fs4.example.com partition /vicepc RW Site
 
 =head1 PRIVILEGE REQUIRED
 

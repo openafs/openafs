@@ -96,11 +96,11 @@ strongly discouraged. Only use it if you really know what you are doing.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a dafs process on
-the file server machine C<fs2.abc.com> that uses the large configuration
+the file server machine C<fs2.example.com> that uses the large configuration
 size, and allows volumes to exceed their quota by 10%. Type the command on
 a single line:
 
-   % bos create -server fs2.abc.com -instance dafs -type dafs \
+   % bos create -server fs2.example.com -instance dafs -type dafs \
                 -cmd "/usr/afs/bin/dafileserver -pctspare 10 -L" \
                 /usr/afs/bin/davolserver \
                 /usr/afs/bin/salvageserver \

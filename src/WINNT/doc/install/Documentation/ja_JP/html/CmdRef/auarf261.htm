@@ -167,12 +167,12 @@ ReleaseClone の場合は <TT>RClone</TT> というフィールドに設定されます。
 <B>vos release</B> コマンドの解説ページを参照してください。
 <P><STRONG>例</STRONG>
 <P>次の例は、
-2 つの 読み取り専用の複写サイトを持つ <B>usr</B> という名前の ABC Corporation ボリュームの出力を示しています。(このボリュームは、
-<B>/afs/abc.com/usr</B> ディレクトリーにマウントされています。)
+2 つの 読み取り専用の複写サイトを持つ <B>usr</B> という名前の Example Corporation ボリュームの出力を示しています。(このボリュームは、
+<B>/afs/example.com/usr</B> ディレクトリーにマウントされています。)
 説明を簡単にするために、この出力では、ボリュームがロックされている状態になっています。
 <PRE>   % <B>vos examine usr</B>
    usr                           536870981 RW   3459 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 5360870981   ROnly 536870982   Backup 536870983
         MaxQuota      40000 K
         Creation    Mon Jun 12 15:22:06 1989
@@ -180,16 +180,16 @@ ReleaseClone の場合は <TT>RClone</TT> というフィールドに設定されます。
         5719 accesses in the past day (i.e., vnode references)
         RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
         number of sites -> 3
-           server fs1.abc.com partition /vicepa RO Site
-           server fs3.abc.com partition /vicepa RO Site
-           server fs2.abc.com partition /vicepb RW Site
+           server fs1.example.com partition /vicepa RO Site
+           server fs3.example.com partition /vicepa RO Site
+           server fs2.example.com partition /vicepb RW Site
         Volume is currently LOCKED
 
 </PRE>
 <P>次の例は、<B>-extended</B> フラグを使用した場合のボリューム <B>user.terry</B> の出力を示しています。このボリュームには、読み取り専用の複写サイトはありません。
 <PRE>   %<B> vos examine -id user.terry -extended</B>
    user.terry         354287190 RW    2302 K used 119 files On-line
-       fs4.abc.com /vicepc
+       fs4.example.com /vicepc
        RWrite 354287190 ROnly          0 Backup 354287192
        MaxQuota       5000 K
        Creation    Wed Nov 25 17:38:57 1992
@@ -219,7 +219,7 @@ ReleaseClone の場合は <TT>RClone</TT> というフィールドに設定されます。
              |-------------------------------------------|
     RWrite: 354287190    Backup: 354287192
     number of sites -> 1
-       server fs4.abc.com partition /vicepc RW Site
+       server fs4.example.com partition /vicepc RW Site
 
 </PRE>
 <P><STRONG>必要となる特権</STRONG>

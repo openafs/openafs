@@ -83,7 +83,7 @@ stream.
 Displays the IP addresses of file server machine interfaces or VL Server
 machines, rather than their hostnames. If this argument is not provided,
 the B<fs> command interpreter has the IP addresses translated to hostnames
-such as C<fs1.abc.com>.
+such as C<fs1.example.com>.
 
 =item B<-vlservers>
 
@@ -117,19 +117,19 @@ B<-file> argument to write the output to a file instead.
 
 The following example displays the local Cache Manager's preference ranks
 for file server machines. The local machine belongs to the AFS cell named
-B<abc.com>, and in this example the ranks of file server machines in its
+B<example.com>, and in this example the ranks of file server machines in its
 local cell are lower than the ranks of file server machines from the
-foreign cell, C<def.com>. It is not possible to translate the IP addresses
+foreign cell, C<example.net>. It is not possible to translate the IP addresses
 of two machines on the 138.255 network.
 
    % fs getserverprefs
-   fs2.abc.com           20007
-   fs3.abc.com           30002
-   fs1.abc.com           20011
-   fs4.abc.com           30010
-   server1.def.com       40002
+   fs2.example.com       20007
+   fs3.example.com       30002
+   fs1.example.com       20011
+   fs4.example.com       30010
+   server1.example.net   40002
    138.255.33.34         40000
-   server6.def.com       40012
+   server6.example.net   40012
    138.255.33.37         40005
 
 The following example shows hows the output displays IP addresses when the
@@ -156,9 +156,9 @@ The example shows how the B<-vlservers> flag displays preference ranks for
 VL Server machines:
 
    % fs getserverprefs -vlservers
-   fs2.abc.com            10052
-   fs3.abc.com            10113
-   fs1.abc.com            10005
+   fs2.example.com        10052
+   fs3.example.com        10113
+   fs1.example.com        10005
 
 =head1 PRIVILEGE REQUIRED
 

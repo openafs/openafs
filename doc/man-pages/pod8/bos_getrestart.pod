@@ -115,14 +115,14 @@ restart once per day. Examples: C<11:00 pm>, C<3:00 am>.
 =head1 EXAMPLES
 
 The following example displays the restart times for the machine
-C<db2.abc.com>:
+C<db2.example.com>:
 
-   % bos getrestart db2.abc.com
-   Server db2.abc.com restarts at sun 4:00 am
-   Server db2.abc.com restarts for new binaries at 2:15 am
+   % bos getrestart db2.example.com
+   Server db2.example.com restarts at sun 4:00 am
+   Server db2.example.com restarts for new binaries at 2:15 am
 
 In the following example, the issuer abbreviates the machine name
-C<fs1.abc.com> to C<fs1>, relying on the cell's name server to resolve the
+C<fs1.example.com> to C<fs1>, relying on the cell's name server to resolve the
 name. The output echoes the abbreviated form.
 
    % bos getrestart fs1

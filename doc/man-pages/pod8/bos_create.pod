@@ -261,46 +261,46 @@ ignored.
 =head1 EXAMPLES
 
 The following command defines and starts the simple process
-C<ptserver> on the machine C<fs3.abc.com>:
+C<ptserver> on the machine C<fs3.example.com>:
 
-   % bos create -server fs3.abc.com -instance ptserver -type simple \
+   % bos create -server fs3.example.com -instance ptserver -type simple \
                 -cmd /usr/afs/bin/ptserver
 
 The following command defines and starts the simple process C<upclientbin>
-on the machine C<fs4.abc.com>. It references C<fs1.abc.com> as the source
-for updates to binary files, checking for changes to the F</usr/afs/bin>
-directory every 120 seconds.
+on the machine C<fs4.example.com>. It references C<fs1.example.com> as the
+source for updates to binary files, checking for changes to the
+F</usr/afs/bin> directory every 120 seconds.
 
-   % bos create -server fs4.abc.com -instance upclientbin -type simple \
-                -cmd "/usr/afs/bin/upclient fs1.abc.com -clear -t 120 \
+   % bos create -server fs4.example.com -instance upclientbin -type simple \
+                -cmd "/usr/afs/bin/upclient fs1.example.com -clear -t 120 \
                 /usr/afs/bin"
 
 The following command creates the B<fs> process C<fs> on the machine
-C<fs4.abc.com> (a traditional File Server with associated processes). Type
+C<fs4.example.com> (a traditional File Server with associated processes). Type
 the command on a single line.
 
-   % bos create -server fs4.abc.com -instance fs -type fs \
+   % bos create -server fs4.example.com -instance fs -type fs \
                 -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \
                 /usr/afs/bin/salvager
 
 The following command creates the B<dafs> process C<dafs> on the machine
-C<fs4.abc.com> (a demand-attach File Server with associated processes).
+C<fs4.example.com> (a demand-attach File Server with associated processes).
 Type the command on a single line.
 
-   % bos create -server fs4.abc.com -instance dafs -type dafs \
+   % bos create -server fs4.example.com -instance dafs -type dafs \
                 -cmd /usr/afs/bin/dafileserver \
                 /usr/afs/bin/davolserver \
                 /usr/afs/bin/salvageserver /usr/afs/bin/dasalvager
 
 The following command creates a cron process called C<userbackup> on the
-machine C<fs5.abc.com>, so that the BOS Server issues the indicated B<vos
+machine C<fs5.example.com>, so that the BOS Server issues the indicated B<vos
 backupsys> command each day at 3:00 a.m. (the command creates a backup
 version of every volume in the file system whose name begins with
 C<user>). Note that the issuer provides the complete pathname to the
 B<vos> command, includes the B<-localauth> flag on it, and types the
 entire B<bos create> command on one line.
 
-   % bos create -server fs5.abc.com -instance userbackup -type cron  \
+   % bos create -server fs5.example.com -instance userbackup -type cron  \
        -cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" 03:00
 
 To switch from a traditional File Server to a demand-attach File Server,

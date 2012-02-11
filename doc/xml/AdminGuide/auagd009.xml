@@ -1236,7 +1236,7 @@
       <para>The following example includes a user-defined cron entry called <emphasis role="bold">backupusers</emphasis>:</para>
 
       <programlisting>
-   % <emphasis role="bold">bos status fs3.abc.com</emphasis>
+   % <emphasis role="bold">bos status fs3.example.com</emphasis>
    Instance kaserver, currently running normally.
    Instance ptserver, currently running normally.
    Instance vlserver, has core file, currently running normally.
@@ -1363,10 +1363,10 @@
       </informaltable>
 
       <para>The following illustrates the extended output for the <emphasis role="bold">fs</emphasis> process running on the machine
-      <emphasis role="bold">fs3.abc.com</emphasis>:</para>
+      <emphasis role="bold">fs3.example.com</emphasis>:</para>
 
       <programlisting>
-   % <emphasis role="bold">bos status fs3.abc.com fs -long</emphasis>
+   % <emphasis role="bold">bos status fs3.example.com fs -long</emphasis>
    Instance fs, (type is fs), currently running normally.
        Auxiliary status is file server running
    Process last started at Mon May 3 8:29:19 1999 (3 proc starts)
@@ -1712,25 +1712,25 @@
       </orderedlist>
 
       <para>The following example defines and starts the Protection Server on the machine <emphasis
-      role="bold">db2.abc.com</emphasis>:</para>
+      role="bold">db2.example.com</emphasis>:</para>
 
       <programlisting>
-   % <emphasis role="bold">bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</emphasis>
+   % <emphasis role="bold">bos create db2.example.com ptserver simple /usr/afs/bin/ptserver</emphasis>
 </programlisting>
 
       <para>The following example defines and starts the <emphasis role="bold">fs</emphasis> process on the machine <emphasis
-      role="bold">fs6.abc.com</emphasis>.</para>
+      role="bold">fs6.example.com</emphasis>.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos create fs6.abc.com fs fs /usr/afs/bin/fileserver</emphasis>   \
+   % <emphasis role="bold">bos create fs6.example.com fs fs /usr/afs/bin/fileserver</emphasis>   \
         <emphasis role="bold">/usr/afs/bin/volserver /usr/afs/bin/salvager</emphasis>
 </programlisting>
 
       <para>The following example defines and starts a cron process called <emphasis role="bold">backupuser</emphasis> process on
-      the machine <emphasis role="bold">fs3.abc.com</emphasis>, scheduling it to run each day at 3:00 a.m.</para>
+      the machine <emphasis role="bold">fs3.example.com</emphasis>, scheduling it to run each day at 3:00 a.m.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos create fs3.abc.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</emphasis>
+   % <emphasis role="bold">bos create fs3.example.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</emphasis>
 </programlisting>
     </sect2>
 

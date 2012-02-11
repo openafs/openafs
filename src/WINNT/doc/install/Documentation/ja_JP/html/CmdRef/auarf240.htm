@@ -77,9 +77,9 @@
 </DL>
 <P><STRONG>例</STRONG>
 <P>次の <B>bos create</B> コマンドは、
-<B>fs4.abc.com</B> マシン上に <B>upclientbin</B> プロセスを作成します。このマシンは、マシン <B>fs1.abc.com</B> を <B>/usr/afs/bin</B> ディレクトリーのソースとして参照します。(したがって、<B>fs1.abc.com</B> は、<B>fs4.abc.com</B> のタイプのバイナリー配布マシンです。) <B>/usr/afs/bin</B> ディレクトリーのファイルは、120 秒ごとに配布されます。このコマンドは、非暗号化形式での転送を要求しています。
-<PRE>   % <B>bos create  -server fs4.abc.com -instance upclientbin -type simple</B>   \
-                 <B>-cmd "/usr/afs/bin/upclient fs1.abc.com -clear</B>  \
+<B>fs4.example.com</B> マシン上に <B>upclientbin</B> プロセスを作成します。このマシンは、マシン <B>fs1.example.com</B> を <B>/usr/afs/bin</B> ディレクトリーのソースとして参照します。(したがって、<B>fs1.example.com</B> は、<B>fs4.example.com</B> のタイプのバイナリー配布マシンです。) <B>/usr/afs/bin</B> ディレクトリーのファイルは、120 秒ごとに配布されます。このコマンドは、非暗号化形式での転送を要求しています。
+<PRE>   % <B>bos create  -server fs4.example.com -instance upclientbin -type simple</B>   \
+                 <B>-cmd "/usr/afs/bin/upclient fs1.example.com -clear</B>  \
                  <B>-t 120 /usr/afs/bin"</B>
 
 </PRE>

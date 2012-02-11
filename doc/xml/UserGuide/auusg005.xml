@@ -309,13 +309,13 @@
 </programlisting>
 
       <para>If you have one or more tokens, the output looks something like the following example, in which the tokens for AFS UID
-      1022 in the <emphasis role="bold">abc.com</emphasis> cell expire on August 3 at 2:35 p.m. The tokens for AFS UID 9554 in the
-      <emphasis role="bold">stateu.edu</emphasis> cell expire on August 4 at 1:02 a.m.</para>
+      1022 in the <emphasis role="bold">example.com</emphasis> cell expire on August 3 at 2:35 p.m. The tokens for AFS UID 9554 in the
+      <emphasis role="bold">example.org</emphasis> cell expire on August 4 at 1:02 a.m.</para>
 
       <programlisting>
    Tokens held by the Cache Manager:
-   User's (AFS ID 1022) tokens for afs@abc.com [Expires Aug   3 14:35]
-   User's (AFS ID 9554) tokens for afs@stateu.edu [Expires Aug   4  1:02]
+   User's (AFS ID 1022) tokens for afs@example.com [Expires Aug   3 14:35]
+   User's (AFS ID 9554) tokens for afs@example.org [Expires Aug   4  1:02]
       --End of list--
 </programlisting>
     </sect2>
@@ -341,7 +341,7 @@
       <programlisting>
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 4562) tokens for afs@abc.com [Expires Jun 22 14:35]
+   User's (AFS ID 4562) tokens for afs@example.com [Expires Jun 22 14:35]
       --End of list--
 </programlisting>
     </sect2>
@@ -361,7 +361,7 @@
    % <emphasis role="bold">aklog</emphasis>
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 4278) tokens for afs@abc.com [Expires Jun 23 9:46]
+   User's (AFS ID 4278) tokens for afs@example.com [Expires Jun 23 9:46]
       --End of list--
 </programlisting>
     </sect2>
@@ -371,18 +371,18 @@
 
       <indexterm><primary>examples</primary><secondary>authenticating in a foreign cell</secondary></indexterm>
 
-      <para>Now <emphasis role="bold">terry</emphasis> authenticates in the <emphasis role="bold">stateu.edu</emphasis> cell where
+      <para>Now <emphasis role="bold">terry</emphasis> authenticates in the <emphasis role="bold">example.org</emphasis> cell where
       his account is called <emphasis role="bold">ts09</emphasis>.</para>
 
       <programlisting>
-   % <emphasis role="bold">env KRB5CCNAME=/tmp/temp.tgt kinit ts09@STATEU.EDU</emphasis>
+   % <emphasis role="bold">env KRB5CCNAME=/tmp/temp.tgt kinit ts09@EXAMPLE.ORG</emphasis>
 	Password: <replaceable>ts09's_password</replaceable>
-   % <emphasis role="bold">env KRB5CCNAME=/tmp/temp.tgt aklog  ts09 -cell stateu.edu</emphasis>
+   % <emphasis role="bold">env KRB5CCNAME=/tmp/temp.tgt aklog  ts09 -cell example.org</emphasis>
 
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 4562) tokens for afs@abc.com [Expires Jun 22 14:35]
-   User's (AFS ID 8346) tokens for afs@stateu.edu [Expires Jun 23  1:02]
+   User's (AFS ID 4562) tokens for afs@example.com [Expires Jun 22 14:35]
+   User's (AFS ID 8346) tokens for afs@example.org [Expires Jun 23  1:02]
        --End of list--
 </programlisting>
     </sect2>
@@ -431,8 +431,8 @@
 </programlisting>
 
       <para>Omit the <emphasis role="bold">-cell</emphasis> argument to discard all of your tokens, or use it to name each cell for
-      which to discard tokens. It is best to provide the full name of each cell (such as <emphasis role="bold">stateu.edu</emphasis>
-      or <emphasis role="bold">abc.com</emphasis>).</para>
+      which to discard tokens. It is best to provide the full name of each cell (such as <emphasis role="bold">example.org</emphasis>
+      or <emphasis role="bold">example.com</emphasis>).</para>
 
       <para>You can issue the <emphasis role="bold">tokens</emphasis> command to verify that your tokens were destroyed, as in the
       following example.</para>
@@ -451,19 +451,19 @@
 
       <para>In the following example, a user has tokens in both the <emphasis role="bold">accounting</emphasis> and <emphasis
       role="bold">marketing</emphasis> cells at her company. She discards the token for the <emphasis
-      role="bold">acctg.abc.com</emphasis> cell but keeps the token for the <emphasis role="bold">mktg.abc.com</emphasis>
+      role="bold">acctg.example.com</emphasis> cell but keeps the token for the <emphasis role="bold">mktg.example.com</emphasis>
       cell.</para>
 
       <programlisting>
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 35) tokens for afs@acctg.abc.com [Expires Nov 10 22:30]
-   User's (AFS ID 674) tokens for afs@mktg.abc.com [Expires Nov 10 18:44]
+   User's (AFS ID 35) tokens for afs@acctg.example.com [Expires Nov 10 22:30]
+   User's (AFS ID 674) tokens for afs@mktg.example.com [Expires Nov 10 18:44]
       --End of list--
-   % <emphasis role="bold">unlog -cell acctg.abc.com</emphasis>
+   % <emphasis role="bold">unlog -cell acctg.example.com</emphasis>
    % <emphasis role="bold">tokens</emphasis>
    Tokens held by the Cache Manager:
-   User's (AFS ID 674) tokens for afs@mktg.abc.com [Expires Nov 10 18:44]
+   User's (AFS ID 674) tokens for afs@mktg.example.com [Expires Nov 10 18:44]
       --End of list--
 </programlisting>
     </sect2>
@@ -518,11 +518,11 @@
       role="bold">\</emphasis>&nbsp;) rather than a forward slash (&nbsp;<emphasis role="bold">/</emphasis>&nbsp;) to separate the
       elements in a pathname. Otherwise, your access to AFS filespace is much the same as for users working on UNIX machines.</para>
 
-      <para>The second element in AFS pathnames is generally a cell's name. For example, the ABC Corporation cell is called
-      <emphasis role="bold">abc.com</emphasis> and the pathname of every file in its filespace begins with the string <emphasis
-      role="bold">/afs/abc.com</emphasis>. Some cells also create a directory at the second level with a shortened name (such as
-      <emphasis role="bold">abc</emphasis> for <emphasis role="bold">abc.com</emphasis> or <emphasis role="bold">stateu</emphasis>
-      for <emphasis role="bold">stateu.edu</emphasis>), to reduce the amount of typing necessary. Your system administrator can tell
+      <para>The second element in AFS pathnames is generally a cell's name. For example, the Example Corporation cell is called
+      <emphasis role="bold">example.com</emphasis> and the pathname of every file in its filespace begins with the string <emphasis
+      role="bold">/afs/example.com</emphasis>. Some cells also create a directory at the second level with a shortened name (such as
+      <emphasis role="bold">example</emphasis> for <emphasis role="bold">example.com</emphasis> or <emphasis role="bold">testcell</emphasis>
+      for <emphasis role="bold">testcell.example.org</emphasis>), to reduce the amount of typing necessary. Your system administrator can tell
       you if your cell's filespace includes shortened names like this. The rest of the pathname depends on how the cell's
       administrators organized its filespace.</para>
 
@@ -537,7 +537,7 @@
       role="bold">pat</emphasis>. He issues the <emphasis role="bold">ls</emphasis> command on the appropriate pathname.</para>
 
       <programlisting>
-   % <emphasis role="bold">ls /afs/abc.com/usr/pat/public</emphasis>
+   % <emphasis role="bold">ls /afs/example.com/usr/pat/public</emphasis>
    doc/                    directions/
    guide/                  jokes/
    library/

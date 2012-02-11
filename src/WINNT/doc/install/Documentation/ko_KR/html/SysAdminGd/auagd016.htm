@@ -285,7 +285,7 @@
    # Base package definitions.
    #
    %ifndef	cell
-   %define	cell	abc.com
+   %define	cell	example.com
    %endif	cell
    %ifndef	sys
    %include /etc/package.sys
@@ -459,13 +459,13 @@ AFS나 로컬 디스크에 상주할 수 있습니다.
 <PRE>   <B>F</B> [<VAR>update_code</VAR>] <VAR>file</VAR> <VAR>source_file</VAR> [<VAR>owner</VAR> <VAR>group</VAR> <VAR>mode_bits</VAR>]
 </PRE>
 <P>로컬 디스크에서 <B>/bin/grep</B> 파일을 작성/갱신하는 예에서
-<B>/afs/abc.com/rs_aix42/bin/grep</B>을 원본으로 사용합니다.
-<PRE>   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+<B>/afs/example.com/rs_aix42/bin/grep</B>을 원본으로 사용합니다.
+<PRE>   F /bin/grep /afs/example.com/rs_aix42 root wheel 755
 </PRE>
 <P>다음 예에서 두 갱신 코드가 사용되고 <I>owner</I>,
 <I>group</I> 그리고 <I>mode_bits</I> 슬롯은
 비어 있는 상태로 남으므로 디스크 파일은 이런 파일에 대해 원본 파일의 값을 사용합니다.
-<PRE>   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+<PRE>   FAQ /usr/vice/etc/ThisCell /afs/example.com/common/etc/ThisCell
 </PRE>
 <A NAME="IDX7550"></A>
 <A NAME="IDX7551"></A>
@@ -488,14 +488,14 @@ AFS나 로컬 디스크에 상주할 수 있습니다.
 관리 프로그램은 일반 읽기/쓰기 볼륨에서 이런 링크를 마운트 포인트로 해석합니다.
 </TD></TR></TABLE>
 <P>다음 예는 로컬 디스크의 <B>/etc/ftpd</B> 디렉토리에서 AFS의
-<B>/afs/abc.com/hp_ux110/etc/ftpd</B> 파일로 심볼릭 링크를
+<B>/afs/example.com/hp_ux110/etc/ftpd</B> 파일로 심볼릭 링크를
 작성합니다. <I>owner</I>, <I>group</I> 그리고
 <I>mode_bits</I> 필드는 비어 있으므로 심볼릭 링크는 실제 파일에서
 이런 필드의 값을 가져옵니다.
-<PRE>   L /etc/ftpd /afs/abc.com/hp_ux110
+<PRE>   L /etc/ftpd /afs/example.com/hp_ux110
 </PRE>
 <P>이 예는 <B>A</B> 갱신 코드를 사용합니다.
-<PRE>   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote
+<PRE>   LA /etc/printcap /afs/example.com/common/etc/printcap.remote
                root wheel 644
 </PRE>
 <A NAME="IDX7554"></A>

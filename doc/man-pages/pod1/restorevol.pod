@@ -128,7 +128,7 @@ mountpoints inside the volume point to AFS (note that this requires
 knowledge of where F<sample> is mounted in AFS):
 
    % restorevol -file sample.dump -dir /tmp -extension .2009-05-17 \
-       -mountpoint /afs/example.org/sample
+       -mountpoint /afs/example.com/sample
    Restoring volume dump of 'sample' to directory '/tmp/sample.2009-05-17'
 
 =head1 PRIVILEGE REQUIRED

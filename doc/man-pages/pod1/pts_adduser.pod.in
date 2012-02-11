@@ -65,9 +65,9 @@ smith:colleagues group.
 
    % pts adduser -user jones terry pat -group smith:colleagues
 
-The following example adds the machine entries in the ABC Corporation
+The following example adds the machine entries in the Example Corporation
 subnet to the group C<bin-prot>. Because of the IP address range of the
-ABC Corporation subnet, the system administrator was able to group the
+Example Corporation subnet, the system administrator was able to group the
 machines into three machine entries (using the wildcard notation discussed
 on the B<pts createuser> reference page).
 

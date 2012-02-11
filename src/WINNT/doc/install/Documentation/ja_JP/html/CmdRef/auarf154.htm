@@ -60,15 +60,15 @@ FL サーバー・マシンが指定される場合には、ローカル・マシンは AFS/DFS 移行ツールキ
 </B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
 </DL>
 <P><STRONG>例</STRONG>
-<P>以下の例は、ABC Corporation セルがマシン
-<B>db1.abc.com</B> と <B>db2.abc.com</B>を組み込むために、データベース・サーバー・マシンのカーネル常駐リストを変更します。
-<PRE>   % <B>fs newcell -name abc.com -servers db1.abc.com db2.abc.com</B>
+<P>以下の例は、Example Corporation セルがマシン
+<B>db1.example.com</B> と <B>db2.example.com</B>を組み込むために、データベース・サーバー・マシンのカーネル常駐リストを変更します。
+<PRE>   % <B>fs newcell -name example.com -servers db1.example.com db2.example.com</B>
 
 </PRE>
-<P>次の例では、DCE セル <B>dce.abc.com</B> を AFS セル <B>abc.com</B> にリンクします。
-AFS クライアントは、DFS パス名の解釈に必要なファイル・セットの位置情報のために、ファイル・ロケーション (FL) サーバー<B>db1.dce.abc.com</B> および <B>db2.dce.abc.com</B> に接続します。
-<PRE>   % <B>fs newcell -name dce.abc.com -servers db1.dce.abc.com db2.dce.abc.com</B>   \
-                <B>-linkedcell abc.com</B>
+<P>次の例では、DCE セル <B>dce.example.com</B> を AFS セル <B>example.com</B> にリンクします。
+AFS クライアントは、DFS パス名の解釈に必要なファイル・セットの位置情報のために、ファイル・ロケーション (FL) サーバー<B>db1.dce.example.com</B> および <B>db2.dce.example.com</B> に接続します。
+<PRE>   % <B>fs newcell -name dce.example.com -servers db1.dce.example.com db2.dce.example.com</B>   \
+                <B>-linkedcell example.com</B>
 
 </PRE>
 <P><STRONG>必要となる特権</STRONG>

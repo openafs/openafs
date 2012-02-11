@@ -164,11 +164,11 @@ ignored.
 
 =head1 EXAMPLES
 
-The following example shows user pat changing her password in the ABC
+The following example shows user pat changing her password in the Example
 Corporation cell.
 
    % kpasswd
-   Changing password for 'pat' in cell 'abc.com'.
+   Changing password for 'pat' in cell 'example.com'.
    Old password:
    New password (RETURN to abort):
    Verifying, please re-enter new_password:

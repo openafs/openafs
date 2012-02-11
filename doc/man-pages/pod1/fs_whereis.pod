@@ -52,11 +52,11 @@ the local machine, use the B<fs wscell> command.
 =head1 EXAMPLES
 
 The following example indicates that volume housing the directory
-F</afs/abc.com> resides is replicated on both C<fs1.abc.com> and
-C<fs3.abc.com>:
+F</afs/example.com> resides is replicated on both C<fs1.example.com> and
+C<fs3.example.com>:
 
-   % fs whereis -path /afs/abc.com
-   File /afs/abc.com is on hosts fs1.abc.com fs3.abc.com
+   % fs whereis -path /afs/example.com
+   File /afs/example.com is on hosts fs1.example.com fs3.example.com
 
 =head1 PRIVILEGE REQUIRED
 

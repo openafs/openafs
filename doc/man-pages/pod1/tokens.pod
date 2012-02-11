@@ -64,7 +64,7 @@ Day and time the token expires.
 The output of the Kerberos version of this command, B<tokens.krb>, also
 reports the following about the Kerberos ticket-granting ticket: the
 ticket owner, which Kerberos ticket-granting service that issued the
-ticket (for example, C<krbtgt.ABC.COM>), and ticket's expiration date.
+ticket (for example, C<krbtgt.EXAMPLE.COM>), and ticket's expiration date.
 
 The string C<--End of list--> appears at the end of the output. If the
 user is not authenticated in any cell, this line is all that appears.
@@ -80,36 +80,36 @@ authenticated in any cell.
       --End of list--
 
 The following example shows the output when the issuer is authenticated in
-ABC Corporation cell, where he or she has AFS UID 1000.
+Example Corporation cell, where he or she has AFS UID 1000.
 
    % tokens
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 2 10:00]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jan 2 10:00]
       --End of list--
 
 The following example shows the output when the issuer is authenticated in
-the ABC Corporation cell, the State University cell, and the XYZ Company
-cell. The user has different AFS UIDs in the three cells. Tokens for last
-cell are expired:
+the Example Corporation cell, the Example Organization cell, and the Example
+Network cell. The user has different AFS UIDs in the three cells. Tokens for
+last cell are expired:
 
    % tokens
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 3 10:00]
-   User's (AFS ID 4286) tokens for afs@stateu.edu [Expires Jan 3 1:34]
-   User's (AFS ID 22) tokens for afs@xyz.com [>>Expired<]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jan 3 10:00]
+   User's (AFS ID 4286) tokens for afs@example.org [Expires Jan 3 1:34]
+   User's (AFS ID 22) tokens for afs@example.net [>>Expired<]
       --End of list--
 
 The following example shows the output when the issuer uses the
-B<tokens.krb> version of the command after authenticating in the ABC
+B<tokens.krb> version of the command after authenticating in the Example
 Corporation cell using the B<klog.krb> command.
 
    % tokens.krb
    Tokens held by the Cache Manager:
 
-   User's (AFS ID 1000) tokens for afs@abc.com [Expires Jan 31 00:09]
-   User smiths tokens for krbtgt.ABC.COM@abc.com [Expires Jan 31 00:09]
+   User's (AFS ID 1000) tokens for afs@example.com [Expires Jan 31 00:09]
+   User smiths tokens for krbtgt.EXAMPLE.COM@example.com [Expires Jan 31 00:09]
       --End of list--
 
 =head1 PRIVILEGE REQUIRED

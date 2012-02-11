@@ -422,7 +422,7 @@
       output is complete.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos listkeys fs1.abc.com</emphasis>
+   % <emphasis role="bold">bos listkeys fs1.example.com</emphasis>
    key 0 has cksum 972037177
    key 1 has cksum 2825165022
    Keys last changed on Wed Jan 13 11:20:29 1999. 

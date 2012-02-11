@@ -86,13 +86,13 @@ performing the B<bos addhost> command.
 =head1 EXAMPLES
 
 The following command displays the database server machines listed in the
-F</usr/afs/etc/CellServDB> file on the machine C<fs7.abc.com>.
+F</usr/afs/etc/CellServDB> file on the machine C<fs7.example.com>.
 
-   % bos listhosts fs7.abc.com
-   Cell name is abc.com
-       Host 1 is db1.abc.com
-       Host 2 is db2.abc.com
-       Host 3 is db3.abc.com
+   % bos listhosts fs7.example.com
+   Cell name is example.com
+       Host 1 is db1.example.com
+       Host 2 is db2.example.com
+       Host 3 is db3.example.com
 
 =head1 PRIVILEGE REQUIRED
 

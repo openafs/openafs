@@ -189,7 +189,7 @@ provided. Do not combine the B<-noauth> and B<-localauth> flags.
 
 Indicates the AFS server machine on which to run the command.  Identify
 the machine by its IP address in dotted decimal format, its
-fully-qualified host name (for example, C<fs1.abc.com>), or by an
+fully-qualified host name (for example, C<fs1.example.com>), or by an
 abbreviated form of its host name that distinguishes it from other
 machines. Successful use of an abbreviated form depends on the
 availability of a name service (such as the Domain Name Service or a local

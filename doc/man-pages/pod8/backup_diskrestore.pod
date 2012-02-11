@@ -228,25 +228,26 @@ the restore operation:
 
 The following command restores the volumes for which the VLDB lists a
 read/write site on the F</vicepd> partition of the machine
-C<fs5.abc.com>. The Tape Coordinator associated with port offset 3
+C<fs5.example.com>. The Tape Coordinator associated with port offset 3
 performs the operation.
 
-   % backup diskrestore -server fs5.abc.com -partition /vicepd -portoffset 3
+   % backup diskrestore -server fs5.example.com   \
+                        -partition /vicepd -portoffset 3
 
 The following command restores the volumes for which the VLDB lists a
-read/write site on the F</vicepb> partition of the machine C<fs1.abc.com>
-to a new site: the F</vicepa> partition on the machine C<fs3.abc.com>. The
+read/write site on the F</vicepb> partition of the machine C<fs1.example.com>
+to a new site: the F</vicepa> partition on the machine C<fs3.example.com>. The
 Tape Coordinator associated with port offset 0 performs the
 operation. (The command appears here on two lines only for legibility.)
 
-   % backup diskrestore  -server fs1.abc.com -partition /vicepb   \
-                         -newserver fs3.abc.com -newpartition /vicepa
+   % backup diskrestore  -server fs1.example.com -partition /vicepb   \
+                         -newserver fs3.example.com -newpartition /vicepa
 
 The following command lists the tapes required to restore the volumes for
 which the VLDB lists a read/write site on the F</vicepm> partition of the
-machine C<fs4.abc.com>:
+machine C<fs4.example.com>:
 
-   % backup diskrestore -server fs4.abc.com -partition /vicepm -dryrun
+   % backup diskrestore -server fs4.example.com -partition /vicepm -dryrun
    Tapes needed:
    user.sunday1.1
    user.sunday1.2

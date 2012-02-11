@@ -172,8 +172,8 @@
 AFS) を指定します。
 <P>
 <P><B>A</B> 更新コードを指定する場合には、ソース・ファイルの完全なパス名を指定してください。そうでない場合には、<B>package</B> コマンドは、このパス名に <VAR>file</VAR> パス名を追加して、ソース・ファイルの完全名を生成します。たとえば、<B>A</B> 更新コードが指定されず、
-<B>/afs/abc.com/rs_aix42/bin/grep</B> ファイルが <B>/bin/grep</B> バイナリーのソース・ファイルである場合、このフィールドに適切な値は、
-<B>/afs/abc.com/rs_aix42</B> になります。
+<B>/afs/example.com/rs_aix42/bin/grep</B> ファイルが <B>/bin/grep</B> バイナリーのソース・ファイルである場合、このフィールドに適切な値は、
+<B>/afs/example.com/rs_aix42</B> になります。
 <P><DT><B><VAR>owner</VAR>
 </B><DD>UNIX の <B>ls -l</B> コマンドの出力にファイルの所有者であることを示すためのユーザー名、または UNIX のユーザー ID (UID) を指定します。
 <P>
@@ -222,7 +222,7 @@ AFS) を指定します。
 </B><DD>作成するシンボリック・リンクの完全なローカル・ディスクのパス名を指定します。
 <P><DT><B><VAR>actual_path</VAR>
 </B><DD>リンクが参照するディレクトリーまたはファイルのパス名 (ローカル または AFS) を指定します。
-<B>A</B> 更新コードを指定した場合には、ディレクトリーまたはファイルの完全なパス名を指定してください。そうでない場合には、<B>package</B> コマンドは、このパス名に <VAR>link</VAR> フィールドの値を追加して、実際のディレクトリーまたはファイルの完全名を生成します。たとえば、<B>A</B> 更新コードを指定せず、<B>/etc/ftpd</B> が <B>/afs/abc.com/sun4x_56/etc/ftpd</B> ファイルを指すシンボリック・リンクである場合、このフィールドの値は、<B>/afs/abc.com/sun4x_56</B> になります。
+<B>A</B> 更新コードを指定した場合には、ディレクトリーまたはファイルの完全なパス名を指定してください。そうでない場合には、<B>package</B> コマンドは、このパス名に <VAR>link</VAR> フィールドの値を追加して、実際のディレクトリーまたはファイルの完全名を生成します。たとえば、<B>A</B> 更新コードを指定せず、<B>/etc/ftpd</B> が <B>/afs/example.com/sun4x_56/etc/ftpd</B> ファイルを指すシンボリック・リンクである場合、このフィールドの値は、<B>/afs/example.com/sun4x_56</B> になります。
 <P>
 <P><B>package</B> コマンド・インタープリターは、<B>./</B> (ピリオド、スラッシュ) または <B> ../</B> (ピリオド 2 つ、スラッシュ) 表記で始まるパス名は、<B>package</B> コマンドが呼び出される現行作業ディレクトリーを基準として解釈し、正しく処理します。
 <P><DT><B><VAR>owner</VAR>
@@ -390,16 +390,16 @@ umask で調整され、<B>777</B>
 <PRE>   DR /usr root wheel 755
 
 </PRE>
-<P>次の例は、ABC Corporation セルで AIX 4.2 を実行するマシンに適切な <B>F</B> 命令により、<B>/afs/abc.com/rs_aix42/bin/grep</B> をソースとして使用し、ローカル・ディスク・ファイル <B>/bin/grep</B> を作成または更新しています。
-<PRE>   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+<P>次の例は、Example Corporation セルで AIX 4.2 を実行するマシンに適切な <B>F</B> 命令により、<B>/afs/example.com/rs_aix42/bin/grep</B> をソースとして使用し、ローカル・ディスク・ファイル <B>/bin/grep</B> を作成または更新しています。
+<PRE>   F /bin/grep /afs/example.com/rs_aix42 root wheel 755
 
 </PRE>
 <P>次の例では、<B>F</B> 命令により、<B>/usr/vice/etc/ThisCell</B>ファイルを作成しています。ここでは、<B>A</B> 更新コードの指定に従って、ソース・ファイルに絶対パス名を指定しています。<B>Q</B> コードで、<B>package</B> コマンドが終了時に状況コード 4 を戻すように設定しています。これは、マシンの AFS 初期設定ファイルに、標準の <B>package</B> に関連した変更が行われると、マシンのリブートを要求します。所有者、グループおよびモード・ビットの値は指定していません。これらは、ソース・ファイルから継承されます。
-<PRE>   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+<PRE>   FAQ /usr/vice/etc/ThisCell /afs/example.com/common/etc/ThisCell
 
 </PRE>
-<P>次の例では、ABC Corporation セルで AIX 4.2 を実行するマシンに適切な <B>L</B> 命令により、ローカル・ディスク上の <B>/etc/ftpd</B> からファイル <B>/afs/abc.com/rs_aix42/etc/ftpd</B> へのシンボリック・リンクを作成しています。
-<PRE>   L /etc/ftpd /afs/abc.com/rs_aix42 root wheel 644
+<P>次の例では、Example Corporation セルで AIX 4.2 を実行するマシンに適切な <B>L</B> 命令により、ローカル・ディスク上の <B>/etc/ftpd</B> からファイル <B>/afs/example.com/rs_aix42/etc/ftpd</B> へのシンボリック・リンクを作成しています。
+<PRE>   L /etc/ftpd /afs/example.com/rs_aix42 root wheel 644
 
 </PRE>
 <P>次の例では、<B>S</B> 命令でソケット <B>/dev/printer</B> を定義しています。
@@ -428,13 +428,13 @@ umask で調整され、<B>777</B>
    %endif rs_aix42
 
 </PRE>
-<P>次の例では、State University セルに適切な <B>%ifndef</B> 命令により、<TT>${cell}</TT> 変数の値として <TT>stateu.edu</TT> を定義しています。
+<P>次の例では、Example Organization セルに適切な <B>%ifndef</B> 命令により、<TT>${cell}</TT> 変数の値として <TT>example.org</TT> を定義しています。
 <PRE>   %ifndef cell
-   %define cell stateu.edu
+   %define cell example.org
    %endif cell
 
 </PRE>
-<P>次の例では、<B>%include</B> 命令で、<B>package</B> に関連したファイルが常駐するディレクトリーの <B>lib</B> サブディレクトリーからライブラリー・ファイル <B>base.generic</B> を組み込んでいます。コンパイル時に、<TT>${wsadmin}</TT> 変数は実際のパス名 (<B>/afs/abc.com/wsadmin</B> など)に解決されます。
+<P>次の例では、<B>%include</B> 命令で、<B>package</B> に関連したファイルが常駐するディレクトリーの <B>lib</B> サブディレクトリーからライブラリー・ファイル <B>base.generic</B> を組み込んでいます。コンパイル時に、<TT>${wsadmin}</TT> 変数は実際のパス名 (<B>/afs/example.com/wsadmin</B> など)に解決されます。
 <PRE>   %include ${wsadmin}/lib/base.generic
 
 </PRE>

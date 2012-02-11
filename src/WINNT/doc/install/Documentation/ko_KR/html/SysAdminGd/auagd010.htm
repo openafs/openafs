@@ -498,7 +498,7 @@ ID 번호를 예약해 둡니다. 동시에 볼륨 서버는 사용자가 지정하는 사이트에
 <P>마운트 포인트에 대한 읽기/쓰기 경로를 지정하여 읽기 전용 볼륨을 변경하려고
 할 때 발생하는 장애를 피하십시오. 일반적으로
 경로 이름의 두 번째 레벨의 셀 이름 앞에 마침표를 사용하여 읽기/쓰기 경로를
-나타내십시오(예를 들어 <B>/afs/.abc.com</B>). 파일 경로를
+나타내십시오(예를 들어 <B>/afs/.example.com</B>). 파일 경로를
 통한 읽기/쓰기 및 읽기 전용 경로의 개념에 대해 좀더 살펴 보려면
 <A HREF="#HDRWQ209">마운트 포인트 통과 규칙</A>을 참조하십시오.
 <P><DT><B>-offlinemsg
@@ -968,7 +968,7 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 명령을 실행하거나 파일 서버 시스템의 <B>BosConfig</B>
 파일에 <B>클론</B> 항목을 작성하여 관리자가 백업 조작을
 초기화할 필요를 없앨 수 있습니다.
-<P>다음 예제 명령은 시스템 <B>fs3.abc.com</B>의
+<P>다음 예제 명령은 시스템 <B>fs3.example.com</B>의
 <B>/usr/afs/local/BosConfig</B> 파일에
 <B>backupusers</B>라는 <B>cron</B>
 프로세스를 작성합니다. 이 프로세스는 매일 새벽 1시에 실행되어 그 이름이
@@ -979,7 +979,7 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 않으므로 <B>vos</B> 2진 파일에 대한 완전한 경로 이름을
 지정한다는 점을 알아 두십시오.
 <PRE>
-   % <B>bos create fs3.abc.com backupusers cron</B>  \
+   % <B>bos create fs3.example.com backupusers cron</B>  \
      <B>-cmd "/usr/afs/bin/vos backupsys  -prefix user -localauth" "1:00"</B>
 
 </PRE>
@@ -1247,7 +1247,7 @@ VLDB에 새로운 각 읽기 전용 사이트를 정의하십시오.
 셀의 <B>root.cell</B> 볼륨을 AFS 파일 공간 루트(일반적으로
 <B>/afs/.</B><VAR>cellname</VAR>) 바로 아래에 마운트하는 것이
 일반적입니다. 앞서 지적한 것처럼 읽기/쓰기 마운트 포인트 이름 맨 앞에
-마침표를 두는 것이 일반적입니다(예: <B>/afs/.abc.com</B>).
+마침표를 두는 것이 일반적입니다(예: <B>/afs/.example.com</B>).
 이 마침표는 읽기/쓰기 마운트 포인트를 동일한 레벨의 <B>root.cell</B>
 볼륨에 대한 일반 마운트 포인트와 구분해 줍니다. 이것은 동일한 볼륨에 대해 두 개의
 마운트 포인트를 작성하는 것이 일반적인 유일한 경우에 해당합니다. 이러한
@@ -1346,37 +1346,37 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 <PRE>   '<VAR>directory</VAR>' is a mount point for volume '<VAR>volume&nbsp;name</VAR>'
 
 </PRE>
-<P>일반 마운트 포인트의 경우 <B>abc.com</B> 셀의 클라이언트
+<P>일반 마운트 포인트의 경우 <B>example.com</B> 셀의 클라이언트
 시스템에 대해 실행된 다음 예제 명령에서처럼 숫자 기호(<TT>#</TT>)가
 <VAR>volume name</VAR> 문자열 앞에 사용됩니다.
 <PRE>
-   % <B>fs lsmount /afs/abc.com/usr/terry</B>
-   '/afs/abc.com/usr/terry' is a mount point for volume '#user.terry'
+   % <B>fs lsmount /afs/example.com/usr/terry</B>
+   '/afs/example.com/usr/terry' is a mount point for volume '#user.terry'
 
 </PRE>
-<P>읽기/쓰기 마운트 포인트의 경우 <B>abc.com</B> 셀의 클라이언트
+<P>읽기/쓰기 마운트 포인트의 경우 <B>example.com</B> 셀의 클라이언트
 시스템에 대해 실행된 다음 예제 명령에서처럼 퍼센트 기호(<TT>%</TT>)가
 <VAR>volume name</VAR> 문자열 앞에 사용됩니다. 셀의 관리자는 읽기/쓰기
 마운트 포인트의 이름 앞에 마침표를 사용하는 규칙을 따라 왔습니다.
 <PRE>
-   % <B>fs lsmount /afs/.abc.com </B>
-   '/afs/.abc.com' is a mount point for volume '%root.cell'
+   % <B>fs lsmount /afs/.example.com </B>
+   '/afs/.example.com' is a mount point for volume '%root.cell'
 
 </PRE>
-<P>셀 방식의 마운트 포인트의 경우 <B>abc.com</B> 셀의 클라이언트
+<P>셀 방식의 마운트 포인트의 경우 <B>example.com</B> 셀의 클라이언트
 시스템에 대해 실행된 다음 예제 명령에서처럼 셀 이름과 콜론(<TT>:</TT>)이
 숫자 다음에 나오고 <VAR>volume name</VAR> 문자열 앞에 사용됩니다.
 <PRE>
-    % <B>fs lsmount /afs/ghi.gov </B>
-   '/afs/ghi.gov' is a mount point for volume '#ghi.gov:root.cell'
+    % <B>fs lsmount /afs/example.org </B>
+   '/afs/example.org' is a mount point for volume '#example.org:root.cell'
 
 </PRE>
-<P>마운트 포인트로의 기호 연결의 경우 출력은 <B>abc.com</B>
+<P>마운트 포인트로의 기호 연결의 경우 출력은 <B>example.com</B>
 셀의 클라이언트 시스템에 대해 실행된 다음 예제 명령에서 볼 수 있는 양식을
 가집니다.
 <PRE>
-   % <B>fs lsmount /afs/abc</B>
-   '/afs/abc' is a symbolic link, leading to a mount point for volume '#root.cell'
+   % <B>fs lsmount /afs/example</B>
+   '/afs/example' is a symbolic link, leading to a mount point for volume '#root.cell'
 
 </PRE>
 <P>디렉토리가 마운트 포인트가 아니고 AFS에 있지 않으면 출력은 다음과 같이
@@ -1427,7 +1427,7 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 <P>마운트 포인트에 대한 읽기/쓰기 경로를 지정하여 읽기 전용 볼륨에 새
 마운트 포인트를 작성하려고 할 때 발생하는 장애를 피하십시오. 일반적으로
 경로 이름의 두 번째 레벨의 셀 이름 앞에 마침표를 사용하여 읽기/쓰기 경로를
-나타내십시오(예를 들어 <B>/afs/.abc.com</B>). 파일 경로를
+나타내십시오(예를 들어 <B>/afs/.example.com</B>). 파일 경로를
 통한 읽기/쓰기 및 읽기 전용 경로의 개념에 대해 좀더 살펴 보려면
 <A HREF="#HDRWQ209">마운트 포인트 통과 규칙</A>을 참조하십시오.
 <P><DT><B><VAR>volume name</VAR>
@@ -1567,7 +1567,7 @@ UNIX <B>ls</B> 명령의 출력에 나타나지 않으므로 이 지점을
 <P>마운트 포인트에 대한 읽기/쓰기 경로를 지정하여 읽기 전용 볼륨에서 마운트 포인트를
 삭제하려고 할 때 발생하는 장애를 피하십시오. 일반적으로
 경로 이름의 두 번째 레벨의 셀 이름 앞에 마침표를 사용하여 읽기/쓰기 경로를
-나타내십시오(예를 들어 <B>/afs/.abc.com</B>). 파일 경로를
+나타내십시오(예를 들어 <B>/afs/.example.com</B>). 파일 경로를
 통한 읽기/쓰기 및 읽기 전용 경로의 개념에 대해 좀더 살펴 보려면
 <A HREF="#HDRWQ209">마운트 포인트 통과 규칙</A>을 참조하십시오.
 </DL>
@@ -1690,7 +1690,7 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
    user.terry
        RWrite: 50489902    Backup: 50489904
        number of sites -> 1
-          server fs3.abc.com partition /vicepc RW Site
+          server fs3.example.com partition /vicepc RW Site
 
 </PRE>
 <P><H3><A NAME="HDRWQ219" HREF="auagd002.htm#ToC_235">볼륨 헤더 표시</A></H3>
@@ -1788,8 +1788,8 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
 출력의 마지막 행은 다음 예에서처럼 온라인, 오프라인 및 사용중 상태에
 있는 볼륨의 수를 요약합니다.
 <PRE>
-   % <B>vos listvol  fs2.abc.com /vicepb</B>
-   Total number of volumes on server fs2.abc.com \
+   % <B>vos listvol  fs2.example.com /vicepb</B>
+   Total number of volumes on server fs2.example.com \
                                        partition /vicepb : 66
    sys                  1969534847 RW       1582 K On-line
    sys.backup           1969535105 BK       1582 K On-line
@@ -1807,8 +1807,8 @@ ID 번호(필드가 나타나지 않으면 해당 버전의 볼륨이 존재하지 않는
 각 볼륨의 볼륨 ID 번호만 표시됩니다. 마지막 행(온라인, 오프라인 및 사용중
 볼륨의 수 요약)은 생략됩니다.
 <PRE>
-   % <B>vos listvol fs3.abc.com /vicepa -f</B>
-   Total number of volumes on server fs3.abc.com  \
+   % <B>vos listvol fs3.example.com /vicepa -f</B>
+   Total number of volumes on server fs3.example.com  \
                                        partition /vicepa: 37
    50489902
    50489904
@@ -1868,20 +1868,20 @@ ReleaseClone이 없으면 <TT>RClone</TT> 필드는 나타나지 않습니다.
 </LI></UL>
 <P><B>-long</B> 플래그가 포함될 때 출력의 예는 다음과 같습니다.
 <PRE>
-   % <B>vos listvol fs2.abc.com b -long</B>
-   Total number of volumes on server fs2.abc.com
+   % <B>vos listvol fs2.example.com b -long</B>
+   Total number of volumes on server fs2.example.com
                                        partition /vicepb: 66
          .                   .      .         .   .    .
          .                   .      .         .   .    .
    user.pat             1969534536 RW      17518 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Mon Jun 12 09:02:25 1989
         Last Update Thu Jan  4 17:39:34 1990
         1573 accesses in the past day (i.e., vnode references)
    user.pat.backup      1969534538 BK      17537 K On-line
-        fs2.abc.com /vicepb
+        fs2.example.com /vicepb
         RWrite 1969534536 ROnly 0        Backup 1969534538
         MaxQuota      20000 K
         Creation    Fri Jan  5 06:37:59 1990
@@ -1904,9 +1904,9 @@ ReleaseClone이 없으면 <TT>RClone</TT> 필드는 나타나지 않습니다.
 및 디렉토리에 대해 수행된 쓰기 작업에 대한 정보가 포함되어 있습니다.
 </LI></UL>
 <P><B>-extended</B> 플래그가 포함될 때 출력의 예는 다음과 같습니다.
-<PRE>   % <B>vos listvol fs3.abc.com a -extended</B>
+<PRE>   % <B>vos listvol fs3.example.com a -extended</B>
    common.bboards   1969535592 RW    23149 K used 9401 files On-line
-       fs3.abc.com /vicepa
+       fs3.example.com /vicepa
        RWrite 1969535592 ROnly          0 Backup 1969535594
        MaxQuota      30000 K
        Creation    Mon Mar  8 14:26:05 1999
@@ -1985,7 +1985,7 @@ VLDB와 볼륨 헤더를 비교할 수 있습니다.
 <PRE>
    % <B>vos examine user.terry</B>
    user.terry                    536870981 RW   3459 K On-line
-       fs3.abc.com /vicepa
+       fs3.example.com /vicepa
        Write 5360870981   ROnly          0  Backup 536870983
        MaxQuota      40000 K
        Creation    Mon Jun 12 15:22:06 1989
@@ -1993,7 +1993,7 @@ VLDB와 볼륨 헤더를 비교할 수 있습니다.
        5719 accesses in the past day (i.e., vnode references)
        RWrite: 5360870981   Backup: 536870983
        number of sites -> 1
-          server fs3.abc.com partition /vicepa RW Site
+          server fs3.example.com partition /vicepa RW Site
        Volume is currently LOCKED
 
 </PRE>
@@ -2059,7 +2059,7 @@ listvldb</B> 명령을 사용하십시오.
 </LI></OL>
 <P>다음은 출력의 예입니다.
 <PRE>
-   % <B>fs listquota /afs/abc.com/usr/terry</B>
+   % <B>fs listquota /afs/example.com/usr/terry</B>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      15000    5071       34%         86%
 
@@ -2093,7 +2093,7 @@ listvldb</B> 명령을 사용하십시오.
 <P>다음 예제는 출력이 <TT>vid</TT> 필드에 볼륨 ID 번호를 보고하는 방법을
 보여 줍니다.
 <PRE>
-   % <B>fs examine /afs/abc.com/usr/terry</B>
+   % <B>fs examine /afs/example.com/usr/terry</B>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073
@@ -2139,8 +2139,8 @@ listvldb</B> 명령을 사용하십시오.
 표시합니다.
 <P>
 <PRE>
-   % <B>fs whereis /afs/abc.com/user/terry</B>
-   File /afs/abc.com/usr/terry is on host fs2.abc.com
+   % <B>fs whereis /afs/example.com/user/terry</B>
+   File /afs/example.com/usr/terry is on host fs2.example.com
 
 </PRE>
 </LI><LI>또한 해당 볼륨이 있는 파티션을 알기 원하는 경우 먼저 <B>fs
@@ -2784,7 +2784,7 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 <P>파일 또는 디렉토리에 대한 읽기/쓰기 경로를 지정하여 읽기 전용 볼륨을
 변경하려고 할 때 발생하는 장애를 피하십시오. 일반적으로
 경로 이름의 두 번째 레벨의 셀 이름 앞에 마침표를 사용하여 읽기/쓰기 경로를
-나타내십시오(예를 들어 <B>/afs/.abc.com</B>). 파일 경로를
+나타내십시오(예를 들어 <B>/afs/.example.com</B>). 파일 경로를
 통한 읽기/쓰기 및 읽기 전용 경로의 개념에 대해 좀더 살펴 보려면
 <A HREF="#HDRWQ209">마운트 포인트 통과 규칙</A>을 참조하십시오.
 <P><DT><B><VAR>max quota in kbytes</VAR>
@@ -2859,7 +2859,7 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 </LI></OL>
 <P>다음 예제는 이 명령이 생성한 출력을 보여 줍니다.
 <PRE>
-   % <B>fs quota /afs/abc.com/usr/terry</B>
+   % <B>fs quota /afs/example.com/usr/terry</B>
    34% of quota used.
 
 </PRE>
@@ -2894,7 +2894,7 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 킬로바이트 블록 단위로), 사용된 퍼센트 할당량 및 사용된 볼륨의 호스트
 파티션에 있는 공간의 백분율을 보고합니다.
 <PRE>
-   % <B>fs listquota /afs/abc.com/usr/terry</B>
+   % <B>fs listquota /afs/example.com/usr/terry</B>
    Volume Name     Quota    Used    % Used   Partition
    user.terry      15000    5071       34%         86%
 
@@ -2931,7 +2931,7 @@ backup</B> 명령을 실행하여 다시 작성할 수 있습니다.
 현재 크기(모두 킬로바이트 블록 단위로), 볼륨 호스트 파티션에서 킬로바이트
 블록의 총 수와 이중 사용 가능한 블록의 수를 보고합니다.
 <PRE>
-   % <B>fs examine /afs/abc.com/usr/terry</B>
+   % <B>fs examine /afs/example.com/usr/terry</B>
    Volume status for vid = 50489902 named user.terry
    Current maximum quota is 15000
    Current blocks used are 5073

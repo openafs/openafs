@@ -33,7 +33,7 @@ coordinator), and the status of the connections between them.
 Names the database server machine that is running the process for which to
 display status information. Provide the machine's IP address in dotted
 decimal format, its fully qualified host name (for example,
-B<fs1.abc.com>), or the shortest abbreviated form of its host name that
+B<fs1.example.com>), or the shortest abbreviated form of its host name that
 distinguishes it from other machines. Successful use of an abbreviated
 form depends on the availability of a name resolution service (such as the
 Domain Name Service or a local host table) at the time the command is

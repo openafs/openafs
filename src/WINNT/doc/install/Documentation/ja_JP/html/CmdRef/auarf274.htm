@@ -99,10 +99,10 @@
 </B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
 </DL>
 <P><STRONG>例</STRONG>
-<P>次のコマンドは、ダンプ・ファイル <B> /afs/abc.com/common/dumps/terry.dump</B> の内容をファイル・サーバー・マシン <B>fs3.abc.com</B> の区画 <B>/vicepc</B> に復元しています。復元後の名前は <B>user.terry</B> です。
-<PRE>   % <B>cd /afs/abc.com/common/dumps</B>
+<P>次のコマンドは、ダンプ・ファイル <B> /afs/example.com/common/dumps/terry.dump</B> の内容をファイル・サーバー・マシン <B>fs3.example.com</B> の区画 <B>/vicepc</B> に復元しています。復元後の名前は <B>user.terry</B> です。
+<PRE>   % <B>cd /afs/example.com/common/dumps</B>
 
-   % <B>vos restore -file terry.dump -server fs3.abc.com -partition c</B>  \
+   % <B>vos restore -file terry.dump -server fs3.example.com -partition c</B>  \
                  <B>-name user.terry</B>
 
 </PRE>

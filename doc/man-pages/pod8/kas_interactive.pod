@@ -47,7 +47,7 @@ B<-password_for_admin>, B<-cell>, and B<-servers> arguments.
 =item *
 
 Type the kas command followed by a user name and cell name, separated by
-an C<@> sign (for example: B<kas admin@abc.com>), to establish a
+an C<@> sign (for example: B<kas admin@example.com>), to establish a
 connection under the specified identity with the Authentication Servers
 listed in the local F</usr/vice/etc/CellServDB> file for the indicated
 cell. If appropriate, provide the B<-servers> argument to specify an

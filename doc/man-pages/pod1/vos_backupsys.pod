@@ -282,17 +282,17 @@ listed in the cell's VLDB whose name begins with the string B<user>.
 
    % vos backupsys -prefix user
 
-The following example, appropriate in the ABC Corporation cell, creates a
+The following example, appropriate in the Example Corporation cell, creates a
 backup version of every read/write volume on the file server machine
-C<fs3.abc.com>.
+C<fs3.example.com>.
 
-   % vos backupsys -server fs3.abc.com
+   % vos backupsys -server fs3.example.com
 
-The following example, appropriate in the State University cell, creates a
+The following example, appropriate in the Example Organization cell, creates a
 backup version of every read/write volume on the file server machine
-C<db1.stateu.edu> except those whose name includes the string C<temp>.
+C<db1.example.org> except those whose name includes the string C<temp>.
 
-   % vos backupsys  -server db1.stateu.edu -prefix '^.*temp'
+   % vos backupsys  -server db1.example.org -prefix '^.*temp'
 
 The following example creates a backup version of every volume listed in
 the cell's VLDB, excluding those whose names contain the string C<source>,

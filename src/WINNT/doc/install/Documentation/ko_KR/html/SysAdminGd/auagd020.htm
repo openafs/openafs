@@ -449,10 +449,10 @@ ACL 항목을 작성할 수 있습니다. 사용자나 기계 그룹을 작성하는 방법이나 여러 가지
 대로 문자 하나로 표시되고 항상 <B>rlidwka</B> 순서로 나타납니다. 부정적
 권한이 있는 <TT>Negative rights</TT> 헤더가 그 다음에 나타나고 부정적 권한 쌍이
 따라옵니다.
-<P>다음 예는 ABC Corporation 셀에 있는 사용자 <B>terry</B>의 홈 디렉토리를
+<P>다음 예는 Example Corporation 셀에 있는 사용자 <B>terry</B>의 홈 디렉토리를
 표시합니다.
-<PRE>   % <B>fs la /afs/abc.com/usr/terry</B>
-   Access list for /afs/abc.com/usr/terry is
+<PRE>   % <B>fs la /afs/example.com/usr/terry</B>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
       system:authuser rl
       pat rlw
@@ -541,7 +541,7 @@ ACL에서 이를 가지고 있습니다. 기본적으로, <B>system:administrators</B>
 변경하려고 할 때 실패하지 않도록 합니다. 일반적으로,
 경로 이름의 두 번째 레벨에서 셀 이름 앞에 점을 찍어
 읽기/쓰기 경로를 표시합니다(예를 들어,
-<B>/afs/.abc.com</B>). 파일 공간을 통한
+<B>/afs/.example.com</B>). 파일 공간을 통한
 읽기/쓰기와 읽기 전용 경로의 개념에 대한 내용은
 <A HREF="auagd010.htm#HDRWQ209">마운트 포인트 통과 규칙</A>을 참조하십시오.
 <P>
@@ -804,7 +804,7 @@ ACL을 복사할 수 없습니다. <B>fs</B> 명령
 <P>각 디렉토리에 읽기/쓰기 경로를 지정하여 읽기 전용 볼륨을 변경하려고 할 때 실패하지
 않도록 합니다.
 일반적으로, 경로 이름의 두 번째 레벨에서 셀 이름 앞에 점을
-찍어 읽기/쓰기 경로를 표시합니다(예를 들어, <B>/afs/.abc.com</B>). 파일 공간을 통한 읽기/쓰기와 읽기 전용
+찍어 읽기/쓰기 경로를 표시합니다(예를 들어, <B>/afs/.example.com</B>). 파일 공간을 통한 읽기/쓰기와 읽기 전용
 경로의 개념에 대한 내용은 <A HREF="auagd010.htm#HDRWQ209">마운트 포인트 통과 규칙</A>을 참조하십시오.
 <P><DT><B>-clear
 </B><DD>원본 ACL로 각 목적지 디렉토리의 ACL을 완전히 겹쳐씁니다.
@@ -852,15 +852,15 @@ ACL을 <B>plans</B> 하위 디렉토리로 복사합니다.
 자신의 홈 디렉토리에 <B>terry:friends</B>
 그룹(AFS GID -567)에 대한 ACL 항목이 있으므로 보호
 데이터베이스에서 그룹을 제거합니다.
-<PRE>   % <B>fs listacl /afs/abc.com/usr/terry</B>
-   Access list for /afs/abc.com/usr/terry is
+<PRE>   % <B>fs listacl /afs/example.com/usr/terry</B>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
      terry:friends rlik
      system:anyuser l
       terry rlidwka
    % <B>pts delete terry:friends</B>
-   % <B>fs listacl /afs/abc.com/usr/terry</B>
-   Access list for /afs/abc.com/usr/terry is
+   % <B>fs listacl /afs/example.com/usr/terry</B>
+   Access list for /afs/example.com/usr/terry is
    Normal permissions:
      -567 rlik
      system:anyuser l
@@ -906,7 +906,7 @@ ACL을 <B>plans</B> 하위 디렉토리로 복사합니다.
 <P>각 디렉토리에 읽기/쓰기 경로를 지정하여 읽기 전용 볼륨을
 변경하려고 할 때 실패하지 않도록 합니다. 일반적으로, 경로
 이름의 두 번째 레벨에서 셀 이름 앞에 점을 찍어 읽기/쓰기
-경로를 표시합니다(예를 들어, <B>/afs/.abc.com</B>).
+경로를 표시합니다(예를 들어, <B>/afs/.example.com</B>).
 파일 공간을 통한 읽기/쓰기와 읽기 전용 경로의 개념에 대한 내용은
 <A HREF="auagd010.htm#HDRWQ209">마운트 포인트 통과 규칙</A>을 참조하십시오.
 <P>

@@ -112,9 +112,9 @@ ignored.
 =head1 EXAMPLES
 
 The following example verifies the VLDB entries in which a site definition
-mentions the file server machine C<fs3.abc.com>.
+mentions the file server machine C<fs3.example.com>.
 
-   % vos syncserv -server fs3.abc.com
+   % vos syncserv -server fs3.example.com
 
 =head1 PRIVILEGE REQUIRED
 

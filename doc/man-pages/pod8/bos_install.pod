@@ -102,14 +102,14 @@ ignored.
 =head1 EXAMPLES
 
 The following command copies the file
-F</afs/abc.com/rs_aix42/usr/afs/bin/vlserver> to the file
-F</usr/afs/bin/vlserver> on the machine C<fs3.abc.com>, which is the
+F</afs/example.com/rs_aix42/usr/afs/bin/vlserver> to the file
+F</usr/afs/bin/vlserver> on the machine C<fs3.example.com>, which is the
 binary distribution machine for server machines running AIX 4.2 in the
-C<abc.com> cell. The current version of the F</usr/afs/bin/vlserver> file
+C<example.com> cell. The current version of the F</usr/afs/bin/vlserver> file
 is moved to F</usr/afs/bin/vlserver.BAK>.
 
-   % bos install -server fs3.abc.com \
-                 -file /afs/abc.com/rs_aix42/usr/afs/bin/vlserver
+   % bos install -server fs3.example.com \
+                 -file /afs/example.com/rs_aix42/usr/afs/bin/vlserver
 
 =head1 PRIVILEGE REQUIRED
 

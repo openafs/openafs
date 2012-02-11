@@ -108,7 +108,7 @@ AFS ファイル・スペース・ルート
 </B><DD>マウント・ポイントとして作成するディレクトリーを指定します。ディレクトリーはまだ存在していないものでなくてはなりません。相対するパス名は、現行作業ディレクトリーを基準にして解釈されます。
 <P>
 <P>ディレクトリーへの読み取り / 書き込みパスを指定し、読み取り専用ボリュームで新規マウント・ポイントを作成しようとして発生する障害を回避します。規則では、読み取り / 書き込みパスは、パス名の 2 番目のレベルのセル名の前にピリオドを入れて示します
-(たとえば、<B>/afs/.abc.com</B>)。ファイル・スペースを通る読み取り / 書き込みパスおよび読み取り専用パスの概念に関する詳細については、この参照ページの<B>説明</B>の節を参照してください。
+(たとえば、<B>/afs/.example.com</B>)。ファイル・スペースを通る読み取り / 書き込みパスおよび読み取り専用パスの概念に関する詳細については、この参照ページの<B>説明</B>の節を参照してください。
 <P><DT><B>-vol
 </B><DD>ボリュームの名前またはボリューム ID を指定して、それをマウントします。適切ならば、名前に <TT>.readonly</TT> または <TT>.backup</TT> 拡張子を追加するか、該当するボリューム ID 番号を指定します。
 <P><DT><B>-cell
@@ -123,23 +123,23 @@ AFS ファイル・スペース・ルート
 </B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
 </DL>
 <P><STRONG>例</STRONG>
-<P>次のコマンドは標準のマウント・ポイントを作成し、<B>/afs/abc.com/usr/smith</B> にボリューム <B>user.smith</B> をマウントします。
-<PRE>   % <B>cd /afs/abc.com/usr</B>
+<P>次のコマンドは標準のマウント・ポイントを作成し、<B>/afs/example.com/usr/smith</B> にボリューム <B>user.smith</B> をマウントします。
+<PRE>   % <B>cd /afs/example.com/usr</B>
 
    %<B> fs mkmount -dir smith -vol user.smith</B>
 
 </PRE>
 <P>以下のコマンドは、
-ABC Corporation セルの <TT>root.cell</TT> ボリューム用の読み取り / 書き込みマウント・ポイントと正規のマウント・ポイントをそのセルのファイル・ツリーで作成します。
+Example Corporation セルの <TT>root.cell</TT> ボリューム用の読み取り / 書き込みマウント・ポイントと正規のマウント・ポイントをそのセルのファイル・ツリーで作成します。
 2 番目のコマンドは、読み取り / 書き込みマウント・ポイントの名前の始まりにピリオドを入れるという規則に従っています。
-<PRE>   % <B>fs mkmount -dir /afs/abc.com -vol root.cell</B>
+<PRE>   % <B>fs mkmount -dir /afs/example.com -vol root.cell</B>
 
-   %<B> fs mkmount -dir /afs/.abc.com -vol root.cell -rw</B>
+   %<B> fs mkmount -dir /afs/.example.com -vol root.cell -rw</B>
 
 </PRE>
-<P>次のコマンドは、State University セルの <TT>root.cell</TT> ボリュームを、ABC Corporation セルのファイル・ツリーにマウントし、<B>/afs/stateu.edu</B> という標準セルラー・マウント・ポイントを作成します。
-ABC Corporation のキャッシュ・マネージャーがこのマウント・ポイントに出会うと、読み取り専用パスで State University セルに入り込みます。
-<PRE>   % <B>fs mkmount -dir /afs/stateu.edu -vol root.cell -c stateu.edu</B>
+<P>次のコマンドは、Example Organization セルの <TT>root.cell</TT> ボリュームを、Example Corporation セルのファイル・ツリーにマウントし、<B>/afs/example.org</B> という標準セルラー・マウント・ポイントを作成します。
+Example Corporation のキャッシュ・マネージャーがこのマウント・ポイントに出会うと、読み取り専用パスで Example Organization セルに入り込みます。
+<PRE>   % <B>fs mkmount -dir /afs/example.org -vol root.cell -c example.org</B>
 
 </PRE>
 <P><STRONG>必要となる特権</STRONG>

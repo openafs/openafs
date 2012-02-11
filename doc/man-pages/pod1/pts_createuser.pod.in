@@ -146,7 +146,7 @@ C<johnson>.
 
    % pts createuser -name johnson
 
-The following example creates three wildcarded machine entries in the ABC
+The following example creates three wildcarded machine entries in the Example
 Corporation cell. The three entries encompass all of the machines on the
 company's networks without including machines on other networks:
 

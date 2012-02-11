@@ -60,7 +60,7 @@ single instance is provided for the first argument (the username).
    % pts removeuser smith staff staff:finance
 
 The following example removes three machine entries, which represent all
-machines in the ABC Corporation network, from the group C<bin-prot>:
+machines in the Example Corporation network, from the group C<bin-prot>:
 
    % pts removeuser -user 138.255.0.0 192.12.105.0 192.12.106.0 -group bin-prot
 

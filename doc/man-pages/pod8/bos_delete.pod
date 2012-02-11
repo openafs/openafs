@@ -74,10 +74,10 @@ ignored.
 =head1 EXAMPLES
 
 The following command removes the B<buserver>, B<kaserver>, B<ptserver>,
-and B<vlserver> entries from the F<BosConfig> file on C<db3.abc.com>, a
+and B<vlserver> entries from the F<BosConfig> file on C<db3.example.com>, a
 database server machine being decommissioned.
 
-   % bos delete -server db3.abc.com \
+   % bos delete -server db3.example.com \
        -instance buserver kaserver ptserver vlserver
 
 =head1 PRIVILEGE REQUIRED

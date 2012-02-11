@@ -170,10 +170,10 @@ ignored.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a C<kaserver> process on
-C<fs3.abc.com> (the command appears on two lines here only for
+C<fs3.example.com> (the command appears on two lines here only for
 legibility):
 
-   % bos create -server fs3.abc.com -instance kaserver \
+   % bos create -server fs3.example.com -instance kaserver \
                 -type simple -cmd /usr/afs/bin/kaserver
 
 =head1 PRIVILEGE REQUIRED

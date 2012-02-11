@@ -191,10 +191,10 @@ ignored.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a C<ptserver> process on the
-machine C<fs3.abc.com>. The command appears here on multiple lines only
+machine C<fs3.example.com>. The command appears here on multiple lines only
 for legibility.
 
-   % bos create -server fs3.abc.com -instance ptserver \
+   % bos create -server fs3.example.com -instance ptserver \
                 -type simple -cmd /usr/afs/bin/ptserver
 
 =head1 PRIVILEGE REQUIRED

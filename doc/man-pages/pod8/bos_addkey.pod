@@ -126,11 +126,11 @@ adding a new key:
 =head1 EXAMPLES
 
 The following command adds a new server encryption key with key version
-number 14 to the B<KeyFile> file kept on the machine C<fs1.abc.com> (the
+number 14 to the B<KeyFile> file kept on the machine C<fs1.example.com> (the
 system control machine). The issuer omits the B<-key> argument, as
 recommended, and provides the password at the prompts.
 
-   % bos addkey -server fs1.abc.com -kvno 14
+   % bos addkey -server fs1.example.com -kvno 14
    Input key:
    Retype input key:
 

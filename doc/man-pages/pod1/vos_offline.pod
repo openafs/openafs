@@ -139,7 +139,7 @@ ignored.
 
 The following example takes an online volume offline:
 
-   % vos offline -server sv7.stateu.edu -partition /vicepb -id root.afs
+   % vos offline -server sv7.example.org -partition /vicepb -id root.afs
 
 =head1 PRIVILEGE REQUIRED
 

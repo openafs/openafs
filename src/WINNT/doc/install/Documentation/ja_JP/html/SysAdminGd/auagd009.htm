@@ -336,7 +336,7 @@ AFS ”FØƒvƒƒgƒRƒ‹‚Íƒ}ƒTƒ`ƒ…[ƒZƒbƒcH‰È‘åŠw‚ÌƒvƒƒWƒFƒNƒg Athena ‚É‚æ‚Á‚ÄŠJ”­‚³
 <P>cron ƒvƒƒZƒX‚Ìo—Í‚É‚ÍAƒRƒ}ƒ“ƒh‚ªŸ‚ÉÀs‚·‚éŠú‚ğ•ñ‚·‚é<TT>•â•ó‹µ</TT> ƒƒbƒZ[ƒW‚ªŠÜ‚Ü‚ê‚Ü‚·BŸ‚É—á‚ğ¦‚µ‚Ü‚·B
 <P>”CˆÓ‚ÌƒvƒƒZƒX‚Ìo—Í‚ÍA‚Ç‚±‚©‚Ìƒ|ƒCƒ“ƒg‚ÅƒvƒƒZƒX‚ª¸”s‚µ‚Ä <B>/usr/afs/logs</B> ƒfƒBƒŒƒNƒgƒŠ[‚ÉƒRƒAEƒtƒ@ƒCƒ‹‚ğ¶¬‚µ‚½‚±‚Æ‚ğ¦‚·‚½‚ßA•â•ƒƒbƒZ[ƒWu<TT>has core file</TT>v‚ğæ‚è“ü‚ê‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B‚Ù‚Æ‚ñ‚Ç‚Ìê‡ABOS ƒT[ƒo[‚ÍƒvƒƒZƒX‚ğÄn“®‚·‚é‚±‚Æ‚ª‚Å‚«A‰Ò“®‚µ‚Ä‚¢‚Ü‚·B
 <P>Ÿ‚Ì—á‚É‚ÍA<B>backupusers</B>‚ÆŒÄ‚Î‚ê‚éƒ†[ƒU[’è‹`‚Ì cron €–Ú‚ªŠÜ‚Ü‚ê‚Ä‚¢‚Ü‚·B
-<PRE>   % <B>bos status fs3.abc.com</B>
+<PRE>   % <B>bos status fs3.example.com</B>
    Instance kaserver, currently running normally.
    Instance ptserver, currently running normally.
    Instance vlserver, has core file, currently running normally.
@@ -400,8 +400,8 @@ shutdown request</TT> (I—¹‚Ì—v‹‚É‚æ‚é) ‚È‚ÇA’Ç‰Á‚Ìà–¾‚ª•\¦‚³‚ê‚é‰Â”\«‚ª‚ ‚
 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/logs</B>
 </TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
 </TD></TR></TABLE>
-<P>ˆÈ‰º‚ÍAƒ}ƒVƒ“ <B>fs3.abc.com</B> ã‚Å‰Ò“®‚µ‚Ä‚¢‚é <B>fs</B> ƒvƒƒZƒX‚ÌŠg’£o—Í‚ğ¦‚µ‚Ä‚¢‚Ü‚·B
-<PRE>   % <B>bos status fs3.abc.com fs -long</B>
+<P>ˆÈ‰º‚ÍAƒ}ƒVƒ“ <B>fs3.example.com</B> ã‚Å‰Ò“®‚µ‚Ä‚¢‚é <B>fs</B> ƒvƒƒZƒX‚ÌŠg’£o—Í‚ğ¦‚µ‚Ä‚¢‚Ü‚·B
+<PRE>   % <B>bos status fs3.example.com fs -long</B>
    Instance fs, (type is fs), currently running normally.
        Auxiliary status is file server running
    Process last started at Mon May 3 8:29:19 1999 (3 proc starts)
@@ -518,19 +518,19 @@ BOS ƒT[ƒo[‚ÍA–ˆTAw’è‚³‚ê‚½—j“ú‚Ìw’è‚³‚ê‚½‚ÉA‚»‚Ìƒtƒ@ƒCƒ‹‚Ü‚½‚ÍƒRƒ}ƒ“
 <I>AFS Administration Reference</I> ‚É‚ ‚é <B>bos create</B> ƒRƒ}ƒ“ƒh‚Ì‰ğàƒy[ƒW‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢B
 </DL>
 </LI></OL>
-<P>Ÿ‚Ì—á‚ÍAƒ}ƒVƒ“ <B>db2.abc.com</B> ‚Ì•ÛŒìƒT[ƒo[‚ğ’è‹`‚¨‚æ‚ÑŠJn‚µ‚Ü‚·B
+<P>Ÿ‚Ì—á‚ÍAƒ}ƒVƒ“ <B>db2.example.com</B> ‚Ì•ÛŒìƒT[ƒo[‚ğ’è‹`‚¨‚æ‚ÑŠJn‚µ‚Ü‚·B
 <PRE>
-   % <B>bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</B>
+   % <B>bos create db2.example.com ptserver simple /usr/afs/bin/ptserver</B>
 
 </PRE>
-<P>Ÿ‚Ì—á‚ÍAƒ}ƒVƒ“ <B>fs6.abc.com</B> ‚Ì <B>fs</B> ƒvƒƒZƒX‚ğ’è‹`‚¨‚æ‚ÑŠJn‚µ‚Ü‚·B
+<P>Ÿ‚Ì—á‚ÍAƒ}ƒVƒ“ <B>fs6.example.com</B> ‚Ì <B>fs</B> ƒvƒƒZƒX‚ğ’è‹`‚¨‚æ‚ÑŠJn‚µ‚Ü‚·B
 <PRE>
-   % <B>bos create fs6.abc.com fs fs /usr/afs/bin/fileserver </B>  \
+   % <B>bos create fs6.example.com fs fs /usr/afs/bin/fileserver </B>  \
         <B>/usr/afs/bin/volserver /usr/afs/bin/salvager</B>
 
 </PRE>
-<P>Ÿ‚Ì—á‚ÍAƒ}ƒVƒ“ <B>fs3.abc.com</B> ‚Ì <B>backupuser</B> ƒvƒƒZƒX‚Æ‚¢‚¤ cron ƒvƒƒZƒX‚ğ’è‹`‚¨‚æ‚ÑŠJn‚µ‚ÄA–ˆ“ú 3:00 a.m ‚É‰Ò“®‚·‚é‚æ‚¤‚ÉƒXƒPƒWƒ…[ƒ‹‚µ‚Ü‚·B
-<PRE>   % <B>bos create fs3.abc.com backupuser cron
+<P>Ÿ‚Ì—á‚ÍAƒ}ƒVƒ“ <B>fs3.example.com</B> ‚Ì <B>backupuser</B> ƒvƒƒZƒX‚Æ‚¢‚¤ cron ƒvƒƒZƒX‚ğ’è‹`‚¨‚æ‚ÑŠJn‚µ‚ÄA–ˆ“ú 3:00 a.m ‚É‰Ò“®‚·‚é‚æ‚¤‚ÉƒXƒPƒWƒ…[ƒ‹‚µ‚Ü‚·B
+<PRE>   % <B>bos create fs3.example.com backupuser cron
         "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</B>
 </PRE>
 <P><H3><A NAME="Header_184" HREF="auagd002.htm#ToC_184">ƒvƒƒZƒX‚ğ’â~‚µ‚Ä BosConfig ƒtƒ@ƒCƒ‹‚©‚çíœ‚·‚é</A></H3>

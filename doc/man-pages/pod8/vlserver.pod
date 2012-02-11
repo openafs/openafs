@@ -156,10 +156,10 @@ ignored.
 =head1 EXAMPLES
 
 The following B<bos create> command creates a vlserver process on the
-machine C<fs2.abc.com> that uses six lightweight processes. Type the
+machine C<fs2.example.com> that uses six lightweight processes. Type the
 command on a single line:
 
-   % bos create -server fs2.abc.com -instance vlserver -type simple \
+   % bos create -server fs2.example.com -instance vlserver -type simple \
                 -cmd "/usr/afs/bin/vlserver -p 6"
 
 =head1 PRIVILEGE REQUIRED
