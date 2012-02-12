@@ -2782,11 +2782,11 @@
           <listitem>
 	    <para><emphasis role="bold">Windows:</emphasis>
             \\afs\example.com#root.cell</para>
-          <listitem>
+          </listitem>
           <listitem>
 	    <para><emphasis role="bold">Unix:</emphasis>
             /afs/.:mount/example.com#root.cell</para>
-          <listitem>
+          </listitem>
       </itemizedlist>
     </sect2>
   </sect1>
