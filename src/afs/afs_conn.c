@@ -134,7 +134,7 @@ release_conns_user_server(struct unixuser *xu, struct server *xs)
     int cix, glocked;
     struct srvAddr *sa;
     struct afs_conn *tc;
-    struct sa_conn_vector *tcv, **lcv;
+    struct sa_conn_vector *tcv, **lcv, *tcvn;
     for (sa = (xs)->addr; sa; sa = sa->next_sa) {
         lcv = &sa->conns;
         for (tcv = *lcv; tcv; lcv = &tcv->next, tcv = *lcv) {
@@ -149,6 +149,23 @@ release_conns_user_server(struct unixuser *xu, struct server *xs)
                     if (tc->activated) {
                         rx_SetConnSecondsUntilNatPing(tc->id, 0);
                         rx_DestroyConnection(tc->id);
+			/* find another eligible connection */
+			if (sa->natping == tc) {
+			    int cin;
+			    struct afs_conn *tcn;
+			    for (tcvn = sa->conns; tcvn; tcvn = tcvn->next) {
+				if (tcvn == tcv)
+				    continue;
+				for(cin = 0; cin < CVEC_LEN; ++cin) {
+				    tcn = &(tcvn->cvec[cin]);
+				    if (tcn->activated) {
+					rx_SetConnSecondsUntilNatPing(tcn->id, 20);
+					sa->natping = tcn;
+					break;
+				    }
+				}
+			    }
+			}
                     }
                 }
                 if (glocked)
@@ -180,6 +197,8 @@ release_conns_vector(struct sa_conn_vector *xcv)
             if (tc->activated) {
                 rx_SetConnSecondsUntilNatPing(tc->id, 0);
                 rx_DestroyConnection(tc->id);
+		if (tcv->srvr->natping == tc)
+		    tcv->srvr->natping = NULL;
             }
         }
         if (glocked)
@@ -450,6 +469,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	UpgradeSToWLock(&afs_xconn, 38);
 	csec = (struct rx_securityClass *)0;
 	if (tc->id) {
+	    if (sap->natping == tc)
+		sap->natping = NULL;
 	    if (glocked)
                 AFS_GUNLOCK();
             rx_SetConnSecondsUntilNatPing(tc->id, 0);
@@ -485,16 +506,12 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	    rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
 
 	/*
-	 * Only do this for the base connection, not per-user.
-	 * Will need to be revisited if/when CB gets security.
+	 * Only do this for one connection
 	 */
-	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad) &&
-	    (tu->viceId == UNDEFVID) && (isrep == 0)
-#ifndef UKERNEL /* ukernel runs as just one uid anyway */
-	    && (tu->uid == 0)
-#endif
-	    )
+	if ((service != 52) && (sap->natping == NULL)) {
+	    sap->natping = tc;
 	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
+	}
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)

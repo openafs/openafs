@@ -1888,6 +1888,7 @@ afs_RemoveAllConns(void)
                 if (sa->conns) {
                     afs_ReleaseConns(sa->conns);
                     sa->conns = NULL;
+		    sa->natping = NULL;
                 }
             }
         }
