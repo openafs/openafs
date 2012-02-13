@@ -74,8 +74,18 @@ RemoveUserConns(struct unixuser *au)
 		    if (tc->user == au && tc->refCount == 0) {
 			*lc = tc->next;
 			AFS_GUNLOCK();
+			rx_SetConnSecondsUntilNatPing(tc->id, 0);
 			rx_DestroyConnection(tc->id);
 			AFS_GLOCK();
+			if (tc->srvr->natping == tc) {
+			    struct afs_conn *nc = sa->conns;
+			    if (nc == tc)
+				nc = *lc;
+			    if (nc && nc->id) {
+				rx_SetConnSecondsUntilNatPing((nc->id), 20);
+				tc->srvr->natping = nc;
+			    }
+			}
 			afs_osi_Free(tc, sizeof(struct afs_conn));
 			break;	/* at most one instance per server */
 		    }		/*Found unreferenced connection for user */

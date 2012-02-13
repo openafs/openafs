@@ -400,7 +400,8 @@ struct srvAddr {
     struct srvAddr *next_bkt;	/* next item in hash bucket */
     struct srvAddr *next_sa;	/* another interface on same host */
     struct server *server;	/* back to parent */
-    struct afs_conn *conns;		/* All user connections to this server */
+    struct afs_conn *conns;	/* All user connections to this server */
+    struct afs_conn *natping;
     afs_int32 sa_ip;		/* Host addr in network byte order */
     u_short sa_iprank;		/* indiv ip address priority */
     u_short sa_portal;		/* port addr in network byte order */
