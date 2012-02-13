@@ -1411,7 +1411,7 @@ afs_shutdown(void)
     afs_StopAFSDB();
     while (afs_termState == AFSOP_STOP_AFSDB)
 	afs_osi_Sleep(&afs_termState);
-#if	defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
     afs_warn("RxEvent... ");
     /* cancel rx event daemon */
     while (afs_termState == AFSOP_STOP_RXEVENT)
