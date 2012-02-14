@@ -371,7 +371,6 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
     tp += sizeof(uuid);
     len += sizeof(uuid);
 
-#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
 	return KTC_TOKEN_MUTEX_FAIL;
@@ -389,18 +388,17 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 	    strcpy(rpcErr, "RPC failure in AFS gateway");
 	else
 	    DceErrorInqText(status, rpcErr);
-	if (status == RPC_S_SERVER_UNAVAILABLE ||
+
+        ReleaseMutex(ktcMutex);
+        CloseHandle(ktcMutex);
+
+        if (status == RPC_S_SERVER_UNAVAILABLE ||
 	    status == EPT_S_NOT_REGISTERED) {
-	    ReleaseMutex(ktcMutex);
-	    CloseHandle(ktcMutex);
 	    return KTC_NOCMRPC;
 	} else {
-	    ReleaseMutex(ktcMutex);
-	    CloseHandle(ktcMutex);
 	    return KTC_RPC;
 	}
     }
-#endif /* AFS_WIN95_ENV */
 
     /* set up for pioctl */
     iob.in = tbuffer;
@@ -410,10 +408,8 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 
     code = pioctl(0, VIOCSETTOK, &iob, 0);
 
-#ifndef AFS_WIN95_ENV
     ReleaseMutex(ktcMutex);
     CloseHandle(ktcMutex);
-#endif /* AFS_WIN95_ENV */
 
     if (code) {
 	if (code == -1) {
@@ -483,7 +479,6 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
-#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
 	return KTC_TOKEN_MUTEX_FAIL;
@@ -493,14 +488,12 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
             return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
-#endif /* AFS_WIN95_ENV */
 
     code = pioctl(0, VIOCNEWGETTOK, &iob, 0);
     if (code) {
-#ifndef AFS_WIN95_ENV
 	ReleaseMutex(ktcMutex);
 	CloseHandle(ktcMutex);
-#endif /* AFS_WIN95_ENV */
+
 	if (code == -1) {
 	    if (errno == ESRCH)
 		return KTC_NOCELL;
@@ -515,8 +508,7 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 	} else
 	    return KTC_PIOCTLFAIL;
     }
-#ifndef AFS_WIN95_ENV
-    /* get rid of RPC for win95 build */
+
     /* RPC to receive session key */
     status = receive_key(uuid, token->sessionKey.data);
 
@@ -524,17 +516,17 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     CloseHandle(ktcMutex);
 
     if (status != RPC_S_OK) {
-	if (status == 1)
-	    strcpy(rpcErr, "RPC failure in AFS gateway");
-	else
-	    DceErrorInqText(status, rpcErr);
-	if (status == RPC_S_SERVER_UNAVAILABLE
-	    || status == EPT_S_NOT_REGISTERED)
-	    return KTC_NOCMRPC;
-	else
-	    return KTC_RPC;
+        if (status == 1)
+            strcpy(rpcErr, "RPC failure in AFS gateway");
+        else
+            DceErrorInqText(status, rpcErr);
+
+        if (status == RPC_S_SERVER_UNAVAILABLE ||
+            status == EPT_S_NOT_REGISTERED)
+            return KTC_NOCMRPC;
+        else
+            return KTC_RPC;
     }
-#endif /* AFS_WIN95_ENV */
 
     cp = tbuffer;
 
@@ -648,7 +640,6 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
-#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
 	return KTC_TOKEN_MUTEX_FAIL;
@@ -658,7 +649,6 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
             return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
-#endif /* AFS_WIN95_ENV */
 
 #if 0
     code = pioctl(0, VIOC_GETTOK2, &iob, 0);
@@ -667,10 +657,8 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
 	errno = EINVAL;
 #endif
 
-#ifndef AFS_WIN95_ENV
     ReleaseMutex(ktcMutex);
     CloseHandle(ktcMutex);
-#endif /* AFS_WIN95_ENV */
 
     /* If we can't use the new pioctl, the fall back to the old one. We then
      * need to convert the rxkad token we get back into the new format
@@ -742,7 +730,6 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
     int code;
     HANDLE ktcMutex = NULL;
 
-#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
 	return KTC_TOKEN_MUTEX_FAIL;
@@ -752,7 +739,6 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
             return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
-#endif /* AFS_WIN95_ENV */
 
     tp = tbuffer;
 
@@ -768,10 +754,8 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
 
     code = pioctl(0, VIOCGETTOK, &iob, 0);
 
-#ifndef AFS_WIN95_ENV
     ReleaseMutex(ktcMutex);
     CloseHandle(ktcMutex);
-#endif /* AFS_WIN95_ENV */
 
     if (code) {
 	if (code == -1) {
@@ -855,7 +839,6 @@ ktc_ForgetToken(struct ktc_principal *server)
     if (strcmp(server->name, "afs")) {
 	return ForgetOneLocalToken(server);
     }
-#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
 	return KTC_TOKEN_MUTEX_FAIL;
@@ -865,7 +848,6 @@ ktc_ForgetToken(struct ktc_principal *server)
             return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
-#endif /* AFS_WIN95_ENV */
 
     tp = tbuffer;
 
@@ -880,10 +862,9 @@ ktc_ForgetToken(struct ktc_principal *server)
     iob.out_size = sizeof(tbuffer);
 
     code = pioctl(0, VIOCDELTOK, &iob, 0);
-#ifndef AFS_WIN95_ENV
     ReleaseMutex(ktcMutex);
     CloseHandle(ktcMutex);
-#endif /* AFS_WIN95_ENV */
+
     if (code) {
 	if (code == -1) {
 	    if (errno == ESRCH)
@@ -910,7 +891,6 @@ ktc_ForgetAllTokens()
 
     (void)ForgetLocalTokens();
 
-#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
 	return KTC_TOKEN_MUTEX_FAIL;
@@ -920,7 +900,6 @@ ktc_ForgetAllTokens()
             return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
-#endif /* AFS_WIN95_ENV */
 
     /* do pioctl */
     iob.in = tbuffer;
@@ -929,10 +908,9 @@ ktc_ForgetAllTokens()
     iob.out_size = sizeof(tbuffer);
 
     code = pioctl(0, VIOCDELALLTOK, &iob, 0);
-#ifndef AFS_WIN95_ENV
     ReleaseMutex(ktcMutex);
     CloseHandle(ktcMutex);
-#endif /* AFS_WIN95_ENV */
+
     if (code) {
 	if (code == -1) {
 	    if (errno == ENODEV)
