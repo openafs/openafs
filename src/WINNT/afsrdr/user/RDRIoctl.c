@@ -924,17 +924,19 @@ RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 
 #if defined(NO_AUTH_GROUPS)
     if ((pflags & AFSCALL_FLAG_LOCAL_SYSTEM) && (flags & PIOCTL_LOGON)) {
-        wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
-        int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
         PSID pSid = NULL;
         DWORD dwSize1, dwSize2;
         wchar_t *pszRefDomain = NULL;
         SID_NAME_USE snu = SidTypeGroup;
         clientchar_t * secSidString = NULL;
         DWORD gle;
+        static wchar_t cname[MAX_COMPUTERNAME_LENGTH+1] = L"";
 
-        GetComputerNameW(cname, &cnamelen);
-        wcsupr(cname);
+        if ( cname[0] == '\0') {
+            int len = MAX_COMPUTERNAME_LENGTH+1;
+            GetComputerNameW(cname, &len);
+            _wcsupr(cname);
+        }
 
         /*
          * The input name is probably not a SID for the user which is how

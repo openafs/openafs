@@ -178,17 +178,19 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     return 0;
 }
 
+static wchar_t cname[MAX_COMPUTERNAME_LENGTH+1] = L"";
+
 cm_user_t *
 RDR_GetLocalSystemUser( void)
 {
     smb_username_t *unp;
     cm_user_t *userp = NULL;
-    wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
-    int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
 
-    GetComputerNameW(cname, &cnamelen);
-    _wcsupr(cname);
-
+    if ( cname[0] == '\0') {
+        int len = MAX_COMPUTERNAME_LENGTH+1;
+        GetComputerNameW(cname, &len);
+        _wcsupr(cname);
+    }
     unp = smb_FindUserByName(NTSID_LOCAL_SYSTEM, cname, SMB_FLAG_CREATE);
     lock_ObtainMutex(&unp->mx);
     if (!unp->userp)
@@ -220,14 +222,15 @@ RDR_UserFromAuthGroup( IN GUID *pGuid)
     smb_username_t *unp;
     cm_user_t * userp = NULL;
     RPC_WSTR UuidString = NULL;
-    wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
-    int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
 
     if (UuidToStringW((UUID *)pGuid, &UuidString) != RPC_S_OK)
         goto done;
 
-    GetComputerNameW(cname, &cnamelen);
-    _wcsupr(cname);
+    if ( cname[0] == '\0') {
+        int len = MAX_COMPUTERNAME_LENGTH+1;
+        GetComputerNameW(cname, &len);
+        _wcsupr(cname);
+    }
 
     unp = smb_FindUserByName(UuidString, cname, SMB_FLAG_CREATE);
     lock_ObtainMutex(&unp->mx);
