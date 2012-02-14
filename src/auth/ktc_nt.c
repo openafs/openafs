@@ -374,11 +374,11 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
-	return KTC_PIOCTLFAIL;
+	return KTC_TOKEN_MUTEX_FAIL;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
 	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
 	    CloseHandle(ktcMutex);
-	    return KTC_PIOCTLFAIL;
+            return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
 
@@ -486,11 +486,11 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
-	return KTC_PIOCTLFAIL;
+	return KTC_TOKEN_MUTEX_FAIL;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
 	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
 	    CloseHandle(ktcMutex);
-	    return KTC_PIOCTLFAIL;
+            return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
 #endif /* AFS_WIN95_ENV */
@@ -651,11 +651,11 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
-	return KTC_PIOCTLFAIL;
+	return KTC_TOKEN_MUTEX_FAIL;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
 	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
 	    CloseHandle(ktcMutex);
-	    return KTC_PIOCTLFAIL;
+            return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
 #endif /* AFS_WIN95_ENV */
@@ -745,11 +745,11 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
-	return KTC_PIOCTLFAIL;
+	return KTC_TOKEN_MUTEX_FAIL;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
 	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
 	    CloseHandle(ktcMutex);
-	    return KTC_PIOCTLFAIL;
+            return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
 #endif /* AFS_WIN95_ENV */
@@ -858,11 +858,11 @@ ktc_ForgetToken(struct ktc_principal *server)
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
-	return KTC_PIOCTLFAIL;
+	return KTC_TOKEN_MUTEX_FAIL;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
 	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
 	    CloseHandle(ktcMutex);
-	    return KTC_PIOCTLFAIL;
+            return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
 #endif /* AFS_WIN95_ENV */
@@ -913,11 +913,11 @@ ktc_ForgetAllTokens()
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
-	return KTC_PIOCTLFAIL;
+	return KTC_TOKEN_MUTEX_FAIL;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
 	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
 	    CloseHandle(ktcMutex);
-	    return KTC_PIOCTLFAIL;
+            return KTC_TOKEN_MUTEX_FAIL;
 	}
     }
 #endif /* AFS_WIN95_ENV */

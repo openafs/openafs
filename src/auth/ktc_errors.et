@@ -20,4 +20,6 @@ error_table KTC
   ec KTC_NOCM,   "Cache Manager is not initialized / afsd is not running"
   ec KTC_RPC,  "failed to send or receive session key via remote procedure call"
   ec KTC_NOCMRPC, "Cache Manager RPC server is not responding"
+  ec KTC_TOKEN_MUTEX_FAIL, "AFS_KTC_Mutex failure"
+
 end
