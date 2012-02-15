@@ -41,6 +41,7 @@ long cm_daemonCheckOfflineVolInterval = 600;
 long cm_daemonPerformanceTuningInterval = 0;
 long cm_daemonRankServerInterval = 600;
 long cm_daemonRDRShakeExtentsInterval = 0;
+long cm_daemonAfsdHookReloadInterval = 0;
 
 osi_rwlock_t *cm_daemonLockp;
 afs_uint64 *cm_bkgQueueCountp;		/* # of queued requests */
@@ -438,6 +439,13 @@ cm_DaemonCheckInit(void)
 	cm_daemonRankServerInterval = dummy;
     afsi_log("daemonRankServerInterval is %d", cm_daemonRankServerInterval);
 
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonAfsdHookReloadInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS && dummy)
+	cm_daemonAfsdHookReloadInterval = dummy;
+    afsi_log("daemonAfsdHookReloadInterval is %d", cm_daemonAfsdHookReloadInterval);
+
     RegCloseKey(parmKey);
 
     if (cm_daemonPerformanceTuningInterval)
@@ -496,10 +504,12 @@ void * cm_Daemon(void *vparm)
     time_t lastPerformanceCheck;
     time_t lastServerRankCheck;
     time_t lastRDRShakeExtents;
+    time_t lastAfsdHookReload;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
-    HMODULE hHookDll;
+    HMODULE hHookDll = NULL;
+    AfsdDaemonHook daemonHook = NULL;
     char * name = "cm_Daemon_ShutdownEvent";
     int configureFirewall = IsWindowsFirewallPresent();
     int bAddrChangeCheck = 0;
@@ -552,6 +562,12 @@ void * cm_Daemon(void *vparm)
     lastServerRankCheck = now - cm_daemonRankServerInterval/2 * (rand() % cm_daemonRankServerInterval);
     if (cm_daemonRDRShakeExtentsInterval)
         lastRDRShakeExtents = now - cm_daemonRDRShakeExtentsInterval/2 * (rand() % cm_daemonRDRShakeExtentsInterval);
+    if (cm_daemonAfsdHookReloadInterval)
+        lastAfsdHookReload = now;
+
+    hHookDll = cm_LoadAfsdHookLib();
+    if (hHookDll)
+        daemonHook = ( AfsdDaemonHook ) GetProcAddress(hHookDll, AFSD_DAEMON_HOOK);
 
     while (daemon_ShutdownFlag == 0) {
         if (powerStateSuspended) {
@@ -719,17 +735,22 @@ void * cm_Daemon(void *vparm)
         }
 
         /* allow an exit to be called prior to stopping the service */
-        hHookDll = cm_LoadAfsdHookLib();
-        if (hHookDll)
-        {
-            BOOL hookRc = TRUE;
-            AfsdDaemonHook daemonHook = ( AfsdDaemonHook ) GetProcAddress(hHookDll, AFSD_DAEMON_HOOK);
-            if (daemonHook)
-            {
-                hookRc = daemonHook();
+        if (cm_daemonAfsdHookReloadInterval &&
+            lastAfsdHookReload != 0 && lastAfsdHookReload < now) {
+            if (hHookDll) {
+                FreeLibrary(hHookDll);
+                hHookDll = NULL;
+                daemonHook = NULL;
             }
-            FreeLibrary(hHookDll);
-            hHookDll = NULL;
+
+            hHookDll = cm_LoadAfsdHookLib();
+            if (hHookDll)
+                daemonHook = ( AfsdDaemonHook ) GetProcAddress(hHookDll, AFSD_DAEMON_HOOK);
+        }
+
+        if (daemonHook)
+        {
+            BOOL hookRc = daemonHook();
 
             if (hookRc == FALSE)
             {
@@ -759,6 +780,10 @@ void * cm_Daemon(void *vparm)
          * kills our process during system shutdown.
          */
         thrd_Sleep(500);
+    }
+
+    if (hHookDll) {
+        FreeLibrary(hHookDll);
     }
 
     thrd_SetEvent(cm_Daemon_ShutdownEvent);
