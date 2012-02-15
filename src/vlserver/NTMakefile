@@ -171,8 +171,6 @@ $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCL
 install: $(INCFILES) $(LIBFILE) $(VLSERVER) $(OUT)\vldb_check.exe $(OUT)\vlclient.exe \
 	 $(MT_LIBFILE)
 
-install9x: install
-
 install_libutils: $(INCFILES) $(LIBFILE)
 
 install_headers: $(INCFILES)

@@ -136,8 +136,6 @@ install: install_headers $(DLLFILE)
 
 install_debug: $(OUT)\osidebug.res $(EXEFILE)
 
-install9x: install
-
 ############################################################################
 # Local clean target; augments predefined clean target
 

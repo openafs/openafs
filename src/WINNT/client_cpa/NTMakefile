@@ -39,8 +39,6 @@ $(DLLFILE): $(DLLOBJS)
 
 install: $(DLLFILE) lang
 
-install9x: install
-
 
 ############################################################################
 # Language target

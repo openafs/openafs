@@ -69,8 +69,6 @@ $(LANGNAME)\event.h $(LANGNAME)\event.rc: $(LANGNAME)\event.mc
 ############################################################################
 install: $(INCFILES) $(DLLFILE)
 
-install9x: install
-
 clean::
 	$(DEL) $(INCFILES) $(DLLFILE)
 	$(DEL) $(LANGNAME)\afsevent.h

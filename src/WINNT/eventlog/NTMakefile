@@ -25,8 +25,6 @@ $(LIBFILE): $(LIBOBJS)
 
 install: $(LIBFILE) lang
 
-install9x: install
-
 lang:: en_US ja_JP ko_KR zh_TW zh_CN pt_BR es_ES de_DE
 
 en_US:

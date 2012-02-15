@@ -57,8 +57,6 @@ $(OUT)\crypt_conn.obj: crypt_conn.c fcrypt.h private_data.h
 
 install: $(INCFILES) $(LIBFILE)
 
-install9x: install
-
 clean::
 	$(DEL) rxkad.h rxkad_errs.c $(INCFILES) $(INCFILEDIR)\fcrypt.h
 	$(DEL) $(LIBFILE)

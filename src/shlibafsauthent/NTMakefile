@@ -228,7 +228,5 @@ afsauthent.res: afsauthent.rc AFS_component_version_number.h
 
 install: $(LIBFILE)
 
-install9x: install
-
 clean ::
 	$(DEL) $(LIBFILE)
