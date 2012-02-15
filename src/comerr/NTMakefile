@@ -74,8 +74,6 @@ $(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXERES) $(COMPILE_ET_E
 ####################################################################
 install: prep $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE) 
 
-install9x: install
-
 clean::
 	$(DEL) $(COMERR_LIBFILE) $(OUT)\AFS_component_version_number.obj
 	$(DEL) $(COMPILE_ET_EXEFILE)

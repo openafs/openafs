@@ -96,8 +96,6 @@ install_headers: $(INCFILES)
 
 install: install_headers $(LIBOBJS) $(LIBFILE) $(MT_LIBFILE)
 
-install9x: install
-
 clean::
 	$(DEL) $(LIBFILE)
 

@@ -81,8 +81,6 @@ install_headers:  $(INCFILES)
 
 install: install_headers $(LIBFILE)
 
-install9x: install_headers $(LIBFILE)
-
 clean::
 	$(DEL) $(LIBFILE) $(INCFILES)
 

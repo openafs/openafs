@@ -39,8 +39,6 @@ cmd_errors.c cmd.h: cmd_errors.et cmd.p.h
 
 install: cmd.h $(LIBFILE) $(INCFILES)
 
-install9x: install
-
 clean::
 	$(DEL) cmd_errors.c cmd.h $(INCFILES)
 	$(DEL) $(LIBFILE)

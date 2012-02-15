@@ -109,8 +109,5 @@ $(OUT)\afsrpc.res: AFS_component_version_number.h
 
 install: $(LIBFILE)
 
-install9x: install
-
-
 clean::
 	$(DEL) $(DESTDIR)\lib\afsrpc.dll $(DESTDIR)\lib\afsrpc.lib $(DESTDIR)\lib\afsrpc.exp

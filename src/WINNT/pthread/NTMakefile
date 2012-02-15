@@ -37,8 +37,6 @@ $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
 
 install: $(PTHR_DLLFILE) $(LIBINCLUDES)
 
-install9x: install
-
 clean::
 
 mkdir:

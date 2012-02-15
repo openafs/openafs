@@ -80,8 +80,6 @@ $(OUT)\afskill.res: AFS_component_version_number.h
 
 install_headers: $(INCFILES)
 
-install9x: install_headers
-
 install: install_headers $(DLLFILE) $(CL_KILL_EXEFILE)
 
 clean::

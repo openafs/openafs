@@ -103,8 +103,6 @@ $(MT_LIBFILE): $(MT_LIBOBJS)
 
 install: $(LIBFILE) $(INCFILES) $(MT_LIBFILE)
 
-install9x: install
-
 clean::
 	$(DEL) *.cs.c *.ss.c *.xdr.c afsint.h afscbint.h
 	$(DEL) $(LIBFILE) $(MT_LIBFILE)
