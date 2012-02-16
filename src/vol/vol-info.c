@@ -2177,6 +2177,7 @@ HandleVnodes(Volume * vp, VnodeClass class)
 	    continue;
 	}
 
+	memset(&vnodeDetails, 0, sizeof(struct VnodeDetails));
 	vnodeDetails.vp = vp;
 	vnodeDetails.class = class;
 	vnodeDetails.vnode = vnode;
