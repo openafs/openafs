@@ -29,8 +29,8 @@ specified group, use the B<pts membership> command.
 =head1 CAUTIONS
 
 After being added as a group member, a currently authenticated user must
-reauthenticate (for example, by issuing the B<klog> command) to obtain
-permissions granted to the group on an access control list (ACL).
+reauthenticate (for example, by issuing the B<aklog> or B<klog.krb5> commands)
+to obtain permissions granted to the group on an access control list (ACL).
 
 =head1 OPTIONS
 
