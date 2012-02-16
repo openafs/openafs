@@ -2058,6 +2058,17 @@ h_GetHost_r(struct rx_connection *tcon)
 		if (oldHost) {
 		    int probefail = 0;
 
+		    /* This is a new address for an existing host. Update
+		     * the list of interfaces for the existing host and
+		     * delete the host structure we just allocated. */
+
+		    /* mark the duplicate host as deleted before we do
+		     * anything. The probing code below may try to change
+		     * "oldHost" to the same IP address as "host" currently
+		     * has, and we do not want a pseudo-"collision" to be
+		     * noticed. */
+		    host->hostFlags |= HOSTDELETED;
+
 		    oldHost->hostFlags |= HWHO_INPROGRESS;
 
                     if (oldHost->interface) {
@@ -2090,13 +2101,6 @@ h_GetHost_r(struct rx_connection *tcon)
                     } else {
                         probefail = 1;
                     }
-
-		    /* This is a new address for an existing host. Update
-		     * the list of interfaces for the existing host and
-		     * delete the host structure we just allocated. */
-
-                    /* prevent warnings while manipulating interface lists */
-		    host->hostFlags |= HOSTDELETED;
 
 		    if (oldHost->host != haddr || oldHost->port != hport) {
 			struct rx_connection *rxconn;
