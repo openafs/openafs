@@ -2095,8 +2095,17 @@ h_GetHost_r(struct rx_connection *tcon)
 					 oldHost,
                                          afs_inet_ntoa_r(oldHost->host, hoststr),
 					 ntohs(oldHost->port),code2));
-			    MultiProbeAlternateAddress_r(oldHost);
-                            probefail = 1;
+
+			    if (MultiProbeAlternateAddress_r(oldHost)) {
+				/* If MultiProbeAlternateAddress_r succeeded,
+				 * it updated oldHost->host and oldHost->port
+				 * to an address that responded successfully to
+				 * a ProbeUuid, so it is as if the ProbeUuid
+				 * call above returned success. So, only set
+				 * 'probefail' if MultiProbeAlternateAddress_r
+				 * fails. */
+				probefail = 1;
+			    }
                         }
                     } else {
                         probefail = 1;
