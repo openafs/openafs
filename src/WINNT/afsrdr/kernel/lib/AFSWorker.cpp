@@ -982,6 +982,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     AFSDirectoryCB *pCurrentDirEntry = NULL, *pNextDirEntry = NULL;
     BOOLEAN bReleaseVolumeLock = FALSE;
     AFSVolumeCB *pVolumeCB = NULL, *pNextVolume = NULL;
+    AFSFcb *pFcb = NULL;
+    LONG lFileType;
     LARGE_INTEGER liCurrentTime;
     BOOLEAN bVolumeObject = FALSE;
     LONG lCount;
@@ -1189,18 +1191,6 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 if( pCurrentObject->Fcb != NULL)
                                 {
 
-                                    //
-                                    // Acquire and drop the Fcb resource to synchronize
-                                    // with a potentially active AFSCleanup() which sets
-                                    // the OpenReferenceCount to zero while holding the
-                                    // resource.
-                                    //
-
-                                    AFSAcquireExcl( &pCurrentObject->Fcb->NPFcb->Resource,
-                                                    TRUE);
-
-                                    AFSReleaseResource( &pCurrentObject->Fcb->NPFcb->Resource);
-
                                     AFSRemoveFcb( &pCurrentObject->Fcb);
                                 }
 
@@ -1224,7 +1214,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSPrimaryWorker Deleting deleted object %08lX\n",
+                                              "AFSPrimaryVolumeWorkerThread Deleting deleted object %08lX\n",
                                               pCurrentObject);
 
                                 AFSDeleteObjectInfo( pCurrentObject);
@@ -1377,9 +1367,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     pCurrentChildObject = pCurrentDirEntry->ObjectInformation;
 
+                                    pFcb = NULL;
+
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
-                                                  "AFSPrimaryWorker Deleting DE %wZ Object %08lX\n",
+                                                  "AFSPrimaryVolumeWorkerThread Deleting DE %wZ Object %08lX\n",
                                                   &pCurrentDirEntry->NameInformation.FileName,
                                                   pCurrentChildObject);
 
@@ -1392,26 +1384,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                         if( pCurrentChildObject->Fcb != NULL)
                                         {
 
-                                            if( pCurrentChildObject->FileType == AFS_FILE_TYPE_FILE)
-                                            {
+                                            pFcb = (AFSFcb *) InterlockedCompareExchangePointer( (PVOID *)&pCurrentChildObject->Fcb, NULL, (PVOID)pCurrentChildObject->Fcb);
 
-                                                AFSCleanupFcb( pCurrentChildObject->Fcb,
-                                                               TRUE);
-                                            }
-
-                                            //
-                                            // Acquire and drop the Fcb resource to synchronize
-                                            // with a potentially active AFSCleanup() which sets
-                                            // the OpenReferenceCount to zero while holding the
-                                            // resource.
-                                            //
-
-                                            AFSAcquireExcl( &pCurrentChildObject->Fcb->NPFcb->Resource,
-                                                            TRUE);
-
-                                            AFSReleaseResource( &pCurrentChildObject->Fcb->NPFcb->Resource);
-
-                                            AFSRemoveFcb( &pCurrentChildObject->Fcb);
+                                            lFileType = pCurrentChildObject->FileType;
                                         }
 
                                         if( pCurrentChildObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
@@ -1435,13 +1410,36 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                       AFS_TRACE_LEVEL_VERBOSE,
-                                                      "AFSPrimaryWorker Deleting object %08lX\n",
+                                                      "AFSPrimaryVolumeWorkerThread Deleting object %08lX\n",
                                                       pCurrentChildObject);
 
                                         AFSDeleteObjectInfo( pCurrentChildObject);
                                     }
 
                                     pCurrentDirEntry = pNextDirEntry;
+
+                                    if ( pFcb != NULL)
+                                    {
+
+                                        if( lFileType == AFS_FILE_TYPE_FILE)
+                                        {
+                                            //
+                                            // We must not hold pVolumeCB->ObjectInfoTree.TreeLock exclusive
+                                            // across an AFSCleanupFcb call since it can deadlock with an
+                                            // invalidation call from the service.
+                                            //
+
+                                            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+                                            AFSCleanupFcb( pFcb,
+                                                           TRUE);
+
+                                            AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                                                            TRUE);
+                                        }
+
+                                        AFSRemoveFcb( &pFcb);
+                                    }
                                 }
 
                                 pCurrentObject->Specific.Directory.DirectoryNodeListHead = NULL;
@@ -1458,7 +1456,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIR_NODE_COUNT,
                                               AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSPrimaryWorker Reset count to 0 on parent FID %08lX-%08lX-%08lX-%08lX\n",
+                                              "AFSPrimaryVolumeWorkerThread Reset count to 0 on parent FID %08lX-%08lX-%08lX-%08lX\n",
                                               pCurrentObject->FileId.Cell,
                                               pCurrentObject->FileId.Volume,
                                               pCurrentObject->FileId.Vnode,
@@ -1531,32 +1529,22 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                               pCurrentObject->Fcb->OpenReferenceCount == 0))
                         {
 
+                            pFcb = (AFSFcb *) InterlockedCompareExchangePointer( (PVOID *)&pCurrentObject->Fcb, NULL, (PVOID)pCurrentObject->Fcb);
+
+                            if( pFcb != NULL)
+                            {
+
+                                AFSCleanupFcb( pFcb,
+                                               TRUE);
+
+                                AFSRemoveFcb( &pFcb);
+                            }
+
                             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
                             if( AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
                                                 FALSE))
                             {
-
-                                if( pCurrentObject->Fcb != NULL)
-                                {
-
-                                    AFSCleanupFcb( pCurrentObject->Fcb,
-                                                   TRUE);
-
-                                    //
-                                    // Acquire and drop the Fcb resource to synchronize
-                                    // with a potentially active AFSCleanup() which sets
-                                    // the OpenReferenceCount to zero while holding the
-                                    // resource.
-                                    //
-
-                                    AFSAcquireExcl( &pCurrentObject->Fcb->NPFcb->Resource,
-                                                    TRUE);
-
-                                    AFSReleaseResource( &pCurrentObject->Fcb->NPFcb->Resource);
-
-                                    AFSRemoveFcb( &pCurrentObject->Fcb);
-                                }
 
                                 AFSDeleteObjectInfo( pCurrentObject);
 
@@ -1577,28 +1565,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         else if( pCurrentObject->Fcb != NULL)
                         {
 
-                            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                            if( AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                                FALSE))
-                            {
-
-                                AFSCleanupFcb( pCurrentObject->Fcb,
-                                               FALSE);
-
-                                AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                                pCurrentObject = pNextObject;
-
-                                continue;
-                            }
-                            else
-                            {
-
-                                bReleaseVolumeLock = FALSE;
-
-                                break;
-                            }
+                            AFSCleanupFcb( pCurrentObject->Fcb,
+                                           FALSE);
                         }
                     }
 
