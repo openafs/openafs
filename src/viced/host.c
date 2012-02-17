@@ -804,6 +804,11 @@ h_TossStuff_r(struct host *host)
 {
     struct client **cp, *client;
     int code;
+    int wasdeleted = 0;
+
+    if ((host->hostFlags & HOSTDELETED)) {
+	wasdeleted = 1;
+    }
 
     /* make sure host doesn't go away over h_NBLock_r */
     h_Hold_r(host);
@@ -816,9 +821,13 @@ h_TossStuff_r(struct host *host)
     /* if somebody still has this host locked */
     if (code != 0) {
 	char hoststr[16];
-	ViceLog(0,
-		("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT " (%s:%d) was locked.\n",
-		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+	if (wasdeleted) {
+	    /* someone locked the host while HOSTDELETED was set; that is bad */
+	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT
+	                " (%s:%d flags 0x%x) was locked.\n",
+	                host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+	                (unsigned)host->hostFlags));
+	}
 	return;
     } else {
 	h_Unlock_r(host);
@@ -829,9 +838,13 @@ h_TossStuff_r(struct host *host)
      * reacquire H_LOCK */
     if (host->refCount > 0) {
 	char hoststr[16];
-	ViceLog(0,
-		("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT " (%s:%d) was held.\n",
-		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+	if (wasdeleted) {
+	    /* someone grabbed a ref while HOSTDELETED was set; that is bad */
+	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT
+	                " (%s:%d flags 0x%x) was held.\n",
+	                host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+	                (unsigned)host->hostFlags));
+	}
 	return;
     }
 
