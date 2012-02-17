@@ -217,8 +217,6 @@ typedef struct _AFS_NONPAGED_FCB
         struct
         {
 
-            KEVENT          DirectoryEnumEvent;
-
             LONG            DirectoryEnumCount;
 
         } Directory;

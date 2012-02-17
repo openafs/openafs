@@ -5398,24 +5398,9 @@ AFSSetEnumerationEvent( IN AFSFcb *Fcb)
     {
 
         case AFS_DIRECTORY_FCB:
-        {
-
-            KeSetEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent,
-                        0,
-                        FALSE);
-
-            lCount = InterlockedIncrement( &Fcb->NPFcb->Specific.Directory.DirectoryEnumCount);
-
-            break;
-        }
-
         case AFS_ROOT_FCB:
         case AFS_ROOT_ALL:
         {
-
-            KeSetEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent,
-                        0,
-                        FALSE);
 
             lCount = InterlockedIncrement( &Fcb->NPFcb->Specific.Directory.DirectoryEnumCount);
 
@@ -5440,21 +5425,6 @@ AFSClearEnumerationEvent( IN AFSFcb *Fcb)
     {
 
         case AFS_DIRECTORY_FCB:
-        {
-
-            ASSERT( Fcb->NPFcb->Specific.Directory.DirectoryEnumCount > 0);
-
-            lCount = InterlockedDecrement( &Fcb->NPFcb->Specific.Directory.DirectoryEnumCount);
-
-            if( lCount == 0)
-            {
-
-                KeClearEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent);
-            }
-
-            break;
-        }
-
         case AFS_ROOT_FCB:
         case AFS_ROOT_ALL:
         {
@@ -5462,12 +5432,6 @@ AFSClearEnumerationEvent( IN AFSFcb *Fcb)
             ASSERT( Fcb->NPFcb->Specific.Directory.DirectoryEnumCount > 0);
 
             lCount = InterlockedDecrement( &Fcb->NPFcb->Specific.Directory.DirectoryEnumCount);
-
-            if( lCount == 0)
-            {
-
-                KeClearEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent);
-            }
 
             break;
         }
@@ -5491,30 +5455,15 @@ AFSIsEnumerationInProcess( IN AFSObjectInfoCB *ObjectInfo)
             try_return( bIsInProcess);
         }
 
-        //
-        // Depending on the type of node, set the event
-        //
-
         switch( ObjectInfo->Fcb->Header.NodeTypeCode)
         {
 
             case AFS_DIRECTORY_FCB:
-            {
-
-                if( KeReadStateEvent( &ObjectInfo->Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent))
-                {
-
-                    bIsInProcess = TRUE;
-                }
-
-                break;
-            }
-
             case AFS_ROOT_FCB:
             case AFS_ROOT_ALL:
             {
 
-                if( KeReadStateEvent( &ObjectInfo->Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent))
+                if( ObjectInfo->Fcb->NPFcb->Specific.Directory.DirectoryEnumCount > 0)
                 {
 
                     bIsInProcess = TRUE;
