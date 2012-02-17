@@ -2154,7 +2154,6 @@ h_GetHost_r(struct rx_connection *tcon)
 				}
 			    }
 			}
-			h_AddHostToAddrHashTable_r(haddr, hport, oldHost);
 			oldHost->host = haddr;
 			oldHost->port = hport;
 			rxconn = oldHost->callback_rxcon;
