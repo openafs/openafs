@@ -179,14 +179,6 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
             //
 
             pFcb->Header.NodeTypeCode = AFS_DIRECTORY_FCB;
-
-            //
-            // Initialize enumeration information
-            //
-
-            KeInitializeEvent( &pFcb->NPFcb->Specific.Directory.DirectoryEnumEvent,
-                               NotificationEvent,
-                               FALSE);
         }
         else if( pObjectInfo->FileType == AFS_FILE_TYPE_FILE)
         {
@@ -956,14 +948,6 @@ AFSInitRootFcb( IN ULONGLONG ProcessID,
         pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
 
         pFcb->NPFcb = pNPFcb;
-
-        //
-        // Initialize enumeration information
-        //
-
-        KeInitializeEvent( &pFcb->NPFcb->Specific.Directory.DirectoryEnumEvent,
-                           NotificationEvent,
-                           FALSE);
 
         //
         // Save the root Fcb in the VolumeCB
