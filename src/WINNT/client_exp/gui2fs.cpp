@@ -2168,38 +2168,38 @@ SetUnixModeBits( const CStringArray& files, const CString& user, const CString& 
     inData.options.size = sizeof(inData.options);
     inData.options.field_flags = 0;
     inData.options.literal = 0;            /* always applying to target */
-    blob.in_size = inData.options.size;    /* no variable length data */
+    blob.in_size = sizeof(inData);         /* no variable length data */
     blob.in = &inData;
     blob.out = NULL;
     blob.out_size = 0;
     inData.unixModeBits = 0;
 
-    if (user.Find(_T("r")) != -1)
+    if (user.Find(_T('r')) != -1)
         inData.unixModeBits |= S_IRUSR;
-    if (user.Find(_T("w")) != -1)
+    if (user.Find(_T('w')) != -1)
         inData.unixModeBits |= S_IWUSR;
-    if (user.Find(_T("x")) != -1)
+    if (user.Find(_T('x')) != -1)
         inData.unixModeBits |= S_IXUSR;
 
-    if (group.Find(_T("r")) != -1)
+    if (group.Find(_T('r')) != -1)
         inData.unixModeBits |= S_IRGRP;
-    if (group.Find(_T("w")) != -1)
+    if (group.Find(_T('w')) != -1)
         inData.unixModeBits |= S_IWGRP;
-    if (group.Find(_T("x")) != -1)
+    if (group.Find(_T('x')) != -1)
         inData.unixModeBits |= S_IXGRP;
 
-    if (other.Find(_T("r")) != -1)
+    if (other.Find(_T('r')) != -1)
         inData.unixModeBits |= S_IROTH;
-    if (other.Find(_T("w")) != -1)
+    if (other.Find(_T('w')) != -1)
         inData.unixModeBits |= S_IWOTH;
-    if (other.Find(_T("x")) != -1)
+    if (other.Find(_T('x')) != -1)
         inData.unixModeBits |= S_IXOTH;
 
-    if (suid.Find(_T("s")) != -1)
+    if (suid.Find(_T('s')) != -1)
         inData.unixModeBits |= S_ISUID;
-    if (suid.Find(_T("g")) != -1)
+    if (suid.Find(_T('g')) != -1)
         inData.unixModeBits |= S_ISGID;
-    if (suid.Find(_T("v")) != -1)
+    if (suid.Find(_T('v')) != -1)
         inData.unixModeBits |= S_ISVTX;
 
     for (int i = 0; i < files.GetSize(); i++)

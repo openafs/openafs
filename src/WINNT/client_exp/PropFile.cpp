@@ -207,21 +207,21 @@ BOOL CPropFile::PropPageProc( HWND hwnd, UINT uMessage, WPARAM wParam, LPARAM lP
 
 void CPropFile::ShowUnixMode(const CString& strUserRights, const CString& strGroupRights, const CString& strOtherRights, const CString& strSuidRights)
 {
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_READ, BM_SETCHECK, (strUserRights.Find(_T("r")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_WRITE, BM_SETCHECK, (strUserRights.Find(_T("w")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_EXECUTE, BM_SETCHECK, (strUserRights.Find(_T("x")) == -1) ? UNCHECKED : CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_READ, BM_SETCHECK, (strUserRights.Find(_T("r")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_WRITE, BM_SETCHECK, (strUserRights.Find(_T("w")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_EXECUTE, BM_SETCHECK, (strUserRights.Find(_T("x")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
 
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_READ, BM_SETCHECK, (strGroupRights.Find(_T("r")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_WRITE, BM_SETCHECK, (strGroupRights.Find(_T("w")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_EXECUTE, BM_SETCHECK, (strGroupRights.Find(_T("x")) == -1) ? UNCHECKED : CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_READ, BM_SETCHECK, (strGroupRights.Find(_T("r")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_WRITE, BM_SETCHECK, (strGroupRights.Find(_T("w")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_EXECUTE, BM_SETCHECK, (strGroupRights.Find(_T("x")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
 
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_READ, BM_SETCHECK, (strOtherRights.Find(_T("r")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_WRITE, BM_SETCHECK, (strOtherRights.Find(_T("w")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_EXECUTE, BM_SETCHECK, (strOtherRights.Find(_T("x")) == -1) ? UNCHECKED : CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_READ, BM_SETCHECK, (strOtherRights.Find(_T("r")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_WRITE, BM_SETCHECK, (strOtherRights.Find(_T("w")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_EXECUTE, BM_SETCHECK, (strOtherRights.Find(_T("x")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
 
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_UID, BM_SETCHECK, (strSuidRights.Find(_T("s")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_GID, BM_SETCHECK, (strSuidRights.Find(_T("g")) == -1) ? UNCHECKED : CHECKED, 0);
-    SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_VTX, BM_SETCHECK, (strSuidRights.Find(_T("v")) == -1) ? UNCHECKED : CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_UID, BM_SETCHECK, (strSuidRights.Find(_T("s")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_GID, BM_SETCHECK, (strSuidRights.Find(_T("g")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
+    SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_VTX, BM_SETCHECK, (strSuidRights.Find(_T("v")) == -1) ? BST_UNCHECKED : BST_CHECKED, 0);
 }
 
 void CPropFile::EnableUnixMode(BOOL bEnable)
@@ -250,31 +250,31 @@ void CPropFile::MakeUnixModeString(CString& userRights, CString& groupRights, CS
     otherRights.Empty();
     suidRights.Empty();
 
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_READ, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_READ, BM_GETCHECK, 0,0) == BST_CHECKED)
         userRights += _T("r");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_WRITE, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_WRITE, BM_GETCHECK, 0,0) == BST_CHECKED)
         userRights += _T("w");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_EXECUTE, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_USER_EXECUTE, BM_GETCHECK, 0,0) == BST_CHECKED)
         userRights += _T("x");
 
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_READ, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_READ, BM_GETCHECK, 0,0) == BST_CHECKED)
         groupRights += _T("r");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_WRITE, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_WRITE, BM_GETCHECK, 0,0) == BST_CHECKED)
         groupRights += _T("w");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_EXECUTE, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_GROUP_EXECUTE, BM_GETCHECK, 0,0) == BST_CHECKED)
         groupRights += _T("x");
 
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_READ, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_READ, BM_GETCHECK, 0,0) == BST_CHECKED)
         otherRights += _T("r");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_WRITE, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_WRITE, BM_GETCHECK, 0,0) == BST_CHECKED)
         otherRights += _T("w");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_EXECUTE, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_OTHER_EXECUTE, BM_GETCHECK, 0,0) == BST_CHECKED)
         otherRights += _T("x");
 
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_UID, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_UID, BM_GETCHECK, 0,0) == BST_CHECKED)
         suidRights += _T("s");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_GID, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_GID, BM_GETCHECK, 0,0) == BST_CHECKED)
         suidRights += _T("g");
-    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_VTX, BM_GETCHECK, 0,0) == CHECKED)
+    if (SendDlgItemMessage(m_hwnd, IDC_ATTR_SUID_VTX, BM_GETCHECK, 0,0) == BST_CHECKED)
         suidRights += _T("v");
 }
