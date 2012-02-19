@@ -854,6 +854,8 @@ extern int smb_unixModeDefaultFile;
 extern int smb_unixModeDefaultDir;
 extern void smb_SetInitialModeBitsForFile(int smb_attr, cm_attr_t * attr);
 extern void smb_SetInitialModeBitsForDir(int smb_attr, cm_attr_t * attr);
+extern void smb_configureBackConnectionHostNames(int bEnable);
+extern void smb_configureExtendedSMBSessionTimeouts(int bEnable);
 
 cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, clientchar_t *usern);
 

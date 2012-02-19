@@ -860,6 +860,17 @@ afsd_InitCM(char **reasonP)
     smb_LogoffTransferTimeout = ltto;
     afsi_log("Logoff token transfer timeout %d seconds", ltto);
 
+    dummyLen = sizeof(cm_NetbiosName);
+    code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
+                            (LPBYTE) cm_NetbiosName, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("NetbiosName %s", cm_NetbiosName);
+    else {
+        cm_FsStrCpy(cm_NetbiosName, lengthof(cm_NetbiosName), "AFS");
+        afsi_log("Default NetbiosName AFS");
+    }
+    cm_Utf8ToClientString(cm_NetbiosName, -1, cm_NetbiosNameC, MAX_NB_NAME_LENGTH);
+
     dummyLen = sizeof(cm_rootVolumeName);
     code = RegQueryValueEx(parmKey, "RootVolume", NULL, NULL,
                             (LPBYTE) cm_rootVolumeName, &dummyLen);
@@ -1585,6 +1596,12 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
         smb_Init(afsd_logp, smb_UseV3, numSvThreads, aMBfunc);
         afsi_log("smb_Init complete");
     } else {
+        smb_configureBackConnectionHostNames(FALSE);
+
+        if (msftSMBRedirectorSupportsExtendedTimeouts()) {
+            afsi_log("Microsoft SMB Redirector supports Extended Timeouts");
+            smb_configureExtendedSMBSessionTimeouts(FALSE);
+        }
         afsi_log("smb_Init skipped");
     }
 
