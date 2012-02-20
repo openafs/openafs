@@ -1453,36 +1453,68 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
     }
 }
 
+/**
+ * Get the current localcell name.
+ *
+ * Internal function to get a pointer to the local cell name.
+ * This function must be called with the global afsconf lock held.
+ *
+ * @param[in]  adir    afsconf object
+ * @param[out] aname   address to a char pointer
+ * @param[in]  check   always perform a config check, even if the
+ *                     the AFSCELL name is set.
+ *
+ * @return status
+ *    @retval 0 success
+ *    @retval AFSCONF_UNKNOWN failed to get cellname
+ *
+ * @internal
+ */
 int
-afsconf_GetLocalCell(struct afsconf_dir *adir, char *aname,
-		     afs_int32 alen)
+_afsconf_GetLocalCell(struct afsconf_dir *adir, char **pname, int check)
 {
     static int afsconf_showcell = 0;
     char *afscell_path;
     afs_int32 code = 0;
 
-    LOCK_GLOBAL_MUTEX;
     /*
      * If a cell switch was specified in a command, then it should override the
      * AFSCELL variable.  If a cell was specified, then the afsconf_SawCell flag
      * is set and the cell name in the adir structure is used.
      * Read the AFSCELL var each time: in case it changes (unsetenv AFSCELL).
+     * Optionally, check the configuration, even if using the environment variable.
      */
     if (!afsconf_SawCell && (afscell_path = getenv("AFSCELL"))) {
+	if (check) {
+	    _afsconf_Check(adir);
+	}
 	if (!afsconf_showcell) {
 	    fprintf(stderr, "Note: Operation is performed on cell %s\n",
 		    afscell_path);
 	    afsconf_showcell = 1;
 	}
-	strncpy(aname, afscell_path, alen);
+	*pname = afscell_path;
     } else {
 	_afsconf_Check(adir);
 	if (adir->cellName) {
-	    strncpy(aname, adir->cellName, alen);
+	    *pname = adir->cellName;
 	} else
 	    code = AFSCONF_UNKNOWN;
     }
+    return code;
+}
 
+int
+afsconf_GetLocalCell(struct afsconf_dir *adir, char *aname, afs_int32 alen)
+{
+    afs_int32 code = 0;
+    char *cellname = NULL;
+
+    LOCK_GLOBAL_MUTEX;
+    code = _afsconf_GetLocalCell(adir, &cellname, 0);
+    if (!code && cellname) {
+	strlcpy(aname, cellname, alen);
+    }
     UNLOCK_GLOBAL_MUTEX;
     return (code);
 }
