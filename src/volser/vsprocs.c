@@ -5207,7 +5207,6 @@ UV_ZapVolumeClones(afs_uint32 aserver, afs_int32 apart,
     int curPos;
     afs_int32 code = 0;
     afs_int32 success = 1;
-    afs_int32 tid;
 
     aconn = (struct rx_connection *)0;
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
@@ -5231,7 +5230,6 @@ UV_ZapVolumeClones(afs_uint32 aserver, afs_int32 apart,
 		VPRINT2("Clone of %s %u deleted\n", curPtr->volName,
 			curPtr->volCloneId);
 	    curPos++;
-	    tid = 0;
 	}
     }
     if (aconn)
