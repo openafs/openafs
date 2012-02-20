@@ -4527,13 +4527,19 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
 
     osi_Log2(afsd_logp, "CALL SetLock scp 0x%p for lock %d", scp, lockType);
 
-	if ((lockType != LOCKING_ANDX_SHARED_LOCK && scp->fsLockCount != 0) ||
-		(lockType == LOCKING_ANDX_SHARED_LOCK && scp->fsLockCount < 0))
-	{
-		code = CM_ERROR_LOCK_NOT_GRANTED;
+#if 0
+    /*
+     * The file server prior to 1.6.2 does not report an accurate value
+     * and callbacks are not issued if the lock is dropped due to expiration.
+     */
+    if ((lockType != LOCKING_ANDX_SHARED_LOCK && scp->fsLockCount != 0) ||
+         (lockType == LOCKING_ANDX_SHARED_LOCK && scp->fsLockCount < 0))
+    {
+        code = CM_ERROR_LOCK_NOT_GRANTED;
         osi_Log2(afsd_logp, "CALL SetLock FAILURE, fsLockCount %d code 0x%x", scp->fsLockCount, code);
-		return code;
-	}
+        return code;
+    }
+#endif
 
     memset(&volSync, 0, sizeof(volSync));
 
