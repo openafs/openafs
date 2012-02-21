@@ -4249,7 +4249,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
                char *message, int deleteMe, int check)
 {
     if (readOnly(isp) || deleteMe) {
-	if (isp->volSummary && isp->volSummary->fileName) {
+	if (isp->volSummary && !isp->volSummary->deleted) {
 	    if (deleteMe) {
 		if (!Showmode)
 		    Log("Volume %u (is only a partial volume--probably an attempt was made to move/restore it when a machine crash occured.\n", isp->volumeId);
