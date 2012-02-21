@@ -8579,7 +8579,14 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                     AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Resource,
                                     TRUE);
 
-                    AFSLockForExtentsTrim( ObjectInfo->Fcb);
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSPerformObjectInvalidate Acquiring Fcb extents lock %08lX EXCL %08lX\n",
+                                  &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+                                  PsGetCurrentThread());
+
+                    AFSAcquireShared( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+                                      TRUE);
 
                     __try
                     {

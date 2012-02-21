@@ -61,7 +61,7 @@ AFSLockForExtentsTrim( IN AFSFcb *Fcb)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSLockForExtentsTrim Acuiring Fcb extents lock %08lX EXCL %08lX\n",
+                  "AFSLockForExtentsTrim Acquiring Fcb extents lock %08lX EXCL %08lX\n",
                   &pNPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
 
@@ -80,7 +80,7 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSLockForExtentsTrimNoWait Attempting to acquiring Fcb extent lock %08lX EXCL %08lX\n",
+                  "AFSLockForExtentsTrimNoWait Attempting to acquire Fcb extent lock %08lX EXCL %08lX\n",
                   &pNPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
 
