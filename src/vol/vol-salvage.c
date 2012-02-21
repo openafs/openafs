@@ -2340,7 +2340,6 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		isp->volumeId, (Testing ? "it would have been " : ""),
 		path);
 	isp->volSummary = calloc(1, sizeof(struct VolumeSummary));
-	isp->volSummary->fileName = ToString(headerName);
 
 	writefunc = VCreateVolumeDiskHeader;
     } else {
@@ -2359,7 +2358,6 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    } else {
 		snprintf(headerName, sizeof headerName, VFORMAT,
 		         afs_printable_uint32_lu(isp->volumeId));
-		isp->volSummary->fileName = ToString(headerName);
 	    }
 	    snprintf(path, sizeof path, "%s" OS_DIRSEP "%s",
 		     salvinfo->fileSysPath, headerName);
