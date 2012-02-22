@@ -962,7 +962,7 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
     }
     AFS_GUNLOCK();
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
