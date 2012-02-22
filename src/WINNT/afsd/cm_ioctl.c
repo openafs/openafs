@@ -2106,10 +2106,16 @@ cm_IoctlCreateMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
         code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, reqp, NULL);
     }
 
-    if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-        smb_NotifyChange(FILE_ACTION_ADDED,
-                         FILE_NOTIFY_CHANGE_DIR_NAME,
-                         dscp, leaf, NULL, TRUE);
+    if (code == 0) {
+        if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange(FILE_ACTION_ADDED,
+                             FILE_NOTIFY_CHANGE_DIR_NAME,
+                             dscp, leaf, NULL, TRUE);
+
+        if (RDR_Initialized)
+            RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode, dscp->fid.unique,
+                                 dscp->fid.hash, dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
+    }
 
   done:
     if (volp)
@@ -2175,11 +2181,18 @@ cm_IoctlSymlink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *dsc
         code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, reqp, NULL);
     }
 
-    if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-        smb_NotifyChange(FILE_ACTION_ADDED,
-                          FILE_NOTIFY_CHANGE_FILE_NAME
-                          | FILE_NOTIFY_CHANGE_DIR_NAME,
-                          dscp, leaf, NULL, TRUE);
+    if (code == 0) {
+        if (dscp->flags & CM_SCACHEFLAG_ANYWATCH)
+            smb_NotifyChange(FILE_ACTION_ADDED,
+                             FILE_NOTIFY_CHANGE_FILE_NAME
+                             | FILE_NOTIFY_CHANGE_DIR_NAME,
+                             dscp, leaf, NULL, TRUE);
+
+        if (RDR_Initialized)
+            RDR_InvalidateObject(dscp->fid.cell, dscp->fid.volume, dscp->fid.vnode, dscp->fid.unique,
+                                 dscp->fid.hash, dscp->fileType, AFS_INVALIDATE_DATA_VERSION);
+    }
+
     return code;
 }
 
