@@ -919,7 +919,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	     * If there is one here that is not in the inode volume list,
 	     * delete it now. */
 	    for (; vsp < esp && (vsp->header.parent < rwvid); vsp++) {
-		if (vsp->fileName)
+		if (vsp->unused)
 		    DeleteExtraVolumeHeaderFile(salvinfo, vsp);
 	    }
 	    /* Now match up the volume summary info from the root directory with the
@@ -928,7 +928,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	    for (tsp = vsp; tsp < esp && (tsp->header.parent == rwvid); tsp++) {
 		if (tsp->header.id == vid) {
 		    salvinfo->inodeSummary[j].volSummary = tsp;
-		    tsp->fileName = 0;
+		    tsp->unused = 0;
 		    break;
 		}
 	    }
@@ -941,7 +941,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
     /* Delete any additional volumes that were listed in the partition but which didn't have any corresponding inodes */
     for (; vsp < esp; vsp++) {
-	if (vsp->fileName)
+	if (vsp->unused)
 	    DeleteExtraVolumeHeaderFile(salvinfo, vsp);
     }
 
@@ -1000,7 +1000,14 @@ void
 DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp)
 {
     char path[64];
-    sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, vsp->fileName);
+    char filename[VMAXPATHLEN];
+
+    if (vsp->deleted) {
+	return;
+    }
+
+    VolumeExternalName_r(vsp->header.id, filename, sizeof(filename));
+    sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, filename);
 
     if (!Showmode)
 	Log("The volume header file %s is not associated with any actual data (%sdeleted)\n", path, (Testing ? "would have been " : ""));
@@ -1013,7 +1020,7 @@ DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp
 	        afs_printable_uint32_lu(vsp->header.id));
 	}
 
-	/* make sure we actually delete the fileName file; ENOENT
+	/* make sure we actually delete the header file; ENOENT
 	 * is fine, since VDestroyVolumeDiskHeader probably already
 	 * unlinked it */
 	if (unlink(path) && errno != ENOENT) {
@@ -1024,7 +1031,6 @@ DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp
 	}
 	vsp->deleted = 1;
     }
-    vsp->fileName = 0;
 }
 
 int
@@ -1258,7 +1264,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FILE *inodeFile, VolumeId singleVolum
 		GetVolumeSummary(salvinfo, singleVolumeNumber);
 
 		for (i = 0, vsp = salvinfo->volumeSummaryp; i < salvinfo->nVolumes; i++) {
-		    if (vsp->fileName) {
+		    if (vsp->unused) {
 			if (vsp->header.id == singleVolumeNumber) {
 			    foundSVN = 1;
 			}
@@ -1507,7 +1513,7 @@ AskVolumeSummary(struct SalvInfo *salvinfo, VolumeId singleVolumeNumber)
 
 		DiskToVolumeHeader(&vsp->header, &diskHdr);
 		VolumeExternalName_r(q_res.children[i], name, sizeof(name));
-		vsp->fileName = ToString(name);
+		vsp->unused = 1;
 		salvinfo->nVolumes++;
 		vsp++;
 	    }
@@ -1678,7 +1684,7 @@ RecordHeader(struct DiskPartition64 *dp, const char *name,
 	    return 1;
 	}
 
-	summary.fileName = ToString(base);
+	summary.unused = 1;
 	params->nVolumes++;
 
 	if (params->nVolumes > params->totalVolumes) {
@@ -2392,12 +2398,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	if (memcmp
 	    (&isp->volSummary->header, &tempHeader,
 	     sizeof(struct VolumeHeader))) {
-	    /* We often remove the name before calling us, so we make a fake one up */
-	    if (isp->volSummary->fileName) {
-		strcpy(headerName, isp->volSummary->fileName);
-	    } else {
-		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
-	    }
+	    VolumeExternalName_r(isp->volumeId, headerName, sizeof(headerName));
 	    (void)afs_snprintf(path, sizeof path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, headerName);
 
 	    Log("Header file %s is damaged or no longer valid%s\n", path,
@@ -4298,7 +4299,9 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    if (!Testing) {
 		afs_int32 code;
 		char path[64];
-		sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, isp->volSummary->fileName);
+		char filename[VMAXPATHLEN];
+		VolumeExternalName_r(isp->volumeId, filename, sizeof(filename));
+		sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, filename);
 
 		code = VDestroyVolumeDiskHeader(salvinfo->fileSysPartition, isp->volumeId, isp->RWvolumeId);
 		if (code) {
@@ -4307,7 +4310,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 		        afs_printable_uint32_lu(isp->volumeId));
 		}
 
-		/* make sure we actually delete the fileName file; ENOENT
+		/* make sure we actually delete the header file; ENOENT
 		 * is fine, since VDestroyVolumeDiskHeader probably already
 		 * unlinked it */
 		if (unlink(path) && errno != ENOENT) {

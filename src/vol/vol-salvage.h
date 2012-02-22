@@ -52,8 +52,6 @@ struct VolumeSummary {		/* Volume summary an entry for each
 				 * volume in a volume directory.
 				 * Assumption: one volume directory per
 				 * partition */
-    char *fileName;		/* File name on the partition for the volume
-				 * header */
     struct VolumeHeader header;
     /* volume number, rw volume number, inode
      * numbers of each major component of
@@ -63,6 +61,8 @@ struct VolumeSummary {		/* Volume summary an entry for each
     byte wouldNeedCallback;	/* set if the file server should issue
 				 * call backs for all the files in this volume when
 				 * the volume goes back on line */
+    byte unused;                /* is this volume 'extra'? i.e. not referenced
+                                 * by anything? */
 };
 
 struct VnodeInfo {
