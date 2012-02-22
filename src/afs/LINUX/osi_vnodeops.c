@@ -885,7 +885,7 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
     }
     AFS_GUNLOCK();
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 static int
