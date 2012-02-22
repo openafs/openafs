@@ -319,9 +319,12 @@ afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
 	} else {
 	    ReleaseReadLock(&afs_xvcache);
 	}
+	if (!avp)
+	    afs_PutVolume(tvp, READ_LOCK);
     }
-    if (!avp)
-	afs_PutVolume(tvp, READ_LOCK);
+
+    if (AFS_STATS_FS_RPCIDXES_WRITE_RETRIABLE(op))
+	return 1;
 
     /* not retriable: we may have raced ourselves */
     return 0;
