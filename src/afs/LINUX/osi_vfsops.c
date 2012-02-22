@@ -39,7 +39,6 @@ extern struct afs_q VLRU;
 extern struct dentry_operations afs_dentry_operations;
 
 /* Forward declarations */
-static void iattr2vattr(struct vattr *vattrp, struct iattr *iattrp);
 static int afs_root(struct super_block *afsp);
 int afs_fill_super(struct super_block *sb, void *data, int silent);
 
@@ -206,33 +205,6 @@ afs_root(struct super_block *afsp)
 }
 
 /* super_operations */
-
-/* afs_notify_change
- * Linux version of setattr call. What to change is in the iattr struct.
- * We need to set bits in both the Linux inode as well as the vcache.
- */
-int
-afs_notify_change(struct dentry *dp, struct iattr *iattrp)
-{
-    struct vattr vattr;
-    cred_t *credp = crref();
-    struct inode *ip = dp->d_inode;
-    int code;
-
-    VATTR_NULL(&vattr);
-    iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
-
-    AFS_GLOCK();
-    code = afs_setattr(VTOAFS(ip), &vattr, credp);
-    if (!code) {
-	afs_getattr(VTOAFS(ip), &vattr, credp);
-	vattr2inode(ip, &vattr);
-    }
-    AFS_GUNLOCK();
-    crfree(credp);
-    return -code;
-}
-
 
 #if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
 static afs_kmem_cache_t *afs_inode_cachep;
@@ -405,70 +377,3 @@ struct super_operations afs_sops = {
   .put_super =		afs_put_super,
   .statfs =		afs_statfs,
 };
-
-/************** Support routines ************************/
-
-/* vattr_setattr
- * Set iattr data into vattr. Assume vattr cleared before call.
- */
-static void
-iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
-{
-    vattrp->va_mask = iattrp->ia_valid;
-    if (iattrp->ia_valid & ATTR_MODE)
-	vattrp->va_mode = iattrp->ia_mode;
-    if (iattrp->ia_valid & ATTR_UID)
-	vattrp->va_uid = iattrp->ia_uid;
-    if (iattrp->ia_valid & ATTR_GID)
-	vattrp->va_gid = iattrp->ia_gid;
-    if (iattrp->ia_valid & ATTR_SIZE)
-	vattrp->va_size = iattrp->ia_size;
-    if (iattrp->ia_valid & ATTR_ATIME) {
-	vattrp->va_atime.tv_sec = iattrp->ia_atime.tv_sec;
-	vattrp->va_atime.tv_usec = 0;
-    }
-    if (iattrp->ia_valid & ATTR_MTIME) {
-	vattrp->va_mtime.tv_sec = iattrp->ia_mtime.tv_sec;
-	vattrp->va_mtime.tv_usec = 0;
-    }
-    if (iattrp->ia_valid & ATTR_CTIME) {
-	vattrp->va_ctime.tv_sec = iattrp->ia_ctime.tv_sec;
-	vattrp->va_ctime.tv_usec = 0;
-    }
-}
-
-/* vattr2inode
- * Rewrite the inode cache from the attr. Assumes all vattr fields are valid.
- */
-void
-vattr2inode(struct inode *ip, struct vattr *vp)
-{
-    ip->i_ino = vp->va_nodeid;
-#ifdef HAVE_LINUX_SET_NLINK
-    set_nlink(ip, vp->va_nlink);
-#else
-    ip->i_nlink = vp->va_nlink;
-#endif
-    ip->i_blocks = vp->va_blocks;
-#ifdef STRUCT_INODE_HAS_I_BLKBITS
-    ip->i_blkbits = AFS_BLKBITS;
-#endif
-#ifdef STRUCT_INODE_HAS_I_BLKSIZE
-    ip->i_blksize = vp->va_blocksize;
-#endif
-    ip->i_rdev = vp->va_rdev;
-    ip->i_mode = vp->va_mode;
-    ip->i_uid = vp->va_uid;
-    ip->i_gid = vp->va_gid;
-    i_size_write(ip, vp->va_size);
-    ip->i_atime.tv_sec = vp->va_atime.tv_sec;
-    ip->i_atime.tv_nsec = 0;
-    ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
-    /* Set the mtime nanoseconds to the sysname generation number.
-     * This convinces NFS clients that all directories have changed
-     * any time the sysname list changes.
-     */
-    ip->i_mtime.tv_nsec = afs_sysnamegen;
-    ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
-    ip->i_ctime.tv_nsec = 0;
-}
