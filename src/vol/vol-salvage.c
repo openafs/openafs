@@ -4618,17 +4618,6 @@ PrintInodeSummary(struct SalvInfo *salvinfo)
     }
 }
 
-void
-PrintVolumeSummary(struct SalvInfo *salvinfo)
-{
-    int i;
-    struct VolumeSummary *vsp;
-
-    for (i = 0, vsp = salvinfo->volumeSummaryp; i < salvinfo->nVolumes; vsp++, i++) {
-	Log("fileName:%s, header, wouldNeedCallback\n", vsp->fileName);
-    }
-}
-
 int
 Fork(void)
 {
