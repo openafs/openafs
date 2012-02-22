@@ -1,3 +1,45 @@
+Since 1.7.0600 (1.7.7)
+
+ * Permit file renames that are no-ops to succeed even if they
+   do nothing.
+
+ * Use InterlockedComparePointerExchange to prevent a race
+   when AFSRemoveFcb() is called to deallocate an AFSFcb
+   structure.
+
+ * Avoid repeated calls to GetComputerNameW() which is somewhat
+   heavyweight since it requires a registry lookup to complete.
+   Instead cache the value and re-use it for all pioctl calls.
+
+ * Add KTC_TOKEN_MUTEX_FAIL error code to distiguish mutex
+   errors from real pioctl errors.
+
+ * Disable afsdhook.dll reloading from within the cm_Daemon
+   thread by default.  This avoids a search of the PATH for
+   a DLL that does not exist in standard openafs distributions.
+
+ * Prevent a deadlock on the VolumeCB->ObjectInfoTree.TreeLock.
+
+ * Fix a bug in the explorer shell extension that prevented
+   saving of UNIX mode bits.
+
+ * If the AFSRedirector is in use, de-register the Lanman and
+   Lsa registry values for BackConnectionHostNames and
+   Servers WithExtendedSessTimeout.
+
+ * Do not rely on the fsLockCount value since the buggy file
+   server does not report accurate values and does not break
+   the callback when the lock becomes available due to lock
+   lease expiration.
+
+ * Prevent a deadlock between a CcPurgeCacheSection call and
+   a call to AFSWrite from the MiMappedPageWriter due to
+   AFSPerformObjectInvalidate holding the ExtentsResource
+   exclusive.
+
+ * Send the redirector a data version invalidate for the directory
+   in which a symlink or mount point has been created.
+
 Since 1.7.0500 (1.7.5)
 
  * OpenAFS Reparse Points are surrogates.  Set the surrogate
