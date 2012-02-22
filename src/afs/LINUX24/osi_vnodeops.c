@@ -47,7 +47,6 @@
 #endif
 
 extern struct vcache *afs_globalVp;
-extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
 #if defined(AFS_LINUX24_ENV)
 /* Some uses of BKL are perhaps not needed for bypass or memcache--
  * why don't we try it out? */
@@ -884,6 +883,86 @@ afs_linux_revalidate(struct dentry *dp)
 #endif
 
     return afs_convert_code(code);
+}
+
+/* vattr_setattr
+ * Set iattr data into vattr. Assume vattr cleared before call.
+ */
+static void
+iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
+{
+    vattrp->va_mask = iattrp->ia_valid;
+    if (iattrp->ia_valid & ATTR_MODE)
+	vattrp->va_mode = iattrp->ia_mode;
+    if (iattrp->ia_valid & ATTR_UID)
+	vattrp->va_uid = iattrp->ia_uid;
+    if (iattrp->ia_valid & ATTR_GID)
+	vattrp->va_gid = iattrp->ia_gid;
+    if (iattrp->ia_valid & ATTR_SIZE)
+	vattrp->va_size = iattrp->ia_size;
+    if (iattrp->ia_valid & ATTR_ATIME) {
+	vattrp->va_atime.tv_sec = iattrp->ia_atime;
+	vattrp->va_atime.tv_usec = 0;
+    }
+    if (iattrp->ia_valid & ATTR_MTIME) {
+	vattrp->va_mtime.tv_sec = iattrp->ia_mtime;
+	vattrp->va_mtime.tv_usec = 0;
+    }
+    if (iattrp->ia_valid & ATTR_CTIME) {
+	vattrp->va_ctime.tv_sec = iattrp->ia_ctime;
+	vattrp->va_ctime.tv_usec = 0;
+    }
+}
+
+/* vattr2inode
+ * Rewrite the inode cache from the attr. Assumes all vattr fields are valid.
+ */
+void
+vattr2inode(struct inode *ip, struct vattr *vp)
+{
+    ip->i_ino = vp->va_nodeid;
+    ip->i_nlink = vp->va_nlink;
+    ip->i_blocks = vp->va_blocks;
+#ifdef STRUCT_INODE_HAS_I_BLKBITS
+    ip->i_blkbits = AFS_BLKBITS;
+#endif
+#ifdef STRUCT_INODE_HAS_I_BLKSIZE
+    ip->i_blksize = vp->va_blocksize;
+#endif
+    ip->i_rdev = vp->va_rdev;
+    ip->i_mode = vp->va_mode;
+    ip->i_uid = vp->va_uid;
+    ip->i_gid = vp->va_gid;
+    i_size_write(ip, vp->va_size);
+    ip->i_atime = vp->va_atime.tv_sec;
+    ip->i_mtime = vp->va_mtime.tv_sec;
+    ip->i_ctime = vp->va_ctime.tv_sec;
+}
+
+/* afs_notify_change
+ * Linux version of setattr call. What to change is in the iattr struct.
+ * We need to set bits in both the Linux inode as well as the vcache.
+ */
+int
+afs_notify_change(struct dentry *dp, struct iattr *iattrp)
+{
+    struct vattr vattr;
+    cred_t *credp = crref();
+    struct inode *ip = dp->d_inode;
+    int code;
+
+    VATTR_NULL(&vattr);
+    iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
+
+    AFS_GLOCK();
+    code = afs_setattr(VTOAFS(ip), &vattr, credp);
+    if (!code) {
+	afs_getattr(VTOAFS(ip), &vattr, credp);
+	vattr2inode(ip, &vattr);
+    }
+    AFS_GUNLOCK();
+    crfree(credp);
+    return -code;
 }
 
 /* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
