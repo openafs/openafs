@@ -906,6 +906,16 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 	goto retry;
     }
 
+    if (singleVolumeNumber) {
+	/* If we delete a volume during the salvage, we indicate as such by
+	 * setting the volsummary->deleted field. We need to know if we
+	 * deleted a volume or not in order to know which volumes to bring
+	 * back online after the salvage. If we fork, we will lose this
+	 * information, since volsummary->deleted will not get set in the
+	 * parent. So, don't fork. */
+	canfork = 0;
+    }
+
     for (i = j = 0, vsp = salvinfo->volumeSummaryp, esp = vsp + salvinfo->nVolumes;
 	 i < salvinfo->nVolumesInInodeFile; i = j) {
 	VolumeId rwvid = salvinfo->inodeSummary[i].RWvolumeId;
