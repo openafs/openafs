@@ -408,6 +408,34 @@ ClearVolumeStats_r(VolumeDiskData * vol)
     vol->dayUseDate = 0;
 }
 
+void
+CopyVolumeStats_r(VolumeDiskData * from, VolumeDiskData * to)
+{
+    memcpy(to->weekUse, from->weekUse, sizeof(to->weekUse));
+    to->dayUse = from->dayUse;
+    to->dayUseDate = from->dayUseDate;
+    if (from->stat_initialized) {
+	memcpy(to->stat_reads, from->stat_reads, sizeof(to->stat_reads));
+	memcpy(to->stat_writes, from->stat_writes, sizeof(to->stat_writes));
+	memcpy(to->stat_fileSameAuthor, from->stat_fileSameAuthor,
+	       sizeof(to->stat_fileSameAuthor));
+	memcpy(to->stat_fileDiffAuthor, from->stat_fileDiffAuthor,
+	       sizeof(to->stat_fileDiffAuthor));
+	memcpy(to->stat_dirSameAuthor, from->stat_dirSameAuthor,
+	       sizeof(to->stat_dirSameAuthor));
+	memcpy(to->stat_dirDiffAuthor, from->stat_dirDiffAuthor,
+	       sizeof(to->stat_dirDiffAuthor));
+    }
+}
+
+void
+CopyVolumeStats(VolumeDiskData * from, VolumeDiskData * to)
+{
+    VOL_LOCK;
+    CopyVolumeStats_r(from, to);
+    VOL_UNLOCK;
+}
+
 /**
  * read an existing volume disk header.
  *

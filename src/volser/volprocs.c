@@ -71,6 +71,7 @@
 
 extern int DoLogging;
 extern struct afsconf_dir *tdir;
+extern int DoPreserveVolumeStats;
 
 extern void LogError(afs_int32 errcode);
 
@@ -907,6 +908,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     afs_int32 newType;
     struct volser_trans *tt, *ttc;
     char caller[MAXKTCNAMELEN];
+    VolumeDiskData saved_header;
 
     /*not a super user */
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -963,6 +965,10 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	goto fail;
     }
 
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&V_disk(clonevp), &saved_header);
+    }
+
     error = 0;
     Log("1 Volser: Clone: Recloning volume %u to volume %u\n", tt->volid,
 	cloneId);
@@ -989,7 +995,11 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
      * for ROs. But do not update copyDate; let it stay so we can identify
      * when the clone was first created. */
     V_creationDate(clonevp) = time(0);
-    ClearVolumeStats(&V_disk(clonevp));
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&saved_header, &V_disk(clonevp));
+    } else {
+	ClearVolumeStats(&V_disk(clonevp));
+    }
     V_destroyMe(clonevp) = 0;
     V_inService(clonevp) = 0;
     if (newType == backupVolume) {

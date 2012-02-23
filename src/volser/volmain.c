@@ -87,6 +87,7 @@ int udpBufSize = 0;		/* UDP buffer size for receive */
 
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
+int DoPreserveVolumeStats = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -374,6 +375,8 @@ main(int argc, char **argv)
 	    rx_enablePeerRPCStats();
 	} else if (strcmp(argv[code], "-enable_process_stats") == 0) {
 	    rx_enableProcessRPCStats();
+	} else if (strcmp(argv[code], "-preserve-vol-stats") == 0) {
+	    DoPreserveVolumeStats = 1;
 	} else if (strcmp(argv[code], "-sync") == 0) {
 	    if ((code + 1) >= argc) {
 		printf("You have to specify -sync <sync_behavior>\n");

@@ -61,6 +61,7 @@
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 extern int DoLogging;
+extern int DoPreserveVolumeStats;
 
 
 /* Forward Declarations */
@@ -1216,10 +1217,15 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
     afs_foff_t *b1 = NULL, *b2 = NULL;
     int s1 = 0, s2 = 0, delo = 0, tdelo;
     int tag;
+    VolumeDiskData saved_header;
 
     iod_Init(iodp, call);
 
     vp = avp;
+
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&V_disk(vp), &saved_header);
+    }
 
     if (!ReadDumpHeader(iodp, &header)) {
 	Log("1 Volser: RestoreVolume: Error reading header file for dump; aborted\n");
@@ -1289,7 +1295,11 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
     }
 
   clean:
-    ClearVolumeStats(&vol);
+    if (DoPreserveVolumeStats) {
+	CopyVolumeStats(&saved_header, &vol);
+    } else {
+	ClearVolumeStats(&vol);
+    }
     if (V_needsSalvaged(vp)) {
 	/* needsSalvaged may have been set while we tried to write volume data.
 	 * prevent it from getting overwritten. */
