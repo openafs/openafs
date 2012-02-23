@@ -63,8 +63,6 @@ extern UNICODE_STRING      AFSServerName;
 
 extern AFSVolumeCB        *AFSGlobalRoot;
 
-extern AFSVolumeCB        *AFSRedirectorRoot;
-
 extern UNICODE_STRING      AFSPIOCtlName;
 
 extern UNICODE_STRING      AFSGlobalRootName;

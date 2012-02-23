@@ -58,8 +58,6 @@ UNICODE_STRING      AFSServerName;
 
 AFSVolumeCB        *AFSGlobalRoot = NULL;
 
-AFSVolumeCB        *AFSRedirectorRoot = NULL;
-
 UNICODE_STRING      AFSPIOCtlName;
 
 UNICODE_STRING      AFSGlobalRootName;
