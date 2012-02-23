@@ -1317,32 +1317,23 @@ AFSExAllocatePoolWithTag( IN POOL_TYPE  PoolType,
     if( pBuffer == NULL)
     {
 
-        if( BooleanFlagOn( AFSDebugFlags, AFS_DBG_BUGCHECK_EXCEPTION))
-        {
+        AFSDbgLogMsg( 0,
+                      0,
+                      "AFSExAllocatePoolWithTag failure Type %08lX Size %08lX Tag %08lX %08lX\n",
+                      PoolType,
+                      NumberOfBytes,
+                      Tag,
+                      PsGetCurrentThread());
 
-            KeBugCheck( (ULONG)-2);
-        }
-        else
-        {
+        switch ( Tag ) {
 
-            AFSDbgLogMsg( 0,
-                          0,
-                          "AFSExAllocatePoolWithTag failure Type %08lX Size %08lX Tag %08lX %08lX\n",
-                          PoolType,
-                          NumberOfBytes,
-                          Tag,
-                          PsGetCurrentThread());
+        case AFS_GENERIC_MEMORY_21_TAG:
+        case AFS_GENERIC_MEMORY_22_TAG:
+            // AFSDumpTraceFiles -- do nothing;
+            break;
 
-            switch ( Tag ) {
-
-            case AFS_GENERIC_MEMORY_21_TAG:
-            case AFS_GENERIC_MEMORY_22_TAG:
-                // AFSDumpTraceFiles -- do nothing;
-                break;
-
-            default:
-                AFSBreakPoint();
-            }
+        default:
+            AFSBreakPoint();
         }
     }
 

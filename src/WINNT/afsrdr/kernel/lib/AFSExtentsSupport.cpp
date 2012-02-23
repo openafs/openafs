@@ -1014,8 +1014,6 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                 if (NULL  == pExtent)
                 {
 
-                    ASSERT( FALSE);
-
                     try_return (ntStatus = STATUS_INSUFFICIENT_RESOURCES );
                 }
 
