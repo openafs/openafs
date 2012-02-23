@@ -61,7 +61,7 @@ extern int UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver,
 extern int UV_BackupVolume(afs_uint32 aserver, afs_int32 apart,
 			   afs_uint32 avolid);
 extern int UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
-			    afs_int32 afrompart, int forceflag, int upflag);
+			    afs_int32 afrompart, int forceflag);
 extern void dump_sig_handler(int x);
 extern int UV_DumpVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 			 afs_int32 afrompart, afs_int32 fromdate,

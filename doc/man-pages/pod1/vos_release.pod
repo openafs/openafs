@@ -9,11 +9,11 @@ vos_release - Updates read-only volumes to match the read/write source volume
 
 B<vos release> S<<< B<-id> <I<volume name or ID>> >>> [B<-force>]
     S<<< [B<-cell> <I<cell name>>] >>>
-    [B<-noauth>] [B<-localauth>] [B<-stayonline>]
+    [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 B<vos rel> S<<< B<-i> <I<volume name or ID>> >>>
-    [B<-f>] S<<< [B<-c> <I<cell name>>] >>> [B<-stayon>]
+    [B<-f>] S<<< [B<-c> <I<cell name>>] >>>
     [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>] [B<-h>]
 
 =for html
@@ -164,12 +164,6 @@ B<-noauth> flag. For more details, see L<vos(1)>.
 Produces on the standard output stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
 appear.
-
-=item B<-stayonline>
-
-Avoids taking replica sites offline by cloning both the source
-and destinations to temporary clones, applying updates, and then
-bringing all clones online as updated readonly volumes.
 
 =item B<-encrypt>
 
