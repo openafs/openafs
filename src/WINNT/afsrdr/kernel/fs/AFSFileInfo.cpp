@@ -58,7 +58,7 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-
+    AFSFcb* pFcb = NULL;
     __try
     {
 
@@ -73,7 +73,10 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        if( pIrpSp->FileObject->FsContext == NULL)
+        pFcb = (AFSFcb*) pIrpSp->FileObject->FsContext;
+
+        if( pFcb == NULL ||
+            pFcb->Header.NodeTypeCode == AFS_REDIRECTOR_FCB)
         {
 
             //
@@ -155,6 +158,7 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    AFSFcb* pFcb = NULL;
 
     __try
     {
@@ -170,7 +174,10 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        if( pIrpSp->FileObject->FsContext == NULL)
+        pFcb = (AFSFcb*) pIrpSp->FileObject->FsContext;
+
+        if( pFcb == NULL ||
+            pFcb->Header.NodeTypeCode == AFS_REDIRECTOR_FCB)
         {
 
             //

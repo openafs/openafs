@@ -147,6 +147,7 @@
 #define AFS_SYMBOLIC_LINK_FCB                   0x000C
 #define AFS_SPECIAL_SHARE_FCB                   0x000D
 #define AFS_DFS_LINK_FCB                        0x000E
+#define AFS_REDIRECTOR_FCB                      0x000F
 
 #define AFS_INVALID_FCB                         0x00FF
 

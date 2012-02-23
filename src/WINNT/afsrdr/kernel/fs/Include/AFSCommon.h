@@ -204,6 +204,12 @@ AFSControlDeviceCreate( IN PIRP Irp);
 NTSTATUS
 AFSOpenRedirector( IN PIRP Irp);
 
+NTSTATUS
+AFSInitRdrFcb( OUT AFSFcb **RdrFcb);
+
+void
+AFSRemoveRdrFcb( IN OUT AFSFcb **RdrFcb);
+
 //
 // AFSClose.cpp Prototypes
 //

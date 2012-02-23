@@ -124,7 +124,7 @@ AFSCommonCleanup( IN PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT pFileObject = NULL;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     BOOLEAN bCompleteRequest = TRUE;
-
+    AFSFcb* pFcb = NULL;
     __Enter
     {
 
@@ -134,7 +134,10 @@ AFSCommonCleanup( IN PDEVICE_OBJECT DeviceObject,
 
         pFileObject = pIrpSp->FileObject;
 
-        if( pIrpSp->FileObject->FsContext == NULL)
+        pFcb = (AFSFcb*) pIrpSp->FileObject->FsContext;
+
+        if( pFcb == NULL ||
+            pFcb->Header.NodeTypeCode == AFS_REDIRECTOR_FCB)
         {
 
             //

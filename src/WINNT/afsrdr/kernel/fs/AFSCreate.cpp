@@ -244,12 +244,19 @@ AFSOpenRedirector( IN PIRP Irp)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     FILE_OBJECT        *pFileObject = NULL;
     IO_STACK_LOCATION  *pIrpSp;
+    AFSDeviceExt* pDeviceExt =
+        (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
     {
 
         pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+
         pFileObject = pIrpSp->FileObject;
+
+        pFileObject->FsContext = (PVOID) pDeviceExt->Fcb;
+
+        ASSERT(pFileObject->FsContext != NULL);
 
         //
         // Return the open result for this file
