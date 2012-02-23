@@ -114,6 +114,19 @@ AFSInitRDRDevice()
 
         ExInitializeResourceLite( &pDeviceExt->Specific.RDR.ProviderListLock);
 
+        ntStatus = AFSInitRdrFcb( &pDeviceExt->Fcb);
+
+        if ( !NT_SUCCESS(ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_INIT_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitRDRDevice AFSInitRdrFcb failure %08lX\n",
+                          ntStatus);
+
+            try_return( ntStatus);
+        }
+
         //
         // Clear the initializing bit
         //
@@ -160,6 +173,12 @@ AFSInitRDRDevice()
             }
         }
 
+        //
+        // Good to go, all registered and ready to start receiving requests
+        //
+
+try_exit:
+
         if( !NT_SUCCESS( ntStatus))
         {
 
@@ -180,17 +199,6 @@ AFSInitRDRDevice()
             AFSRDRDeviceObject = NULL;
 
             try_return( ntStatus);
-        }
-
-        //
-        // Good to go, all registered and ready to start receiving requests
-        //
-
-try_exit:
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
         }
     }
 
@@ -714,6 +722,14 @@ try_exit:
                 AFSDumpFileLocation.Buffer = NULL;
             }
 
+            if ( pDevExt->Fcb != NULL)
+            {
+
+                AFSRemoveRdrFcb( &pDevExt->Fcb);
+
+                pDevExt = NULL;
+            }
+
             AFSUnloadLibrary( TRUE);
         }
     }
@@ -787,7 +803,184 @@ AFSCloseRedirector()
 
             AFSDumpFileLocation.Buffer = NULL;
         }
+
+        if ( pDevExt->Fcb != NULL)
+        {
+
+            AFSRemoveRdrFcb( &pDevExt->Fcb);
+
+            pDevExt->Fcb = NULL;
+        }
+
     }
 
     return ntStatus;
+}
+
+//
+// Function: AFSInitRdrFcb
+//
+// Description:
+//
+//      This function performs Redirector Fcb initialization
+//
+// Return:
+//
+//      A status is returned for the function
+//
+
+NTSTATUS
+AFSInitRdrFcb( OUT AFSFcb **RdrFcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFcb *pFcb = NULL;
+    AFSNonPagedFcb *pNPFcb = NULL;
+    IO_STATUS_BLOCK stIoStatus = {0,0};
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+
+    __Enter
+    {
+
+        //
+        // Initialize the root fcb
+        //
+
+        pFcb = (AFSFcb *)AFSExAllocatePoolWithTag( PagedPool,
+                                                   sizeof( AFSFcb),
+                                                   AFS_FCB_ALLOCATION_TAG);
+
+        if( pFcb == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitRdrFcb Failed to allocate the root fcb\n");
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pFcb,
+                       sizeof( AFSFcb));
+
+        pFcb->Header.NodeByteSize = sizeof( AFSFcb);
+        pFcb->Header.NodeTypeCode = AFS_REDIRECTOR_FCB;
+
+        pNPFcb = (AFSNonPagedFcb *)AFSExAllocatePoolWithTag( NonPagedPool,
+                                                             sizeof( AFSNonPagedFcb),
+                                                             AFS_FCB_NP_ALLOCATION_TAG);
+
+        if( pNPFcb == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitRdrFcb Failed to allocate the non-paged fcb\n");
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pNPFcb,
+                       sizeof( AFSNonPagedFcb));
+
+        pNPFcb->Size = sizeof( AFSNonPagedFcb);
+
+        pNPFcb->Type = AFS_NON_PAGED_FCB;
+
+        //
+        // OK, initialize the entry
+        //
+
+        ExInitializeFastMutex( &pNPFcb->AdvancedHdrMutex);
+
+        FsRtlSetupAdvancedHeader( &pFcb->Header, &pNPFcb->AdvancedHdrMutex);
+
+        ExInitializeResourceLite( &pNPFcb->Resource);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInitRootFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
+                      &pNPFcb->Resource,
+                      PsGetCurrentThread());
+
+        ExInitializeResourceLite( &pNPFcb->PagingResource);
+
+        pFcb->Header.Resource = &pNPFcb->Resource;
+
+        pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
+
+        pFcb->NPFcb = pNPFcb;
+
+        if ( InterlockedCompareExchangePointer( (PVOID *)RdrFcb, pFcb, NULL) != NULL)
+        {
+
+            try_return( ntStatus = STATUS_REPARSE);
+        }
+
+try_exit:
+
+        if( ntStatus != STATUS_SUCCESS)
+        {
+
+            if( pFcb != NULL)
+            {
+
+                AFSRemoveRdrFcb( &pFcb);
+            }
+        }
+    }
+
+    return ntStatus;
+}
+
+//
+// Function: AFSRemoveRdrFcb
+//
+// Description:
+//
+//      This function performs Redirector Fcb removal/deallocation
+//
+// Return:
+//
+//      void.
+//
+
+void
+AFSRemoveRdrFcb( IN OUT AFSFcb **RdrFcb)
+{
+    AFSFcb *pFcb = NULL;
+
+    pFcb = (AFSFcb *) InterlockedCompareExchangePointer( (PVOID *)RdrFcb, NULL, (PVOID)(*RdrFcb));
+
+    if ( pFcb == NULL)
+    {
+
+        return;
+    }
+
+    if( pFcb->NPFcb != NULL)
+    {
+
+        //
+        // Now the resource
+        //
+
+        ExDeleteResourceLite( &pFcb->NPFcb->Resource);
+
+        ExDeleteResourceLite( &pFcb->NPFcb->PagingResource);
+
+        //
+        // The non paged region
+        //
+
+        AFSExFreePool( pFcb->NPFcb);
+    }
+
+    //
+    // And the Fcb itself
+    //
+
+    AFSExFreePool( pFcb);
+
+    return;
 }

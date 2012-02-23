@@ -97,6 +97,7 @@ AFSCommonClose( IN PDEVICE_OBJECT DeviceObject,
     IO_STACK_LOCATION *pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     AFSDeviceExt *pDeviceExt = NULL;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    AFSFcb* pFcb = NULL;
 
     __Enter
     {
@@ -105,7 +106,10 @@ AFSCommonClose( IN PDEVICE_OBJECT DeviceObject,
 
         pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
-        if( pIrpSp->FileObject->FsContext == NULL)
+        pFcb = (AFSFcb*) pIrpSp->FileObject->FsContext;
+
+        if( pFcb == NULL ||
+            pFcb->Header.NodeTypeCode == AFS_REDIRECTOR_FCB)
         {
 
             AFSCompleteRequest( Irp, ntStatus);

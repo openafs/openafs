@@ -428,6 +428,8 @@ typedef struct _AFS_DEVICE_EXTENSION
 
     ULONG           DeviceFlags;
 
+    AFSFcb*         Fcb;
+
     union
     {
 

@@ -46,6 +46,7 @@ AFSSetSecurity( IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS ntStatus = STATUS_NOT_SUPPORTED;
     IO_STACK_LOCATION *pIrpSp;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    AFSFcb* pFcb = NULL;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -68,7 +69,10 @@ AFSSetSecurity( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        if( pIrpSp->FileObject->FsContext == NULL)
+        pFcb = (AFSFcb*) pIrpSp->FileObject->FsContext;
+
+        if( pFcb == NULL ||
+            pFcb->Header.NodeTypeCode == AFS_REDIRECTOR_FCB)
         {
 
             //
@@ -135,6 +139,7 @@ AFSQuerySecurity( IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS ntStatus = STATUS_NOT_SUPPORTED;
     IO_STACK_LOCATION *pIrpSp;
     AFSDeviceExt *pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    AFSFcb* pFcb = NULL;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -157,7 +162,10 @@ AFSQuerySecurity( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        if( pIrpSp->FileObject->FsContext == NULL)
+        pFcb = (AFSFcb*) pIrpSp->FileObject->FsContext;
+
+        if( pFcb == NULL ||
+            pFcb->Header.NodeTypeCode == AFS_REDIRECTOR_FCB)
         {
 
             //
