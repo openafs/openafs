@@ -81,14 +81,19 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 
     lock_ObtainMutex(&cp->mx);
     mxheld = 1;
-    if ((cp->vlServersp == NULL
+
 #ifdef AFS_FREELANCE_CLIENT
-          && !(cp->flags & CM_CELLFLAG_FREELANCE)
+    if (cp->flags & CM_CELLFLAG_FREELANCE) {
+        lock_ReleaseMutex(&cp->mx);
+        return cp;
+    }
 #endif
-          ) || (time(0) > cp->timeout)
-        || (cm_dnsEnabled && (cp->flags & CM_CELLFLAG_DNS) &&
-         ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID)))
-            )
+
+    if ((cp->vlServersp == NULL) ||
+        (time(0) > cp->timeout) ||
+        (cm_dnsEnabled &&
+         (cp->flags & CM_CELLFLAG_DNS) &&
+         ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID))))
     {
         lock_ReleaseMutex(&cp->mx);
         mxheld = 0;
