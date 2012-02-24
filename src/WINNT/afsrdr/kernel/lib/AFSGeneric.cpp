@@ -8581,7 +8581,7 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSPerformObjectInvalidate Acquiring Fcb extents lock %08lX EXCL %08lX\n",
+                                  "AFSPerformObjectInvalidate Acquiring Fcb extents lock %08lX SHARED %08lX\n",
                                   &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
                                   PsGetCurrentThread());
 
