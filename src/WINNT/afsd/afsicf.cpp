@@ -100,6 +100,7 @@ global_afs_port_t afs_serverPorts[] = {
 #endif
 };
 
+#ifdef NET_FW_PROFILE2_ALL
 HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, int nPorts)
 {
     INetFwPolicy2 *pNetFwPolicy2 = NULL;
@@ -266,7 +267,7 @@ HRESULT icf_CheckAndAddPorts2(WCHAR * wServiceName, global_afs_port_t * ports, i
 
     return 0;
 }
-
+#endif /* NET_FW_PROFILE2_ALL */
 
 HRESULT icf_OpenFirewallProfile(INetFwProfile ** fwProfile)
 {
@@ -483,8 +484,11 @@ long icf_CheckAndAddAFSPorts(int portset) {
     // not necessarily catastrophic if the call failed.  We'll try to
     // continue as if it succeeded.
 
+#ifdef NET_FW_PROFILE2_ALL
     hr = icf_CheckAndAddPorts2(wServiceName, ports, nports);
-    if (FAILED(hr)) {
+    if (FAILED(hr))
+#endif
+    {
         DEBUGOUT(("INetFwProfile2 failed, trying INetFwProfile\n"));
         hr = icf_OpenFirewallProfile(&fwProfile);
         if (FAILED(hr)) {
