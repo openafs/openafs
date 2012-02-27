@@ -1,0 +1,13 @@
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# This file (software) make also be used separately from OpenAFS
+# under other licenses, contact the author(s) listed below for details.
+#
+# copyright 2011, 2012 Troy Benjegerdes <hozer@hozed.org>
+
+CELLSRV=@TOP_OBJDIR@/src/afsd/CellServDB
+
+conf/CellServDB: $(CELLSRV)
+	cp $(CELLSRV) conf/
