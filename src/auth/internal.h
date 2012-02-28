@@ -6,3 +6,5 @@ extern int _afsconf_LoadKeys(struct afsconf_dir *adir);
 extern void _afsconf_InitKeys(struct afsconf_dir *adir);
 extern void _afsconf_FreeAllKeys(struct afsconf_dir *adir);
 extern int _afsconf_GetLocalCell(struct afsconf_dir *adir, char **pname, int check);
+extern int _afsconf_LoadRealms(struct afsconf_dir *dir);
+extern void _afsconf_FreeRealms(struct afsconf_dir *dir);

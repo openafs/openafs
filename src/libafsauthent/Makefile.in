@@ -35,7 +35,8 @@ AUTHOBJS = \
 	ktc_errors.o \
 	acfg_errors.o \
 	token.o \
-	token.xdr.o
+	token.xdr.o \
+	realms.o
 
 KAUTHOBJS = \
 	kauth.xdr.o \
@@ -227,6 +228,9 @@ rxkad_errs.o: ../rxkad/rxkad_errs.c
 
 ptclient.o: ${PTSERVER}/ptclient.c
 	${AFS_CCRULE} -I../ptserver ${PTSERVER}/ptclient.c
+
+realms.o: ${AUTH}/realms.c
+	${AFS_CCRULE} -I../auth ${AUTH}/realms.c
 
 ptuser.o: ${PTSERVER}/ptuser.c
 	${AFS_CCRULE} -I../ptserver ${PTSERVER}/ptuser.c

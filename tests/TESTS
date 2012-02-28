@@ -3,6 +3,7 @@ util/exec-alt
 auth/keys
 auth/superuser
 auth/authcon
+auth/realms
 cmd/command
 opr/jhash
 opr/queues

@@ -41,6 +41,7 @@ AFSAUTH_LIBOBJS =\
 	$(OUT)\userok.obj \
 	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \
+	$(OUT)\realms.obj \
 	$(OUT)\acfg_errors.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \
@@ -67,6 +68,7 @@ AFSAUTH_KRB_LIBOBJS =\
 	$(OUT)\userok.obj \
 	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \
+	$(OUT)\realms.obj \
 	$(OUT)\acfg_errors.obj \
 	$(OUT)\ktc_errors.obj \
 	$(OUT)\ktc_nt.obj \

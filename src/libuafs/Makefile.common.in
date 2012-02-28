@@ -228,6 +228,7 @@ UAFSOBJ = \
 	$(UOBJ)/authcon.o \
 	$(UOBJ)/cellconfig.o \
 	$(UOBJ)/keys.o \
+	$(UOBJ)/realms.o \
 	$(UOBJ)/client.o \
 	$(UOBJ)/acfg_errors.o \
 	$(UOBJ)/kaaux.o \
@@ -376,6 +377,7 @@ PICUAFSOBJ = \
 	$(PICOBJ)/authcon.o \
 	$(PICOBJ)/cellconfig.o \
 	$(PICOBJ)/keys.o \
+	$(PICOBJ)/realms.o \
 	$(PICOBJ)/client.o \
 	$(PICOBJ)/acfg_errors.o \
 	$(PICOBJ)/kaaux.o \
@@ -525,6 +527,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/cellconfig.o \
 	$(WEBOBJ)/client.o \
 	$(WEBOBJ)/keys.o \
+	$(WEBOBJ)/realms.o \
 	$(WEBOBJ)/acfg_errors.o \
 	$(WEBOBJ)/kaaux.o \
 	$(WEBOBJ)/kalocalcell.o \
@@ -667,6 +670,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/cellconfig.o \
 	$(WEBOBJ)/client.o \
 	$(WEBOBJ)/keys.o \
+	$(WEBOBJ)/realms.o \
 	$(WEBOBJ)/acfg_errors.o \
 	$(WEBOBJ)/kaaux.o \
 	$(WEBOBJ)/kalocalcell.o \
@@ -812,6 +816,7 @@ JUAFSOBJ = \
 	$(JUAFS)/authcon.o \
 	$(JUAFS)/cellconfig.o \
 	$(JUAFS)/keys.o \
+	$(JUAFS)/realms.o \
 	$(JUAFS)/client.o \
 	$(JUAFS)/acfg_errors.o \
 	$(JUAFS)/kaaux.o \
@@ -1104,6 +1109,8 @@ $(UOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 $(UOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULE1)
 $(UOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
+	$(CRULE1)
+$(UOBJ)/realms.o: $(TOP_SRCDIR)/auth/realms.c
 	$(CRULE1)
 $(UOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
@@ -1407,6 +1414,8 @@ $(PICOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 $(PICOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULEPIC)
 $(PICOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
+	$(CRULEPIC)
+$(PICOBJ)/realms.o: $(TOP_SRCDIR)/auth/realms.c
 	$(CRULEPIC)
 $(PICOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULEPIC)
@@ -1720,6 +1729,8 @@ $(WEBOBJ)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULE2)
 $(WEBOBJ)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
 	$(CRULE1)
+$(WEBOBJ)/realms.o: $(TOP_SRCDIR)/auth/realms.c
+	$(CRULE2)
 $(WEBOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
 $(WEBOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
@@ -2017,6 +2028,8 @@ $(JUAFS)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 $(JUAFS)/keys.o: $(TOP_SRCDIR)/auth/keys.c
 	$(CRULE1)
 $(JUAFS)/casestrcpy.o: $(TOP_SRCDIR)/opr/casestrcpy.c
+	$(CRULE1)
+$(JUAFS)/realms.o: $(TOP_SRCDIR)/auth/realms.c
 	$(CRULE1)
 $(JUAFS)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)

@@ -97,6 +97,8 @@ struct afsconf_dir {
     afs_int32 timeCheck;	/* time of last check for update */
     struct afsconf_aliasentry *alias_entries;	/* cell aliases */
     afsconf_secflags securityFlags;
+    struct afsconf_realms *local_realms;        /* local realms */
+    struct afsconf_realms *exclusions;          /* excluded principals */
 };
 
 extern afs_int32 afsconf_FindService(const char *aname);
@@ -251,6 +253,12 @@ extern int afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall,
 extern int afsconf_SuperIdentity(struct afsconf_dir *, struct rx_call *,
 				 struct rx_identity **);
 extern int afsconf_IsSuperIdentity(struct afsconf_dir *, struct rx_identity *);
+
+/* realms.c */
+extern int afsconf_SetLocalRealm(const char *realm);
+extern int afsconf_IsLocalRealmMatch(struct afsconf_dir *dir, afs_int32 * local,
+				const char *name, const char *instance,
+				const char *cell);
 
 /* some well-known ports and their names; new additions to table in cellconfig.c, too */
 #define	AFSCONF_FILESERVICE		"afs"

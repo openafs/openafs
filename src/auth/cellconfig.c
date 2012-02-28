@@ -823,6 +823,10 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 
     /* now read the fs keys, if possible */
     code = _afsconf_LoadKeys(adir);
+    if (code) {
+        return code;
+    }
+    code = _afsconf_LoadRealms(adir);
 
     return code;
 }
@@ -1555,6 +1559,7 @@ afsconf_CloseInternal(struct afsconf_dir *adir)
     }
 
     _afsconf_FreeAllKeys(adir);
+    _afsconf_FreeRealms(adir);
 
     /* reinit */
     memset(adir, 0, sizeof(struct afsconf_dir));

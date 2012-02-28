@@ -1416,6 +1416,7 @@ AC_CHECK_FUNCS([ \
 	strerror \
 	sysconf \
 	sysctl \
+	tdestroy \
 	timegm \
 ])
 

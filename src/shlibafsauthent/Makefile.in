@@ -40,7 +40,8 @@ AUTHOBJS = \
 	ktc_errors.o \
 	acfg_errors.o \
 	token.xdr.o \
-	token.o
+	token.o \
+	realms.o
 
 KAUTHOBJS = \
 	kauth.xdr.o \
@@ -155,6 +156,9 @@ ktc.o: ${AUTH}/ktc.c
 
 keys.o: ${AUTH}/keys.c
 	${AFS_CCRULE} -I../auth ${AUTH}/keys.c
+
+realms.o: ${AUTH}/realms.c
+	${AFS_CCRULE} -I../auth ${AUTH}/realms.c
 
 token.o: ${AUTH}/token.c
 	${AFS_CCRULE} -I../auth ${AUTH}/token.c
