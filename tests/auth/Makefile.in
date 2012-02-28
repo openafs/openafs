@@ -4,7 +4,7 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-TESTS = authcon-t superuser-t keys-t
+TESTS = authcon-t superuser-t keys-t realms-t
 
 MODULE_CFLAGS=-I$(srcdir)/.. -I$(srcdir)/../common/
 
@@ -29,6 +29,9 @@ superuser-t: superuser-t.o ../common/config.o test.cs.o test.ss.o test.xdr.o
 
 keys-t: keys-t.o ../common/config.o
 	$(AFS_LDRULE) keys-t.o ../common/config.o $(MODULE_LIBS)
+
+realms-t: realms-t.o ../common/config.o
+	$(AFS_LDRULE) realms-t.o ../common/config.o $(MODULE_LIBS)
 
 writekeyfile: writekeyfile.o
 	$(AFS_LDRULE) writekeyfile.o $(MODULE_LIBS)

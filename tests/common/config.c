@@ -124,6 +124,8 @@ afstest_UnlinkTestConfig(char *dir)
     unlinkConfigFile(dir, "CellServDB");
     unlinkConfigFile(dir, "ThisCell");
     unlinkConfigFile(dir, "UserList");
+    unlinkConfigFile(dir, "krb.conf");
+    unlinkConfigFile(dir, "krb.excl");
     rmdir(dir);
 }
 

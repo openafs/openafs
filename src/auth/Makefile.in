@@ -11,9 +11,9 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
 OBJS= cellconfig.o keys.o ktc.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o token.xdr.o token.o
+    acfg_errors.o ktc_errors.o token.xdr.o token.o realms.o
 KOBJS= cellconfig.o keys.o ktc.krb.o userok.o writeconfig.o authcon.o \
-    acfg_errors.o ktc_errors.o token.xdr.o token.o
+    acfg_errors.o ktc_errors.o token.xdr.o token.o realms.o
 
 LIBS=libauth.a \
       ${TOP_LIBDIR}/librxkad.a \
@@ -70,6 +70,7 @@ userok.o: userok.c ${INCLS}
 cellconfig.o: cellconfig.c ${INCLS}
 copyauth.o: copyauth.c ${INCLS} AFS_component_version_number.o
 setkey.o: setkey.c ${INCLS} AFS_component_version_number.o
+realms.o: realms.c ${INCLS}
 
 CFLAGS_ktc.krb.o = -DAFS_KERBEROS_ENV
 ktc.krb.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h

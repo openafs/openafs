@@ -87,3 +87,6 @@ EXPORTS
 	rx_Finalize					@85
 	pr_End						@86
 	pioctl_utf8             			@87
+
+	afsconf_SetLocalRealm				@88
+	afsconf_IsLocalRealmMatch			@89
