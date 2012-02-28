@@ -591,10 +591,8 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 {
     char tcell_l[MAXKTCREALMLEN] = "";
     char *tmp;
-    static char lcell[MAXCELLCHARS] = "";
-    static char lrealms[AFS_NUM_LREALMS][AFS_REALM_SZ];
-    static int  num_lrealms = -1;
-    int lrealm_match = 0, i;
+    int code;
+    afs_int32 islocal;
     int flag;
 
     /* generate lowercased version of cell name */
@@ -607,48 +605,9 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 	}
     }
 
-    /* determine local cell name. It's static, so will only get
-     * calculated the first time through */
-    if (!lcell[0])
-	afsconf_GetLocalCell(adir, lcell, sizeof(lcell));
-
-    /* if running a krb environment, also get the local realm */
-    /* note - this assumes AFS_REALM_SZ <= MAXCELLCHARS */
-    /* just set it to lcell if it fails */
-    if (num_lrealms == -1) {
-	for (i=0; i<AFS_NUM_LREALMS; i++) {
-	    if (afs_krb_get_lrealm(lrealms[i], i) != 0 /*KSUCCESS*/)
-		break;
-	}
-
-	if (i == 0) {
-	    strncpy(lrealms[0], lcell, AFS_REALM_SZ);
-	    num_lrealms = 1;
-	} else {
-	    num_lrealms = i;
-	}
-    }
-
-    /* See if the ticket cell matches one of the local realms */
-    lrealm_match = 0;
-    for ( i=0;i<num_lrealms;i++ ) {
-	if (!strcasecmp(lrealms[i], tcell)) {
-	    lrealm_match = 1;
-	    break;
-	}
-    }
-
-    /* If yes, then make sure that the name is not present in
-     * an exclusion list */
-    if (lrealm_match) {
-	char uname[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
-	if (tinst && tinst[0])
-	    snprintf(uname,sizeof(uname),"%s.%s@%s",tname,tinst,tcell);
-	else
-	    snprintf(uname,sizeof(uname),"%s@%s",tname,tcell);
-
-	if (afs_krb_exclusion(uname))
-	    lrealm_match = 0;
+    code = afsconf_IsLocalRealmMatch(adir, &islocal, tname, tinst, tcell);
+    if (code) {
+	return 0;
     }
 
     /* start with no authorization */
@@ -664,7 +623,7 @@ kerberosSuperUser(struct afsconf_dir *adir, char *tname, char *tinst,
 	flag = 1;
 
 	/* cell of connection matches local cell or one of the realms */
-    } else if (!strcasecmp(tcell, lcell) || lrealm_match) {
+    } else if (islocal) {
 	if (CompFindUser(adir, tname, ".", tinst, NULL, identity)) {
 	    flag = 1;
 	}
