@@ -63,6 +63,7 @@
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/auth.h>
+#include <afs/cellconfig.h>
 
 #include "ptserver.h"
 #include "pterror.h"
@@ -72,9 +73,9 @@
 extern int restricted;
 extern struct ubik_dbase *dbase;
 extern int pr_noAuth;
-extern char *pr_realmName;
 extern int prp_group_default;
 extern int prp_user_default;
+extern struct afsconf_dir *prdir;
 
 static afs_int32 iNewEntry(struct rx_call *call, char aname[], afs_int32 aid,
 			   afs_int32 oid, afs_int32 *cid);
@@ -553,6 +554,7 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
     for (i = 0; i < aname->namelist_len; i++) {
 	char vname[256];
 	char *nameinst, *cell;
+	afs_int32 islocal = 1;
 
 	strncpy(vname, aname->namelist_val[i], sizeof(vname));
 	vname[sizeof(vname)-1] ='\0';
@@ -564,10 +566,16 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
 	    cell++;
 	}
 
-	if (cell && afs_is_foreign_ticket_name(nameinst,NULL,cell,pr_realmName))
-	    code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
-	else
+	if (cell && *cell) {
+	    code = afsconf_IsLocalRealmMatch(prdir, &islocal, nameinst, NULL, cell);
+	    ViceLog(0,
+		    ("PTS_NameToID: afsconf_IsLocalRealmMatch(); code=%d, nameinst=%s, cell=%s\n",
+		     code, nameinst, cell));
+	}
+	if (islocal)
 	    code = NameToID(tt, nameinst, &aid->idlist_val[i]);
+	else
+	    code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
 
 	if (code != PRSUCCESS)
 	    aid->idlist_val[i] = ANONYMOUSID;
@@ -2099,7 +2107,7 @@ static afs_int32
 WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 		  char *aname)
 {
-    int foreign = 0;
+    afs_int32 islocal = 1;
     /* aid is set to the identity of the caller, if known, else ANONYMOUSID */
     /* returns -1 and sets aid to ANONYMOUSID on any failure */
     struct rx_connection *tconn;
@@ -2122,10 +2130,11 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 					name, inst, tcell, NULL)))
 	    goto done;
 
-	if (tcell[0])
-	    foreign = afs_is_foreign_ticket_name(name, inst, tcell,
-						 pr_realmName);
-
+	if (tcell[0]) {
+	    code = afsconf_IsLocalRealmMatch(prdir, &islocal, name, inst, tcell);
+	    if (code)
+		goto done;
+	}
 	strncpy(vname, name, sizeof(vname));
 	if ((ilen = strlen(inst))) {
 	    if (strlen(vname) + 1 + ilen >= sizeof(vname))
@@ -2133,7 +2142,7 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	    strcat(vname, ".");
 	    strcat(vname, inst);
 	}
-	if (foreign) {
+	if (!islocal) {
 	     if (strlen(vname) + strlen(tcell) + 1  >= sizeof(vname))
 		goto done;
 	     strcat(vname, "@");
