@@ -290,7 +290,7 @@ hpr_Initialize(struct ubik_client **uclient)
     code = afsconf_GetCellInfo(tdir, cellstr, "afsprot", &info);
     if (code) {
 	ViceLog(0, ("hpr_Initialize: Could not locate cell %s in %s/%s",
-		    cellstr, confDir->name, AFSDIR_CELLSERVDB_FILE));
+		    cellstr, tdir->name, AFSDIR_CELLSERVDB_FILE));
 	afsconf_Close(tdir);
 	return code;
     }
