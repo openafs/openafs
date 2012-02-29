@@ -37,6 +37,7 @@ LIBS=   ${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
@@ -94,9 +95,9 @@ ${TOP_INCDIR}/afs/ptserver.h: ptserver.h
 #
 # Build targets
 #
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) map.o
 	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o \
-		utils.o map.o $(LIBS) $(LIB_roken) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		utils.o map.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 

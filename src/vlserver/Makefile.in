@@ -30,6 +30,7 @@ LIBS=\
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
@@ -87,7 +88,7 @@ sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
 	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o \
-		$(LIBS) $(LIB_roken) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
 vlserver.o: vlserver.c ${INCLS} AFS_component_version_number.o
 vlutils.o: vlutils.c ${INCLS}

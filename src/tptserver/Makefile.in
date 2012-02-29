@@ -38,6 +38,7 @@ LIBS=${RXOBJS} ${UTILOBJS}\
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libopr.a \
+	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a 
 
 PTOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o
@@ -146,11 +147,11 @@ Kptint.h: ${PTSERVER}/ptint.xg
 display.o: ${PTSERVER}/display.c ${INCLS}
 	${AFS_CCRULE} ${PTSERVER}/display.c
 
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) map.o
 	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o \
 		ptint.ss.o ptint.xdr.o utils.o map.o \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
-		${XLIBS} ${TOP_LIBDIR}/libaudit.a
+		${XLIBS}
 
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/db_verify.c

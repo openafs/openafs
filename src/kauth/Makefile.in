@@ -30,6 +30,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafscom_err.a \
+	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libopr.a \
 	$(DBM) \
@@ -92,8 +93,7 @@ kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kaut
 	$(AFS_LDRULE) kaserver.o kautils.o kalocalcell.o kadatabase.o \
 		krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o \
 		kaauxdb.o \
-		$(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS} \
-		${TOP_LIBDIR}/libaudit.a
+		$(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
 

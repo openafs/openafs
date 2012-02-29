@@ -34,6 +34,7 @@ LIBS=   ${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libafscom_err.a \
+	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libsys.a \
@@ -113,7 +114,7 @@ libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 bosserver: $(OBJS) $(LIBS)
-	$(AFS_LDRULE) $(OBJS) ${TOP_LIBDIR}/libaudit.a \
+	$(AFS_LDRULE) $(OBJS) \
 		$(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 smail-notifier.o: smail-notifier.c ${INCLS}

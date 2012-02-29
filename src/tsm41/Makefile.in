@@ -23,9 +23,9 @@ AFSLIBS = \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafscom_err.a \
+		${TOP_LIBDIR}/libaudit.a \
 		${TOP_LIBDIR}/util.a \
-		${TOP_LIBDIR}/libopr.a \
-		${TOP_LIBDIR}/libaudit.a
+		${TOP_LIBDIR}/libopr.a
 
 KAFSLIBS = \
 		${TOP_LIBDIR}/libkauth.krb.a \
@@ -39,9 +39,9 @@ KAFSLIBS = \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafscom_err.a \
+		${TOP_LIBDIR}/libaudit.a \
 		${TOP_LIBDIR}/util.a \
-		${TOP_LIBDIR}/libopr.a \
-		${TOP_LIBDIR}/libaudit.a
+		${TOP_LIBDIR}/libopr.a
 
 AUTH_OBJS = \
 		aix_auth.o \

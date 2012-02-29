@@ -35,6 +35,7 @@ LIBS=	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libopr.a
 
@@ -124,8 +125,7 @@ sascnvldb.o: ${VLSERVER}/sascnvldb.c
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
 	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} \
-		${TOP_LIBDIR}/libaudit.a
+		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 vlserver.o: ${VLSERVER}/vlserver.c ${INCLS} AFS_component_version_number.o
 	$(AFS_CCRULE) $(VLSERVER)/vlserver.c
