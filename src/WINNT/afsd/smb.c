@@ -770,7 +770,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
         vcp->lana = lana;
         vcp->secCtx = NULL;
 
-        if (smb_authType == SMB_AUTH_NTLM || smb_authType == SMB_AUTH_EXTENDED) {
+        if (smb_authType == SMB_AUTH_NTLM) {
             /* We must obtain a challenge for extended auth
              * in case the client negotiates smb v3
              */
@@ -3976,22 +3976,36 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                                   datap + MSV1_0_CHALLENGE_LENGTH,
                                   (int)(sizeof(outp->data)/sizeof(char) - (datap - outp->data)));
         } else if ( smb_authType == SMB_AUTH_EXTENDED ) {
-            void * secBlob;
-            int secBlobLength;
+            void * secBlob = NULL;
+            int secBlobLength = 0;
 
             smb_SetSMBParmByte(outp, 16, 0); /* Encryption key length */
 
-            smb_NegotiateExtendedSecurity(&secBlob, &secBlobLength);
+            /*
+             * The SMB specification permits the server to save a round trip
+             * in the GSS negotiation by sending an initial security blob.
+             * Unfortunately, doing so trips a bug in Windows 7 and Server 2008 R2
+             * whereby the SMB 1.x redirector drops the blob on the floor after
+             * the first connection to the server and simply attempts to reuse
+             * the previous authentication context.  This bug can be avoided by
+             * the server sending no security blob in the SMB_COM_NEGOTIATE
+             * response.  This forces the client to send an initial GSS init_sec_context
+             * blob under all circumstances which works around the bug in Microsoft's
+             * code.
+             *
+             * Do not call smb_NegotiateExtendedSecurity(&secBlob, &secBlobLength);
+             */
 
             smb_SetSMBDataLength(outp, secBlobLength + sizeof(smb_ServerGUID));
-
             datap = smb_GetSMBData(outp, NULL);
+
             memcpy(datap, &smb_ServerGUID, sizeof(smb_ServerGUID));
+            datap += sizeof(smb_ServerGUID);
 
             if (secBlob) {
-                datap += sizeof(smb_ServerGUID);
                 memcpy(datap, secBlob, secBlobLength);
                 free(secBlob);
+                datap += sizeof(secBlobLength);
             }
         } else {
             smb_SetSMBParmByte(outp, 16, 0);/* Challenge length */
