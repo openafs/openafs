@@ -572,11 +572,11 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
     if ((acode < 0) && (acode != VRESTARTING)) {
-	if (acode == RX_MSGSIZE) {
+	if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
 	    shouldRetry = 1;
 	    goto out;
 	}
-	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE || acode == RX_CALL_BUSY) {
+	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE) {
 	    serversleft = afs_BlackListOnce(areq, afid, tsp);
 	    if (afid)
 		tvp = afs_FindVolume(afid, READ_LOCK);
