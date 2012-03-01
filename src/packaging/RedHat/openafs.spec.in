@@ -1055,6 +1055,8 @@ install -p -m 644 src/packaging/RedHat/openafs-cacheinfo $uve/cacheinfo
 install -d -m 755 $RPM_BUILD_ROOT%{_prefix}/src
 cp -a libafs_tree $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}
 
+%if 0%{?fedora}
+
 cat > $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf <<EOF
 
 PACKAGE_VERSION="%{dkms_version}"
@@ -1070,6 +1072,25 @@ STRIP[0]=no
 AUTOINSTALL=yes
 
 EOF
+
+%else
+cat > $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf <<EOF
+
+PACKAGE_VERSION="%{dkms_version}"
+
+# Items below here should not have to change with each driver version
+PACKAGE_NAME="%{name}"
+MAKE[0]="KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\${kernelver[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
+CLEAN="make -C src/libafs clean"
+
+BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
+DEST_MODULE_LOCATION[0]="/kernel/3rdparty/\$PACKAGE_NAME/"
+STRIP[0]=no
+AUTOINSTALL=yes
+
+EOF
+
+%endif
 
 #
 # install kernel-source
