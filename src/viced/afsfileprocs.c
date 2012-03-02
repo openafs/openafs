@@ -2983,6 +2983,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 	volptr = (Volume *) 0;
 	client = (struct client *)0;
     }
+    errorCode = 0;
 
   Bad_InlineBulkStatus:
     /* Update and store volume/vnode and parent vnodes back */
@@ -3015,7 +3016,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     osi_auditU(acall, InlineBulkFetchStatusEvent, errorCode,
                AUD_ID, t_client ? t_client->ViceId : 0,
                AUD_FIDS, Fids, AUD_END);
-    return 0;
+    return errorCode;
 
 }				/*SRXAFS_InlineBulkStatus */
 
