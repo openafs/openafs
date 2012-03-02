@@ -4102,6 +4102,106 @@ AFSRemoveEntryDirtyList( IN AFSFcb *Fcb,
     return;
 }
 
+ULONG
+AFSConstructCleanByteRangeList( AFSFcb * pFcb,
+                                AFSByteRange ** pByteRangeList)
+{
+
+    ULONG ulByteRangeMax;
+    ULONG ulByteRangeCount = 0;
+    AFSByteRange *ByteRangeList;
+    AFSExtent    *pExtent, *pNextExtent;
+
+    AFSAcquireShared( &pFcb->NPFcb->Specific.File.DirtyExtentsListLock, TRUE);
+
+    ulByteRangeMax = pFcb->Specific.File.ExtentsDirtyCount + 1;
+
+    ByteRangeList = (AFSByteRange *) AFSExAllocatePoolWithTag( PagedPool,
+                                                               ulByteRangeMax * sizeof( AFSByteRange),
+                                                               AFS_BYTERANGE_TAG);
+
+    if ( ByteRangeList == NULL)
+    {
+
+        (*pByteRangeList) = NULL;
+
+        try_return( ulByteRangeCount = DWORD_MAX);
+    }
+
+    RtlZeroMemory( ByteRangeList,
+                   ulByteRangeMax * sizeof( AFSByteRange));
+
+    //
+    // The for loop populates the ByteRangeList entries with values that are
+    // the gaps in the DirtyList.  In other words, if a range is not present
+    // in the DirtyList it will be represented in the ByteRangeList array.
+    //
+
+    for ( ulByteRangeCount = 0,
+          pExtent = (AFSExtent *)pFcb->NPFcb->Specific.File.DirtyListHead;
+          ulByteRangeCount < ulByteRangeMax && pExtent != NULL;
+          pExtent = pNextExtent)
+    {
+
+        pNextExtent = (AFSExtent *)pExtent->DirtyList.fLink;
+
+        //
+        // The first time the for() is entered the ulByteRangeCount will be zero and
+        // ByteRangeList[0] FileOffset and Length will both be zero.  If the first
+        // extent is not for offset zero, the ByteRangeList[0] Length is set to the
+        // FileOffset of the Extent.
+        //
+        // Future passes through the loop behave in a similar fashion but
+        // ByteRangeList[ulByteRangeCount] FileOffset will have been set below.
+        //
+
+        if ( pExtent->FileOffset.QuadPart != ByteRangeList[ulByteRangeCount].FileOffset.QuadPart + ByteRangeList[ulByteRangeCount].Length.QuadPart)
+        {
+
+            ByteRangeList[ulByteRangeCount].Length.QuadPart =
+                pExtent->FileOffset.QuadPart - ByteRangeList[ulByteRangeCount].FileOffset.QuadPart;
+
+            ulByteRangeCount++;
+        }
+
+        //
+        // Having processed the current dirty extent, the following while loop
+        // searches for the next clean gap between dirty extents.
+        //
+
+        while ( pNextExtent && pNextExtent->FileOffset.QuadPart == pExtent->FileOffset.QuadPart + pExtent->Size)
+        {
+
+            pExtent = pNextExtent;
+
+            pNextExtent = (AFSExtent *)pExtent->DirtyList.fLink;
+        }
+
+        //
+        // Having found the next gap, the ByteRangeList[] FileOffset is set to the start of the gap.
+        // The Length is left at zero and will be assigned either when the for loop continues or
+        // when the for loop exits.
+        //
+
+        ByteRangeList[ulByteRangeCount].FileOffset.QuadPart = pExtent->FileOffset.QuadPart + pExtent->Size;
+    }
+
+    //
+    // Assign the Length of the final clean range to match the file length.
+    //
+
+    ByteRangeList[ulByteRangeCount].Length.QuadPart =
+        pFcb->ObjectInformation->EndOfFile.QuadPart - ByteRangeList[ulByteRangeCount].FileOffset.QuadPart;
+
+    (*pByteRangeList) = ByteRangeList;
+
+  try_exit:
+
+    AFSReleaseResource( &pFcb->NPFcb->Specific.File.DirtyExtentsListLock);
+
+    return ulByteRangeCount;
+}
+
 #if GEN_MD5
 void
 AFSSetupMD5Hash( IN AFSFcb *Fcb,

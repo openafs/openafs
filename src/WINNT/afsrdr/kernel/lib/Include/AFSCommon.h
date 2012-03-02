@@ -47,6 +47,7 @@ extern "C"
 #include <ntifs.h>
 #include <wdmsec.h> // for IoCreateDeviceSecure
 #include <initguid.h>
+#include <ntintsafe.h>
 
 #include "AFSDefines.h"
 
@@ -429,6 +430,10 @@ AFSRemoveEntryDirtyList( IN AFSFcb *Fcb,
 
 AFSExtent *
 ExtentFor( PLIST_ENTRY le, ULONG SkipList );
+
+ULONG
+AFSConstructCleanByteRangeList( AFSFcb * pFcb,
+                                AFSByteRange ** pByteRangeList);
 
 #if GEN_MD5
 void

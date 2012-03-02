@@ -8571,6 +8571,9 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                 LARGE_INTEGER liCurrentOffset = {0,0};
                 LARGE_INTEGER liFlushLength = {0,0};
                 ULONG ulFlushLength = 0;
+                BOOLEAN bLocked = FALSE;
+                BOOLEAN bExtentsLocked = FALSE;
+                BOOLEAN bCleanExtents = FALSE;
 
                 if( ObjectInfo->FileType == AFS_FILE_TYPE_FILE &&
                     ObjectInfo->Fcb != NULL)
@@ -8578,6 +8581,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                     AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Resource,
                                     TRUE);
+
+                    bLocked = TRUE;
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -8588,99 +8593,279 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                     AFSAcquireShared( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
                                       TRUE);
 
-                    __try
+                    bExtentsLocked = TRUE;
+
+                    //
+                    // There are several possibilities here:
+                    //
+                    // 0. If there are no extents or all of the extents are dirty, do nothing.
+                    //
+                    // 1. There could be nothing dirty and an open reference count of zero
+                    //    in which case we can just tear down all of the extents without
+                    //    holding any resources.
+                    //
+                    // 2. There could be nothing dirty and a non-zero open reference count
+                    //    in which case we can issue a CcPurge against the entire file
+                    //    while holding just the Fcb Resource.
+                    //
+                    // 3. There can be dirty extents in which case we need to identify
+                    //    the non-dirty ranges and then perform a CcPurge on just the
+                    //    non-dirty ranges while holding just the Fcb Resource.
+                    //
+
+                    if ( ObjectInfo->Fcb->Specific.File.ExtentCount != ObjectInfo->Fcb->Specific.File.ExtentsDirtyCount)
                     {
 
-                        le = ObjectInfo->Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
-
-                        ulProcessCount = 0;
-
-                        ulCount = (ULONG)ObjectInfo->Fcb->Specific.File.ExtentCount;
-
-                        if( ulCount > 0)
+                        if ( ObjectInfo->Fcb->Specific.File.ExtentsDirtyCount == 0)
                         {
-                            pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
 
-                            while( ulProcessCount < ulCount)
+                            if ( ObjectInfo->Fcb->OpenReferenceCount == 0)
                             {
-                                pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
 
-                                if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+
+                                bExtentsLocked = FALSE;
+
+                                AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+
+                                bLocked = FALSE;
+
+                                (VOID) AFSTearDownFcbExtents( ObjectInfo->Fcb,
+                                                              NULL);
+                            }
+                            else
+                            {
+
+                                __try
                                 {
+
+                                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+
+                                    bExtentsLocked = FALSE;
+
                                     if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                              &pEntry->FileOffset,
-                                                              pEntry->Size,
+                                                              NULL,
+                                                              0,
                                                               FALSE))
                                     {
                                         SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                                     }
-                                }
-
-                                if( liCurrentOffset.QuadPart < pEntry->FileOffset.QuadPart)
-                                {
-
-                                    liFlushLength.QuadPart = pEntry->FileOffset.QuadPart - liCurrentOffset.QuadPart;
-
-                                    while( liFlushLength.QuadPart > 0)
+                                    else
                                     {
 
-                                        if( liFlushLength.QuadPart > 512 * 1024000)
-                                        {
-                                            ulFlushLength = 512 * 1024000;
-                                        }
-                                        else
-                                        {
-                                            ulFlushLength = liFlushLength.LowPart;
-                                        }
-
-                                        if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                                  &liCurrentOffset,
-                                                                  ulFlushLength,
-                                                                  FALSE))
-                                        {
-                                            SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                                        }
-
-                                        liFlushLength.QuadPart -= ulFlushLength;
+                                        bCleanExtents = TRUE;
                                     }
                                 }
+                                __except( EXCEPTION_EXECUTE_HANDLER)
+                                {
 
-                                liCurrentOffset.QuadPart = pEntry->FileOffset.QuadPart + pEntry->Size;
+                                    ntStatus = GetExceptionCode();
 
-                                ulProcessCount++;
-                                le = le->Flink;
+                                    AFSDbgLogMsg( 0,
+                                                  0,
+                                                  "EXCEPTION - AFSPerformObjectInvalidate Status %08lX\n",
+                                                  ntStatus);
+                                }
                             }
                         }
                         else
                         {
-                            if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                      NULL,
-                                                      0,
-                                                      FALSE))
+
+                            //
+                            // Must build a list of non-dirty ranges from the beginning of the file
+                            // to the end.  There can be at most (Fcb->Specific.File.ExtentsDirtyCount + 1)
+                            // ranges.  In all but the most extreme random data write scenario there will
+                            // be significantly fewer.
+                            //
+                            // For each range we need offset and size.
+                            //
+
+                            AFSByteRange * ByteRangeList = NULL;
+                            ULONG          ulByteRangeCount = 0;
+                            ULONG          ulIndex;
+                            BOOLEAN        bPurgeOnClose = FALSE;
+
+                            __try
                             {
-                                SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+
+                                ulByteRangeCount = AFSConstructCleanByteRangeList( ObjectInfo->Fcb,
+                                                                                   &ByteRangeList);
+
+                                if ( ByteRangeList != NULL ||
+                                     ulByteRangeCount == 0)
+                                {
+
+                                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+
+                                    bExtentsLocked = FALSE;
+
+                                    for ( ulIndex = 0; ulIndex < ulByteRangeCount; ulIndex++)
+                                    {
+
+                                        ULONG ulSize;
+
+                                        do {
+
+                                            ulSize = ByteRangeList[ulIndex].Length.QuadPart > DWORD_MAX ? DWORD_MAX : ByteRangeList[ulIndex].Length.LowPart;
+
+                                            if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                      &ByteRangeList[ulIndex].FileOffset,
+                                                                      ulSize,
+                                                                      FALSE))
+                                            {
+
+                                                bPurgeOnClose = TRUE;
+                                            }
+                                            else
+                                            {
+
+                                                bCleanExtents = TRUE;
+                                            }
+
+                                            ByteRangeList[ulIndex].Length.QuadPart -= ulSize;
+
+                                            ByteRangeList[ulIndex].FileOffset.QuadPart += ulSize;
+
+                                        } while ( ByteRangeList[ulIndex].Length.QuadPart > 0);
+                                    }
+                                }
+                                else
+                                {
+
+                                    //
+                                    // We couldn't allocate the memory to build the purge list
+                                    // so just walk the extent list while holding the ExtentsList Resource.
+                                    // This could deadlock but we do not have much choice.
+                                    //
+
+                                    le = ObjectInfo->Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+
+                                    ulProcessCount = 0;
+
+                                    ulCount = (ULONG)ObjectInfo->Fcb->Specific.File.ExtentCount;
+
+                                    if( ulCount > 0)
+                                    {
+                                        pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
+
+                                        while( ulProcessCount < ulCount)
+                                        {
+                                            pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
+
+                                            if( !BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                                            {
+                                                if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                          &pEntry->FileOffset,
+                                                                          pEntry->Size,
+                                                                          FALSE))
+                                                {
+
+                                                    bPurgeOnClose = TRUE;
+                                                }
+                                                else
+                                                {
+
+                                                    bCleanExtents = TRUE;
+                                                }
+                                            }
+
+                                            if( liCurrentOffset.QuadPart < pEntry->FileOffset.QuadPart)
+                                            {
+
+                                                liFlushLength.QuadPart = pEntry->FileOffset.QuadPart - liCurrentOffset.QuadPart;
+
+                                                while( liFlushLength.QuadPart > 0)
+                                                {
+
+                                                    if( liFlushLength.QuadPart > 512 * 1024000)
+                                                    {
+                                                        ulFlushLength = 512 * 1024000;
+                                                    }
+                                                    else
+                                                    {
+                                                        ulFlushLength = liFlushLength.LowPart;
+                                                    }
+
+                                                    if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                              &liCurrentOffset,
+                                                                              ulFlushLength,
+                                                                              FALSE))
+                                                    {
+
+                                                        bPurgeOnClose = TRUE;
+                                                    }
+                                                    else
+                                                    {
+
+                                                        bCleanExtents = TRUE;
+                                                    }
+
+                                                    liFlushLength.QuadPart -= ulFlushLength;
+                                                }
+                                            }
+
+                                            liCurrentOffset.QuadPart = pEntry->FileOffset.QuadPart + pEntry->Size;
+
+                                            ulProcessCount++;
+                                            le = le->Flink;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                                  NULL,
+                                                                  0,
+                                                                  FALSE))
+                                        {
+
+                                            bPurgeOnClose = TRUE;
+                                        }
+                                        else
+                                        {
+
+                                            bCleanExtents = TRUE;
+                                        }
+                                    }
+
+                                    if ( bPurgeOnClose)
+                                    {
+
+                                        SetFlag( ObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                                    }
+                                }
+                            }
+                            __except( EXCEPTION_EXECUTE_HANDLER)
+                            {
+
+                                ntStatus = GetExceptionCode();
+
+                                AFSDbgLogMsg( 0,
+                                              0,
+                                              "EXCEPTION - AFSPerformObjectInvalidate Status %08lX\n",
+                                              ntStatus);
                             }
                         }
                     }
-                    __except( EXCEPTION_EXECUTE_HANDLER)
+
+                    if ( bExtentsLocked)
                     {
 
-                        ntStatus = GetExceptionCode();
+                        AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
                     }
 
-                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource );
+                    if ( bLocked)
+                    {
 
-                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+                        AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Resource);
+                    }
 
-                    AFSReleaseCleanExtents( ObjectInfo->Fcb,
-                                            NULL);
+                    if ( bCleanExtents)
+                    {
+
+                        AFSReleaseCleanExtents( ObjectInfo->Fcb,
+                                                NULL);
+                    }
                 }
-
-                break;
-            }
-
-            default:
-            {
 
                 break;
             }

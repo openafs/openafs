@@ -673,4 +673,13 @@ typedef struct _AFS_DIRECTORY_SS_HDR
 
 } AFSSnapshotHdr;
 
+typedef struct _AFS_BYTE_RANGE
+{
+
+    LARGE_INTEGER       FileOffset;
+
+    LARGE_INTEGER       Length;
+
+} AFSByteRange;
+
 #endif /* _AFS_STRUCTS_H */
