@@ -1041,6 +1041,7 @@ extern void afs_FlushReclaimedVcaches(void);
 void afs_vcacheInit(int astatSize);
 extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 * retry,
 				     afs_int32 flag);
+extern void afs_BadFetchStatus(struct afs_conn *tc);
 extern int afs_CheckFetchStatus(struct afs_conn *tc,
                                 struct AFSFetchStatus *status);
 extern afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,

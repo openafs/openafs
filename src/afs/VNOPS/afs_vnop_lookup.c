@@ -630,6 +630,10 @@ afs_CheckBulkStatus(struct afs_conn *tc, int nFids, AFSBulkStats *statParm,
     int code;
 
     if (statParm->AFSBulkStats_len != nFids || cbParm->AFSCBs_len != nFids) {
+	afs_warn("afs: BulkFetchStatus length %u/%u, expected %u\n",
+	         (unsigned)statParm->AFSBulkStats_len,
+	         (unsigned)cbParm->AFSCBs_len, nFids);
+	afs_BadFetchStatus(tc);
 	return VBUSY;
     }
     for (i = 0; i < nFids; i++) {

@@ -2280,6 +2280,19 @@ afs_UpdateStatus(struct vcache *avc, struct VenusFid *afid,
     	afs_PutVolume(volp, READ_LOCK);
 }
 
+void
+afs_BadFetchStatus(struct afs_conn *tc)
+{
+    int addr = ntohl(tc->srvr->sa_ip);
+    afs_warn("afs: Invalid AFSFetchStatus from server %u.%u.%u.%u\n",
+             (addr >> 24) & 0xff, (addr >> 16) & 0xff, (addr >> 8) & 0xff,
+             (addr) & 0xff);
+    afs_warn("afs: This suggests the server may be sending bad data that "
+             "can lead to availability issues or data corruption. The "
+             "issue has been avoided for now, but it may not always be "
+             "detectable. Please upgrade the server if possible.\n");
+}
+
 /**
  * Check if a given AFSFetchStatus structure is sane.
  *
@@ -2298,6 +2311,12 @@ afs_CheckFetchStatus(struct afs_conn *tc, struct AFSFetchStatus *status)
         status->InterfaceVersion != 1 ||
         !(status->FileType > Invalid && status->FileType <= SymbolicLink) ||
         status->ParentVnode == 0 || status->ParentUnique == 0) {
+
+	afs_warn("afs: FetchStatus ec %u iv %u ft %u pv %u pu %u\n",
+	         (unsigned)status->errorCode, (unsigned)status->InterfaceVersion,
+	         (unsigned)status->FileType, (unsigned)status->ParentVnode,
+	         (unsigned)status->ParentUnique);
+	afs_BadFetchStatus(tc);
 
 	return VBUSY;
     }
