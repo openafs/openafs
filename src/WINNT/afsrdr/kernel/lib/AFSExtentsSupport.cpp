@@ -623,47 +623,57 @@ BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb,
 
         AFSAcquireShared( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE );
 
-        entry = AFSExtentForOffsetHint(Fcb, Offset, TRUE, *FirstExtent);
-        *FirstExtent = entry;
-
-        if (NULL == entry || !AFSExtentContains(entry, Offset))
+        __try
         {
-            try_return (retVal = FALSE);
+            entry = AFSExtentForOffsetHint(Fcb, Offset, TRUE, *FirstExtent);
+            *FirstExtent = entry;
+
+            if (NULL == entry || !AFSExtentContains(entry, Offset))
+            {
+                try_return (retVal = FALSE);
+            }
+
+            ASSERT(Offset->QuadPart >= entry->FileOffset.QuadPart);
+
+            while (TRUE)
+            {
+                if ((entry->FileOffset.QuadPart + entry->Size) >=
+                     (Offset->QuadPart + Size))
+                {
+                    //
+                    // The end is inside the extent
+                    //
+                    try_return (retVal = TRUE);
+                }
+
+                if (entry->Lists[AFS_EXTENTS_LIST].Flink == &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
+                {
+                    //
+                    // Run out of extents
+                    //
+                    try_return (retVal = FALSE);
+                }
+
+                newEntry = NextExtent( entry, AFS_EXTENTS_LIST );
+
+                if (newEntry->FileOffset.QuadPart !=
+                     (entry->FileOffset.QuadPart + entry->Size))
+                {
+                    //
+                    // Gap
+                    //
+                    try_return (retVal = FALSE);
+                }
+
+                entry = newEntry;
+            }
         }
-
-        ASSERT(Offset->QuadPart >= entry->FileOffset.QuadPart);
-
-        while (TRUE)
+        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
         {
-            if ((entry->FileOffset.QuadPart + entry->Size) >=
-                                                (Offset->QuadPart + Size))
-            {
-                //
-                // The end is inside the extent
-                //
-                try_return (retVal = TRUE);
-            }
 
-            if (entry->Lists[AFS_EXTENTS_LIST].Flink == &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
-            {
-                //
-                // Run out of extents
-                //
-                try_return (retVal = FALSE);
-            }
-
-            newEntry = NextExtent( entry, AFS_EXTENTS_LIST );
-
-            if (newEntry->FileOffset.QuadPart !=
-                (entry->FileOffset.QuadPart + entry->Size))
-            {
-                //
-                // Gap
-                //
-                try_return (retVal = FALSE);
-            }
-
-            entry = newEntry;
+            AFSDbgLogMsg( 0,
+                          0,
+                          "EXCEPTION - AFSDoExtentsMapRegion\n");
         }
 
 try_exit:
@@ -3455,140 +3465,151 @@ AFSMarkDirty( IN AFSFcb *Fcb,
     AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
                     TRUE);
 
-    //
-    // Find the insertion point
-    //
-
-    if( pNPFcb->Specific.File.DirtyListHead == NULL)
+    __try
     {
+        //
+        // Find the insertion point
+        //
 
-        bInsertTail = TRUE;
-    }
-    else if( StartingByte->QuadPart == 0)
-    {
-
-        bInsertHead = TRUE;
-    }
-    else
-    {
-
-        pCurrentExtent = pNPFcb->Specific.File.DirtyListHead;
-
-        while( pCurrentExtent != NULL)
+        if( pNPFcb->Specific.File.DirtyListHead == NULL)
         {
 
-            if( pCurrentExtent->FileOffset.QuadPart + pCurrentExtent->Size >= StartingByte->QuadPart ||
-                pCurrentExtent->DirtyList.fLink == NULL)
-            {
-
-                break;
-            }
-
-            pCurrentExtent = (AFSExtent *)pCurrentExtent->DirtyList.fLink;
+            bInsertTail = TRUE;
         }
-    }
-
-    while( ulCount < ExtentsCount)
-    {
-
-        pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
-
-        if( !BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+        else if( StartingByte->QuadPart == 0)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSMarkDirty Marking extent offset %I64X Length %08lX DIRTY\n",
-                          pExtent->FileOffset.QuadPart,
-                          pExtent->Size);
+            bInsertHead = TRUE;
+        }
+        else
+        {
 
-            pExtent->DirtyList.fLink = NULL;
-            pExtent->DirtyList.bLink = NULL;
+            pCurrentExtent = pNPFcb->Specific.File.DirtyListHead;
 
-            if( bInsertHead)
+            while( pCurrentExtent != NULL)
             {
 
-                pExtent->DirtyList.fLink = (void *)pNPFcb->Specific.File.DirtyListHead;
+                if( pCurrentExtent->FileOffset.QuadPart + pCurrentExtent->Size >= StartingByte->QuadPart ||
+                    pCurrentExtent->DirtyList.fLink == NULL)
+                {
 
+                    break;
+                }
+
+                pCurrentExtent = (AFSExtent *)pCurrentExtent->DirtyList.fLink;
+            }
+        }
+
+        while( ulCount < ExtentsCount)
+        {
+
+            pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
+
+            if( !BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSMarkDirty Marking extent offset %I64X Length %08lX DIRTY\n",
+                              pExtent->FileOffset.QuadPart,
+                              pExtent->Size);
+
+                pExtent->DirtyList.fLink = NULL;
                 pExtent->DirtyList.bLink = NULL;
 
-                pNPFcb->Specific.File.DirtyListHead->DirtyList.bLink = (void *)pExtent;
-
-                pNPFcb->Specific.File.DirtyListHead = pExtent;
-
-                pCurrentExtent = pExtent;
-
-                bInsertHead = FALSE;
-            }
-            else if( bInsertTail)
-            {
-
-                if( pNPFcb->Specific.File.DirtyListHead == NULL)
+                if( bInsertHead)
                 {
+
+                    pExtent->DirtyList.fLink = (void *)pNPFcb->Specific.File.DirtyListHead;
+
+                    pExtent->DirtyList.bLink = NULL;
+
+                    pNPFcb->Specific.File.DirtyListHead->DirtyList.bLink = (void *)pExtent;
 
                     pNPFcb->Specific.File.DirtyListHead = pExtent;
+
+                    pCurrentExtent = pExtent;
+
+                    bInsertHead = FALSE;
                 }
-                else
+                else if( bInsertTail)
                 {
 
-                    pNPFcb->Specific.File.DirtyListTail->DirtyList.fLink = (void *)pExtent;
+                    if( pNPFcb->Specific.File.DirtyListHead == NULL)
+                    {
 
-                    pExtent->DirtyList.bLink = (void *)pNPFcb->Specific.File.DirtyListTail;
-                }
+                        pNPFcb->Specific.File.DirtyListHead = pExtent;
+                    }
+                    else
+                    {
 
-                pNPFcb->Specific.File.DirtyListTail = pExtent;
-            }
-            else
-            {
+                        pNPFcb->Specific.File.DirtyListTail->DirtyList.fLink = (void *)pExtent;
 
-                pExtent->DirtyList.fLink = pCurrentExtent->DirtyList.fLink;
-                pExtent->DirtyList.bLink = (void *)pCurrentExtent;
-
-                if( pExtent->DirtyList.fLink == NULL)
-                {
+                        pExtent->DirtyList.bLink = (void *)pNPFcb->Specific.File.DirtyListTail;
+                    }
 
                     pNPFcb->Specific.File.DirtyListTail = pExtent;
                 }
                 else
                 {
 
-                    ((AFSExtent *)pExtent->DirtyList.fLink)->DirtyList.bLink = (void *)pExtent;
+                    pExtent->DirtyList.fLink = pCurrentExtent->DirtyList.fLink;
+
+                    pExtent->DirtyList.bLink = (void *)pCurrentExtent;
+
+                    if( pExtent->DirtyList.fLink == NULL)
+                    {
+
+                        pNPFcb->Specific.File.DirtyListTail = pExtent;
+                    }
+                    else
+                    {
+
+                        ((AFSExtent *)pExtent->DirtyList.fLink)->DirtyList.bLink = (void *)pExtent;
+                    }
+
+                    pCurrentExtent->DirtyList.fLink = (void *)pExtent;
+
+                    pCurrentExtent = pExtent;
                 }
 
-                pCurrentExtent->DirtyList.fLink = (void *)pExtent;
+                pExtent->Flags |= AFS_EXTENT_DIRTY;
+
+                //
+                // Up the dirty count
+                //
+
+                lCount = InterlockedIncrement( &Fcb->Specific.File.ExtentsDirtyCount);
+            }
+            else
+            {
 
                 pCurrentExtent = pExtent;
             }
 
-            pExtent->Flags |= AFS_EXTENT_DIRTY;
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_ACTIVE_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSMarkDirty Decrement count on extent %08lX Cnt %d\n",
+                          pExtent,
+                          pExtent->ActiveCount);
 
-            //
-            // Up the dirty count
-            //
+            if( DerefExtents)
+            {
+                ASSERT( pExtent->ActiveCount > 0);
+                lCount = InterlockedDecrement( &pExtent->ActiveCount);
+            }
 
-            lCount = InterlockedIncrement( &Fcb->Specific.File.ExtentsDirtyCount);
+            pExtent = pNextExtent;
+
+            ulCount++;
         }
-        else
-        {
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
 
-            pCurrentExtent = pExtent;
-        }
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_ACTIVE_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSMarkDirty Decrement count on extent %08lX Cnt %d\n",
-                      pExtent,
-                      pExtent->ActiveCount);
-
-        if( DerefExtents)
-        {
-            ASSERT( pExtent->ActiveCount > 0);
-            lCount = InterlockedDecrement( &pExtent->ActiveCount);
-        }
-
-        pExtent = pNextExtent;
-
-        ulCount++;
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSMarkDirty\n");
     }
 
     AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
@@ -4235,127 +4256,139 @@ AFSSetupMD5Hash( IN AFSFcb *Fcb,
 
         AFSAcquireShared( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE);
 
-        liByteOffset.QuadPart = ByteOffset->QuadPart;
-
-        while( ulCount < ExtentsCount)
+        __try
         {
+            liByteOffset.QuadPart = ByteOffset->QuadPart;
 
-            RtlZeroMemory( pExtent->MD5,
-                           sizeof( pExtent->MD5));
-
-            pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
-
-            if( liByteOffset.QuadPart == pExtent->FileOffset.QuadPart &&
-                ByteCount < pExtent->Size)
+            while( ulCount < ExtentsCount)
             {
 
-                if( pExtentBuffer == NULL)
+                RtlZeroMemory( pExtent->MD5,
+                               sizeof( pExtent->MD5));
+
+                pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
+
+                if( liByteOffset.QuadPart == pExtent->FileOffset.QuadPart &&
+                    ByteCount < pExtent->Size)
+                {
+
+                    if( pExtentBuffer == NULL)
+                    {
+
+                        pExtentBuffer = AFSExAllocatePoolWithTag( PagedPool,
+                                                                  pExtent->Size,
+                                                                  AFS_GENERIC_MEMORY_9_TAG);
+
+                        if( pExtentBuffer == NULL)
+                        {
+
+                            break;
+                        }
+                    }
+
+                    RtlZeroMemory( pExtentBuffer,
+                                   pExtent->Size);
+
+                    RtlCopyMemory( pExtentBuffer,
+                                   pCurrentBuffer,
+                                   ByteCount);
+
+                    pMD5Buffer = (char *)pExtentBuffer;
+
+                    ulCurrentLen = ByteCount;
+                }
+                else if( liByteOffset.QuadPart != pExtent->FileOffset.QuadPart)
                 {
 
                     pExtentBuffer = AFSExAllocatePoolWithTag( PagedPool,
                                                               pExtent->Size,
-                                                              AFS_GENERIC_MEMORY_9_TAG);
+                                                              AFS_GENERIC_MEMORY_10_TAG);
 
                     if( pExtentBuffer == NULL)
                     {
 
                         break;
                     }
-                }
 
-                RtlZeroMemory( pExtentBuffer,
-                               pExtent->Size);
+                    RtlZeroMemory( pExtentBuffer,
+                                   pExtent->Size);
 
-                RtlCopyMemory( pExtentBuffer,
-                               pCurrentBuffer,
-                               ByteCount);
-
-                pMD5Buffer = (char *)pExtentBuffer;
-
-                ulCurrentLen = ByteCount;
-            }
-            else if( liByteOffset.QuadPart != pExtent->FileOffset.QuadPart)
-            {
-
-                pExtentBuffer = AFSExAllocatePoolWithTag( PagedPool,
-                                                          pExtent->Size,
-                                                          AFS_GENERIC_MEMORY_10_TAG);
-
-                if( pExtentBuffer == NULL)
-                {
-
-                    break;
-                }
-
-                RtlZeroMemory( pExtentBuffer,
-                               pExtent->Size);
-
-                if( BooleanFlagOn( AFSLibControlFlags, AFS_REDIR_LIB_FLAGS_NONPERSISTENT_CACHE))
-                {
+                    if( BooleanFlagOn( AFSLibControlFlags, AFS_REDIR_LIB_FLAGS_NONPERSISTENT_CACHE))
+                    {
 
 #ifdef AMD64
-                    RtlCopyMemory( pExtentBuffer,
-                                   ((char *)AFSLibCacheBaseAddress + pExtent->CacheOffset.QuadPart),
-                                   pExtent->Size);
+                        RtlCopyMemory( pExtentBuffer,
+                                       ((char *)AFSLibCacheBaseAddress + pExtent->CacheOffset.QuadPart),
+                                       pExtent->Size);
 #else
-                    ASSERT( pExtent->CacheOffset.HighPart == 0);
-                    RtlCopyMemory( pExtentBuffer,
-                                   ((char *)AFSLibCacheBaseAddress + pExtent->CacheOffset.LowPart),
-                                   pExtent->Size);
+                        ASSERT( pExtent->CacheOffset.HighPart == 0);
+                        RtlCopyMemory( pExtentBuffer,
+                                       ((char *)AFSLibCacheBaseAddress + pExtent->CacheOffset.LowPart),
+                                       pExtent->Size);
 #endif
 
-                    ulBytesRead = pExtent->Size;
+                        ulBytesRead = pExtent->Size;
+                    }
+                    else
+                    {
+
+                        ntStatus = AFSReadCacheFile( pExtentBuffer,
+                                                     &pExtent->CacheOffset,
+                                                     pExtent->Size,
+                                                     &ulBytesRead);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            break;
+                        }
+                    }
+
+                    pMD5Buffer = (char *)pExtentBuffer;
+
+                    ulCurrentLen = min( ByteCount, pExtent->Size - (ULONG)(liByteOffset.QuadPart - pExtent->FileOffset.QuadPart));
+
+                    RtlCopyMemory( (void *)((char *)pExtentBuffer + (ULONG)(liByteOffset.QuadPart - pExtent->FileOffset.QuadPart)),
+                                   pCurrentBuffer,
+                                   ulCurrentLen);
                 }
                 else
                 {
 
-                    ntStatus = AFSReadCacheFile( pExtentBuffer,
-                                                 &pExtent->CacheOffset,
-                                                 pExtent->Size,
-                                                 &ulBytesRead);
+                    ulCurrentLen = pExtent->Size;
 
-                    if( !NT_SUCCESS( ntStatus))
-                    {
-                        break;
-                    }
+                    pMD5Buffer = pCurrentBuffer;
                 }
 
-                pMD5Buffer = (char *)pExtentBuffer;
+                AFSGenerateMD5( pMD5Buffer,
+                                pExtent->Size,
+                                pExtent->MD5);
 
-                ulCurrentLen = min( ByteCount, pExtent->Size - (ULONG)(liByteOffset.QuadPart - pExtent->FileOffset.QuadPart));
+                pExtent = pNextExtent;
 
-                RtlCopyMemory( (void *)((char *)pExtentBuffer + (ULONG)(liByteOffset.QuadPart - pExtent->FileOffset.QuadPart)),
-                               pCurrentBuffer,
-                               ulCurrentLen);
+                ulCount++;
+
+                ByteCount -= ulCurrentLen;
+
+                pCurrentBuffer += ulCurrentLen;
+
+                liByteOffset.QuadPart += ulCurrentLen;
             }
-            else
-            {
 
-                ulCurrentLen = pExtent->Size;
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetupMD5Hash Releasing Fcb extents lock %08lX SHARED %08lX\n",
+                          &Fcb->NPFcb->Specific.File.ExtentsResource,
+                          PsGetCurrentThread());
 
-                pMD5Buffer = pCurrentBuffer;
-            }
-
-            AFSGenerateMD5( pMD5Buffer,
-                            pExtent->Size,
-                            pExtent->MD5);
-
-            pExtent = pNextExtent;
-
-            ulCount++;
-
-            ByteCount -= ulCurrentLen;
-
-            pCurrentBuffer += ulCurrentLen;
-
-            liByteOffset.QuadPart += ulCurrentLen;
         }
+        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+        {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSSetupMD5Hash Releasing Fcb extents lock %08lX SHARED %08lX\n",
-                      &Fcb->NPFcb->Specific.File.ExtentsResource,
-                      PsGetCurrentThread());
+            AFSDbgLogMsg( 0,
+                          0,
+                          "EXCEPTION - AFSSetupMD5Hash\n");
+        }
 
         AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
 
