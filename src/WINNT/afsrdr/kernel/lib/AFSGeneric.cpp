@@ -424,10 +424,10 @@ AFSLockUserBuffer( IN void *UserBuffer,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     void *pAddress = NULL;
-	MDL *pMdl = NULL;
+    MDL *pMdl = NULL;
 
-	__Enter
-	{
+    __Enter
+    {
 
         pMdl = IoAllocateMdl( UserBuffer,
                               BufferLength,
@@ -435,11 +435,11 @@ AFSLockUserBuffer( IN void *UserBuffer,
                               FALSE,
                               NULL);
 
-		if( pMdl == NULL)
-		{
+            if( pMdl == NULL)
+            {
 
-			try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-		}
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
 
         //
         //  Lock the new Mdl in memory.
@@ -449,11 +449,11 @@ AFSLockUserBuffer( IN void *UserBuffer,
         {
 
             MmProbeAndLockPages( pMdl,
-								 KernelMode,
+                                 KernelMode,
                                  IoWriteAccess);
 
             pAddress = MmGetSystemAddressForMdlSafe( pMdl,
-													 NormalPagePriority);
+                                                     NormalPagePriority);
         }
         __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
         {
@@ -463,11 +463,11 @@ AFSLockUserBuffer( IN void *UserBuffer,
             pAddress = NULL;
         }
 
-		if( pMdl != NULL)
-		{
+        if( pMdl != NULL)
+        {
 
-			*Mdl = pMdl;
-		}
+            *Mdl = pMdl;
+        }
 
 try_exit:
 
