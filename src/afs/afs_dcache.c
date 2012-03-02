@@ -2111,6 +2111,32 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		afs_AdjustSize(tdc, size);	/* changes chunkBytes */
 		/* max size for transfer still in size */
 	    }
+
+	    if (size) {
+		/* For the actual fetch, do not limit the request to the
+		 * length of the file. If this results in a read past EOF on
+		 * the server, the server will just reply with less data than
+		 * requested. If we limit ourselves to only requesting data up
+		 * to the avc file length, we open ourselves up to races if the
+		 * file is extended on the server at about the same time.
+		 *
+		 * However, we must restrict ourselves to the avc->f.truncPos
+		 * length, since this represents an outstanding local
+		 * truncation of the file that will be committed to the
+		 * fileserver when we actually write the fileserver contents.
+		 * If we do not restrict the fetch length based on
+		 * avc->f.truncPos, a different truncate operation extending
+		 * the file length could cause the old data after
+		 * avc->f.truncPos to reappear, instead of extending the file
+		 * with NUL bytes. */
+		size = AFS_CHUNKSIZE(abyte);
+		if (Position + size > avc->f.truncPos) {
+		    size = avc->f.truncPos - Position;
+		}
+		if (size < 0) {
+		    size = 0;
+		}
+	    }
 	}
 	if (afs_mariner && !tdc->f.chunk)
 	    afs_MarinerLog("fetch$Fetching", avc);	/* , Position, size, afs_indexCounter ); */
