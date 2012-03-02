@@ -2280,6 +2280,30 @@ afs_UpdateStatus(struct vcache *avc, struct VenusFid *afid,
     	afs_PutVolume(volp, READ_LOCK);
 }
 
+/**
+ * Check if a given AFSFetchStatus structure is sane.
+ *
+ * @param[in] tc The server from which we received the status
+ * @param[in] status The status we received
+ *
+ * @return whether the given structure is valid or not
+ *  @retval 0 the structure is fine
+ *  @retval nonzero the structure looks like garbage; act as if we received
+ *                  the returned error code from the server
+ */
+int
+afs_CheckFetchStatus(struct afs_conn *tc, struct AFSFetchStatus *status)
+{
+    if (status->errorCode ||
+        status->InterfaceVersion != 1 ||
+        !(status->FileType > Invalid && status->FileType <= SymbolicLink) ||
+        status->ParentVnode == 0 || status->ParentUnique == 0) {
+
+	return VBUSY;
+    }
+    return 0;
+}
+
 /*!
  * Must be called with avc write-locked
  * don't absolutely have to invalidate the hint unless the dv has
@@ -2310,6 +2334,10 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 	    RX_AFS_GLOCK();
 
 	    XSTATS_END_TIME;
+
+	    if (code == 0) {
+		code = afs_CheckFetchStatus(tc, Outsp);
+	    }
 
 	} else
 	    code = -1;

@@ -622,6 +622,29 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
     return 1;
 }
 
+static int
+afs_CheckBulkStatus(struct afs_conn *tc, int nFids, AFSBulkStats *statParm,
+                    AFSCBs *cbParm)
+{
+    int i;
+    int code;
+
+    if (statParm->AFSBulkStats_len != nFids || cbParm->AFSCBs_len != nFids) {
+	return VBUSY;
+    }
+    for (i = 0; i < nFids; i++) {
+	if (statParm->AFSBulkStats_val[i].errorCode) {
+	    continue;
+	}
+	code = afs_CheckFetchStatus(tc, &statParm->AFSBulkStats_val[i]);
+	if (code) {
+	    return code;
+	}
+    }
+
+    return 0;
+}
+
 extern int BlobScan(struct dcache * afile, afs_int32 ablob);
 
 /* called with an unlocked directory and directory cookie.  Areqp
@@ -1001,6 +1024,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		RX_AFS_GLOCK();
 	    }
 	    XSTATS_END_TIME;
+
+	    if (code == 0) {
+		code = afs_CheckBulkStatus(tcp, fidIndex, &statParm, &cbParm);
+	    }
 	} else
 	    code = -1;
     } while (afs_Analyze
