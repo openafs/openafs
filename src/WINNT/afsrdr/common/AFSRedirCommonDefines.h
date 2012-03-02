@@ -125,7 +125,7 @@
 #define AFS_NETWORK_PROVIDER_11_TAG  'BZFA'
 #define AFS_AG_ENTRY_CB_TAG          'GAFA'
 #define AFS_PROCESS_AG_CB_TAG        'APFA'
-
+#define AFS_BYTERANGE_TAG            '_RBA'
 #define __Enter
 
 #define try_return(S) { S; goto try_exit; }
