@@ -5,7 +5,7 @@ AC_CONFIG_SRCDIR(src/libafs/Makefile.common.in)
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.6.1fc3
+MACOS_VERSION=1.6.1fc4
 
 AC_SUBST(MACOS_VERSION)
 
