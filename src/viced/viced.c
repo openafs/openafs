@@ -1381,7 +1381,6 @@ ParseArgs(int argc, char *argv[])
 	    }
 
 	    strncpy(local_realms[num_lrealms++], optlist->data, AFS_REALM_SZ);
-	    optlist = optlist->next;
 	}
     }
 
