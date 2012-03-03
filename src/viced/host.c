@@ -2462,8 +2462,10 @@ h_FindClient_r(struct rx_connection *tcon)
 		     tname, tinst, tcell, expTime, kvno));
 	    strncpy(uname, tname, sizeof(uname));
 	    if (ilen) {
-		if (strlen(uname) + 1 + ilen >= sizeof(uname))
+		if (strlen(uname) + 1 + ilen >= sizeof(uname)) {
+		    code = -1;
 		    goto bad_name;
+		}
 		strcat(uname, ".");
 		strcat(uname, tinst);
 	    }
