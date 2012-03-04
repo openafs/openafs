@@ -1,3 +1,25 @@
+Since 1.6.0102 (1.6.1pre3)
+
+ * Workaround Win7 SMB Reconnect Bug
+
+   The SMB specification permits the server to save a round trip
+   in the GSS SPNEGO negotiation by sending an initial security blob.
+   Unfortunately, doing so trips a bug in Windows 7 and Server 2008 R2
+   whereby the SMB 1.x redirector drops the blob on the floor after
+   the first connection to the server and simply attempts to reuse
+   the previous authentication context.  This bug can be avoided by
+   the server sending no security blob in the SMB_COM_NEGOTIATE
+   response.  This forces the client to send an initial GSS init_sec_context
+   blob under all circumstances which works around the bug in Microsoft's
+   code.
+
+   As a result of the SMB 1.x bug, all attempts to reconnect fail due to
+   SMB connection resets.  The SMB 1.x redirector will retry indefinitely
+   but all processes with outstanding requests to \\AFS will block until
+   the machine is rebooted.
+
+There were no 1.6.1pre1 and pre2 builds for the Windows platform.
+
 Since 1.6.0002 (1.6.0b)
 
  * Mount point strings always have a trailing dot
