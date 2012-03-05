@@ -2181,8 +2181,6 @@ h_GetHost_r(struct rx_connection *tcon)
 
 
 static char localcellname[PR_MAXNAMELEN + 1];
-char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
-int  num_lrealms = -1;
 
 /* not reentrant */
 void
@@ -2190,75 +2188,22 @@ h_InitHostPackage(void)
 {
     memset(&nulluuid, 0, sizeof(afsUUID));
     afsconf_GetLocalCell(confDir, localcellname, PR_MAXNAMELEN);
-    if (num_lrealms == -1) {
-	int i;
-	for (i=0; i<AFS_NUM_LREALMS; i++) {
-	    if (afs_krb_get_lrealm(local_realms[i], i) != 0 /*KSUCCESS*/)
-		break;
-	}
-
-	if (i == 0) {
-	    ViceLog(0,
-		    ("afs_krb_get_lrealm failed, using %s.\n",
-		     localcellname));
-	    strncpy(local_realms[0], localcellname, AFS_REALM_SZ);
-	    num_lrealms = i =1;
-	} else {
-	    num_lrealms = i;
-	}
-
-	/* initialize the rest of the local realms to nullstring for debugging */
-	for (; i<AFS_NUM_LREALMS; i++)
-	    local_realms[i][0] = '\0';
-    }
     rxcon_ident_key = rx_KeyCreate((rx_destructor_t) free);
     rxcon_client_key = rx_KeyCreate((rx_destructor_t) 0);
     MUTEX_INIT(&host_glock_mutex, "host glock", MUTEX_DEFAULT, 0);
 }
 
 static int
-MapName_r(char *aname, char *acell, afs_int32 * aval)
+MapName_r(char *uname, afs_int32 * aval)
 {
     namelist lnames;
     idlist lids;
     afs_int32 code;
-    afs_int32 anamelen, cnamelen;
-    int foreign = 0;
-    char *tname;
-
-    anamelen = strlen(aname);
-    if (anamelen >= PR_MAXNAMELEN)
-	return -1;		/* bad name -- caller interprets this as anonymous, but retries later */
 
     lnames.namelist_len = 1;
-    lnames.namelist_val = (prname *) aname;	/* don't malloc in the common case */
+    lnames.namelist_val = (prname *) uname;
     lids.idlist_len = 0;
     lids.idlist_val = NULL;
-
-    cnamelen = strlen(acell);
-    if (cnamelen) {
-	if (afs_is_foreign_ticket_name(aname, NULL, acell, localcellname)) {
-	    ViceLog(2,
-		    ("MapName: cell is foreign.  cell=%s, localcell=%s, localrealms={%s,%s,%s,%s}\n",
-		    acell, localcellname, local_realms[0],local_realms[1],local_realms[2],local_realms[3]));
-	    if ((anamelen + cnamelen + 1) >= PR_MAXNAMELEN) {
-		ViceLog(2,
-			("MapName: Name too long, using AnonymousID for %s@%s\n",
-			 aname, acell));
-		*aval = AnonymousID;
-		return 0;
-	    }
-	    foreign = 1;	/* attempt cross-cell authentication */
-	    tname = (char *)malloc(PR_MAXNAMELEN);
-	    if (!tname) {
-		ViceLogThenPanic(0, ("Failed malloc in MapName_r\n"));
-	    }
-	    strcpy(tname, aname);
-	    tname[anamelen] = '@';
-	    strcpy(tname + anamelen + 1, acell);
-	    lnames.namelist_val = (prname *) tname;
-	}
-    }
 
     H_UNLOCK;
     code = hpr_NameToId(&lnames, &lids);
@@ -2278,10 +2223,6 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 		     lnames.namelist_val[0]));
 	    code = -1;
 	}
-    }
-
-    if (foreign) {
-	free(lnames.namelist_val);	/* We allocated this above, so we must free it now. */
     }
     return code;
 }
@@ -2319,6 +2260,34 @@ h_ID2Client(afs_int32 vid)
 
     H_UNLOCK;
     return NULL;
+}
+
+static int
+format_vname(char *vname, int usize, const char *tname, const char *tinst,
+	     const char *tcell, afs_int32 islocal)
+{
+    int len;
+
+    len = strlcpy(vname, tname, usize);
+    if (len >= usize)
+	return -1;
+    if (tinst[0]) {
+	len = strlcat(vname, ".", usize);
+	if (len >= usize)
+	    return -1;
+	len = strlcat(vname, tinst, usize);
+	if (len >= usize)
+	    return -1;
+    }
+    if (tcell[0] && !islocal) {
+	len = strlcat(vname, "@", usize);
+	if (len >= usize)
+	    return -1;
+	len = strlcat(vname, tcell, usize);
+	if (len >= usize)
+	    return -1;
+    }
+    return 0;
 }
 
 /*
@@ -2386,6 +2355,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	expTime = 0x7fffffff;
     } else if (authClass == 2) {
 	afs_int32 kvno;
+	afs_int32 islocal;
 
 	/* kerberos ticket */
 	code = rxkad_GetServerInfo(tcon, /*level */ 0, (afs_uint32 *)&expTime,
@@ -2395,29 +2365,34 @@ h_FindClient_r(struct rx_connection *tcon)
 	    viceid = AnonymousID;
 	    expTime = 0x7fffffff;
 	} else {
-	    int ilen = strlen(tinst);
 	    ViceLog(5,
 		    ("FindClient: rxkad conn: name=%s,inst=%s,cell=%s,exp=%d,kvno=%d\n",
 		     tname, tinst, tcell, expTime, kvno));
-	    strncpy(uname, tname, sizeof(uname));
-	    if (ilen) {
-		if (strlen(uname) + 1 + ilen >= sizeof(uname)) {
-		    code = -1;
-		    goto bad_name;
-		}
-		strcat(uname, ".");
-		strcat(uname, tinst);
-	    }
-	    /* translate the name to a vice id */
-	    code = MapName_r(uname, tcell, &viceid);
+	    code = afsconf_IsLocalRealmMatch(confDir, &islocal, tname, tinst, tcell);
 	    if (code) {
-	      bad_name:
-		ViceLog(1,
-			("failed to map name=%s, cell=%s -> code=%d\n", uname,
-			 tcell, code));
-		fail = 1;
+		ViceLog(0, ("FindClient: local realm check failed; code=%d", code));
 		viceid = AnonymousID;
 		expTime = 0x7fffffff;
+	    }
+	    if (!code) {
+		code = format_vname(uname, sizeof(uname), tname, tinst, tcell, islocal);
+		if (code) {
+		    ViceLog(0, ("FindClient: uname truncated."));
+		    viceid = AnonymousID;
+		    expTime = 0x7fffffff;
+		}
+	    }
+	    if (!code) {
+		/* translate the name to a vice id */
+		code = MapName_r(uname, &viceid);
+		if (code) {
+		    ViceLog(1,
+			    ("failed to map name=%s -> code=%d\n", uname,
+			     code));
+		    fail = 1;
+		    viceid = AnonymousID;
+		    expTime = 0x7fffffff;
+		}
 	    }
 	}
     } else {

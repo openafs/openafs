@@ -1362,8 +1362,6 @@ ParseArgs(int argc, char *argv[])
     /* rxkad options */
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
     if (cmd_OptionAsList(opts, OPT_realm, &optlist) == 0) {
-	extern char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
-	extern int num_lrealms;
 
 	for (; optlist != NULL; optlist=optlist->next) {
 	    if (strlen(optlist->data) >= AFS_REALM_SZ) {
@@ -1371,16 +1369,7 @@ ParseArgs(int argc, char *argv[])
 		       "characters.\n", AFS_REALM_SZ);
 		return -1;
 	    }
-
-	    if (num_lrealms == -1)
-		num_lrealms = 0;
-	    if (num_lrealms >= AFS_NUM_LREALMS) {
-		printf("a maximum of %d -realm arguments can be "
-		       "specified.\n", AFS_NUM_LREALMS);
-	        return -1;
-	    }
-
-	    strncpy(local_realms[num_lrealms++], optlist->data, AFS_REALM_SZ);
+	    afsconf_SetLocalRealm(optlist->data); /* overrides krb.conf file, if one */
 	}
     }
 
