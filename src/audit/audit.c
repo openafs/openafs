@@ -47,6 +47,11 @@ extern struct osi_audit_ops audit_sysvmq_ops;
 #endif
 
 static struct {
+    void *rock;
+    int (*islocal)(void *rock, char *name, char *inst, char *cell);
+} audit_user_check = { NULL, NULL };
+
+static struct {
     const char *name;
     const struct osi_audit_ops *ops;
 } audit_interfaces[] = {
@@ -404,7 +409,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
     struct rx_peer *peer;
     afs_int32 secClass;
     afs_int32 code;
-    char afsName[MAXKTCNAMELEN];
+    char afsName[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
     afs_int32 hostId;
     va_list vaList;
 
@@ -427,8 +432,6 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
                 char tcell[MAXKTCREALMLEN];
                 char name[MAXKTCNAMELEN];
                 char inst[MAXKTCNAMELEN];
-                char vname[256];
-                int  ilen, clen;
 
                 code =
 		    rxkad_GetServerInfo(conn, NULL, NULL, name, inst, tcell,
@@ -437,62 +440,26 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 		    osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent, AUD_END);
 		    strcpy(afsName, "--NoName--");
 		} else {
-                    strncpy(vname, name, sizeof(vname));
-                    if ((ilen = strlen(inst))) {
-                        if (strlen(vname) + 1 + ilen >= sizeof(vname))
-                            goto done;
-                        strcat(vname, ".");
-                        strcat(vname, inst);
-                    }
-                    if ((clen = strlen(tcell))) {
-                        static char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
-			static int  num_lrealms = -1;
-			int i, lrealm_match;
-
-			if (num_lrealms == -1) {
-			    for (i = 0; i < AFS_NUM_LREALMS; i++) {
-				if (afs_krb_get_lrealm(local_realms[i], i) != 0 /*KSUCCESS*/)
-				    break;
-			    }
-
-			    num_lrealms = i;
-                        }
-
-			/* Check to see if the ticket cell matches one of the local realms */
-			lrealm_match = 0;
-			for (i = 0; i < num_lrealms ; i++ ) {
-			    if (!strcasecmp(local_realms[i], tcell)) {
-				lrealm_match = 1;
-				break;
-			    }
-			}
-			/* If yes, then make sure that the name is not present in
-  			 * an exclusion list */
-			if (lrealm_match) {
-			    char uname[256];
-			    if (inst[0])
-				snprintf(uname,sizeof(uname),"%s.%s@%s",name,inst,tcell);
-			    else
-				snprintf(uname,sizeof(uname),"%s@%s",name,tcell);
-
-			    if (afs_krb_exclusion(uname))
-				lrealm_match = 0;
-			}
-
-			if (!lrealm_match) {
-                            if (strlen(vname) + 1 + clen >= sizeof(vname))
-                                goto done;
-                            strcat(vname, "@");
-                            strcat(vname, tcell);
-                        }
-                    }
-                    strcpy(afsName, vname);
-                }
+		    afs_int32 islocal = 0;
+		    if (audit_user_check.islocal) {
+			islocal =
+			    audit_user_check.islocal(audit_user_check.rock,
+						     name, inst, tcell);
+		    }
+		    strlcpy(afsName, name, sizeof(afsName));
+		    if (inst[0]) {
+			strlcat(afsName, ".", sizeof(afsName));
+			strlcat(afsName, inst, sizeof(afsName));
+		    }
+		    if (tcell[0] && !islocal) {
+			strlcat(afsName, "@", sizeof(afsName));
+			strlcat(afsName, tcell, sizeof(afsName));
+		    }
+		}
 	    } else {		/* Unauthenticated & unknown */
 		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent, AUD_END);
                 strcpy(afsName, "--Unknown--");
 	    }
-	done:
 	    peer = rx_PeerOf(conn);	/* conn -> peer */
 	    if (peer)
 		hostId = rx_HostOf(peer);	/* peer -> host */
@@ -574,6 +541,15 @@ osi_audit_interface(const char *interface)
     }
 
     return 1;
+}
+
+void
+osi_audit_set_user_check(void *rock,
+			 int (*islocal) (void *rock, char *name, char *inst,
+					 char *cell))
+{
+    audit_user_check.rock = rock;
+    audit_user_check.islocal = islocal;
 }
 
 void

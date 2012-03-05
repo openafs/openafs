@@ -69,6 +69,25 @@ KA_rxstat_userok(struct rx_call *call)
     return afsconf_SuperUser(KA_conf, call, NULL);
 }
 
+/**
+ * Return true if this name is a member of the local realm.
+ */
+static int
+KA_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	ViceLog(0,
+		("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell));
+    }
+    return islocal;
+}
+
 afs_int32
 es_Report(char *fmt, ...)
 {
@@ -330,6 +349,9 @@ main(int argc, char *argv[])
 	    goto abort;
 	ViceLog(0, ("Using server list from %s cell database.\n", cell));
     }
+
+    /* initialize audit user check */
+    osi_audit_set_user_check(KA_conf, KA_IsLocalRealmMatch);
 
     /* initialize ubik */
     if (level == rxkad_clear)

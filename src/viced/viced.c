@@ -286,6 +286,25 @@ fs_rxstat_userok(struct rx_call *call)
     return afsconf_SuperUser(confDir, call, NULL);
 }
 
+/**
+ * Return true if this name is a member of the local realm.
+ */
+int
+fs_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	ViceLog(0,
+		("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell));
+    }
+    return islocal;
+}
+
 static void
 ResetCheckSignal(void)
 {
@@ -1830,6 +1849,9 @@ main(int argc, char *argv[])
 		AFSDIR_SERVER_ETC_DIRPATH);
 	exit(-1);
     }
+
+    /* initialize audit user check */
+    osi_audit_set_user_check(confDir, fs_IsLocalRealmMatch);
 
     /* Open FileLog on stdout, stderr, fd 1 and fd2 (for perror), sigh. */
 #ifndef AFS_NT40_ENV

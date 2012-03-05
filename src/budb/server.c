@@ -72,6 +72,24 @@ BU_rxstat_userok(struct rx_call *call)
     return afsconf_SuperUser(BU_conf, call, NULL);
 }
 
+/**
+ * Return true if this name is a member of the local realm.
+ */
+int
+BU_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	LogError(code, "Failed local realm check; name=%s, inst=%s, cell=%s\n",
+		 name, inst, cell);
+    }
+    return islocal;
+}
+
 int
 convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_uint32 *myHost,
 		     afs_uint32 *serverList)
@@ -479,6 +497,9 @@ main(int argc, char **argv)
 	if (code)
 	    ERROR(code);
     }
+
+    /* initialize audit user check */
+    osi_audit_set_user_check(BU_conf, BU_IsLocalRealmMatch);
 
     /* initialize ubik */
     ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, BU_conf);
