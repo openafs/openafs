@@ -1329,8 +1329,8 @@ cs_ProcTail_setup(definition * defp, int split_flag)
 	} else {
 	    f_print(fout,
 		    "\t    rx_RecordCallStatistics(z_call, \n"
-		    "\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
-		    "\t\t((afs_uint32)ntohs(z_call->conn->peer->port))),\n");
+		    "\t\t(((afs_uint32)(ntohs(rx_ServiceIdOf(rx_ConnectionOf(z_call))) << 16)) |\n"
+		    "\t\t((afs_uint32)ntohs(rx_PortOf(rx_PeerOf(rx_ConnectionOf(z_call)))))),\n");
 	}
 	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 1);\n",
 		no_of_stat_funcs, PackagePrefix[PackageIndex]);
@@ -1708,8 +1708,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 	    f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
 	} else {
 	    f_print(fout,
-		    "\n\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
-		    "\t\t((afs_uint32)ntohs(z_call->conn->service->servicePort))),\n");
+		    "\n\t\t(((afs_uint32)(ntohs(rx_ServiceIdOf(rx_ConnectionOf(z_call))) << 16)) |\n"
+		    "\t\t((afs_uint32)ntohs(rx_ServiceOf(rx_ConnectionOf(z_call))->servicePort))),\n");
 	}
 	f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 0);\n",
 		no_of_stat_funcs, PackagePrefix[PackageIndex]);
@@ -1728,8 +1728,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 		f_print(fout, " %s,\n", PackageStatIndex[PackageIndex]);
 	    } else {
 		f_print(fout,
-			"\n\t\t(((afs_uint32)(ntohs(z_call->conn->serviceId) << 16)) |\n"
-			"\t\t((afs_uint32)ntohs(z_call->conn->service->servicePort))),\n");
+			"\n\t\t(((afs_uint32)(ntohs(rx_ServiceIdOf(rx_ConnectionOf(z_call))) << 16)) |\n"
+			"\t\t((afs_uint32)ntohs(rx_ServiceOf(rx_ConnectionOf(z_call))->servicePort))),\n");
 	    }
 	    f_print(fout, "\t\t%d, %sNO_OF_STAT_FUNCS, 0);\n",
 		    no_of_stat_funcs, PackagePrefix[PackageIndex]);
