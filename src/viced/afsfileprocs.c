@@ -2223,7 +2223,7 @@ GetStatus(Vnode * targetptr, AFSFetchStatus * status, afs_int32 rights,
 	 Directory ? targetptr->disk.uniquifier : parentptr->disk.uniquifier);
     status->ServerModTime = targetptr->disk.serverModifyTime;
     status->Group = targetptr->disk.group;
-    status->lockCount = Time > targetptr->disk.lock.lockTime ? targetptr->disk.lock.lockCount : 0;
+    status->lockCount = Time > targetptr->disk.lock.lockTime ? 0 : targetptr->disk.lock.lockCount;
     status->errorCode = 0;
 
 }				/*GetStatus */
