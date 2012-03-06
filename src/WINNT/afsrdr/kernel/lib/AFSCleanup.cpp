@@ -469,9 +469,12 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         {
 
                             SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                            pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
                         }
                         else
                         {
+
                             pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
                         }
 
@@ -581,13 +584,15 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         if ( pObjectInfo->ParentObjectInformation != NULL)
                         {
 
-                            AFSAcquireShared( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                              TRUE);
+                            AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                            TRUE);
 
                             if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
                             {
 
                                 SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                                pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
                             }
 
                             AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -811,6 +816,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         }
                         else
                         {
+
                             pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
                         }
 
@@ -894,7 +900,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         if ( pObjectInfo->ParentObjectInformation != NULL)
                         {
 
-                            AFSAcquireShared( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                               TRUE);
 
                             if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
@@ -1193,7 +1199,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         if ( pObjectInfo->ParentObjectInformation != NULL)
                         {
 
-                            AFSAcquireShared( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                               TRUE);
 
                             if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
