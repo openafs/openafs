@@ -773,6 +773,12 @@ AFSInitializeControlDevice()
                            NotificationEvent,
                            TRUE);
 
+        pDeviceExt->Specific.Control.WaitingForMemoryCount = 0;
+
+        KeInitializeEvent( &pDeviceExt->Specific.Control.MemoryAvailableEvent,
+                           NotificationEvent,
+                           TRUE);
+
         ExInitializeResourceLite( &pDeviceExt->Specific.Control.LibraryQueueLock);
 
         pDeviceExt->Specific.Control.LibraryQueueHead = NULL;
@@ -1308,32 +1314,86 @@ AFSExAllocatePoolWithTag( IN POOL_TYPE  PoolType,
                           IN ULONG  Tag)
 {
 
+    AFSDeviceExt *pControlDevExt = NULL;
     void *pBuffer = NULL;
+    BOOLEAN bTimeout = FALSE;
+    LARGE_INTEGER liTimeout;
+    NTSTATUS ntStatus;
 
-    pBuffer = ExAllocatePoolWithTag( PoolType,
-                                     NumberOfBytes,
-                                     Tag);
+    //
+    // Attempt to allocation memory from the system.  If the allocation fails
+    // wait up to 30 seconds for the AFS redirector to free some memory.  As
+    // long as the wait does not timeout, continue to retry the allocation.
+    // If the wait does timeout, attempt to allocate one more time in case
+    // memory was freed by another driver.  Otherwise, fail the request.
+    //
 
-    if( pBuffer == NULL)
+    if ( AFSDeviceObject)
     {
 
-        AFSDbgLogMsg( 0,
-                      0,
-                      "AFSExAllocatePoolWithTag failure Type %08lX Size %08lX Tag %08lX %08lX\n",
-                      PoolType,
-                      NumberOfBytes,
-                      Tag,
-                      PsGetCurrentThread());
+        pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    }
 
-        switch ( Tag ) {
+    while( pBuffer == NULL)
+    {
 
-        case AFS_GENERIC_MEMORY_21_TAG:
-        case AFS_GENERIC_MEMORY_22_TAG:
-            // AFSDumpTraceFiles -- do nothing;
-            break;
+        pBuffer = ExAllocatePoolWithTag( PoolType,
+                                         NumberOfBytes,
+                                         Tag);
 
-        default:
-            AFSBreakPoint();
+        if( pBuffer == NULL)
+        {
+
+            if ( bTimeout || pControlDevExt == NULL)
+            {
+
+                AFSDbgLogMsg( 0,
+                              0,
+                              "AFSExAllocatePoolWithTag failure Type %08lX Size %08lX Tag %08lX %08lX\n",
+                              PoolType,
+                              NumberOfBytes,
+                              Tag,
+                              PsGetCurrentThread());
+
+                switch ( Tag ) {
+
+                case AFS_GENERIC_MEMORY_21_TAG:
+                case AFS_GENERIC_MEMORY_22_TAG:
+                    // AFSDumpTraceFiles -- do nothing;
+                    break;
+
+                default:
+                    AFSBreakPoint();
+                }
+
+                break;
+            }
+
+
+            //
+            // Wait up to 30 seconds for a memory deallocation
+            //
+
+            liTimeout.QuadPart = -(30 *AFS_ONE_SECOND);
+
+            if( InterlockedIncrement( &pControlDevExt->Specific.Control.WaitingForMemoryCount) == 1)
+            {
+                KeClearEvent( &pControlDevExt->Specific.Control.MemoryAvailableEvent);
+            }
+
+            ntStatus = KeWaitForSingleObject( &pControlDevExt->Specific.Control.MemoryAvailableEvent,
+                                              Executive,
+                                              KernelMode,
+                                              FALSE,
+                                              &liTimeout);
+
+            if( ntStatus == STATUS_TIMEOUT)
+            {
+
+                bTimeout = TRUE;
+            }
+
+            InterlockedDecrement( &pControlDevExt->Specific.Control.WaitingForMemoryCount);
         }
     }
 
@@ -1344,8 +1404,23 @@ void
 AFSExFreePool( IN void *Buffer)
 {
 
+    AFSDeviceExt *pControlDevExt = NULL;
+
+    if ( AFSDeviceObject)
+    {
+
+        pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    }
+
     ExFreePool( Buffer);
 
+    if ( pControlDevExt)
+    {
+
+        KeSetEvent( &pControlDevExt->Specific.Control.MemoryAvailableEvent,
+                    0,
+                    FALSE);
+    }
     return;
 }
 
