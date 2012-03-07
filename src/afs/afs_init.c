@@ -57,9 +57,7 @@ const struct cred *cache_creds;
 #endif
 
 /* This is the kernel side of the dynamic vcache setting */
-#ifdef AFS_MAXVCOUNT_ENV
 int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
-#endif
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
