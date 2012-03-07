@@ -556,6 +556,14 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             KEVENT              OutstandingServiceRequestEvent;
 
+            //
+            // Out of memory signalling
+            //
+
+            LONG                WaitingForMemoryCount;
+
+            KEVENT              MemoryAvailableEvent;
+
         } Control;
 
         struct
