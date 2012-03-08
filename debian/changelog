@@ -11,6 +11,8 @@ openafs (1.6.1~pre4-1) UNRELEASED; urgency=low
     - Fix probing for noop_fsync in the Linux kernel.
     - Fix handling of expired locks in the file server.
     - Reset blacklisted servers on a hard-mount retry.
+  * Update debhelper compatibility level to V9.
+  * Update standards version to 3.9.3 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Wed, 07 Mar 2012 16:24:31 -0800
 
