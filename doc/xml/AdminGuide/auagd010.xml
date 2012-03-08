@@ -2763,6 +2763,32 @@
         </listitem>
       </orderedlist>
     </sect2>
+
+    <sect2>
+      <title>To access volumes directly by volume ID</title>
+
+      <indexterm>
+        <primary>volume</primary>
+
+        <secondary>direct access</secondary>
+      </indexterm>
+
+      <para>You can directly access volumes by volume IDs. This is only
+      recommended for temporary access to a volume. For example, if you
+      have recently restored a volume from a backup, you can use this
+      syntax to quickly access the volume without mounting it.</para>
+      <para>Examples:</para>
+      <itemizedlist>
+          <listitem>
+	    <para><emphasis role="bold">Windows:</emphasis>
+            \\afs\example.com#root.cell</para>
+          </listitem>
+          <listitem>
+	    <para><emphasis role="bold">Unix:</emphasis>
+            /afs/.:mount/example.com#root.cell</para>
+          </listitem>
+      </itemizedlist>
+    </sect2>
   </sect1>
 
   <sect1 id="HDRWQ216">

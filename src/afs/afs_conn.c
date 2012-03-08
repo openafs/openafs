@@ -310,6 +310,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	    rx_SetConnSecondsUntilNatPing(tc->id, 0);
 	    rx_DestroyConnection(tc->id);
 	    AFS_GLOCK();
+	    if (sap->natping == tc)
+		sap->natping = NULL;
 	}
 	/*
 	 * Stupid hack to determine if using vldb service or file system
@@ -336,16 +338,12 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	    rx_SetConnIdleDeadTime(tc->id, afs_rx_idledead);
 
 	/*
-	 * Only do this for the base connection, not per-user.
-	 * Will need to be revisited if/when CB gets security.
+	 * Only do this for one connection
 	 */
-	if ((isec == 0) && (service != 52) && !(tu->states & UTokensBad) &&
-	    (tu->vid == UNDEFVID) && (isrep == 0)
-#ifndef UKERNEL /* ukernel runs as just one uid anyway */
-	    && (tu->uid == 0)
-#endif
-	    )
+	if ((service != 52) && (sap->natping == NULL)) {
+	    sap->natping = tc;
 	    rx_SetConnSecondsUntilNatPing(tc->id, 20);
+	}
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)
@@ -479,6 +477,10 @@ afs_PutConn(struct afs_conn *ac, struct rx_connection *rxconn,
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
+    if (ac->refCount < 0) {
+	osi_Panic("afs_PutConn: refcount imbalance 0x%lx %d",
+	          (unsigned long)(uintptrsz)ac, (int)ac->refCount);
+    }
     rx_PutConnection(rxconn);
 }				/*afs_PutConn */
 

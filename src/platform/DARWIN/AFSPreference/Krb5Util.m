@@ -149,7 +149,7 @@
 							    &me);
 				in.client = me;
 			}
-			if (ret == 0) {
+			if ((ret == 0) && (in.client)) {
 			  ret = krb5_build_principal_ext(kcontext, &server,
 						       krb5_princ_realm(kcontext,
 									in.client)->length,

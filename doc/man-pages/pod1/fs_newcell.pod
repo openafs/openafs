@@ -45,9 +45,9 @@ purpose of DFS fileset location.
 
 =head1 CAUTIONS
 
-Some commands, such as the B<klog> command, work correctly only when the
-information is accurate for a cell in both the F<CellServDB> file and the
-kernel-resident list.
+Some commands, such as the B<aklog> or B<klog.krb5> commands, work correctly
+only when the information is accurate for a cell in both the F<CellServDB> file
+and the kernel-resident list.
 
 =head1 OPTIONS
 

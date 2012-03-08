@@ -2072,6 +2072,7 @@ afs_RemoveAllConns(void)
                         tc = ntc;
                     }
                     sa->conns = NULL;
+		    sa->natping = NULL;
                 }
             }
         }

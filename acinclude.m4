@@ -200,7 +200,7 @@ AC_ARG_ENABLE([optimize-kernel],
         [disable compilation of the kernel module with optimization (defaults
          based on platform)])],
     , 
-    [enable_optimize_kernel="yes"])
+    [enable_optimize_kernel=""])
 AC_ARG_ENABLE([debug-lwp],
     [AS_HELP_STRING([--enable-debug-lwp],
         [enable compilation of the LWP code with debugging information
@@ -901,7 +901,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				     [zero_user_segments(NULL, 0, 0, 0, 0);])
 		 AC_CHECK_LINUX_FUNC([noop_fsync],
 				     [#include <linux/fs.h>],
-				     [noop_fsync(NULL, 0, 0, 0);])
+				     [void *address = &noop_fsync; printk("%p\n", address)];)
 
 		 dnl Consequences - things which get set as a result of the
 		 dnl                above tests

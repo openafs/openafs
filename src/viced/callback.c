@@ -812,10 +812,15 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     int hostindex;
     char hoststr[16];
 
-    ViceLog(7,
-	    ("BCB: BreakCallBack(Host %p all but %s:%d, (%u,%u,%u))\n",
-	     xhost, afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
-	     fid->Volume, fid->Vnode, fid->Unique));
+    if (xhost)
+	ViceLog(7,
+		("BCB: BreakCallBack(Host %p all but %s:%d, (%u,%u,%u))\n",
+		 xhost, afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
+		 fid->Volume, fid->Vnode, fid->Unique));
+    else
+	ViceLog(7,
+		("BCB: BreakCallBack(No Host, (%u,%u,%u))\n",
+		fid->Volume, fid->Vnode, fid->Unique));
 
     H_LOCK;
     cbstuff.BreakCallBacks++;
@@ -823,7 +828,7 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     if (!fe) {
 	goto done;
     }
-    hostindex = h_htoi(xhost);
+    hostindex = xhost ? h_htoi(xhost) : 0;
     cb = itocb(fe->firstcb);
     if (!cb || ((fe->ncbs == 1) && (cb->hhead == hostindex) && !flag)) {
 	/* the most common case is what follows the || */
@@ -3006,10 +3011,12 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
-            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
+	    /* add then remove */
+	    addInterfaceAddr_r(host, interfaces[multi_i].addr,
+	                             interfaces[multi_i].port);
+	    removeInterfaceAddr_r(host, host->host, host->port);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
-            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
@@ -3102,10 +3109,12 @@ MultiProbeAlternateAddress_r(struct host *host)
 	    if (host->callback_rxcon)
 		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
-            h_DeleteHostFromAddrHashTable_r(host->host, host->port, host);
+	    /* add then remove */
+	    addInterfaceAddr_r(host, interfaces[multi_i].addr,
+	                             interfaces[multi_i].port);
+	    removeInterfaceAddr_r(host, host->host, host->port);
 	    host->host = interfaces[multi_i].addr;
 	    host->port = interfaces[multi_i].port;
-            h_AddHostToAddrHashTable_r(host->host, host->port, host);
 	    connSuccess = conns[multi_i];
 	    rx_SetConnDeadTime(host->callback_rxcon, 50);
 	    rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);

@@ -133,7 +133,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+    afs_int32 seenpart = 0, seenvol = 0;
+    VolumeId vid = 0;
     ProgramType pt;
 
 #ifdef FAST_RESTART
@@ -384,10 +385,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    SalvageFileSys(partP, 0);
 	else {
 	    /* Salvage individual volume */
-	    if (vid <= 0) {
-		Log("salvage: invalid volume id specified; salvage aborted\n");
-		Exit(1);
-	    }
 	    SalvageFileSys(partP, vid);
 	}
     }

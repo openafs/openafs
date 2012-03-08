@@ -698,6 +698,12 @@ h_Alloc_r(struct rx_connection *r_con)
     if (!host)
 	return NULL;
 
+    h_Hold_r(host);
+    /* acquire the host lock withot dropping H_LOCK. we can do this here
+     * because we know we will not block; we just created this host and
+     * nobody else knows about it. */
+    ObtainWriteLock(&host->lock);
+
     host->host = rxr_HostOf(r_con);
     host->port = rxr_PortOf(r_con);
 
@@ -729,8 +735,6 @@ h_Alloc_r(struct rx_connection *r_con)
     h_gethostcps(host);		/* do this under host hold/lock */
 #endif
     host->FirstClient = NULL;
-    h_Hold_r(host);
-    h_Lock_r(host);
     h_InsertList_r(host);	/* update global host List */
 #if FS_STATS_DETAILED
     /*
@@ -845,6 +849,11 @@ h_TossStuff_r(struct host *host)
 {
     struct client **cp, *client;
     int code;
+    int wasdeleted = 0;
+
+    if ((host->hostFlags & HOSTDELETED)) {
+	wasdeleted = 1;
+    }
 
     /* make sure host doesn't go away over h_NBLock_r */
     h_Hold_r(host);
@@ -857,9 +866,13 @@ h_TossStuff_r(struct host *host)
     /* if somebody still has this host locked */
     if (code != 0) {
 	char hoststr[16];
-	ViceLog(0,
-		("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT " (%s:%d) was locked.\n",
-		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+	if (wasdeleted) {
+	    /* someone locked the host while HOSTDELETED was set; that is bad */
+	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT
+	                " (%s:%d flags 0x%x) was locked.\n",
+	                host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+	                (unsigned)host->hostFlags));
+	}
 	return;
     } else {
 	h_Unlock_r(host);
@@ -870,9 +883,13 @@ h_TossStuff_r(struct host *host)
      * reacquire H_LOCK */
     if (host->refCount > 0) {
 	char hoststr[16];
-	ViceLog(0,
-		("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT " (%s:%d) was held.\n",
-		 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+	if (wasdeleted) {
+	    /* someone grabbed a ref while HOSTDELETED was set; that is bad */
+	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT
+	                " (%s:%d flags 0x%x) was held.\n",
+	                host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+	                (unsigned)host->hostFlags));
+	}
 	return;
     }
 
@@ -2054,6 +2071,17 @@ h_GetHost_r(struct rx_connection *tcon)
 		if (oldHost) {
 		    int probefail = 0;
 
+		    /* This is a new address for an existing host. Update
+		     * the list of interfaces for the existing host and
+		     * delete the host structure we just allocated. */
+
+		    /* mark the duplicate host as deleted before we do
+		     * anything. The probing code below may try to change
+		     * "oldHost" to the same IP address as "host" currently
+		     * has, and we do not want a pseudo-"collision" to be
+		     * noticed. */
+		    host->hostFlags |= HOSTDELETED;
+
 		    oldHost->hostFlags |= HWHO_INPROGRESS;
 
                     if (oldHost->interface) {
@@ -2080,19 +2108,21 @@ h_GetHost_r(struct rx_connection *tcon)
 					 oldHost,
                                          afs_inet_ntoa_r(oldHost->host, hoststr),
 					 ntohs(oldHost->port),code2));
-			    MultiProbeAlternateAddress_r(oldHost);
-                            probefail = 1;
+
+			    if (MultiProbeAlternateAddress_r(oldHost)) {
+				/* If MultiProbeAlternateAddress_r succeeded,
+				 * it updated oldHost->host and oldHost->port
+				 * to an address that responded successfully to
+				 * a ProbeUuid, so it is as if the ProbeUuid
+				 * call above returned success. So, only set
+				 * 'probefail' if MultiProbeAlternateAddress_r
+				 * fails. */
+				probefail = 1;
+			    }
                         }
                     } else {
                         probefail = 1;
                     }
-
-		    /* This is a new address for an existing host. Update
-		     * the list of interfaces for the existing host and
-		     * delete the host structure we just allocated. */
-
-                    /* prevent warnings while manipulating interface lists */
-		    host->hostFlags |= HOSTDELETED;
 
 		    if (oldHost->host != haddr || oldHost->port != hport) {
 			struct rx_connection *rxconn;
@@ -2137,7 +2167,6 @@ h_GetHost_r(struct rx_connection *tcon)
 				}
 			    }
 			}
-			h_AddHostToAddrHashTable_r(haddr, hport, oldHost);
 			oldHost->host = haddr;
 			oldHost->port = hport;
 			rxconn = oldHost->callback_rxcon;

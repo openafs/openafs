@@ -126,7 +126,11 @@ ka_UserAuthenticateGeneral2(afs_int32 flags, char *name, char *instance,
     des_string_to_key(password, &key2);
 
     /* set port number */
-    sp = getservbyname("kerberos", "udp");
+    sp = getservbyname("kerberos4", "udp");
+    if (!sp)
+    sp = getservbyname("kerberos-iv", "udp");
+    if (!sp)
+        sp = getservbyname("kerberos", "udp");
     if (sp)
 	krb_set_port(ntohs(sp->s_port));
 
