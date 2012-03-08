@@ -321,9 +321,12 @@ afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
 	} else {
 	    ReleaseReadLock(&afs_xvcache);
 	}
+	if (!avp)
+	    afs_PutVolume(tvp, READ_LOCK);
     }
-    if (!avp)
-	afs_PutVolume(tvp, READ_LOCK);
+
+    if (AFS_STATS_FS_RPCIDXES_WRITE_RETRIABLE(op))
+	return 1;
 
     /* not retriable: we may have raced ourselves */
     return 0;
@@ -504,6 +507,8 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 
 			VSleep(hm_retry_int);
 			afs_CheckServers(1, cellp);
+			/* clear the black listed servers on this request. */
+			memset(areq->skipserver, 0, sizeof(areq->skipserver));
 
 			if (vp_vhm) {
 			    tvp = afs_FindVolume(afid, READ_LOCK);
@@ -567,11 +572,11 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
     if ((acode < 0) && (acode != VRESTARTING)) {
-	if (acode == RX_MSGSIZE) {
+	if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
 	    shouldRetry = 1;
 	    goto out;
 	}
-	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE || acode == RX_CALL_BUSY) {
+	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE) {
 	    serversleft = afs_BlackListOnce(areq, afid, tsp);
 	    if (afid)
 		tvp = afs_FindVolume(afid, READ_LOCK);

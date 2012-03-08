@@ -726,6 +726,20 @@ case $AFS_SYSNAME in
 esac
 
 #
+# Defaults for --enable-optimize-kernel
+#
+if test "x$enable_optimize_kernel" = "x" ; then
+  AS_CASE([$AFS_SYSNAME],
+    [sunx86_510|sunx86_511],
+      dnl Somewhere around Solaris Studio 12.*, the compiler started adding SSE
+      dnl instructions to optimized code, without any ability to turn it off.
+      dnl So just default to not optimizing kernel code for the relevant
+      dnl platforms, until we get a better autoconf test for this.
+      [enable_optimize_kernel=no],
+    [enable_optimize_kernel=yes])
+fi
+
+#
 # Special build targets
 #
 case $AFS_SYSNAME in

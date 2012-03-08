@@ -1547,6 +1547,7 @@ rx_NewCall(struct rx_connection *conn)
 	}
 	if (i < RX_MAXCALLS) {
 	    conn->lastBusy[i] = 0;
+	    call->flags &= ~RX_CALL_PEER_BUSY;
 	    break;
 	}
         if (!wait)
@@ -5377,9 +5378,13 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     }
     call->flags = 0;
 
-    if ((flags & RX_CALL_PEER_BUSY)) {
+    if (!newcall && (flags & RX_CALL_PEER_BUSY)) {
 	/* The call channel is still busy; resetting the call doesn't change
-	 * that */
+	 * that. However, if 'newcall' is set, we are processing a call
+	 * structure that has either been recycled from the free list, or has
+	 * been newly allocated. So, RX_CALL_PEER_BUSY is not relevant if
+	 * 'newcall' is set, since it describes a completely different call
+	 * channel which we do not care about. */
 	call->flags |= RX_CALL_PEER_BUSY;
     }
 

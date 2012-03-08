@@ -1,0 +1,28 @@
+#!/bin/sh -e
+
+# make_h_tree
+# Generate an h tree that includes the appropriate sys headers
+#
+# Usage: make_h_tree ${SRC} ...
+#
+# The source files in the specified directories will be scanned for include
+# directives. The h directory will be created under the current directory and
+# populated with stubs that include the actual header file for every header
+# included by any source file in the ${SRC} directories. Since this script is
+# for userspace only, this effectively just makes a file called h/foo.h that
+# contains:
+#    #include <sys/foo.h>
+# For every include directive that is found that looks like #include <h/foo.h>
+# This is an ugly hack to work around the naming of header files using h
+# instead of their proper names elsewhere in the code.
+
+mkdir h
+
+for dir in "$@" ; do
+  for hsrc in `cat "$dir"/*.c | \
+    sed -n -e 's|^[ 	]*#[ 	]*include[ 	]*[<"]h/\([^>"/]*\)[>"].*$|\1|p' | \
+      sort | uniq` ; do
+
+    echo "#include <sys/$hsrc>" > h/"$hsrc"
+  done
+done

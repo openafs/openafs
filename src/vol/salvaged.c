@@ -184,7 +184,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+    afs_int32 seenpart = 0, seenvol = 0;
+    VolumeId vid = 0;
     struct cmdline_rock *rock = (struct cmdline_rock *)arock;
 
 #ifdef AFS_SGI_VNODE_GLUE

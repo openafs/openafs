@@ -1055,6 +1055,8 @@ install -p -m 644 src/packaging/RedHat/openafs-cacheinfo $uve/cacheinfo
 install -d -m 755 $RPM_BUILD_ROOT%{_prefix}/src
 cp -a libafs_tree $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}
 
+%if 0%{?fedora}
+
 cat > $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf <<EOF
 
 PACKAGE_VERSION="%{dkms_version}"
@@ -1070,6 +1072,25 @@ STRIP[0]=no
 AUTOINSTALL=yes
 
 EOF
+
+%else
+cat > $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf <<EOF
+
+PACKAGE_VERSION="%{dkms_version}"
+
+# Items below here should not have to change with each driver version
+PACKAGE_NAME="%{name}"
+MAKE[0]="KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\${kernelver[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --with-linux-kernel-headers=\${kernel_source_dir} --with-linux-kernel-packaging; make; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
+CLEAN="make -C src/libafs clean"
+
+BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
+DEST_MODULE_LOCATION[0]="/kernel/3rdparty/\$PACKAGE_NAME/"
+STRIP[0]=no
+AUTOINSTALL=yes
+
+EOF
+
+%endif
 
 #
 # install kernel-source
@@ -1133,7 +1154,7 @@ gzip -9 $RPM_BUILD_ROOT%{_mandir}/man*/*
 	>openafs-man5files
 
 /bin/ls $RPM_BUILD_ROOT%{_mandir}/man8 \
-	|egrep '^backup|^bos|^butc|^fms|^fssync-debug|^fstrace|^kas|^read_tape|^uss' \
+	|egrep '^aklog_dynamic_auth|^backup|^bos|^butc|^fms|^fssync-debug|^fstrace|^kas|^read_tape|^uss' \
 	>openafs-man8files
 
 #
@@ -1498,6 +1519,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/vice/etc/CellServDB.dist
 %config %{_prefix}/vice/etc/ThisCell
 %config %{_prefix}/vice/etc/cacheinfo
+%{_bindir}/afsio
 %{_bindir}/cmdebug
 %{_bindir}/up
 %{_prefix}/vice/etc/afsd
@@ -1624,6 +1646,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %{_includedir}/kopenafs.h
 %{_libdir}/libafsauthent.a
+%{_libdir}/libafscp.a
 %{_libdir}/libafsrpc.a
 %{_libdir}/libafsauthent_pic.a
 %{_libdir}/libafsrpc_pic.a

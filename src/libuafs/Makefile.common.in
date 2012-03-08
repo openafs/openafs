@@ -1532,7 +1532,7 @@ AFSWEB:
 
 h: $(TOP_SRC_AFS)/*.c $(TOP_SRC_VNOPS)/*.c $(TOP_SRC_RX)/*.c
 	-$(RM) -rf h
-	@TOP_SRCDIR@/libuafs/make_h_tree.pl $(TOP_SRC_AFS) $(TOP_SRC_VNOPS) \
+	@TOP_SRCDIR@/libuafs/make_h_tree $(TOP_SRC_AFS) $(TOP_SRC_VNOPS) \
 		$(TOP_SRC_RX)
 
 setup_common: h

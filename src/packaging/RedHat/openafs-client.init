@@ -53,8 +53,11 @@ stop() {
 	RETVAL=$?
 	echo
 	if [ $RETVAL -eq 0 ] ; then
-		rm -f /var/lock/subsys/openafs-client
 		rmmod openafs
+		RETVAL=$?
+	fi
+	if [ $RETVAL -eq 0 ] ; then
+		rm -f /var/lock/subsys/openafs-client
 	fi
 	return $RETVAL
 }
