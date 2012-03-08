@@ -1499,7 +1499,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %files -f openafs-file-list
 %defattr(-,root,root)
-%config /etc/sysconfig/openafs
+%config(noreplace) /etc/sysconfig/openafs
 %doc %{_docdir}/openafs-%{afsvers}/LICENSE
 
 %files docs
@@ -1517,8 +1517,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %dir %{_prefix}/vice/etc
 %dir %{_prefix}/vice/etc/C
 %{_prefix}/vice/etc/CellServDB.dist
-%config %{_prefix}/vice/etc/ThisCell
-%config %{_prefix}/vice/etc/cacheinfo
+%config(noreplace) %{_prefix}/vice/etc/ThisCell
+%config(noreplace) %{_prefix}/vice/etc/cacheinfo
 %{_bindir}/afsio
 %{_bindir}/cmdebug
 %{_bindir}/up
