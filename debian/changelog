@@ -1,3 +1,19 @@
+openafs (1.6.1~pre4-1) UNRELEASED; urgency=low
+
+  * New upstream prerelease.
+    - Always retry busy rx calls and retriable actions.
+    - Do not abort the salvager on large volume IDs.
+    - Ensure one NAT ping connection per srvAddr.
+    - Improvements to the file server address tracking.
+    - Improve locking in the host table in the file server.
+    - Avoid discrepancy between lastBusy and PEER_BUSY.
+    - Allow a null host for callback breaks.
+    - Fix probing for noop_fsync in the Linux kernel.
+    - Fix handling of expired locks in the file server.
+    - Reset blacklisted servers on a hard-mount retry.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 07 Mar 2012 16:24:31 -0800
+
 openafs (1.6.1~pre2-1) unstable; urgency=low
 
   * New upstream prerelease.
