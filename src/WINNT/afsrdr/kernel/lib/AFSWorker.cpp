@@ -1534,8 +1534,13 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                             if( pFcb != NULL)
                             {
 
+                                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
                                 AFSCleanupFcb( pFcb,
                                                TRUE);
+
+                                AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                                                TRUE);
 
                                 AFSRemoveFcb( &pFcb);
                             }
@@ -1565,8 +1570,13 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         else if( pCurrentObject->Fcb != NULL)
                         {
 
+                            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
                             AFSCleanupFcb( pCurrentObject->Fcb,
                                            FALSE);
+
+                            AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
+                                              TRUE);
                         }
                     }
 
