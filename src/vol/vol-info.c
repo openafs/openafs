@@ -213,7 +213,7 @@ static int SaveInodes = 0;          /**< Save vnode data to files */
 static int FixHeader = 0;           /**< Repair header files magic and version fields. */
 static char Hostname[64] = "";      /**< This hostname, for volscan output. */
 static int NeedDirIndex = 0;        /**< Large vnode index handle is needed for path lookups. */
-static char *ColumnDelim = " ";     /**< Column delimiter char(s) */
+static char ColumnDelim[16] = " ";  /**< Column delimiter char(s) */
 static char PrintHeading = 0;       /**< Print column heading */
 static unsigned int ModeMask[64];
 
@@ -958,6 +958,10 @@ VolScan(struct cmd_syndesc *as, void *arock)
 	PrintHeading = 0;
     } else {
 	PrintHeading = 1;
+    }
+    if ((ti = as->parms[P_DELIM].items)) {
+	strncpy(ColumnDelim, ti->data, 15);
+	ColumnDelim[15] = '\0';
     }
 
     /* Limit types of volumes to scan. */
