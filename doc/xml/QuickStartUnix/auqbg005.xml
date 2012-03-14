@@ -67,11 +67,8 @@
         </listitem>
 
         <listitem>
-          <para>You have a NTP, or similar, time service deployed to ensure 
-          rough clock syncronistation between your clients and servers. If you
-          wish to use AFS's built in timeservice (which is deprecated) please
-          see Appendix B for the necessary modifications to this installation
-          procedure.</para>
+          <para>You have NTP or a similar time service deployed to ensure
+          rough clock syncronistation between your clients and servers.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -3984,18 +3981,16 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
   </sect1>
 
   <sect1 id="HDRWQ62">
-    <title>Starting the Controller for NTPD</title>
+    <title>Clock Sync Considerations</title>
 
     <para>Keeping the clocks on all server and client machines in your cell synchronized is crucial to several functions, and in
     particular to the correct operation of AFS's distributed database technology, Ubik. The chapter in the <emphasis>OpenAFS
     Administration Guide</emphasis> about administering server machines explains how time skew can disturb Ubik's performance and
     cause service outages in your cell.</para>
 
-    <para>Historically, AFS used to distribute its own version of the Network 
-Time Protocol Daemon. Whilst this is still provided for existing sites, we 
-recommend that you configure and install your time service independently of 
-AFS. A reliable timeservice will also be required by your Kerberos realm, 
-and so may already be available at your site.</para>
+    <para>You should install and configure your time service independently of
+    AFS. Your Kerberos realm will also require a reliable time source, so your site
+    may already have one available.</para>
 
     <indexterm>
       <primary>overview</primary>

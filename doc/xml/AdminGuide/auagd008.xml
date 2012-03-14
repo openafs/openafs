@@ -500,77 +500,6 @@
               <para>The binary for the Authentication Server process.</para>
 
               <indexterm>
-                <primary>ntpd</primary>
-
-                <secondary>binary in /usr/afs/bin</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>files</primary>
-
-                <secondary>ntpd</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>programs</primary>
-
-                <secondary>ntpd</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>processes</primary>
-
-                <secondary>NTPD, binary in /usr/afs/bin</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>NTPD</primary>
-              </indexterm>
-
-              <indexterm>
-                <primary>Network Time Protocol Daemon</primary>
-
-                <secondary></secondary>
-
-                <see>NTPD</see>
-              </indexterm>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold">ntpd</emphasis></term>
-
-            <listitem>
-              <para>The binary for the Network Time Protocol Daemon (NTPD). AFS redistributes this binary and uses the <emphasis
-              role="bold">runntp</emphasis> program to configure and initialize the NTPD process.</para>
-
-              <indexterm>
-                <primary>ntpdc</primary>
-
-                <secondary>binary in /usr/afs/bin</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>files</primary>
-
-                <secondary>ntpdc</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>programs</primary>
-
-                <secondary>ntpdc</secondary>
-              </indexterm>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold">ntpdc</emphasis></term>
-
-            <listitem>
-              <para>A debugging utility furnished with the <emphasis role="bold">ntpd</emphasis> program.</para>
-
-              <indexterm>
                 <primary>files</primary>
 
                 <secondary>pts command binary</secondary>
@@ -636,40 +565,6 @@
 
             <listitem>
               <para>The binary for the Protection Server process.</para>
-
-              <indexterm>
-                <primary>runntp</primary>
-
-                <secondary>binary in /usr/afs/bin</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>runntp</primary>
-
-                <secondary></secondary>
-
-                <see>NTPD</see>
-              </indexterm>
-
-              <indexterm>
-                <primary>files</primary>
-
-                <secondary>runntp</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>programs</primary>
-
-                <secondary>runntp</secondary>
-              </indexterm>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold">runntp</emphasis></term>
-
-            <listitem>
-              <para>The binary for the program used to configure NTPD most appropriately for use with AFS.</para>
 
               <indexterm>
                 <primary>Salvager</primary>
@@ -1925,11 +1820,6 @@
           </listitem>
 
           <listitem>
-            <para>The NTP coordinator (<emphasis role="bold">runntp</emphasis> process), which helps keep the machine's clock
-            synchronized with the clocks on the other server machines in the cell</para>
-          </listitem>
-
-          <listitem>
             <para>A client portion of the Update Server that picks up binary files from the binary distribution machine of its AFS
             system type (the <emphasis role="bold">upclientbin</emphasis> process)</para>
           </listitem>
@@ -2141,12 +2031,6 @@
             <para>The server portion of the Update Server (<emphasis role="bold">upserver</emphasis>) process, in cells using the
             United States edition of AFS. The client portion of the Update Server (<emphasis role="bold">upclientetc</emphasis>
             process) runs on the other server machines and references the system control machine.</para>
-          </listitem>
-
-          <listitem>
-            <para>The NTP coordinator (<emphasis role="bold">runntp</emphasis> process) which points to a time source outside the
-            cell, if the cell uses NTPD to synchronize its clocks. The <emphasis role="bold">runntp</emphasis> process on other
-            machines reference the system control machine as their main time source.</para>
           </listitem>
         </itemizedlist></para>
 
@@ -2597,12 +2481,6 @@
 
             <listitem>
               <para>Keep the clocks synchronized on all machines in the cell, especially the database server machines.</para>
-
-              <para>In the conventional configuration specified in the <emphasis>OpenAFS Quick Beginnings</emphasis>, you run the
-              <emphasis role="bold">runntp</emphasis> process to supervise the local Network Time Protocol Daemon (NTPD) on every
-              AFS server machine. The NTPD on the system control machine synchronizes its clock with a reliable source outside the
-              cell and broadcasts the time to the NTPDs on the other server machines. You can choose to run a different time
-              synchronization protocol if you wish.</para>
 
               <para>Keeping clocks synchronized is important because the Ubik processes at a database's sites timestamp the messages
               which they exchange to maintain constant contact. Timestamping the messages is necessary because in a networked

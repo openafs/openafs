@@ -1657,7 +1657,7 @@
     <sect2 id="HDRWQ108">
       <title>Starting Server Programs</title>
 
-      <para>In this section you initialize the BOS Server, the Update Server, the controller process for NTPD, and the <emphasis
+      <para>In this section you initialize the BOS Server, the Update Server, and the <emphasis
       role="bold">fs</emphasis> process. You begin by copying the necessary server files to the local disk. <orderedlist>
           <indexterm>
             <primary>copying</primary>
@@ -1976,63 +1976,6 @@
 </programlisting>
                 </listitem>
               </itemizedlist>
-
-            <indexterm>
-              <primary>runntp process</primary>
-
-              <secondary>server machine after first</secondary>
-            </indexterm>
-
-            <indexterm>
-              <primary>starting</primary>
-
-              <secondary>runntp process</secondary>
-
-              <tertiary>server machine after first</tertiary>
-            </indexterm>
-
-            <indexterm>
-              <primary>file server machine, additional</primary>
-
-              <secondary>runntp process</secondary>
-            </indexterm>
-
-            <indexterm>
-              <primary>NTPD</primary>
-
-              <secondary>server machine after first</secondary>
-            </indexterm>
-          </listitem>
-
-          <listitem>
-          
-            <note>
-              <para>Historically, AFS provided its own version of the
-              Network Time Protocol Daemon. Whilst this is still provided for
-              existing sites, we recommend that you configure and run your
-              own timeservice independently of AFS. The instructions below are
-              provided for those sites still reliant upon OpenAFS's ntp system.
-              </para>
-            </note>
-            
-            <para>Start the <emphasis role="bold">runntp</emphasis> process, which configures the Network Time Protocol Daemon
-            (NTPD) to choose a database server machine chosen randomly from the local <emphasis
-            role="bold">/usr/afs/etc/CellServDB</emphasis> file as its time source. In the standard configuration, the first
-            database server machine installed in your cell refers to a time source outside the cell, and serves as the basis for
-            clock synchronization on all server machines. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">runntp simple</emphasis>  \ 
-         <emphasis role="bold">/usr/afs/bin/runntp -cell</emphasis> &lt;<replaceable>cell name</replaceable>&gt;  <emphasis
-                  role="bold">-noauth</emphasis>
-</programlisting></para>
-
-            <note>
-              <para>Do not run the <emphasis role="bold">runntp</emphasis> process if NTPD or another time synchronization protocol
-              is already running on the machine. Some versions of some operating systems run a time synchronization program by
-              default, as detailed in the <emphasis>OpenAFS Release Notes</emphasis>.</para>
-
-              <para>Attempting to run multiple instances of the NTPD causes an error. Running NTPD together with another time
-              synchronization protocol is unnecessary and can cause instability in the clock setting.</para>
-            </note>
 
             <indexterm>
               <primary>File Server</primary>

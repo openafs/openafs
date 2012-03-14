@@ -558,58 +558,6 @@
         </itemizedlist></para>
     </sect2>
 
-    <sect2 id="HDRWQ151">
-      <title>The runntp Process</title>
-
-      <indexterm>
-        <primary>runntp process</primary>
-      </indexterm>
-
-      <indexterm>
-        <primary>ntpd</primary>
-
-        <secondary>invoked by runntp process</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>server process</primary>
-
-        <secondary>runntp</secondary>
-      </indexterm>
-
-      <para>The <emphasis role="bold">runntp</emphasis> process, which runs on every server machine, is a controller program for the
-      Network Time Protocol Daemon (NTPD), which synchronizes the hardware clocks on server machines. You need to run the <emphasis
-      role="bold">runntp</emphasis> process if you are not already running NTP or another time synchronization protocol on your
-      server machines.</para>
-
-      <para>The clocks on database server machines need to be synchronized because AFS's distributed database technology (Ubik)
-      works properly only when the clocks agree within a narrow range of variation (see <link linkend="HDRWQ103">Configuring the
-      Cell for Proper Ubik Operation</link>). The clocks on file server machines need to be correct not only because the File Server
-      sets modification time stamps on files, but because in the conventional configuration they serve as the time source for AFS
-      client machines.</para>
-
-      <para>The process appears as <computeroutput>runntp</computeroutput> in the <emphasis role="bold">bos status</emphasis>
-      command's output, if the conventional name is assigned. It appears in the output from the <emphasis role="bold">ps</emphasis>
-      command as <computeroutput>/usr/afs/bin/runntp</computeroutput>. The <emphasis role="bold">ps</emphasis> command's output also
-      includes an entry called <computeroutput>ntpd</computeroutput>; its exact form depends on the arguments you provide to the
-      <emphasis role="bold">runntp</emphasis> command.</para>
-
-      <indexterm>
-        <primary>ntpd</primary>
-
-        <secondary>when to contact</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>contacting processes</primary>
-
-        <secondary>NTPD</secondary>
-      </indexterm>
-
-      <para>As a system administrator, you do not contact the NTPD directly once you have installed it according to the instructions
-      in the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
-    </sect2>
-
     <sect2 id="HDRWQ152">
       <title>The upserver and upclient Processes: the Update Server</title>
 
@@ -1244,7 +1192,6 @@
    Instance fs, currently running normally.
        Auxiliary status is: file server running.
    Instance upserver, currently running normally.
-   Instance runntp, currently running normally.
    Instance backupusers, currently running normally.
        Auxiliary status is: run next at Mon Jun 7 02:00:00 1999.
 </programlisting>
@@ -1575,11 +1522,6 @@
 
                       <listitem>
                         <para><emphasis role="bold">ptserver</emphasis> for the Protection Server</para>
-                      </listitem>
-
-                      <listitem>
-                        <para><emphasis role="bold">runntp</emphasis> for the controller process for the Network Time Protocol
-                        Daemon</para>
                       </listitem>
 
                       <listitem>

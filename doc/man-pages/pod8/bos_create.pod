@@ -84,10 +84,6 @@ The Authentication Server process.
 
 The Protection Server process.
 
-=item runntp
-
-The controller process for the Network Time Protocol Daemon (obsolete).
-
 =item upclientbin
 
 The client portion of the Update Server process that retrieves binary

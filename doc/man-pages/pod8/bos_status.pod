@@ -235,7 +235,6 @@ machine B<fs3.example.com>:
    Instance fs, has core file, currently running normally.
        Auxiliary status is: file server running.
    Instance upserver, currently running normally.
-   Instance runntp, currently running normally.
 
 The following example command displays a detailed status report for the
 B<fs> and B<ptserver> processes on the machine
