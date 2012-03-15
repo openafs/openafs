@@ -150,26 +150,26 @@
 				in.client = me;
 			}
 			if ((ret == 0) && (in.client)) {
-			  ret = krb5_build_principal_ext(kcontext, &server,
-						       krb5_princ_realm(kcontext,
-									in.client)->length,
-						       krb5_princ_realm(kcontext,
-									in.client)->data,
-						       6, "krbtgt",
-						       krb5_princ_realm(kcontext,
-									in.client)->length,
-						       krb5_princ_realm(kcontext,
-									in.client)->data,
-						       0);
-			}
-			if (ret == 0) {
-			  in.server = server;
-			  ret = krb5_get_renewed_creds(kcontext, &in, me, id, server);
-			}
-			if (ret == 0) {
-			  ret = krb5_cc_initialize (kcontext, id, me);
-			  ret = krb5_cc_store_cred(kcontext, id, &in);
-			  krb5_cc_close(kcontext,id);
+			    ret = krb5_build_principal_ext(kcontext, &server,
+							   krb5_princ_realm(kcontext,
+									    in.client)->length,
+							   krb5_princ_realm(kcontext,
+									    in.client)->data,
+							   6, "krbtgt",
+							   krb5_princ_realm(kcontext,
+									    in.client)->length,
+							   krb5_princ_realm(kcontext,
+									    in.client)->data,
+							   0);
+			    if (ret == 0 && server) {
+				in.server = server;
+				ret = krb5_get_renewed_creds(kcontext, &in, me, id, server);
+				if (ret == 0) {
+				    ret = krb5_cc_initialize (kcontext, id, me);
+				    ret = krb5_cc_store_cred(kcontext, id, &in);
+				    krb5_cc_close(kcontext,id);
+				}
+			    }
 			}
 			krb5_free_principal(kcontext, server);
 #else
