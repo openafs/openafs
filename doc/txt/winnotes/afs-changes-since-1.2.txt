@@ -1,3 +1,25 @@
+Since 1.7.0700 (1.7.8)
+
+ * Disable BugCheck flag in release builds.  This was resulting
+   in too many spurious exceptions due to low memory conditions.
+
+ * AFSRedirector device Open IRPs must return a File Object
+   with a valid File Control Block.
+
+ * Avoid a deadlock during a CcPurge operation that is triggered
+   when a File System Filter Driver opens and closes the file
+   whose cached data is being purged.
+
+ * Always hold the DirectoryNodeHdr.TreeLock around data version
+   changes.
+
+ * If a low memory situation prevents the allocation of the
+   requested memory, wait up to 30 seconds for memory to become
+   available either due to garbage collection in AFSRedir or
+   from another kernel driver.
+
+ * Avoid another deadlock involving VolumeCB->ObjectInfoTree.TreeLock.
+
 Since 1.7.0600 (1.7.7)
 
  * Permit file renames that are no-ops to succeed even if they
