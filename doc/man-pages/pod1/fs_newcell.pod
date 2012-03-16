@@ -76,6 +76,42 @@ ignored.
 
 =back
 
+=head1 WINDOWS
+
+The B<fs newcell> command on Windows differs from the Unix version in a few ways.
+
+B<fs newcell> with no arguments discards the existing cell information.
+The Windows client will reload a cell's information the next time it
+needs the server list for a cell.
+
+Secondly, in addition to accepting the Unix options, B<fs newcell> on
+Windows accepts the following options:
+
+=over 4
+
+=item B<-dns>
+
+Adds the new cell to the cache manager, and obtains the VLDB server
+information from DNS.
+
+=item B<-registry>
+
+Adds the new cell to the cache manager, and also saves the cell
+configuration data in the registry for use the next time the service
+restarts.
+
+=item B<-vlport> <I<cell VLDB server port>>
+
+Specifies an alternate port number at which the cell's volume location
+database servers are listening.
+
+=item B<-fsport> <I<cell fileserver port>>
+
+Specifies an alternate port number at which the cell's file servers are
+listening.
+
+=back
+
 =head1 EXAMPLES
 
 The following example changes the machine's kernel-resident list of
