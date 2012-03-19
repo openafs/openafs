@@ -356,7 +356,7 @@ bozo: cmd comerr audit auth kauth volser
 vfsck:	vol
 	+set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix* | *_darwin* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* ) \
+	sgi_* | *linux* | rs_aix* | *_darwin* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -494,7 +494,7 @@ libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall fs
 		rxstat_depinstall lwp_depinstall sys_depinstall cmd hcrypto
 	+set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | hp_ux112* | ia64_hpux112*) \
+	hp_ux102* | *_obsd* | *_nbsd*| hp_ux11i | hp_ux112* | ia64_hpux112*) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \

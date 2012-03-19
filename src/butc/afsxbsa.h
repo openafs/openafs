@@ -14,11 +14,7 @@
 extern "C" {
 #endif
 
-#if (SYS_V > 3) || defined(BERK4_2) || defined(SUN4)
-#include <sys/time.h>
-#else
 #include <time.h>
-#endif
 
 #ifdef bool_t
 #undef bool_t

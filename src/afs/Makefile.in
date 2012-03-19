@@ -28,8 +28,6 @@ afszcm.cat: afs_trace.msf
 	case ${SYS_NAME} in \
 		sgi_* ) \
 			gencat -m afszcm.cat afs_trace.msf ;; \
-		sun*_4* ) \
-			/usr/etc/gencat afszcm.cat afs_trace.msf ;; \
 		*_linux* | *_umlinux* ) \
 			gencat --new afszcm.cat afs_trace.msf ;; \
 		*_darwin_* ) \
