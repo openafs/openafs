@@ -494,7 +494,7 @@ writeText(struct ubik_trans *ut, int fid, int textType)
 	if (code)
 	    ERROR(code);
 
-	writeSize = MIN(textSize, BLOCK_DATA_SIZE);
+	writeSize = min(textSize, BLOCK_DATA_SIZE);
 	if (!writeSize)
 	    break;
 

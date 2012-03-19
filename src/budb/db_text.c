@@ -110,7 +110,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 
     /* compute minimum of remaining text or user buffer */
     textRemaining = ntohl(tbPtr->size) - offset;
-    transferSize = MIN(textRemaining, maxLength);
+    transferSize = min(textRemaining, maxLength);
 
     /* allocate the transfer storage */
     if (transferSize <= 0) {
@@ -365,7 +365,7 @@ SaveText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
     while (textLength) {
 	/* compute the transfer size */
 	remainingInBlock = (BLOCK_DATA_SIZE - (offset % BLOCK_DATA_SIZE));
-	chunkSize = MIN(remainingInBlock, textLength);
+	chunkSize = min(remainingInBlock, textLength);
 
 	/* copy in the data */
 	memcpy(&diskBlock.a[offset % BLOCK_DATA_SIZE], textptr, chunkSize);
@@ -466,7 +466,7 @@ saveTextToFile(struct ubik_trans *ut, struct textBlock *tbPtr)
     size = ntohl(tbPtr->size);
     blockAddr = ntohl(tbPtr->textAddr);
     while (size) {
-	chunkSize = MIN(BLOCK_DATA_SIZE, size);
+	chunkSize = min(BLOCK_DATA_SIZE, size);
 	dbread(ut, blockAddr, (char *)&block, sizeof(block));
 	write(fid, &block.a[0], chunkSize);
 	blockAddr = ntohl(block.h.next);

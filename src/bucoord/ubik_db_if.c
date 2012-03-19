@@ -585,7 +585,7 @@ bcdb_SaveTextFile(udbClientTextP ctPtr)
 
     offset = 0;
     while (fileSize != 0) {
-	chunkSize = MIN(fileSize, bufferSize);
+	chunkSize = min(fileSize, bufferSize);
 	code =
 	    fread(charList.charListT_val, sizeof(char), chunkSize,
 		  ctPtr->textStream);

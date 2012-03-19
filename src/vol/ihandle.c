@@ -139,7 +139,7 @@ ih_Initialize(void)
 	 */
 	fdMaxCacheSize /= 4;
 #endif
-	fdMaxCacheSize = MIN(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
+	fdMaxCacheSize = min(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
 	osi_Assert(fdMaxCacheSize > 0);
     }
 #elif defined(AFS_HPUX_ENV)
@@ -147,12 +147,12 @@ ih_Initialize(void)
     fdMaxCacheSize = 0;
 #else
     {
-	long fdMax = MAX(sysconf(_SC_OPEN_MAX) - vol_io_params.fd_handle_setaside,
+	long fdMax = max(sysconf(_SC_OPEN_MAX) - vol_io_params.fd_handle_setaside,
 					 0);
-	fdMaxCacheSize = (int)MIN(fdMax, vol_io_params.fd_max_cachesize);
+	fdMaxCacheSize = (int)min(fdMax, vol_io_params.fd_max_cachesize);
     }
 #endif
-    fdCacheSize = MIN(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
+    fdCacheSize = min(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
 
     {
 #ifdef AFS_PTHREAD_ENV

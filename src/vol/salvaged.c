@@ -210,7 +210,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    }
 	}
     } else {
-	Parallel = MIN(DEFAULT_PARALLELISM, MAXPARALLEL);
+	Parallel = min(DEFAULT_PARALLELISM, MAXPARALLEL);
     }
     if ((ti = as->parms[10].items)) {	/* -tmpdir */
 	DIR *dirp;
