@@ -45,6 +45,8 @@ extern void                   *KeServiceDescriptorTable;
 };
 #endif
 
+typedef NTSTATUS (*PsSetCreateProcessNotifyRoutineEx_t)( PCREATE_PROCESS_NOTIFY_ROUTINE_EX NotifyRoutine, BOOLEAN Remove);
+
 //
 // DriverEntry
 //
@@ -76,6 +78,8 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
     BOOLEAN bExit = FALSE;
     UNICODE_STRING uniRoutine;
     RTL_OSVERSIONINFOW sysVersion;
+    UNICODE_STRING uniPsSetCreateProcessNotifyRoutineEx;
+    PsSetCreateProcessNotifyRoutineEx_t pPsSetCreateProcessNotifyRoutineEx = NULL;
 
     __try
     {
@@ -452,8 +456,23 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         // Register the call back for process creation and tear down
         //
 
-        PsSetCreateProcessNotifyRoutine( AFSProcessNotify,
-                                         FALSE);
+        RtlInitUnicodeString( &uniPsSetCreateProcessNotifyRoutineEx,
+                              L"PsSetCreateProcessNotifyRoutineEx");
+
+        pPsSetCreateProcessNotifyRoutineEx = (PsSetCreateProcessNotifyRoutineEx_t)MmGetSystemRoutineAddress(&uniPsSetCreateProcessNotifyRoutineEx);
+
+        if ( pPsSetCreateProcessNotifyRoutineEx)
+        {
+
+            pPsSetCreateProcessNotifyRoutineEx( AFSProcessNotifyEx,
+                                                FALSE);
+        }
+        else
+        {
+
+            PsSetCreateProcessNotifyRoutine( AFSProcessNotify,
+                                             FALSE);
+        }
 
 try_exit:
 
