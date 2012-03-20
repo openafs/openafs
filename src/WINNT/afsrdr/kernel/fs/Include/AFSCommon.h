@@ -812,7 +812,7 @@ AFSProcessDestroy( IN HANDLE ParentId,
                    IN HANDLE ProcessId);
 
 GUID *
-AFSValidateProcessEntry( void);
+AFSValidateProcessEntry( IN HANDLE ProcessId);
 
 BOOLEAN
 AFSIs64BitProcess( IN ULONGLONG ProcessId);

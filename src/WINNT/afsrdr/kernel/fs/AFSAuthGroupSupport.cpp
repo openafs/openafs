@@ -224,7 +224,7 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
                           ProcessId,
                           ThreadId);
 
-            pAuthGroup = AFSValidateProcessEntry();
+            pAuthGroup = AFSValidateProcessEntry( PsGetCurrentProcessId());
 
             if( pAuthGroup != NULL)
             {
