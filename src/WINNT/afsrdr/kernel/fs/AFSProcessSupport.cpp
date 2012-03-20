@@ -44,57 +44,127 @@ AFSProcessNotify( IN HANDLE  ParentId,
                   IN BOOLEAN  Create)
 {
 
+    //
+    // If this is a create notification then update our tree, otherwise remove the
+    // entry
+    //
+
+    if( Create)
+    {
+
+        AFSProcessCreate( ParentId,
+                          ProcessId,
+                          PsGetCurrentProcessId(),
+                          PsGetCurrentThreadId());
+    }
+    else
+    {
+
+        AFSProcessDestroy( ParentId,
+                           ProcessId);
+    }
+
+    return;
+}
+
+void
+AFSProcessNotifyEx( IN OUT PEPROCESS Process,
+                    IN     HANDLE ProcessId,
+                    IN OUT PPS_CREATE_NOTIFY_INFO CreateInfo)
+{
+
+    if ( CreateInfo)
+    {
+
+        AFSProcessCreate( CreateInfo->ParentProcessId,
+                          ProcessId,
+                          CreateInfo->CreatingThreadId.UniqueProcess,
+                          CreateInfo->CreatingThreadId.UniqueThread);
+    }
+    else
+    {
+
+        AFSProcessDestroy( CreateInfo->ParentProcessId,
+                           ProcessId);
+    }
+}
+
+
+void
+AFSProcessCreate( IN HANDLE ParentId,
+                  IN HANDLE ProcessId,
+                  IN HANDLE CreatingProcessId,
+                  IN HANDLE CreatingThreadId)
+{
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSProcessCB *pProcessCB = NULL, *pParentProcessCB = NULL;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    AFSProcessAuthGroupCB *pProcessAuthGroup = NULL, *pLastAuthGroup = NULL;
-    AFSThreadCB *pThreadCB = NULL, *pNextThreadCB = NULL;
+    AFSProcessCB *pProcessCB = NULL;
 
     __Enter
     {
 
-        //
-        // If this is a create notification then update our tree, otherwise remove the
-        // entry
-        //
-
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessNotify Acquiring Control ProcessTree.TreeLock lock %08lX EXCL %08lX\n",
+                      "AFSProcessCreate Acquiring Control ProcessTree.TreeLock lock %08lX EXCL %08lX\n",
                       pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                       PsGetCurrentThread());
 
         AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                         TRUE);
 
-        if( Create)
+        AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessCreate Parent %08lX Process %08lX %08lX\n",
+                      ParentId,
+                      ProcessId,
+                      PsGetCurrentThread());
+
+        pProcessCB = AFSInitializeProcessCB( (ULONGLONG)ParentId,
+                                             (ULONGLONG)ProcessId);
+
+        if( pProcessCB != NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessNotify CREATE Parent %08lX Process %08lX %08lX\n",
-                          ParentId,
-                          ProcessId,
-                          PsGetCurrentThread());
+            pProcessCB->CreatingProcessId = (ULONGLONG)CreatingProcessId;
 
-            pProcessCB = AFSInitializeProcessCB( (ULONGLONG)ParentId,
-                                                 (ULONGLONG)ProcessId);
-
-            if( pProcessCB != NULL)
-            {
-                pProcessCB->CreatingThread = (ULONGLONG)PsGetCurrentThreadId();
-            }
-
-            try_return( ntStatus);
+            pProcessCB->CreatingThreadId = (ULONGLONG)CreatingThreadId;
         }
 
+        AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+    }
+
+    return;
+}
+
+void
+AFSProcessDestroy( IN HANDLE ParentId,
+                   IN HANDLE ProcessId)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
+    AFSProcessCB *pProcessCB = NULL, *pParentProcessCB = NULL;
+    AFSProcessAuthGroupCB *pProcessAuthGroup = NULL, *pLastAuthGroup = NULL;
+    AFSThreadCB *pThreadCB = NULL, *pNextThreadCB = NULL;
+
+    __Enter
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessDestroy Acquiring Control ProcessTree.TreeLock lock %08lX EXCL %08lX\n",
+                      pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                      PsGetCurrentThreadId());
+
+        AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                        TRUE);
         //
         // It's a remove so pull the entry
         //
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessNotify DESTROY Process %08lX %08lX\n",
+                      "AFSProcessDestroy Process %08lX %08lX\n",
                       ProcessId,
                       PsGetCurrentThread());
 
@@ -141,16 +211,13 @@ AFSProcessNotify( IN HANDLE  ParentId,
         {
             AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
                           AFS_TRACE_LEVEL_WARNING,
-                          "AFSProcessNotify Process %08lX not found in ProcessTree Status %08lX %08lX\n",
+                          "AFSProcessDestroy Process %08lX not found in ProcessTree Status %08lX %08lX\n",
                           ProcessId,
                           ntStatus,
                           PsGetCurrentThread());
         }
 
-try_exit:
-
         AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
-
     }
 
     return;
@@ -354,7 +421,7 @@ AFSValidateProcessEntry( void)
                       pParentThreadCB = pParentThreadCB->Next)
                 {
 
-                    if( pParentThreadCB->ThreadId == pProcessCB->CreatingThread)
+                    if( pParentThreadCB->ThreadId == pProcessCB->CreatingThreadId)
                     {
                         break;
                     }

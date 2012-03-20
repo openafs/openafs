@@ -796,6 +796,21 @@ AFSProcessNotify( IN HANDLE  ParentId,
                   IN HANDLE  ProcessId,
                   IN BOOLEAN  Create);
 
+void
+AFSProcessNotifyEx( IN OUT PEPROCESS Process,
+                    IN     HANDLE ProcessId,
+                    IN OUT PPS_CREATE_NOTIFY_INFO CreateInfo);
+
+void
+AFSProcessCreate( IN HANDLE ParentId,
+                  IN HANDLE ProcessId,
+                  IN HANDLE CreatingProcessId,
+                  IN HANDLE CreatingThreadId);
+
+void
+AFSProcessDestroy( IN HANDLE ParentId,
+                   IN HANDLE ProcessId);
+
 GUID *
 AFSValidateProcessEntry( void);
 

@@ -63,7 +63,9 @@ typedef struct AFS_PROCESS_CB
 
     ULONGLONG           ParentProcessId;
 
-    ULONGLONG           CreatingThread;
+    ULONGLONG           CreatingProcessId;
+
+    ULONGLONG           CreatingThreadId;
 
     GUID               *ActiveAuthGroup;
 
