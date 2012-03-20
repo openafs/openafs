@@ -130,6 +130,12 @@ AFSProcessCreate( IN HANDLE ParentId,
             pProcessCB->CreatingThreadId = (ULONGLONG)CreatingThreadId;
         }
 
+        //
+        // Now assign the AuthGroup ACE
+        //
+
+        AFSValidateProcessEntry( ProcessId);
+
         AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
     }
 
@@ -230,14 +236,14 @@ AFSProcessDestroy( IN HANDLE ParentId,
 //
 
 GUID *
-AFSValidateProcessEntry( void)
+AFSValidateProcessEntry( IN HANDLE ProcessId)
 {
 
     GUID *pAuthGroup = NULL;
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSProcessCB *pProcessCB = NULL, *pParentProcessCB = NULL;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
-    ULONGLONG ullProcessID = (ULONGLONG)PsGetCurrentProcessId();
+    ULONGLONG ullProcessID = (ULONGLONG)ProcessId;
     UNICODE_STRING uniSIDString;
     ULONG ulSIDHash = 0;
     AFSSIDEntryCB *pSIDEntryCB = NULL;

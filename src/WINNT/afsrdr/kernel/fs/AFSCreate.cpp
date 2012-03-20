@@ -118,7 +118,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         // Validate the process entry
         //
 
-        pAuthGroup = AFSValidateProcessEntry();
+        pAuthGroup = AFSValidateProcessEntry( PsGetCurrentProcessId());
 
         if( pAuthGroup != NULL)
         {
