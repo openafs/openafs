@@ -63,6 +63,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
     BOOLEAN           bAllocatedSymLinkBuffer = FALSE;
     UNICODE_STRING    uniRelativeName, uniNoOpName;
     AFSObjectInfoCB  *pCurrentObject = NULL;
+    AFSObjectInfoCB  *pParentObjectInfo = NULL;
     AFSVolumeCB      *pCurrentVolume = *VolumeCB;
     BOOLEAN           bReleaseCurrentVolume = TRUE;
     BOOLEAN           bSubstitutedName = FALSE;
@@ -250,16 +251,55 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                  FileObject,
-                                  &pDirEntry->NameInformation.FileName,
-                                  pCurrentObject->FileId.Cell,
-                                  pCurrentObject->FileId.Volume,
-                                  pCurrentObject->FileId.Vnode,
-                                  pCurrentObject->FileId.Unique,
-                                  ntStatus);
+                    if ( ntStatus == STATUS_NOT_A_DIRECTORY)
+                    {
+
+                        if ( pCurrentObject->ParentObjectInformation == NULL)
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT NULL Status %08lX\n",
+                                          FileObject,
+                                          &pDirEntry->NameInformation.FileName,
+                                          pCurrentObject->FileId.Cell,
+                                          pCurrentObject->FileId.Volume,
+                                          pCurrentObject->FileId.Vnode,
+                                          pCurrentObject->FileId.Unique,
+                                          ntStatus);
+                        }
+                        else
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          FileObject,
+                                          &pDirEntry->NameInformation.FileName,
+                                          pCurrentObject->FileId.Cell,
+                                          pCurrentObject->FileId.Volume,
+                                          pCurrentObject->FileId.Vnode,
+                                          pCurrentObject->FileId.Unique,
+                                          pCurrentObject->ParentObjectInformation->FileId.Cell,
+                                          pCurrentObject->ParentObjectInformation->FileId.Volume,
+                                          pCurrentObject->ParentObjectInformation->FileId.Vnode,
+                                          pCurrentObject->ParentObjectInformation->FileId.Unique,
+                                          ntStatus);
+                        }
+                    }
+                    else
+                    {
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to evaluate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pDirEntry->NameInformation.FileName,
+                                      pCurrentObject->FileId.Cell,
+                                      pCurrentObject->FileId.Volume,
+                                      pCurrentObject->FileId.Vnode,
+                                      pCurrentObject->FileId.Unique,
+                                      ntStatus);
+                    }
 
                     try_return( ntStatus);
                 }
@@ -3782,6 +3822,16 @@ AFSCheckCellName( IN GUID *AuthGroup,
 
         if( !NT_SUCCESS( ntStatus))
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSCheckCellName entry %wZ does not exist parent FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          &CellName,
+                          AFSGlobalRoot->ObjectInformation.FileId.Cell,
+                          AFSGlobalRoot->ObjectInformation.FileId.Volume,
+                          AFSGlobalRoot->ObjectInformation.FileId.Vnode,
+                          AFSGlobalRoot->ObjectInformation.FileId.Unique,
+                          ntStatus);
 
             try_return( ntStatus);
         }

@@ -1781,16 +1781,82 @@ AFSProcessCreate( IN PIRP               Irp,
             if( !NT_SUCCESS( ntStatus))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessCreate (%08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                              Irp,
-                              &pDirEntry->NameInformation.FileName,
-                              pObjectInfo->FileId.Cell,
-                              pObjectInfo->FileId.Volume,
-                              pObjectInfo->FileId.Vnode,
-                              pObjectInfo->FileId.Unique,
-                              ntStatus);
+                if ( ntStatus == STATUS_NOT_A_DIRECTORY)
+                {
+
+                    if ( pParentObjectInfo == pObjectInfo->ParentObjectInformation)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSProcessCreate (%08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      Irp,
+                                      &pDirEntry->NameInformation.FileName,
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique,
+                                      pParentObjectInfo->FileId.Cell,
+                                      pParentObjectInfo->FileId.Volume,
+                                      pParentObjectInfo->FileId.Vnode,
+                                      pParentObjectInfo->FileId.Unique,
+                                      ntStatus);
+                    }
+                    else if ( pObjectInfo->ParentObjectInformation == NULL)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSProcessCreate (%08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX != NULL Status %08lX\n",
+                                      Irp,
+                                      &pDirEntry->NameInformation.FileName,
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique,
+                                      pParentObjectInfo->FileId.Cell,
+                                      pParentObjectInfo->FileId.Volume,
+                                      pParentObjectInfo->FileId.Vnode,
+                                      pParentObjectInfo->FileId.Unique,
+                                      ntStatus);
+                    }
+                    else
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSProcessCreate (%08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX PARENT %08lX-%08lX-%08lX-%08lX != %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      Irp,
+                                      &pDirEntry->NameInformation.FileName,
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique,
+                                      pParentObjectInfo->FileId.Cell,
+                                      pParentObjectInfo->FileId.Volume,
+                                      pParentObjectInfo->FileId.Vnode,
+                                      pParentObjectInfo->FileId.Unique,
+                                      pObjectInfo->ParentObjectInformation->FileId.Cell,
+                                      pObjectInfo->ParentObjectInformation->FileId.Volume,
+                                      pObjectInfo->ParentObjectInformation->FileId.Vnode,
+                                      pObjectInfo->ParentObjectInformation->FileId.Unique,
+                                      ntStatus);
+                    }
+                }
+                else
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSProcessCreate (%08lX) Failed to evaluate object %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  Irp,
+                                  &pDirEntry->NameInformation.FileName,
+                                  pObjectInfo->FileId.Cell,
+                                  pObjectInfo->FileId.Volume,
+                                  pObjectInfo->FileId.Vnode,
+                                  pObjectInfo->FileId.Unique,
+                                  ntStatus);
+                }
 
                 try_return( ntStatus);
             }
