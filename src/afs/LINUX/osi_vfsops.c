@@ -186,7 +186,11 @@ afs_root(struct super_block *afsp)
 
 		/* setup super_block and mount point inode. */
 		afs_globalVp = tvp;
+#if defined(HAVE_LINUX_D_MAKE_ROOT)
+		afsp->s_root = d_make_root(ip);
+#else
 		afsp->s_root = d_alloc_root(ip);
+#endif
 #if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 		afsp->s_root->d_op = &afs_dentry_operations;
 #endif
