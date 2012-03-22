@@ -2466,6 +2466,14 @@ SalvageHeader(struct SalvInfo *salvinfo, struct stuff *sp,
 	 * it below */
 	memset(&header, 0, sizeof(header));
     }
+#ifdef AFS_NAMEI_ENV
+    if (namei_FixSpecialOGM(fdP, check)) {
+	Log("Error with namei header OGM data (%s)\n", sp->description);
+	FDH_REALLYCLOSE(fdP);
+	IH_RELEASE(specH);
+	return -1;
+    }
+#endif
     if (sp->inodeType == VI_VOLINFO
 	&& header.volumeInfo.destroyMe == DESTROY_ME) {
 	if (deleteMe)

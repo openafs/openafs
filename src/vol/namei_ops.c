@@ -714,6 +714,31 @@ CheckOGM(FdHandle_t *fdP, int p1)
 
     return 0;
 }
+
+static int
+FixSpecialOGM(FdHandle_t *fdP, int check)
+{
+    Inode ino = fdP->fd_ih->ih_ino;
+    VnodeId vno = NAMEI_VNODESPECIAL, ogm_vno;
+    int ogm_volid;
+
+    if (GetWinOGM(fdP->fd_fd, &ogm_volid, &ogm_vno)) {
+	return -1;
+    }
+
+    /* the only thing we can check is the vnode number; for the volid we have
+     * nothing else to compare against */
+    if (vno != ogm_vno) {
+	if (check) {
+	    return -1;
+	}
+	if (SetWinOGM(fdP->fd_fd, ogm_volid, vno)) {
+	    return -1;
+	}
+    }
+    return 0;
+}
+
 #else /* AFS_NT40_ENV */
 /* SetOGM - set owner group and mode bits from parm and tag */
 static int
@@ -769,7 +794,67 @@ CheckOGM(FdHandle_t *fdP, int p1)
 
     return 0;
 }
+
+static int
+FixSpecialOGM(FdHandle_t *fdP, int check)
+{
+    int inode_volid, ogm_volid;
+    int inode_type, ogm_type;
+    Inode ino = fdP->fd_ih->ih_ino;
+
+    inode_volid = ((ino >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK);
+    inode_type = (int)((ino >> NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
+
+    if (GetOGM(fdP, &ogm_volid, &ogm_type) < 0) {
+	Log("Error retrieving OGM info\n");
+	return -1;
+    }
+
+    if (inode_volid != ogm_volid || inode_type != ogm_type) {
+	Log("%sIncorrect OGM data (ino: vol %u type %d) (ogm: vol %u type %d)\n",
+	    check?"":"Fixing ", inode_volid, inode_type, ogm_volid, ogm_type);
+
+	if (check) {
+	    return -1;
+	}
+
+	if (SetOGM(fdP->fd_fd, inode_volid, inode_type) < 0) {
+	    Log("Error setting OGM data\n");
+	    return -1;
+	}
+    }
+    return 0;
+}
+
 #endif /* !AFS_NT40_ENV */
+
+/**
+ * Check/fix the OGM data for an inode
+ *
+ * @param[in] fdP   Open file handle for the inode to check
+ * @param[in] check 1 to just check the OGM data, and return an error if it
+ *                  is incorrect. 0 to fix the OGM data if it is incorrect.
+ *
+ * @pre fdP must be for a special inode
+ *
+ * @return status
+ *  @retval 0 success
+ *  @retval -1 error
+ */
+int
+namei_FixSpecialOGM(FdHandle_t *fdP, int check)
+{
+    int vnode;
+    Inode ino = fdP->fd_ih->ih_ino;
+
+    vnode = (int)(ino & NAMEI_VNODEMASK);
+    if (vnode != NAMEI_VNODESPECIAL) {
+	Log("FixSpecialOGM: non-special vnode %u\n", vnode);
+	return -1;
+    }
+
+    return FixSpecialOGM(fdP, check);
+}
 
 int big_vno = 0;		/* Just in case we ever do 64 bit vnodes. */
 
@@ -1904,30 +1989,21 @@ _namei_examine_special(char * path1,
 {
     int ret = 0;
     struct ViceInodeInfo info;
-    afs_uint32 inode_vgid;
 
     if (DecodeInode(path1, dname, &info, myIH->ih_vid) < 0) {
 	ret = 0;
 	goto error;
     }
 
-#ifdef AFS_NT40_ENV
-    inode_vgid = myIH->ih_vid;
-#else
-    inode_vgid = (info.inodeNumber >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK;
-#endif
-
     if (info.u.param[2] != VI_LINKTABLE) {
 	info.linkCount = 1;
-    } else if ((info.u.param[0] != myIH->ih_vid) ||
-	       (inode_vgid != myIH->ih_vid)) {
+    } else if (info.u.param[0] != myIH->ih_vid) {
 	/* VGID encoded in linktable filename and/or OGM data isn't
 	 * consistent with VGID encoded in namei path */
 	Log("namei_ListAFSSubDirs: warning: inconsistent linktable "
 	    "filename \"%s" OS_DIRSEP "%s\"; salvager will delete it "
-	    "(dir_vgid=%u, inode_vgid=%u, ogm_vgid=%u)\n",
+	    "(dir_vgid=%u, inode_vgid=%u)\n",
 	    path1, dname, myIH->ih_vid,
-	    (unsigned int)inode_vgid,
 	    info.u.param[0]);
     } else {
 	char path2[512];
@@ -2754,14 +2830,17 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     if (strcmp(name, check))
 	return -1;
 
-    GetOGMFromStat(&status, &parm, &tag);
     if ((info->inodeNumber & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
+	parm = ((info->inodeNumber >> NAMEI_UNIQSHIFT) & NAMEI_UNIQMASK);
+	tag = (int)((info->inodeNumber >> NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
+
 	/* p1 - vid, p2 - -1, p3 - type, p4 - rwvid */
 	info->u.param[0] = parm;
 	info->u.param[1] = -1;
 	info->u.param[2] = tag;
 	info->u.param[3] = volid;
     } else {
+	GetOGMFromStat(&status, &parm, &tag);
 	/* p1 - vid, p2 - vno, p3 - uniq, p4 - dv */
 	info->u.param[0] = volid;
 	info->u.param[1] = (int)(info->inodeNumber & NAMEI_VNODEMASK);
