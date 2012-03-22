@@ -33,6 +33,7 @@ extern int namei_inc(IHandle_t * h, Inode ino, int p1);
 extern int namei_GetLinkCount(FdHandle_t * h, Inode ino, int lockit, int fixup, int nowrite);
 extern int namei_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked);
 extern int namei_ViceREADME(char *partition);
+extern int namei_FixSpecialOGM(FdHandle_t *h, int check);
 #include "nfs.h"
 #include "viceinode.h"
 int namei_ListAFSFiles(char *dev,
