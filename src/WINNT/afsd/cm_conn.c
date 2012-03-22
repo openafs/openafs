@@ -562,7 +562,7 @@ cm_Analyze(cm_conn_t *connp,
 
     /* special codes:  missing volumes */
     else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE ||
-             errorCode == VSALVAGE || errorCode == VNOSERVICE || errorCode == VIO)
+             errorCode == VSALVAGE || errorCode == VIO)
     {
         /* In case of timeout */
         reqp->volumeError = errorCode;
@@ -583,10 +583,6 @@ cm_Analyze(cm_conn_t *connp,
         case VSALVAGE:
 	    msgID = MSG_SERVER_REPORTS_VSALVAGE;
             format = "Server %s reported volume %d in cell %s as needs salvage.";
-            break;
-        case VNOSERVICE:
-	    msgID = MSG_SERVER_REPORTS_VNOSERVICE;
-            format = "Server %s reported volume %d in cell %s as not in service.";
             break;
         case VIO:
 	    msgID = MSG_SERVER_REPORTS_VIO;
@@ -822,6 +818,33 @@ cm_Analyze(cm_conn_t *connp,
         osi_Log1(afsd_logp, "cm_Analyze: Retry RPC due to busy call channel addr[%s]",
                  osi_LogSaveString(afsd_logp,addr));
         retry = 1;
+    }
+    else if (errorCode == VNOSERVICE) {
+        /*
+         * The server did not service the RPC.
+         * If this was a file server RPC it means that for at
+         * least the file server's idle dead timeout period the
+         * file server did not receive any new data packets from
+         * client.
+         *
+         * The RPC was not serviced so it can be retried and any
+         * existing status information is still valid.
+         */
+        if (fidp) {
+            if (serverp)
+                sprintf(addr, "%d.%d.%d.%d",
+                        ((serverp->addr.sin_addr.s_addr & 0xff)),
+                        ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                        ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                        ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+            LogEvent(EVENTLOG_WARNING_TYPE, MSG_SERVER_REPORTS_VNOSERVICE, addr);
+            osi_Log1(afsd_logp, "Server %s reported volume %d in cell %s as not in service.",
+                     osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
+        }
+
+        if (timeLeft > 2)
+            retry = 1;
     }
     else if (errorCode == RX_CALL_IDLE) {
         /*
