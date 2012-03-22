@@ -1633,7 +1633,6 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
     afs_int32 index;
     afs_int32 us;
     afs_int32 chunk;
-    afs_size_t maxGoodLength;	/* amount of good data at server */
     afs_size_t Position = 0;
     afs_int32 size, tlen;	/* size of segment to transfer */
     struct afs_FetchOutput *tsmall = 0;
@@ -2087,10 +2086,6 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    goto RetryGetDCache;
 	}
 
-	/* Do not fetch data beyond truncPos. */
-	maxGoodLength = avc->f.m.Length;
-	if (avc->f.truncPos < maxGoodLength)
-	    maxGoodLength = avc->f.truncPos;
 	Position = AFS_CHUNKBASE(abyte);
 	if (vType(avc) == VDIR) {
 	    size = avc->f.m.Length;
@@ -2100,16 +2095,23 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    }
 	    size = 999999999;	/* max size for transfer */
 	} else {
+	    afs_size_t maxGoodLength;
+
+	    /* estimate how much data we're expecting back from the server,
+	     * and reserve space in the dcache entry for it */
+
+	    maxGoodLength = avc->f.m.Length;
+	    if (avc->f.truncPos < maxGoodLength)
+		maxGoodLength = avc->f.truncPos;
+
 	    size = AFS_CHUNKSIZE(abyte);	/* expected max size */
-	    /* don't read past end of good data on server */
 	    if (Position + size > maxGoodLength)
 		size = maxGoodLength - Position;
 	    if (size < 0)
 		size = 0;	/* Handle random races */
 	    if (size > tdc->f.chunkBytes) {
-		/* pre-reserve space for file */
+		/* pre-reserve estimated space for file */
 		afs_AdjustSize(tdc, size);	/* changes chunkBytes */
-		/* max size for transfer still in size */
 	    }
 
 	    if (size) {
