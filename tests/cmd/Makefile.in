@@ -10,6 +10,7 @@ MODULE_CFLAGS = -I$(srcdir)/..
 LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/lib/libcmd.a \
        $(abs_top_builddir)/lib/libafscom_err.a \
+       $(abs_top_builddir)/lib/libopr.a \
        $(abs_top_builddir)/lib/util.a
 
 tests = command-t
