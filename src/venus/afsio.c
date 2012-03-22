@@ -79,6 +79,8 @@ static int BreakUpPath(char *, char *, char *, size_t);
 
 static char pnp[AFSPATHMAX];	/* filename of this program when called */
 static int verbose = 0;		/* Set if -verbose option given */
+static int clear = 0;		/* Set if -clear option given,
+				   Unset if -crypt given; default is -crypt */
 static int cellGiven = 0;	/* Set if -cell option given */
 static int force = 0;		/* Set if -force option given */
 static int readlock = 0;	/* Set if -readlock option given */
@@ -221,6 +223,10 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
 	if (pdp->items != NULL) {
 	    if (strcmp(pdp->name, "-verbose") == 0)
 	        verbose = 1;
+	    if (strcmp(pdp->name, "-clear") == 0)
+	        clear = 1;
+	    if (strcmp(pdp->name, "-crypt") == 0)
+	        clear = 0;
             else if (strcmp(pdp->name, "-md5") == 0)
 		md5sum = 1;	/* global */
             else if (strcmp(pdp->name, "-cell") == 0) {
@@ -266,6 +272,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
@@ -278,6 +286,8 @@ main(int argc, char **argv)
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
@@ -288,6 +298,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
@@ -299,6 +311,8 @@ main(int argc, char **argv)
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
@@ -308,6 +322,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
@@ -318,6 +334,7 @@ main(int argc, char **argv)
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
@@ -326,6 +343,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"overwrite existing file");
@@ -340,6 +359,8 @@ main(int argc, char **argv)
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"overwrite existing file");
@@ -350,6 +371,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     ts = cmd_CreateSyntax("fidappend", writeFile, NULL,
@@ -359,6 +382,8 @@ main(int argc, char **argv)
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     if (afscp_Init(NULL) != 0)
@@ -616,6 +641,8 @@ lockFile(struct cmd_syndesc *as, void *arock)
 
     CmdProlog(as, &cell, &realm, &fname, NULL);
     afscp_AnonymousAuth(1);
+    if (clear)
+	afscp_Insecure();
 
     if ((locktype == LockWrite) && readlock)
 	locktype = LockRead;
@@ -702,6 +729,8 @@ readFile(struct cmd_syndesc *as, void *unused)
 
     CmdProlog(as, &cell, &realm, &fname, NULL);
     afscp_AnonymousAuth(1);
+    if (clear)
+	afscp_Insecure();
 
     if (md5sum)
 	MD5_Init(&md5);
@@ -819,6 +848,8 @@ writeFile(struct cmd_syndesc *as, void *unused)
 
     CmdProlog(as, &cell, &realm, &fname, &sSynthLen);
     afscp_AnonymousAuth(1);
+    if (clear)
+	afscp_Insecure();
 
     if (realm != NULL)
 	code = afscp_SetDefaultRealm(realm);
