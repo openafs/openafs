@@ -420,6 +420,9 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 			UpgradeSToWLock(&tdc->lock, 678);
 			hset(tdc->f.versionNo, avc->f.m.DataVersion);
 			tdc->dflags |= DFEntryMod;
+			/* DWriting may not have gotten cleared above, if all
+			 * we did was a StoreMini */
+			tdc->f.states &= ~DWriting;
 			ConvertWToSLock(&tdc->lock);
 		    }
 		}
@@ -777,6 +780,7 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
 	ObtainSharedLock(&tdc->lock, 672);
 	if (newSize < tdc->f.chunkBytes && newSize < MAX_AFS_UINT32) {
 	    UpgradeSToWLock(&tdc->lock, 673);
+	    tdc->f.states |= DWriting;
 	    tfile = afs_CFileOpen(&tdc->f.inode);
 	    afs_CFileTruncate(tfile, (afs_int32)newSize);
 	    afs_CFileClose(tfile);
