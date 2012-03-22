@@ -169,6 +169,14 @@
 	rx_RecordCallStatistics;
 	rx_KeepAliveOn;
 	rx_KeepAliveOff;
+	rx_ServiceOf;
+	rx_GetSecurityData;
+	rx_SetSecurityData;
+	rx_GetConnectionId;
+	rx_GetConnectionEpoch;
+	rx_GetSecurityHeaderSize;
+	rx_SetSecurityHeaderSize;
+	rx_SetSecurityMaxTrailerSize;
     local:
 	*;
 };
