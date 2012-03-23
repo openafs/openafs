@@ -6143,6 +6143,31 @@ rxi_CheckCall(struct rx_call *call)
     int cerror = 0;
     int newmtu = 0;
     int idle_timeout = 0;
+    afs_int32  clock_diff = 0;
+
+    now = clock_Sec();
+
+    /* Large swings in the clock can have a significant impact on
+     * the performance of RX call processing.  Forward clock shifts
+     * will result in premature event triggering or timeouts.
+     * Backward shifts can result in calls not completing until
+     * the clock catches up with the original start clock value.
+     *
+     * If a backward clock shift of more than five minutes is noticed,
+     * just fail the call.
+     */
+    if (now < call->lastSendTime)
+        clock_diff = call->lastSendTime - now;
+    if (now < call->startWait)
+        clock_diff = MAX(clock_diff, call->startWait - now);
+    if (now < call->lastReceiveTime)
+        clock_diff = MAX(clock_diff, call->lastReceiveTime - now);
+    if (clock_diff > 5 * 60)
+    {
+	if (call->state == RX_STATE_ACTIVE)
+	    rxi_CallError(call, RX_CALL_TIMEOUT);
+	return -1;
+    }
 
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (call->flags & RX_CALL_TQ_BUSY) {
@@ -6157,7 +6182,6 @@ rxi_CheckCall(struct rx_call *call)
                    ((afs_uint32) call->rtt_dev << 1) + 1023) >> 10;
 
     deadTime = conn->secondsUntilDead + fudgeFactor;
-    now = clock_Sec();
     /* These are computed to the second (+- 1 second).  But that's
      * good enough for these values, which should be a significant
      * number of seconds. */
