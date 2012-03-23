@@ -10,6 +10,7 @@ opr/fmt
 opr/jhash
 opr/queues
 opr/rbtree
+opr/softsig
 opr/time
 opr/uuid
 ptserver/pt_util

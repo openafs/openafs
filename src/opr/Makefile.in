@@ -3,7 +3,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-LT_objs = assert.lo casestrcpy.lo dict.lo fmt.lo proc.lo rbtree.lo uuid.lo
+LT_objs = assert.lo casestrcpy.lo dict.lo fmt.lo proc.lo rbtree.lo softsig.lo uuid.lo
 LT_libs = $(LIB_hcrypto) $(LIB_roken)
 
 HEADERS = $(TOP_INCDIR)/afs/opr.h \
@@ -17,6 +17,7 @@ HEADERS = $(TOP_INCDIR)/afs/opr.h \
 	  $(TOP_INCDIR)/opr/proc.h \
 	  $(TOP_INCDIR)/opr/queue.h \
 	  $(TOP_INCDIR)/opr/rbtree.h \
+	  $(TOP_INCDIR)/opr/softsig.h \
 	  $(TOP_INCDIR)/opr/time.h \
 	  $(TOP_INCDIR)/opr/uuid.h
 
@@ -74,6 +75,9 @@ $(TOP_INCDIR)/opr/time.h: ${srcdir}/opr_time.h
 	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/opr/uuid.h: ${srcdir}/uuid.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/softsig.h: softsig.h
 	$(INSTALL_DATA) $? $@
 
 clean:
