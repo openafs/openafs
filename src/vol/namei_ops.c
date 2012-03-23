@@ -618,23 +618,48 @@ SetOGM(FD_t fd, int parm, int tag)
 }
 
 static int
-CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
+SetWinOGM(FD_t fd, int p1, int p2)
 {
-    WIN32_FIND_DATA info;
-    HANDLE dirH;
+    BOOL code;
+    FILETIME ftime;
 
-    dirH =
-	FindFirstFileEx(name->n_path, FindExInfoStandard, &info,
-			FindExSearchNameMatch, NULL,
-			FIND_FIRST_EX_CASE_SENSITIVE);
+    ftime.dwHighDateTime = p1;
+    ftime.dwLowDateTime = p2;
 
-    if (!dirH)
-	return -1;          /* Can't get info, leave alone */
-
-    FindClose(dirH);
-
-    if (info.ftCreationTime.dwHighDateTime != (unsigned int)p1)
+    code = SetFileTime(fd, &ftime, NULL /*access*/, NULL /*write*/);
+    if (!code)
 	return -1;
+    return 0;
+}
+
+static int
+GetWinOGM(FD_t fd, int *p1, int *p2)
+{
+    BOOL code;
+    FILETIME ftime;
+
+    code = GetFileTime(fd, &ftime, NULL /*access*/, NULL /*write*/);
+    if (!code)
+	return -1;
+
+    *p1 = ftime.dwHighDateTime;
+    *p2 = ftime.dwLowDateTime;
+
+    return 0;
+}
+
+static int
+CheckOGM(FdHandle_t *fdP, int p1)
+{
+    int ogm_p1, ogm_p2;
+
+    if (GetWinOGM(fdP->fd_fd, &ogm_p1, &ogm_p2)) {
+	return -1;
+    }
+
+    if (ogm_p1 != p1) {
+	return -1;
+    }
 
     return 0;
 }
@@ -672,14 +697,22 @@ GetOGMFromStat(struct afs_stat_st *status, int *parm, int *tag)
 }
 
 static int
-CheckOGM(namei_t *name, FdHandle_t *fdP, int p1)
+GetOGM(FdHandle_t *fdP, int *parm, int *tag)
 {
     struct afs_stat_st status;
-    int parm, tag;
     if (afs_fstat(fdP->fd_fd, &status) < 0)
 	return -1;
+    GetOGMFromStat(&status, parm, tag);
+    return 0;
+}
 
-    GetOGMFromStat(&status, &parm, &tag);
+static int
+CheckOGM(FdHandle_t *fdP, int p1)
+{
+    int parm, tag;
+
+    if (GetOGM(fdP, &parm, &tag) < 0)
+	return -1;
     if (parm != p1)
 	return -1;
 
@@ -704,7 +737,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     FdHandle_t *fdP;
     FdHandle_t tfd;
     int type, tag;
-    FILETIME ftime;
+    int ogm_p1, ogm_p2;
     char *p;
     b32_string_t str1;
 
@@ -724,8 +757,8 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 	 * p3 - type
 	 * p4 - parent volume id
 	 */
-        ftime.dwHighDateTime = p1;
-        ftime.dwLowDateTime = p2;
+        ogm_p1 = p1;
+        ogm_p2 = p2;
 	type = p3;
 	tmp.ih_vid = p4;	/* Use parent volume id, where this file will be. */
 	tmp.ih_ino = namei_MakeSpecIno(p1, p3);
@@ -746,8 +779,8 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
 
 	tmp.ih_vid = p1;
 	tmp.ih_ino = (Inode) p2;
-	ftime.dwHighDateTime = p3;
-        ftime.dwLowDateTime = p4;
+	ogm_p1 = p3;
+        ogm_p2 = p4;
     }
 
     namei_HandleToName(&name, &tmp);
@@ -776,7 +809,7 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     tmp.ih_ino |= (((Inode) tag) << NAMEI_TAGSHIFT);
 
     if (!code) {
-        if (!SetFileTime((HANDLE) fd, &ftime, NULL, NULL)) {
+        if (SetWinOGM(fd, ogm_p1, ogm_p2)) {
 	    errno = OS_ERROR(EBADF);
             code = -1;
         }
@@ -977,7 +1010,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	    return -1;
 	}
 
-	if (CheckOGM(&name, fdP, p1) < 0) {
+	if (CheckOGM(fdP, p1) < 0) {
 	    FDH_REALLYCLOSE(fdP);
 	    IH_RELEASE(tmp);
 	    errno = OS_ERROR(EINVAL);
