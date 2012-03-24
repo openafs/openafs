@@ -69,11 +69,11 @@
 #include <afs/dir.h>
 #ifndef AFS_NT40_ENV
 # include <afs/netutils.h>
+# include <afs/softsig.h>
 #endif
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
-#include <afs/softsig.h>
 #if defined(AFS_SGI_ENV)
 # include "sys/schedctl.h"
 # include "sys/lock.h"

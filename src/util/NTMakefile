@@ -26,8 +26,7 @@ INCFILES =\
 	$(INCFILEDIR)\ktime.h \
 	$(INCFILEDIR)\fileutil.h \
 	$(INCFILEDIR)\afsutil_prototypes.h \
-	$(INCFILEDIR)\secutil_nt.h \
-        $(INCFILEDIR)\softsig.h
+	$(INCFILEDIR)\secutil_nt.h
 
 $(DESTDIR)\include\dirent.h: dirent_nt.h
 	$(COPY) $** $@
