@@ -309,17 +309,19 @@
               <term><emphasis role="bold">The a (administer) permission</emphasis></term>
 
               <listitem>
-                <para>This permission enables a user to change the directory's ACL. Members of the <emphasis
-                role="bold">system:administrators</emphasis> group implicitly have this permission on every directory (that is, even
-                if that group does not appear on the ACL). Similarly, the owner of a directory implicitly has this permission on its
-                ACL and those of all directories below it that he or she owns. <indexterm>
+                <para>This permission enables a user to change the directory's ACL. Members of the
+                    <emphasis role="bold">system:administrators</emphasis> group implicitly have
+                  this permission on every directory (that is, even if that group does not appear on
+                  the ACL). Similarly, the owner of a volume root directory implicitly has this
+                  permission on its ACL and those of all directories within the volume. <indexterm>
                     <primary>administer ACL permission</primary>
-
-                    <secondary></secondary>
-
+                    <secondary/>
                     <see>a ACL permission</see>
-                  </indexterm> <indexterm>
+                  </indexterm>
+                  <indexterm>
                     <primary>a ACL permission</primary>
+                  </indexterm><indexterm>
+                    <primary>implicit ACL permissions</primary>
                   </indexterm></para>
               </listitem>
             </varlistentry>
