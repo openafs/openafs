@@ -1958,6 +1958,9 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             try_return( ntStatus);
         }
 
+        AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
+                          TRUE);
+
         if ( AFSIsVolumeFID( &InvalidateCB->FileID))
         {
 
@@ -1965,9 +1968,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         }
         else
         {
-
-            AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
-                              TRUE);
 
             lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
@@ -1982,9 +1982,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             ntStatus = AFSLocateHashEntry( pVolumeCB->ObjectInfoTree.TreeHead,
                                            ullIndex,
                                            (AFSBTreeEntry **)&pObjectInfo);
-
-            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
         }
 
         if( pObjectInfo != NULL)
@@ -2002,6 +1999,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                           pObjectInfo,
                           lCount);
         }
+
+        AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
         if( !NT_SUCCESS( ntStatus) ||
             pObjectInfo == NULL)

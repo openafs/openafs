@@ -644,6 +644,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE))
                 {
                     InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+
                     ClearFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
 
                     AFSPerformObjectInvalidate( pObjectInfo,

@@ -1184,40 +1184,49 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
+                            //
+                            // Dropping the TreeLock permits the
+                            // pCurrentObject->ObjectReferenceCount to change
+                            //
+
                             if( AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
                                                 FALSE))
                             {
 
-                                if( pCurrentObject->Fcb != NULL)
+                                if ( pCurrentObject->ObjectReferenceCount == 0)
                                 {
 
-                                    AFSRemoveFcb( &pCurrentObject->Fcb);
-                                }
-
-                                if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
-                                {
-
-                                    if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
+                                    if( pCurrentObject->Fcb != NULL)
                                     {
 
-                                        AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+                                        AFSRemoveFcb( &pCurrentObject->Fcb);
                                     }
 
-                                    AFSDeleteObjectInfo( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
+                                    if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
+                                    {
 
-                                    ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
+                                        if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
+                                        {
 
-                                    AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged);
+                                            AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+                                        }
 
-                                    AFSExFreePool( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB);
+                                        AFSDeleteObjectInfo( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
+
+                                        ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
+
+                                        AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged);
+
+                                        AFSExFreePool( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB);
+                                    }
+
+                                    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                                  AFS_TRACE_LEVEL_VERBOSE,
+                                                  "AFSPrimaryVolumeWorkerThread Deleting deleted object %08lX\n",
+                                                  pCurrentObject);
+
+                                    AFSDeleteObjectInfo( pCurrentObject);
                                 }
-
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
-                                              AFS_TRACE_LEVEL_VERBOSE,
-                                              "AFSPrimaryVolumeWorkerThread Deleting deleted object %08lX\n",
-                                              pCurrentObject);
-
-                                AFSDeleteObjectInfo( pCurrentObject);
 
                                 AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
 
@@ -1431,6 +1440,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
+                                            //
+                                            // Dropping the TreeLock permits the
+                                            // pCurrentObject->ObjectReferenceCount to change
+                                            //
+
                                             AFSCleanupFcb( pFcb,
                                                            TRUE);
 
@@ -1462,7 +1476,6 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                               pCurrentObject->FileId.Vnode,
                                               pCurrentObject->FileId.Unique);
 
-
                                 //
                                 // Clear our enumerated flag on this object so we retrieve info again on next access
                                 //
@@ -1470,6 +1483,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 ClearFlag( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DIRECTORY_ENUMERATED);
 
                                 AFSReleaseResource( pCurrentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                                AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
                             }
                             else
                             {
@@ -1480,8 +1495,6 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                 break;
                             }
-
-                            AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
                         }
                         else
                         {
@@ -1536,6 +1549,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                 AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
+                                //
+                                // Dropping the TreeLock permits the
+                                // pCurrentObject->ObjectReferenceCount to change
+                                //
+
                                 AFSCleanupFcb( pFcb,
                                                TRUE);
 
@@ -1571,6 +1589,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         {
 
                             AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+                            //
+                            // Dropping the TreeLock permits the
+                            // pCurrentObject->ObjectReferenceCount to change
+                            //
 
                             AFSCleanupFcb( pCurrentObject->Fcb,
                                            FALSE);
