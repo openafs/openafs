@@ -33,9 +33,6 @@
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#ifdef AFS_ATHENA_STDENV
-#include <krb.h>
-#endif
 #include <afs/acl.h>
 #include <afs/ptclient.h>
 #include <afs/prs_fs.h>

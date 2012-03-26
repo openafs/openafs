@@ -1189,7 +1189,6 @@ extern int afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred);
 
 struct fid;
 /* VNOPS/afs_vnop_fid.c */
-#if !defined(AFS_ATHENA_ENV)
 #ifdef AFS_AIX41_ENV
 int afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp);
 #elif defined(AFS_SUN5_ENV)
@@ -1197,7 +1196,6 @@ int afs_fid(OSI_VC_DECL(avc), struct fid *fidpp);
 #else
 int afs_fid(OSI_VC_DECL(avc), struct fid **fidpp);
 #endif                          /* AFS_AIX41_ENV */
-#endif
 
 /* VNOPS/afs_vnop_flock.c */
 extern afs_int32 lastWarnTime;

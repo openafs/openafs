@@ -24,10 +24,6 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 
-#ifdef AFS_ATHENA_STDENV
-#include <krb.h>
-#endif
-
 #include "base64.h"
 #include "auth.h"
 #include "cellconfig.h"

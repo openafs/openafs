@@ -121,7 +121,6 @@ afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localre
     if (localrealm && strcasecmp(localrealm, tcell))
 	foreign = 1;
 
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
     if (foreign) {
 	static char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
 	static int  num_lrealms = -1;
@@ -165,7 +164,6 @@ afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localre
 
 	foreign = !lrealm_match;
     }
-#endif
     return foreign;
 }
 

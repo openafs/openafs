@@ -69,10 +69,6 @@
 #include "ptprototypes.h"
 #include "afs/audit.h"
 
-#ifdef AFS_ATHENA_STDENV
-#include <krb.h>
-#endif
-
 extern int restricted;
 extern struct ubik_dbase *dbase;
 extern int pr_noAuth;

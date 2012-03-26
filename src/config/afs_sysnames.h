@@ -326,29 +326,10 @@
 #define SYS_NAME_ID_amd64_obsd47        4016
 #define SYS_NAME_ID_amd64_obsd48        4017
 
-/*
- * Placeholder to keep system-wide standard flags since this file is included by all
- * files (i.e in afs/param.h)
- */
-#ifdef	notdef
-/* Should be enabled by src sites that are compiling afs in a kerberos environment
- * (i.e. use their headers and libs) and want to use the realm-related kerberos code
- */
-#define	AFS_ATHENA_STDENV		1
-#endif
-#ifdef	AFS_ATHENA_STDENV
-/* So that they don't get our own version of the kerb-related function  in libutil.a */
-#define	afs_krb_get_lrealm(r,n)	krb_get_lrealm(r,n)
-#define	AFS_REALM_SZ		REALM_SZ
-#endif
 
-/* Should be enabled by src sites that are compiling afs without the kerb headers/libs
- * but want to use the kerberos realm-related code
- */
-#define	AFS_KERBREALM_ENV	1
-#ifdef	AFS_KERBREALM_ENV
-#define	AFS_REALM_SZ		64
-#endif
+#define	AFS_REALM_SZ	64
+
 /* Specifies the number of equivalent local realm names */
 #define AFS_NUM_LREALMS 4
+
 #endif /* __AFS_SYSNAMES_INCL_ENV_ */

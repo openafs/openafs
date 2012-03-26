@@ -445,7 +445,6 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
                         strcat(vname, inst);
                     }
                     if ((clen = strlen(tcell))) {
-#if defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
                         static char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
 			static int  num_lrealms = -1;
 			int i, lrealm_match;
@@ -486,7 +485,6 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
                             strcat(vname, "@");
                             strcat(vname, tcell);
                         }
-#endif
                     }
                     strcpy(afsName, vname);
                 }
