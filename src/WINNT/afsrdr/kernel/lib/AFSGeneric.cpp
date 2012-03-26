@@ -2481,13 +2481,17 @@ AFSInvalidateVolume( IN AFSVolumeCB *VolumeCB,
             AFSInvalidateObject( &pCurrentObject,
                                  Reason);
 
-            lCount = InterlockedDecrement( &pCurrentObject->ObjectReferenceCount);
+            if ( pCurrentObject)
+            {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateVolumeObjects Decrement count on object %08lX Cnt %d\n",
-                          pCurrentObject,
-                          lCount);
+                lCount = InterlockedDecrement( &pCurrentObject->ObjectReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInvalidateVolumeObjects Decrement count on object %08lX Cnt %d\n",
+                              pCurrentObject,
+                              lCount);
+            }
         }
 
         //

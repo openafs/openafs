@@ -303,8 +303,19 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                         if( pDirNode->ObjectInformation->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
                         {
 
-                            AFSInvalidateObject( &pDirNode->ObjectInformation,
-+                                                 AFS_INVALIDATE_DATA_VERSION);
+                            LONG lCount;
+                            AFSObjectInfoCB *pObjectInfo = pDirNode->ObjectInformation;
+
+                            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+
+                            AFSInvalidateObject( &pObjectInfo,
+                                                 AFS_INVALIDATE_DATA_VERSION);
+
+                            if( pObjectInfo != NULL)
+                            {
+
+                                lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+                            }
                         }
                         else
                         {
@@ -748,6 +759,7 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
     AFSObjectInfoCB *pObjectInfo = NULL;
     ULONGLONG ullIndex = 0;
     UNICODE_STRING uniGUID;
+    LONG lCount;
 
     __Enter
     {
@@ -1058,8 +1070,16 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                         if( pObjectInfo->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
                         {
 
+                            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+
                             AFSInvalidateObject( &pObjectInfo,
                                                  AFS_INVALIDATE_DATA_VERSION);
+
+                            if( pObjectInfo != NULL)
+                            {
+
+                                lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+                            }
                         }
                         else
                         {
