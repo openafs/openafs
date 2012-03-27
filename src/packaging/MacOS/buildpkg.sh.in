@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Portions Copyright (c) 2003, 2006 Apple Computer, Inc.  All rights reserved.
 
 if [ -z "$1" ]; then
@@ -49,24 +49,11 @@ PACKAGEMAKER=""
 if [ -e "/Developer/usr/bin/packagemaker" ]; then
     PACKAGEMAKER="/Developer/usr/bin/packagemaker"
 else
-    PACKAGEMAKERS=$(mdfind "(kMDItemCFBundleIdentifier == 'com.apple.PackageMaker')")
-    if [ -z "$PACKAGEMAKERS" ]; then
-        echo "packagemaker not found"
-        exit 1
-    fi
-    # if there's a space, trying a for blows up
-    if [ -e "$PACKAGEMAKERS/Contents/MacOS/PackageMaker" ]; then
-            PACKAGEMAKER="$PACKAGEMAKERS/Contents/MacOS/PackageMaker"
-    else
-        for TRYAPP in $PACKAGEMAKERS
-        do
-            echo "$TRYAPP/Contents/MacOS/PackageMaker"
-            if [ -e "$TRYAPP/Contents/MacOS/PackageMaker" ]; then
-                PACKAGEMAKER="$TRYAPP/Contents/MacOS/PackageMaker"
-                break
-            fi
-        done
-    fi
+    while IFS= read -d $'\0' -r file ; do
+        if [ -e "$file/Contents/MacOS/PackageMaker" ]; then
+            PACKAGEMAKER="$file/Contents/MacOS/PackageMaker"
+        fi
+    done < <(mdfind -0 "(kMDItemCFBundleIdentifier == 'com.apple.PackageMaker')")
 fi
 if [ -z "$PACKAGEMAKER" ]; then
     echo "packagemaker not found"
@@ -111,6 +98,8 @@ if [ $firstpass = yes ]; then
        echo "make dest"
        exit 1
     fi
+
+    SEP=:
 
     rm -rf $PKGROOT
     mkdir $PKGROOT
@@ -230,7 +219,7 @@ if [ $secondpass = yes ]; then
 	rm -rf $CURDIR/OpenAFS-debug-extension.pkg
 	echo $PACKAGEMAKER -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
 	    -i OpenAFS-debug.Info.plist -d OpenAFS-debug.Description.plist
-	$PACKAGEMAKER -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
+	"$PACKAGEMAKER" -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
 	    -i OpenAFS-debug.Info.plist -d OpenAFS-debug.Description.plist
     fi
 
@@ -262,11 +251,11 @@ if [ $secondpass = yes ]; then
     if [ $majorvers -ge 7 ]; then
 	echo $PACKAGEMAKER -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
 	    -i OpenAFS.Info.plist -d OpenAFS.Description.plist
-	$PACKAGEMAKER -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
+	"$PACKAGEMAKER" -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
 	    -i OpenAFS.Info.plist -d OpenAFS.Description.plist
     else
 	echo $PACKAGEMAKER $PKGROOT $RESSRC/OpenAFS.info -r $PKGRES
-	(cd $CURDIR && $PACKAGEMAKER $PKGROOT $RESSRC/OpenAFS.info -r $PKGRES)
+	(cd $CURDIR && "$PACKAGEMAKER" $PKGROOT $RESSRC/OpenAFS.info -r $PKGRES)
 	#old versions of package didn't handle this properly
 	if [ ! -r $CURDIR/OpenAFS.pkg/Contents ]; then
 		mkdir -p $CURDIR/OpenAFS.pkg/Contents/Resources
