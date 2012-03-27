@@ -808,8 +808,7 @@ AFSProcessCreate( IN HANDLE ParentId,
                   IN HANDLE CreatingThreadId);
 
 void
-AFSProcessDestroy( IN HANDLE ParentId,
-                   IN HANDLE ProcessId);
+AFSProcessDestroy( IN HANDLE ProcessId);
 
 GUID *
 AFSValidateProcessEntry( IN HANDLE ProcessId);

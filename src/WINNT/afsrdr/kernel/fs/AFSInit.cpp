@@ -453,7 +453,12 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         AFSInitServerStrings();
 
         //
-        // Register the call back for process creation and tear down
+        // Register the call back for process creation and tear down.
+        // On Vista SP1 and above, PsSetCreateProcessNotifyRoutineEx
+        // will be used.  This function returns STATUS_ACCESS_DENIED
+        // if there is a signing error.  In that case, the AFSProcessNotifyEx
+        // routine has not been registered and we can fallback to the
+        // Windows 2000 interface and AFSProcessNotify.
         //
 
         RtlInitUnicodeString( &uniPsSetCreateProcessNotifyRoutineEx,
@@ -461,18 +466,23 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
         pPsSetCreateProcessNotifyRoutineEx = (PsSetCreateProcessNotifyRoutineEx_t)MmGetSystemRoutineAddress(&uniPsSetCreateProcessNotifyRoutineEx);
 
+        ntStatus = STATUS_ACCESS_DENIED;
+
         if ( pPsSetCreateProcessNotifyRoutineEx)
         {
 
-            pPsSetCreateProcessNotifyRoutineEx( AFSProcessNotifyEx,
-                                                FALSE);
+            ntStatus = pPsSetCreateProcessNotifyRoutineEx( AFSProcessNotifyEx,
+                                                           FALSE);
         }
-        else
+
+        if ( ntStatus == STATUS_ACCESS_DENIED)
         {
 
-            PsSetCreateProcessNotifyRoutine( AFSProcessNotify,
-                                             FALSE);
+            ntStatus = PsSetCreateProcessNotifyRoutine( AFSProcessNotify,
+                                                        FALSE);
         }
+
+        ntStatus = STATUS_SUCCESS;
 
 try_exit:
 

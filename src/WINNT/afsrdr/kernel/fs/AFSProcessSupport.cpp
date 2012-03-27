@@ -60,8 +60,7 @@ AFSProcessNotify( IN HANDLE  ParentId,
     else
     {
 
-        AFSProcessDestroy( ParentId,
-                           ProcessId);
+        AFSProcessDestroy( ProcessId);
     }
 
     return;
@@ -84,8 +83,7 @@ AFSProcessNotifyEx( IN OUT PEPROCESS Process,
     else
     {
 
-        AFSProcessDestroy( CreateInfo->ParentProcessId,
-                           ProcessId);
+        AFSProcessDestroy( ProcessId);
     }
 }
 
@@ -143,8 +141,7 @@ AFSProcessCreate( IN HANDLE ParentId,
 }
 
 void
-AFSProcessDestroy( IN HANDLE ParentId,
-                   IN HANDLE ProcessId)
+AFSProcessDestroy( IN HANDLE ProcessId)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -276,8 +273,18 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
                       ullProcessID);
 
         ntStatus = AFSLocateHashEntry( pDeviceExt->Specific.Control.ProcessTree.TreeHead,
-                                       (ULONGLONG)ullProcessID,
+                                       ullProcessID,
                                        (AFSBTreeEntry **)&pProcessCB);
+
+        if( !NT_SUCCESS( ntStatus) ||
+            pProcessCB == NULL)
+        {
+
+            AFSProcessCreate( 0,
+                              ProcessId,
+                              0,
+                              0);
+        }
 
         if( !NT_SUCCESS( ntStatus) ||
             pProcessCB == NULL)
@@ -289,8 +296,8 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
                           __FUNCTION__,
                           ullProcessID);
 
-            ASSERT( FALSE);
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+
             try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
 
