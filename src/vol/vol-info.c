@@ -109,6 +109,7 @@ typedef enum {
     c(host) \
     c(desc) \
     c(vid) \
+    c(offset) \
     c(vtype) \
     c(vname) \
     c(part) \
@@ -2467,6 +2468,9 @@ PrintColumns(struct VnodeDetails *vdp, const char *desc)
 	    break;
 	case col_vid:
 	    printf("%lu", afs_printable_uint32_lu(V_id(vdp->vp)));
+	    break;
+	case col_offset:
+	    printf("%llu", vdp->offset);
 	    break;
 	case col_vtype:
 	    printf("%s", volumeTypeShortString(V_type(vdp->vp)));
