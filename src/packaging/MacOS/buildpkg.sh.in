@@ -45,27 +45,32 @@ PKGROOT=$CURDIR/pkgroot
 PKGRES=$CURDIR/pkgres
 DPKGROOT=$CURDIR/dpkgroot
 DPKGRES=$CURDIR/dpkgres
-if [ $majorvers -ge 7 ]; then
-    SEP=:
-    package=/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker
-    if [ ! -x $package ]; then
-       echo "PackageMaker does not exist. Please run this script on a MacOS X system"
-      echo "with the DeveloperTools package installed"
-      exit 1
-    fi
+PACKAGEMAKER=""
+if [ -e "/Developer/usr/bin/packagemaker" ]; then
+    PACKAGEMAKER="/Developer/usr/bin/packagemaker"
 else
-    SEP=.
-    package=/usr/bin/package
-    if [ ! -f $package ]; then
-       echo "$package does not exist. Please run this script on a MacOS X system"
-      echo "with the BSD subsystem installed"
-      exit 1
+    PACKAGEMAKERS=$(mdfind "(kMDItemCFBundleIdentifier == 'com.apple.PackageMaker')")
+    if [ -z "$PACKAGEMAKERS" ]; then
+        echo "packagemaker not found"
+        exit 1
     fi
-    if grep -q 'set resDir = ""' $package ; then
-       echo $package is buggy.
-       echo remove the line \''set resDir = ""'\' from $package and try again
-       exit 1
+    # if there's a space, trying a for blows up
+    if [ -e "$PACKAGEMAKERS/Contents/MacOS/PackageMaker" ]; then
+            PACKAGEMAKER="$PACKAGEMAKERS/Contents/MacOS/PackageMaker"
+    else
+        for TRYAPP in $PACKAGEMAKERS
+        do
+            echo "$TRYAPP/Contents/MacOS/PackageMaker"
+            if [ -e "$TRYAPP/Contents/MacOS/PackageMaker" ]; then
+                PACKAGEMAKER="$TRYAPP/Contents/MacOS/PackageMaker"
+                break
+            fi
+        done
     fi
+fi
+if [ -z "$PACKAGEMAKER" ]; then
+    echo "packagemaker not found"
+    exit 1
 fi
 
 if [ $firstpass = yes ]; then
@@ -223,9 +228,9 @@ if [ $secondpass = yes ]; then
 	cp background.jpg $DPKGRES/background.jpg
 	chown -R root${SEP}wheel $DPKGRES
 	rm -rf $CURDIR/OpenAFS-debug-extension.pkg
-	echo $package -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
+	echo $PACKAGEMAKER -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
 	    -i OpenAFS-debug.Info.plist -d OpenAFS-debug.Description.plist
-	$package -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
+	$PACKAGEMAKER -build -p $CURDIR/OpenAFS-debug-extension.pkg -f $DPKGROOT -r $DPKGRES \
 	    -i OpenAFS-debug.Info.plist -d OpenAFS-debug.Description.plist
     fi
 
@@ -255,13 +260,13 @@ if [ $secondpass = yes ]; then
     chown -R root${SEP}wheel $PKGRES
     rm -rf $CURDIR/OpenAFS.pkg
     if [ $majorvers -ge 7 ]; then
-	echo $package -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
+	echo $PACKAGEMAKER -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
 	    -i OpenAFS.Info.plist -d OpenAFS.Description.plist
-	$package -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
+	$PACKAGEMAKER -build -p $CURDIR/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
 	    -i OpenAFS.Info.plist -d OpenAFS.Description.plist
     else
-	echo $package $PKGROOT $RESSRC/OpenAFS.info -r $PKGRES
-	(cd $CURDIR && $package $PKGROOT $RESSRC/OpenAFS.info -r $PKGRES)
+	echo $PACKAGEMAKER $PKGROOT $RESSRC/OpenAFS.info -r $PKGRES
+	(cd $CURDIR && $PACKAGEMAKER $PKGROOT $RESSRC/OpenAFS.info -r $PKGRES)
 	#old versions of package didn't handle this properly
 	if [ ! -r $CURDIR/OpenAFS.pkg/Contents ]; then
 		mkdir -p $CURDIR/OpenAFS.pkg/Contents/Resources
