@@ -1093,7 +1093,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                     pVolumeCB->VolumeReferenceCount == 1 &&
                     ( pVolumeCB->RootFcb == NULL ||
                       pVolumeCB->RootFcb->OpenReferenceCount == 0) &&
-                    pVolumeCB->ObjectInformation.ObjectReferenceCount == 0)
+                    pVolumeCB->ObjectInformation.ObjectReferenceCount <= 0)
                 {
 
                     if( pVolumeCB->RootFcb != NULL)
@@ -1175,7 +1175,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         //
 
                         if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
-                            pCurrentObject->ObjectReferenceCount == 0 &&
+                            pCurrentObject->ObjectReferenceCount <= 0 &&
                             ( pCurrentObject->Fcb == NULL ||
                               pCurrentObject->Fcb->OpenReferenceCount == 0) &&
                             pCurrentObject->Specific.Directory.DirectoryNodeListHead == NULL &&
@@ -1193,7 +1193,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                                 FALSE))
                             {
 
-                                if ( pCurrentObject->ObjectReferenceCount == 0)
+                                if ( pCurrentObject->ObjectReferenceCount <= 0)
                                 {
 
                                     if( pCurrentObject->Fcb != NULL)
@@ -1387,7 +1387,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     AFSDeleteDirEntry( pCurrentObject,
                                                        pCurrentDirEntry);
 
-                                    if( pCurrentChildObject->ObjectReferenceCount == 0)
+                                    if( pCurrentChildObject->ObjectReferenceCount <= 0)
                                     {
 
                                         if( pCurrentChildObject->Fcb != NULL)
@@ -1537,7 +1537,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                     {
 
                         if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
-                            pCurrentObject->ObjectReferenceCount == 0 &&
+                            pCurrentObject->ObjectReferenceCount <= 0 &&
                             ( pCurrentObject->Fcb == NULL ||
                               pCurrentObject->Fcb->OpenReferenceCount == 0))
                         {

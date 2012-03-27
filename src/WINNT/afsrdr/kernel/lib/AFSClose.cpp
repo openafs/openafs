@@ -394,7 +394,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                         AFSDeleteDirEntry( pObjectInfo->ParentObjectInformation,
                                            pDirCB);
 
-                        if( pObjectInfo->ObjectReferenceCount == 0)
+                        if( pObjectInfo->ObjectReferenceCount <= 0)
                         {
 
                             if( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
