@@ -1669,7 +1669,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     AFSDeleteDirEntry( pCurrentObject->ParentObjectInformation,
                                        pDirEntry);
 
-                    if( pCurrentObject->ObjectReferenceCount == 0)
+                    if( pCurrentObject->ObjectReferenceCount <= 0)
                     {
 
                         if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_INSERTED_HASH_TREE))
@@ -2458,7 +2458,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         lCount = InterlockedDecrement( &DirEntry->ObjectInformation->ObjectReferenceCount);
 
-        if( lCount == 0)
+        if( lCount <= 0)
         {
             SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
         }
