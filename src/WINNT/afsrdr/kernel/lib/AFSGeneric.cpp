@@ -4867,6 +4867,7 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
 {
 
     AFSNameArrayHdr *pNameArray = NULL;
+    AFSNameArrayCB *pCurrentElement = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
     LONG lCount;
 
@@ -4887,7 +4888,7 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
         if( pNameArray == NULL)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitNameArray Failed to allocate name array\n");
 
@@ -4903,9 +4904,13 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
         if( DirectoryCB != NULL)
         {
 
-            pNameArray->CurrentEntry = &pNameArray->ElementArray[ 0];
+            pCurrentElement = &pNameArray->ElementArray[ 0];
 
-            lCount = InterlockedIncrement( &pNameArray->Count);
+            pNameArray->CurrentEntry = pCurrentElement;
+
+            pNameArray->Count = 1;
+
+            pNameArray->LinkCount = 0;
 
             lCount = InterlockedIncrement( &DirectoryCB->OpenReferenceCount);
 
@@ -4916,11 +4921,29 @@ AFSInitNameArray( IN AFSDirectoryCB *DirectoryCB,
                           DirectoryCB,
                           lCount);
 
-            pNameArray->CurrentEntry->DirectoryCB = DirectoryCB;
+            pCurrentElement->DirectoryCB = DirectoryCB;
 
-            pNameArray->CurrentEntry->Component = DirectoryCB->NameInformation.FileName;
+            pCurrentElement->Component = DirectoryCB->NameInformation.FileName;
 
-            pNameArray->CurrentEntry->FileId = DirectoryCB->ObjectInformation->FileId;
+            pCurrentElement->FileId = DirectoryCB->ObjectInformation->FileId;
+
+            if( pCurrentElement->FileId.Vnode == 1)
+            {
+
+                SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInitNameArray [NA:%p] Element[0] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                          pNameArray,
+                          pCurrentElement->DirectoryCB,
+                          pCurrentElement->FileId.Cell,
+                          pCurrentElement->FileId.Volume,
+                          pCurrentElement->FileId.Vnode,
+                          pCurrentElement->FileId.Unique,
+                          &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
         }
 
 try_exit:
@@ -4949,6 +4972,19 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
     __Enter
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSPopulateNameArray [NA:%p] passed Path %wZ DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                      NameArray,
+                      &Path,
+                      DirectoryCB,
+                      DirectoryCB->ObjectInformation->FileId.Cell,
+                      DirectoryCB->ObjectInformation->FileId.Volume,
+                      DirectoryCB->ObjectInformation->FileId.Vnode,
+                      DirectoryCB->ObjectInformation->FileId.Unique,
+                      &DirectoryCB->NameInformation.FileName,
+                      DirectoryCB->ObjectInformation->FileType);
+
         //
         // Init some info in the header
         //
@@ -4976,9 +5012,29 @@ AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
 
         pCurrentElement->FileId = DirectoryCB->ObjectInformation->VolumeCB->ObjectInformation.FileId;
 
+        pCurrentElement->Flags = 0;
+
+        if( pCurrentElement->FileId.Vnode == 1)
+        {
+
+            SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+        }
+
         NameArray->Count = 1;
 
         NameArray->LinkCount = 0;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSPopulateNameArray [NA:%p] Element[0] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                      NameArray,
+                      pCurrentElement->DirectoryCB,
+                      pCurrentElement->FileId.Cell,
+                      pCurrentElement->FileId.Volume,
+                      pCurrentElement->FileId.Vnode,
+                      pCurrentElement->FileId.Unique,
+                      &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                      pCurrentElement->DirectoryCB->ObjectInformation->FileType);
 
         //
         // If the root is the parent then we are done ...
@@ -5015,6 +5071,19 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
     __Enter
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSPopulateNameArray [NA:%p] passed RelatedNameArray %p DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                      NameArray,
+                      RelatedNameArray,
+                      DirectoryCB,
+                      DirectoryCB->ObjectInformation->FileId.Cell,
+                      DirectoryCB->ObjectInformation->FileId.Volume,
+                      DirectoryCB->ObjectInformation->FileId.Vnode,
+                      DirectoryCB->ObjectInformation->FileId.Unique,
+                      &DirectoryCB->NameInformation.FileName,
+                      DirectoryCB->ObjectInformation->FileType);
+
         //
         // Init some info in the header
         //
@@ -5040,6 +5109,14 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
 
             pCurrentElement->FileId    = pCurrentElement->DirectoryCB->ObjectInformation->FileId;
 
+            pCurrentElement->Flags = 0;
+
+            if( pCurrentElement->FileId.Vnode == 1)
+            {
+
+                SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+            }
+
             lCount = InterlockedIncrement( &pCurrentElement->DirectoryCB->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
@@ -5050,6 +5127,19 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
                           lCount);
 
             lCount = InterlockedIncrement( &NameArray->Count);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSPopulateNameArrayFromRelatedArray [NA:%p] Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                          NameArray,
+                          lCount - 1,
+                          pCurrentElement->DirectoryCB,
+                          pCurrentElement->FileId.Cell,
+                          pCurrentElement->FileId.Volume,
+                          pCurrentElement->FileId.Vnode,
+                          pCurrentElement->FileId.Unique,
+                          &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
 
             if( pCurrentElement->DirectoryCB == DirectoryCB ||
                 NameArray->Count == RelatedNameArray->Count)
@@ -5067,10 +5157,7 @@ AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
             pCurrentRelatedElement++;
         }
 
-        if( NameArray->Count > 0)
-        {
-            NameArray->CurrentEntry = pCurrentElement;
-        }
+        NameArray->CurrentEntry = NameArray->Count > 0 ? pCurrentElement : NULL;
     }
 
     return ntStatus;
@@ -5082,21 +5169,20 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSNameArrayCB *pCurrentElement = NULL;
-    LONG lCount;
+    LONG lCount, lElement;
 
     __Enter
     {
 
-        pCurrentElement = &NameArray->ElementArray[ 0];
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFreeNameArray [NA:%p]\n",
+                      NameArray);
 
-        while( TRUE)
+        for ( lElement = 0; lElement < NameArray->Count; lElement++)
         {
 
-            if( pCurrentElement->DirectoryCB == NULL)
-            {
-
-                break;
-            }
+            pCurrentElement = &NameArray->ElementArray[ lElement];
 
             lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->OpenReferenceCount);
 
@@ -5106,8 +5192,6 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
                           lCount);
-
-            pCurrentElement++;
         }
 
         AFSExFreePool( NameArray);
@@ -5118,25 +5202,48 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
 
 NTSTATUS
 AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
-                      IN AFSDirectoryCB *DirEntry)
+                      IN AFSDirectoryCB *DirectoryCB)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+    AFSNameArrayCB *pCurrentElement = NULL;
     LONG lCount;
 
     __Enter
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInsertNextElement [NA:%p] passed DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                      NameArray,
+                      DirectoryCB,
+                      DirectoryCB->ObjectInformation->FileId.Cell,
+                      DirectoryCB->ObjectInformation->FileId.Volume,
+                      DirectoryCB->ObjectInformation->FileId.Vnode,
+                      DirectoryCB->ObjectInformation->FileId.Unique,
+                      &DirectoryCB->NameInformation.FileName,
+                      DirectoryCB->ObjectInformation->FileType);
+
         if( NameArray->Count == NameArray->MaxElementCount)
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInsertNextElement [NA:%p] Name has reached Maximum Size\n",
+                          NameArray);
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
         if( NameArray->CurrentEntry != NULL &&
-            NameArray->CurrentEntry->DirectoryCB == DirEntry)
+            NameArray->CurrentEntry->DirectoryCB == DirectoryCB)
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSInsertNextElement [NA:%p] DE %p already current element\n",
+                          NameArray,
+                          DirectoryCB);
 
             try_return( ntStatus);
         }
@@ -5151,22 +5258,45 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
             NameArray->CurrentEntry = &NameArray->ElementArray[ 0];
         }
 
+        pCurrentElement = NameArray->CurrentEntry;
+
         lCount = InterlockedIncrement( &NameArray->Count);
 
-        lCount = InterlockedIncrement( &DirEntry->OpenReferenceCount);
+        lCount = InterlockedIncrement( &DirectoryCB->OpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertNextElement Increment count on %wZ DE %p Cnt %d\n",
-                      &DirEntry->NameInformation.FileName,
-                      DirEntry,
+                      &DirectoryCB->NameInformation.FileName,
+                      DirectoryCB,
                       lCount);
 
-        NameArray->CurrentEntry->DirectoryCB = DirEntry;
+        pCurrentElement->DirectoryCB = DirectoryCB;
 
-        NameArray->CurrentEntry->Component = DirEntry->NameInformation.FileName;
+        pCurrentElement->Component = DirectoryCB->NameInformation.FileName;
 
-        NameArray->CurrentEntry->FileId = DirEntry->ObjectInformation->FileId;
+        pCurrentElement->FileId = DirectoryCB->ObjectInformation->FileId;
+
+        pCurrentElement->Flags = 0;
+
+        if( pCurrentElement->FileId.Vnode == 1)
+        {
+
+            SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSInsertNextElement [NA:%p] Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                      NameArray,
+                      NameArray->Count - 1,
+                      pCurrentElement->DirectoryCB,
+                      pCurrentElement->FileId.Cell,
+                      pCurrentElement->FileId.Volume,
+                      pCurrentElement->FileId.Vnode,
+                      pCurrentElement->FileId.Unique,
+                      &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                      pCurrentElement->DirectoryCB->ObjectInformation->FileType);
 
 try_exit:
 
@@ -5180,17 +5310,45 @@ void
 AFSReplaceCurrentElement( IN AFSNameArrayHdr *NameArray,
                           IN AFSDirectoryCB *DirectoryCB)
 {
+    AFSNameArrayCB *pCurrentElement = NULL;
     LONG lCount;
 
+    AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSReplaceCurrentElement [NA:%p] passed DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                  NameArray,
+                  DirectoryCB,
+                  DirectoryCB->ObjectInformation->FileId.Cell,
+                  DirectoryCB->ObjectInformation->FileId.Volume,
+                  DirectoryCB->ObjectInformation->FileId.Vnode,
+                  DirectoryCB->ObjectInformation->FileId.Unique,
+                  &DirectoryCB->NameInformation.FileName,
+                  DirectoryCB->ObjectInformation->FileType);
+
     ASSERT( NameArray->CurrentEntry != NULL);
+
+    pCurrentElement = NameArray->CurrentEntry;
+
+    AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSReplaceCurrentElement [NA:%p] Replacing Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                  NameArray,
+                  NameArray->Count - 1,
+                  pCurrentElement->DirectoryCB,
+                  pCurrentElement->FileId.Cell,
+                  pCurrentElement->FileId.Volume,
+                  pCurrentElement->FileId.Vnode,
+                  pCurrentElement->FileId.Unique,
+                  &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                  pCurrentElement->DirectoryCB->ObjectInformation->FileType);
 
     lCount = InterlockedDecrement( &NameArray->CurrentEntry->DirectoryCB->OpenReferenceCount);
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSReplaceCurrentElement Decrement count on %wZ DE %p Cnt %d\n",
-                  &NameArray->CurrentEntry->DirectoryCB->NameInformation.FileName,
-                  NameArray->CurrentEntry->DirectoryCB,
+                  &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                  pCurrentElement->DirectoryCB,
                   lCount);
 
     lCount = InterlockedIncrement( &DirectoryCB->OpenReferenceCount);
@@ -5202,16 +5360,18 @@ AFSReplaceCurrentElement( IN AFSNameArrayHdr *NameArray,
                   DirectoryCB,
                   lCount);
 
-    NameArray->CurrentEntry->DirectoryCB = DirectoryCB;
+    pCurrentElement->DirectoryCB = DirectoryCB;
 
-    NameArray->CurrentEntry->Component = DirectoryCB->NameInformation.FileName;
+    pCurrentElement->Component = DirectoryCB->NameInformation.FileName;
 
-    NameArray->CurrentEntry->FileId = DirectoryCB->ObjectInformation->FileId;
+    pCurrentElement->FileId = DirectoryCB->ObjectInformation->FileId;
 
-    if( DirectoryCB->ObjectInformation->ParentObjectInformation == NULL)
+    pCurrentElement->Flags = 0;
+
+    if( pCurrentElement->FileId.Vnode == 1)
     {
 
-        SetFlag( NameArray->CurrentEntry->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+        SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
     }
 
     return;
@@ -5221,15 +5381,27 @@ AFSDirectoryCB *
 AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
 {
 
-    AFSDirectoryCB *pCurrentDirEntry = NULL;
+    AFSDirectoryCB *pDirectoryCB = NULL;
+    AFSNameArrayCB *pCurrentElement = NULL;
     LONG lCount;
 
     __Enter
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSBackupEntry [NA:%p]\n",
+                      NameArray);
+
         if( NameArray->Count == 0)
         {
-            try_return( pCurrentDirEntry);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSBackupEntry [NA:%p] No more entries\n",
+                          NameArray);
+
+            try_return( pCurrentElement);
         }
 
         lCount = InterlockedDecrement( &NameArray->CurrentEntry->DirectoryCB->OpenReferenceCount);
@@ -5248,11 +5420,32 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
         if( lCount == 0)
         {
             NameArray->CurrentEntry = NULL;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSBackupEntry [NA:%p] No more entries\n",
+                          NameArray);
         }
         else
         {
             NameArray->CurrentEntry--;
-            pCurrentDirEntry = NameArray->CurrentEntry->DirectoryCB;
+
+            pCurrentElement = NameArray->CurrentEntry;
+
+            pDirectoryCB = pCurrentElement->DirectoryCB;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSBackupEntry [NA:%p] Returning Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                          NameArray,
+                          NameArray->Count - 1,
+                          pCurrentElement->DirectoryCB,
+                          pCurrentElement->FileId.Cell,
+                          pCurrentElement->FileId.Volume,
+                          pCurrentElement->FileId.Vnode,
+                          pCurrentElement->FileId.Unique,
+                          &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
         }
 
 try_exit:
@@ -5260,7 +5453,7 @@ try_exit:
         NOTHING;
     }
 
-    return pCurrentDirEntry;
+    return pDirectoryCB;
 }
 
 AFSDirectoryCB *
@@ -5273,9 +5466,19 @@ AFSGetParentEntry( IN AFSNameArrayHdr *NameArray)
     __Enter
     {
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSGetParentEntry [NA:%p]\n",
+                      NameArray);
+
         if( NameArray->Count == 0 ||
             NameArray->Count == 1)
         {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSGetParentEntry [NA:%p] No more entries\n",
+                          NameArray);
 
             try_return( pDirEntry = NULL);
         }
@@ -5283,6 +5486,19 @@ AFSGetParentEntry( IN AFSNameArrayHdr *NameArray)
         pElement = &NameArray->ElementArray[ NameArray->Count - 2];
 
         pDirEntry = pElement->DirectoryCB;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSGetParentEntry [NA:%p] Returning Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                      NameArray,
+                      NameArray->Count - 2,
+                      pElement->DirectoryCB,
+                      pElement->FileId.Cell,
+                      pElement->FileId.Volume,
+                      pElement->FileId.Vnode,
+                      pElement->FileId.Unique,
+                      &pElement->DirectoryCB->NameInformation.FileName,
+                      pElement->DirectoryCB->ObjectInformation->FileType);
 
 try_exit:
 
@@ -5294,26 +5510,35 @@ try_exit:
 
 void
 AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
-                   IN AFSDirectoryCB *DirEntry)
+                   IN AFSDirectoryCB *DirectoryCB)
 {
 
     AFSNameArrayCB *pCurrentElement = NULL;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
-    LONG lCount;
+    LONG lCount, lElement;
 
     __Enter
     {
 
-        pCurrentElement = &NameArray->ElementArray[ 0];
+        AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSResetNameArray [NA:%p] passed DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                      NameArray,
+                      DirectoryCB,
+                      DirectoryCB->ObjectInformation->FileId.Cell,
+                      DirectoryCB->ObjectInformation->FileId.Volume,
+                      DirectoryCB->ObjectInformation->FileId.Vnode,
+                      DirectoryCB->ObjectInformation->FileId.Unique,
+                      &DirectoryCB->NameInformation.FileName,
+                      DirectoryCB->ObjectInformation->FileType);
+        //
+        // Dereference previous name array contents
+        //
 
-        while( TRUE)
+        for ( lElement = 0; lElement < NameArray->Count; lElement++)
         {
 
-            if( pCurrentElement->DirectoryCB == NULL)
-            {
-
-                break;
-            }
+            pCurrentElement = &NameArray->ElementArray[ lElement];
 
             lCount = InterlockedDecrement( &pCurrentElement->DirectoryCB->OpenReferenceCount);
 
@@ -5323,8 +5548,6 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB,
                           lCount);
-
-            pCurrentElement++;
         }
 
         RtlZeroMemory( NameArray,
@@ -5333,27 +5556,51 @@ AFSResetNameArray( IN AFSNameArrayHdr *NameArray,
 
         NameArray->MaxElementCount = pDevExt->Specific.RDR.NameArrayLength;
 
-        if( DirEntry != NULL)
+        if( DirectoryCB != NULL)
         {
 
-            NameArray->CurrentEntry = &NameArray->ElementArray[ 0];
+            pCurrentElement = &NameArray->ElementArray[ 0];
 
-            lCount = InterlockedIncrement( &NameArray->Count);
+            NameArray->CurrentEntry = pCurrentElement;
 
-            lCount = InterlockedIncrement( &DirEntry->OpenReferenceCount);
+            NameArray->Count = 1;
+
+            NameArray->LinkCount = 0;
+
+            lCount = InterlockedIncrement( &DirectoryCB->OpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSResetNameArray Increment count on %wZ DE %p Cnt %d\n",
-                          &DirEntry->NameInformation.FileName,
-                          DirEntry,
+                          &DirectoryCB->NameInformation.FileName,
+                          DirectoryCB,
                           lCount);
 
-            NameArray->CurrentEntry->DirectoryCB = DirEntry;
+            pCurrentElement->DirectoryCB = DirectoryCB;
 
-            NameArray->CurrentEntry->Component = DirEntry->NameInformation.FileName;
+            pCurrentElement->Component = DirectoryCB->NameInformation.FileName;
 
-            NameArray->CurrentEntry->FileId = DirEntry->ObjectInformation->FileId;
+            pCurrentElement->FileId = DirectoryCB->ObjectInformation->FileId;
+
+            pCurrentElement->Flags  = 0;
+
+            if( pCurrentElement->FileId.Vnode == 1)
+            {
+
+                SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSResetNameArray [NA:%p] Element[0] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
+                          NameArray,
+                          pCurrentElement->DirectoryCB,
+                          pCurrentElement->FileId.Cell,
+                          pCurrentElement->FileId.Volume,
+                          pCurrentElement->FileId.Vnode,
+                          pCurrentElement->FileId.Unique,
+                          &pCurrentElement->DirectoryCB->NameInformation.FileName,
+                          pCurrentElement->DirectoryCB->ObjectInformation->FileType);
         }
     }
 
