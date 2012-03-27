@@ -99,6 +99,7 @@ typedef enum {
     P_OUTPUT,
     P_DELIM,
     P_NOHEADING,
+    P_NOMAGIC,
 } volscan_parm_t;
 
 /*
@@ -215,6 +216,7 @@ static char Hostname[64] = "";      /**< This hostname, for volscan output. */
 static int NeedDirIndex = 0;        /**< Large vnode index handle is needed for path lookups. */
 static char ColumnDelim[16] = " ";  /**< Column delimiter char(s) */
 static char PrintHeading = 0;       /**< Print column heading */
+static int CheckMagic = 1;          /**< Check directory vnode magic when looking up paths */
 static unsigned int ModeMask[64];
 
 static FdHandle_t *DirIndexFd = NULL; /**< Current large vnode index handle for path lookups. */
@@ -959,6 +961,9 @@ VolScan(struct cmd_syndesc *as, void *arock)
     } else {
 	PrintHeading = 1;
     }
+    if (as->parms[P_NOMAGIC].items) {
+        CheckMagic = 0;
+    }
     if ((ti = as->parms[P_DELIM].items)) {
 	strncpy(ColumnDelim, ti->data, 15);
 	ColumnDelim[15] = '\0';
@@ -1483,6 +1488,8 @@ VolScanSyntax(void)
 			"Output field delimiter");
     cmd_AddParm(ts, "-noheading", CMD_FLAG, CMD_OPTIONAL,
 			"Do not print the heading line");
+    cmd_AddParm(ts, "-ignore-magic", CMD_FLAG, CMD_OPTIONAL,
+			"Skip directory vnode magic checks when looking up paths.");
 }
 
 /**
@@ -1777,12 +1784,16 @@ GetDirVnode(Volume * vp, VnodeId parent, VnodeDiskObject * pvn)
 		afs_printable_uint32_lu(parent), (long long unsigned)offset);
 	return -1;
     }
-    if (pvn->vnodeMagic != LARGEVNODEMAGIC) {
-	fprintf(stderr, "%s: GetDirVnode: bad vnode magic\n", progname);
+    if (CheckMagic && (pvn->vnodeMagic != LARGEVNODEMAGIC)) {
+	fprintf(stderr, "%s: GetDirVnode: bad vnode magic for %lu.%lu at offset %llu\n",
+		progname, afs_printable_uint32_lu(V_id(vp)),
+		afs_printable_uint32_lu(parent), (long long unsigned)offset);
 	return -1;
     }
     if (!pvn->dataVersion) {
-	fprintf(stderr, "%s: GetDirVnode: dv is zero\n", progname);
+	fprintf(stderr, "%s: GetDirVnode: dv is zero for %lu.%lu at offset %llu\n",
+		progname, afs_printable_uint32_lu(V_id(vp)),
+		afs_printable_uint32_lu(parent), (long long unsigned)offset);
 	return -1;
     }
     return 0;
