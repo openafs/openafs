@@ -2754,8 +2754,8 @@ rxi_PrepareSendPacket(struct rx_call *call,
     }
     if (len)
         p->wirevec[i - 1].iov_len += len;
-    RXS_PreparePacket(conn->securityObject, call, p);
     MUTEX_ENTER(&call->lock);
+    RXS_PreparePacket(conn->securityObject, call, p);
 }
 
 /* Given an interface MTU size, calculate an adjusted MTU size that
