@@ -1,3 +1,13 @@
+openafs (1.6.1-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Do not ignore all InlineBulkStatus errors in file server.
+    - Support for Linux 3.3 and 3.4.
+    - Fix incorrect kernel error handling in afs_notify_change.
+    - Fix locking around RXS_PreparePacket.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 28 Mar 2012 16:27:56 -0700
+
 openafs (1.6.1~pre4-1) unstable; urgency=low
 
   * New upstream prerelease.
