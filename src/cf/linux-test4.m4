@@ -634,3 +634,30 @@ AC_DEFUN([LINUX_DOP_D_DELETE_TAKES_CONST], [
 			[define if dentry.d_op->d_delete takes a const argument],
 			[-Werror])
 ])
+
+
+AC_DEFUN([LINUX_IOP_MKDIR_TAKES_UMODE_T], [
+  AC_CHECK_LINUX_BUILD([whether inode.i_op->mkdir takes a umode_t argument],
+			[ac_cv_linux_iop_mkdir_takes_umode_t],
+			[#include <linux/fs.h>],
+			[struct inode_operations _i_ops;
+			int _mkdir(struct inode *i, struct dentry *d, umode_t m) {return 0;};
+			_i_ops.mkdir = _mkdir;],
+			[IOP_MKDIR_TAKES_UMODE_T],
+			[define if inode.i_op->mkdir takes a umode_t argument],
+			[-Werror])
+])
+
+
+AC_DEFUN([LINUX_IOP_CREATE_TAKES_UMODE_T], [
+  AC_CHECK_LINUX_BUILD([whether inode.i_op->create takes a umode_t argument],
+			[ac_cv_linux_iop_create_takes_umode_t],
+			[#include <linux/fs.h>],
+			[struct inode_operations _i_ops;
+			int _create(struct inode *i, struct dentry *d, umode_t m, struct nameidata *n)
+				{return 0;};
+			_i_ops.create = _create;],
+			[IOP_CREATE_TAKES_UMODE_T],
+			[define if inode.i_op->create takes a umode_t argument],
+			[-Werror])
+])

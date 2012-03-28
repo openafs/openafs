@@ -847,6 +847,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([d_alloc_anon],
 				     [#include <linux/fs.h>],
 				     [d_alloc_anon(NULL);])
+		 AC_CHECK_LINUX_FUNC([d_make_root],
+				     [#include <linux/fs.h>],
+				     [d_make_root(NULL);])
 		 AC_CHECK_LINUX_FUNC([do_sync_read],
 				     [#include <linux/fs.h>],
 				     [do_sync_read(NULL, NULL, 0, NULL);])
@@ -950,6 +953,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_HAVE_DCACHE_LOCK
 		 LINUX_D_COUNT_IS_INT
+		 LINUX_IOP_MKDIR_TAKES_UMODE_T
+		 LINUX_IOP_CREATE_TAKES_UMODE_T
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled
