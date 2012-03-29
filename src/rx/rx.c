@@ -4832,10 +4832,9 @@ rxi_AttachServerProc(struct rx_call *call,
 	if (call->flags & RX_CALL_WAIT_PROC) {
 	    /* Conservative:  I don't think this should happen */
 	    call->flags &= ~RX_CALL_WAIT_PROC;
+	    rx_atomic_dec(&rx_nWaiting);
 	    if (queue_IsOnQueue(call)) {
 		queue_Remove(call);
-
-		rx_atomic_dec(&rx_nWaiting);
 	    }
 	}
 	call->state = RX_STATE_ACTIVE;
@@ -5311,6 +5310,9 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	osi_rxWakeup(&call->twind);
 #endif
 
+    if (flags & RX_CALL_WAIT_PROC) {
+	rx_atomic_dec(&rx_nWaiting);
+    }
 #ifdef RX_ENABLE_LOCKS
     /* The following ensures that we don't mess with any queue while some
      * other thread might also be doing so. The call_queue_lock field is
@@ -5325,9 +5327,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 	MUTEX_ENTER(call->call_queue_lock);
 	if (queue_IsOnQueue(call)) {
 	    queue_Remove(call);
-	    if (flags & RX_CALL_WAIT_PROC) {
-		rx_atomic_dec(&rx_nWaiting);
-	    }
 	}
 	MUTEX_EXIT(call->call_queue_lock);
 	CLEAR_CALL_QUEUE_LOCK(call);
@@ -5335,8 +5334,6 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 #else /* RX_ENABLE_LOCKS */
     if (queue_IsOnQueue(call)) {
 	queue_Remove(call);
-	if (flags & RX_CALL_WAIT_PROC)
-	    rx_atomic_dec(&rx_nWaiting);
     }
 #endif /* RX_ENABLE_LOCKS */
 
