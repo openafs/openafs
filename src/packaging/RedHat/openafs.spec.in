@@ -16,6 +16,14 @@
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
 %define build_authlibs_on_cmdline %{?build_authlibs:1}%{!?build_authlibs:0}
 
+%if 0%{?rhel} >= 5
+%define fedorakmod 1
+%endif
+%if 0%{?fedora}
+%define fedorakmod 1
+%endif
+
+%if !%{fedorakmod}
 # Determine the version of the kernel to build against
 # - automatically select running kernel if there are sources in /lib/modules
 # - note that this can be overridden on the command line
@@ -31,6 +39,7 @@
 
 %if %{kern24}
 %define fedorakmod 0
+%endif
 %endif
 
 %if %{fedorakmod}
@@ -107,6 +116,43 @@
 # Define the location of the PAM security module directory
 %define pamdir /%{_lib}/security
 
+#######################################################################
+# You probably don't need to change anything beyond this line
+# NOTE: If you do, please email me!!!
+
+# Determine which elements of OpenAFS to build.  For non-x86 arches
+# (subject to the ExclusiveArch setting, below), we build both userspace
+# and modules.  For most x86 arches, we build just the kernel modules.  For
+# i386, we build just the userspace.  If you're running an i386 kernel,
+# you'll need to tweak that last bit.
+%if !%{build_userspace_on_cmdline} && !%{build_modules_on_cmdline}
+
+%define build_userspace 1
+%define build_modules 1
+%ifarch %{ix86} x86_64 ia64
+%define build_authlibs 1
+%else
+%define build_authlibs 0
+%endif
+
+%else
+%if !%{build_userspace_on_cmdline}
+%define build_userspace 0
+%endif
+%if !%{build_modules_on_cmdline}
+%define build_modules 0
+%endif
+%endif
+
+%if !%{build_authlibs_on_cmdline}
+%if %{build_userspace_on_cmdline}
+%define build_authlibs 1
+%else
+%define build_authlibs 0
+%endif
+%endif
+
+%if %{build_modules}
 %if !%{fedorakmod}
 
 # Define the set of kernel module variations to be built:
@@ -175,41 +221,6 @@
 
 # End of legacy kernel module build
 %endif 
-
-#######################################################################
-# You probably don't need to change anything beyond this line
-# NOTE: If you do, please email me!!!
-
-# Determine which elements of OpenAFS to build.  For non-x86 arches
-# (subject to the ExclusiveArch setting, below), we build both userspace
-# and modules.  For most x86 arches, we build just the kernel modules.  For
-# i386, we build just the userspace.  If you're running an i386 kernel,
-# you'll need to tweak that last bit.
-%if !%{build_userspace_on_cmdline} && !%{build_modules_on_cmdline}
-
-%define build_userspace 1
-%define build_modules 1
-%ifarch %{ix86} x86_64 ia64
-%define build_authlibs 1
-%else
-%define build_authlibs 0
-%endif
-
-%else
-%if !%{build_userspace_on_cmdline}
-%define build_userspace 0
-%endif
-%if !%{build_modules_on_cmdline}
-%define build_modules 0
-%endif
-%endif
-
-%if !%{build_authlibs_on_cmdline}
-%if %{build_userspace_on_cmdline}
-%define build_authlibs 1
-%else
-%define build_authlibs 0
-%endif
 %endif
 
 # Make sure RPM doesn't complain about installed but non-packaged files.
@@ -226,12 +237,19 @@ Packager: OpenAFS Gatekeepers <openafs-gatekeepers@openafs.org>
 Group: Networking/Filesystems
 BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
 %if 0%{?fedora} >= 15
-BuildRequires: systemd-units
+BuildRequires: systemd-units perl-devel
 %endif
-BuildRequires: perl-devel perl-ExtUtils-Embed
+%if 0%{?rhel} >= 6
+BuildRequires: perl-devel
+%endif
+BuildRequires: perl(ExtUtils::Embed)
 %if %{krb5support}
 BuildRequires: krb5-devel
 %endif
+%if %{build_modules}
+BuildRequires: kernel-devel
+%endif
+
 ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64
 
 #    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
@@ -686,7 +704,7 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 #
 ##############################################################################
 %build
-
+%if !%{fedorakmod}
 case %{kernvers} in
    2.4.*)
        kv='24'
@@ -699,6 +717,9 @@ case %{kernvers} in
        exit 1
        ;;
 esac
+%else
+kv='26'
+%endif
 
 case %{_arch} in
        x86_64)                         sysname=amd64_linux${kv}        ;;
@@ -964,7 +985,7 @@ rm -f src/config/redhat-fix.h
 export DONT_GPRINTIFY=1
 
 [ $RPM_BUILD_ROOT != / ] && rm -rf $RPM_BUILD_ROOT
-
+%if !%{fedorakmod}
 case %{kernvers} in
    2.4.*)
        kv='24'
@@ -979,6 +1000,9 @@ case %{kernvers} in
        exit 1
        ;;
 esac
+%else
+kv='26'
+%endif
 
 case %{_arch} in
        x86_64)                         sysname=amd64_linux${kv}        ;;
