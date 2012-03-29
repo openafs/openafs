@@ -1,4 +1,4 @@
-openafs (1.6.1-1) UNRELEASED; urgency=low
+openafs (1.6.1-1) unstable; urgency=low
 
   * New upstream release.
     - Do not ignore all InlineBulkStatus errors in file server.
@@ -6,7 +6,7 @@ openafs (1.6.1-1) UNRELEASED; urgency=low
     - Fix incorrect kernel error handling in afs_notify_change.
     - Fix locking around RXS_PreparePacket.
 
- -- Russ Allbery <rra@debian.org>  Wed, 28 Mar 2012 16:27:56 -0700
+ -- Russ Allbery <rra@debian.org>  Wed, 28 Mar 2012 17:25:05 -0700
 
 openafs (1.6.1~pre4-1) unstable; urgency=low
 
