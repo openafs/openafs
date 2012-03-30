@@ -1855,7 +1855,7 @@ cm_VolumeRenewROCallbacks(void)
             cm_InitReq(&req);
 
             lock_ReleaseRead(&cm_volumeLock);
-            if (cm_GetSCache(&fid, &scp, cm_rootUserp, &req) == 0) {
+            if (cm_GetSCache(&fid, NULL, &scp, cm_rootUserp, &req) == 0) {
                 lock_ObtainWrite(&scp->rw);
                 cm_GetCallback(scp, cm_rootUserp, &req, 1);
                 lock_ReleaseWrite(&scp->rw);

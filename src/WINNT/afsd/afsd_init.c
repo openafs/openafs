@@ -480,7 +480,7 @@ afsd_InitRoot(char **reasonP)
         cm_SetFid(&cm_data.rootFid, cm_data.rootCellp->cellID, cm_GetROVolumeID(cm_data.rootVolumep), 1, 1);
     }
 
-    code = cm_GetSCache(&cm_data.rootFid, &cm_data.rootSCachep, cm_rootUserp, &req);
+    code = cm_GetSCache(&cm_data.rootFid, NULL, &cm_data.rootSCachep, cm_rootUserp, &req);
     afsi_log("cm_GetSCache code %x scache %x", code,
              (code ? (cm_scache_t *)-1 : cm_data.rootSCachep));
     if (code != 0) {

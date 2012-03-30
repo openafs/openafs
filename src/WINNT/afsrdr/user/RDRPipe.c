@@ -109,7 +109,7 @@ RDR_SetupPipe( ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid,
                 cm_ReleaseSCache(pipep->parentScp);
                 pipep->parentScp = NULL;
             }
-            cm_GetSCache(parentFid, &pipep->parentScp, userp, &req);
+            cm_GetSCache(parentFid, NULL, &pipep->parentScp, userp, &req);
             pipep->rootFid = *rootFid;
         }
     } else {
@@ -134,7 +134,7 @@ RDR_SetupPipe( ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid,
             cm_HoldSCache(pipep->parentScp);
         } else {
             pipep->parentFid = *parentFid;
-            cm_GetSCache(parentFid, &pipep->parentScp, userp, &req);
+            cm_GetSCache(parentFid, NULL, &pipep->parentScp, userp, &req);
         }
         if (rootFid->cell == 0) {
             pipep->rootFid = cm_data.rootFid;

@@ -816,13 +816,12 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
      * that the cm_scache_t was recycled out of the cache even though
      * a cm_buf_t with the same FID is in the cache.
      */
-    if (scp == NULL) {
-        if ((scp = cm_FindSCache(&bp->fid)) ||
-            (cm_GetSCache(&bp->fid, &scp,
-                          bp->userp ? bp->userp : cm_rootUserp,
-                          reqp) == 0)) {
-            release_scp = 1;
-        }
+    if (scp == NULL &&
+        cm_GetSCache(&bp->fid, NULL, &scp,
+                     bp->userp ? bp->userp : cm_rootUserp,
+                     reqp) == 0)
+    {
+        release_scp = 1;
     }
 
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
