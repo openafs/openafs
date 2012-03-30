@@ -139,6 +139,22 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
     return aclp;
 }
 
+time_t cm_TGTLifeTime(cm_user_t *userp, afs_uint32 cellID)
+{
+    cm_cell_t *cellp = NULL;
+    cm_ucell_t * ucp = NULL;
+    time_t      expirationTime = 0;
+
+    cellp = cm_FindCellByID(cellID, CM_FLAG_NOPROBE);
+    lock_ObtainMutex(&userp->mx);
+    ucp = cm_GetUCell(userp, cellp);
+    if (ucp->ticketp)
+        expirationTime = ucp->expirationTime;
+    lock_ReleaseMutex(&userp->mx);
+
+    return expirationTime;
+}
+
 
 /*
  * Add rights to an acl cache entry.  Do the right thing if not present,
@@ -155,7 +171,14 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 rights)
         if (aclp->userp == userp) {
             aclp->randomAccess = rights;
             if (aclp->tgtLifetime == 0)
-                aclp->tgtLifetime = cm_TGTLifeTime(pag);
+                aclp->tgtLifetime = cm_TGTLifeTime(userp, scp->fid.cell);
+            if (cm_data.aclLRUp != aclp) {
+                /* move to the head of the LRU queue */
+                osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
+                osi_QAddH((osi_queue_t **) &cm_data.aclLRUp,
+                           (osi_queue_t **) &cm_data.aclLRUEndp,
+                           &aclp->q);
+            }
             lock_ReleaseWrite(&cm_aclLock);
             return 0;
         }
@@ -174,7 +197,7 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 rights)
     cm_HoldUser(userp);
     aclp->userp = userp;
     aclp->randomAccess = rights;
-    aclp->tgtLifetime = cm_TGTLifeTime(userp);
+    aclp->tgtLifetime = cm_TGTLifeTime(userp, scp->fid.cell);
     lock_ReleaseWrite(&cm_aclLock);
 
     return 0;

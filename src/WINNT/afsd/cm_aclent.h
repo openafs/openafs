@@ -12,8 +12,6 @@
 
 #include <osi.h>
 
-#define cm_TGTLifeTime(x)	(0x7fffffff)
-
 #define CM_ACLENT_MAGIC    ('A' | 'C' <<8 | 'L'<<16 | 'E'<<24)
 
 /*
@@ -48,5 +46,7 @@ extern long cm_ValidateACLCache(void);
 extern long cm_ShutdownACLCache(void);
 
 extern void cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp);
+
+extern time_t cm_TGTLifeTime(cm_user_t *userp, afs_uint32 cellID);
 
 #endif  /* _CM_ACLENT_H_ */
