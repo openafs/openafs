@@ -171,7 +171,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
         /* not a dir, use parent dir's acl */
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         lock_ReleaseWrite(&scp->rw);
-        code = cm_GetSCache(&tfid, &aclScp, userp, reqp);
+        code = cm_GetSCache(&tfid, NULL, &aclScp, userp, reqp);
         if (code) {
             lock_ObtainWrite(&scp->rw);
 	    goto _done;

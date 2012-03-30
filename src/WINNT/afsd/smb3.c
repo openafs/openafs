@@ -4588,7 +4588,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
             if (patchp->flags & SMB_DIRLISTPATCH_IOCTL)
                 continue;
 
-            code = cm_GetSCache(&patchp->fid, &tscp, userp, reqp);
+            code = cm_GetSCache(&patchp->fid, &dscp->fid, &tscp, userp, reqp);
             if (code == 0) {
                 if (lock_TryWrite(&tscp->rw)) {
                     /* we have an entry that we can look at */
@@ -4673,7 +4673,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
             continue;
         }
 
-        code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
+        code = cm_GetSCache(&patchp->fid, &dscp->fid, &scp, userp, reqp);
         reqp->relPathp = reqp->tidPathp = NULL;
         if (code)
             continue;

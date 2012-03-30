@@ -905,7 +905,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
     if (scp->mountRootFid.cell != 0 && scp->mountRootGen >= cm_data.mountRootGen) {
         tfid = scp->mountRootFid;
         lock_ReleaseWrite(&scp->rw);
-        code = cm_GetSCache(&tfid, outScpp, userp, reqp);
+        code = cm_GetSCache(&tfid, NULL, outScpp, userp, reqp);
         lock_ObtainWrite(&scp->rw);
         return code;
     }
@@ -1022,7 +1022,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
         tfid = scp->mountRootFid;
         lock_ReleaseWrite(&scp->rw);
-        code = cm_GetSCache(&tfid, outScpp, userp, reqp);
+        code = cm_GetSCache(&tfid, NULL, outScpp, userp, reqp);
         lock_ObtainWrite(&scp->rw);
     }
 
@@ -1267,7 +1267,7 @@ notfound:
     if ( !tscp )    /* we did not find it in the dnlc */
     {
         dnlcHit = 0;
-        code = cm_GetSCache(&rock.fid, &tscp, userp, reqp);
+        code = cm_GetSCache(&rock.fid, &dscp->fid, &tscp, userp, reqp);
         if (code)
             goto done;
     }
@@ -1483,7 +1483,7 @@ long cm_EvaluateVolumeReference(clientchar_t * namep, long flags, cm_user_t * us
 
     cm_SetFid(&fid, cellp->cellID, volume, 1, 1);
 
-    code = cm_GetSCache(&fid, outScpp, userp, reqp);
+    code = cm_GetSCache(&fid, NULL, outScpp, userp, reqp);
 
   _exit_cleanup:
     if (fnamep)
@@ -2374,7 +2374,7 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
           !(tfid.vnode==0x1 && tfid.unique==0x1) )
     {
         osi_Log0(afsd_logp, "cm_TryBulkProc Freelance calls cm_SCache on root.afs mountpoint");
-        return cm_GetSCache(&tfid, &tscp, NULL, NULL);
+        return cm_GetSCache(&tfid, NULL, &tscp, NULL, NULL);
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
@@ -2517,7 +2517,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                 cm_req_t treq = *reqp;
                 cm_Analyze(NULL, userp, &treq, &tfid, 0, &volSync, NULL, &cbReq, (&bbp->stats[j])->errorCode);
             } else {
-                code = cm_GetSCache(&tfid, &scp, userp, reqp);
+                code = cm_GetSCache(&tfid, &dscp->fid, &scp, userp, reqp);
                 if (code != 0)
                     continue;
 
@@ -2953,7 +2953,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
      * info.
      */
     if (code == 0) {
-        code = cm_GetSCache(&newFid, &scp, userp, reqp);
+        code = cm_GetSCache(&newFid, &dscp->fid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
 	    scp->creator = userp;		/* remember who created it */
@@ -3145,7 +3145,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
      * info.
      */
     if (code == 0) {
-        code = cm_GetSCache(&newFid, &scp, userp, reqp);
+        code = cm_GetSCache(&newFid, &dscp->fid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
@@ -3396,7 +3396,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
      * info.
      */
     if (code == 0) {
-        code = cm_GetSCache(&newFid, &scp, userp, reqp);
+        code = cm_GetSCache(&newFid, &dscp->fid, &scp, userp, reqp);
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {

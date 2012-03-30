@@ -784,7 +784,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         fid.unique = DirID.Unique;
         fid.hash   = DirID.Hash;
 
-        code = cm_GetSCache(&fid, &dscp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &dscp, userp, &req);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
             (*ResultCB)->ResultStatus = status;
@@ -882,7 +882,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                 }
 
                 if (bSkipStatus) {
-                    code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
+                    code = cm_GetSCache(&entryp->fid, &dscp->fid, &scp, userp, &req);
                     if (code) {
                         osi_Log5(afsd_logp, "RDR_EnumerateDirectory cm_GetSCache failure cell %u vol %u vnode %u uniq %u code=0x%x",
                                  entryp->fid.cell, entryp->fid.volume, entryp->fid.vnode, entryp->fid.unique, code);
@@ -1017,7 +1017,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         parentFid.unique = ParentID.Unique;
         parentFid.hash   = ParentID.Hash;
 
-        code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+        code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
             (*ResultCB)->ResultStatus = status;
@@ -1173,13 +1173,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         req.flags |= CM_REQ_WOW64;
 
     if (SourceID.Cell != 0) {
-        Fid.cell   = SourceID.Cell;
-        Fid.volume = SourceID.Volume;
-        Fid.vnode  = SourceID.Vnode;
-        Fid.unique = SourceID.Unique;
-        Fid.hash   = SourceID.Hash;
-
-        code = cm_GetSCache(&Fid, &scp, userp, &req);
+        cm_SetFid(&Fid, SourceID.Cell, SourceID.Volume, SourceID.Vnode, SourceID.Unique);
+        code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
             (*ResultCB)->ResultStatus = status;
@@ -1195,7 +1190,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
 
     if (ParentID.Cell != 0) {
         cm_SetFid(&parentFid, ParentID.Cell, ParentID.Volume, ParentID.Vnode, ParentID.Unique);
-        code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+        code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
         if (code) {
             cm_ReleaseSCache(scp);
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -1211,7 +1206,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         cm_HoldSCache(dscp);
     } else if (scp->parentVnode) {
         cm_SetFid(&parentFid, SourceID.Cell, SourceID.Volume, scp->parentVnode, scp->parentUnique);
-        code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+        code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
         if (code) {
             cm_ReleaseSCache(scp);
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -1330,7 +1325,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     parentFid.unique = CreateCB->ParentId.Unique;
     parentFid.hash   = CreateCB->ParentId.Hash;
 
-    code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+    code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -1505,7 +1500,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     parentFid.unique = UpdateCB->ParentId.Unique;
     parentFid.hash   = UpdateCB->ParentId.Hash;
 
-    code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+    code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -1548,7 +1543,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash   = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, &dscp->fid, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -1722,7 +1717,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     parentFid.hash   = CleanupCB->ParentId.Hash;
 
     if (parentFid.cell) {
-        code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+        code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
             if ( status == STATUS_INVALID_HANDLE)
@@ -1764,7 +1759,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash   = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, &dscp->fid, &scp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_CleanupFileEntry cm_GetSCache object FID failure code=0x%x",
                  code);
@@ -2082,7 +2077,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     parentFid.unique = ParentId.Unique;
     parentFid.hash   = ParentId.Hash;
 
-    code = cm_GetSCache(&parentFid, &dscp, userp, &req);
+    code = cm_GetSCache(&parentFid, NULL, &dscp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         if ( status == STATUS_INVALID_HANDLE)
@@ -2280,7 +2275,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     TargetParentFid.unique = TargetParentId.Unique;
     TargetParentFid.hash   = TargetParentId.Hash;
 
-    code = cm_GetSCache(&SourceParentFid, &oldDscp, userp, &req);
+    code = cm_GetSCache(&SourceParentFid, NULL, &oldDscp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache source parent failed code 0x%x", code);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -2315,7 +2310,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         return;
     }
 
-    code = cm_GetSCache(&TargetParentFid, &newDscp, userp, &req);
+    code = cm_GetSCache(&TargetParentFid, NULL, &newDscp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache target parent failed code 0x%x", code);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -2392,7 +2387,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
                   TargetFid.cell,  TargetFid.volume,
                   TargetFid.vnode, TargetFid.unique);
 
-        code = cm_GetSCache(&TargetFid, &scp, userp, &req);
+        code = cm_GetSCache(&TargetFid, &newDscp->fid, &scp, userp, &req);
         if (code) {
             osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache target failed code 0x%x", code);
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -2497,7 +2492,7 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -2673,7 +2668,7 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -2850,7 +2845,7 @@ RDR_ReleaseFileAccess( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -3222,7 +3217,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_RequestFileExtentsAsync cm_GetSCache FID failure code=0x%x",
                   code);
@@ -3475,7 +3470,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -3982,7 +3977,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
             goto cleanup_file;
         }
 
-        code = cm_GetSCache(&Fid, &scp, userp, &req);
+        code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
         if (code) {
             osi_Log1(afsd_logp, "RDR_ProcessReleaseFileExtentsResult cm_GetSCache FID failure code=0x%x",
                      code);
@@ -4424,7 +4419,7 @@ RDR_ReleaseFailedSetFileExtents( IN cm_user_t *userp,
         goto cleanup_file;
     }
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_ReleaseFailedSetFileExtents cm_GetSCache FID failure code=0x%x",
                   code);
@@ -4669,7 +4664,7 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -4797,7 +4792,7 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -4900,7 +4895,7 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
     Fid.unique = FileId.Unique;
     Fid.hash = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -5008,7 +5003,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         Fid.unique = FileId.Unique;
         Fid.hash = FileId.Hash;
 
-        code = cm_GetSCache(&Fid, &scp, userp, &req);
+        code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
             (*ResultCB)->ResultStatus = status;

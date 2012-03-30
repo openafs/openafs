@@ -720,10 +720,10 @@ cm_scache_t *cm_FindSCache(cm_fid_t *fidp)
 }
 
 #ifdef DEBUG_REFCOUNT
-long cm_GetSCacheDbg(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
+long cm_GetSCacheDbg(cm_fid_t *fidp, cm_fid_t *parentFidp, cm_scache_t **outScpp, cm_user_t *userp,
                   cm_req_t *reqp, char * file, long line)
 #else
-long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
+long cm_GetSCache(cm_fid_t *fidp, cm_fid_t *parentFidp, cm_scache_t **outScpp, cm_user_t *userp,
                   cm_req_t *reqp)
 #endif
 {
@@ -766,6 +766,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
                 cm_data.fakeDirVersion != scp->dataVersion)
                 break;
 #endif
+            if (parentFidp && scp->parentVnode == 0) {
+                scp->parentVnode = parentFidp->vnode;
+                scp->parentUnique = parentFidp->unique;
+            }
             cm_HoldSCacheNoLock(scp);
             *outScpp = scp;
             lock_ConvertRToW(&cm_scacheLock);
@@ -811,10 +815,11 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             lock_ObtainWrite(&scp->rw);
         }
         scp->fid = *fidp;
-        scp->dotdotFid.cell=AFS_FAKE_ROOT_CELL_ID;
-        scp->dotdotFid.volume=AFS_FAKE_ROOT_VOL_ID;
-        scp->dotdotFid.unique=1;
-        scp->dotdotFid.vnode=1;
+        cm_SetFid(&scp->dotdotFid,AFS_FAKE_ROOT_CELL_ID,AFS_FAKE_ROOT_VOL_ID,1,1);
+        if (parentFidp) {
+            scp->parentVnode = parentFidp->vnode;
+            scp->parentUnique = parentFidp->unique;
+        }
         _InterlockedOr(&scp->flags, (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO));
         lock_ObtainWrite(&cm_scacheLock);
         if (!(scp->flags & CM_SCACHEFLAG_INHASH)) {
@@ -903,6 +908,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	    afsi_log("%s:%d cm_GetSCache (3) scp 0x%p ref %d", file, line, scp, scp->refCount);
 	    osi_Log1(afsd_logp,"cm_GetSCache (3) scp 0x%p", scp);
 #endif
+            if (parentFidp && scp->parentVnode == 0) {
+                scp->parentVnode = parentFidp->vnode;
+                scp->parentUnique = parentFidp->unique;
+            }
             if (volp)
                 cm_PutVolume(volp);
             cm_HoldSCacheNoLock(scp);
@@ -923,7 +932,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     scp->fid = *fidp;
     if (!cm_freelanceEnabled || !isRoot) {
         /* if this scache entry represents a volume root then we need
-         * to copy the dotdotFipd from the volume structure where the
+         * to copy the dotdotFid from the volume structure where the
          * "master" copy is stored (defect 11489)
          */
         if (volp->vol[ROVOL].ID == fidp->volume) {
@@ -938,6 +947,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             if (scp->fid.vnode == 1 && scp->fid.unique == 1)
                 scp->dotdotFid = cm_VolumeStateByType(volp, RWVOL)->dotdotFid;
         }
+    }
+    if (parentFidp) {
+        scp->parentVnode = parentFidp->vnode;
+        scp->parentUnique = parentFidp->unique;
     }
     if (volp)
         cm_PutVolume(volp);
@@ -977,6 +990,9 @@ cm_scache_t * cm_FindSCacheParent(cm_scache_t * scp)
     int i;
     cm_fid_t    parent_fid;
     cm_scache_t * pscp = NULL;
+
+    if (scp->parentVnode == 0)
+        return NULL;
 
     lock_ObtainWrite(&cm_scacheLock);
     cm_SetFid(&parent_fid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);

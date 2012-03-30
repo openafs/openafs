@@ -4711,7 +4711,7 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
         reqp->relPathp = path;
         reqp->tidPathp = tidPathp;
 
-        code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
+        code = cm_GetSCache(&patchp->fid, &dscp->fid, &scp, userp, reqp);
         reqp->relPathp = reqp->tidPathp = NULL;
 
         if (code) {

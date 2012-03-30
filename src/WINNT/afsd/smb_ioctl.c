@@ -1277,7 +1277,7 @@ smb_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1331,7 +1331,7 @@ smb_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1377,7 +1377,7 @@ smb_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1411,7 +1411,7 @@ smb_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 p
         cm_SkipIoctlPath(&ioctlp->ioctl);
 	cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1462,7 +1462,7 @@ smb_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_ui
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1522,7 +1522,7 @@ smb_IoctlGetFileType(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1556,7 +1556,7 @@ smb_IoctlGetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1590,7 +1590,7 @@ smb_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -1990,7 +1990,7 @@ smb_IoctlPathAvailability(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_u
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -2041,7 +2041,7 @@ smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
             cm_SkipIoctlPath(&ioctlp->ioctl);
             cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                        optionsp->fid.vnode, optionsp->fid.unique);
-            code = cm_GetSCache(&fid, &scp, userp, &req);
+            code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
         } else {
             code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
         }
@@ -2085,7 +2085,7 @@ smb_IoctlSetGroup(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
             cm_SkipIoctlPath(&ioctlp->ioctl);
             cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                        optionsp->fid.vnode, optionsp->fid.unique);
-            code = cm_GetSCache(&fid, &scp, userp, &req);
+            code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
         } else {
             code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
         }
@@ -2123,7 +2123,7 @@ smb_IoctlGetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
@@ -2164,7 +2164,7 @@ smb_IoctlSetUnixMode(struct smb_ioctl *ioctlp, struct cm_user *userp, afs_uint32
             cm_SkipIoctlPath(&ioctlp->ioctl);
             cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                        optionsp->fid.vnode, optionsp->fid.unique);
-            code = cm_GetSCache(&fid, &scp, userp, &req);
+            code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
         } else {
             code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
         }

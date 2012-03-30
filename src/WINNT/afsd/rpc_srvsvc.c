@@ -628,7 +628,7 @@ NET_API_STATUS NetrShareEnum(
             continue;
         }
 
-        cm_GetSCache(&entryp->fid, &scp, userp, &req);
+        cm_GetSCache(&entryp->fid, NULL, &scp, userp, &req);
 
         switch (InfoStruct->Level) {
         case 2:
