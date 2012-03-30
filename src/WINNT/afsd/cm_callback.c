@@ -226,6 +226,7 @@ cm_callbackDiscardROVolumeByFID(cm_fid_t *fidp)
         cm_PutVolume(volp);
         if (volp->cbExpiresRO) {
             volp->cbExpiresRO = 0;
+            volp->cbIssuedRO = 0;
             if (volp->cbServerpRO) {
                 cm_PutServer(volp->cbServerpRO);
                 volp->cbServerpRO = NULL;
@@ -1730,6 +1731,7 @@ cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                 cbrp->serverp = NULL;
             }
             scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
+            scp->cbIssued = time(NULL);
         }
 
         if (scp->flags & CM_SCACHEFLAG_PURERO) {
@@ -1738,6 +1740,7 @@ cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                 if (volSyncp) {
                     lock_ObtainWrite(&cm_scacheLock);
                     volp->cbExpiresRO = scp->cbExpires;
+                    volp->cbIssuedRO = scp->cbIssued;
                     volp->creationDateRO = volSyncp->spare1;
                     if (volp->cbServerpRO != scp->cbServerp) {
                         if (volp->cbServerpRO)
@@ -2010,6 +2013,7 @@ void cm_CheckCBExpiration(void)
                 {
                     lock_ObtainWrite(&scp->rw);
                     scp->cbExpires = volp->cbExpiresRO;
+                    scp->cbIssued = volp->cbIssuedRO;
                     if (volp->cbServerpRO != scp->cbServerp) {
                         if (scp->cbServerp)
                             cm_PutServer(scp->cbServerp);

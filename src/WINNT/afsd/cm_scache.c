@@ -193,6 +193,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
         scp->cbServerp = NULL;
     }
     scp->cbExpires = 0;
+    scp->cbIssued = 0;
     scp->volumeCreationDate = 0;
 
     scp->fid.vnode = 0;
@@ -431,6 +432,7 @@ void cm_fakeSCacheInit(int newFile)
         cm_data.fakeSCache.magic = CM_SCACHE_MAGIC;
         cm_data.fakeSCache.cbServerp = (struct cm_server *)(-1);
         cm_data.fakeSCache.cbExpires = (time_t)-1;
+        cm_data.fakeSCache.cbExpires = time(NULL);
         /* can leave clientModTime at 0 */
         cm_data.fakeSCache.fileType = CM_SCACHETYPE_FILE;
         cm_data.fakeSCache.unixModeBits = 0777;
@@ -613,6 +615,7 @@ cm_ShutdownSCache(void)
             scp->cbServerp = NULL;
         }
         scp->cbExpires = 0;
+        scp->cbIssued = 0;
         _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_CALLBACK);
         lock_ReleaseWrite(&scp->rw);
 
@@ -657,6 +660,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
 #endif
                 scp->cbServerp = NULL;
                 scp->cbExpires = 0;
+                scp->cbIssued = 0;
                 scp->volumeCreationDate = 0;
                 scp->fileLocksH = NULL;
                 scp->fileLocksT = NULL;
@@ -1981,6 +1985,7 @@ void cm_DiscardSCache(cm_scache_t *scp)
 	scp->cbServerp = NULL;
     }
     scp->cbExpires = 0;
+    scp->cbIssued = 0;
     scp->volumeCreationDate = 0;
     _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL | CM_SCACHEFLAG_RDR_IN_USE));
     cm_dnlcPurgedp(scp);

@@ -156,6 +156,7 @@ typedef struct cm_scache {
     /* callback info */
     struct cm_server *cbServerp;	/* server granting callback */
     time_t cbExpires;			/* time callback expires */
+    time_t cbIssued;                    /* time callback was issued */
 
     /* access cache */
     long anyAccess;			/* anonymous user's access */
