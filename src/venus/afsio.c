@@ -115,7 +115,7 @@ static int CmdProlog(struct cmd_syndesc *, char **, char **,
 static int ScanFid(char *, struct AFSFid *);
 static afs_int32 GetVenusFidByFid(char *, char *, int, struct afscp_venusfid **);
 static afs_int32 GetVenusFidByPath(char *, char *, struct afscp_venusfid **);
-static int BreakUpPath(char *, char *, char *);
+static int BreakUpPath(char *, char *, char *, size_t);
 
 static char pnp[AFSPATHMAX];	/* filename of this program when called */
 static int verbose = 0;		/* Set if -verbose option given */
@@ -292,7 +292,7 @@ main(int argc, char **argv)
     char baseName[AFSNAMEMAX];
 
     /* try to get only the base name of this executable for use in logs */
-    if (BreakUpPath(argv[0], NULL, baseName) > 0)
+    if (BreakUpPath(argv[0], NULL, baseName, AFSNAMEMAX) > 0)
 	strlcpy(pnp, baseName, AFSNAMEMAX);
     else
 	strlcpy(pnp, argv[0], AFSPATHMAX);
@@ -549,7 +549,7 @@ GetVenusFidByFid(char *fidString, char *cellName, int onlyRW,
  *       2 if both dirName and baseName were filled in
  */
 static int
-BreakUpPath(char *fullPath, char *dirName, char *baseName)
+BreakUpPath(char *fullPath, char *dirName, char *baseName, size_t baseNameSize)
 {
     char *lastSlash;
     size_t dirNameLen = 0;
@@ -576,18 +576,18 @@ BreakUpPath(char *fullPath, char *dirName, char *baseName)
 	/* then lastSlash points to the last path separator in fullPath */
 	if (useDirName) {
 	    dirNameLen = strlen(fullPath) - strlen(lastSlash);
-	    strlcpy(dirName, fullPath, dirNameLen + 1);
+	    strlcpy(dirName, fullPath, min(dirNameLen + 1, baseNameSize));
 	    code++;
 	}
 	if (useBaseName) {
 	    lastSlash++;
-	    strlcpy(baseName, lastSlash, strlen(lastSlash) + 1);
+	    strlcpy(baseName, lastSlash, min(strlen(lastSlash) + 1, baseNameSize));
 	    code++;
 	}
     } else {
 	/* there are no path separators in fullPath -- it's just a baseName */
 	if (useBaseName) {
-	    strlcpy(baseName, fullPath, strlen(fullPath) + 1);
+	    strlcpy(baseName, fullPath, min(strlen(fullPath) + 1, baseNameSize));
 	    code++;
 	}
     }
@@ -907,7 +907,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	    }
 	}
 	if (!append && !overWrite) { /* must create a new file in this case */
-	    if ( BreakUpPath(fname, dirName, baseName) != 2 ) {
+	    if ( BreakUpPath(fname, dirName, baseName, AFSNAMEMAX) != 2 ) {
 		code = EINVAL;
 		afs_com_err(pnp, code, "(must provide full AFS path)");
 		afscp_FreeFid(newvfp);
