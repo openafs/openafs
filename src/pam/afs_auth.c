@@ -102,7 +102,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    } else {
 		ignore_uid = 1;
 		ignore_uid_id = (uid_t) strtol(argv[i], (char **)NULL, 10);
-		if ((ignore_uid_id < 0) || (ignore_uid_id > IGNORE_MAX)) {
+		if (ignore_uid_id > IGNORE_MAX) {
 		    ignore_uid = 0;
 		    pam_afs_syslog(LOG_ERR, PAMAFS_IGNOREUID, argv[i]);
 		}
