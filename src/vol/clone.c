@@ -387,7 +387,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		error = FDH_TRUNC(rwFd, offset);
 	    }
 	}
-	FDH_SYNC(rwFd);
+	(void)FDH_SYNC(rwFd);
 	FDH_CLOSE(rwFd);
     }
 

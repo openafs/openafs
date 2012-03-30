@@ -1483,7 +1483,7 @@ GetFreeTag(IHandle_t * ih, int vno)
     if (FDH_PWRITE(fdP, (char *)&row, sizeof(row), offset) != sizeof(row)) {
 	goto badGetFreeTag;
     }
-    FDH_SYNC(fdP);
+    (void)FDH_SYNC(fdP);
     FDH_UNLOCKFILE(fdP, offset);
     FDH_CLOSE(fdP);
     return col;
@@ -1535,7 +1535,7 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 	errno = OS_ERROR(EBADF);
 	goto bad_SetLinkCount;
     }
-    FDH_SYNC(fdP);
+    (void)FDH_SYNC(fdP);
 
     nBytes = 0;
 

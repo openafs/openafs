@@ -6555,7 +6555,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* HAVE_PIOV */
     if (sync) {
-	FDH_SYNC(fdP);
+	(void) FDH_SYNC(fdP);
     }
     if (errorCode) {
 	Error tmp_errorCode = 0;
