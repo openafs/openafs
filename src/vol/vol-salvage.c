@@ -3322,7 +3322,7 @@ DistilVnodeEssence(struct SalvInfo *salvinfo, VolumeId rwVId,
 		if (class != vLarge) {
 		    VnodeId vnodeNumber = bitNumberToVnodeNumber(vnodeIndex, class);
 		    vip->nAllocatedVnodes--;
-		    memset(vnode, 0, sizeof(vnode));
+		    memset(vnode, 0, sizeof(*vnode));
 		    IH_IWRITE(salvinfo->vnodeInfo[vSmall].handle,
 			      vnodeIndexOffset(vcp, vnodeNumber),
 			      (char *)&vnode, sizeof(vnode));
