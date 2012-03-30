@@ -3506,7 +3506,7 @@ copyvolintXInfo(struct volintXInfo *source, vos_volumeEntry_p dest,
      * user from seeing stale data from a previous call
      */
 
-    memset(dest, 0, sizeof(dest));
+    memset(dest, 0, sizeof(*dest));
 
     switch (source->status) {
     case VOK:
