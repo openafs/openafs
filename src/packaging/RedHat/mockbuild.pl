@@ -23,7 +23,8 @@ my $ignorerelease = 1;
 my @newrpms;
 
 sub findKernels {
-  my ($root, $platform, $uname, @modules) = @_;
+  my ($root, $platform, $uname, $osv, @modules) = @_;
+  $osv =~s/[^\d]//g;
 
   my ($fh, $tmpconf) = tempfile( "yum.confXXXX", DIR => "/tmp");
   open(OLDCONF, "$root/etc/yum.conf");
@@ -53,9 +54,9 @@ sub findKernels {
   my $modlist = join(" ", @modules);
   my @kernels;
   if ($uname) {
-    @kernels = `repoquery $archv --whatprovides kernel-devel-uname-r --qf "%{name}.%{arch} %{version}-%{release}" -c $tmpconf`;
+    @kernels = `repoquery $archv --releasever=$osv --whatprovides kernel-devel-uname-r --qf "%{name}.%{arch} %{version}-%{release}" -c $tmpconf`;
   } else {
-    @kernels = `repoquery $archv --show-duplicates --whatprovides $modlist --qf "%{name}.%{arch} %{version}-%{release}" -c $tmpconf`;
+    @kernels = `strace -o /tmp/out repoquery $archv --releasever=$osv --show-duplicates --whatprovides $modlist --qf "%{name}.%{arch} %{version}-%{release}" -c $tmpconf`;
   }
   unlink $tmpconf;
 
@@ -139,6 +140,22 @@ my %platconf = ( "centos-4-i386" => { osver => "el4",
                                         kmod => "1",
                                         basearch => "x86_64",
                                         results => "fedora-15/x86_64" },
+                 "fedora-16-i386" => { osver => "fc16",
+                                        kmod => "1",
+                                        basearch => "i686",
+                                        results => "fedora-16/i686" },
+                 "fedora-16-x86_64" => { osver => "fc16",
+                                        kmod => "1",
+                                        basearch => "x86_64",
+                                        results => "fedora-16/x86_64" },
+                 "fedora-17-i386" => { osver => "fc17",
+                                        kmod => "1",
+                                        basearch => "i686",
+                                        results => "fedora-16/i686" },
+                 "fedora-17-x86_64" => { osver => "fc17",
+                                        kmod => "1",
+                                        basearch => "x86_64",
+                                        results => "fedora-16/x86_64" },
 		 "fedora-development-i386" => { osver => "fcd",
 					  kmod => '1',
 					  basearch => 'i386',
@@ -230,12 +247,12 @@ foreach my $platform (@platforms) {
 
   my @kernels;
   if ($platform=~/fedora-development/) {
-    @kernels = findKernels($root, $platform, 0, "kernel-devel");
+    @kernels = findKernels($root, $platform, 0, $osver, "kernel-devel");
   } elsif ($platform=~/centos-4/) {
-    @kernels = findKernels($root, $platform, 0, "kernel-devel", "kernel-smp-devel", 
+    @kernels = findKernels($root, $platform, 0, $osver, "kernel-devel", "kernel-smp-devel", 
 				 "kernel-hugemem-devel", "kernel-xenU-devel");
   } else {
-    @kernels = findKernels($root, $platform, 0, 'kernel-devel');
+    @kernels = findKernels($root, $platform, 0, $osver, 'kernel-devel');
   }
 
   foreach my $kernel (@kernels) {
