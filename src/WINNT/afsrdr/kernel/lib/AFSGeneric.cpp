@@ -1632,8 +1632,7 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
 
         AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
                                         NULL,
-                                        FILE_NOTIFY_CHANGE_FILE_NAME |
-                                        FILE_NOTIFY_CHANGE_ATTRIBUTES,
+                                        ulFilter,
                                         FILE_ACTION_MODIFIED);
 
         try_return( ntStatus);
