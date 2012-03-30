@@ -121,9 +121,7 @@ afscp_CellByName(const char *cellname, const char *realmname)
     memset(thecell, 0, sizeof(struct afscp_cell));
     strlcpy(thecell->name, cellname, sizeof(thecell->name));
     if (realmname != NULL) {
-	thecell->realm = malloc(strlen(realmname) + 1);
-	memset(thecell->realm, 0, strlen(realmname) + 1);
-	strlcpy(thecell->realm, realmname, strlen(realmname) + 1);
+	thecell->realm = strdup(realmname);
     } else {
 	thecell->realm = NULL;
     }
