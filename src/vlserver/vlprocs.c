@@ -593,7 +593,7 @@ SVL_GetNewVolumeId(struct rx_call *rxcall, afs_uint32 Maxvolidbump,
     if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
 	END(VL_PERM);
 
-    if (Maxvolidbump < 0 || Maxvolidbump > MAXBUMPCOUNT)
+    if (Maxvolidbump > MAXBUMPCOUNT)
 	END(VL_BADVOLIDBUMP);
 
     if ((errorcode = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
