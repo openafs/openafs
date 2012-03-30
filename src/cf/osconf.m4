@@ -4,8 +4,8 @@ AC_DEFUN([OPENAFS_OSCONF], [
 dnl defaults, override in case below as needed
 RXDEBUG="-DRXDEBUG"
 SHLIB_SUFFIX="so"
-CCOBJ="$CC"
-MT_CC="$CC"
+CCOBJ="\$(CC)"
+MT_CC="\$(CC)"
 XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} ${LIB_libintl}"
 MT_LIBS='-lpthread ${XLIBS}'
 XCFLAGS=
@@ -39,8 +39,6 @@ dnl TODO - need to disable STRIP if we are doing debugging in any user space cod
 case $AFS_SYSNAME in
 	alpha_dux40)
 		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		CSTATIC="-non_shared"
 		DBG="-g3"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread'
@@ -51,8 +49,6 @@ case $AFS_SYSNAME in
 
 	alpha_dux50 | alpha_dux51)
 		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		DBG="-g3"
 		CSTATIC="-non_shared"
 		LWP_OPTMZ="-O2"
@@ -63,34 +59,32 @@ case $AFS_SYSNAME in
 		;;
 
 	alpha_linux_22 | alpha_linux_24 | alpha_linux_26)
-		CCOBJ="${CC} -fPIC"
+		CCOBJ="\$(CC) -fPIC"
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	arm_linux_24 | arm_linux26)
-		CCOBJ="${CC} -fPIC"
+		CCOBJ="\$(CC) -fPIC"
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	hp_ux102)
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc -Ae"
-		CCOBJ="/opt/ansic/bin/cc -Ae"
 		DBM="/lib/libndbm.a"
 		LD="/bin/ld"
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ="-O"
-		MT_CC="/opt/ansic/bin/cc -Ae"
 		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L'
 		MT_LIBS='-L/opt/dce/lib -ldce ${XLIBS}'
 		MV="/bin/mv"
@@ -113,12 +107,10 @@ case $AFS_SYSNAME in
 		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc"
-		CCOBJ="/opt/ansic/bin/cc"
 		DBM="/lib/libndbm.a"
 		LD="/bin/ld   "
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ="-O"
-		MT_CC="$CC"
 		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L'
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -141,12 +133,10 @@ case $AFS_SYSNAME in
 		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc"
-		CCOBJ="/opt/ansic/bin/cc"
 		DBM="/lib/hpux32/libndbm.so"
 		LD="/bin/ld   "
 		LEX="/opt/langtools/bin/lex"
 		LWP_OPTMZ=""
-		MT_CC="$CC"
 		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L'
 		MV="/bin/mv"
 		OPTMZ="-O"
@@ -170,7 +160,7 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
 
@@ -179,7 +169,7 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
 
@@ -187,7 +177,7 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_CFLAGS="-O2 -pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-O2 -pipe -fPIC"
 		;;
 
@@ -197,7 +187,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
 
@@ -206,7 +196,7 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
 
@@ -218,18 +208,18 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		XCFLAGS="-G0"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	amd64_linux*)
-		CCOBJ="${CC} -fPIC"
+		CCOBJ="\$(CC) -fPIC"
 		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	ppc64_linux24 | ppc64_linux26)
@@ -238,7 +228,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LINKER="${MT_CC} -shared -m64"
+		SHLIB_LINKER="${CC} -shared -m64"
 		XCFLAGS="-m64"
 		XLDFLAGS="-m64"
 		ASFLAGS="-a64"
@@ -255,7 +245,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	i386_umlinux22 | i386_umlinux24 | i386_umlinux26)
@@ -268,7 +258,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	*_obsd*)
@@ -280,7 +270,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS=
 		;;
 
@@ -291,13 +281,11 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	ppc_darwin_70)
 		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS='-D_REENTRANT'
 		KROOT=
@@ -307,15 +295,13 @@ case $AFS_SYSNAME in
 		REGEX_OBJ_PIC="regex_pic.o"
 		XCFLAGS="-no-cpp-precomp"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
 		;;
 
 	*_darwin_80)
 		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
 		KROOT=
@@ -326,7 +312,7 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		REGEX_OBJ_PIC="regex_pic.o"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
@@ -344,7 +330,7 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		REGEX_OBJ_PIC="regex_pic.o"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib -c"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
@@ -364,7 +350,7 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		TXLIBS="-lncurses"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} -dynamiclib"
+		SHLIB_LINKER="${CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
@@ -384,7 +370,7 @@ case $AFS_SYSNAME in
 		REGEX_OBJ="regex.o"
 		REGEX_OBJ_PIC="regex_pic.o"
 		EXTRA_VLIBOBJS="fstab.o"
-		SHLIB_LINKER="${MT_CC} \${ARCHFLAGS} -dynamiclib"
+		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
 		RANLIB="ranlib"
 		XLIBS="${LIB_AFSDB} ${XBSA_XLIBS} -framework CoreFoundation"
@@ -397,12 +383,11 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	rs_aix42)
 		CC="cc"
-		CCOBJ="cc"
 		DBG=""
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
@@ -416,7 +401,6 @@ case $AFS_SYSNAME in
 
 	rs_aix51 | rs_aix52 | rs_aix53)	
 		CC="cc"
-		CCOBJ="cc"
 		DBG="-g"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
@@ -430,7 +414,6 @@ case $AFS_SYSNAME in
 
 	rs_aix61)	
 		CC="cc"
-		CCOBJ="cc"
 		DBG="-g"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
@@ -445,20 +428,18 @@ case $AFS_SYSNAME in
 	s390_linux22|s390_linux24|s390_linux26)
 		LD="ld"
 		KERN_OPTMZ=-O2
-		MT_CC="$CC"
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	s390x_linux24|s390x_linux26)
-		CCOBJ="${CC} -fPIC"
+		CCOBJ="\$(CC) -fPIC"
 		LD="ld"
 		KERN_OPTMZ=-O2
-		MT_CC="$CC"
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
@@ -466,13 +447,11 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
 		OPTMZ=-O
 		XCFLAGS="-D__s390x__"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	sgi_62)
 		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		MT_CFLAGS='-D_SGI_MP_SOURCE'
@@ -485,8 +464,6 @@ case $AFS_SYSNAME in
 
 	sgi_63)
 		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		MT_CFLAGS='-D_SGI_MP_SOURCE'
@@ -499,8 +476,6 @@ case $AFS_SYSNAME in
 
 	sgi_64)
 		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		MT_CFLAGS='-D_SGI_MP_SOURCE'
@@ -514,10 +489,8 @@ case $AFS_SYSNAME in
 	sgi_65)
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		CC="/usr/bin/cc"
-		CCOBJ="/usr/bin/cc"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LD="/usr/bin/ld"
-		MT_CC="/usr/bin/cc"
 		MT_CFLAGS='-D_SGI_MP_SOURCE'
 		XCFLAGS64="-64 -mips3"
 		XCFLAGS="-n32 -mips3 -woff 1009,1014,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552,3201 -Wl,-woff,84,-woff,15"
@@ -535,14 +508,12 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		XCFLAGS64="-m64"
 		XLDFLAGS64="-m64"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	sun4x_58|sun4x_59)
 		CC=$SOLARISCC
-		CCOBJ=$SOLARISCC
 		LD="/usr/ccs/bin/ld"
-		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -559,9 +530,7 @@ case $AFS_SYSNAME in
 
 	sun4x_510)
 		CC=$SOLARISCC
-		CCOBJ=$SOLARISCC
 		LD="/usr/ccs/bin/ld"
-		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -578,9 +547,7 @@ case $AFS_SYSNAME in
 
 	sun4x_511)
 		CC=$SOLARISCC
-		CCOBJ=$SOLARISCC
 		LD="/usr/ccs/bin/ld"
-		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -597,9 +564,7 @@ case $AFS_SYSNAME in
 
 	sunx86_58|sunx86_59)
 		CC=$SOLARISCC
-		CCOBJ=$SOLARISCC
 		LD="/usr/ccs/bin/ld"
-		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
@@ -627,10 +592,8 @@ case $AFS_SYSNAME in
 			XARCHFLAGS="-m64"
 		fi
 		CC=$SOLARISCC
-		CCOBJ=$SOLARISCC
 		CFLAGS="$CFLAGS $XARCHFLAGS"
 		LD="/usr/ccs/bin/ld"
-		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
