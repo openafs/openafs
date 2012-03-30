@@ -48,7 +48,8 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
     afs_size_t totalLength;
     afs_size_t transferLength;
     afs_size_t filePos;
-    afs_size_t offset, len, tlen;
+    afs_size_t offset, tlen;
+    afs_size_t len = 0;
     afs_int32 trimlen;
     struct dcache *tdc = 0;
     afs_int32 error, trybusy = 1;
@@ -108,6 +109,16 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
      * Locks held:
      * avc->lock(R)
      */
+
+    /* This bit is bogus. We're checking to see if the read goes past the
+     * end of the file. If so, we should be zeroing out all of the buffers
+     * that the client has passed into us (there is a danger that we may leak
+     * kernel memory if we do not). However, this behaviour is disabled by
+     * not setting len before this segment runs, and by setting len to 0
+     * immediately we enter it. In addition, we also need to check for a read
+     * which partially goes off the end of the file in the while loop below.
+     */
+
     if (filePos >= avc->f.m.Length) {
 	if (len > AFS_ZEROS)
 	    len = sizeof(afs_zeros);	/* and in 0 buffer */
