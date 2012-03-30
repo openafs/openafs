@@ -3201,7 +3201,7 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
 
-    if ((targetptr->disk.type == vSymlink)) {
+    if (targetptr->disk.type == vSymlink) {
 	/* Should we return a better error code here??? */
 	errorCode = EISDIR;
 	goto Bad_StoreData;
@@ -5509,7 +5509,7 @@ SAFSS_ExtendLock(struct rx_call *acall, struct AFSFid *Fid,
     (void)PutVolumePackage(acall, parentwhentargetnotdir, targetptr,
 			   (Vnode *) 0, volptr, &client);
 
-    if ((errorCode == VREADONLY))	/* presumably, we already granted this lock */
+    if (errorCode == VREADONLY)	/* presumably, we already granted this lock */
 	errorCode = 0;		/* under our generous policy re RO vols */
 
     ViceLog(2, ("SAFS_ExtendLock returns %d\n", errorCode));
@@ -5646,7 +5646,7 @@ SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
     (void)PutVolumePackage(acall, parentwhentargetnotdir, targetptr,
 			   (Vnode *) 0, volptr, &client);
 
-    if ((errorCode == VREADONLY))	/* presumably, we already granted this lock */
+    if (errorCode == VREADONLY)	/* presumably, we already granted this lock */
 	errorCode = 0;		/* under our generous policy re RO vols */
 
     ViceLog(2, ("SAFS_ReleaseLock returns %d\n", errorCode));
