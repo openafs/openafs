@@ -88,7 +88,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
     if (use_first_pass)
 	try_first_pass = 0;
 
-    if (logmask && LOG_MASK(LOG_DEBUG)) {
+    if (logmask & LOG_MASK(LOG_DEBUG)) {
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass,
 		       try_first_pass);
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_PAMERROR, flags);
@@ -109,7 +109,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	RET(PAM_USER_UNKNOWN);
     }
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
 
     /*
@@ -148,14 +148,14 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	    RET(PAM_AUTH_ERR);
 	}
 	password = NULL;	/* In case it isn't already NULL */
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
     }
     if (!(use_first_pass || try_first_pass)) {

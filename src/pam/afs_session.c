@@ -72,7 +72,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 	}
     }
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	syslog(LOG_DEBUG,
 	       "pam_afs_session_close: remain: %d, remainlifetime: %d, no_unlog: %d",
 	       remain, remainlifetime, no_unlog);
@@ -98,7 +98,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
     }
     if (!no_unlog && ktc_ForgetAllTokens())
 	return PAM_SESSION_ERR;
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	syslog(LOG_DEBUG, "pam_afs_session_close: Session closed");
     return PAM_SUCCESS;
 }

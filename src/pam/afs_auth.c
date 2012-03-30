@@ -143,7 +143,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     if (use_first_pass)
 	try_first_pass = 0;
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass,
 		       try_first_pass, ignore_uid, ignore_uid_id,
 		       refresh_token, set_token, dont_fork, use_klog);
@@ -163,7 +163,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	RET(PAM_USER_UNKNOWN);
     }
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
 
     /*
@@ -204,14 +204,14 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    RET(PAM_AUTH_ERR);
 	}
 	password = NULL;	/* In case it isn't already NULL */
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
 	got_authtok = 1;
     }
@@ -272,7 +272,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 #ifdef AFS_KERBEROS_ENV
 	ktc_newpag();
 #endif
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    syslog(LOG_DEBUG, "New PAG created in pam_authenticate()");
     }
 
@@ -298,15 +298,15 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 		i = do_klog(user, password, "00:00:01", cell_ptr);
 		ktc_ForgetAllTokens();
 	    }
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		syslog(LOG_DEBUG, "do_klog returned %d", i);
 	    auth_ok = i ? 0 : 1;
 	} else {
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		syslog(LOG_DEBUG, "forking ...");
 	    cpid = fork();
 	    if (cpid <= 0) {	/* The child process */
-		if (logmask && LOG_MASK(LOG_DEBUG))
+		if (logmask & LOG_MASK(LOG_DEBUG))
 		    syslog(LOG_DEBUG, "in child");
 		if (refresh_token || set_token)
 		    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
@@ -331,13 +331,13 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 		} else {
 		    auth_ok = 1;
 		}
-		if (logmask && LOG_MASK(LOG_DEBUG))
+		if (logmask & LOG_MASK(LOG_DEBUG))
 		    syslog(LOG_DEBUG, "child: auth_ok=%d", auth_ok);
 		if (cpid == 0)
 		    exit(auth_ok);
 	    } else {
 		do {
-		    if (logmask && LOG_MASK(LOG_DEBUG))
+		    if (logmask & LOG_MASK(LOG_DEBUG))
 			syslog(LOG_DEBUG, "in parent, waiting ...");
 		    rcpid = waitpid(cpid, &status, 0);
 		} while ((rcpid == -1) && (errno == EINTR));
@@ -347,7 +347,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 		} else {
 		    auth_ok = 0;
 		}
-		if (logmask && LOG_MASK(LOG_DEBUG))
+		if (logmask & LOG_MASK(LOG_DEBUG))
 		    syslog(LOG_DEBUG, "parent: auth_ok=%d", auth_ok);
 	    }
 	}
@@ -357,7 +357,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	    pam_afs_syslog(LOG_ERR, PAMAFS_PAMERROR, errno);
 	}
     } else {			/* dont_fork, used by httpd */
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    syslog(LOG_DEBUG, "dont_fork");
 	if (refresh_token || set_token)
 	    code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, (char *)user,	/* kerberos name */
@@ -374,7 +374,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 					 (char *)password,	/* password */
 					 0,	/* spare 2 */
 					 &reason /* error string */ );
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    syslog(LOG_DEBUG, "dont_fork, code = %d", code);
 	if (code) {
 	    pam_afs_syslog(LOG_ERR, PAMAFS_LOGIN_FAILED, user, reason);
@@ -382,7 +382,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	} else {
 	    auth_ok = 1;
 	}
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    syslog(LOG_DEBUG, "dont_fork: auth_ok=%d", auth_ok);
     }
 
@@ -401,7 +401,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	(void)pam_set_item(pamh, PAM_AUTHTOK, password);
     }
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	syslog(LOG_DEBUG, "leaving auth: auth_ok=%d", auth_ok);
     if (code == KANOENT)
 	RET(PAM_USER_UNKNOWN);

@@ -126,13 +126,13 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     if (use_first_pass)
 	try_first_pass = 0;
 
-    if (logmask && LOG_MASK(LOG_DEBUG))
+    if (logmask & LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass,
 		       try_first_pass, ignore_uid, ignore_uid_id, 8, 8, 8, 8);
     /* Try to get the user-interaction info, if available. */
     errcode = pam_get_item(pamh, PAM_CONV, (PAM_CONST void **)&pam_convp);
     if (errcode != PAM_SUCCESS) {
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_NO_USER_INT);
 	pam_convp = NULL;
     }
@@ -177,19 +177,19 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 #endif
 
     if (flags & PAM_DELETE_CRED) {
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_DELCRED, user);
 
 	RET(PAM_SUCCESS);
     } else if (flags & PAM_REINITIALIZE_CRED) {
 
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_REINITCRED, user);
 	RET(PAM_SUCCESS);
 
     } else {			/* flags are PAM_REFRESH_CRED, PAM_ESTABLISH_CRED, unknown */
 
-	if (logmask && LOG_MASK(LOG_DEBUG))
+	if (logmask & LOG_MASK(LOG_DEBUG))
 	    pam_afs_syslog(LOG_DEBUG, PAMAFS_ESTABCRED, user);
 
 	errcode = pam_get_data(pamh, pam_afs_lh, (const void **)&password);
@@ -199,7 +199,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		RET(PAM_AUTH_ERR);
 	    }
 	    password = NULL;	/* In case it isn't already NULL */
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
 	} else if (password[0] == '\0') {
 	    /* Actually we *did* get one but it was empty. */
@@ -209,10 +209,10 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		pam_afs_syslog(LOG_ERR, PAMAFS_PASSWD_REQ, user);
 		RET(PAM_NEW_AUTHTOK_REQD);
 	    }
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_NILPASSWORD, user);
 	} else {
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
 	}
 	if (!(use_first_pass || try_first_pass)) {
@@ -240,7 +240,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		RET(PAM_AUTH_ERR);
 	    }
 	    if (prompt_password[0] == '\0') {
-		if (logmask && LOG_MASK(LOG_DEBUG))
+		if (logmask & LOG_MASK(LOG_DEBUG))
 		    pam_afs_syslog(LOG_DEBUG, PAMAFS_NILPASSWORD);
 		RET(PAM_NEW_AUTHTOK_REQD);
 	    }
@@ -263,7 +263,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	 * pam_sm_authenticate() or if it was destroyed by the application
 	 */
 	if ((!refresh_token) && (getPAG() == -1)) {
-	    if (logmask && LOG_MASK(LOG_DEBUG))
+	    if (logmask & LOG_MASK(LOG_DEBUG))
 		syslog(LOG_DEBUG, "New PAG created in pam_setcred()");
 	    setpag();
 #ifdef AFS_KERBEROS_ENV
