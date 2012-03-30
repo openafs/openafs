@@ -8342,7 +8342,7 @@ VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint)
     /* search the chain for this volume id */
     for(queue_Scan(head, vp, np, Volume)) {
 	looks++;
-	if ((vp->hashid == volumeId)) {
+	if (vp->hashid == volumeId) {
 	    break;
 	}
     }
