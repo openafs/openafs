@@ -107,6 +107,7 @@ void afscp_Finalize(void);
 
 int afscp_Insecure(void);
 int afscp_AnonymousAuth(int);
+int afscp_LocalAuthAs(const char *aname);
 
 void afscp_SetConfDir(char *confDir);
 

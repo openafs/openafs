@@ -1,5 +1,7 @@
 /* AUTORIGHTS
 Copyright (C) 2003 - 2010 Chaskiel Grundman
+Copyright (c) 2011 Your Filesystem Inc.
+Copyright (c) 2012 Sine Nomine Associates
 All rights reserved
 
 Redistribution and use in source and binary forms, with or without
@@ -44,6 +46,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "afscp.h"
 #include "afscp_internal.h"
 
+#define HC_DEPRECATED
+#include <hcrypto/des.h>
+
 #ifdef HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE
 #define Z_keydata(keyblock)     ((keyblock)->contents)
 #define Z_keylen(keyblock)      ((keyblock)->length)
@@ -58,6 +63,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static int insecure = 0;
 static int try_anonymous = 0;
+static char authas_name[256];
+static char authas_inst[256];
 
 int
 afscp_Insecure(void)
@@ -70,6 +77,42 @@ int
 afscp_AnonymousAuth(int state)
 {
     try_anonymous = state;
+    return 0;
+}
+
+/**
+ * Connect to all servers using authenticated connections, using the local
+ * KeyFile to appear as an arbitrary user.
+ *
+ * @param[in] aname  The pts username to impersonate
+ *
+ * @note aname is krb4-based name, not a krb5 principal. So for example, you
+ *       probably want to give "user.admin" instead of "user/admin".
+ *
+ * @return operation status
+ *  @retval 0 success
+ */
+int
+afscp_LocalAuthAs(const char *aname)
+{
+    const char *ainst = strchr(aname, '.');
+    size_t namelen, instlen;
+
+    if (ainst) {
+	namelen = ainst - aname;
+	ainst++;
+	instlen = strlen(ainst);
+    } else {
+	namelen = strlen(aname);
+	ainst = "";
+	instlen = 0;
+    }
+
+    if (namelen+1 > sizeof(authas_name) || instlen+1 > sizeof(authas_inst)) {
+	return EINVAL;
+    }
+    strncpy(authas_name, aname, namelen);
+    strncpy(authas_inst, ainst, instlen);
     return 0;
 }
 
@@ -105,6 +148,68 @@ _GetNullSecurityObject(struct afscp_cell *cell)
     return 0;
 }
 
+static int
+_GetLocalSecurityObject(struct afscp_cell *cell,
+                        char *aname, char *ainst)
+{
+    int code = 0;
+    char tbuffer[256];
+    struct ktc_encryptionKey key, session;
+    struct rx_securityClass *tc;
+    afs_int32 kvno;
+    afs_int32 ticketLen;
+    rxkad_level lev;
+    struct afsconf_dir *tdir;
+
+    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    if (!tdir) {
+	code = AFSCONF_FAILURE;
+	goto done;
+    }
+
+    code = afsconf_GetLatestKey(tdir, &kvno, &key);
+    if (code) {
+	goto done;
+    }
+
+    DES_init_random_number_generator((DES_cblock *)&key);
+    code = DES_new_random_key((DES_cblock *)&session);
+    if (code) {
+	goto done;
+    }
+
+    ticketLen = sizeof(tbuffer);
+    memset(tbuffer, 0, sizeof(tbuffer));
+    code = tkt_MakeTicket(tbuffer, &ticketLen, &key, aname, ainst, "", 0,
+                          0xffffffff, &session, 0, "afs", "");
+    if (code) {
+	goto done;
+    }
+
+    if (insecure) {
+	lev = rxkad_clear;
+    } else {
+	lev = rxkad_crypt;
+    }
+
+    tc = (struct rx_securityClass *)
+        rxkad_NewClientSecurityObject(lev, &session, kvno, ticketLen,
+	                              tbuffer);
+    if (!tc) {
+	code = RXKADBADKEY;
+	goto done;
+    }
+
+    cell->security = tc;
+    cell->scindex = 2;
+
+ done:
+    if (tdir) {
+	afsconf_Close(tdir);
+    }
+    return code;
+}
+
 int
 _GetSecurityObject(struct afscp_cell *cell)
 {
@@ -124,6 +229,13 @@ _GetSecurityObject(struct afscp_cell *cell)
     code = _GetCellInfo(cell->name, &celldata);
     if (code != 0) {
 	goto try_anon;
+    }
+
+    if (authas_name[0]) {
+	code = _GetLocalSecurityObject(cell, authas_name, authas_inst);
+	if (code == 0) {
+	    return 0;
+	}
     }
 
     code = krb5_init_context(&context);	/* see aklog.c main() */
