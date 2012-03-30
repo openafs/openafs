@@ -1994,6 +1994,14 @@ AFSSetDispositionInfo( IN PIRP Irp,
 
                     try_return( ntStatus = STATUS_DIRECTORY_NOT_EMPTY);
                 }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry  %p Name %wZ\n",
+                              DirectoryCB,
+                              &DirectoryCB->NameInformation.FileName);
+
+                SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
             }
             else if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
             {
@@ -2015,6 +2023,20 @@ AFSSetDispositionInfo( IN PIRP Irp,
                 }
 
                 //
+                // Set PENDING_DELETE before CcPurgeCacheSection to avoid a
+                // deadlock with Trend Micro's Enterprise anti-virus product
+                // which attempts to open the file which is being deleted.
+                //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry %p Name %wZ\n",
+                              DirectoryCB,
+                              &DirectoryCB->NameInformation.FileName);
+
+                SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+
+                //
                 // Purge the cache as well
                 //
 
@@ -2027,14 +2049,6 @@ AFSSetDispositionInfo( IN PIRP Irp,
                                          TRUE);
                 }
             }
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSSetDispositionInfo Setting PENDING_DELETE on DirEntry  %p Name %wZ\n",
-                          DirectoryCB,
-                          &DirectoryCB->NameInformation.FileName);
-
-            SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
         }
         else
         {
