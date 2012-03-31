@@ -81,15 +81,20 @@ listToArray(struct kvnoList *kvnoEntry, struct afsconf_typedKeyList **keys)
     /* Allocate space for the keys we've got stored */
     retval = malloc(sizeof(struct afsconf_typedKeyList));
     retval->nkeys = opr_queue_Count(&kvnoEntry->subTypeList);
-    retval->keys  = calloc(retval->nkeys, sizeof(struct afsconf_typedKey *));
 
-    i = 0;
-    for(opr_queue_Scan(&kvnoEntry->subTypeList, cursor)) {
-	struct subTypeList *entry;
+    if (retval->nkeys > 0) {
+        retval->keys  = calloc(retval->nkeys, sizeof(struct afsconf_typedKey *));
 
-	entry = opr_queue_Entry(cursor, struct subTypeList, link);
-	retval->keys[i] = afsconf_typedKey_get(entry->key);
-	i++;
+	i = 0;
+        for(opr_queue_Scan(&kvnoEntry->subTypeList, cursor)) {
+	    struct subTypeList *entry;
+
+	    entry = opr_queue_Entry(cursor, struct subTypeList, link);
+	    retval->keys[i] = afsconf_typedKey_get(entry->key);
+	    i++;
+        }
+    } else {
+	retval->keys = NULL;
     }
 
     *keys = retval;
@@ -848,20 +853,29 @@ afsconf_GetAllKeys(struct afsconf_dir *dir, struct afsconf_typedKeyList **keys)
     /* Allocate space for all of these */
     retval = malloc(sizeof(struct afsconf_typedKeyList));
     retval->nkeys = count;
-    retval->keys = calloc(retval->nkeys, sizeof(struct afsconf_typedKey *));
 
-    /* Populate the key list */
-    count = 0;
-    for (opr_queue_Scan(&dir->keyList, typeCursor)) {
-	typeEntry = opr_queue_Entry(typeCursor, struct keyTypeList, link);
-	for (opr_queue_Scan(&typeEntry->kvnoList, kvnoCursor)) {
-	    kvnoEntry = opr_queue_Entry(kvnoCursor, struct kvnoList, link);
-	    for (opr_queue_Scan(&kvnoEntry->subTypeList, subCursor)) {
-		subEntry = opr_queue_Entry(subCursor, struct subTypeList, link);
-		retval->keys[count] = afsconf_typedKey_get(subEntry->key);
-		count++;
+    if (count > 0) {
+	retval->keys = calloc(retval->nkeys,
+			      sizeof(struct afsconf_typedKey *));
+
+	/* Populate the key list */
+        count = 0;
+	for (opr_queue_Scan(&dir->keyList, typeCursor)) {
+	    typeEntry = opr_queue_Entry(typeCursor,
+					struct keyTypeList, link);
+	    for (opr_queue_Scan(&typeEntry->kvnoList, kvnoCursor)) {
+	        kvnoEntry = opr_queue_Entry(kvnoCursor,
+					    struct kvnoList, link);
+	        for (opr_queue_Scan(&kvnoEntry->subTypeList, subCursor)) {
+		    subEntry = opr_queue_Entry(subCursor,
+					       struct subTypeList, link);
+		    retval->keys[count] = afsconf_typedKey_get(subEntry->key);
+		    count++;
+		}
 	    }
 	}
+    } else {
+	retval->keys = NULL;
     }
 
     *keys = retval;
@@ -993,7 +1007,10 @@ afsconf_PutTypedKeyList(struct afsconf_typedKeyList **keys)
 
      for (i=0;i<(*keys)->nkeys;i++)
 	afsconf_typedKey_put(&((*keys)->keys[i]));
-     free((*keys)->keys);
+
+     if ((*keys)->keys != NULL)
+	free((*keys)->keys);
+
      free(*keys);
      *keys = NULL;
 }
