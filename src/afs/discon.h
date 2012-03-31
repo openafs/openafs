@@ -39,7 +39,7 @@ extern void afs_UpdateStatus(struct vcache *avc,
 					afs_uint32 start);
 extern void afs_DisconDiscardAll(afs_ucred_t *);
 
-#define AFS_IS_DISCONNECTED (afs_is_disconnected)
+#define AFS_IS_DISCONNECTED (afs_is_disconnected || afs_is_discon_rw)
 #define AFS_IS_DISCON_RW (afs_is_discon_rw)
 #define AFS_IN_SYNC (afs_in_sync)
 #define AFS_DISCON_LOCK() ObtainReadLock(&afs_discon_lock)
