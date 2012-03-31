@@ -1716,6 +1716,9 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
     char *dirname = NULL;
     char *basename = NULL;
 
+    *outbase = NULL;
+    *outdir = NULL;
+
     if (thru_symlink)
 	*thru_symlink = 0;
 
@@ -1800,10 +1803,10 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
     return 0;
 
 out:
-    if (outdir)
-	free(outdir);
-    if (outbase)
-	free(outbase);
+    if (dirname)
+	free(dirname);
+    if (basename)
+	free(basename);
     return -1;
 }
 
