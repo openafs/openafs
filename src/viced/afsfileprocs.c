@@ -2688,7 +2688,13 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			      &parentwhentargetnotdir, &client, READ_LOCK,
 			      &rights, &anyrights))) {
 	    tstatus = &OutStats->AFSBulkStats_val[i];
-	    tstatus->errorCode = errorCode;
+
+	    if (thost->hostFlags & HERRORTRANS) {
+		tstatus->errorCode = sys_error_to_et(errorCode);
+	    } else {
+		tstatus->errorCode = errorCode;
+	    }
+
 	    PutVolumePackage(acall, parentwhentargetnotdir, targetptr,
 			     (Vnode *) 0, volptr, &client);
 	    parentwhentargetnotdir = (Vnode *) 0;
@@ -2712,7 +2718,13 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 		 Check_PermissionRights(targetptr, client, rights,
 					CHK_FETCHSTATUS, 0))) {
 		tstatus = &OutStats->AFSBulkStats_val[i];
-		tstatus->errorCode = errorCode;
+
+		if (thost->hostFlags & HERRORTRANS) {
+		    tstatus->errorCode = sys_error_to_et(errorCode);
+		} else {
+		    tstatus->errorCode = errorCode;
+		}
+
 		(void)PutVolumePackage(acall, parentwhentargetnotdir,
 				       targetptr, (Vnode *) 0, volptr,
 				       &client);
