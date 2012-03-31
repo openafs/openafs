@@ -313,11 +313,10 @@ truncateDatabase(void)
     afs_int32 code = 0;
     int fd;
 
-    path =
-	(char *)malloc(strlen(globalConfPtr->databaseDirectory) +
-		       strlen(globalConfPtr->databaseName) +
-		       strlen(globalConfPtr->databaseExtension) + 1);
-    if (path == 0)
+    path = malloc(strlen(globalConfPtr->databaseDirectory) +
+		  strlen(globalConfPtr->databaseName) +
+		  strlen(globalConfPtr->databaseExtension) + 1);
+    if (path == NULL)
 	ERROR(-1);
 
     /* construct the database name */
@@ -334,6 +333,8 @@ truncateDatabase(void)
 	} else
 	    close(fd);
     }
+
+    free(path);
 
   error_exit:
     return (code);
