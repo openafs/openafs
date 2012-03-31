@@ -1474,7 +1474,9 @@ static void
 VolumeStats_int(volintInfo *pntr, struct nvldbentry *entry, afs_uint32 server,
 	     afs_int32 part, int voltype)
 {
-    int totalOK, totalNotOK, totalBusy;
+    int totalOK = 0;
+    int totalNotOK = 0;
+    int totalBusy = 0;
 
     DisplayFormat(pntr, server, part, &totalOK, &totalNotOK, &totalBusy, 0, 1,
 		  1);
