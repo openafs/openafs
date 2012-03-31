@@ -1099,17 +1099,18 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	    if ((afsdb_type == 1) && (server_num < MAXHOSTSPERCELL) &&
 		/* Do we want to get TTL data for the A record as well? */
 		(he = gethostbyname(host))) {
-		afs_int32 ipaddr;
-		memcpy(&ipaddr, he->h_addr, he->h_length);
-		cellHostAddrs[server_num] = ipaddr;
-		ports[server_num] = afsdbPort;
-		ipRanks[server_num] = 0;
-		strncpy(cellHostNames[server_num], host,
-			sizeof(cellHostNames[server_num]));
-		server_num++;
-
-		if (!minttl || ttl < minttl)
-		    minttl = ttl;
+		if (he->h_addrtype == AF_INET) {
+		    afs_int32 ipaddr;
+		    memcpy(&ipaddr, he->h_addr, sizeof(ipaddr));
+		    cellHostAddrs[server_num] = ipaddr;
+		    ports[server_num] = afsdbPort;
+		    ipRanks[server_num] = 0;
+		    strncpy(cellHostNames[server_num], host,
+			    sizeof(cellHostNames[server_num]));
+		    server_num++;
+		    if (!minttl || ttl < minttl)
+			minttl = ttl;
+		}
 	    }
 	}
 	if (type == T_SRV) {
@@ -1132,18 +1133,21 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	    if ((server_num < MAXHOSTSPERCELL) &&
 		/* Do we want to get TTL data for the A record as well? */
 		(he = gethostbyname(host))) {
-		afs_int32 ipaddr;
-		memcpy(&ipaddr, he->h_addr, he->h_length);
-		cellHostAddrs[server_num] = ipaddr;
-		ipRanks[server_num] = (p[0] << 8) | p[1];
-		ports[server_num] = htons((p[4] << 8) | p[5]);
-		/* weight = (p[2] << 8) | p[3]; */
-		strncpy(cellHostNames[server_num], host,
-			sizeof(cellHostNames[server_num]));
-		server_num++;
+		if (he->h_addrtype == AF_INET) {
+		    afs_int32 ipaddr;
 
-		if (!minttl || ttl < minttl)
-		    minttl = ttl;
+		    memcpy(&ipaddr, he->h_addr, sizeof(ipaddr));
+		    cellHostAddrs[server_num] = ipaddr;
+		    ipRanks[server_num] = (p[0] << 8) | p[1];
+		    ports[server_num] = htons((p[4] << 8) | p[5]);
+		    /* weight = (p[2] << 8) | p[3]; */
+		    strncpy(cellHostNames[server_num], host,
+			    sizeof(cellHostNames[server_num]));
+		    server_num++;
+
+		    if (!minttl || ttl < minttl)
+			minttl = ttl;
+		}
 	    }
 	}
 
