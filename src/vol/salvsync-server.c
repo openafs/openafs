@@ -188,7 +188,7 @@ LookupNode(afs_uint32 vid, char * partName,
 	   struct SalvageQueueNode ** parent)
 {
     struct rx_queue *qp, *nqp;
-    struct SalvageQueueNode *vsp;
+    struct SalvageQueueNode *vsp = NULL;
     int idx = VSHASH(vid);
 
     for (queue_Scan(&SalvageHashTable[idx], qp, nqp, rx_queue)) {
