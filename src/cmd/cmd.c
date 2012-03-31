@@ -254,6 +254,7 @@ PrintSyntax(struct cmd_syndesc *as)
 	       str,
 	       tp->flags & CMD_OPTIONAL?"]":"");
 	free(str);
+	free(name);
 	len+=xtralen;
     }
     printf("\n");
