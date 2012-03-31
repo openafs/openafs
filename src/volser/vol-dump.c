@@ -253,6 +253,8 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
     }
 
     DoMyVolDump(vp, dp, filename, fromtime);
+
+    free(vp);
 }
 
 
