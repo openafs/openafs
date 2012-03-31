@@ -37,10 +37,8 @@ static char *day[] = {
 };
 
 /* free token list returned by parseLine */
-#ifdef undef
-static
-LocalFreeTokens(alist)
-     struct token *alist;
+static void
+LocalFreeTokens(struct token *alist)
 {
     struct token *nlist;
     for (; alist; alist = nlist) {
@@ -48,9 +46,8 @@ LocalFreeTokens(alist)
 	free(alist->key);
 	free(alist);
     }
-    return 0;
+    return;
 }
-#endif
 
 static int
 space(int x)
@@ -80,9 +77,9 @@ LocalParseLine(char *aline, struct token **alist)
 	    if (inToken) {
 		inToken = 0;	/* end of this token */
 		*tptr++ = 0;
-		ttok = (struct token *)malloc(sizeof(struct token));
+		ttok = malloc(sizeof(struct token));
 		ttok->next = NULL;
-		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
+		ttok->key = malloc(strlen(tbuffer) + 1);
 		strcpy(ttok->key, tbuffer);
 		if (last) {
 		    last->next = ttok;
@@ -251,11 +248,11 @@ ktime_ParsePeriodic(char *adate, struct ktime *ak)
 	/* look at each token */
 	if (strcmp(tt->key, "now") == 0) {
 	    ak->mask |= KTIME_NOW;
-	    return 0;
+	    goto out;
 	}
 	if (strcmp(tt->key, "never") == 0) {
 	    ak->mask |= KTIME_NEVER;
-	    return 0;
+	    goto out;
 	}
 	if (strcmp(tt->key, "at") == 0)
 	    continue;
@@ -264,14 +261,17 @@ ktime_ParsePeriodic(char *adate, struct ktime *ak)
 	if (isdigit(tt->key[0])) {
 	    /* parse a time */
 	    code = ParseTime(ak, tt->key);
-	    if (code)
-		return -1;
+	    if (code) {
+		code = -1;
+		goto out;
+	    }
 	    continue;
 	}
 	/* otherwise use keyword table */
 	for (tp = ptkeys;; tp++) {
 	    if (tp->key == NULL) {
-		return -1;
+		code = -1;
+		goto out;
 	    }
 	    if (strcmp(tp->key, tt->key) == 0)
 		break;
@@ -286,23 +286,31 @@ ktime_ParsePeriodic(char *adate, struct ktime *ak)
 	    /* am or pm token */
 	    if ((tp->value & 0xff) == 1) {
 		/* pm */
-		if (!(ak->mask & KTIME_HOUR))
-		    return -1;
-		if (ak->hour < 12)
+		if (!(ak->mask & KTIME_HOUR)) {
+		    code = -1;
+		    goto out;
+		}
+		if (ak->hour < 12) {
 		    ak->hour += 12;
 		/* 12 is 12 PM */
-		else if (ak->hour != 12)
-		    return -1;
+		} else if (ak->hour != 12) {
+		    code = -1;
+		    goto out;
+		}
 	    } else {
 		/* am is almost a noop, except that we map 12:01 am to 0:01 */
-		if (ak->hour > 12)
-		    return -1;
+		if (ak->hour > 12) {
+		    code = -1;
+		    goto out;
+		}
 		if (ak->hour == 12)
 		    ak->hour = 0;
 	    }
 	}
     }
-    return 0;
+out:
+    LocalFreeTokens(tt);
+    return code;
 }
 
 /* ktime_DisplayString
