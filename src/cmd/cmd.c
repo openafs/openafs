@@ -42,9 +42,8 @@ NName(char *a1, char *a2)
     if (strlen(a1) == 0) {
         return "";
     } else {
-        strncpy(tbuffer, a1, sizeof(tbuffer));
-        strncat(tbuffer, a2, sizeof(tbuffer));
-        tbuffer[sizeof(tbuffer)-1]='\0';
+        strlcpy(tbuffer, a1, sizeof(tbuffer));
+        strlcat(tbuffer, a2, sizeof(tbuffer));
         return tbuffer;
     }
 }
