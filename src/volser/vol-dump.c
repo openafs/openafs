@@ -54,9 +54,10 @@ int VolumeChanged;		/* needed by physio - leave alone */
 int verbose = 0;
 
 /* Forward Declarations */
-void HandleVolume(struct DiskPartition64 *partP, char *name, char *filename, int fromtime);
-Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
-		     struct VolumeHeader *header);
+static void HandleVolume(struct DiskPartition64 *partP, char *name,
+			 char *filename, int fromtime);
+static Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
+			    struct VolumeHeader *header);
 static void DoMyVolDump(Volume * vp, struct DiskPartition64 *dp,
 			char *dumpfile, int fromtime);
 
@@ -67,7 +68,7 @@ static void DoMyVolDump(Volume * vp, struct DiskPartition64 *dp,
 char name[VMAXPATHLEN];
 
 
-int
+static int
 ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 {
     int code;
@@ -80,7 +81,7 @@ ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 }
 
 
-Volume *
+static Volume *
 AttachVolume(struct DiskPartition64 * dp, char *volname,
 	     struct VolumeHeader * header)
 {
@@ -209,7 +210,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-void
+static void
 HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtime)
 {
     struct VolumeHeader header;
