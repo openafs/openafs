@@ -458,7 +458,7 @@ _parseExtendedKeyFile(struct afsconf_dir *dir, char *fileName)
 {
     int fd, i, code;
     afs_int32 nkeys;
-    struct afsconf_typedKey *key;
+    struct afsconf_typedKey *key = NULL;
 
     fd = open(fileName, O_RDONLY);
     if (fd < 0)
@@ -530,6 +530,9 @@ _parseExtendedKeyFile(struct afsconf_dir *dir, char *fileName)
     return 0;
 
 fail:
+    if (key)
+	afsconf_typedKey_put(&key);
+
     close(fd);
     return EIO;
 }
