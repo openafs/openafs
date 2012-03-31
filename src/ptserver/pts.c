@@ -471,16 +471,26 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
     struct idlist ids, tids;	/* local copy, if not ret. ids */
     int goodCount = 0;
 
+    /* Initialise our outputs */
+    memset(lids, 0, sizeof(struct idlist));
+    if (lnames)
+	memset(lnames, 0, sizeof(struct namelist));
+
     for (i = as->parms[0].items; i; i = i->next)
 	n++;
-    lids->idlist_val = (afs_int32 *) malloc(n * sizeof(afs_int32));
+
+    /* Nothing to do, so bail */
+    if (n == 0)
+	return 0;
+
+    lids->idlist_val = malloc(n * sizeof(afs_int32));
     lids->idlist_len = n;
-    ids.idlist_val = (afs_int32 *) malloc(n * sizeof(afs_int32));
+    ids.idlist_val = malloc(n * sizeof(afs_int32));
     ids.idlist_len = n;
-    names.namelist_val = (prname *) malloc(n * PR_MAXNAMELEN);
+    names.namelist_val = malloc(n * PR_MAXNAMELEN);
     names.namelist_len = n;
     if (lnames) {
-	lnames->namelist_val = (prname *) malloc(n * PR_MAXNAMELEN);
+	lnames->namelist_val = malloc(n * PR_MAXNAMELEN);
 	lnames->namelist_len = 0;
     }
     for (i = as->parms[0].items; i; i = i->next) {
