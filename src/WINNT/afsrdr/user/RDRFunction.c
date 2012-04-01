@@ -404,7 +404,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
              * status information.  If not, perform a bulk status lookup of multiple
              * entries in order to reduce the number of RPCs issued to the file server.
              */
-            if ((scp->flags & CM_SCACHEFLAG_EACCESS))
+            if (cm_EAccesFindEntry(userp, &scp->fid))
                 bMustFake = TRUE;
             else if (!cm_HaveCallback(scp)) {
                 lock_ReleaseWrite(&scp->rw);
@@ -1759,7 +1759,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     Fid.unique = FileId.Unique;
     Fid.hash   = FileId.Hash;
 
-    code = cm_GetSCache(&Fid, &dscp->fid, &scp, userp, &req);
+    code = cm_GetSCache(&Fid, dscp ? &dscp->fid : NULL, &scp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_CleanupFileEntry cm_GetSCache object FID failure code=0x%x",
                  code);

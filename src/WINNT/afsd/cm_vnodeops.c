@@ -12,6 +12,7 @@
 #include <roken.h>
 
 #include <afs/stds.h>
+#include <afs/unified_afs.h>
 
 #include <windows.h>
 #include <winsock2.h>
@@ -2350,7 +2351,7 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
     if (tscp) {
         if (lock_TryWrite(&tscp->rw)) {
             /* we have an entry that we can look at */
-            if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+            if (!cm_EAccesFindEntry(bsp->userp, &tscp->fid) && cm_HaveCallback(tscp)) {
                 /* we have a callback on it.  Don't bother
                  * fetching this stat entry, since we're happy
                  * with the info we have.
@@ -2516,6 +2517,13 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
             if (inlinebulk && (&bbp->stats[j])->errorCode) {
                 cm_req_t treq = *reqp;
                 cm_Analyze(NULL, userp, &treq, &tfid, 0, &volSync, NULL, &cbReq, (&bbp->stats[j])->errorCode);
+                switch ((&bbp->stats[j])->errorCode) {
+                case EACCES:
+                case UAEACCES:
+                case EPERM:
+                case UAEPERM:
+                    cm_EAccesAddEntry(userp, &tfid, &dscp->fid);
+                }
             } else {
                 code = cm_GetSCache(&tfid, &dscp->fid, &scp, userp, reqp);
                 if (code != 0)
@@ -2547,7 +2555,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                 if ((scp->cbServerp == NULL &&
                      !(scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESTORING))) ||
                      (scp->flags & CM_SCACHEFLAG_PURERO) ||
-                     (scp->flags & CM_SCACHEFLAG_EACCESS))
+                     cm_EAccesFindEntry(userp, &scp->fid))
                 {
                     lock_ConvertRToW(&scp->rw);
                     lostRace = cm_EndCallbackGrantingCall(scp, &cbReq,
@@ -2589,6 +2597,7 @@ cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
 
     bbp = malloc(sizeof(cm_bulkStat_t));
     memset(bbp, 0, sizeof(cm_bulkStat_t));
+    bbp->userp = userp;
     bbp->bufOffset = *offsetp;
 
     lock_ReleaseWrite(&dscp->rw);

@@ -38,37 +38,41 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *
                         afs_uint32 *outRightsp)
 {
     cm_scache_t *aclScp;
-    long code;
+    long code = 0;
     cm_fid_t tfid;
     int didLock;
     long trights;
     int release = 0;    /* Used to avoid a call to cm_HoldSCache in the directory case */
+    cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
 
     didLock = 0;
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY || cm_accessPerFileCheck) {
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+        cm_accessPerFileCheck ||
+        !volp || (volp->flags & CM_VOLUMEFLAG_DFS_VOLUME)) {
         aclScp = scp;   /* not held, not released */
     } else {
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
         aclScp = cm_FindSCache(&tfid);
-        if (!aclScp)
-            return 0;
+        if (!aclScp) {
+            code = 0;
+            goto done;
+        }
+        release = 1;
         if (aclScp != scp) {
             if (aclScp->fid.vnode < scp->fid.vnode)
                 lock_ReleaseWrite(&scp->rw);
             lock_ObtainRead(&aclScp->rw);
+	    didLock = 1;
             if (aclScp->fid.vnode < scp->fid.vnode)
                 lock_ObtainWrite(&scp->rw);
 
-	    /* check that we have a callback, too */
+            /* check that we have a callback, too */
             if (!cm_HaveCallback(aclScp)) {
                 /* can't use it */
-                lock_ReleaseRead(&aclScp->rw);
-                cm_ReleaseSCache(aclScp);
-                return 0;
+                code = 0;
+                goto done;
             }
-            didLock = 1;
         }
-        release = 1;
     }
 
     lock_AssertAny(&aclScp->rw);
@@ -133,6 +137,8 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *
     /* fall through */
 
   done:
+    if (volp)
+        cm_PutVolume(volp);
     if (didLock)
         lock_ReleaseRead(&aclScp->rw);
     if (release)
@@ -154,6 +160,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     cm_fid_t tfid;
     cm_scache_t *aclScp = NULL;
     int got_cb = 0;
+    cm_volume_t * volp = cm_GetVolumeByFID(&scp->fid);
 
     /* pretty easy: just force a pass through the fetch status code */
 
@@ -162,13 +169,16 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     /* first, start by finding out whether we have a directory or something
      * else, so we can find what object's ACL we need.
      */
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY || cm_accessPerFileCheck) {
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+        cm_accessPerFileCheck ||
+        !volp || (volp->flags & CM_VOLUMEFLAG_DFS_VOLUME))
+    {
 	code = cm_SyncOp(scp, NULL, userp, reqp, 0,
 			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
 	if (!code)
 	    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    else
-        osi_Log3(afsd_logp, "GetAccessRights syncop failure scp %x user %x code %x", scp, userp, code);
+        else
+            osi_Log3(afsd_logp, "GetAccessRights syncop failure scp %x user %x code %x", scp, userp, code);
     } else {
         /* not a dir, use parent dir's acl */
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
@@ -194,5 +204,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     }
 
   _done:
+    if (volp)
+        cm_PutVolume(volp);
     return code;
 }

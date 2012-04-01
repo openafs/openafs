@@ -254,6 +254,7 @@ extern int cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *u
 
 /* rock for bulk stat calls */
 typedef struct cm_bulkStat {
+    cm_user_t *userp;
     osi_hyper_t bufOffset;	/* only do it for things in this buffer page */
 
     /* info for the actual call */

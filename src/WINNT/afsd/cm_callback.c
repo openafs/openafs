@@ -2054,6 +2054,11 @@ void cm_CheckCBExpiration(void)
 
             cm_CallbackNotifyChange(scp);
 
+            if (scp->fileType == CM_SCACHETYPE_DIRECTORY &&
+                !(volp && (volp->flags & CM_VOLUMEFLAG_DFS_VOLUME)) &&
+                !cm_accessPerFileCheck)
+                cm_EAccesClearParentEntries(&scp->fid);
+
           scp_complete:
             if (volp)
                 cm_PutVolume(volp);

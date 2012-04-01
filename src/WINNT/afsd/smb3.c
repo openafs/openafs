@@ -4577,6 +4577,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
         cm_bulkStat_t *bsp = malloc(sizeof(cm_bulkStat_t));
 
         memset(bsp, 0, sizeof(cm_bulkStat_t));
+        bsp->userp = userp;
 
         for (patchp = *dirPatchespp, count=0;
              patchp;
@@ -4604,7 +4605,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
                         continue;
                     }
 #endif /* AFS_FREELANCE_CLIENT */
-                    if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                    if (!cm_EAccesFindEntry(userp, &tscp->fid) && cm_HaveCallback(tscp)) {
                         /* we have a callback on it.  Don't bother
                         * fetching this stat entry, since we're happy
                         * with the info we have.
@@ -4626,6 +4627,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
             if (bsp->counter == AFSCBMAX) {
                 code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
                 memset(bsp, 0, sizeof(cm_bulkStat_t));
+                bsp->userp = userp;
             }
         }
 
@@ -4679,7 +4681,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
             continue;
 
         lock_ObtainWrite(&scp->rw);
-        if (mustFake || (scp->flags & CM_SCACHEFLAG_EACCESS) || !cm_HaveCallback(scp)) {
+        if (mustFake || cm_EAccesFindEntry(userp, &scp->fid) || !cm_HaveCallback(scp)) {
             lock_ReleaseWrite(&scp->rw);
 
             /* Plug in fake timestamps. A time stamp of 0 causes 'invalid parameter'
