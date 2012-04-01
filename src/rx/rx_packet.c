@@ -1975,10 +1975,10 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tpeer.ifMTU = htons(tp->ifMTU);
 			tpeer.idleWhen = htonl(tp->idleWhen);
 			tpeer.refCount = htons(tp->refCount);
-			tpeer.burstSize = tp->burstSize;
-			tpeer.burst = tp->burst;
-			tpeer.burstWait.sec = htonl(tp->burstWait.sec);
-			tpeer.burstWait.usec = htonl(tp->burstWait.usec);
+			tpeer.burstSize = 0;
+			tpeer.burst = 0;
+			tpeer.burstWait.sec = 0;
+			tpeer.burstWait.usec = 0;
 			tpeer.rtt = htonl(tp->rtt);
 			tpeer.rtt_dev = htonl(tp->rtt_dev);
 			tpeer.nSent = htonl(tp->nSent);

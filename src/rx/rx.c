@@ -2933,7 +2933,6 @@ rxi_FindPeer(afs_uint32 host, u_short port,
 	    pp->host = host;	/* set here or in InitPeerParams is zero */
 	    pp->port = port;
 	    MUTEX_INIT(&pp->peer_lock, "peer_lock", MUTEX_DEFAULT, 0);
-	    queue_Init(&pp->congestionQueue);
 	    queue_Init(&pp->rpcStats);
 	    pp->next = rx_peerHashTable[hashIndex];
 	    rx_peerHashTable[hashIndex] = pp;
@@ -7275,9 +7274,8 @@ rx_PrintStats(FILE * file)
 void
 rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 {
-    fprintf(file, "Peer %x.%d.  " "Burst size %d, " "burst wait %d.%06d.\n",
-	    ntohl(peer->host), (int)ntohs(peer->port), (int)peer->burstSize,
-	    (int)peer->burstWait.sec, (int)peer->burstWait.usec);
+    fprintf(file, "Peer %x.%d.\n",
+	    ntohl(peer->host), (int)ntohs(peer->port));
 
     fprintf(file,
 	    "   Rtt %d, " "total sent %d, " "resent %d\n",
@@ -7652,8 +7650,6 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	peer->ifMTU = ntohs(peer->ifMTU);
 	peer->idleWhen = ntohl(peer->idleWhen);
 	peer->refCount = ntohs(peer->refCount);
-	peer->burstWait.sec = ntohl(peer->burstWait.sec);
-	peer->burstWait.usec = ntohl(peer->burstWait.usec);
 	peer->rtt = ntohl(peer->rtt);
 	peer->rtt_dev = ntohl(peer->rtt_dev);
 	peer->timeout.sec = 0;
@@ -7706,10 +7702,10 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->ifMTU = tp->ifMTU;
 		peerStats->idleWhen = tp->idleWhen;
 		peerStats->refCount = tp->refCount;
-		peerStats->burstSize = tp->burstSize;
-		peerStats->burst = tp->burst;
-		peerStats->burstWait.sec = tp->burstWait.sec;
-		peerStats->burstWait.usec = tp->burstWait.usec;
+		peerStats->burstSize = 0;
+		peerStats->burst = 0;
+		peerStats->burstWait.sec = 0;
+		peerStats->burstWait.usec = 0;
 		peerStats->rtt = tp->rtt;
 		peerStats->rtt_dev = tp->rtt_dev;
 		peerStats->timeout.sec = 0;
