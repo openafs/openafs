@@ -188,15 +188,13 @@ void cm_CheckTokenCache(time_t now)
                         }
                         _InterlockedAnd(&ucellp->flags, ~CM_UCELLFLAG_RXKAD);
                         ucellp->gen++;
-                        bExpired=TRUE;
+                        lock_ReleaseMutex(&userp->mx);
+                        cm_ResetACLCache(ucellp->cellp, userp);
+                        lock_ObtainMutex(&userp->mx);
                     }
                 }
             }
             lock_ReleaseMutex(&userp->mx);
-            if (bExpired) {
-                bExpired=FALSE;
-                cm_ResetACLCache(NULL, userp);
-            }
         }
     }
     lock_ReleaseRead(&smb_rctLock);

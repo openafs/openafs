@@ -1407,6 +1407,9 @@ afsd_InitCM(char **reasonP)
         return -1;
     }
 
+    /* Must be called after cm_InitMappedMemory. */
+    cm_EAccesInitCache();
+
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
     if (cm_InitDNS(cm_dnsEnabled) == -1)
         cm_dnsEnabled = 0;  /* init failed, so deactivate */

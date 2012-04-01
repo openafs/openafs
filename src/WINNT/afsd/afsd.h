@@ -48,6 +48,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_volume.h"
 #include "cm_dcache.h"
 #include "cm_access.h"
+#include "cm_eacces.h"
 #include "cm_dir.h"
 #include "cm_utils.h"
 #include "cm_vnodeops.h"

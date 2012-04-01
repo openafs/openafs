@@ -2362,6 +2362,7 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         goto done;
     }
     memset(bsp, 0, sizeof(cm_bulkStat_t));
+    bsp->userp = userp;
 
     bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
     if (!bs_errorCodep) {
@@ -2390,7 +2391,7 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         if (tscp) {
             if (lock_TryWrite(&tscp->rw)) {
                 /* we have an entry that we can look at */
-                if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                if (!cm_EAccesFindEntry(userp, &tscp->fid) && cm_HaveCallback(tscp)) {
                     /* we have a callback on it.  Don't bother
                      * fetching this stat entry, since we're happy
                      * with the info we have.
@@ -2427,6 +2428,8 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
                 goto done;
             }
             memset(bsp, 0, sizeof(cm_bulkStat_t));
+            bsp->userp = userp;
+
             /*
              * In order to prevent the directory callback from expiring
              * on really large directories with many symlinks to mount
@@ -2497,6 +2500,7 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
         goto done;
     }
     memset(bsp, 0, sizeof(cm_bulkStat_t));
+    bsp->userp = userp;
 
     bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
     if (!bs_errorCodep) {
@@ -2553,7 +2557,7 @@ cm_BPlusDirEnumBulkStatOne(cm_direnum_t *enump, cm_scache_t *scp)
 
             if (lock_TryWrite(&tscp->rw)) {
                 /* we have an entry that we can look at */
-                if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                if (!cm_EAccesFindEntry(userp, &tscp->fid) && cm_HaveCallback(tscp)) {
                     /* we have a callback on it.  Don't bother
                      * fetching this stat entry, since we're happy
                      * with the info we have.
@@ -2629,6 +2633,7 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
         goto done;
     }
     memset(bsp, 0, sizeof(cm_bulkStat_t));
+    bsp->userp = userp;
 
     bs_errorCodep = malloc(sizeof(DWORD *) * AFSCBMAX);
     if (!bs_errorCodep) {
@@ -2657,7 +2662,7 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
         if (tscp) {
             if (lock_TryWrite(&tscp->rw)) {
                 /* we have an entry that we can look at */
-                if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                if (!cm_EAccesFindEntry(userp, &tscp->fid) && cm_HaveCallback(tscp)) {
                     /* we have a callback on it.  Don't bother
                      * fetching this stat entry, since we're happy
                      * with the info we have.

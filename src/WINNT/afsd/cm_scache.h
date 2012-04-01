@@ -291,7 +291,6 @@ typedef struct cm_scache {
 #define CM_SCACHEFLAG_ANYWATCH \
 			(CM_SCACHEFLAG_WATCHED | CM_SCACHEFLAG_WATCHEDSUBTREE)
 
-#define CM_SCACHEFLAG_EACCESS           0x200000 /* Bulk Stat returned EACCES */
 #define CM_SCACHEFLAG_SMB_FID	        0x400000
 #define CM_SCACHEFLAG_LOCAL             0x800000 /* Locally modified */
 #define CM_SCACHEFLAG_BULKREADING       0x1000000/* Bulk read in progress */

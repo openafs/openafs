@@ -151,7 +151,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 	return -1;
     }
 
-
     if (scp->flags & CM_SCACHEFLAG_SMB_FID) {
 	osi_Log1(afsd_logp,"cm_RecycleSCache CM_SCACHEFLAG_SMB_FID detected scp 0x%p", scp);
 #ifdef DEBUG
@@ -170,6 +169,15 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 
     cm_RemoveSCacheFromHashTable(scp);
 
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY &&
+         !cm_accessPerFileCheck) {
+        cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
+
+        if (!(volp && (volp->flags & CM_VOLUMEFLAG_DFS_VOLUME)))
+            cm_EAccesClearParentEntries(&fid);
+        cm_PutVolume(volp);
+    }
+
     /* invalidate so next merge works fine;
      * also initialize some flags */
     scp->fileType = 0;
@@ -179,8 +187,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		     | CM_SCACHEFLAG_RO
 		     | CM_SCACHEFLAG_PURERO
 		     | CM_SCACHEFLAG_OVERQUOTA
-		     | CM_SCACHEFLAG_OUTOFSPACE
-		     | CM_SCACHEFLAG_EACCESS));
+		     | CM_SCACHEFLAG_OUTOFSPACE));
     scp->serverModTime = 0;
     scp->dataVersion = CM_SCACHE_VERSION_BAD;
     scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
@@ -1324,6 +1331,10 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
             if ((flags & CM_SCACHESYNC_FORCECB) || !cm_HaveCallback(scp)) {
                 osi_Log1(afsd_logp, "CM SyncOp getting callback on scp 0x%p",
                           scp);
+
+                if (cm_EAccesFindEntry(userp, &scp->fid))
+                    return CM_ERROR_NOACCESS;
+
                 if (bufLocked)
 		    lock_ReleaseMutex(&bufp->mx);
                 code = cm_GetCallback(scp, userp, reqp, (flags & CM_SCACHESYNC_FORCECB)?1:0);
@@ -1655,7 +1666,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         case UAEACCES:
         case EPERM:
         case UAEPERM:
-            _InterlockedOr(&scp->flags, CM_SCACHEFLAG_EACCESS);
+            cm_EAccesAddEntry(userp, &scp->fid, &dscp->fid);
         }
         osi_Log2(afsd_logp, "Merge, Failure scp 0x%p code 0x%x", scp, statusp->errorCode);
 
@@ -1689,8 +1700,6 @@ void cm_MergeStatus(cm_scache_t *dscp,
 
         if (RDR_Initialized)
             rdr_invalidate = 1;
-    } else {
-	_InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_EACCESS);
     }
 
     dataVersion = statusp->dataVersionHigh;
@@ -1951,6 +1960,14 @@ void cm_MergeStatus(cm_scache_t *dscp,
             statep->state = vl_online;
             lock_ReleaseWrite(&volp->rw);
         }
+    }
+
+    /* Remove cached EACCES / EPERM errors if the file is a directory */
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY &&
+        !(volp && (volp->flags & CM_VOLUMEFLAG_DFS_VOLUME)) &&
+        !cm_accessPerFileCheck)
+    {
+        cm_EAccesClearParentEntries(&scp->fid);
     }
 
   done:

@@ -4660,6 +4660,7 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
         cm_bulkStat_t *bsp = malloc(sizeof(cm_bulkStat_t));
 
         memset(bsp, 0, sizeof(cm_bulkStat_t));
+        bsp->userp = userp;
 
         for (patchp = *dirPatchespp, count=0;
              patchp;
@@ -4670,7 +4671,7 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
             if (tscp) {
                 if (lock_TryWrite(&tscp->rw)) {
                     /* we have an entry that we can look at */
-                    if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                    if (!cm_EAccesFindEntry(userp, &tscp->fid) && cm_HaveCallback(tscp)) {
                         /* we have a callback on it.  Don't bother
                         * fetching this stat entry, since we're happy
                         * with the info we have.
@@ -4692,6 +4693,7 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
             if (bsp->counter == AFSCBMAX) {
                 code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
                 memset(bsp, 0, sizeof(cm_bulkStat_t));
+                bsp->userp = userp;
             }
         }
 
@@ -4720,7 +4722,7 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
             continue;
         }
         lock_ObtainWrite(&scp->rw);
-        if (mustFake || (scp->flags & CM_SCACHEFLAG_EACCESS) || !cm_HaveCallback(scp)) {
+        if (mustFake || cm_EAccesFindEntry(userp, &scp->fid) || !cm_HaveCallback(scp)) {
             lock_ReleaseWrite(&scp->rw);
 
             /* set the attribute */

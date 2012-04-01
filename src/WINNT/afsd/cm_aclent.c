@@ -404,6 +404,8 @@ cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
     }
     lock_ReleaseRead(&cm_scacheLock);
 
+    cm_EAccesClearUserEntries(userp, cellp->cellID);
+
     if (RDR_Initialized) {
         lock_ObtainRead(&cm_volumeLock);
         for (hash = 0; hash < cm_data.volumeHashTableSize; hash++) {

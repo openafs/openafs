@@ -60,6 +60,7 @@ INCFILES =\
         $(INCFILEDIR)\cm_volstat.h \
 	$(INCFILEDIR)\cm_dcache.h \
 	$(INCFILEDIR)\cm_access.h \
+	$(INCFILEDIR)\cm_eacces.h \
 	$(INCFILEDIR)\cm_vnodeops.h \
 	$(INCFILEDIR)\cm_dir.h \
 	$(INCFILEDIR)\cm_utils.h \
@@ -129,6 +130,7 @@ AFSDOBJS=\
 	$(OUT)\cm_scache.obj \
 	$(OUT)\cm_dcache.obj \
 	$(OUT)\cm_access.obj \
+	$(OUT)\cm_eacces.obj \
 	$(OUT)\cm_callback.obj \
 	$(OUT)\cm_vnodeops.obj \
 	$(OUT)\cm_dir.obj \

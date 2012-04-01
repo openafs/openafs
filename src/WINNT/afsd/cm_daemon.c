@@ -42,6 +42,7 @@ long cm_daemonPerformanceTuningInterval = 0;
 long cm_daemonRankServerInterval = 600;
 long cm_daemonRDRShakeExtentsInterval = 0;
 long cm_daemonAfsdHookReloadInterval = 0;
+long cm_daemonEAccesCheckInterval = 1800;
 
 osi_rwlock_t *cm_daemonLockp;
 afs_uint64 *cm_bkgQueueCountp;		/* # of queued requests */
@@ -505,6 +506,7 @@ void * cm_Daemon(void *vparm)
     time_t lastServerRankCheck;
     time_t lastRDRShakeExtents;
     time_t lastAfsdHookReload;
+    time_t lastEAccesCheck;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
@@ -564,6 +566,7 @@ void * cm_Daemon(void *vparm)
         lastRDRShakeExtents = now - cm_daemonRDRShakeExtentsInterval/2 * (rand() % cm_daemonRDRShakeExtentsInterval);
     if (cm_daemonAfsdHookReloadInterval)
         lastAfsdHookReload = now;
+    lastEAccesCheck = now;
 
     hHookDll = cm_LoadAfsdHookLib();
     if (hHookDll)
@@ -715,6 +718,16 @@ void * cm_Daemon(void *vparm)
             powerStateSuspended == 0) {
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
+            if (daemon_ShutdownFlag == 1)
+                break;
+	    now = osi_Time();
+        }
+
+        if (now > lastEAccesCheck + cm_daemonEAccesCheckInterval &&
+             daemon_ShutdownFlag == 0 &&
+             powerStateSuspended == 0) {
+            lastEAccesCheck = now;
+            cm_EAccesClearOutdatedEntries();
             if (daemon_ShutdownFlag == 1)
                 break;
 	    now = osi_Time();
