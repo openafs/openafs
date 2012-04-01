@@ -1065,34 +1065,35 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
 	lock_ObtainWrite(&cm_scacheLock);
 	for (hash = 0; hash < cm_data.scacheHashTableSize; hash++) {
             for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
-                cm_HoldSCacheNoLock(scp);
-                lock_ReleaseWrite(&cm_scacheLock);
-                lock_ObtainWrite(&scp->rw);
-                discarded = 0;
                 if (scp->cbExpires > 0 && scp->cbServerp != NULL) {
-                    /* we have a callback, now decide if we should clear it */
-                    if (cm_ServerEqual(scp->cbServerp, tsp)) {
-                        osi_Log4(afsd_logp, "InitCallbackState3 Discarding SCache scp 0x%p vol %u vn %u uniq %u",
-                                  scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
-                        discardFid = scp->fid;
-                        discardType = scp->fileType;
-                        cm_DiscardSCache(scp);
-                        discarded = 1;
+                    cm_HoldSCacheNoLock(scp);
+                    lock_ReleaseWrite(&cm_scacheLock);
+                    discarded = 0;
+                    lock_ObtainWrite(&scp->rw);
+                    if (scp->cbExpires > 0 && scp->cbServerp != NULL) {
+                        /* we have a callback, now decide if we should clear it */
+                        if (cm_ServerEqual(scp->cbServerp, tsp)) {
+                            osi_Log4(afsd_logp, "InitCallbackState3 Discarding SCache scp 0x%p vol %u vn %u uniq %u",
+                                     scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
+                            discardFid = scp->fid;
+                            discardType = scp->fileType;
+                            cm_DiscardSCache(scp);
+                            discarded = 1;
+                        }
                     }
-                }
-                lock_ReleaseWrite(&scp->rw);
-                if (discarded) {
-                    cm_CallbackNotifyChange(scp);
-                    if (RDR_Initialized)
-                        RDR_InvalidateObject(discardFid.cell, discardFid.volume, discardFid.vnode, discardFid.unique,
-                                             discardFid.hash, discardType, AFS_INVALIDATE_EXPIRED);
-                }
-                lock_ObtainWrite(&cm_scacheLock);
-                cm_ReleaseSCacheNoLock(scp);
+                    lock_ReleaseWrite(&scp->rw);
+                    if (discarded) {
+                        cm_CallbackNotifyChange(scp);
+                        if (RDR_Initialized)
+                            RDR_InvalidateObject(discardFid.cell, discardFid.volume, discardFid.vnode, discardFid.unique,
+                                                 discardFid.hash, discardType, AFS_INVALIDATE_EXPIRED);
+                    }
+                    lock_ObtainWrite(&cm_scacheLock);
+                    cm_ReleaseSCacheNoLock(scp);
 
-                if (discarded && (scp->flags & CM_SCACHEFLAG_PURERO))
-                    cm_callbackDiscardROVolumeByFID(&scp->fid);
-
+                    if (discarded && (scp->flags & CM_SCACHEFLAG_PURERO))
+                        cm_callbackDiscardROVolumeByFID(&scp->fid);
+                }
             }	/* search one hash bucket */
 	}      	/* search all hash buckets */
 
