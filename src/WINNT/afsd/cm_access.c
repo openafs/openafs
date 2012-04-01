@@ -78,7 +78,9 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *
      * and can definitively answer.
      */
 #ifdef AFS_FREELANCE_CLIENT
-    if (cm_freelanceEnabled && aclScp == cm_data.rootSCachep)
+    if (cm_freelanceEnabled &&
+        aclScp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+        aclScp->fid.volume==AFS_FAKE_ROOT_VOL_ID)
     {
     	*outRightsp = aclScp->anyAccess;
     } else
