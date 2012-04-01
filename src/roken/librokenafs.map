@@ -6,8 +6,8 @@
 		rk_daemon;
 		err;
 		errx;
-		getopt;
-		getprogname;
+		rk_getopt;
+		rk_getprogname;
 		issuid;
 		net_read;
 		net_write;
