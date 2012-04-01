@@ -16,11 +16,11 @@ UPSTREAM = $(TOP_SRCDIR)/external/heimdal/roken
 
 SHLIBOBJ = librokenafs.${SHLIB_SUFFIX}.${LIBMAJOR}.${LIBMINOR}
 
-buildtools: $(ROKEN_HEADERS) $(HEADERS) $(TOP_LIBDIR)/librokenafs.a
-
 all: $(ROKEN_HEADERS) $(HEADERS) \
 	$(TOP_LIBDIR)/$(SHLIBOBJ) \
 	$(TOP_LIBDIR)/librokenafs.a
+
+buildtools: $(ROKEN_HEADERS) $(HEADERS) $(TOP_LIBDIR)/librokenafs.a
 
 install: librokenafs.a $(SHLIBOBJ)
 	$(TOP_OBJDIR)/src/config/shlib-install -d $(DESTDIR)$(libdir) \
