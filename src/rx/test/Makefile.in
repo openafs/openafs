@@ -22,14 +22,14 @@ BASICINCLS =  ../rx_clock.h ../rx_queue.h ../rx_event.h
 
 LINK = $(AFS_LDRULE) $@.o ${LIBS}
 MT_LINK = $(CC) $(MT_CFLAGS) $(COMMON_CFLAGS) $(AFS_LDFLAGS) -o $@ \
-	  $@.o $(TOP_LIBDIR)/libafsrpc.a $(LIB_hcrypto) $(LIB_roken) \
+	  $@.o $(TOP_LIBDIR)/libafsrpc.a $(TOP_LIBDIR)/libopr.a \
+	  $(LIB_hcrypto) $(LIB_roken) \
 	  $(MT_LIBS) $(XLIBS)
 
 TESTS = testclient testserver kstest kctest testqueue tableGen generator
 
 TH_TESTS = th_testserver th_testclient
 
-.IGNORE: 
 
 all: test
 
@@ -67,7 +67,7 @@ th_testserver.o: testserver.c
 	$(MT_CC) $(COMMON_CFLAGS) $(MT_CFLAGS) -c -o th_testserver.o \
 		${srcdir}/testserver.c
 
-th_rxperf: th_rxperf.o ${TOP_LIBDIR}/libafsrpc.a
+th_rxperf: th_rxperf.o ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libopr.a
 	$(MT_LINK)
 
 th_rxperf.o: rxperf.c

@@ -967,7 +967,7 @@ rxperf_server(int argc, char **argv)
 	    if (ptr != 0 && ptr[0] != '\0')
 		errx(1, "can't resolve readsize");
 	    if (rxread_size > sizeof(somebuf))
-		errx(1, "%d > sizeof(somebuf) (%d)", rxread_size,
+		errx(1, "%d > sizeof(somebuf) (%"AFS_SIZET_FMT")", rxread_size,
 		     sizeof(somebuf));
 	    break;
 	case 's':
@@ -995,7 +995,7 @@ rxperf_server(int argc, char **argv)
 	    if (ptr != 0 && ptr[0] != '\0')
 		errx(1, "can't resolve writesize");
 	    if (rxwrite_size > sizeof(somebuf))
-		errx(1, "%d > sizeof(somebuf) (%d)", rxwrite_size,
+		errx(1, "%d > sizeof(somebuf) (%"AFS_SIZET_FMT")", rxwrite_size,
 		     sizeof(somebuf));
 	    break;
 	case 'j':
@@ -1114,7 +1114,7 @@ rxperf_client(int argc, char **argv)
 	    if (ptr != 0 && ptr[0] != '\0')
 		errx(1, "can't resolve readsize");
 	    if (rxread_size > sizeof(somebuf))
-		errx(1, "%d > sizeof(somebuf) (%d)", rxread_size,
+		errx(1, "%d > sizeof(somebuf) (%"AFS_SIZET_FMT")", rxread_size,
 		     sizeof(somebuf));
 	    break;
 	case 's':
@@ -1130,7 +1130,7 @@ rxperf_client(int argc, char **argv)
 	    if (ptr != 0 && ptr[0] != '\0')
 		errx(1, "can't resolve writesize");
 	    if (rxwrite_size > sizeof(somebuf))
-		errx(1, "%d > sizeof(somebuf) (%d)", rxwrite_size,
+		errx(1, "%d > sizeof(somebuf) (%"AFS_SIZET_FMT")", rxwrite_size,
 		     sizeof(somebuf));
 	    break;
 	case 'W':
