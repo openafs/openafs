@@ -33,11 +33,6 @@ struct rx_peer {
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
     afs_int32 refCount;	        /* Reference count for this structure (rx_peerHashTable_lock) */
 
-    /* Congestion control parameters */
-    u_char burstSize;		/* Reinitialization size for the burst parameter */
-    u_char burst;		/* Number of packets that can be transmitted right now, without pausing */
-    struct clock burstWait;	/* Delay until new burst is allowed */
-    struct rx_queue congestionQueue;	/* Calls that are waiting for non-zero burst value */
     int rtt;			/* Smoothed round trip time, measured in milliseconds/8 */
     int rtt_dev;		/* Smoothed rtt mean difference, in milliseconds/4 */
     int nSent;			/* Total number of distinct data packets sent, not including retransmissions */
