@@ -91,13 +91,13 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
                            &aclp->q);
             } else {
                 *rightsp = aclp->randomAccess;
-		if (cm_data.aclLRUp != aclp) {
-		    /* move to the head of the LRU queue */
-		    osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
-		    osi_QAddH((osi_queue_t **) &cm_data.aclLRUp,
-			       (osi_queue_t **) &cm_data.aclLRUEndp,
-			       &aclp->q);
-		}
+                if (cm_data.aclLRUp != aclp) {
+                    /* move to the head of the LRU queue */
+                    osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
+                    osi_QAddH((osi_queue_t **) &cm_data.aclLRUp,
+                              (osi_queue_t **) &cm_data.aclLRUEndp,
+                              &aclp->q);
+                }
                 retval = 0;     /* success */
             }
             break;
