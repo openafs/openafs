@@ -4551,7 +4551,8 @@ AFSIsEqualFID( IN AFSFileID *FileId1,
 
     BOOLEAN bIsEqual = FALSE;
 
-    if( FileId1->Unique == FileId2->Unique &&
+    if( FileId1->Hash == FileId2->Hash &&
+        FileId1->Unique == FileId2->Unique &&
         FileId1->Vnode == FileId2->Vnode &&
         FileId1->Volume == FileId2->Volume &&
         FileId1->Cell == FileId2->Cell)
