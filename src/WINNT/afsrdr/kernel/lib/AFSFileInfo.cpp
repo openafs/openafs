@@ -814,7 +814,7 @@ AFSQueryBasicInfo( IN PIRP Irp,
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
-                                                       NULL,
+                                                       pCcb->NameArray,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
@@ -921,7 +921,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
-                                                       NULL,
+                                                       pCcb->NameArray,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
@@ -1404,7 +1404,7 @@ AFSQueryNetworkInfo( IN PIRP Irp,
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
-                                                       NULL,
+                                                       pCcb->NameArray,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
@@ -1581,7 +1581,7 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
             if( NT_SUCCESS( AFSRetrieveFileAttributes( pParentDirectoryCB,
                                                        DirectoryCB,
                                                        &uniParentPath,
-                                                       NULL,
+                                                       pCcb->NameArray,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
