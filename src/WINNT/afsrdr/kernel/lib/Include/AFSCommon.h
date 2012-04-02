@@ -1253,10 +1253,6 @@ NTSTATUS
 AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
                       IN AFSDirectoryCB *DirEntry);
 
-void
-AFSReplaceCurrentElement( IN AFSNameArrayHdr *NameArray,
-                          IN AFSDirectoryCB *DirectoryCB);
-
 AFSDirectoryCB *
 AFSBackupEntry( IN AFSNameArrayHdr *NameArray);
 

@@ -915,11 +915,12 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
 
                     //
-                    // Replace the current name for the mp with the volume root of the target
+                    // The name array stores both the mount point and the target.
+                    // Insert the target.
                     //
 
-                    AFSReplaceCurrentElement( pNameArray,
-                                              pCurrentVolume->DirectoryCB);
+                    AFSInsertNextElement( pNameArray,
+                                          pCurrentVolume->DirectoryCB);
 
                     //
                     // We want to restart processing here on the new parent ...
