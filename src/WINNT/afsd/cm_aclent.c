@@ -72,6 +72,7 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
 {
     cm_aclent_t *aclp;
     long retval = -1;
+    time_t now = time(NULL);
 
     lock_ObtainWrite(&cm_aclLock);
     *rightsp = 0;   /* get a new acl from server if we don't find a
@@ -80,7 +81,7 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
 
     for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
         if (aclp->userp == userp) {
-            if (aclp->tgtLifetime && aclp->tgtLifetime <= time(NULL)) {
+            if (aclp->tgtLifetime && aclp->tgtLifetime <= now) {
                 /* ticket expired */
                 osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
                 CleanupACLEnt(aclp);
