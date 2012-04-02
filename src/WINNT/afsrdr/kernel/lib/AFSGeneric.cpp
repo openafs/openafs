@@ -5346,83 +5346,13 @@ try_exit:
     return ntStatus;
 }
 
-void
-AFSReplaceCurrentElement( IN AFSNameArrayHdr *NameArray,
-                          IN AFSDirectoryCB *DirectoryCB)
-{
-    AFSNameArrayCB *pCurrentElement = NULL;
-    LONG lCount;
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReplaceCurrentElement [NA:%p] passed DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
-                  NameArray,
-                  DirectoryCB,
-                  DirectoryCB->ObjectInformation->FileId.Cell,
-                  DirectoryCB->ObjectInformation->FileId.Volume,
-                  DirectoryCB->ObjectInformation->FileId.Vnode,
-                  DirectoryCB->ObjectInformation->FileId.Unique,
-                  &DirectoryCB->NameInformation.FileName,
-                  DirectoryCB->ObjectInformation->FileType);
-
-    ASSERT( NameArray->CurrentEntry != NULL);
-
-    pCurrentElement = NameArray->CurrentEntry;
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReplaceCurrentElement [NA:%p] Replacing Element[%d] DE %p FID %08lX-%08lX-%08lX-%08lX %wZ Type %d\n",
-                  NameArray,
-                  NameArray->Count - 1,
-                  pCurrentElement->DirectoryCB,
-                  pCurrentElement->FileId.Cell,
-                  pCurrentElement->FileId.Volume,
-                  pCurrentElement->FileId.Vnode,
-                  pCurrentElement->FileId.Unique,
-                  &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                  pCurrentElement->DirectoryCB->ObjectInformation->FileType);
-
-    lCount = InterlockedDecrement( &NameArray->CurrentEntry->DirectoryCB->OpenReferenceCount);
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReplaceCurrentElement Decrement count on %wZ DE %p Cnt %d\n",
-                  &pCurrentElement->DirectoryCB->NameInformation.FileName,
-                  pCurrentElement->DirectoryCB,
-                  lCount);
-
-    lCount = InterlockedIncrement( &DirectoryCB->OpenReferenceCount);
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReplaceCurrentElement Increment count on %wZ DE %p Cnt %d\n",
-                  &DirectoryCB->NameInformation.FileName,
-                  DirectoryCB,
-                  lCount);
-
-    pCurrentElement->DirectoryCB = DirectoryCB;
-
-    pCurrentElement->Component = DirectoryCB->NameInformation.FileName;
-
-    pCurrentElement->FileId = DirectoryCB->ObjectInformation->FileId;
-
-    pCurrentElement->Flags = 0;
-
-    if( pCurrentElement->FileId.Vnode == 1)
-    {
-
-        SetFlag( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
-    }
-
-    return;
-}
-
 AFSDirectoryCB *
 AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
 {
 
     AFSDirectoryCB *pDirectoryCB = NULL;
     AFSNameArrayCB *pCurrentElement = NULL;
+    BOOLEAN         bVolumeRoot = FALSE;
     LONG lCount;
 
     __Enter
@@ -5468,6 +5398,9 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
         }
         else
         {
+
+            bVolumeRoot = BooleanFlagOn( NameArray->CurrentEntry->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+
             NameArray->CurrentEntry--;
 
             pCurrentElement = NameArray->CurrentEntry;
@@ -5486,6 +5419,17 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
                           pCurrentElement->FileId.Unique,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+        }
+
+        //
+        // If the entry we are removing is a volume root,
+        // we must remove the mount point entry as well.
+        //
+
+        if ( bVolumeRoot)
+        {
+
+            pDirectoryCB = AFSBackupEntry( NameArray);
         }
 
 try_exit:
