@@ -5270,17 +5270,22 @@ AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
-        if( NameArray->CurrentEntry != NULL &&
-            NameArray->CurrentEntry->DirectoryCB == DirectoryCB)
+        for ( lCount = 0; lCount < NameArray->Count; lCount++)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
-                          AFS_TRACE_LEVEL_WARNING,
-                          "AFSInsertNextElement [NA:%p] DE %p already current element\n",
-                          NameArray,
-                          DirectoryCB);
+            if ( AFSIsEqualFID( &NameArray->ElementArray[ lCount].FileId,
+                                &DirectoryCB->ObjectInformation->FileId) )
+            {
 
-            try_return( ntStatus);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_NAME_ARRAY_PROCESSING,
+                              AFS_TRACE_LEVEL_WARNING,
+                              "AFSInsertNextElement [NA:%p] DE %p recursion Status %08X\n",
+                              NameArray,
+                              DirectoryCB,
+                              STATUS_ACCESS_DENIED);
+
+                try_return( ntStatus = STATUS_ACCESS_DENIED);
+            }
         }
 
         if( NameArray->Count > 0)
