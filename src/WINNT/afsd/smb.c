@@ -4627,17 +4627,17 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
     afs_uint32 rights;
     afs_int32 mustFake = 0;
 
+    lock_ObtainWrite(&dscp->rw);
     code = cm_FindACLCache(dscp, userp, &rights);
     if (code == -1) {
-        lock_ObtainWrite(&dscp->rw);
         code = cm_SyncOp(dscp, NULL, userp, reqp, PRSFS_READ,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        lock_ReleaseWrite(&dscp->rw);
         if (code == CM_ERROR_NOACCESS) {
             mustFake = 1;
             code = 0;
         }
     }
+    lock_ReleaseWrite(&dscp->rw);
     if (code)
         goto cleanup;
 
