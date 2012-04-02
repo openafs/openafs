@@ -3704,12 +3704,14 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSValidateEntry Validating entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      "AFSValidateEntry Validating entry %wZ FID %08lX-%08lX-%08lX-%08lX PurgeContent %u FastCall %u\n",
                       &DirEntry->NameInformation.FileName,
                       pObjectInfo->FileId.Cell,
                       pObjectInfo->FileId.Volume,
                       pObjectInfo->FileId.Vnode,
-                      pObjectInfo->FileId.Unique);
+                      pObjectInfo->FileId.Unique,
+                      PurgeContent,
+                      FastCall);
 
         //
         // If this is a fake node then bail since the service knows nothing about it
@@ -3802,7 +3804,8 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSValidateEntry Validating entry FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X returned DV %I64X FT %d\n",
+                      "AFSValidateEntry Validating entry Purge %d FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X returned DV %I64X FT %d\n",
+                      PurgeContent,
                       FastCall,
                       &DirEntry->NameInformation.FileName,
                       pObjectInfo->FileId.Cell,
@@ -4026,8 +4029,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
                 AFSDirectoryCB *pCurrentDirEntry = NULL;
 
-                if( pCurrentFcb != NULL &&
-                    pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
+                if( pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
                 {
 
                     //
@@ -4056,8 +4058,8 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                         AFSAcquireExcl( pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                         TRUE);
 
-                        AFSValidateDirectoryCache( pCurrentFcb->ObjectInformation,
-                                                   AuthGroup);
+                        ntStatus = AFSValidateDirectoryCache( pObjectInfo,
+                                                              AuthGroup);
 
                         AFSReleaseResource( pObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
                     }
