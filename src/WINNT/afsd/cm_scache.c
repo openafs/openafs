@@ -339,7 +339,7 @@ cm_GetNewSCache(afs_uint32 locked)
                              */
                             cm_AdjustScacheLRU(scp);
 
-                            /* and we're done */
+                            /* and we're done - SUCCESS */
                             osi_assertx(!(scp->flags & CM_SCACHEFLAG_INHASH), "CM_SCACHEFLAG_INHASH set");
                             goto done;
                         }
@@ -362,6 +362,8 @@ cm_GetNewSCache(afs_uint32 locked)
 
             osi_Log2(afsd_logp, "GetNewSCache all scache entries in use (attempt = %d, count = %u)", attempt, count);
         }
+        /* FAILURE */
+        scp = NULL;
         goto done;
     }
 
