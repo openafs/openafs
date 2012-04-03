@@ -227,6 +227,7 @@ src/sys/Makefile \
 src/tbutc/Makefile \
 src/tests/Makefile \
 src/tests/run-tests \
+src/tools/Makefile \
 src/tsalvaged/Makefile \
 src/tsm41/Makefile \
 src/tvolser/Makefile \

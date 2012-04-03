@@ -287,6 +287,7 @@ int ShutdownInProgress = 0;
  * Our local function prototypes
  */
 
+static int DirHash(char *string);
 static int ReadDumpHeader(FILE *, struct DumpHeader *);
 static int ReadVolumeHeader(FILE *, VolumeDiskData *);
 static int ScanVnodes(FILE *, VolumeDiskData *, int);
@@ -2426,7 +2427,7 @@ ReadByteString(FILE * f, void *s, int size)
  * The directory hashing algorithm used by AFS
  */
 
-int
+static int
 DirHash(char *string)
 {
     /* Hash a string to a number between 0 and NHASHENT. */
