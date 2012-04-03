@@ -1958,8 +1958,8 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     status->MinQuota = V_minquota(volptr);
     status->MaxQuota = V_maxquota(volptr);
     status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = volptr->partition->free;
-    status->PartMaxBlocks = volptr->partition->totalUsable;
+    status->PartBlocksAvail = RoundInt64ToInt31(volptr->partition->free);
+    status->PartMaxBlocks = RoundInt64ToInt31(volptr->partition->totalUsable);
 
     /* now allocate and copy these things; they're freed by the RXGEN stub */
     temp = strlen(V_name(volptr)) + 1;
