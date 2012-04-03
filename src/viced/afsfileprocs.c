@@ -2045,8 +2045,8 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     status->MinQuota = V_minquota(volptr);
     status->MaxQuota = V_maxquota(volptr);
     status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = RoundInt64ToInt32(volptr->partition->free);
-    status->PartMaxBlocks = RoundInt64ToInt32(volptr->partition->totalUsable);
+    status->PartBlocksAvail = RoundInt64ToInt31(volptr->partition->free);
+    status->PartMaxBlocks = RoundInt64ToInt31(volptr->partition->totalUsable);
 
     /* now allocate and copy these things; they're freed by the RXGEN stub */
     temp = strlen(V_name(volptr)) + 1;
@@ -5741,8 +5741,8 @@ SetVolumeStats(struct AFSStatistics *stats)
 
     for (part = DiskPartitionList; part && i < AFS_MSTATDISKS;
 	 part = part->next) {
-	stats->Disks[i].TotalBlocks = RoundInt64ToInt32(part->totalUsable);
-	stats->Disks[i].BlocksAvailable = RoundInt64ToInt32(part->free);
+	stats->Disks[i].TotalBlocks = RoundInt64ToInt31(part->totalUsable);
+	stats->Disks[i].BlocksAvailable = RoundInt64ToInt31(part->free);
 	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
 	strncpy(stats->Disks[i].Name, part->name, AFS_DISKNAMESIZE);
 	i++;
