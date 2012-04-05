@@ -66,7 +66,7 @@ static void CleanupACLEnt(cm_aclent_t * aclp)
 
 /*
  * Get an acl cache entry for a particular user and file, or return that it doesn't exist.
- * Called with the scp locked.
+ * Called with the scp write locked.
  */
 long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
 {
@@ -74,6 +74,7 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 *rightsp)
     long retval = -1;
     time_t now = time(NULL);
 
+    lock_AssertWrite(&scp->rw);
     lock_ObtainWrite(&cm_aclLock);
     *rightsp = 0;   /* get a new acl from server if we don't find a
                      * current entry
