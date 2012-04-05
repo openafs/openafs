@@ -1495,7 +1495,6 @@ rx_NewCall(struct rx_connection *conn)
                          * effect on overall system performance.
                          */
                         call->state = RX_STATE_RESET;
-                        CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
                         (*call->callNumber)++;
                         MUTEX_EXIT(&conn->conn_call_lock);
                         CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
