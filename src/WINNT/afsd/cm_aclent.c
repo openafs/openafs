@@ -145,8 +145,8 @@ time_t cm_TGTLifeTime(cm_user_t *userp, afs_uint32 cellID)
     cm_ucell_t * ucp = NULL;
     time_t      expirationTime = 0;
 
-    cellp = cm_FindCellByID(cellID, CM_FLAG_NOPROBE);
     lock_ObtainMutex(&userp->mx);
+    cellp = cm_FindCellByID(cellID, CM_FLAG_NOPROBE);
     ucp = cm_GetUCell(userp, cellp);
     if (ucp->ticketp)
         expirationTime = ucp->expirationTime;
@@ -165,13 +165,16 @@ time_t cm_TGTLifeTime(cm_user_t *userp, afs_uint32 cellID)
 long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 rights)
 {
     struct cm_aclent *aclp;
+    time_t tgtLifeTime;
+
+    tgtLifeTime = cm_TGTLifeTime(userp, scp->fid.cell);
 
     lock_ObtainWrite(&cm_aclLock);
     for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
         if (aclp->userp == userp) {
             aclp->randomAccess = rights;
-            if (aclp->tgtLifetime == 0)
-                aclp->tgtLifetime = cm_TGTLifeTime(userp, scp->fid.cell);
+            if (aclp->tgtLifetime < tgtLifeTime)
+                aclp->tgtLifetime = tgtLifeTime;
             if (cm_data.aclLRUp != aclp) {
                 /* move to the head of the LRU queue */
                 osi_QRemoveHT((osi_queue_t **) &cm_data.aclLRUp, (osi_queue_t **) &cm_data.aclLRUEndp, &aclp->q);
@@ -197,7 +200,7 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 rights)
     cm_HoldUser(userp);
     aclp->userp = userp;
     aclp->randomAccess = rights;
-    aclp->tgtLifetime = cm_TGTLifeTime(userp, scp->fid.cell);
+    aclp->tgtLifetime = tgtLifeTime;
     lock_ReleaseWrite(&cm_aclLock);
 
     return 0;
