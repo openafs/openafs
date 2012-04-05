@@ -870,9 +870,10 @@ ListKeys(struct cmd_syndesc *as, void *arock)
 	    break;
 	everWorked = 1;
 	/* first check if key is returned */
-	if ((!ka_KeyIsZero(ktc_to_charptr(&tkey), sizeof(tkey))) && (as->parms[1].items)) {
+	if ((!ka_KeyIsZero((char *)&tkey, sizeof(tkey)))
+	    && (as->parms[1].items)) {
 	    printf("key %d is '", kvno);
-	    ka_PrintBytes(ktc_to_charptr(&tkey), sizeof(tkey));
+	    ka_PrintBytes((char *)&tkey, sizeof(tkey));
 	    printf("'\n");
 	} else {
 	    if (keyInfo.keyCheckSum == 0)	/* shouldn't happen */
