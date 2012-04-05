@@ -1347,7 +1347,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
 		IH_RELEASE(newH);
 		FDH_REALLYCLOSE(targFdP);
 		rc = IH_DEC(V_linkHandle(volptr), ino, V_parentId(volptr));
-		if (!rc) {
+		if (rc) {
 		    ViceLog(0,
 			    ("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
 			     rc, V_id(volptr), volptr->partition->name));
