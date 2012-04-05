@@ -2676,27 +2676,29 @@ AFSVerifyEntry( IN GUID *AuthGroup,
         // Check the data version of the file
         //
 
-        if( pObjectInfo->DataVersion.QuadPart == pDirEnumEntry->DataVersion.QuadPart &&
-            !BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
+        if( pObjectInfo->DataVersion.QuadPart == pDirEnumEntry->DataVersion.QuadPart)
         {
+            if ( !BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
+            {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSVerifyEntry No DV change %I64X for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                          pObjectInfo->DataVersion.QuadPart,
-                          &DirEntry->NameInformation.FileName,
-                          pObjectInfo->FileId.Cell,
-                          pObjectInfo->FileId.Volume,
-                          pObjectInfo->FileId.Vnode,
-                          pObjectInfo->FileId.Unique);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSVerifyEntry No DV change %I64X for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              pObjectInfo->DataVersion.QuadPart,
+                              &DirEntry->NameInformation.FileName,
+                              pObjectInfo->FileId.Cell,
+                              pObjectInfo->FileId.Volume,
+                              pObjectInfo->FileId.Vnode,
+                              pObjectInfo->FileId.Unique);
 
-            //
-            // We are ok, just get out
-            //
+                //
+                // We are ok, just get out
+                //
 
-            ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-            try_return( ntStatus = STATUS_SUCCESS);
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
         }
 
         //
@@ -2761,8 +2763,15 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                 FILE_OBJECT * pCCFileObject = NULL;
                 BOOLEAN bPurgeExtents = FALSE;
 
+                if ( pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
+                {
+
+                    bPurgeExtents = TRUE;
+                }
+
                 if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
                 {
+
                     bPurgeExtents = TRUE;
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2775,29 +2784,6 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                   pObjectInfo->FileId.Unique);
 
                     ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                }
-
-                //
-                // Update the metadata for the entry
-                //
-
-                ntStatus = AFSUpdateMetaData( DirEntry,
-                                              pDirEnumEntry);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSVerifyEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX ntStatus %08lX\n",
-                                  &DirEntry->NameInformation.FileName,
-                                  pObjectInfo->FileId.Cell,
-                                  pObjectInfo->FileId.Volume,
-                                  pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique,
-                                  ntStatus);
-
-                    break;
                 }
 
                 if( pObjectInfo->Fcb != NULL)
@@ -2886,6 +2872,29 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                                     TRUE);
 
                     //
+                    // Update the metadata for the entry
+                    //
+
+                    ntStatus = AFSUpdateMetaData( DirEntry,
+                                                  pDirEnumEntry);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSVerifyEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX ntStatus %08lX\n",
+                                      &DirEntry->NameInformation.FileName,
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique,
+                                      ntStatus);
+
+                        break;
+                    }
+
+                    //
                     // Update file sizes
                     //
 
@@ -2905,6 +2914,30 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                 }
                 else
                 {
+
+                    //
+                    // Update the metadata for the entry
+                    //
+
+                    ntStatus = AFSUpdateMetaData( DirEntry,
+                                                  pDirEnumEntry);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSVerifyEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX ntStatus %08lX\n",
+                                      &DirEntry->NameInformation.FileName,
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique,
+                                      ntStatus);
+
+                        break;
+                    }
+
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_WARNING,
                                   "AFSValidateEntry Fcb NULL %wZ FID %08lX-%08lX-%08lX-%08lX\n",
