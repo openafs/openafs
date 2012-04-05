@@ -14,8 +14,6 @@
 #include "fcrypt.h"
 #include "rx/rx.h"
 
-#include <hcrypto/des.h>
-
 /* crypt_conn.c */
 extern afs_int32 rxkad_DecryptPacket(const struct rx_connection *conn,
 				     const fc_KeySchedule * schedule,

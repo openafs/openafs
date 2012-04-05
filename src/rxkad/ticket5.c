@@ -69,6 +69,7 @@
 
 #include <hcrypto/md4.h>
 #include <hcrypto/md5.h>
+#include <hcrypto/des.h>
 
 #include "lifetimes.h"
 #include "rxkad.h"

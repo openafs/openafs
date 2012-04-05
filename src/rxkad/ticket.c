@@ -13,6 +13,8 @@
 
 #include <roken.h>
 
+#include <hcrypto/des.h>
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 
