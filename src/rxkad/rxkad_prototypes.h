@@ -158,37 +158,4 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     afs_int32 * host, afs_uint32 * start,
 			     afs_uint32 * end, afs_int32 disableDotCheck);
 
-static_inline DES_cblock *
-ktc_to_cblock(struct ktc_encryptionKey *key) {
-    return (DES_cblock *)key;
-}
-
-static_inline char *
-ktc_to_charptr(struct ktc_encryptionKey *key) {
-    return (char *)key;
-}
-
-
-static_inline DES_cblock *
-ktc_to_cblockptr(struct ktc_encryptionKey *key) {
-    return (DES_cblock *)key;
-}
-
-#if 0
-static_inline unsigned char *
-cblockptr_to_cblock(DES_cblock *key) {
-    return (unsigned char *)key;
-}
-#endif
-
-static_inline DES_cblock *
-charptr_to_cblock(char *key) {
-    return (DES_cblock *)key;
-}
-
-static_inline DES_cblock *
-charptr_to_cblockptr(char *key) {
-    return (DES_cblock *)key;
-}
-
 #endif

@@ -27,6 +27,7 @@
 
 #include <afs/pthread_glock.h>
 #include <rx/rxkad.h>
+#include <rx/rxkad_convert.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <afs/auth.h>

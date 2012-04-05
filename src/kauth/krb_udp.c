@@ -34,6 +34,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <rx/rxkad_convert.h>
 #include <afs/auth.h>
 #include <ubik.h>
 

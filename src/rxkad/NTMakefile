@@ -15,7 +15,8 @@ INCFILES =\
 	$(INCFILEDIR)\rxkad_prototypes.h \
 	$(INCFILEDIR)\asn1_err.h \
         $(INCFILEDIR)\v5gen.h \
-	$(INCFILEDIR)\rxkad.h
+	$(INCFILEDIR)\rxkad.h \
+	$(INCFILEDIR)\rxkad_convert.h
 
 # build afsrxkad.lib
 LIBOBJS =\

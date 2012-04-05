@@ -18,6 +18,7 @@
 
 #include "lifetimes.h"
 #include "rxkad.h"
+#include "rxkad_convert.h"
 
 /* This union is used to insure we allocate enough space for a key
  * schedule even if we are linked against a library that uses OpenSSL's

@@ -17,6 +17,7 @@
 #include <ubik.h>
 #include <afs/cmd.h>
 #include <rx/rxkad.h>
+#include <rx/rxkad_convert.h>
 #include <afs/com_err.h>
 
 #include "kauth.h"

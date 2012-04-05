@@ -72,6 +72,7 @@
 
 #include "lifetimes.h"
 #include "rxkad.h"
+#include "rxkad_convert.h"
 
 #include "v5gen-rewrite.h"
 #include "v5gen.h"

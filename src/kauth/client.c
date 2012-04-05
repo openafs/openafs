@@ -17,6 +17,8 @@
 #include <hcrypto/des.h>
 #include <hcrypto/ui.h>
 
+#include <rx/rxkad_convert.h>
+
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>

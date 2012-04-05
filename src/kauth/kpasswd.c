@@ -21,6 +21,7 @@
 #include <hcrypto/ui.h>
 
 #include <rx/xdr.h>
+#include <rx/rxkad_convert.h>
 #include <lock.h>
 #include <ubik.h>
 #include <afs/com_err.h>

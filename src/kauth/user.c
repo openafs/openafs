@@ -35,7 +35,7 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */
-
+#include <rx/rxkad_convert.h>
 
 #include "kauth.h"
 #include "kautils.h"
