@@ -241,9 +241,9 @@ typedef struct _AFS_DIR_ENUM_RESP
 typedef struct _AFS_VOLUME_INFORMATION
 {
 
-    LARGE_INTEGER   TotalAllocationUnits;       /* Partition Max Blocks */
+    LARGE_INTEGER   TotalAllocationUnits;       /* Volume Max Blocks (Partition or Quota) */
 
-    LARGE_INTEGER   AvailableAllocationUnits;   /* Partition Blocks Avail */
+    LARGE_INTEGER   AvailableAllocationUnits;   /* Volume Blocks Avail (Partition or Quota) */
 
     LARGE_INTEGER   VolumeCreationTime;         /* AFS Last Update - Not Creation */
 
@@ -264,9 +264,28 @@ typedef struct _AFS_VOLUME_INFORMATION
 
     ULONG           VolumeLabelLength;
 
-    WCHAR           VolumeLabel[20];            /* Volume:Cell */
+    WCHAR           VolumeLabel[128];            /* Volume:Cell */
 
 } AFSVolumeInfoCB;
+
+
+//
+// Volume size information CB passed used to satisfy
+// FileFsFullSizeInformation and FileFsSizeInformation
+//
+
+typedef struct _AFS_VOLUME_SIZE_INFORMATION
+{
+
+    LARGE_INTEGER   TotalAllocationUnits;       /* Max Blocks (Quota or Partition) */
+
+    LARGE_INTEGER   AvailableAllocationUnits;   /* Blocks Avail (Quota or Partition) */
+
+    ULONG           SectorsPerAllocationUnit;   /* = 1 */
+
+    ULONG           BytesPerSector;             /* = 1024 */
+
+} AFSVolumeSizeInfoCB;
 
 //
 // File create CB

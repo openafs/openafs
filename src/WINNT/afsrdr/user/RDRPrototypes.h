@@ -268,6 +268,13 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
                    IN OUT AFSCommResult **ResultCB);
 
 void
+RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
+                       IN AFSFileID     FileId,
+                       IN BOOL bWow64,
+                       IN DWORD ResultBufferLength,
+                       IN OUT AFSCommResult **ResultCB);
+
+void
 RDR_HoldFid( IN cm_user_t     *userp,
              IN AFSHoldFidRequestCB * pHoldFidCB,
              IN BOOL bFast,

@@ -308,6 +308,8 @@ AFSQueryFsSizeInfo( IN AFSVolumeInfoCB *VolumeInfo,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFileID FileID;
+    AFSVolumeSizeInfoCB VolumeSizeInfo;
 
     RtlZeroMemory( Buffer,
                    *Length);
@@ -315,15 +317,30 @@ AFSQueryFsSizeInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= sizeof( FILE_FS_SIZE_INFORMATION))
     {
 
-        Buffer->TotalAllocationUnits.QuadPart = VolumeInfo->TotalAllocationUnits.QuadPart;
+        RtlZeroMemory( &FileID,
+                       sizeof(AFSFileID));
 
-        Buffer->AvailableAllocationUnits.QuadPart = VolumeInfo->AvailableAllocationUnits.QuadPart;
+        FileID.Cell = VolumeInfo->CellID;
 
-        Buffer->SectorsPerAllocationUnit = VolumeInfo->SectorsPerAllocationUnit;
+        FileID.Volume = VolumeInfo->VolumeID;
 
-        Buffer->BytesPerSector = VolumeInfo->BytesPerSector;
+        ntStatus = AFSRetrieveVolumeSizeInformation( NULL,
+                                                     &FileID,
+                                                     &VolumeSizeInfo);
 
-        *Length -= sizeof( FILE_FS_SIZE_INFORMATION);
+        if ( NT_SUCCESS( ntStatus))
+        {
+
+            Buffer->TotalAllocationUnits.QuadPart = VolumeSizeInfo.TotalAllocationUnits.QuadPart;
+
+            Buffer->AvailableAllocationUnits.QuadPart = VolumeSizeInfo.AvailableAllocationUnits.QuadPart;
+
+            Buffer->SectorsPerAllocationUnit = VolumeSizeInfo.SectorsPerAllocationUnit;
+
+            Buffer->BytesPerSector = VolumeSizeInfo.BytesPerSector;
+
+            *Length -= sizeof( FILE_FS_SIZE_INFORMATION);
+        }
     }
     else
     {
@@ -416,6 +433,8 @@ AFSQueryFsFullSizeInfo( IN AFSVolumeInfoCB *VolumeInfo,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFileID FileID;
+    AFSVolumeSizeInfoCB VolumeSizeInfo;
 
     RtlZeroMemory( Buffer,
                    *Length);
@@ -423,17 +442,32 @@ AFSQueryFsFullSizeInfo( IN AFSVolumeInfoCB *VolumeInfo,
     if( *Length >= sizeof( FILE_FS_FULL_SIZE_INFORMATION))
     {
 
-        Buffer->TotalAllocationUnits.QuadPart = VolumeInfo->TotalAllocationUnits.QuadPart;
+        RtlZeroMemory( &FileID,
+                       sizeof(AFSFileID));
 
-        Buffer->CallerAvailableAllocationUnits.QuadPart = VolumeInfo->AvailableAllocationUnits.QuadPart;
+        FileID.Cell = VolumeInfo->CellID;
 
-        Buffer->ActualAvailableAllocationUnits.QuadPart = VolumeInfo->AvailableAllocationUnits.QuadPart;
+        FileID.Volume = VolumeInfo->VolumeID;
 
-        Buffer->SectorsPerAllocationUnit = VolumeInfo->SectorsPerAllocationUnit;
+        ntStatus = AFSRetrieveVolumeSizeInformation( NULL,
+                                                     &FileID,
+                                                     &VolumeSizeInfo);
 
-        Buffer->BytesPerSector = VolumeInfo->BytesPerSector;
+        if ( NT_SUCCESS( ntStatus))
+        {
 
-        *Length -= sizeof( FILE_FS_FULL_SIZE_INFORMATION);
+            Buffer->TotalAllocationUnits.QuadPart = VolumeSizeInfo.TotalAllocationUnits.QuadPart;
+
+            Buffer->CallerAvailableAllocationUnits.QuadPart = VolumeSizeInfo.AvailableAllocationUnits.QuadPart;
+
+            Buffer->ActualAvailableAllocationUnits.QuadPart = VolumeSizeInfo.AvailableAllocationUnits.QuadPart;
+
+            Buffer->SectorsPerAllocationUnit = VolumeSizeInfo.SectorsPerAllocationUnit;
+
+            Buffer->BytesPerSector = VolumeSizeInfo.BytesPerSector;
+
+            *Length -= sizeof( FILE_FS_FULL_SIZE_INFORMATION);
+        }
     }
     else
     {

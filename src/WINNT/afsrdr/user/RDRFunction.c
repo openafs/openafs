@@ -4995,14 +4995,8 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     (*ResultCB)->ResultBufferLength = sizeof(AFSVolumeInfoCB);
     pResultCB = (AFSVolumeInfoCB *)(*ResultCB)->ResultData;
 
-    /* Allocate the extents from the buffer package */
     if (FileId.Cell != 0) {
-        Fid.cell = FileId.Cell;
-        Fid.volume = FileId.Volume;
-        Fid.vnode = FileId.Vnode;
-        Fid.unique = FileId.Unique;
-        Fid.hash = FileId.Hash;
-
+        cm_SetFid(&Fid, FileId.Cell, FileId.Volume, 1, 1);
         code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
@@ -5019,7 +5013,6 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     }
     lock_ObtainWrite(&scp->rw);
 
-    /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
@@ -5032,7 +5025,6 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         return;
     }
 
-    /* Fake for now */
     pResultCB->SectorsPerAllocationUnit = 1;
     pResultCB->BytesPerSector = 1024;
 
@@ -5084,11 +5076,29 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
 	} while (cm_Analyze(connp, userp, &req, &scp->fid, 0, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
         if (code == 0) {
-            pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;
-            pResultCB->AvailableAllocationUnits.QuadPart = volStat.PartBlocksAvail;
-
-            pResultCB->VolumeLabelLength = cm_Utf8ToUtf16( Name, -1, pResultCB->VolumeLabel,
-                                                           (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) + 1);
+            if (volStat.MaxQuota)
+            {
+                pResultCB->TotalAllocationUnits.QuadPart = volStat.MaxQuota;
+                if (volType == ROVOL || volType == BACKVOL) {
+                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
+                }
+                else
+                {
+                    pResultCB->AvailableAllocationUnits.QuadPart =
+                        min(volStat.MaxQuota - volStat.BlocksInUse, volStat.PartBlocksAvail);
+                }
+            }
+            else
+            {
+                pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;
+                if (volType == ROVOL || volType == BACKVOL) {
+                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
+                }
+                else
+                {
+                    pResultCB->AvailableAllocationUnits.QuadPart = volStat.PartBlocksAvail;
+                }
+            }
         } else {
             pResultCB->TotalAllocationUnits.QuadPart = 0x7FFFFFFF;
             pResultCB->AvailableAllocationUnits.QuadPart = (volType == ROVOL || volType == BACKVOL) ? 0 : 0x3F000000;
@@ -5115,6 +5125,167 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
     (*ResultCB)->ResultStatus = status;
     osi_Log0(afsd_logp, "RDR_GetVolumeInfo SUCCESS");
+    return;
+}
+
+void
+RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
+                   IN AFSFileID     FileId,
+                   IN BOOL bWow64,
+                   IN DWORD ResultBufferLength,
+                   IN OUT AFSCommResult **ResultCB)
+{
+    AFSVolumeSizeInfoCB *pResultCB = NULL;
+    DWORD       Length;
+    cm_scache_t *scp = NULL;
+    cm_volume_t *volp = NULL;
+    afs_uint32   volType;
+    cm_cell_t   *cellp = NULL;
+    cm_fid_t    Fid;
+    afs_uint32  code;
+    cm_req_t    req;
+    DWORD       status;
+
+    char volName[32]="(unknown)";
+    char offLineMsg[256]="server temporarily inaccessible";
+    char motd[256]="server temporarily inaccessible";
+    cm_conn_t *connp;
+    AFSFetchVolumeStatus volStat;
+    char *Name;
+    char *OfflineMsg;
+    char *MOTD;
+    struct rx_connection * rxconnp;
+
+    RDR_InitReq(&req);
+    if ( bWow64 )
+        req.flags |= CM_REQ_WOW64;
+
+    osi_Log4(afsd_logp, "RDR_GetVolumeSizeInfo File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+             FileId.Cell, FileId.Volume,
+             FileId.Vnode, FileId.Unique);
+
+    Length = sizeof( AFSCommResult) + sizeof(AFSVolumeSizeInfoCB);
+    if (sizeof(AFSVolumeSizeInfoCB) > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult) );
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+
+    *ResultCB = (AFSCommResult *)malloc( Length );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = sizeof(AFSVolumeSizeInfoCB);
+    pResultCB = (AFSVolumeSizeInfoCB *)(*ResultCB)->ResultData;
+
+    if (FileId.Cell != 0) {
+        cm_SetFid(&Fid, FileId.Cell, FileId.Volume, 1, 1);
+        code = cm_GetSCache(&Fid, NULL, &scp, userp, &req);
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            (*ResultCB)->ResultBufferLength = 0;
+            osi_Log2(afsd_logp, "RDR_GetVolumeSizeInfo cm_GetSCache FID failure code=0x%x status=0x%x",
+                      code, status);
+            return;
+        }
+    } else {
+        (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_INVALID;
+        osi_Log0(afsd_logp, "RDR_GetVolumeSizeInfo Object Name Invalid - Cell = 0");
+        return;
+    }
+    lock_ObtainWrite(&scp->rw);
+
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        lock_ReleaseWrite(&scp->rw);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+        osi_Log3(afsd_logp, "RDR_GetVolumeSizeInfo cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
+                 scp, code, status);
+        return;
+    }
+
+    pResultCB->SectorsPerAllocationUnit = 1;
+    pResultCB->BytesPerSector = 1024;
+
+    if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID)
+    {
+        pResultCB->TotalAllocationUnits.QuadPart = 100;
+        pResultCB->AvailableAllocationUnits.QuadPart = 0;
+    } else {
+        volp = cm_GetVolumeByFID(&scp->fid);
+        if (!volp) {
+            code = CM_ERROR_NOSUCHVOLUME;
+            goto _done;
+        }
+
+        volType = cm_VolumeType(volp, scp->fid.volume);
+        Name = volName;
+	OfflineMsg = offLineMsg;
+	MOTD = motd;
+	lock_ReleaseWrite(&scp->rw);
+	do {
+	    code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+	    if (code) continue;
+
+	    rxconnp = cm_GetRxConn(connp);
+	    code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
+					 &volStat, &Name, &OfflineMsg, &MOTD);
+	    rx_PutConnection(rxconnp);
+
+	} while (cm_Analyze(connp, userp, &req, &scp->fid, 0, NULL, NULL, NULL, code));
+	code = cm_MapRPCError(code, &req);
+        if (code == 0) {
+            if (volStat.MaxQuota)
+            {
+                pResultCB->TotalAllocationUnits.QuadPart = volStat.MaxQuota;
+                if (volType == ROVOL || volType == BACKVOL) {
+                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
+                }
+                else
+                {
+                    pResultCB->AvailableAllocationUnits.QuadPart =
+                        min(volStat.MaxQuota - volStat.BlocksInUse, volStat.PartBlocksAvail);
+                }
+            }
+            else
+            {
+                pResultCB->TotalAllocationUnits.QuadPart = volStat.PartMaxBlocks;
+                if (volType == ROVOL || volType == BACKVOL) {
+                    pResultCB->AvailableAllocationUnits.QuadPart = 0;
+                }
+                else
+                {
+                    pResultCB->AvailableAllocationUnits.QuadPart = volStat.PartBlocksAvail;
+                }
+            }
+        } else {
+
+            pResultCB->TotalAllocationUnits.QuadPart = 0x7FFFFFFF;
+            pResultCB->AvailableAllocationUnits.QuadPart = (volType == ROVOL || volType == BACKVOL) ? 0 : 0x3F000000;
+            code = 0;
+        }
+        lock_ObtainWrite(&scp->rw);
+    }
+
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+
+  _done:
+    lock_ReleaseWrite(&scp->rw);
+    if (volp)
+       cm_PutVolume(volp);
+    cm_ReleaseSCache(scp);
+
+    smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+    (*ResultCB)->ResultStatus = status;
+    osi_Log0(afsd_logp, "RDR_GetVolumeSizeInfo SUCCESS");
     return;
 }
 
