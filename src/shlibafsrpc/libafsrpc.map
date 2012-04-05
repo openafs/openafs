@@ -136,12 +136,14 @@
 	afs_xdr_array;
 	afs_xdr_bytes;
 	afs_xdr_char;
+	afs_xdr_u_char;
 	afs_xdr_free;
 	afs_xdr_int;
 	afs_xdr_opaque;
 	afs_xdr_short;
 	afs_xdr_string;
 	afs_xdr_vector;
+	afs_xdr_pointer;
 	rx_InterruptCall;
 	rx_SetBusyChannelError;
 	rx_KeepAliveOn;
