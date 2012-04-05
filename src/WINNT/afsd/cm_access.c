@@ -61,7 +61,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *
         if (aclScp != scp) {
             if (aclScp->fid.vnode < scp->fid.vnode)
                 lock_ReleaseWrite(&scp->rw);
-            lock_ObtainRead(&aclScp->rw);
+            lock_ObtainWrite(&aclScp->rw);
 	    didLock = 1;
             if (aclScp->fid.vnode < scp->fid.vnode)
                 lock_ObtainWrite(&scp->rw);
@@ -75,7 +75,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *
         }
     }
 
-    lock_AssertAny(&aclScp->rw);
+    lock_AssertWrite(&aclScp->rw);
 
     /* now if rights is a subset of the public rights, we're done.
      * Otherwise, if we an explicit acl entry, we're also in good shape,
@@ -140,7 +140,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, cm_req_t *
     if (volp)
         cm_PutVolume(volp);
     if (didLock)
-        lock_ReleaseRead(&aclScp->rw);
+        lock_ReleaseWrite(&aclScp->rw);
     if (release)
         cm_ReleaseSCache(aclScp);
     return code;
