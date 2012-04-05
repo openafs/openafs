@@ -90,6 +90,7 @@
 #define AFS_REQUEST_TYPE_CREATE_MOUNTPOINT       0x0000001F
 #define AFS_REQUEST_TYPE_CREATE_SYMLINK          0x00000020
 #define AFS_REQUEST_TYPE_RELEASE_FILE_ACCESS     0x00000021
+#define AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO    0x00000022
 
 //
 // Request Flags, these are passed up from the file system

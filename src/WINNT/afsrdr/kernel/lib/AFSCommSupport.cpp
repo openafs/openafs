@@ -2561,6 +2561,44 @@ try_exit:
 }
 
 NTSTATUS
+AFSRetrieveVolumeSizeInformation( IN GUID *AuthGroup,
+                                  IN AFSFileID *FileID,
+                                  OUT AFSVolumeSizeInfoCB *VolumeSizeInformation)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    ULONG ulResultLen = 0;
+
+    __Enter
+    {
+
+        ulResultLen = sizeof( AFSVolumeSizeInfoCB);
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      AuthGroup,
+                                      NULL,
+                                      FileID,
+                                      NULL,
+                                      0,
+                                      VolumeSizeInformation,
+                                      &ulResultLen);
+
+        if( ntStatus != STATUS_SUCCESS)
+        {
+
+            try_return( ntStatus);
+        }
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSNotifyPipeTransceive( IN AFSCcb *Ccb,
                          IN ULONG InputLength,
                          IN ULONG OutputLength,

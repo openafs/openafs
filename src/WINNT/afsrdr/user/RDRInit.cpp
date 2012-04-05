@@ -1015,6 +1015,25 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 break;
             }
 
+    case AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO:
+            {
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO Index %08lX File %08lX.%08lX.%08lX.%08lX",
+                              RequestBuffer->RequestIndex,
+                              RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                              RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique);
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                RDR_GetVolumeSizeInfo( userp,
+                                       RequestBuffer->FileId,
+                                       bWow64,
+                                       RequestBuffer->ResultBufferLength,
+                                       &pResultCB);
+                break;
+            }
+
     case AFS_REQUEST_TYPE_HOLD_FID:
             {
 

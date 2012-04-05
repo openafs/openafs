@@ -220,6 +220,11 @@ AFSRetrieveVolumeInformation( IN GUID *AuthGroup,
                               OUT AFSVolumeInfoCB *VolumeInformation);
 
 NTSTATUS
+AFSRetrieveVolumeSizeInformation( IN GUID *AuthGroup,
+                                  IN AFSFileID *FileID,
+                                  OUT AFSVolumeSizeInfoCB *VolumeSizeInformation);
+
+NTSTATUS
 AFSNotifyPipeTransceive( IN AFSCcb *Ccb,
                          IN ULONG InputLength,
                          IN ULONG OutputLength,
