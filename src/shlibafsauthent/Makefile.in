@@ -26,6 +26,8 @@ UBIK = $(srcdir)/../ubik
 UTIL = $(srcdir)/../util
 RXKAD = $(srcdir)/../rxkad
 PTSERVER = $(srcdir)/../ptserver
+VOLSER = $(srcdir)/../volser
+VLSERVER = $(srcdir)/../vlserver
 SYS = $(srcdir)/../sys
 
 AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
@@ -66,7 +68,11 @@ UTILOBJS = \
 	get_krbrlm.o \
 	dirpath.o \
 	serverLog.o \
-	fileutil.o
+	fileutil.o \
+	hostparse.o \
+	uuid.o \
+	ktime.o \
+	volparse.o
 
 RXKADOBJS = \
 	rxkad_errs.o
@@ -89,6 +95,30 @@ PTSERVEROBJS = \
 	display.o \
 	pterror.o
 
+VOLSEROBJS = \
+	vsutils.o \
+	vsprocs.o \
+	lockprocs.o \
+	volint.xdr.o \
+	volint.cs.o \
+	volerr.o
+
+VLDBOBJS = \
+	vldbint.xdr.o \
+	vldbint.cs.o \
+	vl_errors.o
+
+COMERROBJS = \
+	et_name.o
+
+BOSOBJS = \
+	bosint.xdr.o \
+	bosint.cs.o \
+	boserr.o
+
+USDOBJS = \
+	usd_file.o \
+
 LIBOBJS = \
 	${AUDITOBJS} \
 	${AUTHOBJS} \
@@ -97,7 +127,12 @@ LIBOBJS = \
 	${UTILOBJS} \
 	${RXKADOBJS} \
 	${PTSERVEROBJS} \
-	${SYSOBJS}
+	${SYSOBJS} \
+	${VOLSEROBJS} \
+	${VLDBOBJS} \
+	${COMERROBJS} \
+	$(BOSOBJS) \
+	$(USDOBJS)
 
 LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTHENTMINOR}
 
@@ -237,6 +272,18 @@ serverLog.o: ${UTIL}/serverLog.c
 fileutil.o: ${UTIL}/fileutil.c
 	${AFS_CCRULE} ${UTIL}/fileutil.c
 
+hostparse.o: ${UTIL}/hostparse.c
+	${AFS_CCRULE} ${UTIL}/hostparse.c
+
+volparse.o: ${UTIL}/volparse.c
+	${AFS_CCRULE} ${UTIL}/volparse.c
+
+uuid.o: ${UTIL}/uuid.c
+	${AFS_CCRULE} ${UTIL}/uuid.c
+
+ktime.o: ${UTIL}/ktime.c
+	${AFS_CCRULE} ${UTIL}/ktime.c
+
 pthread_glock.o: ${UTIL}/pthread_glock.c
 	${AFS_CCRULE} ${UTIL}/pthread_glock.c
 
@@ -285,6 +332,46 @@ setpag.o: ${SYS}/setpag.c
 pioctl.o: ${SYS}/pioctl.c
 	${AFS_CCRULE} ${SYS}/pioctl.c
 
+vsprocs.o: $(VOLSER)/vsprocs.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/vsprocs.c
+
+vsutils.o: $(VOLSER)/vsutils.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/vsutils.c
+
+lockprocs.o: $(VOLSER)/lockprocs.c
+	$(AFS_CCRULE) -I../volser $(VOLSER)/lockprocs.c
+
+volint.xdr.o: ../volser/volint.xdr.c
+	$(AFS_CCRULE) ../volser/volint.xdr.c
+
+volint.cs.o: ../volser/volint.cs.c
+	$(AFS_CCRULE) ../volser/volint.cs.c
+
+volerr.o: ../volser/volerr.c
+	$(AFS_CCRULE) ../volser/volerr.c
+
+vldbint.xdr.o: ../vlserver/vldbint.xdr.c
+	$(AFS_CCRULE) ../vlserver/vldbint.xdr.c
+
+vldbint.cs.o: ../vlserver/vldbint.cs.c
+	$(AFS_CCRULE) ../vlserver/vldbint.cs.c
+vl_errors.o: ../vlserver/vl_errors.c
+	$(AFS_CCRULE) ../vlserver/vl_errors.c
+
+et_name.o: ../comerr/et_name.c
+	${AFS_CCRULE} ../comerr/et_name.c
+
+bosint.xdr.o: ../bozo/bosint.xdr.c
+	$(AFS_CCRULE) ../bozo/bosint.xdr.c
+
+bosint.cs.o: ../bozo/bosint.cs.c
+	$(AFS_CCRULE) ../bozo/bosint.cs.c
+
+boserr.o: ../bozo/boserr.c
+	$(AFS_CCRULE) ../bozo/boserr.c
+
+usd_file.o: ../usd/usd_file.c
+	$(AFS_CCRULE) ../usd/usd_file.c
 clean:
 	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so* \
 		libafsauthent_pic.a libafsauthent.dylib.* \
