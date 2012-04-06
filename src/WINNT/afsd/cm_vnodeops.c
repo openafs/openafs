@@ -2649,6 +2649,73 @@ void cm_StatusFromAttr(AFSStoreStatus *statusp, cm_scache_t *scp, cm_attr_t *att
     statusp->Mask = mask;
 }
 
+int
+cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_req_t *reqp)
+{
+    int spaceAvail = 1;
+    afs_uint32  code;
+    cm_conn_t *connp;
+    struct rx_connection * rxconnp;
+    AFSFetchVolumeStatus volStat;
+    cm_volume_t *volp = NULL;
+    afs_uint32   volType;
+    char *Name;
+    char *OfflineMsg;
+    char *MOTD;
+    char volName[32]="(unknown)";
+    char offLineMsg[256]="server temporarily inaccessible";
+    char motd[256]="server temporarily inaccessible";
+    osi_hyper_t freespace;
+
+    if (fidp->cell==AFS_FAKE_ROOT_CELL_ID &&
+        fidp->volume==AFS_FAKE_ROOT_VOL_ID)
+    {
+        goto _done;
+    }
+
+    volp = cm_GetVolumeByFID(fidp);
+    if (!volp) {
+        spaceAvail = 0;
+        goto _done;
+    }
+    volType = cm_VolumeType(volp, fidp->volume);
+    if (volType == ROVOL || volType == BACKVOL) {
+        spaceAvail = 0;
+        goto _done;
+    }
+
+    Name = volName;
+    OfflineMsg = offLineMsg;
+    MOTD = motd;
+
+    do {
+        code = cm_ConnFromFID(fidp, userp, reqp, &connp);
+        if (code) continue;
+
+        rxconnp = cm_GetRxConn(connp);
+        code = RXAFS_GetVolumeStatus(rxconnp, fidp->volume,
+                                     &volStat, &Name, &OfflineMsg, &MOTD);
+        rx_PutConnection(rxconnp);
+
+    } while (cm_Analyze(connp, userp, reqp, fidp, 0, NULL, NULL, NULL, code));
+    code = cm_MapRPCError(code, reqp);
+    if (code == 0) {
+        if (volStat.MaxQuota) {
+            freespace.QuadPart = 1024 * (afs_int64)min(volStat.MaxQuota - volStat.BlocksInUse, volStat.PartBlocksAvail);
+        } else {
+            freespace.QuadPart = 1024 * (afs_int64)volStat.PartBlocksAvail;
+        }
+        spaceAvail = LargeIntegerGreaterThanOrEqualTo(freespace, *sizep);
+    }
+    /* the rpc failed, assume there is space and we can fail it later. */
+
+  _done:
+    if (volp)
+        cm_PutVolume(volp);
+
+    return spaceAvail;
+}
+
 /* set the file size, and make sure that all relevant buffers have been
  * truncated.  Ensure that any partially truncated buffers have been zeroed
  * to the end of the buffer.
@@ -2730,13 +2797,20 @@ long cm_SetLength(cm_scache_t *scp, osi_hyper_t *sizep, cm_user_t *userp,
     }
     else if (LargeIntegerGreaterThan(*sizep, scp->length)) {
         /* really extending the file */
-        scp->length = *sizep;
-        scp->mask |= CM_SCACHEMASK_LENGTH;
+        /* Check to see if we have sufficient quota */
+        if (cm_IsSpaceAvailable(&scp->fid, sizep, userp, reqp)) {
+            scp->length = *sizep;
+            scp->mask |= CM_SCACHEMASK_LENGTH;
+        } else {
+            code = CM_ERROR_SPACE;
+            goto syncopdone;
+        }
     }
 
     /* done successfully */
     code = 0;
 
+  syncopdone:
     cm_SyncOpDone(scp, NULL,
 		   CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS
 		   | CM_SCACHESYNC_SETSTATUS | CM_SCACHESYNC_SETSIZE);
