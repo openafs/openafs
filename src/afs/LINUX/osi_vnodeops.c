@@ -1198,6 +1198,18 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     
     if (vcp) {
 	struct vattr vattr;
+	struct vcache *parent_vc = VTOAFS(dip);
+
+	if (parent_vc == vcp) {
+	    /* This is possible if the parent dir is a mountpoint to a volume,
+	     * and the dir entry we looked up is a mountpoint to the same
+	     * volume. Linux cannot cope with this, so return an error instead
+	     * of risking a deadlock or panic. */
+	    afs_PutVCache(vcp);
+	    code = EDEADLK;
+	    AFS_GUNLOCK();
+	    goto done;
+	}
 
 	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
@@ -1246,6 +1258,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #endif
     d_add(dp, ip);
 
+ done:
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
