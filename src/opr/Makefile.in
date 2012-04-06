@@ -40,9 +40,14 @@ clean:
 
 install: libopr.a
 	$(INSTALL_DATA) libopr.a $(DESTDIR)$(libdir)/libopr.a
+	$(INSTALL) -d $(DESTDIR)$(includedir)/opr
+	$(INSTALL_DATA) queue.h $(DESTDIR)$(includedir)/opr/queue.h
 
 dest: libopr.a
 	$(INSTALL_DATA) libopr.a $(DEST)/lib/libopr.a
+	$(INSTALL) -d $(DEST)/include/opr
+	$(INSTALL_DATA) queue.h $(DEST)/include/opr/queue.h
+
 
 buildtools: $(HEADERS) $(TOP_LIBDIR)/libopr.a
 
