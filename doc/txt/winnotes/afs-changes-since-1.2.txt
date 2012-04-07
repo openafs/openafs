@@ -1,4 +1,220 @@
-Since 1.7.0700 (1.7.8)
+Since 1.7.0800 (1.7.8)
+
+ * When processing a directory verification, if a change of data
+   version is detected or if the FileID of a FileName changes,
+   be sure to invalidate and verify the directory entry.  Setting
+   the verify flag on the parent after updating the directory
+   entry's metadata does not result in the correct behavior.
+
+ * VNOSERVICE should not be grouped together with the volume status
+   error codes.  It is used to indicate that the RPC was not
+   serviced.  The file server issues it when its idle dead timeout
+   period is reached while receiving rx call data.  The client's
+   existing status information is still valid and the client can
+   retry the call.
+
+ * Redesign authentication group assignments during process
+   creation.  On Vista/2008 and above, use
+   PsSetCreateProcessNotifyRoutineEx() interface which provides
+   explicit specification of the creating thread.   Assign
+   authentication group immediately in order to avoid losing
+   the creating thread's authentication group context.
+
+ * Mark AFSRedir.sys binary with
+   IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY flag.  Signing
+   is now required.
+
+ * The ObjectInformationCB.ObjectReferenceCount is protected by
+   the VolumeCB->ObjectInfoTree.TreeLock.   When the TreeLock is
+   dropped the reference count can change.  Hold the TreeLock across
+   both ObjectReferenceCount == 0 tests and the associated tear down
+   or repeat the ObjectReferenceCount == 0 test after the TreeLock
+   is reacquired.
+
+ * AFSInvalidateObject() must not be called with an
+   AFSObjectInformationCB pointer variable that it is not safe to
+   overwrite as the function sets the input value to NULL if the
+   invalidation is going to be performed asynchronously in a worker
+   thread.
+
+   In AFSEnumerateDirectory(), the following call took place:
+
+      AFSInvalidateObject( &pDirNode->ObjectInformation,
+                           AFS_INVALIDATE_DATA_VERSION);
+
+   which requires a worker thread to process.  As a result, the
+   ObjectInformation pointer was being set to NULL which detached the
+   AFSObjectInformationCB from the AFSDirectoryCB.  That in turn
+   produced an execption in AFSLocateName() which resulted in a
+   resource not being freed that in turn produced a deadlock.
+
+ * Trend Micro's anti-virus driver attempts to open the file in
+   response to CcPurgeCacheSection().  While processing
+   AFSSetDispositionInfo() the Fcb->NPFcb->Resource is held which is
+   also required if a status verification is required during the
+   CreateFile operation.  That results in a deadlock.
+
+   Avoid the deadlock by setting the PENDING_DELETE flag prior to
+   calling CcPurgeCacheSection().
+
+ * If the clock is set backwards, call timeouts will not trigger
+   until the clock regains its original value plus the timeout period.
+   In rxi_CheckCall(), look for a backward clock shift and if one is
+   noticed, fail the call with RX_CALL_TIMEOUT.
+
+ * When a cm_scache_t object is created in 98% of the time, the
+   parent FID is known to the cache manager.  Normally the cache
+   manager will obtain the parent info from the AFSFetchStatus
+   structure but if the user credentials do not permit status info
+   to be obtained from the file server the parent info will be
+   unavailable.
+
+   Having the parent directory FID is useful for debugging but can
+   also be used to check the user's access rights on the parent
+   directory.
+
+ * cm_aclent.h defined cm_TGTLifeTime() as a macro that always
+   returned 0x7fffffff.  Implement cm_TGTLifeTime() as a function
+   that returns the actual token lifetime.
+
+ * optimize InitCallback3 processing.  Do not drop and acquire
+   locks if the cm_scache_t does not have a callback.
+
+ * Change the test in cm_HaveAccessRights related to Freelance
+   mode.  All objects in the freelance cell and root volume
+   by definition have access rights.
+
+ * AFSRetrieveFileInformation does not parse the complete path.
+   That information is available in the Ccb->NameArray.  If the
+   object on which AFSRetrieveFileInformation is called is a
+   relative symlink containing ".." references, the full contents
+   of the evaluated path is required for context.  Pass the
+   Ccb->NameArray so that it is available.
+
+ * The conn->conn_call_lock is held before call->lock in the lock
+   hierarchy which is violated within rxi_FreeCall(). While the
+   deadlock is rare, it is possible and has been experienced on
+   both Windows and Linux.
+
+   Change the signature of rxi_FreeCall to return 1 if it frees
+   the call and 0 if it does not.
+
+   Due to the lock hierarchy violation use MUTEX_TRYENTER()
+   to attempt to obtain the conn->conn_call_lock.  If the lock
+   cannot be obtained set the call state to dally and
+   return.  If the conn_call_lock can be obtained, behave as
+   we did before this patchset.
+
+   Only increment the callNumber if the original call->state
+   was dally or hold and the conn_call_lock could be obtained.
+   We must not increment the callNumber otherwise.  Doing so can
+   result in call numbers being skipped when the conn->call slot
+   is reused.
+
+ * The conn->callNumber array should be protected by the conn_call_lock
+   since the conn_call_lock is what protects the binding of calls to
+   connection channels.
+
+ * cm_GetNewSCache was leaking a valid cm_scache_t pointer in some
+   failure cases.  On failure, explicitly set the return value to
+   NULL.
+
+ * An enumerated directory was not validated properly if
+   AFSValidateEntry() was called with PurgeData == FALSE even
+   when a data version change was detected.  Now it does.
+
+ * The volume size and free space cannot be obtained at volume
+   initialization and then re-used for all FileFsSizeInformation
+   and FileFsFullSizeInformation queries.  Doing so prevents Windows
+   from being able to see changes in the available free space.
+
+   The maximum size of the volume is not the size of the partition
+   and the available space on the partition unless there is no quota
+   applied to the volume.  If there is a quota, then the free space
+   is the smaller of the available quota and the available partition
+   space.
+
+   Add a new ioctl request to permit the redirector to query the
+   current Volume Size Information details.
+
+ * If the data version change is detected during AFSVerifyEntry(),
+   treat it the same as if the AFS_OBJECT_FLAGS_VERIFY_DATA flag
+   had been previous set.  Purge the old data from the Windows
+   file cache.  Be sure to set the new metadata after the purge
+   so that if the file length was truncated the old data beyond
+   the truncation point will still be purged.
+
+ * When cm_SetLength() is called with an extending file length,
+   check the available free space in the volume to see if the
+   new length will fit.  If not, return CM_ERROR_SPACE.
+
+   This permits applications to discover that there is insufficient
+   space prior to writing all of the data into the windows page
+   cache at which point it will be too late.
+
+   There is still the possibility of a race that can result in
+   data loss if two applications are writing into the same volume
+   at the same time and there is insufficient room.
+
+ * Matching the behavior of the AFS SMB server, the afs redirector
+   should return STATUS_ACCESS_DENIED if File ID recursion is detected
+   in the Name Array for any given path.
+
+ * If a cache manager is told by a file server that the user does
+   not have permission to fetch status for an object, the cache
+   manager must avoid requesting a fetch status a second time for
+   that object for the same user.  Doing so risks triggering the
+   rx call abort throttling which can have a significant impact on
+   end user usability of the Explorer Shell and other applications.
+
+   The cache manager cannot make a decision on whether or not to
+   issue an RXAFS_FetchStatus RPC based upon the type of the object
+   because the type is unknown to the cache manager.  A file server
+   will succeed a FetchStatus request when the parent directory ACL
+   grants lookup permission if the object in question is the directory
+   or is a symlink/mountpoint.  Only file objects require read/write
+   permissions to obtain status information.
+
+   The rx call abort throttling is broken is many ways and must be
+   avoided.  Call aborts are tracked by call channel and occur whenever
+   ten call aborts are issued on the same call channel in a row
+   regardless of the amount of time that has elapsed.
+
+   The EACCES cache works by storing EACCES events by the FID and User
+   for which the event occurred, when it occurred and the FID of the
+   parent directory.  By definition, the parent FID of a volume root
+   directory is itself.
+
+   Entries are removed from the cache under the following circumstances:
+
+    1. When the parent FID's callback expires or is replaced.
+
+    2. When the parent FID's cm_scache object is recycled.
+
+    3. When the user's tokens expire or are replaced.
+
+   Entries are not removed when the FID's cm_scache object is recycled.
+
+   This patchset also implements correct behavior if the VLF_DFSFILESET
+   flag is set on a volume.
+
+ * Modify the Name Array processing to store both the mount point
+   object and the volume root directory object in the array.  This
+   is necessary for proper operation of
+   AFSPopulateNameArrayFromRelatedArray when the DirectoryCB parameter
+   is a mount point object.
+
+   Modify AFSBackupEntry to remove two entries if a volume root
+   directory entry is being removed.
+
+ * cm_FindACLCache() must be called with the cm_scache_t
+   write-locked and therefore cm_HaveAccessRights() must obtain a
+   write-lock and not a read-lock on 'aclScp'.
+
+ * The AFS Redirector does not support the Windows quota interface
+   therefore return STATUS_DISK_FULL for all over quota conditions.
+
+Since 1.7.0700 (1.7.7)
 
  * Disable BugCheck flag in release builds.  This was resulting
    in too many spurious exceptions due to low memory conditions.
@@ -20,7 +236,7 @@ Since 1.7.0700 (1.7.8)
 
  * Avoid another deadlock involving VolumeCB->ObjectInfoTree.TreeLock.
 
-Since 1.7.0600 (1.7.7)
+Since 1.7.0600 (1.7.6)
 
  * Permit file renames that are no-ops to succeed even if they
    do nothing.
