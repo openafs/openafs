@@ -127,9 +127,12 @@ or C</vicepXX> where XX is "a" through "z" or "aa" though "iv". Up to
 255 partitions are allowed. The File Server expects that the /vicepXX
 directories are each on a dedicated filesystem. The File Server will
 only use a /vicepXX if it's a mountpoint for another filesystem,
-unless the file C</vicepXX/AlwaysAttach> exists. The data in the
-partition is a special format that can only be access using OpenAFS
-commands or an OpenAFS client.
+unless the file C</vicepXX/AlwaysAttach> exists.  A partition will not be
+mounted if the file C</vicepXX/NeverAttach> exists. If both
+C</vicepXX/AlwaysAttach> and C</vicepXX/NeverAttach> are present, then
+C</vicepXX/AlwaysAttach> wins.  The data in the partition is a special
+format that can only be access using OpenAFS commands or an OpenAFS
+client.
 
 The File Server generates the following message when a partition is nearly
 full:

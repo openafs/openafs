@@ -50,6 +50,11 @@
 #define VICE_ALWAYSATTACH_FILE	"AlwaysAttach"
 #endif
 
+/* If a file by this name exists in a /vicepX directory, it means that
+ * this directory should NOT be used as an AFS partition.
+ */
+#define VICE_NEVERATTACH_FILE	"NeverAttach"
+
 /**
  * abstraction for files used for file-locking.
  */
