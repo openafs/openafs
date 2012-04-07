@@ -398,6 +398,28 @@ VIsAlwaysAttach(char *part, int *awouldattach)
 #endif /* AFS_NAMEI_ENV */
 }
 
+/* VIsNeverAttach() checks whether a /vicepX directory should never be
+ * attached (return value 1), or follow the normal mounting logic. The
+ * Always Attach flag may override the NeverAttach flag.
+ */
+static int
+VIsNeverAttach(char *part)
+{
+    struct afs_stat_st st;
+    char checkfile[256];
+    int ret;
+
+    if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE))
+	return 0;
+
+    strncpy(checkfile, part, 100);
+    strcat(checkfile, OS_DIRSEP);
+    strcat(checkfile, VICE_NEVERATTACH_FILE);
+
+    ret = afs_stat(checkfile, &st);
+    return (ret < 0) ? 0 : 1;
+}
+
 /* VAttachPartitions2() looks for and attaches /vicepX partitions
  * where a special file (VICE_ALWAYSATTACH_FILE) exists.  This is
  * used to attach /vicepX directories which aren't on dedicated
@@ -478,6 +500,10 @@ VAttachPartitions(void)
 	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
 	    continue;
 
+	/* Skip this Partition? */
+	if (VIsNeverAttach(mntent->mnt_dir))
+	    continue;
+
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mnt.mnt_mountp, NULL))
 	    continue;
@@ -515,6 +541,10 @@ VAttachPartitions(void)
     }
     while (mntent = getmntent(mfd)) {
 	if (!hasmntopt(mntent, MNTOPT_RW))
+	    continue;
+
+	/* Skip this Partition? */
+	if (VIsNeverAttach(mntent->mnt_dir))
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
@@ -620,6 +650,10 @@ VAttachPartitions(void)
 #endif
 #endif
 
+	/* Skip this Partition? */
+	if (VIsNeverAttach(mntent->mnt_dir))
+	    continue;
+
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(part, NULL))
 	    continue;
@@ -648,6 +682,10 @@ VAttachPartitions(void)
 
     while ((fsent = getfsent())) {
 	if (strcmp(fsent->fs_type, "rw") != 0)
+	    continue;
+
+	/* Skip this Partition? */
+	if (VIsNeverAttach(mntent->mnt_dir))
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
@@ -834,6 +872,10 @@ VAttachPartitions(void)
 	}
     }
     while ((mntent = getmntent(mfd))) {
+	/* Skip this Partition? */
+	if (VIsNeverAttach(mntent->mnt_dir))
+	    continue;
+
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mntent->mnt_dir, NULL))
 	    continue;
