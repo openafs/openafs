@@ -58,7 +58,7 @@ afs_uint32
 xfread(XFILE * X, void *buf, afs_uint32 count)
 {
     afs_uint32 code;
-    u_int64 tmp64;
+    dt_uint64 tmp64;
 
     code = (X->do_read) (X, buf, count);
     if (code)
@@ -76,7 +76,7 @@ afs_uint32
 xfwrite(XFILE * X, void *buf, afs_uint32 count)
 {
     afs_uint32 code;
-    u_int64 tmp64;
+    dt_uint64 tmp64;
 
     if (!X->is_writable)
 	return ERROR_XFILE_RDONLY;
@@ -91,7 +91,7 @@ xfwrite(XFILE * X, void *buf, afs_uint32 count)
 
 
 afs_uint32
-xftell(XFILE * X, u_int64 * offset)
+xftell(XFILE * X, dt_uint64 * offset)
 {
     if (X->do_tell)
 	return (X->do_tell) (X, offset);
@@ -101,7 +101,7 @@ xftell(XFILE * X, u_int64 * offset)
 
 
 afs_uint32
-xfseek(XFILE * X, u_int64 * offset)
+xfseek(XFILE * X, dt_uint64 * offset)
 {
     afs_uint32 code;
 
@@ -119,7 +119,7 @@ afs_uint32
 xfskip(XFILE * X, afs_uint32 count)
 {
     afs_uint32 code;
-    u_int64 tmp64;
+    dt_uint64 tmp64;
 
     /* Use the skip method, if there is one */
     if (X->do_skip && !X->passthru) {

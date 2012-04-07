@@ -93,7 +93,7 @@ afs_uint32 parse_directory(XFILE *X, dump_parser *p, afs_vnode *v,
   afs_dir_entry de;
   int pgno, i, l, n;
   afs_int32 r;
-  u_int64 where;
+  dt_uint64 where;
 
   if (p->print_flags & DSPRINT_DIR) {
     printf("  VNode      Uniqifier   Name\n");

@@ -362,7 +362,7 @@ main(int argc, char **argv)
     }
 
     if (printflags & DSPRINT_PATH) {
-	u_int64 where;
+	dt_uint64 where;
 
 	dp.print_flags = printflags & DSPRINT_DEBUG;
 	bzero(&phi, sizeof(phi));

@@ -400,7 +400,7 @@ static afs_uint32
 file_cb(afs_vnode * v, XFILE * X, void *refcon)
 {
     char *vnodepath, vnpx[30];
-    u_int64 where;
+    dt_uint64 where;
     XFILE OX;
     int r, use = 0;
 
@@ -462,7 +462,7 @@ static afs_uint32
 symlink_cb(afs_vnode * v, XFILE * X, void *refcon)
 {
     char *vnodepath, *linktarget, vnpx[30];
-    u_int64 where;
+    dt_uint64 where;
     int r, use = 0;
 
     if (!dirs_done) {
@@ -567,7 +567,7 @@ main(int argc, char **argv)
     dirs_done = 0;
 
     if (!use_vnum) {
-	u_int64 where;
+	dt_uint64 where;
 
 	memset(&phi, 0, sizeof(phi));
 	phi.p = &dp;

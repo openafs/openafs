@@ -49,11 +49,11 @@ typedef unsigned long afs_uint32;
 
 
 #ifdef NATIVE_INT64
-typedef unsigned NATIVE_INT64 u_int64;
+typedef unsigned NATIVE_INT64 dt_uint64;
 
 /* construct/extract/assign */
-#define mk64(X,H,L) ((X) = ( ((u_int64)(H) << 32) \
-                           | ((u_int64)(L) & 0xffffffff)))
+#define mk64(X,H,L) ((X) = ( ((dt_uint64)(H) << 32) \
+                           | ((dt_uint64)(L) & 0xffffffff)))
 #define hi64(Y)     ((afs_uint32)(((Y) >> 32) & 0xffffffff))
 #define lo64(Y)     ((afs_uint32)((Y) & 0xffffffff))
 #define ex64(Y,H,L) ((H) = hi64(Y), (L) = lo64(Y))
@@ -71,9 +71,9 @@ typedef unsigned NATIVE_INT64 u_int64;
 #define zero64(X)   (!(X))
 
 /* Arithmetic */
-#define add64_32(X,A,B) ((X) = (A) + (u_int64)(B))
+#define add64_32(X,A,B) ((X) = (A) + (dt_uint64)(B))
 #define add64_64(X,A,B) ((X) = (A) + (B))
-#define sub64_32(X,A,B) ((X) = (A) - (u_int64)(B))
+#define sub64_32(X,A,B) ((X) = (A) - (dt_uint64)(B))
 #define sub64_64(X,A,B) ((X) = (A) - (B))
 
 /* Byte-order */
@@ -89,7 +89,7 @@ typedef unsigned NATIVE_INT64 u_int64;
 /** We have to provide our own 64-bit integers **/
 typedef struct {
     afs_uint32 hi, lo;
-} u_int64;
+} dt_uint64;
 
 /* construct/extract/assign */
 #define mk64(X,H,L) ((X).hi = (H), (X).lo = (L))
@@ -131,27 +131,27 @@ typedef struct {
 
 /* The following are too complex to be macros: */
 
-/* char *hexify_int64(u_int64 a, char *buf)
+/* char *hexify_int64(dt_uint64 a, char *buf)
  * Produces an ASCII representation of a in hexadecimal, and returns
  * a pointer to the resulting string.  If buf is non-NULL, it is taken
  * to be a pointer to the buffer to be used, which must be at least 17
  * bytes long.  This function is thread-safe iff buf is provided.
  */
-extern char *hexify_int64(u_int64 *, char *);
+extern char *hexify_int64(dt_uint64 *, char *);
 
-/* char *decimate_int64(u_int64 a, char *buf)
+/* char *decimate_int64(dt_uint64 a, char *buf)
  * Produces an ASCII representation of a in decimal, and returns
  * a pointer to the resulting string.  If buf is non-NULL, it is taken
  * to be a pointer to the buffer to be used, which must be at least 21
  * bytes long.  This function is thread-safe iff buf is provided.
  */
-extern char *decimate_int64(u_int64 *, char *);
+extern char *decimate_int64(dt_uint64 *, char *);
 
-/* void shift_int64(u_int64 a, int bits)
+/* void shift_int64(dt_uint64 a, int bits)
  * Shifts the 64-bit integer in a by the specified number of bits.
  * If bits is positive, the shift is to the left; if negative, the
  * shift is to the right.
  */
-extern void shift_int64(u_int64 *, int);
+extern void shift_int64(dt_uint64 *, int);
 
 #endif /* _INTNN_H_ */

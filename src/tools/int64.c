@@ -33,13 +33,13 @@
 #include "intNN.h"
 
 char *
-hexify_int64(u_int64 * X, char *buf)
+hexify_int64(dt_uint64 * X, char *buf)
 {
     static char mybuf[17];
 
 #ifdef NATIVE_INT64
     char c, *p;
-    u_int64 x = *X;
+    dt_uint64 x = *X;
 
     if (!buf)
 	buf = mybuf;
@@ -66,11 +66,11 @@ hexify_int64(u_int64 * X, char *buf)
 
 #ifdef NATIVE_INT64
 char *
-decimate_int64(u_int64 * X, char *buf)
+decimate_int64(dt_uint64 * X, char *buf)
 {
     static char mybuf[21];
     char *p;
-    u_int64 x = *X;
+    dt_uint64 x = *X;
 
     if (!buf)
 	buf = mybuf;
@@ -203,7 +203,7 @@ decimate(unsigned long hi, unsigned long lo, char *answer)
 }
 
 char *
-decimate_int64(u_int64 * X, char *buf)
+decimate_int64(dt_uint64 * X, char *buf)
 {
     static char mybuf[21];
     char *p;
@@ -220,7 +220,7 @@ decimate_int64(u_int64 * X, char *buf)
 
 
 void
-shift_int64(u_int64 * X, int bits)
+shift_int64(dt_uint64 * X, int bits)
 {
 #ifdef NATIVE_INT64
     if (bits < 0)
@@ -302,7 +302,7 @@ verify_int64_size()
 void
 test_int64_constructs(void)
 {
-    u_int64 x, y;
+    dt_uint64 x, y;
     afs_uint32 hi, lo;
     int failures = 0, pass;
     char buf[17];
@@ -357,7 +357,7 @@ void
 test_int64_compares()
 {
 #define NCOMPARE 9
-    u_int64 control, test[NCOMPARE];
+    dt_uint64 control, test[NCOMPARE];
     char cbuf[17], tbuf[17];
     int i, r, result[NCOMPARE];
     int pass, failures, FAILURES = 0;

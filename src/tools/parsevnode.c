@@ -69,7 +69,7 @@ static tagged_field vnode_fields[] = {
 static afs_uint32
 resync_vnode(XFILE * X, dump_parser * p, afs_vnode * v, int start, int limit)
 {
-    u_int64 where, expected_where;
+    dt_uint64 where, expected_where;
     afs_uint32 r;
     int i;
 
@@ -123,7 +123,7 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
 {
     dump_parser *p = (dump_parser *) g_refcon;
     afs_uint32(*cb) (afs_vnode *, XFILE *, void *);
-    u_int64 where, offset2k;
+    dt_uint64 where, offset2k;
     afs_vnode v;
     afs_uint32 r;
 
@@ -153,7 +153,7 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
     /* Try to resync, if requested */
     if (!r && (p->repair_flags & DSFIX_VFSYNC)) {
 	afs_uint32 drop;
-	u_int64 xwhere;
+	dt_uint64 xwhere;
 
 	if ((r = xftell(X, &where)))
 	    return r;
@@ -214,7 +214,7 @@ parse_vnode(XFILE * X, unsigned char *tag, tagged_field * field,
 	} else
 	    cb = p->cb_vnode_empty;
 	if (cb) {
-	    u_int64 where;
+	    dt_uint64 where;
 
 	    if ((r = xftell(X, &where)))
 		return r;

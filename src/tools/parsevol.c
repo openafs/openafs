@@ -78,7 +78,7 @@ parse_volhdr(XFILE * X, unsigned char *tag, tagged_field * field,
 {
     dump_parser *p = (dump_parser *) g_refcon;
     afs_vol_header hdr;
-    u_int64 where;
+    dt_uint64 where;
     afs_uint32 r;
 
     memset(&hdr, 0, sizeof(hdr));

@@ -45,7 +45,7 @@
 int
 handle_return(int r, XFILE * X, unsigned char tag, dump_parser * p)
 {
-    u_int64 where, xwhere;
+    dt_uint64 where, xwhere;
 
     switch (r) {
     case 0:
@@ -115,7 +115,7 @@ prep_pi(dump_parser * p, tag_parse_info * pi)
  */
 /*** THIS FUNCTION INTENDED FOR INTERNAL USE ONLY ***/
 int
-match_next_vnode(XFILE * X, dump_parser * p, u_int64 * where,
+match_next_vnode(XFILE * X, dump_parser * p, dt_uint64 * where,
 		 afs_uint32 vnode)
 {
     afs_uint32 r, x, y, z;

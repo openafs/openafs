@@ -63,7 +63,7 @@ ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
 {
     char buf[STAGE_HDRLEN];
     struct stage_header *bckhdr = (struct stage_header *)buf;
-    u_int64 where;
+    dt_uint64 where;
     afs_int32 r;
 
     if ((r = xftell(X, &where)))

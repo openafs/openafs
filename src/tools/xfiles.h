@@ -44,11 +44,11 @@ typedef struct XFILE XFILE;
 struct XFILE {
     afs_uint32(*do_read) (XFILE *, void *, afs_uint32);	/* read data */
     afs_uint32(*do_write) (XFILE *, void *, afs_uint32);	/* write data */
-    afs_uint32(*do_tell) (XFILE *, u_int64 *);	/* find position */
-    afs_uint32(*do_seek) (XFILE *, u_int64 *);	/* set position */
+    afs_uint32(*do_tell) (XFILE *, dt_uint64 *);	/* find position */
+    afs_uint32(*do_seek) (XFILE *, dt_uint64 *);	/* set position */
     afs_uint32(*do_skip) (XFILE *, afs_uint32);	/* skip forward */
     afs_uint32(*do_close) (XFILE *);	/* close */
-    u_int64 filepos;		/* position (counted) */
+    dt_uint64 filepos;		/* position (counted) */
     int is_seekable;		/* 1 if seek works */
     int is_writable;		/* 1 if write works */
     XFILE *passthru;		/* XFILE to pass thru to */
@@ -78,8 +78,8 @@ extern afs_uint32 xfread(XFILE *, void *, afs_uint32);	/* read data */
 extern afs_uint32 xfwrite(XFILE *, void *, afs_uint32);	/* write data */
 extern afs_uint32 xfprintf(XFILE *, char *, ...);	/* formatted */
 extern afs_uint32 vxfprintf(XFILE *, char *, va_list);	/* formatted VA */
-extern afs_uint32 xftell(XFILE *, u_int64 *);	/* get position */
-extern afs_uint32 xfseek(XFILE *, u_int64 *);	/* set position */
+extern afs_uint32 xftell(XFILE *, dt_uint64 *);	/* get position */
+extern afs_uint32 xfseek(XFILE *, dt_uint64 *);	/* set position */
 extern afs_uint32 xfskip(XFILE *, afs_uint32);	/* skip forward */
 extern afs_uint32 xfpass(XFILE *, XFILE *);	/* set passthru */
 extern afs_uint32 xfunpass(XFILE *);	/* unset passthru */

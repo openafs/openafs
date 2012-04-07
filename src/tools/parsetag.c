@@ -79,7 +79,7 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 	 * work much of the time.
 	 */
 	if (!*tag && pi->shift_offset && (pi->flags & TPFLAG_RSKIP)) {
-	    u_int64 where, tmp64a, tmp64b;
+	    dt_uint64 where, tmp64a, tmp64b;
 	    char buf1[21], buf2[21], buf3[21];
 	    char *p1, *p2, *p3;
 
@@ -107,7 +107,7 @@ ParseTaggedData(XFILE * X, tagged_field * fields, unsigned char *tag,
 	}
 	if (!*tag && (pi->flags & TPFLAG_SKIP)) {
 	    int count = 0;
-	    u_int64 where, tmp64a;
+	    dt_uint64 where, tmp64a;
 
 	    if ((r = xftell(X, &where)))
 		return r;

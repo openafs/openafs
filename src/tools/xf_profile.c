@@ -74,7 +74,7 @@ xf_PROFILE_do_write(XFILE * X, void *buf, afs_uint32 count)
 
 /* do_tell for profiled xfiles */
 static afs_uint32
-xf_PROFILE_do_tell(XFILE * X, u_int64 * offset)
+xf_PROFILE_do_tell(XFILE * X, dt_uint64 * offset)
 {
     PFILE *PF = X->refcon;
     afs_uint32 err;
@@ -90,7 +90,7 @@ xf_PROFILE_do_tell(XFILE * X, u_int64 * offset)
 
 /* do_seek for profiled xfiles */
 static afs_uint32
-xf_PROFILE_do_seek(XFILE * X, u_int64 * offset)
+xf_PROFILE_do_seek(XFILE * X, dt_uint64 * offset)
 {
     PFILE *PF = X->refcon;
     afs_uint32 err;

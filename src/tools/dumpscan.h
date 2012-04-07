@@ -78,7 +78,7 @@ typedef struct {
   unsigned char *part;
   unsigned char *volname;
   afs_uint32 volid;
-  u_int64 dumplen;
+  dt_uint64 dumplen;
   afs_uint32 level;
   afs_uint32 magic;
   afs_uint32 cksum;
@@ -92,7 +92,7 @@ typedef struct {
 #define F_DUMPHDR_FROM        0x00000004
 #define F_DUMPHDR_TO          0x00000008
 typedef struct {
-  u_int64 offset;              /* Where in the input stream is it? */
+  dt_uint64 offset;              /* Where in the input stream is it? */
   afs_uint32 field_mask;       /* What fields are present? */
   afs_uint32 magic;            /* Magic number */
   afs_uint32 version;          /* Dump format version */
@@ -130,7 +130,7 @@ typedef struct {
 #define F_VOLHDR_DAYUSE       0x00800000
 #define F_VOLHDR_DAYUSE_DATE  0x01000000
 typedef struct {
-  u_int64 offset;              /* Where in the input stream is it? */
+  dt_uint64 offset;              /* Where in the input stream is it? */
   afs_uint32 field_mask;       /* What fields are present? */
   afs_uint32 volid;            /* Volume ID */
   afs_uint32 volvers;          /* ?? */
@@ -177,7 +177,7 @@ typedef struct {
 #define F_VNODE_PARTIAL       0x00002000 /* Partial vnode continuation (no header) */
 #define F_VNODE_LINK_TARGET   0x00004000 /* Symlink target present */
 typedef struct {
-  u_int64 offset;              /* Where in the input stream is it? */
+  dt_uint64 offset;              /* Where in the input stream is it? */
   afs_uint32 field_mask;       /* What fields are present? */
   afs_uint32 vnode;            /* Vnode number */
   afs_uint32 vuniq;            /* Uniquifier */
@@ -192,7 +192,7 @@ typedef struct {
   afs_uint32 client_date;      /* Last modified date from client */
   afs_uint32 server_date;      /* Last modified date on server */
   afs_uint32 size;             /* Size of data */
-  u_int64 d_offset;            /* Where in the input stream is the data? */
+  dt_uint64 d_offset;            /* Where in the input stream is the data? */
   char *link_target;           /* Target of symbolic link */
   unsigned char acl[SIZEOF_LARGEDISKVNODE - SIZEOF_SMALLDISKVNODE];
 } afs_vnode;
@@ -230,7 +230,7 @@ struct tag_parse_info {
 #define TPFLAG_SKIP   0x0001
 #define TPFLAG_RSKIP  0x0002
   int shift_offset;
-  u_int64 shift_start;
+  dt_uint64 shift_start;
 };
 struct tagged_field {
   char tag;        /* Tag character */
@@ -308,8 +308,8 @@ typedef struct vhash_ent {
   struct vhash_ent *next;    /* Pointer to next entry */
   afs_uint32 vnode;             /* VNode number */
   afs_uint32 parent;            /* Parent VNode number */
-  u_int64 v_offset;          /* Offset to start of vnode */
-  u_int64 d_offset;          /* Offset to data (0 if none) */
+  dt_uint64 v_offset;          /* Offset to start of vnode */
+  dt_uint64 d_offset;          /* Offset to data (0 if none) */
   afs_uint32 d_size;            /* Size of data */
 } vhash_ent;
 typedef struct {

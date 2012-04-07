@@ -40,7 +40,7 @@ try_backuphdr(XFILE * X, char *tag, tagged_field * field, afs_uint32 value,
 {
     dump_parser *p = (dump_parser *) g_refcon;
     backup_system_header bh;
-    u_int64 where;
+    dt_uint64 where;
     afs_uint32 r;
 
     /* Which header should we try (if any)? */

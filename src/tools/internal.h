@@ -53,5 +53,5 @@ extern afs_uint32 try_backuphdr(XFILE * X, unsigned char *tag,
 /* util.c - Random utilities */
 extern afs_uint32 handle_return(int, XFILE *, unsigned char, dump_parser *);
 extern void prep_pi(dump_parser *, tag_parse_info *);
-extern afs_uint32 match_next_vnode(XFILE *, dump_parser *, u_int64 *,
+extern afs_uint32 match_next_vnode(XFILE *, dump_parser *, dt_uint64 *,
 				   afs_uint32);

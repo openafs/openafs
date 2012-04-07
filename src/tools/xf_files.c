@@ -71,7 +71,7 @@ xf_FILE_do_write(XFILE * X, void *buf, afs_uint32 count)
 
 /* do_tell for stdio xfiles */
 static afs_uint32
-xf_FILE_do_tell(XFILE * X, u_int64 * offset)
+xf_FILE_do_tell(XFILE * X, dt_uint64 * offset)
 {
     FILE *F = X->refcon;
     off_t where;
@@ -86,7 +86,7 @@ xf_FILE_do_tell(XFILE * X, u_int64 * offset)
 
 /* do_seek for stdio xfiles */
 static afs_uint32
-xf_FILE_do_seek(XFILE * X, u_int64 * offset)
+xf_FILE_do_seek(XFILE * X, dt_uint64 * offset)
 {
     FILE *F = X->refcon;
     off_t where = get64(*offset);
