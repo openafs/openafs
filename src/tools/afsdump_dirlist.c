@@ -29,11 +29,9 @@
 /* afsdump_dirlist.c - List an AFS directory file */
 
 #include <afsconfig.h>
+#include <afs/param.h>
 
-#include <sys/fcntl.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
+#include <roken.h>
 
 #include <afs/stds.h>
 #include <afs/com_err.h>

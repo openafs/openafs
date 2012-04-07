@@ -27,12 +27,12 @@
 /* UB - Unified Backups */
 /* methods/afs/dumpscan/afsdump_scan.c - General-purpose dump scanner */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
+#include <roken.h>
+
 #include "dumpscan.h"
-#include <sys/fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
 
 extern int opterr, optind;
 extern char *optarg;
