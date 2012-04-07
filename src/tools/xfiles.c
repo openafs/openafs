@@ -189,7 +189,7 @@ xfclose(XFILE * X)
     if (X->do_close)
 	code = (X->do_close) (X);
     memset(X, 0, sizeof(*X));
-    return 0;
+    return code;
 }
 
 
