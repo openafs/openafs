@@ -3195,7 +3195,14 @@ void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir)
         NTStatus = 0xC09820FBL;	/* SMB use standard */
     }
     else if (code == CM_ERROR_QUOTA) {
-        NTStatus = 0xC0000044L;	/* Quota exceeded */
+        /*
+         * AFS Redirector does not support Windows quota
+         * interface.  Always report disk full instead.
+         */
+        if (redir)
+            NTStatus = 0xC000007FL;	/* Disk full */
+        else
+            NTStatus = 0xC0000044L;	/* Quota exceeded */
     }
     else if (code == CM_ERROR_SPACE) {
         NTStatus = 0xC000007FL;	/* Disk full */
