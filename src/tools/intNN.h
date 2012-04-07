@@ -48,8 +48,8 @@ typedef unsigned long afs_uint32;
 #define INT64_TEST_LO  0xfedcba98
 
 
-#ifdef NATIVE_INT64
-typedef unsigned NATIVE_INT64 dt_uint64;
+#ifdef NATIVE_UINT64
+typedef NATIVE_UINT64 dt_uint64;
 
 /* construct/extract/assign */
 #define mk64(X,H,L) ((X) = ( ((dt_uint64)(H) << 32) \

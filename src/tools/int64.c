@@ -37,7 +37,7 @@ hexify_int64(dt_uint64 * X, char *buf)
 {
     static char mybuf[17];
 
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
     char c, *p;
     dt_uint64 x = *X;
 
@@ -64,7 +64,7 @@ hexify_int64(dt_uint64 * X, char *buf)
 }
 
 
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
 char *
 decimate_int64(dt_uint64 * X, char *buf)
 {
@@ -216,13 +216,13 @@ decimate_int64(dt_uint64 * X, char *buf)
     return (*p) ? p : p - 1;
 }
 
-#endif /* NATIVE_INT64 */
+#endif /* NATIVE_UINT64 */
 
 
 void
 shift_int64(dt_uint64 * X, int bits)
 {
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
     if (bits < 0)
 	*X >>= (-bits);
     else
@@ -257,20 +257,20 @@ shift_int64(dt_uint64 * X, int bits)
 
 /** the rest of this is for testing the int64 suite **/
 
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
 
 #define xize(x) #x
 #define stringize(x) xize(x)
-#define INT64_NAME stringize(unsigned NATIVE_INT64)
+#define INT64_NAME stringize(unsigned NATIVE_UINT64)
 
 
-#endif /* NATIVE_INT64 */
+#endif /* NATIVE_UINT64 */
 
 
 void
 verify_int64_size()
 {
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
     signed char testchar = -1;
     unsigned int testint = (unsigned char)testchar;
 
@@ -283,19 +283,19 @@ verify_int64_size()
     }
     printf("Looks like a char is 8 bits...\n");
 
-    if (sizeof(unsigned NATIVE_INT64) != 8) {
+    if (sizeof(unsigned NATIVE_UINT64) != 8) {
 	printf("sizeof(%s) = %d; should be 8\n", INT64_NAME,
-	       sizeof(unsigned NATIVE_INT64));
+	       sizeof(unsigned NATIVE_UINT64));
 	fprintf(stderr, "Hey!  You said a %s was 64-bits wide!\n",
 		INT64_NAME);
 	exit(-1);
     }
     printf("Yippee!  We have a native 64-bit type (%s)\n\n", INT64_NAME);
 
-#else /* !NATIVE_INT64 */
+#else /* !NATIVE_UINT64 */
 
     printf("Using fake 64-bit integers...\n\n");
-#endif /* NATIVE_INT64 */
+#endif /* NATIVE_UINT64 */
 }
 
 
@@ -311,7 +311,7 @@ test_int64_constructs(void)
     printf("Setting x := %s\n", INT64_TEST_STR);
     mk64(x, INT64_TEST_HI, INT64_TEST_LO);
 
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
     pass = (x == INT64_TEST_CONST);
     hexify_int64(&x, buf);
     printf("NATIVE mk64: x       = 0x%16s                %s\n", buf,

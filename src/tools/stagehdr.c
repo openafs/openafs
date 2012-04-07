@@ -99,7 +99,7 @@ ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
 	hdr->dump_date = ntohl(bckhdr->c_time);
 	hdr->filenum = ntohl(bckhdr->c_filenum);
 	hdr->volid = ntohl(bckhdr->c_id);
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
 	hdr->dumplen = ntohl(bckhdr->c_length);
 #else
         hdr->dumplen.hi = 0;
@@ -150,7 +150,7 @@ DumpStageHdr(XFILE * OX, backup_system_header * hdr)
     bckhdr->c_filenum = htonl(hdr->filenum);
     bckhdr->c_time = htonl(hdr->dump_date);
     bckhdr->c_id = htonl(hdr->volid);
-#ifdef NATIVE_INT64
+#ifdef NATIVE_UINT64
     bckhdr->c_length = htonl((afs_uint32) hdr->dumplen);
 #else
     bckhdr->c_length = htonl(hdr->dumplen.lo);
