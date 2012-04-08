@@ -66,10 +66,18 @@ main(int argc, char *argv[])
     }
 #endif
 
-    code = ka_Init(0);
-    if (code) {
-	afs_com_err(whoami, code, "Can't get cell info");
-	exit(1);
+    /* Don't ka_Init if we're just returning help output. */
+    if (argc== 0 ||
+         ( strcmp(argv[1], "-help") != 0 &&
+	   strcmp(argv[1], "help") != 0 &&
+	   strcmp(argv[1], "-version") != 0 &&
+	   strcmp(argv[1], "version") !=0 &&
+	   strcmp(argv[1],"apropos") != 0)) {
+	code = ka_Init(0);
+	if (code) {
+	    afs_com_err(whoami, code, "Can't get cell info");
+	    exit(1);
+	}
     }
 
     /* if there are no arguments or if the first argument is "-cell" or if the
