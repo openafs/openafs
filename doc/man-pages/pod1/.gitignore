@@ -21,5 +21,7 @@
 /pts_sleep.pod
 /pts_source.pod
 /vos_addsite.pod
+/vos_backup.pod
 /vos_copy.pod
+/vos_dump.pod
 /vos_zap.pod
