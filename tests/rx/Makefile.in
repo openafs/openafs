@@ -16,8 +16,7 @@ tests = event-t
 all check test tests: $(tests)
 
 event-t: event-t.o $(LIBS)
-	$(AFS_LDRULE) event-t.o $(LIBS) $(XLIBS)
-
+	$(AFS_LDRULE) event-t.o $(LIBS) $(LIB_roken) $(XLIBS)
 install:
 
 clean distclean:
