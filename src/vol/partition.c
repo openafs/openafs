@@ -501,7 +501,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* Skip this Partition? */
-	if (VIsNeverAttach(mntent->mnt_dir))
+	if (VIsNeverAttach(mnt.mnt_mountp))
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
@@ -651,7 +651,7 @@ VAttachPartitions(void)
 #endif
 
 	/* Skip this Partition? */
-	if (VIsNeverAttach(mntent->mnt_dir))
+	if (VIsNeverAttach(part))
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
@@ -685,7 +685,7 @@ VAttachPartitions(void)
 	    continue;
 
 	/* Skip this Partition? */
-	if (VIsNeverAttach(mntent->mnt_dir))
+	if (VIsNeverAttach(fsent->fs_file))
 	    continue;
 
 	/* If we're going to always attach this partition, do it later. */
