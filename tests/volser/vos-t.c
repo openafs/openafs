@@ -3,6 +3,8 @@
 
 #include <roken.h>
 
+#include <sys/wait.h>
+
 #include <rx/rx.h>
 #include <ubik.h>
 
