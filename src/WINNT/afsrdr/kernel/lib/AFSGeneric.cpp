@@ -3756,28 +3756,6 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
             try_return( ntStatus);
         }
 
-        if( PurgeContent &&
-            pObjectInfo->Fcb != NULL)
-        {
-
-            pCurrentFcb = pObjectInfo->Fcb;
-
-            if( !ExIsResourceAcquiredLite( &pCurrentFcb->NPFcb->Resource))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSValidateEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
-                              &pCurrentFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
-
-                AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
-                                TRUE);
-
-                bReleaseFcb = TRUE;
-            }
-        }
-
         //
         // This routine ensures that the current entry is valid by:
         //
@@ -3905,109 +3883,120 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                 // Can't hold the Fcb resource while doing this
                 //
 
-                if( pCurrentFcb != NULL &&
+                if( PurgeContent &&
+                    pObjectInfo->Fcb != NULL &&
                     (pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart ||
                     BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA)))
                 {
 
-                    IO_STATUS_BLOCK stIoStatus;
-                    BOOLEAN bPurgeExtents = FALSE;
+                    pCurrentFcb = pObjectInfo->Fcb;
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSValidateEntry Flush/purge entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &DirEntry->NameInformation.FileName,
-                                  pObjectInfo->FileId.Cell,
-                                  pObjectInfo->FileId.Volume,
-                                  pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique);
-
-                    if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
+                    if( !ExIsResourceAcquiredLite( &pCurrentFcb->NPFcb->Resource))
                     {
-                        bPurgeExtents = TRUE;
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSValidateEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                      &pCurrentFcb->NPFcb->Resource,
+                                      PsGetCurrentThread());
+
+                        AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
+                                        TRUE);
+
+                        bReleaseFcb = TRUE;
+                    }
+
+                    if( pCurrentFcb != NULL)
+                    {
+
+                        IO_STATUS_BLOCK stIoStatus;
+                        BOOLEAN bPurgeExtents = FALSE;
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSVerifyEntry Clearing VERIFY_DATA flag %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      AFS_TRACE_LEVEL_VERBOSE_2,
+                                      "AFSValidateEntry Flush/purge entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                       &DirEntry->NameInformation.FileName,
                                       pObjectInfo->FileId.Cell,
                                       pObjectInfo->FileId.Volume,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique);
 
-                        ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                    }
-
-                    __try
-                    {
-
-                        CcFlushCache( &pCurrentFcb->NPFcb->SectionObjectPointers,
-                                      NULL,
-                                      0,
-                                      &stIoStatus);
-
-                        if( !NT_SUCCESS( stIoStatus.Status))
+                        if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
                         {
+                            bPurgeExtents = TRUE;
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSVerifyEntry Clearing VERIFY_DATA flag %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                          &DirEntry->NameInformation.FileName,
+                                          pObjectInfo->FileId.Cell,
+                                          pObjectInfo->FileId.Volume,
+                                          pObjectInfo->FileId.Vnode,
+                                          pObjectInfo->FileId.Unique);
+
+                            ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+                        }
+
+                        __try
+                        {
+
+                            CcFlushCache( &pCurrentFcb->NPFcb->SectionObjectPointers,
+                                          NULL,
+                                          0,
+                                          &stIoStatus);
+
+                            if( !NT_SUCCESS( stIoStatus.Status))
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                              AFS_TRACE_LEVEL_ERROR,
+                                              "AFSValidateEntry CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                              &DirEntry->NameInformation.FileName,
+                                              pObjectInfo->FileId.Cell,
+                                              pObjectInfo->FileId.Volume,
+                                              pObjectInfo->FileId.Vnode,
+                                              pObjectInfo->FileId.Unique,
+                                              stIoStatus.Status,
+                                              stIoStatus.Information);
+
+                                ntStatus = stIoStatus.Status;
+                            }
+
+                            if ( bPurgeExtents)
+                            {
+
+                                CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                     NULL,
+                                                     0,
+                                                     FALSE);
+                            }
+                        }
+                        __except( EXCEPTION_EXECUTE_HANDLER)
+                        {
+                            ntStatus = GetExceptionCode();
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
-                                          "AFSValidateEntry CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                          "AFSValidateEntry CcFlushCache or CcPurgeCacheSection exception %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                           &DirEntry->NameInformation.FileName,
                                           pObjectInfo->FileId.Cell,
                                           pObjectInfo->FileId.Volume,
                                           pObjectInfo->FileId.Vnode,
                                           pObjectInfo->FileId.Unique,
-                                          stIoStatus.Status,
-                                          stIoStatus.Information);
+                                          ntStatus);
 
-                            ntStatus = stIoStatus.Status;
                         }
+
+                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                        bReleaseFcb = FALSE;
 
                         if ( bPurgeExtents)
                         {
-
-                            CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                 NULL,
-                                                 0,
-                                                 FALSE);
+                            AFSFlushExtents( pCurrentFcb,
+                                             AuthGroup);
                         }
                     }
-                    __except( EXCEPTION_EXECUTE_HANDLER)
-                    {
-                        ntStatus = GetExceptionCode();
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                      AFS_TRACE_LEVEL_ERROR,
-                                      "AFSValidateEntry CcFlushCache or CcPurgeCacheSection exception %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
-                                      &DirEntry->NameInformation.FileName,
-                                      pObjectInfo->FileId.Cell,
-                                      pObjectInfo->FileId.Volume,
-                                      pObjectInfo->FileId.Vnode,
-                                      pObjectInfo->FileId.Unique,
-                                      ntStatus);
-
-                    }
-
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-
-                    if ( bPurgeExtents)
-                    {
-                        AFSFlushExtents( pCurrentFcb,
-                                         AuthGroup);
-                    }
-
-                    //
-                    // Reacquire the Fcb to purge the cache
-                    //
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSValidateEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                  &pCurrentFcb->NPFcb->Resource,
-                                  PsGetCurrentThread());
-
-                    AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
-                                    TRUE);
                 }
 
                 //
