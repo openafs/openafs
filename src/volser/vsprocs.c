@@ -1013,12 +1013,14 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 	    ERROR_EXIT(0);
 	}
 
-	/* Delete backup if it exists */
-	code = DoVolDelete(aconn, entry.volumeId[BACKVOL], apart,
-			   "the backup", 0, NULL, NULL);
-	if (code && code != VNOVOL) {
-	    error = code;
-	    goto error_exit;
+	if (entry.volumeId[BACKVOL]) {
+	    /* Delete backup if it exists */
+	    code = DoVolDelete(aconn, entry.volumeId[BACKVOL], apart,
+	                       "the backup", 0, NULL, NULL);
+	    if (code && code != VNOVOL) {
+		error = code;
+		goto error_exit;
+	    }
 	}
 
 	if (verbose)
