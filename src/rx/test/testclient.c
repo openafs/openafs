@@ -43,9 +43,6 @@
 int timeReadvs = 0;
 int print = 1, eventlog = 0, rxlog = 0;
 int fillPackets;
-int burst;
-struct clock burstTime;
-struct clock retryTime;
 FILE *debugFile;
 int timeout;
 struct clock waitTime, computeTime;
@@ -145,14 +142,6 @@ main(int argc, char **argv)
 #else
             fprintf(stderr, "ERROR: Compiled without RXDEBUG\n");
 #endif
-        }
-	else if (strcmp(*argv, "-burst") == 0) {
-	    burst = atoi(*++argv), argc--;
-	    burstTime.sec = atoi(*++argv), argc--;
-	    burstTime.usec = atoi(*++argv), argc--;
-	} else if (strcmp(*argv, "-retry") == 0) {
-	    retryTime.sec = atoi(*++argv), argc--;
-	    retryTime.usec = atoi(*++argv), argc--;
 	} else if (strcmp(*argv, "-timeout") == 0)
 	    timeout = atoi(*++argv), argc--;
 	else if (strcmp(*argv, "-fill") == 0)
@@ -238,14 +227,6 @@ main(int argc, char **argv)
     if (!conn)
 	Abort("unable to make a new connection");
 
-    /* Set initial parameters.  This is (currently) not the approved interface */
-    peer = rx_PeerOf(conn);
-    if (burst)
-	peer->burstSize = peer->burst = burst;
-    if (!clock_IsZero(&burstTime))
-	peer->burstWait = burstTime;
-    if (!clock_IsZero(&retryTime))
-	peer->rtt = _8THMSEC(&retryTime);
     if (sendFile)
 	SendFile(sendFile, conn);
     else {
