@@ -3247,8 +3247,6 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         KeQuerySystemTime( &pObjectInfo->LastAccessTime);
 
-        //KeQuerySystemTime( &pObjectInfo->CreationTime);
-
         KeQuerySystemTime( &pObjectInfo->LastWriteTime);
 
         ntStatus = AFSUpdateFileInformation( &pParentObjectInfo->FileId,
