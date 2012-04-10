@@ -671,7 +671,7 @@ ll name</replaceable>&gt; <emphasis
               change directory as indicated, and copy them.</para>
 
 <programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/dest/root.client/usr/vice/etc</emphasis>
    # <emphasis role="bold">cp  -p  afs_dynamic*  /usr/vice/etc</emphasis>
 </programlisting>
             </listitem>
@@ -897,14 +897,14 @@ ll name</replaceable>&gt; <emphasis
             (<emphasis role="bold">kaserver</emphasis> process) in the cell:</para>
 
 <programlisting>
-   # <emphasis role="bold">cp /tmp/afsdist/hp_ux110/lib/pam_afs.so.1  .</emphasis>
+   # <emphasis role="bold">cp /tmp/afsdist/hp_ux110/dest/lib/pam_afs.so.1  .</emphasis>
    # <emphasis role="bold">ln -s  pam_afs.so.1  pam_afs.so</emphasis>   
 </programlisting>
 
             <para>If you use a Kerberos implementation of AFS authentication:</para>
 
 <programlisting>
-   # <emphasis role="bold">cp /tmp/afsdist/hp_ux110/lib/pam_afs.krb.so.1   .</emphasis>
+   # <emphasis role="bold">cp /tmp/afsdist/hp_ux110/dest/lib/pam_afs.krb.so.1   .</emphasis>
    # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
 </programlisting>
           </listitem>
@@ -1022,7 +1022,7 @@ ll name</replaceable>&gt; <emphasis
         them.</para>
 
 <programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/sgi_65/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/sgi_65/dest/root.client/usr/vice/etc</emphasis>
    # <emphasis role="bold">cp  -p  *authlib*  /usr/vice/etc</emphasis>   
 </programlisting>
 
@@ -1570,14 +1570,14 @@ localusertwo:&lt;thelocalusertwo'skey&gt;:11500:0:99999:7:::
             (<emphasis role="bold">kaserver</emphasis> process):</para>
 
 <programlisting>
-   # <emphasis role="bold">cp /tmp/afsdist/sun4x_56/lib/pam_afs.so.1 .</emphasis>
+   # <emphasis role="bold">cp /tmp/afsdist/sun4x_56/dest/lib/pam_afs.so.1 .</emphasis>
    # <emphasis role="bold">ln -s pam_afs.so.1 pam_afs.so</emphasis>   
 </programlisting>
 
             <para>If you use a Kerberos implementation of AFS authentication:</para>
 
 <programlisting>
-   # <emphasis role="bold">cp /tmp/afsdist/sun4x_56/lib/pam_afs.krb.so.1 .</emphasis>
+   # <emphasis role="bold">cp /tmp/afsdist/sun4x_56/dest/lib/pam_afs.krb.so.1 .</emphasis>
    # <emphasis role="bold">ln -s pam_afs.krb.so.1 pam_afs.so</emphasis>
 </programlisting>
           </listitem>
