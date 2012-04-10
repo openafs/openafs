@@ -458,7 +458,7 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "%s PID %08lX Session %08lX inherited Active AuthGroup %wZ from thread %I64X\n",
+                                  "%s PID %I64X Session %08lX inherited Active AuthGroup %wZ from thread %I64X\n",
                                   __FUNCTION__,
                                   ullProcessID,
                                   ulSessionId,
@@ -487,7 +487,7 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "%s PID %08lX Session %08lX inherited Active AuthGroup %wZ from parent PID %I64X\n",
+                                  "%s PID %I64X Session %08lX inherited Active AuthGroup %wZ from parent PID %I64X\n",
                                   __FUNCTION__,
                                   ullProcessID,
                                   ulSessionId,
