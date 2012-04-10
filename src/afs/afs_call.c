@@ -15,14 +15,19 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
-#if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
-#include "net/if.h"
-#ifdef AFS_SGI62_ENV
-#include "h/hashing.h"
-#endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
-#include "netinet/in_var.h"
-#endif
+#if !defined(UKERNEL)
+# if !defined(AFS_LINUX20_ENV)
+#  include "net/if.h"
+#  ifdef AFS_SGI62_ENV
+#   include "h/hashing.h"
+#  endif
+#  if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
+#   include "netinet/in_var.h"
+#  endif
+# endif
+# ifdef HAVE_LINUX_KTHREAD_RUN
+#  include "h/kthread.h"
+# endif
 #endif /* !defined(UKERNEL) */
 #ifdef AFS_SUN510_ENV
 #include "h/ksynch.h"
@@ -292,11 +297,13 @@ afsd_thread(void *rock)
 # ifdef SYS_SETPRIORITY_EXPORTED
     int (*sys_setpriority) (int, int, int) = sys_call_table[__NR_setpriority];
 # endif
-# if defined(AFS_LINUX26_ENV)
+# if !defined(HAVE_LINUX_KTHREAD_RUN)
+#  if defined(AFS_LINUX26_ENV)
     daemonize("afsd");
-# else
+#  else
     daemonize();
-# endif
+#  endif
+# endif /* !HAVE_LINUX_KTHREAD_RUN */
 				/* doesn't do much, since we were forked from keventd, but
 				 * does call mm_release, which wakes up our parent (since it
 				 * used CLONE_VFORK) */
@@ -433,8 +440,14 @@ afsd_launcher(void *rock)
     struct afsd_thread_info *rock = container_of(work, struct afsd_thread_info, tq);
 # endif
 
+# if defined(HAVE_LINUX_KTHREAD_RUN)
+    if (IS_ERR(kthread_run(afsd_thread, (void *)rock, "afsd"))) {
+	afs_warn("kthread_run failed; afs startup will not complete\n");
+    }
+# else /* !HAVE_LINUX_KTHREAD_RUN */
     if (!kernel_thread(afsd_thread, (void *)rock, CLONE_VFORK | SIGCHLD))
 	afs_warn("kernel_thread failed. afs startup will not complete\n");
+# endif /* !HAVE_LINUX_KTHREAD_RUN */
 }
 
 void
