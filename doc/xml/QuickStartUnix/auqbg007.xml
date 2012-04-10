@@ -260,7 +260,7 @@
             examples. Once you have unpacked the distribution, 
             change directory as indicated.
 <programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/dest/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>
           <listitem>
@@ -427,7 +427,7 @@
             examples. Once you have unpacked the distribution, change directory 
             as indicated.
             <programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/root.client</emphasis>
+   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/dest/root.client</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -622,7 +622,7 @@
           examples. Once you have unpacked the distribution, change directory
           as indicated.
 <programlisting>
-   # <emphasis role="bold">cd  /tmp/afsdist/sgi_65/root.client</emphasis>
+   # <emphasis role="bold">cd  /tmp/afsdist/sgi_65/dest/root.client</emphasis>
 </programlisting></para>
         </listitem>
         <listitem>
@@ -1025,7 +1025,7 @@
             examples. Once you have unpacked the distribution,
             change directory as indicated.
 <programlisting>
-  # <emphasis role="bold">cd /tmp/afsdist/linux/root.client/usr/vice/etc</emphasis>
+  # <emphasis role="bold">cd /tmp/afsdist/linux/dest/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -1206,7 +1206,7 @@
             exmaples. Once you have unpacked the distribution, change directory
             as indicated. 
 <programlisting>
-   # <emphasis role="bold">cd  /tmp/afsdist/sun4x_56/root.client/usr/vice/etc</emphasis>
+   # <emphasis role="bold">cd  /tmp/afsdist/sun4x_56/dest/root.client/usr/vice/etc</emphasis>
 </programlisting></para>
           </listitem>          
 
