@@ -911,6 +911,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_FUNC([noop_fsync],
 				     [#include <linux/fs.h>],
 				     [void *address = &noop_fsync; printk("%p\n", address)];)
+		 AC_CHECK_LINUX_FUNC([kthread_run],
+				     [#include <linux/kernel.h>
+				      #include <linux/kthread.h>],
+				     [kthread_run(NULL, NULL, "test");])
 
 		 dnl Consequences - things which get set as a result of the
 		 dnl                above tests
