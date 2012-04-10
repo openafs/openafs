@@ -125,7 +125,7 @@ static void afsd_notifier(char *msgp, char *filep, long line)
 
     if (bRunningAsService) {
         ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-        ServiceStatus.dwWin32ExitCode = NO_ERROR;
+        ServiceStatus.dwWin32ExitCode = ERROR_EXCEPTION_IN_SERVICE;
         ServiceStatus.dwCheckPoint = 0;
         ServiceStatus.dwWaitHint = 0;
         ServiceStatus.dwControlsAccepted = 0;
