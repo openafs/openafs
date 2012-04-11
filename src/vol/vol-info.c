@@ -1200,7 +1200,7 @@ HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
 		  struct VolumeHeader *header, Inode inode,
 		  afs_sfsize_t * psize)
 {
-    afs_sfsize_t size = 0;
+    afs_sfsize_t size = -1;
     IHandle_t *ih = NULL;
     FdHandle_t *fdP = NULL;
 #ifdef AFS_NAMEI_ENV
@@ -1211,7 +1211,7 @@ HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
     fdP = IH_OPEN(ih);
     if (fdP == NULL) {
 	fprintf(stderr,
-		"%s: Error opening header file '%s' for volume %u", progname,
+		"%s: Error opening header file '%s' for volume %u\n", progname,
 		name, header->id);
 	perror("open");
 	goto error;
@@ -1219,22 +1219,27 @@ HandleSpecialFile(const char *name, struct DiskPartition64 *dp,
     size = FDH_SIZE(fdP);
     if (size == -1) {
 	fprintf(stderr,
-		"%s: Error getting size of header file '%s' for volume %u",
+		"%s: Error getting size of header file '%s' for volume %u\n",
 		progname, name, header->id);
 	perror("fstat");
 	goto error;
     }
+    *psize += size;
+
+  error:
     if (DumpInfo) {
-	printf("\t%s inode\t= %s (size = %lld)\n",
-	       name, PrintInode(NULL, inode), size);
+	printf("\t%s inode\t= %s (size = ", name, PrintInode(NULL, inode));
+	if (size != -1) {
+	    printf("%lld)\n", size);
+	} else {
+	    printf("unknown)\n");
+	}
 #ifdef AFS_NAMEI_ENV
 	namei_HandleToName(&filename, ih);
 	printf("\t%s namei\t= %s\n", name, filename.n_path);
 #endif /* AFS_NAMEI_ENV */
     }
-    *psize += size;
 
-  error:
     if (fdP != NULL) {
 	FDH_REALLYCLOSE(fdP);
     }
