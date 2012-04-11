@@ -1985,7 +1985,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     if (bScpLocked)
         lock_ReleaseWrite(&scp->rw);
 
-    if (dscp && bDeleteFile) {
+    if (code == 0 && dscp && bDeleteFile) {
         WCHAR FileName[260];
 
         StringCchCopyNW(FileName, 260, FileNameCounted, FileNameLength / sizeof(WCHAR));
@@ -1996,16 +1996,16 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
             code = cm_Unlink(dscp, NULL, FileName, userp, &req);
     }
 
-    if ( ResultBufferLength >=  sizeof( AFSFileCleanupResultCB))
-    {
-        (*ResultCB)->ResultBufferLength = sizeof( AFSFileCleanupResultCB);
-        pResultCB = (AFSFileCleanupResultCB *)&(*ResultCB)->ResultData;
-        pResultCB->ParentDataVersion.QuadPart = dscp ? dscp->dataVersion : 0;
-    } else {
-        (*ResultCB)->ResultBufferLength = 0;
-    }
+    if (code == 0)
+        if ( ResultBufferLength >=  sizeof( AFSFileCleanupResultCB))
+        {
+            (*ResultCB)->ResultBufferLength = sizeof( AFSFileCleanupResultCB);
+            pResultCB = (AFSFileCleanupResultCB *)&(*ResultCB)->ResultData;
+            pResultCB->ParentDataVersion.QuadPart = dscp ? dscp->dataVersion : 0;
+        } else {
+            (*ResultCB)->ResultBufferLength = 0;
+        }
 
-    if (code == 0) {
         (*ResultCB)->ResultStatus = 0;
         osi_Log0(afsd_logp, "RDR_CleanupFileEntry SUCCESS");
     } else {
@@ -2014,6 +2014,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
         osi_Log2(afsd_logp, "RDR_CleanupFileEntry FAILURE code=0x%x status=0x%x",
                   code, status);
     }
+
     if (scp)
         cm_ReleaseSCache(scp);
     if (dscp)
