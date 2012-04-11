@@ -1996,7 +1996,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
             code = cm_Unlink(dscp, NULL, FileName, userp, &req);
     }
 
-    if (code == 0)
+    if (code == 0) {
         if ( ResultBufferLength >=  sizeof( AFSFileCleanupResultCB))
         {
             (*ResultCB)->ResultBufferLength = sizeof( AFSFileCleanupResultCB);
