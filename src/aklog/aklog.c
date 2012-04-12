@@ -1781,7 +1781,7 @@ get_credv5_akimpersonate(krb5_context context,
     EncTicketPart enc_tkt_reply[1];
     krb5_address address[30];
     krb5_addresses faddr[1];
-    int temp_vno[1];
+    unsigned int temp_vno[1];
     time_t temp_time[2];
 #else
     krb5_ticket ticket_reply[1];
