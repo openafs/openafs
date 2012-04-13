@@ -1480,32 +1480,10 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 
 	*host = from.sin_addr.s_addr;
 	*port = from.sin_port;
-	if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
-            if (rx_stats_active) {
-                struct rx_peer *peer;
-                rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
-                /*
-                 * Try to look up this peer structure.  If it doesn't exist,
-                 * don't create a new one -
-                 * we don't keep count of the bytes sent/received if a peer
-                 * structure doesn't already exist.
-                 *
-                 * The peer/connection cleanup code assumes that there is 1 peer
-                 * per connection.  If we actually created a peer structure here
-                 * and this packet was an rxdebug packet, the peer structure would
-                 * never be cleaned up.
-                 */
-                peer = rxi_FindPeer(*host, *port, 0, 0);
-                /* Since this may not be associated with a connection,
-                 * it may have no refCount, meaning we could race with
-                 * ReapConnections
-                 */
-                if (peer && (peer->refCount > 0)) {
-                    MUTEX_ENTER(&peer->peer_lock);
-                    hadd32(peer->bytesReceived, p->length);
-                    MUTEX_EXIT(&peer->peer_lock);
-                }
-            }
+	if (rx_stats_active
+	    && p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
+
+		rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
 	}
 
 #ifdef RX_TRIMDATABUFS

@@ -3185,6 +3185,26 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	 np->header.seq, np->header.flags, np));
 #endif
 
+    /* Account for connectionless packets */
+    if (rx_stats_active &&
+	((np->header.type == RX_PACKET_TYPE_VERSION) ||
+         (np->header.type == RX_PACKET_TYPE_DEBUG))) {
+	struct rx_peer *peer;
+
+	/* Try to look up the peer structure, but don't create one */
+	peer = rxi_FindPeer(host, port, 0, 0);
+
+	/* Since this may not be associated with a connection, it may have
+	 * no refCount, meaning we could race with ReapConnections
+	 */
+
+	if (peer && (peer->refCount > 0)) {
+	    MUTEX_ENTER(&peer->peer_lock);
+	    hadd32(peer->bytesReceived, np->length);
+	    MUTEX_EXIT(&peer->peer_lock);
+	}
+    }
+
     if (np->header.type == RX_PACKET_TYPE_VERSION) {
 	return rxi_ReceiveVersionPacket(np, socket, host, port, 1);
     }
@@ -3229,6 +3249,13 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	 * (An argument could be made for sending an abort packet for
 	 * the conn) */
 	return np;
+    }
+
+    /* If we're doing statistics, then account for the incoming packet */
+    if (rx_stats_active) {
+	MUTEX_ENTER(&conn->peer->peer_lock);
+	hadd32(conn->peer->bytesReceived, np->length);
+	MUTEX_EXIT(&conn->peer->peer_lock);
     }
 
     /* If the connection is in an error state, send an abort packet and ignore
