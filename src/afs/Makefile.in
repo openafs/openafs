@@ -29,15 +29,15 @@ afszcm.cat: afs_trace.msf
 	-$(RM) -f afszcm.cat
 	case ${SYS_NAME} in \
 		sgi_* ) \
-			gencat -m afszcm.cat afs_trace.msf ;; \
+			${GENCAT} -m afszcm.cat afs_trace.msf ;; \
 		sun*_4* ) \
 			/usr/etc/gencat afszcm.cat afs_trace.msf ;; \
 		*_linux* | *_umlinux* ) \
-			gencat --new afszcm.cat afs_trace.msf ;; \
+			${GENCAT} --new afszcm.cat afs_trace.msf ;; \
 		*_darwin_* ) \
-			gencat -new afszcm.cat afs_trace.msf ;; \
+			${GENCAT} -new afszcm.cat afs_trace.msf ;; \
 		* ) \
-			gencat afszcm.cat afs_trace.msf ;; \
+			${GENCAT} afszcm.cat afs_trace.msf ;; \
 	esac
 
 depinstall: afszcm.cat AFS_component_version_number.c \
