@@ -641,15 +641,15 @@ Print_afs_RPCStats_p(afs_RPCStats_p stat, interface_function_list_p f_list,
 	       f_list->functionList[stat->s.stats_v1.func_index]);
     }
 
-    if (!hiszero(stat->s.stats_v1.invocations)) {
-	printf("%sinvoc (%u.%u) bytes_sent (%u.%u) bytes_rcvd (%u.%u)\n",
-	       prefix, hgethi(stat->s.stats_v1.invocations),
-	       hgetlo(stat->s.stats_v1.invocations),
-	       hgethi(stat->s.stats_v1.bytes_sent),
-	       hgetlo(stat->s.stats_v1.bytes_sent),
-	       hgethi(stat->s.stats_v1.bytes_rcvd),
-	       hgetlo(stat->s.stats_v1.bytes_rcvd)
-	    );
+    if (stat->s.stats_v1.invocations != 0) {
+	printf("%sinvoc %"AFS_UINT64_FMT
+	       " bytes_sent %"AFS_UINT64_FMT
+	       " bytes_rcvd %"AFS_UINT64_FMT"\n",
+	       prefix,
+	       stat->s.stats_v1.invocations,
+	       stat->s.stats_v1.bytes_sent,
+	       stat->s.stats_v1.bytes_rcvd
+	      );
 	printf("\tqsum %d.%06d\tqsqr %d.%06d"
 	       "\tqmin %d.%06d\tqmax %d.%06d\n",
 	       stat->s.stats_v1.queue_time_sum.sec,

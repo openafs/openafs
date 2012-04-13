@@ -1628,8 +1628,8 @@ rx_NewCall(struct rx_connection *conn)
     /* remember start time for call in case we have hard dead time limit */
     call->queueTime = queueTime;
     clock_GetTime(&call->startTime);
-    hzero(call->bytesSent);
-    hzero(call->bytesRcvd);
+    call->bytesSent = 0;
+    call->bytesRcvd = 0;
 
     /* Turn on busy protocol. */
     rxi_KeepAliveOn(call);
@@ -3200,7 +3200,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 
 	if (peer && (peer->refCount > 0)) {
 	    MUTEX_ENTER(&peer->peer_lock);
-	    hadd32(peer->bytesReceived, np->length);
+	    peer->bytesReceived += np->length;
 	    MUTEX_EXIT(&peer->peer_lock);
 	}
     }
@@ -3254,7 +3254,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     /* If we're doing statistics, then account for the incoming packet */
     if (rx_stats_active) {
 	MUTEX_ENTER(&conn->peer->peer_lock);
-	hadd32(conn->peer->bytesReceived, np->length);
+	conn->peer->bytesReceived += np->length;
 	MUTEX_EXIT(&conn->peer->peer_lock);
     }
 
@@ -3335,8 +3335,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #endif
             call->state = RX_STATE_PRECALL;
             clock_GetTime(&call->queueTime);
-            hzero(call->bytesSent);
-            hzero(call->bytesRcvd);
+            call->bytesSent = 0;
+            call->bytesRcvd = 0;
             /*
              * If the number of queued calls exceeds the overload
              * threshold then abort this call.
@@ -3427,8 +3427,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
-	    hzero(call->bytesSent);
-	    hzero(call->bytesRcvd);
+	    call->bytesSent = 0;
+	    call->bytesRcvd = 0;
 	    /*
 	     * If the number of queued calls exceeds the overload
 	     * threshold then abort this call.
@@ -7745,10 +7745,11 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		peerStats->cwind = tp->cwind;
 		peerStats->nDgramPackets = tp->nDgramPackets;
 		peerStats->congestSeq = tp->congestSeq;
-		peerStats->bytesSent.high = tp->bytesSent.high;
-		peerStats->bytesSent.low = tp->bytesSent.low;
-		peerStats->bytesReceived.high = tp->bytesReceived.high;
-		peerStats->bytesReceived.low = tp->bytesReceived.low;
+		peerStats->bytesSent.high = tp->bytesSent >> 32;
+		peerStats->bytesSent.low = tp->bytesSent & MAX_AFS_UINT32;
+		peerStats->bytesReceived.high = tp->bytesReceived >> 32;
+		peerStats->bytesReceived.low
+				= tp->bytesReceived & MAX_AFS_UINT32;
                 MUTEX_EXIT(&tp->peer_lock);
 
                 MUTEX_ENTER(&rx_peerHashTable_lock);
@@ -8040,49 +8041,57 @@ static int rxi_monitor_processStats = 0;
 
 static int rxi_monitor_peerStats = 0;
 
-/*
- * rxi_AddRpcStat - given all of the information for a particular rpc
+/*!
+ * Given all of the information for a particular rpc
  * call, create (if needed) and update the stat totals for the rpc.
  *
- * PARAMETERS
+ * @param stats
+ * 	the queue of stats that will be updated with the new value
  *
- * IN stats - the queue of stats that will be updated with the new value
+ * @param rxInterface
+ * 	a unique number that identifies the rpc interface
  *
- * IN rxInterface - a unique number that identifies the rpc interface
+ * @param currentFunc
+ * 	the index of the function being invoked
  *
- * IN currentFunc - the index of the function being invoked
+ * @param totalFunc
+ * 	the total number of functions in this interface
  *
- * IN totalFunc - the total number of functions in this interface
+ * @param queueTime
+ * 	the amount of time this function waited for a thread
  *
- * IN queueTime - the amount of time this function waited for a thread
+ * @param execTime
+ * 	the amount of time this function invocation took to execute
  *
- * IN execTime - the amount of time this function invocation took to execute
+ * @param bytesSent
+ * 	the number bytes sent by this invocation
  *
- * IN bytesSent - the number bytes sent by this invocation
+ * @param bytesRcvd
+ * 	the number bytes received by this invocation
  *
- * IN bytesRcvd - the number bytes received by this invocation
+ * @param isServer
+ * 	if true, this invocation was made to a server
  *
- * IN isServer - if true, this invocation was made to a server
+ * @param remoteHost
+ * 	the ip address of the remote host
  *
- * IN remoteHost - the ip address of the remote host
+ * @param remotePort
+ * 	the port of the remote host
  *
- * IN remotePort - the port of the remote host
+ * @param addToPeerList
+ * 	if != 0, add newly created stat to the global peer list
  *
- * IN addToPeerList - if != 0, add newly created stat to the global peer list
+ * @param counter
+ * 	if a new stats structure is allocated, the counter will
+ *	be updated with the new number of allocated stat structures
  *
- * INOUT counter - if a new stats structure is allocated, the counter will
- * be updated with the new number of allocated stat structures
- *
- * RETURN CODES
- *
- * Returns void.
  */
 
 static int
 rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 	       afs_uint32 currentFunc, afs_uint32 totalFunc,
 	       struct clock *queueTime, struct clock *execTime,
-	       afs_hyper_t * bytesSent, afs_hyper_t * bytesRcvd, int isServer,
+	       afs_uint64 bytesSent, afs_uint64 bytesRcvd, int isServer,
 	       afs_uint32 remoteHost, afs_uint32 remotePort,
 	       int addToPeerList, unsigned int *counter)
 {
@@ -8127,9 +8136,9 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 	    rpc_stat->stats[i].interfaceId = rxInterface;
 	    rpc_stat->stats[i].func_total = totalFunc;
 	    rpc_stat->stats[i].func_index = i;
-	    hzero(rpc_stat->stats[i].invocations);
-	    hzero(rpc_stat->stats[i].bytes_sent);
-	    hzero(rpc_stat->stats[i].bytes_rcvd);
+	    rpc_stat->stats[i].invocations = 0;
+	    rpc_stat->stats[i].bytes_sent = 0;
+	    rpc_stat->stats[i].bytes_rcvd = 0;
 	    rpc_stat->stats[i].queue_time_sum.sec = 0;
 	    rpc_stat->stats[i].queue_time_sum.usec = 0;
 	    rpc_stat->stats[i].queue_time_sum_sqr.sec = 0;
@@ -8157,9 +8166,9 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
      * Increment the stats for this function
      */
 
-    hadd32(rpc_stat->stats[currentFunc].invocations, 1);
-    hadd(rpc_stat->stats[currentFunc].bytes_sent, *bytesSent);
-    hadd(rpc_stat->stats[currentFunc].bytes_rcvd, *bytesRcvd);
+    rpc_stat->stats[currentFunc].invocations++;
+    rpc_stat->stats[currentFunc].bytes_sent += bytesSent;
+    rpc_stat->stats[currentFunc].bytes_rcvd += bytesRcvd;
     clock_Add(&rpc_stat->stats[currentFunc].queue_time_sum, queueTime);
     clock_AddSq(&rpc_stat->stats[currentFunc].queue_time_sum_sqr, queueTime);
     if (clock_Lt(queueTime, &rpc_stat->stats[currentFunc].queue_time_min)) {
@@ -8182,41 +8191,12 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
     return rc;
 }
 
-/*
- * rx_IncrementTimeAndCount - increment the times and count for a particular
- * rpc function.
- *
- * PARAMETERS
- *
- * IN peer - the peer who invoked the rpc
- *
- * IN rxInterface - a unique number that identifies the rpc interface
- *
- * IN currentFunc - the index of the function being invoked
- *
- * IN totalFunc - the total number of functions in this interface
- *
- * IN queueTime - the amount of time this function waited for a thread
- *
- * IN execTime - the amount of time this function invocation took to execute
- *
- * IN bytesSent - the number bytes sent by this invocation
- *
- * IN bytesRcvd - the number bytes received by this invocation
- *
- * IN isServer - if true, this invocation was made to a server
- *
- * RETURN CODES
- *
- * Returns void.
- */
-
 void
-rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
-			 afs_uint32 currentFunc, afs_uint32 totalFunc,
-			 struct clock *queueTime, struct clock *execTime,
-			 afs_hyper_t * bytesSent, afs_hyper_t * bytesRcvd,
-			 int isServer)
+rxi_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
+			  afs_uint32 currentFunc, afs_uint32 totalFunc,
+			  struct clock *queueTime, struct clock *execTime,
+			  afs_uint64 bytesSent, afs_uint64 bytesRcvd,
+			  int isServer)
 {
 
     if (!(rxi_monitor_peerStats || rxi_monitor_processStats))
@@ -8239,8 +8219,62 @@ rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
     }
 
     MUTEX_EXIT(&rx_rpc_stats);
-
 }
+
+/*!
+ * Increment the times and count for a particular rpc function.
+ *
+ * Traditionally this call was invoked from rxgen stubs. Modern stubs
+ * call rx_RecordCallStatistics instead, so the public version of this
+ * function is left purely for legacy callers.
+ *
+ * @param peer
+ *	The peer who invoked the rpc
+ *
+ * @param rxInterface
+ * 	A unique number that identifies the rpc interface
+ *
+ * @param currentFunc
+ * 	The index of the function being invoked
+ *
+ * @param totalFunc
+ * 	The total number of functions in this interface
+ *
+ * @param queueTime
+ * 	The amount of time this function waited for a thread
+ *
+ * @param execTime
+ * 	The amount of time this function invocation took to execute
+ *
+ * @param bytesSent
+ * 	The number bytes sent by this invocation
+ *
+ * @param bytesRcvd
+ * 	The number bytes received by this invocation
+ *
+ * @param isServer
+ * 	If true, this invocation was made to a server
+ *
+ */
+void
+rx_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
+			 afs_uint32 currentFunc, afs_uint32 totalFunc,
+			 struct clock *queueTime, struct clock *execTime,
+			 afs_hyper_t * bytesSent, afs_hyper_t * bytesRcvd,
+			 int isServer)
+{
+    afs_uint64 sent64;
+    afs_uint64 rcvd64;
+
+    sent64 = ((afs_uint64)bytesSent->high << 32) + bytesSent->low;
+    rcvd64 = ((afs_uint64)bytesRcvd->high << 32) + bytesRcvd->low;
+
+    rxi_IncrementTimeAndCount(peer, rxInterface, currentFunc, totalFunc,
+			      queueTime, execTime, sent64, rcvd64,
+			      isServer);
+}
+
+
 
 /*
  * rx_MarshallProcessRPCStats - marshall an array of rpc statistics
@@ -8276,12 +8310,12 @@ rx_MarshallProcessRPCStats(afs_uint32 callerVersion, int count,
 	*(ptr++) = stats->interfaceId;
 	*(ptr++) = stats->func_total;
 	*(ptr++) = stats->func_index;
-	*(ptr++) = hgethi(stats->invocations);
-	*(ptr++) = hgetlo(stats->invocations);
-	*(ptr++) = hgethi(stats->bytes_sent);
-	*(ptr++) = hgetlo(stats->bytes_sent);
-	*(ptr++) = hgethi(stats->bytes_rcvd);
-	*(ptr++) = hgetlo(stats->bytes_rcvd);
+	*(ptr++) = stats->invocations >> 32;
+	*(ptr++) = stats->invocations & MAX_AFS_UINT32;
+	*(ptr++) = stats->bytes_sent >> 32;
+	*(ptr++) = stats->bytes_sent & MAX_AFS_UINT32;
+	*(ptr++) = stats->bytes_rcvd >> 32;
+	*(ptr++) = stats->bytes_rcvd & MAX_AFS_UINT32;
 	*(ptr++) = stats->queue_time_sum.sec;
 	*(ptr++) = stats->queue_time_sum.usec;
 	*(ptr++) = stats->queue_time_sum_sqr.sec;
@@ -8771,13 +8805,13 @@ rx_clearProcessRPCStats(afs_uint32 clearFlag)
 	num_funcs = rpc_stat->stats[0].func_total;
 	for (i = 0; i < num_funcs; i++) {
 	    if (clearFlag & AFS_RX_STATS_CLEAR_INVOCATIONS) {
-		hzero(rpc_stat->stats[i].invocations);
+		rpc_stat->stats[i].invocations = 0;
 	    }
 	    if (clearFlag & AFS_RX_STATS_CLEAR_BYTES_SENT) {
-		hzero(rpc_stat->stats[i].bytes_sent);
+		rpc_stat->stats[i].bytes_sent = 0;
 	    }
 	    if (clearFlag & AFS_RX_STATS_CLEAR_BYTES_RCVD) {
-		hzero(rpc_stat->stats[i].bytes_rcvd);
+		rpc_stat->stats[i].bytes_rcvd = 0;
 	    }
 	    if (clearFlag & AFS_RX_STATS_CLEAR_QUEUE_TIME_SUM) {
 		rpc_stat->stats[i].queue_time_sum.sec = 0;
@@ -8857,13 +8891,13 @@ rx_clearPeerRPCStats(afs_uint32 clearFlag)
 	num_funcs = rpc_stat->stats[0].func_total;
 	for (i = 0; i < num_funcs; i++) {
 	    if (clearFlag & AFS_RX_STATS_CLEAR_INVOCATIONS) {
-		hzero(rpc_stat->stats[i].invocations);
+		rpc_stat->stats[i].invocations = 0;
 	    }
 	    if (clearFlag & AFS_RX_STATS_CLEAR_BYTES_SENT) {
-		hzero(rpc_stat->stats[i].bytes_sent);
+		rpc_stat->stats[i].bytes_sent = 0;
 	    }
 	    if (clearFlag & AFS_RX_STATS_CLEAR_BYTES_RCVD) {
-		hzero(rpc_stat->stats[i].bytes_rcvd);
+		rpc_stat->stats[i].bytes_rcvd = 0;
 	    }
 	    if (clearFlag & AFS_RX_STATS_CLEAR_QUEUE_TIME_SUM) {
 		rpc_stat->stats[i].queue_time_sum.sec = 0;

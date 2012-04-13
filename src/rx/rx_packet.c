@@ -1969,12 +1969,14 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tpeer.cwind = htons(tp->cwind);
 			tpeer.nDgramPackets = htons(tp->nDgramPackets);
 			tpeer.congestSeq = htons(tp->congestSeq);
-			tpeer.bytesSent.high = htonl(tp->bytesSent.high);
-			tpeer.bytesSent.low = htonl(tp->bytesSent.low);
+			tpeer.bytesSent.high =
+			    htonl(tp->bytesSent >> 32);
+			tpeer.bytesSent.low =
+			    htonl(tp->bytesSent & MAX_AFS_UINT32);
 			tpeer.bytesReceived.high =
-			    htonl(tp->bytesReceived.high);
+			    htonl(tp->bytesReceived >> 32);
 			tpeer.bytesReceived.low =
-			    htonl(tp->bytesReceived.low);
+			    htonl(tp->bytesReceived & MAX_AFS_UINT32);
                         MUTEX_EXIT(&tp->peer_lock);
 
                         MUTEX_ENTER(&rx_peerHashTable_lock);
@@ -2293,7 +2295,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     if (rx_stats_active) {
         rx_atomic_inc(&rx_stats.packetsSent[p->header.type - 1]);
         MUTEX_ENTER(&peer->peer_lock);
-        hadd32(peer->bytesSent, p->length);
+        peer->bytesSent += p->length;
         MUTEX_EXIT(&peer->peer_lock);
     }
 }
@@ -2497,7 +2499,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     if (rx_stats_active) {
         rx_atomic_inc(&rx_stats.packetsSent[p->header.type - 1]);
         MUTEX_ENTER(&peer->peer_lock);
-        hadd32(peer->bytesSent, p->length);
+        peer->bytesSent += p->length;
         MUTEX_EXIT(&peer->peer_lock);
     }
 }

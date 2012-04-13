@@ -16,6 +16,8 @@
 #include "rx.h"
 #include "rx_call.h"
 #include "rx_conn.h"
+#include "rx_atomic.h"
+#include "rx_internal.h"
 
 struct rx_connection *
 rx_ConnectionOf(struct rx_call *call)
@@ -66,7 +68,7 @@ rx_RecordCallStatistics(struct rx_call *call, unsigned int rxInterface,
     queue = call->startTime;
     clock_Sub(&queue, &call->queueTime);
 
-    rx_IncrementTimeAndCount(call->conn->peer, rxInterface, currentFunc,
-			     totalFunc, &queue, &exec, &call->bytesSent,
-			     &call->bytesRcvd, 1);
+    rxi_IncrementTimeAndCount(call->conn->peer, rxInterface, currentFunc,
+			     totalFunc, &queue, &exec, call->bytesSent,
+			     call->bytesRcvd, 1);
 }

@@ -147,7 +147,7 @@ rxi_GetNextPacket(struct rx_call *call) {
 		   call->conn->securityHeaderSize;
 
     call->nLeft = call->currentPacket->length;
-    hadd32(call->bytesRcvd, call->currentPacket->length);
+    call->bytesRcvd += call->currentPacket->length;
 
     call->nHardAcks++;
 
@@ -640,7 +640,7 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		 * there will be others. PrepareSendPacket may
 		 * alter the packet length by up to
 		 * conn->securityMaxTrailerSize */
-		hadd32(call->bytesSent, call->currentPacket->length);
+		call->bytesSent += call->currentPacket->length;
 		rxi_PrepareSendPacket(call, call->currentPacket, 0);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
                 /* PrepareSendPacket drops the call lock */
@@ -1076,7 +1076,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	     * there will be others. PrepareSendPacket may
 	     * alter the packet length by up to
 	     * conn->securityMaxTrailerSize */
-	    hadd32(call->bytesSent, call->currentPacket->length);
+	    call->bytesSent += call->currentPacket->length;
 	    rxi_PrepareSendPacket(call, call->currentPacket, 0);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
             /* PrepareSendPacket drops the call lock */
@@ -1288,7 +1288,7 @@ rxi_FlushWrite(struct rx_call *call)
 	}
 
 	/* The 1 specifies that this is the last packet */
-	hadd32(call->bytesSent, cp->length);
+	call->bytesSent += cp->length;
 	rxi_PrepareSendPacket(call, cp, 1);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
         /* PrepareSendPacket drops the call lock */

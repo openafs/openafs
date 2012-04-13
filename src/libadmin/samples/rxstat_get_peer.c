@@ -224,14 +224,13 @@ main(int argc, char *argv[])
 	    printf("    %s\n", funcList[index]);
 	}
 
-	if (!hiszero(stats.s.stats_v1.invocations)) {
-	    printf("\tinvoc (%u.%u) bytes_sent (%u.%u) bytes_rcvd (%u.%u)\n",
-		   hgethi(stats.s.stats_v1.invocations),
-		   hgetlo(stats.s.stats_v1.invocations),
-		   hgethi(stats.s.stats_v1.bytes_sent),
-		   hgetlo(stats.s.stats_v1.bytes_sent),
-		   hgethi(stats.s.stats_v1.bytes_rcvd),
-		   hgetlo(stats.s.stats_v1.bytes_rcvd));
+	if (stats.s.stats_v1.invocations != 0) {
+	    printf("\tinvoc %"AFS_UINT64_FMT
+		   " bytes_sent %"AFS_UINT64_FMT
+		   " bytes_rcvd %"AFS_UINT64_FMT"\n",
+		   stats.s.stats_v1.invocations,
+		   stats.s.stats_v1.bytes_sent,
+		   stats.s.stats_v1.bytes_rcvd);
 	    printf("\tqsum %d.%06d qsqr %d.%06d"
 		   " qmin %d.%06d qmax %d.%06d\n",
 		   stats.s.stats_v1.queue_time_sum.sec,
