@@ -33,6 +33,15 @@ extern struct rx_packet *rxi_SendAck(struct rx_call *call,
 extern struct rx_packet *rxi_SendConnectionAbort(struct rx_connection *conn,
 						 struct rx_packet *packet,
 						 int istack, int force);
+extern void rxi_IncrementTimeAndCount(struct rx_peer *peer,
+				      afs_uint32 rxInterface,
+				      afs_uint32 currentFunc,
+				      afs_uint32 totalFunc,
+				      struct clock *queueTime,
+				      struct clock *execTime,
+				      afs_uint64 bytesSent,
+				      afs_uint64 bytesRcvd,
+				      int isServer);
 
 /* rx_packet.h */
 

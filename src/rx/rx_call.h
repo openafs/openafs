@@ -139,8 +139,8 @@ struct rx_call {
 
     struct clock queueTime;	/* time call was queued */
     struct clock startTime;	/* time call was started */
-    afs_hyper_t bytesSent;	/* Number bytes sent */
-    afs_hyper_t bytesRcvd;	/* Number bytes received */
+    afs_uint64 bytesSent;	/* Number bytes sent */
+    afs_uint64 bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
 
     struct rx_packet *xmitList[RX_MAXACKS]; /* Can't xmit more than we ack */

@@ -845,9 +845,9 @@ typedef struct rx_function_entry_v1 {
     afs_uint32 interfaceId;
     afs_uint32 func_total;
     afs_uint32 func_index;
-    afs_hyper_t invocations;
-    afs_hyper_t bytes_sent;
-    afs_hyper_t bytes_rcvd;
+    afs_uint64 invocations;
+    afs_uint64 bytes_sent;
+    afs_uint64 bytes_rcvd;
     struct clock queue_time_sum;
     struct clock queue_time_sum_sqr;
     struct clock queue_time_min;

@@ -1205,13 +1205,13 @@ UnmarshallRPCStats(afs_uint32 serverVersion, afs_uint32 ** ptrP,
     s->stats_v1.func_index = *(ptr++);
     hi = *(ptr++);
     lo = *(ptr++);
-    hset64(s->stats_v1.invocations, hi, lo);
+    s->stats_v1.invocations = ((afs_uint64) hi << 32) + lo;
     hi = *(ptr++);
     lo = *(ptr++);
-    hset64(s->stats_v1.bytes_sent, hi, lo);
+    s->stats_v1.bytes_sent = ((afs_uint64) hi << 32) + lo;
     hi = *(ptr++);
     lo = *(ptr++);
-    hset64(s->stats_v1.bytes_rcvd, hi, lo);
+    s->stats_v1.bytes_rcvd = ((afs_uint64) hi << 32) + lo;
     s->stats_v1.queue_time_sum.sec = *(ptr++);
     s->stats_v1.queue_time_sum.usec = *(ptr++);
     s->stats_v1.queue_time_sum_sqr.sec = *(ptr++);
