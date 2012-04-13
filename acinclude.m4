@@ -363,6 +363,9 @@ case $system in
                 AC_MSG_RESULT(sun4)
 	        AC_PATH_PROG(SOLARISCC, [cc], ,
 		    [/opt/SUNWspro/bin:/opt/SunStudioExpress/bin])
+		if test "x$SOLARISCC" = "x" ; then
+		    AC_MSG_FAILURE(Could not find the solaris cc program.  Please define the environment variable SOLARISCC to specify the path.)
+		fi
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_FS_HAS_FS_ROLLED
 		SOLARIS_SOLOOKUP_TAKES_SOCKPARAMS
