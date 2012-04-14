@@ -705,6 +705,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD res;
     DWORD ioctlDebug = IoctlDebug();
     DWORD gle;
+    DWORD dwAttrib;
     DWORD dwSize = sizeof(szUser);
     BOOL  usingRDR = FALSE;
     int saveerrno;
@@ -868,21 +869,14 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
 
     fflush(stdout);
-    /* now open the file */
-    sharingViolation = 0;
-    do {
-        if (sharingViolation)
-            Sleep(100);
-        fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                        FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                        FILE_FLAG_WRITE_THROUGH, NULL);
-        sharingViolation++;
-    } while (fh == INVALID_HANDLE_VALUE &&
-             GetLastError() == ERROR_SHARING_VIOLATION &&
-             sharingViolation < 100);
-    fflush(stdout);
 
-    if (fh == INVALID_HANDLE_VALUE) {
+    /*
+     * Try to find the correct path and authentication
+     */
+    dwAttrib = GetFileAttributes(tbuffer);
+    if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
+        int  gonext = 0;
+
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
@@ -897,17 +891,12 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                (va_list *) NULL
                                ) )
             {
-                fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                         tbuffer,gle,buf);
             }
             errno = saveerrno;
             SetLastError(gle);
         }
-    }
-
-    if (fh == INVALID_HANDLE_VALUE &&
-        GetLastError() != ERROR_SHARING_VIOLATION) {
-        int  gonext = 0;
 
         /* with the redirector interface, fail immediately.  there is nothing to retry */
         if (usingRDR)
@@ -961,19 +950,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_lsa_principal;
 
-            sharingViolation = 0;
-            do {
-                if (sharingViolation)
-                    Sleep(100);
-                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                FILE_FLAG_WRITE_THROUGH, NULL);
-                sharingViolation++;
-            } while (fh == INVALID_HANDLE_VALUE &&
-                     GetLastError() == ERROR_SHARING_VIOLATION &&
-                     sharingViolation < 100);
-            fflush(stdout);
-            if (fh == INVALID_HANDLE_VALUE) {
+            dwAttrib = GetFileAttributes(tbuffer);
+            if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
                 gle = GetLastError();
                 if (gle && ioctlDebug ) {
                     char buf[4096];
@@ -988,7 +966,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         (va_list *) NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
@@ -1000,8 +978,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
   try_lsa_principal:
     if (!usingRDR &&
-        fh == INVALID_HANDLE_VALUE &&
-        GetLastError() != ERROR_SHARING_VIOLATION) {
+        dwAttrib == INVALID_FILE_ATTRIBUTES) {
         int  gonext = 0;
 
         dwSize = sizeof(szUser);
@@ -1042,19 +1019,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_sam_compat;
 
-            sharingViolation = 0;
-            do {
-                if (sharingViolation)
-                    Sleep(100);
-                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                FILE_FLAG_WRITE_THROUGH, NULL);
-                sharingViolation++;
-            } while (fh == INVALID_HANDLE_VALUE &&
-                     GetLastError() == ERROR_SHARING_VIOLATION &&
-                     sharingViolation < 100);
-            fflush(stdout);
-            if (fh == INVALID_HANDLE_VALUE) {
+            dwAttrib = GetFileAttributes(tbuffer);
+            if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
                 gle = GetLastError();
                 if (gle && ioctlDebug ) {
                     char buf[4096];
@@ -1069,7 +1035,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         (va_list *) NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
@@ -1081,8 +1047,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
   try_sam_compat:
     if (!usingRDR &&
-        fh == INVALID_HANDLE_VALUE &&
-        GetLastError() != ERROR_SHARING_VIOLATION) {
+        dwAttrib == INVALID_FILE_ATTRIBUTES) {
         dwSize = sizeof(szUser);
         if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
             if ( ioctlDebug ) {
@@ -1117,19 +1082,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 return -1;
             }
 
-            sharingViolation = 0;
-            do {
-                if (sharingViolation)
-                    Sleep(100);
-                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
-                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
-                                FILE_FLAG_WRITE_THROUGH, NULL);
-                sharingViolation++;
-            } while (fh == INVALID_HANDLE_VALUE &&
-                     GetLastError() == ERROR_SHARING_VIOLATION &&
-                     sharingViolation < 100);
-            fflush(stdout);
-            if (fh == INVALID_HANDLE_VALUE) {
+            dwAttrib = GetFileAttributes(tbuffer);
+            if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
                 gle = GetLastError();
                 if (gle && ioctlDebug ) {
                     char buf[4096];
@@ -1144,7 +1098,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         (va_list *) NULL
                                         ) )
                     {
-                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
+                        fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
                                  tbuffer,gle,buf);
                     }
                     errno = saveerrno;
@@ -1156,6 +1110,26 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             return -1;
         }
     }
+
+    if ( dwAttrib != (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM)) {
+        fprintf(stderr, "GetFileAttributes(%s) returned: 0x%08X\r\n",
+                tbuffer, dwAttrib);
+        return -1;
+    }
+
+    /* tbuffer now contains the correct path; now open the file */
+    sharingViolation = 0;
+    do {
+        if (sharingViolation)
+            Sleep(100);
+        fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                        FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                        FILE_FLAG_WRITE_THROUGH, NULL);
+        sharingViolation++;
+    } while (fh == INVALID_HANDLE_VALUE &&
+             GetLastError() == ERROR_SHARING_VIOLATION &&
+             sharingViolation < 100);
+    fflush(stdout);
 
     if (fh == INVALID_HANDLE_VALUE)
         return -1;
