@@ -162,6 +162,30 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
             case IRP_MN_UNLOCK_ALL:
             case IRP_MN_UNLOCK_ALL_BY_KEY:
             {
+                //
+                // Flush data and then release the locks on the file server
+                //
+
+                CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
+                              NULL,
+                              0,
+                              &stIoStatus);
+
+                if( !NT_SUCCESS( stIoStatus.Status))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLockControl CcFlushCache [1] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                  pFcb->ObjectInformation->FileId.Cell,
+                                  pFcb->ObjectInformation->FileId.Volume,
+                                  pFcb->ObjectInformation->FileId.Vnode,
+                                  pFcb->ObjectInformation->FileId.Unique,
+                                  stIoStatus.Status,
+                                  stIoStatus.Information);
+
+                    ntStatus = stIoStatus.Status;
+                }
 
                 RtlZeroMemory( &stUnlockRequestCB,
                                sizeof( AFSByteRangeUnlockRequestCB));
@@ -178,30 +202,6 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                                               NULL,
                                               NULL);
 
-                if( NT_SUCCESS( ntStatus))
-                {
-                    CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
-                                  NULL,
-                                  0,
-                                  &stIoStatus);
-
-                    if( !NT_SUCCESS( stIoStatus.Status))
-                    {
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                      AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLockControl CcFlushCache [1] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
-                                      pFcb->ObjectInformation->FileId.Cell,
-                                      pFcb->ObjectInformation->FileId.Volume,
-                                      pFcb->ObjectInformation->FileId.Vnode,
-                                      pFcb->ObjectInformation->FileId.Unique,
-                                      stIoStatus.Status,
-                                      stIoStatus.Information);
-
-                        ntStatus = stIoStatus.Status;
-                    }
-                }
-
                 //
                 // Even on a failure we need to notify the rtl package of the unlock
                 //
@@ -211,6 +211,30 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
             case IRP_MN_UNLOCK_SINGLE:
             {
+                //
+                // Flush the data and then release the file server locks
+                //
+
+                CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
+                              &pIrpSp->Parameters.LockControl.ByteOffset,
+                              pIrpSp->Parameters.LockControl.Length->LowPart,
+                              &stIoStatus);
+
+                if( !NT_SUCCESS( stIoStatus.Status))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLockControl CcFlushCache [2] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                  pFcb->ObjectInformation->FileId.Cell,
+                                  pFcb->ObjectInformation->FileId.Volume,
+                                  pFcb->ObjectInformation->FileId.Vnode,
+                                  pFcb->ObjectInformation->FileId.Unique,
+                                  stIoStatus.Status,
+                                  stIoStatus.Information);
+
+                    ntStatus = stIoStatus.Status;
+                }
 
                 stUnlockRequestCB.Count = 1;
 
@@ -233,30 +257,6 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                                               sizeof( AFSByteRangeUnlockRequestCB),
                                               (void *)&stUnlockResultCB,
                                               &ulResultLen);
-
-                if( NT_SUCCESS( ntStatus))
-                {
-                    CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
-                                  &pIrpSp->Parameters.LockControl.ByteOffset,
-                                  pIrpSp->Parameters.LockControl.Length->LowPart,
-                                  &stIoStatus);
-
-                    if( !NT_SUCCESS( stIoStatus.Status))
-                    {
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                      AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLockControl CcFlushCache [2] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
-                                      pFcb->ObjectInformation->FileId.Cell,
-                                      pFcb->ObjectInformation->FileId.Volume,
-                                      pFcb->ObjectInformation->FileId.Vnode,
-                                      pFcb->ObjectInformation->FileId.Unique,
-                                      stIoStatus.Status,
-                                      stIoStatus.Information);
-
-                        ntStatus = stIoStatus.Status;
-                    }
-                }
 
                 break;
             }
