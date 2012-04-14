@@ -1380,7 +1380,6 @@ AFSOpenRoot( IN PIRP Irp,
 
         ntStatus = AFSValidateEntry( VolumeCB->DirectoryCB,
                                      AuthGroup,
-                                     TRUE,
                                      FALSE);
 
         if( !NT_SUCCESS( ntStatus))
@@ -2562,7 +2561,6 @@ AFSProcessOpen( IN PIRP Irp,
 
         ntStatus = AFSValidateEntry( DirectoryCB,
                                      AuthGroup,
-                                     TRUE,
                                      FALSE);
 
         if( !NT_SUCCESS( ntStatus))
@@ -3072,7 +3070,6 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSValidateEntry( DirectoryCB,
                                      AuthGroup,
-                                     TRUE,
                                      FALSE);
 
         if( !NT_SUCCESS( ntStatus))

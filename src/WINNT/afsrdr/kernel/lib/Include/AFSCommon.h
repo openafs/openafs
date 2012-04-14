@@ -1194,7 +1194,6 @@ AFSUpdateMetaData( IN AFSDirectoryCB *DirEntry,
 NTSTATUS
 AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                   IN GUID *AuthGroup,
-                  IN BOOLEAN PurgeContent,
                   IN BOOLEAN FastCall);
 
 AFSDirectoryCB *
