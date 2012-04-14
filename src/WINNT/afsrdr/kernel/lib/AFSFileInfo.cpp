@@ -3178,7 +3178,7 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                     pBasic->LastAccessTime.QuadPart = 0;
                     pBasic->ChangeTime.QuadPart = 0;
                     pBasic->LastWriteTime.QuadPart = 0;
-                    pBasic->FileAttributes = FILE_ATTRIBUTE_SYSTEM;
+                    pBasic->FileAttributes = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
 
                     *Length -= sizeof( FILE_BASIC_INFORMATION);
                 }
