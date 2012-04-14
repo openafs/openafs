@@ -3716,7 +3716,6 @@ try_exit:
 NTSTATUS
 AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                   IN GUID *AuthGroup,
-                  IN BOOLEAN PurgeContent,
                   IN BOOLEAN FastCall)
 {
 
@@ -3737,13 +3736,12 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSValidateEntry Validating entry %wZ FID %08lX-%08lX-%08lX-%08lX PurgeContent %u FastCall %u\n",
+                      "AFSValidateEntry Validating entry %wZ FID %08lX-%08lX-%08lX-%08lX FastCall %u\n",
                       &DirEntry->NameInformation.FileName,
                       pObjectInfo->FileId.Cell,
                       pObjectInfo->FileId.Volume,
                       pObjectInfo->FileId.Vnode,
                       pObjectInfo->FileId.Unique,
-                      PurgeContent,
                       FastCall);
 
         //
@@ -3815,8 +3813,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSValidateEntry Validating entry Purge %d FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X returned DV %I64X FT %d\n",
-                      PurgeContent,
+                      "AFSValidateEntry Validating entry FastCall %d %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X returned DV %I64X FT %d\n",
                       FastCall,
                       &DirEntry->NameInformation.FileName,
                       pObjectInfo->FileId.Cell,
@@ -3883,10 +3880,9 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                 // Can't hold the Fcb resource while doing this
                 //
 
-                if( PurgeContent &&
-                    pObjectInfo->Fcb != NULL &&
+                if( pObjectInfo->Fcb != NULL &&
                     (pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart ||
-                    BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA)))
+                      BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA)))
                 {
 
                     pCurrentFcb = pObjectInfo->Fcb;
@@ -4042,7 +4038,6 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                         (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
                     }
                 }
-
                 break;
             }
 

@@ -724,7 +724,6 @@ AFSQueryDirectory( IN PIRP Irp)
 
             AFSValidateEntry( pDirEntry,
                               &pCcb->AuthGroup,
-                              FALSE,
                               FALSE);
 
             pObjectInfo = pDirEntry->ObjectInformation;
