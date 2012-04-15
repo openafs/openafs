@@ -3334,6 +3334,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
          * then, since this is a client connection we're getting data for
          * it must be for the previous call.
          */
+        MUTEX_EXIT(&conn->conn_call_lock);
         if (rx_stats_active)
             rx_atomic_inc(&rx_stats.spuriousPacketsRead);
 	putConnection(conn);
