@@ -747,6 +747,12 @@ try_exit:
                       "EXCEPTION - AFSSetFileInfo\n");
 
         ntStatus = STATUS_UNSUCCESSFUL;
+
+        if( bReleaseMain)
+        {
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
+        }
     }
 
     AFSCompleteRequest( Irp,
@@ -2745,6 +2751,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
             //
             // If this is a truncation we need to grab the paging IO resource.
             //
+
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
@@ -2756,6 +2763,13 @@ AFSSetAllocationInfo( IN PIRP Irp,
 
             bReleasePaging = TRUE;
 
+            //
+            // Must drop the Fcb Resource.  When changing the file size
+            // a deadlock can occur with Trend Micro's filter if the file
+            // size is set to zero.
+            //
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
 
             pFcb->Header.AllocationSize = pBuffer->AllocationSize;
 
@@ -2786,6 +2800,26 @@ AFSSetAllocationInfo( IN PIRP Irp,
         //
         // Tell Cc if allocation is increased.
         //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                      &pFcb->NPFcb->PagingResource,
+                      PsGetCurrentThread());
+
+        AFSAcquireExcl( &pFcb->NPFcb->PagingResource,
+                        TRUE);
+
+        bReleasePaging = TRUE;
+
+        //
+        // Must drop the Fcb Resource.  When changing the file size
+        // a deadlock can occur with Trend Micro's filter if the file
+        // size is set to zero.
+        //
+
+        AFSReleaseResource( &pFcb->NPFcb->Resource);
+
         bTellCc = pBuffer->AllocationSize.QuadPart > pFcb->Header.AllocationSize.QuadPart;
 
         pFcb->Header.AllocationSize = pBuffer->AllocationSize;
@@ -2842,6 +2876,9 @@ AFSSetAllocationInfo( IN PIRP Irp,
     {
 
         AFSReleaseResource( &pFcb->NPFcb->PagingResource);
+
+        AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                        TRUE);
     }
 
     return ntStatus;
@@ -2890,6 +2927,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
             }
             else
             {
+
                 //
                 // If this is a truncation we need to grab the paging
                 // IO resource.
@@ -2904,6 +2942,14 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
                                 TRUE);
 
                 bReleasePaging = TRUE;
+
+                //
+                // Must drop the Fcb Resource.  When changing the file size
+                // a deadlock can occur with Trend Micro's filter if the file
+                // size is set to zero.
+                //
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 pFcb->Header.AllocationSize = pBuffer->EndOfFile;
 
@@ -2926,9 +2972,33 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         }
         else
         {
+
             //
             // extending the file, move EOF
             //
+
+            //
+            // If this is a truncation we need to grab the paging
+            // IO resource.
+            //
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                          &pFcb->NPFcb->PagingResource,
+                          PsGetCurrentThread());
+
+            AFSAcquireExcl( &pFcb->NPFcb->PagingResource,
+                            TRUE);
+
+            bReleasePaging = TRUE;
+
+            //
+            // Must drop the Fcb Resource.  When changing the file size
+            // a deadlock can occur with Trend Micro's filter if the file
+            // size is set to zero.
+            //
+
+            AFSReleaseResource( &pFcb->NPFcb->Resource);
 
             pFcb->Header.FileSize = pBuffer->EndOfFile;
 
@@ -2995,6 +3065,9 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
     {
 
         AFSReleaseResource( &pFcb->NPFcb->PagingResource);
+
+        AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                        TRUE);
     }
 
     return ntStatus;
