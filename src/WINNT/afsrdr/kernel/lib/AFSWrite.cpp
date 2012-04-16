@@ -1657,6 +1657,15 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
     NTSTATUS      ntStatus = STATUS_SUCCESS;
     AFSCcb       *pCcb = (AFSCcb *)FileObject->FsContext2;
 
+    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSExtendingWrite Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
+                  &Fcb->NPFcb->PagingResource,
+                  PsGetCurrentThread());
+
+    AFSAcquireExcl( &Fcb->NPFcb->PagingResource,
+                    TRUE);
+
     if( NewLength > Fcb->Header.AllocationSize.QuadPart)
     {
 
@@ -1681,12 +1690,6 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
                                          Fcb->ObjectInformation,
                                          &pCcb->AuthGroup);
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSExtendingWrite Acquiring Fcb lock %08lX EXCL %08lX\n",
-                  &Fcb->NPFcb->Resource,
-                  PsGetCurrentThread());
-
     if (NT_SUCCESS(ntStatus))
     {
 
@@ -1709,6 +1712,8 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
         Fcb->Header.FileSize = liSaveFileSize;
         Fcb->Header.AllocationSize = liSaveAllocation;
     }
+
+    AFSReleaseResource( &Fcb->NPFcb->PagingResource);
 
     //
     // DownConvert file resource to shared
