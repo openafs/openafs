@@ -3035,11 +3035,15 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
     AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL;
     LONG lCount;
+    LARGE_INTEGER liSaveSize;
+    LARGE_INTEGER liSaveVDL;
+    LARGE_INTEGER liSaveAlloc;
 
     __Enter
     {
 
         pDesiredAccess = &pIrpSp->Parameters.Create.SecurityContext->DesiredAccess;
+
         usShareAccess = pIrpSp->Parameters.Create.ShareAccess;
 
         pFileObject = pIrpSp->FileObject;
@@ -3216,13 +3220,17 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         (*Ccb)->GrantedAccess = *pDesiredAccess;
 
         //
-        // Need to purge any data currently in the cache
+        // Set the file length to zero
         //
 
-        CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                             NULL,
-                             0,
-                             FALSE);
+        AFSAcquireExcl( pObjectInfo->Fcb->Header.PagingIoResource,
+                        TRUE);
+
+        bReleasePaging = TRUE;
+
+        liSaveSize = pObjectInfo->Fcb->Header.FileSize;
+        liSaveAlloc = pObjectInfo->Fcb->Header.AllocationSize;
+        liSaveVDL = pObjectInfo->Fcb->Header.ValidDataLength;
 
         pObjectInfo->Fcb->Header.FileSize.QuadPart = 0;
         pObjectInfo->Fcb->Header.ValidDataLength.QuadPart = 0;
@@ -3246,34 +3254,6 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         KeQuerySystemTime( &pObjectInfo->LastWriteTime);
 
-        ntStatus = AFSUpdateFileInformation( &pParentObjectInfo->FileId,
-                                             pObjectInfo,
-                                             AuthGroup);
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSProcessOverwriteSupersede (%08lX) Failed to update file information %wZ Status %08lX\n",
-                          Irp,
-                          &DirectoryCB->NameInformation.FileName,
-                          ntStatus);
-
-            try_return( ntStatus);
-        }
-
-        AFSAcquireExcl( pObjectInfo->Fcb->Header.PagingIoResource,
-                        TRUE);
-
-        bReleasePaging = TRUE;
-
-        pFileObject->SectionObjectPointer = &pObjectInfo->Fcb->NPFcb->SectionObjectPointers;
-
-        pFileObject->FsContext = (void *)pObjectInfo->Fcb;
-
-        pFileObject->FsContext2 = (void *)*Ccb;
-
         //
         // Set the update flag accordingly
         //
@@ -3284,12 +3264,28 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                                           AFS_FCB_FLAG_UPDATE_ACCESS_TIME |
                                           AFS_FCB_FLAG_UPDATE_LAST_WRITE_TIME);
 
-        CcSetFileSizes( pFileObject,
-                        (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
+        ntStatus = AFSUpdateFileInformation( &pParentObjectInfo->FileId,
+                                             pObjectInfo,
+                                             AuthGroup);
 
-        AFSReleaseResource( pObjectInfo->Fcb->Header.PagingIoResource);
+        if( !NT_SUCCESS( ntStatus))
+        {
 
-        bReleasePaging = FALSE;
+            pObjectInfo->Fcb->Header.ValidDataLength = liSaveVDL;
+            pObjectInfo->Fcb->Header.FileSize = liSaveSize;
+            pObjectInfo->Fcb->Header.AllocationSize = liSaveAlloc;
+            pObjectInfo->Fcb->ObjectInformation->EndOfFile = liSaveSize;
+            pObjectInfo->Fcb->ObjectInformation->AllocationSize = liSaveAlloc;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessOverwriteSupersede (%08lX) Failed to update file information %wZ Status %08lX\n",
+                          Irp,
+                          &DirectoryCB->NameInformation.FileName,
+                          ntStatus);
+
+            try_return( ntStatus);
+        }
 
         ulAttributes |= FILE_ATTRIBUTE_ARCHIVE;
 
@@ -3371,7 +3367,26 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                       pObjectInfo->ParentObjectInformation,
                       lCount);
 
+        AFSReleaseResource( pObjectInfo->Fcb->Header.Resource);
+
+        bReleaseFcb = FALSE;
+
         *Fcb = pObjectInfo->Fcb;
+
+        //
+        // Now that the Fcb->Resource has been dropped
+        // we can call CcSetFileSizes.  We are still holding
+        // the PagingIoResource
+        //
+
+        pFileObject->SectionObjectPointer = &pObjectInfo->Fcb->NPFcb->SectionObjectPointers;
+
+        pFileObject->FsContext = (void *)pObjectInfo->Fcb;
+
+        pFileObject->FsContext2 = (void *)*Ccb;
+
+        CcSetFileSizes( pFileObject,
+                        (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
 
 try_exit:
 
