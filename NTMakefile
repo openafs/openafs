@@ -714,8 +714,15 @@ extra: afsrdr rpctestlib
 !	ELSE
      @echo ***** Skipping $@ ***** Not found.
 !	ENDIF
-                
-finale: extra
+
+tools: extra
+     @echo ***** $@
+	$(DOCD) $(SRC)\tools\rxperf
+	$(CD) $(SRC)\tools\rxperf
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+finale: tools
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

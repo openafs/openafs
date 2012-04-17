@@ -1,6 +1,6 @@
 srcdir=@srcdir@
 
-SUBDIRS=dumpscan
+SUBDIRS=dumpscan rxperf
 
 all dest install clean distclean:
 	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done

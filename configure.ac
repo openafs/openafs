@@ -229,6 +229,7 @@ src/tests/Makefile \
 src/tests/run-tests \
 src/tools/Makefile \
 src/tools/dumpscan/Makefile \
+src/tools/rxperf/Makefile \
 src/tsalvaged/Makefile \
 src/tsm41/Makefile \
 src/tvolser/Makefile \

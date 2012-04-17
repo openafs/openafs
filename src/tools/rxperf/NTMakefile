@@ -10,7 +10,7 @@ AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DHAVE_WARNX -DHAVE_ERRX -DHAVE_WARN -DHA
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG
 !ENDIF
 
-RELDIR=rx\test
+RELDIR=tools/rxperf
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -23,39 +23,19 @@ LIBS = \
 	$(DESTDIR)\lib\opr.lib
 
 
-RXTESTOBJS = $(OUT)\testclient.obj $(OUT)\testserver.obj
+all: $(OUT)\rxperf.exe
 
-tests: $(OUT)\testclient.exe $(OUT)\testserver.exe $(OUT)\tableGen.exe $(OUT)\generator.exe
+$(OUT)\rxperf.res: rxperf.rc AFS_component_version_number.h
 
-$(OUT)\testclient.exe: $(OUT)\testclient.obj $(LIBS)
+$(OUT)\rxperf.exe: $(OUT)\rxperf.obj $(OUT)\rxperf.res $(LIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
-
-$(OUT)\testserver.exe: $(OUT)\testserver.obj $(LIBS)
-	$(EXECONLINK)
-        $(_VC_MANIFEST_EMBED_EXE)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
-
-$(OUT)\tableGen.exe: $(OUT)\tableGen.obj $(LIBS)
-	$(EXECONLINK)
-        $(_VC_MANIFEST_EMBED_EXE)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
-
-$(OUT)\generator.exe: $(OUT)\generator.obj $(LIBS)
-	$(EXECONLINK)
-        $(_VC_MANIFEST_EMBED_EXE)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
-
-$(RXTESTOBJS): ..\rx_clock.h ..\rx_queue.h ..\rx_event.h ..\rx.h
 
 mkdir:
 	
-install: tests
+install: all
 
 clean::
-    $(DEL) $(TESTS)
+    $(DEL) $(OUT)\rxperf.res

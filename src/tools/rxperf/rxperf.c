@@ -59,76 +59,6 @@ nn * We are using getopt since we want it to be possible to link to
 #define MAX_THREADS 128
 #endif
 
-static const char *__progname;
-
-#ifndef HAVE_WARNX
-static void
-warnx(const char *fmt, ...)
-{
-    va_list args;
-
-    va_start(args, fmt);
-    fprintf(stderr, "%s: ", __progname);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-    va_end(args);
-}
-#endif /* !HAVE_WARNX */
-
-#ifndef HAVE_ERRX
-static void
-errx(int eval, const char *fmt, ...)
-{
-    va_list args;
-
-    va_start(args, fmt);
-    fprintf(stderr, "%s: ", __progname);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-    va_end(args);
-
-    exit(eval);
-}
-#endif /* !HAVE_ERRX */
-
-#ifndef HAVE_WARN
-static void
-warn(const char *fmt, ...)
-{
-    va_list args;
-    char *errstr;
-
-    va_start(args, fmt);
-    fprintf(stderr, "%s: ", __progname);
-    vfprintf(stderr, fmt, args);
-
-    errstr = strerror(errno);
-
-    fprintf(stderr, ": %s\n", errstr ? errstr : "unknown error");
-    va_end(args);
-}
-#endif /* !HAVE_WARN */
-
-#ifndef HAVE_ERR
-static void
-err(int eval, const char *fmt, ...)
-{
-    va_list args;
-    char *errstr;
-
-    va_start(args, fmt);
-    fprintf(stderr, "%s: ", __progname);
-    vfprintf(stderr, fmt, args);
-
-    errstr = strerror(errno);
-
-    fprintf(stderr, ": %s\n", errstr ? errstr : "unknown error");
-    va_end(args);
-
-    exit(eval);
-}
-#endif /* !HAVE_ERR */
-
 #define DEFAULT_PORT 7009	/* To match tcpdump */
 #define DEFAULT_HOST "127.0.0.1"
 #define DEFAULT_BYTES 1024 * 1024
@@ -884,17 +814,17 @@ usage(void)
 {
 #define COMMON ""
 
-    fprintf(stderr, "usage: %s client -c send -b <bytes>\n", __progname);
-    fprintf(stderr, "usage: %s client -c recv -b <bytes>\n", __progname);
+    fprintf(stderr, "usage: %s client -c send -b <bytes>\n", getprogname());
+    fprintf(stderr, "usage: %s client -c recv -b <bytes>\n", getprogname());
     fprintf(stderr,
 	    "usage: %s client -c rpc  -S <sendbytes> -R <recvbytes>\n",
-	    __progname);
-    fprintf(stderr, "usage: %s client -c file -f filename\n", __progname);
+	    getprogname());
+    fprintf(stderr, "usage: %s client -c file -f filename\n", getprogname());
     fprintf(stderr,
 	    "%s: usage:	common option to the client "
 	    "-w <write-bytes> -r <read-bytes> -T times -p port -s server -D\n",
-	    __progname);
-    fprintf(stderr, "usage: %s server -p port\n", __progname);
+	    getprogname());
+    fprintf(stderr, "usage: %s server -p port\n", getprogname());
 #undef COMMMON
     exit(1);
 }
@@ -1197,9 +1127,7 @@ main(int argc, char **argv)
     PROCESS pid;
 #endif
 
-    __progname = strrchr(argv[0], '/');
-    if (__progname == 0)
-	__progname = argv[0];
+    setprogname(argv[0]);
 
 #ifndef AFS_NT40_ENV
     signal(SIGUSR1, sigusr1);
