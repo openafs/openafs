@@ -1,3 +1,41 @@
+Since 1.7.0900 (1.7.9)
+
+ * Avoid deadlocks with Trend Micro Enterprise anti-virus filter
+   driver caused when file size is truncated to zero.  To avoid this
+   deadlock we no longer hold the File Control Block ERESOURCE
+   across CcPurgeCacheSection and CcSetFileSizes calls.  Instead
+   the File Control Block Paging ERESOURCE is held in these cases.
+
+ * Reduce contention in the RX protocol packet processing by avoiding
+   an expensive lookup of the rx_peer object for each packet received
+   and transmitted.
+
+ * Fix a deadlock in RX introduced due to a lock leak introduced
+   in 1.7.9.
+
+ * Redesign pioctl processing to avoid issuing a CreateFile() call
+   on the _._AFS_IOCTL_._ file until it is safely determined that
+   the _._AFS_IOCTL_._ file exists and is in fact an afs pioctl file.
+   Use the GetFileAttributes() function and test for the Hidden and
+   System attributes.
+
+ * Always purge file data when a directory enumeration detects a
+   data version change regardless of the context during which the
+   object verification is being performed.
+
+ * Ensure that the afs redirector flushes file data before dropping
+   file locks.
+
+ * If the file cleanup operation in the afsd_service fails, do not
+   attempt to delete a file if the delete pending flag is set.
+
+ * Avoid File Control Block ERESOURCE contention during file create
+   and file open operations.  This is accomplished by not obtaining
+   the ERESOURCE unless it is known that an object verification needs
+   to be performed as a result of a callback invalidation or expiration.
+
+ * Many RX source code cleanups.
+
 Since 1.7.0800 (1.7.8)
 
  * When processing a directory verification, if a change of data
