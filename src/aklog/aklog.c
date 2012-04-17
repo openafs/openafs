@@ -1985,7 +1985,7 @@ get_credv5_akimpersonate(krb5_context context,
         }
     } /* crypto block */
     ticket_reply->enc_part.etype = deref_entry_enctype(entry);
-    ticket_reply->enc_part.kvno = temp_vno;
+    ticket_reply->enc_part.kvno = (void *)temp_vno;
     *ticket_reply->enc_part.kvno = entry->vno;
     ticket_reply->tkt_vno = 5;
 #else
