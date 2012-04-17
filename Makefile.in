@@ -908,6 +908,7 @@ distclean: clean
 	src/tests/run-tests \
 	src/tests/auth/Makefile \
 	src/tools/Makefile \
+	src/tools/dumpscan/Makefile \
 	src/tsalvaged/Makefile \
 	src/tsm41/Makefile \
 	src/tvolser/Makefile \
