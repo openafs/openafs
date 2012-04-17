@@ -40,14 +40,14 @@ int
 main(int argc, char **argv)
 {
    plan(11);
-   uint32_t test[] = {3526055646, 2064483663, 3234460805, 3963629775};
+   uint32_t test[] = {3526055646UL, 2064483663UL, 3234460805UL, 3963629775UL};
 
    is_int(256, opr_jhash_size(8), "opr_jhash_size returns expected value");
    is_int(255, opr_jhash_mask(8), "opr_jhash_mask returns expected value");
 
    is_int(0xdeadbeef, opr_jhash(test, 0, 0), "empty array hashes as expected");
    is_int(766530906, opr_jhash(test, 4, 0), "simple array works");
-   is_int(3782684773, opr_jhash(test, 4, 1), "changing initval works");
+   is_int(3782684773UL, opr_jhash(test, 4, 1), "changing initval works");
 
    test[2]++;
    is_int(1977082159, opr_jhash(test, 4, 0), "modifying value works");

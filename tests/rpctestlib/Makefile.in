@@ -11,9 +11,8 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-
 RTL=@TOP_OBJDIR@/tests/rpctestlib
-RX=@TOP_OBJDIR@/src/rx
+RX = ${srcdir}/../../src/rx
 VICED=@TOP_OBJDIR@/src/viced
 UTIL=@TOP_OBJDIR@/src/util
 FSINT=@TOP_OBJDIR@/src/fsint
@@ -35,13 +34,14 @@ RXOBJS = rx_pthread.o
 
 LIBOBJS= ${RTLOBJS} ${FSINTOBJS} ${RXOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libopr.a ${TOP_LIBDIR}/util.a
 
 all: xmpl_driver
 
 CFLAGS_rx_pthread.o = -DDPF_FSLOG
 
 rx_pthread.o: ${RX}/rx_pthread.c
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 rpc_test_main.o: ${RTL}/rpc_test_main.c ${headers}
 rpc_test_procs.o: ${RTL}/rpc_test_procs.c ${headers}
@@ -49,15 +49,21 @@ rpc_test_cb_procs.o: ${RTL}/rpc_test_cb_procs.c ${headers}
 
 CFLAGS_afsaux.o = -I{FSINT}
 afsaux.o: ${FSINT}/afsaux.c
+	$(AFS_CCRULE) ${FSINT}/afsaux.c
 afscbint.ss.o: ${FSINT}/afscbint.ss.c
+	$(AFS_CCRULE) ${FSINT}/afscbint.ss.c
 afsint.cs.o: ${FSINT}/afsint.cs.c
+	$(AFS_CCRULE) ${FSINT}/afsint.cs.c
 afsint.ss.o: ${FSINT}/afsint.ss.c
+	$(AFS_CCRULE) ${FSINT}/afsint.ss.c
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
+	$(AFS_CCRULE) ${FSINT}/afsint.xdr.c
 afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
+	$(AFS_CCRULE) ${FSINT}/afscbint.xdr.c
 
 xmpl_driver: librpc_test_lib.a rpc_test_main.o ${LIBS}
 	$(AFS_LDRULE) rpc_test_main.o librpc_test_lib.a \
-		${LIBS} ${MT_LIBS} ${XLIBS}
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 librpc_test_lib.a: ${LIBOBJS}
 	$(RM) -f $@

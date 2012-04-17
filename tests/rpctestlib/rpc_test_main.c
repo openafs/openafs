@@ -56,8 +56,6 @@
 #endif
 #ifdef AFS_DARWIN_ENV
 #include <sys/malloc.h>
-#else
-#include <malloc.h>
 #endif
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>

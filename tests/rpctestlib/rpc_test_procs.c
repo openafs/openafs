@@ -37,54 +37,24 @@
 
 #include "rpc_test_procs.h"
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <string.h>
-
 #ifdef AFS_NT40_ENV
-#else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
-
-#include <string.h>
-#include <fcntl.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
 #include <windows.h>
 #include <WINNT/afsevent.h>
 #else
-#include <pwd.h>
+#include <sys/file.h>
 #include <afs/venus.h>
 #include <sys/time.h>
-#include <netdb.h>
 #endif
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG 1
-#include <sys/stat.h>
-#include <errno.h>
-#include <signal.h>
 #include <afs/vice.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 
 #include <afs/com_err.h>
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-#endif
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
-#endif
-#ifdef AFS_DARWIN_ENV
-#include <sys/malloc.h>
-#else
-#include <malloc.h>
 #endif
 #include <afs/errors.h>
 #include <afs/sys_prototypes.h>
@@ -112,7 +82,7 @@ typedef struct rpc_test_pkg_params {
 } rpc_test_pkg_params;
 static rpc_test_pkg_params rpc_test_params;
 
-afs_int32 rpc_test_PkgInit()
+afs_int32 rpc_test_PkgInit(void)
 {
     afs_int32 code = 0;
     static afs_uint32 rpc_test_initialized = 0; /* once */
@@ -120,7 +90,7 @@ afs_int32 rpc_test_PkgInit()
     if (!rpc_test_initialized) {
         rpc_test_initialized = 1;
     } else {
-        printf("%s: rpc_test_PkgInit: package already initialized\n");
+	printf("%s: rpc_test_PkgInit: package already initialized\n", prog);
         exit(1);
     }
 
@@ -156,7 +126,6 @@ init_callback_service_lwp(void *arg)
 {
     struct rx_securityClass *sc;
     struct rx_service *svc;
-    afs_int32 code = 0;
 
     rpc_test_request_ctx *ctx = (rpc_test_request_ctx *) arg;
 
@@ -195,7 +164,7 @@ init_callback_service_lwp(void *arg)
 
     rx_StartServer(1);
 
-    printf("%s: init_callback_service_lwp: finished");
+    printf("%s: init_callback_service_lwp: finished", prog);
 
     return (NULL);
 
@@ -230,7 +199,6 @@ afs_int32 init_fs_channel(rpc_test_request_ctx **octx, char *cb_if,
                           char *listen_addr_s, char *prefix, char *fs_addr_s,
                           afs_uint32 flags)
 {
-    char cmd[512];
     rpc_test_request_ctx *ctx;
     afs_int32 code = 0;
 #ifdef AFS_NT40_ENV
@@ -251,10 +219,10 @@ afs_int32 init_fs_channel(rpc_test_request_ctx **octx, char *cb_if,
 
     /* afscbint (server) */
     sprintf(ctx->cb_svc_name, "cb_%d", ctx->cno);
-    sprintf(ctx->cb_if_s, cb_if);
-    sprintf(ctx->cb_listen_addr_s, listen_addr_s);
-    sprintf(ctx->cb_prefix_s, prefix);
-    sprintf(ctx->fs_addr_s, fs_addr_s);
+    sprintf(ctx->cb_if_s, "%s", cb_if);
+    sprintf(ctx->cb_listen_addr_s, "%s", listen_addr_s);
+    sprintf(ctx->cb_prefix_s, "%s", prefix);
+    sprintf(ctx->fs_addr_s, "%s", fs_addr_s);
 
 #if defined(RPC_TEST_ADD_ADDRESSES)
 #if defined(AFS_LINUX26_ENV)
@@ -297,7 +265,6 @@ afs_int32 init_fs_channel(rpc_test_request_ctx **octx, char *cb_if,
     /* unlock this */
     pthread_mutex_unlock(&ctx->mtx);
 
-out:
     return (code);
 
 }        /* init_fs_channel */
@@ -320,7 +287,6 @@ afs_int32
 rpc_test_afs_fetch_status(rpc_test_request_ctx *ctx, AFSFid *fid,
                               AFSFetchStatus *outstatus)
 {
-    struct rx_call *tcall;
     struct AFSVolSync tsync;
     struct AFSCallBack tcb;
     afs_int32 code = 0;
@@ -336,7 +302,6 @@ afs_int32
 rpc_test_afs_store_status(rpc_test_request_ctx *ctx, AFSFid *fid,
                     AFSStoreStatus *instatus, AFSFetchStatus *outstatus)
 {
-    struct rx_call *tcall;
     struct AFSVolSync tsync;
     afs_int32 code = 0;
 
@@ -400,7 +365,6 @@ afs_int32 rpc_test_afs_downgrade_byterangelock(rpc_test_request_ctx *ctx,
 afs_int32
 destroy_fs_channel(rpc_test_request_ctx *ctx)
 {
-    char cmd[512];
     afs_int32 code = 0;
 #if defined(RPC_TEST_ADD_ADDRESSES)
 #if defined(AFS_LINUX26_ENV)
@@ -416,8 +380,6 @@ destroy_fs_channel(rpc_test_request_ctx *ctx)
 }        /* destroy_fs_channel */
 
 void
-rpc_test_PkgShutdown()
+rpc_test_PkgShutdown(void)
 {
-    afs_int32 code = 0;
-
 }        /* rpc_test_PkgShutdown */

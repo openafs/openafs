@@ -41,6 +41,7 @@
 #include <rx/rxkad.h>
 #include <rx/rx_identity.h>
 
+#include <hcrypto/des.h>
 #include <tests/tap/basic.h>
 
 #include "test.h"
