@@ -66,7 +66,9 @@ static int AFS_Running = 0;
 static int afs_CacheInit_Done = 0;
 static int afs_Go_Done = 0;
 extern struct interfaceAddr afs_cb_interface;
+#ifdef RXK_LISTENER_ENV
 static int afs_RX_Running = 0;
+#endif
 static int afs_InitSetup_done = 0;
 afs_int32 afs_numcachefiles = -1;
 afs_int32 afs_numfilesperdir = -1;
@@ -1373,6 +1375,15 @@ afs_shutdown(void)
     afs_FlushAllVCaches();
 #endif
 
+    afs_termState = AFSOP_STOP_BKG;
+
+    afs_warn("BkG... ");
+    /* Wake-up afs_brsDaemons so that we don't have to wait for a bkg job! */
+    while (afs_termState == AFSOP_STOP_BKG) {
+	afs_osi_Wakeup(&afs_brsDaemons);
+	afs_osi_Sleep(&afs_termState);
+    }
+
     afs_warn("CB... ");
 
     afs_termState = AFSOP_STOP_RXCALLBACK;
@@ -1394,12 +1405,6 @@ afs_shutdown(void)
 	    afs_osi_CancelWait(&AFS_CSWaitHandler);
 	    afs_osi_Sleep(&afs_termState);
 	}
-    }
-    afs_warn("BkG... ");
-    /* Wake-up afs_brsDaemons so that we don't have to wait for a bkg job! */
-    while (afs_termState == AFSOP_STOP_BKG) {
-	afs_osi_Wakeup(&afs_brsDaemons);
-	afs_osi_Sleep(&afs_termState);
     }
     afs_warn("CTrunc... ");
     /* Cancel cache truncate daemon. */

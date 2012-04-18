@@ -90,7 +90,7 @@ afs_CheckServerDaemon(void)
     last10MinCheck = lastCheck = osi_Time();
     while (1) {
 	if (afs_termState == AFSOP_STOP_CS) {
-	    afs_termState = AFSOP_STOP_BKG;
+	    afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    afs_osi_Wakeup(&afs_termState);
 	    break;
 	}
@@ -108,7 +108,7 @@ afs_CheckServerDaemon(void)
 	}
 	/* shutdown check. */
 	if (afs_termState == AFSOP_STOP_CS) {
-	    afs_termState = AFSOP_STOP_BKG;
+	    afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    afs_osi_Wakeup(&afs_termState);
 	    break;
 	}
@@ -308,7 +308,7 @@ afs_Daemon(void)
 	    if (afs_CheckServerDaemonStarted)
 		afs_termState = AFSOP_STOP_CS;
 	    else
-		afs_termState = AFSOP_STOP_BKG;
+		afs_termState = AFSOP_STOP_TRUNCDAEMON;
 	    afs_osi_Wakeup(&afs_termState);
 	    return;
 	}
@@ -1045,7 +1045,7 @@ afs_BackgroundDaemon(void)
 
 	if (afs_termState == AFSOP_STOP_BKG) {
 	    if (--afs_nbrs <= 0)
-		afs_termState = AFSOP_STOP_TRUNCDAEMON;
+		afs_termState = AFSOP_STOP_RXCALLBACK;
 	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
 #ifdef AFS_DARWIN80_ENV

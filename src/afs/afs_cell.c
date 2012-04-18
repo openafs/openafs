@@ -57,7 +57,11 @@ afs_StopAFSDB(void)
 	afs_osi_Wakeup(&afsdb_req);
     } else {
 	afsdb_handler_shutdown = 1;
+#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV) || defined(RXK_UPCALL_ENV)
 	afs_termState = AFSOP_STOP_RXEVENT;
+#else
+	afs_termState = AFSOP_STOP_COMPLETE;
+#endif
 	afs_osi_Wakeup(&afs_termState);
     }
 }
