@@ -39,6 +39,8 @@
 #include <afs/com_err.h>
 
 #define HC_DEPRECATED
+#include <hcrypto/des.h>
+
 #include <rx/rxkad.h>
 #include <rx/rx_identity.h>
 
