@@ -82,6 +82,7 @@ lib/roken/roken.h.in		roken/roken.h.in
 lib/roken/roken-common.h	roken/roken-common.h
 lib/roken/search.hin		roken/search.hin
 lib/roken/setenv.c		roken/setenv.c
+lib/roken/setprogname.c		roken/setprogname.c
 lib/roken/socket.c		roken/socket.c
 lib/roken/snprintf.c		roken/snprintf.c
 lib/roken/strerror_r.c		roken/strerror_r.c
