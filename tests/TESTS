@@ -11,6 +11,7 @@ opr/rbtree
 ptserver/pt_util
 ptserver/pts-man
 rx/event
+rx/perf
 volser/vos-man
 bucoord/backup-man
 kauth/kas-man
