@@ -1401,7 +1401,6 @@ AC_CHECK_FUNCS([ \
 	geteuid \
 	getgid \
 	getuid \
-	getprogname \
 	getrlimit \
 	issetugid \
 	mkstemp \
@@ -1415,7 +1414,6 @@ AC_CHECK_FUNCS([ \
 	regerror \
 	regexec \
 	setitimer \
-	setprogname \
 	setvbuf \
 	sigaction \
 	strcasestr \
@@ -1474,6 +1472,7 @@ AC_REPLACE_FUNCS([ \
 	localtime_r \
 	mkstemp \
 	setenv \
+	setprogname \
 	strcasecmp \
 	strlcat \
 	strnlen \

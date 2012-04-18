@@ -127,6 +127,9 @@ net_write.o: ${UPSTREAM}/net_write.c
 setenv.o: ${UPSTREAM}/setenv.c
 	$(AFS_CCRULE) $(UPSTREAM)/setenv.c
 
+setprogname.o: ${UPSTREAM}/setprogname.c
+	$(AFS_CCRULE) $(UPSTREAM)/setprogname.c
+
 socket.o: ${UPSTREAM}/socket.c
 	$(AFS_CCRULE) $(UPSTREAM)/socket.c
 

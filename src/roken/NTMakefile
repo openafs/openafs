@@ -43,6 +43,7 @@ ROKEN_OBJS = \
 	$(OUT)\mkstemp.obj \
 	$(OUT)\net_read.obj \
 	$(OUT)\net_write.obj \
+	$(OUT)\setprogname.obj \
 	$(OUT)\snprintf.obj \
 	$(OUT)\socket.obj \
 	$(OUT)\strerror_r.obj \
