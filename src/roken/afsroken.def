@@ -41,3 +41,4 @@ EXPORTS
         rk_tdelete              @45
         rk_tfind                @46
 	rk_getprogname		@47
+	rk_setprogname		@48
