@@ -152,7 +152,7 @@ hp_ux*)
 	> $library.exp
 	export="-Wl,-exported_symbols_list,$library.exp"
 	if [ ! -z "$ignore" ] ; then
-	    export="$export,-flat_namespace,-undefined,suppress"
+	    export="$export,-undefined,dynamic_lookup"
 	fi
     fi
     echo "$linker $export -o $filename $*"
