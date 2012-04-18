@@ -17,7 +17,8 @@
 // -------------------------------------------------------------------------------
 //  krb5TiketAtLoginTime:
 // -------------------------------------------------------------------------------
-+(void) krb5TiketAtLoginTime:(BOOL)enable{
++(void) krb5TiketAtLoginTime:(BOOL)enable helper:(NSString *)helper
+{
 	NSData					*plistData = nil;
 	NSString				*error = nil;
 	NSString				*toRemove = nil;
@@ -112,16 +113,15 @@
 	
 	//now we can move the file
 	futil = [[FileUtil alloc] init];
-	if([futil startAutorization] == noErr) {
-		if(![[NSFileManager defaultManager] fileExistsAtPath:AUTH_FILE_BK]) {
-			//bk file doesn't exist so make it
-			[futil autorizedCopy:AUTH_FILE toPath:AUTH_FILE_BK];
-		}
-		// chmod on tmp file
-		[futil autorizedChown:TMP_FILE owner:@"root" group:@"wheel"];
-		//move the file 
-		[futil autorizedMoveFile:TMP_FILE toPath:AUTH_FILE_DIR];
+	if(![[NSFileManager defaultManager] fileExistsAtPath:AUTH_FILE_BK]) {
+	    //bk file doesn't exist so make it
+	    [futil autorizedCopy:AUTH_FILE toPath:AUTH_FILE_BK];
 	}
+	// chmod on tmp file
+	[futil autorizedChown:TMP_FILE owner:@"root" group:@"wheel"];
+	//move the file
+	[futil autorizedMoveFile:TMP_FILE toPath:AUTH_FILE_DIR];
+
 	[futil release];
 }
 
@@ -223,9 +223,9 @@
 //  installAfsStartupLaunchdFile:
 // -------------------------------------------------------------------------------
 +(void) manageAfsStartupLaunchdFile:(BOOL)enable 
-				   afsStartupScript:(NSString*)afsStartupScript 
-						afsBasePath:(NSString*)afsBasePath 
-						   afsdPath:(NSString*)afsdPath {
+		   afsStartupScript:(NSString*)afsStartupScript
+			afsBasePath:(NSString*)afsBasePath
+			   afsdPath:(NSString*)afsdPath {
 	NSData				*plistData = nil;
 	NSMutableDictionary *launchdDic = nil;
 	NSString			*error = nil;
@@ -288,9 +288,10 @@
 //  launchctlCommand:
 // -------------------------------------------------------------------------------
 +(void) launchctlCommand:(BOOL)enable
-			  userDomain:(BOOL)userDomain
-					   option:(NSArray*)option 
-					plistName:(NSString*)plistName {
+	      userDomain:(BOOL)userDomain
+		  option:(NSArray*)option
+	       plistName:(NSString*)plistName
+{
 	NSMutableArray *argument = [NSMutableArray array];
 	NSMutableString *commandPath = [NSMutableString stringWithCapacity:0];
 	NSUInteger searchDomain = userDomain?NSUserDomainMask:NSSystemDomainMask;
@@ -307,17 +308,21 @@
 	[commandPath appendFormat:@"/LaunchAgents/%@", plistName];
 	
 	[argument addObject:commandPath];
+
 	//exec the command
-	[TaskUtil executeTaskSearchingPath:@"launchctl"  
-								  args:argument];
+	[TaskUtil executeTask:@"/bin/launchctl"
+		  arguments:argument];
 }
 
 // -------------------------------------------------------------------------------
 //  launchctlCommand:
 // -------------------------------------------------------------------------------
-+(void) launchctlStringCommand:(NSString*)operation
-				  option:(NSArray*)option
-			   plistName:(NSString*)plistName {
++(void) launchctlStringCommandAuth:(NSString *)operation
+			    option:(NSArray *)option
+			 plistName:(NSString *)plistName
+			    helper:(NSString *)helper
+		       withAuthRef:(AuthorizationRef)authRef
+{
 	NSMutableArray *argument = [NSMutableArray array];
 
 	//set the load unload
@@ -330,8 +335,8 @@
 	[argument addObject: plistName];
 
 	//exec the command
-	[TaskUtil executeTaskSearchingPath:@"launchctl"
-								  args:argument];
+	[TaskUtil executeTaskWithAuth:@"/bin/launchctl"
+		  arguments:argument helper:helper withAuthRef:authRef];
 }
 
 // -------------------------------------------------------------------------------

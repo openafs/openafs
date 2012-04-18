@@ -16,8 +16,8 @@
 // -------------------------------------------------------------------------------
 - (void)awakeFromNib
 {
-	[((NSTableView*)tableViewCellIP) setDelegate:self];
-	[((NSTableView*)tableViewCellIP) setDataSource:self];
+	[tableViewCellIP setDelegate:self];
+	[tableViewCellIP setDataSource:self];
 }
 
 // -------------------------------------------------------------------------------
@@ -44,8 +44,8 @@
 - (void) commitModify
 {
 	//store the cell name
-	[cellElement setCellName:[((NSControl*) textFieldCellName) stringValue]];
-	[cellElement setCellComment:[((NSControl*) textFieldComment) stringValue]];
+	[cellElement setCellName:[textFieldCellName stringValue]];
+	[cellElement setCellComment:[textFieldComment stringValue]];
 	[bkIPArray removeAllObjects];
 	[bkIPArray setArray:workIPArray];
 	[workIPArray release];
@@ -81,8 +81,8 @@
 	[workIPArray addObject:ip];
 	[ip release];
 	currentSelectedIP = ip;
-	[((NSTableView*)tableViewCellIP) reloadData];
-	[((NSTableView *) tableViewCellIP)  scrollRowToVisible:[[cellElement getIp] count]-1];
+	[tableViewCellIP reloadData];
+	[tableViewCellIP scrollRowToVisible:[[cellElement getIp] count]-1];
 }
 
 // -------------------------------------------------------------------------------
@@ -90,10 +90,10 @@
 // -------------------------------------------------------------------------------
 - (IBAction) cancelIP:(id) sender
 {
-	[workIPArray removeObjectAtIndex:[((NSTableView*)tableViewCellIP) selectedRow]];
-	[((NSTableView*)tableViewCellIP) deselectAll:nil];
+	[workIPArray removeObjectAtIndex:[tableViewCellIP selectedRow]];
+	[tableViewCellIP deselectAll:nil];
 	[self manageTableSelection:-1];
-	[((NSTableView*)tableViewCellIP) reloadData];
+	[tableViewCellIP reloadData];
 
 }
 
@@ -110,9 +110,9 @@
 // -------------------------------------------------------------------------------
 - (void) loadValueFromCellIPClass
 {
-	[((NSTextField*)textFieldCellName) setStringValue:[cellElement getCellName]]; 
-	[((NSTextField*)textFieldComment) setStringValue:[cellElement getCellComment]]; 
-	[((NSTableView*)tableViewCellIP) reloadData];
+	[textFieldCellName setStringValue:[cellElement getCellName]];
+	[textFieldComment setStringValue:[cellElement getCellComment]];
+	[tableViewCellIP reloadData];
 }
 
 // -------------------------------------------------------------------------------
@@ -121,7 +121,7 @@
 - (void) manageTableSelection:(int)row
 {
 	//[((NSControl*) modifyButton) setEnabled:row>=0];
-	[((NSControl*) deleteButton) setEnabled:row>=0];
+	[deleteButton setEnabled:row>=0];
 }
 
 - (id) getPanel
@@ -194,7 +194,7 @@
    forTableColumn:(NSTableColumn *)aCol row:(int)aRow
 {
 	CellIp *ipElement =  (CellIp*)[workIPArray objectAtIndex:aRow];
-	switch([((NSNumber*)[aCol identifier]) intValue])
+	switch([[aCol identifier] intValue])
 	{
 		case 1:
 			[ipElement setCellIp:[aData description]];

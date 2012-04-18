@@ -335,22 +335,26 @@
 - (void)startStopAfs:(id)sender
 {
 	@try {
-		BOOL currentAfsState = NO;
+	    BOOL currentAfsState = NO;
+	    OSErr status = [[AuthUtil shared] autorize];
+	    if(status == noErr){
 		currentAfsState = [afsMngr checkAfsStatus];
 		// make the parameter to call the root helper app
 		if(currentAfsState){
-			//shutdown afs
-			NSLog(@"Shutting down afs");
-			[afsMngr shutdown];
+		    //shutdown afs
+		    NSLog(@"Shutting down afs");
+		    [afsMngr shutdown];
 		} else {
-			//Start afs
-			NSLog(@"Starting up afs");
-			[afsMngr startup];
+		    //Start afs
+		    NSLog(@"Starting up afs");
+		    [afsMngr startup];
 		}
+	    }
 	}@catch (NSException * e) {
 		NSLog(@"error %@", [e reason]);
 	}@finally {
 		[self updateAfsStatus:nil];
+		[[AuthUtil shared] deautorize];
 		//Send notification to preferencepane
 		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID object:kMenuExtraEventOccured];
 	}
@@ -523,53 +527,6 @@
 {
 	if(useAklogPrefValue) return [useAklogPrefValue intValue] == NSOnState; 
 	else return NSOffState;
-}
-
-// -------------------------------------------------------------------------------
-//  repairHelperTool:
-// -------------------------------------------------------------------------------
-- (void) repairHelperTool
-{
-	struct stat st;
-    int fdTool;
-	int status = 0; 
-	NSString *afshlpPath = [[NSBundle mainBundle] pathForResource:@"afshlp" ofType:nil];
-	
-	
-    
-    // Open tool exclusively, so nobody can change it while we bless it.
-    fdTool = open([afshlpPath UTF8String], O_NONBLOCK | O_RDONLY | O_EXLOCK, 0);
-    
-    if(fdTool == -1)
-    {
-        NSLog(@"Exclusive open while repairing tool failed: %d.", errno);
-        exit(-1);
-    }
-    
-    if(fstat(fdTool, &st))
-    {
-        NSLog(@"fstat failed.");
-        exit(-1);
-    }
-    
-    if(st.st_uid != 0)
-    {
-		status = [[AuthUtil shared] autorize];
-		if(status == noErr){
-			fchown(fdTool, 0, st.st_gid);
-			
-			// Disable group and world writability and make setuid root.
-			fchmod(fdTool, (st.st_mode & (~(S_IWGRP | S_IWOTH)))/* | S_ISUID*/);
-			const char *args[] = {"root", [afshlpPath UTF8String],0L};
-			[[AuthUtil shared] execUnixCommand:"/usr/sbin/chown" 
-										  args:args
-										output:nil];
-			[[AuthUtil shared] deautorize];
-		}
-    } else  NSLog(@"st_uid = 0");
-    close(fdTool);
-    NSLog(@"Self-repair done.");
-	
 }
 
 #pragma mark accessor
