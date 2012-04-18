@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "AFSBackgrounderDelegate.h"
 
-@interface AFSMenuExtraView : NSView {
+@interface AFSMenuExtraView : NSView <NSMenuDelegate> {
 	AFSBackgrounderDelegate 	*backgrounderDelegator;
 	NSStatusItem 	*statusItem;
 	NSMenu	*statusItemMenu;

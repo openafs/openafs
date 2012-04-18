@@ -52,6 +52,5 @@
 - (NSImage*)getImageFromBundle:(NSString*)fileName fileExt:(NSString*)ext;
 - (NSImage*)imageToRender;
 - (void)updateMenu;
-- (void)repairHelperTool;
 - (void) afsVolumeMountChange:(NSNotification *)notification;
 @end

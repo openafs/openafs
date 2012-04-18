@@ -65,7 +65,6 @@
 - (NSImage*)getImageFromBundle:(NSString*)fileName fileExt:(NSString*)ext;
 - (NSImage*)imageToRender;
 - (void)menuNeedsUpdate:(NSMenu *)menu;
-- (void)repairHelperTool;
 - (void) afsVolumeMountChange:(NSNotification *)notification;
 - (void) updateLinkModeStatusWithpreferenceStatus:(BOOL)status;
 -(NSStatusItem*)statusItem;
