@@ -3543,6 +3543,7 @@ AFSParseName( IN PIRP Irp,
             AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
 
+
         //
         // Be sure we are starting from the correct volume
         //
@@ -3556,6 +3557,38 @@ AFSParseName( IN PIRP Irp,
             //
 
             pVolumeCB = pDirEntry->ObjectInformation->VolumeCB;
+
+            //
+            // Init our name array
+            //
+
+            pNameArray = AFSInitNameArray( AFSGlobalRoot->DirectoryCB,
+                                           0);
+
+            if( pNameArray == NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSParseName (%08lX) Failed to initialize name array\n",
+                              Irp);
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            ntStatus = AFSInsertNextElement( pNameArray,
+                                             pVolumeCB->DirectoryCB);
+
+            if ( ntStatus)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSParseName (%08lX) Failed to insert name array element\n",
+                              Irp);
+
+                try_return( ntStatus);
+            }
 
             //
             // In this case don't add back in the 'share' name since that is where we are
@@ -3605,6 +3638,23 @@ AFSParseName( IN PIRP Irp,
         {
 
             pVolumeCB = AFSGlobalRoot;
+
+            //
+            // Init our name array
+            //
+
+            pNameArray = AFSInitNameArray( AFSGlobalRoot->DirectoryCB,
+                                           0);
+            if( pNameArray == NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSParseName (%08lX) Failed to initialize name array\n",
+                              Irp);
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
 
             //
             // Add back in the 'share' portion of the name since we will parse it out on return
@@ -3664,24 +3714,7 @@ AFSParseName( IN PIRP Irp,
             //
 
             *ParentDirectoryCB = pVolumeCB->DirectoryCB;
-        }
 
-        //
-        // Init our name array
-        //
-
-        pNameArray = AFSInitNameArray( pVolumeCB->DirectoryCB,
-                                       0);
-
-        if( pNameArray == NULL)
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSParseName (%08lX) Failed to initialize name array\n",
-                          Irp);
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
         //

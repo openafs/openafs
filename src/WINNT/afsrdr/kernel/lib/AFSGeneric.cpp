@@ -5403,18 +5403,24 @@ AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
                           pCurrentElement->FileId.Unique,
                           &pCurrentElement->DirectoryCB->NameInformation.FileName,
                           pCurrentElement->DirectoryCB->ObjectInformation->FileType);
+
+            //
+            // If the entry we are removing is a volume root,
+            // we must remove the mount point entry as well.
+            // If the NameArray was constructed by checking the
+            // share name via the service, the name array can
+            // contain two volume roots in sequence without a
+            // mount point separating them.
+            //
+
+            if ( bVolumeRoot &&
+                 !BooleanFlagOn( NameArray->CurrentEntry->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT))
+            {
+
+                pDirectoryCB = AFSBackupEntry( NameArray);
+            }
         }
 
-        //
-        // If the entry we are removing is a volume root,
-        // we must remove the mount point entry as well.
-        //
-
-        if ( bVolumeRoot)
-        {
-
-            pDirectoryCB = AFSBackupEntry( NameArray);
-        }
 
 try_exit:
 
