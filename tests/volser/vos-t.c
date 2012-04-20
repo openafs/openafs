@@ -81,14 +81,10 @@ main(int argc, char **argv)
 {
     char *dirname;
     struct afsconf_dir *dir;
-    struct afsconf_cell info;
-    int code;
-    int i;
+    int code, secIndex;
     pid_t serverPid;
     struct rx_securityClass *secClass;
-    struct rx_connection *serverconns[MAXSERVERS];
     struct ubik_client *ubikClient = NULL;
-    int secIndex;
 
     plan(6);
 
@@ -112,27 +108,20 @@ main(int argc, char **argv)
 
     /* Let it figure itself out ... */
     sleep(5);
-
     code = afsconf_ClientAuthSecure(dir, &secClass, &secIndex);
+    is_int(code, 0, "Successfully got security class");
     if (code) {
-	afs_com_err("vos-t", code, "while getting a fake token");
-	exit(1);
+	afs_com_err("authname-t", code, "while getting anonymous secClass");
+        exit(1);
     }
 
-    code = afsconf_GetCellInfo(dir, NULL, AFSCONF_VLDBSERVICE, &info);
+    code = afstest_GetUbikClient(dir, AFSCONF_VLDBSERVICE, USER_SERVICE_ID,
+				 secClass, secIndex, &ubikClient);
+    is_int(code, 0, "Successfully built ubik client structure");
     if (code) {
-	afs_com_err("vos-t", code, " while getting addresses from cellservdb");
+	afs_com_err("vos-t", code, "while building ubik client");
 	exit(1);
     }
-    ok(info.numServers < MAXSERVERS, "Number of servers is within range");
-
-    for (i = 0; i < info.numServers; i++)
-	serverconns[i] = rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-					  info.hostAddr[i].sin_port,
-					  USER_SERVICE_ID,
-					  secClass, secIndex);
-
-    code = ubik_ClientInit(serverconns, &ubikClient);
 
     TestListAddrs(ubikClient, dirname);
 

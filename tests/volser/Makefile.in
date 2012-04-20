@@ -24,9 +24,9 @@ MODULE_LIBS = 	../tap/libtap.a \
 		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
 		$(XLIBS)
 
-vos-t: vos-t.o ../common/config.o ../common/servers.o
+vos-t: vos-t.o ../common/config.o ../common/servers.o ../common/ubik.o
 	$(AFS_LDRULE) vos-t.o ../common/config.o ../common/servers.o \
-		$(MODULE_LIBS)
+		../common/ubik.o $(MODULE_LIBS)
 
 clean:
 	rm -f *.o $(TESTS)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Your File System Inc. All rights reserved.
+ * Copyright (c) 2012 Your File System Inc. All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,22 +22,41 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* config.c */
-extern char *afstest_BuildTestConfig(void);
-extern void afstest_UnlinkTestConfig(char *);
+#include <afsconfig.h>
+#include <afs/param.h>
 
-struct afsconf_dir;
-extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
+#include <roken.h>
 
-/* servers.c */
+#include <afs/cellconfig.h>
+#include <ubik.h>
 
-extern int afstest_StartVLServer(char *dirname, pid_t *serverPid);
-extern int afstest_StopVLServer(pid_t serverPid);
+#include "common.h"
 
-/* ubik.c */
-struct ubik_client;
-extern int afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
-				 int serviceId,
-				 struct rx_securityClass *secClass,
-				 int secIndex,
-				 struct ubik_client **ubikClient);
+int
+afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
+		      int serviceId,
+		      struct rx_securityClass *secClass, int secIndex,
+		      struct ubik_client **ubikClient)
+{
+    int code, i;
+    struct afsconf_cell info;
+    struct rx_connection *serverconns[MAXSERVERS];
+
+    code = afsconf_GetCellInfo(dir, NULL, service, &info);
+    if (code)
+	return code;
+
+    for (i = 0; i < info.numServers; i++) {
+	serverconns[i] = rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
+					  info.hostAddr[i].sin_port,
+					  serviceId,
+					  secClass, secIndex);
+    }
+
+    serverconns[i] = NULL;
+
+    *ubikClient = NULL;
+
+    return ubik_ClientInit(serverconns, ubikClient);
+
+}
