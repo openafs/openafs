@@ -32,7 +32,7 @@ extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
 /* servers.c */
 
 extern int afstest_StartVLServer(char *dirname, pid_t *serverPid);
-extern int afstest_StopVLServer(pid_t serverPid);
+extern int afstest_StopServer(pid_t serverPid);
 
 /* ubik.c */
 struct ubik_client;

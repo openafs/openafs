@@ -125,7 +125,7 @@ main(int argc, char **argv)
 
     TestListAddrs(ubikClient, dirname);
 
-    code = afstest_StopVLServer(serverPid);
+    code = afstest_StopServer(serverPid);
     is_int(0, code, "Server exited cleanly");
 
     return 0;

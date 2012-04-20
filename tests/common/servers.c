@@ -45,7 +45,7 @@ afstest_StartVLServer(char *dirname, pid_t *serverPid)
 }
 
 int
-afstest_StopVLServer(pid_t serverPid)
+afstest_StopServer(pid_t serverPid)
 {
     int status;
 
