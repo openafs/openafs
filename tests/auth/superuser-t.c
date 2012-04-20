@@ -38,9 +38,6 @@
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 
-#define HC_DEPRECATED
-#include <hcrypto/des.h>
-
 #include <rx/rxkad.h>
 #include <rx/rx_identity.h>
 
@@ -72,43 +69,6 @@ testNewIterator(struct afsconf_dir *dir, int num, struct rx_identity *id) {
     ok(rx_identity_match(fileId, id), "Identity %d matches", num);
 
     rx_identity_free(&fileId);
-}
-
-struct rx_securityClass *
-fakeRXKADClass(struct afsconf_dir *dir,
-	       char *name, char *instance, char *realm,
-	       afs_uint32 startTime, afs_uint32 endTime)
-{
-    int code;
-    char buffer[256];
-    struct ktc_encryptionKey key, session;
-    afs_int32 kvno;
-    afs_int32 ticketLen;
-    struct rx_securityClass *class = NULL;
-
-    code = afsconf_GetLatestKey(dir, &kvno, &key);
-    if (code)
-	goto out;
-
-    DES_init_random_number_generator((DES_cblock *) &key);
-    code = DES_new_random_key((DES_cblock *) &session);
-    if (code)
-	goto out;
-
-    ticketLen = sizeof(buffer);
-    memset(buffer, 0, sizeof(buffer));
-    startTime = time(NULL);
-    endTime = startTime + 60 * 60;
-
-    code = tkt_MakeTicket(buffer, &ticketLen, &key, name, instance, realm,
-			  startTime, endTime, &session, 0, "afs", "");
-    if (code)
-	goto out;
-
-    class = rxkad_NewClientSecurityObject(rxkad_clear, &session, kvno,
-					  ticketLen, buffer);
-out:
-    return class;
 }
 
 
@@ -268,7 +228,8 @@ startClient(char *configPath)
      * here, sadly */
 
     startTime = time(NULL);
-    class = fakeRXKADClass(dir, "rpctest", "", "", startTime, startTime + 60* 60);
+    class = afstest_FakeRxkadClass(dir, "rpctest", "", "", startTime,
+				   startTime + 60* 60);
 
     conn = rx_NewConnection(addr, htons(TEST_PORT), TEST_SERVICE_ID, class,
 			    RX_SECIDX_KAD);
@@ -306,8 +267,8 @@ startClient(char *configPath)
 
     /* Now try with an admin principal */
     startTime = time(NULL);
-    class = fakeRXKADClass(dir, "rpctest", "admin", "", startTime,
-		      startTime + 60* 60);
+    class = afstest_FakeRxkadClass(dir, "rpctest", "admin", "", startTime,
+				   startTime + 60* 60);
 
     conn = rx_NewConnection(addr, htons(TEST_PORT), TEST_SERVICE_ID, class,
 			    RX_SECIDX_KAD);

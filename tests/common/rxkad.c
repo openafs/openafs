@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Your File System Inc. All rights reserved.
+ * Copyright (c) 2012 Your File System Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -21,29 +21,50 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <afsconfig.h>
+#include <afs/param.h>
 
-/* config.c */
-extern char *afstest_BuildTestConfig(void);
-extern void afstest_UnlinkTestConfig(char *);
+#include <roken.h>
 
-struct afsconf_dir;
-extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
+#define HC_DEPRECATED
+#include <hcrypto/des.h>
 
-/* rxkad.c */
+#include <rx/rxkad.h>
+#include <afs/cellconfig.h>
 
-extern struct rx_securityClass
-	*afstest_FakeRxkadClass(struct afsconf_dir *dir,
-				char *name, char *instance, char *realm,
-				afs_uint32 startTime, afs_uint32 endTime);
-/* servers.c */
+struct rx_securityClass *
+afstest_FakeRxkadClass(struct afsconf_dir *dir,
+		       char *name, char *instance, char *realm,
+		       afs_uint32 startTime, afs_uint32 endTime)
+{
+    int code;
+    char buffer[256];
+    struct ktc_encryptionKey key, session;
+    afs_int32 kvno;
+    afs_int32 ticketLen;
+    struct rx_securityClass *class = NULL;
 
-extern int afstest_StartVLServer(char *dirname, pid_t *serverPid);
-extern int afstest_StopServer(pid_t serverPid);
+    code = afsconf_GetLatestKey(dir, &kvno, &key);
+    if (code)
+	goto out;
 
-/* ubik.c */
-struct ubik_client;
-extern int afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
-				 int serviceId,
-				 struct rx_securityClass *secClass,
-				 int secIndex,
-				 struct ubik_client **ubikClient);
+    DES_init_random_number_generator((DES_cblock *) &key);
+    code = DES_new_random_key((DES_cblock *) &session);
+    if (code)
+	goto out;
+
+    ticketLen = sizeof(buffer);
+    memset(buffer, 0, sizeof(buffer));
+    startTime = time(NULL);
+    endTime = startTime + 60 * 60;
+
+    code = tkt_MakeTicket(buffer, &ticketLen, &key, name, instance, realm,
+			  startTime, endTime, &session, 0, "afs", "");
+    if (code)
+	goto out;
+
+    class = rxkad_NewClientSecurityObject(rxkad_clear, &session, kvno,
+					  ticketLen, buffer);
+out:
+    return class;
+}
