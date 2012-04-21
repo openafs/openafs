@@ -28,6 +28,7 @@
 #include <rx/rx_opaque.h>
 
 typedef enum rx_identity_kind {
+    RX_ID_SUPERUSER = -1,
     RX_ID_KRB4 = 0,
     RX_ID_GSS =  1,
 } rx_identity_kind;
