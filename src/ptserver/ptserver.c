@@ -146,8 +146,6 @@ struct afsconf_dir *prdir;
 extern afs_int32 depthsg;
 #endif
 
-char *pr_realmName;
-
 int restricted = 0;
 int rxMaxMTU = -1;
 int rxBind = 0;
@@ -466,7 +464,6 @@ main(int argc, char **argv)
 	afs_com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
     }
-    pr_realmName = info.name;
 
     /* initialize audit user check */
     osi_audit_set_user_check(configDir, pr_IsLocalRealmMatch);
