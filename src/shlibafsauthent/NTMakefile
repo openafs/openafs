@@ -56,7 +56,6 @@ UBIKOBJS = \
 
 UTILOBJS = \
 	$(OUT)\pthread_glock.obj \
-	$(OUT)\get_krbrlm.obj \
 	$(OUT)\fileutil.obj \
 	$(OUT)\dirpath.obj \
 	$(OUT)\readdir_nt.obj
@@ -157,9 +156,6 @@ ubik_int.cs.obj: $(UBIK)\ubik_int.cs.c
 
 ubik_int.xdr.obj: $(UBIK)\ubik_int.xdr.c
 	$(C2OBJ) $(UBIK)\ubik_int.xdr.c
-
-get_krbrlm.obj: $(UTIL)\get_krbrlm.c
-	$(C2OBJ) $(UTIL)\get_krbrlm.c
 
 dirpath.obj: $(UTIL)\dirpath.c
 	$(C2OBJ) $(UTIL)\dirpath.c

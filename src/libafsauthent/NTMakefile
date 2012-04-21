@@ -69,7 +69,6 @@ UBIKOBJS = \
 
 UTILOBJS = \
 	$(OUT)\pthread_glock.obj \
-	$(OUT)\get_krbrlm.obj \
 	$(OUT)\fileutil.obj \
 	$(OUT)\dirpath.obj \
 	$(OUT)\readdir_nt.obj

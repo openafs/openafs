@@ -59,10 +59,6 @@ extern char *int64_to_flipbase64(lb64_string_t s, afs_uint64 a);
 extern afs_int64 flipbase64_to_int64(char *s);
 #endif
 
-/* get_krbrlm.c */
-extern int afs_krb_get_lrealm(char *r, int n);
-extern int afs_krb_exclusion(char *name);
-extern int afs_is_foreign_ticket_name(char *tname, char *tinst, char * tcell, char *localrealm);
 /* hostparse.c */
 extern struct hostent *hostutil_GetHostByName(char *ahost);
 extern char *hostutil_GetNameByINet(afs_uint32 addr);

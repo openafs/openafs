@@ -13,7 +13,7 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 
 objects =base64.o ktime.o volparse.o hostparse.o exec.o \
-	 hputil.o kreltime.o get_krbrlm.o uuid.o serverLog.o \
+	 hputil.o kreltime.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
 	 afs_atomlist.o afs_lhash.o pthread_glock.o tabular_output.o \
 	 pthread_threadname.o ${REGEX_OBJ}
@@ -26,7 +26,6 @@ objects_pic = \
 	exec_pic.o \
 	hputil_pic.o \
 	kreltime_pic.o \
-	get_krbrlm_pic.o \
 	uuid_pic.o \
 	serverLog_pic.o \
 	dirpath_pic.o \
@@ -203,9 +202,6 @@ hputil_pic.o: ${srcdir}/hputil.c ${includes}
 kreltime_pic.o: ${srcdir}/kreltime.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/kreltime.c
 
-get_krbrlm_pic.o: ${srcdir}/get_krbrlm.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/get_krbrlm.c
-
 uuid_pic.o: ${srcdir}/uuid.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/uuid.c
 
@@ -321,6 +317,6 @@ include ../config/Makefile.version
 check-splint:
 	sh $(HELPER_SPLINT) $(CFLAGS) \
 	    base64.c ktime.c volparse.c hostparse.c \
-	    hputil.c kreltime.c get_krbrlm.c uuid.c serverLog.c \
+	    hputil.c kreltime.c uuid.c serverLog.c \
 	    dirpath.c fileutil.c netutils.c flipbase64.c \
 	    afs_atomlist.c afs_lhash.c fstab.c

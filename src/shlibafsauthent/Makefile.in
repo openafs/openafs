@@ -66,7 +66,6 @@ UBIKOBJS = \
 
 UTILOBJS = \
 	pthread_glock.o \
-	get_krbrlm.o \
 	dirpath.o \
 	serverLog.o \
 	fileutil.o \
@@ -263,9 +262,6 @@ ubik_int.cs.o: ../ubik/ubik_int.cs.c
 
 ubik_int.xdr.o: ../ubik/ubik_int.xdr.c
 	${AFS_CCRULE} ../ubik/ubik_int.xdr.c
-
-get_krbrlm.o: ${UTIL}/get_krbrlm.c
-	${AFS_CCRULE} ${UTIL}/get_krbrlm.c
 
 dirpath.o: ${UTIL}/dirpath.c
 	${AFS_CCRULE} ${UTIL}/dirpath.c

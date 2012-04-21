@@ -75,7 +75,6 @@
 	pr_GetCPS;
 	pr_Initialize;
 	pr_GetHostCPS;
-	afs_krb_get_lrealm;
 	pr_NameToId;
 	pr_IdToName;
 	pr_ListMembers;
