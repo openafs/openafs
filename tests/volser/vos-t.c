@@ -90,7 +90,7 @@ main(int argc, char **argv)
     struct ubik_client *ubikClient = NULL;
     int secIndex;
 
-    plan(5);
+    plan(6);
 
     code = rx_Init(0);
 

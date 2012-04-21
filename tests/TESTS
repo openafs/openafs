@@ -13,5 +13,6 @@ ptserver/pts-man
 rx/event
 rx/perf
 volser/vos-man
+volser/vos
 bucoord/backup-man
 kauth/kas-man
