@@ -1,0 +1,8 @@
+/afsdump_dirlist
+/afsdump_extract
+/afsdump_scan
+/dumpscan_errs.c
+/dumpscan_errs.h
+/dumptool
+/xf_errs.c
+/xf_errs.h
