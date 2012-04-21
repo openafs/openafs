@@ -79,8 +79,11 @@ rx_identity_populate(struct rx_identity *identity, rx_identity_kind kind,
     memset(identity, 0, sizeof(struct rx_identity));
 
     identity->kind = kind;
-    identity->displayName = rxi_Alloc(strlen(displayName)+1);
-    memcpy(identity->displayName, displayName, strlen(displayName)+1);
+
+    if (displayName) {
+	identity->displayName = rxi_Alloc(strlen(displayName)+1);
+	memcpy(identity->displayName, displayName, strlen(displayName)+1);
+    }
 
     rx_opaque_populate(&identity->exportedName, enameData, enameLength);
 }

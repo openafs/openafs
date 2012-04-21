@@ -110,6 +110,9 @@ rx_opaque_populate(struct rx_opaque *to, void *data, size_t datalen)
     to->len = 0;
     to->val = NULL;
 
+    if (data == NULL || datalen == 0)
+	return 0;
+
     code = rx_opaque_alloc(to, datalen);
     if (code)
         return code;
