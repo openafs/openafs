@@ -16,8 +16,6 @@
 #include "ptserver.h"
 #include "display.h"
 
-#ifdef PR_REMEMBER_TIMES
-
 static char *
 pr_TimeToString(time_t clock)
 {
@@ -39,7 +37,6 @@ pr_TimeToString(time_t clock)
 	strftime(buffer, 32, "%m/%d %H:%M:%S", tm);
     return buffer;
 }
-#endif
 
 #define host(a) (hostOrder ? (a) : ntohl(a))
 
@@ -89,13 +86,11 @@ pr_PrintEntry(FILE *f, int hostOrder, afs_int32 ea, struct prentry *e, int inden
     fprintf(f, "%*s", indent, "");
     fprintf(f, "Entry at %d: flags 0x%x, id %di, next %d.\n", ea,
 	    host(e->flags), host(e->id), host(e->next));
-#ifdef PR_REMEMBER_TIMES
     fprintf(f, "%*s", indent, "");
     fprintf(f, "c:%s ", pr_TimeToString(host(e->createTime)));
     fprintf(f, "a:%s ", pr_TimeToString(host(e->addTime)));
     fprintf(f, "r:%s ", pr_TimeToString(host(e->removeTime)));
     fprintf(f, "n:%s\n", pr_TimeToString(host(e->changeTime)));
-#endif
     if (host(e->flags) & PRCONT)
 	PrintEntries(f, hostOrder, indent, e, COSIZE);
     else {			/* regular entry */

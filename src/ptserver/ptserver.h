@@ -89,19 +89,13 @@ extern struct prheader cheader;
 #define PRP_GROUP_DEFAULT (PRP_STATUS_ANY | PRP_MEMBER_ANY)
 #define PRP_USER_DEFAULT (PRP_STATUS_ANY)
 
-#define PR_REMEMBER_TIMES 1
-
 struct prentry {
     afs_int32 flags;		/* random flags */
     afs_int32 id;		/* user or group id */
     afs_int32 cellid;		/* A foreign users's repsenting group */
     afs_int32 next;		/* next block same entry (or freelist) */
-#ifdef PR_REMEMBER_TIMES
     afs_uint32 createTime, addTime, removeTime, changeTime;
     afs_int32 reserved[1];
-#else
-    afs_int32 reserved[5];
-#endif
     afs_int32 entries[PRSIZE];	/* groups a user is a member of (or list of members */
     afs_int32 nextID;		/* id hash table next pointer */
     afs_int32 nextName;		/* name has table next ptr */
@@ -128,12 +122,8 @@ struct prentryg {
     afs_int32 id;		/* user or group id */
     afs_int32 cellid;		/* reserved for cellID */
     afs_int32 next;		/* next block same entry (or freelist) */
-#ifdef PR_REMEMBER_TIMES
     afs_uint32 createTime, addTime, removeTime, changeTime;
     afs_int32 reserved[1];
-#else
-    afs_int32 reserved[5];
-#endif
     afs_int32 entries[PRSIZE];	/* groups a user is a member of (or list of members */
     afs_int32 nextID;		/* id hash table next pointer */
     afs_int32 nextName;		/* name has table next ptr */
