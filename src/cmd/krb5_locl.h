@@ -7,21 +7,14 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <pwd.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-
 #include <roken.h>
 
+#include <assert.h>
+#include <ctype.h>
+
 #include "cmd.h"
+
+#define PACKAGE "openafs"
 
 #ifndef TRUE
 # define TRUE 1
@@ -36,8 +29,6 @@
 #define KRB5_LIB_CALL
 
 #define KRB5_DEPRECATED_FUNCTION(x)
-
-#define KRB5_CONFIG_BADFORMAT                    CMD_BADFORMAT
 
 #define N_(X,Y) X
 
@@ -55,6 +46,41 @@ typedef struct krb5_context_data * krb5_context;
 typedef int krb5_error_code;
 typedef int krb5_boolean;
 typedef time_t krb5_deltat;
+
+static void krb5_set_error_message(krb5_context context, krb5_error_code ret,
+				   const char *fmt, ...) {
+    return;
+}
+
+#ifdef EXPAND_PATH_HEADER
+
+#include <shlobj.h>
+
+static int _krb5_expand_path_tokens(krb5_context, const char *, char**);
+
+int
+_cmd_ExpandPathTokens(krb5_context context, const char *in, char **out) {
+    return _krb5_expand_path_tokens(context, in, out);
+}
+
+HINSTANCE _krb5_hInstance = NULL;
+
+/* This bodge avoids the need for everything linking against cmd to also
+ * link against the shell library on Windows */
+#undef SHGetFolderPath
+#define SHGetFolderPath internal_getpath
+
+HRESULT internal_getpath(void *a, int b, void *c, DWORD d, LPTSTR out) {
+    return E_INVALIDARG;
+}
+
+#else
+
+#define KRB5_CONFIG_BADFORMAT                    CMD_BADFORMAT
+
+#define _krb5_expand_path_tokens _cmd_ExpandPathTokens
+
+extern int _cmd_ExpandPathTokens(krb5_context, const char *, char **);
 
 static const void *_krb5_config_vget(krb5_context,
 				     const krb5_config_section *, int,
@@ -92,10 +118,6 @@ KRB5_LIB_FUNCTION void krb5_clear_error_message(krb5_context context) {
     return;
 }
 
-static void krb5_set_error_message(krb5_context context, krb5_error_code ret,
-				   const char *fmt, ...) {
-    return;
-}
 
 static int _krb5_homedir_access(krb5_context context) {
     return 0;
@@ -114,6 +136,7 @@ krb5_abortx(krb5_context context, const char *fmt, ...)
 }
 
 /* Wrappers */
+
 
 int
 cmd_RawConfigParseFileMulti(const char *fname, cmd_config_section **res) {
@@ -187,3 +210,4 @@ cmd_RawConfigGetList(const cmd_config_section *c, ...)
 
     return ret;
 }
+#endif
