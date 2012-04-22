@@ -60,12 +60,20 @@ TestListAddrs(struct ubik_client *client, char *dirname)
     pipe(outpipe);
     pid = fork();
     if (pid == 0) {
+	char *build, *binPath;
+
 	dup2(outpipe[1], STDOUT_FILENO); /* Redirect stdout into pipe */
 	close(outpipe[0]);
 	close(outpipe[1]);
 
-	execl("../../src/volser/vos", "vos",
+	build = getenv("BUILD");
+	if (build == NULL)
+	    build = "..";
+
+	asprintf(&binPath, "%s/../src/volser/vos", build);
+	execl(binPath, "vos",
 	      "listaddrs", "-config", dirname, "-noauth", NULL);
+	exit(1);
     }
     close(outpipe[1]);
     buffer = malloc(4096);
