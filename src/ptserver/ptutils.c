@@ -360,9 +360,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
     newEntry = AllocBlock(at);
     if (!newEntry)
 	return PRDBFAIL;
-#ifdef PR_REMEMBER_TIMES
     tentry.createTime = time(0);
-#endif
 
     if (flag & PRGRP) {
 	tentry.flags = PRGRP;
@@ -617,9 +615,7 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
     code = pr_ReadEntry(at, 0, temp, &tentry);
     if (code != 0)
 	return code;
-#ifdef PR_REMEMBER_TIMES
     tentry.removeTime = time(0);
-#endif
     for (i = 0; i < PRSIZE; i++) {
 	if (tentry.entries[i] == aid) {
 	    tentry.entries[i] = PRBADID;
@@ -775,9 +771,7 @@ RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
     code = pr_ReadEntry(at, 0, temp, &tentry);
     if (code != 0)
 	return code;
-#ifdef PR_REMEMBER_TIMES
     tentry.removeTime = time(NULL);
-#endif
     tentryg = (struct prentryg *)&tentry;
     for (i = 0; i < SGSIZE; i++) {
 	if (tentryg->supergroup[i] == aid) {
@@ -1016,9 +1010,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
 
     if (entry->id == aid)
 	return PRINCONSISTENT;
-#ifdef PR_REMEMBER_TIMES
     entry->addTime = time(0);
-#endif
     for (i = 0; i < PRSIZE; i++) {
 	if (entry->entries[i] == aid)
 	    return PRIDEXIST;
@@ -1130,9 +1122,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
 
     if (entry->id == aid)
 	return PRINCONSISTENT;
-#ifdef PR_REMEMBER_TIMES
     entry->addTime = time(NULL);
-#endif
     entryg = (struct prentryg *)entry;
     for (i = 0; i < SGSIZE; i++) {
 	if (entryg->supergroup[i] == aid)
@@ -1907,9 +1897,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
     if (tentry.owner != cid && !IsAMemberOf(at, cid, SYSADMINID)
 	&& !IsAMemberOf(at, cid, tentry.owner) && !pr_noAuth)
 	return PRPERM;
-#ifdef PR_REMEMBER_TIMES
     tentry.changeTime = time(0);
-#endif
 
     /* we're actually trying to change the id */
     if (newid && (newid != aid)) {
