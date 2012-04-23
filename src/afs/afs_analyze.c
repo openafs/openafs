@@ -333,6 +333,55 @@ afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
     return 0;
 }
 
+/*!
+ * \brief
+ *      Print the last errors from the servers for the volume on
+ *      this request.
+ *
+ * \param[in] areq   The request record associated with this operation.
+ * \param[in] afid   The FID of the file involved in the action.  This argument
+ *		     may be null if none was involved.
+ *
+ * \return
+ *      None
+ *
+ * \note
+ *      This routine is called before a hard-mount retry, to display
+ *      the servers by primary address and the errors encountered.
+ */
+static void
+afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
+{
+    int i;
+    struct volume *tvp;
+    struct srvAddr *sa;
+    afs_uint32 address;
+    char *sep = " (";
+    char *term = "";
+
+    if (afid) {
+	tvp = afs_FindVolume(afid, READ_LOCK);
+	if (tvp) {
+	    for (i = 0; i < AFS_MAXHOSTS; i++) {
+		if (tvp->serverHost[i]) {
+		    sa = tvp->serverHost[i]->addr;
+		    if (sa) {
+			address = ntohl(sa->sa_ip);
+			afs_warnuser("%s%d.%d.%d.%d code=%d", sep,
+				     (address >> 24), (address >> 16) & 0xff,
+				     (address >> 8) & 0xff, (address) & 0xff,
+				     areq->lasterror[i]);
+			sep = ", ";
+			term = ")";
+		    }
+		}
+	    }
+	    afs_PutVolume(tvp, READ_LOCK);
+	}
+    }
+    afs_warnuser("%s\n", term);
+}
+
 /*------------------------------------------------------------------------
  * EXPORTED afs_Analyze
  *
@@ -502,8 +551,9 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		    if (shouldRetry) {
 			if (warn) {
 			    afs_warnuser
-			        ("afs: hard-mount waiting for volume %u\n",
+			        ("afs: hard-mount waiting for volume %u",
 			         afid->Fid.Volume);
+			    afs_PrintServerErrors(areq, afid);
 			}
 
 			VSleep(hm_retry_int);
@@ -565,6 +615,17 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 
 	afs_PutConn(aconn, rxconn, locktype);
 	return 0;
+    }
+
+    /* Save the last code of this server on this request. */
+    tvp = afs_FindVolume(afid, READ_LOCK);
+    if (tvp) {
+	for (i = 0; i < AFS_MAXHOSTS; i++) {
+	    if (tvp->serverHost[i] == tsp) {
+		areq->lasterror[i] = acode;
+	    }
+	}
+	afs_PutVolume(tvp, READ_LOCK);
     }
 
     /* If network troubles, mark server as having bogued out again. */
