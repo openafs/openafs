@@ -1409,9 +1409,6 @@ afs_ProcessFS(struct vcache *avc,
 	      struct AFSFetchStatus *astat, struct vrequest *areq)
 {
     afs_size_t length;
-#ifdef AFS_DARWIN80_ENV
-    int fixup = 0;
-#endif
     AFS_STATCNT(afs_ProcessFS);
 
 #ifdef AFS_64BIT_CLIENT
@@ -1446,32 +1443,16 @@ afs_ProcessFS(struct vcache *avc,
     avc->f.m.Group = astat->Group;
     avc->f.m.LinkCount = astat->LinkCount;
     if (astat->FileType == File) {
-#ifdef AFS_DARWIN80_ENV
-	if (avc->f.m.Type != VREG)
-	    fixup = 1;
-#endif
 	vSetType(avc, VREG);
 	avc->f.m.Mode |= S_IFREG;
     } else if (astat->FileType == Directory) {
-#ifdef AFS_DARWIN80_ENV
-	if (avc->f.m.Type != VDIR)
-	    fixup = 1;
-#endif
 	vSetType(avc, VDIR);
 	avc->f.m.Mode |= S_IFDIR;
     } else if (astat->FileType == SymbolicLink) {
 	if (afs_fakestat_enable && (avc->f.m.Mode & 0111) == 0) {
-#ifdef AFS_DARWIN80_ENV
-	    if (avc->f.m.Type != VDIR)
-		fixup = 1;
-#endif
 	    vSetType(avc, VDIR);
 	    avc->f.m.Mode |= S_IFDIR;
 	} else {
-#ifdef AFS_DARWIN80_ENV
-	    if (avc->f.m.Type != VLNK)
-		fixup = 1;
-#endif
 	    vSetType(avc, VLNK);
 	    avc->f.m.Mode |= S_IFLNK;
 	}
@@ -1479,10 +1460,6 @@ afs_ProcessFS(struct vcache *avc,
 	    avc->mvstat = 1;
 	}
     }
-#ifdef AFS_DARWIN80_ENV
-    if (fixup)
-	printf("found mistyped vnode!\n");
-#endif
     avc->f.anyAccess = astat->AnonymousAccess;
 #ifdef badidea
     if ((astat->CallerAccess & ~astat->AnonymousAccess))
