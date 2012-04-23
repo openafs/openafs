@@ -1,3 +1,15 @@
+Since 1.7.1000 (1.7.10)
+
+ * Fix an error that resulted in the afsd_service.exe terminating
+   in response to an unlog.exe (or equivalent).  The bug was
+   introduced in 1.7.9.
+
+ * Ensure that all \\afs\share\ names are represented in the
+   internal Control Context Block name array with the root.afs
+   volume root directory as the first component of the path.
+
+ * Correct an out of order lock violation introduced in 1.7.9.
+
 Since 1.7.0900 (1.7.9)
 
  * Avoid deadlocks with Trend Micro Enterprise anti-virus filter
