@@ -244,6 +244,7 @@ struct vrequest {
     char tokenError;            /* a token error other than expired. */
     char idleError;             /* the server idled too long */
     char skipserver[AFS_MAXHOSTS];
+    afs_int32 lasterror[AFS_MAXHOSTS];
 };
 #define VOLMISSING 1
 #define VOLBUSY 2
