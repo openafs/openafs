@@ -306,16 +306,14 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                             LONG lCount;
                             AFSObjectInfoCB *pObjectInfo = pDirNode->ObjectInformation;
 
+                            //
+                            // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
+                            //
+
                             lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
 
-                            AFSInvalidateObject( &pObjectInfo,
-                                                 AFS_INVALIDATE_DATA_VERSION);
-
-                            if( pObjectInfo != NULL)
-                            {
-
-                                lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
-                            }
+                            AFSPerformObjectInvalidate( pObjectInfo,
+                                                        AFS_INVALIDATE_DATA_VERSION);
                         }
                         else
                         {
@@ -1070,16 +1068,14 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                         if( pObjectInfo->DataVersion.QuadPart != pCurrentDirEntry->DataVersion.QuadPart)
                         {
 
+                            //
+                            // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
+                            //
+
                             lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
 
-                            AFSInvalidateObject( &pObjectInfo,
-                                                 AFS_INVALIDATE_DATA_VERSION);
-
-                            if( pObjectInfo != NULL)
-                            {
-
-                                lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
-                            }
+                            AFSPerformObjectInvalidate( pObjectInfo,
+                                                        AFS_INVALIDATE_DATA_VERSION);
                         }
                         else
                         {
