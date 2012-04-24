@@ -2049,10 +2049,14 @@ AFSSetDispositionInfo( IN PIRP Irp,
                 if( pFcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                 {
 
-                    CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
-                                         NULL,
-                                         0,
-                                         TRUE);
+                    if ( !CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
+                                               NULL,
+                                               0,
+                                               TRUE))
+                    {
+
+                        SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                    }
                 }
             }
         }
