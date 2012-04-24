@@ -3967,6 +3967,24 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                                       pObjectInfo->FileId.Vnode,
                                       pObjectInfo->FileId.Unique);
 
+                        if ( pObjectInfo->DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSValidateEntry DV Change %wZ FID %08lX-%08lX-%08lX-%08lX (%08lX != %08lX)\n",
+                                          &DirEntry->NameInformation.FileName,
+                                          pObjectInfo->FileId.Cell,
+                                          pObjectInfo->FileId.Volume,
+                                          pObjectInfo->FileId.Vnode,
+                                          pObjectInfo->FileId.Unique,
+                                          pObjectInfo->DataVersion.LowPart,
+                                          pDirEnumEntry->DataVersion.LowPart
+                                          );
+
+                            bPurgeExtents = TRUE;
+                        }
+
                         if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
                         {
                             bPurgeExtents = TRUE;
