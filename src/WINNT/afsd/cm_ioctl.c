@@ -1426,13 +1426,16 @@ cm_IoctlGetCacheParms(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     memset(&parms, 0, sizeof(parms));
 
-    /* first we get, in 1K units, the cache size */
+    /* the cache size */
     parms.parms[0] = cm_data.buf_nbuffers * (cm_data.buf_blockSize / 1024);
 
-    /* and then the actual # of buffers in use (not in the free list, I guess,
-     * will be what we do).
+    /*
+     * the used cache space.  this number is not available on windows.
+     * the cm_data.buf_freeCount represents all buffers eligible for recycling.
+     * so we report the entire cache in use since reporting 0 in use disturbs
+     * many users.
      */
-    parms.parms[1] = (cm_data.buf_nbuffers - cm_data.buf_freeCount) * (cm_data.buf_blockSize / 1024);
+    parms.parms[1] = cm_data.buf_nbuffers * (cm_data.buf_blockSize / 1024);
 
     memcpy(ioctlp->outDatap, &parms, sizeof(parms));
     ioctlp->outDatap += sizeof(parms);
