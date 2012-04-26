@@ -148,6 +148,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
 
     /* First is always lowest rank, if it's up */
     if ((tv->status[0] == not_busy) && tv->serverHost[0]
+	&& tv->serverHost[0]->addr
 	&& !(tv->serverHost[0]->addr->sa_flags & SRVR_ISDOWN) &&
 	!(((areq->idleError > 0) || (areq->tokenError > 0))
 	  && (areq->skipserver[0] == 1)))
