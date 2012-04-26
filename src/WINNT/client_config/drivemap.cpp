@@ -1149,8 +1149,6 @@ BOOL TestAndDoMapShare(DWORD dwState)
 	return TRUE;
     }
     dwOldState=SERVICE_RUNNING;
-    if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
-	return (DoMapShare() && GlobalMountDrive());
     return GlobalMountDrive();
 }
 
@@ -1175,9 +1173,7 @@ BOOL IsServiceActive()
 
 void TestAndDoUnMapShare()
 {
-    if (!RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
-	return;
-    DoUnMapShare(FALSE);
+    return;
 }
 
 void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
@@ -1287,16 +1283,7 @@ BOOL DoMapShareChange(BOOL removeUnknown)
     DWORD cbUser=MAXRANDOMNAMELEN-1;
     CHAR szUser[MAXRANDOMNAMELEN];
     CHAR * pUser = NULL;
-    if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
-        if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
-            if (!pUserName[0]) {
-                GenRandomName(szUser,MAXRANDOMNAMELEN-1);
-                pUser = szUser;
-            } else {
-                pUser = pUserName;
-            }
-        }
-    } else {
+    if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)==NO_ERROR) {
 	if ((pUser=strchr(szUser,'\\'))!=NULL)
             pUser++;
     }
@@ -1332,16 +1319,7 @@ BOOL DoMapShare()
     DWORD cbUser=MAXRANDOMNAMELEN-1;
     CHAR szUser[MAXRANDOMNAMELEN];
     CHAR * pUser = NULL;
-    if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
-        if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
-            if (!pUserName[0]) {
-                GenRandomName(szUser,MAXRANDOMNAMELEN-1);
-                pUser = szUser;
-            } else {
-                pUser = pUserName;
-            }
-        }
-    } else {
+    if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)==NO_ERROR) {
 	if ((pUser=strchr(szUser,'\\'))!=NULL)
             pUser++;
     }
@@ -1376,8 +1354,6 @@ BOOL DoMapShare()
                 continue;
 
             BOOL fPersistent = List.aDriveMap[chDrive-chDRIVE_A].fPersistent;
-            if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
-                fPersistent = FALSE;
 	    DWORD res=MountDOSDrive(chDrive
 				     ,szSubmount
 				     ,fPersistent,pUser);

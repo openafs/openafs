@@ -86,7 +86,6 @@ extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine,
    return 0;
 }
 
-#define ISHIGHSECURITY(v) ( ((v) & LOGON_OPTION_HIGHSECURITY)==LOGON_OPTION_HIGHSECURITY)
 #define REG_CLIENT_PROVIDER_KEY "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider"
 
 BOOL InitApp (LPSTR pszCmdLineA)
@@ -156,8 +155,8 @@ BOOL InitApp (LPSTR pszCmdLineA)
 
          case ':':
              CopyAnsiToString(g.SmbName,pszCmdLineA);
-			 MapShareName(pszCmdLineA);
-			 break;
+             MapShareName(pszCmdLineA);
+             break;
 
          case 'z':
          case 'Z':
