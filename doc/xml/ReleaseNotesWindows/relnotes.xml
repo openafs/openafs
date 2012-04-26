@@ -4669,16 +4669,8 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
                 <simplelist type="vert">
                   <member>0x00 - Integrated Logon is not used </member>
                   <member> 0x01 - Integrated Logon is used </member>
-                  <member> 0x02 - High Security Mode is used (deprecated) </member>
-                  <member> 0x03 - Integrated Logon with High Security Mode is used (deprecated)
-                  </member>
                 </simplelist>
               </para>
-              <para>High Security Mode generates random SMB names for the creation of Drive
-                Mappings. This mode should not be used without Integrated Logon.</para>
-              <para>As of 1.3.65 the SMB server supports SMB authentication. The High Security Mode
-                should not be used when using SMB authentication (SMBAuthType setting is non
-                zero).</para>
             </section>
             <section>
               <title id="Domain_Specific_Regkeys_FailLoginsSilently">Value:

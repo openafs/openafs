@@ -476,13 +476,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     }
 
     /* come up with SMB username */
-    if(ISHIGHSECURITY(opt->LogonOption)) {
-        DebugEvent0("High Security Mode active");
-        opt->smbName = malloc( MAXRANDOMNAMELEN );
-        if (opt->smbName == NULL)
-            goto cleanup;
-        GenRandomName(opt->smbName);
-    } else if (lpLogonId) {
+    if (lpLogonId) {
         /* username and domain for logon session is not necessarily the same as
            username and domain passed into network provider. */
         PSECURITY_LOGON_SESSION_DATA plsd=NULL;
@@ -568,14 +562,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
             hkTemp = hkDoms;
             DebugEvent0("Located logon script in hkDoms");
         }
-        /* Note that the LogonScript in the NP key is only used if we are doing high security. */
-        else if(hkNp && ISHIGHSECURITY(opt->LogonOption)) {
-            rv = RegQueryValueExW(hkNp, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
-            if(rv == ERROR_SUCCESS && !hkTemp && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
-                hkTemp = hkNp;
-                DebugEvent0("Located logon script in hkNp");
-            }
-        }
+        /* Note that the LogonScript in the NP key not used. */
     }
 
     if(hkTemp) {

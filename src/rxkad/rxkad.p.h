@@ -28,7 +28,6 @@
 #define MAXSMBNAMELEN    256	/* max length of an SMB name */
 
 #define LOGON_OPTION_INTEGRATED 1
-#define LOGON_OPTION_HIGHSECURITY 2
 
 /*
  * Define ticket types. For Kerberos V4 tickets, this is overloaded as
