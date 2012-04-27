@@ -3980,18 +3980,18 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 	 *   - VOL_STATE_SHUTTING_DOWN
 	 */
 	if ((V_attachState(vp) == VOL_STATE_ERROR) ||
-	    (V_attachState(vp) == VOL_STATE_SHUTTING_DOWN) ||
-	    (V_attachState(vp) == VOL_STATE_GOING_OFFLINE)) {
+	    (V_attachState(vp) == VOL_STATE_SHUTTING_DOWN)) {
 	    *ec = VNOVOL;
 	    vp = NULL;
 	    break;
 	}
 
 	/*
-	 * short circuit with VOFFLINE for VOL_STATE_UNATTACHED and
+	 * short circuit with VOFFLINE for VOL_STATE_UNATTACHED/GOING_OFFLINE and
 	 *                    VNOVOL   for VOL_STATE_DELETED
 	 */
        if ((V_attachState(vp) == VOL_STATE_UNATTACHED) ||
+           (V_attachState(vp) == VOL_STATE_GOING_OFFLINE) ||
            (V_attachState(vp) == VOL_STATE_DELETED)) {
 	   if (vp->specialStatus) {
 	       *ec = vp->specialStatus;
