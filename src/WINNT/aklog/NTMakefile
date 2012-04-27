@@ -33,11 +33,8 @@ ASETKEYOBJS = \
 	$(OUT)\asetkey.obj
 
 EXELIBS = \
-	$(DESTDIR)\lib\afs\afspioctl.lib \
         $(DESTDIR)\lib\afsauthent.lib \
-        $(DESTDIR)\lib\afs\afskauth.lib \
         $(DESTDIR)\lib\afs\afscom_err.lib \
-        $(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
