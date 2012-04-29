@@ -60,30 +60,35 @@
 #endif /* vlserver error base define */
 
 
-int afs_BusyWaitPeriod = 15;	/* poll every 15 seconds */
+int afs_BusyWaitPeriod = 15;	/**< poll period, in seconds */
 
-afs_int32 hm_retry_RO = 0;	/* don't wait */
-afs_int32 hm_retry_RW = 0;	/* don't wait */
-afs_int32 hm_retry_int = 0;	/* don't wait */
+afs_int32 hm_retry_RO = 0;	/**< enable read-only hard-mount retry */
+afs_int32 hm_retry_RW = 0;	/**< enable read-write hard-mount retry */
+afs_int32 hm_retry_int = 0;	/**< hard-mount retry interval, in seconds */
 
 #define	VSleep(at)	afs_osi_Wait((at)*1000, 0, 0)
 
 
 int lastcode;
-/* returns:
- * 0   if the vldb record for a specific volume is different from what
- *     we have cached -- perhaps the volume has moved.
- * 1   if the vldb record is the same
- * 2   if we can't tell if it's the same or not.
- *
- * If 0, the caller will probably start over at the beginning of our
- * list of servers for this volume and try to find one that is up.  If
- * not 0, we will probably just keep plugging with what we have
- * cached.   If we fail to contact the VL server, we  should just keep
- * trying with the information we have, rather than failing. */
 #define DIFFERENT 0
 #define SAME 1
 #define DUNNO 2
+/*!
+ * \brief
+ *	Request vldb record to determined if it has changed.
+ *
+ * \retval 0 if the vldb record for a specific volume is different from what
+ *           we have cached -- perhaps the volume has moved.
+ * \retval 1 if the vldb record is the same
+ * \retval 2 if we can't tell if it's the same or not.
+ *
+ * \note
+ *	If 0 returned, the caller will probably start over at the beginning of our
+ *	list of servers for this volume and try to find one that is up.  If
+ *	not 0, we will probably just keep plugging with what we have
+ *	cached.   If we fail to contact the VL server, we  should just keep
+ *	trying with the information we have, rather than failing.
+ */
 static int
 VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 {
@@ -209,34 +214,28 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
     return (changed ? DIFFERENT : SAME);
 }				/*VLDB_Same */
 
-/*------------------------------------------------------------------------
- * afs_BlackListOnce
- *
- * Description:
+/*!
+ * \brief
  *	Mark a server as invalid for further attempts of this request only.
  *
- * Arguments:
- *	areq  : The request record associated with this operation.
- *	afid  : The FID of the file involved in the action.  This argument
- *		may be null if none was involved.
- *      tsp   : pointer to a server struct for the server we wish to
- *              blacklist.
+ * \param[in,out] areq  The request record associated with this operation.
+ * \param[in]     afid  The FID of the file involved in the action.  This argument
+ *                      may be null if none was involved.
+ * \param[in,out] tsp   pointer to a server struct for the server we wish to
+ *                      blacklist.
  *
- * Returns:
+ * \returns
  *	Non-zero value if further servers are available to try,
  *	zero otherwise.
  *
- * Environment:
+ * \note
  *	This routine is typically called in situations where we believe
- *      one server out of a pool may have an error condition.
+ *	one server out of a pool may have an error condition.
  *
- * Side Effects:
- *	As advertised.
- *
- * NOTE:
+ * \note
  *	The afs_Conn* routines use the list of invalidated servers to
  *      avoid reusing a server marked as invalid for this request.
- *------------------------------------------------------------------------*/
+ */
 static afs_int32
 afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		  struct server *tsp)
@@ -271,28 +270,25 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
     return serversleft;
 }
 
-/*------------------------------------------------------------------------
- * afs_ClearStatus
- *
- * Description:
+/*!
+ * \brief
  *	Analyze the outcome of an RPC operation, taking whatever support
  *	actions are necessary.
  *
- * Arguments:
- *	afid  : The FID of the file involved in the action.  This argument
- *		may be null if none was involved.
- *      op    : which RPC we are analyzing.
- *      avp   : A pointer to the struct volume, if we already have one.
+ * \param[in]     afid   The FID of the file involved in the action.  This argument
+ *                       may be null if none was involved.
+ * \param[in]     op     which RPC we are analyzing.
+ * \param[in,out] avp    A pointer to the struct volume, if we already have one.
  *
- * Returns:
+ * \returns
  *	Non-zero value if the related RPC operation can be retried,
  *	zero otherwise.
  *
- * Environment:
+ * \note
  *	This routine is called when we got a network error,
  *      and discards state if the operation was a data-mutating
  *      operation.
- *------------------------------------------------------------------------*/
+ */
 static int
 afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
 {
@@ -330,38 +326,32 @@ afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
     return 0;
 }
 
-/*------------------------------------------------------------------------
- * EXPORTED afs_Analyze
- *
- * Description:
+/*!
+ * \brief
  *	Analyze the outcome of an RPC operation, taking whatever support
  *	actions are necessary.
  *
- * Arguments:
- *	aconn : Ptr to the relevant connection on which the call was made.
- *	acode : The return code experienced by the RPC.
- *	afid  : The FID of the file involved in the action.  This argument
- *		may be null if none was involved.
- *	areq  : The request record associated with this operation.
- *      op    : which RPC we are analyzing.
- *      cellp : pointer to a cell struct.  Must provide either fid or cell.
+ * \param[in]     aconn  Ptr to the relevant connection on which the call was made.
+ * \param[in]     acode  The return code experienced by the RPC.
+ * \param[in]     fid    The FID of the file involved in the action.  This argument
+ *                       may be null if none was involved.
+ * \param[in,out] areq   The request record associated with this operation.
+ * \param[in]     op     which RPC we are analyzing.
+ * \param[in]     cellp  pointer to a cell struct.  Must provide either fid or cell.
  *
- * Returns:
+ * \returns
  *	Non-zero value if the related RPC operation should be retried,
  *	zero otherwise.
  *
- * Environment:
+ * \note
  *	This routine is typically called in a do-while loop, causing the
  *	embedded RPC operation to be called repeatedly if appropriate
  *	until whatever error condition (if any) is intolerable.
  *
- * Side Effects:
- *	As advertised.
- *
- * NOTE:
+ * \note
  *	The retry return value is used by afs_StoreAllSegments to determine
  *	if this is a temporary or permanent error.
- *------------------------------------------------------------------------*/
+ */
 int
 afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
             afs_int32 acode, struct VenusFid *afid, struct vrequest *areq,
@@ -598,7 +588,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	    goto out;
 	}
 	afs_ServerDown(sa, acode);
-	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
+	ForceNewConnections(sa); /* multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;
     }
