@@ -1841,106 +1841,85 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
         scp->flags &= ~CM_SCACHEFLAG_RDR_IN_USE;
     }
 
-    if (bLastHandle || bFlushFile) {
-        if (!bScpLocked) {
-            lock_ObtainWrite(&scp->rw);
-            bScpLocked = TRUE;
-        }
-        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
-                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (code == 0) {
-            if (bScpLocked) {
-                lock_ReleaseWrite(&scp->rw);
-                bScpLocked = FALSE;
+    /* If not a readonly object, flush dirty data and update metadata */
+    if (!(scp->flags & CM_SCACHEFLAG_RO)) {
+        if ((bLastHandle || bFlushFile) &&
+             buf_DirtyBuffersExist(&scp->fid)) {
+            if (!bScpLocked) {
+                lock_ObtainWrite(&scp->rw);
+                bScpLocked = TRUE;
             }
-
-            code = cm_FSync(scp, userp, &req, bScpLocked);
-        }
-        if (bLastHandle && code)
-            goto on_error;
-    }
-
-    if (bUnlockFile || bDeleteFile) {
-        if (!bScpLocked) {
-            lock_ObtainWrite(&scp->rw);
-            bScpLocked = TRUE;
-        }
-        code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
-        if (code) {
-            osi_Log2(afsd_logp, "RDR_CleanupFileEntry cm_SyncOp (2) failure scp=0x%p code=0x%x",
-                     scp, code);
-            goto on_error;
-        }
-
-        key = cm_GenerateKey(CM_SESSION_IFS, CleanupCB->ProcessId, 0);
-
-        /* the scp is now locked and current */
-        code = cm_UnlockByKey(scp, key,
-                              bDeleteFile ? CM_UNLOCK_FLAG_BY_FID : 0,
-                              userp, &req);
-
-        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
-
-        if (code)
-            goto on_error;
-    }
-
-    if (CleanupCB->ChangeTime.QuadPart) {
-
-        if (scp->fileType == CM_SCACHETYPE_FILE) {
-            /* Do not set length and other attributes at the same time */
-            if (scp->length.QuadPart != CleanupCB->AllocationSize.QuadPart) {
-                osi_Log2(afsd_logp, "RDR_CleanupFileEntry Length Change 0x%x -> 0x%x",
-                          (afs_uint32)scp->length.QuadPart, (afs_uint32)CleanupCB->AllocationSize.QuadPart);
-                setAttr.mask |= CM_ATTRMASK_LENGTH;
-                setAttr.length.LowPart = CleanupCB->AllocationSize.LowPart;
-                setAttr.length.HighPart = CleanupCB->AllocationSize.HighPart;
-
+            code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
+                             CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+            if (code == 0) {
                 if (bScpLocked) {
                     lock_ReleaseWrite(&scp->rw);
                     bScpLocked = FALSE;
                 }
-                code = cm_SetAttr(scp, &setAttr, userp, &req);
-                if (code)
-                    goto on_error;
-                setAttr.mask = 0;
+
+                code = cm_FSync(scp, userp, &req, bScpLocked);
+            }
+            if (bLastHandle && code)
+                goto unlock;
+        }
+
+        if (CleanupCB->ChangeTime.QuadPart) {
+
+            if (scp->fileType == CM_SCACHETYPE_FILE) {
+                /* Do not set length and other attributes at the same time */
+                if (scp->length.QuadPart != CleanupCB->AllocationSize.QuadPart) {
+                    osi_Log2(afsd_logp, "RDR_CleanupFileEntry Length Change 0x%x -> 0x%x",
+                             (afs_uint32)scp->length.QuadPart, (afs_uint32)CleanupCB->AllocationSize.QuadPart);
+                    setAttr.mask |= CM_ATTRMASK_LENGTH;
+                    setAttr.length.LowPart = CleanupCB->AllocationSize.LowPart;
+                    setAttr.length.HighPart = CleanupCB->AllocationSize.HighPart;
+
+                    if (bScpLocked) {
+                        lock_ReleaseWrite(&scp->rw);
+                        bScpLocked = FALSE;
+                    }
+                    code = cm_SetAttr(scp, &setAttr, userp, &req);
+                    if (code)
+                        goto unlock;
+                    setAttr.mask = 0;
+                }
+            }
+
+            if (!bScpLocked) {
+                lock_ObtainWrite(&scp->rw);
+                bScpLocked = TRUE;
+            }
+
+            if ((scp->unixModeBits & 0200) && (CleanupCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
+                setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
+                setAttr.unixModeBits = scp->unixModeBits & ~0222;
+            } else if (!(scp->unixModeBits & 0200) && !(CleanupCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
+                setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
+                setAttr.unixModeBits = scp->unixModeBits | 0222;
             }
         }
 
-        if (!bScpLocked) {
-            lock_ObtainWrite(&scp->rw);
-            bScpLocked = TRUE;
+        if (CleanupCB->LastWriteTime.QuadPart) {
+            ft.dwLowDateTime = CleanupCB->LastWriteTime.LowPart;
+            ft.dwHighDateTime = CleanupCB->LastWriteTime.HighPart;
+
+            cm_UnixTimeFromLargeSearchTime(&clientModTime, &ft);
+            if (scp->clientModTime != clientModTime) {
+                setAttr.mask |= CM_ATTRMASK_CLIENTMODTIME;
+                setAttr.clientModTime = clientModTime;
+            }
         }
 
-        if ((scp->unixModeBits & 0200) && (CleanupCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
-            setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
-            setAttr.unixModeBits = scp->unixModeBits & ~0222;
-        } else if (!(scp->unixModeBits & 0200) && !(CleanupCB->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
-            setAttr.mask |= CM_ATTRMASK_UNIXMODEBITS;
-            setAttr.unixModeBits = scp->unixModeBits | 0222;
-        }
+        /* call setattr */
+        if (setAttr.mask) {
+            lock_ReleaseWrite(&scp->rw);
+            bScpLocked = FALSE;
+            code = cm_SetAttr(scp, &setAttr, userp, &req);
+        } else
+            code = 0;
     }
 
-    if (CleanupCB->LastWriteTime.QuadPart) {
-        ft.dwLowDateTime = CleanupCB->LastWriteTime.LowPart;
-        ft.dwHighDateTime = CleanupCB->LastWriteTime.HighPart;
-
-        cm_UnixTimeFromLargeSearchTime(&clientModTime, &ft);
-        if (scp->clientModTime != clientModTime) {
-            setAttr.mask |= CM_ATTRMASK_CLIENTMODTIME;
-            setAttr.clientModTime = clientModTime;
-        }
-    }
-
-    /* call setattr */
-    if (setAttr.mask) {
-        lock_ReleaseWrite(&scp->rw);
-        bScpLocked = FALSE;
-        code = cm_SetAttr(scp, &setAttr, userp, &req);
-    } else
-        code = 0;
-
+  unlock:
     /* Now drop the lock enforcing the share access */
     if ( CleanupCB->FileAccess != AFS_FILE_ACCESS_NOLOCK) {
         unsigned int sLockType;
@@ -1977,6 +1956,32 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
 
             }
         }
+    }
+
+    if (bUnlockFile || bDeleteFile) {
+        if (!bScpLocked) {
+            lock_ObtainWrite(&scp->rw);
+            bScpLocked = TRUE;
+        }
+        code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+        if (code) {
+            osi_Log2(afsd_logp, "RDR_CleanupFileEntry cm_SyncOp (2) failure scp=0x%p code=0x%x",
+                     scp, code);
+            goto on_error;
+        }
+
+        key = cm_GenerateKey(CM_SESSION_IFS, CleanupCB->ProcessId, 0);
+
+        /* the scp is now locked and current */
+        code = cm_UnlockByKey(scp, key,
+                              bDeleteFile ? CM_UNLOCK_FLAG_BY_FID : 0,
+                              userp, &req);
+
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
+
+        if (code)
+            goto on_error;
     }
 
   on_error:
