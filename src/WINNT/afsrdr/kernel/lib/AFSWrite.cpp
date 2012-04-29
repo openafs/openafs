@@ -359,8 +359,10 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                                           pFcb);
 
                     CcSetReadAheadGranularity( pFileObject,
-                                               READ_AHEAD_GRANULARITY);
+                                               pDeviceExt->Specific.RDR.MaximumRPCLength);
 
+                    CcSetDirtyPageThreshold( pFileObject,
+                                             AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength);
                 }
                 __except( EXCEPTION_EXECUTE_HANDLER)
                 {
