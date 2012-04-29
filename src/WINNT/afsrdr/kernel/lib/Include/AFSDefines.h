@@ -206,12 +206,6 @@ NTSTATUS
 //
 #define AFS_SERVER_PURGE_SLEEP  6
 
-//
-// Read ahead granularity
-//
-
-#define READ_AHEAD_GRANULARITY      0x10000     // 64KB
-
 #define AFS_DIR_ENUM_BUFFER_LEN   (16 * 1024)
 
 //
@@ -350,6 +344,8 @@ NTSTATUS
 //
 
 #define AFS_MAXIMUM_EXTENT_RELEASE_COUNT        100
+
+#define AFS_DIRTY_CHUNK_THRESHOLD               2
 
 // {41966169-3FD7-4392-AFE4-E6A9D0A92C72}  - generated using guidgen.exe
 DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
