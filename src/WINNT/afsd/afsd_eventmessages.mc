@@ -146,7 +146,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_SERVER_REPORTS_VNOSERVICE
 Language=English
-Server %1 reported volume %2 in cell %3 as not in service.
+Server %1 reported rpc to volume %2 in cell %3 as not serviced.
 .
 
 MessageId=

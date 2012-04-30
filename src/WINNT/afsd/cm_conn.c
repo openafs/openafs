@@ -840,7 +840,7 @@ cm_Analyze(cm_conn_t *connp,
 
             LogEvent(EVENTLOG_WARNING_TYPE, MSG_SERVER_REPORTS_VNOSERVICE,
                      addr, fidp->volume, cellp->name);
-            osi_Log3(afsd_logp, "Server %s reported volume %d in cell %s as not in service.",
+            osi_Log3(afsd_logp, "Server %s reported rpc to volume %d in cell %s as not serviced.",
                      osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
         }
 
