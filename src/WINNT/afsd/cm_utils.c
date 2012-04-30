@@ -211,7 +211,8 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
     if (error == RX_CALL_DEAD ||
         error == RX_CALL_TIMEOUT ||
         error == RX_CALL_BUSY ||
-        error == RX_MSGSIZE)
+        error == RX_MSGSIZE ||
+        error == VNOSERVICE)
         error = CM_ERROR_RETRY;
     else if (error == RX_CALL_IDLE)
         error = EIO;
@@ -248,7 +249,7 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_QUOTA;
     else if (error == VNOVNODE)
         error = CM_ERROR_BADFD;
-    else if (error == VNOSERVICE || error == VSALVAGE || error == VOFFLINE)
+    else if (error == VSALVAGE || error == VOFFLINE)
         error = CM_ERROR_ALLOFFLINE;
     else if (error == VBUSY || error == VRESTARTING)
         error = CM_ERROR_ALLBUSY;
@@ -279,11 +280,12 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
         error == RX_CALL_TIMEOUT ||
         error == RX_CALL_BUSY ||
         error == RX_CALL_IDLE ||
-        error == RX_MSGSIZE)
+        error == RX_MSGSIZE ||
+        error == VNOSERVICE)
         error = CM_ERROR_RETRY;
     else if (error == VNOVNODE)
         error = CM_ERROR_BADFD;
-    else if (error == VNOSERVICE || error == VSALVAGE || error == VOFFLINE)
+    else if (error == VSALVAGE || error == VOFFLINE)
         error = CM_ERROR_ALLOFFLINE;
     else if (error == VBUSY || error == VRESTARTING)
         error = CM_ERROR_ALLBUSY;
@@ -329,7 +331,8 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
         error == RX_CALL_TIMEOUT ||
         error == RX_CALL_BUSY ||
         error == RX_CALL_IDLE ||
-        error == RX_MSGSIZE)
+        error == RX_MSGSIZE ||
+        error == VNOSERVICE)
         error = CM_ERROR_RETRY;
     else if (error == RX_RESTARTING)
         error = CM_ERROR_ALLBUSY;
