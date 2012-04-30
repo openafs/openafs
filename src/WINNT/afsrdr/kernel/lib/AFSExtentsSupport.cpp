@@ -668,12 +668,14 @@ BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb,
                 entry = newEntry;
             }
         }
-        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+        __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
         {
 
             AFSDbgLogMsg( 0,
                           0,
                           "EXCEPTION - AFSDoExtentsMapRegion\n");
+
+            AFSDumpTraceFilesFnc();
         }
 
 try_exit:
@@ -3604,12 +3606,14 @@ AFSMarkDirty( IN AFSFcb *Fcb,
             ulCount++;
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSMarkDirty\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
@@ -4382,12 +4386,14 @@ AFSSetupMD5Hash( IN AFSFcb *Fcb,
                           PsGetCurrentThread());
 
         }
-        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+        __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
         {
 
             AFSDbgLogMsg( 0,
                           0,
                           "EXCEPTION - AFSSetupMD5Hash\n");
+
+            AFSDumpTraceFilesFnc();
         }
 
         AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );

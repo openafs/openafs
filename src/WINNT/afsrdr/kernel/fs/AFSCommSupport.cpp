@@ -356,8 +356,10 @@ try_exit:
                         FALSE);
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
     {
+
+        AFSDumpTraceFilesFnc();
 
         if( bReleasePool)
         {
@@ -783,10 +785,12 @@ AFSProcessControlRequest( IN PIRP Irp)
 //try_exit:
 
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
     {
 
         ntStatus = STATUS_UNSUCCESSFUL;
+
+        AFSDumpTraceFilesFnc();
     }
 
     if( bCompleteRequest)

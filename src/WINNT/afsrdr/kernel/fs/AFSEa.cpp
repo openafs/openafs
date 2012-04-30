@@ -103,12 +103,14 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueryEA\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -179,12 +181,14 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSSetEA\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

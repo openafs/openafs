@@ -71,12 +71,14 @@ AFSQueryEA( IN PDEVICE_OBJECT LibDeviceObject,
                             ntStatus);
 
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueryEA\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -115,12 +117,14 @@ AFSSetEA( IN PDEVICE_OBJECT LibDeviceObject,
                             ntStatus);
 
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSSetEA\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

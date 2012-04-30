@@ -2249,12 +2249,14 @@ try_exit:
                           "AFSQueueFlushExtents Failed to queue request Status %08lX\n", ntStatus);
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueFlushExtents\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -2333,12 +2335,14 @@ try_exit:
                           "AFSQueueAsyncRead Failed to queue request Status %08lX\n", ntStatus);
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueAsyncRead\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -2417,12 +2421,14 @@ try_exit:
                           "AFSQueueAsyncWrite Failed to queue request Status %08lX\n", ntStatus);
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueAsyncWrite\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -2487,12 +2493,14 @@ try_exit:
                           ntStatus);
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueGlobalRootEnumeration\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -2591,12 +2599,14 @@ try_exit:
             }
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueStartIos\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -2665,12 +2675,14 @@ try_exit:
                           ntStatus);
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueInvalidateObject\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

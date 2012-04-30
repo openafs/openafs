@@ -51,7 +51,8 @@
 //
 
 ULONG
-AFSExceptionFilter( IN ULONG Code,
+AFSExceptionFilter( IN CHAR *FunctionString,
+                    IN ULONG Code,
                     IN PEXCEPTION_POINTERS ExceptPtrs)
 {
 
@@ -67,11 +68,13 @@ AFSExceptionFilter( IN ULONG Code,
 
         AFSDbgLogMsg( 0,
                       0,
-                      "AFSExceptionFilter (Framework) - EXR %p CXR %p Code %08lX Address %p\n",
+                      "AFSExceptionFilter (Framework) - EXR %p CXR %p Function %s Code %08lX Address %p Routine %p\n",
                       ExceptRec,
                       Context,
+                      FunctionString,
                       ExceptRec->ExceptionCode,
-                      ExceptRec->ExceptionAddress);
+                      ExceptRec->ExceptionAddress,
+                      (void *)AFSExceptionFilter);
 
         DbgPrint("**** Exception Caught in AFS Redirector ****\n");
 

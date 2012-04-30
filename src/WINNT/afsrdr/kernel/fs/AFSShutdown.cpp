@@ -78,12 +78,14 @@ AFSShutdown( IN PDEVICE_OBJECT DeviceObject,
         AFSCompleteRequest( Irp,
                             ntStatus);
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSShutdown\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

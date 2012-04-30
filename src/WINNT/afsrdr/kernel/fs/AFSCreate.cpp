@@ -77,7 +77,7 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
@@ -85,6 +85,8 @@ try_exit:
                       "EXCEPTION - AFSCreate\n");
 
         ntStatus = STATUS_ACCESS_DENIED;
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

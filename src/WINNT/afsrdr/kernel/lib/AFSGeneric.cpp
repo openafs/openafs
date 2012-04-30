@@ -51,7 +51,8 @@
 //
 
 ULONG
-AFSExceptionFilter( IN ULONG Code,
+AFSExceptionFilter( IN CHAR *FunctionString,
+                    IN ULONG Code,
                     IN PEXCEPTION_POINTERS ExceptPtrs)
 {
 
@@ -67,9 +68,10 @@ AFSExceptionFilter( IN ULONG Code,
 
         AFSDbgLogMsg( 0,
                       0,
-                      "AFSExceptionFilter (Library) - EXR %p CXR %p Code %08lX Address %p Routine %p\n",
+                      "AFSExceptionFilter (Library) - EXR %p CXR %p Function %s Code %08lX Address %p Routine %p\n",
                       ExceptRec,
                       Context,
+                      FunctionString,
                       ExceptRec->ExceptionCode,
                       ExceptRec->ExceptionAddress,
                       (void *)AFSExceptionFilter);
@@ -403,8 +405,10 @@ AFSLockSystemBuffer( IN PIRP Irp,
                 pAddress = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
 
             }
-            __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+            __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
             {
+
+                AFSDumpTraceFilesFnc();
 
                 IoFreeMdl( Irp->MdlAddress );
                 Irp->MdlAddress = NULL;
@@ -455,8 +459,10 @@ AFSLockUserBuffer( IN void *UserBuffer,
             pAddress = MmGetSystemAddressForMdlSafe( pMdl,
                                                      NormalPagePriority);
         }
-        __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+        __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
         {
+
+            AFSDumpTraceFilesFnc();
 
             IoFreeMdl( pMdl);
             pMdl = NULL;

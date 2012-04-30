@@ -202,7 +202,6 @@ static inline void AFS_ASSERT() {
 //#define AFS_VALIDATE_EXTENTS            0
 
 static inline void AFSBreakPoint() {
-    AFSDumpTraceFilesFnc();
 #if !defined(KD_DEBUGGER_ENABLED)
 #define KD_DEBUGGER_ENABLED DBG
 #endif // KD_DEBUGGER_ENABLED
@@ -222,7 +221,7 @@ static inline void AFSBreakPoint() {
 #else
 
 static inline void AFSBreakPoint() {
-    AFSDumpTraceFilesFnc();
+    NOTHING;
 }
 
 #define AFSPrint

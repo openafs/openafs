@@ -89,12 +89,14 @@ AFSDirControl( IN PDEVICE_OBJECT LibDeviceObject,
                 break;
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSDirControl\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     if( ntStatus != STATUS_PENDING)
