@@ -120,12 +120,14 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSSetSecurity\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -213,12 +215,14 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQuerySecurity\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

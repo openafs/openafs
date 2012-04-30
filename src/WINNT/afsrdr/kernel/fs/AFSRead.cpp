@@ -101,8 +101,10 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
+
+        AFSDumpTraceFilesFnc();
 
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
     }

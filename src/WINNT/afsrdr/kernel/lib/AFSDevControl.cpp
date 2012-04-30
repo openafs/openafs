@@ -427,10 +427,12 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
 //try_exit:
 
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
     {
 
         ntStatus = STATUS_UNSUCCESSFUL;
+
+        AFSDumpTraceFilesFnc();
     }
 
     Irp->IoStatus.Status = ntStatus;

@@ -93,12 +93,14 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( (ntStatus = GetExceptionCode()), GetExceptionInformation()))
+    __except( AFSExceptionFilter( __FUNCTION__, (ntStatus = GetExceptionCode()), GetExceptionInformation()))
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSLockControl\n");
+
+        AFSDumpTraceFilesFnc();
 
         AFSCompleteRequest( Irp,
                             ntStatus);

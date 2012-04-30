@@ -81,7 +81,7 @@ AFSWrite( IN PDEVICE_OBJECT LibDeviceObject,
 
         ntStatus = AFSCommonWrite( AFSRDRDeviceObject, Irp, NULL);
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;

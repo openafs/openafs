@@ -299,12 +299,14 @@ try_exit:
                                 ntStatus);
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()))
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()))
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSLockControl\n");
+
+        AFSDumpTraceFilesFnc();
 
         //
         // Again, there is little point in failing this request but pass back some type of failure status

@@ -532,8 +532,11 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
                     pDevExt->Specific.RDR.CacheBaseAddress = MmGetSystemAddressForMdlSafe( pDevExt->Specific.RDR.CacheMdl,
                                                                                            NormalPagePriority);
                 }
-                __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+                __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
                 {
+
+                    AFSDumpTraceFilesFnc();
+
                     IoFreeMdl( pDevExt->Specific.RDR.CacheMdl);
                     pDevExt->Specific.RDR.CacheMdl = NULL;
                 }

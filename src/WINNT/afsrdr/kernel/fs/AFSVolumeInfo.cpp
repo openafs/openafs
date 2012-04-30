@@ -97,12 +97,14 @@ try_exit:
 
         NOTHING;
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueryVolumeInfo\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;
@@ -129,12 +131,14 @@ AFSSetVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
                             ntStatus);
 
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSSetVolumeInfo\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

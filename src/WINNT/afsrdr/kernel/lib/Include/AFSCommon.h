@@ -1043,7 +1043,8 @@ AFSSetQuota( IN PDEVICE_OBJECT DeviceObject,
 //
 
 ULONG
-AFSExceptionFilter( IN ULONG Code,
+AFSExceptionFilter( IN CHAR *FunctionString,
+                    IN ULONG Code,
                     IN PEXCEPTION_POINTERS ExceptPtrs);
 
 BOOLEAN

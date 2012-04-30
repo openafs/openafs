@@ -286,10 +286,12 @@ try_exit:
             }
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSPrint( "EXCEPTION - AFS DriverEntry\n");
+
+        AFSDumpTraceFilesFnc();
     }
 
     return ntStatus;

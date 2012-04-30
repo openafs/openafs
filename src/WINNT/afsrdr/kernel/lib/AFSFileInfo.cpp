@@ -441,12 +441,14 @@ try_exit:
             }
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueryFileInfo\n");
+
+        AFSDumpTraceFilesFnc();
 
         ntStatus = STATUS_UNSUCCESSFUL;
 
@@ -739,12 +741,14 @@ try_exit:
             }
         }
     }
-    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    __except( AFSExceptionFilter( __FUNCTION__, GetExceptionCode(), GetExceptionInformation()) )
     {
 
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSSetFileInfo\n");
+
+        AFSDumpTraceFilesFnc();
 
         ntStatus = STATUS_UNSUCCESSFUL;
 
