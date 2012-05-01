@@ -244,7 +244,7 @@ SetVolumeSync(struct AFSVolSync *async, Volume * avol)
     FS_LOCK;
     /* date volume instance was created */
     if (async) {
-	if (avol)
+	if (avol && avol->header)
 	    async->spare1 = avol->header->diskstuff.creationDate;
 	else
 	    async->spare1 = 0;
