@@ -4044,9 +4044,17 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 		    if (!vp->pending_vol_op) {
 			endloop = 1;
 		    }
+		    if (vp->specialStatus) {
+			*ec = vp->specialStatus;
+		    }
 		    break;
+
 		default:
-		    *ec = VNOVOL;
+		    if (vp->specialStatus) {
+			*ec = vp->specialStatus;
+		    } else {
+			*ec = VNOVOL;
+		    }
 		    endloop = 1;
 		}
 		if (endloop) {
