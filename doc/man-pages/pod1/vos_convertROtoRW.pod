@@ -116,7 +116,7 @@ partition vicepb on server1 to a read-write volume:
 =head1 PRIVILEGE REQUIRED
 
 The issuer must be listed in the F</usr/afs/etc/UserList> file on the
-machines specified with the B<-toserver> and B<-fromserver> arguments and
+machine specified with the B<-server> argument and
 on each database server machine.  If the B<-localauth> flag is included,
 the issuer must instead be logged on to a server machine as the local
 superuser C<root>.
