@@ -7050,10 +7050,19 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
         // First up are there dirty extents in the cache to flush?
         //
 
-        if( ForceFlush ||
-            ( !BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) &&
-              !BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED) &&
-              ( Fcb->Specific.File.ExtentsDirtyCount ||
+        if( BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
+            BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
+        {
+
+            //
+            // The file has been marked as invalid.  Dump it
+            //
+
+            AFSTearDownFcbExtents( Fcb,
+                                   NULL);
+        }
+        else if( ForceFlush ||
+            ( ( Fcb->Specific.File.ExtentsDirtyCount ||
                 Fcb->Specific.File.ExtentCount) &&
               (liTime.QuadPart - Fcb->Specific.File.LastServerFlush.QuadPart)
                                                     >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart))
@@ -7066,17 +7075,6 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 AFSReleaseExtentsWithFlush( Fcb,
                                             NULL);
             }
-        }
-        else if( BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_OBJECT_INVALID) ||
-                 BooleanFlagOn( Fcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED))
-        {
-
-            //
-            // The file has been marked as invalid.  Dump it
-            //
-
-            AFSTearDownFcbExtents( Fcb,
-                                   NULL);
         }
 
         //
