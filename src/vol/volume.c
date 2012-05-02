@@ -4107,14 +4107,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 	       }
 	   } else {
 	       if (client_ec) {
-		   /* see CheckVnode() in afsfileprocs.c for an explanation
-		    * of this error code logic */
-		   afs_uint32 now = FT_ApproxTime();
-		   if ((vp->stats.last_vol_op + (10 * 60)) >= now) {
-		       *client_ec = VBUSY;
-		   } else {
-		       *client_ec = VRESTARTING;
-		   }
+		   *client_ec = VOFFLINE;
 	       }
 	       *ec = VOFFLINE;
 	   }
