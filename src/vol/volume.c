@@ -4105,9 +4105,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 		case VSALVAGING:
 		    break;
 		case VOFFLINE:
-		    if (!vp->pending_vol_op) {
-			endloop = 1;
-		    }
+		    endloop = 1;
 		    if (vp->specialStatus) {
 			*ec = vp->specialStatus;
 		    }
@@ -4155,39 +4153,12 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint,
 	}
 
 	/*
-	 * this test MUST happen after VAttachVolymeByVp, so vol_op_state is
-	 * not VolOpRunningUnknown (attach2 would have converted it to Online
-	 * or Offline)
+	 * this test MUST happen after VAttachVolymeByVp, so we have no
+	 * conflicting vol op. (attach2 would have errored out if we had one;
+	 * specifically attach_check_vop must have detected a conflicting vop)
 	 */
+         osi_Assert(!vp->pending_vol_op || vp->pending_vol_op->vol_op_state == FSSYNC_VolOpRunningOnline);
 
-         /* only valid before/during demand attachment */
-         osi_Assert(!vp->pending_vol_op || vp->pending_vol_op->vol_op_state != FSSYNC_VolOpRunningUnknown);
-
-         /* deny getvolume due to running mutually exclusive vol op */
-         if (vp->pending_vol_op && vp->pending_vol_op->vol_op_state==FSSYNC_VolOpRunningOffline) {
-	   /*
-	    * volume cannot remain online during this volume operation.
-	    * notify client.
-	    */
-	   if (vp->specialStatus) {
-	       /*
-		* special status codes outrank normal VOFFLINE code
-		*/
-	       *ec = vp->specialStatus;
-	       if (client_ec) {
-		   *client_ec = vp->specialStatus;
-	       }
-	   } else {
-	       if (client_ec) {
-		   *client_ec = VOFFLINE;
-	       }
-	       *ec = VOFFLINE;
-	   }
-	   VChangeState_r(vp, VOL_STATE_UNATTACHED);
-	   FreeVolumeHeader(vp);
-	   vp = NULL;
-	   break;
-	}
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 	LoadVolumeHeader(ec, vp);
