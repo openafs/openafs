@@ -126,13 +126,23 @@ AFSProcessCreate( IN HANDLE ParentId,
             pProcessCB->CreatingProcessId = (ULONGLONG)CreatingProcessId;
 
             pProcessCB->CreatingThreadId = (ULONGLONG)CreatingThreadId;
+
+            //
+            // Now assign the AuthGroup ACE
+            //
+
+            AFSValidateProcessEntry( ProcessId);
         }
+        else
+        {
 
-        //
-        // Now assign the AuthGroup ACE
-        //
-
-        AFSValidateProcessEntry( ProcessId);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_PROCESS_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessCreate Initialization failure for Parent %08lX Process %08lX %08lX\n",
+                          ParentId,
+                          ProcessId,
+                          PsGetCurrentThread());
+        }
 
         AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
     }
