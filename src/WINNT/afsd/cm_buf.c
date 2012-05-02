@@ -1239,7 +1239,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
     cm_buf_t *bp;	/* buffer we're dealing with */
     cm_buf_t *nextBp;	/* next buffer in file hash chain */
     afs_uint32 i;	/* temp */
-    afs_uint64 n_bufs, n_nonzero, n_busy, n_dirty, n_own;
+    afs_uint64 n_bufs, n_nonzero, n_busy, n_dirty, n_own, n_redir;
 
 #ifdef TESTING
     buf_ValidateBufQueues();
@@ -1252,6 +1252,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
         n_own = 0;
         n_busy = 0;
         n_dirty = 0;
+        n_redir = 0;
 
         lock_ObtainRead(&scp->bufCreateLock);
         lock_ObtainWrite(&buf_globalLock);
@@ -1330,12 +1331,14 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                 continue;
             }
 
+            /* leave the buffer alone if held by the redirector */
+            if (bp->qFlags & CM_BUF_QREDIR) {
+                n_redir++;
+                continue;
+            }
+
             if (bp->flags & CM_BUF_DIRTY) {
                 n_dirty++;
-
-                /* leave the buffer alone if held by the redirector */
-                if (bp->qFlags & CM_BUF_QREDIR)
-                    continue;
 
                 /* protect against cleaning the same buffer more than once. */
                 if (cleaned)
@@ -1470,7 +1473,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
         lock_ReleaseWrite(&buf_globalLock);
         lock_ReleaseRead(&scp->bufCreateLock);
 
-	osi_Log1(afsd_logp, "buf_GetNewLocked: Free Buffer List has %u buffers none free", n_bufs);
+	osi_Log2(afsd_logp, "buf_GetNewLocked: Free Buffer List has %u buffers none free; redir %u", n_bufs, n_redir);
         osi_Log4(afsd_logp, "... nonzero %u; own %u; busy %u; dirty %u", n_nonzero, n_own, n_busy, n_dirty);
 
         if (RDR_Initialized) {
