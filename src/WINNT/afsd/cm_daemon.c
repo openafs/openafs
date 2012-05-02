@@ -265,8 +265,9 @@ void * cm_BkgDaemon(void * vparm)
 void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4,
 	cm_user_t *userp, cm_req_t *reqp)
 {
-    cm_bkgRequest_t *rp;
-    afs_uint32 daemonID = scp->fid.hash % cm_nDaemons;
+    cm_bkgRequest_t *rp, *rpq;
+    afs_uint32 daemonID;
+    int duplicate = 0;
 
     rp = malloc(sizeof(*rp));
     memset(rp, 0, sizeof(*rp));
@@ -282,12 +283,40 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
     rp->p4 = p4;
     rp->req = *reqp;
 
+    /* Use separate queues for fetch and store operations */
+    daemonID = scp->fid.hash % (cm_nDaemons/2) * 2;
+    if (procp == cm_BkgStore)
+        daemonID++;
+
     lock_ObtainWrite(&cm_daemonLockp[daemonID]);
-    cm_bkgQueueCountp[daemonID]++;
-    osi_QAddH((osi_queue_t **) &cm_bkgListpp[daemonID], (osi_queue_t **)&cm_bkgListEndpp[daemonID], &rp->q);
+    /* Check to see if this is a duplicate request */
+    for (rpq = cm_bkgListpp[daemonID]; rpq; rpq = (cm_bkgRequest_t *) osi_QNext(&rpq->q))
+    {
+        if ( rpq->p1 == p1 &&
+             rpq->p3 == p3 &&
+             rpq->procp == procp &&
+             rpq->p2 == p2 &&
+             rpq->p4 == p4 &&
+             rpq->scp == scp &&
+             rpq->userp == userp)
+        {
+            /* found a duplicate; update request with latest info */
+            duplicate = 1;
+            break;
+        }
+    }
+
+    if (!duplicate) {
+        cm_bkgQueueCountp[daemonID]++;
+        osi_QAddH((osi_queue_t **) &cm_bkgListpp[daemonID], (osi_queue_t **)&cm_bkgListEndpp[daemonID], &rp->q);
+    }
     lock_ReleaseWrite(&cm_daemonLockp[daemonID]);
 
-    osi_Wakeup((LONG_PTR) &cm_bkgListpp[daemonID]);
+    if (duplicate) {
+        free(rp);
+    } else {
+        osi_Wakeup((LONG_PTR) &cm_bkgListpp[daemonID]);
+    }
 }
 
 static int
