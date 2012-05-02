@@ -1248,7 +1248,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSCachedWrite (%08lX) Exception thrown during mdl read Status %08lX\n",
+                                  "AFSCommonRead (%08lX) Exception thrown during mdl read Status %08lX\n",
                                   Irp,
                                   ntStatus);
                 }

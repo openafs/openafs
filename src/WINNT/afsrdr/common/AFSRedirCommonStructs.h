@@ -598,7 +598,7 @@ typedef struct _AFS_DEVICE_EXTENSION
 
             //
             // Maximum RPC length that is issued by the service. We should limit our
-            // data requests such as for extents to thsi length
+            // data requests such as for extents to this length
             //
 
             ULONG               MaximumRPCLength;
