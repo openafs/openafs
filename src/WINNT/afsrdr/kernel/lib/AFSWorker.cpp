@@ -2183,9 +2183,23 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
 
         pWorkItem->RequestType = AFS_WORK_FLUSH_FCB;
 
-        RtlCopyMemory( &pWorkItem->AuthGroup,
-                       AuthGroup,
-                       sizeof( GUID));
+        if ( AuthGroup == NULL)
+        {
+
+            RtlZeroMemory( &pWorkItem->AuthGroup,
+                           sizeof( GUID));
+
+            ntStatus = AFSRetrieveValidAuthGroup( Fcb,
+                                                  NULL,
+                                                  TRUE,
+                                                  &pWorkItem->AuthGroup);
+        }
+        else
+        {
+            RtlCopyMemory( &pWorkItem->AuthGroup,
+                           AuthGroup,
+                           sizeof( GUID));
+        }
 
         pWorkItem->Specific.Fcb.Fcb = Fcb;
 
