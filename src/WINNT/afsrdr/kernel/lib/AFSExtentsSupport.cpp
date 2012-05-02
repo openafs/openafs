@@ -161,10 +161,6 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
             try_return ( ntStatus = STATUS_SUCCESS);
         }
 
-        //
-        // Release a max of 100 extents at a time
-        //
-
         sz = sizeof( AFSReleaseExtentsCB ) + (AFS_MAXIMUM_EXTENT_RELEASE_COUNT * sizeof ( AFSFileExtentCB ));
 
         pRelease = (AFSReleaseExtentsCB*) AFSExAllocatePoolWithTag( NonPagedPool,
