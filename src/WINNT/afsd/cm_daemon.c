@@ -899,6 +899,7 @@ void cm_InitDaemon(int nDaemons)
             lock_InitializeRWLock(&cm_daemonLockp[i], "cm_daemonLock",
                                   LOCK_HIERARCHY_DAEMON_GLOBAL);
             cm_bkgListpp[i] = cm_bkgListEndpp[i] = NULL;
+            cm_bkgQueueCountp[i]=0;
             pstatus = pthread_create(&phandle, &tattr, cm_BkgDaemon, (LPVOID)(LONG_PTR)i);
             osi_assertx(pstatus == 0, "cm_BkgDaemon thread creation failure");
         }
