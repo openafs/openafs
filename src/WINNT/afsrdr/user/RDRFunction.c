@@ -3299,11 +3299,15 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                 else
                     minLength = scp->length;
 
-                if (!bHaveBuffer &&
-                    LargeIntegerGreaterThanOrEqualTo(bufp->offset, minLength)) {
-                    memset(bufp->datap, 0, cm_data.buf_blockSize);
-                    bufp->dataVersion = scp->dataVersion;
-                    bHaveBuffer = TRUE;
+                if (LargeIntegerGreaterThanOrEqualTo(bufp->offset, minLength)) {
+                    if (!bHaveBuffer) {
+                        memset(bufp->datap, 0, cm_data.buf_blockSize);
+                        bufp->dataVersion = scp->dataVersion;
+                        bHaveBuffer = TRUE;
+                    }
+                    else if (bufp->dataVersion == CM_BUF_VERSION_BAD) {
+                        bufp->dataVersion = scp->dataVersion;
+                    }
                 }
                 else if ((RequestExtentsCB->Flags & AFS_EXTENT_FLAG_CLEAN) &&
                          ByteOffset.QuadPart <= bufp->offset.QuadPart &&
