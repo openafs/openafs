@@ -111,7 +111,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bReleasePaging = FALSE;
     BOOLEAN            bExtendingWrite = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
-    BOOLEAN            bForceFlush = FALSE;
     BOOLEAN            bLockOK;
     BOOLEAN            bMapped = TRUE;
     HANDLE             hCallingUser = OnBehalfOf;
@@ -334,7 +333,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( NULL != pFileObject->SectionObjectPointer->DataSectionObject && !bPagingIo && bNonCachedIo)
         {
             bNonCachedIo = FALSE;
-            bForceFlush = TRUE;
         }
 
         if( (!bPagingIo && !bNonCachedIo))
@@ -617,7 +615,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                           liStartingByte.QuadPart,
                           ulByteCount);
 
-            ntStatus = AFSCachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, bForceFlush);
+            ntStatus = AFSCachedWrite( DeviceObject, Irp, liStartingByte, ulByteCount, TRUE);
 
         }
         else
