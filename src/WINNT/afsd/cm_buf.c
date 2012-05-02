@@ -518,6 +518,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
             bp = cm_data.bufHeaderBaseAddress;
             data = cm_data.bufDataBaseAddress;
 
+            lock_ObtainWrite(&buf_globalLock);
             for (i=0; i<cm_data.buf_nbuffers; i++) {
                 lock_InitializeMutex(&bp->mx, "Buffer mutex", LOCK_HIERARCHY_BUFFER);
                 bp->userp = NULL;
@@ -530,16 +531,12 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                      * extent was not returned by the file system driver.
                      * clean up the mess.
                      */
+                    buf_RemoveFromRedirQueue(NULL, bp);
                     bp->dataVersion = CM_BUF_VERSION_BAD;
-                    _InterlockedAnd(&bp->qFlags, ~CM_BUF_QREDIR);
-                    osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
-                                   (osi_queue_t **) &cm_data.buf_redirListEndp,
-                                   &bp->q);
-                    buf_DecrementRedirCount();
                     bp->redirq.nextp = bp->redirq.prevp = NULL;
                     bp->redirLastAccess = 0;
                     bp->redirReleaseRequested = 0;
-                    buf_Release(bp);
+                    buf_ReleaseLocked(bp, TRUE);
                 }
                 bp++;
             }
@@ -556,17 +553,14 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                  * extent was not returned by the file system driver.
                  * clean up the mess.
                  */
+                buf_RemoveFromRedirQueue(NULL, bp);
                 bp->dataVersion = CM_BUF_VERSION_BAD;
-                _InterlockedAnd(&bp->qFlags, ~CM_BUF_QREDIR);
-                osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
-                               (osi_queue_t **) &cm_data.buf_redirListEndp,
-                               &bp->q);
-                buf_DecrementRedirCount();
                 bp->redirq.nextp = bp->redirq.prevp = NULL;
                 bp->redirLastAccess = 0;
                 bp->redirReleaseRequested = 0;
-                buf_Release(bp);
+                buf_ReleaseLocked(bp, TRUE);
             }
+            lock_ReleaseWrite(&buf_globalLock);
         }
 
 #ifdef TESTING
