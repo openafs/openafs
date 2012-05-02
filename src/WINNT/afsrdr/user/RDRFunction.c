@@ -2970,11 +2970,6 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
     FileId.Unique = scp->fid.unique;
     FileId.Hash = scp->fid.hash;
 
-    if ((GetTickCount() - reqp->startTime) / 1000 > HardDeadtimeout * 5) {
-        RDR_SetFileStatus( &scp->fid, &userp->authgroup, STATUS_IO_TIMEOUT);
-        return 0;
-    }
-
     fetched.LowPart = 0;
     fetched.HighPart = 0;
     tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
