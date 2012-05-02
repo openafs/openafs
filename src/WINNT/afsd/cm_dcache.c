@@ -1701,7 +1701,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     code = cm_SetupFetchBIOD(scp, &bufp->offset, &biod, userp, reqp);
     if (code) {
         /* couldn't even get the first page setup properly */
-        osi_Log1(afsd_logp, "GetBuffer: SetupFetchBIOD failure code %d", code);
+        osi_Log1(afsd_logp, "cm_GetBuffer: SetupFetchBIOD failure code %d", code);
         return code;
     }
 
@@ -1712,26 +1712,50 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
      * We can lose a race condition and end up with biod.length zero, in
      * which case we just retry.
      */
-    if (bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow || biod.length == 0) {
-        if ((bufp->dataVersion == CM_BUF_VERSION_BAD || bufp->dataVersion < scp->bufDataVersionLow) &&
-             LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->serverLength))
-        {
-            osi_Log4(afsd_logp, "Bad DVs 0x%x != (0x%x -> 0x%x) or length 0x%x",
-                     bufp->dataVersion, scp->bufDataVersionLow, scp->dataVersion, biod.length);
 
-            if (bufp->dataVersion == CM_BUF_VERSION_BAD)
-                memset(bufp->datap, 0, cm_data.buf_blockSize);
-            bufp->dataVersion = scp->dataVersion;
+    if (bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow) {
+        /* We obtained the buffer while we were waiting */
+        goto release_biod;
+    }
+
+    if (biod.length == 0) {
+        osi_Log2(afsd_logp, "cm_GetBuffer BIOD length 0 scp 0x%p bufp 0x%p",
+                 scp, bufp);
+        code = CM_ERROR_RETRY;
+        goto release_biod;
+    }
+
+    /* Check for buffers we can fill locally */
+    for (qdp = biod.bufListEndp;
+          qdp;
+          qdp = (osi_queueData_t *) osi_QPrev(&qdp->q)) {
+        tbufp = osi_GetQData(qdp);
+
+        if ( tbufp->dataVersion == CM_BUF_VERSION_BAD ||
+             tbufp->dataVersion < scp->bufDataVersionLow ||
+             tbufp->dataVersion > scp->dataVersion) {
+
+            osi_Log4(afsd_logp, "cm_GetBuffer bufp 0x%p DVs 0x%x != (0x%x -> 0x%x)",
+                     tbufp, tbufp->dataVersion, scp->bufDataVersionLow, scp->dataVersion);
+
+            if (LargeIntegerGreaterThanOrEqualTo(tbufp->offset, scp->length))
+            {
+                if (tbufp->dataVersion == CM_BUF_VERSION_BAD)
+                    memset(tbufp->datap, 0, cm_data.buf_blockSize);
+                tbufp->dataVersion = scp->dataVersion;
+            }
+
+            if ((scp->mask & CM_SCACHEMASK_TRUNCPOS) &&
+                 LargeIntegerGreaterThanOrEqualTo(tbufp->offset, scp->truncPos)) {
+                memset(tbufp->datap, 0, cm_data.buf_blockSize);
+                tbufp->dataVersion = scp->dataVersion;
+            }
         }
-        cm_ReleaseBIOD(&biod, 0, 0, 1);
-        return 0;
-    } else if ((bufp->dataVersion == CM_BUF_VERSION_BAD || bufp->dataVersion < scp->bufDataVersionLow)
-                && (scp->mask & CM_SCACHEMASK_TRUNCPOS) &&
-                LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->truncPos)) {
-        memset(bufp->datap, 0, cm_data.buf_blockSize);
-        bufp->dataVersion = scp->dataVersion;
-        cm_ReleaseBIOD(&biod, 0, 0, 1);
-        return 0;
+    }
+
+    if (bufp->dataVersion <= scp->dataVersion && bufp->dataVersion >= scp->bufDataVersionLow) {
+        /* We locally populated the buffer we wanted */
+        goto release_biod;
     }
 
     InterlockedIncrement(&scp->activeRPCs);
@@ -1822,7 +1846,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
      * the network round trip by allocating zeroed buffers and
      * faking the status info.
      */
-    if (biod.offset.QuadPart >= scp->length.QuadPart) {
+    if (biod.offset.QuadPart >= scp->serverLength.QuadPart ||
+        ((scp->mask & CM_SCACHEMASK_TRUNCPOS) && biod.offset.QuadPart > scp->truncPos.QuadPart)) {
         osi_Log5(afsd_logp, "SKIP FetchData64 scp 0x%p, off 0x%x:%08x > length 0x%x:%08x",
                  scp, biod.offset.HighPart, biod.offset.LowPart,
                  scp->length.HighPart, scp->length.LowPart);
@@ -2178,6 +2203,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     else
         InterlockedDecrement(&scp->activeRPCs);
 
+  release_biod:
     /* release scatter/gather I/O structure (buffers, locks) */
     cm_ReleaseBIOD(&biod, 0, code, 1);
 
