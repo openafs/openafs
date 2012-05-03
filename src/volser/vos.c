@@ -5831,7 +5831,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     if (as->parms[13].items)
 	secFlags |= AFSCONF_SECOPTS_NOAUTH;
 
-    if (as->parms[14].items)	/* -serverauth specified */
+    if (as->parms[14].items)	/* -localauth specified */
 	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
 
     if (as->parms[16].items     /* -encrypt specified */
