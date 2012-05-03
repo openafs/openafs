@@ -59,7 +59,6 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
     AFSFcb *pFcb = NULL;
     AFSNonPagedFcb *pNPFcb = NULL;
     IO_STATUS_BLOCK stIoSb = {0,0};
-    BOOLEAN bUninitFileLock = FALSE;
     USHORT  usFcbLength = 0;
     ULONGLONG   ullIndex = 0;
     AFSDirEnumEntry *pDirEnumCB = NULL;
@@ -193,8 +192,6 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
                                      NULL,
                                      NULL);
 
-            bUninitFileLock = TRUE;
-
             //
             // Initialize the header file sizes to our dir entry information
             //
@@ -314,31 +311,33 @@ try_exit:
             if( pFcb != NULL)
             {
 
-                if( bUninitFileLock)
-                {
-
-                    FsRtlUninitializeFileLock( &pFcb->Specific.File.FileLock);
-                }
-
                 if( pNPFcb != NULL)
                 {
 
                     AFSReleaseResource( &pNPFcb->Resource);
+
+                    FsRtlTeardownPerStreamContexts( &pFcb->Header);
+
+                    if ( pObjectInfo->FileType == AFS_FILE_TYPE_FILE)
+                    {
+
+                        FsRtlUninitializeFileLock( &pFcb->Specific.File.FileLock);
+
+                        ExDeleteResourceLite( &pNPFcb->Specific.File.ExtentsResource);
+
+                        ExDeleteResourceLite( &pNPFcb->Specific.File.DirtyExtentsListLock);
+                    }
 
                     ExDeleteResourceLite( &pNPFcb->PagingResource);
 
                     ExDeleteResourceLite( &pNPFcb->CcbListLock);
 
                     ExDeleteResourceLite( &pNPFcb->Resource);
+
+                    AFSExFreePool( pNPFcb);
                 }
 
                 AFSExFreePool( pFcb);
-            }
-
-            if( pNPFcb != NULL)
-            {
-
-                AFSExFreePool( pNPFcb);
             }
         }
     }
