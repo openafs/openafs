@@ -3000,6 +3000,9 @@ attach_volume_header(Error *ec, Volume *vp, struct DiskPartition64 *partp,
     }
 
     if (*ec) {
+	VOL_LOCK;
+	FreeVolumeHeader(vp);
+	VOL_UNLOCK;
 	return;
     }
     if (retry) {
