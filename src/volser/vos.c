@@ -5461,13 +5461,13 @@ SetAddrs(struct cmd_syndesc *as, void *arock)
     if (vcode) {
 	if (vcode == VL_MULTIPADDR) {
 	    fprintf(STDERR, "vos: VL_RegisterAddrs rpc failed; The IP address exists on a different server; repair it\n");
-	    PrintError("", vcode);
-	    return vcode;
 	} else if (vcode == RXGEN_OPCODE) {
 	    fprintf(STDERR, "vlserver doesn't support VL_RegisterAddrs rpc; ignored\n");
-	    PrintError("", vcode);
-	    return vcode;
+	} else {
+	    fprintf(STDERR, "vos: VL_RegisterAddrs rpc failed\n");
 	}
+	PrintError("", vcode);
+	return vcode;
     }
     if (verbose) {
 	fprintf(STDOUT, "vos: Changed UUID with addresses:\n");
