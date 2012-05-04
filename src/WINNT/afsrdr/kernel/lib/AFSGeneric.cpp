@@ -7153,7 +7153,7 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
 
             AFSReleaseResource( &Fcb->NPFcb->Resource);
 
-            if( Fcb->OpenReferenceCount == 0)
+            if( Fcb->OpenReferenceCount <= 0)
             {
 
                 //

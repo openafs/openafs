@@ -1387,15 +1387,38 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     AFSDeleteDirEntry( pCurrentObject,
                                                        pCurrentDirEntry);
 
+                                    if( pCurrentChildObject->ObjectReferenceCount <= 0 &&
+                                        pCurrentChildObject->Fcb != NULL &&
+                                        pCurrentChildObject->FileType == AFS_FILE_TYPE_FILE)
+                                    {
+
+                                        //
+                                        // We must not hold pVolumeCB->ObjectInfoTree.TreeLock exclusive
+                                        // across an AFSCleanupFcb call since it can deadlock with an
+                                        // invalidation call from the service.
+                                        //
+
+                                        AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+                                        //
+                                        // Dropping the TreeLock permits the
+                                        // pCurrentObject->ObjectReferenceCount to change
+                                        //
+
+                                        AFSCleanupFcb( pCurrentChildObject->Fcb,
+                                                       TRUE);
+
+                                        AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                                                        TRUE);
+                                    }
+
                                     if( pCurrentChildObject->ObjectReferenceCount <= 0)
                                     {
 
                                         if( pCurrentChildObject->Fcb != NULL)
                                         {
-
-                                            pFcb = (AFSFcb *) InterlockedCompareExchangePointer( (PVOID *)&pCurrentChildObject->Fcb, NULL, (PVOID)pCurrentChildObject->Fcb);
-
-                                            lFileType = pCurrentChildObject->FileType;
+                                        
+                                            AFSRemoveFcb( &pCurrentChildObject->Fcb);
                                         }
 
                                         if( pCurrentChildObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
@@ -1427,33 +1450,6 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     pCurrentDirEntry = pNextDirEntry;
 
-                                    if ( pFcb != NULL)
-                                    {
-
-                                        if( lFileType == AFS_FILE_TYPE_FILE)
-                                        {
-                                            //
-                                            // We must not hold pVolumeCB->ObjectInfoTree.TreeLock exclusive
-                                            // across an AFSCleanupFcb call since it can deadlock with an
-                                            // invalidation call from the service.
-                                            //
-
-                                            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                                            //
-                                            // Dropping the TreeLock permits the
-                                            // pCurrentObject->ObjectReferenceCount to change
-                                            //
-
-                                            AFSCleanupFcb( pFcb,
-                                                           TRUE);
-
-                                            AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                                            TRUE);
-                                        }
-
-                                        AFSRemoveFcb( &pFcb);
-                                    }
                                 }
 
                                 pCurrentObject->Specific.Directory.DirectoryNodeListHead = NULL;
@@ -1536,59 +1532,10 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                     else if( pCurrentObject->FileType == AFS_FILE_TYPE_FILE)
                     {
 
-                        if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
-                            pCurrentObject->ObjectReferenceCount <= 0 &&
-                            ( pCurrentObject->Fcb == NULL ||
-                              pCurrentObject->Fcb->OpenReferenceCount == 0))
+                        AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
+
+                        if( pCurrentObject->Fcb != NULL)
                         {
-
-                            pFcb = (AFSFcb *) InterlockedCompareExchangePointer( (PVOID *)&pCurrentObject->Fcb, NULL, (PVOID)pCurrentObject->Fcb);
-
-                            if( pFcb != NULL)
-                            {
-
-                                AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                                //
-                                // Dropping the TreeLock permits the
-                                // pCurrentObject->ObjectReferenceCount to change
-                                //
-
-                                AFSCleanupFcb( pFcb,
-                                               TRUE);
-
-                                AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                                TRUE);
-
-                                AFSRemoveFcb( &pFcb);
-                            }
-
-                            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                            if( AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
-                                                FALSE))
-                            {
-
-                                AFSDeleteObjectInfo( pCurrentObject);
-
-                                AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
-
-                                pCurrentObject = pNextObject;
-
-                                continue;
-                            }
-                            else
-                            {
-
-                                bReleaseVolumeLock = FALSE;
-
-                                break;
-                            }
-                        }
-                        else if( pCurrentObject->Fcb != NULL)
-                        {
-
-                            AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
                             //
                             // Dropping the TreeLock permits the
@@ -1596,11 +1543,38 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                             //
 
                             AFSCleanupFcb( pCurrentObject->Fcb,
-                                           FALSE);
-
-                            AFSAcquireShared( pVolumeCB->ObjectInfoTree.TreeLock,
-                                              TRUE);
+                                           TRUE);
                         }
+
+                        if( !AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
+                                             FALSE))
+                        {
+
+                            bReleaseVolumeLock = FALSE;
+
+                            break;
+                        }
+
+                        if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
+                            pCurrentObject->ObjectReferenceCount <= 0 &&
+                            ( pCurrentObject->Fcb == NULL ||
+                              pCurrentObject->Fcb->OpenReferenceCount == 0))
+                        {
+
+                            if( pCurrentObject->Fcb != NULL)
+                            {
+
+                                AFSRemoveFcb( &pCurrentObject->Fcb);
+                            }
+
+                            AFSDeleteObjectInfo( pCurrentObject);
+                        }
+
+                        AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
+
+                        pCurrentObject = pNextObject;
+
+                        continue;
                     }
 
                     pCurrentObject = pNextObject;
