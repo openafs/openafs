@@ -1100,6 +1100,16 @@ main(int argc, char **argv, char **envp)
 	exit(code);
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
+    if (rxMaxMTU != -1) {
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    bozo_Log("bosserver: rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    exit(1);
+	}
+    }
+
     code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
 			     /* param */ NULL , "bozo-the-clown",
 			     &bozo_pid);
@@ -1163,16 +1173,6 @@ main(int argc, char **argv, char **envp)
 
     if (DoPidFiles) {
 	bozo_CreatePidFile("bosserver", NULL, getpid());
-    }
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
-
-    if (rxMaxMTU != -1) {
-	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
-	    bozo_Log("bosserver: rxMaxMTU %d is invalid\n", rxMaxMTU);
-	    exit(1);
-	}
     }
 
     tservice = rx_NewServiceHost(host, 0, /* service id */ 1,

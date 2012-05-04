@@ -393,6 +393,9 @@ main(int argc, char *argv[])
 	}
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
     if (servers)
 	code =
 	    ubik_ServerInit(myHost, htons(AFSCONF_KAUTHPORT), serverList,
@@ -408,9 +411,6 @@ main(int argc, char *argv[])
     }
 
     sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
 
     tservice =
 	rx_NewServiceHost(host, 0, KA_AUTHENTICATION_SERVICE,

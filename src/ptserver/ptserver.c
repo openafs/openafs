@@ -506,6 +506,16 @@ main(int argc, char **argv)
 	}
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
+    if (rxMaxMTU != -1) {
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    printf("rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    PT_EXIT(1);
+	}
+    }
+
     code =
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, clones,
 			      pr_dbaseName, &dbase);
@@ -519,16 +529,6 @@ main(int argc, char **argv)
 #endif
 
     afsconf_BuildServerSecurityObjects(prdir, &securityClasses, &numClasses);
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
-
-    if (rxMaxMTU != -1) {
-	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
-	    printf("rxMaxMTU %d is invalid\n", rxMaxMTU);
-	    PT_EXIT(1);
-	}
-    }
 
     tservice =
 	rx_NewServiceHost(host, 0, PRSRV, "Protection Server", securityClasses,

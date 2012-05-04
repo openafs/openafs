@@ -404,6 +404,16 @@ main(int argc, char **argv)
 	}
     }
 
+    if (!rxJumbograms) {
+	rx_SetNoJumbo();
+    }
+    if (rxMaxMTU != -1) {
+	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
+	    printf("rxMaxMTU %d invalid\n", rxMaxMTU);
+	    return -1;
+	}
+    }
+
     ubik_nBuffers = 512;
     ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, tdir);
     ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
@@ -416,15 +426,6 @@ main(int argc, char **argv)
     if (code) {
 	printf("vlserver: Ubik init failed: %s\n", afs_error_message(code));
 	exit(2);
-    }
-    if (!rxJumbograms) {
-	rx_SetNoJumbo();
-    }
-    if (rxMaxMTU != -1) {
-	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
-	    printf("rxMaxMTU %d invalid\n", rxMaxMTU);
-	    return -1;
-	}
     }
     rx_SetRxDeadTime(50);
 
