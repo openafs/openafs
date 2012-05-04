@@ -447,6 +447,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     if (code < 0)
 	return code;
 
+    ubik_callPortal = myPort;
+
     udisk_Init(ubik_nBuffers);
     ulock_Init();
 
@@ -463,7 +465,6 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     if (code)
 	return code;
 
-    ubik_callPortal = myPort;
     /* try to get an additional security object */
     if (buildSecClassesProc == NULL) {
 	numClasses = 3;
