@@ -552,6 +552,9 @@ main(int argc, char **argv)
 	}
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
 				  htons(AFSCONF_BUDBPORT),
 				  &cellinfo,
@@ -567,9 +570,6 @@ main(int argc, char **argv)
 
     afsconf_BuildServerSecurityObjects(BU_conf, 0,
 				       &securityClasses, &numClasses);
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
 
     tservice =
 	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase",

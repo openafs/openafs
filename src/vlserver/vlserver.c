@@ -342,6 +342,13 @@ main(int argc, char **argv)
 	}
     }
 
+    if (!rxJumbograms) {
+	rx_SetNoJumbo();
+    }
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
+    }
+
     ubik_nBuffers = 512;
     ubik_CRXSecurityProc = afsconf_ClientAuth;
     ubik_CRXSecurityRock = (char *)tdir;
@@ -355,12 +362,6 @@ main(int argc, char **argv)
     if (code) {
 	printf("vlserver: Ubik init failed: %s\n", afs_error_message(code));
 	exit(2);
-    }
-    if (!rxJumbograms) {
-	rx_SetNoJumbo();
-    }
-    if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
     }
     rx_SetRxDeadTime(50);
 

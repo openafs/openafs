@@ -1111,6 +1111,13 @@ main(int argc, char **argv, char **envp)
 	exit(code);
     }
 
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
+
+    if (rxMaxMTU != -1) {
+	rx_SetMaxMTU(rxMaxMTU);
+    }
+
     code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
 			     /* param */ NULL , "bozo-the-clown",
 			     &bozo_pid);
@@ -1171,13 +1178,6 @@ main(int argc, char **argv, char **envp)
 
     if (DoPidFiles) {
 	bozo_CreatePidFile("bosserver", NULL, getpid());
-    }
-
-    /* Disable jumbograms */
-    rx_SetNoJumbo();
-
-    if (rxMaxMTU != -1) {
-	rx_SetMaxMTU(rxMaxMTU);
     }
 
     tservice = rx_NewServiceHost(host, 0, /* service id */ 1,
