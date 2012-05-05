@@ -659,18 +659,6 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = pGatherIo->Status;
 
-#if 0
-        //
-        // Setup the MD5 for each extent
-        //
-
-        AFSSetupMD5Hash( pFcb,
-                         pStartExtent,
-                         extentsCount,
-                         pSystemBuffer,
-                         &StartingByte,
-                         ulReadByteCount);
-#endif
         AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNonCachedRead (%08lX) AFSStartIos wait completed Status %08lX\n",
@@ -801,8 +789,8 @@ AFSRead( IN PDEVICE_OBJECT LibDeviceObject,
 // Description:
 //
 //      This function is a slightly widened Dispatch handler for the
-//      AFS Read function.  The thrid parameter is FALSE if we were called
-//      at our dispatch point and TRUE if we have been posted.
+//      AFS Read function.  The third parameter is NULL if we were called
+//      at our dispatch point and a process handle if we have been posted.
 //
 //      After doing the obvious (completing MDL writes and so forth)
 //      we then post, or not.
@@ -833,7 +821,6 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
     LARGE_INTEGER       liStartingByte;
     ULONG               ulByteCount;
     VOID               *pSystemBuffer = NULL;
-    HANDLE              hCallingUser = NULL;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     pDeviceExt = (AFSDeviceExt *)DeviceObject->DeviceExtension;
@@ -998,21 +985,6 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // Setup the calling process
-        //
-
-        if( NULL == OnBehalfOf)
-        {
-
-            hCallingUser = PsGetCurrentProcessId();
-        }
-        else
-        {
-
-            hCallingUser = OnBehalfOf;
-        }
-
-        //
         // We acquire the main/paging resource first to synchronize
         // against size checks.
         //
@@ -1121,55 +1093,6 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
 
             try_return( ntStatus = STATUS_FILE_DELETED);
         }
-
-        //
-        // Save off the PID if this is not a paging IO
-        //
-#if 0
-        if( !bPagingIo &&
-            ( pFcb->Specific.File.ExtentProcessId == 0 ||
-              ( PsGetCurrentProcessId() != AFSSysProcess &&
-                pFcb->Specific.File.ExtentProcessId != (ULONGLONG)PsGetCurrentProcessId())))
-        {
-
-            pFcb->Specific.File.ExtentProcessId = (ULONGLONG)PsGetCurrentProcessId();
-
-            if( pFcb->Specific.File.ExtentProcessId == (ULONGLONG)AFSSysProcess)
-            {
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_WARNING,
-                              "%s Setting ExtentProcessId to system process for Fcb %p\n",
-                                            __FUNCTION__,
-                                            pFcb);
-            }
-
-            pFcb->Specific.File.ExtentThreadId = (ULONGLONG)PsGetCurrentThreadId();
-        }
-#endif
-
-        //
-        // If this is going to be posted OR this is a cached read,
-        // then ask for the extents before we post.
-        //
-        /*
-        if( !bPagingIo && !bNonCachedIo)
-        {
-
-            ntStatus = AFSRequestExtentsAsync( pFcb, pCcb, &liStartingByte, ulByteCount);
-
-            if (!NT_SUCCESS(ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonRead (%08lX) Failed to request extents Status %08lX\n",
-                              Irp,
-                              ntStatus);
-
-                try_return( ntStatus );
-            }
-        }
-        */
 
         //
         // If this is an cached IO
@@ -1310,23 +1233,6 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
 
             ntStatus = AFSNonCachedRead( DeviceObject, Irp,  liStartingByte);
         }
-
-        //
-        // We won't do this for now in read processing ...
-
-#if 0
-        //
-        // Queue up a flush
-        //
-
-        if( pFcb->Specific.File.ExtentsDirtyCount > 0 ||
-            pFcb->Specific.File.ExtentLength > 1500)
-        {
-
-            AFSQueueFlushExtents( pFcb,
-                                  &pCcb->AuthGroup);
-        }
-#endif
 
 try_exit:
 
