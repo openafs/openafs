@@ -317,22 +317,21 @@ cm_GetNewSCache(afs_uint32 locked)
                     if (!buf_dirty && !buf_rdr) {
                         cm_fid_t   fid;
                         afs_uint32 fileType;
+                        int        success;
 
-                        if (!lock_TryWrite(&scp->rw)) {
-                            lock_ObtainWrite(&cm_scacheLock);
-                            if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
-                                scp_next != (cm_scache_t *) osi_QNext(&scp->q))
-                                break;
-                            else
-                                continue;
-                        }
+                        success = lock_TryWrite(&scp->rw);
 
                         lock_ObtainWrite(&cm_scacheLock);
                         if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
                             scp_next != (cm_scache_t *) osi_QNext(&scp->q))
                         {
-                            lock_ReleaseWrite(&scp->rw);
+                            osi_Log1(afsd_logp, "GetNewSCache scp 0x%p; LRU order changed", scp);
+                            if (success)
+                                lock_ReleaseWrite(&scp->rw);
                             break;
+                        } else if (!success) {
+                                osi_Log1(afsd_logp, "GetNewSCache failed to obtain lock scp 0x%p", scp);
+                                continue;
                         }
 
                         /* Found a likely candidate.  Save type and fid in case we succeed */
@@ -351,23 +350,34 @@ cm_GetNewSCache(afs_uint32 locked)
                             goto done;
                         }
                         lock_ReleaseWrite(&scp->rw);
-                    } else if (!buf_rdr) {
-                        osi_Log1(afsd_logp, "GetNewSCache dirty buffers scp 0x%p", scp);
-                        lock_ObtainWrite(&cm_scacheLock);
-                        if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
-                            scp_next != (cm_scache_t *) osi_QNext(&scp->q))
-                            break;
                     } else {
-                        osi_Log1(afsd_logp,"GetNewSCache redirector is holding extents scp 0x%p", scp);
+                        if (buf_rdr)
+                            osi_Log1(afsd_logp,"GetNewSCache redirector is holding extents scp 0x%p", scp);
+                        else
+                            osi_Log1(afsd_logp, "GetNewSCache dirty buffers scp 0x%p", scp);
+
                         lock_ObtainWrite(&cm_scacheLock);
                         if (scp_prev != (cm_scache_t *) osi_QPrev(&scp->q) &&
                             scp_next != (cm_scache_t *) osi_QNext(&scp->q))
+                        {
+                            osi_Log1(afsd_logp, "GetNewSCache scp 0x%p; LRU order changed", scp);
                             break;
+                        }
                     }
                 }
             } /* for */
 
             osi_Log2(afsd_logp, "GetNewSCache all scache entries in use (attempt = %d, count = %u)", attempt, count);
+            if (scp == NULL) {
+                /*
+                * The entire LRU queue was walked and no available cm_scache_t was
+                * found.  Drop the cm_scacheLock and sleep for a moment to give a
+                * chance for cm_scache_t objects to be released.
+                */
+                lock_ReleaseWrite(&cm_scacheLock);
+                Sleep(50);
+                lock_ObtainWrite(&cm_scacheLock);
+            }
         }
         /* FAILURE */
         scp = NULL;
