@@ -1945,3 +1945,19 @@ cm_VolumeType(cm_volume_t *volp, afs_uint32 id)
 
     return -1;
 }
+
+LONG_PTR
+cm_ChecksumVolumeServerList(struct cm_fid *fidp, cm_user_t *userp, cm_req_t *reqp)
+{
+    LONG_PTR cksum = 0;
+    long code;
+    afs_uint32 replicated;
+    cm_serverRef_t **serverspp;
+
+    code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
+    if (code == 0) {
+        cksum = cm_ChecksumServerList(*serverspp);
+        cm_FreeServerList(serverspp, 0);
+    }
+    return cksum;
+}

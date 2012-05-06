@@ -210,7 +210,7 @@ void cm_InitReq(cm_req_t *reqp)
 	reqp->startTime = GetTickCount();
 }
 
-static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
+long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 	struct cm_req *reqp, afs_uint32 *replicated, cm_serverRef_t ***serversppp)
 {
     long code;
@@ -638,15 +638,26 @@ cm_Analyze(cm_conn_t *connp,
             if ((errorCode == VMOVED || errorCode == VNOVOL || errorCode == VOFFLINE) &&
                 !(reqp->flags & CM_REQ_VOLUME_UPDATED))
             {
+                LONG_PTR oldSum, newSum;
+
+                oldSum = cm_ChecksumVolumeServerList(fidp, userp, reqp);
+
                 code = cm_ForceUpdateVolume(fidp, userp, reqp);
-                if (code == 0)
+                if (code == 0) {
                     location_updated = 1;
+                    newSum = cm_ChecksumVolumeServerList(fidp, userp, reqp);
+                }
 
-                /* Even if the update fails, there might still be another replica */
+                /*
+                 * Even if the update fails, there might still be another replica.
+                 * If the volume location list changed, permit another update on
+                 * a subsequent error.
+                 */
+                if (code || oldSum == newSum)
+                    reqp->flags |= CM_REQ_VOLUME_UPDATED;
 
-                reqp->flags |= CM_REQ_VOLUME_UPDATED;
                 osi_Log3(afsd_logp, "cm_Analyze called cm_ForceUpdateVolume cell %u vol %u code 0x%x",
-                        fidp->cell, fidp->volume, code);
+                         fidp->cell, fidp->volume, code);
             }
 
             if (statep) {

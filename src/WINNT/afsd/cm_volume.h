@@ -104,6 +104,9 @@ extern void cm_PutVolume(cm_volume_t *volp);
 
 extern long cm_GetROVolumeID(cm_volume_t *volp);
 
+extern LONG_PTR cm_ChecksumVolumeServerList(struct cm_fid *fidp,
+                                            cm_user_t *userp, cm_req_t *reqp);
+
 extern long cm_ForceUpdateVolume(struct cm_fid *fidp, cm_user_t *userp,
 	cm_req_t *reqp);
 
