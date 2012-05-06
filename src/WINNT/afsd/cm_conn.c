@@ -225,7 +225,7 @@ cm_SetServerBusyStatus(cm_serverRef_t *serversp, cm_server_t *serverp)
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         if (tsrp->status == srv_deleted)
             continue;
-        if (tsrp->server == serverp && tsrp->status == srv_not_busy) {
+        if (cm_ServerEqual(tsrp->server, serverp) && tsrp->status == srv_not_busy) {
             tsrp->status = srv_busy;
             break;
         }
