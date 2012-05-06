@@ -662,24 +662,52 @@ cm_Analyze(cm_conn_t *connp,
 
             if (cm_ServerEqual(tsrp->server, serverp)) {
                 /* REDIRECT */
-                if (errorCode == VMOVED || errorCode == VNOVOL) {
-                    osi_Log2(afsd_logp, "volume %d not present on server %s",
+                switch (errorCode) {
+                case VMOVED:
+                    osi_Log2(afsd_logp, "volume %u moved from server %s",
                              fidp->volume, osi_LogSaveString(afsd_logp,addr));
                     tsrp->status = srv_deleted;
                     if (fidp)
                         cm_RemoveVolumeFromServer(serverp, fidp->volume);
-                } else {
-                    osi_Log2(afsd_logp, "volume %d instance on server %s marked offline",
-                             fidp->volume, osi_LogSaveString(afsd_logp,addr));
-                    tsrp->status = srv_offline;
+                    break;
+                case VNOVOL:
+                    /*
+                     * The 1.6.0 and 1.6.1 file servers send transient VNOVOL errors which
+                     * are no indicative of the volume not being present.  For example,
+                     * VNOVOL can be sent during a transition to a VBUSY state prior to
+                     * salvaging or when cloning a .backup volume instance.  As a result
+                     * the cache manager must attempt at least one retry when a VNOVOL is
+                     * receive but there are no changes to the volume location information.
+                     */
+                    if (reqp->vnovolError > 0 && cm_ServerEqual(reqp->errorServp, serverp)) {
+                        osi_Log2(afsd_logp, "volume %u not present on server %s",
+                                  fidp->volume, osi_LogSaveString(afsd_logp,addr));
+                        tsrp->status = srv_deleted;
+                        if (fidp)
+                            cm_RemoveVolumeFromServer(serverp, fidp->volume);
+                    } else {
+                        osi_Log2(afsd_logp, "VNOVOL received for volume %u from server %s",
+                                 fidp->volume, osi_LogSaveString(afsd_logp,addr));
+                        if (replicated) {
+                            cm_SetServerBusyStatus(serversp, serverp);
+                        } else {
+                            Sleep(2000);
+                        }
+                    }
+                    break;
+                default:
+                    osi_Log3(afsd_logp, "volume %u exists on server %s with status %u",
+                             fidp->volume, osi_LogSaveString(afsd_logp,addr), tsrp->status);
                 }
-                /* break; */
-            } else {
-                osi_Log3(afsd_logp, "volume %d exists on server %s with status %u",
-                         fidp->volume, osi_LogSaveString(afsd_logp,addr), tsrp->status);
             }
         }
         lock_ReleaseWrite(&cm_serverLock);
+
+        /* Remember that the VNOVOL error occurred */
+        if (errorCode == VNOVOL) {
+            reqp->errorServp = serverp;
+            reqp->vnovolError++;
+        }
 
         /* Free the server list before cm_ForceUpdateVolume is called */
         if (free_svr_list) {
@@ -745,7 +773,7 @@ cm_Analyze(cm_conn_t *connp,
             LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
             osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime or idleDeadtime exceeded addr[%s]",
                      osi_LogSaveString(afsd_logp,addr));
-            reqp->tokenIdleErrorServp = serverp;
+            reqp->errorServp = serverp;
             reqp->idleError++;
         }
 
@@ -913,7 +941,7 @@ cm_Analyze(cm_conn_t *connp,
         }
 
         if (replicated && serverp) {
-            reqp->tokenIdleErrorServp = serverp;
+            reqp->errorServp = serverp;
             reqp->tokenError = errorCode;
 
             if (timeLeft > 2)
@@ -989,7 +1017,7 @@ cm_Analyze(cm_conn_t *connp,
 
         if (serverp) {
             if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
-                reqp->tokenIdleErrorServp = serverp;
+                reqp->errorServp = serverp;
                 reqp->tokenError = errorCode;
             } else {
                 reqp->flags |= CM_REQ_NEW_CONN_FORCED;
@@ -1037,7 +1065,7 @@ cm_Analyze(cm_conn_t *connp,
                   errorCode, s);
 
         if (serverp) {
-            reqp->tokenIdleErrorServp = serverp;
+            reqp->errorServp = serverp;
             reqp->tokenError = errorCode;
             retry = 1;
         }
@@ -1050,7 +1078,7 @@ cm_Analyze(cm_conn_t *connp,
          * and force the use of another server.
          */
         if (serverp) {
-            reqp->tokenIdleErrorServp = serverp;
+            reqp->errorServp = serverp;
             reqp->tokenError = errorCode;
             retry = 1;
         }
@@ -1246,15 +1274,15 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, afs_uint32 replicated, cm_user_
             continue;
 
         tsp = tsrp->server;
-        if (reqp->tokenIdleErrorServp) {
+        if (reqp->errorServp) {
             /*
              * search the list until we find the server
              * that failed last time.  When we find it
              * clear the error, skip it and try the one
              * in the list.
              */
-            if (tsp == reqp->tokenIdleErrorServp)
-                reqp->tokenIdleErrorServp = NULL;
+            if (tsp == reqp->errorServp)
+                reqp->errorServp = NULL;
             continue;
         }
         if (tsp) {

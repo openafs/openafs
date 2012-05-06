@@ -57,9 +57,10 @@ typedef struct cm_req {
     int rpcError;			/* RPC error code */
     int volumeError;		/* volume error code */
     int accessError;		/* access error code */
-    struct cm_server * tokenIdleErrorServp;  /* server that reported a token/idle error other than expired */
+    struct cm_server * errorServp;  /* server that reported a token/idle error other than expired */
     int tokenError;
     int idleError;
+    int vnovolError;
     afs_uint32 flags;
     clientchar_t * tidPathp;
     clientchar_t * relPathp;
