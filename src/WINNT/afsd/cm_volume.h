@@ -56,6 +56,7 @@ typedef struct cm_volume {
 } cm_volume_t;
 
 #define CM_VOLUMEFLAG_RESET	   1	/* reload this info on next use */
+#define CM_VOLUMEFLAG_RO_MIXED     2
 #define CM_VOLUMEFLAG_UPDATING_VL  8
 #define CM_VOLUMEFLAG_DFS_VOLUME  16
 #define CM_VOLUMEFLAG_NOEXIST     32
