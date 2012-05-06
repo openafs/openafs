@@ -1,3 +1,77 @@
+Since 1.7.1100 (1.7.11)
+
+ * Prevent race between directory enumeration and object purging.
+
+ * If CcPurgeCacheSection fails, flag the FCB that the purge needs
+   to be performed upon handle Close.
+
+ * AFSVerifyEntry failed to set bPurgeExtents variable when a data
+   version change in a file object was detected.
+
+ * "fs cacheparms" no longer reports cache buffers filled with
+    data; only the size of the cache file.
+
+ * The so called "high security mode" that was deprecated in 1.5
+   has been removed.
+
+ * CcSetReadAheadGranularity set to the AFS chunk size; was 64K.
+
+ * CcSetDirtyPageThreshold set to twice the AFS chunk size.
+
+ * Prevent a potential AFS FileLock leak during file cleanup.
+
+ * Modify VNOSERVICE message text to indicate that an RPC has not
+   been serviced as opposed to the volume being out of service.
+
+ * VNOSERVICE is translated to CM_ERROR_RETRY instead of
+   CM_ERROR_OFFLINE.
+
+ * Prevent stack exhaustion if AuthGroup Process allocation
+   fails due to an out of memory condition.
+
+ * No longer permit duplicate background service requests to be
+   added to the request queues.
+
+ * Use separate queues for Fetch and Store operations.  Store
+   operations might be blocked on the file server while a Fetch can
+   be satisfied from the AFSCache.
+
+ * Avoid a significant number of BIOD constructions in cm_GetBuffer
+   operations.
+
+ * Treat all cached writes as write-through.
+
+ * Do not arbitrarily time out background fetch requests after five
+   times the hard dead timeout period.
+
+ * If a race occurs between two threads that each construct a File
+   Control Block for the same file system object, properly tear down
+   the extra FCB prior to deallocating its memory.
+
+ * During directory entry tear down, the ObjectInfoCB must be
+   destroyed after the File Control Block.
+
+ * Drop cm_scacheLock between cm_scache_t recycle attempts if all
+   objects are in use.
+
+ * Require at least one retry if VNOVOL is received due to transient
+   VNOVOL errors in 1.6.0 and 1.6.1.
+
+ * If a vos release was incomplete the replica sites will be a mix
+   of new and old content. In such a mixed configuration, ignore the
+   old replicas.
+
+ * Apply VBUSY state to all cm_server_t objects belonging to the
+   same multi-homed host.
+
+ * Checksum volume server lists prior to and after volume location
+   updates to determine if a change in the list has taken place.
+   If a change has occurred, permit additional volume location update
+   RPCs to issued on subsequent errors for the same cache manager
+   request.
+
+ * Fix cm_scache_t reference count leaks.
+
 Since 1.7.1000 (1.7.10)
 
  * Fix an error that resulted in the afsd_service.exe terminating
