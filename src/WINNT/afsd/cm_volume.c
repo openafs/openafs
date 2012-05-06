@@ -250,6 +250,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     struct uvldbentry uvldbEntry;
     int method = -1;
     int ROcount = 0;
+    int isMixed = 0;
     long code;
     enum volstatus rwNewstate = vl_online;
     enum volstatus roNewstate = vl_online;
@@ -548,6 +549,15 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             volp->vol[BACKVOL].ID = 0;
         }
         lock_ReleaseWrite(&cm_volumeLock);
+
+        /* See if the replica sites are mixed versions */
+        for (i=0; i<nServers; i++) {
+            if (serverFlags[i] & VLSF_NEWREPSITE) {
+                isMixed = 1;
+                break;
+            }
+        }
+
         for (i=0; i<nServers; i++) {
             /* create a server entry */
             tflags = serverFlags[i];
@@ -617,7 +627,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 if (!(tsp->flags & CM_SERVERFLAG_DOWN))
                     rwServers_alldown = 0;
             }
-            if ((tflags & VLSF_ROVOL) && (flags & VLF_ROEXISTS)) {
+            /*
+             * If there are mixed versions of RO releases on the replica
+             * sites, skip the servers with the out of date versions.
+             */
+            if ((tflags & VLSF_ROVOL) && (flags & VLF_ROEXISTS) &&
+                (!isMixed || (tflags & VLSF_NEWREPSITE))) {
                 tsrp = cm_NewServerRef(tsp, roID);
                 cm_InsertServerList(&volp->vol[ROVOL].serversp, tsrp);
                 ROcount++;
@@ -683,6 +698,10 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     }
 
     volp->lastUpdateTime = time(NULL);
+    if (isMixed)
+        _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RO_MIXED);
+    else
+        _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_RO_MIXED);
 
     if (code == 0)
         _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_RESET);
@@ -1211,9 +1230,16 @@ void cm_RefreshVolumes(int lifetime)
 
         if (!(volp->flags & CM_VOLUMEFLAG_RESET)) {
             lock_ObtainWrite(&volp->rw);
-            if (volp->lastUpdateTime + lifetime <= now) {
-                _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
-                volp->lastUpdateTime = 0;
+            if (volp->flags & CM_VOLUMEFLAG_RO_MIXED) {
+                if (volp->lastUpdateTime + 300 <= now) {
+                    _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
+                    volp->lastUpdateTime = 0;
+                }
+            } else {
+                if (volp->lastUpdateTime + lifetime <= now) {
+                    _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
+                    volp->lastUpdateTime = 0;
+                }
             }
             lock_ReleaseWrite(&volp->rw);
         }
