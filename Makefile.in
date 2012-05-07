@@ -567,7 +567,7 @@ afsmonitor: cmd comerr gtx xstat
 		echo Not building afsmonitor, because no curses-headers found. ; \
 	fi
 
-tests: rxtests ubiktests rpctestlib
+tests: rxtests ubiktests rpctestlib viced
 
 # pthread based user space RX library
 libafsrpc: rx rxkad rxstat fsint hcrypto
