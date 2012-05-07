@@ -289,6 +289,12 @@ RDR_ReleaseFid( IN cm_user_t     *userp,
                 IN OUT AFSCommResult **ResultCB);
 
 void
+RDR_InitPipe(void);
+
+void
+RDR_ShutdownPipe(void);
+
+void
 RDR_PipeOpen( IN cm_user_t *userp,
               IN AFSFileID  ParentId,
               IN WCHAR     *Name,
@@ -368,6 +374,9 @@ RDR_FID2fid( IN AFSFileID *FileId,
 
 void
 RDR_InitIoctl(void);
+
+void
+RDR_ShutdownIoctl(void);
 
 #ifdef __cplusplus
 }

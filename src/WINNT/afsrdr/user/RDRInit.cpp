@@ -168,6 +168,7 @@ RDR_Initialize(void)
     if (dwRet == ERROR_SUCCESS) {
 
         RDR_InitIoctl();
+        RDR_InitPipe();
     }
 
     return dwRet;
@@ -278,6 +279,10 @@ RDR_ShutdownNotify(void)
     {
         // log the error, nothing to do
     }
+
+
+    RDR_ShutdownIoctl();
+    RDR_ShutdownPipe();
 
     return 0;
 }

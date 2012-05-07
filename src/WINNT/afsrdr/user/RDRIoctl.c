@@ -143,6 +143,12 @@ RDR_InitIoctl(void)
     RDR_ioctlProcsp[VIOC_SETVERIFYDATA] = RDR_IoctlSetVerifyData;
 }
 
+void
+RDR_ShutdownIoctl(void)
+{
+    lock_FinalizeRWLock(&RDR_globalIoctlLock);
+}
+
 /* called to make a fid structure into an IOCTL fid structure */
 void
 RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *userp)
