@@ -375,7 +375,7 @@ extern void cm_InitSCache(int, long);
 extern long cm_GetSCacheDbg(cm_fid_t *, cm_fid_t *, cm_scache_t **, struct cm_user *,
 	struct cm_req *, char *, long);
 
-#define cm_GetSCache(a,b,c,d)  cm_GetSCacheDbg(a,b,c,d,__FILE__,__LINE__)
+#define cm_GetSCache(a,b,c,d,e)  cm_GetSCacheDbg(a,b,c,d,e,__FILE__,__LINE__)
 #else
 extern long cm_GetSCache(cm_fid_t *, cm_fid_t *, cm_scache_t **, struct cm_user *,
 	struct cm_req *);
