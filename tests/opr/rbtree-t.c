@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 #include <afs/opr.h>
 #include <opr/rbtree.h>

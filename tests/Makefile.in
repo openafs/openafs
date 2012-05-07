@@ -1,6 +1,6 @@
 # Build rules for the OpenAFS test suite.
 
-srcdir=@srcdir@
+srcdir=@srcdir@/../src/external/c-tap-harness/tests
 abs_top_srcdir=@abs_top_srcdir@
 abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
@@ -16,6 +16,9 @@ all: runtests
 
 runtests: runtests.o
 	$(AFS_LDRULE) runtests.o
+
+runtests.o: $(srcdir)/runtests.c
+	$(AFS_CCRULE) $(srcdir)/runtests.c
 
 check test tests: runtests
 	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done

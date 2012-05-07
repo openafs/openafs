@@ -6,7 +6,7 @@
 #include <roken.h>
 #include <pthread.h>
 
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 #include "rx/rx_event.h"
 #include "rx/rx_clock.h"

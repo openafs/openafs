@@ -19,7 +19,7 @@
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
 #include <afs/afsutil_prototypes.h>
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 static struct testTime {
     char *time;

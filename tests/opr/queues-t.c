@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 #include <opr/queue.h>
 

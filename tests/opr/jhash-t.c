@@ -26,7 +26,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 #include <opr/jhash.h>
 

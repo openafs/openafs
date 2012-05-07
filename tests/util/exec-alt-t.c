@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 #include <afs/afsutil.h>
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 #include <unistd.h>
 #include <sys/types.h>

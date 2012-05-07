@@ -12,7 +12,7 @@
 #include <afs/vldbint.h>
 #include <afs/cellconfig.h>
 
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 #include "common.h"
 

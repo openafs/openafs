@@ -36,7 +36,7 @@
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
 
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 #include "test.h"
 #include "common.h"

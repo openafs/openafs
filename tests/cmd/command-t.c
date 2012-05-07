@@ -33,7 +33,7 @@
 
 #include <afs/cmd.h>
 
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 
 enum cmdOptions {
    copt_flag = 0,

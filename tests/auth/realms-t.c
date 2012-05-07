@@ -16,7 +16,7 @@
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 
-#include <tap/basic.h>
+#include <tests/tap/basic.h>
 #include "common.h"
 
 extern int _afsconf_Touch(struct afsconf_dir *adir);
