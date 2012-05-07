@@ -69,6 +69,15 @@ RDR_InitPipe(void)
     lock_InitializeRWLock(&RDR_globalPipeLock, "RDR global pipe lock", LOCK_HIERARCHY_RDR_GLOBAL);
 }
 
+void
+RDR_ShutdownPipe(void)
+{
+    while (RDR_allPipes) {
+        RDR_CleanupPipe(RDR_allPipes->index);
+    }
+    lock_FinalizeRWLock(&RDR_globalPipeLock);
+}
+
 RDR_pipe_t *
 RDR_FindPipe(ULONG index, int locked)
 {
@@ -95,6 +104,7 @@ RDR_SetupPipe( ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid,
     cm_req_t req;
     DWORD status;
     char name[MAX_PATH];
+    int newpipe = 0;
 
     cm_InitReq(&req);
 
@@ -114,19 +124,13 @@ RDR_SetupPipe( ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid,
         }
     } else {
         /* need to allocate a new one */
+        newpipe = 1;
         pipep = malloc(sizeof(*pipep));
         if (pipep == NULL) {
             status = STATUS_NO_MEMORY;
             goto done;
         }
         memset(pipep, 0, sizeof(*pipep));
-        if (RDR_allPipes == NULL)
-            RDR_allPipes = RDR_allPipesLast = pipep;
-        else {
-            pipep->prev = RDR_allPipesLast;
-            RDR_allPipesLast->next = pipep;
-            RDR_allPipesLast = pipep;
-        }
         pipep->index = index;
         if (parentFid->cell == 0) {
             pipep->parentFid = cm_data.rootFid;
@@ -152,6 +156,43 @@ RDR_SetupPipe( ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid,
         pipep->devstate = RDR_DEVICESTATE_READMSGFROMPIPE |
                           RDR_DEVICESTATE_MESSAGEMODEPIPE |
                           RDR_DEVICESTATE_PIPECLIENTEND;
+
+        if (newpipe) {
+            if (RDR_allPipes == NULL)
+                RDR_allPipes = RDR_allPipesLast = pipep;
+            else {
+                pipep->prev = RDR_allPipesLast;
+                RDR_allPipesLast->next = pipep;
+                RDR_allPipesLast = pipep;
+            }
+        }
+    }
+    else
+    {
+        if (pipep->parentScp)
+            cm_ReleaseSCache(pipep->parentScp);
+
+        if (pipep->inAllocp)
+            free(pipep->inAllocp);
+        if (pipep->outAllocp)
+            free(pipep->outAllocp);
+
+        if (!newpipe) {
+            if (RDR_allPipes == RDR_allPipesLast)
+                RDR_allPipes = RDR_allPipesLast = NULL;
+            else {
+                if (pipep->prev == NULL)
+                    RDR_allPipes = pipep->next;
+                else
+                    pipep->prev->next = pipep->next;
+                if (pipep->next == NULL) {
+                    RDR_allPipesLast = pipep->prev;
+                    pipep->prev->next = NULL;
+                } else
+                    pipep->next->prev = pipep->prev;
+            }
+        }
+        free(pipep);
     }
 
   done:

@@ -31,6 +31,8 @@
 
 extern void RDR_InitIoctl(void);
 
+extern void RDR_ShutdownIoctl(void);
+
 extern void RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *userp);
 
 extern void RDR_CleanupIoctl(ULONG index);

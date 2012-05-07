@@ -31,6 +31,8 @@
 
 extern void RDR_InitPipe(void);
 
+extern void RDR_ShutdownPipe(void);
+
 extern DWORD RDR_SetupPipe( ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid,
                             WCHAR *Name, DWORD NameLength,
                             cm_user_t *userp);
