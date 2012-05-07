@@ -3305,6 +3305,7 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 allfiles;
     char *t;
     int error = 0;
+    int async_default = -1;
 
     tsb.sb_thisfile = -1;
     ti = as->parms[0].items;	/* -kbytes */
@@ -3365,14 +3366,18 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 	    continue;
 	}
 
-	if (verbose && (blob.out_size == sizeof(tsb2))) {
-	    if (tsb2.sb_thisfile == -1) {
-		fprintf(stdout, "Will store %s according to default.\n",
-			ti->data);
+	if (blob.out_size == sizeof(tsb2)) {
+	    async_default = tsb2.sb_default;
+
+	    if (verbose) {
+		if (tsb2.sb_thisfile == -1) {
+		    fprintf(stdout, "Will store %s according to default.\n",
+			    ti->data);
 	    } else {
-		fprintf(stdout,
-			"Will store up to %d kbytes of %s asynchronously.\n",
-			(tsb2.sb_thisfile / 1024), ti->data);
+		    fprintf(stdout,
+			    "Will store up to %d kbytes of %s asynchronously.\n",
+			    (tsb2.sb_thisfile / 1024), ti->data);
+		}
 	    }
 	}
     }
@@ -3380,7 +3385,7 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
     /* If no files - make at least one pioctl call, or
      * set the allfiles default if we need to.
      */
-    if (!as->parms[1].items || (allfiles != -1)) {
+    if (async_default < 0 || (allfiles != -1)) {
 	tsb.sb_default = allfiles;
         memset(&tsb2, 0, sizeof(tsb2));
 	blob.out = (char *)&tsb2;
@@ -3389,13 +3394,16 @@ StoreBehindCmd(struct cmd_syndesc *as, void *arock)
 	if (code) {
 	    Die(errno, ((allfiles == -1) ? 0 : "-allfiles"));
 	    error = 1;
+
+	} else if (blob.out_size == sizeof(tsb2)) {
+	    async_default = tsb2.sb_default;
 	}
     }
 
     /* Having no arguments also reports the default store asynchrony */
-    if (!error && verbose && (blob.out_size == sizeof(tsb2))) {
+    if (async_default >= 0 && verbose) {
 	fprintf(stdout, "Default store asynchrony is %d kbytes.\n",
-		(tsb2.sb_default / 1024));
+		(async_default / 1024));
     }
 
     return error;
