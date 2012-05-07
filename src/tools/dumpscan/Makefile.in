@@ -58,8 +58,8 @@ afsdump_extract: libxfiles.a libdumpscan.a afsdump_extract.o
 null-search: libxfiles.a libdumpscan.a null-search.c
 	$(AFS_LDRULE) null-search.c $(LIBS)
 
-dumptool: dumptool.c
-	$(AFS_LDRULE) dumptool.c
+dumptool: ${srcdir}/dumptool.c
+	$(AFS_LDRULE) ${srcdir}/dumptool.c
 
 libxfiles.a: $(OBJS_libxfiles.a)
 	-rm -f libxfiles.a
@@ -71,11 +71,11 @@ libdumpscan.a: $(OBJS_libdumpscan.a)
 	$(AR) r libdumpscan.a $(OBJS_libdumpscan.a)
 	$(RANLIB) libdumpscan.a
 
-xf_errs.c xf_errs.h: xf_errs.et
-	$(COMPILE_ET) xf_errs.et
+xf_errs.c xf_errs.h: ${srcdir}/xf_errs.et
+	$(COMPILE_ET) ${srcdir}/xf_errs.et
 
-dumpscan_errs.c dumpscan_errs.h: dumpscan_errs.et
-	$(COMPILE_ET) dumpscan_errs.et
+dumpscan_errs.c dumpscan_errs.h: ${srcdir}/dumpscan_errs.et
+	$(COMPILE_ET) ${srcdir}/dumpscan_errs.et
 
 util.o xfiles.o xf_files.o: xf_errs.h
 backuphdr.o directory.o parsedump.o parsetag.o: dumpscan_errs.h

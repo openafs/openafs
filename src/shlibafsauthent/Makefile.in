@@ -358,8 +358,8 @@ vldbint.cs.o: ../vlserver/vldbint.cs.c
 vl_errors.o: ../vlserver/vl_errors.c
 	$(AFS_CCRULE) ../vlserver/vl_errors.c
 
-et_name.o: ../comerr/et_name.c
-	${AFS_CCRULE} ../comerr/et_name.c
+et_name.o: ${srcdir}/../comerr/et_name.c
+	${AFS_CCRULE} ${srcdir}/../comerr/et_name.c
 
 bosint.xdr.o: ../bozo/bosint.xdr.c
 	$(AFS_CCRULE) ../bozo/bosint.xdr.c
@@ -370,8 +370,8 @@ bosint.cs.o: ../bozo/bosint.cs.c
 boserr.o: ../bozo/boserr.c
 	$(AFS_CCRULE) ../bozo/boserr.c
 
-usd_file.o: ../usd/usd_file.c
-	$(AFS_CCRULE) ../usd/usd_file.c
+usd_file.o: ${srcdir}/../usd/usd_file.c
+	$(AFS_CCRULE) ${srcdir}/../usd/usd_file.c
 clean:
 	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so* \
 		libafsauthent_pic.a libafsauthent.dylib.* \
