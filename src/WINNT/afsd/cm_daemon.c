@@ -313,6 +313,8 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, afs_uint32 p1, af
     lock_ReleaseWrite(&cm_daemonLockp[daemonID]);
 
     if (duplicate) {
+        cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
         free(rp);
     } else {
         osi_Wakeup((LONG_PTR) &cm_bkgListpp[daemonID]);
