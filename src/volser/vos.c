@@ -5549,7 +5549,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	    PrintError("", code);
 	else
 	    fprintf(STDERR, "Unknown volume ID or name '%s'\n",
-		    as->parms[0].items->data);
+		    as->parms[2].items->data);
 	return -1;
     }
     if (as->parms[3].items)
@@ -5560,7 +5560,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	fprintf(STDERR,
 		"Could not fetch the entry for volume %lu from VLDB\n",
 		(unsigned long)volid);
-	PrintError("convertROtoRW", code);
+	PrintError("convertROtoRW ", vcode);
 	return vcode;
     }
 
