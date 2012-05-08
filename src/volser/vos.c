@@ -5575,8 +5575,9 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	    rwindex = i;
 	    rwserver = entry.serverNumber[i];
 	    rwpartition = entry.serverPartition[i];
-	}
-	if (entry.serverFlags[i] & ITSROVOL) {
+	    if (roserver)
+		break;
+	} else if ((entry.serverFlags[i] & ITSROVOL) && !roserver) {
 	    same = VLDB_IsSameAddrs(server, entry.serverNumber[i], &code);
 	    if (code) {
 		fprintf(STDERR,
@@ -5588,7 +5589,8 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 		roindex = i;
 		roserver = entry.serverNumber[i];
 		ropartition = entry.serverPartition[i];
-		break;
+		if (rwserver)
+		     break;
 	    }
 	}
     }
