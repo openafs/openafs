@@ -5626,7 +5626,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 		"Converting RO volume %lu to RW volume failed with code %d\n",
 		(unsigned long)volid, code);
 	PrintError("convertROtoRW ", code);
-	return -1;
+	goto error_exit;
     }
     entry.serverFlags[roindex] = ITSRWVOL;
     entry.flags |= RW_EXISTS;
@@ -5661,6 +5661,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 		code);
     }
 
+  error_exit:
     vcode = UV_LockRelease(entry.volumeId[RWVOL]);
     if (vcode) {
 	fprintf(STDERR,
