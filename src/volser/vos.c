@@ -5623,6 +5623,13 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     vcode =
 	ubik_VL_SetLock(cstruct, 0, entry.volumeId[RWVOL], RWVOL,
 		  VLOP_MOVE);
+    if (vcode) {
+	fprintf(STDERR,
+		"Unable to lock volume %lu, code %d\n",
+		(unsigned long)entry.volumeId[RWVOL],vcode);
+	PrintError("", vcode);
+	return -1;
+    }
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
     if (code) {
@@ -5664,9 +5671,13 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 		"Warning: volume converted, but vldb update failed with code %d!\n",
 		code);
     }
+
     vcode = UV_LockRelease(entry.volumeId[RWVOL]);
     if (vcode) {
-	PrintDiagnostics("unlock", vcode);
+	fprintf(STDERR,
+		"Unable to unlock volume %lu, code %d\n",
+		(unsigned long)entry.volumeId[RWVOL],vcode);
+	PrintError("", vcode);
     }
     return code;
 }
