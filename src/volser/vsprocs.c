@@ -3307,7 +3307,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     manyDests tr;
     manyResults results;
     int rwindex, roindex, roclone, roexists;
-    afs_uint32 rwcrdate = 0;
+    afs_uint32 rwcrdate = 0, rwupdate = 0;
     afs_uint32 clcrdate;
     struct rtime {
 	int validtime;
@@ -3318,6 +3318,9 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     char hoststr[16];
     afs_int32 origflags[NMAXNSERVERS];
     struct volser_status orig_status;
+    int notreleased = 0;
+    int tried_justnewsites = 0;
+    int justnewsites = 0; /* are we just trying to release to new RO sites? */
 
     memset(remembertime, 0, sizeof(remembertime));
     memset(&results, 0, sizeof(results));
@@ -3379,11 +3382,20 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	if (entry.serverFlags[i] & ITSROVOL) {
 	    m++;
 	    if (entry.serverFlags[i] & NEW_REPSITE) s++;
+	    if (entry.serverFlags[i] & RO_DONTUSE) notreleased++;
 	}
 	origflags[i] = entry.serverFlags[i];
     }
     if ((forceflag && !fullrelease) || (s == m) || (s == 0))
 	fullrelease = 1;
+
+    if (!forceflag && (s == m || s == 0)) {
+	if (notreleased && notreleased != m) {
+	    /* we have some new unreleased sites. try to just release to those,
+	     * if the RW has not changed */
+	    justnewsites = 1;
+	}
+    }
 
     /* Determine which volume id to use and see if it exists */
     cloneVolId =
@@ -3467,6 +3479,11 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	}
     }
 
+    if (fullrelease != 1) {
+	/* in case the RW has changed, and just to be safe */
+	justnewsites = 0;
+    }
+
     if (verbose) {
 	switch (fullrelease) {
 	    case 2:
@@ -3476,6 +3493,11 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    case 1:
 		fprintf(STDOUT, "This is a complete release of volume %lu\n",
 			(unsigned long)afromvol);
+		if (justnewsites) {
+		    tried_justnewsites = 1;
+		    fprintf(STDOUT, "There are new RO sites; we will try to "
+		                    "only release to new sites\n");
+		}
 		break;
 	    case 0:
 		fprintf(STDOUT, "This is a completion of a previous release\n");
@@ -3484,6 +3506,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     }
 
     if (fullrelease) {
+	afs_int32 oldest = 0;
 	/* If the RO clone exists, then if the clone is a temporary
 	 * clone, delete it. Or if the RO clone is marked RO_DONTUSE
 	 * (it was recently added), then also delete it. We do not
@@ -3510,16 +3533,108 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    roexists = 0;
 	}
 
+	if (justnewsites) {
+	    VPRINT("Querying old RO sites for update times...");
+	    for (vldbindex = 0; vldbindex < entry.nServers; vldbindex++) {
+		volEntries volumeInfo;
+		struct rx_connection *conn;
+		afs_int32 crdate;
+
+		if (!(entry.serverFlags[vldbindex] & ITSROVOL)) {
+		    continue;
+		}
+		if ((entry.serverFlags[vldbindex] & RO_DONTUSE)) {
+		    continue;
+		}
+		conn = UV_Bind(entry.serverNumber[vldbindex], AFSCONF_VOLUMEPORT);
+		if (!conn) {
+		    fprintf(STDERR, "Cannot establish connection to server %s\n",
+		                    hostutil_GetNameByINet(entry.serverNumber[vldbindex]));
+		    justnewsites = 0;
+		    break;
+		}
+		volumeInfo.volEntries_val = NULL;
+		volumeInfo.volEntries_len = 0;
+		code = AFSVolListOneVolume(conn, entry.serverPartition[vldbindex],
+		                           entry.volumeId[ROVOL],
+		                           &volumeInfo);
+		if (code) {
+		    fprintf(STDERR, "Could not fetch information about RO vol %lu from server %s\n",
+		                    (unsigned long)entry.volumeId[ROVOL],
+		                    hostutil_GetNameByINet(entry.serverNumber[vldbindex]));
+		    PrintError("", code);
+		    justnewsites = 0;
+		    rx_DestroyConnection(conn);
+		    break;
+		}
+
+		crdate = CLOCKADJ(volumeInfo.volEntries_val[0].creationDate);
+
+		if (oldest == 0 || crdate < oldest) {
+		    oldest = crdate;
+		}
+
+		rx_DestroyConnection(conn);
+		free(volumeInfo.volEntries_val);
+		volumeInfo.volEntries_val = NULL;
+		volumeInfo.volEntries_len = 0;
+	    }
+	    VDONE;
+	}
+	if (justnewsites) {
+	    volEntries volumeInfo;
+	    volumeInfo.volEntries_val = NULL;
+	    volumeInfo.volEntries_len = 0;
+	    code = AFSVolListOneVolume(fromconn, afrompart, afromvol,
+	                               &volumeInfo);
+	    if (code) {
+		fprintf(STDERR, "Could not fetch information about RW vol %lu from server %s\n",
+		                (unsigned long)afromvol,
+		                hostutil_GetNameByINet(afromserver));
+		PrintError("", code);
+		justnewsites = 0;
+	    } else {
+		rwupdate = volumeInfo.volEntries_val[0].updateDate;
+
+		free(volumeInfo.volEntries_val);
+		volumeInfo.volEntries_val = NULL;
+		volumeInfo.volEntries_len = 0;
+	    }
+	}
+	if (justnewsites && oldest <= rwupdate) {
+	    /* RW has changed */
+	    justnewsites = 0;
+	}
+
 	/* Mark all the ROs in the VLDB entry as RO_DONTUSE. We don't
 	 * write this entry out to the vlserver until after the first
 	 * RO volume is released (temp RO clones don't count).
+	 *
+	 * If 'justnewsites' is set, we're only updating sites that have
+	 * RO_DONTUSE set, so set NEW_REPSITE for all of the others.
 	 */
 	for (i = 0; i < entry.nServers; i++) {
-	    entry.serverFlags[i] &= ~NEW_REPSITE;
-	    entry.serverFlags[i] |= RO_DONTUSE;
+	    if (justnewsites) {
+		if ((entry.serverFlags[i] & RO_DONTUSE)) {
+		    entry.serverFlags[i] &= ~NEW_REPSITE;
+		} else {
+		    entry.serverFlags[i] |= NEW_REPSITE;
+		}
+	    } else {
+		entry.serverFlags[i] &= ~NEW_REPSITE;
+		entry.serverFlags[i] |= RO_DONTUSE;
+	    }
 	}
 	entry.serverFlags[rwindex] |= NEW_REPSITE;
 	entry.serverFlags[rwindex] &= ~RO_DONTUSE;
+    }
+
+    if (justnewsites && roexists) {
+	/* if 'justnewsites' and 'roexists' are set, we don't need to do
+	 * anything with the RO clone, so skip the reclone */
+	/* noop */
+
+    } else if (fullrelease) {
 
 	if (roclone) {
 	    strcpy(vname, entry.name);
@@ -3537,6 +3652,17 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	if (code) {
 	    error = code;
 	    goto rfail;
+	}
+
+	if (justnewsites && rwupdate != volstatus.updateDate) {
+	    justnewsites = 0;
+	    /* reset the serverFlags as if 'justnewsites' had never been set */
+	    for (i = 0; i < entry.nServers; i++) {
+		entry.serverFlags[i] &= ~NEW_REPSITE;
+		entry.serverFlags[i] |= RO_DONTUSE;
+	    }
+	    entry.serverFlags[rwindex] |= NEW_REPSITE;
+	    entry.serverFlags[rwindex] &= ~RO_DONTUSE;
 	}
 
 	rwcrdate = volstatus.creationDate;
@@ -3573,7 +3699,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	     * There is a fix in the 3.4 client that does not need this sleep
 	     * anymore, but we don't know what clients we have.
 	     */
-	    if (entry.nServers > 2)
+	    if (entry.nServers > 2 && !justnewsites)
 		sleep(5);
 
 	    /* Mark the RO clone in the VLDB as a good site (already released) */
@@ -3597,6 +3723,14 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	}
     }
 
+    if (justnewsites) {
+	VPRINT("RW vol has not changed; only releasing to new RO sites\n");
+	/* act like this is a completion of a previous release */
+	fullrelease = 0;
+    } else if (tried_justnewsites) {
+	VPRINT("RW vol has changed; releasing to all sites\n");
+    }
+
     /* Now we will release from the clone to the remaining RO replicas.
      * The first 2 ROs (counting the non-temporary RO clone) are released
      * individually: releasecount. This is to reduce the race condition
@@ -3617,7 +3751,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     cookie.clone = 0;
 
     /* how many to do at once, excluding clone */
-    if (stayUp)
+    if (stayUp || justnewsites)
 	nservers = entry.nServers; /* can do all, none offline */
     else
 	nservers = entry.nServers / 2;
@@ -3658,7 +3792,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	for (volcount = 0;
 	     ((volcount < nservers) && (vldbindex < entry.nServers));
 	     vldbindex++) {
-	    if (!stayUp) {
+	    if (!stayUp && !justnewsites) {
 		/* The first two RO volumes will be released individually.
 		 * The rest are then released in parallel. This is a hack
 		 * for clients not recognizing right away when a RO volume
