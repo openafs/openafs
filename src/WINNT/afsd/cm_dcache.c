@@ -1721,7 +1721,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     if (biod.length == 0) {
         osi_Log2(afsd_logp, "cm_GetBuffer BIOD length 0 scp 0x%p bufp 0x%p",
                  scp, bufp);
-        code = CM_ERROR_RETRY;
         goto release_biod;
     }
 
