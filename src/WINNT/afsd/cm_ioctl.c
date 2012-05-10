@@ -3299,11 +3299,11 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     /* dump all interesting data */
     cm_MemDumpDirStats(hLogFile, cookie, 1);
     cm_MemDumpBPlusStats(hLogFile, cookie, 1);
-    cm_DumpCells(hLogFile, cookie, 1);
-    cm_DumpVolumes(hLogFile, cookie, 1);
-    cm_DumpSCache(hLogFile, cookie, 1);
-    cm_DumpBufHashTable(hLogFile, cookie, 1);
-    cm_DumpServers(hLogFile, cookie, 1);
+    cm_DumpCells(hLogFile, cookie, !RDR_Initialized);
+    cm_DumpVolumes(hLogFile, cookie, !RDR_Initialized);
+    cm_DumpSCache(hLogFile, cookie, !RDR_Initialized);
+    cm_DumpBufHashTable(hLogFile, cookie, !RDR_Initialized);
+    cm_DumpServers(hLogFile, cookie, !RDR_Initialized);
     smb_DumpVCP(hLogFile, cookie, 1);
     rx_DumpCalls(hLogFile, cookie);
     rx_DumpPackets(hLogFile, cookie);
