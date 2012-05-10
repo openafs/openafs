@@ -330,21 +330,34 @@ hpr_End(struct ubik_client *uclient)
     return code;
 }
 
+static_inline int
+getThreadClient(struct ubik_client **client)
+{
+    int code;
+
+    *client = pthread_getspecific(viced_uclient_key);
+    if (*client != NULL)
+	return 0;
+
+    code = hpr_Initialize(client);
+    if (code)
+	return code;
+
+    osi_Assert(pthread_setspecific(viced_uclient_key, *client) == 0);
+
+    return 0;
+}
+
 int
 hpr_GetHostCPS(afs_int32 host, prlist *CPS)
 {
     afs_int32 code;
     afs_int32 over;
-    struct ubik_client *uclient =
-	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+    struct ubik_client *uclient;
 
-    if (!uclient) {
-        code = hpr_Initialize(&uclient);
-	if (!code)
-	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
-	else
-	    return code;
-    }
+    code = getThreadClient(&uclient);
+    if (code)
+	return code;
 
     over = 0;
     code = ubik_PR_GetHostCPS(uclient, 0, host, CPS, &over);
@@ -365,16 +378,11 @@ hpr_NameToId(namelist *names, idlist *ids)
 {
     afs_int32 code;
     afs_int32 i;
-    struct ubik_client *uclient =
-	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+    struct ubik_client *uclient;
 
-    if (!uclient) {
-        code = hpr_Initialize(&uclient);
-	if (!code)
-	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
-	else
-	    return code;
-    }
+    code = getThreadClient(&uclient);
+    if (code)
+	return code;
 
     for (i = 0; i < names->namelist_len; i++)
         stolower(names->namelist_val[i]);
@@ -386,16 +394,11 @@ int
 hpr_IdToName(idlist *ids, namelist *names)
 {
     afs_int32 code;
-    struct ubik_client *uclient =
-	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+    struct ubik_client *uclient;
 
-    if (!uclient) {
-        code = hpr_Initialize(&uclient);
-	if (!code)
-	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
-	else
-	    return code;
-    }
+    code = getThreadClient(&uclient);
+    if (code)
+	return code;
 
     code = ubik_PR_IDToName(uclient, 0, ids, names);
     return code;
@@ -406,16 +409,11 @@ hpr_GetCPS(afs_int32 id, prlist *CPS)
 {
     afs_int32 code;
     afs_int32 over;
-    struct ubik_client *uclient =
-	(struct ubik_client *)pthread_getspecific(viced_uclient_key);
+    struct ubik_client *uclient;
 
-    if (!uclient) {
-        code = hpr_Initialize(&uclient);
-	if (!code)
-	    osi_Assert(pthread_setspecific(viced_uclient_key, (void *)uclient) == 0);
-	else
-	    return code;
-    }
+    code = getThreadClient(&uclient);
+    if (code)
+	return code;
 
     over = 0;
     code = ubik_PR_GetCPS(uclient, 0, id, CPS, &over);
