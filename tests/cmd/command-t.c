@@ -59,18 +59,42 @@ testproc(struct cmd_syndesc *as, void *rock)
     return 0;
 }
 
+static void
+checkList(struct cmd_item *list, ...)
+{
+    va_list ap;
+    char *el;
+
+    va_start(ap, list);
+    el = va_arg(ap, char *);
+    while (el != NULL && list != NULL) {
+       is_string(el, list->data, "list element matches");
+       list = list->next;
+       el = va_arg(ap, char *);
+    }
+
+    if (el == NULL && list == NULL) {
+	ok(1, "List has correct number of elements");
+    } else if (el == NULL) {
+	ok(0, "List has too many elements");
+    } else if (list == NULL) {
+	ok(0, "List has too few elements");
+    }
+}
+
 int
 main(int argc, char **argv)
 {
     char *tv[100];
     struct cmd_syndesc *opts;
     struct cmd_syndesc *retopts;
+    struct cmd_item *list;
     int code;
     int tc;
     int retval;
     char *retstring = NULL;
 
-    plan(85);
+    plan(96);
 
     initialize_CMD_error_table();
 
@@ -230,16 +254,25 @@ main(int argc, char **argv)
     code = cmd_OptionAsInt(retopts, copt_first, &retval);
     is_int(0, code, "cmd_OptionsAsInt succeeds");
     is_int(1, retval, " ... and returns correct value");
+    ok(cmd_OptionPresent(retopts, copt_first),
+       " ... and is marked as present");
 
     code = cmd_OptionAsString(retopts, copt_second, &retstring);
     is_int(0, code, "cmd_OptionsAsString succeeds");
     is_string("second", retstring, " ... and returns correct value");
     free(retstring);
     retstring = NULL;
+    ok(cmd_OptionPresent(retopts, copt_second),
+       " ... and is marked as present");
 
     code = cmd_OptionAsFlag(retopts, copt_flag, &retval);
     is_int(0, code, "cmd_OptionsAsFlag succeeds");
     ok(retval, " ... and flag is correct");
+    ok(cmd_OptionPresent(retopts, copt_flag),
+       " ... and is marked as present");
+
+    ok(!cmd_OptionPresent(retopts, copt_sugar),
+       "Missing option is marked as such");
 
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
@@ -310,6 +343,17 @@ main(int argc, char **argv)
     code = cmd_OptionAsInt(retopts, copt_sanity, &retval);
     is_int(0, code, "cmd_OptionAsInt succeeds");
     is_int(3, retval, " ... and we have the correct value twice");
+    cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
+
+    /* Check list behaviour */
+    code = cmd_ParseLine("-first 1 -second one two three", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "cmd_Parse succeeds for a list");
+    code = cmd_OptionAsList(retopts, copt_second, &list);
+    is_int(0, code, "cmd_OptionAsList succeeds");
+    checkList(list, "one", "two", "three", NULL);
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
 
