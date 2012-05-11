@@ -1,0 +1,285 @@
+                    User-Visible C TAP Harness Changes
+
+C TAP Harness 1.12 (2012-05-11)
+
+    Fix additional uses of local in the shell TAP library for portability
+    to Solaris /bin/sh and document a bad interaction between backquotes
+    and double quotes for the puts, test_file_path, and test_tmpdir
+    functions.
+
+    In the C TAP library, if bail is called after plan_lazy but before any
+    tests are run, don't output the plan or the summary of test results.
+
+    Add the UNUSED macro (to mark possibly-usused variables for gcc) to
+    tests/tap/macros.h for use in the C TAP library.
+
+    Make the __attribute__ handling in tests/tap/macros.h more aware of
+    different versions and compilers.  All attributes are now suppressed
+    for GCC older than 2.96 (instead of 2.7), since __malloc__ became
+    available then.  __alloc_size__ is suppressed for GCC older than 4.3.
+    Warnings about unknown diagnostics are suppressed for LLVM and Clang,
+    which pretend to be GCC but don't support all the same attributes.
+
+C TAP Harness 1.11 (2012-04-25)
+
+    Reorganize the source package so that runtests.c is in the tests
+    directory and the C and shell TAP libraries are in tests/tap.  Change
+    the include directives in the C TAP library source files accordingly.
+    This is somewhat confusing for the standalone package, but means that
+    the files are located in the same locations here as they would be in
+    packages into which they're copied, which simplifies instructions and
+    the build system.  This also removes the need to build the C TAP
+    library with -I flags at the cost of requiring that it be located in a
+    tests subdirectory, allowing easier use of additional supporting
+    headers without requiring that all tests be built with a -I directive.
+
+    Do not attempt to use feature-test macros unless compiled with gcc's
+    -ansi flag or PEDANTIC is defined.  Defining _XOPEN_SOURCE 600 on
+    Solaris 10, which is required for isinf() if feature-test macros are
+    in use, causes compilation to fail unless the compiler is run in C99
+    mode due to an ABI change.  The basic TAP library doesn't care about
+    this distinction and doesn't want to force specific compiler flags, so
+    avoiding feature-test macros is a better fix.  Thanks to Bob
+    Friesenhahn for the bug report.
+
+    Do not use local in the shell TAP library.  Solaris /bin/sh doesn't
+    support it, and the shell library is otherwise portable to that shell.
+    Instead, use a prefix of tap_ on all non-public variables.
+
+    Move the __attribute__ and BEGIN_DECLS/END_DECLS macros from
+    tests/tap/basic.h to a new tests/tap/macros.h header file so that they
+    can be more easily reused by any other TAP add-on.  Be sure to copy
+    tests/tap/macros.h into your source package and add it to the source
+    files for the libtap library when upgrading.
+
+    Move the is_double C TAP test function into a separate source file.
+    Including this function may require linking with libm on some
+    platforms, which is undesireable if the package otherwise doesn't use
+    math functions.  The new tests/tap/float.c and tests/tap/float.h files
+    need only be included in a package that wants to do floating point
+    tests.  Users of is_double will now need to include tests/tap/float.h
+    in addition to tests/tap/basic.h (and link all clients of the libtap
+    library with -lm).
+
+C TAP Harness 1.10 (2012-02-29)
+
+    Add bstrndup to the basic C TAP library.  This is akin to strndup
+    (copying at most n characters of the string), but calls sysbail if
+    memory allocation fails.
+
+C TAP Harness 1.9 (2011-12-24)
+
+    Add test_tmpdir and test_tmpdir_free functions to the basic C TAP
+    library and a test_tmpdir function to the shell TAP library.  These
+    functions create a temporary directory under the build tests directory
+    for tests to use for transient files.
+
+    runtests now frees all allocated resources on exit so that it can be
+    used to run test cases with valgrind memory allocation checking
+    without adding false positives.
+
+C TAP Harness 1.8 (2011-09-02)
+
+    Add bmalloc, bcalloc, brealloc, and bstrdup functions to the basic C
+    TAP library.  These functions call sysbail if memory allocation fails.
+
+    If BUILD were not set when building runtests and the -b option was not
+    present, SOURCE and the -s option would be ignored when searching for
+    tests.  Fix runtests to still honor SOURCE and -s when searching for
+    tests even in that case.
+
+C TAP Harness 1.7 (2011-04-28)
+
+    Add a more complete usage message to runtests and add support for a -h
+    command-line flag to display the usage message.
+
+C TAP Harness 1.6 (2010-12-29)
+
+    is_double() now takes a third argument, an epsilon.  Two numbers are
+    considered equal if their absolute difference is less than epsilon.
+    is_double() also now treats wanted and seen values of NaN (not a
+    number) as equal.  Thanks to PICCA Frédéric-Emmanuel for the proposed
+    changes.
+
+    The ok_program function in the shell libtap.sh library no longer
+    strips text after a colon and a space from the program output if the
+    expected status is non-zero.  Instead, if program output may contain
+    system-specific error messages after a colon and a space, put the new
+    function strip_colon_error before the program to do this stripping.
+    Thanks to Carsten Hey for the idea.
+
+    strip_colon_error is now smarter about preserving an initial word
+    ending in a colon (which is generally the program name) while still
+    stripping error messages later in the line.
+
+    The test_file_path function in the shell libtap.sh library now always
+    returns the empty string, rather than possible absolute paths starting
+    at /, if $BUILD and $SOURCE are not set.
+
+    Flush standard error in the C TAP library before printing results for
+    more deterministic output.  Thanks to Carsten Hey for the idea.
+
+    All of C TAP Harness now compiles with gcc -ansi -pedantic and should
+    be fully C89-compatible.  Note that either C99 or SUSv3 is required to
+    build C TAP Harness.  (This should not be a problem on any modern
+    platform.)  Based on work by Carsten Hey.
+
+    Simplify and improve output formatting in the summary of failing tests
+    in some edge cases.
+
+    Add explicit license statements to the files meant to be copied into
+    other packages rather than referring to LICENSE.
+
+C TAP Harness 1.5 (2010-08-25)
+
+    In ok_program in the shell TAP library, strip error output after the
+    second colon, not after the first.  This code helps comparing error
+    output that includes system error messages, but needs to skip past the
+    first colon, since it separates the program name from the error
+    message.
+
+    runtests.c now builds without warnings with gcc -Wswitch-enum.
+
+C TAP Harness 1.4 (2010-07-07)
+
+    Add a test_file_path() function to the basic C and shell TAP
+    libraries, which searches the build and source directories for a
+    particular file and returns the full path.  This is a utility function
+    that can be used to find test data files.
+
+C TAP Harness 1.3 (2010-06-09)
+
+    Add API documentation for the functions provided by the basic TAP C
+    library.  The documentation is in POD and *roff format in docs/api and
+    installed as man pages in the (generally unused) case of make install.
+
+    Add docs/writing-tests, which provides some basic instructions for how
+    to write TAP tests in Perl, C, and shell using the facilities provided
+    by C TAP Harness.  This document is suitable for inclusion in packages
+    that use C TAP Harness as instructions for contributors.
+
+    Add an okv() function to the C TAP library.  This is the same as ok()
+    but takes the test description as a va_list to make it easier to reuse
+    the reporting infrastructure in other tests.
+
+C TAP Harness 1.2 (2010-04-13)
+
+    Support giving the plan at any point in the test output rather than
+    requiring it be first.  The TAP protocol permits giving the plan last
+    instead of first, but since it's just as easy to support providing the
+    plan in the middle of the test output, allow that as well.
+
+    Add support for lazy planning to the basic TAP library.  Instead of
+    calling plan at the start of the test, call plan_lazy instead, which
+    doesn't require specifying a test count.  Then, the plan will
+    automatically be printed based on the last test number at the end of
+    the program.  This is not the recommended approach for writing tests
+    since, should the test program exit in the middle for some reason,
+    everything will appear to succeed.  But it can save time in writing
+    tests quickly and allows for dynamic numbers of tests.
+
+    Add diag and sysdiag functions to the basic TAP library, which output
+    diagnostics to standard error preceded by the protocol-required #
+    character.
+
+    Clean up data types in the basic C TAP library.  Test numbers and
+    counts are now unsigned long, and ok_int compares longs.
+
+    Add the GCC nonnull attribute to the bail functions in the TAP
+    library.
+
+C TAP Harness 1.1 (2009-08-15)
+
+    Set an exit handler in libtap that prints a summary of the test
+    results at the end of a test script, similar to Perl's Test::More.
+
+    When looking for 0..1 # skip plan lines indicating the whole test case
+    should be skipped, correctly compare "skip" case-insensitively.  This
+    fixes interoperability with Perl's Test::More.
+
+    Consume all output from the test case before closing its file
+    descriptor, even if the case is aborted due to bailing out or sending
+    an invalid test number.  This prevents tests from spuriously dying
+    with SIGPIPE.
+
+    Enable Automake silent rules.  For a quieter build, pass the
+    --enable-silent-rules option to configure or build with make V=0.
+
+C TAP Harness 1.0 (2009-05-21)
+
+    Initial public release based on the version of runtests.c and the
+    libtest library that shipped with remctl 2.13.  The changes below are
+    relative to that version.
+
+    Set the SOURCE and BUILD environment variables when running tests to
+    the roots of the source and build test directories if set at compile
+    time or via the -s and -b command-line options to runtests.
+
+    Search for test programs first in the current directory and then in
+    the build and source directories, in that order, as specified by
+    SOURCE and BUILD or by the -s and -b options.  This allows some tests
+    to be compiled and some shipped with the package and merged together
+    at run time by runtests, even if the build directory is not the source
+    directory.
+
+    Support running a single test program with the -o command-line option.
+    This is mostly interesting to take advantage of the environment
+    variables and test searching algorithm described above.
+
+    Add support for 0..1 # skip <reason> plan lines, indicating that the
+    entire test case should be skipped.
+
+    Add support for aborting a test case with "Bail out!" and reporting
+    the reason given on that line.
+
+    Add support for omitting the test number from an "ok" or "not ok"
+    line, in which case the number is assumed to be one more than the
+    previous number.
+
+    Add support for todo tests, which are recorded as skipped if failing
+    and failed if they succeed unexpectedly.
+
+    Omitting the space after "ok" or "not ok" line is now supported, and a
+    test number of 0 now results in an error.
+
+    Recognize skip directives regardless of case.
+
+    Change the reporting of reasons to abort the test case to use ABORTED
+    and the abort reason in parentheses for more consistent output.
+
+    Rename test_init() to plan() and ok_int(), ok_double(), and
+    ok_string() to is_int(), is_double(), and is_string() in the C TAP
+    library to more closely match the function names in Perl's test
+    modules.
+
+    Add is_hex() C TAP library function to compare two unsigned longs and
+    print mismatches in hex.
+
+    Change all C library functions to take a test description
+    (printf-style) and to no longer take the test number.  Instead, keep a
+    static count of the current test number.
+
+    Add bail() and sysbail() C TAP library functions to bail out with the
+    right magic output string.
+
+    Add skip_all() C TAP library function to skip all tests and exit.
+
+    Stop exporting the printcount interface in the shell version of the
+    TAP library.  Instead, provide plan, skip_all, ok, skip, ok_block,
+    skip_block, ok_program, and bail shell functions, similar to the C
+    library interface, with the ok* functions taking a test description as
+    the first argument.
+
+    Show mismatch output from the is_*() functions before the "not ok"
+    line instead of after it.
+
+    Add the initial "1.." to plan() output for better TAP compliance.
+
+    Support either "-t" or ".t" as the ending of test cases.
+
+    Remove the dependency on both config.h and the general portability
+    framework and instead include the necessary C headers directly.  This
+    requires ANSI C.
+
+    Remove the functions from libtap that assume libutil from rra-c-util.
+    Those library functions will be provided by that package.
