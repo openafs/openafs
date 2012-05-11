@@ -78,6 +78,26 @@ NPGetConnectionCommon( LPWSTR  lpLocalName,
                        LPDWORD lpBufferSize,
                        BOOL    bDriveSubstOk);
 
+static DWORD APIENTRY
+NPGetConnection3Common( LPCWSTR lpLocalName,
+                        DWORD dwLevel,
+                        LPVOID lpBuffer,
+                        LPDWORD lpBufferSize,
+                        BOOL bDriveSubstOk);
+
+static DWORD APIENTRY
+NPGetUniversalNameCommon( LPCWSTR lpLocalPath,
+                          DWORD   dwInfoLevel,
+                          LPVOID  lpBuffer,
+                          LPDWORD lpBufferSize,
+                          BOOL    bDriveSubstOk);
+
+static BOOL
+DriveSubstitution( LPCWSTR drivestr,
+                   LPWSTR subststr,
+                   size_t substlen,
+                   DWORD * pStatus);
+
 #define WNNC_DRIVER( major, minor ) ( major * 0x00010000 + minor )
 
 #define OPENAFS_PROVIDER_NAME           L"OpenAFS Network"
@@ -1240,10 +1260,29 @@ NPGetConnection( LPWSTR  lpLocalName,
                  LPDWORD lpBufferSize)
 {
 
-    return NPGetConnectionCommon( lpLocalName,
-                                  lpRemoteName,
-                                  lpBufferSize,
-                                  TRUE);
+    DWORD dwBufferSize = *lpBufferSize;
+    DWORD dwStatus;
+
+    dwStatus = NPGetConnectionCommon( lpLocalName,
+                                      lpRemoteName,
+                                      &dwBufferSize,
+                                      FALSE);
+
+    if ( dwStatus == WN_NOT_CONNECTED)
+    {
+
+        dwStatus = NPGetConnectionCommon( lpLocalName,
+                                          lpRemoteName,
+                                          lpBufferSize,
+                                          TRUE);
+    }
+    else
+    {
+
+        *lpBufferSize = dwBufferSize;
+    }
+
+    return dwStatus;
 }
 
 DWORD
@@ -1529,12 +1568,47 @@ try_exit:
     return dwStatus;
 }
 
-DWORD
-APIENTRY
+DWORD APIENTRY
 NPGetConnection3( IN     LPCWSTR lpLocalName,
                   IN     DWORD dwLevel,
                   OUT    LPVOID lpBuffer,
                   IN OUT LPDWORD lpBufferSize)
+{
+
+    DWORD dwBufferSize = *lpBufferSize;
+    DWORD dwStatus;
+
+    dwStatus = NPGetConnection3Common( lpLocalName,
+                                       dwLevel,
+                                       lpBuffer,
+                                       &dwBufferSize,
+                                       FALSE);
+
+    if ( dwStatus == WN_NOT_CONNECTED)
+    {
+
+        dwStatus = NPGetConnection3Common( lpLocalName,
+                                           dwLevel,
+                                           lpBuffer,
+                                           lpBufferSize,
+                                           TRUE);
+    }
+    else
+    {
+
+        *lpBufferSize = dwBufferSize;
+    }
+
+    return dwStatus;
+}
+
+
+static DWORD APIENTRY
+NPGetConnection3Common( IN     LPCWSTR lpLocalName,
+                        IN     DWORD dwLevel,
+                        OUT    LPVOID lpBuffer,
+                        IN OUT LPDWORD lpBufferSize,
+                        IN     BOOL bDriveSubstOk)
 {
 
     DWORD    dwStatus = WN_NOT_CONNECTED;
@@ -1599,7 +1673,8 @@ NPGetConnection3( IN     LPCWSTR lpLocalName,
             try_return( dwStatus = WN_MORE_DATA);
         }
 
-        if ( !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName), &dwStatus))
+        if ( !bDriveSubstOk ||
+             !DriveSubstitution( lpLocalName, wchSubstName, sizeof( wchSubstName), &dwStatus))
         {
             wchLocalName[0] = towupper(lpLocalName[0]);
             wchLocalName[1] = L':';
@@ -3223,7 +3298,42 @@ DWORD APIENTRY
 NPGetUniversalName( LPCWSTR lpLocalPath,
                     DWORD   dwInfoLevel,
                     LPVOID  lpBuffer,
-                    LPDWORD lpBufferSize )
+                    LPDWORD lpBufferSize)
+{
+
+    DWORD dwBufferSize = *lpBufferSize;
+    DWORD dwStatus;
+
+    dwStatus = NPGetUniversalNameCommon( lpLocalPath,
+                                         dwInfoLevel,
+                                         lpBuffer,
+                                         &dwBufferSize,
+                                         FALSE);
+
+    if ( dwStatus == WN_NOT_CONNECTED)
+    {
+
+        dwStatus = NPGetUniversalNameCommon( lpLocalPath,
+                                             dwInfoLevel,
+                                             lpBuffer,
+                                             lpBufferSize,
+                                             TRUE);
+    }
+    else
+    {
+
+        *lpBufferSize = dwBufferSize;
+    }
+
+    return dwStatus;
+}
+
+static DWORD APIENTRY
+NPGetUniversalNameCommon( LPCWSTR lpLocalPath,
+                          DWORD   dwInfoLevel,
+                          LPVOID  lpBuffer,
+                          LPDWORD lpBufferSize,
+                          BOOL    bDriveSubstOk)
 {
     DWORD    dwStatus = WN_NOT_CONNECTED;
     WCHAR    wchLocalName[3];
@@ -3295,7 +3405,8 @@ NPGetUniversalName( LPCWSTR lpLocalPath,
 
         memset(lpBuffer, 0, dwPassedSize);
 
-        if ( !DriveSubstitution( lpLocalPath, pwchSubstName, dwSubstNameLength, &dwStatus))
+        if ( !bDriveSubstOk ||
+             !DriveSubstitution( lpLocalPath, pwchSubstName, dwSubstNameLength, &dwStatus))
         {
             wchLocalName[0] = towupper(lpLocalPath[0]);
             wchLocalName[1] = L':';
