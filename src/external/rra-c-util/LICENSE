@@ -1,7 +1,7 @@
 The rra-c-util package as a whole is:
 
   Copyright 2000, 2009, 2010 Russ Allbery <rra@stanford.edu>
-  Copyright 2009, 2010, 2011
+  Copyright 2009, 2010, 2011, 2012
       The Board of Trustees of the Leland Stanford Junior University
 
 The package is collectively released under the following license:
@@ -34,15 +34,16 @@ licenses, all of which are compatible with the above general package
 license but which may require preservation of additional notices.  All
 required notices are preserved in this file.  Each file intended for
 copying into other software packages contains a copyright and license
-notice at the top of the file.  Please take note of any attribution and
-notice requirements specified in that license.
+notice at the top of the file or, in the case of tests/fakepam/README, at
+the bottom of the file.  Please take note of any attribution and notice
+requirements specified in that license.
 
 Collected copyright notices for the entire package:
 
   Copyright 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-      2010 Russ Allbery <rra@stanford.edu>
-  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-      The Board of Trustees of the Leland Stanford Junior University
+      2010, 2011 Russ Allbery <rra@stanford.edu>
+  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+      2012 The Board of Trustees of the Leland Stanford Junior University
   Copyright 2004, 2005, 2006, 2007, 2008, 2009, 2010
       by Internet Systems Consortium, Inc. ("ISC")
   Copyright 1991, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
@@ -57,49 +58,49 @@ Collected copyright notices for the entire package:
   Copyright 1998 Andrew Tridgell <tridge@samba.org>
   Copyright 2000, 2005 Hrvoje Niksic <hniksic@xemacs.org>
   Copyright 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-      2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+      2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
       Free Software Foundation, Inc.
   Copyright 1994 X Consortium
 
-The files kafs/sys-syscall.c, mkusage, pam-util/vector.c,
-pam-util/vector.h, portable/asprintf.c, portable/daemon.c,
-portable/dummy.c, portable/getaddrinfo.c, portable/getaddrinfo.h,
-portable/getnameinfo.c, portable/getnameinfo.h, portable/gssapi-mech.c,
-portable/gssapi.h, portable/inet_aton.c, portable/inet_ntoa.c,
-portable/inet_ntop.c, portable/issetuidgid.c, portable/krb4.h,
-portable/krb5-extra.c, portable/krb5.h, portable/macros.h,
-portable/mkstemp.c, portable/pam.h, portable/pam_syslog.c,
-portable/pam_vsyslog.c, portable/setenv.c, portable/seteuid.c,
-portable/stdbool.h, portable/strlcat.c, portable/strlcpy.c,
-portable/strndup.c, portable/system.h, portable/uio.h, portable/winsock.c,
-tests/pam-util/vector-t.c, tests/portable/asprintf-t.c,
-tests/portable/daemon-t.c, tests/portable/getaddrinfo-t.c,
-tests/portable/getnameinfo-t.c, tests/portable/inet_aton-t.c,
-tests/portable/inet_ntoa-t.c, tests/portable/inet_ntop-t.c,
-tests/portable/mkstemp-t.c, tests/portable/setenv-t.c,
-tests/portable/strlcat-t.c, tests/portable/strlcpy-t.c,
-tests/portable/strndup-t.c, tests/util/buffer-t.c, tests/util/concat-t.c,
-tests/util/vector-t.c, util/concat.c, util/concat.h, util/macros.h,
-util/vector.c, and util/vector.h are covered by the following statement:
+The files kafs/sys-syscall.c, pam-util/vector.c, pam-util/vector.h,
+portable/asprintf.c, portable/daemon.c, portable/dummy.c,
+portable/getaddrinfo.c, portable/getaddrinfo.h, portable/getnameinfo.c,
+portable/getnameinfo.h, portable/gssapi-mech.c, portable/gssapi.h,
+portable/inet_aton.c, portable/inet_ntoa.c, portable/inet_ntop.c,
+portable/issetugid.c, portable/kadmin.h, portable/krb5-extra.c,
+portable/krb5.h, portable/macros.h, portable/mkstemp.c, portable/pam.h,
+portable/pam_syslog.c, portable/pam_vsyslog.c, portable/setenv.c,
+portable/seteuid.c, portable/stdbool.h, portable/strlcat.c,
+portable/strlcpy.c, portable/strndup.c, portable/system.h, portable/uio.h,
+portable/winsock.c, tests/pam-util/vector-t.c,
+tests/portable/asprintf-t.c, tests/portable/daemon-t.c,
+tests/portable/getaddrinfo-t.c, tests/portable/getnameinfo-t.c,
+tests/portable/inet_aton-t.c, tests/portable/inet_ntoa-t.c,
+tests/portable/inet_ntop-t.c, tests/portable/mkstemp-t.c,
+tests/portable/setenv-t.c, tests/portable/strlcat-t.c,
+tests/portable/strlcpy-t.c, tests/portable/strndup-t.c,
+tests/util/buffer-t.c, tests/util/concat-t.c, tests/util/vector-t.c,
+util/concat.c, util/concat.h, util/macros.h, util/vector.c, and
+util/vector.h are covered by the following statement:
 
-    The authors hereby relinquish any claim to any copyright that they may
-    have in this work, whether granted under contract or by operation of
-    law or international treaty, and hereby commit to the public, at
-    large, that they shall not, at any time in the future, seek to enforce
-    any copyright in this work against any person or entity, or prevent
-    any person or entity from copying, publishing, distributing or
-    creating derivative works of this work.
+  The authors hereby relinquish any claim to any copyright that they may
+  have in this work, whether granted under contract or by operation of law
+  or international treaty, and hereby commit to the public, at large, that
+  they shall not, at any time in the future, seek to enforce any copyright
+  in this work against any person or entity, or prevent any person or
+  entity from copying, publishing, distributing or creating derivative
+  works of this work.
 
 In other words, you can do anything you wish with this code, although I
 would strongly prefer that any improvements or modifications be sent to me
 (rra@stanford.edu) so that I can continue to maintain a canonical version.
 
 The files configure.ac, m4/apache.m4, m4/apr.m4, m4/aprutil.m4,
-m4/curl.m4, m4/gssapi.m4, m4/inet-ntoa.m4, m4/kafs.m4, m4/krb4.m4,
-m4/krb5.m4, m4/ld-version.m4, m4/ldap.m4, m4/lib-depends.m4,
-m4/lib-pathname.m4, m4/pam-const.m4, m4/pcre.m4, m4/remctl.m4,
-m4/snprintf.m4, m4/ssl.m4, and m4/vamacros.m4 are released under the
-following copyright and license:
+m4/curl.m4, m4/gssapi.m4, m4/inet-ntoa.m4, m4/kadm5clnt.m4, m4/kafs.m4,
+m4/krb5.m4, m4/krb5-config.m4, m4/ld-version.m4, m4/ldap.m4,
+m4/lib-depends.m4, m4/lib-helper.m4, m4/lib-pathname.m4, m4/pam-const.m4,
+m4/pcre.m4, m4/remctl.m4, m4/snprintf.m4, m4/ssl.m4, and m4/vamacros.m4
+are released under the following copyright and license:
 
   Copyright 1999, 2000, 2001, 2003 Russ Allbery <rra@stanford.edu>
   Copyright 2005, 2006, 2007, 2008, 2009, 2010, 2011
@@ -117,7 +118,7 @@ util/messages.c, util/messages.h, util/network.c, util/network.h,
 util/xmalloc.c, util/xmalloc.h, util/xwrite.c, and util/xwrite.h are
 released under the following copyright and license:
 
-  Copyright 2008, 2009, 2010, 2011
+  Copyright 2008, 2009, 2010, 2011, 2012
       The Board of Trustees of the Leland Stanford Junior University
   Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009, 2010
       by Internet Systems Consortium, Inc. ("ISC")
@@ -193,10 +194,10 @@ The files Makefile.in and aclocal.m4 are generated by GNU Automake and
 released under the following copyright and license:
 
   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-  2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation,
-  Inc.  This file is free software; the Free Software Foundation gives
-  unlimited permission to copy and/or distribute it, with or without
-  modifications, as long as this notice is preserved.
+  2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+  Foundation, Inc.  This file is free software; the Free Software
+  Foundation gives unlimited permission to copy and/or distribute it, with
+  or without modifications, as long as this notice is preserved.
 
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY, to the extent permitted by law; without
@@ -212,14 +213,14 @@ following copyright and license:
   Software Foundation gives unlimited permission to copy, distribute and
   modify it.
 
-The files build-aux/depcomp and build-aux/missing are taken from GNU
-Automake.  The files build-aux/config.guess and build-aux/config.sub are
-taken from the Debian autotools-dev package.  These files are released
-under the following copyright and license:
+The files build-aux/compile, build-aux/depcomp, and build-aux/missing are
+taken from GNU Automake.  The files build-aux/config.guess and
+build-aux/config.sub are taken from the Debian autotools-dev package.
+These files are released under the following copyright and license:
 
   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free
-  Software Foundation, Inc.
+  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+  Free Software Foundation, Inc.
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -271,3 +272,13 @@ and license:
   from the X Consortium.
 
   FSF changes to this file are in the public domain.
+
+The files tests/README and tests/fakepam/README are released under the
+following copyright and license:
+
+  Copyright 2010, 2011 Russ Allbery <rra@stanford.edu>
+
+  Copying and distribution of this file, with or without modification, are
+  permitted in any medium without royalty provided the copyright notice
+  and this notice are preserved.  This file is offered as-is, without any
+  warranty.
