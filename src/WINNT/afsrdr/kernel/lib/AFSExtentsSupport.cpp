@@ -102,17 +102,25 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
     return TRUE;
 }
 //
-// Pull all the extents away from the FCB.
+// AFSTearDownFcbExtents was originally written to
+// remove all of the extents from an FCB.  For that to happen
+// it must be an invariant that the extent list cannot change
+// from the moment the caller decides to execute AFSTearDownFcbExtents
+// until it returns.  This invariant does not hold because the
+// the decision to call AFSTearDownFcbExtents is made without
+// holding the ExtentsResource and it is possible that extents
+// are in active use. Therefore, AFSTearDownFcbExtents now releases
+// as many non-active extents as it can.
 //
-BOOLEAN
+VOID
 AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                        IN GUID *AuthGroup)
 {
-    BOOLEAN             bFoundExtents = FALSE;
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
-    LIST_ENTRY          *le;
+    LIST_ENTRY          *le, *leNext;
     AFSExtent           *pEntry;
-    ULONG                ulCount = 0, ulReleaseCount = 0, ulProcessCount = 0;
+    LONG                 lExtentCount = 0;
+    ULONG                ulReleaseCount = 0, ulProcessCount = 0;
     size_t               sz;
     AFSReleaseExtentsCB *pRelease = NULL;
     BOOLEAN              locked = FALSE;
@@ -172,62 +180,42 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
             try_return ( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
 
-        le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
+        AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                        TRUE);
 
-        ulCount = Fcb->Specific.File.ExtentCount;
-
-        while( ulReleaseCount < ulCount)
+        for( le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink,
+             lExtentCount = 0;
+             lExtentCount < Fcb->Specific.File.ExtentCount;
+             lExtentCount += ulProcessCount)
         {
-
-            bFoundExtents = TRUE;
 
             RtlZeroMemory( pRelease,
                            sizeof( AFSReleaseExtentsCB ) +
                            (AFS_MAXIMUM_EXTENT_RELEASE_COUNT * sizeof ( AFSFileExtentCB )));
 
-            if( ulCount - ulReleaseCount <= AFS_MAXIMUM_EXTENT_RELEASE_COUNT)
+            for( ulProcessCount = 0, ulReleaseCount = 0;
+                 !IsListEmpty( le) && ulReleaseCount < AFS_MAXIMUM_EXTENT_RELEASE_COUNT;
+                 ulProcessCount++, le = leNext)
             {
-                ulProcessCount = ulCount - ulReleaseCount;
-            }
-            else
-            {
-                ulProcessCount = AFS_MAXIMUM_EXTENT_RELEASE_COUNT;
-            }
 
-            pRelease->Flags = AFS_EXTENT_FLAG_RELEASE;
-            pRelease->ExtentCount = ulProcessCount;
+                leNext = le->Flink;
 
-            //
-            // Update the metadata for this call
-            //
-
-            pRelease->AllocationSize = Fcb->ObjectInformation->EndOfFile;
-            pRelease->CreateTime = Fcb->ObjectInformation->CreationTime;
-            pRelease->ChangeTime = Fcb->ObjectInformation->ChangeTime;
-            pRelease->LastAccessTime = Fcb->ObjectInformation->LastAccessTime;
-            pRelease->LastWriteTime = Fcb->ObjectInformation->LastWriteTime;
-
-            ulProcessCount = 0;
-
-            while (ulProcessCount < pRelease->ExtentCount)
-            {
                 pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
 
-                pRelease->FileExtents[ulProcessCount].Flags = AFS_EXTENT_FLAG_RELEASE;
-
-#if GEN_MD5
-                RtlCopyMemory( pRelease->FileExtents[ulProcessCount].MD5,
-                               pEntry->MD5,
-                               sizeof(pEntry->MD5));
-
-                pRelease->FileExtents[ulProcessCount].Flags |= AFS_EXTENT_FLAG_MD5_SET;
-#endif
-
-                if( BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                if( pEntry->ActiveCount == 0)
                 {
 
-                    AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                                    TRUE);
+                    ulReleaseCount++;
+
+                    pRelease->FileExtents[ulProcessCount].Flags = AFS_EXTENT_FLAG_RELEASE;
+
+#if GEN_MD5
+                    RtlCopyMemory( pRelease->FileExtents[ulProcessCount].MD5,
+                                   pEntry->MD5,
+                                   sizeof(pEntry->MD5));
+
+                    pRelease->FileExtents[ulProcessCount].Flags |= AFS_EXTENT_FLAG_MD5_SET;
+#endif
 
                     if( BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
                     {
@@ -244,115 +232,131 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                         ASSERT( dirtyCount >= 0);
                     }
 
-                    AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
-                }
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSTearDownFcbExtents Releasing extent %p fid %08lX-%08lX-%08lX-%08lX Offset %08lX-%08lX Len %08lX\n",
+                                  pEntry,
+                                  Fcb->ObjectInformation->FileId.Cell,
+                                  Fcb->ObjectInformation->FileId.Volume,
+                                  Fcb->ObjectInformation->FileId.Vnode,
+                                  Fcb->ObjectInformation->FileId.Unique,
+                                  pEntry->FileOffset.HighPart,
+                                  pEntry->FileOffset.LowPart,
+                                  pEntry->Size);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSTearDownFcbExtents Releasing extent %p fid %08lX-%08lX-%08lX-%08lX Offset %08lX-%08lX Len %08lX\n",
-                              pEntry,
-                              Fcb->ObjectInformation->FileId.Cell,
-                              Fcb->ObjectInformation->FileId.Volume,
-                              Fcb->ObjectInformation->FileId.Vnode,
-                              Fcb->ObjectInformation->FileId.Unique,
-                              pEntry->FileOffset.HighPart,
-                              pEntry->FileOffset.LowPart,
-                              pEntry->Size);
+                    pRelease->FileExtents[ulProcessCount].Length = pEntry->Size;
+                    pRelease->FileExtents[ulProcessCount].DirtyLength = pEntry->Size;
+                    pRelease->FileExtents[ulProcessCount].DirtyOffset = 0;
+                    pRelease->FileExtents[ulProcessCount].CacheOffset = pEntry->CacheOffset;
+                    pRelease->FileExtents[ulProcessCount].FileOffset = pEntry->FileOffset;
 
-                pRelease->FileExtents[ulProcessCount].Length = pEntry->Size;
-                pRelease->FileExtents[ulProcessCount].DirtyLength = pEntry->Size;
-                pRelease->FileExtents[ulProcessCount].DirtyOffset = 0;
-                pRelease->FileExtents[ulProcessCount].CacheOffset = pEntry->CacheOffset;
-                pRelease->FileExtents[ulProcessCount].FileOffset = pEntry->FileOffset;
+                    InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pEntry->Size/1024)));
 
-                InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pEntry->Size/1024)));
+                    InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pEntry->Size/1024)));
 
-                InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pEntry->Size/1024)));
+                    RemoveEntryList( le);
 
-                ASSERT( pEntry->ActiveCount == 0);
+                    AFSExFreePool( pEntry);
 
-                ulProcessCount ++;
-                le = le->Flink;
-                AFSExFreePool( pEntry);
+                    lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
 
-                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+                    lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
 
-                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+                    if( lCount == 0)
+                    {
 
-                if( lCount == 0)
-                {
-
-                    KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                                0,
-                                FALSE);
+                        KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
+                                    0,
+                                    FALSE);
+                    }
                 }
             }
 
-            //
-            // Send the request down.  We cannot send this down
-            // asynchronously - if we did that we could request them
-            // back before the service got this request and then this
-            // request would be a corruption.
-            //
-
-            sz = sizeof( AFSReleaseExtentsCB ) + (ulProcessCount * sizeof ( AFSFileExtentCB ));
-
-            ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
-                                          AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                          pAuthGroup,
-                                          NULL,
-                                          &Fcb->ObjectInformation->FileId,
-                                          pRelease,
-                                          sz,
-                                          NULL,
-                                          NULL);
-
-            if( !NT_SUCCESS(ntStatus))
+            if ( ulReleaseCount > 0)
             {
 
+                pRelease->ExtentCount = ulReleaseCount;
+
+                pRelease->Flags = AFS_EXTENT_FLAG_RELEASE;
+
                 //
-                // Regardless of whether or not the AFSProcessRequest() succeeded, the extents
-                // were released (if AFS_EXTENT_FLAG_RELEASE was set).  Log the error so it is known.
+                // Update the metadata for this call
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSTearDownFcbExtents AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS failed fid %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                              Fcb->ObjectInformation->FileId.Cell,
-                              Fcb->ObjectInformation->FileId.Volume,
-                              Fcb->ObjectInformation->FileId.Vnode,
-                              Fcb->ObjectInformation->FileId.Unique,
-                              ntStatus);
+                pRelease->AllocationSize = Fcb->ObjectInformation->EndOfFile;
+                pRelease->CreateTime = Fcb->ObjectInformation->CreationTime;
+                pRelease->ChangeTime = Fcb->ObjectInformation->ChangeTime;
+                pRelease->LastAccessTime = Fcb->ObjectInformation->LastAccessTime;
+                pRelease->LastWriteTime = Fcb->ObjectInformation->LastWriteTime;
 
+                //
+                // Send the request down.  We cannot send this down
+                // asynchronously - if we did that we could request them
+                // back before the service got this request and then this
+                // request would be a corruption.
+                //
+
+                sz = sizeof( AFSReleaseExtentsCB ) + (ulProcessCount * sizeof ( AFSFileExtentCB ));
+
+                ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
+                                              AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                              pAuthGroup,
+                                              NULL,
+                                              &Fcb->ObjectInformation->FileId,
+                                              pRelease,
+                                              sz,
+                                              NULL,
+                                              NULL);
+
+                if( !NT_SUCCESS(ntStatus))
+                {
+
+                    //
+                    // Regardless of whether or not the AFSProcessRequest() succeeded, the extents
+                    // were released (if AFS_EXTENT_FLAG_RELEASE was set).  Log the error so it is known.
+                    //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSTearDownFcbExtents AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS failed fid %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  Fcb->ObjectInformation->FileId.Cell,
+                                  Fcb->ObjectInformation->FileId.Volume,
+                                  Fcb->ObjectInformation->FileId.Vnode,
+                                  Fcb->ObjectInformation->FileId.Unique,
+                                  ntStatus);
+
+                }
             }
-
-            ulReleaseCount += ulProcessCount;
         }
-
-        //
-        // Reinitialize the skip lists
-        //
-
-        ASSERT( Fcb->Specific.File.ExtentCount == 0);
-
-        for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i++)
-        {
-            InitializeListHead(&Fcb->Specific.File.ExtentsLists[i]);
-        }
-
-        //
-        // Reinitialize the dirty list as well
-        //
-
-        AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                        TRUE);
-
-        ASSERT( Fcb->Specific.File.ExtentsDirtyCount == 0);
-
-        Fcb->NPFcb->Specific.File.DirtyListHead = NULL;
-        Fcb->NPFcb->Specific.File.DirtyListTail = NULL;
 
         AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
+        //
+        // if all extents have been released, reinitialize the skip lists
+        //
+
+        if( Fcb->Specific.File.ExtentCount == 0)
+        {
+
+            for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i++)
+            {
+                InitializeListHead(&Fcb->Specific.File.ExtentsLists[i]);
+            }
+
+            //
+            // Reinitialize the dirty list as well
+            //
+
+            AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                            TRUE);
+
+            ASSERT( Fcb->Specific.File.ExtentsDirtyCount == 0);
+
+            Fcb->NPFcb->Specific.File.DirtyListHead = NULL;
+            Fcb->NPFcb->Specific.File.DirtyListTail = NULL;
+
+            AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+        }
 
         Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
 
@@ -376,8 +380,6 @@ try_exit:
             AFSExFreePool( pRelease);
         }
     }
-
-    return bFoundExtents;
 }
 
 static PAFSExtent

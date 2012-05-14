@@ -1793,8 +1793,8 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                 // for any writes or reads to the cache to complete)
                 //
 
-                (VOID) AFSTearDownFcbExtents( (*ppObjectInfo)->Fcb,
-                                              NULL);
+                AFSTearDownFcbExtents( (*ppObjectInfo)->Fcb,
+                                       NULL);
             }
 
             (*ppObjectInfo)->DataVersion.QuadPart = (ULONGLONG)-1;
@@ -3284,8 +3284,8 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
                     // for any writes or reads to the cache to complete)
                     //
 
-                    (VOID) AFSTearDownFcbExtents( pFcb,
-                                                  NULL);
+                    AFSTearDownFcbExtents( pFcb,
+                                           NULL);
                 }
 
                 pCurrentObject = (AFSObjectInfoCB *)pCurrentObject->ListEntry.fLink;
@@ -8914,8 +8914,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                     // for any writes or reads to the cache to complete)
                     //
 
-                    (VOID) AFSTearDownFcbExtents( ObjectInfo->Fcb,
-                                                  NULL);
+                    AFSTearDownFcbExtents( ObjectInfo->Fcb,
+                                           NULL);
                 }
 
                 break;
@@ -8986,8 +8986,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                 bLocked = FALSE;
 
-                                (VOID) AFSTearDownFcbExtents( ObjectInfo->Fcb,
-                                                              NULL);
+                                AFSTearDownFcbExtents( ObjectInfo->Fcb,
+                                                       NULL);
                             }
                             else
                             {

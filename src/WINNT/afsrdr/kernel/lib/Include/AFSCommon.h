@@ -408,7 +408,7 @@ AFSMarkDirty( IN AFSFcb *pFcb,
               IN LARGE_INTEGER *StartingByte,
               IN BOOLEAN DerefExtents);
 
-BOOLEAN
+VOID
 AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                        IN GUID *AuthGroup);
 

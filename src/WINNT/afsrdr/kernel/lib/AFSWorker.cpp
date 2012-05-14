@@ -1412,7 +1412,10 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                                         TRUE);
                                     }
 
-                                    if( pCurrentChildObject->ObjectReferenceCount <= 0)
+                                    if( pCurrentChildObject->ObjectReferenceCount <= 0 &&
+                                        ( pCurrentChildObject->Fcb == NULL ||
+                                          pCurrentChildObject->Fcb->OpenReferenceCount == 0 &&
+                                          pCurrentChildObject->Fcb->Specific.File.ExtentCount == 0))
                                     {
 
                                         if( pCurrentChildObject->Fcb != NULL)
@@ -1558,7 +1561,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
                             pCurrentObject->ObjectReferenceCount <= 0 &&
                             ( pCurrentObject->Fcb == NULL ||
-                              pCurrentObject->Fcb->OpenReferenceCount == 0))
+                              pCurrentObject->Fcb->OpenReferenceCount == 0 &&
+                              pCurrentObject->Fcb->Specific.File.ExtentCount == 0))
                         {
 
                             if( pCurrentObject->Fcb != NULL)
