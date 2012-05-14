@@ -487,25 +487,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     // Tear 'em down, we'll not be needing them again
                     //
 
-                    if( AFSTearDownFcbExtents( pFcb,
-                                               &pCcb->AuthGroup))
-                    {
-
-                        //
-                        // Indicate to the service that the file required complete flushing to the
-                        // server.
-                        //
-
-                        AFSProcessRequest( AFS_REQUEST_TYPE_FLUSH_FILE,
-                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
-                                           &pCcb->AuthGroup,
-                                           NULL,
-                                           &pFcb->ObjectInformation->FileId,
-                                           NULL,
-                                           0,
-                                           NULL,
-                                           NULL);
-                    }
+                    AFSTearDownFcbExtents( pFcb,
+                                           &pCcb->AuthGroup);
                 }
                 else
                 {
