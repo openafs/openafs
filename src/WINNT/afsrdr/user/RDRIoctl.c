@@ -165,6 +165,8 @@ RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *u
     }
 
     if (iop) {
+        iop->flags = 0;
+
         /* we are reusing a previous ioctl */
         if (cm_FidCmp(&iop->parentFid, parentFid)) {
             iop->parentFid = *parentFid;
@@ -204,6 +206,35 @@ RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *u
     lock_ReleaseWrite(&RDR_globalIoctlLock);
 }
 
+static void
+RDR_DestroyIoctl(RDR_ioctl_t *iop)
+{
+    if (iop == NULL)
+        return;
+
+    if (iop->parentScp)
+        cm_ReleaseSCache(iop->parentScp);
+
+    if (iop->ioctl.inAllocp)
+        free(iop->ioctl.inAllocp);
+    if (iop->ioctl.outAllocp)
+        free(iop->ioctl.outAllocp);
+
+    if (RDR_allIoctls == RDR_allIoctlsLast)
+        RDR_allIoctls = RDR_allIoctlsLast = NULL;
+    else {
+        if (iop->prev == NULL)
+            RDR_allIoctls = iop->next;
+        else
+            iop->prev->next = iop->next;
+        if (iop->next == NULL) {
+            RDR_allIoctlsLast = iop->prev;
+            iop->prev->next = NULL;
+        } else
+            iop->next->prev = iop->prev;
+    }
+    free(iop);
+}
 
 void
 RDR_CleanupIoctl(ULONG index)
@@ -217,31 +248,15 @@ RDR_CleanupIoctl(ULONG index)
     }
 
     if (iop) {
-        if (iop->parentScp)
-            cm_ReleaseSCache(iop->parentScp);
-
-        if (iop->ioctl.inAllocp)
-            free(iop->ioctl.inAllocp);
-        if (iop->ioctl.outAllocp)
-            free(iop->ioctl.outAllocp);
-
-		if (RDR_allIoctls == RDR_allIoctlsLast)
-	        RDR_allIoctls = RDR_allIoctlsLast = NULL;
-		else {
-			if (iop->prev == NULL)
-				RDR_allIoctls = iop->next;
-			else
-				iop->prev->next = iop->next;
-			if (iop->next == NULL) {
-				RDR_allIoctlsLast = iop->prev;
-				iop->prev->next = NULL;
-			} else
-				iop->next->prev = iop->prev;
-		}
-		free(iop);
-	}
+        if (iop->refCount == 0) {
+            RDR_DestroyIoctl(iop);
+        }
+        else
+        {
+            iop->flags |= RDR_IOCTL_FLAG_CLEANED;
+        }
+    }
     lock_ReleaseWrite(&RDR_globalIoctlLock);
-
 }
 
 /* called when we receive a write call.  If this is the first write call after
@@ -324,11 +339,28 @@ RDR_FindIoctl(ULONG index)
 
     lock_ObtainRead(&RDR_globalIoctlLock);
     for ( iop=RDR_allIoctls; iop; iop=iop->next) {
-        if (iop->index == index)
+        if (iop->index == index &&
+            !(iop->flags & RDR_IOCTL_FLAG_CLEANED)) {
+            InterlockedIncrement(&iop->refCount);
             break;
+        }
     }
     lock_ReleaseRead(&RDR_globalIoctlLock);
     return iop;
+}
+
+void
+RDR_ReleaseIoctl(RDR_ioctl_t * iop)
+{
+    lock_ObtainWrite(&RDR_globalIoctlLock);
+    InterlockedDecrement(&iop->refCount);
+
+    if (iop->refCount == 0 &&
+        (iop->flags & RDR_IOCTL_FLAG_CLEANED))
+    {
+        RDR_DestroyIoctl(iop);
+    }
+    lock_ReleaseWrite(&RDR_globalIoctlLock);
 }
 
 /* called from RDR_ReceiveCoreRead when we receive a read on the ioctl fid */
@@ -337,7 +369,7 @@ RDR_IoctlRead(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *Mappe
 {
     RDR_ioctl_t *iop;
     afs_uint32 count;
-    afs_int32 code;
+    afs_int32 code = 0;
 
     iop = RDR_FindIoctl(RequestId);
     if (iop == NULL)
@@ -345,22 +377,23 @@ RDR_IoctlRead(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *Mappe
 
     /* turn the connection around, if required */
     code = RDR_IoctlPrepareRead(iop, userp, pflags);
-    if (code)
-        return code;
+    if (code == 0) {
 
-    count = (afs_int32)((iop->ioctl.outDatap - iop->ioctl.outAllocp) - iop->ioctl.outCopied);
-    if (BufferLength < count)
-        count = BufferLength;
+        count = (afs_int32)((iop->ioctl.outDatap - iop->ioctl.outAllocp) - iop->ioctl.outCopied);
+        if (BufferLength < count)
+            count = BufferLength;
 
-    /* now copy the data into the response packet */
-    memcpy((char *)MappedBuffer, iop->ioctl.outCopied + iop->ioctl.outAllocp, count);
+        /* now copy the data into the response packet */
+        memcpy((char *)MappedBuffer, iop->ioctl.outCopied + iop->ioctl.outAllocp, count);
 
-    /* and adjust the counters */
-    iop->ioctl.outCopied += count;
+        /* and adjust the counters */
+        iop->ioctl.outCopied += count;
 
-    *pBytesProcessed = count;
+        *pBytesProcessed = count;
 
-    return 0;
+        RDR_ReleaseIoctl(iop);
+    }
+    return code;
 }
 
 /* called from RDR_PioctWRite when we receive a write call on the IOCTL
@@ -369,6 +402,7 @@ RDR_IoctlRead(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *Mappe
 afs_int32
 RDR_IoctlWrite(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer, cm_req_t *reqp)
 {
+    afs_int32 code = 0;
     RDR_ioctl_t *iop;
 
     iop = RDR_FindIoctl(RequestId);
@@ -377,16 +411,20 @@ RDR_IoctlWrite(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *Mapp
 
     RDR_IoctlPrepareWrite(iop);
 
-    if (BufferLength + iop->ioctl.inCopied > CM_IOCTL_MAXDATA)
-        return CM_ERROR_TOOBIG;
+    if (BufferLength + iop->ioctl.inCopied > CM_IOCTL_MAXDATA) {
+        code = CM_ERROR_TOOBIG;
+    }
+    else
+    {
+        /* copy data */
+        memcpy(iop->ioctl.inDatap + iop->ioctl.inCopied, (char *)MappedBuffer, BufferLength);
 
-    /* copy data */
-    memcpy(iop->ioctl.inDatap + iop->ioctl.inCopied, (char *)MappedBuffer, BufferLength);
+        /* adjust counts */
+        iop->ioctl.inCopied += BufferLength;
+    }
 
-    /* adjust counts */
-    iop->ioctl.inCopied += BufferLength;
-
-    return 0;
+    RDR_ReleaseIoctl(iop);
+    return code;
 }
 
 

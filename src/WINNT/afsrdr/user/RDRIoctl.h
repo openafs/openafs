@@ -51,7 +51,11 @@ typedef struct RDR_ioctl {
     cm_fid_t          rootFid;
     cm_scache_t      *parentScp;
     cm_ioctl_t        ioctl;
+    afs_uint32        flags;
+    afs_int32         refCount;         /* RDR_globalIoctlLock */
 } RDR_ioctl_t;
+
+#define RDR_IOCTL_FLAG_CLEANED   1
 
 /* procedure implementing an ioctl */
 typedef long (RDR_ioctlProc_t)(RDR_ioctl_t *, struct cm_user *userp, afs_uint32 pflags);
