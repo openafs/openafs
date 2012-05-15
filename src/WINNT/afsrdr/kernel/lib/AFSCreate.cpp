@@ -1140,9 +1140,15 @@ try_exit:
                 // For files perform additional processing
                 //
 
-                if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                switch( pFcb->Header.NodeTypeCode)
                 {
-                    pFileObject->SectionObjectPointer = &pFcb->NPFcb->SectionObjectPointers;
+
+                    case AFS_FILE_FCB:
+                    case AFS_IOCTL_FCB:
+                    {
+
+                        pFileObject->SectionObjectPointer = &pFcb->NPFcb->SectionObjectPointers;
+                    }
                 }
 
                 //
