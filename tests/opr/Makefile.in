@@ -7,7 +7,7 @@ MODULE_CFLAGS = -I$(srcdir)/../..
 
 LIBS=../tap/libtap.a $(abs_top_builddir)/lib/libopr.a
 
-tests = jhash-t queues-t rbtree-t
+tests = jhash-t queues-t rbtree-t time-t
 
 all check test tests: $(tests)
 
@@ -19,6 +19,9 @@ rbtree-t: rbtree-t.o $(LIBS)
 
 jhash-t: jhash-t.o
 	$(AFS_LDRULE) jhash-t.o ../tap/libtap.a $(XLIBS)
+
+time-t: time-t.o
+	$(AFS_LDRULE) time-t.o ../tap/libtap.a $(XLIBS)
 
 clean distclean:
 	$(RM) -f $(tests) *.o core
