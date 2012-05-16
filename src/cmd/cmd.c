@@ -450,9 +450,8 @@ cmd_CreateSyntax(char *aname,
 
     /* copy in name, etc */
     if (aname) {
-	td->name = malloc(strlen(aname) + 1);
+	td->name = strdup(aname);
 	assert(td->name);
-	strcpy(td->name, aname);
     } else {
 	td->name = NULL;
 	noOpcodes = 1;
@@ -462,9 +461,8 @@ cmd_CreateSyntax(char *aname,
 	if (ahelp == (char *)CMD_HIDDEN) {
 	    td->flags |= CMD_HIDDEN;
 	} else {
-	    td->help = malloc(strlen(ahelp) + 1);
+	    td->help = strdup(ahelp);
 	    assert(td->help);
-	    strcpy(td->help, ahelp);
 	}
     } else
 	td->help = NULL;
@@ -488,9 +486,8 @@ cmd_CreateAlias(struct cmd_syndesc *as, char *aname)
     td = malloc(sizeof(struct cmd_syndesc));
     assert(td);
     memcpy(td, as, sizeof(struct cmd_syndesc));
-    td->name = malloc(strlen(aname) + 1);
+    td->name = strdup(aname);
     assert(td->name);
-    strcpy(td->name, aname);
     td->flags |= CMD_ALIAS;
     /* if ever free things, make copy of help string, too */
 
@@ -543,16 +540,14 @@ cmd_AddParmAtOffset(struct cmd_syndesc *as, int ref, char *aname, int atype,
 	return CMD_EXCESSPARMS;
     tp = &as->parms[ref];
 
-    tp->name = malloc(strlen(aname) + 1);
+    tp->name = strdup(aname);
     assert(tp->name);
-    strcpy(tp->name, aname);
     tp->type = atype;
     tp->flags = aflags;
     tp->items = NULL;
     if (ahelp) {
-	tp->help = malloc(strlen(ahelp) + 1);
+	tp->help = strdup(ahelp);
 	assert(tp->help);
-	strcpy(tp->help, ahelp);
     } else
 	tp->help = NULL;
 
@@ -607,9 +602,8 @@ AddItem(struct cmd_parmdesc *aparm, char *aval, char *pname)
 
     ti = calloc(1, sizeof(struct cmd_item));
     assert(ti);
-    ti->data = malloc(strlen(aval) + 1);
+    ti->data = strdup(aval);
     assert(ti->data);
-    strcpy(ti->data, aval);
     /* now put ti at the *end* of the list */
     if ((ni = aparm->items)) {
 	for (; ni; ni = ni->next)
@@ -716,13 +710,12 @@ InsertInitOpcode(int *aargc, char **aargv)
     }
 
     /* Create space for the initial opcode & fill it in */
-    pinitopcode = malloc(sizeof(initcmd_opcode));
+    pinitopcode = strdup(initcmd_opcode);
     if (!pinitopcode) {
 	fprintf(stderr, "%s: Can't malloc initial opcode space\n", aargv[0]);
 	free(newargv);
 	return (NULL);
     }
-    strcpy(pinitopcode, initcmd_opcode);
 
     /* Move all the items in the old argv into the new argv, in their
      * proper places */
@@ -1144,9 +1137,8 @@ CopyBackArgs(struct cmd_token *alist, char **argv,
     count = 0;
     if (amaxn <= 1)
 	return CMD_TOOMANY;
-    *argv = (char *)malloc(strlen(INITSTR) + 1);
+    *argv = strdup(INITSTR);
     assert(*argv);
-    strcpy(*argv, INITSTR);
     amaxn--;
     argv++;
     count++;
@@ -1211,9 +1203,8 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
 		ttok = malloc(sizeof(struct cmd_token));
 		assert(ttok);
 		ttok->next = NULL;
-		ttok->key = malloc(strlen(tbuffer) + 1);
+		ttok->key = strdup(tbuffer);
 		assert(ttok->key);
-		strcpy(ttok->key, tbuffer);
 		if (last) {
 		    last->next = ttok;
 		    last = ttok;

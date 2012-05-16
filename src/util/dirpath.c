@@ -556,12 +556,9 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 	    status = EINVAL;
 	} else {
 	    /* fully qualified path; just make a copy */
-	    newPath = (char *)malloc(strlen(cpath) + 1);
-	    if (!newPath) {
+	    newPath = strdup(cpath);
+	    if (!newPath)
 		status = ENOMEM;
-	    } else {
-		(void)strcpy(newPath, cpath);
-	    }
 	}
 
     } else {
@@ -645,12 +642,9 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 
     LocalizePathHead(&cpath, &relativeTo);
     if (*cpath == '/') {
-	newPath = (char *)malloc(strlen(cpath) + 1);
-	if (!newPath) {
+	newPath = strdup(cpath);
+	if (!newPath)
 	    status = ENOMEM;
-	} else {
-	    strcpy(newPath, cpath);
-	}
     } else {
 	newPath = (char *)malloc(strlen(relativeTo) + 1 + strlen(cpath) + 1);
 	if (!newPath) {

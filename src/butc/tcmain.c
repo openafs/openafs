@@ -514,8 +514,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		continue;
 	    }
 
-	    opencallout = (char *)malloc(strlen(value) + 1);
-	    strcpy(opencallout, value);
+	    opencallout = strdup(value);
 	    printf("Tape mount callout routine is %s\n", opencallout);
 	}
 
@@ -527,8 +526,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		continue;
 	    }
 
-	    closecallout = (char *)malloc(strlen(value) + 1);
-	    strcpy(closecallout, value);
+	    closecallout = strdup(value);
 	    printf("Tape unmount callout routine is %s\n", closecallout);
 	}
 
@@ -661,8 +659,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		     cmd);
 		continue;
 	    }
-	    xbsaObjectOwner = malloc(strlen(value) + 1);
-	    strcpy(xbsaObjectOwner, value);
+	    xbsaObjectOwner = strdup(value);
 	    printf("XBSA node is %s\n", xbsaObjectOwner);
 	}
 
@@ -673,8 +670,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		     cmd);
 		continue;
 	    }
-	    adsmServerName = malloc(strlen(value) + 1);
-	    strcpy(adsmServerName, value);
+	    adsmServerName = strdup(value);
 	    printf("XBSA server is %s\n", adsmServerName);
 	}
 
@@ -692,8 +688,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		continue;
 	    }
 
-	    xbsaSecToken = malloc(strlen(value) + 1);
-	    strcpy(xbsaSecToken, value);
+	    xbsaSecToken = strdup(value);
 	    printf("XBSA Password has been read\n");
 	}
 
@@ -736,8 +731,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		     cmd);
 		continue;
 	    }
-	    xbsalGName = malloc(strlen(value) + 1);
-	    strcpy(xbsalGName, value);
+	    xbsalGName = strdup(value);
 	    printf("XBSA management class is %s\n", xbsalGName);
 	}
 #endif
@@ -771,8 +765,7 @@ GetConfigParams(char *filename, afs_int32 port)
 	}
 
 	else if (!strcmp(cmd, "CENTRALLOG")) {
-	    centralLogFile = malloc(strlen(value) + 1);
-	    strcpy(centralLogFile, value);
+	    centralLogFile = strdup(value);
 	    printf("Central log file is %s\n", centralLogFile);
 	}
 
@@ -903,9 +896,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[6].items) {	/* -restoretofile */
-	int s = strlen(as->parms[6].items->data);
-	restoretofile = malloc(s + 1);
-	strncpy(restoretofile, as->parms[6].items->data, s + 1);
+	restoretofile = strdup(as->parms[6].items->data);
 	printf("Restore to file '%s'\n", restoretofile);
     }
 

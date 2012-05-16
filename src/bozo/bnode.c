@@ -60,10 +60,8 @@ RememberProcName(struct bnode_proc *ap)
 	free(tbnodep->lastErrorName);
 	tbnodep->lastErrorName = NULL;
     }
-    if (ap->coreName) {
-	tbnodep->lastErrorName = (char *)malloc(strlen(ap->coreName) + 1);
-	strcpy(tbnodep->lastErrorName, ap->coreName);
-    }
+    if (ap->coreName)
+	tbnodep->lastErrorName = strdup(ap->coreName);
 }
 
 /* utility for use by BOP_HASCORE functions to determine where a core file might
@@ -503,10 +501,9 @@ bnode_InitBnode(struct bnode *abnode, struct bnode_ops *abnodeops,
     /* format the bnode properly */
     memset(abnode, 0, sizeof(struct bnode));
     abnode->ops = abnodeops;
-    abnode->name = (char *)malloc(strlen(aname) + 1);
+    abnode->name = strdup(aname);
     if (!abnode->name)
 	return ENOMEM;
-    strcpy(abnode->name, aname);
     abnode->flags = BNODE_ACTIVE;
     abnode->fileGoal = BSTAT_NORMAL;
     abnode->goal = BSTAT_SHUTDOWN;
@@ -921,8 +918,7 @@ bnode_ParseLine(char *aline, struct bnode_token **alist)
 		ttok =
 		    (struct bnode_token *)malloc(sizeof(struct bnode_token));
 		ttok->next = (struct bnode_token *)0;
-		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
-		strcpy(ttok->key, tbuffer);
+		ttok->key = strdup(tbuffer);
 		if (last) {
 		    last->next = ttok;
 		    last = ttok;

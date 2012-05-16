@@ -226,12 +226,8 @@ STC_PerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr, tc_d
     /*set up the parameters in the node, to be used by LWP */
     strcpy(newNode->dumpSetName, tcdiPtr->dumpName);
 
-    newNode->dumpName = (char *)malloc(strlen(tcdiPtr->dumpPath) + 1);
-    strcpy(newNode->dumpName, tcdiPtr->dumpPath);
-
-    newNode->volumeSetName =
-	(char *)malloc(strlen(tcdiPtr->volumeSetName) + 1);
-    strcpy(newNode->volumeSetName, tcdiPtr->volumeSetName);
+    newNode->dumpName = strdup(tcdiPtr->dumpPath);
+    newNode->volumeSetName = strdup(tcdiPtr->volumeSetName);
 
     CopyTapeSetDesc(&(newNode->tapeSetDesc), &tcdiPtr->tapeSet);
 

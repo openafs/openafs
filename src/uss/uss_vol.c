@@ -824,10 +824,8 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
      */
     new_dir = (struct uss_subdir *)malloc(sizeof(struct uss_subdir));
     new_dir->previous = uss_currentDir;
-    new_dir->path = (char *)malloc(strlen(a_mpoint) + 1);
-    strcpy(new_dir->path, a_mpoint);
-    new_dir->finalACL = (char *)malloc(strlen(a_acl) + 1);
-    strcpy(new_dir->finalACL, a_acl);
+    new_dir->path = strdup(a_mpoint);
+    new_dir->finalACL = strdup(a_acl);
     uss_currentDir = new_dir;
     sprintf(tmp_str, "%s %s all", a_mpoint, uss_AccountCreator);
 

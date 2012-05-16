@@ -678,8 +678,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    memset(lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
-	    lip->name = (char *)malloc(strlen(tname) + 1);
-	    strcpy(lip->name, tname);
+	    lip->name = strdup(tname);
 	}
 	i = found;
     } else {
@@ -696,8 +695,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    memset(lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
-	    lip->name = (char *)malloc(strlen(tname) + 1);
-	    strcpy(lip->name, tname);
+	    lip->name = strdup(tname);
 	}
     }
 

@@ -677,7 +677,7 @@ YY_RULE_SETUP
 case 7:
 YY_RULE_SETUP
 #line 13 "et_lex.lex.l"
-{ char *p; yylval.dynstr = ds((char *)yytext+1);
+{ char *p; yylval.dynstr = strdup((char *)yytext+1);
 		  if (p=strrchr(yylval.dynstr, '"')) *p='\0';
 		  return QUOTED_STRING;
 		}
@@ -685,7 +685,7 @@ YY_RULE_SETUP
 case 8:
 YY_RULE_SETUP
 #line 18 "et_lex.lex.l"
-{ yylval.dynstr = ds((char *)yytext); return STRING; }
+{ yylval.dynstr = strdup((char *)yytext); return STRING; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP

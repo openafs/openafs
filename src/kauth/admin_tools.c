@@ -1523,9 +1523,8 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 			return code;
 		    }
 		    ip = (struct cmd_item *)malloc(sizeof(struct cmd_item));
-		    ip->data = (char *)malloc(strlen(password) + 1);
+		    ip->data = strdup(password);
 		    ip->next = 0;
-		    strcpy(ip->data, password);
 		    as->parms[i].items = ip;
 		}
 	    }

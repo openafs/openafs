@@ -52,9 +52,6 @@ void *bozo_ShutdownAndExit(void *arock /* really int asignal */);
 int initBosEntryStats(void);
 int DirAccessOK(void);
 
-/* fsbnodeops.c */
-char *copystr(char *a);
-
 /* inline functions */
 static_inline struct bozo_key *
 ktc_to_bozoptr(struct ktc_encryptionKey *key) {

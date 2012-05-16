@@ -37,7 +37,6 @@
 char *current_token = (char *)NULL;
 extern char *table_name;
 
-char *ds(const char *string);
 char *quote(const char *string);
 void set_table_1num(char *string);
 int char_to_1num(char c);
@@ -670,7 +669,7 @@ yyparse(YYPARSE_PARAM)
     case 1:
 #line 51 "error_table.y"
 	{
-	    table_name = ds(yyvsp[-2].dynstr);
+	    table_name = strdup(yyvsp[-2].dynstr);
 	    current_token = table_name;
 	    put_ecs();;
 	    break;
@@ -686,7 +685,7 @@ yyparse(YYPARSE_PARAM)
 #line 60 "error_table.y"
 	{
 	    current_token = yyvsp[0].dynstr;
-	    set_table_fun(ds("1"));
+	    set_table_fun(strdup("1"));
 	    yyval.dynstr = yyvsp[0].dynstr;
 	    ;
 	    break;
@@ -728,14 +727,14 @@ yyparse(YYPARSE_PARAM)
     case 10:
 #line 96 "error_table.y"
 	{
-	    yyval.dynstr = ds(yyvsp[0].dynstr);
+	    yyval.dynstr = strdup(yyvsp[0].dynstr);
 	    current_token = yyval.dynstr;;
 	    break;
 	}
     case 11:
 #line 101 "error_table.y"
 	{
-	    yyval.dynstr = ds(yyvsp[0].dynstr);
+	    yyval.dynstr = strdup(yyvsp[0].dynstr);
 	    current_token = yyval.dynstr;;
 	    break;
 	}
@@ -976,15 +975,6 @@ gensym(const char *x)
 }
 
 char *
-ds(const char *string)
-{
-    char *rv;
-    rv = (char *)malloc(strlen(string) + 1);
-    strcpy(rv, string);
-    return (rv);
-}
-
-char *
 quote(const char *string)
 {
     char *rv;
@@ -1018,7 +1008,7 @@ add_ec(const char *name, const char *description)
     }
     error_codes =
 	(char **)realloc((char *)error_codes, (current + 2) * sizeof(char *));
-    error_codes[current++] = ds(name);
+    error_codes[current++] = strdup(name);
     error_codes[current] = (char *)NULL;
 }
 
@@ -1052,7 +1042,7 @@ add_ec_val(const char *name, const char *val, const char *description)
     }
     error_codes =
 	(char **)realloc((char *)error_codes, (current + 2) * sizeof(char *));
-    error_codes[current++] = ds(name);
+    error_codes[current++] = strdup(name);
     error_codes[current] = (char *)NULL;
 }
 

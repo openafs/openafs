@@ -333,8 +333,7 @@ usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
     usd->seek = usd_FileSeek;
     usd->ioctl = usd_FileIoctl;
     usd->close = usd_FileClose;
-    usd->fullPathName = (char *)malloc(strlen(path) + 1);
-    strcpy(usd->fullPathName, path);
+    usd->fullPathName = strdup(path);
     usd->openFlags = flags;
 
     code = 0;

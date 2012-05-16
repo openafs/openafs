@@ -343,10 +343,8 @@ createDirEnt(dirEntry, fileName, vnode, unique)
 				 dirEntry->numEntries * sizeof(VnodeName)));
     dirEntry->vnodeName[dirEntry->numEntries - 1].vnode = vnode;
     dirEntry->vnodeName[dirEntry->numEntries - 1].vunique = unique;
-    dirEntry->vnodeName[dirEntry->numEntries - 1].name =
-	(char *)malloc(strlen(fileName) + 1);
+    dirEntry->vnodeName[dirEntry->numEntries - 1].name = strdup(fileName);
     assert(dirEntry->vnodeName[dirEntry->numEntries - 1].name);
-    strcpy(dirEntry->vnodeName[dirEntry->numEntries - 1].name, fileName);
 }
 
 

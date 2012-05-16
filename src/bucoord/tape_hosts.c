@@ -266,8 +266,7 @@ bc_ParseHosts(void)
 	    tfirst = tlast = the;
 	}
 	the->next = (struct bc_hostEntry *)0;
-	the->name = (char *)malloc(strlen(hostName) + 1);
-	strcpy(the->name, hostName);
+	the->name = strdup(hostName);
 	the->portOffset = port;
 	if (th) {
 	    memcpy(&the->addr.sin_addr.s_addr, th->h_addr, 4);

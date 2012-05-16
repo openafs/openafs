@@ -1996,7 +1996,6 @@ static afs_int32
 RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
 		  char **motd, Volume * volptr)
 {
-    int temp;
 
     status->Vid = V_id(volptr);
     status->ParentId = V_parentId(volptr);
@@ -2015,18 +2014,14 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     status->PartMaxBlocks = RoundInt64ToInt31(volptr->partition->totalUsable);
 
     /* now allocate and copy these things; they're freed by the RXGEN stub */
-    temp = strlen(V_name(volptr)) + 1;
-    *name = malloc(temp);
+    *name = strdup(V_name(volptr));
     if (!*name) {
 	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
-    strcpy(*name, V_name(volptr));
-    temp = strlen(V_offlineMessage(volptr)) + 1;
-    *offMsg = malloc(temp);
+    *offMsg = strdup(V_offlineMessage(volptr));
     if (!*offMsg) {
 	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));
     }
-    strcpy(*offMsg, V_offlineMessage(volptr));
     *motd = malloc(1);
     if (!*motd) {
 	ViceLogThenPanic(0, ("Failed malloc in RXGetVolumeStatus\n"));

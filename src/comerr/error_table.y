@@ -49,7 +49,6 @@ char *gensym(const char *x);
 char *current_token = (char *)NULL;
 extern char *table_name;
 
-char *ds(const char *string);
 char *quote(const char *string);
 void set_table_1num(char *string);
 int char_to_1num(char c);
@@ -75,7 +74,7 @@ extern int yylex (void);
 %%
 
 error_table	:	ERROR_TABLE header error_codes END
-			{ table_name = ds($2);
+			{ table_name = strdup($2);
 			  current_token = table_name;
 			  put_ecs(); }
 		;
@@ -85,7 +84,7 @@ header          :       table_fun table_id
                           $$ = $2; }
                 |       table_id
                         { current_token = $1;
-                          set_table_fun(ds("1"));
+                          set_table_fun(strdup("1"));
                           $$ = $1;
                         }
                 ;
@@ -120,12 +119,12 @@ ec_entry	:	ERROR_CODE_ENTRY ec_name ',' description
 		;
 
 ec_name		:	STRING
-			{ $$ = ds($1);
+			{ $$ = strdup($1);
 			  current_token = $$; }
 		;
 
 description	:	QUOTED_STRING
-			{ $$ = ds($1);
+			{ $$ = strdup($1);
 			  current_token = $$; }
 		;
 
@@ -160,19 +159,10 @@ char *gensym(const char *x)
 }
 
 char *
-ds(const char *string)
-{
-	char *rv;
-	rv = (char *)malloc(strlen(string)+1);
-	strcpy(rv, string);
-	return(rv);
-}
-
-char *
 quote(const char *string)
 {
 	char *rv;
-	rv = (char *)malloc(strlen(string)+3);
+	rv = malloc(strlen(string)+3);
 	strcpy(rv, "\"");
 	strcat(rv, string);
 	strcat(rv, "\"");
@@ -201,7 +191,7 @@ void add_ec(const char *name, const char *description)
 	}
 	error_codes = (char **)realloc((char *)error_codes,
 				       (current + 2)*sizeof(char *));
-	error_codes[current++] = ds(name);
+	error_codes[current++] = strdup(name);
 	error_codes[current] = (char *)NULL;
 }
 
@@ -235,7 +225,7 @@ void add_ec_val(const char *name, const char *val, const char *description)
 	}
 	error_codes = (char **)realloc((char *)error_codes,
 				       (current + 2)*sizeof(char *));
-	error_codes[current++] = ds(name);
+	error_codes[current++] = strdup(name);
 	error_codes[current] = (char *)NULL;
 } 
 

@@ -30,8 +30,7 @@ AddToList(struct filestr **ah, char *aname)
     tf = (struct filestr *)malloc(sizeof(struct filestr));
     tf->next = *ah;
     *ah = tf;
-    tf->name = (char *)malloc(strlen(aname) + 1);
-    strcpy(tf->name, aname);
+    tf->name = strdup(aname);
     return 0;
 }
 

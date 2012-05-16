@@ -181,9 +181,8 @@ static afs_uint32 dirlookup_cb(afs_vnode *v, afs_dir_entry *de,
   } else if (s->vnode) {                        /* Search by vnode */
     if (de->vnode != s->vnode[0]) return 0;     /* Not it! */
     if (s->name) {
-      s->name[0] = (char *)malloc(strlen(de->name) + 1);
+      s->name[0] = strdup(de->name);
       if (!s->name[0]) return ENOMEM;
-      strcpy(s->name[0], de->name);
     }
     if (s->vuniq) s->vuniq[0] = de->uniq;
   }

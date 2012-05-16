@@ -404,8 +404,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     initialize_U_error_table();
 
     tdb = (struct ubik_dbase *)malloc(sizeof(struct ubik_dbase));
-    tdb->pathName = (char *)malloc(strlen(pathName) + 1);
-    strcpy(tdb->pathName, pathName);
+    tdb->pathName = strdup(pathName);
     tdb->activeTrans = (struct ubik_trans *)0;
     memset(&tdb->version, 0, sizeof(struct ubik_version));
     memset(&tdb->cachedVersion, 0, sizeof(struct ubik_version));

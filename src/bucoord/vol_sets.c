@@ -486,8 +486,7 @@ bc_ParseVolumeSet(void)
 	     */
 	    tvs = (struct bc_volumeSet *)malloc(sizeof(struct bc_volumeSet));
 	    memset(tvs, 0, sizeof(*tvs));
-	    tvs->name = (char *)malloc(strlen(vsname) + 1);
-	    strcpy(tvs->name, vsname);
+	    tvs->name = strdup(vsname);
 
 	    /* append to the end */
 	    for (ppvs = &bc_globalConfig->vset, pvs = *ppvs; pvs;
@@ -527,32 +526,29 @@ bc_ParseVolumeSet(void)
 	    /* The above code has filled in the server sockaddr, now fill in
 	     * the rest of the fields.
 	     */
-	    tve->serverName = (char *)malloc(strlen(serverName) + 1);
+	    tve->serverName = strdup(serverName);
 	    if (!tve->serverName) {
 		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec server name field!");
 		return (-1);
 	    }
-	    strcpy(tve->serverName, serverName);
-	    tve->partname = (char *)malloc(strlen(partName) + 1);
+	    tve->partname = strdup(partName);
 	    if (!tve->partname) {
 		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec partition pattern field!");
 		return (-1);
 	    }
-	    strcpy(tve->partname, partName);
 	    code = bc_GetPartitionID(partName, &tve->partition);
 	    if (code) {
 		afs_com_err(whoami, 0, "Can't parse partition '%s'", partName);
 		return -1;
 	    }
-	    tp = (char *)malloc(strlen(vsname) + 1);
+	    tp = strdup(vsname);
 	    if (!tp) {
 		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec volume pattern field!");
 		return (-1);
 	    }
-	    strcpy(tp, vsname);
 	    tve->name = tp;
 
 	    /* Now, thread it onto the list of other volume spec entries for

@@ -561,10 +561,8 @@ finddisk(name)
     if ((*dkp = (struct disk *)malloc(sizeof(struct disk))) == NULL)
 	errexit("out of memory");
     dk = *dkp;
-    if ((dk->name = malloc((unsigned int)len + 1)) == NULL)
+    if ((dk->name = strdup(name)) == NULL)
 	errexit("out of memory");
-    strncpy(dk->name, name, len);
-    dk->name[len] = '\0';
     dk->part = NULL;
     dk->next = NULL;
     dk->pid = 0;
@@ -586,12 +584,10 @@ addpart(name, fsname)
     if ((*ppt = (struct part *)malloc(sizeof(struct part))) == NULL)
 	errexit("out of memory");
     pt = *ppt;
-    if ((pt->name = malloc((unsigned int)strlen(name) + 1)) == NULL)
+    if ((pt->name = strdup(name)) == NULL)
 	errexit("out of memory");
-    strcpy(pt->name, name);
-    if ((pt->fsname = malloc((unsigned int)strlen(fsname) + 1)) == NULL)
+    if ((pt->fsname = strdup(fsname)) == NULL)
 	errexit("out of memory");
-    strcpy(pt->fsname, fsname);
     pt->next = NULL;
 }
 

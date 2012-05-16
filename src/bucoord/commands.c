@@ -729,18 +729,15 @@ bc_FloatATOI(char *anum)
 char *
 bc_CopyString(char *astring)
 {
-    afs_int32 tlen;
     char *tp;
 
     if (!astring)
 	return (NULL);		/* propagate null strings easily */
-    tlen = strlen(astring);
-    tp = (char *)malloc(tlen + 1);	/* don't forget the terminating null */
+    tp = strdup(astring);
     if (!tp) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	return (tp);
     }
-    strcpy(tp, astring);
     return tp;
 }
 
@@ -1851,12 +1848,11 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
      * global variables so this can take place in main.
      */
     if (loadfile) {
-	loadFile = (char *)malloc(strlen(as->parms[6].items->data) + 1);
+	loadFile = strdup(as->parms[6].items->data);
 	if (!loadFile) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
-	strcpy(loadFile, as->parms[6].items->data);
 	return 0;
     }
 

@@ -193,8 +193,7 @@ bc_CreateVolumeSet(struct bc_config *aconfig, char *avolName,
     nset = (struct bc_volumeSet *)malloc(sizeof(struct bc_volumeSet));
     memset(nset, 0, sizeof(*nset));
     nset->flags = aflags;
-    nset->name = (char *)malloc(strlen(avolName) + 1);
-    strcpy(nset->name, avolName);
+    nset->name = strdup(avolName);
     if (aflags & VSFLAG_TEMPORARY) {
 	/* Add to beginning of list */
 	nset->next = aconfig->vset;
@@ -306,12 +305,9 @@ bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost,
     for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
     tentry = (struct bc_volumeEntry *)malloc(sizeof(struct bc_volumeEntry));
     memset(tentry, 0, sizeof(*tentry));
-    tentry->serverName = (char *)malloc(strlen(ahost) + 1);
-    strcpy(tentry->serverName, ahost);
-    tentry->partname = (char *)malloc(strlen(apart) + 1);
-    strcpy(tentry->partname, apart);
-    tentry->name = (char *)malloc(strlen(avol) + 1);
-    strcpy(tentry->name, avol);
+    tentry->serverName = strdup(ahost);
+    tentry->partname = strdup(apart);
+    tentry->name = strdup(avol);
 
     code = bc_ParseHost(tentry->serverName, &tentry->server);
     if (code)
@@ -378,8 +374,7 @@ bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName,
     aconfig->dsched = tdump;
 
     /* save the name of this dump node */
-    tdump->name = (char *)malloc(strlen(adumpName) + 1);
-    strcpy(tdump->name, adumpName);
+    tdump->name = strdup(adumpName);
 
     /* expiration information */
     tdump->expDate = expDate;

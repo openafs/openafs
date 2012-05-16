@@ -299,14 +299,13 @@ bc_Restorer(afs_int32 aindex)
 	}
 	memset(vi, 0, sizeof(struct volinfo));
 
-	vi->volname = (char *)malloc(strlen(vname) + 1);
+	vi->volname = strdup(vname);
 	if (!vi->volname) {
 	    free(vi);
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
 
-	strcpy(vi->volname, vname);
 	if (serverAll) {
 	    vi->server = serverAll;
 	    vi->partition = partitionAll;
@@ -480,16 +479,13 @@ bc_Restorer(afs_int32 aindex)
 			    }
 			    memset(tle, 0, sizeof(struct bc_tapeList));
 
-			    tle->tapeName =
-				(char *)malloc(strlen(volumeEntries[ve].tape)
-					       + 1);
+			    tle->tapeName = strdup(volumeEntries[ve].tape);
 			    if (!tle->tapeName) {
 				free(tle);
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 
-			    strcpy(tle->tapeName, volumeEntries[ve].tape);
 			    tle->dumpID = dlevels[lv].DumpId;
 			    tle->initialDumpID = dlevels[lv].initialDumpId;
 			    tle->tapeNumber = tapeseq;
@@ -535,16 +531,13 @@ bc_Restorer(afs_int32 aindex)
 			    }
 			    memset(ti, 0, sizeof(struct bc_tapeItem));
 
-			    ti->volumeName =
-				(char *)malloc(strlen(volumeEntries[ve].name)
-					       + 1);
+			    ti->volumeName = strdup(volumeEntries[ve].name);
 			    if (!ti->volumeName) {
 				free(ti);
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
 
-			    strcpy(ti->volumeName, volumeEntries[ve].name);
 			    ti->server = vi->server;
 			    ti->partition = vi->partition;
 			    ti->oid = volumeEntries[ve].id;

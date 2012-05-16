@@ -194,13 +194,9 @@ cfg_ClientQueryStatus(const char *hostName,	/* name of host */
 
 	    if (tst == 0 && clientSt == 0) {
 		/* everything looks good; malloc cell name buffer to return */
-		clientCellName =
-		    (char *)malloc(strlen(cellentry->cellInfo.name) + 1);
-		if (clientCellName == NULL) {
+		clientCellName = strdup(cellentry->cellInfo.name);
+		if (clientCellName == NULL)
 		    tst = ADMNOMEM;
-		} else {
-		    strcpy(clientCellName, cellentry->cellInfo.name);
-		}
 	    }
 
 	    (void)afsconf_Close(confdir);

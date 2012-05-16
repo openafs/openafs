@@ -91,14 +91,13 @@ afs_plugin_init(int tokenExpiration, char *weblogPath, char *error_fname,
 
     FILE *fp;			/* for pid_fname */
     char *afs_weblog_pidfile;
-    char *httpd_pid_fname = (char *)malloc(strlen(pf) + 1);
+    char *httpd_pid_fname = strdup(pf);
     if (httpd_pid_fname == NULL) {
 	fprintf(stderr,
 		"%s: malloc failed - out of memory while allocating space for httpd_pid_fname\n",
 		module_name);
 	exit(-1);
     }
-    strcpy(httpd_pid_fname, pf);
     afs_weblog_pidfile = (char *)malloc(strlen(httpd_pid_fname) + 5);
     if (httpd_pid_fname == NULL) {
 	fprintf(stderr,

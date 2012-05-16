@@ -399,8 +399,7 @@ SBOZO_GetCellName(struct rx_call *acall, char **aname)
 	*aname = (char *)malloc(1);
 	**aname = 0;
     } else {
-	*aname = (char *)malloc(strlen(tname) + 1);
-	strcpy(*aname, tname);
+	*aname = strdup(tname);
     }
 
     return code;
@@ -1486,8 +1485,7 @@ SBOZO_GetInstanceStrings(struct rx_call *acall, char *abnodeName,
 
     /* now, return the appropriate error string, if any */
     if (tb->lastErrorName) {
-	*as1 = (char *)malloc(strlen(tb->lastErrorName) + 1);
-	strcpy(*as1, tb->lastErrorName);
+	*as1 = strdup(tb->lastErrorName);
     } else {
 	*as1 = (char *)malloc(1);
 	**as1 = 0;

@@ -29,14 +29,9 @@ keymap_Create(void)
 char *
 gtx_CopyString(char *aval)
 {
-    char *tp;
-
     if (!aval)
 	return NULL;		/* propagate null strings around */
-    tp = (char *)malloc(strlen(aval) + 1);
-    if (tp != NULL)
-	strcpy(tp, aval);
-    return (tp);
+    return strdup(aval);
 }
 
 static int

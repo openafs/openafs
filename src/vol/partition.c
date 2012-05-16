@@ -201,8 +201,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     else
 	DiskPartitionList = dp;
     dp->next = 0;
-    dp->name = (char *)malloc(strlen(path) + 1);
-    strncpy(dp->name, path, strlen(path) + 1);
+    dp->name = strdup(path);
     dp->index = volutil_GetPartitionID(path);
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
     /* Create a lockfile for the partition, of the form /vicepa/Lock/vicepa */
@@ -215,8 +214,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     close(afs_open(dp->devName, O_RDWR | O_CREAT, 0600));
     dp->device = dp->index;
 #else
-    dp->devName = (char *)malloc(strlen(devname) + 1);
-    strncpy(dp->devName, devname, strlen(devname) + 1);
+    dp->devName = strdup(devname);
     dp->device = dev;
 #endif
     dp->lock_fd = INVALID_FD;

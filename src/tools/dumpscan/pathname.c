@@ -279,14 +279,13 @@ Path_Build(XFILE * X, path_hashinfo * phi, afs_uint32 vnode, char **his_path,
     int nl, pl = 0;
 
     if (vnode == 1) {
-	*his_path = (char *)malloc(2);
+	*his_path = strdup("/");
 	if (!his_path) {
 	    if (phi->p->cb_error)
 		(phi->p->cb_error) (ENOMEM, 1, phi->p->err_refcon,
 				    "No memory for pathname of vnode 1");
 	    return ENOMEM;
 	}
-	strcpy(*his_path, "/");
 	return 0;
     }
 

@@ -324,15 +324,6 @@ RestoreSalFlag(struct fsbnode *abnode)
     return 0;
 }
 
-char *
-copystr(char *a)
-{
-    char *b;
-    b = (char *)malloc(strlen(a) + 1);
-    strcpy(b, a);
-    return b;
-}
-
 static int
 fs_delete(struct bnode *bn)
 {

@@ -183,21 +183,16 @@ argHandler(struct cmd_syndesc *as, void *arock)
 
     /* database directory */
     if (as->parms[0].items != 0) {
-	globalConfPtr->databaseDirectory =
-	    (char *)malloc(strlen(as->parms[0].items->data) + 1);
+	globalConfPtr->databaseDirectory = strdup(as->parms[0].items->data);
 	if (globalConfPtr->databaseDirectory == 0)
 	    BUDB_EXIT(-1);
-	strcpy(globalConfPtr->databaseDirectory, as->parms[0].items->data);
     }
 
     /* -cellservdb, cell configuration directory */
     if (as->parms[1].items != 0) {
-	globalConfPtr->cellConfigdir =
-	    (char *)malloc(strlen(as->parms[1].items->data) + 1);
+	globalConfPtr->cellConfigdir = strdup(as->parms[1].items->data);
 	if (globalConfPtr->cellConfigdir == 0)
 	    BUDB_EXIT(-1);
-
-	strcpy(globalConfPtr->cellConfigdir, as->parms[1].items->data);
 
 	globalConfPtr->debugFlags |= DF_RECHECKNOAUTH;
     }

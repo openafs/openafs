@@ -479,8 +479,7 @@ usd_DeviceOpen(const char *path, int oflag, int pmode, usd_handle_t * usdP)
     usd->ioctl = usd_DeviceIoctl;
     usd->close = usd_DeviceClose;
 
-    usd->fullPathName = (char *)malloc(strlen(path) + 1);
-    strcpy(usd->fullPathName, path);
+    usd->fullPathName = strdup(path);
     usd->openFlags = oflag;
 
     /* For devices, this is the first real reference, so many errors show up

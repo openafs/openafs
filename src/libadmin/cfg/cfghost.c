@@ -177,13 +177,9 @@ cfg_HostQueryStatus(const char *hostName,	/* name of host */
 
 	    if (tst == 0 && serverSt == 0) {
 		/* everything looks good; malloc cell name buffer to return */
-		serverCellName =
-		    (char *)malloc(strlen(cellentry->cellInfo.name) + 1);
-		if (serverCellName == NULL) {
+		serverCellName = strdup(cellentry->cellInfo.name);
+		if (serverCellName == NULL)
 		    tst = ADMNOMEM;
-		} else {
-		    strcpy(serverCellName, cellentry->cellInfo.name);
-		}
 	    }
 
 	    (void)afsconf_Close(confdir);
@@ -262,8 +258,7 @@ cfg_HostOpen(void *cellHandle,	/* cell handle */
 
 	if ((cfg_host = (cfg_host_p) malloc(sizeof(cfg_host_t))) == NULL) {
 	    tst = ADMNOMEM;
-	} else if ((localHostName = (char *)malloc(strlen(fullHostName) + 1))
-		   == NULL) {
+	} else if ((localHostName = strdup(fullHostName)) == NULL) {
 	    free(cfg_host);
 	    tst = ADMNOMEM;
 	} else {
@@ -275,8 +270,6 @@ cfg_HostOpen(void *cellHandle,	/* cell handle */
 	    cfg_host->cellHandle = cellHandle;
 	    cfg_host->bosHandle = NULL;
 	    cfg_host->end_magic = END_MAGIC;
-
-	    strcpy(localHostName, fullHostName);
 
 	    if (!afsclient_CellNameGet
 		(cfg_host->cellHandle, &cfg_host->cellName, &tst2)) {

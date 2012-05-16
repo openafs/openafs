@@ -171,7 +171,7 @@ cron_create(char *ainstance, char *acommand, char *awhen,
     }
     te->when = ktime_next(&te->whenToRun, 0);
     te->command = cmdpath;
-    te->whenString = copystr(awhen);
+    te->whenString = strdup(awhen);
     return (struct bnode *)te;
 }
 

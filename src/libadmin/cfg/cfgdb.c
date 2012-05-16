@@ -307,14 +307,12 @@ cfg_CellServDbEnumerate(const char *fsDbHost,	/* fileserver or database host */
 
 	    /* return cell name to caller */
 	    if (tst == 0) {
-		*cellName = (char *)malloc(strlen(dbhostCell) + 1);
+		*cellName = strdup(dbhostCell);
 
 		if (*cellName == NULL) {
 		    free(*cellDbHosts);
-			*cellDbHosts = NULL;
+		    *cellDbHosts = NULL;
 		    tst = ADMNOMEM;
-		} else {
-		    strcpy(*cellName, dbhostCell);
 		}
 	    }
 	}

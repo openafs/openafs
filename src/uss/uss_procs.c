@@ -146,10 +146,8 @@ uss_procs_BuildDir(char *a_path, char *a_mode, char *a_owner, char *a_access)
      */
     new_dir = (struct uss_subdir *)malloc(sizeof(struct uss_subdir));
     new_dir->previous = uss_currentDir;
-    new_dir->path = (char *)malloc(strlen(a_path) + 1);
-    strcpy(new_dir->path, a_path);
-    new_dir->finalACL = (char *)malloc(strlen(a_access) + 1);
-    strcpy(new_dir->finalACL, a_access);
+    new_dir->path = strdup(a_path);
+    new_dir->finalACL = strdup(a_access);
     uss_currentDir = new_dir;
 
     /*

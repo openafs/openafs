@@ -3218,10 +3218,7 @@ JudgeEntry(void *arock, char *name, afs_int32 vnodeNumber,
 	    Log("FOUND root file: %s" OS_DIRSEP "%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name ? dir->name : "??", name, vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
 	if (vnodeIdToClass(vnodeNumber) == vLarge
 	    && vnodeEssence->name == NULL) {
-	    char *n;
-	    if ((n = (char *)malloc(strlen(name) + 1)))
-		strcpy(n, name);
-	    vnodeEssence->name = n;
+	    vnodeEssence->name = strdup(name);
 	}
 
 	/* The directory entry points to the vnode. Check to see if the
@@ -4855,9 +4852,8 @@ char *
 ToString(const char *s)
 {
     char *p;
-    p = (char *)malloc(strlen(s) + 1);
+    p = strdup(s);
     osi_Assert(p != NULL);
-    strcpy(p, s);
     return p;
 }
 

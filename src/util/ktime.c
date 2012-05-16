@@ -79,8 +79,7 @@ LocalParseLine(char *aline, struct token **alist)
 		*tptr++ = 0;
 		ttok = malloc(sizeof(struct token));
 		ttok->next = NULL;
-		ttok->key = malloc(strlen(tbuffer) + 1);
-		strcpy(ttok->key, tbuffer);
+		ttok->key = strdup(tbuffer);
 		if (last) {
 		    last->next = ttok;
 		    last = ttok;

@@ -67,10 +67,9 @@ repair_dumphdr_cb(afs_dump_header * hdr, XFILE * X, void *refcon)
 	    fprintf(stderr, ">>> Will use RESTORED.%d\n", hdr->volid);
 	}
 	sprintf(volname, "RESTORED.%d", hdr->volid);
-	hdr->volname = (unsigned char *)malloc(strlen(volname) + 1);
+	hdr->volname = (unsigned char *) strdup(volname);
 	if (!hdr->volname)
 	    return ENOMEM;
-	strcpy((char *)hdr->volname, volname);
 	hdr->field_mask |= F_DUMPHDR_VOLNAME;
     }
     if (!(field_mask & F_DUMPHDR_FROM)) {
@@ -120,10 +119,9 @@ repair_volhdr_cb(afs_vol_header * hdr, XFILE * X, void *refcon)
 	    fprintf(stderr, ">>> Will use RESTORED.%d\n", hdr->volid);
 	}
 	sprintf(volname, "RESTORED.%d", hdr->volid);
-	hdr->volname = (unsigned char *)malloc(strlen(volname) + 1);
+	hdr->volname = (unsigned char *)strdup(volname);
 	if (!hdr->volname)
 	    return ENOMEM;
-	strcpy((char *)hdr->volname, volname);
 	hdr->field_mask |= F_VOLHDR_VOLNAME;
     }
     if (!(field_mask & F_VOLHDR_INSERV)) {

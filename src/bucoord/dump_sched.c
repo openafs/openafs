@@ -429,8 +429,7 @@ bc_ParseDumpSchedule(void)
 	memset(tds, 0, sizeof(*tds));
 
 	tds->next = (struct bc_dumpSchedule *)0;
-	tds->name = (char *)malloc(strlen(dsname) + 1);
-	strcpy(tds->name, dsname);
+	tds->name = strdup(dsname);
 
 	tds->expDate = expDate;
 	tds->expType = expType;

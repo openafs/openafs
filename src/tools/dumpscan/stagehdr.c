@@ -109,9 +109,9 @@ ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
 	hdr->magic = ntohl(bckhdr->c_magic);
 	hdr->cksum = ntohl(bckhdr->c_checksum);
 	hdr->flags = ntohl(bckhdr->c_flags);
-	hdr->server = malloc(strlen(bckhdr->c_host) + 1);
-	hdr->part = malloc(strlen(bckhdr->c_disk) + 1);
-	hdr->volname = malloc(strlen(bckhdr->c_name) + 1);
+	hdr->server = (unsigned char *) strdup(bckhdr->c_host);
+	hdr->part = (unsigned char *) strdup(bckhdr->c_disk);
+	hdr->volname = (unsigned char *) strdup(bckhdr->c_name);
 
 	if (!hdr->server || !hdr->part || !hdr->volname) {
 	    if (hdr->server)
@@ -122,9 +122,6 @@ ParseStageHdr(XFILE * X, unsigned char *tag, backup_system_header * hdr)
 		free(hdr->volname);
 	    return ENOMEM;
 	}
-	strcpy((char *)hdr->server, bckhdr->c_host);
-	strcpy((char *)hdr->part, bckhdr->c_disk);
-	strcpy((char *)hdr->volname, bckhdr->c_name);
     }
 
     if (tag)
