@@ -969,9 +969,8 @@ afsconf_LookupServer(const char *service, const char *protocol,
     int len;
     unsigned char answer[1024];
     unsigned char *p;
-    char *dotcellname;
+    char *dotcellname = NULL;
     char *realCellName;
-    int cellnamelength, fullnamelength;
     char host[256];
     int server_num = 0;
     int minttl = 0;
@@ -991,12 +990,6 @@ afsconf_LookupServer(const char *service, const char *protocol,
     if (strchr(cellName,'.'))
 	pass += 2;
 
-    cellnamelength=strlen(cellName); /* _ ._ . . \0 */
-    fullnamelength=cellnamelength+strlen(protocol)+strlen(IANAname)+6;
-    dotcellname=malloc(fullnamelength);
-    if (!dotcellname)
-	return AFSCONF_NOTFOUND;	/* service not found */
-
 #ifdef HAVE_RES_RETRANSRETRY
     if ((_res.options & RES_INIT) == 0 && res_init() == -1)
       return (0);
@@ -1013,30 +1006,32 @@ afsconf_LookupServer(const char *service, const char *protocol,
     switch (pass) {
     case 0:
 	dnstype = T_SRV;
-	code = snprintf(dotcellname, fullnamelength, "_%s._%s.%s.",
-		 IANAname, protocol, cellName);
+	asprintf(&dotcellname, "_%s._%s.%s.", IANAname, protocol, cellName);
 	break;
     case 1:
 	dnstype = T_AFSDB;
-	code = snprintf(dotcellname, fullnamelength, "%s.",
-		 cellName);
+	asprintf(&dotcellname, "%s.", cellName);
 	break;
     case 2:
 	dnstype = T_SRV;
-	code = snprintf(dotcellname, fullnamelength, "_%s._%s.%s",
-		 IANAname, protocol, cellName);
+	asprintf(&dotcellname, "_%s._%s.%s", IANAname, protocol, cellName);
 	break;
     case 3:
 	dnstype = T_AFSDB;
-	code = snprintf(dotcellname, fullnamelength, "%s",
-		 cellName);
+	asprintf(&dotcellname, "%s", cellName);
 	break;
     }
-    if ((code < 0) || (code >= fullnamelength))
+    if (dotcellname == NULL)
 	goto findservererror;
+
     LOCK_GLOBAL_MUTEX;
     len = res_search(dotcellname, C_IN, dnstype, answer, sizeof(answer));
     UNLOCK_GLOBAL_MUTEX;
+
+    if (dotcellname != NULL) {
+	free(dotcellname);
+	dotcellname = NULL;
+    }
 
     if (len < 0) {
 	if (try_init < 1) {
@@ -1181,7 +1176,6 @@ afsconf_LookupServer(const char *service, const char *protocol,
 findservererror:
     if (code && realCellName)
 	free(realCellName);
-    free(dotcellname);
     return code;
 }
 
