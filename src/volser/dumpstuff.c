@@ -1295,9 +1295,9 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
   out:
     /* Free the malloced space above */
     if (b1)
-	free((char *)b1);
+	free(b1);
     if (b2)
-	free((char *)b2);
+	free(b2);
     return error;
 }
 

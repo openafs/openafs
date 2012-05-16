@@ -138,7 +138,7 @@ afsconf_fopen(const char *fname, const char *fmode)
     iop->buffer = malloc(BUFFER);
     if (iop->buffer == NULL) {
 	(void) close(fd);
-	free((void *) iop);
+	free(iop);
 	errno = ENOMEM;
 	return NULL;
     }
@@ -154,8 +154,8 @@ afsconf_fclose(afsconf_FILE *iop)
 	return 0;
     }
     close(iop->_file);
-    free((void *)iop->buffer);
-    free((void *)iop);
+    free(iop->buffer);
+    free(iop);
     return 0;
 }
 

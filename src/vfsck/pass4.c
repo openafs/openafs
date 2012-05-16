@@ -96,7 +96,7 @@ pass4()
 			zlnp->zlncnt = zlnhead->zlncnt;
 			zlnp = zlnhead;
 			zlnhead = zlnhead->next;
-			free((char *)zlnp);
+			free(zlnp);
 			clri(&idesc, "UNREF", 1);
 			break;
 		    }
@@ -176,7 +176,7 @@ pass4check(idesc)
 		dlp->dup = duplist->dup;
 		dlp = duplist;
 		duplist = duplist->next;
-		free((char *)dlp);
+		free(dlp);
 		break;
 	    }
 	    if (dlp == 0) {

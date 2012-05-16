@@ -999,7 +999,7 @@ h_Enumerate(int (*proc) (struct host*, void *), void *param)
 	}
 	H_UNLOCK;
     }
-    free((void *)list);
+    free(list);
 }	/* h_Enumerate */
 
 

@@ -196,7 +196,7 @@ simplify_bitmap(struct bitmap *map)
 		   mp2->m_page);
 #endif
 	    *mpp = mp2->m_next;
-	    free((char *)mp2);
+	    free(mp2);
 	} else
 	    mpp = &mp2->m_next;
     }
@@ -214,7 +214,7 @@ or_bitmap(struct bitmap *left, struct bitmap *right)
 		for (i = 0; i < MDATA; ++i)
 		    lmap->m_data[i] |= rmap->m_data[i];
 		*rightmp = rmap->m_next;
-		free((char *)rmap);
+		free(rmap);
 		break;
 	    }
     }
@@ -237,14 +237,14 @@ and_bitmap(struct bitmap *left, struct bitmap *right)
 		for (i = 0; i < MDATA; ++i)
 		    sig |= (lmap->m_data[i] &= rmap->m_data[i]);
 		*rightmp = rmap->m_next;
-		free((char *)rmap);
+		free(rmap);
 		break;
 	    }
 	if (rmap && sig) {
 	    leftmp = &lmap->m_next;
 	} else {
 	    *leftmp = lmap->m_next;
-	    free((char *)lmap);
+	    free(lmap);
 	}
     }
     free_map((struct map *)right);
@@ -270,14 +270,14 @@ bic_bitmap(struct bitmap *left, struct bitmap *right)
 		for (i = 0; i < MDATA; ++i)
 		    sig |= (lmap->m_data[i] &= ~rmap->m_data[i]);
 		*rightmp = rmap->m_next;
-		free((char *)rmap);
+		free(rmap);
 		break;
 	    }
 	if (!rmap || sig) {
 	    leftmp = &lmap->m_next;
 	} else {
 	    *leftmp = lmap->m_next;
-	    free((char *)lmap);
+	    free(lmap);
 	}
     }
     free_map((struct map *)right);

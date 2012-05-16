@@ -341,8 +341,8 @@ int ADMINAPI
 cfg_CellServDbStatusDeallocate(cfg_cellServDbStatus_t * statusItempP,
 			       afs_status_p st)
 {
-	if ( statusItempP )
-		free((void *)statusItempP);
+    if ( statusItempP )
+	free(statusItempP);
 
     if (st != NULL) {
 	*st = 0;

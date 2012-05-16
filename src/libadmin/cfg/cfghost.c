@@ -1206,7 +1206,7 @@ int ADMINAPI
 cfg_StringDeallocate(char *stringDataP,	/* (multi)string to deallocate */
 		     afs_status_p st)
 {				/* completion status */
-    free((void *)stringDataP);
+    free(stringDataP);
     if (st != NULL) {
 	*st = 0;
     }
@@ -1222,7 +1222,7 @@ int ADMINAPI
 cfg_PartitionListDeallocate(cfg_partitionEntry_t * partitionListDataP,
 			    afs_status_p st)
 {
-    free((void *)partitionListDataP);
+    free(partitionListDataP);
     if (st != NULL) {
 	*st = 0;
     }

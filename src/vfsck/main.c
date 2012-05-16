@@ -893,7 +893,7 @@ checkfilesys(filesys, parname)
     ckfini();
     free(blockmap);
     free(statemap);
-    free((char *)lncntp);
+    free(lncntp);
     lncntp = NULL;
     blockmap = statemap = NULL;
 #ifdef	AFS_SUN5_ENV

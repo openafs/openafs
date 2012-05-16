@@ -757,7 +757,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 
     closedir(top_dirp);
     if (renames)
-	free((char *)renames);
+	free(renames);
     if (inodeFile != INVALID_FD) {
 	if (OS_SYNC(inodeFile) == -1) {
 	    Log("Unable to successfully fsync inode file for %s\n", mountedOn);
@@ -787,7 +787,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
     if (top_dirp)
 	closedir(top_dirp);
     if (renames)
-	free((char *)renames);
+	free(renames);
     return -1;
 }
 

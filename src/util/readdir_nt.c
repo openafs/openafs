@@ -96,7 +96,7 @@ closedir(DIR * dir)
 
     if (dir->h != INVALID_HANDLE_VALUE)
 	FindClose(dir->h);
-    free((void *)dir);
+    free(dir);
     return 0;
 }
 

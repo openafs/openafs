@@ -123,7 +123,7 @@ popsource(void)
 	fclose(source);
     source = sp->s_file;
     shead = sp->s_next;
-    free((char *)sp);
+    free(sp);
     return 1;
 }
 

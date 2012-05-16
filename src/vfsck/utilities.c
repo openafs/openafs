@@ -364,7 +364,7 @@ ckfini()
 	flush(fswritefd, bp);
 	nbp = bp->b_prev;
 	free(bp->b_un.b_buf);
-	free((char *)bp);
+	free(bp);
     }
 #ifdef	AFS_SUN5_ENVX
     pbp = pdirbp = NULL;

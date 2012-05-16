@@ -231,7 +231,7 @@ int LWP_CreateProcess(int (*funP)(), int stacksize, int priority, void *argP,
 
     pcb->fiber = CreateFiber(stacksize, Enter_LWP, pcb);
     if (pcb->fiber == NULL) {
-	free((void*)pcb);
+	free(pcb);
 	return LWP_EINIT;
     }
     Debug(0, ("Create: pcb=0x%p, funP=0x%p, argP=0x%p\n", pcb, funP, argP))
@@ -622,8 +622,8 @@ static void Free_PCB(PROCESS pid)
     if (pid->fiber != NULL) {
 	DeleteFiber(pid->fiber);
     }
-    if (pid->eventlist != NULL)  free((void*)pid->eventlist);
-    free((void*)pid);
+    if (pid->eventlist != NULL)  free(pid->eventlist);
+    free(pid);
 }
 
 static void Dispose_of_Dead_PCB(PROCESS cur)

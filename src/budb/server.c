@@ -307,7 +307,7 @@ parseServerList(struct cmd_item *itemPtr)
 	ERROR(code);
 
     /* free space for the server args */
-    free((char *)serverArgs);
+    free(serverArgs);
 
   error_exit:
     return (code);

@@ -354,9 +354,9 @@ inocleanup()
     if (inphead == NULL)
 	return;
     for (inpp = &inpsort[inplast - 1]; inpp >= inpsort; inpp--)
-	free((char *)(*inpp));
-    free((char *)inphead);
-    free((char *)inpsort);
+	free(*inpp);
+    free(inphead);
+    free(inpsort);
     inphead = inpsort = NULL;
 }
 #endif

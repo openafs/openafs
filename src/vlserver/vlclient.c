@@ -535,7 +535,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (i = 0; i < nentries; i++, entry++)
 		    display_entry(entry, 0);
 		if (entries.bulkentries_val)
-		    free((char *)entries.bulkentries_val);
+		    free(entries.bulkentries_val);
 	    } else if (!strcmp(oper, "lan2")) {
 		int nentries, i, si, nsi, t = 0;
 		nbulkentries entries;
@@ -572,7 +572,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    for (i = 0; i < nentries; i++, entry++)
 			display_entryN(entry, 0);
 		    if (entries.nbulkentries_val)
-			free((char *)entries.nbulkentries_val);
+			free(entries.nbulkentries_val);
 		}
 		printf("--- %d volumes ---\n", t);
 	    } else if (!strcmp(oper, "ln")) {
@@ -617,7 +617,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
 		    display_entry((struct vldbentry *)&vllist->VldbEntry, 0);
-		    free((char *)vllist);
+		    free(vllist);
 		}
 	    } else if (!strcmp(oper, "di")) {
 		sscanf(&(*argp)[0], "%d", &id);
@@ -743,7 +743,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			printf("[0x%x %u] %s\n", *addrp, *addrp,
 			       hostutil_GetNameByINet(ntohl(*addrp)));
 		}
-		free((char *)addrs.bulkaddrs_val);
+		free(addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "gau")) {
 		int nentries, i, j;
 		afs_uint32 *addrp;
@@ -799,13 +799,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 				   hostutil_GetNameByINet(mhaddrp[j]));
 			}
 			if (mhaddrs.bulkaddrs_val)
-			    free((char *)mhaddrs.bulkaddrs_val);
+			    free(mhaddrs.bulkaddrs_val);
 		    } else {
 			printf("[0x%x %u] %s\n", *addrp, *addrp,
 			       hostutil_GetNameByINet(ntohl(*addrp)));
 		    }
 		}
-		free((char *)addrs.bulkaddrs_val);
+		free(addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "mhc")) {
 		afs_uint32 serveraddrs[MAXSERVERID + 1][VL_MAXIPADDRS_PERMH];
 		afs_int32 serveraddrtype[MAXSERVERID + 1];
@@ -860,7 +860,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			for (j = 0; j < nentries2; j++) {
 			    serveraddrs[i][j] = ntohl(addrp2[j]);
 			}
-			free((char *)addrs2.bulkaddrs_val);
+			free(addrs2.bulkaddrs_val);
 		    }
 
 		    if (nargs) {
@@ -875,7 +875,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			}
 		    }
 		}
-		free((char *)addrs1.bulkaddrs_val);
+		free(addrs1.bulkaddrs_val);
 
 		/* Look for any duplicates */
 		for (i = 0; i < MAXSERVERID + 1; i++) {

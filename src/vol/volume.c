@@ -6489,7 +6489,7 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
 	vip->bitmap = BitMap;
 	vip->bitmapOffset = 0;
     } else
-	free((byte *) BitMap);
+	free(BitMap);
 #endif /* BITMAP_LATER */
 #ifdef AFS_DEMAND_ATTACH_FS
     VChangeState_r(vp, state_save);

@@ -46,7 +46,7 @@ IOMGR_AllocFDSet(void)
 void
 IOMGR_FreeFDSet(fd_set * fds)
 {
-    free((char *)fds);
+    free(fds);
 }
 #endif
 

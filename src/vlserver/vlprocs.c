@@ -1760,7 +1760,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 	countAbort(this_op);
 	ubik_AbortTrans(ctx.trans);
 	if (vldbentries->nbulkentries_val)
-	    free((char *)vldbentries->nbulkentries_val);
+	    free(vldbentries->nbulkentries_val);
 	vldbentries->nbulkentries_val = 0;
 	vldbentries->nbulkentries_len = 0;
 	*nextstartindex = -1;

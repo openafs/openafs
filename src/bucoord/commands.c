@@ -353,7 +353,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 
 	    /* Free memory allocated during VL call */
 	    if (bulkentries.nbulkentries_val) {
-		free((char *)bulkentries.nbulkentries_val);
+		free(bulkentries.nbulkentries_val);
 		bulkentries.nbulkentries_val = 0;
 		entries = 0;
 	    }
@@ -366,7 +366,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 
   error_exit:
     if (bulkentries.nbulkentries_val) {
-	free((char *)bulkentries.nbulkentries_val);
+	free(bulkentries.nbulkentries_val);
     }
     return (code);
 }				/*EvalVolumeSet2 */
