@@ -324,16 +324,12 @@ truncateDatabase(void)
     afs_int32 code = 0;
     int fd;
 
-    path = malloc(strlen(globalConfPtr->databaseDirectory) +
-		  strlen(globalConfPtr->databaseName) +
-		  strlen(globalConfPtr->databaseExtension) + 1);
+    asprintf(&path, "%s%s%s",
+	     globalConfPtr->databaseDirectory,
+	     globalConfPtr->databaseName,
+	     globalConfPtr->databaseExtension);
     if (path == NULL)
 	ERROR(-1);
-
-    /* construct the database name */
-    strcpy(path, globalConfPtr->databaseDirectory);
-    strcat(path, globalConfPtr->databaseName);
-    strcat(path, globalConfPtr->databaseExtension);
 
     fd = open(path, O_RDWR, 0755);
     if (!fd) {
@@ -506,15 +502,10 @@ main(int argc, char **argv)
 
     LogError(0, "Will allocate %d ubik buffers\n", ubik_nBuffers);
 
-    dbNamePtr =
-	(char *)malloc(strlen(globalConfPtr->databaseDirectory) +
-		       strlen(globalConfPtr->databaseName) + 1);
+    asprintf(&dbNamePtr, "%s%s", globalConfPtr->databaseDirectory,
+	     globalConfPtr->databaseName);
     if (dbNamePtr == 0)
 	ERROR(-1);
-
-    /* construct the database name */
-    strcpy(dbNamePtr, globalConfPtr->databaseDirectory);
-    strcat(dbNamePtr, globalConfPtr->databaseName);	/* name prefix */
 
     rx_SetRxDeadTime(60);	/* 60 seconds inactive before timeout */
 

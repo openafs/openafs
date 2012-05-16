@@ -3534,11 +3534,9 @@ T_DumpDatabase(struct rx_call *call, char *filename)
     if (!callPermitted(call))
 	return BUDB_NOTPERMITTED;
 
-    path = (char *)malloc(strlen(gettmpdir()) + 1 + strlen(filename) + 1);
+    asprintf(&path, "%s/%s", gettmpdir(), filename);
     if (!path)
 	return (BUDB_INTERNALERROR);
-
-    sprintf(path, "%s/%s", gettmpdir(), filename);
 
     dumpfid = fopen(path, "w");
     if (!dumpfid)

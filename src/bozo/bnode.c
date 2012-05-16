@@ -110,7 +110,6 @@ SaveCore(struct bnode *abnode, struct bnode_proc
     if (code) {
         DIR *logdir;
         struct dirent *file;
-        size_t length;
         unsigned long pid;
 	const char *coredir = AFSDIR_LOGS_DIR;
 
@@ -125,13 +124,11 @@ SaveCore(struct bnode *abnode, struct bnode_proc
                 continue;
             pid = atol(file->d_name + 5);
             if (pid == aproc->pid) {
-                length = strlen(coredir) + strlen(file->d_name) + 2;
-                corefile = malloc(length);
+                asprintf(&corefile, "%s/%s", coredir, file->d_name);
                 if (corefile == NULL) {
                     closedir(logdir);
                     return;
                 }
-                snprintf(corefile, length, "%s/%s", coredir, file->d_name);
                 code = 0;
                 break;
             }

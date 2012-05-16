@@ -74,15 +74,10 @@ static int stderr_save;
 static char *
 afs_path(const char *apath)
 {
-    size_t len;
     static const char prefix[] = "/afs/";
     char *path;
 
-    len = strlen(apath) + sizeof(prefix);
-
-    path = malloc(len);
-
-    sprintf(path, "%s%s", prefix, apath);
+    asprint(&path, "%s%s", prefix, apath);
 
     return path;
 }

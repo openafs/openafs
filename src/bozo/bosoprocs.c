@@ -425,13 +425,10 @@ SBOZO_GetCellHost(struct rx_call *acall, afs_uint32 awhich, char **aname)
     }
 
     tp = tcell.hostName[awhich];
-    *aname = (char *)malloc(strlen(tp) + 3);
     if (clones[awhich]) {
-	strcpy(*aname, "[");
-	strcat(*aname, tp);
-	strcat(*aname, "]");
+	asprintf(aname, "[%s]", tp);
     } else
-	strcpy(*aname, tp);
+	*aname = strdup(tp);
     goto done;
 
   fail:

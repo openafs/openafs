@@ -841,7 +841,6 @@ rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
     char *realmUsed = NULL;
     char *username = NULL;
     int status;
-    size_t len;
 
     *token = NULL;
     *authuser = NULL;
@@ -866,9 +865,7 @@ rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
 	username = NULL;
 	*foreign = 0;
     } else {
-	len = strlen(username)+strlen(realmUsed)+2;
-	*authuser = malloc(len);
-	snprintf(*authuser, len, "%s@%s", username, realmUsed);
+	asprintf(authuser, "%s@%s", username, realmUsed);
 	*foreign = 1;
     }
 

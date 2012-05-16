@@ -643,16 +643,11 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
     LocalizePathHead(&cpath, &relativeTo);
     if (*cpath == '/') {
 	newPath = strdup(cpath);
-	if (!newPath)
-	    status = ENOMEM;
     } else {
-	newPath = (char *)malloc(strlen(relativeTo) + 1 + strlen(cpath) + 1);
-	if (!newPath) {
-	    status = ENOMEM;
-	} else {
-	    sprintf(newPath, "%s/%s", relativeTo, cpath);
-	}
+	asprintf(&newPath, "%s/%s", relativeTo, cpath);
     }
+    if (newPath == NULL)
+	status = ENOMEM;
 
     if (status == 0) {
 	FilepathNormalize(newPath);

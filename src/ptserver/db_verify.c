@@ -962,10 +962,7 @@ QuoteName(char *s)
 {
     char *qs;
     if (strpbrk(s, " \t")) {
-	qs = (char *)malloc(strlen(s) + 3);
-	strcpy(qs, "\"");
-	strcat(qs, s);
-	strcat(qs, "\"");
+	asprintf(&qs, "\"%s\"", s);
     } else
 	qs = s;
     return qs;

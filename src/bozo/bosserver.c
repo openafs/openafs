@@ -686,28 +686,18 @@ static char *
 make_pid_filename(char *ainst, char *aname)
 {
     char *buffer = NULL;
-    int length;
 
-    length = strlen(DoPidFiles) + strlen(ainst) + 6;
     if (aname && *aname) {
-	length += strlen(aname) + 1;
-    }
-    buffer = malloc(length * sizeof(char));
-    if (!buffer) {
-	if (aname) {
+	asprintf(&buffer, "%s/%s.%s.pid", DoPidFiles, ainst, aname);
+	if (buffer == NULL)
 	    bozo_Log("Failed to alloc pid filename buffer for %s.%s.\n",
 		     ainst, aname);
-	} else {
-	    bozo_Log("Failed to alloc pid filename buffer for %s.\n", ainst);
-	}
     } else {
-	if (aname && *aname) {
-	    snprintf(buffer, length, "%s/%s.%s.pid", DoPidFiles, ainst,
-		     aname);
-	} else {
-	    snprintf(buffer, length, "%s/%s.pid", DoPidFiles, ainst);
-	}
+	asprintf(&buffer, "%s/%s.pid", DoPidFiles, ainst);
+	if (buffer == NULL)
+	    bozo_Log("Failed to alloc pid filename buffer for %s.\n", ainst);
     }
+
     return buffer;
 }
 
