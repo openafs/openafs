@@ -726,7 +726,8 @@ cm_Analyze(cm_conn_t *connp,
                         osi_Log2(afsd_logp, "VNOVOL received for volume %u from server %s",
                                  fidp->volume, osi_LogSaveString(afsd_logp,addr));
                         if (replicated) {
-                            cm_SetServerBusyStatus(serversp, serverp);
+                            if (tsrp->status == srv_not_busy)
+                                tsrp->status = srv_busy;
                         } else {
                             Sleep(2000);
                         }
