@@ -59,6 +59,9 @@ typedef int (*cm_DirFuncp_t)(struct cm_scache *, struct cm_dirEntry *, void *,
 #define CM_PREFIX_VOL "@vol:"
 #define CM_PREFIX_VOL_CCH 5
 
+/* Maximum number of expanded components in a path */
+#define MAX_FID_COUNT 512
+
 /* arrays */
 
 extern fschar_t cm_foldUpper[];

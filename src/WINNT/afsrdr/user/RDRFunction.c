@@ -148,8 +148,8 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     (*ppRedirInitInfo)->GlobalFileId.Hash   = cm_data.rootFid.hash;
     (*ppRedirInitInfo)->ExtentCount.QuadPart = cm_data.buf_nbuffers;
     (*ppRedirInitInfo)->CacheBlockSize = cm_data.blockSize;
-    (*ppRedirInitInfo)->MaxPathLinkCount = 512; /* this needs to become a registry value */
-    (*ppRedirInitInfo)->NameArrayLength = 32;   /* this needs to become a registry value */
+    (*ppRedirInitInfo)->MaxPathLinkCount = MAX_FID_COUNT;
+    (*ppRedirInitInfo)->NameArrayLength = MAX_FID_COUNT;
     if (cm_virtualCache || cm_data.bufferSize <= maxMemoryCacheSize) {
         osi_Log0(afsd_logp, "RDR_SetInitParams Initializing Memory Extent Interface");
         (*ppRedirInitInfo)->MemoryCacheOffset.QuadPart = (LONGLONG)cm_data.bufDataBaseAddress;
