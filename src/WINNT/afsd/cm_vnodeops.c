@@ -1969,7 +1969,6 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
     int symlinkCount;		/* count of # of symlinks traversed */
     int extraFlag;		/* avoid chasing mt pts for dir cmd */
     int phase = 1;		/* 1 = tidPathp, 2 = pathp */
-#define MAX_FID_COUNT 512
     cm_fid_t fids[MAX_FID_COUNT]; /* array of fids processed in this path walk */
     int fid_count = 0;          /* number of fids processed in this path walk */
     int i;
