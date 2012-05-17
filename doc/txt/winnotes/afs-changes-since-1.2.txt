@@ -1,3 +1,32 @@
+Since 1.7.1200 (1.7.12)
+
+ * Avoid deadlocking when using "fs memdump" with the AFS
+   redirector interface under heavy extent processing.
+
+ * Do not return CM_ERROR_RETRY from cm_GetBuffer() if the
+   BIOD length is zero.  That is an indication that there is
+   nothing to do.
+
+ * Alter Network Provider processing for drive substitutions.
+   This permits Windows Media Player and Adobe products to
+   work properly with the AFS redirector.
+
+ * Prevent a potential race condition in the afsd_service
+   when managing redirector ioctl structures.
+
+ * Initialize section pointers in the File Control Block
+   for the fake _._AFS_IOCTL_._ files.  This prevents a BSOD
+   when using some variants of Microsoft Security Essentials.
+
+ * Modify the behavior of AFSTearDownExtents() to prevent the
+   tear down of extents that are still in use.  Prevent the
+   File Control Block from being destroyed if there are active
+   extents attached to it.
+
+ * Increase the maximum expanded component list for a file
+   path from 32 to 512 in the AFS redirector.  This matches
+   the behavior of the SMB interface of afsd_service.exe.
+
 Since 1.7.1100 (1.7.11)
 
  * Prevent race between directory enumeration and object purging.
