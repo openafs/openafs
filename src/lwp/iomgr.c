@@ -158,7 +158,7 @@ fd_set *IOMGR_AllocFDSet(void)
 	iomgrFreeFDSets = iomgrFreeFDSets->next;
     }
     else {
-	t = (struct IOMGR_fd_set *)malloc(sizeof(fd_set));
+	t = malloc(sizeof(fd_set));
     }
     if (!t)
 	return (fd_set*)0;

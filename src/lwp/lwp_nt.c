@@ -147,7 +147,7 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 
     if (priority >= MAX_PRIORITIES) return LWP_EBADPRI;
 
-    pcb = (PROCESS)malloc(sizeof(*pcb));
+    pcb = malloc(sizeof(*pcb));
     if (pcb == NULL)
 	Abort_LWP("Insufficient Storage to Initialize LWP PCB");
     (void) memset((void*)pcb, 0, sizeof(*pcb));
@@ -155,7 +155,7 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
     if (pcb == NULL)
 	Abort_LWP("Cannot convert main thread to LWP fiber");
 
-    lwp_init = (struct lwp_ctl *) malloc(sizeof(struct lwp_ctl));
+    lwp_init = malloc(sizeof(struct lwp_ctl));
     if (lwp_init == NULL)
 	Abort_LWP("Insufficient Storage to Initialize LWP CTL");
     (void) memset((void*)lwp_init, 0, sizeof(struct lwp_ctl));
@@ -213,7 +213,7 @@ int LWP_CreateProcess(int (*funP)(), int stacksize, int priority, void *argP,
 
     purge_dead_pcbs();
 
-    pcb = (PROCESS)malloc(sizeof(*pcb));
+    pcb = malloc(sizeof(*pcb));
     if (pcb == NULL)
 	return LWP_ENOMEM;
     (void) memset((void*)pcb, 0, sizeof(*pcb));
@@ -485,7 +485,7 @@ static void Initialize_PCB(PROCESS pcb, int priority, int stacksize,
     pcb->funP = funP;
     pcb->argP = argP;
     pcb->status = READY;
-    pcb->eventlist = (void**)malloc(EVINITSIZE*sizeof(void*));
+    pcb->eventlist = malloc(EVINITSIZE*sizeof(void*));
     pcb->eventlistsize =  pcb->eventlist ? EVINITSIZE : 0;
     pcb->eventcnt = 0;
     pcb->wakevent = 0;

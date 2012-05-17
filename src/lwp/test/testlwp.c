@@ -165,7 +165,7 @@ int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
     /* Throw away all dead process control blocks */
     purge_dead_pcbs();
     if (lwp_init) {
-	temp = (PROCESS) malloc (sizeof (struct lwp_pcb));
+	temp = malloc (sizeof (struct lwp_pcb));
 	if (temp == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
@@ -174,7 +174,7 @@ int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
 	    stacksize = 1000;
 	else
 	    stacksize = 4 * ((stacksize+3) / 4);
-	if ((stackptr = (char *) malloc(stacksize)) == NULL) {
+	if ((stackptr = malloc(stacksize)) == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
 	}
@@ -293,8 +293,8 @@ int LWP_InitializeProcessSupport(priority, pid)
     }
     blocked.head = NULL;
     blocked.count = 0;
-    lwp_init = (struct lwp_ctl *) malloc(sizeof(struct lwp_ctl));
-    temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
+    lwp_init = malloc(sizeof(struct lwp_ctl));
+    temp = malloc(sizeof(struct lwp_pcb));
     if (lwp_init == NULL || temp == NULL)
 	Abort_LWP("Insufficient Storage to Initialize LWP Support");
     LWPANCHOR.processcnt = 1;

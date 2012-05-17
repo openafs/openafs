@@ -281,7 +281,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
     /* Throw away all dead process control blocks */
     purge_dead_pcbs();
     if (lwp_init) {
-	temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
+	temp = malloc(sizeof(struct lwp_pcb));
 	if (temp == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
@@ -337,9 +337,9 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	stackmemory = stackptr;
 #else
 #ifdef AFS_DARWIN_ENV
-	if ((stackmemory = (char *)malloc(stacksize + STACK_ALIGN - 1)) == NULL)
+	if ((stackmemory = malloc(stacksize + STACK_ALIGN - 1)) == NULL)
 #else /* !AFS_DARWIN_ENV */
-	if ((stackmemory = (char *)malloc(stacksize + 7)) == NULL)
+	if ((stackmemory = malloc(stacksize + 7)) == NULL)
 #endif /* !AFS_DARWIN_ENV */
 	{
 	    Set_LWP_RC();
@@ -434,7 +434,7 @@ LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm
     /* Throw away all dead process control blocks */
     purge_dead_pcbs();
     if (lwp_init) {
-	temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
+	temp = malloc(sizeof(struct lwp_pcb));
 	if (temp == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
@@ -444,7 +444,7 @@ LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm
 	else
 	    stacksize =
 		STACK_ALIGN * ((stacksize + STACK_ALIGN - 1) / STACK_ALIGN);
-	if ((stackptr = (char *)malloc(stacksize)) == NULL) {
+	if ((stackptr = malloc(stacksize)) == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
 	}
@@ -614,8 +614,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
     blocked.count = 0;
     qwaiting.head = NULL;
     qwaiting.count = 0;
-    lwp_init = (struct lwp_ctl *)malloc(sizeof(struct lwp_ctl));
-    temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
+    lwp_init = malloc(sizeof(struct lwp_ctl));
+    temp = malloc(sizeof(struct lwp_pcb));
     if (lwp_init == NULL || temp == NULL)
 	Abort_LWP("Insufficient Storage to Initialize LWP Support");
     LWPANCHOR.processcnt = 1;
@@ -1032,7 +1032,7 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 	    i++;
     temp->name[31] = '\0';
     temp->status = READY;
-    temp->eventlist = (void **)malloc(EVINITSIZE * sizeof(void *));
+    temp->eventlist = malloc(EVINITSIZE * sizeof(void *));
     temp->eventlistsize = EVINITSIZE;
     temp->eventcnt = 0;
     temp->wakevent = 0;

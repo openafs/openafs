@@ -39,7 +39,7 @@ init()
 {
     queue *q;
 
-    q = (queue *) malloc(sizeof(queue));
+    q = malloc(sizeof(queue));
     q->prev = q->next = q;
     return (q);
 }
@@ -55,7 +55,7 @@ insert(queue * q, char *s)
 {
     queue *new;
 
-    new = (queue *) malloc(sizeof(queue));
+    new = malloc(sizeof(queue));
     new->data = s;
     new->prev = q->prev;
     q->prev->next = new;

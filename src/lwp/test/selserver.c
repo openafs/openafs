@@ -376,7 +376,7 @@ handleWrite(clientHandle_t * ch, selcmd_t * sc)
     if (sc->sc_flags & SC_WAIT_OOB)
 	sendOOB(ch->ch_fd);
 
-    buf = (char *)malloc(sc->sc_info);
+    buf = malloc(sc->sc_info);
     assert(buf);
     i = 0;
 

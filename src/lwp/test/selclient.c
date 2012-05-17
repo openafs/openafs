@@ -242,9 +242,9 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
     selcmd_t selCmd;
     time_t stime, etime;
 
-    buf = (char *)malloc(size);
+    buf = malloc(size);
     assert(buf);
-    bufTest = (char *)malloc(size);
+    bufTest = malloc(size);
     assert(bufTest);
 
     for (j = i = 0; i < size; i++, j++) {

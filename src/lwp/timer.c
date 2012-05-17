@@ -37,7 +37,7 @@ typedef unsigned char bool;
 
 #define expiration TotalTime
 
-#define new_elem()	((struct TM_Elem *) malloc(sizeof(struct TM_Elem)))
+#define new_elem()	(malloc(sizeof(struct TM_Elem)))
 
 #define MILLION	1000000
 
