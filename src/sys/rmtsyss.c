@@ -119,9 +119,7 @@ SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path,
     *errornumber = 0;
     SETCLIENTCONTEXT(blob, rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), creds->uid,
 		     creds->group0, creds->group1, cmd, NFS_EXPORTER);
-    data.in =
-	(char *)malloc(InData->rmtbulk_len +
-		       PIOCTL_HEADER * sizeof(afs_int32));
+    data.in = malloc(InData->rmtbulk_len + PIOCTL_HEADER * sizeof(afs_int32));
     if (!data.in)
 	return (-1);		/* helpless here */
     if (!strcmp(path, NIL_PATHP))

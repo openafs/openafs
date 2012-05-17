@@ -73,7 +73,7 @@ RParseAcl(char *astr)
     sscanf(astr, "%d", &nminus);
     astr = RSkipLine(astr);
 
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = malloc(sizeof(struct Acl));
     ta->nplus = nplus;
     ta->nminus = nminus;
 
@@ -82,7 +82,7 @@ RParseAcl(char *astr)
     for (i = 0; i < nplus; i++) {
 	sscanf(astr, "%100s %d", tname, &trights);
 	astr = RSkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);
@@ -99,7 +99,7 @@ RParseAcl(char *astr)
     for (i = 0; i < nminus; i++) {
 	sscanf(astr, "%100s %d", tname, &trights);
 	astr = RSkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);

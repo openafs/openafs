@@ -217,7 +217,7 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     if (!ins)
 	ins = 1;
 #endif
-    if (!(inbuffer = (char *)malloc(ins)))
+    if (!(inbuffer = malloc(ins)))
 	return (-1);		/* helpless here */
     if (data->in_size)
 	memcpy(inbuffer, data->in, data->in_size);

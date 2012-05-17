@@ -407,8 +407,7 @@ check_iops(int index, char *fun, char *file, int line)
 	int avail = *availp;
 	avail += IOPS_DEBUG_MALLOC_STEP;
 	if (avail == IOPS_DEBUG_MALLOC_STEP)
-	    iops_debug[index] =
-		(iops_debug_t *) malloc(avail * sizeof(iops_debug_t));
+	    iops_debug[index] = malloc(avail * sizeof(iops_debug_t));
 	else
 	    iops_debug[index] = realloc(*iops, avail * sizeof(iops_debug_t));
 	if (!iops_debug[index]) {
