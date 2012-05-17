@@ -486,12 +486,11 @@ SalvageFileSysParallel(struct DiskPartition64 *partP)
 
     if (partP) {
 	/* We have a partition to salvage. Copy it into thisjob */
-	thisjob = (struct job *)malloc(sizeof(struct job));
+	thisjob = calloc(1, sizeof(struct job));
 	if (!thisjob) {
 	    Log("Can't salvage '%s'. Not enough memory\n", partP->name);
 	    return;
 	}
-	memset(thisjob, 0, sizeof(struct job));
 	thisjob->partP = partP;
 	thisjob->jobnumb = jobcount;
 	jobcount++;
@@ -2185,10 +2184,8 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 
     memset(goodspecial, 0, sizeof(goodspecial));
 
-    skip = malloc(isp->nSpecialInodes * sizeof(*skip));
-    if (skip) {
-	memset(skip, 0, isp->nSpecialInodes * sizeof(*skip));
-    } else {
+    skip = calloc(isp->nSpecialInodes, sizeof(*skip));
+    if (skip == NULL) {
 	Log("cannot allocate memory for inode skip array when salvaging "
 	    "volume %lu; not performing duplicate special inode recovery\n",
 	    afs_printable_uint32_lu(isp->volumeId));

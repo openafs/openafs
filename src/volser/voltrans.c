@@ -54,7 +54,7 @@ NewTrans(afs_uint32 avol, afs_int32 apart)
     struct volser_trans *tt, *newtt;
     struct timeval tp;
 
-    newtt = (struct volser_trans *)malloc(sizeof(struct volser_trans));
+    newtt = calloc(1, sizeof(struct volser_trans));
     VTRANS_LOCK;
     /* don't allow the same volume to be attached twice */
     for (tt = allTrans; tt; tt = tt->next) {
@@ -65,7 +65,6 @@ NewTrans(afs_uint32 avol, afs_int32 apart)
 	}
     }
     tt = newtt;
-    memset(tt, 0, sizeof(struct volser_trans));
     tt->volid = avol;
     tt->partition = apart;
     tt->refCount = 1;

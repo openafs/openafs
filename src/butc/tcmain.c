@@ -1206,8 +1206,7 @@ main(int argc, char **argv)
      * instead
      */
     if (argc == 1) {
-	ts = (struct cmd_syndesc *)malloc(sizeof(struct cmd_syndesc));
-	memset(ts, 0, sizeof(*ts));
+	ts = calloc(1, sizeof(struct cmd_syndesc));
 
 	ti = (struct cmd_item *)malloc(sizeof(struct cmd_item));
 	ti->next = 0;

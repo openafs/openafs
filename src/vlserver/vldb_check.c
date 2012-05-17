@@ -1182,8 +1182,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     }
 
     maxentries = (header.vital_header.eofPtr / sizeof(vlentry)) + 1;
-    record = (struct er *)malloc(maxentries * sizeof(struct er));
-    memset(record, 0, (maxentries * sizeof(struct er)));
+    record = calloc(maxentries, sizeof(struct er));
     memset(serveraddrs, 0, sizeof(serveraddrs));
 
     /* Will fill in the record array of entries it found */

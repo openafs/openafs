@@ -256,9 +256,8 @@ afs_uint32 Dir_Init(struct dir_state **dsp)
 {
   afs_uint32 r;
 
-  *dsp = malloc(sizeof(struct dir_state));
+  *dsp = calloc(1, sizeof(struct dir_state));
   if (!*dsp) return ENOMEM;
-  memset(*dsp, 0, sizeof(struct dir_state));
   if ((r = allocpage(*dsp, DPHE))) return r;
   (*dsp)->dh = (afs_dir_header *)((*dsp)->page);
   return 0;

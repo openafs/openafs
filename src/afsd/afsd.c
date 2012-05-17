@@ -1381,13 +1381,11 @@ SweepAFSCache(int *vFilesFound)
     }
 
     if (cache_dir_filelist == NULL) {
-	cache_dir_filelist = (struct afsd_file_list **)
-	    malloc(maxDir * sizeof(*cache_dir_filelist));
+	cache_dir_filelist = calloc(maxDir, sizeof(*cache_dir_filelist));
 	if (cache_dir_filelist == NULL) {
 	    printf("%s: Malloc Failed!\n", rn);
 	    return (-1);
 	}
-	memset(cache_dir_filelist, 0, maxDir * sizeof(*cache_dir_filelist));
     }
 
     if (dir_for_V == NULL) {
@@ -1518,8 +1516,7 @@ BkgHandler(void)
     char srcName[256];
     char dstName[256];
 
-    uspc = (struct afs_uspc_param *)malloc(sizeof(struct afs_uspc_param));
-    memset(uspc, 0, sizeof(struct afs_uspc_param));
+    uspc = calloc(1, sizeof(struct afs_uspc_param));
     memset(srcName, 0, sizeof(srcName));
     memset(dstName, 0, sizeof(dstName));
 
@@ -2077,14 +2074,13 @@ afsd_run(void)
     /*
      * Create and zero the inode table for the desired cache files.
      */
-    inode_for_V = (AFSD_INO_T *) malloc(cacheFiles * sizeof(AFSD_INO_T));
+    inode_for_V = calloc(cacheFiles, sizeof(AFSD_INO_T));
     if (inode_for_V == (AFSD_INO_T *) 0) {
 	printf
 	    ("%s: malloc() failed for cache file inode table with %d entries.\n",
 	     rn, cacheFiles);
 	exit(1);
     }
-    memset(inode_for_V, '\0', (cacheFiles * sizeof(AFSD_INO_T)));
     if (afsd_debug)
 	printf("%s: %d inode_for_V entries at 0x%x, %lu bytes\n", rn,
 	       cacheFiles, inode_for_V, (cacheFiles * sizeof(AFSD_INO_T)));

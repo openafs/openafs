@@ -111,8 +111,7 @@ ez_create(char *ainstance, char *acommand, char *unused1, char *unused2,
 	return NULL;
     }
 
-    te = (struct ezbnode *)malloc(sizeof(struct ezbnode));
-    memset(te, 0, sizeof(struct ezbnode));
+    te = calloc(1, sizeof(struct ezbnode));
     if (bnode_InitBnode((struct bnode *)te, &ezbnode_ops, ainstance) != 0) {
 	free(te);
 	return NULL;

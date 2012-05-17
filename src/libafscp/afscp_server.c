@@ -286,11 +286,10 @@ afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
 	}
 	thecell->fsservers = newlist;
     }
-    ret = malloc(sizeof(struct afscp_server));
+    ret = calloc(1, sizeof(struct afscp_server));
     if (ret == NULL) {
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_server));
     thecell->fsservers[thecell->nservers] = ret;
     memmove(&ret->id, u, sizeof(afsUUID));
     ret->cell = thecell->id;
@@ -376,11 +375,10 @@ afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 	}
 	thecell->fsservers = newlist;
     }
-    ret = malloc(sizeof(struct afscp_server));
+    ret = calloc(1, sizeof(struct afscp_server));
     if (ret == NULL) {
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_server));
     thecell->fsservers[thecell->nservers] = ret;
     ret->cell = thecell->id;
     memset(&uuid, 0, sizeof(uuid));

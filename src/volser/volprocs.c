@@ -334,10 +334,9 @@ ViceCreateRoot(Volume *vp)
     afs_fsize_t length;
     ssize_t nBytes;
 
-    vnode = (struct VnodeDiskObject *)malloc(SIZEOF_LARGEDISKVNODE);
+    vnode = calloc(1, SIZEOF_LARGEDISKVNODE);
     if (!vnode)
 	return ENOMEM;
-    memset(vnode, 0, SIZEOF_LARGEDISKVNODE);
 
     V_pref(vp, nearInode);
     inodeNumber =
@@ -2335,10 +2334,9 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
     int code;
     volint_info_handle_t handle;
 
-    volumeInfo->volEntries_val = (volintInfo *) malloc(sizeof(volintInfo));
+    volumeInfo->volEntries_val = calloc(1, sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
 	return ENOMEM;
-    memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
 
     volumeInfo->volEntries_len = 1;
     if (GetPartName(partid, pname))
@@ -2440,11 +2438,9 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
      * Set up our pointers for action, marking our structure to hold exactly
      * one entry.  Also, assume we'll fail in our quest.
      */
-    a_volumeXInfoP->volXEntries_val =
-	(volintXInfo *) malloc(sizeof(volintXInfo));
+    a_volumeXInfoP->volXEntries_val = calloc(1, sizeof(volintXInfo));
     if (!a_volumeXInfoP->volXEntries_val)
 	return ENOMEM;
-    memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
 
     a_volumeXInfoP->volXEntries_len = 1;
     code = ENODEV;
@@ -2549,11 +2545,9 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     int code;
     volint_info_handle_t handle;
 
-    volumeInfo->volEntries_val =
-	(volintInfo *) malloc(allocSize * sizeof(volintInfo));
+    volumeInfo->volEntries_val = calloc(allocSize, sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
 	return ENOMEM;
-    memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
 
     pntr = volumeInfo->volEntries_val;
     volumeInfo->volEntries_len = 0;
@@ -2679,11 +2673,9 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
      * Allocate a large array of extended volume info structures, then
      * set it up for action.
      */
-    a_volumeXInfoP->volXEntries_val =
-	(volintXInfo *) malloc(allocSize * sizeof(volintXInfo));
+    a_volumeXInfoP->volXEntries_val = calloc(allocSize, sizeof(volintXInfo));
     if (!a_volumeXInfoP->volXEntries_val)
 	return ENOMEM;
-    memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
 
     xInfoP = a_volumeXInfoP->volXEntries_val;
     a_volumeXInfoP->volXEntries_len = 0;

@@ -2658,22 +2658,18 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     }
 
     /* allocate space for return output parameters */
-    OutStats->AFSBulkStats_val = (struct AFSFetchStatus *)
-	malloc(nfiles * sizeof(struct AFSFetchStatus));
+    OutStats->AFSBulkStats_val = calloc(nfiles, sizeof(struct AFSFetchStatus));
     if (!OutStats->AFSBulkStats_val) {
 	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
     }
     OutStats->AFSBulkStats_len = nfiles;
-    CallBacks->AFSCBs_val = (struct AFSCallBack *)
-	malloc(nfiles * sizeof(struct AFSCallBack));
+    CallBacks->AFSCBs_val = calloc(nfiles, sizeof(struct AFSCallBack));
     if (!CallBacks->AFSCBs_val) {
 	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
     }
     CallBacks->AFSCBs_len = nfiles;
 
     /* Zero out return values to avoid leaking information on partial succes */
-    memset(OutStats->AFSBulkStats_val, 0, nfiles * sizeof(struct AFSFetchStatus));
-    memset(CallBacks->AFSCBs_val, 0, nfiles * sizeof(struct AFSCallBack));
     memset(Sync, 0, sizeof(*Sync));
 
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &thost))) {

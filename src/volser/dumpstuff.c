@@ -1153,13 +1153,12 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	    (size <=
 	     vcp->diskSize ? 0 : size - vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {
-	    Buf = malloc(nVnodes * sizeof(afs_foff_t));
+	    Buf = calloc(nVnodes,  sizeof(afs_foff_t));
 	    if (Buf == NULL) {
 		STREAM_CLOSE(afile);
 		FDH_CLOSE(fdP);
 		return -1;
 	    }
-	    memset(Buf, 0, nVnodes * sizeof(afs_foff_t));
 	    STREAM_ASEEK(afile, offset = vcp->diskSize);
 	    while (1) {
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);

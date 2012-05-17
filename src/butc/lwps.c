@@ -1678,10 +1678,9 @@ Restorer(void *param) {
 	allocbufferSize = tapeblocks * BUTM_BLOCKSIZE;	/* This many full tapeblocks */
     }
     bufferBlock = NULL;
-    bufferBlock = (struct TapeBlock *)malloc(allocbufferSize);
+    bufferBlock = calloc(1, allocbufferSize);
     if (!bufferBlock)
 	ERROR_EXIT(TC_NOMEMORY);
-    memset(bufferBlock, 0, allocbufferSize);
 
     for (rparams.frag = 0; (rparams.frag < newNode->arraySize);
 	 rparams.frag++) {

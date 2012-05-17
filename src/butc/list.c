@@ -60,9 +60,7 @@ void
 CreateNode(struct dumpNode **newNode)
 {
     /* get space */
-    *newNode = (struct dumpNode *)(malloc(sizeof(struct dumpNode)));
-
-    memset(*newNode, 0, sizeof(struct dumpNode));
+    *newNode = calloc(1, sizeof(struct dumpNode));
 
     (*newNode)->next = dumpQHeader->next;
     dumpQHeader->next = *newNode;

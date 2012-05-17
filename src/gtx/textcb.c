@@ -110,7 +110,7 @@ gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
     if (gator_textcb_debug)
 	fprintf(stderr, "[%s] Allocating %d bytes for the text buffer\n", rn,
 		bytesToAllocate);
-    newBuff = (char *)malloc(bytesToAllocate);
+    newBuff = calloc(1, bytesToAllocate);
     if (newBuff == NULL) {
 	fprintf(stderr,
 		"[%s] Can't allocate %d bytes for text buffer; errno is %d\n",
@@ -172,11 +172,6 @@ gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
     /*
      * Now, just initialize all the pieces and plug them in.
      */
-    if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Zeroing %d bytes in text buffer at %p\n", rn,
-		numBuffBytes, newBuff);
-    memset(newBuff, 0, numBuffBytes);
-
     if (gator_textcb_debug)
 	fprintf(stderr, "[%s] Initializing blank line buffer at %p\n", rn,
 		blankLine);

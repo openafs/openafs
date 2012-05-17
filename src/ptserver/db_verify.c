@@ -1253,8 +1253,7 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
     }
     if (misc->verbose)
 	printf("Database has %d entries\n", n);
-    map = (char *)malloc(n);
-    memset(map, 0, n);
+    map = calloc(1, n);
     misc->nEntries = n;
 
     if (misc->verbose) {
@@ -1282,14 +1281,13 @@ CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
 #else
     n = ((misc->maxId > misc->maxForId) ? misc->maxId : misc->maxForId);
     misc->idRange = n - misc->minId + 1;
-    misc->idmap = (afs_int32 *) malloc(misc->idRange * sizeof(afs_int32));
+    misc->idmap = calloc(misc->idRange, sizeof(afs_int32));
     if (!misc->idmap) {
 	afs_com_err(whoami, 0, "Unable to malloc space for max ids of %d",
 		misc->idRange);
 	code = -1;
 	goto abort;
     }
-    memset(misc->idmap, 0, misc->idRange * sizeof(misc->idmap[0]));
 #endif /* SUPERGROUPS */
 
     if (misc->verbose) {
@@ -1480,12 +1478,11 @@ inccount(struct idused **idmapp, int id)
 	idmapp = &idmap->idnext;
     }
     if (!idmap) {
-	idmap = (struct idused *)malloc(sizeof *idmap);
+	idmap = calloc(1, sizeof *idmap);
 	if (!idmap) {
 	    perror("idmap");
 	    exit(1);
 	}
-	memset(idmap, 0, sizeof idmap);
 	idmap->idstart = id & ~(IDCOUNT - 1);
 	idmap->idnext = *idmapp;
 	*idmapp = idmap;

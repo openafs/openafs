@@ -207,12 +207,11 @@ afscp_OpenDir(const struct afscp_venusfid *fid)
 	afscp_errno = ENOTDIR;
 	return NULL;
     }
-    ret = malloc(sizeof(struct afscp_dirstream));
+    ret = calloc(1, sizeof(struct afscp_dirstream));
     if (ret == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_dirstream));
     memmove(&ret->fid, fid, sizeof(struct afscp_venusfid));
     code = _DirUpdate(ret);
     if (code < 0) {

@@ -257,19 +257,15 @@ afscp_ReturnCallBacks(const struct afscp_server *server)
 	    continue;
 	}
 	if (!inited) {
-	    theFids.AFSCBFids_val = malloc(sizeof(struct AFSFid) * AFSCBMAX);
+	    theFids.AFSCBFids_val = calloc(AFSCBMAX, sizeof(struct AFSFid));
 	    if (!theFids.AFSCBFids_val) {
 		return -1;
 	    }
-	    memset(theFids.AFSCBFids_val, 0,
-		   sizeof(struct AFSFid) * AFSCBMAX);
-	    theCBs.AFSCBs_val = malloc(sizeof(struct AFSCallBack) * AFSCBMAX);
+	    theCBs.AFSCBs_val = calloc(AFSCBMAX, sizeof(struct AFSCallBack));
 	    if (!theCBs.AFSCBs_val) {
 		free(theFids.AFSCBFids_val);
 		return -1;
 	    }
-	    memset(theCBs.AFSCBs_val, 0,
-		   sizeof(struct AFSCallBack) * AFSCBMAX);
 	    inited = 1;
 	}
 

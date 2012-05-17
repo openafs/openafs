@@ -489,19 +489,14 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 
     srandom(seed);
 
-    users = (afs_int32 *) malloc(number * sizeof(afs_int32));
-    groups = (afs_int32 *) malloc(number * sizeof(afs_int32));
-    filled = (char *)malloc(number * sizeof(char));
-    cleaned = (char *)malloc(number * sizeof(char));
-    population = (char *)malloc(sqr(number) * sizeof(char));
+    users = calloc(number, sizeof(afs_int32));
+    groups = calloc(number, sizeof(afs_int32));
+    filled = calloc(number, sizeof(char));
+    cleaned = calloc(number, sizeof(char));
+    population = calloc(sqr(number), sizeof(char));
 
     nFilled = 0;
-    memset(filled, 0, number);
     nCleaned = 0;
-    memset(cleaned, 0, number);
-    memset(population, 0, sqr(number));
-    memset(users, 0, number * sizeof(afs_int32));
-    memset(groups, 0, number * sizeof(afs_int32));
 
     ownerUser = lastGroup = 0;
     groupOwners = (afs_int32 *) malloc(number * sizeof(afs_int32));

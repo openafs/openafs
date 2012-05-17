@@ -431,13 +431,12 @@ GetVenusFidByFid(char *fidString, char *cellName, int onlyRW,
     struct afscp_volume *avolp;
 
     if (*avfpp == NULL) {
-	*avfpp = malloc(sizeof(struct afscp_venusfid));
+	*avfpp = calloc(1, sizeof(struct afscp_venusfid));
 	if ( *avfpp == NULL ) {
 	    code = ENOMEM;
 	    return code;
 	}
     }
-    memset(*avfpp, 0, sizeof(struct afscp_venusfid));
 
     if (cellName == NULL) {
 	(*avfpp)->cell = afscp_DefaultCell();
@@ -747,14 +746,13 @@ readFile(struct cmd_syndesc *as, void *unused)
     Len <<= 32;
     Len += OutStatus.Length;
     ZeroInt64(Pos);
-    buf = (char *) malloc(bufflen * sizeof(char));
+    buf = calloc(bufflen, sizeof(char));
     if (buf == NULL) {
 	code = ENOMEM;
 	afs_com_err(pnp, code, "(cannot allocate buffer)");
 	afscp_FreeFid(avfp);
 	return code;
     }
-    memset(buf, 0, bufflen * sizeof(char));
     length = Len;
     while (!code && NonZeroInt64(length)) {
 	if (length > bufflen)
@@ -951,7 +949,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
      */
     Len = 0;
     while (Len < WRITEBUFLEN) {
-	tbuf = (struct wbuf *)malloc(sizeof(struct wbuf));
+	tbuf = calloc(1, sizeof(struct wbuf));
 	if (tbuf == NULL) {
 	    if (!bufchain) {
 		code = ENOMEM;
@@ -962,7 +960,6 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	    }
 	    break;
 	}
-	memset(tbuf, 0, sizeof(struct wbuf));
 	tbuf->buflen = BUFFLEN;
 	if (synthesize) {
 	    afs_int64 ll, l = tbuf->buflen;

@@ -136,10 +136,9 @@ xfopen_profile(XFILE * X, int flag, char *xname, char *profile)
     PFILE *PF;
     afs_uint32 err;
 
-    PF = malloc(sizeof(*PF));
+    PF = calloc(1, sizeof(*PF));
     if (!PF)
 	return ENOMEM;
-    memset(PF, 0, sizeof(*PF));
 
     err = xfopen(&PF->profile, O_RDWR | O_CREAT | O_TRUNC, profile);
     if (err) {

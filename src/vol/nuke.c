@@ -65,8 +65,7 @@ NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
 	return 0;		/* don't want this one */
     /* record the info */
     if (!*allInodes || (*allInodes)->freePtr >= MAXATONCE) {
-	ti = (struct ilist *)malloc(sizeof(struct ilist));
-	memset(ti, 0, sizeof(*ti));
+	ti = calloc(1, sizeof(struct ilist));
 	ti->next = *allInodes;
 	*allInodes = ti;
     } else

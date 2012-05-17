@@ -890,14 +890,12 @@ AllocNode(struct SalvageQueueNode ** node_out)
     int code = 0;
     struct SalvageQueueNode * node;
 
-    *node_out = node = (struct SalvageQueueNode *)
-	malloc(sizeof(struct SalvageQueueNode));
+    *node_out = node = calloc(1, sizeof(struct SalvageQueueNode));
     if (node == NULL) {
 	code = 1;
 	goto done;
     }
 
-    memset(node, 0, sizeof(struct SalvageQueueNode));
     node->type = SALVSYNC_VOLGROUP_PARENT;
     node->state = SALVSYNC_STATE_UNKNOWN;
 

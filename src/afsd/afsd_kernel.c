@@ -268,14 +268,11 @@ aix_vmount(const char *cacheMountDir)
     int size, error;
 
     size = sizeof(struct vmount) + ROUNDUP(strlen(cacheMountDir) + 1) + 5 * 4;
-    /* Malloc the vmount structure */
-    if ((vmountp = (struct vmount *)malloc(size)) == (struct vmount *)NULL) {
+    /* Malloc and zero the vmount structure */
+    if ((vmountp = calloc(1, size)) == NULL) {
 	printf("Can't allocate space for the vmount structure (AIX)\n");
 	exit(1);
     }
-
-    /* zero out the vmount structure */
-    memset(vmountp, '\0', size);
 
     /* transfer info into the vmount structure */
     vmountp->vmt_revision = VMT_REVISION;

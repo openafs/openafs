@@ -270,12 +270,11 @@ bc_Restorer(afs_int32 aindex)
 
 	/* If didn't find it, create one and thread into list */
 	if (!di) {
-	    di = (struct dumpinfo *)malloc(sizeof(struct dumpinfo));
+	    di = calloc(1, sizeof(struct dumpinfo));
 	    if (!di) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		ERROR(BC_NOMEM);
 	    }
-	    memset(di, 0, sizeof(struct dumpinfo));
 
 	    di->DumpId = dumpDescr->id;
 	    di->initialDumpId = dumpDescr->initialDumpID;
@@ -292,12 +291,11 @@ bc_Restorer(afs_int32 aindex)
 	}
 
 	/* Create one and thread into list */
-	vi = (struct volinfo *)malloc(sizeof(struct volinfo));
+	vi = calloc(1, sizeof(struct volinfo));
 	if (!vi) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
-	memset(vi, 0, sizeof(struct volinfo));
 
 	vi->volname = strdup(vname);
 	if (!vi->volname) {
@@ -471,13 +469,11 @@ bc_Restorer(afs_int32 aindex)
 
 			/* Allocate a new tapelist entry if one not found */
 			if (!tle) {
-			    tle = (struct bc_tapeList *)
-				malloc(sizeof(struct bc_tapeList));
+			    tle = calloc(1, sizeof(struct bc_tapeList));
 			    if (!tle) {
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
-			    memset(tle, 0, sizeof(struct bc_tapeList));
 
 			    tle->tapeName = strdup(volumeEntries[ve].tape);
 			    if (!tle->tapeName) {
@@ -523,13 +519,11 @@ bc_Restorer(afs_int32 aindex)
 			 * Remember the server and partition.
 			 */
 			if (!ti) {
-			    ti = (struct bc_tapeItem *)
-				malloc(sizeof(struct bc_tapeItem));
+			    ti = calloc(1, sizeof(struct bc_tapeItem));
 			    if (!ti) {
 				afs_com_err(whoami, BC_NOMEM, NULL);
 				return (BC_NOMEM);
 			    }
-			    memset(ti, 0, sizeof(struct bc_tapeItem));
 
 			    ti->volumeName = strdup(volumeEntries[ve].name);
 			    if (!ti->volumeName) {
@@ -619,14 +613,11 @@ bc_Restorer(afs_int32 aindex)
     }
 
     /* Allocate a list of volumes to restore */
-    tcarray =
-	(struct tc_restoreDesc *)malloc(nentries *
-					sizeof(struct tc_restoreDesc));
+    tcarray = calloc(nentries, sizeof(struct tc_restoreDesc));
     if (!tcarray) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);
     }
-    memset(tcarray, 0, nentries * sizeof(struct tc_restoreDesc));
 
     /* Fill in the array with the list above */
     i = 0;

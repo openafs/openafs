@@ -75,11 +75,10 @@ opendir(const char *path)
 	}
     }
 
-    tDir = (DIR *) malloc(sizeof(DIR));
+    tDir = calloc(1, sizeof(DIR));
     if (!tDir) {
 	errno = ENOMEM;
     } else {
-	memset((void *)tDir, 0, sizeof(*tDir));
 	tDir->h = tH;
 	tDir->data = tData;
     }

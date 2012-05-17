@@ -63,11 +63,10 @@ AllocateIdHash(struct idhash **aidhash)
 {
     struct idhash *idhash;
 
-    idhash = (struct idhash *)malloc(sizeof(struct idhash));
+    idhash = calloc(1, sizeof(struct idhash));
     if (!idhash) {
        return ENOMEM;
     }
-    memset((void *)idhash, 0, sizeof(struct idhash));
     *aidhash = idhash;
     return 0;
 }

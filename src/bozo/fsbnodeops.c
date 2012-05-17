@@ -430,12 +430,11 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	}
     }
 
-    te = (struct fsbnode *)malloc(sizeof(struct fsbnode));
+    te = calloc(1, sizeof(struct fsbnode));
     if (te == NULL) {
 	bailout = 1;
 	goto done;
     }
-    memset(te, 0, sizeof(struct fsbnode));
     te->filecmd = fileCmdpath;
     te->volcmd = volCmdpath;
     te->salsrvcmd = NULL;
@@ -559,12 +558,11 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	}
     }
 
-    te = (struct fsbnode *)malloc(sizeof(struct fsbnode));
+    te = calloc(1, sizeof(struct fsbnode));
     if (te == NULL) {
 	bailout = 1;
 	goto done;
     }
-    memset(te, 0, sizeof(struct fsbnode));
     te->filecmd = fileCmdpath;
     te->volcmd = volCmdpath;
     te->salsrvcmd = salsrvCmdpath;

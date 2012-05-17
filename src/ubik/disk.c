@@ -238,9 +238,8 @@ udisk_Init(int abuffers)
     /* Initialize the venus buffer system. */
     int i;
     struct buffer *tb;
-    Buffers = (struct buffer *)malloc(abuffers * sizeof(struct buffer));
-    memset(Buffers, 0, abuffers * sizeof(struct buffer));
-    BufferData = (char *)malloc(abuffers * UBIK_PAGESIZE);
+    Buffers = calloc(abuffers, sizeof(struct buffer));
+    BufferData = malloc(abuffers * UBIK_PAGESIZE);
     nbuffers = abuffers;
     for (i = 0; i < PHSIZE; i++)
 	phTable[i] = 0;
@@ -839,8 +838,7 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
 	if (code)
 	    return code;
     }
-    tt = (struct ubik_trans *)malloc(sizeof(struct ubik_trans));
-    memset(tt, 0, sizeof(struct ubik_trans));
+    tt = calloc(1, sizeof(struct ubik_trans));
     tt->dbase = adbase;
     tt->next = adbase->activeTrans;
     adbase->activeTrans = tt;

@@ -395,11 +395,9 @@ struct ktc_setTokenData *
 token_buildTokenJar(char * cellname) {
     struct ktc_setTokenData *jar;
 
-    jar = malloc(sizeof(struct ktc_setTokenData));
+    jar = calloc(1, sizeof(struct ktc_setTokenData));
     if (jar == NULL)
 	return NULL;
-
-    memset(jar, 0, sizeof(struct ktc_setTokenData));
 
     jar->cell = strdup(cellname);
 

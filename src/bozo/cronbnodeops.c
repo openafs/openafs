@@ -161,8 +161,7 @@ cron_create(char *ainstance, char *acommand, char *awhen,
 	return NULL;
     }
 
-    te = (struct cronbnode *)malloc(sizeof(struct cronbnode));
-    memset(te, 0, sizeof(struct cronbnode));
+    te = calloc(1, sizeof(struct cronbnode));
     code = ktime_ParsePeriodic(awhen, &te->whenToRun);
     if ((code < 0) || (bnode_InitBnode((struct bnode *)te, &cronbnode_ops, ainstance) != 0)) {
 	free(te);

@@ -325,8 +325,7 @@ usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
     if (fd == -1)
 	return errno;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)(intptr_t)fd;
     usd->read = usd_FileRead;
     usd->write = usd_FileWrite;
@@ -396,8 +395,7 @@ usd_FileStandardInput(usd_handle_t * usdP)
     if (usdP)
 	*usdP = NULL;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)((unsigned long)0);
     usd->read = usd_FileRead;
     usd->write = usd_FileWrite;
@@ -425,8 +423,7 @@ usd_FileStandardOutput(usd_handle_t * usdP)
     if (usdP)
 	*usdP = NULL;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)((unsigned long)1);
     usd->read = usd_FileRead;
     usd->write = usd_FileWrite;

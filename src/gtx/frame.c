@@ -187,10 +187,9 @@ gtxframe_AddMenu(struct gtx_frame *aframe, char *alabel, char *astring)
     if (!tmenu) {
 	/* Handle everything but the command string, which is handled by the
 	 * common-case code below */
-	tmenu = (struct gtxframe_menu *)malloc(sizeof(*tmenu));
+	tmenu = calloc(1, sizeof(*tmenu));
 	if (tmenu == (struct gtxframe_menu *)0)
 	    return (-1);
-	memset(tmenu, 0, sizeof(*tmenu));
 	tmenu->next = aframe->menus;
 	aframe->menus = tmenu;
 	tmenu->name = gtx_CopyString(alabel);
@@ -382,7 +381,7 @@ gtxframe_Create(void)
     /*
      * Allocate all the pieces first: frame, keymap, and key state.
      */
-    tframe = (struct gtx_frame *)malloc(sizeof(struct gtx_frame));
+    tframe = calloc(1, sizeof(struct gtx_frame));
     if (tframe == (struct gtx_frame *)0) {
 	return ((struct gtx_frame *)0);
     }
@@ -411,7 +410,6 @@ gtxframe_Create(void)
      * Now that all the pieces exist, fill them in and stick them in
      * the right places.
      */
-    memset(tframe, 0, sizeof(struct gtx_frame));
     tframe->keymap = newkeymap;
     tframe->keystate = newkeystate;
     keymap_InitState(tframe->keystate, tframe->keymap);

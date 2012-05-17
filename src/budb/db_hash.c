@@ -172,8 +172,7 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     len = nb * nHTBuckets;	/* new hash table length */
 
     mht->size = nb * sizeof(struct memoryHTBlock *);
-    b = mht->blocks = (struct memoryHTBlock **)malloc(mht->size);
-    memset(b, 0, mht->size);
+    b = mht->blocks = calloc(1, mht->size);
 
     for (i = 0; i < nb; i++) {
 	b[i] = (struct memoryHTBlock *)malloc(sizeof(struct memoryHTBlock));
@@ -285,8 +284,7 @@ ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht,
 
     if (*blocksP == 0) {
 	*sizeP = ht_TableSize(length);
-	*blocksP = (struct memoryHTBlock **)malloc(*sizeP);
-	memset(*blocksP, 0, *sizeP);
+	*blocksP = calloc(1, *sizeP);
     }
     n = *sizeP / sizeof(struct memoryHTBlock *);
     if (bi >= n)

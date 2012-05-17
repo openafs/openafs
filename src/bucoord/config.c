@@ -57,12 +57,11 @@ bc_InitConfig(char *apath)
     struct bc_config *tb;
 
     /* initialize global config structure */
-    tb = (struct bc_config *)malloc(sizeof(struct bc_config));
+    tb = calloc(1, sizeof(struct bc_config));
     if (!tb)
 	return (BC_NOMEM);
 
     bc_globalConfig = tb;
-    memset(tb, 0, sizeof(struct bc_config));
     tb->path = strdup(apath);
     if (!tb->path) {
 	free(tb);
@@ -95,8 +94,7 @@ HostAdd(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
     for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
 
     /* tlast now points to the next pointer (or head pointer) we should overwrite */
-    tentry = (struct bc_hostEntry *)malloc(sizeof(struct bc_hostEntry));
-    memset(tentry, 0, sizeof(*tentry));
+    tentry = calloc(1, sizeof(struct bc_hostEntry));
     tentry->name = strdup(aname);
     *tlast = tentry;
     tentry->next = (struct bc_hostEntry *)0;

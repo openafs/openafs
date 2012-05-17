@@ -435,8 +435,7 @@ afsconf_Open(const char *adir)
 
     LOCK_GLOBAL_MUTEX;
     /* zero structure and fill in name; rest is done by internal routine */
-    tdir = (struct afsconf_dir *)malloc(sizeof(struct afsconf_dir));
-    memset(tdir, 0, sizeof(struct afsconf_dir));
+    tdir = calloc(1, sizeof(struct afsconf_dir));
     tdir->name = strdup(adir);
 
     code = afsconf_OpenInternal(tdir, 0, 0);
@@ -697,9 +696,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 		adir->entries = curEntry;
 		curEntry = 0;
 	    }
-	    curEntry =
-		(struct afsconf_entry *)malloc(sizeof(struct afsconf_entry));
-	    memset(curEntry, 0, sizeof(struct afsconf_entry));
+	    curEntry = calloc(1, sizeof(struct afsconf_entry));
 	    code =
 		ParseCellLine(tbuffer, curEntry->cellInfo.name, linkedcell);
 	    if (code) {
@@ -808,8 +805,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 	    tp++;
 	tp[0] = '\0';
 
-	curAlias = malloc(sizeof(*curAlias));
-	memset(curAlias, 0, sizeof(*curAlias));
+	curAlias = calloc(1, sizeof(*curAlias));
 
 	strlcpy(curAlias->aliasInfo.aliasName, aliasPtr, sizeof curAlias->aliasInfo.aliasName);
 	strlcpy(curAlias->aliasInfo.realName, tbuffer, sizeof curAlias->aliasInfo.realName);

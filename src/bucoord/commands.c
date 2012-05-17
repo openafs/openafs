@@ -107,13 +107,12 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
     }
     /* No server entry added. Add one */
     if (!(*ss)) {
-	*ss = (struct serversort *)malloc(sizeof(struct serversort));
+	*ss = calloc(1, sizeof(struct serversort));
 	if (!(*ss)) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    *ss = 0;
 	    return (BC_NOMEM);
 	}
-	memset(*ss, 0, sizeof(struct serversort));
 	(*ss)->ipaddr = server;
 	(*ss)->next = *serverlist;
 	*serverlist = *ss;
@@ -128,7 +127,7 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
     }
     /* No partition entry added. Add one */
     if (!(*ps)) {
-	*ps = (struct partitionsort *)malloc(sizeof(struct partitionsort));
+	*ps = calloc(1, sizeof(struct partitionsort));
 	if (!(*ps)) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    free(*ss);
@@ -136,7 +135,6 @@ getSPEntries(afs_uint32 server, afs_int32 partition,
 	    *ss = 0;
 	    return (BC_NOMEM);
 	}
-	memset(*ps, 0, sizeof(struct partitionsort));
 	(*ps)->part = partition;
 	(*ps)->next = (*ss)->partitions;
 	(*ss)->partitions = *ps;
@@ -309,13 +307,11 @@ EvalVolumeSet2(struct bc_config *aconfig,
 
 		if (add) {
 		    /* Allocate a volume dump structure and its name */
-		    tvd = (struct bc_volumeDump *)
-			malloc(sizeof(struct bc_volumeDump));
+		    tvd = calloc(1, sizeof(struct bc_volumeDump));
 		    if (!tvd) {
 			afs_com_err(whoami, BC_NOMEM, NULL);
 			ERROR(BC_NOMEM);
 		    }
-		    memset(tvd, 0, sizeof(*tvd));
 
 		    tvd->name = (char *)malloc(strlen(entries[e].name) + 10);
 		    if (!(tvd->name)) {
@@ -579,13 +575,11 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		}
 
 		total++;
-		tvd = (struct bc_volumeDump *)
-		    malloc(sizeof(struct bc_volumeDump));
+		tvd = calloc(1, sizeof(struct bc_volumeDump));
 		if (!tvd) {
 		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    return (BC_NOMEM);
 		}
-		memset(tvd, 0, sizeof(*tvd));
 
 		tvd->name = (char *)malloc(strlen(entry.name) + 10);
 		if (!(tvd->name)) {
@@ -1186,12 +1180,11 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 
     for (ti = as->parms[2].items; ti; ti = ti->next) {
 	/* build list of volume items */
-	tvol = (struct bc_volumeDump *)malloc(sizeof(struct bc_volumeDump));
+	tvol = calloc(1, sizeof(struct bc_volumeDump));
 	if (!tvol) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
 	}
-	memset(tvol, 0, sizeof(struct bc_volumeDump));
 
 	tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
 	if (!tvol->name) {
@@ -1530,9 +1523,7 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 	    }
 
 	    /* Allocate a volumeDump structure and link it in */
-	    tvol =
-		(struct bc_volumeDump *)malloc(sizeof(struct bc_volumeDump));
-	    memset(tvol, 0, sizeof(struct bc_volumeDump));
+	    tvol = calloc(1, sizeof(struct bc_volumeDump));
 
 	    tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
 	    if (!tvol->name) {
@@ -2761,12 +2752,10 @@ DBLookupByVolume(char *volumeName)
 	    for (i = 0; i < numEntries; i++) {	/*f */
 		struct dumpedVol *insPtr, **prevPtr;
 
-		tempPtr =
-		    (struct dumpedVol *)malloc(sizeof(struct dumpedVol));
+		tempPtr = calloc(1, sizeof(struct dumpedVol));
 		if (!tempPtr)
 		    ERROR(BC_NOMEM);
 
-		memset(tempPtr, 0, sizeof(*tempPtr));
 		tempPtr->incTime = volumeEntry[i].clone;
 		tempPtr->dumpID = volumeEntry[i].dump;
 		strncpy(tempPtr->tapeName, volumeEntry[i].tape,
@@ -2919,13 +2908,12 @@ dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
 
     /* now get the list of tapes */
     for (tapeNumber = dumpEntry.tapes.b; tapeNumber <= dumpEntry.tapes.maxTapes; tapeNumber++) {	/*f */
-	tapeLinkPtr = (struct tapeLink *)malloc(sizeof(struct tapeLink));
+	tapeLinkPtr = calloc(1, sizeof(struct tapeLink));
 	if (!tapeLinkPtr) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    ERROR(BC_NOMEM);
 	}
 
-	memset(tapeLinkPtr, 0, sizeof(*tapeLinkPtr));
 	code = bcdb_FindTapeSeq(dumpid, tapeNumber, &tapeLinkPtr->tapeEntry);
 	if (code) {
 	    code = 0;
@@ -2970,13 +2958,11 @@ dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
 	    for (i = 0; i < vl.budb_volumeList_len; i++) {
 		link = &tapeLinkPtr->firstVolume;
 
-		volumeLinkPtr =
-		    (struct volumeLink *)malloc(sizeof(struct volumeLink));
+		volumeLinkPtr = calloc(1, sizeof(struct volumeLink));
 		if (!volumeLinkPtr) {
 		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    ERROR(BC_NOMEM);
 		}
-		memset(volumeLinkPtr, 0, sizeof(*volumeLinkPtr));
 
 		memcpy(&volumeLinkPtr->volumeEntry,
 		       &vl.budb_volumeList_val[i],

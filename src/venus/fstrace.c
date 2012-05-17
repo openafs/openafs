@@ -674,8 +674,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    found++;
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
-	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset(lip, 0, sizeof(*lip));
+	    lip = calloc(1, sizeof(struct logInfo));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = strdup(tname);
@@ -691,8 +690,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 		break;
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
-	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset(lip, 0, sizeof(*lip));
+	    lip = calloc(1, sizeof(struct logInfo));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = strdup(tname);
@@ -1639,14 +1637,13 @@ GetBulkSetInfo(void)
 	sizeof(afs_icl_bulkSetinfo_t) + (ICL_RPC_MAX_SETS -
 					 1) * sizeof(afs_icl_setinfo_t);
     if (!setInfo) {
-	setInfo = (afs_icl_bulkSetinfo_t *) malloc(infoSize);
+	setInfo = calloc(1, infoSize);
 	if (!setInfo) {
 	    (void)fprintf(stderr,
 			  "Could not allocate the memory for bulk set info structure\n");
 	    exit(1);
 	}
     }
-    memset(setInfo, 0, infoSize);
 
     return setInfo;
 }
@@ -1660,7 +1657,7 @@ GetBulkLogInfo(void)
 	sizeof(afs_icl_bulkLoginfo_t) + (ICL_RPC_MAX_LOGS -
 					 1) * sizeof(afs_icl_loginfo_t);
     if (!logInfo) {
-	logInfo = (afs_icl_bulkLoginfo_t *) malloc(infoSize);
+	logInfo = calloc(1, infoSize);
 	if (!logInfo) {
 	    (void)fprintf(stderr,
 			  "Could not allocate the memory for bulk log info structure\n");
@@ -1668,7 +1665,6 @@ GetBulkLogInfo(void)
 	}
     }
 
-    memset(logInfo, 0, infoSize);
     return logInfo;
 }
 

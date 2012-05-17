@@ -86,11 +86,10 @@ createStatusNode(void)
 {
     statusP ptr;
 
-    ptr = (statusP) malloc(sizeof(*ptr));
+    ptr = calloc(1, sizeof(*ptr));
     if (ptr == 0) {
 	return (0);
     }
-    memset(ptr, 0, sizeof(*ptr));
 
     /* link it onto the chain of status entries */
     ObtainWriteLock(&statusQueueLock);

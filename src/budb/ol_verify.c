@@ -699,10 +699,9 @@ verifyBlocks(struct ubik_trans *ut)
 	bmsize =
 	    sizeof(*ablockMap) + (blockEntries[blocktype] -
 				  1) * sizeof(ablockMap->entries[0]);
-	ablockMap = (struct blockMap *)malloc(bmsize);
+	ablockMap = calloc(1, bmsize);
 	if (!ablockMap)
 	    ERROR(BUDB_NOMEM);
-	memset(ablockMap, 0, bmsize);
 
 	ablockMap->nEntries = blockEntries[blocktype];
 
@@ -1282,10 +1281,9 @@ verifyDatabase(struct ubik_trans *ut,
 
     /* construct block map - first level is the array of pointers */
     bmsize = nBlocks * sizeof(struct blockMap *);
-    blockMap = (struct blockMap **)malloc(bmsize);
+    blockMap = calloc(1, bmsize);
     if (!blockMap)
 	ERROR(BUDB_NOMEM);
-    memset(blockMap, 0, bmsize);
 
     /* verify blocks and construct the block map */
     Log("Read header of every block\n");

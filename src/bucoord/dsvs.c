@@ -190,8 +190,7 @@ bc_CreateVolumeSet(struct bc_config *aconfig, char *avolName,
 	return -1;		/* already exists */
     /* move to end of the list */
 
-    nset = (struct bc_volumeSet *)malloc(sizeof(struct bc_volumeSet));
-    memset(nset, 0, sizeof(*nset));
+    nset = calloc(1, sizeof(struct bc_volumeSet));
     nset->flags = aflags;
     nset->name = strdup(avolName);
     if (aflags & VSFLAG_TEMPORARY) {
@@ -303,8 +302,7 @@ bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost,
 
     /* move to end of the list */
     for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
-    tentry = (struct bc_volumeEntry *)malloc(sizeof(struct bc_volumeEntry));
-    memset(tentry, 0, sizeof(*tentry));
+    tentry = calloc(1, sizeof(struct bc_volumeEntry));
     tentry->serverName = strdup(ahost);
     tentry->partname = strdup(apart);
     tentry->name = strdup(avol);
@@ -366,8 +364,7 @@ bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName,
     else if (code != -1)
 	return -2;		/* name specification error */
 
-    tdump = (struct bc_dumpSchedule *)malloc(sizeof(struct bc_dumpSchedule));
-    memset(tdump, 0, sizeof(*tdump));
+    tdump = calloc(1, sizeof(struct bc_dumpSchedule));
 
     /* prepend this node to the dump schedule list */
     tdump->next = aconfig->dsched;

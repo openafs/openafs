@@ -150,19 +150,12 @@ VVGCache_PkgShutdown(void)
 static int
 _VVGC_entry_alloc(VVGCache_entry_t ** entry_out)
 {
-    int code = 0;
-    VVGCache_entry_t * ent;
+    *entry_out = calloc(1, sizeof(VVGCache_entry_t));
 
-    *entry_out = ent = malloc(sizeof(VVGCache_entry_t));
-    if (ent == NULL) {
-	code = ENOMEM;
-	goto error;
-    }
+    if (*entry_out == NULL)
+	return ENOMEM;
 
-    memset(ent, 0, sizeof(*ent));
-
- error:
-    return code;
+    return 0;
 }
 
 /**

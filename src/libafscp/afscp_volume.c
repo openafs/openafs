@@ -115,12 +115,11 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
 	afscp_errno = code;
 	return NULL;
     }
-    ret = malloc(sizeof(struct afscp_volume));
+    ret = calloc(1, sizeof(struct afscp_volume));
     if (ret == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_volume));
     strlcpy(ret->name, u.u.name, sizeof(ret->name));
     ret->nservers = 0;
     ret->cell = cell;
@@ -229,12 +228,11 @@ afscp_VolumeById(struct afscp_cell *cell, afs_uint32 id)
 	afscp_errno = code;
 	return NULL;
     }
-    ret = malloc(sizeof(struct afscp_volume));
+    ret = calloc(1, sizeof(struct afscp_volume));
     if (ret == NULL) {
 	afscp_errno = ENOMEM;
 	return NULL;
     }
-    memset(ret, 0, sizeof(struct afscp_volume));
     strlcpy(ret->name, u.u.name, sizeof(ret->name));
     ret->nservers = 0;
     ret->cell = cell;

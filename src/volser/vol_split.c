@@ -91,13 +91,11 @@ ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class,
 	goto Bad_Extract;
     }
     size = FDH_SIZE(fdP);
-    *list = (struct VnodeExtract *) malloc(size / vcp->diskSize
-					* sizeof(struct VnodeExtract));
+    *list = calloc(size / vcp->diskSize, sizeof(struct VnodeExtract));
     if (!(*list)) {
 	code = ENOMEM;
 	goto Bad_Extract;
     }
-    memset(*list, 0, size / vcp->diskSize * sizeof(struct VnodeExtract));
     stream = FDH_FDOPEN(fdP, "r");
     if (!stream) {
 	sprintf(m->line, "Couldn't stream open %s Index of volume %u\n",
@@ -712,8 +710,7 @@ split_volume(struct rx_call *call, Volume *vol, Volume *newvol,
     afs_uint32 parent;
     struct Msg *m;
 
-    m = (struct Msg *) malloc(sizeof(struct Msg));
-    memset(m, 0, sizeof(struct Msg));
+    m = calloc(1, sizeof(struct Msg));
     m->call = call;
     m->verbose = verbose;
 

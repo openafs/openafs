@@ -114,9 +114,8 @@ rxkad_Init(void) {
 rxkad_stats_t *
 rxkad_thr_stats_init(void) {
     rxkad_stats_t * rxkad_stats;
-    rxkad_stats = (rxkad_stats_t *)malloc(sizeof(rxkad_stats_t));
+    rxkad_stats = calloc(1, sizeof(rxkad_stats_t));
     osi_Assert(rxkad_stats != NULL && pthread_setspecific(rxkad_stats_key,rxkad_stats) == 0);
-    memset(rxkad_stats,0,sizeof(rxkad_stats_t));
     RXKAD_GLOBAL_STATS_LOCK;
     DLL_INSERT_TAIL(rxkad_stats, rxkad_global_stats.first, rxkad_global_stats.last, next, prev);
     RXKAD_GLOBAL_STATS_UNLOCK;

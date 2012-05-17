@@ -438,12 +438,11 @@ _afsconf_LoadRealms(struct afsconf_dir *dir)
     struct afsconf_realms *exclusions = NULL;
 
     /* Create and load the list of local realms. */
-    local_realms = malloc(sizeof(struct afsconf_realms));
+    local_realms = calloc(1, sizeof(struct afsconf_realms));
     if (!local_realms) {
 	code = ENOMEM;
 	goto cleanup;
     }
-    memset(local_realms, 0, sizeof(struct afsconf_realms));
     opr_queue_Init(&local_realms->list);
     local_realms->compare = compare_realms;
 
@@ -466,12 +465,11 @@ _afsconf_LoadRealms(struct afsconf_dir *dir)
     }
 
     /* Create and load the list of excluded principals. */
-    exclusions = malloc(sizeof(struct afsconf_realms));
+    exclusions = calloc(1, sizeof(struct afsconf_realms));
     if (!exclusions) {
 	code = ENOMEM;
 	goto cleanup;
     }
-    memset(exclusions, 0, sizeof(struct afsconf_realms));
     opr_queue_Init(&exclusions->list);
     exclusions->compare = compare_principals;
     code = read_local_exclusions(exclusions, dir->name);

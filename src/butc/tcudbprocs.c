@@ -271,11 +271,9 @@ GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
 	*wroteLabel = 1;
 
 	/* Initialize a tapeEntry for later inclusion into the database */
-	listEntryPtr =
-	    (struct tapeEntryList *)malloc(sizeof(struct tapeEntryList));
+	listEntryPtr = calloc(1, sizeof(struct tapeEntryList));
 	if (!listEntryPtr)
 	    ERROR_EXIT(TC_NOMEMORY);
-	memset(listEntryPtr, 0, sizeof(struct tapeEntryList));
 
 	/* Remember dumpid so we can delete it later */
 	if ((oldTapeLabel.structVersion >= TAPE_VERSION_3)
@@ -871,11 +869,9 @@ readDbTape(struct butm_tapeInfo *tapeInfoPtr,
 
 
     /* Initialize a tapeEntry for later inclusion into the database */
-    listEntryPtr =
-	(struct tapeEntryList *)malloc(sizeof(struct tapeEntryList));
+    listEntryPtr = calloc(1, sizeof(struct tapeEntryList));
     if (!listEntryPtr)
 	ERROR_EXIT(TC_NOMEMORY);
-    memset(listEntryPtr, 0, sizeof(struct tapeEntryList));
 
     /* Fill in tape entry so we can save it later */
     strcpy(tapeEntryPtr->name, TNAME(&oldTapeLabel));
@@ -1348,11 +1344,10 @@ saveTextFile(afs_int32 taskId, afs_int32 textType, char *fileName)
     afs_int32 code = 0;
     int tlock = 0;
 
-    ctPtr = (udbClientTextP) malloc(sizeof(*ctPtr));
+    ctPtr = calloc(1, sizeof(*ctPtr));
     if (!ctPtr)
 	ERROR_EXIT(TC_NOMEMORY);
 
-    memset(ctPtr, 0, sizeof(*ctPtr));
     ctPtr->textType = textType;
 
     /* lock the text in the database */

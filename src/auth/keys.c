@@ -1023,11 +1023,10 @@ afsconf_typedKey_blank(void)
 {
     struct afsconf_typedKey *key;
 
-    key = malloc(sizeof(struct afsconf_typedKey));
+    key = calloc(1, sizeof(struct afsconf_typedKey));
     if (key == NULL)
 	return NULL;
 
-    memset(key, 0, sizeof(struct afsconf_typedKey));
     rx_atomic_set(&key->refcnt, 1);
 
     return key;

@@ -48,9 +48,8 @@ get_vhash_ent(path_hashinfo * phi, afs_uint32 vnode, int make)
     for (vhe = phi->hash_table[key]; vhe && vhe->vnode != vnode;
 	 vhe = vhe->next);
     if (make && !vhe) {
-	vhe = (vhash_ent *) malloc(sizeof(vhash_ent));
+	vhe = calloc(1, sizeof(vhash_ent));
 	if (vhe) {
-	    memset(vhe, 0, sizeof(vhash_ent));
 	    vhe->vnode = vnode;
 	    vhe->next = phi->hash_table[key];
 	    phi->hash_table[key] = vhe;
@@ -71,10 +70,9 @@ volhdr_cb(afs_vol_header * hdr, XFILE * X, void *refcon)
 	for (phi->hash_size = 1; nfiles > BUCKET_SIZE;
 	     phi->hash_size++, nfiles >>= 1);
 	hsize = (1 << phi->hash_size);
-	phi->hash_table = (vhash_ent **) malloc(hsize * sizeof(vhash_ent *));
+	phi->hash_table = calloc(hsize ,sizeof(vhash_ent *));
 	if (!phi->hash_table)
 	    return ENOMEM;
-	memset(phi->hash_table, 0, hsize * sizeof(vhash_ent *));
 	return 0;
     } else {
 	if (phi->p->cb_error)

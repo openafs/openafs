@@ -436,8 +436,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     nentries =
 	(info.st_size -
 	 (UBIK_HEADERSIZE + header.headerSize)) / sizeof(struct kaentry);
-    entrys = (int *)malloc(nentries * sizeof(int));
-    memset(entrys, 0, nentries * sizeof(int));
+    entrys = calloc(nentries, sizeof(int));
 
     for (i = 0, index = sizeof(header); i < nentries;
 	 i++, index += sizeof(struct kaentry)) {

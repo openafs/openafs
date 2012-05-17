@@ -338,8 +338,7 @@ bnode_Register(char *atype, struct bnode_ops *aprocs, int anparms)
 	    break;
     }
     if (!tt) {
-	tt = (struct bnode_type *)malloc(sizeof(struct bnode_type));
-	memset(tt, 0, sizeof(struct bnode_type));
+	tt = calloc(1, sizeof(struct bnode_type));
 	tt->next = allTypes;
 	allTypes = tt;
 	tt->name = atype;
@@ -959,8 +958,7 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     code = bnode_ParseLine(aexecString, &tlist);	/* try parsing first */
     if (code)
 	return code;
-    tp = (struct bnode_proc *)malloc(sizeof(struct bnode_proc));
-    memset(tp, 0, sizeof(struct bnode_proc));
+    tp = calloc(1, sizeof(struct bnode_proc));
     tp->next = allProcs;
     tp->bnode = abnode;
     tp->comLine = aexecString;

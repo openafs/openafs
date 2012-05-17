@@ -183,9 +183,7 @@ acl_Externalize_pr(int (*func)(idlist *ids, namelist *names), struct acl_accessL
 	return (-1);
     acl_NewExternalACL(acl->total, elist);
     nextc = *elist;
-    lids.idlist_val =
-	(afs_int32 *) malloc(ACL_MAXENTRIES * sizeof(afs_int32));
-    memset(lids.idlist_val, 0, ACL_MAXENTRIES * sizeof(afs_int32));
+    lids.idlist_val = calloc(ACL_MAXENTRIES, sizeof(afs_int32));
     lids.idlist_len = acl->total;
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *) 0;

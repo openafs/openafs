@@ -484,8 +484,7 @@ bc_ParseVolumeSet(void)
 	     * the info just read placing it at the head of its queue in the
 	     * global configuration structure.
 	     */
-	    tvs = (struct bc_volumeSet *)malloc(sizeof(struct bc_volumeSet));
-	    memset(tvs, 0, sizeof(*tvs));
+	    tvs = calloc(1, sizeof(struct bc_volumeSet));
 	    tvs->name = strdup(vsname);
 
 	    /* append to the end */
@@ -511,14 +510,12 @@ bc_ParseVolumeSet(void)
 	     * spec record, then get the rest of the information regarding
 	     * the host, and stuff everything into place.
 	     */
-	    tve = (struct bc_volumeEntry *)
-		malloc(sizeof(struct bc_volumeEntry));
+	    tve = calloc(1, sizeof(struct bc_volumeEntry));
 	    if (!tve) {
 		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec record!");
 		return (-1);
 	    }
-	    memset(tve, 0, sizeof(*tve));
 	    if (bc_ParseHost(serverName, &(tve->server)))
 		afs_com_err(whoami, 0, "Can't get required info on host '%s'",
 			serverName);

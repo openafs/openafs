@@ -692,8 +692,7 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
     void *status;
 #endif
 
-    params = malloc(sizeof(struct client_data));
-    memset(params, 0, sizeof(struct client_data));
+    params = calloc(1, sizeof(struct client_data));
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {

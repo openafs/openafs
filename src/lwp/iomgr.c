@@ -176,9 +176,8 @@ static struct IoRequest *NewRequest(void)
 
     if ((request=iorFreeList))
 	iorFreeList = (struct IoRequest *) (request->next);
-    else request = (struct IoRequest *) malloc(sizeof(struct IoRequest));
+    else request = calloc(1, sizeof(struct IoRequest));
 
-    memset((char*)request, 0, sizeof(struct IoRequest));
     return request;
 }
 

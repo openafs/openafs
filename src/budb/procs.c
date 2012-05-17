@@ -534,12 +534,13 @@ SendReturnList(struct ubik_trans *ut,
 
     /* Allocate space for the return values if needed and zero it */
     if (eList->budb_dumpList_val == 0) {
-	eList->budb_dumpList_val =
-	    (struct budb_dumpEntry *)malloc(e_size * to_return);
+	eList->budb_dumpList_val = calloc(to_return, e_size);
 	if (!eList->budb_dumpList_val)
 	    return (BUDB_NOMEM);
+    } else {
+        memset(eList->budb_dumpList_val, 0, e_size * to_return);
     }
-    memset(eList->budb_dumpList_val, 0, e_size * to_return);
+
     eList->budb_dumpList_len = to_return;
 
     e = (char *)(eList->budb_dumpList_val);
@@ -1040,10 +1041,9 @@ rememberDump(dbadr dumpAddr, void *dumpParam, void *dumpListPtrParam)
     dumpPtr = (struct dump *)dumpParam;
     rockPtr = (struct wantDumpRock *)dumpListPtrParam;
 
-    ptr = (struct chosenDump *)malloc(sizeof(*ptr));
+    ptr = calloc(1, sizeof(*ptr));
     if (!ptr)
 	return (0);
-    memset(ptr, 0, sizeof(*ptr));
     ptr->addr = dumpAddr;
     ptr->date = (afs_uint32) ntohl(dumpPtr->created);
 

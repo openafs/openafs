@@ -1699,14 +1699,13 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
      * watching.
      */
     sktbytes = a_numservers * sizeof(struct sockaddr_in);
-    FSSktArray = (struct sockaddr_in *)malloc(sktbytes);
+    FSSktArray = calloc(1, sktbytes);
     if (FSSktArray == (struct sockaddr_in *)0) {
 	fprintf(stderr,
 		"[%s] Can't malloc() %d sockaddrs (%d bytes) for the given servers\n",
 		rn, a_numservers, sktbytes);
 	scout_CleanExit(-1);
     }
-    memset(FSSktArray, 0, sktbytes);
 
     /*
      * Sweep through the server names provided, filling in the socket
@@ -1742,13 +1741,12 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
      * Create the set of mini-lines, one per server.
      */
     mini_line_bytes = a_numservers * sizeof(struct mini_line);
-    mini_lines = (struct mini_line *)malloc(mini_line_bytes);
+    mini_lines = calloc(1, mini_line_bytes);
     if (mini_lines == (struct mini_line *)0) {
 	fprintf(stderr, "[%s] Can't malloc() %d bytes for %d screen lines\n",
 		rn, mini_line_bytes, a_numservers);
 	return (-1);
     }
-    memset(mini_lines, 0, mini_line_bytes);
 
     /*
      * Set up each line in the mini_lines, creating and initializing

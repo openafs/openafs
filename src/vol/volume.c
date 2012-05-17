@@ -925,9 +925,8 @@ VInitVolumePackageThread(void *args)
             continue;
         }
         while ((vid = VInitNextVolumeId(dirp))) {
-            Volume *vp = (Volume*)malloc(sizeof(Volume));
+            Volume *vp = calloc(1, sizeof(Volume));
             osi_Assert(vp);
-            memset(vp, 0, sizeof(Volume));
             vp->device = partition->device;
             vp->partition = partition;
             vp->hashid = vid;
@@ -2215,9 +2214,8 @@ VPreAttachVolumeByVp_r(Error * ec,
 	VOL_UNLOCK;
 
 	/* allocate the volume structure */
-	vp = nvp = (Volume *) malloc(sizeof(Volume));
+	vp = nvp = calloc(1, sizeof(Volume));
 	osi_Assert(vp != NULL);
-	memset(vp, 0, sizeof(Volume));
 	queue_Init(&vp->vnode_list);
 	queue_Init(&vp->rx_call_list);
 	CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);

@@ -198,9 +198,8 @@ xfregister(char *name, afs_uint32(*do_on) (XFILE *, int, char *))
 {
     struct xftype *x;
 
-    if (!(x = (struct xftype *)malloc(sizeof(struct xftype))))
+    if (!(x = calloc(1, sizeof(struct xftype))))
 	return ENOMEM;
-    memset(x, 0, sizeof(*x));
     x->next = xftypes;
     x->name = name;
     x->do_on = do_on;

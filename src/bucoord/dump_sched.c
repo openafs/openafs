@@ -424,9 +424,7 @@ bc_ParseDumpSchedule(void)
 		    tbuffer);
 	    return (BC_INTERNALERROR);
 	}
-	tds =
-	    (struct bc_dumpSchedule *)malloc(sizeof(struct bc_dumpSchedule));
-	memset(tds, 0, sizeof(*tds));
+	tds = calloc(1, sizeof(struct bc_dumpSchedule));
 
 	tds->next = (struct bc_dumpSchedule *)0;
 	tds->name = strdup(dsname);

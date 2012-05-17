@@ -503,9 +503,8 @@ SalvageServer(int argc, char **argv)
      * the salvager daemon */
     ObtainSharedSalvageLock();
 
-    child_slot = (int *) malloc(Parallel * sizeof(int));
+    child_slot = calloc(Parallel, sizeof(int));
     osi_Assert(child_slot != NULL);
-    memset(child_slot, 0, Parallel * sizeof(int));
 
     /* initialize things */
     VOptDefaults(salvageServer, &opts);

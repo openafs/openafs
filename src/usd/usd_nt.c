@@ -466,9 +466,7 @@ usd_DeviceOpen(const char *path, int oflag, int pmode, usd_handle_t * usdP)
     if (devhandle == INVALID_HANDLE_VALUE)
 	return nterr_nt2unix(GetLastError(), EIO);
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
-
+    usd = calloc(1, sizeof(*usd));
 
     _ASSERT(sizeof(devhandle) <= sizeof(usd->handle));
     usd->handle = (void *)devhandle;
@@ -524,8 +522,7 @@ usd_DeviceStandardInput(usd_handle_t * usdP)
     if (usdP)
 	*usdP = NULL;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)0;
     usd->read = usd_DeviceRead;
     usd->write = usd_DeviceWrite;
@@ -552,8 +549,7 @@ usd_DeviceStandardOutput(usd_handle_t * usdP)
     if (usdP)
 	*usdP = NULL;
 
-    usd = (usd_handle_t) malloc(sizeof(*usd));
-    memset(usd, 0, sizeof(*usd));
+    usd = calloc(1, sizeof(*usd));
     usd->handle = (void *)1;
     usd->read = usd_DeviceRead;
     usd->write = usd_DeviceWrite;

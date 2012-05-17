@@ -186,11 +186,9 @@ RDR_Ready(void)
     //
     // Allocate a response buffer.
     //
-    respBuffer = (AFSDriverStatusRespCB *)malloc( sizeof( AFSDriverStatusRespCB));
+    respBuffer = calloc(1, sizeof( AFSDriverStatusRespCB));
     if( respBuffer)
     {
-
-	memset( respBuffer, '\0', sizeof( AFSDriverStatusRespCB));
 
         if( !DeviceIoControl( hDevHandle,
                               IOCTL_AFS_STATUS_REQUEST,

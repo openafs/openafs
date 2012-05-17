@@ -1699,23 +1699,14 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     cookie.clone = 0;
 
     nservers = entry.nServers / 2;	/* how many to do at once, excluding clone */
-    replicas =
-	(struct replica *)malloc(sizeof(struct replica) * nservers + 1);
-    times = (struct release *)malloc(sizeof(struct release) * nservers + 1);
-    toconns =
-	(struct rx_connection **)malloc(sizeof(struct rx_connection *) *
-					nservers + 1);
-    results.manyResults_val =
-	(afs_int32 *) malloc(sizeof(afs_int32) * nservers + 1);
+    replicas = calloc(nservers + 1, sizeof(struct replica));
+    times = calloc(nservers + 1, sizeof(struct release));
+    toconns = calloc(nservers + 1, sizeof(struct rx_connection *));
+    results.manyResults_val = calloc(nservers + 1, sizeof(afs_int32));
     if (!replicas || !times || !!!results.manyResults_val || !toconns) {
 	tst = ADMNOMEM;
 	goto fail_UV_ReleaseVolume;
     }
-
-    memset(replicas, 0, (sizeof(struct replica) * nservers + 1));
-    memset(times, 0, (sizeof(struct release) * nservers + 1));
-    memset(toconns, 0, (sizeof(struct rx_connection *) * nservers + 1));
-    memset(results.manyResults_val, 0, (sizeof(afs_int32) * nservers + 1));
 
     /* Create a transaction on the cloned volume */
     tst =

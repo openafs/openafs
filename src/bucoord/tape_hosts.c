@@ -255,10 +255,9 @@ bc_ParseHosts(void)
 		    "can't get host info for %s from nameserver or /etc/hosts.",
 		    hostName);
 	}
-	the = (struct bc_hostEntry *)malloc(sizeof(struct bc_hostEntry));
+	the = calloc(1, sizeof(struct bc_hostEntry));
 	if (the == (struct bc_hostEntry *)0)
 	    return (BC_NOMEM);
-	memset(the, 0, sizeof(struct bc_hostEntry));
 	if (tlast) {
 	    tlast->next = the;
 	    tlast = the;
