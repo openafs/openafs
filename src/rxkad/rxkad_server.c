@@ -144,12 +144,12 @@ rxkad_NewServerSecurityObject(rxkad_level level, void *get_key_rock,
 	return 0;
 
     size = sizeof(struct rx_securityClass);
-    tsc = (struct rx_securityClass *)osi_Alloc(size);
+    tsc = osi_Alloc(size);
     memset(tsc, 0, size);
     tsc->refCount = 1;		/* caller has one reference */
     tsc->ops = &rxkad_server_ops;
     size = sizeof(struct rxkad_sprivate);
-    tsp = (struct rxkad_sprivate *)osi_Alloc(size);
+    tsp = osi_Alloc(size);
     memset(tsp, 0, size);
     tsc->privateData = (char *)tsp;
 
@@ -415,7 +415,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	    return RXKADNOAUTH;
     } else {			/* save the info for later retreival */
 	int size = sizeof(struct rxkad_serverinfo);
-	rock = (struct rxkad_serverinfo *)osi_Alloc(size);
+	rock = osi_Alloc(size);
 	memset(rock, 0, size);
 	rock->kvno = kvno;
 	memcpy(&rock->client, &client, sizeof(rock->client));

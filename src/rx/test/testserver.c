@@ -274,7 +274,7 @@ FileRequest(struct rx_call *call)
     blockSize = status.st_blksize;
 #endif
 #endif /* AFS_NT40_ENV */
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
 
     rx_SetLocalStatus(call, 79);	/* Emulation of file server's old "RCallBackReceivedStore" */
 

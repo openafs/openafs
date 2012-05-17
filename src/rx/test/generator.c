@@ -176,7 +176,7 @@ GetName(char *serverName, int sign_no)
     /* itl file name 8.3 format */
     char *bufP;
 
-    bufP = (char *)malloc(32 * sizeof(char));
+    bufP = malloc(32 * sizeof(char));
     MEM_CHK(bufP, "GetName: bufP out of mem\n");
 
     sprintf(bufP, "%s%d", serverName, sign_no);
@@ -530,7 +530,7 @@ WriteServC(rpcArgs * argsP, FILE * srv_h, char *serverName, int sign_no)
 			argsP->argDescr[i].outValue[0]);
 	    } else if (!strcmp(typ, "varString")) {
 		if (!strcmp(argsP->argDescr[i].direction, "OUT")) {
-		    fprintf(srv_h, "\n\t*a%d = (char *) malloc(STR_MAX);", i);
+		    fprintf(srv_h, "\n\t*a%d = malloc(STR_MAX);", i);
 		}
 		fprintf(srv_h, "\n\tstrcpy((char *)*a%d, %s);", i,
 			argsP->argDescr[i].outValue[0]);
@@ -768,7 +768,7 @@ WriteCltTrailer(char *serverName, int first, int last, FILE * itl_h)
 		"malloc(numThreads*(sizeof(pthread_t)));\n");
     } else {
 	fprintf(itl_h,
-		"\ttid = (PROCESS *) malloc(numThreads*(sizeof(PROCESS *)));\n");
+		"\ttid = malloc(numThreads*(sizeof(PROCESS *)));\n");
     }
 
     fprintf(itl_h, "\tassert(tid);\n" "\tfor(j=0;j<numThreads;j++) {\n");
@@ -914,8 +914,8 @@ WriteCltInit(arg_tuple * arg, FILE * itl_h, int i, int structFlag)
 			arg->type);
 		fprintf(itl_h,
 			"\t%sa%d.drpc_out_%s_t_val = "
-			"(%s *) malloc(FIX_ARRAY_SIZE * sizeof(%s));\n", s, i,
-			arg->type, (arg->type + 3), (arg->type + 3));
+			"malloc(FIX_ARRAY_SIZE * sizeof(%s));\n", s, i,
+			arg->type, (arg->type + 3));
 	    }
 	    for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++) {
 		if (structFlag) {

@@ -117,8 +117,7 @@ async_BulkTest(host, conn, store, count, verbose, file)
     char tempfile[256];
     char *name;
     PROCESS pid;
-    struct async_work *work =
-	(struct async_work *)malloc(sizeof(struct async_work));
+    struct async_work *work = malloc(sizeof(struct async_work));
     work->host = host;
     work->conn = conn;
     work->store = store;

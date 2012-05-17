@@ -530,7 +530,7 @@ rxi_MorePackets(int apackets)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = (struct rx_packet *)osi_Alloc(getme);
+    p = osi_Alloc(getme);
     osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
@@ -584,7 +584,7 @@ rxi_MorePackets(int apackets)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = (struct rx_packet *)osi_Alloc(getme);
+    p = osi_Alloc(getme);
     osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
@@ -627,7 +627,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
     SPLVAR;
 
     getme = apackets * sizeof(struct rx_packet);
-    p = (struct rx_packet *)osi_Alloc(getme);
+    p = osi_Alloc(getme);
 
     PIN(p, getme);		/* XXXXX */
     memset(p, 0, getme);
@@ -689,7 +689,7 @@ rxi_MorePacketsNoLock(int apackets)
 	* ((rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE) / RX_CBUFFERSIZE);
     do {
         getme = apackets * sizeof(struct rx_packet);
-        p = (struct rx_packet *)osi_Alloc(getme);
+        p = osi_Alloc(getme);
 	if (p == NULL) {
             apackets -= apackets / 4;
             osi_Assert(apackets > 0);

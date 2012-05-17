@@ -25,7 +25,7 @@
 #include <afs/afsutil.h>
 
 #ifndef osi_Alloc
-#define osi_Alloc(n) (char *) malloc(n)
+#define osi_Alloc(n) malloc(n)
 #endif
 
 int timeReadvs = 0;
@@ -218,7 +218,7 @@ main(int argc, char **argv)
     if (sendFile)
 	SendFile(sendFile, conn);
     else {
-	buffer = (char *)osi_Alloc(bufferSize);
+	buffer = osi_Alloc(bufferSize);
 	while (nCalls--) {
 	    struct clock startTime;
 	    struct timeval t;
@@ -323,7 +323,7 @@ SendFile(char *file, struct rx_connection *conn)
     blockSize = status.st_blksize;
 #endif
 #endif
-    buf = (char *)osi_Alloc(blockSize);
+    buf = osi_Alloc(blockSize);
     bytesLeft = status.st_size;
     clock_GetTime(&startTime);
     call = rx_NewCall(conn);

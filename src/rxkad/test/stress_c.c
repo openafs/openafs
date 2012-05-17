@@ -282,7 +282,7 @@ CallSimultaneously(u_int threads, opaque rock, long (*proc)(int, opaque))
 	PROCESS pid;
 #endif
 	assert(i < MAX_CTHREADS);
-	w = (struct worker *)osi_Alloc(sizeof(struct worker));
+	w = osi_Alloc(sizeof(struct worker));
 	memset(w, 0, sizeof(*w));
 	w->next = workers;
 	workers = w;

@@ -178,7 +178,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
     struct usr_socket *usockp;
 
-    usockp = (struct usr_socket *)afs_osi_Alloc(sizeof(struct usr_socket));
+    usockp = afs_osi_Alloc(sizeof(struct usr_socket));
     usr_assert(usockp != NULL);
 
     usockp->sock = -1;

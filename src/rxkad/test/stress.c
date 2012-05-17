@@ -114,8 +114,8 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     struct serverParms *sParms;
     struct clientParms *cParms;
 
-    sParms = (struct serverParms *)osi_Alloc(sizeof(*sParms));
-    cParms = (struct clientParms *)osi_Alloc(sizeof(*cParms));
+    sParms = osi_Alloc(sizeof(*sParms));
+    cParms = osi_Alloc(sizeof(*cParms));
     memset(sParms, 0, sizeof(*sParms));
     memset(cParms, 0, sizeof(*cParms));
     sParms->whoami = cParms->whoami = whoami;

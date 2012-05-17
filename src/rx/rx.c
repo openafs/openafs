@@ -556,11 +556,10 @@ rx_InitHost(u_int host, u_int port)
     rx_connDeadTime = 12;
     rx_tranquil = 0;		/* reset flag */
     rxi_ResetStatistics();
-    htable = (char *)
-	osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
+    htable = osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
     PIN(htable, rx_hashTableSize * sizeof(struct rx_connection *));	/* XXXXX */
     memset(htable, 0, rx_hashTableSize * sizeof(struct rx_connection *));
-    ptable = (char *)osi_Alloc(rx_hashTableSize * sizeof(struct rx_peer *));
+    ptable = osi_Alloc(rx_hashTableSize * sizeof(struct rx_peer *));
     PIN(ptable, rx_hashTableSize * sizeof(struct rx_peer *));	/* XXXXX */
     memset(ptable, 0, rx_hashTableSize * sizeof(struct rx_peer *));
 
@@ -7935,7 +7934,7 @@ rx_SetSpecific(struct rx_connection *conn, int key, void *ptr)
     int i;
     MUTEX_ENTER(&conn->conn_data_lock);
     if (!conn->specific) {
-	conn->specific = (void **)malloc((key + 1) * sizeof(void *));
+	conn->specific = malloc((key + 1) * sizeof(void *));
 	for (i = 0; i < key; i++)
 	    conn->specific[i] = NULL;
 	conn->nSpecific = key + 1;
@@ -7961,7 +7960,7 @@ rx_SetServiceSpecific(struct rx_service *svc, int key, void *ptr)
     int i;
     MUTEX_ENTER(&svc->svc_data_lock);
     if (!svc->specific) {
-	svc->specific = (void **)malloc((key + 1) * sizeof(void *));
+	svc->specific = malloc((key + 1) * sizeof(void *));
 	for (i = 0; i < key; i++)
 	    svc->specific[i] = NULL;
 	svc->nSpecific = key + 1;

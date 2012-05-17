@@ -37,9 +37,9 @@ multi_Init(struct rx_connection **conns, int nConns)
      * a process stack will not be accessible to other processes
      */
 
-    calls = (struct rx_call **)osi_Alloc(sizeof(struct rx_call *) * nConns);
-    ready = (short *)osi_Alloc(sizeof(short *) * nConns);
-    mh = (struct multi_handle *)osi_Alloc(sizeof(struct multi_handle));
+    calls = osi_Alloc(sizeof(struct rx_call *) * nConns);
+    ready = osi_Alloc(sizeof(short *) * nConns);
+    mh = osi_Alloc(sizeof(struct multi_handle));
     if (!calls || !ready || !mh)
 	osi_Panic("multi_Rx: no mem\n");
     memset(mh, 0, sizeof(struct multi_handle));

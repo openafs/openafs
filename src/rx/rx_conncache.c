@@ -132,7 +132,7 @@ rxi_AddCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
 {
     cache_entry_p new_entry;
 
-    if ((new_entry = (cache_entry_p) malloc(sizeof(cache_entry_t)))) {
+    if ((new_entry = malloc(sizeof(cache_entry_t)))) {
 	new_entry->conn = *conn;
 	new_entry->parts = *parts;
 	new_entry->inUse = 1;
