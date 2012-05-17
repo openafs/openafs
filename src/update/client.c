@@ -472,7 +472,7 @@ update_ReceiveFile(int fd, struct rx_call *call, struct stat *status)
 #else
     blockSize = status->st_blksize;
 #endif
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	printf("malloc failed\n");
 	return UPDATE_ERROR;

@@ -400,7 +400,7 @@ update_SendFile(int fd, struct rx_call *call, struct stat *status)
     blockSize = status->st_blksize;
 #endif
     length = status->st_size;
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	printf("malloc failed\n");
 	return UPDATE_ERROR;

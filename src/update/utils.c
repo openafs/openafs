@@ -27,7 +27,7 @@ int
 AddToList(struct filestr **ah, char *aname)
 {
     struct filestr *tf;
-    tf = (struct filestr *)malloc(sizeof(struct filestr));
+    tf = malloc(sizeof(struct filestr));
     tf->next = *ah;
     *ah = tf;
     tf->name = strdup(aname);
