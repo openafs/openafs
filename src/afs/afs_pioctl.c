@@ -568,8 +568,7 @@ kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
 	    if (((uap->com >> 8) & 0xff) == 'V') {
 		struct afs_ioctl *datap;
 		AFS_GLOCK();
-		datap =
-		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 		code=copyin_afs_ioctl((char *)uap->arg, datap);
 		if (code) {
 		    osi_FreeSmallSpace(datap);
@@ -677,8 +676,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 	    if (((uap->com >> 8) & 0xff) == 'V') {
 		struct afs_ioctl *datap;
 		AFS_GLOCK();
-		datap =
-		    (struct afs_ioctl *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		datap = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 		code=copyin_afs_ioctl((char *)uap->arg, datap);
 		if (code) {
 		    osi_FreeSmallSpace(datap);

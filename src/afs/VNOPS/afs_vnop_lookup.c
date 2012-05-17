@@ -205,7 +205,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
      * Don't know why we do this. Would have still found it in above call - jpm.
      */
     if (!tvp && (prefetch == 2) && len < AFS_SMALLOCSIZ - 10) {
-	buf = (char *)osi_AllocSmallSpace(len + 10);
+	buf = osi_AllocSmallSpace(len + 10);
 
 	strcpy(buf, volnamep);
 	afs_strcat(buf, ".readonly");
@@ -300,8 +300,7 @@ EvalMountPoint(struct vcache *avc, struct vcache *advc,
 	auniq = 1;
 
     if (avc->mvid == 0)
-	avc->mvid =
-	    (struct VenusFid *)osi_AllocSmallSpace(sizeof(struct VenusFid));
+	avc->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
     avc->mvid->Cell = (*avolpp)->cell;
     avc->mvid->Fid.Volume = (*avolpp)->volume;
     avc->mvid->Fid.Vnode = avnoid;
@@ -554,7 +553,7 @@ Check_AtSys(struct vcache *avc, const char *aname,
 
     if (AFS_EQ_ATSYS(aname)) {
 	state->offset = 0;
-	state->name = (char *)osi_AllocLargeSpace(MAXSYSNAME);
+	state->name = osi_AllocLargeSpace(MAXSYSNAME);
 	state->allocked = 1;
 	state->index =
 	    afs_getsysname(areq, avc, state->name, &num, sysnamelist);
@@ -586,7 +585,7 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
 
 	if ((tname > state->name + 4) && (AFS_EQ_ATSYS(tname - 4))) {
 	    state->offset = (tname - 4) - state->name;
-	    tname = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	    tname = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	    strncpy(tname, state->name, state->offset);
 	    state->name = tname;
 	    state->allocked = 1;
@@ -740,11 +739,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * one for fids and callbacks, and one for stat info.  Well set
      * up our pointers to the memory from there, too.
      */
-    statsp = (AFSFetchStatus *) 
-	    osi_Alloc(AFSCBMAX * sizeof(AFSFetchStatus));
-    fidsp = (AFSFid *) osi_AllocLargeSpace(nentries * sizeof(AFSFid));
-    cbsp = (AFSCallBack *) 
-	    osi_Alloc(AFSCBMAX * sizeof(AFSCallBack));
+    statsp = osi_Alloc(AFSCBMAX * sizeof(AFSFetchStatus));
+    fidsp = osi_AllocLargeSpace(nentries * sizeof(AFSFid));
+    cbsp = osi_Alloc(AFSCBMAX * sizeof(AFSCallBack));
 
     /* next, we must iterate over the directory, starting from the specified
      * cookie offset (dirCookie), and counting out nentries file entries.
@@ -1173,8 +1170,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* now copy ".." entry back out of volume structure, if necessary */
 	if (tvcp->mvstat == 2 && (dotdot.Fid.Volume != 0)) {
 	    if (!tvcp->mvid)
-		tvcp->mvid = (struct VenusFid *)
-		    osi_AllocSmallSpace(sizeof(struct VenusFid));
+		tvcp->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
 	    *tvcp->mvid = dotdot;
 	}
 
@@ -1865,7 +1861,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    if (tvolp) {
 			ObtainWriteLock(&tvc->lock, 134);
 			if (tvc->mvid == NULL) {
-			    tvc->mvid = (struct VenusFid *)
+			    tvc->mvid =
 				osi_AllocSmallSpace(sizeof(struct VenusFid));
 			}
 			/* setup backpointer */

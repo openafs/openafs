@@ -372,7 +372,7 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc,
     if ( !tc )
 	return -1;
 
-    v = (struct rxfs_storeVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_storeVariables));
+    v = osi_AllocSmallSpace(sizeof(struct rxfs_storeVariables));
     if (!v)
         osi_Panic("rxfs_storeInit: osi_AllocSmallSpace returned NULL\n");
     memset(v, 0, sizeof(struct rxfs_storeVariables));

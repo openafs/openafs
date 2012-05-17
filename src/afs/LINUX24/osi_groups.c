@@ -121,7 +121,7 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     afs_int32 ngroups, code = 0;
     int j;
 
-    gidset = (gid_t *) osi_Alloc(NGROUPS * sizeof(gidset[0]));
+    gidset = osi_Alloc(NGROUPS * sizeof(gidset[0]));
     ngroups = afs_getgroups(*cr, gidset);
 
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {

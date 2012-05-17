@@ -31,7 +31,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     code = VFS_VGET(cacheDev.mp, (ino_t) ainode->ufs, &vp);
     AFS_GLOCK();

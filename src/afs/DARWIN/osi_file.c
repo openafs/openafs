@@ -155,7 +155,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 #endif
 	afs_osicred_initialized = 1;
     }
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 #ifdef AFS_CACHE_VNODE_PATH
     if (!ainode->ufs) {

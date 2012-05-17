@@ -80,7 +80,7 @@ setpag(cred, pagvalue, newpag, change_parent)
 
     AFS_STATCNT(setpag);
 
-    gidset = (gid_t *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    gidset = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
     mutex_enter(&curproc->p_crlock);
     ngroups = afs_getgroups(*cred, gidset);

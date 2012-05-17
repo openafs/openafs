@@ -324,7 +324,7 @@ afs_MemHandleLink(struct vcache *avc, struct vrequest *areq)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */
-	rbuf = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	rbuf = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	ObtainReadLock(&tdc->lock);
 	addr = afs_MemCacheOpen(&tdc->f.inode);
 	tlen = len;
@@ -381,7 +381,7 @@ afs_UFSHandleLink(struct vcache *avc, struct vrequest *areq)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */
-	rbuf = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	rbuf = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	tlen = len;
 	ObtainReadLock(&tdc->lock);
 	tfile = osi_UFSOpen(&tdc->f.inode);

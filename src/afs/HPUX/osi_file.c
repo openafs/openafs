@@ -42,7 +42,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     setuerror(0);
     AFS_GUNLOCK();
     ip = (struct inode *)igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev,

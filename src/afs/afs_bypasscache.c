@@ -582,7 +582,7 @@ afs_PrefetchNoCache(struct vcache *avc,
     iovecp = auio->uio_iov;
 #endif
 
-    tcallspec = (struct tlocal1 *) osi_Alloc(sizeof(struct tlocal1));
+    tcallspec = osi_Alloc(sizeof(struct tlocal1));
     do {
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */, &rxconn);
 	if (tc) {

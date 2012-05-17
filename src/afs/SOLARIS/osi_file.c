@@ -143,7 +143,7 @@ osi_VxfsOpen(afs_dcache_id_t *ainode)
     struct osi_file *afile = NULL;
     afs_int32 code = 0;
     int dummy;
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     code = (*vxfs_vx_vp_byino) (afs_cacheVfsp, &vp, (unsigned int)ainode->ufs);
     AFS_GLOCK();
@@ -175,7 +175,7 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
     struct pathname lookpn;
 #endif
     struct osi_stat tstat;
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 
 /*

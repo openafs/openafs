@@ -44,7 +44,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }
-    afile = (struct osi_file *)osi_AllocLargeSpace(sizeof(struct osi_file));
+    afile = osi_AllocLargeSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     if (!afile) {
 	osi_Panic("osi_UFSOpen: Failed to allocate %d bytes for osi_file.\n",

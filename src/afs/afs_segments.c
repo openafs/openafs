@@ -178,7 +178,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
     hset(newDV, avc->f.m.DataVersion);
     hash = DVHash(&avc->f.fid);
     foreign = (avc->f.states & CForeign);
-    dcList = (struct dcache **)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    dcList = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     afs_Trace2(afs_iclSetp, CM_TRACE_STOREALL, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
 #if !defined(AFS_AIX32_ENV) && !defined(AFS_SGI65_ENV)

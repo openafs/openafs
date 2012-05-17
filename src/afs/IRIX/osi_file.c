@@ -55,7 +55,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     afile->vnode = afs_XFSIGetVnode(ainode->ufs);
     AFS_GLOCK();

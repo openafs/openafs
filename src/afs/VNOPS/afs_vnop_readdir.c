@@ -455,11 +455,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     }
 #else /* AFS_SGI53_ENV */
 #if  defined(AFS_SUN5_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-#if	defined(AFS_SUN5_ENV)
-    direntp = (struct dirent64 *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-#else
-    direntp = (struct dirent *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-#endif
+    direntp = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     direntp->d_ino = afs_calc_inum(vc->f.fid.Cell, Volume, ntohl(Vnode));
 #if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
     direntp->d_offset = off;
@@ -605,8 +601,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
      * it is necessary for hpux due to stack problems that seem to occur when coming thru the nfs
      * translator side XXX
      */
-    struct min_direct *sdirEntry =
-	(struct min_direct *)osi_AllocSmallSpace(sizeof(struct min_direct));
+    struct min_direct *sdirEntry = osi_AllocSmallSpace(sizeof(struct min_direct));
     afs_int32 rlen;
 #endif
 

@@ -42,7 +42,7 @@ osi_NewVnode(void)
 {
     struct vcache *tvc;
 
-    tvc = (struct vcache *)afs_osi_Alloc(sizeof(struct vcache));
+    tvc = afs_osi_Alloc(sizeof(struct vcache));
     tvc->v = NULL; /* important to clean this, or use memset 0 */
 
     return tvc;

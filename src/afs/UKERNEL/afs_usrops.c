@@ -329,7 +329,7 @@ usr_crcopy(struct usr_ucred *credp)
 {
     struct usr_ucred *newcredp;
 
-    newcredp = (struct usr_ucred *)afs_osi_Alloc(sizeof(struct usr_ucred));
+    newcredp = afs_osi_Alloc(sizeof(struct usr_ucred));
     *newcredp = *credp;
     newcredp->cr_ref = 1;
     return newcredp;
@@ -340,7 +340,7 @@ usr_crget(void)
 {
     struct usr_ucred *newcredp;
 
-    newcredp = (struct usr_ucred *)afs_osi_Alloc(sizeof(struct usr_ucred));
+    newcredp = afs_osi_Alloc(sizeof(struct usr_ucred));
     newcredp->cr_ref = 1;
     return newcredp;
 }
@@ -391,9 +391,7 @@ uafs_InitThread(void)
      * allocate the data block, so pthread_finish can free the buffer
      * when this thread terminates.
      */
-    uptr =
-	(struct usr_user *)malloc(sizeof(struct usr_user) +
-				  sizeof(struct usr_ucred));
+    uptr = malloc(sizeof(struct usr_user) + sizeof(struct usr_ucred));
     usr_assert(uptr != NULL);
     uptr->u_error = 0;
     uptr->u_prio = 0;
@@ -447,7 +445,7 @@ afs_osi_Sleep(void *x)
     }
     index = WAITHASH(x);
     if (osi_waithash_avail == NULL) {
-	waitp = (osi_wait_t *) afs_osi_Alloc(sizeof(osi_wait_t));
+	waitp = afs_osi_Alloc(sizeof(osi_wait_t));
 	usr_cond_init(&waitp->cond);
     } else {
 	waitp = osi_waithash_avail;
@@ -533,7 +531,7 @@ afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 	}
 	index = WAITHASH((caddr_t) handle);
 	if (osi_waithash_avail == NULL) {
-	    waitp = (osi_wait_t *) afs_osi_Alloc(sizeof(osi_wait_t));
+	    waitp = afs_osi_Alloc(sizeof(osi_wait_t));
 	    usr_cond_init(&waitp->cond);
 	} else {
 	    waitp = osi_waithash_avail;
@@ -660,7 +658,7 @@ osi_UFSOpen(afs_dcache_id_t *ino)
     AFS_ASSERT_GLOCK();
 
     AFS_GUNLOCK();
-    fp = (struct osi_file *)afs_osi_Alloc(sizeof(struct osi_file));
+    fp = afs_osi_Alloc(sizeof(struct osi_file));
     usr_assert(fp != NULL);
 
     usr_assert(ino->ufs);
@@ -3393,9 +3391,8 @@ uafs_opendir_r(char *path)
     /*
      * Set up the directory structures
      */
-    dirp =
-	(usr_DIR *) afs_osi_Alloc(sizeof(usr_DIR) + USR_DIRSIZE +
-				  sizeof(struct usr_dirent));
+    dirp = afs_osi_Alloc(sizeof(usr_DIR) + USR_DIRSIZE +
+			 sizeof(struct usr_dirent));
     usr_assert(dirp != NULL);
     dirp->dd_buf = (char *)(dirp + 1);
     dirp->dd_fd = fd;

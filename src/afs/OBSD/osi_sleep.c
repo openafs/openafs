@@ -150,7 +150,7 @@ afs_getevent(char *event)
         evp = evp->next;
     }
     if (!newp) {
-        newp = (afs_event_t *) osi_AllocSmallSpace(sizeof(afs_event_t));
+        newp = osi_AllocSmallSpace(sizeof(afs_event_t));
         afs_evhashcnt++;
         newp->next = afs_evhasht[hashcode];
         afs_evhasht[hashcode] = newp;

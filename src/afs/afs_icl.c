@@ -178,7 +178,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	if (!logp)
 	    return ENOENT;
 #define	BUFFERSIZE	AFS_LRALLOCSIZ
-	lp = (afs_int32 *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	lp = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	elts = BUFFERSIZE / sizeof(afs_int32);
 	if (p3 < elts)
 	    elts = p3;
@@ -745,8 +745,7 @@ afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize, afs_uint32 flags,
 	}
     }
 
-    logp = (struct afs_icl_log *)
-	osi_AllocSmallSpace(sizeof(struct afs_icl_log));
+    logp = osi_AllocSmallSpace(sizeof(struct afs_icl_log));
     memset((caddr_t) logp, 0, sizeof(*logp));
 
     logp->refCount = 1;
@@ -1153,7 +1152,7 @@ afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     if (flags & ICL_CRSET_FLAG_PERSISTENT)
 	states |= ICL_SETF_PERSISTENT;
 
-    setp = (struct afs_icl_set *)osi_AllocSmallSpace(sizeof(struct afs_icl_set));
+    setp = osi_AllocSmallSpace(sizeof(struct afs_icl_set));
     memset((caddr_t) setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)

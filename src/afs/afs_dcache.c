@@ -2160,8 +2160,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 			   ICL_TYPE_POINTER, tdc, ICL_TYPE_INT32,
 			   tdc->dflags);
 	}
-	tsmall =
-	    (struct afs_FetchOutput *)osi_AllocLargeSpace(sizeof(struct afs_FetchOutput));
+	tsmall = osi_AllocLargeSpace(sizeof(struct afs_FetchOutput));
 	setVcacheStatus = 0;
 #ifndef AFS_NOSTATS
 	/*
