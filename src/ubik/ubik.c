@@ -403,7 +403,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 
     initialize_U_error_table();
 
-    tdb = (struct ubik_dbase *)malloc(sizeof(struct ubik_dbase));
+    tdb = malloc(sizeof(struct ubik_dbase));
     tdb->pathName = strdup(pathName);
     tdb->activeTrans = (struct ubik_trans *)0;
     memset(&tdb->version, 0, sizeof(struct ubik_version));
@@ -1049,10 +1049,9 @@ ubik_Write(struct ubik_trans *transPtr, void *vbuffer,
     if (!transPtr->iovec_info.iovec_wrt_val) {
 	transPtr->iovec_info.iovec_wrt_len = 0;
 	transPtr->iovec_info.iovec_wrt_val =
-	    (struct ubik_iovec *)malloc(IOVEC_MAXWRT *
-					sizeof(struct ubik_iovec));
+	    malloc(IOVEC_MAXWRT * sizeof(struct ubik_iovec));
 	transPtr->iovec_data.iovec_buf_len = 0;
-	transPtr->iovec_data.iovec_buf_val = (char *)malloc(IOVEC_MAXBUF);
+	transPtr->iovec_data.iovec_buf_val = malloc(IOVEC_MAXBUF);
 	if (!transPtr->iovec_info.iovec_wrt_val
 	    || !transPtr->iovec_data.iovec_buf_val) {
 	    if (transPtr->iovec_info.iovec_wrt_val)

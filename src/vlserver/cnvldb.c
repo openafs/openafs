@@ -385,7 +385,7 @@ read_mhentries(afs_uint32 mh_addr, int oldfd)
 	perror("seek MH block");
 	exit(1);
     }
-    base[0] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+    base[0] = malloc(VL_ADDREXTBLK_SIZE);
     if (!base[0]) {
 	perror("malloc1");
 	exit(1);
@@ -430,7 +430,7 @@ read_mhentries(afs_uint32 mh_addr, int oldfd)
 	    perror("seek MH block");
 	    exit(1);
 	}
-	base[j] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	base[j] = malloc(VL_ADDREXTBLK_SIZE);
 	if (!base[j]) {
 	    perror("malloc1");
 	    exit(1);

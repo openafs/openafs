@@ -1212,7 +1212,7 @@ AddToPRList(prlist *alist, int *sizeP, afs_int32 id)
 	if (alist->prlist_val) {
 	    tmp = realloc(alist->prlist_val, count * sizeof(afs_int32));
 	} else {
-	    tmp = (char *)malloc(count * sizeof(afs_int32));
+	    tmp = malloc(count * sizeof(afs_int32));
 	}
 	if (!tmp)
 	    return (PRNOMEM);

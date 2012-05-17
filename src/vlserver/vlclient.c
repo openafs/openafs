@@ -286,8 +286,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		afs_int32 index, count, num = 0, num1 = 0, next_index;
 		struct Vlent *vl1;
 
-		VL = SVL =
-		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		VL = SVL = malloc(ALLOCNT * sizeof(struct Vlent));
 		if (VL == NULL) {
 		    printf("Can't allocate memory...\n");
 		    exit(1);
@@ -335,8 +334,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    0, num31 = 0, num4 = 0, num41 = 0, next_index;
 		struct vldbentry tentry;
 
-		VL = SVL =
-		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		VL = SVL = malloc(ALLOCNT * sizeof(struct Vlent));
 		if (VL == NULL) {
 		    printf("Can't allocate memory...\n");
 		    exit(1);
@@ -408,8 +406,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    0;
 		struct vldbentry tentry;
 
-		VL = SVL =
-		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		VL = SVL = malloc(ALLOCNT * sizeof(struct Vlent));
 		if (VL == NULL) {
 		    printf("Can't allocate memory...\n");
 		    exit(1);
@@ -924,7 +921,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("Illegal # entries = %d\n", nargs);
 		    continue;
 		}
-		addrp = (afs_uint32 *) malloc(20 * 4);
+		addrp = malloc(20 * 4);
 		addrs.bulkaddrs_val = addrp;
 		addrs.bulkaddrs_len = nargs;
 		while (nargs > 0) {

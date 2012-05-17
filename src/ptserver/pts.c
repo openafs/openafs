@@ -84,7 +84,7 @@ pts_Source(struct cmd_syndesc *as, void *arock)
 	perror(as->parms[0].items->data);
 	return errno;
     }
-    sp = (struct sourcestack *)malloc(sizeof *sp);
+    sp = malloc(sizeof *sp);
     if (!sp) {
 	return errno ? errno : ENOMEM;
     } else {
@@ -403,7 +403,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames
 	n = 0;			/* count names */
 	for (i = as->parms[0].items; i; i = i->next)
 	    n++;
-	nl->namelist_val = (prname *) malloc(n * PR_MAXNAMELEN);
+	nl->namelist_val = malloc(n * PR_MAXNAMELEN);
 	nl->namelist_len = n;
 	n = 0;
 	for (i = as->parms[0].items; i; i = i->next)
@@ -431,7 +431,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames
 	n = 0;
 	for (i = as->parms[1].items; i; i = i->next)
 	    n++;
-	lids->idlist_val = (afs_int32 *) malloc(n * sizeof(afs_int32));
+	lids->idlist_val = malloc(n * sizeof(afs_int32));
 	lids->idlist_len = n;
 	n = 0;
 	for (i = as->parms[1].items; i; i = i->next) {
@@ -494,7 +494,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	lnames->namelist_len = 0;
     }
     for (i = as->parms[0].items; i; i = i->next) {
-	tnames.namelist_val = (prname *) malloc(PR_MAXNAMELEN);
+	tnames.namelist_val = malloc(PR_MAXNAMELEN);
 	strncpy(tnames.namelist_val[0], i->data, PR_MAXNAMELEN);
 	tnames.namelist_len = 1;
 	tids.idlist_len = 0;
@@ -724,7 +724,7 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
 	return PRBADARG;
 
     lids.idlist_len = 2;
-    lids.idlist_val = (afs_int32 *) malloc(sizeof(afs_int32) * 2);
+    lids.idlist_val = malloc(sizeof(afs_int32) * 2);
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
 

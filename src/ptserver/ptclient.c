@@ -325,7 +325,7 @@ main(int argc, char **argv)
 	    if (CodeOk(code))
 		afs_com_err(whoami, code, "on %s %d %d", op, id, gid);
 	} else if (!strcmp(op, "iton")) {
-	    lid.idlist_val = (afs_int32 *) malloc(20 * sizeof(afs_int32));
+	    lid.idlist_val = malloc(20 * sizeof(afs_int32));
 	    ptr = lid.idlist_val;
 	    lid.idlist_len = 0;
 	    foo = line;
@@ -354,8 +354,7 @@ main(int argc, char **argv)
 	    lid.idlist_val = 0;
 	    lid.idlist_len = 0;
 	} else if (!strcmp(op, "ntoi")) {
-	    lnames.namelist_val =
-		(prname *) malloc(PR_MAXLIST * PR_MAXNAMELEN);
+	    lnames.namelist_val = malloc(PR_MAXLIST * PR_MAXNAMELEN);
 	    lnames.namelist_len = 0;
 	    foo = line;
 	    skip(&foo);

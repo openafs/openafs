@@ -146,7 +146,7 @@ add_map(struct map *parm, int node)
 	if (map->m_page == page)
 	    break;
     if (!map) {
-	map = (struct bitmap *)malloc(sizeof *map);
+	map = malloc(sizeof *map);
 	if (!map) {
 #ifdef PRINT_MAP_ERROR
 	    printf("No memory!\n");
@@ -378,7 +378,7 @@ copy_map(struct map *parm)
 #endif
     map = MAP(parm);
     for (mpp = &result; (*mpp = 0), map; map = map->m_next) {
-	*mpp = (struct bitmap *)malloc(sizeof **mpp);
+	*mpp = malloc(sizeof **mpp);
 	if (!*mpp) {
 #ifdef MAP_DEBUG
 	    if (Mflag)
@@ -701,7 +701,7 @@ read_map(int (*f) (void *), char *arg)
 		if (map->m_page == page)
 		    break;
 	if (!map) {
-	    map = (struct bitmap *)malloc(sizeof *map);
+	    map = malloc(sizeof *map);
 	    if (!map) {
 #ifdef PRINT_MAP_ERROR
 		printf("No memory!\n");

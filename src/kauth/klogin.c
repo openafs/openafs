@@ -392,7 +392,7 @@ main(int argc, char **argv)
     i = 0;
     while (environ[i] != NULL)
 	i++;
-    envnew = (char **)malloc(sizeof(char *) * (i + 1));
+    envnew = malloc(sizeof(char *) * (i + 1));
     for (; i >= 0; i--)
 	envnew[i] = environ[i];
     environ = envnew;

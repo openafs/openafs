@@ -221,7 +221,7 @@ readExtents(struct ubik_trans *trans)
 
     /* Read the first extension block */
     if (!rd_ex_addr[0]) {
-	rd_ex_addr[0] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	rd_ex_addr[0] = malloc(VL_ADDREXTBLK_SIZE);
 	if (!rd_ex_addr[0])
 	    ERROR_EXIT(VL_NOMEM);
     }
@@ -252,7 +252,7 @@ readExtents(struct ubik_trans *trans)
 
 	/* Read the continuation block */
 	if (!rd_ex_addr[i]) {
-	    rd_ex_addr[i] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	    rd_ex_addr[i] = malloc(VL_ADDREXTBLK_SIZE);
 	    if (!rd_ex_addr[i])
 		ERROR_EXIT(VL_NOMEM);
 	}
@@ -402,7 +402,7 @@ GetExtentBlock(struct vl_ctx *ctx, register afs_int32 base)
     if (!ctx->ex_addr[0] || !ctx->ex_addr[0]->ex_contaddrs[base]) {
 	/* Create a new extension block */
 	if (!ctx->ex_addr[base]) {
-	    ctx->ex_addr[base] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	    ctx->ex_addr[base] = malloc(VL_ADDREXTBLK_SIZE);
 	    if (!ctx->ex_addr[base])
 		ERROR_EXIT(VL_NOMEM);
 	}

@@ -1263,7 +1263,7 @@ SVL_ListAttributes(struct rx_call *rxcall,
 	return code;
     allocCount = VLDBALLOCCOUNT;
     Vldbentry = VldbentryFirst = vldbentries->bulkentries_val =
-	(vldbentry *) malloc(allocCount * sizeof(vldbentry));
+	malloc(allocCount * sizeof(vldbentry));
     if (Vldbentry == NULL) {
 	code = VL_NOMEM;
 	goto abort;
@@ -1393,7 +1393,7 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 	return code;
     allocCount = VLDBALLOCCOUNT;
     Vldbentry = VldbentryFirst = vldbentries->nbulkentries_val =
-	(nvldbentry *) malloc(allocCount * sizeof(nvldbentry));
+	malloc(allocCount * sizeof(nvldbentry));
     if (Vldbentry == NULL) {
 	code = VL_NOMEM;
 	goto abort;
@@ -1543,7 +1543,7 @@ SVL_ListAttributesN2(struct rx_call *rxcall,
 	return code;
 
     Vldbentry = VldbentryFirst = vldbentries->nbulkentries_val =
-	(nvldbentry *) malloc(maxCount * sizeof(nvldbentry));
+	malloc(maxCount * sizeof(nvldbentry));
     if (Vldbentry == NULL) {
 	countAbort(this_op);
 	ubik_AbortTrans(ctx.trans);
@@ -1812,7 +1812,7 @@ SVL_LinkedList(struct rx_call *rxcall,
 	    goto abort;
 	}
 
-	vllist = (single_vldbentry *) malloc(sizeof(single_vldbentry));
+	vllist = malloc(sizeof(single_vldbentry));
 	if (vllist == NULL) {
 	    code = VL_NOMEM;
 	    goto abort;
@@ -1885,7 +1885,7 @@ SVL_LinkedList(struct rx_call *rxcall,
 		    continue;
 	    }
 
-	    vllist = (single_vldbentry *) malloc(sizeof(single_vldbentry));
+	    vllist = malloc(sizeof(single_vldbentry));
 	    if (vllist == NULL) {
 		code = VL_NOMEM;
 		goto abort;
@@ -1948,7 +1948,7 @@ SVL_LinkedListN(struct rx_call *rxcall,
 	    goto abort;
 	}
 
-	vllist = (single_nvldbentry *) malloc(sizeof(single_nvldbentry));
+	vllist = malloc(sizeof(single_nvldbentry));
 	if (vllist == NULL) {
 	    code = VL_NOMEM;
 	    goto abort;
@@ -2021,7 +2021,7 @@ SVL_LinkedListN(struct rx_call *rxcall,
 		    continue;
 	    }
 
-	    vllist = (single_nvldbentry *) malloc(sizeof(single_nvldbentry));
+	    vllist = malloc(sizeof(single_nvldbentry));
 	    if (vllist == NULL) {
 		code = VL_NOMEM;
 		goto abort;
@@ -2107,7 +2107,7 @@ SVL_GetAddrs(struct rx_call *rxcall,
 
     VLog(5, ("GetAddrs\n"));
     addrsp->bulkaddrs_val = taddrp =
-	(afs_uint32 *) malloc(sizeof(afs_int32) * (MAXSERVERID + 1));
+	malloc(sizeof(afs_int32) * (MAXSERVERID + 1));
     nservers = *nentries = addrsp->bulkaddrs_len = 0;
 
     if (!taddrp) {
@@ -2596,7 +2596,7 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	goto abort;
     }
     addrsp->bulkaddrs_val = taddrp =
-	(afs_uint32 *) malloc(sizeof(afs_int32) * (MAXSERVERID + 1));
+	malloc(sizeof(afs_int32) * (MAXSERVERID + 1));
     nservers = *nentries = addrsp->bulkaddrs_len = 0;
     if (!taddrp) {
 	code = VL_NOMEM;

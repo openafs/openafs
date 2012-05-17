@@ -404,7 +404,7 @@ ParseAcl(astr)
     sscanf(astr, "%d", &nminus);
     astr = SkipLine(astr);
 
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = malloc(sizeof(struct Acl));
     ta->nplus = nplus;
     ta->nminus = nminus;
 
@@ -413,7 +413,7 @@ ParseAcl(astr)
     for (i = 0; i < nplus; i++) {
 	sscanf(astr, "%100s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);
@@ -430,7 +430,7 @@ ParseAcl(astr)
     for (i = 0; i < nminus; i++) {
 	sscanf(astr, "%100s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);
@@ -516,7 +516,7 @@ AddTester(pathname)
 	}
 	al->nplus -= PruneList(&al->pluslist);
 
-	tlist = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tlist = malloc(sizeof(struct AclEntry));
 	tlist->rights = 9;
 	strcpy(tlist->name, tester);
 	tlist->next = al->pluslist;

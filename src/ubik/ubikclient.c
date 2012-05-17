@@ -217,7 +217,7 @@ ubik_ClientInit(struct rx_connection **serverconns,
 	    return UMUTEXDESTROY;
 #endif
     } else {
-	tc = (struct ubik_client *)malloc(sizeof(struct ubik_client));
+	tc = malloc(sizeof(struct ubik_client));
     }
     if (tc == NULL)
 	return UNOMEM;

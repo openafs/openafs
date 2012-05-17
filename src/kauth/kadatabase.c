@@ -99,8 +99,7 @@ init_kadatabase(int initFlags)
     Lock_Init(&keycache_lock);
 
     maxCachedKeys = 10;
-    keyCache =
-	(struct cachedKey *)malloc(maxCachedKeys * sizeof(struct cachedKey));
+    keyCache = malloc(maxCachedKeys * sizeof(struct cachedKey));
     keyCacheVersion = 0;
     if (initFlags & 4) {
 	maxKeyLifetime = 90;

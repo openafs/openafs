@@ -544,7 +544,7 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
     if (size < 0)
 	return PRTOOMANY;
 
-    aid->idlist_val = (afs_int32 *) malloc(size * sizeof(afs_int32));
+    aid->idlist_val = malloc(size * sizeof(afs_int32));
     if (!aid->idlist_val)
 	return PRNOMEM;
 
@@ -631,7 +631,7 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname)
 	return 0;
     if (size < 0)
 	return PRTOOMANY;
-    aname->namelist_val = (prname *) malloc(size * PR_MAXNAMELEN);
+    aname->namelist_val = malloc(size * PR_MAXNAMELEN);
     aname->namelist_len = 0;
     if (aname->namelist_val == 0)
 	return PRNOMEM;
@@ -1476,9 +1476,8 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
 
     if (bulkentries->prentries_val == 0) {
 	bulkentries->prentries_len = 0;
-	bulkentries->prentries_val =
-	    (struct prlistentries *)malloc(PR_MAXENTRIES *
-					   sizeof(struct prentry));
+	bulkentries->prentries_val = malloc(PR_MAXENTRIES *
+					    sizeof(struct prentry));
 	if (!bulkentries->prentries_val) {
 	    return (PRNOMEM);
 	}

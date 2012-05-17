@@ -114,7 +114,7 @@ FindId(struct idhash *idhash, afs_int32 id)
     }
 
     /* Insert this id but return not found. */
-    newChain = (struct idchain *)malloc(sizeof(struct idchain));
+    newChain = malloc(sizeof(struct idchain));
     if (!newChain) {
 	return ENOMEM;
     } else {
@@ -149,7 +149,7 @@ CreateIdList(struct idhash *idhash, idlist * alist, afs_int32 select)
     }
 
     alist->idlist_len = entries;
-    alist->idlist_val = (afs_int32 *) malloc(sizeof(afs_int32) * entries);
+    alist->idlist_val = malloc(sizeof(afs_int32) * entries);
     if (!alist->idlist_val) {
 	return ENOMEM;
     }
@@ -695,7 +695,7 @@ pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
     if (code) {
 	return code;
     }
-    stack = (afs_int32 *) malloc(sizeof(afs_int32) * maxstack);
+    stack = malloc(sizeof(afs_int32) * maxstack);
     if (!stack) {
 	code = ENOMEM;
 	goto done;

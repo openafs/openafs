@@ -420,8 +420,7 @@ GetTrunc(void)
 {
     struct ubik_trunc *tt;
     if (!freeTruncList) {
-	freeTruncList =
-	    (struct ubik_trunc *)malloc(sizeof(struct ubik_trunc));
+	freeTruncList = malloc(sizeof(struct ubik_trunc));
 	freeTruncList->next = (struct ubik_trunc *)0;
     }
     tt = freeTruncList;

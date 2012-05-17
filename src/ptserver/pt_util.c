@@ -296,7 +296,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 		    code = CreateEntry(0, name, &id, 1 /*idflag */ ,
 				       flags & PRGRP, oid, cid);
 		if (code == PRBADNAM) {
-		    u = (struct usr_list *)malloc(sizeof(struct usr_list));
+		    u = malloc(sizeof(struct usr_list));
 		    u->next = usr_head;
 		    u->uid = id;
 		    strcpy(u->name, name);
@@ -395,7 +395,7 @@ add_group(long id)
 
     i = grp_count++ % 1024;
     if (i == 0) {
-	g = (struct grp_list *)malloc(sizeof(struct grp_list));
+	g = malloc(sizeof(struct grp_list));
 	g->next = grp_head;
 	grp_head = g;
     }
@@ -562,7 +562,7 @@ checkin(struct prentry *pre)
 	last = he;
 	he = he->next;
     }
-    he = (struct hash_entry *)malloc(sizeof(struct hash_entry));
+    he = malloc(sizeof(struct hash_entry));
     if (he == 0) {
 	fprintf(stderr, "pt_util: No Memory for internal hash table.\n");
 	exit(1);

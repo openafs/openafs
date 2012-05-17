@@ -1522,7 +1522,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 			afs_com_err(whoami, code, "prompting for %s", p + 1);
 			return code;
 		    }
-		    ip = (struct cmd_item *)malloc(sizeof(struct cmd_item));
+		    ip = malloc(sizeof(struct cmd_item));
 		    ip->data = strdup(password);
 		    ip->next = 0;
 		    as->parms[i].items = ip;

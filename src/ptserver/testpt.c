@@ -98,7 +98,7 @@ ListUsedIds(struct cmd_syndesc *as, void *arock)
     printf("Checking for %d %sused ids starting at %d.\n", number,
 	   (unused ? "un" : ""), startId);
 #define NUM 100
-    lids.idlist_val = (afs_int32 *) malloc(sizeof(afs_int32) * NUM);
+    lids.idlist_val = malloc(sizeof(afs_int32) * NUM);
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
     while (number) {
@@ -499,7 +499,7 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
     nCleaned = 0;
 
     ownerUser = lastGroup = 0;
-    groupOwners = (afs_int32 *) malloc(number * sizeof(afs_int32));
+    groupOwners = malloc(number * sizeof(afs_int32));
     nUsers = nGroups = nAdds = nRems = nUDels = nGDels = 0;
 
     while ((nFilled < number) || (nCleaned < number)) {
@@ -558,7 +558,7 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 
     /* check the membership list of all users for correctness */
     printf("Starting check of memberships\n");
-    glist = (afs_int32 *) malloc(number * sizeof(afs_int32));
+    glist = malloc(number * sizeof(afs_int32));
     for (u = 0; u < number; u++) {
 	afs_int32 ui = users[u];
 	if (ui) {

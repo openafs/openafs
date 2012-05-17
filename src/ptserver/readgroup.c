@@ -86,7 +86,7 @@ main(int argc, char **argv)
 	    verbose = 1;
 	else {
 	    if (!strcmp(argv[i], "-c")) {
-		cellname = (char *)malloc(100);
+		cellname = malloc(100);
 		strncpy(cellname, argv[++i], 100);
 	    } else
 		strncpy(buf, argv[i], 150);
