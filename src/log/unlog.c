@@ -143,8 +143,7 @@ unlog_ForgetCertainTokens(char **list, int listSize)
 	code = ktc_ListTokens(count, &count, &serviceName);
     } while (!code);
 
-    tokenInfoP =
-	(struct tokenInfo *)malloc((sizeof(struct tokenInfo) * count));
+    tokenInfoP = malloc((sizeof(struct tokenInfo) * count));
     if (!tokenInfoP) {
 	perror("unlog_ForgetCertainTokens -- osi_Alloc failed");
 	exit(1);

@@ -1820,7 +1820,7 @@ extern char **environ;
 
     for (senv = environ, numenv = 0; *senv; senv++)
 	numenv++;
-    newenv = (char **)malloc((numenv + 2) * sizeof(char *));
+    newenv = malloc((numenv + 2) * sizeof(char *));
 
     for (senv = environ, denv = newenv; *senv; senv++) {
 	if (strncmp(*senv, "KRBTKFILE=", 10) != 0 &&

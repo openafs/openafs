@@ -166,7 +166,7 @@ aklog_authenticate(char *userName, char *response, int *reenter, char **message)
 
     if (status) {
 	char *str = afs_error_message(status);
-	*message = (char *)malloc(1024);
+	*message = malloc(1024);
 #ifdef HAVE_KRB5_SVC_GET_MSG
 	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
 	    krb5_svc_get_msg(status,&str);

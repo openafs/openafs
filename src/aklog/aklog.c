@@ -345,7 +345,7 @@ copy_cellinfo(cellinfo_t *cellinfo)
 {
     cellinfo_t *new_cellinfo;
 
-    if ((new_cellinfo = (cellinfo_t *)malloc(sizeof(cellinfo_t))))
+    if ((new_cellinfo = malloc(sizeof(cellinfo_t))))
 	memcpy(new_cellinfo, cellinfo, sizeof(cellinfo_t));
 
     return ((char *)new_cellinfo);

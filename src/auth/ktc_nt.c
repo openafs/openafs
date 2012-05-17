@@ -64,7 +64,7 @@ char rpcErr[256];
 void __RPC_FAR *__RPC_USER
 midl_user_allocate(size_t cBytes)
 {
-    return ((void __RPC_FAR *)malloc(cBytes));
+    return malloc(cBytes);
 }
 
 void __RPC_USER
