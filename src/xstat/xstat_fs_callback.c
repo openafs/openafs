@@ -696,7 +696,7 @@ SRXAFSCB_GetLocalCell(struct rx_call * a_call, char **a_name)
 {
     char *t_name;
 
-    t_name = (char *)malloc(AFSNAMEMAX);
+    t_name = malloc(AFSNAMEMAX);
     if (!t_name)
 	return ENOMEM;
     strcpy(t_name, "This is xstat_fs");
