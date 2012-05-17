@@ -911,8 +911,7 @@ bnode_ParseLine(char *aline, struct bnode_token **alist)
 	    if (inToken) {
 		inToken = 0;	/* end of this token */
 		*tptr++ = 0;
-		ttok =
-		    (struct bnode_token *)malloc(sizeof(struct bnode_token));
+		ttok = malloc(sizeof(struct bnode_token));
 		ttok->next = (struct bnode_token *)0;
 		ttok->key = strdup(tbuffer);
 		if (last) {

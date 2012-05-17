@@ -396,7 +396,7 @@ SBOZO_GetCellName(struct rx_call *acall, char **aname)
     code = afsconf_GetLocalCell(bozo_confdir, tname, sizeof(tname));
     if (code) {
 	/* must set output parameters even if aborting */
-	*aname = (char *)malloc(1);
+	*aname = malloc(1);
 	**aname = 0;
     } else {
 	*aname = strdup(tname);
@@ -432,7 +432,7 @@ SBOZO_GetCellHost(struct rx_call *acall, afs_uint32 awhich, char **aname)
     goto done;
 
   fail:
-    *aname = (char *)malloc(1);	/* return fake string */
+    *aname = malloc(1);	/* return fake string */
     **aname = 0;
 
   done:
@@ -697,7 +697,7 @@ SBOZO_ListSUsers(struct rx_call *acall, afs_int32 an, char **aname)
     afs_int32 code;
     char *tp;
 
-    tp = *aname = (char *)malloc(256);
+    tp = *aname = malloc(256);
     *tp = 0;			/* in case getnthuser doesn't null-terminate the string */
     code = afsconf_GetNthUser(bozo_confdir, an, tp, 256);
 
@@ -1101,7 +1101,7 @@ SBOZO_GetStatus(struct rx_call *acall, char *ainstance, afs_int32 *astat,
 	goto fail;
     }
 
-    *astatDescr = (char *)malloc(BOZO_BSSIZE);
+    *astatDescr = malloc(BOZO_BSSIZE);
     code = bnode_GetString(tb, *astatDescr, BOZO_BSSIZE);
     bnode_Release(tb);
     if (code)
@@ -1109,7 +1109,7 @@ SBOZO_GetStatus(struct rx_call *acall, char *ainstance, afs_int32 *astat,
     return 0;
 
   fail:
-    *astatDescr = (char *)malloc(1);
+    *astatDescr = malloc(1);
     **astatDescr = 0;
     return code;
 }
@@ -1205,7 +1205,7 @@ SBOZO_EnumerateInstance(struct rx_call *acall, afs_int32 anum,
 {
     struct eidata tdata;
 
-    *ainstance = (char *)malloc(BOZO_BSSIZE);
+    *ainstance = malloc(BOZO_BSSIZE);
     **ainstance = 0;
     tdata.counter = anum;
     tdata.iname = *ainstance;
@@ -1343,7 +1343,7 @@ SBOZO_GetInstanceInfo(IN struct rx_call *acall,
     struct bnode *tb;
 
     tb = bnode_FindInstance(ainstance);
-    *atype = (char *)malloc(BOZO_BSSIZE);
+    *atype = malloc(BOZO_BSSIZE);
     **atype = 0;
     if (!tb)
 	return BZNOENT;
@@ -1379,7 +1379,7 @@ SBOZO_GetInstanceParm(struct rx_call *acall,
     char *tp;
     afs_int32 code;
 
-    tp = (char *)malloc(BOZO_BSSIZE);
+    tp = malloc(BOZO_BSSIZE);
     *aparm = tp;
     *tp = 0;			/* null-terminate string in error case */
     tb = bnode_FindInstance(ainstance);
@@ -1470,11 +1470,11 @@ SBOZO_GetInstanceStrings(struct rx_call *acall, char *abnodeName,
 {
     struct bnode *tb;
 
-    *as2 = (char *)malloc(1);
+    *as2 = malloc(1);
     **as2 = 0;
-    *as3 = (char *)malloc(1);
+    *as3 = malloc(1);
     **as3 = 0;
-    *as4 = (char *)malloc(1);
+    *as4 = malloc(1);
     **as4 = 0;
     tb = bnode_FindInstance(abnodeName);
     if (!tb)
@@ -1484,13 +1484,13 @@ SBOZO_GetInstanceStrings(struct rx_call *acall, char *abnodeName,
     if (tb->lastErrorName) {
 	*as1 = strdup(tb->lastErrorName);
     } else {
-	*as1 = (char *)malloc(1);
+	*as1 = malloc(1);
 	**as1 = 0;
     }
     return 0;
 
   fail:
-    *as1 = (char *)malloc(1);
+    *as1 = malloc(1);
     **as1 = 0;
     return BZNOENT;
 }

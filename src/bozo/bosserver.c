@@ -392,7 +392,7 @@ ReadBozoFile(char *aname)
 		goto fail;	/* no "parm " either */
 	    }
 	    if (!parms[i])	/* make sure there's space */
-		parms[i] = (char *)malloc(BOZO_BSSIZE);
+		parms[i] = malloc(BOZO_BSSIZE);
 	    strcpy(parms[i], tbuffer + 5);	/* remember the parameter for later */
 	    thisparms[i] = parms[i];
 	}

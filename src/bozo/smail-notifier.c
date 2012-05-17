@@ -40,9 +40,9 @@ main(int argc, char **argv)
     time_t procStartTime = -1, rsTime = -1, lastAnyExit = -1, lastErrorExit = -1;
     char *timeStamp;
 
-    typep = (char *)malloc(50);
-    cmd = (char *)malloc(50);
-    bufp = bufp1 = (char *)malloc(1000);
+    typep = malloc(50);
+    cmd = malloc(50);
+    bufp = bufp1 = malloc(1000);
     while (fgets(buf, sizeof(buf), fin)) {
 	code = sscanf(buf, "%s %s\n", typep, cmd);
 	if (code < 2) {
