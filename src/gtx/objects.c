@@ -185,7 +185,7 @@ gator_objects_create(struct onode_createparams *params)
 	fprintf(stderr,
 		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for new onode structure\n", mn,
 		rn, sizeof(struct onode));
-    new_onode = (struct onode *)malloc(sizeof(struct onode));
+    new_onode = malloc(sizeof(struct onode));
     if (new_onode == NULL) {
 	fprintf(stderr,
 		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for new onode structure; errno is %d\n",

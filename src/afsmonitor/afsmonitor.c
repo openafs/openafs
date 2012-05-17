@@ -569,8 +569,7 @@ insert_FS(char *a_hostName)		/* name of cache manager to be inserted in list */
 
     if (*a_hostName == '\0')
 	return (-1);
-    curr_item = (struct afsmon_hostEntry *)
-	malloc(sizeof(struct afsmon_hostEntry));
+    curr_item = malloc(sizeof(struct afsmon_hostEntry));
     if (curr_item == (struct afsmon_hostEntry *)0) {
 	fprintf(stderr, "Failed to allocate space for FS nameList\n");
 	return (-1);
@@ -656,8 +655,7 @@ insert_CM(char *a_hostName)		/* name of cache manager to be inserted in list */
 
     if (*a_hostName == '\0')
 	return (-1);
-    curr_item = (struct afsmon_hostEntry *)
-	malloc(sizeof(struct afsmon_hostEntry));
+    curr_item = malloc(sizeof(struct afsmon_hostEntry));
     if (curr_item == (struct afsmon_hostEntry *)0) {
 	fprintf(stderr, "Failed to allocate space for CM nameList\n");
 	return (-1);
@@ -1539,7 +1537,7 @@ process_config_file(char *a_config_filename)
 	}
 	if (curr_host->numThresh) {
 	    numBytes = curr_host->numThresh * sizeof(struct Threshold);
-	    curr_host->thresh = (struct Threshold *)malloc(numBytes);
+	    curr_host->thresh = malloc(numBytes);
 	    if (curr_host->thresh == NULL) {
 		fprintf(stderr, "[ %s ] Memory Allocation error 1", rn);
 		afsmon_Exit(25);
@@ -1557,7 +1555,7 @@ process_config_file(char *a_config_filename)
 	}
 	if (curr_host->numThresh) {
 	    numBytes = curr_host->numThresh * sizeof(struct Threshold);
-	    curr_host->thresh = (struct Threshold *)malloc(numBytes);
+	    curr_host->thresh = malloc(numBytes);
 	    if (curr_host->thresh == NULL) {
 		fprintf(stderr, "[ %s ] Memory Allocation error 2", rn);
 		afsmon_Exit(35);
@@ -3496,8 +3494,8 @@ init_cm_buffers(void)
 		    /* >>>  need to allocate rx connection info structure here <<< */
 
 		    new_cmPR->data.AFSCB_CollData_val =
-			(afs_int32 *) malloc(XSTAT_CM_FULLPERF_RESULTS_LEN
-					     * sizeof(afs_int32));
+			malloc(XSTAT_CM_FULLPERF_RESULTS_LEN
+			       *sizeof(afs_int32));
 		    if (new_cmPR->data.AFSCB_CollData_val == NULL) {
 			free(new_cmlist_item);
 			free(new_cmPR->connP);
@@ -3588,7 +3586,7 @@ init_print_buffers(void)
 
     if (numFS) {
 	numBytes = numFS * sizeof(struct fs_Display_Data);
-	curr_fsData = (struct fs_Display_Data *)malloc(numBytes);
+	curr_fsData = malloc(numBytes);
 	if (curr_fsData == (struct fs_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-1);
@@ -3596,7 +3594,7 @@ init_print_buffers(void)
 	memset(curr_fsData, 0, numBytes);
 
 	numBytes = numFS * sizeof(struct fs_Display_Data);
-	prev_fsData = (struct fs_Display_Data *)malloc(numBytes);
+	prev_fsData = malloc(numBytes);
 	if (prev_fsData == (struct fs_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-5);
@@ -3625,7 +3623,7 @@ init_print_buffers(void)
     if (numCM) {
 	numBytes = numCM * sizeof(struct cm_Display_Data);
 
-	curr_cmData = (struct cm_Display_Data *)malloc(numBytes);
+	curr_cmData = malloc(numBytes);
 	if (curr_cmData == (struct cm_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-10);
@@ -3633,7 +3631,7 @@ init_print_buffers(void)
 	memset(curr_cmData, 0, numBytes);
 
 	numBytes = numCM * sizeof(struct cm_Display_Data);
-	prev_cmData = (struct cm_Display_Data *)malloc(numBytes);
+	prev_cmData = malloc(numBytes);
 	if (prev_cmData == (struct cm_Display_Data *)0) {
 	    fprintf(stderr, "[ %s ] Memory allocation failure\n", rn);
 	    return (-15);
@@ -3726,7 +3724,7 @@ afsmon_execute(void)
 	/* Allocate an array of sockets for each fileserver we monitor */
 
 	FSsktbytes = numFS * sizeof(struct sockaddr_in);
-	FSSktArray = (struct sockaddr_in *)malloc(FSsktbytes);
+	FSSktArray = malloc(FSsktbytes);
 	if (FSSktArray == (struct sockaddr_in *)0) {
 	    fprintf(stderr,
 		    "[ %s ] cannot malloc %d sockaddr_ins for fileservers\n",
@@ -3811,7 +3809,7 @@ afsmon_execute(void)
 	/* Allocate an array of sockets for each cache manager we monitor */
 
 	CMsktbytes = numCM * sizeof(struct sockaddr_in);
-	CMSktArray = (struct sockaddr_in *)malloc(CMsktbytes);
+	CMSktArray = malloc(CMsktbytes);
 	if (CMSktArray == (struct sockaddr_in *)0) {
 	    fprintf(stderr,
 		    "[ %s ] cannot malloc %d sockaddr_ins for CM entries\n",

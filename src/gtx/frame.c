@@ -260,7 +260,7 @@ gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt,
     if (aframe->defaultLine)
 	free(aframe->defaultLine);
     aframe->promptLine = gtx_CopyString(aprompt);
-    tp = aframe->defaultLine = (char *)malloc(1024);
+    tp = aframe->defaultLine = malloc(1024);
     if (tp == NULL)
 	return (-1);
     if (adefault)
@@ -338,7 +338,7 @@ ShowMessageLine(struct gtx_frame *aframe)
 	strparms.x = 0;
 	strparms.y = sizeparms.maxy - 1;
 	strparms.highlight = 1;
-	tp = strparms.s = (char *)malloc(1024);
+	tp = strparms.s = malloc(1024);
 	strcpy(tp, aframe->promptLine);
 	strcat(tp, aframe->defaultLine);
 	WOP_DRAWSTRING(aframe->window, &strparms);
@@ -395,8 +395,7 @@ gtxframe_Create(void)
 	return ((struct gtx_frame *)0);
     }
 
-    newkeystate = (struct keymap_state *)
-	malloc(sizeof(struct keymap_state));
+    newkeystate = malloc(sizeof(struct keymap_state));
     if (newkeystate == (struct keymap_state *)0) {
 	/*
 	 * Get rid of the frame AND the keymap before exiting.
@@ -486,7 +485,7 @@ gtxframe_AddToList(struct gtx_frame *aframe, struct onode *aobj)
      * OK, it's not alreadyt there.  Create a new list object, fill it
      * in, and splice it on.
      */
-    tlist = (struct gtxframe_dlist *)malloc(sizeof(struct gtxframe_dlist));
+    tlist = malloc(sizeof(struct gtxframe_dlist));
     if (tlist == (struct gtxframe_dlist *)0)
 	return (-1);
     tlist->data = (char *)aobj;

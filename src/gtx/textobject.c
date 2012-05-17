@@ -84,7 +84,7 @@ gator_text_create(struct onode *text_onp, struct onode_createparams *params)
 	fprintf(stderr,
 		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for text object private data region\n",
 		mn, rn, sizeof(struct gator_textobj));
-    text_data = (struct gator_textobj *)malloc(sizeof(struct gator_textobj));
+    text_data = malloc(sizeof(struct gator_textobj));
     if (text_data == (struct gator_textobj *)0) {
 	fprintf(stderr,
 		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for text object private data region, errno is %d\n",

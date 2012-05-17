@@ -118,7 +118,7 @@ gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
 	return ((struct gator_textcb_hdr *)0);
     } else if (gator_textcb_debug)
 	fprintf(stderr, "[%s] Text buffer allocated at %p\n", rn, newBuff);
-    blankLine = (char *)malloc(a_maxCharsPerEntry + 1);
+    blankLine = malloc(a_maxCharsPerEntry + 1);
     if (blankLine == NULL) {
 	fprintf(stderr,
 		"[%s] Can't allocate %d bytes for blank line buffer; errno is %d\n",
@@ -135,7 +135,7 @@ gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
 	fprintf(stderr,
 		"[%s] Allocating %d bytes for the %d text entry array items\n",
 		rn, bytesToAllocate, a_maxEntriesStored);
-    newEntries = (struct gator_textcb_entry *)malloc(bytesToAllocate);
+    newEntries = malloc(bytesToAllocate);
     if (newEntries == (struct gator_textcb_entry *)0) {
 	fprintf(stderr,
 		"[%s] Can't allocate %d bytes for the %d-member text entry array; errno is %d\n",
@@ -155,7 +155,7 @@ gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
 	fprintf(stderr,
 		"[%s] Allocating %d bytes for the text circular buffer header\n",
 		rn, bytesToAllocate);
-    newHdr = (struct gator_textcb_hdr *)malloc(bytesToAllocate);
+    newHdr = malloc(bytesToAllocate);
     if (newHdr == (struct gator_textcb_hdr *)0) {
 	fprintf(stderr,
 		"[%s] Can't allocate %d bytes for text circular buffer header; errno is %d\n",
