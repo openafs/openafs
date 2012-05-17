@@ -516,7 +516,7 @@ Java_org_openafs_jafs_Server_getBosAdminCount (JNIEnv *env, jclass cls,
     return -1;
   }
 
-  admin = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN);
+  admin = malloc( sizeof(char)*BOS_MAX_NAME_LEN);
 
   if( !admin ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -578,7 +578,7 @@ Java_org_openafs_jafs_Server_getBosAdminsNextString (JNIEnv *env,
 
   afs_status_t ast;
   jstring jadmin;
-  char *admin = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+  char *admin = malloc( sizeof(char)*BOS_MAX_NAME_LEN );
 
   if( !admin ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -622,7 +622,7 @@ Java_org_openafs_jafs_Server_getBosAdminsNext (JNIEnv *env, jclass cls,
   char *admin;
   jstring jadmin;
 
-  admin = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN);
+  admin = malloc( sizeof(char)*BOS_MAX_NAME_LEN);
 
   if( !admin ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -821,7 +821,7 @@ Java_org_openafs_jafs_Server_getProcessCount (JNIEnv *env, jclass cls,
     return -1;
   }
 
-  process = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+  process = malloc( sizeof(char)*BOS_MAX_NAME_LEN );
 
   if( !process ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -883,7 +883,7 @@ Java_org_openafs_jafs_Server_getProcessesNextString (JNIEnv *env,
 
   afs_status_t ast;
   jstring jprocess;
-  char *process = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+  char *process = malloc( sizeof(char)*BOS_MAX_NAME_LEN );
 
   if( !process ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -925,7 +925,7 @@ Java_org_openafs_jafs_Server_getProcessesNext (JNIEnv *env, jclass cls,
 						  jobject jprocessObject) {
     
   afs_status_t ast;
-  char *process = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+  char *process = malloc( sizeof(char)*BOS_MAX_NAME_LEN );
   jstring jprocess;
 
   if( !process ) {
@@ -1539,7 +1539,7 @@ Java_org_openafs_jafs_Server_getLog(JNIEnv *env, jclass cls,
       logFile = NULL;
     }
 
-    logData = (char *) malloc( sizeof(char)*currInLogSize );
+    logData = malloc( sizeof(char)*currInLogSize );
     if( !logData ) {
       throwAFSException( env, JAFSADMNOMEM );
       return;    
@@ -1564,7 +1564,7 @@ Java_org_openafs_jafs_Server_getLog(JNIEnv *env, jclass cls,
     // increase log size (plus one for terminator)
     currInLogSize = currOutLogSize + 1;
     // allocate buffer
-    logData = (char *) malloc( sizeof(char)*currInLogSize );
+    logData = malloc( sizeof(char)*currInLogSize );
     if( !logData ) {
       throwAFSException( env, JAFSADMNOMEM );
       return;    

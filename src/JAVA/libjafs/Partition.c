@@ -180,7 +180,7 @@ Java_org_openafs_jafs_Partition_translateIDToName
  (JNIEnv *env, jclass cls, jint id)
 {
   afs_status_t ast;
-  char *name = (char *) malloc( sizeof(char)*VOS_MAX_PARTITION_NAME_LEN);
+  char *name = malloc( sizeof(char)*VOS_MAX_PARTITION_NAME_LEN);
   jstring jname;
 
   if( !name ) {

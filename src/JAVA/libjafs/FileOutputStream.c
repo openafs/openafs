@@ -123,7 +123,7 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_FileOutputStream_write
                        "descriptor\n");
       throwAFSFileException(env, 0, "Failed to get file descriptor!");
     }
-    bytes = (char*) malloc(length);
+    bytes = malloc(length);
     if(bytes == NULL) {
       fprintf(stderr, "FileOutputStream::write(): malloc failed of %d bytes\n",
                        length);

@@ -208,9 +208,8 @@ Java_org_openafs_jafs_Cell_getKasUsersNextString (JNIEnv *env, jclass cls,
   }
 
   if( strcmp( who.instance, "" ) ) {
-    char *fullName = (char *) malloc( sizeof(char)*( strlen( who.principal ) 
-						     + strlen( who.instance ) 
-						     + 2 ) );
+    char *fullName = malloc( sizeof(char)*( strlen( who.principal ) +
+					    strlen( who.instance ) + 2 ) );
     if( !fullName ) {
       throwAFSException( env, JAFSADMNOMEM );
       return;    
@@ -265,8 +264,8 @@ Java_org_openafs_jafs_Cell_getKasUsersNext (JNIEnv *env, jclass cls,
 
   // take care of the instance stuff(by concatenating with a period in between)
   if( strcmp( who.instance, "" ) ) {
-    fullName = (char *) malloc( sizeof(char)*( strlen( who.principal ) + 
-					       strlen( who.instance ) + 2 ) );
+    fullName = malloc( sizeof(char)*( strlen( who.principal ) +
+				      strlen( who.instance ) + 2 ) );
     if( !fullName ) {
       throwAFSException( env, JAFSADMNOMEM );
       return 0;    
@@ -369,7 +368,7 @@ Java_org_openafs_jafs_Cell_getPtsUserCount (JNIEnv *env, jclass cls,
     return -1;
   }
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !userName ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -419,7 +418,7 @@ Java_org_openafs_jafs_Cell_getPtsOnlyUserCount (JNIEnv *env, jclass cls,
     return -1;
   }
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
     
   if( !userName ) {
     free( who );
@@ -499,7 +498,7 @@ Java_org_openafs_jafs_Cell_getPtsUsersNextString (JNIEnv *env, jclass cls,
   char *userName;
   jstring juser;
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !userName ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -555,7 +554,7 @@ Java_org_openafs_jafs_Cell_getPtsOnlyUsersNextString (JNIEnv *env,
       return;    
     }
 
-    userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
     
     if( !userName ) {
       free( who );
@@ -626,7 +625,7 @@ Java_org_openafs_jafs_Cell_getPtsUsersNext (JNIEnv *env, jclass cls,
   char *userName;
   jstring juser;
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !userName ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -696,7 +695,7 @@ Java_org_openafs_jafs_Cell_getPtsOnlyUsersNext (JNIEnv *env, jclass cls,
     return 0;    
   }
   
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !userName ) {
     free( who );
@@ -798,7 +797,7 @@ Java_org_openafs_jafs_Cell_getGroupCount (JNIEnv *env, jclass cls,
     return -1;
   }
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -866,7 +865,7 @@ Java_org_openafs_jafs_Cell_getGroupsBeginAt (JNIEnv *env, jclass cls,
   char *groupName;
   int i;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !pts_GroupListBegin( (void *) cellHandle, &iterationId, &ast ) ) {
     throwAFSException( env, ast );
@@ -907,7 +906,7 @@ Java_org_openafs_jafs_Cell_getGroupsNextString (JNIEnv *env, jclass cls,
   char *groupName;
   jstring jgroup;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
@@ -952,7 +951,7 @@ Java_org_openafs_jafs_Cell_getGroupsNext (JNIEnv *env, jclass cls,
   char *groupName;
   jstring jgroup;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN );
+  groupName = malloc( sizeof(char)*PTS_MAX_NAME_LEN );
 
   if( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
