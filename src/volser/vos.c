@@ -4604,9 +4604,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 	    } else {
 		/* Grow the tarray to keep the extra entries */
 		parraysize = (centries * sizeof(struct nvldbentry));
-		ttarray =
-		    (struct nvldbentry *)realloc(tarray,
-						 tarraysize + parraysize);
+		ttarray = realloc(tarray, tarraysize + parraysize);
 		if (!ttarray) {
 		    fprintf(STDERR,
 			    "Could not allocate enough space for  the VLDB entries\n");

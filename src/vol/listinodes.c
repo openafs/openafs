@@ -718,9 +718,8 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 			renames = (xfs_Rename_t *)
 			    malloc(n_avail * sizeof(xfs_Rename_t));
 		    else
-			renames = (xfs_Rename_t *)
-			    realloc((char *)renames,
-				    n_avail * sizeof(xfs_Rename_t));
+			renames = realloc(renames,
+				          n_avail * sizeof(xfs_Rename_t));
 		    if (!renames) {
 			Log("Can't %salloc %lu bytes for rename list.\n",
 			    (n_avail == N_RENAME_STEP) ? "m" : "re",

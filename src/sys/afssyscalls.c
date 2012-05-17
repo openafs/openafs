@@ -410,8 +410,7 @@ check_iops(int index, char *fun, char *file, int line)
 	    iops_debug[index] =
 		(iops_debug_t *) malloc(avail * sizeof(iops_debug_t));
 	else
-	    iops_debug[index] =
-		(iops_debug_t *) realloc(*iops, avail * sizeof(iops_debug_t));
+	    iops_debug[index] = realloc(*iops, avail * sizeof(iops_debug_t));
 	if (!iops_debug[index]) {
 	    printf("check_iops: Can't %salloc %lu bytes for index %d\n",
 		   (avail == IOPS_DEBUG_MALLOC_STEP) ? "m" : "re",

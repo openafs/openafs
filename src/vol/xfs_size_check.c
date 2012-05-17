@@ -123,9 +123,8 @@ CheckPartitions()
 			partList =
 			    (partInfo *) malloc(nAvail * sizeof(partInfo));
 		    else
-			partList =
-			    (partInfo *) realloc((char *)partList,
-						 nAvail * sizeof(partInfo));
+			partList = realloc(partList,
+					   nAvail * sizeof(partInfo));
 		    if (!partList) {
 			printf
 			    ("Failed to %salloc %d bytes for partition list.\n",

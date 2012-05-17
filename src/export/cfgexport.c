@@ -459,7 +459,7 @@ xlate_xtok(xp, kp, strp, szp)
 	 */
 	len = strlen(xp->n_nptr) + 1;
 	while (len >= left) {
-	    export_strings = (char *)realloc(*strp, sz += SYMBUFSIZE);
+	    export_strings = realloc(*strp, sz += SYMBUFSIZE);
 	    if (!export_strings)
 		error("no memory for EXPORT string table");
 	    *strp = export_strings;

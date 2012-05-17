@@ -93,7 +93,7 @@ ReadString(XFILE * X, unsigned char **val)
 	}
 	/* iff we found a null, i < BUFSIZE and buf[i] holds the NUL */
 	if (result)
-	    result = (unsigned char *)realloc(result, l + i + 1);
+	    result = realloc(result, l + i + 1);
 	else
 	    result = (unsigned char *)malloc(i + 1);
 	if (!result)

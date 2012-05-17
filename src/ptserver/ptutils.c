@@ -1210,8 +1210,7 @@ AddToPRList(prlist *alist, int *sizeP, afs_int32 id)
     if (alist->prlist_len >= *sizeP) {
 	count = alist->prlist_len + 100;
 	if (alist->prlist_val) {
-	    tmp =
-		(char *)realloc(alist->prlist_val, count * sizeof(afs_int32));
+	    tmp = realloc(alist->prlist_val, count * sizeof(afs_int32));
 	} else {
 	    tmp = (char *)malloc(count * sizeof(afs_int32));
 	}

@@ -1348,9 +1348,8 @@ SVL_ListAttributes(struct rx_call *rxcall,
 	&& (allocCount > vldbentries->bulkentries_len)) {
 
 	vldbentries->bulkentries_val =
-	    (vldbentry *) realloc(vldbentries->bulkentries_val,
-				  vldbentries->bulkentries_len *
-				  sizeof(vldbentry));
+	    realloc(vldbentries->bulkentries_val,
+		    vldbentries->bulkentries_len * sizeof(vldbentry));
 	if (vldbentries->bulkentries_val == NULL) {
 	    code = VL_NOMEM;
 	    goto abort;
@@ -1480,9 +1479,8 @@ SVL_ListAttributesN(struct rx_call *rxcall,
 	&& (allocCount > vldbentries->nbulkentries_len)) {
 
 	vldbentries->nbulkentries_val =
-	    (nvldbentry *) realloc(vldbentries->nbulkentries_val,
-				   vldbentries->nbulkentries_len *
-				   sizeof(nvldbentry));
+	    realloc(vldbentries->nbulkentries_val,
+		    vldbentries->nbulkentries_len * sizeof(nvldbentry));
 	if (vldbentries->nbulkentries_val == NULL) {
 	    code = VL_NOMEM;
 	    goto abort;
@@ -2664,9 +2662,8 @@ put_attributeentry(struct vl_ctx *ctx,
 	 * then grow in increments of VLDBALLOCINCR.
 	 */
 	allo = (*alloccnt > VLDBALLOCLIMIT) ? VLDBALLOCINCR : *alloccnt;
-	reall =
-	    (vldbentry *) realloc(*VldbentryFirst,
-				  (*alloccnt + allo) * sizeof(vldbentry));
+	reall = realloc(*VldbentryFirst,
+			(*alloccnt + allo) * sizeof(vldbentry));
 	if (reall == NULL)
 	    return VL_NOMEM;
 
@@ -2711,9 +2708,8 @@ put_nattributeentry(struct vl_ctx *ctx,
 	 * then grow in increments of VLDBALLOCINCR.
 	 */
 	allo = (*alloccnt > VLDBALLOCLIMIT) ? VLDBALLOCINCR : *alloccnt;
-	reall =
-	    (nvldbentry *) realloc(*VldbentryFirst,
-				   (*alloccnt + allo) * sizeof(nvldbentry));
+	reall = realloc(*VldbentryFirst,
+			(*alloccnt + allo) * sizeof(nvldbentry));
 	if (reall == NULL)
 	    return VL_NOMEM;
 

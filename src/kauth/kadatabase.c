@@ -706,10 +706,8 @@ ka_Encache(char *name, char *inst, afs_int32 kvno,
 	    return;
 	}
     /* i == maxCachedKeys */
-    keyCache =
-	(struct cachedKey *)realloc(keyCache,
-				    (maxCachedKeys *=
-				     2) * sizeof(struct cachedKey));
+    keyCache = realloc(keyCache, (maxCachedKeys *=2)
+				  * sizeof(struct cachedKey));
     if (keyCache == 0) {
 	es_Report("Can't realloc keyCache! out of memory?");
 	exit(123);

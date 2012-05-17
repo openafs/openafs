@@ -339,8 +339,8 @@ createDirEnt(dirEntry, fileName, vnode, unique)
 
     (dirEntry->numEntries)++;
     assert(dirEntry->vnodeName =
-	   (VnodeName *) realloc(dirEntry->vnodeName,
-				 dirEntry->numEntries * sizeof(VnodeName)));
+	   realloc(dirEntry->vnodeName,
+		   dirEntry->numEntries * sizeof(VnodeName)));
     dirEntry->vnodeName[dirEntry->numEntries - 1].vnode = vnode;
     dirEntry->vnodeName[dirEntry->numEntries - 1].vunique = unique;
     dirEntry->vnodeName[dirEntry->numEntries - 1].name = strdup(fileName);

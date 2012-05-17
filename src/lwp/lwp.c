@@ -723,9 +723,8 @@ LWP_MwaitProcess(int wcount, void *evlist[])
 	}
 	if (ecount > lwp_cpptr->eventlistsize) {
 
-	    lwp_cpptr->eventlist =
-		(void **)realloc(lwp_cpptr->eventlist,
-				 ecount * sizeof(void *));
+	    lwp_cpptr->eventlist = realloc(lwp_cpptr->eventlist,
+				           ecount * sizeof(void *));
 	    lwp_cpptr->eventlistsize = ecount;
 	}
 	for (i = 0; i < ecount; i++)

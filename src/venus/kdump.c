@@ -677,8 +677,7 @@ read_ksyms(void)
     while (fgets(line, MAXLINE, fp)) {
 	if (nksyms >= availksyms) {
 	    availksyms += KSYM_ALLOC_STEP;
-	    ksyms =
-		(symlist_t *) realloc(ksyms, availksyms * sizeof(symlist_t));
+	    ksyms = realloc(ksyms, availksyms * sizeof(symlist_t));
 	    if (!ksyms) {
 		printf("Failed to realloc %d symbols.\n", availksyms);
 		exit(1);
@@ -1350,10 +1349,9 @@ add_found_server(struct server *sep)
 		(struct server **)malloc(NserversAllocated *
 					 sizeof(struct server *));
 	} else {
-	    serversFound =
-		(struct server **)realloc((char *)serversFound,
-					  NserversAllocated *
-					  sizeof(struct server *));
+	    serversFound = realloc(serversFound,
+				   NserversAllocated *
+			           sizeof(struct server *));
 	}
 	if (!serversFound) {
 	    printf("Can't allocate %lu bytes for list of found servers.\n",

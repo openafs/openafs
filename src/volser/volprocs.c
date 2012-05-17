@@ -1798,7 +1798,7 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
 	TRELE(tt);
 	return E2BIG;
     }
-    *aname = (char *)realloc(*aname, len);
+    *aname = realloc(*aname, len);
     strcpy(*aname, td->name);
     TClearRxCall(tt);
     if (TRELE(tt))
@@ -2595,9 +2595,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	if ((allocSize - volumeInfo->volEntries_len) < 5) {
 	    /*running out of space, allocate more space */
 	    allocSize = (allocSize * 3) / 2;
-	    pntr =
-		(volintInfo *) realloc((char *)volumeInfo->volEntries_val,
-				       allocSize * sizeof(volintInfo));
+	    pntr = realloc(volumeInfo->volEntries_val,
+			   allocSize * sizeof(volintInfo));
 	    if (pntr == NULL) {
 		closedir(dirp);
 		return VOLSERNO_MEMORY;
@@ -2844,11 +2843,8 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	transInfo->transDebugEntries_len += 1;
 	if ((allocSize - transInfo->transDebugEntries_len) < 5) {	/*alloc some more space */
 	    allocSize = (allocSize * 3) / 2;
-	    pntr =
-		(transDebugInfo *) realloc((char *)transInfo->
-					   transDebugEntries_val,
-					   allocSize *
-					   sizeof(transDebugInfo));
+	    pntr = realloc(transInfo->transDebugEntries_val,
+			   allocSize * sizeof(transDebugInfo));
 	    transInfo->transDebugEntries_val = pntr;
 	    pntr =
 		transInfo->transDebugEntries_val +

@@ -605,7 +605,7 @@ setenv(char *var, char *value, int clobber)
 	    return;
 	}
     }
-    environ = (char **)realloc(environ, sizeof(char *) * (index + 2));
+    environ = realloc(environ, sizeof(char *) * (index + 2));
     if (environ == NULL) {
 	fprintf(stderr, "login: malloc out of memory\n");
 	exit(1);

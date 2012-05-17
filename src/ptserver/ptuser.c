@@ -738,9 +738,7 @@ pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
 		if (n == maxstack) {	/* need more stack space */
 		    afs_int32 *tmp;
 		    maxstack += n;
-		    tmp =
-			(afs_int32 *) realloc(stack,
-					      maxstack * sizeof(afs_int32));
+		    tmp = realloc(stack, maxstack * sizeof(afs_int32));
 		    if (!tmp) {
 			code = ENOMEM;
 			xdr_free((xdrproc_t) xdr_prlist, &alist);

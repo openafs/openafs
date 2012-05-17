@@ -3533,7 +3533,7 @@ bos_Salvage(const void *cellHandle, const void *serverHandle,
 	       (serverHandle, AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH,
 		&logLen, logData, &tst)) {
 	    if (logLen > INITIAL_LOG_LEN) {
-		logData = (char *)realloc(logData, (logLen + (logLen / 10)));
+		logData = realloc(logData, (logLen + (logLen / 10)));
 		if (logData == NULL) {
 		    tst = ADMNOMEM;
 		    goto fail_bos_Salvage;

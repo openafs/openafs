@@ -6829,9 +6829,8 @@ VAddToVolumeUpdateList_r(Error * ec, Volume * vp)
 		Log("warning: there is likely a bug in the volume update scanner\n");
 		return;
 	    }
-	    UpdateList =
-		(VolumeId *) realloc(UpdateList,
-				     sizeof(VolumeId) * updateSize);
+	    UpdateList = realloc(UpdateList,
+				 sizeof(VolumeId) * updateSize);
 	}
     }
     osi_Assert(UpdateList != NULL);

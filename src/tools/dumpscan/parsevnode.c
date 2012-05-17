@@ -453,7 +453,7 @@ parse_vdata(XFILE * X, unsigned char *tag, tagged_field * field,
 	case vSymlink:
 	    if (v->size > symlink_size) {
 		if (symlink_buf)
-		    symlink_buf = (char *)realloc(symlink_buf, v->size + 1);
+		    symlink_buf = realloc(symlink_buf, v->size + 1);
 		else
 		    symlink_buf = (char *)malloc(v->size + 1);
 		symlink_size = symlink_buf ? v->size : 0;

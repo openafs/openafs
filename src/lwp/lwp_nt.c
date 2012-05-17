@@ -433,8 +433,8 @@ int LWP_MwaitProcess(int wcount, void **evlist)
     if (ecount > lwp_cpptr->eventlistsize) {
 
 	void **save_eventlist = lwp_cpptr->eventlist;
-	lwp_cpptr->eventlist = (char **)realloc(lwp_cpptr->eventlist,
-						ecount*sizeof(char *));
+	lwp_cpptr->eventlist = realloc(lwp_cpptr->eventlist,
+				       ecount*sizeof(char *));
 	if (lwp_cpptr->eventlist == NULL) {
 	    lwp_cpptr->eventlist = save_eventlist;
 	    Dispatcher();

@@ -1006,8 +1006,7 @@ add_ec(const char *name, const char *description)
 	error_codes = (char **)malloc(sizeof(char *));
 	*error_codes = (char *)NULL;
     }
-    error_codes =
-	(char **)realloc((char *)error_codes, (current + 2) * sizeof(char *));
+    error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
     error_codes[current++] = strdup(name);
     error_codes[current] = (char *)NULL;
 }
@@ -1040,8 +1039,7 @@ add_ec_val(const char *name, const char *val, const char *description)
 	error_codes = (char **)malloc(sizeof(char *));
 	*error_codes = (char *)NULL;
     }
-    error_codes =
-	(char **)realloc((char *)error_codes, (current + 2) * sizeof(char *));
+    error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
     error_codes[current++] = strdup(name);
     error_codes[current] = (char *)NULL;
 }

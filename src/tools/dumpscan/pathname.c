@@ -362,7 +362,7 @@ Path_Build(XFILE * X, path_hashinfo * phi, afs_uint32 vnode, char **his_path,
 
 	nl = strlen(name);
 	if (path) {
-	    path = (char *)realloc(path, nl + pl + 2);
+	    path = realloc(path, nl + pl + 2);
 	    if (!path) {
 		if (phi->p->cb_error)
 		    (phi->p->cb_error) (ENOMEM, 1, phi->p->err_refcon,
