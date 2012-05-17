@@ -1822,8 +1822,7 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
     server_get_p serv = calloc(1, sizeof(server_get_t));
     server_get_p serv_cache = NULL;
     const char *cellName = NULL;
@@ -2654,7 +2653,7 @@ afsclient_RXDebugOpen(const char *serverName, afs_stat_source_t type,
 	goto fail_afsclient_RXDebugOpen;
     }
 
-    handle = (rxdebugHandle_p) malloc(sizeof(rxdebugHandle_t));
+    handle = malloc(sizeof(rxdebugHandle_t));
     if (!handle) {
 	close(sock);
 	tst = ADMNOMEM;
@@ -2739,7 +2738,7 @@ afsclient_RXDebugOpenPort(const char *serverName, int serverPort,
 	goto fail_afsclient_RXDebugOpenPort;
     }
 
-    handle = (rxdebugHandle_p) malloc(sizeof(rxdebugHandle_t));
+    handle = malloc(sizeof(rxdebugHandle_t));
     if (!handle) {
 	close(sock);
 	tst = ADMNOMEM;

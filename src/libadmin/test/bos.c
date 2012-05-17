@@ -104,7 +104,7 @@ LocalParseLine(char *aline, struct token **alist)
 	    if (inToken) {
 		inToken = 0;	/* end of this token */
 		*tptr++ = 0;
-		ttok = (struct token *)malloc(sizeof(struct token));
+		ttok = malloc(sizeof(struct token));
 		ttok->next = NULL;
 		ttok->key = strdup(tbuffer);
 		if (last) {

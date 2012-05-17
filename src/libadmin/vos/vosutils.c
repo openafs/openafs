@@ -278,7 +278,7 @@ VLDB_ListAttributes(afs_cell_handle_p cellHandle,
 		    *entriesp = arrayEntries.bulkentries_len;
 
 		blkentriesp->nbulkentries_val =
-		    (nvldbentry *) malloc(*entriesp * sizeof(*blkentriesp));
+		    malloc(*entriesp * sizeof(*blkentriesp));
 		if (blkentriesp->nbulkentries_val != NULL) {
 		    for (i = 0; i < *entriesp; i++) {
 			OldVLDB_to_NewVLDB((struct vldbentry *)&arrayEntries.

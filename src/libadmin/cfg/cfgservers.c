@@ -1181,7 +1181,7 @@ cfg_UpdateServerStart(void *hostHandle,	/* host config handle */
 	    if (argsLen <= AFSDIR_PATH_MAX) {
 		args = argsBuf;
 	    } else {
-		args = (char *)malloc(argsLen);
+		args = malloc(argsLen);
 	    }
 
 	    if (args == NULL) {
@@ -1444,7 +1444,7 @@ cfg_UpdateClientStart(void *hostHandle,	/* host config handle */
 	if (argsLen <= AFSDIR_PATH_MAX) {
 	    args = argsBuf;
 	} else {
-	    args = (char *)malloc(argsLen);
+	    args = malloc(argsLen);
 	}
 
 	if (args == NULL) {
@@ -1775,7 +1775,7 @@ SimpleProcessStart(void *bosHandle, const char *instance,
     if (cmdLen <= AFSDIR_PATH_MAX) {
 	cmd = cmdBuf;
     } else {
-	cmd = (char *)malloc(cmdLen);
+	cmd = malloc(cmdLen);
     }
 
     if (cmd == NULL) {

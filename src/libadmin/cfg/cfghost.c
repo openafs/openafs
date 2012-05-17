@@ -256,7 +256,7 @@ cfg_HostOpen(void *cellHandle,	/* cell handle */
     if (tst == 0) {
 	char *localHostName;
 
-	if ((cfg_host = (cfg_host_p) malloc(sizeof(cfg_host_t))) == NULL) {
+	if ((cfg_host = malloc(sizeof(cfg_host_t))) == NULL) {
 	    tst = ADMNOMEM;
 	} else if ((localHostName = strdup(fullHostName)) == NULL) {
 	    free(cfg_host);
@@ -894,7 +894,7 @@ cfg_HostPartitionTableEnumerate(void *hostHandle,	/* host config handle */
 		    vpentryCountMax * (sizeof(cfg_partitionEntry_t) +
 				       sizeof(struct vptab));
 
-		if ((metaTablep = (void *)malloc(metaTableSize)) == NULL) {
+		if ((metaTablep = malloc(metaTableSize)) == NULL) {
 		    tst = ADMNOMEM;
 		} else {
 		    int i;

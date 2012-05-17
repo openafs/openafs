@@ -1805,8 +1805,8 @@ main(int argc, char *argv[])
     strcpy(uss_whoami, argv[0]);
     yyin = (FILE *) NULL;
 
-    uss_fs_InBuff = (char *)malloc(USS_FS_MAX_SIZE);	/*Cache Manager input buff */
-    uss_fs_OutBuff = (char *)malloc(USS_FS_MAX_SIZE);	/*Cache Manager output buff */
+    uss_fs_InBuff = malloc(USS_FS_MAX_SIZE);	/*Cache Manager input buff */
+    uss_fs_OutBuff = malloc(USS_FS_MAX_SIZE);	/*Cache Manager output buff */
     if (!uss_fs_InBuff || !uss_fs_OutBuff) {
 	fprintf(stderr, "%s: Can't malloc in/out buffers\n", uss_whoami);
 	exit(-1);

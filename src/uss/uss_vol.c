@@ -726,7 +726,7 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
      * the code if we're doing a dry run.
      */
     if (VolExistFlag) {
-	if ((Oldmpoint = (char *)malloc(strlen(a_mpoint) + 50)) == NULL) {
+	if ((Oldmpoint = malloc(strlen(a_mpoint) + 50)) == NULL) {
 	    fprintf(stderr, "%s: No more memory!\n", uss_whoami);
 	    return (1);
 	}
@@ -822,7 +822,7 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
      * properly, as well as all ACLs of future subdirectories,as the very last
      * thing we do to the new account.
      */
-    new_dir = (struct uss_subdir *)malloc(sizeof(struct uss_subdir));
+    new_dir = malloc(sizeof(struct uss_subdir));
     new_dir->previous = uss_currentDir;
     new_dir->path = strdup(a_mpoint);
     new_dir->finalACL = strdup(a_acl);

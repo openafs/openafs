@@ -559,8 +559,7 @@ uss_fs_UnlogToken(char *celln)
 	cnt++;
     } while (!code);
     count = cnt - 1;
-    tokenInfoP =
-	(struct tokenInfo *)malloc((sizeof(struct tokenInfo) * count));
+    tokenInfoP = malloc((sizeof(struct tokenInfo) * count));
     for (code = index = index2 = 0; (!code) && (index < count); index++) {
 	tp = tokenInfoP + index;
 	code = ktc_ListTokens(index2, &index2, &tp->service);

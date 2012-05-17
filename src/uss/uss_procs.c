@@ -144,7 +144,7 @@ uss_procs_BuildDir(char *a_path, char *a_mode, char *a_owner, char *a_access)
      * Use our linked list to remember this directory's true ACL setting so
      * we may set it correctly at the tail end of the account creation.
      */
-    new_dir = (struct uss_subdir *)malloc(sizeof(struct uss_subdir));
+    new_dir = malloc(sizeof(struct uss_subdir));
     new_dir->previous = uss_currentDir;
     new_dir->path = strdup(a_path);
     new_dir->finalACL = strdup(a_access);

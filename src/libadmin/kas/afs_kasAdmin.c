@@ -361,7 +361,7 @@ kas_ServerOpen(const void *cellHandle, const char **serverList,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     int server_count = 0, server_addr;
     struct afsconf_cell server_info;
-    kas_server_p k_handle = (kas_server_p) malloc(sizeof(kas_server_t));
+    kas_server_p k_handle = malloc(sizeof(kas_server_t));
 
     /*
      * Validate input parameters
@@ -916,10 +916,8 @@ kas_PrincipalGetBegin(const void *cellHandle, const void *serverHandle,
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     kas_server_p k_handle = (kas_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    principal_get_p principal =
-	(principal_get_p) malloc(sizeof(principal_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    principal_get_p principal = malloc(sizeof(principal_get_t));
 
     /*
      * Validate arguments

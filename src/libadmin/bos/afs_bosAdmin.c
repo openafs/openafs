@@ -161,7 +161,7 @@ bos_ServerOpen(const void *cellHandle, const char *serverName,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    bos_server_p bos_server = (bos_server_p) malloc(sizeof(bos_server_t));
+    bos_server_p bos_server = malloc(sizeof(bos_server_t));
     int serverAddress;
 
     /*
@@ -771,10 +771,8 @@ bos_ProcessNameGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    process_name_get_p proc =
-	(process_name_get_p) malloc(sizeof(process_name_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    process_name_get_p proc = malloc(sizeof(process_name_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessNameGetBegin;
@@ -1095,9 +1093,8 @@ bos_ProcessParameterGetBegin(const void *serverHandle,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    param_get_p param = (param_get_p) malloc(sizeof(param_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    param_get_p param = malloc(sizeof(param_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessParameterGetBegin;
@@ -1760,9 +1757,8 @@ bos_AdminGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    admin_get_p admin = (admin_get_p) malloc(sizeof(admin_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    admin_get_p admin = malloc(sizeof(admin_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_AdminGetBegin;
@@ -2077,9 +2073,8 @@ bos_KeyGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    key_get_p key = (key_get_p) malloc(sizeof(key_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    key_get_p key = malloc(sizeof(key_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_KeyGetBegin;
@@ -2484,9 +2479,8 @@ bos_HostGetBegin(const void *serverHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    host_get_p host = (host_get_p) malloc(sizeof(host_get_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    host_get_p host = malloc(sizeof(host_get_t));
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_HostGetBegin;
@@ -3523,7 +3517,7 @@ bos_Salvage(const void *cellHandle, const void *serverHandle,
 
     if (log != NULL) {
 
-	logData = (char *)malloc(INITIAL_LOG_LEN);
+	logData = malloc(INITIAL_LOG_LEN);
 	if (!logData) {
 	    tst = ADMNOMEM;
 	    goto fail_bos_Salvage;

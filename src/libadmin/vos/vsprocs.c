@@ -1995,7 +1995,7 @@ t structure!! */
     }
 #endif
     nbytes = blockSize;
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	return ADMNOMEM;
     }
@@ -2190,7 +2190,7 @@ t structure!! */
 	blockSize = 4096;
     }
 #endif
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
     if (!buffer) {
 	return ADMNOMEM;
     }
@@ -3951,7 +3951,7 @@ GroupEntries(struct rx_connection *server, volintInfo * pntr, afs_int32 count,
 			error = VOLSERBADOP;
 		}
 	    } else {		/*create a fresh entry */
-		qPtr = (struct aqueue *)malloc(sizeof(struct aqueue));
+		qPtr = malloc(sizeof(struct aqueue));
 		if (pntr->type == RWVOL) {
 		    qPtr->isValid[RWVOL] = 1;
 		    qPtr->isValid[BACKVOL] = 0;

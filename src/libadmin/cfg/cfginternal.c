@@ -480,8 +480,7 @@ cfgutil_HostAddressFetchAll(const char *hostName, int *addrCount,
 	for (i = 0; hentryp->h_addr_list[i] != NULL; i++);
 	aCount = i;
 
-	if ((aList =
-	     (afs_int32 *) malloc(aCount * sizeof(afs_int32))) == NULL) {
+	if ((aList = malloc(aCount * sizeof(afs_int32))) == NULL) {
 	    tst = ADMNOMEM;
 	} else {
 	    for (i = 0; i < aCount; i++) {

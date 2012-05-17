@@ -250,7 +250,7 @@ ChangeList(struct Acl *a_al, afs_int32 a_plus, char *a_name,
     /*
      * Otherwise, we make a new item and plug in the new data.
      */
-    tlist = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+    tlist = malloc(sizeof(struct AclEntry));
     strcpy(tlist->name, a_name);
     tlist->rights = a_rights;
     if (a_plus) {
@@ -371,7 +371,7 @@ EmptyAcl(void)
 
     struct Acl *tp;
 
-    tp = (struct Acl *)malloc(sizeof(struct Acl));
+    tp = malloc(sizeof(struct Acl));
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
     return (tp);
@@ -420,7 +420,7 @@ ParseAcl(char *a_str)
     /*
      * Allocate and initialize the first entry.
      */
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = malloc(sizeof(struct Acl));
     ta->nplus = nplus;
     ta->nminus = nminus;
 
@@ -432,7 +432,7 @@ ParseAcl(char *a_str)
     for (i = 0; i < nplus; i++) {
 	sscanf(a_str, "%100s %d", tname, &trights);
 	a_str = SkipLine(a_str);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);
@@ -452,7 +452,7 @@ ParseAcl(char *a_str)
     for (i = 0; i < nminus; i++) {
 	sscanf(a_str, "%100s %d", tname, &trights);
 	a_str = SkipLine(a_str);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);

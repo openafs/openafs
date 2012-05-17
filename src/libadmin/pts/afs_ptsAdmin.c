@@ -1151,7 +1151,7 @@ MemberListBegin(const void *cellHandle, const char *name, afs_status_t error1,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 groupId = 0;
     afs_int32 exceeded = 0;
-    pts_group_member_list_iterator_p iter = (pts_group_member_list_iterator_p)
+    pts_group_member_list_iterator_p iter =
 	malloc(sizeof(pts_group_member_list_iterator_t));
     int iter_allocated = 0;
     int ids_allocated = 0;
@@ -2706,10 +2706,8 @@ pts_OwnedGroupListBegin(const void *cellHandle, const char *userName,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    owned_group_list_p list =
-	(owned_group_list_p) malloc(sizeof(owned_group_list_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    owned_group_list_p list = malloc(sizeof(owned_group_list_t));
 
     /*
      * Validate arguments
@@ -3043,9 +3041,8 @@ pts_UserListBegin(const void *cellHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    pts_list_p list = (pts_list_p) malloc(sizeof(pts_list_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    pts_list_p list = malloc(sizeof(pts_list_t));
 
     /*
      * Validate arguments
@@ -3227,9 +3224,8 @@ pts_GroupListBegin(const void *cellHandle, void **iterationIdP,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter =
-	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    pts_list_p list = (pts_list_p) malloc(sizeof(pts_list_t));
+    afs_admin_iterator_p iter = malloc(sizeof(afs_admin_iterator_t));
+    pts_list_p list = malloc(sizeof(pts_list_t));
 
     /*
      * Validate arguments
