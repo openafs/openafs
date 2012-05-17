@@ -288,7 +288,7 @@ ProcessAfsInodes(devname, partition)
 	goto out;
     }
     bufsize = super.fs.fs_ipg * sizeof(struct dinode);
-    if (!(inodes = (struct dinode *)malloc(bufsize))) {
+    if (!(inodes = malloc(bufsize))) {
 	printf("Unable to allocate enough memory to scan inodes; help!\n");
 	goto out;
     }

@@ -1036,8 +1036,7 @@ doSweepAFSCache(int *vFilesFound,
 		cache_dir_list[dirNum]++;	/* keep directory's file count */
 		if (cache_dir_list[dirNum] > nFilesPerDir) {
 		    /* Too many files -- add to filelist */
-		    struct afsd_file_list *tmp = (struct afsd_file_list *)
-			malloc(sizeof(*tmp));
+		    struct afsd_file_list *tmp = malloc(sizeof(*tmp));
 		    if (!tmp)
 			printf
 			    ("%s: MALLOC FAILED allocating file_list entry\n",
@@ -1371,7 +1370,7 @@ SweepAFSCache(int *vFilesFound)
     }
 
     if (cache_dir_list == NULL) {
-	cache_dir_list = (int *)malloc(maxDir * sizeof(*cache_dir_list));
+	cache_dir_list = malloc(maxDir * sizeof(*cache_dir_list));
 	if (cache_dir_list == NULL) {
 	    printf("%s: Malloc Failed!\n", rn);
 	    return (-1);
@@ -1389,7 +1388,7 @@ SweepAFSCache(int *vFilesFound)
     }
 
     if (dir_for_V == NULL) {
-	dir_for_V = (int *)malloc(cacheFiles * sizeof(*dir_for_V));
+	dir_for_V = malloc(cacheFiles * sizeof(*dir_for_V));
 	if (dir_for_V == NULL) {
 	    printf("%s: Malloc Failed!\n", rn);
 	    return (-1);

@@ -63,7 +63,7 @@ ParseLine(char *aline, struct token **alist)
 		    return -1;	/* should never get here */
 		else
 		    *tptr++ = 0;
-		ttok = (struct token *)malloc(sizeof(struct token));
+		ttok = malloc(sizeof(struct token));
 		ttok->next = NULL;
 		if (dontUse) {
 		    ttok->key = strdup(tbuffer + 1); /* Skip first char */

@@ -232,7 +232,7 @@ get_syms(conf, syms)
     if (debug)
 	printf("nsyms = %d\n", nsyms);
 
-    x_symtab = (struct syment *)malloc(nsyms * SYMESZ);
+    x_symtab = malloc(nsyms * SYMESZ);
     if (!x_symtab)
 	error("no memory for symbol table");
 
@@ -326,7 +326,7 @@ get_syms(conf, syms)
     /*
      * we will need no more than `nxsyms' symbols.
      */
-    k_symtab = (sym_t *) malloc(nxsyms * sizeof(sym_t));
+    k_symtab = malloc(nxsyms * sizeof(sym_t));
     if (!k_symtab)
 	error("no memory for EXPORT symbol table");
 

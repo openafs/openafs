@@ -546,7 +546,7 @@ StringArrayToString(char *strArray[])
     }
 
     /* put all strings into buffer; guarantee buffer is at least one char */
-    buffer = (char *)malloc(byteCount + (strCount * 3) /* quotes+space */ +1);
+    buffer = malloc(byteCount + (strCount * 3) /* quotes+space */ +1);
     if (buffer != NULL) {
 	int i;
 
@@ -585,7 +585,7 @@ StringArrayToMultiString(char *strArray[])
     }
 
     /* put all strings into buffer; guarantee buffer is at least two chars */
-    buffer = (char *)malloc(byteCount + strCount + 2);
+    buffer = malloc(byteCount + strCount + 2);
     if (buffer != NULL) {
 	if (byteCount == 0) {
 	    buffer[0] = '\0';
@@ -764,7 +764,7 @@ ReadChildDataBuffer(void **datap,	/* allocated data buffer */
 		size_t *memp = (size_t *) bufMemp;
 
 		*dataLen = *memp++;
-		*datap = (void *)malloc(*dataLen);
+		*datap = malloc(*dataLen);
 
 		if (*datap != NULL) {
 		    memcpy(*datap, (void *)memp, *dataLen);
@@ -888,7 +888,7 @@ pmgt_ProcessSpawnVEB(const char *spath, char *sargv[], char *senvp[],
     }
 
     /* create path with .exe extension if no filename extension supplied */
-    if (!(pathbuf = (char *)malloc(strlen(spath) + 5 /* .exe */ ))) {
+    if (!(pathbuf = malloc(strlen(spath) + 5 /* .exe */ ))) {
 	errno = ENOMEM;
 	return ((pid_t) - 1);
     }

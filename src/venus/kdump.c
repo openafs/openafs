@@ -667,7 +667,7 @@ read_ksyms(void)
     }
 
     availksyms = KSYM_ALLOC_BASE;
-    ksyms = (symlist_t *) malloc(availksyms * sizeof(symlist_t));
+    ksyms = malloc(availksyms * sizeof(symlist_t));
     if (!ksyms) {
 	printf("Can't malloc %d elements for symbol list.\n", availksyms);
 	exit(1);
@@ -1345,9 +1345,8 @@ add_found_server(struct server *sep)
     if (NserversFound >= NserversAllocated) {
 	NserversAllocated += SF_ALLOCATION_STEP;
 	if (!serversFound) {
-	    serversFound =
-		(struct server **)malloc(NserversAllocated *
-					 sizeof(struct server *));
+	    serversFound = malloc(NserversAllocated *
+				  sizeof(struct server *));
 	} else {
 	    serversFound = realloc(serversFound,
 				   NserversAllocated *
@@ -1611,7 +1610,7 @@ print_dcaches(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_indexTable", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (long *)malloc(count * sizeof(long));
+    ptr = malloc(count * sizeof(long));
     kread(kmem, table, (char *)ptr, count * sizeof(long));
     for (i = 0, j = 0; i < count; i++) {
 	if (dp = (struct dcache *)ptr[i]) {
@@ -1650,7 +1649,7 @@ print_DindexTimes(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_indexTimes", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (afs_hyper_t *) malloc(count * sizeof(afs_hyper_t));
+    ptr = malloc(count * sizeof(afs_hyper_t));
     kread(kmem, table, (char *)ptr, count * sizeof(afs_hyper_t));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1686,7 +1685,7 @@ print_DdvnextTbl(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_dvnextTbl", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (afs_int32 *) malloc(count * sizeof(afs_int32));
+    ptr = malloc(count * sizeof(afs_int32));
     kread(kmem, table, (char *)ptr, count * sizeof(afs_int32));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1715,7 +1714,7 @@ print_DdcnextTbl(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_dcnextTbl", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    ptr = (afs_int32 *) malloc(count * sizeof(afs_int32));
+    ptr = malloc(count * sizeof(afs_int32));
     kread(kmem, table, (char *)ptr, count * sizeof(afs_int32));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1745,7 +1744,7 @@ print_DindexFlags(int pnt)
     kread(kmem, symoff, (char *)&count, sizeof count);
     findsym("afs_indexFlags", &symoff);
     kread(kmem, symoff, (char *)&table, sizeof(long));
-    flags = (unsigned char *)malloc(count * sizeof(char));
+    flags = malloc(count * sizeof(char));
     kread(kmem, table, flags, count * sizeof(char));
     for (i = 0, j = 0; i < count; i++) {
 	if (pnt)
@@ -1774,7 +1773,7 @@ print_buffers(int pnt)
     kread(kmem, symoff, (char *)&table, sizeof(long));
     findsym("nbuffers", &symoff);
     kread(kmem, symoff, (char *)&count, sizeof(int));
-    buffers = (unsigned char *)malloc(count * sizeof(struct buffer));
+    buffers = malloc(count * sizeof(struct buffer));
     kread(kmem, table, buffers, count * sizeof(struct buffer));
     bp = (struct buffer *)buffers;
     for (i = 0, j = 0; i < count; i++, bp++) {

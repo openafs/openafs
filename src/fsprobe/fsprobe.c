@@ -231,8 +231,8 @@ fsprobe_LWP(void *unused)
     struct ProbeViceStatistics *curr_stats;	/*Current stats region */
     int *curr_probeOK;		/*Current probeOK field */
     ViceStatistics64 stats64;      /*Current stats region */
-    stats64.ViceStatistics64_val = (afs_uint64 *)malloc(STATS64_VERSION *
-							sizeof(afs_uint64));
+    stats64.ViceStatistics64_val = malloc(STATS64_VERSION *
+					  sizeof(afs_uint64));
     while (1) {			/*Service loop */
 	/*
 	 * Iterate through the server connections, gathering data.
@@ -291,7 +291,7 @@ fsprobe_LWP(void *unused)
 		char pname[10];
 		struct diskPartition partition;
 		struct diskPartition64 *partition64p =
-		    (struct diskPartition64 *)malloc(sizeof(struct diskPartition64));
+		    malloc(sizeof(struct diskPartition64));
 
 		if (fsprobe_debug)
 		    fprintf(stderr,
@@ -573,7 +573,7 @@ fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 		rn, fsprobe_statsBytes);
 
     fsprobe_probeOKBytes = a_numServers * sizeof(int);
-    fsprobe_Results.probeOK = (int *)malloc(fsprobe_probeOKBytes);
+    fsprobe_Results.probeOK = malloc(fsprobe_probeOKBytes);
     if (fsprobe_Results.probeOK == (int *)0) {
 	fprintf(stderr,
 		"[%s] Can't allocate %d probeOK array entries (%d bytes)\n",

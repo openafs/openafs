@@ -699,7 +699,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 
     if (bufferSize == 0)
 	return -1;
-    bufferp = (afs_int32 *) malloc(sizeof(afs_int32) * bufferSize);
+    bufferp = malloc(sizeof(afs_int32) * bufferSize);
     if (!bufferp)
 	return -1;
 
@@ -985,7 +985,7 @@ icl_TailKernel(FILE *outFilep, char *logname, afs_int32 waitTime)
 
     if (bufferSize == 0)
 	return -1;
-    bufferp = (afs_int32 *) malloc(sizeof(afs_int32) * bufferSize);
+    bufferp = malloc(sizeof(afs_int32) * bufferSize);
     if (!bufferp) {
 	(void)fprintf(stderr, "cannot allocate %d words for buffer\n",
 		      bufferSize);
@@ -1079,7 +1079,7 @@ icl_TailKernel(FILE *outFilep, char *logname, afs_int32 waitTime)
 	    /* have to reallocate a buffer */
 	    bufferSize = newBufferSize;
 	    free(bufferp);
-	    bufferp = (afs_int32 *) malloc(sizeof(afs_int32) * bufferSize);
+	    bufferp = malloc(sizeof(afs_int32) * bufferSize);
 	    if (!bufferp) {
 		(void)fprintf(stderr, "cannot allocate %d words for buffer\n",
 			      bufferSize);
@@ -1210,17 +1210,17 @@ icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     if (flags & ICL_CRSET_FLAG_PERSISTENT)
 	states |= ICL_SETF_PERSISTENT;
 
-    setp = (struct afs_icl_set *)osi_Alloc(sizeof(struct afs_icl_set));
+    setp = osi_Alloc(sizeof(struct afs_icl_set));
     memset((caddr_t) setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)
 	states &= ~ICL_SETF_ACTIVE;	/* if freed, can't be active */
     setp->states = states;
 
-    setp->name = (char *)osi_Alloc(strlen(name) + 1);
+    setp->name = osi_Alloc(strlen(name) + 1);
     strcpy(setp->name, name);
     setp->nevents = ICL_DEFAULTEVENTS;
-    setp->eventFlags = (char *)osi_Alloc(ICL_DEFAULTEVENTS);
+    setp->eventFlags = osi_Alloc(ICL_DEFAULTEVENTS);
     for (i = 0; i < ICL_DEFAULTEVENTS; i++)
 	setp->eventFlags[i] = 0xff;	/* default to enabled */
 
@@ -1507,8 +1507,7 @@ icl_LogUse(struct afs_icl_log *logp)
 	    /* we weren't passed in a hint and it wasn't set */
 	    logp->logSize = ICL_DEFAULT_LOGSIZE;
 	}
-	logp->datap =
-	    (afs_int32 *) osi_Alloc(sizeof(afs_int32) * logp->logSize);
+	logp->datap = osi_Alloc(sizeof(afs_int32) * logp->logSize);
     }
     logp->setCount++;
     return 0;
@@ -1542,7 +1541,7 @@ icl_LogSetSize(struct afs_icl_log *logp, afs_int32 logSize)
 
 	/* free and allocate a new one */
 	osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
-	logp->datap = (afs_int32 *) osi_Alloc(sizeof(afs_int32) * logSize);
+	logp->datap = osi_Alloc(sizeof(afs_int32) * logSize);
 	logp->logSize = logSize;
     }
 

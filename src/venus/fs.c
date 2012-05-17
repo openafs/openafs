@@ -459,10 +459,10 @@ SetDotDefault(struct cmd_item **aitemp)
     if (*aitemp)
 	return;			/* already has value */
     /* otherwise, allocate an item representing "." */
-    ti = (struct cmd_item *)malloc(sizeof(struct cmd_item));
+    ti = malloc(sizeof(struct cmd_item));
     assert(ti);
     ti->next = (struct cmd_item *)0;
-    ti->data = (char *)malloc(2);
+    ti->data = malloc(2);
     assert(ti->data);
     strcpy(ti->data, ".");
     *aitemp = ti;
@@ -499,7 +499,7 @@ ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
         return;                 /* can't reduce non-existing rights   */
 
     /* Otherwise we make a new item and plug in the new data. */
-    tlist = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+    tlist = malloc(sizeof(struct AclEntry));
     assert(tlist);
     strcpy(tlist->name, aname);
     tlist->rights = arights;
@@ -572,7 +572,7 @@ EmptyAcl(char *astr)
     struct Acl *tp;
     int junk;
 
-    tp = (struct Acl *)malloc(sizeof(struct Acl));
+    tp = malloc(sizeof(struct Acl));
     assert(tp);
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
@@ -589,7 +589,7 @@ ParseAcl(char *astr)
     struct AclEntry *first, *last, *tl;
     struct Acl *ta;
 
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = malloc(sizeof(struct Acl));
     assert(ta);
     ta->dfs = 0;
     sscanf(astr, "%d dfs:%d %s", &ta->nplus, &ta->dfs, ta->cell);
@@ -605,7 +605,7 @@ ParseAcl(char *astr)
     for (i = 0; i < nplus; i++) {
 	sscanf(astr, "%100s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	assert(tl);
 	if (!first)
 	    first = tl;
@@ -623,7 +623,7 @@ ParseAcl(char *astr)
     for (i = 0; i < nminus; i++) {
 	sscanf(astr, "%100s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	assert(tl);
 	if (!first)
 	    first = tl;
