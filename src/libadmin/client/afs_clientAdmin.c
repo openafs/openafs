@@ -1824,7 +1824,7 @@ afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_admin_iterator_p iter =
 	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    server_get_p serv = (server_get_p) calloc(1, sizeof(server_get_t));
+    server_get_p serv = calloc(1, sizeof(server_get_t));
     server_get_p serv_cache = NULL;
     const char *cellName = NULL;
     void *database_iter;

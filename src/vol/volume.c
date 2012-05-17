@@ -8053,7 +8053,7 @@ GetVolumeHeader(Volume * vp)
     if (programType != fileServer) {
 	/* for volume utilities, we allocate volHeaders as needed */
 	if (!vp->header) {
-	    hd = (struct volHeader *)calloc(1, sizeof(*vp->header));
+	    hd = calloc(1, sizeof(*vp->header));
 	    osi_Assert(hd != NULL);
 	    vp->header = hd;
 	    hd->back = vp;
@@ -8077,7 +8077,7 @@ GetVolumeHeader(Volume * vp)
 	    if (!hd) {
 		/* LRU is empty, so allocate a new volHeader
 		 * this is probably indicative of a leak, so let the user know */
-		hd = (struct volHeader *)calloc(1, sizeof(struct volHeader));
+		hd = calloc(1, sizeof(struct volHeader));
 		osi_Assert(hd != NULL);
 		if (!everLogged) {
 		    Log("****Allocated more volume headers, probably leak****\n");

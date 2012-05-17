@@ -936,7 +936,7 @@ hasvfsopt(vfs, opt)
     if (vfs->vfs_mntopts == NULL)
 	return (NULL);
     if (tmpopts == 0) {
-	tmpopts = (char *)calloc(256, sizeof(char));
+	tmpopts = calloc(256, sizeof(char));
 	if (tmpopts == 0)
 	    return (0);
     }

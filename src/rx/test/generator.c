@@ -156,8 +156,7 @@ GetDescription(rpcArgs * argsP)
     char *bufP2;
     int i;
 
-    bufP2 =
-	(char *)calloc((MAX_TYP_STR + MAX_DIR_STR + ATTRIB_LEN * ATTRIB_NO)
+    bufP2 = calloc((MAX_TYP_STR + MAX_DIR_STR + ATTRIB_LEN * ATTRIB_NO)
 		       * argsP->argCount + 3, sizeof(char));
     MEM_CHK(bufP2, "GetDescription: out of mem bufP2\n");
 
@@ -312,8 +311,8 @@ GetRandP(char *typ, char **ret, char **ret2)
     double d, d1;
     short shI;
 
-    *ret = (char *)calloc(MAX_RAND_LENGTH + 1, sizeof(char));
-    *ret2 = (char *)calloc(MAX_RAND_LENGTH + 1, sizeof(char));
+    *ret = calloc(MAX_RAND_LENGTH + 1, sizeof(char));
+    *ret2 = calloc(MAX_RAND_LENGTH + 1, sizeof(char));
 
     if (strstr(typ, "char")) {
 	GetRandStr(1, ret2, &randI);

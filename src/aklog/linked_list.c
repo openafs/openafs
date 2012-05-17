@@ -57,7 +57,7 @@ ll_node *ll_add_node(linked_list *list, ll_end which_end)
 {
     ll_node *node = NULL;
 
-    if ((node = (ll_node *)calloc(1, sizeof(ll_node))) != NULL) {
+    if ((node = calloc(1, sizeof(ll_node))) != NULL) {
 	if (list->nelements == 0) {
 	    list->first = node;
 	    list->last = node;
@@ -156,8 +156,7 @@ int ll_string(linked_list *list, ll_s_action action, char *string)
 	if (!ll_string(list, ll_s_check, string)) {
 	    if ((cur_node = ll_add_node(list, ll_tail))) {
 		char *new_string;
-		if ((new_string = (char *)calloc(strlen(string) + 1,
-						sizeof(char)))) {
+		if ((new_string = calloc(strlen(string) + 1, sizeof(char)))) {
 		    strcpy(new_string, string);
 		    ll_add_data(cur_node, new_string);
 		}

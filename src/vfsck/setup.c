@@ -497,7 +497,7 @@ setup(dev)
 #else /* AFS_SUN5_ENV */
 #if     defined(AFS_HPUX110_ENV)
     size = fragroundup(&sblock, sblock.fs_cssize);
-    sblock.fs_csp = (struct csum *)calloc(1, (unsigned)size);
+    sblock.fs_csp = calloc(1, (unsigned)size);
     if ((bread
 	 (fsreadfd, (char *)sblock.fs_csp, fsbtodb(&sblock, sblock.fs_csaddr),
 	  size) != 0) && !asked) {
@@ -517,7 +517,7 @@ setup(dev)
 	    sblock.fs_cssize - i <
 	    sblock.fs_bsize ? sblock.fs_cssize - i : sblock.fs_bsize;
 #endif /* AFS_HPUX101_ENV */
-	sblock.fs_csp[j] = (struct csum *)calloc(1, (unsigned)size);
+	sblock.fs_csp[j] = calloc(1, (unsigned)size);
 	if (bread
 	    (fsreadfd, (char *)sblock.fs_csp[j],
 	     fsbtodb(&sblock, sblock.fs_csaddr + j * sblock.fs_frag),
@@ -574,7 +574,7 @@ setup(dev)
 	msgprintf("cannot alloc %d bytes for statemap\n", maxino + 1);
 	goto badsb;
     }
-    lncntp = (short *)calloc((unsigned)(maxino + 1), sizeof(short));
+    lncntp = calloc((unsigned)(maxino + 1), sizeof(short));
     if (lncntp == NULL) {
 	msgprintf("cannot alloc %d bytes for lncntp\n",
 		  (maxino + 1) * sizeof(short));

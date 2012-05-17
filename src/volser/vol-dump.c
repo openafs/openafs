@@ -103,7 +103,7 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
     vp->shuttingDown = 0;
     vp->goingOffline = 0;
     vp->nUsers = 1;
-    vp->header = (struct volHeader *)calloc(1, sizeof(*vp->header));
+    vp->header = calloc(1, sizeof(*vp->header));
     ec = ReadHdr1(V_diskDataHandle(vp), (char *)&V_disk(vp),
 		  sizeof(V_disk(vp)), VOLUMEINFOMAGIC, VOLUMEINFOVERSION);
     if (!ec) {

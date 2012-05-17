@@ -535,7 +535,7 @@ AttachVolume(struct DiskPartition64 * dp, char *volname,
     vp->shuttingDown = 0;
     vp->goingOffline = 0;
     vp->nUsers = 1;
-    vp->header = (struct volHeader *)calloc(1, sizeof(*vp->header));
+    vp->header = calloc(1, sizeof(*vp->header));
     if (!vp->header) {
 	fprintf(stderr, "%s: Failed to allocate volume header.\n", progname);
 	free(vp);

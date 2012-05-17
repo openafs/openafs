@@ -228,8 +228,7 @@ util_DatabaseServerGetBegin(const char *cellName, void **iterationIdP,
     afs_status_t tst = 0;
     afs_admin_iterator_p iter =
 	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    database_server_get_p serv =
-	(database_server_get_p) calloc(1, sizeof(database_server_get_t));
+    database_server_get_p serv = calloc(1, sizeof(database_server_get_t));
     char copyCell[MAXCELLCHARS];
 
     /*
