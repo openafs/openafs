@@ -569,7 +569,7 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 	    /* construct path relative to install directory only */
 	    pathSize += strlen(cpath);
 
-	    newPath = (char *)malloc(pathSize);
+	    newPath = malloc(pathSize);
 	    if (!newPath) {
 		status = ENOMEM;
 	    } else {
@@ -579,7 +579,7 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 	    /* construct path relative to 'relativeTo' (and install dir) */
 	    pathSize += strlen(relativeTo) + 1 + strlen(cpath);
 
-	    newPath = (char *)malloc(pathSize);
+	    newPath = malloc(pathSize);
 	    if (!newPath) {
 		status = ENOMEM;
 	    } else {

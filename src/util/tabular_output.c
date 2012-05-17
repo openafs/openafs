@@ -337,13 +337,12 @@ util_newCellContents(struct util_Table* Table) {
     char **CellContents=NULL;
     int i;
 
-    if ( (CellContents=(char **) malloc( sizeof(char *) * Table->numColumns))\
-          == NULL ) {
+    if ( (CellContents=malloc( sizeof(char *) * Table->numColumns))== NULL ) {
         fprintf(stderr,"Internal Error. Cannot allocate memory for new CellContents-array.\n");
         exit(EXIT_FAILURE);
     }
     for (i=0;i<Table->numColumns;i++) {
-        if ( (CellContents[i]=(char *) malloc(UTIL_T_MAX_CELLCONTENT_LEN)) == NULL)  {
+        if ( (CellContents[i]=malloc(UTIL_T_MAX_CELLCONTENT_LEN)) == NULL)  {
             fprintf(stderr,\
                     "Internal Error. Cannot allocate memory for new CellContents-array.\n");
             exit(EXIT_FAILURE);
@@ -417,7 +416,7 @@ struct util_TableRow*
 newTableRow(struct util_Table* Table) {
     struct util_TableRow *aRow =NULL;
 
-    if ( (aRow= (struct util_TableRow*) malloc(sizeof(struct util_TableRow))) == NULL) {
+    if ( (aRow = malloc(sizeof(struct util_TableRow))) == NULL) {
         fprintf(stderr,\
                 "Internal Error. Cannot allocate memory for new TableRow.\n");
         exit(EXIT_FAILURE);

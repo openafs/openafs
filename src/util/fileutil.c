@@ -102,7 +102,7 @@ BufioOpen(char *path, int oflag, int mode)
 {
     bufio_p bp;
 
-    bp = (bufio_p) malloc(sizeof(bufio_t));
+    bp = malloc(sizeof(bufio_t));
     if (bp == NULL) {
 	return NULL;
     }

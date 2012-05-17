@@ -1180,7 +1180,7 @@ afs_wq_node_alloc(struct afs_work_queue_node ** node_out)
     int ret = 0;
     struct afs_work_queue_node * node;
 
-    *node_out = node = (struct afs_work_queue_node *) malloc(sizeof(*node));
+    *node_out = node = malloc(sizeof(*node));
     if (node == NULL) {
 	ret = ENOMEM;
 	goto error;

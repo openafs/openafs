@@ -244,7 +244,7 @@ gettmpdir(void)
 
     if (saveTmpDir == NULL) {
 	/* initialize global temporary directory string */
-	char *dirp = (char *)malloc(MAX_PATH+1);
+	char *dirp = malloc(MAX_PATH+1);
 	int freeDirp = 1;
 
 	if (dirp != NULL) {
