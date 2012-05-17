@@ -421,7 +421,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     /*
      * Initialize the tape block buffers
      */
-    tapeblock1 = (char *)malloc(3 * 16384);
+    tapeblock1 = malloc(3 * 16384);
     if (tapeblock1 == NULL) {
 	printf("Failed to allocate I/O buffers.\n");
 	exit(1);

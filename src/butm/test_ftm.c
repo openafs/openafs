@@ -111,7 +111,7 @@ main(argc, argv)
     if (argc < 2)
 	goto usage;
 
-    files = (char **)malloc(argc * sizeof(char *));
+    files = malloc(argc * sizeof(char *));
     nFiles = 0;
     for (i = 1; i < argc; i++) {
 	if (argv[i][0] == '-') {
@@ -213,7 +213,7 @@ PerformDumpTest(TestInfo * tip)
     int i, past, code;
     struct timeval tp;
 
-    bufferBlock = (struct BufferBlock *)malloc(sizeof(struct BufferBlock));
+    bufferBlock = malloc(sizeof(struct BufferBlock));
 
     info.structVersion = BUTM_MAJORVERSION;
     if (code = butm_file_Instantiate(&info, tip->tc_Infop)) {

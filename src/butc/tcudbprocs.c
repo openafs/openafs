@@ -415,7 +415,7 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
     charList.charListT_val = 0;
     charList.charListT_len = 0;
     blockSize = BUTM_BLKSIZE;
-    writeBlock = (char *)malloc(BUTM_BLOCKSIZE);
+    writeBlock = malloc(BUTM_BLOCKSIZE);
     if (!writeBlock)
 	ERROR_EXIT(TC_NOMEMORY);
 
@@ -1408,7 +1408,7 @@ restoreText(struct butm_tapeInfo *tapeInfo,
     udbClientTextP ctPtr = 0;
     afs_int32 textType;
 
-    ctPtr = (udbClientTextP) malloc(sizeof(*ctPtr));
+    ctPtr = malloc(sizeof(*ctPtr));
     if (!ctPtr)
 	ERROR_EXIT(TC_NOMEMORY);
 
@@ -1444,7 +1444,7 @@ restoreText(struct butm_tapeInfo *tapeInfo,
 
     /* allocate buffer for text */
     readBlockSize = BUTM_BLKSIZE;
-    readBuffer = (char *)malloc(readBlockSize);
+    readBuffer = malloc(readBlockSize);
     if (!readBuffer)
 	ERROR_EXIT(TC_NOMEMORY);
 
@@ -1533,7 +1533,7 @@ getTapeData(struct butm_tapeInfo *tapeInfoPtr,
 	ERROR_EXIT(TC_ABORTEDBYREQUEST);
 
     if (!tapeReadBuffer) {
-	tapeReadBuffer = (char *)malloc(BUTM_BLOCKSIZE);
+	tapeReadBuffer = malloc(BUTM_BLOCKSIZE);
 	if (!tapeReadBuffer)
 	    ERROR_EXIT(TC_NOMEMORY);
     }

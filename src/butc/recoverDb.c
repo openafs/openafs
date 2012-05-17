@@ -168,7 +168,7 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
 
     memset(volumeHeader, 0, sizeof(struct volumeHeader));
 
-    block = (char *)malloc(2 * BUTM_BLOCKSIZE);
+    block = malloc(2 * BUTM_BLOCKSIZE);
     if (!block)
 	return (TC_NOMEMORY);
     buffer[0] = &block[sizeof(struct blockMark)];

@@ -118,7 +118,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 	charListPtr->charListT_val = NULL;
     } else {
 	charListPtr->charListT_len = transferSize;
-	charListPtr->charListT_val = (char *)malloc(transferSize);
+	charListPtr->charListT_val = malloc(transferSize);
 	if (charListPtr->charListT_val == 0)
 	    ABORT(BUDB_NOMEM);
     }
@@ -177,7 +177,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 
   no_xfer_abort:
     charListPtr->charListT_len = 0;
-    charListPtr->charListT_val = (char *)malloc(0);
+    charListPtr->charListT_val = malloc(0);
 
   abort_exit:
     if (ut)

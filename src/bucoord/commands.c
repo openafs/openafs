@@ -313,7 +313,7 @@ EvalVolumeSet2(struct bc_config *aconfig,
 			ERROR(BC_NOMEM);
 		    }
 
-		    tvd->name = (char *)malloc(strlen(entries[e].name) + 10);
+		    tvd->name = malloc(strlen(entries[e].name) + 10);
 		    if (!(tvd->name)) {
 			afs_com_err(whoami, BC_NOMEM, NULL);
 			free(tvd);
@@ -581,7 +581,7 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		    return (BC_NOMEM);
 		}
 
-		tvd->name = (char *)malloc(strlen(entry.name) + 10);
+		tvd->name = malloc(strlen(entry.name) + 10);
 		if (!(tvd->name)) {
 		    afs_com_err(whoami, BC_NOMEM, NULL);
 		    free(tvd);
@@ -759,7 +759,7 @@ concatParams(struct cmd_item *itemPtr)
 	return (NULL);
     }
 
-    string = (char *)malloc(length);	/* allocate the string */
+    string = malloc(length);	/* allocate the string */
     if (!string) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	return (NULL);
@@ -1186,7 +1186,7 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 	    return BC_NOMEM;
 	}
 
-	tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
+	tvol->name = malloc(VOLSER_MAXVOLNAME + 1);
 	if (!tvol->name) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1226,7 +1226,7 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[5].items) {
 	for (ti = as->parms[5].items; ti; ti = ti->next)
 	    portCount++;
-	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
+	ports = malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1356,7 +1356,7 @@ bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	for (ti = as->parms[2].items; ti; ti = ti->next)
 	    portCount++;
-	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
+	ports = malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1525,7 +1525,7 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 	    /* Allocate a volumeDump structure and link it in */
 	    tvol = calloc(1, sizeof(struct bc_volumeDump));
 
-	    tvol->name = (char *)malloc(VOLSER_MAXVOLNAME + 1);
+	    tvol->name = malloc(VOLSER_MAXVOLNAME + 1);
 	    if (!tvol->name) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
@@ -1551,7 +1551,7 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	for (ti = as->parms[2].items; ti; ti = ti->next)
 	    portCount++;
-	ports = (afs_int32 *) malloc(portCount * sizeof(afs_int32));
+	ports = malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
 	    return BC_NOMEM;
@@ -1706,7 +1706,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 
 	/* get the port number, if one was specified */
 	if (as->parms[2].items) {
-	    portp = (afs_int32 *) malloc(sizeof(afs_int32));
+	    portp = malloc(sizeof(afs_int32));
 	    if (!portp) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;
@@ -1787,7 +1787,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	    sprintf(statusPtr->taskName, "Scheduled Dump");
 	    statusPtr->jobNumber = bc_jobNumber();
 	    statusPtr->scheduledDump = atTime;
-	    statusPtr->cmdLine = (char *)malloc(length);
+	    statusPtr->cmdLine = malloc(length);
 	    if (!statusPtr->cmdLine) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
 		return BC_NOMEM;

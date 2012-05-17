@@ -42,8 +42,8 @@ threadEntryDir(void *anEntry, afs_int32 size, afs_int32 type)
     int tried;
 
     for (tried = 0; tried < 5; tried++) {
-	entryPtr = (dlqlinkP) malloc(sizeof(dlqlinkT));
-	entry = (char *)malloc(size);
+	entryPtr = malloc(sizeof(dlqlinkT));
+	entry = malloc(size);
 	if (entryPtr && entry)
 	    break;
 
@@ -86,7 +86,7 @@ threadEntry(void *anEntry, afs_int32 size, afs_int32 type)
 
     for (tried = 0; tried < 5; tried++) {
 	entryPtr = (dlqlinkP) malloc(sizeof(dlqlinkT));
-	entry = (char *)malloc(size);
+	entry = malloc(size);
 	if (entryPtr && entry)
 	    break;
 

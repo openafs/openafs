@@ -185,14 +185,13 @@ bc_Restorer(afs_int32 aindex)
     time_t did;
     int foundtape, c;
 
-    dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
+    dlevels = malloc(num_dlevels * sizeof(*dlevels));
 
     dumpTaskPtr = &bc_dumpTasks[aindex];
     serverAll = HOSTADDR(&dumpTaskPtr->destServer);
     partitionAll = dumpTaskPtr->destPartition;
 
-    volumeEntries = (struct budb_volumeEntry *)
-	malloc(MAXTAPESATONCE * sizeof(struct budb_volumeEntry));
+    volumeEntries = malloc(MAXTAPESATONCE * sizeof(struct budb_volumeEntry));
     if (!volumeEntries) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);
@@ -332,7 +331,7 @@ bc_Restorer(afs_int32 aindex)
 		struct dumpinfo *tdl = dlevels;
 
 		num_dlevels += num_dlevels;	/* double */
-		dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
+		dlevels = malloc(num_dlevels * sizeof(*dlevels));
 		memcpy(dlevels, tdl, (num_dlevels/2) * sizeof(*dlevels));
 		free(tdl);
 	    }

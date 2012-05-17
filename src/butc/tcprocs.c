@@ -146,7 +146,7 @@ STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
 
-    ptr = (struct labelTapeIf *)malloc(sizeof(*ptr));
+    ptr = malloc(sizeof(*ptr));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
     memcpy(&ptr->label, label, sizeof(ptr->label));
@@ -231,9 +231,8 @@ STC_PerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr, tc_d
 
     CopyTapeSetDesc(&(newNode->tapeSetDesc), &tcdiPtr->tapeSet);
 
-    newNode->dumps = (struct tc_dumpDesc *)
-	malloc(sizeof(struct tc_dumpDesc) *
-	       tc_dumpArrayPtr->tc_dumpArray_len);
+    newNode->dumps = malloc(sizeof(struct tc_dumpDesc) *
+			    tc_dumpArrayPtr->tc_dumpArray_len);
     newNode->arraySize = tc_dumpArrayPtr->tc_dumpArray_len;
     CopyDumpDesc(newNode->dumps, tc_dumpArrayPtr);
 
@@ -314,9 +313,8 @@ STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *are
     /* this creates a node in list, alots an id for it and prepares it for locking */
     CreateNode(&newNode);
 
-    newNode->restores = (struct tc_restoreDesc *)
-	malloc(sizeof(struct tc_restoreDesc) *
-	       arestores->tc_restoreArray_len);
+    newNode->restores = malloc(sizeof(struct tc_restoreDesc) *
+		               arestores->tc_restoreArray_len);
     newNode->arraySize = arestores->tc_restoreArray_len;
     CopyRestoreDesc(newNode->restores, arestores);
     *taskID = newNode->taskID;
@@ -477,7 +475,7 @@ STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
 
     *taskId = allocTaskId();
 
-    ptr = (struct saveDbIf *)malloc(sizeof(struct saveDbIf));
+    ptr = malloc(sizeof(struct saveDbIf));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
     ptr->archiveTime = archiveTime;
@@ -556,7 +554,7 @@ STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
 
     *taskId = allocTaskId();
 
-    ptr = (struct scanTapeIf *)malloc(sizeof(*ptr));
+    ptr = malloc(sizeof(*ptr));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
     ptr->addDbFlag = addDbFlag;
@@ -644,7 +642,7 @@ STC_DeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
 
-    ptr = (struct deleteDumpIf *)malloc(sizeof(*ptr));
+    ptr = malloc(sizeof(*ptr));
     if (!ptr)
 	ERROR_EXIT(TC_NOMEMORY);
 

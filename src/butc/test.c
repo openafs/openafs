@@ -103,8 +103,7 @@ PerformDump(struct cmd_syndesc *as, void *arock)
     strcpy(ttapeSet.format, "tapeName%u");
     strcpy(ttapeSet.tapeServer, "diskTapes");
     tdumps.tc_dumpArray_val =
-	(struct tc_dumpDesc
-	 *)(malloc(tdumps.tc_dumpArray_len * sizeof(struct tc_dumpDesc)));
+	malloc(tdumps.tc_dumpArray_len * sizeof(struct tc_dumpDesc));
     ptr = tdumps.tc_dumpArray_val;
     for (i = 0; i < tdumps.tc_dumpArray_len; i++) {
 	fscanf(fp, "%s\n", ptr->name);
@@ -146,9 +145,9 @@ PerformRestore(struct cmd_syndesc *as, void *arock)
     strcpy(tdumpSetName, "Test");
     fp = fopen("restoreScr", "r");
     fscanf(fp, "%u\n", &trestores.tc_restoreArray_len);
-    trestores.tc_restoreArray_val =
-	(struct tc_restoreDesc *)malloc(trestores.tc_restoreArray_len *
-					sizeof(struct tc_restoreDesc));
+    trestores.tc_restoreArray_val
+	= malloc(trestores.tc_restoreArray_len *
+		 sizeof(struct tc_restoreDesc));
     ptr = trestores.tc_restoreArray_val;
     for (i = 0; i < trestores.tc_restoreArray_len; i++) {
 	fscanf(fp, "%s\n", ptr->oldName);

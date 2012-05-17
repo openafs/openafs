@@ -175,7 +175,7 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
     b = mht->blocks = calloc(1, mht->size);
 
     for (i = 0; i < nb; i++) {
-	b[i] = (struct memoryHTBlock *)malloc(sizeof(struct memoryHTBlock));
+	b[i] = malloc(sizeof(struct memoryHTBlock));
 	code = AllocBlock(ut, (struct block *)&b[i]->b, &b[i]->a);
 	if (code)
 	    return code;
@@ -302,8 +302,7 @@ ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht,
 		    db_panic("non-zero length, but no table");
 	    }
 	    /* else ta is set from last time around loop */
-	    b[i] =
-		(struct memoryHTBlock *)malloc(sizeof(struct memoryHTBlock));
+	    b[i] = malloc(sizeof(struct memoryHTBlock));
 	    b[i]->a = ta;
 	    b[i]->valid = 0;
 	}

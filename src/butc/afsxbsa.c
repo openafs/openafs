@@ -1271,7 +1271,7 @@ BSA_Int16 BSAGetEnvironment(
    for (i=0; i< ADSM_ENV_STRS; i++) {
      if ( *envP == NULL ) {  /* watch for NULL pointers */
        /* Allocating memory for *envP.*/
-       *envP = (char *) malloc(sizeof(char) * BSA_MAX_DESC +1);
+       *envP = malloc(sizeof(char) * BSA_MAX_DESC +1);
 
        /* copy the content of envString[i] to *envP. */
         strcpy(*envP,envString[i]);

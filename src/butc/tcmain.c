@@ -1060,8 +1060,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     /*initialize the dumpNode list */
     InitNodeList(portOffset);
 
-    deviceLatch =
-	(struct deviceSyncNode *)(malloc(sizeof(struct deviceSyncNode)));
+    deviceLatch = malloc(sizeof(struct deviceSyncNode));
     Lock_Init(&(deviceLatch->lock));
     deviceLatch->flags = 0;
 
@@ -1208,11 +1207,11 @@ main(int argc, char **argv)
     if (argc == 1) {
 	ts = calloc(1, sizeof(struct cmd_syndesc));
 
-	ti = (struct cmd_item *)malloc(sizeof(struct cmd_item));
+	ti = malloc(sizeof(struct cmd_item));
 	ti->next = 0;
 	ti->data = "0";
 	ts->parms[0].items = ti;
-	ti = (struct cmd_item *)malloc(sizeof(struct cmd_item));
+	ti = malloc(sizeof(struct cmd_item));
 	ti->next = 0;
 	ti->data = "0";
 	ts->parms[1].items = ti;

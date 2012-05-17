@@ -219,7 +219,7 @@ DumpDB(struct rx_call *call,
 	ObtainWriteLock(&dumpSyncPtr->ds_lock);
     }
 
-    charListPtr->charListT_val = (char *)malloc(maxLength);
+    charListPtr->charListT_val = malloc(maxLength);
     readSize =
 	read(dumpSyncPtr->pipeFid[0], charListPtr->charListT_val, maxLength);
 

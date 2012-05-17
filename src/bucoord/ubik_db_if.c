@@ -489,7 +489,7 @@ bcdb_GetTextFile(udbClientTextP ctPtr)
 
     /* allocate a buffer */
     bufferSize = 1024;
-    charList.charListT_val = (char *)malloc(bufferSize);
+    charList.charListT_val = malloc(bufferSize);
     if (charList.charListT_val == 0)
 	ERROR(BUDB_INTERNALERROR);
     charList.charListT_len = bufferSize;
@@ -558,7 +558,7 @@ bcdb_SaveTextFile(udbClientTextP ctPtr)
 
     /* allocate a buffer */
     bufferSize = 1024;
-    charList.charListT_val = (char *)malloc(bufferSize);
+    charList.charListT_val = malloc(bufferSize);
     if (charList.charListT_val == 0)
 	ERROR(BUDB_INTERNALERROR);
     charList.charListT_len = bufferSize;

@@ -365,7 +365,7 @@ AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
     if (list->nElements >= list->allocSize) {
 	if (list->elements == 0) {
 	    size = 10;
-	    tmp = (char *)malloc(sizeof(dbadr) * size);
+	    tmp = malloc(sizeof(dbadr) * size);
 	} else {
 	    size = list->allocSize + 10;
 	    tmp = realloc(list->elements, sizeof(dbadr) * size);
@@ -939,8 +939,7 @@ deleteDump(struct rx_call *call, dumpId id, budb_dumpsList *dumps)
 	/* Record the dump just deleted */
 	if (dumps && (dumps->budb_dumpsList_len < BUDB_MAX_RETURN_LIST)) {
 	    if (dumps->budb_dumpsList_len == 0)
-		dumps->budb_dumpsList_val =
-		    (afs_int32 *) malloc(sizeof(afs_int32));
+		dumps->budb_dumpsList_val = malloc(sizeof(afs_int32));
 	    else
 		dumps->budb_dumpsList_val =
 		    realloc(dumps->budb_dumpsList_val,
@@ -1630,11 +1629,9 @@ ListDumps(struct rx_call *call, afs_int32 sflags, afs_int32 groupid,
 			count += 10;
 			if (count == 10) {
 			    dumps->budb_dumpsList_val =
-				(afs_int32 *) malloc(count *
-						     sizeof(afs_int32));
+				malloc(count * sizeof(afs_int32));
 			    flags->budb_dumpsList_val =
-				(afs_int32 *) malloc(count *
-						     sizeof(afs_int32));
+				malloc(count * sizeof(afs_int32));
 			} else {
 			    dumps->budb_dumpsList_val =
 				realloc(dumps->budb_dumpsList_val,

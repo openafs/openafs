@@ -1052,7 +1052,7 @@ file_Mount(struct butm_tapeInfo *info, char *tape)
 
     (void)PrepareAccess(fid);	/* for NT */
 
-    p = (struct progress *)malloc(sizeof(*p));
+    p = malloc(sizeof(*p));
     info->tmRock = (char *)p;
     p->fid = fid;
     p->mountId = config.mountId = time(0);

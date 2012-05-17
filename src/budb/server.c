@@ -285,7 +285,7 @@ parseServerList(struct cmd_item *itemPtr)
     LogDebug(3, "%d servers\n", nservers);
 
     /* now can allocate the space for the server arguments */
-    serverArgs = (char **)malloc((nservers + 2) * sizeof(char *));
+    serverArgs = malloc((nservers + 2) * sizeof(char *));
     if (serverArgs == 0)
 	ERROR(-1);
 

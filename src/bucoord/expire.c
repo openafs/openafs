@@ -418,7 +418,7 @@ bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType,
     if (length == 0)		/* no actual date string */
 	FAIL(1);
 
-    dateString = (char *)malloc(length);
+    dateString = malloc(length);
     if (dateString == 0)
 	FAIL(2);
 
