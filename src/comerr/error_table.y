@@ -152,7 +152,7 @@ char *gensym(const char *x)
 		gettimeofday(&tv, (void *)0);
 		gensym_n = (tv.tv_sec%10000)*100 + tv.tv_usec/10000;
 	}
-	symbol = (char *)malloc(32 * sizeof(char));
+	symbol = malloc(32 * sizeof(char));
 	gensym_n++;
 	sprintf(symbol, "et%ld", (long int) gensym_n);
 	return(symbol);
@@ -186,7 +186,7 @@ void add_ec(const char *name, const char *description)
 	    fprintf(cfile, "\t\"%s\",\n", description);
 	}
 	if (error_codes == (char **)NULL) {
-		error_codes = (char **)malloc(sizeof(char *));
+		error_codes = malloc(sizeof(char *));
 		*error_codes = (char *)NULL;
 	}
 	error_codes = (char **)realloc((char *)error_codes,
@@ -220,7 +220,7 @@ void add_ec_val(const char *name, const char *val, const char *description)
 	    fprintf(cfile, "\t\"%s\",\n", description);
 	}
 	if (error_codes == (char **)NULL) {
-		error_codes = (char **)malloc(sizeof(char *));
+		error_codes = malloc(sizeof(char *));
 		*error_codes = (char *)NULL;
 	}
 	error_codes = (char **)realloc((char *)error_codes,

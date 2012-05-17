@@ -162,8 +162,8 @@ parse_options(int argc, char **argv)
 	    else
 		vnum_count++;
 	}
-	file_names = (char **)malloc(name_count + sizeof(char *));
-	file_vnums = (afs_int32 *) malloc(vnum_count + sizeof(afs_uint32));
+	file_names = malloc(name_count + sizeof(char *));
+	file_vnums = malloc(vnum_count + sizeof(afs_uint32));
 	if (name_count)
 	    use_realpath = 1;
 
@@ -484,7 +484,7 @@ symlink_cb(afs_vnode * v, XFILE * X, void *refcon)
 	vnodepath = vnpx;
     }
 
-    if (!(linktarget = (char *)malloc(v->size + 1))) {
+    if (!(linktarget = malloc(v->size + 1))) {
 	if (!use_vnum && use != 2)
 	    free(vnodepath);
 	return DSERR_MEM;

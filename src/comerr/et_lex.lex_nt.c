@@ -1520,7 +1520,7 @@ static void *yy_flex_alloc( size )
 yy_size_t size;
 #endif
 	{
-	return (void *) malloc( size );
+	return malloc( size );
 	}
 
 #ifdef YY_USE_PROTOS

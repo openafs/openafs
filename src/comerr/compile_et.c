@@ -43,7 +43,7 @@ extern int yylineno;
 char *
 xmalloc(unsigned int size)
 {
-    char *p = (char *)malloc(size);
+    char *p = malloc(size);
     if (!p) {
 	perror(whoami);
 	exit(1);

@@ -810,7 +810,7 @@ yyparse(YYPARSE_PARAM)
 		 x < (sizeof(yytname) / sizeof(char *)); x++)
 		if (yycheck[x + yyn] == x)
 		    size += strlen(yytname[x]) + 15, count++;
-	    msg = (char *)malloc(size + 15);
+	    msg = malloc(size + 15);
 	    if (msg != 0) {
 		strcpy(msg, "parse error");
 
@@ -968,7 +968,7 @@ gensym(const char *x)
 	gettimeofday(&tv, NULL);
 	gensym_n = (tv.tv_sec % 10000) * 100 + tv.tv_usec / 10000;
     }
-    symbol = (char *)malloc(32 * sizeof(char));
+    symbol = malloc(32 * sizeof(char));
     gensym_n++;
     sprintf(symbol, "et%ld", gensym_n);
     return (symbol);
@@ -1003,7 +1003,7 @@ add_ec(const char *name, const char *description)
 	fprintf(cfile, "\t\"%s\",\n", description);
     }
     if (error_codes == (char **)NULL) {
-	error_codes = (char **)malloc(sizeof(char *));
+	error_codes = malloc(sizeof(char *));
 	*error_codes = (char *)NULL;
     }
     error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
@@ -1036,7 +1036,7 @@ add_ec_val(const char *name, const char *val, const char *description)
 	fprintf(cfile, "\t\"%s\",\n", description);
     }
     if (error_codes == (char **)NULL) {
-	error_codes = (char **)malloc(sizeof(char *));
+	error_codes = malloc(sizeof(char *));
 	*error_codes = (char *)NULL;
     }
     error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
