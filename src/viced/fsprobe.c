@@ -275,7 +275,6 @@ FetchData(char **argp)
 static afs_int32
 FetchProc(struct rx_call *acall)
 {
-    extern char *malloc();
     char *tbuffer;
     afs_int32 tlen, length, code;
 
@@ -834,7 +833,6 @@ Readdir(char **argp)
 static afs_int32
 FetchDir(struct rx_call *acall)
 {
-    extern char *malloc();
     char *tbuffer;
     afs_int32 tlen, length, code;
     struct dirent *dp;

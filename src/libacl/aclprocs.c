@@ -92,8 +92,7 @@ acl_NewACL(int nEntries, struct acl_accessList **acl)
     t = sizeof(struct acl_accessList) + (nEntries -
 					 1) * sizeof(struct acl_accessEntry);
     if (GetFromList(&freeList, &e, t) < 0) {
-	e = (struct freeListEntry *)malloc(t + sizeof(int) +
-					   sizeof(struct freeListEntry *));
+	e = malloc(t + sizeof(int) + sizeof(struct freeListEntry *));
 	if (e == NULL) {
 	    perror("acl_NewACL: malloc() failed");
 	    abort();
@@ -136,8 +135,7 @@ acl_NewExternalACL(int nEntries, char **r)
      * name plus decimal 2**32 (for largest rights mask) plus some formatting */
 
     if (GetFromList(&freeList, &e, t)) {
-	e = (struct freeListEntry *)malloc(t + sizeof(int) +
-					   sizeof(struct freeListEntry *));
+	e = malloc(t + sizeof(int) + sizeof(struct freeListEntry *));
 	if (e == NULL) {
 	    perror("acl_NewExternalACL(): malloc() failed");
 	    abort();
@@ -255,8 +253,7 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 	return 0;
     }
     lnames.namelist_len = (*acl)->total;
-    lnames.namelist_val =
-	(prname *) malloc(lnames.namelist_len * PR_MAXNAMELEN);
+    lnames.namelist_val = malloc(lnames.namelist_len * PR_MAXNAMELEN);
     if (lnames.namelist_val == 0) {
 	return -1;
     }

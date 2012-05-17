@@ -715,8 +715,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 		if (n_renames >= n_avail) {
 		    n_avail += N_RENAME_STEP;
 		    if (n_avail == N_RENAME_STEP)
-			renames = (xfs_Rename_t *)
-			    malloc(n_avail * sizeof(xfs_Rename_t));
+			renames = malloc(n_avail * sizeof(xfs_Rename_t));
 		    else
 			renames = realloc(renames,
 				          n_avail * sizeof(xfs_Rename_t));
@@ -1018,7 +1017,7 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 #else
     bufsize = super.fs.fs_ipg * sizeof(struct dinode);
 #endif /* AFS_HPUX_ENV */
-    inodes = (struct dinode *)malloc(bufsize);
+    inodes = malloc(bufsize);
     einodes = (struct dinode *)(((char *)inodes) + bufsize);
     if (inodes == NULL) {
 	Log("Unable to allocate enough memory to scan inodes; help!\n");

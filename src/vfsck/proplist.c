@@ -166,8 +166,7 @@ proplist_blkscan(dp, idesc, entry_list)
 		valueresid = 0;
 	    }
 	    if (valueresid == 0) {
-		entry = (struct prop_entry_desc *)
-		    malloc(sizeof(struct prop_entry_desc));
+		entry = malloc(sizeof(struct prop_entry_desc));
 		if (entry == NULL)
 		    return (SKIP);
 		entry->next = NULL;

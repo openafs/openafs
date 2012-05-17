@@ -537,7 +537,7 @@ ReadVNode(afs_int32 count)
 
 
 		buffer = NULL;
-		buffer = (char *)malloc(vn.dataSize);
+		buffer = malloc(vn.dataSize);
 
 		readdata(buffer, vn.dataSize);
 		page0 = (struct Page0 *)buffer;

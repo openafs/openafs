@@ -1268,7 +1268,7 @@ dump_he_interfaces(void)
 	return;
 
     len = sizeof(struct Interface) + ((he_cursor.hdr.interfaces-1)*sizeof(struct AddrPort));
-    ifp = (struct Interface *) malloc(len);
+    ifp = malloc(len);
     assert(ifp != NULL);
 
     memcpy(ifp, he_cursor.ifp, len);
@@ -1304,7 +1304,7 @@ dump_he_hcps(void)
 	return;
 
     len = (he_cursor.hdr.hcps)*sizeof(afs_uint32);
-    hcps = (afs_int32 *) malloc(len);
+    hcps = malloc(len);
     assert(hcps != NULL);
     memcpy(hcps, he_cursor.hcps, len);
 

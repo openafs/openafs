@@ -194,7 +194,7 @@ bufinit()
     if (bufcnt < MINBUFS)
 	bufcnt = MINBUFS;
     for (i = 0; i < bufcnt; i++) {
-	bp = (struct bufarea *)malloc(sizeof(struct bufarea));
+	bp = malloc(sizeof(struct bufarea));
 	bufp = malloc((unsigned int)sblock.fs_bsize);
 	if (bp == NULL || bufp == NULL) {
 	    if (i >= MINBUFS)

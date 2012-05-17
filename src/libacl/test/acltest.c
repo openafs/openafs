@@ -172,7 +172,7 @@ main()
 	    if (externalstore[which] != NULL) {
 		/* we're adding to access list */
 		size = strlen(externalstore[which]);
-		ptr = (char *)malloc(size);
+		ptr = malloc(size);
 		sscanf(externalstore[which], "%d\n%d\n", &p, &n);
 		strncpy(ptr, externalstore[which], size);
 		p++;
@@ -235,7 +235,7 @@ main()
 		continue;
 	    }
 	    names.namelist_len = 1;
-	    names.namelist_val = (prname *) malloc(strlen(name) + 1);
+	    names.namelist_val = malloc(strlen(name) + 1);
 	    strncpy(names.namelist_val, name, PR_MAXNAMELEN);
 	    code = pr_NameToId(&names, &ids);
 	    if (code) {

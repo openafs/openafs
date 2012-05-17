@@ -411,8 +411,7 @@ SAFSVolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition
 		     *partition)
 {
     afs_int32 code;
-    struct diskPartition64 *dp = (struct diskPartition64 *)
-	malloc(sizeof(struct diskPartition64));
+    struct diskPartition64 *dp = malloc(sizeof(struct diskPartition64));
 
     code = VolPartitionInfo(acid, pname, dp);
     if (!code) {
@@ -1361,8 +1360,7 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
     if (results) {
 	memset(results, 0, sizeof(manyResults));
 	i = results->manyResults_len = destinations->manyDests_len;
-	results->manyResults_val = codes =
-	  (afs_int32 *) malloc(i * sizeof(afs_int32));
+	results->manyResults_val = codes = malloc(i * sizeof(afs_int32));
     }
     if (!results || !results->manyResults_val)
 	return ENOMEM;
@@ -1383,12 +1381,11 @@ SAFSVolForwardMultiple(struct rx_call *acid, afs_int32 fromTrans, afs_int32
     /* (fromDate == 0) ==> full dump */
     is_incremental = (fromDate ? 1 : 0);
 
-    tcons =
-	(struct rx_connection **)malloc(i * sizeof(struct rx_connection *));
+    tcons = malloc(i * sizeof(struct rx_connection *));
     if (!tcons) {
 	return ENOMEM;
     }
-    tcalls = (struct rx_call **)malloc(i * sizeof(struct rx_call *));
+    tcalls = malloc(i * sizeof(struct rx_call *));
     if (!tcalls) {
 	free(tcons);
 	return ENOMEM;
@@ -1772,7 +1769,7 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
     int len;
 
     /* We need to at least fill it in */
-    *aname = (char *)malloc(1);
+    *aname = malloc(1);
     if (!*aname)
 	return ENOMEM;
     tt = FindTrans(atrans);
@@ -1891,7 +1888,7 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 	    partList.partId[j++] = i;
     }
     if (j > 0) {
-	pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
+	pEntries->partEntries_val = malloc(j * sizeof(int));
 	if (!pEntries->partEntries_val)
 	    return ENOMEM;
 	memcpy((char *)pEntries->partEntries_val, (char *)&partList,
@@ -2805,7 +2802,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
     struct volser_trans *tt, *nt, *allTrans;
 
     transInfo->transDebugEntries_val =
-	(transDebugInfo *) malloc(allocSize * sizeof(transDebugInfo));
+	malloc(allocSize * sizeof(transDebugInfo));
     if (!transInfo->transDebugEntries_val)
 	return ENOMEM;
     pntr = transInfo->transDebugEntries_val;

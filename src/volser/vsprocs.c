@@ -646,8 +646,7 @@ UV_PartitionInfo64(afs_uint32 server, char *pname,
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolPartitionInfo64(aconn, pname, partition);
     if (code == RXGEN_OPCODE) {
-	struct diskPartition *dpp =
-	    (struct diskPartition *)malloc(sizeof(struct diskPartition));
+	struct diskPartition *dpp = malloc(sizeof(struct diskPartition));
 	code = AFSVolPartitionInfo(aconn, pname, dpp);
 	if (!code) {
 	    strncpy(partition->name, dpp->name, 32);

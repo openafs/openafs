@@ -1258,7 +1258,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FD_t inodeFile, VolumeId singleVolume
 	    deleted = 1;
 	    goto error;
 	}
-	ip = (struct ViceInodeInfo *)malloc(nInodes*sizeof(struct ViceInodeInfo));
+	ip = malloc(nInodes*sizeof(struct ViceInodeInfo));
 	if (ip == NULL) {
 	    OS_CLOSE(summaryFile);
 	    Abort
@@ -1313,7 +1313,7 @@ GetInodeSummary(struct SalvInfo *salvinfo, FD_t inodeFile, VolumeId singleVolume
     osi_Assert(st_size >= 0);
     if (st_size != 0) {
 	int ret;
-	salvinfo->inodeSummary = (struct InodeSummary *)malloc(st_size);
+	salvinfo->inodeSummary = malloc(st_size);
 	osi_Assert(salvinfo->inodeSummary != NULL);
 	/* For GNU we need to do lseek to get the file pointer moved. */
 	osi_Assert(OS_SEEK(summaryFile, 0, SEEK_SET) == 0);
@@ -1933,7 +1933,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
     for (i = 0, totalInodes = 0; i < nVols; i++)
 	totalInodes += isp[i].nInodes;
     size = totalInodes * sizeof(struct ViceInodeInfo);
-    inodes = (struct ViceInodeInfo *)malloc(size);
+    inodes = malloc(size);
     allInodes = inodes - isp->index;	/* this would the base of all the inodes
 					 * for the partition, if all the inodes
 					 * had been read into memory */
@@ -4614,7 +4614,7 @@ PrintInodeList(struct SalvInfo *salvinfo)
 
     st_size = OS_SIZE(salvinfo->inodeFd);
     osi_Assert(st_size >= 0);
-    buf = (struct ViceInodeInfo *)malloc(st_size);
+    buf = malloc(st_size);
     osi_Assert(buf != NULL);
     nInodes = st_size / sizeof(struct ViceInodeInfo);
     osi_Assert(OS_READ(salvinfo->inodeFd, buf, st_size) == st_size);

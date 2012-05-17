@@ -1528,7 +1528,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	}
 	FillInt64(filesize, filesize_high, filesize_low);
     }
-    p = (unsigned char *)malloc(size);
+    p = malloc(size);
     if (p == NULL) {
 	*status = 2;
 	return (0);

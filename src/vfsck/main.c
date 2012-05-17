@@ -558,7 +558,7 @@ finddisk(name)
 	if (strncmp(dk->name, name, len) == 0 && dk->name[len] == 0)
 	    return (dk);
     }
-    if ((*dkp = (struct disk *)malloc(sizeof(struct disk))) == NULL)
+    if ((*dkp = malloc(sizeof(struct disk))) == NULL)
 	errexit("out of memory");
     dk = *dkp;
     if ((dk->name = strdup(name)) == NULL)
@@ -581,7 +581,7 @@ addpart(name, fsname)
 	    printf("%s in fstab more than once!\n", name);
 	    return;
 	}
-    if ((*ppt = (struct part *)malloc(sizeof(struct part))) == NULL)
+    if ((*ppt = malloc(sizeof(struct part))) == NULL)
 	errexit("out of memory");
     pt = *ppt;
     if ((pt->name = strdup(name)) == NULL)

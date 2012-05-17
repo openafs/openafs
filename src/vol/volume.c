@@ -708,7 +708,7 @@ VInitAttachVolumes(ProgramType pt)
 
 	/* create partition work queue */
 	for (parts=0, diskP = DiskPartitionList; diskP; diskP = diskP->next, parts++) {
-	    dpq = (diskpartition_queue_t *) malloc(sizeof(struct diskpartition_queue_t));
+	    dpq = malloc(sizeof(struct diskpartition_queue_t));
 	    osi_Assert(dpq != NULL);
 	    dpq->diskP = diskP;
 	    queue_Append(&params,dpq);
@@ -830,7 +830,7 @@ VInitAttachVolumes(ProgramType pt)
 	MUTEX_INIT(&(pq.mutex), "partq", MUTEX_DEFAULT, 0);
 	for (parts = 0, diskP = DiskPartitionList; diskP; diskP = diskP->next, parts++) {
 	    struct diskpartition_queue_t *dp;
-	    dp = (struct diskpartition_queue_t*)malloc(sizeof(struct diskpartition_queue_t));
+	    dp = malloc(sizeof(struct diskpartition_queue_t));
 	    osi_Assert(dp != NULL);
 	    dp->diskP = diskP;
 	    queue_Append(&pq, dp);
@@ -856,7 +856,7 @@ VInitAttachVolumes(ProgramType pt)
 	    struct vinitvolumepackage_thread_param *params;
             AFS_SIGSET_DECL;
 
-            params = (struct vinitvolumepackage_thread_param *)malloc(sizeof(struct vinitvolumepackage_thread_param));
+            params = malloc(sizeof(struct vinitvolumepackage_thread_param));
             osi_Assert(params);
             params->pq = &pq;
             params->vq = &vq;
@@ -907,7 +907,7 @@ VInitVolumePackageThread(void *args)
     osi_Assert(pq);
     osi_Assert(vq);
 
-    vb = (struct volume_init_batch*)malloc(sizeof(struct volume_init_batch));
+    vb = malloc(sizeof(struct volume_init_batch));
     osi_Assert(vb);
     vb->thread = params->thread;
     vb->last = 0;
@@ -941,7 +941,7 @@ VInitVolumePackageThread(void *args)
 		CV_BROADCAST(&vq->cv);
 		MUTEX_EXIT(&vq->mutex);
 
-                vb = (struct volume_init_batch*)malloc(sizeof(struct volume_init_batch));
+                vb = malloc(sizeof(struct volume_init_batch));
                 osi_Assert(vb);
                 vb->thread = params->thread;
                 vb->size = 0;
@@ -1246,7 +1246,7 @@ VShutdown_r(void)
 
 
 	    /* build up the pass 0 shutdown work queue */
-	    dpq = (struct diskpartition_queue_t *) malloc(sizeof(struct diskpartition_queue_t));
+	    dpq = malloc(sizeof(struct diskpartition_queue_t));
 	    osi_Assert(dpq != NULL);
 	    dpq->diskP = diskP;
 	    queue_Prepend(&params, dpq);
@@ -5254,7 +5254,7 @@ VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
     FSSYNC_VolOp_info * info;
 
     /* attach a vol op info node to the volume struct */
-    info = (FSSYNC_VolOp_info *) malloc(sizeof(FSSYNC_VolOp_info));
+    info = malloc(sizeof(FSSYNC_VolOp_info));
     osi_Assert(info != NULL);
     memcpy(info, vopinfo, sizeof(FSSYNC_VolOp_info));
     vp->pending_vol_op = info;
@@ -6420,7 +6420,7 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
     osi_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r");
     osi_Assert(file != NULL);
-    vnode = (VnodeDiskObject *) malloc(vcp->diskSize);
+    vnode = malloc(vcp->diskSize);
     osi_Assert(vnode != NULL);
     size = OS_SIZE(fdP->fd_fd);
     osi_Assert(size != -1);
@@ -6821,7 +6821,7 @@ VAddToVolumeUpdateList_r(Error * ec, Volume * vp)
 	return;
     if (UpdateList == NULL) {
 	updateSize = UPDATE_LIST_SIZE;
-	UpdateList = (VolumeId *) malloc(sizeof(VolumeId) * updateSize);
+	UpdateList = malloc(sizeof(VolumeId) * updateSize);
     } else {
 	if (nUpdatedVolumes == updateSize) {
 	    updateSize <<= 1;
@@ -7603,7 +7603,7 @@ VLRU_Demote_r(int idx)
 
     /* no big deal if this allocation fails */
     if (volume_LRU.q[idx].len) {
-	salv_flag_vec = (Volume **) malloc(volume_LRU.q[idx].len * sizeof(Volume *));
+	salv_flag_vec = malloc(volume_LRU.q[idx].len * sizeof(Volume *));
     }
 
     now = FT_ApproxTime();

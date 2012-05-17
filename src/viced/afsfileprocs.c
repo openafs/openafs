@@ -1255,7 +1255,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_foff_t off, afs_fsize_t len)
     if (size > len)
 	size = len;
 
-    buff = (char *)malloc(COPYBUFFSIZE);
+    buff = malloc(COPYBUFFSIZE);
     if (buff == NULL) {
 	return EIO;
     }
@@ -2534,14 +2534,12 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     }
 
     /* allocate space for return output parameters */
-    OutStats->AFSBulkStats_val = (struct AFSFetchStatus *)
-	malloc(nfiles * sizeof(struct AFSFetchStatus));
+    OutStats->AFSBulkStats_val = malloc(nfiles * sizeof(struct AFSFetchStatus));
     if (!OutStats->AFSBulkStats_val) {
 	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
     }
     OutStats->AFSBulkStats_len = nfiles;
-    CallBacks->AFSCBs_val = (struct AFSCallBack *)
-	malloc(nfiles * sizeof(struct AFSCallBack));
+    CallBacks->AFSCBs_val = malloc(nfiles * sizeof(struct AFSCallBack));
     if (!CallBacks->AFSCBs_val) {
 	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
     }
@@ -5372,7 +5370,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 * for the File Server.
 	 */
 	dataBytes = sizeof(struct afs_Stats);
-	dataBuffP = (afs_int32 *) malloc(dataBytes);
+	dataBuffP = malloc(dataBytes);
 	memcpy(dataBuffP, &afs_cmstats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes >> 2;
 	a_dataP->AFS_CollData_val = dataBuffP;
@@ -5399,7 +5397,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 */
 
 	dataBytes = sizeof(struct afs_PerfStats);
-	dataBuffP = (afs_int32 *) malloc(dataBytes);
+	dataBuffP = malloc(dataBytes);
 	memcpy(dataBuffP, &afs_perfstats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes >> 2;
 	a_dataP->AFS_CollData_val = dataBuffP;
@@ -5425,7 +5423,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 */
 
 	dataBytes = sizeof(struct fs_stats_FullPerfStats);
-	dataBuffP = (afs_int32 *) malloc(dataBytes);
+	dataBuffP = malloc(dataBytes);
 	memcpy(dataBuffP, &afs_FullPerfStats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes >> 2;
 	a_dataP->AFS_CollData_val = dataBuffP;
@@ -5435,7 +5433,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	afs_perfstats.numPerfCalls++;
 
 	dataBytes = sizeof(struct cbcounters);
-	dataBuffP = (afs_int32 *) malloc(dataBytes);
+	dataBuffP = malloc(dataBytes);
 	{
 	    extern struct cbcounters cbstuff;
 	    dataBuffP[0]=cbstuff.DeleteFiles;
@@ -5601,7 +5599,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 	goto Bad_GetCaps;
 
     dataBytes = 1 * sizeof(afs_int32);
-    dataBuffP = (afs_uint32 *) malloc(dataBytes);
+    dataBuffP = malloc(dataBytes);
     dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
     if (saneacls)
@@ -5881,15 +5879,15 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
     ViceLog(2, ("SAFS_GetVolumeStatus returns %d\n", errorCode));
     /* next is to guarantee out strings exist for stub */
     if (*Name == 0) {
-	*Name = (char *)malloc(1);
+	*Name = malloc(1);
 	**Name = 0;
     }
     if (*Motd == 0) {
-	*Motd = (char *)malloc(1);
+	*Motd = malloc(1);
 	**Motd = 0;
     }
     if (*OfflineMsg == 0) {
-	*OfflineMsg = (char *)malloc(1);
+	*OfflineMsg = malloc(1);
 	**OfflineMsg = 0;
     }
     errorCode = CallPostamble(tcon, errorCode, thost);

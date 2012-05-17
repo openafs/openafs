@@ -646,7 +646,7 @@ SalvageChildReaperThread(void * args)
 
 	MUTEX_EXIT(&worker_lock);
 
-	cleanup = (struct log_cleanup_node *) malloc(sizeof(struct log_cleanup_node));
+	cleanup = malloc(sizeof(struct log_cleanup_node));
 
 	while (Reap_Child("salvageserver", &pid, &status) < 0) {
 	    /* try to prevent livelock if something goes wrong */
@@ -822,8 +822,7 @@ SalvageLogScanningThread(void * arg)
 		continue;
 	    }
 
-	    cleanup =
-		(struct log_cleanup_node *) malloc(sizeof(struct log_cleanup_node));
+	    cleanup = malloc(sizeof(struct log_cleanup_node));
 	    cleanup->pid = pid;
 
 	    queue_Append(&log_watch_queue, cleanup);

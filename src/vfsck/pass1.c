@@ -292,7 +292,7 @@ pass1()
 	    n_files++;
 	    lncntp[inumber] = dp->di_nlink;
 	    if (dp->di_nlink <= 0) {
-		zlnp = (struct zlncnt *)malloc(sizeof *zlnp);
+		zlnp = malloc(sizeof *zlnp);
 		if (zlnp == NULL) {
 		    pfatal("LINK COUNT TABLE OVERFLOW");
 		    if (reply("CONTINUE") == 0)
@@ -433,7 +433,7 @@ pass1check(idesc)
 #endif
 		return (STOP);
 	    }
-	    new = (struct dups *)malloc(sizeof(struct dups));
+	    new = malloc(sizeof(struct dups));
 	    if (new == NULL) {
 		pfatal("DUP TABLE OVERFLOW.");
 		if (reply("CONTINUE") == 0)

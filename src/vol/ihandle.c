@@ -203,7 +203,7 @@ iHandleAllocateChunk(void)
     IHandle_t *ihP;
 
     osi_Assert(ihAvailHead == NULL);
-    ihP = (IHandle_t *) malloc(I_HANDLE_MALLOCSIZE * sizeof(IHandle_t));
+    ihP = malloc(I_HANDLE_MALLOCSIZE * sizeof(IHandle_t));
     osi_Assert(ihP != NULL);
     for (i = 0; i < I_HANDLE_MALLOCSIZE; i++) {
 	ihP[i].ih_refcnt = 0;
@@ -276,7 +276,7 @@ fdHandleAllocateChunk(void)
     FdHandle_t *fdP;
 
     osi_Assert(fdAvailHead == NULL);
-    fdP = (FdHandle_t *) malloc(FD_HANDLE_MALLOCSIZE * sizeof(FdHandle_t));
+    fdP = malloc(FD_HANDLE_MALLOCSIZE * sizeof(FdHandle_t));
     osi_Assert(fdP != NULL);
     for (i = 0; i < FD_HANDLE_MALLOCSIZE; i++) {
 	fdP[i].fd_status = FD_HANDLE_AVAIL;

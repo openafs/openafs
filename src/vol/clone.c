@@ -76,7 +76,7 @@ ci_AddItem(struct clone_head *ah, Inode aino)
 
     /* if no last elt (first call) or last item full, get a new one */
     if ((!ah->last) || ah->last->nitems >= CLONE_MAXITEMS) {
-	ti = (struct clone_items *)malloc(sizeof(struct clone_items));
+	ti = malloc(sizeof(struct clone_items));
 	if (!ti) {
 	    Log("ci_AddItem: malloc failed\n");
 	    osi_Panic("ci_AddItem: malloc failed\n");

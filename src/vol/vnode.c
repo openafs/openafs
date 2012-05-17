@@ -839,7 +839,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type, VnodeId in_vnode, Unique 
 		}
 	    } else {
 		/* growing file - grow in a reasonable increment */
-		char *buf = (char *)malloc(16 * 1024);
+		char *buf = malloc(16 * 1024);
 		if (!buf) {
 		    Log("VAllocVnode: can't grow vnode index: out of memory\n");
 		    *ec = ENOMEM;

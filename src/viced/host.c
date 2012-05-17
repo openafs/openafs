@@ -110,7 +110,7 @@ GetCEBlock(void)
     struct CEBlock *block;
     int i;
 
-    block = (struct CEBlock *)malloc(sizeof(struct CEBlock));
+    block = malloc(sizeof(struct CEBlock));
     if (!block) {
 	ViceLog(0, ("Failed malloc in GetCEBlock\n"));
 	ShutDownAndCore(PANIC);
@@ -198,7 +198,7 @@ GetHTBlock(void)
 	return;
     }
 
-    block = (struct HTBlock *)malloc(sizeof(struct HTBlock));
+    block = malloc(sizeof(struct HTBlock));
     if (!block) {
 	ViceLog(0, ("Failed malloc in GetHTBlock\n"));
 	ShutDownAndCore(PANIC);
@@ -954,7 +954,7 @@ h_Enumerate(int (*proc) (struct host*, void *), void *param)
 	H_UNLOCK;
 	return;
     }
-    list = (struct host **)malloc(hostCount * sizeof(struct host *));
+    list = malloc(hostCount * sizeof(struct host *));
     if (!list) {
 	ViceLogThenPanic(0, ("Failed malloc in h_Enumerate (list)\n"));
     }
@@ -1130,7 +1130,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
     }
 
     /* insert into beginning of list for this bucket */
-    chain = (struct h_UuidHashChain *)malloc(sizeof(struct h_UuidHashChain));
+    chain = malloc(sizeof(struct h_UuidHashChain));
     if (!chain) {
 	ViceLogThenPanic(0, ("Failed malloc in h_AddHostToUuidHashTable_r\n"));
     }
@@ -1311,7 +1311,7 @@ createHostAddrHashChain_r(int index, afs_uint32 addr, afs_uint16 port, struct ho
     char hoststr[16];
 
     /* insert into beginning of list for this bucket */
-    chain = (struct h_AddrHashChain *)malloc(sizeof(struct h_AddrHashChain));
+    chain = malloc(sizeof(struct h_AddrHashChain));
     if (!chain) {
 	ViceLogThenPanic(0, ("Failed malloc in h_AddHostToAddrHashTable_r\n"));
     }
@@ -1530,8 +1530,8 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 		  ntohs(host->port), afs_inet_ntoa_r(addr, hoststr2),
 		  ntohs(port)));
 
-    interface = (struct Interface *)
-	malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * number));
+    interface = malloc(sizeof(struct Interface)
+		       + (sizeof(struct AddrPort) * number));
     if (!interface) {
 	ViceLogThenPanic(0, ("Failed malloc in addInterfaceAddr_r\n"));
     }
@@ -1724,7 +1724,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	H_LOCK;
 	if ((code == RXGEN_OPCODE) ||
 	    ((code == 0) && (afs_uuid_equal(&interf.uuid, &nulluuid)))) {
-	    identP = (struct Identity *)malloc(sizeof(struct Identity));
+	    identP = malloc(sizeof(struct Identity));
 	    if (!identP) {
 		ViceLogThenPanic(0, ("Failed malloc in h_GetHost_r\n"));
 	    }
@@ -1765,7 +1765,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    }
 	} else if (code == 0) {
 	    interfValid = 1;
-	    identP = (struct Identity *)malloc(sizeof(struct Identity));
+	    identP = malloc(sizeof(struct Identity));
 	    if (!identP) {
 		ViceLogThenPanic(0, ("Failed malloc in h_GetHost_r\n"));
 	    }
@@ -1951,8 +1951,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	    if ((code == RXGEN_OPCODE) ||
 		((code == 0) && (afs_uuid_equal(&interf.uuid, &nulluuid)))) {
 		if (!identP)
-		    identP =
-			(struct Identity *)malloc(sizeof(struct Identity));
+		    identP = malloc(sizeof(struct Identity));
 		else
 		    pident = 1;
 
@@ -1969,8 +1968,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		code = 0;
 	    } else if (code == 0) {
 		if (!identP)
-		    identP =
-			(struct Identity *)malloc(sizeof(struct Identity));
+		    identP = malloc(sizeof(struct Identity));
 		else
 		    pident = 1;
 
@@ -2678,7 +2676,7 @@ h_UserName(struct client *client)
     idlist lids;
 
     lids.idlist_len = 1;
-    lids.idlist_val = (afs_int32 *) malloc(1 * sizeof(afs_int32));
+    lids.idlist_val = malloc(1 * sizeof(afs_int32));
     if (!lids.idlist_val) {
 	ViceLogThenPanic(0, ("Failed malloc in h_UserName\n"));
     }
@@ -3260,7 +3258,7 @@ h_stateSaveHost(struct host * host, void* rock)
     if (host->interface) {
 	if_len = sizeof(struct Interface) +
 	    ((host->interface->numberOfInterfaces-1) * sizeof(struct AddrPort));
-	ifp = (struct Interface *) malloc(if_len);
+	ifp = malloc(if_len);
 	osi_Assert(ifp != NULL);
 	memcpy(ifp, host->interface, if_len);
 	hdr.interfaces = host->interface->numberOfInterfaces;
@@ -3271,7 +3269,7 @@ h_stateSaveHost(struct host * host, void* rock)
     if (host->hcps.prlist_val) {
 	hdr.hcps = host->hcps.prlist_len;
 	hcps_len = hdr.hcps * sizeof(afs_int32);
-	hcps = (afs_int32 *) malloc(hcps_len);
+	hcps = malloc(hcps_len);
 	osi_Assert(hcps != NULL);
 	memcpy(hcps, host->hcps.prlist_val, hcps_len);
 	iov[iovcnt].iov_base = (char *) hcps;
@@ -3343,7 +3341,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
     if (hdr.interfaces) {
 	ifp_len = sizeof(struct Interface) +
 	    ((hdr.interfaces-1) * sizeof(struct AddrPort));
-	ifp = (struct Interface *) malloc(ifp_len);
+	ifp = malloc(ifp_len);
 	osi_Assert(ifp != NULL);
 	iov[iovcnt].iov_base = (char *) ifp;
 	iov[iovcnt].iov_len = ifp_len;
@@ -3351,7 +3349,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
     }
     if (hdr.hcps) {
 	hcps_len = hdr.hcps * sizeof(afs_int32);
-	hcps = (afs_int32 *) malloc(hcps_len);
+	hcps = malloc(hcps_len);
 	osi_Assert(hcps != NULL);
 	iov[iovcnt].iov_base = (char *) hcps;
 	iov[iovcnt].iov_len = hcps_len;
@@ -3372,7 +3370,7 @@ h_stateRestoreHost(struct fs_dump_state * state)
 
     if (!hdr.hcps && hdsk.hcps_valid) {
 	/* valid, zero-length host cps ; does this ever happen? */
-	hcps = (afs_int32 *) malloc(sizeof(afs_int32));
+	hcps = malloc(sizeof(afs_int32));
 	osi_Assert(hcps != NULL);
     }
 
@@ -4066,16 +4064,15 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
      * Allocate and initialize an interface structure for this host.
      */
     if (found) {
-	interface = (struct Interface *)
-	    malloc(sizeof(struct Interface) +
-		   (sizeof(struct AddrPort) * (count - 1)));
+	interface = malloc(sizeof(struct Interface) +
+		           (sizeof(struct AddrPort) * (count - 1)));
 	if (!interface) {
 	    ViceLogThenPanic(0, ("Failed malloc in initInterfaceAddr_r 1\n"));
 	}
 	interface->numberOfInterfaces = count;
     } else {
-	interface = (struct Interface *)
-	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * count));
+	interface = malloc(sizeof(struct Interface) +
+			   (sizeof(struct AddrPort) * count));
 	if (!interface) {
 	    ViceLogThenPanic(0, ("Failed malloc in initInterfaceAddr_r 2\n"));
 	}

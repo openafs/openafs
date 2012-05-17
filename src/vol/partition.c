@@ -190,7 +190,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
 {
     struct DiskPartition64 *dp, *op;
 
-    dp = (struct DiskPartition64 *)malloc(sizeof(struct DiskPartition64));
+    dp = malloc(sizeof(struct DiskPartition64));
     /* Add it to the end, to preserve order when we print statistics */
     for (op = DiskPartitionList; op; op = op->next) {
 	if (!op->next)
@@ -205,7 +205,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     dp->index = volutil_GetPartitionID(path);
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
     /* Create a lockfile for the partition, of the form /vicepa/Lock/vicepa */
-    dp->devName = (char *)malloc(2 * strlen(path) + 6);
+    dp->devName = malloc(2 * strlen(path) + 6);
     strcpy(dp->devName, path);
     strcat(dp->devName, OS_DIRSEP);
     strcat(dp->devName, "Lock");
@@ -574,7 +574,7 @@ getmount(struct vmount **vmountpp)
 
     /* try the operation until ok or a fatal error */
     while (1) {
-	if ((vm = (struct vmount *)malloc(size)) == NULL) {
+	if ((vm = malloc(size)) == NULL) {
 	    /* failed getting memory for mount status buf */
 	    perror("FATAL ERROR: get_stat malloc failed\n");
 	    exit(-1);

@@ -93,7 +93,7 @@ AllocProfBuf()
     if (profBuf != NULL)
 	return;
     profBufSize = (int)&etext - PROFSTART;
-    profBuf = (char *)malloc(profBufSize);
+    profBuf = malloc(profBufSize);
     if (profBuf == NULL) {
 	fprintf(stderr, "Couldn't get profiling buffer.\n");
 	return;

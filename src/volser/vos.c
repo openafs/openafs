@@ -104,7 +104,7 @@ qPut(struct tqHead *ahead, afs_uint32 volid)
 {
     struct tqElem *elem;
 
-    elem = (struct tqElem *)malloc(sizeof(struct tqElem));
+    elem = malloc(sizeof(struct tqElem));
     elem->next = ahead->next;
     elem->volid = volid;
     ahead->next = elem;
@@ -282,7 +282,7 @@ SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
     int done = 0;
     afs_uint32 nbytes;
 
-    buffer = (char *)malloc(blksize);
+    buffer = malloc(blksize);
     if (!buffer) {
 	fprintf(STDERR, "malloc failed\n");
 	return -1;
@@ -392,7 +392,7 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
     afs_uint32 bytesleft, w;
     afs_int32 error = 0;
 
-    buffer = (char *)malloc(blksize);
+    buffer = malloc(blksize);
     if (!buffer) {
 	fprintf(STDERR, "memory allocation failed\n");
 	ERROR_EXIT(-1);

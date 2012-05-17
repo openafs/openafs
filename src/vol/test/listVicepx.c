@@ -300,7 +300,7 @@ scanLargeVnode(dev, node, partitionName, option)
 		 vnode->inodeNumber, vnode->parent);
 #endif
 
-	    assert(dirEntry = (DirEnt *) malloc(sizeof(DirEnt)));
+	    assert(dirEntry = malloc(sizeof(DirEnt)));
 	    dirEntry->inode = vnode->inodeNumber;
 	    dirEntry->numEntries = 0;
 	    dirEntry->vnodeName = NULL;
@@ -438,7 +438,7 @@ scanSmallVnode(dev, node, partitionName, option)
 			   errno);
 		    exit(12);
 		}
-		assert(symLink = (char *)malloc(statLink.st_size + 1));
+		assert(symLink = malloc(statLink.st_size + 1));
 		if (read(fdLink, symLink, statLink.st_size) < 0) {
 		    printf("Error in reading symbolic link : %d\n", errno);
 		    exit(11);

@@ -3145,7 +3145,7 @@ AddToZLCDeleteList(char dir, char *name)
 	if (zlcCur && zlcCur->zlc_next)
 	    zlcCur = zlcCur->zlc_next;
 	else {
-	    zlcList_t *tmp = (zlcList_t *) malloc(sizeof(zlcList_t));
+	    zlcList_t *tmp = malloc(sizeof(zlcList_t));
 	    if (!tmp)
 		return;
 	    if (!zlcAnchor) {

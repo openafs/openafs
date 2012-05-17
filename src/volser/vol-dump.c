@@ -587,7 +587,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 	return VOLSERDUMPERROR;
     }
 
-    p = (unsigned char *)malloc(howMany);
+    p = malloc(howMany);
     if (!p) {
 	fprintf(stderr, "out of memory!\n");
 	return VOLSERDUMPERROR;

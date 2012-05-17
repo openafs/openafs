@@ -120,8 +120,7 @@ CheckPartitions()
 		if (nAvail <= nParts) {
 		    nAvail += ALLOC_STEP;
 		    if (nAvail == ALLOC_STEP)
-			partList =
-			    (partInfo *) malloc(nAvail * sizeof(partInfo));
+			partList = malloc(nAvail * sizeof(partInfo));
 		    else
 			partList = realloc(partList,
 					   nAvail * sizeof(partInfo));
