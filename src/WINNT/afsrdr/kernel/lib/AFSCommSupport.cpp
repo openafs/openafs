@@ -1070,12 +1070,22 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
 
                             //
                             // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
+                            // if successfully queued.  Cannot call AFSPerformObjectInvalidate directly
+                            // because ObjectInfoCB->Specific.Directory.DirectoryNodeHdr.TreeLock is
+                            // held during the sequence AFSVerifyEntry->AFSValidateDirectoryCache->
+                            // AFSVerifyDirectoryContent and AFSPerformObjectInvalidate requires the
+                            // Fcb->NPFcb->Resource which must be held prior to the TreeLock in the
+                            // lock hierarchy.
                             //
 
                             lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
 
-                            AFSPerformObjectInvalidate( pObjectInfo,
-                                                        AFS_INVALIDATE_DATA_VERSION);
+                            if ( !NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
+                                                                        AFS_INVALIDATE_DATA_VERSION)))
+                            {
+
+                                lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+                            }
                         }
                         else
                         {
