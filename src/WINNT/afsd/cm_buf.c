@@ -2596,7 +2596,9 @@ buf_InsertToRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
 {
     lock_AssertWrite(&buf_globalLock);
 
-    lock_ObtainMutex(&scp->redirMx);
+    if (scp) {
+        lock_ObtainMutex(&scp->redirMx);
+    }
 
     if (bufp->qFlags & CM_BUF_QINLRU) {
         _InterlockedAnd(&bufp->qFlags, ~CM_BUF_QINLRU);
@@ -2617,9 +2619,9 @@ buf_InsertToRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
                    &bufp->redirq);
         scp->redirLastAccess = bufp->redirLastAccess;
         InterlockedIncrement(&scp->redirBufCount);
-    }
 
-    lock_ReleaseMutex(&scp->redirMx);
+        lock_ReleaseMutex(&scp->redirMx);
+    }
 }
 
 void
@@ -2630,21 +2632,24 @@ buf_RemoveFromRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
     if (!(bufp->qFlags & CM_BUF_QREDIR))
         return;
 
-    lock_ObtainMutex(&scp->redirMx);
+    if (scp) {
+        lock_ObtainMutex(&scp->redirMx);
+    }
 
     _InterlockedAnd(&bufp->qFlags, ~CM_BUF_QREDIR);
     osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
                    (osi_queue_t **) &cm_data.buf_redirListEndp,
                    &bufp->q);
     buf_DecrementRedirCount();
+
     if (scp) {
         osi_QRemoveHT( (osi_queue_t **) &scp->redirQueueH,
                        (osi_queue_t **) &scp->redirQueueT,
                        &bufp->redirq);
-        InterlockedDecrement(&scp->redirBufCount);
-    }
 
-    lock_ReleaseMutex(&scp->redirMx);
+        InterlockedDecrement(&scp->redirBufCount);
+        lock_ReleaseMutex(&scp->redirMx);
+    }
 }
 
 void
@@ -2654,7 +2659,9 @@ buf_MoveToHeadOfRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
     if (!(bufp->qFlags & CM_BUF_QREDIR))
         return;
 
-    lock_ObtainMutex(&scp->redirMx);
+    if (scp) {
+        lock_ObtainMutex(&scp->redirMx);
+    }
 
     osi_QRemoveHT( (osi_queue_t **) &cm_data.buf_redirListp,
                    (osi_queue_t **) &cm_data.buf_redirListEndp,
@@ -2671,7 +2678,7 @@ buf_MoveToHeadOfRedirQueue(cm_scache_t *scp, cm_buf_t *bufp)
                    (osi_queue_t **) &scp->redirQueueT,
                    &bufp->redirq);
         scp->redirLastAccess = bufp->redirLastAccess;
-    }
 
-    lock_ReleaseMutex(&scp->redirMx);
+        lock_ReleaseMutex(&scp->redirMx);
+    }
 }
