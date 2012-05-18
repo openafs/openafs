@@ -70,7 +70,7 @@ extern int osi_sysctl_init(void);
 extern void osi_sysctl_clean(void);
 
 /* osi_vm.c */
-extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
+extern int osi_VM_FlushVCache(struct vcache *avc);
 extern void osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred,
 			      int sync);
 extern void osi_VM_FSyncInval(struct vcache *avc);

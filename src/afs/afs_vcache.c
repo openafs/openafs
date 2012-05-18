@@ -143,7 +143,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     afs_Trace2(afs_iclSetp, CM_TRACE_FLUSHV, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, avc->f.states);
 
-    code = osi_VM_FlushVCache(avc, slept);
+    code = osi_VM_FlushVCache(avc);
     if (code)
 	goto bad;
 

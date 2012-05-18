@@ -24,7 +24,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 	printf("%s enter\n", __func__);
     }
 
-    if (osi_VM_FlushVCache(avc, slept) != 0) {
+    if (osi_VM_FlushVCache(avc) != 0) {
 	code = 0;
     } else {
 	code = 1;
