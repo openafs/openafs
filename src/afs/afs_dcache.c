@@ -2626,7 +2626,7 @@ afs_MemGetDSlot(afs_int32 aslot, int needvalid)
 	return tdc;
     }
 
-    osi_Assert(!needvalid);
+    osi_Assert(needvalid);
 
     if (!afs_freeDSList)
 	afs_GetDownDSlot(4);
