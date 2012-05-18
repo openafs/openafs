@@ -1928,7 +1928,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	     * volume) rather than the vc of the mount point itself.  We can
 	     * still find the mount point's vc in the vcache by its fid. */
 #endif /* UKERNEL */
-	    if (!hit && force_eval) {
+	    if (!hit && (force_eval || tvc->mvstat != 1)) {
 		osi_dnlc_enter(adp, aname, tvc, &versionNo);
 	    } else {
 #ifdef AFS_LINUX20_ENV
