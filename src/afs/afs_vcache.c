@@ -205,8 +205,6 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     vn_reinit(AFSTOV(avc));
 #endif
     afs_FreeAllAxs(&(avc->Access));
-    if (!afs_shuttingdown)
-	afs_QueueVCB(avc, slept);
     ObtainWriteLock(&afs_xcbhash, 460);
     afs_DequeueCallback(avc);	/* remove it from queued callbacks list */
     avc->f.states &= ~(CStatd | CUnique);
@@ -215,6 +213,9 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
     else
 	osi_dnlc_purgevp(avc);
+
+    if (!afs_shuttingdown)
+	afs_QueueVCB(avc, slept);
 
     /*
      * Next, keep track of which vnodes we've deleted for create's
