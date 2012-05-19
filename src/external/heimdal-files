@@ -80,6 +80,7 @@ lib/roken/mkstemp.c		roken/mkstemp.c
 lib/roken/net_read.c		roken/net_read.c
 lib/roken/net_write.c		roken/net_write.c
 lib/roken/realloc.c		roken/realloc.c
+lib/roken/rename.c		roken/rename.c
 lib/roken/roken.h.in		roken/roken.h.in
 lib/roken/roken-common.h	roken/roken-common.h
 lib/roken/search.hin		roken/search.hin
