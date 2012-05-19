@@ -317,7 +317,7 @@ fs_stateCreateDump(struct fs_dump_state * state)
     snprintf(savedump, sizeof(savedump), "%s.old", state->fn);
 
     if (afs_stat(state->fn, &status) == 0) {
-	renamefile(state->fn, savedump);
+	rk_rename(state->fn, savedump);
     }
 
     if (((fd = afs_open(state->fn,

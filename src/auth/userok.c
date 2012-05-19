@@ -213,7 +213,7 @@ afsconf_DeleteIdentity(struct afsconf_dir *adir, struct rx_identity *user)
     strcat(nbuffer, ".NXX");	/* generate new file name again */
     if (flag == 0) {
 	/* try the rename */
-	flag = renamefile(nbuffer, tbuffer);
+	flag = rk_rename(nbuffer, tbuffer);
 	if (flag == 0)
 	    flag = chmod(tbuffer, tstat.st_mode);
     } else

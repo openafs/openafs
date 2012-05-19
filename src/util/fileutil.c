@@ -23,28 +23,6 @@
 
 #include "fileutil.h"
 
-
-/*
- * renamefile() -- rename a file (Unix rename() semantics)
- */
-int
-renamefile(const char *oldname, const char *newname)
-{
-    int rc = 0;
-
-#ifdef AFS_NT40_ENV
-    if (!MoveFileEx(oldname, newname, MOVEFILE_REPLACE_EXISTING)) {
-	/* rename failed */
-	errno = nterr_nt2unix(GetLastError(), EIO);
-	rc = -1;
-    }
-#else
-    rc = rename(oldname, newname);
-#endif
-    return rc;
-}
-
-
 /*
  * FilepathNormalizeEx() -- normalize file path; i.e., use only forward (or only
  *     backward) slashes, remove multiple and trailing slashes.

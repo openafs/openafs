@@ -295,16 +295,14 @@ ReadBozoFile(char *aname)
 	/* if BozoInit exists and BosConfig doesn't, try a rename */
 	if (access(AFSDIR_SERVER_BOZINIT_FILEPATH, 0) == 0
 	    && access(AFSDIR_SERVER_BOZCONF_FILEPATH, 0) != 0) {
-	    code =
-		renamefile(AFSDIR_SERVER_BOZINIT_FILEPATH,
-			   AFSDIR_SERVER_BOZCONF_FILEPATH);
+	    code = rk_rename(AFSDIR_SERVER_BOZINIT_FILEPATH,
+			     AFSDIR_SERVER_BOZCONF_FILEPATH);
 	    if (code < 0)
 		perror("bosconfig rename");
 	}
 	if (access(AFSDIR_SERVER_BOZCONFNEW_FILEPATH, 0) == 0) {
-	    code =
-		renamefile(AFSDIR_SERVER_BOZCONFNEW_FILEPATH,
-			   AFSDIR_SERVER_BOZCONF_FILEPATH);
+	    code = rk_rename(AFSDIR_SERVER_BOZCONFNEW_FILEPATH,
+			     AFSDIR_SERVER_BOZCONF_FILEPATH);
 	    if (code < 0)
 		perror("bosconfig rename");
 	}
@@ -493,7 +491,7 @@ WriteBozoFile(char *aname)
 	unlink(tbuffer);
 	return -1;
     }
-    code = renamefile(tbuffer, aname);
+    code = rk_rename(tbuffer, aname);
     if (code) {
 	unlink(tbuffer);
 	return -1;
@@ -1047,7 +1045,7 @@ main(int argc, char **argv, char **envp)
 	) {
 	strcpy(namebuf, AFSDIR_BOZLOG_FILE);
 	strcat(namebuf, ".old");
-	renamefile(AFSDIR_BOZLOG_FILE, namebuf);	/* try rename first */
+	rk_rename(AFSDIR_BOZLOG_FILE, namebuf);	/* try rename first */
 	bozo_logFile = fopen(AFSDIR_BOZLOG_FILE, "a");
 	if (!bozo_logFile) {
 	    printf("bosserver: can't initialize log file (%s).\n",

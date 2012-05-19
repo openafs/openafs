@@ -52,7 +52,6 @@ extern char* afs_exec_alt(int argc, char **argv, const char *prefix,
                           const char *suffix);
 
 /* fileutil.c */
-extern int renamefile(const char *oldname, const char *newname);
 extern void FilepathNormalizeEx(char *path, int slashType);
 extern void FilepathNormalize(char *path);
 

@@ -71,7 +71,6 @@
 	pthread_recursive_mutex_unlock;
 	grmutex;
 	initAFSDirPath;
-	renamefile;
 	pr_GetCPS;
 	pr_Initialize;
 	pr_GetHostCPS;

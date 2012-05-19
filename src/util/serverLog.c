@@ -310,7 +310,7 @@ OpenLog(const char *fileName)
 	    goto makefilename;
 	}
 	if (!isfifo)
-	    renamefile(fileName, FileName);	/* don't check error code */
+	    rk_rename(fileName, FileName);	/* don't check error code */
 	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     } else {
 	strcpy(oldName, fileName);
@@ -318,7 +318,7 @@ OpenLog(const char *fileName)
 
 	/* don't check error */
 	if (!isfifo)
-	    renamefile(fileName, oldName);
+	    rk_rename(fileName, oldName);
 	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT | (isfifo?O_NONBLOCK:0), 0666);
     }
 

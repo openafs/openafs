@@ -38,8 +38,8 @@ clean:
 
 OBJECTS = $(ROKEN_LIBOBJS) \
 	  base64.o \
-	  cloexec.o ct.o hex.o issuid.o net_read.o net_write.o socket.o \
-	  snprintf.o warnerr.o
+	  cloexec.o ct.o hex.o issuid.o net_read.o net_write.o \
+	  rename.o socket.o snprintf.o warnerr.o
 
 $(TOP_LIBDIR)/$(SHLIBOBJ): $(SHLIBOBJ)
 	$(TOP_OBJDIR)/src/config/shlib-install -d $(TOP_LIBDIR) \
@@ -123,6 +123,9 @@ net_read.o: ${UPSTREAM}/net_read.c
 
 net_write.o: ${UPSTREAM}/net_write.c
 	$(AFS_CCRULE) $(UPSTREAM)/net_write.c
+
+rename.o: ${UPSTREAM}/rename.c
+	$(AFS_CCRULE) $(UPSTREAM)/rename.c
 
 setenv.o: ${UPSTREAM}/setenv.c
 	$(AFS_CCRULE) $(UPSTREAM)/setenv.c

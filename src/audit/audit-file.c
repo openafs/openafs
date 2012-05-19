@@ -52,7 +52,7 @@ open_file(const char *fileName)
     {
         strcpy(oldName, fileName);
         strcat(oldName, ".old");
-        renamefile(fileName, oldName);
+        rk_rename(fileName, oldName);
         flags = O_WRONLY | O_TRUNC | O_CREAT;
     }
     tempfd = open(fileName, flags, 0666);

@@ -4733,7 +4733,7 @@ CheckLogFile(char * log_path)
     strcpy(oldSlvgLog, log_path);
     strcat(oldSlvgLog, ".old");
     if (!logFile) {
-	renamefile(log_path, oldSlvgLog);
+	rk_rename(log_path, oldSlvgLog);
 	logFile = afs_fopen(log_path, "a");
 
 	if (!logFile) {		/* still nothing, use stdout */

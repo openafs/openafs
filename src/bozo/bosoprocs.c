@@ -197,16 +197,16 @@ SBOZO_UnInstall(struct rx_call *acall, char *aname)
     strcpy(fpOld, filepath);
     strcat(fpOld, ".OLD");
 
-    code = renamefile(fpBak, filepath);
+    code = rk_rename(fpBak, filepath);
     if (code) {
 	/* can't find .BAK, try .OLD */
-	code = renamefile(fpOld, filepath);
+	code = rk_rename(fpOld, filepath);
 	if (code && errno == ENOENT)	/* If doesn't exist don't fail */
 	    code = 0;
     } else {
 	/* now rename .OLD to .BAK */
 	if (stat(fpOld, &tstat) == 0)
-	    code = renamefile(fpOld, fpBak);
+	    code = rk_rename(fpOld, fpBak);
     }
     if (code)
 	code = errno;
@@ -251,11 +251,11 @@ SaveOldFiles(char *aname)
 
     if (bakTime && (oldTime == 0 || bakTime < now - BOZO_OLDTIME)) {
 	/* no .OLD file, or .BAK is at least a week old */
-	code = renamefile(bbuffer, obuffer);
+	code = rk_rename(bbuffer, obuffer);
     }
 
     /* finally rename to .BAK extension */
-    renamefile(aname, bbuffer);
+    rk_rename(aname, bbuffer);
 }
 
 afs_int32
@@ -325,7 +325,7 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
     /* all done, rename to final name */
     strcpy(tbuffer, filepath);
     strcat(tbuffer, ".NEW");
-    code = (renamefile(tbuffer, filepath) ? errno : 0);
+    code = (rk_rename(tbuffer, filepath) ? errno : 0);
 
     /* label file with same time for our sanity */
 #ifdef AFS_NT40_ENV

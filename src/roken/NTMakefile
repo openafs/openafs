@@ -44,6 +44,7 @@ ROKEN_OBJS = \
 	$(OUT)\net_read.obj \
 	$(OUT)\net_write.obj \
         $(OUT)\realloc.obj \
+	$(OUT)\rename.obj \
 	$(OUT)\setprogname.obj \
 	$(OUT)\snprintf.obj \
 	$(OUT)\socket.obj \
