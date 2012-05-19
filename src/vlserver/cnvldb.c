@@ -239,7 +239,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
     close(new);
 
-    renamefile(tempname, pathname);
+    rk_rename(tempname, pathname);
     sleep(5);
     exit(0);
 }

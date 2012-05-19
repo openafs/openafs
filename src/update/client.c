@@ -600,7 +600,7 @@ RenameNewFiles(struct filestr *modFiles)
 	strcat(newname, ".NEW");
 	if (verbose >= 2)
 	    printf("  renaming %s\n", newname);
-	errcode = renamefile(newname, fname);
+	errcode = rk_rename(newname, fname);
 	if (errcode) {
 	    printf("could not rename %s to %s\n", newname, fname);
 	    afs_com_err(whoami, errno, "could not rename %s to %s", newname,

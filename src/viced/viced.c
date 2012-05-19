@@ -1618,8 +1618,8 @@ WriteSysIdFile(void)
 	/*
 	 * File exists; keep the old one around
 	 */
-	renamefile(AFSDIR_SERVER_SYSID_FILEPATH,
-		   AFSDIR_SERVER_OLDSYSID_FILEPATH);
+	rk_rename(AFSDIR_SERVER_SYSID_FILEPATH,
+		  AFSDIR_SERVER_OLDSYSID_FILEPATH);
     }
     fd = afs_open(AFSDIR_SERVER_SYSID_FILEPATH, O_WRONLY | O_TRUNC | O_CREAT,
 		  0666);

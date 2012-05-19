@@ -199,6 +199,9 @@
 #include "redhat-fix.h"
 #endif
 
+/* Define if rename() does not unlink an existing file */
+#define RENAME_DOES_NOT_UNLINK 1
+
 /* Windows does not provide socklen_t prior to WDK 6.0 */
 #define HAVE_SOCKLEN_T 1
 typedef int socklen_t;
