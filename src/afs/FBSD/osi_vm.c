@@ -99,23 +99,17 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 	return code;
     }
 
-    if ((vp->v_iflag & VI_DOOMED) != 0) {
-	VI_UNLOCK(vp);
-	return 0;
-    }
-
-    /* must hold the vnode before calling vgone()
+    /* must hold the vnode before calling cache_purge()
      * This code largely copied from vfs_subr.c:vlrureclaim() */
     vholdl(vp);
+    VI_UNLOCK(vp);
+
     AFS_GUNLOCK();
-    *slept = 1;
-    /* use the interlock while locking, so no one else can DOOM this */
-    ilock_vnode(vp);
-    vgone(vp);
-    unlock_vnode(vp);
+    cache_purge(vp);
+    AFS_GLOCK();
+
     vdrop(vp);
 
-    AFS_GLOCK();
     return 0;
 }
 
