@@ -138,6 +138,10 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     afs_int32 i, code;
     struct vcache **uvc, *wvc;
 
+    /* NOTE: We must have nothing drop afs_xvcache until we have removed all
+     * possible references to this vcache. This means all hash tables, queues,
+     * DNLC, etc. */
+
     *slept = 0;
     AFS_STATCNT(afs_FlushVCache);
     afs_Trace2(afs_iclSetp, CM_TRACE_FLUSHV, ICL_TYPE_POINTER, avc,
@@ -213,6 +217,10 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
     else
 	osi_dnlc_purgevp(avc);
+
+    /* By this point, the vcache has been removed from all global structures
+     * via which someone could try to use the vcache. It is okay to drop
+     * afs_xvcache at this point (if *slept is set). */
 
     if (!afs_shuttingdown)
 	afs_QueueVCB(avc, slept);
