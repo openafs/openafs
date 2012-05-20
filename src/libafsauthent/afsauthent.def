@@ -154,3 +154,4 @@ EXPORTS
 	afsconf_SetSecurityFlags			@153
 	afsconf_SetLocalRealm				@154
 	afsconf_IsLocalRealmMatch			@155
+	afsconf_ParseNetFiles				@156

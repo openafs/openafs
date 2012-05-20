@@ -20,7 +20,6 @@
 #include <afs/cellconfig.h>
 #ifndef AFS_NT40_ENV
 #include <afs/afsutil.h>
-#include <afs/netutils.h>
 #endif
 
 #define UBIK_INTERNALS
@@ -615,10 +614,10 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	 * host as returned by rx_getAllAddr (in NBO)
 	 */
 	char reason[1024];
-	count =
-	    parseNetFiles(myAddr, NULL, NULL, UBIK_MAX_INTERFACE_ADDR, reason,
-			  AFSDIR_SERVER_NETINFO_FILEPATH,
-			  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	count = afsconf_ParseNetFiles(myAddr, NULL, NULL,
+				      UBIK_MAX_INTERFACE_ADDR, reason,
+				      AFSDIR_SERVER_NETINFO_FILEPATH,
+				      AFSDIR_SERVER_NETRESTRICT_FILEPATH);
 	if (count < 0) {
 	    ubik_print("ubik: Can't register any valid addresses:%s\n",
 		       reason);

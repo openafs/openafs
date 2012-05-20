@@ -47,7 +47,6 @@ UTILOBJS =\
         $(OUT)\uuid.obj \
         $(OUT)\serverLog.obj \
         $(OUT)\fileutil.obj \
-        $(OUT)\netutils.obj \
         $(OUT)\dirpath.obj \
         $(OUT)\volparse.obj \
         $(OUT)\flipbase64.obj \

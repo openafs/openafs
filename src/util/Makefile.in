@@ -14,7 +14,7 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 objects =base64.o ktime.o volparse.o hostparse.o exec.o \
 	 hputil.o kreltime.o uuid.o serverLog.o \
-	 dirpath.o fileutil.o netutils.o flipbase64.o fstab.o \
+	 dirpath.o fileutil.o flipbase64.o fstab.o \
 	 afs_atomlist.o afs_lhash.o pthread_glock.o tabular_output.o \
 	 pthread_threadname.o ${REGEX_OBJ}
 
@@ -30,7 +30,6 @@ objects_pic = \
 	serverLog_pic.o \
 	dirpath_pic.o \
 	fileutil_pic.o \
-	netutils_pic.o \
 	flipbase64_pic.o \
 	fstab_pic.o \
 	afs_atomlist_pic.o \
@@ -47,7 +46,6 @@ includes = \
 	${TOP_INCDIR}/afs/vice.h \
 	${TOP_INCDIR}/afs/ktime.h \
 	${TOP_INCDIR}/afs/fileutil.h \
-	${TOP_INCDIR}/afs/netutils.h \
 	${TOP_INCDIR}/afs/afsutil.h \
 	${TOP_INCDIR}/afs/afsutil_prototypes.h \
 	${TOP_INCDIR}/afs/pthread_glock.h \
@@ -87,9 +85,6 @@ ${TOP_INCDIR}/afs/ktime.h: ${srcdir}/ktime.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/fileutil.h: ${srcdir}/fileutil.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/netutils.h: ${srcdir}/netutils.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/afsutil.h: ${srcdir}/afsutil.h
@@ -214,9 +209,6 @@ dirpath_pic.o: ${srcdir}/dirpath.c ${includes}
 fileutil_pic.o: ${srcdir}/fileutil.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/fileutil.c
 
-netutils_pic.o: ${srcdir}/netutils.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/netutils.c
-
 flipbase64_pic.o: ${srcdir}/flipbase64.c ${includes}
 	$(SHD_CCRULE) ${srcdir}/flipbase64.c
 
@@ -257,7 +249,6 @@ install: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/vice.h ${DESTDIR}${includedir}/afs/vice.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DESTDIR}${includedir}/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DESTDIR}${includedir}/afs/fileutil.h
-	${INSTALL_DATA} ${srcdir}/netutils.h ${DESTDIR}${includedir}/afs/netutils.h
 	${INSTALL_DATA} ${srcdir}/afsutil.h ${DESTDIR}${includedir}/afs/afsutil.h
 	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DESTDIR}${includedir}/afs/afsutil_prototypes.h
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DESTDIR}${includedir}/afs/pthread_glock.h
@@ -284,7 +275,6 @@ dest: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/vice.h ${DEST}/include/afs/vice.h
 	${INSTALL_DATA} ${srcdir}/ktime.h ${DEST}/include/afs/ktime.h
 	${INSTALL_DATA} ${srcdir}/fileutil.h ${DEST}/include/afs/fileutil.h
-	${INSTALL_DATA} ${srcdir}/netutils.h ${DEST}/include/afs/netutils.h
 	${INSTALL_DATA} ${srcdir}/afsutil.h ${DEST}/include/afs/afsutil.h
 	${INSTALL_DATA} ${srcdir}/afsutil_prototypes.h ${DEST}/include/afs/afsutil_prototypes.h
 	${INSTALL_DATA} ${srcdir}/pthread_glock.h ${DEST}/include/afs/pthread_glock.h
@@ -318,5 +308,5 @@ check-splint:
 	sh $(HELPER_SPLINT) $(CFLAGS) \
 	    base64.c ktime.c volparse.c hostparse.c \
 	    hputil.c kreltime.c uuid.c serverLog.c \
-	    dirpath.c fileutil.c netutils.c flipbase64.c \
+	    dirpath.c fileutil.c flipbase64.c \
 	    afs_atomlist.c afs_lhash.c fstab.c

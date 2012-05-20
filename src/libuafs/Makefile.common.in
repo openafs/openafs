@@ -216,7 +216,7 @@ UAFSOBJ = \
 	$(UOBJ)/casestrcpy.o \
 	$(UOBJ)/dirpath.o \
 	$(UOBJ)/fileutil.o \
-	$(UOBJ)/netutils.o \
+	$(UOBJ)/netrestrict.o \
 	$(UOBJ)/et_name.o \
 	$(UOBJ)/com_err.o \
 	$(UOBJ)/error_msg.o \
@@ -365,7 +365,7 @@ PICUAFSOBJ = \
 	$(PICOBJ)/casestrcpy.o \
 	$(PICOBJ)/dirpath.o \
 	$(PICOBJ)/fileutil.o \
-	$(PICOBJ)/netutils.o \
+	$(PICOBJ)/netrestrict.o \
 	$(PICOBJ)/et_name.o \
 	$(PICOBJ)/com_err.o \
 	$(PICOBJ)/error_msg.o \
@@ -514,7 +514,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/casestrcpy.o \
 	$(WEBOBJ)/dirpath.o \
 	$(WEBOBJ)/fileutil.o \
-	$(WEBOBJ)/netutils.o \
+	$(WEBOBJ)/netrestrict.o \
 	$(WEBOBJ)/et_name.o \
 	$(WEBOBJ)/com_err.o \
 	$(WEBOBJ)/error_msg.o \
@@ -657,7 +657,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/casestrcpy.o \
 	$(WEBOBJ)/dirpath.o \
 	$(WEBOBJ)/fileutil.o \
-	$(WEBOBJ)/netutils.o \
+	$(WEBOBJ)/netrestrict.o \
 	$(WEBOBJ)/et_name.o \
 	$(WEBOBJ)/com_err.o \
 	$(WEBOBJ)/error_msg.o \
@@ -804,7 +804,7 @@ JUAFSOBJ = \
 	$(JUAFS)/casestrcpy.o \
 	$(JUAFS)/dirpath.o \
 	$(JUAFS)/fileutil.o \
-	$(JUAFS)/netutils.o \
+	$(JUAFS)/netrestrict.o \
 	$(JUAFS)/et_name.o \
 	$(JUAFS)/com_err.o \
 	$(JUAFS)/error_msg.o \
@@ -1116,7 +1116,7 @@ $(UOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
 $(UOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
-$(UOBJ)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
+$(UOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
 	$(CRULE1)
 $(UOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
 	$(CRULE1)
@@ -1421,7 +1421,7 @@ $(PICOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULEPIC)
 $(PICOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULEPIC)
-$(PICOBJ)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
+$(PICOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
 	$(CRULEPIC)
 $(PICOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
 	$(CRULEPIC)
@@ -1735,7 +1735,7 @@ $(WEBOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
 $(WEBOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
-$(WEBOBJ)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
+$(WEBOBJ)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
 	$(CRULE1)
 $(WEBOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
 	$(CRULE2)
@@ -2035,7 +2035,7 @@ $(JUAFS)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
 $(JUAFS)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
-$(JUAFS)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
+$(JUAFS)/netrestrict.o: $(TOP_SRCDIR)/auth/netrestrict.c
 	$(CRULE1)
 $(JUAFS)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
 	$(CRULE1)

@@ -18,7 +18,7 @@ BUDB=$(srcdir)/../budb
 
 RXOBJS= rx_pthread.o rxkad_errs.o
 
-UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
+UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o \
      volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o
 
 
@@ -89,9 +89,6 @@ volparse.o: ${UTIL}/volparse.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
 	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-netutils.o: ${UTIL}/netutils.c
-	$(AFS_CCRULE) $(UTIL)/netutils.c
 
 dirpath.o: ${UTIL}/dirpath.c
 	$(AFS_CCRULE) $(UTIL)/dirpath.c

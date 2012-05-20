@@ -34,7 +34,7 @@ LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
+UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o volparse.o flipbase64.o softsig.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -99,9 +99,6 @@ volparse.o: ${UTIL}/volparse.c
 
 flipbase64.o: ${UTIL}/flipbase64.c
 	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-netutils.o: ${UTIL}/netutils.c
-	$(AFS_CCRULE) -I../util $(UTIL)/netutils.c
 
 dirpath.o: ${UTIL}/dirpath.c
 	$(AFS_CCRULE) $(UTIL)/dirpath.c

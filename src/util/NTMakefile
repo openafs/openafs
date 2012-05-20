@@ -17,7 +17,6 @@ INCFILES =\
 	$(INCFILEDIR)\afsutil.h \
 	$(INCFILEDIR)\errors.h \
 	$(INCFILEDIR)\vice.h \
-        $(INCFILEDIR)\netutils.h \
 	$(INCFILEDIR)\pthread_glock.h \
 	$(INCFILEDIR)\pthread_nosigs.h \
 	$(INCFILEDIR)\errmap_nt.h \
@@ -44,7 +43,6 @@ LIBOBJS = \
         $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
-        $(OUT)\netutils.obj \
 	$(OUT)\regex.obj \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog.obj \
@@ -62,7 +60,6 @@ MT_LIBOBJS = \
         $(OUT)\krb5_nt.obj \
 	$(OUT)\kreltime.obj \
 	$(OUT)\ktime.obj \
-        $(OUT)\netutils.obj \
 	$(OUT)\regex.obj \
 	$(OUT)\readdir_nt.obj \
 	$(OUT)\serverLog_mt.obj \

@@ -260,6 +260,18 @@ extern int afsconf_IsLocalRealmMatch(struct afsconf_dir *dir, afs_int32 * local,
 				const char *name, const char *instance,
 				const char *cell);
 
+/* netrestrict.c */
+
+extern int afsconf_ParseNetRestrictFile(afs_uint32 outAddrs[],
+					afs_uint32 * mask, afs_uint32 * mtu,
+					afs_uint32 maxAddrs, afs_uint32 * nAddrs,
+					char reason[], const char *fileName);
+
+extern int afsconf_ParseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
+				 afs_uint32 mtubuf[], afs_uint32 max,
+				 char reason[], const char *niFileName,
+				 const char *nrFileName);
+
 /* some well-known ports and their names; new additions to table in cellconfig.c, too */
 #define	AFSCONF_FILESERVICE		"afs"
 #define	AFSCONF_FILEPORT		7000
