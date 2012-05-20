@@ -37,7 +37,10 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
     /* must hold the vnode before calling vgone()
      * This code largely copied from vfs_subr.c:vlrureclaim() */
     vholdl(vp);
+
+    ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
+
     *slept = 1;
     /* use the interlock while locking, so no one else can DOOM this */
     vn_lock(vp, LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY);
@@ -46,6 +49,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
     vdrop(vp);
 
     AFS_GLOCK();
+    ObtainWriteLock(&afs_xvcache, 340);
     return 1;
 }
 
