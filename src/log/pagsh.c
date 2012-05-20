@@ -24,8 +24,7 @@
 #include <limits.h>
 #include <rx/rx.h>
 #include <afs/auth.h>
-
-#include "sys_prototypes.h"
+#include <afs/sys_prototypes.h>
 
 #include "AFS_component_version_number.c"
 
