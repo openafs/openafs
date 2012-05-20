@@ -47,6 +47,7 @@ AFSAUTH_LIBOBJS =\
 	$(OUT)\ktc_nt.obj \
         $(OUT)\token.obj \
         $(OUT)\token.xdr.obj \
+	$(OUT)\netrestrict.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 AFSDOBJS =\

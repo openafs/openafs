@@ -358,10 +358,9 @@ afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
     char reason[1024];
     afs_int32 code;
 
-    code =
-	parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
-		      AFSDIR_CLIENT_NETINFO_FILEPATH,
-		      AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
+    code = afsconf_ParseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS,
+				 reason, AFSDIR_CLIENT_NETINFO_FILEPATH,
+				 AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
 
     if (code > 0) {
 	/* Note we're refreshing */
@@ -2136,10 +2135,9 @@ afsd_run(void)
 	afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	    mtubuf[MAXIPADDRS];
 	char reason[1024];
-	code =
-	    parseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
-			  AFSDIR_CLIENT_NETINFO_FILEPATH,
-			  AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
+	code = afsconf_ParseNetFiles(addrbuf, maskbuf, mtubuf, MAXIPADDRS, reason,
+				     AFSDIR_CLIENT_NETINFO_FILEPATH,
+				     AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
 	if (code > 0) {
 	    if (enable_rxbind)
 		code = code | 0x80000000;

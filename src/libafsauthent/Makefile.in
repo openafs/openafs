@@ -36,7 +36,8 @@ AUTHOBJS = \
 	acfg_errors.o \
 	token.o \
 	token.xdr.o \
-	realms.o
+	realms.o \
+	netrestrict.o
 
 KAUTHOBJS = \
 	kauth.xdr.o \
@@ -231,6 +232,9 @@ ptclient.o: ${PTSERVER}/ptclient.c
 
 realms.o: ${AUTH}/realms.c
 	${AFS_CCRULE} -I../auth ${AUTH}/realms.c
+
+netrestrict.o: ${AUTH}/netrestrict.c
+	${AFS_CCRULE} -I../auth ${AUTH}/netrestrict.c
 
 ptuser.o: ${PTSERVER}/ptuser.c
 	${AFS_CCRULE} -I../ptserver ${PTSERVER}/ptuser.c

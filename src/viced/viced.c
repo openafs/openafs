@@ -68,7 +68,7 @@
 #include <afs/partition.h>
 #include <afs/dir.h>
 #ifndef AFS_NT40_ENV
-# include <afs/netutils.h>
+# include <afs/softsig.h>
 #endif
 #include "viced_prototypes.h"
 #include "viced.h"
@@ -1803,10 +1803,12 @@ SetupVL(void)
 	 * /usr/afs/local/NetRestict)
 	 */
 	char reason[1024];
-	afs_int32 code = parseNetFiles(FS_HostAddrs, NULL, NULL,
-				       ADDRSPERSITE, reason,
-				       AFSDIR_SERVER_NETINFO_FILEPATH,
-				       AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	afs_int32 code;
+
+	code = afsconf_ParseNetFiles(FS_HostAddrs, NULL, NULL,
+				     ADDRSPERSITE, reason,
+				     AFSDIR_SERVER_NETINFO_FILEPATH,
+				     AFSDIR_SERVER_NETRESTRICT_FILEPATH);
 	if (code < 0) {
 	    ViceLog(0, ("Can't register any valid addresses: %s\n", reason));
 	    exit(1);

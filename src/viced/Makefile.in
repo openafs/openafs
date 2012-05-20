@@ -9,52 +9,49 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
-HELPER_SPLINT=@HELPER_SPLINT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-LIBS=${TOP_LIBDIR}/libacl.a	\
-	${TOP_LIBDIR}/libvldb.a	\
-	${TOP_LIBDIR}/libprot.a	\
-	${TOP_LIBDIR}/libauth.a	\
-	${TOP_LIBDIR}/librxkad.a		\
-	${TOP_LIBDIR}/libubik.a 		\
-	${TOP_LIBDIR}/vlib.a		\
-	${TOP_LIBDIR}/libdir.a	\
-	${TOP_LIBDIR}/util.a		\
-	${TOP_LIBDIR}/libsys.a	\
-	${TOP_LIBDIR}/libafsint.a	\
-	${TOP_LIBDIR}/librxstat.a	\
-	${TOP_LIBDIR}/librx.a		\
-	${TOP_LIBDIR}/libsys.a	\
-	${TOP_LIBDIR}/libafscom_err.a	\
-	${TOP_LIBDIR}/libcmd.a		\
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libafsutil.a \
-	$(TOP_LIBDIR)/libopr.a \
-	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
-headers=${TOP_INCDIR}/lwp.h		\
-	${TOP_INCDIR}/afs/acl.h	\
-	${TOP_INCDIR}/afs/errors.h	\
-	${TOP_INCDIR}/afs/ptclient.h \
-	${TOP_INCDIR}/lock.h		\
-	${TOP_INCDIR}/afs/volume.h	\
-	${TOP_INCDIR}/afs/vnode.h	\
-	${TOP_INCDIR}/rx/rx.h	\
-	${TOP_INCDIR}/rx/xdr.h	\
-	${TOP_INCDIR}/afs/auth.h	\
-	${TOP_INCDIR}/afs/afsint.h	\
-	viced.h				\
-	host.h				\
-	callback.h			\
-	fs_stats.h
+MODULE_CFLAGS = -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
-objects=viced.o		\
-	afsfileprocs.o	\
-	host.o		\
-	physio.o	\
-	callback.o	\
-	fsstats.o
+RX=$(srcdir)/../rx
+VLSERVER=$(srcdir)/../vlserver
+LWP=$(srcdir)/../lwp
+LIBACL=$(srcdir)/../libacl
+UTIL=$(srcdir)/../util
+DIR=$(srcdir)/../dir
+VOL=$(srcdir)/../vol
+FSINT=$(srcdir)/../fsint
+
+VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
+	  fsstats.o
+
+VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
+
+LWPOBJS=lock.o threadname.o
+
+LIBACLOBJS=aclprocs.o netprocs.o
+
+UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o volparse.o flipbase64.o softsig.o pthread_threadname.o
+
+DIROBJS=buffer.o dir.o salvage.o
+
+VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
+	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
+	 fstab.o salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
+
+FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
+
+RXOBJS = rx_pthread.o
+
+objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
+	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+
+LIBS=${TOP_LIBDIR}/libafsauthent.a \
+     ${TOP_LIBDIR}/libafsrpc.a \
+     $(TOP_LIBDIR)/libcmd.a \
+     $(TOP_LIBDIR)/libopr.a \
+     ${TOP_LIBDIR}/util.a
 
 all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
 
@@ -92,7 +89,284 @@ cbd.o: callback.c AFS_component_version_number.c
 cbd: cbd.o
 	$(AFS_LDRULE) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
 
+<<<<<<< HEAD
 install: fileserver fs_stats.h
+||||||| parent of 1e76c59... auth: Relocate NetRestrict support functions
+CFLAGS_rx_pthread.o = -DDPF_FSLOG
+rx_pthread.o: ${RX}/rx_pthread.c
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
+
+uuid.o: ${UTIL}/uuid.c
+	$(AFS_CCRULE) $(UTIL)/uuid.c
+
+serverLog.o: ${UTIL}/serverLog.c
+	$(AFS_CCRULE) $(UTIL)/serverLog.c
+
+fileutil.o: ${UTIL}/fileutil.c
+	$(AFS_CCRULE) $(UTIL)/fileutil.c
+
+volparse.o: ${UTIL}/volparse.c
+	$(AFS_CCRULE) $(UTIL)/volparse.c
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	$(AFS_CCRULE) $(UTIL)/flipbase64.c
+
+netutils.o: ${UTIL}/netutils.c
+	$(AFS_CCRULE) -I../util $(UTIL)/netutils.c
+
+dirpath.o: ${UTIL}/dirpath.c
+	$(AFS_CCRULE) $(UTIL)/dirpath.c
+
+softsig.o: ${UTIL}/softsig.c
+	$(AFS_CCRULE) $(UTIL)/softsig.c
+
+pthread_threadname.o: ${UTIL}/pthread_threadname.c
+	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
+
+lock.o: ${LWP}/lock.c
+	$(AFS_CCRULE) $(LWP)/lock.c
+
+threadname.o: ${LWP}/threadname.c
+	$(AFS_CCRULE) $(LWP)/threadname.c
+
+aclprocs.o: ${LIBACL}/aclprocs.c
+	$(AFS_CCRULE) $(LIBACL)/aclprocs.c
+
+netprocs.o: ${LIBACL}/netprocs.c
+	$(AFS_CCRULE) $(LIBACL)/netprocs.c
+
+
+vldbint.cs.o: ../vlserver/vldbint.cs.c
+	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c
+
+vldbint.xdr.o: ../vlserver/vldbint.xdr.c
+	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.xdr.c
+
+
+buffer.o: ${DIR}/buffer.c
+	$(AFS_CCRULE) $(DIR)/buffer.c
+
+dir.o: ${DIR}/dir.c
+	$(AFS_CCRULE) $(DIR)/dir.c
+
+salvage.o: ${DIR}/salvage.c
+	$(AFS_CCRULE) $(DIR)/salvage.c
+
+vnode.o: ${VOL}/vnode.c
+	$(AFS_CCRULE) $(VOL)/vnode.c
+
+volume.o: ${VOL}/volume.c
+	$(AFS_CCRULE) $(VOL)/volume.c
+
+vutil.o: ${VOL}/vutil.c
+	$(AFS_CCRULE) $(VOL)/vutil.c
+
+partition.o: ${VOL}/partition.c
+	$(AFS_CCRULE) $(VOL)/partition.c
+
+vg_cache.o: ${VOL}/vg_cache.c
+	$(AFS_CCRULE) $(VOL)/vg_cache.c
+
+vg_scan.o: ${VOL}/vg_scan.c
+	$(AFS_CCRULE) $(VOL)/vg_scan.c
+
+fssync-server.o: ${VOL}/fssync-server.c
+	$(AFS_CCRULE) $(VOL)/fssync-server.c
+
+fssync-client.o: ${VOL}/fssync-client.c
+	$(AFS_CCRULE) $(VOL)/fssync-client.c
+
+salvsync-client.o: ${VOL}/salvsync-client.c
+	$(AFS_CCRULE) $(VOL)/salvsync-client.c
+
+daemon_com.o: ${VOL}/daemon_com.c
+	$(AFS_CCRULE) $(VOL)/daemon_com.c
+
+clone.o: ${VOL}/clone.c
+	$(AFS_CCRULE) $(VOL)/clone.c
+
+nuke.o: ${VOL}/nuke.c
+	$(AFS_CCRULE) $(VOL)/nuke.c
+
+devname.o: ${VOL}/devname.c
+	$(AFS_CCRULE) $(VOL)/devname.c
+
+# only for darwin?
+fstab.o: ${UTIL}/fstab.c
+	$(AFS_CCRULE) $(UTIL)/fstab.c
+
+common.o: ${VOL}/common.c
+	$(AFS_CCRULE) $(VOL)/common.c
+
+listinodes.o: ${VOL}/listinodes.c
+	$(AFS_CCRULE) $(VOL)/listinodes.c
+
+ihandle.o: ${VOL}/ihandle.c
+	$(AFS_CCRULE) $(VOL)/ihandle.c
+
+namei_ops.o: ${VOL}/namei_ops.c
+	$(AFS_CCRULE) $(VOL)/namei_ops.c
+
+afsaux.o: ${FSINT}/afsaux.c
+	$(AFS_CCRULE) -I../fsint $(FSINT)/afsaux.c
+
+afscbint.cs.o: ../fsint/afscbint.cs.c
+	$(AFS_CCRULE) ../fsint/afscbint.cs.c
+
+afscbint.ss.o: ../fsint/afscbint.ss.c
+	$(AFS_CCRULE) ../fsint/afscbint.ss.c
+
+afsint.cs.o: ../fsint/afsint.cs.c
+	$(AFS_CCRULE) ../fsint/afsint.cs.c
+
+afsint.ss.o: ../fsint/afsint.ss.c
+	$(AFS_CCRULE) ../fsint/afsint.ss.c
+
+afsint.xdr.o: ../fsint/afsint.xdr.c
+	$(AFS_CCRULE) ../fsint/afsint.xdr.c
+
+fileserver: ${objects} ${LIBS}
+	$(AFS_LDRULE) ${objects} \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+
+install: fileserver
+=======
+CFLAGS_rx_pthread.o = -DDPF_FSLOG
+rx_pthread.o: ${RX}/rx_pthread.c
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
+
+uuid.o: ${UTIL}/uuid.c
+	$(AFS_CCRULE) $(UTIL)/uuid.c
+
+serverLog.o: ${UTIL}/serverLog.c
+	$(AFS_CCRULE) $(UTIL)/serverLog.c
+
+fileutil.o: ${UTIL}/fileutil.c
+	$(AFS_CCRULE) $(UTIL)/fileutil.c
+
+volparse.o: ${UTIL}/volparse.c
+	$(AFS_CCRULE) $(UTIL)/volparse.c
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	$(AFS_CCRULE) $(UTIL)/flipbase64.c
+
+dirpath.o: ${UTIL}/dirpath.c
+	$(AFS_CCRULE) $(UTIL)/dirpath.c
+
+softsig.o: ${UTIL}/softsig.c
+	$(AFS_CCRULE) $(UTIL)/softsig.c
+
+pthread_threadname.o: ${UTIL}/pthread_threadname.c
+	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
+
+lock.o: ${LWP}/lock.c
+	$(AFS_CCRULE) $(LWP)/lock.c
+
+threadname.o: ${LWP}/threadname.c
+	$(AFS_CCRULE) $(LWP)/threadname.c
+
+aclprocs.o: ${LIBACL}/aclprocs.c
+	$(AFS_CCRULE) $(LIBACL)/aclprocs.c
+
+netprocs.o: ${LIBACL}/netprocs.c
+	$(AFS_CCRULE) $(LIBACL)/netprocs.c
+
+
+vldbint.cs.o: ../vlserver/vldbint.cs.c
+	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c
+
+vldbint.xdr.o: ../vlserver/vldbint.xdr.c
+	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.xdr.c
+
+
+buffer.o: ${DIR}/buffer.c
+	$(AFS_CCRULE) $(DIR)/buffer.c
+
+dir.o: ${DIR}/dir.c
+	$(AFS_CCRULE) $(DIR)/dir.c
+
+salvage.o: ${DIR}/salvage.c
+	$(AFS_CCRULE) $(DIR)/salvage.c
+
+vnode.o: ${VOL}/vnode.c
+	$(AFS_CCRULE) $(VOL)/vnode.c
+
+volume.o: ${VOL}/volume.c
+	$(AFS_CCRULE) $(VOL)/volume.c
+
+vutil.o: ${VOL}/vutil.c
+	$(AFS_CCRULE) $(VOL)/vutil.c
+
+partition.o: ${VOL}/partition.c
+	$(AFS_CCRULE) $(VOL)/partition.c
+
+vg_cache.o: ${VOL}/vg_cache.c
+	$(AFS_CCRULE) $(VOL)/vg_cache.c
+
+vg_scan.o: ${VOL}/vg_scan.c
+	$(AFS_CCRULE) $(VOL)/vg_scan.c
+
+fssync-server.o: ${VOL}/fssync-server.c
+	$(AFS_CCRULE) $(VOL)/fssync-server.c
+
+fssync-client.o: ${VOL}/fssync-client.c
+	$(AFS_CCRULE) $(VOL)/fssync-client.c
+
+salvsync-client.o: ${VOL}/salvsync-client.c
+	$(AFS_CCRULE) $(VOL)/salvsync-client.c
+
+daemon_com.o: ${VOL}/daemon_com.c
+	$(AFS_CCRULE) $(VOL)/daemon_com.c
+
+clone.o: ${VOL}/clone.c
+	$(AFS_CCRULE) $(VOL)/clone.c
+
+nuke.o: ${VOL}/nuke.c
+	$(AFS_CCRULE) $(VOL)/nuke.c
+
+devname.o: ${VOL}/devname.c
+	$(AFS_CCRULE) $(VOL)/devname.c
+
+# only for darwin?
+fstab.o: ${UTIL}/fstab.c
+	$(AFS_CCRULE) $(UTIL)/fstab.c
+
+common.o: ${VOL}/common.c
+	$(AFS_CCRULE) $(VOL)/common.c
+
+listinodes.o: ${VOL}/listinodes.c
+	$(AFS_CCRULE) $(VOL)/listinodes.c
+
+ihandle.o: ${VOL}/ihandle.c
+	$(AFS_CCRULE) $(VOL)/ihandle.c
+
+namei_ops.o: ${VOL}/namei_ops.c
+	$(AFS_CCRULE) $(VOL)/namei_ops.c
+
+afsaux.o: ${FSINT}/afsaux.c
+	$(AFS_CCRULE) -I../fsint $(FSINT)/afsaux.c
+
+afscbint.cs.o: ../fsint/afscbint.cs.c
+	$(AFS_CCRULE) ../fsint/afscbint.cs.c
+
+afscbint.ss.o: ../fsint/afscbint.ss.c
+	$(AFS_CCRULE) ../fsint/afscbint.ss.c
+
+afsint.cs.o: ../fsint/afsint.cs.c
+	$(AFS_CCRULE) ../fsint/afsint.cs.c
+
+afsint.ss.o: ../fsint/afsint.ss.c
+	$(AFS_CCRULE) ../fsint/afsint.ss.c
+
+afsint.xdr.o: ../fsint/afsint.xdr.c
+	$(AFS_CCRULE) ../fsint/afsint.xdr.c
+
+fileserver: ${objects} ${LIBS}
+	$(AFS_LDRULE) ${objects} \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+
+install: fileserver
+>>>>>>> 1e76c59... auth: Relocate NetRestrict support functions
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} ${srcdir}/fs_stats.h ${DESTDIR}${includedir}/afs/fs_stats.h

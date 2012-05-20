@@ -116,23 +116,6 @@ extern afs_int32 ktime_DateToInt32(char *adate, afs_int32 * aint32);
 extern char *ktime_GetDateUsage(void);
 extern afs_int32 ktime_InterpretDate(struct ktime_date *akdate);
 
-/* netutils.c */
-extern afs_uint32 extract_Addr(char *line, int maxSize);
-extern int parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
-				afs_uint32 * mtu, afs_uint32 maxAddrs,
-				afs_uint32 * nAddrs, char reason[],
-				const char *fileName);
-extern int ParseNetInfoFile(afs_uint32 * final, afs_uint32 * mask,
-			    afs_uint32 * mtu, int max, char reason[],
-			    const char *fileName);
-extern int filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[],
-		       afs_uint32 mask1[], afs_uint32 mask2[],
-		       afs_uint32 mtu1[], afs_uint32 mtu2[], int n1, int n2);
-extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
-			 afs_uint32 mtubuf[], afs_uint32 max, char reason[],
-			 const char *niFileName, const char *nrFileName);
-
-
 /* pthread_glock.c */
 
 

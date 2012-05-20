@@ -43,7 +43,8 @@ AUTHOBJS = \
 	$(OUT)\keys.obj \
         $(OUT)\token.obj \
         $(OUT)\token.xdr.obj \
-	$(OUT)\acfg_errors.obj
+	$(OUT)\acfg_errors.obj \
+	$(OUT)\netrestrict.obj
 
 KAUTHOBJS = \
 	$(OUT)\kauth.xdr.obj \

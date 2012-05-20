@@ -1084,10 +1084,10 @@ main(int argc, char **argv, char **envp)
 	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
 	    AFSDIR_SERVER_NETINFO_FILEPATH) {
 	    char reason[1024];
-	    ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-	                          ADDRSPERSITE, reason,
-	                          AFSDIR_SERVER_NETINFO_FILEPATH,
-	                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	    ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+			                  ADDRSPERSITE, reason,
+	                                  AFSDIR_SERVER_NETINFO_FILEPATH,
+	                                  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else {
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }

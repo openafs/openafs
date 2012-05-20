@@ -1588,7 +1588,6 @@
                                 <File Id="filelockprocs_prototypes_H" Name="LOCKPROC.h" LongName="lockprocs_prototypes.h" DiskId="1" src="$(var.IncDir)afs\lockprocs_prototypes.h" />
                                 <File Id="filemit_sipb_cr_H" Name="MITSIPBC.h" LongName="mit-sipb-cr.h" DiskId="1" src="$(var.IncDir)afs\mit-sipb-cr.h" />
                                 <File Id="filenamei_ops_H" Name="nameiops.h" LongName="namei_ops.h" DiskId="1" src="$(var.IncDir)afs\namei_ops.h" />
-                                <File Id="filenetutils_H" Name="netutil.h" LongName="netutils.h" DiskId="1" src="$(var.IncDir)afs\netutils.h" />
                                 <File Id="filenfs_H" Name="nfs.h" LongName="nfs.h" DiskId="1" src="$(var.IncDir)afs\nfs.h" /> 
                                 <File Id="filentops_H" Name="ntops.h" LongName="ntops.h" DiskId="1" src="$(var.IncDir)afs\ntops.h" /> 
                                 <File Id="fileopr_H" Name="opr.h" LongName="opr.h" DiskId="1" src="$(var.IncDir)afs\opr.h" />
