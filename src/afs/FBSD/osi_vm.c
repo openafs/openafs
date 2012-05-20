@@ -75,34 +75,22 @@
 int
 osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
-    struct vnode *vp = AFSTOV(avc);
+    struct vnode *vp;
+    int code;
 
-    if (!VI_TRYLOCK(vp)) /* need interlock to check usecount */
+    vp = AFSTOV(avc);
+
+    if (!VI_TRYLOCK(vp))
 	return EBUSY;
-
-    if (vp->v_usecount > 0) {
+    code = osi_fbsd_checkinuse(avc);
+    if (code) {
 	VI_UNLOCK(vp);
-	return EBUSY;
-    }
-
-    /* XXX
-     * The value of avc->opens here came to be, at some point,
-     * typically -1.  This was caused by incorrectly performing afs_close
-     * processing on vnodes being recycled */
-    if (avc->opens) {
-	VI_UNLOCK(vp);
-	return EBUSY;
-    }
-
-    /* if a lock is held, give up */
-    if (CheckLock(&avc->lock)) {
-	VI_UNLOCK(vp);
-	return EBUSY;
+	return code;
     }
 
     if ((vp->v_iflag & VI_DOOMED) != 0) {
 	VI_UNLOCK(vp);
-	return (0);
+	return 0;
     }
 
     /* must hold the vnode before calling vgone()
