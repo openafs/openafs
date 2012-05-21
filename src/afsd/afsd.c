@@ -2300,7 +2300,7 @@ afsd_run(void)
     if (enable_fakestat) {
 	if (afsd_verbose)
 	    printf("%s: Enabling fakestat support in kernel%s.\n", rn,
-		   (enable_fakestat==2)?" for all mountpoints."
+		   (enable_fakestat==1)?" for all mountpoints."
 		   :" for crosscell mountpoints");
 	code = afsd_call_syscall(AFSOP_SET_FAKESTAT, enable_fakestat);
 	if (code)
