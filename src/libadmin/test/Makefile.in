@@ -8,7 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
-
+top_builddir=@TOP_OBJDIR@
 
 ########################################################################
 # build tests
@@ -23,7 +23,7 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
 	$(TOP_LIBDIR)/libcmd.a \
-	$(TOP_LIBDIR)/libopr.a \
+	$(top_builddir)/src/opr/liboafs_opr.la \
 	$(TOP_LIBDIR)/libafsutil.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
@@ -40,7 +40,7 @@ all test tests: afscp
 CFLAGS_client.o = @CFLAGS_NOERROR@
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
-	$(AFS_LDRULE) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) \
+	$(LT_LDRULE_static) afscp.o $(AFSCPOBJS) $(AFSCPLIBS) \
 		$(LIB_roken) $(LIB_crypt) ${MT_LIBS} $(XLIBS)
 
 #######################################################################
@@ -49,4 +49,5 @@ install:
 dest:
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o afscp core

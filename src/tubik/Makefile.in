@@ -33,7 +33,7 @@ UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o \
 LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
      ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/libcmd.a \
      ${TOP_LIBDIR}/libsys.a \
-     $(TOP_LIBDIR)/libopr.a \
+     $(top_builddir)/src/opr/liboafs_opr.la \
      ${XLIBS} ${MT_LIBS}
 
 all: depinstall ${TOP_LIBDIR}/libubik_pthread.a udebug utst_server utst_client
@@ -92,15 +92,15 @@ pthread_threadname.o: ${UTIL}/pthread_threadname.c
 #
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	$(AFS_LDRULE) utst_server.o utst_int.ss.o utst_int.xdr.o \
+	$(LT_LDRULE_static) utst_server.o utst_int.ss.o utst_int.xdr.o \
 		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	$(AFS_LDRULE) utst_client.o utst_int.cs.o utst_int.xdr.o \
+	$(LT_LDRULE_static) utst_client.o utst_int.cs.o utst_int.xdr.o \
 		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 udebug: udebug.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
-	$(AFS_LDRULE) udebug.o libubik_pthread.a \
+	$(LT_LDRULE_static) udebug.o libubik_pthread.a \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 ubik_int.cs.c: ${UBIK}/ubik_int.xg
@@ -212,8 +212,8 @@ install: libubik_pthread.a ubik.h ubik_int.h udebug
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL_DATA} libubik_pthread.a ${DESTDIR}${libdir}/libubik_pthread.a
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then                 \
-	    ${INSTALL_PROGRAM} udebug ${DESTDIR}${bindir}/udebug;          \
-	    ${INSTALL_PROGRAM} udebug ${DESTDIR}${afssrvbindir}/udebug;    \
+	    $(LT_INSTALL_PROGRAM) udebug ${DESTDIR}${bindir}/udebug;          \
+	    $(LT_INSTALL_PROGRAM) udebug ${DESTDIR}${afssrvbindir}/udebug;    \
 	    ${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h;         \
 	    ${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h; \
 	fi
@@ -233,6 +233,7 @@ dest: libubik_pthread.a ubik.h ubik_int.h udebug
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o utst_server utst_client udebug *.a *.cs.c *.ss.c *.xdr.c
 	$(RM) -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h
 

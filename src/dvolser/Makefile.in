@@ -47,7 +47,7 @@ LIBS=	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsrpc.a       \
 	${TOP_LIBDIR}/libafsutil.a      \
-	${TOP_LIBDIR}/libopr.a		\
+	$(top_builddir)/src/opr/liboafs_opr.la \
 	${TOP_LIBDIR}/libusd.a
 
 all: davolserver 
@@ -195,18 +195,20 @@ namei_ops.o: ${VOL}/namei_ops.c
 	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 davolserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} ${LIBS} $(LIB_hcrypto) $(LIB_roken) \
+	$(LT_LDRULE_static) ${objects} ${LIBS} $(LIB_hcrypto) $(LIB_roken) \
 		${MT_LIBS} ${XLIBS}
 
 install: davolserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL} davolserver ${DESTDIR}${afssrvlibexecdir}/davolserver
+	${LT_INSTALL_PROGRAM} davolserver \
+		${DESTDIR}${afssrvlibexecdir}/davolserver
 
 dest: davolserver
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} davolserver ${DEST}/root.server/usr/afs/bin/davolserver
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o davolserver core AFS_component_version_number.c
 
 include ../config/Makefile.version

@@ -14,29 +14,29 @@ MODULE_LIBS = 	../tap/libtap.a \
 		$(abs_top_builddir)/lib/libafsauthent.a \
 		$(abs_top_builddir)/lib/libafsrpc.a \
 		$(abs_top_builddir)/lib/libafshcrypto.a \
-		$(abs_top_builddir)/lib/libopr.a \
+		$(abs_top_builddir)/lib/liboafs_opr.la \
 		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
 		$(XLIBS)
 
 authcon-t: authcon-t.o ../common/config.o
-	$(AFS_LDRULE) authcon-t.o ../common/config.o \
+	$(LT_LDRULE_static) authcon-t.o ../common/config.o \
 		$(MODULE_LIBS)
 
 superuser-t: superuser-t.o ../common/config.o ../common/rxkad.o \
 	     test.cs.o test.ss.o test.xdr.o
-	$(AFS_LDRULE) superuser-t.o ../common/config.o ../common/rxkad.o \
-		../common/servers.o \
+	$(LT_LDRULE_static) superuser-t.o ../common/config.o
+		../common/rxkad.o ../common/servers.o \
 		test.cs.o test.ss.o test.xdr.o \
 		$(MODULE_LIBS)
 
 keys-t: keys-t.o ../common/config.o
-	$(AFS_LDRULE) keys-t.o ../common/config.o $(MODULE_LIBS)
+	$(LT_LDRULE_static) keys-t.o ../common/config.o $(MODULE_LIBS)
 
 realms-t: realms-t.o ../common/config.o
-	$(AFS_LDRULE) realms-t.o ../common/config.o $(MODULE_LIBS)
+	$(LT_LDRULE_static) realms-t.o ../common/config.o $(MODULE_LIBS)
 
 writekeyfile: writekeyfile.o
-	$(AFS_LDRULE) writekeyfile.o $(MODULE_LIBS)
+	$(LT_LDRULE_static) writekeyfile.o $(MODULE_LIBS)
 
 test.cs.c: test.xg
 	$(RXGEN) -A -x -C -o $@ $(srcdir)/test.xg
@@ -53,5 +53,6 @@ test.h: test.xg
 superuser-t.o: test.h
 
 clean:
+	$(LT_CLEAN)
 	rm -f *.o *.cs.c *.ss.c *.xdr.c test.h \
 		writekeyfile $(TESTS)

@@ -37,7 +37,7 @@ LIBS=${RXOBJS} ${UTILOBJS}\
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libopr.a \
+	$(top_builddir)/src/opr/liboafs_opr.la \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a 
 
@@ -150,7 +150,7 @@ display.o: ${PTSERVER}/display.c ${INCLS}
 	${AFS_CCRULE} ${PTSERVER}/display.c
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) map.o
-	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o \
+	$(LT_LDRULE_static) ptserver.o ptutils.o ptprocs.o \
 		ptint.ss.o ptint.xdr.o utils.o map.o \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
 		${XLIBS}
@@ -159,12 +159,12 @@ db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/db_verify.c
 
 db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(AFS_LDRULE) db_verify.o display.o pterror.o \
+	$(LT_LDRULE_static) db_verify.o display.o pterror.o \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 ptclient: ptclient.o display.o ptuser.o pterror.o ptint.cs.o ptint.xdr.o \
 	AFS_component_version_number.o $(LIBS)
-	$(AFS_LDRULE) ptclient.o display.o $(PTOBJS) \
+	$(LT_LDRULE_static) ptclient.o display.o $(PTOBJS) \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
@@ -178,35 +178,35 @@ pterror.h pterror.c: ${PTSERVER}/pterror.et
 	${COMPILE_ET} -p ${srcdir}/${PTSERVER} pterror
 
 pts: pts.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${INCLS}
-	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
+	$(LT_LDRULE_static) pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 pts.o: ${PTSERVER}/pts.c
 	$(AFS_CCRULE) $(PTSERVER)/pts.c
 
 readgroup: readgroup.o $(PTOBJS) $(LIBS)
-	$(AFS_LDRULE) readgroup.o $(PTOBJS) \
+	$(LT_LDRULE_static) readgroup.o $(PTOBJS) \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 readgroup.o: ${PTSERVER}/readgroup.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readgroup.c
 
 readpwd: readpwd.o $(PTOBJS) $(LIBS)
-	$(AFS_LDRULE) readpwd.o $(PTOBJS) \
+	$(LT_LDRULE_static) readpwd.o $(PTOBJS) \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 readpwd.o: ${PTSERVER}/readpwd.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readpwd.c
 
 testpt: testpt.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(AFS_LDRULE) testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
+	$(LT_LDRULE_static) testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/testpt.c
 
 pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) $(LIBS)
-	$(AFS_LDRULE) pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) \
+	$(LT_LDRULE_static) pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) \
 		${TOP_LIBDIR}/libcmd.a \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
@@ -225,11 +225,13 @@ prerror.h: pterror.h
 #
 install: ptserver pts pt_util db_verify
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
-		${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver; \
-		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
-		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
-		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
-		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
+		${LT_INSTALL_PROGRAM} ptserver \
+			${DESTDIR}${afssrvlibexecdir}/ptserver; \
+		${LT_INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
+		${LT_INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
+		${LT_INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
+		${LT_INSTALL_PROGRAM} db_verify \
+			${DESTDIR}${afssrvsbindir}/prdb_check; \
 	fi
 
 dest: ptserver pts pt_util db_verify
@@ -245,6 +247,7 @@ dest: ptserver pts pt_util db_verify
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
 	pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c

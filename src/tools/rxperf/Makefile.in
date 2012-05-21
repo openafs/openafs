@@ -1,15 +1,15 @@
 srcdir=@srcdir@
-
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
+top_builddir=@TOP_OBJDIR@
 
 LIBS= $(TOP_LIBDIR)/libafsrpc.a \
-      $(TOP_LIBDIR)/libopr.a
+      $(top_builddir)/src/opr/liboafs_opr.la
 
 all: rxperf
 
 rxperf: rxperf.o $(LIBS)
-	$(AFS_LDRULE) rxperf.o $(LIBS) $(LIB_hcrypto) $(LIB_roken) \
+	$(LT_LDRULE_static) rxperf.o $(LIBS) $(LIB_hcrypto) $(LIB_roken) \
 		$(MT_LIBS) $(XLIBS)
 
 install:
@@ -17,4 +17,5 @@ install:
 dest:
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f rxperf.o rxperf

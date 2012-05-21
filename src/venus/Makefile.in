@@ -29,7 +29,7 @@ AFSIO_LIBS=${TOP_LIBDIR}/libafscp.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
 	$(TOP_LIBDIR)/libafsutil.a \
-	$(TOP_LIBDIR)/libopr.a
+	$(top_builddir)/src/opr/liboafs_opr.la
 
 FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libvldb.a \
@@ -94,7 +94,8 @@ afscbint.ss.o: ../fsint/afscbint.ss.c
 	${PTH_CCRULE} ../fsint/afscbint.ss.c
 
 afsio: afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS}
-	$(MT_CC) $(PTH_LDFLAGS) $(AFS_CFLAGS) -o afsio afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS} \
+	$(LT_LDRULE_static) afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o \
+		${AFSIO_LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} \
 		$(LDFLAGS_krb5) $(LIB_krb5)
 

@@ -54,7 +54,7 @@ LIBS=	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libafsutil.a      \
 	${TOP_LIBDIR}/libusd.a          \
 	${TOP_LIBDIR}/libafsrpc.a	\
-	$(TOP_LIBDIR)/libopr.a
+	$(top_builddir)/src/opr/liboafs_opr.la
 
 all: volserver vos
 
@@ -208,20 +208,20 @@ vos.o: ${VOLSER}/vos.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/vos.c
 
 vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
-	$(AFS_LDRULE) vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} \
+	$(LT_LDRULE_static) vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} \
 		${TOP_LIBDIR}/libubik_pthread.a \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 volserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} \
+	$(LT_LDRULE_static) ${objects} \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 install: volserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
+	${LT_INSTALL_PROGRAM} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then     \
-	    ${INSTALL} vos ${DESTDIR}${afssrvsbindir}/vos;     \
-	    ${INSTALL} vos ${DESTDIR}${sbindir}/vos;           \
+	    $(LT_INSTALL_PROGRAM) vos ${DESTDIR}${afssrvsbindir}/vos;     \
+	    $(LT_INSTALL_PROGRAM) vos ${DESTDIR}${sbindir}/vos;           \
 	fi
 
 dest: volserver
@@ -233,6 +233,7 @@ dest: volserver
 	fi
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o volserver core AFS_component_version_number.c
 
 include ../config/Makefile.version

@@ -37,7 +37,7 @@ LIBS=	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a \
-	${TOP_LIBDIR}/libopr.a
+	$(top_builddir)/src/opr/liboafs_opr.la
 
 OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS} ${UTILOBJS} 
 
@@ -96,28 +96,28 @@ pthread_threadname.o: ${UTIL}/pthread_threadname.c
 
 
 vldb_check: vldb_check.o ${LIBS} AFS_component_version_number.o
-	$(AFS_LDRULE) vldb_check.o AFS_component_version_number.o \
+	$(LT_LDRULE_static) vldb_check.o AFS_component_version_number.o \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} 
 
 vldb_check.o: ${VLSERVER}/vldb_check.c 
 	$(AFS_CCRULE) $(VLSERVER)/vldb_check.c
 
 cnvldb: cnvldb.o ${LIBS} 
-	$(AFS_LDRULE) cnvldb.o \
+	$(LT_LDRULE_static) cnvldb.o \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 cnvldb.o: ${VLSERVER}/cnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/cnvldb.c
 
 sascnvldb: sascnvldb.o ${LIBS} 
-	$(AFS_LDRULE) sascnvldb.o \
+	$(LT_LDRULE_static) sascnvldb.o \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 sascnvldb.o: ${VLSERVER}/sascnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/sascnvldb.c
 
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
-	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
+	$(LT_LDRULE_static) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
@@ -157,7 +157,7 @@ Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
 	${RXGEN} -A -x -k -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
-	$(AFS_LDRULE) vlclient.o $(OBJS) ${TOP_LIBDIR}/libcmd.a \
+	$(LT_LDRULE_static) vlclient.o $(OBJS) ${TOP_LIBDIR}/libcmd.a \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 		
 vlclient.o: ${VLSERVER}/vlclient.c
@@ -172,16 +172,22 @@ system: install
 
 install: vlserver cnvldb vldb_check
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
-		${INSTALL_PROGRAM} vlserver ${DESTDIR}${afssrvlibexecdir}/vlserver; \
-		${INSTALL_PROGRAM} cnvldb ${DESTDIR}${afssrvsbindir}/vldb_convert; \
-		${INSTALL_PROGRAM} vldb_check ${DESTDIR}${afssrvsbindir}/vldb_check; \
+		$(LT_INSTALL_PROGRAM) vlserver \
+			${DESTDIR}${afssrvlibexecdir}/vlserver; \
+		$(LT_INSTALL_PROGRAM) cnvldb \
+			${DESTDIR}${afssrvsbindir}/vldb_convert; \
+		$(LT_INSTALL_PROGRAM) vldb_check \
+			${DESTDIR}${afssrvsbindir}/vldb_check; \
 	fi
 
 dest: vlserver cnvldb vldb_check
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
-		${INSTALL_PROGRAM} vlserver ${DEST}/root.server/usr/afs/bin/vlserver; \
-		${INSTALL_PROGRAM} cnvldb ${DEST}/etc/vldb_convert; \
-		${INSTALL_PROGRAM} vldb_check ${DEST}/etc/vldb_check; \
+		$(LT_INSTALL_PROGRAM) vlserver \
+			${DEST}/root.server/usr/afs/bin/vlserver; \
+		$(LT_INSTALL_PROGRAM) cnvldb \
+			${DEST}/etc/vldb_convert; \
+		$(LT_INSTALL_PROGRAM) vldb_check \
+			${DEST}/etc/vldb_check; \
 	fi
 
 #
@@ -190,6 +196,7 @@ dest: vlserver cnvldb vldb_check
 include ../config/Makefile.version
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.otl *.xdr.c *.cs.c *.ss.c core \
 		vlserver vlclient cnvldb vldbint.h vlserver.h vldb_check \
 		vl_errors.c AFS_component_version_number.c

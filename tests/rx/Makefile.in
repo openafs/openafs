@@ -9,15 +9,16 @@ MODULE_CFLAGS = -I$(srcdir)/../..
 
 LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/lib/libafsrpc.a \
-       $(abs_top_builddir)/lib/libopr.a
+       $(abs_top_builddir)/src/opr/liboafs_opr.la
 
 tests = event-t
 
 all check test tests: $(tests)
 
 event-t: event-t.o $(LIBS)
-	$(AFS_LDRULE) event-t.o $(LIBS) $(LIB_roken) $(XLIBS)
+	$(LT_LDRULE_static) event-t.o $(LIBS) $(LIB_roken) $(XLIBS)
 install:
 
 clean distclean:
+	$(LT_clean)
 	$(RM) -f $(tests) *.o core

@@ -54,7 +54,7 @@ LIBS=   ${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libopr.a
+	$(top_builddir)/src/opr/liboafs_opr.la
 
 SLIBS=	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libdir.a \
@@ -63,7 +63,7 @@ SLIBS=	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libacl.a \
 	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libopr.a 
+	$(top_builddir)/src/opr/liboafs_opr.la
 
 all: salvageserver dafssync-debug salvsync-debug dasalvager
 
@@ -200,31 +200,31 @@ namei_ops.o: ${VOL}/namei_ops.c
 	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
 salvageserver: ${OBJECTS} ${LIBS}
-	$(AFS_LDRULE) ${OBJECTS} ${LIBS} \
+	$(LT_LDRULE_static) ${OBJECTS} ${LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
 
 dasalvager: ${SOBJECTS} ${SLIBS}
-	$(AFS_LDRULE) ${SOBJECTS} ${SLIBS} \
+	$(LT_LDRULE_static) ${SOBJECTS} ${SLIBS} \
 		$(LIB_roken) ${XLIBS}
 
 dafssync-debug: ${FSSDEBUG_OBJS} ${LIBS}
-	$(AFS_LDRULE) ${FSSDEBUG_OBJS} ${LIBS} \
+	$(LT_LDRULE_static) ${FSSDEBUG_OBJS} ${LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
 
 salvsync-debug: ${SSSDEBUG_OBJS} ${LIBS}
-	$(AFS_LDRULE) ${SSSDEBUG_OBJS} ${LIBS} \
+	$(LT_LDRULE_static) ${SSSDEBUG_OBJS} ${LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) ${MT_LIBS} ${XLIBS}
 
 install: salvageserver dafssync-debug salvsync-debug dasalvager
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
-	${INSTALL_PROGRAM} dasalvager \
+	${LT_INSTALL_PROGRAM} dasalvager \
 		${DESTDIR}${afssrvlibexecdir}/dasalvager
-	${INSTALL_PROGRAM} salvageserver \
+	${LT_INSTALL_PROGRAM} salvageserver \
 		${DESTDIR}${afssrvlibexecdir}/salvageserver
-	${INSTALL_PROGRAM} dafssync-debug \
+	${LT_INSTALL_PROGRAM} dafssync-debug \
 		${DESTDIR}${afssrvsbindir}/dafssync-debug
-	${INSTALL_PROGRAM} salvsync-debug \
+	${LT_INSTALL_PROGRAM} salvsync-debug \
 		${DESTDIR}${afssrvsbindir}/salvsync-debug
 
 dest: salvageserver dafssync-debug salvsync-debug dasalvager
@@ -239,6 +239,7 @@ dest: salvageserver dafssync-debug salvsync-debug dasalvager
 		${DEST}/root.server/usr/afs/bin/salvsync-debug
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o salvageserver core AFS_component_version_number.c dafssync-debug salvsync-debug dasalvager
 
 include ../config/Makefile.version

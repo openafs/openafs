@@ -57,7 +57,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libafsrpc.a \
             ${TOP_LIBDIR}/libcmd.a \
 	    ${TOP_LIBDIR}/util.a \
-	    $(TOP_LIBDIR)/libopr.a \
+	    $(top_builddir)/src/opr/liboafs_opr.la \
 	    ${TOP_LIBDIR}/libusd.a \
 	    ${TOP_LIBDIR}/libprocmgmt.a
 
@@ -68,7 +68,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
-	$(AFS_LDRULE) ${BUTCOBJS} ${BUTCLIBS} \
+	$(LT_LDRULE_static) ${BUTCOBJS} ${BUTCLIBS} \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
@@ -139,7 +139,7 @@ file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
 #
 install: butc
 	${INSTALL} -d ${DESTDIR}${sbindir}
-	${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc
+	$(LT_INSTALL_PROGRAM) butc ${DESTDIR}${sbindir}/butc
 
 dest: butc
 	${INSTALL} -d ${DEST}/etc
@@ -149,6 +149,7 @@ dest: butc
 # Misc targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a core AFS_component_version_number.c butc
 
 include ../config/Makefile.version

@@ -50,12 +50,12 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
 SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a \
-	   ${TOP_LIBDIR}/libopr.a
+	   $(top_builddir)/src/opr/liboafs_opr.la
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
      $(TOP_LIBDIR)/libcmd.a \
-     ${TOP_LIBDIR}/libopr.a \
+     $(top_builddir)/src/opr/liboafs_opr.la \
      ${TOP_LIBDIR}/util.a
 
 all: dafileserver state_analyzer
@@ -211,17 +211,17 @@ state_analyzer.o: ${VICED}/state_analyzer.c
 	$(AFS_CCRULE) $(VICED)/state_analyzer.c
 
 dafileserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} \
+	$(LT_LDRULE_static) ${objects} \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 state_analyzer: ${SDBGOBJS}
-	$(AFS_LDRULE) ${SDBGOBJS} \
+	$(LT_LDRULE_static) ${SDBGOBJS} \
 		$(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 install: dafileserver state_analyzer
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
-	${INSTALL} dafileserver \
+	$(LT_INSTALL_PROGRAM) dafileserver \
 		${DESTDIR}${afssrvlibexecdir}/dafileserver
 	${INSTALL_PROGRAM} state_analyzer \
 		${DESTDIR}${afssrvsbindir}/state_analyzer
@@ -234,6 +234,7 @@ dest: dafileserver state_analyzer
 		${DEST}/root.server/usr/afs/bin/state_analyzer
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o dafileserver state_analyzer core AFS_component_version_number.c
 
 include ../config/Makefile.version

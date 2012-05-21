@@ -44,7 +44,7 @@ LIBS=${RXOBJS} ${UTILOBJS} \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
-	$(TOP_LIBDIR)/libopr.a \
+	$(top_builddir)/src/opr/liboafs_opr.la \
 	${TOP_LIBDIR}/libafsutil.a
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
@@ -136,7 +136,7 @@ server.o: ${BUDB}/server.c budb_errs.h ${INCLS}
 	$(AFS_CCRULE) $(BUDB)/server.c
 
 budb_server: $(SERVER_OBJS) ${LIBS}
-	$(AFS_LDRULE) $(SERVER_OBJS) ${LIBS} \
+	$(LT_LDRULE_static) $(SERVER_OBJS) ${LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 budb.cs.c: ${BUDB}/budb.rg
@@ -165,7 +165,7 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 #
 install: budb_server
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then      \
-	    ${INSTALl_PROGRAM} budb_server                      \
+	    ${LT_INSTALl_PROGRAM} budb_server                      \
 		${DESTDIR}${afssrvlibexecdir}/buserver;         \
 	fi
 
@@ -179,6 +179,7 @@ dest: budb_server
 # Misc targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *~ budb_errs.[ch] budb.h *.a *.xdr.c \
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 

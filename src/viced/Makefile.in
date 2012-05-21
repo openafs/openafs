@@ -50,7 +50,7 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
      $(TOP_LIBDIR)/libcmd.a \
-     $(TOP_LIBDIR)/libopr.a \
+     $(top_builddir)/src/opr/liboafs_opr.la \
      ${TOP_LIBDIR}/util.a
 
 all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
@@ -65,15 +65,15 @@ check_sysid: check_sysid.c
 fsprobe.o: fsprobe.c AFS_component_version_number.c
 
 fsprobe: fsprobe.o
-	$(AFS_LDRULE) fsprobe.o \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+	$(LT_LDRULE_static) fsprobe.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) ${XLIBS}
 
 CFLAGS_cbd.o = -DINTERPRET_DUMP
 cbd.o: callback.c AFS_component_version_number.c
 	$(AFS_CCRULE) $(srcdir)/callback.c
 
 cbd: cbd.o
-	$(AFS_LDRULE) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
+	$(LT_LDRULE_static) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 CFLAGS_rx_pthread.o = -DDPF_FSLOG
 rx_pthread.o: ${RX}/rx_pthread.c
@@ -206,13 +206,13 @@ afsint.xdr.o: ../fsint/afsint.xdr.c
 	$(AFS_CCRULE) ../fsint/afsint.xdr.c
 
 fileserver: ${objects} ${LIBS}
-	$(AFS_LDRULE) ${objects} \
+	$(LT_LDRULE_static) ${objects} \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 install: fileserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
-	${INSTALL} fileserver \
+	${LT_INSTALL_PROGRAM} fileserver \
 		${DESTDIR}${afssrvlibexecdir}/fileserver
 
 dest: fileserver
@@ -221,6 +221,7 @@ dest: fileserver
 		${DEST}/root.server/usr/afs/bin/fileserver
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o fileserver core AFS_component_version_number.c \
 	       cbd check_sysid fsprobe
 

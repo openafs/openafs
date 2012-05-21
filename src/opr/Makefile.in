@@ -1,8 +1,9 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.shared
+include @TOP_OBJDIR@/src/config/Makefile.libtool
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-objects = assert.o casestrcpy.o rbtree.o uuid.o
+LT_objs = assert.lo casestrcpy.lo rbtree.lo uuid.lo
 
 HEADERS = $(TOP_INCDIR)/afs/opr.h \
 	  $(TOP_INCDIR)/afs/opr_assert.h \
@@ -12,15 +13,23 @@ HEADERS = $(TOP_INCDIR)/afs/opr.h \
 	  $(TOP_INCDIR)/opr/time.h \
 	  $(TOP_INCDIR)/opr/uuid.h
 
-all: $(HEADERS) $(TOP_LIBDIR)/libopr.a
+all: $(HEADERS) liboafs_opr.la $(TOP_LIBDIR)/libopr_pic.a $(TOP_LIBDIR)/libopr.a
 
-libopr.a: $(objects)
-	-$(RM) -f $@
-	$(AR) crv $@ $(objects)
-	$(RANLIB) $@
+liboafs_opr.la: $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libopr.a: $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
+
+libopr_pic.a: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 $(TOP_LIBDIR)/libopr.a: libopr.a
 	$(INSTALL_DATA) libopr.a $@
+
+$(TOP_LIBDIR)/libopr_pic.a: libopr.a
+	$(INSTALL_DATA) libopr.a $@
+
 
 $(TOP_INCDIR)/afs/opr.h: opr.h
 	$(INSTALL_DATA) $? $@
@@ -44,9 +53,11 @@ $(TOP_INCDIR)/opr/uuid.h: ${srcdir}/uuid.h
 	$(INSTALL_DATA) $? $@
 
 clean:
-	rm -f $(objects) libopr.a
+	$(LT_CLEAN)
+	rm -f libopr.a
 
 install: libopr.a
+	$(LT_INSTALL_DATA) liboafs_opr.la $(DESTDIR)$(libdir)/liboafs_opr.la
 	$(INSTALL_DATA) libopr.a $(DESTDIR)$(libdir)/libopr.a
 	$(INSTALL) -d $(DESTDIR)$(includedir)/opr
 	$(INSTALL_DATA) ${srcdir}/queue.h $(DESTDIR)$(includedir)/opr/queue.h
@@ -55,7 +66,6 @@ dest: libopr.a
 	$(INSTALL_DATA) libopr.a $(DEST)/lib/libopr.a
 	$(INSTALL) -d $(DEST)/include/opr
 	$(INSTALL_DATA) ${srcdir}/queue.h $(DEST)/include/opr/queue.h
-
 
 buildtools: $(HEADERS) $(TOP_LIBDIR)/libopr.a
 

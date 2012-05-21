@@ -15,6 +15,10 @@ do
 done
 
 echo "Updating configuration..."
+
+echo "Running libtoolize"
+libtoolize -c -f
+
 echo "Running aclocal"
 if which aclocal > /dev/null 2>&1; then
   aclocal -I src/cf -I src/external/rra-c-util/m4
@@ -25,8 +29,6 @@ else
   exit 1
 fi
 
-echo "Running libtoolize"
-libtoolize -c -f
 echo "Running autoconf"
 autoconf
 echo "Running autoconf for configure-libafs"

@@ -14,7 +14,7 @@ AFSLIBS= ${TOP_LIBDIR}/libafsauthent.a \
          ${TOP_LIBDIR}/libafsrpc.a \
 	 ${TOP_LIBDIR}/libafshcrypto.a \
 	 ${TOP_LIBDIR}/libcmd.a \
-	 ${TOP_LIBDIR}/libopr.a \
+	 $(top_builddir)/src/opr/liboafs_opr.la \
          ${TOP_LIBDIR}/util.a
 
 SRCS=	aklog.c krb_util.c linked_list.c
@@ -23,13 +23,13 @@ OBJS=   aklog.o krb_util.o linked_list.o
 all: aklog asetkey klog
 
 aklog:	${OBJS} ${AFSLIBS}
-	$(AFS_LDRULE) ${OBJS} ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
+	$(LT_LDRULE_static) ${OBJS} ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
 
 asetkey: asetkey.o ${AFSLIBS}
-	$(AFS_LDRULE) asetkey.o ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
+	$(LT_LDRULE_static) asetkey.o ${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
 
 klog:	klog.o skipwrap.o ${AFSLIBS}
-	$(AFS_LDRULE) klog.o skipwrap.o \
+	$(LT_LDRULE_static) klog.o skipwrap.o \
 		${AKLIBS} ${AFSLIBS} $(LIB_roken) ${MT_LIBS}
 
 #
@@ -37,10 +37,10 @@ klog:	klog.o skipwrap.o ${AFSLIBS}
 #
 install: aklog asetkey klog
 	${INSTALL} -d ${DESTDIR}${bindir}
-	${INSTALL_PROGRAM} aklog ${DESTDIR}${bindir}/aklog
-	${INSTALL_PROGRAM} klog ${DESTDIR}${bindir}/klog.krb5
+	${LT_INSTALL_PROGRAM} aklog ${DESTDIR}${bindir}/aklog
+	${LT_INSTALL_PROGRAM} klog ${DESTDIR}${bindir}/klog.krb5
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
-	${INSTALL_PROGRAM} asetkey ${DESTDIR}${afssrvbindir}/asetkey 
+	${LT_INSTALL_PROGRAM} asetkey ${DESTDIR}${afssrvbindir}/asetkey
 
 dest: aklog asetkey klog
 	${INSTALL} -d ${DEST}/bin
@@ -53,6 +53,7 @@ dest: aklog asetkey klog
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o ${OBJS} aklog asetkey klog
 
 include ../config/Makefile.version
