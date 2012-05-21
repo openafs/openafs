@@ -2571,6 +2571,7 @@ afs_WriteThroughDSlots(void)
  *
  * Parameters:
  *	aslot : Dcache slot to look at.
+ *      needvalid : Whether the specified slot should already exist
  *
  * Environment:
  *	Must be called with afs_xdcache write-locked.
@@ -2598,6 +2599,9 @@ afs_MemGetDSlot(afs_int32 aslot, int needvalid)
 	return tdc;
     }
 
+    /* if 'needvalid' is true, the slot must already exist and be populated
+     * somewhere. for memcache, the only place that dcache entries exist is
+     * in memory, so if we did not find it above, something is very wrong. */
     osi_Assert(!needvalid);
 
     if (!afs_freeDSList)
@@ -2659,6 +2663,7 @@ unsigned int last_error = 0, lasterrtime = 0;
  *
  * Parameters:
  *	aslot : Dcache slot to look at.
+ *      needvalid : Whether the specified slot should already exist
  *
  * Environment:
  *	afs_xdcache lock write-locked.
