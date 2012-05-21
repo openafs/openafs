@@ -25,6 +25,8 @@ else
   exit 1
 fi
 
+echo "Running libtoolize"
+libtoolize -c -f
 echo "Running autoconf"
 autoconf
 echo "Running autoconf for configure-libafs"

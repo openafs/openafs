@@ -829,6 +829,7 @@ distclean: clean
 	src/comerr/test/Makefile \
 	src/config/Makefile \
 	src/config/Makefile.config \
+	src/config/Makefile.libtool \
 	src/config/Makefile.lwp \
 	src/config/Makefile.pthread \
 	src/config/Makefile.shared \

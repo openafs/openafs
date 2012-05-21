@@ -5,6 +5,7 @@
 /Makefile.*_*[0123456789]
 /Makefile.*_*[0123456789].in
 /Makefile.config
+/Makefile.libtool
 /Makefile.lwp
 /Makefile.shared
 /Makefile.pthread

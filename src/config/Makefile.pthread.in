@@ -10,5 +10,9 @@ AFS_LDRULE_NOQ=$(RUN_LD_NOQ) $(MT_CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@
 	$(AFS_CCRULE) $<
 %.o: %.c
 	$(AFS_CCRULE) $<
+.c.lo:
+	$(LT_CCRULE) $<
+%.lo: %.c
+	$(LT_CCRULE) $<
 .m.o:
 	$(AFS_CCRULE) $<

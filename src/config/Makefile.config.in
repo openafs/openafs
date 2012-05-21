@@ -25,6 +25,7 @@ prefix=@prefix@
 sbindir=@sbindir@
 sysconfdir=@sysconfdir@
 viceetcdir=@viceetcdir@/
+top_builddir=@top_builddir@
 
 
 #
@@ -62,6 +63,7 @@ LIB_curses = @LIB_curses@
 LIB_hcrypto = @LIB_hcrypto@
 LIB_roken = @LIB_roken@
 LIB_krb5 = @KRB5_LIBS@
+LIBTOOL= @LIBTOOL@
 LIBS = @LIBS@
 LIB_LIBINTL = @LIB_libintl@
 LINUX_KERNEL_PATH = @LINUX_KERNEL_PATH@
@@ -144,7 +146,8 @@ KERNELDIR = ../libafs
 #
 COMPILE_ET = ${TOP_OBJDIR}/src/comerr/compile_et
 RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
-SHELL = /bin/sh
+SHELL = @SHELL@
+LWPTOOL = ${TOP_SRCDIR}/config/lwptool
 
 #
 # "Pretty" build line stuff
@@ -224,6 +227,40 @@ SHD_CFLAGS=$(COMMON_CFLAGS) $(MODULE_CFLAGS) $(MT_CFLAGS) $(SHLIB_CFLAGS)
 SHD_LDFLAGS=$(COMMON_LDFLAGS) $(MODULE_LDFLAGS) $(SHLIB_LDFLAGS)
 SHD_CCRULE        =$(RUN_CC) $(MT_CC) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 SHD_CCRULE_NOQ=$(RUN_CC_NOQ) $(MT_CC) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+
+# Libtool - for objects that are part of pthread-only libraries
+LT_CCRULE=$(RUN_CC) $(LIBTOOL) --quiet --mode=compile --tag=CC \
+	      $(MT_CC) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+
+# Libtool - for objects that are built for both pthread and lwp libraries
+LTLWP_CCRULE=$(RUN_CC) $(LWPTOOL) --mode compile \
+	         --lwpcc $(CCOBJ) \
+		 --mtcc "$(LIBTOOL) --quiet --mode=compile --tag=CC $(MT_CC) $(MT_CFLAGS)" \
+		 -o $@ \
+		 -- \
+		 $(COMMON_CFLAGS) $(MODULE_CFLAGS) $(CFLAGS_$(@)) \
+		 -c
+
+LT_LDLIB_lwp=$(RUN_LD) $(LWPTOOL) --mode link \
+	         --ranlib "$(RANLIB)" \
+		 --linker "$(AR) crv" \
+		 -o $@ \
+		 --
+
+
+# Use this to link an executable with one or more libtool libraries
+LT_LDRULE        = $(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
+		             $(MT_CC) $(PTH_LDFLAGS) $(PTH_CFLAGS) \
+			     $(LDFLAGS_$(@)) -o $@
+
+LT_LDRULE_static = $(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
+			     $(MT_CC) -static $(PTH_LDFLAGS) $(PTH_CFLAGS) \
+			     $(LDFLAGS_$(@)) -o $@
+
+LT_INSTALL_DATA=$(LIBTOOL) --quiet --mode=install $(INSTALL_DATA)
+LT_INSTALL_PROGRAM=$(LIBTOOL) --quiet --mode=install $(INSTALL_PROGRAM)
+
+LT_CLEAN=$(RM) -rf .libs *.la *.lo
 
 # Default rules. These will be overriden if the module Makefile specifically
 # includes a particular type (lwp, pthread, or shared)

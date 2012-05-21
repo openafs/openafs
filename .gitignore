@@ -15,7 +15,9 @@
 *.orig
 *.rej
 *.o
+*.lo
 *.a
+*.la
 *.so
 *.sl
 *.so.*
@@ -49,6 +51,7 @@ config.log
 /cscope.out
 /include
 /lib
+/libtool
 /autom4te.cache
 /ID
 /TAGS

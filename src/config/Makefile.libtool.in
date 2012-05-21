@@ -1,0 +1,34 @@
+# This Makefile fragment contains rules necessary to build libtool libraries,
+# the Makefile rules necessary to use them are all in Makefile.config
+
+LT_current=0
+LT_revision=0
+LT_age=0
+
+# Basic rule to link a shared library.
+LT_LDLIB_shlib=$(LIBTOOL) --quiet --mode=link --tag=CC \
+		$(MT_CC) -rpath $(libdir) \
+		$(PTH_LDFLAGS) $(PTH_CFLAGS) $(LDFLAGS_$(@)) \
+		-o $@ \
+	        -no-undefined \
+		-export-symbols $@.sym \
+		-version-info=$(LT_current):$(LT_revision):$(LT_age)
+
+
+# Link a static convenience library (contains no PIC code)
+LT_LDLIB_static=$(LIBTOOL) --quiet --mode=link --tag=CC \
+		 $(MT_CC) -static $(LDFLAGS) $(DBG) $(OPTMZ) \
+		 $(LDFLAGS_$(@)) -o $@
+
+# Link a convenience library for use in other libs (contains PIC code)
+LT_LDLIB_pic= $(LIBTOOL) --quiet --mode=link --tag=CC \
+	       $(MT_CC) $(LDFLAGS) $(DBG) $(OPTMZ) \
+	       $(LDFLAGS_$(@)) -o $@
+
+LT_CLEAN=$(RM) -rf .libs *.la *.lo
+
+.SUFFIXES: .lo
+
+.m.lo:
+	$(LT_CCRULE) $<
+

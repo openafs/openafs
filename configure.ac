@@ -1,6 +1,7 @@
 AC_PREREQ([2.60])
 AC_INIT([OpenAFS], m4_esyscmd([build-tools/git-version .]))
 AC_CONFIG_AUX_DIR([build-tools])
+AC_CONFIG_MACRO_DIR([src/cf])
 AC_CONFIG_SRCDIR([src/config/stds.h])
 AM_INIT_AUTOMAKE
 
@@ -23,6 +24,8 @@ dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
 AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
 
 AC_USE_SYSTEM_EXTENSIONS
+
+LT_INIT
 
 AC_PROG_CC
 
@@ -148,6 +151,7 @@ src/comerr/Makefile \
 src/comerr/test/Makefile \
 src/config/Makefile \
 src/config/Makefile.config \
+src/config/Makefile.libtool \
 src/config/Makefile.lwp \
 src/config/Makefile.pthread \
 src/config/Makefile.shared \
