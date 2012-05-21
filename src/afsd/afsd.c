@@ -2410,13 +2410,13 @@ afsd_run(void)
      * Give the kernel the names of the AFS files cached on the workstation's
      * disk.
      */
-    if (afsd_debug)
-	printf
-	    ("%s: Calling AFSOP_CACHEFILE for each of the %d files in '%s'\n",
-	     rn, cacheFiles, cacheBaseDir);
     if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
-	/* ... and again ... */
 	int nocachefile = 0;
+	if (afsd_debug)
+	    printf
+	        ("%s: Calling AFSOP_CACHEFILE for each of the %d files in '%s'\n",
+	         rn, cacheFiles, cacheBaseDir);
+	/* ... and again ... */
 	for (currVFile = 0; currVFile < cacheFiles; currVFile++) {
 	    if (!nocachefile) {
 		sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
