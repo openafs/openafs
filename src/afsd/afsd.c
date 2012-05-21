@@ -1735,7 +1735,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    if (cmd_OptionAsInt(as, OPT_dcache, &dCacheSize))
+    if (cmd_OptionAsInt(as, OPT_dcache, &dCacheSize) == 0)
 	sawDCacheSize = 1;
 
     cmd_OptionAsInt(as, OPT_volumes, &vCacheSize);
