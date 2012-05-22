@@ -9,7 +9,7 @@ MODULE_CFLAGS = -I$(srcdir)/../..
 
 LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/lib/libcmd.a \
-       $(abs_top_builddir)/lib/libafscom_err.a \
+       $(abs_top_builddir)/src/comerr/liboafs_comerr.la \
        $(abs_top_builddir)/src/opr/liboafs_opr.la \
        $(abs_top_builddir)/lib/util.a
 

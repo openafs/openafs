@@ -31,7 +31,8 @@ UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o \
        pthread_threadname.o
 
 LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
-     ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/libcmd.a \
+     $(top_builddir)/src/comerr/liboafs_comerr.la \
+     $(TOP_LIBDIR)/libcmd.a \
      ${TOP_LIBDIR}/libsys.a \
      $(top_builddir)/src/opr/liboafs_opr.la \
      ${XLIBS} ${MT_LIBS}
