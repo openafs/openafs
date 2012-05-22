@@ -344,7 +344,7 @@ main(int argc, char **argv)
     }
 
     /* initialize audit user check */
-    osi_audit_set_user_check(configDir, vldb_IsLocalRealmMatch);
+    osi_audit_set_user_check(tdir, vldb_IsLocalRealmMatch);
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */

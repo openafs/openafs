@@ -466,7 +466,7 @@ main(int argc, char **argv)
     }
 
     /* initialize audit user check */
-    osi_audit_set_user_check(configDir, pr_IsLocalRealmMatch);
+    osi_audit_set_user_check(prdir, pr_IsLocalRealmMatch);
 
     /* initialize ubik */
     ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, prdir);
