@@ -7,14 +7,17 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.libtool
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
+LT_objs=cmd_errors.lo cmd.lo config_file.lo AFS_component_version_number.lo
+LT_deps=$(top_builddir)/src/comerr/liboafs_comerr.la
+LT_libs=
 
-LIBOBJS=cmd_errors.o cmd.o config_file.o
-LIBPICOBJS=cmd_errors_pic.o cmd_pic.o config_file_pic.o
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
-all: ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcmd_pic.a ${TOP_INCDIR}/afs/cmd.h
+all: ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcmd_pic.a \
+     ${TOP_INCDIR}/afs/cmd.h liboafs_cmd.la
 
 all64: all ${TOP_LIBDIR}/libcmd64.a
 
@@ -23,8 +26,8 @@ generated: cmd.h cmd_errors.c
 ${TOP_LIBDIR}/libcmd.a: libcmd.a
 	${INSTALL_DATA} $? $@
 
-${TOP_LIBDIR}/libcmd_pic.a: libcmd_pic.a
-	${INSTALL_DATA} $? $@
+${TOP_LIBDIR}/libcmd_pic.a: libcmd_pic.la
+	$(INSTALL_DATA) .libs/libcmd_pic.a $@
 
 ${TOP_LIBDIR}/libcmd64.a: libcmd64.a
 	${INSTALL_DATA} $? $@
@@ -37,13 +40,10 @@ cmd.h: cmd_errors.et cmd.p.h
 	${COMPILE_ET} -p ${srcdir} cmd_errors -h cmd
 
 cmd_errors.c: cmd.h 
+cmd.lo: cmd.h
 
-cmd_errors.o: cmd_errors.c
-
-cmd.o: cmd.c cmd.h
-
-config_file.o: $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c krb5_locl.h
-	$(AFS_CCRULE) -c $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c
+config_file.lo: $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c krb5_locl.h
+	$(LT_CCRULE) $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c
 
 cmd_errors64.o: cmd_errors.c
 	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
@@ -53,57 +53,42 @@ cmd64.o: cmd.c cmd.h
 	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
 		-c -o cmd64.o ${srcdir}/cmd.c
 
-cmd_errors_pic.o: cmd_errors.c
-	$(SHD_CCRULE) cmd_errors.c
-
-cmd_pic.o: cmd.c cmd.h
-	$(SHD_CCRULE) ${srcdir}/cmd.c
-
-config_file_pic.o: $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c krb5_locl.h
-	$(SHD_CCRULE) $(TOP_SRCDIR)/external/heimdal/krb5/config_file.c
-
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${LIB64OBJS} AFS_component_version_number64.o
 	$(RANLIB) $@
 
-libcmd.a: ${LIBOBJS} AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
-	$(RANLIB) $@
+libcmd.a: $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
 
-libcmd_pic.a: ${LIBPICOBJS} AFS_component_version_number_pic.o
-	-$(RM) -f $@
-	$(AR) crv $@ ${LIBPICOBJS} AFS_component_version_number_pic.o
-	$(RANLIB) $@
+libcmd_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
+liboafs_cmd.la: $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
 AFS_component_version_number64.o: AFS_component_version_number.c
 	${CC} $(COMMON_CFLAGS) $(CPPFLAGS) ${XCFLAGS64} \
 		-c -o AFS_component_version_number64.o \
 		AFS_component_version_number.c
 
-AFS_component_version_number_pic.o: AFS_component_version_number.c
-	$(SHD_CCRULE) AFS_component_version_number.c
-
 #
 # Install targets
 #
-install: libcmd.a libcmd_pic.a cmd.h
+install: libcmd.a cmd.h
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	${INSTALL_DATA} libcmd.a ${DESTDIR}${libdir}/afs/libcmd.a
-	${INSTALL_DATA} libcmd_pic.a ${DESTDIR}${libdir}/afs/libcmd_pic.a
+	$(LT_INSTALL_DATA) libcmd.la $(DESTDIR)$(libdir)/afs/libcmd.la
 	${INSTALL_DATA} cmd.h ${DESTDIR}${includedir}/afs/cmd.h
 
 install64: install libcmd64.a
 	${INSTALL_DATA} libcmd64.a ${DESTDIR}${libdir}/afs/libcmd64.a
 
-dest: libcmd.a cmd.h libcmd_pic.a
+dest: libcmd.a cmd.h 
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} libcmd.a ${DEST}/lib/afs/libcmd.a
 	${INSTALL_DATA} cmd.h ${DEST}/include/afs/cmd.h
-	${INSTALL_DATA} libcmd_pic.a ${DEST}/lib/afs/libcmd_pic.a
 
 dest64: dest libcmd64.a
 	${INSTALL_DATA} libcmd64.a ${DEST}/lib/afs/libcmd64.a
@@ -115,6 +100,8 @@ test tests:
 	(cd test; $(MAKE) )
 
 clean:
-	$(RM) -f  *.a *.o ctest dtest cmd.h cmd_errors.c core AFS_component_version_number.c
+	$(LT_CLEAN)
+	$(RM) -f  *.a *.o ctest dtest cmd.h cmd_errors.c core \
+		  AFS_component_version_number.c
 
 include ../config/Makefile.version

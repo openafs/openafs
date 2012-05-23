@@ -8,7 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
-
+top_builddir=@TOP_OBJDIR@
 
 
 CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
@@ -26,7 +26,8 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/util.a
 
-THLIBS= ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/libafscom_err.a \
+THLIBS= $(top_builddir)/src/cmd/liboafs_cmd.la  \
+	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
 	${MT_LIBS} ${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
 
@@ -35,6 +36,7 @@ THRULE = ${MT_CC} $(COMMON_CFLAGS) $(MT_CFLAGS)
 noversion all test system: stress
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o stress.cs.c stress.ss.c stress.xdr.c stress.h \
 		stress_errs.c stress_errs.h stress th_*
 
@@ -93,7 +95,7 @@ stress: stress.o stress.xdr.o stress_c.o stress_s.o stress.cs.o \
 th_stress: th_stress.o th_stress.xdr.o th_stress_c.o th_stress_s.o \
 		th_stress.cs.o th_stress.ss.o stress_errs.o \
 		${LIBRPC}
-	$(AFS_LDRULE) th_stress.o th_stress.xdr.o th_stress_c.o \
+	$(LT_LDRULE_static) th_stress.o th_stress.xdr.o th_stress_c.o \
 		th_stress_s.o th_stress.cs.o th_stress.ss.o stress_errs.o \
 		${THLIBS} ${XLIBS}
 

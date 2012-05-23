@@ -43,11 +43,11 @@ RXOBJS=rx_pthread.o
 objects= ${VOLSEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${RXOBJS}
 
-LIBS=	${TOP_LIBDIR}/libcmd.a          \
+LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsrpc.a       \
 	${TOP_LIBDIR}/libafsutil.a      \
-	$(top_builddir)/src/opr/liboafs_opr.la \
+	$(top_builddir)/src/opr/liboafs_opr.la		\
 	${TOP_LIBDIR}/libusd.a
 
 all: davolserver 

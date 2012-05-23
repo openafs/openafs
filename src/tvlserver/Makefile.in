@@ -34,7 +34,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 LIBS_common = \
 	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libcmd.a \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(top_builddir)/src/opr/liboafs_opr.la
@@ -163,7 +163,7 @@ Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
 	${RXGEN} -A -x -k -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
-	$(LT_LDRULE_static) vlclient.o $(OBJS) ${TOP_LIBDIR}/libcmd.a \
+	$(LT_LDRULE_static) vlclient.o $(OBJS) \
 		$(LIBS_server) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 		
 vlclient.o: ${VLSERVER}/vlclient.c

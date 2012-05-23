@@ -12,6 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 OBJS= cellconfig.o keys.o ktc.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o token.xdr.o token.o realms.o netrestrict.o
+
 KOBJS= cellconfig.o keys.o ktc.krb.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o token.xdr.o token.o realms.o netrestrict.o
 

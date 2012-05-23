@@ -22,7 +22,7 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libptsadmin.a \
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
-	$(TOP_LIBDIR)/libcmd.a \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	$(top_builddir)/src/opr/liboafs_opr.la \
 	$(TOP_LIBDIR)/libafsutil.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
