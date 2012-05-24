@@ -23,6 +23,8 @@
 
 #include <assert.h>
 
+#ifdef AFS_PTHREAD_ENV
+
 #include "rx.h"
 #include "rx_globals.h"
 #include "rx_pthread.h"
@@ -464,3 +466,4 @@ rx_SetThreadNum(void) {
     return threadId;
 }
 
+#endif

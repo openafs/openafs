@@ -27,6 +27,8 @@
 # include <sys/file.h>
 #endif
 
+#ifndef AFS_PTHREAD_ENV
+
 #include <lwp.h>
 
 #include "rx.h"
@@ -482,3 +484,4 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	IOMGR_FreeFDSet(sfds);
     return 0;
 }
+#endif

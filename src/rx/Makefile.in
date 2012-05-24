@@ -7,78 +7,46 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
-
 
 MODULE_CFLAGS=$(RXDEBUG)
 
-#
-# Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
-# Really the xdr stuff should be in its own directory.
-#
-XDROBJS_common = xdr.o xdr_array.o xdr_rx.o xdr_mem.o xdr_len.o xdr_afsuuid.o
-
-XDROBJS = xdr_arrayn.o ${XDROBJS_common}
-
-RXOBJS_common = rx_clock.o rx_call.o rx_conn.o rx_event.o rx_user.o rx_lwp.o \
-		rx.o rx_null.o rx_globals.o rx_getaddr.o rx_misc.o rx_packet.o \
-		rx_peer.o rx_rdwr.o rx_trace.o rx_conncache.o rx_opaque.o \
-		rx_identity.o rx_stats.o \
-		xdr_int32.o xdr_int64.o xdr_update.o xdr_refernce.o
-
-RXOBJS = ${RXOBJS_common} 
-
-MULTIOBJS = rx_multi.o
-
-LIBOBJS = ${RXOBJS} ${MULTIOBJS} ${XDROBJS}
-
-BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
-	     rx_clock.h rx_queue.h rx_event.h
-
-LIBS=librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	       ${TOP_LIBDIR}/util.a
+LT_objs = xdr.lo xdr_array.lo xdr_rx.lo xdr_mem.lo xdr_len.lo xdr_afsuuid.lo \
+	  xdr_int32.lo xdr_int64.lo xdr_update.lo xdr_refernce.lo \
+	  rx_clock.lo rx_call.lo rx_conn.lo rx_event.lo rx_user.lo rx_lwp.lo \
+	  rx_pthread.lo rx.lo rx_null.lo rx_globals.lo rx_getaddr.lo rx_misc.lo \
+	  rx_packet.lo rx_peer.lo rx_rdwr.lo rx_trace.lo rx_conncache.lo \
+	  rx_opaque.lo rx_identity.lo rx_stats.lo rx_multi.lo \
+	  AFS_component_version_number.lo
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
+LT_libs = $(MT_LIBS)
 
 all: \
 	includes \
-	${TOP_LIBDIR}/librx.a
+	${TOP_LIBDIR}/librx.a \
+	liboafs_rx.la
 
 depinstall: includes
 
-RX_component_version_number.c: AFS_component_version_number.c
-	sed 's/cml_version/rx_cml_version/' <AFS_component_version_number.c >RX_component_version_number.c
+rx_user.lo: rx.h rx_user.h rx_prototypes.h
+rx_packet.lo: rx_packet.c rx_packet.h rx.h
+rx_rdwr.lo: rx_rdwr.c rx.h rx_prototypes.h
+rx.lo: rx.h rx_user.h rx_prototypes.h
+rx_conncache.lo: rx.h rx_prototypes.h
+rx_trace.lo: rx_trace.h
+rx_getaddr.lo: rx.h rx_getaddr.c rx_prototypes.h
+rx_globals.lo: rx.h rx_user.h rx_globals.h rx_prototypes.h
+xdr_rx.lo: xdr.h rx.h xdr_prototypes.h rx_prototypes.h
+xdr_refernce.lo: xdr_refernce.c xdr.h xdr_prototypes.h
 
-RX_component_version_number.o: RX_component_version_number.c
+librx.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
 
-${RXOBJS}: ${BASICINCLS} rx.h rx_user.h rx_globals.h rx_prototypes.h
+liboafs_rx.la: liboafs_rx.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-${MULTIOBJS}: rx.h rx_multi.h rx_prototypes.h
-
-${XDROBJS}: xdr.h xdr_prototypes.h
-
-rx_user.o: rx.h rx_user.h rx_prototypes.h
-
-rx_packet.o: rx_packet.c rx_packet.h rx.h
-
-rx_rdwr.o: rx_rdwr.c rx.h rx_prototypes.h
-
-rx.o: rx.h rx_user.h rx_prototypes.h
-
-rx_conncache.o: rx.h rx_prototypes.h
-
-rx_trace.o: rx_trace.h
-
-rx_getaddr.o: rx.h rx_getaddr.c rx_prototypes.h
-
-rx_globals.o: rx.h rx_user.h rx_globals.h rx_prototypes.h
-
-xdr_rx.o: xdr.h rx.h xdr_prototypes.h rx_prototypes.h
-
-xdr_refernce.o: xdr_refernce.c xdr.h xdr_prototypes.h
-
-librx.a: ${LIBOBJS} RX_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS} RX_component_version_number.o
-	$(RANLIB) $@
+CFLAGS_rx.lo = @CFLAGS_NOERROR@
 
 #
 # Install targets
@@ -210,6 +178,7 @@ dest: librx.a
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a core *_component_version_number.c
 
 include ../config/Makefile.version

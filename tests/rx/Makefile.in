@@ -8,8 +8,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 MODULE_CFLAGS = -I$(srcdir)/../..
 
 LIBS = ../tap/libtap.a \
-       $(abs_top_builddir)/lib/libafsrpc.a \
-       $(abs_top_builddir)/src/opr/liboafs_opr.la
+       $(abs_top_builddir)/src/rx/liboafs_rx.la
 
 tests = event-t
 

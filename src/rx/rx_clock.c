@@ -29,6 +29,8 @@
 # include <roken.h>
 #endif
 
+#ifndef AFS_PTHREAD_ENV
+
 #include "rx.h"
 #include "rx_clock.h"
 
@@ -140,3 +142,4 @@ clock_UpdateTime(void)
 #endif /* KERNEL */
 
 #endif /* AFS_USE_GETTIMEOFDAY */
+#endif /* !AFS_PTHREAD_ENV */
