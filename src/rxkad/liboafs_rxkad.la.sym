@@ -1,0 +1,6 @@
+rxkad_NewClientSecurityObject
+rxkad_NewServerSecurityObject
+rxkad_GetServerInfo
+tkt_MakeTicket
+tkt_CheckTimes
+initialize_RXK_error_table
