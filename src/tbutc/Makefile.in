@@ -16,7 +16,6 @@ BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
 MODULE_CFLAGS = @XBSA_CFLAGS@ -I${BUCOORD} -I${VOLSER} -I../bucoord -I../volser
 
-LWP     = ${srcdir}/../lwp
 BUTM    = ${srcdir}/../butm
 BUTC    = ${srcdir}/../butc
 BUCOORD = ${srcdir}/../bucoord
@@ -28,11 +27,9 @@ BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
 VOLSEROBJS=vsprocs.o vsutils.o lockprocs.o
 VOLSERLIBS=${TOP_LIBDIR}/libvosadmin.a ${TOP_LIBDIR}/libafsadminutil.a
 
-LWPOBJS     =lock.o waitkey.o
-
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o afsxbsa.o \
-            ${LWPOBJS} ${BUCOORDOBJS} ${VOLSEROBJS}
+            ${BUCOORDOBJS} ${VOLSEROBJS}
 
 BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 	    ${TOP_INCDIR}/afs/volume.h \
@@ -59,6 +56,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    $(top_builddir)/src/util/liboafs_util.la \
 	    $(top_builddir)/src/opr/liboafs_opr.la \
 	    $(top_builddir)/src/usd/liboafs_usd.la \
+	    $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
 	    ${TOP_LIBDIR}/libprocmgmt.a
 
 #
@@ -124,12 +122,6 @@ vsprocs.o: ${VOLSER}/vsprocs.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) ${VOLSER}/lockprocs.c
-
-lock.o: ${LWP}/lock.c
-	$(AFS_CCRULE) ${LWP}/lock.c
-
-waitkey.o: ${LWP}/waitkey.c
-	$(AFS_CCRULE) ${LWP}/waitkey.c
 
 file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
 	$(AFS_CCRULE) ${BUTM}/file_tm.c

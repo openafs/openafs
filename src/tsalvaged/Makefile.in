@@ -22,7 +22,6 @@ SCFLAGS=$(COMMON_CFLAGS) -I.. -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
 
 SCCRULE=${MT_CC} ${SCFLAGS} -c $? -o $@
 
-LWP=$(srcdir)/../lwp
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 
@@ -31,8 +30,6 @@ SALVAGEROBJS=salvager.o s_vol-salvage.o s_physio.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
-LWPOBJS=lock.o threadname.o
-
 VLIBOBJS=volume.o vnode.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \
 	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o
@@ -40,17 +37,18 @@ SVLIBOBJS=s_volume.o s_vnode.o s_vutil.o s_partition.o s_fssync-client.o \
 	 s_clone.o s_nuke.o s_devname.o s_listinodes.o s_ihandle.o \
 	 s_namei_ops.o s_salvsync-server.o s_salvsync-client.o s_daemon_com.o
 
-OBJECTS= ${SALVAGEDOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+OBJECTS= ${SALVAGEDOBJS} ${VLIBOBJS} ${DIROBJS}
 SOBJECTS= ${SALVAGEROBJS} ${SVLIBOBJS}
 
-FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS}
 
-SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS}
 
 LIBS=   ${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
 SLIBS=	${top_builddir}/src/cmd/liboafs_cmd.la \
@@ -119,12 +117,6 @@ dir.o: ${DIR}/dir.c
 
 salvage.o: ${DIR}/salvage.c
 	$(AFS_CCRULE) $(DIR)/salvage.c
-
-lock.o: ${LWP}/lock.c
-	$(AFS_CCRULE) $(LWP)/lock.c
-
-threadname.o: ${LWP}/threadname.c
-	$(AFS_CCRULE) $(LWP)/threadname.c
 
 vnode.o: ${VOL}/vnode.c
 	$(AFS_CCRULE) $(VOL)/vnode.c

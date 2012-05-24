@@ -14,7 +14,6 @@ HELPER_SPLINT=@HELPER_SPLINT@
 MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 
 VLSERVER=$(srcdir)/../vlserver
-LWP=$(srcdir)/../lwp
 LIBACL=$(srcdir)/../libacl
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
@@ -24,8 +23,6 @@ RX=$(srcdir)/../rx
 VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o vol_split.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o vl_errors.o
-
-LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
@@ -37,12 +34,13 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 
 RXOBJS=rx_pthread.o
 
-objects= ${VOLSEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
+objects= ${VOLSEROBJS} ${LIBACLOBJS} \
 	 ${DIROBJS} ${VOLOBJS} ${RXOBJS}
 
 LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsrpc.a       \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la    \
 	$(top_builddir)/src/util/liboafs_util.la	\
 	$(top_builddir)/src/opr/liboafs_opr.la		\
 	$(top_builddir)/src/usd/liboafs_usd.la
@@ -91,12 +89,6 @@ vsutils.o: ${VOLSER}/vsutils.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) $(VOLSER)/lockprocs.c
-
-lock.o: ${LWP}/lock.c
-	$(AFS_CCRULE) $(LWP)/lock.c
-
-threadname.o: ${LWP}/threadname.c
-	$(AFS_CCRULE) $(LWP)/threadname.c
 
 aclprocs.o: ${LIBACL}/aclprocs.c
 	$(AFS_CCRULE) $(LIBACL)/aclprocs.c

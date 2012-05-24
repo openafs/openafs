@@ -18,7 +18,6 @@ MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_SERVER \
 RX=$(srcdir)/../rx
 VICED=$(srcdir)/../viced
 VLSERVER=$(srcdir)/../vlserver
-LWP=$(srcdir)/../lwp
 LIBACL=$(srcdir)/../libacl
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
@@ -28,8 +27,6 @@ VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
 	  fsstats.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
-
-LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
@@ -43,7 +40,7 @@ FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
 RXOBJS = rx_pthread.o 
 
-objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
+objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} \
 	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
 SDBGOBJS = state_analyzer.o \
@@ -52,6 +49,7 @@ SDBGOBJS = state_analyzer.o \
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
+     $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
      $(top_builddir)/src/cmd/liboafs_cmd.la \
      $(top_builddir)/src/opr/liboafs_opr.la \
      $(top_builddir)/src/util/liboafs_util.la
@@ -82,12 +80,6 @@ fsstats.o: ${VICED}/fsstats.c
 
 serialize_state.o: ${VICED}/serialize_state.c
 	$(AFS_CCRULE) $(VICED)/serialize_state.c
-
-lock.o: ${LWP}/lock.c
-	$(AFS_CCRULE) $(LWP)/lock.c
-
-threadname.o: ${LWP}/threadname.c
-	$(AFS_CCRULE) $(LWP)/threadname.c
 
 aclprocs.o: ${LIBACL}/aclprocs.c
 	$(AFS_CCRULE) $(LIBACL)/aclprocs.c

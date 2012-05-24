@@ -16,7 +16,6 @@ MODULE_CFLAGS = -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
 RX=$(srcdir)/../rx
 VLSERVER=$(srcdir)/../vlserver
-LWP=$(srcdir)/../lwp
 LIBACL=$(srcdir)/../libacl
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
@@ -26,8 +25,6 @@ VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
 	  fsstats.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
-
-LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
@@ -41,8 +38,8 @@ FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
 RXOBJS = rx_pthread.o
 
-objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} \
+	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
@@ -71,16 +68,6 @@ cbd.o: callback.c AFS_component_version_number.c
 
 cbd: cbd.o
 	$(LT_LDRULE_static) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
-
-CFLAGS_rx_pthread.o = -DDPF_FSLOG
-rx_pthread.o: ${RX}/rx_pthread.c
-	$(AFS_CCRULE) $(RX)/rx_pthread.c
-
-lock.o: ${LWP}/lock.c
-	$(AFS_CCRULE) $(LWP)/lock.c
-
-threadname.o: ${LWP}/threadname.c
-	$(AFS_CCRULE) $(LWP)/threadname.c
 
 aclprocs.o: ${LIBACL}/aclprocs.c
 	$(AFS_CCRULE) $(LIBACL)/aclprocs.c

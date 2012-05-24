@@ -9,16 +9,20 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
-
 
 DBG=${LWP_DBG}
 OPTMZ=${LWP_OPTMZ}
 
-LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
-	waitkey.o threadname.o AFS_component_version_number.o
+LIBOBJS=lwp.o process.o iomgr.o timer.o preempt.o \
+	threadname.o AFS_component_version_number.o
 
-all: ${TOP_LIBDIR}/liblwp.a depinstall
+LT_objs = waitkey.lo fasttime.lo lock.lo
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
+LT_libs = $(MT_LIBS)
+
+all: liboafs_lwpcompat.la ${TOP_LIBDIR}/liblwp.a depinstall
 
 depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
 
@@ -40,10 +44,13 @@ ${TOP_INCDIR}/timer.h: timer.h
 #
 # Build rules
 #
-liblwp.a: ${LIBOBJS}
+liblwp.a: ${LIBOBJS} $(LT_objs)
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS} .lwp/waitkey.o .lwp/fasttime.o .lwp/lock.o
 	$(RANLIB) $@
+
+liboafs_lwpcompat.la: liboafs_lwpcompat.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
 # This is required so sgi_64+ does not try to build this file.
 process.s:
@@ -173,9 +180,9 @@ lwp.o		: lwp.c lwp.h
 		*)  \
 			$(AFS_CCRULE_NOQ) ${srcdir}/lwp.c;; \
 		esac
-lock.o		: lock.c lock.h lwp.h
+lock.lo		: lock.c lock.h lwp.h
 timer.o		: timer.c
-fasttime.o	: fasttime.c
+fasttime.lo	: fasttime.c
 threadname.o    : threadname.c
 
 exc_handling.o	: exc_handling.c
@@ -211,6 +218,7 @@ dest: liblwp.a lock.h lwp.h preempt.h timer.h
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
