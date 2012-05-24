@@ -214,13 +214,13 @@ export_build: fsint
 afs: config export comerr afs_depinstall
 	+${COMPILE_PART1} afs ${COMPILE_PART2}
 
-sys: cmd comerr afs hcrypto rx rxstat fsint auth sys_depinstall
+sys: cmd comerr afs hcrypto rx rxstat fsint sys_depinstall
 	+${COMPILE_PART1} sys ${COMPILE_PART2}
 
 rxkad: cmd comerr hcrypto rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: cmd comerr hcrypto lwp rx rxkad audit sys_depinstall auth_depinstall
+auth: cmd comerr hcrypto lwp rx rxkad audit sys auth_depinstall
 	+${COMPILE_PART1} auth ${COMPILE_PART2}
 
 ubik: cmd comerr auth ubik_depinstall sys
