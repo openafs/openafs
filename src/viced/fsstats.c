@@ -30,7 +30,7 @@ fsstats_StartOp(struct fsstats *stats, int index)
     FS_LOCK;
     (stats->opP->numOps)++;
     FS_UNLOCK;
-    FT_GetTimeOfDay(&stats->opStartTime, NULL);
+    gettimeofday(&stats->opStartTime, NULL);
 }
 
 void
@@ -38,7 +38,7 @@ fsstats_FinishOp(struct fsstats *stats, int code)
 {
     struct timeval opStopTime, elapsedTime;
 
-    FT_GetTimeOfDay(&opStopTime, NULL);
+    gettimeofday(&opStopTime, NULL);
     if (code == 0) {
 	FS_LOCK;
 	(stats->opP->numSuccesses)++;
@@ -59,7 +59,7 @@ void
 fsstats_StartXfer(struct fsstats *stats, int index)
 {
     assert(index >= 0 && index < FS_STATS_NUM_XFER_OPS);
-    FT_GetTimeOfDay(&stats->xferStartTime, NULL);
+    gettimeofday(&stats->xferStartTime, NULL);
     stats->xferP = &(afs_FullPerfStats.det.xferOpTimes[index]);
 }
 
@@ -77,7 +77,7 @@ fsstats_FinishXfer(struct fsstats *stats, int code,
      * integrate the transfer size and elapsed time into the stats.  If the
      * operation failed, we jump to the appropriate point.
      */
-    FT_GetTimeOfDay(&xferStopTime, 0);
+    gettimeofday(&xferStopTime, 0);
     FS_LOCK;
     (stats->xferP->numXfers)++;
     if (code == 0) {

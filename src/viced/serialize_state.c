@@ -452,7 +452,7 @@ fs_stateLoadDump(struct fs_dump_state * state)
     afs_uint64 z;
     int fd, ret = 0;
     struct afs_stat status;
-    afs_int32 now = FT_ApproxTime();
+    afs_int32 now = time(NULL);
 
     ZeroInt64(z);
 
@@ -926,7 +926,7 @@ fs_stateFillHeader(struct fs_state_header * hdr)
 #else
     hdr->sys_name = 0xFFFFFFFF;
 #endif
-    hdr->timestamp = FT_ApproxTime();
+    hdr->timestamp = time(NULL);
     hdr->server_uuid = FS_HostUUID;
     hdr->valid = 1;
 #ifdef WORDS_BIGENDIAN

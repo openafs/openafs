@@ -421,7 +421,7 @@ int
 InitCallBack(int nblks)
 {
     H_LOCK;
-    tfirst = CBtime(FT_ApproxTime());
+    tfirst = CBtime(time(NULL));
     /* N.B. The "-1", below, is because
      * FE[0] and CB[0] are not used--and not allocated */
     FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry))));
@@ -558,18 +558,18 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     fe = FindFE(fid);
     if (type == CB_NORMAL) {
 	time_out =
-	    TimeCeiling(FT_ApproxTime() + TimeOut(fe ? fe->ncbs : 0) +
+	    TimeCeiling(time(NULL) + TimeOut(fe ? fe->ncbs : 0) +
 			ServerBias);
 	Thead = THead(CBtime(time_out));
     } else if (type == CB_VOLUME) {
-	time_out = TimeCeiling((60 * 120 + FT_ApproxTime()) + ServerBias);
+	time_out = TimeCeiling((60 * 120 + time(NULL)) + ServerBias);
 	Thead = THead(CBtime(time_out));
     } else if (type == CB_BULK) {
 	/* bulk status can get so many callbacks all at once, and most of them
 	 * are probably not for things that will be used for long.
 	 */
 	time_out =
-	    TimeCeiling(FT_ApproxTime() + ServerBias +
+	    TimeCeiling(time(NULL) + ServerBias +
 			TimeOut(22 + (fe ? fe->ncbs : 0)));
 	Thead = THead(CBtime(time_out));
     }
@@ -1351,7 +1351,7 @@ CleanupTimedOutCallBacks(void)
 int
 CleanupTimedOutCallBacks_r(void)
 {
-    afs_uint32 now = CBtime(FT_ApproxTime());
+    afs_uint32 now = CBtime(time(NULL));
     afs_uint32 *thead;
     struct CallBack *cb;
     int ntimedout = 0;
@@ -2643,7 +2643,7 @@ static int
 DumpCallBackState_r(void)
 {
     int fd, oflag;
-    afs_uint32 magic = MAGICV2, now = (afs_int32) FT_ApproxTime(), freelisthead;
+    afs_uint32 magic = MAGICV2, now = (afs_int32) time(NULL), freelisthead;
 
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef AFS_NT40_ENV

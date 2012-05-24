@@ -389,7 +389,7 @@ CallPreamble(struct rx_call *acall, int activecall,
 	goto retry;
     }
 
-    tclient->LastCall = thost->LastCall = FT_ApproxTime();
+    tclient->LastCall = thost->LastCall = time(NULL);
     if (activecall)		/* For all but "GetTime", "GetStats", and "GetCaps" calls */
 	thost->ActiveCall = thost->LastCall;
 
@@ -574,7 +574,7 @@ CheckVnodeWithCall(AFSFid * fid, Volume ** volptr, struct VCallByVol *cbv,
 		if (restartedat.tv_sec == 0) {
 		    /* I'm not really worried about when we restarted, I'm   */
 		    /* just worried about when the first VBUSY was returned. */
-		    FT_GetTimeOfDay(&restartedat, 0);
+		    gettimeofday(&restartedat, 0);
 		    if (busyonrst) {
 			FS_LOCK;
 			afs_perfstats.fs_nBusies++;
@@ -583,7 +583,7 @@ CheckVnodeWithCall(AFSFid * fid, Volume ** volptr, struct VCallByVol *cbv,
 		    return (busyonrst ? VBUSY : restarting);
 		} else {
 		    struct timeval now;
-		    FT_GetTimeOfDay(&now, 0);
+		    gettimeofday(&now, 0);
 		    if ((now.tv_sec - restartedat.tv_sec) < (11 * 60)) {
 			if (busyonrst) {
 			    FS_LOCK;
@@ -1532,6 +1532,7 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
     Date currDate;		/*Current date */
     int writeIdx;		/*Write index to bump */
     int timeIdx;		/*Authorship time index to bump */
+    time_t now;
 
     parentptr->disk.dataVersion++;
     newlength = (afs_fsize_t) afs_dir_Length(dir);
@@ -1568,7 +1569,8 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
      * directory operation.  Get the current time, decide to which time
      * slot this operation belongs, and bump the appropriate slot.
      */
-    currDate = (FT_ApproxTime() - parentptr->disk.unixModifyTime);
+    now = time(NULL);
+    currDate = (time(NULL) - parentptr->disk.unixModifyTime);
     timeIdx =
 	(currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 : currDate <
 	 VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 : currDate <
@@ -1583,8 +1585,8 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
 
     parentptr->disk.author = author;
     parentptr->disk.linkCount = linkcount;
-    parentptr->disk.unixModifyTime = FT_ApproxTime();	/* This should be set from CLIENT!! */
-    parentptr->disk.serverModifyTime = FT_ApproxTime();
+    parentptr->disk.unixModifyTime = time(NULL);	/* This should be set from CLIENT!! */
+    parentptr->disk.serverModifyTime = time(NULL);
     parentptr->changed_newTime = 1;	/* vnode changed, write it back. */
 }
 
@@ -1643,7 +1645,7 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 	 * file operation.  Get the current time, decide to which time
 	 * slot this operation belongs, and bump the appropriate slot.
 	 */
-	currDate = (FT_ApproxTime() - targetptr->disk.unixModifyTime);
+	currDate = (time(NULL) - targetptr->disk.unixModifyTime);
 	timeIdx =
 	    (currDate <
 	     VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 : currDate <
@@ -1677,7 +1679,7 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
     } else {			/* other: date always changes, but perhaps to what is specified by caller */
 	targetptr->disk.unixModifyTime =
 	    (InStatus->Mask & AFS_SETMODTIME ? InStatus->
-	     ClientModTime : FT_ApproxTime());
+	     ClientModTime : time(NULL));
     }
     if (InStatus->Mask & AFS_SETOWNER) {
 	/* admin is allowed to do chmod, chown as well as chown, chmod. */
@@ -1721,7 +1723,7 @@ Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
 	    }
 	}
     }
-    targetptr->disk.serverModifyTime = FT_ApproxTime();
+    targetptr->disk.serverModifyTime = time(NULL);
     if (InStatus->Mask & AFS_SETGROUP)
 	targetptr->disk.group = InStatus->Group;
     /* vnode changed : to be written back by VPutVnode */
@@ -1742,7 +1744,7 @@ SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
 	ViceLog(0, ("WARNING: CallBackTime == 0!\n"));
 	CallBack->ExpirationTime = 0;
     } else
-	CallBack->ExpirationTime = CallBackTime - FT_ApproxTime();
+	CallBack->ExpirationTime = CallBackTime - time(NULL);
     CallBack->CallBackVersion = CALLBACK_VERSION;
     CallBack->CallBackType = CB_SHARED;	/* The default for now */
 
@@ -1897,7 +1899,7 @@ HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLo
     int writeVnode = targetptr->changed_oldTime;	/* save original status */
 
     targetptr->changed_oldTime = 1;	/* locking doesn't affect any time stamp */
-    Time = FT_ApproxTime();
+    Time = time(NULL);
     switch (LockingType) {
     case LockRead:
     case LockWrite:
@@ -2135,7 +2137,7 @@ static
 GetStatus(Vnode * targetptr, AFSFetchStatus * status, afs_int32 rights,
 	  afs_int32 anyrights, Vnode * parentptr)
 {
-    int Time =FT_ApproxTime();
+    int Time = time(NULL);
 
     /* initialize return status from a vnode  */
     status->InterfaceVersion = 1;
@@ -4933,11 +4935,8 @@ SetSystemStats(struct AFSStatistics *stats)
 {
     /* Fix this sometime soon.. */
     /* Because hey, it's not like we have a network monitoring protocol... */
-    struct timeval time;
 
-    /* this works on all system types */
-    FT_GetTimeOfDay(&time, 0);
-    stats->CurrentTime = time.tv_sec;
+    stats->CurrentTime = time(NULL);
 }				/*SetSystemStats */
 
 void
@@ -4978,7 +4977,7 @@ SetAFSStats(struct AFSStatistics *stats)
     FS_UNLOCK;
     h_GetWorkStats((int *)&(stats->WorkStations),
 		   (int *)&(stats->ActiveWorkStations), (int *)0,
-		   (afs_int32) (FT_ApproxTime()) - (15 * 60));
+		   (afs_int32) (time(NULL)) - (15 * 60));
 
 }				/*SetAFSStats */
 
@@ -5049,7 +5048,6 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
     struct rx_connection *tcon = rx_ConnectionOf(acall);
     struct host *thost;
     struct client *t_client = NULL;	/* tmp ptr to client data */
-    struct timeval time;
     struct fsstats fsstats;
 
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETSTATISTICS);
@@ -5102,13 +5100,9 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
     h_GetWorkStats64(&(Statistics->ViceStatistics64_val[STATS64_WORKSTATIONS]),
                      &(Statistics->ViceStatistics64_val[STATS64_ACTIVEWORKSTATIONS]),
 		     0,
-                     (afs_int32) (FT_ApproxTime()) - (15 * 60));
+                     (afs_int32) (time(NULL)) - (15 * 60));
 
-
-
-    /* this works on all system types */
-    FT_GetTimeOfDay(&time, 0);
-    Statistics->ViceStatistics64_val[STATS64_CURRENTTIME] = time.tv_sec;
+    Statistics->ViceStatistics64_val[STATS64_CURRENTTIME] = time(NULL);
 
   Bad_GetStatistics64:
     code = CallPostamble(tcon, code, thost);
@@ -5336,7 +5330,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
      * Record the time of day and the server version number.
      */
     *a_srvVersionNumP = AFS_XSTAT_VERSION;
-    *a_timeP = FT_ApproxTime();
+    *a_timeP = (afs_int32) time(NULL);
 
     /*
      * Stuff the appropriate data in there (assume victory)
@@ -5778,7 +5772,7 @@ TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
 	    rx_NewConnection(htonl(0x7f000001), htons(7003), 52, vlSec, 0);
 	rx_SetConnDeadTime(vlConn, 15);	/* don't wait long */
     }
-    if (down && (FT_ApproxTime() < lastDownTime + 180)) {
+    if (down && (time(NULL) < lastDownTime + 180)) {
 	return 1;		/* failure */
     }
 
@@ -5787,7 +5781,7 @@ TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
 	down = 0;		/* call worked */
     if (code) {
 	if (code < 0) {
-	    lastDownTime = FT_ApproxTime();	/* last time we tried an RPC */
+	    lastDownTime = time(NULL);	/* last time we tried an RPC */
 	    down = 1;
 	}
 	return code;
@@ -6079,7 +6073,7 @@ SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
     FS_LOCK;
     AFSCallStats.GetTime++, AFSCallStats.TotalCalls++;
     FS_UNLOCK;
-    FT_GetTimeOfDay(&tpl, 0);
+    gettimeofday(&tpl, 0);
     *Seconds = tpl.tv_sec;
     *USeconds = tpl.tv_usec;
 
@@ -6153,7 +6147,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	rx_Write(Call, (char *)&zero, sizeof(afs_int32));	/* send 0-length  */
 	return (0);
     }
-    FT_GetTimeOfDay(&StartTime, 0);
+    gettimeofday(&StartTime, 0);
     ihP = targetptr->handle;
     fdP = IH_OPEN(ihP);
     if (fdP == NULL) {
@@ -6259,7 +6253,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* HAVE_PIOV */
     FDH_CLOSE(fdP);
-    FT_GetTimeOfDay(&StopTime, 0);
+    gettimeofday(&StopTime, 0);
 
     /* Adjust all Fetch Data related stats */
     FS_LOCK;
@@ -6482,7 +6476,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     /* this bit means that the locks are set and protections are OK */
     rx_SetLocalStatus(Call, 1);
 
-    FT_GetTimeOfDay(&StartTime, 0);
+    gettimeofday(&StartTime, 0);
 
     optSize = sendBufSize;
     ViceLog(25,
@@ -6581,7 +6575,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     }
     FDH_CLOSE(fdP);
 
-    FT_GetTimeOfDay(&StopTime, 0);
+    gettimeofday(&StopTime, 0);
 
     VN_SET_LEN(targetptr, NewLength);
 

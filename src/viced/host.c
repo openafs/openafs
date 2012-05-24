@@ -575,7 +575,7 @@ h_gethostcps_r(struct host *host, afs_int32 now)
 	free(host->hcps.prlist_val);	/* this is for hostaclRefresh */
     host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
-    host->cpsCall = slept ? (FT_ApproxTime()) : (now);
+    host->cpsCall = slept ? time(NULL) : (now);
 
     H_UNLOCK;
     code = hpr_GetHostCPS(ntohl(host->host), &host->hcps);
@@ -687,7 +687,7 @@ h_Alloc_r(struct rx_connection *r_con)
     /* Make a callback channel even for the console, on the off chance that it
      * makes a request that causes a break call back.  It shouldn't. */
     h_SetupCallbackConn_r(host);
-    host->LastCall = host->cpsCall = host->ActiveCall = FT_ApproxTime();
+    host->LastCall = host->cpsCall = host->ActiveCall = time(NULL);
     host->hostFlags = 0;
     host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
@@ -760,7 +760,7 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, struct host **hostp)
 		goto restart;
 	    }
 	    h_Unlock_r(host);
-	    now = FT_ApproxTime();	/* always evaluate "now" */
+	    now = time(NULL);	/* always evaluate "now" */
 	    if (host->hcpsfailed || (host->cpsCall + hostaclRefresh < now)) {
 		/*
 		 * Every hostaclRefresh period (def 2 hrs) get the new
@@ -1943,7 +1943,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	host = h_Alloc_r(tcon);	/* returned held and locked */
 	if (!host)
 	    goto gethost_out;
-	h_gethostcps_r(host, FT_ApproxTime());
+	h_gethostcps_r(host, time(NULL));
 	if (!(host->Console & 1)) {
 	    int pident = 0;
 	    cb_conn = host->callback_rxcon;
@@ -2811,7 +2811,7 @@ h_PrintClients(void)
 		 AFSDIR_SERVER_CLNTDUMP_FILEPATH));
 	return;
     }
-    now = FT_ApproxTime();
+    now = time(NULL);
     strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&now, &tm));
     snprintf(tmpStr, sizeof tmpStr, "List of active users at %s\n\n",
@@ -2885,7 +2885,7 @@ h_DumpHosts(void)
 		 AFSDIR_SERVER_HOSTDUMP_FILEPATH));
 	return;
     }
-    now = FT_ApproxTime();
+    now = time(NULL);
     strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&now, &tm));
     snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n\n", tbuffer);
@@ -3982,7 +3982,7 @@ CheckHost_r(struct host *host, void *dummy)
 void
 h_CheckHosts(void)
 {
-    afs_uint32 now = FT_ApproxTime();
+    afs_uint32 now = time(NULL);
 
     memset(&zerofid, 0, sizeof(zerofid));
     /*

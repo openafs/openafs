@@ -433,7 +433,7 @@ FiveMinuteCheckLWP(void *unused)
 	    Do_VLRegisterRPC();
 	/* Force wakeup in case we missed something; pthreads does timedwait */
 	if (printBanner && (++msg & 1)) {	/* Every 10 minutes */
-	    time_t now = FT_ApproxTime();
+	    time_t now = time(NULL);
 	    struct tm tm;
 	    strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 		     localtime_r(&now, &tm));
@@ -643,7 +643,7 @@ PrintCounters(void)
     int stats_flags = 0;
 #endif
 
-    FT_GetTimeOfDay(&tpl, 0);
+    gettimeofday(&tpl, 0);
     Statistics = 1;
     strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
 	     localtime_r(&StartTime, &tm));
@@ -2161,7 +2161,7 @@ main(int argc, char *argv[])
     osi_Assert(pthread_create
 	   (&serverPid, &tattr, FsyncCheckLWP, &fiveminutes) == 0);
 
-    FT_GetTimeOfDay(&tp, 0);
+    gettimeofday(&tp, 0);
 
     /*
      * Figure out the FileServer's name and primary address.
