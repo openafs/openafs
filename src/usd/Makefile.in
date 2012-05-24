@@ -7,10 +7,13 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.libtool
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
+LT_objs = usd_file.lo AFS_component_version_number.lo
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 
-all: ${TOP_LIBDIR}/libusd.a ${TOP_INCDIR}/afs/usd.h
+all: liboafs_usd.la ${TOP_LIBDIR}/libusd.a ${TOP_INCDIR}/afs/usd.h
 
 ${TOP_LIBDIR}/libusd.a: libusd.a
 	${INSTALL_DATA} $? $@
@@ -21,12 +24,13 @@ ${TOP_INCDIR}/afs/usd.h: usd.h
 #
 # Build targets
 #
-libusd.a: usd_file.o AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ usd_file.o AFS_component_version_number.o
-	$(RANLIB) $@
+liboafs_usd.la: liboafs_usd.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-usd_file.o: usd_file.c usd.h
+libusd.a: $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
+
+usd_file.lo: usd.h
 
 #
 # Installation targets
@@ -47,6 +51,7 @@ dest: libusd.a usd.h
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o libusd.a core AFS_component_version_number.c
 
 include ../config/Makefile.version

@@ -45,7 +45,7 @@ LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
 	${TOP_LIBDIR}/libafsrpc.a       \
 	$(top_builddir)/src/util/liboafs_util.la	\
 	$(top_builddir)/src/opr/liboafs_opr.la		\
-	${TOP_LIBDIR}/libusd.a
+	$(top_builddir)/src/usd/liboafs_usd.la
 
 all: davolserver 
 
