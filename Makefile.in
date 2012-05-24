@@ -178,7 +178,7 @@ hcrypto: config $(DIR_roken)
 rfc3961: config hcrypto
 	+${COMPILE_PART1} crypto/rfc3961 ${COMPILE_PART2}
 
-lwp: util lwp_depinstall
+lwp: opr $(DIR_roken) lwp_depinstall
 	+${COMPILE_PART1} lwp ${COMPILE_PART2}
 
 roken: config
@@ -187,7 +187,7 @@ roken: config
 rxgen: $(DIR_roken) config
 	+${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
-rx: config lwp rxgen rx_depinstall
+rx: config lwp rxgen rx_depinstall util
 	+${COMPILE_PART1} rx ${COMPILE_PART2}
 
 rxstat: rx rxstat_depinstall

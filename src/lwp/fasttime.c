@@ -28,8 +28,6 @@
 
 #include <roken.h>
 
-#include <afs/afsutil.h>
-
 int ft_debug;
 
 #define TRUE	1
