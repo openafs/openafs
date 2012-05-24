@@ -9,8 +9,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
-
 
 SFLAGS=-I${TOP_INCDIR}
 LIBS=libsys.a \
@@ -22,12 +22,13 @@ LIBS=libsys.a \
      ${TOP_LIBDIR}/libafshcrypto_lwp.a \
      ${XLIBS}
 
-OBJECTS= afssyscalls.o setpag.o pioctl.o glue.o \
-	AFS_component_version_number.o
-SHLIBOBJS = picobj/setpag.o picobj/glue.o syscall.o
-RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
+LT_objs = afssyscalls.lo setpag.lo pioctl.lo glue.lo \
+	 rmtsysnet.lo rmtsysc.lo rmtsys.cs.lo rmtsys.xdr.lo rmtsys.ss.lo \
+	 rmtsyss.lo AFS_component_version_number.lo
+LT_deps = $(top_builddir)/src/rx/liboafs_rx.la
 
 all: \
+    liboafs_sys.la \
     rmtsysd \
     ${TOP_INCDIR}/afs/afssyscalls.h \
     ${TOP_INCDIR}/afs/afs.exp \
@@ -91,17 +92,23 @@ depinstall: \
 	${UKERNELDIR}/afs/afsl.exp \
 	Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c rmtsys.h 
 
-libsys.a: ${OBJECTS} ${RMTOBJS} syscall.o afsl.exp AFS_component_version_number.o
-	$(RM) -f $@
+libsys.a: $(LT_objs) afsl.exp
 	@set -e; set -x; case "$(SYS_NAME)" in \
-	sgi_* | hp_ux10*) \
-		${AR} crv $@ ${OBJECTS} ${RMTOBJS} syscall.o ;; \
 	rs_aix*) \
-		${AR} crv $@ ${OBJECTS} ${RMTOBJS} syscall.o afsl.exp ;; \
+	    $(LT_LDLIB_lwp) $(LT_objs) afsl.exp ;; \
 	*) \
-		${AR} crv $@ ${OBJECTS} ${RMTOBJS} ;; \
+	    $(LT_LDLIB_lwp) $(LT_objs) ;; \
 	esac
-	$(RANLIB) $@
+
+# On AIX, liboafs_sys uses lsetpag() and lpioctl() which are syscall stubs,
+# we need to include afsl.exp in order to link against them
+liboafs_sys.la: liboafs_sys.la.sym $(LT_objs) $(LT_deps) afsl.exp
+	@set -e; set -x; case "$(SYS_NAME)" in \
+	rs_aix*) \
+	    $(LT_LDLIB_shlib) -Wl,-bI:afsl.exp $(LT_objs) $(LT_deps) ;; \
+	*) \
+	    $(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) ;; \
+	esac
 
 tests:	fixit iinc idec icreate iopen istat rmtsysd
 
@@ -120,12 +127,12 @@ syscall.o: syscall.s
 		;; \
 	esac
 
-afssyscalls.o: afssyscalls.c afssyscalls.h
-glue.o: glue.c afssyscalls.h
-setpag.o: setpag.c afssyscalls.h
-pioctl.o: pioctl.c afssyscalls.h
+afssyscalls.lo: afssyscalls.c afssyscalls.h
+glue.lo: glue.c afssyscalls.h
+setpag.lo: setpag.c afssyscalls.h
+pioctl.lo: pioctl.c afssyscalls.h
 
-rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
+rmtsysnet.lo rmtsysc.lo rmtsyss.lo rmtsysd.lo: rmtsys.h
 rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
 
 rmtsys.cs.c: rmtsys.xg
@@ -245,8 +252,8 @@ dest: libsys.a rmtsysd afssyscalls.h afs.exp xfsattrs.h
 include ../config/Makefile.version
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
 	rmtsysd AFS_component_version_number.c \
 	afs.exp afsl.exp libafssetpag.* Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c
-	$(RM) -rf picobj
