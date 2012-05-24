@@ -1358,9 +1358,6 @@ cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
     const char *str;
     int code;
 
-    if (*value)
-	free(*value);
-
     code = _get_config_string(syn, pos, &str);
     if (code)
 	return code;
@@ -1368,6 +1365,8 @@ cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
     if (str == NULL)
 	return CMD_MISSING;
 
+    if (*value)
+	free(*value);
     *value = strdup(str);
 
     return 0;
