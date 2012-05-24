@@ -1467,16 +1467,6 @@ AFSQueueFlushExtents( IN AFSFcb *Fcb,
                       IN GUID *AuthGroup);
 
 NTSTATUS
-AFSQueueAsyncRead( IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp,
-                   IN HANDLE CallerProcess);
-
-NTSTATUS
-AFSQueueAsyncWrite( IN PDEVICE_OBJECT DeviceObject,
-                    IN PIRP Irp,
-                    IN HANDLE CallerProcess);
-
-NTSTATUS
 AFSQueueGlobalRootEnumeration( void);
 
 NTSTATUS
