@@ -112,8 +112,8 @@ NTSTATUS
 
 #define AFS_WORK_UNUSED_1                       0x0001
 #define AFS_WORK_FLUSH_FCB                      0x0002
-#define AFS_WORK_ASYNCH_READ                    0x0003
-#define AFS_WORK_ASYNCH_WRITE                   0x0004
+#define AFS_WORK_UNUSED_3                       0x0003
+#define AFS_WORK_UNUSED_4                       0x0004
 #define AFS_WORK_UNUSED_5                       0x0005
 #define AFS_WORK_ENUMERATE_GLOBAL_ROOT          0x0006
 #define AFS_WORK_INVALIDATE_OBJECT              0x0007
