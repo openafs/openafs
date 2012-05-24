@@ -430,8 +430,6 @@ AFSInitVolume( IN GUID *AuthGroup,
                 AFSAcquireExcl( pVolumeCB->VolumeLock,
                                 TRUE);
 
-                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
                 *VolumeCB = pVolumeCB;
 
                 try_return( ntStatus);
@@ -526,10 +524,10 @@ AFSInitVolume( IN GUID *AuthGroup,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitVolume Initializing count (1) on volume %08lX\n",
+                      "AFSInitVolume Initializing count (2) on volume %08lX\n",
                       pVolumeCB);
 
-        pVolumeCB->VolumeReferenceCount = 1;
+        pVolumeCB->VolumeReferenceCount = 2;
 
         AFSAcquireExcl( pVolumeCB->VolumeLock,
                         TRUE);

@@ -4067,6 +4067,7 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
     AFSVolumeCB *pVolumeCB = NULL;
     AFSFileID stTargetFileID;
     LONG lCount;
+    BOOLEAN bReleaseVolumeLock = FALSE;
 
     __Enter
     {
@@ -4221,39 +4222,45 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
 
                 try_return( ntStatus);
             }
+
+            //
+            // pVolumeCB->VolumeLock held exclusive and
+            // pVolumeCB->VolumeReferenceCount has been incremented
+            // pVolumeCB->RootFcb == NULL
+            //
+
+            bReleaseVolumeLock = TRUE;
         }
         else
         {
 
             //
-            // Check if this volume has been deleted or taken offline
-            //
-
-            if( BooleanFlagOn( pVolumeCB->Flags, AFS_VOLUME_FLAGS_OFFLINE))
-            {
-
-                AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
-
-                try_return( ntStatus = STATUS_FILE_IS_OFFLINE);
-            }
-
-            //
-            // Just to ensure that things don't get torn down AND we don't create a
-            // deadlock with invalidation
+            // AFSInitVolume returns with a VolumeReferenceCount
+            // obtain one to match
             //
 
             lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSBuildMountPointTarget Increment count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          lCount);
+
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
-
-            AFSAcquireExcl( pVolumeCB->VolumeLock,
-                            TRUE);
-
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
         }
 
         if( pVolumeCB->RootFcb == NULL)
         {
+
+            if ( bReleaseVolumeLock == FALSE)
+            {
+
+                AFSAcquireExcl( pVolumeCB->VolumeLock,
+                                TRUE);
+
+                bReleaseVolumeLock = TRUE;
+            }
 
             //
             // Initialize the root fcb for this volume
@@ -4264,6 +4271,8 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
 
             if( !NT_SUCCESS( ntStatus))
             {
+
+                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
                 AFSReleaseResource( pVolumeCB->VolumeLock);
 
@@ -4277,6 +4286,12 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
             AFSReleaseResource( &pVolumeCB->RootFcb->NPFcb->Resource);
         }
 
+        if ( bReleaseVolumeLock == TRUE)
+        {
+
+            AFSReleaseResource( pVolumeCB->VolumeLock);
+        }
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSBuildMountPointTarget Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
@@ -4285,16 +4300,6 @@ AFSBuildMountPointTarget( IN GUID *AuthGroup,
                       pVolumeCB->ObjectInformation.FileId.Volume,
                       pVolumeCB->ObjectInformation.FileId.Vnode,
                       pVolumeCB->ObjectInformation.FileId.Unique);
-
-        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
-
-        AFSReleaseResource( pVolumeCB->VolumeLock);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSBuildMountPointTarget Increment count on volume %08lX Cnt %d\n",
-                      pVolumeCB,
-                      lCount);
 
         *TargetVolumeCB = pVolumeCB;
 
@@ -4323,6 +4328,7 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
     ULONGLONG       ullIndex = 0;
     AFSVolumeCB *pVolumeCB = NULL;
     LONG lCount;
+    BOOLEAN bReleaseVolumeLock = FALSE;
 
     __Enter
     {
@@ -4390,28 +4396,46 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 
                 try_return( ntStatus);
             }
+
+            //
+            // pVolumeCB->VolumeLock is held exclusive
+            // pVolumeCB->VolumeReferenceCount has been incremented
+            // pVolumeCB->RootFcb == NULL
+            //
+
+            bReleaseVolumeLock = TRUE;
         }
         else
         {
 
             //
-            // Just to ensure that things don't get torn down AND we don't create a
-            // deadlock with invalidation
+            // AFSInitVolume returns with a VolumeReferenceCount
+            // obtain one to match
             //
 
             lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSBuildRootVolume Increment count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          lCount);
+
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
-
-            AFSAcquireExcl( pVolumeCB->VolumeLock,
-                            TRUE);
-
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
         }
 
 
         if( pVolumeCB->RootFcb == NULL)
         {
+
+            if ( bReleaseVolumeLock == FALSE)
+            {
+
+                AFSAcquireExcl( pVolumeCB->VolumeLock,
+                                TRUE);
+
+                bReleaseVolumeLock = TRUE;
+            }
 
             //
             // Initialize the root fcb for this volume
@@ -4422,6 +4446,8 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
 
             if( !NT_SUCCESS( ntStatus))
             {
+
+                lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
                 AFSReleaseResource( pVolumeCB->VolumeLock);
 
@@ -4435,6 +4461,12 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
             AFSReleaseResource( &pVolumeCB->RootFcb->NPFcb->Resource);
         }
 
+        if ( bReleaseVolumeLock == TRUE)
+        {
+
+            AFSReleaseResource( pVolumeCB->VolumeLock);
+        }
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSBuildRootVolume Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
@@ -4443,16 +4475,6 @@ AFSBuildRootVolume( IN GUID *AuthGroup,
                       pVolumeCB->ObjectInformation.FileId.Volume,
                       pVolumeCB->ObjectInformation.FileId.Vnode,
                       pVolumeCB->ObjectInformation.FileId.Unique);
-
-        lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
-
-        AFSReleaseResource( pVolumeCB->VolumeLock);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSBuildRootVolume Increment count on volume %08lX Cnt %d\n",
-                      pVolumeCB,
-                      lCount);
 
         *TargetVolumeCB = pVolumeCB;
 

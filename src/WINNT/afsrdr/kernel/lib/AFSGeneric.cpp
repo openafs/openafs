@@ -7731,6 +7731,7 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pControlDevExt = NULL;
     ULONG ulTimeIncrement = 0;
+    LONG lCount;
 
     __Enter
     {
@@ -7817,6 +7818,8 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
                           "AFSInitializeLibrary AFSInitRootFcb failure %08lX\n",
                           ntStatus);
 
+            lCount = InterlockedDecrement( &AFSGlobalRoot->VolumeReferenceCount);
+
             AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
             try_return( ntStatus);
@@ -7842,6 +7845,8 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
         //
 
         AFSInitVolumeWorker( AFSGlobalRoot);
+
+        lCount = InterlockedDecrement( &AFSGlobalRoot->VolumeReferenceCount);
 
         AFSReleaseResource( AFSGlobalRoot->VolumeLock);
 
