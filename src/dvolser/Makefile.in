@@ -16,7 +16,6 @@ MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 VLSERVER=$(srcdir)/../vlserver
 LWP=$(srcdir)/../lwp
 LIBACL=$(srcdir)/../libacl
-UTIL=$(srcdir)/../util
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 VOLSER=$(srcdir)/../volser
@@ -30,8 +29,6 @@ LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o volparse.o flipbase64.o softsig.o
-
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
@@ -41,12 +38,12 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 RXOBJS=rx_pthread.o
 
 objects= ${VOLSEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${RXOBJS}
+	 ${DIROBJS} ${VOLOBJS} ${RXOBJS}
 
 LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsrpc.a       \
-	${TOP_LIBDIR}/libafsutil.a      \
+	$(top_builddir)/src/util/liboafs_util.la	\
 	$(top_builddir)/src/opr/liboafs_opr.la		\
 	${TOP_LIBDIR}/libusd.a
 
@@ -94,27 +91,6 @@ vsutils.o: ${VOLSER}/vsutils.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) $(VOLSER)/lockprocs.c
-
-uuid.o: ${UTIL}/uuid.c
-	$(AFS_CCRULE) $(UTIL)/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	$(AFS_CCRULE) $(UTIL)/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	$(AFS_CCRULE) $(UTIL)/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	$(AFS_CCRULE) $(UTIL)/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	$(AFS_CCRULE) $(UTIL)/softsig.c
 
 lock.o: ${LWP}/lock.c
 	$(AFS_CCRULE) $(LWP)/lock.c

@@ -19,7 +19,6 @@ LIBOBJS = \
 	afscp_acl.o
 
 all: \
-	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libafscp.a \
 	depinstall
 

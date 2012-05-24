@@ -13,14 +13,9 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 HELPER_SPLINT=@HELPER_SPLINT@
 
 RX=$(srcdir)/../rx
-UTIL=$(srcdir)/../util
 BUDB=$(srcdir)/../budb
 
 RXOBJS= rx_pthread.o rxkad_errs.o
-
-UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o \
-     volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o
-
 
 INCLS=\
 	${TOP_INCDIR}/lock.h \
@@ -38,14 +33,14 @@ INCLS=\
 	budb.h $(BUDB)/budb_client.h
 
 # library ordering defined by top level makefile
-LIBS=${RXOBJS} ${UTILOBJS} \
+LIBS=${RXOBJS} \
 	${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	$(top_builddir)/src/opr/liboafs_opr.la \
-	${TOP_LIBDIR}/libafsutil.a
+	$(top_builddir)/src/util/liboafs_util.la
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 
@@ -69,38 +64,6 @@ rx_pthread.o: ${RX}/rx_pthread.c
 
 rxkad_errs.o: ../rxkad/rxkad_errs.c
 	$(AFS_CCRULE) ../rxkad/rxkad_errs.c
-
-# get the pthreaded util stuff compiled here.  we do this instead of
-# using the non-pthreaded libutil.a.  There probably should be a
-# pthreaded version of this library, as we are doing with ubik itself, but...
-#
-
-uuid.o: ${UTIL}/uuid.c
-	$(AFS_CCRULE) $(UTIL)/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	$(AFS_CCRULE) $(UTIL)/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	$(AFS_CCRULE) $(UTIL)/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	$(AFS_CCRULE) $(UTIL)/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	$(AFS_CCRULE) $(UTIL)/softsig.c
-
-hostparse.o: ${UTIL}/hostparse.c
-	$(AFS_CCRULE) $(UTIL)/hostparse.c
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
 
 database.o: ${BUDB}/database.c budb_errs.h ${INCLS}
 	$(AFS_CCRULE) $(BUDB)/database.c

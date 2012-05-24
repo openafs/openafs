@@ -152,7 +152,7 @@ procmgmt: $(DIR_roken) config
 opr: config hcrypto $(DIR_roken)
 	+${COMPILE_PART1} opr ${COMPILE_PART2}
 
-util: opr $(DIR_roken) procmgmt hcrypto lwp_depinstall rx_depinstall
+util: opr $(DIR_roken) procmgmt hcrypto lwp
 	+${COMPILE_PART1} util ${COMPILE_PART2}
 
 libafscp: util afs volser vlserver rx auth fsint

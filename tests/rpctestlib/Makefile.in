@@ -14,7 +14,6 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 RTL=@TOP_OBJDIR@/tests/rpctestlib
 RX = ${srcdir}/../../src/rx
 VICED=@TOP_OBJDIR@/src/viced
-UTIL=@TOP_OBJDIR@/src/util
 FSINT=@TOP_OBJDIR@/src/fsint
 MCAS=@TOP_OBJDIR@/src/mcas
 OSI=@TOP_OBJDIR@/src/osi
@@ -34,7 +33,8 @@ RXOBJS = rx_pthread.o
 
 LIBOBJS= ${RTLOBJS} ${FSINTOBJS} ${RXOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libopr.a ${TOP_LIBDIR}/util.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libopr.a \
+     $(top_builddir)/src/util/liboafs_util.la
 
 all: xmpl_driver
 
@@ -62,8 +62,8 @@ afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
 	$(AFS_CCRULE) ${FSINT}/afscbint.xdr.c
 
 xmpl_driver: librpc_test_lib.a rpc_test_main.o ${LIBS}
-	$(AFS_LDRULE) rpc_test_main.o librpc_test_lib.a \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+	$(LT_LDRULE_static) rpc_test_main.o librpc_test_lib.a \
+		${LIBS} ${LIB_hcrypto} ${MT_LIBS} ${XLIBS}
 
 librpc_test_lib.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -75,6 +75,7 @@ install:
 dest:
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.gch xmpl_driver core
 
 include @TOP_OBJDIR@/src/config/Makefile.version

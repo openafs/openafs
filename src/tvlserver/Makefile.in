@@ -13,14 +13,9 @@ HELPER_SPLINT=@HELPER_SPLINT@
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 RX=$(srcdir)/../rx
-UTIL=$(srcdir)/../util
 VLSERVER=$(srcdir)/../vlserver
 
 RXOBJS= rx_pthread.o rxkad_errs.o
-
-UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o \
-     volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
-     pthread_threadname.o
 
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
@@ -36,7 +31,8 @@ LIBS_common = \
 	${TOP_LIBDIR}/libafsauthent.a \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libafsutil.a \
+	$(top_builddir)/src/util/liboafs_util.la \
+	${TOP_LIBDIR}/libaudit.a \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
 LIBS_server = \
@@ -46,7 +42,7 @@ LIBS_server = \
 LIBS_client = \
 	$(LIBS_common)
 
-OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS} ${UTILOBJS}
+OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS}
 
 all: \
 	vlserver vlclient vlserver cnvldb vldb_check \
@@ -60,41 +56,6 @@ rx_pthread.o: ${RX}/rx_pthread.c
 rxkad_errs.o: ../rxkad/rxkad_errs.c
 	$(AFS_CCRULE) ../rxkad/rxkad_errs.c
 
-#
-# get the pthreaded util stuff compiled here.  we do this instead of
-# using the non-pthreaded libutil.a.  There probably should be a
-# pthreaded version of this library, as we are doing with ubik itself, but...
-#
-
-uuid.o: ${UTIL}/uuid.c
-	$(AFS_CCRULE) $(UTIL)/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	$(AFS_CCRULE) $(UTIL)/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	$(AFS_CCRULE) $(UTIL)/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	$(AFS_CCRULE) $(UTIL)/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	$(AFS_CCRULE) $(UTIL)/softsig.c
-
-hostparse.o: ${UTIL}/hostparse.c
-	$(AFS_CCRULE) $(UTIL)/hostparse.c
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
-
-pthread_threadname.o: ${UTIL}/pthread_threadname.c
-	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
 
 #
 # Other stuff

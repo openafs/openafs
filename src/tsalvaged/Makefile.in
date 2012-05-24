@@ -23,7 +23,6 @@ SCFLAGS=$(COMMON_CFLAGS) -I.. -DRXDEBUG -DFSSYNC_BUILD_CLIENT \
 SCCRULE=${MT_CC} ${SCFLAGS} -c $? -o $@
 
 LWP=$(srcdir)/../lwp
-UTIL=$(srcdir)/../util
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 
@@ -34,8 +33,6 @@ DIROBJS=buffer.o dir.o salvage.o
 
 LWPOBJS=lock.o threadname.o
 
-UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o volparse.o flipbase64.o softsig.o fstab.o
-
 VLIBOBJS=volume.o vnode.o vutil.o partition.o fssync-client.o \
 	 clone.o nuke.o devname.o listinodes.o ihandle.o \
 	 namei_ops.o salvsync-server.o salvsync-client.o daemon_com.o
@@ -43,16 +40,16 @@ SVLIBOBJS=s_volume.o s_vnode.o s_vutil.o s_partition.o s_fssync-client.o \
 	 s_clone.o s_nuke.o s_devname.o s_listinodes.o s_ihandle.o \
 	 s_namei_ops.o s_salvsync-server.o s_salvsync-client.o s_daemon_com.o
 
-OBJECTS= ${SALVAGEDOBJS} ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+OBJECTS= ${SALVAGEDOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 SOBJECTS= ${SALVAGEROBJS} ${SVLIBOBJS}
 
-FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
-SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
+SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
 LIBS=   ${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/util.a \
+	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
@@ -62,7 +59,7 @@ SLIBS=	${top_builddir}/src/cmd/liboafs_cmd.la \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libacl.a \
-	${TOP_LIBDIR}/util.a \
+	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
 all: salvageserver dafssync-debug salvsync-debug dasalvager
@@ -114,27 +111,6 @@ physio.o: ${VOL}/physio.c
 fssync-debug.o: ${VOL}/fssync-debug.c
 	$(AFS_CCRULE) $(VOL)/fssync-debug.c
 
-uuid.o: ${UTIL}/uuid.c
-	$(AFS_CCRULE) $(UTIL)/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	$(AFS_CCRULE) $(UTIL)/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	$(AFS_CCRULE) $(UTIL)/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	$(AFS_CCRULE) $(UTIL)/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	$(AFS_CCRULE) $(UTIL)/softsig.c
-
 buffer.o: ${DIR}/buffer.c
 	$(AFS_CCRULE) $(DIR)/buffer.c
 
@@ -182,10 +158,6 @@ nuke.o: ${VOL}/nuke.c
 
 devname.o: ${VOL}/devname.c
 	$(AFS_CCRULE) $(VOL)/devname.c
-
-# only for darwin?
-fstab.o: ${UTIL}/fstab.c
-	$(AFS_CCRULE) $(UTIL)/fstab.c
 
 common.o: ${VOL}/common.c
 	$(AFS_CCRULE) $(VOL)/common.c

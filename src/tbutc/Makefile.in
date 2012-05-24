@@ -56,7 +56,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libafsauthent.a \
 	    ${TOP_LIBDIR}/libafsrpc.a \
             $(top_builddir)/src/cmd/liboafs_cmd.la \
-	    ${TOP_LIBDIR}/util.a \
+	    $(top_builddir)/src/util/liboafs_util.la \
 	    $(top_builddir)/src/opr/liboafs_opr.la \
 	    ${TOP_LIBDIR}/libusd.a \
 	    ${TOP_LIBDIR}/libprocmgmt.a

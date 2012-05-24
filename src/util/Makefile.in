@@ -7,37 +7,19 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 HELPER_SPLINT=@HELPER_SPLINT@
 
+LT_objs =base64.lo ktime.lo volparse.lo hostparse.lo exec.lo \
+	 hputil.lo kreltime.lo uuid.lo serverLog.lo \
+	 dirpath.lo fileutil.lo flipbase64.lo fstab.lo \
+	 afs_atomlist.lo afs_lhash.lo pthread_glock.lo tabular_output.lo \
+	 pthread_threadname.lo softsig.lo ${REGEX_OBJ}
 
-objects =base64.o ktime.o volparse.o hostparse.o exec.o \
-	 hputil.o kreltime.o uuid.o serverLog.o \
-	 dirpath.o fileutil.o flipbase64.o fstab.o \
-	 afs_atomlist.o afs_lhash.o pthread_glock.o tabular_output.o \
-	 pthread_threadname.o ${REGEX_OBJ}
-
-objects_pic = \
-	base64_pic.o \
-	ktime_pic.o \
-	volparse_pic.o \
-	hostparse_pic.o \
-	exec_pic.o \
-	hputil_pic.o \
-	kreltime_pic.o \
-	uuid_pic.o \
-	serverLog_pic.o \
-	dirpath_pic.o \
-	fileutil_pic.o \
-	flipbase64_pic.o \
-	fstab_pic.o \
-	afs_atomlist_pic.o \
-	afs_lhash_pic.o \
-	pthread_glock_pic.o \
-	tabular_output_pic.o \
-	pthread_threadname_pic.o \
-	${REGEX_OBJ_PIC}
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
+LT_libs = $(LIB_roken) $(MT_LIBS)
 
 includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
@@ -62,7 +44,17 @@ all: ${includes} \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libafsutil_pic.a \
-	sys
+	sys \
+	liboafs_util.la
+
+util.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
+
+libafsutil_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
+liboafs_util.la: liboafs_util.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
 buildtools: ${TOP_LIBDIR}/libafsutil.a ${TOP_INCDIR}/afs/afsutil.h
 buildtools_clean: clean
@@ -129,8 +121,8 @@ ${TOP_LIBDIR}/util.a: util.a
 ${TOP_LIBDIR}/libafsutil.a: util.a
 	${INSTALL_DATA} $? $@
 
-${TOP_LIBDIR}/libafsutil_pic.a: util_pic.a
-	${INSTALL_DATA} $? $@
+${TOP_LIBDIR}/libafsutil_pic.a: libafsutil_pic.la
+	${INSTALL_DATA} .libs/libafsutil_pic.a $@
 
 # Use " as the sed boundary character because we lose anyway if that occurs
 # in path names.
@@ -149,89 +141,13 @@ dirpath.h: ${srcdir}/dirpath.hin Makefile
 		-e 's"@afsdatadir"${afsdatadir}"' \
 		${srcdir}/dirpath.hin >dirpath.h
 
-util.a: ${objects} AFS_component_version_number.o
-	$(RM) -f util.a
-	$(AR) crv util.a ${objects} AFS_component_version_number.o
-	$(RANLIB) util.a
 
-util_pic.a: ${objects_pic} AFS_component_version_number_pic.o
-	$(RM) -f util_pic.a
-	$(AR) crv util_pic.a ${objects_pic} AFS_component_version_number_pic.o
-	$(RANLIB) util_pic.a
-
-pthread_glock.o: ${srcdir}/pthread_glock.c ${includes}
-	${MT_CC} $(COMMON_CFLAGS) ${MT_CFLAGS} -c ${srcdir}/pthread_glock.c
-
-pthread_threadname.o: ${srcdir}/pthread_threadname.c ${includes}
-	${MT_CC} $(COMMON_CFLAGS) ${MT_CFLAGS} -c ${srcdir}/pthread_threadname.c
-
-${objects}: ${includes}
-
-AFS_component_version_number_pic.o: AFS_component_version_number.c
-	$(SHD_CCRULE) AFS_component_version_number.c
+$(LT_objs): ${includes}
 
 sys.o: sys.c AFS_component_version_number.c ${includes}
 
 sys: sys.o 
 	$(AFS_LDRULE) sys.o
-
-# PIC objects build rules
-base64_pic.o: ${srcdir}/base64.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/base64.c
-
-ktime_pic.o: ${srcdir}/ktime.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/ktime.c
-
-volparse_pic.o: ${srcdir}/volparse.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/volparse.c
-
-hostparse_pic.o: ${srcdir}/hostparse.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/hostparse.c
-
-exec_pic.o: ${srcdir}/exec.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/exec.c
-
-hputil_pic.o: ${srcdir}/hputil.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/hputil.c
-
-kreltime_pic.o: ${srcdir}/kreltime.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/kreltime.c
-
-uuid_pic.o: ${srcdir}/uuid.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/uuid.c
-
-serverLog_pic.o: ${srcdir}/serverLog.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/serverLog.c
-
-dirpath_pic.o: ${srcdir}/dirpath.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/dirpath.c
-
-fileutil_pic.o: ${srcdir}/fileutil.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/fileutil.c
-
-flipbase64_pic.o: ${srcdir}/flipbase64.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/flipbase64.c
-
-fstab_pic.o: ${srcdir}/fstab.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/fstab.c
-
-afs_atomlist_pic.o: ${srcdir}/afs_atomlist.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/afs_atomlist.c
-
-afs_lhash_pic.o: ${srcdir}/afs_lhash.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/afs_lhash.c
-
-pthread_glock_pic.o: ${srcdir}/pthread_glock.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/pthread_glock.c
-
-pthread_threadname_pic.o: ${srcdir}/pthread_threadname.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/pthread_threadname.c
-
-tabular_output_pic.o: ${srcdir}/tabular_output.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/tabular_output.c
-
-regex_pic.o: ${srcdir}/regex.c ${includes}
-	$(SHD_CCRULE) ${srcdir}/regex.c
 
 #
 # Install targets
@@ -239,7 +155,7 @@ regex_pic.o: ${srcdir}/regex.c ${includes}
 KDIR=../libafs/afs
 UKDIR=../libuafs/afs
 
-install: dirpath.h util.a util_pic.a sys
+install: dirpath.h util.a sys
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${bindir}
@@ -262,10 +178,9 @@ install: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DESTDIR}${includedir}/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/util.a
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/libafsutil.a
-	${INSTALL_DATA} util_pic.a ${DESTDIR}${libdir}/afs/libafsutil_pic.a
 	${INSTALL_PROGRAM} sys ${DESTDIR}${bindir}/sys
 
-dest: dirpath.h util.a util_pic.a sys
+dest: dirpath.h util.a sys
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
 	${INSTALL} -d ${DEST}/bin
@@ -288,7 +203,6 @@ dest: dirpath.h util.a util_pic.a sys
 	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DEST}/include/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/util.a
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/libafsutil.a
-	${INSTALL_DATA} util_pic.a ${DEST}/lib/afs/libafsutil_pic.a
 	${INSTALL_PROGRAM} sys ${DEST}/bin/sys
 
 #
@@ -296,8 +210,9 @@ dest: dirpath.h util.a util_pic.a sys
 #
 
 clean:
-	$(RM) -f ${objects} sys dirpath.h
-	$(RM) -f util.a util_pic.a *.o core AFS_component_version_number.c
+	$(LT_CLEAN)
+	$(RM) -f sys dirpath.h
+	$(RM) -f util.a *.o core AFS_component_version_number.c
 
 test:
 	cd test; $(MAKE)

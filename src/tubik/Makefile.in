@@ -14,7 +14,6 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 UBIK=$(srcdir)/../ubik
 RX=$(srcdir)/../rx
-UTIL=$(srcdir)/../util
 
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
@@ -26,14 +25,11 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 
 RXOBJS = rx_pthread.o
 
-UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o \
-       volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
-       pthread_threadname.o
-
-LIBS=${RXOBJS} ${UTILOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
+LIBS=${RXOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
      $(top_builddir)/src/comerr/liboafs_comerr.la \
      ${top_builddir}/src/cmd/liboafs_cmd.la \
      ${TOP_LIBDIR}/libsys.a \
+     $(top_builddir)/src/util/liboafs_util.la \
      $(top_builddir)/src/opr/liboafs_opr.la \
      ${XLIBS} ${MT_LIBS}
 
@@ -52,55 +48,20 @@ CFLAGS_rx_pthread.o = -DDPF_FSLOG
 rx_pthread.o: ${RX}/rx_pthread.c
 	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
-#
-# get the pthreaded util stuff compiled here.  we do this instead of
-# using the non-pthreaded libutil.a.  There probably should be a
-# pthreaded version of this library, as we are doing with ubik itself, but...
-#
-
-uuid.o: ${UTIL}/uuid.c
-	$(AFS_CCRULE) $(UTIL)/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	$(AFS_CCRULE) $(UTIL)/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	$(AFS_CCRULE) $(UTIL)/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	$(AFS_CCRULE) $(UTIL)/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	$(AFS_CCRULE) $(UTIL)/softsig.c
-
-hostparse.o: ${UTIL}/hostparse.c
-	$(AFS_CCRULE) $(UTIL)/hostparse.c
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	$(AFS_CCRULE) $(UTIL)/pthread_glock.c
-
-pthread_threadname.o: ${UTIL}/pthread_threadname.c
-	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
 
 #
 # insert comments here
 #
 
-utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
+utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a ${RXOBJS}
 	$(LT_LDRULE_static) utst_server.o utst_int.ss.o utst_int.xdr.o \
 		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
-utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
+utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a ${RXOBJS}
 	$(LT_LDRULE_static) utst_client.o utst_int.cs.o utst_int.xdr.o \
 		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
-udebug: udebug.o libubik_pthread.a ${RXOBJS} ${UTILOBJS}
+udebug: udebug.o libubik_pthread.a ${RXOBJS}
 	$(LT_LDRULE_static) udebug.o libubik_pthread.a \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken)
 

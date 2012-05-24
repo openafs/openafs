@@ -18,7 +18,6 @@ RX=$(srcdir)/../rx
 VLSERVER=$(srcdir)/../vlserver
 LWP=$(srcdir)/../lwp
 LIBACL=$(srcdir)/../libacl
-UTIL=$(srcdir)/../util
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 FSINT=$(srcdir)/../fsint
@@ -32,26 +31,24 @@ LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o volparse.o flipbase64.o softsig.o pthread_threadname.o
-
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 fstab.o salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
+	 salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
 RXOBJS = rx_pthread.o
 
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
      $(top_builddir)/src/cmd/liboafs_cmd.la \
      $(top_builddir)/src/opr/liboafs_opr.la \
-     ${TOP_LIBDIR}/util.a
+     $(top_builddir)/src/util/liboafs_util.la
 
 all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
 
@@ -78,30 +75,6 @@ cbd: cbd.o
 CFLAGS_rx_pthread.o = -DDPF_FSLOG
 rx_pthread.o: ${RX}/rx_pthread.c
 	$(AFS_CCRULE) $(RX)/rx_pthread.c
-
-uuid.o: ${UTIL}/uuid.c
-	$(AFS_CCRULE) $(UTIL)/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	$(AFS_CCRULE) $(UTIL)/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	$(AFS_CCRULE) $(UTIL)/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	$(AFS_CCRULE) $(UTIL)/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	$(AFS_CCRULE) $(UTIL)/softsig.c
-
-pthread_threadname.o: ${UTIL}/pthread_threadname.c
-	$(AFS_CCRULE) $(UTIL)/pthread_threadname.c
 
 lock.o: ${LWP}/lock.c
 	$(AFS_CCRULE) $(LWP)/lock.c
@@ -170,10 +143,6 @@ nuke.o: ${VOL}/nuke.c
 
 devname.o: ${VOL}/devname.c
 	$(AFS_CCRULE) $(VOL)/devname.c
-
-# only for darwin?
-fstab.o: ${UTIL}/fstab.c
-	$(AFS_CCRULE) $(UTIL)/fstab.c
 
 common.o: ${VOL}/common.c
 	$(AFS_CCRULE) $(VOL)/common.c

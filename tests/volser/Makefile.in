@@ -21,7 +21,8 @@ MODULE_LIBS = 	../tap/libtap.a \
 		$(abs_top_builddir)/lib/libafsrpc.a \
 		$(abs_top_builddir)/lib/libafshcrypto.a \
 		$(abs_top_builddir)/src/opr/liboafs_opr.la \
-		$(LIB_rfc3961) $(LIB_roken) -lafsutil\
+		$(abs_top_builddir)/src/opr/liboafs_util.la \
+		$(LIB_rfc3961) $(LIB_roken) \
 		$(XLIBS)
 
 vos-t: vos-t.o ../common/config.o ../common/servers.o ../common/ubik.o

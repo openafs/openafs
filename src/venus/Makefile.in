@@ -28,7 +28,7 @@ AFSIO_LIBS=${TOP_LIBDIR}/libafscp.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
-	$(TOP_LIBDIR)/libafsutil.a \
+	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
 FSLIBS=${TOP_LIBDIR}/libsys.a \

@@ -20,7 +20,6 @@ VICED=$(srcdir)/../viced
 VLSERVER=$(srcdir)/../vlserver
 LWP=$(srcdir)/../lwp
 LIBACL=$(srcdir)/../libacl
-UTIL=$(srcdir)/../util
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 FSINT=$(srcdir)/../fsint
@@ -34,29 +33,28 @@ LWPOBJS=lock.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o volparse.o flipbase64.o softsig.o
-
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 fstab.o salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
+	 salvsync-client.o daemon_com.o vg_cache.o vg_scan.o
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
 RXOBJS = rx_pthread.o 
 
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
 
-SDBGOBJS = state_analyzer.o uuid.o dirpath.o fileutil.o ${TOP_LIBDIR}/util.a \
+SDBGOBJS = state_analyzer.o \
+	   $(top_builddir)/src/util/liboafs_util.la \
 	   $(top_builddir)/src/opr/liboafs_opr.la
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      ${TOP_LIBDIR}/libafsrpc.a \
      $(top_builddir)/src/cmd/liboafs_cmd.la \
      $(top_builddir)/src/opr/liboafs_opr.la \
-     ${TOP_LIBDIR}/util.a
+     $(top_builddir)/src/util/liboafs_util.la
 
 all: dafileserver state_analyzer
 
@@ -84,27 +82,6 @@ fsstats.o: ${VICED}/fsstats.c
 
 serialize_state.o: ${VICED}/serialize_state.c
 	$(AFS_CCRULE) $(VICED)/serialize_state.c
-
-uuid.o: ${UTIL}/uuid.c
-	$(AFS_CCRULE) $(UTIL)/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	$(AFS_CCRULE) $(UTIL)/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	$(AFS_CCRULE) $(UTIL)/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	$(AFS_CCRULE) $(UTIL)/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	$(AFS_CCRULE) $(UTIL)/flipbase64.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	$(AFS_CCRULE) $(UTIL)/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	$(AFS_CCRULE) $(UTIL)/softsig.c
 
 lock.o: ${LWP}/lock.c
 	$(AFS_CCRULE) $(LWP)/lock.c
@@ -173,10 +150,6 @@ nuke.o: ${VOL}/nuke.c
 devname.o: ${VOL}/devname.c
 	$(AFS_CCRULE) $(VOL)/devname.c
 
-# only for darwin?
-fstab.o: ${UTIL}/fstab.c
-	$(AFS_CCRULE) $(UTIL)/fstab.c
-
 common.o: ${VOL}/common.c
 	$(AFS_CCRULE) $(VOL)/common.c
 
@@ -223,7 +196,7 @@ install: dafileserver state_analyzer
 	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
 	$(LT_INSTALL_PROGRAM) dafileserver \
 		${DESTDIR}${afssrvlibexecdir}/dafileserver
-	${INSTALL_PROGRAM} state_analyzer \
+	${LT_INSTALL_PROGRAM} state_analyzer \
 		${DESTDIR}${afssrvsbindir}/state_analyzer
 
 dest: dafileserver state_analyzer
