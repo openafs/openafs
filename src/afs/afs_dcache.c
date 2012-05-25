@@ -2910,7 +2910,6 @@ afs_wakeup(struct vcache *avc)
     return 0;
 }
 
-
 /*!
  * Given a file name and inode, set up that file to be an
  * active member in the AFS cache.  This also involves checking
@@ -2944,56 +2943,61 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 
     ObtainWriteLock(&tdc->lock, 621);
     ObtainWriteLock(&afs_xdcache, 622);
-    if (afile) {
-	code = afs_LookupInodeByPath(afile, &tdc->f.inode.ufs, NULL);
-	if (code) {
-	    ReleaseWriteLock(&afs_xdcache);
-	    ReleaseWriteLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	    return code;
-	}
+    if (!afile && !ainode) {
+	tfile = NULL;
+	fileIsBad = 1;
     } else {
-	/* Add any other 'complex' inode types here ... */
+	if (afile) {
+	    code = afs_LookupInodeByPath(afile, &tdc->f.inode.ufs, NULL);
+	    if (code) {
+		ReleaseWriteLock(&afs_xdcache);
+		ReleaseWriteLock(&tdc->lock);
+		afs_PutDCache(tdc);
+		return code;
+	    }
+	} else {
+	    /* Add any other 'complex' inode types here ... */
 #if !defined(AFS_LINUX26_ENV) && !defined(AFS_CACHE_VNODE_PATH)
-	tdc->f.inode.ufs = ainode;
+	    tdc->f.inode.ufs = ainode;
 #else
-	osi_Panic("Can't init cache with inode numbers when complex inodes are "
-	          "in use\n");
+	    osi_Panic("Can't init cache with inode numbers when complex inodes are "
+		      "in use\n");
 #endif
-    }
-    fileIsBad = 0;
-    if ((tdc->f.states & DWriting) || tdc->f.fid.Fid.Volume == 0)
-	fileIsBad = 1;
-    tfile = osi_UFSOpen(&tdc->f.inode);
-    code = afs_osi_Stat(tfile, &tstat);
-    if (code)
-	osi_Panic("initcachefile stat");
+	}
+	fileIsBad = 0;
+	if ((tdc->f.states & DWriting) || tdc->f.fid.Fid.Volume == 0)
+	    fileIsBad = 1;
+	tfile = osi_UFSOpen(&tdc->f.inode);
+	code = afs_osi_Stat(tfile, &tstat);
+	if (code)
+	    osi_Panic("initcachefile stat");
 
-    /*
-     * If file size doesn't match the cache info file, it's probably bad.
-     */
-    if (tdc->f.chunkBytes != tstat.size)
-	fileIsBad = 1;
+	/*
+	 * If file size doesn't match the cache info file, it's probably bad.
+	 */
+	if (tdc->f.chunkBytes != tstat.size)
+	    fileIsBad = 1;
+	/*
+	 * If file changed within T (120?) seconds of cache info file, it's
+	 * probably bad.  In addition, if slot changed within last T seconds,
+	 * the cache info file may be incorrectly identified, and so slot
+	 * may be bad.
+	 */
+	if (cacheInfoModTime < tstat.mtime + 120)
+	    fileIsBad = 1;
+	if (cacheInfoModTime < tdc->f.modTime + 120)
+	    fileIsBad = 1;
+	/* In case write through is behind, make sure cache items entry is
+	 * at least as new as the chunk.
+	 */
+	if (tdc->f.modTime < tstat.mtime)
+	    fileIsBad = 1;
+    }
     tdc->f.chunkBytes = 0;
 
-    /*
-     * If file changed within T (120?) seconds of cache info file, it's
-     * probably bad.  In addition, if slot changed within last T seconds,
-     * the cache info file may be incorrectly identified, and so slot
-     * may be bad.
-     */
-    if (cacheInfoModTime < tstat.mtime + 120)
-	fileIsBad = 1;
-    if (cacheInfoModTime < tdc->f.modTime + 120)
-	fileIsBad = 1;
-    /* In case write through is behind, make sure cache items entry is
-     * at least as new as the chunk.
-     */
-    if (tdc->f.modTime < tstat.mtime)
-	fileIsBad = 1;
     if (fileIsBad) {
 	tdc->f.fid.Fid.Volume = 0;	/* not in the hash table */
-	if (tstat.size != 0)
+	if (tfile && tstat.size != 0)
 	    osi_UFSTruncate(tfile, 0);
 	tdc->f.states &= ~(DRO|DBackup|DRW);
 	afs_DCMoveBucket(tdc, 0, 0);
@@ -3030,7 +3034,8 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	afs_indexUnique[index] = tdc->f.fid.Fid.Unique;
     }				/*File is not bad */
 
-    osi_UFSClose(tfile);
+    if (tfile)
+	osi_UFSClose(tfile);
     tdc->f.states &= ~DWriting;
     tdc->dflags &= ~DFEntryMod;
     /* don't set f.modTime; we're just cleaning up */
@@ -3086,29 +3091,6 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 
     if (!aDentries)
 	aDentries = DDSIZE;
-
-    if (aflags & AFSCALL_INIT_MEMCACHE) {
-	/*
-	 * Use a memory cache instead of a disk cache
-	 */
-	cacheDiskType = AFS_FCACHE_TYPE_MEM;
-	afs_cacheType = &afs_MemCacheOps;
-	afiles = (afiles < aDentries) ? afiles : aDentries;	/* min */
-	ablocks = afiles * (AFS_FIRSTCSIZE / 1024);
-	/* ablocks is reported in 1K blocks */
-	code = afs_InitMemCache(afiles, AFS_FIRSTCSIZE, aflags);
-	if (code != 0) {
-	    afs_warn("afsd: memory cache too large for available memory.\n");
-	    afs_warn("afsd: AFS files cannot be accessed.\n\n");
-	    dcacheDisabled = 1;
-	    afiles = ablocks = 0;
-	} else
-	    afs_warn("Memory cache: Allocating %d dcache entries...",
-		   aDentries);
-    } else {
-	cacheDiskType = AFS_FCACHE_TYPE_UFS;
-	afs_cacheType = &afs_UfsCacheOps;
-    }
 
     if (aDentries > 512)
 	afs_dhashsize = 2048;
@@ -3184,6 +3166,29 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 	afs_stats_cmperf.cacheBucket2_Discarded = 0;
     afs_DCSizeInit();
     QInit(&afs_DLRU);
+
+    if (aflags & AFSCALL_INIT_MEMCACHE) {
+	/*
+	 * Use a memory cache instead of a disk cache
+	 */
+	cacheDiskType = AFS_FCACHE_TYPE_MEM;
+	afs_cacheType = &afs_MemCacheOps;
+	afiles = (afiles < aDentries) ? afiles : aDentries;	/* min */
+	ablocks = afiles * (AFS_FIRSTCSIZE / 1024);
+	/* ablocks is reported in 1K blocks */
+	code = afs_InitMemCache(afiles, AFS_FIRSTCSIZE, aflags);
+	if (code != 0) {
+	    afs_warn("afsd: memory cache too large for available memory.\n");
+	    afs_warn("afsd: AFS files cannot be accessed.\n\n");
+	    dcacheDisabled = 1;
+	    afiles = ablocks = 0;
+	} else
+	    afs_warn("Memory cache: Allocating %d dcache entries...",
+		   aDentries);
+    } else {
+	cacheDiskType = AFS_FCACHE_TYPE_UFS;
+	afs_cacheType = &afs_UfsCacheOps;
+    }
 }
 
 /*!
