@@ -1050,6 +1050,9 @@ try_exit:
             if( pCcb != NULL)
             {
 
+                AFSAcquireExcl( &pCcb->NPCcb->CcbLock,
+                                TRUE);
+
                 RtlCopyMemory( &pCcb->AuthGroup,
                                &stAuthGroup,
                                sizeof( GUID));
@@ -1111,6 +1114,8 @@ try_exit:
                 pCcb->NameArray = pNameArray;
 
                 pNameArray = NULL;
+
+                AFSReleaseResource( &pCcb->NPCcb->CcbLock);
             }
 
             //

@@ -296,9 +296,14 @@ AFSQueryDirectory( IN PIRP Irp)
             // Perform a new snapshot of the directory
             //
 
+            AFSAcquireExcl( &pCcb->NPCcb->CcbLock,
+                            TRUE);
+
             ntStatus = AFSSnapshotDirectory( pFcb,
                                              pCcb,
                                              FALSE);
+
+            AFSReleaseResource( &pCcb->NPCcb->CcbLock);
 
             if( !NT_SUCCESS( ntStatus))
             {
@@ -337,6 +342,9 @@ AFSQueryDirectory( IN PIRP Irp)
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
 
+        AFSAcquireExcl( &pCcb->NPCcb->CcbLock,
+                        TRUE);
+
         // Check if initial on this map
         if( bInitialQuery)
         {
@@ -347,6 +355,8 @@ AFSQueryDirectory( IN PIRP Irp)
 
             if( !NT_SUCCESS( ntStatus))
             {
+
+                AFSReleaseResource( &pCcb->NPCcb->CcbLock);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
@@ -462,6 +472,8 @@ AFSQueryDirectory( IN PIRP Irp)
                     if( pFcb->ObjectInformation->Specific.Directory.PIOCtlDirectoryCB == NULL)
                     {
 
+                        AFSReleaseResource( &pCcb->NPCcb->CcbLock);
+
                         AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                         bReleaseMain = FALSE;
@@ -496,6 +508,9 @@ AFSQueryDirectory( IN PIRP Irp)
                         bReleaseMain = TRUE;
 
                         AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                        AFSAcquireExcl( &pCcb->NPCcb->CcbLock,
+                                        TRUE);
                     }
                 }
 
@@ -537,6 +552,12 @@ AFSQueryDirectory( IN PIRP Irp)
                 pCcb->CurrentDirIndex = AFS_DIR_ENTRY_INITIAL_ROOT_INDEX;
             }
         }
+
+        AFSReleaseResource( &pCcb->NPCcb->CcbLock);
+
+        AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+        bReleaseMain = FALSE;
 
         switch( FileInformationClass)
         {
@@ -589,10 +610,6 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
         }
-
-        AFSReleaseResource( pFcb->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
-
-        bReleaseMain = FALSE;
 
         while( TRUE)
         {
@@ -1094,6 +1111,12 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
     __Enter
     {
 
+        AFSAcquireShared( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                          TRUE);
+
+        AFSAcquireExcl( &Ccb->NPCcb->CcbLock,
+                        TRUE);
+
         //
         // Is this a PIOCtl query
         //
@@ -1203,9 +1226,6 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
             // Get to a valid entry
             //
 
-            AFSAcquireShared( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                              TRUE);
-
             while( ulCount < pSnapshotHdr->EntryCount)
             {
 
@@ -1276,13 +1296,13 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
 
                 Ccb->CurrentDirIndex++;
             }
-
-            AFSReleaseResource( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
 
 try_exit:
 
-        NOTHING;
+        AFSReleaseResource( &Ccb->NPCcb->CcbLock);
+
+        AFSReleaseResource( ObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
     }
 
     return pDirEntry;
@@ -1302,6 +1322,9 @@ AFSLocateDirEntryByIndex( IN AFSObjectInfoCB *ObjectInfo,
 
     __Enter
     {
+
+        AFSAcquireExcl( &Ccb->NPCcb->CcbLock,
+                        TRUE);
 
         Ccb->CurrentDirIndex = DirIndex;
 
@@ -1374,7 +1397,7 @@ AFSLocateDirEntryByIndex( IN AFSObjectInfoCB *ObjectInfo,
 
 try_exit:
 
-        NOTHING;
+        AFSReleaseResource( &Ccb->NPCcb->CcbLock);
     }
 
     return pDirEntry;
@@ -1541,6 +1564,9 @@ AFSFsRtlNotifyFullChangeDirectory( IN AFSObjectInfoCB *ObjectInfo,
     __Enter
     {
 
+        AFSAcquireExcl( &Ccb->NPCcb->CcbLock,
+                        TRUE);
+
         //
         // Build a dir name based on the FID of the file
         //
@@ -1621,6 +1647,8 @@ try_exit:
                 Ccb->NotifyMask.Buffer = NULL;
             }
         }
+
+        AFSReleaseResource( &Ccb->NPCcb->CcbLock);
     }
 
     return ntStatus;

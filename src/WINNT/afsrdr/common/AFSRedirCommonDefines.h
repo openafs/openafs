@@ -77,6 +77,7 @@
 #define AFS_VCB_ALLOCATION_TAG       'CVFA'
 #define AFS_VCB_NP_ALLOCATION_TAG    'NVFA'
 #define AFS_CCB_ALLOCATION_TAG       'CCFA'
+#define AFS_CCB_NP_ALLOCATION_TAG    'NCFA'
 #define AFS_WORKER_CB_TAG            'CWFA'
 #define AFS_WORK_ITEM_TAG            'IWFA'
 #define AFS_POOL_ENTRY_TAG           'EPFA'

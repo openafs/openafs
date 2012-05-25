@@ -73,13 +73,24 @@ typedef struct _AFS_WORKER_QUEUE_HDR
 // These are the context control blocks for the open instance
 //
 
+typedef struct _AFS_NONPAGED_CCB
+{
+
+    ERESOURCE           CcbLock;
+
+} AFSNonPagedCcb;
+
+
 typedef struct _AFS_CCB
 {
 
     USHORT        Size;
+
     USHORT        Type;
 
     ULONG         Flags;
+
+    AFSNonPagedCcb  *NPCcb;
 
     AFSListEntry  ListEntry;
 
