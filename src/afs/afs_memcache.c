@@ -53,7 +53,8 @@ afs_InitMemCache(int blkCount, int blkSize, int flags)
 #if defined(AFS_HAVE_VXFS)
     afs_InitDualFSCacheOps((struct vnode *)0);
 #endif
-
+    for (index = 0; index < blkCount; index++)
+	afs_InitCacheFile(NULL, 0);
     return 0;
 
   nomem:
