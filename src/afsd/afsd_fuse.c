@@ -77,7 +77,7 @@ afs_path(const char *apath)
     static const char prefix[] = "/afs/";
     char *path;
 
-    asprint(&path, "%s%s", prefix, apath);
+    asprintf(&path, "%s%s", prefix, apath);
 
     return path;
 }
