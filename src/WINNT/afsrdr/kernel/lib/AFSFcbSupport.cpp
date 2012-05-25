@@ -1140,7 +1140,24 @@ AFSInitCcb( IN OUT AFSCcb **Ccb)
                        sizeof( AFSCcb));
 
         pCcb->Size = sizeof( AFSCcb);
+
         pCcb->Type = AFS_CCB;
+
+        pCcb->NPCcb = (AFSNonPagedCcb *)AFSExAllocatePoolWithTag( NonPagedPool,
+                                                     sizeof( AFSNonPagedCcb),
+                                                     AFS_CCB_NP_ALLOCATION_TAG);
+
+        if( pCcb->NPCcb == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSInitCcb Failed to allocate NPCcb\n");
+
+            try_return( Status = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        ExInitializeResourceLite( &pCcb->NPCcb->CcbLock);
 
         //
         // Return the Ccb
@@ -1155,6 +1172,12 @@ try_exit:
 
             if( pCcb != NULL)
             {
+
+                if ( pCcb->NPCcb != NULL)
+                {
+
+                    AFSExFreePool( pCcb->NPCcb);
+                }
 
                 AFSExFreePool( pCcb);
             }
@@ -1184,6 +1207,9 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+
+    AFSAcquireExcl( &Ccb->NPCcb->CcbLock,
+                    TRUE);
 
     if( Fcb != NULL &&
         BooleanFlagOn( Ccb->Flags, CCB_FLAG_INSERTED_CCB_LIST))
@@ -1263,9 +1289,15 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
         AFSExFreePool( Ccb->NotifyMask.Buffer);
     }
 
+    AFSReleaseResource( &Ccb->NPCcb->CcbLock);
+
     //
     // Free up the Ccb
     //
+
+    ExDeleteResourceLite( &Ccb->NPCcb->CcbLock);
+
+    AFSExFreePool( Ccb->NPCcb);
 
     AFSExFreePool( Ccb);
 
@@ -1282,6 +1314,9 @@ AFSInsertCcb( IN AFSFcb *Fcb,
     AFSAcquireExcl( &Fcb->NPFcb->CcbListLock,
                     TRUE);
 
+    AFSAcquireExcl( &Ccb->NPCcb->CcbLock,
+                    TRUE);
+
     if( Fcb->CcbListHead == NULL)
     {
         Fcb->CcbListHead = Ccb;
@@ -1296,6 +1331,8 @@ AFSInsertCcb( IN AFSFcb *Fcb,
     Fcb->CcbListTail = Ccb;
 
     SetFlag( Ccb->Flags, CCB_FLAG_INSERTED_CCB_LIST);
+
+    AFSReleaseResource( &Ccb->NPCcb->CcbLock);
 
     AFSReleaseResource( &Fcb->NPFcb->CcbListLock);
 
