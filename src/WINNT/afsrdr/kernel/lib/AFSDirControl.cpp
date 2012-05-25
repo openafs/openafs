@@ -206,7 +206,7 @@ AFSQueryDirectory( IN PIRP Irp)
         bReturnSingleEntry = BooleanFlagOn( pIrpSp->Flags, SL_RETURN_SINGLE_ENTRY);
         bIndexSpecified    = BooleanFlagOn( pIrpSp->Flags, SL_INDEX_SPECIFIED);
 
-        bInitialQuery = (BOOLEAN)( !BooleanFlagOn( pCcb->Flags, CCB_FLAGS_DIRECTORY_QUERY_MAPPED));
+        bInitialQuery = (BOOLEAN)( !BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_MAPPED));
 
         if( bInitialQuery)
         {
@@ -358,7 +358,7 @@ AFSQueryDirectory( IN PIRP Irp)
                 try_return( ntStatus);
             }
 
-            SetFlag( pCcb->Flags, CCB_FLAGS_DIRECTORY_QUERY_MAPPED);
+            SetFlag( pCcb->Flags, CCB_FLAG_DIRECTORY_QUERY_MAPPED);
 
             ClearFlag( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY);
 
