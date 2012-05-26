@@ -253,7 +253,13 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
 
                     InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pEntry->Size/1024)));
 
-                    RemoveEntryList( le);
+                    for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
+                    {
+                        if (NULL != pEntry->Lists[i].Flink && !IsListEmpty(&pEntry->Lists[i]))
+                        {
+                            RemoveEntryList( &pEntry->Lists[i] );
+                        }
+                    }
 
                     AFSExFreePool( pEntry);
 
