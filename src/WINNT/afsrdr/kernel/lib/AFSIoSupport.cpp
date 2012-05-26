@@ -38,8 +38,6 @@
 
 #include "AFSCommon.h"
 
-static AFSExtent *NextExtent(AFSExtent *Extent);
-
 //
 // Called in the paging or non cached read and write paths to get the
 // first and last extent in a span.  We also the count of how many
@@ -73,7 +71,7 @@ AFSGetExtents( IN AFSFcb *Fcb,
         while ((Offset->QuadPart + Length) >
                pEndExtent->FileOffset.QuadPart + pEndExtent->Size) {
 
-            pEndExtent = NextExtent(pEndExtent);
+            pEndExtent = NextExtent(pEndExtent, AFS_EXTENTS_LIST);
 
             if (liLastCacheOffset.QuadPart != pEndExtent->CacheOffset.QuadPart) {
                 //
@@ -143,7 +141,7 @@ AFSSetupIoRun( IN PDEVICE_OBJECT CacheDevice,
                 //
                 // Collapse the read if we can
                 //
-                pNextExtent = NextExtent( pExtent );
+                pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
 
                 if (pNextExtent->CacheOffset.QuadPart !=
                     (pExtent->CacheOffset.QuadPart + pExtent->Size))
@@ -389,16 +387,6 @@ AFSCompleteIo( IN AFSGatherIo *Gather,
     }
 }
 
-static AFSExtent *ExtentFor(PLIST_ENTRY le)
-{
-    return CONTAINING_RECORD( le, AFSExtent, Lists[AFS_EXTENTS_LIST] );
-}
-
-static AFSExtent *NextExtent(AFSExtent *Extent)
-{
-    return ExtentFor(Extent->Lists[AFS_EXTENTS_LIST].Flink);
-}
-
 NTSTATUS
 AFSProcessExtentRun( IN PVOID          SystemBuffer,
                      IN PLARGE_INTEGER Start,
@@ -440,7 +428,7 @@ AFSProcessExtentRun( IN PVOID          SystemBuffer,
                 //
                 // Collapse the read if we can
                 //
-                pNextExtent = NextExtent( pExtent );
+                pNextExtent = NextExtent( pExtent, AFS_EXTENTS_LIST);
 
                 if (pNextExtent->CacheOffset.QuadPart !=
                     (pExtent->CacheOffset.QuadPart + pExtent->Size))

@@ -436,6 +436,9 @@ AFSRemoveEntryDirtyList( IN AFSFcb *Fcb,
 AFSExtent *
 ExtentFor( PLIST_ENTRY le, ULONG SkipList );
 
+AFSExtent *
+NextExtent( AFSExtent *Extent, ULONG SkipList );
+
 ULONG
 AFSConstructCleanByteRangeList( AFSFcb * pFcb,
                                 AFSByteRange ** pByteRangeList);
