@@ -97,6 +97,41 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
 
     return TRUE;
 }
+
+static VOID
+AFSFreeExtent( IN AFSFcb *Fcb,
+               IN AFSExtent *pExtent)
+{
+    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    LONG                 lCount;
+
+    for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
+    {
+        if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
+        {
+            RemoveEntryList( &pExtent->Lists[i] );
+        }
+    }
+
+    InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
+
+    InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
+
+    lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+    lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
+
+    if( lCount == 0)
+    {
+
+        KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
+                    0,
+                    FALSE);
+    }
+
+    AFSExFreePool( pExtent);
+}
+
 //
 // AFSTearDownFcbExtents was originally written to
 // remove all of the extents from an FCB.  For that to happen
@@ -246,31 +281,8 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                     pRelease->FileExtents[ulProcessCount].CacheOffset = pEntry->CacheOffset;
                     pRelease->FileExtents[ulProcessCount].FileOffset = pEntry->FileOffset;
 
-                    InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pEntry->Size/1024)));
-
-                    InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pEntry->Size/1024)));
-
-                    for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
-                    {
-                        if (NULL != pEntry->Lists[i].Flink && !IsListEmpty(&pEntry->Lists[i]))
-                        {
-                            RemoveEntryList( &pEntry->Lists[i] );
-                        }
-                    }
-
-                    AFSExFreePool( pEntry);
-
-                    lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
-
-                    lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
-
-                    if( lCount == 0)
-                    {
-
-                        KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                                    0,
-                                    FALSE);
-                    }
+                    AFSFreeExtent( Fcb,
+                                   pEntry);
                 }
             }
 
@@ -1650,37 +1662,8 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
             ulExtentCount ++;
             *ExtentCount = (*ExtentCount) + 1;
 
-            //
-            // And unpick
-            //
-            for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
-            {
-                if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
-                {
-                    RemoveEntryList( &pExtent->Lists[i] );
-                }
-            }
-
-            InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
-
-            InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
-
-            //
-            // and free
-            //
-            AFSExFreePool( pExtent);
-
-            lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
-
-            lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
-
-            if( lCount == 0)
-            {
-
-                KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                            0,
-                            FALSE);
-            }
+            AFSFreeExtent( Fcb,
+                           pExtent);
         }
 
 try_exit:
@@ -2741,35 +2724,8 @@ AFSFlushExtents( IN AFSFcb *Fcb,
 
                 pRelease->FileExtents[count].Flags |= AFS_EXTENT_FLAG_RELEASE;
 
-                //
-                // Need to pull this extent from the main list as well
-                //
-
-                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
-                {
-                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
-                    {
-                        RemoveEntryList( &pExtent->Lists[i] );
-                    }
-                }
-
-                InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
-
-                InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
-
-                AFSExFreePool( pExtent);
-
-                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
-
-                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
-
-                if( lCount == 0)
-                {
-
-                    KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                                0,
-                                FALSE);
-                }
+                AFSFreeExtent( Fcb,
+                               pExtent);
 
                 count ++;
 
@@ -3052,35 +3008,8 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
                     AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
                 }
 
-                //
-                // Need to pull this extent from the main list as well
-                //
-
-                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
-                {
-                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
-                    {
-                        RemoveEntryList( &pExtent->Lists[i] );
-                    }
-                }
-
-                InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
-
-                InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
-
-                AFSExFreePool( pExtent);
-
-                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
-
-                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
-
-                if( lCount == 0)
-                {
-
-                    KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                                0,
-                                FALSE);
-                }
+                AFSFreeExtent( Fcb,
+                               pExtent);
 
                 count ++;
             }
@@ -3312,33 +3241,8 @@ AFSReleaseCleanExtents( IN AFSFcb *Fcb,
                 pRelease->FileExtents[count].Flags |= AFS_EXTENT_FLAG_MD5_SET;
 #endif
 
-                //
-                // Need to pull this extent from the main list as well
-                //
-
-                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
-                {
-                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
-                    {
-                        RemoveEntryList( &pExtent->Lists[i] );
-                    }
-                }
-
-                InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
-
-                InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
-
-                AFSExFreePool( pExtent);
-
-                InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
-
-                if( InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount) == 0)
-                {
-
-                    KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                                0,
-                                FALSE);
-                }
+                AFSFreeExtent( Fcb,
+                               pExtent);
 
                 count ++;
             }
@@ -3833,14 +3737,6 @@ AFSTrimExtents( IN AFSFcb *Fcb,
                     AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
                 }
 
-                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
-                {
-                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
-                    {
-                        RemoveEntryList( &pExtent->Lists[i] );
-                    }
-                }
-
                 AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSTrimExtents Releasing extent %p fid %08lX-%08lX-%08lX-%08lX Offset %I64X Len %08lX\n",
@@ -3852,28 +3748,10 @@ AFSTrimExtents( IN AFSFcb *Fcb,
                               pExtent->FileOffset.QuadPart,
                               pExtent->Size);
 
-                InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
-
-                InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
-
                 ASSERT( pExtent->ActiveCount == 0);
 
-                //
-                // and free
-                //
-                AFSExFreePool( pExtent);
-
-                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
-
-                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
-
-                if( lCount == 0)
-                {
-
-                    KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                                0,
-                                FALSE);
-                }
+                AFSFreeExtent( Fcb,
+                               pExtent);
             }
         }
 
@@ -3960,14 +3838,6 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
 
                 }
 
-                for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++)
-                {
-                    if (NULL != pExtent->Lists[i].Flink && !IsListEmpty(&pExtent->Lists[i]))
-                    {
-                        RemoveEntryList( &pExtent->Lists[i] );
-                    }
-                }
-
                 AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSTrimSpecifiedExtents Releasing extent %p fid %08lX-%08lX-%08lX-%08lX Offset %I64X Len %08lX\n",
@@ -3979,28 +3849,10 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
                               pExtent->FileOffset.QuadPart,
                               pExtent->Size);
 
-                InterlockedExchangeAdd( &pControlDevExt->Specific.Control.ExtentsHeldLength, -((LONG)(pExtent->Size/1024)));
-
-                InterlockedExchangeAdd( &Fcb->Specific.File.ExtentLength, -((LONG)(pExtent->Size/1024)));
-
                 ASSERT( pExtent->ActiveCount == 0);
 
-                //
-                // and free
-                //
-                AFSExFreePool( pExtent);
-
-                lCount = InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
-
-                lCount = InterlockedDecrement( &pControlDevExt->Specific.Control.ExtentCount);
-
-                if( lCount == 0)
-                {
-
-                    KeSetEvent( &pControlDevExt->Specific.Control.ExtentsHeldEvent,
-                                0,
-                                FALSE);
-                }
+                AFSFreeExtent( Fcb,
+                               pExtent);
 
                 //
                 // Next extent we are looking for
