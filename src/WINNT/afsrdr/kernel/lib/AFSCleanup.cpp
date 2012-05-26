@@ -85,6 +85,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
         }
 
         pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+
         pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
 
         //
@@ -384,22 +385,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   &pFcb->NPFcb->Specific.File.ExtentsResource,
                                   PsGetCurrentThread());
 
-                    AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+                    AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource,
                                     TRUE);
 
-                    pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
+                    pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
 
-                    KeSetEvent( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                    KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
                                 0,
                                 FALSE);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup Releasing Fcb extents lock %08lX EXCL %08lX\n",
-                                  &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                  PsGetCurrentThread());
-
-                    AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
 
                     //
                     // Before telling the server about the deleted file, tear down all extents for
@@ -408,6 +401,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     AFSTearDownFcbExtents( pFcb,
                                            &pCcb->AuthGroup);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Releasing Fcb extents lock %08lX EXCL %08lX\n",
+                                  &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                  PsGetCurrentThread());
+
+                    AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
 
                     ntStatus = STATUS_SUCCESS;
 

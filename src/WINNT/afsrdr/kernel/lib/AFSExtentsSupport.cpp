@@ -55,16 +55,14 @@ AFSEntryForOffset( IN AFSFcb *Fcb,
 VOID
 AFSLockForExtentsTrim( IN AFSFcb *Fcb)
 {
-    NTSTATUS          ntStatus;
-    AFSNonPagedFcb *pNPFcb = Fcb->NPFcb;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSLockForExtentsTrim Acquiring Fcb extents lock %08lX EXCL %08lX\n",
-                  &pNPFcb->Specific.File.ExtentsResource,
+                  &Fcb->NPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
 
-    AFSAcquireExcl( &pNPFcb->Specific.File.ExtentsResource, TRUE );
+    AFSAcquireExcl( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE );
 
     return;
 }
@@ -75,15 +73,14 @@ AFSLockForExtentsTrim( IN AFSFcb *Fcb)
 BOOLEAN
 AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
 {
-    AFSNonPagedFcb *pNPFcb = Fcb->NPFcb;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSLockForExtentsTrimNoWait Attempting to acquire Fcb extent lock %08lX EXCL %08lX\n",
-                  &pNPFcb->Specific.File.ExtentsResource,
+                  &Fcb->NPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
 
-    if (!AFSAcquireExcl( &pNPFcb->Specific.File.ExtentsResource, FALSE ))
+    if (!AFSAcquireExcl( &Fcb->NPFcb->Specific.File.ExtentsResource, FALSE ))
     {
         //
         // Couldn't lock immediately
@@ -92,7 +89,7 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSLockForExtentsTrimNoWait Refused to wait for Fcb extent lock %08lX EXCL %08lX\n",
-                      &pNPFcb->Specific.File.ExtentsResource,
+                      &Fcb->NPFcb->Specific.File.ExtentsResource,
                       PsGetCurrentThread());
 
         return FALSE;
