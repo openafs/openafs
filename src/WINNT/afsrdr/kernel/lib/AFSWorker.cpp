@@ -739,7 +739,8 @@ AFSWorkerThread( IN PVOID Context)
                         {
 
                             AFSReleaseExtentsWithFlush( pWorkItem->Specific.Fcb.Fcb,
-                                                        &pWorkItem->AuthGroup);
+                                                        &pWorkItem->AuthGroup,
+                                                        FALSE);
                         }
 
                         ASSERT( pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount != 0);

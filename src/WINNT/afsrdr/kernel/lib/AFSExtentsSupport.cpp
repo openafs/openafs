@@ -2885,7 +2885,8 @@ try_exit:
 
 NTSTATUS
 AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
-                            IN GUID *AuthGroup)
+                            IN GUID *AuthGroup,
+                            IN BOOLEAN bReleaseAll)
 {
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     AFSExtent           *pExtent;
@@ -2956,18 +2957,15 @@ AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
             try_return ( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
         }
 
-        if( Fcb->OpenHandleCount > 0)
+        if( Fcb->OpenHandleCount > 0 &&
+            !bReleaseAll)
         {
 
             //
             // Don't release everything ...
             //
 
-            //
-            // For now release everything
-            //
-
-            //ulRemainingExtentLength = 1500;
+            ulRemainingExtentLength = 1024;
         }
 
         while( Fcb->Specific.File.ExtentLength > (LONG)ulRemainingExtentLength)
