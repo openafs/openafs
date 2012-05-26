@@ -290,25 +290,41 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
             pProcessCB == NULL)
         {
 
-            AFSProcessCreate( 0,
-                              ProcessId,
-                              0,
-                              0);
-        }
-
-        if( !NT_SUCCESS( ntStatus) ||
-            pProcessCB == NULL)
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "%s Failed to locate process entry for ProcessID %I64X\n",
-                          __FUNCTION__,
-                          ullProcessID);
-
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
 
-            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                            TRUE);
+
+            ntStatus = AFSLocateHashEntry( pDeviceExt->Specific.Control.ProcessTree.TreeHead,
+                                           ullProcessID,
+                                           (AFSBTreeEntry **)&pProcessCB);
+
+            if( !NT_SUCCESS( ntStatus) ||
+                pProcessCB == NULL)
+            {
+
+                AFSProcessCreate( 0,
+                                  ProcessId,
+                                  0,
+                                  0);
+            }
+
+            if( !NT_SUCCESS( ntStatus) ||
+                pProcessCB == NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "%s Failed to locate process entry for ProcessID %I64X\n",
+                              __FUNCTION__,
+                              ullProcessID);
+
+                AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+
+                try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            }
+
+            AFSConvertToShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
         }
 
         //
