@@ -39,7 +39,6 @@
 
 #define AFS_MAX_FCBS_TO_DROP 10
 
-static AFSExtent *NextExtent( AFSExtent *Extent, ULONG SkipList );
 static ULONG ExtentsMasks[AFS_NUM_EXTENT_LISTS] = AFS_EXTENTS_MASKS;
 static VOID VerifyExtentsLists(AFSFcb *Fcb);
 static AFSExtent *DirtyExtentFor(PLIST_ENTRY le);
@@ -3637,16 +3636,20 @@ AFSMarkDirty( IN AFSFcb *Fcb,
 AFSExtent *
 ExtentFor(PLIST_ENTRY le, ULONG SkipList)
 {
+
     return CONTAINING_RECORD( le, AFSExtent, Lists[SkipList] );
 }
 
-static AFSExtent *NextExtent(AFSExtent *Extent, ULONG SkipList)
+AFSExtent *
+NextExtent(AFSExtent *Extent, ULONG SkipList)
 {
+
     return ExtentFor(Extent->Lists[SkipList].Flink, SkipList);
 }
 
 static AFSExtent *DirtyExtentFor(PLIST_ENTRY le)
 {
+
     return CONTAINING_RECORD( le, AFSExtent, DirtyList );
 }
 
