@@ -126,7 +126,8 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
         {
 
             AFSReleaseExtentsWithFlush( pFcb,
-                                        &pCcb->AuthGroup);
+                                        &pCcb->AuthGroup,
+                                        TRUE);
 
             ntStatus = STATUS_SUCCESS;
         }

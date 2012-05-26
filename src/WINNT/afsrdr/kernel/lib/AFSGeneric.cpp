@@ -7028,7 +7028,8 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                 {
 
                     AFSReleaseExtentsWithFlush( Fcb,
-                                                NULL);
+                                                NULL,
+                                                TRUE);
                 }
             }
 
@@ -7073,7 +7074,8 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
             {
 
                 AFSReleaseExtentsWithFlush( Fcb,
-                                            NULL);
+                                            NULL,
+                                            TRUE);
             }
         }
 

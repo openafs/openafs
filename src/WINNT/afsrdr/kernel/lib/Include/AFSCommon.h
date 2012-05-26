@@ -395,7 +395,8 @@ AFSFlushExtents( IN AFSFcb *pFcb,
 
 NTSTATUS
 AFSReleaseExtentsWithFlush( IN AFSFcb *Fcb,
-                            IN GUID *AuthGroup);
+                            IN GUID *AuthGroup,
+                            IN BOOLEAN bReleaseAll);
 
 NTSTATUS
 AFSReleaseCleanExtents( IN AFSFcb *Fcb,

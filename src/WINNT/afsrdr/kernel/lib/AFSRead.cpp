@@ -691,8 +691,14 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
         // The data is there now.  Give back the extents now so the service
         // has some in hand
         //
-        (VOID) AFSReleaseExtentsWithFlush( pFcb,
-                                           &pCcb->AuthGroup);
+
+        if ( pFcb->Specific.File.ExtentLength > 4096)
+        {
+
+            (VOID) AFSReleaseExtentsWithFlush( pFcb,
+                                               &pCcb->AuthGroup,
+                                               FALSE);
+        }
 
 try_exit:
 

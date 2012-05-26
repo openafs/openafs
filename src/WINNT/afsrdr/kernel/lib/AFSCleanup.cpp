@@ -557,6 +557,9 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         AFSWaitOnQueuedFlushes( pFcb);
 
                         ulNotificationFlags |= AFS_REQUEST_FLAG_FLUSH_FILE;
+
+                        AFSTearDownFcbExtents( pFcb,
+                                               &pCcb->AuthGroup);
                     }
 
                     //
