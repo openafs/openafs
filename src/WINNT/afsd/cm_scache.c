@@ -173,9 +173,12 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
          !cm_accessPerFileCheck) {
         cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
 
-        if (!(volp && (volp->flags & CM_VOLUMEFLAG_DFS_VOLUME)))
-            cm_EAccesClearParentEntries(&fid);
-        cm_PutVolume(volp);
+        if (volp) {
+            if (!(volp->flags & CM_VOLUMEFLAG_DFS_VOLUME))
+                cm_EAccesClearParentEntries(&fid);
+
+            cm_PutVolume(volp);
+        }
     }
 
     /* invalidate so next merge works fine;
