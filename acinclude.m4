@@ -840,6 +840,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 #include <linux/page-flags.h>],
 				     [struct page *_page;
                                       int bchecked = PageFsMisc(_page);])
+		 AC_CHECK_LINUX_FUNC([clear_inode],
+				     [#include <linux/fs.h>],
+				     [clear_inode(NULL);])
 		 AC_CHECK_LINUX_FUNC([current_kernel_time],
 				     [#include <linux/time.h>],
 			             [struct timespec s;
