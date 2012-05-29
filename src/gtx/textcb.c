@@ -91,7 +91,6 @@ gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
     struct gator_textcb_entry *newEntries;	/*Ptr to new text entries */
     struct gator_textcb_hdr *newHdr;	/*Ptr to new text hdr */
     int bytesToAllocate;	/*Num bytes to allocate */
-    int numBuffBytes;		/*Num bytes in text buffer */
     int curr_ent_num;		/*Current entry number */
     struct gator_textcb_entry *curr_ent;	/*Ptr to current entry */
     char *curr_buff;		/*Ptr to current buff pos */
@@ -105,7 +104,7 @@ gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
      * always null-terminate them.  We also need to allocate the blank
      * line buffer.
      */
-    numBuffBytes = bytesToAllocate =
+    bytesToAllocate =
 	a_maxEntriesStored * (a_maxCharsPerEntry + 1);
     if (gator_textcb_debug)
 	fprintf(stderr, "[%s] Allocating %d bytes for the text buffer\n", rn,
