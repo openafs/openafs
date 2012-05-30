@@ -590,7 +590,7 @@ bos_ProcessExecutionStateGet(const void *serverHandle,
 static int
 SetExecutionState(const void *serverHandle, const char *processName,
 		  const bos_ProcessExecutionState_t processStatus,
-		  int (*func) (struct rx_connection *, char *,
+		  int (*func) (struct rx_connection *, const char *,
 			       afs_int32), afs_status_p st)
 {
     int rc = 0;
