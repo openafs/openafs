@@ -219,7 +219,7 @@ psproc1(definition * defp, int callTconnF, char *type, char *prefix,
     f_print(fout, "\nextern %s %s%s%s(\n", type, prefix, defp->pc.proc_prefix,
 	    defp->pc.proc_name);
 
-    if (callTconnF == 1) {
+    if (callTconnF == 1 || callTconnF == 3) {
 	f_print(fout, "\t/*IN */ struct rx_call *z_call");
     } else if (callTconnF == 2) {
 	f_print(fout, "\tstruct ubik_client *aclient, afs_int32 aflags");
@@ -232,7 +232,10 @@ psproc1(definition * defp, int callTconnF, char *type, char *prefix,
 	    && (iomask & (1 << plist->pl.param_kind))) {
 	    switch (plist->pl.param_kind) {
 	    case DEF_INPARAM:
-		f_print(fout, ",\n\t/*IN */ ");
+		f_print(fout, ",\n\t/*IN %d*/ ",callTconnF);
+		if ((callTconnF != 3)
+		    && strcmp(plist->pl.param_type, "char *")== 0)
+		    f_print(fout, "const ");
 		break;
 	    case DEF_OUTPARAM:
 		f_print(fout, ",\n\t/*OUT*/ ");
@@ -274,7 +277,7 @@ psprocdef(definition * defp)
 	psproc1(defp, 2, "int", "ubik_", 0xFFFFFFFF);
 
     if (*ServerPrefix)
-	psproc1(defp, 1, "afs_int32", ServerPrefix, 0xFFFFFFFF);
+	psproc1(defp, 3, "afs_int32", ServerPrefix, 0xFFFFFFFF);
 }
 
 

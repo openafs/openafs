@@ -1147,16 +1147,21 @@ cs_ProcName_setup(definition * defp, char *procheader, int split_flag)
     if (!cflag) {
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
+		f_print(fout, ",");
 		if (ansic_flag) {
+		    if (plist->pl.param_kind == DEF_INPARAM &&
+			strcmp(plist->pl.param_type, "char *") == 0) {
+			f_print(fout, "const ");
+		    }
 		    if (plist->pl.param_flag & OUT_STRING) {
-			f_print(fout, ",%s *%s", plist->pl.param_type,
+			f_print(fout, "%s *%s", plist->pl.param_type,
 				plist->pl.param_name);
 		    } else {
-			f_print(fout, ",%s %s", plist->pl.param_type,
+			f_print(fout, "%s %s", plist->pl.param_type,
 				plist->pl.param_name);
 		    }
 		} else {
-		    f_print(fout, ", %s", plist->pl.param_name);
+		    f_print(fout, " %s", plist->pl.param_name);
 		    plist->pl.param_flag &= ~PROCESSED_PARAM;
 		}
 	    }
@@ -1735,17 +1740,22 @@ ucs_ProcName_setup(definition * defp, char *procheader, int split_flag)
     if (!cflag) {
 	for (plist = defp->pc.plists; plist; plist = plist->next) {
 	    if (plist->component_kind == DEF_PARAM) {
+		f_print(fout, ",");
 		if (ansic_flag) {
+		    if (plist->pl.param_kind == DEF_INPARAM &&
+			strcmp(plist->pl.param_type, "char *") == 0) {
+			f_print(fout, "const ");
+		    }
 		    if (plist->pl.param_flag & OUT_STRING) {
-			f_print(fout, ",%s *%s", plist->pl.param_type,
+			f_print(fout, "%s *%s", plist->pl.param_type,
 				plist->pl.param_name);
 		    } else {
-			f_print(fout, ",%s %s", plist->pl.param_type,
+			f_print(fout, "%s %s", plist->pl.param_type,
 				plist->pl.param_name);
 		    }
 		} else {
 		    plist->pl.param_flag &= ~PROCESSED_PARAM;
-		    f_print(fout, ", %s", plist->pl.param_name);
+		    f_print(fout, " %s", plist->pl.param_name);
 		}
 	    }
 	}
