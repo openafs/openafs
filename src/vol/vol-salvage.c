@@ -4714,6 +4714,18 @@ Exit(int code)
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (programType == salvageServer) {
+	/* release all volume locks before closing down our SYNC channels.
+	 * the fileserver may try to online volumes we have checked out when
+	 * we close down FSSYNC, so we should make sure we don't have those
+	 * volumes locked when it does */
+	struct DiskPartition64 *dp;
+	int i;
+	for (i = 0; i <= VOLMAXPARTS; i++) {
+	    dp = VGetPartitionById(i, 0);
+	    if (dp) {
+		VLockFileReinit(&dp->volLockFile);
+	    }
+	}
 # ifdef SALVSYNC_BUILD_CLIENT
 	VDisconnectSALV();
 # endif
