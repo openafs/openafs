@@ -4672,12 +4672,12 @@ Exit(int code)
 
 #ifdef AFS_DEMAND_ATTACH_FS
     if (programType == salvageServer) {
-#ifdef SALVSYNC_BUILD_CLIENT
+# ifdef SALVSYNC_BUILD_CLIENT
 	VDisconnectSALV();
-#endif
-#ifdef FSSYNC_BUILD_CLIENT
+# endif
+# ifdef FSSYNC_BUILD_CLIENT
 	VDisconnectFS();
-#endif
+# endif
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
