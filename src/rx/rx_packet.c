@@ -2548,6 +2548,41 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     }
 }
 
+/* Send a raw abort packet, without any call or connection structures */
+void
+rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
+		 afs_int32 error, struct rx_packet *source, int istack)
+{
+    struct rx_header theader;
+    struct sockaddr_in addr;
+    struct iovec iov[2];
+
+    memset(&theader, 0, sizeof(theader));
+    theader.epoch = htonl(source->header.epoch);
+    theader.callNumber = htonl(source->header.callNumber);
+    theader.serial = htonl(1);
+    theader.type = RX_PACKET_TYPE_ABORT;
+    theader.serviceId = htons(source->header.serviceId);
+    theader.securityIndex = source->header.securityIndex;
+    theader.cid = htonl(source->header.cid);
+
+    error = htonl(error);
+
+    iov[0].iov_base = &theader;
+    iov[0].iov_len = sizeof(struct rx_header);
+    iov[1].iov_base = &error;
+    iov[1].iov_len = sizeof(error);
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = host;
+    addr.sin_port = port;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    addr.sin_len = sizeof(struct sockaddr_in);
+#endif
+
+    osi_NetSend(socket, &addr, iov, 2,
+		sizeof(struct rx_header) + sizeof(error), istack);
+}
 
 /* Send a "special" packet to the peer connection.  If call is
  * specified, then the packet is directed to a specific call channel
