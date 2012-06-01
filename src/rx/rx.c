@@ -3171,10 +3171,11 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 			   np->header.cid, np->header.epoch, type,
 			   np->header.securityIndex);
 
-    if (!conn) {
-	/* If no connection found or fabricated, just ignore the packet.
-	 * (An argument could be made for sending an abort packet for
-	 * the conn) */
+    /* To avoid having 2 connections just abort at each other,
+       don't abort an abort. */
+    if (!conn && (np->header.type != RX_PACKET_TYPE_ABORT)) {
+	rxi_SendRawAbort(socket, host, port, RX_INVALID_OPERATION,
+			 np, 0);
 	return np;
     }
 
