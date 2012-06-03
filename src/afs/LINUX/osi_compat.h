@@ -333,7 +333,11 @@ afs_get_dentry_from_fh(struct super_block *afs_cacheSBp, afs_dcache_id_t *ainode
 static inline int
 afs_get_fh_from_dentry(struct dentry *dp, afs_ufs_dcache_id_t *ainode, int *max_lenp) {
     if (dp->d_sb->s_export_op->encode_fh)
+#if defined(EXPORT_OP_ENCODE_FH_TAKES_INODES)
+        return dp->d_sb->s_export_op->encode_fh(dp->d_inode, &ainode->raw[0], max_lenp, NULL);
+#else
         return dp->d_sb->s_export_op->encode_fh(dp, &ainode->raw[0], max_lenp, 0);
+#endif
 #if defined(NEW_EXPORT_OPS)
     /* If fs doesn't provide an encode_fh method, assume the default INO32 type */
     *max_lenp = sizeof(struct fid)/4;

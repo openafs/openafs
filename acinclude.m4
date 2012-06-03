@@ -958,6 +958,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_D_COUNT_IS_INT
 		 LINUX_IOP_MKDIR_TAKES_UMODE_T
 		 LINUX_IOP_CREATE_TAKES_UMODE_T
+		 LINUX_EXPORT_OP_ENCODE_FH_TAKES_INODES
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled

@@ -661,3 +661,17 @@ AC_DEFUN([LINUX_IOP_CREATE_TAKES_UMODE_T], [
 			[define if inode.i_op->create takes a umode_t argument],
 			[-Werror])
 ])
+
+
+AC_DEFUN([LINUX_EXPORT_OP_ENCODE_FH_TAKES_INODES], [
+  AC_CHECK_LINUX_BUILD([whether export operation encode_fh takes inode arguments],
+			[ac_cv_linux_export_op_encode_fh__takes_inodes],
+			[#include <linux/exportfs.h>],
+			[struct export_operations _exp_ops;
+			int _encode_fh(struct inode *i, __u32 *fh, int *len, struct inode *p)
+				{return 0;};
+			_exp_ops.encode_fh = _encode_fh;],
+			[EXPORT_OP_ENCODE_FH_TAKES_INODES],
+			[define if encode_fh export op takes inode arguments],
+			[-Werror])
+])
