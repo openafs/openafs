@@ -23,6 +23,10 @@
 #include <sys/file.h>
 #include <sys/wait.h>
 
+#if defined(AFS_LINUX20_ENV)
+#include <sys/resource.h>
+#endif
+
 #ifdef HAVE_SYS_FS_TYPES_H
 #include <sys/fs_types.h>
 #endif
