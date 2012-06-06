@@ -50,7 +50,9 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
     void *pBuffer = NULL;
     ULONG ulLength = 0;
     BOOLEAN bReleaseResource = FALSE;
+    PFILE_OBJECT pFileObject = NULL;
     AFSFcb *pFcb = NULL;
+    AFSObjectInfoCB *pObjectInfo = NULL;
     AFSVolumeCB *pVolumeCB = NULL;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
@@ -58,7 +60,19 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
     __try
     {
 
-        pFcb = (AFSFcb *)pIrpSp->FileObject->FsContext;
+        pFileObject = pIrpSp->FileObject;
+
+        if( pFileObject == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueryVolumeInfo Failing request with NULL FileObject\n");
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
+
+        pFcb = (AFSFcb *)pFileObject->FsContext;
 
         if( pFcb == NULL)
         {
@@ -70,10 +84,22 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
 
-        pVolumeCB = pFcb->ObjectInformation->VolumeCB;
+        pObjectInfo = pFcb->ObjectInformation;
 
-        ASSERT( pVolumeCB->ObjectInformation.FileType == AFS_FILE_TYPE_DIRECTORY &&
-                pVolumeCB->ObjectInformation.FileId.Vnode == 1);
+        if( pObjectInfo == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueryVolumeInfo Failing request with NULL ObjectInformation\n");
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
+
+        pVolumeCB = pObjectInfo->VolumeCB;
+
+        ASSERT( pObjectInfo->FileType == AFS_FILE_TYPE_DIRECTORY &&
+                pObjectInfo->FileId.Vnode == 1);
 
         ulLength = pIrpSp->Parameters.QueryVolume.Length;
         FsInformationClass = pIrpSp->Parameters.QueryVolume.FsInformationClass;
@@ -208,7 +234,12 @@ try_exit:
 
         AFSDbgLogMsg( 0,
                       0,
-                      "EXCEPTION - AFSQueryVolumeInfo\n");
+                      "EXCEPTION - AFSQueryVolumeInfo FO %08lX InfoClass %d FCB %08lX ObjectInfo %08lX VolCB %08lX\n",
+                      pFileObject,
+                      FsInformationClass,
+                      pFcb,
+                      pObjectInfo,
+                      pVolumeCB);
 
         AFSDumpTraceFilesFnc();
     }
