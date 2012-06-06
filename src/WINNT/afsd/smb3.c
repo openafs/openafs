@@ -3400,6 +3400,95 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
               osi_LogSaveClientString(smb_logp, tidPathp));
 
     /*
+     * If the query is regarding the special _._AFS_IOCTL_._ file
+     * a reply must be sent even though the file doesn't exist.
+     */
+    if (cm_ClientStrCmpI(pathp, CM_IOCTL_FILENAME_NOSLASH_W) == 0)
+    {
+        /* for info level 108, figure out short name */
+        if (infoLevel == SMB_QUERY_FILE_ALT_NAME_INFO) {
+            smb_UnparseString(opx, qpi.u.QPfileAltNameInfo.fileName, L"_IOCTL_.AFS", &len, SMB_STRF_IGNORENUL);
+            qpi.u.QPfileAltNameInfo.fileNameLength = len;
+            responseSize = sizeof(unsigned long) + len;
+        }
+        else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
+            smb_UnparseString(opx, qpi.u.QPfileNameInfo.fileName, CM_IOCTL_FILENAME_NOSLASH_W, &len, SMB_STRF_IGNORENUL);
+            qpi.u.QPfileNameInfo.fileNameLength = len;
+            responseSize = sizeof(unsigned long) + len;
+        }
+        else if (infoLevel == SMB_INFO_STANDARD || infoLevel == SMB_INFO_QUERY_EA_SIZE) {
+            cm_SearchTimeFromUnixTime(&dosTime, 0);
+            qpi.u.QPstandardInfo.creationDateTime = dosTime;
+            qpi.u.QPstandardInfo.lastAccessDateTime = dosTime;
+            qpi.u.QPstandardInfo.lastWriteDateTime = dosTime;
+            qpi.u.QPstandardInfo.dataSize = 0;
+            qpi.u.QPstandardInfo.allocationSize = 0;
+            qpi.u.QPstandardInfo.attributes = SMB_ATTR_SYSTEM | SMB_ATTR_HIDDEN;
+            qpi.u.QPstandardInfo.eaSize = 0;
+        }
+        else if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
+            cm_LargeSearchTimeFromUnixTime(&ft, 0);
+            qpi.u.QPfileBasicInfo.creationTime = ft;
+            qpi.u.QPfileBasicInfo.lastAccessTime = ft;
+            qpi.u.QPfileBasicInfo.lastWriteTime = ft;
+            qpi.u.QPfileBasicInfo.changeTime = ft;
+            qpi.u.QPfileBasicInfo.attributes = SMB_ATTR_SYSTEM | SMB_ATTR_HIDDEN;
+            qpi.u.QPfileBasicInfo.reserved = 0;
+        }
+        else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
+            qpi.u.QPfileStandardInfo.allocationSize.QuadPart = 0;
+            qpi.u.QPfileStandardInfo.endOfFile.QuadPart = 0;
+            qpi.u.QPfileStandardInfo.numberOfLinks = 1;
+            qpi.u.QPfileStandardInfo.directory = 0;
+            qpi.u.QPfileStandardInfo.reserved = 0;
+            qpi.u.QPfileStandardInfo.deletePending = 0;
+        }
+        else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
+            qpi.u.QPfileEaInfo.eaSize = 0;
+        }
+        else if (infoLevel == SMB_QUERY_FILE_ALL_INFO) {
+            cm_LargeSearchTimeFromUnixTime(&ft, 0);
+            qpi.u.QPfileAllInfo.creationTime = ft;
+            qpi.u.QPfileAllInfo.lastAccessTime = ft;
+            qpi.u.QPfileAllInfo.lastWriteTime = ft;
+            qpi.u.QPfileAllInfo.changeTime = ft;
+            qpi.u.QPfileAllInfo.attributes = SMB_ATTR_SYSTEM | SMB_ATTR_HIDDEN;
+            qpi.u.QPfileAllInfo.allocationSize.QuadPart = 0;
+            qpi.u.QPfileAllInfo.endOfFile.QuadPart = 0;
+            qpi.u.QPfileAllInfo.numberOfLinks = 1;
+            qpi.u.QPfileAllInfo.deletePending = 0;
+            qpi.u.QPfileAllInfo.directory = 0;
+            qpi.u.QPfileAllInfo.indexNumber.HighPart = 0;
+            qpi.u.QPfileAllInfo.indexNumber.LowPart  = 0;
+            qpi.u.QPfileAllInfo.eaSize = 0;
+            qpi.u.QPfileAllInfo.accessFlags = 0;
+            qpi.u.QPfileAllInfo.indexNumber2.HighPart = 0;
+            qpi.u.QPfileAllInfo.indexNumber2.LowPart  = 0;
+            qpi.u.QPfileAllInfo.currentByteOffset.HighPart = 0;
+            qpi.u.QPfileAllInfo.currentByteOffset.LowPart = 0;
+            qpi.u.QPfileAllInfo.mode = 0;
+            qpi.u.QPfileAllInfo.alignmentRequirement = 0;
+
+            smb_UnparseString(opx, qpi.u.QPfileAllInfo.fileName, CM_IOCTL_FILENAME_NOSLASH_W, &len, SMB_STRF_IGNORENUL);
+            qpi.u.QPfileAllInfo.fileNameLength = len;
+            responseSize -= (sizeof(qpi.u.QPfileAllInfo.fileName) - len);
+        }
+        else if (infoLevel == SMB_QUERY_FILE_STREAM_INFO) {
+            size_t len = 0;
+            /* For now we have no streams */
+            qpi.u.QPfileStreamInfo.nextEntryOffset = 0;
+            qpi.u.QPfileStreamInfo.streamSize.QuadPart = 0;
+            qpi.u.QPfileStreamInfo.streamAllocationSize.QuadPart = 0;
+            smb_UnparseString(opx, qpi.u.QPfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
+            qpi.u.QPfileStreamInfo.streamNameLength = len;
+            responseSize -= (sizeof(qpi.u.QPfileStreamInfo.fileName) - len);
+        }
+
+        outp->totalData = responseSize;
+        goto done_afs_ioctl;
+    }
+
+    /*
      * XXX Strange hack XXX
      *
      * As of Patch 7 (13 January 98), we are having the following problem:
@@ -3660,6 +3749,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
     scp_rw_held = 0;
     cm_ReleaseSCache(scp);
+
+  done_afs_ioctl:
     cm_ReleaseUser(userp);
     if (code == 0) {
 	memcpy(outp->datap, &qpi, responseSize);
