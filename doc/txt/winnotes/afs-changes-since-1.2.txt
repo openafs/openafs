@@ -1,3 +1,35 @@
+Since 1.7.1400 (1.7.14)
+
+ * Avoid kernel deadlock on VolumeCB->VolumeLock that can
+   be triggered during mount point target resolution when
+   some versions of Sophos or Kapersky anti-virus. [130812]
+
+ * Add a non-paged resource for synchronization of access
+   to Context Control Blocks.  This protects the Flags field
+   and the construction of directory snapshots.
+
+ * Avoid a deadlock on the ProcessTree lock.
+
+ * Protect against a null pointer dereference in cm_RecycleSCache
+   if cm_GetVolumeByFID() fails.
+
+ * Be sure to remove extents from all afs redirector skip lists
+   prior to freeing the memory.  Otherwise, the lists will be
+   corrupted.
+
+ * Adjust extent release strategy.  No longer flush all extents
+   after each non-cached read.  Instead, flush extents when the
+   number of extents is greater than 4096.  Be sure to flush all
+   extents on last handle close.
+
+ * Implement Win32 GetFileAttributes for the SMB interface.
+   This permits pioctls to work again after adding the
+   GetFileAttributes test to prevent printing blank pages from
+   printers with broken SMB protocol implementations.
+
+ * Protect against NULL FileObject and ObjectInformation
+   pointers during Volume Information queries.
+
 Since 1.7.1300 (1.7.13)
 
  * Avoid kernel deadlock between directory TreeLock and
