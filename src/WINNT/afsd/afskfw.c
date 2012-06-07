@@ -2172,15 +2172,20 @@ KFW_kinit( krb5_context alt_ctx,
         }
     }
 
-    code = pkrb5_get_init_creds_password(ctx,
-                                       &my_creds,
-                                       me,
-                                       password, // password
-                                       KRB5_prompter, // prompter
-                                       hParent, // prompter data
-                                       0, // start time
-                                       0, // service name
-                                       &options);
+    do {
+        code = pkrb5_get_init_creds_password(ctx,
+                                              &my_creds,
+                                              me,
+                                              password, // password
+                                              KRB5_prompter, // prompter
+                                              hParent, // prompter data
+                                              0, // start time
+                                              0, // service name
+                                              &options);
+        if (code == KRB5KRB_AP_ERR_REPEAT)
+            Sleep(1000);
+    } while(code == KRB5KRB_AP_ERR_REPEAT);
+
     if (code)
 	goto cleanup;
 
@@ -3038,7 +3043,12 @@ KFW_AFS_klog(
             pkrb5_free_unparsed_name(ctx,sname);
         }
 
-        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+        do {
+            code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+            if (code == KRB5KRB_AP_ERR_REPEAT)
+                Sleep(1000);
+        } while(code == KRB5KRB_AP_ERR_REPEAT);
+
         if (code == 0) {
             /* The client's realm is a local realm for the cell.
             * Save it so that later the pts registration will not
@@ -3078,8 +3088,13 @@ KFW_AFS_klog(
                     pkrb5_free_unparsed_name(ctx,sname);
                 }
 
-                if (!code)
-                    code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                if (!code) {
+                    do {
+                        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                        if (code == KRB5KRB_AP_ERR_REPEAT)
+                            Sleep(1000);
+                    } while(code == KRB5KRB_AP_ERR_REPEAT);
+                }
 
                 if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
                     code == KRB5_ERR_HOST_REALM_UNKNOWN ||
@@ -3108,8 +3123,13 @@ KFW_AFS_klog(
                         pkrb5_free_unparsed_name(ctx,sname);
                     }
 
-                    if (!code)
-                        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                    if (!code) {
+                        do {
+                            code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                            if (code == KRB5KRB_AP_ERR_REPEAT)
+                                Sleep(1000);
+                        } while(code == KRB5KRB_AP_ERR_REPEAT);
+                    }
                 }
 
                 if (code == 0) {
@@ -3142,9 +3162,13 @@ KFW_AFS_klog(
                         pkrb5_free_unparsed_name(ctx,sname);
                     }
 
-                    if (!code)
-                        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
-
+                    if (!code) {
+                        do {
+                            code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                            if (code == KRB5KRB_AP_ERR_REPEAT)
+                                Sleep(1000);
+                        } while(code == KRB5KRB_AP_ERR_REPEAT);
+                    }
                     if (!code && !strlen(realm_of_cell))
                         copy_realm_of_ticket(ctx, realm_of_cell, sizeof(realm_of_cell), k5creds);
                 }
@@ -3176,8 +3200,14 @@ KFW_AFS_klog(
                         pkrb5_free_unparsed_name(ctx,sname);
                     }
 
-                    if (!code)
-                        code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                    if (!code) {
+                        do {
+                            code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+                            if (code == KRB5KRB_AP_ERR_REPEAT)
+                                Sleep(1000);
+                        } while(code == KRB5KRB_AP_ERR_REPEAT);
+                    }
+
                     if (!code && !strlen(realm_of_cell))
                         copy_realm_of_ticket(ctx, realm_of_cell, sizeof(realm_of_cell), k5creds);
                 }
