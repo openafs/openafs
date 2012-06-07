@@ -257,6 +257,7 @@ DECL_PIOCTL(PRemoveMount);
 DECL_PIOCTL(PGetCellStatus);
 DECL_PIOCTL(PSetCellStatus);
 DECL_PIOCTL(PFlushVolumeData);
+DECL_PIOCTL(PFlushAllVolumeData);
 DECL_PIOCTL(PGetVnodeXStatus);
 DECL_PIOCTL(PGetVnodeXStatus2);
 DECL_PIOCTL(PSetSysName);
@@ -400,6 +401,7 @@ static pioctlFunction CpioctlSw[] = {
     PBogus,                     /* 11 */
     PPrecache,                  /* 12 */
     PGetPAG,                    /* 13 */
+    PFlushAllVolumeData,        /* 14 */
 };
 
 static pioctlFunction OpioctlSw[]  = {
@@ -3389,46 +3391,27 @@ DECL_PIOCTL(PSetCellStatus)
     return 0;
 }
 
-/*!
- * VIOC_FLUSHVOLUME (37) - Flush whole volume's data
- *
- * \ingroup pioctl
- *
- * \param[in] ain	not in use (args in avc)
- * \param[out] aout	not in use
- *
- * \retval EINVAL	Error if some of the standard args aren't set
- * \retval EIO		Error if the afs daemon hasn't started yet
- *
- * \post
- * 	Flush all cached contents of a volume.  Exactly what stays and what
- * 	goes depends on the platform.
- *
- * \notes
- * 	Does not flush a file that a user has open and is using, because
- * 	it will be re-created on next write.  Also purges the dnlc,
- * 	because things are screwed up.
- */
-DECL_PIOCTL(PFlushVolumeData)
+static void
+FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
 {
     afs_int32 i;
     struct dcache *tdc;
     struct vcache *tvc;
     struct volume *tv;
-    afs_int32 cell, volume;
+    afs_int32 all = 0;
+    afs_int32 cell = 0;
+    afs_int32 volume = 0;
     struct afs_q *tq, *uq;
 #ifdef AFS_DARWIN80_ENV
     vnode_t vp;
 #endif
 
-    AFS_STATCNT(PFlushVolumeData);
-    if (!avc)
-	return EINVAL;
-    if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
-	return EIO;		/* Inappropriate ioctl for device */
-
-    volume = avc->f.fid.Fid.Volume;	/* who to zap */
-    cell = avc->f.fid.Cell;
+    if (!afid) {
+	all = 1;
+    } else {
+	volume = afid->Fid.Volume;	/* who to zap */
+	cell = afid->Cell;
+    }
 
     /*
      * Clear stat'd flag from all vnodes from this volume; this will
@@ -3436,11 +3419,11 @@ DECL_PIOCTL(PFlushVolumeData)
      */
  loop:
     ObtainReadLock(&afs_xvcache);
-    i = VCHashV(&avc->f.fid);
-    for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
+    for (i = (afid ? VCHashV(afid) : 0); i < VCSIZE; i = (afid ? VCSIZE : i+1)) {
+	for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
 	    uq = QPrev(tq);
 	    tvc = QTOVH(tq);
-	    if (tvc->f.fid.Fid.Volume == volume && tvc->f.fid.Cell == cell) {
+	    if (all || (tvc->f.fid.Fid.Volume == volume && tvc->f.fid.Cell == cell)) {
 		if (tvc->f.states & CVInit) {
 		    ReleaseReadLock(&afs_xvcache);
 		    afs_osi_Sleep(&tvc->f.states);
@@ -3469,7 +3452,7 @@ DECL_PIOCTL(PFlushVolumeData)
 		afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
 		ObtainWriteLock(&tvc->lock, 232);
-		afs_ResetVCache(tvc, *acred, 1);
+		afs_ResetVCache(tvc, acred, 1);
 		ReleaseWriteLock(&tvc->lock);
 #ifdef AFS_BOZONLOCK_ENV
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
@@ -3483,6 +3466,7 @@ DECL_PIOCTL(PFlushVolumeData)
 		AFS_FAST_RELE(tvc);
 	    }
 	}
+    }
     ReleaseReadLock(&afs_xvcache);
 
 
@@ -3496,7 +3480,7 @@ DECL_PIOCTL(PFlushVolumeData)
 	}
 	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
 	    ReleaseReadLock(&tdc->tlock);
-	    if (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell) {
+	    if (all || (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell)) {
 		if (!(afs_indexFlags[i] & (IFDataMod | IFFree | IFDiscarded))) {
 		    /* if the file is modified, but has a ref cnt of only 1,
 		     * then someone probably has the file open and is writing
@@ -3520,7 +3504,7 @@ DECL_PIOCTL(PFlushVolumeData)
     ObtainReadLock(&afs_xvolume);
     for (i = 0; i < NVOLS; i++) {
 	for (tv = afs_volumes[i]; tv; tv = tv->next) {
-	    if (tv->volume == volume) {
+	    if (all || tv->volume == volume) {
 		afs_ResetVolumeInfo(tv);
 		break;
 	    }
@@ -3531,9 +3515,70 @@ DECL_PIOCTL(PFlushVolumeData)
     /* probably, a user is doing this, probably, because things are screwed up.
      * maybe it's the dnlc's fault? */
     osi_dnlc_purge();
+}
+
+/*!
+ * VIOC_FLUSHVOLUME (37) - Flush whole volume's data
+ *
+ * \ingroup pioctl
+ *
+ * \param[in] ain	not in use (args in avc)
+ * \param[out] aout	not in use
+ *
+ * \retval EINVAL	Error if some of the standard args aren't set
+ * \retval EIO		Error if the afs daemon hasn't started yet
+ *
+ * \post
+ * 	Flush all cached contents of a volume.  Exactly what stays and what
+ * 	goes depends on the platform.
+ *
+ * \notes
+ * 	Does not flush a file that a user has open and is using, because
+ * 	it will be re-created on next write.  Also purges the dnlc,
+ * 	because things are screwed up.
+ */
+DECL_PIOCTL(PFlushVolumeData)
+{
+    AFS_STATCNT(PFlushVolumeData);
+    if (!avc)
+	return EINVAL;
+    if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
+
+    FlushVolumeData(&avc->f.fid, *acred);
     return 0;
 }
 
+/*!
+ * VIOC_FLUSHALL (14) - Flush whole volume's data for all volumes
+ *
+ * \ingroup pioctl
+ *
+ * \param[in] ain	not in use
+ * \param[out] aout	not in use
+ *
+ * \retval EINVAL	Error if some of the standard args aren't set
+ * \retval EIO		Error if the afs daemon hasn't started yet
+ *
+ * \post
+ * 	Flush all cached contents.  Exactly what stays and what
+ * 	goes depends on the platform.
+ *
+ * \notes
+ * 	Does not flush a file that a user has open and is using, because
+ * 	it will be re-created on next write.  Also purges the dnlc,
+ * 	because things are screwed up.
+ */
+DECL_PIOCTL(PFlushAllVolumeData)
+{
+    AFS_STATCNT(PFlushAllVolumeData);
+
+    if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
+
+    FlushVolumeData(NULL, *acred);
+    return 0;
+}
 
 /*!
  * VIOCGETVCXSTATUS (41) - gets vnode x status
