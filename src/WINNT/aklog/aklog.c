@@ -514,7 +514,12 @@ static int get_v5cred(krb5_context context,
 	/* Ask for DES since that is what V4 understands */
     increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
-    r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
+    do {
+        r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
+        if (r == KRB5KRB_AP_ERR_REPEAT)
+            Sleep(1000);
+    } while(r == KRB5KRB_AP_ERR_REPEAT);
+
     if (r) {
         return((int)r);
     }
