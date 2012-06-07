@@ -2128,7 +2128,7 @@ DECL_PIOCTL(PFlush)
     afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
     ObtainWriteLock(&avc->lock, 225);
-    afs_ResetVCache(avc, *acred);
+    afs_ResetVCache(avc, *acred, 0);
     ReleaseWriteLock(&avc->lock);
 #ifdef AFS_BOZONLOCK_ENV
     afs_BozonUnlock(&avc->pvnLock, avc);
@@ -3469,14 +3469,7 @@ DECL_PIOCTL(PFlushVolumeData)
 		afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
 		ObtainWriteLock(&tvc->lock, 232);
-
-		ObtainWriteLock(&afs_xcbhash, 458);
-		afs_DequeueCallback(tvc);
-		tvc->f.states &= ~(CStatd | CDirty);
-		ReleaseWriteLock(&afs_xcbhash);
-		if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
-		    osi_dnlc_purgedp(tvc);
-		afs_TryToSmush(tvc, *acred, 1);
+		afs_ResetVCache(tvc, *acred, 1);
 		ReleaseWriteLock(&tvc->lock);
 #ifdef AFS_BOZONLOCK_ENV
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
