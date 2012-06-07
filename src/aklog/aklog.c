@@ -310,8 +310,11 @@ redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
 	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
 #ifdef HAVE_KRB5_SVC_GET_MSG
 	    krb5_svc_get_msg(code,&str);
-#elif defined(HAVE_ERROR_MESSAGE)
-	    str = error_message(code);
+#elif defined(HAVE_KRB5_GET_ERROR_MESSAGE)
+	    krb5_context context;
+	    krb5_init_context(&context);
+	    str = krb5_get_error_message(context, code);
+	    krb5_free_context(context);
 #else
 	    ; /* IRIX apparently has neither: use the string we have */
 #endif
