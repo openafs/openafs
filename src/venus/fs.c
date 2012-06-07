@@ -1314,6 +1314,25 @@ FlushVolumeCmd(struct cmd_syndesc *as, void *arock)
     return error;
 }
 
+static int
+FlushAllVolumesCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    int error = 0;
+
+    blob.in_size = 0;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
+    blob.out = space;
+
+    code = pioctl(NULL, VIOC_FLUSHALL, &blob, 0);
+    if (code) {
+	fprintf(stderr, "Error flushing all volumes\n");
+	error = 1;
+    }
+    return error;
+}
+
 /*
  * The Windows version of UuidCmd displays the UUID.
  * When the UNIX version is updated to do the same
@@ -3868,6 +3887,8 @@ defect 3069
     ts = cmd_CreateSyntax("flushvolume", FlushVolumeCmd, NULL,
 			  "flush all data in volume");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+
+    cmd_CreateSyntax("flushall", FlushAllVolumesCmd, NULL, "flush all data from the cache");
 
     ts = cmd_CreateSyntax("sysname", SysNameCmd, NULL,
 			  "get/set sysname (i.e. @sys) value");

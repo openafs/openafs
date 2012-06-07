@@ -18,10 +18,6 @@ B<fs flusha> [B<-h>]
 
 The B<fs flushall> command flushes all data from the AFS cache.
 
-=head1 CAUTIONS
-
-This command is only available on Windows.
-
 =head1 OPTIONS
 
 =over 4
