@@ -3497,11 +3497,13 @@ DECL_PIOCTL(PFlushVolumeData)
 	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
 	    ReleaseReadLock(&tdc->tlock);
 	    if (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell) {
-		if (!(afs_indexFlags[i] & IFDataMod)) {
+		if (!(afs_indexFlags[i] & (IFDataMod | IFFree | IFDiscarded))) {
 		    /* if the file is modified, but has a ref cnt of only 1,
 		     * then someone probably has the file open and is writing
 		     * into it. Better to skip flushing such a file, it will be
 		     * brought back immediately on the next write anyway.
+		     *
+		     * Skip if already freed.
 		     *
 		     * If we *must* flush, then this code has to be rearranged
 		     * to call afs_storeAllSegments() first */
