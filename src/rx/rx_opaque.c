@@ -104,7 +104,7 @@ rx_opaque_alloc(struct rx_opaque *buf, size_t length)
  */
 
 int
-rx_opaque_populate(struct rx_opaque *to, void *data, size_t datalen)
+rx_opaque_populate(struct rx_opaque *to, const void *data, size_t datalen)
 {
     int code;
     to->len = 0;
