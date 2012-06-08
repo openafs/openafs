@@ -984,7 +984,7 @@ ParseArgs(int argc, char *argv[])
 {
     int code;
     int optval;
-    char *optstring;
+    char *optstring = NULL;
     struct cmd_item *optlist;
     struct cmd_syndesc *opts;
 
