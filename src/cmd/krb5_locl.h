@@ -37,6 +37,7 @@ typedef struct cmd_config_binding krb5_config_section;
 
 #define krb5_config_list cmd_config_list
 #define krb5_config_string cmd_config_string
+#define _krb5_config_get_entry _cmd_config_get_entry
 
 struct krb5_context_data {
     krb5_config_section *cf;
