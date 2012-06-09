@@ -1482,30 +1482,23 @@ InitPR(void)
     }
 }				/*InitPR */
 
-struct rx_connection *serverconns[MAXSERVERS];
-struct ubik_client *cstruct;
+static struct ubik_client *cstruct;
 
-afs_int32
-vl_Initialize(const char *confDir)
+static afs_int32
+vl_Initialize(struct afsconf_dir *dir)
 {
     afs_int32 code, i;
     afs_int32 scIndex = RX_SECIDX_NULL;
-    struct afsconf_dir *tdir;
-    struct rx_securityClass *sc;
     struct afsconf_cell info;
+    struct rx_securityClass *sc;
+    struct rx_connection *serverconns[MAXSERVERS];
 
-    tdir = afsconf_Open(confDir);
-    if (!tdir) {
-	ViceLog(0,
-		("Could not open configuration directory (%s).\n", confDir));
-	exit(1);
-    }
-    code = afsconf_ClientAuth(tdir, &sc, &scIndex);
+    code = afsconf_ClientAuth(dir, &sc, &scIndex);
     if (code) {
 	ViceLog(0, ("Could not get security object for localAuth\n"));
 	exit(1);
     }
-    code = afsconf_GetCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info);
+    code = afsconf_GetCellInfo(dir, NULL, AFSCONF_VLDBSERVICE, &info);
     if (info.numServers > MAXSERVERS) {
 	ViceLog(0,
 		("vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",
@@ -1518,7 +1511,6 @@ vl_Initialize(const char *confDir)
 			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
 			     scIndex);
     code = ubik_ClientInit(serverconns, &cstruct);
-    afsconf_Close(tdir);
     if (code) {
 	ViceLog(0, ("vl_Initialize: ubik client init failed.\n"));
 	return code;
@@ -1749,7 +1741,7 @@ SetupVL(void)
 }
 
 afs_int32
-InitVL(void)
+InitVL(struct afsconf_dir *dir)
 {
     afs_int32 code;
 
@@ -1757,7 +1749,7 @@ InitVL(void)
      * If this fails, it's because something major is wrong, and is not
      * likely to be time dependent.
      */
-    code = vl_Initialize(AFSDIR_SERVER_ETC_DIRPATH);
+    code = vl_Initialize(dir);
     if (code != 0) {
 	ViceLog(0,
 		("Couldn't initialize volume location library; code=%d.\n", code));
@@ -2036,7 +2028,7 @@ main(int argc, char *argv[])
     InitCallBack(numberofcbs);
     ClearXStatValues();
 
-    code = InitVL();
+    code = InitVL(confDir);
     if (code && code != VL_MULTIPADDR) {
 	ViceLog(0, ("Fatal error in library initialization, exiting!!\n"));
 	exit(1);
