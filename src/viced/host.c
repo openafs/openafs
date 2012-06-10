@@ -2286,6 +2286,74 @@ format_vname(char *vname, int usize, const char *tname, const char *tinst,
     return 0;
 }
 
+static int
+getPeerDetails(struct rx_connection *conn,
+	       afs_int32 *viceid, afs_int32 *expTime, int authClass)
+{
+    int code;
+#if (64-MAXKTCNAMELEN)
+    ticket name length != 64
+#endif
+    char tname[64];
+    char tinst[64];
+    char tcell[MAXKTCREALMLEN];
+    char uname[PR_MAXNAMELEN];
+
+    *viceid = AnonymousID;
+    *expTime = 0x7fffffff;
+
+    ViceLog(5,
+	    ("FindClient: authenticating connection: authClass=%d\n",
+	     authClass));
+    if (authClass == 1) {
+	/* A bcrypt tickets, no longer supported */
+	ViceLog(1, ("FindClient: bcrypt ticket, using AnonymousID\n"));
+	return 0;
+    }
+
+    if (authClass == 2) {
+	/* an rxkad ticket */
+	afs_int32 kvno;
+	afs_int32 islocal;
+
+	/* kerberos ticket */
+	code = rxkad_GetServerInfo(conn, /*level */ 0, (afs_uint32 *)expTime,
+				   tname, tinst, tcell, &kvno);
+	if (code) {
+	    ViceLog(1, ("Failed to get rxkad ticket info\n"));
+	    return 0;
+	}
+
+	ViceLog(5,
+	        ("FindClient: rxkad conn: name=%s,inst=%s,cell=%s,exp=%d,kvno=%d\n",
+		 tname, tinst, tcell, *expTime, kvno));
+	code = afsconf_IsLocalRealmMatch(confDir, &islocal, tname, tinst, tcell);
+
+	if (code) {
+	    ViceLog(0, ("FindClient: local realm check failed; code=%d", code));
+	    return 0;
+	}
+
+	code = format_vname(uname, sizeof(uname), tname, tinst, tcell, islocal);
+	if (code) {
+	    ViceLog(0, ("FindClient: uname truncated."));
+	    return 0;
+	}
+
+	/* translate the name to a vice id */
+	code = MapName_r(uname, viceid);
+	if (code) {
+	    ViceLog(1, ("failed to map name=%s -> code=%d\n", uname,
+			code));
+	    return code; /* Actually flag this is a failure */
+	}
+
+	return 0;
+    }
+
+    return 0;
+}
+
 /*
  * Called by the server main loop.  Returns a h_Held client, which must be
  * released later the main loop.  Allocates a client if the matching one
@@ -2306,13 +2374,7 @@ h_FindClient_r(struct rx_connection *tcon)
     afs_int32 expTime;
     afs_int32 code;
     int authClass;
-#if (64-MAXKTCNAMELEN)
-    ticket name length != 64
-#endif
-    char tname[64];
-    char tinst[64];
-    char uname[PR_MAXNAMELEN];
-    char tcell[MAXKTCREALMLEN];
+
     int fail = 0;
     int created = 0;
 
@@ -2340,61 +2402,11 @@ h_FindClient_r(struct rx_connection *tcon)
 	client = NULL;
     }
 
-    authClass = rx_SecurityClassOf((struct rx_connection *)tcon);
-    ViceLog(5,
-	    ("FindClient: authenticating connection: authClass=%d\n",
-	     authClass));
-    if (authClass == 1) {
-	/* A bcrypt tickets, no longer supported */
-	ViceLog(1, ("FindClient: bcrypt ticket, using AnonymousID\n"));
-	viceid = AnonymousID;
-	expTime = 0x7fffffff;
-    } else if (authClass == 2) {
-	afs_int32 kvno;
-	afs_int32 islocal;
+    authClass = rx_SecurityClassOf(tcon);
 
-	/* kerberos ticket */
-	code = rxkad_GetServerInfo(tcon, /*level */ 0, (afs_uint32 *)&expTime,
-				   tname, tinst, tcell, &kvno);
-	if (code) {
-	    ViceLog(1, ("Failed to get rxkad ticket info\n"));
-	    viceid = AnonymousID;
-	    expTime = 0x7fffffff;
-	} else {
-	    ViceLog(5,
-		    ("FindClient: rxkad conn: name=%s,inst=%s,cell=%s,exp=%d,kvno=%d\n",
-		     tname, tinst, tcell, expTime, kvno));
-	    code = afsconf_IsLocalRealmMatch(confDir, &islocal, tname, tinst, tcell);
-	    if (code) {
-		ViceLog(0, ("FindClient: local realm check failed; code=%d", code));
-		viceid = AnonymousID;
-		expTime = 0x7fffffff;
-	    }
-	    if (!code) {
-		code = format_vname(uname, sizeof(uname), tname, tinst, tcell, islocal);
-		if (code) {
-		    ViceLog(0, ("FindClient: uname truncated."));
-		    viceid = AnonymousID;
-		    expTime = 0x7fffffff;
-		}
-	    }
-	    if (!code) {
-		/* translate the name to a vice id */
-		code = MapName_r(uname, &viceid);
-		if (code) {
-		    ViceLog(1,
-			    ("failed to map name=%s -> code=%d\n", uname,
-			     code));
-		    fail = 1;
-		    viceid = AnonymousID;
-		    expTime = 0x7fffffff;
-		}
-	    }
-	}
-    } else {
-	viceid = AnonymousID;	/* unknown security class */
-	expTime = 0x7fffffff;
-    }
+    code = getPeerDetails(tcon, &viceid, &expTime, authClass);
+    if (code)
+	fail = 1;
 
     if (!client) { /* loop */
 	host = h_GetHost_r(tcon);	/* Returns with incremented refCount  */
