@@ -865,10 +865,10 @@ GetVolumePackageWithCall(struct rx_call *acall, struct VCallByVol *cbv,
 	if (!VanillaUser(*client))
 	    (*rights) |= PRSFS_LOOKUP;
 #endif /* ADMIN_IMPLICIT_LOOKUP */
+    }
 gvpdone:
     if (errorCode)
 	rx_KeepAliveOn(acall);
-    }
     return errorCode;
 
 }				/*GetVolumePackage */
