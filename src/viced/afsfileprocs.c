@@ -847,9 +847,10 @@ GetVolumePackageWithCall(struct rx_call *acall, struct VCallByVol *cbv,
 	if (!(*client)) {
 	    if ((errorCode = GetClient(tcon, client)) != 0)
 		goto gvpdone;
-	    if (!(*client))
+	    if (!(*client)) {
 		errorCode = EINVAL;
 		goto gvpdone;
+	    }
 	}
 	GetRights(*client, aCL, rights, anyrights);
 	/* ok, if this is not a dir, set the PRSFS_ADMINISTER bit iff we're the owner */
