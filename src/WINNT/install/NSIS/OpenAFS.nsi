@@ -718,7 +718,6 @@ skipremove:
 
   ; Daemon entries
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "" ""
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "VerboseLogging" 10

@@ -123,7 +123,6 @@
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Id="reg_Client23" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="LogonOptions" Type="integer" Value="[LOGONOPTIONS]" Id="reg_Client24" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="VerboseLogging" Type="integer" Value="10" Id="reg_Client25" />
-        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[AFSDIR]Client\Program\afslogon.dll" Id="reg_Client26" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="LogonScript" Type="expandable" Value="afscreds.exe -:%s -x -a -m -n -q" Id="reg_Client27" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="Class" Type="integer" Value="2" Id="reg_Client29" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" Name="Name" Type="string" Value="TransarcAFSDaemon" Id="reg_Client30" />
