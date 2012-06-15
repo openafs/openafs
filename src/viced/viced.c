@@ -279,9 +279,9 @@ CheckDescriptors_Signal(int x)
     CheckDescriptors(NULL);
 }
 
-/* check whether caller is authorized to manage RX statistics */
+/* check whether caller is authorized to perform admin operations */
 int
-fs_rxstat_userok(struct rx_call *call)
+viced_SuperUser(struct rx_call *call)
 {
     return afsconf_SuperUser(confDir, call, NULL);
 }
@@ -2041,7 +2041,7 @@ main(int argc, char *argv[])
     }
 
     /* allow super users to manage RX statistics */
-    rx_SetRxStatUserOk(fs_rxstat_userok);
+    rx_SetRxStatUserOk(viced_SuperUser);
 
     CV_INIT(&fsync_cond, "fsync", CV_DEFAULT, 0);
     MUTEX_INIT(&fsync_glock_mutex, "fsync", MUTEX_DEFAULT, 0);
