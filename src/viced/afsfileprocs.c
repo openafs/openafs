@@ -5631,6 +5631,12 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     FS_LOCK;
     AFSCallStats.TotalCalls++;
     FS_UNLOCK;
+
+    if (!viced_SuperUser(acall)) {
+	errorCode = EPERM;
+	goto Bad_FlushCPS;
+    }
+
     nids = vids->ViceIds_len;	/* # of users in here */
     naddrs = addrs->IPAddrs_len;	/* # of hosts in here */
     if (nids < 0 || naddrs < 0) {
