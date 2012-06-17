@@ -163,7 +163,6 @@ struct DiskPartitionStats64 {
 
 #ifdef AFS_NT40_ENV
 #include <WINNT/vptab.h>
-extern int VValidVPTEntry(struct vptab *vptp);
 #endif
 
 

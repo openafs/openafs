@@ -124,6 +124,10 @@
 #include <jfs/filsys.h>
 #endif
 
+#ifdef AFS_NT40_ENV
+extern int VValidVPTEntry(struct vptab *vptp);
+#endif
+
 int aixlow_water = 8;		/* default 8% */
 struct DiskPartition64 *DiskPartitionList;
 
@@ -268,7 +272,7 @@ VInitPartition(char *path, char *devname, Device dev)
  *
  * Use partition name as devname.
  */
-int
+static int
 VCheckPartition(char *part, char *devname, int logging)
 {
     struct afs_stat_st status;
@@ -420,7 +424,7 @@ VIsNeverAttach(char *part)
  * used to attach /vicepX directories which aren't on dedicated
  * partitions, in the NAMEI fileserver.
  */
-void
+static void
 VAttachPartitions2(void)
 {
 #ifdef AFS_NAMEI_ENV
@@ -709,7 +713,7 @@ VAttachPartitions(void)
  * 0 invalid entry
  */
 
-int
+static int
 VValidVPTEntry(struct vptab *vpe)
 {
     int len = strlen(vpe->vp_name);
@@ -748,7 +752,7 @@ VValidVPTEntry(struct vptab *vpe)
     return 1;
 }
 
-int
+static int
 VCheckPartition(char *partName)
 {
     char volRoot[4];
