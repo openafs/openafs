@@ -471,7 +471,7 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
 
             requestBuffer->RequestFlags = pInfo->Flags;
 
-            if( !RDR_DeviceIoControl( hDevHandle,
+            if( RDR_DeviceIoControl( hDevHandle,
                                       IOCTL_AFS_PROCESS_IRP_REQUEST,
                                       (void *)requestBuffer,
                                       sizeof( AFSCommRequest),
@@ -480,21 +480,27 @@ RDR_RequestWorkerThread( LPVOID lpParameter)
                                       &bytesReturned ))
             {
 
+                WaitForSingleObject( RDR_SuspendEvent, INFINITE);
+
                 //
-                // Error condition back from driver
+                // Go process the request
                 //
 
-                break;
+                if (!Exit)
+                    RDR_ProcessRequest( requestBuffer);
             }
+            else
+            {
 
-            WaitForSingleObject( RDR_SuspendEvent, INFINITE);
+                if (afsd_logp->enabled) {
+                    WCHAR wchBuffer[256];
+                    DWORD gle = GetLastError();
 
-            //
-            // Go process the request
-            //
-
-            if (!Exit)
-                RDR_ProcessRequest( requestBuffer);
+                    swprintf( wchBuffer,
+                              L"Failed to post IOCTL_AFS_IRP_REQUEST gle 0x%x", gle);
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+            }
         }
 
 	free( requestBuffer);
