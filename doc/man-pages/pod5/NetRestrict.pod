@@ -33,6 +33,10 @@ Cache Manager then removes from the list any addresses that appear in the
 F<NetRestrict> file, if it exists. The Cache Manager records the resulting
 list in kernel memory.
 
+The F<NetRestrict> file is in ASCII format. One IP address appears on each
+line, in dotted decimal format. The order of the addresses is not
+significant.
+
 To display the addresses the Cache Manager is currently registering with
 File Servers, use the B<fs getclientaddrs> command.
 
