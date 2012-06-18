@@ -412,6 +412,13 @@ static void VVByPListEndExclusive_r(struct DiskPartition64 * dp);
 static void VVByPListWait_r(struct DiskPartition64 * dp);
 
 /* online salvager */
+typedef enum {
+    VCHECK_SALVAGE_OK = 0,         /**< no pending salvage */
+    VCHECK_SALVAGE_SCHEDULED = 1,  /**< salvage has been scheduled */
+    VCHECK_SALVAGE_ASYNC = 2,      /**< salvage being scheduled */
+    VCHECK_SALVAGE_DENIED = 3,     /**< salvage not scheduled; denied */
+    VCHECK_SALVAGE_FAIL = 4        /**< salvage not scheduled; failed */
+} vsalvage_check;
 static int VCheckSalvage(Volume * vp);
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
 static int VScheduleSalvage_r(Volume * vp);
@@ -3510,7 +3517,14 @@ locked_error:
 
 #ifdef AFS_DEMAND_ATTACH_FS
  error_notbroken:
-    VCheckSalvage(vp);
+    if (VCheckSalvage(vp) == VCHECK_SALVAGE_FAIL) {
+	/* The salvage could not be scheduled with the salvage server
+	 * due to a hard error. Reset the error code to prevent retry loops by
+	 * callers. */
+	if (*ec == VSALVAGING) {
+	    *ec = VSALVAGE;
+	}
+    }
     if (forcefree) {
 	FreeVolume(vp);
     } else {
@@ -5294,8 +5308,11 @@ VOfflineForSalvage_r(struct Volume *vp)
  * @param[in] vp   pointer to volume object
  *
  * @return status code
- *    @retval 0 no salvage scheduled
- *    @retval 1 a salvage has been scheduled with the salvageserver
+ *    @retval VCHECK_SALVAGE_OK (0)         no pending salvage
+ *    @retval VCHECK_SALVAGE_SCHEDULED (1)  salvage has been scheduled
+ *    @retval VCHECK_SALVAGE_ASYNC (2)      salvage being scheduled
+ *    @retval VCHECK_SALVAGE_DENIED (3)     salvage not scheduled; denied
+ *    @retval VCHECK_SALVAGE_FAIL (4)       salvage not scheduled; failed
  *
  * @pre VOL_LOCK is held
  *
@@ -5315,31 +5332,32 @@ VOfflineForSalvage_r(struct Volume *vp)
 static int
 VCheckSalvage(Volume * vp)
 {
-    int ret = 0;
+    int ret = VCHECK_SALVAGE_OK;
+
 #if defined(SALVSYNC_BUILD_CLIENT) || defined(FSSYNC_BUILD_CLIENT)
-    if (vp->nUsers)
-	return ret;
     if (!vp->salvage.requested) {
-	return ret;
+	return VCHECK_SALVAGE_OK;
+    }
+    if (vp->nUsers) {
+	return VCHECK_SALVAGE_ASYNC;
     }
 
     /* prevent recursion; some of the code below creates and removes
      * lightweight refs, which can call VCheckSalvage */
     if (vp->salvage.scheduling) {
-	return ret;
+	return VCHECK_SALVAGE_ASYNC;
     }
     vp->salvage.scheduling = 1;
 
     if (V_attachState(vp) == VOL_STATE_SALVAGE_REQ) {
 	if (!VOfflineForSalvage_r(vp)) {
 	    vp->salvage.scheduling = 0;
-	    return ret;
+	    return VCHECK_SALVAGE_FAIL;
 	}
     }
 
     if (vp->salvage.requested) {
-	VScheduleSalvage_r(vp);
-	ret = 1;
+	ret = VScheduleSalvage_r(vp);
     }
     vp->salvage.scheduling = 0;
 #endif /* SALVSYNC_BUILD_CLIENT || FSSYNC_BUILD_CLIENT */
@@ -5564,8 +5582,11 @@ try_FSSYNC(Volume *vp, char *partName, int *code) {
  * @param[in] vp  pointer to volume object
  *
  * @return operation status
- *    @retval 0 salvage scheduled successfully
- *    @retval 1 salvage not scheduled, or SALVSYNC/FSSYNC com error
+ *    @retval VCHECK_SALVAGE_OK (0)         no pending salvage
+ *    @retval VCHECK_SALVAGE_SCHEDULED (1)  salvage has been scheduled
+ *    @retval VCHECK_SALVAGE_ASYNC (2)      salvage being scheduled
+ *    @retval VCHECK_SALVAGE_DENIED (3)     salvage not scheduled; denied
+ *    @retval VCHECK_SALVAGE_FAIL (4)       salvage not scheduled; failed
  *
  * @pre
  *    @arg VOL_LOCK is held.
@@ -5588,8 +5609,8 @@ try_FSSYNC(Volume *vp, char *partName, int *code) {
 static int
 VScheduleSalvage_r(Volume * vp)
 {
-    int ret=0;
-    int code;
+    int ret = VCHECK_SALVAGE_SCHEDULED;
+    int code = 0;
     VolState state_save;
     VThreadOptions_t * thread_opts;
     char partName[16];
@@ -5597,12 +5618,13 @@ VScheduleSalvage_r(Volume * vp)
     osi_Assert(VCanUseSALVSYNC() || VCanUseFSSYNC());
 
     if (vp->nWaiters || vp->nUsers) {
-	return 1;
+	return VCHECK_SALVAGE_ASYNC;
     }
 
     /* prevent endless salvage,attach,salvage,attach,... loops */
-    if (vp->stats.salvages >= SALVAGE_COUNT_MAX)
-	return 1;
+    if (vp->stats.salvages >= SALVAGE_COUNT_MAX) {
+	return VCHECK_SALVAGE_FAIL;
+    }
 
     /*
      * don't perform salvsync ops on certain threads
@@ -5612,11 +5634,11 @@ VScheduleSalvage_r(Volume * vp)
 	thread_opts = &VThread_defaults;
     }
     if (thread_opts->disallow_salvsync || vol_disallow_salvsync) {
-	return 1;
+	return VCHECK_SALVAGE_ASYNC;
     }
 
     if (vp->salvage.scheduled) {
-	return ret;
+	return VCHECK_SALVAGE_SCHEDULED;
     }
 
     VCreateReservation_r(vp);
@@ -5626,7 +5648,9 @@ VScheduleSalvage_r(Volume * vp)
      * XXX the scheduling process should really be done asynchronously
      *     to avoid fssync deadlocks
      */
-    if (!vp->salvage.scheduled) {
+    if (vp->salvage.scheduled) {
+	ret = VCHECK_SALVAGE_SCHEDULED;
+    } else {
 	/* if we haven't previously scheduled a salvage, do so now
 	 *
 	 * set the volume to an exclusive state and drop the lock
@@ -5643,6 +5667,7 @@ VScheduleSalvage_r(Volume * vp)
 	VChangeState_r(vp, state_save);
 
 	if (code == SYNC_OK) {
+	    ret = VCHECK_SALVAGE_SCHEDULED;
 	    vp->salvage.scheduled = 1;
 	    vp->stats.last_salvage_req = FT_ApproxTime();
 	    if (VCanUseSALVSYNC()) {
@@ -5652,20 +5677,23 @@ VScheduleSalvage_r(Volume * vp)
 		IncUInt64(&VStats.salvages);
 	    }
 	} else {
-	    ret = 1;
 	    switch(code) {
 	    case SYNC_BAD_COMMAND:
 	    case SYNC_COM_ERROR:
+	        ret = VCHECK_SALVAGE_FAIL;
 		break;
 	    case SYNC_DENIED:
+	        ret = VCHECK_SALVAGE_DENIED;
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "denied\n", afs_printable_uint32_lu(vp->hashid));
 		break;
 	    case SYNC_FAILED:
+	        ret = VCHECK_SALVAGE_FAIL;
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "failed\n", afs_printable_uint32_lu(vp->hashid));
 		break;
 	    default:
+	        ret = VCHECK_SALVAGE_FAIL;
 		Log("VScheduleSalvage_r: Salvage request for volume %lu "
 		    "received unknown protocol error %d\n",
 		    afs_printable_uint32_lu(vp->hashid), code);
