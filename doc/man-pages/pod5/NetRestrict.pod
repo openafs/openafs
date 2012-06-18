@@ -28,10 +28,7 @@ list in kernel memory.
 
 The F<NetRestrict> file is in ASCII format. One IP address appears on each
 line, in dotted decimal format. The order of the addresses is not
-significant. The value C<255> is a wildcard that represents all possible
-addresses in that field. For example, the value C<192.12.105.255>
-indicates that the Cache Manager does not register any of the addresses in
-the C<192.12.105> subnet.
+significant.
 
 To display the addresses the Cache Manager is currently registering with
 File Servers, use the B<fs getclientaddrs> command.
