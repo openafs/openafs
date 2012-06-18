@@ -22,6 +22,7 @@
 
 #include <ctype.h>
 #include <sys/types.h>
+#include <afs/auth.h>
 #include <afs/cmd.h>
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
@@ -46,7 +47,8 @@ static afs_int32 server_id[256];
 
 static struct ubik_client *client;
 
-static struct rx_securityClass *junk;
+static struct rx_securityClass *sc;
+static int scindex;
 
 /*
 Obtain list of file servers as known to VLDB. These may
@@ -180,7 +182,7 @@ InvalidateCache(struct cmd_syndesc *as, void *arock)
 	    err = 1;
 	    continue;
 	}
-	conn = rx_NewConnection(server_id[i], htons(port), 1, junk, 0);
+	conn = rx_NewConnection(server_id[i], htons(port), 1, sc, scindex);
 	if (!conn) {
 	    printf("Informational: could not connect to \
 file server %s\n", afs_inet_ntoa_r(server_id[i], hoststr));
@@ -248,8 +250,13 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
     afs_int32 code, i;
+    struct rx_securityClass *scnull;
 
     sprintf(confdir, "%s", AFSDIR_CLIENT_ETC_DIRPATH);
+    if (as->parms[4].items) { /* -localauth */
+	sprintf(confdir, "%s", AFSDIR_SERVER_ETC_DIRPATH);
+    }
+
     /* setup to talk to servers */
     code = rx_Init(0);
     if (code) {
@@ -257,7 +264,9 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
 
-    junk = rxnull_NewClientSecurityObject();
+    scnull = sc = rxnull_NewClientSecurityObject();
+    scindex = 0;
+
     tdir = afsconf_Open(confdir);
     if (!tdir) {
 	printf("Warning: could not get cell configuration.\n");
@@ -272,10 +281,38 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
 
+    if (as->parms[4].items) { /* -localauth */
+	code = afsconf_ClientAuth(tdir, &sc, &scindex);
+	if (code || scindex == 0) {
+	    afsconf_Close(tdir);
+	    fprintf(stderr, "Could not get security object for -localauth (code: %d)\n",
+	            code);
+	    return -1;
+	}
+
+    } else if (!as->parms[3].items) { /* not -noauth */
+	struct ktc_principal sname;
+	struct ktc_token ttoken;
+
+	strcpy(sname.cell, info.name);
+	sname.instance[0] = '\0';
+	strcpy(sname.name, "afs");
+
+	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+	if (code) {
+	    fprintf(stderr, "Could not get afs tokens, running unauthenticated\n");
+	} else {
+	    scindex = 2;
+	    sc = rxkad_NewClientSecurityObject(rxkad_auth, &ttoken.sessionKey,
+	                                       ttoken.kvno, ttoken.ticketLen,
+	                                       ttoken.ticket);
+	}
+    }
+
     for (i = 0; i < info.numServers; ++i)
 	serverconns[i] =
 	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, USER_SERVICE_ID, junk,
+			     info.hostAddr[i].sin_port, USER_SERVICE_ID, scnull,
 			     0);
     for (; i < MAXSERVERS; ++i) {
 	serverconns[i] = (struct rx_connection *)0;
@@ -315,6 +352,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-ip", CMD_LIST, CMD_OPTIONAL, "IP address");
     cmd_CreateAlias(ts, "ic");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
+    cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");
+    cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL, "user server tickets");
 
     ts = cmd_CreateSyntax("listservers", GetServerList, NULL,
 			  "list servers in the cell");
