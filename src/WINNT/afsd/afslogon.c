@@ -226,14 +226,17 @@ DWORD MapAuthError(DWORD code)
     switch (code) {
         /* Unfortunately, returning WN_NO_NETWORK results in the MPR abandoning
          * logon scripts for all credential managers, although they will still
-         * receive logon notifications.  Since we don't want this, we return
-         * WN_SUCCESS.  This is highly undesirable, but we also don't want to
-         * break other network providers.
+         * receive logon notifications.
+         *
+         * Instead return WN_NET_ERROR (ERROR_UNEXP_NET_ERR) to indicate a
+         * problem with this network.
          */
- /* case KTC_NOCM:
+    case KTC_NOCM:
     case KTC_NOCMRPC:
-    return WN_NO_NETWORK; */
-    default: return WN_SUCCESS;
+        return WN_NET_ERROR;
+
+    default:
+        return WN_SUCCESS;
   }
 }
 
