@@ -5616,6 +5616,25 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     return 0;
 }
 
+/* client is held, but not locked */
+static int
+FlushClientCPS(struct client *client, void *arock)
+{
+    ObtainWriteLock(&client->lock);
+
+    client->prfail = 2;	/* Means re-eval client's cps */
+
+    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
+	free(client->CPS.prlist_val);
+	client->CPS.prlist_val = NULL;
+	client->CPS.prlist_len = 0;
+    }
+
+    ReleaseWriteLock(&client->lock);
+
+    return 0;
+}
+
 afs_int32
 SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
 		struct IPAddrs * addrs, afs_int32 spare1, afs_int32 * spare2,
@@ -5625,7 +5644,6 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     afs_int32 nids, naddrs;
     afs_int32 *vd, *addr;
     Error errorCode = 0;		/* return code to caller */
-    struct client *client = 0;
 
     ViceLog(1, ("SRXAFS_FlushCPS\n"));
     FS_LOCK;
@@ -5648,23 +5666,7 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     for (i = 0; i < nids; i++, vd++) {
 	if (!*vd)
 	    continue;
-	client = h_ID2Client(*vd);	/* returns write locked and refCounted, or NULL */
-	if (!client)
-	    continue;
-
-	client->prfail = 2;	/* Means re-eval client's cps */
-#ifdef	notdef
-	if (client->tcon) {
-	    rx_SetRock(((struct rx_connection *)client->tcon), 0);
-	}
-#endif
-	if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
-	    free(client->CPS.prlist_val);
-	    client->CPS.prlist_val = NULL;
-	    client->CPS.prlist_len = 0;
-	}
-	ReleaseWriteLock(&client->lock);
-	PutClient(&client);
+	h_EnumerateClients(*vd, FlushClientCPS, NULL);
     }
 
     addr = addrs->IPAddrs_val;

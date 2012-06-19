@@ -73,6 +73,13 @@ int rxcon_client_key;
 
 static struct rx_securityClass *sc = NULL;
 
+/* arguments for PerHost_EnumerateClient enumeration */
+struct enumclient_args {
+    afs_int32 vid;
+    int (*proc)(struct client *client, void *rock);
+    void *rock;
+};
+
 static void h_SetupCallbackConn_r(struct host * host);
 static int h_threadquota(int);
 
@@ -2226,36 +2233,46 @@ MapName_r(char *uname, afs_int32 * aval)
 /*MapName*/
 
 
-/* NOTE: this returns the client with a Write lock and a refCount */
-struct client *
-h_ID2Client(afs_int32 vid)
+static int
+PerHost_EnumerateClient(struct host *host, void *arock)
 {
+    struct enumclient_args *args = arock;
     struct client *client;
-    struct host *host;
-    int count;
+    int code;
 
-    H_LOCK;
-    for (count = 0, host = hostList; host && count < hostCount; host = host->next, count++) {
-	if (host->hostFlags & HOSTDELETED)
-	    continue;
-	for (client = host->FirstClient; client; client = client->next) {
-	    if (!client->deleted && client->ViceId == vid) {
-		client->refCount++;
-		H_UNLOCK;
-		ObtainWriteLock(&client->lock);
-		return client;
+    for (client = host->FirstClient; client; client = client->next) {
+	if (!client->deleted && client->ViceId == args->vid) {
+
+	    client->refCount++;
+	    H_UNLOCK;
+
+	    code = (*args->proc)(client, args->rock);
+
+	    H_LOCK;
+	    h_ReleaseClient_r(client);
+
+	    if (code) {
+		return H_ENUMERATE_BAIL(0);
 	    }
 	}
     }
-    if (count != hostCount) {
-	ViceLog(0, ("h_ID2Client found %d of %d hosts\n", count, hostCount));
-    } else if (host != NULL) {
-	ViceLog(0, ("h_ID2Client found more than %d hosts\n", hostCount));
-	ShutDownAndCore(PANIC);
-    }
 
+    return 0;
+}
+
+void
+h_EnumerateClients(afs_int32 vid,
+                   int (*proc)(struct client *client, void *rock),
+                   void *rock)
+{
+    struct enumclient_args args;
+    args.vid = vid;
+    args.proc = proc;
+    args.rock = rock;
+
+    H_LOCK;
+    h_Enumerate_r(PerHost_EnumerateClient, hostList, &args);
     H_UNLOCK;
-    return NULL;
 }
 
 static int
