@@ -68,6 +68,7 @@ BOOL KFW_AFS_get_lsa_principal(char *, DWORD *);
 int  KFW_AFS_set_file_cache_dacl(char *filename, HANDLE hUserToken);
 int  KFW_AFS_obtain_user_temp_directory(HANDLE hUserToken, char *newfilename, int size);
 int  KFW_AFS_copy_file_cache_to_default_cache(char * filename);
+char * KFW_get_default_realm(void);
 
 
 /* These functions are only to be used in the afslogon.dll */
