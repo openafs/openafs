@@ -1160,10 +1160,12 @@ DWORD APIENTRY NPLogonNotify(
 	HANDLE h;
 	char *ptbuf[1];
 
+        DebugEvent("Integrated login failed: %s", reason);
+
 	StringCbPrintf(msg, sizeof(msg), "Integrated login failed: %s", reason);
 
 	if (ISLOGONINTEGRATED(opt.LogonOption) && interactive && !opt.failSilently)
-	    MessageBox(hwndOwner, msg, "AFS Logon", MB_OK);
+	    MessageBox(hwndOwner, msg, "AFS Logon", MB_OK|MB_ICONWARNING|MB_SYSTEMMODAL);
 
 	h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
 	ptbuf[0] = msg;
