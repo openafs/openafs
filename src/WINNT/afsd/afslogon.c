@@ -1285,6 +1285,14 @@ VOID AFS_Startup_Event( PWLX_NOTIFICATION_INFO pInfo )
                      &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
 
     RegCloseKey (NPKey);
+
+    (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PROVIDER_SUBKEY,
+                         0, KEY_QUERY_VALUE, &NPKey);
+    LSPsize=sizeof(Debug);
+    RegQueryValueEx(NPKey, REG_CLIENT_DEBUG_PARM, NULL,
+                     &LSPtype, (LPBYTE)&Debug, &LSPsize);
+
+    RegCloseKey (NPKey);
     DebugEvent0("AFS_Startup_Event");
 }
 
