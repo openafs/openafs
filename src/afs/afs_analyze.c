@@ -533,6 +533,8 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		}
 	    }
 	}
+	if (aconn) /* simply lacking aconn->server doesn't absolve this */
+	    afs_PutConn(aconn, rxconn, locktype);
 	return shouldRetry;
     }
 
