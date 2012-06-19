@@ -4090,6 +4090,32 @@ KFW_AFS_copy_file_cache_to_default_cache(char * filename)
     return 0;
 }
 
+char *
+KFW_get_default_realm(void)
+{
+    krb5_context ctx = NULL;
+    char * def_realm = NULL, *realm = NULL;
+    krb5_error_code code;
+
+    code = pkrb5_init_context(&ctx);
+    if (code)
+        return NULL;
+
+    if (code = pkrb5_get_default_realm(ctx, &def_realm))
+        goto cleanup;
+
+    realm = strdup(def_realm);
+
+  cleanup:
+    if (def_realm)
+        pkrb5_free_default_realm(ctx, def_realm);
+
+    if (ctx)
+        pkrb5_free_context(ctx);
+
+    return realm;
+}
+
 /* We are including this
 
 /* Ticket lifetime.  This defines the table used to lookup lifetime for the
