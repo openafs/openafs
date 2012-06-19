@@ -1205,6 +1205,8 @@ NPLogonNotify(
     if (opt.smbName) free(opt.smbName);
     if (opt.realm) free(opt.realm);
 
+    SecureZeroMemory(password, sizeof(password));
+
     DebugEvent("AFS AfsLogon - Exit","Return Code[%x]",code);
     return code;
 }
