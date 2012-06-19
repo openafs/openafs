@@ -57,6 +57,11 @@ void DebugEvent0(char *a)
     if (!Debug && !ISLOGONTRACE(TraceOption))
         return;
 
+    if (Debug & 2) {
+        OutputDebugString(a);
+        OutputDebugString("\r\n");
+    }
+
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
     if (h != INVALID_HANDLE_VALUE) {
         ptbuf[0] = a;
@@ -68,22 +73,29 @@ void DebugEvent0(char *a)
 #define MAXBUF_ 512
 void DebugEvent(char *b,...)
 {
-    HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+    HANDLE h;
+    char *ptbuf[1], buf[MAXBUF_+1];
     va_list marker;
 
     if (!Debug && !ISLOGONTRACE(TraceOption))
         return;
 
+    va_start(marker,b);
+    StringCbVPrintf(buf, MAXBUF_+1,b,marker);
+    buf[MAXBUF_] = '\0';
+
+    if (Debug & 2) {
+        OutputDebugString(buf);
+        OutputDebugString("\r\n");
+    }
+
     h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
     if (h != INVALID_HANDLE_VALUE) {
-        va_start(marker,b);
-        StringCbVPrintf(buf, MAXBUF_+1,b,marker);
-        buf[MAXBUF_] = '\0';
         ptbuf[0] = buf;
         ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 1008, NULL, 1, 0, (const char **)ptbuf, NULL);
         DeregisterEventSource(h);
-        va_end(marker);
     }
+    va_end(marker);
 }
 
 static HANDLE hInitMutex = NULL;
