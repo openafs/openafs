@@ -1329,11 +1329,11 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
 	    size_t szlen = 0;
 
 	    StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
-	    WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
+	    WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, (int)szlen,
 				 username, sizeof(username), NULL, NULL);
 
 	    StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
-	    WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
+	    WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, (int)szlen,
 				 domain, sizeof(domain), NULL, NULL);
 
 	    GetDomainLogonOptions(NULL, username, domain, &opt);
@@ -1426,11 +1426,11 @@ VOID AFS_Logon_Event( PWLX_NOTIFICATION_INFO pInfo )
 	DebugEvent0("AFS_Logon_Event - pInfo UserName and Domain");
 
         StringCchLengthW(pInfo->UserName, MAX_USERNAME_LENGTH, &szlen);
-        WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, szlen,
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->UserName, (int)szlen,
                             username, sizeof(username), NULL, NULL);
 
         StringCchLengthW(pInfo->Domain, MAX_DOMAIN_LENGTH, &szlen);
-        WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, szlen,
+        WideCharToMultiByte(CP_UTF8, 0, pInfo->Domain, (int)szlen,
                             domain, sizeof(domain), NULL, NULL);
 
 	DebugEvent0("AFS_Logon_Event - Calling GetDomainLogonOptions");
