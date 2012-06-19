@@ -1153,11 +1153,21 @@ NPLogonNotify(
      */
 
     if (ISLOGONINTEGRATED(opt.LogonOption) && KFW_is_available()) {
+        CtxtHandle LogonContext;
+
+        LogonSSP(lpLogonId, &LogonContext);
+        ImpersonateSecurityContext(&LogonContext);
+
 #ifdef KFW_LOGON
 	sprintf(szLogonId,"%d.%d",lpLogonId->HighPart, lpLogonId->LowPart);
+        DebugEvent("copying cache for %s %s", uname, szLogonId);
 	KFW_AFS_copy_cache_to_system_file(uname, szLogonId);
 #endif
+        DebugEvent("Destroying tickets for %s", uname);
 	KFW_AFS_destroy_tickets_for_principal(uname);
+
+        RevertSecurityContext(&LogonContext);
+        DeleteSecurityContext(&LogonContext);
     }
 
     if (code) {
