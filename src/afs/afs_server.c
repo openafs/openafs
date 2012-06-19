@@ -1806,11 +1806,10 @@ afs_GetCapabilities(struct server *ts)
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
-	afs_PutConn(tc, rxconn, SHARED_LOCK);
 	afs_ServerDown(tc->srvr);
 	ForceNewConnections(tc->srvr); /* multi homed clients */
     }
-
+    afs_PutConn(tc, rxconn, SHARED_LOCK);
     if ( code && code != RXGEN_OPCODE ) {
 	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
 	/* better not be anything to free. we failed! */
