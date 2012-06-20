@@ -147,6 +147,8 @@ extern int cm_DumpServers(FILE *outputFile, char *cookie, int lock);
 
 extern int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2);
 
+extern int cm_IsServerListEmpty(cm_serverRef_t *serversp);
+
 /* Protected by cm_syscfgLock (rw) */
 extern int cm_noIPAddr;         /* number of client network interfaces */
 extern int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */

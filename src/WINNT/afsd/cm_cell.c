@@ -92,7 +92,7 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
     }
 #endif
 
-    if ((cp->vlServersp == NULL) ||
+    if (cm_IsServerListEmpty(cp->vlServersp) ||
         (time(0) > cp->timeout) ||
         (cm_dnsEnabled &&
          (cp->flags & CM_CELLFLAG_DNS) &&
