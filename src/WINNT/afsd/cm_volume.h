@@ -163,5 +163,8 @@ extern cm_vol_state_t * cm_VolumeStateByName(cm_volume_t *volp, char *volname);
 
 extern afs_int32 cm_VolumeType(cm_volume_t *volp, afs_uint32 id);
 
+extern long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
+                                    cm_volume_t *volp);
+
 extern osi_rwlock_t cm_volumeLock;
 #endif /*  OPENAFS_WINNT_AFSD_CM_VOLUME_H */

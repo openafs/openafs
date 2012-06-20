@@ -1345,6 +1345,26 @@ void cm_RemoveVolumeFromServer(cm_server_t * serverp, afs_uint32 volID)
     }
 }
 
+int cm_IsServerListEmpty(cm_serverRef_t *serversp)
+{
+    cm_serverRef_t *tsrp;
+    int allDeleted = 1;
+
+    if (serversp == NULL)
+        return CM_ERROR_EMPTY;
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
+        allDeleted = 0;
+        break;
+    }
+    lock_ReleaseRead(&cm_serverLock);
+
+    return ( allDeleted ? CM_ERROR_EMPTY : 0 );
+}
+
 void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
 {
     cm_serverRef_t  **current;

@@ -203,7 +203,7 @@ cm_GetEntryByName( struct cm_cell *cellp, const char *name,
             *methodp = 0;
         }
         rx_PutConnection(rxconnp);
-    } while (cm_Analyze(connp, userp, reqp, NULL, 0, NULL, cellp->vlServersp, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, NULL, cellp, 0, NULL, cellp->vlServersp, NULL, code));
     code = cm_MapVLRPCError(code, reqp);
     if ( code )
         osi_Log3(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s:%s FAILURE, code 0x%x",
@@ -449,7 +449,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                         rxconnp = cm_GetRxConn(connp);
                         code = VL_GetAddrsU(rxconnp, &attrs, &uuid, &unique, &nentries, &addrs);
                         rx_PutConnection(rxconnp);
-                    } while (cm_Analyze(connp, userp, reqp, NULL, 0, NULL, cellp->vlServersp, NULL, code));
+                    } while (cm_Analyze(connp, userp, reqp, NULL, cellp, 0, NULL, cellp->vlServersp, NULL, code));
 
                     if ( code ) {
                         code = cm_MapVLRPCError(code, reqp);
@@ -1323,7 +1323,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                     code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
                                                  &volStat, &Name, &OfflineMsg, &MOTD);
                     rx_PutConnection(rxconnp);
-                } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, 0, NULL, NULL, NULL, code));
+                } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, NULL, 0, NULL, NULL, NULL, code));
                 code = cm_MapRPCError(code, &req);
 
                 lock_ObtainWrite(&volp->rw);

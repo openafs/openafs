@@ -3260,7 +3260,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir)
         NTStatus = 0xC0020018L; /* RPC_NT_SERVER_TOO_BUSY */
 #endif
     }
-    else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
+    else if (code == CM_ERROR_ALLOFFLINE ||
+             code == CM_ERROR_ALLDOWN ||
+             code == CM_ERROR_EMPTY) {
 #ifdef COMMENT
         NTStatus = 0xC000003AL; /* Path not found */
 #else

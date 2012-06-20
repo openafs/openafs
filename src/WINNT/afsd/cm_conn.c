@@ -286,7 +286,7 @@ cm_ResetServerBusyStatus(cm_serverRef_t *serversp)
  *
  * If the error code is from cm_ConnFromFID() or friends, connp will be NULL.
  *
- * For VLDB calls, fidp will be NULL.
+ * For VLDB calls, fidp will be NULL and cellp will not be.
  *
  * volSyncp and/or cbrp may also be NULL.
  */
@@ -295,6 +295,7 @@ cm_Analyze(cm_conn_t *connp,
            cm_user_t *userp,
            cm_req_t *reqp,
            struct cm_fid *fidp,
+           cm_cell_t *cellp,
            afs_uint32 storeOp,
            AFSVolSync *volSyncp,
            cm_serverRef_t * serversp,
@@ -304,7 +305,6 @@ cm_Analyze(cm_conn_t *connp,
     cm_server_t *serverp = NULL;
     cm_serverRef_t **serverspp = NULL;
     cm_serverRef_t *tsrp;
-    cm_cell_t  *cellp = NULL;
     cm_ucell_t *ucellp;
     cm_volume_t * volp = NULL;
     cm_vol_state_t *statep = NULL;
@@ -404,6 +404,38 @@ cm_Analyze(cm_conn_t *connp,
          */
     }
 
+    else if (errorCode == CM_ERROR_EMPTY) {
+        /*
+         * The server list is empty (or all entries have been deleted).
+         * If fidp is NULL, this was a vlServer list and we can attempt
+         * to force a cell lookup.  If fidp is not NULL, we can attempt
+         * to refresh the volume location list.
+         */
+        if (fidp) {
+            code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
+                                     CM_GETVOL_FLAG_NO_LRU_UPDATE,
+                                     &volp);
+            if (code == 0) {
+                if (cm_UpdateVolumeLocation(cellp, userp, reqp, volp) == 0) {
+                    code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
+                    if (code == 0) {
+                        if (!cm_IsServerListEmpty(*serverspp))
+                            retry = 1;
+                        cm_FreeServerList(serverspp, 0);
+                    }
+                }
+
+                lock_ObtainRead(&cm_volumeLock);
+                cm_PutVolume(volp);
+                lock_ReleaseRead(&cm_volumeLock);
+                volp = NULL;
+            }
+        } else {
+            cm_cell_t * newCellp = cm_UpdateCell( cellp, 0);
+            if (newCellp)
+                retry = 1;
+        }
+    }
     else if (errorCode == CM_ERROR_ALLDOWN) {
 	/* Servers marked DOWN will be restored by the background daemon
 	 * thread as they become available.  The volume status is
@@ -419,7 +451,6 @@ cm_Analyze(cm_conn_t *connp,
             osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLDOWN (VL Server)");
         }
     }
-
     else if (errorCode == CM_ERROR_ALLOFFLINE) {
         /* Volume instances marked offline will be restored by the
          * background daemon thread as they become available
@@ -1079,7 +1110,7 @@ cm_Analyze(cm_conn_t *connp,
                  errorCode);
         if (!dead_session) {
             lock_ObtainMutex(&userp->mx);
-            ucellp = cm_GetUCell(userp, serverp->cellp);
+            ucellp = cm_GetUCell(userp, cellp);
             if (ucellp->ticketp) {
                 free(ucellp->ticketp);
                 ucellp->ticketp = NULL;
@@ -1295,15 +1326,15 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, afs_uint32 replicated, cm_user_
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     long firstError = 0;
-    int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+    int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1, allDeleted = 1;
 #ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
     long timeUsed, timeLeft, hardTimeLeft;
 #endif
     *connpp = NULL;
 
     if (serversp == NULL) {
-	osi_Log1(afsd_logp, "cm_ConnByMServers returning 0x%x", CM_ERROR_ALLDOWN);
-	return CM_ERROR_ALLDOWN;
+	osi_Log1(afsd_logp, "cm_ConnByMServers returning 0x%x", CM_ERROR_EMPTY);
+	return CM_ERROR_EMPTY;
     }
 
 #ifdef SET_RX_TIMEOUTS_TO_TIMELEFT
@@ -1318,6 +1349,8 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, afs_uint32 replicated, cm_user_
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         if (tsrp->status == srv_deleted)
             continue;
+
+        allDeleted = 0;
 
         tsp = tsrp->server;
         if (reqp->errorServp) {
@@ -1376,7 +1409,9 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, afs_uint32 replicated, cm_user_
     lock_ReleaseRead(&cm_serverLock);
 
     if (firstError == 0) {
-        if (allDown) {
+        if (allDeleted) {
+            firstError = CM_ERROR_EMPTY;
+        } else if (allDown) {
             firstError = (reqp->tokenError ? reqp->tokenError :
                           (reqp->idleError ? RX_CALL_TIMEOUT : CM_ERROR_ALLDOWN));
             /*

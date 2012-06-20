@@ -439,7 +439,7 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
             code = RXAFS_FetchACL(rxconnp, &afid, &acl, &fileStatus, &volSync);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &scp->fid, 0, &volSync, NULL, NULL, code));
+        } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
         if (code)
@@ -537,7 +537,7 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
             code = RXAFS_StoreACL(rxconnp, &fid, &acl, &fileStatus, &volSync);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &scp->fid, 1, &volSync, NULL, NULL, code));
+        } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
         /* invalidate cache info, since we just trashed the ACL cache */
@@ -710,7 +710,7 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
                                          &storeStat, volName, offLineMsg, motd);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(tcp, userp, reqp, &scp->fid, 1, NULL, NULL, NULL, code));
+        } while (cm_Analyze(tcp, userp, reqp, &scp->fid, NULL, 1, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
     }
 
@@ -786,7 +786,7 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
 					 &volStat, &Name, &OfflineMsg, &MOTD);
 	    rx_PutConnection(rxconnp);
 
-	} while (cm_Analyze(connp, userp, reqp, &scp->fid, 0, NULL, NULL, NULL, code));
+	} while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, reqp);
     }
 
@@ -3324,17 +3324,18 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
     afs_int32 code = 0;
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
-    int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+    int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1, allDeleted = 1;
 
     if (serversp == NULL) {
-	osi_Log1(afsd_logp, "cm_CheckServersStatus returning 0x%x", CM_ERROR_ALLDOWN);
-	return CM_ERROR_ALLDOWN;
+	osi_Log1(afsd_logp, "cm_CheckServersStatus returning 0x%x", CM_ERROR_EMPTY);
+	return CM_ERROR_EMPTY;
     }
 
     lock_ObtainRead(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         if (tsrp->status == srv_deleted)
             continue;
+        allDeleted = 0;
         if (tsp = tsrp->server) {
             cm_GetServerNoLock(tsp);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
@@ -3357,7 +3358,9 @@ cm_CheckServersStatus(cm_serverRef_t *serversp)
     }
     lock_ReleaseRead(&cm_serverLock);
 
-    if (allDown)
+    if (allDeleted)
+        code = CM_ERROR_EMPTY;
+    else if (allDown)
         code = CM_ERROR_ALLDOWN;
     else if (allBusy)
         code = CM_ERROR_ALLBUSY;
