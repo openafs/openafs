@@ -363,7 +363,7 @@ main(int argc, char **argv)
     if (getenv("SOURCE") == NULL)
 	path = strdup("test1.conf");
     else
-	asprintf(&path, "%s/command/test1.conf", getenv("SOURCE"));
+	asprintf(&path, "%s/cmd/test1.conf", getenv("SOURCE"));
 
     cmd_SetCommandName("test");
     code = cmd_OpenConfigFile(path);
