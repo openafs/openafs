@@ -37,6 +37,7 @@ typedef struct cm_racingRevokes {
 #define CM_CALLBACK_MAINTAINCOUNT	1	/* don't decrement count of
 						 * callback-granting calls.
                                                  */
+#define CM_CALLBACK_BULKSTAT            2       /* volSync may not be trustworthy */
 
 /* Combinations of change notification filters to make sure callback loss
  * gets noticed

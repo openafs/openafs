@@ -1742,7 +1742,10 @@ cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                     lock_ObtainWrite(&cm_scacheLock);
                     volp->cbExpiresRO = scp->cbExpires;
                     volp->cbIssuedRO = scp->cbIssued;
-                    volp->creationDateRO = volSyncp->spare1;
+                    if (cm_readonlyVolumeVersioning || !(flags & CM_CALLBACK_BULKSTAT))
+                        volp->creationDateRO = volSyncp->spare1;
+                    else
+                        volp->creationDateRO = 0;
                     if (volp->cbServerpRO != scp->cbServerp) {
                         if (volp->cbServerpRO)
                             cm_PutServer(volp->cbServerpRO);
