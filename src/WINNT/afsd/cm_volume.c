@@ -260,7 +260,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 #endif
     afs_uint32 volType;
     time_t now;
-    int replicated = 0;
 
     lock_AssertWrite(&volp->rw);
 
@@ -392,7 +391,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         case 0:
             flags = vldbEntry.flags;
             nServers = vldbEntry.nServers;
-            replicated = (nServers > 0);
             rwID = vldbEntry.volumeId[0];
             roID = vldbEntry.volumeId[1];
             bkID = vldbEntry.volumeId[2];
@@ -406,7 +404,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         case 1:
             flags = nvldbEntry.flags;
             nServers = nvldbEntry.nServers;
-            replicated = (nServers > 0);
             rwID = nvldbEntry.volumeId[0];
             roID = nvldbEntry.volumeId[1];
             bkID = nvldbEntry.volumeId[2];
@@ -420,7 +417,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         case 2:
             flags = uvldbEntry.flags;
             nServers = uvldbEntry.nServers;
-            replicated = (nServers > 0);
             rwID = uvldbEntry.volumeId[0];
             roID = uvldbEntry.volumeId[1];
             bkID = uvldbEntry.volumeId[2];
@@ -527,10 +523,6 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 volp->vol[ROVOL].ID = roID;
                 cm_AddVolumeToIDHashTable(volp, ROVOL);
             }
-            if (replicated)
-                _InterlockedOr(&volp->vol[ROVOL].flags, CM_VOL_STATE_FLAG_REPLICATED);
-            else
-                _InterlockedAnd(&volp->vol[ROVOL].flags, ~CM_VOL_STATE_FLAG_REPLICATED);
         } else {
             if (volp->vol[ROVOL].qflags & CM_VOLUME_QFLAG_IN_HASH)
                 cm_RemoveVolumeFromIDHashTable(volp, ROVOL);
@@ -668,6 +660,10 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
          */
         if (ROcount > 1) {
             cm_RandomizeServer(&volp->vol[ROVOL].serversp);
+            _InterlockedOr(&volp->vol[ROVOL].flags, CM_VOL_STATE_FLAG_REPLICATED);
+        }
+        else {
+            _InterlockedAnd(&volp->vol[ROVOL].flags, ~CM_VOL_STATE_FLAG_REPLICATED);
         }
 
         rwNewstate = rwServers_alldown ? vl_alldown : vl_online;
