@@ -1194,7 +1194,7 @@ long cm_GetROVolumeID(cm_volume_t *volp)
     long id;
 
     lock_ObtainRead(&volp->rw);
-    if (volp->vol[ROVOL].ID && volp->vol[ROVOL].serversp)
+    if (volp->vol[ROVOL].ID && !cm_IsServerListEmpty(volp->vol[ROVOL].serversp))
 	id = volp->vol[ROVOL].ID;
     else
 	id = volp->vol[RWVOL].ID;
