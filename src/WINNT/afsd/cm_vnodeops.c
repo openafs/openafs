@@ -2560,10 +2560,10 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                     lostRace = cm_EndCallbackGrantingCall(scp, &cbReq,
                                                           &bbp->callbacks[j],
                                                           &volSync,
-                                                          CM_CALLBACK_MAINTAINCOUNT);
+                                                          CM_CALLBACK_MAINTAINCOUNT|CM_CALLBACK_BULKSTAT);
                     InterlockedIncrement(&scp->activeRPCs);
                     if (!lostRace)
-                        cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
+                        cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, CM_MERGEFLAG_BULKSTAT);
                     lock_ReleaseWrite(&scp->rw);
                 } else {
                     lock_ReleaseRead(&scp->rw);

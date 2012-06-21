@@ -1765,8 +1765,19 @@ void cm_MergeStatus(cm_scache_t *dscp,
             goto done;
     }
 
-    if (cm_readonlyVolumeVersioning)
+    /*
+     * The first field of the volsync parameter is supposed to be the
+     * volume creation date.  Unfortunately, pre-OpenAFS 1.4.11 and 1.6.0
+     * file servers do not populate the VolSync structure for BulkStat and
+     * InlineBulkStat RPCs.  As a result, the volume creation date is not
+     * trustworthy when status is obtained via [Inline]BulkStatus RPCs.
+     * If cm_readonlyVolumeVersioning is set, it is assumed that all file
+     * servers populate the VolSync structure at all times.
+     */
+    if (cm_readonlyVolumeVersioning || !(flags & CM_MERGEFLAG_BULKSTAT))
         scp->volumeCreationDate = volsyncp->spare1;       /* volume creation date */
+    else
+        scp->volumeCreationDate = 0;
 
     scp->serverModTime = statusp->ServerModTime;
 
