@@ -2511,7 +2511,7 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	      bulkaddrs *addrsp)
 {
     int this_op = VLGETADDRSU;
-    afs_int32 code, index = -1, offset;
+    afs_int32 code, index;
     struct vl_ctx ctx;
     int nservers, i, j, base = 0;
     struct extentaddr *exp = 0;
@@ -2531,15 +2531,13 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	    code = VL_BADMASK;
 	    goto abort;
 	}
-	for (base = 0; base < VL_MAX_ADDREXTBLKS; base++) {
-	    if (!ctx.ex_addr[base])
-		break;
-	    for (i = 1; i < VL_MHSRV_PERBLK; i++) {
-		exp = &ctx.ex_addr[base][i];
-		tuuid = exp->ex_hostuuid;
-		afs_ntohuuid(&tuuid);
-		if (afs_uuid_is_nil(&tuuid))
-		    continue;
+	/* Search for a server registered with the VLDB with this ip address. */
+	for (index = 0; index <= MAXSERVERID; index++) {
+	    code = multiHomedExtent(&ctx, index, &exp);
+	    if (code)
+		continue;
+
+	    if (exp) {
 		for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
 		    if (exp->ex_addrs[j]
 			&& (ntohl(exp->ex_addrs[j]) == attributes->ipaddr)) {
@@ -2549,10 +2547,8 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 		if (j < VL_MAXIPADDRS_PERMH)
 		    break;
 	    }
-	    if (i < VL_MHSRV_PERBLK)
-		break;
 	}
-	if (base >= VL_MAX_ADDREXTBLKS) {
+	if (index > MAXSERVERID) {
 	    code = VL_NOENT;
 	    goto abort;
 	}
@@ -2561,22 +2557,17 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 	    code = VL_BADMASK;
 	    goto abort;
 	}
-	index = attributes->index;
-	if (index < 1 || index >= (VL_MAX_ADDREXTBLKS * VL_MHSRV_PERBLK)) {
+	/* VLADDR_INDEX index is one based */
+	if (attributes->index < 1 || attributes->index > MAXSERVERID) {
 	    code = VL_INDEXERANGE;
 	    goto abort;
 	}
-	base = index / VL_MHSRV_PERBLK;
-	offset = index % VL_MHSRV_PERBLK;
-	if (offset == 0) {
+	index = attributes->index - 1;
+	code = multiHomedExtent(&ctx, index, &exp);
+	if (code) {
 	    code = VL_NOENT;
 	    goto abort;
 	}
-	if (!ctx.ex_addr[base]) {
-	    code = VL_INDEXERANGE;
-	    goto abort;
-	}
-	exp = &ctx.ex_addr[base][offset];
     } else if (attributes->Mask & VLADDR_UUID) {
 	if (attributes->Mask & (VLADDR_IPADDR | VLADDR_INDEX)) {
 	    code = VL_BADMASK;
