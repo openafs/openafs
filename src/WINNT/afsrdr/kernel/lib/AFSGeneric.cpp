@@ -1843,10 +1843,22 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                 ulFilter |= FILE_NOTIFY_CHANGE_ATTRIBUTES;
             }
 
-            AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
-                                            NULL,
-                                            ulFilter,
-                                            FILE_ACTION_MODIFIED);
+            if( (*ppObjectInfo)->FileType == AFS_FILE_TYPE_DIRECTORY)
+            {
+
+                AFSFsRtlNotifyFullReportChange( (*ppObjectInfo),
+                                                NULL,
+                                                ulFilter,
+                                                FILE_ACTION_MODIFIED);
+            }
+            else
+            {
+
+                AFSFsRtlNotifyFullReportChange( (*ppObjectInfo)->ParentObjectInformation,
+                                                NULL,
+                                                ulFilter,
+                                                FILE_ACTION_MODIFIED);
+            }
 
             //
             // Indicate this node requires re-evaluation for the remaining reasons
