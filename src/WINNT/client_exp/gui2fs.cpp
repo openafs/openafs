@@ -1824,6 +1824,11 @@ MakeSymbolicLink(const CString& strName, const CString& strTarget)
     CString strParent = Parent(strName);
     FixNetbiosPath(strParent);
 
+    if (!IsPathInAfs(strParent)) {
+	    ShowMessageBox(IDS_MAKE_LNK_NOT_AFS_ERROR, MB_ICONERROR, IDS_MAKE_MP_NOT_AFS_ERROR);
+	    return FALSE;
+    }
+
     if ( IsFreelanceRoot(strParent) && !IsAdmin() ) {
 	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
 	return FALSE;
