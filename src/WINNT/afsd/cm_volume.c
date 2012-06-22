@@ -1264,7 +1264,8 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
     char motd[256];
     long alldown, alldeleted;
     cm_serverRef_t *serversp;
-    cm_fid_t fid;
+    cm_fid_t vfid;
+    cm_scache_t *vscp = NULL;
 
     Name = volName;
     OfflineMsg = offLineMsg;
@@ -1272,7 +1273,7 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
 
     if (statep->ID != 0 && (!volID || volID == statep->ID)) {
         /* create fid for volume root so that VNOVOL and VMOVED errors can be processed */
-        cm_SetFid(&fid, volp->cellp->cellID, statep->ID, 1, 1);
+        cm_SetFid(&vfid, volp->cellp->cellID, statep->ID, 1, 1);
 
         if (!statep->serversp && !(*volumeUpdatedp)) {
             cm_InitReq(&req);
@@ -1308,20 +1309,33 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                 (!alldown && statep->state == vl_alldown)) {
                 cm_InitReq(&req);
                 req.flags |= CM_REQ_OFFLINE_VOL_CHK;
-
                 lock_ReleaseWrite(&volp->rw);
-                do {
-                    code = cm_ConnFromVolume(volp, statep->ID, cm_rootUserp, &req, &connp);
-                    if (code)
-                        continue;
 
-                    rxconnp = cm_GetRxConn(connp);
-                    code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
-                                                 &volStat, &Name, &OfflineMsg, &MOTD);
-                    rx_PutConnection(rxconnp);
-                } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, NULL, 0, NULL, NULL, NULL, code));
-                code = cm_MapRPCError(code, &req);
+                code = cm_GetSCache(&vfid, NULL, &vscp, cm_rootUserp, &req);
+                if (code = 0) {
+                    lock_ObtainWrite(&vscp->rw);
+                    code = cm_SyncOp(vscp, NULL, cm_rootUserp, &req, PRSFS_READ,
+                                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                    lock_ReleaseWrite(&vscp->rw);
+                    if (code == 0) {
+                        do {
+                            code = cm_ConnFromVolume(volp, statep->ID, cm_rootUserp, &req, &connp);
+                            if (code)
+                                continue;
 
+                            rxconnp = cm_GetRxConn(connp);
+                            code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
+                                                         &volStat, &Name, &OfflineMsg, &MOTD);
+                            rx_PutConnection(rxconnp);
+                        } while (cm_Analyze(connp, cm_rootUserp, &req, &vfid, NULL, 0, NULL, NULL, NULL, code));
+                        code = cm_MapRPCError(code, &req);
+                    }
+
+                    lock_ObtainWrite(&vscp->rw);
+                    cm_SyncOpDone(vscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                    lock_ReleaseWrite(&vscp->rw);
+                    cm_ReleaseSCache(vscp);
+                }
                 lock_ObtainWrite(&volp->rw);
                 if (code == 0 && volStat.Online) {
                     cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_online);

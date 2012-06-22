@@ -774,20 +774,40 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     } else
 #endif
     {
-	Name = volName;
-	OfflineMsg = offLineMsg;
-	MOTD = motd;
-	do {
-	    code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
-	    if (code) continue;
+        cm_fid_t    vfid;
+        cm_scache_t *vscp;
 
-	    rxconnp = cm_GetRxConn(connp);
-	    code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
-					 &volStat, &Name, &OfflineMsg, &MOTD);
-	    rx_PutConnection(rxconnp);
+        cm_SetFid(&vfid, scp->fid.cell, scp->fid.volume, 1, 1);
+        code = cm_GetSCache(&vfid, NULL, &vscp, userp, reqp);
+        if (code)
+            return code;
 
-	} while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
-	code = cm_MapRPCError(code, reqp);
+        lock_ObtainWrite(&vscp->rw);
+        code = cm_SyncOp(vscp, NULL, userp, reqp, PRSFS_READ,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&vscp->rw);
+        if (code)
+            return code;
+
+        Name = volName;
+        OfflineMsg = offLineMsg;
+        MOTD = motd;
+        do {
+            code = cm_ConnFromFID(&vfid, userp, reqp, &connp);
+            if (code) continue;
+
+            rxconnp = cm_GetRxConn(connp);
+            code = RXAFS_GetVolumeStatus(rxconnp, vfid.volume,
+                                         &volStat, &Name, &OfflineMsg, &MOTD);
+            rx_PutConnection(rxconnp);
+
+        } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, code));
+        code = cm_MapRPCError(code, reqp);
+
+        lock_ObtainWrite(&vscp->rw);
+        cm_SyncOpDone(vscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&vscp->rw);
+        cm_ReleaseSCache(vscp);
     }
 
     if (code)
