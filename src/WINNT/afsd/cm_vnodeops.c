@@ -2674,6 +2674,8 @@ cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_re
     char offLineMsg[256]="server temporarily inaccessible";
     char motd[256]="server temporarily inaccessible";
     osi_hyper_t freespace;
+    cm_fid_t    vfid;
+    cm_scache_t *vscp;
 
     if (fidp->cell==AFS_FAKE_ROOT_CELL_ID &&
         fidp->volume==AFS_FAKE_ROOT_VOL_ID)
@@ -2692,21 +2694,37 @@ cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_re
         goto _done;
     }
 
-    Name = volName;
-    OfflineMsg = offLineMsg;
-    MOTD = motd;
+    cm_SetFid(&vfid, fidp->cell, fidp->volume, 1, 1);
+    code = cm_GetSCache(&vfid, NULL, &vscp, userp, reqp);
+    if (code == 0) {
+        lock_ObtainWrite(&vscp->rw);
+        code = cm_SyncOp(vscp, NULL, userp, reqp, PRSFS_READ,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&vscp->rw);
+        if (code == 0) {
+            Name = volName;
+            OfflineMsg = offLineMsg;
+            MOTD = motd;
 
-    do {
-        code = cm_ConnFromFID(fidp, userp, reqp, &connp);
-        if (code) continue;
+            do {
+                code = cm_ConnFromFID(&vfid, userp, reqp, &connp);
+                if (code) continue;
 
-        rxconnp = cm_GetRxConn(connp);
-        code = RXAFS_GetVolumeStatus(rxconnp, fidp->volume,
-                                     &volStat, &Name, &OfflineMsg, &MOTD);
-        rx_PutConnection(rxconnp);
+                rxconnp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(rxconnp, fidp->volume,
+                                             &volStat, &Name, &OfflineMsg, &MOTD);
+                rx_PutConnection(rxconnp);
 
-    } while (cm_Analyze(connp, userp, reqp, fidp, NULL, 0, NULL, NULL, NULL, code));
-    code = cm_MapRPCError(code, reqp);
+            } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, code));
+            code = cm_MapRPCError(code, reqp);
+        }
+
+        lock_ObtainWrite(&vscp->rw);
+        cm_SyncOpDone(vscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&vscp->rw);
+        cm_ReleaseSCache(vscp);
+    }
+
     if (code == 0) {
         if (volStat.MaxQuota) {
             freespace.QuadPart = 1024 * (afs_int64)min(volStat.MaxQuota - volStat.BlocksInUse, volStat.PartBlocksAvail);

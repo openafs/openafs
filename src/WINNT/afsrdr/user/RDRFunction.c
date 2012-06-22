@@ -5018,7 +5018,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     }
     lock_ObtainWrite(&scp->rw);
 
-    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
@@ -5107,11 +5107,10 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         } else {
             pResultCB->TotalAllocationUnits.QuadPart = 0x7FFFFFFF;
             pResultCB->AvailableAllocationUnits.QuadPart = (volType == ROVOL || volType == BACKVOL) ? 0 : 0x3F000000;
-
-            pResultCB->VolumeLabelLength = cm_Utf8ToUtf16( volp->namep, -1, pResultCB->VolumeLabel,
-                                                           (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) + 1);
-            code = 0;
         }
+
+        pResultCB->VolumeLabelLength = cm_Utf8ToUtf16( volp->namep, -1, pResultCB->VolumeLabel,
+                                                       (sizeof(pResultCB->VolumeLabel) / sizeof(WCHAR)) + 1);
         if ( pResultCB->VolumeLabelLength )
             pResultCB->VolumeLabelLength--;
 
@@ -5204,8 +5203,8 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
     }
     lock_ObtainWrite(&scp->rw);
 
-    code = cm_SyncOp(scp, NULL, userp, &req, 0,
-                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
