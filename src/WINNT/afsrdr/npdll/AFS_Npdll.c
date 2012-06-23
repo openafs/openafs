@@ -525,14 +525,14 @@ NPGetCaps( DWORD nIndex )
 
             //
             // No support for:
-            //   WNNC_CON_GETPERFORMANCE
             //   WNNC_CON_DEFER
             //
 
             rc = WNNC_CON_GETCONNECTIONS |
                  WNNC_CON_CANCELCONNECTION |
                  WNNC_CON_ADDCONNECTION |
-                 WNNC_CON_ADDCONNECTION3;
+                 WNNC_CON_ADDCONNECTION3 |
+                 WNNC_CON_GETPERFORMANCE;
 
             break;
         }
@@ -1842,10 +1842,10 @@ NPGetConnectionPerformance( LPCWSTR lpRemoteName,
         {
 
 #ifdef AFS_DEBUG_TRACE
-            AFSDbgPrint( L"NPGetConnectionPerformance AFSRDFS is disabled, returning WN_BAD_NETNAME\n");
+            AFSDbgPrint( L"NPGetConnectionPerformance AFSRDFS is disabled, returning WN_NET_ERROR\n");
 #endif
 
-            return WN_NO_NETWORK;
+            return WN_NET_ERROR;
         }
 
         AFSDbgPrint( L"NPGetConnectionPerformance Entry for remote connection %S\n",
@@ -1900,13 +1900,13 @@ NPGetConnectionPerformance( LPCWSTR lpRemoteName,
             try_return( dwReturn = WN_NOT_CONNECTED);
         }
 
-        lpNetConnectInfo->dwFlags = WNCON_DYNAMIC;
+        lpNetConnectInfo->dwFlags = 0;
 
-        lpNetConnectInfo->dwSpeed = 500;
+        lpNetConnectInfo->dwSpeed = 0;
 
         lpNetConnectInfo->dwDelay = 0;
 
-        lpNetConnectInfo->dwOptDataSize = 0x1000;
+        lpNetConnectInfo->dwOptDataSize = 0x10000;
 
         AFSDbgPrint( L"NPGetConnectionPerformance Successfully returned information for remote connection %S\n",
                      lpRemoteName);
