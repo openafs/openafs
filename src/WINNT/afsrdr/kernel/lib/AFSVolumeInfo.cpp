@@ -98,9 +98,6 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT LibDeviceObject,
 
         pVolumeCB = pObjectInfo->VolumeCB;
 
-        ASSERT( pObjectInfo->FileType == AFS_FILE_TYPE_DIRECTORY &&
-                pObjectInfo->FileId.Vnode == 1);
-
         ulLength = pIrpSp->Parameters.QueryVolume.Length;
         FsInformationClass = pIrpSp->Parameters.QueryVolume.FsInformationClass;
         pBuffer = Irp->AssociatedIrp.SystemBuffer;
