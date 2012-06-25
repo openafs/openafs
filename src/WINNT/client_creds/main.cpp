@@ -245,11 +245,6 @@ BOOL InitApp (LPSTR pszCmdLineA)
    if (GetVersionEx (&Version))
       g.fIsWinNT = (Version.dwPlatformId == VER_PLATFORM_WIN32_NT) ? TRUE : FALSE;
 
-   if (!g.fIsWinNT)
-      lstrcpy (g.szHelpFile, TEXT("afs-light.hlp"));
-   else
-      lstrcpy (g.szHelpFile, TEXT("afs-nt.hlp"));
-
    // Initialize winsock etc
    //
    WSADATA Data;

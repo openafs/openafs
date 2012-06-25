@@ -87,7 +87,6 @@ typedef struct
    LPWIZARD pWizard;
    BOOL fStartup;
    BOOL fIsWinNT;
-   TCHAR szHelpFile[ MAX_PATH ];
    osi_mutex_t expirationCheckLock;
    osi_mutex_t credsLock;
    TCHAR SmbName[ MAXRANDOMNAMELEN ];
