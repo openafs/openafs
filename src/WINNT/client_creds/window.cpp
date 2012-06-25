@@ -695,8 +695,12 @@ size_t Main_FindExpiredCreds (void)
    expirationCheck = true;
    lock_ReleaseMutex(&g.expirationCheckLock);
 
-   if ( KFW_is_available() )
-       KFW_AFS_renew_expiring_tokens();
+    if ( KFW_is_available() ) {
+#ifdef USE_MS2MIT
+        KFW_import_windows_lsa();
+#endif /* USE_MS2MIT */
+        KFW_AFS_renew_expiring_tokens();
+    }
 
    lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
