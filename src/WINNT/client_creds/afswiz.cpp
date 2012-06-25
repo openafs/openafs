@@ -136,11 +136,6 @@ BOOL CALLBACK WizCommon_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                break;
            }
         break;
-
-      case WM_HELP:
-         if (l.idh)
-            WinHelp (GetParent(hDlg), g.szHelpFile, HELP_CONTEXT, l.idh);
-         break;
      }
    return FALSE;
 }

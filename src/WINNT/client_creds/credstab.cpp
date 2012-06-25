@@ -75,15 +75,6 @@ BOOL CALLBACK Creds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                break;
             }
          break;
-
-      case WM_HELP:
-         if (IsWindow (GetDlgItem (hDlg, IDC_CREDS_REMIND)))
-            WinHelp (hDlg, g.szHelpFile, HELP_CONTEXT, IDH_AFSCREDS_TAB_TOKENS);
-         else if (IsServiceRunning())
-            WinHelp (hDlg, g.szHelpFile, HELP_CONTEXT, IDH_AFSCREDS_TAB_NOTOKENS_RUNNING);
-         else // (!IsServiceRunning())
-            WinHelp (hDlg, g.szHelpFile, HELP_CONTEXT, IDH_AFSCREDS_TAB_NOTOKENS_STOPPED);
-         break;
       }
 
    return FALSE;
@@ -291,10 +282,6 @@ BOOL CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                NewCreds_DlgProc (hDlg, WM_HELP, 0, 0);
                break;
             }
-         break;
-
-      case WM_HELP:
-         WinHelp (hDlg, g.szHelpFile, HELP_CONTEXT, IDH_AFSCREDS_NEWTOKENS);
          break;
       }
    return FALSE;

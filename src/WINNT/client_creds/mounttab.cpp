@@ -98,10 +98,6 @@ BOOL CALLBACK Mount_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                break;
             }
          break;
-
-      case WM_HELP:
-         WinHelp (hDlg, g.szHelpFile, HELP_CONTEXT, IDH_AFSCREDS_TAB_DRIVES);
-         break;
       }
    return FALSE;
 }
@@ -382,10 +378,6 @@ BOOL CALLBACK Mapping_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                Mapping_DlgProc (hDlg, WM_HELP, 0, 0);
                break;
             }
-         break;
-
-      case WM_HELP:
-         WinHelp (hDlg, g.szHelpFile, HELP_CONTEXT, IDH_AFSCREDS_MAPDRIVE);
          break;
       }
    return FALSE;

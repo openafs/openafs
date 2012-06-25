@@ -82,10 +82,6 @@ BOOL CALLBACK Advanced_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                break;
             }
          break;
-
-      case WM_HELP:
-         WinHelp (hDlg, g.szHelpFile, HELP_CONTEXT, IDH_AFSCREDS_TAB_ADVANCED);
-         break;
       }
    return FALSE;
 }
