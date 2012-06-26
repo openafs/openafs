@@ -277,7 +277,7 @@ readheader(struct vlheader *headerp)
 	    ntohl(headerp->vital_header.totalEntries[1]);
 
     headerp->SIT = ntohl(headerp->SIT);
-    for (i = 0; i < MAXSERVERID; i++)
+    for (i = 0; i <= MAXSERVERID; i++)
 	headerp->IpMappedAddr[i] = ntohl(headerp->IpMappedAddr[i]);
     for (i = 0; i < HASHSIZE; i++)
 	headerp->VolnameHash[i] = ntohl(headerp->VolnameHash[i]);
@@ -341,7 +341,7 @@ writeheader(struct vlheader *headerp)
 	    htonl(headerp->vital_header.totalEntries[1]);
 
     headerp->SIT = htonl(headerp->SIT);
-    for (i = 0; i < MAXSERVERID; i++)
+    for (i = 0; i <= MAXSERVERID; i++)
 	headerp->IpMappedAddr[i] = htonl(headerp->IpMappedAddr[i]);
     for (i = 0; i < HASHSIZE; i++)
 	headerp->VolnameHash[i] = htonl(headerp->VolnameHash[i]);
@@ -960,7 +960,7 @@ CheckIpAddrs(struct vlheader *header)
 		e = (struct extentaddr *)&(MHblock[j]);
 
 		/* Search the IpMappedAddr array for the reference to this entry */
-		for (ipindex = 0; ipindex < MAXSERVERID; ipindex++) {
+		for (ipindex = 0; ipindex <= MAXSERVERID; ipindex++) {
 		    if (((header->IpMappedAddr[ipindex] & 0xff000000) ==
 			 0xff000000)
 			&&
@@ -971,7 +971,7 @@ CheckIpAddrs(struct vlheader *header)
 			break;
 		    }
 		}
-		if (ipindex >= MAXSERVERID)
+		if (ipindex > MAXSERVERID)
 		    ipindex = -1;
 		else
 		    serveraddrs[ipindex] = -1;
