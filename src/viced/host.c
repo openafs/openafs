@@ -83,6 +83,7 @@ struct enumclient_args {
 
 static void h_SetupCallbackConn_r(struct host * host);
 static int h_threadquota(int);
+static int initInterfaceAddr_r(struct host *, struct interfaceAddr *);
 
 #define CESPERBLOCK 73
 struct CEBlock {		/* block of CESPERBLOCK file entries */
@@ -4006,7 +4007,7 @@ h_CheckHosts(void)
  *
  * The addresses in the interfaceAddr list are in host byte order.
  */
-int
+static int
 initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 {
     int i, j;
