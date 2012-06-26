@@ -366,6 +366,86 @@ BOOL StartTheService (void)
     return (gle == 0);
 }
 
+char *
+FindFullDomainName(const char *short_domain)
+{
+    /*
+     * Possible sources of domain or realm information:
+     *
+     * HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\History
+     *   MachineDomain REG_SZ
+     *
+     * HKLM\SYSTEM\CurrentControlSet\Control\Lsa\CachedMachineNames
+     *   NameUserPrincipal REG_SZ  MACHINE$@DOMAIN
+     *
+     * HKLM\SYSTEM\CurrentControlSet\Control\Lsa\Kerberos\Domains\<DOMAIN>
+    */
+
+    LONG rv;
+    HKEY hk = NULL;
+    DWORD dwType;
+    DWORD dwSize;
+    char * domain;
+    size_t short_domain_len;
+
+    if (short_domain == NULL)
+        return NULL;
+
+    short_domain_len = strlen(short_domain);
+
+    /* First look for this machine's Active Directory domain */
+    rv = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                       "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Group Policy\\History",
+                       0, KEY_READ, &hk);
+    if (rv == ERROR_SUCCESS) {
+        dwType = 0;
+        dwSize = 0;
+        rv = RegQueryValueEx(hk, "MachineDomain", 0, &dwType, NULL, &dwSize);
+        if (rv == ERROR_SUCCESS && dwType == REG_SZ) {
+            domain = malloc(dwSize + 1);
+            if (domain) {
+                dwSize += 1;
+                rv = RegQueryValueEx(hk, "MachineDomain", 0, &dwType, domain, &dwSize);
+                if (rv == ERROR_SUCCESS && dwType == REG_SZ) {
+                    domain[dwSize-1] = '\0';
+                    if (strncmp(short_domain, domain, strlen(short_domain)) == 0 &&
+                        domain[short_domain_len] == '.')
+                    {
+                        RegCloseKey(hk);
+                        return domain;
+                    }
+                }
+                free(domain);
+            }
+        }
+        RegCloseKey(hk);
+    }
+
+    /* Then check the list of configured Kerberos realms, if any */
+    rv = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                       "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Group Policy\\History",
+                       0, KEY_READ, &hk);
+    if (rv == ERROR_SUCCESS) {
+        DWORD index, cch;
+        char  name[256];
+
+        for (index=0; rv==ERROR_SUCCESS; index++) {
+            cch = sizeof(name);
+            rv = RegEnumKeyEx(hk, index, name, &cch, NULL, NULL, NULL, NULL);
+            if (rv == ERROR_SUCCESS &&
+                strncmp(short_domain, name, strlen(short_domain)) == 0 &&
+                name[short_domain_len] == '.') {
+                domain = strdup(name);
+                RegCloseKey(hk);
+                return domain;
+            }
+        }
+        RegCloseKey(hk);
+    }
+
+    return NULL;
+}
+
 /*
  * LOOKUPKEYCHAIN: macro to look up the value in the list of keys in order until it's found
  *   v:variable to receive value (reference type).
@@ -829,8 +909,29 @@ GetDomainLogonOptions( PLUID lpLogonId, BOOLEAN bKerberos,
       doneRealm:
         if (realm) free(realm);
     } else {
-        if ( !ISREMOTE(opt->flags) )
+        /*
+         * If no realm was found and the logon domain is not a valid
+         * realm name (aka LOCALHOST or domain short name, attempt
+         * to identify the full domain name or use the krb5 default
+         * realm.
+         *
+         * Possible sources of domain or realm information:
+         *
+         * HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\History
+         *   MachineDomain REG_SZ
+         *
+         * HKLM\SYSTEM\CurrentControlSet\Control\Lsa\CachedMachineNames
+         *   NameUserPrincipal REG_SZ  MACHINE$@DOMAIN
+         *
+         * HKLM\SYSTEM\CurrentControlSet\Control\Lsa\Kerberos\Domains\<DOMAIN>
+         */
+        if ( !ISREMOTE(opt->flags)) {
             opt->realm = KFW_get_default_realm();
+        } else if ( strchr(domain, '.') == NULL) {
+            opt->realm = FindFullDomainName(domain);
+            if (opt->realm == NULL)
+                opt->realm = KFW_get_default_realm();
+        }
     }
 
     /* Obtain the username mapping (if any) */
