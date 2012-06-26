@@ -2187,14 +2187,11 @@ h_GetHost_r(struct rx_connection *tcon)
 }				/*h_GetHost_r */
 
 
-static char localcellname[PR_MAXNAMELEN + 1];
-
 /* not reentrant */
 void
 h_InitHostPackage(void)
 {
     memset(&nulluuid, 0, sizeof(afsUUID));
-    afsconf_GetLocalCell(confDir, localcellname, PR_MAXNAMELEN);
     rxcon_ident_key = rx_KeyCreate((rx_destructor_t) free);
     rxcon_client_key = rx_KeyCreate((rx_destructor_t) 0);
     MUTEX_INIT(&host_glock_mutex, "host glock", MUTEX_DEFAULT, 0);
