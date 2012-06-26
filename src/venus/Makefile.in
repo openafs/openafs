@@ -10,7 +10,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 KRB5CFLAGS = @KRB5_CPPFLAGS@
-KRB5LIBS = @KRB5_LIBS@
 
 INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/cmd.h \
@@ -96,7 +95,8 @@ afscbint.ss.o: ../fsint/afscbint.ss.c
 
 afsio: afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS}
 	$(MT_CC) $(PTH_LDFLAGS) $(AFS_CFLAGS) -o afsio afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS} \
-		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} ${KRB5LIBS}
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} \
+		$(LDFLAGS_krb5) $(LIB_krb5)
 
 livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
 

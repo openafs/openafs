@@ -74,7 +74,8 @@ clean:
 
 aklog_dynamic_auth: ${AUTH_KRB5_OBJS} ${AFSLIBS} ${AUTHFILES}
 	$(LD) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} \
-		@KRB5_LIBS@ $(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${AKLDFLAGS}
+		$(LDFLAGS_krb5) $(LIB_krb5) \
+		$(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${AKLDFLAGS}
 
 afs_dynamic_auth: ${AUTH_OBJS} ${AFSLIBS} ${AUTHFILES}
 	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} \

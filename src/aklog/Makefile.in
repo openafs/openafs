@@ -9,7 +9,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS=@KRB5_CPPFLAGS@ -DALLOW_REGISTER
 
-AKLIBS= ${LIBS} @KRB5_LDFLAGS@ @KRB5_LIBS@
+AKLIBS= ${LIBS} $(LDFLAGS_krb5) $(LIB_krb5)
 AFSLIBS= ${TOP_LIBDIR}/libafsauthent.a \
          ${TOP_LIBDIR}/libafsrpc.a \
 	 ${TOP_LIBDIR}/libafshcrypto.a \
