@@ -364,37 +364,6 @@ STEST_NewWhoAmI(struct rx_call *call, char **result)
    return 0;
 }
 
-void
-startServer(char *configPath)
-{
-    struct rx_securityClass **classes;
-    afs_int32 numClasses;
-    int code;
-    struct rx_service *service;
-
-    globalDir = afsconf_Open(configPath);
-    if (globalDir == NULL) {
-	fprintf(stderr, "Server: Unable to open config directory\n");
-	exit(1);
-    }
-
-    code = rx_Init(htons(TEST_PORT));
-    if (code != 0) {
-	fprintf(stderr, "Server: Unable to initialise RX\n");
-        exit(1);
-    }
-
-    afsconf_BuildServerSecurityObjects(globalDir, &classes, &numClasses);
-    service = rx_NewService(0, TEST_SERVICE_ID, "test", classes, numClasses,
-			    TEST_ExecuteRequest);
-    if (service == NULL) {
-	fprintf(stderr, "Server: Unable to start to test service\n");
-	exit(1);
-    }
-
-    rx_StartServer(1);
-}
-
 int main(int argc, char **argv)
 {
     struct afsconf_dir *dir;
@@ -406,7 +375,9 @@ int main(int argc, char **argv)
 
     if (argc == 3 ) {
         if (strcmp(argv[1], "-server") == 0) {
-            startServer(argv[2]);
+	    globalDir = afsconf_Open(argv[2]);
+	    afstest_StartTestRPCService(argv[2], TEST_PORT, TEST_SERVICE_ID,
+					TEST_ExecuteRequest);
             exit(0);
         } else if (strcmp(argv[1], "-client") == 0) {
             startClient(argv[2]);

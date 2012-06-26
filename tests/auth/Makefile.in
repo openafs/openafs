@@ -25,6 +25,7 @@ authcon-t: authcon-t.o ../common/config.o
 superuser-t: superuser-t.o ../common/config.o ../common/rxkad.o \
 	     test.cs.o test.ss.o test.xdr.o
 	$(AFS_LDRULE) superuser-t.o ../common/config.o ../common/rxkad.o \
+		../common/servers.o \
 		test.cs.o test.ss.o test.xdr.o \
 		$(MODULE_LIBS)
 

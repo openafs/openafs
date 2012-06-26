@@ -7,6 +7,10 @@
 #include <sys/wait.h>
 #endif
 
+#include <rx/rx.h>
+
+#include <afs/cellconfig.h>
+
 #include "common.h"
 
 /* Start up the VLserver, using the configuration in dirname, and putting our
@@ -62,4 +66,41 @@ afstest_StopServer(pid_t serverPid)
 	return -1;
     }
     return 0;
+}
+
+int
+afstest_StartTestRPCService(const char *configPath,
+			    u_short port,
+			    u_short serviceId,
+			    afs_int32 (*proc) (struct rx_call *))
+{
+    struct afsconf_dir *dir;
+    struct rx_securityClass **classes;
+    afs_int32 numClasses;
+    int code;
+    struct rx_service *service;
+
+    dir = afsconf_Open(configPath);
+    if (dir == NULL) {
+        fprintf(stderr, "Server: Unable to open config directory\n");
+        return -1;
+    }
+
+    code = rx_Init(htons(port));
+    if (code != 0) {
+	fprintf(stderr, "Server: Unable to initialise RX\n");
+	return -1;
+    }
+
+    afsconf_BuildServerSecurityObjects(dir, &classes, &numClasses);
+    service = rx_NewService(0, serviceId, "test", classes, numClasses,
+                            proc);
+    if (service == NULL) {
+        fprintf(stderr, "Server: Unable to start to test service\n");
+        return -1;
+    }
+
+    rx_StartServer(1);
+
+    return 0; /* Not reached, we donated ourselves to StartServer */
 }

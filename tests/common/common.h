@@ -37,8 +37,11 @@ extern struct rx_securityClass
 				afs_uint32 startTime, afs_uint32 endTime);
 /* servers.c */
 
+struct rx_call;
 extern int afstest_StartVLServer(char *dirname, pid_t *serverPid);
 extern int afstest_StopServer(pid_t serverPid);
+extern int afstest_StartTestRPCService(const char *, u_short, u_short,
+				       afs_int32 (*proc)(struct rx_call *));
 
 /* ubik.c */
 struct ubik_client;
