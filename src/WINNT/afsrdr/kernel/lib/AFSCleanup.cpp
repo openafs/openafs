@@ -65,6 +65,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
     AFSDeviceExt *pControlDeviceExt = NULL;
     IO_STATUS_BLOCK stIoSB;
     AFSObjectInfoCB *pObjectInfo = NULL;
+    AFSObjectInfoCB *pParentObjectInfo = NULL;
     AFSFileCleanupCB stFileCleanup;
     AFSFileCleanupResultCB *pResultCB = NULL;
     ULONG ulResultLen = 0;
@@ -461,22 +462,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
-                        ASSERT( pObjectInfo->ParentObjectInformation != NULL);
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
-                        AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        ASSERT( pParentObjectInfo != NULL);
+
+                        AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                         TRUE);
 
-                        if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                        if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
                         {
 
-                            SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                            SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                            pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                            pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
                         }
                         else
                         {
 
-                            pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                            pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
                         }
 
                         //
@@ -493,7 +496,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                           pCcb->DirectoryCB,
                                           &pCcb->DirectoryCB->NameInformation.FileName);
 
-                            AFSRemoveNameEntry( pObjectInfo->ParentObjectInformation,
+                            AFSRemoveNameEntry( pParentObjectInfo,
                                                 pCcb->DirectoryCB);
                         }
                         else
@@ -506,9 +509,9 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                           &pCcb->DirectoryCB->NameInformation.FileName);
                         }
 
-                        AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                        AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                        AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
+                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                                         pCcb,
                                                         (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
                                                         (ULONG)FILE_ACTION_REMOVED);
@@ -585,21 +588,23 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     if ( NT_SUCCESS( ntStatus))
                     {
 
-                        if ( pObjectInfo->ParentObjectInformation != NULL)
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                        if ( pParentObjectInfo != NULL)
                         {
 
-                            AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                             TRUE);
 
-                            if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
+                            if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
                             {
 
-                                SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                                pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
                             }
 
-                            AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                            AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
                         }
                     }
 
@@ -629,17 +634,19 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the open child handle count
                 //
 
-                if( pObjectInfo->ParentObjectInformation != NULL)
+                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                if( pParentObjectInfo != NULL)
                 {
 
-                    ASSERT( pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0);
+                    ASSERT( pParentObjectInfo->Specific.Directory.ChildOpenHandleCount > 0);
 
-                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (File) Decrement child open handle count on Parent object %08lX Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
+                                  pParentObjectInfo,
                                   lCount);
                 }
 
@@ -811,22 +818,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
-                        ASSERT( pObjectInfo->ParentObjectInformation != NULL);
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
-                        AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        ASSERT( pParentObjectInfo != NULL);
+
+                        AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                         TRUE);
 
-                        if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                        if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
                         {
 
-                            SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                            SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                            pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                            pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
                         }
                         else
                         {
 
-                            pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                            pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
                         }
 
                         //
@@ -837,7 +846,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
                         {
 
-                            AFSRemoveNameEntry( pObjectInfo->ParentObjectInformation,
+                            AFSRemoveNameEntry( pParentObjectInfo,
                                                 pCcb->DirectoryCB);
                         }
                         else
@@ -850,9 +859,9 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                           &pCcb->DirectoryCB->NameInformation.FileName);
                         }
 
-                        AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                        AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                        AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
+                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                                         pCcb,
                                                         (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
                                                         (ULONG)FILE_ACTION_REMOVED);
@@ -875,12 +884,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ClearFlag( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
 
-                        if(  pObjectInfo->ParentObjectInformation != NULL)
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                        if(  pParentObjectInfo != NULL)
                         {
 
                             ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
 
-                            AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
+                            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                                             pCcb,
                                                             (ULONG)ulNotifyFilter,
                                                             (ULONG)FILE_ACTION_MODIFIED);
@@ -906,21 +917,23 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     if ( NT_SUCCESS( ntStatus))
                     {
 
-                        if ( pObjectInfo->ParentObjectInformation != NULL)
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                        if ( pParentObjectInfo != NULL)
                         {
 
-                            AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                               TRUE);
 
-                            if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
+                            if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
                             {
 
-                                SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                                pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
                             }
 
-                            AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                            AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
                         }
                     }
 
@@ -958,17 +971,19 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the open child handle count
                 //
 
-                if( pObjectInfo->ParentObjectInformation != NULL)
+                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                if( pParentObjectInfo != NULL)
                 {
 
-                    ASSERT( pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0);
+                    ASSERT( pParentObjectInfo->Specific.Directory.ChildOpenHandleCount > 0);
 
-                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Dir) Decrement child open handle count on Parent object %08lX Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
+                                  pParentObjectInfo,
                                   lCount);
                 }
 
@@ -1111,21 +1126,23 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
-                        ASSERT( pObjectInfo->ParentObjectInformation != NULL);
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
-                        AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        ASSERT( pParentObjectInfo != NULL);
+
+                        AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                         TRUE);
 
-                        if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
+                        if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1)
                         {
 
-                            SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                            SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                            pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                            pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
                         }
                         else
                         {
-                            pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
+                            pParentObjectInfo->DataVersion.QuadPart = pResultCB->ParentDataVersion.QuadPart;
                         }
 
                         //
@@ -1136,7 +1153,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         if( !BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_NOT_IN_PARENT_TREE))
                         {
 
-                            AFSRemoveNameEntry( pObjectInfo->ParentObjectInformation,
+                            AFSRemoveNameEntry( pParentObjectInfo,
                                                 pCcb->DirectoryCB);
                         }
                         else
@@ -1149,9 +1166,9 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                           &pCcb->DirectoryCB->NameInformation.FileName);
                         }
 
-                        AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                        AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-                        AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
+                        AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                                         pCcb,
                                                         (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
                                                         (ULONG)FILE_ACTION_REMOVED);
@@ -1174,12 +1191,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         ClearFlag( pFcb->Flags, AFS_FCB_FLAG_FILE_MODIFIED);
 
-                        if(  pObjectInfo->ParentObjectInformation != NULL)
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                        if(  pParentObjectInfo != NULL)
                         {
 
                             ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);
 
-                            AFSFsRtlNotifyFullReportChange( pObjectInfo->ParentObjectInformation,
+                            AFSFsRtlNotifyFullReportChange( pParentObjectInfo,
                                                             pCcb,
                                                             (ULONG)ulNotifyFilter,
                                                             (ULONG)FILE_ACTION_MODIFIED);
@@ -1205,21 +1224,23 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     if ( NT_SUCCESS( ntStatus))
                     {
 
-                        if ( pObjectInfo->ParentObjectInformation != NULL)
+                        pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                        if ( pParentObjectInfo != NULL)
                         {
 
-                            AFSAcquireExcl( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                               TRUE);
 
-                            if ( pObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
+                            if ( pParentObjectInfo->DataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart)
                             {
 
-                                SetFlag( pObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                                SetFlag( pParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                                pObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                                pParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
                             }
 
-                            AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                            AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
                         }
                     }
 
@@ -1249,17 +1270,19 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the open child handle count
                 //
 
-                if( pObjectInfo->ParentObjectInformation != NULL)
+                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                if( pParentObjectInfo != NULL)
                 {
 
-                    ASSERT( pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0);
+                    ASSERT( pParentObjectInfo->Specific.Directory.ChildOpenHandleCount > 0);
 
-                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (MP/SL) Decrement child open handle count on Parent object %08lX Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
+                                  pParentObjectInfo,
                                   lCount);
                 }
 
@@ -1294,16 +1317,18 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the open child handle count
                 //
 
-                if( pObjectInfo->ParentObjectInformation != NULL &&
-                    pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount > 0)
+                pParentObjectInfo = pObjectInfo->ParentObjectInformation;
+
+                if( pParentObjectInfo != NULL &&
+                    pParentObjectInfo->Specific.Directory.ChildOpenHandleCount > 0)
                 {
 
-                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenHandleCount);
+                    lCount = InterlockedDecrement( &pParentObjectInfo->Specific.Directory.ChildOpenHandleCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup (Share) Decrement child open handle count on Parent object %08lX Cnt %d\n",
-                                  pObjectInfo->ParentObjectInformation,
+                                  pParentObjectInfo,
                                   lCount);
                 }
 
