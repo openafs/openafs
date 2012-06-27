@@ -61,6 +61,7 @@ extern int LogLevel;
 extern struct afsconf_dir *confDir;	/* config dir object */
 extern int lwps;		/* the max number of server threads */
 extern afsUUID FS_HostUUID;
+extern char *FS_configPath;
 
 afsUUID nulluuid;
 int CEs = 0;			/* active clients */
@@ -266,9 +267,11 @@ hpr_Initialize(struct ubik_client **uclient)
     afs_int32 i;
     char cellstr[64];
 
-    tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    tdir = afsconf_Open(FS_configPath);
     if (!tdir) {
-	ViceLog(0, ("hpr_Initialize: Could not open configuration directory: %s", AFSDIR_SERVER_ETC_DIRPATH));
+	ViceLog(0,
+		("hpr_Initialize: Could not open configuration directory: %s",
+		 FS_configPath));
 	return -1;
     }
 

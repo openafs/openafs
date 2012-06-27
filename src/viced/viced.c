@@ -180,6 +180,7 @@ pthread_key_t viced_uclient_key;
 #define ADDRSPERSITE 16		/* Same global is in rx/rx_user.c */
 
 char FS_HostName[128] = "localhost";
+char *FS_configPath = NULL;
 afs_uint32 FS_HostAddr_NBO;
 afs_uint32 FS_HostAddr_HBO;
 afs_uint32 FS_HostAddrs[ADDRSPERSITE], FS_HostAddr_cnt = 0, FS_registered = 0;
@@ -1835,10 +1836,12 @@ main(int argc, char *argv[])
 	exit(1);
     }
 #endif
-    confDir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    FS_configPath = strdup(AFSDIR_SERVER_ETC_DIRPATH);
+
+    confDir = afsconf_Open(FS_configPath);
     if (!confDir) {
 	fprintf(stderr, "Unable to open config directory %s\n",
-		AFSDIR_SERVER_ETC_DIRPATH);
+		FS_configPath);
 	exit(-1);
     }
 
