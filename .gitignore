@@ -46,6 +46,7 @@ config.log
 /config.status
 /configure
 /configure-libafs
+/cscope.out
 /include
 /lib
 /autom4te.cache

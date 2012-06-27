@@ -42,6 +42,9 @@ only_libafs_tree: force
 buildtools: force
 	$(MAKE) build TARGET=build_tools COMPILE_PART2B=buildtools
 
+cscope:
+	( cd src ; cscope -b -R )
+
 generated: force buildtools
 	+${COMPILE_PART1} afs ${COMPILE_GENERATED}
 	+${COMPILE_PART1} auth ${COMPILE_GENERATED}
@@ -783,6 +786,7 @@ clean2:
 	-${COMPILE_PART1} crypto/hcrypto ${COMPILE_CLEAN}
 	-${COMPILE_PART1} roken ${COMPILE_CLEAN}
 	-${COMPILE_PART1} crypto/rfc3961 ${COMPILE_CLEAN}
+	-(cd src; /bin/rm cscope.out)
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx)
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
