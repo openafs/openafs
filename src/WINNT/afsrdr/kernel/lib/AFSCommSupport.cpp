@@ -2252,6 +2252,7 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
     AFSFileEvalResultCB *pEvalResultCB = NULL;
     AFSDirEnumEntry *pDirEnumCB = NULL;
     ULONG ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
+    AFSObjectInfoCB *pParentInfo = NULL;
 
     __Enter
     {
@@ -2259,10 +2260,12 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         RtlZeroMemory( &stTargetID,
                        sizeof( AFSEvalTargetCB));
 
-        if( ObjectInfo->ParentObjectInformation != NULL)
+        pParentInfo = ObjectInfo->ParentObjectInformation;
+
+        if( pParentInfo != NULL)
         {
 
-            stTargetID.ParentId = ObjectInfo->ParentObjectInformation->FileId;
+            stTargetID.ParentId = pParentInfo->FileId;
         }
 
         //
@@ -2312,17 +2315,17 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
             if( ntStatus == STATUS_OBJECT_PATH_INVALID)
             {
 
-                if( ObjectInfo->ParentObjectInformation != NULL)
+                if( pParentInfo != NULL)
                 {
 
-                    AFSAcquireExcl( ObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                    AFSAcquireExcl( pParentInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                     TRUE);
 
-                    SetFlag( ObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                    SetFlag( pParentInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                    ObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                    pParentInfo->DataVersion.QuadPart = (ULONGLONG)-1;
 
-                    AFSReleaseResource( ObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                    AFSReleaseResource( pParentInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
                 }
             }
 
@@ -2333,21 +2336,21 @@ AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
         // Validate the parent data version
         //
 
-        if ( ObjectInfo->ParentObjectInformation != NULL)
+        if ( pParentInfo != NULL)
         {
 
-            AFSAcquireExcl( ObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+            AFSAcquireExcl( pParentInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                             TRUE);
 
-            if ( ObjectInfo->ParentObjectInformation->DataVersion.QuadPart != pEvalResultCB->ParentDataVersion.QuadPart)
+            if ( pParentInfo->DataVersion.QuadPart != pEvalResultCB->ParentDataVersion.QuadPart)
             {
 
-                SetFlag( ObjectInfo->ParentObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                SetFlag( pParentInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
 
-                ObjectInfo->ParentObjectInformation->DataVersion.QuadPart = (ULONGLONG)-1;
+                pParentInfo->DataVersion.QuadPart = (ULONGLONG)-1;
             }
 
-            AFSReleaseResource( ObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+            AFSReleaseResource( pParentInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
 
         //

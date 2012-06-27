@@ -2262,12 +2262,12 @@ AFSSetRenameInfo( IN PIRP Irp)
 
         if( pTargetParentObject != pSrcParentObject)
         {
-            AFSAcquireExcl( pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+            AFSAcquireExcl( pSrcParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
                             TRUE);
 
             bReleaseSourceDirLock = TRUE;
 
-            pSourceDirLock = pSrcFcb->ObjectInformation->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock;
+            pSourceDirLock = pSrcParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock;
         }
 
         AFSLocateCaseSensitiveDirEntry( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,

@@ -1643,9 +1643,11 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 // on the entry
                 //
 
-                ASSERT( pCurrentObject->ParentObjectInformation != NULL);
+                pParentObjectInfo = pCurrentObject->ParentObjectInformation;
 
-                AFSAcquireExcl( pCurrentObject->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                ASSERT( pParentObjectInfo != NULL);
+
+                AFSAcquireExcl( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                 TRUE);
 
                 AFSAcquireExcl( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock,
@@ -1667,7 +1669,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     // Remove and delete the directory entry from the parent list
                     //
 
-                    AFSDeleteDirEntry( pCurrentObject->ParentObjectInformation,
+                    AFSDeleteDirEntry( pParentObjectInfo,
                                        pDirEntry);
 
                     if( pCurrentObject->ObjectReferenceCount <= 0)
@@ -1699,11 +1701,11 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
 
                     SetFlag( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED);
 
-                    AFSRemoveNameEntry( pCurrentObject->ParentObjectInformation,
+                    AFSRemoveNameEntry( pParentObjectInfo,
                                         pDirEntry);
                 }
 
-                AFSReleaseResource( pCurrentObject->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
+                AFSReleaseResource( pParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                 AFSReleaseResource( pCurrentObject->VolumeCB->ObjectInfoTree.TreeLock);
 
