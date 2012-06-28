@@ -73,7 +73,7 @@ housing the directory F</afs/abc.com/usr/smith>:
 
 The issuer must have the C<r> (read) permission on the ACL of the root
 directory of the volume that houses the file or directory named by the
-B<-path> argument, and C<l> (list) permission on the ACL of each 
+B<-path> argument, and C<l> (list) permission on the ACL of each
 directory that precedes it in the pathname.
 
 =head1 SEE ALSO
