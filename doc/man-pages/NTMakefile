@@ -352,6 +352,10 @@ clean::
         $(CD) html
         $(DEL) /s *.html
         $(CD) ..
+        $(DEL) pod1\fs_listquota.pod
+        $(DEL) pod1\fs_quota.pod
+        $(DEL) pod1\fs_setquota.pod
+        $(DEL) pod1\fs_setvol.pod
         $(DEL) pod1\pts_adduser.pod
         $(DEL) pod1\pts_chown.pod
         $(DEL) pod1\pts_creategroup.pod
@@ -370,8 +374,15 @@ clean::
         $(DEL) pod1\pts_setmax.pod
         $(DEL) pod1\pts_sleep.pod
         $(DEL) pod1\pts_source.pod
+        $(DEL) pod1\vos.pod
         $(DEL) pod1\vos_addsite.pod
+        $(DEL) pod1\vos_clone.pod
         $(DEL) pod1\vos_copy.pod
+        $(DEL) pod1\vos_create.pod
+        $(DEL) pod1\vos_examine.pod
+        $(DEL) pod1\vos_move.pod
+        $(DEL) pod1\vos_partinfo.pod
+        $(DEL) pod1\vos_shadow.pod
         $(DEL) pod1\vos_zap.pod
         $(DEL) pod8\dafileserver.pod
         $(DEL) pod8\dasalvager.pod

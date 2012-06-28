@@ -2,6 +2,10 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
+/fs_listquota.pod
+/fs_quota.pod
+/fs_setquota.pod
+/fs_setvol.pod
 /pts_adduser.pod
 /pts_chown.pod
 /pts_creategroup.pod
@@ -20,6 +24,13 @@
 /pts_setmax.pod
 /pts_sleep.pod
 /pts_source.pod
+/vos.pod
 /vos_addsite.pod
 /vos_copy.pod
+/vos_clone.pod
+/vos_create.pod
+/vos_examine.pod
+/vos_move.pod
+/vos_partinfo.pod
+/vos_shadow.pod
 /vos_zap.pod

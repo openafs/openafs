@@ -87,7 +87,7 @@ confirmation of the kill signal:
 To confirm termination of the operation, press Ctrl-C a second time; press
 any other key to continue the operation.
 
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
+=include fragments/volsize-caution.pod
 
 =head1 OPTIONS
 
