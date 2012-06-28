@@ -1,0 +1,99 @@
+=head1 NAME
+
+fs_bypassthreshold - get/set Cache Bypass file size threshold
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs bypassthreshold> S<<< [B<-size> <I<file size>>] >>> [B<-help>]
+
+B<fs bypassthresh> S<<< [B<-s> <I<file size>>] >>> [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs bypassthreshold> command either changes the AFS client Cache
+Bypass file size threshold, or reports the current threshold. Normally,
+when an application tries to read data via the OpenAFS client, the client
+will fetch the required data from the fileserver, store the results in
+the local cache, and then serve the application request from the local
+cache. When the Cache Bypass feature is enabled, certain files will be
+read directly from the network, and the data will not be saved to the
+local cache. In some scenarios, this can provide a significant
+performance improvement, especially if the data is only read once.
+
+Currently, the only way to specify which files should bypass the cache
+and which files should not, is by file size. In the future, different
+mechanisms may exist for specifying which files should bypass the local
+cache and which should not.
+
+If B<-size> is not specified, B<fs bypassthreshold> just reports the
+current threshold and exits.
+
+=head1 CAUTIONS
+
+Cache Bypass is still considered an experimental feature. Even in stable
+releases of OpenAFS, it is not considered as stable as the rest of OpenAFS.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-size> <I<file size>>
+
+Specifies how large a file must be in order to enable Cache Bypass mode.
+If a file is larger than the specified file size (in bytes), reading from
+that file will bypass the local cache and be read directly from the
+network. A file size of -1 indicates that Cache Bypass should be disabled
+complete, so no files will enable Cache Bypass mode, no matter how large
+they are.
+
+By default, Cache Bypass is disabled.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output format is identical whether or not B<-size> was specified. If
+B<-size> is specified, the bypass threshold is changed, and the output
+represents the new, changed, threshold. Otherwise the output represents
+the current threshold.
+
+=head1 EXAMPLES
+
+The following example turns on Cache Bypass with a threshold of 4KiB:
+
+   % fs bypassthreshold 4096
+   Cache bypass threshold 4096
+
+The following example disables Cache Bypass:
+
+   % fs bypassthreshold -1
+   Cache bypass threshold -1 (disabled)
+
+The following example examines the current Cache Bypass threshold:
+
+   % fs bypassthreshold
+   Cache bypass threshold 4096
+
+=head1 PRIVILEGE REQUIRED
+
+To set the bypass threshold, the issuer must be logged in as the local
+superuser C<root>. Otherwise, no privilege is required.
+
+=head1 COPYRIGHT
+
+Copyright 2012 Sine Nomine Associates
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Andrew Deason for
+OpenAFS.
