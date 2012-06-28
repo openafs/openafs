@@ -89,6 +89,12 @@ afs_int32 maxentries;
 int serveraddrs[MAXSERVERID + 2];
 u_char serverxref[MAXSERVERID + 2];  /**< to resolve cross-linked mh entries */
 
+struct mhinfo {
+    afs_uint32 addr;			/**< vldb file record */
+    char orphan[VL_MHSRV_PERBLK];	/**< unreferenced mh enties */
+} mhinfo[VL_MAX_ADDREXTBLKS];
+
+
 /*  Used to control what goes to stdout based on quiet flag */
 void
 quiet_println(const char *fmt,...) {
@@ -354,18 +360,20 @@ writeheader(struct vlheader *headerp)
 }
 
 void
-readMH(afs_int32 addr, struct extentaddr *mhblockP)
+readMH(afs_uint32 addr, int block, struct extentaddr *mhblockP)
 {
     int i, j;
     struct extentaddr *e;
 
     vldbread(addr, (char *)mhblockP, VL_ADDREXTBLK_SIZE);
 
-    mhblockP->ex_count = ntohl(mhblockP->ex_count);
-    mhblockP->ex_flags = ntohl(mhblockP->ex_flags);
-    for (i = 0; i < VL_MAX_ADDREXTBLKS; i++)
-	mhblockP->ex_contaddrs[i] = ntohl(mhblockP->ex_contaddrs[i]);
-
+    if (block == 0) {
+        mhblockP->ex_count = ntohl(mhblockP->ex_count);
+        mhblockP->ex_flags = ntohl(mhblockP->ex_flags);
+        for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
+	    mhblockP->ex_contaddrs[i] = ntohl(mhblockP->ex_contaddrs[i]);
+        }
+    }
     for (i = 1; i < VL_MHSRV_PERBLK; i++) {
 	e = &(mhblockP[i]);
 
@@ -467,6 +475,33 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 	}
     }
     return;
+}
+
+void
+writeMH(afs_int32 addr, int block, struct extentaddr *mhblockP)
+{
+    int i, j;
+    struct extentaddr *e;
+
+    if (verbose) {
+	quiet_println("Writing back MH block % at addr %u\n", block,  addr);
+    }
+    if (block == 0) {
+	mhblockP->ex_count = htonl(mhblockP->ex_count);
+	mhblockP->ex_flags = htonl(mhblockP->ex_flags);
+	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
+	    mhblockP->ex_contaddrs[i] = htonl(mhblockP->ex_contaddrs[i]);
+	}
+    }
+    for (i = 1; i < VL_MHSRV_PERBLK; i++) {
+	e = &(mhblockP[i]);
+	/* hostuuid was not converted */
+	e->ex_uniquifier = htonl(e->ex_uniquifier);
+	for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
+	    e->ex_addrs[j] = htonl(e->ex_addrs[j]);
+	}
+    }
+    vldbwrite(addr, (char *)mhblockP, VL_ADDREXTBLK_SIZE);
 }
 
 void
@@ -891,7 +926,6 @@ CheckIpAddrs(struct vlheader *header)
     int mhblocks = 0;
     afs_int32 i, j, m, rindex;
     afs_int32 mhentries, regentries;
-    afs_uint32 caddrs[VL_MAX_ADDREXTBLKS];
     char mhblock[VL_ADDREXTBLK_SIZE];
     struct extentaddr *MHblock = (struct extentaddr *)mhblock;
     struct extentaddr *e;
@@ -907,7 +941,7 @@ CheckIpAddrs(struct vlheader *header)
 	/* Read the first MH block and from it, gather the
 	 * addresses of all the mh blocks.
 	 */
-	readMH(header->SIT, MHblock);
+	readMH(header->SIT, 0, MHblock);
 	if (MHblock->ex_flags != VLCONTBLOCK) {
 	   log_error
 		(VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
@@ -915,32 +949,32 @@ CheckIpAddrs(struct vlheader *header)
 	}
 
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
-	    caddrs[i] = MHblock->ex_contaddrs[i];
+	    mhinfo[i].addr = MHblock->ex_contaddrs[i];
 	}
 
-	if (header->SIT != caddrs[0]) {
+	if (header->SIT != mhinfo[0].addr) {
 	   log_error
 		(VLDB_CHECK_ERROR,"MH block does not point to self %u in header, %u in block\n",
-		 header->SIT, caddrs[0]);
+		 header->SIT, mhinfo[0].addr);
 	}
 
 	/* Now read each MH block and record it in the record array */
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
-	    if (!caddrs[i])
+	    if (!mhinfo[i].addr)
 		continue;
 
-	    readMH(caddrs[i], MHblock);
+	    readMH(mhinfo[i].addr, i, MHblock);
 	    if (MHblock->ex_flags != VLCONTBLOCK) {
 	        log_error
 		    (VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		     header->SIT);
 	    }
 
-	    rindex = caddrs[i] / sizeof(vlentry);
-	    if (record[rindex].addr != caddrs[i] && record[rindex].addr) {
+	    rindex = mhinfo[i].addr / sizeof(vlentry);
+	    if (record[rindex].addr != mhinfo[i].addr && record[rindex].addr) {
 	        log_error
 		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
-		     record[rindex].addr, caddrs[i], rindex);
+		     record[rindex].addr, mhinfo[i].addr, rindex);
 	    }
 	    if (record[rindex].type & FRC) {
 	        log_error
@@ -999,6 +1033,7 @@ CheckIpAddrs(struct vlheader *header)
 		if (ipaddrs) {
 		    mhentries++;
 		    if (ipindex == -1) {
+		        mhinfo[i].orphan[j] = 1;
 		        log_error
 			    (VLDB_CHECK_ERROR,"MH block %d, index %d: Not referenced by server addrs\n",
 			     i, j);
@@ -1045,7 +1080,7 @@ CheckIpAddrs(struct vlheader *header)
 		   log_error
 			(VLDB_CHECK_ERROR,"IP Addr for entry %d: Multihome block is bad (%d)\n",
 			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
-		if (caddrs[(header->IpMappedAddr[i] & 0x00ff0000) >> 16] == 0)
+		if (mhinfo[(header->IpMappedAddr[i] & 0x00ff0000) >> 16].addr == 0)
 		    log_error(VLDB_CHECK_ERROR,"IP Addr for entry %d: No such multihome block (%d)\n",
 			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
 		if (((header->IpMappedAddr[i] & 0x0000ffff) > VL_MHSRV_PERBLK)
@@ -1211,6 +1246,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     record = (struct er *)malloc(maxentries * sizeof(struct er));
     memset(record, 0, (maxentries * sizeof(struct er)));
     memset(serveraddrs, 0, sizeof(serveraddrs));
+    memset(mhinfo, 0, sizeof(mhinfo));
     for (i = 0; i <= MAXSERVERID; i++) {
 	serverxref[i] = BADSERVERID;
     }
@@ -1485,6 +1521,30 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    header.VolidHash[j][hash] = record[i].addr;
 		}
 		writeentry(record[i].addr, &vlentry);
+	    }
+	}
+	else if (record[i].type & MH) {
+	    int block, index;
+	    char mhblock[VL_ADDREXTBLK_SIZE];
+	    struct extentaddr *MHblock = (struct extentaddr *)mhblock;
+
+	    if (fix) {
+		for (block = 0; block < VL_MAX_ADDREXTBLKS; block++) {
+		    if (mhinfo[block].addr == record[i].addr)
+			break;
+		}
+		if (block == VL_MAX_ADDREXTBLKS) {
+		    continue;  /* skip orphaned extent block */
+		}
+		readMH(record[i].addr, block, MHblock);
+		for (index = 0; index < VL_MHSRV_PERBLK; index++) {
+		    if (mhinfo[block].orphan[index]) {
+			quiet_println("FIX: Removing unreferenced mh entry; block %d, index %d\n",
+				block, index);
+			memset(&(MHblock[index]), 0, sizeof(struct extentaddr));
+		    }
+		}
+		writeMH(record[i].addr, block, MHblock);
 	    }
 	}
     }
