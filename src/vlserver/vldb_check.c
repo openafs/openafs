@@ -103,14 +103,6 @@ log_error(int eval, const char *fmt, ...)
 }
 
 
-#if 0
-int
-writeUbikHeader()
-{
-    /* Bump the version number?? We could cheat and push a new db... */
-}
-#endif
-
 #define HDRSIZE 64
 int
 readUbikHeader(void)
@@ -480,61 +472,6 @@ writeentry(afs_int32 addr, struct nvlentry *vlentryp)
 	vlentryp->serverFlags[i] = vlentryp->serverFlags[i] ;
     }
     vldbwrite(addr, (char *)vlentryp, sizeof(*vlentryp));
-}
-
-void
-readSIT(int base, int addr)
-{
-    int i, j, a;
-    char sitbuf[VL_ADDREXTBLK_SIZE];
-    struct extentaddr *extent;
-
-    if (!addr)
-	return;
-    vldbread(addr, sitbuf, VL_ADDREXTBLK_SIZE);
-    extent = (struct extentaddr *)sitbuf;
-
-    quiet_println("multihome info block: base %d\n", base);
-    if (base == 0) {
-	quiet_println("   count = %u\n", ntohl(extent->ex_count));
-	quiet_println("   flags = %u\n", ntohl(extent->ex_hdrflags));
-	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
-	    quiet_println("   contaddrs[%d] = %u\n", i,
-		   ntohl(extent->ex_contaddrs[i]));
-	}
-    }
-    for (i = 1; i < VL_MHSRV_PERBLK; i++) {
-	/* should we skip this entry */
-	for (j = 0; j < VL_MAX_ADDREXTBLKS; j++) {
-	    if (extent[i].ex_addrs[j])
-		break;
-	}
-	if (j >= VL_MAX_ADDREXTBLKS)
-	    continue;
-
-	quiet_println("   base %d index %d:\n", base, i);
-
-	quiet_println("       afsuuid    = (%x %x %x /%d/%d/ /%x/%x/%x/%x/%x/%x/)\n",
-	       ntohl(extent[i].ex_hostuuid.time_low),
-	       ntohl(extent[i].ex_hostuuid.time_mid),
-	       ntohl(extent[i].ex_hostuuid.time_hi_and_version),
-	       ntohl(extent[i].ex_hostuuid.clock_seq_hi_and_reserved),
-	       ntohl(extent[i].ex_hostuuid.clock_seq_low),
-	       ntohl(extent[i].ex_hostuuid.node[0]),
-	       ntohl(extent[i].ex_hostuuid.node[1]),
-	       ntohl(extent[i].ex_hostuuid.node[2]),
-	       ntohl(extent[i].ex_hostuuid.node[3]),
-	       ntohl(extent[i].ex_hostuuid.node[4]),
-	       ntohl(extent[i].ex_hostuuid.node[5]));
-	quiet_println("       uniquifier = %u\n", ntohl(extent[i].ex_uniquifier));
-	for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
-	    a = ntohl(extent[i].ex_addrs[j]);
-	    if (a) {
-		quiet_println("       %d.%d.%d.%d\n", (a >> 24) & 0xff,
-		       (a >> 16) & 0xff, (a >> 8) & 0xff, (a) & 0xff);
-	    }
-	}
-    }
 }
 
 /*
