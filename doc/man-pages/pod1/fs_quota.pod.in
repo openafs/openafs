@@ -26,7 +26,7 @@ To set volume quota, use the B<fs setquota> or B<fs setvol> command.
 
 =head1 CAUTIONS
 
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
+=include fragments/volsize-caution.pod
 
 =head1 OPTIONS
 
