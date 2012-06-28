@@ -58,7 +58,7 @@ B<vos move>, B<vos dump>, or other B<vos> commands.
 Some commands do not work properly on clone volumes. B<vos move> is one
 such command.
 
-Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
+=include fragments/volsize-caution.pod
 
 =head1 OPTIONS
 
