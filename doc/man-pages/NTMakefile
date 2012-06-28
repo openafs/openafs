@@ -37,6 +37,7 @@ PODS = \
         pod1\dlog.pod                  \
         pod1\fs.pod                    \
         pod1\fs_apropos.pod            \
+        pod1\fs_bypassthreshold.pod    \
         pod1\fs_checkservers.pod       \
         pod1\fs_checkvolumes.pod       \
         pod1\fs_chgrp.pod              \
