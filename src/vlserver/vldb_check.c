@@ -87,6 +87,7 @@ struct er {
 } *record;
 afs_int32 maxentries;
 int serveraddrs[MAXSERVERID + 2];
+u_char serverxref[MAXSERVERID + 2];  /**< to resolve cross-linked mh entries */
 
 /*  Used to control what goes to stdout based on quiet flag */
 void
@@ -957,23 +958,24 @@ CheckIpAddrs(struct vlheader *header)
 	     */
 	    mhentries = 0;
 	    for (j = 1; j < VL_MHSRV_PERBLK; j++) {
+		int first_ipindex = -1;
 		e = (struct extentaddr *)&(MHblock[j]);
 
-		/* Search the IpMappedAddr array for the reference to this entry */
+		/* Search the IpMappedAddr array for all the references to this entry. */
+		/* Use the first reference for checking the ip addresses of this entry. */
 		for (ipindex = 0; ipindex <= MAXSERVERID; ipindex++) {
-		    if (((header->IpMappedAddr[ipindex] & 0xff000000) ==
-			 0xff000000)
-			&&
-			(((header->
-			   IpMappedAddr[ipindex] & 0x00ff0000) >> 16) == i)
-			&& ((header->IpMappedAddr[ipindex] & 0x0000ffff) ==
-			    j)) {
-			break;
+		    if (((header->IpMappedAddr[ipindex] & 0xff000000) == 0xff000000)
+			&& (((header-> IpMappedAddr[ipindex] & 0x00ff0000) >> 16) == i)
+			&& ((header->IpMappedAddr[ipindex] & 0x0000ffff) == j)) {
+			if (first_ipindex == -1) {
+			    first_ipindex = ipindex;
+			} else {
+			    serverxref[ipindex] = first_ipindex;
+			}
 		    }
 		}
-		if (ipindex > MAXSERVERID)
-		    ipindex = -1;
-		else
+		ipindex = first_ipindex;
+		if (ipindex != -1)
 		    serveraddrs[ipindex] = -1;
 
 		if (memcmp(&e->ex_hostuuid, &nulluuid, sizeof(afsUUID)) == 0) {
@@ -1043,6 +1045,9 @@ CheckIpAddrs(struct vlheader *header)
 		   log_error
 			(VLDB_CHECK_ERROR,"IP Addr for entry %d: Multihome block is bad (%d)\n",
 			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
+		if (caddrs[(header->IpMappedAddr[i] & 0x00ff0000) >> 16] == 0)
+		    log_error(VLDB_CHECK_ERROR,"IP Addr for entry %d: No such multihome block (%d)\n",
+			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
 		if (((header->IpMappedAddr[i] & 0x0000ffff) > VL_MHSRV_PERBLK)
 		    || ((header->IpMappedAddr[i] & 0x0000ffff) < 1))
 		    log_error
@@ -1053,6 +1058,17 @@ CheckIpAddrs(struct vlheader *header)
 			(VLDB_CHECK_WARNING,"warning: IP Addr for entry %d: Multihome entry has no ip addresses\n",
 			 i);
 		    serveraddrs[i] = 0;
+		}
+		if (serverxref[i] != BADSERVERID) {
+		    log_error
+			(VLDB_CHECK_WARNING,
+			"warning: MH block %d, index %d is cross-linked by server numbers %d and %d.\n",
+			(header->IpMappedAddr[i] & 0x00ff0000) >> 16,
+			(header->IpMappedAddr[i] & 0x0000ffff),
+			i, serverxref[i]);
+		    /* set addresses found/not found for this server number,
+		     * using the first index to the mh we found above. */
+		    serveraddrs[i] = serveraddrs[serverxref[i]];
 		}
 		if (listservers) {
 		    quiet_println("   Server ip addr %d = MH block %d, index %d\n",
@@ -1195,6 +1211,9 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     record = (struct er *)malloc(maxentries * sizeof(struct er));
     memset(record, 0, (maxentries * sizeof(struct er)));
     memset(serveraddrs, 0, sizeof(serveraddrs));
+    for (i = 0; i <= MAXSERVERID; i++) {
+	serverxref[i] = BADSERVERID;
+    }
 
     /* Will fill in the record array of entries it found */
     ReadAllEntries(&header);
