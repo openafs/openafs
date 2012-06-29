@@ -65,7 +65,8 @@ check_sysid: check_sysid.c
 fsprobe.o: fsprobe.c AFS_component_version_number.c
 
 fsprobe: fsprobe.o
-	$(AFS_LDRULE) fsprobe.o ${LIBS} $(LIB_roken) ${XLIBS}
+	$(AFS_LDRULE) fsprobe.o \
+		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 CFLAGS_cbd.o = -DINTERPRET_DUMP
 cbd.o: callback.c AFS_component_version_number.c
