@@ -379,8 +379,10 @@ clean::
         $(DEL) pod1\pts_source.pod
         $(DEL) pod1\vos.pod
         $(DEL) pod1\vos_addsite.pod
+        $(DEL) pod1\vos_backup.pod
         $(DEL) pod1\vos_clone.pod
         $(DEL) pod1\vos_copy.pod
+        $(DEL) pod1\vos_dump.pod
         $(DEL) pod1\vos_create.pod
         $(DEL) pod1\vos_examine.pod
         $(DEL) pod1\vos_move.pod

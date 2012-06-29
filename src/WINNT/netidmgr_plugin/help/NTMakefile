@@ -34,4 +34,4 @@ $(CHMFILE): afsplhlp.hhp
 	$(COPY) afsplhlp.chm $(CHMFILE)
 
 clean::
-	$(DEL) $(CHMFILE)
+	$(DEL) $(CHMFILE) afsplhlp.chm
