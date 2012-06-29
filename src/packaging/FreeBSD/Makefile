@@ -56,7 +56,7 @@ CONFIGURE_ARGS=	--prefix=${PREFIX} \
 	--includedir=${PREFIX}/include/openafs \
 			${CONFIGURE_TARGET}
 #	--with-krb5 KRB5CFLAGS=-I/usr/include \
-#	KRB5LIBS='-lkrb5 -lcom_err -lcrypto -lcrypt -lasn1 -lhx509 -lroken' \
+#	KRB5LIBS='-lkrb5 -lcom_err -lcrypto -lcrypt -lasn1 -lhx509 -lroken'
 
 .if !defined(WITH_FUSE)
 CONFIGURE_ARGS+=	--disable-fuse-client

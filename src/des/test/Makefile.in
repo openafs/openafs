@@ -16,7 +16,7 @@ PROGS = \
 LDFLAGS = ${XLDFLAGS} ${ARCHFLAGS}
 
 LIBS=\
-	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libdes.a
 
 all test: $(PROGS)
 
