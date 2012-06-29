@@ -519,21 +519,28 @@ UINT removeAfsAdminGroup(void) {
     return status;
 }
 
-const TCHAR * reg_NP = _T("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider");
-const TCHAR * reg_NP_Backup = _T("SOFTWARE\\OpenAFS\\Client\\BackupSettings\\NetworkProvider");
+const TCHAR * reg_AFSD_NP = _T("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider");
+const TCHAR * reg_AFSD_NP_Backup = _T("SOFTWARE\\OpenAFS\\BackupSettings\\TransarcAFSDaemon\\NetworkProvider");
 
-const TCHAR * reg_NP_Domains = _T("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider\\Domain");
-const TCHAR * reg_NP_Domains_Backup = _T("SOFTWARE\\OpenAFS\\Client\\BackupSettings\\NetworkProvider\\Domain");
+const TCHAR * reg_AFSD_NP_Domains = _T("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider\\Domain");
+const TCHAR * reg_AFSD_NP_Domains_Backup = _T("SOFTWARE\\OpenAFS\\BackupSettings\\TransarcAFSDaemon\\NetworkProvider\\Domain");
 
-const TCHAR * reg_Param = _T("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters");
-const TCHAR * reg_Param_Backup = _T("SOFTWARE\\OpenAFS\\Client\\BackupSettings\\Parameters");
+const TCHAR * reg_AFSD_Param = _T("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters");
+const TCHAR * reg_AFSD_Param_Backup = _T("SOFTWARE\\OpenAFS\\BackupSettings\\TransarcAFSDaemon\\Parameters");
+
+const TCHAR * reg_RDR_NP = _T("SYSTEM\\CurrentControlSet\\Services\\AFSRedirector\\NetworkProvider");
+const TCHAR * reg_RDR_NP_Backup = _T("SOFTWARE\\OpenAFS\\BackupSettings\\AFSRedirector\\NetworkProvider");
+
+const TCHAR * reg_RDR_Param = _T("SYSTEM\\CurrentControlSet\\Services\\AFSRedirector\\Parameters");
+const TCHAR * reg_RDR_Param_Backup = _T("SOFTWARE\\OpenAFS\\BackupSettings\\AFSRedirector\\Parameters");
 
 const TCHAR * reg_Client = _T("SOFTWARE\\OpenAFS\\Client");
-const TCHAR * reg_Client_Backup = _T("SOFTWARE\\OpenAFS\\Client\\BackupSettings\\Client");
+const TCHAR * reg_Client_Backup = _T("SOFTWARE\\OpenAFS\\BackupSettings\\Client");
 
-const TCHAR * reg_Backup = _T("SOFTWARE\\OpenAFS\\Client\\BackupSettings");
+const TCHAR * reg_Backup = _T("SOFTWARE\\OpenAFS\\BackupSettings");
 
-const TCHAR * reg_NP_values[] = {
+const TCHAR * reg_AFSD_NP_values[] = {
+    _T("Debug"),
     _T("LogonOptions"),
     _T("VerboseLogging"),
     _T("LogonScript"),
@@ -542,6 +549,12 @@ const TCHAR * reg_NP_values[] = {
     _T("LoginSleepInterval"),
     _T("Realm"),
     _T("TheseCells"),
+    NULL
+};
+
+const TCHAR * reg_RDR_NP_values[] = {
+    _T("Name"),
+    _T("Debug"),
     NULL
 };
 
@@ -570,9 +583,11 @@ struct registry_backup {
 
     // Subkeys must be specified before parent keys.
 
-    { reg_NP_Domains, reg_Everything, reg_NP_Domains_Backup },
-    { reg_NP, reg_NP_values, reg_NP_Backup },
-    { reg_Param, reg_Everything, reg_Param_Backup },
+    { reg_AFSD_NP_Domains, reg_Everything, reg_AFSD_NP_Domains_Backup },
+    { reg_AFSD_NP, reg_AFSD_NP_values, reg_AFSD_NP_Backup },
+    { reg_AFSD_Param, reg_Everything, reg_AFSD_Param_Backup },
+    { reg_RDR_NP, reg_RDR_NP_values, reg_RDR_NP_Backup },
+    { reg_RDR_Param, reg_Everything, reg_RDR_Param_Backup },
     { reg_Client, reg_Client_values, reg_Client_Backup },
     { NULL, NULL, NULL }
 };
@@ -877,7 +892,7 @@ MSIDLLEXPORT DetectSavedConfiguration( MSIHANDLE hInstall )
     LONG rv;
     BOOL found = FALSE;
 
-    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, reg_Param_Backup, 0, KEY_READ, &hk_param);
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, reg_AFSD_Param_Backup, 0, KEY_READ, &hk_param);
     if (rv == ERROR_SUCCESS) {
         SetMsiPropertyFromRegValue(hInstall, hk_param, _T("AFSCELLNAME"), _T("Cell"));
         SetMsiPropertyFromRegValue(hInstall, hk_param, _T("FREELANCEMODE"), _T("FreelanceClient"));
@@ -895,7 +910,7 @@ MSIDLLEXPORT DetectSavedConfiguration( MSIHANDLE hInstall )
         found = TRUE;
     }
 
-    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, reg_NP_Backup, 0, KEY_READ, &hk_np);
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, reg_AFSD_NP_Backup, 0, KEY_READ, &hk_np);
     if (rv == ERROR_SUCCESS) {
         SetMsiPropertyFromRegValue(hInstall, hk_np, _T("LOGONOPTIONS"), _T("LogonOptions"));
         RegCloseKey(hk_np);
