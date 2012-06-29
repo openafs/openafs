@@ -1494,6 +1494,7 @@ vl_Initialize(struct afsconf_dir *dir)
     struct rx_securityClass *sc;
     struct rx_connection *serverconns[MAXSERVERS];
 
+    memset(serverconns, 0, sizeof(serverconns));
     code = afsconf_ClientAuth(dir, &sc, &scIndex);
     if (code) {
 	ViceLog(0, ("Could not get security object for localAuth\n"));
