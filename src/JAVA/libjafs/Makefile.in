@@ -202,7 +202,7 @@ clean:
 setup:	FORCE
 	if [ ! -e ./h ]; then \
 	  ln -s /usr/include/sys h; \
-	fi; \
+	fi;
 
 ${TOP_JLIBDIR}:
 	mkdir -p $@

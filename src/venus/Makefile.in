@@ -264,7 +264,7 @@ kdump-alpha_linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_numb
 		-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs \
 		-I${TOP_SRCDIR} -I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
 		-I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS} -mno-fp-regs -ffixed-8 \
-		-o kdump-alpha_linux-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;; \
+		-o kdump-alpha_linux-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;;
 
 kdump-alpha_linux-@LINUX_VERSION@: kdump-alpha_linux-@LINUX_VERSION@.o
 	${CC} ${KERN_DBG} ${KERN_OPTMZ} -o kdump-alpha_linux-${LINUX_VERSION} kdump-alpha_linux-${LINUX_VERSION}.o \
