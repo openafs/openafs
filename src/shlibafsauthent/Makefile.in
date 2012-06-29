@@ -124,7 +124,7 @@ BOSOBJS = \
 	boserr.o
 
 USDOBJS = \
-	usd_file.o \
+	usd_file.o
 
 LIBOBJS = \
 	${AUDITOBJS} \
