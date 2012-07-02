@@ -923,7 +923,7 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
 
         /* now look up the cell */
         lock_ReleaseWrite(&scp->rw);
-        cellp = cm_GetCell(cellNamep, CM_FLAG_CREATE);
+        cellp = cm_GetCell(cellNamep, CM_FLAG_CREATE|CM_FLAG_NOPROBE);
         lock_ObtainWrite(&scp->rw);
     } else {
         /* normal mt pt */
