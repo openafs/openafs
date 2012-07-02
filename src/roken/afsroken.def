@@ -42,3 +42,7 @@ EXPORTS
         rk_tfind                @46
 	rk_getprogname		@47
 	rk_setprogname		@48
+        rk_calloc               @49
+        rk_free                 @50
+        rk_malloc               @51
+        rk_realloc              @52
