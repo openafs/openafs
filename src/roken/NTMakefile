@@ -43,6 +43,7 @@ ROKEN_OBJS = \
 	$(OUT)\mkstemp.obj \
 	$(OUT)\net_read.obj \
 	$(OUT)\net_write.obj \
+        $(OUT)\realloc.obj \
 	$(OUT)\setprogname.obj \
 	$(OUT)\snprintf.obj \
 	$(OUT)\socket.obj \
@@ -58,7 +59,8 @@ ROKEN_OBJS = \
         $(OUT)\vwarnx.obj \
         $(OUT)\warn.obj \
         $(OUT)\warnerr.obj \
-        $(OUT)\warnx.obj
+        $(OUT)\warnx.obj \
+        $(OUT)\win32_alloc.obj
 
 $(ROKEN_OBJS):$(ROKEN)\$$(@B).c
 	$(C2OBJ) $** -I$(ROKEN)
