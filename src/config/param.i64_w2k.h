@@ -19,7 +19,7 @@
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV       1	/* User space interface to file system */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
-#define HAVE_SSIZE_T        1
+#define HAVE_INT64TOINT32   1
 
 #include <afs/afs_sysnames.h>
 #define SYS_NAME_ID	SYS_NAME_ID_i64_w2k
