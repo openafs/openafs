@@ -14,7 +14,6 @@ extern "C" {
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <roken.h>
-#include <afs/stds.h>
 #include <osilog.h>
 #include <afs/fs_utils.h>
 #include <rx\rxkad.h>

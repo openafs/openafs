@@ -14,8 +14,6 @@ extern "C" {
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <roken.h>
-
-#include <afs/stds.h>
 #include <afs/fs_utils.h>
 }
 

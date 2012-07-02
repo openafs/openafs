@@ -12,9 +12,8 @@
 
 extern "C" {
 #include <afsconfig.h>
-#include <afs\param.h>
+#include <afs/param.h>
 #include <roken.h>
-#include <afs\stds.h>
 #include <afs\auth.h>
 #include <afs\kautils.h>
 #include <rx\rxkad.h>
