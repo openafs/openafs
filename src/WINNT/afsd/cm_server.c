@@ -954,8 +954,6 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         lock_InitializeMutex(&tsp->mx, "cm_server_t mutex", LOCK_HIERARCHY_SERVER);
         tsp->addr = *socketp;
 
-        cm_SetServerIPRank(tsp);
-
         tsp->allNextp = cm_allServersp;
         cm_allServersp = tsp;
 
@@ -970,11 +968,30 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
     }
     lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
-    if (!(flags & CM_FLAG_NOPROBE) && tsp) {
-        _InterlockedOr(&tsp->flags, CM_SERVERFLAG_DOWN);	/* assume down; ping will mark up if available */
-        cm_PingServer(tsp);	                                /* Obtain Capabilities and check up/down state */
-    }
+    if (tsp) {
+        if (!(flags & CM_FLAG_NOPROBE)) {
+            _InterlockedOr(&tsp->flags, CM_SERVERFLAG_DOWN);	/* assume down; ping will mark up if available */
+            lock_ObtainMutex(&tsp->mx);
+            cm_RankServer(tsp);
+            lock_ReleaseMutex(&tsp->mx);
+            cm_PingServer(tsp);	                                /* Obtain Capabilities and check up/down state */
+        } else {
+            pthread_t phandle;
+            pthread_attr_t tattr;
+            int pstatus;
 
+            /* Probe the server in the background to determine if it is up or down */
+            pthread_attr_init(&tattr);
+            pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
+
+            lock_ObtainMutex(&tsp->mx);
+            cm_RankServer(tsp);
+            lock_ReleaseMutex(&tsp->mx);
+            pstatus = pthread_create(&phandle, &tattr, cm_PingServer, tsp);
+
+            pthread_attr_destroy(&tattr);
+        }
+    }
     return tsp;
 }
 
