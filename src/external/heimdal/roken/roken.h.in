@@ -67,8 +67,6 @@
 /*
  * error codes for inet_ntop/inet_pton
  */
-#define EAFNOSUPPORT WSAEAFNOSUPPORT
-
 typedef SOCKET rk_socket_t;
 
 #define rk_closesocket(x) closesocket(x)
@@ -78,23 +76,6 @@ typedef SOCKET rk_socket_t;
 #define rk_SOCK_ERRNO WSAGetLastError()
 
 ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL rk_SOCK_IOCTL(SOCKET s, long cmd, int * argp);
-
-/* Microsoft VC 2010 POSIX definitions */
-#ifndef ENOTSOCK
-#define ENOTSOCK		128
-#endif
-#ifndef ENOTSUP
-#define ENOTSUP                 129
-#endif
-#ifndef EOVERFLOW
-#define EOVERFLOW               132
-#endif
-#ifndef ETIMEDOUT
-#define ETIMEDOUT               138
-#endif
-#ifndef EWOULDBLOCK
-#define EWOULDBLOCK             140
-#endif
 
 #define rk_SOCK_INIT() rk_WSAStartup()
 #define rk_SOCK_EXIT() rk_WSACleanup()
@@ -116,13 +97,17 @@ typedef int rk_socket_t;
 #define rk_SOCK_INIT() 0
 #define rk_SOCK_EXIT() do { } while(0)
 
-#endif
+#endif  /* WinSock */
 
 #ifndef IN_LOOPBACKNET
 #define IN_LOOPBACKNET 127
 #endif
 
 #ifdef _MSC_VER
+#ifndef HAVE_STDINT_H
+#include <intsafe.h>
+#endif
+
 /* Declarations for Microsoft Visual C runtime on Windows */
 
 #include<process.h>
@@ -367,6 +352,26 @@ rk_vsnprintf (char *str, size_t sz, const char *format, va_list args);
  S_ISBLK(m)
 */
 
+#if !defined(ROKEN_NO_DEFINE_ALLOCATORS)
+/* Ensure that a common memory allocator is used by all */
+#define calloc  rk_calloc
+#define free    rk_free
+#define malloc  rk_malloc
+#define realloc rk_realloc
+#endif
+
+ROKEN_LIB_FUNCTION void * ROKEN_LIB_CALL
+rk_calloc(size_t, size_t);
+
+ROKEN_LIB_FUNCTION void ROKEN_LIB_CALL
+rk_free(void *);
+
+ROKEN_LIB_FUNCTION void * ROKEN_LIB_CALL
+rk_malloc(size_t);
+
+ROKEN_LIB_FUNCTION void * ROKEN_LIB_CALL
+rk_realloc(void *, size_t);
+
 #endif  /* _MSC_VER */
 
 #ifdef HAVE_WINSOCK
@@ -599,6 +604,13 @@ ROKEN_LIB_FUNCTION char* ROKEN_LIB_CALL getcwd(char *, size_t);
 #include <pwd.h>
 ROKEN_LIB_FUNCTION struct passwd * ROKEN_LIB_CALL k_getpwnam (const char *);
 ROKEN_LIB_FUNCTION struct passwd * ROKEN_LIB_CALL k_getpwuid (uid_t);
+#endif
+
+#ifdef POSIX_GETPWNAM_R
+#define rk_getpwnam_r(_n, _pw, _b, _sz, _pwd) getpwnam_r(_n, _pw, _b, _sz, _pwd)
+#else
+ROKEN_LIB_FUNCTION int ROKEN_LIB_CALL
+rk_getpwnam_r(const char *, struct passwd *, char *, size_t, struct passwd **);
 #endif
 
 ROKEN_LIB_FUNCTION const char * ROKEN_LIB_CALL get_default_username (void);
@@ -1026,6 +1038,22 @@ ROKEN_LIB_FUNCTION struct tm * ROKEN_LIB_CALL
 localtime_r(const time_t *, struct tm *);
 #endif
 
+#if !defined(HAVE_STRTOLL) || defined(NEED_STRTOLL_PROTO)
+#ifndef HAVE_STRTOLL
+#define strtoll rk_strtoll
+#endif
+ROKEN_LIB_FUNCTION long long ROKEN_LIB_CALL
+strtoll(const char * __restrict nptr, char ** __restrict endptr, int base);
+#endif
+
+#if !defined(HAVE_STRTOULL) || defined(NEED_STRTOULL_PROTO)
+#ifndef HAVE_STRTOULL
+#define strtoull rk_strtoull
+#endif
+ROKEN_LIB_FUNCTION unsigned long long ROKEN_LIB_CALL
+strtoull(const char * __restrict nptr, char ** __restrict endptr, int base);
+#endif
+
 #if !defined(HAVE_STRSVIS) || defined(NEED_STRSVIS_PROTO)
 #ifndef HAVE_STRSVIS
 #define strsvis rk_strsvis
@@ -1134,6 +1162,27 @@ rk_qsort(void *, size_t, size_t, int (*)(const void *, const void *));
 #define socket(_fam,_type,_prot) rk_socket(_fam,_type,_prot)
 int ROKEN_LIB_FUNCTION rk_socket(int, int, int);
 #endif
+
+/* Microsoft VC 2010 POSIX definitions */
+#ifndef EAFNOSUPPORT
+#define EAFNOSUPPORT            102
+#endif
+#ifndef ENOTSOCK
+#define ENOTSOCK		128
+#endif
+#ifndef ENOTSUP
+#define ENOTSUP                 129
+#endif
+#ifndef EOVERFLOW
+#define EOVERFLOW               132
+#endif
+#ifndef ETIMEDOUT
+#define ETIMEDOUT               138
+#endif
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK             140
+#endif
+
 
 #ifdef SOCKET_WRAPPER_REPLACE
 #include <socket_wrapper.h>
