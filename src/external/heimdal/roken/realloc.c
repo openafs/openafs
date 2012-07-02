@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999 - 2001 Kungliga Tekniska Högskolan
+ * Copyright (c) 2005 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * All rights reserved.
  *
@@ -32,59 +32,16 @@
  */
 
 #include <config.h>
+#undef realloc
 
+#include <stdlib.h>
 #include "roken.h"
+#undef realloc
 
-ROKEN_LIB_FUNCTION char * ROKEN_LIB_CALL
-pid_file_write (const char *progname)
+ROKEN_LIB_FUNCTION void * ROKEN_LIB_CALL
+rk_realloc(void *ptr, size_t size)
 {
-    char *ret = NULL;
-    FILE *fp;
-
-    if (asprintf (&ret, "%s%s.pid", _PATH_VARRUN, progname) < 0 || ret == NULL)
-	return NULL;
-    fp = fopen (ret, "w");
-    if (fp == NULL) {
-	free (ret);
-	return NULL;
-    }
-    fprintf (fp, "%u", (unsigned)getpid());
-    fclose (fp);
-    return ret;
+    if (ptr == NULL)
+	return malloc(size);
+    return realloc(ptr, size);
 }
-
-ROKEN_LIB_FUNCTION void ROKEN_LIB_CALL
-pid_file_delete (char **filename)
-{
-    if (*filename != NULL) {
-	unlink (*filename);
-	free (*filename);
-	*filename = NULL;
-    }
-}
-
-#ifndef HAVE_PIDFILE
-static char *pidfile_path;
-
-static void
-pidfile_cleanup(void)
-{
-    if(pidfile_path != NULL)
-	pid_file_delete(&pidfile_path);
-}
-
-ROKEN_LIB_FUNCTION void ROKEN_LIB_CALL
-pidfile(const char *bname)
-{
-    if(pidfile_path != NULL)
-	return;
-    if(bname == NULL)
-	bname = getprogname();
-    pidfile_path = pid_file_write(bname);
-#if defined(HAVE_ATEXIT)
-    atexit(pidfile_cleanup);
-#elif defined(HAVE_ON_EXIT)
-    on_exit(pidfile_cleanup);
-#endif
-}
-#endif
