@@ -78,6 +78,7 @@ lib/roken/localtime_r.c		roken/localtime_r.c
 lib/roken/mkstemp.c		roken/mkstemp.c
 lib/roken/net_read.c		roken/net_read.c
 lib/roken/net_write.c		roken/net_write.c
+lib/roken/realloc.c		roken/realloc.c
 lib/roken/roken.h.in		roken/roken.h.in
 lib/roken/roken-common.h	roken/roken-common.h
 lib/roken/search.hin		roken/search.hin
@@ -100,5 +101,6 @@ lib/roken/vwarnx.c		roken/vwarnx.c
 lib/roken/warn.c		roken/warn.c
 lib/roken/warnx.c		roken/warnx.c
 lib/roken/warnerr.c		roken/warnerr.c
+lib/roken/win32_alloc.c		roken/win32_alloc.c
 lib/roken/write_pid.c		roken/write_pid.c
 
