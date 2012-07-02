@@ -302,6 +302,7 @@ cm_PingServer(cm_server_t *tsp)
                     }
                 }
             }
+            cm_RankServer(tsp);
         }
     } else {
 	/* mark server as down */
@@ -341,6 +342,7 @@ cm_PingServer(cm_server_t *tsp)
                     }
                 }
             }
+            cm_RankServer(tsp);
         }
     }
 
@@ -587,6 +589,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                             }
                         }
                     }
+                    cm_RankServer(tsp);
                 }
             } else {
                 /* mark server as down */
@@ -627,6 +630,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                             }
                         }
                     }
+                    cm_RankServer(tsp);
                 }
             }
 
@@ -720,6 +724,8 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                           osi_LogSaveString(afsd_logp, hoststr),
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
+                if (wasDown)
+                    cm_RankServer(tsp);
             } else {
                 /* mark server as down */
                 if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
@@ -736,6 +742,8 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                           osi_LogSaveString(afsd_logp, hoststr),
                           tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
                           tsp->capabilities);
+                if (!wasDown)
+                    cm_RankServer(tsp);
             }
 
             if (tsp->waitCount == 0)
