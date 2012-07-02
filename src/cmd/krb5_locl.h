@@ -57,6 +57,10 @@ static void krb5_set_error_message(krb5_context context, krb5_error_code ret,
 
 #include <shlobj.h>
 
+static krb5_error_code krb5_enomem(krb5_context context) {
+    return ENOMEM;
+}
+
 static int _krb5_expand_path_tokens(krb5_context, const char *, char**);
 
 int
