@@ -21,6 +21,7 @@
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_KRB5_ERROR_ENV  1   /* fetch_krb5_error_message() available in afsutil.lib */
 #define HAVE_SSIZE_T        1
+#define HAVE_INT64TOINT32   1
 
 #include <afs/afs_sysnames.h>
 #define SYS_NAME_ID	SYS_NAME_ID_i386_w2k

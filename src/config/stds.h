@@ -85,7 +85,9 @@ typedef unsigned long long afs_uint64;
 #define CompareInt64(a,b) (afs_int64)(a) - (afs_int64)(b)
 #define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
 #define NonZeroInt64(a)                (a)
+#ifndef HAVE_INT64TOINT32
 #define Int64ToInt32(a)    (a) & MAX_AFS_UINT32
+#endif
 #define FillInt64(t,h,l) (t) = ((afs_int64)(h) << 32) | (l);
 #define SplitInt64(t,h,l) (h) = ((afs_int64)t) >> 32; (l) = (t) & MAX_AFS_UINT32;
 #define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a;
