@@ -50,21 +50,11 @@ typedef __int64 ssize_t;
 #endif
 #endif
 
-#if 0
-#define memset(A, 0, S) memset((void*)(A), 0, (size_t)(S))
-#define memcpy(B, A, S) memcpy((void*)(B), (void*)(A), (size_t)(S))
-/* There is a minor syntactic difference between memcmp and bcmp... */
-#define memcmp(A, B, S) (memcmp((void*)(A), (void*)(B), (size_t)(S)) ? 1 : 0)
-#define strchr(s, c)             strchr(s, c)
-#define strrchr(s, c)            strrchr(s, c)
-#endif
 #define strcasecmp(s1,s2)       _stricmp(s1,s2)
 #define strncasecmp(s1,s2,n)    _strnicmp(s1,s2,n)
 #define sleep(seconds)          Sleep((seconds) * 1000)
 #define fsync(fileno)           _commit(fileno)
 #define ftruncate(fd, size)     _chsize((fd), (long)(size))
-#define strtoll(str, cp, base)  strtoi64((str), (cp), (base))
-#define strtoull(str, cp, base) strtoui64((str), (cp), (base))
 
 #define random()                rand()
 #define srandom(a)              srand(a)
