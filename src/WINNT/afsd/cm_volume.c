@@ -312,6 +312,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         }
 
         _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_UPDATING_VL);
+
+        /* Do not hold the volume lock across the RPC calls */
         lock_ReleaseWrite(&volp->rw);
 
         if (cellp->flags & CM_CELLFLAG_VLSERVER_INVALID)
@@ -321,45 +323,45 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         code = cm_GetEntryByName(cellp, volp->namep, &vldbEntry, &nvldbEntry,
                                  &uvldbEntry,
                                  &method, userp, reqp);
-    }
 
-    /* We can end up here with code == CM_ERROR_NOSUCHVOLUME if the base volume name
-     * does not exist and is not a numeric string but there might exist a .readonly volume.
-     * If the base name doesn't exist we will not care about the .backup that might be left
-     * behind since there should be no method to access it.
-     */
-    if (code == CM_ERROR_NOSUCHVOLUME &&
-        _atoi64(volp->namep) == 0 &&
-        volp->vol[RWVOL].ID == 0 &&
-        strlen(volp->namep) < (VL_MAXNAMELEN - 9)) {
-        char name[VL_MAXNAMELEN];
+        /* We can end up here with code == CM_ERROR_NOSUCHVOLUME if the base volume name
+         * does not exist and is not a numeric string but there might exist a .readonly volume.
+         * If the base name doesn't exist we will not care about the .backup that might be left
+         * behind since there should be no method to access it.
+         */
+        if (code == CM_ERROR_NOSUCHVOLUME &&
+             _atoi64(volp->namep) == 0 &&
+             volp->vol[RWVOL].ID == 0 &&
+             strlen(volp->namep) < (VL_MAXNAMELEN - 9)) {
+            char name[VL_MAXNAMELEN];
 
-        snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
+            snprintf(name, VL_MAXNAMELEN, "%s.readonly", volp->namep);
 
-        /* now we have volume structure locked and held; make RPC to fill it */
-        code = cm_GetEntryByName(cellp, name, &vldbEntry, &nvldbEntry,
-                                 &uvldbEntry,
-                                 &method, userp, reqp);
-    }
-
-    /*
-     * What if there was a volume rename?  The volume name no longer exists but the
-     * volume id might.  Try to refresh the volume location information based one
-     * of the readwrite or readonly volume id.
-     */
-    if (code == CM_ERROR_NOSUCHVOLUME) {
-        if (volp->vol[RWVOL].ID != 0) {
-            code = cm_GetEntryByID(cellp, volp->vol[RWVOL].ID, &vldbEntry, &nvldbEntry,
-                                    &uvldbEntry,
-                                    &method, userp, reqp);
-        } else if (volp->vol[ROVOL].ID != 0) {
-            code = cm_GetEntryByID(cellp, volp->vol[ROVOL].ID, &vldbEntry, &nvldbEntry,
-                                    &uvldbEntry,
-                                    &method, userp, reqp);
+            /* now we have volume structure locked and held; make RPC to fill it */
+            code = cm_GetEntryByName(cellp, name, &vldbEntry, &nvldbEntry,
+                                     &uvldbEntry,
+                                     &method, userp, reqp);
         }
+
+        /*
+         * What if there was a volume rename?  The volume name no longer exists but the
+         * volume id might.  Try to refresh the volume location information based one
+         * of the readwrite or readonly volume id.
+         */
+        if (code == CM_ERROR_NOSUCHVOLUME) {
+            if (volp->vol[RWVOL].ID != 0) {
+                code = cm_GetEntryByID(cellp, volp->vol[RWVOL].ID, &vldbEntry, &nvldbEntry,
+                                       &uvldbEntry,
+                                       &method, userp, reqp);
+            } else if (volp->vol[ROVOL].ID != 0) {
+                code = cm_GetEntryByID(cellp, volp->vol[ROVOL].ID, &vldbEntry, &nvldbEntry,
+                                       &uvldbEntry,
+                                       &method, userp, reqp);
+            }
+        }
+        lock_ObtainWrite(&volp->rw);
     }
 
-    lock_ObtainWrite(&volp->rw);
     if (code == 0) {
         afs_int32 flags;
         afs_int32 nServers;
