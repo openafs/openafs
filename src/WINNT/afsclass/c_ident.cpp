@@ -13,7 +13,6 @@
 extern "C" {
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <afs/stds.h>
 #include <roken.h>
 }
 
