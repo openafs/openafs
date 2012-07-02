@@ -31,7 +31,8 @@ DLLOBJS =\
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib
+	$(DESTDIR)\lib\afs\afsutil.lib \
+        $(DESTDIR)\lib\afsroken.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLRES) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsprocmgmt.def

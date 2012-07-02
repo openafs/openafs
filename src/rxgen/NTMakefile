@@ -19,6 +19,9 @@ EXEFILE = $(DESTDIR)\bin\rxgen.exe
 
 EXERES = $(OUT)\rxgen.res
 
+EXELIBS =\
+    $(DESTDIR)\lib\afsroken.lib
+
 EXEOBJS =\
 	$(OUT)\rpc_main.obj \
 	$(OUT)\rpc_hout.obj \
