@@ -92,18 +92,18 @@ OBJFILES= 				\
 	$(OUT)\dynimport.obj 		\
 	$(OUT)\krb5common.obj
 
-!if "$(CPU)" == "AMD64"
 LIBFILES= 				\
+        $(DESTDIR)\lib\afsroken.lib     \
+	$(DESTDIR)\lib\afsauthent.lib 	\
+	$(DESTDIR)\lib\libafsconf.lib 	\
+        $(DESTDIR)\lib\afs\mtafsutil.lib\
+!if "$(CPU)" == "AMD64"
 	$(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\nidmgr64.lib
 !else
-LIBFILES= 				\
 	$(AFSROOT)\src\WINNT\kfw\lib\$(CPU)\nidmgr32.lib
 !endif
 
 SDKLIBFILES= 				\
-	$(DESTDIR)\lib\afsauthent.lib 	\
-	$(DESTDIR)\lib\libafsconf.lib 	\
-        $(DESTDIR)\lib\afs\mtafsutil.lib\
 	htmlhelp.lib			\
 	shell32.lib			\
 	comctl32.lib			\

@@ -95,12 +95,15 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 # Build cbd - not generally distributed debugging program
 CBD = $(DESTDIR)\root.server\usr\afs\bin\cbd.exe
 
+CBDLIBS =\
+	$(DESTDIR)\lib\afsroken.lib
+
 CBDRES = $(OUT)\cbd.res
 
 $(OUT)\cbd.obj: callback.c AFS_component_version_number.h
 	$(C2OBJ) callback.c -DINTERPRET_DUMP
 
-$(CBD): $(OUT)\cbd.obj $(CBDRES)
+$(CBD): $(OUT)\cbd.obj $(CBDLIBS) $(CBDRES)
 	$(EXECONLINK)
 	$(_VC_MANIFEST_EMBED_EXE)
 	$(CODESIGN_USERLAND)
