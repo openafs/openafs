@@ -5876,10 +5876,6 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 			  &rights, &anyrights)))
 	goto Bad_GetVolumeStatus;
 
-    if ((VanillaUser(client)) && (!(rights & PRSFS_READ))) {
-	errorCode = EACCES;
-	goto Bad_GetVolumeStatus;
-    }
     (void)RXGetVolumeStatus(FetchVolStatus, Name, OfflineMsg, Motd, volptr);
 
   Bad_GetVolumeStatus:
