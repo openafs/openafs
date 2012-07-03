@@ -2029,7 +2029,6 @@ void cm_DiscardSCache(cm_scache_t *scp)
     }
     scp->cbExpires = 0;
     scp->cbIssued = 0;
-    scp->volumeCreationDate = 0;
     _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL | CM_SCACHEFLAG_RDR_IN_USE));
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
