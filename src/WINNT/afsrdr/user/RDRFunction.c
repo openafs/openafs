@@ -4956,7 +4956,6 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     DWORD       Length;
     cm_scache_t *scp = NULL;
     cm_volume_t *volp = NULL;
-    cm_vol_state_t *volstatep = NULL;
     afs_uint32   volType;
     cm_cell_t   *cellp = NULL;
     cm_fid_t    Fid;
@@ -4974,6 +4973,8 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     char *OfflineMsg;
     char *MOTD;
     struct rx_connection * rxconnp;
+    int sync_done = 0;
+    int scp_locked = 0;
 
     RDR_InitReq(&req);
     if ( bWow64 )
@@ -5017,18 +5018,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         return;
     }
     lock_ObtainWrite(&scp->rw);
-
-    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
-                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) {
-        lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
-        (*ResultCB)->ResultStatus = status;
-        (*ResultCB)->ResultBufferLength = 0;
-        osi_Log3(afsd_logp, "RDR_GetVolumeInfo cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
-                 scp, code, status);
-        return;
-    }
+    scp_locked = 1;
 
     pResultCB->SectorsPerAllocationUnit = 1;
     pResultCB->BytesPerSector = 1024;
@@ -5060,26 +5050,35 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
             code = CM_ERROR_NOSUCHVOLUME;
             goto _done;
         }
-        volstatep = cm_VolumeStateByID(volp, scp->fid.volume);
         volType = cm_VolumeType(volp, scp->fid.volume);
 
         pResultCB->Characteristics |= ((volType == ROVOL || volType == BACKVOL) ? FILE_READ_ONLY_DEVICE : 0);
 
-        Name = volName;
-	OfflineMsg = offLineMsg;
-	MOTD = motd;
-	lock_ReleaseWrite(&scp->rw);
-	do {
-	    code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
-	    if (code) continue;
+        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code == 0)
+        {
+            sync_done = 1;
 
-	    rxconnp = cm_GetRxConn(connp);
-	    code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
-					 &volStat, &Name, &OfflineMsg, &MOTD);
-	    rx_PutConnection(rxconnp);
+            Name = volName;
+            OfflineMsg = offLineMsg;
+            MOTD = motd;
+            lock_ReleaseWrite(&scp->rw);
+            scp_locked = 0;
 
-	} while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
-	code = cm_MapRPCError(code, &req);
+            do {
+                code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+                if (code) continue;
+
+                rxconnp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
+                                              &volStat, &Name, &OfflineMsg, &MOTD);
+                rx_PutConnection(rxconnp);
+
+            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
+            code = cm_MapRPCError(code, &req);
+        }
+
         if (code == 0) {
             if (volStat.MaxQuota)
             {
@@ -5105,8 +5104,13 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
                 }
             }
         } else {
+            /*
+             * Lie about the available space.  Out of quota errors will need
+             * detected when the file server rejects the store data.
+             */
             pResultCB->TotalAllocationUnits.QuadPart = 0x7FFFFFFF;
             pResultCB->AvailableAllocationUnits.QuadPart = (volType == ROVOL || volType == BACKVOL) ? 0 : 0x3F000000;
+            code = 0;
         }
 
         pResultCB->VolumeLabelLength = cm_Utf8ToUtf16( volp->namep, -1, pResultCB->VolumeLabel,
@@ -5114,14 +5118,19 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         if ( pResultCB->VolumeLabelLength )
             pResultCB->VolumeLabelLength--;
 
-        lock_ObtainWrite(&scp->rw);
+        if (sync_done) {
+            if (!scp_locked) {
+                lock_ObtainWrite(&scp->rw);
+                scp_locked = 1;
+            }
+            cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        }
     }
     pResultCB->VolumeLabelLength *= sizeof(WCHAR);  /* convert to bytes from chars */
 
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-
   _done:
-    lock_ReleaseWrite(&scp->rw);
+    if (scp_locked)
+        lock_ReleaseWrite(&scp->rw);
     if (volp)
        cm_PutVolume(volp);
     cm_ReleaseSCache(scp);
@@ -5159,6 +5168,8 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
     char *OfflineMsg;
     char *MOTD;
     struct rx_connection * rxconnp;
+    int sync_done = 0;
+    int scp_locked = 0;
 
     RDR_InitReq(&req);
     if ( bWow64 )
@@ -5202,24 +5213,13 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
         return;
     }
     lock_ObtainWrite(&scp->rw);
-
-    code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
-                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    if (code) {
-        lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
-        (*ResultCB)->ResultStatus = status;
-        (*ResultCB)->ResultBufferLength = 0;
-        osi_Log3(afsd_logp, "RDR_GetVolumeSizeInfo cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
-                 scp, code, status);
-        return;
-    }
+    scp_locked = 1;
 
     pResultCB->SectorsPerAllocationUnit = 1;
     pResultCB->BytesPerSector = 1024;
 
     if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID)
+        scp->fid.volume==AFS_FAKE_ROOT_VOL_ID)
     {
         pResultCB->TotalAllocationUnits.QuadPart = 100;
         pResultCB->AvailableAllocationUnits.QuadPart = 0;
@@ -5231,21 +5231,32 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
         }
 
         volType = cm_VolumeType(volp, scp->fid.volume);
-        Name = volName;
-	OfflineMsg = offLineMsg;
-	MOTD = motd;
-	lock_ReleaseWrite(&scp->rw);
-	do {
-	    code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
-	    if (code) continue;
 
-	    rxconnp = cm_GetRxConn(connp);
-	    code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
-					 &volStat, &Name, &OfflineMsg, &MOTD);
-	    rx_PutConnection(rxconnp);
+        code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code == 0)
+        {
+            sync_done = 1;
 
-	} while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
-	code = cm_MapRPCError(code, &req);
+            Name = volName;
+            OfflineMsg = offLineMsg;
+            MOTD = motd;
+            lock_ReleaseWrite(&scp->rw);
+            scp_locked = 0;
+
+            do {
+                code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
+                if (code) continue;
+
+                rxconnp = cm_GetRxConn(connp);
+                code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
+                                              &volStat, &Name, &OfflineMsg, &MOTD);
+                rx_PutConnection(rxconnp);
+
+            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
+            code = cm_MapRPCError(code, &req);
+        }
+
         if (code == 0) {
             if (volStat.MaxQuota)
             {
@@ -5271,18 +5282,27 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
                 }
             }
         } else {
-
+            /*
+             * Lie about the available space.  Out of quota errors will need
+             * detected when the file server rejects the store data.
+             */
             pResultCB->TotalAllocationUnits.QuadPart = 0x7FFFFFFF;
             pResultCB->AvailableAllocationUnits.QuadPart = (volType == ROVOL || volType == BACKVOL) ? 0 : 0x3F000000;
             code = 0;
         }
-        lock_ObtainWrite(&scp->rw);
+
+        if (sync_done) {
+            if (!scp_locked) {
+                lock_ObtainWrite(&scp->rw);
+                scp_locked = 1;
+            }
+            cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        }
     }
 
-    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-
   _done:
-    lock_ReleaseWrite(&scp->rw);
+    if (scp_locked)
+        lock_ReleaseWrite(&scp->rw);
     if (volp)
        cm_PutVolume(volp);
     cm_ReleaseSCache(scp);
