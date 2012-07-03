@@ -1591,6 +1591,7 @@ int cm_HaveCallback(cm_scache_t *scp)
             }
             if (cm_readonlyVolumeVersioning &&
                 !haveCB &&
+                scp->volumeCreationDate != 0 &&
                 volp->creationDateRO == scp->volumeCreationDate &&
                 volp->cbServerpRO != NULL) {
                 haveCB = 1;
