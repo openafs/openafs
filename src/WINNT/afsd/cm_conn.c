@@ -1513,9 +1513,11 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
         tcp->nextp = serverp->connsp;
         serverp->connsp = tcp;
         lock_ReleaseWrite(&cm_connLock);
+        lock_ReleaseMutex(&userp->mx);
     } else {
         lock_ReleaseRead(&cm_connLock);
       haveconn:
+        lock_ReleaseMutex(&userp->mx);
         InterlockedIncrement(&tcp->refCount);
 
         lock_ObtainMutex(&tcp->mx);
@@ -1527,14 +1529,13 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to token update");
             else
                 osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to crypt change");
-	    tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
+            tcp->flags &= ~CM_CONN_FLAG_FORCE_NEW;
             rx_SetConnSecondsUntilNatPing(tcp->rxconnp, 0);
             rx_DestroyConnection(tcp->rxconnp);
             cm_NewRXConnection(tcp, ucellp, serverp, replicated);
         }
         lock_ReleaseMutex(&tcp->mx);
     }
-    lock_ReleaseMutex(&userp->mx);
 
     /* return this pointer to our caller */
     osi_Log1(afsd_logp, "cm_ConnByServer returning conn 0x%p", tcp);
