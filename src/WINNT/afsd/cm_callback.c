@@ -1576,6 +1576,9 @@ int cm_HaveCallback(cm_scache_t *scp)
         return (cm_data.fakeDirVersion == scp->dataVersion);
     }
 #endif
+    if (scp->cbServerp != NULL)
+	return 1;
+
     if (scp->flags & CM_SCACHEFLAG_PURERO) {
         cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
         if (volp) {
@@ -1600,10 +1603,7 @@ int cm_HaveCallback(cm_scache_t *scp)
             return haveCB;
         }
     }
-    if (scp->cbServerp != NULL)
-	return 1;
-    else
-        return 0;
+    return 0;
 }
 
 /* need to detect a broken callback that races with our obtaining a callback.
