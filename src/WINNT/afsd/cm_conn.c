@@ -215,7 +215,6 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 {
     long code;
     cm_volume_t *volp = NULL;
-    cm_vol_state_t *volstatep = NULL;
     cm_cell_t *cellp = NULL;
 
     if (!fidp) {
@@ -231,9 +230,7 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     if (code)
         return code;
 
-    volstatep = cm_VolumeStateByID(volp, fidp->volume);
-    *replicated = (volstatep->flags & CM_VOL_STATE_FLAG_REPLICATED);
-    *serversppp = cm_GetVolServers(volp, fidp->volume, userp, reqp);
+    *serversppp = cm_GetVolServers(volp, fidp->volume, userp, reqp, replicated);
 
     lock_ObtainRead(&cm_volumeLock);
     cm_PutVolume(volp);
@@ -1702,13 +1699,10 @@ long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, struct cm_us
     long code;
     cm_serverRef_t **serverspp;
     afs_uint32 replicated;
-    cm_vol_state_t * volstatep;
 
     *connpp = NULL;
 
-    volstatep = cm_VolumeStateByID(volp, volid);
-    replicated = (volstatep->flags & CM_VOL_STATE_FLAG_REPLICATED);
-    serverspp = cm_GetVolServers(volp, volid, userp, reqp);
+    serverspp = cm_GetVolServers(volp, volid, userp, reqp, &replicated);
 
     code = cm_ConnByMServers(*serverspp, replicated, userp, reqp, connpp);
     cm_FreeServerList(serverspp, 0);

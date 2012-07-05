@@ -1060,7 +1060,7 @@ cm_IoctlWhereIs(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp
 
         cp = ioctlp->outDatap;
 
-        tsrpp = cm_GetVolServers(tvp, volume, userp, reqp);
+        tsrpp = cm_GetVolServers(tvp, volume, userp, reqp, NULL);
         if (tsrpp == NULL) {
             code = CM_ERROR_NOSUCHVOLUME;
         } else {
