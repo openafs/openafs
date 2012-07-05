@@ -1709,7 +1709,9 @@ long cm_ConnFromVolume(struct cm_volume *volp, unsigned long volid, struct cm_us
 
     *connpp = NULL;
 
-    serverspp = cm_GetVolServers(volp, volid, userp, reqp, &replicated);
+    code = cm_GetVolServerList(volp, volid, userp, reqp, &replicated, &serverspp);
+    if (code)
+        return code;
 
     code = cm_ConnByMServers(*serverspp, replicated, userp, reqp, connpp);
     cm_FreeServerList(serverspp, 0);
