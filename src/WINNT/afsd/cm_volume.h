@@ -111,7 +111,7 @@ extern long cm_ForceUpdateVolume(struct cm_fid *fidp, cm_user_t *userp,
 	cm_req_t *reqp);
 
 extern cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume,
-                                         cm_user_t *userp, cm_req_t *reqp);
+                                         cm_user_t *userp, cm_req_t *reqp, afs_uint32 *replicated);
 
 extern void cm_ChangeRankVolume(cm_server_t *tsp);
 

@@ -1139,22 +1139,22 @@ long cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 }
 
 /* find the appropriate servers from a volume */
-cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volume, cm_user_t *userp, cm_req_t *reqp)
+cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, afs_uint32 volid, cm_user_t *userp, cm_req_t *reqp, afs_uint32 *replicated)
 {
     cm_serverRef_t **serverspp;
     cm_serverRef_t *current;
     int firstTry = 1;
+    cm_vol_state_t *volstatep = NULL;
 
   start:
-    lock_ObtainWrite(&cm_serverLock);
+    volstatep = cm_VolumeStateByID(volp, volid);
 
-    if (volume == volp->vol[RWVOL].ID)
-        serverspp = &volp->vol[RWVOL].serversp;
-    else if (volume == volp->vol[ROVOL].ID)
-        serverspp = &volp->vol[ROVOL].serversp;
-    else if (volume == volp->vol[BACKVOL].ID)
-        serverspp = &volp->vol[BACKVOL].serversp;
-    else {
+    lock_ObtainWrite(&cm_serverLock);
+    if (volstatep) {
+        if (replicated)
+            *replicated = (volstatep->flags & CM_VOL_STATE_FLAG_REPLICATED);
+        serverspp = &volstatep->serversp;
+    } else {
         lock_ReleaseWrite(&cm_serverLock);
         if (firstTry) {
             afs_int32 code;
