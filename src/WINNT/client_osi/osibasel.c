@@ -35,7 +35,7 @@ void osi_BaseInit(void)
     int i;
 
     for(i=0; i<OSI_MUTEXHASHSIZE; i++)
-        InitializeCriticalSection(&osi_baseAtomicCS[i]);
+        InitializeCriticalSectionAndSpinCount(&osi_baseAtomicCS[i], 4000);
 
     if ((tls_LockRefH = TlsAlloc()) == TLS_OUT_OF_INDEXES)
         osi_panic("TlsAlloc(tls_LockRefH) failure", __FILE__, __LINE__);
@@ -43,7 +43,7 @@ void osi_BaseInit(void)
     if ((tls_LockRefT = TlsAlloc()) == TLS_OUT_OF_INDEXES)
         osi_panic("TlsAlloc(tls_LockRefT) failure", __FILE__, __LINE__);
 
-    InitializeCriticalSection(&lock_ref_CS);
+    InitializeCriticalSectionAndSpinCount(&lock_ref_CS, 4000);
 }
 
 void
