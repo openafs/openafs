@@ -170,4 +170,9 @@ extern long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
                              struct cm_req *reqp, afs_uint32 *replicated,
                              cm_serverRef_t ***serversppp);
 
+extern long cm_GetVolServerList(struct cm_volume *volp, afs_uint32 volid,
+                                struct cm_user *userp,
+                                struct cm_req *reqp, afs_uint32 *replicated,
+                                cm_serverRef_t ***serversppp);
+
 #endif /*  OPENAFS_WINNT_AFSD_CM_CONN_H */

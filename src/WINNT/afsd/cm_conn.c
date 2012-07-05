@@ -210,6 +210,13 @@ void cm_InitReq(cm_req_t *reqp)
 	reqp->startTime = GetTickCount();
 }
 
+long cm_GetVolServerList(cm_volume_t *volp, afs_uint32 volid, struct cm_user *userp,
+	struct cm_req *reqp, afs_uint32 *replicated, cm_serverRef_t ***serversppp)
+{
+    *serversppp = cm_GetVolServers(volp, volid, userp, reqp, replicated);
+    return (*serversppp ? 0 : CM_ERROR_NOSUCHVOLUME);
+}
+
 long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 	struct cm_req *reqp, afs_uint32 *replicated, cm_serverRef_t ***serversppp)
 {
