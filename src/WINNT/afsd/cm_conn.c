@@ -1503,17 +1503,15 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
         cm_GetServer(serverp);
         tcp = malloc(sizeof(*tcp));
         memset(tcp, 0, sizeof(*tcp));
-        tcp->nextp = serverp->connsp;
-        serverp->connsp = tcp;
         cm_HoldUser(userp);
         tcp->userp = userp;
         lock_InitializeMutex(&tcp->mx, "cm_conn_t mutex", LOCK_HIERARCHY_CONN);
-        lock_ObtainMutex(&tcp->mx);
         tcp->serverp = serverp;
         tcp->cryptlevel = rxkad_clear;
         cm_NewRXConnection(tcp, ucellp, serverp, replicated);
         tcp->refCount = 1;
-        lock_ReleaseMutex(&tcp->mx);
+        tcp->nextp = serverp->connsp;
+        serverp->connsp = tcp;
         lock_ReleaseWrite(&cm_connLock);
     } else {
         lock_ReleaseRead(&cm_connLock);
