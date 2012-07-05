@@ -421,7 +421,7 @@ cm_Analyze(cm_conn_t *connp,
                                      &volp);
             if (code == 0) {
                 if (cm_UpdateVolumeLocation(cellp, userp, reqp, volp) == 0) {
-                    code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
                     if (code == 0) {
                         if (!cm_IsServerListEmpty(*serverspp))
                             retry = 1;
@@ -466,24 +466,24 @@ cm_Analyze(cm_conn_t *connp,
             format = "All servers are offline when accessing cell %s volume %d.";
 	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, cellp->name, fidp->volume);
 
-            if (!serversp) {
-                code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
-                if (code == 0) {
-                    serversp = *serverspp;
-                    free_svr_list = 1;
-                }
-            }
-            cm_ResetServerBusyStatus(serversp);
-            if (free_svr_list) {
-                cm_FreeServerList(serverspp, 0);
-                free_svr_list = 0;
-                serversp = NULL;
-            }
-
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                       &volp);
             if (code == 0) {
+                if (!serversp) {
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
+                    if (code == 0) {
+                        serversp = *serverspp;
+                        free_svr_list = 1;
+                    }
+                }
+                cm_ResetServerBusyStatus(serversp);
+                if (free_svr_list) {
+                    cm_FreeServerList(serverspp, 0);
+                    free_svr_list = 0;
+                    serversp = NULL;
+                }
+
                 /*
                  * Do not perform a cm_CheckOfflineVolume() if cm_Analyze()
                  * was called by cm_CheckOfflineVolumeState().
@@ -517,24 +517,24 @@ cm_Analyze(cm_conn_t *connp,
             format = "All servers are busy when accessing cell %s volume %d.";
 	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, cellp->name, fidp->volume);
 
-            if (!serversp) {
-                code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
-                if (code == 0) {
-                    serversp = *serverspp;
-                    free_svr_list = 1;
-                }
-            }
-            cm_ResetServerBusyStatus(serversp);
-            if (free_svr_list) {
-                cm_FreeServerList(serverspp, 0);
-                free_svr_list = 0;
-                serversp = NULL;
-            }
-
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
                                      CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                      &volp);
             if (code == 0) {
+                if (!serversp) {
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
+                    if (code == 0) {
+                        serversp = *serverspp;
+                        free_svr_list = 1;
+                    }
+                }
+                cm_ResetServerBusyStatus(serversp);
+                if (free_svr_list) {
+                    cm_FreeServerList(serverspp, 0);
+                    free_svr_list = 0;
+                    serversp = NULL;
+                }
+
                 if (timeLeft > 7) {
                     thrd_Sleep(5000);
                     statep = cm_VolumeStateByID(volp, fidp->volume);
@@ -563,44 +563,19 @@ cm_Analyze(cm_conn_t *connp,
 
     /* special codes:  VBUSY and VRESTARTING */
     else if (errorCode == VBUSY || errorCode == VRESTARTING) {
-        if (!serversp && fidp) {
-            code = cm_GetServerList(fidp, userp, reqp, &replicated, &serverspp);
-            if (code == 0) {
-                serversp = *serverspp;
-                free_svr_list = 1;
-            }
-        }
-
-        switch ( errorCode ) {
-        case VBUSY:
-	    msgID = MSG_SERVER_REPORTS_VBUSY;
-            format = "Server %s reported busy when accessing volume %d in cell %s.";
-            break;
-        case VRESTARTING:
-	    msgID = MSG_SERVER_REPORTS_VRESTARTING;
-            format = "Server %s reported restarting when accessing volume %d in cell %s.";
-            break;
-        }
-
-        if (serverp && fidp) {
-            /* Log server being offline for this volume */
-            sprintf(addr, "%d.%d.%d.%d",
-                   ((serverp->addr.sin_addr.s_addr & 0xff)),
-                   ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                   ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                   ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
-
-	    osi_Log3(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
-	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume, cellp->name);
-        }
-
-        cm_SetServerBusyStatus(serversp, serverp);
-
-        if (fidp) { /* File Server query */
+        if (fidp) {
             code = cm_FindVolumeByID(cellp, fidp->volume, userp, reqp,
                                       CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                       &volp);
             if (code == 0) {
+                if (!serversp) {
+                    code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
+                    if (code == 0) {
+                        serversp = *serverspp;
+                        free_svr_list = 1;
+                    }
+                }
+
                 statep = cm_VolumeStateByID(volp, fidp->volume);
 
                 if (statep)
@@ -611,6 +586,31 @@ cm_Analyze(cm_conn_t *connp,
                 lock_ReleaseRead(&cm_volumeLock);
                 volp = NULL;
             }
+        }
+
+        if (serverp) {
+            /* Log server being offline for this volume */
+            sprintf(addr, "%d.%d.%d.%d",
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                     ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+
+            switch ( errorCode ) {
+            case VBUSY:
+                msgID = MSG_SERVER_REPORTS_VBUSY;
+                format = "Server %s reported busy when accessing volume %d in cell %s.";
+                break;
+            case VRESTARTING:
+                msgID = MSG_SERVER_REPORTS_VRESTARTING;
+                format = "Server %s reported restarting when accessing volume %d in cell %s.";
+                break;
+            }
+
+            osi_Log3(afsd_logp, format, osi_LogSaveString(afsd_logp,addr), fidp->volume, cellp->name);
+            LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume, cellp->name);
+
+            cm_SetServerBusyStatus(serversp, serverp);
         }
 
         if (free_svr_list) {
