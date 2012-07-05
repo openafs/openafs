@@ -232,7 +232,7 @@ void lock_ObtainWrite(osi_rwlock_t *lockp)
         osi_assert(lockp->readers == 0 && (lockp->flags & OSI_LOCKFLAG_EXCL));
     } else {
         /* if we're here, all clear to set the lock */
-        lockp->flags |= OSI_LOCKFLAG_EXCL;
+        _InterlockedOr(&lockp->flags, OSI_LOCKFLAG_EXCL);
         lockp->tid[0] = tid;
     }
     osi_assertx(lockp->readers == 0, "write lock readers present");
@@ -413,7 +413,7 @@ void lock_ReleaseWrite(osi_rwlock_t *lockp)
     osi_assertx(lockp->tid[0] == thrd_Current(), "write lock not held by current thread");
     lockp->tid[0] = 0;
 
-    lockp->flags &= ~OSI_LOCKFLAG_EXCL;
+    _InterlockedAnd( &lockp->flags, ~OSI_LOCKFLAG_EXCL);
     if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, csp);
     }
@@ -442,7 +442,7 @@ void lock_ConvertWToR(osi_rwlock_t *lockp)
     osi_assertx(lockp->tid[0] == thrd_Current(), "write lock not held by current thread");
 
     /* convert write lock to read lock */
-    lockp->flags &= ~OSI_LOCKFLAG_EXCL;
+    _InterlockedAnd(&lockp->flags, ~OSI_LOCKFLAG_EXCL);
     lockp->tid[0] = 0;
     lockp->readers++;
 
@@ -489,7 +489,7 @@ void lock_ConvertRToW(osi_rwlock_t *lockp)
 
     if (--(lockp->readers) == 0) {
         /* convert read lock to write lock */
-        lockp->flags |= OSI_LOCKFLAG_EXCL;
+        _InterlockedOr(&lockp->flags, OSI_LOCKFLAG_EXCL);
         lockp->tid[0] = tid;
     } else {
         osi_assertx(lockp->readers > 0, "read lock underflow");
@@ -538,7 +538,7 @@ void lock_ObtainMutex(struct osi_mutex *lockp)
         osi_assert(lockp->flags & OSI_LOCKFLAG_EXCL);
     } else {
         /* if we're here, all clear to set the lock */
-        lockp->flags |= OSI_LOCKFLAG_EXCL;
+        _InterlockedOr(&lockp->flags, OSI_LOCKFLAG_EXCL);
         lockp->tid = thrd_Current();
     }
 
@@ -591,7 +591,7 @@ void lock_ReleaseMutex(struct osi_mutex *lockp)
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "mutex not held");
     osi_assertx(lockp->tid == thrd_Current(), "mutex not held by current thread");
 
-    lockp->flags &= ~OSI_LOCKFLAG_EXCL;
+    _InterlockedAnd(&lockp->flags, ~OSI_LOCKFLAG_EXCL);
     lockp->tid = 0;
     if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, csp);
@@ -692,7 +692,7 @@ int lock_TryWrite(struct osi_rwlock *lockp)
     }
     else {
         /* if we're here, all clear to set the lock */
-        lockp->flags |= OSI_LOCKFLAG_EXCL;
+        _InterlockedOr(&lockp->flags, OSI_LOCKFLAG_EXCL);
         lockp->tid[0] = thrd_Current();
         i = 1;
     }
@@ -743,7 +743,7 @@ int lock_TryMutex(struct osi_mutex *lockp) {
     }
     else {
         /* if we're here, all clear to set the lock */
-        lockp->flags |= OSI_LOCKFLAG_EXCL;
+        _InterlockedOr(&lockp->flags, OSI_LOCKFLAG_EXCL);
         lockp->tid = thrd_Current();
         i = 1;
     }
@@ -854,7 +854,7 @@ void osi_SleepW(LONG_PTR sleepVal, struct osi_rwlock *lockp)
 
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "osi_SleepW: not held");
 
-    lockp->flags &= ~OSI_LOCKFLAG_EXCL;
+    _InterlockedAnd(&lockp->flags, ~OSI_LOCKFLAG_EXCL);
     lockp->tid[0] = 0;
     if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, NULL);
@@ -899,7 +899,7 @@ void osi_SleepM(LONG_PTR sleepVal, struct osi_mutex *lockp)
 
     osi_assertx(lockp->flags & OSI_LOCKFLAG_EXCL, "osi_SleepM not held");
 
-    lockp->flags &= ~OSI_LOCKFLAG_EXCL;
+    _InterlockedAnd(&lockp->flags, ~OSI_LOCKFLAG_EXCL);
     lockp->tid = 0;
     if (lockp->waiters) {
         osi_TSignalForMLs(&lockp->d.turn, 0, NULL);
