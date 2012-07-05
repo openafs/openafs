@@ -371,7 +371,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
     cm_server_t ** serversp, *tsp;
     afs_uint32 isDown, wasDown;
     afs_uint32 code;
-    time_t start, *deltas;
+    time_t start;
     char hoststr[16];
 
     cm_InitReq(&req);
@@ -382,7 +382,6 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
     conns = (cm_conn_t **)malloc(maxconns * sizeof(cm_conn_t *));
     rxconns = (struct rx_connection **)malloc(maxconns * sizeof(struct rx_connection *));
     conntimer = (afs_int32 *)malloc(maxconns * sizeof (afs_int32));
-    deltas = (time_t *)malloc(maxconns * sizeof (time_t));
     results = (afs_int32 *)malloc(maxconns * sizeof (afs_int32));
     serversp = (cm_server_t **)malloc(maxconns * sizeof(cm_server_t *));
     caps = (Capabilities *)malloc(maxconns * sizeof(Capabilities));
@@ -666,7 +665,6 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
     free(conns);
     free(rxconns);
     free(conntimer);
-    free(deltas);
     free(results);
     free(serversp);
     free(caps);
