@@ -696,6 +696,61 @@ struct file_operations afs_file_fops = {
   .llseek = 	default_llseek,
 };
 
+static struct dentry *
+canonical_dentry(struct inode *ip)
+{
+    struct vcache *vcp = VTOAFS(ip);
+    struct dentry *first = NULL, *ret = NULL, *cur;
+
+    /* general strategy:
+     * if vcp->target_link is set, and can be found in ip->i_dentry, use that.
+     * otherwise, use the first dentry in ip->i_dentry.
+     * if ip->i_dentry is empty, use the 'dentry' argument we were given.
+     */
+    /* note that vcp->target_link specifies which dentry to use, but we have
+     * no reference held on that dentry. so, we cannot use or dereference
+     * vcp->target_link itself, since it may have been freed. instead, we only
+     * use it to compare to pointers in the ip->i_dentry list. */
+
+    d_prune_aliases(ip);
+
+# ifdef HAVE_DCACHE_LOCK
+    spin_lock(&dcache_lock);
+# else
+    spin_lock(&ip->i_lock);
+# endif
+
+    list_for_each_entry_reverse(cur, &ip->i_dentry, d_alias) {
+
+	if (!vcp->target_link || cur == vcp->target_link) {
+	    ret = cur;
+	    break;
+	}
+
+	if (!first) {
+	    first = cur;
+	}
+    }
+    if (!ret && first) {
+	ret = first;
+    }
+
+    vcp->target_link = ret;
+
+# ifdef HAVE_DCACHE_LOCK
+    if (ret) {
+	dget_locked(ret);
+    }
+    spin_unlock(&dcache_lock);
+# else
+    if (ret) {
+	dget(ret);
+    }
+    spin_unlock(&ip->i_lock);
+# endif
+
+    return ret;
+}
 
 /**********************************************************************
  * AFS Linux dentry operations
@@ -1076,10 +1131,40 @@ afs_dentry_delete(struct dentry *dp)
     return 0;
 }
 
+#ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
+static struct vfsmount *
+afs_dentry_automount(struct path *path)
+{
+    struct dentry *target;
+
+    target = canonical_dentry(path->dentry->d_inode);
+
+    if (target == path->dentry) {
+	dput(target);
+	target = NULL;
+    }
+
+    if (target) {
+	dput(path->dentry);
+	path->dentry = target;
+
+    } else {
+	spin_lock(&path->dentry->d_lock);
+	path->dentry->d_flags &= ~DCACHE_NEED_AUTOMOUNT;
+	spin_unlock(&path->dentry->d_lock);
+    }
+
+    return NULL;
+}
+#endif /* STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT */
+
 struct dentry_operations afs_dentry_operations = {
   .d_revalidate =	afs_linux_dentry_revalidate,
   .d_delete =		afs_dentry_delete,
   .d_iput =		afs_dentry_iput,
+#ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
+  .d_automount =        afs_dentry_automount,
+#endif /* STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT */
 };
 
 /**********************************************************************
@@ -1174,20 +1259,28 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     AFS_GUNLOCK();
 
     if (ip && S_ISDIR(ip->i_mode)) {
+	int retry = 1;
 	struct dentry *alias;
 
-        /* Try to invalidate an existing alias in favor of our new one */
-	alias = d_find_alias(ip);
-        /* But not if it's disconnected; then we want d_splice_alias below */
-	if (alias && !(alias->d_flags & DCACHE_DISCONNECTED)) {
-	    if (d_invalidate(alias) == 0) {
-		dput(alias);
-	    } else {
-		iput(ip);
-		crfree(credp);
-		return alias;
+	while (retry) {
+	    retry = 0;
+
+	    /* Try to invalidate an existing alias in favor of our new one */
+	    alias = d_find_alias(ip);
+	    /* But not if it's disconnected; then we want d_splice_alias below */
+	    if (alias && !(alias->d_flags & DCACHE_DISCONNECTED)) {
+		if (d_invalidate(alias) == 0) {
+		    /* there may be more aliases; try again until we run out */
+		    retry = 1;
+		}
 	    }
+
+	    dput(alias);
 	}
+
+#ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
+	ip->i_flags |= S_AUTOMOUNT;
+#endif
     }
     newdp = d_splice_alias(ip, dp);
 
@@ -2484,6 +2577,33 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 }
 #endif
 
+#ifndef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
+static void *
+afs_linux_dir_follow_link(struct dentry *dentry, struct nameidata *nd)
+{
+    struct dentry **dpp;
+    struct dentry *target;
+
+    target = canonical_dentry(dentry->d_inode);
+
+# ifdef STRUCT_NAMEIDATA_HAS_PATH
+    dpp = &nd->path.dentry;
+# else
+    dpp = &nd->dentry;
+# endif
+
+    dput(*dpp);
+
+    if (target) {
+	*dpp = target;
+    } else {
+	*dpp = dget(dentry);
+    }
+
+    return NULL;
+}
+#endif /* !STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT */
+
 
 static struct inode_operations afs_file_iops = {
   .permission =		afs_linux_permission,
@@ -2521,6 +2641,9 @@ static struct inode_operations afs_dir_iops = {
   .rename =		afs_linux_rename,
   .getattr =		afs_linux_getattr,
   .permission =		afs_linux_permission,
+#ifndef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
+  .follow_link =        afs_linux_dir_follow_link,
+#endif
 };
 
 /* We really need a separate symlink set of ops, since do_follow_link()

@@ -781,6 +781,57 @@ struct file_operations afs_file_fops = {
 #endif
 };
 
+static struct dentry *
+canonical_dentry(struct inode *ip)
+{
+    struct vcache *vcp = VTOAFS(ip);
+    struct dentry *first = NULL, *ret = NULL, *cur;
+    struct list_head *head, *prev, *tmp;
+
+    /* general strategy:
+     * if vcp->target_link is set, and can be found in ip->i_dentry, use that.
+     * otherwise, use the first dentry in ip->i_dentry.
+     * if ip->i_dentry is empty, use the 'dentry' argument we were given.
+     */
+    /* note that vcp->target_link specifies which dentry to use, but we have
+     * no reference held on that dentry. so, we cannot use or dereference
+     * vcp->target_link itself, since it may have been freed. instead, we only
+     * use it to compare to pointers in the ip->i_dentry list. */
+
+    d_prune_aliases(ip);
+
+    spin_lock(&dcache_lock);
+
+    head = &ip->i_dentry;
+    prev = ip->i_dentry.prev;
+
+    while (prev != head) {
+	tmp = prev;
+	prev = tmp->prev;
+	cur = list_entry(tmp, struct dentry, d_alias);
+
+	if (!vcp->target_link || cur == vcp->target_link) {
+	    ret = cur;
+	    break;
+	}
+
+	if (!first) {
+	    first = cur;
+	}
+    }
+    if (!ret && first) {
+	ret = first;
+    }
+
+    vcp->target_link = ret;
+
+    if (ret) {
+	dget_locked(ret);
+    }
+    spin_unlock(&dcache_lock);
+
+    return ret;
+}
 
 /**********************************************************************
  * AFS Linux dentry operations
@@ -1239,18 +1290,23 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 
 #if defined(AFS_LINUX24_ENV)
     if (ip && S_ISDIR(ip->i_mode)) {
+	int retry = 1;
 	struct dentry *alias;
 
-        /* Try to invalidate an existing alias in favor of our new one */
-	alias = d_find_alias(ip);
-	if (alias) {
-	    if (d_invalidate(alias) == 0) {
-		dput(alias);
-	    } else {
-		iput(ip);
-		crfree(credp);
-		return alias;
+	while (retry) {
+	    retry = 0;
+
+	    /* Try to invalidate an existing alias in favor of our new one */
+	    alias = d_find_alias(ip);
+	    /* But not if it's disconnected; then we want d_splice_alias below */
+	    if (alias) {
+		if (d_invalidate(alias) == 0) {
+		    /* there may be more aliases; try again until we run out */
+		    retry = 1;
+		}
 	    }
+
+	    dput(alias);
 	}
     }
 #endif
@@ -1996,6 +2052,26 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 }
 #endif
 
+static int
+afs_linux_dir_follow_link(struct dentry *dentry, struct nameidata *nd)
+{
+    struct dentry **dpp;
+    struct dentry *target;
+
+    target = canonical_dentry(dentry->d_inode);
+
+    dpp = &nd->dentry;
+
+    dput(*dpp);
+
+    if (target) {
+	*dpp = target;
+    } else {
+	*dpp = dget(dentry);
+    }
+
+    return 0;
+}
 
 static struct inode_operations afs_file_iops = {
 #if defined(AFS_LINUX24_ENV)
@@ -2045,6 +2121,7 @@ static struct inode_operations afs_dir_iops = {
   .rename =		afs_linux_rename,
   .revalidate =		afs_linux_revalidate,
   .permission =		afs_linux_permission,
+  .follow_link =	afs_linux_dir_follow_link,
 };
 
 /* We really need a separate symlink set of ops, since do_follow_link()

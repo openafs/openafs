@@ -793,6 +793,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
 				       [backing-dev.h])
 		 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
+		 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blkbits], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([inode], [i_blksize], [fs.h])
