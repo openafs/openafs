@@ -131,6 +131,8 @@ extern void cm_RandomizeServer(cm_serverRef_t** list);
 
 extern void cm_FreeServer(cm_server_t* server);
 
+extern afs_uint32 cm_ServerListSize(cm_serverRef_t* list);
+
 #define CM_FREESERVERLIST_DELETE 1
 
 extern void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags);

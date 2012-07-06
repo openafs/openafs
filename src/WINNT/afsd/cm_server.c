@@ -1081,7 +1081,21 @@ afs_int32 cm_PutServerRef(cm_serverRef_t *tsrp, int locked)
     return refCount;
 }
 
+afs_uint32
+cm_ServerListSize(cm_serverRef_t* serversp)
+{
+    afs_uint32 count = 0;
+    cm_serverRef_t *tsrp;
 
+    lock_ObtainRead(&cm_serverLock);
+    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+        if (tsrp->status == srv_deleted)
+            continue;
+        count++;
+    }
+    lock_ReleaseRead(&cm_serverLock);
+    return count;
+}
 
 LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 {
