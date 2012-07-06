@@ -751,6 +751,13 @@ struct vcache {
     struct bhv_desc vc_bhv_desc;	/* vnode's behavior data. */
 #endif
 #endif				/* AFS_SGI_ENV */
+#ifdef AFS_LINUX24_ENV
+    struct dentry *target_link; /* dentry we prefer, when we are redirecting
+                                 * all requests due to duplicate dentry aliases.
+                                 * See LINUX/osi_vnodeops.c. Note that this is
+                                 * NOT an actual reference to a dentry, so this
+                                 * pointer MUST NOT be dereferenced on its own. */
+#endif
     afs_int32 vc_error;		/* stash write error for this vnode. */
     int xlatordv;		/* Used by nfs xlator */
     struct AFS_UCRED *uncred;

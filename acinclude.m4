@@ -740,6 +740,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_KBUILD_USES_EXTRA_CFLAGS
 		 LINUX_KERNEL_COMPILE_WORKS
 		 LINUX_EXPORTS_FIND_TASK_BY_PID
+		 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
 		 LINUX_EXPORTS_PROC_ROOT_FS
                  LINUX_HAVE_CURRENT_KERNEL_TIME
                  LINUX_HAVE_WRITE_BEGIN_AOP
