@@ -52,6 +52,43 @@ osi_SetLockOrderValidation(int on)
     lockOrderValidation = (BOOLEAN)on;
 }
 
+#ifdef DEBUG
+#ifdef _M_IX86
+static __inline void
+osi_InterlockedAnd(LONG * pdest, LONG value)
+{
+    LONG orig, current, new;
+
+    current = *pdest;
+
+    do
+    {
+        orig = current;
+        new = orig & value;
+        current = _InterlockedCompareExchange(pdest, new, orig);
+    } while (orig != current);
+}
+
+static __inline void
+osi_InterlockedOr(LONG * pdest, LONG value)
+{
+    LONG orig, current, new;
+
+    current = *pdest;
+
+    do
+    {
+        orig = current;
+        new = orig | value;
+        current = _InterlockedCompareExchange(pdest, new, orig);
+    } while (orig != current);
+}
+
+#define _InterlockedOr   osi_InterlockedOr
+#define _InterlockedAnd  osi_InterlockedAnd
+#endif
+#endif
+
 static osi_lock_ref_t *
 lock_GetLockRef(void * lockp, char type)
 {
