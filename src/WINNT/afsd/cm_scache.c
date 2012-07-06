@@ -1468,6 +1468,12 @@ void cm_MergeStatus(cm_scache_t *dscp,
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
+    if (statusp->InterfaceVersion != 0x1) {
+        osi_Log2(afsd_logp, "Merge, Failure scp 0x%p Invalid InterfaceVersion %u",
+                 scp, statusp->InterfaceVersion);
+        return;
+    }
+
     if (statusp->errorCode != 0) {
         _InterlockedOr(&scp->flags, CM_SCACHEFLAG_EACCESS);
 	osi_Log2(afsd_logp, "Merge, Failure scp 0x%p code 0x%x", scp, statusp->errorCode);
