@@ -1973,3 +1973,20 @@ cm_ChecksumVolumeServerList(struct cm_fid *fidp, cm_user_t *userp, cm_req_t *req
     }
     return cksum;
 }
+
+afs_int32
+cm_IsVolumeReplicated(cm_fid_t *fidp)
+{
+    afs_int32 replicated = 0;
+    cm_volume_t *volp;
+    cm_vol_state_t * volstatep;
+
+    volp = cm_GetVolumeByFID(fidp);
+    if (volp) {
+        volstatep = cm_VolumeStateByID(volp, fidp->volume);
+        replicated = (volstatep->flags & CM_VOL_STATE_FLAG_REPLICATED);
+        cm_PutVolume(volp);
+    }
+
+    return replicated;
+}
