@@ -1987,11 +1987,13 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                      * length_found and continue as if the file server said
                      * it was sending us zero octets of data.
                      */
-                    if (fs_fetchdata_offset_bug && first_read)
+                    if (fs_fetchdata_offset_bug && first_read) {
                         length_found = 0;
-                    else
+                        break;
+                    } else if (temp <= 0) {
                         code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
-                    break;
+                        break;
+                    }
                 }
 
                 iov = 0;
@@ -2064,11 +2066,13 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                      * length_found and continue as if the file server said
                      * it was sending us zero octets of data.
                      */
-                    if (fs_fetchdata_offset_bug && first_read)
+                    if (fs_fetchdata_offset_bug && first_read) {
                         length_found = 0;
-                    else
+                        break;
+                    } else if (temp <= 0) {
                         code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
-                    break;
+                        break;
+                    }
                 }
                 first_read = 0;
 
@@ -2436,11 +2440,13 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                      * length_found and continue as if the file server said
                      * it was sending us zero octets of data.
                      */
-                    if (fs_fetchdata_offset_bug && first_read)
+                    if (fs_fetchdata_offset_bug && first_read) {
                         length_found = 0;
-                    else
+                        break;
+                    } else if (temp <= 0) {
                         code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
-                    break;
+                        break;
+                    }
                 }
 
                 iov = 0;
@@ -2483,11 +2489,13 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
                      * length_found and continue as if the file server said
                      * it was sending us zero octets of data.
                      */
-                    if (fs_fetchdata_offset_bug && first_read)
+                    if (fs_fetchdata_offset_bug && first_read) {
                         length_found = 0;
-                    else
+                        break;
+                    } else if (temp <= 0) {
                         code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
-                    break;
+                        break;
+                    }
                 }
                 first_read = 0;
 
@@ -2726,11 +2734,13 @@ cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
                      * length_found and continue as if the file server said
                      * it was sending us zero octets of data.
                      */
-                    if (fs_fetchdata_offset_bug && first_read)
+                    if (fs_fetchdata_offset_bug && first_read) {
                         length_found = 0;
-                    else
+                        break;
+                    } else if (temp <= 0) {
                         code = (rx_Error(rxcallp) < 0) ? rx_Error(rxcallp) : RX_PROTOCOL_ERROR;
-                    break;
+                        break;
+                    }
                 }
                 first_read = 0;
 
