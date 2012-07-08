@@ -1673,6 +1673,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     int first_read = 1;
     int scp_locked = 1;
 
+    memset(&afsStatus, 0, sizeof(afsStatus));
+    memset(&callback, 0, sizeof(callback));
     memset(&volSync, 0, sizeof(volSync));
 
     /* now, the buffer may or may not be filled with good data (buf_GetNewLocked
@@ -2240,6 +2242,8 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
     int first_read = 1;
     int scp_locked = 1;
 
+    memset(&afsStatus, 0, sizeof(afsStatus));
+    memset(&callback, 0, sizeof(callback));
     memset(&volSync, 0, sizeof(volSync));
 
     /* now, the buffer may or may not be filled with good data (buf_GetNewLocked
@@ -2595,6 +2599,8 @@ cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
     cm_req_t *reqp = biod->reqp;
     afs_uint64 dataVersion = scp->dataVersion;
 
+    memset(&afsStatus, 0, sizeof(afsStatus));
+    memset(&callback, 0, sizeof(callback));
     memset(&volSync, 0, sizeof(volSync));
     memset(bufferp, 0, biod->length);
 
