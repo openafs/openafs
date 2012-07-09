@@ -312,9 +312,9 @@ static void afsd_InitServerPreferences(void)
             if ( tsp )		/* an existing server - ref count increased */
             {
                 lock_ObtainMutex(&tsp->mx);
-                tsp->ipRank = (USHORT)dwRank;
+                tsp->adminRank = (USHORT)dwRank;
                 _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
-		tsp->adminRank = tsp->ipRank;
+                cm_RankServer(tsp);
                 lock_ReleaseMutex(&tsp->mx);
 
                 /* set preferences for an existing vlserver */
@@ -325,9 +325,9 @@ static void afsd_InitServerPreferences(void)
             {
                 tsp = cm_NewServer(&saddr, CM_SERVER_VLDB, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
                 lock_ObtainMutex(&tsp->mx);
-                tsp->ipRank = (USHORT)dwRank;
+                tsp->adminRank = (USHORT)dwRank;
                 _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
-		tsp->adminRank = tsp->ipRank;
+                cm_RankServer(tsp);
                 lock_ReleaseMutex(&tsp->mx);
             }
         }
@@ -388,9 +388,9 @@ static void afsd_InitServerPreferences(void)
             if ( tsp )		/* an existing server - ref count increased */
             {
                 lock_ObtainMutex(&tsp->mx);
-                tsp->ipRank = (USHORT)dwRank;
+                tsp->adminRank = (USHORT)dwRank;
 		_InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
-		tsp->adminRank = tsp->ipRank;
+                cm_RankServer(tsp);
                 lock_ReleaseMutex(&tsp->mx);
 
                 /* find volumes which might have RO copy
@@ -404,9 +404,9 @@ static void afsd_InitServerPreferences(void)
             {
                 tsp = cm_NewServer(&saddr, CM_SERVER_FILE, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
                 lock_ObtainMutex(&tsp->mx);
-                tsp->ipRank = (USHORT)dwRank;
+                tsp->adminRank = (USHORT)dwRank;
                 _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
-		tsp->adminRank = tsp->ipRank;
+                cm_RankServer(tsp);
                 lock_ReleaseMutex(&tsp->mx);
             }
         }

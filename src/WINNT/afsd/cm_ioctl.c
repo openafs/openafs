@@ -1948,9 +1948,8 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
         if ( tsp )		/* an existing server - ref count increased */
         {
             lock_ObtainMutex(&tsp->mx);
-            tsp->ipRank = rank;
+            tsp->adminRank = rank;
             _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
-	    tsp->adminRank = tsp->ipRank;
             lock_ReleaseMutex(&tsp->mx);
 
             switch (type) {
@@ -1972,11 +1971,9 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
         {
             tsp = cm_NewServer(&tmp, type, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
             lock_ObtainMutex(&tsp->mx);
-            tsp->ipRank = rank;
+            tsp->adminRank = rank;
             _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
-	    tsp->adminRank = tsp->ipRank;
             lock_ReleaseMutex(&tsp->mx);
-            tsp->ipRank = rank;
         }
 	cm_PutServer(tsp);  /* decrease refcount */
     }
@@ -2017,7 +2014,7 @@ cm_IoctlGetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
             continue;   /* ignore vlservers */
 
         srvout->host = tsp->addr.sin_addr;
-        srvout->rank = tsp->ipRank;
+        srvout->rank = tsp->activeRank;
         srvout++;
         spout->num_servers++;
         noServers--;

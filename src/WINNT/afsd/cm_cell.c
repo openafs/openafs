@@ -33,7 +33,7 @@ osi_rwlock_t cm_cellLock;
  *
  * At the present time the return value is ignored by the caller.
  */
-long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, unsigned short ipRank)
+long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, unsigned short adminRank)
 {
     cm_server_t *tsp;
     cm_serverRef_t *tsrp;
@@ -59,8 +59,8 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, uns
     else
         tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, NULL, probe ? 0 : CM_FLAG_NOPROBE);
 
-    if (ipRank)
-        tsp->ipRank = ipRank;
+    if (adminRank)
+        tsp->adminRank = adminRank;
 
     /* Insert the vlserver into a sorted list, sorted by server rank */
     tsrp = cm_NewServerRef(tsp, 0);

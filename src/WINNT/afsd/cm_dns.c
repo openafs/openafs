@@ -485,7 +485,7 @@ void printReplyBuffer_AFSDB(PDNS_HDR replyBuff)
 };
 
 void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
-                              unsigned short ports[], unsigned short ipRanks[], int *numServers, int *ttl)
+                              unsigned short ports[], unsigned short adminRanks[], int *numServers, int *ttl)
   /*PAFS_SRV_LIST (srvList)*/
 {
   u_char *ptr = (u_char *) replyBuff;
@@ -538,7 +538,7 @@ void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHost
       memcpy(&cellHostAddrs[srvCount], &addr.s_addr, sizeof(addr.s_addr));
 	  strncpy(cellHostNames[srvCount], hostName, CELL_MAXNAMELEN);
 	  cellHostNames[srvCount][CELL_MAXNAMELEN-1] = '\0';
-      ipRanks[srvCount] = 0;
+      adminRanks[srvCount] = 0;
       ports[srvCount] = htons(7003);
       srvCount++;
     }
@@ -629,7 +629,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                  unsigned short afsdbPort,  /* network byte order */
                  int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
                  unsigned short ports[],    /* network byte order */
-                 unsigned short ipRanks[],
+                 unsigned short adminRanks[],
                  int *numServers, int *ttl)
 {
 #ifndef DNSAPI_ENV
@@ -688,7 +688,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
 
     /*printReplyBuffer_AFSDB(pDNShdr);*/
     if (pDNShdr)
-        processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, ports, ipRanks, numServers, ttl);
+        processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, ports, adminRanks, numServers, ttl);
 
     closesocket(commSock);
     if (*numServers == 0)
@@ -724,7 +724,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
             if (pDnsIter->wType == DNS_TYPE_SRV) {
                 StringCbCopyA(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                               pDnsIter->Data.SRV.pNameTarget);
-                ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
+                adminRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
                 ports[*numServers] = htons(pDnsIter->Data.SRV.wPort);
                 (*numServers)++;
 
@@ -792,7 +792,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                 if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
                     StringCbCopyA(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                                    pDnsIter->Data.Afsdb.pNameExchange);
-                    ipRanks[*numServers] = 0;
+                    adminRanks[*numServers] = 0;
                     ports[*numServers] = afsdbPort;
                     (*numServers)++;
 
@@ -860,7 +860,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                   int *cellHostAddrs,
                   cm_unichar_t cellHostNames[][MAXHOSTCHARS],
                   unsigned short ports[],   /* network byte order */
-                  unsigned short ipRanks[],
+                  unsigned short adminRanks[],
                   int *numServers, int *ttl)
 {
 #ifdef DNSAPI_ENV
@@ -893,7 +893,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
             if (pDnsIter->wType == DNS_TYPE_SRV) {
                 StringCbCopyW(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                               pDnsIter->Data.SRV.pNameTarget);
-                ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
+                adminRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
                 ports[*numServers] = htons(pDnsIter->Data.SRV.wPort);
                 (*numServers)++;
 
@@ -963,7 +963,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                 if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
                     StringCbCopyW(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                                   pDnsIter->Data.Afsdb.pNameExchange);
-                    ipRanks[*numServers] = 0;
+                    adminRanks[*numServers] = 0;
                     ports[*numServers] = afsdbPort;
                     (*numServers)++;
 

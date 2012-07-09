@@ -34,11 +34,16 @@ typedef struct cm_server {
     struct cm_cell *cellp;		/* cell containing this server */
     afs_int32 refCount;		        /* Interlocked with cm_serverLock */
     osi_mutex_t mx;
-    unsigned short ipRank;		/* server priority */
+    unsigned short ipRank;		/* network class rank */
+    unsigned short adminRank;		/* set if admin sets a rank
+                                         * (fs setserverpref or registry or dns)
+                                         */
+    unsigned short activeRank;          /* Computed rank combining ipRank, adminRank,
+                                         * and performance data.
+                                         */
     cm_server_vols_t *  vols;           /* by mx */
     time_t downTime;                    /* by mx */
     afsUUID uuid;                       /* by mx */
-    unsigned short adminRank;		/* only set if admin sets a rank */
 } cm_server_t;
 
 enum repstate {srv_not_busy, srv_busy, srv_offline, srv_deleted};
@@ -75,6 +80,7 @@ typedef struct cm_serverRef {
 #define CM_IPRANK_HI	20000	/* on same subnet  */
 #define CM_IPRANK_MED	30000	/* on same network */
 #define CM_IPRANK_LOW	40000	/* on different networks */
+#define CM_IPRANK_DOWN  65535   /* unavailable */
 
 /* the maximum number of network interfaces that this client has */
 
@@ -115,7 +121,7 @@ extern afs_int32 cm_RankServer(cm_server_t * server);
 
 extern void cm_RankUpServers();
 
-extern void cm_SetServerPrefs(cm_server_t * serverp);
+extern void cm_SetServerIPRank(cm_server_t * serverp);
 
 extern void cm_InsertServerList(cm_serverRef_t** list,cm_serverRef_t* element);
 

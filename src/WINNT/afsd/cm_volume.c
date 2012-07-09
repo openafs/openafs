@@ -653,7 +653,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         /*
          * Randomize RO list
          *
-         * If the first n servers have the same ipRank, then we
+         * If the first n servers have the same rank, then we
          * randomly pick one among them and move it to the beginning.
          * We don't bother to re-order the whole list because
          * the rest of the list is used only if the first server is
