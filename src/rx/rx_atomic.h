@@ -57,6 +57,11 @@ rx_atomic_add(rx_atomic_t *atomic, int change) {
     InterlockedExchangeAdd(&atomic->var, change);
 }
 
+static_inline int
+rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
+    return InterlockedExchangeAdd(&atomic->var, change) + change;
+}
+
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
     InterlockedDecrement(&atomic->var);
@@ -110,6 +115,11 @@ rx_atomic_add(rx_atomic_t *atomic, int change) {
     OSAtomicAdd32(change, &atomic->var);
 }
 
+static_inline int
+rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
+    return OSAtomicAdd32(change, &atomic->var);
+}
+
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
     OSAtomicDecrement32(&atomic->var);
@@ -134,6 +144,7 @@ typedef atomic_t rx_atomic_t;
 #define rx_atomic_inc(X)	  atomic_inc(X)
 #define rx_atomic_inc_and_read(X) atomic_inc_return(X)
 #define rx_atomic_add(X, V)	  atomic_add(V, X)
+#define rx_atomic_add_and_read(X, V) atomic_add_return(V, X);
 #define rx_atomic_dec(X)	  atomic_dec(X)
 #define rx_atomic_dec_and_read(X) atomic_dec_return(X)
 #define rx_atomic_sub(X, V)	  atomic_sub(V, X)
@@ -182,6 +193,11 @@ rx_atomic_add(rx_atomic_t *atomic, int change) {
     atomic_add_32(&atomic->var, change);
 }
 
+static_inline int
+rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
+    return atomic_add_32_nv(&atomic->var, change);
+}
+
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
     atomic_dec_32(&atomic->var);
@@ -226,6 +242,11 @@ rx_atomic_inc_and_read(rx_atomic_t *atomic) {
 static_inline void
 rx_atomic_add(rx_atomic_t *atomic, int change) {
     (void)__sync_fetch_and_add(&atomic->var, change);
+}
+
+static_inline int
+rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
+    return __sync_fetch_and_add(&atomic->var, change);
 }
 
 static_inline void
@@ -298,6 +319,18 @@ rx_atomic_add(rx_atomic_t *atomic, int change) {
     MUTEX_ENTER(&rx_atomic_mutex);
     atomic->var += change;
     MUTEX_EXIT(&rx_atomic_mutex);
+}
+
+static_inline int
+rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
+    int retval;
+
+    MUTEX_ENTER(&rx_atomic_mutex);
+    atomic->var += change;
+    retval = atomic->var;
+    MUTEX_EXIT(&rx_atomic_mutex);
+
+    return retval;
 }
 
 static_inline void
