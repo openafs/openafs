@@ -842,7 +842,8 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
 
-    if (scp->mountPointStringp[0])
+    if (scp->mountPointStringp[0] &&
+        scp->mpDataVersion == scp->dataVersion)
         return 0;
 
 #ifdef AFS_FREELANCE_CLIENT
@@ -877,6 +878,7 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         /* convert the terminating dot to a NUL */
         temp[scp->length.LowPart - 1] = 0;
         memcpy(scp->mountPointStringp, temp, scp->length.LowPart);
+        scp->mpDataVersion = scp->dataVersion;
     }
 
     return code;
@@ -1763,7 +1765,8 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
     long code = 0;
 
     lock_AssertWrite(&linkScp->rw);
-    if (!linkScp->mountPointStringp[0]) {
+    if (!linkScp->mountPointStringp[0] ||
+        linkScp->mpDataVersion != linkScp->dataVersion) {
 
 #ifdef AFS_FREELANCE_CLIENT
 	/* File servers do not have data for freelance entries */

@@ -1535,13 +1535,14 @@ long
 cm_FreelanceFetchMountPointString(cm_scache_t *scp)
 {
     lock_ObtainMutex(&cm_Freelance_Lock);
-    if (!scp->mountPointStringp[0] &&
+    if (scp->mpDataVersion != scp->dataVersion &&
         scp->fid.cell == AFS_FAKE_ROOT_CELL_ID &&
         scp->fid.volume == AFS_FAKE_ROOT_VOL_ID &&
         (afs_int32)(scp->fid.unique - cm_data.fakeUnique) - 1 >= 0 &&
         scp->fid.unique - cm_data.fakeUnique <= cm_noLocalMountPoints) {
         strncpy(scp->mountPointStringp, cm_localMountPoints[scp->fid.unique-cm_data.fakeUnique-1].mountPointStringp, MOUNTPOINTLEN);
         scp->mountPointStringp[MOUNTPOINTLEN-1] = 0;	/* null terminate */
+        scp->mpDataVersion = scp->dataVersion;
     }
     lock_ReleaseMutex(&cm_Freelance_Lock);
 

@@ -144,6 +144,7 @@ typedef struct cm_scache {
                                          * storing data */
 
     /* symlink and mount point info */
+    afs_uint64   mpDataVersion;         /* data version represented by mountPointStringp */
     char mountPointStringp[MOUNTPOINTLEN];	/* the string stored in a mount point;
                                                  * first char is type, then vol name.
                                          * If this is a normal symlink, we store

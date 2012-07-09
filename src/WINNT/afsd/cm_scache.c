@@ -221,6 +221,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->mask = 0;
 
     /* discard symlink info */
+    scp->mpDataVersion = CM_SCACHE_VERSION_BAD;
     scp->mountPointStringp[0] = '\0';
     memset(&scp->mountRootFid, 0, sizeof(cm_fid_t));
     memset(&scp->dotdotFid, 0, sizeof(cm_fid_t));
@@ -1900,15 +1901,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         lock_ReleaseWrite(&buf_globalLock);
     }
 
-    /*
-     * If the dataVersion has changed, the mountPointStringp must be cleared
-     * in order to force a re-evaluation by cm_HandleLink().  The Windows CM
-     * does not update a mountpoint or symlink by altering the contents of
-     * the file data; but the Unix CM does.
-     */
     if (scp->dataVersion != dataVersion && !(flags & CM_MERGEFLAG_FETCHDATA)) {
-        scp->mountPointStringp[0] = '\0';
-
         osi_Log5(afsd_logp, "cm_MergeStatus data version change scp 0x%p cell %u vol %u vn %u uniq %u",
                  scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
@@ -2042,9 +2035,6 @@ void cm_DiscardSCache(cm_scache_t *scp)
 
     if (scp->fileType == CM_SCACHETYPE_DFSLINK)
         cm_VolStatus_Invalidate_DFS_Mapping(scp);
-
-    /* Force mount points and symlinks to be re-evaluated */
-    scp->mountPointStringp[0] = '\0';
 }
 
 void cm_AFSFidFromFid(AFSFid *afsFidp, cm_fid_t *fidp)
@@ -2251,10 +2241,10 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
         }
         sprintf(output,
                 "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) type=%d dv=%I64d len=0x%I64x "
-                "mp='%s' Locks (server=0x%x shared=%d excl=%d clnt=%d) fsLockCount=%d linkCount=%d anyAccess=0x%x "
+                "mpDV=%I64d mp='%s' Locks (server=0x%x shared=%d excl=%d clnt=%d) fsLockCount=%d linkCount=%d anyAccess=0x%x "
                 "flags=0x%x cbServer='%s' cbExpires='%s' volumeCreationDate='%s' refCount=%u\r\n",
                 cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp,
+                scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mpDataVersion, scp->mountPointStringp,
                 scp->serverLock, scp->sharedLocks, scp->exclusiveLocks, scp->clientLocks, scp->fsLockCount,
                 scp->linkCount, scp->anyAccess, scp->flags, srvStr ? srvStr : "<none>", cbt ? cbt : "<none>",
                 cdrot ? cdrot : "<none>", scp->refCount);
