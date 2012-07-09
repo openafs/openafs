@@ -731,7 +731,7 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
     if (scp->flags & CM_SCACHEFLAG_RO || scp->flags & CM_SCACHEFLAG_PURERO)
         cep->states |= 4;
     if (scp->fileType == CM_SCACHETYPE_MOUNTPOINT &&
-        scp->mountPointStringp[0])
+        scp->mpDataVersion == scp->dataVersion)
         cep->states |= 8;
     if (scp->flags & CM_SCACHEFLAG_WAITING)
         cep->states |= 0x40;
@@ -846,7 +846,7 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
     if (scp->flags & CM_SCACHEFLAG_RO || scp->flags & CM_SCACHEFLAG_PURERO)
         cep->states |= 4;
     if (scp->fileType == CM_SCACHETYPE_MOUNTPOINT &&
-        scp->mountPointStringp[0])
+        scp->mpDataVersion == scp->dataVersion)
         cep->states |= 8;
     if (scp->flags & CM_SCACHEFLAG_WAITING)
         cep->states |= 0x40;
