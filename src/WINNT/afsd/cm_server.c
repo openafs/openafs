@@ -60,7 +60,11 @@ cm_RankServer(cm_server_t * tsp)
     afs_int32 code = 0; /* start with "success" */
     struct rx_debugPeer tpeer;
     afs_uint16 port;
-    afs_uint16 newRank;
+    afs_uint64 newRank;
+    afs_uint64 perfRank = 0;
+    afs_uint64 rtt;
+    double log_rtt;
+    int isDown = (tsp->flags & CM_SERVERFLAG_DOWN);
 
     switch(tsp->type) {
 	case CM_SERVER_VLDB:
@@ -73,23 +77,61 @@ cm_RankServer(cm_server_t * tsp)
 	    return -1;
     }
 
-    code = rx_GetLocalPeers(tsp->addr.sin_addr.s_addr, port, &tpeer);
+    cm_SetServerIPRank(tsp);
 
-    /*check if rx_GetLocalPeers succeeded and if there is data for tsp */
-    if(code == 0 && (tpeer.rtt == 0 && tpeer.rtt_dev == 0))
-	code = -1;
+    if (isDown) {
+        newRank = 0xFFFF;
+    } else {
+        /*
+        * There are three potential components to the ranking:
+        *  1. Any administrative set preference whether it be
+        *     via "fs setserverprefs", registry or dns.
+        *
+        *  2. Network subnet mask comparison.
+        *
+        *  3. Performance data.
+        *
+        * If there is an administrative rank, that is the
+        * the primary factor.  If not the primary factor
+        * is the network ranking.
+        */
 
-    if(code == 0) {
-	if((tsp->flags & CM_SERVERFLAG_PREF_SET))
-	    newRank = tsp->adminRank +
-                ((int)(623 * log(tpeer.rtt) / 10) * 10 + 5);
-	else /* rank has not been set by admin, derive rank from rtt */
-	    newRank = (int)(7200 * log(tpeer.rtt) / 5000) * 5000 + 5000;
+        code = rx_GetLocalPeers(tsp->addr.sin_addr.s_addr, port, &tpeer);
+        if (code == 0) {
+            if (tpeer.rtt) {
+                /* rtt is ms/8 */
+                rtt = tpeer.rtt;
+                log_rtt = log(tpeer.rtt);
+                perfRank += (6000 * log_rtt / 5000) * 5000;
 
-	newRank += (rand() & 0x000f); /* randomize */
+                if (tsp->type == CM_SERVER_FILE) {
+                    /* give an edge to servers with high congestion windows */
+                    perfRank -= (tpeer.cwind - 1)* 15;
+                }
+            }
+        }
 
-        if (abs(newRank - tsp->ipRank) > 0xf) {
-            tsp->ipRank = newRank;
+        if (tsp->adminRank) {
+            newRank = tsp->adminRank * 0.8;
+            newRank += tsp->ipRank * 0.2;
+        } else {
+            newRank = tsp->ipRank;
+        }
+        if (perfRank) {
+            newRank *= 0.9;
+            newRank += perfRank * 0.1;
+        }
+        newRank += (rand() & 0x000f); /* randomize */
+
+        if (newRank > 0xFFFF)
+            osi_Log1(afsd_logp, "new server rank %I64u exceeds 0xFFFF", newRank);
+
+        /*
+         * If the ranking changes by more than the randomization
+         * factor, update the server reference lists.
+         */
+        if (abs(newRank - tsp->activeRank) > 0xf) {
+            tsp->activeRank = newRank;
 
             lock_ReleaseMutex(&tsp->mx);
             switch (tsp->type) {
@@ -765,19 +807,17 @@ void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no)
     lock_ReleaseMutex(&serverp->mx);
 }
 
-void cm_SetServerPrefs(cm_server_t * serverp)
+void cm_SetServerIPRank(cm_server_t * serverp)
 {
     unsigned long	serverAddr; 	/* in host byte order */
     unsigned long	myAddr, myNet, mySubnet;/* in host byte order */
     unsigned long	netMask;
     int 		i;
     long code;
-    int writeLock = 0;
 
     lock_ObtainRead(&cm_syscfgLock);
     if (cm_LanAdapterChangeDetected) {
         lock_ConvertRToW(&cm_syscfgLock);
-        writeLock = 1;
         if (cm_LanAdapterChangeDetected) {
             /* get network related info */
             cm_noIPAddr = CM_MAXINTERFACE_ADDR;
@@ -814,19 +854,18 @@ void cm_SetServerPrefs(cm_server_t * serverp)
 	{
 	    if ( (serverAddr & cm_SubnetMask[i]) == mySubnet)
 	    {
-		if ( serverAddr == myAddr )
+		if ( serverAddr == myAddr ) {
 		    serverp->ipRank = min(serverp->ipRank,
 					   CM_IPRANK_TOP);/* same machine */
-		else serverp->ipRank = min(serverp->ipRank,
-					    CM_IPRANK_HI); /* same subnet */
-	    }
-	    else serverp->ipRank = min(serverp->ipRank,CM_IPRANK_MED);
-	    /* same net */
+		} else {
+                    serverp->ipRank = min(serverp->ipRank,
+                                          CM_IPRANK_HI); /* same subnet */
+                }
+	    } else {
+                serverp->ipRank = min(serverp->ipRank, CM_IPRANK_MED); /* same net */
+            }
 	}
     } /* and of for loop */
-
-    /* random between 0..15*/
-    serverp->ipRank += (rand() % 0x000f);
     lock_ReleaseRead(&cm_syscfgLock);
 }
 
@@ -862,7 +901,7 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         lock_InitializeMutex(&tsp->mx, "cm_server_t mutex", LOCK_HIERARCHY_SERVER);
         tsp->addr = *socketp;
 
-        cm_SetServerPrefs(tsp);
+        cm_SetServerIPRank(tsp);
 
         tsp->allNextp = cm_allServersp;
         cm_allServersp = tsp;
@@ -1074,7 +1113,7 @@ LONG_PTR cm_ChecksumServerList(cm_serverRef_t *serversp)
 void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 {
     cm_serverRef_t	*current;
-    unsigned short ipRank;
+    unsigned short rank;
 
     lock_ObtainWrite(&cm_serverLock);
     /*
@@ -1142,10 +1181,10 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
         goto done;
     }
 
-    ipRank = element->server->ipRank;
+    rank = element->server->activeRank;
 
 	/* insertion at the beginning of the list */
-    if ((*list)->server->ipRank > ipRank)
+    if ((*list)->server->activeRank > rank)
     {
         element->next = *list;
         *list = element;
@@ -1155,7 +1194,7 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
     /* find appropriate place to insert */
     for ( current = *list; current->next; current = current->next)
     {
-        if ( current->next->server->ipRank > ipRank )
+        if ( current->next->server->activeRank > rank )
             break;
     }
     element->next = current->next;
@@ -1226,10 +1265,10 @@ void cm_RandomizeServer(cm_serverRef_t** list)
     }
 
     /* count the number of servers with the lowest rank */
-    lowestRank = tsrp->server->ipRank;
+    lowestRank = tsrp->server->activeRank;
     for ( count=1, tsrp=tsrp->next; tsrp; tsrp=tsrp->next)
     {
-        if ( tsrp->server->ipRank != lowestRank)
+        if ( tsrp->server->activeRank != lowestRank)
             break;
         else
             count++;
@@ -1451,7 +1490,7 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
                  "flags=0x%x waitCount=%u rank=%u downTime=\"%s\" refCount=%u\r\n",
                  cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr,
                  ntohs(tsp->addr.sin_port), uuidstr, type,
-                 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->ipRank,
+                 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->activeRank,
                  (tsp->flags & CM_SERVERFLAG_DOWN) ?  down : "up",
                  tsp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
