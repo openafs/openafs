@@ -1170,6 +1170,8 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
     afs_uint32 sleep_buf_cmflags = 0;
     afs_uint32 sleep_scp_bufs = 0;
     int wakeupCycle;
+    afs_int32 waitCount;
+    afs_int32 waitRequests;
 
     lock_AssertWrite(&scp->rw);
 
@@ -1413,15 +1415,15 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
 
         /* wait here, then try again */
         osi_Log1(afsd_logp, "CM SyncOp sleeping scp 0x%p", scp);
-        if ( scp->flags & CM_SCACHEFLAG_WAITING ) {
-            scp->waitCount++;
-            scp->waitRequests++;
+
+        waitCount = InterlockedIncrement(&scp->waitCount);
+        waitRequests = InterlockedIncrement(&scp->waitRequests);
+        if (waitCount > 1) {
             osi_Log3(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING already set for 0x%p; %d threads; %d requests",
-                     scp, scp->waitCount, scp->waitRequests);
+                     scp, waitCount, waitRequests);
         } else {
             osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING set for 0x%p", scp);
             _InterlockedOr(&scp->flags, CM_SCACHEFLAG_WAITING);
-            scp->waitCount = scp->waitRequests = 1;
         }
 
         cm_SyncOpAddToWaitQueue(scp, flags, bufp);
@@ -1437,10 +1439,10 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *userp, cm_req_t *req
 
 	cm_UpdateServerPriority();
 
-        scp->waitCount--;
+        waitCount = InterlockedDecrement(&scp->waitCount);
         osi_Log3(afsd_logp, "CM SyncOp woke! scp 0x%p; still waiting %d threads of %d requests",
-                 scp, scp->waitCount, scp->waitRequests);
-        if (scp->waitCount == 0) {
+                 scp, waitCount, scp->waitRequests);
+        if (waitCount == 0) {
             osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING reset for 0x%p", scp);
             _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_WAITING);
             scp->waitRequests = 0;
@@ -1593,7 +1595,8 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
     }
 
     /* and wakeup anyone who is waiting */
-    if (scp->flags & CM_SCACHEFLAG_WAITING) {
+    if ((scp->flags & CM_SCACHEFLAG_WAITING) ||
+        !osi_QIsEmpty(&scp->waitQueueH)) {
         osi_Log3(afsd_logp, "CM SyncOpDone 0x%x Waking scp 0x%p bufp 0x%p", flags, scp, bufp);
         osi_Wakeup((LONG_PTR) &scp->flags);
     }
