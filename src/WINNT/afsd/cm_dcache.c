@@ -921,7 +921,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
                          scp, &base, &fetched);
 
     /* wakeup anyone who is waiting */
-    if (scp->flags & CM_SCACHEFLAG_WAITING) {
+    if (!osi_QIsEmpty(&scp->waitQueueH)) {
         osi_Log1(afsd_logp, "CM BkgPrefetch Waking scp 0x%p", scp);
         osi_Wakeup((LONG_PTR) &scp->flags);
     }
@@ -2024,7 +2024,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                         */
                         _InterlockedOr(&tbufp->cmFlags, CM_BUF_CMFULLYFETCHED);
                         lock_ObtainWrite(&scp->rw);
-                        if (scp->flags & CM_SCACHEFLAG_WAITING) {
+                        if (!osi_QIsEmpty(&scp->waitQueueH)) {
                             osi_Log1(afsd_logp, "CM GetBuffer Waking scp 0x%p", scp);
                             osi_Wakeup((LONG_PTR) &scp->flags);
                         }
@@ -2083,7 +2083,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                  */
                 _InterlockedOr(&tbufp->cmFlags, CM_BUF_CMFULLYFETCHED);
                 lock_ObtainWrite(&scp->rw);
-                if (scp->flags & CM_SCACHEFLAG_WAITING) {
+                if (!osi_QIsEmpty(&scp->waitQueueH)) {
                     osi_Log1(afsd_logp, "CM GetBuffer Waking scp 0x%p", scp);
                     osi_Wakeup((LONG_PTR) &scp->flags);
                 }

@@ -674,7 +674,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         }
         if ( scp ) {
             lock_ObtainRead(&scp->rw);
-            if (scp->flags & CM_SCACHEFLAG_WAITING) {
+            if (!osi_QIsEmpty(&scp->waitQueueH)) {
                 osi_Log1(buf_logp, "buf_WaitIO waking scp 0x%p", scp);
                 osi_Wakeup((LONG_PTR)&scp->flags);
             }
