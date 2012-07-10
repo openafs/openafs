@@ -726,7 +726,7 @@ SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
         break;
     }
     cep->states = 0;
-    if (scp->flags & CM_SCACHEFLAG_STATD)
+    if (cm_HaveCallback(scp))
         cep->states |= 1;
     if (scp->flags & CM_SCACHEFLAG_RO || scp->flags & CM_SCACHEFLAG_PURERO)
         cep->states |= 4;
@@ -841,7 +841,7 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry64 *cep)
         break;
     }
     cep->states = 0;
-    if (scp->flags & CM_SCACHEFLAG_STATD)
+    if (cm_HaveCallback(scp))
         cep->states |= 1;
     if (scp->flags & CM_SCACHEFLAG_RO || scp->flags & CM_SCACHEFLAG_PURERO)
         cep->states |= 4;

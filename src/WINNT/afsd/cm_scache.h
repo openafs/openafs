@@ -263,9 +263,7 @@ typedef struct cm_scache {
 #define CM_SCACHETYPE_INVALID           99      /* an invalid link */
 
 /* flag bits */
-#define CM_SCACHEFLAG_STATD             0x01    /* status info is valid */
 #define CM_SCACHEFLAG_DELETED           0x02    /* file has been deleted */
-#define CM_SCACHEFLAG_CALLBACK          0x04    /* have a valid callback */
 #define CM_SCACHEFLAG_STORING           0x08    /* status being stored back */
 #define CM_SCACHEFLAG_FETCHING		0x10	/* status being fetched */
 #define CM_SCACHEFLAG_SIZESTORING	0x20	/* status being stored that

@@ -185,8 +185,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
      * also initialize some flags */
     scp->fileType = 0;
     _InterlockedAnd(&scp->flags,
-                    ~(CM_SCACHEFLAG_STATD
-		     | CM_SCACHEFLAG_DELETED
+                    ~( CM_SCACHEFLAG_DELETED
 		     | CM_SCACHEFLAG_RO
 		     | CM_SCACHEFLAG_PURERO
 		     | CM_SCACHEFLAG_OVERQUOTA
@@ -639,7 +638,6 @@ cm_ShutdownSCache(void)
         }
         scp->cbExpires = 0;
         scp->cbIssued = 0;
-        _InterlockedAnd(&scp->flags, ~CM_SCACHEFLAG_CALLBACK);
         lock_ReleaseWrite(&scp->rw);
 
 #ifdef USE_BPLUS
@@ -702,7 +700,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
 #endif
                 scp->waitQueueT = NULL;
-                _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_WAITING | CM_SCACHEFLAG_RDR_IN_USE));
+                _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_WAITING | CM_SCACHEFLAG_RDR_IN_USE));
 
                 scp->redirBufCount = 0;
                 scp->redirQueueT = NULL;
@@ -2028,7 +2026,7 @@ void cm_DiscardSCache(cm_scache_t *scp)
     }
     scp->cbExpires = 0;
     scp->cbIssued = 0;
-    _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL | CM_SCACHEFLAG_RDR_IN_USE));
+    _InterlockedAnd(&scp->flags, ~(CM_SCACHEFLAG_LOCAL | CM_SCACHEFLAG_RDR_IN_USE));
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
     cm_FreeAllACLEnts(scp);
