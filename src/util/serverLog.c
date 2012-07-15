@@ -160,7 +160,7 @@ LogCommandLine(int argc, char **argv, const char *progname,
     int i, l;
     char *commandLine, *cx;
 
-    opr_Assert(argc != 0);
+    opr_Assert(argc > 0);
 
     for (l = i = 0; i < argc; i++)
 	l += strlen(argv[i]) + 1;
