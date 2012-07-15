@@ -23,11 +23,7 @@ OPTF=-O
 
 TEST_CFLAGS=-D_REENTRANT -DAFS_PTHREAD_ENV -DAFS_FBSD50_ENV $(XCFLAGS)
 TEST_LDFLAGS=
-<all -fbsd_62 -fbsd_70 -fbsd_71 -fbsd_72 -fbsd_73 -fbsd_74 -fbsd_80 -fbsd_81 -fbsd_90>
-TEST_LIBS=-lc_r
-<fbsd_62 fbsd_70 fbsd_71 fbsd_72 fbsd_73 fbsd_74 fbsd_80 fbsd_81 fbsd_82 fbsd_90>
 TEST_LIBS=-lpthread
-<all>
 
 LIBUAFS = libuafs.a
 LIBJUAFS = libjuafs.a
