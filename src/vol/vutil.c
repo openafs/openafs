@@ -827,8 +827,8 @@ int
 VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
                    VWalkVolFunc volfunc, VWalkErrFunc errfunc, void *rock)
 {
-    DIR *dirp = NULL;
-    struct dirent *dentry = NULL;
+    DIR *dirp;
+    struct dirent *dentry;
     int code = 0;
     struct VolumeDiskHeader diskHeader;
 
@@ -839,8 +839,8 @@ VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 	goto done;
     }
 
-    while ((dentry = readdir(dirp))) {
-	char *p = dentry->d_name;
+    while ((dentry = readdir(dirp)) != NULL) {
+	char *p;
 	p = strrchr(dentry->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    char name[VMAXPATHLEN];
