@@ -607,6 +607,7 @@ rx_InitHost(u_int host, u_int port)
 #endif
 	if (getsockname((intptr_t)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
 	    rx_Finalize();
+	    osi_Free(htable, rx_hashTableSize * sizeof(struct rx_connection *));
 	    return -1;
 	}
 	rx_port = addr.sin_port;
