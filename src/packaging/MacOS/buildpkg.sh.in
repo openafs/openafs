@@ -40,6 +40,9 @@ fi
 if [ $majorvers -eq 11 ]; then
   RELNAME="Lion"
 fi
+if [ $majorvers -eq 12 ]; then
+  RELNAME="MountainLion"
+fi
 
 PKGROOT=$CURDIR/pkgroot
 PKGRES=$CURDIR/pkgres
