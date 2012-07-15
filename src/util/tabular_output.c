@@ -369,6 +369,7 @@ util_newTable(int Type, int numColumns, char **ColumnHeaders, int *ColumnContent
     if (sortByColumn < 0 || sortByColumn > numColumns) {
         fprintf(stderr,"Invalid Table Sortkey: %d.\n", sortByColumn);
 	errno=EINVAL;
+	free(Table);
 	return NULL;
     }
     if (sortByColumn > 0 )
