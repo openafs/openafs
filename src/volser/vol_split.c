@@ -375,7 +375,8 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 		    code = EIO;
 		    goto Bad_Copy;
 	        }
-	        memcpy(parVnode, vnode, sizeof(struct VnodeDiskObject));
+		if (parVnode != NULL)
+		    memcpy(parVnode, vnode, sizeof(struct VnodeDiskObject));
 	    }
 	    if (e->flag & NEEDED && e->vN != where) {
 	        VNDISK_GET_LEN(size, vnode);
