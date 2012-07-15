@@ -956,7 +956,7 @@ void
 rxi_RestoreDataBufs(struct rx_packet *p)
 {
     unsigned int i;
-    struct iovec *iov = &p->wirevec[2];
+    struct iovec *iov;
 
     RX_PACKET_IOV_INIT(p);
 
