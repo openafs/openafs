@@ -177,7 +177,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 
   no_xfer_abort:
     charListPtr->charListT_len = 0;
-    charListPtr->charListT_val = malloc(0);
+    charListPtr->charListT_val = NULL;
 
   abort_exit:
     if (ut)
