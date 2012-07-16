@@ -1048,7 +1048,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 		sa->sa_iprank = t;
 	}
     }
-#ifdef  IFF_POINTOPOINT
+#if defined(IFF_POINTOPOINT) && !defined(UKERNEL)
     /* check for case #4 -- point-to-point link */
     if ((ifa->ia_ifp->if_flags & IFF_POINTOPOINT)
 	&& (SA2ULONG(IA_DST(ifa)) == ntohl(sa->sa_ip))) {
