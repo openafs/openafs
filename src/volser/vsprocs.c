@@ -1531,7 +1531,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	/* Get a clone id */
 	VPRINT1("Allocating new volume id for clone of volume %u ...",
 		afromvol);
-	newVol = tmpVol = 0;
+	tmpVol = 0;
 	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &tmpVol);
 	newVol = tmpVol;
 	EGOTO1(mfail, vcode,
