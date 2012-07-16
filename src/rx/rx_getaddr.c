@@ -184,7 +184,6 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
     int mib[6];
     struct if_msghdr *ifm, *nextifm;
     struct ifa_msghdr *ifam;
-    struct sockaddr_dl *sdl;
     struct rt_addrinfo info;
     char *buf, *lim, *next;
     int count = 0, addrcount = 0;
@@ -215,7 +214,6 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 	    free(buf);
 	    return 0;
 	}
-	sdl = (struct sockaddr_dl *)(ifm + 1);
 	next += ifm->ifm_msglen;
 	ifam = NULL;
 	addrcount = 0;
