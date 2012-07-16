@@ -1052,7 +1052,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 		sa->sa_iprank = t;
 	}
     }
-#ifdef  IFF_POINTTOPOINT
+#ifdef  IFF_POINTOPOINT
     /* check for case #4 -- point-to-point link */
     if ((ifa->ia_ifp->if_flags & IFF_POINTOPOINT)
 	&& (SA2ULONG(IA_DST(ifa)) == ntohl(sa->sa_ip))) {
@@ -1063,7 +1063,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 	if (sa->sa_iprank > t)
 	    sa->sa_iprank = t;
     }
-#endif /* IFF_POINTTOPOINT */
+#endif /* IFF_POINTOPOINT */
 }
 #endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR) */
 #if (defined(AFS_DARWIN_ENV) || defined(AFS_OBSD47_ENV) || defined(AFS_FBSD_ENV)) && defined(USEIFADDR)
