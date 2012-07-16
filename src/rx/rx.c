@@ -3864,7 +3864,6 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	MUTEX_EXIT(&rx_freePktQ_lock);
         if (rx_stats_active)
             rx_MutexIncrement(rx_stats.noPacketBuffersOnRead, rx_stats_mutex);
-	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
 	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems", np));
         /* We used to clear the receive queue here, in an attempt to free
@@ -3884,7 +3883,6 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	    call->delayedAckEvent =
 		rxevent_PostNow(&when, &now, rxi_SendDelayedAck, call, 0);
 	}
-	/* we've damaged this call already, might as well do it in. */
 	return np;
     }
 #endif /* KERNEL */
