@@ -1016,7 +1016,6 @@ verifyFreeLists(void)
 		Log("     Skipping remainder of free chain\n");
 		if (BumpErrors())
 		    return (DBBAD);
-		code = 0;
 		break;
 	    }
 
