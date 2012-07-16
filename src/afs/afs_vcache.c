@@ -852,7 +852,6 @@ afs_FlushAllVCaches(void)
 	    if (slept) {
 		goto retry;
 	    }
-	    tvc = nvc;
 	}
     }
 
