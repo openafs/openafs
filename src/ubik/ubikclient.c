@@ -431,12 +431,8 @@ CallIter(int (*aproc) (), struct ubik_client *aclient,
     while (*apos < MAXSERVERS) {
 	/* tc is the next conn to try */
 	tc = aclient->conns[*apos];
-	if (!tc) {
-	    if (needlock) {
-		UNLOCK_UBIK_CLIENT(aclient);
-	    }
-	    return UNOSERVERS;
-	}
+	if (!tc)
+	    goto errout;
 
 	if (rx_ConnError(tc)) {
 	    tc = ubik_RefreshConn(tc);
@@ -449,21 +445,17 @@ CallIter(int (*aproc) (), struct ubik_client *aclient,
 	    break;		/* this is the desired path */
 	}
     }
-    if (*apos >= MAXSERVERS) {
-	if (needlock) {
-	    UNLOCK_UBIK_CLIENT(aclient);
-	}
-	return UNOSERVERS;
-    }
+    if (*apos >= MAXSERVERS)
+	goto errout;
 
     code =
 	(*aproc) (tc, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13,
 		  p14, p15, p16);
     if (aclient->initializationState != origLevel) {
-	if (needlock) {
-	    UNLOCK_UBIK_CLIENT(aclient);
-	}
-	return code;		/* somebody did a ubik_ClientInit */
+	/* somebody did a ubik_ClientInit */
+	if (code == 0)
+	    code = UINTERNAL;	/* no more specific error was returned */
+	goto errout;
     }
 
     /* what should I do in case of UNOQUORUM ? */
@@ -475,6 +467,7 @@ CallIter(int (*aproc) (), struct ubik_client *aclient,
     }
 
     (*apos)++;
+errout:
     if (needlock) {
 	UNLOCK_UBIK_CLIENT(aclient);
     }
