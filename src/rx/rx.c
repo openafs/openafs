@@ -4252,9 +4252,14 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     prev = ntohl(ap->previousPacket);
     serial = ntohl(ap->serial);
 
-    /* Ignore ack packets received out of order */
+    /*
+     * Ignore ack packets received out of order while protecting
+     * against peers that set the previousPacket field to a packet
+     * serial number instead of a sequence number.
+     */
     if (first < call->tfirst ||
-        (first == call->tfirst && prev < call->tprev)) {
+        (first == call->tfirst && prev < call->tprev && prev < call->tfirst
+	 + call->twind)) {
 	return np;
     }
 
