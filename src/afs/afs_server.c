@@ -643,11 +643,6 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
     if (AFS_IS_DISCONNECTED)
         return;
 
-    conns = (struct afs_conn **)0;
-    rxconns = (struct rx_connection **) 0;
-    conntimer = 0;
-    nconns = 0;
-
     if ((code = afs_InitReq(&treq, afs_osi_credp)))
 	return;
     ObtainReadLock(&afs_xserver);	/* Necessary? */
@@ -681,6 +676,7 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
     conntimer = afs_osi_Alloc(j * sizeof (afs_int32));
     osi_Assert(conntimer != NULL);
 
+    nconns = 0;
     for (i = 0; i < j; i++) {
 	struct rx_connection *rxconn;
 	sa = addrs[i];
