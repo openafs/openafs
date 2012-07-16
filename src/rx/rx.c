@@ -3851,15 +3851,12 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	MUTEX_EXIT(&rx_freePktQ_lock);
         if (rx_stats_active)
             rx_atomic_inc(&rx_stats.noPacketBuffersOnRead);
-	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
 	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems\n", np));
         /* We used to clear the receive queue here, in an attempt to free
          * packets. However this is unsafe if the queue has received a
          * soft ACK for the final packet */
 	rxi_PostDelayedAckEvent(call, &rx_softAckDelay);
-
-	/* we've damaged this call already, might as well do it in. */
 	return np;
     }
 #endif /* KERNEL */
