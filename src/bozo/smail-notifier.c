@@ -14,6 +14,9 @@
 #include <roken.h>
 
 #include <afs/afsutil.h>
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
 
 /*
  * XXX CHANGE the following depedent stuff XXX
@@ -211,6 +214,18 @@ main(int argc, char **argv)
      */
     sprintf(bufp1, "%s %s -s TESTING < %s", SENDMAIL, RECIPIENT, buf);
     code = system(bufp1);
+    if (code == -1)
+	perror("system");
+    else if (code == 127)
+	fprintf(stderr, "system: unable to execute shell\n");
+#ifdef WTERMSIG
+    else if (WIFSIGNALED(code))
+	fprintf(stderr, "%s terminated with signal %d\n", SENDMAIL,
+	    WTERMSIG(code));
+    else if (WEXITSTATUS(code) != 0)
+	fprintf(stderr, "%s exited with status %d\n", SENDMAIL,
+	    WEXITSTATUS(code));
+#endif /* WTERMSIG */
     unlink(buf);
     exit(0);
 }
