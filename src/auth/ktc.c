@@ -487,7 +487,10 @@ ktc_GetTokenEx(char *cellName, struct ktc_setTokenData **tokenSet) {
 	memset(ktcToken, 0, sizeof(struct ktc_token));
 
 	strcpy(server.name, "afs");
-	strcpy(server.cell, cellName);
+
+	if (cellName != NULL)
+	    strcpy(server.cell, cellName);
+
 	code = GetToken(&server, ktcToken, sizeof(struct ktc_token),
 			 NULL /*client*/, &viceid);
 	if (code == 0) {
