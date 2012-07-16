@@ -53,7 +53,6 @@ hostutil_GetHostByName(char *ahost)
 	}
     }
     if (numeric) {
-	tc = *ahost;		/* look at the first char */
 	/* decimal address, return fake hostent with only hostaddr field good */
 	tval = 0;
 	dots = 0;
