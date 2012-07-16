@@ -165,7 +165,7 @@ if [ $firstpass = yes ]; then
     chmod -R og-w $PKGROOT/private
     chmod  og-rx $PKGROOT/private/var/db/openafs/cache
 
-    mkdir -p $PKGROOT/usr/bin $PKGROOT/usr/sbin $PKGROOT/usr/share/man/man1 $PKGROOT/usr/share/man/man5 $PKGROOT/usr/share/man/man8
+    mkdir -p $PKGROOT/usr/bin $PKGROOT/usr/lib $PKGROOT/usr/sbin $PKGROOT/usr/share/man/man1 $PKGROOT/usr/share/man/man5 $PKGROOT/usr/share/man/man8
 
     BINLIST="fs klog klog.krb pagsh pagsh.krb pts sys tokens tokens.krb unlog unlog.krb aklog"
     ETCLIST="vos"
