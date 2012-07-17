@@ -1858,7 +1858,13 @@ LIB_hcrypto="-lafshcrypto"
 LDFLAGS_hcrypto="-L\$(TOP_LIBDIR)"
 AC_SUBST(LIB_hcrypto)
 AC_SUBST(LDFLAGS_hcrypto)
+
+dnl Check for UUID library
+AC_CHECK_HEADERS([uuid/uuid.h])
+AC_CHECK_LIB(uuid, uuid_generate, LIBS_uuid="-luuid")
+AC_CHECK_FUNCS([uuid_generate])
 ])
+
 
 AC_DEFUN([SUMMARY], [
     # Print a configuration summary

@@ -16,7 +16,8 @@ INCFILES = \
 	$(DESTDIR)\include\opr\jhash.h \
 	$(DESTDIR)\include\opr\queue.h \
 	$(DESTDIR)\include\opr\rbtree.h \
-	$(DESTDIR)\include\opr\time.h
+	$(DESTDIR)\include\opr\time.h \
+	$(DESTDIR)\include\opr\uuid.h
 
 $(DESTDIR)\include\opr\time.h: opr_time.h
         $(COPY) $** $@
@@ -27,6 +28,7 @@ LIBOBJS = \
 	$(OUT)\assert.obj \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\rbtree.obj \
+	$(OUT)\uuid.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 $(LIBOBJS): $(INCFILES)

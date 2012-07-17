@@ -2,14 +2,15 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.shared
 
-objects = assert.o casestrcpy.o rbtree.o
+objects = assert.o casestrcpy.o rbtree.o uuid.o
 
 HEADERS = $(TOP_INCDIR)/afs/opr.h \
 	  $(TOP_INCDIR)/afs/opr_assert.h \
 	  $(TOP_INCDIR)/opr/jhash.h \
 	  $(TOP_INCDIR)/opr/queue.h \
 	  $(TOP_INCDIR)/opr/rbtree.h \
-	  $(TOP_INCDIR)/opr/time.h
+	  $(TOP_INCDIR)/opr/time.h \
+	  $(TOP_INCDIR)/opr/uuid.h
 
 all: $(HEADERS) $(TOP_LIBDIR)/libopr.a
 
@@ -37,6 +38,9 @@ $(TOP_INCDIR)/opr/rbtree.h: ${srcdir}/rbtree.h
 	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/opr/time.h: ${srcdir}/opr_time.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/uuid.h: ${srcdir}/uuid.h
 	$(INSTALL_DATA) $? $@
 
 clean:
