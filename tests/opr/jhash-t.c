@@ -39,7 +39,7 @@
 int
 main(int argc, char **argv)
 {
-   plan(8);
+   plan(11);
    uint32_t test[] = {3526055646, 2064483663, 3234460805, 3963629775};
 
    is_int(256, opr_jhash_size(8), "opr_jhash_size returns expected value");
@@ -57,5 +57,14 @@ main(int argc, char **argv)
    is_int(1100796964, opr_jhash_int(test[0], 0),
           "single value works through jhash_int");
 
-   return 0;
+   is_int(0xdeadbeef, opr_jhash_opaque("", 0, 0),
+	  "Hashing an empty string works");
+
+   is_int(2748273291,
+	  opr_jhash_opaque("Four score and seven years ago", 30, 0),
+	  "Hashing a string with a 0 initval works");
+   is_int(1389900913,
+	  opr_jhash_opaque("Four score and seven years ago", 30, 1),
+	  "Hashing a string with a 1 initval works");
+  return 0;
 }
