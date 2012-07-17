@@ -38,6 +38,9 @@ rx_upcall(socket_t so, void *arg, __unused int waitflag)
     afs_int32 savelen;          /* was using rlen but had aliasing problems */
     size_t nbytes, resid, noffset;
 
+    /* See if a check for additional packets was issued */
+    rx_CheckPackets();
+
     p = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE);
     rx_computelen(p, tlen);
     rx_SetDataSize(p, tlen);    /* this is the size of the user data area */
