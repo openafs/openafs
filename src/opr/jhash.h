@@ -103,4 +103,46 @@ opr_jhash_int(afs_uint32 a, afs_uint32 initval) {
    return c;
 }
 
+static_inline afs_uint32
+opr_jhash_opaque(const void *val, size_t length, afs_uint32 initval)
+{
+    const unsigned char *str = (const unsigned char *) val;
+    afs_uint32 a,b,c;
+    afs_uint32 k[3];
+
+    /* Set up the internal state */
+    a = b = c = 0xdeadbeef + (((afs_uint32)length)<<2) + initval;
+
+    while (length > 12) {
+	memcpy(&k, str, 12);
+	a += k[0];
+	b += k[1];
+	c += k[2];
+	opr_jhash_mix(a, b, c);
+	length -= 12;
+	str += 12;
+    }
+
+    /* All the case statements fall through */
+    switch(length) {
+      case 12 : c += (afs_uint32) str[11]<<24;
+      case 11 : c += (afs_uint32) str[10]<<16;
+      case 10 : c += (afs_uint32) str[9]<<8;
+      case 9  : c += (afs_uint32) str[8];
+      case 8  : b += (afs_uint32) str[7]<<24;
+      case 7  : b += (afs_uint32) str[6]<<16;
+      case 6  : b += (afs_uint32) str[5]<<8;
+      case 5  : b += (afs_uint32) str[4];
+      case 4  : a += (afs_uint32) str[3]<<24;
+      case 3  : a += (afs_uint32) str[2]<<16;
+      case 2  : a += (afs_uint32) str[1]<<8;
+      case 1  : a += (afs_uint32) str[0];
+	opr_jhash_final(a, b, c);
+      case 0:     /* case 0: nothing left to add */
+	break;
+    }
+
+    return c;
+}
+
 #endif
