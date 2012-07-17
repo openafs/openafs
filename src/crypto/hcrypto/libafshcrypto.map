@@ -21,6 +21,7 @@
 	hc_MD5_Final;
 	hc_MD5_Init;
 	hc_MD5_Update;
+	hc_RAND_bytes;
 	hc_UI_UTIL_read_pw_string;
     local:
 	*;
