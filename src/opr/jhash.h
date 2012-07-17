@@ -35,7 +35,7 @@
 #ifndef OPENAFS_OPR_JHASH_H
 #define OPENAFS_OPR_JHASH_H 1
 
-#define opr_jhash_size(n) ((uint32_t)1<<(n))
+#define opr_jhash_size(n) ((afs_uint32)1<<(n))
 #define opr_jhash_mask(n) (opr_jhash_size(n)-1)
 #define opr_jhash_rot(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
 
@@ -60,13 +60,13 @@
     c ^= b; c -= opr_jhash_rot(b,24); \
 }
 
-static_inline uint32_t
-opr_jhash(const uint32_t *k, size_t length, uint32_t initval)
+static_inline afs_uint32
+opr_jhash(const afs_uint32 *k, size_t length, afs_uint32 initval)
 {
-    uint32_t a,b,c;
+    afs_uint32 a,b,c;
 
     /* Set up the internal state */
-    a = b = c = 0xdeadbeef + (((uint32_t)length)<<2) + initval;
+    a = b = c = 0xdeadbeef + (((afs_uint32)length)<<2) + initval;
 
     while (length > 3) {
 	a += k[0];
@@ -92,9 +92,9 @@ opr_jhash(const uint32_t *k, size_t length, uint32_t initval)
 
 /* Simplified version of the above function to hash just one int */
 
-static_inline uint32_t
-opr_jhash_int(uint32_t a, uint32_t initval) {
-   uint32_t b, c;
+static_inline afs_uint32
+opr_jhash_int(afs_uint32 a, afs_uint32 initval) {
+   afs_uint32 b, c;
 
    a += 0xdeadbeef + 4 + initval;
    b = c = 0xdeadbeef + 4 + initval;
