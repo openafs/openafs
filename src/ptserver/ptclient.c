@@ -48,7 +48,7 @@ static char *lineProgress;
 
 #ifndef AFS_PTHREAD_ENV
 int
-osi_audit()
+osi_audit(void)
 {
 /* OK, this REALLY sucks bigtime, but I can't tell who is calling
  * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
@@ -243,7 +243,7 @@ main(int argc, char **argv)
 	if (code) {
 	    afs_com_err(whoami, PRBADARG,
 		    "error reading opcode in line '%s', got '%.*s'", line,
-		    sizeof(op), op);
+		    (int) sizeof(op), op);
 	    exit(1);
 	}
 	if (strlen(op) == 0)
@@ -698,6 +698,7 @@ main(int argc, char **argv)
 	else
 	    printf("Unknown op: '%s'! ? for help\n", op);
     }
+    return 0;
 }
 
 
