@@ -54,8 +54,8 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     if (afs_fakestat_enable && avc->mvstat == 1)
 	fakedir = 1;
     attrs->va_type = fakedir ? VDIR : vType(avc);
-#if defined(AFS_SGI_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
-    attrs->va_mode = fakedir ? 0755 : (mode_t) (avc->f.m.Mode & 0xffff);
+#if defined(AFS_SGI_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
+    attrs->va_mode = fakedir ? S_IFDIR | 0755 : (mode_t) (avc->f.m.Mode & 0xffff);
 #else
     attrs->va_mode = fakedir ? VDIR | 0755 : avc->f.m.Mode;
 #endif
