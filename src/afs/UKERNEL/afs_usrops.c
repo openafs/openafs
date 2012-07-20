@@ -412,11 +412,12 @@ get_user_struct(void)
 {
     struct usr_user *uptr;
     int st;
-    st = usr_getspecific(afs_global_u_key, (void **)&uptr);
+
+    st = usr_getspecific(afs_global_u_key, &uptr);
     usr_assert(st == 0);
     if (uptr == NULL) {
 	uafs_InitThread();
-	st = usr_getspecific(afs_global_u_key, (void **)&uptr);
+	st = usr_getspecific(afs_global_u_key, &uptr);
 	usr_assert(st == 0);
 	usr_assert(uptr != NULL);
     }
