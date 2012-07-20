@@ -22,12 +22,14 @@
  * SOFTWARE.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <afs/stds.h>
+#include <roken.h>
+
 #include <windows.h>
-#include <stdlib.h>
 #include <wchar.h>
 #include <strsafe.h>
-#include <stdio.h>
-#include <errno.h>
 
 #include "cm_nls.h"
 

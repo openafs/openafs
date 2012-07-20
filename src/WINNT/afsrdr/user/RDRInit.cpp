@@ -29,6 +29,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+extern "C" {
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <afs/stds.h>
+}
+
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
 #endif
@@ -42,10 +48,7 @@
 #include <windows.h>
 typedef LONG NTSTATUS, *PNTSTATUS;      // not declared in ntstatus.h
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <errno.h>
+#include <roken.h>
 
 #include <devioctl.h>
 

@@ -10,21 +10,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
+
 #include <roken.h>
 
 #include <windows.h>
 #include <winsock2.h>
 #include <shlwapi.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <strsafe.h>
 
 #include "afsd.h"
 #include <WINNT\afssw.h>
 #include <WINNT\afsreg.h>
 
-#include <afs/stds.h>
 #include <afs/cellconfig.h>
 
 #include "cm_dns.h"

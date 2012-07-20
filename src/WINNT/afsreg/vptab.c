@@ -9,15 +9,13 @@
 
 /* Functions and definitions for accessing the vice partition table */
 
+#include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#include <roken.h>
+
 #include <windows.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
 
 #include <afs/errmap_nt.h>
 
