@@ -9,9 +9,13 @@
 
 /* Functions for accessing NT system configuration information. */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <afs/stds.h>
+
+#include <roken.h>
+
 #include <windows.h>
-#include <stdlib.h>
-#include <string.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <iptypes.h>

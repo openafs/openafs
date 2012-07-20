@@ -9,18 +9,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 #include <roken.h>
 
-#include <afs/stds.h>
 #include <afs/unified_afs.h>
 
 #include <windows.h>
 #include <winsock2.h>
-#include <stddef.h>
-#include <malloc.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
 
 #include <osi.h>
 
