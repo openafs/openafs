@@ -3173,10 +3173,11 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 
     /* To avoid having 2 connections just abort at each other,
        don't abort an abort. */
-    if (!conn && (np->header.type != RX_PACKET_TYPE_ABORT)) {
-	rxi_SendRawAbort(socket, host, port, RX_INVALID_OPERATION,
-			 np, 0);
-	return np;
+    if (!conn) {
+        if (np->header.type != RX_PACKET_TYPE_ABORT)
+            rxi_SendRawAbort(socket, host, port, RX_INVALID_OPERATION,
+                             np, 0);
+        return np;
     }
 
     /* If the connection is in an error state, send an abort packet and ignore
