@@ -6339,7 +6339,7 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp,
     }
     /* No bit map entry--must grow bitmap */
     VGrowBitmap(index);
-    bp = index->bitmap;
+    bp = index->bitmap + index->bitmapOffset;
     *bp = 1;
     ret = index->bitmapOffset * 8;
 #ifdef AFS_DEMAND_ATTACH_FS
