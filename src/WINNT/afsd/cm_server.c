@@ -50,6 +50,28 @@ cm_ForceNewConnectionsAllServers(void)
     lock_ReleaseRead(&cm_serverLock);
 }
 
+void
+cm_ServerClearRPCStats(void) {
+    cm_server_t *tsp;
+    afs_uint16 port;
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+        switch (tsp->type) {
+        case CM_SERVER_VLDB:
+	    port = htons(7003);
+            rx_ClearPeerRPCStats(opcode_VL_ProbeServer>>32, tsp->addr.sin_addr.s_addr, port);
+	    break;
+	case CM_SERVER_FILE:
+	    port = htons(7000);
+            rx_ClearPeerRPCStats(opcode_RXAFS_GetCapabilities>>32, tsp->addr.sin_addr.s_addr, port);
+            rx_ClearPeerRPCStats(opcode_RXAFS_GetTime>>32, tsp->addr.sin_addr.s_addr, port);
+	    break;
+        }
+    }
+    lock_ReleaseRead(&cm_serverLock);
+}
+
 /*
  * lock_ObtainMutex must be held prior to calling
  * this function.
