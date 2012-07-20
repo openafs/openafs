@@ -236,16 +236,14 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                 if( pEntry->ActiveCount == 0)
                 {
 
-                    ulReleaseCount++;
-
-                    pRelease->FileExtents[ulProcessCount].Flags = AFS_EXTENT_FLAG_RELEASE;
+                    pRelease->FileExtents[ulReleaseCount].Flags = AFS_EXTENT_FLAG_RELEASE;
 
 #if GEN_MD5
-                    RtlCopyMemory( pRelease->FileExtents[ulProcessCount].MD5,
+                    RtlCopyMemory( pRelease->FileExtents[ulReleaseCount].MD5,
                                    pEntry->MD5,
                                    sizeof(pEntry->MD5));
 
-                    pRelease->FileExtents[ulProcessCount].Flags |= AFS_EXTENT_FLAG_MD5_SET;
+                    pRelease->FileExtents[ulReleaseCount].Flags |= AFS_EXTENT_FLAG_MD5_SET;
 #endif
 
                     if( BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
@@ -256,7 +254,7 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                         AFSRemoveEntryDirtyList( Fcb,
                                                  pEntry);
 
-                        pRelease->FileExtents[ulProcessCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
+                        pRelease->FileExtents[ulReleaseCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
 
                         dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
 
@@ -275,11 +273,13 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                                   pEntry->FileOffset.LowPart,
                                   pEntry->Size);
 
-                    pRelease->FileExtents[ulProcessCount].Length = pEntry->Size;
-                    pRelease->FileExtents[ulProcessCount].DirtyLength = pEntry->Size;
-                    pRelease->FileExtents[ulProcessCount].DirtyOffset = 0;
-                    pRelease->FileExtents[ulProcessCount].CacheOffset = pEntry->CacheOffset;
-                    pRelease->FileExtents[ulProcessCount].FileOffset = pEntry->FileOffset;
+                    pRelease->FileExtents[ulReleaseCount].Length = pEntry->Size;
+                    pRelease->FileExtents[ulReleaseCount].DirtyLength = pEntry->Size;
+                    pRelease->FileExtents[ulReleaseCount].DirtyOffset = 0;
+                    pRelease->FileExtents[ulReleaseCount].CacheOffset = pEntry->CacheOffset;
+                    pRelease->FileExtents[ulReleaseCount].FileOffset = pEntry->FileOffset;
+
+                    ulReleaseCount++;
 
                     AFSFreeExtent( Fcb,
                                    pEntry);
