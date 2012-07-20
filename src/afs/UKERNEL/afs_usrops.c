@@ -3735,13 +3735,12 @@ uafs_getvolquota(char *path, afs_int32 * BlocksInUse, afs_int32 * MaxQuota)
 {
     int rc;
     struct afs_ioctl iob;
-    VolumeStatus *status;
-    char buf[1024];
+    VolumeStatus status;
 
     iob.in = 0;
     iob.in_size = 0;
-    iob.out = buf;
-    iob.out_size = 1024;
+    iob.out = (char *)&status;
+    iob.out_size = sizeof status;
 
     rc = call_syscall(AFSCALL_PIOCTL, (long)path, _VICEIOCTL(4), (long)&iob,
 		      0, 0);
@@ -3751,9 +3750,8 @@ uafs_getvolquota(char *path, afs_int32 * BlocksInUse, afs_int32 * MaxQuota)
 	return -1;
     }
 
-    status = (VolumeStatus *) buf;
-    *BlocksInUse = status->BlocksInUse;
-    *MaxQuota = status->MaxQuota;
+    *BlocksInUse = status.BlocksInUse;
+    *MaxQuota = status.MaxQuota;
     return 0;
 }
 
@@ -3766,18 +3764,15 @@ uafs_setvolquota(char *path, afs_int32 MaxQuota)
 {
     int rc;
     struct afs_ioctl iob;
-    VolumeStatus *status;
-    char buf[1024];
+    VolumeStatus status = { 0 };
 
-    iob.in = buf;
-    iob.in_size = 1024;
+    iob.in = (char *)&status;
+    iob.in_size = sizeof status;
     iob.out = 0;
     iob.out_size = 0;
 
-    memset(buf, 0, sizeof(VolumeStatus));
-    status = (VolumeStatus *) buf;
-    status->MaxQuota = MaxQuota;
-    status->MinQuota = -1;
+    status.MaxQuota = MaxQuota;
+    status.MinQuota = -1;
 
     rc = call_syscall(AFSCALL_PIOCTL, (long)path, _VICEIOCTL(5), (long)&iob,
 		      0, 0);
