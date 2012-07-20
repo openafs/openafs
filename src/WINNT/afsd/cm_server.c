@@ -59,19 +59,25 @@ cm_RankServer(cm_server_t * tsp)
 {
     afs_int32 code = 0; /* start with "success" */
     struct rx_debugPeer tpeer;
+    struct rx_peer * rxPeer;
     afs_uint16 port;
     afs_uint64 newRank;
     afs_uint64 perfRank = 0;
-    afs_uint64 rtt;
+    afs_uint64 rtt = 0;
     double log_rtt;
+
     int isDown = (tsp->flags & CM_SERVERFLAG_DOWN);
+    void *peerRpcStats = NULL;
+    afs_uint64 opcode = 0;
 
     switch(tsp->type) {
 	case CM_SERVER_VLDB:
 	    port = htons(7003);
+            opcode = opcode_VL_ProbeServer;
 	    break;
 	case CM_SERVER_FILE:
 	    port = htons(7000);
+            opcode = opcode_RXAFS_GetCapabilities;
 	    break;
 	default:
 	    return -1;
@@ -98,10 +104,27 @@ cm_RankServer(cm_server_t * tsp)
 
         code = rx_GetLocalPeers(tsp->addr.sin_addr.s_addr, port, &tpeer);
         if (code == 0) {
-            if (tpeer.rtt) {
+            peerRpcStats = rx_CopyPeerRPCStats(opcode, tsp->addr.sin_addr.s_addr, port);
+            if (peerRpcStats == NULL && tsp->type == CM_SERVER_FILE)
+                peerRpcStats = rx_CopyPeerRPCStats(opcode_RXAFS_GetTime, tsp->addr.sin_addr.s_addr, port);
+            if (peerRpcStats) {
+                afs_uint64 execTimeSum = _8THMSEC(RPCOpStat_ExecTimeSum(peerRpcStats));
+                afs_uint64 queueTimeSum = _8THMSEC(RPCOpStat_QTimeSum(peerRpcStats));
+                afs_uint64 numCalls = RPCOpStat_NumCalls(peerRpcStats);
+
+                if (numCalls > 0)
+                    rtt = (execTimeSum - queueTimeSum) / numCalls;
+
+                rx_ReleaseRPCStats(peerRpcStats);
+            }
+
+            if (rtt == 0 && tpeer.rtt) {
                 /* rtt is ms/8 */
                 rtt = tpeer.rtt;
-                log_rtt = log(tpeer.rtt);
+            }
+
+            if (rtt > 0) {
+                log_rtt = log(rtt);
                 perfRank += (6000 * log_rtt / 5000) * 5000;
 
                 if (tsp->type == CM_SERVER_FILE) {
