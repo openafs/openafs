@@ -20,6 +20,7 @@ DLLOBJS =\
 	$(OUT)\afssvrcpa_stub.res
 
 DLLLIBS =\
+        $(DESTDIR)\lib\afsroken.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\TaLocale.lib \
 	comctl32.lib
