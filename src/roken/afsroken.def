@@ -46,3 +46,5 @@ EXPORTS
         rk_free                 @50
         rk_malloc               @51
         rk_realloc              @52
+        rk_strdup               @53
+        rk_wcsdup               @54
