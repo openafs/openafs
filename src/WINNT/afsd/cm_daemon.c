@@ -82,6 +82,8 @@ void * cm_IpAddrDaemon(void * vparm)
                 smb_SetLanAdapterChangeDetected();
             cm_SetLanAdapterChangeDetected();
             thrd_ResetEvent(cm_IPAddrDaemon_ShutdownEvent);
+
+            cm_ServerClearRPCStats();
 	}
     }
 
