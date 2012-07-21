@@ -7614,7 +7614,7 @@ try_exit:
         if( pTokenInfo != NULL)
         {
 
-            AFSExFreePool( pTokenInfo);
+            ExFreePool( pTokenInfo);    // Allocated by SeQueryInformationToken
         }
     }
 
