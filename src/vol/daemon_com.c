@@ -88,7 +88,7 @@ SYNC_getAddr(SYNC_endpoint_t * endpoint, SYNC_sockaddr_t * addr)
 
 #ifdef USE_UNIX_SOCKETS
     strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-               endpoint->un, NULL);
+               endpoint->un, (char *)NULL);
     addr->sun_family = AF_UNIX;
     strncpy(addr->sun_path, tbuffer, (sizeof(struct sockaddr_un) - sizeof(short)));
 #else  /* !USE_UNIX_SOCKETS */

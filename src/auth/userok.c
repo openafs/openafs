@@ -43,8 +43,7 @@ static void
 UserListFileName(struct afsconf_dir *adir,
 		 char *buffer, size_t len)
 {
-    strcompose(buffer, len, adir->name, "/",
-	       AFSDIR_ULIST_FILE, NULL);
+    strcompose(buffer, len, adir->name, "/", AFSDIR_ULIST_FILE, (char *)NULL);
 }
 
 #if !defined(UKERNEL)

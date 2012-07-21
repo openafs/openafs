@@ -509,7 +509,8 @@ GetCellUnix(struct afsconf_dir *adir)
     char *start, *p;
     afsconf_FILE *fp;
 
-    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE, NULL);
+    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE,
+	(char *)NULL);
     fp = fopen(tbuffer, "r");
     if (fp == 0) {
 	return -1;
@@ -774,7 +775,8 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 #endif /* AFS_NT40_ENV */
 
     /* Read in the alias list */
-    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLALIAS_FILE, NULL);
+    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLALIAS_FILE,
+	(char *)NULL);
 
     tf = fopen(tbuffer, "r");
     while (tf) {

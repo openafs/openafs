@@ -226,7 +226,7 @@ main(int argc, char *argv[])
     cellservdb = AFSDIR_SERVER_ETC_DIRPATH;
     dbpath = AFSDIR_SERVER_KADB_FILEPATH;
     strcompose(default_lclpath, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH,
-	       "/", AFSDIR_KADB_FILE, NULL);
+	       "/", AFSDIR_KADB_FILE, (char *)NULL);
     lclpath = default_lclpath;
 
     debugOutput = 0;

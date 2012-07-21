@@ -291,7 +291,7 @@ SetSalFlag(struct fsbnode *abnode, int aflag)
     if (abnode->salsrvcmd == NULL) {
 	abnode->needsSalvage = aflag;
 	strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-		   SALFILE, abnode->b.name, NULL);
+		   SALFILE, abnode->b.name, (char *)NULL);
 	if (aflag) {
 	    fd = open(tbuffer, O_CREAT | O_TRUNC | O_RDWR, 0666);
 	    close(fd);
@@ -313,7 +313,7 @@ RestoreSalFlag(struct fsbnode *abnode)
 	abnode->needsSalvage = 0;
     } else {
 	strcompose(tbuffer, AFSDIR_PATH_MAX, AFSDIR_SERVER_LOCAL_DIRPATH, "/",
-		   SALFILE, abnode->b.name, NULL);
+		   SALFILE, abnode->b.name, (char *)NULL);
 	if (access(tbuffer, 0) == 0) {
 	    /* file exists, so need to salvage */
 	    abnode->needsSalvage = 1;

@@ -988,7 +988,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	}
 
 	strcompose(tmp_conf_file, 128, tmp_conf_dir, "/",
-		   AFSDIR_CELLSERVDB_FILE, NULL);
+		   AFSDIR_CELLSERVDB_FILE, (char *)NULL);
 	f = fopen(tmp_conf_file, "w");
 	if (f == 0) {
 	  cantcreate:
@@ -1011,7 +1011,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	}
 
 	strcompose(tmp_cell_file, 128, tmp_conf_dir, "/",
-		   AFSDIR_THISCELL_FILE, NULL);
+		   AFSDIR_THISCELL_FILE, (char *)NULL);
 	f = fopen(tmp_cell_file, "w");
 	if (f == 0)
 	    goto cantcreate;
@@ -1020,7 +1020,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	    goto cantclose;
 
 	strcompose(tmp_noauth_file, 128, tmp_conf_dir, "/",
-		   AFSDIR_NOAUTH_FILE, NULL);
+		   AFSDIR_NOAUTH_FILE, (char *)NULL);
 	if (noAuth) {
 	    code = creat(tmp_noauth_file, 0777);
 	    if (code && (errno != EEXIST))

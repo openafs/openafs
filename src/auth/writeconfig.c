@@ -88,7 +88,7 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
 
     LOCK_GLOBAL_MUTEX;
     /* write ThisCell file */
-    strcompose(tbuffer, 1024, apath, "/", AFSDIR_THISCELL_FILE, NULL);
+    strcompose(tbuffer, 1024, apath, "/", AFSDIR_THISCELL_FILE, (char *)NULL);
 
     fd = open(tbuffer, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
@@ -115,7 +115,7 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     }
 
     /* write CellServDB */
-    strcompose(tbuffer, 1024, apath, "/", AFSDIR_CELLSERVDB_FILE, NULL);
+    strcompose(tbuffer, 1024, apath, "/", AFSDIR_CELLSERVDB_FILE, (char *)NULL);
     tf = fopen(tbuffer, "w");
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;

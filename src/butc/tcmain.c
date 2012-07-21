@@ -1194,11 +1194,11 @@ main(int argc, char **argv)
 
     /* setup the file paths */
     strcompose(eFile, AFSDIR_PATH_MAX, AFSDIR_SERVER_BACKUP_DIRPATH, "/",
-	       TE_PREFIX, NULL);
+	       TE_PREFIX, (char *)NULL);
     strcompose(lFile, AFSDIR_PATH_MAX, AFSDIR_SERVER_BACKUP_DIRPATH, "/",
-	       TL_PREFIX, NULL);
+	       TL_PREFIX, (char *)NULL);
     strcompose(pFile, AFSDIR_PATH_MAX, AFSDIR_SERVER_BACKUP_DIRPATH, "/",
-	       CFG_PREFIX, NULL);
+	       CFG_PREFIX, (char *)NULL);
     strcpy(tapeConfigFile, AFSDIR_SERVER_TAPECONFIG_FILEPATH);
 
     /* special case "no args" case since cmd_dispatch gives help message
