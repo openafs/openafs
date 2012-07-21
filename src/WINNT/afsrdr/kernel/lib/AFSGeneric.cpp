@@ -5942,6 +5942,14 @@ try_exit:
                 AFSExFreePoolWithTag( pDirNode, AFS_DIR_ENTRY_TAG);
             }
 
+            if( pNonPagedDirEntry != NULL)
+            {
+
+                ExDeleteResourceLite( &pNonPagedDirEntry->Lock);
+
+                AFSExFreePoolWithTag( pNonPagedDirEntry, AFS_DIR_ENTRY_NP_TAG);
+            }
+
             if ( pObjectInfoCB != NULL)
             {
 
