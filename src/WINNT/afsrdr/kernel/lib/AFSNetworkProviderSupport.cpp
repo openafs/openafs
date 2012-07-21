@@ -512,12 +512,12 @@ AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         if( pConnection->Comment.Buffer != NULL)
         {
 
-            AFSExFreePool( pConnection->Comment.Buffer);
+            AFSExFreePoolWithTag( pConnection->Comment.Buffer, 0);
         }
 
         ConnectionResult->LocalName = pConnection->LocalName;
 
-        AFSExFreePool( pConnection);
+        AFSExFreePoolWithTag( pConnection, AFS_PROVIDER_CB);
 
         ConnectionResult->Status = WN_SUCCESS;
 
@@ -983,7 +983,7 @@ try_exit:
         if( uniRemoteName.Buffer != NULL)
         {
 
-            AFSExFreePool( uniRemoteName.Buffer);
+            AFSExFreePoolWithTag( uniRemoteName.Buffer, 0);
         }
     }
 
@@ -1702,7 +1702,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
             // Don't need this
             //
 
-            AFSExFreePool( pDirEnumEntry);
+            AFSExFreePoolWithTag( pDirEnumEntry, AFS_GENERIC_MEMORY_3_TAG);
 
             //
             // The share name is valid
@@ -1755,7 +1755,7 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
             AFSReleaseResource( AFSGlobalRoot->ObjectInformation.Specific.Directory.DirectoryNodeHdr.TreeLock);
 
-            AFSExFreePool( uniFullName.Buffer);
+            AFSExFreePoolWithTag( uniFullName.Buffer, 0);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1887,7 +1887,7 @@ try_exit:
         if ( uniRemainingPathLocal.Buffer )
         {
 
-            AFSExFreePool( uniRemainingPathLocal.Buffer);
+            AFSExFreePoolWithTag( uniRemainingPathLocal.Buffer, 0);
         }
     }
 

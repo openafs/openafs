@@ -81,7 +81,7 @@ extern PAFSAddConnectionEx AFSAddConnectionEx;
 
 extern PAFSExAllocatePoolWithTag   AFSExAllocatePoolWithTag;
 
-extern PAFSExFreePool      AFSExFreePool;
+extern PAFSExFreePoolWithTag      AFSExFreePoolWithTag;
 
 extern PAFSRetrieveAuthGroup AFSRetrieveAuthGroupFnc;
 

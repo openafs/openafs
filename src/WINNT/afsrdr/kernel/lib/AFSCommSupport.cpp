@@ -660,7 +660,7 @@ try_exit:
         if( pBuffer != NULL)
         {
 
-            AFSExFreePool( pBuffer);
+            AFSExFreePoolWithTag( pBuffer, AFS_DIR_BUFFER_TAG);
         }
 
         //
@@ -1491,7 +1491,7 @@ try_exit:
         if( pBuffer != NULL)
         {
 
-            AFSExFreePool( pBuffer);
+            AFSExFreePoolWithTag( pBuffer, AFS_DIR_BUFFER_TAG);
         }
     }
 
@@ -1822,7 +1822,7 @@ try_exit:
         if( pResultCB != NULL)
         {
 
-            AFSExFreePool( pResultCB);
+            AFSExFreePoolWithTag( pResultCB, AFS_GENERIC_MEMORY_1_TAG);
         }
     }
 
@@ -1924,7 +1924,7 @@ try_exit:
         if( pUpdateResultCB != NULL)
         {
 
-            AFSExFreePool( pUpdateResultCB);
+            AFSExFreePoolWithTag( pUpdateResultCB, AFS_UPDATE_RESULT_TAG);
         }
     }
 
@@ -2232,7 +2232,7 @@ try_exit:
         if( pRenameCB != NULL)
         {
 
-            AFSExFreePool( pRenameCB);
+            AFSExFreePoolWithTag( pRenameCB, AFS_RENAME_REQUEST_TAG);
         }
     }
 
@@ -2381,7 +2381,7 @@ try_exit:
         if( pEvalResultCB != NULL)
         {
 
-            AFSExFreePool( pEvalResultCB);
+            AFSExFreePoolWithTag( pEvalResultCB, AFS_GENERIC_MEMORY_30_TAG);
         }
 
         if( !NT_SUCCESS( ntStatus))
@@ -2390,7 +2390,7 @@ try_exit:
             if( pDirEnumCB != NULL)
             {
 
-                AFSExFreePool( pDirEnumCB);
+                AFSExFreePoolWithTag( pDirEnumCB, AFS_GENERIC_MEMORY_2_TAG);
             }
 
             *DirEnumEntry = NULL;
@@ -2512,7 +2512,7 @@ try_exit:
         if( pEvalResultCB != NULL)
         {
 
-            AFSExFreePool( pEvalResultCB);
+            AFSExFreePoolWithTag( pEvalResultCB, AFS_GENERIC_MEMORY_31_TAG);
         }
 
         if( !NT_SUCCESS( ntStatus))
@@ -2521,7 +2521,7 @@ try_exit:
             if( pDirEnumCB != NULL)
             {
 
-                AFSExFreePool( pDirEnumCB);
+                AFSExFreePoolWithTag( pDirEnumCB, AFS_GENERIC_MEMORY_3_TAG);
             }
 
             *DirEnumEntry = NULL;
@@ -2730,7 +2730,7 @@ try_exit:
         if( pIoRequest != NULL)
         {
 
-            AFSExFreePool( pIoRequest);
+            AFSExFreePoolWithTag( pIoRequest, AFS_GENERIC_MEMORY_4_TAG);
         }
     }
 
@@ -2807,7 +2807,7 @@ try_exit:
         if( pInfoRequest != NULL)
         {
 
-            AFSExFreePool( pInfoRequest);
+            AFSExFreePoolWithTag( pInfoRequest, AFS_GENERIC_MEMORY_5_TAG);
         }
     }
 

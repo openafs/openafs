@@ -382,7 +382,7 @@ AFSCompleteIo( IN AFSGatherIo *Gather,
         else
         {
 
-            AFSExFreePool( Gather);
+            AFSExFreePoolWithTag( Gather, AFS_GATHER_TAG);
         }
     }
 }

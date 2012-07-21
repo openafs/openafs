@@ -976,14 +976,14 @@ AFSRemoveRdrFcb( IN OUT AFSFcb **RdrFcb)
         // The non paged region
         //
 
-        AFSExFreePool( pFcb->NPFcb);
+        AFSExFreePoolWithTag( pFcb->NPFcb, AFS_FCB_NP_ALLOCATION_TAG);
     }
 
     //
     // And the Fcb itself
     //
 
-    AFSExFreePool( pFcb);
+    AFSExFreePoolWithTag( pFcb, AFS_FCB_ALLOCATION_TAG);
 
     return;
 }

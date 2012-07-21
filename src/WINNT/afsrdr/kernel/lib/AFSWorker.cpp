@@ -1193,9 +1193,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                         ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
 
-                                        AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged);
+                                        AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
-                                        AFSExFreePool( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB);
+                                        AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
                                     }
 
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
@@ -1416,9 +1416,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                             ExDeleteResourceLite( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
 
-                                            AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged);
+                                            AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
-                                            AFSExFreePool( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB);
+                                            AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
                                         }
 
                                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,

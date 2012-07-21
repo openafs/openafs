@@ -895,7 +895,7 @@ AFSInitializeLibrary( IN AFSFileID *GlobalRootFid,
 
         stInitLib.AFSExAllocatePoolWithTag = AFSExAllocatePoolWithTag;
 
-        stInitLib.AFSExFreePool = AFSExFreePool;
+        stInitLib.AFSExFreePoolWithTag = AFSExFreePoolWithTag;
 
         stInitLib.AFSDumpTraceFiles = AFSDumpTraceFiles;
 

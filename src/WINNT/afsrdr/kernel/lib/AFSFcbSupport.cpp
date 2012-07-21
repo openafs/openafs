@@ -334,10 +334,10 @@ try_exit:
 
                     ExDeleteResourceLite( &pNPFcb->Resource);
 
-                    AFSExFreePool( pNPFcb);
+                    AFSExFreePoolWithTag( pNPFcb, AFS_FCB_NP_ALLOCATION_TAG);
                 }
 
-                AFSExFreePool( pFcb);
+                AFSExFreePoolWithTag( pFcb, AFS_FCB_ALLOCATION_TAG);
             }
         }
     }
@@ -470,7 +470,7 @@ AFSInitVolume( IN GUID *AuthGroup,
 
         pNonPagedVcb = (AFSNonPagedVolumeCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                         sizeof( AFSNonPagedVolumeCB),
-                                                                        AFS_VCB_ALLOCATION_TAG);
+                                                                        AFS_VCB_NP_ALLOCATION_TAG);
 
         if( pNonPagedVcb == NULL)
         {
@@ -491,7 +491,7 @@ AFSInitVolume( IN GUID *AuthGroup,
 
         pNonPagedObject = (AFSNonPagedObjectInfoCB *)AFSExAllocatePoolWithTag( NonPagedPool,
                                                                                sizeof( AFSNonPagedObjectInfoCB),
-                                                                               AFS_VCB_ALLOCATION_TAG);
+                                                                               AFS_NP_OBJECT_INFO_TAG);
 
         if( pNonPagedObject == NULL)
         {
@@ -667,7 +667,7 @@ try_exit:
 
                 ExDeleteResourceLite( &pNonPagedVcb->ObjectInfoTreeLock);
 
-                AFSExFreePool( pNonPagedVcb);
+                AFSExFreePoolWithTag( pNonPagedVcb, AFS_VCB_NP_ALLOCATION_TAG);
             }
 
             if( pNonPagedObject != NULL)
@@ -675,7 +675,7 @@ try_exit:
 
                 ExDeleteResourceLite( &pNonPagedObject->DirectoryNodeHdrLock);
 
-                AFSExFreePool( pNonPagedObject);
+                AFSExFreePoolWithTag( pNonPagedObject, AFS_NP_OBJECT_INFO_TAG);
             }
 
             if( pVolumeCB != NULL)
@@ -684,10 +684,10 @@ try_exit:
                 if( pVolumeCB->DirectoryCB != NULL)
                 {
 
-                    AFSExFreePool( pVolumeCB->DirectoryCB);
+                    AFSExFreePoolWithTag( pVolumeCB->DirectoryCB, AFS_DIR_ENTRY_TAG);
                 }
 
-                AFSExFreePool( pVolumeCB);
+                AFSExFreePoolWithTag( pVolumeCB, AFS_VCB_ALLOCATION_TAG);
             }
 
             if( pNonPagedDirEntry != NULL)
@@ -695,7 +695,7 @@ try_exit:
 
                 ExDeleteResourceLite( &pNonPagedDirEntry->Lock);
 
-                AFSExFreePool( pNonPagedDirEntry);
+                AFSExFreePoolWithTag( pNonPagedDirEntry, AFS_DIR_ENTRY_NP_TAG);
             }
         }
 
@@ -786,7 +786,7 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
             AFSDeleteObjectInfo( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
-            AFSExFreePool( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB);
+            AFSExFreePoolWithTag( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
         }
 
         if( BooleanFlagOn( VolumeCB->ObjectInformation.Flags, AFS_OBJECT_HELD_IN_SERVICE))
@@ -815,7 +815,7 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
             ExDeleteResourceLite( &VolumeCB->NonPagedVcb->ObjectInfoTreeLock);
 
-            AFSExFreePool( VolumeCB->NonPagedVcb);
+            AFSExFreePoolWithTag( VolumeCB->NonPagedVcb, AFS_VCB_NP_ALLOCATION_TAG);
         }
 
         if( VolumeCB->ObjectInformation.NonPagedInfo != NULL)
@@ -823,7 +823,7 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
             ExDeleteResourceLite( &VolumeCB->ObjectInformation.NonPagedInfo->DirectoryNodeHdrLock);
 
-            AFSExFreePool( VolumeCB->ObjectInformation.NonPagedInfo);
+            AFSExFreePoolWithTag( VolumeCB->ObjectInformation.NonPagedInfo, AFS_NP_OBJECT_INFO_TAG);
         }
 
         if( VolumeCB->DirectoryCB != NULL)
@@ -834,13 +834,13 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
                 ExDeleteResourceLite( &VolumeCB->DirectoryCB->NonPaged->Lock);
 
-                AFSExFreePool( VolumeCB->DirectoryCB->NonPaged);
+                AFSExFreePoolWithTag( VolumeCB->DirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
             }
 
-            AFSExFreePool( VolumeCB->DirectoryCB);
+            AFSExFreePoolWithTag( VolumeCB->DirectoryCB, AFS_DIR_ENTRY_TAG);
         }
 
-        AFSExFreePool( VolumeCB);
+        AFSExFreePoolWithTag( VolumeCB, AFS_VCB_ALLOCATION_TAG);
     }
 
     return ntStatus;
@@ -1010,14 +1010,14 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb)
         // The non paged region
         //
 
-        AFSExFreePool( RootFcb->NPFcb);
+        AFSExFreePoolWithTag( RootFcb->NPFcb, AFS_FCB_NP_ALLOCATION_TAG);
     }
 
     //
     // And the Fcb itself
     //
 
-    AFSExFreePool( RootFcb);
+    AFSExFreePoolWithTag( RootFcb, AFS_FCB_ALLOCATION_TAG);
 
     return;
 }
@@ -1097,13 +1097,13 @@ AFSRemoveFcb( IN AFSFcb **ppFcb)
     // The non paged region
     //
 
-    AFSExFreePool( pFcb->NPFcb);
+    AFSExFreePoolWithTag( pFcb->NPFcb, AFS_FCB_NP_ALLOCATION_TAG);
 
     //
     // And the Fcb itself, which includes the name
     //
 
-    AFSExFreePool( pFcb);
+    AFSExFreePoolWithTag( pFcb, AFS_FCB_ALLOCATION_TAG);
 
     return;
 }
@@ -1176,10 +1176,10 @@ try_exit:
                 if ( pCcb->NPCcb != NULL)
                 {
 
-                    AFSExFreePool( pCcb->NPCcb);
+                    AFSExFreePoolWithTag( pCcb->NPCcb, AFS_CCB_NP_ALLOCATION_TAG);
                 }
 
-                AFSExFreePool( pCcb);
+                AFSExFreePoolWithTag( pCcb, AFS_CCB_ALLOCATION_TAG);
             }
 
             *Ccb = NULL;
@@ -1254,13 +1254,13 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
     if( Ccb->MaskName.Buffer != NULL)
     {
 
-        AFSExFreePool( Ccb->MaskName.Buffer);
+        AFSExFreePoolWithTag( Ccb->MaskName.Buffer, AFS_GENERIC_MEMORY_6_TAG);
     }
 
     if( BooleanFlagOn( Ccb->Flags, CCB_FLAG_FREE_FULL_PATHNAME))
     {
 
-        AFSExFreePool( Ccb->FullFileName.Buffer);
+        AFSExFreePoolWithTag( Ccb->FullFileName.Buffer, 0);
     }
 
     //
@@ -1278,7 +1278,7 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
     if( Ccb->DirectorySnapshot != NULL)
     {
 
-        AFSExFreePool( Ccb->DirectorySnapshot);
+        AFSExFreePoolWithTag( Ccb->DirectorySnapshot, AFS_DIR_SNAPSHOT_TAG);
 
         Ccb->DirectorySnapshot = NULL;
     }
@@ -1286,7 +1286,7 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
     if( Ccb->NotifyMask.Buffer != NULL)
     {
 
-        AFSExFreePool( Ccb->NotifyMask.Buffer);
+        AFSExFreePoolWithTag( Ccb->NotifyMask.Buffer, AFS_GENERIC_MEMORY_7_TAG);
     }
 
     AFSReleaseResource( &Ccb->NPCcb->CcbLock);
@@ -1297,9 +1297,9 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
 
     ExDeleteResourceLite( &Ccb->NPCcb->CcbLock);
 
-    AFSExFreePool( Ccb->NPCcb);
+    AFSExFreePoolWithTag( Ccb->NPCcb, AFS_CCB_NP_ALLOCATION_TAG);
 
-    AFSExFreePool( Ccb);
+    AFSExFreePoolWithTag( Ccb, AFS_CCB_ALLOCATION_TAG);
 
     return ntStatus;
 }

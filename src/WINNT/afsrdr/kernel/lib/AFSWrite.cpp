@@ -1372,13 +1372,13 @@ try_exit:
 
         if( pGatherIo)
         {
-            AFSExFreePool(pGatherIo);
+            AFSExFreePoolWithTag(pGatherIo, AFS_GATHER_TAG);
         }
 
         if( NULL != pIoRuns &&
             stIoRuns != pIoRuns)
         {
-            AFSExFreePool(pIoRuns);
+            AFSExFreePoolWithTag(pIoRuns, AFS_IO_RUN_TAG);
         }
 
         if( bCompleteIrp)
@@ -1856,7 +1856,7 @@ try_exit:
         if( pIoRequest != NULL)
         {
 
-            AFSExFreePool( pIoRequest);
+            AFSExFreePoolWithTag( pIoRequest, AFS_GENERIC_MEMORY_14_TAG);
         }
     }
 
