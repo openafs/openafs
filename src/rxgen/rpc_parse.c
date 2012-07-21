@@ -68,6 +68,7 @@ int combinepackages = 0;
 int PackageIndex = -1;
 int PerProcCounter = 0;
 int Multi_Init = 0;
+int StatIndex = -1;
 
 /*
  * Character arrays to keep list of function names as we process the file
@@ -622,6 +623,7 @@ def_statindex(definition * defp)
     defp->def_name = name;
     defp->def.co = tok.str;
     PackageStatIndex[PackageIndex] = name;
+    StatIndex = atoi(tok.str);
 }
 
 static void
@@ -929,7 +931,7 @@ generate_code(definition * defp, int proc_split_flag, int multi_flag)
 	if (Sflag || cflag)
 	    ss_Proc_CodeGeneration(defp);
     }
-    if (Sflag || (cflag && xflag && !proc_split_flag))
+    if (Sflag || (cflag && xflag && !proc_split_flag) || hflag)
 	STOREVAL(&proc_defined[PackageIndex], defp);
 }
 
@@ -2170,6 +2172,7 @@ h_HeadofOldStyleProc_setup(void)
     f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
 	    prefix,
 	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+    f_print(fout,"\nextern int %sOpCodeIndex(int op);\n", PackagePrefix[PackageIndex]);
 }
 
 void
@@ -2190,45 +2193,52 @@ h_Proc_CodeGeneration(void)
     PackageIndex = temp;
 }
 
+static void
+proc_h_case(definition * defp)
+{
+    f_print(fout, "#define opcode_%s%s \t((afs_uint64)((%uLL << 32) + %sOpCodeIndex(%u)))\n",
+	    defp->pc.proc_prefix, defp->pc.proc_name, StatIndex,
+	    defp->pc.proc_prefix, defp->pc.proc_opcodenum);
+}
+
+void
+h_opcode_stats_pkg(char *pprefix, int lowest, int highest, int nops,
+		  int statfuncs, char *ptype, list *proclist)
+{
+    list *listp;
+
+    if (!pprefix)
+	return;
+
+    f_print(fout,
+            "\n/* Opcode-related useful stats for %spackage: %s */\n",
+            ptype, pprefix);
+    f_print(fout, "#define %sLOWEST_OPCODE   %d\n", pprefix, lowest);
+    f_print(fout, "#define %sHIGHEST_OPCODE     %d\n", pprefix, highest);
+    f_print(fout, "#define %sNUMBER_OPCODES     %d\n\n", pprefix, nops);
+
+    for (listp = proclist; listp != NULL;
+         listp = listp->next)
+        proc_h_case((definition *) listp->val);
+
+    if (xflag) {
+        f_print(fout, "#define %sNO_OF_STAT_FUNCS\t%d\n\n",
+                pprefix, statfuncs);
+        f_print(fout, "AFS_RXGEN_EXPORT\n");
+        f_print(fout, "extern const char *%sfunction_names[];\n\n",
+                pprefix);
+    }
+}
+
 void
 h_opcode_stats(void)
 {
     if (combinepackages) {
-	f_print(fout,
-		"\n/* Opcode-related useful stats for Master package: %s */\n",
-		MasterPrefix);
-	f_print(fout, "#define %sLOWEST_OPCODE   %d\n", MasterPrefix,
-		master_lowest_opcode);
-	f_print(fout, "#define %sHIGHEST_OPCODE	%d\n", MasterPrefix,
-		master_highest_opcode);
-	f_print(fout, "#define %sNUMBER_OPCODES	%d\n\n", MasterPrefix,
-		master_no_of_opcodes);
-	if (xflag) {
-	    f_print(fout, "#define %sNO_OF_STAT_FUNCS\t%d\n\n", MasterPrefix,
-		    no_of_stat_funcs_header[0]);
-	    f_print(fout, "AFS_RXGEN_EXPORT\n");
-	    f_print(fout, "extern const char *%sfunction_names[];\n\n",
-		    MasterPrefix);
-	}
+	h_opcode_stats_pkg(MasterPrefix, master_lowest_opcode, master_highest_opcode, master_no_of_opcodes, no_of_stat_funcs_header[0], "Master ", proc_defined[0]);
     } else {
 	int i;
 	for (i = 0; i <= PackageIndex; i++) {
-	    f_print(fout,
-		    "\n/* Opcode-related useful stats for package: %s */\n",
-		    PackagePrefix[i]);
-	    f_print(fout, "#define %sLOWEST_OPCODE   %d\n", PackagePrefix[i],
-		    lowest_opcode[i]);
-	    f_print(fout, "#define %sHIGHEST_OPCODE	%d\n",
-		    PackagePrefix[i], highest_opcode[i]);
-	    f_print(fout, "#define %sNUMBER_OPCODES	%d\n\n",
-		    PackagePrefix[i], no_of_opcodes[i]);
-	    if (xflag) {
-		f_print(fout, "#define %sNO_OF_STAT_FUNCS\t%d\n\n",
-			PackagePrefix[i], no_of_stat_funcs_header[i]);
-		f_print(fout, "AFS_RXGEN_EXPORT\n");
-		f_print(fout, "extern const char *%sfunction_names[];\n\n",
-			PackagePrefix[i]);
-	    }
+	    h_opcode_stats_pkg(PackagePrefix[i], lowest_opcode[i], highest_opcode[i], no_of_opcodes[i], no_of_stat_funcs_header[i], "", proc_defined[i]);
 	}
     }
 }
