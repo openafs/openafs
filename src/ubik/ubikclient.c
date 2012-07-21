@@ -451,12 +451,9 @@ CallIter(int (*aproc) (), struct ubik_client *aclient,
     code =
 	(*aproc) (tc, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13,
 		  p14, p15, p16);
-    if (aclient->initializationState != origLevel) {
+    if (aclient->initializationState != origLevel)
 	/* somebody did a ubik_ClientInit */
-	if (code == 0)
-	    code = UINTERNAL;	/* no more specific error was returned */
 	goto errout;
-    }
 
     /* what should I do in case of UNOQUORUM ? */
     if (code < 0) {
