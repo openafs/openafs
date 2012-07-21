@@ -150,8 +150,8 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
     AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
     LIST_ENTRY          *le, *leNext;
     AFSExtent           *pEntry;
-    LONG                 lExtentCount = 0;
-    ULONG                ulReleaseCount = 0, ulProcessCount = 0;
+    LONG                 lExtentCount = 0, lProcessCount = 0;
+    ULONG                ulReleaseCount = 0;
     size_t               sz;
     AFSReleaseExtentsCB *pRelease = NULL;
     BOOLEAN              locked = FALSE;
@@ -217,16 +217,18 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
         for( le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink,
              lExtentCount = 0;
              lExtentCount < Fcb->Specific.File.ExtentCount;
-             lExtentCount += ulProcessCount)
+             lExtentCount += lProcessCount)
         {
 
             RtlZeroMemory( pRelease,
                            sizeof( AFSReleaseExtentsCB ) +
                            (AFS_MAXIMUM_EXTENT_RELEASE_COUNT * sizeof ( AFSFileExtentCB )));
 
-            for( ulProcessCount = 0, ulReleaseCount = 0;
-                 !IsListEmpty( le) && ulReleaseCount < AFS_MAXIMUM_EXTENT_RELEASE_COUNT;
-                 ulProcessCount++, le = leNext)
+            for( lProcessCount = 0, ulReleaseCount = 0;
+                 !IsListEmpty( le) &&
+                 ulReleaseCount < AFS_MAXIMUM_EXTENT_RELEASE_COUNT &&
+                 lExtentCount + lProcessCount < Fcb->Specific.File.ExtentCount;
+                 lProcessCount++, le = leNext)
             {
 
                 leNext = le->Flink;
@@ -310,7 +312,7 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                 // request would be a corruption.
                 //
 
-                sz = sizeof( AFSReleaseExtentsCB ) + (ulProcessCount * sizeof ( AFSFileExtentCB ));
+                sz = sizeof( AFSReleaseExtentsCB ) + (lProcessCount * sizeof ( AFSFileExtentCB ));
 
                 ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                               AFS_REQUEST_FLAG_SYNCHRONOUS,
