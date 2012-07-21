@@ -18,7 +18,7 @@
 
 /* Just like strncpy but shift-case in transit and forces null termination */
 char *
-lcstring(char *d, char *s, int n)
+lcstring(char *d, const char *s, int n)
 {
     char *original_d = d;
     char c;
@@ -39,7 +39,7 @@ lcstring(char *d, char *s, int n)
 }
 
 char *
-ucstring(char *d, char *s, int n)
+ucstring(char *d, const char *s, int n)
 {
     char *original_d = d;
     char c;
@@ -86,7 +86,7 @@ stoupper(char *s)
  *   buf: storage for the composed string. Any data in it will be lost.
  *   len: length of the buffer.
  *   ...: variable number of string arguments. The last argument must be
- *        NULL.
+ *        (char *)NULL.
  * Returns buf or NULL if the buffer was not sufficiently large.
  */
 char *
