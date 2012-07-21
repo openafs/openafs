@@ -786,6 +786,10 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
             AFSDeleteObjectInfo( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
+            ExDeleteResourceLite( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->NonPaged->Lock);
+
+            AFSExFreePoolWithTag( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->NonPaged, AFS_DIR_ENTRY_NP_TAG);
+
             AFSExFreePoolWithTag( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
         }
 
