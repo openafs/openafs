@@ -225,5 +225,6 @@ struct definition {
     } def;
     procedure_def pc;
     int can_fail;
+    int statindex;
 };
 typedef struct definition definition;

@@ -890,4 +890,105 @@ extern int rx_DumpCalls(FILE *outputFile, char *cookie);
 #include "rx_prototypes.h"
 #endif
 
+static_inline afs_uint32
+RPCOpStat_Peer(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->remote_peer;
+}
+
+static_inline afs_uint32
+RPCOpStat_Port(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->remote_port;
+}
+
+static_inline afs_uint32
+RPCOpStat_IsServer(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->remote_is_server;
+}
+
+static_inline afs_uint32
+RPCOpStat_InterfaceId(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->interfaceId;
+}
+
+static_inline afs_uint32
+RPCOpStat_NumFuncs(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->func_total;
+}
+
+static_inline afs_uint32
+RPCOpStat_CurFunc(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->func_index;
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSum(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_sum);
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSumSqr(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_sum_sqr);
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSumMin(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_min);
+}
+
+static_inline struct clock *
+RPCOpStat_QTimeSumMax(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->queue_time_max);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSum(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_sum);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSumSqr(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_sum_sqr);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSumMin(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_min);
+}
+
+static_inline struct clock *
+RPCOpStat_ExecTimeSumMax(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return &(rpcop_stat->execution_time_max);
+}
+
+static_inline afs_uint64
+RPCOpStat_NumCalls(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->invocations;
+}
+
+static_inline afs_uint64
+RPCOpStat_BytesSent(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->bytes_sent;
+}
+
+static_inline afs_uint64
+RPCOpStat_BytesRcvd(void *blob) {
+    rx_function_entry_v1_p rpcop_stat = (rx_function_entry_v1_p)blob;
+    return rpcop_stat->bytes_rcvd;
+}
 #endif /* !KDUMP_RX_LOCK */

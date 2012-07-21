@@ -331,6 +331,13 @@ EXPORTS
 	rx_HostOf				@337
         rx_PortOf                               @338
 
+        rx_ClearProcessRPCStats                 @339
+        rx_ClearPeerRPCStats                    @340
+        rx_CopyProcessRPCStats                  @341
+        rx_CopyPeerRPCStats                     @342
+	rx_ReleaseRPCStats                      @343
+        RXAFS_OpCodeIndex                       @344
+
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA
