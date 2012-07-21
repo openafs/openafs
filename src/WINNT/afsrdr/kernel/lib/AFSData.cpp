@@ -98,7 +98,7 @@ PAFSAddConnectionEx AFSAddConnectionEx = NULL;
 
 PAFSExAllocatePoolWithTag   AFSExAllocatePoolWithTag = NULL;
 
-PAFSExFreePool      AFSExFreePool = NULL;
+PAFSExFreePoolWithTag      AFSExFreePoolWithTag = NULL;
 
 PAFSDumpTraceFiles  AFSDumpTraceFilesFnc = AFSDumpTraceFiles_Default;
 

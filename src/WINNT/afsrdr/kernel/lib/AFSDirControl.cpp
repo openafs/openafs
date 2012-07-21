@@ -1446,7 +1446,7 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
             if( Ccb->DirectorySnapshot != NULL)
             {
 
-                AFSExFreePool( Ccb->DirectorySnapshot);
+                AFSExFreePoolWithTag( Ccb->DirectorySnapshot, AFS_DIR_SNAPSHOT_TAG);
 
                 Ccb->DirectorySnapshot = NULL;
             }
@@ -1534,7 +1534,7 @@ AFSSnapshotDirectory( IN AFSFcb *Fcb,
         if( Ccb->DirectorySnapshot != NULL)
         {
 
-            AFSExFreePool( Ccb->DirectorySnapshot);
+            AFSExFreePoolWithTag( Ccb->DirectorySnapshot, AFS_DIR_SNAPSHOT_TAG);
 
             Ccb->DirectorySnapshot = NULL;
         }
@@ -1642,7 +1642,7 @@ try_exit:
             if( Ccb->NotifyMask.Buffer != NULL)
             {
 
-                AFSExFreePool( Ccb->NotifyMask.Buffer);
+                AFSExFreePoolWithTag( Ccb->NotifyMask.Buffer, AFS_GENERIC_MEMORY_7_TAG);
 
                 Ccb->NotifyMask.Buffer = NULL;
             }
@@ -1763,7 +1763,7 @@ try_exit:
         if( uniName.Buffer != NULL)
         {
 
-            AFSExFreePool( uniName.Buffer);
+            AFSExFreePoolWithTag( uniName.Buffer, AFS_GENERIC_MEMORY_8_TAG);
         }
     }
 

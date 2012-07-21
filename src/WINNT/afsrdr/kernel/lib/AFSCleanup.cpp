@@ -1361,7 +1361,7 @@ try_exit:
         if( pResultCB != NULL)
         {
 
-            AFSExFreePool( pResultCB);
+            AFSExFreePoolWithTag( pResultCB, AFS_GENERIC_MEMORY_32_TAG);
         }
 
         if( pFileObject != NULL)

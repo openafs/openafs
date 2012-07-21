@@ -478,7 +478,7 @@ AFSExAllocatePoolWithTag( IN POOL_TYPE  PoolType,
                           IN ULONG  Tag);
 
 void
-AFSExFreePool( IN void *Buffer);
+AFSExFreePoolWithTag( IN void *Buffer, IN ULONG Tag);
 
 NTSTATUS
 AFSShutdownRedirector( void);

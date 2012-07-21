@@ -552,7 +552,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         if( pTmpBuffer != NULL)
                         {
 
-                            AFSExFreePool( pTmpBuffer);
+                            AFSExFreePoolWithTag( pTmpBuffer, 0);
                         }
 
                         AFSReleaseResource( &pDirEntry->NonPaged->Lock);
@@ -697,7 +697,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         if( pTmpBuffer != NULL)
                         {
 
-                            AFSExFreePool( pTmpBuffer);
+                            AFSExFreePoolWithTag( pTmpBuffer, 0);
                         }
 
                         AFSReleaseResource( &pDirEntry->NonPaged->Lock);
@@ -1182,7 +1182,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                 uniSearchName.Buffer != NULL)
             {
 
-                AFSExFreePool( uniSearchName.Buffer);
+                AFSExFreePoolWithTag( uniSearchName.Buffer, 0);
 
                 bSubstituteName = FALSE;
 
@@ -1455,7 +1455,7 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                             if( bSubstituteName)
                             {
 
-                                AFSExFreePool( uniSearchName.Buffer);
+                                AFSExFreePoolWithTag( uniSearchName.Buffer, 0);
 
                                 uniSearchName = uniComponentName;
 
@@ -1955,7 +1955,7 @@ try_exit:
             if( RootPathName->Buffer != uniFullPathName.Buffer)
             {
 
-                AFSExFreePool( uniFullPathName.Buffer);
+                AFSExFreePoolWithTag( uniFullPathName.Buffer, 0);
             }
         }
         else
@@ -1990,7 +1990,7 @@ try_exit:
             uniSearchName.Buffer != NULL)
         {
 
-            AFSExFreePool( uniSearchName.Buffer);
+            AFSExFreePoolWithTag( uniSearchName.Buffer, 0);
         }
     }
 
@@ -2444,13 +2444,13 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
         if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
         {
 
-            AFSExFreePool( DirEntry->NameInformation.FileName.Buffer);
+            AFSExFreePoolWithTag( DirEntry->NameInformation.FileName.Buffer, 0);
         }
 
         if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
         {
 
-            AFSExFreePool( DirEntry->NameInformation.TargetName.Buffer);
+            AFSExFreePoolWithTag( DirEntry->NameInformation.TargetName.Buffer, 0);
         }
 
         //
@@ -2474,13 +2474,13 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         ExDeleteResourceLite( &DirEntry->NonPaged->Lock);
 
-        AFSExFreePool( DirEntry->NonPaged);
+        AFSExFreePoolWithTag( DirEntry->NonPaged, AFS_DIR_ENTRY_NP_TAG);
 
         //
         // Free up the dir entry
         //
 
-        AFSExFreePool( DirEntry);
+        AFSExFreePoolWithTag( DirEntry, AFS_DIR_ENTRY_TAG);
     }
 
     return ntStatus;
@@ -2937,7 +2937,7 @@ AFSParseName( IN PIRP Irp,
                                   "AFSParseName (%08lX) Failed to initialize name array\n",
                                   Irp);
 
-                    AFSExFreePool( uniFullName.Buffer);
+                    AFSExFreePoolWithTag( uniFullName.Buffer, 0);
 
                     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
                 }
@@ -2964,7 +2964,7 @@ AFSParseName( IN PIRP Irp,
                                   "AFSParseName (%08lX) Failed to initialize name array\n",
                                   Irp);
 
-                    AFSExFreePool( uniFullName.Buffer);
+                    AFSExFreePoolWithTag( uniFullName.Buffer, 0);
 
                     try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
                 }
@@ -2982,7 +2982,7 @@ AFSParseName( IN PIRP Irp,
                               "AFSParseName (%08lX) Failed to populate name array\n",
                               Irp);
 
-                AFSExFreePool( uniFullName.Buffer);
+                AFSExFreePoolWithTag( uniFullName.Buffer, 0);
 
                 try_return( ntStatus);
             }
@@ -4047,7 +4047,7 @@ try_exit:
         if( pDirEnumEntry != NULL)
         {
 
-            AFSExFreePool( pDirEnumEntry);
+            AFSExFreePoolWithTag( pDirEnumEntry, AFS_GENERIC_MEMORY_31_TAG);
         }
     }
 
@@ -4310,7 +4310,7 @@ try_exit:
         if( pDirEntry)
         {
 
-            AFSExFreePool( pDirEntry);
+            AFSExFreePoolWithTag( pDirEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
     }
 
@@ -4677,7 +4677,7 @@ AFSProcessDFSLink( IN AFSDirectoryCB *DirEntry,
         if( FileObject->FileName.Buffer != NULL)
         {
 
-            AFSExFreePool( FileObject->FileName.Buffer);
+            AFSExFreePoolWithTag( FileObject->FileName.Buffer, 0);
         }
 
         FileObject->FileName = uniReparseName;
@@ -4703,7 +4703,7 @@ try_exit:
         if ( pDirEntry)
         {
 
-            AFSExFreePool( pDirEntry);
+            AFSExFreePoolWithTag( pDirEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
     }
 

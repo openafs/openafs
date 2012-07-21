@@ -1404,7 +1404,7 @@ AFSExAllocatePoolWithTag( IN POOL_TYPE  PoolType,
 }
 
 void
-AFSExFreePool( IN void *Buffer)
+AFSExFreePoolWithTag( IN void *Buffer, IN ULONG Tag)
 {
 
     AFSDeviceExt *pControlDevExt = NULL;
@@ -1415,7 +1415,16 @@ AFSExFreePool( IN void *Buffer)
         pControlDevExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
     }
 
-    ExFreePool( Buffer);
+    if ( Tag)
+    {
+
+        ExFreePoolWithTag( Buffer, Tag);
+    }
+    else
+    {
+
+        ExFreePool( Buffer);
+    }
 
     if ( pControlDevExt)
     {

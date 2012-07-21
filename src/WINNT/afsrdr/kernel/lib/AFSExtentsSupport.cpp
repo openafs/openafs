@@ -129,7 +129,7 @@ AFSFreeExtent( IN AFSFcb *Fcb,
                     FALSE);
     }
 
-    AFSExFreePool( pExtent);
+    AFSExFreePoolWithTag( pExtent, AFS_EXTENT_TAG);
 }
 
 //
@@ -391,7 +391,7 @@ try_exit:
         if (pRelease)
         {
 
-            AFSExFreePool( pRelease);
+            AFSExFreePoolWithTag( pRelease, AFS_EXTENT_RELEASE_TAG);
         }
     }
 }
@@ -2427,7 +2427,7 @@ try_exit:
             Irp->AssociatedIrp.SystemBuffer != pResult)
         {
 
-            AFSExFreePool(pResult);
+            AFSExFreePoolWithTag(pResult, AFS_EXTENTS_RESULT_TAG);
         }
 
         if (NT_SUCCESS(ntStatus))
@@ -2832,7 +2832,7 @@ try_exit:
 
         if (pRelease)
         {
-            AFSExFreePool( pRelease);
+            AFSExFreePoolWithTag( pRelease, AFS_EXTENT_RELEASE_TAG);
         }
     }
 
@@ -3098,7 +3098,7 @@ try_exit:
 
         if (pRelease)
         {
-            AFSExFreePool( pRelease);
+            AFSExFreePoolWithTag( pRelease, AFS_EXTENT_RELEASE_TAG);
         }
     }
 
@@ -3331,7 +3331,7 @@ try_exit:
 
         if (pRelease)
         {
-            AFSExFreePool( pRelease);
+            AFSExFreePoolWithTag( pRelease, AFS_EXTENT_RELEASE_TAG);
         }
     }
 
@@ -4255,7 +4255,7 @@ AFSSetupMD5Hash( IN AFSFcb *Fcb,
         if( pExtentBuffer != NULL)
         {
 
-            AFSExFreePool( pExtentBuffer);
+            AFSExFreePoolWithTag( pExtentBuffer, AFS_GENERIC_MEMORY_9_TAG);
         }
     }
 

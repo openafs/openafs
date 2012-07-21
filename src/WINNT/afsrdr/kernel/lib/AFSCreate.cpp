@@ -1250,7 +1250,7 @@ try_exit:
             if( uniSubstitutedPathName.Buffer != NULL)
             {
 
-                AFSExFreePool( uniSubstitutedPathName.Buffer);
+                AFSExFreePoolWithTag( uniSubstitutedPathName.Buffer, 0);
 
                 ClearFlag( ulParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER);
             }
@@ -1269,7 +1269,7 @@ try_exit:
         if( BooleanFlagOn( ulParseFlags, AFS_PARSE_FLAG_FREE_FILE_BUFFER))
         {
 
-            AFSExFreePool( uniRootFileName.Buffer);
+            AFSExFreePoolWithTag( uniRootFileName.Buffer, 0);
         }
 
         if( bReleaseVolume)

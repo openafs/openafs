@@ -737,12 +737,12 @@ try_exit:
 
         if (pGatherIo)
         {
-            AFSExFreePool(pGatherIo);
+            AFSExFreePoolWithTag(pGatherIo, AFS_GATHER_TAG);
         }
 
         if (NULL != pIoRuns && stIoRuns != pIoRuns)
         {
-            AFSExFreePool(pIoRuns);
+            AFSExFreePoolWithTag(pIoRuns, AFS_IO_RUN_TAG);
         }
 
         if (bCompleteIrp)

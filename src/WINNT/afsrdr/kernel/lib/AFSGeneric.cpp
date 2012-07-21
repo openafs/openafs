@@ -1184,13 +1184,13 @@ try_exit:
 
                 ExDeleteResourceLite( &pNonPagedDirEntry->Lock);
 
-                AFSExFreePool( pNonPagedDirEntry);
+                AFSExFreePoolWithTag( pNonPagedDirEntry, AFS_DIR_ENTRY_NP_TAG);
             }
 
             if( pDirNode != NULL)
             {
 
-                AFSExFreePool( pDirNode);
+                AFSExFreePoolWithTag( pDirNode, AFS_DIR_ENTRY_TAG);
 
                 pDirNode = NULL;
             }
@@ -1413,7 +1413,7 @@ try_exit:
         if( pDirEntry != NULL)
         {
 
-            AFSExFreePool( pDirEntry);
+            AFSExFreePoolWithTag( pDirEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
     }
 
@@ -1551,7 +1551,7 @@ try_exit:
         if( pDirEntry != NULL)
         {
 
-            AFSExFreePool( pDirEntry);
+            AFSExFreePoolWithTag( pDirEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
     }
 
@@ -2442,7 +2442,7 @@ AFSSubstituteNameInPath( IN OUT UNICODE_STRING *FullPathName,
 
         if( FreePathName)
         {
-            AFSExFreePool( FullPathName->Buffer);
+            AFSExFreePoolWithTag( FullPathName->Buffer, 0);
         }
 
         *FullPathName = uniPathName;
@@ -3155,7 +3155,7 @@ AFSVerifyEntry( IN GUID *AuthGroup,
         if( pDirEnumEntry != NULL)
         {
 
-            AFSExFreePool( pDirEnumEntry);
+            AFSExFreePoolWithTag( pDirEnumEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
     }
 
@@ -3761,7 +3761,7 @@ AFSUpdateMetaData( IN AFSDirectoryCB *DirEntry,
             if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER) &&
                 DirEntry->NameInformation.TargetName.Buffer != NULL)
             {
-                AFSExFreePool( DirEntry->NameInformation.TargetName.Buffer);
+                AFSExFreePoolWithTag( DirEntry->NameInformation.TargetName.Buffer, AFS_NAME_BUFFER_FIVE_TAG);
             }
 
             ClearFlag( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER);
@@ -4241,7 +4241,7 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
         if( pDirEnumEntry != NULL)
         {
 
-            AFSExFreePool( pDirEnumEntry);
+            AFSExFreePoolWithTag( pDirEnumEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
     }
 
@@ -4870,7 +4870,7 @@ AFSEnumerateGlobalRoot( IN GUID *AuthGroup)
             pDirGlobalDirNode = (AFSDirectoryCB *)pDirGlobalDirNode->ListEntry.fLink;
         }
 
-        AFSExFreePool( uniFullName.Buffer);
+        AFSExFreePoolWithTag( uniFullName.Buffer, 0);
 
 try_exit:
 
@@ -4950,7 +4950,7 @@ AFSUpdateTargetName( IN OUT UNICODE_STRING *TargetName,
             if( BooleanFlagOn( *Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
             {
 
-                AFSExFreePool( TargetName->Buffer);
+                AFSExFreePoolWithTag( TargetName->Buffer, AFS_NAME_BUFFER_FIVE_TAG);
             }
 
             TargetName->MaximumLength = NameLength;
@@ -5313,7 +5313,7 @@ AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
                           lCount);
         }
 
-        AFSExFreePool( NameArray);
+        AFSExFreePoolWithTag( NameArray, AFS_NAME_ARRAY_TAG);
     }
 
     return ntStatus;
@@ -5939,7 +5939,7 @@ try_exit:
             if ( pDirNode != NULL)
             {
 
-                AFSExFreePool( pDirNode);
+                AFSExFreePoolWithTag( pDirNode, AFS_DIR_ENTRY_TAG);
             }
 
             if ( pObjectInfoCB != NULL)
@@ -6366,7 +6366,7 @@ try_exit:
         if( pDirEntry != NULL)
         {
 
-            AFSExFreePool( pDirEntry);
+            AFSExFreePoolWithTag( pDirEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
 
         if( pVolumeCB != NULL)
@@ -6402,10 +6402,10 @@ try_exit:
                 pwchBuffer != (WCHAR *)((char *)uniFullPathName.Buffer - ulNameDifference))
             {
 
-                AFSExFreePool( uniFullPathName.Buffer);
+                AFSExFreePoolWithTag( uniFullPathName.Buffer, 0);
             }
 
-            AFSExFreePool( pwchBuffer);
+            AFSExFreePoolWithTag( pwchBuffer, 0);
         }
     }
 
@@ -6444,7 +6444,7 @@ AFSAllocateObjectInfo( IN AFSObjectInfoCB *ParentObjectInfo,
         if( pObjectInfo->NonPagedInfo == NULL)
         {
 
-            AFSExFreePool( pObjectInfo);
+            AFSExFreePoolWithTag( pObjectInfo, AFS_OBJECT_INFO_TAG);
 
             try_return( pObjectInfo = NULL);
         }
@@ -6616,9 +6616,9 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
 
     ExDeleteResourceLite( &ObjectInfo->NonPagedInfo->DirectoryNodeHdrLock);
 
-    AFSExFreePool( ObjectInfo->NonPagedInfo);
+    AFSExFreePoolWithTag( ObjectInfo->NonPagedInfo, AFS_NP_OBJECT_INFO_TAG);
 
-    AFSExFreePool( ObjectInfo);
+    AFSExFreePoolWithTag( ObjectInfo, AFS_OBJECT_INFO_TAG);
 
     return;
 }
@@ -6888,7 +6888,7 @@ try_exit:
         if( pDirEntry != NULL)
         {
 
-            AFSExFreePool( pDirEntry);
+            AFSExFreePoolWithTag( pDirEntry, AFS_GENERIC_MEMORY_2_TAG);
         }
 
         if( pVolumeCB != NULL)
@@ -6924,10 +6924,10 @@ try_exit:
                 pwchBuffer != (WCHAR *)((char *)uniFullPathName.Buffer - ulNameDifference))
             {
 
-                AFSExFreePool( uniFullPathName.Buffer);
+                AFSExFreePoolWithTag( uniFullPathName.Buffer, 0);
             }
 
-            AFSExFreePool( pwchBuffer);
+            AFSExFreePoolWithTag( pwchBuffer, 0);
         }
     }
 
@@ -7204,7 +7204,7 @@ AFSUpdateDirEntryName( IN AFSDirectoryCB *DirectoryCB,
             if( BooleanFlagOn( DirectoryCB->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
             {
 
-                AFSExFreePool( DirectoryCB->NameInformation.FileName.Buffer);
+                AFSExFreePoolWithTag( DirectoryCB->NameInformation.FileName.Buffer, 0);
 
                 ClearFlag( DirectoryCB->Flags, AFS_DIR_RELEASE_NAME_BUFFER);
 
@@ -7770,7 +7770,7 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
 
         AFSExAllocatePoolWithTag = LibraryInit->AFSExAllocatePoolWithTag;
 
-        AFSExFreePool = LibraryInit->AFSExFreePool;
+        AFSExFreePoolWithTag = LibraryInit->AFSExFreePoolWithTag;
 
         AFSDumpTraceFilesFnc = LibraryInit->AFSDumpTraceFiles;
 

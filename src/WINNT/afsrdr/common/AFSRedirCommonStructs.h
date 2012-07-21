@@ -775,7 +775,7 @@ void *
 
 typedef
 void
-(*PAFSExFreePool)( IN void *Pointer);
+(*PAFSExFreePoolWithTag)( IN void *Pointer, IN ULONG Tag);
 
 typedef
 void
@@ -814,7 +814,7 @@ typedef struct _AFS_LIBRARY_INIT_CB
 
     PAFSExAllocatePoolWithTag   AFSExAllocatePoolWithTag;
 
-    PAFSExFreePool      AFSExFreePool;
+    PAFSExFreePoolWithTag      AFSExFreePoolWithTag;
 
     PAFSDumpTraceFiles  AFSDumpTraceFiles;
 
