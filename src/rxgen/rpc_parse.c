@@ -143,9 +143,12 @@ static void er_ProcDeclExterns_setup(void);
 static void er_ProcProcsArray_setup(void);
 static void er_ProcMainBody_setup(void);
 static void er_HeadofOldStyleProc_setup(void);
+static void er_HeadofOldStyleProc_setup2(void);
 static void er_BodyofOldStyleProc_setup(void);
+static void er_BodyofOldStyleProc_setup2(void);
 static void proc_er_case(definition * defp);
 static void er_TailofOldStyleProc_setup(void);
+static void er_TailofOldStyleProc_setup2(void);
 
 
 
@@ -842,6 +845,7 @@ check_proc(definition * defp, token * tokp, int noname)
 	    prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
 
     function_list_index++;
+    defp->statindex = no_of_stat_funcs;
     no_of_stat_funcs_header[PackageIndex]++;
     no_of_stat_funcs++;
     *Proc_listp = NULL;
@@ -1972,6 +1976,9 @@ er_Proc_CodeGeneration(void)
 	    er_HeadofOldStyleProc_setup();
 	    er_BodyofOldStyleProc_setup();
 	    er_TailofOldStyleProc_setup();
+	    er_HeadofOldStyleProc_setup2();
+	    er_BodyofOldStyleProc_setup2();
+	    er_TailofOldStyleProc_setup2();
 	} else {
 	    er_ProcDeclExterns_setup();
 	    er_ProcProcsArray_setup();
@@ -2056,6 +2063,13 @@ er_ProcMainBody_setup(void)
 		PackagePrefix[PackageIndex], PackagePrefix[PackageIndex]);
 	f_print(fout, "\treturn opnames%d[op - %sLOWEST_OPCODE];\n}\n",
 		PackageIndex, PackagePrefix[PackageIndex]);
+	f_print(fout, "struct %sstats *%sOpCodeStats(int op)\n{\n",
+		PackagePrefix[PackageIndex], PackagePrefix[PackageIndex]);
+	f_print(fout, "\tif (op < %sLOWEST_OPCODE || op > %sHIGHEST_OPCODE)\n\t\treturn NULL;\n",
+		PackagePrefix[PackageIndex], PackagePrefix[PackageIndex]);
+	f_print(fout, "\treturn NULL;/*%d %s*/\n}\n",
+		PackageIndex, PackagePrefix[PackageIndex]);
+
 	return;
     }
     f_print(fout, "int %s%sExecuteRequest(struct rx_call *z_call)\n",
@@ -2075,6 +2089,14 @@ er_ProcMainBody_setup(void)
     f_print(fout, "\treturn hton_syserr_conv(z_result);\n}\n");
 }
 
+static void
+er_HeadofOldStyleProc_setup2(void)
+{
+    if ( cflag ) {
+	f_print(fout, "int %sOpCodeIndex(int op)\n{\n", (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+        f_print(fout, "\tswitch (op) {\n");
+    }
+}
 
 static void
 er_HeadofOldStyleProc_setup(void)
@@ -2144,6 +2166,44 @@ proc_er_case(definition * defp)
     f_print(fout, "\t\t\tbreak;\n");
 }
 
+static void
+proc_op_case(definition * defp)
+{
+    f_print(fout, "\t\tcase %d:", defp->pc.proc_opcodenum);
+    f_print(fout, "\treturn %d;\n",
+	    defp->statindex);
+}
+
+static void
+er_BodyofOldStyleProc_setup2(void)
+{
+    list *listp;
+
+    if (!cflag)
+	return;
+    if (combinepackages) {
+	int temp = PackageIndex;
+	for (PackageIndex = 0; PackageIndex <= temp; PackageIndex++) {
+	    for (listp = proc_defined[PackageIndex]; listp != NULL;
+		 listp = listp->next)
+		proc_op_case((definition *) listp->val);
+	}
+	PackageIndex = temp;
+    } else {
+	for (listp = proc_defined[PackageIndex]; listp != NULL;
+	     listp = listp->next)
+	    proc_op_case((definition *) listp->val);
+    }
+}
+
+static void
+er_TailofOldStyleProc_setup2(void)
+{
+    if ( cflag ) {
+	f_print(fout, "\t\tdefault:\n");
+	f_print(fout, "\t\t\treturn -1;\n\t}\n}\n");
+    }
+}
 
 static void
 er_TailofOldStyleProc_setup(void)
@@ -2169,9 +2229,11 @@ h_ProcMainBody_setup(void)
 static void
 h_HeadofOldStyleProc_setup(void)
 {
+    char *pprefix = (combinepackages ? MasterPrefix :
+		     PackagePrefix[PackageIndex]);
+    f_print(fout,"\nstruct %sstats{\n\tint statsver;\n};", pprefix);
     f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
-	    prefix,
-	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+	    prefix, pprefix);
     f_print(fout,"\nextern int %sOpCodeIndex(int op);\n", PackagePrefix[PackageIndex]);
 }
 

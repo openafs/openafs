@@ -8041,6 +8041,248 @@ static int rxi_monitor_processStats = 0;
 
 static int rxi_monitor_peerStats = 0;
 
+
+void
+rxi_ClearRPCOpStat(rx_function_entry_v1_p rpc_stat)
+{
+    rpc_stat->invocations = 0;
+    rpc_stat->bytes_sent = 0;
+    rpc_stat->bytes_rcvd = 0;
+    rpc_stat->queue_time_sum.sec = 0;
+    rpc_stat->queue_time_sum.usec = 0;
+    rpc_stat->queue_time_sum_sqr.sec = 0;
+    rpc_stat->queue_time_sum_sqr.usec = 0;
+    rpc_stat->queue_time_min.sec = 9999999;
+    rpc_stat->queue_time_min.usec = 9999999;
+    rpc_stat->queue_time_max.sec = 0;
+    rpc_stat->queue_time_max.usec = 0;
+    rpc_stat->execution_time_sum.sec = 0;
+    rpc_stat->execution_time_sum.usec = 0;
+    rpc_stat->execution_time_sum_sqr.sec = 0;
+    rpc_stat->execution_time_sum_sqr.usec = 0;
+    rpc_stat->execution_time_min.sec = 9999999;
+    rpc_stat->execution_time_min.usec = 9999999;
+    rpc_stat->execution_time_max.sec = 0;
+    rpc_stat->execution_time_max.usec = 0;
+}
+
+/*!
+ * Given all of the information for a particular rpc
+ * call, find or create (if requested) the stat structure for the rpc.
+ *
+ * @param stats
+ * 	the queue of stats that will be updated with the new value
+ *
+ * @param rxInterface
+ * 	a unique number that identifies the rpc interface
+ *
+ * @param totalFunc
+ * 	the total number of functions in this interface. this is only
+ *      required if create is true
+ *
+ * @param isServer
+ * 	if true, this invocation was made to a server
+ *
+ * @param remoteHost
+ * 	the ip address of the remote host. this is only required if create
+ *      and addToPeerList are true
+ *
+ * @param remotePort
+ * 	the port of the remote host. this is only required if create
+ *      and addToPeerList are true
+ *
+ * @param addToPeerList
+ * 	if != 0, add newly created stat to the global peer list
+ *
+ * @param counter
+ * 	if a new stats structure is allocated, the counter will
+ *	be updated with the new number of allocated stat structures.
+ *      only required if create is true
+ *
+ * @param create
+ * 	if no stats structure exists, allocate one
+ *
+ */
+
+static rx_interface_stat_p
+rxi_FindRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
+		afs_uint32 totalFunc, int isServer, afs_uint32 remoteHost,
+		afs_uint32 remotePort, int addToPeerList,
+		unsigned int *counter, int create)
+{
+    rx_interface_stat_p rpc_stat, nrpc_stat;
+    /*
+     * See if there's already a structure for this interface
+     */
+
+    for (queue_Scan(stats, rpc_stat, nrpc_stat, rx_interface_stat)) {
+	if ((rpc_stat->stats[0].interfaceId == rxInterface)
+	    && (rpc_stat->stats[0].remote_is_server == isServer))
+	    break;
+    }
+
+    /* if they didn't ask us to create, we're done */
+    if (!create)
+	return rpc_stat;
+
+    /* can't proceed without these */
+    if (!totalFunc || !counter)
+	return NULL;
+
+    /*
+     * Didn't find a match so allocate a new structure and add it to the
+     * queue.
+     */
+
+    if (queue_IsEnd(stats, rpc_stat) || (rpc_stat == NULL)
+	|| (rpc_stat->stats[0].interfaceId != rxInterface)
+	|| (rpc_stat->stats[0].remote_is_server != isServer)) {
+	int i;
+	size_t space;
+
+	space =
+	    sizeof(rx_interface_stat_t) +
+	    totalFunc * sizeof(rx_function_entry_v1_t);
+
+	rpc_stat = rxi_Alloc(space);
+	if (rpc_stat == NULL)
+	    return NULL;
+
+	*counter += totalFunc;
+	for (i = 0; i < totalFunc; i++) {
+	    rxi_ClearRPCOpStat(&(rpc_stat->stats[i]));
+	    rpc_stat->stats[i].remote_peer = remoteHost;
+	    rpc_stat->stats[i].remote_port = remotePort;
+	    rpc_stat->stats[i].remote_is_server = isServer;
+	    rpc_stat->stats[i].interfaceId = rxInterface;
+	    rpc_stat->stats[i].func_total = totalFunc;
+	    rpc_stat->stats[i].func_index = i;
+	}
+	queue_Prepend(stats, rpc_stat);
+	if (addToPeerList) {
+	    queue_Prepend(&peerStats, &rpc_stat->all_peers);
+	}
+    }
+    return rpc_stat;
+}
+
+void
+rx_ClearProcessRPCStats(afs_int32 rxInterface)
+{
+    rx_interface_stat_p rpc_stat;
+    int totalFunc, i;
+
+    if (rxInterface == -1)
+        return;
+
+    MUTEX_ENTER(&rx_rpc_stats);
+    rpc_stat = rxi_FindRpcStat(&processStats, rxInterface, 0, 0,
+			       0, 0, 0, 0, 0);
+    if (rpc_stat) {
+	totalFunc = rpc_stat->stats[0].func_total;
+	for (i = 0; i < totalFunc; i++)
+	    rxi_ClearRPCOpStat(&(rpc_stat->stats[i]));
+    }
+    MUTEX_EXIT(&rx_rpc_stats);
+    return;
+}
+
+void
+rx_ClearPeerRPCStats(afs_int32 rxInterface, afs_uint32 peerHost, afs_uint16 peerPort)
+{
+    rx_interface_stat_p rpc_stat;
+    int totalFunc, i;
+    struct rx_peer * peer;
+
+    if (rxInterface == -1)
+        return;
+
+    peer = rxi_FindPeer(peerHost, peerPort, 0, 0);
+    if (!peer)
+        return;
+
+    MUTEX_ENTER(&rx_rpc_stats);
+    rpc_stat = rxi_FindRpcStat(&peer->rpcStats, rxInterface, 0, 1,
+			       0, 0, 0, 0, 0);
+    if (rpc_stat) {
+	totalFunc = rpc_stat->stats[0].func_total;
+	for (i = 0; i < totalFunc; i++)
+	    rxi_ClearRPCOpStat(&(rpc_stat->stats[i]));
+    }
+    MUTEX_EXIT(&rx_rpc_stats);
+    return;
+}
+
+void *
+rx_CopyProcessRPCStats(afs_uint64 op)
+{
+    rx_interface_stat_p rpc_stat;
+    rx_function_entry_v1_p rpcop_stat =
+	rxi_Alloc(sizeof(rx_function_entry_v1_t));
+    int currentFunc = (op & MAX_AFS_UINT32);
+    afs_int32 rxInterface = (op >> 32);
+
+    if (!rxi_monitor_processStats)
+        return NULL;
+
+    if (rxInterface == -1)
+        return NULL;
+
+    MUTEX_ENTER(&rx_rpc_stats);
+    rpc_stat = rxi_FindRpcStat(&processStats, rxInterface, 0, 0,
+			       0, 0, 0, 0, 0);
+    if (rpc_stat)
+	memcpy(rpcop_stat, &(rpc_stat->stats[currentFunc]),
+	       sizeof(rx_function_entry_v1_t));
+    MUTEX_EXIT(&rx_rpc_stats);
+    if (!rpc_stat) {
+	rxi_Free(rpcop_stat, sizeof(rx_function_entry_v1_t));
+	return NULL;
+    }
+    return rpcop_stat;
+}
+
+void *
+rx_CopyPeerRPCStats(afs_uint64 op, afs_uint32 peerHost, afs_uint16 peerPort)
+{
+    rx_interface_stat_p rpc_stat;
+    rx_function_entry_v1_p rpcop_stat =
+	rxi_Alloc(sizeof(rx_function_entry_v1_t));
+    int currentFunc = (op & MAX_AFS_UINT32);
+    afs_int32 rxInterface = (op >> 32);
+    struct rx_peer *peer;
+
+    if (!rxi_monitor_peerStats)
+        return NULL;
+
+    if (rxInterface == -1)
+        return NULL;
+
+    peer = rxi_FindPeer(peerHost, peerPort, 0, 0);
+    if (!peer)
+        return NULL;
+
+    MUTEX_ENTER(&rx_rpc_stats);
+    rpc_stat = rxi_FindRpcStat(&peer->rpcStats, rxInterface, 0, 1,
+			       0, 0, 0, 0, 0);
+    if (rpc_stat)
+	memcpy(rpcop_stat, &(rpc_stat->stats[currentFunc]),
+	       sizeof(rx_function_entry_v1_t));
+    MUTEX_EXIT(&rx_rpc_stats);
+    if (!rpc_stat) {
+	rxi_Free(rpcop_stat, sizeof(rx_function_entry_v1_t));
+	return NULL;
+    }
+    return rpcop_stat;
+}
+
+void
+rx_ReleaseRPCStats(void *stats)
+{
+    if (stats)
+	rxi_Free(stats, sizeof(rx_function_entry_v1_t));
+}
+
 /*!
  * Given all of the information for a particular rpc
  * call, create (if needed) and update the stat totals for the rpc.
@@ -8096,70 +8338,14 @@ rxi_AddRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 	       int addToPeerList, unsigned int *counter)
 {
     int rc = 0;
-    rx_interface_stat_p rpc_stat, nrpc_stat;
+    rx_interface_stat_p rpc_stat;
 
-    /*
-     * See if there's already a structure for this interface
-     */
-
-    for (queue_Scan(stats, rpc_stat, nrpc_stat, rx_interface_stat)) {
-	if ((rpc_stat->stats[0].interfaceId == rxInterface)
-	    && (rpc_stat->stats[0].remote_is_server == isServer))
-	    break;
-    }
-
-    /*
-     * Didn't find a match so allocate a new structure and add it to the
-     * queue.
-     */
-
-    if (queue_IsEnd(stats, rpc_stat) || (rpc_stat == NULL)
-	|| (rpc_stat->stats[0].interfaceId != rxInterface)
-	|| (rpc_stat->stats[0].remote_is_server != isServer)) {
-	int i;
-	size_t space;
-
-	space =
-	    sizeof(rx_interface_stat_t) +
-	    totalFunc * sizeof(rx_function_entry_v1_t);
-
-	rpc_stat = rxi_Alloc(space);
-	if (rpc_stat == NULL) {
-	    rc = 1;
-	    goto fail;
-	}
-	*counter += totalFunc;
-	for (i = 0; i < totalFunc; i++) {
-	    rpc_stat->stats[i].remote_peer = remoteHost;
-	    rpc_stat->stats[i].remote_port = remotePort;
-	    rpc_stat->stats[i].remote_is_server = isServer;
-	    rpc_stat->stats[i].interfaceId = rxInterface;
-	    rpc_stat->stats[i].func_total = totalFunc;
-	    rpc_stat->stats[i].func_index = i;
-	    rpc_stat->stats[i].invocations = 0;
-	    rpc_stat->stats[i].bytes_sent = 0;
-	    rpc_stat->stats[i].bytes_rcvd = 0;
-	    rpc_stat->stats[i].queue_time_sum.sec = 0;
-	    rpc_stat->stats[i].queue_time_sum.usec = 0;
-	    rpc_stat->stats[i].queue_time_sum_sqr.sec = 0;
-	    rpc_stat->stats[i].queue_time_sum_sqr.usec = 0;
-	    rpc_stat->stats[i].queue_time_min.sec = 9999999;
-	    rpc_stat->stats[i].queue_time_min.usec = 9999999;
-	    rpc_stat->stats[i].queue_time_max.sec = 0;
-	    rpc_stat->stats[i].queue_time_max.usec = 0;
-	    rpc_stat->stats[i].execution_time_sum.sec = 0;
-	    rpc_stat->stats[i].execution_time_sum.usec = 0;
-	    rpc_stat->stats[i].execution_time_sum_sqr.sec = 0;
-	    rpc_stat->stats[i].execution_time_sum_sqr.usec = 0;
-	    rpc_stat->stats[i].execution_time_min.sec = 9999999;
-	    rpc_stat->stats[i].execution_time_min.usec = 9999999;
-	    rpc_stat->stats[i].execution_time_max.sec = 0;
-	    rpc_stat->stats[i].execution_time_max.usec = 0;
-	}
-	queue_Prepend(stats, rpc_stat);
-	if (addToPeerList) {
-	    queue_Prepend(&peerStats, &rpc_stat->all_peers);
-	}
+    rpc_stat = rxi_FindRpcStat(stats, rxInterface, totalFunc, isServer,
+			       remoteHost, remotePort, addToPeerList, counter,
+			       1);
+    if (!rpc_stat) {
+	rc = -1;
+	goto fail;
     }
 
     /*
