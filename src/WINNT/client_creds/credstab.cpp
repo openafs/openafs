@@ -231,7 +231,7 @@ void ShowObtainCreds (BOOL fExpiring, LPTSTR pszCell)
         return;
     oc->parent = (IsWindowVisible (g.hMain)) ? g.hMain : NULL;
     oc->type = fExpiring ? IDD_NEWCREDS_EXPIRE : IDD_NEWCREDS;
-    oc->cell = _strdup(pszCell);
+    oc->cell = strdup(pszCell);
 
     HANDLE thread = 0;
     ULONG  threadID = 123;
