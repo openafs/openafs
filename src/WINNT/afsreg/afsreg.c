@@ -302,7 +302,7 @@ long
 RegDeleteEntryAlt(const char *entryName, regentry_t entryType)
 {
     long status = ERROR_SUCCESS;
-    char *entryBuf = _strdup(entryName);
+    char *entryBuf = strdup(entryName);
 
     if (entryBuf == NULL) {
 	status = ERROR_NOT_ENOUGH_MEMORY;

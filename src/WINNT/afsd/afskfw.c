@@ -61,6 +61,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 #include <roken.h>
 
 #include <osilog.h>
@@ -377,7 +378,7 @@ KFW_AFS_update_princ_ccache_data(krb5_context context, krb5_ccache cc, int lsa)
         next = (struct principal_ccache_data *) malloc(sizeof(struct principal_ccache_data));
         next->next = princ_cc_data;
         princ_cc_data = next;
-        next->principal = _strdup(pname);
+        next->principal = strdup(pname);
         next->ccache_name = ccfullname;
         ccfullname = NULL;
         next->from_lsa = lsa;
@@ -465,7 +466,7 @@ KFW_AFS_find_ccache_for_principal(krb5_context context, char * principal,
                 if ( next->from_lsa || !strcmp(next->ccache_name, principal) )
                     free(response);
             }
-            response = _strdup(next->ccache_name);
+            response = strdup(next->ccache_name);
             // MS Kerberos LSA is our best option so use it and quit
             if ( next->from_lsa )
                 break;
@@ -529,8 +530,8 @@ KFW_AFS_update_cell_princ_map(krb5_context context, char * cell, char *pname, in
         next = (struct cell_principal_map *) malloc(sizeof(struct cell_principal_map));
         next->next = cell_princ_map;
         cell_princ_map = next;
-        next->principal = _strdup(pname);
-        next->cell = _strdup(cell);
+        next->principal = strdup(pname);
+        next->cell = strdup(cell);
         next->active = active;
     }
 }
@@ -585,7 +586,7 @@ KFW_AFS_find_principals_for_cell(krb5_context context, char * cell, char **princ
     for ( next_map = cell_princ_map, i=0 ; next_map && i<count; next_map = next_map->next )
     {
         if ( (!active_only || next_map->active) && !strcmp(next_map->cell,cell) ) {
-            (*principals)[i++] = _strdup(next_map->principal);
+            (*principals)[i++] = strdup(next_map->principal);
         }
     }
     return count;
@@ -615,7 +616,7 @@ KFW_AFS_find_cells_for_princ(krb5_context context, char * pname, char **cells[],
     for ( next_map = cell_princ_map, i=0 ; next_map && i<count; next_map = next_map->next )
     {
         if ( (!active_only || next_map->active) && !strcmp(next_map->principal,pname) ) {
-            (*cells)[i++] = _strdup(next_map->cell);
+            (*cells)[i++] = strdup(next_map->cell);
         }
     }
     return count;

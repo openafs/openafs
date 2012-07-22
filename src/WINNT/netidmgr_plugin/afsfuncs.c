@@ -1443,7 +1443,7 @@ afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
                                 (void*) cellconfig);
 
     if (linkedCell[0])
-        cellconfig->linkedCell = _strdup(linkedCell);
+        cellconfig->linkedCell = strdup(linkedCell);
 
     return rc;
 }

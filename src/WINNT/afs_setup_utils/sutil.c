@@ -434,7 +434,7 @@ static BOOL ReadAutoExec(char **ppszEnvValue, char *pszEnvName)
 	if (_strnicmp(szSetCmd, szLine, strlen(szSetCmd)) == 0) {
 	    char *value = strchr(szLine, '=');
 	    if (value)
-		*ppszEnvValue = _strdup(++value);
+		*ppszEnvValue = strdup(++value);
 	    break;
 	}
     }
@@ -512,11 +512,11 @@ static BOOL FindSubString(const char *s1, const char *s2)
     char *ls1, *ls2;
     BOOL bFound = FALSE;
 
-    ls1 = _strdup(s1);
+    ls1 = strdup(s1);
     if (!ls1)
 	return FALSE;
 
-    ls2 = _strdup(s2);
+    ls2 = strdup(s2);
     if (!ls2) {
 	free(ls1);
 	return FALSE;
