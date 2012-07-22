@@ -8,7 +8,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 
 #
@@ -20,13 +20,11 @@ all: afsd vsys @ENABLE_FUSE_CLIENT@
 # Programs
 #
 
-AFSLIBS=${TOP_LIBDIR}/libauth.a \
-	${TOP_LIBDIR}/libcmd.a \
+AFSLIBS=${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libafsauthent.a \
+	${TOP_LIBDIR}/libafsrpc.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/util.a \
 	$(TOP_LIBDIR)/libopr.a
 
 UAFSLIBS=${TOP_LIBDIR}/libuafs.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libopr.a
