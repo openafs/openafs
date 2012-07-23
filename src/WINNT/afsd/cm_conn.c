@@ -420,15 +420,18 @@ cm_Analyze(cm_conn_t *connp,
                                      CM_GETVOL_FLAG_NO_LRU_UPDATE,
                                      &volp);
             if (code == 0) {
+                lock_ObtainWrite(&volp->rw);
                 if (cm_UpdateVolumeLocation(cellp, userp, reqp, volp) == 0) {
+                    lock_ReleaseWrite(&volp->rw);
                     code = cm_GetVolServerList(volp, fidp->volume, userp, reqp, &replicated, &serverspp);
                     if (code == 0) {
                         if (!cm_IsServerListEmpty(*serverspp))
                             retry = 1;
                         cm_FreeServerList(serverspp, 0);
                     }
+                } else {
+                    lock_ReleaseWrite(&volp->rw);
                 }
-
                 lock_ObtainRead(&cm_volumeLock);
                 cm_PutVolume(volp);
                 lock_ReleaseRead(&cm_volumeLock);
