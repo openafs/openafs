@@ -180,14 +180,15 @@ release_conns_user_server(struct unixuser *xu, struct server *xs)
 
 
 static void
-release_conns_vector(struct sa_conn_vector *xcv)
+release_conns_vector(struct sa_conn_vector *tcv)
 {
     int cix, glocked;
     struct afs_conn *tc;
-    struct sa_conn_vector *tcv = NULL;
-    struct sa_conn_vector **lcv = NULL;
-    for (tcv = xcv; tcv; lcv = &tcv->next, tcv = *lcv) {
-        *lcv = tcv->next;
+    struct sa_conn_vector *next;
+
+    while (tcv != NULL) {
+	next = tcv->next;
+
         /* you know it, you love it, the GLOCK */
         glocked = ISAFS_GLOCK();
         if (glocked)
@@ -204,6 +205,7 @@ release_conns_vector(struct sa_conn_vector *xcv)
         if (glocked)
             AFS_GLOCK();
         afs_osi_Free(tcv, sizeof(struct sa_conn_vector));
+	tcv = next;
     }
 
 }        /* release_conns_vector */
