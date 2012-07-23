@@ -8111,6 +8111,10 @@ rxi_FindRpcStat(struct rx_queue *stats, afs_uint32 rxInterface,
 		unsigned int *counter, int create)
 {
     rx_interface_stat_p rpc_stat, nrpc_stat;
+
+    if (queue_IsEmpty(stats) && !create)
+        return NULL;
+
     /*
      * See if there's already a structure for this interface
      */
