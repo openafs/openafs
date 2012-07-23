@@ -492,7 +492,7 @@ afs_ReadNoCache(struct vcache *avc,
     /* the reciever will free this */
     areq = osi_Alloc(sizeof(struct vrequest));
 
-    if (avc && avc->vc_error) {
+    if (avc->vc_error) {
 	code = EIO;
 	afs_warn("afs_ReadNoCache VCache Error!\n");
 	goto cleanup;

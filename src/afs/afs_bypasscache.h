@@ -132,7 +132,7 @@ void afs_TransitionToCaching(struct vcache *, afs_ucred_t *, int);
 /* dispatch a no-cache read request */
 afs_int32
 afs_ReadNoCache(struct vcache *avc, struct nocache_read_request *bparms,
-		afs_ucred_t *acred);
+		afs_ucred_t *acred) AFS_NONNULL((1,2));
 
 /* no-cache prefetch routine */
 afs_int32
