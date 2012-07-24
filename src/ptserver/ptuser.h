@@ -16,17 +16,17 @@
 extern afs_int32 pr_Initialize(afs_int32 secLevel, const char *confDir,
  			       char *cell);
 extern int pr_End(void);
-extern int pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id);
-extern int pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN],
+extern int pr_CreateUser(prname name, afs_int32 *id);
+extern int pr_CreateGroup(prname name, prname owner,
  			  afs_int32 *id);
 extern int pr_Delete(char *name);
 extern int pr_DeleteByID(afs_int32 id);
 extern int pr_AddToGroup(char *user, char *group);
 extern int pr_RemoveUserFromGroup(char *user, char *group);
 extern int pr_NameToId(namelist *names, idlist *ids);
-extern int pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id);
+extern int pr_SNameToId(prname name, afs_int32 *id);
 extern int pr_IdToName(idlist *ids, namelist *names);
-extern int pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN]);
+extern int pr_SIdToName(afs_int32 id, prname name);
 extern int pr_GetCPS(afs_int32 id, prlist *CPS);
 extern int pr_GetCPS2(afs_int32 id, afs_uint32 host, prlist *CPS);
 extern int pr_GetHostCPS(afs_uint32 host, prlist *CPS);

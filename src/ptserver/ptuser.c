@@ -346,7 +346,7 @@ pr_End(void)
 
 
 int
-pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
+pr_CreateUser(prname name, afs_int32 *id)
 {
     afs_int32 code;
 
@@ -362,7 +362,7 @@ pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
 }
 
 int
-pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *id)
+pr_CreateGroup(prname name, prname owner, afs_int32 *id)
 {
     afs_int32 code;
     afs_int32 oid = 0;
@@ -491,7 +491,7 @@ pr_NameToId(namelist *names, idlist *ids)
 }
 
 int
-pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
+pr_SNameToId(prname name, afs_int32 *id)
 {
     namelist lnames;
     idlist lids;
@@ -525,7 +525,7 @@ pr_IdToName(idlist *ids, namelist *names)
 }
 
 int
-pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
+pr_SIdToName(afs_int32 id, prname name)
 {
     namelist lnames;
     idlist lids;
