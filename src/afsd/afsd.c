@@ -2200,7 +2200,7 @@ afsd_run(void)
     cparams.setTimeFlag = 0;
     cparams.memCacheFlag = cacheFlags;
     cparams.dynamic_vcaches = afsd_dynamic_vcaches;
-	afsd_syscall(AFSOP_CACHEINIT, &cparams);
+    afsd_syscall(AFSOP_CACHEINIT, &cparams);
 
     /* do it before we init the cache inodes */
     if (enable_splitcache) {
@@ -2594,16 +2594,21 @@ afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
 
     switch (syscall) {
     case AFSOP_RXEVENT_DAEMON:
+    case AFSOP_CLOSEWAIT:
+    case AFSOP_START_AFS:
+    case AFSOP_START_CS:
+    case AFSOP_START_TRUNCDAEMON:
 	break;
     case AFSOP_START_BKG:
     case AFSOP_SHUTDOWN:
     case AFSOP_SET_RXPCK:
     case AFSOP_BASIC_INIT:
     case AFSOP_SET_RXMAXFRAGS:
-      case AFSOP_SET_RXMAXMTU:
+    case AFSOP_SET_RXMAXMTU:
     case AFSOP_SET_DYNROOT:
     case AFSOP_SET_FAKESTAT:
     case AFSOP_SET_BACKUPTREE:
+    case AFSOP_BUCKETPCT:
     case AFSOP_GO:
 	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
 	break;
@@ -2611,6 +2616,9 @@ afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
     case AFSOP_ROOTVOLUME:
     case AFSOP_VOLUMEINFO:
     case AFSOP_CACHEFILE:
+    case AFSOP_CACHEINFO:
+    case AFSOP_CACHEINIT:
+    case AFSOP_CELLINFO:
 	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
 	break;
     case AFSOP_ADDCELLALIAS:

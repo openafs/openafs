@@ -178,7 +178,7 @@ os_syscall64(struct afsd_syscall_args *args)
     syscall64_data.param5 = args->params[3];
     syscall64_data.param6 = args->params[4];
 
-    error = ioctl(fd, VIOC_SYSCALL64, syscall64_data);
+    error = ioctl(fd, VIOC_SYSCALL64, &syscall64_data);
     close(fd);
 
     if (error)
