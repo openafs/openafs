@@ -22,9 +22,9 @@ all: afsd vsys @ENABLE_FUSE_CLIENT@
 
 AFSLIBS=${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libafsrpc.a \
 	$(TOP_LIBDIR)/libopr.a
 
 UAFSLIBS=${TOP_LIBDIR}/libuafs.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libopr.a
