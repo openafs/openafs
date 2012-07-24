@@ -610,6 +610,93 @@ NPAddConnection( LPNETRESOURCE   lpNetResource,
     return NPAddConnection3( NULL, lpNetResource, lpPassword, lpUserName, 0 );
 }
 
+static void
+Add3FlagsToString( DWORD dwFlags, WCHAR *wszBuffer, size_t wch)
+{
+    HRESULT  hr;
+    int first = 1;
+
+    *wszBuffer = L'\0';
+
+    if (dwFlags & CONNECT_TEMPORARY) {
+
+        hr = StringCbCat( wszBuffer, wch, L"TEMPORARY");
+
+        if ( FAILED(hr)) {
+
+            return;
+        }
+
+        first = 0;
+    }
+
+    if (dwFlags & CONNECT_INTERACTIVE) {
+
+        if (!first) {
+
+            hr = StringCbCat( wszBuffer, wch, L"|");
+
+            if ( FAILED(hr)) {
+
+                return;
+            }
+        }
+
+        hr = StringCbCat( wszBuffer, wch, L"INTERACTIVE");
+
+        if ( FAILED(hr)) {
+
+            return;
+        }
+
+        first = 0;
+    }
+
+    if (dwFlags & CONNECT_PROMPT) {
+
+        if (!first) {
+
+            hr = StringCbCat( wszBuffer, wch, L"|");
+
+            if ( FAILED(hr)) {
+
+                return;
+            }
+        }
+
+        hr = StringCbCat( wszBuffer, wch, L"PROMPT");
+
+        if ( FAILED(hr)) {
+
+            return;
+        }
+
+        first = 0;
+    }
+
+    if (dwFlags & CONNECT_INTERACTIVE) {
+
+        if (!first) {
+
+            hr = StringCbCat( wszBuffer, wch, L"|");
+
+            if ( FAILED(hr)) {
+
+                return;
+            }
+        }
+
+        hr = StringCbCat( wszBuffer, wch, L"DEFERRED");
+
+        if ( FAILED(hr)) {
+
+            return;
+        }
+
+        first = 0;
+    }
+}
+
 DWORD
 APIENTRY
 NPAddConnection3( HWND            hwndOwner,
@@ -630,6 +717,7 @@ NPAddConnection3( HWND            hwndOwner,
     HANDLE   hToken = NULL;
     LARGE_INTEGER liAuthId = {0,0};
     HRESULT  hr;
+    WCHAR    wszFlagsString[1024]=L"";
 
     __Enter
     {
@@ -657,7 +745,13 @@ NPAddConnection3( HWND            hwndOwner,
         }
 
 #ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPAddConnection3 processing\n");
+        Add3FlagsToString( dwFlags, wszFlagsString, 1024);
+
+        AFSDbgPrint( L"NPAddConnection3 processing Remote %s User %s Pass %s Flags %s\n",
+                     lpNetResource->lpRemoteName,
+                     lpUserName == NULL? L"use-default": lpUserName[0] ? lpUserName : L"no-username",
+                     lpPassword == NULL? L"use-default": lpPassword[0] ? L"provided" : L"no-password",
+                     wszFlagsString);
 #endif
         if( lpNetResource->lpLocalName != NULL)
         {
