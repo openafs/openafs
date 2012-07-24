@@ -223,6 +223,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     int offset;
     int dirpos;
     struct DirEntry *de;
+    struct DirBuffer entry;
     ino_t ino;
     int len;
     afs_size_t origOffset, tlen;
@@ -312,7 +313,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	else {
 	    printf("afs_linux_readdir: afs_dir_GetBlob failed, null name (inode %lx, dirpos %d)\n", 
 		   (unsigned long)&tdc->f.inode, dirpos);
-	    DRelease(de, 0);
+	    DRelease(&entry, 0);
 	    ReleaseSharedLock(&avc->lock);
 	    afs_PutDCache(tdc);
 	    code = -ENOENT;
@@ -363,7 +364,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 #else
 	code = (*filldir) (dirbuf, de->name, len, offset, ino);
 #endif
-	DRelease(de, 0);
+	DRelease(&entry, 0);
 	if (code)
 	    break;
 	offset = dirpos + 1 + ((len + 16) >> 5);
