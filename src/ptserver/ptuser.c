@@ -507,6 +507,8 @@ pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
     if (lids.idlist_val) {
 	*id = *lids.idlist_val;
 	xdr_free((xdrproc_t) xdr_idlist, &lids);
+    } else if (code == 0) {
+	code = PRINTERNAL;
     }
     if (lnames.namelist_val)
 	free(lnames.namelist_val);
@@ -538,6 +540,8 @@ pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
 
     if (lnames.namelist_val)
 	strncpy(name, lnames.namelist_val[0], PR_MAXNAMELEN);
+    else if (code == 0)
+	code = PRINTERNAL;
 
     if (lids.idlist_val)
 	free(lids.idlist_val);
