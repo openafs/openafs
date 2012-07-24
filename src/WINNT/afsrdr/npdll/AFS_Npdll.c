@@ -3893,8 +3893,8 @@ NPFormatNetworkName( LPTSTR  lpRemoteName,
 #ifdef AFS_DEBUG_TRACE
     AFSDbgPrint( L"NPFormatNetworkName Remote %s Flags %s (0x%x) CharsPerLine %u\n",
                  lpRemoteName,
-                 dwFlags,
                  GetFormatFlags( dwFlags),
+                 dwFlags,
                  dwAveCharPerLine);
 #endif
 
@@ -4292,7 +4292,7 @@ AFSDbgPrint(
 #endif
                            GetCurrentThreadId());
 
-        rc = StringCbVPrintfW( &wszbuffer[ 14], sizeof(wszbuffer) - 14, Format, marker);
+        rc = StringCbVPrintfW( &wszbuffer[ 14], sizeof(wszbuffer) - 14 * sizeof(WCHAR), Format, marker);
 
         if (SUCCEEDED(rc)) {
             if (debug & 1)
