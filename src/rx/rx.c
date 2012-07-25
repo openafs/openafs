@@ -8232,6 +8232,9 @@ rx_CopyProcessRPCStats(afs_uint64 op)
     if (rxInterface == -1)
         return NULL;
 
+    if (rpcop_stat == NULL)
+        return NULL;
+
     MUTEX_ENTER(&rx_rpc_stats);
     rpc_stat = rxi_FindRpcStat(&processStats, rxInterface, 0, 0,
 			       0, 0, 0, 0, 0);
@@ -8260,6 +8263,9 @@ rx_CopyPeerRPCStats(afs_uint64 op, afs_uint32 peerHost, afs_uint16 peerPort)
         return NULL;
 
     if (rxInterface == -1)
+        return NULL;
+
+    if (rpcop_stat == NULL)
         return NULL;
 
     peer = rxi_FindPeer(peerHost, peerPort, 0, 0);
