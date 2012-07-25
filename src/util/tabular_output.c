@@ -399,6 +399,7 @@ util_newTable(int Type, int numColumns, char **ColumnHeaders, int *ColumnContent
                 break;
         default :
                 fprintf(stderr,"Error. Invalid TableType: %d.\n", Table->Type);
+		free(Table);
 		errno=EINVAL;
                 return NULL;
     }
