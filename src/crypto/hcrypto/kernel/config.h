@@ -27,6 +27,8 @@
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"
+#include "afs/afsincludes.h"
+#include "afs/afs_prototypes.h"
 
 /* Asserting is a mess - we need the RX headers in order to get a definition
  * for osi_Assert */
@@ -57,6 +59,9 @@ char * _afscrypto_strdup(const char *);
 
 #define realloc _afscrypto_realloc
 void * _afscrypto_realloc(void *, size_t);
+
+/* we may not have strcasecmp in the kernel */
+#define strcasecmp afs_strcasecmp
 
 /* osi_readRandom is also prototyped in afs_prototypes.h, but pulling that in
  * here creates loads of additional dependencies */
