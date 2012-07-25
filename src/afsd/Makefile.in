@@ -34,17 +34,17 @@ FUSE_LIBS=@FUSE_LIBS@
 LDFLAGS_afsd = $(AFSD_LDFLAGS)
 afsd: afsd.o afsd_kernel.o $(AFSLIBS) $(AFSD_LIBS)
 	${AFS_LDRULE} afsd.o afsd_kernel.o $(NON_SHARED) \
-		$(AFSLIBS) ${AFSD_LIBS} $(LIB_roken) $(XLIBS)
+		$(AFSLIBS) ${AFSD_LIBS} $(LIB_roken) $(MT_LIBS) $(XLIBS)
 
 LDFLAGS_afsd.fuse = $(AFSD_LDFLAGS)
 afsd.fuse: afsd_fuse.o $(UAFSLIBS) $(AFSD_LIBS)
 	${AFS_LDRULE} afsd_fuse.o $(NON_SHARED) \
-		$(UAFSLIBS) $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) \
+		$(UAFSLIBS) $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) $(LIB_crypt) \
 		${XLIBS} ${FUSE_LIBS} ${AFSD_LIBS}
 
 vsys: vsys.o
 	${AFS_LDRULE} vsys.o ${TOP_LIBDIR}/libsys.a \
-		$(LIB_roken) ${XLIBS}
+		$(LIB_roken) $(MT_LIBS) ${XLIBS}
 
 #
 # Objects
