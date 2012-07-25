@@ -147,6 +147,11 @@ CreateIdList(struct idhash *idhash, idlist * alist, afs_int32 select)
     if (select & PRUSERS) {
 	entries += idhash->userEntries;
     }
+    if (entries == 0) {
+	alist->idlist_len = 0;
+	alist->idlist_val = NULL;
+	return 0;
+    }
 
     alist->idlist_len = entries;
     alist->idlist_val = malloc(sizeof(afs_int32) * entries);
@@ -759,10 +764,14 @@ pr_IDListExpandedMembers(afs_int32 aid, namelist * lnames)
     code = CreateIdList(members, &lids, (aid < 0 ? PRUSERS : PRGROUPS));
     if (code) {
 	goto done;
+    } else if (lids.idlist_len == 0) {
+	/* Avoid the RPC when there's nothing to look up. */
+	lnames->namelist_len = 0;
+	lnames->namelist_val = NULL;
+	goto done;
     }
     code = pr_IdToName(&lids, lnames);
-    if (lids.idlist_len)
-	free(lids.idlist_val);
+    free(lids.idlist_val);
 
   done:
     if (stack)
