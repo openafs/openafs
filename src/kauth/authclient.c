@@ -104,8 +104,8 @@ ka_GetServers(char *cell, struct afsconf_cell * cellinfo)
     char cellname[MAXKTCREALMLEN];
 
     LOCK_GLOBAL_MUTEX;
-    if (cell && !strlen(cell))
-	cell = 0;
+    if (cell == NULL || strlen(cell) == 0)
+	cell = NULL;
     else
 	cell = lcstring(cellname, cell, sizeof(cellname));
 
