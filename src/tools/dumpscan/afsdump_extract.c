@@ -437,7 +437,7 @@ file_cb(afs_vnode * v, XFILE * X, void *refcon)
 	    || (r =
 		xfopen_path(&OX, O_RDWR | O_CREAT | O_TRUNC, vnodepath + 1,
 			    0644))) {
-	    if (!use_vnum)
+	    if (vnodepath != vnpx)
 		free(vnodepath);
 	    return r;
 	}
@@ -447,7 +447,7 @@ file_cb(afs_vnode * v, XFILE * X, void *refcon)
     } else
 	r = 0;
 
-    if (!use_vnum && use != 2)
+    if (vnodepath != vnpx)
 	free(vnodepath);
     return r;
 }
@@ -485,14 +485,14 @@ symlink_cb(afs_vnode * v, XFILE * X, void *refcon)
     }
 
     if (!(linktarget = malloc(v->size + 1))) {
-	if (!use_vnum && use != 2)
+	if (vnodepath != vnpx)
 	    free(vnodepath);
 	return DSERR_MEM;
     }
     if ((r = xftell(X, &where))
 	|| (r = xfseek(X, &v->d_offset))
 	|| (r = xfread(X, linktarget, v->size))) {
-	if (!use_vnum && use != 2)
+	if (vnodepath != vnpx)
 	    free(vnodepath);
 	free(linktarget);
 	return r;
@@ -515,7 +515,7 @@ symlink_cb(afs_vnode * v, XFILE * X, void *refcon)
     }
 
     free(linktarget);
-    if (!use_vnum && use != 2)
+    if (vnodepath != vnpx)
 	free(vnodepath);
     return r;
 }
