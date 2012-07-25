@@ -517,6 +517,7 @@ docppline(char *line, int *lineno, char **fname)
     *p = 0;
     if (*file == 0) {
 	*fname = NULL;
+	free(file);
     } else {
 	*fname = file;
     }
