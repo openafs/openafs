@@ -124,7 +124,7 @@ static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
     OSAtomicAdd32(0 - change, &atomic->var);
 }
-#elif defined(AFS_LINUX20_ENV) && defined(KERNEL)
+#elif defined(AFS_LINUX26_ENV) && defined(KERNEL)
 #include <asm/atomic.h>
 
 typedef atomic_t rx_atomic_t;
