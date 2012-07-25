@@ -124,7 +124,7 @@ extern char *ka_LocalCell(void
 
 extern int ka_ExpandCell(char *cell, char *fullCell, int *alocal);
 
-extern int ka_CellToRealm(char *cell, char *realm, int *local);
+extern int ka_CellToRealm(char *cell, char *realm, int *local) AFS_NONNULL((2));
 
 extern void ka_PrintUserID(char *prefix, char *name, char *instance,
 			   char *postfix);
