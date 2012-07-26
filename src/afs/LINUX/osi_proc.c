@@ -134,21 +134,29 @@ static void *
 uu_start(struct seq_file *m, loff_t *pos)
 {
     struct unixuser *tu;
+    void *ret;
     loff_t n = 0;
     afs_int32 i;
 
-    ObtainReadLock(&afs_xuser);
     if (!*pos)
 	return (void *)(1);
+
+    AFS_GLOCK();
+    ObtainReadLock(&afs_xuser);
+
+    ret = NULL;
 
     for (i = 0; i < NUSERS; i++) {
 	for (tu = afs_users[i]; tu; tu = tu->next) {
 	    if (++n == *pos)
-		return tu;
+		ret = tu;
+		goto done;
 	}
     }
 
-    return NULL;
+ done:
+    AFS_GUNLOCK();
+    return ret;
 }
 
 static void *
@@ -173,7 +181,9 @@ uu_next(struct seq_file *m, void *p, loff_t *pos)
 static void
 uu_stop(struct seq_file *m, void *p)
 {
+    AFS_GLOCK();
     ReleaseReadLock(&afs_xuser);
+    AFS_GUNLOCK();
 }
 
 static int
@@ -194,6 +204,8 @@ uu_show(struct seq_file *m, void *p)
 
 	return 0;
     }
+
+    AFS_GLOCK();
 
     tu->refCount++;
     ReleaseReadLock(&afs_xuser);
@@ -250,6 +262,8 @@ uu_show(struct seq_file *m, void *p)
     afs_PutUser(tu, READ_LOCK);
     ObtainReadLock(&afs_xuser);
 
+    AFS_GUNLOCK();
+
     return 0;
 }
 
@@ -289,6 +303,8 @@ csdbproc_info(char *buffer, char **start, off_t offset, int length)
        decor */
     char temp[91];
     afs_uint32 addr;
+
+    AFS_GLOCK();
     
     ObtainReadLock(&afs_xcell);
 
@@ -335,6 +351,8 @@ csdbproc_info(char *buffer, char **start, off_t offset, int length)
     ReleaseReadLock(&afs_xcell);
     
 done:
+    AFS_GUNLOCK();
+
     *start = buffer + len - (pos - offset);
     len = pos - offset;
     if (len > length)
