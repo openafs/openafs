@@ -107,7 +107,7 @@ afs_strtoi_r(const char *str, char **endptr, afs_uint32 *ret)
 
 #ifndef afs_strcasecmp
 int
-afs_strcasecmp(char *s1, char *s2)
+afs_strcasecmp(const char *s1, const char *s2)
 {
     while (*s1 && *s2) {
 	char c1, c2;

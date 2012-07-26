@@ -1011,7 +1011,7 @@ extern afs_int32 afs_calc_inum(afs_int32 cell, afs_int32 volume,
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
 #endif
 #ifndef afs_strcasecmp
-extern int afs_strcasecmp(char *s1, char *s2);
+extern int afs_strcasecmp(const char *s1, const char *s2);
 #endif
 #ifndef afs_strcat
 extern char *afs_strcat(char *s1, char *s2);
