@@ -17,7 +17,7 @@
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #ifdef HAVE_LINUX_SEQ_FILE_H
-#include <linux/seq_file.h>
+# include <linux/seq_file.h>
 #endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -26,7 +26,7 @@
 #include <linux/mm.h>
 
 #ifdef AFS_AMD64_LINUX20_ENV
-#include <asm/ia32_unistd.h>
+# include <asm/ia32_unistd.h>
 #endif
 
 #include <linux/proc_fs.h>
@@ -38,95 +38,100 @@
 struct proc_dir_entry *openafs_procfs;
 
 #ifdef HAVE_LINUX_SEQ_FILE_H
-static void *c_start(struct seq_file *m, loff_t *pos)
+static void *
+c_start(struct seq_file *m, loff_t *pos)
 {
-	struct afs_q *cq, *tq;
-	loff_t n = 0;
+    struct afs_q *cq, *tq;
+    loff_t n = 0;
 
-	AFS_GLOCK();
-	ObtainReadLock(&afs_xcell);
-	for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-		tq = QNext(cq);
-
-		if (n++ == *pos)
-			break;
-	}
-	if (cq == &CellLRU)
-		cq = NULL;
-
-	AFS_GUNLOCK();
-	return cq;
-}
-
-static void *c_next(struct seq_file *m, void *p, loff_t *pos)
-{
-	struct afs_q *cq = p, *tq;
-
-	AFS_GLOCK();
-	(*pos)++;
+    AFS_GLOCK();
+    ObtainReadLock(&afs_xcell);
+    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tq = QNext(cq);
 
-	if (tq == &CellLRU)
-		tq = NULL;
+	if (n++ == *pos)
+	    break;
+    }
+    if (cq == &CellLRU)
+	cq = NULL;
 
-	AFS_GUNLOCK();
-	return tq;
+    AFS_GUNLOCK();
+    return cq;
 }
 
-static void c_stop(struct seq_file *m, void *p)
+static void *
+c_next(struct seq_file *m, void *p, loff_t *pos)
 {
-        AFS_GLOCK();
-	ReleaseReadLock(&afs_xcell);
-	AFS_GUNLOCK();
+    struct afs_q *cq = p, *tq;
+
+    AFS_GLOCK();
+    (*pos)++;
+    tq = QNext(cq);
+
+    if (tq == &CellLRU)
+	tq = NULL;
+
+    AFS_GUNLOCK();
+    return tq;
 }
 
-static int c_show(struct seq_file *m, void *p)
+static void
+c_stop(struct seq_file *m, void *p)
 {
-	struct afs_q *cq = p;
-	struct cell *tc = QTOC(cq);
-	int j;
+    AFS_GLOCK();
+    ReleaseReadLock(&afs_xcell);
+    AFS_GUNLOCK();
+}
 
-	seq_printf(m, ">%s #(%d/%d)\n", tc->cellName,
-		   tc->cellNum, tc->cellIndex);
+static int
+c_show(struct seq_file *m, void *p)
+{
+    struct afs_q *cq = p;
+    struct cell *tc = QTOC(cq);
+    int j;
 
-	for (j = 0; j < AFS_MAXCELLHOSTS; j++) {
-		afs_uint32 addr;
+    seq_printf(m, ">%s #(%d/%d)\n", tc->cellName,
+               tc->cellNum, tc->cellIndex);
 
-		if (!tc->cellHosts[j]) break;
+    for (j = 0; j < AFS_MAXCELLHOSTS; j++) {
+	afs_uint32 addr;
 
-		addr = tc->cellHosts[j]->addr->sa_ip;
+	if (!tc->cellHosts[j]) break;
+
+	addr = tc->cellHosts[j]->addr->sa_ip;
 #if defined(NIPQUAD)
-		seq_printf(m, "%u.%u.%u.%u #%u.%u.%u.%u\n",
-			   NIPQUAD(addr), NIPQUAD(addr));
+	seq_printf(m, "%u.%u.%u.%u #%u.%u.%u.%u\n",
+	           NIPQUAD(addr), NIPQUAD(addr));
 #else
-		seq_printf(m, "%pI4 #%pI4\n", &addr, &addr);
+	seq_printf(m, "%pI4 #%pI4\n", &addr, &addr);
 #endif
-	}
+    }
 
 	return 0;
 }
 
 static struct seq_operations afs_csdb_op = {
-	.start		= c_start,
-	.next		= c_next,
-	.stop		= c_stop,
-	.show		= c_show,
+    .start = c_start,
+    .next  = c_next,
+    .stop  = c_stop,
+    .show  = c_show,
 };
 
-static int afs_csdb_open(struct inode *inode, struct file *file)
+static int
+afs_csdb_open(struct inode *inode, struct file *file)
 {
-	return seq_open(file, &afs_csdb_op);
+    return seq_open(file, &afs_csdb_op);
 }
 
 static struct file_operations afs_csdb_operations = {
-	.open		= afs_csdb_open,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= seq_release,
+    .open    = afs_csdb_open,
+    .read    = seq_read,
+    .llseek  = seq_lseek,
+    .release = seq_release,
 };
 
-
-static void *uu_start(struct seq_file *m, loff_t *pos)
+static void *
+uu_start(struct seq_file *m, loff_t *pos)
 {
     struct unixuser *tu;
     loff_t n = 0;
@@ -146,7 +151,8 @@ static void *uu_start(struct seq_file *m, loff_t *pos)
     return NULL;
 }
 
-static void *uu_next(struct seq_file *m, void *p, loff_t *pos)
+static void *
+uu_next(struct seq_file *m, void *p, loff_t *pos)
 {
     struct unixuser *tu = p;
     afs_int32 i = 0;
@@ -164,12 +170,14 @@ static void *uu_next(struct seq_file *m, void *p, loff_t *pos)
     return NULL;
 }
 
-static void uu_stop(struct seq_file *m, void *p)
+static void
+uu_stop(struct seq_file *m, void *p)
 {
     ReleaseReadLock(&afs_xuser);
 }
 
-static int uu_show(struct seq_file *m, void *p)
+static int
+uu_show(struct seq_file *m, void *p)
 {
     struct cell *tc = 0;
     struct unixuser *tu = p;
@@ -234,30 +242,30 @@ static int uu_show(struct seq_file *m, void *p)
 }
 
 static struct seq_operations afs_unixuser_seqop = {
-    .start		= uu_start,
-    .next		= uu_next,
-    .stop		= uu_stop,
-    .show		= uu_show,
+    .start = uu_start,
+    .next  = uu_next,
+    .stop  = uu_stop,
+    .show  = uu_show,
 };
 
-static int afs_unixuser_open(struct inode *inode, struct file *file)
+static int
+afs_unixuser_open(struct inode *inode, struct file *file)
 {
     return seq_open(file, &afs_unixuser_seqop);
 }
 
 static struct file_operations afs_unixuser_fops = {
-    .open		= afs_unixuser_open,
-    .read		= seq_read,
-    .llseek		= seq_lseek,
-    .release	= seq_release,
+    .open    = afs_unixuser_open,
+    .read    = seq_read,
+    .llseek  = seq_lseek,
+    .release = seq_release,
 };
 
 
 #else /* HAVE_LINUX_SEQ_FILE_H */
 
 static int
-csdbproc_info(char *buffer, char **start, off_t offset, int
-length)
+csdbproc_info(char *buffer, char **start, off_t offset, int length)
 {
     int len = 0;
     off_t pos = 0;
@@ -342,9 +350,9 @@ osi_proc_init(void)
     entry = create_proc_entry("unixusers", 0, openafs_procfs);
     if (entry) {
 	entry->proc_fops = &afs_unixuser_fops;
-#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
+# if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
 	entry->owner = THIS_MODULE;
-#endif
+# endif
     }
     entry = create_proc_entry(PROC_CELLSERVDB_NAME, 0, openafs_procfs);
     if (entry)
