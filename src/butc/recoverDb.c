@@ -906,6 +906,7 @@ RcreateDump(struct tapeScanInfo *tapeScanInfoPtr,
 	    struct volumeHeader *volHeaderPtr)
 {
     afs_int32 code;
+    const char *volsetName;
     struct butm_tapeLabel *dumpLabelPtr = &tapeScanInfoPtr->dumpLabel;
     struct budb_dumpEntry *dumpEntryPtr = &tapeScanInfoPtr->dumpEntry;
 
@@ -919,8 +920,10 @@ RcreateDump(struct tapeScanInfo *tapeScanInfoPtr,
     dumpEntryPtr->flags = 0;
     dumpEntryPtr->incTime = 0;
     dumpEntryPtr->nVolumes = 0;
-    strcpy(dumpEntryPtr->volumeSetName,
-	   volumesetNamePtr(volHeaderPtr->dumpSetName));
+    volsetName = volumesetNamePtr(volHeaderPtr->dumpSetName);
+    if (volsetName == NULL)
+	return BUDB_BADARGUMENT;
+    strcpy(dumpEntryPtr->volumeSetName, volsetName);
     strcpy(dumpEntryPtr->dumpPath, dumpLabelPtr->dumpPath);
     strcpy(dumpEntryPtr->name, volHeaderPtr->dumpSetName);
     default_tapeset(&dumpEntryPtr->tapes, volHeaderPtr->dumpSetName);
