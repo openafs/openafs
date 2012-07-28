@@ -139,7 +139,8 @@ _GetSecurityObject(struct afscp_cell *cell)
 	    strlcpy(localcell, realms[0], sizeof(localcell));
 	    krb5_free_host_realm(context, realms);
 	    realm = localcell;
-	}
+	} else
+	    goto try_anon;
     } else {
 	realm = cell->realm;
 	strlcpy(localcell, realm, MAXCELLCHARS + 1);
