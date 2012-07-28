@@ -328,22 +328,24 @@ UpdateCache(struct ubik_trans *trans, void *rock)
 	    printf("Can't read VLDB header, re-initialising...\n");
 
 	    /* try to write a good header */
-	    memset(&rd_cheader, 0, sizeof(rd_cheader));
-	    rd_cheader.vital_header.vldbversion = htonl(VLDBVERSION);
-	    rd_cheader.vital_header.headersize = htonl(sizeof(rd_cheader));
+	    /* The read cache will be sync'ed to this new header
+	     * when the ubik transaction is ended by vlsynccache(). */
+	    memset(&wr_cheader, 0, sizeof(wr_cheader));
+	    wr_cheader.vital_header.vldbversion = htonl(VLDBVERSION);
+	    wr_cheader.vital_header.headersize = htonl(sizeof(wr_cheader));
 	    /* DANGER: Must get this from a master place!! */
-	    rd_cheader.vital_header.MaxVolumeId = htonl(0x20000000);
-	    rd_cheader.vital_header.eofPtr = htonl(sizeof(rd_cheader));
+	    wr_cheader.vital_header.MaxVolumeId = htonl(0x20000000);
+	    wr_cheader.vital_header.eofPtr = htonl(sizeof(wr_cheader));
 	    for (i = 0; i < MAXSERVERID + 1; i++) {
-		rd_cheader.IpMappedAddr[i] = 0;
-		rd_HostAddress[i] = 0;
+		wr_cheader.IpMappedAddr[i] = 0;
+		wr_HostAddress[i] = 0;
 	    }
-	    code = vlwrite(trans, 0, (char *)&rd_cheader, sizeof(rd_cheader));
+	    code = vlwrite(trans, 0, (char *)&wr_cheader, sizeof(wr_cheader));
 	    if (code) {
 		printf("Can't write VLDB header (error = %d)\n", code);
 		ERROR_EXIT(VL_IO);
 	    }
-	    vldbversion = ntohl(rd_cheader.vital_header.vldbversion);
+	    vldbversion = ntohl(wr_cheader.vital_header.vldbversion);
 	} else {
 	    ERROR_EXIT(VL_EMPTY);
 	}
