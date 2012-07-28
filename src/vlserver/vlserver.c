@@ -121,7 +121,7 @@ vldb_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
 
     code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
     if (code) {
-	ViceLog(0,
+	VLog(0,
 		("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
 		 code, name, inst, cell));
     }
@@ -341,9 +341,9 @@ main(int argc, char **argv)
 
     tdir = afsconf_Open(configDir);
     if (!tdir) {
-	printf
+	VLog(0,
 	    ("vlserver: can't open configuration files in dir %s, giving up.\n",
-	     configDir);
+	     configDir));
 	exit(1);
     }
 
@@ -354,7 +354,7 @@ main(int argc, char **argv)
     /* initialize winsock */
     if (afs_winsockInit() < 0) {
 	ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0, argv[0], 0);
-	fprintf(stderr, "vlserver: couldn't initialize winsock. \n");
+	VLog(0, ("vlserver: couldn't initialize winsock. \n"));
 	exit(1);
     }
 #endif
@@ -362,8 +362,8 @@ main(int argc, char **argv)
     gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
     if (!th) {
-	printf("vlserver: couldn't get address of this host (%s).\n",
-	       hostname);
+	VLog(0, ("vlserver: couldn't get address of this host (%s).\n",
+	       hostname));
 	exit(1);
     }
     memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
@@ -413,7 +413,7 @@ main(int argc, char **argv)
     }
     if (rxMaxMTU != -1) {
 	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
-	    printf("rxMaxMTU %d invalid\n", rxMaxMTU);
+	    VLog(0, ("rxMaxMTU %d invalid\n", rxMaxMTU));
 	    return -1;
 	}
     }
@@ -428,7 +428,7 @@ main(int argc, char **argv)
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, clones,
 			      vl_dbaseName, &VL_dbase);
     if (code) {
-	printf("vlserver: Ubik init failed: %s\n", afs_error_message(code));
+	VLog(0, ("vlserver: Ubik init failed: %s\n", afs_error_message(code)));
 	exit(2);
     }
     rx_SetRxDeadTime(50);
@@ -444,7 +444,7 @@ main(int argc, char **argv)
 			  securityClasses, numClasses,
 			  VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	printf("vlserver: Could not create VLDB_SERVICE rx service\n");
+	VLog(0, ("vlserver: Could not create VLDB_SERVICE rx service\n"));
 	exit(3);
     }
     rx_SetMinProcs(tservice, 2);
@@ -462,14 +462,14 @@ main(int argc, char **argv)
 			  securityClasses, numClasses,
 			  RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	printf("vlserver: Could not create rpc stats rx service\n");
+	VLog(0, ("vlserver: Could not create rpc stats rx service\n"));
 	exit(3);
     }
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
 
     LogCommandLine(argc, argv, "vlserver", VldbVersion, "Starting AFS", FSLog);
-    printf("%s\n", cml_version_number);	/* Goes to the log */
+    VLog(0, ("%s\n", cml_version_number));
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(vldb_rxstat_userok);
