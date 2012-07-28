@@ -62,6 +62,7 @@ pr_ListMembers
 pr_NameToId
 pr_SNameToId
 setpag
+string_PR_IDToName
 ubik_Call
 ubik_CallIter
 ubik_Call_New

@@ -342,7 +342,7 @@ TranslatePTSIds(const afs_cell_handle_p cellHandle, namelist * names,
     int rc = 0;
     afs_status_t tst = 0;
 
-    tst = ubik_PR_IDToName(cellHandle->pts, 0, ids, names);
+    tst = string_PR_IDToName(cellHandle->pts, 0, ids, names);
 
     if (tst) {
 	goto fail_TranslatePTSIds;

@@ -166,3 +166,4 @@ EXPORTS
         afsconf_typedKey_values                         @165
         afsconf_GetAllKeys                              @166
 	afsconf_CheckRestrictedQuery			@167
+        string_PR_IDToName				@168

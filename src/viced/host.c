@@ -411,7 +411,7 @@ hpr_IdToName(idlist *ids, namelist *names)
     if (code)
 	return code;
 
-    code = ubik_PR_IDToName(uclient, 0, ids, names);
+    code = string_PR_IDToName(uclient, 0, ids, names);
     return code;
 }
 

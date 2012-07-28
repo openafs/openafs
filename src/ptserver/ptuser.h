@@ -19,10 +19,10 @@ extern int pr_End(void);
 extern int pr_CreateUser(prname name, afs_int32 *id) AFS_NONNULL();
 extern int pr_CreateGroup(prname name, prname owner,
  			  afs_int32 *id) AFS_NONNULL((1,3));
-extern int pr_Delete(char *name) AFS_NONNULL();
+extern int pr_Delete(prname name) AFS_NONNULL();
 extern int pr_DeleteByID(afs_int32 id);
-extern int pr_AddToGroup(char *user, char *group) AFS_NONNULL();
-extern int pr_RemoveUserFromGroup(char *user, char *group) AFS_NONNULL();
+extern int pr_AddToGroup(prname user, prname group) AFS_NONNULL();
+extern int pr_RemoveUserFromGroup(prname user, prname group) AFS_NONNULL();
 extern int pr_NameToId(namelist *names, idlist *ids) AFS_NONNULL();
 extern int pr_SNameToId(prname name, afs_int32 *id) AFS_NONNULL();
 extern int pr_IdToName(idlist *ids, namelist *names) AFS_NONNULL();
@@ -30,7 +30,7 @@ extern int pr_SIdToName(afs_int32 id, prname name) AFS_NONNULL();
 extern int pr_GetCPS(afs_int32 id, prlist *CPS) AFS_NONNULL();
 extern int pr_GetCPS2(afs_int32 id, afs_uint32 host, prlist *CPS) AFS_NONNULL();
 extern int pr_GetHostCPS(afs_uint32 host, prlist *CPS) AFS_NONNULL();
-extern int pr_ListMembers(char *group, namelist *lnames) AFS_NONNULL();
+extern int pr_ListMembers(prname group, namelist *lnames) AFS_NONNULL();
 extern int pr_ListOwned(afs_int32 oid, namelist *lnames, afs_int32 *moreP)
 		       AFS_NONNULL();
 extern int pr_IDListMembers(afs_int32 gid, namelist *lnames) AFS_NONNULL();
@@ -40,13 +40,13 @@ extern afs_int32 pr_ListEntries(int flag, afs_int32 startindex,
  				afs_int32 *nentries,
  				struct prlistentries **entries,
  				afs_int32 *nextstartindex) AFS_NONNULL();
-extern int pr_CheckEntryByName(char *name, afs_int32 *id, char *owner,
-			       char *creator) AFS_NONNULL();
-extern int pr_CheckEntryById(char *name, afs_int32 id, char *owner,
-			     char *creator) AFS_NONNULL();
-extern int pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid,
-			  char *newowner) AFS_NONNULL((1));
-extern int pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
+extern int pr_CheckEntryByName(prname name, afs_int32 *id, prname owner,
+			       prname creator) AFS_NONNULL();
+extern int pr_CheckEntryById(prname name, afs_int32 id, prname owner,
+			     prname creator) AFS_NONNULL();
+extern int pr_ChangeEntry(prname oldname, prname newname, afs_int32 *newid,
+			  prname newowner) AFS_NONNULL((1));
+extern int pr_IsAMemberOf(prname uname, prname gname, afs_int32 *flag)
 			 AFS_NONNULL();
 extern int pr_ListMaxUserId(afs_int32 *mid) AFS_NONNULL();
 extern int pr_SetMaxUserId(afs_int32 mid);
