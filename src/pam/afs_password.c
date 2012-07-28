@@ -192,7 +192,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	 */
 	strncpy(my_password_buf, prompt_password, sizeof(my_password_buf));
 	my_password_buf[sizeof(my_password_buf) - 1] = '\0';
-	memset(prompt_password, 0, strlen(password));
+	memset(prompt_password, 0, strlen(prompt_password));
 	free(prompt_password);
 	password = torch_password = my_password_buf;
     }
