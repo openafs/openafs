@@ -48,6 +48,7 @@
 #define VFORMAT "V%010lu.vol"
 #define	VHDREXT	".vol"
 #endif
+#define	VHDRNAMELEN (11 + sizeof(VHDREXT) - 1) /* must match VFORMAT */
 #define VMAXPATHLEN 64		/* Maximum length (including null) of a volume
 				 * external path name */
 

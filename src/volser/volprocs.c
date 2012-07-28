@@ -1902,28 +1902,30 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 
 }
 
-/*return the name of the next volume header in the directory associated with dirp and dp.
-*the volume id is  returned in volid, and volume header name is returned in volname*/
-int
-GetNextVol(DIR * dirp, char *volname, afs_uint32 * volid)
+/*
+ * Scan a directory for possible volume headers.
+ * in: DIR *dirp		-- a directory handle from opendir()
+ * out: char *volname		-- set to name of directory entry
+ *      afs_uint32 *volid	-- set to volume ID parsed from name
+ * returns:
+ *  true if volname and volid have been set to valid values
+ *  false if we got to the end of the directory
+ */
+static int
+GetNextVol(DIR *dirp, char *volname, afs_uint32 *volid)
 {
     struct dirent *dp;
 
-    dp = readdir(dirp);		/*read next entry in the directory */
-    if (dp) {
-	if ((dp->d_name[0] == 'V') && !strcmp(&(dp->d_name[11]), VHDREXT)) {
+    while ((dp = readdir(dirp)) != NULL) {
+	/* could be optimized on platforms with dp->d_namlen */
+	if (dp->d_name[0] == 'V' && strlen(dp->d_name) == VHDRNAMELEN
+		&& strcmp(&(dp->d_name[11]), VHDREXT) == 0) {
 	    *volid = VolumeNumber(dp->d_name);
 	    strcpy(volname, dp->d_name);
-	    return 0;		/*return the name of the file representing a volume */
-	} else {
-	    strcpy(volname, "");
-	    return 0;		/*volname doesnot represent a volume */
+	    return 1;
 	}
-    } else {
-	strcpy(volname, "EOD");
-	return 0;		/*end of directory */
     }
-
+    return 0;
 }
 
 /**
@@ -2344,21 +2346,11 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid,
     if (dirp == NULL)
 	return VOLSERILLEGAL_PARTITION;
 
-    strcpy(volname, "");
-
-    while (strcmp(volname, "EOD") && !found) {	/*while there are more volumes in the partition */
-
-	if (!strcmp(volname, "")) {	/* its not a volume, fetch next file */
-	    GetNextVol(dirp, volname, &volid);
-	    continue;		/*back to while loop */
-	}
-
+    while (GetNextVol(dirp, volname, &volid)) {
 	if (volid == volumeId) {	/*copy other things too */
 	    found = 1;
 	    break;
 	}
-
-	GetNextVol(dirp, volname, &volid);
     }
 
     if (found) {
@@ -2458,23 +2450,13 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     if (dirp == NULL)
 	return (VOLSERILLEGAL_PARTITION);
 
-    strcpy(volname, "");
 
     /*
      * Sweep through the partition directory, looking for the desired entry.
      * First, of course, figure out how many stat bytes to copy out of each
      * volume.
      */
-    while (strcmp(volname, "EOD") && !found) {
-	/*
-	 * If this is not a volume, move on to the next entry in the
-	 * partition's directory.
-	 */
-	if (!strcmp(volname, "")) {
-	    GetNextVol(dirp, volname, &currVolID);
-	    continue;
-	}
-
+    while (GetNextVol(dirp, volname, &currVolID)) {
 	if (currVolID == a_volID) {
 	    /*
 	     * We found the volume entry we're interested.  Pull out the
@@ -2484,8 +2466,6 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    found = 1;
 	    break;
 	}			/*Found desired volume */
-
-	GetNextVol(dirp, volname, &currVolID);
     }
 
     if (found) {
@@ -2555,15 +2535,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     dirp = opendir(VPartitionPath(partP));
     if (dirp == NULL)
 	return VOLSERILLEGAL_PARTITION;
-    strcpy(volname, "");
 
-    while (strcmp(volname, "EOD")) {	/*while there are more partitions in the partition */
-
-	if (!strcmp(volname, "")) {	/* its not a volume, fetch next file */
-	    GetNextVol(dirp, volname, &volid);
-	    continue;		/*back to while loop */
-	}
-
+    while (GetNextVol(dirp, volname, &volid)) {
 	if (flags) {		/*copy other things too */
 #ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();	/*make sure that the client does not time out */
@@ -2579,9 +2552,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 			      volname,
 			      &handle,
 			      VOL_INFO_LIST_MULTIPLE);
-	    if (code == -2) { /* DESTROY_ME flag set */
-		goto drop2;
-	    }
+	    if (code == -2)	/* DESTROY_ME flag set */
+		continue;
 	} else {
 	    pntr->volid = volid;
 	    /*just volids are needed */
@@ -2601,12 +2573,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	    volumeInfo->volEntries_val = pntr;	/* point to new block */
 	    /* set pntr to the right position */
 	    pntr = volumeInfo->volEntries_val + volumeInfo->volEntries_len;
-
 	}
-
-      drop2:
-	GetNextVol(dirp, volname, &volid);
-
     }
 
     closedir(dirp);
@@ -2691,23 +2658,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
     dirp = opendir(VPartitionPath(partP));
     if (dirp == NULL)
 	return (VOLSERILLEGAL_PARTITION);
-    strcpy(volname, "");
-
-    /*
-     * Sweep through the partition directory, acting on each entry.  First,
-     * of course, figure out how many stat bytes to copy out of each volume.
-     */
-    while (strcmp(volname, "EOD")) {
-
-	/*
-	 * If this is not a volume, move on to the next entry in the
-	 * partition's directory.
-	 */
-	if (!strcmp(volname, "")) {
-	    GetNextVol(dirp, volname, &volid);
-	    continue;
-	}
-
+    while (GetNextVol(dirp, volname, &volid)) {
 	if (a_flags) {
 	    /*
 	     * Full info about the volume desired.  Poll to make sure the
@@ -2726,9 +2677,8 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 			      volname,
 			      &handle,
 			      VOL_INFO_LIST_MULTIPLE);
-	    if (code == -2) { /* DESTROY_ME flag set */
-		goto drop2;
-	    }
+	    if (code == -2)	/* DESTROY_ME flag set */
+		continue;
 	} else {
 	    /*
 	     * Just volume IDs are needed.
@@ -2768,10 +2718,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 		a_volumeXInfoP->volXEntries_val +
 		a_volumeXInfoP->volXEntries_len;
 	}
-
-      drop2:
-	GetNextVol(dirp, volname, &volid);
-    }				/*Sweep through the partition directory */
+    }
 
     /*
      * We've examined all entries in the partition directory.  Close it,
@@ -2995,15 +2942,9 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
     dirp = opendir(VPartitionPath(partP));
     if (dirp == NULL)
 	return VOLSERILLEGAL_PARTITION;
-    strcpy(volname, "");
     ttc = (struct volser_trans *)0;
 
-    while (strcmp(volname, "EOD")) {
-	if (!strcmp(volname, "")) {     /* its not a volume, fetch next file */
-            GetNextVol(dirp, volname, &volid);
-            continue;           /*back to while loop */
-        }
-
+    while (GetNextVol(dirp, volname, &volid)) {
 	if (volid == volumeId) {        /*copy other things too */
 #ifndef AFS_PTHREAD_ENV
             IOMGR_Poll();       /*make sure that the client doesnot time out */
@@ -3019,7 +2960,6 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 #endif
 	    break;
 	}
-	GetNextVol(dirp, volname, &volid);
     }
 
     if (ttc) {
