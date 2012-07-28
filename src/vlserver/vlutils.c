@@ -329,7 +329,7 @@ UpdateCache(struct ubik_trans *trans, void *rock)
     /* now, if can't read, or header is wrong, write a new header */
     if (ubcode || vldbversion == 0) {
 	if (builddb) {
-	    printf("Can't read VLDB header, re-initialising...\n");
+	    VLog(0, ("Can't read VLDB header, re-initialising...\n"));
 
 	    /* try to write a good header */
 	    memset(&cheader, 0, sizeof(cheader));
@@ -344,7 +344,7 @@ UpdateCache(struct ubik_trans *trans, void *rock)
 	    }
 	    code = vlwrite(trans, 0, (char *)&cheader, sizeof(cheader));
 	    if (code) {
-		printf("Can't write VLDB header (error = %d)\n", code);
+		VLog(0, ("Can't write VLDB header (error = %d)\n", code));
 		ERROR_EXIT(VL_IO);
 	    }
 	    vldbversion = ntohl(cheader.vital_header.vldbversion);
@@ -355,9 +355,9 @@ UpdateCache(struct ubik_trans *trans, void *rock)
 
     if ((vldbversion != VLDBVERSION) && (vldbversion != OVLDBVERSION)
         && (vldbversion != VLDBVERSION_4)) {
-	printf
+	VLog(0,
 	    ("VLDB version %d doesn't match this software version(%d, %d or %d), quitting!\n",
-	     vldbversion, VLDBVERSION_4, VLDBVERSION, OVLDBVERSION);
+	     vldbversion, VLDBVERSION_4, VLDBVERSION, OVLDBVERSION));
 	return VL_BADVERSION;
     }
 

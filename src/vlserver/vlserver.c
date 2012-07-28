@@ -279,16 +279,16 @@ main(int argc, char **argv)
 
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
-	printf
+	VLog(0,
 	    ("vlserver: can't open configuration files in dir %s, giving up.\n",
-	     AFSDIR_SERVER_ETC_DIRPATH);
+	     AFSDIR_SERVER_ETC_DIRPATH));
 	exit(1);
     }
 #ifdef AFS_NT40_ENV
     /* initialize winsock */
     if (afs_winsockInit() < 0) {
 	ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0, argv[0], 0);
-	fprintf(stderr, "vlserver: couldn't initialize winsock. \n");
+	VLog(0, ("vlserver: couldn't initialize winsock.\n"));
 	exit(1);
     }
 #endif
@@ -296,8 +296,8 @@ main(int argc, char **argv)
     gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
     if (!th) {
-	printf("vlserver: couldn't get address of this host (%s).\n",
-	       hostname);
+	VLog(0, ("vlserver: couldn't get address of this host (%s).\n",
+	       hostname));
 	exit(1);
     }
     memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
@@ -310,7 +310,7 @@ main(int argc, char **argv)
 	afsconf_GetExtendedCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info,
 				    clones);
     if (code) {
-	printf("vlserver: Couldn't get cell server list for 'afsvldb'.\n");
+	VLog(0, ("vlserver: Couldn't get cell server list for 'afsvldb'.\n"));
 	exit(2);
     }
 
@@ -392,7 +392,7 @@ main(int argc, char **argv)
 			  securityClasses, numClasses,
 			  RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	printf("vlserver: Could not create rpc stats rx service\n");
+	VLog(0, ("vlserver: Could not create rpc stats rx service\n"));
 	exit(3);
     }
     rx_SetMinProcs(tservice, 2);
