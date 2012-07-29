@@ -78,7 +78,7 @@ typedef struct leaf {
     Nptr	nextNode;
 } Leaf;
 
-typedef struct data {
+typedef struct btree_data {
     keyT        key;
     dataT	value;
     Nptr        next;
