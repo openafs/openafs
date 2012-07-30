@@ -1160,6 +1160,11 @@ ParseArgs(int argc, char *argv[])
     if (code)
 	return -1;
 
+    /* XXX - cmd_OptionAsString(opts, OPT_config, &configDir); */
+
+    cmd_OpenConfigFile(AFSDIR_SERVER_CONFIG_FILE_FILEPATH);
+    cmd_SetCommandName("fileserver");
+
     if (cmd_OptionPresent(opts, OPT_large)
 	&& cmd_OptionPresent(opts, OPT_small)) {
 	printf("Only one of -L or -S must be specified\n");
@@ -1336,7 +1341,6 @@ ParseArgs(int argc, char *argv[])
 	optstring = NULL;
     }
 
-    /* XXX - cmd_OptionAsString(opts, OPT_config, &configDir); */
     cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
     /* XXX - cmd_OptionAsString(opts, OPT_logfile, &logFile); */
     cmd_OptionAsFlag(opts, OPT_mrafslogs, &mrafsStyleLogs);

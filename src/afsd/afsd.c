@@ -1677,6 +1677,9 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
+    cmd_OpenConfigFile(AFSDIR_CLIENT_CONFIG_FILE_FILEPATH);
+    cmd_SetCommandName("afsd");
+
     /* call atoi on the appropriate parsed results */
     if (cmd_OptionAsInt(as, OPT_blocks, &cacheBlocks) == 0)
 	sawCacheBlocks = 1;

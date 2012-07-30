@@ -354,6 +354,11 @@ main(int argc, char **argv)
     if (code)
 	PT_EXIT(1);
 
+    cmd_OptionAsString(opts, OPT_config, &configDir);
+
+    cmd_OpenConfigFile(AFSDIR_SERVER_CONFIG_FILE_FILEPATH);
+    cmd_SetCommandName("ptserver");
+
     if (cmd_OptionAsList(opts, OPT_access, &list) == 0) {
 	prp_user_default = prp_access_mask(list->data);
 	if (list->next == NULL || list->next->data == NULL) {
@@ -380,7 +385,6 @@ main(int argc, char **argv)
 	free(interface);
     }
 
-    cmd_OptionAsString(opts, OPT_config, &configDir);
     cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
     cmd_OptionAsString(opts, OPT_database, &pr_dbaseName);
     cmd_OptionAsString(opts, OPT_logfile, &logFile);

@@ -267,6 +267,11 @@ main(int argc, char **argv)
     if (code)
 	return -1;
 
+    cmd_OptionAsString(opts, OPT_config, &configDir);
+
+    cmd_OpenConfigFile(AFSDIR_SERVER_CONFIG_FILE_FILEPATH);
+    cmd_SetCommandName("vlserver");
+
     /* vlserver options */
     cmd_OptionAsFlag(opts, OPT_noauth, &noAuth);
     cmd_OptionAsFlag(opts, OPT_smallmem, &smallMem);
@@ -289,7 +294,6 @@ main(int argc, char **argv)
 	free(interface);
     }
 
-    cmd_OptionAsString(opts, OPT_config, &configDir);
     cmd_OptionAsInt(opts, OPT_debug, &LogLevel);
     cmd_OptionAsString(opts, OPT_database, &vl_dbaseName);
     cmd_OptionAsString(opts, OPT_logfile, &logFile);
