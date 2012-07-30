@@ -253,8 +253,8 @@
           <listitem>
             <para>In addition to using server encryption keys when communicating with clients, the server processes use them to
             protect communications with other server processes. Therefore, all server machines in your cell must have the same
-            version of the <emphasis role="bold">KeyFile</emphasis> file. The easiest way to maintain consistency (if you run the
-            United States edition of AFS) is to use the Update Server to distribute the contents of the system control machine's
+            version of the <emphasis role="bold">KeyFile</emphasis> file. The easiest way to maintain consistency
+            is to use the Update Server to distribute the contents of the system control machine's
             <emphasis role="bold">/usr/afs/etc</emphasis> directory to all of the other server machines. There are two implications:
             <itemizedlist>
                 <listitem>
@@ -285,13 +285,6 @@
                   </indexterm>
                 </listitem>
               </itemizedlist></para>
-
-            <para>If you run the international edition of AFS, do not use the Update Server to distribute the contents of the
-            <emphasis role="bold">/usr/afs/etc</emphasis> directory, particularly the <emphasis role="bold">KeyFile</emphasis> file.
-            The data in the file is too sensitive for transfer in unencrypted form, and because of United States government exports
-            regulations the international edition of AFS does not include the necessary encryption routines in a form that the
-            Update Server can use. You must instead modify the file on each server machine individually, taking care to enter the
-            same key on every server machine.</para>
           </listitem>
 
           <listitem>
@@ -713,13 +706,10 @@
           <para>Issue the <emphasis role="bold">bos addkey</emphasis> command to create a new AFS server
           encryption key in the <emphasis role="bold">KeyFile</emphasis> file.</para>
 
-          <para>If you run the United States edition of AFS and use the Update Server to distribute the contents of the system
+          <para>If you use the Update Server to distribute the contents of the system
           control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, substitute the system control machine for the
           machine name argument. (If you have forgotten which machine is the system control machine, see <link linkend="HDRWQ96">To
           locate the system control machine</link>.)</para>
-
-          <para>If you run the international edition of AFS or do not use the Update Server, repeat the <emphasis role="bold">bos
-          addkey</emphasis> command, substituting each server machine in your cell for the machine name argument in turn.</para>
 
           <para>To avoid visible echoing of the string that corresponds to the new key, omit the <emphasis
           role="bold">-key</emphasis> argument from the command line; instead enter the string at the prompts that appear when you
@@ -755,8 +745,7 @@
                 <listitem>
                   <para>Specifies the new key's key version number as an integer from the range 0 (zero) through 255.</para>
 
-                  <para>Remember the number. You need to use it again in Step <link linkend="LIWQ367">6</link>. If you are using the
-                  international edition of AFS, be sure to type the same number each time you issue this command.</para>
+                  <para>Remember the number. You need to use it again in Step <link linkend="LIWQ367">6</link>.</para>
                 </listitem>
               </varlistentry>
 
@@ -766,8 +755,7 @@
                 <listitem>
                   <para>Is a character string similar to a user password, of any length from one to about 1,000 characters. To
                   improve security, include nonalphabetic characters and make the string as long as is practical (you need to type
-                  it only in this step and in Step <link linkend="LIWQ367">6</link>). If you are using the international edition of
-                  AFS, be sure to type the same string each time you issue this command.</para>
+                  it only in this step and in Step <link linkend="LIWQ367">6</link>).</para>
 
                   <para>Do not enter an octal string directly. The BOS Server scrambles the character string into an octal string
                   appropriate for use as an encryption key before recording it in the <emphasis role="bold">KeyFile</emphasis>
@@ -1006,13 +994,10 @@
           <para>Issue the <emphasis role="bold">bos removekey</emphasis> command to remove one or more server encryption keys from
           the <emphasis role="bold">KeyFile</emphasis> file.</para>
 
-          <para>If you run the United States edition of AFS and use the Update Server to distribute the contents of the system
+          <para>If you use the Update Server to distribute the contents of the system
           control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, substitute the system control machine for the
           machine name argument. (If you have forgotten which machine is the system control machine, see <link linkend="HDRWQ96">To
           locate the system control machine</link>.)</para>
-
-          <para>If you run the international edition of AFS or do not use the Update Server, repeat the <emphasis role="bold">bos
-          removekey</emphasis> command, substituting each server machine in your cell for the machine name argument in turn.</para>
 
           <programlisting>
    % <emphasis role="bold">bos removekey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>key version number</replaceable>&gt;
@@ -1173,7 +1158,7 @@
       system control machine first. If the Update Server is working, then it is distributing the same change as you are making on
       each server machine individually.</para>
 
-      <para>If your cell does not use the Update Server, or uses the international edition of AFS, you always change keys on server
+      <para>If your cell does not use the Update Server or you always change keys on server
       machines individually. The following instructions are also appropriate for you.</para>
     </sect2>
 

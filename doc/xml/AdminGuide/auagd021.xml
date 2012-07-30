@@ -713,13 +713,10 @@
         <secondary>as distributor of UserList file</secondary>
       </indexterm></para>
 
-    <para>If your cell runs the United States edition of AFS and uses the Update Server to distribute the contents of the system
+    <para>If your cell uses the Update Server to distribute the contents of the system
     control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, then edit only the copy of the <emphasis
     role="bold">UserList</emphasis> file stored on the system control machine. If you have forgotten which machine is the system
     control machine, see <link linkend="HDRWQ90">The Four Roles for File Server Machines</link>.</para>
-
-    <para>If your cell runs the international edition of AFS, or does not use a system control machine, then you must edit the
-    <emphasis role="bold">UserList</emphasis> file on each server machine individually.</para>
 
     <para>To avoid making formatting errors that can result in performance problems, never edit the <emphasis
     role="bold">UserList</emphasis> file directly. Instead, use the <emphasis role="bold">bos adduser</emphasis> or <emphasis
@@ -830,12 +827,9 @@
 
                 <listitem>
                   <para>Names the system control machine if you use the Update Server to distribute the contents of the <emphasis
-                  role="bold">/usr/afs/etc</emphasis> directory (possible only in cells running the United States edition of AFS).
+                  role="bold">/usr/afs/etc</emphasis> directory.
                   By default, it can take up to five minutes for the Update Server to distribute the changes, so newly added users
                   must wait that long before attempting to issue privileged commands.</para>
-
-                  <para>If you are running the international edition of AFS, or do not use the Update Server, repeat the command,
-                  substituting the name of each AFS server machine for machine name in turn.</para>
                 </listitem>
               </varlistentry>
 
@@ -909,12 +903,9 @@
 
                 <listitem>
                   <para>Names the system control machine if you use the Update Server to distribute the contents of the <emphasis
-                  role="bold">/usr/afs/etc</emphasis> directory (possible only in cells running the United States edition of AFS).
+                  role="bold">/usr/afs/etc</emphasis> directory.
                   By default, it can take up to five minutes for the Update Server to distribute the change, so newly removed users
                   can continue to issue privileged commands during that time.</para>
-
-                  <para>If you are running the international edition of AFS, or do not use the Update Server, repeat the command,
-                  substituting the name of each AFS server machine for machine name in turn.</para>
                 </listitem>
               </varlistentry>
 

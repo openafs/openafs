@@ -989,22 +989,11 @@
           </indexterm>
 
           <listitem>
-            <para>Cells that run the United States edition of AFS conventionally use the Update Server to distribute a common
+            <para>Cells conventionally use the Update Server to distribute a common
             version of each file from the cell's system control machine to other server machines (for more on the system control
             machine, see <link linkend="HDRWQ94">The System Control Machine</link>). Run the Update Server's server portion on the
             system control machine, and the client portion on all other server machines. Update the files on the system control
             machine only, except as directed by instructions for dealing with emergencies.</para>
-          </listitem>
-
-          <listitem>
-            <para>Cells that run the international edition of AFS must not use the Update Server to distribute the contents of the
-            <emphasis role="bold">/usr/afs/etc</emphasis> directory. Due to United States government regulations, the data
-            encryption routines that AFS uses to protect the files in this directory as they cross the network are not available to
-            the Update Server in the international edition of AFS. You must instead update the files on each server machine
-            individually, taking extra care to issue exactly the same <emphasis role="bold">bos</emphasis> command for each machine.
-            The necessary data encryption routines are available to the <emphasis role="bold">bos</emphasis> commands, so
-            information is safe as it crosses the network from the machine where the <emphasis role="bold">bos</emphasis> command is
-            issued to the server machines.</para>
           </listitem>
         </itemizedlist></para>
 
@@ -1877,9 +1866,7 @@
 
         <listitem>
           <para>The single <emphasis>system control machine</emphasis> distributes common server configuration files to all other
-          server machines in the cell, in a cell that runs the United States edition of AFS (cells that use the international
-          edition of AFS must not use the system control machine for this purpose). The machine conventionally also serves as the
-          time synchronization source for the cell, adjusting its clock according to a time source outside the cell.</para>
+          server machines in the cell.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -1935,8 +1922,8 @@
           </listitem>
 
           <listitem>
-            <para>A client portion of the Update Server that picks up common configuration files from the system control machine, in
-            cells running the United States edition of AFS (the <emphasis role="bold">upclientetc</emphasis> process)</para>
+            <para>A client portion of the Update Server that picks up common configuration files from the system control machine
+            (the <emphasis role="bold">upclientetc</emphasis> process)</para>
           </listitem>
         </itemizedlist></para>
 
@@ -2097,20 +2084,12 @@
     <sect2 id="HDRWQ94">
       <title>The System Control Machine</title>
 
-      <para>In cells that run the United States edition of AFS, the <emphasis>system control machine</emphasis> stores and
+      <para>The <emphasis>system control machine</emphasis> stores and
       distributes system configuration files shared by all of the server machines in the cell. Each file server machine keeps its
       own copy of the configuration files on its local disk, by convention in the <emphasis role="bold">/usr/afs/etc</emphasis>
       directory. For consistent system performance, however, all server machines must use the same files. The easiest way to keep
       the files consistent is to have the system control machine distribute them. You make changes only to the copy stored on the
-      system control machine, as directed by the instructions in this document. The United States edition of AFS is available to
-      cells in the United States and Canada and to selected institutions in other countries, as determined by United States
-      government regulations.</para>
-
-      <para>Cells that run the international version of AFS do not use the system control machine to distribute system configuration
-      files. Some of the files contain information that is too sensitive to cross the network unencrypted, and United States
-      government regulations forbid the export of the necessary encryption routines in the form that the Update Server uses. You
-      must instead update the configuration files on each file server machine individually. The <emphasis role="bold">bos</emphasis>
-      commands that you use to update the files encrypt the information using an exportable form of the encryption routines.</para>
+      system control machine, as directed by the instructions in this document.</para>
 
       <para>For a list of the configuration files stored in the <emphasis role="bold">/usr/afs/etc</emphasis> directory, see <link
       linkend="HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</link>.</para>
@@ -2138,8 +2117,8 @@
           </indexterm>
 
           <listitem>
-            <para>The server portion of the Update Server (<emphasis role="bold">upserver</emphasis>) process, in cells using the
-            United States edition of AFS. The client portion of the Update Server (<emphasis role="bold">upclientetc</emphasis>
+            <para>The server portion of the Update Server (<emphasis role="bold">upserver</emphasis>) process
+            The client portion of the Update Server (<emphasis role="bold">upclientetc</emphasis>
             process) runs on the other server machines and references the system control machine.</para>
           </listitem>
 
@@ -2348,7 +2327,7 @@
    Command 1 is '/usr/afs/bin/upclient fs7.example.com -t 60 /usr/afs/bin'
 </programlisting>
 
-      <para>If you run the United States edition of AFS, a simple file server machine also runs the <emphasis
+      <para>A simple file server machine also runs the <emphasis
       role="bold">upclientetc</emphasis> process, so the output includes a message like the following. It indicates that <emphasis
       role="bold">fs1.example.com</emphasis> is the system control machine.</para>
 
@@ -2361,7 +2340,7 @@
       <sect3 id="HDRWQ99">
         <title>The Output on the System Control Machine</title>
 
-        <para>If you run the United States edition of AFS and have issued the <emphasis role="bold">bos status</emphasis> command
+        <para>If you have issued the <emphasis role="bold">bos status</emphasis> command
         for the system control machine, the output includes an entry for the <emphasis role="bold">upserver</emphasis> process
         similar to the following:</para>
 
@@ -2571,10 +2550,10 @@
               a coordinator in each of several subgroups of machines, because the Ubik processes on various machines do not agree on
               which machines need to participate in the quorum.</para>
 
-              <para>If you run the United States version of AFS and use the Update Server, it is simplest to maintain the <emphasis
+              <para>If you use the Update Server, it is simplest to maintain the <emphasis
               role="bold">/usr/afs/etc/CellServDB</emphasis> file on the system control machine, which distributes its copy to all
               other server machines. The <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to configure the Update Server.
-              If you run the international version of AFS, you must update the file on each machine individually.</para>
+              </para>
 
               <para>The only reason to alter the file is when configuring or decommissioning a database server machine. Use the
               appropriate <emphasis role="bold">bos</emphasis> commands rather than editing the file by hand. For instructions, see
@@ -4018,12 +3997,9 @@
       context. This section explains how to distribute the file to your server machines and how to make other cells aware of the
       changes if you participate in the AFS global name space.</para>
 
-      <para>If you use the United States edition of AFS, use the Update Server to distribute the central copy of the server
-      <emphasis role="bold">CellServDB</emphasis> file stored on the cell's system control machine. If you use the international
-      edition of AFS, instead change the file on each server machine individually. For further discussion of the system control
-      machine and why international cells must not use it for files in the <emphasis role="bold">/usr/afs/etc</emphasis> directory,
-      see <link linkend="HDRWQ94">The System Control Machine</link>. For instructions on configuring the Update Server when using
-      the United States version of AFS, see the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
+      <para>If you use the Update Server to distribute the central copy of the server
+      <emphasis role="bold">CellServDB</emphasis> file stored on the cell's system control machine. 
+      For instructions on configuring the Update Server, see the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
       <para>To avoid formatting errors that can cause errors, always use the <emphasis role="bold">bos addhost</emphasis> and
       <emphasis role="bold">bos removehost</emphasis> commands, rather than editing the file directly. You must also restart the
@@ -4233,11 +4209,10 @@
 
         <listitem>
           <para>Issue the <emphasis role="bold">bos addhost</emphasis> command to add each new database server machine to the
-          <emphasis role="bold">CellServDB</emphasis> file. If you use the United States edition of AFS, specify the system control
+          <emphasis role="bold">CellServDB</emphasis> file. Specify the system control
           machine as <emphasis>machine name</emphasis>. (If you have forgotten which machine is the system control machine, see
-          <link linkend="HDRWQ99">The Output on the System Control Machine</link>.) If you use the international edition of AFS,
-          repeat the command on each or your cell's server machines in turn by substituting its name for <emphasis>machine
-          name</emphasis>. <programlisting>
+          <link linkend="HDRWQ99">The Output on the System Control Machine</link>.)
+<programlisting>
    % <emphasis role="bold">bos addhost</emphasis>  &lt;<replaceable>machine name</replaceable>&gt;  &lt;<replaceable>host name</replaceable>&gt;+
 </programlisting></para>
 
@@ -4254,8 +4229,7 @@
                 <term><emphasis role="bold">machine name</emphasis></term>
 
                 <listitem>
-                  <para>Names the system control machine, if you are using the United States edition of AFS. If you are using the
-                  international edition of AFS, it names each of your server machines in turn.</para>
+                  <para>Names the system control machine</para>
                 </listitem>
               </varlistentry>
 
@@ -4388,11 +4362,10 @@
 
         <listitem>
           <para>Issue the <emphasis role="bold">bos removehost</emphasis> command to remove each database server machine from the
-          <emphasis role="bold">CellServDB</emphasis> file. If you use the United States edition of AFS, specify the system control
+          <emphasis role="bold">CellServDB</emphasis> file. Specify the system control
           machine as <emphasis>machine name</emphasis>. (If you have forgotten which machine is the system control machine, see
-          <link linkend="HDRWQ99">The Output on the System Control Machine</link>.) If you use the international edition of AFS,
-          repeat the command on each or your cell's server machines in turn by substituting its name for <emphasis>machine
-          name</emphasis>. <programlisting>
+          <link linkend="HDRWQ99">The Output on the System Control Machine</link>.)
+<programlisting>
    % <emphasis role="bold">bos removehost</emphasis> &lt;<replaceable>machine name</replaceable>&gt;  &lt;<replaceable>host name</replaceable>&gt;+
 </programlisting></para>
 
@@ -4409,8 +4382,7 @@
                 <term><emphasis role="bold">machine name</emphasis></term>
 
                 <listitem>
-                  <para>Names the system control machine, if you are using the United States edition of AFS. If you are using the
-                  international edition of AFS, it names each of your server machines in turn.</para>
+                  <para>Names the system control machine.</para>
                 </listitem>
               </varlistentry>
 
@@ -5503,7 +5475,7 @@
         <listitem>
           <para>If the machine is a database server machine, edit its entry in the <emphasis
           role="bold">/usr/afs/etc/CellServDB</emphasis> file on every server machine in the cell to list one of the new IP
-          addresses. If you use the United States edition of AFS, you can edit the file on the system control machine and wait the
+          addresses. You can edit the file on the system control machine and wait the
           required time (by default, five minutes) for the Update Server to distribute the changed file to all server
           machines.</para>
         </listitem>

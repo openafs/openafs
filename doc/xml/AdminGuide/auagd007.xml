@@ -2192,12 +2192,8 @@
         <listitem>
           <para>The single <emphasis>system control machine</emphasis>
           distributes common server configuration files to all other
-          server machines in the cell, in a cell that runs the United
-          States edition of AFS (cells that use the international edition
-          of AFS must not use the system control machine for this
-          purpose). The machine conventionally also serves as the time
-          synchronization source for the cell, adjusting its clock
-          according to a time source outside the cell.</para>
+          server machines in the cell.
+          </para>
         </listitem>
     </itemizedlist>
     </para>
@@ -4505,7 +4501,7 @@
       </itemizedlist>
       </para>
 
-      <para>In addition, the United States edition of the Update Server
+      <para>In addition, the Update Server
       encrypts sensitive information (such as the contents of <emphasis
       role="bold">KeyFile</emphasis>) when distributing it. Other commands
       in the <emphasis role="bold">bos</emphasis> suite and the commands
