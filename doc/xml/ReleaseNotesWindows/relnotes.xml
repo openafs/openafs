@@ -96,6 +96,16 @@
           <listitem>
             <para>Microsoft Windows 2008 Server R2 (64-bit Intel)</para>
           </listitem>
+          <listitem>
+            <para>Microsoft Windows 8 Release Preview (32-bit and 64-bit Intel)</para>
+            <para><emphasis role="italic">(not guaranteed to work with the final
+              release)</emphasis></para>
+          </listitem>
+          <listitem>
+            <para>Microsoft Windows Server 2012 Release Preview (64-bit Intel)</para>
+            <para><emphasis role="italic">(not guaranteed to work with the final
+              release)</emphasis></para>
+          </listitem>
         </itemizedlist>
       </para>
     </section>
@@ -142,9 +152,11 @@
       <para>
         <indexterm significance="normal">
           <primary>disk space required</primary>
-        </indexterm>
-      Up to 60mb required for the OpenAFS binaries plus 100MB for the default AFSCache file. The size of the AFSCache file may be adjusted via <link linkend="Regkey_TransarcAFSDaemon_Parameters_CacheSize">the Registry</link> after installation.  The maximum cache size for 32-bit Windows is approximately 1.2GB.  On 64-bit Windows there is no practical limit on the cache size.
-      </para>
+        </indexterm> Up to 60mb required for the OpenAFS binaries plus 100MB for the default
+        AFSCache file. The size of the AFSCache file may be adjusted via <link
+          linkend="Regkey_TransarcAFSDaemon_Parameters_CacheSize">the Registry</link> after
+        installation. The maximum cache size for 32-bit Windows is approximately 1.2GB. On 64-bit
+        Windows there is no enforced limit on the cache size. </para>
     </section>
     <section>
       <title id="Additional_Software_Packages">2.3 Additional Software Packages</title>
@@ -473,9 +485,9 @@
       <para>The OpenAFS for Windows client will use DNS SRV records and DNS AFSDB records to
         discover the location of AFS Volume Database servers when entries for the cell are not
         present in either the client's CellServDB registry store or file
-        (\%PROGRAMFILES%\OpenAFS\Client\CellServDB). Also see <link
-          linkend="Registry_VLDB_Configuration">Registry Configuration for AFS Volume Database
-          Servers</link>.</para>
+        (\%ALLUSERSPROFILE%\OpenAFS\Client\CellServDB or \%PROGRAMFILES%\OpenAFS\Client\CellServDB).
+        Also see <link linkend="Registry_VLDB_Configuration">Registry Configuration for AFS Volume
+          Database Servers</link>.</para>
     </section>
     <section>
       <title id="Integrated_Logon">3.6. Obtaining AFS Tokens as a Integrated Part of Windows Logon</title>
@@ -500,12 +512,12 @@
       <indexterm significance="normal">
         <primary>tokens</primary>
       </indexterm>
-      <para>OpenAFS for Windows installs a WinLogon Network Provider to provide Single Sign-On
-        functionality (aka Integrated Logon.) Integrated Logon can be used to obtain AFS tokens when
-        the Windows username and password match the username and password associated with the
-        default cell's Kerberos realm. For example, if the Windows username is "jaltman" and the
-        default cell is "your-file-system.com", then Integrated Logon can be successfully used if
-        the windows password matches the password assigned to the Kerberos principal
+      <para>OpenAFS for Windows installs a WinLogon Authentication Provider to provide Single
+        Sign-On functionality (aka Integrated Logon.) Integrated Logon can be used to obtain AFS
+        tokens when the Windows username and password match the username and password associated
+        with the default cell's Kerberos realm. For example, if the Windows username is "jaltman"
+        and the default cell is "your-file-system.com", then Integrated Logon can be successfully
+        used if the windows password matches the password assigned to the Kerberos principal
         "jaltman@YOUR-FILE-SYSTEM.COM". The realm "YOUR-FILE-SYSTEM.COM" is obtained by performing a
         domain name to realm mapping on the hostname of one of the cell's Volume Database
         servers.</para>
@@ -513,14 +525,146 @@
         system. OpenAFS does not provide tools for synchronizing the Windows and Kerberos user
         accounts and passwords.  Integrated Logon can be enabled or disabled via the <link
           linkend="Value_LogonOptions">LogonOptions</link> registry value.</para>
-      <para>When KFW is configured, Integrated Logon will use it to obtain tokens. Use of KFW for Integrated Logon can be disabled via the
-        <link linkend="Value_EnableKFW">EnableKFW</link> registry value.
-      </para>
+      <para>When Heimdal or KFW is installed, Integrated Logon will use it to obtain tokens using
+        Kerberos v5. If you must use the <emphasis role="italic">deprecated</emphasis> kaserver for
+        authentication instead of Kerberos v5, the use of KFW can be disabled via the <link
+          linkend="Value_EnableKFW">EnableKFW</link> registry value. </para>
       <para>Integrated Logon will not transfer Kerberos v5 tickets into the user's logon session credential cache.  This is no longer possible on Vista and Windows 7.</para>
-      <para>Integrated Logon does not have the ability to cache the user's username and password for the purpose of obtaining tokens if the Kerberos KDC is inaccessible at logon time.</para>
-      <para>Integrated Logon supports the ability to obtain tokens for multiple cells. For further information on how to configure this feature, read about the
-        <link linkend="Value_TheseCells">TheseCells</link> value.
+      <para>Integrated Logon does not have the ability to cache the username and password for the
+        purpose of obtaining tokens if the Kerberos KDC is inaccessible at logon time.</para>
+      <para>Integrated Logon supports the ability to obtain tokens for multiple cells.  For further
+        information on how to configure this feature, read about the <link
+          linkend="Value_TheseCells">TheseCells</link> registry value. </para>
+      <para>Depending on the configuration of the local machine, it is possible for logon
+        authentication to complete with one of the following user account types:</para>
+      <para>
+        <itemizedlist>
+          <listitem>
+            <para>Local Machine Account (<emphasis role="italic">LOCALHOST</emphasis> domain)</para>
+          </listitem>
+          <listitem>
+            <para>Domain or Forest Account</para>
+          </listitem>
+          <listitem>
+            <para>Domain or Forest Account NETBIOS-compatible name</para>
+          </listitem>
+          <listitem>
+            <para>Kerberos Principal mapped to a local or domain or forest account</para>
+          </listitem>
+        </itemizedlist>
       </para>
+      <para>For each "domain" context, the following properties are configurable:</para>
+      <itemizedlist>
+        <listitem>
+          <para>Obtain AFS Tokens at Logon</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>Alternate Kerberos Realm Name - combined with the username to construct a Kerberos
+            principal</para>
+        </listitem>
+        <listitem>
+          <para>TheseCells - A list of cell names other than the workstation cell for which tokens
+            should be obtained</para>
+        </listitem>
+        <listitem>
+          <para>Fail Logons Silently</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+          
+        </listitem>
+        <listitem>
+          <para>Logon Script to Execute</para>
+        </listitem>
+        <listitem>
+          <para>Logon Retry Interval</para>
+        </listitem>
+        <listitem>
+          <para>Logon Sleep between Failure Interval</para>
+        </listitem>
+      </itemizedlist>
+      <para>Within a "domain" context it is often desireable to apply alternate rules for a
+        particular user.  The rules can include a username substitution.</para>
+      <para>
+        <itemizedlist>
+          <listitem>
+            <para>Obtain AFS Tokens at Logon</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+          <listitem>
+            <para>Alternate User Name</para>
+          </listitem>
+          <listitem>
+            <para>Alternate Kerberos Realm Name - combined with the username to construct a Kerberos
+              principal</para>
+          </listitem>
+          <listitem>
+            <para>TheseCells - A list of cell names other than the workstation cell for which tokens
+              should be obtained</para>
+          </listitem>
+          <listitem>
+            <para>Fail Logons Silently</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+          <listitem>
+            <para>Logon Script to Execute</para>
+          </listitem>
+          <listitem>
+            <para>Logon Retry Interval</para>
+          </listitem>
+          <listitem>
+            <para>Logon Sleep between Failure Interval</para>
+          </listitem>
+        </itemizedlist>
+      </para>
+      <para>The  configuration hierarchy is specified in the registry under the
+        HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain key.   For
+        example:</para>
+      <para>
+        <itemizedlist>
+          <listitem>
+            <para>...\NetworkProvider\Domain\LOCALHOST\</para>
+          </listitem>
+          <listitem>
+            <para>...\NetworkProvider\Domain\LOCALHOST\Administrator\</para>
+          </listitem>
+          <listitem>
+            <para>...\NetworkProvider\Domain\AD\</para>
+          </listitem>
+          <listitem>
+            <para>...\NetworkProvider\Domain\AD.EXAMPLE.ORG\</para>
+          </listitem>
+        </itemizedlist>
+      </para>
+      <para> From the perspective of configuration, the Full domain name and the
+        NETBIOS-compatibility name are separate entities.  </para>
     </section>
     <section>
       <title id="AFS_System_Tray">3.7. AFS Authentication Tool Command Line Options</title>
@@ -1068,7 +1212,6 @@
           </tbody>
         </tgroup>
       </informaltable>
-      <para></para>
       <para>The pre-1.5.50 OpenAFS Client provided an optional registry value,
         <link linkend="Value_StoreAnsiFilenames">StoreAnsiFilenames</link>, that could be set to instruct OpenAFS to store filenames using the ANSI Code Page instead of the OEM Code Page. The ANSI Code Page is a compatible superset of Latin-1. This setting is not the default setting because making this change would prevent OpenAFS for Windows from being able to access filenames containing the above characters which were created without this setting.
       </para>
@@ -2947,7 +3090,6 @@
             </tbody>
           </tgroup>
         </informaltable>
-        <para></para>
         <para>The example adds domain specific keys for 'ATHENA.MIT.EDU' (enable integrated logon) and 'LOCALHOST' (disable integrated logon and fail logins silently).</para>
       </section>
       <section>
@@ -4636,9 +4778,13 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
           <para>HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider</para>
           <para> |</para>
           <para> +- Domain</para>
-          <para> +-AD1.EXAMPLE.COM</para>
-          <para> +-AD2.EXAMPLE.NET</para>
-          <para> +-LOCALHOST</para>
+          <para>      +-AD1.EXAMPLE.COM</para>
+          <para>      +-AD1</para>
+          <para>      +-AD2.EXAMPLE.NET</para>
+          <para>      +-AD2</para>
+          <para>      +-LOCALHOST</para>
+          <para>           +-Administrator</para>
+          <para>           +-Other User</para>
           <para>Each of the domain specific keys can have the set of values described in 2.1.1. The
             effective values are chosen as described in 2.1.2.</para>
         </section>
@@ -4651,7 +4797,11 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
               [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain
               name"]
-              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain
+              name"]["user name"]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\"user name"]
+            </title>
             <section>
               <title id="Domain_Specific_Regkeys_LogonOptions">Value: LogonOptions</title>
               <indexterm significance="normal">
@@ -4661,7 +4811,10 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
                 >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: DWORD </para>
               <para> Default: 0x01</para>
               <para>NSIS/WiX: depends on user configuration</para>
@@ -4681,7 +4834,10 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: DWORD (1|0) </para>
               <para> Default: 0 </para>
               <para> NSIS/WiX: (not set)</para>
@@ -4696,7 +4852,10 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: REG_SZ or REG_EXPAND_SZ </para>
               <para> Default: (null) </para>
               <para> NSIS/WiX: (only value under NP key) &lt;install path&gt;\afscreds.exe -:%s -x
@@ -4716,7 +4875,10 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: DWORD </para>
               <para> Default: 30 </para>
               <para> NSIS/WiX: (not set)</para>
@@ -4733,7 +4895,10 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: DWORD </para>
               <para> Default: 5 </para>
               <para> NSIS/WiX: (not set)</para>
@@ -4748,7 +4913,10 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
                 >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: REG_SZ </para>
               <para> NSIS: &lt;not set&gt;</para>
               <para>When Kerberos v5 is being used, Realm specifies the Kerberos v5 realm that
@@ -4764,11 +4932,28 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
                 >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
                 name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
               <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
               <para>Type: REG_MULTI_SZ </para>
               <para> NSIS: &lt;not set&gt;</para>
               <para>When Kerberos v5 is being used, TheseCells provides a list of additional cells
                 for which tokens should be obtained with the default Kerberos v5 principal.</para>
+            </section>
+            <section>
+              <title id="Domain_User_Specific_Regkeys_Username">Value: Username</title>
+              <indexterm significance="normal">
+                <primary>Username</primary>
+              </indexterm>
+              <para id="Value_Username"
+                >[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: REG_SZ </para>
+              <para> NSIS: &lt;not set&gt;</para>
+              <para>Username specifies an alternate username to be combined with the Realm when constructing
+                the Kerberos v5 principal for which AFS tokens should be obtained.</para>
             </section>
           </section>
         </section>
