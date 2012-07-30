@@ -1,3 +1,122 @@
+Since 1.7.1500 (1.7.15)
+
+ * Rx RPC improvements
+   - protect against ACKs with invalid serial numbers.
+   - issue rx abort on packets received for an unknown
+     service.
+
+ * Avoid exception in NPAddConnection when debugging
+
+ * Perform server probes in background threads.
+
+ * Use afsroken.dll as a shared memory allocator across
+   the entire product tree.
+
+ * Use RX Peer RPC statistics for RXAFS_GetCapabilities
+   and VL_ProbeServer to compute server rankings in place
+   of RX peer RTT statistics.  Server rankings are now
+   computed using administrator preferences (if any),
+   network address locality and peer RPC performance.
+
+ * Correct afsredirlib.sys memory corrupting bugs
+   - Incorrect end of extent list calculation permits
+     FCB structure deallocation while still in use.
+   - Freed SeQueryInformationToken allocation from
+     afsredir.sys
+   - avoid memory overwrite during extent tear down
+     processing if extents are in use.
+
+ * Correct afsredirlib.sys memory leaks
+   - pioctl directory cb non-paged pool leak
+   - volume cb non-paged pool leak
+
+ * Replace cm_SyncOp CM_SCACHEFLAG_WAITING flag with
+   a runtime test of the wait queue empty state.
+
+ * When processing RXAFS_FetchData[64] RPCs, a short
+   read from rx_Read[v] is not a reason to stop processing
+   the call unles it is the first read and the file server
+   FetchData offset bug has been detected.  If not, only
+   stop processing if the rx_Read[v] return value is less
+   than or equal to zero.
+
+ * Track mount point target data by data version.  Store
+   the data version in the cm_scache_t object.
+
+ * While processing cm_MergeStatus, if the status information
+   interface number is unknown, skip the merge.
+
+ * Use spin locks and interlocked operations for osi base
+   locks.
+
+ * Avoid holding the cm_user_t->mx during force new
+   connection processing in cm_ConnByServer().
+
+ * Optimize cm_HaveCallback() evaluation for .readonly
+   volumes.
+
+ * Handle RXAFS_GetVolumeStatus() RPC failures due to the
+   user permissions on the root directory being lookup
+   only.
+
+ * Restore OfflineReadOnlyIsValid functionality which was
+   broken in a prior release.
+
+ * afscreds.exe now attempts to import MSLSA credentals before
+   renewing expired tokens.
+
+ * Remove old HELP file from afscreds.exe
+
+ * Integrated Logon improvements
+   - Permit confirmation for specific user@Domain accounts
+   - Avoid redundant get credential operations.
+   - Import MSLSA credentials when possible.
+
+ * Return STATUS_MEDIA_PROTECTED if create on a .readonly
+   is attempted.
+
+ * Implement NPGetConnectionPerformance() in the AFSRDFS
+   Network Provider.  The lack of this function was the cause
+   of the 20 second delays from the Explorer Shell.
+
+ * Shell Extension improvements
+   - Only add property pages if the selected object(s) are
+     in AFS.
+   - Display error during Symlink creation if the path is
+     not in AFS.
+
+ * Apply directory notification to the correct kernel object
+   during invalidation processing.  Notifications in some
+   cases were not applied to the parent directory.
+
+ * Treat cm_serverRef_t lists that contain only deleted
+   entries as if they were empty.
+
+ * Force VLDB lookup if the server reference list for the
+   volume is empty.
+
+ * During volume location updates, ignore replica sites that
+   have the DONOTUSE flag set.  If at the end of processing
+   there is only one valid site for a volume, it is not
+   replicated.
+
+ * Track volume creation date for all RPCs except RXAFS_BulkStatus
+   and RXAFS_InlineBulkStatus unless the ReadonlyVolumeVersioning
+   option is on.
+
+ * During NPLogonNotify processing, impersonate the current
+   user context when deleting Kerberos tickets.
+
+
+ * Any error dialogs presented by NPLogonNotify must be system
+   modal in order to prevent them from becoming accidentally
+   hidden.
+
+ * Add support for sending NPLogonNotify debug messages via
+   OutputDebugString.
+
+ * Only register afslogon.dll as an Authentication Provider.
+
 Since 1.7.1400 (1.7.14)
 
  * Avoid kernel deadlock on VolumeCB->VolumeLock that can
