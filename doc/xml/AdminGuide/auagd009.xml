@@ -583,7 +583,7 @@
       role="bold">upserver</emphasis> process is the server portion of the Update Server. Its function depends on which edition of
       AFS you use: <itemizedlist>
           <listitem>
-            <para>With both the United States and international editions, it runs on the binary distribution machine of each system
+            <para>It runs on the binary distribution machine of each system
             type you use as a server machine, distributing the contents of each one's <emphasis role="bold">/usr/afs/bin</emphasis>
             directory to the other server machines of that type. This guarantees that all machines have the same version of AFS
             binaries. (For a list of the binaries, see <link linkend="HDRWQ84">Binaries in the /usr/afs/bin
@@ -591,7 +591,7 @@
           </listitem>
 
           <listitem>
-            <para>In you use the United States edition of AFS, it also runs on the cell's system control machine, distributing the
+            <para>It also runs on the cell's system control machine, distributing the
             contents of its <emphasis role="bold">/usr/afs/etc</emphasis> directory to all the other server machines in order to
             synchronize the configuration files stored in that directory. (For a list of the configuration files, see <link
             linkend="HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</link>.)</para>
@@ -608,7 +608,7 @@
           </listitem>
 
           <listitem>
-            <para>If you use the United States edition of AFS, another instance of the process runs on every server machine except
+            <para>Another instance of the process runs on every server machine except
             the system control machine. It references the system control machine as the source for updates to the common
             configuration files in the <emphasis role="bold">/usr/afs/etc</emphasis> directory. The conventional process name to
             assign is <emphasis role="bold">upclientetc</emphasis>.</para>
@@ -993,17 +993,11 @@
       of the Update Server client portion (by convention called <emphasis role="bold">upclientbin</emphasis>) that references the
       binary distribution machine.</para>
 
-      <para>If you run the United States edition of AFS, it is conventional for the first server machine you install to act as the
+      <para>It is conventional for the first server machine you install to act as the
       system control machine, running the server portion of the Update Server (<emphasis role="bold">upserver</emphasis> process) to
       distribute the contents of its <emphasis role="bold">/usr/afs/etc</emphasis> directory. All other server machines run an
       instance of the Update Server client portion (by convention called <emphasis role="bold">upclientetc</emphasis>) that
       references the system control machine.</para>
-
-      <note>
-        <para>If you are using the international edition of AFS, do not use the Update Server to distribute the contents of the
-        <emphasis role="bold">/usr/afs/etc</emphasis> directory (you do not run a system control machine). Ignore all references to
-        the process in this chapter.</para>
-      </note>
 
       <para>It is simplest not to move binary distribution or system control responsibilities to a different machine unless you
       completely decommission a machine that is currently serving in one of those roles. Running the Update Server usually imposes
