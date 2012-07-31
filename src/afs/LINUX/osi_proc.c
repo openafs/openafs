@@ -138,11 +138,13 @@ uu_start(struct seq_file *m, loff_t *pos)
     loff_t n = 0;
     afs_int32 i;
 
-    if (!*pos)
-	return (void *)(1);
-
     AFS_GLOCK();
     ObtainReadLock(&afs_xuser);
+
+    if (!*pos) {
+	ret = (void *)(1);
+	goto done;
+    }
 
     ret = NULL;
 
