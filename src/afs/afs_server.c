@@ -1194,16 +1194,6 @@ afs_SetServerPrefs(struct srvAddr *sa)
 	}
 	net = afsifinfo[i].ipaddr & netmask;
 
-#ifdef notdef
-	if (!s) {
-	    if (!rx_IsLoopbackAddr(afsifinfo[i].ipaddr)) {	/* ignore loopback */
-		*cnt += 1;
-		if (*cnt > 16)
-		    return;
-		*addrp++ = afsifinfo[i].ipaddr;
-	    }
-	} else
-#endif /* notdef */
         {
             /* XXXXXX Do the individual ip ranking below XXXXX */
             if ((sa->sa_ip & netmask) == net) {
@@ -1255,16 +1245,6 @@ afs_SetServerPrefs(struct srvAddr *sa)
 		netmask = 0;
 	    }
 	    net = ipif->ipif_local_addr & netmask;
-#ifdef notdef
-	    if (!s) {
-		if (!rx_IsLoopbackAddr(ipif->ipif_local_addr)) {	/* ignore loopback */
-		    *cnt += 1;
-		    if (*cnt > 16)
-			return;
-		    *addrp++ = ipif->ipif_local_addr;
-		}
-	    } else
-#endif /* notdef */
 	    {
 		/* XXXXXX Do the individual ip ranking below XXXXX */
 		if ((sa->sa_ip & netmask) == net) {
@@ -1300,20 +1280,6 @@ afs_SetServerPrefs(struct srvAddr *sa)
     struct sockaddr_in *sin;
 
     if (!sa) {
-#ifdef notdef			/* clean up, remove this */
-	for (ifn = ifnet; ifn != NULL; ifn = ifn->if_next) {
-	    for (ifad = ifn->if_addrlist; ifad != NULL; ifad = ifad->ifa_next) {
-		if ((IFADDR2SA(ifad)->sa_family == AF_INET)
-		    && !(ifn->if_flags & IFF_LOOPBACK)) {
-		    *cnt += 1;
-		    if (*cnt > 16)
-			return;
-		    *addrp++ =
-			((struct sockaddr_in *)IFADDR2SA(ifad))->sin_addr.
-			s_addr;
-		}
-	}}
-#endif				/* notdef */
 	return;
     }
     sa->sa_iprank = 0;
