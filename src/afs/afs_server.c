@@ -1154,7 +1154,7 @@ afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
 }
 #endif				/* AFS_SGI62_ENV */
 static int
-afs_SetServerPrefs(struct srvAddr *sa)
+afs_SetServerPrefs(struct srvAddr *const sa)
 {
 #if     defined(AFS_USERSPACE_IP_ADDR)
     int i;
@@ -1176,8 +1176,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #endif
     int subnet, subnetmask, net, netmask;
 
-    if (sa)
-	  sa->sa_iprank = 0;
+    sa->sa_iprank = 0;
 #ifdef AFS_SUN510_ENV
     rw_enter(&afsifinfo_lock, RW_READER);
 
@@ -1279,9 +1278,6 @@ afs_SetServerPrefs(struct srvAddr *sa)
     struct in_ifaddr *ifad = (struct in_ifaddr *)0;
     struct sockaddr_in *sin;
 
-    if (!sa) {
-	return;
-    }
     sa->sa_iprank = 0;
     ifn = rxi_FindIfnet(sa->sa_ip, &ifad);
     if (ifn) {			/* local, more or less */
@@ -1319,8 +1315,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
     }
 #else				/* USEIFADDR */
 
-    if (sa)
-	sa->sa_iprank = LO;
+    sa->sa_iprank = LO;
 #ifdef AFS_SGI62_ENV
     (void)hash_enum(&hashinfo_inaddr, afsi_enum_set_rank, HTF_INET, NULL,
 		    (caddr_t) sa, NULL);
@@ -1390,8 +1385,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 #endif
 #endif				/* AFS_SUN5_ENV */
 #endif				/* else AFS_USERSPACE_IP_ADDR */
-    if (sa)
-	  sa->sa_iprank += afs_randomMod15();
+    sa->sa_iprank += afs_randomMod15();
 
     return 0;
 }				/* afs_SetServerPrefs */
