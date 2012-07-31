@@ -103,7 +103,7 @@ initAFSDirPath(void)
 static void
 initDirPathArray(void)
 {
-    char *pathp;
+    char *pathp, *clntEtcDir;
     const char *clientPrefix = "";
     const char *serverPrefix = "";
 
@@ -228,7 +228,7 @@ initDirPathArray(void)
 #else
     strcpy(dirPathArray[AFSDIR_CLIENT_VICE_DIRPATH_ID], afsClntDirPath);
 
-    pathp = dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID];
+    clntEtcDir = pathp = dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID];
 #ifdef AFS_DARWIN_ENV
     if (access(AFSDIR_ALTERNATE_CLIENT_ETC_DIR, F_OK) == 0)
 	AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_ALTERNATE_CLIENT_ETC_DIR);
@@ -397,24 +397,20 @@ initDirPathArray(void)
 	   "/NoCellAliasOnWindows");
 #else
     pathp = dirPathArray[AFSDIR_CLIENT_THISCELL_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_THISCELL_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_THISCELL_FILE);
 
     pathp = dirPathArray[AFSDIR_CLIENT_CELLSERVDB_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_CELLSERVDB_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_CELLSERVDB_FILE);
 
     pathp = dirPathArray[AFSDIR_CLIENT_CELLALIAS_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_CELLALIAS_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_CELLALIAS_FILE);
 #endif /* AFS_NT40_ENV */
 
     pathp = dirPathArray[AFSDIR_CLIENT_NETINFO_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR, AFSDIR_NETINFO_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_NETINFO_FILE);
 
     pathp = dirPathArray[AFSDIR_CLIENT_NETRESTRICT_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_NETRESTRICT_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_NETRESTRICT_FILE);
 
     initFlag = 1;		/* finished dirpath initialization */
     return;
