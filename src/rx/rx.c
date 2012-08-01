@@ -6163,11 +6163,11 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
  * haveCTLock Set if calling from rxi_ReapConnections
  */
 #ifdef RX_ENABLE_LOCKS
-int
-static rxi_CheckCall(struct rx_call *call, int haveCTLock)
+static int
+rxi_CheckCall(struct rx_call *call, int haveCTLock)
 #else /* RX_ENABLE_LOCKS */
-int
-static rxi_CheckCall(struct rx_call *call)
+static int
+rxi_CheckCall(struct rx_call *call)
 #endif				/* RX_ENABLE_LOCKS */
 {
     struct rx_connection *conn = call->conn;
@@ -6222,31 +6222,31 @@ static rxi_CheckCall(struct rx_call *call)
     if (now > (call->lastReceiveTime + deadTime)) {
 	if (call->state == RX_STATE_ACTIVE) {
 #ifdef ADAPT_PMTU
-#if defined(KERNEL) && defined(AFS_SUN5_ENV)
+# if defined(KERNEL) && defined(AFS_SUN5_ENV)
 	    ire_t *ire;
-#if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
-	    netstack_t *ns =  netstack_find_by_stackid(GLOBAL_NETSTACKID);
+#  if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
+	    netstack_t *ns = netstack_find_by_stackid(GLOBAL_NETSTACKID);
 	    ip_stack_t *ipst = ns->netstack_ip;
-#endif
+#  endif
 	    ire = ire_cache_lookup(conn->peer->host
-#if defined(AFS_SUN510_ENV) && defined(ALL_ZONES)
+#  if defined(AFS_SUN510_ENV) && defined(ALL_ZONES)
 				   , ALL_ZONES
-#if defined(AFS_SUN510_ENV) && (defined(ICL_3_ARG) || defined(GLOBAL_NETSTACKID))
+#    if defined(ICL_3_ARG) || defined(GLOBAL_NETSTACKID)
 				   , NULL
-#if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
+#     if defined(GLOBAL_NETSTACKID)
 				   , ipst
-#endif
-#endif
-#endif
+#     endif
+#    endif
+#  endif
 		);
 
 	    if (ire && ire->ire_max_frag > 0)
 		rxi_SetPeerMtu(NULL, conn->peer->host, 0,
 			       ire->ire_max_frag);
-#if defined(GLOBAL_NETSTACKID)
+#  if defined(GLOBAL_NETSTACKID)
 	    netstack_rele(ns);
-#endif
-#endif
+#  endif
+# endif
 #endif /* ADAPT_PMTU */
 	    cerror = RX_CALL_DEAD;
 	    goto mtuout;
