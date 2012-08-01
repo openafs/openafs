@@ -18,8 +18,15 @@
 
 #include <linux/version.h>
 #include "rx/rx_kcommon.h"
+#include "rx.h"
+#include "rx_atomic.h"
+#include "rx_globals.h"
+#include "rx_stats.h"
+#include "rx_peer.h"
+#include "rx_packet.h"
+#include "rx_internal.h"
 #include <asm/uaccess.h>
-#ifdef ADAPT_PMTU
+#ifdef AFS_RXERRQ_ENV
 #include <linux/errqueue.h>
 #include <linux/icmp.h>
 #endif
@@ -35,9 +42,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct socket *sockp;
     struct sockaddr_in myaddr;
     int code;
-#ifdef ADAPT_PMTU
+#ifdef AFS_ADAPT_PMTU
     int pmtu = IP_PMTUDISC_WANT;
-    int do_recverr = 1;
 #else
     int pmtu = IP_PMTUDISC_DONT;
 #endif
@@ -67,9 +73,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 
     kernel_setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
 		      sizeof(pmtu));
-#ifdef ADAPT_PMTU
-    kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&do_recverr,
-                      sizeof(do_recverr));
+#ifdef AFS_RXERRQ_ENV
+    {
+	int recverr = 1;
+	kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&recverr,
+	                  sizeof(recverr));
+    }
 #endif
     return (osi_socket *)sockp;
 }
@@ -88,7 +97,7 @@ rxk_FreeSocket(struct socket *asocket)
     return 0;
 }
 
-#ifdef ADAPT_PMTU
+#ifdef AFS_RXERRQ_ENV
 void
 handle_socket_error(osi_socket so)
 {
@@ -130,12 +139,14 @@ handle_socket_error(osi_socket so)
 
     memcpy(&addr, offender, sizeof(addr));
 
+# ifdef AFS_ADAPT_PMTU
     if (err->ee_origin == SO_EE_ORIGIN_ICMP &&
 	err->ee_type == ICMP_DEST_UNREACH &&
 	err->ee_code == ICMP_FRAG_NEEDED) {
 	rxi_SetPeerMtu(NULL, ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port),
 		       err->ee_info);
     }
+# endif
     /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
 
 out:
@@ -156,7 +167,7 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 {
     struct msghdr msg;
     int code;
-#ifdef ADAPT_PMTU
+#ifdef AFS_RXERRQ_ENV
     int sockerr;
     int esize;
 
@@ -208,7 +219,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 {
     struct msghdr msg;
     int code;
-#ifdef ADAPT_PMTU
+#ifdef AFS_RXERRQ_ENV
     int sockerr;
     int esize;
 #endif
@@ -218,7 +229,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     if (iovcnt > RX_MAXWVECS + 2) {
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
     }
-#ifdef ADAPT_PMTU
+#ifdef AFS_RXERRQ_ENV
     while (1) {
 	sockerr=0;
 	esize = sizeof(sockerr);

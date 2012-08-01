@@ -36,10 +36,10 @@
 #define IPPORT_USERRESERVED 5000
 # endif
 
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#if defined(AFS_LINUX22_ENV) && defined(AFS_RXERRQ_ENV)
 # include <linux/types.h>
 # include <linux/errqueue.h>
-# ifndef IP_MTU
+# if defined(AFS_ADAPT_PMTU) && !defined(IP_MTU)
 #  define IP_MTU 14
 # endif
 #endif
@@ -50,6 +50,7 @@
 #include "rx_stats.h"
 #include "rx_peer.h"
 #include "rx_packet.h"
+#include "rx_internal.h"
 
 #ifdef AFS_PTHREAD_ENV
 
@@ -94,9 +95,8 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
 #ifdef AFS_LINUX22_ENV
-# if defined(ADAPT_PMTU)
+# if defined(AFS_ADAPT_PMTU)
     int pmtu = IP_PMTUDISC_WANT;
-    int recverr = 1;
 # else
     int pmtu = IP_PMTUDISC_DONT;
 # endif
@@ -198,9 +198,12 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 
 #ifdef AFS_LINUX22_ENV
     setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
-#if defined(ADAPT_PMTU)
-    setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr, sizeof(recverr));
 #endif
+#ifdef AFS_RXERRQ_ENV
+    {
+	int recverr = 1;
+	setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr, sizeof(recverr));
+    }
 #endif
     if (rxi_Listen(socketFd) < 0) {
 	goto error;
@@ -668,7 +671,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
     afs_uint32 ppaddr;
     u_short rxmtu;
     int ix;
-#if defined(ADAPT_PMTU) && defined(IP_MTU)
+#ifdef AFS_ADAPT_PMTU
     int sock;
     struct sockaddr_in addr;
 #endif
@@ -715,7 +718,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
-#if defined(ADAPT_PMTU) && defined(IP_MTU)
+#ifdef AFS_ADAPT_PMTU
     sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock != OSI_NULLSOCKET) {
         addr.sin_family = AF_INET;
@@ -773,12 +776,11 @@ rx_SetMaxMTU(int mtu)
     return 0;
 }
 
-#if defined(ADAPT_PMTU)
+#ifdef AFS_RXERRQ_ENV
 int
 rxi_HandleSocketError(int socket)
 {
-    int ret=0;
-#if defined(HAVE_LINUX_ERRQUEUE_H)
+    int ret = 0;
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
@@ -813,14 +815,15 @@ rxi_HandleSocketError(int socket)
     ret = 1;
     err = (struct sock_extended_err *) CMSG_DATA(cmsg);
 
+# ifdef AFS_ADAPT_PMTU
     if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
 	rxi_SetPeerMtu(NULL, addr.sin_addr.s_addr, addr.sin_port,
                        err->ee_info - RX_IPUDP_SIZE);
     }
+# endif
     /* other DEST_UNREACH's and TIME_EXCEEDED should be dealt with too */
 
 out:
-#endif
     return ret;
 }
 #endif

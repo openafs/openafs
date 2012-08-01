@@ -6221,7 +6221,7 @@ rxi_CheckCall(struct rx_call *call)
      * number of seconds. */
     if (now > (call->lastReceiveTime + deadTime)) {
 	if (call->state == RX_STATE_ACTIVE) {
-#ifdef ADAPT_PMTU
+#ifdef AFS_ADAPT_PMTU
 # if defined(KERNEL) && defined(AFS_SUN5_ENV)
 	    ire_t *ire;
 #  if defined(AFS_SUN510_ENV) && defined(GLOBAL_NETSTACKID)
@@ -6247,7 +6247,7 @@ rxi_CheckCall(struct rx_call *call)
 	    netstack_rele(ns);
 #  endif
 # endif
-#endif /* ADAPT_PMTU */
+#endif /* AFS_ADAPT_PMTU */
 	    cerror = RX_CALL_DEAD;
 	    goto mtuout;
 	} else {
