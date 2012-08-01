@@ -99,6 +99,15 @@
 #include <features.h>
 #endif
 
+#ifdef notyet
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(HAVE_SETSOCKOPT_IP_RECVERR)
+# define AFS_RXERRQ_ENV
+#endif
+#ifdef AFS_RXERRQ_ENV
+# define AFS_ADAPT_PMTU
+#endif
+#endif
+
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
 #define USE_UCONTEXT
