@@ -125,9 +125,14 @@ osi_HandleSocketError(osi_socket so)
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
 	goto out;
 
-    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-	if (CMSG_OK(&msg, cmsg) && cmsg->cmsg_level == SOL_IP &&
-	    cmsg->cmsg_type == IP_RECVERR)
+    /* kernel_recvmsg changes msg_control to point at the _end_ of the buffer,
+     * and msg_controllen is set to the number of bytes remaining */
+    msg.msg_controllen = ((char*)msg.msg_control - (char*)controlmsgbuf);
+    msg.msg_control = controlmsgbuf;
+
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg && CMSG_OK(&msg, cmsg);
+         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+	if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
 	    break;
     }
     if (!cmsg)
