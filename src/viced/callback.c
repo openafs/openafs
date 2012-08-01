@@ -457,10 +457,8 @@ XCallBackBulk_r(struct host * ahost, struct AFSFid * fids, afs_int32 nfids)
     int j;
     struct rx_connection *cb_conn = NULL;
 
-#ifdef	ADAPT_MTU
     rx_SetConnDeadTime(ahost->callback_rxcon, 4);
     rx_SetConnHardDeadTime(ahost->callback_rxcon, AFS_HARDDEADTIME);
-#endif
 
     code = 0;
     j = 0;
@@ -694,10 +692,8 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 	multi_to_cba_map[j] = i;
 	conns[j++] = thishost->callback_rxcon;
 
-#ifdef	ADAPT_MTU
 	rx_SetConnDeadTime(thishost->callback_rxcon, 4);
 	rx_SetConnHardDeadTime(thishost->callback_rxcon, AFS_HARDDEADTIME);
-#endif
     }
 
     if (j) {			/* who knows what multi would do with 0 conns? */

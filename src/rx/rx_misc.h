@@ -14,9 +14,6 @@
 #ifndef _RX_MISC_H_
 #define _RX_MISC_H_
 
-#define MISCMTU
-#define ADAPT_MTU
-
 #if defined(AFS_SUN5_ENV)
 #include <sys/sockio.h>
 #include <sys/fcntl.h>

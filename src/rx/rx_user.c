@@ -685,7 +685,6 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	UNLOCK_IF_INIT;
     }
 
-#ifdef ADAPT_MTU
     /* try to second-guess IP, and identify which link is most likely to
      * be used for traffic to/from this host. */
     ppaddr = ntohl(pp->host);
@@ -716,10 +715,6 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
-#else /* ADAPT_MTU */
-    rx_rto_setPeerTimeoutSecs(pp, 2);
-    pp->ifMTU = MIN(rx_MyMaxSendSize, OLD_MAX_PACKET_SIZE);
-#endif /* ADAPT_MTU */
 #if defined(ADAPT_PMTU) && defined(IP_MTU)
     sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock != OSI_NULLSOCKET) {

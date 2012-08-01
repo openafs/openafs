@@ -365,9 +365,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
 {
     u_short rxmtu;
 
-#ifdef	ADAPT_MTU
-# ifndef AFS_SUN5_ENV
-#  ifdef AFS_USERSPACE_IP_ADDR
+#ifndef AFS_SUN5_ENV
+# ifdef AFS_USERSPACE_IP_ADDR
     afs_int32 i;
     afs_int32 mtu;
 
@@ -387,25 +386,25 @@ rxi_InitPeerParams(struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     }
-#  else /* AFS_USERSPACE_IP_ADDR */
+# else /* AFS_USERSPACE_IP_ADDR */
     rx_ifnet_t ifn;
 
-#   if !defined(AFS_SGI62_ENV)
+#  if !defined(AFS_SGI62_ENV)
     if (numMyNetAddrs == 0)
 	(void)rxi_GetIFInfo();
-#   endif
+#  endif
 
     ifn = rxi_FindIfnet(pp->host, NULL);
     if (ifn) {
 	rx_rto_setPeerTimeoutSecs(pp, 2);
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
-#   ifdef IFF_POINTOPOINT
+#  ifdef IFF_POINTOPOINT
 	if (rx_ifnet_flags(ifn) & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
 	    rx_rto_setPeerTimeoutSecs(pp, 4);
 	    pp->ifMTU = RX_PP_PACKET_SIZE;
 	}
-#   endif /* IFF_POINTOPOINT */
+#  endif /* IFF_POINTOPOINT */
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
 	if (rx_ifnet_mtu(ifn) > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
@@ -417,8 +416,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
-#  endif /* else AFS_USERSPACE_IP_ADDR */
-# else /* AFS_SUN5_ENV */
+# endif /* else AFS_USERSPACE_IP_ADDR */
+#else /* AFS_SUN5_ENV */
     afs_int32 mtu;
 
     mtu = rxi_FindIfMTU(pp->host);
@@ -438,11 +437,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     }
-# endif /* AFS_SUN5_ENV */
-#else /* ADAPT_MTU */
-    rx_rto_setPeerTimeoutSecs(pp, 2);
-    pp->ifMTU = OLD_MAX_PACKET_SIZE;
-#endif /* else ADAPT_MTU */
+#endif /* AFS_SUN5_ENV */
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
     pp->maxMTU = OLD_MAX_PACKET_SIZE;	/* for compatibility with old guys */
     pp->natMTU = MIN(pp->ifMTU, OLD_MAX_PACKET_SIZE);
