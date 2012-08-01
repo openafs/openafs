@@ -98,20 +98,21 @@ rxk_FreeSocket(struct socket *asocket)
 }
 
 #ifdef AFS_RXERRQ_ENV
-void
-handle_socket_error(osi_socket so)
+int
+osi_HandleSocketError(osi_socket so)
 {
+    int ret = 0;
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
     struct sockaddr_in addr;
     struct sockaddr *offender;
-    char *controlmsgbuf;
+    char *controlmsgbuf = NULL;
     int code;
     struct socket *sop = (struct socket *)so;
 
-    if (!(controlmsgbuf=rxi_Alloc(256)))
-	return;
+    if (!(controlmsgbuf = rxi_Alloc(256)))
+	goto out;
     msg.msg_name = &addr;
     msg.msg_namelen = sizeof(addr);
     msg.msg_control = controlmsgbuf;
@@ -131,6 +132,8 @@ handle_socket_error(osi_socket so)
     }
     if (!cmsg)
 	goto out;
+
+    ret = 1;
     err = CMSG_DATA(cmsg);
     offender = SO_EE_OFFENDER(err);
     
@@ -141,9 +144,11 @@ handle_socket_error(osi_socket so)
 
     rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
 
-out:
-    rxi_Free(controlmsgbuf, 256);
-    return;
+ out:
+    if (controlmsgbuf) {
+	rxi_Free(controlmsgbuf, 256);
+    }
+    return ret;
 }
 #endif
 
@@ -159,18 +164,10 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 {
     struct msghdr msg;
     int code;
-#ifdef AFS_RXERRQ_ENV
-    int sockerr;
-    int esize;
 
-    while (1) {
-	sockerr=0;
-	esize = sizeof(sockerr);
-	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
-	if (sockerr == 0)
-	   break;
-	handle_socket_error(sop);
-    }
+#ifdef AFS_RXERRQ_ENV
+    while (osi_HandleSocketError(sop))
+	;
 #endif
 
     msg.msg_name = to;
@@ -211,26 +208,18 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 {
     struct msghdr msg;
     int code;
-#ifdef AFS_RXERRQ_ENV
-    int sockerr;
-    int esize;
-#endif
     struct iovec tmpvec[RX_MAXWVECS + 2];
     struct socket *sop = (struct socket *)so;
 
     if (iovcnt > RX_MAXWVECS + 2) {
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
     }
+
 #ifdef AFS_RXERRQ_ENV
-    while (1) {
-	sockerr=0;
-	esize = sizeof(sockerr);
-	kernel_getsockopt(sop, SOL_SOCKET, SO_ERROR, (char *)&sockerr, &esize);
-	if (sockerr == 0)
-	   break;
-	handle_socket_error(so);
-    }
+    while (osi_HandleSocketError(so))
+	;
 #endif
+
     memcpy(tmpvec, iov, iovcnt * sizeof(struct iovec));
     msg.msg_name = from;
     msg.msg_iov = tmpvec;
