@@ -37,11 +37,11 @@
 # endif
 
 #if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
-#include <linux/types.h>
-#include <linux/errqueue.h>
-#ifndef IP_MTU
-#define IP_MTU 14
-#endif
+# include <linux/types.h>
+# include <linux/errqueue.h>
+# ifndef IP_MTU
+#  define IP_MTU 14
+# endif
 #endif
 
 #include "rx.h"
@@ -94,12 +94,12 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
 #ifdef AFS_LINUX22_ENV
-#if defined(ADAPT_PMTU)
-    int pmtu=IP_PMTUDISC_WANT;
-    int recverr=1;
-#else
-    int pmtu=IP_PMTUDISC_DONT;
-#endif
+# if defined(ADAPT_PMTU)
+    int pmtu = IP_PMTUDISC_WANT;
+    int recverr = 1;
+# else
+    int pmtu = IP_PMTUDISC_DONT;
+# endif
 #endif
 
 #if !defined(AFS_NT40_ENV)
@@ -728,11 +728,11 @@ rxi_InitPeerParams(struct rx_peer *pp)
                 pp->ifMTU = MIN(mtu - RX_IPUDP_SIZE, pp->ifMTU);
             }
         }
-#ifdef AFS_NT40_ENV
+# ifdef AFS_NT40_ENV
         closesocket(sock);
-#else
+# else
         close(sock);
-#endif
+# endif
     }
 #endif
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
@@ -810,8 +810,8 @@ rxi_HandleSocketError(int socket)
     }
     if (!cmsg)
         goto out;
-    ret=1;
-    err =(struct sock_extended_err *) CMSG_DATA(cmsg);
+    ret = 1;
+    err = (struct sock_extended_err *) CMSG_DATA(cmsg);
 
     if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
 	rxi_SetPeerMtu(NULL, addr.sin_addr.s_addr, addr.sin_port,
