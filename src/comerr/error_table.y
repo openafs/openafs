@@ -183,7 +183,7 @@ void add_ec(const char *name, const char *description)
 #else
                 fprintf(msfile, "%d %s\n", current, description);
 #endif /* !sun */
-        } else {
+        } else if (cfile){
 	    fprintf(cfile, "\t\"%s\",\n", description);
 	}
 	if (error_codes == NULL) {
@@ -206,7 +206,7 @@ void add_ec_val(const char *name, const char *val, const char *description)
 	}
       
 	while (ncurrent > current) {
-	     if (!msfile)
+	     if (cfile)
 		 fputs("\tNULL,\n", cfile);
 	     current++;
 	 }
@@ -217,7 +217,7 @@ void add_ec_val(const char *name, const char *val, const char *description)
 #else
                 fprintf(msfile, "%d %s\n", current, description);
 #endif /* ! sun */
-        } else {	
+        } else if (cfile) {
 	    fprintf(cfile, "\t\"%s\",\n", description);
 	}
 	if (error_codes == NULL) {
@@ -233,6 +233,8 @@ void add_ec_val(const char *name, const char *val, const char *description)
 void put_ecs(void)
 {
 	int i;
+	if (!hfile)
+	    return;
 	for (i = 0; i < current; i++) {
 	     if (error_codes[i] != NULL)
 		  fprintf(hfile, "#define %-40s (%ldL)\n",
@@ -275,7 +277,7 @@ int char_to_num(char c)
 
 void set_table_num(char *string)
 {
-        if (msfile) {
+        if (use_msf) {
 	    set_table_1num(string);
 	    return;
 	}
@@ -312,7 +314,7 @@ void set_table_fun(char *astring)
             exit(1);
         }
     }
-    if (msfile) 
+    if (use_msf)
 	table_number += (atoi(astring)) << 28;
 }
 
