@@ -1313,9 +1313,7 @@ afs_SetServerPrefs(struct srvAddr *sa)
 	return;
     }
     sa->sa_iprank = 0;
-#ifdef	ADAPT_MTU
     ifn = rxi_FindIfnet(sa->sa_ip, &ifad);
-#endif
     if (ifn) {			/* local, more or less */
 #ifdef IFF_LOOPBACK
 	if (ifn->if_flags & IFF_LOOPBACK) {
