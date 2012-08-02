@@ -63,6 +63,9 @@ struct rx_peer {
     struct rx_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
     afs_int32 maxPacketSize;    /* peer packetsize hint */
+#ifdef AFS_RXERRQ_ENV
+    rx_atomic_t neterrs;
+#endif
 };
 
 #endif

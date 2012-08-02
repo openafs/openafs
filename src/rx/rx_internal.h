@@ -5,6 +5,14 @@
  * customers of RX belong in rx_private.h, which is installed.
  */
 
+#ifdef AFS_RXERRQ_ENV
+# if defined(AFS_LINUX26_ENV) || defined(AFS_USR_LINUX26_ENV)
+#  include <linux/module.h>
+#  include <linux/types.h>
+#  include <linux/errqueue.h>
+#  include <linux/icmp.h>
+# endif
+#endif
 
 /* Globals that we don't want the world to know about */
 extern rx_atomic_t rx_nWaiting;
@@ -16,6 +24,10 @@ extern rx_atomic_t rx_nWaited;
 extern void rxi_PacketsUnWait(void);
 extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
 			   afs_uint32 port, int mtu);
+#ifdef AFS_RXERRQ_ENV
+extern void rxi_ProcessNetError(struct sock_extended_err *err,
+                                afs_uint32 addr, afs_uint16 port);
+#endif
 extern struct rx_peer *rxi_FindPeer(afs_uint32 host, u_short port,
 				    struct rx_peer *origPeer, int create);
 extern struct rx_packet *rxi_ReceivePacket(struct rx_packet *np,

@@ -1626,6 +1626,13 @@ rx_NewCall(struct rx_connection *conn)
     else
 	call->mode = RX_MODE_SENDING;
 
+#ifdef AFS_RXERRQ_ENV
+    /* remember how many network errors the peer has when we started, so if
+     * more errors are encountered after the call starts, we know the other endpoint won't be
+     * responding to us */
+    call->neterr_gen = rx_atomic_read(&conn->peer->neterrs);
+#endif
+
     /* remember start time for call in case we have hard dead time limit */
     call->queueTime = queueTime;
     clock_GetTime(&call->startTime);
@@ -2910,6 +2917,51 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
     MUTEX_EXIT(&rx_peerHashTable_lock);
 }
 
+#ifdef AFS_RXERRQ_ENV
+static void
+rxi_SetPeerDead(afs_uint32 host, afs_uint16 port)
+{
+    int hashIndex = PEER_HASH(host, port);
+    struct rx_peer *peer;
+
+    MUTEX_ENTER(&rx_peerHashTable_lock);
+
+    for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
+	if (peer->host == host && peer->port == port) {
+	    break;
+	}
+    }
+
+    if (peer) {
+	rx_atomic_inc(&peer->neterrs);
+    }
+
+    MUTEX_EXIT(&rx_peerHashTable_lock);
+}
+
+void
+rxi_ProcessNetError(struct sock_extended_err *err, afs_uint32 addr, afs_uint16 port)
+{
+# ifdef AFS_ADAPT_PMTU
+    if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
+	rxi_SetPeerMtu(NULL, addr, port, err->ee_info - RX_IPUDP_SIZE);
+	return;
+    }
+# endif
+    if (err->ee_origin == SO_EE_ORIGIN_ICMP && err->ee_type == ICMP_DEST_UNREACH) {
+	switch (err->ee_code) {
+	case ICMP_NET_UNREACH:
+	case ICMP_HOST_UNREACH:
+	case ICMP_PORT_UNREACH:
+	case ICMP_NET_ANO:
+	case ICMP_HOST_ANO:
+	    rxi_SetPeerDead(addr, port);
+	    break;
+	}
+    }
+}
+#endif /* AFS_RXERRQ_ENV */
+
 /* Find the peer process represented by the supplied (host,port)
  * combination.  If there is no appropriate active peer structure, a
  * new one will be allocated and initialized
@@ -2933,6 +2985,9 @@ rxi_FindPeer(afs_uint32 host, u_short port,
 	    pp = rxi_AllocPeer();	/* This bzero's *pp */
 	    pp->host = host;	/* set here or in InitPeerParams is zero */
 	    pp->port = port;
+#ifdef AFS_RXERRQ_ENV
+	    rx_atomic_set(&pp->neterrs, 0);
+#endif
 	    MUTEX_INIT(&pp->peer_lock, "peer_lock", MUTEX_DEFAULT, 0);
 	    queue_Init(&pp->rpcStats);
 	    pp->next = rx_peerHashTable[hashIndex];
@@ -3200,6 +3255,11 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	 */
 
 	if (peer && (peer->refCount > 0)) {
+#ifdef AFS_RXERRQ_ENV
+	    if (rx_atomic_read(&peer->neterrs)) {
+		rx_atomic_set(&peer->neterrs, 0);
+	    }
+#endif
 	    MUTEX_ENTER(&peer->peer_lock);
 	    peer->bytesReceived += np->length;
 	    MUTEX_EXIT(&peer->peer_lock);
@@ -3253,6 +3313,12 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
                              np, 0);
         return np;
     }
+
+#ifdef AFS_RXERRQ_ENV
+    if (rx_atomic_read(&conn->peer->neterrs)) {
+	rx_atomic_set(&conn->peer->neterrs, 0);
+    }
+#endif
 
     /* If we're doing statistics, then account for the incoming packet */
     if (rx_stats_active) {
@@ -6178,6 +6244,23 @@ rxi_CheckCall(struct rx_call *call)
     int newmtu = 0;
     int idle_timeout = 0;
     afs_int32  clock_diff = 0;
+
+#ifdef AFS_RXERRQ_ENV
+    int peererrs = rx_atomic_read(&call->conn->peer->neterrs);
+    if (call->neterr_gen < peererrs) {
+	/* we have received network errors since this call started; kill
+	 * the call */
+	if (call->state == RX_STATE_ACTIVE) {
+	    rxi_CallError(call, RX_CALL_DEAD);
+	}
+	return -1;
+    }
+    if (call->neterr_gen > peererrs) {
+	/* someone has reset the number of peer errors; set the call error gen
+	 * so we can detect if more errors are encountered */
+	call->neterr_gen = peererrs;
+    }
+#endif
 
     now = clock_Sec();
 
