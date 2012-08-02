@@ -157,6 +157,9 @@ struct rx_call {
 #endif
     afs_uint32 call_id;
 #endif
+#ifdef AFS_RXERRQ_ENV
+    int neterr_gen;
+#endif
 };
 
 /* Only include this once, even when re-loading for kdump. */
