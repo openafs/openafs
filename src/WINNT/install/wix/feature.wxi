@@ -280,6 +280,7 @@
 				<ComponentRef Id="cmp_SDK_Include" />
 				<ComponentRef Id="cmp_SDK_Include_afs" />
 				<ComponentRef Id="cmp_SDK_Include_hcrypto" />
+				<ComponentRef Id="cmp_SDK_Include_opr" />
 				<ComponentRef Id="cmp_SDK_Include_rx" />
 				<ComponentRef Id="cmp_SDK_Include_Winnt" />
 				<ComponentRef Id="cmp_SDK_Lib" />

@@ -1450,9 +1450,12 @@
             <Directory Id="dirSDK" Name="SDK">
                     <Directory Id="dirInclude" Name="Include">
                         <Component Id="cmp_SDK_Include" Guid="2229E5F7-1D23-4088-AF85-917CCDB2634D">
+                            <File Id="fileafsconfig_H" Name="afscfg.h" LongName="afsconfig.h" DiskId="1" src="$(var.IncDir)afsconfig.h" />
+                            <File Id="filebase64_H" Name="base64.h" LongName="base64.h" DiskId="1" src="$(var.IncDir)base64.h" />
                             <File Id="filebasic_H" Name="basic.h" LongName="basic.h" DiskId="1" src="$(var.IncDir)basic.h" /> 
                             <File Id="filedbrpc_H" Name="dbrpc.h" LongName="dbrpc.h" DiskId="1" src="$(var.IncDir)dbrpc.h" /> 
                             <File Id="filedirent_H" Name="dirent.h" LongName="dirent.h" DiskId="1" src="$(var.IncDir)dirent.h" />
+                            <File Id="fileerr_H" Name="err.h" LongName="err.h" DiskId="1" src="$(var.IncDir)err.h" />
                             <File Id="filelargeint_H" Name="largeint.h" LongName="largeint.h" DiskId="1" src="$(var.IncDir)largeint.h" /> 
                             <File Id="filelock_H" Name="lock.h" LongName="lock.h" DiskId="1" src="$(var.IncDir)lock.h" /> 
                             <File Id="filelwp_H" Name="lwp.h" LongName="lwp.h" DiskId="1" src="$(var.IncDir)lwp.h" /> 
@@ -1467,25 +1470,29 @@
                             <File Id="fileosiqueue_H" Name="osiqueue.h" LongName="osiqueue.h" DiskId="1" src="$(var.IncDir)osiqueue.h" /> 
                             <File Id="fileosisleep_H" Name="osisleep.h" LongName="osisleep.h" DiskId="1" src="$(var.IncDir)osisleep.h" /> 
                             <File Id="fileosistatl_H" Name="osistatl.h" LongName="osistatl.h" DiskId="1" src="$(var.IncDir)osistatl.h" /> 
-                            <File Id="fileosithrdnt_H" Name="OSITHRNT.h" LongName="osithrdnt.h" DiskId="1" src="$(var.IncDir)osithrdnt.h" />
+                            <File Id="fileosithrdnt_H" Name="osithrdn.h" LongName="osithrdnt.h" DiskId="1" src="$(var.IncDir)osithrdnt.h" />
                             <File Id="fileosiutils_H" Name="osiutils.h" LongName="osiutils.h" DiskId="1" src="$(var.IncDir)osiutils.h" /> 
                             <File Id="fileperf_H" Name="perf.h" LongName="perf.h" DiskId="1" src="$(var.IncDir)perf.h" /> 
                             <File Id="filepreempt_H" Name="preempt.h" LongName="preempt.h" DiskId="1" src="$(var.IncDir)preempt.h" /> 
                             <File Id="filepthread_H" Name="pthread.h" LongName="pthread.h" DiskId="1" src="$(var.IncDir)pthread.h" /> 
+                            <File Id="fileroken_common_H" Name="rokencmn.h" LongName="roken-common.h" DiskId="1" src="$(var.IncDir)roken-common.h" />
+                            <File Id="fileroken_H" Name="roken.h" LongName="roken.h" DiskId="1" src="$(var.IncDir)roken.h" />
+                            <File Id="filesearch_H" Name="search.h" LongName="search.h" DiskId="1" src="$(var.IncDir)search.h" />
                             <File Id="filetimer_H" Name="timer.h" LongName="timer.h" DiskId="1" src="$(var.IncDir)timer.h" /> 
                             <File Id="filetrylock_H" Name="trylock.h" LongName="trylock.h" DiskId="1" src="$(var.IncDir)trylock.h" /> 
                             <File Id="fileubik_H" Name="ubik.h" LongName="ubik.h" DiskId="1" src="$(var.IncDir)ubik.h" /> 
                             <File Id="fileubik_int_H" Name="ubik_int.h" LongName="ubik_int.h" DiskId="1" src="$(var.IncDir)ubik_int.h" /> 
-                            <File Id="fileroken_H" Name="roken.h" LongName="roken.h" DiskId="1" src="$(var.IncDir)roken.h" /> 
                         </Component>
                         <Directory Id="dirIncludeAfs" Name="afs">
                             <Component Id="cmp_SDK_Include_afs" Guid="DDAE87DF-AFA8-4EAF-BE9C-6A32D6D4ED06">
                                 <File Id="fileacl_H" Name="acl.h" LongName="acl.h" DiskId="1" src="$(var.IncDir)afs\acl.h" /> 
                                 <File Id="fileafscbint_H" Name="afscbint.h" LongName="afscbint.h" DiskId="1" src="$(var.IncDir)afs\afscbint.h" /> 
-                                <File Id="fileafsconfig_H" Name="AFSCONFG.h" LongName="afsconfig.h" DiskId="1" src="$(var.IncDir)afs\afsconfig.h" />
+                                <File Id="fileafsafsconfig_H" Name="AFSCONFG.h" LongName="afsconfig.h" DiskId="1" src="$(var.IncDir)afs\afsconfig.h" />
+                                <File Id="fileafscp_H" Name="afscp.h" LongName="afscp.h" DiskId="1" src="$(var.IncDir)afs\afscp.h" />
                                 <File Id="fileafsd_H" Name="afsd.h" LongName="afsd.h" DiskId="1" src="$(var.IncDir)afs\afsd.h" /> 
                                 <File Id="fileafsdicon_H" Name="afsdicon.h" LongName="afsdicon.h" DiskId="1" src="$(var.IncDir)afs\afsdicon.h" /> 
                                 <File Id="fileafsd_eventlog_H" Name="AFSD_EVL.h" LongName="afsd_eventlog.h" DiskId="1" src="$(var.IncDir)afs\afsd_eventlog.h" />
+                                <File Id="fileafsicf_H" Name="afsicf.h" LongName="afsicf.h" DiskId="1" src="$(var.IncDir)afs\afsicf.h" />
                                 <File Id="fileafsint_H" Name="afsint.h" LongName="afsint.h" DiskId="1" src="$(var.IncDir)afs\afsint.h" /> 
                                 <File Id="fileafskfw_H" Name="afskfw.h" LongName="afskfw.h" DiskId="1" src="$(var.IncDir)afs\afskfw.h" /> 
                                 <File Id="fileafsrpc_H" Name="afsrpc.h" LongName="afsrpc.h" DiskId="1" src="$(var.IncDir)afs\afsrpc.h" /> 
@@ -1514,6 +1521,7 @@
                                 <File Id="fileafs_vosAdmin_H" Name="AFS_VOS1.h" LongName="afs_vosAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_vosAdmin.h" />
                                 <File Id="fileaudit_H" Name="audit.h" LongName="audit.h" DiskId="1" src="$(var.IncDir)afs\audit.h" /> 
                                 <File Id="fileauth_H" Name="auth.h" LongName="auth.h" DiskId="1" src="$(var.IncDir)afs\auth.h" /> 
+                                <File Id="filebc_H" Name="bc.h" LongName="bc.h" DiskId="1" src="$(var.IncDir)afs\bc.h" />
                                 <File Id="filebnode_H" Name="bnode.h" LongName="bnode.h" DiskId="1" src="$(var.IncDir)afs\bnode.h" /> 
                                 <File Id="filebosint_H" Name="bosint.h" LongName="bosint.h" DiskId="1" src="$(var.IncDir)afs\bosint.h" /> 
                                 <File Id="filebubasics_H" Name="bubasics.h" LongName="bubasics.h" DiskId="1" src="$(var.IncDir)afs\bubasics.h" /> 
@@ -1540,15 +1548,20 @@
                                 <File Id="filecm_dnlc_H" Name="cm_dnlc.h" LongName="cm_dnlc.h" DiskId="1" src="$(var.IncDir)afs\cm_dnlc.h" /> 
                                 <File Id="filecm_dns_H" Name="cm_dns.h" LongName="cm_dns.h" DiskId="1" src="$(var.IncDir)afs\cm_dns.h" /> 
                                 <File Id="filecm_dns_private_H" Name="CM_DNS_P.h" LongName="cm_dns_private.h" DiskId="1" src="$(var.IncDir)afs\cm_dns_private.h" />
+                                <File Id="filecm_eacces_H" Name="cm_eacce.h" LongName="cm_eacces.h" DiskId="1" src="$(var.IncDir)afs\cm_eacces.h" />
+                                <File Id="filecm_error_H" Name="cm_error.h" LongName="cm_error.h" DiskId="1" src="$(var.IncDir)afs\cm_error.h" />
                                 <File Id="filecm_freelance_H" Name="CMFREEL.h" LongName="cm_freelance.h" DiskId="1" src="$(var.IncDir)afs\cm_freelance.h" />
                                 <File Id="filecm_ioctl_H" Name="cm_ioctl.h" LongName="cm_ioctl.h" DiskId="1" src="$(var.IncDir)afs\cm_ioctl.h" /> 
+                                <File Id="filecm_performance_H" Name="cm_perf.h" LongName="cm_performance.h" DiskId="1" src="$(var.IncDir)afs\cm_performance.h" />
                                 <File Id="filecm_scache_H" Name="CMSCACHE.h" LongName="cm_scache.h" DiskId="1" src="$(var.IncDir)afs\cm_scache.h" />
                                 <File Id="filecm_server_H" Name="CMSERVER.h" LongName="cm_server.h" DiskId="1" src="$(var.IncDir)afs\cm_server.h" />
                                 <File Id="filecm_user_H" Name="cm_user.h" LongName="cm_user.h" DiskId="1" src="$(var.IncDir)afs\cm_user.h" /> 
                                 <File Id="filecm_utils_H" Name="cm_utils.h" LongName="cm_utils.h" DiskId="1" src="$(var.IncDir)afs\cm_utils.h" /> 
                                 <File Id="filecm_vnodeops_H" Name="CMVNODEO.h" LongName="cm_vnodeops.h" DiskId="1" src="$(var.IncDir)afs\cm_vnodeops.h" />
+                                <File Id="filecm_volstat_H" Name="CMVOLSTA.h" LongName="cm_volstat.h" DiskId="1" src="$(var.IncDir)afs\cm_volstat.h" />
                                 <File Id="filecm_volume_H" Name="CMVOLUME.h" LongName="cm_volume.h" DiskId="1" src="$(var.IncDir)afs\cm_volume.h" />
                                 <File Id="filecom_err_H" Name="com_err.h" LongName="com_err.h" DiskId="1" src="$(var.IncDir)afs\com_err.h" /> 
+                                <File Id="filedaemon_com_H" Name="DAEMONCO.h" LongName="daemon_com.h" DiskId="1" src="$(var.IncDir)afs\daemon_com.h" />
                                 <File Id="filedir_H" Name="dir.h" LongName="dir.h" DiskId="1" src="$(var.IncDir)afs\dir.h" /> 
                                 <File Id="filedirpath_H" Name="dirpath.h" LongName="dirpath.h" DiskId="1" src="$(var.IncDir)afs\dirpath.h" /> 
                                 <File Id="fileerrmap_nt_H" Name="ERRMAPNT.h" LongName="errmap_nt.h" DiskId="1" src="$(var.IncDir)afs\errmap_nt.h" />
@@ -1556,6 +1569,7 @@
                                 <File Id="fileerror_table_H" Name="ERROR_TB.h" LongName="error_table.h" DiskId="1" src="$(var.IncDir)afs\error_table.h" />
                                 <File Id="filefileutil_H" Name="fileutil.h" LongName="fileutil.h" DiskId="1" src="$(var.IncDir)afs\fileutil.h" /> 
                                 <File Id="filefssync_H" Name="fssync.h" LongName="fssync.h" DiskId="1" src="$(var.IncDir)afs\fssync.h" /> 
+                                <File Id="filefs_acl_H" Name="fs_acl.h" LongName="fs_acl.h" DiskId="1" src="$(var.IncDir)afs\fs_acl.h" />
                                 <File Id="filefs_stats_H" Name="fs_stats.h" LongName="fs_stats.h" DiskId="1" src="$(var.IncDir)afs\fs_stats.h" /> 
                                 <File Id="filefs_utils_H" Name="fs_utils.h" LongName="fs_utils.h" DiskId="1" src="$(var.IncDir)afs\fs_utils.h" /> 
                                 <File Id="fileicl_H" Name="icl.h" LongName="icl.h" DiskId="1" src="$(var.IncDir)afs\icl.h" /> 
@@ -1565,12 +1579,18 @@
                                 <File Id="filekautils_H" Name="kautils.h" LongName="kautils.h" DiskId="1" src="$(var.IncDir)afs\kautils.h" /> 
                                 <File Id="filekeys_H" Name="keys.h" LongName="keys.h" DiskId="1" src="$(var.IncDir)afs\keys.h" /> 
                                 <File Id="filekrb_H" Name="krb.h" LongName="krb.h" DiskId="1" src="$(var.IncDir)afs\krb.h" /> 
+                                <File Id="filekrb5_nt_H" Name="krb5_nt.h" LongName="krb5_nt.h" DiskId="1" src="$(var.IncDir)afs\krb5_nt.h" />
                                 <File Id="filekrb_prot_H" Name="krb_prot.h" LongName="krb_prot.h" DiskId="1" src="$(var.IncDir)afs\krb_prot.h" /> 
                                 <File Id="filektime_H" Name="ktime.h" LongName="ktime.h" DiskId="1" src="$(var.IncDir)afs\ktime.h" /> 
                                 <File Id="filelanahelper_H" Name="LANAHELP.h" LongName="lanahelper.h" DiskId="1" src="$(var.IncDir)afs\lanahelper.h" />
+                                <File Id="filelockprocs_prototypes_H" Name="LOCKPROC.h" LongName="lockprocs_prototypes.h" DiskId="1" src="$(var.IncDir)afs\lockprocs_prototypes.h" />
                                 <File Id="filemit_sipb_cr_H" Name="MITSIPBC.h" LongName="mit-sipb-cr.h" DiskId="1" src="$(var.IncDir)afs\mit-sipb-cr.h" />
+                                <File Id="filenamei_ops_H" Name="nameiops.h" LongName="namei_ops.h" DiskId="1" src="$(var.IncDir)afs\namei_ops.h" />
+                                <File Id="filenetutils_H" Name="netutil.h" LongName="netutils.h" DiskId="1" src="$(var.IncDir)afs\netutils.h" />
                                 <File Id="filenfs_H" Name="nfs.h" LongName="nfs.h" DiskId="1" src="$(var.IncDir)afs\nfs.h" /> 
                                 <File Id="filentops_H" Name="ntops.h" LongName="ntops.h" DiskId="1" src="$(var.IncDir)afs\ntops.h" /> 
+                                <File Id="fileopr_H" Name="opr.h" LongName="opr.h" DiskId="1" src="$(var.IncDir)afs\opr.h" />
+                                <File Id="fileopr_assert_H" Name="oprasser.h" LongName="opr_assert.h" DiskId="1" src="$(var.IncDir)afs\opr_assert.h" />
                                 <File Id="fileparam_H" Name="param.h" LongName="param.h" DiskId="1" src="$(var.IncDir)afs\param.h" /> 
                                 <File Id="filepartition_H" Name="PARTITON.h" LongName="partition.h" DiskId="1" src="$(var.IncDir)afs\partition.h" />
                                 <File Id="filepioctl_nt_H" Name="PIOCTLNT.h" LongName="pioctl_nt.h" DiskId="1" src="$(var.IncDir)afs\pioctl_nt.h" />
@@ -1586,14 +1606,18 @@
                                 <File Id="filepthread_nosigs_H" Name="PTHRNOSG.h" LongName="pthread_nosigs.h" DiskId="1" src="$(var.IncDir)afs\pthread_nosigs.h" />
                                 <File Id="fileptint_H" Name="ptint.h" LongName="ptint.h" DiskId="1" src="$(var.IncDir)afs\ptint.h" /> 
                                 <File Id="fileptserver_H" Name="ptserver.h" LongName="ptserver.h" DiskId="1" src="$(var.IncDir)afs\ptserver.h" /> 
+                                <File Id="fileptuser_H" Name="ptuser.h" LongName="ptuser.h" DiskId="1" src="$(var.IncDir)afs\ptuser.h" />
                                 <File Id="filerxgen_consts_H" Name="RXGENCON.h" LongName="rxgen_consts.h" DiskId="1" src="$(var.IncDir)afs\rxgen_consts.h" />
                                 <File Id="filesecutil_nt_H" Name="SECUTINT.h" LongName="secutil_nt.h" DiskId="1" src="$(var.IncDir)afs\secutil_nt.h" />
                                 <File Id="filesmb_H" Name="smb.h" LongName="smb.h" DiskId="1" src="$(var.IncDir)afs\smb.h" /> 
                                 <File Id="filesmb3_H" Name="smb3.h" LongName="smb3.h" DiskId="1" src="$(var.IncDir)afs\smb3.h" /> 
                                 <File Id="filesmb_iocons_H" Name="SMBIOCON.h" LongName="smb_iocons.h" DiskId="1" src="$(var.IncDir)afs\smb_iocons.h" />
                                 <File Id="filesmb_ioctl_H" Name="SMBIOCTL.h" LongName="smb_ioctl.h" DiskId="1" src="$(var.IncDir)afs\smb_ioctl.h" />
+                                <File Id="filesmb_rpc_H" Name="smb_rpc.h" LongName="smb_rpc.h" DiskId="1" src="$(var.IncDir)afs\smb_rpc.h" />
                                 <File Id="filestds_H" Name="stds.h" LongName="stds.h" DiskId="1" src="$(var.IncDir)afs\stds.h" /> 
+                                <File Id="filesys_prototypes_H" Name="sysproto.h" LongName="sys_prototypes.h" DiskId="1" src="$(var.IncDir)afs\sys_prototypes.h" />
                                 <File Id="filetcdata_H" Name="tcdata.h" LongName="tcdata.h" DiskId="1" src="$(var.IncDir)afs\tcdata.h" /> 
+                                <File Id="filetoken_H" Name="token.h" LongName="token.h" DiskId="1" src="$(var.IncDir)afs\token.h" />
                                 <File Id="fileunified_afs_H" Name="UNIAFS.h" LongName="unified_afs.h" DiskId="1" src="$(var.IncDir)afs\unified_afs.h" />
                                 <File Id="fileusd_H" Name="usd.h" LongName="usd.h" DiskId="1" src="$(var.IncDir)afs\usd.h" /> 
                                 <File Id="filevice_H" Name="vice.h" LongName="vice.h" DiskId="1" src="$(var.IncDir)afs\vice.h" /> 
@@ -1602,11 +1626,18 @@
                                 <File Id="filevlserver_H" Name="vlserver.h" LongName="vlserver.h" DiskId="1" src="$(var.IncDir)afs\vlserver.h" /> 
                                 <File Id="filevl_opcodes_H" Name="VLOPCODE.h" LongName="vl_opcodes.h" DiskId="1" src="$(var.IncDir)afs\vl_opcodes.h" />
                                 <File Id="filevnode_H" Name="vnode.h" LongName="vnode.h" DiskId="1" src="$(var.IncDir)afs\vnode.h" /> 
+                                <File Id="filevnode_inline_H" Name="vnodeinl.h" LongName="vnode_inline.h" DiskId="1" src="$(var.IncDir)afs\vnode_inline.h" />
                                 <File Id="filevoldefs_H" Name="voldefs.h" LongName="voldefs.h" DiskId="1" src="$(var.IncDir)afs\voldefs.h" /> 
                                 <File Id="filevolint_H" Name="volint.h" LongName="volint.h" DiskId="1" src="$(var.IncDir)afs\volint.h" /> 
                                 <File Id="filevolser_H" Name="volser.h" LongName="volser.h" DiskId="1" src="$(var.IncDir)afs\volser.h" /> 
+                                <File Id="filevolser_internal_H" Name="volserin.h" LongName="volser_internal.h" DiskId="1" src="$(var.IncDir)afs\volser_internal.h" />
                                 <File Id="filevolser_prototypes_H" Name="VOLSPROT.h" LongName="volser_prototypes.h" DiskId="1" src="$(var.IncDir)afs\volser_prototypes.h" />
                                 <File Id="filevolume_H" Name="volume.h" LongName="volume.h" DiskId="1" src="$(var.IncDir)afs\volume.h" />
+                                <File Id="filevolume_inline_H" Name="volumein.h" LongName="volume_inline.h" DiskId="1" src="$(var.IncDir)afs\volume_inline.h" />
+                                <File Id="filevol_prototypes_H" Name="volproto.h" LongName="vol_prototypes.h" DiskId="1" src="$(var.IncDir)afs\vol_prototypes.h" />
+                                <File Id="filevsutils_prototypes_H" Name="vsutilsp.h" LongName="vsutils_prototypes.h" DiskId="1" src="$(var.IncDir)afs\vsutils_prototypes.h" />
+                                <File Id="filexstat_cm_H" Name="xstat_cm.h" LongName="xstat_cm.h" DiskId="1" src="$(var.IncDir)afs\xstat_cm.h" />
+                                <File Id="filexstat_fs_H" Name="xstat_fs.h" LongName="xstat_fs.h" DiskId="1" src="$(var.IncDir)afs\xstat_fs.h" />
                             </Component>
                         </Directory>
 
@@ -1630,6 +1661,14 @@
                             </Component>
                         </Directory>
 
+                        <Directory Id="dirIncludeOpr" Name="opr">
+                            <Component Id="cmp_SDK_Include_opr" Guid="726B86EF-3431-4DF2-83EC-E4CFA379AE35">
+                                <File Id="file_opr_jhash_H" Name="jhash.h" LongName="jhash.h" DiskId="1" src="$(var.IncDir)opr\jhash.h" />
+                                <File Id="file_opr_queue_H" Name="queue.h" LongName="queue.h" DiskId="1" src="$(var.IncDir)opr\queue.h" />
+                                <File Id="file_opr_rbtree_H" Name="rbtree.h" LongName="rbtree.h" DiskId="1" src="$(var.IncDir)opr\rbtree.h" />
+                            </Component>
+                        </Directory>
+
                         <Directory Id="dirIncludeRx" Name="rx">
                             <Component Id="cmp_SDK_Include_rx" Guid="2E215D10-C080-42A3-B692-AFF94C7A1A2B">
                                 <File Id="fileasn1_err_H" Name="asn1_err.h" LongName="asn1_err.h" DiskId="1" src="$(var.IncDir)rx\asn1_err.h" /> 
@@ -1637,7 +1676,9 @@
                                 <File Id="filerx_H" Name="rx.h" LongName="rx.h" DiskId="1" src="$(var.IncDir)rx\rx.h" /> 
                                 <File Id="filerxkad_H" Name="rxkad.h" LongName="rxkad.h" DiskId="1" src="$(var.IncDir)rx\rxkad.h" /> 
                                 <File Id="filerxkad_prototypes_H" Name="RXKAPROT.h" LongName="rxkad_prototypes.h" DiskId="1" src="$(var.IncDir)rx\rxkad_prototypes.h" />
+                                <File Id="filerxkad_stats_H" Name="rxkadsta.h" LongName="rxkad_stats.h" DiskId="1" src="$(var.IncDir)rx\rxkad_stats.h" />
                                 <File Id="filerxstat_H" Name="rxstat.h" LongName="rxstat.h" DiskId="1" src="$(var.IncDir)rx\rxstat.h" /> 
+                                <File Id="filerx_atomic_H" Name="rx_atomi.h" LongName="rx_atomic.h" DiskId="1" src="$(var.IncDir)rx\rx_atomic.h" />
                                 <File Id="filerx_clock_H" Name="rx_clock.h" LongName="rx_clock.h" DiskId="1" src="$(var.IncDir)rx\rx_clock.h" /> 
                                 <File Id="filerx_event_H" Name="rx_event.h" LongName="rx_event.h" DiskId="1" src="$(var.IncDir)rx\rx_event.h" /> 
                                 <File Id="filerx_globals_H" Name="RXGLOBAL.h" LongName="rx_globals.h" DiskId="1" src="$(var.IncDir)rx\rx_globals.h" />
@@ -1645,6 +1686,7 @@
                                 <File Id="filerx_misc_H" Name="rx_misc.h" LongName="rx_misc.h" DiskId="1" src="$(var.IncDir)rx\rx_misc.h" /> 
                                 <File Id="filerx_multi_H" Name="rx_multi.h" LongName="rx_multi.h" DiskId="1" src="$(var.IncDir)rx\rx_multi.h" /> 
                                 <File Id="filerx_null_H" Name="rx_null.h" LongName="rx_null.h" DiskId="1" src="$(var.IncDir)rx\rx_null.h" /> 
+                                <File Id="filerx_opaque_H" Name="rx_opaqu.h" LongName="rx_opaque.h" DiskId="1" src="$(var.IncDir)rx\rx_opaque.h" />
                                 <File Id="filerx_packet_H" Name="RXPACKET.h" LongName="rx_packet.h" DiskId="1" src="$(var.IncDir)rx\rx_packet.h" />
                                 <File Id="filerx_prototypes_H" Name="RX_PROT.h" LongName="rx_prototypes.h" DiskId="1" src="$(var.IncDir)rx\rx_prototypes.h" />
                                 <File Id="filerx_pthread_H" Name="RX_PTHRD.h" LongName="rx_pthread.h" DiskId="1" src="$(var.IncDir)rx\rx_pthread.h" />
