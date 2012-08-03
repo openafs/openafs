@@ -280,7 +280,6 @@
 
 				<ComponentRef Id="rcm_SDK" />
 
-				<ComponentRef Id="cmp_SDK_Sample" />
 				<ComponentRef Id="cmp_SDK_Include" />
 				<ComponentRef Id="cmp_SDK_Include_afs" />
 				<ComponentRef Id="cmp_SDK_Include_hcrypto" />

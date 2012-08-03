@@ -1140,10 +1140,6 @@ Section /o "Software Development Kit (SDK)" secSDK
    SetOutPath "$INSTDIR\SDK\Include"
    File /r "${AFS_BUILD_INCDIR}\*.*"    
 
-   ; Client Sample
-   SetOutPath "$INSTDIR\SDK\Sample"
-   File "..\..\afsd\sample\token.c"
-
    ;Store install folder
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS SDK" "" $INSTDIR
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS SDK\CurrentVersion" "VersionString" ${AFS_VERSION}

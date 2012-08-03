@@ -1451,11 +1451,6 @@
   <?ifndef BinsOnly?>
   <?ifndef LiteClient ?>
             <Directory Id="dirSDK" Name="SDK">
-                    <Directory Id="dirSample" Name="Sample">
-                        <Component Id="cmp_SDK_Sample" Guid="F9373E95-F410-4AA5-AA79-07C11EE00334">
-                            <File Id="filetoken_C" Name="token.c" LongName="token.c" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\afsd\sample\token.c"/>
-                        </Component>
-                    </Directory>
                     <Directory Id="dirInclude" Name="Include">
                         <Component Id="cmp_SDK_Include" Guid="2229E5F7-1D23-4088-AF85-917CCDB2634D">
                             <File Id="filebasic_H" Name="basic.h" LongName="basic.h" DiskId="1" src="$(var.IncDir)basic.h" /> 
