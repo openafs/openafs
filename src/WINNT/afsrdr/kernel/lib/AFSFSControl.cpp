@@ -683,8 +683,25 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 break;
             }
 
+#ifndef FSCTL_SET_PURGE_FAILURE_MODE
+#define FSCTL_SET_PURGE_FAILURE_MODE        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 156, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
+
+            case FSCTL_SET_PURGE_FAILURE_MODE:
+            {
+
+                //
+                // For the time being just succeed this call
+                //
+
+                ntStatus = STATUS_SUCCESS;
+
+                break;
+            }
+
             default :
             {
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSProcessUserFsRequest Processing default (%08lX) request\n", ulFsControlCode);
