@@ -56,6 +56,7 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
     ULONG   ulRequestFlags = AFS_REQUEST_FLAG_SYNCHRONOUS;
     ULONG ulCRC = 0;
     UNICODE_STRING uniGUID;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
     {
@@ -429,7 +430,8 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                 // Init the short name if we have one
                 //
 
-                if( pCurrentDirEntry->ShortNameLength > 0)
+                if( !BooleanFlagOn( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+                    pCurrentDirEntry->ShortNameLength > 0)
                 {
 
                     UNICODE_STRING uniShortName;
@@ -474,6 +476,15 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                         RtlZeroMemory( pDirNode->NameInformation.ShortName,
                                        (12 * sizeof( WCHAR)));
                     }
+                }
+                else
+                {
+
+                    //
+                    // No short name or short names are disabled
+                    //
+
+                    pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = 0;
                 }
 
                 //
@@ -758,6 +769,7 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
     ULONGLONG ullIndex = 0;
     UNICODE_STRING uniGUID;
     LONG lCount;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
     {
@@ -1232,7 +1244,8 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                 // Init the short name if we have one
                 //
 
-                if( pCurrentDirEntry->ShortNameLength > 0)
+                if( !BooleanFlagOn( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+                    pCurrentDirEntry->ShortNameLength > 0)
                 {
 
                     UNICODE_STRING uniShortName;
@@ -1281,15 +1294,11 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                 else
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVerifyDirectoryContent NO short name for DE %p for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  pDirNode,
-                                  &pDirNode->NameInformation.FileName,
-                                  pCurrentDirEntry->FileId.Cell,
-                                  pCurrentDirEntry->FileId.Volume,
-                                  pCurrentDirEntry->FileId.Vnode,
-                                  pCurrentDirEntry->FileId.Unique);
+                    //
+                    // No short name or short names have been disabled
+                    //
+
+                    pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = 0;
                 }
 
                 //
@@ -1515,6 +1524,7 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
     AFSDirectoryCB *pDirNode = NULL;
     ULONG     ulCRC = 0;
     LARGE_INTEGER liOldDataVersion;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
     {
@@ -1760,7 +1770,8 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
         // Init the short name if we have one
         //
 
-        if( pResultCB->DirEnum.ShortNameLength > 0)
+        if( !BooleanFlagOn( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+            pResultCB->DirEnum.ShortNameLength > 0)
         {
 
             UNICODE_STRING uniShortName;
@@ -1787,6 +1798,14 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                           &uniShortName,
                           pDirNode,
                           &pDirNode->NameInformation.FileName);
+        }
+        else
+        {
+            //
+            // No short name or short names are disabled
+            //
+
+            pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = 0;
         }
 
         if ( !BooleanFlagOn( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY))
@@ -2059,6 +2078,7 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
     AFSFileRenameCB *pRenameCB = NULL;
     AFSFileRenameResultCB *pRenameResultCB = NULL;
     ULONG ulResultLen = 0;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
     {
@@ -2166,7 +2186,8 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
 
         DirectoryCB->NameInformation.ShortNameLength = pRenameResultCB->DirEnum.ShortNameLength;
 
-        if( DirectoryCB->NameInformation.ShortNameLength > 0)
+        if( !BooleanFlagOn( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+            DirectoryCB->NameInformation.ShortNameLength > 0)
         {
 
             UNICODE_STRING uniShortName;
