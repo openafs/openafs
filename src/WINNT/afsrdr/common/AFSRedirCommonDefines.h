@@ -237,5 +237,12 @@ static inline void AFSBreakPoint() {
 
 #define AFS_REDIR_LIBRARY_SERVICE_ENTRY     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\AFSLibrary"
 
+//
+// Common Device flags
+//
+
+#define AFS_DEVICE_FLAG_HIDE_DOT_NAMES          0x00000001
+#define AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN     0x00000002
+
 #endif
 
