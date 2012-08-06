@@ -4265,7 +4265,7 @@ AFSInitializeSpecialShareNameList()
     {
 
         RtlInitUnicodeString( &uniShareName,
-                              L"PIPE\\srvsvc");
+                              L"PIPE");
 
         pObjectInfoCB = AFSAllocateObjectInfo( &AFSGlobalRoot->ObjectInformation,
                                                0);
@@ -4330,7 +4330,7 @@ AFSInitializeSpecialShareNameList()
         // Set valid entry
         //
 
-        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID | AFS_DIR_ENTRY_SERVER_SERVICE);
+        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID | AFS_DIR_ENTRY_PIPE_SERVICE);
 
         pDirNode->NameInformation.FileName.Length = uniShareName.Length;
 
@@ -4349,92 +4349,6 @@ AFSInitializeSpecialShareNameList()
 
         pLastDirNode = pDirNode;
 
-        RtlInitUnicodeString( &uniShareName,
-                              L"PIPE\\wkssvc");
-
-        pObjectInfoCB = AFSAllocateObjectInfo( &AFSGlobalRoot->ObjectInformation,
-                                               0);
-
-        if( pObjectInfoCB == NULL)
-        {
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitializeSpecialShareNameList (wkssvc) Initializing count (1) on object %08lX\n",
-                      pObjectInfoCB);
-
-        pObjectInfoCB->ObjectReferenceCount = 1;
-
-        pObjectInfoCB->FileType = AFS_FILE_TYPE_SPECIAL_SHARE_NAME;
-
-        ulEntryLength = sizeof( AFSDirectoryCB) +
-                                     uniShareName.Length;
-
-        pDirNode = (AFSDirectoryCB *)AFSLibExAllocatePoolWithTag( PagedPool,
-                                                                  ulEntryLength,
-                                                                  AFS_DIR_ENTRY_TAG);
-
-        if( pDirNode == NULL)
-        {
-
-            AFSDeleteObjectInfo( pObjectInfoCB);
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        pNonPagedDirEntry = (AFSNonPagedDirectoryCB *)AFSLibExAllocatePoolWithTag( NonPagedPool,
-                                                                                   sizeof( AFSNonPagedDirectoryCB),
-                                                                                   AFS_DIR_ENTRY_NP_TAG);
-
-        if( pNonPagedDirEntry == NULL)
-        {
-
-            ExFreePool( pDirNode);
-
-            AFSDeleteObjectInfo( pObjectInfoCB);
-
-            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        RtlZeroMemory( pDirNode,
-                       ulEntryLength);
-
-        RtlZeroMemory( pNonPagedDirEntry,
-                       sizeof( AFSNonPagedDirectoryCB));
-
-        ExInitializeResourceLite( &pNonPagedDirEntry->Lock);
-
-        pDirNode->NonPaged = pNonPagedDirEntry;
-
-        pDirNode->ObjectInformation = pObjectInfoCB;
-
-        //
-        // Set valid entry
-        //
-
-        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_VALID | AFS_DIR_ENTRY_WORKSTATION_SERVICE);
-
-        pDirNode->NameInformation.FileName.Length = uniShareName.Length;
-
-        pDirNode->NameInformation.FileName.MaximumLength = uniShareName.Length;
-
-        pDirNode->NameInformation.FileName.Buffer = (WCHAR *)((char *)pDirNode + sizeof( AFSDirectoryCB));
-
-        RtlCopyMemory( pDirNode->NameInformation.FileName.Buffer,
-                       uniShareName.Buffer,
-                       pDirNode->NameInformation.FileName.Length);
-
-        pDirNode->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pDirNode->NameInformation.FileName,
-                                                                       TRUE);
-
-        pLastDirNode->ListEntry.fLink = pDirNode;
-
-        pDirNode->ListEntry.bLink = pLastDirNode;
-
-        pLastDirNode = pDirNode;
 
         RtlInitUnicodeString( &uniShareName,
                               L"IPC$");
@@ -4567,38 +4481,14 @@ AFSGetSpecialShareNameEntry( IN UNICODE_STRING *ShareName,
     __Enter
     {
 
-        //
-        // Build up the entire name here. We are guaranteed that if there is a
-        // secondary name, it is pointing to a portion of the share name buffer
-        //
 
-        if( SecondaryName->Length > 0 &&
-            SecondaryName->Buffer != NULL)
-        {
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSGetSpecialShareNameEntry share name %wZ secondary name %wZ\n",
+                      ShareName,
+                      SecondaryName);
 
-            uniFullShareName = *SecondaryName;
-
-            //
-            // The calling routine strips off the leading slash so add it back in
-            //
-
-            uniFullShareName.Buffer--;
-            uniFullShareName.Length += sizeof( WCHAR);
-            uniFullShareName.MaximumLength += sizeof( WCHAR);
-
-            //
-            // And the share name
-            //
-
-            uniFullShareName.Buffer -= (ShareName->Length/sizeof( WCHAR));
-            uniFullShareName.Length += ShareName->Length;
-            uniFullShareName.MaximumLength += ShareName->Length;
-        }
-        else
-        {
-
-            uniFullShareName = *ShareName;
-        }
+        uniFullShareName = *ShareName;
 
         //
         // Generate our hash value

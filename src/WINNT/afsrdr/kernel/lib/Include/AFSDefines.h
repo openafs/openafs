@@ -246,10 +246,9 @@ NTSTATUS
 #define AFS_DIR_ENTRY_VALID                     0x00000080
 #define AFS_DIR_ENTRY_PENDING_DELETE            0x00000100
 #define AFS_DIR_ENTRY_DELETED                   0x00000200
-#define AFS_DIR_ENTRY_SERVER_SERVICE            0x00000400
-#define AFS_DIR_ENTRY_WORKSTATION_SERVICE       0x00000800
-#define AFS_DIR_ENTRY_IPC                       0x00001000
-#define AFS_DIR_ENTRY_INSERTED_SHORT_NAME       0x00002000
+#define AFS_DIR_ENTRY_PIPE_SERVICE              0x00000400
+#define AFS_DIR_ENTRY_IPC                       0x00000800
+#define AFS_DIR_ENTRY_INSERTED_SHORT_NAME       0x00001000
 
 //
 // Network provider errors
