@@ -2089,6 +2089,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     IO_STATUS_BLOCK stIoSb = {0,0};
     AFSFcb *pSrcFcb = NULL, *pTargetDcb = NULL, *pTargetFcb = NULL;
@@ -2289,7 +2290,8 @@ AFSSetRenameInfo( IN PIRP Irp)
                                               &pTargetDirEntry);
         }
 
-        if( pTargetDirEntry == NULL && RtlIsNameLegalDOS8Dot3( &uniTargetName,
+        if ( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+             pTargetDirEntry == NULL && RtlIsNameLegalDOS8Dot3( &uniTargetName,
                                                                NULL,
                                                                NULL))
         {
@@ -2514,7 +2516,8 @@ AFSSetRenameInfo( IN PIRP Irp)
         pSrcCcb->DirectoryCB->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pSrcCcb->DirectoryCB->NameInformation.FileName,
                                                                                    TRUE);
 
-        if( pSrcCcb->DirectoryCB->NameInformation.ShortNameLength > 0 &&
+        if( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+            pSrcCcb->DirectoryCB->NameInformation.ShortNameLength > 0 &&
             !RtlIsNameLegalDOS8Dot3( &pSrcCcb->DirectoryCB->NameInformation.FileName,
                                      NULL,
                                      NULL))

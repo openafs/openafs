@@ -3366,6 +3366,7 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     BOOLEAN  bAcquiredLock = FALSE;
     AFSDirectoryCB *pCurrentDirEntry = NULL, *pNextDirEntry = NULL;
     AFSFcb *pFcb = NULL;
@@ -3507,7 +3508,8 @@ AFSValidateDirectoryCache( IN AFSObjectInfoCB *ObjectInfo,
             if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID))
             {
 
-                if( !BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME) &&
+                if( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+                    !BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_INSERTED_SHORT_NAME) &&
                     pCurrentDirEntry->Type.Data.ShortNameTreeEntry.HashIndex > 0)
                 {
 
@@ -8329,6 +8331,7 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     AFSDirectoryCB *pDirEntry = NULL;
     ULONG ulCRC = 0;
     LONG lCount;
@@ -8382,7 +8385,8 @@ AFSCheckSymlinkAccess( IN AFSDirectoryCB *ParentDirectoryCB,
                 // a lookup in the short name tree
                 //
 
-                if( RtlIsNameLegalDOS8Dot3( ComponentName,
+                if( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+                    RtlIsNameLegalDOS8Dot3( ComponentName,
                                             NULL,
                                             NULL))
                 {

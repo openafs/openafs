@@ -1429,7 +1429,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         // a lookup in the short name tree
                         //
 
-                        if( RtlIsNameLegalDOS8Dot3( &uniSearchName,
+                        if( !BooleanFlagOn( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+                            RtlIsNameLegalDOS8Dot3( &uniSearchName,
                                                     NULL,
                                                     NULL))
                         {
@@ -3498,7 +3499,8 @@ AFSParseName( IN PIRP Irp,
                 // a lookup in the short name tree
                 //
 
-                if( RtlIsNameLegalDOS8Dot3( &uniComponentName,
+                if( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+                    RtlIsNameLegalDOS8Dot3( &uniComponentName,
                                             NULL,
                                             NULL))
                 {

@@ -503,6 +503,16 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
             SetFlag( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES);
         }
 
+        if( BooleanFlagOn( RedirInitInfo->Flags, AFS_REDIR_INIT_FLAG_DISABLE_SHORTNAMES))
+        {
+
+            //
+            // Hide files which begin with .
+            //
+
+            SetFlag( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES);
+        }
+
         if( RedirInitInfo->MemoryCacheOffset.QuadPart != 0 &&
             RedirInitInfo->MemoryCacheLength.QuadPart != 0)
         {
