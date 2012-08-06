@@ -774,30 +774,10 @@ AFSProcessShareFsCtrl( IN IRP *Irp,
             default:
             {
 
-                if( BooleanFlagOn( Ccb->DirectoryCB->Flags, AFS_DIR_ENTRY_SERVER_SERVICE))
-                {
-
-                    //AFSPrint("AFSProcessShareFsCtrl (%08lX) For srvsvc input %08lX output %08lX\n",
-                    //                                                            ulFsControlCode,
-                    //                                                            ulInputBufferLen,
-                    //                                                            ulOutputBufferLen);
-                }
-                else if( BooleanFlagOn( Ccb->DirectoryCB->Flags, AFS_DIR_ENTRY_WORKSTATION_SERVICE))
-                {
-
-                    //AFSPrint("AFSProcessShareFsCtrl (%08lX) For wkssvc input %08lX output %08lX\n",
-                    //                                                            ulFsControlCode,
-                    //                                                            ulInputBufferLen,
-                    //                                                            ulOutputBufferLen);
-                }
-                else
-                {
-
-                    //AFSPrint("AFSProcessShareFsCtrl (%08lX) For IPC$ input %08lX output %08lX\n",
-                    //                                                            ulFsControlCode,
-                    //                                                            ulInputBufferLen,
-                    //                                                            ulOutputBufferLen);
-                }
+                AFSPrint( "AFSProcessShareFsCtrl (%08lX) For IPC$ input %08lX output %08lX\n",
+                          ulFsControlCode,
+                          ulInputBufferLen,
+                          ulOutputBufferLen);
 
                 break;
             }
