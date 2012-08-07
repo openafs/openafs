@@ -325,6 +325,7 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
                 break;
             }
 
+            case FileNormalizedNameInformation:
             case FileNameInformation:
             {
 
@@ -3301,6 +3302,7 @@ AFSProcessPIOCtlQueryInfo( IN IRP *Irp,
                 break;
             }
 
+            case FileNormalizedNameInformation:
             case FileNameInformation:
             {
 
