@@ -3641,6 +3641,42 @@ Variable: cm_freelanceEnabled</para>
           <para>Enables freelance client.</para>
         </section>
         <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_FreelanceImportCellServDB">Value: FreelanceImportCellServDB</title>
+          <indexterm significance="normal">
+            <primary>FreelanceImportCellServDB</primary>
+          </indexterm>
+          <indexterm significance="normal">
+            <primary>dynroot</primary>
+          </indexterm>
+          <para id="Value_FreelanceImportCellServDB">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {1,0}
+          </para>
+          <para>
+            Default: 0
+          </para>
+          <para>
+            Variable: cm_freelanceImportCellServDB</para>
+          <para>Creates Freelance Mount Points for each cell listed in the CellServDB during startup.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_FreelanceDiscovery">Value: FreelanceDiscovery</title>
+          <indexterm significance="normal">
+            <primary>FreelanceDiscovery</primary>
+          </indexterm>
+          <indexterm significance="normal">
+            <primary>dynroot</primary>
+          </indexterm>
+          <para id="Value_FreelanceDiscovery">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {1,0}
+          </para>
+          <para>
+            Default: 1
+          </para>
+          <para>
+            Variable: cm_freelanceDiscovery</para>
+          <para>Enables automatic discovery of cell mount points within the Freelance root.</para>
+        </section>
+        <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_HideDotFiles">Value: HideDotFiles</title>
           <indexterm significance="normal">
             <primary>HideDotFiles</primary>
