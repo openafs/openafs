@@ -1073,6 +1073,13 @@ afsd_InitCM(char **reasonP)
                             (BYTE *) &cm_freelanceImportCellServDB, &dummyLen);
     afsi_log("Freelance client %s import CellServDB",
               cm_freelanceImportCellServDB ? "does" : "does not");
+
+    dummyLen = sizeof(cm_freelanceDiscovery);
+    code = RegQueryValueEx(parmKey, "FreelanceDiscovery", NULL, NULL,
+                            (BYTE *) &cm_freelanceDiscovery, &dummyLen);
+    afsi_log("Freelance client discovery is %s",
+              cm_freelanceDiscovery ? "on" : "off");
+
 #endif /* AFS_FREELANCE_CLIENT */
 
     dummyLen = sizeof(smb_UseUnicode);

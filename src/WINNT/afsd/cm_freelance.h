@@ -35,4 +35,5 @@ extern int cm_FakeRootFid(cm_fid_t *fidp);
 extern time_t FakeFreelanceModTime;
 extern int cm_freelanceEnabled;
 extern int cm_freelanceImportCellServDB;
+extern int cm_freelanceDiscovery;
 #endif // _CM_FREELANCE_H

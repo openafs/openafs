@@ -31,6 +31,7 @@ static cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 static int cm_localMountPointChangeFlag = 0;
 int cm_freelanceEnabled = 1;
+int cm_freelanceDiscovery = 1;
 int cm_freelanceImportCellServDB = 0;
 time_t FakeFreelanceModTime = 0x3b49f6e2;
 

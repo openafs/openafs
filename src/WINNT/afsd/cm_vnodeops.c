@@ -1151,7 +1151,7 @@ retry_lookup:
 notfound:
     getroot = (dscp==cm_data.rootSCachep) ;
     if (!rock.found) {
-        if (!cm_freelanceEnabled || !getroot) {
+        if (!(cm_freelanceEnabled && cm_freelanceDiscovery) || !getroot) {
             if (flags & CM_FLAG_CHECKPATH)
                 code = CM_ERROR_NOSUCHPATH;
             else
