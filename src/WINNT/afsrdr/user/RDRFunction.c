@@ -140,6 +140,7 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     *pRedirInitInfoLen = (DWORD) (sizeof(AFSRedirectorInitInfo) + (cm_CachePathLen + TempPathLen) * sizeof(WCHAR));
     *ppRedirInitInfo = (AFSRedirectorInitInfo *)malloc(*pRedirInitInfoLen);
     (*ppRedirInitInfo)->Flags = smb_hideDotFiles ? AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES : 0;
+    (*ppRedirInitInfo)->Flags |= cm_shortNames ? 0 : AFS_REDIR_INIT_FLAG_DISABLE_SHORTNAMES;
     (*ppRedirInitInfo)->MaximumChunkLength = cm_data.chunkSize;
     (*ppRedirInitInfo)->GlobalFileId.Cell   = cm_data.rootFid.cell;
     (*ppRedirInitInfo)->GlobalFileId.Volume = cm_data.rootFid.volume;
@@ -896,7 +897,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                     code = RDR_PopulateCurrentEntry( pCurrentEntry, dwMaxEntryLength,
                                                      dscp, scp, userp, &req,
                                                      entryp->name,
-                                                     cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
+                                                     cm_shortNames && cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
                                                      (bWow64 ? RDR_POP_WOW64 : 0) |
                                                      (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0),
                                                      code,
@@ -906,7 +907,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                     code = RDR_PopulateCurrentEntryNoScp( pCurrentEntry, dwMaxEntryLength,
                                                           dscp, &entryp->fid, userp, &req,
                                                           entryp->name,
-                                                          cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
+                                                          cm_shortNames && cm_Is8Dot3(entryp->name) ? NULL : entryp->shortName,
                                                           (bWow64 ? RDR_POP_WOW64 : 0),
                                                           code,
                                                           &pCurrentEntry, &dwMaxEntryLength);
@@ -1077,7 +1078,9 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     if (code == 0 && scp) {
         wchar_t shortName[13]=L"";
 
-        if (bVol) {
+        if (!cm_shortNames) {
+            shortName[0] = L'\0';
+        } else if (bVol) {
             cm_Gen8Dot3VolNameW(scp->fid.cell, scp->fid.volume, shortName, NULL);
         } else if (!cm_Is8Dot3(wszName)) {
             cm_dirFid_t dfid;
@@ -1087,7 +1090,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
             cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
         } else {
-            shortName[0] = '\0';
+            shortName[0] = L'\0';
         }
 
         code = RDR_PopulateCurrentEntry(pCurrentEntry, dwRemaining,
@@ -1418,13 +1421,15 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         lock_ReleaseWrite(&dscp->rw);
 
-        dfid.vnode = htonl(scp->fid.vnode);
-        dfid.unique = htonl(scp->fid.unique);
+        if (cm_shortNames) {
+            dfid.vnode = htonl(scp->fid.vnode);
+            dfid.unique = htonl(scp->fid.unique);
 
-        if (!cm_Is8Dot3(FileName))
-            cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
-        else
-            shortName[0] = '\0';
+            if (!cm_Is8Dot3(FileName))
+                cm_Gen8Dot3NameIntW(FileName, &dfid, shortName, NULL);
+            else
+                shortName[0] = '\0';
+        }
 
         code = RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                         dscp, scp, userp, &req, FileName, shortName,
@@ -2421,13 +2426,15 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         lock_ReleaseWrite(&scp->rw);
 
-        dfid.vnode = htonl(scp->fid.vnode);
-        dfid.unique = htonl(scp->fid.unique);
+        if (cm_shortNames) {
+            dfid.vnode = htonl(scp->fid.vnode);
+            dfid.unique = htonl(scp->fid.unique);
 
-        if (!cm_Is8Dot3(TargetFileName))
-            cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
-        else
-            shortName[0] = '\0';
+            if (!cm_Is8Dot3(TargetFileName))
+                cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
+            else
+                shortName[0] = '\0';
+        }
 
         RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
                                  newDscp, scp, userp, &req, TargetFileName, shortName,
