@@ -77,6 +77,7 @@ int cm_logChunkSize;
 int cm_chunkSize;
 int cm_virtualCache = 0;
 afs_int32 cm_verifyData = 0;
+int cm_shortNames = 1;
 
 int smb_UseV3 = 1;
 afs_uint32 smb_Enabled = 1;
@@ -534,6 +535,12 @@ afsd_InitCM(char **reasonP)
     int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
     int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
     DWORD dwPriority;
+    OSVERSIONINFO osVersion;
+
+    /* Get the version of Windows */
+    memset(&osVersion, 0x00, sizeof(osVersion));
+    osVersion.dwOSVersionInfoSize = sizeof(osVersion);
+    GetVersionEx(&osVersion);
 
     WSAStartup(0x0101, &WSAjunk);
 
@@ -1356,6 +1363,22 @@ afsd_InitCM(char **reasonP)
     }
     afsi_log("CM ReadOnlyVolumeVersioning is %u", cm_readonlyVolumeVersioning);
 
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "ShortNames", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_shortNames = (unsigned short) dwValue;
+    } else {
+        /* disable by default on Win8 and Server 2008 R2 */
+        if (osVersion.dwMajorVersion > 6 ||
+            osVersion.dwMajorVersion == 6 &&
+            osVersion.dwMinorVersion >= 2)
+            cm_shortNames = 0;
+        else
+            cm_shortNames = 1;
+    }
+    afsi_log("CM ShortNames is %u", cm_shortNames);
+
     RegCloseKey (parmKey);
 
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;
@@ -1373,7 +1396,7 @@ afsd_InitCM(char **reasonP)
                   cm_IPAddr[0], cm_SubnetMask[0]);
 
     /*
-     * Save client configuration for GetCacheConfig requests
+     * Save client configuration for GetCacheConfig requests
      */
     cm_initParams.nChunkFiles = 0;
     cm_initParams.nStatCaches = stats;

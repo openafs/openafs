@@ -97,14 +97,10 @@
             <para>Microsoft Windows 2008 Server R2 (64-bit Intel)</para>
           </listitem>
           <listitem>
-            <para>Microsoft Windows 8 Release Preview (32-bit and 64-bit Intel)</para>
-            <para><emphasis role="italic">(not guaranteed to work with the final
-              release)</emphasis></para>
+            <para>Microsoft Windows 8 (32-bit and 64-bit Intel)</para>
           </listitem>
           <listitem>
-            <para>Microsoft Windows Server 2012 Release Preview (64-bit Intel)</para>
-            <para><emphasis role="italic">(not guaranteed to work with the final
-              release)</emphasis></para>
+            <para>Microsoft Windows Server 2012 (64-bit Intel)</para>
           </listitem>
         </itemizedlist>
       </para>
@@ -1842,6 +1838,19 @@
       </para>
       </listitem>
       </itemizedlist>
+      </para>
+    </section>
+    <section>
+      <title id="windows8_changes">3.56. Changes for Windows 8 and Server 2012</title>
+      <indexterm significance="normal">
+        <primary>Windows 8</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>Server 2012</primary>
+      </indexterm>
+      <para>
+      In Windows 8 and Server 2012 Microsoft has introduced a new file system, ReFS, and has begun the process of transitioning away from several legacy file system properties including 8.3 compatible short names for all file system objects.
+      The OpenAFS file system has followed suit and is disabling automatic generation of 8.3 compatible names on Windows 8 and Server 2012.
       </para>
     </section>
 
@@ -4212,6 +4221,20 @@ Default: 0</para>
             match, retry the store operation until it does.</para>
           <para>The "fs getverify" and "fs setverify {on, off}" commands can be used to query and
             set this value at runtime.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_ShortNames">Value: ShortNames</title>
+          <indexterm significance="normal">
+            <primary>ShortNames</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}
+          </para>
+          <para>
+            Default: 0 on Windows 8 and Server 2012, 1 otherwise</para>
+          <para>Determines whether or not the AFS Cache Manager will generate 8.3 compatible shortnames for all objects stored in AFS.  Short names are disabled by default on Windows 8 and Server 2012.  All prior operating systems enable short names by default.</para>
+          <para>0: do not generate 8.3 compatible short names.</para>
+          <para>1: generate 8.3 compatible short names.</para>
         </section>
       </section>
       <section>

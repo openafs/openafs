@@ -1797,7 +1797,7 @@ long cm_BPlusDirCreateEntry(cm_dirOp_t * op, clientchar_t * entry, cm_fid_t * cf
 
     insert(op->scp->dirBplus, key, data);
 
-    if (!cm_Is8Dot3(entry)) {
+    if (cm_shortNames && !cm_Is8Dot3(entry)) {
         cm_dirFid_t dfid;
         clientchar_t wshortName[13];
 
@@ -1908,14 +1908,17 @@ int  cm_BPlusDirDeleteEntry(cm_dirOp_t * op, clientchar_t *centry)
                 }
 
                 if (rc != CM_ERROR_AMBIGUOUS_FILENAME) {
-                    dfid.vnode = htonl(fid.vnode);
-                    dfid.unique = htonl(fid.unique);
-                    cm_Gen8Dot3NameIntW(centry, &dfid, shortName, NULL);
-
                     /* delete first the long name and then the short name */
                     delete(op->scp->dirBplus, key);
-                    key.name = shortName;
-                    delete(op->scp->dirBplus, key);
+
+                    if (cm_shortNames) {
+                        dfid.vnode = htonl(fid.vnode);
+                        dfid.unique = htonl(fid.unique);
+                        cm_Gen8Dot3NameIntW(centry, &dfid, shortName, NULL);
+
+                        key.name = shortName;
+                        delete(op->scp->dirBplus, key);
+                    }
                 }
             } /* !NONODE */
         } else {
@@ -2031,7 +2034,7 @@ int cm_BPlusDirFoo(struct cm_scache *scp, struct cm_dirEntry *dep,
     /* the Write lock is held in cm_BPlusDirBuildTree() */
     insert(scp->dirBplus, key, data);
 
-    if (!cm_Is8Dot3(data.cname)) {
+    if (cm_shortNames && !cm_Is8Dot3(data.cname)) {
         cm_dirFid_t dfid;
         wchar_t wshortName[13];
 
@@ -2276,17 +2279,19 @@ cm_BPlusDirEnumerate(cm_scache_t *dscp, cm_user_t *userp, cm_req_t *reqp,
                     enump->entry[count].name = name;
                     enump->entry[count].fid  = getdatavalue(dataNode).fid;
 
-                    if (!cm_Is8Dot3(name)) {
-                        cm_dirFid_t dfid;
+                    if (cm_shortNames) {
+                        if (!cm_Is8Dot3(name)) {
+                            cm_dirFid_t dfid;
 
-                        dfid.vnode = htonl(getdatavalue(dataNode).fid.vnode);
-                        dfid.unique = htonl(getdatavalue(dataNode).fid.unique);
+                            dfid.vnode = htonl(getdatavalue(dataNode).fid.vnode);
+                            dfid.unique = htonl(getdatavalue(dataNode).fid.unique);
 
-                        cm_Gen8Dot3NameIntW(name, &dfid, enump->entry[count].shortName, NULL);
-                    } else {
-                        StringCbCopyW(enump->entry[count].shortName,
-                                      sizeof(enump->entry[count].shortName),
-                                      name);
+                            cm_Gen8Dot3NameIntW(name, &dfid, enump->entry[count].shortName, NULL);
+                        } else {
+                            StringCbCopyW(enump->entry[count].shortName,
+                                          sizeof(enump->entry[count].shortName),
+                                          name);
+                        }
                     }
 
                     count++;

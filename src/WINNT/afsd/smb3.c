@@ -5232,8 +5232,8 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
     fp = (smb_tran2Find_t *) op;
 
-    if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO
-        && !cm_Is8Dot3(maskp)) {
+    if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO &&
+        cm_shortNames && !cm_Is8Dot3(maskp)) {
 
         /*
          * Since the _._AFS_IOCTL_._ file does not actually exist
@@ -5960,6 +5960,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         /* Need 8.3 name? */
         NeedShortName = 0;
         if (infoLevel == SMB_FIND_FILE_BOTH_DIRECTORY_INFO &&
+            cm_shortNames &&
             !cm_Is8Dot3(cfileName)) {
             cm_Gen8Dot3Name(dep, shortName, &shortNameEnd);
             NeedShortName = 1;

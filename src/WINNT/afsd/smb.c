@@ -5189,7 +5189,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
         /* Compute 8.3 name if necessary */
         actualName = cm_FsStringToClientStringAlloc(dep->name, -1, NULL);
-        if (dep->fid.vnode != 0 && !cm_Is8Dot3(actualName)) {
+        if (dep->fid.vnode != 0 && cm_shortNames && !cm_Is8Dot3(actualName)) {
             if (actualName)
                 free(actualName);
             cm_Gen8Dot3NameInt(dep->name, &dep->fid, shortName, &shortNameEnd);
@@ -5947,6 +5947,7 @@ int smb_UnlinkProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     match = cm_MatchMask(matchName, rockp->maskp, caseFold);
     if (!match &&
         (rockp->flags & SMB_MASKFLAG_TILDE) &&
+        cm_shortNames &&
         !cm_Is8Dot3(matchName)) {
         cm_Gen8Dot3Name(dep, matchName, NULL);
         /* 8.3 matches are always case insensitive */
@@ -6153,6 +6154,7 @@ int smb_RenameProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hype
     match = cm_MatchMask(matchName, rockp->maskp, caseFold);
     if (!match &&
         (rockp->flags & SMB_MASKFLAG_TILDE) &&
+        cm_shortNames &&
         !cm_Is8Dot3(matchName)) {
         cm_Gen8Dot3Name(dep, matchName, NULL);
         match = cm_MatchMask(matchName, rockp->maskp, caseFold);
@@ -6613,6 +6615,7 @@ int smb_RmdirProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper
         match = (cm_ClientStrCmp(matchName, rockp->maskp) == 0);
     if (!match &&
          (rockp->flags & SMB_MASKFLAG_TILDE) &&
+         cm_shortNames &&
          !cm_Is8Dot3(matchName)) {
         cm_Gen8Dot3Name(dep, matchName, NULL);
         match = (cm_ClientStrCmpI(matchName, rockp->maskp) == 0);
@@ -6830,7 +6833,7 @@ int smb_FullNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
         return 0;
     }
 
-    if (!cm_Is8Dot3(matchName)) {
+    if (cm_shortNames && !cm_Is8Dot3(matchName)) {
         clientchar_t shortName[13];
 
         cm_Gen8Dot3Name(dep, shortName, NULL);

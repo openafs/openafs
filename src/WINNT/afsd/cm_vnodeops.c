@@ -767,6 +767,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 
     if (match != 0
         && sp->hasTilde
+        && cm_shortNames
         && !cm_Is8Dot3(matchName)) {
 
         cm_Gen8Dot3NameInt(dep->name, &dep->fid, matchName, NULL);
