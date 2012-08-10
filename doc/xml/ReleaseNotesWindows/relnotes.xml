@@ -1786,16 +1786,31 @@
       The following is a list of known issues when using the IFS redirector driver:
       <itemizedlist>
       <listitem>
-		<para>It is not possible to execute an application out of AFS under
-   the following conditions:
-      <itemizedlist>
-      <listitem><para>The path is a drive letter mapping</para></listitem>
-      <listitem><para>The application requires elevated privileges</para></listitem>
-      </itemizedlist>
-   Workaround: use SUBST instead of NET USE to assign drive
-   letters to UNC paths.
-      </para>
-      </listitem>
+            <para>Command Prompt .LNK files do not behave properly when stored within AFS <itemizedlist>
+                <listitem>
+                  <para>Custom properties will be ignored.</para>
+                </listitem>
+                <listitem>
+                  <para>It is not possible to make changes to the LNK properties.</para>
+                </listitem>
+              </itemizedlist> These issues are the result of the <emphasis role="italic">Console
+                Window Host</emphasis> process (conhost.exe) running outside the logon session's
+              authentication group.  While conhost.exe impersonates the Windows user, it does not
+              impersonate a logon session process.  As a result, it has no tokens and cannot access
+              the LNK file.</para>
+          </listitem>
+          <listitem>
+            <para>It is not possible to execute an application out of AFS under the following
+              conditions: <itemizedlist>
+                <listitem>
+                  <para>The path is a drive letter mapping</para>
+                </listitem>
+                <listitem>
+                  <para>The application requires elevated privileges</para>
+                </listitem>
+              </itemizedlist> Workaround: use SUBST instead of NET USE to assign drive letters to
+              UNC paths. </para>
+          </listitem>
       <listitem>
       <para>The Windows File System <ulink url="http://msdn.microsoft.com/en-us/library/ff549293%28v=vs.85%29.aspx">Volume Query Quota Interface</ulink> is not implemented.  As a result, AFS quota information is not available to application processes or end users via Windows dialogs.</para>
       </listitem>
