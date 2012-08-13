@@ -172,6 +172,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
         pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
         if( pFcb == NULL ||
+            pCcb == NULL ||
             pCcb->DirectoryCB == NULL)
         {
 
