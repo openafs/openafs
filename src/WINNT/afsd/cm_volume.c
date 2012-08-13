@@ -677,6 +677,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_NOEXIST);
     } else {
         rwNewstate = roNewstate = bkNewstate = vl_alldown;
+
+        /*
+         * we are updating lastUpdateTime but didn't get an answer
+         * so clear the no exist flag.
+         */
+        _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_NOEXIST);
     }
 
     if (volp->vol[RWVOL].state != rwNewstate) {
@@ -1226,8 +1232,13 @@ void cm_RefreshVolumes(int lifetime)
 	InterlockedIncrement(&volp->refCount);
 	lock_ReleaseRead(&cm_volumeLock);
 
-        if (!(volp->flags & CM_VOLUMEFLAG_RESET)) {
+        if (!(volp->flags & CM_VOLUMEFLAG_RESET) ||
+            (volp->flags & CM_VOLUMEFLAG_NOEXIST)) {
             lock_ObtainWrite(&volp->rw);
+            if (volp->flags & CM_VOLUMEFLAG_NOEXIST) {
+                _InterlockedAnd(&volp->flags, ~CM_VOLUMEFLAG_NOEXIST);
+            }
+
             if (volp->flags & CM_VOLUMEFLAG_RO_MIXED) {
                 if (volp->lastUpdateTime + 300 <= now) {
                     _InterlockedOr(&volp->flags, CM_VOLUMEFLAG_RESET);
