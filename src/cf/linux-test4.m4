@@ -727,3 +727,17 @@ AC_DEFUN([LINUX_IOP_I_CREATE_TAKES_BOOL], [
 		       [define if your iops.create takes a bool argument],
 		       [-Werror])
 ])
+
+
+AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED], [
+  AC_CHECK_LINUX_BUILD([whether dentry_operations.d_revalidate takes an unsigned int],
+			[ac_cv_linux_func_d_revalidate_takes_unsigned],
+			[#include <linux/fs.h>
+			#include <linux/namei.h>],
+			[struct dentry_operations dops;
+			int reval(struct dentry *d, unsigned int i) { return 0; };
+			dops.d_revalidate = reval;],
+		       [DOP_REVALIDATE_TAKES_UNSIGNED],
+		       [define if your dops.d_revalidate takes an unsigned int argument],
+		       [-Werror])
+])
