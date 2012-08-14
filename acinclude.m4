@@ -962,6 +962,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_EXPORT_OP_ENCODE_FH_TAKES_INODES
 		 LINUX_KMAP_ATOMIC_TAKES_NO_KM_TYPE
 		 LINUX_DENTRY_OPEN_TAKES_PATH
+		 LINUX_D_ALIAS_IS_HLIST
 
 		 dnl If we are guaranteed that keyrings will work - that is
 		 dnl  a) The kernel has keyrings enabled

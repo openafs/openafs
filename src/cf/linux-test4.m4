@@ -699,3 +699,16 @@ AC_DEFUN([LINUX_DENTRY_OPEN_TAKES_PATH], [
 			[define if dentry_open takes a path argument],
 			[-Werror])
 ])
+
+
+AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
+  AC_CHECK_LINUX_BUILD([whether dentry->d_alias is an hlist],
+			[ac_cv_linux_d_alias_is_hlist],
+			[#include <linux/fs.h>],
+			[struct dentry *d = NULL;
+			struct hlist_node *hn = NULL;
+			d->d_alias = *hn;],
+			[D_ALIAS_IS_HLIST],
+			[define if dentry->d_alias is an hlist],
+			[])
+])

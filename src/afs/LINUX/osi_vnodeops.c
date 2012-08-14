@@ -701,6 +701,9 @@ canonical_dentry(struct inode *ip)
 {
     struct vcache *vcp = VTOAFS(ip);
     struct dentry *first = NULL, *ret = NULL, *cur;
+#if defined(D_ALIAS_IS_HLIST)
+    struct hlist_node *p;
+#endif
 
     /* general strategy:
      * if vcp->target_link is set, and can be found in ip->i_dentry, use that.
@@ -720,7 +723,11 @@ canonical_dentry(struct inode *ip)
     spin_lock(&ip->i_lock);
 # endif
 
+#if defined(D_ALIAS_IS_HLIST)
+    hlist_for_each_entry(cur, p, &ip->i_dentry, d_alias) {
+#else
     list_for_each_entry_reverse(cur, &ip->i_dentry, d_alias) {
+#endif
 
 	if (!vcp->target_link || cur == vcp->target_link) {
 	    ret = cur;

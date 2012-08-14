@@ -396,8 +396,13 @@ afs_CheckRootVolume(void)
 		    spin_lock(&dp->d_lock);
 #endif
 #endif
+#if defined(D_ALIAS_IS_HLIST)
+		    hlist_del_init(&dp->d_alias);
+		    hlist_add_head(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+#else
 		    list_del_init(&dp->d_alias);
 		    list_add(&dp->d_alias, &(AFSTOV(vcp)->i_dentry));
+#endif
 		    dp->d_inode = AFSTOV(vcp);
 #if defined(AFS_LINUX24_ENV)
 #if defined(AFS_LINUX26_ENV)
