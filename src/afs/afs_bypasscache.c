@@ -325,13 +325,21 @@ afs_bypass_copy_page(bypass_page_t pp, int pageoff, struct iovec *rxiov,
 	dolen = auio->uio_iov[curiov].iov_len - pageoff;
 
 #if !defined(UKERNEL)
+# if defined(KMAP_ATOMIC_TAKES_NO_KM_TYPE)
+    address = kmap_atomic(pp);
+# else
     address = kmap_atomic(pp, KM_USER0);
+# endif
 #else
     address = pp;
 #endif
     memcpy(address + pageoff, (char *)(rxiov[iovno].iov_base) + iovoff, dolen);
 #if !defined(UKERNEL)
+# if defined(KMAP_ATOMIC_TAKES_NO_KM_TYPE)
+    kunmap_atomic(address);
+# else
     kunmap_atomic(address, KM_USER0);
+# endif
 #endif
 }
 

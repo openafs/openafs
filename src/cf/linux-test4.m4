@@ -675,3 +675,15 @@ AC_DEFUN([LINUX_EXPORT_OP_ENCODE_FH_TAKES_INODES], [
 			[define if encode_fh export op takes inode arguments],
 			[-Werror])
 ])
+
+
+AC_DEFUN([LINUX_KMAP_ATOMIC_TAKES_NO_KM_TYPE], [
+  AC_CHECK_LINUX_BUILD([whether kmap_atomic takes no km_type argument],
+			[ac_cv_linux_kma_atomic_takes_no_km_type],
+			[#include <linux/highmem.h>],
+			[struct page *p = NULL;
+			kmap_atomic(p);],
+			[KMAP_ATOMIC_TAKES_NO_KM_TYPE],
+			[define if kmap_atomic takes no km_type argument],
+			[-Werror])
+])
