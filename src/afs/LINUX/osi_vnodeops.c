@@ -1187,16 +1187,17 @@ struct dentry_operations afs_dentry_operations = {
  * name is in kernel space at this point.
  */
 static int
-#if defined(IOP_CREATE_TAKES_UMODE_T)
+#if defined(IOP_CREATE_TAKES_BOOL)
+afs_linux_create(struct inode *dip, struct dentry *dp, umode_t mode,
+		 bool excl)
+#elif defined(IOP_CREATE_TAKES_UMODE_T)
 afs_linux_create(struct inode *dip, struct dentry *dp, umode_t mode,
 		 struct nameidata *nd)
-#else
-#ifdef IOP_CREATE_TAKES_NAMEIDATA
+#elif defined(IOP_CREATE_TAKES_NAMEIDATA)
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode,
 		 struct nameidata *nd)
 #else
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
-#endif
 #endif
 {
     struct vattr vattr;

@@ -712,3 +712,18 @@ AC_DEFUN([LINUX_D_ALIAS_IS_HLIST], [
 			[define if dentry->d_alias is an hlist],
 			[])
 ])
+
+
+AC_DEFUN([LINUX_IOP_I_CREATE_TAKES_BOOL], [
+  AC_CHECK_LINUX_BUILD([whether inode_operations.create takes a bool],
+			[ac_cv_linux_func_i_create_takes_bool],
+			[#include <linux/fs.h>
+			#include <linux/namei.h>],
+			[struct inode _inode = {};
+			struct dentry _dentry;
+			bool b = true;
+			(void)_inode.i_op->create(&_inode, &_dentry, 0, b);],
+		       [IOP_CREATE_TAKES_BOOL],
+		       [define if your iops.create takes a bool argument],
+		       [-Werror])
+])
