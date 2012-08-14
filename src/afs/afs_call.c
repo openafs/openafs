@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#if defined(HAVE_LINUX_KTHREAD_RUN) && !defined(UKERNEL)
+#  include "h/kthread.h"
+#endif
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -24,9 +27,6 @@
 #  if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
 #   include "netinet/in_var.h"
 #  endif
-# endif
-# ifdef HAVE_LINUX_KTHREAD_RUN
-#  include "h/kthread.h"
 # endif
 #endif /* !defined(UKERNEL) */
 #ifdef AFS_SUN510_ENV
