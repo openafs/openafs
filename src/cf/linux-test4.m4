@@ -687,3 +687,15 @@ AC_DEFUN([LINUX_KMAP_ATOMIC_TAKES_NO_KM_TYPE], [
 			[define if kmap_atomic takes no km_type argument],
 			[-Werror])
 ])
+
+
+AC_DEFUN([LINUX_DENTRY_OPEN_TAKES_PATH], [
+  AC_CHECK_LINUX_BUILD([whether dentry_open takes a path argument],
+			[ac_cv_linux_dentry_open_takes_path],
+			[#include <linux/fs.h>],
+			[struct path p;
+			dentry_open(&p, 0, NULL);],
+			[DENTRY_OPEN_TAKES_PATH],
+			[define if dentry_open takes a path argument],
+			[-Werror])
+])

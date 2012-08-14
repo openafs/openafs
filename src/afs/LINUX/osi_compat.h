@@ -445,4 +445,20 @@ afs_get_dentry_ref(struct path *path, struct vfsmount **mnt, struct dentry **dpp
 #endif
 }
 
+#if defined(STRUCT_TASK_STRUCT_HAS_CRED)
+static inline struct file *
+afs_dentry_open(struct dentry *dp, struct vfsmount *mnt, int flags, const struct cred *creds) {
+#if defined(DENTRY_OPEN_TAKES_PATH)
+    struct path path;
+    struct file *filp;
+    path.mnt = mnt;
+    path.dentry = dp;
+    filp = dentry_open(&path, flags, creds);
+    return filp;
+#else
+    return dentry_open(dp, mntget(mnt), flags, creds);
+#endif
+}
+#endif
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */
