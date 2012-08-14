@@ -85,6 +85,7 @@ int rxcon_ident_key;
 int rxcon_client_key;
 
 static struct rx_securityClass *sc = NULL;
+static int h_quota_limit;
 
 /* arguments for PerHost_EnumerateClient enumeration */
 struct enumclient_args {
@@ -1657,18 +1658,8 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 static int
 h_threadquota(int waiting)
 {
-    if (lwps > 64) {
-	if (waiting > 5)
-	    return 1;
-    } else if (lwps > 32) {
-	if (waiting > 4)
-	    return 1;
-    } else if (lwps > 16) {
-	if (waiting > 3)
-	    return 1;
-    } else {
-	if (waiting > 2)
-	    return 1;
+    if (waiting > h_quota_limit) {
+	return 1;
     }
     return 0;
 }
@@ -2245,8 +2236,11 @@ int  num_lrealms = -1;
 
 /* not reentrant */
 void
-h_InitHostPackage(void)
+h_InitHostPackage(int hquota)
 {
+    osi_Assert(hquota > 0);
+    h_quota_limit = hquota;
+
     memset(&nulluuid, 0, sizeof(afsUUID));
     afsconf_GetLocalCell(confDir, localcellname, PR_MAXNAMELEN);
     if (num_lrealms == -1) {

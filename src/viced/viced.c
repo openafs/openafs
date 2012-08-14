@@ -184,6 +184,7 @@ static int panic_timeout = 2 * 60;
 static int panic_timeout = 30 * 60;
 #endif
 
+static int host_thread_quota;
 int rxpackets = 150;		/* 100 */
 int nSmallVns = 400;		/* 200 */
 int large = 400;		/* 200 */
@@ -1498,6 +1499,16 @@ ParseArgs(int argc, char *argv[])
     else if (lwps < 6)
 	lwps = 6;
 
+    if (lwps > 64) {
+	host_thread_quota = 5;
+    } else if (lwps > 32) {
+	host_thread_quota = 4;
+    } else if (lwps > 16) {
+	host_thread_quota = 3;
+    } else {
+	host_thread_quota = 2;
+    }
+
     return (0);
 
 }				/*ParseArgs */
@@ -2207,7 +2218,7 @@ main(int argc, char *argv[])
     }
 
     init_sys_error_to_et();	/* Set up error table translation */
-    h_InitHostPackage();	/* set up local cellname and realmname */
+    h_InitHostPackage(host_thread_quota); /* set up local cellname and realmname */
     InitCallBack(numberofcbs);
     ClearXStatValues();
 
