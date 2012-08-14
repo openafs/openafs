@@ -1240,7 +1240,10 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 
 /* afs_linux_lookup */
 static struct dentry *
-#ifdef IOP_LOOKUP_TAKES_NAMEIDATA
+#if defined(IOP_LOOKUP_TAKES_UNSIGNED)
+afs_linux_lookup(struct inode *dip, struct dentry *dp,
+		 unsigned flags)
+#elif defined(IOP_LOOKUP_TAKES_NAMEIDATA)
 afs_linux_lookup(struct inode *dip, struct dentry *dp,
 		 struct nameidata *nd)
 #else

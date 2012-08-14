@@ -741,3 +741,17 @@ AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_UNSIGNED], [
 		       [define if your dops.d_revalidate takes an unsigned int argument],
 		       [-Werror])
 ])
+
+
+AC_DEFUN([LINUX_IOP_LOOKUP_TAKES_UNSIGNED], [
+  AC_CHECK_LINUX_BUILD([whether inode operation lookup takes an unsigned int],
+			[ac_cv_linux_func_lookup_takes_unsigned],
+			[#include <linux/fs.h>
+			#include <linux/namei.h>],
+			[struct inode_operations iops;
+			struct dentry *look(struct inode *i, struct dentry *d, unsigned int j) { return NULL; };
+			iops.lookup = look;],
+		       [IOP_LOOKUP_TAKES_UNSIGNED],
+		       [define if your iops.lookup takes an unsigned int argument],
+		       [-Werror])
+])
