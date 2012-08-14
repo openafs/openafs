@@ -225,7 +225,7 @@ extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSu
 		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP);
 extern int h_NBLock_r(struct host *host);
 extern void h_DumpHosts(void);
-extern void h_InitHostPackage(void);
+extern void h_InitHostPackage(int hquota);
 extern void h_CheckHosts(void );
 extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
 extern void h_AddHostToUuidHashTable_r(afsUUID * uuid, struct host * host);
