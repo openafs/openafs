@@ -1045,7 +1045,9 @@ afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *sta
  * The code here assumes that on entry the global lock is not held
  */
 static int
-#ifdef DOP_REVALIDATE_TAKES_NAMEIDATA
+#if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
+afs_linux_dentry_revalidate(struct dentry *dp, unsigned int flags)
+#elif defined(DOP_REVALIDATE_TAKES_NAMEIDATA)
 afs_linux_dentry_revalidate(struct dentry *dp, struct nameidata *nd)
 #else
 afs_linux_dentry_revalidate(struct dentry *dp, int flags)
@@ -1061,7 +1063,11 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
 #ifdef LOOKUP_RCU
     /* We don't support RCU path walking */
+# if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
+    if (flags & LOOKUP_RCU)
+# else
     if (nd->flags & LOOKUP_RCU)
+# endif
        return -ECHILD;
 #endif
 
