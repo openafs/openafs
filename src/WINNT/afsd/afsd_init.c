@@ -1376,10 +1376,10 @@ afsd_InitCM(char **reasonP)
     if (code == ERROR_SUCCESS) {
         cm_shortNames = (unsigned short) dwValue;
     } else {
-        /* disable by default on Win8 and Server 2008 R2 */
+        /* disable by default on Win7, Win 8, Server 2008 R2 and Server 2012 */
         if (osVersion.dwMajorVersion > 6 ||
             osVersion.dwMajorVersion == 6 &&
-            osVersion.dwMinorVersion >= 2)
+            osVersion.dwMinorVersion >= 1)
             cm_shortNames = 0;
         else
             cm_shortNames = 1;
