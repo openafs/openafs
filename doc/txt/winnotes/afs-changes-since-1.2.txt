@@ -1,3 +1,21 @@
+Since 1.7.1600 (1.7.16)
+
+ * Add support for Windows 8 and Server 2012
+
+ * Disable short name support for Windows 7, Windows 8,
+   Server 2008 R2 and Server 2012.  Can be enabled by
+   registry value.
+
+ * Permit auto-discovery of new cells in Freelance
+   mode to be disabled without disabling Freelance
+   mode or DNS support.  "FreelanceDiscovery" registry
+   value.
+
+ * Reset volume NOEXIST flag on "fs checkvolumes"
+
+ * Prevent NULL pointer kernel reference when used
+   with Microsoft System Center 2012 Endpoint Protection.
+
 Since 1.7.1500 (1.7.15)
 
  * Rx RPC improvements
