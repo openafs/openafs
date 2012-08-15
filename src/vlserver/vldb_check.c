@@ -88,6 +88,7 @@ struct er {
 afs_int32 maxentries;
 int serveraddrs[MAXSERVERID + 2];
 u_char serverxref[MAXSERVERID + 2];  /**< to resolve cross-linked mh entries */
+int serverref[MAXSERVERID + 2];      /**< which addrs are referenced by vl entries */
 
 struct mhinfo {
     afs_uint32 addr;			/**< vldb file record */
@@ -1198,6 +1199,47 @@ reportHashChanges(struct vlheader *header, afs_uint32 oldnamehash[HASHSIZE], afs
     }
 }
 
+/**
+ * Remove unreferenced, duplicate multi-home address indices.
+ *
+ * Removes entries from IpMappedAddr which where found to be
+ * duplicates. Only entries which are not referenced by vl entries
+ * are removed on this pass.
+ *
+ * @param[inout] header the vldb header to be updated.
+ */
+void
+removeCrossLinkedAddresses(struct vlheader *header)
+{
+    int i;
+
+    for (i = 0; i <= MAXSERVERID; i++) {
+	if (serverref[i] == 0
+	    && (header->IpMappedAddr[i] & 0xff000000) == 0xff000000
+	    && serverxref[i] != BADSERVERID) {
+	    if (serverxref[i] == i) {
+		log_error(VLDB_CHECK_ERROR,
+			  "INTERNAL VLDB_CHECK_ERROR: serverxref points to self; index %d\n",
+			  i);
+	    } else if (header->IpMappedAddr[serverxref[i]] == 0) {
+		log_error(VLDB_CHECK_ERROR,
+			  "INTERNAL VLDB_CHECK_ERROR: serverxref points to empty addr; index %d, value %d\n",
+			  i, serverxref[i]);
+	    } else if (header->IpMappedAddr[serverxref[i]] != header->IpMappedAddr[i]) {
+		log_error(VLDB_CHECK_ERROR,
+			  "INTERNAL VLDB_CHECK_ERROR: invalid serverxref; index %d, value %d\n",
+			  i, serverxref[i]);
+	    } else {
+		quiet_println
+		    ("FIX: Removing unreferenced address index %d, which cross-links MH block %d, index %d\n",
+		     i, (header->IpMappedAddr[i] & 0x00ff0000) >> 16,
+		     (header->IpMappedAddr[i] & 0x0000ffff));
+		header->IpMappedAddr[i] = 0;
+	    }
+	}
+    }
+}
+
 int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
@@ -1205,7 +1247,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     afs_int32 type;
     struct vlheader header;
     struct nvlentry vlentry, vlentry2;
-    int i, j;
+    int i, j, k;
     afs_uint32 oldnamehash[HASHSIZE];
     afs_uint32 oldidhash[MAXTYPES][HASHSIZE];
 
@@ -1247,6 +1289,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     memset(record, 0, (maxentries * sizeof(struct er)));
     memset(serveraddrs, 0, sizeof(serveraddrs));
     memset(mhinfo, 0, sizeof(mhinfo));
+    memset(serverref, 0, sizeof(serverref));
     for (i = 0; i <= MAXSERVERID; i++) {
 	serverxref[i] = BADSERVERID;
     }
@@ -1392,11 +1435,17 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    }
 
 	    for (j = 0; j < NMAXNSERVERS; j++) {
-		if ((vlentry.serverNumber[j] != 255)
-		    && (serveraddrs[vlentry.serverNumber[j]] == 0)) {
-		   log_error
-			(VLDB_CHECK_ERROR,"Volume '%s', index %d points to empty server entry %d\n",
-			 vlentry.name, j, vlentry.serverNumber[j]);
+		if (vlentry.serverNumber[j] != BADSERVERID) {
+		    serverref[vlentry.serverNumber[j]] = 1;
+		    if (serveraddrs[vlentry.serverNumber[j]] == 0) {
+			log_error
+			    (VLDB_CHECK_ERROR,"Volume '%s', index %d points to empty server entry %d\n",
+			     vlentry.name, j, vlentry.serverNumber[j]);
+		    } else if (serverxref[vlentry.serverNumber[j]] != BADSERVERID) {
+			    log_error
+			    (VLDB_CHECK_ERROR,"Volume '%s', index %d points to server entry %d, which is cross-linked by %d\n",
+			     vlentry.name, j, vlentry.serverNumber[j], serverxref[vlentry.serverNumber[j]]);
+		    }
 		}
 	    }
 
@@ -1517,6 +1566,36 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 			}
 		    }
 
+		    /* Consolidate server numbers which point to the same mh entry.
+		     * The serverref flags are not reset here, since we want to make
+		     * sure the data is actually written before the server number is
+		     * considered unreferenced. */
+		    for (k = 0; k < NMAXNSERVERS; k++) {
+			if (vlentry.serverNumber[k] != BADSERVERID
+			    && serverxref[vlentry.serverNumber[k]] != BADSERVERID) {
+			    u_char oldsn = vlentry.serverNumber[k];
+			    u_char newsn = serverxref[oldsn];
+			    if (newsn == oldsn) {
+				log_error(VLDB_CHECK_ERROR,
+					  "INTERNAL VLDB_CHECK_ERROR: serverxref points to self; index %d\n",
+					  oldsn);
+			    } else if (header.IpMappedAddr[oldsn] == 0) {
+				log_error(VLDB_CHECK_ERROR,
+					  "INTERNAL VLDB_CHECK_ERROR: serverxref; points to empty address; index %d, value %d\n",
+					  oldsn, newsn);
+			    } else if (header.IpMappedAddr[newsn] != header.IpMappedAddr[oldsn]) {
+				log_error(VLDB_CHECK_ERROR,
+					  "INTERNAL VLDB_CHECK_ERROR: invalid serverxref; index %d\n",
+					  oldsn);
+			    } else {
+				quiet_println
+				    ("FIX: Volume '%s', index %d, server number was %d, is now %d\n",
+				     vlentry.name, k, oldsn, newsn);
+				vlentry.serverNumber[k] = newsn;
+			    }
+			}
+		    }
+
 		    vlentry.nextIdHash[j] = header.VolidHash[j][hash];
 		    header.VolidHash[j][hash] = record[i].addr;
 		}
@@ -1550,6 +1629,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     }
     if (fix) {
 	reportHashChanges(&header, oldnamehash, oldidhash);
+	removeCrossLinkedAddresses(&header);
 	writeheader(&header);
     }
 
