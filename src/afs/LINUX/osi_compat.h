@@ -27,6 +27,10 @@
 # endif
 #endif
 
+#if defined(STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT) && !defined(DCACHE_NEED_AUTOMOUNT)
+# define DCACHE_NEED_AUTOMOUNT DMANAGED_AUTOMOUNT
+#endif
+
 #ifdef HAVE_LINUX_STRUCT_VFS_PATH
 typedef struct vfs_path afs_linux_path_t;
 #else
