@@ -31,16 +31,22 @@ INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/afs/cellconfig.h \
 	vlserver.h vldbint.h
 
-LIBS=	${TOP_LIBDIR}/libubik_pthread.a \
+LIBS_common = \
+	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libafsutil.a \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
-OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS} ${UTILOBJS} 
+LIBS_server = \
+	${TOP_LIBDIR}/libaudit.a \
+	$(LIBS_common)
 
+LIBS_client = \
+	$(LIBS_common)
+
+OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS} ${UTILOBJS}
 
 all: \
 	vlserver vlclient vlserver cnvldb vldb_check \
@@ -95,31 +101,31 @@ pthread_threadname.o: ${UTIL}/pthread_threadname.c
 #
 
 
-vldb_check: vldb_check.o ${LIBS} AFS_component_version_number.o
+vldb_check: vldb_check.o AFS_component_version_number.o $(LIBS_client)
 	$(LT_LDRULE_static) vldb_check.o AFS_component_version_number.o \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} 
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 vldb_check.o: ${VLSERVER}/vldb_check.c 
 	$(AFS_CCRULE) $(VLSERVER)/vldb_check.c
 
-cnvldb: cnvldb.o ${LIBS} 
+cnvldb: cnvldb.o $(LIBS_client)
 	$(LT_LDRULE_static) cnvldb.o \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 cnvldb.o: ${VLSERVER}/cnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/cnvldb.c
 
-sascnvldb: sascnvldb.o ${LIBS} 
+sascnvldb: sascnvldb.o $(LIBS_client)
 	$(LT_LDRULE_static) sascnvldb.o \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 sascnvldb.o: ${VLSERVER}/sascnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/sascnvldb.c
 
-vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
+vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS_server)
 	$(LT_LDRULE_static) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_server) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 vlserver.o: ${VLSERVER}/vlserver.c ${INCLS} AFS_component_version_number.o
 	$(AFS_CCRULE) $(VLSERVER)/vlserver.c
@@ -158,7 +164,7 @@ Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
 
 vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
 	$(LT_LDRULE_static) vlclient.o $(OBJS) ${TOP_LIBDIR}/libcmd.a \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_server) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 		
 vlclient.o: ${VLSERVER}/vlclient.c
 	$(AFS_CCRULE) $(VLSERVER)/vlclient.c

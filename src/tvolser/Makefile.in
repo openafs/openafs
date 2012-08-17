@@ -49,12 +49,20 @@ objects= ${VOLSEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 vosobjects= ${VOSOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} ${UTILOBJS} ${DIROBJS} \
 	${VOLOBJS} ${RXOBJS}
 
-LIBS=	${TOP_LIBDIR}/libcmd.a          \
+LIBS_common = \
+	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsutil.a      \
 	${TOP_LIBDIR}/libusd.a          \
 	${TOP_LIBDIR}/libafsrpc.a	\
 	$(top_builddir)/src/opr/liboafs_opr.la
+
+LIBS_client = \
+	$(TOP_LIBDIR)/libubik_pthread.a \
+	$(LIBS_common)
+
+LIBS_server = \
+	$(LIBS_common)
 
 all: volserver vos
 
@@ -207,14 +215,13 @@ namei_ops.o: ${VOL}/namei_ops.c
 vos.o: ${VOLSER}/vos.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/vos.c
 
-vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
-	$(LT_LDRULE_static) vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} \
-		${TOP_LIBDIR}/libubik_pthread.a \
+vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} $(LIBS_client)
+	$(LT_LDRULE_static) vos.o ${VOSOBJS} ${VLSERVEROBJS} $(LIBS_client) \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
-volserver: ${objects} ${LIBS}
-	$(LT_LDRULE_static) ${objects} \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+volserver: ${objects} $(LIBS_server)
+	$(LT_LDRULE_static) ${objects} $(LIBS_server) \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 install: volserver
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}

@@ -22,6 +22,8 @@ UTILOBJS=uuid.o serverLog.o fileutil.o dirpath.o \
      volparse.o flipbase64.o softsig.o hostparse.o pthread_glock.o \
      pthread_threadname.o
 
+PTOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o
+
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
 	${TOP_INCDIR}/lwp.h \
@@ -32,16 +34,20 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	ptint.h \
 	pterror.h
 
-LIBS=${RXOBJS} ${UTILOBJS}\
+LIBS_common=$(RXOBJS) $(UTILOBJS) \
 	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
 	${TOP_LIBDIR}/libcmd.a \
-	$(top_builddir)/src/opr/liboafs_opr.la \
-	${TOP_LIBDIR}/libaudit.a \
-	${TOP_LIBDIR}/libafsutil.a 
+	${TOP_LIBDIR}/libafsutil.a \
+	$(top_builddir)/src/opr/liboafs_opr.la
 
-PTOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o
+LIBS_server= \
+	${TOP_LIBDIR}/libaudit.a \
+	$(LIBS_common)
+
+LIBS_client=$(PTOBJS) \
+	$(LIBS_common)
 
 all: ptserver pts pt_util db_verify \
 	depinstall readgroup readpwd testpt
@@ -67,7 +73,7 @@ rxkad_errs.o: ../rxkad/rxkad_errs.c
 # get the pthreaded util stuff compiled here.  we do this instead of
 # using the non-pthreaded libutil.a.  There probably should be a
 # pthreaded version of this library, as we are doing with ubik itself, but...
-#
+
 
 assert.o: ${UTIL}/assert.c
 	$(AFS_CCRULE) $(UTIL)/assert.c
@@ -149,23 +155,25 @@ Kptint.h: ${PTSERVER}/ptint.xg
 display.o: ${PTSERVER}/display.c ${INCLS}
 	${AFS_CCRULE} ${PTSERVER}/display.c
 
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) map.o
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o \
+	  $(LIBS_server)
 	$(LT_LDRULE_static) ptserver.o ptutils.o ptprocs.o \
 		ptint.ss.o ptint.xdr.o utils.o map.o \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
+		$(LIBS_server) \
+		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
 		${XLIBS}
 
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/db_verify.c
 
-db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(LT_LDRULE_static) db_verify.o display.o pterror.o \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+db_verify: db_verify.o display.o $(LIBS_client)
+	$(LT_LDRULE_static) db_verify.o display.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
-ptclient: ptclient.o display.o ptuser.o pterror.o ptint.cs.o ptint.xdr.o \
-	AFS_component_version_number.o $(LIBS)
+ptclient: ptclient.o display.o ptuser.o ptint.cs.o ptint.xdr.o \
+	AFS_component_version_number.o $(LIBS_client)
 	$(LT_LDRULE_static) ptclient.o display.o $(PTOBJS) \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptclient.c
@@ -177,38 +185,37 @@ pterror.h pterror.c: ${PTSERVER}/pterror.et
 	$(RM) -f pterror.h pterror.c
 	${COMPILE_ET} -p ${srcdir}/${PTSERVER} pterror
 
-pts: pts.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS) ${INCLS}
-	$(LT_LDRULE_static) pts.o ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+pts: pts.o ${TOP_LIBDIR}/libcmd.a $(LIBS_client) ${INCLS}
+	$(LT_LDRULE_static) pts.o \
+		${LIBS_client} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 pts.o: ${PTSERVER}/pts.c
 	$(AFS_CCRULE) $(PTSERVER)/pts.c
 
-readgroup: readgroup.o $(PTOBJS) $(LIBS)
-	$(LT_LDRULE_static) readgroup.o $(PTOBJS) \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+readgroup: readgroup.o $(LIBS_client)
+	$(LT_LDRULE_static) readgroup.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 readgroup.o: ${PTSERVER}/readgroup.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readgroup.c
 
-readpwd: readpwd.o $(PTOBJS) $(LIBS)
-	$(LT_LDRULE_static) readpwd.o $(PTOBJS) \
-		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+readpwd: readpwd.o $(LIBS_client)
+	$(LT_LDRULE_static) readpwd.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 readpwd.o: ${PTSERVER}/readpwd.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/readpwd.c
 
-testpt: testpt.o $(PTOBJS) ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(LT_LDRULE_static) testpt.o -lm ${TOP_LIBDIR}/libcmd.a $(PTOBJS) \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+testpt: testpt.o $(LIBS_client)
+	$(LT_LDRULE_static) testpt.o -lm \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 testpt.o: ${PTSERVER}/testpt.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/testpt.c
 
-pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) $(LIBS)
-	$(LT_LDRULE_static) pt_util.o ptutils.o ubik.o utils.o map.o $(PTOBJS) \
-		${TOP_LIBDIR}/libcmd.a \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+pt_util: pt_util.o ptutils.o ubik.o utils.o map.o $(LIBS_client)
+	$(LT_LDRULE_static) pt_util.o ptutils.o ubik.o utils.o map.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 pt_util.o: ${PTSERVER}/pt_util.c
 	$(AFS_CCRULE) $(PTSERVER)/pt_util.c
