@@ -5510,7 +5510,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     afs_uint32 volid;
     afs_uint32 server;
     afs_int32 code, i, same;
-    struct nvldbentry entry, storeEntry;
+    struct nvldbentry entry, checkEntry, storeEntry;
     afs_int32 vcode;
     afs_int32 rwindex = 0;
     afs_uint32 rwserver = 0;
@@ -5555,6 +5555,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     if (as->parms[3].items)
 	force = 1;
 
+    memset(&entry, 0, sizeof(entry));
     vcode = VLDB_GetEntryByID(volid, -1, &entry);
     if (vcode) {
 	fprintf(STDERR,
@@ -5565,7 +5566,6 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     }
 
     /* use RO volid even if user specified RW or BK volid */
-
     if (volid != entry.volumeId[ROVOL])
 	volid = entry.volumeId[ROVOL];
 
@@ -5630,6 +5630,30 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	PrintError("", vcode);
 	return -1;
     }
+
+    /* make sure the VLDB entry hasn't changed since we started */
+    memset(&checkEntry, 0, sizeof(checkEntry));
+    vcode = VLDB_GetEntryByID(volid, -1, &checkEntry);
+    if (vcode) {
+	fprintf(STDERR,
+                "Could not fetch the entry for volume %lu from VLDB\n",
+                (unsigned long)volid);
+	PrintError("convertROtoRW ", vcode);
+	code = vcode;
+	goto error_exit;
+    }
+
+    MapHostToNetwork(&checkEntry);
+    entry.flags &= ~VLOP_ALLOPERS;  /* clear any stale lock operation flags */
+    entry.flags |= VLOP_MOVE;        /* set to match SetLock operation above */
+    if (memcmp(&entry, &checkEntry, sizeof(entry)) != 0) {
+        fprintf(STDERR,
+                "VLDB entry for volume %lu has changed; please reissue the command.\n",
+                (unsigned long)volid);
+        code = -1;
+        goto error_exit;
+    }
+
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
     if (code) {
