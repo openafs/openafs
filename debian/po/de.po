@@ -19,6 +19,7 @@ msgstr ""
 "PO-Revision-Date: 2006-11-24 22:34+0200\n"
 "Last-Translator: Henrik Kroeger <henrik_kroeger@arcor.de>\n"
 "Language-Team: Debian German <debian-l10n-german@lists.debian.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-15\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -27,7 +28,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:1001
 msgid "DB server host names for your home cell:"
-msgstr "Rechnername des Datenbank-Servers fÃ¼r Ihre Home-Zelle:"
+msgstr "Rechnername des Datenbank-Servers für Ihre Home-Zelle:"
 
 #. Type: string
 #. Description
@@ -43,23 +44,23 @@ msgid ""
 "cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
 "client to enable the client."
 msgstr ""
-"AFS benutzt die Datei /etc/openafs/CellServDB fÃ¼r eine Liste von Servern, "
+"AFS benutzt die Datei /etc/openafs/CellServDB für eine Liste von Servern, "
 "die angesprochen werden sollen, um Teile einer Zelle zu finden. Die Zelle, "
-"von der Sie sagen, diese Workstation gehÃ¶re zu ihr, ist nicht in dieser "
+"von der Sie sagen, diese Workstation gehöre zu ihr, ist nicht in dieser "
 "Datei. Geben Sie die Hostnamen der Datenbank-Server ein, getrennt durch "
 "Leerzeichen. WICHTIG: Falls Sie eine neue Zelle erstellen und dieser "
 "Computer der Datenbank-Server der Zelle sein soll, geben Sie nur den "
-"Hostnamen dieses Computers ein; fÃ¼gen Sie andere Server erst spÃ¤ter hinzu, "
-"sobald diese funktionieren. AuÃŸerdem sollten Sie den AFS-Client auf diesem "
+"Hostnamen dieses Computers ein; fügen Sie andere Server erst später hinzu, "
+"sobald diese funktionieren. Außerdem sollten Sie den AFS-Client auf diesem "
 "Server nicht beim Rechnerstart starten lassen, bevor diese Zelle "
-"konfiguriert ist. Wenn Sie soweit sind, kÃ¶nnen Sie /etc/openafs/afs.conf."
+"konfiguriert ist. Wenn Sie soweit sind, können Sie /etc/openafs/afs.conf."
 "client editieren, um den AFS-Client zu aktivieren."
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:2001
 msgid "AFS cell this workstation belongs to:"
-msgstr "AFS-Zelle, zu der diese Workstation gehÃ¶rt:"
+msgstr "AFS-Zelle, zu der diese Workstation gehört:"
 
 #. Type: string
 #. Description
@@ -70,14 +71,14 @@ msgid ""
 "the site."
 msgstr ""
 "Der AFS-Dateiraum ist in Zellen bzw. administrativen Domains organisiert. "
-"Jede Workstation gehÃ¶rt zu einer Zelle. Normalerweise ist eine Zelle gleich "
+"Jede Workstation gehört zu einer Zelle. Normalerweise ist eine Zelle gleich "
 "dem DNS Domain-Namen."
 
 #. Type: string
 #. Description
 #: ../openafs-client.templates:3001
 msgid "Size of AFS cache in kB:"
-msgstr "GrÃ¶ÃŸe des AFS-Cache in kB:"
+msgstr "Größe des AFS-Cache in kB:"
 
 #. Type: string
 #. Description
@@ -90,9 +91,9 @@ msgid ""
 msgstr ""
 "AFS benutzt einen Bereich der Festplatte, um Netzwerk-Dateien zum "
 "schnelleren Zugriff zwischenzuspeichern. Dieser Cache wird unter /var/cache/"
-"openafs eingehÃ¤ngt werden. Es ist wichtig, dass der Cache nicht die "
-"Partition Ã¼berfÃ¼llt, auf dem er sich befindet. Viele Leute finden es "
-"nÃ¼tzlich, eine extra Partition fÃ¼r ihren AFS-Cache zu haben. "
+"openafs eingehängt werden. Es ist wichtig, dass der Cache nicht die "
+"Partition überfüllt, auf dem er sich befindet. Viele Leute finden es "
+"nützlich, eine extra Partition für ihren AFS-Cache zu haben. "
 
 #. Type: boolean
 #. Description
@@ -111,11 +112,11 @@ msgid ""
 "start to start the client when you wish to run it."
 msgstr ""
 "Normalerweise erwarten Benutzer, die das Paket openafs-client installieren, "
-"dass AFS automatisch beim Boot eingehÃ¤ngt wird. Falls Sie aber eine neue "
-"Zelle erstellen wollen, oder einen Laptop benutzen, mÃ¶chten Sie es "
-"vielleicht nicht beim Boot gestartet haben. Wenn Sie sich dafÃ¼r "
-"entscheiden, AFS nicht beim Rechnerstart zu starten, kÃ¶nnen Sie /etc/init.d/"
-"openafs-client force-start ausfÃ¼hren, um den AFS-Client zu starten. "
+"dass AFS automatisch beim Boot eingehängt wird. Falls Sie aber eine neue "
+"Zelle erstellen wollen, oder einen Laptop benutzen, möchten Sie es "
+"vielleicht nicht beim Boot gestartet haben. Wenn Sie sich dafür "
+"entscheiden, AFS nicht beim Rechnerstart zu starten, können Sie /etc/init.d/"
+"openafs-client force-start ausführen, um den AFS-Client zu starten. "
 
 #. Type: boolean
 #. Description
@@ -135,15 +136,14 @@ msgstr ""
 "Um eine AFS-Zelle zu kontaktieren, brauchen Sie die IP-Adressen der "
 "Datenbank-Server der Zellen. Normalerweise werden diese Informationen aus "
 "der Datei /etc/openafs/CellServDB gelesen. Falls Openafs aber keine Zelle in "
-"dieser Datei finden kann, kann auch DNS benutzt werden, um nach AFSDB-EintrÃ"
-"¤gen zu suchen, die diese Information enthalten."
+"dieser Datei finden kann, kann auch DNS benutzt werden, um nach AFSDB-Eintrögen zu suchen, die diese Information enthalten."
 
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:6001
 msgid "Encrypt authenticated traffic with AFS fileserver?"
 msgstr ""
-"Soll authentifizierter Verkehr mit AFS-Dateiservern verschlÃ¼sselt werden?"
+"Soll authentifizierter Verkehr mit AFS-Dateiservern verschlüsselt werden?"
 
 #. Type: boolean
 #. Description
@@ -155,10 +155,10 @@ msgid ""
 "confidentiality and is likely to make the job of a casual attacker "
 "significantly more difficult."
 msgstr ""
-"AFS bietet eine schwache Form der VerschlÃ¼sselung, die optional zwischen "
-"Client und Dateiserver benutzt werden kann. Obwohl diese VerschlÃ¼sselung "
-"schwÃ¤cher als DES und daher nicht ausreichend fÃ¼r sehr vertrauliche Daten "
-"ist, macht es einem mÃ¶glichen Angreifer die Arbeit dennoch deutlich "
+"AFS bietet eine schwache Form der Verschlüsselung, die optional zwischen "
+"Client und Dateiserver benutzt werden kann. Obwohl diese Verschlüsselung "
+"schwächer als DES und daher nicht ausreichend für sehr vertrauliche Daten "
+"ist, macht es einem möglichen Angreifer die Arbeit dennoch deutlich "
 "schwerer."
 
 #. Type: boolean
@@ -176,8 +176,8 @@ msgid ""
 "cell.  However, OpenAFS clients can generate the contents of /afs "
 "dynamically based on the contents of /etc/openafs/CellServDB and DNS."
 msgstr ""
-"/afs enthÃ¤lt einen Eintrag fÃ¼r jede Zelle, mit der der Client interagieren "
-"kann. Normalerweise werden diese EintrÃ¤ge von Servern in der Home-Zelle des "
+"/afs enthält einen Eintrag für jede Zelle, mit der der Client interagieren "
+"kann. Normalerweise werden diese Einträge von Servern in der Home-Zelle des "
 "Clients generiert. Trotzdem kann aber der OpenAFS-Client den Inhalt von /afs "
 "dynamisch anhand der Informationen von /etc/openafs/CellServDB und DNS "
 "erstellen."
@@ -192,8 +192,8 @@ msgid ""
 "cell.)"
 msgstr ""
 "Wenn Sie /afs dynamisch erstellen lassen, werden Sie vielleicht /etc/openafs/"
-"CellAlias erstellen mÃ¼ssen, sodass die Datei Aliase fÃ¼r gebrÃ¤uchliche "
-"Zellen enthÃ¤lt. Die Syntax ist: Eine Zeile pro Aliase, mit Zellenname - "
+"CellAlias erstellen müssen, sodass die Datei Aliase für gebräuchliche "
+"Zellen enthält. Die Syntax ist: Eine Zeile pro Aliase, mit Zellenname - "
 "Leerzeichen - Alias."
 
 #. Type: boolean
@@ -201,7 +201,7 @@ msgstr ""
 #: ../openafs-client.templates:8001
 msgid "Use fakestat to avoid hangs when listing /afs?"
 msgstr ""
-"Soll fakestat benutzt werden, um eine VerzÃ¶gerung beim Auflisten von /afs "
+"Soll fakestat benutzt werden, um eine Verzögerung beim Auflisten von /afs "
 "zu vermeiden?"
 
 #. Type: boolean
@@ -215,18 +215,18 @@ msgid ""
 "operations locally to avoid these hangs.  You want this option under most "
 "circumstances."
 msgstr ""
-"Da AFS ein globaler Dateiraum ist, kÃ¶nnen Operationen im /afs-Verzeichnis "
-"zu groÃŸen Netzverkehr fÃ¼hren. Wenn einige AFS-Zellen nicht erreichbar sind, "
+"Da AFS ein globaler Dateiraum ist, können Operationen im /afs-Verzeichnis "
+"zu großen Netzverkehr führen. Wenn einige AFS-Zellen nicht erreichbar sind, "
 "kann das Anschauen von /afs (mit ls oder einem Dateibrowser) zu "
-"minutenlangem AufhÃ¤ngen fÃ¼hren. AFS kann aber Antworten zu solchen "
-"Operationen simulieren, um ein AufhÃ¤ngen zu vermeiden. Die meisten Leute "
+"minutenlangem Aufhängen führen. AFS kann aber Antworten zu solchen "
+"Operationen simulieren, um ein Aufhängen zu vermeiden. Die meisten Leute "
 "wollen das."
 
 #. Type: string
 #. Description
 #: ../openafs-fileserver.templates:1001
 msgid "Cell this server serves files for:"
-msgstr "Zelle, fÃ¼r die dieser Server Dateien ausliefert:"
+msgstr "Zelle, für die dieser Server Dateien ausliefert:"
 
 #. Type: string
 #. Description
@@ -236,8 +236,8 @@ msgid ""
 "Kerberos service and serve volumes into that cell.  Normally, this cell is "
 "the same cell as the workstation's client belongs to."
 msgstr ""
-"AFS-Dateiserver gehÃ¶ren zu einer Zelle. Die Server haben den SchlÃ¼ssel "
-"fÃ¼r den Kerberos-Service der Zelle und stellen Volumes fÃ¼r die Zelle "
+"AFS-Dateiserver gehören zu einer Zelle. Die Server haben den Schlüssel "
+"für den Kerberos-Service der Zelle und stellen Volumes für die Zelle "
 "bereit. Normalerweise ist die Zelle identisch mit der des Clients."
 
 #. Type: note
@@ -258,7 +258,7 @@ msgstr ""
 "Sie benutzen den OpenAFS-Dateiserver auf einer Alpha-Maschine. Das "
 "funktioniert wahrscheinlich nicht; der DES-Code unter Alpha zusammen mit dem "
 "Dateiserver im Thread-Modus ist fehlerhaft. Wahrscheinlich wird der "
-"Dateiserver einfach nicht starten, aber wenn er gestartet wird, kÃ¶nnte "
+"Dateiserver einfach nicht starten, aber wenn er gestartet wird, könnte "
 "Datenverlust die Folge sein. Sie wurden gewarnt."
 
 #~ msgid "Upgrading will move files to new locations; continue?"
@@ -278,5 +278,5 @@ msgstr ""
 #~ "BosConfig-Datei ist nun unter /etc/openafs zu finden und alle anderen "
 #~ "Dateien sind unter /var/lib/openafs. Wenn Sie mit dem Upgrade fortfahren, "
 #~ "werden diese Dateien verschoben. Sie sollten den bos restart Befehl "
-#~ "verwenden, um Ihre Server neuzustarten. Jede KonfigurationsÃ¤nderung, die "
+#~ "verwenden, um Ihre Server neuzustarten. Jede Konfigurationsänderung, die "
 #~ "Sie davor machen, wird verloren gehen."

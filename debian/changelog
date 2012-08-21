@@ -1,3 +1,11 @@
+openafs (1.6.1-2) UNRELEASED; urgency=low
+
+  * Translation updates:
+    - Fix German translation encoding.  Thanks, Christian PERRIER.
+      (Closes: #678736)
+
+ -- Russ Allbery <rra@debian.org>  Tue, 21 Aug 2012 16:46:17 -0700
+
 openafs (1.6.1-1) unstable; urgency=low
 
   * New upstream release.
