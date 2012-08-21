@@ -1150,6 +1150,10 @@ afs_dentry_automount(struct path *path)
 {
     struct dentry *target;
 
+    /* avoid symlink resolution limits when resolving; we cannot contribute to
+     * an infinite symlink loop */
+    current->total_link_count--;
+
     target = canonical_dentry(path->dentry->d_inode);
 
     if (target == path->dentry) {
@@ -2613,6 +2617,17 @@ afs_linux_dir_follow_link(struct dentry *dentry, struct nameidata *nd)
 {
     struct dentry **dpp;
     struct dentry *target;
+
+    if (current->total_link_count > 0) {
+	/* avoid symlink resolution limits when resolving; we cannot contribute to
+	 * an infinite symlink loop */
+	/* only do this for follow_link when total_link_count is positive to be
+	 * on the safe side; there is at least one code path in the Linux
+	 * kernel where it seems like it may be possible to get here without
+	 * total_link_count getting incremented. it is not clear on how that
+	 * path is actually reached, but guard against it just to be safe */
+	current->total_link_count--;
+    }
 
     target = canonical_dentry(dentry->d_inode);
 
