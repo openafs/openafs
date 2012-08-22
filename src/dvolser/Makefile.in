@@ -18,7 +18,6 @@ LIBACL=$(srcdir)/../libacl
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 VOLSER=$(srcdir)/../volser
-RX=$(srcdir)/../rx
 
 VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o vol_split.o
 
@@ -32,10 +31,8 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o \
 	 namei_ops.o nuke.o salvsync-client.o daemon_com.o
 
-RXOBJS=rx_pthread.o
-
 objects= ${VOLSEROBJS} ${LIBACLOBJS} \
-	 ${DIROBJS} ${VOLOBJS} ${RXOBJS}
+	 ${DIROBJS} ${VOLOBJS}
 
 LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
 	${TOP_LIBDIR}/libafsauthent.a   \
@@ -46,10 +43,6 @@ LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
 	$(top_builddir)/src/usd/liboafs_usd.la
 
 all: davolserver 
-
-CFLAGS_rx_pthread.o = -DDPF_FSLOG
-rx_pthread.o: ${RX}/rx_pthread.c
-	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 volmain.o: ${VOLSER}/volmain.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/volmain.c

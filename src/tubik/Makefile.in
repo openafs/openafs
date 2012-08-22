@@ -13,7 +13,6 @@ HELPER_SPLINT=@HELPER_SPLINT@
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 UBIK=$(srcdir)/../ubik
-RX=$(srcdir)/../rx
 
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
@@ -23,9 +22,8 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/lock.h ubik.h ubik_int.h utst_int.h
 
-RXOBJS = rx_pthread.o
 
-LIBS=${RXOBJS} ${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
      $(top_builddir)/src/comerr/liboafs_comerr.la \
      ${top_builddir}/src/cmd/liboafs_cmd.la \
      ${TOP_LIBDIR}/libsys.a \
@@ -41,27 +39,18 @@ depinstall: \
 	${TOP_INCDIR}/ubik_int.h
 
 #
-# get the pthreaded rx stuff compiled here
-#
-
-CFLAGS_rx_pthread.o = -DDPF_FSLOG
-rx_pthread.o: ${RX}/rx_pthread.c
-	$(AFS_CCRULE) $(RX)/rx_pthread.c
-
-
-#
 # insert comments here
 #
 
-utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a ${RXOBJS}
+utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a
 	$(LT_LDRULE_static) utst_server.o utst_int.ss.o utst_int.xdr.o \
 		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
-utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a ${RXOBJS}
+utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a
 	$(LT_LDRULE_static) utst_client.o utst_int.cs.o utst_int.xdr.o \
 		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
-udebug: udebug.o libubik_pthread.a ${RXOBJS}
+udebug: udebug.o libubik_pthread.a
 	$(LT_LDRULE_static) udebug.o libubik_pthread.a \
 		$(LIBS) $(LIB_hcrypto) $(LIB_roken)
 

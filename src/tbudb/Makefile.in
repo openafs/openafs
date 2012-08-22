@@ -15,8 +15,6 @@ HELPER_SPLINT=@HELPER_SPLINT@
 RX=$(srcdir)/../rx
 BUDB=$(srcdir)/../budb
 
-RXOBJS= rx_pthread.o rxkad_errs.o
-
 INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \
@@ -33,7 +31,7 @@ INCLS=\
 	budb.h $(BUDB)/budb_client.h
 
 # library ordering defined by top level makefile
-LIBS=${RXOBJS} \
+LIBS= \
 	${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
@@ -58,12 +56,6 @@ budb_errs.c: ${BUDB}/budb_errs.et
 #
 # Build targets
 #
-
-rx_pthread.o: ${RX}/rx_pthread.c
-	$(AFS_CCRULE) $(RX)/rx_pthread.c
-
-rxkad_errs.o: ../rxkad/rxkad_errs.c
-	$(AFS_CCRULE) ../rxkad/rxkad_errs.c
 
 database.o: ${BUDB}/database.c budb_errs.h ${INCLS}
 	$(AFS_CCRULE) $(BUDB)/database.c

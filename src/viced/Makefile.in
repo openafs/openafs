@@ -14,7 +14,6 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS = -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
-RX=$(srcdir)/../rx
 VLSERVER=$(srcdir)/../vlserver
 LIBACL=$(srcdir)/../libacl
 DIR=$(srcdir)/../dir
@@ -35,9 +34,7 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 
 FSINTOBJS = afsint.ss.o
 
-RXOBJS = rx_pthread.o
-
-objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} \
+objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \

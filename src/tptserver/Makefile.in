@@ -15,8 +15,6 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 RX=$(srcdir)/../rx
 PTSERVER=$(srcdir)/../ptserver
 
-RXOBJS= rx_pthread.o rxkad_errs.o
-
 PTOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o
 
 INCLS=${TOP_INCDIR}/ubik.h \
@@ -29,7 +27,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	ptint.h \
 	pterror.h
 
-LIBS_common=$(RXOBJS) \
+LIBS_common= \
 	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	${TOP_LIBDIR}/libafsrpc.a \
@@ -57,12 +55,6 @@ CFLAGS_ptprocs.o = @CFLAGS_NOSTRICT@
 #
 # Build targets
 #
-
-rx_pthread.o: ${RX}/rx_pthread.c
-	$(AFS_CCRULE) $(RX)/rx_pthread.c
-
-rxkad_errs.o: ../rxkad/rxkad_errs.c
-	$(AFS_CCRULE) ../rxkad/rxkad_errs.c
 
 ptserver.o: ${PTSERVER}/ptserver.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptserver.c

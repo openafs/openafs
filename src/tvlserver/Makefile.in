@@ -12,10 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 HELPER_SPLINT=@HELPER_SPLINT@
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
-RX=$(srcdir)/../rx
 VLSERVER=$(srcdir)/../vlserver
-
-RXOBJS= rx_pthread.o rxkad_errs.o
 
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
@@ -42,20 +39,13 @@ LIBS_server = \
 LIBS_client = \
 	$(LIBS_common)
 
-OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS}
+OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
 
 all: \
 	vlserver vlclient vlserver cnvldb vldb_check \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h 
 
 depinstall:
-
-rx_pthread.o: ${RX}/rx_pthread.c
-	$(AFS_CCRULE) $(RX)/rx_pthread.c
-
-rxkad_errs.o: ../rxkad/rxkad_errs.c
-	$(AFS_CCRULE) ../rxkad/rxkad_errs.c
-
 
 #
 # Other stuff

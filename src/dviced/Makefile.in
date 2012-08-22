@@ -15,7 +15,6 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_SERVER \
 	      -DSALVSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 
-RX=$(srcdir)/../rx
 VICED=$(srcdir)/../viced
 VLSERVER=$(srcdir)/../vlserver
 LIBACL=$(srcdir)/../libacl
@@ -37,10 +36,8 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 
 FSINTOBJS= afsint.ss.o
 
-RXOBJS = rx_pthread.o 
-
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} \
-	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS} ${RXOBJS}
+	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 SDBGOBJS = state_analyzer.o \
 	   $(top_builddir)/src/util/liboafs_util.la \
@@ -55,10 +52,6 @@ LIBS=${TOP_LIBDIR}/libafsauthent.a \
      $(top_builddir)/src/util/liboafs_util.la
 
 all: dafileserver state_analyzer
-
-CFLAGS_rx_pthread.o=-DDPF_FSLOG
-rx_pthread.o: ${RX}/rx_pthread.c
-	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 viced.o: ${VICED}/viced.c
 	$(AFS_CCRULE) $(VICED)/viced.c
