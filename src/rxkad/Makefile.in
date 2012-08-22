@@ -19,8 +19,7 @@ INCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 	rxkad_convert.h fcrypt.h v5gen.h
 
 LT_objs=rxkad_client.lo rxkad_server.lo rxkad_common.lo rxkad_errs.lo \
-        fcrypt.lo crypt_conn.lo ticket.lo ticket5.lo crc.lo \
-	AFS_component_version_number.lo
+        fcrypt.lo crypt_conn.lo ticket.lo ticket5.lo crc.lo
 
 LT_deps=$(top_builddir)/src/comerr/liboafs_comerr.la \
 	$(top_builddir)/src/rx/liboafs_rx.la \
@@ -37,7 +36,7 @@ fc_test_LIBS=\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libafsutil.a
 
-all: ${TOP_LIBDIR}/librxkad.a liboafs_rxkad.la depinstall
+all: ${TOP_LIBDIR}/librxkad.a liboafs_rxkad.la libafsrpc_rxkad.la depinstall
 
 test: fc_test
 
@@ -77,6 +76,9 @@ librxkad.a: $(LT_objs)
 
 liboafs_rxkad.la: liboafs_rxkad.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libafsrpc_rxkad.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 CFLAGS_ticket5.lo = @CFLAGS_NOERROR@
 

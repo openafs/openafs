@@ -23,10 +23,14 @@ all: \
 	depinstall \
 	generated \
 	${TOP_LIBDIR}/libafsint.a \
-	liboafs_fsint.la
+	liboafs_fsint.la \
+	libafsrpc_fsint.la
 
 liboafs_fsint.la: liboafs_fsint.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libafsrpc_fsint.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 libafsint.a: $(LT_objs) afsint.ss.lo afscbint.ss.lo
 	$(LT_LDLIB_lwp) $(LT_objs) afsint.ss.lo afscbint.ss.lo

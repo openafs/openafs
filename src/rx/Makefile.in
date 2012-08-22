@@ -25,7 +25,8 @@ LT_libs = $(MT_LIBS)
 all: \
 	includes \
 	${TOP_LIBDIR}/librx.a \
-	liboafs_rx.la
+	liboafs_rx.la \
+	libafsrpc_rx.la
 
 depinstall: includes
 
@@ -45,6 +46,10 @@ librx.a: $(LT_objs)
 
 liboafs_rx.la: liboafs_rx.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+# Convenience libraries for libafsrpc and shlibafsrpc
+libafsrpc_rx.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 CFLAGS_rx.lo = @CFLAGS_NOERROR@
 

@@ -12,9 +12,11 @@ include @TOP_OBJDIR@/src/config/Makefile.shared
   OPTMZ = ${PAM_OPTMZ}
     DBG = ${PAM_DBG}
    LIBS = ${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a \
+	  ${TOP_LIBDIR}/libopr_pic.a \
 	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
   KLIBS = ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
 	  ${TOP_LIBDIR}/libafsrpc_pic.a \
+	  ${TOP_LIBDIR}/libopr_pic.a \
 	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
  SHOBJS = afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o

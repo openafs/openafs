@@ -9,13 +9,13 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-LT_objs = error_msg.lo et_name.lo com_err.lo AFS_component_version_number.lo
+LT_objs = error_msg.lo et_name.lo com_err.lo
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 LT_libs = $(LIB_roken) $(MT_LIBS)
 
 all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h \
      ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libafscom_err.a \
-     liboafs_comerr.la
+     liboafs_comerr.la libafsrpc_comerr.la
 
 buildtools: compile_et
 
@@ -48,6 +48,9 @@ libafscom_err.a: $(LT_objs)
 
 liboafs_comerr.la: $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libafsrpc_comerr.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 # When we build this file, we're using a .c file that's in the object directory,
 # so we need to add the source directory to the includes to pick up local headers.

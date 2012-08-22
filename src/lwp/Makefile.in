@@ -22,7 +22,8 @@ LT_objs = waitkey.lo fasttime.lo lock.lo
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 LT_libs = $(MT_LIBS)
 
-all: liboafs_lwpcompat.la ${TOP_LIBDIR}/liblwp.a depinstall
+all: liboafs_lwpcompat.la libafsrpc_lwpcompat.la \
+	${TOP_LIBDIR}/liblwp.a depinstall
 
 depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
 
@@ -51,6 +52,9 @@ liblwp.a: ${LIBOBJS} $(LT_objs)
 
 liboafs_lwpcompat.la: liboafs_lwpcompat.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libafsrpc_lwpcompat.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 # This is required so sgi_64+ does not try to build this file.
 process.s:

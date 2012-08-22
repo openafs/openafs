@@ -3,6 +3,7 @@
 # to check that you haven't inadvertently ignored any tracked files.
 /rmtsys.h
 /rmtsysd
+/syscall.c
 /afs.exp
 /afsl.exp
 /Krmtsys.h

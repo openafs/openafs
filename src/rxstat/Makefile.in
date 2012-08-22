@@ -13,7 +13,8 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 LT_objs = rxstat.cs.lo rxstat.ss.lo rxstat.xdr.lo rxstat.lo
 LT_deps = $(top_builddir)/src/rx/liboafs_rx.la
 
-all: depinstall liboafs_rxstat.la ${TOP_LIBDIR}/librxstat.a
+all: depinstall liboafs_rxstat.la libafsrpc_rxstat.la \
+	${TOP_LIBDIR}/librxstat.a
 
 generated: \
 	Krxstat.cs.c Krxstat.ss.c Krxstat.xdr.c \
@@ -53,6 +54,9 @@ librxstat.a: $(LT_objs)
 
 liboafs_rxstat.la: liboafs_rxstat.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libafsrpc_rxstat.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 Krxstat.cs.c: rxstat.xg
 	${RXGEN} -x -k -C -o $@ ${srcdir}/rxstat.xg

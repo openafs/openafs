@@ -12,7 +12,10 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 HELPER_SPLINT=@HELPER_SPLINT@
 
-LT_objs =base64.lo ktime.lo volparse.lo hostparse.lo exec.lo \
+LT_rpc_objs     = base64.lo
+
+LT_objs =$(LT_rpc_objs) \
+	 ktime.lo volparse.lo hostparse.lo exec.lo \
 	 hputil.lo kreltime.lo uuid.lo serverLog.lo \
 	 dirpath.lo fileutil.lo flipbase64.lo fstab.lo \
 	 afs_atomlist.lo afs_lhash.lo pthread_glock.lo tabular_output.lo \
@@ -45,7 +48,8 @@ all: ${includes} \
 	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libafsutil_pic.a \
 	sys \
-	liboafs_util.la
+	liboafs_util.la \
+	libafsrpc_util.la
 
 util.a: $(LT_objs)
 	$(LT_LDLIB_lwp) $(LT_objs)
@@ -55,6 +59,9 @@ libafsutil_pic.la: $(LT_objs)
 
 liboafs_util.la: liboafs_util.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libafsrpc_util.la: $(LT_rpc_objs)
+	$(LT_LDLIB_pic) $(LT_rpc_objs)
 
 buildtools: ${TOP_LIBDIR}/libafsutil.a ${TOP_INCDIR}/afs/afsutil.h
 buildtools_clean: clean

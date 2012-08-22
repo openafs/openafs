@@ -369,7 +369,7 @@ vfsck:	vol
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
 	esac
 
-pam: auth shlibafsauthent shlibafsrpc
+pam: auth shlibafsauthent
 	+set -x; \
 	if test "@HAVE_PAM@" = "yes"; then \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ; \
@@ -570,7 +570,7 @@ afsmonitor: cmd comerr gtx xstat
 tests: rxtests ubiktests rpctestlib viced
 
 # pthread based user space RX library
-libafsrpc: rx rxkad rxstat fsint hcrypto
+libafsrpc: comerr fsint hcrypto lwp rx rxkad rxstat sys util
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
@@ -594,16 +594,7 @@ libafsauthent: ubik auth kauth libafsrpc volser vlserver
 		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
 	esac
 
-# pthread based user space RX library
-shlibafsrpc: rx rxstat fsint rxkad hcrypto
-	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*|*nbsd*|*obsd*|*fbsd*) \
-	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
-	*) \
-		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
-	esac
-
-shlibafsauthent: bozo ubik auth kauth shlibafsrpc
+shlibafsauthent: bozo ubik auth kauth
 	+case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_1*|*nbsd*|*obsd*|*fbsd*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
@@ -659,7 +650,7 @@ finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs 
 	ptserver tptserver scout bu_utils ubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser libafscp\
 	venus update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
+	libafsauthent shlibafsauthent libadmin man-pages \
 	tools platform kopenafs authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -667,7 +658,7 @@ finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth lo
 	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	dviced dvolser libafscp\
 	venus update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
-	libafsauthent shlibafsrpc shlibafsauthent libadmin man-pages \
+	libafsauthent shlibafsauthent libadmin man-pages \
 	tools platform kopenafs authtools $(DIR_roken)
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -765,7 +756,6 @@ clean2:
 	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
-	-${COMPILE_PART1} shlibafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} shlibafsauthent ${COMPILE_CLEAN}
 	-${COMPILE_PART1} kopenafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tools ${COMPILE_CLEAN}
@@ -913,7 +903,6 @@ distclean: clean
 	src/scout/Makefile \
 	src/sgistuff/Makefile \
 	src/shlibafsauthent/Makefile \
-	src/shlibafsrpc/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \
 	src/tests/Makefile \
