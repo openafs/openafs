@@ -40,7 +40,7 @@ LIBS_common= \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
 LIBS_server= \
-	${TOP_LIBDIR}/libaudit.a \
+	$(top_builddir)/src/audit/liboafs_audit.la \
 	$(LIBS_common)
 
 LIBS_client=$(PTOBJS) \

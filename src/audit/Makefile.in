@@ -14,10 +14,15 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
+LT_objs=audit.lo audit-file.lo audit-sysvmq.lo \
+	AFS_component_version_number.lo
+LT_deps = $(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	  $(top_builddir)/src/util/liboafs_util.la
 
-all: ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
+all: liboafs_audit.la ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
 
 ${TOP_LIBDIR}/libaudit.a: libaudit.a
 	${INSTALL_DATA} $? $@
@@ -25,14 +30,15 @@ ${TOP_LIBDIR}/libaudit.a: libaudit.a
 ${TOP_INCDIR}/afs/audit.h: audit.h
 	${INSTALL_DATA} $? $@
 
-libaudit.a: audit.o audit-file.o audit-sysvmq.o AFS_component_version_number.o
-	$(RM) -f libaudit.a
-	ar r libaudit.a audit.o audit-file.o audit-sysvmq.o AFS_component_version_number.o
-	$(RANLIB) libaudit.a
+libaudit.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
 
-audit.o: audit.c audit.h audit-api.h
-audit-file.o: audit-file.c audit.h audit-api.h
-audit-sysvmq.o: audit-sysvmq.c audit.h audit-api.h
+liboafs_audit.la: liboafs_audit.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+audit.lo: audit.c audit.h audit-api.h
+audit-file.lo: audit-file.c audit.h audit-api.h
+audit-sysvmq.lo: audit-sysvmq.c audit.h audit-api.h
 
 # XXX-INST: where to install the AIX audit files?
 install: audit.h libaudit.a
@@ -58,6 +64,7 @@ dest: libaudit.a audit.h
 	esac ;
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.a *.o core AFS_component_version_number.c
 
 include ../config/Makefile.version
