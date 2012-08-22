@@ -31,12 +31,10 @@
 #include <lwp.h>
 
 #if defined(AFS_PTHREAD_ENV)
-/* can't include rx when we are libutil; it's too early */
-#include <rx/rx.h>
 #include <pthread.h>
 static pthread_mutex_t serverLogMutex;
-#define LOCK_SERVERLOG() MUTEX_ENTER(&serverLogMutex)
-#define UNLOCK_SERVERLOG() MUTEX_EXIT(&serverLogMutex)
+#define LOCK_SERVERLOG() opr_Verify(pthread_mutex_lock(&serverLogMutex) == 0);
+#define UNLOCK_SERVERLOG() opr_Verify(pthread_mutex_unlock(&serverLogMutex) == 0);
 
 #ifdef AFS_NT40_ENV
 #define NULLDEV "NUL"
@@ -340,7 +338,7 @@ OpenLog(const char *fileName)
 #endif
 
 #if defined(AFS_PTHREAD_ENV)
-    MUTEX_INIT(&serverLogMutex, "serverlog", MUTEX_DEFAULT, 0);
+    opr_Verify(pthread_mutex_init(&serverLogMutex, NULL) == 0);
 #endif /* AFS_PTHREAD_ENV */
 
     serverLogFD = tempfd;
