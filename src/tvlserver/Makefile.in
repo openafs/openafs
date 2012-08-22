@@ -26,8 +26,12 @@ INCLS=${TOP_INCDIR}/ubik.h \
 LIBS_common = \
 	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
+	$(top_builddir)/src/sys/liboafs_sys.la \
+	$(top_builddir)/src/rx/liboafs_rx.la \
+	$(top_builddir)/src/rxstat/liboafs_rxstat.la \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
-	${TOP_LIBDIR}/libafsrpc.a \
 	$(top_builddir)/src/util/liboafs_util.la \
 	${TOP_LIBDIR}/libaudit.a \
 	$(top_builddir)/src/opr/liboafs_opr.la

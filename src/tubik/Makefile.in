@@ -23,10 +23,11 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/lock.h ubik.h ubik_int.h utst_int.h
 
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
+LIBS=${TOP_LIBDIR}/libafsauthent.a \
+     $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
      $(top_builddir)/src/comerr/liboafs_comerr.la \
      ${top_builddir}/src/cmd/liboafs_cmd.la \
-     ${TOP_LIBDIR}/libsys.a \
+     $(top_builddir)/src/sys/liboafs_sys.la \
      $(top_builddir)/src/util/liboafs_util.la \
      $(top_builddir)/src/opr/liboafs_opr.la \
      ${XLIBS} ${MT_LIBS}

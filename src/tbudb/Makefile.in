@@ -35,7 +35,9 @@ LIBS= \
 	${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libafsrpc.a \
+	$(top_builddir)/src/sys/liboafs_sys.la \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	$(top_builddir)/src/opr/liboafs_opr.la \
 	$(top_builddir)/src/util/liboafs_util.la
