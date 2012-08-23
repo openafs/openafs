@@ -12,10 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 HELPER_SPLINT=@HELPER_SPLINT@
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
-RX=$(srcdir)/../rx
 PTSERVER=$(srcdir)/../ptserver
-
-PTOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
@@ -24,8 +21,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	ptint.h \
-	pterror.h
+	ptint.h
 
 LIBS_common= \
 	$(top_builddir)/src/ubik/liboafs_ubik.la \
@@ -43,7 +39,8 @@ LIBS_server= \
 	$(top_builddir)/src/audit/liboafs_audit.la \
 	$(LIBS_common)
 
-LIBS_client=$(PTOBJS) \
+LIBS_client= \
+	$(top_builddir)/src/ptserver/liboafs_prot.la \
 	$(LIBS_common)
 
 all: ptserver pts pt_util db_verify \
@@ -75,13 +72,6 @@ utils.o: ${PTSERVER}/utils.c ${INCLS}
 map.o: ${PTSERVER}/map.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/map.c
 
-ptint.ss.o: ptint.ss.c
-ptint.cs.o: ptint.cs.c
-ptint.xdr.o: ptint.xdr.c
-
-ptint.cs.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -C -u -o $@ ${srcdir}/${PTSERVER}/ptint.xg
-
 ptint.ss.c: ${PTSERVER}/ptint.xg
 	${RXGEN} -A -x -S -o $@ ${srcdir}/${PTSERVER}/ptint.xg
 
@@ -91,21 +81,8 @@ ptint.xdr.c: ${PTSERVER}/ptint.xg
 ptint.h: ${PTSERVER}/ptint.xg
 	${RXGEN} -A -x -h -u -o $@ ${srcdir}/${PTSERVER}/ptint.xg
 
-ptint.cs.c: ptint.h
 ptint.ss.c: ptint.h
 ptint.xdr.c: ptint.h
-
-Kptint.cs.c: ${PTSERVER}/ptint.xg Kptint.h
-	${RXGEN} -A -x -k -C -o Kptint.cs.c ${srcdir}/${PTSERVER}/ptint.xg
- 
-Kptint.xdr.c: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -k -c -o Kptint.xdr.c ${srcdir}/${PTSERVER}/ptint.xg
- 
-Kptint.h: ${PTSERVER}/ptint.xg
-	${RXGEN} -A -x -k -h -o Kptint.h ${srcdir}/${PTSERVER}/ptint.xg
-
-display.o: ${PTSERVER}/display.c ${INCLS}
-	${AFS_CCRULE} ${PTSERVER}/display.c
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o \
 	  $(LIBS_server)
@@ -118,24 +95,16 @@ ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o \
 db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/db_verify.c
 
-db_verify: db_verify.o display.o $(LIBS_client)
-	$(LT_LDRULE_static) db_verify.o display.o \
+db_verify: db_verify.o $(LIBS_client)
+	$(LT_LDRULE_static) db_verify.o \
 		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
-ptclient: ptclient.o display.o ptuser.o ptint.cs.o ptint.xdr.o \
-	AFS_component_version_number.o $(LIBS_client)
-	$(LT_LDRULE_static) ptclient.o display.o $(PTOBJS) \
+ptclient: ptclient.o AFS_component_version_number.o $(LIBS_client)
+	$(LT_LDRULE_static) ptclient.o \
 		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
 
 ptclient.o: ${PTSERVER}/ptclient.c ${INCLS}
 	$(AFS_CCRULE) $(PTSERVER)/ptclient.c
-
-ptuser.o: ${PTSERVER}/ptuser.c ${INCLS}
-	$(AFS_CCRULE) $(PTSERVER)/ptuser.c
-
-pterror.h pterror.c: ${PTSERVER}/pterror.et
-	$(RM) -f pterror.h pterror.c
-	${COMPILE_ET} -p ${srcdir}/${PTSERVER} pterror
 
 pts: pts.o $(LIBS_client) ${INCLS}
 	$(LT_LDRULE_static) pts.o \

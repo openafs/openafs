@@ -6,6 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
@@ -42,8 +43,15 @@ LIBS=   ${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
+LT_objs = ptuser.lo pterror.lo ptint.cs.lo ptint.xdr.lo display.lo
 
-all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
+	  $(top_builddir)/src/rx/liboafs_rx.la \
+	  $(top_builddir)/src/ubik/liboafs_ubik.la \
+	  $(top_builddir)/src/auth/liboafs_auth.la
+LT_libs =
+
+all: ptserver pts pt_util db_verify liboafs_prot.la ${TOP_LIBDIR}/libprot.a \
 	depinstall readgroup readpwd testpt ptclient
 
 generated: \
@@ -139,30 +147,30 @@ Kptint.xdr.c: ptint.xg
 Kptint.h: ptint.xg
 	${RXGEN} -A -x -k -h -o Kptint.h ${srcdir}/ptint.xg
 
-display.o: display.c ${INCLS}
-
 db_verify.o: db_verify.c ${INCLS} AFS_component_version_number.c
 
-db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(AFS_LDRULE) db_verify.o display.o pterror.o \
+db_verify: db_verify.o libprot.a $(LIBS)
+	$(AFS_LDRULE) db_verify.o libprot.a \
 		$(LIBS) $(LIB_roken) ${XLIBS}
 
-ptclient: ptclient.o display.o libprot.a $(LIBS)
-	$(AFS_LDRULE) ptclient.o display.o libprot.a \
+ptclient: ptclient.o libprot.a $(LIBS)
+	$(AFS_LDRULE) ptclient.o libprot.a \
 		$(LIBS) $(LIB_roken) ${XLIBS}
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
-
-ptuser.o: ptuser.c ${LINCLS}
 
 pterror.h pterror.c: pterror.et
 	$(RM) -f pterror.h pterror.c
 	${COMPILE_ET} -p ${srcdir} pterror
 
-libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
-	$(RANLIB) $@
+display.lo: $(INCLS)
+ptuser.lo: $(LINCLS)
+
+liboafs_prot.la: liboafs_prot.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libprot.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
 
 pts: pts.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a libprot.a \
@@ -262,6 +270,7 @@ dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
 	libprot.a pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
