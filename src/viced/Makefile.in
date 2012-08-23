@@ -15,7 +15,6 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 MODULE_CFLAGS = -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
 VLSERVER=$(srcdir)/../vlserver
-LIBACL=$(srcdir)/../libacl
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 
@@ -23,8 +22,6 @@ VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
 	  fsstats.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
-
-LIBACLOBJS=aclprocs.o netprocs.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -34,14 +31,14 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 
 FSINTOBJS = afsint.ss.o
 
-objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+objects= ${VICEDOBJS} ${VLSERVEROBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      $(top_builddir)/src/sys/liboafs_sys.la \
      $(top_builddir)/src/rxkad/liboafs_rxkad.la \
      $(top_builddir)/src/rxstat/liboafs_rxstat.la \
      $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+     $(top_builddir)/src/libacl/liboafs_acl.la \
      $(top_builddir)/src/fsint/liboafs_fsint.la \
      $(top_builddir)/src/cmd/liboafs_cmd.la \
      $(top_builddir)/src/opr/liboafs_opr.la \
@@ -68,13 +65,6 @@ cbd.o: callback.c AFS_component_version_number.c
 
 cbd: cbd.o
 	$(LT_LDRULE_static) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
-
-aclprocs.o: ${LIBACL}/aclprocs.c
-	$(AFS_CCRULE) $(LIBACL)/aclprocs.c
-
-netprocs.o: ${LIBACL}/netprocs.c
-	$(AFS_CCRULE) $(LIBACL)/netprocs.c
-
 
 vldbint.cs.o: ../vlserver/vldbint.cs.c
 	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c

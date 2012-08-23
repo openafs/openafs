@@ -15,7 +15,6 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_CLIENT
 
 VLSERVER=$(srcdir)/../vlserver
-LIBACL=$(srcdir)/../libacl
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 VOLSER=$(srcdir)/../volser
@@ -26,16 +25,13 @@ VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o vl_errors.o
 
 VOSOBJS= vsprocs.o vsutils.o lockprocs.o volint.xdr.o volerr.o volint.cs.o
 
-LIBACLOBJS=aclprocs.o netprocs.o
-
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o \
 	 namei_ops.o nuke.o salvsync-client.o daemon_com.o
 
-objects= ${VOLSEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
-	 ${DIROBJS} ${VOLOBJS}
+objects= ${VOLSEROBJS} ${DIROBJS} ${VOLOBJS}
 
 vosobjects= ${VOSOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} ${DIROBJS} \
 	${VOLOBJS}
@@ -58,6 +54,7 @@ LIBS_client = \
 
 LIBS_server = \
 	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	$(top_builddir)/src/libacl/liboafs_acl.la \
 	$(LIBS_common)
 
 all: volserver vos
@@ -100,12 +97,6 @@ vsutils.o: ${VOLSER}/vsutils.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/lockprocs.c
-
-aclprocs.o: ${LIBACL}/aclprocs.c
-	$(AFS_CCRULE) $(LIBACL)/aclprocs.c
-
-netprocs.o: ${LIBACL}/netprocs.c
-	$(AFS_CCRULE) $(LIBACL)/netprocs.c
 
 vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
 	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
