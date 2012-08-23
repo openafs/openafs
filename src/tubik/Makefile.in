@@ -14,71 +14,19 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 UBIK=$(srcdir)/../ubik
 
-LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
-	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
-	ubikclient.o uerrors.o uinit.o
-
 INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/lock.h ubik.h ubik_int.h utst_int.h
 
+LTLIBS=@TOP_OBJDIR@/src/util/liboafs_util.la \
+       @TOP_OBJDIR@/src/ubik/liboafs_ubik.la \
+       @TOP_OBJDIR@/src/cmd/liboafs_cmd.la
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a \
-     $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
-     $(top_builddir)/src/comerr/liboafs_comerr.la \
-     ${top_builddir}/src/cmd/liboafs_cmd.la \
-     $(top_builddir)/src/sys/liboafs_sys.la \
-     $(top_builddir)/src/util/liboafs_util.la \
-     $(top_builddir)/src/opr/liboafs_opr.la \
-     ${XLIBS} ${MT_LIBS}
-
-all: depinstall ${TOP_LIBDIR}/libubik_pthread.a udebug utst_server utst_client
-
-depinstall: \
-	ubik_int.cs.c ubik_int.xdr.c \
-	${TOP_INCDIR}/ubik.h \
-	${TOP_INCDIR}/ubik_int.h
+all: udebug utst_server utst_client
 
 #
 # insert comments here
 #
-
-utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik_pthread.a
-	$(LT_LDRULE_static) utst_server.o utst_int.ss.o utst_int.xdr.o \
-		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
-
-utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o libubik_pthread.a
-	$(LT_LDRULE_static) utst_client.o utst_int.cs.o utst_int.xdr.o \
-		libubik_pthread.a $(LIBS) $(LIB_hcrypto) $(LIB_roken)
-
-udebug: udebug.o libubik_pthread.a
-	$(LT_LDRULE_static) udebug.o libubik_pthread.a \
-		$(LIBS) $(LIB_hcrypto) $(LIB_roken)
-
-ubik_int.cs.c: ${UBIK}/ubik_int.xg
-	${RXGEN} -A -x -C -o $@ ${UBIK}/ubik_int.xg
-
-ubik_int.ss.c: ${UBIK}/ubik_int.xg
-	${RXGEN} -A -x -S -o $@ ${UBIK}/ubik_int.xg
-
-ubik_int.xdr.c: ${UBIK}/ubik_int.xg
-	${RXGEN} -A -x -c -o $@ ${UBIK}/ubik_int.xg
-
-ubik_int.h: ${UBIK}/ubik_int.xg
-	${RXGEN} -A -x -h -o $@ ${UBIK}/ubik_int.xg
-
-ubik_int.cs.c: ubik_int.h
-ubik_int.ss.c: ubik_int.h
-ubik_int.xdr.c: ubik_int.h
-
-Kubik_int.cs.c: ${UBIK}/ubik_int.xg Kubik_int.h
-	${RXGEN} -A -x -k -C -o Kubik_int.cs.c ${UBIK}/ubik_int.xg
- 
-Kubik_int.xdr.c: ${UBIK}/ubik_int.xg
-	${RXGEN} -A -x -k -c -o Kubik_int.xdr.c ${UBIK}/ubik_int.xg
- 
-Kubik_int.h: ${UBIK}/ubik_int.xg
-	${RXGEN} -A -x -k -h -o Kubik_int.h ${UBIK}/ubik_int.xg
 
 utst_int.ss.o: utst_int.ss.c
 utst_int.cs.o: utst_int.cs.c
@@ -106,80 +54,39 @@ utst_server.o: ${UBIK}/utst_server.c
 utst_client.o: ${UBIK}/utst_client.c
 	${AFS_CCRULE} ${UBIK}/utst_client.c
 
+utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o $(LTLIBS)
+	$(LT_LDRULE_static) utst_server.o utst_int.ss.o utst_int.xdr.o \
+		$(LTLIBS) $(LIBS) $(LIB_hcrypto) $(LIB_roken)
+
+utst_client: utst_client.o utst_int.cs.o utst_int.xdr.o $(LTLIBS)
+	$(LT_LDRULE_static) utst_client.o utst_int.cs.o utst_int.xdr.o \
+		$(LTLIBS) $(LIBS) $(LIB_hcrypto) $(LIB_roken)
+
 udebug.o: ${UBIK}/udebug.c
 	${AFS_CCRULE} ${UBIK}/udebug.c
 
-uerrors.c ubik.h: ${UBIK}/uerrors.et ${UBIK}/ubik.p.h
-	$(RM) -f ubik.h uerrors.c
-	${COMPILE_ET} -p ${UBIK} uerrors -h ubik
-
-libubik_pthread.a: ${INCLS} ${LIBOBJS} AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crc $@ ${LIBOBJS} AFS_component_version_number.o
-	$(RANLIB) $@
-
-disk.o: ${UBIK}/disk.c
-	$(AFS_CCRULE) $(UBIK)/disk.c
-
-uinit.o: ${UBIK}/uinit.c
-	$(AFS_CCRULE) $(UBIK)/uinit.c
-
-remote.o: ${UBIK}/remote.c
-	$(AFS_CCRULE) $(UBIK)/remote.c
-
-beacon.o: ${UBIK}/beacon.c
-	$(AFS_CCRULE) $(UBIK)/beacon.c
-
-lock.o: ${UBIK}/lock.c
-	$(AFS_CCRULE) $(UBIK)/lock.c
-
-recovery.o: ${UBIK}/recovery.c
-	$(AFS_CCRULE) $(UBIK)/recovery.c
-
-ubik.o: ${UBIK}/ubik.c
-	$(AFS_CCRULE) $(UBIK)/ubik.c
-
-phys.o: ${UBIK}/phys.c
-	$(AFS_CCRULE) $(UBIK)/phys.c
-
-vote.o: ${UBIK}/vote.c
-	$(AFS_CCRULE) $(UBIK)/vote.c
-
-ubikcmd.o: ${UBIK}/ubikcmd.c
-	$(AFS_CCRULE) $(UBIK)/ubikcmd.c
-
-ubikclient.o: ${UBIK}/ubikclient.c
-	$(AFS_CCRULE) $(UBIK)/ubikclient.c
-ubik_int.xdr.o: ubik_int.xdr.c
+udebug: udebug.o $(LTLIBS)
+	$(LT_LDRULE_static) udebug.o \
+		$(LTLIBS) $(LIBS) $(LIB_hcrypto) $(LIB_roken)
 
 #
 # Installation targets
 #
 test: all
 
-install: libubik_pthread.a ubik.h ubik_int.h udebug
-	${INSTALL} -d ${DESTDIR}${libdir}
-	${INSTALL} -d ${DESTDIR}${includedir}
+install: udebug
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
-	${INSTALL_DATA} libubik_pthread.a ${DESTDIR}${libdir}/libubik_pthread.a
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then                 \
 	    $(LT_INSTALL_PROGRAM) udebug ${DESTDIR}${bindir}/udebug;          \
 	    $(LT_INSTALL_PROGRAM) udebug ${DESTDIR}${afssrvbindir}/udebug;    \
-	    ${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h;         \
-	    ${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h; \
 	fi
 
-dest: libubik_pthread.a ubik.h ubik_int.h udebug
-	${INSTALL} -d ${DEST}/lib
-	${INSTALL} -d ${DEST}/include
+dest: udebug
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL_DATA} libubik_pthread.a ${DEST}/lib/libubik_pthread.a
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then                    \
 	    ${INSTALL_PROGRAM} udebug ${DEST}/bin/udebug;		      \
 	    ${INSTALL_PROGRAM} udebug ${DEST}/root.server/usr/afs/bin/udebug; \
-	    ${INSTALL_DATA} ubik.h ${DEST}/include/ubik.h;		      \
-	    ${INSTALL_DATA} ubik_int.h ${DEST}/include/ubik_int.h;	      \
 	fi
 #
 # Misc. targets
@@ -187,17 +94,6 @@ dest: libubik_pthread.a ubik.h ubik_int.h udebug
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o utst_server utst_client udebug *.a *.cs.c *.ss.c *.xdr.c
-	$(RM) -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h
+	$(RM) -f utst_int.h core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${TOP_LIBDIR}/libubik_pthread.a: libubik_pthread.a
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/ubik.h: ubik.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
-

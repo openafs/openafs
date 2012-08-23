@@ -28,7 +28,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	pterror.h
 
 LIBS_common= \
-	${TOP_LIBDIR}/libubik_pthread.a \
+	$(top_builddir)/src/ubik/liboafs_ubik.la \
 	${TOP_LIBDIR}/libafsauthent.a \
 	$(top_builddir)/src/sys/liboafs_sys.la \
 	$(top_builddir)/src/rx/liboafs_rx.la \

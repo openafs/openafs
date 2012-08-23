@@ -53,7 +53,7 @@ LIBS_common = \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
 LIBS_client = \
-	$(TOP_LIBDIR)/libubik_pthread.a \
+	$(top_builddir)/src/ubik/liboafs_ubik.la \
 	$(LIBS_common)
 
 LIBS_server = \

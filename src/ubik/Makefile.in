@@ -7,12 +7,20 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
+LT_objs =   disk.lo remote.lo beacon.lo recovery.lo ubik.lo vote.lo lock.lo \
+	    phys.lo ubik_int.cs.lo ubik_int.ss.lo ubik_int.xdr.lo ubikcmd.lo \
+	    ubikclient.lo uerrors.lo uinit.lo \
+	    AFS_component_version_number.lo
 
-LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
-	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
-	ubikclient.o uerrors.o uinit.o
+LT_deps =   $(top_builddir)/src/auth/liboafs_auth.la \
+	    $(top_builddir)/src/opr/liboafs_opr.la \
+	    $(top_builddir)/src/comerr/liboafs_comerr.la \
+	    $(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	    $(top_builddir)/src/rx/liboafs_rx.la \
+	    $(top_builddir)/src/util/liboafs_util.la
 
 INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
@@ -20,10 +28,12 @@ INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 
 LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libafsutil.a \
-	${TOP_LIBDIR}/libopr.a ${XLIBS}
+	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libopr.a \
+	${XLIBS}
 
-all: depinstall ${TOP_LIBDIR}/libubik.a udebug utst_server utst_client
+all: depinstall ${TOP_LIBDIR}/libubik.a udebug utst_server utst_client \
+     liboafs_ubik.la
 
 generated: \
 	utst_int.cs.c utst_int.ss.c utst_int.xdr.c utst_int.h \
@@ -113,28 +123,17 @@ uerrors.c: uerrors.et ubik.p.h
 	$(RM) -f ubik.h uerrors.c
 	${COMPILE_ET} -p ${srcdir} uerrors -h ubik
 
-libubik.a: ${LIBOBJS} AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crc $@ ${LIBOBJS} AFS_component_version_number.o
-	$(RANLIB) $@
+libubik.a: ${LT_objs}
+	$(LT_LDLIB_lwp) $(LT_objs)
 
-disk.o: disk.c ${INCLS}
-uinit.o: uinit.c ${INCLS}
-remote.o: remote.c ${INCLS}
-beacon.o: beacon.c ${INCLS}
-lock.o: lock.c ${INCLS}
-recovery.o: recovery.c ${INCLS}
-ubik.o: ubik.c ${INCLS}
-phys.o: phys.c ${INCLS}
-vote.o: vote.c ${INCLS}
-ubikcmd.o: ubikcmd.c ${INCLS}
-ubikclient.o: ubikclient.c ${INCLS}
-ubik_int.ss.o: ubik_int.ss.c ${INCLS}
-ubik_int.cs.o: ubik_int.cs.c ${INCLS}
-ubik_int.xdr.o: ubik_int.xdr.c ${INCLS}
+$(LT_objs): $(INCLS)
+
 utst_int.ss.o: utst_int.ss.c ${INCLS} utst_int.h
 utst_int.cs.o: utst_int.cs.c ${INCLS} utst_int.h
 utst_int.xdr.o: utst_int.xdr.c ${INCLS} utst_int.h 
+
+liboafs_ubik.la: liboafs_ubik.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
 #
 # Installation targets
@@ -147,6 +146,7 @@ install: libubik.a ubik.h ubik_int.h udebug
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL_DATA} libubik.a ${DESTDIR}${libdir}/libubik.a
+	$(LT_INSTALL_DATA) liboafs_ubik.la $(DESTDIR)$(libdir)/liboafs_ubik.la
 	${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h
 	${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h
 	${INSTALL_PROGRAM} udebug ${DESTDIR}${bindir}/udebug
@@ -166,6 +166,7 @@ dest: libubik.a ubik.h ubik_int.h udebug
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o utst_server utst_client udebug *.a *.cs.c *.ss.c *.xdr.c
 	$(RM) -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h
 

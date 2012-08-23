@@ -33,7 +33,7 @@ INCLS=\
 # library ordering defined by top level makefile
 LIBS= \
 	${TOP_LIBDIR}/libbubasics.a \
-	${TOP_LIBDIR}/libubik_pthread.a \
+	$(top_builddir)/src/ubik/liboafs_ubik.la \
 	${TOP_LIBDIR}/libafsauthent.a \
 	$(top_builddir)/src/sys/liboafs_sys.la \
 	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
