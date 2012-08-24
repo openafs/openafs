@@ -388,9 +388,9 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc,
 #ifdef AFS_64BIT_CLIENT
 	if (!afs_serverHasNo64Bit(tc))
 	    code = StartRXAFS_StoreData64(
-	    			v->call, (struct AFSFid*)&avc->f.fid.Fid,
-				&v->InStatus, base, bytes, length);
-	else
+		v->call, (struct AFSFid*)&avc->f.fid.Fid,
+		&v->InStatus, base, bytes, length);
+	else {
 	    if (length > 0xFFFFFFFF)
 		code = EFBIG;
 	    else {
@@ -399,6 +399,8 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc,
 					(struct AFSFid *) &avc->f.fid.Fid,
 					 &v->InStatus, t1, t2, t3);
 	    }
+	    v->hasNo64bit = 1;
+	}
 #else /* AFS_64BIT_CLIENT */
 	code = StartRXAFS_StoreData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
 				    &v->InStatus, base, bytes, length);
@@ -970,6 +972,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
 		RX_AFS_GLOCK();
 	    }
 	    afs_serverSetNo64Bit(tc);
+	    v->hasNo64bit = 1;
 	}
 	if (!code) {
 	    RX_AFS_GUNLOCK();
