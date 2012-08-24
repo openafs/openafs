@@ -19,6 +19,7 @@ AC_OUTPUT(             \
 Makefile               \
 src/config/Makefile    \
 src/config/Makefile.config \
+src/config/Makefile.lwp \
 src/config/Makefile.version-CML \
 src/config/Makefile.version-NOCML \
 src/libafs/Makefile.common \

@@ -1,5 +1,6 @@
 Makefile.in
 Makefile.config.in
+Makefile.lwp.in
 Makefile.version-CML.in
 Makefile.version-NOCML.in
 afsconfig.h.in
