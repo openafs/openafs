@@ -8,3 +8,4 @@ fcrypt.c
 fcrypt.h
 sboxes.h
 tcrypt.c
+stats.h
