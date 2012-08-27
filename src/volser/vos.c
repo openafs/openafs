@@ -5663,9 +5663,29 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	PrintError("convertROtoRW ", code);
 	goto error_exit;
     }
-    entry.serverFlags[roindex] = ITSRWVOL;
+    /* Update the VLDB to match what we did on disk as much as possible.  */
+    /* If the converted RO was in the VLDB, make it look like the new RW. */
+    if (roserver) {
+	entry.serverFlags[roindex] = ITSRWVOL;
+    } else {
+	/* Add a new site entry for the newly created RW.  It's possible
+	 * (but unlikely) that we are already at MAXNSERVERS and that this
+	 * new site will invalidate the whole VLDB entry;  however,
+	 * VLDB_ReplaceEntry will detect this and return VL_BADSERVER,
+	 * so we need no extra guard logic here.
+	 */
+	afs_int32 newrwindex = entry.nServers;
+	(entry.nServers)++;
+	entry.serverNumber[newrwindex] = server;
+	entry.serverPartition[newrwindex] = partition;
+	entry.serverFlags[newrwindex] = ITSRWVOL;
+    }
     entry.flags |= RW_EXISTS;
     entry.flags &= ~BACK_EXISTS;
+
+    /* if the old RW was in the VLDB, remove it by decrementing the number */
+    /* of servers, replacing the RW entry with the last entry, and zeroing */
+    /* out the last entry. */
     if (rwserver) {
 	(entry.nServers)--;
 	if (rwindex != entry.nServers) {
