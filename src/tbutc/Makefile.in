@@ -7,6 +7,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 
@@ -25,11 +26,10 @@ BUCOORDOBJS=ubik_db_if.o ../bucoord/volstub.o ../bucoord/dlq.o \
 	    status.o ../bucoord/bucoord_errs.o
 
 VOLSEROBJS=vsprocs.o vsutils.o lockprocs.o
-VOLSERLIBS=${TOP_LIBDIR}/libvosadmin.a ${TOP_LIBDIR}/libafsadminutil.a
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o afsxbsa.o \
-            ${BUCOORDOBJS} ${VOLSEROBJS}
+            ${BUCOORDOBJS}
 
 BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 	    ${TOP_INCDIR}/afs/volume.h \
@@ -48,7 +48,6 @@ BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 BUTCINCLUDE=-I. -I${TOP_INCDIR}
 BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libbubasics.a \
-	    ${VOLSERLIBS} \
             ${BUTMLIBS} \
 	    ${TOP_LIBDIR}/libafsauthent.a \
 	    $(top_builddir)/src/rxkad/liboafs_rxkad.la \

@@ -23,8 +23,6 @@ VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstu
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o vl_errors.o
 
-VOSOBJS= vsprocs.o vsutils.o lockprocs.o volint.xdr.o volerr.o volint.cs.o
-
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
@@ -33,8 +31,7 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 
 objects= ${VOLSEROBJS} ${DIROBJS} ${VOLOBJS}
 
-vosobjects= ${VOSOBJS} ${VLSERVEROBJS} ${LIBACLOBJS} ${DIROBJS} \
-	${VOLOBJS}
+vosobjects= ${VLSERVEROBJS} ${DIROBJS} ${VOLOBJS}
 
 LIBS_common = \
 	$(top_builddir)/src/sys/liboafs_sys.la \
@@ -50,6 +47,7 @@ LIBS_common = \
 
 LIBS_client = \
 	$(top_builddir)/src/ubik/liboafs_ubik.la \
+	$(top_builddir)/src/volser/liboafs_volser.la \
 	$(LIBS_common)
 
 LIBS_server = \
@@ -89,18 +87,11 @@ volint.ss.o: ../volser/volint.ss.c
 volint.xdr.o: ../volser/volint.xdr.c
 	$(AFS_CCRULE) ../volser/volint.xdr.c
 
-vsprocs.o: ${VOLSER}/vsprocs.c
-	$(AFS_CCRULE) -I../volser $(VOLSER)/vsprocs.c
-
-vsutils.o: ${VOLSER}/vsutils.c
-	$(AFS_CCRULE) -I../volser $(VOLSER)/vsutils.c
-
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) -I../volser $(VOLSER)/lockprocs.c
 
 vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
 	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
-
 
 vldbint.cs.o: ../vlserver/vldbint.cs.c
 	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c

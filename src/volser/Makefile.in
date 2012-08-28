@@ -7,10 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 HELPER_SPLINT=@HELPER_SPLINT@
-
 
 VINCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
 	${TOP_INCDIR}/afs/vlserver.h vol.h dump.h volser.h  lockdata.h \
@@ -23,6 +23,7 @@ RINCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
 INTINCLS=volint.h volser.h volser_prototypes.h volser_internal.h
 
 LIBS=\
+        $(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/vlib.a \
 	${TOP_LIBDIR}/libacl.a \
@@ -47,6 +48,7 @@ VOLDUMP_LIBS = \
 	../vol/ihandle.o \
 	../vol/physio.o \
 	../vol/vlib.a \
+	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libdir.a \
@@ -57,11 +59,19 @@ VOLDUMP_LIBS = \
 	${TOP_LIBDIR}/util.a \
 	$(TOP_LIBDIR)/libopr.a
 
-VSOBJS=vsutils.o vsprocs.o lockprocs.o volint.xdr.o volerr.o 
-SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \
- volint.cs.o dumpstuff.o volint.ss.o volint.xdr.o vol_split.o
+SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o \
+      dumpstuff.o volint.ss.o vol_split.o
+
+LT_objs = vsprocs.lo vsutils.lo lockprocs.lo volint.xdr.lo volerr.lo \
+	  volint.cs.lo AFS_component_version_number.lo
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
+	  $(top_builddir)/src/comerr/liboafs_comerr.la \
+	  $(top_builddir)/src/rx/liboafs_rx.la \
+	  $(top_builddir)/src/ubik/liboafs_ubik.la \
+	  $(top_builddir)/src/vlserver/liboafs_vldb.la
 
 all: volserver vos restorevol voldump \
+	liboafs_volser.la \
 	${TOP_INCDIR}/afs/volser.h \
 	${TOP_INCDIR}/afs/vsutils_prototypes.h \
 	${TOP_INCDIR}/afs/volser_prototypes.h \
@@ -89,22 +99,25 @@ restorevol: restorevol.o
 	$(AFS_LDRULE) restorevol.o ${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/util.a $(LIB_roken) ${XLIBS}
 
-vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
-	$(AFS_LDRULE) vos.o $(VSOBJS) libvolser.a \
+vos: vos.o libvolser.a ${LIBS}
+	$(AFS_LDRULE) vos.o libvolser.a \
 		${LIBS} $(LIB_roken) ${XLIBS}
 
-volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
-	$(AFS_LDRULE) $(SOBJS) ${TOP_LIBDIR}/libdir.a \
+volserver: $(SOBJS) volerr.lo volint.xdr.lo volint.cs.lo \
+	   $(LIBS) ${TOP_LIBDIR}/libdir.a
+	$(AFS_LDRULE) $(SOBJS) .lwp/volerr.o .lwp/volint.xdr.o .lwp/volint.cs.o \
+		${TOP_LIBDIR}/libdir.a \
 		$(LIBS) $(LIB_roken) ${XLIBS}
 
 voldump: vol-dump.o ${VOLDUMP_LIBS}
 	$(AFS_LDRULE) vol-dump.o ${VOLDUMP_LIBS} \
 		$(LIB_roken) ${XLIBS}
 
-libvolser.a: volint.cs.o  $(VSOBJS) volint.ss.o AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ volint.cs.o $(VSOBJS) volint.ss.o AFS_component_version_number.o 
-	$(RANLIB) $@
+libvolser.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
+
+liboafs_volser.la: liboafs_volser.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
 volser.h: volerr.c
 
@@ -131,16 +144,16 @@ volint.xdr.c: volint.h
 #
 # Dependencies
 #
-volint.cs.o: volint.cs.c ${INTINCLS}
+volint.cs.lo: volint.cs.c ${INTINCLS}
 volint.ss.o: volint.ss.c ${INTINCLS}
-volint.xdr.o: volint.xdr.c ${INTINCLS}
-vsutils.o: vsutils.c ${VINCLS} ${RINCLS} ${INTINCLS}
+volint.xdr.lo: volint.xdr.c ${INTINCLS}
+vsutils.lo: vsutils.c ${VINCLS} ${RINCLS} ${INTINCLS}
 volmain.o: volmain.c ${VINCLS} ${RINCLS} ${INTINCLS} AFS_component_version_number.c
 volprocs.o: volprocs.c ${VINCLS} ${RINCLS} ${INTINCLS}
 dumpstuff.o: dumpstuff.c ${VINCLS} ${RINCLS} ${INTINCLS}
 voldump.o: voldump.c ${VINCLS} ${RINCLS}
 vos.o: vos.c ${VINCLS} ${RINCLS} ${INTINCLS} AFS_component_version_number.c
-vsprocs.o: vsprocs.c ${VINCLS} ${RINCLS} ${INTINCLS}
+vsprocs.lo: vsprocs.c ${VINCLS} ${RINCLS} ${INTINCLS}
 physio.o: physio.c ${VINCLS}
 common.o: common.c ${VINCLS}
 lockprocs.o: lockprocs.c ${VINCLS} ${INTINCLS} ${RINCLS}
@@ -217,6 +230,7 @@ dest: restorevol voldump volser.h volint.h vos volserver libvolser.a
 # Misc targets
 # 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a core volserver volint.ss.c volint.cs.c volint.h \
 	volint.xdr.c vos volser.h volerr.c AFS_component_version_number.c restorevol voldump
 
