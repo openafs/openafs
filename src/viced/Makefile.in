@@ -14,14 +14,11 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS = -DRXDEBUG -DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT
 
-VLSERVER=$(srcdir)/../vlserver
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 
 VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
 	  fsstats.o
-
-VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -31,7 +28,7 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 
 FSINTOBJS = afsint.ss.o
 
-objects= ${VICEDOBJS} ${VLSERVEROBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+objects= ${VICEDOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      $(top_builddir)/src/sys/liboafs_sys.la \
@@ -65,13 +62,6 @@ cbd.o: callback.c AFS_component_version_number.c
 
 cbd: cbd.o
 	$(LT_LDRULE_static) cbd.o ${LIBS} $(LIB_roken) ${XLIBS}
-
-vldbint.cs.o: ../vlserver/vldbint.cs.c
-	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c
-
-vldbint.xdr.o: ../vlserver/vldbint.xdr.c
-	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.xdr.c
-
 
 buffer.o: ${DIR}/buffer.c
 	$(AFS_CCRULE) $(DIR)/buffer.c

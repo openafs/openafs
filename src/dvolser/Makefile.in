@@ -13,14 +13,11 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 MODULE_CFLAGS=-DRXDEBUG -DFSSYNC_BUILD_CLIENT -DAFS_DEMAND_ATTACH_FS
 
-VLSERVER=$(srcdir)/../vlserver
 DIR=$(srcdir)/../dir
 VOL=$(srcdir)/../vol
 VOLSER=$(srcdir)/../volser
 
 VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o vol_split.o
-
-VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o vl_errors.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -82,15 +79,6 @@ vsutils.o: ${VOLSER}/vsutils.c
 
 lockprocs.o: ${VOLSER}/lockprocs.c
 	$(AFS_CCRULE) $(VOLSER)/lockprocs.c
-
-vlserver.h vl_errors.c: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${VLSERVER} vl_errors -h vlserver
-
-vldbint.cs.o: ../vlserver/vldbint.cs.c
-	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c
-
-vldbint.xdr.o: ../vlserver/vldbint.xdr.c
-	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.xdr.c
 
 buffer.o: ${DIR}/buffer.c
 	$(AFS_CCRULE) $(DIR)/buffer.c

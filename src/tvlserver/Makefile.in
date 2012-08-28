@@ -35,25 +35,23 @@ LIBS_common = \
 	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/opr/liboafs_opr.la
 
-LIBS_server = \
+LIBS_server= \
+	$(top_builddir)/src/rxstat/liboafs_rxstat.la \
 	$(top_builddir)/src/audit/liboafs_audit.la \
 	$(LIBS_common)
 
-LIBS_client = \
+LIBS_client= \
+	$(top_builddir)/src/vlserver/liboafs_vldb.la \
 	$(LIBS_common)
 
-OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
-
 all: \
-	vlserver vlclient vlserver cnvldb vldb_check \
-	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h 
+	vlserver vlclient vlserver cnvldb vldb_check vldbint.h
 
 depinstall:
 
 #
 # Other stuff
 #
-
 
 vldb_check: vldb_check.o AFS_component_version_number.o $(LIBS_client)
 	$(LT_LDRULE_static) vldb_check.o AFS_component_version_number.o \
@@ -91,11 +89,8 @@ vlprocs.o: ${VLSERVER}/vlprocs.c ${INCLS}
 	$(AFS_CCRULE) $(VLSERVER)/vlprocs.c
 
 vldbint.ss.o: vldbint.ss.c 
-vldbint.cs.o: vldbint.cs.c 
 vldbint.xdr.o: vldbint.xdr.c 
 
-vldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -u -x -C -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vldbint.ss.c: ${VLSERVER}/vldbint.xg
 	${RXGEN} -A -x -S -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
@@ -106,19 +101,12 @@ vldbint.xdr.c: ${VLSERVER}/vldbint.xg
 vldbint.h: ${VLSERVER}/vldbint.xg
 	${RXGEN} -A -u -x -h -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
-vldbint.cs.c: vldbint.h
 vldbint.ss.c: vldbint.h
 vldbint.xdr.c: vldbint.h
 
-Kvldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -k -C -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
-
-Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -k -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
-
-vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
-	$(LT_LDRULE_static) vlclient.o $(OBJS) \
-		$(LIBS_server) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS}
+vlclient: vlclient.o $(LIBS_client)
+	$(LT_LDRULE_static) vlclient.o $(LIBS_client) \
+		$(LIB_roken) ${MT_LIBS} ${XLIBS}
 		
 vlclient.o: ${VLSERVER}/vlclient.c
 	$(AFS_CCRULE) $(VLSERVER)/vlclient.c

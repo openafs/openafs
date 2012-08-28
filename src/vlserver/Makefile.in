@@ -7,6 +7,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 ENABLE_PTHREADED_UBIK = @ENABLE_PTHREADED_UBIK@
@@ -21,6 +22,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	vlserver.h vldbint.h
 
 LIBS=\
+        $(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
@@ -35,13 +37,17 @@ LIBS=\
 	$(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
-OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
+LT_objs = vldbint.xdr.lo vldbint.cs.lo vl_errors.lo \
+	  AFS_component_version_number.lo
 
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
+	  $(top_builddir)/src/rx/liboafs_rx.la \
+	  $(top_builddir)/src/ubik/liboafs_ubik.la
 
 all: \
 	vlserver vlclient cnvldb vlserver cnvldb vldb_check \
 	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
-	${TOP_LIBDIR}/libvldb.a depinstall
+	liboafs_vldb.la ${TOP_LIBDIR}/libvldb.a depinstall
 
 generated: \
 	vl_errors.c vlserver.h \
@@ -85,17 +91,18 @@ sascnvldb: sascnvldb.o ${LIBS}
 
 sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
 
-vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
+vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.lo $(LIBS)
 	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
-		vldbint.xdr.o \
+		.lwp/vldbint.xdr.o \
 		$(LIBS) $(LIB_roken) ${XLIBS}
 
 vlserver.o: vlserver.c ${INCLS} AFS_component_version_number.o
 vlutils.o: vlutils.c ${INCLS}
 vlprocs.o: vlprocs.c ${INCLS}
 vldbint.ss.o: vldbint.ss.c vldbint.xdr.c
-vldbint.cs.o: vldbint.cs.c vldbint.xdr.c
-vldbint.xdr.o: vldbint.xdr.c vldbint.h
+
+vldbint.cs.lo: vldbint.cs.c vldbint.xdr.c
+vldbint.xdr.lo: vldbint.xdr.c vldbint.h
 
 vldbint.cs.c: vldbint.xg
 	${RXGEN} -A -u -x -C -o $@ ${srcdir}/vldbint.xg
@@ -119,10 +126,11 @@ Kvldbint.cs.c: vldbint.xg
 Kvldbint.xdr.c: vldbint.xg
 	${RXGEN} -A -x -k -c -o $@ ${srcdir}/vldbint.xg
 
-libvldb.a: $(OBJS) AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
-	$(RANLIB) $@
+libvldb.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
+
+liboafs_vldb.la: liboafs_vldb.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
 vlclient: vlclient.o libvldb.a $(LIBS)
 	$(AFS_LDRULE) vlclient.o libvldb.a \
@@ -178,6 +186,7 @@ dest: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \
 include ../config/Makefile.version
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.otl *.xdr.c *.cs.c *.ss.c core \
 		vlserver vlclient cnvldb vldbint.h vlserver.h vldb_check \
 		vl_errors.c AFS_component_version_number.c

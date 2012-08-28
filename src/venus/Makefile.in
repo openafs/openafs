@@ -28,6 +28,7 @@ AFSIO_LIBS=${TOP_LIBDIR}/libafscp.a \
 	${TOP_LIBDIR}/libafsauthent.a \
 	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
 	$(top_builddir)/src/fsint/liboafs_fsint.la \
+	$(top_builddir)/src/vlserver/liboafs_vldb.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
 	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/opr/liboafs_opr.la
@@ -87,15 +88,11 @@ fs: fs.o $(LIBS)
 
 afsio.o: afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
 	${PTH_CCRULE} ${srcdir}/afsio.c
-vldbint.cs.o: ../vlserver/vldbint.cs.c
-	${PTH_CCRULE} ../vlserver/vldbint.cs.c
-vldbint.xdr.o: ../vlserver/vldbint.xdr.c
-	${PTH_CCRULE} ../vlserver/vldbint.xdr.c
 afscbint.ss.o: ../fsint/afscbint.ss.c
 	${PTH_CCRULE} ../fsint/afscbint.ss.c
 
-afsio: afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o ${AFSIO_LIBS}
-	$(LT_LDRULE_static) afsio.o vldbint.cs.o afscbint.ss.o vldbint.xdr.o \
+afsio: afsio.o afscbint.ss.o ${AFSIO_LIBS}
+	$(LT_LDRULE_static) afsio.o afscbint.ss.o \
 		${AFSIO_LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} ${XLIBS} \
 		$(LDFLAGS_krb5) $(LIB_krb5)

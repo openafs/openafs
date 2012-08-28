@@ -23,8 +23,6 @@ VOL=$(srcdir)/../vol
 VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o serialize_state.o \
 	  fsstats.o
 
-VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
-
 DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
@@ -33,8 +31,7 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-server.o \
 
 FSINTOBJS= afsint.ss.o
 
-objects= ${VICEDOBJS} ${VLSERVEROBJS} \
-	 ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+objects= ${VICEDOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 SDBGOBJS = state_analyzer.o \
 	   $(top_builddir)/src/util/liboafs_util.la \
@@ -42,6 +39,7 @@ SDBGOBJS = state_analyzer.o \
 
 LIBS=${TOP_LIBDIR}/libafsauthent.a \
      $(top_builddir)/src/sys/liboafs_sys.la \
+     $(top_builddir)/src/vlserver/liboafs_vldb.la \
      $(top_builddir)/src/libacl/liboafs_acl.la \
      $(top_builddir)/src/rxkad/liboafs_rxkad.la \
      $(top_builddir)/src/rxstat/liboafs_rxstat.la \
@@ -73,13 +71,6 @@ fsstats.o: ${VICED}/fsstats.c
 
 serialize_state.o: ${VICED}/serialize_state.c
 	$(AFS_CCRULE) $(VICED)/serialize_state.c
-
-vldbint.cs.o: ../vlserver/vldbint.cs.c
-	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.cs.c
-
-vldbint.xdr.o: ../vlserver/vldbint.xdr.c
-	$(AFS_CCRULE) -I$(VLSERVER) ../vlserver/vldbint.xdr.c
-
 
 buffer.o: ${DIR}/buffer.c
 	$(AFS_CCRULE) $(DIR)/buffer.c
