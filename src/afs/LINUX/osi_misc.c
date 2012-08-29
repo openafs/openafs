@@ -62,7 +62,7 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
 #if defined(HAVE_LINUX_PATH_LOOKUP)
     struct nameidata path_data;
 #else
-    struct path path_data;
+    afs_linux_path_t path_data;
 #endif
     int flags = LOOKUP_POSITIVE;
     code = ENOENT;
@@ -117,7 +117,7 @@ int osi_abspath(char *aname, char *buf, int buflen,
     code = osi_lookupname_internal(afs_name_to_string(tname), followlink, &mnt, &dp);
     if (!code) {
 #if defined(D_PATH_TAKES_STRUCT_PATH)
-	struct path p = { mnt, dp };
+	afs_linux_path_t p = { mnt, dp };
 	path = d_path(&p, buf, buflen);
 #else
 	path = d_path(dp, mnt, buf, buflen);

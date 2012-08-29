@@ -1146,7 +1146,7 @@ afs_dentry_delete(struct dentry *dp)
 
 #ifdef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
 static struct vfsmount *
-afs_dentry_automount(struct path *path)
+afs_dentry_automount(afs_linux_path_t *path)
 {
     struct dentry *target;
 
