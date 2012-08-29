@@ -1,3 +1,17 @@
+
+AC_DEFUN([LINUX_AIO_NONVECTOR],
+ [AC_CHECK_LINUX_BUILD([for non-vectorized aio kernel functions],
+                       [ac_cv_linux_aio_nonvector],
+                       [#include <linux/fs.h>],
+                       [extern ssize_t
+                        generic_file_aio_read(struct kiocb *, char __user *,
+                                              size_t, loff_t);],
+                       [LINUX_HAS_NONVECTOR_AIO],
+                       [define if kernel functions like generic_file_aio_read use
+                        non-vectorized i/o],
+                       [])
+ ])
+
 AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
   AC_CHECK_LINUX_BUILD([for exported tasklist_lock],
 		       [ac_cv_linux_exports_tasklist_lock],

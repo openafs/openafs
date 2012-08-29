@@ -945,6 +945,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				  [define to disable the nfs translator])])
 
 		 dnl Assorted more complex tests
+		 LINUX_AIO_NONVECTOR
 		 LINUX_EXPORTS_PROC_ROOT_FS
                  LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
