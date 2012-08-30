@@ -125,6 +125,16 @@ AC_DEFUN([AC_CHECK_LINUX_FUNC],
 		   [Define if your kernel has the $1 function])])
  ])
 
+dnl AC_CHECK_LINUX_TYPE([type], [includes])
+AC_DEFUN([AC_CHECK_LINUX_TYPE],
+ [AC_CHECK_LINUX_BUILD([for $1],
+                       [ac_cv_linux_type_$1_exists],
+                       [#include <linux/$2>],
+                       [$1 _test; ],
+                       AS_TR_CPP(HAVE_LINUX_$1),
+                       [Define if kernel defines $1])
+ ])
+
 dnl AC_CHECK_LINUX_STRUCT([structure], [element], [includes])
 AC_DEFUN([AC_CHECK_LINUX_STRUCT],
  [AC_CHECK_LINUX_TYPED_STRUCT([struct $1], [$2], [$3])
