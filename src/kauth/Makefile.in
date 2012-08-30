@@ -7,8 +7,22 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
+BASE_objs = kauth.xdr.lo kauth.cs.lo kaaux.lo client.lo authclient.lo \
+	    katoken.lo kautils.lo kalocalcell.lo kaerrors.lo
+
+LT_objs = $(BASE_objs) user.lo
+LWP_objs = $(LT_objs) krb_tf.o
+KRB_objs = $(BASE_objs) user.krb.o krb_tf.o
+
+LT_deps = $(top_builddir)/src/ubik/liboafs_ubik.la \
+	  $(top_builddir)/src/auth/liboafs_auth.la \
+	  $(top_builddir)/src/ptserver/liboafs_prot.la \
+	  $(top_builddir)/src/sys/liboafs_sys.la \
+	  $(top_builddir)/src/rxkad/liboafs_rxkad.la
+LT_libs =
 
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
@@ -18,6 +32,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	     ${TOP_INCDIR}/rx/rxkad.h \
 	     ${TOP_INCDIR}/afs/com_err.h \
 	kaserver.h kauth.h kautils.h
+
 
 LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libprot.a \
@@ -36,9 +51,6 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	$(DBM) \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
-UKSRCS=authclient.c user.c kautils.h kaserver.h kaaux.c katoken.c \
-       kalocalcell.c client.c kaerrors.c
-
 KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libauth.krb.a \
@@ -53,10 +65,8 @@ KLIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
-OBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o katoken.o kautils.o kalocalcell.o kaerrors.o user.o krb_tf.o
-KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o katoken.o kautils.o kalocalcell.o kaerrors.o user.krb.o krb_tf.o
-
-all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb ka-forwarder \
+all: liboafs_kauth.la \
+     kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb ka-forwarder \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libkauth.krb.a \
 	depinstall
@@ -70,6 +80,8 @@ depinstall: \
 generated: \
 	kaerrors.c kautils.h \
 	kauth.cs.c kauth.ss.c kauth.xdr.c kauth.h
+
+$(LT_objs): $(INCLS)
 
 ${TOP_LIBDIR}/libkauth.a: libkauth.a
 	${INSTALL_DATA} $? $@
@@ -86,30 +98,23 @@ ${TOP_INCDIR}/afs/kauth.h: kauth.h
 ${TOP_INCDIR}/afs/kaport.h: kaport.h
 	${INSTALL_DATA} $? $@
 
+liboafs_kauth.la: liboafs_kauth.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 test tests: all
 	cd test; $(MAKE)
 
-kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaserver.o kaaux.o krb_udp.o kaauxdb.o $(LIBS) 
-	$(AFS_LDRULE) kaserver.o kautils.o kalocalcell.o kadatabase.o \
-		krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o \
-		kaauxdb.o \
+kaserver: kadatabase.o kaprocs.o kalog.o kauth.ss.o kaserver.o krb_udp.o kaauxdb.o \
+	  libkauth.a $(LIBS)
+	$(AFS_LDRULE) kaserver.o kadatabase.o \
+		krb_udp.o kaprocs.o kalog.o kauth.ss.o \
+		kaauxdb.o libkauth.a \
 		$(LIBS) $(LIB_roken) $(LIB_crypt) ${XLIBS}
 
 kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
 
-kautils.o: kautils.c ${INCLS}
-
-kalocalcell.o: kalocalcell.c ${INCLS}
-
 kadatabase.o: kadatabase.c ${INCLS}
 
 kaprocs.o: kaprocs.c ${INCLS} kaport.h
-
-authclient.o: authclient.c ${INCLS}
-
-kaauxdb.o: kaauxdb.c
-
-kaerrors.o: kaerrors.c
 
 kautils.h: kaerrors.c
 
@@ -117,11 +122,7 @@ kaerrors.c: kaerrors.et kautils.p.h
 	$(RM) -f kautils.h kaerrors.c
 	${COMPILE_ET} -p ${srcdir} kaerrors -h kautils
 
-kauth.ss.o: kauth.ss.c
-kauth.cs.o: kauth.cs.c
-kauth.xdr.o: kauth.xdr.c kauth.h
-
-$(UKSRCS): kauth.h
+kauth.xdr.lo: kauth.xdr.c kauth.h
 
 kauth.cs.c: kauth.rg
 	${RXGEN} -A -u -x -C -o $@ ${srcdir}/kauth.rg
@@ -148,19 +149,11 @@ Kkauth.xdr.c: kauth.rg
 Kkauth.h: kauth.rg
 	${RXGEN} -A -x -k -h -o Kkauth.h ${srcdir}/kauth.rg
 
-libkauth.a: $(OBJS) AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
-	$(RANLIB) $@
+libkauth.a: $(LWP_objs)
+	$(LT_LDLIB_lwp) $(LWP_objs)
 
-libkauth.krb.a: $(KOBJS) AFS_component_version_number.o
-	-$(RM) -f $@
-	$(AR) crv $@ $(KOBJS) AFS_component_version_number.o
-	$(RANLIB) $@
-
-katoken.o: katoken.c ${INCLS}
-
-client.o: client.c ${INCLS} AFS_component_version_number.o
+libkauth.krb.a: $(KRB_objs)
+	$(LT_LDLIB_lwp) $(KRB_objs)
 
 kas.o: kas.c ${INCLS} AFS_component_version_number.o
 
@@ -241,8 +234,8 @@ ka-forwarder: ka-forwarder.o
 
 rebuild.o: rebuild.c $(INCLS) AFS_component_version_number.o
 
-rebuild: rebuild.o kautils.o $(LIBS)
-	$(AFS_LDRULE) rebuild.o kautils.o \
+rebuild: rebuild.o $(LIBS) libkauth.a
+	$(AFS_LDRULE) rebuild.o libkauth.a \
 		$(LIBS) $(LIB_roken) ${XLIBS}
 
 #
