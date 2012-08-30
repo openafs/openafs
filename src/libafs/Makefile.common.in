@@ -231,23 +231,23 @@ AFSPAGOBJS = \
 	xdr_array.o	\
 	xdr_int32.o	\
 	xdr_int64.o	\
-	rx.o		\
-	rx_call.o	\
+	rx_pag.o	\
+	rx_pag_call.o	\
 	rx_conn.o	\
         rx_peer.o       \
-	rx_rdwr.o	\
+	rx_pag_rdwr.o	\
 	rx_clock.o	\
 	rx_event.o	\
 	rx_globals.o	\
 	rx_identity.o	\
 	rx_kmutex.o	\
 	rx_pag_knet.o	\
-	rx_kcommon.o	\
+	rx_pag_kcommon.o	\
 	rx_misc.o	\
 	rx_null.o	\
 	rx_opaque.o	\
 	rx_getaddr.o	\
-	rx_packet.o	\
+	rx_pag_packet.o	\
 	rx_multi.o	\
 	rx_stats.o	\
 	opr_rbtree.o	\
@@ -522,6 +522,16 @@ afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
 # Special objects for the PAG module
 afs_pag_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE_OPT) -DAFS_PAG_MANAGER $(TOP_SRC_AFS)/afs_user.c
+rx_pag.o: $(TOP_SRC_RX)/rx.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx.c
+rx_pag_call.o: $(TOP_SRC_RX)/rx_call.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_call.c
+rx_pag_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_rdwr.c
+rx_pag_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_kcommon.c
+rx_pag_packet.o: $(TOP_SRC_RX)/rx_packet.c
+	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_packet.c
 rx_pag_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 
