@@ -767,16 +767,17 @@ bozo_CreateRxBindFile(afs_uint32 host)
     char buffer[16];
     FILE *fp;
 
-    if (host == htonl(INADDR_ANY)) {
-	host = htonl(0x7f000001);
-    }
-
     afs_inet_ntoa_r(host, buffer);
     bozo_Log("Listening on %s:%d\n", buffer, AFSCONF_NANNYPORT);
     if ((fp = fopen(AFSDIR_SERVER_BOZRXBIND_FILEPATH, "w")) == NULL) {
 	bozo_Log("Unable to open rxbind address file: %s, code=%d\n",
 		 AFSDIR_SERVER_BOZRXBIND_FILEPATH, errno);
     } else {
+	/* If listening on any interface, write the loopback interface
+	   to the rxbind file to give local scripts a usable addresss. */
+	if (host == htonl(INADDR_ANY)) {
+	    afs_inet_ntoa_r(htonl(0x7f000001), buffer);
+	}
 	fprintf(fp, "%s\n", buffer);
 	fclose(fp);
     }
