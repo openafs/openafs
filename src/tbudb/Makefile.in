@@ -34,7 +34,6 @@ INCLS=\
 LIBS= \
 	${TOP_LIBDIR}/libbubasics.a \
 	$(top_builddir)/src/ubik/liboafs_ubik.la \
-	${TOP_LIBDIR}/libafsauthent.a \
 	$(top_builddir)/src/sys/liboafs_sys.la \
 	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
 	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \

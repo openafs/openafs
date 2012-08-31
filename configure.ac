@@ -230,7 +230,6 @@ src/rxosd/Makefile \
 src/rxstat/Makefile \
 src/scout/Makefile \
 src/sgistuff/Makefile \
-src/shlibafsauthent/Makefile \
 src/sys/Makefile \
 src/tbutc/Makefile \
 src/tests/Makefile \

@@ -25,7 +25,6 @@ INCLS=${TOP_INCDIR}/ubik.h \
 
 LIBS_common= \
 	$(top_builddir)/src/ubik/liboafs_ubik.la \
-	${TOP_LIBDIR}/libafsauthent.a \
 	$(top_builddir)/src/sys/liboafs_sys.la \
 	$(top_builddir)/src/rx/liboafs_rx.la \
 	$(top_builddir)/src/rxstat/liboafs_rxstat.la \

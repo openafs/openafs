@@ -36,7 +36,6 @@ vosobjects= ${VLSERVEROBJS} ${DIROBJS} ${VOLOBJS}
 LIBS_common = \
 	$(top_builddir)/src/sys/liboafs_sys.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \
-	${TOP_LIBDIR}/libafsauthent.a   \
 	$(top_builddir)/src/util/liboafs_util.la      \
 	$(top_builddir)/src/usd/liboafs_usd.la		\
 	$(top_builddir)/src/rx/liboafs_rx.la \

@@ -17,12 +17,11 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-LT_objs=audit.lo audit-file.lo audit-sysvmq.lo \
-	AFS_component_version_number.lo
+LT_objs=audit.lo audit-file.lo audit-sysvmq.lo
 LT_deps = $(top_builddir)/src/rxkad/liboafs_rxkad.la \
 	  $(top_builddir)/src/util/liboafs_util.la
 
-all: liboafs_audit.la ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
+all: liboafs_audit.la libauthent_audit.la ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
 
 ${TOP_LIBDIR}/libaudit.a: libaudit.a
 	${INSTALL_DATA} $? $@
@@ -35,6 +34,9 @@ libaudit.a: $(LT_objs)
 
 liboafs_audit.la: liboafs_audit.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libauthent_audit.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 audit.lo: audit.c audit.h audit-api.h
 audit-file.lo: audit-file.c audit.h audit-api.h

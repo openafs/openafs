@@ -10,10 +10,12 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-LT_objs =   disk.lo remote.lo beacon.lo recovery.lo ubik.lo vote.lo lock.lo \
-	    phys.lo ubik_int.cs.lo ubik_int.ss.lo ubik_int.xdr.lo ubikcmd.lo \
-	    ubikclient.lo uerrors.lo uinit.lo \
-	    AFS_component_version_number.lo
+LT_authent_objs = uinit.lo ubikclient.lo uerrors.lo ubik_int.cs.lo \
+		  ubik_int.xdr.lo
+
+LT_objs =   $(LT_authent_objs) \
+	    disk.lo remote.lo beacon.lo recovery.lo ubik.lo vote.lo lock.lo \
+	    phys.lo ubik_int.ss.lo ubikcmd.lo
 
 LT_deps =   $(top_builddir)/src/auth/liboafs_auth.la \
 	    $(top_builddir)/src/opr/liboafs_opr.la \
@@ -33,7 +35,7 @@ LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libauth.a \
 	${XLIBS}
 
 all: depinstall ${TOP_LIBDIR}/libubik.a udebug utst_server utst_client \
-     liboafs_ubik.la
+     liboafs_ubik.la libauthent_ubik.la
 
 generated: \
 	utst_int.cs.c utst_int.ss.c utst_int.xdr.c utst_int.h \
@@ -134,6 +136,9 @@ utst_int.xdr.o: utst_int.xdr.c ${INCLS} utst_int.h
 
 liboafs_ubik.la: liboafs_ubik.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libauthent_ubik.la: $(LT_authent_objs)
+	$(LT_LDLIB_pic) $(LT_authent_objs)
 
 #
 # Installation targets

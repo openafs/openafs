@@ -43,6 +43,7 @@ rxkad_global_stats_lock
 rxkad_stats_key
 afs_com_err
 afs_error_message
+afs_error_table_name
 rx_socket
 rxevent_debugFile
 rx_debugFile
@@ -172,3 +173,5 @@ rx_SetSecurityHeaderSize
 rx_SetSecurityMaxTrailerSize
 rx_HostOf
 rx_PortOf
+initialize_RXK_error_table
+rx_getAllAddrMaskMtu

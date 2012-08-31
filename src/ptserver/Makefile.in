@@ -51,8 +51,8 @@ LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
 	  $(top_builddir)/src/auth/liboafs_auth.la
 LT_libs =
 
-all: ptserver pts pt_util db_verify liboafs_prot.la ${TOP_LIBDIR}/libprot.a \
-	depinstall readgroup readpwd testpt ptclient
+all: ptserver pts pt_util db_verify liboafs_prot.la libauthent_ptserver.la \
+     ${TOP_LIBDIR}/libprot.a depinstall readgroup readpwd testpt ptclient
 
 generated: \
 	pterror.h pterror.c \
@@ -168,6 +168,9 @@ ptuser.lo: $(LINCLS)
 
 liboafs_prot.la: liboafs_prot.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libauthent_ptserver.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 libprot.a: $(LT_objs)
 	$(LT_LDLIB_lwp) $(LT_objs)

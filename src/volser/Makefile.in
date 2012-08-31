@@ -63,7 +63,7 @@ SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o \
       dumpstuff.o volint.ss.o vol_split.o
 
 LT_objs = vsprocs.lo vsutils.lo lockprocs.lo volint.xdr.lo volerr.lo \
-	  volint.cs.lo AFS_component_version_number.lo
+	  volint.cs.lo
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
 	  $(top_builddir)/src/comerr/liboafs_comerr.la \
 	  $(top_builddir)/src/rx/liboafs_rx.la \
@@ -72,6 +72,7 @@ LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
 
 all: volserver vos restorevol voldump \
 	liboafs_volser.la \
+	libauthent_volser.la \
 	${TOP_INCDIR}/afs/volser.h \
 	${TOP_INCDIR}/afs/vsutils_prototypes.h \
 	${TOP_INCDIR}/afs/volser_prototypes.h \
@@ -118,6 +119,9 @@ libvolser.a: $(LT_objs)
 
 liboafs_volser.la: liboafs_volser.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libauthent_volser.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 volser.h: volerr.c
 

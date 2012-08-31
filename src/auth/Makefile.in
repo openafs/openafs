@@ -12,8 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 BASE_objs= cellconfig.lo keys.lo userok.lo writeconfig.lo authcon.lo \
 	 acfg_errors.lo ktc_errors.lo netrestrict.lo token.xdr.lo token.lo \
-	 realms.lo \
-	 AFS_component_version_number.lo
+	 realms.lo
 
 LT_objs= ktc.lo $(BASE_objs)
 KRB_objs = ktc.krb.lo $(BASE_objs)
@@ -37,7 +36,8 @@ LIBS=libauth.a \
 
 INCLS=cellconfig.h auth.h keys.h internal.h token.h
 
-all: liboafs_auth.la ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a \
+all: liboafs_auth.la libauthent_auth.la \
+     ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a \
      depinstall
 
 depinstall: ${TOP_INCDIR}/afs/keys.h \
@@ -99,6 +99,9 @@ libauth.krb.a: $(KRB_objs)
 
 liboafs_auth.la: liboafs_auth.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libauthent_auth.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
 copyauth: copyauth.o ${LIBS}
 	$(AFS_LDRULE) copyauth.o ${LIBS} ${XLIBS}
