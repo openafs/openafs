@@ -10,9 +10,8 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 MODULE_CFLAGS=@KRB5_CPPFLAGS@ -DALLOW_REGISTER
 
 AKLIBS= ${LIBS} $(LDFLAGS_krb5) $(LIB_krb5)
-AFSLIBS= ${TOP_LIBDIR}/libafsauthent.a \
-	 ${TOP_LIBDIR}/libafshcrypto.a \
-	 $(top_builddir)/src/sys/liboafs_sys.la \
+AFSLIBS= ${TOP_LIBDIR}/libafshcrypto.a \
+	 $(top_builddir)/src/ptserver/liboafs_prot.la \
 	 $(top_builddir)/src/rxkad/liboafs_rxkad.la \
 	 $(top_builddir)/src/cmd/liboafs_cmd.la \
 	 $(top_builddir)/src/opr/liboafs_opr.la \

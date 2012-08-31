@@ -44,7 +44,7 @@ FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS}
 
 SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${VLIBOBJS} ${DIROBJS}
 
-LIBS=   ${TOP_LIBDIR}/libafsauthent.a \
+LIBS=   \
 	$(top_builddir)/src/rx/liboafs_rx.la \
 	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/cmd/liboafs_cmd.la \

@@ -28,8 +28,6 @@ VOLOBJS= vnode.o volume.o vutil.o partition.o fssync-client.o purge.o \
 objects= ${VOLSEROBJS} ${DIROBJS} ${VOLOBJS}
 
 LIBS=	$(top_builddir)/src/cmd/liboafs_cmd.la		\
-	${TOP_LIBDIR}/libafsauthent.a   \
-	$(top_builddir)/src/sys/liboafs_sys.la \
 	$(top_builddir)/src/libacl/liboafs_acl.la \
         $(top_builddir)/src/rx/liboafs_rx.la \
         $(top_builddir)/src/rxstat/liboafs_rxstat.la \

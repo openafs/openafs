@@ -49,7 +49,10 @@ BUTCINCLUDE=-I. -I${TOP_INCDIR}
 BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libbubasics.a \
             ${BUTMLIBS} \
-	    ${TOP_LIBDIR}/libafsauthent.a \
+	    $(top_builddir)/src/kauth/liboafs_kauth.la \
+	    $(top_builddir)/src/volser/liboafs_volser.la \
+	    $(top_builddir)/src/vlserver/liboafs_vldb.la \
+	    $(top_builddir)/src/ubik/liboafs_ubik.la \
 	    $(top_builddir)/src/rxkad/liboafs_rxkad.la \
             $(top_builddir)/src/cmd/liboafs_cmd.la \
 	    $(top_builddir)/src/util/liboafs_util.la \

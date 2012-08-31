@@ -25,7 +25,6 @@ AFSIO_INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/afsutil.h
 
 AFSIO_LIBS=${TOP_LIBDIR}/libafscp.a \
-	${TOP_LIBDIR}/libafsauthent.a \
 	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
 	$(top_builddir)/src/fsint/liboafs_fsint.la \
 	$(top_builddir)/src/vlserver/liboafs_vldb.la \

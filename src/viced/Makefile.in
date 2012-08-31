@@ -30,8 +30,8 @@ FSINTOBJS = afsint.ss.o
 
 objects= ${VICEDOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a \
-     $(top_builddir)/src/sys/liboafs_sys.la \
+LIBS= \
+     $(top_builddir)/src/vlserver/liboafs_vldb.la \
      $(top_builddir)/src/rxkad/liboafs_rxkad.la \
      $(top_builddir)/src/rxstat/liboafs_rxstat.la \
      $(top_builddir)/src/lwp/liboafs_lwpcompat.la \

@@ -23,6 +23,7 @@ LT_objs = \
 	$(top_builddir)/src/vlserver/libauthent_vlserver.la
 
 LT_deps = \
+	$(top_builddir)/src/opr/liboafs_opr.la \
 	$(top_builddir)/src/util/liboafs_util.la \
 	$(top_builddir)/src/libafsrpc/libafsrpc.la
 

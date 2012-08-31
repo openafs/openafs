@@ -37,8 +37,7 @@ SDBGOBJS = state_analyzer.o \
 	   $(top_builddir)/src/util/liboafs_util.la \
 	   $(top_builddir)/src/opr/liboafs_opr.la
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a \
-     $(top_builddir)/src/sys/liboafs_sys.la \
+LIBS= \
      $(top_builddir)/src/vlserver/liboafs_vldb.la \
      $(top_builddir)/src/libacl/liboafs_acl.la \
      $(top_builddir)/src/rxkad/liboafs_rxkad.la \
