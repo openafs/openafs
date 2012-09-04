@@ -5597,7 +5597,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     if (!roserver) {
 	fprintf(STDERR, "Warning: RO volume didn't exist in vldb!\n");
     }
-    if (ropartition != partition) {
+    if (roserver && (ropartition != partition)) {
 	fprintf(STDERR,
 		"Warning: RO volume should be in partition %d instead of %d (vldb)\n",
 		ropartition, partition);
