@@ -48,6 +48,11 @@ all: ptserver pts pt_util db_verify \
 
 depinstall: 
 
+# When supergroups is enabled, some parts of ptserver cast between
+# incompatible structs.
+CFLAGS_ptutils.o = @CFLAGS_NOSTRICT@
+CFLAGS_ptprocs.o = @CFLAGS_NOSTRICT@
+
 #
 # Build targets
 #
