@@ -34,7 +34,7 @@
 #if defined(assert)
 #undef assert
 #endif
-#define assert opr_Assert
+#define assert osi_Assert
 
 /* hcrypto uses "static inline", which isn't supported by some of our
  * compilers */
