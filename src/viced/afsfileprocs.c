@@ -1571,7 +1571,7 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
      * slot this operation belongs, and bump the appropriate slot.
      */
     now = time(NULL);
-    currDate = (time(NULL) - parentptr->disk.unixModifyTime);
+    currDate = (now - parentptr->disk.unixModifyTime);
     timeIdx =
 	(currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 : currDate <
 	 VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 : currDate <
@@ -1586,8 +1586,8 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
 
     parentptr->disk.author = author;
     parentptr->disk.linkCount = linkcount;
-    parentptr->disk.unixModifyTime = time(NULL);	/* This should be set from CLIENT!! */
-    parentptr->disk.serverModifyTime = time(NULL);
+    parentptr->disk.unixModifyTime = now;	/* This should be set from CLIENT!! */
+    parentptr->disk.serverModifyTime = now;
     parentptr->changed_newTime = 1;	/* vnode changed, write it back. */
 }
 
