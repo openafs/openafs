@@ -21,6 +21,8 @@ struct opr_time {
     afs_int64 time;
 };
 
+#define OPR_TIME_INIT {0LL}
+
 static_inline void
 opr_time_FromSecs(struct opr_time *out, time_t in)
 {
