@@ -118,6 +118,8 @@ opr_uuid_fromString(opr_uuid_t *uuid, const char *string)
     return 0;
 }
 
+#endif
+
 void
 opr_uuid_pack(opr_uuid_t *uuid, const struct opr_uuid_unpacked *raw)
 {
@@ -160,4 +162,3 @@ opr_uuid_unpack(const opr_uuid_t *uuid, struct opr_uuid_unpacked *raw)
     memcpy(&raw->node, &uuid->data[10], 6);
 }
 
-#endif
