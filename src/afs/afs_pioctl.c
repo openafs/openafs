@@ -1218,7 +1218,13 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif /* AFS_NEED_CLIENTCONTEXT */
     if (vp) {
 #ifdef AFS_LINUX22_ENV
+	/*
+	 * Holding the global lock when calling dput can cause a deadlock
+	 * when the kernel calls back into afs_dentry_iput
+	 */
+	AFS_GUNLOCK();
 	dput(dp);
+	AFS_GLOCK();
 #else
 #if defined(AFS_FBSD80_ENV)
     if (VOP_ISLOCKED(vp))
