@@ -2777,11 +2777,23 @@
       <itemizedlist>
           <listitem>
 	    <para><emphasis role="bold">Windows:</emphasis>
-            \\afs\example.com#root.cell</para>
+            \\afs\example.com%root.cell - Access a read/write volume directly</para>
+          </listitem>
+          <listitem>
+	    <para><emphasis role="bold">Windows:</emphasis>
+            \\afs\example.com#root.cell - Access a read-only volume directly</para>
           </listitem>
           <listitem>
 	    <para><emphasis role="bold">Unix:</emphasis>
-            /afs/.:mount/example.com#root.cell</para>
+            /afs/.:mount/example.com:root.cell - Access a read/write volume directly</para>
+          </listitem>
+          <listitem>
+	    <para><emphasis role="bold">Unix:</emphasis>
+            /afs/.:mount/example.com:root.cell.readonly - Access a read-only volume directly</para>
+          </listitem>
+          <listitem>
+	    <para><emphasis role="bold">Unix:</emphasis>
+            /afs/.:mount/example.com:root.cell.backup - Access a backup volume directly</para>
           </listitem>
       </itemizedlist>
     </sect2>
