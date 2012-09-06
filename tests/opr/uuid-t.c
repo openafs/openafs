@@ -23,6 +23,8 @@ main(int argc, char **argv)
     int version;
     struct opr_uuid_unpacked raw;
 
+    plan(16);
+
     memset(&uuidC, 0, sizeof(opr_uuid_t));
 
     ok(opr_uuid_isNil(&uuidC), "opr_uuid_isNil(nilUuid) works");
@@ -52,7 +54,7 @@ main(int argc, char **argv)
     memset(&uuidC, 0, sizeof(opr_uuid_t));
     opr_uuid_create(&uuidC);
     ok(!opr_uuid_isNil(&uuidC), "opr_uuid_create makes non-nil UUID");
-    is_int(0x80, uuidC.data[8] & 0xB0, "variant is DCE as expected");
+    is_int(0x80, uuidC.data[8] & 0x80, "variant is DCE as expected");
     version = (uuidC.data[6] & 0xF0) >> 4;
     ok(version >=1 && version <=5, "version %d is in expected range", version);
 
