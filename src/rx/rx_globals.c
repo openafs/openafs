@@ -26,9 +26,15 @@
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllexport)
 #define EXT2 __declspec(dllexport)
+#define POSTAMBLE
 #else
 #define EXT
 #define EXT2
+#ifdef AFS_PTHREAD_ENV
+#define POSTAMBLE =PTHREAD_MUTEX_INITIALIZER
+#else
+#define POSTAMBLE
+#endif
 #endif
 
 #ifdef KERNEL

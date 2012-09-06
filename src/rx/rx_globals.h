@@ -21,6 +21,7 @@
 
 #ifndef GLOBALSINIT
 #define GLOBALSINIT(x)
+#define POSTAMBLE
 #if defined(AFS_NT40_ENV)
 #define RX_STATS_INTERLOCKED 1
 #if defined(AFS_PTHREAD_ENV)
@@ -602,11 +603,11 @@ EXT pthread_key_t rx_thread_id_key;
 #endif
 
 #if defined(RX_ENABLE_LOCKS)
-EXT afs_kmutex_t rx_waiting_mutex;	/* used to protect waiting counters */
-EXT afs_kmutex_t rx_quota_mutex;	/* used to protect quota counters */
-EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */
-EXT afs_kmutex_t rx_packets_mutex;	/* used to protect packet counters */
-EXT afs_kmutex_t rx_refcnt_mutex;       /* used to protect conn/call ref counts */
+EXT afs_kmutex_t rx_waiting_mutex POSTAMBLE;	/* used to protect waiting counters */
+EXT afs_kmutex_t rx_quota_mutex POSTAMBLE;	/* used to protect quota counters */
+EXT afs_kmutex_t rx_pthread_mutex POSTAMBLE;	/* used to protect pthread counters */
+EXT afs_kmutex_t rx_packets_mutex POSTAMBLE;	/* used to protect packet counters */
+EXT afs_kmutex_t rx_refcnt_mutex POSTAMBLE;       /* used to protect conn/call ref counts */
 #endif
 
 EXT int rx_enable_stats GLOBALSINIT(0);
