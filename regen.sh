@@ -17,7 +17,14 @@ done
 echo "Updating configuration..."
 
 echo "Running libtoolize"
-libtoolize -c -f
+if which libtoolize > /dev/null 2>&1; then
+    libtoolize -c -f
+elif which glibtoolize > /dev/null 2>&1; then
+    glibtoolize -c -f
+else
+  echo "No libtoolize found on your system (looked for libtoolize & glibtoolize)"
+  exit 1
+fi
 
 echo "Running aclocal"
 if which aclocal > /dev/null 2>&1; then
