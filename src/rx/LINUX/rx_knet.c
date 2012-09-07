@@ -170,10 +170,6 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     struct msghdr msg;
     int code;
 
-#ifdef AFS_RXERRQ_ENV
-    while (osi_HandleSocketError(sop))
-	;
-#endif
 
     msg.msg_name = to;
     msg.msg_namelen = sizeof(*to);
@@ -182,6 +178,14 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     msg.msg_flags = 0;
 
     code = kernel_sendmsg(sop, &msg, (struct kvec *) iovec, iovcnt, size);
+
+#ifdef AFS_RXERRQ_ENV
+    if (code < 0) {
+	while (osi_HandleSocketError(sop))
+	    ;
+    }
+#endif
+
     return (code < 0) ? code : 0;
 }
 
@@ -220,11 +224,6 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
     }
 
-#ifdef AFS_RXERRQ_ENV
-    while (osi_HandleSocketError(so))
-	;
-#endif
-
     memcpy(tmpvec, iov, iovcnt * sizeof(struct iovec));
     msg.msg_name = from;
     msg.msg_iov = tmpvec;
@@ -245,6 +244,11 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 	flush_signals(current);	/* We don't want no stinkin' signals. */
 	rxk_lastSocketError = code;
 	rxk_nSocketErrors++;
+
+#ifdef AFS_RXERRQ_ENV
+	while (osi_HandleSocketError(so))
+	    ;
+#endif
     } else {
 	*lengthp = code;
 	code = 0;

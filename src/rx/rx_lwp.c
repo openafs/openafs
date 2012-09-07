@@ -410,11 +410,17 @@ rxi_Listen(osi_socket sock)
 int
 rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
+    int code;
+    code = recvmsg(socket, msg_p, flags);
+
 #ifdef AFS_RXERRQ_ENV
-    while((rxi_HandleSocketError(socket)) > 0)
-	;
+    if (code < 0) {
+	while((rxi_HandleSocketError(socket)) > 0)
+	    ;
+    }
 #endif
-    return recvmsg(socket, msg_p, flags);
+
+    return code;
 }
 
 /*
