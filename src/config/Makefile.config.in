@@ -234,7 +234,7 @@ LT_CCRULE=$(RUN_CC) $(LIBTOOL) --quiet --mode=compile --tag=CC \
 
 # Libtool - for objects that are built for both pthread and lwp libraries
 LTLWP_CCRULE=$(RUN_CC) $(LWPTOOL) --mode compile \
-	         --lwpcc $(CCOBJ) \
+	         --lwpcc "$(CCOBJ)" \
 		 --mtcc "$(LIBTOOL) --quiet --mode=compile --tag=CC $(MT_CC) $(MT_CFLAGS)" \
 		 -o $@ \
 		 -- \

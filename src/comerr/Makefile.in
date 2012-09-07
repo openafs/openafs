@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 LT_objs = error_msg.lo et_name.lo com_err.lo AFS_component_version_number.lo
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
-LT_libs = $(MT_LIBS)
+LT_libs = $(LIB_roken) $(MT_LIBS)
 
 all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h \
      ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libafscom_err.a \
