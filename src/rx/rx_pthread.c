@@ -393,11 +393,15 @@ int
 rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
-#ifdef AFS_RXERRQ_ENV
-    while((rxi_HandleSocketError(socket)) > 0)
-      ;
-#endif
     ret = recvmsg(socket, msg_p, flags);
+
+#ifdef AFS_RXERRQ_ENV
+    if (ret < 0) {
+	while (rxi_HandleSocketError(socket) > 0)
+	    ;
+    }
+#endif
+
     return ret;
 }
 
@@ -409,26 +413,36 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     ret = sendmsg(socket, msg_p, flags);
-#ifdef AFS_LINUX22_ENV
+
+#ifdef AFS_RXERRQ_ENV
+    if (ret < 0) {
+	while (rxi_HandleSocketError(socket) > 0)
+	    ;
+    }
+    return ret;
+
+#else
+# ifdef AFS_LINUX22_ENV
     /* linux unfortunately returns ECONNREFUSED if the target port
      * is no longer in use */
     /* and EAGAIN if a UDP checksum is incorrect */
     if (ret == -1 && errno != ECONNREFUSED && errno != EAGAIN) {
-#else
+# else
     if (ret == -1) {
-#endif
+# endif
 	dpf(("rxi_sendmsg failed, error %d\n", errno));
 	fflush(stdout);
-#ifndef AFS_NT40_ENV
+# ifndef AFS_NT40_ENV
         if (errno > 0)
           return -errno;
-#else
+# else
             if (WSAGetLastError() > 0)
               return -WSAGetLastError();
-#endif
+# endif
 	return -1;
     }
     return 0;
+#endif /* !AFS_RXERRQ_ENV */
 }
 
 struct rx_ts_info_t * rx_ts_info_init(void) {
