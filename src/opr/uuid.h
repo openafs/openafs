@@ -24,7 +24,7 @@ typedef opr_uuid_t opr_uuid; /* For XDR */
 extern void opr_uuid_create(opr_uuid_t *uuid);
 extern int opr_uuid_isNil(const opr_uuid_t *uuid);
 extern int opr_uuid_equal(const opr_uuid_t *uuid1, const opr_uuid_t *uuid2);
-extern int opr_uuid_hash(const opr_uuid_t *uuid);
+extern unsigned int opr_uuid_hash(const opr_uuid_t *uuid);
 
 #if !defined(KERNEL)
 extern void opr_uuid_toString(const opr_uuid_t *uuid, char **string);

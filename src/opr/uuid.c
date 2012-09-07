@@ -55,7 +55,7 @@ opr_uuid_equal(const opr_uuid_t *uuid1, const opr_uuid_t *uuid2)
    return memcmp(uuid1, uuid2, sizeof(opr_uuid_t)) == 0;
 }
 
-int
+unsigned int
 opr_uuid_hash(const opr_uuid_t *uuid)
 {
    /* uuid->data is a (unsigned char *), so there's every danger that this
