@@ -98,37 +98,33 @@ rxk_FreeSocket(struct socket *asocket)
 }
 
 #ifdef AFS_RXERRQ_ENV
-int
-osi_HandleSocketError(osi_socket so)
+static int
+osi_HandleSocketError(osi_socket so, char *cmsgbuf, size_t cmsgbuf_len)
 {
-    int ret = 0;
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
     struct sockaddr_in addr;
     struct sockaddr *offender;
-    char *controlmsgbuf = NULL;
     int code;
     struct socket *sop = (struct socket *)so;
 
-    if (!(controlmsgbuf = rxi_Alloc(256)))
-	goto out;
     msg.msg_name = &addr;
     msg.msg_namelen = sizeof(addr);
-    msg.msg_control = controlmsgbuf;
-    msg.msg_controllen = 256;
+    msg.msg_control = cmsgbuf;
+    msg.msg_controllen = cmsgbuf_len;
     msg.msg_flags = 0;
 
     code = kernel_recvmsg(sop, &msg, NULL, 0, 0,
 			  MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
-	goto out;
+	return 0;
 
     /* kernel_recvmsg changes msg_control to point at the _end_ of the buffer,
      * and msg_controllen is set to the number of bytes remaining */
-    msg.msg_controllen = ((char*)msg.msg_control - (char*)controlmsgbuf);
-    msg.msg_control = controlmsgbuf;
+    msg.msg_controllen = ((char*)msg.msg_control - (char*)cmsgbuf);
+    msg.msg_control = cmsgbuf;
 
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg && CMSG_OK(&msg, cmsg);
          cmsg = CMSG_NXTHDR(&msg, cmsg)) {
@@ -136,24 +132,37 @@ osi_HandleSocketError(osi_socket so)
 	    break;
     }
     if (!cmsg)
-	goto out;
+	return 0;
 
-    ret = 1;
     err = CMSG_DATA(cmsg);
     offender = SO_EE_OFFENDER(err);
     
     if (offender->sa_family != AF_INET)
-       goto out;
+       return 1;
 
     memcpy(&addr, offender, sizeof(addr));
 
     rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
 
- out:
-    if (controlmsgbuf) {
-	rxi_Free(controlmsgbuf, 256);
+    return 1;
+}
+
+static void
+do_handlesocketerror(osi_socket so)
+{
+    char *cmsgbuf;
+    size_t cmsgbuf_len;
+
+    cmsgbuf_len = 256;
+    cmsgbuf = rxi_Alloc(cmsgbuf_len);
+    if (!cmsgbuf) {
+	return;
     }
-    return ret;
+
+    while (osi_HandleSocketError(so, cmsgbuf, cmsgbuf_len))
+	;
+
+    rxi_Free(cmsgbuf, cmsgbuf_len);
 }
 #endif
 
@@ -181,8 +190,7 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 
 #ifdef AFS_RXERRQ_ENV
     if (code < 0) {
-	while (osi_HandleSocketError(sop))
-	    ;
+	do_handlesocketerror(sop);
     }
 #endif
 
@@ -246,8 +254,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 	rxk_nSocketErrors++;
 
 #ifdef AFS_RXERRQ_ENV
-	while (osi_HandleSocketError(so))
-	    ;
+	do_handlesocketerror(so);
 #endif
     } else {
 	*lengthp = code;
