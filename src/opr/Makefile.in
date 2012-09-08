@@ -57,7 +57,6 @@ clean:
 	rm -f libopr.a
 
 install: libopr.a
-	$(LT_INSTALL_DATA) liboafs_opr.la $(DESTDIR)$(libdir)/liboafs_opr.la
 	$(INSTALL_DATA) libopr.a $(DESTDIR)$(libdir)/libopr.a
 	$(INSTALL) -d $(DESTDIR)$(includedir)/opr
 	$(INSTALL_DATA) ${srcdir}/queue.h $(DESTDIR)$(includedir)/opr/queue.h

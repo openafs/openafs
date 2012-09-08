@@ -67,7 +67,6 @@ install: compile_et com_err.h error_table.h mit-sipb-cr.h libafscom_err.a \
 	${INSTALL_DATA} ${srcdir}/error_table.h ${DESTDIR}${includedir}/afs/error_table.h
 	${INSTALL_DATA} ${srcdir}/mit-sipb-cr.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h
 	${INSTALL_DATA} libafscom_err.a ${DESTDIR}${libdir}/afs/libafscom_err.a
-	$(LT_INSTALL_DATA) liboafs_comerr.la $(DESTDIR)$(libdir)liboafs_comerr.la
 
 dest: compile_et com_err.h error_table.h mit-sipb-cr.h libafscom_err.a
 	${INSTALL} -d ${DEST}/bin

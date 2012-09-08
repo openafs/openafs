@@ -78,7 +78,7 @@ AFS_component_version_number64.o: AFS_component_version_number.c
 install: libcmd.a cmd.h
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
-	$(LT_INSTALL_DATA) libcmd.la $(DESTDIR)$(libdir)/afs/libcmd.la
+	${INSTALL_DATA} libcmd.a ${DESTDIR}$(libdir)/afs/libcmd.a
 	${INSTALL_DATA} cmd.h ${DESTDIR}${includedir}/afs/cmd.h
 
 install64: install libcmd64.a
