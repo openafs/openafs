@@ -77,6 +77,58 @@ rx_atomic_sub(rx_atomic_t *atomic, int change) {
     InterlockedExchangeAdd(&atomic->var, 0 - change);
 }
 
+#elif defined(AFS_AIX61_ENV) || defined(AFS_USR_AIX61_ENV)
+#include <sys/atomic_op.h>
+
+typedef struct {
+   volatile int var;
+} rx_atomic_t;
+
+static_inline void
+rx_atomic_set(rx_atomic_t *atomic, int val) {
+    atomic->var = val;
+}
+
+static_inline int
+rx_atomic_read(rx_atomic_t *atomic) {
+    return atomic->var;
+}
+
+static_inline void
+rx_atomic_inc(rx_atomic_t *atomic) {
+    fetch_and_add(&atomic->var, 1);
+}
+
+static_inline int
+rx_atomic_inc_and_read(rx_atomic_t *atomic) {
+    return (fetch_and_add(&atomic->var, 1) + 1);
+}
+
+static_inline void
+rx_atomic_add(rx_atomic_t *atomic, int change) {
+    fetch_and_add(&atomic->var, change);
+}
+
+static_inline int
+rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
+    return (fetch_and_add(&atomic->var, change) + change);
+}
+
+static_inline void
+rx_atomic_dec(rx_atomic_t *atomic) {
+    fetch_and_add(&atomic->var, -1);
+}
+
+static_inline int
+rx_atomic_dec_and_read(rx_atomic_t *atomic) {
+    return (fetch_and_add(&atomic->var, -1) - 1);
+}
+
+static_inline void
+rx_atomic_sub(rx_atomic_t *atomic, int change) {
+    fetch_and_add(&atomic->var, -change);
+}
+
 #elif defined(AFS_DARWIN80_ENV) || defined(AFS_USR_DARWIN80_ENV)
 
 #include <libkern/OSAtomic.h>
