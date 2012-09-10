@@ -128,21 +128,21 @@ osi_HandleSocketError(osi_socket so, char *cmsgbuf, size_t cmsgbuf_len)
 
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg && CMSG_OK(&msg, cmsg);
          cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-	if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
-	    break;
+
+	if (cmsg->cmsg_level != SOL_IP || cmsg->cmsg_type != IP_RECVERR) {
+	    continue;
+	}
+
+	err = CMSG_DATA(cmsg);
+	offender = SO_EE_OFFENDER(err);
+
+	if (offender->sa_family != AF_INET) {
+	    continue;
+	}
+
+	memcpy(&addr, offender, sizeof(addr));
+	rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
     }
-    if (!cmsg)
-	return 0;
-
-    err = CMSG_DATA(cmsg);
-    offender = SO_EE_OFFENDER(err);
-    
-    if (offender->sa_family != AF_INET)
-       return 1;
-
-    memcpy(&addr, offender, sizeof(addr));
-
-    rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
 
     return 1;
 }
