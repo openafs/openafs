@@ -780,7 +780,6 @@ rx_SetMaxMTU(int mtu)
 int
 rxi_HandleSocketError(int socket)
 {
-    int ret = 0;
     struct msghdr msg;
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
@@ -798,26 +797,15 @@ rxi_HandleSocketError(int socket)
     code = recvmsg(socket, &msg, MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
 
     if (code < 0 || !(msg.msg_flags & MSG_ERRQUEUE))
-        goto out;
+        return 0;
 
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-       if ((char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(0) ||
-           (char *)cmsg - controlmsgbuf > msg.msg_controllen - CMSG_SPACE(cmsg->cmsg_len) ||
-	   cmsg->cmsg_len == 0) {
-	   cmsg = 0;
-           break;
+	if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR) {
+	    err = (struct sock_extended_err *)CMSG_DATA(cmsg);
+	    rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
 	}
-        if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR)
-            break;
     }
-    if (!cmsg)
-        goto out;
-    ret = 1;
-    err = (struct sock_extended_err *) CMSG_DATA(cmsg);
 
-    rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
-
-out:
-    return ret;
+    return 1;
 }
 #endif
