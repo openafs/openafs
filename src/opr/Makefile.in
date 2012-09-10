@@ -21,14 +21,14 @@ liboafs_opr.la: $(LT_objs) $(LT_deps)
 libopr.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 
-libopr_pic.a: $(LT_objs)
+libopr_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
 $(TOP_LIBDIR)/libopr.a: libopr.a
 	$(INSTALL_DATA) libopr.a $@
 
-$(TOP_LIBDIR)/libopr_pic.a: libopr.a
-	$(INSTALL_DATA) libopr.a $@
+$(TOP_LIBDIR)/libopr_pic.a: libopr_pic.la
+	$(INSTALL_DATA) .libs/libopr_pic.a $@
 
 
 $(TOP_INCDIR)/afs/opr.h: opr.h
