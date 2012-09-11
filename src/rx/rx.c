@@ -5959,7 +5959,13 @@ static int
 rxi_CheckPeerDead(struct rx_call *call)
 {
 #ifdef AFS_RXERRQ_ENV
-    int peererrs = rx_atomic_read(&call->conn->peer->neterrs);
+    int peererrs;
+
+    if (call->state == RX_STATE_DALLY) {
+	return 0;
+    }
+
+    peererrs = rx_atomic_read(&call->conn->peer->neterrs);
     if (call->neterr_gen < peererrs) {
 	/* we have received network errors since this call started; kill
 	 * the call */
