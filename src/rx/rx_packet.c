@@ -2143,6 +2143,31 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 
 }
 
+static void
+rxi_NetSendError(struct rx_call *call, int code)
+{
+    int down = 0;
+#ifdef AFS_NT40_ENV
+    if (code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) {
+	down = 1;
+    }
+    if (code == -WSAEHOSTUNREACH) {
+	down = 1;
+    }
+#elif defined(AFS_LINUX20_ENV)
+    if (code == -ENETUNREACH) {
+	down = 1;
+    }
+#elif defined(AFS_DARWIN_ENV)
+    if (code == EHOSTUNREACH) {
+	down = 1;
+    }
+#endif
+    if (down) {
+	call->lastReceiveTime = 0;
+    }
+}
+
 /* Send the packet to appropriate destination for the specified
  * call.  The header is first encoded and placed in the packet.
  */
@@ -2259,18 +2284,9 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	     * So, when this happens let's "down" the host NOW so
 	     * we don't sit around waiting for this host to timeout later.
 	     */
-	    if (call &&
-#ifdef AFS_NT40_ENV
-		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
-#elif defined(AFS_LINUX20_ENV)
-		code == -ENETUNREACH
-#elif defined(AFS_DARWIN_ENV)
-		code == EHOSTUNREACH
-#else
-		0
-#endif
-		)
-		call->lastReceiveTime = 0;
+	    if (call) {
+		rxi_NetSendError(call, code);
+	    }
 	}
 #ifdef KERNEL
 #ifdef RX_KERNEL_TRACE
@@ -2469,18 +2485,9 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	     * So, when this happens let's "down" the host NOW so
 	     * we don't sit around waiting for this host to timeout later.
 	     */
-	    if (call &&
-#ifdef AFS_NT40_ENV
-		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
-#elif defined(AFS_LINUX20_ENV)
-		code == -ENETUNREACH
-#elif defined(AFS_DARWIN_ENV)
-		code == EHOSTUNREACH
-#else
-		0
-#endif
-		)
-		call->lastReceiveTime = 0;
+	    if (call) {
+		rxi_NetSendError(call, code);
+	    }
 	}
 #if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 	if (!istack && waslocked)
