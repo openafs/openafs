@@ -105,7 +105,6 @@ osi_HandleSocketError(osi_socket so, char *cmsgbuf, size_t cmsgbuf_len)
     struct cmsghdr *cmsg;
     struct sock_extended_err *err;
     struct sockaddr_in addr;
-    struct sockaddr *offender;
     int code;
     struct socket *sop = (struct socket *)so;
 
@@ -134,13 +133,6 @@ osi_HandleSocketError(osi_socket so, char *cmsgbuf, size_t cmsgbuf_len)
 	}
 
 	err = CMSG_DATA(cmsg);
-	offender = SO_EE_OFFENDER(err);
-
-	if (offender->sa_family != AF_INET) {
-	    continue;
-	}
-
-	memcpy(&addr, offender, sizeof(addr));
 	rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
     }
 
