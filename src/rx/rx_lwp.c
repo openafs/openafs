@@ -429,6 +429,13 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     fd_set *sfds = (fd_set *) 0;
     while (sendmsg(socket, msg_p, flags) == -1) {
 	int err;
+
+#ifdef AFS_NT40_ENV
+	err = WSAGetLastError();
+#else
+	err = errno;
+#endif
+
 	if (rx_stats_active)
 	    rx_atomic_inc(&rx_stats.sendSelects);
 
@@ -445,26 +452,21 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	  ;
 #endif
 #ifdef AFS_NT40_ENV
-	if (WSAGetLastError())
+	if (err)
 #elif defined(AFS_LINUX22_ENV)
 	/* linux unfortunately returns ECONNREFUSED if the target port
 	 * is no longer in use */
 	/* and EAGAIN if a UDP checksum is incorrect */
-	if (errno != EWOULDBLOCK && errno != ENOBUFS && errno != ECONNREFUSED
-	    && errno != EAGAIN)
+	if (err != EWOULDBLOCK && err != ENOBUFS && err != ECONNREFUSED
+	    && err != EAGAIN)
 #else
-	if (errno != EWOULDBLOCK && errno != ENOBUFS)
+	if (err != EWOULDBLOCK && err != ENOBUFS)
 #endif
 	{
 	    (osi_Msg "rx failed to send packet: ");
 	    perror("rx_sendmsg");
-#ifndef AFS_NT40_ENV
-            if (errno > 0)
-              return -errno;
-#else
-            if (WSAGetLastError() > 0)
-              return -WSAGetLastError();
-#endif
+            if (err > 0)
+              return -err;
 	    return -1;
 	}
 	while ((err = select(
