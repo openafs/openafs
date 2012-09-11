@@ -5941,6 +5941,44 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
     }
 }
 
+/**
+ * Check if the peer for the given call is known to be dead
+ *
+ * If the call's peer appears dead (it has encountered fatal network errors
+ * since the call started) the call is killed with RX_CALL_DEAD if the call
+ * is active. Otherwise, we do nothing.
+ *
+ * @param[in] call  The call to check
+ *
+ * @return status
+ *  @retval 0 The call is fine, and we haven't done anything to the call
+ *  @retval nonzero The call's peer appears dead, and the call has been
+ *                  terminated if it was active
+ *
+ * @pre call->lock must be locked
+ */
+static int
+rxi_CheckPeerDead(struct rx_call *call)
+{
+#ifdef AFS_RXERRQ_ENV
+    int peererrs = rx_atomic_read(&call->conn->peer->neterrs);
+    if (call->neterr_gen < peererrs) {
+	/* we have received network errors since this call started; kill
+	 * the call */
+	if (call->state == RX_STATE_ACTIVE) {
+	    rxi_CallError(call, RX_CALL_DEAD);
+	}
+	return -1;
+    }
+    if (call->neterr_gen > peererrs) {
+	/* someone has reset the number of peer errors; set the call error gen
+	 * so we can detect if more errors are encountered */
+	call->neterr_gen = peererrs;
+    }
+#endif
+    return 0;
+}
+
 static void
 rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 {
@@ -5961,6 +5999,8 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
 	rxevent_Put(call->resendEvent);
 	call->resendEvent = NULL;
     }
+
+    rxi_CheckPeerDead(call);
 
     if (rxi_busyChannelError && (call->flags & RX_CALL_PEER_BUSY)) {
 	rxi_CheckBusy(call);
@@ -6247,22 +6287,9 @@ rxi_CheckCall(struct rx_call *call)
     int idle_timeout = 0;
     afs_int32  clock_diff = 0;
 
-#ifdef AFS_RXERRQ_ENV
-    int peererrs = rx_atomic_read(&call->conn->peer->neterrs);
-    if (call->neterr_gen < peererrs) {
-	/* we have received network errors since this call started; kill
-	 * the call */
-	if (call->state == RX_STATE_ACTIVE) {
-	    rxi_CallError(call, RX_CALL_DEAD);
-	}
+    if (rxi_CheckPeerDead(call)) {
 	return -1;
     }
-    if (call->neterr_gen > peererrs) {
-	/* someone has reset the number of peer errors; set the call error gen
-	 * so we can detect if more errors are encountered */
-	call->neterr_gen = peererrs;
-    }
-#endif
 
     now = clock_Sec();
 
