@@ -1018,7 +1018,7 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 	/* Display full help syntax if we don't have subcommands */
 	if (noOpcodes)
 	    PrintFlagHelp(ts);
-	code = CMD_USAGE;
+	code = CMD_HELP;
 	goto out;
     }
 
@@ -1061,8 +1061,12 @@ cmd_Dispatch(int argc, char **argv)
     int code;
 
     code = cmd_Parse(argc, argv, &ts);
-    if (code)
+    if (code) {
+	if (code == CMD_HELP) {
+	    code = 0; /* displaying help is not an error */
+	}
 	return code;
+    }
 
     /*
      * Before calling the beforeProc and afterProc and all the implications

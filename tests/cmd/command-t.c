@@ -330,7 +330,7 @@ main(int argc, char **argv)
     code = cmd_ParseLine("-help", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Parse(tc, tv, &retopts);
-    is_int(CMD_USAGE, code, "cmd_Parse returns usage error with help output");
+    is_int(CMD_HELP, code, "cmd_Parse returns help indicator with help output");
     ok(retopts == NULL, " ... and options is empty");
 
     /* Check splitting with '=' */
