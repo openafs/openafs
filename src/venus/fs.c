@@ -2367,10 +2367,8 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     afs_int32 hostAddr;
     struct hostent *thp;
-    int setp;
 
     ti = as->parms[0].items;
-    setp = 1;
     if (ti) {
         thp = hostutil_GetHostByName(ti->data);
 	if (!thp) {
@@ -2380,7 +2378,6 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
 	else memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
     } else {
         hostAddr = 0;   /* means don't set host */
-	setp = 0;       /* aren't setting host */
     }
 
     /* now do operation */
@@ -2751,7 +2748,7 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct ViceIoctl blob;
     struct cmd_item *ti;
-    int export = 0, type = 0, mode = 0, exp = 0, exportcall, pwsync =
+    int export = 0, type = 0, mode = 0, exportcall, pwsync =
 	0, smounts = 0, clipags = 0, pagcb = 0;
 
     ti = as->parms[0].items;
@@ -2773,7 +2770,6 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	    fprintf(stderr, "Illegal argument %s\n", ti->data);
 	    return 1;
 	}
-	exp = 1;
     }
     if ((ti = as->parms[2].items)) {	/* -noconvert */
 	if (strcmp(ti->data, "on") == 0)
@@ -4083,12 +4079,10 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
     char *last_component;	/*Last component of true name */
     struct stat statbuff;	/*Buffer for status info */
     int link_chars_read;	/*Num chars read in readlink() */
-    int thru_symlink;		/*Did we get to a mount point via a symlink? */
     int error = 0;
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
-	thru_symlink = 0;
 	sprintf(orig_name, "%s%s", (ti->data[0] == '/') ? "" : "./",
 		ti->data);
 
@@ -4104,7 +4098,6 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	 * the file name with the link name.
 	 */
 	if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
-	    thru_symlink = 1;
 	    /*
 	     * Read name of resolved file.
 	     */

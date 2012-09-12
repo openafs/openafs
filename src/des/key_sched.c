@@ -55,17 +55,13 @@ des_key_sched(des_cblock k, des_key_schedule schedule)
 {
     /* better pass 8 bytes, length not checked here */
 
-    int i, j, n;	/* i = r10, j = r9, n = r8 */
+    int i, j;
     unsigned int temp;	/*  r7 */
     char *p_char;	/* r6 */
     key k_char;
     i = 8;
-    n = 0;
     p_char = k_char;
 
-#ifdef lint
-    n = n;			/* fool it in case of VAXASM */
-#endif
 #ifdef DEBUG
     if (des_debug)
 	fprintf(stderr, "\n\ninput key, left to right = ");

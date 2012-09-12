@@ -249,10 +249,8 @@ main(int argc, char *argv[])
 	  usage:
 	    Quit("Usage: upserver [<directory>+] [-crypt <directory>+] [-clear <directory>+] [-auth <directory>+] [-rxbind] [-help]\n");
 	} else {
-	    int dirlen;
 	    if (nDirs >= sizeof(dirName) / sizeof(dirName[0]))
 		Quit("Too many dirs");
-	    dirlen = strlen(argv[a]);
 	    if (AddObject(&dirName[nDirs], argv[a])) {
 		printf("%s: Unable to export dir %s. Skipping\n", whoami,
 		       argv[a]);

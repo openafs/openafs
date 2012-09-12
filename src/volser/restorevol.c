@@ -147,7 +147,7 @@ ReadDumpHeader(struct DumpHeader *dh)
 {
     int i, done;
     char tag, c;
-    afs_int32 magic;
+    afs_int32 magic AFS_UNUSED;
 
 /*  memset(&dh, 0, sizeof(dh)); */
 

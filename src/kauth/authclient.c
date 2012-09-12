@@ -352,12 +352,10 @@ CheckTicketAnswer(ka_BBS * oanswer, afs_int32 challenge,
 		  afs_int32 * pwexpires)
 {
     struct ka_ticketAnswer *answer;
-    afs_uint32 cksum;
     unsigned char tempc;
 
     answer = (struct ka_ticketAnswer *)oanswer->SeqBody;
 
-    cksum = ntohl(answer->cksum);
     if (challenge != ntohl(answer->challenge))
 	return KABADPROTOCOL;
     memcpy(&token->sessionKey, &answer->sessionKey,

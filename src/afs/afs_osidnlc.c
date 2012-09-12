@@ -190,10 +190,9 @@ struct vcache *
 osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 {
     struct vcache *tvc;
-    int LRUme;
     unsigned int key, skey;
     char *ts = aname;
-    struct nc *tnc, *tnc1 = 0;
+    struct nc *tnc;
     int safety;
 #ifdef AFS_DARWIN80_ENV
     vnode_t tvp;
@@ -218,7 +217,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	if ( /* (tnc->key == key)  && */ (tnc->dirp == adp)
 	    && (!strcmp((char *)tnc->name, aname))) {
 	    tvc = tnc->vp;
-	    tnc1 = tnc;
 	    break;
 	} else if (tnc->next == nameHash[skey]) {	/* end of list */
 	    break;
@@ -232,7 +230,6 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	}
     }
 
-    LRUme = 0;			/* (tnc != nameHash[skey]); */
     ReleaseReadLock(&afs_xdnlc);
 
     if (!tvc) {

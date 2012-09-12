@@ -4854,8 +4854,8 @@ DECL_PIOCTL(PRxStatPeer)
 
 DECL_PIOCTL(PPrefetchFromTape)
 {
-    afs_int32 code, code1;
-    afs_int32 bytes, outval;
+    afs_int32 code;
+    afs_int32 outval;
     struct afs_conn *tc;
     struct rx_call *tcall;
     struct AFSVolSync tsync;
@@ -4898,11 +4898,11 @@ DECL_PIOCTL(PPrefetchFromTape)
 		StartRXAFS_FetchData(tcall, (struct AFSFid *)&tvc->f.fid.Fid, 0,
 				     0);
 	    if (!code) {
-		bytes = rx_Read(tcall, (char *)&outval, sizeof(afs_int32));
+		rx_Read(tcall, (char *)&outval, sizeof(afs_int32));
 		code =
 		    EndRXAFS_FetchData(tcall, &OutStatus, &CallBack, &tsync);
 	    }
-	    code1 = rx_EndCall(tcall, code);
+	    code = rx_EndCall(tcall, code);
 	    RX_AFS_GLOCK();
 	} else
 	    code = -1;

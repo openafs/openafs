@@ -26,11 +26,15 @@
 #include "kautils.h"
 #include "kaserver.h"
 
+#if !defined(offsetof)
+#include <stddef.h>             /* for definition of offsetof() */
+#endif
+
 extern Date cheaderReadTime;	/* time cheader last read in */
 
-#define set_header_word(tt,field,value) kawrite ((tt), ((char *)&(cheader.field) - (char *)&cheader), ((cheader.field = (value)), (char *)&(cheader.field)), sizeof(afs_int32))
+#define set_header_word(tt,field,value) kawrite ((tt), (offsetof(struct kaheader, field)), ((cheader.field = (value)), (char *)&(cheader.field)), sizeof(afs_int32))
 
-#define inc_header_word(tt,field) kawrite ((tt), ((char *)&(cheader.field) - (char *)&cheader), ((cheader.field = (htonl(ntohl(cheader.field)+1))), (char *)&(cheader.field)), sizeof(afs_int32))
+#define inc_header_word(tt,field) kawrite ((tt), (offsetof(struct kaheader, field)), ((cheader.field = (htonl(ntohl(cheader.field)+1))), (char *)&(cheader.field)), sizeof(afs_int32))
 
 static int index_OK(afs_int32);
 
@@ -411,7 +415,11 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
     Date now = time(0);
     afs_int32 newkeyver;	/* new key version number */
     afs_int32 newtotalkeyentries = 0, oldtotalkeyentries = 0, keyentries;
-    int foundcurrentkey = 0, addednewkey = 0, modified;
+    int addednewkey = 0, modified;
+#ifdef AUTH_DBM_LOG
+    int foundcurrentkey = 0;
+#endif
+
 
     es_Report("Newkey for %s.%s\n", tentry->userID.name,
 	      tentry->userID.instance);
@@ -460,8 +468,8 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 			    ("Warning: Entry %s.%s contains more than one valid key: fixing\n",
 			     tentry->userID.name, tentry->userID.instance));
 		}
-#endif
 		foundcurrentkey = 1;
+#endif
 	    }
 
 	    /* If we find an oldkey of the same version or

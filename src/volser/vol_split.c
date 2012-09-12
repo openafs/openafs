@@ -404,7 +404,7 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 	        ino = VNDISK_GET_INO(vnode);
 	        if (ino) {
 		    IHandle_t *h, *newh;
-		    Inode nearInode;
+		    Inode nearInode AFS_UNUSED;
 #if defined(NEARINODE_HINT) && !defined(AFS_NAMEI_ENV)
 		    V_pref(vol,nearInode)
 #endif

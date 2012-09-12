@@ -331,7 +331,6 @@ afs_cellname_init(afs_dcache_id_t *inode, int lookupcode)
 
     while (1) {
 	afs_int32 cellnum, clen, magic;
-	struct cell_name *cn;
 	char *cellname;
 
 	cc = afs_osi_Read(tfile, off, &magic, sizeof(magic));
@@ -369,7 +368,7 @@ afs_cellname_init(afs_dcache_id_t *inode, int lookupcode)
 	    break;
 	}
 
-	cn = afs_cellname_new(cellname, cellnum);
+	afs_cellname_new(cellname, cellnum);
 	afs_osi_Free(cellname, clen + 1);
     }
 

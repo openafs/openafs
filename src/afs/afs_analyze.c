@@ -427,7 +427,6 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     afs_int32 shouldRetry = 0;
     afs_int32 serversleft = 1;
     struct afs_stats_RPCErrors *aerrP;
-    afs_int32 markeddown;
     afs_uint32 address;
 
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
@@ -665,7 +664,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	     */
 	    goto out;
 	}
-	markeddown = afs_ServerDown(sa, acode);
+	afs_ServerDown(sa, acode);
 	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;

@@ -421,7 +421,6 @@ DoPtsUserModify(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
     pts_UserUpdateEntry_t entry;
-    int have_quota = 0;
     int have_list_status_perm = 0;
     int have_list_groups_owned_perm = 0;
     int have_list_membership_perm = 0;
@@ -432,7 +431,6 @@ DoPtsUserModify(struct cmd_syndesc *as, void *arock)
 	entry.groupCreationQuota =
 	    GetIntFromString(as->parms[GROUPQUOTA].items->data, "bad quota");
 	entry.flag = PTS_USER_UPDATE_GROUP_CREATE_QUOTA;
-	have_quota = 1;
     }
 
     if (as->parms[LISTSTATUS].items) {

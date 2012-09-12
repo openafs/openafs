@@ -1880,7 +1880,6 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 {
     struct server *oldts = 0, *ts, *newts, *orphts = 0;
     struct srvAddr *oldsa, *newsa, *nextsa, *orphsa;
-    u_short fsport;
     afs_int32 iphash, k, srvcount = 0;
     unsigned int srvhash;
 
@@ -1963,8 +1962,6 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
     }
     if (acell)
 	newts->cell = afs_GetCell(acell, 0);
-
-    fsport = (newts->cell ? newts->cell->fsport : AFS_FSPORT);
 
     /* For each IP address we are registering */
     for (k = 0; k < nservers; k++) {

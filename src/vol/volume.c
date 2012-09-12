@@ -3139,11 +3139,11 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
     /* have we read in the header successfully? */
     int read_header = 0;
 
+#ifdef AFS_DEMAND_ATTACH_FS
     /* should we FreeVolume(vp) instead of VCheckFree(vp) in the error
      * cleanup? */
     int forcefree = 0;
 
-#ifdef AFS_DEMAND_ATTACH_FS
     /* in the case of an error, to what state should the volume be
      * transitioned? */
     VolState error_state = VOL_STATE_ERROR;
@@ -3330,10 +3330,10 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_NO_OFFLINE);
 	VChangeState_r(vp, VOL_STATE_ERROR);
 	vp->nUsers = 0;
+	forcefree = 1;
 #endif /* AFS_DEMAND_ATTACH_FS */
 	Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
 	*ec = VNOVOL;
-	forcefree = 1;
 	goto locked_error;
     }
 
@@ -4470,12 +4470,12 @@ VOffline(Volume * vp, char *message)
 void
 VDetachVolume_r(Error * ec, Volume * vp)
 {
+#ifdef FSSYNC_BUILD_CLIENT
     VolumeId volume;
     struct DiskPartition64 *tpartp;
     int notifyServer = 0;
     int  useDone = FSYNC_VOL_ON;
 
-    *ec = 0;			/* always "succeeds" */
     if (VCanUseFSSYNC()) {
 	notifyServer = vp->needsPutBack;
 	if (V_destroyMe(vp) == DESTROY_ME)
@@ -4493,6 +4493,8 @@ VDetachVolume_r(Error * ec, Volume * vp)
 # endif
     tpartp = vp->partition;
     volume = V_id(vp);
+#endif /* FSSYNC_BUILD_CLIENT */
+    *ec = 0;			/* always "succeeds" */
     DeleteVolumeFromHashTable(vp);
     vp->shuttingDown = 1;
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -8632,7 +8634,7 @@ VVByPListWait_r(struct DiskPartition64 * dp)
 void
 VPrintCacheStats_r(void)
 {
-    afs_uint32 get_hi, get_lo, load_hi, load_lo;
+    afs_uint32 get_hi AFS_UNUSED, get_lo, load_hi AFS_UNUSED, load_lo;
     struct VnodeClassInfo *vcp;
     vcp = &VnodeClassInfo[vLarge];
     Log("Large vnode cache, %d entries, %d allocs, %d gets (%d reads), %d writes\n", vcp->cacheSize, vcp->allocs, vcp->gets, vcp->reads, vcp->writes);

@@ -536,17 +536,13 @@ WalkNextChain(char map[],		/* one byte per db entry */
 	    if (id == PRBADID)
 		continue;
 	    else if (id) {
-		int eid_s, id_s;
+		int id_s;
 		sgcount++;
 		/* in case the ids are large, convert to pure sign. */
 		if (id > 0)
 		    id_s = 1;
 		else
 		    id_s = -1;
-		if (eid > 0)
-		    eid_s = 1;
-		else
-		    eid_s = -1;
 		if (id_s > 0) {
 		    fprintf(stderr,
 			    "User can't be member of supergroup list\n");

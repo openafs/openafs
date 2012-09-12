@@ -724,11 +724,6 @@ shutdown_cache(void)
 void
 shutdown_vnodeops(void)
 {
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV)
-    struct buf *afs_bread_freebp = 0;
-#endif
-
-
     AFS_STATCNT(shutdown_vnodeops);
     if (afs_cold_shutdown) {
 #ifndef	AFS_SUN5_ENV		/* XXX */
@@ -736,9 +731,6 @@ shutdown_vnodeops(void)
 #endif
 #ifndef AFS_LINUX20_ENV
 	afs_rd_stash_i = 0;
-#endif
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV)
-	afs_bread_freebp = 0;
 #endif
 	shutdown_mariner();
     }
