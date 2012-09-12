@@ -225,7 +225,7 @@ os_syscall(struct afsd_syscall_args *args)
 static int
 os_syscall(struct afsd_syscall_args *args)
 {
-    int retval;
+    int retval, error;
 
     error = ioctl_sun_afs_syscall(AFSCALL_CALL, args->syscall,
 				 args->params[0], args->params[1],
