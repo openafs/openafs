@@ -103,8 +103,8 @@ ${TOP_INCDIR}/afs/ptserver.h: ptserver.h
 #
 # Build targets
 #
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) map.o
-	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o \
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.lo utils.o $(LIBS) map.o
+	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o ptint.ss.o .lwp/ptint.xdr.o \
 		utils.o map.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
@@ -119,8 +119,8 @@ ptprocs.o: ptprocs.c ${INCLS}
 utils.o: utils.c ${INCLS} 
 map.o: map.c ${INCLS}
 ptint.ss.o: ptint.ss.c ptint.xdr.c ptint.xg
-ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
-ptint.xdr.o: ptint.xdr.c ptint.h ptint.xg
+ptint.cs.lo: ptint.cs.c ptint.xdr.c ptint.xg
+ptint.xdr.lo: ptint.xdr.c ptint.h ptint.xg
 
 ptint.cs.c: ptint.xg
 	${RXGEN} -A -x -C -u -o $@ ${srcdir}/ptint.xg
