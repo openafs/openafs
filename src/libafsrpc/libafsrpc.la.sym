@@ -101,11 +101,6 @@ RXSTATS_ClearProcessRPCStats
 RXSTATS_ClearPeerRPCStats
 TM_GetTimeOfDay
 FT_GetTimeOfDay
-opr_strcompose
-opr_stolower
-opr_ucstring
-opr_lcstring
-opr_AssertionFailed
 rx_GetLocalPeers
 rx_GetMaxReceiveWindow
 rx_GetMaxSendWindow

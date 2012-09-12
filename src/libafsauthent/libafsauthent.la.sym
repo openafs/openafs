@@ -56,12 +56,7 @@ ubik_ClientDestroy
 ubik_ClientInit
 ubik_ParseClientList
 pioctl
-getDirPath
 ka_AuthSpecificServersConn
-pthread_recursive_mutex_lock
-pthread_recursive_mutex_unlock
-grmutex
-initAFSDirPath
 pr_GetCPS
 pr_Initialize
 pr_GetHostCPS
@@ -72,4 +67,3 @@ pr_End
 pr_SNameToId
 afs_get_pag_from_groups
 setpag
-LogThreadNum
