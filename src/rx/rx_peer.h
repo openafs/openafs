@@ -27,7 +27,7 @@ struct rx_peer {
     u_short port;		/* Remote UDP port, in net byte order */
 
     /* interface mtu probably used for this host  -  includes RX Header */
-    u_short ifMTU;		/* doesn't include IP header */
+    u_short ifMTU;		/* doesn't include IP/UDP header */
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
@@ -39,7 +39,7 @@ struct rx_peer {
     int reSends;		/* Total number of retransmissions for this peer, since this structure was created */
 
     /* the "natural" MTU, excluding IP,UDP headers, is negotiated by the endpoints */
-    u_short natMTU;
+    u_short natMTU;		/* includes rx header */
     u_short maxMTU;
     /* negotiated maximum number of packets to send in a single datagram. */
     u_short maxDgramPackets;
@@ -62,7 +62,7 @@ struct rx_peer {
     afs_uint64 bytesReceived;	/* Number of bytes received from this peer */
     struct opr_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
-    afs_int32 maxPacketSize;    /* peer packetsize hint */
+    afs_int32 maxPacketSize;    /* Max size we sent that got acked (w/o hdrs) */
 #ifdef AFS_RXERRQ_ENV
     rx_atomic_t neterrs;
 

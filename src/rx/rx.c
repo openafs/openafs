@@ -2888,7 +2888,7 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 	if (peer->ifMTU < OLD_MAX_PACKET_SIZE)
 	    peer->maxDgramPackets = 1;
 	/* We no longer have valid peer packet information */
-	if (peer->maxPacketSize-RX_IPUDP_SIZE > peer->ifMTU)
+	if (peer->maxPacketSize + RX_HEADER_SIZE > peer->ifMTU)
 	    peer->maxPacketSize = 0;
         MUTEX_EXIT(&peer->peer_lock);
 
@@ -4396,12 +4396,12 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	 * but we are clearly receiving.
 	 */
 	if (!peer->maxPacketSize)
-	    peer->maxPacketSize = RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE;
+	    peer->maxPacketSize = RX_MIN_PACKET_SIZE - RX_HEADER_SIZE;
 
 	if (pktsize > peer->maxPacketSize) {
 	    peer->maxPacketSize = pktsize;
-	    if ((pktsize-RX_IPUDP_SIZE > peer->ifMTU)) {
-		peer->ifMTU=pktsize-RX_IPUDP_SIZE;
+	    if ((pktsize + RX_HEADER_SIZE > peer->ifMTU)) {
+		peer->ifMTU = pktsize + RX_HEADER_SIZE;
 		peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
 		rxi_ScheduleGrowMTUEvent(call, 1);
 	    }
@@ -5531,7 +5531,7 @@ rxi_SendAck(struct rx_call *call,
 	 */
 	if (call->conn->peer->maxPacketSize &&
 	    (call->conn->peer->maxPacketSize < OLD_MAX_PACKET_SIZE
-	     +RX_IPUDP_SIZE))
+	     - RX_HEADER_SIZE))
 	    padbytes = call->conn->peer->maxPacketSize+16;
 	else
 	    padbytes = call->conn->peer->maxMTU + 128;
@@ -6471,13 +6471,14 @@ mtuout:
         call->lastReceiveTime) {
 	int oldMTU = conn->peer->ifMTU;
 
-	/* if we thought we could send more, perhaps things got worse */
-	if (conn->peer->maxPacketSize > conn->lastPacketSize)
-	    /* maxpacketsize will be cleared in rxi_SetPeerMtu */
-	    newmtu = MAX(conn->peer->maxPacketSize-RX_IPUDP_SIZE,
-			 conn->lastPacketSize-(128+RX_IPUDP_SIZE));
+	/* If we thought we could send more, perhaps things got worse.
+	 * Shrink by 128 bytes and try again. */
+	if (conn->peer->maxPacketSize < conn->lastPacketSize)
+	    /* maxPacketSize will be cleared in rxi_SetPeerMtu */
+	    newmtu = MAX(conn->peer->maxPacketSize + RX_HEADER_SIZE,
+			 conn->lastPacketSize - 128 + RX_HEADER_SIZE);
 	else
-	    newmtu = conn->lastPacketSize-(128+RX_IPUDP_SIZE);
+	    newmtu = conn->lastPacketSize - 128 + RX_HEADER_SIZE;
 
 	/* minimum capped in SetPeerMtu */
 	rxi_SetPeerMtu(conn->peer, 0, 0, newmtu);
