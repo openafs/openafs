@@ -16,7 +16,7 @@ HEADERS = $(TOP_INCDIR)/afs/opr.h \
 
 all: $(HEADERS) liboafs_opr.la $(TOP_LIBDIR)/libopr_pic.a $(TOP_LIBDIR)/libopr.a
 
-liboafs_opr.la: $(LT_objs) $(LT_deps)
+liboafs_opr.la: liboafs_opr.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
 libopr.a: $(LT_objs)
