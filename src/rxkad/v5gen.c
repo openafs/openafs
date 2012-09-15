@@ -14,7 +14,7 @@ encode_krb5int32(unsigned char *p, size_t len, const krb5int32 * data, size_t * 
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
     e = der_put_integer(p, len, data, &l);
@@ -117,7 +117,7 @@ encode_Ticket(unsigned char *p, size_t len, const Ticket * data, size_t * size)
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
 /* enc-part */
@@ -460,7 +460,7 @@ encode_AuthorizationDataElement(unsigned char *p, size_t len, const Authorizatio
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
 /* ad-data */
@@ -691,7 +691,7 @@ encode_EncryptedData(unsigned char *p, size_t len, const EncryptedData * data, s
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
 /* cipher */
@@ -1463,7 +1463,7 @@ encode_HostAddress(unsigned char *p, size_t len, const HostAddress * data, size_
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
 /* address */
@@ -1890,7 +1890,7 @@ encode_EncTicketPart(unsigned char *p, size_t len, const EncTicketPart * data, s
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
 /* authorization-data */
@@ -2692,7 +2692,7 @@ encode_KerberosTime(unsigned char *p, size_t len, const KerberosTime * data, siz
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
     e = der_put_generalized_time(p, len, data, &l);
@@ -2795,7 +2795,7 @@ encode_TransitedEncoding(unsigned char *p, size_t len, const TransitedEncoding *
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
 /* contents */
@@ -3026,7 +3026,7 @@ encode_EncryptionKey(unsigned char *p, size_t len, const EncryptionKey * data, s
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
 /* keyvalue */
@@ -3257,7 +3257,7 @@ encode_TicketFlags(unsigned char *p, size_t len, const TicketFlags * data, size_
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
     {
@@ -3519,7 +3519,7 @@ encode_Realm(unsigned char *p, size_t len, const Realm * data, size_t * size)
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
     e = der_put_general_string(p, len, data, &l);
@@ -3627,7 +3627,7 @@ encode_ENCTYPE(unsigned char *p, size_t len, const ENCTYPE * data, size_t * size
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
     {
@@ -3741,7 +3741,7 @@ encode_NAME_TYPE(unsigned char *p, size_t len, const NAME_TYPE * data, size_t * 
 {
     size_t ret = 0;
     size_t l;
-    int i, e;
+    int i AFS_UNUSED, e;
 
     i = 0;
     {
