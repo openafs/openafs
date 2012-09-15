@@ -51,10 +51,10 @@ clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o libafsauthent.a
 
-install: libafsauthent.la libafsauthent_pic.la
+install: libafsauthent.a libafsauthent_pic.la
 	${INSTALL} -d ${DESTDIR}${libdir}
-	${LT_INSTALL_DATA} libafsauthent.la ${DESTDIR}${libdir}/libafsauthent.la
-	${INSTALL_DATA}  libafsauthent_pic.a ${DESTDIR}${libdir}/libafsauthent_pic.a
+	${INSTALL_DATA}  libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
+	${INSTALL_DATA}  .libs/libafsauthent_pic.a ${DESTDIR}${libdir}/libafsauthent_pic.a
 
 dest: libafsauthent.a
 	${INSTALL} -d ${DEST}/lib

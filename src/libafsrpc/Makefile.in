@@ -58,9 +58,9 @@ ${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
 ${TOP_LIBDIR}/libafsrpc_pic.a: libafsrpc_pic.la
 	${INSTALL_DATA} .libs/libafsrpc_pic.a $@
 
-install: libafsrpc.la libafsrpc_pic.la
+install: libafsrpc.a libafsrpc_pic.la
 	${INSTALL} -d ${DESTDIR}${libdir}
-	${LT_INSTALL_DATA} libafsrpc.la ${DESTDIR}${libdir}/libafsrpc.la
+	$(INSTALL_DATA) libafsrpc.a $(DESTDIR)$(libdir)/libafsrpc.a
 	$(INSTALL_DATA) .libs/libafsrpc_pic.a $(DESTDIR)$(libdir)/libafsrpc_pic.a
 
 dest: libafsrpc.a

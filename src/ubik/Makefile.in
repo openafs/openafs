@@ -151,7 +151,6 @@ install: libubik.a ubik.h ubik_int.h udebug
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL_DATA} libubik.a ${DESTDIR}${libdir}/libubik.a
-	$(LT_INSTALL_DATA) liboafs_ubik.la $(DESTDIR)$(libdir)/liboafs_ubik.la
 	${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h
 	${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h
 	${INSTALL_PROGRAM} udebug ${DESTDIR}${bindir}/udebug
