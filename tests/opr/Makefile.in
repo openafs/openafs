@@ -1,30 +1,30 @@
 srcdir=@srcdir@
 abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS = -I$(srcdir)/../..
 
-LIBS=../tap/libtap.a $(abs_top_builddir)/lib/libopr.a
+LIBS=../tap/libtap.a $(abs_top_builddir)/src/opr/liboafs_opr.la
 
 tests = jhash-t queues-t rbtree-t time-t uuid-t
 
 all check test tests: $(tests)
 
 queues-t: queues-t.o
-	$(AFS_LDRULE) queues-t.o ../tap/libtap.a $(XLIBS)
+	$(LT_LDRULE_static) queues-t.o ../tap/libtap.a $(XLIBS)
 
 rbtree-t: rbtree-t.o $(LIBS)
-	$(AFS_LDRULE) rbtree-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
+	$(LT_LDRULE_static) rbtree-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
 
 jhash-t: jhash-t.o
-	$(AFS_LDRULE) jhash-t.o ../tap/libtap.a $(XLIBS)
+	$(LT_LDRULE_static) jhash-t.o ../tap/libtap.a $(XLIBS)
 
 time-t: time-t.o
-	$(AFS_LDRULE) time-t.o ../tap/libtap.a $(XLIBS)
+	$(LT_LDRULE_static) time-t.o ../tap/libtap.a $(XLIBS)
 
 uuid-t: uuid-t.o
-	$(AFS_LDRULE) uuid-t.o ../tap/libtap.a $(LIBS) $(LIB_hcrypto) $(XLIBS)
+	$(LT_LDRULE_static) uuid-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
 
 clean distclean:
 	$(RM) -f $(tests) *.o core
