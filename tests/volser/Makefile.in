@@ -10,19 +10,8 @@ MODULE_CFLAGS=-I$(srcdir)/../.. -I$(srcdir)/../common/
 
 all check test tests: $(TESTS)
 
-# The direct reference of viced libraries here is a colossal hack, but
-# we're just not building pthreaded versions of the vldb interface at the moment.
-# Soon, I hope ...
-
 MODULE_LIBS = 	../tap/libtap.a \
-		$(abs_top_builddir)/src/viced/vldbint.cs.o \
-		$(abs_top_builddir)/src/viced/vldbint.xdr.o \
-		$(abs_top_builddir)/lib/libafsauthent.a \
-		$(abs_top_builddir)/lib/libafsrpc.a \
-		$(abs_top_builddir)/lib/libafshcrypto.a \
-		$(abs_top_builddir)/src/opr/liboafs_opr.la \
-		$(abs_top_builddir)/src/opr/liboafs_util.la \
-		$(LIB_rfc3961) $(LIB_roken) \
+		$(abs_top_builddir)/src/vlserver/liboafs_vldb.la \
 		$(XLIBS)
 
 vos-t: vos-t.o ../common/config.o ../common/servers.o ../common/ubik.o
