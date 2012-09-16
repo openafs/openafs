@@ -3,10 +3,6 @@ AFS_LDFLAGS = $(LWP_LDFLAGS)
 AFS_CCRULE     =$(LWP_CCRULE)
 AFS_CCRULE_NOQ =$(LWP_CCRULE_NOQ)
 
-.c.lo:
-	$(LTLWP_CCRULE) $<
-%.lo: %.c
-	$(LTLWP_CCRULE) $<
 .c.o:
 	$(AFS_CCRULE) $<
 %.o: %.c

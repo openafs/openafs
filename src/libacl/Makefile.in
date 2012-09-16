@@ -7,8 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
 LT_objs = aclprocs.lo netprocs.lo AFS_component_version_number.lo
 LT_deps = $(top_builddir)/src/ptserver/liboafs_prot.la

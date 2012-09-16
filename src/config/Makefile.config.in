@@ -232,6 +232,30 @@ SHD_CCRULE_NOQ=$(RUN_CC_NOQ) $(MT_CC) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 LT_CCRULE=$(RUN_CC) $(LIBTOOL) --quiet --mode=compile --tag=CC \
 	      $(MT_CC) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
+LT_current=0
+LT_revision=0
+LT_age=0
+
+# Basic rule to link a shared library.
+LT_LDLIB_shlib=$(LIBTOOL) --quiet --mode=link --tag=CC \
+		$(MT_CC) -rpath $(libdir) \
+		$(PTH_LDFLAGS) $(PTH_CFLAGS) $(LDFLAGS_$(@)) \
+		-o $@ \
+	        -no-undefined \
+		-export-symbols $@.sym \
+		-version-info=$(LT_current):$(LT_revision):$(LT_age)
+
+
+# Link a static convenience library (contains no PIC code)
+LT_LDLIB_static=$(LIBTOOL) --quiet --mode=link --tag=CC \
+		 $(MT_CC) -static $(LDFLAGS) $(DBG) $(OPTMZ) \
+		 $(LDFLAGS_$(@)) -o $@
+
+# Link a convenience library for use in other libs (contains PIC code)
+LT_LDLIB_pic= $(LIBTOOL) --quiet --mode=link --tag=CC \
+	       $(MT_CC) $(LDFLAGS) $(DBG) $(OPTMZ) \
+	       $(LDFLAGS_$(@)) -o $@
+
 # Libtool - for objects that are built for both pthread and lwp libraries
 LTLWP_CCRULE=$(RUN_CC) $(LWPTOOL) --mode compile \
 	         --lwpcc "$(CCOBJ)" \
@@ -247,7 +271,6 @@ LT_LDLIB_lwp=$(RUN_LD) $(LWPTOOL) --mode link \
 		 -o $@ \
 		 --
 
-
 # Use this to link an executable with one or more libtool libraries
 LT_LDRULE        = $(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
 		             $(MT_CC) $(PTH_LDFLAGS) $(PTH_CFLAGS) \
@@ -260,7 +283,7 @@ LT_LDRULE_static = $(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
 LT_INSTALL_DATA=$(LIBTOOL) --quiet --mode=install $(INSTALL_DATA)
 LT_INSTALL_PROGRAM=$(LIBTOOL) --quiet --mode=install $(INSTALL_PROGRAM)
 
-LT_CLEAN=$(RM) -rf .libs *.la *.lo
+LT_CLEAN=$(RM) -rf .lwp .libs *.la *.lo
 
 # Default rules. These will be overriden if the module Makefile specifically
 # includes a particular type (lwp, pthread, or shared)

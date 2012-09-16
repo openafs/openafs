@@ -154,6 +154,7 @@ src/config/Makefile \
 src/config/Makefile.config \
 src/config/Makefile.libtool \
 src/config/Makefile.lwp \
+src/config/Makefile.lwptool \
 src/config/Makefile.pthread \
 src/config/Makefile.shared \
 src/config/Makefile.version-CML \

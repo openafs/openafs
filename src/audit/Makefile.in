@@ -14,8 +14,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
 LT_objs=audit.lo audit-file.lo audit-sysvmq.lo
 LT_deps = $(top_builddir)/src/rxkad/liboafs_rxkad.la \

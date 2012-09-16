@@ -1,7 +1,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-include @TOP_OBJDIR@/src/config/Makefile.libtool
 include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 
 LT_objs = assert.lo casestrcpy.lo rbtree.lo uuid.lo
 LT_libs = $(LIB_hcrypto) $(LIB_roken)
