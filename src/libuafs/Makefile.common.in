@@ -2086,7 +2086,7 @@ $(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o UAFS.pic/libuafs_pic.a
 		$(PERLUAFS)/ukernel_swig_perl.o \
 		UAFS.pic/libuafs_pic.a ${TOP_LIBDIR}/libcmd_pic.a \
 		${TOP_LIBDIR}/libafsutil_pic.a \
-		$(TOP_LIBDIR)/libopr.a \
+		$(TOP_LIBDIR)/libopr_pic.a \
 		$(LDFLAGS_roken) $(LDFLAGS_hcrypto) $(LIB_hcrypto) \
 		$(LIB_roken) $(LIB_crypt) \
 		$(XLIBS)
