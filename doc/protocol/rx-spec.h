@@ -1,4 +1,9 @@
-/*! \mainpage AFS-3 Programmer's Reference: Specification for the Rx Remote
+/*!
+ * \addtogroup rxrpc-spec RX RPC Specification
+ * RX RPC Specification
+ * @{
+ *
+ * \mainpage AFS-3 Programmer's Reference: Specification for the Rx Remote
  * Procedure Call Facility
  *
  * AFS-3 Programmer's Reference:  
@@ -6445,5 +6450,6 @@
  * \li [4] S. R. Kleinman. 	Vnodes: An Architecture for Multiple file
  * System Types in Sun UNIX, Conference Proceedings, 1986 Summer Usenix
  * Technical Conference, pp. 238-247, El Toro, CA, 1986. 
- * 
+ *
+ * @}
  */

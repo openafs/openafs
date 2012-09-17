@@ -1,4 +1,6 @@
 /*!
+  \addtogroup bos-spec BOS Server Interface
+  @{
 
 	\page title AFS-3 Programmer's Reference: BOS Server Interface 
 
@@ -2469,5 +2471,6 @@ University. Quorum Completion, ITCID, Pittsburgh, PA, Month, 1988.
 System Types in Sun UNIX, Conference Proceedings, 1986 Summer Usenix Technical
 Conference, pp. 238-247, El Toro, CA, 1986. 
 
+@}
 */
 

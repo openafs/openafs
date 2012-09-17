@@ -1,4 +1,5 @@
 /*!
+  \addtogroup arch-overview Architectural Overview
 	\page title AFS-3 Programmer's Reference:  Architectural Overview 
 
 \author Edward R. Zayas 
