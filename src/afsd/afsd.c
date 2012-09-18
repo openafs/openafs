@@ -55,7 +55,15 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <roken.h>
+/* darwin dirent.h doesn't give us the prototypes we want if KERNEL is
+ * defined, and roken includes dirent */
+#if defined(UKERNEL) && defined(AFS_USR_DARWIN_ENV)
+# undef KERNEL
+# include <roken.h>
+# define KERNEL
+#else
+# include <roken.h>
+#endif
 
 #define VFS 1
 
