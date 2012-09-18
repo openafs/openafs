@@ -41,7 +41,7 @@ AFS_OS_CLEAN = \
 
 # To get __file__ (afs_osi_pag.c) you need to specify language level 
 # C99 to xlc_r like this:
-OPTF=-O -qlanglvl=stdc99
+OPTF=${OPTMZ} -qlanglvl=stdc99
 WEBOPTS = -I../nsapi -qarch=com -DNETSCAPE_NSAPI -DAIX -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 include Makefile.common
