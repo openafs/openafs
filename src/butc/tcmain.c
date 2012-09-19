@@ -822,6 +822,15 @@ GetConfigParams(char *filename, afs_int32 port)
     return (code);
 }
 
+#ifdef xbsa
+static void
+xbsa_shutdown(int x)
+{
+    xbsa_Finalize(&butxInfo);
+    exit(0);
+}
+#endif
+
 static int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
@@ -1008,6 +1017,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	rc = InitToServer(0 /*taskid */ , &butxInfo, adsmServerName);
 	if (rc != XBSA_SUCCESS)
 	    return (1);
+	(void)signal(SIGINT, xbsa_shutdown);
+	(void)signal(SIGHUP, xbsa_shutdown);
     }
 #endif /*xbsa */
 
