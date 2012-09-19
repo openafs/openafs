@@ -371,6 +371,7 @@ int main(int argc, char **argv)
     char *dirname;
     int serverPid, clientPid, waited, stat;
     int code;
+    int ret = 0;
 
     /* Start the client and the server if requested */
 
@@ -397,13 +398,15 @@ int main(int argc, char **argv)
     dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to configure directory.\n");
-	exit(1);
+	ret = 1;
+	goto out;
     }
 
     code = afstest_AddDESKeyFile(dir);
     if (code) {
 	afs_com_err("superuser-t", code, "while adding new key\n");
-	exit(1);
+	ret = 1;
+	goto out;
     }
 
     printf("Config directory is %s\n", dirname);
@@ -412,13 +415,15 @@ int main(int argc, char **argv)
         /* Bang */
     } else if (serverPid == 0) {
         execl(argv[0], argv[0], "-server", dirname, NULL);
-        exit(1);
+	ret = 1;
+	goto out;
     }
     clientPid = fork();
     if (clientPid == -1) {
         kill(serverPid, SIGTERM);
         waitpid(serverPid, &stat, 0);
-        exit(1);
+	ret = 1;
+	goto out;
     } else if (clientPid == 0) {
         execl(argv[0], argv[0], "-client", dirname, NULL);
     }
@@ -434,9 +439,9 @@ int main(int argc, char **argv)
     }
     waitpid(0, &stat, 0);
 
+out:
     /* Client and server are both done, so cleanup after everything */
+    afstest_UnlinkTestConfig(dirname);
 
-    /* unlinkTestConfig(dirname); */
-
-    return 0;
+    return ret;
 }

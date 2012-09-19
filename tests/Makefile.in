@@ -23,7 +23,7 @@ runtests.o: $(srcdir)/runtests.c
 check test tests: runtests
 	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
 	./libwrap @TOP_OBJDIR@/lib \
-	    ./runtests $(abs_top_srcdir)/tests/TESTS
+	    MAKECHECK=1 ./runtests $(abs_top_srcdir)/tests/TESTS
 
 install:
 

@@ -120,13 +120,16 @@ fail:
 void
 afstest_UnlinkTestConfig(char *dir)
 {
-    unlinkConfigFile(dir, "KeyFile");
-    unlinkConfigFile(dir, "CellServDB");
-    unlinkConfigFile(dir, "ThisCell");
-    unlinkConfigFile(dir, "UserList");
-    unlinkConfigFile(dir, "krb.conf");
-    unlinkConfigFile(dir, "krb.excl");
-    rmdir(dir);
+    if (getenv("MAKECHECK") != NULL) {
+	unlinkConfigFile(dir, "KeyFile");
+	unlinkConfigFile(dir, "KeyFileExt");
+	unlinkConfigFile(dir, "CellServDB");
+	unlinkConfigFile(dir, "ThisCell");
+	unlinkConfigFile(dir, "UserList");
+	unlinkConfigFile(dir, "krb.conf");
+	unlinkConfigFile(dir, "krb.excl");
+	rmdir(dir);
+    }
 }
 
 int

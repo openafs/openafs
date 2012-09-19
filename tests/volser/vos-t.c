@@ -93,6 +93,7 @@ main(int argc, char **argv)
     pid_t serverPid;
     struct rx_securityClass *secClass;
     struct ubik_client *ubikClient = NULL;
+    int ret = 0;
 
     plan(6);
 
@@ -108,13 +109,15 @@ main(int argc, char **argv)
     code = afstest_AddDESKeyFile(dir);
     if (code) {
 	afs_com_err("vos-t", code, "while adding test DES keyfile");
-	exit(1);
+	ret = 1;
+	goto out;
     }
 
     code = afstest_StartVLServer(dirname, &serverPid);
     if (code) {
 	afs_com_err("vos-t", code, "while starting the vlserver");
-	exit(1);
+	ret = 1;
+	goto out;
     }
 
     /* Let it figure itself out ... */
@@ -123,7 +126,8 @@ main(int argc, char **argv)
     is_int(code, 0, "Successfully got security class");
     if (code) {
 	afs_com_err("authname-t", code, "while getting anonymous secClass");
-        exit(1);
+	ret = 1;
+	goto out;
     }
 
     code = afstest_GetUbikClient(dir, AFSCONF_VLDBSERVICE, USER_SERVICE_ID,
@@ -131,7 +135,8 @@ main(int argc, char **argv)
     is_int(code, 0, "Successfully built ubik client structure");
     if (code) {
 	afs_com_err("vos-t", code, "while building ubik client");
-	exit(1);
+	ret = 1;
+	goto out;
     }
 
     TestListAddrs(ubikClient, dirname);
@@ -139,5 +144,7 @@ main(int argc, char **argv)
     code = afstest_StopServer(serverPid);
     is_int(0, code, "Server exited cleanly");
 
-    return 0;
+out:
+    afstest_UnlinkTestConfig(dirname);
+    return ret;
 }

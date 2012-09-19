@@ -49,6 +49,7 @@ main(int argc, char **argv)
     int secIndex;
     int numClasses;
     struct afsconf_typedKey *key;
+    int code = 0;
 
     plan(9);
     dirname = afstest_BuildTestConfig();
@@ -56,7 +57,8 @@ main(int argc, char **argv)
     dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to configure directory.\n");
-        exit(1);
+	code = 1;
+	goto out;
     }
 
     rx_Init(0);
@@ -87,5 +89,7 @@ main(int argc, char **argv)
     afsconf_GetLatestKeyByTypes(dir, afsconf_rxkad, 0, &key);
     ok(afsconf_UpToDate(dir), "afsconf_GetLatestKeyByTypes resest UpToDate");
 
-    return 0;
+out:
+    afstest_UnlinkTestConfig(dirname);
+    return code;
 }
