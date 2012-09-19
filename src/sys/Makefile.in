@@ -97,9 +97,9 @@ depinstall: \
 libsys.a: $(LT_objs) afsl.exp syscall.lo
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix*) \
-	    $(LT_LDLIB_lwp) $(LT_objs) syscall.o afsl.exp ;; \
+	    $(LT_LDLIB_lwp_NOQ) $(LT_objs) syscall.o afsl.exp ;; \
 	*) \
-	    $(LT_LDLIB_lwp) $(LT_objs) syscall.o ;; \
+	    $(LT_LDLIB_lwp_NOQ) $(LT_objs) syscall.o ;; \
 	esac
 
 # On AIX, liboafs_sys uses lsetpag() and lpioctl() which are syscall stubs,
