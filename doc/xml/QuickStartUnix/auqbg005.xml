@@ -2142,6 +2142,12 @@ auth  required                pam_unix.so try_first_pass</literallayout>
             <para>Copy the appropriate AFS kernel library file to the local file <emphasis
             role="bold">/kernel/fs/afs</emphasis>.</para>
 
+            <para>If the machine is running Solaris 10 or 11 on the x86_64 platform:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs64.o /kernel/fs/amd64/afs</emphasis>
+</programlisting>
+
             <para>If the machine is running Solaris 2.6 or the 32-bit version of Solaris 7, its kernel supports NFS server
             functionality, and the <emphasis role="bold">nfsd</emphasis> process is running:</para>
 
