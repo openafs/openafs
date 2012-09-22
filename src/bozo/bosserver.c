@@ -969,7 +969,7 @@ main(int argc, char **argv, char **envp)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-audit-interafce <file|sysvmq> (default is file)] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-syslog[=FACILITY]] "
 		   "[-restricted] "
@@ -980,7 +980,7 @@ main(int argc, char **argv, char **envp)
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
-		   "[-audit-interafce <file|sysvmq> (default is file)] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-restricted] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
