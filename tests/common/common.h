@@ -50,3 +50,7 @@ extern int afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
 				 struct rx_securityClass *secClass,
 				 int secIndex,
 				 struct ubik_client **ubikClient);
+
+/* network.c */
+extern int afstest_IsLoopbackNetworkDefault(void);
+extern int afstest_SkipTestsIfLoopbackNetIsDefault(void);
