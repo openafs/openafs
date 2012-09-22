@@ -29,11 +29,13 @@
  *            Open files are not inherited, except stdin, stdout, and stderr.
  *            If child fails to exec() spath, its exit code is estatus.
  *
+ * If provided, a signal mask will be set for the spawned process.
+ *
  * ASSUMPTIONS: sargv[0] is the same as spath (or its last component).
  */
 pid_t
 pmgt_ProcessSpawnVE(const char *spath, char *sargv[], char *senvp[],
-		    int estatus)
+		    int estatus, sigset_t *mask)
 {
     pid_t pid;
 
@@ -46,6 +48,8 @@ pmgt_ProcessSpawnVE(const char *spath, char *sargv[], char *senvp[],
 	for (i = 3; i < 64; i++) {
 	    close(i);
 	}
+
+	sigprocmask(SIG_SETMASK, mask, NULL);
 
 	if (senvp) {
 	    execve(spath, sargv, senvp);
