@@ -30,6 +30,7 @@ HTML_XSL = @HTML_XSL@
 DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
 XSLTPROC = @XSLTPROC@
 DOCBOOK2PDF = @DOCBOOK2PDF@
+KINDLEGEN = @KINDLEGEN@
 DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
 
 index.html: $(SRCS)
@@ -51,7 +52,7 @@ $(BOOK).epub: $(SRCS)
 
 $(BOOK).mobi: $(BOOK).epub
 	if test -n "$(KINDLEGEN)" && test -x "$(DBTOEPUB)" ; then \
-		kindlegen $(BOOK).epub -o $(BOOK).mobi; \
+		$(KINDLEGEN) $(BOOK).epub -o $(BOOK).mobi; \
 	fi
 
 check:
