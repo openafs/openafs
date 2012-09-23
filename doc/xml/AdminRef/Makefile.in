@@ -14,6 +14,7 @@ DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
 XSLTPROC = @XSLTPROC@ --stringparam variablelist.as.blocks 1
 DOCBOOK2PDF = @DOCBOOK2PDF@
 DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
+KINDLEGEN = @KINDLEGEN@
 
 entities.dtd sect1.xml sect5.xml sect8.xml:
 	./generate-xml.pl $(TOP_SRCDIR)
@@ -32,7 +33,9 @@ $(BOOK).epub: $(SRCS)
 	fi
 
 $(BOOK).mobi: $(BOOK).epub
-	kindlegen $(BOOK).epub -o $(BOOK).mobi
+	if test -n "$(KINDLEGEN)" && test -x "$(DBTOEPUB)" ; then \
+		$(KINDLEGEN) $(BOOK).epub -o $(BOOK).mobi; \
+	fi
 
 check:
 	xmllint --noout --valid $(BOOK).xml

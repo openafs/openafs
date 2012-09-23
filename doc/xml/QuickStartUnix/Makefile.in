@@ -29,6 +29,7 @@ DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
 XSLTPROC = @XSLTPROC@
 DOCBOOK2PDF = @DOCBOOK2PDF@
 DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
+KINDLEGEN = @KINDLEGEN@
 
 index.html: $(SRCS)
 	$(XSLTPROC) --param navig.graphics 1 \
@@ -49,7 +50,7 @@ $(BOOK).epub: $(SRCS)
 
 $(BOOK).mobi: $(BOOK).epub
 	if test -n "$(KINDLEGEN)" && test -x "$(DBTOEPUB)" ; then \
-		kindlegen $(BOOK).epub -o $(BOOK).mobi; \
+		$(KINDLEGEN) $(BOOK).epub -o $(BOOK).mobi; \
 	fi
 
 check:
