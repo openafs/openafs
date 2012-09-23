@@ -1354,7 +1354,7 @@ int cm_ExpandSysName(cm_req_t * reqp, clientchar_t *inp, clientchar_t *outp, lon
 #ifdef _WIN64
     int use_sysname64 = 0;
 
-    if (cm_sysName64Count > 0 && reqp && (reqp->flags & CM_REQ_WOW64) && (reqp->flags & CM_REQ_SOURCE_REDIR))
+    if (cm_sysName64Count > 0 && reqp && !(reqp->flags & CM_REQ_WOW64) && (reqp->flags & CM_REQ_SOURCE_REDIR))
         use_sysname64 = 1;
 #endif
 
