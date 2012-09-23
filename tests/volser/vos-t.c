@@ -96,6 +96,9 @@ main(int argc, char **argv)
 
     plan(6);
 
+    /* Skip all tests if the current hostname is on the loopback network */
+    afstest_SkipTestsIfLoopbackNetIsDefault();
+
     code = rx_Init(0);
 
     dirname = afstest_BuildTestConfig();
