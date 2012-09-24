@@ -133,8 +133,8 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #define copyout(F, T, C) (copy_to_user ((char*)(T), (char*)(F), (C)) > 0 ? EFAULT : 0)
 
 /* kernel print statements */
-#define printf printk
-#define uprintf printk
+#define printf(args...) printk(args)
+#define uprintf(args...) printk(args)
 
 
 #ifndef NGROUPS
