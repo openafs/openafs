@@ -1383,7 +1383,13 @@
               <para>Copy the appropriate AFS kernel library file to the local file <emphasis
               role="bold">/kernel/fs/afs</emphasis>.</para>
 
-            <para>If the machine is running Solaris 10 or 11 on the x86_64 platform:</para>
+            <para>If the machine is running Solaris 11 on the x86_64 platform:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp -p modload/libafs64.o /kernel/drv/amd64/afs</emphasis>
+</programlisting>
+
+            <para>If the machine is running Solaris 10 on the x86_64 platform:</para>
 
             <programlisting>
    # <emphasis role="bold">cp -p modload/libafs64.o /kernel/fs/amd64/afs</emphasis>
