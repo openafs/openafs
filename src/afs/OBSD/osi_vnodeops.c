@@ -197,7 +197,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_advlock_desc, afs_obsd_advlock},	/* advlock */
     {&vop_reallocblks_desc, afs_obsd_reallocblks},	/* reallocblks */
     {&vop_bwrite_desc, vop_generic_bwrite},
-    {(struct vnodeop_desc *)NULL, (int (*)__P((void *)))NULL}
+    {NULL, (int (*)__P((void *)))NULL}
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
     { &afs_vnodeop_p, afs_vnodeop_entries };

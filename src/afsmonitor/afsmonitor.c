@@ -299,7 +299,7 @@ strcasestr(s1, s2)
     len2 = strlen(s2);
 
     if (len1 < len2)
-	return ((char *)NULL);
+	return (NULL);
 
     ptr = s1;
 
@@ -309,7 +309,7 @@ strcasestr(s1, s2)
 	ptr++;
 	len1--;
     }
-    return ((char *)NULL);
+    return (NULL);
 }
 #endif
 
@@ -1158,8 +1158,8 @@ parse_showEntry(char *a_line)
 	/* if it is a section/group name, find it in the fs_categories[] array */
 
 	found = 0;
-	if (strcasestr(arg2, "_section") != (char *)NULL
-	    || strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL
+	    || strcasestr(arg2, "_group") != NULL) {
 	    idx = 0;
 	    while (idx < FS_NUM_DATA_CATEGORIES) {
 		sscanf(fs_categories[idx], "%s %d %d", catName, &fromIdx,
@@ -1182,7 +1182,7 @@ parse_showEntry(char *a_line)
 	/* if it is a group name, read its start/end indices and fill in the
 	 * fs_Display_map[]. */
 
-	if (strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_group") != NULL) {
 
 	    if (fromIdx < 0 || toIdx < 0 || fromIdx > NUM_FS_STAT_ENTRIES
 		|| toIdx > NUM_FS_STAT_ENTRIES)
@@ -1202,7 +1202,7 @@ parse_showEntry(char *a_line)
 	    /* if it is a section name, get the count of number of groups in it and
 	     * for each group fill in the start/end indices in the fs_Display_map[] */
 
-	if (strcasestr(arg2, "_section") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL) {
 	    /* fromIdx is actually the number of groups in thi section */
 	    numGroups = fromIdx;
 	    /* for each group in section */
@@ -1273,8 +1273,8 @@ parse_showEntry(char *a_line)
 	/* if it is a section/group name, find it in the cm_categories[] array */
 
 	found = 0;
-	if (strcasestr(arg2, "_section") != (char *)NULL
-	    || strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL
+	    || strcasestr(arg2, "_group") != NULL) {
 	    idx = 0;
 	    while (idx < CM_NUM_DATA_CATEGORIES) {
 		sscanf(cm_categories[idx], "%s %d %d", catName, &fromIdx,
@@ -1297,7 +1297,7 @@ parse_showEntry(char *a_line)
 	/* if it is a group name, read its start/end indices and fill in the
 	 * cm_Display_map[]. */
 
-	if (strcasestr(arg2, "_group") != (char *)NULL) {
+	if (strcasestr(arg2, "_group") != NULL) {
 
 	    if (fromIdx < 0 || toIdx < 0 || fromIdx > NUM_CM_STAT_ENTRIES
 		|| toIdx > NUM_CM_STAT_ENTRIES)
@@ -1317,7 +1317,7 @@ parse_showEntry(char *a_line)
 	    /* if it is a section name, get the count of number of groups in it and
 	     * for each group fill in the start/end indices in the cm_Display_map[] */
 
-	if (strcasestr(arg2, "_section") != (char *)NULL) {
+	if (strcasestr(arg2, "_section") != NULL) {
 	    /* fromIdx is actually the number of groups in thi section */
 	    numGroups = fromIdx;
 	    /* for each group in section */

@@ -181,7 +181,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
     struct rx_securityClass *sc = NULL;
-    static struct afsconf_dir *tdir = (struct afsconf_dir *)NULL;	/* only do this once */
+    static struct afsconf_dir *tdir = NULL;	/* only do this once */
     static char tconfDir[100] = "";
     static char tcell[64] = "";
     afs_int32 scIndex;
@@ -237,9 +237,9 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	 */
 	if (tdir && !gottdir) {
 	    afsconf_Close(tdir);
-            tdir = (struct afsconf_dir *)NULL;
+            tdir = NULL;
         }
-	pruclient = (struct ubik_client *)NULL;
+	pruclient = NULL;
         refresh = 1;
     }
 

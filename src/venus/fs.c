@@ -296,7 +296,7 @@ Parent(char *apath)
     tp = strrchr(tspace, '/');
     if (tp == (char *)tspace)
 	tp++;
-    else if (tp == (char *)NULL) {
+    else if (tp == NULL) {
 	tp      = (char *)tspace;
 	*(tp++) = '.';
     }

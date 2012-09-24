@@ -829,7 +829,7 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
     afs_int32 code;
     struct ubik_trans *tt;
 
-    *atrans = (struct ubik_trans *)NULL;
+    *atrans = NULL;
     if (atype == UBIK_WRITETRANS) {
 	if (adbase->flags & DBWRITING)
 	    return USYNC;

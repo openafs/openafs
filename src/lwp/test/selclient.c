@@ -285,7 +285,7 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
 	    (void)time(&stime);
 	    code =
 		IOMGR_Select(sockFD + 1, rfds, wfds, efds,
-			     (struct timeval *)NULL);
+			     NULL);
 	    assert(code > 0);
 
 	    if (FD_ISSET(sockFD, wfds)) {

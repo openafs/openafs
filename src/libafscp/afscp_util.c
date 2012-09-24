@@ -295,7 +295,7 @@ _GetSecurityObject(struct afscp_cell *cell)
 	match.server = NULL;
 
 	code = krb5_build_principal(context, &match.server,
-				    strlen(realm), realm, "afs", (void *)NULL);
+				    strlen(realm), realm, "afs", NULL);
 	if (code == 0)
 	    code = krb5_get_credentials(context, 0, cc, &match, &cred);
 	if (code != 0) {

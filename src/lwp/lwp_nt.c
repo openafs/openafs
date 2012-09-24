@@ -491,7 +491,7 @@ static void Initialize_PCB(PROCESS pcb, int priority, int stacksize,
     pcb->wakevent = 0;
     pcb->waitcnt = 0;
     pcb->next = pcb->prev = (PROCESS)NULL;
-    pcb->iomgrRequest = (struct IoRequest*)NULL;
+    pcb->iomgrRequest = NULL;
     pcb->index = lwp_nextindex ++;
 }
 

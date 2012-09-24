@@ -172,7 +172,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     for (wvc = *uvc; wvc; uvc = &wvc->hnext, wvc = *uvc) {
 	if (avc == wvc) {
 	    *uvc = avc->hnext;
-	    avc->hnext = (struct vcache *)NULL;
+	    avc->hnext = NULL;
 	    break;
 	}
     }

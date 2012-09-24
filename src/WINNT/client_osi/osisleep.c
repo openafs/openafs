@@ -227,8 +227,8 @@ void osi_Init(void)
     /* initialize critical regions and semaphores */
     for(i=0;i<OSI_SLEEPHASHSIZE; i++) {
         InitializeCriticalSection(&osi_critSec[i]);
-        osi_sleepers[i] = (osi_sleepInfo_t *) NULL;
-        osi_sleepersEnd[i] = (osi_sleepInfo_t *) NULL;
+        osi_sleepers[i] = NULL;
+        osi_sleepersEnd[i] = NULL;
     }
 
     /* free list CS */

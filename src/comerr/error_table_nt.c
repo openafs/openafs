@@ -34,7 +34,7 @@
 
 #include "internal.h"
 
-char *current_token = (char *)NULL;
+char *current_token = NULL;
 extern char *table_name;
 
 char *quote(const char *string);
@@ -987,7 +987,7 @@ quote(const char *string)
 
 afs_int32 table_number = 0;
 int current = 0;
-char **error_codes = (char **)NULL;
+char **error_codes = NULL;
 
 void
 add_ec(const char *name, const char *description)
@@ -1002,13 +1002,13 @@ add_ec(const char *name, const char *description)
     } else {
 	fprintf(cfile, "\t\"%s\",\n", description);
     }
-    if (error_codes == (char **)NULL) {
+    if (error_codes == NULL) {
 	error_codes = malloc(sizeof(char *));
-	*error_codes = (char *)NULL;
+	*error_codes = NULL;
     }
     error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
     error_codes[current++] = strdup(name);
-    error_codes[current] = (char *)NULL;
+    error_codes[current] = NULL;
 }
 
 void
@@ -1022,7 +1022,7 @@ add_ec_val(const char *name, const char *val, const char *description)
 
     while (ncurrent > current) {
 	if (!msfile)
-	    fputs("\t(char *)NULL,\n", cfile);
+	    fputs("\tNULL,\n", cfile);
 	current++;
     }
     if (msfile) {
@@ -1035,13 +1035,13 @@ add_ec_val(const char *name, const char *val, const char *description)
     } else {
 	fprintf(cfile, "\t\"%s\",\n", description);
     }
-    if (error_codes == (char **)NULL) {
+    if (error_codes == NULL) {
 	error_codes = malloc(sizeof(char *));
-	*error_codes = (char *)NULL;
+	*error_codes = NULL;
     }
     error_codes = realloc(error_codes, (current + 2) * sizeof(char *));
     error_codes[current++] = strdup(name);
-    error_codes[current] = (char *)NULL;
+    error_codes[current] = NULL;
 }
 
 void
@@ -1049,7 +1049,7 @@ put_ecs(void)
 {
     int i;
     for (i = 0; i < current; i++) {
-	if (error_codes[i] != (char *)NULL)
+	if (error_codes[i] != NULL)
 	    fprintf(hfile, "#define %-40s (%ldL)\n", error_codes[i],
 		    table_number + i);
     }

@@ -449,7 +449,7 @@ delTree(char *root, char *tree, int *errp)
 	    cp = tree + strlen(tree);	/* move cp to the end of string tree */
 
 	/* now delete all entries in this dir */
-	if ((ds = opendir(root)) != (DIR *) NULL) {
+	if ((ds = opendir(root)) != NULL) {
 	    errno = 0;
 	    while ((dirp = readdir(ds))) {
 		/* ignore . and .. */

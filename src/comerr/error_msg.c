@@ -33,7 +33,7 @@ static const char copyright[] =
 
 static char buffer[64];
 
-static struct et_list *_et_list = (struct et_list *)NULL;
+static struct et_list *_et_list = NULL;
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>

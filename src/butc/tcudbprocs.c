@@ -490,7 +490,7 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
 		AFS_SIGSET_RESTORE();
 #else
 		code =
-		    LWP_CreateProcess(KeepAlive, 16384, 1, (void *)NULL,
+		    LWP_CreateProcess(KeepAlive, 16384, 1, NULL,
 				      "Keep-alive process", &alivePid);
 #endif
 		/* XXX should we check code here ??? XXX */

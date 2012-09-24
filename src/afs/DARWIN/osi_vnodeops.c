@@ -159,7 +159,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {VOPPREF(blktooff_desc), (VOPFUNC)afs_vop_blktooff},	/* blktooff */
     {VOPPREF(offtoblk_desc), (VOPFUNC)afs_vop_offtoblk},	/* offtoblk */
     {VOPPREF(bwrite_desc), (VOPFUNC)vn_bwrite},
-    {(struct vnodeop_desc *)NULL, (void (*)())NULL}
+    {NULL, (void (*)())NULL}
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
     { &afs_vnodeop_p, afs_vnodeop_entries };
@@ -202,7 +202,7 @@ struct vnodeopv_entry_desc afs_dead_vnodeop_entries[] = {
     {VOPPREF(blktooff_desc), (VOPFUNC)err_blktooff},	/* blktooff */
     {VOPPREF(offtoblk_desc), (VOPFUNC)err_offtoblk},	/* offtoblk */
     {VOPPREF(bwrite_desc), (VOPFUNC)err_bwrite},
-    {(struct vnodeop_desc *)NULL, (void (*)())NULL}
+    {NULL, (void (*)())NULL}
 };
 struct vnodeopv_desc afs_dead_vnodeop_opv_desc =
     { &afs_dead_vnodeop_p, afs_dead_vnodeop_entries };

@@ -582,7 +582,7 @@ s_output(int argc, char *argv[], char *infile, char *define, int extend,
 	return;
     }
     if (nomain) {
-	write_programs((char *)NULL);
+	write_programs(NULL);
     } else {
 	write_most();
 	do_registers(argc, argv);

@@ -95,7 +95,7 @@ osi_PostPopulateVCache(struct vcache *avc) {
     vSetVfsp(avc, afs_globalVFS);
     vSetType(avc, VREG);
 
-    VN_SET_DPAGES(&(avc->v), (struct pfdat *)NULL);
+    VN_SET_DPAGES(&(avc->v), NULL);
     osi_Assert((avc->v.v_flag & VINACT) == 0);
     avc->v.v_flag = 0;
     osi_Assert(VN_GET_PGCNT(&(avc->v)) == 0);

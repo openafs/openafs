@@ -58,7 +58,7 @@ mntinfo(struct statfs **mntbuffer)
     return (mntsize);
 }
 
-static struct statfs *mntbuf = (struct statfs *)NULL;
+static struct statfs *mntbuf = NULL;
 static struct statfs *mntent;
 static int mntcnt;
 static struct fstab fstabent;
@@ -67,7 +67,7 @@ struct fstab *
 getfsent(void)
 {
     if (((!mntbuf) && !setfsent()) || mntcnt == 0)
-	return ((struct fstab *)NULL);
+	return (NULL);
     fstabent.fs_file = mntent->f_mntonname;
     fstabent.fs_freq = fstabent.fs_passno = 0;
     fstabent.fs_mntops = mntent->f_fstypename;

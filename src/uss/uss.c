@@ -1803,7 +1803,7 @@ main(int argc, char *argv[])
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     strcpy(uss_whoami, argv[0]);
-    yyin = (FILE *) NULL;
+    yyin = NULL;
 
     uss_fs_InBuff = malloc(USS_FS_MAX_SIZE);	/*Cache Manager input buff */
     uss_fs_OutBuff = malloc(USS_FS_MAX_SIZE);	/*Cache Manager output buff */

@@ -258,7 +258,7 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
     if (code) {
 	return (code);
     }
-    code = falloc((struct vnode *)NULL, FWRITE | FREAD, &fp, &fd);
+    code = falloc(NULL, FWRITE | FREAD, &fp, &fd);
     if (code) {
 	rw_enter(&ip->i_contents, RW_READER);
 	AFS_ITIMES(ip);

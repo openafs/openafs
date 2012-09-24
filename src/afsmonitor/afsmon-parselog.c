@@ -734,13 +734,13 @@ main(argc, argv)
     /* Malloc two blocks of data, one for reading each line from the data file
      * and the other for coverting data to longs */
 
-    if ((line = malloc(block_size + 256)) == (char *)NULL) {
+    if ((line = malloc(block_size + 256)) == NULL) {
 	fprintf(stderr, "[ %s ] malloc %d bytes failed\n", rn,
 		block_size + 256);
 	exit(10);
     }
 
-    if ((longs = malloc(block_size)) == (long *)NULL) {
+    if ((longs = malloc(block_size)) == NULL) {
 	fprintf(stderr, "[ %s ] malloc %d bytes failed\n", rn, block_size);
 	exit(20);
     }

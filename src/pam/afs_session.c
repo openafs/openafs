@@ -54,7 +54,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 	} else if (strcasecmp(argv[i], "remainlifetime") == 0) {
 	    i++;
 	    remain = 1;
-	    remainlifetime = (int)strtol(argv[i], (char **)NULL, 10);
+	    remainlifetime = (int)strtol(argv[i], NULL, 10);
 	    if (remainlifetime == 0) {
 		if ((errno == EINVAL) || (errno == ERANGE)) {
 		    remainlifetime = REMAINLIFETIME;

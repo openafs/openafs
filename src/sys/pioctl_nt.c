@@ -172,7 +172,7 @@ RDR_Ready(void)
                                MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                buf,
                                4096,
-                               (va_list *) NULL
+                               NULL
                                ) )
             {
                 fprintf(stderr,"RDR_Ready CreateFile(%S) failed: 0x%X\r\n\t[%s]\r\n",
@@ -215,7 +215,7 @@ RDR_Ready(void)
                                     MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                     buf,
                                     4096,
-                                    (va_list *) NULL
+                                    NULL
                                     ) )
                 {
                     fprintf(stderr,"RDR_Ready CreateFile(%s) failed: 0x%X\r\n\t[%s]\r\n",
@@ -846,7 +846,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                buf,
                                4096,
-                               (va_list *) NULL
+                               NULL
                                ) )
             {
                 fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
@@ -921,7 +921,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                         buf,
                                         4096,
-                                        (va_list *) NULL
+                                        NULL
                                         ) )
                     {
                         fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
@@ -990,7 +990,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                         buf,
                                         4096,
-                                        (va_list *) NULL
+                                        NULL
                                         ) )
                     {
                         fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",
@@ -1053,7 +1053,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                         MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
                                         buf,
                                         4096,
-                                        (va_list *) NULL
+                                        NULL
                                         ) )
                     {
                         fprintf(stderr,"pioctl GetFileAttributes(%s) failed: 0x%X\r\n\t[%s]\r\n",

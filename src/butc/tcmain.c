@@ -1226,10 +1226,10 @@ main(int argc, char **argv)
 	ti->next = 0;
 	ti->data = "0";
 	ts->parms[1].items = ti;
-	ts->parms[2].items = (struct cmd_item *)NULL;
-	ts->parms[3].items = (struct cmd_item *)NULL;
-	ts->parms[4].items = (struct cmd_item *)NULL;
-	ts->parms[5].items = (struct cmd_item *)NULL;
+	ts->parms[2].items = NULL;
+	ts->parms[3].items = NULL;
+	ts->parms[4].items = NULL;
+	ts->parms[5].items = NULL;
 	return WorkerBee(ts, NULL);
     } else
 	return cmd_Dispatch(argc, argv);

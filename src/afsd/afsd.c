@@ -1335,7 +1335,7 @@ CheckCacheBaseDir(char *dir)
 
 		    if (cp = hasmntopt(&mnt, "dev="))
 			rdev =
-			    (int)strtol(cp + strlen("dev="), (char **)NULL,
+			    (int)strtol(cp + strlen("dev="), NULL,
 					16);
 
 		    if ((rdev == 0) && (stat(mnt.mnt_mountp, &statmnt) == 0))

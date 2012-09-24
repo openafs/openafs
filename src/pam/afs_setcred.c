@@ -91,7 +91,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		ignore_uid = 0;
 	    } else {
 		ignore_uid = 1;
-		ignore_uid_id = (uid_t) strtol(argv[i], (char **)NULL, 10);
+		ignore_uid_id = (uid_t) strtol(argv[i], NULL, 10);
 		if (ignore_uid_id > IGNORE_MAX) {
 		    ignore_uid = 0;
 		    pam_afs_syslog(LOG_ERR, PAMAFS_IGNOREUID, argv[i]);

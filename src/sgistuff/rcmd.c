@@ -586,7 +586,7 @@ _checkhost(rhost, lhost, len)
 	    return (0);
 	}
 	ldomain[MAXHOSTNAMELEN] = '\0';
-	if ((domainp = strchr(ldomain, '.')) == (char *)NULL) {
+	if ((domainp = strchr(ldomain, '.')) == NULL) {
 	    nodomain = 1;
 	    return (0);
 	}

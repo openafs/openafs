@@ -26,7 +26,7 @@ static const char copyright[] =
 extern char *current_token;
 extern int table_number, current;
 char buffer[BUFSIZ];
-char *table_name = (char *)NULL;
+char *table_name = NULL;
 FILE *hfile, *cfile, *msfile;
 int version = 1;
 int use_msf = 0;
@@ -240,7 +240,7 @@ main(int argc, char **argv)
 
 
     p = strrchr(filename, '/');
-    if (p == (char *)NULL)
+    if (p == NULL)
 	p = filename;
     else
 	p++;
@@ -285,7 +285,7 @@ main(int argc, char **argv)
     }
 
     hfile = fopen(h_file, "w");
-    if (hfile == (FILE *) NULL) {
+    if (hfile == NULL) {
 	perror(h_file);
 	exit(1);
     }
@@ -326,14 +326,14 @@ main(int argc, char **argv)
 
     if (use_msf) {
 	msfile = fopen(msf_file, "w");
-	if (msfile == (FILE *) NULL) {
+	if (msfile == NULL) {
 	    perror(msf_file);
 	    exit(1);
 	}
 	fprintf(msfile, msf_warning, msf_file);
     } else {
 	cfile = fopen(c_file, "w");
-	if (cfile == (FILE *) NULL) {
+	if (cfile == NULL) {
 	    perror(c_file);
 	    exit(1);
 	}

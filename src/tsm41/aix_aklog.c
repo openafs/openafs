@@ -230,8 +230,8 @@ get_credv5(krb5_context context, char *user,
     if ((r = krb5_build_principal(context, &increds.server,
 				  strlen(realm), realm,
 				  name,
-				  (inst && strlen(inst)) ? inst : (void *) NULL,
-				  (void *) NULL))) {
+				  (inst && strlen(inst)) ? inst : NULL,
+				  NULL))) {
         return r;
     }
     r = krb5_cc_default(context, &_krb425_ccache);
