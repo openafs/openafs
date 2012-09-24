@@ -129,10 +129,10 @@ int blockEntries[NBLOCKTYPES] = {
 
 int blockEntrySize[NBLOCKTYPES] = {
     0 /* free */ ,
-    sizeof(((struct vfBlock *) NULL)->a[0]),
-    sizeof(((struct viBlock *) NULL)->a[0]),
-    sizeof(((struct tBlock *) NULL)->a[0]),
-    sizeof(((struct dBlock *) NULL)->a[0]),
+    sizeof(struct vfBlock_frag),
+    sizeof(struct viBlock_info),
+    sizeof(struct tBlock_tape),
+    sizeof(struct dBlock_dump),
     0,
     0,
 };
