@@ -4461,6 +4461,9 @@ RDR_PioctlOpen( IN cm_user_t *userp,
 {
     cm_fid_t    ParentFid;
     cm_fid_t    RootFid;
+    cm_req_t    req;
+
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
     if (!(*ResultCB))
@@ -4485,7 +4488,7 @@ RDR_PioctlOpen( IN cm_user_t *userp,
     RootFid.hash = pPioctlCB->RootId.Hash;
 
     /* Create the pioctl index */
-    RDR_SetupIoctl(pPioctlCB->RequestId, &ParentFid, &RootFid, userp);
+    RDR_SetupIoctl(pPioctlCB->RequestId, &ParentFid, &RootFid, userp, &req);
 
     return;
 }

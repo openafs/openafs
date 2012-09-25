@@ -33,7 +33,7 @@ extern void RDR_InitIoctl(void);
 
 extern void RDR_ShutdownIoctl(void);
 
-extern void RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *userp);
+extern void RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *userp, cm_req_t *reqp);
 
 extern void RDR_CleanupIoctl(ULONG index);
 
@@ -53,6 +53,7 @@ typedef struct RDR_ioctl {
     cm_ioctl_t        ioctl;
     afs_uint32        flags;
     afs_int32         refCount;         /* RDR_globalIoctlLock */
+    cm_req_t          req;
 } RDR_ioctl_t;
 
 #define RDR_IOCTL_FLAG_CLEANED   1
