@@ -151,12 +151,9 @@ RDR_ShutdownIoctl(void)
 
 /* called to make a fid structure into an IOCTL fid structure */
 void
-RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *userp)
+RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *userp, cm_req_t *reqp)
 {
     RDR_ioctl_t *iop;
-    cm_req_t req;
-
-    cm_InitReq(&req);
 
     lock_ObtainWrite(&RDR_globalIoctlLock);
     for ( iop=RDR_allIoctls; iop; iop=iop->next) {
@@ -166,6 +163,7 @@ RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *u
 
     if (iop) {
         iop->flags = 0;
+        iop->req = *reqp;
 
         /* we are reusing a previous ioctl */
         if (cm_FidCmp(&iop->parentFid, parentFid)) {
@@ -174,7 +172,7 @@ RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *u
                 cm_ReleaseSCache(iop->parentScp);
                 iop->parentScp = NULL;
             }
-            cm_GetSCache(parentFid, NULL, &iop->parentScp, userp, &req);
+            cm_GetSCache(parentFid, NULL, &iop->parentScp, userp, reqp);
             iop->rootFid = *rootFid;
         }
     } else {
@@ -189,13 +187,14 @@ RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, cm_user_t *u
             RDR_allIoctlsLast = iop;
         }
         iop->index = index;
+        iop->req = *reqp;
         if (parentFid->cell == 0) {
             iop->parentFid = cm_data.rootFid;
-            iop->parentScp = cm_RootSCachep(userp, &req);
+            iop->parentScp = cm_RootSCachep(userp, reqp);
             cm_HoldSCache(iop->parentScp);
         } else {
             iop->parentFid = *parentFid;
-            cm_GetSCache(parentFid, NULL, &iop->parentScp, userp, &req);
+            cm_GetSCache(parentFid, NULL, &iop->parentScp, userp, reqp);
         }
         if (rootFid->cell == 0) {
             iop->rootFid = cm_data.rootFid;
@@ -1100,11 +1099,8 @@ RDR_IoctlGetACL(RDR_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
 {
     cm_scache_t *scp;
     afs_int32 code;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1115,14 +1111,14 @@ RDR_IoctlGetACL(RDR_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlGetACL(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlGetACL(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
     return code;
@@ -1133,17 +1129,14 @@ RDR_IoctlSetACL(RDR_ioctl_t *ioctlp, cm_user_t *userp, afs_uint32 pflags)
 {
     cm_scache_t *scp;
     afs_int32 code;
-    cm_req_t req;
 
     afs_uint32 flags = 0;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     if (code)
         return code;
 
-    code = cm_IoctlSetACL(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlSetACL(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
     return code;
@@ -1154,11 +1147,8 @@ RDR_IoctlGetFileCellName(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_ui
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1169,14 +1159,14 @@ RDR_IoctlGetFileCellName(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_ui
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlGetFileCellName(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlGetFileCellName(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1186,13 +1176,9 @@ RDR_IoctlGetFileCellName(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_ui
 afs_int32
 RDR_IoctlFlushAllVolumes(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
-    cm_req_t req;
-
-    cm_InitReq(&req);
-
     cm_SkipIoctlPath(&ioctlp->ioctl);	/* we don't care about the path */
 
-    return cm_IoctlFlushAllVolumes(&ioctlp->ioctl, userp, &req);
+    return cm_IoctlFlushAllVolumes(&ioctlp->ioctl, userp, &ioctlp->req);
 }
 
 afs_int32
@@ -1200,11 +1186,8 @@ RDR_IoctlFlushVolume(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1215,14 +1198,14 @@ RDR_IoctlFlushVolume(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlFlushVolume(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlFlushVolume(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1234,11 +1217,8 @@ RDR_IoctlFlushFile(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 p
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1249,14 +1229,14 @@ RDR_IoctlFlushFile(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 p
         cm_SkipIoctlPath(&ioctlp->ioctl);
 	cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlFlushFile(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlFlushFile(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
     return code;
@@ -1267,14 +1247,11 @@ RDR_IoctlSetVolumeStatus(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_ui
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, 0);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, 0);
     if (code) return code;
 
-    code = cm_IoctlSetVolumeStatus(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlSetVolumeStatus(&ioctlp->ioctl, userp, scp, &ioctlp->req);
     cm_ReleaseSCache(scp);
 
     return code;
@@ -1287,9 +1264,6 @@ RDR_IoctlGetVolumeStatus(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_ui
     cm_scache_t *scp;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-    cm_req_t req;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1300,14 +1274,14 @@ RDR_IoctlGetVolumeStatus(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_ui
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlGetVolumeStatus(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlGetVolumeStatus(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1319,21 +1293,18 @@ RDR_IoctlGetFid(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfla
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t * optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
         flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
 
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     if (code)
         return code;
 
-    code = cm_IoctlGetFid(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlGetFid(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1345,11 +1316,8 @@ RDR_IoctlGetFileType(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t * optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1360,14 +1328,14 @@ RDR_IoctlGetFileType(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlGetFileType(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlGetFileType(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1379,11 +1347,8 @@ RDR_IoctlGetOwner(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1394,14 +1359,14 @@ RDR_IoctlGetOwner(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlGetOwner(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlGetOwner(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1413,11 +1378,8 @@ RDR_IoctlWhereIs(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1428,14 +1390,14 @@ RDR_IoctlWhereIs(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlWhereIs(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlWhereIs(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1448,15 +1410,12 @@ RDR_IoctlStatMountPoint(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uin
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &dscp, 0);
     if (code)
         return code;
 
-    code = cm_IoctlStatMountPoint(&ioctlp->ioctl, userp, dscp, &req);
+    code = cm_IoctlStatMountPoint(&ioctlp->ioctl, userp, dscp, &ioctlp->req);
 
     cm_ReleaseSCache(dscp);
 
@@ -1468,15 +1427,12 @@ RDR_IoctlDeleteMountPoint(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_u
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &dscp, 0);
     if (code)
         return code;
 
-    code = cm_IoctlDeleteMountPoint(&ioctlp->ioctl, userp, dscp, &req);
+    code = cm_IoctlDeleteMountPoint(&ioctlp->ioctl, userp, dscp, &ioctlp->req);
 
     cm_ReleaseSCache(dscp);
 
@@ -1617,15 +1573,12 @@ RDR_IoctlCreateMountPoint(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_u
     afs_int32 code;
     cm_scache_t *dscp;
     wchar_t leaf[LEAF_SIZE];
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
+    code = RDR_ParseIoctlParent(ioctlp, userp, &ioctlp->req, &dscp, leaf);
     if (code)
         return code;
 
-    code = cm_IoctlCreateMountPoint(&ioctlp->ioctl, userp, dscp, &req, leaf);
+    code = cm_IoctlCreateMountPoint(&ioctlp->ioctl, userp, dscp, &ioctlp->req, leaf);
 
     cm_ReleaseSCache(dscp);
     return code;
@@ -1637,14 +1590,11 @@ RDR_IoctlSymlink(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfl
     afs_int32 code;
     cm_scache_t *dscp;
     wchar_t leaf[LEAF_SIZE];
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
+    code = RDR_ParseIoctlParent(ioctlp, userp, &ioctlp->req, &dscp, leaf);
     if (code) return code;
 
-    code = cm_IoctlSymlink(&ioctlp->ioctl, userp, dscp, &req, leaf);
+    code = cm_IoctlSymlink(&ioctlp->ioctl, userp, dscp, &ioctlp->req, leaf);
 
     cm_ReleaseSCache(dscp);
 
@@ -1656,14 +1606,11 @@ RDR_IoctlListlink(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &dscp, 0);
     if (code) return code;
 
-    code = cm_IoctlListlink(&ioctlp->ioctl, userp, dscp, &req);
+    code = cm_IoctlListlink(&ioctlp->ioctl, userp, dscp, &ioctlp->req);
 
     cm_ReleaseSCache(dscp);
     return code;
@@ -1674,14 +1621,11 @@ RDR_IoctlIslink(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pfla
 {/*CHECK FOR VALID SYMLINK*/
     afs_int32 code;
     cm_scache_t *dscp;
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &dscp, 0);
     if (code) return code;
 
-    code = cm_IoctlIslink(&ioctlp->ioctl, userp, dscp, &req);
+    code = cm_IoctlIslink(&ioctlp->ioctl, userp, dscp, &ioctlp->req);
 
     cm_ReleaseSCache(dscp);
 
@@ -1693,14 +1637,11 @@ RDR_IoctlDeletelink(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 
 {
     afs_int32 code;
     cm_scache_t *dscp;
-    cm_req_t req;
 
-    cm_InitReq(&req);
-
-    code = RDR_ParseIoctlPath(ioctlp, userp, &req, &dscp, 0);
+    code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &dscp, 0);
     if (code) return code;
 
-    code = cm_IoctlDeletelink(&ioctlp->ioctl, userp, dscp, &req);
+    code = cm_IoctlDeletelink(&ioctlp->ioctl, userp, dscp, &ioctlp->req);
 
     cm_ReleaseSCache(dscp);
 
@@ -1813,11 +1754,8 @@ RDR_IoctlPathAvailability(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_u
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1828,14 +1766,14 @@ RDR_IoctlPathAvailability(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_u
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlPathAvailability(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlPathAvailability(&ioctlp->ioctl, userp, scp, &ioctlp->req);
     cm_ReleaseSCache(scp);
     return code;
 }
@@ -1843,13 +1781,9 @@ RDR_IoctlPathAvailability(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_u
 afs_int32
 RDR_IoctlVolStatTest(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags)
 {
-    cm_req_t req;
-
-    cm_InitReq(&req);
-
     cm_SkipIoctlPath(&ioctlp->ioctl);
 
-    return cm_IoctlVolStatTest(&ioctlp->ioctl, userp, &req);
+    return cm_IoctlVolStatTest(&ioctlp->ioctl, userp, &ioctlp->req);
 }
 
 /*
@@ -1863,11 +1797,8 @@ RDR_IoctlSetOwner(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp) {
@@ -1879,9 +1810,9 @@ RDR_IoctlSetOwner(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
             cm_SkipIoctlPath(&ioctlp->ioctl);
             cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                        optionsp->fid.vnode, optionsp->fid.unique);
-            code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+            code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
         } else {
-            code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+            code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
         }
         if (code)
             return code;
@@ -1889,7 +1820,7 @@ RDR_IoctlSetOwner(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);
     }
 
-    code = cm_IoctlSetOwner(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlSetOwner(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1907,11 +1838,8 @@ RDR_IoctlSetGroup(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp) {
@@ -1923,9 +1851,9 @@ RDR_IoctlSetGroup(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
             cm_SkipIoctlPath(&ioctlp->ioctl);
             cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                        optionsp->fid.vnode, optionsp->fid.unique);
-            code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+            code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
         } else {
-            code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+            code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
         }
         if (code)
             return code;
@@ -1933,7 +1861,7 @@ RDR_IoctlSetGroup(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pf
         cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);
     }
 
-    code = cm_IoctlSetGroup(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlSetGroup(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1945,11 +1873,8 @@ RDR_IoctlGetUnixMode(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    cm_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp && CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
@@ -1960,14 +1885,14 @@ RDR_IoctlGetUnixMode(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
         cm_SkipIoctlPath(&ioctlp->ioctl);
         cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                   optionsp->fid.vnode, optionsp->fid.unique);
-        code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+        code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
     } else {
-        code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
     }
     if (code)
         return code;
 
-    code = cm_IoctlGetUnixMode(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlGetUnixMode(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
@@ -1985,11 +1910,8 @@ RDR_IoctlSetUnixMode(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
 {
     afs_int32 code;
     cm_scache_t *scp;
-    cm_req_t req;
     cm_ioctlQueryOptions_t *optionsp;
     afs_uint32 flags = 0;
-
-    smb_InitReq(&req);
 
     optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
     if (optionsp) {
@@ -2001,9 +1923,9 @@ RDR_IoctlSetUnixMode(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
             cm_SkipIoctlPath(&ioctlp->ioctl);
             cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
                        optionsp->fid.vnode, optionsp->fid.unique);
-            code = cm_GetSCache(&fid, NULL, &scp, userp, &req);
+            code = cm_GetSCache(&fid, NULL, &scp, userp, &ioctlp->req);
         } else {
-            code = RDR_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+            code = RDR_ParseIoctlPath(ioctlp, userp, &ioctlp->req, &scp, flags);
         }
         if (code)
             return code;
@@ -2011,7 +1933,7 @@ RDR_IoctlSetUnixMode(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32
         cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);
     }
 
-    code = cm_IoctlSetUnixMode(&ioctlp->ioctl, userp, scp, &req);
+    code = cm_IoctlSetUnixMode(&ioctlp->ioctl, userp, scp, &ioctlp->req);
 
     cm_ReleaseSCache(scp);
 
