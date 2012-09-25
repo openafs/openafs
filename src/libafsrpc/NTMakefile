@@ -42,8 +42,8 @@ RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj \
 
 RXSTATBJS = $(OUT)\rxstat.obj $(OUT)\rxstat.ss.obj $(OUT)\rxstat.xdr.obj $(OUT)\rxstat.cs.obj
 
-LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\ticket.obj \
-	$(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\AFS_component_version_number.obj
+LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\rxkad_errs.obj \
+	$(OUT)\ticket.obj $(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\AFS_component_version_number.obj
 
 LIBRXKAD_REGOBJS = $(OUT)\bg-fcrypt.obj
 

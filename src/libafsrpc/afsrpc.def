@@ -337,6 +337,7 @@ EXPORTS
         rx_CopyPeerRPCStats                     @342
 	rx_ReleaseRPCStats                      @343
 ;       RXAFS_OpCodeIndex                       @344
+	initialize_RXK_error_table		@345
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
