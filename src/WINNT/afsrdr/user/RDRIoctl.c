@@ -74,6 +74,14 @@ static osi_rwlock_t  RDR_globalIoctlLock;
 
 extern wchar_t       RDR_UNCName[];
 
+static afs_int32
+RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
+                   cm_scache_t **scpp, afs_uint32 flags);
+
+static afs_int32
+RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
+                     cm_scache_t **scpp, wchar_t *leafp);
+
 void
 RDR_InitIoctl(void)
 {
@@ -432,7 +440,7 @@ RDR_IoctlWrite(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *Mapp
  */
 #define CM_PARSE_FLAG_LITERAL 1
 
-afs_int32
+static afs_int32
 RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                    cm_scache_t **scpp, afs_uint32 flags)
 {
@@ -676,13 +684,11 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     return 0;
 }
 
-
-
 #define LEAF_SIZE 256
 /* parse the passed-in file name and do a namei on its parent.  If we fail,
  * return an error code, otherwise return the vnode located in *scpp.
  */
-afs_int32
+static afs_int32
 RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                      cm_scache_t **scpp, wchar_t *leafp)
 {

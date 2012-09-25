@@ -66,12 +66,6 @@ extern afs_int32 RDR_IoctlPrepareRead(RDR_ioctl_t *ioctlp, cm_user_t *userp, afs
 
 extern RDR_ioctl_t *RDR_FindIoctl(ULONG index);
 
-extern afs_int32 RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
-                                    cm_scache_t **scpp, afs_uint32 flags);
-
-extern afs_int32 RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
-                                      cm_scache_t **scpp, wchar_t *leafp);
-
 extern afs_int32
 RDR_IoctlSetToken(struct RDR_ioctl *ioctlp, struct cm_user *userp, afs_uint32 pflags);
 
