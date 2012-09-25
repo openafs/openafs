@@ -46,7 +46,7 @@ typedef struct cm_scache cm_scache_t;
 #include <../common/AFSUserPrototypes.h>
 
 void
-RDR_InitReq( IN OUT cm_req_t *reqp );
+RDR_InitReq( IN OUT cm_req_t *reqp, BOOL bWow64);
 
 DWORD
 RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo,

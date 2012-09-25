@@ -80,10 +80,12 @@
 static CHAR * RDR_extentBaseAddress = NULL;
 
 void
-RDR_InitReq(cm_req_t *reqp)
+RDR_InitReq(cm_req_t *reqp, BOOL bWow64)
 {
     cm_InitReq(reqp);
     reqp->flags |= CM_REQ_SOURCE_REDIR;
+    if (bWow64)
+        reqp->flags |= CM_REQ_WOW64;
 }
 
 void
@@ -749,9 +751,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     cm_scache_t * dscp = NULL;
     cm_req_t      req;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_EnumerateDirectory FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
              DirID.Cell, DirID.Volume, DirID.Vnode, DirID.Unique);
@@ -978,9 +978,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
     StringCchCopyNW(FileName, 260, FileNameCounted, FileNameLength / sizeof(WCHAR));
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_EvaluateNodeByName parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
              ParentID.Cell, ParentID.Volume, ParentID.Vnode, ParentID.Unique);
@@ -1171,9 +1169,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         dwRemaining -= (sizeof( AFSFileEvalResultCB) - sizeof( AFSDirEnumEntry));
     }
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     if (SourceID.Cell != 0) {
         cm_SetFid(&Fid, SourceID.Cell, SourceID.Volume, SourceID.Vnode, SourceID.Unique);
@@ -1307,9 +1303,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
               CreateCB->ParentId.Vnode, CreateCB->ParentId.Unique);
     osi_Log1(afsd_logp, "... name=%S", osi_LogSaveStringW(afsd_logp, FileName));
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     *ResultCB = (AFSCommResult *)malloc(size);
@@ -1477,9 +1471,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     DWORD               status;
     BOOL                bScpLocked = FALSE;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     osi_Log4(afsd_logp, "RDR_UpdateFileEntry parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
@@ -1693,9 +1685,7 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
     BOOL                bFlushFile = FALSE;
     cm_key_t            key;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     osi_Log4(afsd_logp, "RDR_CleanupFileEntry parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
@@ -2067,9 +2057,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
              osi_LogSaveStringW(afsd_logp, FileName),
              bCheckOnly);
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
     memset(&setAttr, 0, sizeof(cm_attr_t));
 
     *ResultCB = (AFSCommResult *)malloc( size);
@@ -2240,9 +2228,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     afs_uint32             code;
     DWORD                  status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     StringCchCopyNW(SourceFileName, 260, SourceFileNameCounted, SourceFileNameLength / sizeof(WCHAR));
     StringCchCopyNW(TargetFileName, 260, TargetFileNameCounted, TargetFileNameLength / sizeof(WCHAR));
@@ -2473,9 +2459,7 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
     char        dbgstr[1024];
 #endif
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_FlushFileEntry File FID cell 0x%x vol 0x%x vno 0x%x uniq 0x%x",
               FileId.Cell, FileId.Volume,
@@ -2654,9 +2638,7 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_OpenFileEntry File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume,
@@ -2832,9 +2814,7 @@ RDR_ReleaseFileAccess( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_ReleaseFileAccess File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume,
@@ -3195,9 +3175,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     cm_req_t    req;
     BOOLEAN     bBufRelease = TRUE;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
     req.flags |= CM_REQ_NORETRY;
 
     osi_Log4(afsd_logp, "RDR_RequestFileExtentsAsync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
@@ -3459,9 +3437,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     char dbgstr[1024];
 #endif
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_ReleaseFileExtents File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume,
@@ -3955,7 +3931,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
 #endif
     char dbgstr[1024];
 #endif
-    RDR_InitReq(&req);
+    RDR_InitReq(&req, FALSE);
 
     for ( fileno = 0, pNextFileCB = &ReleaseFileExtentsResultCB->Files[0];
           fileno < ReleaseFileExtentsResultCB->FileCount;
@@ -4411,7 +4387,7 @@ RDR_ReleaseFailedSetFileExtents( IN cm_user_t *userp,
     cm_scache_t *    scp = NULL;
     int              dirty = 0;
 
-    RDR_InitReq(&req);
+    RDR_InitReq(&req, FALSE);
 
     osi_Log4(afsd_logp, "RDR_ReleaseFailedSetFileExtents %d.%d.%d.%d",
               SetFileExtentsResultCB->FileId.Cell, SetFileExtentsResultCB->FileId.Volume,
@@ -4552,9 +4528,7 @@ RDR_PioctlWrite( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
     if (!(*ResultCB))
@@ -4593,9 +4567,7 @@ RDR_PioctlRead( IN cm_user_t *userp,
     DWORD       status;
     afs_uint32  pflags = (bIsLocalSystem ? AFSCALL_FLAG_LOCAL_SYSTEM : 0);
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof(AFSPIOCtlIOResultCB));
     if (!(*ResultCB))
@@ -4639,9 +4611,7 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
 
     ProcessId.QuadPart = pBRLRequestCB->ProcessId;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_ByteRangeLockSync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume,
@@ -4768,9 +4738,7 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
 
     ProcessId.QuadPart = pBRURequestCB->ProcessId;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_ByteRangeUnlock File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume,
@@ -4884,9 +4852,7 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
 
     ProcessId.QuadPart = pBRURequestCB->ProcessId;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_ByteRangeUnlockAll File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume,
@@ -4983,9 +4949,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     int sync_done = 0;
     int scp_locked = 0;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_GetVolumeInfo File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
              FileId.Cell, FileId.Volume,
@@ -5178,9 +5142,7 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
     int sync_done = 0;
     int scp_locked = 0;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     osi_Log4(afsd_logp, "RDR_GetVolumeSizeInfo File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
              FileId.Cell, FileId.Volume,
@@ -5332,7 +5294,7 @@ RDR_HoldFid( IN cm_user_t     *userp,
     DWORD       Length;
     cm_req_t    req;
 
-    RDR_InitReq(&req);
+    RDR_InitReq(&req, FALSE);
 
     osi_Log1(afsd_logp, "RDR_HoldFid Count=%u", pHoldFidCB->Count);
 
@@ -5392,7 +5354,7 @@ RDR_ReleaseFid( IN cm_user_t     *userp,
     DWORD       Length;
     cm_req_t    req;
 
-    RDR_InitReq(&req);
+    RDR_InitReq(&req, FALSE);
 
     osi_Log1(afsd_logp, "RDR_ReleaseFid Count=%u", pReleaseFidCB->Count);
 
@@ -5555,9 +5517,7 @@ RDR_PipeWrite( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + sizeof(AFSPipeIOResultCB));
     if (!(*ResultCB))
@@ -5595,9 +5555,7 @@ RDR_PipeRead( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + ResultBufferLength);
     if (!(*ResultCB))
@@ -5632,9 +5590,7 @@ RDR_PipeSetInfo( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
     if (!(*ResultCB))
@@ -5664,9 +5620,7 @@ RDR_PipeQueryInfo( IN cm_user_t *userp,
     cm_req_t    req;
     DWORD       status;
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult) + ResultBufferLength);
     if (!(*ResultCB))
@@ -5732,9 +5686,7 @@ RDR_PipeTransceive( IN cm_user_t     *userp,
     DWORD       status;
     DWORD Length = ResultBufferLength + sizeof( AFSCommResult);
 
-    RDR_InitReq(&req);
-    if ( bWow64 )
-        req.flags |= CM_REQ_WOW64;
+    RDR_InitReq(&req, bWow64);
 
     *ResultCB = (AFSCommResult *)malloc( Length);
     if (!(*ResultCB))
