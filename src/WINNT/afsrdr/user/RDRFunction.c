@@ -4543,7 +4543,7 @@ RDR_PioctlWrite( IN cm_user_t *userp,
 
     pResultCB = (AFSPIOCtlIOResultCB *)(*ResultCB)->ResultData;
 
-    code = RDR_IoctlWrite(userp, pPioctlCB->RequestId, pPioctlCB->BufferLength, pPioctlCB->MappedBuffer, &req);
+    code = RDR_IoctlWrite(userp, pPioctlCB->RequestId, pPioctlCB->BufferLength, pPioctlCB->MappedBuffer);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;
@@ -4583,7 +4583,7 @@ RDR_PioctlRead( IN cm_user_t *userp,
     pResultCB = (AFSPIOCtlIOResultCB *)(*ResultCB)->ResultData;
 
     code = RDR_IoctlRead(userp, pPioctlCB->RequestId, pPioctlCB->BufferLength, pPioctlCB->MappedBuffer,
-                         &pResultCB->BytesProcessed, &req, pflags);
+                         &pResultCB->BytesProcessed, pflags);
     if (code) {
         smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
         (*ResultCB)->ResultStatus = status;

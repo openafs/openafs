@@ -38,10 +38,9 @@ extern void RDR_SetupIoctl(ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid, 
 extern void RDR_CleanupIoctl(ULONG index);
 
 extern afs_int32 RDR_IoctlRead(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer,
-                               ULONG *pBytesProcessed, cm_req_t *reqp, afs_uint32 pflags);
+                               ULONG *pBytesProcessed, afs_uint32 pflags);
 
-extern afs_int32 RDR_IoctlWrite(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer,
-                                cm_req_t *reqp);
+extern afs_int32 RDR_IoctlWrite(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer);
 
 #ifdef RDR_IOCTL_PRIVATE
 typedef struct RDR_ioctl {
