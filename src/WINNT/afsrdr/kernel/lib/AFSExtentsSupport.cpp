@@ -629,13 +629,7 @@ BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDoExtentsMapRegion Acquiring Fcb extent lock %08lX SHARED %08lX\n",
-                      &Fcb->NPFcb->Specific.File.ExtentsResource,
-                      PsGetCurrentThread());
-
-        AFSAcquireShared( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE );
+        ASSERT( ExIsResourceAcquiredLite( &Fcb->NPFcb->Specific.File.ExtentsResource ));
 
         __try
         {
@@ -693,14 +687,6 @@ BOOLEAN AFSDoExtentsMapRegion(IN AFSFcb *Fcb,
         }
 
 try_exit:
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDoExtentsMapRegion Releasing Fcb extent lock %08lX SHARED %08lX\n",
-                      &Fcb->NPFcb->Specific.File.ExtentsResource,
-                      PsGetCurrentThread());
-
-        AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
 
         *LastExtent = entry;
     }
