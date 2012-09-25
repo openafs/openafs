@@ -364,7 +364,7 @@ RDR_ReleaseIoctl(RDR_ioctl_t * iop)
 
 /* called from RDR_ReceiveCoreRead when we receive a read on the ioctl fid */
 afs_int32
-RDR_IoctlRead(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer, ULONG *pBytesProcessed, cm_req_t *reqp, afs_uint32 pflags)
+RDR_IoctlRead(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer, ULONG *pBytesProcessed, afs_uint32 pflags)
 {
     RDR_ioctl_t *iop;
     afs_uint32 count;
@@ -395,11 +395,11 @@ RDR_IoctlRead(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *Mappe
     return code;
 }
 
-/* called from RDR_PioctWRite when we receive a write call on the IOCTL
+/* called from RDR_PioctWrite when we receive a write call on the IOCTL
  * file descriptor.
  */
 afs_int32
-RDR_IoctlWrite(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer, cm_req_t *reqp)
+RDR_IoctlWrite(cm_user_t *userp, ULONG RequestId, ULONG BufferLength, void *MappedBuffer)
 {
     afs_int32 code = 0;
     RDR_ioctl_t *iop;
