@@ -155,3 +155,8 @@ EXPORTS
 	afsconf_SetLocalRealm				@154
 	afsconf_IsLocalRealmMatch			@155
 	afsconf_ParseNetFiles				@156
+	afsconf_SetExtendedCellInfo			@157
+	afsconf_PickClientSecObj			@158
+	afsconf_SawCell					@159
+	ka_PrintBytes					@160
+	ka_KeyIsZero					@161
