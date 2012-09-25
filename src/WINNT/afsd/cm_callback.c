@@ -1163,7 +1163,7 @@ GetCellCommon(afs_int32 a_cellnum, char **a_name, serverList *a_hosts)
     if (!cellp) {
         *a_name = (char *)xdr_alloc(sizeof(char));
         if (*a_name)
-            *a_name = '\0';
+            *a_name[0] = '\0';
         return 0;
     }
 
