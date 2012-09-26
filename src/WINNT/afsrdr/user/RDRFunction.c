@@ -3104,6 +3104,7 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
             case RXKADNOAUTH:
             case CM_ERROR_QUOTA:
             case CM_ERROR_LOCK_CONFLICT:
+            case EIO:
                 /*
                  * these are fatal errors.  deliver what we can
                  * and halt.

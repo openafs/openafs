@@ -3287,6 +3287,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir)
     else if (code == ENOMEM) {
         NTStatus = 0xC0000017L; /* Out of Memory */
     }
+    else if (code == EIO) {
+	NTStatus = 0xC000016AL;	/* Disk Operation Failure */
+    }
     else if (code == CM_ERROR_RPC_MOREDATA) {
 	NTStatus = 0x80000005L;	/* Buffer overflow */
     }
