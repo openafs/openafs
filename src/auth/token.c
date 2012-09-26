@@ -174,7 +174,7 @@ addOpaque(struct ktc_setTokenData *jar, char *data, size_t len)
 
     entry = jar->tokens.tokens_len;
     jar->tokens.tokens_val = realloc(jar->tokens.tokens_val,
-				     entry + 1 * sizeof(token_opaque));
+				     (entry + 1) * sizeof(token_opaque));
     jar->tokens.tokens_len++;
     jar->tokens.tokens_val[entry].token_opaque_val = data;
     jar->tokens.tokens_val[entry].token_opaque_len = len;
