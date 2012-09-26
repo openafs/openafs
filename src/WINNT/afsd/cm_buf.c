@@ -855,7 +855,7 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 	 */
 	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD || code == CM_ERROR_NOACCESS ||
             code == CM_ERROR_QUOTA || code == CM_ERROR_SPACE || code == CM_ERROR_TOOBIG ||
-            code == CM_ERROR_READONLY || code == CM_ERROR_NOSUCHPATH){
+            code == CM_ERROR_READONLY || code == CM_ERROR_NOSUCHPATH || code == EIO){
 	    _InterlockedAnd(&bp->flags, ~CM_BUF_DIRTY);
 	    _InterlockedOr(&bp->flags, CM_BUF_ERROR);
             bp->dirty_offset = 0;
@@ -2237,6 +2237,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                 case CM_ERROR_TOOBIG:
                 case CM_ERROR_READONLY:
                 case CM_ERROR_NOSUCHPATH:
+                case EIO:
                     /*
                      * Apply the previous fatal error to this buffer.
                      * Do not waste the time attempting to store to

@@ -1286,6 +1286,8 @@ cm_Analyze(cm_conn_t *connp,
 	    case CM_ERROR_ALLDOWN           : s = "CM_ERROR_ALLDOWN";            break;
 	    case CM_ERROR_TOOFEWBUFS	    : s = "CM_ERROR_TOOFEWBUFS";         break;
 	    case CM_ERROR_TOOMANYBUFS	    : s = "CM_ERROR_TOOMANYBUFS";        break;
+            case UAEIO                      : s = "UAEIO";                       break;
+            case EIO                        : s = "EIO";                         break;
             }
             osi_Log2(afsd_logp, "cm_Analyze: ignoring error code 0x%x (%s)",
                      errorCode, s);
