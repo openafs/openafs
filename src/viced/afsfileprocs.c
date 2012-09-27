@@ -6336,7 +6336,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		  afs_sfsize_t * a_bytesStoredP)
 {
     afs_sfsize_t bytesTransfered;	/* number of bytes actually transfered */
-    struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
     Error errorCode = 0;		/* Returned error code to caller */
 #ifndef HAVE_PIOV
     char *tbuffer;	/* data copying buffer */
@@ -6477,8 +6476,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     /* this bit means that the locks are set and protections are OK */
     rx_SetLocalStatus(Call, 1);
 
-    gettimeofday(&StartTime, 0);
-
     optSize = sendBufSize;
     ViceLog(25,
 	    ("StoreData_RXStyle: Pos %llu, DataLength %llu, FileLength %llu, Length %llu\n",
@@ -6575,8 +6572,6 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	return errorCode;
     }
     FDH_CLOSE(fdP);
-
-    gettimeofday(&StopTime, 0);
 
     VN_SET_LEN(targetptr, NewLength);
 
