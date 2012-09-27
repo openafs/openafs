@@ -372,6 +372,24 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
 
         AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
 
+#if defined(_WIN64)
+
+        //
+        // Mark the process as 64-bit if it is.
+        //
+
+        if( !IoIs32bitProcess( NULL))
+        {
+
+            SetFlag( pProcessCB->Flags, AFS_PROCESS_FLAG_IS_64BIT);
+        }
+        else
+        {
+
+            ClearFlag( pProcessCB->Flags, AFS_PROCESS_FLAG_IS_64BIT);
+        }
+#endif
+
         //
         // Locate the SID for the caller
         //
@@ -831,15 +849,6 @@ AFSInitializeProcessCB( IN ULONGLONG ParentProcessId,
         pProcessCB->TreeEntry.HashIndex = (ULONGLONG)ProcessId;
 
         pProcessCB->ParentProcessId = (ULONGLONG)ParentProcessId;
-
-#if defined(_WIN64)
-
-        if( !IoIs32bitProcess( NULL))
-        {
-            SetFlag( pProcessCB->Flags, AFS_PROCESS_FLAG_IS_64BIT);
-        }
-
-#endif
 
         if( pDeviceExt->Specific.Control.ProcessTree.TreeHead == NULL)
         {
