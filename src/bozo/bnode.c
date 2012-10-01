@@ -22,6 +22,7 @@
 #include <afs/fileutil.h>
 
 #include "bnode.h"
+#include "bnode_internal.h"
 #include "bosprototypes.h"
 
 #ifndef WCOREDUMP

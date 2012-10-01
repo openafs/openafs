@@ -45,6 +45,7 @@
 
 #include "bosint.h"
 #include "bnode.h"
+#include "bnode_internal.h"
 #include "bosprototypes.h"
 
 #define BOZO_LWP_STACKSIZE	16000

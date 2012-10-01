@@ -29,6 +29,7 @@
 #include <afs/kautils.h>
 
 #include "bnode.h"
+#include "bnode_internal.h"
 #include "bosint.h"
 #include "bosprototypes.h"
 

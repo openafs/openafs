@@ -36,6 +36,7 @@ static int DoStat(char *aname, struct rx_connection *aconn,
 		  int aint32p, int firstTime);
 
 #include "bosint.h"
+#include "bnode_internal.h"
 #include "bosprototypes.h"
 
 /* command offsets for bos salvage command */

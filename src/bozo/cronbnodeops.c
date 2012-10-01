@@ -20,6 +20,7 @@
 #include <afs/afsutil.h>
 
 #include "bnode.h"
+#include "bnode_internal.h"
 #include "bosprototypes.h"
 
 struct bnode *cron_create(char *, char *, char *, char *, char *, char *);
