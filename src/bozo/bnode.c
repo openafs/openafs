@@ -20,6 +20,7 @@
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#include <opr/queue.h>
 
 #include "bnode.h"
 #include "bnode_internal.h"
@@ -36,7 +37,7 @@ int bnode_waiting = 0;
 static PROCESS bproc_pid;	/* pid of waker-upper */
 static struct bnode *allBnodes = 0;	/* list of all bnodes */
 static struct bnode_proc *allProcs = 0;	/* list of all processes for which we're waiting */
-static struct bnode_type *allTypes = 0;	/* list of registered type handlers */
+static struct opr_queue allTypes;	/**< List of all registered type handlers */
 
 static struct bnode_stats {
     int weirdPids;
@@ -320,28 +321,32 @@ bnode_FindInstance(char *aname)
 static struct bnode_type *
 FindType(char *aname)
 {
-    struct bnode_type *tt;
+    struct opr_queue *cursor;
 
-    for (tt = allTypes; tt; tt = tt->next) {
+    for (opr_queue_Scan(&allTypes, cursor)) {
+	struct bnode_type *tt = opr_queue_Entry(cursor, struct bnode_type, q);
+
 	if (!strcmp(tt->name, aname))
 	    return tt;
     }
-    return (struct bnode_type *)0;
+    return NULL;
 }
 
 int
 bnode_Register(char *atype, struct bnode_ops *aprocs, int anparms)
 {
-    struct bnode_type *tt;
+    struct opr_queue *cursor;
+    struct bnode_type *tt = NULL;
 
-    for (tt = allTypes; tt; tt = tt->next) {
+    for (opr_queue_Scan(&allTypes, cursor), tt = NULL) {
+	tt = opr_queue_Entry(cursor, struct bnode_type, q);
 	if (!strcmp(tt->name, atype))
 	    break;
     }
     if (!tt) {
 	tt = calloc(1, sizeof(struct bnode_type));
-	tt->next = allTypes;
-	allTypes = tt;
+        opr_queue_Init(&tt->q);
+	opr_queue_Prepend(&allTypes, &tt->q);
 	tt->name = atype;
     }
     tt->ops = aprocs;
@@ -849,6 +854,7 @@ bnode_Init(void)
     if (initDone)
 	return 0;
     initDone = 1;
+    opr_queue_Init(&allTypes);
     memset(&bnode_stats, 0, sizeof(bnode_stats));
     LWP_InitializeProcessSupport(1, &junk);	/* just in case */
     IOMGR_Initialize();

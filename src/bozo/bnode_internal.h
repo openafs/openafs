@@ -36,7 +36,7 @@ struct bnode_ops {
 };
 
 struct bnode_type {
-    struct bnode_type *next;
+    struct opr_queue q;
     char *name;
     struct bnode_ops *ops;
 };
