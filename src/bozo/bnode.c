@@ -36,7 +36,7 @@
 int bnode_waiting = 0;
 static PROCESS bproc_pid;	/* pid of waker-upper */
 static struct bnode *allBnodes = 0;	/* list of all bnodes */
-static struct bnode_proc *allProcs = 0;	/* list of all processes for which we're waiting */
+static struct opr_queue allProcs;	/**< List of all processes for which we're waiting */
 static struct opr_queue allTypes;	/**< List of all registered type handlers */
 
 static struct bnode_stats {
@@ -517,23 +517,6 @@ bnode_InitBnode(struct bnode *abnode, struct bnode_ops *abnodeops,
     return 0;
 }
 
-static int
-DeleteProc(struct bnode_proc *abproc)
-{
-    struct bnode_proc **pb, *tb;
-    struct bnode_proc *nb;
-
-    for (pb = &allProcs, tb = *pb; tb; pb = &tb->next, tb = nb) {
-	nb = tb->next;
-	if (tb == abproc) {
-	    *pb = nb;
-	    free(tb);
-	    return 0;
-	}
-    }
-    return BZNOENT;
-}
-
 /* bnode lwp executes this code repeatedly */
 static void *
 bproc(void *unused)
@@ -541,6 +524,7 @@ bproc(void *unused)
     afs_int32 code;
     struct bnode *tb;
     afs_int32 temp;
+    struct opr_queue *cursor;
     struct bnode_proc *tp;
     struct bnode *nb;
     int options;		/* must not be register */
@@ -603,9 +587,12 @@ bproc(void *unused)
 		if (code == 0 || code == -1)
 		    break;	/* all done */
 		/* otherwise code has a process id, which we now search for */
-		for (tp = allProcs; tp; tp = tp->next)
+		for (tp = NULL, opr_queue_Scan(&allProcs, cursor), tp = NULL) {
+		    tp = opr_queue_Entry(cursor, struct bnode_proc, q);
+
 		    if (tp->pid == code)
 			break;
+		}
 		if (tp) {
 		    /* found the pid */
 		    tb = tp->bnode;
@@ -690,7 +677,8 @@ bproc(void *unused)
 		    BOP_PROCEXIT(tb, tp);
 		    bnode_Check(tb);
 		    bnode_Release(tb);	/* bnode delete can happen here */
-		    DeleteProc(tp);
+		    opr_queue_Remove(&tp->q);
+		    free(tp);
 		} else
 		    bnode_stats.weirdPids++;
 	    }
@@ -855,6 +843,7 @@ bnode_Init(void)
 	return 0;
     initDone = 1;
     opr_queue_Init(&allTypes);
+    opr_queue_Init(&allProcs);
     memset(&bnode_stats, 0, sizeof(bnode_stats));
     LWP_InitializeProcessSupport(1, &junk);	/* just in case */
     IOMGR_Initialize();
@@ -965,7 +954,7 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     if (code)
 	return code;
     tp = calloc(1, sizeof(struct bnode_proc));
-    tp->next = allProcs;
+    opr_queue_Init(&tp->q);
     tp->bnode = abnode;
     tp->comLine = aexecString;
     tp->coreName = coreName;	/* may be null */
@@ -990,7 +979,7 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     bozo_Log("%s started pid %ld: %s\n", abnode->name, cpid, aexecString);
 
     bnode_FreeTokens(tlist);
-    allProcs = tp;
+    opr_queue_Prepend(&allProcs, &tp->q);
     *aproc = tp;
     tp->pid = cpid;
     tp->flags = BPROC_STARTED;

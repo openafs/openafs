@@ -72,7 +72,7 @@ struct bnode {
 };
 
 struct bnode_proc {
-    struct bnode_proc *next;	/* next guy in top-level's list */
+    struct opr_queue q;		/* prev/next entry in top-level's list */
     struct bnode *bnode;	/* bnode creating this process */
     char *comLine;		/* command line used to start this process */
     char *coreName;		/* optional core file component name */
