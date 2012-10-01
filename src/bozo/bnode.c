@@ -35,7 +35,7 @@
 
 int bnode_waiting = 0;
 static PROCESS bproc_pid;	/* pid of waker-upper */
-static struct bnode *allBnodes = 0;	/* list of all bnodes */
+static struct opr_queue allBnodes;	/**< List of all bnodes */
 static struct opr_queue allProcs;	/**< List of all processes for which we're waiting */
 static struct opr_queue allTypes;	/**< List of all registered type handlers */
 
@@ -202,12 +202,14 @@ bnode_HasCore(struct bnode *abnode)
 int
 bnode_WaitAll(void)
 {
-    struct bnode *tb;
+    struct opr_queue *cursor;
     afs_int32 code;
     afs_int32 stat;
 
   retry:
-    for (tb = allBnodes; tb; tb = tb->next) {
+    for (opr_queue_Scan(&allBnodes, cursor)) {
+	struct bnode *tb = opr_queue_Entry(cursor, struct bnode, q);
+
 	bnode_Hold(tb);
 	code = BOP_GETSTAT(tb, &stat);
 	if (code) {
@@ -294,11 +296,11 @@ bnode_SetFileGoal(struct bnode *abnode, int agoal)
 int
 bnode_ApplyInstance(int (*aproc) (struct bnode *tb, void *), void *arock)
 {
-    struct bnode *tb, *nb;
+    struct opr_queue *cursor, *store;
     afs_int32 code;
 
-    for (tb = allBnodes; tb; tb = nb) {
-	nb = tb->next;
+    for (opr_queue_ScanSafe(&allBnodes, cursor, store)) {
+	struct bnode *tb = opr_queue_Entry(cursor, struct bnode, q);
 	code = (*aproc) (tb, arock);
 	if (code)
 	    return code;
@@ -309,9 +311,11 @@ bnode_ApplyInstance(int (*aproc) (struct bnode *tb, void *), void *arock)
 struct bnode *
 bnode_FindInstance(char *aname)
 {
-    struct bnode *tb;
+    struct opr_queue *cursor;
 
-    for (tb = allBnodes; tb; tb = tb->next) {
+    for (opr_queue_Scan(&allBnodes, cursor)) {
+	struct bnode *tb = opr_queue_Entry(cursor, struct bnode, q);
+
 	if (!strcmp(tb->name, aname))
 	    return tb;
     }
@@ -440,7 +444,6 @@ int
 bnode_Delete(struct bnode *abnode)
 {
     afs_int32 code;
-    struct bnode **lb, *ub;
     afs_int32 temp;
 
     if (abnode->refCount != 0) {
@@ -458,13 +461,7 @@ bnode_Delete(struct bnode *abnode)
 	return BZBUSY;
 
     /* all clear to zap */
-    for (lb = &allBnodes, ub = *lb; ub; lb = &ub->next, ub = *lb) {
-	if (ub == abnode) {
-	    /* unthread it from the list */
-	    *lb = ub->next;
-	    break;
-	}
-    }
+    opr_queue_Remove(&abnode->q);
     free(abnode->name);		/* do this first, since bnode fields may be bad after BOP_DELETE */
     code = BOP_DELETE(abnode);	/* don't play games like holding over this one */
     WriteBozoFile(0);
@@ -498,10 +495,9 @@ int
 bnode_InitBnode(struct bnode *abnode, struct bnode_ops *abnodeops,
 		char *aname)
 {
-    struct bnode **lb, *nb;
-
     /* format the bnode properly */
     memset(abnode, 0, sizeof(struct bnode));
+    opr_queue_Init(&abnode->q);
     abnode->ops = abnodeops;
     abnode->name = strdup(aname);
     if (!abnode->name)
@@ -511,8 +507,7 @@ bnode_InitBnode(struct bnode *abnode, struct bnode_ops *abnodeops,
     abnode->goal = BSTAT_SHUTDOWN;
 
     /* put the bnode at the end of the list so we write bnode file in same order */
-    for (lb = &allBnodes, nb = *lb; nb; lb = &nb->next, nb = *lb);
-    *lb = abnode;
+    opr_queue_Append(&allBnodes, &abnode->q);
 
     return 0;
 }
@@ -524,9 +519,8 @@ bproc(void *unused)
     afs_int32 code;
     struct bnode *tb;
     afs_int32 temp;
-    struct opr_queue *cursor;
+    struct opr_queue *cursor, *store;
     struct bnode_proc *tp;
-    struct bnode *nb;
     int options;		/* must not be register */
     struct timeval tv;
     int setAny;
@@ -536,7 +530,8 @@ bproc(void *unused)
 	/* first figure out how long to sleep for */
 	temp = 0x7fffffff;	/* afs_int32 time; maxint doesn't work in select */
 	setAny = 0;
-	for (tb = allBnodes; tb; tb = tb->next) {
+	for (opr_queue_Scan(&allBnodes, cursor)) {
+	    tb = opr_queue_Entry(cursor, struct bnode, q);
 	    if (tb->flags & BNODE_NEEDTIMEOUT) {
 		if (tb->nextTimeout < temp) {
 		    setAny = 1;
@@ -563,7 +558,8 @@ bproc(void *unused)
 	temp = tv.tv_sec;
 
 	/* check all bnodes to see which ones need timeout events */
-	for (tb = allBnodes; tb; tb = nb) {
+	for (opr_queue_ScanSafe(&allBnodes, cursor, store)) {
+	    tb = opr_queue_Entry(cursor, struct bnode, q);
 	    if ((tb->flags & BNODE_NEEDTIMEOUT) && temp > tb->nextTimeout) {
 		bnode_Hold(tb);
 		BOP_TIMEOUT(tb);
@@ -571,10 +567,8 @@ bproc(void *unused)
 		if (tb->flags & BNODE_NEEDTIMEOUT) {	/* check again, BOP_TIMEOUT could change */
 		    tb->nextTimeout = FT_ApproxTime() + tb->period;
 		}
-		nb = tb->next;
 		bnode_Release(tb);	/* delete may occur here */
-	    } else
-		nb = tb->next;
+	    }
 	}
 
 	if (code < 0) {
@@ -844,6 +838,7 @@ bnode_Init(void)
     initDone = 1;
     opr_queue_Init(&allTypes);
     opr_queue_Init(&allProcs);
+    opr_queue_Init(&allBnodes);
     memset(&bnode_stats, 0, sizeof(bnode_stats));
     LWP_InitializeProcessSupport(1, &junk);	/* just in case */
     IOMGR_Initialize();
@@ -1004,20 +999,18 @@ bnode_StopProc(struct bnode_proc *aproc, int asignal)
     return code;
 }
 
+#if 0
 int
 bnode_Deactivate(struct bnode *abnode)
 {
-    struct bnode **pb, *tb;
-    struct bnode *nb;
+    struct opr_queue *cursor;
     if (!(abnode->flags & BNODE_ACTIVE))
 	return BZNOTACTIVE;
-    for (pb = &allBnodes, tb = *pb; tb; tb = nb) {
-	nb = tb->next;
-	if (tb == abnode) {
-	    *pb = nb;
-	    tb->flags &= ~BNODE_ACTIVE;
-	    return 0;
-	}
+
+    if (opr_queue_IsOnQueue(&abnode->q)) {
+	tb->flags &= ~BNODE_ACTIVE;
+	return 0;
     }
     return BZNOENT;
 }
+#endif
