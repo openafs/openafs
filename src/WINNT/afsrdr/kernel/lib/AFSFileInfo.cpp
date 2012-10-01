@@ -829,9 +829,23 @@ AFSQueryBasicInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-                ulFileAttribs = stFileInfo.FileAttributes;
 
-                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+                {
+
+                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+                else
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+
+                if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_DIRECTORY;
+                }
             }
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
@@ -936,7 +950,23 @@ AFSQueryStandardInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-                ulFileAttribs = stFileInfo.FileAttributes;
+
+                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+                {
+
+                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+                else
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+
+                if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_DIRECTORY;
+                }
             }
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
@@ -1419,9 +1449,23 @@ AFSQueryNetworkInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-                ulFileAttribs = stFileInfo.FileAttributes;
 
-                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+                {
+
+                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+                else
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+
+                if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_DIRECTORY;
+                }
             }
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
@@ -1596,9 +1640,23 @@ AFSQueryAttribTagInfo( IN PIRP Irp,
                                                        &pCcb->AuthGroup,
                                                        &stFileInfo)))
             {
-                ulFileAttribs = stFileInfo.FileAttributes;
 
-                ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+                if ( ulFileAttribs == FILE_ATTRIBUTE_NORMAL)
+                {
+
+                    ulFileAttribs = FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+                else
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_REPARSE_POINT;
+                }
+
+                if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+
+                    ulFileAttribs |= FILE_ATTRIBUTE_DIRECTORY;
+                }
             }
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
