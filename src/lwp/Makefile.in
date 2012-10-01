@@ -218,6 +218,8 @@ dest: liblwp.a lock.h lwp.h preempt.h timer.h
 	${INSTALL_DATA} ${srcdir}/preempt.h ${DEST}/include/preempt.h
 	${INSTALL_DATA} ${srcdir}/timer.h ${DEST}/include/timer.h
 
+buildtools: ${TOP_LIBDIR}/liblwp.a depinstall
+
 #
 # Misc. targets
 #
