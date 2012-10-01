@@ -146,7 +146,6 @@ AFSQueryDirectory( IN PIRP Irp)
     BOOLEAN bReleaseFcb = FALSE;
     ULONG ulTargetFileType = AFS_FILE_TYPE_UNKNOWN;
     AFSFileInfoCB       stFileInfo;
-    BOOLEAN         bUseFileInfo = TRUE;
     AFSObjectInfoCB *pObjectInfo = NULL;
     ULONG ulAdditionalAttributes = 0;
     LONG lCount;
@@ -617,6 +616,8 @@ AFSQueryDirectory( IN PIRP Irp)
             ULONG ulBytesRemainingInBuffer;
             int rc;
 
+            ulAdditionalAttributes = 0;
+
             //
             //  If the user had requested only a single match and we have
             //  returned that, then we stop at this point.
@@ -747,36 +748,6 @@ AFSQueryDirectory( IN PIRP Irp)
 
             pObjectInfo = pDirEntry->ObjectInformation;
 
-            bUseFileInfo = FALSE;
-
-            ulAdditionalAttributes = 0;
-
-            if( pObjectInfo->FileType == AFS_FILE_TYPE_SYMLINK)
-            {
-
-                //
-                // Go grab the file information for this entry
-                // No worries on failures since we will just display
-                // pseudo information
-                //
-
-                RtlZeroMemory( &stFileInfo,
-                               sizeof( AFSFileInfoCB));
-
-                if( NT_SUCCESS( AFSRetrieveFileAttributes( pCcb->DirectoryCB,
-                                                           pDirEntry,
-                                                           &pCcb->FullFileName,
-                                                           pCcb->NameArray,
-                                                           &pCcb->AuthGroup,
-                                                           &stFileInfo)))
-                {
-
-                    ulAdditionalAttributes = FILE_ATTRIBUTE_REPARSE_POINT;
-
-                    bUseFileInfo = TRUE;
-                }
-            }
-
             //  Here are the rules concerning filling up the buffer:
             //
             //  1.  The Io system guarantees that there will always be
@@ -808,6 +779,74 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 try_return( ntStatus = STATUS_SUCCESS);
             }
+
+
+            //
+            // For Symlinks and Mount Points the reparse point attribute
+            // must be associated with the directory entry.  In addition,
+            // for Symlinks it must be determined if the target object is
+            // a directory or not.  If so, the directory attribute must be
+            // specified.  Mount points always refer to directories and
+            // must have the directory attribute set.
+            //
+
+            switch( pObjectInfo->FileType)
+            {
+
+            case AFS_FILE_TYPE_MOUNTPOINT:
+            case AFS_FILE_TYPE_DFSLINK:
+            {
+
+                ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT;
+
+                break;
+            }
+
+            case AFS_FILE_TYPE_SYMLINK:
+            {
+
+                //
+                // Go grab the file information for this entry
+                // No worries on failures since we will just display
+                // pseudo information
+                //
+
+                RtlZeroMemory( &stFileInfo,
+                               sizeof( AFSFileInfoCB));
+
+                if( NT_SUCCESS( AFSRetrieveFileAttributes( pCcb->DirectoryCB,
+                                                           pDirEntry,
+                                                           &pCcb->FullFileName,
+                                                           pCcb->NameArray,
+                                                           &pCcb->AuthGroup,
+                                                           &stFileInfo)))
+                {
+
+                    if ( stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                    {
+
+                        ulAdditionalAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                    }
+                }
+
+                ulAdditionalAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+
+                break;
+            }
+            }
+
+            //
+            // Check if the name begins with a . and we are hiding them
+            //
+
+            if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_FAKE) &&
+                pDirEntry->NameInformation.FileName.Buffer[ 0] == L'.' &&
+                BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES))
+            {
+
+                ulAdditionalAttributes |= FILE_ATTRIBUTE_HIDDEN;
+            }
+
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -847,20 +886,7 @@ AFSQueryDirectory( IN PIRP Irp)
                 {
                     pDirInfo = (PFILE_DIRECTORY_INFORMATION)&pBuffer[ ulNextEntry];
 
-                    if( bUseFileInfo)
-                    {
-
-                        pDirInfo->CreationTime = stFileInfo.CreationTime;
-                        pDirInfo->LastWriteTime = stFileInfo.LastWriteTime;
-                        pDirInfo->LastAccessTime = stFileInfo.LastAccessTime;
-                        pDirInfo->ChangeTime = stFileInfo.ChangeTime;
-
-                        pDirInfo->EndOfFile = stFileInfo.EndOfFile;
-                        pDirInfo->AllocationSize = stFileInfo.AllocationSize;
-
-                        pDirInfo->FileAttributes = stFileInfo.FileAttributes | ulAdditionalAttributes;
-                    }
-                    else if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_FAKE))
+                    if( BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_FAKE))
                     {
 
                         pDirInfo->CreationTime = pFcb->ObjectInformation->CreationTime;
@@ -891,19 +917,16 @@ AFSQueryDirectory( IN PIRP Irp)
                         pDirInfo->EndOfFile = pObjectInfo->EndOfFile;
                         pDirInfo->AllocationSize = pObjectInfo->AllocationSize;
 
-                        pDirInfo->FileAttributes = pObjectInfo->FileAttributes | ulAdditionalAttributes;
-                    }
+                        if ( ulAdditionalAttributes && pObjectInfo->FileAttributes == FILE_ATTRIBUTE_NORMAL)
+                        {
 
-                    //
-                    // Check if the name begins with a . and we are hiding them
-                    //
+                            pDirInfo->FileAttributes = ulAdditionalAttributes;
+                        }
+                        else
+                        {
 
-                    if( !BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_FAKE) &&
-                        pDirEntry->NameInformation.FileName.Buffer[ 0] == L'.' &&
-                        BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES))
-                    {
-
-                        pDirInfo->FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+                            pDirInfo->FileAttributes = pObjectInfo->FileAttributes | ulAdditionalAttributes;
+                        }
                     }
 
                     pDirInfo->FileIndex = pDirEntry->FileIndex;
