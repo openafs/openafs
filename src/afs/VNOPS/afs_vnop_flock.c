@@ -639,8 +639,8 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     else if (af->l_type == F_UNLCK)
 	code = LOCK_UN;
     else {
-	afs_PutFakeStat(&fakestate);
-	return EINVAL;		/* unknown lock type */
+	code = EINVAL;		/* unknown lock type */
+	goto done;
     }
     if (((acmd == F_SETLK)
 #if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
