@@ -478,7 +478,7 @@ libafs: config export rfc3961 hcrypto lwp_depinstall \
 	libacl_depinstall afs_depinstall dir_depinstall \
 	rxstat_depinstall sys_depinstall auth_depinstall \
 	rxosdsrc
-	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
+	${CONFIGTOOL} src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 	+${COMPILE_PART1} libafs ${COMPILE_PART2}
 
 libafs_tree: export lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_depinstall rxkad_depinstall fsint_depinstall \
@@ -495,7 +495,7 @@ libafs_tree: export lwp_depinstall rx_depinstall vlserver_depinstall tvlserver_d
 #
 
 libuafs_setup: config export
-	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
+	${CONFIGTOOL} src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
 
 libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall fsint_depinstall \
 		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \

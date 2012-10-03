@@ -145,6 +145,7 @@ KERNELDIR = ../libafs
 # Build helper apps
 #
 COMPILE_ET = ${TOP_OBJDIR}/src/comerr/compile_et
+CONFIGTOOL = ${TOP_OBJDIR}/src/config/config
 RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
 SHELL = @SHELL@
 LWPTOOL = ${TOP_SRCDIR}/config/lwptool
