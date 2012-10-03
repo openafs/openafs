@@ -37,7 +37,7 @@ et_lex.lex.c: et_lex.lex.l
 
 compile_et:	compile_et.o error_table.o
 	$(Q)case $(SYS_NAME) in \
-	*_linux* | *_umlinux* ) \
+	*_linux* | *_umlinux* | *_darwin* ) \
 	$(AFS_LDRULE_NOQ) compile_et.o error_table.o -L${TOP_LIBDIR} -lopr;; \
 	* ) \
 	$(AFS_LDRULE_NOQ) compile_et.o error_table.o -L${TOP_LIBDIR} -lopr -ll;; \
