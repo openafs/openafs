@@ -260,8 +260,11 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
             pFcb->Header.NodeTypeCode = AFS_INVALID_FCB;
         }
 
+        pFcb->ObjectInformation = pObjectInfo;
+
         //
-        // Initialize some fields in the Fcb
+        // Swap the allocated FCB into the ObjectInformation structure if it
+        // does not already have one.
         //
 
         if ( InterlockedCompareExchangePointer( (PVOID *)&pObjectInfo->Fcb, pFcb, NULL) != NULL)
@@ -285,8 +288,6 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
             try_return( ntStatus = STATUS_REPARSE);
         }
-
-        pFcb->ObjectInformation = pObjectInfo;
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
