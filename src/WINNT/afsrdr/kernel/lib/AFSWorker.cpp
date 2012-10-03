@@ -1171,7 +1171,10 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                                 FALSE))
                             {
 
-                                if ( pCurrentObject->ObjectReferenceCount <= 0)
+                                if ( pCurrentObject->ObjectReferenceCount <= 0 &&
+                                     ( pCurrentObject->Fcb == NULL ||
+                                       pCurrentObject->Fcb->OpenReferenceCount == 0 &&
+                                       pCurrentObject->Fcb->Specific.File.ExtentCount == 0))
                                 {
 
                                     AFSRemoveFcb( &pCurrentObject->Fcb);
