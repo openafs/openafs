@@ -1174,20 +1174,12 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 if ( pCurrentObject->ObjectReferenceCount <= 0)
                                 {
 
-                                    if( pCurrentObject->Fcb != NULL)
-                                    {
-
-                                        AFSRemoveFcb( &pCurrentObject->Fcb);
-                                    }
+                                    AFSRemoveFcb( &pCurrentObject->Fcb);
 
                                     if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
                                     {
 
-                                        if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
-                                        {
-
-                                            AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
-                                        }
+                                        AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
 
                                         AFSDeleteObjectInfo( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
@@ -1396,21 +1388,13 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                           pCurrentChildObject->Fcb->Specific.File.ExtentCount == 0))
                                     {
 
-                                        if( pCurrentChildObject->Fcb != NULL)
-                                        {
-                                        
-                                            AFSRemoveFcb( &pCurrentChildObject->Fcb);
-                                        }
+                                        AFSRemoveFcb( &pCurrentChildObject->Fcb);
 
                                         if( pCurrentChildObject->FileType == AFS_FILE_TYPE_DIRECTORY &&
                                             pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
                                         {
 
-                                            if( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
-                                            {
-
-                                                AFSRemoveFcb( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
-                                            }
+                                            AFSRemoveFcb( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
 
                                             AFSDeleteObjectInfo( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
@@ -1543,11 +1527,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                               pCurrentObject->Fcb->Specific.File.ExtentCount == 0))
                         {
 
-                            if( pCurrentObject->Fcb != NULL)
-                            {
-
-                                AFSRemoveFcb( &pCurrentObject->Fcb);
-                            }
+                            AFSRemoveFcb( &pCurrentObject->Fcb);
 
                             AFSDeleteObjectInfo( pCurrentObject);
                         }
