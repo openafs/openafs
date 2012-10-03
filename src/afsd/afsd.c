@@ -144,22 +144,10 @@
 #endif
 #include <CoreFoundation/CoreFoundation.h>
 
-#include <SystemConfiguration/SystemConfiguration.h>
-#include <SystemConfiguration/SCDynamicStore.h>
-
-#ifndef AFS_ARM_DARWIN_ENV
-#include <IOKit/pwr_mgt/IOPMLib.h>
-#include <IOKit/IOMessage.h>
-
-static io_connect_t root_port;
-static IONotificationPortRef notify;
-static io_object_t iterator;
-#endif
-
-static CFRunLoopSourceRef source;
-
 static int event_pid;
-
+#ifndef AFS_ARM_DARWIN_ENV
+#define MACOS_EVENT_HANDLING 1
+#endif
 #endif /* AFS_DARWIN_ENV */
 
 #if AFS_HAVE_STATVFS || defined(HAVE_SYS_STATVFS_H)
@@ -357,7 +345,18 @@ enum optionsList {
     OPT_rxmaxfrags,
 };
 
-#if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#ifdef MACOS_EVENT_HANDLING
+#include <SystemConfiguration/SystemConfiguration.h>
+#include <SystemConfiguration/SCDynamicStore.h>
+
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include <IOKit/IOMessage.h>
+
+static io_connect_t root_port;
+static IONotificationPortRef notify;
+static io_object_t iterator;
+static CFRunLoopSourceRef source;
+
 static void
 afsd_sleep_callback(void * refCon, io_service_t service,
 		    natural_t messageType, void * messageArgument )
@@ -1467,7 +1466,7 @@ AfsdbLookupHandler(void)
     kernelMsg[1] = 0;
     acellName[0] = '\0';
 
-#if defined(AFS_DARWIN_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#ifdef MACOS_EVENT_HANDLING
     /* Fork the event handler also. */
     code = fork();
     if (code == 0) {
