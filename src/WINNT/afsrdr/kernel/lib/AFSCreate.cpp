@@ -2642,38 +2642,34 @@ AFSProcessOpen( IN PIRP Irp,
         // Be sure we have an Fcb for the current object
         //
 
-        if( pObjectInfo->Fcb == NULL)
+        ntStatus = AFSInitFcb( DirectoryCB);
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
-            ntStatus = AFSInitFcb( DirectoryCB);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessOpen (%08lX) Failed to init fcb on %wZ Status %08lX\n",
+                          Irp,
+                          &DirectoryCB->NameInformation.FileName,
+                          ntStatus);
 
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessOpen (%08lX) Failed to init fcb on %wZ Status %08lX\n",
-                              Irp,
-                              &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            if ( ntStatus != STATUS_REPARSE)
-            {
-
-                bAllocatedFcb = TRUE;
-            }
-
-            ntStatus = STATUS_SUCCESS;
+            try_return( ntStatus);
         }
-        else
+
+        if ( ntStatus != STATUS_REPARSE)
         {
 
-            AFSAcquireExcl( pObjectInfo->Fcb->Header.Resource,
-                            TRUE);
+            bAllocatedFcb = TRUE;
         }
+
+        ntStatus = STATUS_SUCCESS;
+
+        //
+        // AFSInitFcb returns the Fcb resource held
+        //
+
+        bReleaseFcb = TRUE;
 
         //
         // Increment the open count on this Fcb
@@ -2686,8 +2682,6 @@ AFSProcessOpen( IN PIRP Irp,
                       "AFSProcessOpen Increment2 count on Fcb %08lX Cnt %d\n",
                       pObjectInfo->Fcb,
                       lCount);
-
-        bReleaseFcb = TRUE;
 
         //
         // Check access on the entry
