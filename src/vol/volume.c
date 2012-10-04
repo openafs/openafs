@@ -5696,6 +5696,37 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	    *ec = VSALVAGE;
 	    code = 1;
 	}
+	if ((flags & VOL_SALVAGE_NO_OFFLINE)) {
+	    /* Here, we free the header for the volume, but make sure to only
+	     * do this if VOL_SALVAGE_NO_OFFLINE is specified. The reason for
+	     * this requires a bit of explanation.
+	     *
+	     * Normally, the volume header will be freed when the volume goes
+	     * goes offline. However, if VOL_SALVAGE_NO_OFFLINE has been
+	     * specified, the volume was in the process of being attached when
+	     * we discovered that it needed salvaging. Thus, the volume will
+	     * never go offline, since it never went fully online in the first
+	     * place. Specifically, we do not call VOfflineForSalvage_r above,
+	     * and we never get rid of the volume via VPutVolume_r; the volume
+	     * has not been initialized enough for those to work.
+	     *
+	     * So instead, explicitly free the volume header here. If we do not
+	     * do this, we are wasting a header that some other volume could be
+	     * using, since the header remains attached to the volume. Also if
+	     * we do not free the header here, we end up with a volume where
+	     * nUsers == 0, but the volume has a header that is not on the
+	     * header LRU. Some code expects that all nUsers == 0 volumes have
+	     * their header on the header LRU (or have no header).
+	     *
+	     * Also note that we must not free the volume header here if
+	     * VOL_SALVAGE_NO_OFFLINE is not set. Since, if
+	     * VOL_SALVAGE_NO_OFFLINE is not set, someone else may have a
+	     * reference to this volume, and they assume they can use the
+	     * volume's header. If we free the volume out from under them, they
+	     * can easily segfault.
+	     */
+	    FreeVolumeHeader(vp);
+	}
     }
     return code;
 }
