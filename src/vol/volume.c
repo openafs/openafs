@@ -3444,7 +3444,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 #ifdef AFS_DEMAND_ATTACH_FS
 		error_state = VOL_STATE_ERROR;
 		/* see if we can recover */
-		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, 0 /*flags*/);
+		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_NO_OFFLINE);
 #endif
 	    }
 #ifdef AFS_DEMAND_ATTACH_FS
