@@ -269,36 +269,36 @@ typedef struct _AFS_OBJECT_INFORMATION_CB
 
 			struct _AFS_DIRECTORY_CB  *DirectoryNodeListTail;
 
-            LONG                       DirectoryNodeCount;
+                        LONG                       DirectoryNodeCount;
 
 			struct _AFS_DIRECTORY_CB  *ShortNameTree;
 
-            //
-            // PIOCtl directory cb entry
-            //
+                        //
+                        // PIOCtl directory cb entry
+                        //
 
-            struct _AFS_DIRECTORY_CB  *PIOCtlDirectoryCB;
+                        struct _AFS_DIRECTORY_CB  *PIOCtlDirectoryCB;
 
-            //
-            // Open handle and reference count for this object
-            //
+                        //
+                        // Open handle and reference count for this object
+                        //
 
-            LONG                       ChildOpenHandleCount;
+                        LONG                       ChildOpenHandleCount;
 
-            LONG                       ChildOpenReferenceCount;
+                        LONG                       ChildOpenReferenceCount;
 
-            //
-            // Index for the PIOCtl and share open count
-            //
+                        //
+                        // Index for the PIOCtl and share open count
+                        //
 
-            LONG                OpenRequestIndex;
+                        LONG                OpenRequestIndex;
 
 		} Directory;
 
 		struct
 		{
 
-            ULONG       Reserved;
+                        ULONG       Reserved;
 
 		} File;
 
