@@ -2225,7 +2225,12 @@ try_exit:
             if( bAllocatedFcb)
             {
 
+                AFSAcquireExcl( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
                 AFSRemoveFcb( &pObjectInfo->Fcb);
+
+                AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
             }
 
             *Fcb = NULL;
@@ -2517,7 +2522,12 @@ try_exit:
             if( bAllocatedFcb)
             {
 
+                AFSAcquireExcl( &pParentObject->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
                 AFSRemoveFcb( &pParentObject->Fcb);
+
+                AFSReleaseResource( &pParentObject->NonPagedInfo->ObjectInfoLock);
             }
 
             *Fcb = NULL;
@@ -3029,7 +3039,12 @@ try_exit:
             if( bAllocatedFcb)
             {
 
+                AFSAcquireExcl( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
                 AFSRemoveFcb( &pObjectInfo->Fcb);
+
+                AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
             }
 
             *Fcb = NULL;
@@ -3461,7 +3476,12 @@ try_exit:
             if( bAllocatedFcb)
             {
 
+                AFSAcquireExcl( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
                 AFSRemoveFcb( &pObjectInfo->Fcb);
+
+                AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
             }
 
             *Fcb = NULL;
@@ -3772,7 +3792,12 @@ try_exit:
                 // Need to tear down this Fcb since it is not in the tree for the worker thread
                 //
 
+                AFSAcquireExcl( &pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
                 AFSRemoveFcb( &pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+
+                AFSReleaseResource( &pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
             }
 
             *Fcb = NULL;
@@ -4006,7 +4031,12 @@ try_exit:
                 // Need to tear down this Fcb since it is not in the tree for the worker thread
                 //
 
+                AFSAcquireExcl( &DirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
                 AFSRemoveFcb( &DirectoryCB->ObjectInformation->Fcb);
+
+                AFSReleaseResource( &DirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
             }
 
             *Fcb = NULL;

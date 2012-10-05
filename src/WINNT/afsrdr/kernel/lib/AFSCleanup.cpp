@@ -658,7 +658,7 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
                     //
 
-                    InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+                    AFSObjectInfoIncrement( pObjectInfo);
 
                     ClearFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
 

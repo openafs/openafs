@@ -394,6 +394,9 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                         AFSDeleteDirEntry( pObjectInfo->ParentObjectInformation,
                                            pDirCB);
 
+                        AFSAcquireShared( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
+                                          TRUE);
+
                         if( pObjectInfo->ObjectReferenceCount <= 0)
                         {
 
@@ -413,6 +416,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                             SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_DELETED);
                         }
+
+                        AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
                     }
 
                     AFSReleaseResource( pObjectInfo->ParentObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);

@@ -262,6 +262,8 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
         pFcb->ObjectInformation = pObjectInfo;
 
+        AFSAcquireShared( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
+                          TRUE);
         //
         // Swap the allocated FCB into the ObjectInformation structure if it
         // does not already have one.
@@ -283,11 +285,15 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
                           &pObjectInfo->Fcb->NPFcb->Resource,
                           PsGetCurrentThread());
 
+            AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
+
             AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
                             TRUE);
 
             try_return( ntStatus = STATUS_REPARSE);
         }
+
+        AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -507,6 +513,8 @@ AFSInitVolume( IN GUID *AuthGroup,
         RtlZeroMemory( pNonPagedObject,
                        sizeof( AFSNonPagedObjectInfoCB));
 
+        ExInitializeResourceLite( &pNonPagedObject->ObjectInfoLock);
+
         ExInitializeResourceLite( &pNonPagedObject->DirectoryNodeHdrLock);
 
         pVolumeCB->NonPagedVcb = pNonPagedVcb;
@@ -674,7 +682,7 @@ try_exit:
             if( pNonPagedObject != NULL)
             {
 
-                ExDeleteResourceLite( &pNonPagedObject->DirectoryNodeHdrLock);
+                ExDeleteResourceLite( &pNonPagedObject->ObjectInfoLock);
 
                 AFSExFreePoolWithTag( pNonPagedObject, AFS_NP_OBJECT_INFO_TAG);
             }
@@ -782,7 +790,12 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
             if( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb != NULL)
             {
 
+                AFSAcquireExcl( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+                                TRUE);
+
                 AFSRemoveFcb( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+
+                AFSReleaseResource( &VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
             }
 
             AFSDeleteObjectInfo( VolumeCB->ObjectInformation.Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
@@ -825,6 +838,8 @@ AFSRemoveVolume( IN AFSVolumeCB *VolumeCB)
 
         if( VolumeCB->ObjectInformation.NonPagedInfo != NULL)
         {
+
+            ExDeleteResourceLite( &VolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock);
 
             ExDeleteResourceLite( &VolumeCB->ObjectInformation.NonPagedInfo->DirectoryNodeHdrLock);
 

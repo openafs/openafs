@@ -178,6 +178,8 @@ typedef struct _AFS_NONPAGED_OBJECT_INFO_CB
 
     ERESOURCE           DirectoryNodeHdrLock;
 
+    ERESOURCE           ObjectInfoLock;
+
 } AFSNonPagedObjectInfoCB;
 
 typedef struct _AFS_OBJECT_INFORMATION_CB

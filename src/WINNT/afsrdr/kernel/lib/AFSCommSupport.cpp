@@ -311,7 +311,7 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                             // The ObjectReferenceCount will be freed by AFSPerformObjectInvalidate
                             //
 
-                            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+                            lCount = AFSObjectInfoIncrement( pObjectInfo);
 
                             AFSPerformObjectInvalidate( pObjectInfo,
                                                         AFS_INVALIDATE_DATA_VERSION);
@@ -1090,13 +1090,13 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                             // lock hierarchy.
                             //
 
-                            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+                            lCount = AFSObjectInfoIncrement( pObjectInfo);
 
                             if ( !NT_SUCCESS( AFSQueueInvalidateObject( pObjectInfo,
                                                                         AFS_INVALIDATE_DATA_VERSION)))
                             {
 
-                                lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+                                lCount = AFSObjectInfoDecrement( pObjectInfo);
                             }
                         }
                         else
