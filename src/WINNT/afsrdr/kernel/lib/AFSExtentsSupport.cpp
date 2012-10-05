@@ -1367,7 +1367,7 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
             // Reference the node so it won't be torn down
             //
 
-            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = AFSObjectInfoIncrement( pObjectInfo);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1448,7 +1448,7 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = AFSObjectInfoDecrement( pObjectInfo);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1853,7 +1853,7 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
                 // A hit a very palpable hit.  Pin it
                 //
 
-                lCount = InterlockedIncrement( &pCurrentObject->ObjectReferenceCount);
+                lCount = AFSObjectInfoIncrement( pCurrentObject);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -1991,7 +1991,7 @@ AFSProcessExtentFailure( PIRP Irp)
             // Reference the node so it won't be torn down
             //
 
-            lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = AFSObjectInfoIncrement( pObjectInfo);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -2052,7 +2052,7 @@ AFSProcessExtentFailure( PIRP Irp)
 
         AFSReleaseResource( &pObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
 
-        lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+        lCount = AFSObjectInfoDecrement( pObjectInfo);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -2229,7 +2229,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                 // Reference the node so it won't be torn down
                 //
 
-                lCount = InterlockedIncrement( &pObjectInfo->ObjectReferenceCount);
+                lCount = AFSObjectInfoIncrement( pObjectInfo);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -2454,7 +2454,7 @@ try_exit:
         if( pObjectInfo != NULL)
         {
 
-            lCount = InterlockedDecrement( &pObjectInfo->ObjectReferenceCount);
+            lCount = AFSObjectInfoDecrement( pObjectInfo);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,

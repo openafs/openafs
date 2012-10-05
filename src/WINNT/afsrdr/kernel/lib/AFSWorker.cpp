@@ -1066,6 +1066,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                 pNextVolume = (AFSVolumeCB *)pVolumeCB->ListEntry.fLink;
 
+                AFSAcquireShared( &pVolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock,
+                                  TRUE);
+
                 if( pVolumeCB->ObjectInfoListHead == NULL &&
                     pVolumeCB->DirectoryCB->OpenReferenceCount == 0 &&
                     pVolumeCB->VolumeReferenceCount == 1 &&
@@ -1080,10 +1083,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         AFSRemoveRootFcb( pVolumeCB->RootFcb);
                     }
 
+                    AFSReleaseResource( &pVolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock);
+
                     AFSRemoveVolume( pVolumeCB);
                 }
                 else
                 {
+
+                    AFSReleaseResource( &pVolumeCB->ObjectInformation.NonPagedInfo->ObjectInfoLock);
 
                     AFSReleaseResource( pVolumeCB->VolumeLock);
                 }
@@ -1171,6 +1178,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                                 FALSE))
                             {
 
+                                AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
+                                                TRUE);
+
                                 if ( pCurrentObject->ObjectReferenceCount <= 0 &&
                                      ( pCurrentObject->Fcb == NULL ||
                                        pCurrentObject->Fcb->OpenReferenceCount == 0 &&
@@ -1182,7 +1192,12 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     if( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
                                     {
 
+                                        AFSAcquireExcl( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+                                                        TRUE);
+
                                         AFSRemoveFcb( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+
+                                        AFSReleaseResource( &pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
 
                                         AFSDeleteObjectInfo( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
@@ -1193,12 +1208,19 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                         AFSExFreePoolWithTag( pCurrentObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
                                     }
 
+                                    AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
+
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
                                                   "AFSPrimaryVolumeWorkerThread Deleting deleted object %08lX\n",
                                                   pCurrentObject);
 
                                     AFSDeleteObjectInfo( pCurrentObject);
+                                }
+                                else
+                                {
+
+                                    AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
                                 }
 
                                 AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);
@@ -1360,6 +1382,15 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     AFSDeleteDirEntry( pCurrentObject,
                                                        pCurrentDirEntry);
 
+
+                                    //
+                                    // Acquire ObjectInfoLock shared here so as not to deadlock
+                                    // with an invalidation call from the service during AFSCleanupFcb
+                                    //
+
+                                    AFSAcquireShared( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
+                                                      TRUE);
+
                                     if( pCurrentChildObject->ObjectReferenceCount <= 0 &&
                                         pCurrentChildObject->Fcb != NULL &&
                                         pCurrentChildObject->FileType == AFS_FILE_TYPE_FILE)
@@ -1385,6 +1416,11 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                                         TRUE);
                                     }
 
+                                    AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
+
+                                    AFSAcquireExcl( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
+                                                    TRUE);
+
                                     if( pCurrentChildObject->ObjectReferenceCount <= 0 &&
                                         ( pCurrentChildObject->Fcb == NULL ||
                                           pCurrentChildObject->Fcb->OpenReferenceCount == 0 &&
@@ -1397,7 +1433,12 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                             pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB != NULL)
                                         {
 
+                                            AFSAcquireExcl( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
+                                                            TRUE);
+
                                             AFSRemoveFcb( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
+
+                                            AFSReleaseResource( &pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
 
                                             AFSDeleteObjectInfo( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation);
 
@@ -1408,12 +1449,19 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                             AFSExFreePoolWithTag( pCurrentChildObject->Specific.Directory.PIOCtlDirectoryCB, AFS_DIR_ENTRY_TAG);
                                         }
 
+                                        AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
+
                                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
                                                       AFS_TRACE_LEVEL_VERBOSE,
                                                       "AFSPrimaryVolumeWorkerThread Deleting object %08lX\n",
                                                       pCurrentChildObject);
 
                                         AFSDeleteObjectInfo( pCurrentChildObject);
+                                    }
+                                    else
+                                    {
+
+                                        AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
                                     }
 
                                     pCurrentDirEntry = pNextDirEntry;
@@ -1523,6 +1571,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                             break;
                         }
 
+                        AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
+                                        TRUE);
+
                         if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
                             pCurrentObject->ObjectReferenceCount <= 0 &&
                             ( pCurrentObject->Fcb == NULL ||
@@ -1532,7 +1583,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                             AFSRemoveFcb( &pCurrentObject->Fcb);
 
+                            AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
+
                             AFSDeleteObjectInfo( pCurrentObject);
+                        }
+                        else
+                        {
+
+                            AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
                         }
 
                         AFSConvertToShared( pVolumeCB->ObjectInfoTree.TreeLock);

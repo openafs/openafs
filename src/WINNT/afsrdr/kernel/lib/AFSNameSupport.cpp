@@ -1673,6 +1673,9 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     AFSDeleteDirEntry( pParentObjectInfo,
                                        pDirEntry);
 
+                    AFSAcquireShared( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
+                                      TRUE);
+
                     if( pCurrentObject->ObjectReferenceCount <= 0)
                     {
 
@@ -1690,6 +1693,8 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                             ClearFlag( pCurrentObject->Flags, AFS_OBJECT_INSERTED_HASH_TREE);
                         }
                     }
+
+                    AFSReleaseResource( &pCurrentObject->NonPagedInfo->ObjectInfoLock);
                 }
                 else
                 {
@@ -2460,7 +2465,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         ASSERT( DirEntry->ObjectInformation->ObjectReferenceCount > 0);
 
-        lCount = InterlockedDecrement( &DirEntry->ObjectInformation->ObjectReferenceCount);
+        lCount = AFSObjectInfoDecrement( DirEntry->ObjectInformation);
 
         if( lCount <= 0)
         {
@@ -2471,7 +2476,7 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSDeleteDirEntry Decrement count on object %08lX Cnt %d\n",
                       DirEntry->ObjectInformation,
-                      DirEntry->ObjectInformation->ObjectReferenceCount);
+                      lCount);
 
         ExDeleteResourceLite( &DirEntry->NonPaged->Lock);
 
