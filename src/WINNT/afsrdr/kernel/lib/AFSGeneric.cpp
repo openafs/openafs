@@ -8938,6 +8938,14 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
                     ObjectInfo->Fcb != NULL)
                 {
 
+                    AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
+                                    TRUE);
+
+                    ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
+
+                    KeSetEvent( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                0,
+                                FALSE);
 
                     //
                     // Clear out the extents
@@ -8947,6 +8955,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                     AFSTearDownFcbExtents( ObjectInfo->Fcb,
                                            NULL);
+
+                    AFSReleaseResource( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource);
                 }
 
                 break;
