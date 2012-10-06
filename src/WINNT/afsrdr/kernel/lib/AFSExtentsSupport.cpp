@@ -750,9 +750,31 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
         // Check if we are already mapped
         //
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRequestExtentsAsync Acquiring Fcb extents lock %08lX SHARED %08lX\n",
+                      &pNPFcb->Specific.File.ExtentsResource,
+                      PsGetCurrentThread());
+
+        AFSAcquireShared( &pNPFcb->Specific.File.ExtentsResource, TRUE );
+
         bRegionMapped = AFSDoExtentsMapRegion( Fcb, Offset, Size, &pFirstExtent, &pExtent);
 
         if( bRegionMapped)
+        {
+
+            KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSRequestExtentsAsync Releasing Fcb extents lock %08lX SHARED %08lX\n",
+                      &pNPFcb->Specific.File.ExtentsResource,
+                      PsGetCurrentThread());
+
+        AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
+
+        if ( bRegionMapped)
         {
 
             try_return( ntStatus = STATUS_SUCCESS);
