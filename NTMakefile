@@ -683,14 +683,14 @@ netidmgr_plugin: xstat
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-afsrdr: netidmgr_plugin
+afsrdr: config
         echo ***** $@
         $(DOCD) $(SRC)\WINNT\afsrdr
         $(CD) $(SRC)\WINNT\afsrdr
         $(NTMAKE)
         $(CD) ..\..\..
 
-rpctestlib: fsint libafsrpc
+rpctestlib: config fsint libafsrpc
      @echo ***** $@
 	$(DOCD) $(TESTS)\$@
 	$(CD) $(TESTS)\$@
@@ -704,7 +704,7 @@ libafscp: libafscp_headers util afs volser vlserver rx auth fsint afsdobjs
 	$(NTMAKE)
 	$(CD) ..\..
 
-extra: afsrdr rpctestlib
+extra: config
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      @echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@
@@ -715,21 +715,21 @@ extra: afsrdr rpctestlib
      @echo ***** Skipping $@ ***** Not found.
 !	ENDIF
 
-tools: extra
+tools: config
      @echo ***** $@
 	$(DOCD) $(SRC)\tools\rxperf
 	$(CD) $(SRC)\tools\rxperf
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-finale: tools
+finale: netidmgr_plugin
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
-install: finale
+install: finale afsrdr tools rpctestlib extra
 	@echo Build Finished Successfully
         
 
