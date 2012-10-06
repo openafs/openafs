@@ -2988,7 +2988,7 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
     }
     lock_ReleaseWrite(&scp->rw);
 
-    dwResultBufferLength = (DWORD)(sizeof( AFSSetFileExtentsCB) + sizeof( AFSSetFileExtentsCB) * (length.QuadPart / cm_data.blockSize + 1));
+    dwResultBufferLength = (DWORD)(sizeof( AFSSetFileExtentsCB) + sizeof( AFSFileExtentCB) * (length.QuadPart / cm_data.blockSize + 1));
     pResultCB = (AFSSetFileExtentsCB *)malloc( dwResultBufferLength );
     if (!pResultCB)
         return CM_ERROR_RETRY;
