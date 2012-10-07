@@ -1612,8 +1612,10 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                           ParentObjectInfo->FileId.Volume,
                           ParentObjectInfo->FileId.Vnode,
                           ParentObjectInfo->FileId.Unique,
-                          ParentObjectInfo->DataVersion.QuadPart,
-                          pResultCB->ParentDataVersion.QuadPart);
+                          ParentObjectInfo->DataVersion.HighPart,
+                          ParentObjectInfo->DataVersion.LowPart,
+                          pResultCB->ParentDataVersion.HighPart,
+                          pResultCB->ParentDataVersion.LowPart);
 
             //
             // We raced so go and lookup the directory entry in the parent
