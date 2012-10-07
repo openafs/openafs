@@ -47,7 +47,7 @@
 //
 // Return:
 //
-//      A status is returned for the function
+//      Return Fcb->NPFcb->Resource held exclusive
 //
 
 NTSTATUS
@@ -73,6 +73,15 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
         pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
         pVolumeCB = pObjectInfo->VolumeCB;
+
+        if ( pObjectInfo->Fcb != NULL)
+        {
+
+            AFSAcquireExcl( &pObjectInfo->Fcb->NPFcb->Resource,
+                            TRUE);
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
 
         //
         // Allocate the Fcb and the nonpaged portion of the Fcb.
