@@ -964,6 +964,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     LONG lFileType;
     LARGE_INTEGER liCurrentTime;
     BOOLEAN bVolumeObject = FALSE;
+    BOOLEAN bFcbBusy = FALSE;
     LONG lCount;
 
     pControlDeviceExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
@@ -1007,11 +1008,20 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
     while( BooleanFlagOn( pPoolContext->State, AFS_WORKER_PROCESS_REQUESTS))
     {
 
-        KeWaitForSingleObject( &Timer,
-                               Executive,
-                               KernelMode,
-                               FALSE,
-                               NULL);
+        if ( bFcbBusy == FALSE)
+        {
+
+            KeWaitForSingleObject( &Timer,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+        }
+        else
+        {
+
+            bFcbBusy = FALSE;
+        }
 
         //
         // This is the primary volume worker so it will traverse the volume list
@@ -1409,8 +1419,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                         // pCurrentObject->ObjectReferenceCount to change
                                         //
 
-                                        AFSCleanupFcb( pCurrentChildObject->Fcb,
-                                                       TRUE);
+                                        ntStatus = AFSCleanupFcb( pCurrentChildObject->Fcb,
+                                                                  TRUE);
+
+                                        if ( ntStatus == STATUS_RETRY)
+                                        {
+
+                                            bFcbBusy = TRUE;
+                                        }
 
                                         AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
                                                         TRUE);
@@ -1558,8 +1574,14 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                             // pCurrentObject->ObjectReferenceCount to change
                             //
 
-                            AFSCleanupFcb( pCurrentObject->Fcb,
-                                           TRUE);
+                            ntStatus = AFSCleanupFcb( pCurrentObject->Fcb,
+                                                      FALSE);
+
+                            if ( ntStatus == STATUS_RETRY)
+                            {
+
+                                bFcbBusy = TRUE;
+                            }
                         }
 
                         if( !AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
