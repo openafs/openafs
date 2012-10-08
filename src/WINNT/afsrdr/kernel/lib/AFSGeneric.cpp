@@ -7148,82 +7148,89 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
               ( 0 != Fcb->Specific.File.ExtentCount &&
                 0 != Fcb->Specific.File.LastExtentAccess.QuadPart &&
                 (liTime.QuadPart - Fcb->Specific.File.LastExtentAccess.QuadPart) >=
-                                        (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))) &&
-            AFSAcquireExcl( &Fcb->NPFcb->Resource,
-                            ForceFlush))
+                                        (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))))
         {
 
-            __try
+            if ( AFSAcquireExcl( &Fcb->NPFcb->Resource, ForceFlush))
             {
 
-                CcFlushCache( &Fcb->NPFcb->SectionObjectPointers,
-                              NULL,
-                              0,
-                              &stIoStatus);
-
-                if( !NT_SUCCESS( stIoStatus.Status))
+                __try
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSCleanupFcb CcFlushCache [2] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                    CcFlushCache( &Fcb->NPFcb->SectionObjectPointers,
+                                  NULL,
+                                  0,
+                                  &stIoStatus);
+
+                    if( !NT_SUCCESS( stIoStatus.Status))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSCleanupFcb CcFlushCache [2] failure FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                      Fcb->ObjectInformation->FileId.Cell,
+                                      Fcb->ObjectInformation->FileId.Volume,
+                                      Fcb->ObjectInformation->FileId.Vnode,
+                                      Fcb->ObjectInformation->FileId.Unique,
+                                      stIoStatus.Status,
+                                      stIoStatus.Information);
+
+                        ntStatus = stIoStatus.Status;
+                    }
+
+                    if( ForceFlush)
+                    {
+
+                        if ( !CcPurgeCacheSection( &Fcb->NPFcb->SectionObjectPointers,
+                                                   NULL,
+                                                   0,
+                                                   FALSE))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                          AFS_TRACE_LEVEL_WARNING,
+                                          "AFSCleanupFcb CcPurgeCacheSection [2] failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                          Fcb->ObjectInformation->FileId.Cell,
+                                          Fcb->ObjectInformation->FileId.Volume,
+                                          Fcb->ObjectInformation->FileId.Vnode,
+                                          Fcb->ObjectInformation->FileId.Unique);
+
+                            SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                        }
+                    }
+                }
+                __except( EXCEPTION_EXECUTE_HANDLER)
+                {
+
+                    ntStatus = GetExceptionCode();
+
+                    AFSDbgLogMsg( 0,
+                                  0,
+                                  "EXCEPTION - AFSCleanupFcb Cc [2] FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                   Fcb->ObjectInformation->FileId.Cell,
                                   Fcb->ObjectInformation->FileId.Volume,
                                   Fcb->ObjectInformation->FileId.Vnode,
                                   Fcb->ObjectInformation->FileId.Unique,
-                                  stIoStatus.Status,
-                                  stIoStatus.Information);
-
-                    ntStatus = stIoStatus.Status;
+                                  ntStatus);
                 }
 
-                if( ForceFlush)
+                AFSReleaseResource( &Fcb->NPFcb->Resource);
+
+                if( Fcb->OpenReferenceCount <= 0)
                 {
 
-                    if ( !CcPurgeCacheSection( &Fcb->NPFcb->SectionObjectPointers,
-                                               NULL,
-                                               0,
-                                               FALSE))
-                    {
+                    //
+                    // Tear em down we'll not be needing them again
+                    //
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                      AFS_TRACE_LEVEL_WARNING,
-                                      "AFSCleanupFcb CcPurgeCacheSection [2] failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                      Fcb->ObjectInformation->FileId.Cell,
-                                      Fcb->ObjectInformation->FileId.Volume,
-                                      Fcb->ObjectInformation->FileId.Vnode,
-                                      Fcb->ObjectInformation->FileId.Unique);
-
-                        SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                    }
+                    AFSTearDownFcbExtents( Fcb,
+                                           NULL);
                 }
             }
-            __except( EXCEPTION_EXECUTE_HANDLER)
+            else
             {
 
-                ntStatus = GetExceptionCode();
-
-                AFSDbgLogMsg( 0,
-                              0,
-                              "EXCEPTION - AFSCleanupFcb Cc [2] FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
-                              Fcb->ObjectInformation->FileId.Cell,
-                              Fcb->ObjectInformation->FileId.Volume,
-                              Fcb->ObjectInformation->FileId.Vnode,
-                              Fcb->ObjectInformation->FileId.Unique,
-                              ntStatus);
-            }
-
-            AFSReleaseResource( &Fcb->NPFcb->Resource);
-
-            if( Fcb->OpenReferenceCount <= 0)
-            {
-
-                //
-                // Tear em down we'll not be needing them again
-                //
-
-                AFSTearDownFcbExtents( Fcb,
-                                       NULL);
+                ntStatus = STATUS_RETRY;
             }
         }
 
