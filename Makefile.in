@@ -139,10 +139,7 @@ prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto ${TOP_INCDIR}/
 
 project: cmd comerr 
 
-tests: all_nolibafs
-	+${COMPILE_PART1} tests ${COMPILE_PART2}
-
-tests_libafs: all
+tests: all 
 	+${COMPILE_PART1} tests ${COMPILE_PART2}
 
 config: prelude
@@ -659,7 +656,7 @@ finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth lo
 rpctestlib: util fsint rx opr libafsrpc libafsauthent
 	+${TEST_PART1} rpctestlib  ${COMPILE_PART2}
 
-check test: finale_nolibafs
+check test: finale
 	cd tests && $(MAKE) check
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
