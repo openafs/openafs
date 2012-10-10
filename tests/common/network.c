@@ -1,17 +1,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <afs/cellconfig.h>
 #include <rx/rx.h>
 
-#include <stdio.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <string.h>
-
 #include <tests/tap/basic.h>
 #include "common.h"
-
-extern int h_errno;
 
 /*! Check if the current machine's hostname resolves to the loopback
  * network.

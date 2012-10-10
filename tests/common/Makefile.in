@@ -5,7 +5,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS=-I$(srcdir)/.. -I$(srcdir)/../..
-CFLAGS_network.o = -Wno-strict-prototypes
 
 all check test tests:	config.o servers.o ubik.o rxkad.o network.o
 
