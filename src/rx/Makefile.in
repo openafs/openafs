@@ -33,7 +33,7 @@ depinstall: includes
 rx_user.lo: rx.h rx_user.h rx_prototypes.h
 rx_packet.lo: rx_packet.c rx_packet.h rx.h
 rx_rdwr.lo: rx_rdwr.c rx.h rx_prototypes.h
-rx.lo: rx.h rx_user.h rx_prototypes.h
+rx.lo: rx.h rx_user.h rx_server.h rx_prototypes.h
 rx_conncache.lo: rx.h rx_prototypes.h
 rx_trace.lo: rx_trace.h
 rx_getaddr.lo: rx.h rx_getaddr.c rx_prototypes.h
