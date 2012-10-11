@@ -84,6 +84,7 @@ extern afs_int32 afs_termState;
 #include "rx_conn.h"
 #include "rx_call.h"
 #include "rx_packet.h"
+#include "rx_server.h"
 
 #include <afs/rxgen_consts.h>
 
@@ -211,6 +212,14 @@ static afs_int32 rxi_busyChannelError = 0;
 
 rx_atomic_t rx_nWaiting = RX_ATOMIC_INIT(0);
 rx_atomic_t rx_nWaited = RX_ATOMIC_INIT(0);
+
+/* Incoming calls wait on this queue when there are no available
+ * server processes */
+struct rx_queue rx_incomingCallQueue;
+
+/* Server processes wait on this queue when there are no appropriate
+ * calls to process */
+struct rx_queue rx_idleServerQueue;
 
 #if !defined(offsetof)
 #include <stddef.h>		/* for definition of offsetof() */

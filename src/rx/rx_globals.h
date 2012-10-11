@@ -43,12 +43,6 @@ EXT struct rx_service *rx_services[RX_MAX_SERVICES + 1];
 EXT afs_kmutex_t rx_serverPool_lock;
 #endif /* RX_ENABLE_LOCKS */
 
-/* Incoming calls wait on this queue when there are no available server processes */
-EXT struct rx_queue rx_incomingCallQueue;
-
-/* Server processes wait on this queue when there are no appropriate calls to process */
-EXT struct rx_queue rx_idleServerQueue;
-
 /* Constant delay time before sending a hard ack if the receiver consumes
  * a packet while no delayed ack event is scheduled. Ensures that the
  * sender is able to advance its window when the receiver consumes a packet

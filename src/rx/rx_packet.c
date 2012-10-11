@@ -104,6 +104,8 @@ static int rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first,
 				   struct rx_queue * q);
 #endif
 
+extern struct rx_queue rx_idleServerQueue;
+
 /* some rules about packets:
  * 1.  When a packet is allocated, the final iov_buf contains room for
  * a security trailer, but iov_len masks that fact.  If the security

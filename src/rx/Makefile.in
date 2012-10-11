@@ -61,7 +61,7 @@ rx_packet.o: rx_packet.c rx_packet.h rx.h
 
 rx_rdwr.o: rx_rdwr.c rx.h rx_prototypes.h
 
-rx.o: rx.h rx_user.h rx_prototypes.h
+rx.o: rx.h rx_user.h rx_server.h rx_prototypes.h
 
 rx_conncache.o: rx.h rx_prototypes.h
 
