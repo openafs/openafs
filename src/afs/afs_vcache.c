@@ -690,10 +690,11 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	    i = 0;
 	    continue;	/* start over - may have raced. */
 	}
-	if (tq == uq) {
+	if (uq == &VLRU) {
 	    if (anumber && !defersleep) {
 		defersleep = 1;
-		tq = VLRU.prev;
+		uq = VLRU.prev;
+		i = 0;
 		continue;
 	    }
 	    break;
