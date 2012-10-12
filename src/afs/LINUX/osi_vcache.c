@@ -20,9 +20,9 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
     struct dentry *dentry;
     struct inode *inode = AFSTOV(avc);
 #if defined(D_ALIAS_IS_HLIST)
-    struct hlist_node *cur, *head;
+    struct hlist_node *cur, *head, *list_end;
 #else
-    struct list_head *cur, *head;
+    struct list_head *cur, *head, *list_end;
 #endif
 
     /* First, see if we can evict the inode from the dcache */
@@ -59,13 +59,15 @@ restart:
 	spin_lock(&inode->i_lock);
 #if defined(D_ALIAS_IS_HLIST)
 	head = inode->i_dentry.first;
+	list_end = NULL;
 #else
 	head = &inode->i_dentry;
+	list_end = head;
 #endif
 
 restart:
 	cur = head;
-	while ((cur = cur->next) != head) {
+	while ((cur = cur->next) != list_end) {
 #if defined(D_ALIAS_IS_HLIST)
 	    dentry = hlist_entry(cur, struct dentry, d_alias);
 #else
