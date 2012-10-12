@@ -20,9 +20,9 @@ struct rx_call_rx_lock {
 #else
 struct rx_call {
 #endif
-    struct rx_queue queue_item_header;	/* Call can be on various queues (one-at-a-time) */
-    struct rx_queue tq;		/* Transmit packet queue */
-    struct rx_queue rq;		/* Receive packet queue */
+    struct opr_queue entry;	/* Call can be on various queues (one-at-a-time) */
+    struct opr_queue tq;	/* Transmit packet queue */
+    struct opr_queue rq;	/* Receive packet queue */
     /*
      * The following fields are accessed while the call is unlocked.
      * These fields are used by the caller/server thread to marshall
@@ -33,7 +33,7 @@ struct rx_call {
      *       word boundary. Otherwise threads that are changing
      *       adjacent fields will cause problems.
      */
-    struct rx_queue iovq;	/* readv/writev packet queue */
+    struct opr_queue iovq;	/* readv/writev packet queue */
     u_short nLeft;		/* Number bytes left in first receive packet */
     u_short curvec;		/* current iovec in currentPacket */
     u_short curlen;		/* bytes remaining in curvec */

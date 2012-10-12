@@ -60,7 +60,7 @@ struct rx_peer {
     u_short congestSeq;		/* Changed when a call retransmits */
     afs_uint64 bytesSent;	/* Number of bytes sent to this peer */
     afs_uint64 bytesReceived;	/* Number of bytes received from this peer */
-    struct rx_queue rpcStats;	/* rpc statistic list */
+    struct opr_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
     afs_int32 maxPacketSize;    /* peer packetsize hint */
 #ifdef AFS_RXERRQ_ENV

@@ -52,7 +52,8 @@
 #endif
 #endif /* KERNEL */
 
-#include "rx_queue.h"
+#include <opr/queue.h>
+
 #include "rx_clock.h"
 #include "rx_event.h"
 #include "rx_misc.h"
@@ -841,8 +842,8 @@ typedef struct rx_function_entry_v1 {
 #define RX_STATS_RETRIEVAL_FIRST_EDITION 1	/* first implementation */
 
 typedef struct rx_interface_stat {
-    struct rx_queue queue_header;
-    struct rx_queue all_peers;
+    struct opr_queue entry;
+    struct opr_queue entryPeers;
     rx_function_entry_v1_t stats[1];	/* make sure this is aligned correctly */
 } rx_interface_stat_t, *rx_interface_stat_p;
 

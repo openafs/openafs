@@ -10,8 +10,6 @@
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
 
-#include "rx_queue.h"
-
 #if defined(AFS_NT40_ENV)
 #include "rx_xmit_nt.h"
 #endif
@@ -239,7 +237,7 @@ struct rx_jumboHeader {
 #endif
 
 struct rx_packet {
-    struct rx_queue queueItemHeader;	/* Packets are chained using the queue.h package */
+    struct opr_queue entry;	/* Packets are chained using opr_queue */
     struct clock timeSent;	/* When this packet was transmitted last */
     afs_uint32 firstSerial;	/* Original serial number of this packet */
     struct clock firstSent;	/* When this packet was transmitted first */

@@ -17,6 +17,7 @@
 #include <afs/opr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>

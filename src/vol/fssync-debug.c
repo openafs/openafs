@@ -35,6 +35,7 @@
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#include <rx/rx_queue.h>
 
 #include "nfs.h"
 #include "lwp.h"

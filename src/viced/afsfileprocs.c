@@ -74,6 +74,7 @@
 #endif /* AFS_HPUX_ENV */
 
 #include <afs/opr.h>
+#include <rx/rx_queue.h>
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>

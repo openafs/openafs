@@ -42,6 +42,7 @@
 
 #include <afs/opr.h>
 #include <afs/nfs.h>
+#include <rx/rx_queue.h>
 #include <lwp.h>
 #include <lock.h>
 #include <afs/cmd.h>

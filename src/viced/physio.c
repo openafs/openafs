@@ -22,6 +22,7 @@
 #include <sys/file.h>
 #endif
 
+#include <rx/rx_queue.h>
 #include <afs/nfs.h>
 #include <lwp.h>
 #include <lock.h>

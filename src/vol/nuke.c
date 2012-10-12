@@ -14,6 +14,7 @@
 
 #include <afs/opr.h>
 #include <afs/afsint.h>
+#include <rx/rx_queue.h>
 
 #include <afs/afsutil.h>
 

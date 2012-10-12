@@ -17,6 +17,7 @@
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
 #include <afs/dir.h>
 #include <rx/xdr.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <lwp.h>

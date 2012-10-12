@@ -417,8 +417,8 @@ extern void rxi_RestoreDataBufs(struct rx_packet *p);
 extern int rxi_TrimDataBufs(struct rx_packet *p, int first);
 extern void rxi_FreePacket(struct rx_packet *p);
 extern struct rx_packet *rxi_AllocPacket(int cla_ss);
-extern int rxi_AllocPackets(int cla_ss, int num_pkts, struct rx_queue *q);
-extern int rxi_FreePackets(int num_pkts, struct rx_queue *q);
+extern int rxi_AllocPackets(int cla_ss, int num_pkts, struct opr_queue *q);
+extern int rxi_FreePackets(int num_pkts, struct opr_queue *q);
 extern struct rx_packet *rxi_AllocSendPacket(struct rx_call *call,
 					     int want);
 extern int rxi_ReadPacket(osi_socket socket, struct rx_packet *p,

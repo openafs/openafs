@@ -27,6 +27,7 @@
 
 #include <afs/cmd.h>
 #include <rx/xdr.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/errors.h>

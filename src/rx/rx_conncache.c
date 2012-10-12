@@ -25,7 +25,7 @@
  * We initialize rxi_connectionCache at compile time, so there is no
  * need to call queue_Init(&rxi_connectionCache).
  */
-static struct rx_queue rxi_connectionCache = { &rxi_connectionCache,
+static struct opr_queue rxi_connectionCache = { &rxi_connectionCache,
     &rxi_connectionCache
 };
 
@@ -59,13 +59,13 @@ typedef struct rx_connParts {
 
 /*
  * Each element in the cache is represented by the following
- * structure.  I use an rx_queue to manipulate the cache entries.
+ * structure.  I use an opr_queue to manipulate the cache entries.
  * inUse tracks the number of calls within this connection that
  * we know are in use.
  */
 
 typedef struct cache_entry {
-    struct rx_queue queue_header;
+    struct opr_queue queue;
     struct rx_connection *conn;
     rx_connParts_t parts;
     int inUse;
@@ -104,9 +104,11 @@ static int
 rxi_FindCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
 {
     int error = 0;
-    cache_entry_p cacheConn, nCacheConn;
+    struct opr_queue *cursor;
 
-    for (queue_Scan(&rxi_connectionCache, cacheConn, nCacheConn, cache_entry)) {
+    for (opr_queue_Scan(&rxi_connectionCache, cursor)) {
+	struct cache_entry *cacheConn
+	    = opr_queue_Entry(cursor, struct cache_entry, queue);
 	if ((rxi_CachedConnectionsEqual(parts, &cacheConn->parts))
 	    && (cacheConn->inUse < RX_MAXCALLS)
 	    && (cacheConn->hasError == 0)) {
@@ -138,7 +140,7 @@ rxi_AddCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
 	new_entry->parts = *parts;
 	new_entry->inUse = 1;
 	new_entry->hasError = 0;
-	queue_Prepend(&rxi_connectionCache, new_entry);
+	opr_queue_Prepend(&rxi_connectionCache, &new_entry->queue);
     }
 
     /*
@@ -197,13 +199,15 @@ rxi_GetCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
 void
 rxi_DeleteCachedConnections(void)
 {
-    cache_entry_p cacheConn, nCacheConn;
+    struct opr_queue *cursor, *store;
 
     LOCK_CONN_CACHE;
-    for (queue_Scan(&rxi_connectionCache, cacheConn, nCacheConn, cache_entry)) {
+    for (opr_queue_ScanSafe(&rxi_connectionCache, cursor, store)) {
+	struct cache_entry *cacheConn
+	    = opr_queue_Entry(cursor, struct cache_entry, queue);
 	if (!cacheConn)
 	    break;
-	queue_Remove(cacheConn);
+	opr_queue_Remove(&cacheConn->queue);
 	rxi_DestroyConnection(cacheConn->conn);
 	free(cacheConn);
     }
@@ -251,11 +255,14 @@ rx_GetCachedConnection(unsigned int remoteAddr, unsigned short port,
 void
 rx_ReleaseCachedConnection(struct rx_connection *conn)
 {
-    cache_entry_p cacheConn, nCacheConn;
+    struct opr_queue *cursor, *store;
 
     LOCK_CONN_CACHE;
-    for (queue_Scan(&rxi_connectionCache, cacheConn, nCacheConn, cache_entry)) {
-	if (conn == cacheConn->conn) {
+    for (opr_queue_ScanSafe(&rxi_connectionCache, cursor, store)) {
+	struct cache_entry *cacheConn
+	    = opr_queue_Entry(cursor, struct cache_entry, queue);
+
+    	    if (conn == cacheConn->conn) {
 	    cacheConn->inUse--;
 	    /*
 	     * check to see if the connection is in error.
@@ -266,7 +273,7 @@ rx_ReleaseCachedConnection(struct rx_connection *conn)
 	    if (rx_ConnError(conn)) {
 		cacheConn->hasError = 1;
 		if (cacheConn->inUse == 0) {
-		    queue_Remove(cacheConn);
+		    opr_queue_Remove(&cacheConn->queue);
 		    rxi_DestroyConnection(cacheConn->conn);
 		    free(cacheConn);
 		}

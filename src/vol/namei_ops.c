@@ -30,6 +30,7 @@
 #endif
 
 #include <afs/opr.h>
+#include <rx/rx_queue.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>

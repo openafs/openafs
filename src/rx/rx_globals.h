@@ -149,7 +149,7 @@ EXT int rx_nPackets GLOBALSINIT(0);	/* preallocate packets with rx_extraPackets 
 EXT pthread_key_t rx_ts_info_key;
 typedef struct rx_ts_info_t {
     struct {
-        struct rx_queue queue;
+        struct opr_queue queue;
         int len;                /* local queue length */
         int delta;              /* number of new packets alloc'd locally since last sync w/ global queue */
 
@@ -184,7 +184,7 @@ EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-s
 /* in pthreads rx, free packet queue is now a two-tiered queueing system
  * in which the first tier is thread-specific, and the second tier is
  * a global free packet queue */
-EXT struct rx_queue rx_freePacketQueue;
+EXT struct opr_queue rx_freePacketQueue;
 #ifdef RX_TRACK_PACKETS
 #define RX_FPQ_MARK_FREE(p) \
     do { \
@@ -285,9 +285,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         struct rx_packet * p; \
         int tsize = MIN((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize); \
 	if (tsize <= 0) break; \
-        for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
-             i < tsize; i++,p=queue_Prev(p, rx_packet)); \
-        queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
+        for (i=0,p=opr_queue_Last(&((rx_ts_info_p)->_FPQ.queue), \
+				 struct rx_packet, entry); \
+             i < tsize; i++,p=opr_queue_Prev(&p->entry, \
+		     			    struct rx_packet, entry )); \
+        opr_queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ.queue), \
+				   &rx_freePacketQueue, &p->entry); \
         (rx_ts_info_p)->_FPQ.len -= tsize; \
         rx_nFreePackets += tsize; \
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
@@ -305,9 +308,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         int i; \
         struct rx_packet * p; \
         if (num_transfer <= 0) break; \
-        for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
-	     i < (num_transfer); i++,p=queue_Prev(p, rx_packet)); \
-        queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ),&rx_freePacketQueue,p); \
+        for (i=0,p=opr_queue_Last(&((rx_ts_info_p)->_FPQ.queue), \
+				 struct rx_packet, entry ); \
+	     i < (num_transfer); \
+	     i++,p=opr_queue_Prev(&p->entry, struct rx_packet, entry )); \
+        opr_queue_SplitAfterPrepend(&((rx_ts_info_p)->_FPQ.queue), \
+				   &rx_freePacketQueue, &p->entry); \
         (rx_ts_info_p)->_FPQ.len -= (num_transfer); \
         rx_nFreePackets += (num_transfer); \
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
@@ -327,9 +333,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         struct rx_packet * p; \
         tsize = (rx_TSFPQGlobSize <= rx_nFreePackets) ? \
                  rx_TSFPQGlobSize : rx_nFreePackets; \
-        for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
-             i < tsize; i++,p=queue_Next(p, rx_packet)); \
-        queue_SplitBeforeAppend(&rx_freePacketQueue,&((rx_ts_info_p)->_FPQ),p); \
+        for (i=0, \
+	       p=opr_queue_First(&rx_freePacketQueue, struct rx_packet, entry); \
+             i < tsize; \
+	     i++,p=opr_queue_Next(&p->entry, struct rx_packet, entry)); \
+        opr_queue_SplitBeforeAppend(&rx_freePacketQueue, \
+				   &((rx_ts_info_p)->_FPQ.queue), &p->entry); \
         (rx_ts_info_p)->_FPQ.len += i; \
         rx_nFreePackets -= i; \
         (rx_ts_info_p)->_FPQ.gtol_ops++; \
@@ -342,9 +351,12 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         struct rx_packet * p; \
         tsize = (num_transfer); \
         if (tsize > rx_nFreePackets) tsize = rx_nFreePackets; \
-        for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
-             i < tsize; i++,p=queue_Next(p, rx_packet)); \
-        queue_SplitBeforeAppend(&rx_freePacketQueue,&((rx_ts_info_p)->_FPQ),p); \
+        for (i=0, \
+	       p=opr_queue_First(&rx_freePacketQueue, struct rx_packet, entry); \
+             i < tsize; \
+	     i++, p=opr_queue_Next(&p->entry, struct rx_packet, entry)); \
+        opr_queue_SplitBeforeAppend(&rx_freePacketQueue, \
+				   &((rx_ts_info_p)->_FPQ.queue), &p->entry); \
         (rx_ts_info_p)->_FPQ.len += i; \
         rx_nFreePackets -= i; \
         (rx_ts_info_p)->_FPQ.gtol_ops++; \
@@ -353,8 +365,9 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
 /* checkout a packet from the thread-specific free packet queue */
 #define RX_TS_FPQ_CHECKOUT(rx_ts_info_p,p) \
     do { \
-        (p) = queue_First(&((rx_ts_info_p)->_FPQ), rx_packet); \
-        queue_Remove(p); \
+        (p) = opr_queue_First(&((rx_ts_info_p)->_FPQ.queue), \
+			     struct rx_packet, entry); \
+        opr_queue_Remove(&p->entry); \
         RX_FPQ_MARK_USED(p); \
         (rx_ts_info_p)->_FPQ.len--; \
         (rx_ts_info_p)->_FPQ.checkout_ops++; \
@@ -368,12 +381,14 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
         int i; \
         struct rx_packet *p; \
         if (num_transfer > (rx_ts_info_p)->_FPQ.len) num_transfer = (rx_ts_info_p)->_FPQ.len; \
-        for (i=0, p=queue_First(&((rx_ts_info_p)->_FPQ), rx_packet); \
+        for (i=0, p=opr_queue_First(&((rx_ts_info_p)->_FPQ.queue), \
+				   struct rx_packet, entry); \
              i < num_transfer; \
-             i++, p=queue_Next(p, rx_packet)) { \
+             i++, p=opr_queue_Next(&p->entry, struct rx_packet, entry)) { \
             RX_FPQ_MARK_USED(p); \
         } \
-        queue_SplitBeforeAppend(&((rx_ts_info_p)->_FPQ),(q),p); \
+        opr_queue_SplitBeforeAppend(&((rx_ts_info_p)->_FPQ.queue),(q), \
+				   &((p)->entry)); \
         (rx_ts_info_p)->_FPQ.len -= num_transfer; \
         (rx_ts_info_p)->_FPQ.checkout_ops++; \
         (rx_ts_info_p)->_FPQ.checkout_xfer += num_transfer; \
@@ -381,7 +396,7 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
 /* check a packet into the thread-specific free packet queue */
 #define RX_TS_FPQ_CHECKIN(rx_ts_info_p,p) \
     do { \
-        queue_Prepend(&((rx_ts_info_p)->_FPQ), (p)); \
+        opr_queue_Prepend(&((rx_ts_info_p)->_FPQ.queue), &((p)->entry)); \
         RX_FPQ_MARK_FREE(p); \
         (rx_ts_info_p)->_FPQ.len++; \
         (rx_ts_info_p)->_FPQ.checkin_ops++; \
@@ -393,11 +408,11 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
  * since caller already knows length of (q) for other reasons */
 #define RX_TS_FPQ_QCHECKIN(rx_ts_info_p,num_transfer,q) \
     do { \
-        struct rx_packet *p, *np; \
-        for (queue_Scan((q), p, np, rx_packet)) { \
-            RX_FPQ_MARK_FREE(p); \
+	struct opr_queue *cur; \
+        for (opr_queue_Scan((q), cur)) { \
+            RX_FPQ_MARK_FREE(opr_queue_Entry(cur, struct rx_packet, entry)); \
         } \
-        queue_SplicePrepend(&((rx_ts_info_p)->_FPQ),(q)); \
+        opr_queue_SplicePrepend(&((rx_ts_info_p)->_FPQ.queue),(q)); \
         (rx_ts_info_p)->_FPQ.len += (num_transfer); \
         (rx_ts_info_p)->_FPQ.checkin_ops++; \
         (rx_ts_info_p)->_FPQ.checkin_xfer += (num_transfer); \
@@ -439,7 +454,7 @@ EXT afs_kmutex_t freeSQEList_lock;
 #endif
 
 /* List of free call structures */
-EXT struct rx_queue rx_freeCallQueue;
+EXT struct opr_queue rx_freeCallQueue;
 #ifdef	RX_ENABLE_LOCKS
 EXT afs_kmutex_t rx_freeCallQueue_lock;
 #endif

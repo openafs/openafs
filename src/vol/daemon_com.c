@@ -27,6 +27,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/errors.h>
+#include <rx/rx_queue.h>
 
 #include "nfs.h"
 #include "daemon_com.h"

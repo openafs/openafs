@@ -449,7 +449,7 @@ struct rx_ts_info_t * rx_ts_info_init(void) {
     rx_ts_info = calloc(1, sizeof(rx_ts_info_t));
     osi_Assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
 #ifdef RX_ENABLE_TSFPQ
-    queue_Init(&rx_ts_info->_FPQ);
+    opr_queue_Init(&rx_ts_info->_FPQ.queue);
 
     MUTEX_ENTER(&rx_packets_mutex);
     rx_TSFPQMaxProcs++;

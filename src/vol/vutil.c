@@ -28,6 +28,7 @@
 #endif
 
 #include <afs/opr.h>
+#include <rx/rx_queue.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"

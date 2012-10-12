@@ -153,6 +153,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#include <rx/rx_queue.h>
 
 #include "nfs.h"
 #include "lwp.h"

@@ -15,6 +15,7 @@
 #include <ctype.h>
 
 #include <rx/xdr.h>
+#include <rx/rx_queue.h>
 #include <afs/afsint.h>
 
 #if !defined(AFS_SGI_ENV)

@@ -31,7 +31,7 @@
 #include <afs/errors.h>
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
-#include <opr/queue.h>
+#include <rx/rx_queue.h>
 
 #include "nfs.h"
 #include "lock.h"

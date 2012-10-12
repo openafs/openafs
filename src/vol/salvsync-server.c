@@ -33,6 +33,8 @@
 
 #include <afs/opr.h>
 #include <afs/afsint.h>
+#include <rx/rx_queue.h>
+
 #include "nfs.h"
 #include <afs/errors.h>
 #include "salvsync.h"

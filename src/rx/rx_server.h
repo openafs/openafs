@@ -18,7 +18,7 @@ struct rx_serverQueueEntry_rx_lock {
 #else
 struct rx_serverQueueEntry {
 #endif
-    struct rx_queue queueItemHeader;
+    struct opr_queue entry;
 #ifdef KDUMP_RX_LOCK
     struct rx_call_rx_lock *newcall;
 #else

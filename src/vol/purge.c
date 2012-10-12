@@ -23,6 +23,7 @@
 #endif
 
 #include <afs/afsutil.h>
+#include <rx/rx_queue.h>
 
 #include <rx/xdr.h>
 #include "afs/afsint.h"

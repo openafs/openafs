@@ -30,8 +30,6 @@
 #include <afs/nfs.h>
 #include <afs/errors.h>
 #include <afs/ihandle.h>
-#include <afs/vnode.h>
-#include <afs/volume.h>
 #include <afs/acl.h>
 #include <afs/ptclient.h>
 #include <afs/ptuser.h>

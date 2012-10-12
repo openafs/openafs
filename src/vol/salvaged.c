@@ -34,6 +34,7 @@
 
 #include <afs/opr.h>
 #include <afs/afsint.h>
+#include <rx/rx_queue.h>
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
 #if defined(AFS_VFSINCL_ENV)

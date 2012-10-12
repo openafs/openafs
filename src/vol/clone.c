@@ -28,6 +28,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/afssyscalls.h>
+#include <rx/rx_queue.h>
 
 #include "nfs.h"
 #include "lwp.h"

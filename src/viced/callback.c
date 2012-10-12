@@ -95,6 +95,7 @@
 #include <afs/nfs.h>		/* yuck.  This is an abomination. */
 #include <lwp.h>
 #include <rx/rx.h>
+#include <rx/rx_queue.h>
 #include <afs/afscbint.h>
 #include <afs/afsutil.h>
 #include <lock.h>
