@@ -836,11 +836,17 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
  */
 long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
-    long code;
+    long code = 0;
+
+    code = cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_FETCHDATA);
+    if (code)
+        return code;
 
     if (scp->mountPointStringp[0] &&
-        scp->mpDataVersion == scp->dataVersion)
-        return 0;
+         scp->mpDataVersion == scp->dataVersion) {
+        code = 0;
+        goto done;
+    }
 
 #ifdef AFS_FREELANCE_CLIENT
     /* File servers do not have data for freelance entries */
@@ -859,23 +865,31 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         offset.LowPart = offset.HighPart = 0;
         code = cm_GetData(scp, &offset, temp, MOUNTPOINTLEN, userp, reqp);
         if (code)
-            return code;
+            goto done;
 
         /*
          * scp->length is the actual length of the mount point string.
          * It is current because cm_GetData merged the most up to date
          * status info into scp and has not dropped the rwlock since.
          */
-        if (scp->length.LowPart > MOUNTPOINTLEN - 1)
-            return CM_ERROR_TOOBIG;
-        if (scp->length.LowPart == 0)
-            return CM_ERROR_INVAL;
+        if (scp->length.LowPart > MOUNTPOINTLEN - 1) {
+            code = CM_ERROR_TOOBIG;
+            goto done;
+        }
+
+        if (scp->length.LowPart == 0) {
+            code = CM_ERROR_INVAL;
+            goto done;
+        }
 
         /* convert the terminating dot to a NUL */
         temp[scp->length.LowPart - 1] = 0;
         memcpy(scp->mountPointStringp, temp, scp->length.LowPart);
         scp->mpDataVersion = scp->dataVersion;
     }
+
+  done:
+    cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHDATA);
 
     return code;
 }
