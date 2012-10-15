@@ -93,7 +93,7 @@ osi_lookupname(char *aname, uio_seg_t seg, int followlink,
     }
     code = osi_lookupname_internal(tname, followlink, NULL, dpp);   
     if (seg == AFS_UIOUSER) {
-        putname(tname);
+        afs_putname(tname);
     }
     return code;
 }
@@ -129,7 +129,7 @@ int osi_abspath(char *aname, char *buf, int buflen,
 	mntput(mnt);
     }
 
-    putname(tname);
+    afs_putname(tname);
     return code;
 }
 

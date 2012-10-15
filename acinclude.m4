@@ -891,6 +891,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				     [#include <linux/fs.h>
 				      #include <linux/namei.h>],
 				     [path_lookup(NULL, 0, NULL);])
+		 AC_CHECK_LINUX_FUNC([putname],
+				     [#include <linux/fs.h>
+				      #include <linux/namei.h>],
+				     [putname(NULL);])
 		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
 				     [#include <linux/rcupdate.h>],
 				     [rcu_read_lock();])
