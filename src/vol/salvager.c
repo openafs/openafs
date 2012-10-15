@@ -153,7 +153,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 #ifndef AFS_NT40_ENV
 	if (useSyslog)
-	    Log(msg);
+	    Log("%s", msg);
 	else
 #endif
 	    printf("%s\n", msg);
@@ -270,7 +270,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 #ifndef AFS_NT40_ENV
 	if (useSyslog)
-	    Log(msg);
+	    Log("%s", msg);
 	else
 #endif
 	    printf("%s\n", msg);
