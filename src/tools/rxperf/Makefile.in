@@ -3,8 +3,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 top_builddir=@TOP_OBJDIR@
 
-LIBS= $(TOP_LIBDIR)/libafsrpc.a \
-      $(top_builddir)/src/opr/liboafs_opr.la
+LIBS= $(top_builddir)/src/rx/liboafs_rx.la
 
 all: rxperf
 
