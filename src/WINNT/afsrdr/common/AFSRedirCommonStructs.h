@@ -377,12 +377,6 @@ typedef struct AFS_FCB
             LONG                ExtentCount;
 
             //
-            // The Lazy writer thread
-            //
-
-            PETHREAD            LazyWriterThread;
-
-            //
             // Current count of queued flush items for the file
             //
 

@@ -1553,10 +1553,6 @@ AFSAcquireFcbForLazyWrite( IN PVOID Fcb,
                   "AFSAcquireFcbForLazyWrite Acquiring Fcb %08lX\n",
                   Fcb);
 
-    ASSERT( NULL == pFcb->Specific.File.LazyWriterThread);
-
-    pFcb->Specific.File.LazyWriterThread = PsGetCurrentThread();
-
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSAcquireFcbForLazyWrite Attempt to acquire Fcb lock %08lX SHARED %08lX\n",
@@ -1638,11 +1634,6 @@ AFSReleaseFcbFromLazyWrite( IN PVOID Fcb)
                   Fcb);
 
     IoSetTopLevelIrp( NULL);
-
-    ASSERT( PsGetCurrentThread() == pFcb->Specific.File.LazyWriterThread);
-
-    pFcb->Specific.File.LazyWriterThread = NULL;
-
 
     AFSReleaseResource( &pFcb->NPFcb->PagingResource);
 
