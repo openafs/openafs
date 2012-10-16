@@ -1708,7 +1708,6 @@ AFSProcessCreate( IN PIRP               Irp,
     ULONG ulAttributes = 0;
     LARGE_INTEGER   liAllocationSize = {0,0};
     BOOLEAN bFileCreated = FALSE, bReleaseFcb = FALSE, bAllocatedCcb = FALSE;
-    BOOLEAN bAllocatedFcb = FALSE;
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
     AFSDirectoryCB *pDirEntry = NULL;
@@ -1902,52 +1901,28 @@ AFSProcessCreate( IN PIRP               Irp,
         // We may have raced and the Fcb is already created
         //
 
-        if( pObjectInfo->Fcb != NULL)
+        //
+        // Allocate and initialize the Fcb for the file.
+        //
+
+        ntStatus = AFSInitFcb( pDirEntry);
+
+        *Fcb = pObjectInfo->Fcb;
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSProcessCreate (%08lX) Not allocating Fcb for file %wZ\n",
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessCreate (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
                           Irp,
-                          FullFileName);
+                          FullFileName,
+                          ntStatus);
 
-            *Fcb = pObjectInfo->Fcb;
-
-            AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
-                            TRUE);
+            try_return( ntStatus);
         }
-        else
-        {
 
-            //
-            // Allocate and initialize the Fcb for the file.
-            //
-
-            ntStatus = AFSInitFcb( pDirEntry);
-
-            *Fcb = pObjectInfo->Fcb;
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessCreate (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
-                              Irp,
-                              FullFileName,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            if ( ntStatus != STATUS_REPARSE)
-            {
-
-                bAllocatedFcb = TRUE;
-            }
-
-            ntStatus = STATUS_SUCCESS;
-        }
+        ntStatus = STATUS_SUCCESS;
 
         //
         // Increment the open count on this Fcb
@@ -2222,16 +2197,9 @@ try_exit:
                               *Ccb);
             }
 
-            if( bAllocatedFcb)
-            {
-
-                AFSAcquireExcl( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
-                                TRUE);
-
-                AFSRemoveFcb( &pObjectInfo->Fcb);
-
-                AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
-            }
+            //
+            // Fcb will be freed by AFSPrimaryVolumeWorker thread
+            //
 
             *Fcb = NULL;
 
@@ -2258,7 +2226,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
     BOOLEAN bAllocatedCcb = FALSE;
-    BOOLEAN bReleaseFcb = FALSE, bAllocatedFcb = FALSE;
+    BOOLEAN bReleaseFcb = FALSE;
     AFSObjectInfoCB *pParentObject = NULL, *pTargetObject = NULL;
     UNICODE_STRING uniTargetName;
     LONG lCount;
@@ -2287,48 +2255,29 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
         //
         // Make sure we have an Fcb for the access
+
+        //
+        // Allocate and initialize the Fcb for the file.
         //
 
-        if( pParentObject->Fcb != NULL)
+        ntStatus = AFSInitFcb( ParentDirectoryCB);
+
+        *Fcb = pParentObject->Fcb;
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
-            *Fcb = pParentObject->Fcb;
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSOpenTargetDirectory (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
+                          Irp,
+                          &ParentDirectoryCB->NameInformation.FileName,
+                          ntStatus);
 
-            AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
-                            TRUE);
+            try_return( ntStatus);
         }
-        else
-        {
 
-            //
-            // Allocate and initialize the Fcb for the file.
-            //
-
-            ntStatus = AFSInitFcb( ParentDirectoryCB);
-
-            *Fcb = pParentObject->Fcb;
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSOpenTargetDirectory (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
-                              Irp,
-                              &ParentDirectoryCB->NameInformation.FileName,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            if ( ntStatus != STATUS_REPARSE)
-            {
-
-                bAllocatedFcb = TRUE;
-            }
-
-            ntStatus = STATUS_SUCCESS;
-        }
+        ntStatus = STATUS_SUCCESS;
 
         //
         // Increment the open count on this Fcb
@@ -2519,16 +2468,9 @@ try_exit:
 
             *Ccb = NULL;
 
-            if( bAllocatedFcb)
-            {
-
-                AFSAcquireExcl( &pParentObject->NonPagedInfo->ObjectInfoLock,
-                                TRUE);
-
-                AFSRemoveFcb( &pParentObject->Fcb);
-
-                AFSReleaseResource( &pParentObject->NonPagedInfo->ObjectInfoLock);
-            }
+            //
+            // Fcb will be freed by AFSPrimaryVolumeWorker thread
+            //
 
             *Fcb = NULL;
         }
@@ -2552,7 +2494,7 @@ AFSProcessOpen( IN PIRP Irp,
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
-    BOOLEAN bAllocatedCcb = FALSE, bReleaseFcb = FALSE, bAllocatedFcb = FALSE;
+    BOOLEAN bAllocatedCcb = FALSE, bReleaseFcb = FALSE;
     ULONG ulAdditionalFlags = 0, ulOptions = 0;
     AFSFileOpenCB   stOpenCB;
     AFSFileOpenResultCB stOpenResultCB;
@@ -2665,12 +2607,6 @@ AFSProcessOpen( IN PIRP Irp,
                           ntStatus);
 
             try_return( ntStatus);
-        }
-
-        if ( ntStatus != STATUS_REPARSE)
-        {
-
-            bAllocatedFcb = TRUE;
         }
 
         ntStatus = STATUS_SUCCESS;
@@ -3036,16 +2972,9 @@ try_exit:
 
             *Ccb = NULL;
 
-            if( bAllocatedFcb)
-            {
-
-                AFSAcquireExcl( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
-                                TRUE);
-
-                AFSRemoveFcb( &pObjectInfo->Fcb);
-
-                AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
-            }
+            //
+            // Fcb will be freed by AFSPrimaryVolumeWorker thread
+            //
 
             *Fcb = NULL;
         }
@@ -3073,7 +3002,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
     ULONG   ulAttributes = 0;
     LARGE_INTEGER liTime;
     ULONG ulCreateDisposition = 0;
-    BOOLEAN bAllocatedCcb = FALSE, bAllocatedFcb = FALSE;
+    BOOLEAN bAllocatedCcb = FALSE;
     PACCESS_MASK pDesiredAccess = NULL;
     USHORT usShareAccess;
     AFSObjectInfoCB *pParentObjectInfo = NULL;
@@ -3137,40 +3066,24 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         // Be sure we have an Fcb for the object block
         //
 
-        if( pObjectInfo->Fcb == NULL)
+        ntStatus = AFSInitFcb( DirectoryCB);
+
+        *Fcb = pObjectInfo->Fcb;
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
-            ntStatus = AFSInitFcb( DirectoryCB);
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSProcessOverwriteSupersede (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
+                          Irp,
+                          &DirectoryCB->NameInformation.FileName,
+                          ntStatus);
 
-            *Fcb = pObjectInfo->Fcb;
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessOverwriteSupersede (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
-                              Irp,
-                              &DirectoryCB->NameInformation.FileName,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            if ( ntStatus != STATUS_REPARSE)
-            {
-
-                bAllocatedFcb = TRUE;
-            }
-
-            ntStatus = STATUS_SUCCESS;
+            try_return( ntStatus);
         }
-        else
-        {
 
-            AFSAcquireExcl( pObjectInfo->Fcb->Header.Resource,
-                            TRUE);
-        }
+        ntStatus = STATUS_SUCCESS;
 
         //
         // Increment the open count on this Fcb.
@@ -3473,16 +3386,9 @@ try_exit:
 
             *Ccb = NULL;
 
-            if( bAllocatedFcb)
-            {
-
-                AFSAcquireExcl( &pObjectInfo->NonPagedInfo->ObjectInfoLock,
-                                TRUE);
-
-                AFSRemoveFcb( &pObjectInfo->Fcb);
-
-                AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
-            }
+            //
+            // Fcb will be freed by AFSPrimaryVolumeWorker thread
+            //
 
             *Fcb = NULL;
         }
@@ -3521,7 +3427,7 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
     NTSTATUS ntStatus = STATUS_SUCCESS;
     PFILE_OBJECT pFileObject = NULL;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
-    BOOLEAN bReleaseFcb = FALSE, bAllocatedCcb = FALSE, bAllocatedFcb = FALSE;
+    BOOLEAN bReleaseFcb = FALSE, bAllocatedCcb = FALSE;
     UNICODE_STRING uniFullFileName;
     AFSPIOCtlOpenCloseRequestCB stPIOCtlOpen;
     AFSFileID stFileID;
@@ -3551,45 +3457,27 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
             }
         }
 
-        if( pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb == NULL)
+        //
+        // Allocate and initialize the Fcb for the file.
+        //
+
+        ntStatus = AFSInitFcb( pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB);
+
+        *Fcb = pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb;
+
+        if( !NT_SUCCESS( ntStatus))
         {
 
-            //
-            // Allocate and initialize the Fcb for the file.
-            //
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSOpenIOCtlFcb (%08lX) Failed to initialize fcb Status %08lX\n",
+                          Irp,
+                          ntStatus);
 
-            ntStatus = AFSInitFcb( pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB);
-
-            *Fcb = pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb;
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSOpenIOCtlFcb (%08lX) Failed to initialize fcb Status %08lX\n",
-                              Irp,
-                              ntStatus);
-
-                try_return( ntStatus);
-            }
-
-            if ( ntStatus != STATUS_REPARSE)
-            {
-
-                bAllocatedFcb = TRUE;
-            }
-
-            ntStatus = STATUS_SUCCESS;
+            try_return( ntStatus);
         }
-        else
-        {
 
-            *Fcb = pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb;
-
-            AFSAcquireExcl( &(*Fcb)->NPFcb->Resource,
-                            TRUE);
-        }
+        ntStatus = STATUS_SUCCESS;
 
         //
         // Increment the open reference and handle on the node
@@ -3785,20 +3673,9 @@ try_exit:
 
             *Ccb = NULL;
 
-            if( bAllocatedFcb)
-            {
-
-                //
-                // Need to tear down this Fcb since it is not in the tree for the worker thread
-                //
-
-                AFSAcquireExcl( &pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock,
-                                TRUE);
-
-                AFSRemoveFcb( &pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->Fcb);
-
-                AFSReleaseResource( &pParentObjectInfo->Specific.Directory.PIOCtlDirectoryCB->ObjectInformation->NonPagedInfo->ObjectInfoLock);
-            }
+            //
+            // Fcb will be freed by AFSPrimaryVolumeWorker thread
+            //
 
             *Fcb = NULL;
         }
