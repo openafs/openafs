@@ -112,7 +112,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bExtendingWrite = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
     BOOLEAN            bLockOK;
-    BOOLEAN            bMapped = TRUE;
     HANDLE             hCallingUser = OnBehalfOf;
     ULONG              ulExtensionLength = 0;
     BOOLEAN            bRetry = FALSE;
@@ -438,21 +437,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             }
         }
         */
-
-        //
-        // If they are not mapped and we are the Lazy Writer then just
-        // say "not now"
-        //
-        if (!bMapped && pFcb->Specific.File.LazyWriterThread == PsGetCurrentThread())
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonWrite (%08lX) Failing lazy writer for unmapped request\n",
-                          Irp);
-
-            try_return ( ntStatus = STATUS_FILE_LOCK_CONFLICT);
-        }
 
         //
         // Take locks
