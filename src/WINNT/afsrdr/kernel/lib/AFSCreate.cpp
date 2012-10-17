@@ -2308,7 +2308,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessCreate (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
+                              "AFSOpenTargetDirectory (%08lX) Failed to initialize fcb %wZ Status %08lX\n",
                               Irp,
                               &ParentDirectoryCB->NameInformation.FileName,
                               ntStatus);
@@ -2316,7 +2316,7 @@ AFSOpenTargetDirectory( IN PIRP Irp,
                 try_return( ntStatus);
             }
 
-            if ( ntStatus == STATUS_REPARSE)
+            if ( ntStatus != STATUS_REPARSE)
             {
 
                 bAllocatedFcb = TRUE;
