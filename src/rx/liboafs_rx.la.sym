@@ -59,8 +59,11 @@ rx_NewService
 rx_NewServiceHost
 rx_PeerOf
 rx_PortOf
+rx_PrintPeerStats
 rx_PrintStats
 rx_ReadProc
+rx_ReadProc32
+rx_ReadvProc
 rx_RecordCallStatistics
 rx_ReleaseCachedConnection
 rx_RetrievePeerRPCStats
@@ -80,6 +83,9 @@ rx_SetConnectionId
 rx_SetEpoch
 rx_SetLocalStatus
 rx_SetMaxMTU
+rx_SetMaxReceiveWindow
+rx_SetMaxSendWindow
+rx_SetMinPeerTimeout
 rx_SetNoJumbo
 rx_SetRxStatUserOk
 rx_SetSecurityConfiguration
@@ -95,6 +101,7 @@ rx_SlowWritePacket
 rx_StartServer
 rx_UdpBufSize
 rx_WriteProc
+rx_WriteProc32
 rx_clearPeerRPCStats
 rx_clearProcessRPCStats
 rx_connDeadTime
