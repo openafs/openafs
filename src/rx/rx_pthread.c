@@ -416,9 +416,8 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     if (ret < 0) {
 	while (rxi_HandleSocketError(socket) > 0)
 	    ;
+	return ret;
     }
-    return ret;
-
 #else
 # ifdef AFS_LINUX22_ENV
     /* linux unfortunately returns ECONNREFUSED if the target port
@@ -439,8 +438,8 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 # endif
 	return -1;
     }
-    return 0;
 #endif /* !AFS_RXERRQ_ENV */
+    return 0;
 }
 
 struct rx_ts_info_t * rx_ts_info_init(void) {
