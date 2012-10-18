@@ -251,4 +251,7 @@ void Lock_Destroy(struct Lock *lock);
 #define WriteLocked(lock)\
 	((lock)->excl_locked & WRITE_LOCK)
 
+#define SharedLocked(lock)\
+	((lock)->excl_locked & SHARED_LOCK)
+
 #endif /* LOCK_H */
