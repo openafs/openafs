@@ -2129,7 +2129,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 
 	if(page_ix == 0) {
 	    offset = page_offset(pp);
-	    auio->uio_offset = offset;
+	    ancr->offset = auio->uio_offset = offset;
 	    base_index = pp->index;
 	}
         iovecp[page_ix].iov_len = PAGE_SIZE;
