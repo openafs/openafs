@@ -462,6 +462,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
+                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+
                         pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
                         ASSERT( pParentObjectInfo != NULL);
@@ -818,6 +820,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
 
+                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
+
                         pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
                         ASSERT( pParentObjectInfo != NULL);
@@ -1125,6 +1129,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                       pCcb->DirectoryCB);
 
                         SetFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_DELETED);
+
+                        ClearFlag( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE);
 
                         pParentObjectInfo = pObjectInfo->ParentObjectInformation;
 
