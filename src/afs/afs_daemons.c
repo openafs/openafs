@@ -611,6 +611,43 @@ BStore(struct brequest *ab)
     }
 }
 
+static void
+BPartialStore(struct brequest *ab)
+{
+    struct vcache *tvc;
+    afs_int32 code;
+    struct vrequest treq;
+    int locked, shared_locked = 0;
+
+    AFS_STATCNT(BStore);
+    if ((code = afs_InitReq(&treq, ab->cred)))
+	return;
+    code = 0;
+    tvc = ab->vc;
+    locked = tvc->lock.excl_locked? 1:0;
+    if (!locked)
+        ObtainWriteLock(&tvc->lock, 1209);
+    else if (!(tvc->lock.excl_locked & WRITE_LOCK)) {
+	shared_locked = 1;
+	ConvertSToRLock(&tvc->lock);
+    }
+    code = afs_StoreAllSegments(tvc, &treq, AFS_ASYNC);
+    if (!locked)
+	ReleaseWriteLock(&tvc->lock);
+    else if (shared_locked)
+	ConvertSToRLock(&tvc->lock);
+    /* now set final return code, and wakeup anyone waiting */
+    if ((ab->flags & BUVALID) == 0) {
+	/* set final code, since treq doesn't go across processes */
+	ab->code = afs_CheckCode(code, &treq, 43);
+	ab->flags |= BUVALID;
+	if (ab->flags & BUWAIT) {
+	    ab->flags &= ~BUWAIT;
+	    afs_osi_Wakeup(ab);
+	}
+    }
+}
+
 /* release a held request buffer */
 void
 afs_BRelease(struct brequest *ab)
@@ -1104,6 +1141,8 @@ afs_BackgroundDaemon(void)
                 return 0;
             }
 #endif
+	    else if (tb->opcode == BOP_PARTIAL_STORE)
+		BPartialStore(tb);
 	    else
 		panic("background bop");
 	    brequest_release(tb);
