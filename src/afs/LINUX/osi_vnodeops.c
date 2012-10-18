@@ -2241,13 +2241,14 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
 
 static inline int
 afs_linux_can_bypass(struct inode *ip) {
+
     switch(cache_bypass_strategy) {
 	case NEVER_BYPASS_CACHE:
 	    return 0;
 	case ALWAYS_BYPASS_CACHE:
 	    return 1;
 	case LARGE_FILES_BYPASS_CACHE:
-	    if(i_size_read(ip) > cache_bypass_threshold)
+	    if (i_size_read(ip) > cache_bypass_threshold)
 		return 1;
 	default:
 	    return 0;

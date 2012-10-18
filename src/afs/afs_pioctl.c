@@ -5093,7 +5093,12 @@ DECL_PIOCTL(PSetCachingThreshold)
 	cache_bypass_threshold = threshold;
         afs_warn("Cache Bypass Threshold set to: %d\n", threshold);
 	/* TODO:  move to separate pioctl, or enhance pioctl */
-	cache_bypass_strategy = LARGE_FILES_BYPASS_CACHE;
+	if (threshold == AFS_CACHE_BYPASS_DISABLED)
+	    cache_bypass_strategy = NEVER_BYPASS_CACHE;
+	else if (!threshold)
+	    cache_bypass_strategy = ALWAYS_BYPASS_CACHE;
+	else
+	    cache_bypass_strategy = LARGE_FILES_BYPASS_CACHE;
     }
 
     /* Return the current size threshold */
