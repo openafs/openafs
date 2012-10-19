@@ -813,6 +813,8 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
                                        request.Length))
         {
 
+            KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
+
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRequestExtentsAsync Request extents for fid %08lX-%08lX-%08lX-%08lX Offset %08lX Len %08lX Thread %08lX\n",
@@ -862,16 +864,13 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
                 }
             }
 
-            if( NT_SUCCESS( ntStatus))
+            if( !NT_SUCCESS( ntStatus))
             {
 
-                KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
+                KeSetEvent( &pNPFcb->Specific.File.ExtentsRequestComplete,
+                            0,
+                            FALSE);
             }
-        }
-        else
-        {
-
-            KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
         }
 
 try_exit:
