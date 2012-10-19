@@ -6543,10 +6543,31 @@ AFSObjectInfoIncrement( IN AFSObjectInfoCB *ObjectInfo)
 
     LONG lCount;
 
-    AFSAcquireShared( &ObjectInfo->NonPagedInfo->ObjectInfoLock,
-                      TRUE);
+    if ( ObjectInfo->ObjectReferenceCount == 0)
+    {
 
-    lCount = InterlockedIncrement( &ObjectInfo->ObjectReferenceCount);
+        AFSAcquireExcl( &ObjectInfo->NonPagedInfo->ObjectInfoLock,
+                        TRUE);
+
+        lCount = InterlockedIncrement( &ObjectInfo->ObjectReferenceCount);
+    }
+    else
+    {
+
+        AFSAcquireShared( &ObjectInfo->NonPagedInfo->ObjectInfoLock,
+                          TRUE);
+
+        lCount = InterlockedIncrement( &ObjectInfo->ObjectReferenceCount);
+
+        if ( lCount == 1)
+        {
+
+            AFSReleaseResource( &ObjectInfo->NonPagedInfo->ObjectInfoLock);
+
+            AFSAcquireExcl( &ObjectInfo->NonPagedInfo->ObjectInfoLock,
+                            TRUE);
+        }
+    }
 
     AFSReleaseResource( &ObjectInfo->NonPagedInfo->ObjectInfoLock);
 
@@ -6563,6 +6584,19 @@ AFSObjectInfoDecrement( IN AFSObjectInfoCB *ObjectInfo)
                       TRUE);
 
     lCount = InterlockedDecrement( &ObjectInfo->ObjectReferenceCount);
+
+    if ( lCount == 0)
+    {
+
+        lCount = InterlockedIncrement( &ObjectInfo->ObjectReferenceCount);
+
+        AFSReleaseResource(&ObjectInfo->NonPagedInfo->ObjectInfoLock);
+
+        AFSAcquireExcl( &ObjectInfo->NonPagedInfo->ObjectInfoLock,
+                        TRUE);
+
+        lCount = InterlockedDecrement( &ObjectInfo->ObjectReferenceCount);
+    }
 
     AFSReleaseResource( &ObjectInfo->NonPagedInfo->ObjectInfoLock);
 
