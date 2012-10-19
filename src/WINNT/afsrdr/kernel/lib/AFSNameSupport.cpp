@@ -2467,16 +2467,17 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
 
         lCount = AFSObjectInfoDecrement( DirEntry->ObjectInformation);
 
-        if( lCount <= 0)
-        {
-            SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
-        }
-
         AFSDbgLogMsg( AFS_SUBSYSTEM_OBJECT_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSDeleteDirEntry Decrement count on object %08lX Cnt %d\n",
                       DirEntry->ObjectInformation,
                       lCount);
+
+        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED))
+        {
+
+            SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);
+        }
 
         ExDeleteResourceLite( &DirEntry->NonPaged->Lock);
 
