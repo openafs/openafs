@@ -413,8 +413,6 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                                 ClearFlag( pObjectInfo->Flags, AFS_OBJECT_INSERTED_HASH_TREE);
                             }
-
-                            SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_DELETED);
                         }
 
                         AFSReleaseResource( &pObjectInfo->NonPagedInfo->ObjectInfoLock);
