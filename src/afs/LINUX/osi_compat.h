@@ -462,10 +462,11 @@ afs_dentry_open(struct dentry *dp, struct vfsmount *mnt, int flags, const struct
 #endif
 
 static inline void
-afs_putname(struct filename *name) {
 #if defined(HAVE_LINUX_PUTNAME)
+afs_putname(char *name) {
     putname(name);
 #else
+afs_putname(struct filename *name) {
     kmem_cache_free(names_cachep, (void *)name);
 #endif
 }
