@@ -461,14 +461,40 @@ afs_dentry_open(struct dentry *dp, struct vfsmount *mnt, int flags, const struct
 }
 #endif
 
-static inline void
 #if defined(HAVE_LINUX_PUTNAME)
-afs_putname(char *name) {
-    putname(name);
-#else
-afs_putname(struct filename *name) {
-    kmem_cache_free(names_cachep, (void *)name);
-#endif
+typedef char *afs_name_t;
+
+static inline char *
+afs_name_to_string(afs_name_t s) {
+    return (char *)s;
 }
+
+static inline void
+afs_putname(afs_name_t name) {
+    putname((char *)name);
+}
+
+static inline void
+afs_set_name(afs_name_t name, char *string) {
+    name = string;
+}
+#else
+typedef struct filename *afs_name_t;
+
+static inline char *
+afs_name_to_string(afs_name_t s) {
+    return (char *)s->name;
+}
+
+static inline void
+afs_putname(afs_name_t name) {
+    kmem_cache_free(names_cachep, (void *)name);
+}
+
+static inline void
+afs_set_name(afs_name_t aname, char *string) {
+    aname->name = string;
+}
+#endif
 
 #endif /* AFS_LINUX_OSI_COMPAT_H */
