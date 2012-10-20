@@ -44,7 +44,7 @@
 #include <afs/nfs.h>
 #include <rx/rx_queue.h>
 #include <lwp.h>
-#include <lock.h>
+#include <opr/lock.h>
 #include <afs/cmd.h>
 #include <afs/ptclient.h>
 #include <afs/afsint.h>
@@ -228,7 +228,7 @@ static int fs_stateInit(void)
     fs_state.options.fs_state_verify_before_save = 1;
     fs_state.options.fs_state_verify_after_restore = 1;
 
-    CV_INIT(&fs_state.worker_done_cv, "worker done", CV_DEFAULT, 0);
+    opr_cv_init(&fs_state.worker_done_cv, "worker done");
     opr_Verify(pthread_rwlock_init(&fs_state.state_lock, NULL) == 0);
 }
 # endif /* AFS_NT40_ENV */
@@ -448,7 +448,7 @@ FiveMinuteCheckLWP(void *unused)
 #ifdef AFS_DEMAND_ATTACH_FS
     fs_state.FiveMinuteLWP_tranquil = 1;
     FS_LOCK;
-    CV_BROADCAST(&fs_state.worker_done_cv);
+    opr_cv_broadcast(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
 #endif
@@ -496,7 +496,7 @@ HostCheckLWP(void *unused)
 #ifdef AFS_DEMAND_ATTACH_FS
     fs_state.HostCheckLWP_tranquil = 1;
     FS_LOCK;
-    CV_BROADCAST(&fs_state.worker_done_cv);
+    opr_cv_broadcast(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
 #endif
@@ -529,7 +529,7 @@ FsyncCheckLWP(void *unused)
 	fsync_next.tv_nsec = 0;
 	fsync_next.tv_sec = time(0) + fiveminutes;
 
-	code = CV_TIMEDWAIT(&fsync_cond, &fsync_glock_mutex,
+	code = opr_cv_timedwait(&fsync_cond, &fsync_glock_mutex,
 			    &fsync_next);
 	if (code != 0 && code != ETIMEDOUT)
 	    ViceLog(0, ("pthread_cond_timedwait returned %d\n", code));
@@ -555,7 +555,7 @@ FsyncCheckLWP(void *unused)
 #ifdef AFS_DEMAND_ATTACH_FS
     fs_state.FsyncCheckLWP_tranquil = 1;
     FS_LOCK;
-    CV_BROADCAST(&fs_state.worker_done_cv);
+    opr_cv_broadcast(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
 #endif /* AFS_DEMAND_ATTACH_FS */
@@ -786,7 +786,7 @@ ShutDownAndCore(int dopanic)
 		FS_LOCK;
 		FS_STATE_UNLOCK;
 		ViceLog(0, ("waiting for background host/callback threads to quiesce before saving fileserver state...\n"));
-		CV_WAIT(&fs_state.worker_done_cv, &fileproc_glock_mutex);
+		opr_cv_wait(&fs_state.worker_done_cv, &fileproc_glock_mutex);
 		FS_UNLOCK;
 		FS_STATE_RDLOCK;
 	    }
@@ -1835,7 +1835,7 @@ main(int argc, char *argv[])
     if (ParseArgs(argc, argv)) {
 	exit(-1);
     }
-    MUTEX_INIT(&fileproc_glock_mutex, "fileproc", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&fileproc_glock_mutex);
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -2054,8 +2054,8 @@ main(int argc, char *argv[])
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(viced_SuperUser);
 
-    CV_INIT(&fsync_cond, "fsync", CV_DEFAULT, 0);
-    MUTEX_INIT(&fsync_glock_mutex, "fsync", MUTEX_DEFAULT, 0);
+    opr_cv_init(&fsync_cond);
+    opr_mutex_init(&fsync_glock_mutex);
 
 #if !defined(AFS_DEMAND_ATTACH_FS)
     /*

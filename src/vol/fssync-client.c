@@ -38,6 +38,10 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
+
 #include <afs/afsint.h>
 #include <rx/rx_queue.h>
 #include <afs/errors.h>
@@ -70,8 +74,8 @@ static SYNC_client_state fssync_state =
 #ifdef AFS_PTHREAD_ENV
 static pthread_mutex_t vol_fsync_mutex;
 static volatile int vol_fsync_mutex_init = 0;
-#define VFSYNC_LOCK MUTEX_ENTER(&vol_fsync_mutex)
-#define VFSYNC_UNLOCK MUTEX_EXIT(&vol_fsync_mutex)
+#define VFSYNC_LOCK opr_mutex_enter(&vol_fsync_mutex)
+#define VFSYNC_UNLOCK opr_mutex_exit(&vol_fsync_mutex)
 #else
 #define VFSYNC_LOCK
 #define VFSYNC_UNLOCK
@@ -83,7 +87,7 @@ FSYNC_clientInit(void)
 #ifdef AFS_PTHREAD_ENV
     /* this is safe since it gets called with VOL_LOCK held, or before we go multithreaded */
     if (!vol_fsync_mutex_init) {
-	MUTEX_INIT(&vol_fsync_mutex, "vol fsync", MUTEX_DEFAULT, 0);
+	opr_mutex_init(&vol_fsync_mutex);
 	vol_fsync_mutex_init = 1;
     }
 #endif

@@ -20,6 +20,9 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>

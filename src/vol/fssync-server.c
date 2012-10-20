@@ -46,6 +46,9 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 #include <afs/afsint.h>
 #include <rx/rx_queue.h>
 #include "nfs.h"
@@ -211,7 +214,7 @@ FSYNC_fsInit(void)
 
 #ifdef AFS_DEMAND_ATTACH_FS
     queue_Init(&fsync_salv.head);
-    CV_INIT(&fsync_salv.cv, "fsync salv", CV_DEFAULT, 0);
+    opr_cv_init(&fsync_salv.cv);
     opr_Verify(pthread_create(&tid, &tattr, FSYNC_salvageThread, NULL) == 0);
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
@@ -413,7 +416,7 @@ FSYNC_backgroundSalvage(Volume *vp)
     }
 
     queue_Append(&fsync_salv.head, node);
-    CV_BROADCAST(&fsync_salv.cv);
+    opr_cv_broadcast(&fsync_salv.cv);
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 

@@ -75,9 +75,8 @@
 
 #include <afs/opr.h>
 #include <rx/rx_queue.h>
+#include <opr/lock.h>
 #include <afs/nfs.h>
-#include <lwp.h>
-#include <lock.h>
 #include <afs/afsint.h>
 #include <afs/vldbint.h>
 #include <afs/errors.h>
@@ -734,7 +733,7 @@ GetRights(struct client *client, struct acl_accessList *ACL,
     H_LOCK;
     while (client->host->hostFlags & HCPS_INPROGRESS) {
 	client->host->hostFlags |= HCPS_WAITING;	/* I am waiting */
-	CV_WAIT(&client->host->cond, &host_glock_mutex);
+	opr_cv_wait(&client->host->cond, &host_glock_mutex);
     }
 
     if (!client->host->hcps.prlist_len || !client->host->hcps.prlist_val) {

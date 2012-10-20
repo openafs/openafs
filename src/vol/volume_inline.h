@@ -40,7 +40,7 @@ VOL_CV_TIMEDWAIT(pthread_cond_t *cv, const struct timespec *ts, int *timedout)
 	return;
     }
     VOL_LOCK_DBG_CV_WAIT_BEGIN;
-    code = CV_TIMEDWAIT(cv, &vol_glock_mutex, ts);
+    code = opr_cv_timedwait(cv, &vol_glock_mutex, ts);
     VOL_LOCK_DBG_CV_WAIT_END;
     if (code == ETIMEDOUT) {
 	code = 0;
@@ -547,7 +547,7 @@ VChangeState_r(Volume * vp, VolState new_state)
     VStats.state_levels[new_state]++;
 
     V_attachState(vp) = new_state;
-    CV_BROADCAST(&V_attachCV(vp));
+    opr_cv_broadcast(&V_attachCV(vp));
     return old_state;
 }
 

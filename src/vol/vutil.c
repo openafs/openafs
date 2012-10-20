@@ -27,6 +27,12 @@
 #include <sys/lockf.h>
 #endif
 
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
+
 #include <afs/opr.h>
 #include <rx/rx_queue.h>
 #include <rx/xdr.h>
@@ -891,7 +897,7 @@ VLockFileInit(struct VLockFile *lf, const char *path)
     memset(lf, 0, sizeof(*lf));
     lf->path = strdup(path);
     lf->fd = INVALID_FD;
-    MUTEX_INIT(&lf->mutex, "vlockfile", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&lf->mutex);
 }
 
 #ifdef AFS_NT40_ENV
@@ -1092,7 +1098,7 @@ _VUnlockFd(FD_t fd, afs_uint32 offset)
 void
 VLockFileReinit(struct VLockFile *lf)
 {
-    MUTEX_ENTER(&lf->mutex);
+    opr_mutex_enter(&lf->mutex);
 
     if (lf->fd != INVALID_FD) {
 	_VCloseFd(lf->fd);
@@ -1101,7 +1107,7 @@ VLockFileReinit(struct VLockFile *lf)
 
     lf->refcount = 0;
 
-    MUTEX_EXIT(&lf->mutex);
+    opr_mutex_exit(&lf->mutex);
 }
 
 /**
@@ -1133,29 +1139,29 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 
     opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
-    MUTEX_ENTER(&lf->mutex);
+    opr_mutex_enter(&lf->mutex);
 
     if (lf->fd == INVALID_FD) {
 	lf->fd = _VOpenPath(lf->path);
 	if (lf->fd == INVALID_FD) {
-	    MUTEX_EXIT(&lf->mutex);
+	    opr_mutex_exit(&lf->mutex);
 	    return EIO;
 	}
     }
 
     lf->refcount++;
 
-    MUTEX_EXIT(&lf->mutex);
+    opr_mutex_exit(&lf->mutex);
 
     code = _VLockFd(lf->fd, offset, locktype, nonblock);
 
     if (code) {
-	MUTEX_ENTER(&lf->mutex);
+	opr_mutex_enter(&lf->mutex);
 	if (--lf->refcount < 1) {
 	    _VCloseFd(lf->fd);
 	    lf->fd = INVALID_FD;
 	}
-	MUTEX_EXIT(&lf->mutex);
+	opr_mutex_exit(&lf->mutex);
     }
 
     return code;
@@ -1164,7 +1170,7 @@ VLockFileLock(struct VLockFile *lf, afs_uint32 offset, int locktype, int nonbloc
 void
 VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 {
-    MUTEX_ENTER(&lf->mutex);
+    opr_mutex_enter(&lf->mutex);
 
     opr_Assert(lf->fd != INVALID_FD);
 
@@ -1175,7 +1181,7 @@ VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset)
 	_VUnlockFd(lf->fd, offset);
     }
 
-    MUTEX_EXIT(&lf->mutex);
+    opr_mutex_exit(&lf->mutex);
 }
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1192,8 +1198,8 @@ VDiskLockInit(struct VDiskLock *dl, struct VLockFile *lf, afs_uint32 offset)
     opr_Assert(lf);
     memset(dl, 0, sizeof(*dl));
     Lock_Init(&dl->rwlock);
-    MUTEX_INIT(&dl->mutex, "disklock", MUTEX_DEFAULT, 0);
-    CV_INIT(&dl->cv, "disklock cv", CV_DEFAULT, 0);
+    opr_mutex_init(&dl->mutex);
+    opr_cv_init(&dl->cv);
     dl->lockfile = lf;
     dl->offset = offset;
 }
@@ -1243,7 +1249,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	ObtainWriteLock(&dl->rwlock);
     }
 
-    MUTEX_ENTER(&dl->mutex);
+    opr_mutex_enter(&dl->mutex);
 
     if ((dl->flags & VDISKLOCK_ACQUIRING)) {
 	/* Some other thread is waiting to acquire an fs lock. If nonblock=1,
@@ -1254,7 +1260,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	    code = EBUSY;
 	} else {
 	    while ((dl->flags & VDISKLOCK_ACQUIRING)) {
-		CV_WAIT(&dl->cv, &dl->mutex);
+		opr_cv_wait(&dl->cv, &dl->mutex);
 	    }
 	}
     }
@@ -1271,9 +1277,9 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	    /* mark that we are waiting on the fs lock */
 	    dl->flags |= VDISKLOCK_ACQUIRING;
 
-	    MUTEX_EXIT(&dl->mutex);
+	    opr_mutex_exit(&dl->mutex);
 	    code = VLockFileLock(dl->lockfile, dl->offset, locktype, nonblock);
-	    MUTEX_ENTER(&dl->mutex);
+	    opr_mutex_enter(&dl->mutex);
 
 	    dl->flags &= ~VDISKLOCK_ACQUIRING;
 
@@ -1281,7 +1287,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 		dl->flags |= VDISKLOCK_ACQUIRED;
 	    }
 
-	    CV_BROADCAST(&dl->cv);
+	    opr_cv_broadcast(&dl->cv);
 	}
     }
 
@@ -1297,7 +1303,7 @@ VGetDiskLock(struct VDiskLock *dl, int locktype, int nonblock)
 	++dl->lockers;
     }
 
-    MUTEX_EXIT(&dl->mutex);
+    opr_mutex_exit(&dl->mutex);
 
     return code;
 }
@@ -1317,7 +1323,7 @@ VReleaseDiskLock(struct VDiskLock *dl, int locktype)
 {
     opr_Assert(locktype == READ_LOCK || locktype == WRITE_LOCK);
 
-    MUTEX_ENTER(&dl->mutex);
+    opr_mutex_enter(&dl->mutex);
     opr_Assert(dl->lockers > 0);
 
     if (--dl->lockers < 1) {
@@ -1327,7 +1333,7 @@ VReleaseDiskLock(struct VDiskLock *dl, int locktype)
 	dl->flags &= ~VDISKLOCK_ACQUIRED;
     }
 
-    MUTEX_EXIT(&dl->mutex);
+    opr_mutex_exit(&dl->mutex);
 
     if (locktype == READ_LOCK) {
 	ReleaseReadLock(&dl->rwlock);

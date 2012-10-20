@@ -69,8 +69,8 @@ struct ubik_client {
 };
 
 #ifdef AFS_PTHREAD_ENV
-#define LOCK_UBIK_CLIENT(client) MUTEX_ENTER(&client->cm)
-#define UNLOCK_UBIK_CLIENT(client) MUTEX_EXIT(&client->cm)
+#define LOCK_UBIK_CLIENT(client) opr_mutex_enter(&client->cm)
+#define UNLOCK_UBIK_CLIENT(client) opr_mutex_exit(&client->cm)
 #else
 #define LOCK_UBIK_CLIENT(client)
 #define UNLOCK_UBIK_CLIENT(client)
@@ -304,8 +304,8 @@ struct ubik_server {
 
 /*! \name hold and release functions on a database */
 #ifdef AFS_PTHREAD_ENV
-# define	DBHOLD(a)	MUTEX_ENTER(&((a)->versionLock))
-# define	DBRELE(a)	MUTEX_EXIT(&((a)->versionLock))
+# define	DBHOLD(a)	opr_mutex_enter(&((a)->versionLock))
+# define	DBRELE(a)	opr_mutex_exit(&((a)->versionLock))
 #else /* !AFS_PTHREAD_ENV */
 # define	DBHOLD(a)	ObtainWriteLock(&((a)->versionLock))
 # define	DBRELE(a)	ReleaseWriteLock(&((a)->versionLock))
@@ -374,8 +374,8 @@ struct beacon_data {
     afs_int32 syncSiteUntil;		/*!< valid only if amSyncSite */
 };
 
-#define UBIK_BEACON_LOCK MUTEX_ENTER(&beacon_globals.beacon_lock)
-#define UBIK_BEACON_UNLOCK MUTEX_EXIT(&beacon_globals.beacon_lock)
+#define UBIK_BEACON_LOCK opr_mutex_enter(&beacon_globals.beacon_lock)
+#define UBIK_BEACON_UNLOCK opr_mutex_exit(&beacon_globals.beacon_lock)
 
 /*!
  * \brief Global vote data.  All values are protected by vote_lock
@@ -399,8 +399,8 @@ struct vote_data {
     afs_int32 syncHost;
 };
 
-#define UBIK_VOTE_LOCK MUTEX_ENTER(&vote_globals.vote_lock)
-#define UBIK_VOTE_UNLOCK MUTEX_EXIT(&vote_globals.vote_lock)
+#define UBIK_VOTE_LOCK opr_mutex_enter(&vote_globals.vote_lock)
+#define UBIK_VOTE_UNLOCK opr_mutex_exit(&vote_globals.vote_lock)
 
 /*!
  * \brief Server address data.  All values are protected by addr_lock
@@ -417,8 +417,8 @@ struct addr_data {
     struct rx_securityClass *ubikSecClass;
 };
 
-#define UBIK_ADDR_LOCK MUTEX_ENTER(&addr_globals.addr_lock)
-#define UBIK_ADDR_UNLOCK MUTEX_EXIT(&addr_globals.addr_lock)
+#define UBIK_ADDR_LOCK opr_mutex_enter(&addr_globals.addr_lock)
+#define UBIK_ADDR_UNLOCK opr_mutex_exit(&addr_globals.addr_lock)
 
 /*!
  * \brief The version lock protects the structure member, as well as
@@ -431,8 +431,8 @@ struct version_data {
     afs_int32 ubik_epochTime;	/* time when this site started */
 };
 
-#define UBIK_VERSION_LOCK MUTEX_ENTER(&version_globals.version_lock)
-#define UBIK_VERSION_UNLOCK MUTEX_EXIT(&version_globals.version_lock)
+#define UBIK_VERSION_LOCK opr_mutex_enter(&version_globals.version_lock)
+#define UBIK_VERSION_UNLOCK opr_mutex_exit(&version_globals.version_lock)
 
 /* phys.c */
 extern int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid,

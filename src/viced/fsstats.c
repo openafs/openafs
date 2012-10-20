@@ -16,6 +16,7 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#include <opr/lock.h>
 #include <afs/afsint.h>
 #include <afs/ihandle.h>
 #include <afs/nfs.h>

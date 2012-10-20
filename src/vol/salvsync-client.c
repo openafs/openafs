@@ -20,12 +20,12 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#include <opr/lock.h>
 #include <afs/afsint.h>
 #include <rx/rx_queue.h>
 #include "nfs.h"
 #include <afs/errors.h>
 #include "salvsync.h"
-#include "lwp.h"
 #include "lock.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"

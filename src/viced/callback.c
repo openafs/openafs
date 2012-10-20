@@ -92,16 +92,13 @@
 #endif
 
 #include <afs/opr.h>
+#include <opr/lock.h>
 #include <afs/nfs.h>		/* yuck.  This is an abomination. */
-#include <lwp.h>
 #include <rx/rx.h>
 #include <rx/rx_queue.h>
 #include <afs/afscbint.h>
 #include <afs/afsutil.h>
-#include <lock.h>
 #include <afs/ihandle.h>
-#include <afs/vnode.h>
-#include <afs/volume.h>
 #include "viced_prototypes.h"
 #include "viced.h"
 
@@ -1230,7 +1227,7 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
 
     ViceLog(25, ("Fsync thread wakeup\n"));
     FSYNC_LOCK;
-    CV_BROADCAST(&fsync_cond);
+    opr_cv_broadcast(&fsync_cond);
     FSYNC_UNLOCK;
     return 0;
 }

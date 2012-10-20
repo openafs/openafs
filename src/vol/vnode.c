@@ -27,6 +27,9 @@
 #endif
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+#include <opr/lock.h>
+#endif
 #include "rx/rx_queue.h"
 #include <afs/afsint.h>
 #include "nfs.h"

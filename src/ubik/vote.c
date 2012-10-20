@@ -13,6 +13,11 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
 #include <lock.h>
 #include <rx/rx.h>
 #include <afs/afsutil.h>

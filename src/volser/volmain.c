@@ -12,13 +12,15 @@
 
 #include <roken.h>
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #include <WINNT/afsevent.h>
 #endif
 
-#include <rx/xdr.h>
 #include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include <afs/prs_fs.h>

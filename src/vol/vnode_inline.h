@@ -168,7 +168,7 @@ VnChangeState_r(Vnode * vnp, VnState new_state)
     VnState old_state = Vn_state(vnp);
 
     Vn_state(vnp) = new_state;
-    CV_BROADCAST(&Vn_stateCV(vnp));
+    opr_cv_broadcast(&Vn_stateCV(vnp));
     return old_state;
 }
 
@@ -359,7 +359,7 @@ VnEndRead_r(Vnode * vnp)
     opr_Assert(Vn_readers(vnp) > 0);
     Vn_readers(vnp)--;
     if (!Vn_readers(vnp)) {
-	CV_BROADCAST(&Vn_stateCV(vnp));
+	opr_cv_broadcast(&Vn_stateCV(vnp));
 	VnChangeState_r(vnp, VN_STATE_ONLINE);
     }
 }

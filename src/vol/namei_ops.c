@@ -31,6 +31,9 @@
 
 #include <afs/opr.h>
 #include <rx/rx_queue.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <lwp.h>
@@ -1453,8 +1456,8 @@ namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_foff_t * offset, int *index)
 #ifdef AFS_PTHREAD_ENV
 /* XXX do static initializers work for WINNT/pthread? */
 pthread_mutex_t _namei_glc_lock = PTHREAD_MUTEX_INITIALIZER;
-#define NAMEI_GLC_LOCK MUTEX_ENTER(&_namei_glc_lock)
-#define NAMEI_GLC_UNLOCK MUTEX_EXIT(&_namei_glc_lock)
+#define NAMEI_GLC_LOCK opr_mutex_enter(&_namei_glc_lock)
+#define NAMEI_GLC_UNLOCK opr_mutex_exit(&_namei_glc_lock)
 #else /* !AFS_PTHREAD_ENV */
 #define NAMEI_GLC_LOCK
 #define NAMEI_GLC_UNLOCK

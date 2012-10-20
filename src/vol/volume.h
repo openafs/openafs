@@ -74,7 +74,7 @@ extern int vol_attach_threads;
 extern pthread_t vol_glock_holder;
 #define VOL_LOCK \
     do { \
-	MUTEX_ENTER(&vol_glock_mutex); \
+	opr_mutex_enter(&vol_glock_mutex); \
 	VOL_LOCK_ASSERT_UNHELD; \
 	_VOL_LOCK_SET_HELD; \
     } while (0)
@@ -82,24 +82,24 @@ extern pthread_t vol_glock_holder;
     do { \
         VOL_LOCK_ASSERT_HELD; \
 	_VOL_LOCK_SET_UNHELD; \
-	MUTEX_EXIT(&vol_glock_mutex); \
+	opr_mutex_exit(&vol_glock_mutex); \
     } while (0)
 #define VOL_CV_WAIT(cv) \
     do { \
         VOL_LOCK_DBG_CV_WAIT_BEGIN; \
-	CV_WAIT((cv), &vol_glock_mutex); \
+	opr_cv_wait((cv), &vol_glock_mutex); \
         VOL_LOCK_DBG_CV_WAIT_END; \
     } while (0)
 #else /* !VOL_LOCK_DEBUG */
-#define VOL_LOCK MUTEX_ENTER(&vol_glock_mutex)
-#define VOL_UNLOCK MUTEX_EXIT(&vol_glock_mutex)
-#define VOL_CV_WAIT(cv) CV_WAIT((cv), &vol_glock_mutex)
+#define VOL_LOCK opr_mutex_enter(&vol_glock_mutex)
+#define VOL_UNLOCK opr_mutex_exit(&vol_glock_mutex)
+#define VOL_CV_WAIT(cv) opr_cv_wait((cv), &vol_glock_mutex)
 #endif /* !VOL_LOCK_DEBUG */
 
-#define VSALVSYNC_LOCK MUTEX_ENTER(&vol_salvsync_mutex)
-#define VSALVSYNC_UNLOCK MUTEX_EXIT(&vol_salvsync_mutex)
-#define VTRANS_LOCK MUTEX_ENTER(&vol_trans_mutex)
-#define VTRANS_UNLOCK MUTEX_EXIT(&vol_trans_mutex)
+#define VSALVSYNC_LOCK opr_mutex_enter(&vol_salvsync_mutex)
+#define VSALVSYNC_UNLOCK opr_mutex_exit(&vol_salvsync_mutex)
+#define VTRANS_LOCK opr_mutex_enter(&vol_trans_mutex)
+#define VTRANS_UNLOCK opr_mutex_exit(&vol_trans_mutex)
 #else /* AFS_PTHREAD_ENV */
 #define VOL_LOCK
 #define VOL_UNLOCK

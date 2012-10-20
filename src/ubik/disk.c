@@ -13,7 +13,11 @@
 #include <roken.h>
 #include <afs/opr.h>
 
-#include <lock.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -896,7 +900,7 @@ udisk_commit(struct ubik_trans *atrans)
 	UBIK_VERSION_LOCK;
 	dbase->version.counter++;	/* bump commit count */
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&dbase->version_cond);
+	opr_cv_broadcast(&dbase->version_cond);
 #else
 	LWP_NoYieldSignal(&dbase->version);
 #endif
@@ -1010,7 +1014,7 @@ udisk_end(struct ubik_trans *atrans)
 
     /* Wakeup any writers waiting in BeginTrans() */
 #ifdef AFS_PTHREAD_ENV
-    CV_BROADCAST(&dbase->flags_cond);
+    opr_cv_broadcast(&dbase->flags_cond);
 #else
     LWP_NoYieldSignal(&dbase->flags);
 #endif

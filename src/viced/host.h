@@ -24,8 +24,8 @@
 #include <rx/rx_globals.h>
 #include <pthread.h>
 extern pthread_mutex_t host_glock_mutex;
-#define H_LOCK MUTEX_ENTER(&host_glock_mutex);
-#define H_UNLOCK MUTEX_EXIT(&host_glock_mutex);
+#define H_LOCK opr_mutex_enter(&host_glock_mutex);
+#define H_UNLOCK opr_mutex_exit(&host_glock_mutex);
 extern pthread_key_t viced_uclient_key;
 
 #define h_MAXHOSTTABLEENTRIES 1000

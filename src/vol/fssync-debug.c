@@ -25,6 +25,7 @@
 #endif
 
 #include <afs/opr.h>
+#include <opr/lock.h>
 #include <afs/afsint.h>
 
 #ifndef AFS_NT40_ENV
@@ -38,7 +39,6 @@
 #include <rx/rx_queue.h>
 
 #include "nfs.h"
-#include "lwp.h"
 #include "lock.h"
 #include "ihandle.h"
 #include "vnode.h"

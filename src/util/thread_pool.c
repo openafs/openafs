@@ -139,24 +139,24 @@ _afs_tp_worker_run(void * rock)
     struct afs_thread_pool * pool = worker->pool;
 
     /* register worker with pool */
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     queue_Append(&pool->thread_list, worker);
     pool->nthreads++;
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     /* call high-level entry point */
     worker->ret = (*pool->entry)(pool, worker, pool->work_queue, pool->rock);
 
     /* adjust pool live thread count */
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     opr_Assert(pool->nthreads);
     queue_Remove(worker);
     pool->nthreads--;
     if (!pool->nthreads) {
-	CV_BROADCAST(&pool->shutdown_cv);
+	opr_cv_broadcast(&pool->shutdown_cv);
 	pool->state = AFS_TP_STATE_STOPPED;
     }
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     _afs_tp_worker_free(worker);
 
@@ -241,8 +241,8 @@ afs_tp_create(struct afs_thread_pool ** pool_out,
     }
     pool = *pool_out;
 
-    MUTEX_INIT(&pool->lock, "pool", MUTEX_DEFAULT, 0);
-    CV_INIT(&pool->shutdown_cv, "pool shutdown", CV_DEFAULT, 0);
+    opr_mutex_init(&pool->lock);
+    opr_cv_init(&pool->shutdown_cv);
     queue_Init(&pool->thread_list);
     pool->work_queue = queue;
     pool->entry = &_afs_tp_worker_default;
@@ -269,7 +269,7 @@ afs_tp_destroy(struct afs_thread_pool * pool)
 {
     int ret = 0;
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     switch (pool->state) {
     case AFS_TP_STATE_INIT:
     case AFS_TP_STATE_STOPPED:
@@ -278,7 +278,7 @@ afs_tp_destroy(struct afs_thread_pool * pool)
 
     default:
 	ret = AFS_TP_ERROR;
-	MUTEX_EXIT(&pool->lock);
+	opr_mutex_exit(&pool->lock);
     }
 
     return ret;
@@ -300,13 +300,13 @@ afs_tp_set_threads(struct afs_thread_pool *pool,
 {
     int ret = 0;
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     if (pool->state != AFS_TP_STATE_INIT) {
 	ret = AFS_TP_ERROR;
     } else {
 	pool->max_threads = threads;
     }
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     return ret;
 }
@@ -329,14 +329,14 @@ afs_tp_set_entry(struct afs_thread_pool * pool,
 {
     int ret = 0;
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     if (pool->state != AFS_TP_STATE_INIT) {
 	ret = AFS_TP_ERROR;
     } else {
 	pool->entry = entry;
 	pool->rock = rock;
     }
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     return ret;
 }
@@ -357,13 +357,13 @@ afs_tp_start(struct afs_thread_pool * pool)
     struct afs_thread_pool_worker * worker;
     afs_uint32 i;
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     if (pool->state != AFS_TP_STATE_INIT) {
 	ret = AFS_TP_ERROR;
 	goto done_sync;
     }
     pool->state = AFS_TP_STATE_STARTING;
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     for (i = 0; i < pool->max_threads; i++) {
 	code = _afs_tp_worker_start(pool, &worker);
@@ -372,10 +372,10 @@ afs_tp_start(struct afs_thread_pool * pool)
 	}
     }
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     pool->state = AFS_TP_STATE_RUNNING;
  done_sync:
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     return ret;
 }
@@ -396,7 +396,7 @@ afs_tp_shutdown(struct afs_thread_pool * pool,
     int ret = 0;
     struct afs_thread_pool_worker * worker, *nn;
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     if (pool->state == AFS_TP_STATE_STOPPED
         || pool->state == AFS_TP_STATE_STOPPING) {
 	goto done_stopped;
@@ -414,22 +414,22 @@ afs_tp_shutdown(struct afs_thread_pool * pool,
 	pool->state = AFS_TP_STATE_STOPPED;
     }
     /* need to drop lock to get a membar here */
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     ret = afs_wq_shutdown(pool->work_queue);
     if (ret) {
 	goto error;
     }
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
  done_stopped:
     if (block) {
 	while (pool->nthreads) {
-	    CV_WAIT(&pool->shutdown_cv, &pool->lock);
+	    opr_cv_wait(&pool->shutdown_cv, &pool->lock);
 	}
     }
  done_sync:
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
  error:
     return ret;
@@ -449,9 +449,9 @@ afs_tp_is_online(struct afs_thread_pool * pool)
 {
     int ret;
 
-    MUTEX_ENTER(&pool->lock);
+    opr_mutex_enter(&pool->lock);
     ret = (pool->state == AFS_TP_STATE_RUNNING);
-    MUTEX_EXIT(&pool->lock);
+    opr_mutex_exit(&pool->lock);
 
     return ret;
 }

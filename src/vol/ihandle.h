@@ -77,9 +77,9 @@ extern pthread_mutex_t ih_glock_mutex;
 extern void ih_glock_init(void);
 #define IH_LOCK \
     do { opr_Verify(pthread_once(&ih_glock_once, ih_glock_init) == 0);	\
-	MUTEX_ENTER(&ih_glock_mutex); \
+	opr_mutex_enter(&ih_glock_mutex); \
     } while (0)
-#define IH_UNLOCK MUTEX_EXIT(&ih_glock_mutex)
+#define IH_UNLOCK opr_mutex_exit(&ih_glock_mutex)
 #else /* AFS_PTHREAD_ENV */
 #define IH_LOCK
 #define IH_UNLOCK

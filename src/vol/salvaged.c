@@ -33,6 +33,7 @@
 #endif
 
 #include <afs/opr.h>
+#include <opr/lock.h>
 #include <afs/afsint.h>
 #include <rx/rx_queue.h>
 
@@ -516,9 +517,9 @@ SalvageServer(int argc, char **argv)
     DInit(10);
     queue_Init(&pending_q);
     queue_Init(&log_cleanup_queue);
-    MUTEX_INIT(&worker_lock, "worker", MUTEX_DEFAULT, 0);
-    CV_INIT(&worker_cv, "worker", CV_DEFAULT, 0);
-    CV_INIT(&log_cleanup_queue.queue_change_cv, "queuechange", CV_DEFAULT, 0);
+    opr_mutex_init(&worker_lock);
+    opr_cv_init(&worker_cv);
+    opr_cv_init(&log_cleanup_queue.queue_change_cv);
     opr_Verify(pthread_attr_init(&attrs) == 0);
 
     /* start up the reaper and log cleaner threads */
@@ -562,17 +563,17 @@ SalvageServer(int argc, char **argv)
 	    node->pid = pid;
 	    VOL_UNLOCK;
 
-	    MUTEX_ENTER(&worker_lock);
+	    opr_mutex_enter(&worker_lock);
 	    current_workers++;
 
 	    /* let the reaper thread know another worker was spawned */
-	    CV_BROADCAST(&worker_cv);
+	    opr_cv_broadcast(&worker_cv);
 
 	    /* if we're overquota, wait for the reaper */
 	    while (current_workers >= Parallel) {
-		CV_WAIT(&worker_cv, &worker_lock);
+		opr_cv_wait(&worker_cv, &worker_lock);
 	    }
-	    MUTEX_EXIT(&worker_lock);
+	    opr_mutex_exit(&worker_lock);
 	}
     }
 }
@@ -630,17 +631,17 @@ SalvageChildReaperThread(void * args)
     int slot, pid, status;
     struct log_cleanup_node * cleanup;
 
-    MUTEX_ENTER(&worker_lock);
+    opr_mutex_enter(&worker_lock);
 
     /* loop reaping our children */
     while (1) {
 	/* wait() won't block unless we have children, so
 	 * block on the cond var if we're childless */
 	while (current_workers == 0) {
-	    CV_WAIT(&worker_cv, &worker_lock);
+	    opr_cv_wait(&worker_cv, &worker_lock);
 	}
 
-	MUTEX_EXIT(&worker_lock);
+	opr_mutex_exit(&worker_lock);
 
 	cleanup = malloc(sizeof(struct log_cleanup_node));
 
@@ -660,17 +661,17 @@ SalvageChildReaperThread(void * args)
 
 	SALVSYNC_doneWorkByPid(pid, status);
 
-	MUTEX_ENTER(&worker_lock);
+	opr_mutex_enter(&worker_lock);
 
 	if (cleanup) {
 	    cleanup->pid = pid;
 	    queue_Append(&log_cleanup_queue, cleanup);
-	    CV_SIGNAL(&log_cleanup_queue.queue_change_cv);
+	    opr_cv_signal(&log_cleanup_queue.queue_change_cv);
 	}
 
 	/* ok, we've reaped a child */
 	current_workers--;
-	CV_BROADCAST(&worker_cv);
+	opr_cv_broadcast(&worker_cv);
     }
 
     return NULL;
@@ -705,24 +706,24 @@ SalvageLogCleanupThread(void * arg)
 {
     struct log_cleanup_node * cleanup;
 
-    MUTEX_ENTER(&worker_lock);
+    opr_mutex_enter(&worker_lock);
 
     while (1) {
 	while (queue_IsEmpty(&log_cleanup_queue)) {
-	    CV_WAIT(&log_cleanup_queue.queue_change_cv, &worker_lock);
+	    opr_cv_wait(&log_cleanup_queue.queue_change_cv, &worker_lock);
 	}
 
 	while (queue_IsNotEmpty(&log_cleanup_queue)) {
 	    cleanup = queue_First(&log_cleanup_queue, log_cleanup_node);
 	    queue_Remove(cleanup);
-	    MUTEX_EXIT(&worker_lock);
+	    opr_mutex_exit(&worker_lock);
 	    SalvageLogCleanup(cleanup->pid);
 	    free(cleanup);
-	    MUTEX_ENTER(&worker_lock);
+	    opr_mutex_enter(&worker_lock);
 	}
     }
 
-    MUTEX_EXIT(&worker_lock);
+    opr_mutex_exit(&worker_lock);
     return NULL;
 }
 
@@ -849,7 +850,7 @@ ScanLogs(struct rx_queue *log_watch_queue)
 {
     struct log_cleanup_node *cleanup, *next;
 
-    MUTEX_ENTER(&worker_lock);
+    opr_mutex_enter(&worker_lock);
 
     for (queue_Scan(log_watch_queue, cleanup, next, log_cleanup_node)) {
 	/* if a process is still running, assume it's the salvage process
@@ -857,9 +858,9 @@ ScanLogs(struct rx_queue *log_watch_queue)
 	if (kill(cleanup->pid, 0) < 0 && errno == ESRCH) {
 	    queue_Remove(cleanup);
 	    queue_Append(&log_cleanup_queue, cleanup);
-	    CV_SIGNAL(&log_cleanup_queue.queue_change_cv);
+	    opr_cv_signal(&log_cleanup_queue.queue_change_cv);
 	}
     }
 
-    MUTEX_EXIT(&worker_lock);
+    opr_mutex_exit(&worker_lock);
 }

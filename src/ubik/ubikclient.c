@@ -13,6 +13,9 @@
 
 #include <roken.h>
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wstrict-prototypes"

@@ -12,10 +12,9 @@
 
 #include <roken.h>
 #include <afs/opr.h>
+#include <opr/lock.h>
 
 #include <sys/file.h>
-
-#include <lock.h>
 
 #define __AFS_WORK_QUEUE_IMPL 1
 #include "work_queue.h"
@@ -97,7 +96,7 @@ _afs_wq_node_state_change(struct afs_work_queue_node * node,
     old_state = node->state;
     node->state = new_state;
 
-    CV_BROADCAST(&node->state_cv);
+    opr_cv_broadcast(&node->state_cv);
 
     return old_state;
 }
@@ -118,7 +117,7 @@ static int
 _afs_wq_node_state_wait_busy(struct afs_work_queue_node * node)
 {
     while (node->state == AFS_WQ_NODE_STATE_BUSY) {
-	CV_WAIT(&node->state_cv, &node->lock);
+	opr_cv_wait(&node->state_cv, &node->lock);
     }
 
     return 0;
@@ -185,14 +184,14 @@ _afs_wq_node_multilock(struct afs_work_queue_node_multilock * ml)
 	    }
 	}
 
-	code = MUTEX_TRYENTER(&ml->nodes[1].node->lock);
+	code = opr_mutex_tryenter(&ml->nodes[1].node->lock);
 	if (code) {
 	    /* success */
 	    goto done;
 	}
 
 	/* setup for main loop */
-	MUTEX_EXIT(&ml->nodes[0].node->lock);
+	opr_mutex_exit(&ml->nodes[0].node->lock);
     }
 
     /*
@@ -204,16 +203,16 @@ _afs_wq_node_multilock(struct afs_work_queue_node_multilock * ml)
     delay.tv_nsec = 500 + rand() % 500;
 
     while (1) {
-	MUTEX_ENTER(&ml->nodes[first].node->lock);
+	opr_mutex_enter(&ml->nodes[first].node->lock);
 	if ((first != 0) || !ml->nodes[0].busy_held) {
 	    ret = _afs_wq_node_state_wait_busy(ml->nodes[first].node);
 	    if (ret) {
 		/* cleanup */
 		if (!ml->nodes[0].lock_held || first) {
-		    MUTEX_EXIT(&ml->nodes[first].node->lock);
+		    opr_mutex_exit(&ml->nodes[first].node->lock);
 		    if (ml->nodes[0].lock_held) {
 			/* on error, return with locks in same state as before call */
-			MUTEX_ENTER(&ml->nodes[0].node->lock);
+			opr_mutex_enter(&ml->nodes[0].node->lock);
 		    }
 		}
 		goto error;
@@ -225,14 +224,14 @@ _afs_wq_node_multilock(struct afs_work_queue_node_multilock * ml)
 	 * a non-blocking state check.  if we meet any contention,
 	 * we must drop back and start again.
 	 */
-	code = MUTEX_TRYENTER(&ml->nodes[second].node->lock);
+	code = opr_mutex_tryenter(&ml->nodes[second].node->lock);
 	if (code) {
 	    if (((second == 0) && (ml->nodes[0].busy_held)) ||
 		!_afs_wq_node_state_is_busy(ml->nodes[second].node)) {
 		/* success */
 		break;
 	    } else {
-		MUTEX_EXIT(&ml->nodes[second].node->lock);
+		opr_mutex_exit(&ml->nodes[second].node->lock);
 	    }
 	}
 
@@ -242,7 +241,7 @@ _afs_wq_node_multilock(struct afs_work_queue_node_multilock * ml)
 	 * drop locks, use exponential backoff,
 	 * try acquiring in the opposite order
 	 */
-	MUTEX_EXIT(&ml->nodes[first].node->lock);
+	opr_mutex_exit(&ml->nodes[first].node->lock);
 	nanosleep(&delay, NULL);
 	if (delay.tv_nsec <= 65536000) { /* max backoff delay of ~131ms */
 	    delay.tv_nsec <<= 1;
@@ -273,8 +272,8 @@ _afs_wq_node_list_init(struct afs_work_queue_node_list * list,
 		       afs_wq_node_list_id_t id)
 {
     queue_Init(&list->list);
-    MUTEX_INIT(&list->lock, "list", MUTEX_DEFAULT, 0);
-    CV_INIT(&list->cv, "list", CV_DEFAULT, 0);
+    opr_mutex_init(&list->lock);
+    opr_cv_init(&list->cv);
     list->qidx = id;
     list->shutdown = 0;
 
@@ -302,8 +301,8 @@ _afs_wq_node_list_destroy(struct afs_work_queue_node_list * list)
 	goto error;
     }
 
-    MUTEX_DESTROY(&list->lock);
-    CV_DESTROY(&list->cv);
+    opr_mutex_destroy(&list->lock);
+    opr_cv_destroy(&list->cv);
 
  error:
     return ret;
@@ -325,7 +324,7 @@ _afs_wq_node_list_shutdown(struct afs_work_queue_node_list * list)
     int ret = 0;
     struct afs_work_queue_node *node, *nnode;
 
-    MUTEX_ENTER(&list->lock);
+    opr_mutex_enter(&list->lock);
     list->shutdown = 1;
 
     for (queue_Scan(&list->list, node, nnode, afs_work_queue_node)) {
@@ -343,8 +342,8 @@ _afs_wq_node_list_shutdown(struct afs_work_queue_node_list * list)
 	}
     }
 
-    CV_BROADCAST(&list->cv);
-    MUTEX_EXIT(&list->lock);
+    opr_cv_broadcast(&list->cv);
+    opr_mutex_exit(&list->lock);
 
     return ret;
 }
@@ -385,13 +384,13 @@ _afs_wq_node_list_enqueue(struct afs_work_queue_node_list * list,
     }
 
     /* deal with lock inversion */
-    code = MUTEX_TRYENTER(&list->lock);
+    code = opr_mutex_tryenter(&list->lock);
     if (!code) {
 	/* contended */
 	_afs_wq_node_state_change(node, AFS_WQ_NODE_STATE_BUSY);
-	MUTEX_EXIT(&node->lock);
-	MUTEX_ENTER(&list->lock);
-	MUTEX_ENTER(&node->lock);
+	opr_mutex_exit(&node->lock);
+	opr_mutex_enter(&list->lock);
+	opr_mutex_enter(&node->lock);
 
 	/* assert state of the world (we set busy, so this should never happen) */
 	opr_Assert(queue_IsNotOnQueue(node));
@@ -405,15 +404,15 @@ _afs_wq_node_list_enqueue(struct afs_work_queue_node_list * list,
     opr_Assert(node->qidx == AFS_WQ_NODE_LIST_NONE);
     if (queue_IsEmpty(&list->list)) {
 	/* wakeup a dequeue thread */
-	CV_SIGNAL(&list->cv);
+	opr_cv_signal(&list->cv);
     }
     queue_Append(&list->list, node);
     node->qidx = list->qidx;
     _afs_wq_node_state_change(node, state);
 
  error_unlock:
-    MUTEX_EXIT(&node->lock);
-    MUTEX_EXIT(&list->lock);
+    opr_mutex_exit(&node->lock);
+    opr_mutex_exit(&list->lock);
 
  error:
     return ret;
@@ -445,7 +444,7 @@ _afs_wq_node_list_dequeue(struct afs_work_queue_node_list * list,
     int ret = 0;
     struct afs_work_queue_node * node;
 
-    MUTEX_ENTER(&list->lock);
+    opr_mutex_enter(&list->lock);
 
     if (list->shutdown) {
 	*node_out = NULL;
@@ -465,18 +464,18 @@ _afs_wq_node_list_dequeue(struct afs_work_queue_node_list * list,
 	    ret = EINTR;
 	    goto done_sync;
 	}
-	CV_WAIT(&list->cv, &list->lock);
+	opr_cv_wait(&list->cv, &list->lock);
     }
 
     *node_out = node = queue_First(&list->list, afs_work_queue_node);
 
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     queue_Remove(node);
     node->qidx = AFS_WQ_NODE_LIST_NONE;
     _afs_wq_node_state_change(node, state);
 
  done_sync:
-    MUTEX_EXIT(&list->lock);
+    opr_mutex_exit(&list->lock);
 
     return ret;
 }
@@ -533,14 +532,14 @@ _afs_wq_node_list_remove(struct afs_work_queue_node * node,
     }
 
     if (list) {
-	code = MUTEX_TRYENTER(&list->lock);
+	code = opr_mutex_tryenter(&list->lock);
 	if (!code) {
 	    /* contended */
 	    _afs_wq_node_state_change(node,
 					   AFS_WQ_NODE_STATE_BUSY);
-	    MUTEX_EXIT(&node->lock);
-	    MUTEX_ENTER(&list->lock);
-	    MUTEX_ENTER(&node->lock);
+	    opr_mutex_exit(&node->lock);
+	    opr_mutex_enter(&list->lock);
+	    opr_mutex_enter(&node->lock);
 
 	    if (node->qidx == AFS_WQ_NODE_LIST_NONE) {
 		/* raced */
@@ -554,7 +553,7 @@ _afs_wq_node_list_remove(struct afs_work_queue_node * node,
 	_afs_wq_node_state_change(node, next_state);
 
     done_sync:
-	MUTEX_EXIT(&list->lock);
+	opr_mutex_exit(&list->lock);
     }
 
  error:
@@ -692,7 +691,7 @@ _afs_wq_node_free_deps(struct afs_work_queue_node *parent)
 		    nd,
 		    afs_work_queue_dep_node)) {
 
-	MUTEX_ENTER(&dep->child->lock);
+	opr_mutex_enter(&dep->child->lock);
 	node_unlock = dep->child;
 
 	/* We need to get a ref on child here, since _afs_wq_dep_unlink_r may
@@ -711,7 +710,7 @@ _afs_wq_node_free_deps(struct afs_work_queue_node *parent)
 	if (node_put) {
 	    _afs_wq_node_put_r(node_put, 1);
 	} else if (node_unlock) {
-	    MUTEX_EXIT(&node_unlock->lock);
+	    opr_mutex_exit(&node_unlock->lock);
 	}
 	node_put = node_unlock = NULL;
 
@@ -795,7 +794,7 @@ _afs_wq_dep_propagate(struct afs_work_queue_node * parent,
 
 	/* skip unscheduled nodes */
 	if (dep->child->queue == NULL) {
-	    MUTEX_EXIT(&dep->child->lock);
+	    opr_mutex_exit(&dep->child->lock);
 	    continue;
 	}
 
@@ -822,7 +821,7 @@ _afs_wq_dep_propagate(struct afs_work_queue_node * parent,
 	    ret = _afs_wq_node_list_remove(dep->child,
 						AFS_WQ_NODE_STATE_BUSY);
 	    if (ret) {
-		MUTEX_EXIT(&dep->child->lock);
+		opr_mutex_exit(&dep->child->lock);
 		goto error;
 	    }
 
@@ -830,11 +829,11 @@ _afs_wq_dep_propagate(struct afs_work_queue_node * parent,
 						 dep->child,
 						 cns);
 	    if (ret) {
-		MUTEX_EXIT(&dep->child->lock);
+		opr_mutex_exit(&dep->child->lock);
 		goto error;
 	    }
 	}
-	MUTEX_EXIT(&dep->child->lock);
+	opr_mutex_exit(&dep->child->lock);
     }
 
  error:
@@ -851,14 +850,14 @@ _afs_wq_dep_propagate(struct afs_work_queue_node * parent,
 static void
 _afs_wq_dec_running_count(struct afs_work_queue *queue)
 {
-    MUTEX_ENTER(&queue->lock);
+    opr_mutex_enter(&queue->lock);
     queue->running_count--;
     if (queue->shutdown && queue->running_count == 0) {
 	/* if we've shut down, someone may be waiting for the running count
 	 * to drop to 0 */
-	CV_BROADCAST(&queue->running_cv);
+	opr_cv_broadcast(&queue->running_cv);
     }
-    MUTEX_EXIT(&queue->lock);
+    opr_mutex_exit(&queue->lock);
 }
 
 /**
@@ -893,13 +892,13 @@ _afs_wq_do(struct afs_work_queue * queue,
      * _afs_wq_node_list_dequeue should return immediately with EINTR,
      * in which case we'll dec running_count, so it's as if we never inc'd it
      * in the first place. */
-    MUTEX_ENTER(&queue->lock);
+    opr_mutex_enter(&queue->lock);
     if (queue->shutdown) {
-	MUTEX_EXIT(&queue->lock);
+	opr_mutex_exit(&queue->lock);
 	return EINTR;
     }
     queue->running_count++;
-    MUTEX_EXIT(&queue->lock);
+    opr_mutex_exit(&queue->lock);
 
     ret = _afs_wq_node_list_dequeue(&queue->ready_list,
 					 &node,
@@ -915,9 +914,9 @@ _afs_wq_do(struct afs_work_queue * queue,
     detached = node->detached;
 
     if (cbf != NULL) {
-	MUTEX_EXIT(&node->lock);
+	opr_mutex_exit(&node->lock);
 	code = (*cbf)(queue, node, queue->rock, node_rock, rock);
-	MUTEX_ENTER(&node->lock);
+	opr_mutex_enter(&node->lock);
 	if (code == 0) {
 	    next_state = AFS_WQ_NODE_STATE_DONE;
 	    ql = &queue->done_list;
@@ -949,23 +948,23 @@ _afs_wq_do(struct afs_work_queue * queue,
     if ((next_state == AFS_WQ_NODE_STATE_DONE) ||
         (next_state == AFS_WQ_NODE_STATE_ERROR)) {
 
-	MUTEX_ENTER(&queue->lock);
+	opr_mutex_enter(&queue->lock);
 
 	if (queue->drain && queue->pend_count == queue->opts.pend_lothresh) {
 	    /* signal other threads if we're about to below the low
 	     * pending-tasks threshold */
 	    queue->drain = 0;
-	    CV_SIGNAL(&queue->pend_cv);
+	    opr_cv_signal(&queue->pend_cv);
 	}
 
 	if (queue->pend_count == 1) {
 	    /* signal other threads if we're about to become 'empty' */
-	    CV_BROADCAST(&queue->empty_cv);
+	    opr_cv_broadcast(&queue->empty_cv);
 	}
 
 	queue->pend_count--;
 
-	MUTEX_EXIT(&queue->lock);
+	opr_mutex_exit(&queue->lock);
     }
 
     ret = _afs_wq_node_state_wait_busy(node);
@@ -1076,10 +1075,10 @@ afs_wq_create(struct afs_work_queue ** queue_out,
     queue->pend_count = 0;
     queue->running_count = 0;
 
-    MUTEX_INIT(&queue->lock, "queue", MUTEX_DEFAULT, 0);
-    CV_INIT(&queue->pend_cv, "queue pending", CV_DEFAULT, 0);
-    CV_INIT(&queue->empty_cv, "queue empty", CV_DEFAULT, 0);
-    CV_INIT(&queue->running_cv, "queue running", CV_DEFAULT, 0);
+    opr_mutex_init(&queue->lock);
+    opr_cv_init(&queue->pend_cv);
+    opr_cv_init(&queue->empty_cv);
+    opr_cv_init(&queue->running_cv);
 
  error:
     return ret;
@@ -1133,10 +1132,10 @@ afs_wq_shutdown(struct afs_work_queue * queue)
 {
     int ret = 0;
 
-    MUTEX_ENTER(&queue->lock);
+    opr_mutex_enter(&queue->lock);
     if (queue->shutdown) {
 	/* already shutdown, do nothing */
-	MUTEX_EXIT(&queue->lock);
+	opr_mutex_exit(&queue->lock);
 	goto error;
     }
     queue->shutdown = 1;
@@ -1159,9 +1158,9 @@ afs_wq_shutdown(struct afs_work_queue * queue)
     /* signal everyone that could be waiting, since these conditions will
      * generally fail to signal on their own if we're shutdown, since no
      * progress is being made */
-    CV_BROADCAST(&queue->pend_cv);
-    CV_BROADCAST(&queue->empty_cv);
-    MUTEX_EXIT(&queue->lock);
+    opr_cv_broadcast(&queue->pend_cv);
+    opr_cv_broadcast(&queue->empty_cv);
+    opr_mutex_exit(&queue->lock);
 
  error:
     return ret;
@@ -1195,8 +1194,8 @@ afs_wq_node_alloc(struct afs_work_queue_node ** node_out)
     node->refcount = 1;
     node->block_count = 0;
     node->error_count = 0;
-    MUTEX_INIT(&node->lock, "node", MUTEX_DEFAULT, 0);
-    CV_INIT(&node->state_cv, "node state", CV_DEFAULT, 0);
+    opr_mutex_init(&node->lock);
+    opr_cv_init(&node->state_cv);
     node->state = AFS_WQ_NODE_STATE_INIT;
     queue_Init(&node->dep_children);
 
@@ -1232,8 +1231,8 @@ _afs_wq_node_free(struct afs_work_queue_node * node)
 	goto error;
     }
 
-    MUTEX_DESTROY(&node->lock);
-    CV_DESTROY(&node->state_cv);
+    opr_mutex_destroy(&node->lock);
+    opr_cv_destory(&node->state_cv);
 
     if (node->rock_dtor) {
 	(*node->rock_dtor) (node->rock);
@@ -1256,9 +1255,9 @@ _afs_wq_node_free(struct afs_work_queue_node * node)
 int
 afs_wq_node_get(struct afs_work_queue_node * node)
 {
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     node->refcount++;
-    MUTEX_EXIT(&node->lock);
+    opr_mutex_exit(&node->lock);
 
     return 0;
 }
@@ -1287,7 +1286,7 @@ _afs_wq_node_put_r(struct afs_work_queue_node * node,
     opr_Assert(node->refcount > 0);
     refc = --node->refcount;
     if (drop) {
-	MUTEX_EXIT(&node->lock);
+	opr_mutex_exit(&node->lock);
     }
     if (!refc) {
 	opr_Assert(node->qidx == AFS_WQ_NODE_LIST_NONE);
@@ -1310,7 +1309,7 @@ _afs_wq_node_put_r(struct afs_work_queue_node * node,
 int
 afs_wq_node_put(struct afs_work_queue_node * node)
 {
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     return _afs_wq_node_put_r(node, 1);
 }
 
@@ -1330,11 +1329,11 @@ afs_wq_node_set_callback(struct afs_work_queue_node * node,
 			 afs_wq_callback_func_t * cbf,
 			 void * rock, afs_wq_callback_dtor_t *dtor)
 {
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     node->cbf = cbf;
     node->rock = rock;
     node->rock_dtor = dtor;
-    MUTEX_EXIT(&node->lock);
+    opr_mutex_exit(&node->lock);
 
     return 0;
 }
@@ -1350,9 +1349,9 @@ afs_wq_node_set_callback(struct afs_work_queue_node * node,
 int
 afs_wq_node_set_detached(struct afs_work_queue_node * node)
 {
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     node->detached = 1;
-    MUTEX_EXIT(&node->lock);
+    opr_mutex_exit(&node->lock);
 
     return 0;
 }
@@ -1478,8 +1477,8 @@ afs_wq_node_dep_add(struct afs_work_queue_node * child,
 
  done:
     if (held) {
-	MUTEX_EXIT(&child->lock);
-	MUTEX_EXIT(&parent->lock);
+	opr_mutex_exit(&child->lock);
+	opr_mutex_exit(&parent->lock);
     }
     return ret;
 
@@ -1552,8 +1551,8 @@ afs_wq_node_dep_del(struct afs_work_queue_node * child,
 
  error:
     if (held) {
-	MUTEX_EXIT(&child->lock);
-	MUTEX_EXIT(&parent->lock);
+	opr_mutex_exit(&child->lock);
+	opr_mutex_exit(&parent->lock);
     }
     return ret;
 }
@@ -1576,7 +1575,7 @@ afs_wq_node_block(struct afs_work_queue_node * node)
     int ret = 0;
     int start;
 
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     ret = _afs_wq_node_state_wait_busy(node);
     if (ret) {
 	goto error_sync;
@@ -1599,7 +1598,7 @@ afs_wq_node_block(struct afs_work_queue_node * node)
     }
 
  error_sync:
-    MUTEX_EXIT(&node->lock);
+    opr_mutex_exit(&node->lock);
 
     return ret;
 }
@@ -1622,7 +1621,7 @@ afs_wq_node_unblock(struct afs_work_queue_node * node)
     int ret = 0;
     int end;
 
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     ret = _afs_wq_node_state_wait_busy(node);
     if (ret) {
 	goto error_sync;
@@ -1645,7 +1644,7 @@ afs_wq_node_unblock(struct afs_work_queue_node * node)
     }
 
  error_sync:
-    MUTEX_EXIT(&node->lock);
+    opr_mutex_exit(&node->lock);
 
     return ret;
 }
@@ -1698,7 +1697,7 @@ afs_wq_add(struct afs_work_queue *queue,
     force = opts->force;
 
  retry:
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
 
     ret = _afs_wq_node_state_wait_busy(node);
     if (ret) {
@@ -1718,12 +1717,12 @@ afs_wq_add(struct afs_work_queue *queue,
 
     ret = 0;
 
-    MUTEX_ENTER(&queue->lock);
+    opr_mutex_enter(&queue->lock);
 
     if (queue->shutdown) {
 	ret = EINTR;
-	MUTEX_EXIT(&queue->lock);
-	MUTEX_EXIT(&node->lock);
+	opr_mutex_exit(&queue->lock);
+	opr_mutex_exit(&node->lock);
 	goto error;
     }
 
@@ -1737,13 +1736,13 @@ afs_wq_add(struct afs_work_queue *queue,
 
 	if (queue->drain) {
 	    if (block) {
-		MUTEX_EXIT(&node->lock);
-		CV_WAIT(&queue->pend_cv, &queue->lock);
+		opr_mutex_exit(&node->lock);
+		opr_cv_wait(&queue->pend_cv, &queue->lock);
 
 		if (queue->shutdown) {
 		    ret = EINTR;
 		} else {
-		    MUTEX_EXIT(&queue->lock);
+		    opr_mutex_exit(&queue->lock);
 
 		    waited_for_drain = 1;
 
@@ -1760,10 +1759,10 @@ afs_wq_add(struct afs_work_queue *queue,
     }
     if (waited_for_drain) {
 	/* signal another thread that may have been waiting for drain */
-	CV_SIGNAL(&queue->pend_cv);
+	opr_cv_signal(&queue->pend_cv);
     }
 
-    MUTEX_EXIT(&queue->lock);
+    opr_mutex_exit(&queue->lock);
 
     if (ret) {
 	goto error;
@@ -1845,10 +1844,10 @@ afs_wq_wait_all(struct afs_work_queue *queue)
 {
     int ret = 0;
 
-    MUTEX_ENTER(&queue->lock);
+    opr_mutex_enter(&queue->lock);
 
     while (queue->pend_count > 0 && !queue->shutdown) {
-	CV_WAIT(&queue->empty_cv, &queue->lock);
+	opr_cv_wait(&queue->empty_cv, &queue->lock);
     }
 
     if (queue->shutdown) {
@@ -1856,14 +1855,14 @@ afs_wq_wait_all(struct afs_work_queue *queue)
 	 * running e.g. in the middle of their callback. ensure they have
 	 * stopped before we return. */
 	while (queue->running_count > 0) {
-	    CV_WAIT(&queue->running_cv, &queue->lock);
+	    opr_cv_wait(&queue->running_cv, &queue->lock);
 	}
 	ret = EINTR;
 	goto done;
     }
 
  done:
-    MUTEX_EXIT(&queue->lock);
+    opr_mutex_exit(&queue->lock);
 
     /* technically this doesn't really guarantee that the work queue is empty
      * after we return, but we do guarantee that it was empty at some point */
@@ -1888,7 +1887,7 @@ afs_wq_node_wait(struct afs_work_queue_node * node,
 {
     int ret = 0;
 
-    MUTEX_ENTER(&node->lock);
+    opr_mutex_enter(&node->lock);
     if (node->state == AFS_WQ_NODE_STATE_INIT) {
 	/* not sure what to do in this case */
 	goto done_sync;
@@ -1896,9 +1895,9 @@ afs_wq_node_wait(struct afs_work_queue_node * node,
 
     while ((node->state != AFS_WQ_NODE_STATE_DONE) &&
 	   (node->state != AFS_WQ_NODE_STATE_ERROR)) {
-	CV_WAIT(&node->state_cv, &node->lock);
+	opr_cv_wait(&node->state_cv, &node->lock);
     }
-    if (retcode) {
+    if (retcowait{
 	*retcode = node->retcode;
     }
 
@@ -1911,7 +1910,7 @@ afs_wq_node_wait(struct afs_work_queue_node * node,
 					AFS_WQ_NODE_STATE_INIT);
 
  done_sync:
-    MUTEX_EXIT(&node->lock);
+    opr_mutex_exit(&node->lock);
 
     return ret;
 }

@@ -100,6 +100,10 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #define WCOREDUMP(x)	((x) & 0200)
 #endif
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
+
 #include <afs/afsint.h>
 #if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
 #if defined(AFS_VFSINCL_ENV)

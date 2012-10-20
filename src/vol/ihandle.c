@@ -23,6 +23,9 @@
 #endif
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 #include <afs/afsint.h>
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
@@ -102,7 +105,7 @@ void ih_PkgDefaults(void)
 void
 ih_glock_init(void)
 {
-    MUTEX_INIT(&ih_glock_mutex, "ih glock", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&ih_glock_mutex);
 }
 #endif /* AFS_PTHREAD_ENV */
 

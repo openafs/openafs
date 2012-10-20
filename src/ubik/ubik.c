@@ -12,10 +12,18 @@
 
 #include <roken.h>
 
+
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
+
 #include <lock.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
+
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -410,11 +418,11 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     memset(&tdb->version, 0, sizeof(struct ubik_version));
     memset(&tdb->cachedVersion, 0, sizeof(struct ubik_version));
 #ifdef AFS_PTHREAD_ENV
-    MUTEX_INIT(&tdb->versionLock, "version lock", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&beacon_globals.beacon_lock, "beacon lock", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&vote_globals.vote_lock, "vote lock", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&addr_globals.addr_lock, "address lock", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&version_globals.version_lock, "version lock", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&tdb->versionLock);
+    opr_mutex_init(&beacon_globals.beacon_lock);
+    opr_mutex_init(&vote_globals.vote_lock);
+    opr_mutex_init(&addr_globals.addr_lock);
+    opr_mutex_init(&version_globals.version_lock);
 #else
     Lock_Init(&tdb->versionLock);
 #endif
@@ -435,8 +443,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     ubik_dbase = tdb;		/* for now, only one db per server; can fix later when we have names for the other dbases */
 
 #ifdef AFS_PTHREAD_ENV
-    CV_INIT(&tdb->version_cond, "version", CV_DEFAULT, 0);
-    CV_INIT(&tdb->flags_cond, "flags", CV_DEFAULT, 0);
+    opr_cv_init(&tdb->version_cond);
+    opr_cv_init(&tdb->flags_cond);
 #endif /* AFS_PTHREAD_ENV */
 
     /* initialize RX */
@@ -624,7 +632,7 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	/* if we're writing already, wait */
 	while (dbase->flags & DBWRITING) {
 #ifdef AFS_PTHREAD_ENV
-	    CV_WAIT(&dbase->flags_cond, &dbase->versionLock);
+	    opr_cv_wait(&dbase->flags_cond, &dbase->versionLock);
 #else
 	    DBRELE(dbase);
 	    LWP_WaitProcess(&dbase->flags);
@@ -1255,7 +1263,7 @@ ubik_WaitVersion(struct ubik_dbase *adatabase,
 	    return 0;
 	}
 #ifdef AFS_PTHREAD_ENV
-	CV_WAIT(&adatabase->version_cond, &adatabase->versionLock);
+	opr_cv_wait(&adatabase->version_cond, &adatabase->versionLock);
 #else
 	DBRELE(adatabase);
 	LWP_WaitProcess(&adatabase->version);	/* same vers, just wait */

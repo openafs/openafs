@@ -20,8 +20,7 @@
 #include <afs/stds.h>
 
 #include <afs/opr.h>
-#include <lwp.h>
-#include <lock.h>
+#include <opr/lock.h>
 #include <afs/afsint.h>
 #include <afs/rxgen_consts.h>
 #include <afs/nfs.h>

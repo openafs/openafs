@@ -15,14 +15,12 @@
 
 #include <roken.h>
 #include <afs/opr.h>
+#include <opr/lock.h>
 
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
 
-#include <rx/xdr.h>
-#include <lwp.h>
-#include <lock.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>
@@ -211,7 +209,7 @@ GetHTBlock(void)
 	ShutDownAndCore(PANIC);
     }
     for (i = 0; i < (h_HTSPERBLOCK); i++)
-	CV_INIT(&block->entry[i].cond, "block entry", CV_DEFAULT, 0);
+	opr_cv_init(&block->entry[i].cond);
     for (i = 0; i < (h_HTSPERBLOCK); i++)
 	Lock_Init(&block->entry[i].lock);
     for (i = 0; i < (h_HTSPERBLOCK - 1); i++)
@@ -564,7 +562,7 @@ h_gethostcps_r(struct host *host, afs_int32 now)
     while (host->hostFlags & HCPS_INPROGRESS) {
 	slept = 1;		/* I did sleep */
 	host->hostFlags |= HCPS_WAITING;	/* I am sleeping now */
-	CV_WAIT(&host->cond, &host_glock_mutex);
+	opr_cv_wait(&host->cond, &host_glock_mutex);
     }
 
 
@@ -620,7 +618,7 @@ h_gethostcps_r(struct host *host, afs_int32 now)
     /* signal all who are waiting */
     if (host->hostFlags & HCPS_WAITING) {	/* somebody is waiting */
 	host->hostFlags &= ~HCPS_WAITING;
-	CV_BROADCAST(&host->cond);
+	opr_cv_broadcast(&host->cond);
     }
 }
 
@@ -2192,7 +2190,7 @@ h_InitHostPackage(void)
     memset(&nulluuid, 0, sizeof(afsUUID));
     rxcon_ident_key = rx_KeyCreate((rx_destructor_t) free);
     rxcon_client_key = rx_KeyCreate((rx_destructor_t) 0);
-    MUTEX_INIT(&host_glock_mutex, "host glock", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&host_glock_mutex);
 }
 
 static int

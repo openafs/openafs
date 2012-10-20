@@ -19,8 +19,12 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
+
 #include <ubik.h>
-#include <lock.h>
 #include <afs/audit.h>
 
 #include "database.h"
@@ -68,7 +72,7 @@ canWrite(int fid)
 	if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	    dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	    CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
+	    opr_cv_broadcast(&dumpSyncPtr->ds_readerStatus_cond);
 #else
 	    code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	    if (code)
@@ -79,7 +83,7 @@ canWrite(int fid)
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 #ifdef AFS_PTHREAD_ENV
 	MUTEX_ENTER(&dumpSyncPtr->ds_writerStatus_mutex);
-	CV_WAIT(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
+	opr_cv_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
 	MUTEX_EXIT(&dumpSyncPtr->ds_writerStatus_mutex);
 #else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
@@ -109,7 +113,7 @@ haveWritten(afs_int32 nbytes)
     if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
 	dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
+	opr_cv_broadcast(&dumpSyncPtr->ds_readerStatus_cond);
 #else
 	code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
 	if (code)
@@ -139,7 +143,7 @@ doneWriting(afs_int32 error)
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 #ifdef AFS_PTHREAD_ENV
 	MUTEX_ENTER(&dumpSyncPtr->ds_writerStatus_mutex);
-	CV_WAIT(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
+	opr_cv_wait(&dumpSyncPtr->ds_writerStatus_cond, &dumpSyncPtr->ds_writerStatus_mutex);
 	MUTEX_EXIT(&dumpSyncPtr->ds_writerStatus_mutex);
 #else
 	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
@@ -156,7 +160,7 @@ doneWriting(afs_int32 error)
 	dumpSyncPtr->ds_writerStatus = DS_DONE;
     dumpSyncPtr->ds_readerStatus = 0;
 #ifdef AFS_PTHREAD_ENV
-    CV_BROADCAST(&dumpSyncPtr->ds_readerStatus_cond);
+    opr_cv_broadcast(&dumpSyncPtr->ds_readerStatus_cond);
 #else
     code = LWP_NoYieldSignal(&dumpSyncPtr->ds_readerStatus);
     if (code)

@@ -195,11 +195,11 @@ extern int saneacls;
 					 * HostCheck, Signal, min 2 for RXSTATS */
 #include <pthread.h>
 extern pthread_mutex_t fileproc_glock_mutex;
-#define FS_LOCK MUTEX_ENTER(&fileproc_glock_mutex);
-#define FS_UNLOCK MUTEX_EXIT(&fileproc_glock_mutex);
+#define FS_LOCK opr_mutex_enter(&fileproc_glock_mutex);
+#define FS_UNLOCK opr_mutex_exit(&fileproc_glock_mutex);
 extern pthread_mutex_t fsync_glock_mutex;
-#define FSYNC_LOCK MUTEX_ENTER(&fsync_glock_mutex);
-#define FSYNC_UNLOCK MUTEX_EXIT(&fsync_glock_mutex);
+#define FSYNC_LOCK opr_mutex_enter(&fsync_glock_mutex);
+#define FSYNC_UNLOCK opr_mutex_exit(&fsync_glock_mutex);
 
 
 #ifdef AFS_DEMAND_ATTACH_FS

@@ -71,13 +71,13 @@ struct volser_trans {
 
 #ifdef AFS_PTHREAD_ENV
 #define VTRANS_OBJ_LOCK_INIT(tt) \
-  MUTEX_INIT(&((tt)->lock), "vtrans obj", MUTEX_DEFAULT, 0);
+  opr_mutex_init(&((tt)->lock));
 #define VTRANS_OBJ_LOCK_DESTROY(tt) \
-  MUTEX_DESTROY(&((tt)->lock))
+  opr_mutex_destroy(&((tt)->lock))
 #define VTRANS_OBJ_LOCK(tt) \
-  MUTEX_ENTER(&((tt)->lock))
+  opr_mutex_enter(&((tt)->lock))
 #define VTRANS_OBJ_UNLOCK(tt) \
-  MUTEX_EXIT(&((tt)->lock))
+  opr_mutex_exit(&((tt)->lock))
 #else
 #define VTRANS_OBJ_LOCK_INIT(tt)
 #define VTRANS_OBJ_LOCK_DESTROY(tt)

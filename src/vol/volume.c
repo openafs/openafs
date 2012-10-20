@@ -31,7 +31,12 @@
 #include <sys/file.h>
 #endif
 
-#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
+
 #include <afs/afsint.h>
 
 #include <rx/rx_queue.h>
@@ -529,7 +534,7 @@ static void
 VSetVInit_r(int value)
 {
     VInit = value;
-    CV_BROADCAST(&vol_vinit_cond);
+    opr_cv_broadcast(&vol_vinit_cond);
 }
 
 static_inline void
@@ -581,12 +586,12 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
     opr_Verify(pthread_key_create(&VThread_key, NULL) == 0);
 #endif
 
-    MUTEX_INIT(&vol_glock_mutex, "vol glock", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&vol_trans_mutex, "vol trans", MUTEX_DEFAULT, 0);
-    CV_INIT(&vol_put_volume_cond, "vol put", CV_DEFAULT, 0);
-    CV_INIT(&vol_sleep_cond, "vol sleep", CV_DEFAULT, 0);
-    CV_INIT(&vol_init_attach_cond, "vol init attach", CV_DEFAULT, 0);
-    CV_INIT(&vol_vinit_cond, "vol init", CV_DEFAULT, 0);
+    opr_mutex_init(&vol_glock_mutex);
+    opr_mutex_init(&vol_trans_mutex);
+    opr_cv_init(&vol_put_volume_cond);
+    opr_cv_init(&vol_sleep_cond);
+    opr_cv_init(&vol_init_attach_cond);
+    opr_cv_init(&vol_vinit_cond);
 #ifndef AFS_PTHREAD_ENV
     IOMGR_Initialize();
 #endif /* AFS_PTHREAD_ENV */
@@ -595,7 +600,7 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
     srandom(time(0));		/* For VGetVolumeInfo */
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    MUTEX_INIT(&vol_salvsync_mutex, "salvsync", MUTEX_DEFAULT, 0);
+    opr_mutex_init(&vol_salvsync_mutex);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     /* Ok, we have done enough initialization that fileserver can
@@ -713,7 +718,7 @@ VInitAttachVolumes(ProgramType pt)
 	pthread_t tid;
 	pthread_attr_t attrs;
 
-	CV_INIT(&params.thread_done_cv, "thread done", CV_DEFAULT, 0);
+	opr_cv_init(&params.thread_done_cv);
 	queue_Init(&params);
 	params.n_threads_complete = 0;
 
@@ -764,11 +769,11 @@ VInitAttachVolumes(ProgramType pt)
 	    VInitVolumePackageThread(&params);
 	}
 
-	CV_DESTROY(&params.thread_done_cv);
+	opr_cv_destroy(&params.thread_done_cv);
     }
     VOL_LOCK;
     VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
-    CV_BROADCAST(&vol_init_attach_cond);
+    opr_cv_broadcast(&vol_init_attach_cond);
     VOL_UNLOCK;
     return 0;
 }
@@ -807,7 +812,7 @@ VInitVolumePackageThread(void * args) {
 
 done:
     params->n_threads_complete++;
-    CV_SIGNAL(&params->thread_done_cv);
+    opr_cv_signal(&params->thread_done_cv);
     VOL_UNLOCK;
     return NULL;
 }
@@ -840,8 +845,8 @@ VInitAttachVolumes(ProgramType pt)
 
 	/* create partition work queue */
         queue_Init(&pq);
-	CV_INIT(&(pq.cv), "partq", CV_DEFAULT, 0);
-	MUTEX_INIT(&(pq.mutex), "partq", MUTEX_DEFAULT, 0);
+	opr_cv_init(&pq.cv);
+	opr_mutex_init(&pq.mutex);
 	for (parts = 0, diskP = DiskPartitionList; diskP; diskP = diskP->next, parts++) {
 	    struct diskpartition_queue_t *dp;
 	    dp = malloc(sizeof(struct diskpartition_queue_t));
@@ -855,8 +860,8 @@ VInitAttachVolumes(ProgramType pt)
 
         /* create volume work queue */
         queue_Init(&vq);
-	CV_INIT(&(vq.cv), "volq", CV_DEFAULT, 0);
-	MUTEX_INIT(&(vq.mutex), "volq", MUTEX_DEFAULT, 0);
+	opr_cv_init(&vq.cv);
+	opr_mutex_init(&vq.mutex);
 
         opr_Verify(pthread_attr_init(&attrs) == 0);
         opr_Verify(pthread_attr_setdetachstate(&attrs,
@@ -888,15 +893,15 @@ VInitAttachVolumes(ProgramType pt)
         VInitPreAttachVolumes(threads, &vq);
 
         opr_Verify(pthread_attr_destroy(&attrs) == 0);
-	CV_DESTROY(&pq.cv);
-	MUTEX_DESTROY(&pq.mutex);
-	CV_DESTROY(&vq.cv);
-	MUTEX_DESTROY(&vq.mutex);
+	opr_cv_destroy(&pq.cv);
+	opr_mutex_destroy(&pq.mutex);
+	opr_cv_destroy(&vq.cv);
+	opr_mutex_destroy(&vq.mutex);
     }
 
     VOL_LOCK;
     VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
-    CV_BROADCAST(&vol_init_attach_cond);
+    opr_cv_broadcast(&vol_init_attach_cond);
     VOL_UNLOCK;
 
     return 0;
@@ -949,14 +954,14 @@ VInitVolumePackageThread(void *args)
             vp->hashid = vid;
             queue_Init(&vp->vnode_list);
             queue_Init(&vp->rx_call_list);
-	    CV_INIT(&V_attachCV(vp), "partattach", CV_DEFAULT, 0);
+	    opr_cv_init(&V_attachCV(vp));
 
             vb->batch[vb->size++] = vp;
             if (vb->size == VINIT_BATCH_MAX_SIZE) {
-		MUTEX_ENTER(&vq->mutex);
+		opr_mutex_enter(&vq->mutex);
                 queue_Append(vq, vb);
-		CV_BROADCAST(&vq->cv);
-		MUTEX_EXIT(&vq->mutex);
+		opr_cv_broadcast(&vq->cv);
+		opr_mutex_exit(&vq->mutex);
 
                 vb = malloc(sizeof(struct volume_init_batch));
                 opr_Assert(vb);
@@ -969,10 +974,10 @@ VInitVolumePackageThread(void *args)
     }
 
     vb->last = 1;
-    MUTEX_ENTER(&vq->mutex);
+    opr_mutex_enter(&vq->mutex);
     queue_Append(vq, vb);
-    CV_BROADCAST(&vq->cv);
-    MUTEX_EXIT(&vq->mutex);
+    opr_cv_broadcast(&vq->cv);
+    opr_mutex_exit(&vq->mutex);
 
     Log("Partition scan thread %d of %d ended\n", params->thread, params->nthreads);
     free(params);
@@ -994,14 +999,14 @@ VInitNextPartition(struct partition_queue *pq)
     }
 
     /* get next partition to scan */
-    MUTEX_ENTER(&pq->mutex);
+    opr_mutex_enter(&pq->mutex);
     if (queue_IsEmpty(pq)) {
-	MUTEX_EXIT(&pq->mutex);
+	opr_mutex_exit(&pq->mutex);
         return NULL;
     }
     dp = queue_First(pq, diskpartition_queue_t);
     queue_Remove(dp);
-    MUTEX_EXIT(&pq->mutex);
+    opr_mutex_exit(&pq->mutex);
 
     opr_Assert(dp);
     opr_Assert(dp->diskP);
@@ -1049,13 +1054,13 @@ VInitPreAttachVolumes(int nthreads, struct volume_init_queue *vq)
 
     while (nthreads) {
         /* dequeue next volume */
-	MUTEX_ENTER(&vq->mutex);
+	opr_mutex_enter(&vq->mutex);
         if (queue_IsEmpty(vq)) {
-	    CV_WAIT(&vq->cv, &vq->mutex);
+	    opr_cv_wait(&vq->cv, &vq->mutex);
         }
         vb = queue_First(vq, volume_init_batch);
         queue_Remove(vb);
-	MUTEX_EXIT(&vq->mutex);
+	opr_mutex_exit(&vq->mutex);
 
         if (vb->size) {
             VOL_LOCK;
@@ -1234,9 +1239,9 @@ VShutdown_r(void)
     if (vol_attach_threads > 1) {
 	/* prepare for parallel shutdown */
 	params.n_threads = vol_attach_threads;
-	MUTEX_INIT(&params.lock, "params", MUTEX_DEFAULT, 0);
-	CV_INIT(&params.cv, "params", CV_DEFAULT, 0);
-	CV_INIT(&params.master_cv, "params master", CV_DEFAULT, 0);
+	opr_mutex_init(&params.lock);
+	opr_cv_init(&params.cv);
+	opr_cv_init(&params.master_cv);
 	opr_Verify(pthread_attr_init(&attrs) == 0);
 	opr_Verify(pthread_attr_setdetachstate(&attrs,
 					       PTHREAD_CREATE_DETACHED) == 0);
@@ -1277,7 +1282,7 @@ VShutdown_r(void)
 	    vol_attach_threads, params.n_parts, params.n_parts > 1 ? "s" : "" );
 
 	/* do pass 0 shutdown */
-	MUTEX_ENTER(&params.lock);
+	opr_mutex_enter(&params.lock);
 	for (i=0; i < params.n_threads; i++) {
 	    opr_Verify(pthread_create(&tid, &attrs, &VShutdownThread,
 				      &params) == 0);
@@ -1289,8 +1294,8 @@ VShutdown_r(void)
 	}
 	params.n_threads_complete = 0;
 	params.pass = 1;
-	CV_BROADCAST(&params.cv);
-	MUTEX_EXIT(&params.lock);
+	opr_cv_broadcast(&params.cv);
+	opr_mutex_exit(&params.lock);
 
 	Log("VShutdown:  pass 0 completed using the 1 thread per partition algorithm\n");
 	Log("VShutdown:  starting passes 1 through 3 using finely-granular mp-fast algorithm\n");
@@ -1304,9 +1309,9 @@ VShutdown_r(void)
 	}
 
 	opr_Verify(pthread_attr_destroy(&attrs) == 0);
-	CV_DESTROY(&params.cv);
-	CV_DESTROY(&params.master_cv);
-	MUTEX_DESTROY(&params.lock);
+	opr_cv_destroy(&params.cv);
+	opr_cv_destroy(&params.master_cv);
+	opr_mutex_destroy(&params.lock);
 
 	/* drop the VByPList exclusive reservations */
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
@@ -1583,14 +1588,14 @@ VShutdownThread(void * args)
     params = (vshutdown_thread_t *) args;
 
     /* acquire the shutdown pass 0 lock */
-    MUTEX_ENTER(&params->lock);
+    opr_mutex_enter(&params->lock);
 
     /* if there's still pass 0 work to be done,
      * get a work entry, and do a pass 0 shutdown */
     if (queue_IsNotEmpty(params)) {
 	dpq = queue_First(params, diskpartition_queue_t);
 	queue_Remove(dpq);
-	MUTEX_EXIT(&params->lock);
+	opr_mutex_exit(&params->lock);
 	diskP = dpq->diskP;
 	free(dpq);
 	id = diskP->index;
@@ -1599,20 +1604,20 @@ VShutdownThread(void * args)
 	while (ShutdownVolumeWalk_r(diskP, 0, &params->part_pass_head[id]))
 	    count++;
 	params->stats[0][diskP->index] = count;
-	MUTEX_ENTER(&params->lock);
+	opr_mutex_enter(&params->lock);
     }
 
     params->n_threads_complete++;
     if (params->n_threads_complete == params->n_threads) {
 	/* notify control thread that all workers have completed pass 0 */
-	CV_SIGNAL(&params->master_cv);
+	opr_cv_signal(&params->master_cv);
     }
     while (params->pass == 0) {
-	CV_WAIT(&params->cv, &params->lock);
+	opr_cv_wait(&params->cv, &params->lock);
     }
 
     /* switch locks */
-    MUTEX_EXIT(&params->lock);
+    opr_mutex_exit(&params->lock);
     VOL_LOCK;
 
     pass = params->pass;
@@ -1696,7 +1701,7 @@ VShutdownThread(void * args)
 		    ShutdownCreateSchedule(params);
 
 		    /* wake up all the workers */
-		    CV_BROADCAST(&params->cv);
+		    opr_cv_broadcast(&params->cv);
 
 		    VOL_UNLOCK;
 		    Log("VShutdown:  pass %d completed using %d threads on %d partitions\n",
@@ -2235,7 +2240,7 @@ VPreAttachVolumeByVp_r(Error * ec,
 	opr_Assert(vp != NULL);
 	queue_Init(&vp->vnode_list);
 	queue_Init(&vp->rx_call_list);
-	CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
+	opr_cv_init(&V_attachCV(vp));
     }
 
     /* link the volume with its associated vice partition */
@@ -2466,7 +2471,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
       queue_Init(&vp->vnode_list);
       queue_Init(&vp->rx_call_list);
 #ifdef AFS_DEMAND_ATTACH_FS
-      CV_INIT(&V_attachCV(vp), "vp attach", CV_DEFAULT, 0);
+      opr_cv_init(&V_attachCV(vp));
 #endif /* AFS_DEMAND_ATTACH_FS */
     }
 
@@ -4389,7 +4394,7 @@ VForceOffline_r(Volume * vp, int flags)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_PTHREAD_ENV
-    CV_BROADCAST(&vol_put_volume_cond);
+    opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
     LWP_NoYieldSignal(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
@@ -5041,7 +5046,7 @@ VCheckDetach(Volume * vp)
 	VCheckSalvage(vp);
 	ReallyFreeVolume(vp);
 	if (programType == fileServer) {
-	    CV_BROADCAST(&vol_put_volume_cond);
+	    opr_cv_broadcast(&vol_put_volume_cond);
 	}
     }
     return ret;
@@ -5075,7 +5080,7 @@ VCheckDetach(Volume * vp)
 	ReallyFreeVolume(vp);
 	if (programType == fileServer) {
 #if defined(AFS_PTHREAD_ENV)
-	    CV_BROADCAST(&vol_put_volume_cond);
+	    opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
 	    LWP_NoYieldSignal(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
@@ -5175,7 +5180,7 @@ VCheckOffline(Volume * vp)
 	}
 	FreeVolumeHeader(vp);
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&vol_put_volume_cond);
+	opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
 	LWP_NoYieldSignal(VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
@@ -7131,7 +7136,7 @@ VInitVLRU(void)
 	queue_Init(&volume_LRU.q[i]);
 	volume_LRU.q[i].len = 0;
 	volume_LRU.q[i].busy = 0;
-	CV_INIT(&volume_LRU.q[i].cv, "vol lru", CV_DEFAULT, 0);
+	opr_cv_init(&volume_LRU.q[i].cv);
     }
 
     /* setup the timing constants */
@@ -7149,7 +7154,7 @@ VInitVLRU(void)
     /* start up the VLRU scanner */
     volume_LRU.scanner_state = VLRU_SCANNER_STATE_OFFLINE;
     if (programType == fileServer) {
-	CV_INIT(&volume_LRU.cv, "vol lru", CV_DEFAULT, 0);
+	opr_cv_init(&volume_LRU.cv);
 	opr_Verify(pthread_attr_init(&attrs) == 0);
 	opr_Verify(pthread_attr_setdetachstate(&attrs,
 					       PTHREAD_CREATE_DETACHED) == 0);
@@ -7457,7 +7462,7 @@ VLRU_ScannerThread(void * args)
 	/* check to see if we've been asked to pause */
 	if (volume_LRU.scanner_state == VLRU_SCANNER_STATE_PAUSING) {
 	    volume_LRU.scanner_state = VLRU_SCANNER_STATE_PAUSED;
-	    CV_BROADCAST(&volume_LRU.cv);
+	    opr_cv_broadcast(&volume_LRU.cv);
 	    do {
 		VOL_CV_WAIT(&volume_LRU.cv);
 	    } while (volume_LRU.scanner_state == VLRU_SCANNER_STATE_PAUSED);
@@ -7533,7 +7538,7 @@ VLRU_ScannerThread(void * args)
 
     /* signal that scanner is down */
     volume_LRU.scanner_state = VLRU_SCANNER_STATE_OFFLINE;
-    CV_BROADCAST(&volume_LRU.cv);
+    opr_cv_broadcast(&volume_LRU.cv);
     VOL_UNLOCK;
     return NULL;
 }
@@ -7856,7 +7861,7 @@ VLRU_EndExclusive_r(struct VLRU_q * q)
 {
     opr_Assert(q->busy);
     q->busy = 0;
-    CV_BROADCAST(&q->cv);
+    opr_cv_broadcast(&q->cv);
 }
 
 /* wait for another thread to end exclusive access on VLRU */
@@ -8372,7 +8377,7 @@ VInitVolumeHash(void)
     for (i=0; i < VolumeHashTable.Size; i++) {
 	queue_Init(&VolumeHashTable.Table[i]);
 #ifdef AFS_DEMAND_ATTACH_FS
-	CV_INIT(&VolumeHashTable.Table[i].chain_busy_cv, "vhash busy", CV_DEFAULT, 0);
+	opr_cv_init(&VolumeHashTable.Table[i].chain_busy_cv);
 #endif /* AFS_DEMAND_ATTACH_FS */
     }
 }
@@ -8667,7 +8672,7 @@ VHashEndExclusive_r(VolumeHashChainHead * head)
 {
     opr_Assert(head->busy);
     head->busy = 0;
-    CV_BROADCAST(&head->chain_busy_cv);
+    opr_cv_broadcast(&head->chain_busy_cv);
 }
 
 /**
@@ -8831,7 +8836,7 @@ VVByPListEndExclusive_r(struct DiskPartition64 * dp)
 {
     opr_Assert(dp->vol_list.busy);
     dp->vol_list.busy = 0;
-    CV_BROADCAST(&dp->vol_list.cv);
+    opr_cv_broadcast(&dp->vol_list.cv);
 }
 
 /**

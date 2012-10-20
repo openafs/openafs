@@ -21,6 +21,7 @@
 /* Block signals to child threads. */
 #include <afs/pthread_nosigs.h>
 #include <afs/opr.h>
+#include <opr/lock.h>
 
 #ifdef AFS_NT40_ENV
 #include <wtypes.h>
@@ -69,63 +70,16 @@ typedef pthread_cond_t afs_kcondvar_t;
 
 extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
-#ifdef AFS_PTHREAD_ENV
-#ifdef MUTEX_INIT
-#undef MUTEX_INIT
-#endif
-#define MUTEX_INIT(a, b, c, d) opr_Verify(pthread_mutex_init(a, NULL) == 0)
-
-#ifdef MUTEX_DESTROY
-#undef MUTEX_DESTROY
-#endif
-#define MUTEX_DESTROY(l) opr_Verify(pthread_mutex_destroy(l) == 0)
-
-#ifdef MUTEX_ENTER
-#undef MUTEX_ENTER
-#endif
-#define MUTEX_ENTER(l) opr_Verify(pthread_mutex_lock(l) == 0)
-
-#ifdef MUTEX_TRYENTER
-#undef MUTEX_TRYENTER
-#endif
-#define MUTEX_TRYENTER(l) pthread_mutex_trylock(l) ? 0 : 1
-
-#ifdef MUTEX_EXIT
-#undef MUTEX_EXIT
-#endif
-#define MUTEX_EXIT(l) opr_Verify(pthread_mutex_unlock(l) == 0)
-
-#ifdef CV_INIT
-#undef CV_INIT
-#endif
-#define CV_INIT(cv, a, b, c) opr_Verify(pthread_cond_init(cv, NULL) == 0)
-
-#ifdef CV_DESTROY
-#undef CV_DESTROY
-#endif
-#define CV_DESTROY(cv) opr_Verify(pthread_cond_destroy(cv) == 0)
-
-#ifdef CV_WAIT
-#undef CV_WAIT
-#endif
-#define CV_WAIT(cv, l) opr_Verify(pthread_cond_wait(cv, l) == 0)
-
-#ifdef CV_TIMEDWAIT
-#undef CV_TIMEDWAIT
-#endif
-#define CV_TIMEDWAIT(cv, l, t) pthread_cond_timedwait(cv, l, t)
-
-#ifdef CV_SIGNAL
-#undef CV_SIGNAL
-#endif
-#define CV_SIGNAL(cv) opr_Verify(pthread_cond_signal(cv) == 0)
-
-#ifdef CV_BROADCAST
-#undef CV_BROADCAST
-#endif
-#define CV_BROADCAST(cv) opr_Verify(pthread_cond_broadcast(cv) == 0)
-
-#endif /* AFS_PTHREAD_ENV */
-
+#define MUTEX_INIT(a, b, c, d) opr_mutex_init(a)
+#define MUTEX_DESTROY(l) opr_mutex_destroy(l)
+#define MUTEX_ENTER(l) opr_mutex_enter(l)
+#define MUTEX_TRYENTER(l) opr_mutex_tryenter(l)
+#define MUTEX_EXIT(l) opr_mutex_exit(l)
+#define CV_INIT(cv, a, b, c) opr_cv_init(cv)
+#define CV_DESTROY(cv) opr_cv_destroy(cv)
+#define CV_WAIT(cv, l) opr_cv_wait(cv, l)
+#define CV_TIMEDWAIT(cv, l, t) opr_cv_timedwait(cv, l, t)
+#define CV_SIGNAL(cv) opr_cv_signal(cv)
+#define CV_BROADCAST(cv) opr_cv_broadcast(cv)
 
 #endif /* RX_PTHREAD_H */

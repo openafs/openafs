@@ -43,10 +43,10 @@
 #define ENDMAC   } while (0)
 
 #ifdef AFS_PTHREAD_ENV
-#include <pthread.h>
 #include <afs/opr.h>
-#define LOCK_LOCK(A) opr_Verify(pthread_mutex_lock(&(A)->mutex) == 0);
-#define LOCK_UNLOCK(A) opr_Verify(pthread_mutex_unlock(&(A)->mutex) == 0);
+#include <opr/lock.h>
+#define LOCK_LOCK(A) opr_mutex_enter(&(A)->mutex);
+#define LOCK_UNLOCK(A) opr_mutex_exit(&(A)->mutex);
 #else /* AFS_PTHREAD_ENV */
 #define LOCK_LOCK(A)
 #define LOCK_UNLOCK(A)

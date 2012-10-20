@@ -13,6 +13,9 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
 #include <lock.h>
 
 #define UBIK_INTERNALS 1

@@ -15,6 +15,10 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#endif
+
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <rx/rx_queue.h>

@@ -13,11 +13,17 @@
 #include <roken.h>
 
 #include <afs/opr.h>
-#include <lock.h>
-#include <rx/xdr.h>
+
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
+
 #include <rx/rx.h>
 #include <afs/afsutil.h>
 #include <afs/cellconfig.h>
+
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -377,7 +383,7 @@ InitializeDB(struct ubik_dbase *adbase)
 	    (*adbase->setlabel) (adbase, 0, &adbase->version);
 	}
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&adbase->version_cond);
+	opr_cv_broadcast(&adbase->version_cond);
 #else
 	LWP_NoYieldSignal(&adbase->version);
 #endif
@@ -714,7 +720,7 @@ urecovery_Interact(void *dummy)
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
 #ifdef AFS_PTHREAD_ENV
-	    CV_BROADCAST(&ubik_dbase->version_cond);
+	    opr_cv_broadcast(&ubik_dbase->version_cond);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
 #endif
@@ -740,7 +746,7 @@ urecovery_Interact(void *dummy)
 	    UBIK_VERSION_UNLOCK;
 	    udisk_Invalidate(ubik_dbase, 0);	/* data may have changed */
 #ifdef AFS_PTHREAD_ENV
-	    CV_BROADCAST(&ubik_dbase->version_cond);
+	    opr_cv_broadcast(&ubik_dbase->version_cond);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
 #endif
