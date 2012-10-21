@@ -170,8 +170,7 @@ extern lck_grp_t * openafs_lck_grp;
         lck_mtx_unlock((a)->meta); \
     } while(0)
 
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == current_thread())
+#define MUTEX_ASSERT(a) osi_Assert(((afs_kmutex_t *)(a))->owner == current_thread())
 #else
 typedef struct {
     struct lock__bsd__ lock;
@@ -208,11 +207,7 @@ typedef int afs_kcondvar_t;
 	lockmgr(&(a)->lock, LK_RELEASE, 0, current_proc()); \
     } while(0);
 
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == current_thread())
+#define MUTEX_ASSERT(a) osi_Assert(((afs_kmutex_t *)(a))->owner == current_thread())
 #endif
-
-#undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #endif /* _RX_KMUTEX_H_ */

@@ -43,7 +43,7 @@ typedef kmutex_t afs_kmutex_t;
 #define MUTEX_ENTER(a) mutex_enter((a));
 #define MUTEX_TRYENTER(a) mutex_tryenter((a))
 #define MUTEX_EXIT(a) mutex_exit((a))
-#define MUTEX_ISMINE(a) mutex_owned((a))
+#define MUTEX_ASSERT(a) osi_Assert(mutex_owned((a)))
 
 typedef kcondvar_t afs_kcondvar_t;
 int afs_cv_wait(afs_kcondvar_t *, afs_kmutex_t *, int);
@@ -149,8 +149,8 @@ typedef struct {
     } while(0);
 #endif  /* LOCKDEBUG */
 
-#define MUTEX_ISMINE(a) \
-    (lockstatus(a) == LK_EXCLUSIVE)
+#define MUTEX_ASSERT(a) \
+    osi_Assert((lockstatus(a) == LK_EXCLUSIVE))
 #define MUTEX_LOCKED(a) \
     (lockstatus(a) == LK_EXCLUSIVE)
 

@@ -18,6 +18,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <afs/opr.h>
 
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
@@ -33,7 +34,6 @@
 # include <opr/lockstub.h>
 #endif
 
-#include <afs/opr.h>
 #include <rx/rx_queue.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>

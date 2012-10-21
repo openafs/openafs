@@ -132,8 +132,6 @@ typedef caddr_t afs_kcondvar_t;
 #ifdef AFS_HPUX102_ENV
 
 #if defined(AFS_HPUX110_ENV)
-#undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #define AFS_RX_ORDER 30
 
@@ -155,18 +153,16 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
     ((b_owns_sema(a)) ? b_vsema(a) : (osi_Panic("mutex not held"), 0))
 #endif
 
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a) b_owns_sema(a)
+#define MUTEX_ASSERT(a) osi_Assert(b_owns_sema(a))
 
 #else /* AFS_HPUX110_ENV */
-
-#define osirx_AssertMine(addr, msg)
 
 #define MUTEX_DESTROY(a)
 #define MUTEX_ENTER(a)
 #define MUTEX_TRYENTER(a) 1
 #define MUTEX_EXIT(a)
 #define MUTEX_INIT(a,b,c,d)
+#define MUTEX_ASSERT(a)
 
 #endif /* else AFS_HPUX110_ENV */
 #endif /* AFS_HPUX102_ENV */

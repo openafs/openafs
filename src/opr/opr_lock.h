@@ -26,10 +26,34 @@
 
 #include <pthread.h>
 
+/* Mutexes */
+
 typedef pthread_mutex_t opr_mutex_t;
 
-# define opr_mutex_init(mutex) \
+# ifdef OPR_DEBUG_LOCKS
+static_inline void
+opr_mutex_init(opr_mutex_t *mutex)
+{
+    pthread_mutexattr_t attr;
+
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+
+    opr_Verify(pthread_mutex_init(mutex, &attr) == 0);
+    pthread_mutexattr_destroy(&attr);
+}
+
+#  define opr_mutex_assert(mutex) \
+    opr_Verify(pthread_mutex_lock(mutex) == EDEADLK)
+
+# else
+
+#  define opr_mutex_init(mutex) \
     opr_Verify(pthread_mutex_init(mutex, NULL) == 0)
+
+#  define opr_mutex_assert(mutex)
+
+# endif
 
 # define opr_mutex_destroy(mutex) \
     opr_Verify(pthread_mutex_destroy(mutex) == 0)

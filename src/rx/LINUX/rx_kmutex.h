@@ -52,10 +52,10 @@ typedef struct afs_kcondvar {
     wait_queue_head_t waitq;
 } afs_kcondvar_t;
 
-static inline int
-MUTEX_ISMINE(afs_kmutex_t * l)
+static inline void
+MUTEX_ASSERT(afs_kmutex_t * l)
 {
-    return l->owner == current->pid;
+    osi_Assert(l->owner == current->pid);
 }
 
 #define MUTEX_INIT(a,b,c,d)	afs_mutex_init(a)

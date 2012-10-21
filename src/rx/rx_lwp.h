@@ -29,14 +29,13 @@ typedef int afs_kmutex_t;
 #define MUTEX_TRYENTER(a) 1
 #define MUTEX_EXIT(a)
 #define MUTEX_INIT(a,b,c,d)
-#define MUTEX_ISMINE(a)
+#define MUTEX_ASSERT(a)
 #define CV_INIT(a,b,c,d)
 #define CV_DESTROY(a)
 #define CV_WAIT(cv, l)
 #define CV_SIGNAL(cv)
 #define CV_BROADCAST(cv)
 #define CV_TIMEDWAIT(cv, l, t)
-#define osirx_AssertMine(a, b)
 
 #endif /* KERNEL */
 

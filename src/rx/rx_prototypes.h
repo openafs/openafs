@@ -122,9 +122,6 @@ extern afs_int32 rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 extern afs_int32 rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 				      struct rx_debugPeer * peerStats);
 extern void shutdown_rx(void);
-#ifndef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
-#endif
 #ifndef KERNEL
 extern int rx_KeyCreate(rx_destructor_t rtn);
 #endif

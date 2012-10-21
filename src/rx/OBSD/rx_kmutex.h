@@ -64,6 +64,6 @@ typedef struct {
 	osi_Assert((a)->owner == curproc); \
 	(a)->owner = 0; \
     } while(0);
-#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curproc)
+#define MUTEX_ASSERT(a) osi_Assert(((afs_kmutex_t *)(a))->owner == curproc)
 
 #endif /* _RX_KMUTEX_H_ */

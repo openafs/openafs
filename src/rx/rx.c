@@ -1414,7 +1414,7 @@ rxi_WaitforTQBusy(struct rx_call *call) {
     while (!call->error && (call->flags & RX_CALL_TQ_BUSY)) {
 	call->flags |= RX_CALL_TQ_WAIT;
 	call->tqWaiters++;
-	osirx_AssertMine(&call->lock, "rxi_WaitforTQ lock");
+	MUTEX_ASSERT(&call->lock);
 	CV_WAIT(&call->cv_tq, &call->lock);
 	call->tqWaiters--;
 	if (call->tqWaiters == 0) {
@@ -1431,7 +1431,7 @@ rxi_WakeUpTransmitQueue(struct rx_call *call)
 	dpf(("call %"AFS_PTR_FMT" has %d waiters and flags %d\n",
 	     call, call->tqWaiters, call->flags));
 #ifdef RX_ENABLE_LOCKS
-	osirx_AssertMine(&call->lock, "rxi_Start start");
+	MUTEX_ASSERT(&call->lock);
 	CV_BROADCAST(&call->cv_tq);
 #else /* RX_ENABLE_LOCKS */
 	osi_rxWakeup(&call->tq);
@@ -3544,7 +3544,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	return np;
     }
 
-    osirx_AssertMine(&call->lock, "rxi_ReceivePacket middle");
+    MUTEX_ASSERT(&call->lock);
     /* Set remote user defined status from packet */
     call->remoteStatus = np->header.userStatus;
 
@@ -5220,9 +5220,7 @@ rx_InterruptCall(struct rx_call *call, afs_int32 error)
 void
 rxi_CallError(struct rx_call *call, afs_int32 error)
 {
-#ifdef DEBUG
-    osirx_AssertMine(&call->lock, "rxi_CallError");
-#endif
+    MUTEX_ASSERT(&call->lock);
     dpf(("rxi_CallError call %"AFS_PTR_FMT" error %d call->error %d\n", call, error, call->error));
     if (call->error)
 	error = call->error;
@@ -5250,9 +5248,8 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     int flags;
     struct rx_peer *peer;
     struct rx_packet *packet;
-#ifdef DEBUG
-    osirx_AssertMine(&call->lock, "rxi_ResetCall");
-#endif
+
+    MUTEX_ASSERT(&call->lock);
     dpf(("rxi_ResetCall(call %"AFS_PTR_FMT", newcall %d)\n", call, newcall));
 
     /* Notify anyone who is waiting for asynchronous packet arrival */
@@ -7971,15 +7968,6 @@ shutdown_rx(void)
     rxinit_status = 1;
     UNLOCK_RX_INIT;
 }
-
-#ifdef RX_ENABLE_LOCKS
-void
-osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg)
-{
-    if (!MUTEX_ISMINE(lockaddr))
-	osi_Panic("Lock not held: %s", msg);
-}
-#endif /* RX_ENABLE_LOCKS */
 
 #ifndef KERNEL
 

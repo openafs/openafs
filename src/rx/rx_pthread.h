@@ -8,7 +8,7 @@
  */
 
 /* rx_pthread.h defines the lock and cv primitives required for a thread
- * safe user mode rx. The current implemenation is only tested on Solaris.
+ * safe user mode rx.
  */
 
 #ifndef RX_PTHREAD_H
@@ -31,11 +31,6 @@
 
 typedef pthread_mutex_t afs_kmutex_t;
 typedef pthread_cond_t afs_kcondvar_t;
-#ifdef	RX_ENABLE_LOCKS
-#define MUTEX_ISMINE(l) (pthread_mutex_trylock(l) == EDEADLK)
-#else
-#define MUTEX_ISMINE(l) (1)
-#endif
 
 #define pthread_yield() Sleep(0)
 
@@ -54,27 +49,14 @@ typedef pthread_cond_t afs_kcondvar_t;
 #if !defined(pthread_yield) && (_XOPEN_SOURCE + 0) >= 500
 #define pthread_yield() sched_yield()
 #endif
-
-
-#ifndef MUTEX_ISMINE
-/* Only used for debugging. */
-#ifdef AFS_SUN5_ENV
-/* synch.h says mutex_t and pthread_mutex_t are always the same */
-#include <synch.h>
-#define MUTEX_ISMINE(l) MUTEX_HELD((mutex_t *) l)
-#else /* AFS_SUN5_ENV */
-#define MUTEX_ISMINE(l) (1)
-#endif /* AFS_SUN5_ENV */
-#endif /* !MUTEX_ISMINE */
 #endif /* AFS_NT40_ENV */
-
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #define MUTEX_INIT(a, b, c, d) opr_mutex_init(a)
 #define MUTEX_DESTROY(l) opr_mutex_destroy(l)
 #define MUTEX_ENTER(l) opr_mutex_enter(l)
 #define MUTEX_TRYENTER(l) opr_mutex_tryenter(l)
 #define MUTEX_EXIT(l) opr_mutex_exit(l)
+#define MUTEX_ASSERT(l) opr_mutex_assert(l)
 #define CV_INIT(cv, a, b, c) opr_cv_init(cv)
 #define CV_DESTROY(cv) opr_cv_destroy(cv)
 #define CV_WAIT(cv, l) opr_cv_wait(cv, l)

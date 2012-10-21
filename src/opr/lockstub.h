@@ -37,6 +37,7 @@
 typedef int opr_cv_t;
 
 # define opr_mutex_init(mutex)
+# define opr_mutex_assert(mutex)
 # define opr_mutex_destroy(mutex)
 # define opr_mutex_enter(mutex)
 # define opr_mutex_exit(mutex)

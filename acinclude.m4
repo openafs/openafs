@@ -192,6 +192,11 @@ AC_ARG_ENABLE([checking],
 	 to disabled)])],
     [enable_checking="$enableval"],
     [enable_checking="no"])
+AC_ARG_ENABLE([debug-locks],
+    [AS_HELP_STRING([--enable-debug-locks],
+	[turn on lock debugging assertions (defaults to disabled)])],
+    [enable_debug_locks="$enableval"],
+    [enable_debug_locks="no"])
 AC_ARG_ENABLE([debug-kernel],
     [AS_HELP_STRING([--enable-debug-kernel],
         [enable compilation of the kernel module with debugging information
@@ -1411,6 +1416,10 @@ AS_IF([test "x$enable_gtx" != "xno"],
       AC_SUBST(LIB_curses)])
 	
 OPENAFS_TEST_PACKAGE(libintl,[#include <libintl.h>],[-lintl],,,INTL)
+
+if test "$enable_debug_locks" = yes; then
+	AC_DEFINE(OPR_DEBUG_LOCKS, 1, [turn on lock debugging in opr])
+fi
 
 dnl Don't build PAM on IRIX; the interface doesn't work for us.
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then

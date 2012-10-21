@@ -23,9 +23,9 @@
 #define MUTEX_INIT(A,B,C,D)	usr_mutex_init(A)
 #define MUTEX_ENTER(A)		usr_mutex_lock(A)
 #define MUTEX_TRYENTER(A)	usr_mutex_trylock(A)
-#define MUTEX_ISMINE(A)		(1)
 #define MUTEX_EXIT(A)		usr_mutex_unlock(A)
 #define MUTEX_DESTROY(A)	usr_mutex_destroy(A)
+#define MUTEX_ASSERT(A)
 #define CV_INIT(A,B,C,D)	usr_cond_init(A)
 #define CV_TIMEDWAIT(A,B,C)	usr_cond_timedwait(A,B,C)
 #define CV_SIGNAL(A)		usr_cond_signal(A)
@@ -43,10 +43,6 @@
 					MUTEX_ENTER(_lck); \
 				    } \
 				}
-
-#ifndef UKERNEL
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
-#endif
 
 #define SPLVAR
 #define NETPRI

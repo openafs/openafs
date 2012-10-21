@@ -132,11 +132,7 @@ typedef tid_t afs_kcondvar_t;
 
 #define	MUTEX_DEFAULT	0
 
-#undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a)	(lock_mine((void *)(a)))
-
-#undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
+#define MUTEX_ASSERT(a)	osi_Assert(lock_mine((void *)(a)))
 
 #endif /* AFS_AIX41_ENV */
 
