@@ -262,18 +262,6 @@ extern int rxk_DelPort(u_short aport);
 extern void rxk_shutdownPorts(void);
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
-# if defined(AFS_LINUX26_ENV)
-# define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
-# undef osi_Assert
-# define osi_Assert(expr) \
-    do { if (!(expr)) osi_Panic("assertion failed: %s, file: %s, line: %d\n", #expr, __FILE__, __LINE__); } while (0)
-# elif defined(AFS_AIX_ENV)
-extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
-# else
-extern void osi_Panic(char *fmt, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2)
-    AFS_NORETURN;
-#endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern void shutdown_rxkernel(void);

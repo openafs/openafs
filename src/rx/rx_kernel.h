@@ -36,7 +36,27 @@ typedef struct socket *osi_socket;
         CM_TRACE_RXWAKE, ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32, __LINE__)
 
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
-#define osi_Assert(exp) (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
+
+# if defined(AFS_LINUX26_ENV)
+#  define osi_Panic(msg...) \
+    do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
+#  define osi_Assert(expr) \
+    do { \
+	if (!(expr)) \
+	    osi_Panic("assertion failed: %s, file: %s, line: %d\n", \
+		      #expr, __FILE__, __LINE__); \
+    } while (0)
+# elif defined(AFS_AIX_ENV)
+extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
+#  define osi_Assert(exp) \
+    (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
+# else
+extern void osi_Panic(char *fmt, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2)
+    AFS_NORETURN;
+#  define osi_Assert(exp) \
+    (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
+# endif
 
 #ifdef AFS_LINUX20_ENV
 # define	osi_Msg printk)(
