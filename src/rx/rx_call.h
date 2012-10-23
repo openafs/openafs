@@ -30,13 +30,14 @@ struct rx_call_appl {
     char *curpos;		/* current position in curvec */
     int mode;			/* Mode of call */
     int padding;		/* Pad to double word */
+    afs_uint64 bytesSent;	/* Number bytes sent */
+    afs_uint64 bytesRcvd;	/* Number bytes received */
 };
 
 /* Call structure:  only instantiated for active calls and dallying
  * server calls.  The permanent call state (i.e. the call number as
  * well as state shared with other calls associated with this
  * connection) is maintained in the connection structure. */
-
 
 #ifdef KDUMP_RX_LOCK
 struct rx_call_rx_lock {
@@ -142,8 +143,7 @@ struct rx_call {
 
     struct clock queueTime;	/* time call was queued */
     struct clock startTime;	/* time call was started */
-    afs_uint64 bytesSent;	/* Number bytes sent */
-    afs_uint64 bytesRcvd;	/* Number bytes received */
+
     u_short tqWaiters;
 
     struct rx_packet *xmitList[RX_MAXACKS]; /* Can't xmit more than we ack */

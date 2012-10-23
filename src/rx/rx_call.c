@@ -69,6 +69,6 @@ rx_RecordCallStatistics(struct rx_call *call, unsigned int rxInterface,
     clock_Sub(&queue, &call->queueTime);
 
     rxi_IncrementTimeAndCount(call->conn->peer, rxInterface, currentFunc,
-			     totalFunc, &queue, &exec, call->bytesSent,
-			     call->bytesRcvd, 1);
+			     totalFunc, &queue, &exec, call->app.bytesSent,
+			     call->app.bytesRcvd, 1);
 }

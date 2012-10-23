@@ -1649,8 +1649,8 @@ rx_NewCall(struct rx_connection *conn)
     /* remember start time for call in case we have hard dead time limit */
     call->queueTime = queueTime;
     clock_GetTime(&call->startTime);
-    call->bytesSent = 0;
-    call->bytesRcvd = 0;
+    call->app.bytesSent = 0;
+    call->app.bytesRcvd = 0;
 
     /* Turn on busy protocol. */
     rxi_KeepAliveOn(call);
@@ -3429,8 +3429,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #endif
             call->state = RX_STATE_PRECALL;
             clock_GetTime(&call->queueTime);
-            call->bytesSent = 0;
-            call->bytesRcvd = 0;
+            call->app.bytesSent = 0;
+            call->app.bytesRcvd = 0;
             /*
              * If the number of queued calls exceeds the overload
              * threshold then abort this call.
@@ -3521,8 +3521,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
-	    call->bytesSent = 0;
-	    call->bytesRcvd = 0;
+	    call->app.bytesSent = 0;
+	    call->app.bytesRcvd = 0;
 	    /*
 	     * If the number of queued calls exceeds the overload
 	     * threshold then abort this call.
