@@ -3818,9 +3818,6 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                           pExtent->CacheOffset.LowPart);
                 osi_Log5( afsd_logp, "... belongs to bp 0x%p vol 0x%x vno 0x%x foffset 0x%x:%x",
                           wbp, wbp->fid.volume, wbp->fid.vnode, wbp->offset.HighPart, wbp->offset.LowPart);
-#ifdef DEBUG
-                DebugBreak();
-#endif
             }
             buf_Release(bufp);
         }
@@ -4224,10 +4221,8 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                                     osi_Log2(afsd_logp, "... coffset 0x%x:%x",
                                              pExtent->CacheOffset.HighPart,
                                              pExtent->CacheOffset.LowPart);
-#ifdef DEBUG
-                                    DebugBreak();
-#endif
-                                    if (!deleted) {
+
+				    if (!deleted) {
                                         buf_SetDirty(bufp, &req, pExtent->DirtyOffset, pExtent->DirtyLength, userp);
                                         dirty++;
                                     }
@@ -4285,9 +4280,6 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                                  wbp, wbp->fid.volume, wbp->fid.vnode, wbp->offset.HighPart, wbp->offset.LowPart);
                     else
                         osi_Log0(afsd_logp, "... coffset cannot be found");
-#ifdef DEBUG
-                    DebugBreak();
-#endif
                 }
                 buf_Release(bufp);
             } else {
