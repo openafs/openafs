@@ -1859,7 +1859,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			    tconn.callNumber[j] = htonl(tc->callNumber[j]);
 			    if ((tcall = tc->call[j])) {
 				tconn.callState[j] = tcall->state;
-				tconn.callMode[j] = tcall->mode;
+				tconn.callMode[j] = tcall->app.mode;
 				tconn.callFlags[j] = tcall->flags;
 				if (!opr_queue_IsEmpty(&tcall->rq))
 				    tconn.callOther[j] |= RX_OTHER_IN;

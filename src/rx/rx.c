@@ -1635,9 +1635,9 @@ rx_NewCall(struct rx_connection *conn)
     call->state = RX_STATE_ACTIVE;
     call->error = conn->error;
     if (call->error)
-	call->mode = RX_MODE_ERROR;
+	call->app.mode = RX_MODE_ERROR;
     else
-	call->mode = RX_MODE_SENDING;
+	call->app.mode = RX_MODE_SENDING;
 
 #ifdef AFS_RXERRQ_ENV
     /* remember how many network errors the peer has when we started, so if
@@ -2175,7 +2175,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     if (call) {
 	clock_GetTime(&call->startTime);
 	call->state = RX_STATE_ACTIVE;
-	call->mode = RX_MODE_RECEIVING;
+	call->app.mode = RX_MODE_RECEIVING;
 #ifdef RX_KERNEL_TRACE
 	if (ICL_SETACTIVE(afs_iclSetp)) {
 	    int glockOwner = ISAFS_GLOCK();
@@ -2336,7 +2336,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     if (call) {
 	clock_GetTime(&call->startTime);
 	call->state = RX_STATE_ACTIVE;
-	call->mode = RX_MODE_RECEIVING;
+	call->app.mode = RX_MODE_RECEIVING;
 #ifdef RX_KERNEL_TRACE
 	if (ICL_SETACTIVE(afs_iclSetp)) {
 	    int glockOwner = ISAFS_GLOCK();
@@ -2413,7 +2413,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     call->arrivalProc = (void (*)())0;
     if (rc && call->error == 0) {
 	rxi_CallError(call, rc);
-        call->mode = RX_MODE_ERROR;
+        call->app.mode = RX_MODE_ERROR;
 	/* Send an abort message to the peer if this error code has
 	 * only just been set.  If it was set previously, assume the
 	 * peer has already been sent the error code or will request it
@@ -2422,12 +2422,12 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     }
     if (conn->type == RX_SERVER_CONNECTION) {
 	/* Make sure reply or at least dummy reply is sent */
-	if (call->mode == RX_MODE_RECEIVING) {
+	if (call->app.mode == RX_MODE_RECEIVING) {
 	    MUTEX_EXIT(&call->lock);
 	    rxi_WriteProc(call, 0, 0);
 	    MUTEX_ENTER(&call->lock);
 	}
-	if (call->mode == RX_MODE_SENDING) {
+	if (call->app.mode == RX_MODE_SENDING) {
             MUTEX_EXIT(&call->lock);
 	    rxi_FlushWrite(call);
             MUTEX_ENTER(&call->lock);
@@ -2447,8 +2447,9 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	char dummy;
 	/* Make sure server receives input packets, in the case where
 	 * no reply arguments are expected */
-	if ((call->mode == RX_MODE_SENDING)
-	    || (call->mode == RX_MODE_RECEIVING && call->rnext == 1)) {
+
+	if ((call->app.mode == RX_MODE_SENDING)
+	    || (call->app.mode == RX_MODE_RECEIVING && call->rnext == 1)) {
 	    MUTEX_EXIT(&call->lock);
 	    (void)rxi_ReadProc(call, &dummy, 1);
 	    MUTEX_ENTER(&call->lock);
@@ -2503,21 +2504,21 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
      * ResetCall cannot: ResetCall may be called at splnet(), in the
      * kernel version, and may interrupt the macros rx_Read or
      * rx_Write, which run at normal priority for efficiency. */
-    if (call->currentPacket) {
+    if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-        call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+        call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-	rxi_FreePacket(call->currentPacket);
-	call->currentPacket = (struct rx_packet *)0;
+	rxi_FreePacket(call->app.currentPacket);
+	call->app.currentPacket = (struct rx_packet *)0;
     }
 
-    call->nLeft = call->nFree = call->curlen = 0;
+    call->app.nLeft = call->app.nFree = call->app.curlen = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
 #ifdef RXDEBUG_PACKET
     call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-        rxi_FreePackets(0, &call->iovq);
+        rxi_FreePackets(0, &call->app.iovq);
     MUTEX_EXIT(&call->lock);
 
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
@@ -2720,7 +2721,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
 	/* Initialize once-only items */
 	opr_queue_Init(&call->tq);
 	opr_queue_Init(&call->rq);
-	opr_queue_Init(&call->iovq);
+	opr_queue_Init(&call->app.iovq);
 #ifdef RXDEBUG_PACKET
         call->rqc = call->tqc = call->iovqc = 0;
 #endif /* RXDEBUG_PACKET */
@@ -3735,8 +3736,8 @@ rxi_IsConnInteresting(struct rx_connection *aconn)
 	    if ((tcall->state == RX_STATE_PRECALL)
 		|| (tcall->state == RX_STATE_ACTIVE))
 		return 1;
-	    if ((tcall->mode == RX_MODE_SENDING)
-		|| (tcall->mode == RX_MODE_RECEIVING))
+	    if ((tcall->app.mode == RX_MODE_SENDING)
+		|| (tcall->app.mode == RX_MODE_RECEIVING))
 		return 1;
 	}
     }
@@ -4973,7 +4974,7 @@ rxi_AttachServerProc(struct rx_call *call,
 	    }
 	}
 	call->state = RX_STATE_ACTIVE;
-	call->mode = RX_MODE_RECEIVING;
+	call->app.mode = RX_MODE_RECEIVING;
 #ifdef RX_KERNEL_TRACE
 	{
 	    int glockOwner = ISAFS_GLOCK();
@@ -5959,8 +5960,11 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
     /* Send the whole list when the call is in receive mode, when
      * the call is in eof mode, when we are in fast recovery mode,
      * and when we have the last packet */
+    /* XXX - The accesses to app.mode aren't safe, as this may be called by
+     * the listener or event threads
+     */
     if ((list[len - 1]->header.flags & RX_LAST_PACKET)
-	|| call->mode == RX_MODE_RECEIVING || call->mode == RX_MODE_EOF
+	|| call->app.mode == RX_MODE_RECEIVING || call->app.mode == RX_MODE_EOF
 	|| (call->flags & RX_CALL_FAST_RECOVER)) {
 	/* Check for the case where the current list contains
 	 * an acked packet. Since we always send retransmissions
@@ -9367,7 +9371,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
         MUTEX_ENTER(&c->lock);
         rqc = opr_queue_Count(&c->rq);
         tqc = opr_queue_Count(&c->tq);
-        iovqc = opr_queue_Count(&c->iovq);
+        iovqc = opr_queue_Count(&c->app.iovq);
 
 	RXDPRINTF(RXDPRINTOUT, "%s - call=0x%p, id=%u, state=%u, mode=%u, conn=%p, epoch=%u, cid=%u, callNum=%u, connFlags=0x%x, flags=0x%x, "
                 "rqc=%u,%u, tqc=%u,%u, iovqc=%u,%u, "
@@ -9382,7 +9386,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
                 "refCountAlive=%u, refCountPacket=%u, refCountSend=%u, refCountAckAll=%u, refCountAbort=%u"
 #endif
                 "\r\n",
-                cookie, c, c->call_id, (afs_uint32)c->state, (afs_uint32)c->mode, c->conn, c->conn?c->conn->epoch:0, c->conn?c->conn->cid:0,
+                cookie, c, c->call_id, (afs_uint32)c->state, (afs_uint32)c->app.mode, c->conn, c->conn?c->conn->epoch:0, c->conn?c->conn->cid:0,
                 c->callNumber?*c->callNumber:0, c->conn?c->conn->flags:0, c->flags,
                 (afs_uint32)c->rqc, (afs_uint32)rqc, (afs_uint32)c->tqc, (afs_uint32)tqc, (afs_uint32)c->iovqc, (afs_uint32)iovqc,
                 (afs_uint32)c->localStatus, (afs_uint32)c->remoteStatus, c->error, c->timeout,

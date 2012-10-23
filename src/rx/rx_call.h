@@ -10,10 +10,33 @@
 #ifndef OPENAFS_RX_CALL_H
 #define OPENAFS_RX_CALL_H 1
 
+/*
+ * The following fields are accessed while the call is unlocked.
+ * These fields are used by the application thread to marshall
+ * and unmarshall RPC data. The only time they may be changed by
+ * other threads is when the RX_CALL_IOVEC_WAIT flag is set
+ *
+ * NOTE: Ensure that this structure is padded to a double word boundary
+ * to avoid problems with other threads accessing items stored beside it
+ * in the call structure
+ */
+struct rx_call_appl {
+    struct opr_queue iovq;	/* readv/writev packet queue */
+    u_short nLeft;		/* Number bytes left in first receive packet */
+    u_short curvec;		/* current iovec in currentPacket */
+    u_short curlen;		/* bytes remaining in curvec */
+    u_short nFree;		/* Number bytes free in last send packet */
+    struct rx_packet *currentPacket;	/* Current packet being assembled or being read */
+    char *curpos;		/* current position in curvec */
+    int mode;			/* Mode of call */
+    int padding;		/* Pad to double word */
+};
+
 /* Call structure:  only instantiated for active calls and dallying
  * server calls.  The permanent call state (i.e. the call number as
  * well as state shared with other calls associated with this
  * connection) is maintained in the connection structure. */
+
 
 #ifdef KDUMP_RX_LOCK
 struct rx_call_rx_lock {
@@ -23,29 +46,9 @@ struct rx_call {
     struct opr_queue entry;	/* Call can be on various queues (one-at-a-time) */
     struct opr_queue tq;	/* Transmit packet queue */
     struct opr_queue rq;	/* Receive packet queue */
-    /*
-     * The following fields are accessed while the call is unlocked.
-     * These fields are used by the caller/server thread to marshall
-     * and unmarshall RPC data. The only time they may be changed by
-     * other threads is when the RX_CALL_IOVEC_WAIT flag is set.
-     *
-     * NOTE: Be sure that these fields start and end on a double
-     *       word boundary. Otherwise threads that are changing
-     *       adjacent fields will cause problems.
-     */
-    struct opr_queue iovq;	/* readv/writev packet queue */
-    u_short nLeft;		/* Number bytes left in first receive packet */
-    u_short curvec;		/* current iovec in currentPacket */
-    u_short curlen;		/* bytes remaining in curvec */
-    u_short nFree;		/* Number bytes free in last send packet */
-    struct rx_packet *currentPacket;	/* Current packet being assembled or being read */
-    char *curpos;		/* current position in curvec */
-    /*
-     * End of fields accessed with call unlocked
-     */
+    struct rx_call_appl app;	/* Data private to the application thread */
     u_char channel;		/* Index of call, within connection */
     u_char state;		/* Current call state as defined below */
-    u_char mode;		/* Current mode of a call in ACTIVE state */
 #ifdef	RX_ENABLE_LOCKS
     afs_kmutex_t lock;		/* lock covers data as well as mutexes. */
     afs_kmutex_t *call_queue_lock;	/* points to lock for queue we're on,

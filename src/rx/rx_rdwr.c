@@ -91,12 +91,12 @@ rxi_GetNextPacket(struct rx_call *call) {
     struct rx_packet *rp;
     int error;
 
-    if (call->currentPacket != NULL) {
+    if (call->app.currentPacket != NULL) {
 #ifdef RX_TRACK_PACKETS
-	call->currentPacket->flags |= RX_PKTFLAG_CP;
+	call->app.currentPacket->flags |= RX_PKTFLAG_CP;
 #endif
-	rxi_FreePacket(call->currentPacket);
-	call->currentPacket = NULL;
+	rxi_FreePacket(call->app.currentPacket);
+	call->app.currentPacket = NULL;
     }
 
     if (opr_queue_IsEmpty(&call->rq))
@@ -133,21 +133,21 @@ rxi_GetNextPacket(struct rx_call *call) {
      }
 
     call->rnext++;
-    call->currentPacket = rp;
+    call->app.currentPacket = rp;
 #ifdef RX_TRACK_PACKETS
-    call->currentPacket->flags |= RX_PKTFLAG_CP;
+    call->app.currentPacket->flags |= RX_PKTFLAG_CP;
 #endif
-    call->curvec = 1;	/* 0th vec is always header */
+    call->app.curvec = 1;	/* 0th vec is always header */
 
     /* begin at the beginning [ more or less ], continue on until the end,
      * then stop. */
-    call->curpos = (char *)call->currentPacket->wirevec[1].iov_base +
+    call->app.curpos = (char *)call->app.currentPacket->wirevec[1].iov_base +
 		   call->conn->securityHeaderSize;
-    call->curlen = call->currentPacket->wirevec[1].iov_len -
+    call->app.curlen = call->app.currentPacket->wirevec[1].iov_len -
 		   call->conn->securityHeaderSize;
 
-    call->nLeft = call->currentPacket->length;
-    call->bytesRcvd += call->currentPacket->length;
+    call->app.nLeft = call->app.currentPacket->length;
+    call->bytesRcvd += call->app.currentPacket->length;
 
     call->nHardAcks++;
 
@@ -170,25 +170,25 @@ rxi_ReadProc(struct rx_call *call, char *buf,
     requestCount = nbytes;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
     do {
-	if (call->nLeft == 0) {
+	if (call->app.nLeft == 0) {
 	    /* Get next packet */
 	    MUTEX_ENTER(&call->lock);
 	    for (;;) {
-		if (call->error || (call->mode != RX_MODE_RECEIVING)) {
+		if (call->error || (call->app.mode != RX_MODE_RECEIVING)) {
 		    if (call->error) {
-                        call->mode = RX_MODE_ERROR;
+                        call->app.mode = RX_MODE_ERROR;
 			MUTEX_EXIT(&call->lock);
 			return 0;
 		    }
-		    if (call->mode == RX_MODE_SENDING) {
+		    if (call->app.mode == RX_MODE_SENDING) {
                         MUTEX_EXIT(&call->lock);
 			rxi_FlushWrite(call);
                         MUTEX_ENTER(&call->lock);
@@ -200,7 +200,7 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 		if (code)
 		     return 0;
 
-		if (call->currentPacket) {
+		if (call->app.currentPacket) {
 		    if (!(call->flags & RX_CALL_RECEIVE_DONE)) {
 			if (call->nHardAcks > (u_short) rxi_HardAckRate) {
 			    rxevent_Cancel(&call->delayedAckEvent, call,
@@ -251,45 +251,45 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 	    /* osi_Assert(cp); */
 	    /* MTUXXX  this should be replaced by some error-recovery code before shipping */
 	    /* yes, the following block is allowed to be the ELSE clause (or not) */
-	    /* It's possible for call->nLeft to be smaller than any particular
+	    /* It's possible for call->app.nLeft to be smaller than any particular
 	     * iov_len.  Usually, recvmsg doesn't change the iov_len, since it
 	     * reflects the size of the buffer.  We have to keep track of the
 	     * number of bytes read in the length field of the packet struct.  On
 	     * the final portion of a received packet, it's almost certain that
-	     * call->nLeft will be smaller than the final buffer. */
-	    while (nbytes && call->currentPacket) {
-		t = MIN((int)call->curlen, nbytes);
-		t = MIN(t, (int)call->nLeft);
-		memcpy(buf, call->curpos, t);
+	     * call->app.nLeft will be smaller than the final buffer. */
+	    while (nbytes && call->app.currentPacket) {
+		t = MIN((int)call->app.curlen, nbytes);
+		t = MIN(t, (int)call->app.nLeft);
+		memcpy(buf, call->app.curpos, t);
 		buf += t;
 		nbytes -= t;
-		call->curpos += t;
-		call->curlen -= t;
-		call->nLeft -= t;
+		call->app.curpos += t;
+		call->app.curlen -= t;
+		call->app.nLeft -= t;
 
-		if (!call->nLeft) {
+		if (!call->app.nLeft) {
 		    /* out of packet.  Get another one. */
 #ifdef RX_TRACK_PACKETS
-		    call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+		    call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-		    rxi_FreePacket(call->currentPacket);
-		    call->currentPacket = NULL;
-		} else if (!call->curlen) {
+		    rxi_FreePacket(call->app.currentPacket);
+		    call->app.currentPacket = NULL;
+		} else if (!call->app.curlen) {
 		    /* need to get another struct iov */
-		    if (++call->curvec >= call->currentPacket->niovecs) {
+		    if (++call->app.curvec >= call->app.currentPacket->niovecs) {
 			/* current packet is exhausted, get ready for another */
 			/* don't worry about curvec and stuff, they get set somewhere else */
 #ifdef RX_TRACK_PACKETS
-			call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+			call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-			rxi_FreePacket(call->currentPacket);
-			call->currentPacket = NULL;
-			call->nLeft = 0;
+			rxi_FreePacket(call->app.currentPacket);
+			call->app.currentPacket = NULL;
+			call->app.nLeft = 0;
 		    } else {
-			call->curpos =
-			    call->currentPacket->wirevec[call->curvec].iov_base;
-			call->curlen =
-			    call->currentPacket->wirevec[call->curvec].iov_len;
+			call->app.curpos =
+			    call->app.currentPacket->wirevec[call->app.curvec].iov_base;
+			call->app.curlen =
+			    call->app.currentPacket->wirevec[call->app.curvec].iov_len;
 		    }
 		}
 	    }
@@ -310,28 +310,28 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
     SPLVAR;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
     /*
      * Most common case, all of the data is in the current iovec.
      * We are relying on nLeft being zero unless the call is in receive mode.
      */
-    if (!call->error && call->curlen > nbytes && call->nLeft > nbytes) {
-        memcpy(buf, call->curpos, nbytes);
+    if (!call->error && call->app.curlen > nbytes && call->app.nLeft > nbytes) {
+        memcpy(buf, call->app.curpos, nbytes);
 
-	call->curpos += nbytes;
-	call->curlen -= nbytes;
-	call->nLeft  -= nbytes;
+	call->app.curpos += nbytes;
+	call->app.curlen -= nbytes;
+	call->app.nLeft  -= nbytes;
 
-        if (!call->nLeft && call->currentPacket != NULL) {
+        if (!call->app.nLeft && call->app.currentPacket != NULL) {
             /* out of packet.  Get another one. */
-            rxi_FreePacket(call->currentPacket);
-            call->currentPacket = (struct rx_packet *)0;
+            rxi_FreePacket(call->app.currentPacket);
+            call->app.currentPacket = NULL;
         }
 	return nbytes;
     }
@@ -350,30 +350,30 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
     SPLVAR;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
     /*
      * Most common case, all of the data is in the current iovec.
      * We are relying on nLeft being zero unless the call is in receive mode.
      */
-    if (!call->error && call->curlen >= sizeof(afs_int32)
-	&& call->nLeft >= sizeof(afs_int32)) {
+    if (!call->error && call->app.curlen >= sizeof(afs_int32)
+	&& call->app.nLeft >= sizeof(afs_int32)) {
 
-        memcpy((char *)value, call->curpos, sizeof(afs_int32));
+        memcpy((char *)value, call->app.curpos, sizeof(afs_int32));
 
-        call->curpos += sizeof(afs_int32);
-	call->curlen -= sizeof(afs_int32);
-	call->nLeft  -= sizeof(afs_int32);
+        call->app.curpos += sizeof(afs_int32);
+	call->app.curlen -= sizeof(afs_int32);
+	call->app.nLeft  -= sizeof(afs_int32);
 
-        if (!call->nLeft && call->currentPacket != NULL) {
+        if (!call->app.nLeft && call->app.currentPacket != NULL) {
             /* out of packet.  Get another one. */
-            rxi_FreePacket(call->currentPacket);
-            call->currentPacket = (struct rx_packet *)0;
+            rxi_FreePacket(call->app.currentPacket);
+            call->app.currentPacket = NULL;
         }
 	return sizeof(afs_int32);
     }
@@ -401,13 +401,13 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
     struct iovec *call_iov;
     struct iovec *cur_iov = NULL;
 
-    if (call->currentPacket) {
-	cur_iov = &call->currentPacket->wirevec[call->curvec];
+    if (call->app.currentPacket) {
+	cur_iov = &call->app.currentPacket->wirevec[call->app.curvec];
     }
     call_iov = &call->iov[call->iovNext];
 
     while (!call->error && call->iovNBytes && call->iovNext < call->iovMax) {
-	if (call->nLeft == 0) {
+	if (call->app.nLeft == 0) {
 	    /* Get next packet */
 	    code = rxi_GetNextPacket(call);
 	    if (code) {
@@ -415,8 +415,8 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 	        return 1;
 	    }
 
-	    if (call->currentPacket) {
-		cur_iov = &call->currentPacket->wirevec[1];
+	    if (call->app.currentPacket) {
+		cur_iov = &call->app.currentPacket->wirevec[1];
 		didConsume = 1;
 		continue;
 	    } else {
@@ -424,57 +424,59 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 	    }
 	}
 
-	/* It's possible for call->nLeft to be smaller than any particular
+	/* It's possible for call->app.nLeft to be smaller than any particular
 	 * iov_len.  Usually, recvmsg doesn't change the iov_len, since it
 	 * reflects the size of the buffer.  We have to keep track of the
 	 * number of bytes read in the length field of the packet struct.  On
 	 * the final portion of a received packet, it's almost certain that
-	 * call->nLeft will be smaller than the final buffer. */
+	 * call->app.nLeft will be smaller than the final buffer. */
 	while (call->iovNBytes
 	       && call->iovNext < call->iovMax
-	       && call->currentPacket) {
+	       && call->app.currentPacket) {
 
-	    t = MIN((int)call->curlen, call->iovNBytes);
-	    t = MIN(t, (int)call->nLeft);
-	    call_iov->iov_base = call->curpos;
+	    t = MIN((int)call->app.curlen, call->iovNBytes);
+	    t = MIN(t, (int)call->app.nLeft);
+	    call_iov->iov_base = call->app.curpos;
 	    call_iov->iov_len = t;
 	    call_iov++;
 	    call->iovNext++;
 	    call->iovNBytes -= t;
-	    call->curpos += t;
-	    call->curlen -= t;
-	    call->nLeft -= t;
+	    call->app.curpos += t;
+	    call->app.curlen -= t;
+	    call->app.nLeft -= t;
 
-	    if (!call->nLeft) {
+	    if (!call->app.nLeft) {
 		/* out of packet.  Get another one. */
 #ifdef RX_TRACK_PACKETS
-                call->currentPacket->flags &= ~RX_PKTFLAG_CP;
-                call->currentPacket->flags |= RX_PKTFLAG_IOVQ;
+                call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
+                call->app.currentPacket->flags |= RX_PKTFLAG_IOVQ;
 #endif
-		opr_queue_Append(&call->iovq, &call->currentPacket->entry);
+		opr_queue_Append(&call->app.iovq,
+				 &call->app.currentPacket->entry);
 #ifdef RXDEBUG_PACKET
                 call->iovqc++;
 #endif /* RXDEBUG_PACKET */
-		call->currentPacket = NULL;
-	    } else if (!call->curlen) {
+		call->app.currentPacket = NULL;
+	    } else if (!call->app.curlen) {
 		/* need to get another struct iov */
-		if (++call->curvec >= call->currentPacket->niovecs) {
+		if (++call->app.curvec >= call->app.currentPacket->niovecs) {
 		    /* current packet is exhausted, get ready for another */
 		    /* don't worry about curvec and stuff, they get set somewhere else */
 #ifdef RX_TRACK_PACKETS
-		    call->currentPacket->flags &= ~RX_PKTFLAG_CP;
-		    call->currentPacket->flags |= RX_PKTFLAG_IOVQ;
+		    call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
+		    call->app.currentPacket->flags |= RX_PKTFLAG_IOVQ;
 #endif
-		    opr_queue_Append(&call->iovq, &call->currentPacket->entry);
+		    opr_queue_Append(&call->app.iovq,
+				     &call->app.currentPacket->entry);
 #ifdef RXDEBUG_PACKET
                     call->iovqc++;
 #endif /* RXDEBUG_PACKET */
-		    call->currentPacket = NULL;
-		    call->nLeft = 0;
+		    call->app.currentPacket = NULL;
+		    call->app.nLeft = 0;
 		} else {
 		    cur_iov++;
-		    call->curpos = (char *)cur_iov->iov_base;
-		    call->curlen = cur_iov->iov_len;
+		    call->app.curpos = (char *)cur_iov->iov_base;
+		    call->app.curlen = cur_iov->iov_len;
 		}
 	    }
 	}
@@ -512,14 +514,14 @@ rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     int bytes;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
-    if (call->mode == RX_MODE_SENDING) {
+    if (call->app.mode == RX_MODE_SENDING) {
 	rxi_FlushWrite(call);
     }
 
@@ -569,7 +571,7 @@ rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 
   error:
     MUTEX_EXIT(&call->lock);
-    call->mode = RX_MODE_ERROR;
+    call->app.mode = RX_MODE_ERROR;
     return 0;
 }
 
@@ -600,25 +602,25 @@ rxi_WriteProc(struct rx_call *call, char *buf,
     int requestCount = nbytes;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
-    if (call->mode != RX_MODE_SENDING) {
+    if (call->app.mode != RX_MODE_SENDING) {
 	if ((conn->type == RX_SERVER_CONNECTION)
-	    && (call->mode == RX_MODE_RECEIVING)) {
-	    call->mode = RX_MODE_SENDING;
-	    if (call->currentPacket) {
+	    && (call->app.mode == RX_MODE_RECEIVING)) {
+	    call->app.mode = RX_MODE_SENDING;
+	    if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-		call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+		call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-		rxi_FreePacket(call->currentPacket);
-		call->currentPacket = NULL;
-		call->nLeft = 0;
-		call->nFree = 0;
+		rxi_FreePacket(call->app.currentPacket);
+		call->app.currentPacket = NULL;
+		call->app.nLeft = 0;
+		call->app.nFree = 0;
 	    }
 	} else {
 	    return 0;
@@ -630,33 +632,34 @@ rxi_WriteProc(struct rx_call *call, char *buf,
      * there are 0 bytes on the stream, but we must send a packet
      * anyway. */
     do {
-	if (call->nFree == 0) {
+	if (call->app.nFree == 0) {
 	    MUTEX_ENTER(&call->lock);
             if (call->error)
-                call->mode = RX_MODE_ERROR;
-	    if (!call->error && call->currentPacket) {
+                call->app.mode = RX_MODE_ERROR;
+	    if (!call->error && call->app.currentPacket) {
 		clock_NewTime();	/* Bogus:  need new time package */
 		/* The 0, below, specifies that it is not the last packet:
 		 * there will be others. PrepareSendPacket may
 		 * alter the packet length by up to
 		 * conn->securityMaxTrailerSize */
-		call->bytesSent += call->currentPacket->length;
-		rxi_PrepareSendPacket(call, call->currentPacket, 0);
+		call->bytesSent += call->app.currentPacket->length;
+		rxi_PrepareSendPacket(call, call->app.currentPacket, 0);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
                 /* PrepareSendPacket drops the call lock */
                 rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 #ifdef RX_TRACK_PACKETS
-		call->currentPacket->flags |= RX_PKTFLAG_TQ;
+		call->app.currentPacket->flags |= RX_PKTFLAG_TQ;
 #endif
-		opr_queue_Append(&call->tq, &call->currentPacket->entry);
+		opr_queue_Append(&call->tq,
+				 &call->app.currentPacket->entry);
 #ifdef RXDEBUG_PACKET
                 call->tqc++;
 #endif /* RXDEBUG_PACKET */
 #ifdef RX_TRACK_PACKETS
-                call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+                call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-                call->currentPacket = NULL;
+                call->app.currentPacket = NULL;
 
 		/* If the call is in recovery, let it exhaust its current
 		 * retransmit queue before forcing it to send new packets
@@ -664,12 +667,12 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		if (!(call->flags & (RX_CALL_FAST_RECOVER))) {
 		    rxi_Start(call, 0);
 		}
-	    } else if (call->currentPacket) {
+	    } else if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-		call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+		call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-		rxi_FreePacket(call->currentPacket);
-		call->currentPacket = NULL;
+		rxi_FreePacket(call->app.currentPacket);
+		call->app.currentPacket = NULL;
 	    }
 	    /* Wait for transmit window to open up */
 	    while (!call->error
@@ -687,35 +690,35 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 		call->startWait = 0;
 #ifdef RX_ENABLE_LOCKS
 		if (call->error) {
-                    call->mode = RX_MODE_ERROR;
+                    call->app.mode = RX_MODE_ERROR;
 		    MUTEX_EXIT(&call->lock);
 		    return 0;
 		}
 #endif /* RX_ENABLE_LOCKS */
 	    }
-	    if ((call->currentPacket = rxi_AllocSendPacket(call, nbytes))) {
+	    if ((call->app.currentPacket = rxi_AllocSendPacket(call, nbytes))) {
 #ifdef RX_TRACK_PACKETS
-		call->currentPacket->flags |= RX_PKTFLAG_CP;
+		call->app.currentPacket->flags |= RX_PKTFLAG_CP;
 #endif
-		call->nFree = call->currentPacket->length;
-		call->curvec = 1;	/* 0th vec is always header */
+		call->app.nFree = call->app.currentPacket->length;
+		call->app.curvec = 1;	/* 0th vec is always header */
 		/* begin at the beginning [ more or less ], continue
 		 * on until the end, then stop. */
-		call->curpos =
-		    (char *) call->currentPacket->wirevec[1].iov_base +
+		call->app.curpos =
+		    (char *) call->app.currentPacket->wirevec[1].iov_base +
 		    call->conn->securityHeaderSize;
-		call->curlen =
-		    call->currentPacket->wirevec[1].iov_len -
+		call->app.curlen =
+		    call->app.currentPacket->wirevec[1].iov_len -
 		    call->conn->securityHeaderSize;
 	    }
 	    if (call->error) {
-                call->mode = RX_MODE_ERROR;
-		if (call->currentPacket) {
+                call->app.mode = RX_MODE_ERROR;
+		if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-		    call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+		    call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-		    rxi_FreePacket(call->currentPacket);
-		    call->currentPacket = NULL;
+		    rxi_FreePacket(call->app.currentPacket);
+		    call->app.currentPacket = NULL;
 		}
 		MUTEX_EXIT(&call->lock);
 		return 0;
@@ -723,19 +726,19 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 	    MUTEX_EXIT(&call->lock);
 	}
 
-	if (call->currentPacket && (int)call->nFree < nbytes) {
+	if (call->app.currentPacket && (int)call->app.nFree < nbytes) {
 	    /* Try to extend the current buffer */
 	    int len, mud;
-	    len = call->currentPacket->length;
+	    len = call->app.currentPacket->length;
 	    mud = rx_MaxUserDataSize(call);
 	    if (mud > len) {
 		int want;
-		want = MIN(nbytes - (int)call->nFree, mud - len);
-		rxi_AllocDataBuf(call->currentPacket, want,
+		want = MIN(nbytes - (int)call->app.nFree, mud - len);
+		rxi_AllocDataBuf(call->app.currentPacket, want,
 				 RX_PACKET_CLASS_SEND_CBUF);
-		if (call->currentPacket->length > (unsigned)mud)
-		    call->currentPacket->length = mud;
-		call->nFree += (call->currentPacket->length - len);
+		if (call->app.currentPacket->length > (unsigned)mud)
+		    call->app.currentPacket->length = mud;
+		call->app.nFree += (call->app.currentPacket->length - len);
 	    }
 	}
 
@@ -743,31 +746,31 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 	 * and return.  Don't ship a buffer that's full immediately to
 	 * the peer--we don't know if it's the last buffer yet */
 
-	if (!call->currentPacket) {
-	    call->nFree = 0;
+	if (!call->app.currentPacket) {
+	    call->app.nFree = 0;
 	}
 
-	while (nbytes && call->nFree) {
+	while (nbytes && call->app.nFree) {
 
-	    t = MIN((int)call->curlen, nbytes);
-	    t = MIN((int)call->nFree, t);
-	    memcpy(call->curpos, buf, t);
+	    t = MIN((int)call->app.curlen, nbytes);
+	    t = MIN((int)call->app.nFree, t);
+	    memcpy(call->app.curpos, buf, t);
 	    buf += t;
 	    nbytes -= t;
-	    call->curpos += t;
-	    call->curlen -= (u_short)t;
-	    call->nFree -= (u_short)t;
+	    call->app.curpos += t;
+	    call->app.curlen -= (u_short)t;
+	    call->app.nFree -= (u_short)t;
 
-	    if (!call->curlen) {
+	    if (!call->app.curlen) {
 		/* need to get another struct iov */
-		if (++call->curvec >= call->currentPacket->niovecs) {
+		if (++call->app.curvec >= call->app.currentPacket->niovecs) {
 		    /* current packet is full, extend or send it */
-		    call->nFree = 0;
+		    call->app.nFree = 0;
 		} else {
-		    call->curpos =
-			call->currentPacket->wirevec[call->curvec].iov_base;
-		    call->curlen =
-			call->currentPacket->wirevec[call->curvec].iov_len;
+		    call->app.curpos =
+			call->app.currentPacket->wirevec[call->app.curvec].iov_base;
+		    call->app.curlen =
+			call->app.currentPacket->wirevec[call->app.curvec].iov_len;
 		}
 	    }
 	}			/* while bytes to send and room to send them */
@@ -791,26 +794,26 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
     SPLVAR;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
     /*
      * Most common case: all of the data fits in the current iovec.
      * We are relying on nFree being zero unless the call is in send mode.
      */
-    tcurlen = (int)call->curlen;
-    tnFree = (int)call->nFree;
+    tcurlen = (int)call->app.curlen;
+    tnFree = (int)call->app.nFree;
     if (!call->error && tcurlen >= nbytes && tnFree >= nbytes) {
-	tcurpos = call->curpos;
+	tcurpos = call->app.curpos;
 
 	memcpy(tcurpos, buf, nbytes);
-	call->curpos = tcurpos + nbytes;
-	call->curlen = (u_short)(tcurlen - nbytes);
-	call->nFree = (u_short)(tnFree - nbytes);
+	call->app.curpos = tcurpos + nbytes;
+	call->app.curlen = (u_short)(tcurlen - nbytes);
+	call->app.nFree = (u_short)(tnFree - nbytes);
 	return nbytes;
     }
 
@@ -830,31 +833,31 @@ rx_WriteProc32(struct rx_call *call, afs_int32 * value)
     char *tcurpos;
     SPLVAR;
 
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
     /*
      * Most common case: all of the data fits in the current iovec.
      * We are relying on nFree being zero unless the call is in send mode.
      */
-    tcurlen = call->curlen;
-    tnFree = call->nFree;
+    tcurlen = call->app.curlen;
+    tnFree = call->app.nFree;
     if (!call->error && tcurlen >= sizeof(afs_int32)
 	&& tnFree >= sizeof(afs_int32)) {
-	tcurpos = call->curpos;
+	tcurpos = call->app.curpos;
 
 	if (!((size_t)tcurpos & (sizeof(afs_int32) - 1))) {
 	    *((afs_int32 *) (tcurpos)) = *value;
 	} else {
 	    memcpy(tcurpos, (char *)value, sizeof(afs_int32));
 	}
-	call->curpos = tcurpos + sizeof(afs_int32);
-	call->curlen = (u_short)(tcurlen - sizeof(afs_int32));
-	call->nFree = (u_short)(tnFree - sizeof(afs_int32));
+	call->app.curpos = tcurpos + sizeof(afs_int32);
+	call->app.curlen = (u_short)(tcurlen - sizeof(afs_int32));
+	call->app.nFree = (u_short)(tnFree - sizeof(afs_int32));
 	return sizeof(afs_int32);
     }
 
@@ -890,25 +893,25 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     nextio = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
-    if (call->mode != RX_MODE_SENDING) {
+    if (call->app.mode != RX_MODE_SENDING) {
 	if ((conn->type == RX_SERVER_CONNECTION)
-	    && (call->mode == RX_MODE_RECEIVING)) {
-	    call->mode = RX_MODE_SENDING;
-	    if (call->currentPacket) {
+	    && (call->app.mode == RX_MODE_RECEIVING)) {
+	    call->app.mode = RX_MODE_SENDING;
+	    if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-		call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+		call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-		rxi_FreePacket(call->currentPacket);
-		call->currentPacket = NULL;
-		call->nLeft = 0;
-		call->nFree = 0;
+		rxi_FreePacket(call->app.currentPacket);
+		call->app.currentPacket = NULL;
+		call->app.nLeft = 0;
+		call->app.nFree = 0;
 	    }
 	} else {
 	    return 0;
@@ -916,11 +919,11 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     }
 
     /* Set up the iovec to point to data in packet buffers. */
-    tnFree = call->nFree;
-    tcurvec = call->curvec;
-    tcurpos = call->curpos;
-    tcurlen = call->curlen;
-    cp = call->currentPacket;
+    tnFree = call->app.nFree;
+    tcurvec = call->app.curvec;
+    tcurpos = call->app.curpos;
+    tcurlen = call->app.curlen;
+    cp = call->app.currentPacket;
     do {
 	int t;
 
@@ -937,7 +940,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 #ifdef RX_TRACK_PACKETS
 	    cp->flags |= RX_PKTFLAG_IOVQ;
 #endif
-	    opr_queue_Append(&call->iovq, &cp->entry);
+	    opr_queue_Append(&call->app.iovq, &cp->entry);
 #ifdef RXDEBUG_PACKET
             call->iovqc++;
 #endif /* RXDEBUG_PACKET */
@@ -961,8 +964,8 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 		if (cp->length > (unsigned)mud)
 		    cp->length = mud;
 		tnFree += (cp->length - len);
-		if (cp == call->currentPacket) {
-		    call->nFree += (cp->length - len);
+		if (cp == call->app.currentPacket) {
+		    call->app.nFree += (cp->length - len);
 		}
 	    }
 	}
@@ -1030,8 +1033,8 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 
     MUTEX_ENTER(&call->lock);
     if (call->error) {
-        call->mode = RX_MODE_ERROR;
-    } else if (call->mode != RX_MODE_SENDING) {
+        call->app.mode = RX_MODE_ERROR;
+    } else if (call->app.mode != RX_MODE_SENDING) {
 	call->error = RX_PROTOCOL_ERROR;
     }
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
@@ -1039,23 +1042,24 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
     if (call->error) {
-        call->mode = RX_MODE_ERROR;
+        call->app.mode = RX_MODE_ERROR;
 	MUTEX_EXIT(&call->lock);
-	if (call->currentPacket) {
+	if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-            call->currentPacket->flags &= ~RX_PKTFLAG_CP;
-            call->currentPacket->flags |= RX_PKTFLAG_IOVQ;
+            call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
+            call->app.currentPacket->flags |= RX_PKTFLAG_IOVQ;
 #endif
-	    opr_queue_Prepend(&call->iovq, &call->currentPacket->entry);
+	    opr_queue_Prepend(&call->app.iovq,
+			      &call->app.currentPacket->entry);
 #ifdef RXDEBUG_PACKET
             call->iovqc++;
 #endif /* RXDEBUG_PACKET */
-	    call->currentPacket = NULL;
+	    call->app.currentPacket = NULL;
 	}
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
 	return 0;
     }
 
@@ -1070,27 +1074,27 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     tmpqc = 0;
 #endif /* RXDEBUG_PACKET */
     do {
-	if (call->nFree == 0 && call->currentPacket) {
+	if (call->app.nFree == 0 && call->app.currentPacket) {
 	    clock_NewTime();	/* Bogus:  need new time package */
 	    /* The 0, below, specifies that it is not the last packet:
 	     * there will be others. PrepareSendPacket may
 	     * alter the packet length by up to
 	     * conn->securityMaxTrailerSize */
-	    call->bytesSent += call->currentPacket->length;
-	    rxi_PrepareSendPacket(call, call->currentPacket, 0);
+	    call->bytesSent += call->app.currentPacket->length;
+	    rxi_PrepareSendPacket(call, call->app.currentPacket, 0);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
             /* PrepareSendPacket drops the call lock */
             rxi_WaitforTQBusy(call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	    opr_queue_Append(&tmpq, &call->currentPacket->entry);
+	    opr_queue_Append(&tmpq, &call->app.currentPacket->entry);
 #ifdef RXDEBUG_PACKET
             tmpqc++;
 #endif /* RXDEBUG_PACKET */
-            call->currentPacket = NULL;
+            call->app.currentPacket = NULL;
 
 	    /* The head of the iovq is now the current packet */
 	    if (nbytes) {
-		if (opr_queue_IsEmpty(&call->iovq)) {
+		if (opr_queue_IsEmpty(&call->app.iovq)) {
                     MUTEX_EXIT(&call->lock);
 		    call->error = RX_PROTOCOL_ERROR;
 #ifdef RXDEBUG_PACKET
@@ -1099,43 +1103,44 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
                         rxi_FreePackets(0, &tmpq);
 		    return 0;
 		}
-		call->currentPacket = opr_queue_First(&call->iovq,
-						      struct rx_packet,
-						      entry);
-		opr_queue_Remove(&call->currentPacket->entry);
+		call->app.currentPacket
+			= opr_queue_First(&call->app.iovq, struct rx_packet,
+					  entry);
+		opr_queue_Remove(&call->app.currentPacket->entry);
 #ifdef RX_TRACK_PACKETS
-                call->currentPacket->flags &= ~RX_PKTFLAG_IOVQ;
-		call->currentPacket->flags |= RX_PKTFLAG_CP;
+                call->app.currentPacket->flags &= ~RX_PKTFLAG_IOVQ;
+		call->app.currentPacket->flags |= RX_PKTFLAG_CP;
 #endif
 #ifdef RXDEBUG_PACKET
                 call->iovqc--;
 #endif /* RXDEBUG_PACKET */
-		call->nFree = call->currentPacket->length;
-		call->curvec = 1;
-		call->curpos =
-		    (char *) call->currentPacket->wirevec[1].iov_base +
+		call->app.nFree = call->app.currentPacket->length;
+		call->app.curvec = 1;
+		call->app.curpos =
+		    (char *) call->app.currentPacket->wirevec[1].iov_base +
 		    call->conn->securityHeaderSize;
-		call->curlen =
-		    call->currentPacket->wirevec[1].iov_len -
+		call->app.curlen =
+		    call->app.currentPacket->wirevec[1].iov_len -
 		    call->conn->securityHeaderSize;
 	    }
 	}
 
 	if (nbytes) {
 	    /* The next iovec should point to the current position */
-	    if (iov[nextio].iov_base != call->curpos
-		|| iov[nextio].iov_len > (int)call->curlen) {
+	    if (iov[nextio].iov_base != call->app.curpos
+		|| iov[nextio].iov_len > (int)call->app.curlen) {
 		call->error = RX_PROTOCOL_ERROR;
                 MUTEX_EXIT(&call->lock);
-		if (call->currentPacket) {
+		if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-		    call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+		    call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-                    opr_queue_Prepend(&tmpq, &call->currentPacket->entry);
+                    opr_queue_Prepend(&tmpq,
+				      &call->app.currentPacket->entry);
 #ifdef RXDEBUG_PACKET
                     tmpqc++;
 #endif /* RXDEBUG_PACKET */
-                    call->currentPacket = NULL;
+                    call->app.currentPacket = NULL;
 		}
 #ifdef RXDEBUG_PACKET
                 tmpqc -=
@@ -1144,18 +1149,18 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 		return 0;
 	    }
 	    nbytes -= iov[nextio].iov_len;
-	    call->curpos += iov[nextio].iov_len;
-	    call->curlen -= iov[nextio].iov_len;
-	    call->nFree -= iov[nextio].iov_len;
+	    call->app.curpos += iov[nextio].iov_len;
+	    call->app.curlen -= iov[nextio].iov_len;
+	    call->app.nFree -= iov[nextio].iov_len;
 	    nextio++;
-	    if (call->curlen == 0) {
-		if (++call->curvec > call->currentPacket->niovecs) {
-		    call->nFree = 0;
+	    if (call->app.curlen == 0) {
+		if (++call->app.curvec > call->app.currentPacket->niovecs) {
+		    call->app.nFree = 0;
 		} else {
-		    call->curpos =
-			call->currentPacket->wirevec[call->curvec].iov_base;
-		    call->curlen =
-			call->currentPacket->wirevec[call->curvec].iov_len;
+		    call->app.curpos =
+			call->app.currentPacket->wirevec[call->app.curvec].iov_base;
+		    call->app.curlen =
+			call->app.currentPacket->wirevec[call->app.curvec].iov_len;
 		}
 	    }
 	}
@@ -1172,7 +1177,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     }
 #endif
     if (call->error)
-        call->mode = RX_MODE_ERROR;
+        call->app.mode = RX_MODE_ERROR;
 
     opr_queue_SpliceAppend(&call->tq, &tmpq);
 
@@ -1197,14 +1202,14 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     }
 
     if (call->error) {
-        call->mode = RX_MODE_ERROR;
-        call->currentPacket = NULL;
+        call->app.mode = RX_MODE_ERROR;
+        call->app.currentPacket = NULL;
         MUTEX_EXIT(&call->lock);
-	if (call->currentPacket) {
+	if (call->app.currentPacket) {
 #ifdef RX_TRACK_PACKETS
-	    call->currentPacket->flags &= ~RX_PKTFLAG_CP;
+	    call->app.currentPacket->flags &= ~RX_PKTFLAG_CP;
 #endif
-	    rxi_FreePacket(call->currentPacket);
+	    rxi_FreePacket(call->app.currentPacket);
 	}
 	return 0;
     }
@@ -1236,16 +1241,16 @@ rxi_FlushWrite(struct rx_call *call)
     struct rx_packet *cp = NULL;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    if (!opr_queue_IsEmpty(&call->iovq)) {
+    if (!opr_queue_IsEmpty(&call->app.iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
-            rxi_FreePackets(0, &call->iovq);
+            rxi_FreePackets(0, &call->app.iovq);
     }
 
-    if (call->mode == RX_MODE_SENDING) {
+    if (call->app.mode == RX_MODE_SENDING) {
 
-	call->mode =
+	call->app.mode =
 	    (call->conn->type ==
 	     RX_CLIENT_CONNECTION ? RX_MODE_RECEIVING : RX_MODE_EOF);
 
@@ -1264,9 +1269,9 @@ rxi_FlushWrite(struct rx_call *call)
 
         MUTEX_ENTER(&call->lock);
         if (call->error)
-            call->mode = RX_MODE_ERROR;
+            call->app.mode = RX_MODE_ERROR;
 
-        cp = call->currentPacket;
+        cp = call->app.currentPacket;
 
 	if (cp) {
 	    /* cp->length is only supposed to be the user's data */
@@ -1275,9 +1280,9 @@ rxi_FlushWrite(struct rx_call *call)
 #ifdef RX_TRACK_PACKETS
 	    cp->flags &= ~RX_PKTFLAG_CP;
 #endif
-	    cp->length -= call->nFree;
-	    call->currentPacket = (struct rx_packet *)0;
-	    call->nFree = 0;
+	    cp->length -= call->app.nFree;
+	    call->app.currentPacket = NULL;
+	    call->app.nFree = 0;
 	} else {
 	    cp = rxi_AllocSendPacket(call, 0);
 	    if (!cp) {
@@ -1286,7 +1291,7 @@ rxi_FlushWrite(struct rx_call *call)
 	    }
 	    cp->length = 0;
 	    cp->niovecs = 2;	/* header + space for rxkad stuff */
-	    call->nFree = 0;
+	    call->app.nFree = 0;
 	}
 
 	/* The 1 specifies that this is the last packet */
