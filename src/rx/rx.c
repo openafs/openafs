@@ -5964,7 +5964,7 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
      * the listener or event threads
      */
     if ((list[len - 1]->header.flags & RX_LAST_PACKET)
-	|| call->app.mode == RX_MODE_RECEIVING || call->app.mode == RX_MODE_EOF
+	|| (call->flags & RX_CALL_FLUSH)
 	|| (call->flags & RX_CALL_FAST_RECOVER)) {
 	/* Check for the case where the current list contains
 	 * an acked packet. Since we always send retransmissions

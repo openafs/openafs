@@ -1271,6 +1271,8 @@ rxi_FlushWrite(struct rx_call *call)
         if (call->error)
             call->app.mode = RX_MODE_ERROR;
 
+	call->flags |= RX_CALL_FLUSH;
+
         cp = call->app.currentPacket;
 
 	if (cp) {

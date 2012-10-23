@@ -170,7 +170,7 @@ extern u_short rx_PortOf(struct rx_peer *peer);
 #define RX_CALL_PEER_BUSY	0x20000 /* the last packet we received on this call was a
                                          * BUSY packet; i.e. the channel for this call is busy */
 #define RX_CALL_ACKALL_SENT     0x40000 /* ACKALL has been sent on the call */
-
+#define RX_CALL_FLUSH		0x80000 /* Transmit queue should be flushed to peer */
 #endif
 
 
