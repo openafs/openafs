@@ -1301,6 +1301,14 @@ try_exit:
             Irp->IoStatus.Information > 0)
         {
 
+	    if ( !bLocked)
+	    {
+
+		AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource,
+				  TRUE);
+		bLocked = TRUE;
+	    }
+
             //
             // Since this is dirty we can mark the extents dirty now.
             // AFSMarkDirty will dereference the extents.  Do not call
