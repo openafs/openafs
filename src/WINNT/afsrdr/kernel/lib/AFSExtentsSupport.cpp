@@ -3363,7 +3363,6 @@ AFSMarkDirty( IN AFSFcb *Fcb,
     ULONG ulCount = 0;
     BOOLEAN bInsertTail = FALSE, bInsertHead = FALSE;
     LONG lCount;
-    BOOLEAN bLocked = FALSE;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -3371,11 +3370,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
                   &Fcb->NPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
 
-    if( !ExIsResourceAcquiredLite( &Fcb->NPFcb->Specific.File.ExtentsResource))
-    {
-        AFSAcquireShared( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE);
-        bLocked = TRUE;
-    }
+    ASSERT( ExIsResourceAcquiredLite( &pNPFcb->Specific.File.ExtentsResource));
 
     AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
                     TRUE);
@@ -3536,11 +3531,6 @@ AFSMarkDirty( IN AFSFcb *Fcb,
                   "AFSMarkDirty Releasing Fcb extents lock %08lX SHARED %08lX\n",
                   &Fcb->NPFcb->Specific.File.ExtentsResource,
                   PsGetCurrentThread());
-
-    if( bLocked)
-    {
-        AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
-    }
 
     return;
 }
