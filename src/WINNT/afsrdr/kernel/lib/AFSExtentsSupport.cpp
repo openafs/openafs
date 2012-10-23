@@ -2585,6 +2585,8 @@ AFSFlushExtents( IN AFSFcb *Fcb,
     __Enter
     {
 
+        lCount = InterlockedIncrement( &Fcb->Specific.File.QueuedFlushCount);
+
         if( pAuthGroup == NULL ||
             RtlCompareMemory( pAuthGroup,
                               &Fcb->NPFcb->Specific.File.ExtentsRequestAuthGroup,
@@ -2615,8 +2617,6 @@ AFSFlushExtents( IN AFSFcb *Fcb,
         AFSLockForExtentsTrim( Fcb);
 
         bExtentsLocked = TRUE;
-
-        lCount = InterlockedIncrement( &Fcb->Specific.File.QueuedFlushCount);
 
         //
         // Clear our queued flush event
@@ -2814,6 +2814,8 @@ AFSFlushExtents( IN AFSFcb *Fcb,
 try_exit:
 
         lCount = InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount);
+
+	ASSERT( lCount >= 0);
 
         if( lCount == 0)
         {

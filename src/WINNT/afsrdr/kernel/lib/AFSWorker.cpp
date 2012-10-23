@@ -2258,6 +2258,8 @@ try_exit:
 
         lCount = InterlockedDecrement( &Fcb->Specific.File.QueuedFlushCount);
 
+	ASSERT( lCount >= 0);
+
         if( lCount == 0)
         {
 
