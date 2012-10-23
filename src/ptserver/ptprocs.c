@@ -1148,6 +1148,7 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
     afs_int32 hostid;
     int host_list = 0;
     struct in_addr iaddr;
+    char hoststr[16];
 
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
@@ -1172,7 +1173,7 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
 	    || !AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	    ABORT_WITH(tt, PRPERM);
     }
-    code = NameToID(tt, inet_ntoa(iaddr), &hostid);
+    code = NameToID(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr), &hostid);
     if (code == PRSUCCESS && hostid != 0) {
 	temp = FindByID(tt, hostid);
 	if (temp) {
@@ -1219,6 +1220,7 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
     struct prentry host_tentry;
     afs_int32 hostid;
     struct in_addr iaddr;
+    char hoststr[16];
 
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
@@ -1229,7 +1231,7 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
     if (code)
 	return code;
 
-    code = NameToID(tt, inet_ntoa(iaddr), &hostid);
+    code = NameToID(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr), &hostid);
     if (code == PRSUCCESS && hostid != 0) {
 	temp = FindByID(tt, hostid);
 	if (temp) {
@@ -1919,11 +1921,12 @@ addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
     afs_int32 hostid;
     int size = 0, i, code;
     int added = 0;
+    char hoststr[16];
 
     while ((host = (host & wild))) {
 	wild = htonl(ntohl(wild) << 8);
 	iaddr.s_addr = host;
-	code = NameToID(tt, inet_ntoa(iaddr), &hostid);
+	code = NameToID(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr), &hostid);
 	if (code == PRSUCCESS && hostid != 0) {
 	    temp = FindByID(tt, hostid);
 	    if (temp) {
