@@ -2439,7 +2439,7 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
         }
     }
     lock_ReleaseRead(&buf_globalLock);
-    return 0;
+    return found;
 }
 
 long buf_RDRBuffersExist(cm_fid_t *fidp)
