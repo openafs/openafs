@@ -550,6 +550,8 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                         AFSFlushExtents( pFcb,
                                          &pCcb->AuthGroup);
+
+                        ulNotificationFlags |= AFS_REQUEST_FLAG_FLUSH_FILE;
                     }
 
                     if( pFcb->OpenHandleCount == 1)
@@ -560,8 +562,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                         //
 
                         AFSWaitOnQueuedFlushes( pFcb);
-
-                        ulNotificationFlags |= AFS_REQUEST_FLAG_FLUSH_FILE;
 
                         AFSTearDownFcbExtents( pFcb,
                                                &pCcb->AuthGroup);
