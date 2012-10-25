@@ -34,7 +34,6 @@
 
 /* You can't have AFS_GLOBAL_SUNLOCK and not RX_ENABLE_LOCKS */
 #define RX_ENABLE_LOCKS 1
-#define AFS_GLOBAL_RXLOCK_KERNEL
 
 #if defined(AFS_NBSD50_ENV)
 typedef kmutex_t afs_kmutex_t;

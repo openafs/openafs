@@ -20,7 +20,6 @@
 
 #ifdef MP
 #define	RX_ENABLE_LOCKS	1
-#define	AFS_GLOBAL_RXLOCK_KERNEL 1
 
 
 #include "sys/sema.h"

@@ -16,7 +16,6 @@
 #ifndef _RX_KMUTEX_H_
 #define _RX_KMUTEX_H_
 
-#define AFS_GLOBAL_RXLOCK_KERNEL
 #define RX_ENABLE_LOCKS		1
 
 #define	afs_kmutex_t		usr_mutex_t

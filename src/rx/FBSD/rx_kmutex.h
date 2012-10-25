@@ -26,7 +26,6 @@
 #endif
 
 #define RX_ENABLE_LOCKS         1
-#define AFS_GLOBAL_RXLOCK_KERNEL
 
 typedef int afs_kcondvar_t;
 

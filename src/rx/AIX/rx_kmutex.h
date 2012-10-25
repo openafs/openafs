@@ -25,7 +25,6 @@
 #include <sys/lock_alloc.h>
 #include <sys/sleep.h>
 #define	RX_ENABLE_LOCKS		1
-#define AFS_GLOBAL_RXLOCK_KERNEL
 /*
  * `condition variables' -- well, not really.  these just map to the
  * AIX event-list routines.  Thus, if one signals a condition prior to

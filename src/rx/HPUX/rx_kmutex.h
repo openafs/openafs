@@ -27,7 +27,6 @@
 #include "../rx/rx_kernel.h"	/* For osi_Panic() */
 
 #define RX_ENABLE_LOCKS         1
-#define AFS_GLOBAL_RXLOCK_KERNEL
 
 extern lock_t *rx_sleepLock;
 

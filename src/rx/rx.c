@@ -155,14 +155,12 @@ static int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 
 #ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
-#endif
 
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
     rx_atomic_t rxi_start_aborted; /* rxi_start awoke after rxi_Send in error.*/
     rx_atomic_t rxi_start_in_error;
 } rx_tq_debug;
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 
 /* Constant delay time before sending an acknowledge of the last packet
  * received.  This is to avoid sending an extra acknowledge when the
@@ -1409,7 +1407,7 @@ rx_GetConnection(struct rx_connection *conn)
     USERPRI;
 }
 
-#ifdef  AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
 /* Wait for the transmit queue to no longer be busy.
  * requires the call->lock to be held */
 void
@@ -1417,12 +1415,8 @@ rxi_WaitforTQBusy(struct rx_call *call) {
     while (!call->error && (call->flags & RX_CALL_TQ_BUSY)) {
 	call->flags |= RX_CALL_TQ_WAIT;
 	call->tqWaiters++;
-#ifdef RX_ENABLE_LOCKS
 	osirx_AssertMine(&call->lock, "rxi_WaitforTQ lock");
 	CV_WAIT(&call->cv_tq, &call->lock);
-#else /* RX_ENABLE_LOCKS */
-	osi_rxSleep(&call->tq);
-#endif /* RX_ENABLE_LOCKS */
 	call->tqWaiters--;
 	if (call->tqWaiters == 0) {
 	    call->flags &= ~RX_CALL_TQ_WAIT;
@@ -1668,18 +1662,15 @@ rx_NewCall(struct rx_connection *conn)
      * run (see code above that avoids resource starvation).
      */
 #ifdef	RX_ENABLE_LOCKS
+    if (call->flags & (RX_CALL_TQ_BUSY | RX_CALL_TQ_CLEARME)) {
+        osi_Panic("rx_NewCall call about to be used without an empty tq");
+    }
+
     CV_BROADCAST(&conn->conn_call_cv);
 #else
     osi_rxWakeup(conn);
 #endif
     MUTEX_EXIT(&conn->conn_call_lock);
-
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-    if (call->flags & (RX_CALL_TQ_BUSY | RX_CALL_TQ_CLEARME)) {
-        osi_Panic("rx_NewCall call about to be used without an empty tq");
-    }
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-
     MUTEX_EXIT(&call->lock);
     USERPRI;
 
@@ -2650,10 +2641,10 @@ static struct rx_call *
 rxi_NewCall(struct rx_connection *conn, int channel)
 {
     struct rx_call *call;
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
     struct rx_call *cp;	/* Call pointer temp */
     struct opr_queue *cursor;
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif
 
     dpf(("rxi_NewCall(conn %"AFS_PTR_FMT", channel %d)\n", conn, channel));
 
@@ -2662,7 +2653,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
      * rxi_FreeCall */
     MUTEX_ENTER(&rx_freeCallQueue_lock);
 
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
     /*
      * EXCEPT that the TQ might not yet be cleared out.
      * Skip over those with in-use TQs.
@@ -2676,24 +2667,24 @@ rxi_NewCall(struct rx_connection *conn, int channel)
 	}
     }
     if (call) {
-#else /* AFS_GLOBAL_RXLOCK_KERNEL */
+#else /* RX_ENABLE_LOCKS */
     if (!opr_queue_IsEmpty(&rx_freeCallQueue)) {
 	call = opr_queue_First(&rx_freeCallQueue, struct rx_call, entry);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 	opr_queue_Remove(&call->entry);
         if (rx_stats_active)
 	    rx_atomic_dec(&rx_stats.nFreeCallStructs);
 	MUTEX_EXIT(&rx_freeCallQueue_lock);
 	MUTEX_ENTER(&call->lock);
 	CLEAR_CALL_QUEUE_LOCK(call);
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
 	/* Now, if TQ wasn't cleared earlier, do it now. */
 	rxi_WaitforTQBusy(call);
 	if (call->flags & RX_CALL_TQ_CLEARME) {
 	    rxi_ClearTransmitQueue(call, 1);
 	    /*queue_Init(&call->tq);*/
 	}
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 	/* Bind the call to its connection structure */
 	call->conn = conn;
 	rxi_ResetCall(call, 1);
@@ -2792,7 +2783,7 @@ rxi_FreeCall(struct rx_call *call, int haveCTLock)
 
     MUTEX_ENTER(&rx_freeCallQueue_lock);
     SET_CALL_QUEUE_LOCK(call, &rx_freeCallQueue_lock);
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
     /* A call may be free even though its transmit queue is still in use.
      * Since we search the call list from head to tail, put busy calls at
      * the head of the list, and idle calls at the tail.
@@ -2801,9 +2792,9 @@ rxi_FreeCall(struct rx_call *call, int haveCTLock)
 	opr_queue_Prepend(&rx_freeCallQueue, &call->entry);
     else
 	opr_queue_Append(&rx_freeCallQueue, &call->entry);
-#else /* AFS_GLOBAL_RXLOCK_KERNEL */
+#else /* RX_ENABLE_LOCKS */
     opr_queue_Append(&rx_freeCallQueue, &call->entry);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
     if (rx_stats_active)
 	rx_atomic_inc(&rx_stats.nFreeCallStructs);
     MUTEX_EXIT(&rx_freeCallQueue_lock);
@@ -3470,7 +3461,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     * call will be in ether DALLY or HOLD state once the TQ_BUSY
 	     * flag is cleared.
 	     */
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
             if (call->state == RX_STATE_ACTIVE) {
                 rxi_WaitforTQBusy(call);
                 /*
@@ -3485,7 +3476,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
                     return np;
                 }
             }
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 	    /* If the new call cannot be taken right now send a busy and set
 	     * the error condition in this call, so that it terminates as
 	     * quickly as possible */
@@ -3568,8 +3559,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	/* If we're receiving the response, then all transmit packets are
 	 * implicitly acknowledged.  Get rid of them. */
 	if (np->header.type == RX_PACKET_TYPE_DATA) {
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-	    /* XXX Hack. Because we must release the global rx lock when
+#ifdef RX_ENABLE_LOCKS
+	    /* XXX Hack. Because we must release the call lock when
 	     * sending packets (osi_NetSend) we drop all acks while we're
 	     * traversing the tq in rxi_Start sending packets out because
 	     * packets may move to the freePacketQueue as result of being here!
@@ -3579,18 +3570,13 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     * packets and let rxi_Start remove them from the transmit queue.
 	     */
 	    if (call->flags & RX_CALL_TQ_BUSY) {
-#ifdef	RX_ENABLE_LOCKS
 		rxi_SetAcksInTransmitQueue(call);
-#else
-		putConnection(conn);
-		return np;	/* xmitting; drop packet */
-#endif
 	    } else {
 		rxi_ClearTransmitQueue(call, 0);
 	    }
-#else /* AFS_GLOBAL_RXLOCK_KERNEL */
+#else /* RX_ENABLE_LOCKS */
 	    rxi_ClearTransmitQueue(call, 0);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 	} else {
 	    if (np->header.type == RX_PACKET_TYPE_ACK) {
 		/* now check to see if this is an ack packet acknowledging that the
@@ -3671,8 +3657,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     case RX_PACKET_TYPE_ACKALL:
 	/* All packets acknowledged, so we can drop all packets previously
 	 * readied for sending */
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-	/* XXX Hack. We because we can't release the global rx lock when
+#ifdef	RX_ENABLE_LOCKS
+	/* XXX Hack. We because we can't release the call lock when
 	 * sending packets (osi_NetSend) we drop all ack pkts while we're
 	 * traversing the tq in rxi_Start sending packets out because
 	 * packets may move to the freePacketQueue as result of being
@@ -3682,16 +3668,10 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	 * and let rxi_Start remove the packets from the transmit queue.
 	 */
 	if (call->flags & RX_CALL_TQ_BUSY) {
-#ifdef	RX_ENABLE_LOCKS
 	    rxi_SetAcksInTransmitQueue(call);
 	    break;
-#else /* RX_ENABLE_LOCKS */
-	    MUTEX_EXIT(&call->lock);
-	    putConnection(conn);
-	    return np;		/* xmitting; drop packet */
-#endif /* RX_ENABLE_LOCKS */
 	}
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 	rxi_ClearTransmitQueue(call, 0);
 	break;
     default:
@@ -4485,8 +4465,8 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    rxi_ComputeRoundTripTime(tp, ap, call, peer, &now);
 	}
 
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-	/* XXX Hack. Because we have to release the global rx lock when sending
+#ifdef RX_ENABLE_LOCKS
+	/* XXX Hack. Because we have to release the global call lock when sending
 	 * packets (osi_NetSend) we drop all acks while we're traversing the tq
 	 * in rxi_Start sending packets out because packets may move to the
 	 * freePacketQueue as result of being here! So we drop these packets until
@@ -4496,14 +4476,10 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	 * when it's done transmitting.
 	 */
 	if (call->flags & RX_CALL_TQ_BUSY) {
-#ifdef RX_ENABLE_LOCKS
 	    tp->flags |= RX_PKTFLAG_ACKED;
 	    call->flags |= RX_CALL_TQ_SOME_ACKED;
-#else /* RX_ENABLE_LOCKS */
-	    break;
-#endif /* RX_ENABLE_LOCKS */
 	} else
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 	{
 	    opr_queue_Remove(&tp->entry);
 #ifdef RX_TRACK_PACKETS
@@ -5083,7 +5059,7 @@ rxi_SetAcksInTransmitQueue(struct rx_call *call)
 static void
 rxi_ClearTransmitQueue(struct rx_call *call, int force)
 {
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef	RX_ENABLE_LOCKS
     struct opr_queue *cursor;
     if (!force && (call->flags & RX_CALL_TQ_BUSY)) {
 	int someAcked = 0;
@@ -5099,16 +5075,16 @@ rxi_ClearTransmitQueue(struct rx_call *call, int force)
 	    call->flags |= RX_CALL_TQ_SOME_ACKED;
 	}
     } else {
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 #ifdef RXDEBUG_PACKET
         call->tqc -=
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->tq);
 	rxi_WakeUpTransmitQueue(call);
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
 	call->flags &= ~RX_CALL_TQ_CLEARME;
     }
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif
 
     rxi_rto_cancel(call);
     call->tfirst = call->tnext;	/* implicitly acknowledge all data already sent */
@@ -5303,7 +5279,7 @@ rxi_CallError(struct rx_call *call, afs_int32 error)
     if (call->error)
 	error = call->error;
 
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
     if (!((call->flags & RX_CALL_TQ_BUSY) || (call->tqWaiters > 0))) {
 	rxi_ResetCall(call, 0);
     }
@@ -5386,9 +5362,9 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     MUTEX_EXIT(&peer->peer_lock);
 
     flags = call->flags;
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
     rxi_WaitforTQBusy(call);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 
     rxi_ClearTransmitQueue(call, 1);
     if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
@@ -6123,7 +6099,7 @@ rxi_Start(struct rx_call *call, int istack)
     int maxXmitPackets;
 
     if (call->error) {
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
         if (rx_stats_active)
             rx_atomic_inc(&rx_tq_debug.rxi_start_in_error);
 #endif
@@ -6146,15 +6122,15 @@ rxi_Start(struct rx_call *call, int istack)
 	 * But check whether we're here recursively, and let the other guy
 	 * do the work.
 	 */
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
 	if (!(call->flags & RX_CALL_TQ_BUSY)) {
 	    call->flags |= RX_CALL_TQ_BUSY;
 	    do {
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 	    restart:
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
 		call->flags &= ~RX_CALL_NEED_START;
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
 		nXmitPackets = 0;
 		maxXmitPackets = MIN(call->twind, call->cwind);
 		for (opr_queue_Scan(&call->tq, cursor)) {
@@ -6206,7 +6182,7 @@ rxi_Start(struct rx_call *call, int istack)
 				     istack);
 		}
 
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
 		if (call->error) {
 		    /* We went into the error state while sending packets. Now is
 		     * the time to reset the call. This will also inform the using
@@ -6219,7 +6195,7 @@ rxi_Start(struct rx_call *call, int istack)
 		    rxi_CallError(call, call->error);
 		    return;
 		}
-#ifdef RX_ENABLE_LOCKS
+
 		if (call->flags & RX_CALL_TQ_SOME_ACKED) {
 		    int missing;
 		    call->flags &= ~RX_CALL_TQ_SOME_ACKED;
@@ -6247,20 +6223,19 @@ rxi_Start(struct rx_call *call, int istack)
 		    if (!missing)
 			call->flags |= RX_CALL_TQ_CLEARME;
 		}
-#endif /* RX_ENABLE_LOCKS */
 		if (call->flags & RX_CALL_TQ_CLEARME)
 		    rxi_ClearTransmitQueue(call, 1);
 	    } while (call->flags & RX_CALL_NEED_START);
 	    /*
 	     * TQ references no longer protected by this flag; they must remain
-	     * protected by the global lock.
+	     * protected by the call lock.
 	     */
 	    call->flags &= ~RX_CALL_TQ_BUSY;
 	    rxi_WakeUpTransmitQueue(call);
 	} else {
 	    call->flags |= RX_CALL_NEED_START;
 	}
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+#endif /* RX_ENABLE_LOCKS */
     } else {
 	rxi_rto_cancel(call);
     }
@@ -6357,7 +6332,7 @@ rxi_CheckCall(struct rx_call *call, int haveCTLock)
 	return -1;
     }
 
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
+#ifdef RX_ENABLE_LOCKS
     if (call->flags & RX_CALL_TQ_BUSY) {
 	/* Call is active and will be reset by rxi_Start if it's
 	 * in an error state.

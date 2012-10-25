@@ -18,12 +18,6 @@
 
 #include "rx/rx_kernel.h"	/* for osi_Panic() */
 
-/* AFS_GLOBAL_RXLOCK_KERNEL is defined so that the busy tq code paths are
- * used. The thread can sleep when sending packets.
- */
-#define	AFS_GLOBAL_RXLOCK_KERNEL 1
-
-
 #define RX_ENABLE_LOCKS 1
 
 #ifndef _LINUX_CODA_FS_I

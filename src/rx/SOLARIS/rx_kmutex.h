@@ -19,7 +19,6 @@
 #if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 
 #define RX_ENABLE_LOCKS 1
-#define AFS_GLOBAL_RXLOCK_KERNEL 1
 
 #include <sys/tiuser.h>
 #include <sys/t_lock.h>

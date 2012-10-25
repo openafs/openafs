@@ -18,11 +18,6 @@
 #define RX_ENABLE_LOCKS 1
 #endif
 
-/* This turns out to be necessary even for fine grain locking. */
-#ifndef AFS_GLOBAL_RXLOCK_KERNEL
-#define AFS_GLOBAL_RXLOCK_KERNEL 1
-#endif
-
 /* Block signals to child threads. */
 #include <afs/pthread_nosigs.h>
 #include <afs/opr.h>

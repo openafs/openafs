@@ -28,7 +28,6 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 #include <sys/vm.h>
 
 #define RX_ENABLE_LOCKS         1
-#define AFS_GLOBAL_RXLOCK_KERNEL
 
 /*
  * Condition variables
