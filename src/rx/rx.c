@@ -3395,44 +3395,40 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
         currentCallNumber = conn->callNumber[channel];
         MUTEX_EXIT(&conn->conn_call_lock);
     } else if (type == RX_SERVER_CONNECTION) {  /* No call allocated */
-        call = conn->call[channel];
-        if (call) {
-            MUTEX_ENTER(&call->lock);
-            currentCallNumber = conn->callNumber[channel];
-            MUTEX_EXIT(&conn->conn_call_lock);
-        } else {
-            call = rxi_NewCall(conn, channel);  /* returns locked call */
-            *call->callNumber = currentCallNumber = np->header.callNumber;
-            MUTEX_EXIT(&conn->conn_call_lock);
+	call = rxi_NewCall(conn, channel);  /* returns locked call */
+ 	*call->callNumber = currentCallNumber = np->header.callNumber;
+	MUTEX_EXIT(&conn->conn_call_lock);
 #ifdef RXDEBUG
-            if (np->header.callNumber == 0)
-                dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
-                     np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
-                     np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
-                     np->header.flags, np, np->length));
+	if (np->header.callNumber == 0)
+	    dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, "
+		 "packet %"AFS_PTR_FMT" len %d\n",
+		 np->header.serial, rx_packetTypes[np->header.type - 1], 
+		 ntohl(conn->peer->host), ntohs(conn->peer->port),
+		 np->header.serial, np->header.epoch, np->header.cid, 
+		 np->header.callNumber, np->header.seq,
+		 np->header.flags, np, np->length));
 #endif
-            call->state = RX_STATE_PRECALL;
-            clock_GetTime(&call->queueTime);
-            call->bytesSent = 0;
-            call->bytesRcvd = 0;
-            /*
-             * If the number of queued calls exceeds the overload
-             * threshold then abort this call.
-             */
-            if ((rx_BusyThreshold > 0) &&
-                (rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
-                struct rx_packet *tp;
+        call->state = RX_STATE_PRECALL;
+        clock_GetTime(&call->queueTime);
+        call->bytesSent = 0;
+        call->bytesRcvd = 0;
+        /*
+         * If the number of queued calls exceeds the overload
+         * threshold then abort this call.
+         */
+        if ((rx_BusyThreshold > 0) &&
+             (rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
+            struct rx_packet *tp;
 
-                rxi_CallError(call, rx_BusyError);
-                tp = rxi_SendCallAbort(call, np, 1, 0);
-                MUTEX_EXIT(&call->lock);
-		putConnection(conn);
-                if (rx_stats_active)
-                    rx_atomic_inc(&rx_stats.nBusies);
-                return tp;
-            }
-            rxi_KeepAliveOn(call);
+	    rxi_CallError(call, rx_BusyError);
+	    tp = rxi_SendCallAbort(call, np, 1, 0);
+	    MUTEX_EXIT(&call->lock);
+	    putConnection(conn);
+	    if (rx_stats_active)
+		rx_atomic_inc(&rx_stats.nBusies);
+	    return tp;
         }
+	rxi_KeepAliveOn(call);
     } else {    /* RX_CLIENT_CONNECTION and No call allocated */
         /* This packet can't be for this call. If the new call address is
          * 0 then no call is running on this channel. If there is a call
