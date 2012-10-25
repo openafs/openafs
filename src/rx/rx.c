@@ -3396,16 +3396,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	call = rxi_NewCall(conn, channel);  /* returns locked call */
  	*call->callNumber = currentCallNumber = np->header.callNumber;
 	MUTEX_EXIT(&conn->conn_call_lock);
-#ifdef RXDEBUG
-	if (np->header.callNumber == 0)
-	    dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, "
-		 "packet %"AFS_PTR_FMT" len %d\n",
-		 np->header.serial, rx_packetTypes[np->header.type - 1], 
-		 ntohl(conn->peer->host), ntohs(conn->peer->port),
-		 np->header.serial, np->header.epoch, np->header.cid, 
-		 np->header.callNumber, np->header.seq,
-		 np->header.flags, np, np->length));
-#endif
         call->state = RX_STATE_PRECALL;
         clock_GetTime(&call->queueTime);
         call->bytesSent = 0;
@@ -3490,13 +3480,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
              * packet.  This assignment should be safe.
              */
 	    *call->callNumber = np->header.callNumber;
-#ifdef RXDEBUG
-	    if (np->header.callNumber == 0)
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
-                      np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port),
-                      np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq,
-                      np->header.flags, np, np->length));
-#endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
 	    call->bytesSent = 0;
