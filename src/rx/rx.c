@@ -148,12 +148,10 @@ static void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
 static void rxi_KeepAliveOn(struct rx_call *call);
 static void rxi_GrowMTUOn(struct rx_call *call);
 static void rxi_ChallengeOn(struct rx_connection *conn);
+static int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 
 #ifdef RX_ENABLE_LOCKS
-static int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
-#else
-static int rxi_CheckCall(struct rx_call *call);
 #endif
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
@@ -6279,13 +6277,8 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
  *  may be freed!
  * haveCTLock Set if calling from rxi_ReapConnections
  */
-#ifdef RX_ENABLE_LOCKS
 static int
 rxi_CheckCall(struct rx_call *call, int haveCTLock)
-#else /* RX_ENABLE_LOCKS */
-static int
-rxi_CheckCall(struct rx_call *call)
-#endif				/* RX_ENABLE_LOCKS */
 {
     struct rx_connection *conn = call->conn;
     afs_uint32 now;
@@ -6582,15 +6575,10 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
 
     now = clock_Sec();
 
-#ifdef RX_ENABLE_LOCKS
     if (rxi_CheckCall(call, 0)) {
 	MUTEX_EXIT(&call->lock);
 	return;
     }
-#else /* RX_ENABLE_LOCKS */
-    if (rxi_CheckCall(call))
-	return;
-#endif /* RX_ENABLE_LOCKS */
 
     /* Don't try to keep alive dallying calls */
     if (call->state == RX_STATE_DALLY) {
@@ -6624,15 +6612,10 @@ rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
 	call->growMTUEvent = NULL;
     }
 
-#ifdef RX_ENABLE_LOCKS
     if (rxi_CheckCall(call, 0)) {
 	MUTEX_EXIT(&call->lock);
 	return;
     }
-#else /* RX_ENABLE_LOCKS */
-    if (rxi_CheckCall(call))
-	return;
-#endif /* RX_ENABLE_LOCKS */
 
     /* Don't bother with dallying calls */
     if (call->state == RX_STATE_DALLY) {
@@ -7048,11 +7031,7 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 			code = MUTEX_TRYENTER(&call->lock);
 			if (!code)
 			    continue;
-#ifdef RX_ENABLE_LOCKS
 			result = rxi_CheckCall(call, 1);
-#else /* RX_ENABLE_LOCKS */
-			result = rxi_CheckCall(call);
-#endif /* RX_ENABLE_LOCKS */
 			MUTEX_EXIT(&call->lock);
 			if (result == -2) {
 			    /* If CheckCall freed the call, it might
