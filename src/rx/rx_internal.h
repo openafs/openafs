@@ -53,6 +53,11 @@ extern void rxi_IncrementTimeAndCount(struct rx_peer *peer,
 				      afs_uint64 bytesSent,
 				      afs_uint64 bytesRcvd,
 				      int isServer);
+#ifdef RX_ENABLE_LOCKS
+extern void rxi_WaitforTQBusy(struct rx_call *call);
+#else
+# define rxi_WaitforTQBusy(call)
+#endif
 
 /* rx_packet.h */
 

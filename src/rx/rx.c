@@ -5360,9 +5360,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     MUTEX_EXIT(&peer->peer_lock);
 
     flags = call->flags;
-#ifdef RX_ENABLE_LOCKS
     rxi_WaitforTQBusy(call);
-#endif /* RX_ENABLE_LOCKS */
 
     rxi_ClearTransmitQueue(call, 1);
     if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {

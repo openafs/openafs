@@ -459,9 +459,6 @@ extern void rxi_PrepareSendPacket(struct rx_call *call,
 extern int rxi_AdjustIfMTU(int mtu);
 extern int rxi_AdjustMaxMTU(int mtu, int peerMaxMTU);
 extern int rxi_AdjustDgramPackets(int frags, int mtu);
-#ifdef RX_ENABLE_LOCKS
-extern void rxi_WaitforTQBusy(struct rx_call *call);
-#endif
 
 /* rxperf.c */
 
