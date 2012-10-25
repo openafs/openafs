@@ -574,6 +574,34 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     stFileCleanup.FileAccess = pCcb->FileAccess;
 
                     //
+                    // Remove the share access at this time since we may not get the close for sometime on this FO.
+                    //
+
+                    IoRemoveShareAccess( pFileObject,
+                                         &pFcb->ShareAccess);
+
+
+                    //
+                    // We don't need the name array after the user closes the handle on the file
+                    //
+
+                    if( pCcb->NameArray != NULL)
+                    {
+
+                        AFSFreeNameArray( pCcb->NameArray);
+
+                        pCcb->NameArray = NULL;
+                    }
+
+                    //
+                    // Release the Fcb Resource across the call to the service
+                    // which may block for quite a while if flushing of the
+                    // data is required.
+                    //
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                    //
                     // Push the request to the service
                     //
 
@@ -586,6 +614,13 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                                   sizeof( AFSFileCleanupCB),
                                                   pResultCB,
                                                   &ulResultLen);
+
+                    //
+                    // Regain exclusive access to the Fcb
+                    //
+
+                    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                    TRUE);
 
                     if ( NT_SUCCESS( ntStatus))
                     {
@@ -614,25 +649,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 }
 
                 //
-                // Remove the share access at this time since we may not get the close for sometime on this FO.
-                //
-
-                IoRemoveShareAccess( pFileObject,
-                                     &pFcb->ShareAccess);
-
-                //
-                // We don't need the name array after the user closes the handle on the file
-                //
-
-                if( pCcb->NameArray != NULL)
-                {
-
-                    AFSFreeNameArray( pCcb->NameArray);
-
-                    pCcb->NameArray = NULL;
-                }
-
-                //
                 // Decrement the open child handle count
                 //
 
@@ -652,7 +668,14 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                   lCount);
                 }
 
-                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup (File) Decrement handle count on Fcb %08lX Cnt %d\n",
+                              pFcb,
+                              lCount);
 
                 if( BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE))
                 {
@@ -664,17 +687,16 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ClearFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
 
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
                     AFSPerformObjectInvalidate( pObjectInfo,
                                                 AFS_INVALIDATE_DATA_VERSION);
                 }
+                else
+                {
 
-                lCount = InterlockedDecrement( &pFcb->OpenHandleCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup (File) Decrement handle count on Fcb %08lX Cnt %d\n",
-                              pFcb,
-                              lCount);
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+                }
 
                 break;
             }
