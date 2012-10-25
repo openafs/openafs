@@ -1398,10 +1398,9 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     // with an invalidation call from the service during AFSCleanupFcb
                                     //
 
-                                    AFSAcquireShared( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
-                                                      TRUE);
+                                    lCount = AFSObjectInfoIncrement( pCurrentChildObject);
 
-                                    if( pCurrentChildObject->ObjectReferenceCount <= 0 &&
+                                    if( lCount == 1 &&
                                         pCurrentChildObject->Fcb != NULL &&
                                         pCurrentChildObject->FileType == AFS_FILE_TYPE_FILE)
                                     {
@@ -1414,6 +1413,10 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                         AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
+                                        //
+                                        // Cannot hold a TreeLock across an AFSCleanupFcb call
+                                        // as it can deadlock with an invalidation ioctl initiated
+                                        // from the service.
                                         //
                                         // Dropping the TreeLock permits the
                                         // pCurrentObject->ObjectReferenceCount to change
@@ -1432,7 +1435,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                                         TRUE);
                                     }
 
-                                    AFSReleaseResource( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock);
+                                    lCount = AFSObjectInfoDecrement( pCurrentChildObject);
 
                                     AFSAcquireExcl( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
                                                     TRUE);
@@ -1566,7 +1569,10 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                         AFSReleaseResource( pVolumeCB->ObjectInfoTree.TreeLock);
 
-                        if( pCurrentObject->Fcb != NULL)
+                        lCount = AFSObjectInfoIncrement( pCurrentObject);
+
+                        if( lCount == 0 &&
+                            pCurrentObject->Fcb != NULL)
                         {
 
                             //
@@ -1583,6 +1589,8 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 bFcbBusy = TRUE;
                             }
                         }
+
+                        lCount = AFSObjectInfoDecrement( pCurrentObject);
 
                         if( !AFSAcquireExcl( pVolumeCB->ObjectInfoTree.TreeLock,
                                              FALSE))
