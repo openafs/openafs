@@ -3543,14 +3543,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    return np;
 	}
 
-	/* If the service security object index stamped in the packet does not
-	 * match the connection's security index, ignore the packet */
-	if (np->header.securityIndex != conn->securityIndex) {
-	    MUTEX_EXIT(&call->lock);
-	    putConnection(conn);
-	    return np;
-	}
-
 	/* If we're receiving the response, then all transmit packets are
 	 * implicitly acknowledged.  Get rid of them. */
 	if (np->header.type == RX_PACKET_TYPE_DATA) {
