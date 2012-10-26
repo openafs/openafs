@@ -149,10 +149,7 @@ static void rxi_KeepAliveOn(struct rx_call *call);
 static void rxi_GrowMTUOn(struct rx_call *call);
 static void rxi_ChallengeOn(struct rx_connection *conn);
 static int rxi_CheckCall(struct rx_call *call, int haveCTLock);
-
-#ifdef RX_ENABLE_LOCKS
-static void rxi_SetAcksInTransmitQueue(struct rx_call *call);
-#endif
+static void rxi_AckAllInTransmitQueue(struct rx_call *call);
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
@@ -3545,31 +3542,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 
 	/* If we're receiving the response, then all transmit packets are
 	 * implicitly acknowledged.  Get rid of them. */
-	if (np->header.type == RX_PACKET_TYPE_DATA) {
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-	    /* XXX Hack. Because we must release the global rx lock when
-	     * sending packets (osi_NetSend) we drop all acks while we're
-	     * traversing the tq in rxi_Start sending packets out because
-	     * packets may move to the freePacketQueue as result of being here!
-	     * So we drop these packets until we're safely out of the
-	     * traversing. Really ugly!
-	     * For fine grain RX locking, we set the acked field in the
-	     * packets and let rxi_Start remove them from the transmit queue.
-	     */
-	    if (call->flags & RX_CALL_TQ_BUSY) {
-#ifdef	RX_ENABLE_LOCKS
-		rxi_SetAcksInTransmitQueue(call);
-#else
-		putConnection(conn);
-		return np;	/* xmitting; drop packet */
-#endif
-	    } else {
-		rxi_ClearTransmitQueue(call, 0);
-	    }
-#else /* AFS_GLOBAL_RXLOCK_KERNEL */
-	    rxi_ClearTransmitQueue(call, 0);
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	}
+	if (np->header.type == RX_PACKET_TYPE_DATA)
+	    rxi_AckAllInTransmitQueue(call);
     }
 
     osirx_AssertMine(&call->lock, "rxi_ReceivePacket middle");
@@ -3626,28 +3600,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     case RX_PACKET_TYPE_ACKALL:
 	/* All packets acknowledged, so we can drop all packets previously
 	 * readied for sending */
-#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-	/* XXX Hack. We because we can't release the global rx lock when
-	 * sending packets (osi_NetSend) we drop all ack pkts while we're
-	 * traversing the tq in rxi_Start sending packets out because
-	 * packets may move to the freePacketQueue as result of being
-	 * here! So we drop these packets until we're safely out of the
-	 * traversing. Really ugly!
-	 * For fine grain RX locking, we set the acked field in the packets
-	 * and let rxi_Start remove the packets from the transmit queue.
-	 */
-	if (call->flags & RX_CALL_TQ_BUSY) {
-#ifdef	RX_ENABLE_LOCKS
-	    rxi_SetAcksInTransmitQueue(call);
-	    break;
-#else /* RX_ENABLE_LOCKS */
-	    MUTEX_EXIT(&call->lock);
-	    putConnection(conn);
-	    return np;		/* xmitting; drop packet */
-#endif /* RX_ENABLE_LOCKS */
-	}
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	rxi_ClearTransmitQueue(call, 0);
+	rxi_AckAllInTransmitQueue(call);
 	break;
     default:
 	/* Should not reach here, unless the peer is broken: send an abort
@@ -4981,7 +4934,6 @@ rxi_SendDelayedAck(struct rxevent *event, void *arg1, void *unused1,
 #endif /* RX_ENABLE_LOCKS */
 }
 
-
 #ifdef RX_ENABLE_LOCKS
 /* Set ack in all packets in transmit queue. rxi_Start will deal with
  * clearing them out.
@@ -5016,6 +4968,24 @@ rxi_SetAcksInTransmitQueue(struct rx_call *call)
 }
 #endif /* RX_ENABLE_LOCKS */
 
+/*!
+ * Acknowledge the whole transmit queue.
+ *
+ * If we're running without locks, or the transmit queue isn't busy, then
+ * we can just clear the queue now. Otherwise, we have to mark all of the
+ * packets as acknowledged, and let rxi_Start clear it later on
+ */
+static void
+rxi_AckAllInTransmitQueue(struct rx_call *call)
+{
+#ifdef RX_ENABLE_LOCKS
+    if (call->flags & RX_CALL_TQ_BUSY) {
+	rxi_SetAcksInTransmitQueue(call);
+	return;
+    }
+#endif
+    rxi_ClearTransmitQueue(call, 0);
+}
 /* Clear out the transmit queue for the current call (all packets have
  * been received by peer) */
 static void
