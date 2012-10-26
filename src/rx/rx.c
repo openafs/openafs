@@ -3208,6 +3208,26 @@ rxi_CheckBusy(struct rx_call *call)
     MUTEX_EXIT(&conn->conn_call_lock);
 }
 
+/*!
+ * Abort the call if the server is over the busy threshold. This
+ * can be used without requiring a call structure be initialised,
+ * or connected to a particular channel
+ */
+static_inline int
+rxi_AbortIfServerBusy(osi_socket socket, afs_uint32 host,
+		      u_short port, struct rx_packet *np)
+{
+    if ((rx_BusyThreshold > 0) &&
+	(rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
+	rxi_SendRawAbort(socket, host, port, rx_BusyError, np, 0);
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.nBusies);
+	return 1;
+    }
+
+    return 0;
+}
+
 /* There are two packet tracing routines available for testing and monitoring
  * Rx.  One is called just after every packet is received and the other is
  * called just before every packet is sent.  Received packets, have had their
@@ -3398,6 +3418,12 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
         currentCallNumber = conn->callNumber[channel];
         MUTEX_EXIT(&conn->conn_call_lock);
     } else if (type == RX_SERVER_CONNECTION) {  /* No call allocated */
+
+	if (rxi_AbortIfServerBusy(socket, host, port, np)) {
+	    putConnection(conn);
+	    return np;
+	}
+
 	call = rxi_NewCall(conn, channel);  /* returns locked call */
  	*call->callNumber = currentCallNumber = np->header.callNumber;
 	MUTEX_EXIT(&conn->conn_call_lock);
@@ -3405,23 +3431,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	clock_GetTime(&call->queueTime);
 	call->app.bytesSent = 0;
 	call->app.bytesRcvd = 0;
-	/*
-	 * If the number of queued calls exceeds the overload
-	 * threshold then abort this call.
-	 */
-	if ((rx_BusyThreshold > 0) &&
-	    (rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
-	    struct rx_packet *tp;
-
-	    rxi_CallError(call, rx_BusyError);
-	    tp = rxi_SendCallAbort(call, np, 1, 0);
-	    MUTEX_EXIT(&call->lock);
-	    putConnection(conn);
-	    if (rx_stats_active)
-		rx_atomic_inc(&rx_stats.nBusies);
-	    return tp;
-        }
 	rxi_KeepAliveOn(call);
+
     } else {    /* RX_CLIENT_CONNECTION and No call allocated */
         /* This packet can't be for this call. If the new call address is
          * 0 then no call is running on this channel. If there is a call
@@ -3478,6 +3489,13 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 		putConnection(conn);
 		return tp;
 	    }
+
+	    if (rxi_AbortIfServerBusy(socket, host, port, np)) {
+		MUTEX_EXIT(&call->lock);
+		putConnection(conn);
+		return np;
+	    }
+
 	    rxi_ResetCall(call, 0);
             /*
              * The conn_call_lock is not held but no one else should be
@@ -3489,22 +3507,6 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    clock_GetTime(&call->queueTime);
 	    call->app.bytesSent = 0;
 	    call->app.bytesRcvd = 0;
-	    /*
-	     * If the number of queued calls exceeds the overload
-	     * threshold then abort this call.
-	     */
-	    if ((rx_BusyThreshold > 0) &&
-	        (rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
-		struct rx_packet *tp;
-
-		rxi_CallError(call, rx_BusyError);
-		tp = rxi_SendCallAbort(call, np, 1, 0);
-		MUTEX_EXIT(&call->lock);
-		putConnection(conn);
-                if (rx_stats_active)
-                    rx_atomic_inc(&rx_stats.nBusies);
-		return tp;
-	    }
 	    rxi_KeepAliveOn(call);
 	} else {
 	    /* Continuing call; do nothing here. */
