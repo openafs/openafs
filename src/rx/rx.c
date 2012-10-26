@@ -3569,30 +3569,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #else /* AFS_GLOBAL_RXLOCK_KERNEL */
 	    rxi_ClearTransmitQueue(call, 0);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	} else {
-	    if (np->header.type == RX_PACKET_TYPE_ACK) {
-		/* now check to see if this is an ack packet acknowledging that the
-		 * server actually *lost* some hard-acked data.  If this happens we
-		 * ignore this packet, as it may indicate that the server restarted in
-		 * the middle of a call.  It is also possible that this is an old ack
-		 * packet.  We don't abort the connection in this case, because this
-		 * *might* just be an old ack packet.  The right way to detect a server
-		 * restart in the midst of a call is to notice that the server epoch
-		 * changed, btw.  */
-		/* XXX I'm not sure this is exactly right, since tfirst **IS**
-		 * XXX unacknowledged.  I think that this is off-by-one, but
-		 * XXX I don't dare change it just yet, since it will
-		 * XXX interact badly with the server-restart detection
-		 * XXX code in receiveackpacket.  */
-		if (ntohl(rx_GetInt32(np, FIRSTACKOFFSET)) < call->tfirst) {
-                    if (rx_stats_active)
-                        rx_atomic_inc(&rx_stats.spuriousPacketsRead);
-		    MUTEX_EXIT(&call->lock);
-		    putConnection(conn);
-		    return np;
-		}
-	    }
-	}			/* else not a data packet */
+	}
     }
 
     osirx_AssertMine(&call->lock, "rxi_ReceivePacket middle");
