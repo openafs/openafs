@@ -3534,23 +3534,14 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	}
     }
 
-    if (type == RX_SERVER_CONNECTION) {
+    if (type == RX_SERVER_CONNECTION)
 	call = rxi_ReceiveServerCall(socket, np, conn);
-	if (call == NULL) {
-	    putConnection(conn);
-	    return np;
-        }
-    } else {
+    else
 	call = rxi_ReceiveClientCall(np, conn);
-	if (call == NULL) {
-	    putConnection(conn);
-	    return np;
-	}
 
-	/* If we're receiving the response, then all transmit packets are
-	 * implicitly acknowledged.  Get rid of them. */
-	if (np->header.type == RX_PACKET_TYPE_DATA)
-	    rxi_AckAllInTransmitQueue(call);
+    if (call == NULL) {
+	putConnection(conn);
+	return np;
     }
 
     osirx_AssertMine(&call->lock, "rxi_ReceivePacket middle");
@@ -3560,6 +3551,11 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     /* Now do packet type-specific processing */
     switch (np->header.type) {
     case RX_PACKET_TYPE_DATA:
+	/* If we're a client, and receiving a response, then all the packets
+	 * we transmitted packets are implicitly acknowledged. */
+	if (type == RX_CLIENT_CONNECTION && !opr_queue_IsEmpty(&call->tq))
+	    rxi_AckAllInTransmitQueue(call);
+
 	np = rxi_ReceiveDataPacket(call, np, 1, socket, host, port, tnop,
 				   newcallp);
 	break;
