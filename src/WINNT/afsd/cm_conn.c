@@ -695,6 +695,11 @@ cm_Analyze(cm_conn_t *connp,
                         }
                     }
                     break;
+                case VOFFLINE:
+                    osi_Log2(afsd_logp, "VOFFLINE received for volume %u from server %s",
+                              fidp->volume, osi_LogSaveString(afsd_logp,addr));
+                    tsrp->status = srv_offline;
+                    break;
                 default:
                     osi_Log3(afsd_logp, "volume %u exists on server %s with status %u",
                              fidp->volume, osi_LogSaveString(afsd_logp,addr), tsrp->status);
