@@ -536,11 +536,6 @@ static inline void
 afs_putname(afs_name_t name) {
     putname((char *)name);
 }
-
-static inline void
-afs_set_name(afs_name_t name, char *string) {
-    name = string;
-}
 #else
 typedef struct filename *afs_name_t;
 
@@ -552,11 +547,6 @@ afs_name_to_string(afs_name_t s) {
 static inline void
 afs_putname(afs_name_t name) {
     kmem_cache_free(names_cachep, (void *)name);
-}
-
-static inline void
-afs_set_name(afs_name_t aname, char *string) {
-    aname->name = string;
 }
 #endif
 
