@@ -103,6 +103,21 @@ opr_jhash_int(afs_uint32 a, afs_uint32 initval) {
    return c;
 }
 
+/* and one to do two ints */
+
+static_inline afs_uint32
+opr_jhash_int2(afs_uint32 a, afs_uint32 b, afs_uint32 initval)
+{
+   afs_uint32 c;
+
+   a += 0xdeadbeef + 8 + initval;
+   b += 0xdeadbeef + 8 + initval;
+   c =  0xdeadbeef + 8 + initval;
+   opr_jhash_final(a, b, c);
+
+   return c;
+}
+
 static_inline afs_uint32
 opr_jhash_opaque(const void *val, size_t length, afs_uint32 initval)
 {

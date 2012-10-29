@@ -39,7 +39,7 @@
 int
 main(int argc, char **argv)
 {
-   plan(11);
+   plan(13);
    uint32_t test[] = {3526055646UL, 2064483663UL, 3234460805UL, 3963629775UL};
 
    is_int(256, opr_jhash_size(8), "opr_jhash_size returns expected value");
@@ -56,6 +56,11 @@ main(int argc, char **argv)
 	  "single value works through jhash");
    is_int(1100796964, opr_jhash_int(test[0], 0),
           "single value works through jhash_int");
+
+   is_int(3704403432, opr_jhash(test, 2, 0),
+	  "Hashing two values works");
+   is_int(3704403432, opr_jhash_int2(test[0], test[1], 0),
+	  "jhash_int2 gives same result");
 
    is_int(0xdeadbeef, opr_jhash_opaque("", 0, 0),
 	  "Hashing an empty string works");
