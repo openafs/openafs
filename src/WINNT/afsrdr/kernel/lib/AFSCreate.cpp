@@ -688,28 +688,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
               pDirectoryCB == NULL))
         {
 
-            if ( pVolumeCB &&
-                 BooleanFlagOn( pVolumeCB->VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate ReadOnly Device on create Status %08lX\n",
-                              ntStatus);
-
-                InterlockedDecrement( &pParentDirectoryCB->OpenReferenceCount);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonCreate Decrement13 count on %wZ DE %p Ccb %p Cnt %d\n",
-                              &pParentDirectoryCB->NameInformation.FileName,
-                              pParentDirectoryCB,
-                              NULL,
-                              pParentDirectoryCB->OpenReferenceCount);
-
-                try_return( ntStatus = STATUS_MEDIA_WRITE_PROTECTED);
-            }
-
             if( uniComponentName.Length == 0 ||
                 pDirectoryCB != NULL)
             {
