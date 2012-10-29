@@ -1950,6 +1950,7 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
             lock_ObtainMutex(&tsp->mx);
             tsp->adminRank = rank;
             _InterlockedOr(&tsp->flags, CM_SERVERFLAG_PREF_SET);
+            cm_RankServer(tsp);
             lock_ReleaseMutex(&tsp->mx);
 
             switch (type) {
