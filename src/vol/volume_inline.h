@@ -128,8 +128,8 @@ VMustCheckoutVolume(int mode)
  * (or put it in an error state) if we detect that another program
  * claims to be using the volume when we try to attach. We don't always
  * want to do that, since sometimes we know that the volume may be in
- * use by another program, e.g. when we are attaching with V_PEEK, and
- * we don't care.
+ * use by another program, e.g. when we are attaching with V_PEEK
+ * or attaching for only reading (V_READONLY).
  *
  * @param mode  the mode of attachment for the volume
  *
@@ -147,9 +147,24 @@ VShouldCheckInUse(int mode)
        return 1;
     }
     if (VMustCheckoutVolume(mode)) {
-	/* assume we checked out the volume from the fileserver, so inUse
-	 * should not be set */
-	return 1;
+	/*
+	 * Before VShouldCheckInUse() was called, the caller checked out the
+	 * volume from the fileserver. The volume may not be in use by the
+	 * fileserver, or another program, at this point. The caller should
+	 * verify by checking inUse is not set, otherwise the volume state
+	 * is in error.
+	 *
+	 * However, an exception is made for the V_READONLY attach mode.  The
+	 * volume may still be in use by the fileserver when a caller has
+	 * checked out the volume from the fileserver with the V_READONLY
+	 * attach mode, and so it is not an error for the inUse field to be set
+	 * at this point. The caller should not check the inUse and may
+	 * not change any volume state.
+	 */
+	if (mode == V_READONLY) {
+	    return 0; /* allowed to be inUse; do not check */
+	}
+	return 1; /* may not be inUse; check */
     }
     return 0;
 }
