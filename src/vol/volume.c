@@ -3442,7 +3442,7 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	}
     } else {
 #ifdef AFS_DEMAND_ATTACH_FS
-	if ((mode != V_PEEK) && (mode != V_SECRETLY))
+	if ((mode != V_PEEK) && (mode != V_SECRETLY) && (mode != V_READONLY))
 	    V_inUse(vp) = programType;
 #endif /* AFS_DEMAND_ATTACH_FS */
 	V_checkoutMode(vp) = mode;
