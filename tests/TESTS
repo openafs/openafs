@@ -5,6 +5,7 @@ auth/superuser
 auth/authcon
 auth/realms
 cmd/command
+opr/dict
 opr/jhash
 opr/queues
 opr/rbtree

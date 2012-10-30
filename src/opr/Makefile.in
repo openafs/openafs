@@ -3,11 +3,12 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-LT_objs = assert.lo casestrcpy.lo rbtree.lo uuid.lo
+LT_objs = assert.lo casestrcpy.lo dict.lo rbtree.lo uuid.lo
 LT_libs = $(LIB_hcrypto) $(LIB_roken)
 
 HEADERS = $(TOP_INCDIR)/afs/opr.h \
 	  $(TOP_INCDIR)/afs/opr_assert.h \
+	  $(TOP_INCDIR)/opr/dict.h \
 	  $(TOP_INCDIR)/opr/jhash.h \
 	  $(TOP_INCDIR)/opr/lock.h \
 	  $(TOP_INCDIR)/opr/lockstub.h \
@@ -38,6 +39,9 @@ $(TOP_INCDIR)/afs/opr.h: opr.h
 	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/afs/opr_assert.h: ${srcdir}/opr_assert.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/dict.h: ${srcdir}/dict.h
 	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/opr/jhash.h: ${srcdir}/jhash.h

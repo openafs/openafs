@@ -4,6 +4,8 @@ opr_stolower
 opr_stoupper
 opr_strcompose
 opr_AssertionFailed
+opr_dict_Init
+opr_dict_Free
 opr_rbtree_first
 opr_rbtree_next
 opr_rbtree_remove
