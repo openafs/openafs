@@ -2228,8 +2228,15 @@ GetVolInfo(afs_uint32 partId,
     /* Get volume from volserver */
     if (mode == VOL_INFO_LIST_MULTIPLE)
 	tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
-    else
-	tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
+    else {
+#ifdef AFS_DEMAND_ATTACH_FS
+	int mode = V_PEEK;
+#else
+	int mode = V_READONLY;   /* informs the fileserver to update the volume headers. */
+#endif
+	tv = VAttachVolumeByName_retry(&error, pname, volname, mode);
+    }
+
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n",
 	    volumeId, pname, volname, error);
