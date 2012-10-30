@@ -866,7 +866,8 @@ extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
 extern void afs_GetCapabilities(struct server *ts);
 extern void ForceAllNewConnections(void);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
-extern afs_int32 afs_ServerDown(struct srvAddr *sa, int code);
+extern afs_int32 afs_ServerDown(struct srvAddr *sa, int code,
+                                struct rx_connection *rxconn);
 extern void afs_CountServers(void);
 extern void afs_CheckServers(int adown, struct cell *acellp);
 extern void afs_LoopServers(int adown, struct cell *acellp, int vlalso,
@@ -1028,7 +1029,8 @@ extern char *afs_strrchr(char *s, int c);
 #endif
 extern char *afs_strdup(char *s);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
-				   char *postamble, int flag, int code);
+				   char *postamble, int flag, int code,
+				   struct rx_connection *rxconn);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
 extern void afs_CheckLocks(void);

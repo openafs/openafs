@@ -230,7 +230,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 
 
 afs_int32
-afs_ServerDown(struct srvAddr *sa, int code)
+afs_ServerDown(struct srvAddr *sa, int code, struct rx_connection *rxconn)
 {
     struct server *aserver = sa->server;
 
@@ -239,11 +239,11 @@ afs_ServerDown(struct srvAddr *sa, int code)
 	return 0;
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
     if (sa->sa_portal == aserver->cell->vlport)
-	print_internet_address
-	    ("afs: Lost contact with volume location server ", sa, "", 1, code);
+	print_internet_address("afs: Lost contact with volume location server ",
+	                      sa, "", 1, code, rxconn);
     else
 	print_internet_address("afs: Lost contact with file server ", sa, "",
-			       1, code);
+			       1, code, rxconn);
     return 1;
 }				/*ServerDown */
 
@@ -301,7 +301,6 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
     code = VL_ProbeServer(rxconn);
     RX_AFS_GLOCK();
     rx_SetConnDeadTime(rxconn, afs_rx_deadtime);
-    afs_PutConn(tc, rxconn, SHARED_LOCK);
     /*
      * If probe worked, or probe call not yet defined (for compatibility
      * with old vlsevers), then we treat this server as running again
@@ -310,9 +309,10 @@ CheckVLServer(struct srvAddr *sa, struct vrequest *areq)
 	if (tc->parent->srvr == sa) {
 	    afs_MarkServerUpOrDown(sa, 0);
 	    print_internet_address("afs: volume location server ", sa,
-				   " is back up", 2, code);
+				   " is back up", 2, code, rxconn);
 	}
     }
+    afs_PutConn(tc, rxconn, SHARED_LOCK);
 
 }				/*CheckVLServer */
 
@@ -518,7 +518,8 @@ ForceAllNewConnections(void)
 }
 
 static void
-CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
+CkSrv_MarkUpDown(struct afs_conn **conns, struct rx_connection **rxconns,
+                 int nconns, afs_int32 *results)
 {
     struct srvAddr *sa;
     struct afs_conn *tc;
@@ -532,7 +533,7 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 	    (tc->parent->srvr == sa)) {
 	    /* server back up */
 	    print_internet_address("afs: file server ", sa, " is back up", 2,
-			           results[i]);
+			           results[i], rxconns[i]);
 
 	    ObtainWriteLock(&afs_xserver, 244);
 	    ObtainWriteLock(&afs_xsrvAddr, 245);
@@ -546,7 +547,7 @@ CkSrv_MarkUpDown(struct afs_conn **conns, int nconns, afs_int32 *results)
 	} else {
 	    if (results[i] < 0) {
 		/* server crashed */
-		afs_ServerDown(sa, results[i]);
+		afs_ServerDown(sa, results[i], rxconns[i]);
 		ForceNewConnections(sa);  /* multi homed clients */
 	    }
 	}
@@ -597,7 +598,7 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
 		caps[i].Capabilities_len = 0;
 	    }
     }
-    CkSrv_MarkUpDown(conns, nconns, results);
+    CkSrv_MarkUpDown(conns, rxconns, nconns, results);
 
     afs_osi_Free(caps, nconns * sizeof(Capabilities));
     afs_osi_Free(results, nconns * sizeof(afs_int32));
@@ -1515,7 +1516,7 @@ afs_GetCapabilities(struct server *ts)
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
-	afs_ServerDown(tc->parent->srvr, code);
+	afs_ServerDown(tc->parent->srvr, code, rxconn);
 	ForceNewConnections(tc->parent->srvr); /* multi homed clients */
     }
     afs_PutConn(tc, rxconn, SHARED_LOCK);

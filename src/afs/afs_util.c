@@ -194,7 +194,7 @@ afs_strdup(char *s)
 
 void
 print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
-		       int flag, int code)
+		       int flag, int code, struct rx_connection *rxconn)
 {
     struct server *aserver = sa->server;
     char *ptr = "\n";

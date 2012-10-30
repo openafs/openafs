@@ -650,7 +650,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	     */
 	    goto out;
 	}
-	afs_ServerDown(sa, acode);
+	afs_ServerDown(sa, acode, rxconn);
 	ForceNewConnections(sa); /* multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
 	    (aerrP->err_Server)++;
@@ -770,7 +770,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     }
     /* check for ubik errors; treat them like crashed servers */
     else if (acode >= ERROR_TABLE_BASE_U && acode < ERROR_TABLE_BASE_U + 255) {
-	afs_ServerDown(sa, acode);
+	afs_ServerDown(sa, acode, rxconn);
 	if (aerrP)
 	    (aerrP->err_Server)++;
 	shouldRetry = 1;	/* retryable (maybe one is working) */
@@ -830,7 +830,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	 * retry in case there is another server.  However, if we find
 	 * no connection (aconn == 0) we set the networkError flag.
 	 */
-	afs_ServerDown(sa, acode);
+	afs_ServerDown(sa, acode, rxconn);
 	if (aerrP)
 	    (aerrP->err_Server)++;
 	VSleep(1);		/* Just a hack for desperate times. */
