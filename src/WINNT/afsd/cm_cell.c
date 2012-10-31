@@ -272,7 +272,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             /* don't increment currentCells until we know that we
              * are going to keep this entry
              */
-            cp = &cm_data.cellBaseAddress[cm_data.currentCells];
+            cp = &cm_data.cellBaseAddress[InterlockedIncrement(&cm_data.currentCells) - 1];
             memset(cp, 0, sizeof(cm_cell_t));
             cp->magic = CM_CELL_MAGIC;
 

@@ -390,7 +390,7 @@ cm_GetNewSCache(afs_uint32 locked)
     /* if we get here, we should allocate a new scache entry.  We either are below
      * quota or we have a leak and need to allocate a new one to avoid panicing.
      */
-    scp = cm_data.scacheBaseAddress + cm_data.currentSCaches;
+    scp = cm_data.scacheBaseAddress + InterlockedIncrement(&cm_data.currentSCaches) - 1;
     osi_assertx(scp >= cm_data.scacheBaseAddress && scp < (cm_scache_t *)cm_data.scacheHashTablep,
                 "invalid cm_scache_t address");
     memset(scp, 0, sizeof(cm_scache_t));
@@ -409,7 +409,6 @@ cm_GetNewSCache(afs_uint32 locked)
 
     /* and put it in the LRU queue */
     osi_QAddH((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **)&cm_data.scacheLRULastp, &scp->q);
-    cm_data.currentSCaches++;
     cm_dnlcPurgedp(scp); /* make doubly sure that this is not in dnlc */
     cm_dnlcPurgevp(scp);
     scp->allNextp = cm_data.allSCachesp;
