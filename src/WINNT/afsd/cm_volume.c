@@ -1229,7 +1229,7 @@ void cm_RefreshVolumes(int lifetime)
      */
     lock_ObtainRead(&cm_volumeLock);
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
-	InterlockedIncrement(&volp->refCount);
+	cm_GetVolume(volp);
 	lock_ReleaseRead(&cm_volumeLock);
 
         if (!(volp->flags & CM_VOLUMEFLAG_RESET) ||
@@ -1254,8 +1254,7 @@ void cm_RefreshVolumes(int lifetime)
         }
 
         lock_ObtainRead(&cm_volumeLock);
-        refCount = InterlockedDecrement(&volp->refCount);
-	osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
+        cm_PutVolume(volp);
     }
     lock_ReleaseRead(&cm_volumeLock);
 }
@@ -1424,12 +1423,11 @@ void cm_CheckOfflineVolumes(void)
          */
         if ((volp->qflags & CM_VOLUME_QFLAG_IN_HASH) &&
             !(volp->flags & CM_VOLUMEFLAG_NOEXIST)) {
-            InterlockedIncrement(&volp->refCount);
+            cm_GetVolume(volp);
             lock_ReleaseRead(&cm_volumeLock);
             cm_CheckOfflineVolume(volp, 0);
             lock_ObtainRead(&cm_volumeLock);
-            refCount = InterlockedDecrement(&volp->refCount);
-            osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
+            cm_PutVolume(volp);
         }
     }
     lock_ReleaseRead(&cm_volumeLock);
@@ -1554,7 +1552,7 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
     for(volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
 	code = 1 ;	/* assume that list is unchanged */
-	InterlockedIncrement(&volp->refCount);
+	cm_GetVolume(volp);
 	lock_ReleaseRead(&cm_volumeLock);
 	lock_ObtainWrite(&volp->rw);
 
@@ -1567,8 +1565,7 @@ void cm_ChangeRankVolume(cm_server_t *tsp)
 
 	lock_ReleaseWrite(&volp->rw);
 	lock_ObtainRead(&cm_volumeLock);
-        refCount = InterlockedDecrement(&volp->refCount);
-	osi_assertx(refCount >= 0, "cm_volume_t refCount underflow");
+        cm_PutVolume(volp);
     }
     lock_ReleaseRead(&cm_volumeLock);
 }
