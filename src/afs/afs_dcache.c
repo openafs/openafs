@@ -2766,6 +2766,8 @@ afs_UFSGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
 	entryok = 0;
 #if defined(KERNEL_HAVE_UERROR)
 	last_error = getuerror();
+#else
+	last_error = code;
 #endif
 	lasterrtime = osi_Time();
 	if (indexvalid) {
