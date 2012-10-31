@@ -1592,6 +1592,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
                 break;
         }
         if (tcp) {
+            InterlockedIncrement(&tcp->refCount);
             lock_ReleaseWrite(&cm_connLock);
             goto haveconn;
         }
@@ -1610,10 +1611,10 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, afs_uint32 replicat
         lock_ReleaseWrite(&cm_connLock);
         lock_ReleaseMutex(&userp->mx);
     } else {
+        InterlockedIncrement(&tcp->refCount);
         lock_ReleaseRead(&cm_connLock);
       haveconn:
         lock_ReleaseMutex(&userp->mx);
-        InterlockedIncrement(&tcp->refCount);
 
         lock_ObtainMutex(&tcp->mx);
         if ((tcp->flags & CM_CONN_FLAG_FORCE_NEW) ||
