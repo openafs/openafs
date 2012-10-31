@@ -1087,7 +1087,8 @@ afs_FreeDiscardedDCache(void)
     /*
      * Get an entry from the list of discarded cache elements
      */
-    tdc = afs_GetNewDSlot(afs_discardDCList);
+    tdc = afs_GetUnusedDSlot(afs_discardDCList);
+    osi_Assert(tdc);
     osi_Assert(tdc->refCount == 1);
     ReleaseReadLock(&tdc->tlock);
 
@@ -1507,7 +1508,8 @@ afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
 	|| ((lock & 2) && afs_freeDCList != NULLIDX)) {
 
 	afs_indexFlags[afs_freeDCList] &= ~IFFree;
-	tdc = afs_GetNewDSlot(afs_freeDCList);
+	tdc = afs_GetUnusedDSlot(afs_freeDCList);
+	osi_Assert(tdc);
 	osi_Assert(tdc->refCount == 1);
 	ReleaseReadLock(&tdc->tlock);
 	ObtainWriteLock(&tdc->lock, 604);
@@ -1515,7 +1517,8 @@ afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
 	afs_freeDCCount--;
     } else {
 	afs_indexFlags[afs_discardDCList] &= ~IFDiscarded;
-	tdc = afs_GetNewDSlot(afs_discardDCList);
+	tdc = afs_GetUnusedDSlot(afs_discardDCList);
+	osi_Assert(tdc);
 	osi_Assert(tdc->refCount == 1);
 	ReleaseReadLock(&tdc->tlock);
 	ObtainWriteLock(&tdc->lock, 605);
@@ -2606,7 +2609,7 @@ afs_WriteThroughDSlots(void)
  */
 
 struct dcache *
-afs_MemGetDSlot(afs_int32 aslot, int needvalid)
+afs_MemGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
 {
     struct dcache *tdc;
     int existing = 0;
@@ -2627,10 +2630,10 @@ afs_MemGetDSlot(afs_int32 aslot, int needvalid)
 	return tdc;
     }
 
-    /* if 'needvalid' is true, the slot must already exist and be populated
+    /* if 'indexvalid' is true, the slot must already exist and be populated
      * somewhere. for memcache, the only place that dcache entries exist is
      * in memory, so if we did not find it above, something is very wrong. */
-    osi_Assert(!needvalid);
+    osi_Assert(!indexvalid);
 
     if (!afs_freeDSList)
 	afs_GetDownDSlot(4);
@@ -2691,13 +2694,20 @@ unsigned int last_error = 0, lasterrtime = 0;
  *
  * Parameters:
  *	aslot : Dcache slot to look at.
- *      needvalid : Whether the specified slot should already exist
+ *      indexvalid : 1 if we know the slot we're giving is valid, and thus
+ *                   reading the dcache from the disk index should succeed. 0
+ *                   if we are initializing a new dcache, and so reading from
+ *                   the disk index may fail.
+ *      datavalid : 0 if we are loading a dcache entry from the free or
+ *                  discard list, so we know the data in the given dcache is
+ *                  not valid. 1 if we are loading a known used dcache, so the
+ *                  data in the dcache must be valid.
  *
  * Environment:
  *	afs_xdcache lock write-locked.
  */
 struct dcache *
-afs_UFSGetDSlot(afs_int32 aslot, int needvalid)
+afs_UFSGetDSlot(afs_int32 aslot, int indexvalid, int datavalid)
 {
     afs_int32 code;
     struct dcache *tdc;
@@ -2758,7 +2768,7 @@ afs_UFSGetDSlot(afs_int32 aslot, int needvalid)
 	last_error = getuerror();
 #endif
 	lasterrtime = osi_Time();
-	if (needvalid) {
+	if (indexvalid) {
 	    struct osi_stat tstat;
 	    if (afs_osi_Stat(afs_cacheInodep, &tstat)) {
 		tstat.size = -1;
@@ -2778,19 +2788,19 @@ afs_UFSGetDSlot(afs_int32 aslot, int needvalid)
     }
     if (!afs_CellNumValid(tdc->f.fid.Cell)) {
 	entryok = 0;
-	if (needvalid) {
+	if (datavalid) {
 	    osi_Panic("afs: needed valid dcache but index %d off %d has "
 	              "invalid cell num %d\n",
 	              (int)aslot, off, (int)tdc->f.fid.Cell);
 	}
     }
 
-    if (needvalid && tdc->f.fid.Fid.Volume == 0) {
+    if (datavalid && tdc->f.fid.Fid.Volume == 0) {
 	osi_Panic("afs: invalid zero-volume dcache entry at slot %d off %d",
 	          (int)aslot, off);
     }
 
-    if (!entryok) {
+    if (!entryok || !datavalid) {
 	tdc->f.fid.Cell = 0;
 	tdc->f.fid.Fid.Volume = 0;
 	tdc->f.chunk = -1;
