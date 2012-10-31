@@ -2762,8 +2762,9 @@ afs_UFSGetDSlot(afs_int32 aslot, int needvalid)
 	    if (afs_osi_Stat(afs_cacheInodep, &tstat)) {
 		tstat.size = -1;
 	    }
-	    afs_warn("afs: disk cache read error in CacheItems off %d/%d "
-	             "code %d/%d\n",
+	    afs_warn("afs: disk cache read error in CacheItems slot %d "
+	             "off %d/%d code %d/%d\n",
+	             (int)aslot,
 	             off, (int)tstat.size,
 	             (int)code, (int)sizeof(struct fcache));
 	    /* put tdc back on the free dslot list */
