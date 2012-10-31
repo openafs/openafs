@@ -3854,7 +3854,9 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     }
 
     if (scp) {
-        if (ReleaseExtentsCB->Flags & AFS_EXTENT_FLAG_FLUSH) {
+        if (deleted) {
+            code = 0;
+        } else if (ReleaseExtentsCB->Flags & AFS_EXTENT_FLAG_FLUSH) {
             lock_ObtainWrite(&scp->rw);
             code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_WRITE,
                              CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
