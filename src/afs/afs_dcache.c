@@ -1892,35 +1892,36 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		goto done;
 	    }
 
-	    /* Make sure there is a free dcache entry for us to use */
 	    if (afs_discardDCList == NULLIDX && afs_freeDCList == NULLIDX) {
-		while (1) {
-		    if (!setLocks)
-			avc->f.states |= CDCLock;
-		    /* just need slots */
-		    afs_GetDownD(5, (int *)0, afs_DCGetBucket(avc));
-		    if (!setLocks)
-			avc->f.states &= ~CDCLock;
-		    if (afs_discardDCList != NULLIDX
-			|| afs_freeDCList != NULLIDX)
-			break;
-		    /* If we can't get space for 5 mins we give up and panic */
-		    if (++downDCount > 300) {
-			osi_Panic("getdcache");
-                    }
-		    ReleaseWriteLock(&afs_xdcache);
-		    /*
-		     * Locks held:
-		     * avc->lock(R) if setLocks
-		     * avc->lock(W) if !setLocks
-		     */
-		    afs_osi_Wait(1000, 0, 0);
-		    goto RetryLookup;
-		}
+		if (!setLocks)
+		    avc->f.states |= CDCLock;
+		/* just need slots */
+		afs_GetDownD(5, (int *)0, afs_DCGetBucket(avc));
+		if (!setLocks)
+		    avc->f.states &= ~CDCLock;
+	    }
+	    tdc = afs_AllocDCache(avc, chunk, aflags, NULL);
+	    if (!tdc) {
+		/* If we can't get space for 5 mins we give up and panic */
+		if (++downDCount > 300)
+		    osi_Panic("getdcache");
+		ReleaseWriteLock(&afs_xdcache);
+		/*
+		 * Locks held:
+		 * avc->lock(R) if setLocks
+		 * avc->lock(W) if !setLocks
+		 */
+		afs_osi_Wait(1000, 0, 0);
+		goto RetryLookup;
 	    }
 
-	    tdc = afs_AllocDCache(avc, chunk, aflags, NULL);
-	    osi_Assert(tdc);
+	    /*
+	     * Locks held:
+	     * avc->lock(R) if setLocks
+	     * avc->lock(W) if !setLocks
+	     * tdc->lock(W)
+	     * afs_xdcache(W)
+	     */
 
 	    /*
 	     * Now add to the two hash chains - note that i is still set
