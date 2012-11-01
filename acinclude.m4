@@ -1334,7 +1334,7 @@ AC_CHECK_FUNCS(snprintf strlcat strlcpy flock getrlimit strnlen tsearch)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
-AC_CHECK_FUNCS(fseeko64 ftello64 pread preadv pwrite pwritev preadv64 pwritev64)
+AC_CHECK_FUNCS(fseeko64 ftello64 poll pread preadv pwrite pwritev preadv64 pwritev64)
 AC_CHECK_FUNCS([setenv unsetenv])
 
 case $AFS_SYSNAME in
