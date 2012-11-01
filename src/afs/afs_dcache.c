@@ -1512,6 +1512,53 @@ afs_FindDCache(struct vcache *avc, afs_size_t abyte)
     return NULL;
 }				/*afs_FindDCache */
 
+/* only call these from afs_AllocDCache() */
+static struct dcache *
+afs_AllocFreeDSlot(void)
+{
+    struct dcache *tdc;
+
+    tdc = afs_GetDSlotFromList(&afs_freeDCList);
+    if (!tdc) {
+	return NULL;
+    }
+    afs_indexFlags[tdc->index] &= ~IFFree;
+    ObtainWriteLock(&tdc->lock, 604);
+    afs_freeDCCount--;
+
+    return tdc;
+}
+static struct dcache *
+afs_AllocDiscardDSlot(afs_int32 lock)
+{
+    struct dcache *tdc;
+    afs_uint32 size = 0;
+    struct osi_file *file;
+
+    tdc = afs_GetDSlotFromList(&afs_discardDCList);
+    if (!tdc) {
+	return NULL;
+    }
+    afs_indexFlags[tdc->index] &= ~IFDiscarded;
+    ObtainWriteLock(&tdc->lock, 605);
+    afs_discardDCCount--;
+    size =
+	((tdc->f.chunkBytes +
+	  afs_fsfragsize) ^ afs_fsfragsize) >> 10;
+    tdc->f.states &= ~(DRO|DBackup|DRW);
+    afs_DCMoveBucket(tdc, size, 0);
+    afs_blocksDiscarded -= size;
+    afs_stats_cmperf.cacheBlocksDiscarded = afs_blocksDiscarded;
+    if ((lock & 2)) {
+	/* Truncate the chunk so zeroes get filled properly */
+	file = afs_CFileOpen(&tdc->f.inode);
+	afs_CFileTruncate(file, 0);
+	afs_CFileClose(file);
+	afs_AdjustSize(tdc, 0);
+    }
+
+    return tdc;
+}
 
 /*!
  * Get a fresh dcache from the free or discarded list.
@@ -1534,37 +1581,22 @@ afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
 		struct VenusFid *ashFid)
 {
     struct dcache *tdc = NULL;
-    afs_uint32 size = 0;
-    struct osi_file *file;
 
-    if (afs_discardDCList == NULLIDX
-	|| ((lock & 2) && afs_freeDCList != NULLIDX)) {
-
-	tdc = afs_GetDSlotFromList(&afs_freeDCList);
-	osi_Assert(tdc);
-	afs_indexFlags[tdc->index] &= ~IFFree;
-	ObtainWriteLock(&tdc->lock, 604);
-	afs_freeDCCount--;
-    } else {
-	tdc = afs_GetDSlotFromList(&afs_discardDCList);
-	osi_Assert(tdc);
-	afs_indexFlags[tdc->index] &= ~IFDiscarded;
-	ObtainWriteLock(&tdc->lock, 605);
-	afs_discardDCCount--;
-	size =
-	    ((tdc->f.chunkBytes +
-	      afs_fsfragsize) ^ afs_fsfragsize) >> 10;
-	tdc->f.states &= ~(DRO|DBackup|DRW);
-	afs_DCMoveBucket(tdc, size, 0);
-	afs_blocksDiscarded -= size;
-	afs_stats_cmperf.cacheBlocksDiscarded = afs_blocksDiscarded;
-	if (lock & 2) {
-	    /* Truncate the chunk so zeroes get filled properly */
-	    file = afs_CFileOpen(&tdc->f.inode);
-	    afs_CFileTruncate(file, 0);
-	    afs_CFileClose(file);
-	    afs_AdjustSize(tdc, 0);
+    /* if (lock & 2), prefer 'free' dcaches; otherwise, prefer 'discard'
+     * dcaches. In either case, try both if our first choice doesn't work. */
+    if ((lock & 2)) {
+	tdc = afs_AllocFreeDSlot();
+	if (!tdc) {
+	    tdc = afs_AllocDiscardDSlot(lock);
 	}
+    } else {
+	tdc = afs_AllocDiscardDSlot(lock);
+	if (!tdc) {
+	    tdc = afs_AllocFreeDSlot();
+	}
+    }
+    if (!tdc) {
+	return NULL;
     }
 
     /*
@@ -1888,6 +1920,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    }
 
 	    tdc = afs_AllocDCache(avc, chunk, aflags, NULL);
+	    osi_Assert(tdc);
 
 	    /*
 	     * Now add to the two hash chains - note that i is still set
@@ -3468,6 +3501,7 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 
     /* Get a fresh dcache. */
     new_dc = afs_AllocDCache(avc, 0, 0, &shadow_fid);
+    osi_Assert(new_dc);
 
     ObtainReadLock(&adc->mflock);
 
