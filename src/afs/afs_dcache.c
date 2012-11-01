@@ -1066,6 +1066,34 @@ afs_DiscardDCache(struct dcache *adc)
 
 }				/*afs_DiscardDCache */
 
+/**
+ * Get a dcache entry from the discard or free list
+ *
+ * @param[in] indexp  A pointer to the head of the dcache free list or discard
+ *                    list (afs_freeDCList, or afs_discardDCList)
+ *
+ * @return A dcache from that list, or NULL if none could be retrieved.
+ *
+ * @pre afs_xdcache is write-locked
+ */
+static struct dcache *
+afs_GetDSlotFromList(afs_int32 *indexp)
+{
+    struct dcache *tdc;
+
+    for ( ; *indexp != NULLIDX; indexp = &afs_dvnextTbl[*indexp]) {
+	tdc = afs_GetUnusedDSlot(*indexp);
+	if (tdc) {
+	    osi_Assert(tdc->refCount == 1);
+	    ReleaseReadLock(&tdc->tlock);
+	    *indexp = afs_dvnextTbl[tdc->index];
+	    afs_dvnextTbl[tdc->index] = NULLIDX;
+	    return tdc;
+	}
+    }
+    return NULL;
+}
+
 /*!
  * Free the next element on the list of discarded cache elements.
  */
@@ -1087,13 +1115,9 @@ afs_FreeDiscardedDCache(void)
     /*
      * Get an entry from the list of discarded cache elements
      */
-    tdc = afs_GetUnusedDSlot(afs_discardDCList);
+    tdc = afs_GetDSlotFromList(&afs_discardDCList);
     osi_Assert(tdc);
-    osi_Assert(tdc->refCount == 1);
-    ReleaseReadLock(&tdc->tlock);
 
-    afs_discardDCList = afs_dvnextTbl[tdc->index];
-    afs_dvnextTbl[tdc->index] = NULLIDX;
     afs_discardDCCount--;
     size = ((tdc->f.chunkBytes + afs_fsfragsize) ^ afs_fsfragsize) >> 10;	/* round up */
     afs_blocksDiscarded -= size;
@@ -1516,22 +1540,16 @@ afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
     if (afs_discardDCList == NULLIDX
 	|| ((lock & 2) && afs_freeDCList != NULLIDX)) {
 
-	afs_indexFlags[afs_freeDCList] &= ~IFFree;
-	tdc = afs_GetUnusedDSlot(afs_freeDCList);
+	tdc = afs_GetDSlotFromList(&afs_freeDCList);
 	osi_Assert(tdc);
-	osi_Assert(tdc->refCount == 1);
-	ReleaseReadLock(&tdc->tlock);
+	afs_indexFlags[tdc->index] &= ~IFFree;
 	ObtainWriteLock(&tdc->lock, 604);
-	afs_freeDCList = afs_dvnextTbl[tdc->index];
 	afs_freeDCCount--;
     } else {
-	afs_indexFlags[afs_discardDCList] &= ~IFDiscarded;
-	tdc = afs_GetUnusedDSlot(afs_discardDCList);
+	tdc = afs_GetDSlotFromList(&afs_discardDCList);
 	osi_Assert(tdc);
-	osi_Assert(tdc->refCount == 1);
-	ReleaseReadLock(&tdc->tlock);
+	afs_indexFlags[tdc->index] &= ~IFDiscarded;
 	ObtainWriteLock(&tdc->lock, 605);
-	afs_discardDCList = afs_dvnextTbl[tdc->index];
 	afs_discardDCCount--;
 	size =
 	    ((tdc->f.chunkBytes +
