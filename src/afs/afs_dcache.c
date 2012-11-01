@@ -22,7 +22,7 @@
 
 /* Forward declarations. */
 static void afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint);
-static void afs_FreeDiscardedDCache(void);
+static int afs_FreeDiscardedDCache(void);
 static void afs_DiscardDCache(struct dcache *);
 static void afs_FreeDCache(struct dcache *);
 /* For split cache */
@@ -459,7 +459,16 @@ afs_CacheTruncateDaemon(void)
 	 */
 	while (afs_blocksDiscarded && !afs_WaitForCacheDrain
 	       && (afs_termState != AFSOP_STOP_TRUNCDAEMON)) {
-	    afs_FreeDiscardedDCache();
+	    int code = afs_FreeDiscardedDCache();
+	    if (code) {
+		/* If we can't free any discarded dcache entries, that's okay.
+		 * We're just doing this in the background; if someone needs
+		 * discarded entries freed, they will try it themselves and/or
+		 * signal us that the cache is too full. In any case, we'll
+		 * try doing this again the next time we run through the loop.
+		 */
+		break;
+	    }
 	}
 
 	/* See if we need to continue to run. Someone may have
@@ -1096,8 +1105,11 @@ afs_GetDSlotFromList(afs_int32 *indexp)
 
 /*!
  * Free the next element on the list of discarded cache elements.
+ *
+ * Returns -1 if we encountered an error preventing us from freeing a
+ * discarded dcache, or 0 on success.
  */
-static void
+static int
 afs_FreeDiscardedDCache(void)
 {
     struct dcache *tdc;
@@ -1109,14 +1121,17 @@ afs_FreeDiscardedDCache(void)
     ObtainWriteLock(&afs_xdcache, 510);
     if (!afs_blocksDiscarded) {
 	ReleaseWriteLock(&afs_xdcache);
-	return;
+	return 0;
     }
 
     /*
      * Get an entry from the list of discarded cache elements
      */
     tdc = afs_GetDSlotFromList(&afs_discardDCList);
-    osi_Assert(tdc);
+    if (!tdc) {
+	ReleaseWriteLock(&afs_xdcache);
+	return -1;
+    }
 
     afs_discardDCCount--;
     size = ((tdc->f.chunkBytes + afs_fsfragsize) ^ afs_fsfragsize) >> 10;	/* round up */
@@ -1145,6 +1160,8 @@ afs_FreeDiscardedDCache(void)
     ReleaseWriteLock(&tdc->lock);
     afs_PutDCache(tdc);
     ReleaseWriteLock(&afs_xdcache);
+
+    return 0;
 }
 
 /*!
@@ -1162,7 +1179,14 @@ afs_MaybeFreeDiscardedDCache(void)
     while (afs_blocksDiscarded
 	   && (afs_blocksUsed >
 	       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks))) {
-	afs_FreeDiscardedDCache();
+	int code = afs_FreeDiscardedDCache();
+	if (code) {
+	    /* Callers depend on us to get the afs_blocksDiscarded count down.
+	     * If we cannot do that, the callers can spin by calling us over
+	     * and over. Panic for now until we can figure out something
+	     * better. */
+	    osi_Panic("Error freeing discarded dcache");
+	}
     }
     return 0;
 }
