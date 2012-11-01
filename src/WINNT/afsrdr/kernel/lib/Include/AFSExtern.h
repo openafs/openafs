@@ -61,6 +61,8 @@ extern HANDLE              AFSSysProcess;
 
 extern UNICODE_STRING      AFSServerName;
 
+extern UNICODE_STRING      AFSMountRootName;
+
 extern AFSVolumeCB        *AFSGlobalRoot;
 
 extern UNICODE_STRING      AFSPIOCtlName;

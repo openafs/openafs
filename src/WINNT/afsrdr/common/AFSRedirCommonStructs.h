@@ -786,6 +786,8 @@ typedef struct _AFS_LIBRARY_INIT_CB
 
     UNICODE_STRING      AFSServerName;
 
+    UNICODE_STRING      AFSMountRootName;
+
     ULONG               AFSDebugFlags;
 
     AFSFileID           GlobalRootFid;

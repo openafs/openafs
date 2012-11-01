@@ -4778,7 +4778,8 @@ AFSIsRelativeName( IN UNICODE_STRING *Name)
 
     BOOLEAN bIsRelative = FALSE;
 
-    if( Name->Buffer[ 0] != L'\\')
+    if( Name->Length > 0 &&
+        Name->Buffer[ 0] != L'\\')
     {
 
         bIsRelative = TRUE;
@@ -4786,6 +4787,53 @@ AFSIsRelativeName( IN UNICODE_STRING *Name)
 
     return bIsRelative;
 }
+
+BOOLEAN
+AFSIsAbsoluteAFSName( IN UNICODE_STRING *Name)
+{
+    UNICODE_STRING uniTempName;
+    BOOLEAN        bIsAbsolute = FALSE;
+
+    //
+    // An absolute AFS path must begin with \afs\... or equivalent
+    //
+
+    if ( Name->Length == 0 ||
+         Name->Length <= AFSMountRootName.Length + sizeof( WCHAR) ||
+         Name->Buffer[ 0] != L'\\' ||
+         Name->Buffer[ AFSMountRootName.Length/sizeof( WCHAR)] != L'\\')
+    {
+
+        return FALSE;
+    }
+
+    uniTempName.Length = AFSMountRootName.Length;
+    uniTempName.MaximumLength = AFSMountRootName.Length;
+
+    uniTempName.Buffer = (WCHAR *)AFSExAllocatePoolWithTag( PagedPool,
+                                                            uniTempName.MaximumLength,
+                                                            AFS_NAME_BUFFER_TWO_TAG);
+
+    if( uniTempName.Buffer == NULL)
+    {
+
+        return FALSE;
+    }
+
+    RtlCopyMemory( uniTempName.Buffer,
+                   Name->Buffer,
+                   AFSMountRootName.Length);
+
+    bIsAbsolute = (0 == RtlCompareUnicodeString( &uniTempName,
+                                                 &AFSMountRootName,
+                                                 TRUE));
+
+    AFSExFreePoolWithTag( uniTempName.Buffer,
+                          AFS_NAME_BUFFER_TWO_TAG);
+
+    return bIsAbsolute;
+}
+
 
 void
 AFSUpdateName( IN UNICODE_STRING *Name)
@@ -7734,6 +7782,8 @@ AFSInitializeLibrary( IN AFSLibraryInitCB *LibraryInit)
         AFSRDRDeviceObject = LibraryInit->AFSRDRDeviceObject;
 
         AFSServerName = LibraryInit->AFSServerName;
+
+        AFSMountRootName = LibraryInit->AFSMountRootName;
 
         AFSDebugFlags = LibraryInit->AFSDebugFlags;
 

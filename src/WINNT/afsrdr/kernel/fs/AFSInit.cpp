@@ -108,6 +108,8 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
 
         AFSReadServerName();
 
+        AFSReadMountRootName();
+
         RtlZeroMemory( &sysVersion,
                        sizeof( RTL_OSVERSIONINFOW));
 

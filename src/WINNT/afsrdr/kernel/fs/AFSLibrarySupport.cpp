@@ -870,6 +870,8 @@ AFSInitializeLibrary( IN AFSFileID *GlobalRootFid,
 
         stInitLib.AFSServerName = AFSServerName;
 
+        stInitLib.AFSMountRootName = AFSMountRootName;
+
         stInitLib.AFSDebugFlags = AFSDebugFlags;
 
         if( GlobalRootFid != NULL)
