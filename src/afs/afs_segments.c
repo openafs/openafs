@@ -540,7 +540,19 @@ afs_InvalidateAllSegments(struct vcache *avc)
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
-	    if (!tdc) osi_Panic("afs_InvalidateAllSegments tdc count");
+	    if (!tdc) {
+		/* In the case of fatal errors during stores, we MUST
+		 * invalidate all of the relevant chunks. Otherwise, the chunks
+		 * will be left with the 'new' data that was never successfully
+		 * written to the server, but the DV in the dcache is still the
+		 * old DV. So, we may indefintely serve serve applications data
+		 * that is not actually in the file on the fileserver. If we
+		 * cannot afs_GetValidDSlot the appropriate entries, currently
+		 * there is no way to ensure the dcache is invalidated. So for
+		 * now, to avoid risking serving bad data from the cache, panic
+		 * instead. */
+		osi_Panic("afs_InvalidateAllSegments tdc count");
+	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
 		dcListMax++;
@@ -555,7 +567,13 @@ afs_InvalidateAllSegments(struct vcache *avc)
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
-	    if (!tdc) osi_Panic("afs_InvalidateAllSegments tdc store");
+	    if (!tdc) {
+		/* We cannot proceed after getting this error; we risk serving
+		 * incorrect data to applications. So panic instead. See the
+		 * above comment next to the previous afs_GetValidDSlot call
+		 * for details. */
+		osi_Panic("afs_InvalidateAllSegments tdc store");
+	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file? we'll zap it */
