@@ -28,7 +28,7 @@ extern void rxi_ProcessNetError(struct sock_extended_err *err,
                                 afs_uint32 addr, afs_uint16 port);
 #endif
 extern struct rx_peer *rxi_FindPeer(afs_uint32 host, u_short port,
-				    struct rx_peer *origPeer, int create);
+				    int create);
 extern struct rx_packet *rxi_ReceivePacket(struct rx_packet *np,
 					   osi_socket socket, afs_uint32 host,
 					   u_short port, int *tnop,

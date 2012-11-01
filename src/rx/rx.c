@@ -1069,7 +1069,7 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
     conn->type = RX_CLIENT_CONNECTION;
     conn->cid = cid;
     conn->epoch = rx_epoch;
-    conn->peer = rxi_FindPeer(shost, sport, 0, 1);
+    conn->peer = rxi_FindPeer(shost, sport, 1);
     conn->serviceId = sservice;
     conn->securityObject = securityObject;
     conn->securityData = (void *) 0;
@@ -2976,12 +2976,9 @@ rxi_ProcessNetError(struct sock_extended_err *err, afs_uint32 addr, afs_uint16 p
 /* Find the peer process represented by the supplied (host,port)
  * combination.  If there is no appropriate active peer structure, a
  * new one will be allocated and initialized
- * The origPeer, if set, is a pointer to a peer structure on which the
- * refcount will be be decremented. This is used to replace the peer
- * structure hanging off a connection structure */
+ */
 struct rx_peer *
-rxi_FindPeer(afs_uint32 host, u_short port,
-	     struct rx_peer *origPeer, int create)
+rxi_FindPeer(afs_uint32 host, u_short port, int create)
 {
     struct rx_peer *pp;
     int hashIndex;
@@ -3011,8 +3008,6 @@ rxi_FindPeer(afs_uint32 host, u_short port,
     if (pp && create) {
 	pp->refCount++;
     }
-    if (origPeer)
-	origPeer->refCount--;
     MUTEX_EXIT(&rx_peerHashTable_lock);
     return pp;
 }
@@ -3089,7 +3084,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 	conn->next = rx_connHashTable[hashindex];
 	rx_connHashTable[hashindex] = conn;
-	conn->peer = rxi_FindPeer(host, port, 0, 1);
+	conn->peer = rxi_FindPeer(host, port, 1);
 	conn->type = RX_SERVER_CONNECTION;
 	conn->lastSendTime = clock_Sec();	/* don't GC immediately */
 	conn->epoch = epoch;
@@ -3403,7 +3398,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	struct rx_peer *peer;
 
 	/* Try to look up the peer structure, but don't create one */
-	peer = rxi_FindPeer(host, port, 0, 0);
+	peer = rxi_FindPeer(host, port, 0);
 
 	/* Since this may not be associated with a connection, it may have
 	 * no refCount, meaning we could race with ReapConnections
@@ -8267,7 +8262,7 @@ rx_ClearPeerRPCStats(afs_int32 rxInterface, afs_uint32 peerHost, afs_uint16 peer
     if (rxInterface == -1)
         return;
 
-    peer = rxi_FindPeer(peerHost, peerPort, 0, 0);
+    peer = rxi_FindPeer(peerHost, peerPort, 0);
     if (!peer)
         return;
 
@@ -8334,7 +8329,7 @@ rx_CopyPeerRPCStats(afs_uint64 op, afs_uint32 peerHost, afs_uint16 peerPort)
     if (rpcop_stat == NULL)
         return NULL;
 
-    peer = rxi_FindPeer(peerHost, peerPort, 0, 0);
+    peer = rxi_FindPeer(peerHost, peerPort, 0);
     if (!peer)
         return NULL;
 
