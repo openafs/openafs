@@ -1315,7 +1315,12 @@ afs_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    int releaseTlock = 1;
 	    tdc = afs_GetValidDSlot(index);
-	    if (!tdc) osi_Panic("afs_TryToSmush tdc");
+	    if (!tdc) {
+		/* afs_TryToSmush is best-effort; we may not actually discard
+		 * everything, so failure to discard a dcache due to an i/o
+		 * error is okay. */
+		continue;
+	    }
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		if (sync) {
 		    if ((afs_indexFlags[index] & IFDataMod) == 0
@@ -1457,17 +1462,21 @@ afs_FindDCache(struct vcache *avc, afs_size_t abyte)
      */
     i = DCHash(&avc->f.fid, chunk);
     ObtainWriteLock(&afs_xdcache, 278);
-    for (index = afs_dchashTbl[i]; index != NULLIDX;) {
+    for (index = afs_dchashTbl[i]; index != NULLIDX; index = afs_dcnextTbl[index]) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
-	    if (!tdc) osi_Panic("afs_FindDCache tdc");
+	    if (!tdc) {
+		/* afs_FindDCache is best-effort; we may not find the given
+		 * file/offset, so if we cannot find the given dcache due to
+		 * i/o errors, that is okay. */
+		continue;
+	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid) && chunk == tdc->f.chunk) {
 		break;		/* leaving refCount high for caller */
 	    }
 	    afs_PutDCache(tdc);
 	}
-	index = afs_dcnextTbl[index];
     }
     if (index != NULLIDX) {
 	hset(afs_indexTimes[tdc->index], afs_indexCounter);
@@ -1758,6 +1767,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
      */
 
     if (!tdc) {			/* If the hint wasn't the right dcache entry */
+	int dslot_error = 0;
 	/*
 	 * Hash on the [fid, chunk] and get the corresponding dcache index
 	 * after write-locking the dcache.
@@ -1775,12 +1785,16 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 
 	ObtainWriteLock(&afs_xdcache, 280);
 	us = NULLIDX;
-	for (index = afs_dchashTbl[i]; index != NULLIDX;) {
+	for (index = afs_dchashTbl[i]; index != NULLIDX; us = index, index = afs_dcnextTbl[index]) {
 	    if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 		tdc = afs_GetValidDSlot(index);
 		if (!tdc) {
-		    ReleaseWriteLock(&afs_xdcache);
-		    goto done;
+		    /* we got an i/o error when trying to get the given dslot,
+		     * but do not bail out just yet; it is possible the dcache
+		     * we're looking for is elsewhere, so it doesn't matter if
+		     * we can't load this one. */
+		    dslot_error = 1;
+		    continue;
 		}
 		ReleaseReadLock(&tdc->tlock);
 		/*
@@ -1803,8 +1817,6 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		afs_PutDCache(tdc);
 		tdc = 0;
 	    }
-	    us = index;
-	    index = afs_dcnextTbl[index];
 	}
 
 	/*
@@ -1819,6 +1831,16 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	     */
 	    afs_Trace2(afs_iclSetp, CM_TRACE_GETDCACHE1, ICL_TYPE_POINTER,
 		       avc, ICL_TYPE_INT32, chunk);
+
+	    if (dslot_error) {
+		/* We couldn't find the dcache we want, but we hit some i/o
+		 * errors when trying to find it, so we're not sure if the
+		 * dcache we want is in the cache or not. Error out, so we
+		 * don't try to possibly create 2 separate dcaches for the
+		 * same exact data. */
+		ReleaseWriteLock(&afs_xdcache);
+		goto done;
+	    }
 
 	    /* Make sure there is a free dcache entry for us to use */
 	    if (afs_discardDCList == NULLIDX && afs_freeDCList == NULLIDX) {

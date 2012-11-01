@@ -359,11 +359,22 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 	    ObtainWriteLock(&afs_xdcache, 285);
 
 	    for (j = 0, safety = 0, index = afs_dvhashTbl[hash];
-		 index != NULLIDX && safety < afs_cacheFiles + 2;) {
+		 index != NULLIDX && safety < afs_cacheFiles + 2;
+	         index = afs_dvnextTbl[index]) {
 
 		if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 		    tdc = afs_GetValidDSlot(index);
-		    if (!tdc) osi_Panic("afs_StoreAllSegments tdc dv");
+		    if (!tdc) {
+			/* This is okay; since manipulating the dcaches at this
+			 * point is best-effort. We only get a dcache here to
+			 * increment the dv and turn off DWriting. If we were
+			 * supposed to do that for a dcache, but could not
+			 * due to an I/O error, it just means the dv won't
+			 * be updated so we don't be able to use that cached
+			 * chunk in the future. That's inefficient, but not
+			 * an error. */
+			continue;
+		    }
 		    ReleaseReadLock(&tdc->tlock);
 
 		    if (!FidCmp(&tdc->f.fid, &avc->f.fid)
@@ -385,8 +396,6 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 			afs_PutDCache(tdc);
 		    }
 		}
-
-		index = afs_dvnextTbl[index];
 	    }
 	    ReleaseWriteLock(&afs_xdcache);
 
@@ -669,7 +678,7 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
     afs_size_t newSize;
 
     int dcCount, dcPos;
-    struct dcache **tdcArray;
+    struct dcache **tdcArray = NULL;
 
     AFS_STATCNT(afs_TruncateAllSegments);
     avc->f.m.Date = osi_Time();
@@ -745,10 +754,21 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
     tdcArray = osi_Alloc(dcCount * sizeof(struct dcache *));
     dcPos = 0;
 
-    for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
+    for (index = afs_dvhashTbl[code]; index != NULLIDX; index = afs_dvnextTbl[index]) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
-	    if (!tdc) osi_Panic("afs_TruncateAllSegments tdc");
+	    if (!tdc) {
+		/* make sure we put back all of the tdcArray members before
+		 * bailing out */
+		/* remember, the last valid tdc is at dcPos-1, so start at
+		 * dcPos-1, not at dcPos itself. */
+		for (dcPos = dcPos - 1; dcPos >= 0; dcPos--) {
+		    tdc = tdcArray[dcPos];
+		    afs_PutDCache(tdc);
+		}
+		code = EIO;
+		goto done;
+	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file, and modified, we'll store it back */
@@ -761,7 +781,6 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
 		afs_PutDCache(tdc);
 	    }
 	}
-	index = afs_dvnextTbl[index];
     }
 
     ReleaseWriteLock(&afs_xdcache);
@@ -795,11 +814,12 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
 	afs_PutDCache(tdc);
     }
 
-    osi_Free(tdcArray, dcCount * sizeof(struct dcache *));
-
     code = 0;
 
  done:
+    if (tdcArray) {
+	osi_Free(tdcArray, dcCount * sizeof(struct dcache *));
+    }
 #if	(defined(AFS_SUN5_ENV))
     ObtainWriteLock(&avc->vlock, 547);
     if (--avc->activeV == 0 && (avc->vstates & VRevokeWait)) {
