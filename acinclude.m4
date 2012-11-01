@@ -1463,6 +1463,7 @@ AC_CHECK_FUNCS([ \
 	getrlimit \
 	issetugid \
 	mkstemp \
+	poll \
 	pread \
 	preadv \
 	preadv64 \
