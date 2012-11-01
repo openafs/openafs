@@ -457,6 +457,9 @@ NTSTATUS
 AFSReadServerName( void);
 
 NTSTATUS
+AFSReadMountRootName( void);
+
+NTSTATUS
 AFSSetSysNameInformation( IN AFSSysNameNotificationCB *SysNameInfo,
                           IN ULONG SysNameInfoBufferLength);
 

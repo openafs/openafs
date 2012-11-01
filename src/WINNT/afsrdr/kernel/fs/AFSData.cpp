@@ -64,6 +64,8 @@ HANDLE              AFSMUPHandle = NULL;
 
 UNICODE_STRING      AFSServerName;
 
+UNICODE_STRING      AFSMountRootName;
+
 UNICODE_STRING      AFSGlobalRootName;
 
 CACHE_MANAGER_CALLBACKS AFSCacheManagerCallbacks;

@@ -1227,6 +1227,9 @@ AFSEnumerateGlobalRoot( IN GUID *AuthGroup);
 BOOLEAN
 AFSIsRelativeName( IN UNICODE_STRING *Name);
 
+BOOLEAN
+AFSIsAbsoluteAFSName( IN UNICODE_STRING *Name);
+
 void
 AFSUpdateName( IN UNICODE_STRING *Name);
 

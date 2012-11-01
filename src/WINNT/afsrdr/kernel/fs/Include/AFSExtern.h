@@ -67,6 +67,8 @@ extern HANDLE              AFSMUPHandle;
 
 extern UNICODE_STRING      AFSServerName;
 
+extern UNICODE_STRING      AFSMountRootName;
+
 extern UNICODE_STRING      AFSGlobalRootName;
 
 extern ERESOURCE           AFSDbgLogLock;

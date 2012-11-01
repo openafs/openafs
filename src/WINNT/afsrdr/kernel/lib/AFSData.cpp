@@ -56,6 +56,8 @@ HANDLE              AFSSysProcess = NULL;
 
 UNICODE_STRING      AFSServerName;
 
+UNICODE_STRING      AFSMountRootName;
+
 AFSVolumeCB        *AFSGlobalRoot = NULL;
 
 UNICODE_STRING      AFSPIOCtlName;

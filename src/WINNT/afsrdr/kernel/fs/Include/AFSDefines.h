@@ -48,7 +48,8 @@
 #define AFS_REG_TRACE_BUFFER_LENGTH      L"TraceBufferSize"  // in KB
 #define AFS_REG_MAX_DIRTY                L"MaxDirtyMb"
 #define AFS_REG_MAX_IO                   L"MaxIOMb"
-#define AFS_NETBIOS_NAME                 L"NetbiosName"
+#define AFS_REG_NETBIOS_NAME             L"NetbiosName"
+#define AFS_REG_MOUNT_ROOT               L"MountRoot"
 #define AFS_REG_SHUTDOWN_STATUS          L"ShutdownStatus"
 #define AFS_REG_REQUIRE_CLEAN_SHUTDOWN   L"RequireCleanShutdown"
 

@@ -960,7 +960,7 @@ AFSReadServerName()
         AFSServerName.Buffer = NULL;
 
         paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-        paramTable[0].Name = AFS_NETBIOS_NAME;
+        paramTable[0].Name = AFS_REG_NETBIOS_NAME;
         paramTable[0].EntryContext = &AFSServerName;
 
         paramTable[0].DefaultType = REG_NONE;
@@ -990,6 +990,107 @@ try_exit:
 
             RtlInitUnicodeString( &AFSServerName,
                                   L"AFS");
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSReadMountRootName()
+{
+
+    NTSTATUS ntStatus        = STATUS_SUCCESS;
+    ULONG Default            = 0;
+    UNICODE_STRING paramPath;
+    RTL_QUERY_REGISTRY_TABLE paramTable[2];
+
+    __Enter
+    {
+
+        //
+        // Setup the paramPath buffer.
+        //
+
+        paramPath.MaximumLength = PAGE_SIZE;
+        paramPath.Buffer = (PWSTR)AFSExAllocatePoolWithTag( PagedPool,
+                                                            paramPath.MaximumLength,
+                                                            AFS_GENERIC_MEMORY_17_TAG);
+
+        //
+        // If it exists, setup the path.
+        //
+
+        if( paramPath.Buffer == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        //
+        // Move in the paths
+        //
+
+        RtlZeroMemory( paramPath.Buffer,
+                       paramPath.MaximumLength);
+
+        RtlCopyMemory( &paramPath.Buffer[ 0],
+                       L"\\TransarcAFSDaemon\\Parameters",
+                       58);
+
+        paramPath.Length = 58;
+
+        RtlZeroMemory( paramTable,
+                       sizeof( paramTable));
+
+        //
+        // Setup the table to query the registry for the needed value
+        //
+
+        AFSMountRootName.Length = 0;
+        AFSMountRootName.MaximumLength = 0;
+        AFSMountRootName.Buffer = NULL;
+
+        paramTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+        paramTable[0].Name = AFS_REG_MOUNT_ROOT;
+        paramTable[0].EntryContext = &AFSMountRootName;
+
+        paramTable[0].DefaultType = REG_NONE;
+        paramTable[0].DefaultData = NULL;
+        paramTable[0].DefaultLength = 0;
+
+        //
+        // Query the registry
+        //
+
+        ntStatus = RtlQueryRegistryValues( RTL_REGISTRY_SERVICES,
+                                           paramPath.Buffer,
+                                           paramTable,
+                                           NULL,
+                                           NULL);
+
+        if ( NT_SUCCESS( ntStatus))
+        {
+            if ( AFSMountRootName.Buffer[0] == L'/')
+            {
+
+                AFSMountRootName.Buffer[0] = L'\\';
+            }
+        }
+
+        //
+        // Free up the buffer
+        //
+
+        ExFreePool( paramPath.Buffer);
+
+try_exit:
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            RtlInitUnicodeString( &AFSMountRootName,
+                                  L"\\afs");
         }
     }
 

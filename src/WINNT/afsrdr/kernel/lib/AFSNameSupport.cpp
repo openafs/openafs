@@ -619,6 +619,26 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                       pCurrentObject->FileId.Vnode,
                                       pCurrentObject->FileId.Unique);
 
+                        if ( !AFSIsAbsoluteAFSName( &pDirEntry->NameInformation.TargetName))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSLocateNameEntry Name %wZ contains invalid server name\n",
+                                          &pDirEntry->NameInformation.TargetName);
+
+                            //
+                            // The correct response would be STATUS_OBJECT_PATH_INVALID
+                            // but that prevents cmd.exe from performing a recursive
+                            // directory enumeration when opening a directory entry
+                            // that represents a symlink to an invalid path is discovered.
+                            //
+
+                            AFSReleaseResource( &pDirEntry->NonPaged->Lock);
+
+                            try_return( ntStatus = STATUS_OBJECT_PATH_NOT_FOUND);
+                        }
+
                         //
                         // We'll substitute this name into the current process name
                         // starting at where we sit in the path
@@ -664,10 +684,10 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                         //
 
                         RtlCopyMemory( uniTempName.Buffer,
-                                       pDirEntry->NameInformation.TargetName.Buffer,
-                                       pDirEntry->NameInformation.TargetName.Length);
+                                       &pDirEntry->NameInformation.TargetName.Buffer[ AFSMountRootName.Length/sizeof( WCHAR)],
+                                       pDirEntry->NameInformation.TargetName.Length - AFSMountRootName.Length);
 
-                        uniTempName.Length = pDirEntry->NameInformation.TargetName.Length;
+                        uniTempName.Length = pDirEntry->NameInformation.TargetName.Length - AFSMountRootName.Length;
 
                         //
                         // And now any remaining portion of the name
@@ -789,35 +809,6 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                            pDirEntry);
 
                         pNameArray->LinkCount = lLinkCount;
-
-                        //
-                        // Process over the \\<Global root> portion of the name
-                        //
-
-                        FsRtlDissectName( uniPathName,
-                                          &uniComponentName,
-                                          &uniRemainingPath);
-
-                        if( RtlCompareUnicodeString( &uniComponentName,
-                                                     &AFSServerName,
-                                                     TRUE) != 0)
-                        {
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_ERROR,
-                                          "AFSLocateNameEntry Name %wZ contains invalid server name\n",
-                                          &uniPathName);
-
-                            //
-                            // The correct response would be STATUS_OBJECT_PATH_INVALID
-                            // but that prevents cmd.exe from performing a recursive
-                            // directory enumeration when opening a directory entry
-                            // that represents a symlink to an invalid path is discovered.
-                            //
-                            try_return( ntStatus = STATUS_OBJECT_PATH_NOT_FOUND);
-                        }
-
-                        uniPathName = uniRemainingPath;
 
                         pParentDirEntry = NULL;
                     }
