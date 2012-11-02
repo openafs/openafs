@@ -1,3 +1,99 @@
+Release 1.7.1800; Changes since 1.7.1700
+
+ * On 64-bit Windows, fix process type tagging
+   to ensure that 64-bit processes are reported
+   as 64-bit and WOW64 processes are WOW64.
+
+ * Correct use of the 64-bit process sysname
+   list when evaluating symlink target paths
+   during pioctls.
+
+ * Fix a memory leak during SRXAFSCB_GetCellServ
+   RPC processing by the cache manager.  This RPC
+   is executed in response to "cmdebug -cellservdb"
+   command operations.
+
+ * Comparisons of the behavior of cmd.exe, powershell.exe,
+   and tcc.exe with regards to directory enumeration show that
+   when Symlink file information is returned that the "reparse
+   point" data should be reported along with whether or not the
+   target is a directory.
+
+   For mount points, the reparse point file information should
+   always be returned and the type should always be directory.
+   The target timestamps, file sizes, etc. should never be returned.
+
+ * All active I/O operations for a file must be canceled
+   when the cache manager receives a VNOVODE response from
+   the file server.
+
+ * Fix a memory corruption error in the kernel triggered by
+   premature deallocation of a File Control Block object
+   when opening directory objects.
+
+ * Prevent multiple attempts to fetch the target data of a
+   mount point in different threads at the same time.
+
+ * Add a new ERESOURCE to protect the ObjectInformation
+   Control Block reference counts which are used to determine
+   when it is safe to detach and deallocate the associated
+   File Control Block.
+
+ * Improved handling of the ObjectInformationCB DELETED flag
+   during Handle Cleanup.
+
+ * Avoid a race condition in the Setting and Clearing of the
+   FCB ExtentsRequestComplete event.  This race contributed
+   to the 10 second extent fetch stalls that were noticed
+   with previous releases.
+
+ * Do not block the AFSPrimaryVolumeWorker thread in the kernel
+   if the File Control Block under examination is in use.
+
+ * Prevent unnecessary data flush requests being sent to the
+   service as a result of a leak in the FCB QueuedFlushCount.
+
+ * Correct the return value of buf_DirtyBuffersExist() in the
+   service that permitted Handle Cleanup requests to complete
+   before all of the dirty data buffers were written to the
+   file server.
+
+ * The redirector must request that all dirty data be flushed
+   to the file server each time a handle is closed that has
+   write permission.  The last handle to be closed might not
+   have write permission resulting in data loss.
+
+ * EIO errors received from the file server were not treated
+   as a fatal error and requests would be retried indefinitely.
+   EIO errors are now reported to the application as
+   STATUS_DISK_OPERATION_FAILURE.
+
+ * Return STATUS_MEDIA_WRITE_PROTECTED errors on a .readonly
+   volume only if the requested CreateFile operation would in
+   fact attempt to create the file.  If the file already exists,
+   return STATUS_OBJECT_NAME_COLLISION.  This change reverts
+   a behavior change introduced in 1.7.16.
+
+ * Fix failover behavior when the file server responds with
+   VOFFLINE.
+
+ * Fix "fs setserverprefs" behavior.  The server ranking is
+   immediately recalculated.
+
+ * cm_FindVolumeByName() allocation of new volume group objects
+   was racy permitting two threads to attempt to use the same
+   memory region for allocation at the same time.  The result
+   would be an exception terminating the afsd_service.
+
+ * Prevent premature garbage collection of cm_conn objects in
+   the afsd_service which can result in process termination.
+
+ * Alter the processing of absolute symlinks in afsredirlib.sys.
+   Use the "MountRoot" registry value instead of the "NetbiosName"
+   parameter when testing whether the symlink target is a valid
+   AFS target path.   Do not include the "MountRoot" string in
+   the internal target path.
+
 Since 1.7.1600 (1.7.16)
 
  * Add support for Windows 8 and Server 2012
