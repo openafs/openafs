@@ -314,7 +314,7 @@ resetFirst(struct rxevent *ev)
 }
 
 void
-rxevent_Cancel(struct rxevent **evp, struct rx_call *call, int type)
+rxevent_Cancel(struct rxevent **evp)
 {
     struct rxevent *event;
 
@@ -368,9 +368,6 @@ rxevent_Cancel(struct rxevent **evp, struct rx_call *call, int type)
 
     *evp = NULL;
     rxevent_put(event); /* Dispose of caller's reference */
-
-    if (call)
-	CALL_RELE(call, type);
 }
 
 /* Process all events which have expired. If events remain, then the relative

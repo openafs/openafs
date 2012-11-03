@@ -528,11 +528,9 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 
 /* Forward definitions of internal procedures */
 #define	rxi_ChallengeOff(conn)	\
-	rxevent_Cancel(&(conn)->challengeEvent, NULL, 0)
-#define rxi_KeepAliveOff(call) \
-	rxevent_Cancel(&(call)->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE)
+	rxevent_Cancel(&(conn)->challengeEvent)
 #define rxi_NatKeepAliveOff(conn) \
-	rxevent_Cancel(&(conn)->natKeepAliveEvent, NULL, 0)
+	rxevent_Cancel(&(conn)->natKeepAliveEvent)
 
 #define rxi_AllocSecurityObject() rxi_Alloc(sizeof(struct rx_securityClass))
 #define	rxi_FreeSecurityObject(obj) rxi_Free(obj, sizeof(struct rx_securityClass))

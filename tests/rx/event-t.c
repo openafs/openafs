@@ -116,7 +116,7 @@ main(void)
     /* Test for a problem when there is only a single event in the tree */
     event = rxevent_Post(&now, &now, reportSub, NULL, NULL, 0);
     ok(event != NULL, "Created a single event");
-    rxevent_Cancel(&event, NULL, 0);
+    rxevent_Cancel(&event);
     ok(1, "Cancelled a single event");
     rxevent_RaiseEvents(&now);
     ok(1, "RaiseEvents happened without error");
@@ -148,7 +148,7 @@ main(void)
 	    int victim = random() % counter;
 
 	    if (events[victim].event != NULL) {
-		rxevent_Cancel(&events[victim].event, NULL, 0);
+		rxevent_Cancel(&events[victim].event);
 		events[victim].cancelled = 1;
 	    }
 	}

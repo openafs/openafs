@@ -153,6 +153,9 @@ static void rxi_GrowMTUOn(struct rx_call *call);
 static void rxi_ChallengeOn(struct rx_connection *conn);
 static int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 static void rxi_AckAllInTransmitQueue(struct rx_call *call);
+static void rxi_CancelKeepAliveEvent(struct rx_call *call);
+static void rxi_CancelDelayedAbortEvent(struct rx_call *call);
+static void rxi_CancelGrowMTUEvent(struct rx_call *call);
 
 #ifdef RX_ENABLE_LOCKS
 struct rx_tq_debug {
@@ -727,7 +730,8 @@ rxi_rto_startTimer(struct rx_call *call, int lastPacket, int istack)
 static_inline void
 rxi_rto_cancel(struct rx_call *call)
 {
-    rxevent_Cancel(&call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
+    rxevent_Cancel(&call->resendEvent);
+    CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
 }
 
 /*!
@@ -829,18 +833,30 @@ rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *offset)
     when = now;
     clock_Add(&when, offset);
 
-    if (!call->delayedAckEvent
-	|| clock_Gt(&call->delayedAckTime, &when)) {
+    if (call->delayedAckEvent && clock_Gt(&call->delayedAckTime, &when)) {
+	/* The event we're cancelling already has a reference, so we don't
+	 * need a new one */
+	rxevent_Cancel(&call->delayedAckEvent);
+	call->delayedAckEvent = rxevent_Post(&when, &now, rxi_SendDelayedAck,
+					     call, NULL, 0);
 
-        rxevent_Cancel(&call->delayedAckEvent, call,
-		       RX_CALL_REFCOUNT_DELAY);
+	call->delayedAckTime = when;
+    } else if (!call->delayedAckEvent) {
 	CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-
 	call->delayedAckEvent = rxevent_Post(&when, &now,
 					     rxi_SendDelayedAck,
 					     call, NULL, 0);
 	call->delayedAckTime = when;
     }
+}
+
+void
+rxi_CancelDelayedAckEvent(struct rx_call *call)
+{
+   if (call->delayedAckEvent) {
+	rxevent_Cancel(&call->delayedAckEvent);
+	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
+   }
 }
 
 /* called with unincremented nRequestsRunning to see if it is OK to start
@@ -1302,8 +1318,7 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 		    /* Push the final acknowledgment out now--there
 		     * won't be a subsequent call to acknowledge the
 		     * last reply packets */
-		    rxevent_Cancel(&call->delayedAckEvent, call,
-				   RX_CALL_REFCOUNT_DELAY);
+		    rxi_CancelDelayedAckEvent(call);
 		    if (call->state == RX_STATE_PRECALL
 			|| call->state == RX_STATE_ACTIVE) {
 			rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
@@ -1343,7 +1358,7 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
     }
 
     if (conn->delayedAbortEvent) {
-	rxevent_Cancel(&conn->delayedAbortEvent, NULL, 0);
+	rxevent_Cancel(&conn->delayedAbortEvent);
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
 	if (packet) {
 	    MUTEX_ENTER(&conn->conn_data_lock);
@@ -1371,9 +1386,9 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
 
     /* Make sure the connection is completely reset before deleting it. */
     /* get rid of pending events that could zap us later */
-    rxevent_Cancel(&conn->challengeEvent, NULL, 0);
-    rxevent_Cancel(&conn->checkReachEvent, NULL, 0);
-    rxevent_Cancel(&conn->natKeepAliveEvent, NULL, 0);
+    rxevent_Cancel(&conn->challengeEvent);
+    rxevent_Cancel(&conn->checkReachEvent);
+    rxevent_Cancel(&conn->natKeepAliveEvent);
 
     /* Add the connection to the list of destroyed connections that
      * need to be cleaned up. This is necessary to avoid deadlocks
@@ -2426,8 +2441,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	    call->state = RX_STATE_DALLY;
 	    rxi_ClearTransmitQueue(call, 0);
 	    rxi_rto_cancel(call);
-	    rxevent_Cancel(&call->keepAliveEvent, call,
-			   RX_CALL_REFCOUNT_ALIVE);
+	    rxi_CancelKeepAliveEvent(call);
 	}
     } else {			/* Client connection */
 	char dummy;
@@ -2445,8 +2459,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	 * and force-send it now.
 	 */
 	if (call->delayedAckEvent) {
-	    rxevent_Cancel(&call->delayedAckEvent, call,
-			   RX_CALL_REFCOUNT_DELAY);
+	    rxi_CancelDelayedAckEvent(call);
 	    rxi_SendDelayedAck(NULL, call, NULL, 0);
 	}
 
@@ -3898,8 +3911,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
                 if (rx_stats_active)
                     rx_atomic_inc(&rx_stats.dupPacketsRead);
 		dpf(("packet %"AFS_PTR_FMT" dropped on receipt - duplicate\n", np));
-		rxevent_Cancel(&call->delayedAckEvent, call,
-			       RX_CALL_REFCOUNT_DELAY);
+		rxi_CancelDelayedAckEvent(call);
 		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
 		ackNeeded = 0;
 		call->rprev = seq;
@@ -3989,8 +4001,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	    if (seq < call->rnext) {
                 if (rx_stats_active)
                     rx_atomic_inc(&rx_stats.dupPacketsRead);
-		rxevent_Cancel(&call->delayedAckEvent, call,
-			       RX_CALL_REFCOUNT_DELAY);
+		rxi_CancelDelayedAckEvent(call);
 		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
 		ackNeeded = 0;
 		call->rprev = seq;
@@ -4001,8 +4012,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	     * accomodated by the current window, then send a negative
 	     * acknowledge and drop the packet */
 	    if ((call->rnext + call->rwind) <= seq) {
-		rxevent_Cancel(&call->delayedAckEvent, call,
-			       RX_CALL_REFCOUNT_DELAY);
+		rxi_CancelDelayedAckEvent(call);
 		np = rxi_SendAck(call, np, serial, RX_ACK_EXCEEDS_WINDOW,
 				 istack);
 		ackNeeded = 0;
@@ -4021,8 +4031,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 		if (seq == tp->header.seq) {
                     if (rx_stats_active)
                         rx_atomic_inc(&rx_stats.dupPacketsRead);
-		    rxevent_Cancel(&call->delayedAckEvent, call,
-				   RX_CALL_REFCOUNT_DELAY);
+		    rxi_CancelDelayedAckEvent(call);
 		    np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE,
 				     istack);
 		    ackNeeded = 0;
@@ -4133,10 +4142,10 @@ rxi_ReceiveDataPacket(struct rx_call *call,
      * received. Always send a soft ack for the last packet in
      * the server's reply. */
     if (ackNeeded) {
-	rxevent_Cancel(&call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+	rxi_CancelDelayedAckEvent(call);
 	np = rxi_SendAck(call, np, serial, ackNeeded, istack);
     } else if (call->nSoftAcks > (u_short) rxi_SoftAckRate) {
-	rxevent_Cancel(&call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+	rxi_CancelDelayedAckEvent(call);
 	np = rxi_SendAck(call, np, serial, RX_ACK_IDLE, istack);
     } else if (call->nSoftAcks) {
 	if (haveLast && !(flags & RX_CLIENT_INITIATED))
@@ -4144,7 +4153,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	else
 	    rxi_PostDelayedAckEvent(call, &rx_softAckDelay);
     } else if (call->flags & RX_CALL_RECEIVE_DONE) {
-	rxevent_Cancel(&call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+	rxi_CancelDelayedAckEvent(call);
     }
 
     return np;
@@ -4703,7 +4712,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	&& call->tfirst + call->nSoftAcked >= call->tnext) {
 	call->state = RX_STATE_DALLY;
 	rxi_ClearTransmitQueue(call, 0);
-        rxevent_Cancel(&call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
+	rxi_CancelKeepAliveEvent(call);
     } else if (!opr_queue_IsEmpty(&call->tq)) {
 	rxi_Start(call, istack);
     }
@@ -5093,10 +5102,7 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 
     if (force || rxi_callAbortThreshhold == 0
 	|| call->abortCount < rxi_callAbortThreshhold) {
-	if (call->delayedAbortEvent) {
-	    rxevent_Cancel(&call->delayedAbortEvent, call,
-			   RX_CALL_REFCOUNT_ABORT);
-	}
+	rxi_CancelDelayedAbortEvent(call);
 	error = htonl(cerror);
 	call->abortCount++;
 	packet =
@@ -5111,6 +5117,15 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 	    rxevent_Post(&when, &now, rxi_SendDelayedCallAbort, call, 0, 0);
     }
     return packet;
+}
+
+static void
+rxi_CancelDelayedAbortEvent(struct rx_call *call)
+{
+    if (call->delayedAbortEvent) {
+	rxevent_Cancel(&call->delayedAbortEvent);
+	CALL_RELE(call, RX_CALL_REFCOUNT_ABORT);
+    }
 }
 
 /* Send an abort packet for the specified connection.  Packet is an
@@ -5139,7 +5154,7 @@ rxi_SendConnectionAbort(struct rx_connection *conn,
     if (force || rxi_connAbortThreshhold == 0
 	|| conn->abortCount < rxi_connAbortThreshhold) {
 
-	rxevent_Cancel(&conn->delayedAbortEvent, NULL, 0);
+	rxevent_Cancel(&conn->delayedAbortEvent);
 	error = htonl(conn->error);
 	conn->abortCount++;
 	MUTEX_EXIT(&conn->conn_data_lock);
@@ -5173,10 +5188,10 @@ rxi_ConnectionError(struct rx_connection *conn,
 	dpf(("rxi_ConnectionError conn %"AFS_PTR_FMT" error %d\n", conn, error));
 
 	MUTEX_ENTER(&conn->conn_data_lock);
-	rxevent_Cancel(&conn->challengeEvent, NULL, 0);
-	rxevent_Cancel(&conn->natKeepAliveEvent, NULL, 0);
+	rxevent_Cancel(&conn->challengeEvent);
+	rxevent_Cancel(&conn->natKeepAliveEvent);
 	if (conn->checkReachEvent) {
-	    rxevent_Cancel(&conn->checkReachEvent, NULL, 0);
+	    rxevent_Cancel(&conn->checkReachEvent);
 	    conn->flags &= ~(RX_CONN_ATTACHWAIT|RX_CONN_NAT_PING);
 	    putConnection(conn);
 	}
@@ -5253,10 +5268,10 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     }
 
 
-    rxevent_Cancel(&call->growMTUEvent, call, RX_CALL_REFCOUNT_MTU);
+    rxi_CancelGrowMTUEvent(call);
 
     if (call->delayedAbortEvent) {
-	rxevent_Cancel(&call->delayedAbortEvent, call, RX_CALL_REFCOUNT_ABORT);
+	rxi_CancelDelayedAbortEvent(call);
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
 	if (packet) {
 	    rxi_SendCallAbort(call, packet, 0, 1);
@@ -5385,8 +5400,8 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     }
 #endif /* RX_ENABLE_LOCKS */
 
-    rxi_KeepAliveOff(call);
-    rxevent_Cancel(&call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+    rxi_CancelKeepAliveEvent(call);
+    rxi_CancelDelayedAckEvent(call);
 }
 
 /* Send an acknowledge for the indicated packet (seq,serial) of the
@@ -5753,7 +5768,7 @@ rxi_SendList(struct rx_call *call, struct xmitlist *xmit,
 
     /* Since we're about to send a data packet to the peer, it's
      * safe to nuke any scheduled end-of-packets ack */
-    rxevent_Cancel(&call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+    rxi_CancelDelayedAckEvent(call);
 
     MUTEX_EXIT(&call->lock);
     CALL_HOLD(call, RX_CALL_REFCOUNT_SEND);
@@ -6195,7 +6210,7 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
 
     /* Since we're about to send SOME sort of packet to the peer, it's
      * safe to nuke any scheduled end-of-packets ack */
-    rxevent_Cancel(&call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+    rxi_CancelDelayedAckEvent(call);
 
     /* Actually send the packet, filling in more connection-specific fields */
     MUTEX_EXIT(&call->lock);
@@ -6318,13 +6333,10 @@ rxi_CheckCall(struct rx_call *call, int haveCTLock)
 	} else {
 #ifdef RX_ENABLE_LOCKS
 	    /* Cancel pending events */
-	    rxevent_Cancel(&call->delayedAckEvent, call,
-			   RX_CALL_REFCOUNT_DELAY);
+	    rxi_CancelDelayedAckEvent(call);
 	    rxi_rto_cancel(call);
-	    rxevent_Cancel(&call->keepAliveEvent, call,
-			   RX_CALL_REFCOUNT_ALIVE);
-	    rxevent_Cancel(&call->growMTUEvent, call,
-			   RX_CALL_REFCOUNT_MTU);
+	    rxi_CancelKeepAliveEvent(call);
+	    rxi_CancelGrowMTUEvent(call);
             MUTEX_ENTER(&rx_refcnt_mutex);
             /* if rxi_FreeCall returns 1 it has freed the call */
 	    if (call->refCount == 0 &&
@@ -6603,6 +6615,14 @@ rxi_ScheduleKeepAliveEvent(struct rx_call *call)
 }
 
 static void
+rxi_CancelKeepAliveEvent(struct rx_call *call) {
+    if (call->keepAliveEvent) {
+	rxevent_Cancel(&call->keepAliveEvent);
+	CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
+    }
+}
+
+static void
 rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 {
     if (!call->growMTUEvent) {
@@ -6625,7 +6645,15 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
     }
 }
 
-/* N.B. rxi_KeepAliveOff:  is defined earlier as a macro */
+static void
+rxi_CancelGrowMTUEvent(struct rx_call *call)
+{
+    if (call->growMTUEvent) {
+	rxevent_Cancel(&call->growMTUEvent);
+	CALL_RELE(call, RX_CALL_REFCOUNT_MTU);
+    }
+}
+
 static void
 rxi_KeepAliveOn(struct rx_call *call)
 {
@@ -6638,16 +6666,14 @@ rxi_KeepAliveOn(struct rx_call *call)
     rxi_ScheduleKeepAliveEvent(call);
 }
 
-/*
- * Solely in order that callers not need to include rx_call.h
- */
 void
 rx_KeepAliveOff(struct rx_call *call)
 {
     MUTEX_ENTER(&call->lock);
-    rxi_KeepAliveOff(call);
+    rxi_CancelKeepAliveEvent(call);
     MUTEX_EXIT(&call->lock);
 }
+
 void
 rx_KeepAliveOn(struct rx_call *call)
 {
