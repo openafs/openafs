@@ -43,7 +43,7 @@ extern int rxevent_RaiseEvents(struct clock *wait);
 extern struct rxevent *rxevent_Get(struct rxevent *event);
 
 /* Release a reference to an event */
-extern void rxevent_Put(struct rxevent *event);
+extern void rxevent_Put(struct rxevent **event);
 
 /* Shutdown the event package */
 extern void shutdown_rxevent(void);

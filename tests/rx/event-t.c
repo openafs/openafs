@@ -45,7 +45,7 @@ eventSub(struct rxevent *event, void *arg, void *arg1, int arg2)
     struct testEvent *evrecord = arg;
 
     pthread_mutex_lock(&eventListMutex);
-    rxevent_Put(evrecord->event);
+    rxevent_Put(&evrecord->event);
     evrecord->event = NULL;
     evrecord->fired = 1;
     pthread_mutex_unlock(&eventListMutex);

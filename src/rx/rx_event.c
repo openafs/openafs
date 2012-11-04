@@ -155,8 +155,10 @@ rxevent_put(struct rxevent *ev) {
 }
 
 void
-rxevent_Put(struct rxevent *ev) {
-    rxevent_put(ev);
+rxevent_Put(struct rxevent **ev)
+{
+    rxevent_put(*ev);
+    *ev = NULL;
 }
 
 static_inline struct rxevent *
