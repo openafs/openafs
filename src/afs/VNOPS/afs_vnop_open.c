@@ -170,28 +170,29 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 	afs_size_t offset, len;
 
 	tdc = afs_GetDCache(tvc, 0, &treq, &offset, &len, 1);
+	if (tdc) {
+	    ObtainSharedLock(&tdc->mflock, 865);
+	    if (!(tdc->mflags & DFFetchReq)) {
+		struct brequest *bp;
 
-	ObtainSharedLock(&tdc->mflock, 865);
-	if (!(tdc->mflags & DFFetchReq)) {
-	    struct brequest *bp;
-
-	    /* start the daemon (may already be running, however) */
-	    UpgradeSToWLock(&tdc->mflock, 666);
-	    tdc->mflags |= DFFetchReq;  /* guaranteed to be cleared by BKG or 
-					   GetDCache */
-	    /* last parm (1) tells bkg daemon to do an afs_PutDCache when it 
-	       is done, since we don't want to wait for it to finish before 
-	       doing so ourselves.
-	    */
-	    bp = afs_BQueue(BOP_FETCH, tvc, B_DONTWAIT, 0, acred,
-			    (afs_size_t) 0, (afs_size_t) 1, tdc,
-			    (void *)0, (void *)0);
-	    if (!bp) {
-		tdc->mflags &= ~DFFetchReq;
+		/* start the daemon (may already be running, however) */
+		UpgradeSToWLock(&tdc->mflock, 666);
+		tdc->mflags |= DFFetchReq;  /* guaranteed to be cleared by BKG or
+					       GetDCache */
+		/* last parm (1) tells bkg daemon to do an afs_PutDCache when it
+		   is done, since we don't want to wait for it to finish before
+		   doing so ourselves.
+		*/
+		bp = afs_BQueue(BOP_FETCH, tvc, B_DONTWAIT, 0, acred,
+				(afs_size_t) 0, (afs_size_t) 1, tdc,
+				(void *)0, (void *)0);
+		if (!bp) {
+		    tdc->mflags &= ~DFFetchReq;
+		}
+		ReleaseWriteLock(&tdc->mflock);
+	    } else {
+		ReleaseSharedLock(&tdc->mflock);
 	    }
-	    ReleaseWriteLock(&tdc->mflock);
-	} else {
-	    ReleaseSharedLock(&tdc->mflock);
 	}
     }	
   done:
