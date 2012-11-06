@@ -391,11 +391,17 @@ cm_Analyze(cm_conn_t *connp,
     }
 
     if (errorCode == CM_ERROR_TIMEDOUT) {
+	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_TIMEDOUT");
         if ( timeLeft > 5 ) {
             thrd_Sleep(3000);
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, cellp);
             retry = 1;
         }
+    }
+
+    else if (errorCode == CM_ERROR_RETRY) {
+	osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_RETRY");
+        retry = 1;
     }
 
     else if (errorCode == UAEWOULDBLOCK || errorCode == EWOULDBLOCK ||
@@ -1261,8 +1267,6 @@ cm_Analyze(cm_conn_t *connp,
             case VL_BADMASK        : s = "VL_BADMASK";         break;
 	    case CM_ERROR_NOSUCHCELL	    : s = "CM_ERROR_NOSUCHCELL";         break;
 	    case CM_ERROR_NOSUCHVOLUME	    : s = "CM_ERROR_NOSUCHVOLUME";       break;
-	    case CM_ERROR_TIMEDOUT	    : s = "CM_ERROR_TIMEDOUT";           break;
-	    case CM_ERROR_RETRY		    : s = "CM_ERROR_RETRY";              break;
 	    case CM_ERROR_NOACCESS	    : s = "CM_ERROR_NOACCESS";           break;
 	    case CM_ERROR_NOSUCHFILE	    : s = "CM_ERROR_NOSUCHFILE";         break;
 	    case CM_ERROR_STOPNOW	    : s = "CM_ERROR_STOPNOW";            break;
