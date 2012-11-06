@@ -583,17 +583,17 @@ NET_API_STATUS NetrShareEnum(
     case 2:
         if (space_limited)
             space_available -= sizeof(InfoStruct->ShareInfo.Level2);
-        InfoStruct->ShareInfo.Level2->Buffer = calloc((enump->count - enump->next), sizeof(SHARE_INFO_2));
+        InfoStruct->ShareInfo.Level2->Buffer = MIDL_user_allocate((enump->count - enump->next) * sizeof(SHARE_INFO_2));
         break;
     case 1:
         if (space_limited)
             space_available -= sizeof(InfoStruct->ShareInfo.Level1);
-        InfoStruct->ShareInfo.Level1->Buffer = calloc((enump->count - enump->next), sizeof(SHARE_INFO_1));
+        InfoStruct->ShareInfo.Level1->Buffer = MIDL_user_allocate((enump->count - enump->next) * sizeof(SHARE_INFO_1));
         break;
     case 0:
         if (space_limited)
             space_available -= sizeof(InfoStruct->ShareInfo.Level0);
-        InfoStruct->ShareInfo.Level0->Buffer = calloc((enump->count - enump->next), sizeof(SHARE_INFO_0));
+        InfoStruct->ShareInfo.Level0->Buffer = MIDL_user_allocate((enump->count - enump->next) * sizeof(SHARE_INFO_0));
         break;
     }
 
@@ -733,13 +733,13 @@ NET_API_STATUS NetrShareGetInfo(
     /* Allocate the memory for the response */
     switch (Level) {
     case 2:
-        InfoStruct->ShareInfo2 = calloc(1, sizeof(SHARE_INFO_2));
+        InfoStruct->ShareInfo2 = MIDL_user_allocate(sizeof(SHARE_INFO_2));
         break;
     case 1:
-        InfoStruct->ShareInfo1 = calloc(1, sizeof(SHARE_INFO_1));
+        InfoStruct->ShareInfo1 = MIDL_user_allocate(sizeof(SHARE_INFO_1));
         break;
     case 0:
-        InfoStruct->ShareInfo0 = calloc(1, sizeof(SHARE_INFO_0));
+        InfoStruct->ShareInfo0 = MIDL_user_allocate(sizeof(SHARE_INFO_0));
         break;
     }
 
@@ -947,16 +947,16 @@ NET_API_STATUS NetrServerGetInfo(
      */
     switch (Level) {
     case 103:
-        InfoStruct->ServerInfo103 = calloc(1, sizeof(SERVER_INFO_103));
+        InfoStruct->ServerInfo103 = MIDL_user_allocate(sizeof(SERVER_INFO_103));
         break;
     case 102:
-        InfoStruct->ServerInfo102 = calloc(1, sizeof(SERVER_INFO_102));
+        InfoStruct->ServerInfo102 = MIDL_user_allocate(sizeof(SERVER_INFO_102));
         break;
     case 101:
-        InfoStruct->ServerInfo101 = calloc(1, sizeof(SERVER_INFO_101));
+        InfoStruct->ServerInfo101 = MIDL_user_allocate(sizeof(SERVER_INFO_101));
         break;
     case 100:
-        InfoStruct->ServerInfo100 = calloc(1, sizeof(SERVER_INFO_100));
+        InfoStruct->ServerInfo100 = MIDL_user_allocate(sizeof(SERVER_INFO_100));
         break;
     }
 

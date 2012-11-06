@@ -50,13 +50,13 @@ unsigned long NetrWkstaGetInfo(
      */
     switch (Level) {
     case 102:
-        WkstaInfo->WkstaInfo102 = calloc(1, sizeof(WKSTA_INFO_102));
+        WkstaInfo->WkstaInfo102 = MIDL_user_allocate(sizeof(WKSTA_INFO_102));
         break;
     case 101:
-        WkstaInfo->WkstaInfo101 = calloc(1, sizeof(WKSTA_INFO_101));
+        WkstaInfo->WkstaInfo101 = MIDL_user_allocate(sizeof(WKSTA_INFO_101));
         break;
     case 100:
-        WkstaInfo->WkstaInfo100 = calloc(1, sizeof(WKSTA_INFO_100));
+        WkstaInfo->WkstaInfo100 = MIDL_user_allocate(sizeof(WKSTA_INFO_100));
         break;
     }
 
