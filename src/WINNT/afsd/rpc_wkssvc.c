@@ -82,7 +82,7 @@ unsigned long NetrWkstaGetInfo(
         WkstaInfo->WkstaInfo101->wki101_lanroot = NULL;
     case  100:
         WkstaInfo->WkstaInfo100->wki100_computername = _wcsupr(wcsdup(s));
-        WkstaInfo->WkstaInfo100->wki100_langroup = _wcsdup(L"AFS");
+        WkstaInfo->WkstaInfo100->wki100_langroup = wcsdup(L"AFS");
         WkstaInfo->WkstaInfo100->wki100_platform_id = PLATFORM_ID_AFS;
         WkstaInfo->WkstaInfo100->wki100_ver_major = AFSPRODUCT_VERSION_MAJOR;
         WkstaInfo->WkstaInfo100->wki100_ver_minor = AFSPRODUCT_VERSION_MINOR;
