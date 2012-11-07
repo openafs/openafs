@@ -501,7 +501,9 @@ afs_vop_lookup(ap)
     lockparent = flags & LOCKPARENT;
     wantparent = flags & (LOCKPARENT | WANTPARENT);
 
+#if __FreeBSD_version < 1000021
     cnp->cn_flags |= MPSAFE; /* steel */
+#endif
 
     if (flags & ISDOTDOT)
 	MA_VOP_UNLOCK(dvp, 0, p);
