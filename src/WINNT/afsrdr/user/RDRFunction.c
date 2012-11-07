@@ -1907,8 +1907,10 @@ RDR_CleanupFileEntry( IN cm_user_t *userp,
 
         /* call setattr */
         if (setAttr.mask) {
-            lock_ReleaseWrite(&scp->rw);
-            bScpLocked = FALSE;
+            if (bScpLocked) {
+                lock_ReleaseWrite(&scp->rw);
+                bScpLocked = FALSE;
+            }
             code = cm_SetAttr(scp, &setAttr, userp, &req);
         } else
             code = 0;
