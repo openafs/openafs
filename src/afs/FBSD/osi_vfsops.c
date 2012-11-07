@@ -135,7 +135,9 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
 #if defined(AFS_FBSD61_ENV) && !defined(AFS_FBSD62_ENV)
     MNT_ILOCK(mp);
 #endif
+#if __FreeBSD_version < 1000021
     mp->mnt_kern_flag |= MNTK_MPSAFE; /* solid steel */
+#endif
 #ifndef AFS_FBSD61_ENV
     MNT_ILOCK(mp);
 #endif
