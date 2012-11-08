@@ -1610,6 +1610,17 @@ dv_diff(afs_uint64 dv1, afs_uint64 dv2)
         return (afs_uint32)(dv1 - dv2);
 }
 
+long
+cm_IsStatusValid(AFSFetchStatus *statusp)
+{
+    if (statusp->InterfaceVersion != 0x1 ||
+        !(statusp->FileType > 0 && statusp->FileType <= SymbolicLink)) {
+        return 0;
+    }
+
+    return 1;
+}
+
 /* merge in a response from an RPC.  The scp must be locked, and the callback
  * is optional.
  *
@@ -1674,9 +1685,8 @@ long cm_MergeStatus(cm_scache_t *dscp,
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
-    if (statusp->InterfaceVersion != 0x1 ||
-        !(statusp->FileType > 0 && statusp->FileType <= SymbolicLink)) {
-        osi_Log3(afsd_logp, "Merge, Failure scp 0x%p Invalid InterfaceVersion %d FileType %d",
+    if (!cm_IsStatusValid(statusp)) {
+        osi_Log3(afsd_logp, "Merge: Bad Status scp 0x%p Invalid InterfaceVersion %d FileType %d",
                  scp, statusp->InterfaceVersion, statusp->FileType);
         return CM_ERROR_INVAL;
     }
