@@ -1623,7 +1623,7 @@ dv_diff(afs_uint64 dv1, afs_uint64 dv2)
  * handled after the callback breaking is done, but only one of whose calls
  * started before that, can cause old info to be merged from the first call.
  */
-void cm_MergeStatus(cm_scache_t *dscp,
+long cm_MergeStatus(cm_scache_t *dscp,
 		    cm_scache_t *scp, AFSFetchStatus *statusp,
 		    AFSVolSync *volsyncp,
                     cm_user_t *userp, cm_req_t *reqp, afs_uint32 flags)
@@ -1674,10 +1674,11 @@ void cm_MergeStatus(cm_scache_t *dscp,
     }
 #endif /* AFS_FREELANCE_CLIENT */
 
-    if (statusp->InterfaceVersion != 0x1) {
-        osi_Log2(afsd_logp, "Merge, Failure scp 0x%p Invalid InterfaceVersion %u",
-                 scp, statusp->InterfaceVersion);
-        return;
+    if (statusp->InterfaceVersion != 0x1 ||
+        !(statusp->FileType > 0 && statusp->FileType <= SymbolicLink)) {
+        osi_Log3(afsd_logp, "Merge, Failure scp 0x%p Invalid InterfaceVersion %d FileType %d",
+                 scp, statusp->InterfaceVersion, statusp->FileType);
+        return CM_ERROR_INVAL;
     }
 
     if (statusp->errorCode != 0) {
@@ -1693,7 +1694,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         if (scp->fid.vnode & 0x1)
             scp->fileType = CM_SCACHETYPE_DIRECTORY;
         else
-            scp->fileType = 0;	/* unknown */
+            scp->fileType = CM_SCACHETYPE_UNKNOWN;
 
 	scp->serverModTime = 0;
 	scp->clientModTime = 0;
@@ -2009,6 +2010,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
                              scp->fileType, AFS_INVALIDATE_DATA_VERSION);
         lock_ObtainWrite(&scp->rw);
     }
+
+    return 0;
 }
 
 /* note that our stat cache info is incorrect, so force us eventually

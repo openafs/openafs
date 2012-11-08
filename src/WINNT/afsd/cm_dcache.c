@@ -418,7 +418,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             _InterlockedAnd(&scp->mask, ~CM_SCACHEMASK_LENGTH);
 
-        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
+        code = cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     } else {
         InterlockedDecrement(&scp->activeRPCs);
         if (code == CM_ERROR_SPACE)
@@ -585,7 +585,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             _InterlockedAnd(&scp->mask, ~CM_SCACHEMASK_LENGTH);
-        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
+        code = cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     } else {
         InterlockedDecrement(&scp->activeRPCs);
     }
@@ -2205,7 +2205,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     }
 
     if (code == 0)
-        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
+        code = cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
     else
         InterlockedDecrement(&scp->activeRPCs);
 
@@ -2567,7 +2567,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
         lock_ObtainWrite(&scp->rw);
 
     if (code == 0)
-        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
+        code = cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
     else
         InterlockedDecrement(&scp->activeRPCs);
 
@@ -2791,7 +2791,7 @@ cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
         lock_ObtainWrite(&scp->rw);
 
     if (code == 0)
-        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
+        code = cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, CM_MERGEFLAG_FETCHDATA);
     else
         InterlockedDecrement(&scp->activeRPCs);
 

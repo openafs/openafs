@@ -1707,7 +1707,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     lock_ObtainWrite(&dscp->rw);
     cm_dnlcRemove(dscp, cnamep);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        code = cm_MergeStatus(NULL, dscp, &newDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         invalidate = 1;
         if (cm_CheckDirOpForSingleChange(&dirop) && cnamep) {
             lock_ReleaseWrite(&dscp->rw);
@@ -2575,7 +2575,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                                                           CM_CALLBACK_MAINTAINCOUNT|CM_CALLBACK_BULKSTAT);
                     InterlockedIncrement(&scp->activeRPCs);
                     if (!lostRace)
-                        cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, CM_MERGEFLAG_BULKSTAT);
+                        code = cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, CM_MERGEFLAG_BULKSTAT);
                     lock_ReleaseWrite(&scp->rw);
                 } else {
                     lock_ReleaseRead(&scp->rw);
@@ -2927,8 +2927,8 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
 
     lock_ObtainWrite(&scp->rw);
     if (code == 0)
-        cm_MergeStatus(NULL, scp, &afsOutStatus, &volSync, userp, reqp,
-                        CM_MERGEFLAG_FORCE|CM_MERGEFLAG_STOREDATA);
+        code = cm_MergeStatus( NULL, scp, &afsOutStatus, &volSync, userp, reqp,
+                               CM_MERGEFLAG_FORCE|CM_MERGEFLAG_STOREDATA);
     else
         InterlockedDecrement(&scp->activeRPCs);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
@@ -3043,7 +3043,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     }
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        code = cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         if (cm_CheckDirOpForSingleChange(&dirop)) {
             lock_ReleaseWrite(&dscp->rw);
@@ -3074,8 +3074,8 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
                                                       &newFileCallback, &volSync, 0);
                 InterlockedIncrement(&scp->activeRPCs);
                 if (!lostRace)
-                    cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
-                                   userp, reqp, 0);
+                    code = cm_MergeStatus( dscp, scp, &newFileStatus, &volSync,
+                                           userp, reqp, 0);
                 didEnd = 1;
             }
             lock_ReleaseWrite(&scp->rw);
@@ -3235,7 +3235,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     }
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        code = cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         if (cm_CheckDirOpForSingleChange(&dirop)) {
             lock_ReleaseWrite(&dscp->rw);
@@ -3265,8 +3265,8 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
                                                       &newDirCallback, &volSync, 0);
                 InterlockedIncrement(&scp->activeRPCs);
                 if (!lostRace)
-                    cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
-                                   userp, reqp, 0);
+                    code = cm_MergeStatus( dscp, scp, &newDirStatus, &volSync,
+                                           userp, reqp, 0);
                 didEnd = 1;
             }
             lock_ReleaseWrite(&scp->rw);
@@ -3367,7 +3367,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     }
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        code = cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         invalidate = 1;
 
         if (cm_CheckDirOpForSingleChange(&dirop)) {
@@ -3395,7 +3395,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     if (code == 0) {
         lock_ObtainWrite(&sscp->rw);
         InterlockedIncrement(&sscp->activeRPCs);
-        cm_MergeStatus(NULL, sscp, &newLinkStatus, &volSync, userp, reqp, 0);
+        code = cm_MergeStatus(NULL, sscp, &newLinkStatus, &volSync, userp, reqp, 0);
         lock_ReleaseWrite(&sscp->rw);
     }
 
@@ -3482,7 +3482,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     }
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        code = cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         cm_SetFid(&newFid, dscp->fid.cell, dscp->fid.volume, newAFSFid.Vnode, newAFSFid.Unique);
         if (cm_CheckDirOpForSingleChange(&dirop)) {
             lock_ReleaseWrite(&dscp->rw);
@@ -3513,8 +3513,8 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
                 InterlockedIncrement(&scp->activeRPCs);
-                cm_MergeStatus(dscp, scp, &newLinkStatus, &volSync,
-                                userp, reqp, 0);
+                code = cm_MergeStatus( dscp, scp, &newLinkStatus, &volSync,
+                                       userp, reqp, 0);
             }
             lock_ReleaseWrite(&scp->rw);
 
@@ -3640,7 +3640,7 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     lock_ObtainWrite(&dscp->rw);
     if (code == 0) {
         cm_dnlcRemove(dscp, cnamep);
-        cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
+        code = cm_MergeStatus(NULL, dscp, &updatedDirStatus, &volSync, userp, reqp, CM_MERGEFLAG_DIROP);
         if (cm_CheckDirOpForSingleChange(&dirop) && cnamep != NULL) {
             lock_ReleaseWrite(&dscp->rw);
             cm_DirDeleteEntry(&dirop, fnamep);
@@ -3988,8 +3988,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
 
     lock_ObtainWrite(&oldDscp->rw);
     if (code == 0) {
-        cm_MergeStatus(NULL, oldDscp, &updatedOldDirStatus, &volSync,
-                       userp, reqp, CM_MERGEFLAG_DIROP);
+        code = cm_MergeStatus( NULL, oldDscp, &updatedOldDirStatus, &volSync,
+                               userp, reqp, CM_MERGEFLAG_DIROP);
         if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
             lock_ReleaseWrite(&oldDscp->rw);
             if (bTargetExists && oneDir) {
@@ -4041,8 +4041,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         }
         lock_ObtainWrite(&newDscp->rw);
         if (code == 0) {
-            cm_MergeStatus(NULL, newDscp, &updatedNewDirStatus, &volSync,
-                            userp, reqp, CM_MERGEFLAG_DIROP);
+            code = cm_MergeStatus( NULL, newDscp, &updatedNewDirStatus, &volSync,
+                                   userp, reqp, CM_MERGEFLAG_DIROP);
 
             /*
              * we only make the local change if we successfully made
