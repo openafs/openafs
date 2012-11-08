@@ -140,6 +140,7 @@ extern void cm_InitReq(cm_req_t *reqp);
 extern int cm_Analyze(cm_conn_t *connp, struct cm_user *up, struct cm_req *reqp,
                       struct cm_fid *fidp, struct cm_cell *cellp,
                       afs_uint32 storeOp,
+                      struct AFSFetchStatus *statusp,
                       struct AFSVolSync *volInfop,
                       cm_serverRef_t * serversp,
                       struct cm_callbackRequest *cbrp, long code);

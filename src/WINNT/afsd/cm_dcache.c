@@ -375,7 +375,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             osi_Log2(afsd_logp, "rx_EndCall converted 0x%x to 0x%x", code, code1);
             code = code1;
         }
-    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &outStatus, &volSync, NULL, NULL, code));
 
     code = cm_MapRPCError(code, reqp);
 
@@ -564,7 +564,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         /* prefer StoreData error over rx_EndCall error */
         if (code == 0 && code1 != 0)
             code = code1;
-    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &outStatus, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
 
     /* now, clean up our state */
@@ -2174,7 +2174,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             code = code1;
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
-    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &afsStatus, &volSync, NULL, NULL, code));
 
   fetchingcompleted:
     code = cm_MapRPCError(code, reqp);
@@ -2558,7 +2558,7 @@ long cm_GetData(cm_scache_t *scp, osi_hyper_t *offsetp, char *datap, int data_le
             code = code1;
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
-    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &afsStatus, &volSync, NULL, NULL, code));
 
   fetchingcompleted:
     code = cm_MapRPCError(code, reqp);
@@ -2782,7 +2782,7 @@ cm_VerifyStoreData(cm_bulkIO_t *biod, cm_scache_t *savedScp)
             code = code1;
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
-    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &afsStatus, &volSync, NULL, NULL, code));
 
   fetchingcompleted:
     code = cm_MapRPCError(code, reqp);

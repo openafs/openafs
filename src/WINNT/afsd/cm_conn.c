@@ -301,6 +301,7 @@ cm_Analyze(cm_conn_t *connp,
            struct cm_fid *fidp,
            cm_cell_t *cellp,
            afs_uint32 storeOp,
+           AFSFetchStatus *statusp,
            AFSVolSync *volSyncp,
            cm_serverRef_t * serversp,
            cm_callbackRequest_t *cbrp,
@@ -324,6 +325,7 @@ cm_Analyze(cm_conn_t *connp,
     int location_updated = 0;
     char *format;
     DWORD msgID;
+    int invalid_status = 0;
 
     osi_Log2(afsd_logp, "cm_Analyze connp 0x%p, code 0x%x",
              connp, errorCode);
@@ -358,6 +360,18 @@ cm_Analyze(cm_conn_t *connp,
         timeLeft = HardDeadtimeout - timeUsed;
     else
         timeLeft = 0x0FFFFFFF;
+
+    /*
+     * Similar to the UNIX cache manager, if the AFSFetchStatus info
+     * returned by the file server is invalid, consider the response
+     * as being equivalent to VBUSY so that another file server can
+     * be queried if there is one.  If there is no replica, then the
+     * request will fail.
+     */
+    if (errorCode == 0 && statusp && !cm_IsStatusValid(statusp)) {
+        invalid_status = 1;
+        errorCode = VBUSY;
+    }
 
     /* get a pointer to the cell */
     if (errorCode) {
@@ -601,8 +615,13 @@ cm_Analyze(cm_conn_t *connp,
 
             switch ( errorCode ) {
             case VBUSY:
-                msgID = MSG_SERVER_REPORTS_VBUSY;
-                format = "Server %s reported busy when accessing volume %d in cell %s.";
+                if (invalid_status) {
+                    msgID = MSG_SERVER_REPLIED_BAD_STATUS;
+                    format = "Server %s replied with bad status info when accessing volume %d in cell %s.  Data discarded by cache manager.";
+                } else {
+                    msgID = MSG_SERVER_REPORTS_VBUSY;
+                    format = "Server %s reported busy when accessing volume %d in cell %s.";
+                }
                 break;
             case VRESTARTING:
                 msgID = MSG_SERVER_REPORTS_VRESTARTING;

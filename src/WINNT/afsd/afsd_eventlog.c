@@ -254,6 +254,7 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SERVER_REPORTS_VIO:
     case MSG_SERVER_REPORTS_VBUSY:
     case MSG_SERVER_REPORTS_VRESTARTING:
+    case MSG_SERVER_REPLIED_BAD_STATUS:
 	wNumArgs = 3;
 	lpArgs[0] = va_arg(listArgs, LPTSTR);
 	StringCbPrintf(lpStrings[1],STRLEN,"%d",va_arg(listArgs,afs_int32));

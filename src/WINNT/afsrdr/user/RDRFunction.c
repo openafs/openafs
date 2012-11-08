@@ -5046,7 +5046,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
                                               &volStat, &Name, &OfflineMsg, &MOTD);
                 rx_PutConnection(rxconnp);
 
-            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
+            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, &req);
         }
 
@@ -5222,7 +5222,7 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
                                               &volStat, &Name, &OfflineMsg, &MOTD);
                 rx_PutConnection(rxconnp);
 
-            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, code));
+            } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, &req);
         }
 

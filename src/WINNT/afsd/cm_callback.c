@@ -1865,7 +1865,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
                                      &afsStatus, &callback, &volSync);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &sfid, NULL, 0, &volSync, NULL,
+        } while (cm_Analyze(connp, userp, reqp, &sfid, NULL, 0, &afsStatus, &volSync, NULL,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);
         if (code)
