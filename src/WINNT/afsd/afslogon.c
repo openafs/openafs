@@ -950,7 +950,7 @@ GetDomainLogonOptions( PLUID lpLogonId, BOOLEAN bKerberos,
                 goto doneUserMap;
             dwSize *=2;
             SetLastError(0);
-            rv = RegQueryValueEx(hkTemp, REG_CLIENT_USERNAME_PARM, 0, NULL, (LPBYTE) usermap, &dwSize);
+            rv = RegQueryValueEx(hkUserMap, REG_CLIENT_USERNAME_PARM, 0, NULL, (LPBYTE) usermap, &dwSize);
             if(rv != ERROR_SUCCESS) {/* what the ..? */
                 DebugEvent("Can't look up Username rv [%d] size [%d] gle [%d]", rv, dwSize, GetLastError());
                 goto doneUserMap;
