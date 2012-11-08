@@ -427,6 +427,7 @@ rxi_FreePackets(int num_pkts, struct opr_queue *q)
 		qlen += rxi_FreeDataBufsToQueue(p, 2, &cbs);
 	    }
             RX_FPQ_MARK_FREE(p);
+	    num_pkts++;
 	}
 	if (!num_pkts)
 	    return 0;
