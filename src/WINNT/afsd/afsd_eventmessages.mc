@@ -454,4 +454,12 @@ Language=English
 Idle dead timeout when communicating with server %1.
 .
 
+MessageId=
+Severity=Warning
+Facility=System
+SymbolicName=MSG_SERVER_REPLIED_BAD_STATUS
+Language=English
+Server %1 replied with bad status info when accessing volume %2 in cell %3.  Data discarded by cache manager.
+.
+
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */

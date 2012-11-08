@@ -1692,7 +1692,7 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
                                 &newDirStatus, &volSync);
         rx_PutConnection(rxconnp);
 
-    } while (cm_Analyze(connp, userp, reqp, &dscp->fid, NULL, 1, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &dscp->fid, NULL, 1, &newDirStatus, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
 
     if (code)
@@ -2496,7 +2496,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                         code = (&bbp->stats[0])->errorCode;
                 }
             }
-        } while (cm_Analyze(connp, userp, reqp, &tfid, NULL, 0, &volSync, NULL, &cbReq, code));
+        } while (cm_Analyze(connp, userp, reqp, &tfid, NULL, 0, &bbp->stats[0], &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
 
         /*
@@ -2527,7 +2527,8 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
 
             if (inlinebulk && (&bbp->stats[j])->errorCode) {
                 cm_req_t treq = *reqp;
-                cm_Analyze(NULL, userp, &treq, &tfid, NULL, 0, &volSync, NULL, &cbReq, (&bbp->stats[j])->errorCode);
+                cm_Analyze(NULL, userp, &treq, &tfid, NULL, 0, &bbp->stats[j], &volSync,
+                           NULL, &cbReq, (&bbp->stats[j])->errorCode);
                 switch ((&bbp->stats[j])->errorCode) {
                 case EACCES:
                 case UAEACCES:
@@ -2727,7 +2728,7 @@ cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_re
                                              &volStat, &Name, &OfflineMsg, &MOTD);
                 rx_PutConnection(rxconnp);
 
-            } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, code));
+            } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, reqp);
         }
 
@@ -2917,7 +2918,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
         rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
-                         &scp->fid, NULL, 1, &volSync, NULL, NULL, code));
+                         &scp->fid, NULL, 1, &afsOutStatus, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
 
     if (code)
@@ -3029,7 +3030,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
         rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
-                         &dscp->fid, NULL, 1, &volSync, NULL, &cbReq, code));
+                         &dscp->fid, NULL, 1, &updatedDirStatus, &volSync, NULL, &cbReq, code));
     code = cm_MapRPCError(code, reqp);
 
     if (code)
@@ -3221,7 +3222,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
         rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
-                        &dscp->fid, NULL, 1, &volSync, NULL, &cbReq, code));
+                        &dscp->fid, NULL, 1, &updatedDirStatus, &volSync, NULL, &cbReq, code));
     code = cm_MapRPCError(code, reqp);
 
     if (code)
@@ -3352,7 +3353,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
         rx_PutConnection(rxconnp);
         osi_Log1(afsd_logp,"  RXAFS_Link returns 0x%x", code);
 
-    } while (cm_Analyze(connp, userp, reqp, &dscp->fid, NULL, 1, &volSync, NULL, NULL, code));
+    } while (cm_Analyze(connp, userp, reqp, &dscp->fid, NULL, 1, &updatedDirStatus, &volSync, NULL, NULL, code));
 
     code = cm_MapRPCError(code, reqp);
 
@@ -3468,7 +3469,7 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
         rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
-                         &dscp->fid, NULL, 1, &volSync, NULL, NULL, code));
+                         &dscp->fid, NULL, 1, &updatedDirStatus, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
 
     if (code)
@@ -3625,7 +3626,7 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
         rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp,
-                        &dscp->fid, NULL, 1, &volSync, NULL, NULL, code));
+                        &dscp->fid, NULL, 1, &updatedDirStatus, &volSync, NULL, NULL, code));
     code = cm_MapRPCErrorRmdir(code, reqp);
 
     if (code)
@@ -3971,7 +3972,7 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
         rx_PutConnection(rxconnp);
 
     } while (cm_Analyze(connp, userp, reqp, &oldDscp->fid, NULL, 1,
-                         &volSync, NULL, NULL, code));
+                        &updatedOldDirStatus, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
 
     if (code)
@@ -4672,7 +4673,7 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
                              &volSync);
         rx_PutConnection(rxconnp);
 
-    } while (cm_Analyze(connp, userp, reqp, &cfid, NULL, 1, &volSync,
+    } while (cm_Analyze(connp, userp, reqp, &cfid, NULL, 1, NULL, &volSync,
                         NULL, NULL, code));
 
     code = cm_MapRPCError(code, reqp);
@@ -4734,7 +4735,7 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
         code = RXAFS_ReleaseLock(rxconnp, &tfid, &volSync);
         rx_PutConnection(rxconnp);
 
-    } while (cm_Analyze(connp, userp, reqp, &cfid, NULL, 1, &volSync,
+    } while (cm_Analyze(connp, userp, reqp, &cfid, NULL, 1, NULL, &volSync,
                         NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
     if (code)
@@ -5728,7 +5729,7 @@ void cm_CheckLocks()
                         osi_Log1(afsd_logp, "   ExtendLock returns %d", code);
 
                     } while (cm_Analyze(connp, userp, &req,
-                                        &cfid, NULL, 1, &volSync, NULL, NULL,
+                                        &cfid, NULL, 1, NULL, &volSync, NULL, NULL,
                                         code));
 
                     code = cm_MapRPCError(code, &req);

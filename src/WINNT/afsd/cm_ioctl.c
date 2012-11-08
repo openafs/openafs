@@ -439,7 +439,7 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
             code = RXAFS_FetchACL(rxconnp, &afid, &acl, &fileStatus, &volSync);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &volSync, NULL, NULL, code));
+        } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 0, &fileStatus, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
         if (code)
@@ -537,7 +537,7 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
             code = RXAFS_StoreACL(rxconnp, &fid, &acl, &fileStatus, &volSync);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &volSync, NULL, NULL, code));
+        } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &fileStatus, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
         /* invalidate cache info, since we just trashed the ACL cache */
@@ -710,7 +710,7 @@ cm_IoctlSetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
                                          &storeStat, volName, offLineMsg, motd);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(tcp, userp, reqp, &scp->fid, NULL, 1, NULL, NULL, NULL, code));
+        } while (cm_Analyze(tcp, userp, reqp, &scp->fid, NULL, 1, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
     }
 
@@ -801,7 +801,7 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
                                          &volStat, &Name, &OfflineMsg, &MOTD);
             rx_PutConnection(rxconnp);
 
-        } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, code));
+        } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
         lock_ObtainWrite(&vscp->rw);
