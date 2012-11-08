@@ -392,6 +392,8 @@ extern long cm_SyncOp(cm_scache_t *, struct cm_buf *, struct cm_user *,
 
 extern void cm_SyncOpDone(cm_scache_t *, struct cm_buf *, afs_uint32);
 
+extern long cm_IsStatusValid(AFSFetchStatus *statusp);
+
 extern long cm_MergeStatus(cm_scache_t * dscp, cm_scache_t * scp,
 			   struct AFSFetchStatus * statusp,
 			   struct AFSVolSync * volsyncp,
