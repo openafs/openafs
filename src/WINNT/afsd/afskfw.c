@@ -455,7 +455,7 @@ KFW_initialize(void)
             LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
             LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
 #ifdef USE_KRB4
-            LoadFuncs(KRB4_DLL, k4_fi, &hKrb4, 0, 1, 0, 0);
+            LoadFuncs(KRB4_DLL, k4_fi, &hKrb4, 0, 1, 1, 1);
 #endif /* USE_KRB4 */
             LoadFuncs(SERVICE_DLL, service_fi, &hService, 0, 1, 0, 0);
 #ifdef USE_MS2MIT
@@ -647,9 +647,6 @@ KFW_is_available(void)
 #ifdef USE_MS2MIT
          hSecur32 &&
 #endif /* USE_MS2MIT */
-#ifdef USE_KRB524
-         hKrb524 &&
-#endif
 #ifdef USE_LEASH
          hLeash &&
 #endif
@@ -2970,7 +2967,7 @@ KFW_AFS_klog(
 
   skip_krb5_init:
 #ifdef USE_KRB4
-    if ( !try_krb5 || !realm_of_user[0] ) {
+    if ( hKrb4 && (!try_krb5 || !realm_of_user[0]) ) {
         if ((rc = (*pkrb_get_tf_realm)((*ptkt_string)(), realm_of_user)) != KSUCCESS)
         {
             goto cleanup;
@@ -3307,6 +3304,9 @@ KFW_AFS_klog(
 #ifndef USE_KRB524
         goto cleanup;
 #else
+        if (hKrb524 == NULL)
+            goto cleanup;
+
         /* Otherwise, the ticket could have been too large so try to
          * convert using the krb524d running with the KDC
          */
@@ -3325,6 +3325,9 @@ KFW_AFS_klog(
     } else {
       use_krb4:
 #ifdef USE_KRB4
+        if (hKrb4 == NULL)
+            goto cleanup;
+
         code = (*pkrb_get_cred)(ServiceName, CellName, RealmName, &creds);
         if (code == NO_TKT_FIL) {
             // if the problem is that we have no krb4 tickets
