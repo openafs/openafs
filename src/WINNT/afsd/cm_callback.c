@@ -1824,7 +1824,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             InterlockedIncrement(&scp->activeRPCs);
 
             // Fetch the status info
-            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
+            code = cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
         }
         goto done;
     }
@@ -1879,7 +1879,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         if (code == 0) {
             int lostRace = cm_EndCallbackGrantingCall(scp, &cbr, &callback, &volSync, 0);
             if (!lostRace)
-                cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
+                code = cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, NULL, 0);
             InterlockedDecrement(&scp->activeRPCs);
