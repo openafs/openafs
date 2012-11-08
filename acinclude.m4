@@ -162,6 +162,14 @@ AC_ARG_ENABLE([transarc-paths],
     , 
     [enable_transarc_paths="no"])
 
+dnl Deprecated crypto
+AC_ARG_ENABLE([kauth],
+    [AS_HELP_STRING([--disable-kauth],
+        [do not install the deprecated kauth server and utilities (defaults to
+         enabled)])],
+    ,
+    [enable_kauth="yes"])
+
 dnl Optimization and debugging flags.
 AC_ARG_ENABLE([strip-binaries],
     [AS_HELP_STRING([--disable-strip-binaries],
@@ -1452,6 +1460,13 @@ else
 	BUILD_USS="no"
 fi
 AC_SUBST(BUILD_USS)
+
+if test "$enable_kauth" = yes; then
+	INSTALL_KAUTH="yes"
+else
+	INSTALL_KAUTH="no"
+fi
+AC_SUBST(INSTALL_KAUTH)
 
 AC_CHECK_FUNCS([ \
 	arc4random \
