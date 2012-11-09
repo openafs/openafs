@@ -18,6 +18,7 @@
 #ifndef KDUMP_KERNEL
 
 typedef int afs_kmutex_t;
+typedef int afs_kcondvar_t;
 
 #define CALL_HOLD(call, type)
 #define CALL_HOLD_R(call, type)
