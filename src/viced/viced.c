@@ -1216,9 +1216,11 @@ ParseArgs(int argc, char *argv[])
     cmd_OptionAsInt(opts, OPT_buffers, &buffs);
 
     if (cmd_OptionAsInt(opts, OPT_callbacks, &numberofcbs) == 0) {
-	printf("number of cbs %d invalid; "
-	       "must be between 10000 and 2147483647\n", numberofcbs);
-	return -1;
+	if ((numberofcbs < 10000) || (numberofcbs > 2147483647)) {
+	    printf("number of cbs %d invalid; "
+		   "must be between 10000 and 2147483647\n", numberofcbs);
+	    return -1;
+	}
     }
 
     cmd_OptionAsInt(opts, OPT_vcsize, &volcache);
