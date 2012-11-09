@@ -3146,12 +3146,10 @@ rxi_CheckBusy(struct rx_call *call)
     int channel = call->channel;
     int freechannel = 0;
     int i;
-    afs_uint32 callNumber;
 
     MUTEX_EXIT(&call->lock);
 
     MUTEX_ENTER(&conn->conn_call_lock);
-    callNumber = *call->callNumber;
 
     /* Are there any other call slots on this conn that we should try? Look for
      * slots that are empty and are either non-busy, or were marked as busy
@@ -3187,14 +3185,13 @@ rxi_CheckBusy(struct rx_call *call)
 
     MUTEX_ENTER(&call->lock);
 
-    /* Since the call->lock and conn->conn_call_lock have been released it is
-     * possible that (1) the call may no longer be busy and/or (2) the call may
-     * have been reused by another waiting thread. Therefore, we must confirm
+    /* Since the call->lock has been released it is possible that the call may
+     * no longer be busy (the call channel cannot have been reallocated as we
+     * haven't dropped the conn_call_lock) Therefore, we must confirm
      * that the call state has not changed when deciding whether or not to
      * force this application thread to retry by forcing a Timeout error. */
 
-    if (freechannel && *call->callNumber == callNumber &&
-        (call->flags & RX_CALL_PEER_BUSY)) {
+    if (freechannel && (call->flags & RX_CALL_PEER_BUSY)) {
 	/* Since 'freechannel' is set, there exists another channel in this
 	 * rx_conn that the application thread might be able to use. We know
 	 * that we have the correct call since callNumber is unchanged, and we
