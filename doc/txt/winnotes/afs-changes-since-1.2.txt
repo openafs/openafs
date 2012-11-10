@@ -1,3 +1,36 @@
+Release 1.7.1900; Changes since 1.7.1800
+
+ * Pullup of RX optimizations from master branch
+
+ * Prevent lock release of scp->rw when not held
+   in the service during file cleanup.
+
+ * 32-bit builds no longer have a dependency on
+   the MIT Kerberos v4 or 5to4 libraries.
+
+ * Detect invalid AFSFetchStatus structures in
+   cm_Analyze().  When detected, the volume instance
+   is marked "server busy" and the RPC is retried
+   using an alternate replica.  If there is no replica,
+   the RPC fails.  Under no circumstances is the
+   invalid status information applied to the cache.
+
+   All file servers older than 1.6.1 can generate
+   invalid AFSFetchStatus responses in response to
+   RXAFS_InlineBulkStatus RPCs and some older file
+   servers (1.2.x and 1.4.x) can return completely
+   bogus information.
+
+ * Prevent use of an uninitialized smb_fid_t pointer
+   in smb_NTTransCreate.
+
+ * Fix the registry handle used in afslogon.dll to
+   read the domain/user Username mapping.
+
+ * Change the default cell to grand.central.org
+   from openafs.org since openafs.org does not
+   exist.
+
 Release 1.7.1800; Changes since 1.7.1700
 
  * On 64-bit Windows, fix process type tagging
