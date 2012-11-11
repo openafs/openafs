@@ -6,7 +6,7 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 RELDIR=libafsrpc
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_PTHREAD_ENV
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN -DAFS_PTHREAD_ENV -DMAKEDEBUGCALL
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
