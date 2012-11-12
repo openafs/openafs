@@ -9,7 +9,6 @@
 #ifndef NO_AFS_SOURCE
     #include <afsconfig.h>
     #include <afs/param.h>
-    #include <roken.h>
 
     #include <afs\stds.h>
     #include <afs\smb_iocons.h>
