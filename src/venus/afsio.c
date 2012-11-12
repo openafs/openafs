@@ -225,6 +225,23 @@ summarizeMD5(char *fname)
 	    htonl(md5int[1]), htonl(md5int[2]), htonl(md5int[3]), p);
 } /* summarizeMD5 */
 
+#ifdef AFS_NT40_ENV
+static void
+ConvertAFSPath(char **fnp)
+{
+    char *p;
+
+    for (p = *fnp; *p; p++) {
+        if (*p == '\\')
+           *p = '/';
+    }
+
+    p = *fnp;
+    if (p[0] == '/' && p[1] == '/')
+        *fnp = p+1;
+}
+#endif /* AFS_NT40_ENV */
+
 /*!
  * parses all command-line arguments
  *
@@ -266,11 +283,15 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
             else if (strcmp(pdp->name, "-cell") == 0) {
 		cellGiven = 1;	/* global */
 		*cellp = pdp->items->data;
-            } else if ( (strcmp(pdp->name, "-file") == 0) ||
-                        (strcmp(pdp->name, "-fid") == 0) ||
-                        (strcmp(pdp->name, "-vnode") == 0) )
+            } else if ( strcmp(pdp->name, "-file") == 0) {
 		*fnp = pdp->items->data;
-            else if (strcmp(pdp->name, "-force") == 0)
+#ifdef AFS_NT40_ENV
+                ConvertAFSPath(fnp);
+#endif /* AFS_NT40_ENV */
+            } else if ( (strcmp(pdp->name, "-fid") == 0) ||
+                        (strcmp(pdp->name, "-vnode") == 0) ) {
+		*fnp = pdp->items->data;
+            } else if (strcmp(pdp->name, "-force") == 0)
 		force = 1;	/* global */
             else if (strcmp(pdp->name, "-synthesize") == 0)
 		*slp = pdp->items->data;
@@ -290,9 +311,18 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     char baseName[AFSNAMEMAX];
+    int code;
 
     /* try to get only the base name of this executable for use in logs */
-    if (BreakUpPath(argv[0], NULL, baseName, AFSNAMEMAX) > 0)
+#ifdef AFS_NT40_ENV
+    char *p = strdup(argv[0]);
+    ConvertAFSPath(&p);
+    code = BreakUpPath(p, NULL, baseName, AFSNAMEMAX);
+    free(p);
+#else
+    code = BreakUpPath(argv[0], NULL, baseName, AFSNAMEMAX);
+#endif
+    if (code > 0)
 	strlcpy(pnp, baseName, AFSNAMEMAX);
     else
 	strlcpy(pnp, argv[0], AFSPATHMAX);
@@ -567,11 +597,7 @@ BreakUpPath(char *fullPath, char *dirName, char *baseName, size_t baseNameSize)
 	/* would be pointless to continue -- must be error in call */
 	return code;
     }
-#ifdef AFS_NT40_ENV
-    lastSlash = strrchr(fullPath, '\\');
-#else
     lastSlash = strrchr(fullPath, '/');
-#endif
     if (lastSlash != NULL) {
 	/* then lastSlash points to the last path separator in fullPath */
 	if (useDirName) {
