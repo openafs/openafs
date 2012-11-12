@@ -1,3 +1,15 @@
+Release 1.7.2000; Changes since 1.7.1900
+
+ * Fix critical bug in afslogon.dll authentication
+   provider that resulted in a NULL function pointer
+   dereference when neither KFW nor Heimdal Kerberos v5
+   packages are installed.
+
+   On XP, XP64, and Server 2003, the premature termination
+   of winlogin.exe results in a BSOD.
+
+ * Permit afsrpc.dll to be used to issue RX Debug queries.
+
 Release 1.7.1900; Changes since 1.7.1800
 
  * Pullup of RX optimizations from master branch
