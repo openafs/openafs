@@ -30,6 +30,7 @@ $(CRASH) : $(CRASHOBJS) $(OUT)\crash.res
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 install : $(CRASH)
 
