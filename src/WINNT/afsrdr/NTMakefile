@@ -79,9 +79,17 @@ $(OUT)\ddkbuild.cmd: NTMakefile
 !IFDEF CODESIGN_KERNEL
         echo $(CODESIGN_KERNEL) AFSRedir.sys >> $@
         echo $(CODESIGN_KERNEL) AFSRedirLib.sys >> $@
-        echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll >> $@
 !ENDIF
-        $(SYMSTORE_IMPORT)
+!IFDEF CODESIGN_USERLAND
+        echo $(CODESIGN_USERLAND) AFSRDFSProvider.dll >> $@
+!ENDIF
+!IFDEF SYMSTORE_EXE
+!IFDEF SYMSTORE_ROOT
+        echo $(SYMSTORE_EXE) add /s $(SYMSTORE_ROOT) /t "OpenAFS for Windows" /v "$(AFSBLD_TYPE)-$(CPU)-$(AFSPRODUCT_VERSION)" /c "AFSRedir.sys$(SYMSTORE_COMMENT)" /f AFSRedir.* >> $@
+        echo $(SYMSTORE_EXE) add /s $(SYMSTORE_ROOT) /t "OpenAFS for Windows" /v "$(AFSBLD_TYPE)-$(CPU)-$(AFSPRODUCT_VERSION)" /c "AFSRedirLib.sys$(SYMSTORE_COMMENT)" /f AFSRedirLib.* >> $@
+        echo $(SYMSTORE_EXE) add /s $(SYMSTORE_ROOT) /t "OpenAFS for Windows" /v "$(AFSBLD_TYPE)-$(CPU)-$(AFSPRODUCT_VERSION)" /c "AFSRDFSProvider.dll$(SYMSTORE_COMMENT)" /f AFSRDRFSProvider.* >> $@
+!ENDIF
+!ENDIF
         echo exit 0 >> $@
 
 $(OUT)\ddkclean.cmd: NTMakefile
