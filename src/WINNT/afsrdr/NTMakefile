@@ -69,24 +69,19 @@ $(OUT)\ddkbuild.cmd: NTMakefile
         echo cd kernel\fs >> $@
         echo build.exe -M >> $@
         echo if errorlevel neq 0 exit 1 >> $@
-        echo cd ..\..\build\$(CPU) >> $@
-!IFDEF CODESIGN_KERNEL
-        echo $(CODESIGN_KERNEL) AFSRedir.sys >> $@
-!ENDIF
         echo cd ..\..\kernel\lib >> $@
         echo build.exe -M >> $@
         echo if errorlevel neq 0 exit 1 >> $@
-        echo cd ..\..\build\$(CPU) >> $@
-!IFDEF CODESIGN_KERNEL
-        echo $(CODESIGN_KERNEL) AFSRedirLib.sys >> $@
-!ENDIF
         echo cd ..\..\npdll >> $@
         echo build.exe -M >> $@
         echo if errorlevel neq 0 exit 1 >> $@
         echo cd ..\build\$(CPU) >> $@
 !IFDEF CODESIGN_KERNEL
+        echo $(CODESIGN_KERNEL) AFSRedir.sys >> $@
+        echo $(CODESIGN_KERNEL) AFSRedirLib.sys >> $@
         echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll >> $@
 !ENDIF
+        $(SYMSTORE_IMPORT)
         echo exit 0 >> $@
 
 $(OUT)\ddkclean.cmd: NTMakefile
