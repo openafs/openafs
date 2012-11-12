@@ -4101,6 +4101,9 @@ KFW_get_default_realm(void)
     char * def_realm = NULL, *realm = NULL;
     krb5_error_code code;
 
+    if (!pkrb5_init_context)
+        return NULL;
+
     code = pkrb5_init_context(&ctx);
     if (code)
         return NULL;
