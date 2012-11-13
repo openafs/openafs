@@ -2924,7 +2924,7 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 
 #ifdef AFS_RXERRQ_ENV
 static void
-rxi_SetPeerDead(afs_uint32 host, afs_uint16 port)
+rxi_SetPeerDead(struct sock_extended_err *err, afs_uint32 host, afs_uint16 port)
 {
     int hashIndex = PEER_HASH(host, port);
     struct rx_peer *peer;
@@ -2933,15 +2933,25 @@ rxi_SetPeerDead(afs_uint32 host, afs_uint16 port)
 
     for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
 	if (peer->host == host && peer->port == port) {
+	    peer->refCount++;
 	    break;
 	}
     }
 
+    MUTEX_EXIT(&rx_peerHashTable_lock);
+
     if (peer) {
 	rx_atomic_inc(&peer->neterrs);
-    }
+	MUTEX_ENTER(&peer->peer_lock);
+	peer->last_err_origin = RX_NETWORK_ERROR_ORIGIN_ICMP;
+	peer->last_err_type = err->ee_type;
+	peer->last_err_code = err->ee_code;
+	MUTEX_EXIT(&peer->peer_lock);
 
-    MUTEX_EXIT(&rx_peerHashTable_lock);
+	MUTEX_ENTER(&rx_peerHashTable_lock);
+	peer->refCount--;
+	MUTEX_EXIT(&rx_peerHashTable_lock);
+    }
 }
 
 void
@@ -2960,12 +2970,86 @@ rxi_ProcessNetError(struct sock_extended_err *err, afs_uint32 addr, afs_uint16 p
 	case ICMP_PORT_UNREACH:
 	case ICMP_NET_ANO:
 	case ICMP_HOST_ANO:
-	    rxi_SetPeerDead(addr, port);
+	    rxi_SetPeerDead(err, addr, port);
 	    break;
 	}
     }
 }
+
+static const char *
+rxi_TranslateICMP(int type, int code)
+{
+    switch (type) {
+    case ICMP_DEST_UNREACH:
+	switch (code) {
+	case ICMP_NET_UNREACH:
+	    return "Destination Net Unreachable";
+	case ICMP_HOST_UNREACH:
+	    return "Destination Host Unreachable";
+	case ICMP_PROT_UNREACH:
+	    return "Destination Protocol Unreachable";
+	case ICMP_PORT_UNREACH:
+	    return "Destination Port Unreachable";
+	case ICMP_NET_ANO:
+	    return "Destination Net Prohibited";
+	case ICMP_HOST_ANO:
+	    return "Destination Host Prohibited";
+	}
+	break;
+    }
+    return NULL;
+}
 #endif /* AFS_RXERRQ_ENV */
+
+/**
+ * Get the last network error for a connection
+ *
+ * A "network error" here means an error retrieved from ICMP, or some other
+ * mechanism outside of Rx that informs us of errors in network reachability.
+ *
+ * If a peer associated with the given Rx connection has received a network
+ * error recently, this function allows the caller to know what error
+ * specifically occurred. This can be useful to know, since e.g. ICMP errors
+ * can cause calls to that peer to be quickly aborted. So, this function can
+ * help see why a call was aborted due to network errors.
+ *
+ * If we have received traffic from a peer since the last network error, we
+ * treat that peer as if we had not received an network error for it.
+ *
+ * @param[in] conn  The Rx connection to examine
+ * @param[out] err_origin  The origin of the last network error (e.g. ICMP);
+ *                         one of the RX_NETWORK_ERROR_ORIGIN_* constants
+ * @param[out] err_type  The type of the last error
+ * @param[out] err_code  The code of the last error
+ * @param[out] msg  Human-readable error message, if applicable; NULL otherwise
+ *
+ * @return If we have an error
+ *  @retval -1 No error to get; 'out' params are undefined
+ *  @retval 0 We have an error; 'out' params contain the last error
+ */
+int
+rx_GetNetworkError(struct rx_connection *conn, int *err_origin, int *err_type,
+                   int *err_code, const char **msg)
+{
+#ifdef AFS_RXERRQ_ENV
+    struct rx_peer *peer = conn->peer;
+    if (rx_atomic_read(&peer->neterrs)) {
+	MUTEX_ENTER(&peer->peer_lock);
+	*err_origin = peer->last_err_origin;
+	*err_type = peer->last_err_type;
+	*err_code = peer->last_err_code;
+	MUTEX_EXIT(&peer->peer_lock);
+
+	*msg = NULL;
+	if (*err_origin == RX_NETWORK_ERROR_ORIGIN_ICMP) {
+	    *msg = rxi_TranslateICMP(*err_type, *err_code);
+	}
+
+	return 0;
+    }
+#endif
+    return -1;
+}
 
 /* Find the peer process represented by the supplied (host,port)
  * combination.  If there is no appropriate active peer structure, a

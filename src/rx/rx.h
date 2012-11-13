@@ -452,6 +452,15 @@ struct rx_ackPacket {
 #define	RX_CHECKREACH_TTL	60	/* Re-check reachability this often */
 
 /*
+ * rx_GetNetworkError 'origin' constants. These define the meaning of the
+ * 'type' and 'code' values returned by rx_GetNetworkError.
+ */
+
+/* Used for ICMP errors; the type and code are the ICMP type and code,
+ * respectively */
+#define RX_NETWORK_ERROR_ORIGIN_ICMP (0)
+
+/*
  * RX error codes.  RX uses error codes from -1 to -64 and -100.
  * Rxgen uses other error codes < -64 (see src/rxgen/rpc_errors.h);
  * user programs are expected to return positive error codes

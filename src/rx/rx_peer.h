@@ -65,6 +65,11 @@ struct rx_peer {
     afs_int32 maxPacketSize;    /* peer packetsize hint */
 #ifdef AFS_RXERRQ_ENV
     rx_atomic_t neterrs;
+
+    /* protected by peer_lock */
+    int last_err_origin; /* origin of the last network error received */
+    int last_err_type; /* last error 'type' received */
+    int last_err_code; /* last error 'code' received */
 #endif
 };
 
