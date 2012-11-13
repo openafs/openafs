@@ -1540,7 +1540,6 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
                          */
                         _InterlockedAnd(&bufp->flags, ~CM_BUF_DIRTY);
                         _InterlockedOr(&bufp->flags, CM_BUF_ERROR);
-                        bufp->dirty_offset = 0;
                         bufp->dirty_length = 0;
                         bufp->error = code;
                         bufp->dataVersion = CM_BUF_VERSION_BAD;
