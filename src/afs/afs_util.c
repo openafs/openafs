@@ -221,6 +221,33 @@ print_internet_address(char *preamble, struct srvAddr *sa, char *postamble,
 		 (address >> 16) & 0xff, (address >> 8) & 0xff,
 		 (address) & 0xff, aserver->cell->cellName, postamble, code, ptr);
 
+    if (flag == 1 && rxconn) {
+	/* server was marked down, check Rx to see if this was possibly due to
+	 * an ICMP error received from the network */
+	int errorigin, errtype, errcode;
+	const char *errmsg;
+	if (rx_GetNetworkError(rxconn, &errorigin, &errtype, &errcode, &errmsg) == 0) {
+	    const char *str1 = " (";
+	    const char *str2 = ")";
+	    if (!errmsg) {
+		errmsg = str1 = str2 = "";
+	    }
+	    afs_warn("afs: network error for %d.%d.%d.%d:%d: origin %d type %d code %d%s%s%s\n",
+	             (address >> 24),
+	             (address >> 16) & 0xff,
+	             (address >> 8) & 0xff,
+	             (address) & 0xff,
+	             (int)ntohs(sa->sa_portal),
+	             errorigin, errtype, errcode, str1, errmsg, str2);
+	    afs_warnuser("afs: network error for %d.%d.%d.%d:%d: origin %d type %d code %d%s%s%s\n",
+	             (address >> 24),
+	             (address >> 16) & 0xff,
+	             (address >> 8) & 0xff,
+	             (address) & 0xff,
+	             (int)ntohs(sa->sa_portal),
+	             errorigin, errtype, errcode, str1, errmsg, str2);
+	}
+    }
 }				/*print_internet_address */
 
 
