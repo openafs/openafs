@@ -170,3 +170,4 @@ rx_HostOf
 rx_PortOf
 initialize_RXK_error_table
 rx_getAllAddrMaskMtu
+rx_GetNetworkError

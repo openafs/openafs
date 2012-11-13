@@ -155,3 +155,4 @@ xdr_afs_uint32
 xdr_afs_uint64
 xdrlen_create
 xdrrx_create
+rx_GetNetworkError

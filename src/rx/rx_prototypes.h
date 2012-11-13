@@ -179,6 +179,9 @@ void rxi_DebugInit(void);
 void rxi_DebugPrint(char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
+extern int rx_GetNetworkError(struct rx_connection *conn, int *err_origin,
+                              int *err_type, int *err_code, const char **msg);
+
 /* rx_clock.c */
 #if !defined(clock_Init)
 extern void clock_Init(void);
