@@ -627,43 +627,43 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	afs_PutVolume(tvp, READ_LOCK);
     }
 
-    /* If network troubles, mark server as having bogued out again. */
-    /* VRESTARTING is < 0 because of backward compatibility issues
-     * with 3.4 file servers and older cache managers */
 #ifdef AFS_64BIT_CLIENT
     if (acode == -455)
 	acode = 455;
 #endif /* AFS_64BIT_CLIENT */
-    if ((acode < 0) && (acode != VRESTARTING)) {
-	if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
+    if (acode == RX_MSGSIZE || acode == RX_CALL_BUSY) {
+	shouldRetry = 1;
+	goto out;
+    }
+    if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE) {
+	serversleft = afs_BlackListOnce(areq, afid, tsp);
+	if (afid)
+	    tvp = afs_FindVolume(afid, READ_LOCK);
+	if ((serversleft == 0) && tvp &&
+	    ((tvp->states & VRO) || (tvp->states & VBackup))) {
+	    shouldRetry = 0;
+	} else {
 	    shouldRetry = 1;
-	    goto out;
 	}
-	if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE) {
-	    serversleft = afs_BlackListOnce(areq, afid, tsp);
-	    if (afid)
-		tvp = afs_FindVolume(afid, READ_LOCK);
-	    if ((serversleft == 0) && tvp &&
-		((tvp->states & VRO) || (tvp->states & VBackup))) {
-		shouldRetry = 0;
-	    } else {
-		shouldRetry = 1;
-	    }
-	    if (!afid || !tvp || (tvp->states & VRO))
-		areq->idleError++;
-	    else if (afs_ClearStatus(afid, op, tvp) == 0)
-		shouldRetry = 0;
+	if (!afid || !tvp || (tvp->states & VRO))
+	    areq->idleError++;
+	else if (afs_ClearStatus(afid, op, tvp) == 0)
+	    shouldRetry = 0;
 
-	    if (tvp)
-		afs_PutVolume(tvp, READ_LOCK);
-	    /* By doing this, we avoid ever marking a server down
-	     * in an idle timeout case. That's because the server is
-	     * still responding and may only be letting a single vnode
-	     * time out. We otherwise risk having the server continually
-	     * be marked down, then up, then down again...
-	     */
-	    goto out;
-	}
+	if (tvp)
+	    afs_PutVolume(tvp, READ_LOCK);
+	/* By doing this, we avoid ever marking a server down
+	 * in an idle timeout case. That's because the server is
+	 * still responding and may only be letting a single vnode
+	 * time out. We otherwise risk having the server continually
+	 * be marked down, then up, then down again...
+	 */
+	goto out;
+    }
+    /* If network troubles, mark server as having bogued out again. */
+    /* VRESTARTING is < 0 because of backward compatibility issues
+     * with 3.4 file servers and older cache managers */
+    if ((acode < 0) && (acode != VRESTARTING)) {
 	afs_ServerDown(sa, acode);
 	ForceNewConnections(sa); /**multi homed clients lock:afs_xsrvAddr? */
 	if (aerrP)
