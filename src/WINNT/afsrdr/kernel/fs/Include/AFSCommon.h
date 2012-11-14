@@ -815,7 +815,8 @@ void
 AFSProcessDestroy( IN HANDLE ProcessId);
 
 GUID *
-AFSValidateProcessEntry( IN HANDLE ProcessId);
+AFSValidateProcessEntry( IN HANDLE  ProcessId,
+                         IN BOOLEAN bProcessTreeLocked);
 
 BOOLEAN
 AFSIs64BitProcess( IN ULONGLONG ProcessId);
