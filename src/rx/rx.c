@@ -6676,12 +6676,16 @@ rxi_KeepAliveOn(struct rx_call *call)
 void
 rx_KeepAliveOff(struct rx_call *call)
 {
+    MUTEX_ENTER(&call->lock);
     rxi_KeepAliveOff(call);
+    MUTEX_EXIT(&call->lock);
 }
 void
 rx_KeepAliveOn(struct rx_call *call)
 {
+    MUTEX_ENTER(&call->lock);
     rxi_KeepAliveOn(call);
+    MUTEX_EXIT(&call->lock);
 }
 
 void
