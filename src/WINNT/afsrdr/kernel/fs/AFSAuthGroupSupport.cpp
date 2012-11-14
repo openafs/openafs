@@ -135,6 +135,7 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
                           ThreadId);
 
             AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+
             try_return( ntStatus);
         }
 
@@ -224,7 +225,8 @@ AFSRetrieveAuthGroup( IN ULONGLONG ProcessId,
                           ProcessId,
                           ThreadId);
 
-            pAuthGroup = AFSValidateProcessEntry( PsGetCurrentProcessId());
+            pAuthGroup = AFSValidateProcessEntry( PsGetCurrentProcessId(),
+                                                  FALSE);
 
             if( pAuthGroup != NULL)
             {

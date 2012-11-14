@@ -131,7 +131,8 @@ AFSProcessCreate( IN HANDLE ParentId,
             // Now assign the AuthGroup ACE
             //
 
-            AFSValidateProcessEntry( ProcessId);
+            AFSValidateProcessEntry( ProcessId,
+                                     TRUE);
         }
         else
         {
@@ -243,7 +244,8 @@ AFSProcessDestroy( IN HANDLE ProcessId)
 //
 
 GUID *
-AFSValidateProcessEntry( IN HANDLE ProcessId)
+AFSValidateProcessEntry( IN HANDLE  ProcessId,
+                         IN BOOLEAN bProcessTreeLocked)
 {
 
     GUID *pAuthGroup = NULL;
@@ -263,18 +265,22 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSValidateProcessEntry Acquiring Control ProcessTree.TreeLock lock %08lX SHARED %08lX\n",
-                      pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                      PsGetCurrentThread());
-
         uniSIDString.Length = 0;
         uniSIDString.MaximumLength = 0;
         uniSIDString.Buffer = NULL;
 
-        AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                          TRUE);
+        if ( !bProcessTreeLocked)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSValidateProcessEntry Acquiring Control ProcessTree.TreeLock lock %08lX SHARED %08lX\n",
+                          pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                          PsGetCurrentThread());
+
+            AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                              TRUE);
+        }
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_AUTHGROUP_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -290,10 +296,14 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
             pProcessCB == NULL)
         {
 
-            AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+            if ( !bProcessTreeLocked)
+            {
 
-            AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                            TRUE);
+                AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+
+                AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                                TRUE);
+            }
 
             ntStatus = AFSLocateHashEntry( pDeviceExt->Specific.Control.ProcessTree.TreeHead,
                                            ullProcessID,
@@ -319,12 +329,14 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
                               __FUNCTION__,
                               ullProcessID);
 
-                AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
-
                 try_return( ntStatus = STATUS_UNSUCCESSFUL);
             }
 
-            AFSConvertToShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+            if ( !bProcessTreeLocked)
+            {
+
+                AFSConvertToShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
+            }
         }
 
         //
@@ -369,8 +381,6 @@ AFSValidateProcessEntry( IN HANDLE ProcessId)
 
         AFSAcquireExcl( &pProcessCB->Lock,
                         TRUE);
-
-        AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
 
 #if defined(_WIN64)
 
@@ -781,6 +791,12 @@ try_exit:
         if( uniSIDString.Length > 0)
         {
             RtlFreeUnicodeString( &uniSIDString);
+        }
+
+        if ( !bProcessTreeLocked)
+        {
+
+            AFSReleaseResource( pDeviceExt->Specific.Control.ProcessTree.TreeLock);
         }
     }
 
