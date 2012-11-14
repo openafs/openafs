@@ -635,7 +635,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	shouldRetry = 1;
 	goto out;
     }
-    if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE) {
+    if (acode == RX_CALL_TIMEOUT || acode == RX_CALL_IDLE || acode == VNOSERVICE) {
 	serversleft = afs_BlackListOnce(areq, afid, tsp);
 	if (afid)
 	    tvp = afs_FindVolume(afid, READ_LOCK);
@@ -798,7 +798,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     }
     /* Check for bad volume data base / missing volume. */
     else if (acode == VSALVAGE || acode == VOFFLINE || acode == VNOVOL
-	     || acode == VNOSERVICE || acode == VMOVED) {
+	     || acode == VMOVED) {
 	struct cell *tcell;
 	int same;
 
