@@ -3339,13 +3339,14 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	     */
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
             if (call->state == RX_STATE_ACTIVE) {
+		int old_error = call->error;
                 rxi_WaitforTQBusy(call);
                 /*
                  * If we entered error state while waiting,
                  * must call rxi_CallError to permit rxi_ResetCall
                  * to processed when the tqWaiter count hits zero.
                  */
-                if (call->error) {
+                if (call->error && call->error != old_error) {
                     rxi_CallError(call, call->error);
                     MUTEX_EXIT(&call->lock);
                     MUTEX_ENTER(&rx_refcnt_mutex);
