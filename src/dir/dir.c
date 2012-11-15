@@ -13,7 +13,9 @@
 #ifdef KERNEL
 # if !defined(UKERNEL)
 #  include "h/types.h"
-#  include "h/param.h"
+#  if !defined(AFS_LINUX26_ENV)
+#   include "h/param.h"
+#  endif
 #  ifdef	AFS_AUX_ENV
 #   include "h/mmu.h"
 #   include "h/seg.h"

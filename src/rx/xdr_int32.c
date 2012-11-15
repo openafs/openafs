@@ -34,9 +34,11 @@
 #ifndef	NeXT
 
 #if defined(KERNEL) && !defined(UKERNEL)
-#include <sys/param.h>
+# if !defined(AFS_LINUX26_ENV)
+#  include <sys/param.h>
+# endif
 #else
-#include <roken.h>
+# include <roken.h>
 #endif
 #include "xdr.h"
 

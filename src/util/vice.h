@@ -12,9 +12,9 @@
 
 #include <sys/types.h>
 #if !defined(AFS_NT40_ENV)
-# if !defined(AFS_FBSD80_ENV) || !defined(KERNEL) || defined(UKERNEL)
-#include <sys/ioctl.h>
-#endif /* AFS_FBSD80_ENV */
+# if (!defined(AFS_FBSD80_ENV) && !defined(AFS_LINUX26_ENV)) || !defined(KERNEL) || defined(UKERNEL)
+#  include <sys/ioctl.h>
+# endif
 #endif /* AFS_NT40_ENV */
 #if (defined(__sun) && defined(__SVR4)) || defined(AFS_DFBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
 # include <sys/ioccom.h>

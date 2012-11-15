@@ -35,7 +35,9 @@ typedef unsigned short etap_event_t;
 
 
 #include "h/types.h"
+#if !defined(AFS_LINUX26_ENV)
 #include "h/param.h"
+#endif
 #ifndef AFS_LINUX22_ENV
 #include "h/systm.h"
 #endif
