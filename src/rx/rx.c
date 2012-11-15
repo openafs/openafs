@@ -9262,7 +9262,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
 	RXDPRINTF(RXDPRINTOUT, "%s - call=0x%p, id=%u, state=%u, mode=%u, conn=%p, epoch=%u, cid=%u, callNum=%u, connFlags=0x%x, flags=0x%x, "
                 "rqc=%u,%u, tqc=%u,%u, iovqc=%u,%u, "
                 "lstatus=%u, rstatus=%u, error=%d, timeout=%u, "
-                "resendEvent=%d, timeoutEvt=%d, keepAliveEvt=%d, delayedAckEvt=%d, delayedAbortEvt=%d, abortCode=%d, abortCount=%d, "
+                "resendEvent=%d, keepAliveEvt=%d, delayedAckEvt=%d, delayedAbortEvt=%d, abortCode=%d, abortCount=%d, "
                 "lastSendTime=%u, lastRecvTime=%u, lastSendData=%u"
 #ifdef RX_ENABLE_LOCKS
                 ", refCount=%u"
@@ -9276,7 +9276,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
                 c->callNumber?*c->callNumber:0, c->conn?c->conn->flags:0, c->flags,
                 (afs_uint32)c->rqc, (afs_uint32)rqc, (afs_uint32)c->tqc, (afs_uint32)tqc, (afs_uint32)c->iovqc, (afs_uint32)iovqc,
                 (afs_uint32)c->localStatus, (afs_uint32)c->remoteStatus, c->error, c->timeout,
-                c->resendEvent?1:0, c->timeoutEvent?1:0, c->keepAliveEvent?1:0, c->delayedAckEvent?1:0, c->delayedAbortEvent?1:0,
+                c->resendEvent?1:0, c->keepAliveEvent?1:0, c->delayedAckEvent?1:0, c->delayedAbortEvent?1:0,
                 c->abortCode, c->abortCount, c->lastSendTime, c->lastReceiveTime, c->lastSendData
 #ifdef RX_ENABLE_LOCKS
                 , (afs_uint32)c->refCount

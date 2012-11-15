@@ -92,7 +92,6 @@ struct rx_call {
     int rtt_dev;
     struct clock rto;		/* The round trip timeout calculated for this call */
     struct rxevent *resendEvent;	/* If this is non-Null, there is a retransmission event pending */
-    struct rxevent *timeoutEvent;	/* If this is non-Null, then there is an overall timeout for this call */
     struct rxevent *keepAliveEvent;	/* Scheduled periodically in active calls to keep call alive */
     struct rxevent *growMTUEvent;      /* Scheduled periodically in active calls to discover true maximum MTU */
     struct rxevent *delayedAckEvent;	/* Scheduled after all packets are received to send an ack if a reply or new call is not generated soon */
