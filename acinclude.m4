@@ -802,6 +802,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 AC_CHECK_LINUX_STRUCT([file_operations], [flock], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_operations], [sendfile], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([file_system_type], [mount], [fs.h])
+		 AC_CHECK_LINUX_STRUCT([filename], [name], [fs.h])
 		 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 		 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 		 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
@@ -891,10 +892,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 				     [#include <linux/fs.h>
 				      #include <linux/namei.h>],
 				     [path_lookup(NULL, 0, NULL);])
-		 AC_CHECK_LINUX_FUNC([putname],
-				     [#include <linux/fs.h>
-				      #include <linux/namei.h>],
-				     [putname(NULL);])
 		 AC_CHECK_LINUX_FUNC([rcu_read_lock],
 				     [#include <linux/rcupdate.h>],
 				     [rcu_read_lock();])

@@ -461,7 +461,7 @@ afs_dentry_open(struct dentry *dp, struct vfsmount *mnt, int flags, const struct
 }
 #endif
 
-#if defined(HAVE_LINUX_PUTNAME)
+#if !defined(STRUCT_FILENAME_HAS_NAME)
 typedef char *afs_name_t;
 
 static inline char *
