@@ -14,7 +14,9 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #if !defined(UKERNEL)
-#include "h/param.h"
+#if !defined(AFS_LINUX26_ENV)
+# include "h/param.h"
+#endif
 #include "h/types.h"
 #include "h/time.h"
 #if	defined(AFS_AIX31_ENV)

@@ -11,7 +11,9 @@
 #define _AFS_OSI_
 
 #include "h/types.h"
+#if !defined(AFS_LINUX26_ENV)
 #include "h/param.h"
+#endif
 
 #ifdef AFS_FBSD_ENV
 #include <sys/condvar.h>
