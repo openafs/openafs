@@ -457,7 +457,11 @@ static void afs_pag_describe(const struct key *key, struct seq_file *m)
     seq_printf(m, ": %u", key->datalen);
 }
 
+#if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
+static int afs_pag_instantiate(struct key *key, struct key_preparsed_payload *prep)
+#else
 static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen)
+#endif
 {
     int code;
     afs_uint32 *userpag, pag = NOPAG;
@@ -468,7 +472,11 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     code = -EINVAL;
     get_group_info(current_group_info());
 
+#if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
+    if (prep->datalen != sizeof(afs_uint32) || !prep->data)
+#else
     if (datalen != sizeof(afs_uint32) || !data)
+#endif
 	goto error;
 
     /* ensure key being set matches current pag */
@@ -477,7 +485,11 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     if (pag == NOPAG)
 	goto error;
 
-    userpag = (afs_uint32 *) data;
+#if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
+    userpag = (afs_uint32 *)prep->data;
+#else
+    userpag = (afs_uint32 *)data;
+#endif
     if (*userpag != pag)
 	goto error;
 
