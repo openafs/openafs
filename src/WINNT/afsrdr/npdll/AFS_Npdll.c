@@ -3194,6 +3194,18 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
             try_return( dwStatus = WN_NET_ERROR);
         }
 
+        uniRemoteName.Length = (USHORT)pConnectCB->RemoteNameLength;
+        uniRemoteName.MaximumLength = uniRemoteName.Length;
+        uniRemoteName.Buffer = pConnectCB->RemoteName;
+
+#ifdef AFS_DEBUG_TRACE
+        AFSDbgPrint( L"NPGetResourceInformation For remote name %wZ Scope %08lX Type %08lX Usage %08lX\n",
+                     &uniRemoteName,
+                     pConnectCB->Scope,
+                     pConnectCB->Type,
+                     pConnectCB->Usage);
+#endif
+
         dwError = DeviceIoControl( hControlDevice,
                                    IOCTL_AFS_GET_CONNECTION_INFORMATION,
                                    pConnectCB,
@@ -3213,18 +3225,6 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
 #endif
             try_return( dwStatus = WN_BAD_NETNAME);
         }
-
-        uniRemoteName.Length = (USHORT)pConnectCB->RemoteNameLength;
-        uniRemoteName.MaximumLength = uniRemoteName.Length;
-        uniRemoteName.Buffer = pConnectCB->RemoteName;
-
-#ifdef AFS_DEBUG_TRACE
-        AFSDbgPrint( L"NPGetResourceInformation For remote name %wZ Scope %08lX Type %08lX Usage %08lX\n",
-                     &uniRemoteName,
-                     pConnectCB->Scope,
-                     pConnectCB->Type,
-                     pConnectCB->Usage);
-#endif
 
         // Determine the space needed for this entry...
 
