@@ -716,9 +716,8 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	uq = QPrev(tq);
 	if (tvc->f.states & CVFlushed) {
 	    refpanic("CVFlushed on VLRU");
-	    /* In the other path, this was 2 * afs_cacheStats */
-	} else if (!afsd_dynamic_vcaches && i++ > afs_maxvcount) {
-	    refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
+	} else if (!afsd_dynamic_vcaches && i++ > afs_vcount) {
+	    refpanic("Found too many AFS vnodes on VLRU (VLRU cycle?)");
 	} else if (QNext(uq) != tq) {
 	    refpanic("VLRU inconsistent");
 	} else if (tvc->f.states & CVInit) {
