@@ -2155,8 +2155,9 @@ AFSSetRenameInfo( IN PIRP Irp)
     AFSCcb *pSrcCcb = NULL, *pTargetDirCcb = NULL;
     PFILE_OBJECT pSrcFileObj = pIrpSp->FileObject;
     PFILE_OBJECT pTargetFileObj = pIrpSp->Parameters.SetFile.FileObject;
+    PFILE_OBJECT pTargetParentFileObj = NULL;
     PFILE_RENAME_INFORMATION pRenameInfo = NULL;
-    UNICODE_STRING uniTargetName, uniSourceName;
+    UNICODE_STRING uniTargetName, uniSourceName, uniTargetParentName;
     BOOLEAN bReplaceIfExists = FALSE;
     UNICODE_STRING uniShortName;
     AFSDirectoryCB *pTargetDirEntry = NULL;
@@ -2166,10 +2167,11 @@ AFSSetRenameInfo( IN PIRP Irp)
     AFSObjectInfoCB *pSrcParentObject = NULL, *pTargetParentObject = NULL;
     AFSFileID stNewFid, stTmpTargetFid;
     ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
-    UNICODE_STRING uniFullTargetPath;
+    UNICODE_STRING uniFullTargetName;
     BOOLEAN bCommonParent = FALSE;
     BOOLEAN bReleaseTargetDirLock = FALSE;
     BOOLEAN bReleaseSourceDirLock = FALSE;
+    BOOLEAN bDereferenceTargetParentObject = FALSE;
     PERESOURCE  pSourceDirLock = NULL;
     LONG lCount;
 
@@ -2237,19 +2239,58 @@ AFSSetRenameInfo( IN PIRP Irp)
         if( pTargetFileObj == NULL)
         {
 
-            //
-            // This is a simple rename. Here the target directory is the same as the source parent directory
-            // and the name is retrieved from the system buffer information
-            //
-
             pRenameInfo = (PFILE_RENAME_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
-            pTargetParentObject = pSrcParentObject;
+            if ( pRenameInfo->RootDirectory)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSSetRenameInfo Handle provided but no FileObject ntStatus INVALID_PARAMETER\n");
+
+                try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            }
+            else
+            {
+
+                uniFullTargetName.Length = (USHORT)pRenameInfo->FileNameLength;
+
+                uniFullTargetName.Buffer = (PWSTR)&pRenameInfo->FileName;
+
+                AFSRetrieveFinalComponent( &uniFullTargetName,
+                                           &uniTargetName);
+
+                AFSRetrieveParentPath( &uniFullTargetName,
+                                       &uniTargetParentName);
+
+                if ( uniTargetParentName.Length == 0)
+                {
+
+                    //
+                    // This is a simple rename. Here the target directory is the same as the source parent directory
+                    // and the name is retrieved from the system buffer information
+                    //
+
+                    pTargetParentObject = pSrcParentObject;
+                }
+                else
+                {
+                    //
+                    // uniTargetParentName contains the directory the renamed object
+                    // will be moved to.  Must obtain the TargetParentObject.
+                    //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSSetRenameInfo Attempt to move %wZ to %wZ -- not yet supported (NOT_SAME_DEVICE)\n",
+                                  &pSrcCcb->DirectoryCB->NameInformation.FileName,
+                                  &uniFullTargetName);
+
+                    try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
+                }
+            }
 
             pTargetDcb = pTargetParentObject->Fcb;
-
-            uniTargetName.Length = (USHORT)pRenameInfo->FileNameLength;
-            uniTargetName.Buffer = (PWSTR)&pRenameInfo->FileName;
         }
         else
         {
@@ -2749,6 +2790,12 @@ try_exit:
         {
             AFSReleaseResource( pSourceDirLock);
         }
+    }
+
+    if ( bDereferenceTargetParentObject)
+    {
+
+        ObDereferenceObject( pTargetParentFileObj);
     }
 
     return ntStatus;
