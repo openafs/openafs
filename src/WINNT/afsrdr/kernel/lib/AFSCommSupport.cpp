@@ -2066,6 +2066,385 @@ try_exit:
     return ntStatus;
 }
 
+
+NTSTATUS
+AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
+                   IN GUID            *AuthGroup,
+                   IN AFSObjectInfoCB *ParentObjectInfo,
+                   IN AFSObjectInfoCB *TargetParentObjectInfo,
+                   IN AFSDirectoryCB  *SourceDirectoryCB,
+                   IN UNICODE_STRING  *TargetName,
+                   IN BOOLEAN          bReplaceIfExists,
+                   OUT AFSDirectoryCB **TargetDirectoryCB)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFileHardLinkCB *pHardLinkCB = NULL;
+    AFSFileHardLinkResultCB *pResultCB = NULL;
+    ULONG ulResultLen = 0;
+    AFSDirectoryCB *pDirNode = NULL;
+    ULONG     ulCRC = 0;
+    BOOLEAN bReleaseParentLock = FALSE, bReleaseTargetParentLock = FALSE;
+    AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+
+    __Enter
+    {
+
+        //
+        // Init the control block for the request
+        //
+
+        pHardLinkCB = (AFSFileHardLinkCB *)AFSExAllocatePoolWithTag( PagedPool,
+                                                                     PAGE_SIZE,
+                                                                     AFS_HARDLINK_REQUEST_TAG);
+
+        if( pHardLinkCB == NULL)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pHardLinkCB,
+                       PAGE_SIZE);
+
+        pHardLinkCB->SourceParentId = ParentObjectInfo->FileId;
+
+        pHardLinkCB->TargetParentId = TargetParentObjectInfo->FileId;
+
+        pHardLinkCB->TargetNameLength = TargetName->Length;
+
+        RtlCopyMemory( pHardLinkCB->TargetName,
+                       TargetName->Buffer,
+                       TargetName->Length);
+
+        pHardLinkCB->bReplaceIfExists = bReplaceIfExists;
+
+        //
+        // Use the same buffer for the result control block
+        //
+
+        pResultCB = (AFSFileHardLinkResultCB *)pHardLinkCB;
+
+        ulResultLen = PAGE_SIZE;
+
+        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_HARDLINK_FILE,
+                                      AFS_REQUEST_FLAG_SYNCHRONOUS,
+                                      AuthGroup,
+                                      &SourceDirectoryCB->NameInformation.FileName,
+                                      &ObjectInfo->FileId,
+                                      pHardLinkCB,
+                                      sizeof( AFSFileHardLinkCB) + TargetName->Length,
+                                      pResultCB,
+                                      &ulResultLen);
+
+        if( ntStatus != STATUS_SUCCESS)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSNotifyHardLink failed FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                          ObjectInfo->FileId.Cell,
+                          ObjectInfo->FileId.Volume,
+                          ObjectInfo->FileId.Vnode,
+                          ObjectInfo->FileId.Unique,
+                          ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Update the information from the returned data
+        //
+
+        if ( ParentObjectInfo != TargetParentObjectInfo)
+        {
+
+            AFSAcquireExcl( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            TRUE);
+
+            bReleaseParentLock = TRUE;
+
+            if ( ParentObjectInfo->DataVersion.QuadPart == pResultCB->SourceParentDataVersion.QuadPart - 1)
+            {
+
+                ParentObjectInfo->DataVersion = pResultCB->SourceParentDataVersion;
+            }
+            else
+            {
+
+                SetFlag( ParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+                ParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+            }
+        }
+
+        AFSAcquireExcl( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        bReleaseTargetParentLock = TRUE;
+
+        if ( TargetParentObjectInfo->DataVersion.QuadPart == pResultCB->TargetParentDataVersion.QuadPart - 1)
+        {
+
+            TargetParentObjectInfo->DataVersion = pResultCB->TargetParentDataVersion;
+        }
+        else
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_WARNING,
+                          "AFSNotifyHardLink Raced with an invalidate call and a re-enumeration for entry %wZ ParentFID %08lX-%08lX-%08lX-%08lX Version (%08lX:%08lX != %08lX:%08lX - 1)\n",
+                          TargetName,
+                          TargetParentObjectInfo->FileId.Cell,
+                          TargetParentObjectInfo->FileId.Volume,
+                          TargetParentObjectInfo->FileId.Vnode,
+                          TargetParentObjectInfo->FileId.Unique,
+                          TargetParentObjectInfo->DataVersion.HighPart,
+                          TargetParentObjectInfo->DataVersion.LowPart,
+                          pResultCB->TargetParentDataVersion.HighPart,
+                          pResultCB->TargetParentDataVersion.LowPart);
+
+            //
+            // We raced so go and lookup the directory entry in the parent
+            //
+
+            ulCRC = AFSGenerateCRC( TargetName,
+                                    FALSE);
+
+            AFSLocateCaseSensitiveDirEntry( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                            ulCRC,
+                                            &pDirNode);
+
+            if( pDirNode != NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSNotifyHardLink Located dir entry %p for file %wZ\n",
+                              pDirNode,
+                              TargetName);
+
+                if ( AFSIsEqualFID( &pDirNode->ObjectInformation->FileId,
+                                    &pResultCB->DirEnum.FileId))
+                {
+
+                    InterlockedIncrement( &pDirNode->OpenReferenceCount);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSNotifyHardLink Increment count on %wZ DE %p Cnt %d\n",
+                                  &pDirNode->NameInformation.FileName,
+                                  pDirNode,
+                                  pDirNode->OpenReferenceCount);
+
+                    AFSReleaseResource( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+                    try_return( ntStatus = STATUS_REPARSE);
+                }
+                else
+                {
+
+                    //
+                    // We found an entry that matches the desired name but it is not the
+                    // same as the one that was created for us by the file server.
+                    //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSNotifyHardLink Found matching name entry %wZ DE %p FID %08lX-%08lX-%08lX-%08lX != FID %08lX-%08lX-%08lX-%08lX\n",
+                                  TargetName,
+                                  pDirNode,
+                                  pDirNode->ObjectInformation->FileId.Cell,
+                                  pDirNode->ObjectInformation->FileId.Volume,
+                                  pDirNode->ObjectInformation->FileId.Vnode,
+                                  pDirNode->ObjectInformation->FileId.Unique,
+                                  pResultCB->DirEnum.FileId.Cell,
+                                  pResultCB->DirEnum.FileId.Volume,
+                                  pResultCB->DirEnum.FileId.Vnode,
+                                  pResultCB->DirEnum.FileId.Unique);
+
+                    if( pDirNode->OpenReferenceCount == 0)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSNotifyHardLink Different FIDs - Deleting DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName,
+                                      pDirNode->ObjectInformation->FileId.Cell,
+                                      pDirNode->ObjectInformation->FileId.Volume,
+                                      pDirNode->ObjectInformation->FileId.Vnode,
+                                      pDirNode->ObjectInformation->FileId.Unique,
+                                      pResultCB->DirEnum.FileId.Cell,
+                                      pResultCB->DirEnum.FileId.Volume,
+                                      pResultCB->DirEnum.FileId.Vnode,
+                                      pResultCB->DirEnum.FileId.Unique);
+
+                        AFSDeleteDirEntry( TargetParentObjectInfo,
+                                           pDirNode);
+                    }
+                    else
+                    {
+
+                        SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_DELETED);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSNotifyHardLink Different FIDs - Removing DE %p for %wZ Old FID %08lX-%08lX-%08lX-%08lX New FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pDirNode,
+                                      &pDirNode->NameInformation.FileName,
+                                      pDirNode->ObjectInformation->FileId.Cell,
+                                      pDirNode->ObjectInformation->FileId.Volume,
+                                      pDirNode->ObjectInformation->FileId.Vnode,
+                                      pDirNode->ObjectInformation->FileId.Unique,
+                                      pResultCB->DirEnum.FileId.Cell,
+                                      pResultCB->DirEnum.FileId.Volume,
+                                      pResultCB->DirEnum.FileId.Vnode,
+                                      pResultCB->DirEnum.FileId.Unique);
+
+                        AFSRemoveNameEntry( TargetParentObjectInfo,
+                                            pDirNode);
+                    }
+
+                    pDirNode = NULL;
+                }
+            }
+
+            //
+            // We are unsure of our current data so set the verify flag. It may already be set
+            // but no big deal to reset it
+            //
+
+            SetFlag( TargetParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            TargetParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+        }
+
+        //
+        // Create the hard link entry
+        //
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSNotifyHardLink Creating new entry %wZ\n",
+                      TargetName);
+
+        //
+        // Initialize the directory entry
+        //
+
+        pDirNode = AFSInitDirEntry( TargetParentObjectInfo,
+                                    TargetName,
+                                    NULL,
+                                    &pResultCB->DirEnum,
+                                    (ULONG)InterlockedIncrement( &TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.ContentIndex));
+
+        if( pDirNode == NULL)
+        {
+
+            SetFlag( TargetParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY);
+
+            TargetParentObjectInfo->DataVersion.QuadPart = (ULONGLONG)-1;
+
+            AFSReleaseResource( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        //
+        // Init the short name if we have one
+        //
+
+        if( !BooleanFlagOn( pDevExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+            pResultCB->DirEnum.ShortNameLength > 0)
+        {
+
+            UNICODE_STRING uniShortName;
+
+            pDirNode->NameInformation.ShortNameLength = pResultCB->DirEnum.ShortNameLength;
+
+            RtlCopyMemory( pDirNode->NameInformation.ShortName,
+                           pResultCB->DirEnum.ShortName,
+                           pDirNode->NameInformation.ShortNameLength);
+
+            //
+            // Generate the short name index
+            //
+
+            uniShortName.Length = pDirNode->NameInformation.ShortNameLength;
+            uniShortName.Buffer = pDirNode->NameInformation.ShortName;
+
+            pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = AFSGenerateCRC( &uniShortName,
+                                                                               TRUE);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyHardLink Initialized short name %wZ for DE %p for %wZ\n",
+                          &uniShortName,
+                          pDirNode,
+                          &pDirNode->NameInformation.FileName);
+        }
+        else
+        {
+            //
+            // No short name or short names are disabled
+            //
+
+            pDirNode->Type.Data.ShortNameTreeEntry.HashIndex = 0;
+        }
+
+        if ( !BooleanFlagOn( TargetParentObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY))
+        {
+
+            //
+            // Update the target parent data version
+            //
+
+            TargetParentObjectInfo->DataVersion = pResultCB->TargetParentDataVersion;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSNotifyHardLink entry %wZ ParentFID %08lX-%08lX-%08lX-%08lX Version %08lX:%08lX\n",
+                          TargetName,
+                          TargetParentObjectInfo->FileId.Cell,
+                          TargetParentObjectInfo->FileId.Volume,
+                          TargetParentObjectInfo->FileId.Vnode,
+                          TargetParentObjectInfo->FileId.Unique,
+                          TargetParentObjectInfo->DataVersion.QuadPart);
+        }
+
+try_exit:
+
+        if ( bReleaseTargetParentLock)
+        {
+
+            AFSReleaseResource( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
+
+        if ( bReleaseParentLock)
+        {
+
+            AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
+
+        if( pHardLinkCB != NULL)
+        {
+
+            AFSExFreePoolWithTag( pHardLinkCB, AFS_HARDLINK_REQUEST_TAG);
+        }
+
+        if ( TargetDirectoryCB)
+        {
+
+            *TargetDirectoryCB = pDirNode;
+        }
+    }
+
+    return ntStatus;
+}
+
+
+
 NTSTATUS
 AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
                  IN GUID            *AuthGroup,

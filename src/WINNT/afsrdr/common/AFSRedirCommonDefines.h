@@ -127,6 +127,8 @@
 #define AFS_AG_ENTRY_CB_TAG          'GAFA'
 #define AFS_PROCESS_AG_CB_TAG        'APFA'
 #define AFS_BYTERANGE_TAG            '_RBA'
+#define AFS_HARDLINK_REQUEST_TAG     'LFFA'
+
 #define __Enter
 
 #define try_return(S) { S; goto try_exit; }

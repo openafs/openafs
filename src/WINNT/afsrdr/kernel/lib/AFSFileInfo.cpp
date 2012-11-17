@@ -661,7 +661,7 @@ AFSSetFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
             case FileLinkInformation:
             {
 
-                ntStatus = STATUS_INVALID_DEVICE_REQUEST;
+                ntStatus = AFSSetFileLinkInfo( Irp);
 
                 break;
             }
@@ -2049,6 +2049,13 @@ AFSSetDispositionInfo( IN PIRP Irp,
             {
 
                 //
+                // Reduce the Link count in the object information block
+                // to correspond with the deletion of the directory entry.
+                //
+
+                pFcb->ObjectInformation->Links--;
+
+                //
                 // Check if this is a directory that there are not currently other opens
                 //
 
@@ -2155,6 +2162,355 @@ try_exit:
 }
 
 NTSTATUS
+AFSSetFileLinkInfo( IN PIRP Irp)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
+    IO_STATUS_BLOCK stIoSb = {0,0};
+    PFILE_LINK_INFORMATION pFileLinkInfo = NULL;
+    PFILE_OBJECT pSrcFileObj = NULL;
+    PFILE_OBJECT pTargetFileObj = pIrpSp->Parameters.SetFile.FileObject;
+    AFSFcb *pSrcFcb = NULL, *pTargetDcb = NULL, *pTargetFcb = NULL;
+    AFSCcb *pSrcCcb = NULL, *pTargetDirCcb = NULL;
+    AFSObjectInfoCB *pSrcObject = NULL, *pTargetObject = NULL;
+    AFSObjectInfoCB *pSrcParentObject = NULL, *pTargetParentObject = NULL;
+    UNICODE_STRING uniSourceName, uniTargetName;
+    UNICODE_STRING uniFullTargetName, uniTargetParentName;
+    UNICODE_STRING uniShortName;
+    BOOLEAN bCommonParent = FALSE;
+    AFSDirectoryCB *pTargetDirEntry = NULL;
+    AFSDirectoryCB *pNewTargetDirEntry = NULL;
+    ULONG ulTargetCRC;
+    BOOLEAN bTargetEntryExists = FALSE;
+    LONG lCount;
+    BOOLEAN bReleaseTargetDirLock = FALSE;
+    AFSFileID stNewFid;
+    ULONG ulNotificationAction = 0, ulNotifyFilter = 0;
+
+    __Enter
+    {
+
+        pSrcFileObj = pIrpSp->FileObject;
+
+        pSrcFcb = (AFSFcb *)pSrcFileObj->FsContext;
+        pSrcCcb = (AFSCcb *)pSrcFileObj->FsContext2;
+
+        pSrcObject = pSrcFcb->ObjectInformation;
+        pSrcParentObject = pSrcFcb->ObjectInformation->ParentObjectInformation;
+
+        pFileLinkInfo = (PFILE_LINK_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+        //
+        // Perform some basic checks to ensure FS integrity
+        //
+
+        if( pSrcFcb->Header.NodeTypeCode != AFS_FILE_FCB)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetFileLinkInfo Attempt to non-file (INVALID_PARAMETER)\n");
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        if( pTargetFileObj == NULL)
+        {
+
+            if ( pFileLinkInfo->RootDirectory)
+            {
+
+                //
+                // The target directory is provided by HANDLE
+                // RootDirectory is only set when the target directory is not the same
+                // as the source directory.
+                //
+                // AFS only supports hard links within a single directory.
+                //
+                // The IOManager should translate any Handle to a FileObject for us.
+                // However, the failure to receive a FileObject is treated as a fatal
+                // error.
+                //
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSSetFileLinkInfo Attempt to link %wZ to alternate directory by handle INVALID_PARAMETER\n",
+                              &pSrcCcb->DirectoryCB->NameInformation.FileName);
+
+                try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            }
+            else
+            {
+
+                uniFullTargetName.Length = (USHORT)pFileLinkInfo->FileNameLength;
+
+                uniFullTargetName.Buffer = (PWSTR)&pFileLinkInfo->FileName;
+
+                AFSRetrieveFinalComponent( &uniFullTargetName,
+                                           &uniTargetName);
+
+                AFSRetrieveParentPath( &uniFullTargetName,
+                                       &uniTargetParentName);
+
+                if ( uniTargetParentName.Length == 0)
+                {
+
+                    //
+                    // This is a simple rename. Here the target directory is the same as the source parent directory
+                    // and the name is retrieved from the system buffer information
+                    //
+
+                    pTargetParentObject = pSrcParentObject;
+                }
+                else
+                {
+                    //
+                    // uniTargetParentName contains the directory the renamed object
+                    // will be moved to.  Must obtain the TargetParentObject.
+                    //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSSetFileLinkInfo Attempt to link  %wZ to alternate directory %wZ (NOT_SAME_DEVICE)\n",
+                                  &pSrcCcb->DirectoryCB->NameInformation.FileName,
+                                  &uniFullTargetName);
+
+                    try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
+                }
+            }
+
+            pTargetDcb = pTargetParentObject->Fcb;
+        }
+        else
+        {
+
+            //
+            // So here we have the target directory taken from the targetfile object
+            //
+
+            pTargetDcb = (AFSFcb *)pTargetFileObj->FsContext;
+
+            pTargetDirCcb = (AFSCcb *)pTargetFileObj->FsContext2;
+
+            pTargetParentObject = (AFSObjectInfoCB *)pTargetDcb->ObjectInformation;
+
+            //
+            // Grab the target name which we setup in the IRP_MJ_CREATE handler. By how we set this up
+            // it is only the target component of the rename operation
+            //
+
+            uniTargetName = *((PUNICODE_STRING)&pTargetFileObj->FileName);
+        }
+
+        //
+        // The quick check to see if they are self linking.
+        // Do the names match? Only do this where the parent directories are
+        // the same
+        //
+
+        if( pTargetParentObject == pSrcParentObject)
+        {
+
+            if( FsRtlAreNamesEqual( &uniTargetName,
+                                    &uniSourceName,
+                                    FALSE,
+                                    NULL))
+            {
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+
+            bCommonParent = TRUE;
+        }
+        else
+        {
+
+            //
+            // We do not allow cross-volume hard links
+            //
+
+            if( pTargetParentObject->VolumeCB != pSrcObject->VolumeCB)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSSetFileLinkInfo Attempt to link to different volume %wZ\n",
+                              &pSrcCcb->DirectoryCB->NameInformation.FileName);
+
+                try_return( ntStatus = STATUS_NOT_SAME_DEVICE);
+            }
+        }
+
+        ulTargetCRC = AFSGenerateCRC( &uniTargetName,
+                                      FALSE);
+
+        AFSAcquireExcl( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        bReleaseTargetDirLock = TRUE;
+
+        AFSLocateCaseSensitiveDirEntry( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                        ulTargetCRC,
+                                        &pTargetDirEntry);
+
+        if( pTargetDirEntry == NULL)
+        {
+
+            //
+            // Missed so perform a case insensitive lookup
+            //
+
+            ulTargetCRC = AFSGenerateCRC( &uniTargetName,
+                                          TRUE);
+
+            AFSLocateCaseInsensitiveDirEntry( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                              ulTargetCRC,
+                                              &pTargetDirEntry);
+        }
+
+        if ( !BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_DISABLE_SHORTNAMES) &&
+             pTargetDirEntry == NULL && RtlIsNameLegalDOS8Dot3( &uniTargetName,
+                                                                NULL,
+                                                                NULL))
+        {
+            //
+            // Try the short name
+            //
+            AFSLocateShortNameDirEntry( pTargetParentObject->Specific.Directory.ShortNameTree,
+                                        ulTargetCRC,
+                                        &pTargetDirEntry);
+        }
+
+        //
+        // Increment our ref count on the dir entry
+        //
+
+        if( pTargetDirEntry != NULL)
+        {
+
+            ASSERT( pTargetParentObject == pTargetDirEntry->ObjectInformation->ParentObjectInformation);
+
+            lCount = InterlockedIncrement( &pTargetDirEntry->OpenReferenceCount);
+
+            if( !pFileLinkInfo->ReplaceIfExists)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSSetFileLinkInfo Attempt to link with target collision %wZ Target %wZ\n",
+                              &pSrcCcb->DirectoryCB->NameInformation.FileName,
+                              &pTargetDirEntry->NameInformation.FileName);
+
+                try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetFileLinkInfo Target %wZ exists DE %p Count %08lX, performing delete of target\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pTargetDirEntry->OpenReferenceCount);
+
+            //
+            // Pull the directory entry from the parent
+            //
+
+            AFSRemoveDirNodeFromParent( pTargetParentObject,
+                                        pTargetDirEntry,
+                                        FALSE);
+
+            bTargetEntryExists = TRUE;
+        }
+        else
+        {
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetFileLinkInfo Target does NOT exist, normal linking\n");
+        }
+
+        //
+        // OK, this is a simple rename. Issue the rename
+        // request to the service.
+        //
+
+        ntStatus = AFSNotifyHardLink( pSrcFcb->ObjectInformation,
+                                      &pSrcCcb->AuthGroup,
+                                      pSrcFcb->ObjectInformation->ParentObjectInformation,
+                                      pTargetDcb->ObjectInformation,
+                                      pSrcCcb->DirectoryCB,
+                                      &uniTargetName,
+                                      pFileLinkInfo->ReplaceIfExists,
+                                      &pNewTargetDirEntry);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSSetFileLinkInfo Failed link of %wZ to target %wZ Status %08lX\n",
+                          &pSrcCcb->DirectoryCB->NameInformation.FileName,
+                          &uniTargetName,
+                          ntStatus);
+
+            try_return( ntStatus);
+        }
+
+        AFSInsertDirectoryNode( pTargetDcb->ObjectInformation,
+                                pNewTargetDirEntry,
+                                TRUE);
+
+        //
+        // Send notification for the target link file
+        //
+
+        if( bTargetEntryExists || pNewTargetDirEntry)
+        {
+
+            ulNotificationAction = FILE_ACTION_MODIFIED;
+        }
+        else
+        {
+
+            ulNotificationAction = FILE_ACTION_ADDED;
+        }
+
+        AFSFsRtlNotifyFullReportChange( pTargetParentObject->ParentObjectInformation,
+                                        pSrcCcb,
+                                        (ULONG)ulNotifyFilter,
+                                        (ULONG)ulNotificationAction);
+
+      try_exit:
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( bTargetEntryExists)
+            {
+
+                AFSInsertDirectoryNode( pTargetDirEntry->ObjectInformation->ParentObjectInformation,
+                                        pTargetDirEntry,
+                                        FALSE);
+            }
+        }
+
+        if( pTargetDirEntry != NULL)
+        {
+
+            lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
+        }
+
+        if( bReleaseTargetDirLock)
+        {
+
+            AFSReleaseResource( pTargetParentObject->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
 AFSSetRenameInfo( IN PIRP Irp)
 {
 
@@ -2235,6 +2591,7 @@ AFSSetRenameInfo( IN PIRP Irp)
                 try_return( ntStatus = STATUS_ACCESS_DENIED);
             }
         }
+
 
         //
         // Extract off the final component name from the Fcb
@@ -2773,7 +3130,6 @@ AFSSetRenameInfo( IN PIRP Irp)
         }
 
 try_exit:
-
 
         if( !NT_SUCCESS( ntStatus))
         {
