@@ -1685,6 +1685,7 @@ void buf_SetDirty(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 offset, afs_uint32 le
 {
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
     osi_assertx(bp->refCount > 0, "cm_buf_t refcount 0");
+    osi_assertx(userp != NULL, "userp is NULL");
 
     if (length == 0)
         return;
