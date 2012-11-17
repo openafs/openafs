@@ -133,6 +133,16 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
                      IN OUT AFSCommResult **ResultCB);
 
 void
+RDR_HardLinkFileEntry( IN cm_user_t *userp,
+                       IN WCHAR    *SourceFileName,
+                       IN DWORD     SourceFileNameLength,
+                       IN AFSFileID SourceFileId,
+                       IN AFSFileHardLinkCB *HardLinkCB,
+                       IN BOOL bWow64,
+                       IN DWORD ResultBufferLength,
+                       IN OUT AFSCommResult **ResultCB);
+
+void
 RDR_FlushFileEntry( IN cm_user_t *userp,
                     IN AFSFileID FileId,
                     IN BOOL bWow64,
