@@ -426,6 +426,7 @@ AFSQueryFsAttributeInfo( IN AFSVolumeInfoCB *VolumeInfo,
 
         Buffer->FileSystemAttributes = (FILE_CASE_PRESERVED_NAMES |
                                         FILE_UNICODE_ON_DISK |
+                                        FILE_SUPPORTS_HARD_LINKS |
                                         FILE_SUPPORTS_REPARSE_POINTS);
 
         Buffer->MaximumComponentNameLength = 255;

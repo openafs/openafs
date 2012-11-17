@@ -203,6 +203,16 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
                  OUT AFSFileID  *UpdatedFID);
 
 NTSTATUS
+AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
+                   IN GUID            *AuthGroup,
+                   IN AFSObjectInfoCB *ParentObjectInfo,
+                   IN AFSObjectInfoCB *TargetParentObjectInfo,
+                   IN AFSDirectoryCB  *SourceDirectoryCB,
+                   IN UNICODE_STRING  *TargetName,
+                   IN BOOLEAN          bReplaceIfExists,
+                   OUT AFSDirectoryCB **TargetDirectoryCB);
+
+NTSTATUS
 AFSEvaluateTargetByID( IN AFSObjectInfoCB *ObjectInfo,
                        IN GUID *AuthGroup,
                        IN BOOLEAN FastCall,
@@ -815,6 +825,9 @@ AFSSetDispositionInfo( IN PIRP Irp,
 
 NTSTATUS
 AFSSetRenameInfo( IN PIRP Irp);
+
+NTSTATUS
+AFSSetFileLinkInfo( IN PIRP Irp);
 
 NTSTATUS
 AFSSetPositionInfo( IN PIRP Irp,

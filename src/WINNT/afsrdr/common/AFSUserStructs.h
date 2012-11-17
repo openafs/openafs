@@ -603,6 +603,39 @@ typedef struct _AFS_FILE_RENAME_RESULT_CB
 
 
 //
+// File Hard Link CB
+//
+
+typedef struct _AFS_FILE_HARDLINK_CB
+{
+
+    AFSFileID       SourceParentId;        /* Must be directory */
+
+    AFSFileID       TargetParentId;        /* Must be directory */
+
+    BOOLEAN         bReplaceIfExists;
+
+                                           /* Source Name and FileID in Common Request Block */
+
+    USHORT          TargetNameLength;
+
+    WCHAR           TargetName[ 1];
+
+} AFSFileHardLinkCB;
+
+typedef struct _AFS_FILE_HARDLINK_RESULT_CB
+{
+
+    LARGE_INTEGER   SourceParentDataVersion;
+
+    LARGE_INTEGER   TargetParentDataVersion;
+
+    AFSDirEnumEntry DirEnum;
+
+} AFSFileHardLinkResultCB;
+
+
+//
 // Control structures for AFS_REQUEST_TYPE_EVAL_TARGET_BY_ID
 // and AFS_REQUEST_TYPE_EVAL_TARGET_BY_NAME
 //

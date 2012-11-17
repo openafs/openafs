@@ -91,6 +91,7 @@
 #define AFS_REQUEST_TYPE_CREATE_SYMLINK          0x00000020
 #define AFS_REQUEST_TYPE_RELEASE_FILE_ACCESS     0x00000021
 #define AFS_REQUEST_TYPE_GET_VOLUME_SIZE_INFO    0x00000022
+#define AFS_REQUEST_TYPE_HARDLINK_FILE           0x00000023
 
 //
 // Request Flags, these are passed up from the file system
@@ -272,6 +273,7 @@
 #define FILE_VOLUME_QUOTAS              0x00000020  // winnt
 #define FILE_SUPPORTS_REPARSE_POINTS    0x00000080  // winnt
 #define FILE_SUPPORTS_OBJECT_IDS        0x00010000  // winnt
+#define FILE_SUPPORTS_HARD_LINKS        0x00400000  // winnt
 
 #endif
 
