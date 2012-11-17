@@ -717,11 +717,12 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             AFSFileRenameCB *pFileRenameCB = (AFSFileRenameCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
 
             if (afsd_logp->enabled) {
-                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S",
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RENAME_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S TargetLength %08lX Target %*S",
                           RequestBuffer->RequestIndex,
                           RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
                           RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
-                          RequestBuffer->NameLength, (int)RequestBuffer->NameLength, RequestBuffer->Name);
+                          RequestBuffer->NameLength, (int)RequestBuffer->NameLength, RequestBuffer->Name,
+                          pFileRenameCB->TargetNameLength, (int)pFileRenameCB->TargetNameLength, pFileRenameCB->TargetName);
 
                 osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
             }
@@ -734,6 +735,34 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                  bWow64,
 				 RequestBuffer->ResultBufferLength,
 				 &pResultCB);
+
+            break;
+        }
+
+        case AFS_REQUEST_TYPE_HARDLINK_FILE:
+        {
+
+            AFSFileHardLinkCB *pFileHardLinkCB = (AFSFileHardLinkCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_HARDLINK_FILE Index %08lX File %08lX.%08lX.%08lX.%08lX NameLength %08lX Name %*S TargetLength %08lX Target %*S",
+                          RequestBuffer->RequestIndex,
+                          RequestBuffer->FileId.Cell, RequestBuffer->FileId.Volume,
+                          RequestBuffer->FileId.Vnode, RequestBuffer->FileId.Unique,
+                          RequestBuffer->NameLength, (int)RequestBuffer->NameLength, RequestBuffer->Name,
+                          pFileHardLinkCB->TargetNameLength, (int)pFileHardLinkCB->TargetNameLength, pFileHardLinkCB->TargetName);
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                RDR_HardLinkFileEntry( userp,
+                                       RequestBuffer->Name,
+                                       RequestBuffer->NameLength,
+                                       RequestBuffer->FileId,
+                                       pFileHardLinkCB,
+                                       bWow64,
+                                       RequestBuffer->ResultBufferLength,
+                                       &pResultCB);
 
             break;
         }

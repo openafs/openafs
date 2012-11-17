@@ -2445,6 +2445,341 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     return;
 }
 
+/*
+ * AFS does not support cross-directory hard links but RDR_HardLinkFileEntry
+ * is written as if AFS does.  The check for cross-directory links is
+ * implemented in cm_Link().
+ *
+ * Windows supports optional ReplaceIfExists functionality.  The AFS file
+ * server does not.  If the target name already exists and bReplaceIfExists
+ * is true, check to see if the user has insert permission before calling
+ * cm_Unlink() on the existing object.  If the user does not have insert
+ * permission return STATUS_ACCESS_DENIED.
+ */
+
+void
+RDR_HardLinkFileEntry( IN cm_user_t *userp,
+                       IN WCHAR    *SourceFileNameCounted,
+                       IN DWORD     SourceFileNameLength,
+                       IN AFSFileID SourceFileId,
+                       IN AFSFileHardLinkCB *pHardLinkCB,
+                       IN BOOL bWow64,
+                       IN DWORD ResultBufferLength,
+                       IN OUT AFSCommResult **ResultCB)
+{
+
+    AFSFileHardLinkResultCB *pResultCB = NULL;
+    size_t size = sizeof(AFSCommResult) + ResultBufferLength - 1;
+    AFSFileID              SourceParentId   = pHardLinkCB->SourceParentId;
+    AFSFileID              TargetParentId   = pHardLinkCB->TargetParentId;
+    WCHAR *                TargetFileNameCounted = pHardLinkCB->TargetName;
+    DWORD                  TargetFileNameLength = pHardLinkCB->TargetNameLength;
+    cm_fid_t               SourceParentFid;
+    cm_fid_t               TargetParentFid;
+    cm_fid_t		   SourceFid;
+    cm_fid_t		   OrigTargetFid = {0,0,0,0,0};
+    cm_scache_t *          srcDscp = NULL;
+    cm_scache_t *          targetDscp = NULL;
+    cm_scache_t *          srcScp = NULL;
+    cm_dirOp_t             dirop;
+    wchar_t                shortName[13];
+    wchar_t                SourceFileName[260];
+    wchar_t                TargetFileName[260];
+    cm_dirFid_t            dfid;
+    cm_req_t               req;
+    afs_uint32             code;
+    DWORD                  status;
+
+    RDR_InitReq(&req, bWow64);
+
+    StringCchCopyNW(SourceFileName, 260, SourceFileNameCounted, SourceFileNameLength / sizeof(WCHAR));
+    StringCchCopyNW(TargetFileName, 260, TargetFileNameCounted, TargetFileNameLength / sizeof(WCHAR));
+
+    osi_Log4(afsd_logp, "RDR_HardLinkFileEntry Source Parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              SourceParentId.Cell,  SourceParentId.Volume,
+              SourceParentId.Vnode, SourceParentId.Unique);
+    osi_Log2(afsd_logp, "... Source Name=%S Length %u", osi_LogSaveStringW(afsd_logp, SourceFileName), SourceFileNameLength);
+    osi_Log4(afsd_logp, "... Target Parent FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+              TargetParentId.Cell,  TargetParentId.Volume,
+              TargetParentId.Vnode, TargetParentId.Unique);
+    osi_Log2(afsd_logp, "... Target Name=%S Length %u", osi_LogSaveStringW(afsd_logp, TargetFileName), TargetFileNameLength);
+
+    *ResultCB = (AFSCommResult *)malloc( size);
+    if (!(*ResultCB))
+	return;
+
+    memset( *ResultCB,
+            '\0',
+            size);
+
+    pResultCB = (AFSFileHardLinkResultCB *)(*ResultCB)->ResultData;
+
+    if (SourceFileNameLength == 0 || TargetFileNameLength == 0)
+    {
+        osi_Log2(afsd_logp, "RDR_HardLinkFileEntry Invalid Name Length: src %u target %u",
+                 SourceFileNameLength, TargetFileNameLength);
+        (*ResultCB)->ResultStatus = STATUS_INVALID_PARAMETER;
+        return;
+    }
+
+    SourceFid.cell   = SourceFileId.Cell;
+    SourceFid.volume = SourceFileId.Volume;
+    SourceFid.vnode  = SourceFileId.Vnode;
+    SourceFid.unique = SourceFileId.Unique;
+    SourceFid.hash   = SourceFileId.Hash;
+
+    SourceParentFid.cell   = SourceParentId.Cell;
+    SourceParentFid.volume = SourceParentId.Volume;
+    SourceParentFid.vnode  = SourceParentId.Vnode;
+    SourceParentFid.unique = SourceParentId.Unique;
+    SourceParentFid.hash   = SourceParentId.Hash;
+
+    TargetParentFid.cell   = TargetParentId.Cell;
+    TargetParentFid.volume = TargetParentId.Volume;
+    TargetParentFid.vnode  = TargetParentId.Vnode;
+    TargetParentFid.unique = TargetParentId.Unique;
+    TargetParentFid.hash   = TargetParentId.Hash;
+
+    code = cm_GetSCache(&SourceFid, NULL, &srcScp, userp, &req);
+    if (code) {
+        osi_Log1(afsd_logp, "RDR_HardLinkFileEntry cm_GetSCache source failed code 0x%x", code);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        return;
+    }
+
+    code = cm_GetSCache(&TargetParentFid, NULL, &targetDscp, userp, &req);
+    if (code) {
+        osi_Log1(afsd_logp, "RDR_HardLinkFileEntry cm_GetSCache target parent failed code 0x%x", code);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        cm_ReleaseSCache(srcScp);
+        return;
+    }
+
+    lock_ObtainWrite(&targetDscp->rw);
+    code = cm_SyncOp(targetDscp, NULL, userp, &req, PRSFS_INSERT,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {
+        osi_Log2(afsd_logp, "RDR_HardLinkFileEntry cm_SyncOp targetDscp 0x%p failed code 0x%x", targetDscp, code);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        lock_ReleaseWrite(&targetDscp->rw);
+        cm_ReleaseSCache(srcScp);
+        cm_ReleaseSCache(targetDscp);
+        return;
+    }
+
+    cm_SyncOpDone(targetDscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&targetDscp->rw);
+
+    if (targetDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
+        osi_Log1(afsd_logp, "RDR_HardLinkFileEntry targetDscp 0x%p not a directory", targetDscp);
+        (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
+        cm_ReleaseSCache(srcScp);
+        cm_ReleaseSCache(targetDscp);
+        return;
+    }
+
+    if ( cm_FidCmp(&SourceParentFid, &TargetParentFid) ) {
+        code = cm_GetSCache(&SourceParentFid, NULL, &srcDscp, userp, &req);
+        if (code) {
+            osi_Log1(afsd_logp, "RDR_HardLinkFileEntry cm_GetSCache source parent failed code 0x%x", code);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            if ( status == STATUS_INVALID_HANDLE)
+                status = STATUS_OBJECT_PATH_INVALID;
+            (*ResultCB)->ResultStatus = status;
+            cm_ReleaseSCache(srcScp);
+            cm_ReleaseSCache(targetDscp);
+            return;
+        }
+
+        lock_ObtainWrite(&srcDscp->rw);
+        code = cm_SyncOp(srcDscp, NULL, userp, &req, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code) {
+            osi_Log2(afsd_logp, "RDR_HardLinkFileEntry cm_SyncOp srcDscp 0x%p failed code 0x%x", srcDscp, code);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            if ( status == STATUS_INVALID_HANDLE)
+                status = STATUS_OBJECT_PATH_INVALID;
+            (*ResultCB)->ResultStatus = status;
+            lock_ReleaseWrite(&srcDscp->rw);
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(targetDscp);
+            cm_ReleaseSCache(srcScp);
+            return;
+        }
+
+        cm_SyncOpDone(srcDscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&srcDscp->rw);
+
+        if (srcDscp->fileType != CM_SCACHETYPE_DIRECTORY) {
+            osi_Log1(afsd_logp, "RDR_HardLinkFileEntry srcDscp 0x%p not a directory", srcDscp);
+            (*ResultCB)->ResultStatus = STATUS_NOT_A_DIRECTORY;
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(targetDscp);
+            cm_ReleaseSCache(srcScp);
+            return;
+        }
+    } else {
+        srcDscp = targetDscp;
+    }
+
+    /* Obtain the target FID if it exists */
+    code = cm_BeginDirOp( targetDscp, userp, &req, CM_DIRLOCK_READ, CM_DIROP_FLAG_NONE, &dirop);
+    if (code == 0) {
+        code = cm_BPlusDirLookup(&dirop, TargetFileName, &OrigTargetFid);
+        cm_EndDirOp(&dirop);
+    }
+
+    if (OrigTargetFid.vnode) {
+
+        /* An object exists with the target name */
+        if (!pHardLinkCB->bReplaceIfExists) {
+            osi_Log0(afsd_logp, "RDR_HardLinkFileEntry target name collision and !ReplaceIfExists");
+            (*ResultCB)->ResultStatus = STATUS_OBJECT_NAME_COLLISION;
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(targetDscp);
+            cm_ReleaseSCache(srcScp);
+            return;
+        }
+
+        lock_ObtainWrite(&targetDscp->rw);
+        code = cm_SyncOp(targetDscp, NULL, userp, &req, PRSFS_INSERT | PRSFS_DELETE,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            lock_ReleaseWrite(&srcDscp->rw);
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(targetDscp);
+            cm_ReleaseSCache(srcScp);
+            return;
+        }
+        cm_SyncOpDone(targetDscp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&targetDscp->rw);
+
+        code = cm_Unlink(targetDscp, NULL, TargetFileName, userp, &req);
+        if (code) {
+            osi_Log1(afsd_logp, "RDR_HardLinkFileEntry cm_Unlink code 0x%x", code);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            lock_ReleaseWrite(&srcDscp->rw);
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(targetDscp);
+            cm_ReleaseSCache(srcScp);
+            return;
+        }
+    }
+
+    code = cm_Link( targetDscp, TargetFileName, srcScp, 0, userp, &req);
+    if (code == 0) {
+        cm_fid_t TargetFid;
+        cm_scache_t *targetScp = 0;
+        DWORD dwRemaining;
+
+        (*ResultCB)->ResultBufferLength = ResultBufferLength;
+        dwRemaining = ResultBufferLength - sizeof( AFSFileHardLinkResultCB) + sizeof( AFSDirEnumEntry);
+        (*ResultCB)->ResultStatus = 0;
+
+        pResultCB->SourceParentDataVersion.QuadPart = srcDscp->dataVersion;
+        pResultCB->TargetParentDataVersion.QuadPart = targetDscp->dataVersion;
+
+        osi_Log2(afsd_logp, "RDR_HardLinkFileEntry cm_Link srcDscp 0x%p targetDscp 0x%p SUCCESS",
+                 srcDscp, targetDscp);
+
+        code = cm_BeginDirOp( targetDscp, userp, &req, CM_DIRLOCK_READ, CM_DIROP_FLAG_NONE, &dirop);
+        if (code == 0) {
+            code = cm_BPlusDirLookup(&dirop, TargetFileName, &TargetFid);
+            cm_EndDirOp(&dirop);
+        }
+
+        if (code != 0) {
+            osi_Log1(afsd_logp, "RDR_HardLinkFileEntry cm_BPlusDirLookup failed code 0x%x",
+                     code);
+            (*ResultCB)->ResultStatus = STATUS_OBJECT_PATH_INVALID;
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(srcScp);
+            cm_ReleaseSCache(targetDscp);
+            return;
+        }
+
+        osi_Log4(afsd_logp, "RDR_HardLinkFileEntry Target FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+                  TargetFid.cell,  TargetFid.volume,
+                  TargetFid.vnode, TargetFid.unique);
+
+        code = cm_GetSCache(&TargetFid, &targetDscp->fid, &targetScp, userp, &req);
+        if (code) {
+            osi_Log1(afsd_logp, "RDR_HardLinkFileEntry cm_GetSCache target failed code 0x%x", code);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(srcScp);
+            cm_ReleaseSCache(targetDscp);
+            return;
+        }
+
+        /* Make sure the source vnode is current */
+        lock_ObtainWrite(&targetScp->rw);
+        code = cm_SyncOp(targetScp, NULL, userp, &req, 0,
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code) {
+            osi_Log2(afsd_logp, "RDR_HardLinkFileEntry cm_SyncOp scp 0x%p failed code 0x%x",
+                     targetScp, code);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+            (*ResultCB)->ResultStatus = status;
+            lock_ReleaseWrite(&targetScp->rw);
+            cm_ReleaseSCache(targetScp);
+            if (srcDscp != targetDscp)
+                cm_ReleaseSCache(srcDscp);
+            cm_ReleaseSCache(srcScp);
+            cm_ReleaseSCache(targetDscp);
+            return;
+        }
+
+        cm_SyncOpDone(targetScp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        lock_ReleaseWrite(&targetScp->rw);
+
+        if (cm_shortNames) {
+            dfid.vnode = htonl(targetScp->fid.vnode);
+            dfid.unique = htonl(targetScp->fid.unique);
+
+            if (!cm_Is8Dot3(TargetFileName))
+                cm_Gen8Dot3NameIntW(TargetFileName, &dfid, shortName, NULL);
+            else
+                shortName[0] = '\0';
+        }
+
+        RDR_PopulateCurrentEntry(&pResultCB->DirEnum, dwRemaining,
+                                 targetDscp, targetScp, userp, &req, TargetFileName, shortName,
+                                 RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
+                                 0, NULL, &dwRemaining);
+        (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
+        cm_ReleaseSCache(targetScp);
+
+        osi_Log0(afsd_logp, "RDR_HardLinkFileEntry SUCCESS");
+    } else {
+        osi_Log3(afsd_logp, "RDR_HardLinkFileEntry cm_Link srcDscp 0x%p targetDscp 0x%p failed code 0x%x",
+                 srcDscp, targetDscp, code);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status, TRUE);
+        (*ResultCB)->ResultStatus = status;
+        (*ResultCB)->ResultBufferLength = 0;
+    }
+
+    cm_ReleaseSCache(srcScp);
+    if (srcDscp != targetDscp)
+        cm_ReleaseSCache(srcDscp);
+    cm_ReleaseSCache(targetDscp);
+    return;
+}
+
 void
 RDR_FlushFileEntry( IN cm_user_t *userp,
                     IN AFSFileID FileId,
@@ -4998,7 +5333,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     pResultCB->VolumeID = scp->fid.volume;
     pResultCB->Characteristics = FILE_REMOTE_DEVICE;
     pResultCB->FileSystemAttributes = FILE_CASE_PRESERVED_NAMES | FILE_UNICODE_ON_DISK |
-        FILE_SUPPORTS_REPARSE_POINTS;
+        FILE_SUPPORTS_HARD_LINKS | FILE_SUPPORTS_REPARSE_POINTS;
 
     if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
          scp->fid.volume==AFS_FAKE_ROOT_VOL_ID)
