@@ -860,9 +860,8 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
              * to determine if it is appropriate to fill a full chunk of data
              * when storing to the file server.
              */
-            code = (*cm_buf_opsp->Writep)(scp, &offset,
-                                          bp->dirty_length,
-                                          flags, bp->userp, reqp);
+            code = (*cm_buf_opsp->Writep)(scp, &offset, bp->dirty_length, flags,
+                                          bp->userp ? bp->userp : cm_rootUserp, reqp);
             osi_Log3(buf_logp, "buf_CleanLocked I/O on scp 0x%p buf 0x%p, done=%d", scp, bp, code);
         }
         lock_ObtainMutex(&bp->mx);
