@@ -816,6 +816,23 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
                      reqp) == 0)
     {
         release_scp = 1;
+
+        lock_ObtainWrite(&scp->rw);
+        code = cm_SyncOp(scp, NULL, bp->userp ? bp->userp : cm_rootUserp, reqp, 0,
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        if (code == 0) {
+            cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+        }
+        lock_ReleaseWrite(&scp->rw);
+    }
+
+    if (scp && (scp->flags & CM_SCACHEFLAG_DELETED)) {
+        _InterlockedAnd(&bp->flags, ~CM_BUF_DIRTY);
+        _InterlockedOr(&bp->flags, CM_BUF_ERROR);
+        bp->dirty_length = 0;
+        bp->error = code;
+        bp->dataVersion = CM_BUF_VERSION_BAD;
+        bp->dirtyCounter++;
     }
 
     while ((bp->flags & CM_BUF_DIRTY) == CM_BUF_DIRTY) {
