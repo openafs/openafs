@@ -376,41 +376,6 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     BooleanFlagOn( pCcb->DirectoryCB->Flags, AFS_DIR_ENTRY_PENDING_DELETE))
                 {
 
-                    //
-                    // Stop anything possibly in process
-                    //
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup Acquiring Fcb extents lock %08lX EXCL %08lX\n",
-                                  &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                  PsGetCurrentThread());
-
-                    AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                    TRUE);
-
-                    pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
-
-                    KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
-                                0,
-                                FALSE);
-
-                    //
-                    // Before telling the server about the deleted file, tear down all extents for
-                    // the file
-                    //
-
-                    AFSTearDownFcbExtents( pFcb,
-                                           &pCcb->AuthGroup);
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup Releasing Fcb extents lock %08lX EXCL %08lX\n",
-                                  &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                  PsGetCurrentThread());
-
-                    AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
-
                     ntStatus = STATUS_SUCCESS;
 
                     ulNotificationFlags |= AFS_REQUEST_FLAG_FILE_DELETED;
@@ -453,6 +418,45 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                     {
 
                         ntStatus = STATUS_SUCCESS;
+
+                        if ( --pObjectInfo->Links < 1)
+                        {
+
+                            //
+                            // Stop anything possibly in process
+                            //
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSCleanup Acquiring Fcb extents lock %08lX EXCL %08lX\n",
+                                          &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                          PsGetCurrentThread());
+
+                            AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                            TRUE);
+
+                            pFcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
+
+                            KeSetEvent( &pFcb->NPFcb->Specific.File.ExtentsRequestComplete,
+                                        0,
+                                        FALSE);
+
+                            //
+                            // Before telling the server about the deleted file, tear down all extents for
+                            // the file
+                            //
+
+                            AFSTearDownFcbExtents( pFcb,
+                                                   &pCcb->AuthGroup);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSCleanup Releasing Fcb extents lock %08lX EXCL %08lX\n",
+                                          &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                          PsGetCurrentThread());
+
+                            AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
+                        }
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
