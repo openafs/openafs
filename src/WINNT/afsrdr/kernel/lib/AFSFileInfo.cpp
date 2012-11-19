@@ -2180,6 +2180,8 @@ AFSSetRenameInfo( IN PIRP Irp)
 
         bReplaceIfExists = pIrpSp->Parameters.SetFile.ReplaceIfExists;
 
+        pRenameInfo = (PFILE_RENAME_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
         pSrcFcb = (AFSFcb *)pSrcFileObj->FsContext;
         pSrcCcb = (AFSCcb *)pSrcFileObj->FsContext2;
 
@@ -2238,8 +2240,6 @@ AFSSetRenameInfo( IN PIRP Irp)
 
         if( pTargetFileObj == NULL)
         {
-
-            pRenameInfo = (PFILE_RENAME_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
 
             if ( pRenameInfo->RootDirectory)
             {
