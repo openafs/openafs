@@ -11,6 +11,7 @@ use Getopt::Long;
 use IO::Dir;
 use IO::File;
 use Pod::Usage;
+use bigint qw/hex/;
 use warnings;
 use strict;
 
@@ -32,12 +33,14 @@ my $temp_dir   = tempdir( "afsdebugXXXXXX", DIR => File::Spec->tmpdir,
 my $dump_file  = "/var/db/openafs/logs/crash.dump";
 my $kernel = "/mach_kernel";
 my $kextpath = "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext";
+my $sysextpath = "";
 
 my $option_quiet;
 my $option_verbose;
 my $option_help;
 my $result = GetOptions ("input=s"  => \$panic_file,
                          "output=s" => \$dump_file,
+                         "sysexts=s" => \$sysextpath,
 			 "kernel=s" => \$kernel,
 			 "debugkit=s" => \$debugkit,
 			 "archive=s"=> \$archive,
@@ -116,9 +119,9 @@ if (-d $archive && -f $dmgutil ) {
     }
 }
 
-generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir, $kextarch , $kernel, $kextpath);
+generate_symbol_files( $crash_info{"afs_kernel_address"}, $crash_info{"kernel_shift"}, $temp_dir, $kextarch , $kernel, $kextpath, $sysextpath);
 
-write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" } );
+write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" }, $crash_info{ "kernel_shift" } );
 
 # needed so we can put the sym file where the kext is. ick.
 if ($kextprog eq $kextutil) {
@@ -280,7 +283,7 @@ sub read_panic {
         while ( $line = <$panic_fh> ) {
             chomp $line;
             last if $line !~ /^\s*0x[0-9a-fA-F]+ : (0x[0-9a-fA-F]*)/;
-            push @{ $hash_ref->{ "backtrace" } }, $1;
+	    push @{ $hash_ref->{ "backtrace" } }, $1;
         }
     }
 
@@ -299,12 +302,20 @@ sub read_panic {
         last;
     }
 
+    $hash_ref->{ "kernel_shift" } = "0x0";
     # grab the kernel version
     while ( $line = <$panic_fh> ) {
         chomp $line;
-        next if ( $line !~ /^Darwin Kernel Version/ );
-        $hash_ref->{ "kernel_version" } = $line;
-	last;
+        if ( $line =~ /^Darwin Kernel Version/ ) {
+	    $hash_ref->{ "kernel_version" } = $line;
+	    next;
+	}
+	if ($line =~ /^Kernel slide:\s+(0x[0-9a-fA-F]+)/ ) {
+	    $hash_ref->{ "kernel_shift" } = $1;
+	    next;
+	}
+	next if (! $hash_ref->{ "kernel_version" });
+	last if ($line =~ /^\s*$/)
     }
     
     if (! $kernel_line ) {
@@ -336,56 +347,76 @@ sub read_panic {
 # generate the symbol files that will be read by gdb
 sub generate_symbol_files {
     my $kernel_address   = shift;
+    my $kernel_shift   = shift;
     my $symbol_write_dir = shift;
     my $kextarch = shift;
     my $kernel = shift;
     my $kext = shift;
+    my $sysext = shift;
+
+    my $kaddress = sprintf("0x%x", hex($kernel_address) - hex($kernel_shift));
 
     if ($kextprog eq $kextload) {
 	if ($kernel eq "/mach_kernel") {
 	    if ($option_verbose) {
-		print "$kextprog -k $kernel -s $temp_dir -a org.openafs.filesystems.afs\@${kernel_address} -n $kext\n";
+		print "$kextprog -k $kernel -s $temp_dir -a org.openafs.filesystems.afs\@${kaddress} -n $kext\n";
 	    }
 	    system( $kextprog,
 		    "-k", $kernel,
 		    "-s", $temp_dir,
-		    "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
+		    "-a", 'org.openafs.filesystems.afs@' . $kaddress,
 		    "-n", $kext );
 	} else {
 	    if ($option_verbose) {
-		print "$kextprog -c -e -r $temp_dir -k $kernel -s $temp_dir -a org.openafs.filesystems.afs\@${kernel_address} -n $kext\n";
+		print "$kextprog -c -e -r $temp_dir -k $kernel -s $temp_dir -a org.openafs.filesystems.afs\@${kaddress} -n $kext\n";
 	    }
 	    system( $kextprog,
 		    "-c", "-e",
 		    "-r", $temp_dir,
 		    "-k", $kernel,
 		    "-s", $temp_dir,
-		    "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
+		    "-a", 'org.openafs.filesystems.afs@' . $kaddress,
 		    "-n", $kext );
 	}
     } else {
 	if ($kernel eq "/mach_kernel") {
 	    if ($option_verbose) {
-		print "$kextprog -k $kernel -s $temp_dir -arch $kextarch -a org.openafs.filesystems.afs\@${kernel_address} -n $kext\n";
+		print "$kextprog -k $kernel -s $temp_dir -arch $kextarch -a org.openafs.filesystems.afs\@${kaddress} -n $kext\n";
 	    }
 	    system( $kextprog,
 		    "-k", $kernel,
 		    "-s", $temp_dir,
 		    "-arch", $kextarch,
-		    "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
+		    "-a", 'org.openafs.filesystems.afs@' . $kaddress,
 		    "-n", $kext );
 	} else {
 	    if ($option_verbose) {
-		print "$kextprog -c -e -r $temp_dir -k $kernel -s $temp_dir -arch $kextarch -a org.openafs.filesystems.afs\@${kernel_address} -n $kext\n";
+		if ($sysextpath) {
+		    print "$kextprog -c -e -r $sysextpath -r $temp_dir -k $kernel -s $temp_dir -arch $kextarch -a org.openafs.filesystems.afs\@${kaddress} -n $kext\n";
+		} else {
+		    print "$kextprog -c -e -r $temp_dir -k $kernel -s $temp_dir -arch $kextarch -a org.openafs.filesystems.afs\@${kaddress} -n $kext\n";
+		}
 	    }
-	    system( $kextprog,
-		    "-c", "-e",
-		    "-r", $temp_dir,
-		    "-k", $kernel,
-		    "-s", $temp_dir,
-		    "-arch", $kextarch,
-		    "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
-		    "-n", $kext );
+	    if ($sysextpath) {
+		system( $kextprog,
+			"-c", "-e",
+			"-r", $temp_dir,
+			"-k", $kernel,
+			"-s", $temp_dir,
+			"-arch", $kextarch,
+			"-a", 'org.openafs.filesystems.afs@' . $kaddress,
+			"-n", $kext );
+	    } else {
+		system( $kextprog,
+			"-c", "-e",
+			"-r", $temp_dir,
+			"-r", $sysextpath,
+			"-k", $kernel,
+			"-s", $temp_dir,
+			"-arch", $kextarch,
+			"-a", 'org.openafs.filesystems.afs@' . $kaddress,
+			"-n", $kext );
+	    }
 	}
     }    
     if ( $CHILD_ERROR ) {
@@ -400,6 +431,7 @@ sub write_gdb_input_file {
     my $write_dir     = shift;
     my $filename      = shift;
     my $backtrace_ref = shift;
+    my $kernel_shift = shift;
     
     my @symbol_files = ( $write_dir . "/org.openafs.filesystems.afs.sym" );
         
@@ -417,7 +449,8 @@ sub write_gdb_input_file {
     print $fh "set print asm-demangle on\n";
 
     for my $address ( @{ $backtrace_ref } ) {
-        print $fh "x/i $address\n";
+	my $kaddress = sprintf("0x%x", hex($address) - hex($kernel_shift));
+	print $fh "x/i $kaddress\n";
     }
 
    $fh->close()
