@@ -2464,7 +2464,8 @@ AFSDeleteDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                       DirEntry->ObjectInformation,
                       lCount);
 
-        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED))
+        if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_ENTRY_DELETED) &&
+            DirEntry->ObjectInformation->Links == 0)
         {
 
             SetFlag( DirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_DELETED);

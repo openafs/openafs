@@ -314,7 +314,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 if( BooleanFlagOn( pDirCB->Flags, AFS_DIR_ENTRY_DELETED))
                 {
 
-                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                        pObjectInfo->Links == 0)
                     {
 
                         //

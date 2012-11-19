@@ -1139,16 +1139,6 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
             pObjectInfoCB->EaSize = DirEnumEntry->EaSize;
 
             //
-            // Object specific information
-            //
-
-            pObjectInfoCB->Links = DirEnumEntry->Links;
-
-            pObjectInfoCB->Expiration = DirEnumEntry->Expiration;
-
-            pObjectInfoCB->DataVersion = DirEnumEntry->DataVersion;
-
-            //
             // Check for the case where we have a filetype of SymLink but both the TargetFid and the
             // TargetName are empty. In this case set the filetype to zero so we evaluate it later in
             // the code
@@ -1173,6 +1163,16 @@ AFSInitDirEntry( IN AFSObjectInfoCB *ParentObjectInfo,
                 SetFlag( pObjectInfoCB->Flags, AFS_OBJECT_FLAGS_NOT_EVALUATED);
             }
         }
+
+        //
+        // Object specific information
+        //
+
+        pObjectInfoCB->Links = DirEnumEntry->Links;
+
+        pObjectInfoCB->Expiration = DirEnumEntry->Expiration;
+
+        pObjectInfoCB->DataVersion = DirEnumEntry->DataVersion;
 
 try_exit:
 
@@ -1657,6 +1657,8 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
             //
             // Mark this node as invalid
             //
+
+            (*ppObjectInfo)->Links = 0;
 
             SetFlag( (*ppObjectInfo)->Flags, AFS_OBJECT_FLAGS_DELETED);
 
@@ -8959,6 +8961,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                     AFSAcquireExcl( &ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsResource,
                                     TRUE);
+
+                    ObjectInfo->Links = 0;
 
                     ObjectInfo->Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_FILE_DELETED;
 
