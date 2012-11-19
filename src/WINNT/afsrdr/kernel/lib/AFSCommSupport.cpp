@@ -2168,6 +2168,9 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
         if ( ParentObjectInfo != TargetParentObjectInfo)
         {
 
+            AFSAcquireExcl( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            TRUE);
+
             if ( TargetParentObjectInfo->DataVersion.QuadPart == pRenameResultCB->TargetParentDataVersion.QuadPart - 1)
             {
 
@@ -2241,6 +2244,12 @@ AFSNotifyRename( IN AFSObjectInfoCB *ObjectInfo,
             DirectoryCB->NameInformation.ShortNameLength = 0;
 
             DirectoryCB->Type.Data.ShortNameTreeEntry.HashIndex = 0;
+        }
+
+        if ( ParentObjectInfo != TargetParentObjectInfo)
+        {
+
+            AFSReleaseResource( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
         }
 
         AFSReleaseResource( ParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
