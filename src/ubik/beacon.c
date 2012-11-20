@@ -497,6 +497,22 @@ ubeacon_Interact(void *dummy)
 		UBIK_BEACON_LOCK;
 		ts->lastBeaconSent = temp;
 		code = multi_error;
+
+		if (code > 0 && ((code < temp && code < temp - 3600) ||
+		                 (code > temp && code > temp + 3600))) {
+		    /* if we reached here, supposedly the remote host voted
+		     * for us based on a computation from over an hour ago in
+		     * the past, or over an hour in the future. this is
+		     * unlikely; what actually probably happened is that the
+		     * call generated some error and was aborted. this can
+		     * happen due to errors with the rx security class in play
+		     * (rxkad, rxgk, etc). treat the host as if we got a
+		     * timeout, since this is not a valid vote. */
+		    ubik_print("assuming distant vote time %d from %s is an error; marking host down\n",
+		               (int)code, afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    code = -1;
+		}
+
 		/* note that the vote time (the return code) represents the time
 		 * the vote was computed, *not* the time the vote expires.  We compute
 		 * the latter down below if we got enough votes to go with */
