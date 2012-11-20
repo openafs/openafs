@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2012, Sine Nomine Associates
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+
+=head1 NAME
+
+readsysvmq - example program to read the sysvmq audit log
+
+=head1 SYNOPSIS
+
+B<readsysvmq> I<path>
+
+=head1 DESCRIPTION
+
+This is an example script to read the OpenAFS fileserver System V message queue
+(sysvmq) based audit log. The OpenAFS fileserver writed to the sysv message
+queue audit log when it is started with the C<-audit-interface sysvmq> option
+in conjuntion with the C<-auditlog> option.
+
+=head1 OPTIONS
+
+=over 8
+
+=item I<path>
+
+The path of the sysvmq audit log. This should match the path given in the
+fileserver C<-auditlog> command line option.
+
+=back
+
+=head1 SEE ALSO
+
+fileserver
+
+=head1 COPYRIGHT
+
+Copyright (c) 2012, Sine Nomine Associates
+
+=cut
+
+
+use strict;
+use warnings;
+use IPC::SysV qw(S_IRUSR ftok);
+
+if (scalar @ARGV != 1) {
+    print("usage: $0 <auditlog-path>\n");
+    exit(1);
+}
+
+my $path = $ARGV[0];
+
+my $mqkey = ftok($path, 1);
+unless (defined $mqkey) {
+    die "$path does not exist\n";
+}
+
+my $mqid = msgget($mqkey, S_IRUSR);
+unless (defined $mqid) {
+    die "message queue $mqkey ($path) cannot be opened\n";
+}
+
+my $msgsize = 2048;
+my ($msg, $msgtype, $msgtext);
+while (1) {
+    if (msgrcv($mqid, $msg, $msgsize, 0, 0)) {
+        ($msgtype, $msgtext) = unpack("i! a*", $msg);
+        print $msgtext, "\n";
+    }
+}
+
