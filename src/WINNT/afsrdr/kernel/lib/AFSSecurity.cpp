@@ -82,16 +82,52 @@ AFSQuerySecurity( IN PDEVICE_OBJECT LibDeviceObject,
     PMDL pUserBufferMdl = NULL;
     void *pLockedUserBuffer = NULL;
     ULONG ulSDLength = 0;
+    SECURITY_INFORMATION SecurityInformation;
+    PFILE_OBJECT pFileObject;
+    AFSFcb *pFcb = NULL;
+    AFSCcb *pCcb = NULL;
 
     __try
     {
 
         pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
+        SecurityInformation = pIrpSp->Parameters.QuerySecurity.SecurityInformation;
+
+        pFileObject = pIrpSp->FileObject;
+
+        pFcb = (AFSFcb *)pFileObject->FsContext;
+
+        pCcb = (AFSCcb *)pFileObject->FsContext2;
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQuerySecurity Entry for FO %08lX\n",
-                      pIrpSp->FileObject);
+                      "AFSQuerySecurity (%08lX) Entry for FO %08lX SI %08lX\n",
+                      Irp,
+                      pFileObject,
+                      SecurityInformation);
+
+        if( pFcb == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQuerySecurity Attempted access (%08lX) when pFcb == NULL\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
+        }
+
+        if ( SecurityInformation & SACL_SECURITY_INFORMATION)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQuerySecurity Attempted access (%08lX) SACL\n",
+                          Irp);
+
+            try_return( ntStatus = STATUS_ACCESS_DENIED);
+        }
 
         if( AFSDefaultSD == NULL)
         {
