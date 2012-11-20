@@ -512,6 +512,12 @@ ubeacon_Interact(void *dummy)
 		               (int)code, afs_inet_ntoa_r(ts->addr[0], hoststr));
 		    code = -1;
 		}
+		if (code > 0 && rx_ConnError(connections[multi_i])) {
+		    ubik_print("assuming vote from %s is invalid due to conn error %d; marking host down\n",
+		               afs_inet_ntoa_r(ts->addr[0], hoststr),
+		               (int)rx_ConnError(connections[multi_i]));
+		    code = -1;
+		}
 
 		/* note that the vote time (the return code) represents the time
 		 * the vote was computed, *not* the time the vote expires.  We compute
