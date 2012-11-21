@@ -124,6 +124,11 @@ opr_queue_IsOnQueue(struct opr_queue *q) {
 
 static_inline int
 opr_queue_IsEnd(struct opr_queue *q, struct opr_queue *cursor) {
+    return (cursor == q);
+}
+
+static_inline int
+opr_queue_IsLast(struct opr_queue *q, struct opr_queue *cursor) {
     return (cursor->next == q);
 }
 

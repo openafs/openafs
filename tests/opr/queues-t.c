@@ -57,7 +57,7 @@ main(void)
 {
     struct opr_queue q1, q2, q3, q4, *cursor;
 
-    plan(17);
+    plan(20);
 
     opr_queue_Init(&q1);
     opr_queue_Init(&q2);
@@ -135,6 +135,14 @@ main(void)
     opr_queue_Swap(&q3, &q4);
     is_string("ABC", queueAsString(&q3), "Swap Q3");
     is_string("123", queueAsString(&q4), "Swap Q4");
+
+    /* IsEnd and IsLast handling */
+    ok(opr_queue_IsLast(&q1, &(opr_queue_Last(&q1, struct charqueue, entry)->entry)),
+       "IsLast is true for last element of a list");
+    ok(opr_queue_IsEnd(&q1,
+		       opr_queue_Last(&q1, struct charqueue, entry)->entry.next),
+       "IsEnd is true for entry after last element");
+    ok(opr_queue_IsEnd(&q1, &q1), "IsEnd is true for queue head");
 
     return 0;
 }
