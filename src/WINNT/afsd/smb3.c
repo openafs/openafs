@@ -4066,24 +4066,38 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* now we have the status in the cache entry, and everything is locked.
      * Marshall the output data.
      */
+
     if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
-        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        if (fidp->flags & SMB_FID_IOCTL) {
+            cm_LargeSearchTimeFromUnixTime(&ft, 0);
+            attributes = SMB_ATTR_SYSTEM | SMB_ATTR_HIDDEN;
+        } else {
+            cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+            attributes = smb_ExtAttributes(scp);
+        }
         qfi.u.QFbasicInfo.creationTime = ft;
         qfi.u.QFbasicInfo.lastAccessTime = ft;
         qfi.u.QFbasicInfo.lastWriteTime = ft;
         qfi.u.QFbasicInfo.lastChangeTime = ft;
-        attributes = smb_ExtAttributes(scp);
         qfi.u.QFbasicInfo.attributes = attributes;
     }
     else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
-	qfi.u.QFstandardInfo.allocationSize = scp->length;
-	qfi.u.QFstandardInfo.endOfFile = scp->length;
-        qfi.u.QFstandardInfo.numberOfLinks = scp->linkCount;
-        qfi.u.QFstandardInfo.deletePending = (delonclose ? 1 : 0);
-        qfi.u.QFstandardInfo.directory =
-	    ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
-	      scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
-	      scp->fileType == CM_SCACHETYPE_INVALID)? 1 : 0);
+        if (fidp->flags & SMB_FID_IOCTL) {
+            qfi.u.QFstandardInfo.allocationSize.QuadPart = 0;
+            qfi.u.QFstandardInfo.endOfFile.QuadPart = 0;
+            qfi.u.QFstandardInfo.numberOfLinks = 1;
+            qfi.u.QFstandardInfo.deletePending = 0;
+            qfi.u.QFstandardInfo.directory = 0;
+        } else {
+            qfi.u.QFstandardInfo.allocationSize = scp->length;
+            qfi.u.QFstandardInfo.endOfFile = scp->length;
+            qfi.u.QFstandardInfo.numberOfLinks = scp->linkCount;
+            qfi.u.QFstandardInfo.deletePending = (delonclose ? 1 : 0);
+            qfi.u.QFstandardInfo.directory =
+                ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+                   scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+                   scp->fileType == CM_SCACHETYPE_INVALID)? 1 : 0);
+        }
     }
     else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
         qfi.u.QFeaInfo.eaSize = 0;
@@ -4116,8 +4130,15 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         } else {
             /* For now we have no alternate streams */
             qfi.u.QFfileStreamInfo.nextEntryOffset = 0;
-            qfi.u.QFfileStreamInfo.streamSize = scp->length;
-            qfi.u.QFfileStreamInfo.streamAllocationSize = scp->length;
+
+            if (fidp->flags & SMB_FID_IOCTL) {
+                qfi.u.QFfileStreamInfo.streamSize.QuadPart = 0;
+                qfi.u.QFfileStreamInfo.streamAllocationSize.QuadPart = 0;
+            } else {
+                qfi.u.QFfileStreamInfo.streamSize = scp->length;
+                qfi.u.QFfileStreamInfo.streamAllocationSize = scp->length;
+            }
+
             smb_UnparseString(opx, qfi.u.QFfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
             qfi.u.QFfileStreamInfo.streamNameLength = len;
             responseSize -= (sizeof(qfi.u.QFfileStreamInfo.fileName) - len);
