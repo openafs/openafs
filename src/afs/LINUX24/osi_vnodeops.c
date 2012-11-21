@@ -2083,6 +2083,8 @@ afs_linux_dir_follow_link(struct dentry *dentry, struct nameidata *nd)
 	*dpp = dget(dentry);
     }
 
+    nd->last_type = LAST_BIND;
+
     return 0;
 }
 
