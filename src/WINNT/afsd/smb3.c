@@ -3403,7 +3403,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      * If the query is regarding the special _._AFS_IOCTL_._ file
      * a reply must be sent even though the file doesn't exist.
      */
-    if (cm_ClientStrCmpI(pathp, CM_IOCTL_FILENAME_NOSLASH_W) == 0)
+    if (cm_ClientStrCmpI(pathp, CM_IOCTL_FILENAME_W) == 0)
     {
         /* for info level 108, figure out short name */
         if (infoLevel == SMB_QUERY_FILE_ALT_NAME_INFO) {
