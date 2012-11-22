@@ -1199,7 +1199,8 @@ AFSUpdateMetaData( IN AFSDirectoryCB *DirEntry,
 NTSTATUS
 AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                   IN GUID *AuthGroup,
-                  IN BOOLEAN FastCall);
+                  IN BOOLEAN FastCall,
+                  IN BOOLEAN SafeToPurge);
 
 AFSDirectoryCB *
 AFSGetSpecialShareNameEntry( IN UNICODE_STRING *ShareName,

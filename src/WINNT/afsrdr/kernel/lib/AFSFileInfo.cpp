@@ -65,6 +65,7 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
     BOOLEAN bReleaseMain = FALSE;
     LONG lLength;
     FILE_INFORMATION_CLASS stFileInformationClass;
+    GUID stAuthGroup;
     PVOID pBuffer;
 
     __try
@@ -92,6 +93,16 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         lLength = (LONG)pIrpSp->Parameters.QueryFile.Length;
         stFileInformationClass = pIrpSp->Parameters.QueryFile.FileInformationClass;
         pBuffer = Irp->AssociatedIrp.SystemBuffer;
+
+        RtlZeroMemory( &stAuthGroup,
+                       sizeof( GUID));
+
+        AFSRetrieveAuthGroupFnc( (ULONGLONG)PsGetCurrentProcessId(),
+                                 (ULONGLONG)PsGetCurrentThreadId(),
+                                  &stAuthGroup);
+
+        AFSVerifyEntry( &stAuthGroup,
+                        pCcb->DirectoryCB);
 
         //
         // Grab the main shared right off the bat

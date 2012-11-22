@@ -1753,21 +1753,26 @@ AFSInvalidateObject( IN OUT AFSObjectInfoCB **ppObjectInfo,
                         ntStatus = stIoStatus.Status;
                     }
 
-                    if ( !CcPurgeCacheSection( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectPointers,
-                                               NULL,
-                                               0,
-                                               FALSE))
+
+                    if ( (*ppObjectInfo)->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                      AFS_TRACE_LEVEL_WARNING,
-                                      "AFSInvalidateObject CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                      (*ppObjectInfo)->FileId.Cell,
-                                      (*ppObjectInfo)->FileId.Volume,
-                                      (*ppObjectInfo)->FileId.Vnode,
-                                      (*ppObjectInfo)->FileId.Unique);
+                        if ( !CcPurgeCacheSection( &(*ppObjectInfo)->Fcb->NPFcb->SectionObjectPointers,
+                                                   NULL,
+                                                   0,
+                                                   FALSE))
+                        {
 
-                        SetFlag( (*ppObjectInfo)->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                          AFS_TRACE_LEVEL_WARNING,
+                                          "AFSInvalidateObject CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                          (*ppObjectInfo)->FileId.Cell,
+                                          (*ppObjectInfo)->FileId.Volume,
+                                          (*ppObjectInfo)->FileId.Vnode,
+                                          (*ppObjectInfo)->FileId.Unique);
+
+                            SetFlag( (*ppObjectInfo)->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                        }
                     }
                 }
                 __except( EXCEPTION_EXECUTE_HANDLER)
@@ -2881,7 +2886,8 @@ AFSVerifyEntry( IN GUID *AuthGroup,
                             ntStatus = stIoStatus.Status;
                         }
 
-                        if ( bPurgeExtents)
+                        if ( bPurgeExtents &&
+                             pObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                         {
 
                             if ( !CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
@@ -3788,7 +3794,8 @@ try_exit:
 NTSTATUS
 AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                   IN GUID *AuthGroup,
-                  IN BOOLEAN FastCall)
+                  IN BOOLEAN FastCall,
+                  IN BOOLEAN bSafeToPurge)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -3946,6 +3953,8 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
             case AFS_FILE_TYPE_FILE:
             {
 
+                BOOLEAN bPurgeExtents = FALSE;
+
                 //
                 // For a file where the data version has become invalid we need to
                 // fail any current extent requests and purge the cache for the file
@@ -3978,7 +3987,6 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                     {
 
                         IO_STATUS_BLOCK stIoStatus;
-                        BOOLEAN bPurgeExtents = FALSE;
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
@@ -4007,91 +4015,107 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                             bPurgeExtents = TRUE;
                         }
 
-                        if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
-                        {
-                            bPurgeExtents = TRUE;
-
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSVerifyEntry Clearing VERIFY_DATA flag %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                          &DirEntry->NameInformation.FileName,
-                                          pObjectInfo->FileId.Cell,
-                                          pObjectInfo->FileId.Volume,
-                                          pObjectInfo->FileId.Vnode,
-                                          pObjectInfo->FileId.Unique);
-
-                            ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
-                        }
-
-                        __try
+                        if ( bSafeToPurge)
                         {
 
-                            CcFlushCache( &pCurrentFcb->NPFcb->SectionObjectPointers,
-                                          NULL,
-                                          0,
-                                          &stIoStatus);
+                            if ( BooleanFlagOn( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA))
+                            {
+                                bPurgeExtents = TRUE;
 
-                            if( !NT_SUCCESS( stIoStatus.Status))
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSVerifyEntry Clearing VERIFY_DATA flag %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                              &DirEntry->NameInformation.FileName,
+                                              pObjectInfo->FileId.Cell,
+                                              pObjectInfo->FileId.Volume,
+                                              pObjectInfo->FileId.Vnode,
+                                              pObjectInfo->FileId.Unique);
+
+                                ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
+                            }
+
+                            __try
                             {
 
-                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                              AFS_TRACE_LEVEL_ERROR,
-                                              "AFSValidateEntry CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                CcFlushCache( &pCurrentFcb->NPFcb->SectionObjectPointers,
+                                              NULL,
+                                              0,
+                                              &stIoStatus);
+
+                                if( !NT_SUCCESS( stIoStatus.Status))
+                                {
+
+                                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                  AFS_TRACE_LEVEL_ERROR,
+                                                  "AFSValidateEntry CcFlushCache failure %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX Bytes 0x%08lX\n",
+                                                  &DirEntry->NameInformation.FileName,
+                                                  pObjectInfo->FileId.Cell,
+                                                  pObjectInfo->FileId.Volume,
+                                                  pObjectInfo->FileId.Vnode,
+                                                  pObjectInfo->FileId.Unique,
+                                                  stIoStatus.Status,
+                                                  stIoStatus.Information);
+
+                                    ntStatus = stIoStatus.Status;
+                                }
+
+                                if ( bPurgeExtents &&
+                                     pObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
+                                {
+
+                                    if ( !CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                                               NULL,
+                                                               0,
+                                                               FALSE))
+                                    {
+
+                                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                                      AFS_TRACE_LEVEL_WARNING,
+                                                      "AFSValidateEntry CcPurgeCacheSection failure %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                                      &DirEntry->NameInformation.FileName,
+                                                      pObjectInfo->FileId.Cell,
+                                                      pObjectInfo->FileId.Volume,
+                                                      pObjectInfo->FileId.Vnode,
+                                                      pObjectInfo->FileId.Unique);
+
+                                        SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                                    }
+                                }
+                            }
+                            __except( EXCEPTION_EXECUTE_HANDLER)
+                            {
+                                ntStatus = GetExceptionCode();
+
+                                AFSDbgLogMsg( 0,
+                                              0,
+                                              "EXCEPTION - AFSValidateEntry CcFlushCache or CcPurgeCacheSection %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
                                               &DirEntry->NameInformation.FileName,
                                               pObjectInfo->FileId.Cell,
                                               pObjectInfo->FileId.Volume,
                                               pObjectInfo->FileId.Vnode,
                                               pObjectInfo->FileId.Unique,
-                                              stIoStatus.Status,
-                                              stIoStatus.Information);
+                                              ntStatus);
 
-                                ntStatus = stIoStatus.Status;
+                                SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                             }
+                        }
+                        else
+                        {
 
                             if ( bPurgeExtents)
                             {
 
-                                if ( !CcPurgeCacheSection( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers,
-                                                           NULL,
-                                                           0,
-                                                           FALSE))
-                                {
-
-                                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                                  AFS_TRACE_LEVEL_WARNING,
-                                                  "AFSValidateEntry CcPurgeCacheSection failure %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                                  &DirEntry->NameInformation.FileName,
-                                                  pObjectInfo->FileId.Cell,
-                                                  pObjectInfo->FileId.Volume,
-                                                  pObjectInfo->FileId.Vnode,
-                                                  pObjectInfo->FileId.Unique);
-
-                                    SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                                }
+                                SetFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY_DATA);
                             }
                         }
-                        __except( EXCEPTION_EXECUTE_HANDLER)
-                        {
-                            ntStatus = GetExceptionCode();
 
-                            AFSDbgLogMsg( 0,
-                                          0,
-                                          "EXCEPTION - AFSValidateEntry CcFlushCache or CcPurgeCacheSection %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
-                                          &DirEntry->NameInformation.FileName,
-                                          pObjectInfo->FileId.Cell,
-                                          pObjectInfo->FileId.Volume,
-                                          pObjectInfo->FileId.Vnode,
-                                          pObjectInfo->FileId.Unique,
-                                          ntStatus);
-
-                            SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
-                        }
 
                         AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
 
                         bReleaseFcb = FALSE;
 
-                        if ( bPurgeExtents)
+                        if ( bPurgeExtents &&
+                             bSafeToPurge)
                         {
                             AFSFlushExtents( pCurrentFcb,
                                              AuthGroup);
@@ -4100,46 +4124,55 @@ AFSValidateEntry( IN AFSDirectoryCB *DirEntry,
                 }
 
                 //
-                // Update the metadata for the entry
+                // Update the metadata for the entry but only if it is safe to do so.
+                // If it was determined that a data version change has occurred or
+                // that a pending data verification was required, do not update the
+                // ObjectInfo meta data or the FileObject size information.  That
+                // way it is consistent for the next time that the data is verified
+                // or validated.
                 //
 
-                ntStatus = AFSUpdateMetaData( DirEntry,
-                                              pDirEnumEntry);
-
-                if( !NT_SUCCESS( ntStatus))
+                if ( !(bPurgeExtents && bSafeToPurge))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSValidateEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
-                                  &DirEntry->NameInformation.FileName,
-                                  pObjectInfo->FileId.Cell,
-                                  pObjectInfo->FileId.Volume,
-                                  pObjectInfo->FileId.Vnode,
-                                  pObjectInfo->FileId.Unique,
-                                  ntStatus);
+                    ntStatus = AFSUpdateMetaData( DirEntry,
+                                                  pDirEnumEntry);
 
-                    break;
-                }
-
-                ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY | AFS_OBJECT_FLAGS_NOT_EVALUATED);
-
-                //
-                // Update file sizes
-                //
-
-                if( pObjectInfo->Fcb != NULL)
-                {
-                    FILE_OBJECT *pCCFileObject = CcGetFileObjectFromSectionPtrs( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers);
-
-                    pObjectInfo->Fcb->Header.AllocationSize.QuadPart  = pObjectInfo->AllocationSize.QuadPart;
-                    pObjectInfo->Fcb->Header.FileSize.QuadPart        = pObjectInfo->EndOfFile.QuadPart;
-                    pObjectInfo->Fcb->Header.ValidDataLength.QuadPart = pObjectInfo->EndOfFile.QuadPart;
-
-                    if ( pCCFileObject != NULL)
+                    if( !NT_SUCCESS( ntStatus))
                     {
-                        CcSetFileSizes( pCCFileObject,
-                                        (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSValidateEntry Meta Data Update failed %wZ FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+                                      &DirEntry->NameInformation.FileName,
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique,
+                                      ntStatus);
+
+                        break;
+                    }
+
+                    ClearFlag( pObjectInfo->Flags, AFS_OBJECT_FLAGS_VERIFY | AFS_OBJECT_FLAGS_NOT_EVALUATED);
+
+                    //
+                    // Update file sizes
+                    //
+
+                    if( pObjectInfo->Fcb != NULL)
+                    {
+                        FILE_OBJECT *pCCFileObject = CcGetFileObjectFromSectionPtrs( &pObjectInfo->Fcb->NPFcb->SectionObjectPointers);
+
+                        pObjectInfo->Fcb->Header.AllocationSize.QuadPart  = pObjectInfo->AllocationSize.QuadPart;
+                        pObjectInfo->Fcb->Header.FileSize.QuadPart        = pObjectInfo->EndOfFile.QuadPart;
+                        pObjectInfo->Fcb->Header.ValidDataLength.QuadPart = pObjectInfo->EndOfFile.QuadPart;
+
+                        if ( pCCFileObject != NULL)
+                        {
+                            CcSetFileSizes( pCCFileObject,
+                                            (PCC_FILE_SIZES)&pObjectInfo->Fcb->Header.AllocationSize);
+                        }
                     }
                 }
                 break;
@@ -7010,21 +7043,25 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                             ntStatus = stIoStatus.Status;
                         }
 
-                        if ( !CcPurgeCacheSection( &Fcb->NPFcb->SectionObjectPointers,
-                                                   NULL,
-                                                   0,
-                                                   FALSE))
+                        if (  Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                          AFS_TRACE_LEVEL_WARNING,
-                                          "AFSCleanupFcb CcPurgeCacheSection [1] failure FID %08lX-%08lX-%08lX-%08lX\n",
-                                          Fcb->ObjectInformation->FileId.Cell,
-                                          Fcb->ObjectInformation->FileId.Volume,
-                                          Fcb->ObjectInformation->FileId.Vnode,
-                                          Fcb->ObjectInformation->FileId.Unique);
+                            if ( !CcPurgeCacheSection( &Fcb->NPFcb->SectionObjectPointers,
+                                                       NULL,
+                                                       0,
+                                                       FALSE))
+                            {
 
-                            SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                              AFS_TRACE_LEVEL_WARNING,
+                                              "AFSCleanupFcb CcPurgeCacheSection [1] failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                              Fcb->ObjectInformation->FileId.Cell,
+                                              Fcb->ObjectInformation->FileId.Volume,
+                                              Fcb->ObjectInformation->FileId.Vnode,
+                                              Fcb->ObjectInformation->FileId.Unique);
+
+                                SetFlag( Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                            }
                         }
                     }
                     __except( EXCEPTION_EXECUTE_HANDLER)
@@ -7152,7 +7189,8 @@ AFSCleanupFcb( IN AFSFcb *Fcb,
                         ntStatus = stIoStatus.Status;
                     }
 
-                    if( ForceFlush)
+                    if( ForceFlush &&
+                        Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
                     {
 
                         if ( !CcPurgeCacheSection( &Fcb->NPFcb->SectionObjectPointers,
@@ -9063,7 +9101,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                     bExtentsLocked = FALSE;
 
-                                    if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                    if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
+                                        !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
                                                               NULL,
                                                               0,
                                                               FALSE))
@@ -9143,7 +9182,8 @@ AFSPerformObjectInvalidate( IN AFSObjectInfoCB *ObjectInfo,
 
                                             ulSize = ByteRangeList[ulIndex].Length.QuadPart > DWORD_MAX ? DWORD_MAX : ByteRangeList[ulIndex].Length.LowPart;
 
-                                            if( !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
+                                            if( ObjectInfo->Fcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL &&
+                                                !CcPurgeCacheSection( &ObjectInfo->Fcb->NPFcb->SectionObjectPointers,
                                                                       &ByteRangeList[ulIndex].FileOffset,
                                                                       ulSize,
                                                                       FALSE))
