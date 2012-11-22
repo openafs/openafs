@@ -30,7 +30,7 @@ extern struct rxevent *rxevent_Post(struct clock *when, struct clock *now,
 /* Remove the indicated event from the event queue.  The event must be
  * pending.  Note that a currently executing event may not cancel itself.
  */
-extern void rxevent_Cancel(struct rxevent **);
+extern int rxevent_Cancel(struct rxevent **);
 
 /* The actions specified for each event that has reached the current clock
  * time will be taken.  The current time returned by GetTime is used

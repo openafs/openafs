@@ -313,13 +313,21 @@ resetFirst(struct rxevent *ev)
 	eventTree.first = NULL;
 }
 
-void
+/*!
+ * Cancel an event
+ *
+ * Cancels the event pointed to by evp. Returns true if the event has
+ * been succesfully cancelled, or false if the event has already fired.
+ */
+
+int
 rxevent_Cancel(struct rxevent **evp)
 {
     struct rxevent *event;
+    int cancelled = 0;
 
     if (!evp || !*evp)
-	return;
+	return 0;
 
     event = *evp;
 
@@ -362,12 +370,15 @@ rxevent_Cancel(struct rxevent **evp)
 	}
 	event->handled = 1;
 	rxevent_put(event); /* Dispose of eventTree reference */
+	cancelled = 1;
     }
 
     MUTEX_EXIT(&eventTree.lock);
 
     *evp = NULL;
     rxevent_put(event); /* Dispose of caller's reference */
+
+    return cancelled;
 }
 
 /* Process all events which have expired. If events remain, then the relative
