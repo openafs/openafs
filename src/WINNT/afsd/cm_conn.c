@@ -314,12 +314,12 @@ cm_Analyze(cm_conn_t *connp,
     cm_volume_t * volp = NULL;
     cm_vol_state_t *statep = NULL;
     cm_scache_t * scp = NULL;
-    afs_uint32 replicated;
+    afs_uint32 replicated = 0;
     int retry = 0;
     int free_svr_list = 0;
-    int dead_session;
+    int dead_session = (userp->cellInfop == NULL);
     long timeUsed, timeLeft;
-    long code;
+    long code = 0;
     char addr[16]="unknown";
     int forcing_new = 0;
     int location_updated = 0;
@@ -332,7 +332,6 @@ cm_Analyze(cm_conn_t *connp,
 
     /* no locking required, since connp->serverp never changes after
      * creation */
-    dead_session = (userp->cellInfop == NULL);
     if (connp)
         serverp = connp->serverp;
 
@@ -1132,9 +1131,10 @@ cm_Analyze(cm_conn_t *connp,
                 forcing_new = 1;
                 cm_ForceNewConnections(serverp);
             }
+
+            if ( timeLeft > 2 )
+                retry = 1;
         }
-        if ( timeLeft > 2 )
-            retry = 1;
     }
     else if (errorCode == RXKADEXPIRED) {
         osi_Log1(afsd_logp, "cm_Analyze: rxkad error code 0x%x (RXKADEXPIRED)",
@@ -1320,10 +1320,9 @@ cm_Analyze(cm_conn_t *connp,
     }
 
     /* If not allowed to retry, don't */
-    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY) &&
-        (errorCode != RX_MSGSIZE && errorCode != RX_CALL_BUSY))
-	retry = 0;
-    else if (retry && dead_session)
+    if (dead_session ||
+        !forcing_new && (reqp->flags & CM_REQ_NORETRY) &&
+        !(errorCode > -64 && errorCode <= RX_INVALID_OPERATION))
         retry = 0;
 
     /* drop this on the way out */

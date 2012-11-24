@@ -3142,6 +3142,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp, afs_uint32 redir)
     else if (code == CM_ERROR_INVAL) {
         NTStatus = 0xC000000DL;	/* Invalid parameter */
     }
+    else if (code == CM_ERROR_INVAL_NET_RESP) {
+        NTStatus = 0xC00000C3L; /* Invalid network response */
+    }
     else if (code == CM_ERROR_BADFD) {
         NTStatus = 0xC0000008L;	/* Invalid handle */
     }

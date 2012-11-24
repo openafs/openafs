@@ -219,6 +219,8 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_RETRY;
     else if (error == RX_CALL_IDLE)
         error = EIO;
+    else if (error == RX_INVALID_OPERATION)
+        error = CM_ERROR_INVAL_NET_RESP;
     else if (error < 0)
         error = CM_ERROR_UNKNOWN;
     else if (error == EINVAL)
@@ -292,6 +294,8 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
         error = CM_ERROR_ALLOFFLINE;
     else if (error == VBUSY || error == VRESTARTING)
         error = CM_ERROR_ALLBUSY;
+    else if (error == RX_INVALID_OPERATION)
+        error = CM_ERROR_INVAL_NET_RESP;
     else if (error < 0)
         error = CM_ERROR_UNKNOWN;
     else if (error == EROFS)
@@ -337,6 +341,8 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
         error == RX_MSGSIZE ||
         error == VNOSERVICE)
         error = CM_ERROR_RETRY;
+    else if (error == RX_INVALID_OPERATION)
+        error = CM_ERROR_INVAL_NET_RESP;
     else if (error == RX_RESTARTING)
         error = CM_ERROR_ALLBUSY;
     else if (error < 0)

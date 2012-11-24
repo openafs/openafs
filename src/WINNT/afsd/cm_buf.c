@@ -871,7 +871,8 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 	 */
 	if (code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BADFD || code == CM_ERROR_NOACCESS ||
             code == CM_ERROR_QUOTA || code == CM_ERROR_SPACE || code == CM_ERROR_TOOBIG ||
-            code == CM_ERROR_READONLY || code == CM_ERROR_NOSUCHPATH || code == EIO){
+            code == CM_ERROR_READONLY || code == CM_ERROR_NOSUCHPATH || code == EIO ||
+            code == CM_ERROR_INVAL || code == CM_ERROR_INVAL_NET_RESP || code == CM_ERROR_UNKNOWN){
 	    _InterlockedAnd(&bp->flags, ~CM_BUF_DIRTY);
 	    _InterlockedOr(&bp->flags, CM_BUF_ERROR);
             bp->dirty_length = 0;
@@ -894,10 +895,14 @@ afs_uint32 buf_CleanLocked(cm_scache_t *scp, cm_buf_t *bp, cm_req_t *reqp,
 	if (reqp->flags & CM_REQ_NORETRY)
 	    break;
 
-        /* Ditto if the hardDeadTimeout or idleTimeout was reached */
+        /*
+         * Ditto if the hardDeadTimeout or idleTimeout was reached
+         * Or a fatal error is received.
+         */
         if (code == CM_ERROR_TIMEDOUT || code == CM_ERROR_ALLDOWN ||
             code == CM_ERROR_ALLBUSY || code == CM_ERROR_ALLOFFLINE ||
-            code == CM_ERROR_CLOCKSKEW) {
+            code == CM_ERROR_CLOCKSKEW || code == CM_ERROR_INVAL_NET_RESP ||
+            code == CM_ERROR_INVAL || code == CM_ERROR_UNKNOWN || code == EIO) {
             break;
         }
     }
@@ -2244,6 +2249,7 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
 
                 switch (code) {
                 case CM_ERROR_NOSUCHFILE:
+                case CM_ERROR_INVAL:
                 case CM_ERROR_BADFD:
                 case CM_ERROR_NOACCESS:
                 case CM_ERROR_QUOTA:
@@ -2252,6 +2258,8 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                 case CM_ERROR_READONLY:
                 case CM_ERROR_NOSUCHPATH:
                 case EIO:
+                case CM_ERROR_INVAL_NET_RESP:
+                case CM_ERROR_UNKNOWN:
                     /*
                      * Apply the previous fatal error to this buffer.
                      * Do not waste the time attempting to store to

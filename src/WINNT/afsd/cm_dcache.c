@@ -1535,6 +1535,8 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
                     case CM_ERROR_READONLY:
                     case CM_ERROR_NOSUCHPATH:
                     case EIO:
+                    case CM_ERROR_INVAL_NET_RESP:
+                    case CM_ERROR_UNKNOWN:
                         /*
                          * Apply the fatal error to this buffer.
                          */
