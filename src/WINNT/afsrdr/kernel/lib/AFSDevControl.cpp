@@ -432,6 +432,11 @@ AFSDevControl( IN PDEVICE_OBJECT LibDeviceObject,
 
         ntStatus = STATUS_UNSUCCESSFUL;
 
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSDevControl %08lX\n",
+                      ulIoControlCode);
+
         AFSDumpTraceFilesFnc();
     }
 
