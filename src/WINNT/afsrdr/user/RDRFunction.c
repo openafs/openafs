@@ -3442,6 +3442,8 @@ RDR_BkgFetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_
             case CM_ERROR_QUOTA:
             case CM_ERROR_LOCK_CONFLICT:
             case EIO:
+            case CM_ERROR_INVAL_NET_RESP:
+            case CM_ERROR_UNKNOWN:
                 /*
                  * these are fatal errors.  deliver what we can
                  * and halt.
@@ -3715,10 +3717,12 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                 buf_Release(bufp);
 
             if (QueueLength) {
+                req.flags &= ~CM_REQ_NORETRY;
                 cm_QueueBKGRequest(scp, RDR_BkgFetch, QueueOffset.LowPart, QueueOffset.HighPart,
                                    QueueLength, 0, userp, &req);
                 osi_Log3(afsd_logp, "RDR_RequestFileExtentsAsync Queued a Background Fetch offset 0x%x:%x length 0x%x",
                          QueueOffset.HighPart, QueueOffset.LowPart, QueueLength);
+                req.flags |= CM_REQ_NORETRY;
             }
         } else {
             /* No error from buf_Get() can be fatal */
@@ -3730,6 +3734,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     if (BeginOffset.QuadPart != EndOffset.QuadPart) {
         afs_uint32 length = (afs_uint32)(EndOffset.QuadPart - BeginOffset.QuadPart);
 
+        req.flags &= ~CM_REQ_NORETRY;
         cm_QueueBKGRequest(scp, RDR_BkgFetch, BeginOffset.LowPart, BeginOffset.HighPart,
                            length, 0, userp, &req);
         osi_Log3(afsd_logp, "RDR_RequestFileExtentsAsync Queued a Background Fetch offset 0x%x:%x length 0x%x",
