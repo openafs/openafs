@@ -2544,6 +2544,14 @@ rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
     theader.securityIndex = source->header.securityIndex;
     theader.cid = htonl(source->header.cid);
 
+    /*
+     * If the abort is being sent in response to a server initiated packet,
+     * set client_initiated in the abort to ensure it is not associated by
+     * the receiver with a connection in the opposite direction.
+     */
+    if ((source->header.flags & RX_CLIENT_INITIATED) != RX_CLIENT_INITIATED)
+        theader.flags |= RX_CLIENT_INITIATED;
+
     error = htonl(error);
 
     iov[0].iov_base = &theader;
