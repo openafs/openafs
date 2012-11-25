@@ -2000,8 +2000,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
             ntStatus = AFSInvalidateVolume( pVolumeCB,
                                             InvalidateCB->Reason);
 
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
             try_return( ntStatus);
         }
 
@@ -2015,14 +2013,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         }
         else
         {
-
-            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSInvalidateCache Decrement count on volume %08lX Cnt %d\n",
-                          pVolumeCB,
-                          pVolumeCB->VolumeReferenceCount);
 
             ullIndex = AFSCreateLowIndex( &InvalidateCB->FileID);
 
@@ -2079,6 +2069,18 @@ try_exit:
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInvalidateCache Decrement count on object %08lX Cnt %d\n",
                           pObjectInfo,
+                          lCount);
+        }
+
+        if ( pVolumeCB != NULL)
+        {
+
+            lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSInvalidateCache Decrement count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
                           lCount);
         }
     }
