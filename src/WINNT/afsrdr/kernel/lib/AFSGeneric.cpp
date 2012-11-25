@@ -6588,6 +6588,19 @@ AFSDeleteObjectInfo( IN AFSObjectInfoCB *ObjectInfo)
     BOOLEAN bAcquiredTreeLock = FALSE;
     LONG lCount;
 
+    if ( BooleanFlagOn( ObjectInfo->Flags, AFS_OBJECT_ROOT_VOLUME))
+    {
+
+        //
+        // AFSDeleteObjectInfo should never be called on the ObjectInformationCB
+        // embedded in the VolumeCB.
+        //
+
+        ASSERT( TRUE);
+
+        return;
+    }
+
     if( !ExIsResourceAcquiredExclusiveLite( ObjectInfo->VolumeCB->ObjectInfoTree.TreeLock))
     {
 
