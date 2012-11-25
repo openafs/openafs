@@ -2788,8 +2788,6 @@ AFSVerifyEntry( IN GUID *AuthGroup,
             case AFS_FILE_TYPE_SYMLINK:
             {
 
-                ASSERT( pDirEnumEntry->TargetNameLength > 0);
-
                 //
                 // Update the metadata for the entry
                 //
@@ -3720,7 +3718,9 @@ AFSUpdateMetaData( IN AFSDirectoryCB *DirEntry,
 
         pObjectInfo->Links = DirEnumEntry->Links;
 
-        if( DirEnumEntry->TargetNameLength > 0)
+        if( DirEnumEntry->TargetNameLength > 0 &&
+            ( DirEntry->NameInformation.TargetName.Length != DirEnumEntry->TargetNameLength ||
+              DirEntry->ObjectInformation->DataVersion.QuadPart != DirEnumEntry->DataVersion.QuadPart))
         {
 
             //
@@ -3762,7 +3762,8 @@ AFSUpdateMetaData( IN AFSDirectoryCB *DirEntry,
 
             AFSReleaseResource( &DirEntry->NonPaged->Lock);
         }
-        else if( DirEntry->NameInformation.TargetName.Length > 0)
+        else if( DirEntry->NameInformation.TargetName.Length > 0 &&
+                 DirEntry->ObjectInformation->DataVersion.QuadPart != DirEnumEntry->DataVersion.QuadPart)
         {
 
             AFSAcquireExcl( &DirEntry->NonPaged->Lock,
