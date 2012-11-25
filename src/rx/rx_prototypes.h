@@ -111,7 +111,8 @@ extern struct rx_connection *rxi_FindConnection(osi_socket socket,
 						u_short serviceId,
 						afs_uint32 cid,
 						afs_uint32 epoch, int type,
-						u_int securityIndex);
+						u_int securityIndex,
+						int *unknownService);
 extern struct rx_packet *rxi_ReceivePacket(struct rx_packet *np,
 					   osi_socket socket, afs_uint32 host,
 					   u_short port, int *tnop,

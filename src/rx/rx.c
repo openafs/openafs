@@ -2910,10 +2910,12 @@ rxi_FindPeer(afs_uint32 host, u_short port,
 struct rx_connection *
 rxi_FindConnection(osi_socket socket, afs_uint32 host,
 		   u_short port, u_short serviceId, afs_uint32 cid,
-		   afs_uint32 epoch, int type, u_int securityIndex)
+		   afs_uint32 epoch, int type, u_int securityIndex,
+		   int *unknownService)
 {
     int hashindex, flag, i;
     struct rx_connection *conn;
+    *unknownService = 0;
     hashindex = CONN_HASH(host, port, cid, epoch, type);
     MUTEX_ENTER(&rx_connHashTable_lock);
     rxLastConn ? (conn = rxLastConn, flag = 0) : (conn =
@@ -2957,6 +2959,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	service = rxi_FindService(socket, serviceId);
 	if (!service || (securityIndex >= service->nSecurityObjects)
 	    || (service->securityObjects[securityIndex] == 0)) {
+	    *unknownService = 1;
 	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    return (struct rx_connection *)0;
 	}
@@ -3114,6 +3117,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     afs_uint32 currentCallNumber;
     int type;
     int skew;
+    int unknownService = 0;
 #ifdef RXDEBUG
     char *packetType;
 #endif
@@ -3169,12 +3173,13 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     conn =
 	rxi_FindConnection(socket, host, port, np->header.serviceId,
 			   np->header.cid, np->header.epoch, type,
-			   np->header.securityIndex);
+			   np->header.securityIndex,
+			   &unknownService);
 
     /* To avoid having 2 connections just abort at each other,
        don't abort an abort. */
     if (!conn) {
-        if (np->header.type != RX_PACKET_TYPE_ABORT)
+        if (unknownService && (np->header.type != RX_PACKET_TYPE_ABORT))
             rxi_SendRawAbort(socket, host, port, RX_INVALID_OPERATION,
                              np, 0);
         return np;
