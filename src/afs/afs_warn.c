@@ -148,7 +148,8 @@ afs_warnuser(char *fmt, ...)
 	/* mariner log the warning */
 	snprintf(buf, sizeof(buf), "warn$");
 	vsnprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), fmt, ap);
-	afs_MarinerLog(buf, NULL);
+	if (afs_mariner)
+	    afs_MarinerLog(buf, NULL);
 	va_end(ap);
 	va_start(ap, fmt);
 	vprintf(fmt, ap);

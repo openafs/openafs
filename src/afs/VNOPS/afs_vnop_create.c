@@ -486,10 +486,12 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	afs_PutVolume(volp, READ_LOCK);
 
     if (code == 0) {
-	afs_AddMarinerName(aname, *avcp);
+	if (afs_mariner)
+	    afs_AddMarinerName(aname, *avcp);
 	/* return the new status in vattr */
 	afs_CopyOutAttrs(*avcp, attrs);
-	afs_MarinerLog("store$Creating", *avcp);
+	if (afs_mariner)
+	    afs_MarinerLog("store$Creating", *avcp);
     }
 
     afs_PutFakeStat(&fakestate);
