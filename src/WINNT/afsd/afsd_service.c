@@ -1387,8 +1387,13 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         cm_VolStatus_Service_Started();
 
         code = RDR_Initialize();
-        RDR_Initialized = !code;
-        afsi_log("RDR_Initialize returned: (code = %d)", code);
+        if ( code == ERROR_SERVICE_DISABLED) {
+            afsi_log("RDR_Initialize failed: 1058 (Unable to load AFSRedirLib.sys)");
+            osi_panic(reason, __FILE__, __LINE__);
+        } else {
+            RDR_Initialized = !code;
+            afsi_log("RDR_Initialize returned: (code = %d)", code);
+        }
 
         if (RDR_Initialized) {
             if (cm_sysNameCount)
