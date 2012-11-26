@@ -332,7 +332,7 @@ AFSEnumerateDirectory( IN GUID *AuthGroup,
                         // Need to tear down this entry and rebuild it below
                         //
 
-                        if( pDirNode->OpenReferenceCount == 0)
+                        if( pDirNode->DirOpenReferenceCount <= 0)
                         {
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1145,7 +1145,7 @@ AFSVerifyDirectoryContent( IN AFSObjectInfoCB *ObjectInfoCB,
                     // Need to tear down this entry and rebuild it below
                     //
 
-                    if( pDirNode->OpenReferenceCount == 0)
+                    if( pDirNode->DirOpenReferenceCount <= 0)
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1523,6 +1523,7 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
     UNICODE_STRING uniTargetName;
     AFSDirectoryCB *pDirNode = NULL;
     ULONG     ulCRC = 0;
+    LONG       lCount;
     LARGE_INTEGER liOldDataVersion;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
 
@@ -1641,14 +1642,16 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                                     &pResultCB->DirEnum.FileId))
                 {
 
-                    InterlockedIncrement( &pDirNode->OpenReferenceCount);
+                    lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSNotifyFileCreate Increment count on %wZ DE %p Cnt %d\n",
                                   &pDirNode->NameInformation.FileName,
                                   pDirNode,
-                                  pDirNode->OpenReferenceCount);
+                                  lCount);
+
+                    ASSERT( lCount >= 0);
 
                     *DirNode = pDirNode;
 
@@ -1678,7 +1681,7 @@ AFSNotifyFileCreate( IN GUID            *AuthGroup,
                                   pResultCB->DirEnum.FileId.Vnode,
                                   pResultCB->DirEnum.FileId.Unique);
 
-                    if( pDirNode->OpenReferenceCount == 0)
+                    if( pDirNode->DirOpenReferenceCount <= 0)
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -2086,6 +2089,7 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
     ULONG     ulCRC = 0;
     BOOLEAN bReleaseParentLock = FALSE, bReleaseTargetParentLock = FALSE;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
+    LONG lCount;
 
     __Enter
     {
@@ -2228,14 +2232,16 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
                                     &pResultCB->DirEnum.FileId))
                 {
 
-                    InterlockedIncrement( &pDirNode->OpenReferenceCount);
+                    lCount = InterlockedIncrement( &pDirNode->DirOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSNotifyHardLink Increment count on %wZ DE %p Cnt %d\n",
                                   &pDirNode->NameInformation.FileName,
                                   pDirNode,
-                                  pDirNode->OpenReferenceCount);
+                                  lCount);
+
+                    ASSERT( lCount >= 0);
 
                     AFSReleaseResource( TargetParentObjectInfo->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -2263,7 +2269,7 @@ AFSNotifyHardLink( IN AFSObjectInfoCB *ObjectInfo,
                                   pResultCB->DirEnum.FileId.Vnode,
                                   pResultCB->DirEnum.FileId.Unique);
 
-                    if( pDirNode->OpenReferenceCount == 0)
+                    if( pDirNode->DirOpenReferenceCount <= 0)
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,

@@ -431,7 +431,7 @@ typedef struct _AFS_DIRECTORY_CB
     // for tear down
     //
 
-    LONG             OpenReferenceCount;
+    LONG             DirOpenReferenceCount;
 
     //
     // File index used in directory enumerations

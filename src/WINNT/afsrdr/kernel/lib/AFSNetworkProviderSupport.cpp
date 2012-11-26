@@ -1299,7 +1299,7 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             }
         }
 
-        lCount = InterlockedIncrement( &pShareDirEntry->OpenReferenceCount);
+        lCount = InterlockedIncrement( &pShareDirEntry->DirOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1395,7 +1395,7 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             pDirEntry = (AFSDirectoryCB *)pDirEntry->ListEntry.fLink;
         }
 
-        lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
+        lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1405,6 +1405,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                       NULL,
                       lCount);
 
+        ASSERT( lCount >= 0);
+
         *CopiedLength = ulCopiedLength;
 
         AFSReleaseResource( pTargetDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
@@ -1413,7 +1415,7 @@ try_exit:
 
         if( pShareDirEntry != NULL)
         {
-            lCount = InterlockedDecrement( &pShareDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pShareDirEntry->DirOpenReferenceCount);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -1422,6 +1424,8 @@ try_exit:
                           pShareDirEntry,
                           NULL,
                           lCount);
+
+            ASSERT( lCount >= 0);
         }
     }
 

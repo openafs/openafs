@@ -661,7 +661,17 @@ AFSQueryDirectory( IN PIRP Irp)
                      BooleanFlagOn( pDirEntry->Flags, AFS_DIR_ENTRY_DELETED))
             {
 
-                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSQueryDirectory Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pDirEntry->NameInformation.FileName,
+                              pDirEntry,
+                              pCcb,
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 continue;
             }
@@ -685,7 +695,17 @@ AFSQueryDirectory( IN PIRP Irp)
                     if( !FlagOn( pObjectInfo->FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
                     {
 
-                        lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSQueryDirectory Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                      &pDirEntry->NameInformation.FileName,
+                                      pDirEntry,
+                                      pCcb,
+                                      lCount);
+
+                        ASSERT( lCount >= 0);
 
                         continue;
                     }
@@ -706,7 +726,17 @@ AFSQueryDirectory( IN PIRP Irp)
                                                       NULL))
                         {
 
-                            lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                            lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSQueryDirectory Decrement3 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                          &pDirEntry->NameInformation.FileName,
+                                          pDirEntry,
+                                          pCcb,
+                                          lCount);
+
+                            ASSERT( lCount >= 0);
 
                             continue;
                         }
@@ -728,7 +758,17 @@ AFSQueryDirectory( IN PIRP Irp)
                                                          TRUE))
                             {
 
-                                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                              AFS_TRACE_LEVEL_VERBOSE,
+                                              "AFSQueryDirectory Decrement4 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                              &pDirEntry->NameInformation.FileName,
+                                              pDirEntry,
+                                              pCcb,
+                                              lCount);
+
+                                ASSERT( lCount >= 0);
 
                                 continue;
                             }
@@ -776,7 +816,17 @@ AFSQueryDirectory( IN PIRP Irp)
 
                 pCcb->CurrentDirIndex--;
 
-                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSQueryDirectory Decrement5 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pDirEntry->NameInformation.FileName,
+                              pDirEntry,
+                              pCcb,
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 try_return( ntStatus = STATUS_SUCCESS);
             }
@@ -952,7 +1002,17 @@ AFSQueryDirectory( IN PIRP Irp)
                                   Irp,
                                   FileInformationClass);
 
-                    lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSQueryDirectory Decrement6 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  &pDirEntry->NameInformation.FileName,
+                                  pDirEntry,
+                                  pCcb,
+                                  lCount);
+
+                    ASSERT( lCount >= 0);
 
                     try_return( ntStatus = STATUS_INVALID_INFO_CLASS);
 
@@ -980,12 +1040,32 @@ AFSQueryDirectory( IN PIRP Irp)
             if( ulBytesConverted < pDirEntry->NameInformation.FileName.Length)
             {
 
-                lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSQueryDirectory Decrement7 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pDirEntry->NameInformation.FileName,
+                              pDirEntry,
+                              pCcb,
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 try_return( ntStatus = STATUS_BUFFER_OVERFLOW);
             }
 
-            lCount = InterlockedDecrement( &pDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pDirEntry->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSQueryDirectory Decrement8 count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pDirEntry->NameInformation.FileName,
+                          pDirEntry,
+                          pCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
 
             dStatus = STATUS_SUCCESS;
 
@@ -1157,7 +1237,17 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
                 if( pDirEntry != NULL)
                 {
 
-                    lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                    lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSLocateNextDirEntry Increment count on %wZ DE %p Ccb %p Cnt %d\n",
+                                  &pDirEntry->NameInformation.FileName,
+                                  pDirEntry,
+                                  Ccb,
+                                  lCount);
+
+                    ASSERT( lCount >= 0);
                 }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1189,7 +1279,17 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
             if( pDirEntry != NULL)
             {
 
-                lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLocateNextDirEntry Increment2 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pDirEntry->NameInformation.FileName,
+                              pDirEntry,
+                              Ccb,
+                              lCount);
+
+                ASSERT( lCount >= 0);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1213,7 +1313,17 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
             if( pDirEntry != NULL)
             {
 
-                lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLocateNextDirEntry Increment3 count on %wZ DE %p Ccb %p Cnt %d\n",
+                              &pDirEntry->NameInformation.FileName,
+                              pDirEntry,
+                              Ccb,
+                              lCount);
+
+                ASSERT( lCount >= 0);
             }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1287,7 +1397,17 @@ AFSLocateNextDirEntry( IN AFSObjectInfoCB *ObjectInfo,
                                       ObjectInfo->FileId.Vnode,
                                       ObjectInfo->FileId.Unique);
 
-                        lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+                        lCount = InterlockedIncrement( &pDirEntry->DirOpenReferenceCount);
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNextDirEntry Increment4 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                      &pDirEntry->NameInformation.FileName,
+                                      pDirEntry,
+                                      Ccb,
+                                      lCount);
+
+                        ASSERT( lCount >= 0);
                     }
                     else
                     {
