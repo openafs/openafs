@@ -1518,6 +1518,20 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                             pDirEntry->CaseInsensitiveList.fLink != NULL)
                         {
 
+                            //
+                            // Increment our dir entry ref count since we will decrement it on exit
+                            //
+
+                            lCount = InterlockedIncrement( &pDirEntry->OpenReferenceCount);
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                                          AFS_TRACE_LEVEL_VERBOSE,
+                                          "AFSLocateNameEntry Increment5 count on %wZ DE %p Ccb %p Cnt %d\n",
+                                          &pDirEntry->NameInformation.FileName,
+                                          pDirEntry,
+                                          NULL,
+                                          lCount);
+
                             AFSReleaseResource( pParentDirEntry->ObjectInformation->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
                             try_return(ntStatus = STATUS_OBJECT_NAME_COLLISION);
