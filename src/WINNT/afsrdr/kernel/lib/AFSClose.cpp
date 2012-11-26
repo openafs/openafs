@@ -305,7 +305,81 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 KeQueryTickCount( &pFcb->ObjectInformation->LastAccessCount);
 
+                if( pFcb->OpenReferenceCount == 1 &&
+                    pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
+                {
+
+                    SetFlag( pFcb->Flags, AFS_FCB_FILE_CLOSED);
+
+                    //
+                    // Attempt to tear down our extent list for the file
+                    // If there are remaining dirty extents then attempt to
+                    // flush them as well
+                    //
+
+                    if( pFcb->Specific.File.ExtentsDirtyCount)
+                    {
+
+                        AFSFlushExtents( pFcb,
+                                         &pCcb->AuthGroup);
+                    }
+
+                    //
+                    // Wait for any outstanding queued flushes to complete
+                    //
+
+                    AFSWaitOnQueuedFlushes( pFcb);
+
+                    ASSERT( pFcb->Specific.File.ExtentsDirtyCount == 0 &&
+                            pFcb->Specific.File.QueuedFlushCount == 0);
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                    //
+                    // Tear 'em down, we'll not be needing them again
+                    //
+
+                    AFSTearDownFcbExtents( pFcb,
+                                           &pCcb->AuthGroup);
+                }
+                else
+                {
+
+                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                        pFcb->Specific.File.ExtentsDirtyCount &&
+                        (pCcb->GrantedAccess & FILE_WRITE_DATA))
+                    {
+
+                        AFSFlushExtents( pFcb,
+                                         &pCcb->AuthGroup);
+                    }
+
+                    AFSReleaseResource( &pFcb->NPFcb->Resource);
+                }
+
                 pDirCB = pCcb->DirectoryCB;
+
+                //
+                // Remove the Ccb and de-allocate it
+                //
+
+                ntStatus = AFSRemoveCcb( pFcb,
+                                         pCcb);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_WARNING,
+                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n",
+                                  ntStatus);
+
+                    //
+                    // We can't actually fail a close operation so reset the status
+                    //
+
+                    ntStatus = STATUS_SUCCESS;
+                }
 
                 //
                 // If this entry is deleted then remove the object from the volume tree
@@ -455,80 +529,6 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                   "AFSClose Decrement child open ref count on Parent object %08lX Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
                                   pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
-                }
-
-                if( pFcb->OpenReferenceCount == 1 &&
-                    pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
-                {
-
-                    SetFlag( pFcb->Flags, AFS_FCB_FILE_CLOSED);
-
-                    //
-                    // Attempt to tear down our extent list for the file
-                    // If there are remaining dirty extents then attempt to
-                    // flush them as well
-                    //
-
-                    if( pFcb->Specific.File.ExtentsDirtyCount)
-                    {
-
-                        AFSFlushExtents( pFcb,
-                                         &pCcb->AuthGroup);
-                    }
-
-                    //
-                    // Wait for any outstanding queued flushes to complete
-                    //
-
-                    AFSWaitOnQueuedFlushes( pFcb);
-
-                    ASSERT( pFcb->Specific.File.ExtentsDirtyCount == 0 &&
-                            pFcb->Specific.File.QueuedFlushCount == 0);
-
-                    AFSReleaseResource( &pFcb->NPFcb->Resource);
-
-                    //
-                    // Tear 'em down, we'll not be needing them again
-                    //
-
-                    AFSTearDownFcbExtents( pFcb,
-                                           &pCcb->AuthGroup);
-                }
-                else
-                {
-
-                    if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
-                        pFcb->Specific.File.ExtentsDirtyCount &&
-                        (pCcb->GrantedAccess & FILE_WRITE_DATA))
-                    {
-
-                        AFSFlushExtents( pFcb,
-                                         &pCcb->AuthGroup);
-                    }
-
-                    AFSReleaseResource( &pFcb->NPFcb->Resource);
-                }
-
-                //
-                // Remove the Ccb and de-allocate it
-                //
-
-                ntStatus = AFSRemoveCcb( pFcb,
-                                         pCcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_WARNING,
-                                  "AFSClose Failed to remove Ccb from Fcb Status %08lX\n",
-                                  ntStatus);
-
-                    //
-                    // We can't actually fail a close operation so reset the status
-                    //
-
-                    ntStatus = STATUS_SUCCESS;
                 }
 
                 //
