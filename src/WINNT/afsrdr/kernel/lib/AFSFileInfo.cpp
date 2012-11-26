@@ -2391,7 +2391,17 @@ AFSSetFileLinkInfo( IN PIRP Irp)
 
             ASSERT( pTargetParentObject == pTargetDirEntry->ObjectInformation->ParentObjectInformation);
 
-            lCount = InterlockedIncrement( &pTargetDirEntry->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pTargetDirEntry->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetFileLinkInfo Increment count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pSrcCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
 
             if( !pFileLinkInfo->ReplaceIfExists)
             {
@@ -2405,12 +2415,12 @@ AFSSetFileLinkInfo( IN PIRP Irp)
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetFileLinkInfo Target %wZ exists DE %p Count %08lX, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
-                          pTargetDirEntry->OpenReferenceCount);
+                          pTargetDirEntry->DirOpenReferenceCount);
 
             //
             // Pull the directory entry from the parent
@@ -2497,7 +2507,17 @@ AFSSetFileLinkInfo( IN PIRP Irp)
         if( pTargetDirEntry != NULL)
         {
 
-            lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetFileLinkInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pSrcCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
         }
 
         if( bReleaseTargetDirLock)
@@ -2780,7 +2800,18 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             ASSERT( pTargetParentObject == pTargetDirEntry->ObjectInformation->ParentObjectInformation);
 
-            lCount = InterlockedIncrement( &pTargetDirEntry->OpenReferenceCount);
+            lCount = InterlockedIncrement( &pTargetDirEntry->DirOpenReferenceCount);
+
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Increment count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pSrcCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
 
             if( !bReplaceIfExists)
             {
@@ -2794,12 +2825,12 @@ AFSSetRenameInfo( IN PIRP Irp)
                 try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetRenameInfo Target %wZ exists DE %p Count %08lX, performing delete of target\n",
                           &pTargetDirEntry->NameInformation.FileName,
                           pTargetDirEntry,
-                          pTargetDirEntry->OpenReferenceCount);
+                          pTargetDirEntry->DirOpenReferenceCount);
 
             //
             // Pull the directory entry from the parent
@@ -3084,7 +3115,7 @@ AFSSetRenameInfo( IN PIRP Irp)
 
             if( pTargetDirEntry->ObjectInformation->FileType == AFS_FILE_TYPE_FILE &&
                 pTargetDirEntry->ObjectInformation->Fcb != NULL &&
-                pTargetDirEntry->OpenReferenceCount > 1)
+                pTargetDirEntry->DirOpenReferenceCount > 1)
             {
 
                 pTargetFcb = pTargetDirEntry->ObjectInformation->Fcb;
@@ -3109,9 +3140,19 @@ AFSSetRenameInfo( IN PIRP Irp)
                 AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
             }
 
-            ASSERT( pTargetDirEntry->OpenReferenceCount > 0);
+            ASSERT( pTargetDirEntry->DirOpenReferenceCount > 0);
 
-            lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount); // The count we added above
+            lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount); // The count we added above
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Decrement count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pSrcCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
 
             if( lCount == 0)
             {
@@ -3145,7 +3186,17 @@ try_exit:
         if( pTargetDirEntry != NULL)
         {
 
-            lCount = InterlockedDecrement( &pTargetDirEntry->OpenReferenceCount);
+            lCount = InterlockedDecrement( &pTargetDirEntry->DirOpenReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetRenameInfo Decrement2 count on %wZ DE %p Ccb %p Cnt %d\n",
+                          &pTargetDirEntry->NameInformation.FileName,
+                          pTargetDirEntry,
+                          pSrcCcb,
+                          lCount);
+
+            ASSERT( lCount >= 0);
         }
 
         if( bReleaseTargetDirLock)

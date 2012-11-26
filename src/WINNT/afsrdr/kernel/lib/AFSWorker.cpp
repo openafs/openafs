@@ -1080,7 +1080,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                   TRUE);
 
                 if( pVolumeCB->ObjectInfoListHead == NULL &&
-                    pVolumeCB->DirectoryCB->OpenReferenceCount == 0 &&
+                    pVolumeCB->DirectoryCB->DirOpenReferenceCount <= 0 &&
                     pVolumeCB->VolumeReferenceCount == 1 &&
                     ( pVolumeCB->RootFcb == NULL ||
                       pVolumeCB->RootFcb->OpenReferenceCount == 0) &&
@@ -1275,7 +1275,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                         while( pCurrentDirEntry != NULL)
                         {
 
-                            if( pCurrentDirEntry->OpenReferenceCount > 0 ||
+                            if( pCurrentDirEntry->DirOpenReferenceCount > 0 ||
                                 ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
                                   pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0) ||
                                 liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
@@ -1340,7 +1340,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 while( pCurrentDirEntry != NULL)
                                 {
 
-                                    if( pCurrentDirEntry->OpenReferenceCount > 0 ||
+                                    if( pCurrentDirEntry->DirOpenReferenceCount > 0 ||
                                         ( pCurrentDirEntry->ObjectInformation->Fcb != NULL &&
                                           pCurrentDirEntry->ObjectInformation->Fcb->OpenReferenceCount > 0) ||
                                         liCurrentTime.QuadPart <= pCurrentDirEntry->ObjectInformation->LastAccessCount.QuadPart ||
@@ -1383,7 +1383,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
 
                                     pFcb = NULL;
 
-                                    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
+                                    AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING | AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                                   AFS_TRACE_LEVEL_VERBOSE,
                                                   "AFSPrimaryVolumeWorkerThread Deleting DE %wZ Object %08lX\n",
                                                   &pCurrentDirEntry->NameInformation.FileName,

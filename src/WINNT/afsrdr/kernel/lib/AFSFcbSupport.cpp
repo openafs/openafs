@@ -437,6 +437,12 @@ AFSInitVolume( IN GUID *AuthGroup,
 
                 lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSInitVolume Increment count on volume %08lX Cnt %d\n",
+                              pVolumeCB,
+                              lCount);
+
                 AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
 
                 AFSReleaseResource( &pDeviceExt->Specific.RDR.VolumeListLock);

@@ -1324,6 +1324,12 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
                           PsGetCurrentThread());
 
             lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessSetFileExtents Increment count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          lCount);
         }
 
         AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -1348,6 +1354,12 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
                           TRUE);
 
         lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessSetFileExtents Decrement count on volume %08lX Cnt %d\n",
+                      pVolumeCB,
+                      lCount);
 
         //
         // Now locate the Object in this volume
@@ -1727,6 +1739,12 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
 
         lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFindFcbToClean Increment count on volume %08lX Cnt %d\n",
+                      pVolumeCB,
+                      lCount);
+
         AFSReleaseResource( &pRDRDeviceExt->Specific.RDR.VolumeListLock);
 
         bReleaseVolumeListLock = FALSE;
@@ -1735,6 +1753,12 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
                           TRUE);
 
         lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFindFcbToClean Decrement count on volume %08lX Cnt %d\n",
+                      pVolumeCB,
+                      lCount);
 
         if( NULL == LastFcb)
         {
@@ -1951,6 +1975,12 @@ AFSProcessExtentFailure( PIRP Irp)
                           PsGetCurrentThread());
 
             lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessExtentFailure Increment count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          lCount);
         }
 
         AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -1972,6 +2002,11 @@ AFSProcessExtentFailure( PIRP Irp)
 
         lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSProcessExtentFailure Decrement count on volume %08lX Cnt %d\n",
+                      pVolumeCB,
+                      lCount);
         //
         // Now locate the Object in this volume
         //
@@ -2190,6 +2225,12 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                               PsGetCurrentThread());
 
                 lCount = InterlockedIncrement( &pVolumeCB->VolumeReferenceCount);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSProcessReleaseFileExtents Increment count on volume %08lX Cnt %d\n",
+                              pVolumeCB,
+                              lCount);
             }
 
             AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
@@ -2210,6 +2251,12 @@ AFSProcessReleaseFileExtents( IN PIRP Irp)
                               TRUE);
 
             lCount = InterlockedDecrement( &pVolumeCB->VolumeReferenceCount);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_VOLUME_REF_COUNTING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSProcessReleaseFileExtents Decrement count on volume %08lX Cnt %d\n",
+                          pVolumeCB,
+                          lCount);
 
             //
             // Now locate the Object in this volume

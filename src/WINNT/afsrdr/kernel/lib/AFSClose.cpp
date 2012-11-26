@@ -63,6 +63,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
     AFSCcb *pCcb = NULL;
     AFSObjectInfoCB *pObjectInfo = NULL;
     AFSDirectoryCB *pDirCB = NULL;
+    LONG lCount;
 
     __try
     {
@@ -167,9 +168,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     ntStatus = STATUS_SUCCESS;
                 }
 
-                ASSERT( pDirCB->OpenReferenceCount > 0);
-
-                InterlockedDecrement( &pDirCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -177,7 +176,9 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                               &pDirCB->NameInformation.FileName,
                               pDirCB,
                               pCcb,
-                              pDirCB->OpenReferenceCount);
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 //
                 // If this is not the root then decrement the open child reference count
@@ -198,15 +199,15 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
-                ASSERT( pFcb->OpenReferenceCount != 0);
-
-                InterlockedDecrement( &pFcb->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose (IOCtl) Decrement count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenReferenceCount);
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 break;
             }
@@ -248,9 +249,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     ntStatus = STATUS_SUCCESS;
                 }
 
-                ASSERT( pDirCB->OpenReferenceCount > 0);
-
-                InterlockedDecrement( &pDirCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -258,19 +257,21 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                               &pDirCB->NameInformation.FileName,
                               pDirCB,
                               pCcb,
-                              pDirCB->OpenReferenceCount);
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
-                ASSERT( pFcb->OpenReferenceCount > 0);
-
-                InterlockedDecrement( &pFcb->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose (RootAll) Decrement count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenReferenceCount);
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 break;
             }
@@ -426,19 +427,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     AFSAcquireExcl( pObjectInfo->VolumeCB->ObjectInfoTree.TreeLock,
                                     TRUE);
 
-                    if ( pDirCB->OpenReferenceCount == 0)
-                    {
-                        AFSDbgLogMsg( 0,
-                                      0,
-                                      "AFSClose (Other) OpenReferenceCount is Zero on DE %08lX Ccb %08lX FileName %wZ\n",
-                                      pDirCB,
-                                      pCcb,
-                                      &pDirCB->NameInformation.FileName);
-                    }
-
-                    ASSERT( pDirCB->OpenReferenceCount > 0);
-
-                    InterlockedDecrement( &pDirCB->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -446,9 +435,11 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                   &pDirCB->NameInformation.FileName,
                                   pDirCB,
                                   pCcb,
-                                  pDirCB->OpenReferenceCount);
+                                  lCount);
 
-                    if( pDirCB->OpenReferenceCount == 0)
+                    ASSERT( lCount >= 0);
+
+                    if( lCount == 0)
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_CLEANUP_PROCESSING,
@@ -500,9 +491,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 else
                 {
 
-                    ASSERT( pDirCB->OpenReferenceCount > 0);
-
-                    InterlockedDecrement( &pDirCB->OpenReferenceCount);
+                    lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -510,7 +499,9 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                   &pDirCB->NameInformation.FileName,
                                   pDirCB,
                                   pCcb,
-                                  pDirCB->OpenReferenceCount);
+                                  lCount);
+
+                    ASSERT( lCount >= 0);
                 }
 
                 //
@@ -535,15 +526,15 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                 // Decrement the reference count on the Fcb. this is protecting it from teardown.
                 //
 
-                ASSERT( pFcb->OpenReferenceCount != 0);
-
-                InterlockedDecrement( &pFcb->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Decrement count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenReferenceCount);
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 break;
             }
@@ -553,6 +544,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSPipeOpenCloseRequestCB stPipeClose;
 
+                pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
+
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Acquiring Special Share lock %08lX EXCL %08lX\n",
@@ -561,10 +554,6 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
-
-                pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
-
-                pDirCB = pCcb->DirectoryCB;
 
                 RtlZeroMemory( &stPipeClose,
                                sizeof( AFSPipeOpenCloseRequestCB));
@@ -589,6 +578,8 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                                    NULL);
                 */
 
+                pDirCB = pCcb->DirectoryCB;
+
                 //
                 // Remove the Ccb and de-allocate it
                 //
@@ -610,9 +601,7 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     ntStatus = STATUS_SUCCESS;
                 }
 
-                ASSERT( pDirCB->OpenReferenceCount > 0);
-
-                InterlockedDecrement( &pDirCB->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pDirCB->DirOpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_DIRENTRY_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -620,7 +609,9 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                               &pDirCB->NameInformation.FileName,
                               pDirCB,
                               pCcb,
-                              pDirCB->OpenReferenceCount);
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 //
                 // If this is not the root then decrement the open child reference count
@@ -630,26 +621,26 @@ AFSClose( IN PDEVICE_OBJECT LibDeviceObject,
                     pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount > 0)
                 {
 
-                    InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                    lCount = InterlockedDecrement( &pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose (Share) Decrement child open ref count on Parent object %08lX Cnt %d\n",
                                   pObjectInfo->ParentObjectInformation,
-                                  pObjectInfo->ParentObjectInformation->Specific.Directory.ChildOpenReferenceCount);
+                                  lCount);
                 }
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
-                ASSERT( pFcb->OpenReferenceCount != 0);
-
-                InterlockedDecrement( &pFcb->OpenReferenceCount);
+                lCount = InterlockedDecrement( &pFcb->OpenReferenceCount);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FCB_REF_COUNTING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose (Share) Decrement count on Fcb %08lX Cnt %d\n",
                               pFcb,
-                              pFcb->OpenReferenceCount);
+                              lCount);
+
+                ASSERT( lCount >= 0);
 
                 break;
             }
