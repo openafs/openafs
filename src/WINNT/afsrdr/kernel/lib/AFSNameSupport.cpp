@@ -906,14 +906,6 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                     ASSERT( pCurrentVolume->VolumeReferenceCount > 1);
 
                     //
-                    // The name array stores both the mount point and the target.
-                    // Insert the target.
-                    //
-
-                    AFSInsertNextElement( pNameArray,
-                                          pCurrentVolume->DirectoryCB);
-
-                    //
                     // We want to restart processing here on the new parent ...
                     // Deref and ref count the entries
                     //
@@ -939,6 +931,14 @@ AFSLocateNameEntry( IN GUID *AuthGroup,
                                   pDirEntry,
                                   NULL,
                                   lCount);
+
+                    //
+                    // The name array stores both the mount point and the target.
+                    // Insert the target.
+                    //
+
+                    AFSInsertNextElement( pNameArray,
+                                          pDirEntry);
 
                     pParentDirEntry = NULL;
 
