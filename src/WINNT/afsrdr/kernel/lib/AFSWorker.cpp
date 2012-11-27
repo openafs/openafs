@@ -1191,10 +1191,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                 AFSAcquireExcl( &pCurrentObject->NonPagedInfo->ObjectInfoLock,
                                                 TRUE);
 
-                                if ( pCurrentObject->ObjectReferenceCount <= 0 &&
-                                     ( pCurrentObject->Fcb == NULL ||
-                                       pCurrentObject->Fcb->OpenReferenceCount == 0 &&
-                                       pCurrentObject->Fcb->Specific.File.ExtentCount == 0))
+                                if ( pCurrentObject->ObjectReferenceCount <= 0)
                                 {
 
                                     AFSRemoveFcb( &pCurrentObject->Fcb);
@@ -1440,10 +1437,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                     AFSAcquireExcl( &pCurrentChildObject->NonPagedInfo->ObjectInfoLock,
                                                     TRUE);
 
-                                    if( pCurrentChildObject->ObjectReferenceCount <= 0 &&
-                                        ( pCurrentChildObject->Fcb == NULL ||
-                                          pCurrentChildObject->Fcb->OpenReferenceCount == 0 &&
-                                          pCurrentChildObject->Fcb->Specific.File.ExtentCount == 0))
+                                    if( pCurrentChildObject->ObjectReferenceCount <= 0)
                                     {
 
                                         AFSRemoveFcb( &pCurrentChildObject->Fcb);
@@ -1605,10 +1599,7 @@ AFSPrimaryVolumeWorkerThread( IN PVOID Context)
                                         TRUE);
 
                         if( BooleanFlagOn( pCurrentObject->Flags, AFS_OBJECT_FLAGS_DELETED) &&
-                            pCurrentObject->ObjectReferenceCount <= 0 &&
-                            ( pCurrentObject->Fcb == NULL ||
-                              pCurrentObject->Fcb->OpenReferenceCount == 0 &&
-                              pCurrentObject->Fcb->Specific.File.ExtentCount == 0))
+                            pCurrentObject->ObjectReferenceCount <= 0)
                         {
 
                             AFSRemoveFcb( &pCurrentObject->Fcb);
