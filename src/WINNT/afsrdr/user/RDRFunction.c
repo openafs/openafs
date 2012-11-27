@@ -984,7 +984,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
              ParentID.Cell, ParentID.Volume, ParentID.Vnode, ParentID.Unique);
 
     /* Allocate enough room to add a volume prefix if necessary */
-    cbName = FileNameLength + (CM_PREFIX_VOL_CCH + 1) * sizeof(WCHAR);
+    cbName = FileNameLength + (CM_PREFIX_VOL_CCH + 64) * sizeof(WCHAR);
     wszName = malloc(cbName);
     if (!wszName) {
         osi_Log0(afsd_logp, "RDR_EvaluateNodeByName Out of Memory");
@@ -1062,12 +1062,24 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     code = cm_Lookup(dscp, wszName, CM_FLAG_CHECKPATH, userp, &req, &scp);
 
     if ((code == CM_ERROR_NOSUCHPATH || code == CM_ERROR_NOSUCHFILE || code == CM_ERROR_BPLUS_NOMATCH) &&
-         (wcschr(wszName, '%') != NULL || wcschr(wszName, '#') != NULL)) {
-        /*
-         * A volume reference:  <cell>{%,#}<volume> -> @vol:<cell>{%,#}<volume>
-         */
+         dscp == cm_data.rootSCachep) {
+
         StringCchCopyNW(wszName, cbName, _C(CM_PREFIX_VOL), CM_PREFIX_VOL_CCH);
-        StringCbCatNW(wszName, cbName, FileName, FileNameLength);
+        if (wcschr(wszName, '%') != NULL || wcschr(wszName, '#') != NULL) {
+            /*
+             * A volume reference:  <cell>{%,#}<volume> -> @vol:<cell>{%,#}<volume>
+             */
+            StringCbCatNW(wszName, cbName, FileName, FileNameLength);
+        } else {
+            if (FileName[0] == L'.') {
+                StringCbCatNW(wszName, cbName, &FileName[1], FileNameLength);
+                StringCbCatNW(wszName, cbName, L"%", sizeof(WCHAR));
+            } else {
+                StringCbCatNW(wszName, cbName, FileName, FileNameLength);
+                StringCbCatNW(wszName, cbName, L"#", sizeof(WCHAR));
+            }
+            StringCbCatNW(wszName, cbName, L"root.cell", 9 * sizeof(WCHAR));
+        }
         bVol = TRUE;
 
         code = cm_EvaluateVolumeReference(wszName, CM_FLAG_CHECKPATH, userp, &req, &scp);
