@@ -1148,7 +1148,7 @@ retry_lookup:
      * that we stopped early, probably because we found the entry we're
      * looking for.  Any other non-zero code is an error.
      */
-    if (code && code != CM_ERROR_STOPNOW && code != CM_ERROR_BPLUS_NOMATCH) {
+    if (code && code != CM_ERROR_STOPNOW) {
         /* if the cm_scache_t we are searching in is not a directory
          * we must return path not found because the error
          * is to describe the final component not an intermediary
@@ -1289,7 +1289,7 @@ notfound:
     lock_ObtainWrite(&tscp->rw);
 
     /*
-     * Do not get status if we do not already have a callback.
+     * Do not get status if we do not already have a callback or know the type.
      * The process of reading the mount point string will obtain status information
      * in a single RPC.  No reason to add a second round trip.
      *
@@ -1297,7 +1297,7 @@ notfound:
      * current cm_user_t is not the same as the one that obtained the
      * mount point string contents.
      */
-    if (cm_HaveCallback(tscp)) {
+    if (cm_HaveCallback(tscp) || tscp->fileType == CM_SCACHETYPE_UNKNOWN) {
         code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
                           CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
         if (code) {
