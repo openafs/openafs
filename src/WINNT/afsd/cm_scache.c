@@ -403,6 +403,7 @@ cm_GetNewSCache(afs_uint32 locked)
     scp->dataVersion = CM_SCACHE_VERSION_BAD;
     scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
     scp->lockDataVersion = CM_SCACHE_VERSION_BAD;
+    scp->mpDataVersion = CM_SCACHE_VERSION_BAD;
 
     /* and put it in the LRU queue */
     osi_QAddH((osi_queue_t **) &cm_data.scacheLRUFirstp, (osi_queue_t **)&cm_data.scacheLRULastp, &scp->q);
