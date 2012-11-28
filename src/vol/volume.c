@@ -3442,15 +3442,21 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    V_inUse(vp) = fileServer;
 	    V_offlineMessage(vp)[0] = '\0';
 	}
+#ifdef AFS_DEMAND_ATTACH_FS
+	/* check if the volume is actually usable. only do this for DAFS; for
+	 * non-DAFS, volumes that are not inService/blessed can still be
+	 * attached, even if clients cannot access them. this is relevant
+	 * because for non-DAFS, we try to attach the volume when e.g.
+	 * volserver gives us back then vol when its done with it, but
+	 * volserver may give us back a volume that is not inService/blessed. */
+
 	if (!V_inUse(vp)) {
 	    *ec = VNOVOL;
-#ifdef AFS_DEMAND_ATTACH_FS
 	    /* Put the vol into PREATTACHED state, so if someone tries to
 	     * access it again, we try to attach, see that we're not blessed,
 	     * and give a VNOVOL error again. Putting it into UNATTACHED state
 	     * would result in a VOFFLINE error instead. */
 	    error_state = VOL_STATE_PREATTACHED;
-#endif /* AFS_DEMAND_ATTACH_FS */
 
 	    /* mimic e.g. GetVolume errors */
 	    if (!V_blessed(vp)) {
@@ -3462,17 +3468,14 @@ attach2(Error * ec, VolId volumeId, char *path, struct DiskPartition64 *partp,
 	    } else {
 		Log("Volume %lu offline: needs salvage\n", afs_printable_uint32_lu(V_id(vp)));
 		*ec = VSALVAGE;
-#ifdef AFS_DEMAND_ATTACH_FS
 		error_state = VOL_STATE_ERROR;
 		/* see if we can recover */
 		VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_NO_OFFLINE);
-#endif
 	    }
-#ifdef AFS_DEMAND_ATTACH_FS
 	    vp->nUsers = 0;
-#endif
 	    goto locked_error;
 	}
+#endif /* AFS_DEMAND_ATTACH_FS */
     } else {
 #ifdef AFS_DEMAND_ATTACH_FS
 	if ((mode != V_PEEK) && (mode != V_SECRETLY) && (mode != V_READONLY))
