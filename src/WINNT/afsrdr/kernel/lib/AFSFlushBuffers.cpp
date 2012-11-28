@@ -49,6 +49,7 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
     AFSFcb            *pFcb = (AFSFcb *)pFileObject->FsContext;
     AFSCcb            *pCcb = (AFSCcb *)pFileObject->FsContext2;
     IO_STATUS_BLOCK    iosb = {0};
+    BOOLEAN            bReleaseSectionObject = FALSE;
 
     pIrpSp = IoGetCurrentIrpStackLocation( Irp);
 
@@ -84,6 +85,18 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
             //
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFlushBuffers Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                      &pFcb->NPFcb->SectionObjectResource,
+                      PsGetCurrentThread());
+
+        AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
+                          TRUE);
+
+        bReleaseSectionObject = TRUE;
+
         //
         // The flush consists of two parts.  We firstly flush our
         // cache (if we have one), then we tell the service to write
@@ -115,6 +128,17 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
 
             try_return( ntStatus = GetExceptionCode());
         }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFlushBuffers Releasing Fcb SectionObject lock %08lX SHARED %08lX\n",
+                      &pFcb->NPFcb->SectionObjectResource,
+                      PsGetCurrentThread());
+
+        AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
+        bReleaseSectionObject = FALSE;
+
         //
         // Now, flush to the server - if there is stuff to do
         //
@@ -133,6 +157,18 @@ AFSFlushBuffers( IN PDEVICE_OBJECT LibDeviceObject,
         }
 
 try_exit:
+
+        if ( bReleaseSectionObject)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSFlushBuffers Releasing Fcb SectionObject lock %08lX SHARED %08lX\n",
+                          &pFcb->NPFcb->SectionObjectResource,
+                          PsGetCurrentThread());
+
+            AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+        }
 
         AFSCompleteRequest( Irp, ntStatus);
     }

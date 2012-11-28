@@ -230,18 +230,18 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring Fcb lock %08lX EXCL %08lX\n",
-                              &pFcb->NPFcb->Resource,
+                              "AFSCleanup Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
                               PsGetCurrentThread());
 
-                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
                 //
                 // If the handle has write permission ...
                 //
 
-                if( (pCcb->GrantedAccess & FILE_WRITE_DATA) &&
+                if( ((pCcb->GrantedAccess & FILE_WRITE_DATA) || pFcb->OpenHandleCount == 1) &&
                     CcIsFileCached( pIrpSp->FileObject))
                 {
 
@@ -269,11 +269,49 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
 
                             ntStatus = stIoSB.Status;
                         }
+
+                        if ( ( pFcb->OpenHandleCount == 1 ||
+                               BooleanFlagOn( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE)) &&
+                             pFcb->NPFcb->SectionObjectPointers.DataSectionObject != NULL)
+                        {
+
+                            if ( !CcPurgeCacheSection( &pFcb->NPFcb->SectionObjectPointers,
+                                                       NULL,
+                                                       0,
+                                                       FALSE))
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                              AFS_TRACE_LEVEL_WARNING,
+                                              "AFSCleanup CcPurgeCacheSection failure FID %08lX-%08lX-%08lX-%08lX\n",
+                                              pObjectInfo->FileId.Cell,
+                                              pObjectInfo->FileId.Volume,
+                                              pObjectInfo->FileId.Vnode,
+                                              pObjectInfo->FileId.Unique);
+
+                                SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                            }
+                            else
+                            {
+                                ClearFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
+                            }
+                        }
                     }
                     __except( EXCEPTION_EXECUTE_HANDLER)
                     {
 
                         ntStatus = GetExceptionCode();
+
+                        AFSDbgLogMsg( 0,
+                                      0,
+                                      "EXCEPTION - AFSCleanup Cc FID %08lX-%08lX-%08lX-%08lX Status 0x%08lX\n",
+                                      pObjectInfo->FileId.Cell,
+                                      pObjectInfo->FileId.Volume,
+                                      pObjectInfo->FileId.Vnode,
+                                      pObjectInfo->FileId.Unique,
+                                      ntStatus);
+
+                        SetFlag( pObjectInfo->Fcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                     }
                 }
 
@@ -290,6 +328,24 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                 CcUninitializeCacheMap( pFileObject,
                                         NULL,
                                         NULL);
+
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCleanup Acquiring Fcb lock %08lX EXCL %08lX\n",
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
+
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                TRUE);
 
                 //
                 // Unlock all outstanding locks on the file, again, unconditionally

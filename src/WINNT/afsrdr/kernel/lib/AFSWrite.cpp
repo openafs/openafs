@@ -108,6 +108,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN            bPagingIo = FALSE;
     BOOLEAN            bNonCachedIo = FALSE;
     BOOLEAN            bReleaseMain = FALSE;
+    BOOLEAN            bReleaseSectionObject = FALSE;
     BOOLEAN            bReleasePaging = FALSE;
     BOOLEAN            bExtendingWrite = FALSE;
     BOOLEAN            bCompleteIrp = TRUE;
@@ -334,61 +335,86 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             bNonCachedIo = FALSE;
         }
 
-        if( (!bPagingIo && !bNonCachedIo))
-        {
+        if ( !bNonCachedIo) {
 
-            if( pFileObject->PrivateCacheMap == NULL)
+            if( !bPagingIo)
             {
 
-                __try
+                if( pFileObject->PrivateCacheMap == NULL)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCommonWrite Initialize caching on Fcb %08lX FileObject %08lX\n",
-                                  pFcb,
-                                  pFileObject);
+                                  "AFSCommonWrite Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                  &pNPFcb->SectionObjectResource,
+                                  PsGetCurrentThread());
 
-                    CcInitializeCacheMap( pFileObject,
-                                          (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
-                                          FALSE,
-                                          AFSLibCacheManagerCallbacks,
-                                          pFcb);
+                    AFSAcquireExcl( &pNPFcb->SectionObjectResource,
+                                    TRUE);
 
-                    CcSetReadAheadGranularity( pFileObject,
-                                               pDeviceExt->Specific.RDR.MaximumRPCLength);
+                    bReleaseSectionObject = TRUE;
 
-                    CcSetDirtyPageThreshold( pFileObject,
-                                             AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength);
-                }
-                __except( EXCEPTION_EXECUTE_HANDLER)
-                {
+                    __try
+                    {
 
-                    ntStatus = GetExceptionCode();
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSCommonWrite Initialize caching on Fcb %08lX FileObject %08lX\n",
+                                      pFcb,
+                                      pFileObject);
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSCommonWrite (%08lX) Exception thrown while initializing cache map Status %08lX\n",
-                                  Irp,
-                                  ntStatus);
-                }
+                        CcInitializeCacheMap( pFileObject,
+                                              (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
+                                              FALSE,
+                                              AFSLibCacheManagerCallbacks,
+                                              pFcb);
 
-                if( !NT_SUCCESS( ntStatus))
-                {
+                        CcSetReadAheadGranularity( pFileObject,
+                                                   pDeviceExt->Specific.RDR.MaximumRPCLength);
 
-                    try_return( ntStatus);
+                        CcSetDirtyPageThreshold( pFileObject,
+                                                 AFS_DIRTY_CHUNK_THRESHOLD * pDeviceExt->Specific.RDR.MaximumRPCLength);
+                    }
+                    __except( EXCEPTION_EXECUTE_HANDLER)
+                    {
+
+                        ntStatus = GetExceptionCode();
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSCommonWrite (%08lX) Exception thrown while initializing cache map Status %08lX\n",
+                                      Irp,
+                                      ntStatus);
+                    }
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonWrite Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                  &pNPFcb->SectionObjectResource,
+                                  PsGetCurrentThread());
+
+                    AFSReleaseResource( &pNPFcb->SectionObjectResource);
+
+                    bReleaseSectionObject = FALSE;
+
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        try_return( ntStatus);
+                    }
                 }
             }
-        }
 
-        while (!bNonCachedIo && !CcCanIWrite( pFileObject,
-                                              ulByteCount,
-                                              FALSE,
-                                              bRetry))
-        {
-            static const LONGLONG llWriteDelay = (LONGLONG)-100000;
-            bRetry = TRUE;
-            KeDelayExecutionThread(KernelMode, FALSE, (PLARGE_INTEGER)&llWriteDelay);
+            while (!CcCanIWrite( pFileObject,
+                                 ulByteCount,
+                                 FALSE,
+                                 bRetry))
+            {
+                static const LONGLONG llWriteDelay = (LONGLONG)-100000;
+                bRetry = TRUE;
+                KeDelayExecutionThread(KernelMode, FALSE, (PLARGE_INTEGER)&llWriteDelay);
+            }
         }
 
         //
@@ -414,34 +440,9 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // We should be ready to go.  So first of all ask for the extents
-        // Provoke a get of the extents - if we need to.
-        //
-
-        /*
-        if( !bPagingIo && !bNonCachedIo)
-        {
-
-            ntStatus = AFSRequestExtentsAsync( pFcb, pCcb, &liStartingByte, ulByteCount);
-
-            if (!NT_SUCCESS(ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonWrite (%08lX) Failed to request extents Status %08lX\n",
-                              Irp,
-                              ntStatus);
-
-                try_return( ntStatus );
-            }
-        }
-        */
-
-        //
         // Take locks
         //
-        //   - if Paging then we need to nothing (the precalls will
+        //   - if Paging then we need to do nothing (the precalls will
         //     have acquired the paging resource), for clarity we will collect
         //     the paging resource
         //   - If extending Write then take the fileresource EX (EOF will change, Allocation will only move out)
@@ -452,15 +453,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
 
         do
         {
-
-            if( !bPagingIo)
-            {
-
-                bExtendingWrite = (((liStartingByte.QuadPart + ulByteCount) >=
-                                    pFcb->Header.FileSize.QuadPart) ||
-                                   (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
-                                    liStartingByte.HighPart == -1)) ;
-            }
 
             if( bPagingIo)
             {
@@ -483,103 +475,139 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 //
                 bLockOK = TRUE;
             }
-            else if( bExtendingWrite)
-            {
-                //
-                // Check for lock inversion
-                //
-
-                ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonWrite Acquiring Fcb lock %08lX EXCL %08lX\n",
-                              &pNPFcb->Resource,
-                              PsGetCurrentThread());
-
-                AFSAcquireExcl( &pNPFcb->Resource,
-                                TRUE);
-
-                if (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
-                    liStartingByte.HighPart == -1)
-                {
-                    if (pFcb->Header.ValidDataLength.QuadPart > pFcb->Header.FileSize.QuadPart)
-                    {
-                        liStartingByte = pFcb->Header.ValidDataLength;
-                    }
-                    else
-                    {
-                        liStartingByte = pFcb->Header.FileSize;
-                    }
-                }
-                bReleaseMain = TRUE;
-
-                //
-                // We have the correct lock - even if we don't end up truncating
-                //
-                bLockOK = TRUE;
-            }
             else
             {
-                ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCommonWrite Acquiring Fcb lock %08lX SHARED %08lX\n",
-                              &pNPFcb->Resource,
-                              PsGetCurrentThread());
+                bExtendingWrite = (((liStartingByte.QuadPart + ulByteCount) >=
+                                     pFcb->Header.FileSize.QuadPart) ||
+                                    (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
+                                      liStartingByte.HighPart == -1)) ;
 
-                AFSAcquireShared( &pNPFcb->Resource,
-                                  TRUE);
-
-                bReleaseMain = TRUE;
-
-                //
-                // Have things moved?  Are we extending? If so, the the lock isn't OK
-                //
-                bLockOK = (liStartingByte.QuadPart + ulByteCount) < pFcb->Header.FileSize.QuadPart;
-
-                if (!bLockOK)
+                if( bExtendingWrite)
                 {
-                    AFSReleaseResource( &pNPFcb->Resource);
-                    bReleaseMain = FALSE;
+                    //
+                    // Check for lock inversion
+                    //
+
+                    ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonWrite Acquiring Fcb lock %08lX EXCL %08lX\n",
+                                  &pNPFcb->Resource,
+                                  PsGetCurrentThread());
+
+                    AFSAcquireExcl( &pNPFcb->Resource,
+                                    TRUE);
+
+                    bReleaseMain = TRUE;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonWrite Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                                  &pNPFcb->SectionObjectResource,
+                                  PsGetCurrentThread());
+
+                    AFSAcquireExcl( &pNPFcb->SectionObjectResource,
+                                    TRUE);
+
+                    bReleaseSectionObject = TRUE;
+
+                    if (liStartingByte.LowPart == FILE_WRITE_TO_END_OF_FILE &&
+                         liStartingByte.HighPart == -1)
+                    {
+                        if (pFcb->Header.ValidDataLength.QuadPart > pFcb->Header.FileSize.QuadPart)
+                        {
+                            liStartingByte = pFcb->Header.ValidDataLength;
+                        }
+                        else
+                        {
+                            liStartingByte = pFcb->Header.FileSize;
+                        }
+                    }
+
+                    //
+                    // We have the correct lock - even if we don't end up truncating
+                    //
+                    bLockOK = TRUE;
+                }
+                else
+                {
+                    ASSERT( !ExIsResourceAcquiredLite( &pNPFcb->PagingResource ));
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonWrite Acquiring Fcb lock %08lX SHARED %08lX\n",
+                                  &pNPFcb->Resource,
+                                  PsGetCurrentThread());
+
+                    AFSAcquireShared( &pNPFcb->Resource,
+                                      TRUE);
+
+                    bReleaseMain = TRUE;
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCommonWrite Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                                  &pNPFcb->SectionObjectResource,
+                                  PsGetCurrentThread());
+
+                    AFSAcquireShared( &pNPFcb->SectionObjectResource,
+                                      TRUE);
+
+                    bReleaseSectionObject = TRUE;
+
+                    //
+                    // Have things moved?  Are we extending? If so, the the lock isn't OK
+                    //
+                    bLockOK = (liStartingByte.QuadPart + ulByteCount) < pFcb->Header.FileSize.QuadPart;
+
+                    if (!bLockOK)
+                    {
+                        AFSReleaseResource( &pNPFcb->Resource);
+
+                        bReleaseMain = FALSE;
+                    }
                 }
             }
         }
         while (!bLockOK);
 
-        //
-        // Check the BR locks on the file.
-        //
-
-        if( !bPagingIo &&
-            !FsRtlCheckLockForWriteAccess( &pFcb->Specific.File.FileLock,
-                                           Irp))
+        if( !bPagingIo)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSCommonWrite (%08lX) Request failed due to lock conflict\n",
-                          Irp);
+            //
+            // Check the BR locks on the file.
+            //
 
-            try_return( ntStatus = STATUS_FILE_LOCK_CONFLICT);
-        }
-
-        if( bExtendingWrite)
-        {
-
-            ntStatus = AFSExtendingWrite( pFcb, pFileObject, (liStartingByte.QuadPart + ulByteCount));
-
-            if( !NT_SUCCESS(ntStatus))
+            if ( !FsRtlCheckLockForWriteAccess( &pFcb->Specific.File.FileLock,
+                                                Irp))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonWrite (%08lX) Failed extending write request Status %08lX\n",
-                              Irp,
-                              ntStatus);
+                              "AFSCommonWrite (%08lX) Request failed due to lock conflict\n",
+                              Irp);
 
-                try_return( ntStatus );
+                try_return( ntStatus = STATUS_FILE_LOCK_CONFLICT);
+            }
+
+            if( bExtendingWrite)
+            {
+
+                ntStatus = AFSExtendingWrite( pFcb, pFileObject, (liStartingByte.QuadPart + ulByteCount));
+
+                if( !NT_SUCCESS(ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSCommonWrite (%08lX) Failed extending write request Status %08lX\n",
+                                  Irp,
+                                  ntStatus);
+
+                    try_return( ntStatus );
+                }
             }
         }
 
@@ -591,6 +619,10 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         if( !bPagingIo &&
             !bNonCachedIo)
         {
+
+            //
+            // Main and SectionObject resources held Shared
+            //
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -604,6 +636,35 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         }
         else
         {
+
+            //
+            // if bPagingIo, Paging Resource held Shared
+            // else Main and SectionObject resources held Shared
+            //
+
+            if( bReleaseSectionObject)
+            {
+
+                AFSReleaseResource( &pNPFcb->SectionObjectResource);
+
+                bReleaseSectionObject = FALSE;
+            }
+
+            if( bReleasePaging)
+            {
+
+                AFSReleaseResource( &pNPFcb->PagingResource);
+
+                bReleasePaging = FALSE;
+            }
+
+            if( bReleaseMain)
+            {
+
+                AFSReleaseResource( &pNPFcb->Resource);
+
+                bReleaseMain = FALSE;
+            }
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -625,16 +686,22 @@ try_exit:
 
         ObDereferenceObject(pFileObject);
 
-        if( bReleaseMain)
+        if( bReleaseSectionObject)
         {
 
-            AFSReleaseResource( &pNPFcb->Resource);
+            AFSReleaseResource( &pNPFcb->SectionObjectResource);
         }
 
         if( bReleasePaging)
         {
 
             AFSReleaseResource( &pNPFcb->PagingResource);
+        }
+
+        if( bReleaseMain)
+        {
+
+            AFSReleaseResource( &pNPFcb->Resource);
         }
 
         if( bCompleteIrp)
@@ -1649,15 +1716,6 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
     NTSTATUS      ntStatus = STATUS_SUCCESS;
     AFSCcb       *pCcb = (AFSCcb *)FileObject->FsContext2;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSExtendingWrite Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
-                  &Fcb->NPFcb->PagingResource,
-                  PsGetCurrentThread());
-
-    AFSAcquireExcl( &Fcb->NPFcb->PagingResource,
-                    TRUE);
-
     if( NewLength > Fcb->Header.AllocationSize.QuadPart)
     {
 
@@ -1704,8 +1762,6 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
         Fcb->Header.FileSize = liSaveFileSize;
         Fcb->Header.AllocationSize = liSaveAllocation;
     }
-
-    AFSReleaseResource( &Fcb->NPFcb->PagingResource);
 
     //
     // DownConvert file resource to shared

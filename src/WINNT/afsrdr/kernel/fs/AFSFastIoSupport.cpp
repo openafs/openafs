@@ -194,11 +194,11 @@ AFSFastIoAcquireFile( IN struct _FILE_OBJECT *FileObject)
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSFastIoAcquireFile Acquiring Fcb lock %08lX EXCL %08lX\n",
-                  &pFcb->NPFcb->Resource,
+                  "AFSFastIoAcquireFile Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                  &pFcb->NPFcb->SectionObjectResource,
                   PsGetCurrentThread());
 
-    AFSAcquireExcl( &pFcb->NPFcb->Resource,
+    AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
                     TRUE);
 
     return;
@@ -210,10 +210,16 @@ AFSFastIoReleaseFile( IN struct _FILE_OBJECT *FileObject)
 
     AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
 
-    if( ExIsResourceAcquiredExclusiveLite( &pFcb->NPFcb->Resource))
+    if( ExIsResourceAcquiredExclusiveLite( &pFcb->NPFcb->SectionObjectResource))
     {
 
-        AFSReleaseResource( &pFcb->NPFcb->Resource);
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFastIoReleaseFile Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      &pFcb->NPFcb->SectionObjectResource,
+                      PsGetCurrentThread());
+
+        AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
     }
 
     return;
@@ -312,13 +318,13 @@ AFSFastIoAcquireForModWrite( IN struct _FILE_OBJECT *FileObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSFastIoAcquireForModWrite Acquired Fcb lock %08lX EXCL %08lX\n",
-                          &pFcb->NPFcb->Resource,
+                          "AFSFastIoAcquireForModWrite Acquired Fcb SectionObject lock %08lX EXCL %08lX\n",
+                          &pFcb->NPFcb->SectionObjectResource,
                           PsGetCurrentThread());
 
             ntStatus = STATUS_SUCCESS;
 
-            *ResourceToRelease = &pFcb->NPFcb->Resource;
+            *ResourceToRelease = &pFcb->NPFcb->SectionObjectResource;
         }
     }
 
@@ -333,6 +339,12 @@ AFSFastIoReleaseForModWrite( IN struct _FILE_OBJECT *FileObject,
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
+    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                  AFS_TRACE_LEVEL_VERBOSE,
+                  "AFSFastIoReleaseForModWrite Releasing lock %08lX EXCL %08lX\n",
+                  ResourceToRelease,
+                  PsGetCurrentThread());
+
     AFSReleaseResource( ResourceToRelease);
 
     return ntStatus;
@@ -346,33 +358,6 @@ AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
     NTSTATUS ntStatus = STATUS_FILE_LOCK_CONFLICT;
     AFSFcb *pFcb = (AFSFcb *)FileObject->FsContext;
 
-    if( !ExIsResourceAcquiredSharedLite( &pFcb->NPFcb->Resource))
-    {
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFastIoAcquireForCCFlush Acquiring Fcb lock %08lX EXCL %08lX\n",
-                      &pFcb->NPFcb->Resource,
-                      PsGetCurrentThread());
-
-        AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                        TRUE);
-    }
-    else
-    {
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFastIoAcquireForCCFlush Acquiring Fcb lock %08lX SHARED %08lX\n",
-                      &pFcb->NPFcb->Resource,
-                      PsGetCurrentThread());
-
-        AFSAcquireShared( &pFcb->NPFcb->Resource,
-                          TRUE);
-    }
-
-    ntStatus = STATUS_SUCCESS;
-
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSFastIoAcquireForCCFlush Acquiring Fcb PagingIo lock %08lX SHARED %08lX\n",
@@ -381,6 +366,33 @@ AFSFastIoAcquireForCCFlush( IN struct _FILE_OBJECT *FileObject,
 
     AFSAcquireShared( &pFcb->NPFcb->PagingResource,
                       TRUE);
+
+    if( !ExIsResourceAcquiredSharedLite( &pFcb->NPFcb->SectionObjectResource))
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFastIoAcquireForCCFlush Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      &pFcb->NPFcb->SectionObjectResource,
+                      PsGetCurrentThread());
+
+        AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
+                        TRUE);
+    }
+    else
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSFastIoAcquireForCCFlush Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                      &pFcb->NPFcb->SectionObjectResource,
+                      PsGetCurrentThread());
+
+        AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
+                          TRUE);
+    }
+
+    ntStatus = STATUS_SUCCESS;
 
     //
     // Set the TopLevelIrp field for this caller
@@ -409,20 +421,6 @@ AFSFastIoReleaseForCCFlush( IN struct _FILE_OBJECT *FileObject,
         IoSetTopLevelIrp( NULL);
     }
 
-    if( ExIsResourceAcquiredExclusiveLite( &pFcb->NPFcb->Resource) ||
-        ExIsResourceAcquiredSharedLite( &pFcb->NPFcb->Resource))
-    {
-
-        AFSReleaseResource( &pFcb->NPFcb->Resource);
-    }
-    else
-    {
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_ERROR,
-                      "AFSFastIoReleaseForCCFlush Called for non-acquired main resource Fcb\n");
-    }
-
     if( ExIsResourceAcquiredSharedLite( &pFcb->NPFcb->PagingResource))
     {
 
@@ -434,6 +432,20 @@ AFSFastIoReleaseForCCFlush( IN struct _FILE_OBJECT *FileObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSFastIoReleaseForCCFlush Called for non-acquired paging resource Fcb\n");
+    }
+
+    if( ExIsResourceAcquiredExclusiveLite( &pFcb->NPFcb->SectionObjectResource) ||
+        ExIsResourceAcquiredSharedLite( &pFcb->NPFcb->SectionObjectResource))
+    {
+
+        AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+    }
+    else
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSFastIoReleaseForCCFlush Called for non-acquired SectionObject resource Fcb\n");
     }
 
     return ntStatus;
