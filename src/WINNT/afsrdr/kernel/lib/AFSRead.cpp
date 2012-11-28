@@ -818,6 +818,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
     AFSFcb             *pFcb = NULL;
     AFSCcb             *pCcb = NULL;
     BOOLEAN             bReleaseMain = FALSE;
+    BOOLEAN             bReleaseSectionObject = FALSE;
     BOOLEAN             bReleasePaging = FALSE;
     BOOLEAN             bPagingIo = FALSE;
     BOOLEAN             bNonCachedIo = FALSE;
@@ -964,6 +965,17 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         if ( FlagOn(pIrpSp->MinorFunction, IRP_MN_COMPLETE) )
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonRead Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                          &pFcb->NPFcb->SectionObjectResource,
+                          PsGetCurrentThread());
+
+            AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
+                              TRUE);
+
+            bReleaseSectionObject = TRUE;
+
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonRead (%08lX) IRP_MN_COMPLETE being processed\n",
@@ -1001,27 +1013,39 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonRead Acquiring Fcb PagingIo lock %08lX SHARED %08lX\n",
-                                                              &pFcb->NPFcb->PagingResource,
-                                                              PsGetCurrentThread());
+                          &pFcb->NPFcb->PagingResource,
+                          PsGetCurrentThread());
 
             AFSAcquireShared( &pFcb->NPFcb->PagingResource,
                               TRUE);
 
             bReleasePaging = TRUE;
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSCommonRead Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                          &pFcb->NPFcb->SectionObjectResource,
+                          PsGetCurrentThread());
+
+            AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
+                              TRUE);
+
+            bReleaseSectionObject = TRUE;
+
         }
         else
         {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonRead Acquiring Fcb lock %08lX SHARED %08lX\n",
-                                                              &pFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                          "AFSCommonRead Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                          &pFcb->NPFcb->SectionObjectResource,
+                          PsGetCurrentThread());
 
-            AFSAcquireShared( &pFcb->NPFcb->Resource,
+            AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
                               TRUE);
 
-            bReleaseMain = TRUE;
+            bReleaseSectionObject = TRUE;
 
             //
             // Check the BR locks
@@ -1119,8 +1143,8 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCommonRead Initialize caching on Fcb %08lX FO %08lX\n",
-                                      pFcb,
-                                      pFileObject);
+                                  pFcb,
+                                  pFileObject);
 
                     CcInitializeCacheMap( pFileObject,
                                           (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
@@ -1230,6 +1254,30 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         else
         {
 
+            if( bReleasePaging)
+            {
+
+                AFSReleaseResource( &pFcb->NPFcb->PagingResource);
+
+                bReleasePaging = FALSE;
+            }
+
+            if( bReleaseSectionObject)
+            {
+
+                AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
+                bReleaseSectionObject = FALSE;
+            }
+
+            if( bReleaseMain)
+            {
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                bReleaseMain = FALSE;
+            }
+
             AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSCommonRead (%08lX) Processing NON-CACHED request Offset %I64X Len %08lX\n",
@@ -1252,6 +1300,12 @@ try_exit:
         {
 
             AFSReleaseResource( &pFcb->NPFcb->PagingResource);
+        }
+
+        if( bReleaseSectionObject)
+        {
+
+            AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
         }
 
         if( bReleaseMain)

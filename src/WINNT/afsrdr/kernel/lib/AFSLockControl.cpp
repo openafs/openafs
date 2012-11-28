@@ -166,6 +166,15 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 // Flush data and then release the locks on the file server
                 //
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLockControl Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
+                                  TRUE);
+
                 CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
                               NULL,
                               0,
@@ -186,6 +195,14 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
 
                     ntStatus = stIoStatus.Status;
                 }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLockControl Releasing Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
                 RtlZeroMemory( &stUnlockRequestCB,
                                sizeof( AFSByteRangeUnlockRequestCB));
@@ -215,10 +232,26 @@ AFSLockControl( IN PDEVICE_OBJECT LibDeviceObject,
                 // Flush the data and then release the file server locks
                 //
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLockControl Acquiring Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSAcquireShared( &pFcb->NPFcb->SectionObjectResource,
+                                  TRUE);
                 CcFlushCache( &pFcb->NPFcb->SectionObjectPointers,
                               &pIrpSp->Parameters.LockControl.ByteOffset,
                               pIrpSp->Parameters.LockControl.Length->LowPart,
                               &stIoStatus);
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSLockControl Releasing Fcb SectionObject lock %08lX SHARED %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
 
                 if( !NT_SUCCESS( stIoStatus.Status))
                 {

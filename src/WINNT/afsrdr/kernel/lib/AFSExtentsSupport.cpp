@@ -1197,29 +1197,6 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
                 //
                 le = &pExtent->Lists[AFS_EXTENTS_LIST];
 
-                /*
-                //
-                // Then the check the skip lists cursors
-                //
-                for (ULONG i = AFS_NUM_EXTENT_LISTS-1; i > AFS_EXTENTS_LIST; i--)
-                {
-                    if (0 == (pFileExtents->FileOffset.LowPart & ExtentsMasks[i]))
-                    {
-                        //
-                        // Three options:
-                        //    - empty list (pSkipEntries[i]->Flink == pSkipEntries[i]->Flink == fcb->lists[i]
-                        //    - We are the last on the list (pSkipEntries[i]->Flink == fcb->lists[i])
-                        //    - We are not the last on the list.  In that case we have to be strictly less than
-                        //      that extent.
-                        if (pSkipEntries[i]->Flink != &Fcb->Specific.File.ExtentsLists[i]) {
-
-                            AFSExtent *otherExtent = ExtentFor(pSkipEntries[i]->Flink, i);
-                            ASSERT(pFileExtents->FileOffset.QuadPart < otherExtent->FileOffset.QuadPart);
-                        }
-                    }
-                }
-                */
-
                 //
                 // setup pExtent if there is one
                 //
@@ -2853,6 +2830,7 @@ AFSFlushExtents( IN AFSFcb *Fcb,
                               ntStatus);
 
             }
+
             AFSLockForExtentsTrim( Fcb);
 
             bExtentsLocked = TRUE;

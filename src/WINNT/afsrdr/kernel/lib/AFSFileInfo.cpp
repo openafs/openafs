@@ -2093,6 +2093,15 @@ AFSSetDispositionInfo( IN PIRP Irp,
             else if( pFcb->Header.NodeTypeCode == AFS_FILE_FCB)
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetDispositionInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
+                                TRUE);
+
                 //
                 // Attempt to flush any outstanding data
                 //
@@ -2139,6 +2148,14 @@ AFSSetDispositionInfo( IN PIRP Irp,
                         SetFlag( pFcb->Flags, AFS_FCB_FLAG_PURGE_ON_CLOSE);
                     }
                 }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetDispositionInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              &pFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
             }
         }
         else
@@ -3120,7 +3137,13 @@ AFSSetRenameInfo( IN PIRP Irp)
 
                 pTargetFcb = pTargetDirEntry->ObjectInformation->Fcb;
 
-                AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetRenameInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              &pTargetFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSAcquireExcl( &pTargetFcb->NPFcb->SectionObjectResource,
                                 TRUE);
 
                 //
@@ -3137,7 +3160,13 @@ AFSSetRenameInfo( IN PIRP Irp)
                                   &pTargetDirEntry->NameInformation.FileName);
                 }
 
-                AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
+                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSSetRenameInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                              &pTargetFcb->NPFcb->SectionObjectResource,
+                              PsGetCurrentThread());
+
+                AFSReleaseResource( &pTargetFcb->NPFcb->SectionObjectResource);
             }
 
             ASSERT( pTargetDirEntry->DirOpenReferenceCount > 0);
@@ -3243,6 +3272,7 @@ AFSSetAllocationInfo( IN PIRP Irp,
     BOOLEAN bReleasePaging = FALSE;
     BOOLEAN bTellCc = FALSE;
     BOOLEAN bTellService = FALSE;
+    BOOLEAN bUserMapped = FALSE;
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation( Irp);
     PFILE_OBJECT pFileObject = pIrpSp->FileObject;
     AFSFcb *pFcb = NULL;
@@ -3272,17 +3302,38 @@ AFSSetAllocationInfo( IN PIRP Irp,
 
     if( pFcb->Header.AllocationSize.QuadPart > pBuffer->AllocationSize.QuadPart)
     {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSSetAllocationInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      &pFcb->NPFcb->SectionObjectResource,
+                      PsGetCurrentThread());
+
+        AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
+                        TRUE);
+
+        bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
+                                             &pBuffer->AllocationSize);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSSetAllocationInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                      &pFcb->NPFcb->SectionObjectResource,
+                      PsGetCurrentThread());
+
+        AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
         //
         // Truncating the file
         //
-        if( !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
-                                   &pBuffer->AllocationSize))
+        if ( bUserMapped)
         {
 
             ntStatus = STATUS_USER_MAPPED_FILE ;
         }
         else
         {
+
             //
             // If this is a truncation we need to grab the paging IO resource.
             //
@@ -3433,6 +3484,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
     BOOLEAN bModified = FALSE;
     BOOLEAN bReleasePaging = FALSE;
     BOOLEAN bTruncated = FALSE;
+    BOOLEAN bUserMapped = FALSE;
     AFSFcb *pFcb = NULL;
     AFSCcb *pCcb = NULL;
 
@@ -3453,9 +3505,28 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         if( pBuffer->EndOfFile.QuadPart < pFcb->Header.FileSize.QuadPart)
         {
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetEndOfFileInfo Acquiring Fcb SectionObject lock %08lX EXCL %08lX\n",
+                          &pFcb->NPFcb->SectionObjectResource,
+                          PsGetCurrentThread());
+
+            AFSAcquireExcl( &pFcb->NPFcb->SectionObjectResource,
+                            TRUE);
+
+            bUserMapped = !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
+                                                 &pBuffer->EndOfFile);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSSetEndOfFileInfo Releasing Fcb SectionObject lock %08lX EXCL %08lX\n",
+                          &pFcb->NPFcb->SectionObjectResource,
+                          PsGetCurrentThread());
+
+            AFSReleaseResource( &pFcb->NPFcb->SectionObjectResource);
+
             // Truncating the file
-            if( !MmCanFileBeTruncated( pFileObject->SectionObjectPointer,
-                                       &pBuffer->EndOfFile))
+            if ( bUserMapped)
             {
 
                 ntStatus = STATUS_USER_MAPPED_FILE;

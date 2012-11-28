@@ -163,12 +163,15 @@ typedef struct _AFS_NONPAGED_FCB
     USHORT          Type;
 
     //
-    // Ranking - File Resource first, then Paging Resource
+    // Ranking - File Resource, Paging Resource,
+    //           then SectionObject Resource
     //
 
     ERESOURCE       Resource;
 
     ERESOURCE       PagingResource;
+
+    ERESOURCE       SectionObjectResource;
 
     //
     // The section object pointer

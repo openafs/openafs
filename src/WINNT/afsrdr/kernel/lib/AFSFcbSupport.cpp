@@ -154,6 +154,8 @@ AFSInitFcb( IN AFSDirectoryCB  *DirEntry)
 
         ExInitializeResourceLite( &pNPFcb->PagingResource);
 
+        ExInitializeResourceLite( &pNPFcb->SectionObjectResource);
+
         ExInitializeResourceLite( &pNPFcb->CcbListLock);
 
         pFcb->Header.Resource = &pNPFcb->Resource;
@@ -343,6 +345,8 @@ try_exit:
 
                         ExDeleteResourceLite( &pNPFcb->Specific.File.DirtyExtentsListLock);
                     }
+
+                    ExDeleteResourceLite( &pNPFcb->SectionObjectResource);
 
                     ExDeleteResourceLite( &pNPFcb->PagingResource);
 
@@ -1125,6 +1129,8 @@ AFSRemoveFcb( IN AFSFcb **ppFcb)
     ExDeleteResourceLite( &pFcb->NPFcb->Resource);
 
     ExDeleteResourceLite( &pFcb->NPFcb->PagingResource);
+
+    ExDeleteResourceLite( &pFcb->NPFcb->SectionObjectResource);
 
     ExDeleteResourceLite( &pFcb->NPFcb->CcbListLock);
 
