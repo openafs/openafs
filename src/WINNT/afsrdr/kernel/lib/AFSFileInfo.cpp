@@ -94,15 +94,30 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT LibDeviceObject,
         stFileInformationClass = pIrpSp->Parameters.QueryFile.FileInformationClass;
         pBuffer = Irp->AssociatedIrp.SystemBuffer;
 
-        RtlZeroMemory( &stAuthGroup,
-                       sizeof( GUID));
+        if ( BooleanFlagOn( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
+        {
 
-        AFSRetrieveAuthGroupFnc( (ULONGLONG)PsGetCurrentProcessId(),
-                                 (ULONGLONG)PsGetCurrentThreadId(),
-                                  &stAuthGroup);
+            RtlZeroMemory( &stAuthGroup,
+                           sizeof( GUID));
 
-        AFSVerifyEntry( &stAuthGroup,
-                        pCcb->DirectoryCB);
+            AFSRetrieveAuthGroupFnc( (ULONGLONG)PsGetCurrentProcessId(),
+                                     (ULONGLONG)PsGetCurrentThreadId(),
+                                     &stAuthGroup);
+
+            ntStatus = AFSVerifyEntry( &stAuthGroup,
+                                       pCcb->DirectoryCB);
+
+            if ( NT_SUCCESS( ntStatus))
+            {
+
+                ClearFlag( pFcb->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+            }
+            else
+            {
+
+                ntStatus = STATUS_SUCCESS;
+            }
+        }
 
         //
         // Grab the main shared right off the bat
