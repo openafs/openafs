@@ -782,10 +782,24 @@ AFSQueryDirectory( IN PIRP Irp)
             // We don't worry about entries while enumerating the directory
             //
 
-            AFSValidateEntry( pDirEntry,
-                              &pCcb->AuthGroup,
-                              FALSE,
-                              FALSE);
+            if ( BooleanFlagOn( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY))
+            {
+
+                ntStatus = AFSValidateEntry( pDirEntry,
+                                             &pCcb->AuthGroup,
+                                             FALSE,
+                                             FALSE);
+                if ( NT_SUCCESS( ntStatus))
+                {
+
+                    ClearFlag( pDirEntry->ObjectInformation->Flags, AFS_OBJECT_FLAGS_VERIFY);
+                }
+                else
+                {
+
+                    ntStatus = STATUS_SUCCESS;
+                }
+            }
 
             pObjectInfo = pDirEntry->ObjectInformation;
 
