@@ -398,6 +398,139 @@ try_exit:
     }
 }
 
+VOID
+AFSDeleteFcbExtents( IN AFSFcb *Fcb)
+{
+    AFSNonPagedFcb      *pNPFcb = Fcb->NPFcb;
+    LIST_ENTRY          *le, *leNext;
+    AFSExtent           *pEntry;
+    LONG                 lExtentCount = 0, lProcessCount = 0;
+    LONG                 lFcbExtentCount;
+    size_t               sz;
+    BOOLEAN              locked = FALSE;
+    NTSTATUS             ntStatus;
+    AFSDeviceExt        *pControlDevExt = (AFSDeviceExt *)AFSControlDeviceObject->DeviceExtension;
+    LONG                 lCount;
+
+    __Enter
+    {
+
+        //
+        // Ensure that no one is working with the extents and grab the
+        // lock
+        //
+
+        AFSLockForExtentsTrim( Fcb );
+
+        locked = TRUE;
+
+        if (0 == Fcb->Specific.File.ExtentCount)
+        {
+            try_return ( ntStatus = STATUS_SUCCESS);
+        }
+
+        sz = sizeof( AFSReleaseExtentsCB ) + (AFS_MAXIMUM_EXTENT_RELEASE_COUNT * sizeof ( AFSFileExtentCB ));
+
+        AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                        TRUE);
+
+        for( le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink,
+             lExtentCount = 0,
+             lFcbExtentCount = Fcb->Specific.File.ExtentCount;
+             lExtentCount < lFcbExtentCount;
+             lExtentCount += lProcessCount)
+        {
+
+            for( lProcessCount = 0;
+                 !IsListEmpty( le) &&
+                 lExtentCount + lProcessCount < lFcbExtentCount;
+                 lProcessCount++, le = leNext)
+            {
+
+                leNext = le->Flink;
+
+                pEntry = ExtentFor( le, AFS_EXTENTS_LIST );
+
+                if( BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                {
+
+                    LONG dirtyCount;
+
+                    AFSRemoveEntryDirtyList( Fcb,
+                                             pEntry);
+
+                    dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+                    ASSERT( dirtyCount >= 0);
+                }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSDeleteFcbExtents Deleting extent %p fid %08lX-%08lX-%08lX-%08lX Offset %08lX-%08lX Len %08lX\n",
+                              pEntry,
+                              Fcb->ObjectInformation->FileId.Cell,
+                              Fcb->ObjectInformation->FileId.Volume,
+                              Fcb->ObjectInformation->FileId.Vnode,
+                              Fcb->ObjectInformation->FileId.Unique,
+                              pEntry->FileOffset.HighPart,
+                              pEntry->FileOffset.LowPart,
+                              pEntry->Size);
+
+                AFSFreeExtent( Fcb,
+                               pEntry);
+            }
+        }
+
+        AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
+        //
+        // if all extents have been released, reinitialize the skip lists
+        //
+
+        ASSERT( Fcb->Specific.File.ExtentCount == 0);
+
+        if( Fcb->Specific.File.ExtentCount == 0)
+        {
+
+            for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i++)
+            {
+                InitializeListHead(&Fcb->Specific.File.ExtentsLists[i]);
+            }
+
+            //
+            // Reinitialize the dirty list as well
+            //
+
+            AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                            TRUE);
+
+            ASSERT( Fcb->Specific.File.ExtentsDirtyCount == 0);
+
+            Fcb->NPFcb->Specific.File.DirtyListHead = NULL;
+            Fcb->NPFcb->Specific.File.DirtyListTail = NULL;
+
+            AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+        }
+
+        Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
+
+try_exit:
+
+        if (locked)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSDeleteFcbExtents Releasing Fcb extent lock %08lX thread %08lX\n",
+                          &Fcb->NPFcb->Specific.File.ExtentsResource,
+                          PsGetCurrentThread());
+
+            AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource );
+        }
+    }
+}
+
+
 static PAFSExtent
 ExtentForOffsetInList( IN AFSFcb *Fcb,
                        IN LIST_ENTRY *List,
