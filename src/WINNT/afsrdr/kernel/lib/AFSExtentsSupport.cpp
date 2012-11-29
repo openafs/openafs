@@ -151,6 +151,7 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
     LIST_ENTRY          *le, *leNext;
     AFSExtent           *pEntry;
     LONG                 lExtentCount = 0, lProcessCount = 0;
+    LONG                 lFcbExtentCount;
     ULONG                ulReleaseCount = 0;
     size_t               sz;
     AFSReleaseExtentsCB *pRelease = NULL;
@@ -215,8 +216,9 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                         TRUE);
 
         for( le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink,
-             lExtentCount = 0;
-             lExtentCount < Fcb->Specific.File.ExtentCount;
+             lExtentCount = 0,
+             lFcbExtentCount = Fcb->Specific.File.ExtentCount;
+             lExtentCount < lFcbExtentCount;
              lExtentCount += lProcessCount)
         {
 
@@ -227,7 +229,7 @@ AFSTearDownFcbExtents( IN AFSFcb *Fcb,
             for( lProcessCount = 0, ulReleaseCount = 0;
                  !IsListEmpty( le) &&
                  ulReleaseCount < AFS_MAXIMUM_EXTENT_RELEASE_COUNT &&
-                 lExtentCount + lProcessCount < Fcb->Specific.File.ExtentCount;
+                 lExtentCount + lProcessCount < lFcbExtentCount;
                  lProcessCount++, le = leNext)
             {
 
