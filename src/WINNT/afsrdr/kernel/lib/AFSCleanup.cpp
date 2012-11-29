@@ -498,12 +498,10 @@ AFSCleanup( IN PDEVICE_OBJECT LibDeviceObject,
                                         FALSE);
 
                             //
-                            // Before telling the server about the deleted file, tear down all extents for
-                            // the file
+                            // The file has been deleted since the Link count is zero
                             //
 
-                            AFSTearDownFcbExtents( pFcb,
-                                                   &pCcb->AuthGroup);
+                            AFSDeleteFcbExtents( pFcb);
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
