@@ -423,6 +423,9 @@ VOID
 AFSTearDownFcbExtents( IN AFSFcb *Fcb,
                        IN GUID *AuthGroup);
 
+VOID
+AFSDeleteFcbExtents( IN AFSFcb *Fcb);
+
 void
 AFSTrimExtents( IN AFSFcb *Fcb,
                 IN PLARGE_INTEGER FileSize);
