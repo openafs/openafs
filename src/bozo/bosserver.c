@@ -47,6 +47,7 @@
 #include <afs/authcon.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+#include <opr/softsig.h>
 
 #if defined(AFS_SGI_ENV)
 #include <afs/afs_args.h>
@@ -60,10 +61,22 @@
 #define BOZO_LWP_STACKSIZE	16000
 extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
 
-struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
-static PROCESS bozo_pid;
+/*
+ * bozo configuration dir. This can be accessed outside of any locks; we
+ * initialize it in main() before any useful threads have started.
+ */
+struct afsconf_dir *bozo_confdir;
+
 const char *bozo_fileName;
-FILE *bozo_logFile;
+
+/* Protects the entire bnode subsystem. */
+opr_mutex_t bnode_glock;
+
+#ifdef AFS_PTHREAD_ENV
+/* Protects writing to the log file. */
+static opr_mutex_t bozo_logLock;
+#endif
+
 #ifndef AFS_NT40_ENV
 static int bozo_argc = 0;
 static char** bozo_argv = NULL;
@@ -81,7 +94,7 @@ static afs_int32 nextRestart;
 static afs_int32 nextDay;
 
 struct ktime bozo_nextRestartKT, bozo_nextDayKT;
-int bozo_newKTs;
+int bozo_newKTs = 1;
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
 
@@ -91,7 +104,9 @@ int bozo_restdisable = 0;
 void
 bozo_insecureme(int sig)
 {
+#ifndef AFS_PTHREAD_ENV
     signal(SIGFPE, bozo_insecureme);
+#endif
     bozo_isrestricted = 0;
     bozo_restdisable = 1;
 }
@@ -530,6 +545,8 @@ WriteBozoFile(char *aname)
     struct bztemp btemp;
     int ret = 0;
 
+    BNODE_ASSERT_LOCK();
+
     if (!aname)
 	aname = (char *)bozo_fileName;
     if (asprintf(&tbuffer, "%s.NBZ", aname) < 0)
@@ -600,10 +617,15 @@ BozoDaemon(void *unused)
 {
     afs_int32 now;
 
-    /* now initialize the values */
-    bozo_newKTs = 1;
     while (1) {
+#ifdef AFS_PTHREAD_ENV
+	sleep(60);
+#else
 	IOMGR_Sleep(60);
+#endif
+
+	BNODE_LOCK();
+
 	now = FT_ApproxTime();
 
 	if (bozo_restdisable) {
@@ -619,7 +641,9 @@ BozoDaemon(void *unused)
 
 	/* see if we should do a restart */
 	if (now > nextRestart) {
+	    BNODE_UNLOCK();
 	    SBOZO_ReBozo(0);	/* doesn't come back */
+	    BNODE_LOCK();
 	}
 
 	/* see if we should restart a server */
@@ -629,6 +653,8 @@ BozoDaemon(void *unused)
 	    /* call the bnode restartp function, and restart all that require it */
 	    bnode_ApplyInstance(bdrestart, 0);
 	}
+
+	BNODE_UNLOCK();
     }
     AFS_UNREACHED(return(NULL));
 }
@@ -880,6 +906,12 @@ main(int argc, char **argv, char **envp)
     int DoProcessRPCStats = 0;
     struct stat sb;
     struct afsconf_bsso_info bsso;
+#ifdef AFS_PTHREAD_ENV
+    pthread_attr_t tattr;
+    pthread_t bozo_pid;
+#else
+    PROCESS bozo_pid;
+#endif
 #ifndef AFS_NT40_ENV
     int nofork = 0;
 #endif
@@ -905,7 +937,6 @@ main(int argc, char **argv, char **envp)
     sigaction(SIGABRT, &nsa, NULL);
 #endif
     osi_audit_init();
-    signal(SIGFPE, bozo_insecureme);
 
     memset(&bsso, 0, sizeof(bsso));
 
@@ -917,6 +948,9 @@ main(int argc, char **argv, char **envp)
 	exit(2);
     }
 #endif
+
+    opr_mutex_init(&bozo_logLock);
+    opr_mutex_init(&bnode_glock);
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -1078,6 +1112,7 @@ main(int argc, char **argv, char **envp)
     }
 
     if (!DoSyslog) {
+	FILE *bozo_logFile;
 	/* Support logging to named pipes by not renaming. */
 	if (DoTransarcLogs
 	    && (lstat(AFSDIR_SERVER_BOZLOG_FILEPATH, &sb) == 0)
@@ -1105,7 +1140,8 @@ main(int argc, char **argv, char **envp)
 
     /*
      * go into the background and remove our controlling tty, close open
-     * file desriptors
+     * file desriptors. we should delay creating any pthreads until after this
+     * point, since they will be destroyed here (unless -nofork was given).
      */
 
 #ifndef AFS_NT40_ENV
@@ -1114,6 +1150,13 @@ main(int argc, char **argv, char **envp)
 	    printf("bosserver: warning - daemon() returned code %d\n", errno);
     }
 #endif /* ! AFS_NT40_ENV */
+
+#ifdef AFS_PTHREAD_ENV
+    opr_softsig_Init();
+    opr_Verify(opr_softsig_Register(SIGFPE, bozo_insecureme) == 0);
+#else
+    signal(SIGFPE, bozo_insecureme);
+#endif
 
     /* Write current state of directory permissions to log file */
     DirAccessOK();
@@ -1143,6 +1186,8 @@ main(int argc, char **argv, char **envp)
     }
     /* opened the cell databse */
     bozo_confdir = tdir;
+
+    BNODE_LOCK();
 
     code = bnode_Init();
     if (code) {
@@ -1218,8 +1263,15 @@ main(int argc, char **argv, char **envp)
 	}
     }
 
+#ifdef AFS_PTHREAD_ENV
+    opr_Verify(pthread_attr_init(&tattr) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+    code = pthread_create(&bozo_pid, &tattr, BozoDaemon, NULL);
+    opr_Verify(pthread_attr_destroy(&tattr) == 0);
+#else
     code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
 			     /* param */ NULL , "bozo-the-clown", &bozo_pid);
+#endif
     if (code) {
 	bozo_Log("Failed to create daemon thread\n");
         exit(1);
@@ -1245,6 +1297,8 @@ main(int argc, char **argv, char **envp)
     if (DoPidFiles) {
 	bozo_CreatePidFile("bosserver", NULL, getpid());
     }
+
+    BNODE_UNLOCK();
 
     tservice = rx_NewServiceHost(host, 0, /* service id */ 1,
 			         "bozo", securityClasses, numClasses,
@@ -1284,6 +1338,8 @@ bozo_Log(const char *format, ...)
         vsyslog(LOG_INFO, format, ap);
 #endif
     } else {
+	FILE *bozo_logFile;
+	opr_mutex_enter(&bozo_logLock);
 	myTime = time(0);
 	strcpy(tdate, ctime(&myTime));	/* copy out of static area asap */
 	tdate[24] = ':';
@@ -1304,6 +1360,7 @@ bozo_Log(const char *format, ...)
 	    /* close so rm BosLog works */
 	    fclose(bozo_logFile);
 	}
+	opr_mutex_exit(&bozo_logLock);
     }
     va_end(ap);
 }

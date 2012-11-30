@@ -1256,7 +1256,11 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     count = 0;
     while (1) {
 	char *itype = NULL;
+#ifdef AFS_PTHREAD_ENV
+	sleep(1);
+#else
 	IOMGR_Sleep(1);
+#endif
 	code = BOZO_GetInstanceInfo(aconn, "salvage-tmp", &itype, &istatus);
 	xdr_free((xdrproc_t)xdr_string, &itype);
 	if (code)

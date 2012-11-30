@@ -30,7 +30,6 @@ int bnode_Hold(struct bnode *);
 int bnode_Release(struct bnode *);
 int bnode_Delete(struct bnode *);
 int bnode_PendingTimeout(struct bnode *abnode);
-void bnode_Int(int asignal);
 int bnode_Init(void);
 int bnode_FreeTokens(struct bnode_token *alist);
 int bnode_ParseLine(char *aline, struct bnode_token **alist);

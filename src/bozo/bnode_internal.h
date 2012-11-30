@@ -7,6 +7,32 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
+#else
+# include <opr/lockstub.h>
+#endif
+
+/*
+ * To keep things simple, we have one big lock for the entire bnode subsystem.
+ * Generally, that means you must hold BNODE_LOCK before interacting with any
+ * bnodes or bnode processes, and before calling any bnode_* functions (with
+ * some exceptions noted in function comments).
+ *
+ * More specifically, BNODE_LOCK protects:
+ * - allBnodes (and all 'struct bnode')
+ * - allProcs (and all 'struct bnode_proc')
+ * - allTypes (and all 'struct bnode_type')
+ * - bozo_newKTs, bozo_nextRestartKT, bozo_nextDayKT, bnode_stats
+ *
+ * For LWP, BNODE_LOCK does nothing.
+ */
+extern opr_mutex_t bnode_glock;
+#define BNODE_LOCK() opr_mutex_enter(&bnode_glock)
+#define BNODE_UNLOCK() opr_mutex_exit(&bnode_glock)
+#define BNODE_ASSERT_LOCK() opr_mutex_assert(&bnode_glock)
+
 #define	BOP_TIMEOUT(bnode)	((*(bnode)->ops->timeout)((bnode)))
 #define	BOP_GETSTAT(bnode, a)	((*(bnode)->ops->getstat)((bnode),(a)))
 #define	BOP_SETSTAT(bnode, a)	((*(bnode)->ops->setstat)((bnode),(a)))
@@ -68,6 +94,7 @@ struct bnode {
     char fileGoal;		/* same, but to be stored in file */
     afs_int32 errorStopCount;	/* number of recent error stops */
     afs_int32 errorStopDelay;	/* seconds to wait before retrying start */
+    opr_cv_t bn_cv;		/* condvar for bnode_Wait/bnode_Check */
 };
 
 struct bnode_proc {
